@@ -15,9 +15,12 @@
 -->
 # The VaR engine: value at risk for any set of trades, with full drill-down
 
-Status: **design, not built.** Planned for **2.8.0** (product owner, 2026-10-24), what-if pricing through QLRisk only if its API is
-declared stable in time (otherwise 2.8.x). Everything named below that does not exist in the code today (kinds, connectors, packages,
-screens, endpoints, settings) is **planned (2.8.0)**. Related: [REACTIVE_CONNECTORS.md](REACTIVE_CONNECTORS.md) (the connector type
+Status: **partly built (2.8.0, unreleased).** Waves **V0 to V3 are built** (the data, the engine, the VaR explorer, history and
+backtesting, baskets, captures, entitlements and audit): what was built, how it differs from this design and the decisions taken on
+its open questions are in [section 18](#18-as-built-in-280-waves-v0-to-v3); the user guide is [VAR_EXPLORER.md](../guides/VAR_EXPLORER.md).
+Waves V4 to V6 (what-if pricing, intraday recomputes, the sharded store across Drishti\*net) are **planned**: what-if pricing through
+QLRisk only if its API is declared stable in time (otherwise 2.8.x). Elsewhere in this design, a part section 18 does not list as
+built (reactive connector, compute workers, Python package) is **planned (2.8.0)**. Related: [REACTIVE_CONNECTORS.md](REACTIVE_CONNECTORS.md) (the connector type
 the engine is), [PYTHON_COMPUTE.md](PYTHON_COMPUTE.md) (where its code runs and how its libraries are approved),
 [WRITE_BACK.md](WRITE_BACK.md) (a booked or amended trade recomputes the VaR it affects), [DEMO_DATA.md](../connectors/DEMO_DATA.md)
 (the data pattern every pack follows). **The data model is in a companion document, [VAR_DATA_MODEL.md](VAR_DATA_MODEL.md):** positions
@@ -44,6 +47,7 @@ sizing for a large bank.
 15. [Phased delivery](#15-phased-delivery)
 16. [Tests](#16-tests)
 17. [Open questions for the product owner](#17-open-questions-for-the-product-owner)
+18. [As built in 2.8.0: waves V0 to V3](#18-as-built-in-280-waves-v0-to-v3)
 
 ---
 
@@ -439,16 +443,24 @@ the lake. Sizes for 1 to 5 million positions, the whole-bank scan time and the 5
 
 ### 13.2 Targets
 
-All to be **measured** on a real server in step V6; a workstation run is limited to 10,000 positions.
+All to be **measured** on a real server in step V6; a workstation run is limited to 10,000 positions on disk. The **measured** column
+is from 2.8.0's V1 to V3 build, on a workstation (24 hardware threads, 61 GB, JDK 25): the scale benchmark
+`drishti-compute/src/test/java/com/ash/drishti/compute/var/VarScaleBenchmark.java` over **500,000 positions and 1,000,000 trades
+held in memory** (4.07 GB of vectors, never written to disk; `-Ddrishti.var.scale.positions=500000
+-Ddrishti.var.scale.trades-per-position=2`), and the explorer's Playwright test on the demo data (`test_var_explorer_browser.py`). The
+extrapolation to 2 to 5 million positions assumes summing stays memory-bound (it scales with the rows read) and four servers share the
+rows, as section 13.3 and VAR_DATA_MODEL.md section 14.2 plan.
 
-| Operation | Target (p95, warm) |
-|---|---|
-| VaR, ES and headline of a precomputed node | 100 ms |
-| P&L path (509 rows) of a node | 100 ms |
-| contributions of a node's children (up to 500) | 300 ms |
-| a scope written as nodes plus or minus up to 1,000 positions | 500 ms |
-| an ad-hoc scope of 50,000 positions (any shape) | 250 ms |
-| a filter scope over the whole bank (all 2 million positions considered) | 3 s on a three-node cluster |
+| Operation | Target (p95, warm) | Measured (2.8.0, one workstation) | Extrapolated |
+|---|---|---|---|
+| VaR, ES and headline of a precomputed node | 100 ms | under 1 ms from the node's aggregate; 2.6 ms for *the bank minus one desk* (the planner's aggregates) | independent of the bank's size |
+| the whole bank summed from its trades (a filter that cuts across every node) | | 58 ms for 1 M trades (70 GB/s on 24 threads) | 2 M: about 0.12 s on one server, 0.03 s on four; 5 M: about 0.29 s on one, 0.07 s on four (target 0.14 s on four for 2 M) |
+| P&L path (509 rows) of a node | 100 ms | the explorer: click to painted, a desk 9 to 14 ms when its answers were fetched ahead, 30 to 35 ms when not (target from the product owner: 300 ms) | |
+| contributions of a node's children (up to 500) | 300 ms | 148 ms for a desk's **5,000** positions (standalone, component, incremental VaR each) | linear in the parts |
+| a scope written as nodes plus or minus up to 1,000 positions | 500 ms | 2.6 ms (bank minus a desk) | |
+| an ad-hoc scope of 50,000 positions (any shape) | 250 ms | 52 ms: 43 ms reading the 50,000 ids, 9 ms to sum and measure | about the same at 5 M (the sum reads only the basket's rows) |
+| a filter scope over the whole bank (all 2 million positions considered) | 3 s on a three-node cluster | | |
+| loading a date into memory (sort into hierarchy order, permute, sum every node) | | 3.4 s for 1 M trades (after reading); the demo's 1,673 trades: 0.6 s from the lake | minutes for 5 M, as section 13.4 says |
 | VaR and ES history, 250 days, of a precomputed node | 300 ms |
 | VaR history, 250 days, of an ad-hoc scope of up to 10,000 positions | 60 s, as a visible job ([BI_RUNS.md](BI_RUNS.md)), then cached |
 | position-level component VaR for the whole bank | 30 s, as a job |
@@ -508,10 +520,10 @@ The computed kinds are read like any kind (Sutra `source:`, BI, `GET /api/v1/vie
 
 | Step | Delivers | Accepted when |
 |---|---|---|
-| V0 | the stored kinds (`position`, `risk-hierarchy`, `scenario-set`, `pnl-vector`, `var-node`, `pnl-hypothetical`) in the market-risk pack; vector columns in the lake tools and the Delta plugin ([VAR_DATA_MODEL.md section 15](VAR_DATA_MODEL.md#15-fit-with-the-repositorys-data-pattern-and-what-must-change)); deterministic demo data in `data/testdata/market-risk/`; the Delta tables and `risk-store` routes; a local generator for sizing sets | the demo lake builds with the demo connector off; node vectors equal the sum of their positions |
-| V1 | `var-engine` (reactive connector) and `compute/drishti-var`: scope algebra, VaR, ES, path, contributions by child; the VaR explorer Sutra and its new UI kit fragments | any node and any scope of the grammar shows headline, path (table and charts) and contributions; components add up to the smoothed VaR |
-| V2 | history and backtesting: the overnight precomputation, `var-node` history, exceptions, traffic light, Kupiec and Christoffersen | the history tab shows 250 days for any node with exceptions marked |
-| V3 | baskets, entitlements by node (`positions`, `aggregate`), audit entries, official numbers | an aggregate-only viewer sees a division's numbers and never a position; every answer is audited |
+| V0 (built) | the stored kinds (`position`, `risk-hierarchy`, `scenario-set`, `pnl-vector`, `var-node`, `pnl-hypothetical`) in the market-risk pack; vector columns in the lake tools and the Delta plugin ([VAR_DATA_MODEL.md section 15](VAR_DATA_MODEL.md#15-fit-with-the-repositorys-data-pattern-and-what-must-change)); deterministic demo data in `data/testdata/market-risk/`; the Delta tables and `risk-store` routes; a local generator for sizing sets | the demo lake builds with the demo connector off; node vectors equal the sum of their positions |
+| V1 (built, in the server: section 18) | `var-engine` (reactive connector) and `compute/drishti-var`: scope algebra, VaR, ES, path, contributions by child; the VaR explorer Sutra and its new UI kit fragments | any node and any scope of the grammar shows headline, path (table and charts) and contributions; components add up to the smoothed VaR |
+| V2 (built) | history and backtesting: the overnight precomputation, `var-node` history, exceptions, traffic light, Kupiec and Christoffersen | the history tab shows 250 days for any node with exceptions marked |
+| V3 (built, with captures) | baskets, entitlements by node (`positions`, `aggregate`), audit entries, official numbers | an aggregate-only viewer sees a division's numbers and never a position; every answer is audited |
 | V4 | what-if: sandboxes, unwind and linear scaling (no pricing), the reprice check; **pricing through QLRisk if its API is stable** (else 2.8.x); the QuantLib-Java parity | a sandbox removing three trades matches the scope minus those trades exactly; with QLRisk, a new swap's incremental VaR is shown in under 3 s |
 | V5 | intraday: `write-back` and `data-version` triggers, the intraday layer, per-event impacts, pushes ([WRITE_BACK.md section 18](WRITE_BACK.md#18-280-saving-through-connectors-triggers-and-viewers)) | two traders' amendments to one book: each sees their own impact, both see one shared number stamped with both events |
 | V6 | scale: the hot vector store, sharding across Drishti\*net, the targets of [section 13.2](#132-targets) measured on a real server | the measured numbers are published in the scale document; any target missed has a stated reason and plan |
@@ -549,3 +561,92 @@ The computed kinds are read like any kind (Sutra `source:`, BI, `GET /api/v1/vie
    entitlement system?
 10. **Committed demo data size.** About 200 positions over 60 days (about 21 MB compressed) is proposed; is that acceptable for the
     repository?
+
+## 18. As built in 2.8.0: waves V0 to V3
+
+What was built (2.8.0, unreleased), where it differs from the sections above, and why. The user guide is
+[VAR_EXPLORER.md](../guides/VAR_EXPLORER.md); the data as built is [VAR_DATA_MODEL.md section 18](VAR_DATA_MODEL.md#18-as-built-in-280).
+
+### 18.1 Where it lives
+
+| Part | As built |
+|---|---|
+| the pack | the **market-risk** pack (open question 1): the kinds `position`, `portfolio`, `pnl-vector`, `scenario-set`, `risk-hierarchy`, `var-node` (`tools/packgen/banking/var_kinds.py`, written into `pack.yaml` by `make_packs.py`), routed to `risk-store`; mnemonics `POS`, `PORT`, `PNLV`, `SSET`, `HIER`, `VNODE`; Sutras for `portfolio` and `position` |
+| the stored data | `risk-store` (Delta), the vectors in a `list<double>` column (`layout.<kind>.vectors: [PNL]`); demo data from `tools/packgen/var/make_var_data.py` |
+| the engine | **in the server, in Java**: the generic vector store, ordinal sets, parallel sums and the VaR maths in a new module `drishti-compute` (`com.ash.drishti.compute.vector`, `com.ash.drishti.compute.var`); loading, entitlements, baskets, captures and the API in `drishti-server` (`com.ash.drishti.server.var`). Not yet a reactive connector (waves R1 to R4) and no Python package: base VaR is additions and sorts, which Java does next to the data without moving vectors to a worker |
+| the explorer | a console page (`/var`, `drishti-console/routes/var_routes.py`, `web/static/js/var-explorer.js`, `var-charts.js`, `web/static/css/var.css`) over `/api/v1/var`, not a Sutra: a Sutra's `source:` reads a kind, and the parametrised sources a VaR panel needs come with reactive connectors (R2). The portfolio and position pages are Sutras, with the new UI kit fragment `pnl-distribution@1` |
+
+**The compute boundary.** Everything in V0 to V3 is base VaR: sums of stored vectors and measures over the sums, in the server's JVM on
+a bounded pool (`drishti.var.threads`). The heavy work that needs Python or a pricer (what-if pricing over the scenarios, V4; intraday
+repricing, V5) is a separate request of whole trades to price, which the compute workers of PYTHON_COMPUTE.md serve: any number of
+workers (their count is configuration, never code), one trade or a batch each, the 509 values each returns joining the intraday layer
+as a vector. Nothing in the engine assumes one worker or calls one in its request path.
+
+### 18.2 What it does
+
+- **Scopes** (section 6): the grammar as designed, plus `TRD:` (trades), `PORT:` (a stored portfolio), `CAPTURE:` (a capture's members)
+  and node aliases (`DESK:RATES` = `DESK:DESK-RATES` = `NODE:MGMT~DESK-RATES`). `WHERE:` runs a small part of DEL over the positions'
+  columns (`PositionRule`; the same grammar in `tools/packgen/var/rules.py`). Scopes resolve to sets of trade ordinals (exact union,
+  difference, intersection); a scope's vector is planned over the node aggregates (a whole node is its aggregate, a node minus a few
+  trades its aggregate minus them, scattered trades one parallel pass); the plan never changes the result (tested against brute force).
+- **Measures** (section 7): VaR by the rank rule (default k-th worst, k = ceil(N (1 − a)): the 6th of 509; `interpolated` by setting),
+  ES (the mean of the 13 worst at 97.5%), standalone, component (Euler on the five scenarios around rank k, **scaled to add up to the
+  VaR exactly**; component ES adds up to ES), incremental (VaR without the part, recomputed), marginal (per million of market value) and
+  diversification. Historical method, equal weights, 1-day; `age-weighted` and `filtered`, 10-day and stressed sets are not built.
+- **History and backtesting** (section 11): a node's official figures from `var-node` (250 days), exceptions against the previous
+  day's VaR, the Basel light (limits scaled for a shorter history), Kupiec's and Christoffersen's statistics; any other scope replays
+  today's members over the last 250 scenario days (in-sample, labelled). Acerbi–Székely and the overnight precomputation job are not built
+  (the demo data carries the nodes' history; the engine sums every node when a date loads).
+- **Baskets** (section 6.3): saved from the explorer's *New scope*, in the content store under `var/baskets/<owner>/`, versioned,
+  shared read-only with users or roles, read as `BASKET:<owner>/<name>`.
+- **Captures** (new, product owner 2026-10-24): an immutable snapshot of a scope's numbers, full vector, members and provenance, in the
+  content store under `var/captures/<owner>/`; listed per scope, reopened exactly, compared with another capture or with now, exported as
+  CSV; `VAR CAPTURE <id>`.
+- **Entitlements** (section 12): per role and node, `positions` or `aggregate` (`drishti.var.access`); a role without an entry sees
+  every node when it may open `pnl-vector`. Scopes naming positions, trades or rules are refused to a viewer who sees them in aggregate
+  only. Results are cached per date, data version, view and scope.
+- **Audit**: every headline answer (`var-view`), capture (`var-capture`) and basket change; who, the scope, the date and version, the
+  view, the VaR and ES, the members' hash and the time.
+- **The API** (section 14): `GET /api/v1/var/scope?scope=` (and `/scopes/{scope}` for a scope without a slash), `/scope/path`,
+  `/scope/history`, `/scope/contributions?by=&scenario=`, `/tree`, `/status`, `POST /reload`, `/baskets`, `/captures`, `/compare`. The
+  sandboxes of section 8 and the CLI verbs are not built.
+
+### 18.3 Decisions on the open questions (the design's recommended defaults)
+
+| Question | Decision |
+|---|---|
+| 1. Which pack | the **market-risk** pack |
+| 2. The existing `var` kind | **kept** as sample data beside the engine; `VAR VAR-RATES` still opens it, `VAR <word> …` opens the explorer |
+| 3. Rank rule | **the 6th worst of 509** (k = ceil(N (1 − a))), configurable (`drishti.var.rank-rule: interpolated`) |
+| 4. Precision | **float64** in the lake, in memory and in sums; no float32 cache |
+| 5. Risk-class split | **not in 2.8.0** (no `PNL_BY_RISK_CLASS`) |
+| 6. Retention | not decided by the engine: the demo keeps the last business date's vectors and 250 days of node figures |
+| 7. 10-day VaR | not built; the screens say *1 day* |
+| 8. Who produces vectors | **the bank's batch**; Drishti loads them (the demo's come from a synthetic factor model) |
+| 9. Entitlement source | **in Drishti** (`drishti.var.access`) |
+| 10. Demo data size | **about 3.5 MB**: one business date of vectors (1,673 trades), 250 days of node figures; not 21 MB |
+| VAR_DATA_MODEL.md 1. Position grain | **vectors at trade grain**; a position is a holding of one instrument in one book netting its trades (VAR_DATA_MODEL.md section 18) |
+| VAR_DATA_MODEL.md 9. Roaring bitmaps | **not added**: a plain bitmap of the date's rows (java.util.BitSet) is small enough |
+
+### 18.4 Scale
+
+The engine is written for the whole bank: the vector store holds rows in `double[]` chunks of 65,536 rows (no object per row, nothing
+boxed), within a memory budget (`drishti.var.memory-budget-mb`; a date that would exceed it is refused with the reason); a date's
+rows are put in hierarchy order once, so every book and position is one run of ordinals; every node's vector is summed when the date
+loads (the cached aggregates the planner uses); scopes are bitmaps; sums run on a bounded pool on every core, slices added in a fixed
+order (the same scope gives the same bits). Section 13.2 has the measured numbers next to the targets. What is not built for scale
+yet: the sharding of the store across Drishti\*net (V6), the local memory-mappable copy of a loaded date, and incremental maintenance
+of node aggregates by intraday deltas (V5: with no intraday events in V0 to V3, a new batch reloads the date).
+
+### 18.5 Tests
+
+`drishti-compute`: `VarMathTest` (hand-made vectors: the 6th worst and the mean of 13, ties, components adding up to VaR and ES, a long
+and a short netting), `VectorStoreTest` (sums against brute force across chunks, parallel equal to serial, set algebra, the budget),
+`VarBookTest` (hierarchy order, node vectors equal the sums of their positions, the planner equal to brute force for random scopes,
+overlaps counted once, trade, position and desk VaR consistent), `ScopeAndRuleTest`, `BacktestTest`, `VarScaleBenchmark` (opt-in).
+`plugins/drishti-plugin-delta`: `DeltaVectorColumnTest` (a vector column written and read back to the bit, in bulk and in a document).
+`tools/lake/test_vectors.py` (the Python writer). `tools/packgen/var/test_var_data.py` (the demo data: positions net their trades,
+node vectors, portfolio membership by type). `drishti-server`: `VarApiTest` (a hand-computed lake: every measure, portfolios and
+overlaps, contributions, history, entitlements, baskets, a capture read back after the data changes). `drishti-console`:
+`test_var_explorer_browser.py` (the command, a drill from bank to trade in place with the paint time, the tabs, an ad-hoc basket saved
+and captured, the portfolio and position pages, a phone), with the demo connector off.

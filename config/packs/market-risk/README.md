@@ -73,7 +73,11 @@ generated-by: tools/packgen/banking/make_docs.py
 ## What it is
 
 Market-risk results over the trading pack's trades: value at risk and expected shortfall by desk, stress scenarios and their results,
-FRTB standardised sensitivities, P&L explain and trade valuations (mark-to-market, P&L and sensitivities per trade).
+FRTB standardised sensitivities, P&L explain and trade valuations (mark-to-market, P&L and sensitivities per trade). Since 2.8.0
+(unreleased) also the **VaR engine's data**: positions (holdings netting their trades), portfolios (hierarchy, rule, basket), one P&L
+vector per trade over 509 historical scenario days, the MGMT and LEGAL hierarchies with VaR limits and every node's 250-day history.
+The VaR explorer (`VAR DESK DESK-RATES <GO>`, [VAR_EXPLORER.md](../../../docs/guides/VAR_EXPLORER.md)) computes VaR, ES and
+contributions for any set of these trades; `PORT <id>` and `POS <id>` open a portfolio's and a position's pages.
 
 ## Data structures
 
@@ -259,22 +263,24 @@ Links: `COUNTERPARTY` → `counterparty`, `DESK` → `desk`, `PORTFOLIO` → `bo
 
 **Position** · mnemonic `POS` · read through connector `risk-store`.
 
+A holding of one instrument in one book, netting the trades that build or reduce it (VAR_DATA_MODEL.md section 18). Data: tools/packgen/var/make_var_data.py.
+
 **Id:** pattern `^POS-`.
 
 Fields, from 2 sample documents:
 
 | Field | Type | Example | Description |
 |---|---|---|---|
-| `POSITION_ID` | string | `POS-BOOK-EQD-2~EQ_ASIAN-USD-2029Q2` | link to `position` |
+| `POSITION_ID` | string | `POS-BOOK-EQD-2~EQ_ASIAN-USD-2029Q2` | POS-<book>~<instrument>: one position per instrument per book on a business date; link to `position` |
 | `BUSINESS_DATE` | date | `2026-09-30` | — |
-| `INSTRUMENT_ID` | string | `INS-EQ_ASIAN-USD-2029Q2` | Instrument |
+| `INSTRUMENT_ID` | string | `INS-EQ_ASIAN-USD-2029Q2` | The instrument: product, currency, underlying and maturity quarter |
 | `INSTRUMENT` | string | `Equity Asian option USD 2029-04` | What the position holds: the product, its currency, its underlying and its maturity. Trades of the same instrument in one book are one position. |
 | `POSITION_TYPE` | string | `fungible` | — |
-| `DIRECTION` | string | `SHORT` | LONG when the position's net quantity is above zero (more bought than sold), SHORT when below. Its trades may be of both directions: they net. |
-| `QUANTITY` | number | `-810529060.0` | The signed sum of the position's trades' quantities (notional for swaps, units for securities): a buy adds, a sell takes away. |
+| `DIRECTION` | string | `SHORT` | LONG, SHORT or FLAT: the sign of the net quantity |
+| `QUANTITY` | number | `-810529060.0` | The signed sum of the trades' quantities (a buy adds, a sell takes away) |
 | `GROSS_QUANTITY` | number | `7050772940.0` | — |
-| `TRADE_IDS` | list of strings |  | link to `trade` |
-| `TRADE_QUANTITIES` | list of objects |  | Nested: see below |
+| `TRADE_IDS` | list of strings |  | The trades in the position (each links to the trade); link to `trade` |
+| `TRADE_QUANTITIES` | list of objects |  | Each trade's signed quantity, its own VaR and its component of the position's VaR |
 | `TRADE_COUNT` | integer | `18` | Trades |
 | `LONG_TRADES` | integer | `9` | — |
 | `SHORT_TRADES` | integer | `9` | — |
@@ -297,11 +303,11 @@ Fields, from 2 sample documents:
 | `TAGS` | list or list of strings |  | — |
 | `VAR_99` | integer | `52808` | The loss the portfolio is expected not to exceed on 99 of 100 trading days, read from the 1st percentile of the revalued scenario P&L (historical simulation). (USD) |
 | `ES_975` | integer | `52234` | The average loss on the worst 2.5% of scenario days. It looks into the tail that VaR ignores, and it is the measure the FRTB internal-models approach uses for capital. (USD) |
-| `COMPONENT_VAR` | integer | `51216` | The position's share of its book's VaR (Euler allocation): the shares of a book's positions add up to the book's VaR; a hedge has a negative share. (USD) |
+| `COMPONENT_VAR` | integer | `51216` | The position's share of its book's VaR (Euler; the shares add up to the book's VaR) |
 | `BOOK_VAR` | integer | `426663` | The 1-day 99% VaR of the whole book the position is held in. (USD) |
 | `PCT_OF_BOOK_VAR` | number | `0.12` | The component VaR over the book's VaR. |
 | `SCENARIO_SET_ID` | string | `HS-509` | — |
-| `PNL` | list of integers |  | The position's P&L under each historical scenario day (509 of them): the sum of its trades' vectors. (USD) |
+| `PNL` | list of integers |  | The position's P&L under the 509 scenario days: the sum of its trades' vectors (a list<double> column in the lake) |
 | `VAR_SCOPE` | string | `POS:POS-BOOK-EQD-2~EQ_ASIAN-USD-2029Q2` | — |
 
 Nested structures:
@@ -316,6 +322,8 @@ Links: `COUNTERPARTY` → `counterparty`, `DESK` → `desk`, `LEGAL_ENTITY` → 
 
 **Portfolio** · mnemonic `PORT` · read through connector `risk-store`.
 
+A set of positions: a hierarchy node, a rule over the positions' columns, or a basket of positions and trades. Portfolios may overlap.
+
 **Id:** pattern `^PF-`.
 
 Fields, from 2 sample documents:
@@ -325,8 +333,8 @@ Fields, from 2 sample documents:
 | `PORTFOLIO_ID` | string | `PF-USD-RATES` | link to `portfolio` |
 | `NAME` | string | `USD rates exposure` | — |
 | `OWNER` | string | `group-risk` | Who keeps the portfolio's definition. |
-| `TYPE` | string | `RULE` | HIERARCHY: a node of the bank's hierarchy (a desk, a book). RULE: every position whose columns meet a condition. BASKET: positions and trades someone picked. |
-| `DEFINITION` | object |  | Nested: see below |
+| `TYPE` | string | `RULE` | HIERARCHY, RULE or BASKET |
+| `DEFINITION` | object |  | NODE (a hierarchy node), RULE (a condition) or MEMBERS (positions and trades) |
 | `ROLLS_UP_TO` | object |  | Nested: see below |
 | `LIMIT_VAR` | integer | `1500000` | The VaR the portfolio may take. (USD) |
 | `BUSINESS_DATE` | date | `2026-09-30` | — |
@@ -342,14 +350,14 @@ Fields, from 2 sample documents:
 | `VAR_99` | integer | `1001253` | The loss the portfolio is expected not to exceed on 99 of 100 trading days, read from the 1st percentile of the revalued scenario P&L (historical simulation). (USD) |
 | `ES_975` | integer | `978359` | The average loss on the worst 2.5% of scenario days. It looks into the tail that VaR ignores, and it is the measure the FRTB internal-models approach uses for capital. (USD) |
 | `LIMIT_USE` | number | `0.6675` | The VaR over the portfolio's VaR limit. |
-| `POSITIONS` | list of objects |  | Nested: see below |
+| `POSITIONS` | list of objects |  | The positions on the date, each with its VaR and component VaR |
 | `BY_PRODUCT` | list of objects |  | Nested: see below |
 | `BY_CURRENCY` | list of objects |  | Nested: see below |
 | `BY_DIRECTION` | list of objects |  | Nested: see below |
 | `TOP_CONTRIBUTORS` | list of objects |  | Nested: see below |
 | `ALL_TRADES` | null |  | — |
 | `VAR_SCOPE` | string | `PORT:PF-USD-RATES` | — |
-| `PNL` | list of integers |  | The portfolio's P&L under each historical scenario day: the sum of its members' vectors, each trade counted once. (USD) |
+| `PNL` | list of integers |  | The portfolio's P&L under the scenario days, each trade counted once |
 
 Nested structures:
 
@@ -370,15 +378,17 @@ Links: `PORTFOLIO_ID` → `portfolio`.
 
 **P&L vector (509 scenarios)** · mnemonic `PNLV` · read through connector `risk-store`.
 
+One trade's P&L under each of the 509 scenario days, in USD: the grain every VaR is summed from
+
 **Id:** pattern `^PV-`.
 
 Fields, from 1 sample document:
 
 | Field | Type | Example | Description |
 |---|---|---|---|
-| `VECTOR_ID` | string | `PV-MX-20000209-HS-509` | — |
+| `VECTOR_ID` | string | `PV-MX-20000209-HS-509` | PV-<trade>-HS-509 |
 | `TRADE_ID` | string | `MX-20000209` | link to `trade` |
-| `POSITION_ID` | string | `POS-BOOK-EQD-2~EQ_ASIAN-USD-2029Q2` | link to `position` |
+| `POSITION_ID` | string | `POS-BOOK-EQD-2~EQ_ASIAN-USD-2029Q2` | The position the trade belongs to; link to `position` |
 | `INSTRUMENT_ID` | string | `INS-EQ_ASIAN-USD-2029Q2` | — |
 | `BUSINESS_DATE` | date | `2026-09-30` | — |
 | `SCENARIO_SET_ID` | string | `HS-509` | — |
@@ -398,7 +408,7 @@ Fields, from 1 sample document:
 | `QUANTITY` | number | `-180000000.0` | — |
 | `REPORTING_CCY` | string | `USD` | — |
 | `PV` | integer | `-83827` | — |
-| `PNL` | list of integers |  | — |
+| `PNL` | list of integers |  | 509 values, oldest scenario first, stored as a list<double> column (out of the document) |
 | `STATUS` | string | `ok` | — |
 | `PRICER` | string | `demo-factor-model` | — |
 | `MODEL_VERSION` | string | `demo-1` | — |
@@ -412,6 +422,8 @@ Links: `COUNTERPARTY` → `counterparty`, `DESK` → `desk`, `LEGAL_ENTITY` → 
 
 **Scenario set** · mnemonic `SSET` · read through connector `risk-store`.
 
+The scenario days of a business date: HS-509, historical simulation over 509 business days
+
 **Id:** pattern `^HS-`.
 
 Fields, from 1 sample document:
@@ -420,7 +432,7 @@ Fields, from 1 sample document:
 |---|---|---|---|
 | `SCENARIO_SET_ID` | string | `HS-509` | — |
 | `BUSINESS_DATE` | date | `2026-09-30` | — |
-| `SCENARIO_DATES` | list of dates |  | — |
+| `SCENARIO_DATES` | list of dates |  | The 509 scenario days, oldest first: index i of every vector is day i |
 | `SCENARIO_COUNT` | integer | `509` | — |
 | `WINDOW_START` | date | `2024-09-17` | — |
 | `WINDOW_END` | date | `2026-09-29` | — |
@@ -433,6 +445,8 @@ Fields, from 1 sample document:
 ### `risk-hierarchy`
 
 **Risk hierarchy node** · mnemonic `HIER` · read through connector `risk-store`.
+
+A node of a hierarchy: MGMT (bank, division, desk, book) or LEGAL (bank, legal entity, desk, book), with its VaR limit
 
 **Id:** pattern `^(MGMT|LEGAL)~`.
 
@@ -447,8 +461,8 @@ Fields, from 2 sample documents:
 | `NAME` | string | `LE-NY` | — |
 | `REF` | object |  | Nested: see below |
 | `CHILDREN` | list of strings |  | — |
-| `BOOKS` | list of strings |  | — |
-| `LIMIT_VAR` | integer | `8500000` | — |
+| `BOOKS` | list of strings |  | Every book beneath the node |
+| `LIMIT_VAR` | integer | `8500000` | The node's VaR limit (USD) |
 | `BUSINESS_DATE` | date | `2026-09-30` | — |
 | `VALID_FROM` | date | `2026-01-02` | — |
 | `VALID_TO` | null |  | — |
@@ -464,6 +478,8 @@ Links: `NODE_ID` → `risk-hierarchy`.
 ### `var-node`
 
 **Official VaR of a hierarchy node** · mnemonic `VNODE` · read through connector `risk-store`.
+
+A node's official VaR, ES and hypothetical P&L on one business date (250 days kept: the backtest)
 
 **Id:** pattern `^VN-`.
 
@@ -481,8 +497,8 @@ Fields, from 2 sample documents:
 | `SCENARIO_SET_ID` | string | `HS-509` | — |
 | `VAR_99` | integer | `2938233` | — |
 | `ES_975` | integer | `3599094` | — |
-| `HYPO_PNL` | integer | `388197` | — |
-| `EXCEPTION` | boolean | `false` | — |
+| `HYPO_PNL` | integer | `388197` | The node's P&L of the day with its positions unchanged |
+| `EXCEPTION` | boolean | `false` | True when the day's loss exceeded the previous day's VaR |
 | `PREVIOUS_VAR` | integer | `2919754` | — |
 | `LIMIT` | integer | `4200000` | — |
 | `LIMIT_USE` | number | `0.6996` | — |

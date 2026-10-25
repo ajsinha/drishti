@@ -208,6 +208,26 @@ up together, no headline that is not its own series' point, no curve apart from 
 (the documents new or different that day, whole; an empty file when nothing changed). A file that would pass 9 MB is split into
 `.part-001`, `.part-002` … (`--part-mb`). A day's state is the snapshot with every change up to that day applied by key.
 
+## The VaR engine's data (market-risk, dated by its documents)
+
+Six more market-risk folders feed the VaR engine ([VAR_DATA_MODEL.md section 18](../../docs/architecture/VAR_DATA_MODEL.md#18-as-built-in-280),
+[VAR_EXPLORER.md](../../docs/guides/VAR_EXPLORER.md)). They are written by `tools/packgen/var/make_var_data.py` (which
+`make_testdata.py` runs) from the trades and desks above, and are **dated by their documents** (`dated-by: BUSINESS_DATE` in
+`testdata.yaml`): no snapshot and changes, `lake demo` loads each folder in one run, every document on its own `BUSINESS_DATE`, moved
+with the other business dates. 3.5 MB in all.
+
+| Folder | Kind · key | Dates | Documents |
+|---|---|---|---|
+| `market-risk/position` | `position` · `POSITION_ID` | the last day | 196 positions netting 1,673 trades (44 hold buys and sells), with their VaR, ES, component VaR and vector |
+| `market-risk/pnl-vector` | `pnl-vector` · `VECTOR_ID` | the last day | one 509-scenario P&L vector per trade (`PNL`, a `list<double>` column in the lake), in two files |
+| `market-risk/scenario-set` | `scenario-set` · `SCENARIO_SET_ID` | the last day | HS-509: the 509 scenario days |
+| `market-risk/risk-hierarchy` | `risk-hierarchy` · `NODE_ID` | the last day | 88 nodes: MGMT (bank, 2 divisions, 10 desks, 30 books) and LEGAL (bank, 4 legal entities, desks, books), with VaR limits |
+| `market-risk/var-node` | `var-node` · `VAR_NODE_ID` | 250 business days | each node's official VaR, ES and hypothetical P&L; its vector on the last day |
+| `market-risk/portfolio` | `portfolio` · `PORTFOLIO_ID` | the last day | 7 portfolios: HIERARCHY, RULE and BASKET, overlapping |
+
+`python3 tools/packgen/var/make_var_data.py --check` says whether they match the trades; `--budget 0 --out <a folder outside the
+repository>` values every live trade (a sizing set, never committed).
+
 ## The market snapshot (news-and-markets, offline)
 
 The news-and-markets pack computes its quotes (Yahoo Finance, the `yfinance` connector) and headlines (Google News, the `news`

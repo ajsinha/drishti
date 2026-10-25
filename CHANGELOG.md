@@ -17,6 +17,30 @@
 
 ## Unreleased
 
+- **The VaR engine, waves V0 to V3 (2.8.0)** ([VAR_ENGINE.md section 18](docs/architecture/VAR_ENGINE.md#18-as-built-in-280-waves-v0-to-v3),
+  [VAR_DATA_MODEL.md section 18](docs/architecture/VAR_DATA_MODEL.md#18-as-built-in-280), [VAR_EXPLORER.md](docs/guides/VAR_EXPLORER.md)):
+  - **Data:** the market-risk pack gains `position` (a holding of one instrument in one book netting its trades, LONG or SHORT),
+    `portfolio` (HIERARCHY, RULE or BASKET, overlapping), `pnl-vector` (one 509-scenario P&L vector per trade: the grain, so trade,
+    position and any basket are exact), `scenario-set`, `risk-hierarchy` (MGMT and LEGAL trees with VaR limits) and `var-node` (each
+    node's official VaR, ES and hypothetical P&L over 250 days); mnemonics `POS`, `PORT`, `PNLV`, `SSET`, `HIER`, `VNODE`. Demo data
+    from `tools/packgen/var/make_var_data.py` (196 positions, 1,673 trades, a synthetic correlated fat-tailed market; 3.5 MB), dated by
+    its documents (`testdata.yaml` `dated-by`); 83 demo tables.
+  - **Vector columns:** `layout.<kind>.vectors` keeps a list of numbers as a `list<double>` column out of the document (`lake build
+    --vector`, both writers); the Delta plugin streams a date's vectors (`SourcePlugin.vectors`, `VectorSink`) and puts them back into a
+    fetched document.
+  - **Engine** (new module `drishti-compute`, and `com.ash.drishti.server.var`): an in-memory vector store (row-major `double[]` chunks,
+    hierarchy order, a memory budget), exact set algebra over trade ordinals, a planner over cached node aggregates, parallel sums on a
+    bounded pool; VaR (the 6th worst of 509, configurable), ES, standalone, component (adds up to the VaR), incremental and marginal VaR,
+    diversification; history, Basel light, Kupiec and Christoffersen; entitlements by node (`drishti.var.access`: positions or
+    aggregate); audit entries; baskets and immutable **captures** (reopen, compare with another or now, CSV) in the content store;
+    `/api/v1/var/...`. Scale benchmark: 1 M trades summed in 58 ms on one workstation, a 50,000-position basket in 52 ms.
+  - **The VaR explorer** (`VAR DESK DESK-RATES <GO>`, `/var`): the approved mock-up: scope tree (books open to positions, positions to
+    trades), breadcrumb, six tiles, the P&L path (histogram, worst 25, by date, ranked table, scenario drill), VaR/ES history with
+    exceptions, contributions by child, position or trade, captured results, the provenance box; *+ New scope* builds a basket live.
+    Panels update in place, answers cached per scope, children fetched ahead: a desk paints 9 to 35 ms after the click.
+  - **Pages:** the portfolio's (`PORT PF-RATES-DESK`: positions with VaR and component VaR, a click opens the position's trades beside;
+    by product, currency and direction) and the position's (`POS …`: its trades netting, its distribution); UI kit fragment
+    `pnl-distribution@1`.
 - **2.8.0 designs (design only, nothing built):** reactive connectors that compute when asked and on events, with point-in-time
   stamps, coalescing and per-user isolation ([REACTIVE_CONNECTORS.md](docs/architecture/REACTIVE_CONNECTORS.md)); out-of-process
   Python and Java compute workers with pinned, administrator-approved requirements, QLRisk as the default pricer (design only until

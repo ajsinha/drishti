@@ -579,6 +579,20 @@ drishti:
     memory-budget-mb: ${DRISHTI_VAR_MEMORY_MB:0}       # most memory the loaded dates' vectors take (0: a quarter of the heap)
     hot-dates: 2                     # business dates kept loaded (the newest)
     history-days: 250                # history and backtest window
+    component-scale-to-var: true     # components scaled to add up to the VaR exactly (false: to the smoothed VaR)
+    parallel-rows: 4096              # the fewest rows a sum splits across threads
+    rows-per-chunk: 65536            # rows per chunk of the in-memory vector store
+    histogram-bins: 42               # bins of the P&L distribution sent to the screen
+    max-parts: 5000                  # most parts a contribution table computes at once
+    path-page: 60                    # rows of the ranked P&L path per page
+    kinds:                           # the kinds the engine reads (the market-risk pack's)
+      vector: pnl-vector
+      position: position
+      hierarchy: risk-hierarchy
+      scenario-set: scenario-set
+      node: var-node
+      portfolio: portfolio
+    access: {}                       # per role, per node: positions | aggregate (drishti.var.access.<role>[MGMT~DESK-RATES]=aggregate)
   calc:                              # Calc: Python in the browser (docs/guides/PYTHON_CALC.md); the server never runs the code
     enabled: ${DRISHTI_CALC_ENABLED:true}   # also needs a role with calc, and a pack that enables it for the view's kind
     max-column-rows: 250000          # drishti.columns() returns at most this many entities (the browser holds them all)

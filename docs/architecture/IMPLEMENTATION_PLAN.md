@@ -298,8 +298,8 @@ Releases 1.11 to 1.21; each is in [CHANGELOG.md](../../CHANGELOG.md) with detail
 ## 2.8.0: write-back, reactive connectors and VaR (planned)
 
 Scope agreed by the product owner on 2026-10-24: **write-back**, **reactive connectors** and a **generic VaR engine**. Packs stay as they
-are; connectors may be static, live, on-demand or reactive; a screen combines as many connectors as it needs, on one as-of. All of it
-is planned, none of it is built. The designs:
+are; connectors may be static, live, on-demand or reactive; a screen combines as many connectors as it needs, on one as-of. Waves V0 to V3
+of the VaR engine are built (unreleased: VAR_ENGINE.md section 18, the guide VAR_EXPLORER.md); the rest is planned. The designs:
 
 | Design | What it decides |
 |---|---|
@@ -317,7 +317,7 @@ is planned, none of it is built. The designs:
 | W1–W5 | write-back as designed (lanes, edit log, approval, cluster, outbox and connector writes, forms and phone) | [WRITE_BACK.md](WRITE_BACK.md) section 14 |
 | C1–C3 | compute workers: the supervisor and Python pools (Linux and Windows), Arrow transport, locked environments, approval | [PYTHON_COMPUTE.md](PYTHON_COMPUTE.md) section 16 |
 | R1–R4 | reactive connectors: the plugin and its interface, typed source parameters, cache and single flight, the worker bridge with progress, triggers with coalescing and ordering, per-user isolation | [REACTIVE_CONNECTORS.md](REACTIVE_CONNECTORS.md) section 18 |
-| V0–V3 | VaR data (positions, vectors, hierarchies, vector columns in the lake tools and the Delta plugin), the engine and the VaR explorer, history and backtesting, baskets, entitlements and audit | [VAR_ENGINE.md](VAR_ENGINE.md) section 15, [VAR_DATA_MODEL.md](VAR_DATA_MODEL.md) |
+| V0–V3 (built) | VaR data (positions, vectors, hierarchies, vector columns in the lake tools and the Delta plugin), the engine and the VaR explorer, history and backtesting, baskets, captures, entitlements and audit; the portfolio and position pages | [VAR_ENGINE.md](VAR_ENGINE.md) section 15, [VAR_DATA_MODEL.md](VAR_DATA_MODEL.md) |
 | W6–W7 | forms save through connectors; applied changes trigger recomputes; viewers updated | [WRITE_BACK.md](WRITE_BACK.md) section 18 |
 | C4–C6, V4 | the pricer interface and stand-in; what-if; **QLRisk only if its API is declared stable, otherwise in 2.8.x**; the QuantLib Java worker with its parity test (Linux) | [PYTHON_COMPUTE.md](PYTHON_COMPUTE.md) section 9, [VAR_ENGINE.md](VAR_ENGINE.md) section 8 |
 | R5–R6, V5–V6 | one as-of per screen; the cluster (key owners, sharded vector store); intraday VaR from write-backs; the targets measured on a real server | [REACTIVE_CONNECTORS.md](REACTIVE_CONNECTORS.md), [VAR_ENGINE.md](VAR_ENGINE.md) section 13 |

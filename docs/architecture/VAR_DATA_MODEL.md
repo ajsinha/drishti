@@ -15,11 +15,13 @@
 -->
 # The VaR data model: positions, portfolios and the P&L vector store
 
-Status: **design, not built.** Planned for **2.8.0** (product owner, 2026-10-24). This is the companion of
+Status: **partly built (2.8.0, unreleased).** The data of waves V0 to V3 is built: positions, portfolios, the trades' P&L vectors as a
+`list<double>` column, hierarchies, the nodes' history, the vector store in memory; [section 18](#18-as-built-in-280) says what was
+built, the **vector grain chosen (the trade)** and where it differs from the sections above. This is the companion of
 [VAR_ENGINE.md](VAR_ENGINE.md): that document says what the engine computes and shows; this one says **what it computes over and how
 that is stored and served** so that an interactive VaR on any scope answers in well under a second and the overnight VaR of every
-desk and portfolio of a large bank takes minutes. Everything named below that does not exist in the code today (kinds, fields,
-settings, modules, tools' options) is **planned (2.8.0)**; what exists is cited with its file.
+desk and portfolio of a large bank takes minutes. A part section 18 does not list as built (cubes, sharding, the local memory-mapped
+copy, restatement archiving, the `--sort-by` option) is **planned (2.8.0)**; what exists is cited with its file.
 
 ## Contents
 
@@ -40,6 +42,7 @@ settings, modules, tools' options) is **planned (2.8.0)**; what exists is cited 
 15. [Fit with the repository's data pattern, and what must change](#15-fit-with-the-repositorys-data-pattern-and-what-must-change)
 16. [Worked examples](#16-worked-examples)
 17. [Open questions for the product owner](#17-open-questions-for-the-product-owner)
+18. [As built in 2.8.0](#18-as-built-in-280)
 
 ---
 
@@ -647,3 +650,60 @@ relative in any order. A property test draws random scopes over the demo data an
    currency)?
 8. **Demo data size.** About 200 positions over 60 COBs, about 21 MB compressed (proposed); acceptable to commit?
 9. **Roaring bitmaps.** Accept the small Apache-2.0 Roaring library as a new dependency of `drishti-compute`?
+
+## 18. As built in 2.8.0
+
+The data of the VaR engine's waves V0 to V3 (2.8.0, unreleased). The engine as built is [VAR_ENGINE.md section 18](VAR_ENGINE.md#18-as-built-in-280-waves-v0-to-v3).
+
+### 18.1 The vector grain: the trade
+
+The product owner (2026-10-24): *a position is not a trade*. A position is a holding: an instrument, a signed quantity (LONG or
+SHORT), and the trades that build or reduce it; VaR must be exact for a trade, a position, a book, a portfolio and any basket of trades
+or positions. **P&L vectors are stored per trade** (`pnl-vector`, one row per trade per business date, `VECTOR_ID = PV-<trade>-HS-509`,
+its `POSITION_ID` the trade's position). A position's vector is the sum of its trades' (P&L adds), a book's the sum of its positions',
+and so on up. Why the trade, not the position (sections 3 and 13.4 proposed the position):
+
+- **Trade-level VaR is exact** for every product, linear or not; a position's is exact too, by additivity. Storing positions only
+  would make a trade's VaR exact for linear holdings alone (scaling by quantity, section 13.4) and unavailable for an option.
+- **Long and short net by construction:** the long and the short trades of one instrument add up in the position's vector; positions
+  net in a portfolio the same way.
+- **Baskets of trades and of positions** are both sets of trade ordinals: a basket naming one trade of a ten-trade position holds that
+  trade's part, exactly.
+- **The cost:** more rows than positions (1,673 trades in 196 positions in the demo). In memory a position is a run of consecutive
+  trade ordinals, so summing a position or a book is one sequential scan; a bank whose batch values positions can store one row per
+  position (one "trade" each) with nothing else changing.
+
+The demo also stores each **position's** and each **portfolio's** vector (`PNL` on `position` and `portfolio`, a vector column too),
+derived as the sums, for their pages' distributions; the engine never reads them.
+
+### 18.2 The kinds as built
+
+| Kind | One record per | Key fields (UPPER_SNAKE) |
+|---|---|---|
+| `position` | position and business date | `POSITION_ID` (`POS-<book>~<instrument>`, e.g. `POS-BOOK-RATES-1~CMS_SPREAD_OPT-AUD-2028Q2`), `INSTRUMENT_ID` (`INS-<product>-<currency>[-<underlying>]-<maturity quarter>`), `INSTRUMENT`, `DIRECTION` (LONG, SHORT, FLAT), `QUANTITY` (signed sum), `GROSS_QUANTITY`, `TRADE_IDS`, `TRADE_QUANTITIES` (each trade's signed quantity, direction, own VaR and component of the position's VaR), `LONG_TRADES`, `SHORT_TRADES`, `LEGAL_ENTITY`, `DIVISION`, `DESK`, `TT_BOOK`, `PORTFOLIO`, `COUNTERPARTY` (when one), `PRODUCT_GROUP`, `PRODUCT_TYPE`, `CURRENCY`, `MARKET_VALUE` (the trades' MTM), `NOTIONAL`, `LINEAR`, `TAGS`, `VAR_99`, `ES_975`, `COMPONENT_VAR` and `PCT_OF_BOOK_VAR` in its book, `PNL` |
+| `pnl-vector` | trade and business date | `VECTOR_ID`, `TRADE_ID`, `POSITION_ID`, `INSTRUMENT_ID`, the hierarchy, `PRODUCT_*`, `CURRENCY`, `COUNTERPARTY`, `DIRECTION`, `QUANTITY`, `PV`, `PNL` (509, list<double>), `STATUS`, `PRICER`, `MODEL_VERSION`, `BATCH_ID`, `RESTATEMENT` |
+| `scenario-set` | scenario set and business date | `SCENARIO_SET_ID` (HS-509), `SCENARIO_DATES` (509, oldest first), `WINDOW_START`, `WINDOW_END`, `HORIZON_DAYS`, `REVALUATION` |
+| `risk-hierarchy` | node and business date | `NODE_ID` (`MGMT~DESK-RATES`, `LEGAL~LE-NY`), `HIERARCHY` (MGMT: bank, division, desk, book; LEGAL: bank, legal entity, desk, book), `LEVEL`, `PARENT_ID`, `CHILDREN`, `BOOKS` (every book beneath), `REF`, `LIMIT_VAR` |
+| `var-node` | node and business date (250 days) | `VAR_NODE_ID` (`VN-<node>`), `NODE_ID`, `VAR_99`, `ES_975`, `HYPO_PNL`, `EXCEPTION`, `PREVIOUS_VAR`, `LIMIT`, `LIMIT_USE`, counts; `PNL` and `EXCEPTIONS_250` on the last date |
+| `portfolio` | portfolio and business date | `PORTFOLIO_ID` (`PF-…`), `NAME`, `OWNER`, `TYPE` (HIERARCHY, RULE, BASKET), `DEFINITION` (`NODE`, `RULE` or `MEMBERS` of positions and trades), `ROLLS_UP_TO`, `VALID_FROM`, `LIMIT_VAR`, and as of the date: `POSITIONS` (each with its VaR and component VaR), counts of longs and shorts, gross and net market value, `VAR_99`, `ES_975`, `LIMIT_USE`, `BY_PRODUCT`, `BY_CURRENCY`, `BY_DIRECTION`, `TOP_CONTRIBUTORS`, `PNL` |
+
+`pnl-hypothetical` (per position and date) is not built: the backtest of a node reads its `HYPO_PNL`; any other scope replays its
+members. Rule portfolios and baskets saved by people live in the content store (VAR_ENGINE.md section 18.2); the stored `portfolio`
+kind holds the demo's (and a bank's own) definitions.
+
+### 18.3 Storage and the pipeline
+
+- **Vector columns** (section 15): the pack's `layout.<kind>.vectors: [PNL]`; `lake build --vector` and both writers write
+  `list<double>` (`tools/lake/stage.py`, `writers.py`; `LakeWriter` type `vector`), the document keeping `{"$vector": "PNL"}`; the Delta
+  plugin streams a date's vectors (`SourcePlugin.vectors`, `VectorSink`, through `SourceRouter.vectors`) and puts a vector back into a
+  fetched document. Reading goes through Delta Kernel's own list reader (no custom fast path yet); the Python writer keeps SNAPPY and
+  default encodings (no `BYTE_STREAM_SPLIT` yet).
+- **Order:** the engine sorts a date's trades into hierarchy order in memory when it loads them (the lake's file order does not
+  matter); the lake-side `--sort-by` and partitioning by scenario set are not built.
+- **Demo data:** `tools/packgen/var/make_var_data.py` (`make_testdata.py` runs it) derives positions from the committed trades (whole
+  positions, up to 60 trades a book, positions holding both buys and sells first), values each trade over a synthetic market of about
+  forty correlated, fat-tailed factors (`factors.py`: Student-t shocks, GARCH clustering, a stress episode, crash days), writes the
+  six kinds into `data/testdata/market-risk/<kind>/` dated by their documents (`testdata.yaml` `dated-by: BUSINESS_DATE`: `lake demo`
+  loads each folder in one run, every date moved with the business dates) and the pack's reference samples and Sutra tests. One business
+  date of vectors and 250 days of node figures: **3.5 MB** (the open question 8 asked 21 MB for 60 dates of vectors).
+- **Precision:** float64 everywhere; the demo's P&Ls are whole USD.
