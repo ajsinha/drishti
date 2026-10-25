@@ -62,6 +62,7 @@ panels:
       - { label: LEI, bind: "link(%{rec}.LEI, 'lei-entity', %{rec}.LEI)" }          # the gleif pack's LEI record, when that pack is on
       - { label: Incorporated in, bind: "%{rec}.STATE_OF_INCORPORATION" }
       - { label: Fiscal year end (MM-DD), bind: "%{rec}.FISCAL_YEAR_END" }
+      - { label: Reporting currency, bind: "%{rec}.CURRENCY" }
       - { label: Headquarters, bind: "nonblank(%{rec}.HEADQUARTERS, %{rec}.BUSINESS_ADDRESS)" }
       - { label: Founded, bind: "%{rec}.FOUNDED" }
       - { label: Website, bind: "%{rec}.WEBSITE" }

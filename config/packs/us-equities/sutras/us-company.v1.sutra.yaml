@@ -41,7 +41,6 @@ strip:
   - { label: Ticker, bind: $.TICKER, emphasis: true }
   - { label: Industry (SIC), bind: $.SIC_DESCRIPTION }
   - { label: Fiscal year, bind: $.FISCAL_YEAR }
-  - { label: Currency, bind: $.CURRENCY }
   - { label: Revenue, bind: $.REVENUE, fmt: compact }
   - { label: Net income, bind: $.NET_INCOME, fmt: compact, tone: sign }
   - { label: Net margin, bind: $.NET_MARGIN, fmt: margin1, tone: sign }
@@ -64,7 +63,7 @@ panels:
     area: right
     rows: $.INDEXES
     search: false
-    empty: Not a member of the Dow 30, the Nasdaq-100 or the S&P 500 in Wikidata
+    empty: Not a member of the Dow 30, the Nasdaq-100, the S&P 500 or a bank list
     columns:
       - { label: Index, bind: "link(@.INDEX, 'index-membership', @.NAME)" }
       - { label: Member since, bind: "@.SINCE", fmt: date }
@@ -72,6 +71,6 @@ panels:
     with:
       title: About this page
       area: right
-      text: "Public data. The company, its SIC industry and its filings come from SEC EDGAR (public domain); the financials are the annual values of its 10-K XBRL filings, a fiscal year being the calendar year its period ends in. Index membership, headquarters and founding come from Wikidata (CC0), the LEI from GLEIF (CC0). No index weights, no GICS and no prices: the price history (F6) is read live, off as shipped, for internal use only."
+      text: "Public data. The company, its SIC industry and its filings come from SEC EDGAR (public domain); the financials are the annual values of its 10-K XBRL filings (a foreign bank's 20-F or 40-F, in the currency it reports in, under key facts), a fiscal year being the calendar year its period ends in. Index membership, headquarters and founding come from Wikidata (CC0), the LEI from GLEIF (CC0). No index weights, no GICS and no prices: the price history (F6) is read live, off as shipped, for internal use only."
   - { use: source-footer@1 }
 keys: { F5: "link($.LEI, 'lei-entity', 'LEI record')", F6: "link($.PRICE_HISTORY, 'price-history')", F7: "link($.SIC_SECTOR, 'sic-sector')", F9: raw }
