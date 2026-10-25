@@ -1422,6 +1422,12 @@ pauses. A suspected node refutes the suspicion by itself as soon as it hears of 
 | `DRS-5057` | content conflict (HTTP 409): the item (a Design) was changed by another node or tab since you read it, or it already exists. Reload and make the change again (docs/architecture/CONTENT_STORE.md) |
 | `DRS-5058` | a content-store key that is not valid (HTTP 400): empty, too long, a `..` segment or control characters |
 | `DRS-5059` | the content store could not be reached (HTTP 503): its database, bucket or shared folder failed; see the server log and `config/store/store.yaml` |
+| `DRS-9201` | compute is off on this server (HTTP 503): `compute.enabled` in `config/compute/compute.yaml` ([COMPUTE.md](../admin/COMPUTE.md#1-switch-it-on)) |
+| `DRS-9202` | a compute request or decision refused before any work (HTTP 409): an unknown pool, requirements waiting for approval or rejected, an environment approved but not built, or four eyes (the person who asked cannot approve); the message says which ([COMPUTE.md section 10](../admin/COMPUTE.md#10-when-something-is-wrong)) |
+| `DRS-9203` | a compute pool is busy (HTTP 429): its queue for the request's class is full; try again in a moment, or raise `workers.max` or the queue |
+| `DRS-9204` | a computation passed its time budget and was stopped (HTTP 504): the pool's `timeout` (or `timeout-batch`), waiting for a worker included |
+| `DRS-9205` | a computation failed (HTTP 502): it crashed, passed its CPU or memory limit, the sandbox refused something (a socket, a process, a write outside its scratch folder), or the engine refused in words; for any other failure the traceback is in the server's log under the request id |
+| `DRS-9206` | no such compute approval request, or no such computation waiting or running on this node (HTTP 404) |
 | `DRS-6001`–`DRS-6010` | user management (see [USER_MANAGEMENT.md](../admin/USER_MANAGEMENT.md)); `DRS-6005` is a locked account |
 | `DRS-6011` | a start-up warning in the server log, not an answer: a `drishti.security.redact` entry names no field of the loaded packs' samples, so it masks nothing. Write the field as the data spells it (masks match in any case and convention) or remove the entry; Admin → Health lists such entries under `masksMatchingNothing` |
 | `DRS-7001` | a share link that is not yours, or does not exist (HTTP 404; the two look the same on purpose). Ask the sender to share it with you again |

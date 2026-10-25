@@ -17,6 +17,22 @@
 
 ## Unreleased
 
+- **Compute workers, steps C1 to C3 (2.8.0, [PYTHON_COMPUTE.md](docs/architecture/PYTHON_COMPUTE.md),
+  [COMPUTE.md](docs/admin/COMPUTE.md)):** a new module, `drishti-compute`: a supervisor of out-of-process Python workers in pools (fork
+  mode on Linux, a fresh child per request; warm mode on Windows, reset and recycled), one request per worker, JSON-lines control and
+  Arrow files in a per-request scratch folder under `<data dir>/compute/` (removed when the request ends), correlation ids, progress,
+  cancellation, wall-time, CPU and memory limits, and an audit-hook sandbox (no sockets, no processes, no writes outside the scratch
+  folder). **As many workers as wanted:** the count is configuration per pool and per node (`compute.nodes.<node>`); a request can be
+  split into chunks and fanned out over every worker of this node and of the other Drishti\*net nodes that serve the pool, gathered in
+  order; fair scheduling by class (interactive, event, batch with its share) and by user (turns, an in-flight limit) with bounded
+  queues (`DRS-9203` busy). A pure-Python worker SDK (`drishti_compute`: the engine contract, an Arrow codec with no pyarrow, the
+  sample engine echo/sum/sum-vectors). `requires:` on connector files (Python lock with hashes, Java coordinates with sha256 and a
+  native-code scan, plugins); locked environments built offline with `pip --require-hashes`, a manifest checked at every worker start,
+  read-only; the four-eyes approval (requests and approved items in `drishti_compute_request` and `drishti_compute_approval` of both
+  schema files; revocable; audited): a connector with unapproved requirements stays off and says why. **Admin → Compute**; the
+  configuration `config/compute/compute.yaml` (off as shipped); errors `DRS-9201` to `DRS-9206`. A load test with a configurable
+  worker count (`ComputeLoadTest`; 16 to 64 workers measured, [COMPUTE.md section 9](docs/admin/COMPUTE.md#9-measured-the-load-test)).
+  Still planned: the pricer interface, QLRisk and the QuantLib Java worker (C4 to C6), the reactive connectors (R1 to R6).
 - **2.8.0 designs (design only, nothing built):** reactive connectors that compute when asked and on events, with point-in-time
   stamps, coalescing and per-user isolation ([REACTIVE_CONNECTORS.md](docs/architecture/REACTIVE_CONNECTORS.md)); out-of-process
   Python and Java compute workers with pinned, administrator-approved requirements, QLRisk as the default pricer (design only until

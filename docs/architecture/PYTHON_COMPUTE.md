@@ -15,9 +15,14 @@
 -->
 # Compute workers: Python and Java libraries for connectors, approved, pinned and isolated
 
-Status: **design, not built.** Planned for **2.8.0** (product owner, 2026-10-24). Everything named below that does not exist in the
-code today (settings, folders, modules, packages, endpoints) is **planned (2.8.0)**. QLRisk stays **design only** until its author
-declares its API stable. Related: [REACTIVE_CONNECTORS.md](REACTIVE_CONNECTORS.md) (the connectors that use these workers),
+Status: **steps C1 to C3 built in 2.8.0 (unreleased)**; C4 to C6 planned ([section 16](#16-build-plan)). Built: the `drishti-compute`
+module (supervisor, Python pools in fork and warm mode, JSON-lines control, Arrow scratch transport, limits and the sandbox, fair
+scheduling, fan-out over N workers and Drishti\*net nodes), the pure-Python worker SDK `drishti_compute` with its sample engine,
+`requires:` on connector files, locked environments with manifests, Java libraries by sha256, the four-eyes approval in the Drishti
+database, and Admin → Compute ([COMPUTE.md](../admin/COMPUTE.md), the operator's guide). Still **planned**: the pricer interface and the
+stand-in (C4), QLRisk (C5, and **design only** until its author declares its API stable), the QuantLib Java worker (C6), the reactive
+connectors that send work to the pools (REACTIVE_CONNECTORS.md R1 to R6), the planned `drishti.py compute`, the pre-approval file and per-pool OS
+users. Each section says what differs from the build where it does. Related: [REACTIVE_CONNECTORS.md](REACTIVE_CONNECTORS.md) (the connectors that use these workers),
 [VAR_ENGINE.md](VAR_ENGINE.md) (the first user), [QUANT_SERVICE.md](QUANT_SERVICE.md) (the earlier pricing-service proposal,
 reconciled in [section 14](#14-how-this-fits-with-what-exists)), [PYTHON_BI.md](../guides/PYTHON_BI.md) (the console's Python runner,
 built).
@@ -70,7 +75,7 @@ approved by an administrator) and **how it is kept from harming the server, the 
  │ reactive connector ── ComputeEngine bridge           │  control:   │ Python worker  (env A: drishti-var, numpy,   │
  │   │                                                  │  JSON lines │   polars, qlrisk 2.4.0, QuantLib 1.x wheels) │
  │   ▼                                                  │ ──────────▶ │   one request at a time; no network          │
- │ drishti-compute (planned module)                     │  data:      │   scratch: <data dir>/compute/scratch/<req>/ │
+ │ drishti-compute (module, built: C1-C3)               │  data:      │   scratch: <data dir>/compute/scratch/<req>/ │
  │   planner · admission · routing · Arrow transport    │  Arrow IPC  ├──────────────────────────────────────────────┤
  │   result cache · stamps · audit                      │ ◀────────── │ Python worker  (env B: another lock)         │
  │   supervisor: start, watch, limit, recycle, kill     │             ├──────────────────────────────────────────────┤
@@ -80,7 +85,7 @@ approved by an administrator) and **how it is kept from harming the server, the 
                                                                      └──────────────────────────────────────────────┘
 ```
 
-- **`drishti-compute`** (planned Maven module) is generic: nothing in it knows about VaR. It plans and admits requests, moves data as
+- **`drishti-compute`** (the Maven module, built) is generic: nothing in it knows about VaR. It plans and admits requests, moves data as
   Arrow, supervises workers, builds environments and records approvals.
 - **The VaR maths** is a separate, versioned Python package in the repository (planned: `compute/drishti-var`, its own
   `pyproject.toml` and tests), installed into the var-engine's locked environment like any other wheel. Drishti's own compute packages
@@ -91,7 +96,7 @@ approved by an administrator) and **how it is kept from harming the server, the 
 ## 4. `requires:`: what a connector needs to run
 
 ```yaml
-# in config/connectors/var-engine.yaml                         (planned, 2.8.0)
+# in config/connectors/var-engine.yaml                         (built: parsed, approved, gated; the reactive plugin is R1)
 requires:
   python:
     version: "3.12"                          # the interpreter the environment is built with
@@ -107,8 +112,13 @@ requires:
     - name: drishti-plugin-delta             # a connector plugin the computation depends on (must be installed and enabled)
 ```
 
+*As built:* `requires:` is a key of every connector file (`ConnectorFiles`); a connector whose requirements are not all approved stays off
+and says why (state `NOT_APPROVED`, *waiting for approval of N requirements (request cr-…)*). Plugins are recorded as approval items;
+checking that they are installed arrives with the reactive plugin (R1). `requested-by:` (optional) names the person who asked, for four
+eyes; without it, the administrator who last saved the file through Admin → Connectors.
+
 The **lock file** pins every wheel, including transitive ones, with its hash. It is generated once by a tool (planned:
-`drishti.py compute lock`), reviewed, committed with the connector, and never resolved again at install time:
+`drishti.py compute lock`, planned), reviewed, committed with the connector, and never resolved again at install time:
 
 ```text
 # requires/var-engine.lock            (planned, 2.8.0) python 3.12, platforms: manylinux_2_28_x86_64, win_amd64
@@ -138,11 +148,13 @@ qlrisk==2.4.0          --hash=sha256:1e5f…      # from the author's wheel (qlr
 | **Built under the data folder**, never in a system location or `/tmp` | `<data dir>/compute/envs/<env id>/` (a venv); its wheels cache `<data dir>/compute/wheels/` |
 | **Offline and exact** | `python -m venv`, then `pip install --require-hashes --no-deps --only-binary=:all:` from the approved sources; no source builds, no resolution, no network beyond the named index |
 | **Read-only once built** | the environment folder is made read-only; a worker cannot install into it; a changed file is detected by a manifest of hashes checked at worker start |
-| **Never changed in place** | a new lock is a new environment; the old one stays until no approved connector uses it, then is removed by `drishti.py compute gc` (planned) |
+| **Never changed in place** | a new lock is a new environment; the old one stays until no approved connector uses it, then is removed by `drishti.py compute gc` (planned; `Environments.gc` is built) |
 | **The interpreter** | the site's Python (`compute.python`, a path; the console's Python by default). Drishti does not download interpreters. |
 
 Building an environment is an administrator action (or automatic after approval, `compute.build: on-approval`), shown with its log in
-Admin → Compute. A build that fails (a hash mismatch, a wheel missing for the platform) leaves no environment behind and names the
+Admin → Compute. *As built (C2):* environments of **pools** (`pools.<p>.environment`) are built and verified at every worker start; a
+connector's own `requires.python` is approved now and gets its environment when the reactive plugin runs its engine (R2). Java libraries
+are checked by sha256 and scanned for native code, and staged under `<data dir>/compute/jars/<sha256>/`. A build that fails (a hash mismatch, a wheel missing for the platform) leaves no environment behind and names the
 wheel.
 
 ## 6. Approval
@@ -161,7 +173,8 @@ Nothing in `requires:` is fetched, built or run until an administrator approves 
 
 - **What needs approval:** a new package, a new version, a new hash for the same version, a new source, a new Java library. Removing a
   package does not.
-- **Who:** an administrator with the planned (2.8.0) `compute-approve` power; never the person who changed the connector file (four
+- **Who:** an administrator (built: any administrator, or only those holding one of `compute.approval.roles`; a dedicated
+  `compute-approve` role power is planned); never the person who changed the connector file (four
   eyes, as for write-back approvals).
 - **Recorded:** each decision is an audit entry (who, when, what, why), and the approved set is kept in the Drishti database
   ([DATABASE.md](DATABASE.md)) as rows of a planned `drishti_compute_approval` table, so every node of a cluster sees the same
@@ -169,41 +182,54 @@ Nothing in `requires:` is fetched, built or run until an administrator approves 
 - **Revocation:** an administrator can revoke an approval; new requests are refused at once, in-flight ones finish.
 - **Signed packs:** a pack archive from the signed registry may ship wheels and jars; the signature proves where they came from, not
   that the site wants them: approval is still required.
-- **A site may pre-approve** a list in `config/compute/approved.yaml` (planned) for automated deployments; the file is itself an
+- **A site may pre-approve** a list in `config/compute/approved.yaml` (planned, open question 5; not built) for automated deployments; the file is itself an
   administrator's change and audited when loaded.
 
 ## 7. The worker pool
 
 ### 7.1 Pools
 
-A **pool** is a set of worker processes of one type and environment, configured once per site:
+A **pool** is a set of worker processes of one type and environment, configured once per site (built; the shipped file is
+`config/compute/compute.yaml`, every key in [COMPUTE.md section 2](../admin/COMPUTE.md#2-pools-and-how-many-workers)):
 
 ```yaml
-# config/compute/compute.yaml                                  (planned, 2.8.0)
+# config/compute/compute.yaml                                  (built, 2.8.0)
 compute:
   enabled: false                    # off as shipped: no worker starts, reactive connectors say "compute is off"
   python: ${DRISHTI_PYTHON:}        # the interpreter; empty: the console's Python
   pools:
     risk:
       type: python
+      engines: [drishti_var.connector:VarEngine]                       # module:Class, loaded once per worker
+      environment: { python: "3.12", lock: locks/risk.lock, index: shipped }   # or: system (the site's interpreter and the SDK)
       workers: { min: 2, max: 8 }   # started on demand up to max; idle ones beyond min stop after 5 min
       memory: 4GB                   # per worker (address-space limit on Linux; watched on Windows)
       cpu-seconds: 300              # per request
       recycle-after: 200            # requests, then the worker is replaced (bounds slow leaks)
       batch-share: 0.25
-    pricing-java:
+    pricing-java:                   # planned (C6): type java is refused until then
       type: java
       workers: { min: 0, max: 2 }
       memory: 3GB                   # -Xmx plus native headroom
       jvm-args: ["-XX:+UseZGC"]
+  nodes:                            # built: a node's own worker counts, by its Drishti*net id
+    drishti-big-1:
+      pools:
+        risk: { workers: { max: 64 } }
 ```
+
+**As many workers as the site wants** (product owner, 2026-10-24, a hard requirement). The worker count is configuration only, per pool
+and per node; the code has no upper bound and no part of it assumes one worker. Pools scale out by adding Drishti\*net nodes that serve
+the same pool, each with its own count, and one request can be spread over all of them ([section 7.6](#76-fan-out-and-scale-out)).
 
 ### 7.2 Process model
 
 - **One request at a time per worker.** Concurrency comes from the number of workers. A worker never holds two users' data at once.
-- **Linux: fork-server.** As the console's Python runner already does ([PYTHON_BI.md](../guides/PYTHON_BI.md)), a parent per pool
-  imports the environment's heavy modules once (numpy, pyarrow, QuantLib) and **forks one child per request**; the child runs the
-  request and exits. Start-up cost is paid once; isolation between requests is total (a fresh address space).
+- **Linux: fork-server.** As the console's Python runner already does ([PYTHON_BI.md](../guides/PYTHON_BI.md)), a parent imports the
+  environment's heavy modules once (numpy, pyarrow, QuantLib) and **forks one child per request**; the child runs the request and exits.
+  Start-up cost is paid once; isolation between requests is total (a fresh address space). *As built:* each worker is such a parent (N
+  workers, N parents, each forking one child at a time), so a request's child can be killed alone at a timeout or cancel and the worker
+  stays.
 - **Windows: warm workers, reset between requests.** There is no `fork`; workers are started with `spawn`, kept warm, and **reset**
   between requests (module-level caches cleared by the engine contract, temporary files removed, the worker recycled after
   `recycle-after` requests or on any error). Recycling is more frequent by default on Windows (`recycle-after: 50`).
@@ -235,23 +261,43 @@ from one another and from the server's files.
 | Limit | Linux | Windows |
 |---|---|---|
 | wall time | the supervisor kills the process group at the request's timeout | the supervisor kills the process at the timeout |
-| CPU time | `RLIMIT_CPU` | watched by the supervisor |
+| CPU time | `RLIMIT_CPU` | watched by the supervisor (planned; the wall time is enforced) |
 | memory | `RLIMIT_AS` | working set watched every 250 ms; killed above the limit |
 | files | `RLIMIT_FSIZE`; writes only under the scratch folder (audit hook) | writes only under the scratch folder (audit hook) |
-| network | none: a network namespace with no interfaces where the machine allows it, plus an audit hook refusing sockets | an audit hook refusing sockets |
+| network | none: a network namespace with no interfaces where the machine allows it, plus an audit hook refusing sockets (built: the audit hook; the namespace is planned) | an audit hook refusing sockets |
 | processes | an audit hook refusing `subprocess`, `os.fork`, `os.exec*` | the same |
+
+### 7.6 Fan-out and scale-out
+
+Built in C1 (product owner's requirement: work fans out across N workers and nodes). A request may be **split into chunks** and gathered:
+one named input is cut into chunks of `compute.fan-out.chunk-rows` rows; every other input (market data, scenarios) goes whole with each
+chunk; each chunk is an ordinary request with its own id (`<parent>-c<i>`) and the parent's viewer, class and budget, so fairness,
+limits and isolation apply per chunk; answers are gathered **in chunk order** (rows appended, tables concatenated). Chunks go to the
+target with the lowest *(outstanding + 1) / workers*: this node's pool and every other Drishti\*net member alive that serves it (asked
+for its load, cached two seconds). Chunks for another node travel signed, on behalf of the viewer, one hop (the receiving node runs them
+on its own workers only). An unreachable node's chunk runs here; any other failure fails the whole request and cancels what is left. At
+most twice the total worker count of chunks is outstanding (back-pressure). This is the shape what-if pricing needs: trades × 509
+scenario days spread over every worker of the cluster.
+
+### 7.7 Fair scheduling (as built)
+
+One queue per pool and class (`interactive`, then `event`, then `batch`); `batch` holds at most `batch-share` of the workers; within a
+class users take turns and none runs more than `compute.scheduling.max-inflight-per-user` at once; each class's queue is bounded
+(`compute.scheduling.queue`) and a full queue refuses at once (`DRS-9203`), which a fan-out answers by waiting and retrying. Waiting for a
+worker counts against the request's budget.
 
 ## 8. The engine contract (Python)
 
 ```python
 # compute/drishti-var/src/drishti_var/connector.py             (planned, 2.8.0)
-from drishti_compute import Engine, Request, Inputs, Progress, Result    # a small shim package shipped with Drishti (planned)
+from drishti_compute import Engine, Request, Inputs, Progress, Result    # the worker SDK shipped with Drishti (built, pure Python)
 
 class VarEngine(Engine):
     kinds = ("var-result", "var-contribution", "var-path", "var-history", "what-if")
 
     def compute(self, req: Request, inputs: Inputs, progress: Progress) -> Result:
-        vectors = inputs.table("pnl-vector")            # a pyarrow.Table, already filtered and masked as the user
+        vectors = inputs.arrow("pnl-vector")            # a pyarrow.Table, already filtered and masked as the user
+                                                        # (inputs.table(...) gives the SDK's own table: no pyarrow needed)
         ...
         progress.partial({"done": 7, "of": 12, "estimate": {"VAR_99": 41_200_000}})
         return Result(rows=[...], arrow=None)           # validated against the kind's schema by the server
@@ -260,8 +306,8 @@ class VarEngine(Engine):
         ...
 ```
 
-- **Pure:** no network, no files outside the scratch folder, no global state that outlives a request (the shim clears registered
-  caches on Windows between requests).
+- **Pure:** no network, no files outside the scratch folder, no global state that outlives a request (the SDK clears caches registered
+  with `register_cache` between requests in warm mode; fork mode needs nothing).
 - **Deterministic:** the same inputs and request give the same result (random numbers only from a seed in the request).
 - **Typed errors:** `ComputeError("the scope is empty")` reaches the panel in words; any other exception is *the computation failed*
   with the request id, and the traceback goes to the server's log, never to the browser.
@@ -368,17 +414,25 @@ Python venv (pip packages) are allowed.
 
 | Setting (`config/compute/compute.yaml`, planned) | Default | Meaning |
 |---|---|---|
-| `compute.enabled` | `false` | master switch: off as shipped; a fresh install or an upgrade starts no worker |
-| `compute.python` | the console's Python | the interpreter environments are built with |
-| `compute.indexes.<name>` | — | a package source: `url`, `trust` (a CA file), credentials as `${ENV}` |
-| `compute.maven.settings` | the site's `settings.xml` | the bank's Maven repository for `java:` requirements |
-| `compute.build` | `manual` | `manual` or `on-approval`: when environments are built |
-| `compute.in-process-java` | `false` | allow trusted Java engines in the server process |
-| `compute.pools.<p>.*` | — | `type`, `workers.min/max`, `memory`, `cpu-seconds`, `recycle-after`, `batch-share`, `jvm-args`, `os-user` |
-| `compute.scratch` | `<data dir>/compute/scratch` | request folders |
-| `compute.approved` | `config/compute/approved.yaml` | optional pre-approvals |
+| `compute.enabled` | `false` | built: master switch: off as shipped; a fresh install or an upgrade starts no worker |
+| `compute.python` | `python3` (`python` on Windows) | built: the interpreter workers run and environments are built with (`DRISHTI_PYTHON`) |
+| `compute.indexes.<name>.url` | — | built: a package source (the bank's mirror); `trust` and credentials planned |
+| `compute.java-repository` | — | built: a folder or URL in Maven layout for `java:` requirements with `source: bank-maven` (replaces the planned `compute.maven.settings`) |
+| `compute.shipped` | `<data dir>/compute/shipped` | built: wheels and jars of the `shipped` source |
+| `compute.build` | `manual` | built: `manual` or `on-approval`: when environments are built |
+| `compute.approval.roles` | `[]` | built: roles whose administrators may approve (empty: any administrator) |
+| `compute.scheduling.max-inflight-per-user` | `4` | built: one user's requests running at once per pool |
+| `compute.scheduling.queue.interactive/event/batch` | `256`, `10000`, `100000` | built: waiting requests per pool and class; full: busy |
+| `compute.fan-out.chunk-rows`, `compute.fan-out.peers` | `5000`, `true` | built: chunk size, and whether chunks go to other nodes ([section 7.6](#76-fan-out-and-scale-out)) |
+| `compute.limits.max-result-bytes` | `256MB` | built: the largest result file a worker may hand back |
+| `compute.in-process-java` | `false` | planned (R1): allow trusted Java engines in the server process |
+| `compute.pools.<p>.*` | — | built: `type` (python), `engines`, `environment` (`system` or `{python, lock, index}`), `workers.min/max`, `mode`, `memory`, `cpu-seconds`, `recycle-after`, `batch-share`, `idle-stop`, `timeout`, `timeout-batch`, `start-timeout`, `python-path`; planned: `jvm-args` (C6), `os-user` |
+| `compute.nodes.<node>.pools.<p>.workers` | — | built: this node's own worker counts |
+| `compute.scratch` | `<data dir>/compute/scratch` | built: request folders |
+| `compute.approved` | `config/compute/approved.yaml` | planned: optional pre-approvals (open question 5) |
 
-Folders under the data folder: `compute/envs/`, `compute/wheels/`, `compute/native/`, `compute/scratch/`, `compute/results/`.
+Folders under the data folder: `compute/envs/`, `compute/shipped/`, `compute/jars/`, `compute/sdk/`, `compute/scratch/`, `compute/work/`
+(built); `compute/native/`, `compute/results/` (planned).
 
 ## 14. How this fits with what exists
 
@@ -390,12 +444,14 @@ Folders under the data folder: `compute/envs/`, `compute/wheels/`, `compute/nati
 
 ## 15. Operations
 
-- **Admin → Compute** (planned): the master switch; pools (workers, busy, memory, recycled, crashed); environments (id, lock, size,
+- **Admin → Compute** (built, C3: pools, workers busy, queues, latency, environments, approval requests, recent requests; Test, Build,
+  Cancel, Approve, Reject, Revoke; the per-connector view arrives with R6): the master switch; pools (workers, busy, memory, recycled, crashed); environments (id, lock, size,
   built when, used by); approval requests and decisions; native libraries extracted; the per-connector view of
   [REACTIVE_CONNECTORS.md section 15](REACTIVE_CONNECTORS.md#15-observability-and-audit).
 - **Health:** a pool whose workers keep crashing is `DEGRADED`; an environment that fails its manifest check is `DOWN` with the file
   named.
-- **CLI** (planned): `drishti.py compute status|lock|build|approve|revoke|gc`.
+- **CLI** (planned): `drishti.py compute status|lock|build|approve|revoke|gc`. The HTTP API behind Admin → Compute is built
+  (`/api/v1/admin/compute`, [COMPUTE.md section 7](../admin/COMPUTE.md#7-admin--compute)).
 - **Upgrades:** a Drishti upgrade never changes an approved environment; new versions of Drishti's own compute packages arrive as a
   new lock and an approval request.
 
@@ -403,14 +459,21 @@ Folders under the data folder: `compute/envs/`, `compute/wheels/`, `compute/nati
 
 | Step | Delivers | Accepted when |
 |---|---|---|
-| C1 | `drishti-compute` module: supervisor, Python pools (Linux fork-server, Windows spawn), JSON-lines control, Arrow scratch transport, limits, the `drishti_compute` shim and engine contract | a test engine computes over 1 million Arrow rows in a worker; a crashing or looping engine is killed and replaced; the scratch folder is gone after every request |
-| C2 | `requires:` parsing, lock files, environment builder (`--require-hashes`, offline), read-only environments with manifests | an environment builds from a local wheel folder with no network; a tampered wheel fails the build; a tampered file in a built environment stops the worker |
-| C3 | approval: requests, Admin → Compute, the approval table, four eyes, revocation, audit | a connector with unapproved requirements stays off and says so; approval by its author is refused |
-| C4 | the pricer SPI, the stand-in pricer, the pack pricer mappings (shared with QUANT_SERVICE.md section 6) | a what-if on a sample swap prices with the stand-in through the SPI |
-| C5 | QLRisk provider (**only if its API is declared stable**; otherwise 2.8.x) | QLRisk prices the sample products; the parity test runs |
-| C6 | QuantLib-SWIG Java: the build script (linux-x86_64), the jar, extraction under the data folder, Java worker pools, parity with QLRisk | the parity test passes on Linux; the tests skip on Windows with the stated reason |
+| C1 (**built**, 2.8.0) | `drishti-compute` module: supervisor, Python pools (Linux fork-server, Windows spawn), JSON-lines control, Arrow scratch transport, limits, the `drishti_compute` shim and engine contract | a test engine computes over 1 million Arrow rows in a worker; a crashing or looping engine is killed and replaced; the scratch folder is gone after every request |
+| C2 (**built**, 2.8.0) | `requires:` parsing, lock files, environment builder (`--require-hashes`, offline), read-only environments with manifests | an environment builds from a local wheel folder with no network; a tampered wheel fails the build; a tampered file in a built environment stops the worker |
+| C3 (**built**, 2.8.0) | approval: requests, Admin → Compute, the approval table, four eyes, revocation, audit | a connector with unapproved requirements stays off and says so; approval by its author is refused |
+| C4 (planned) | the pricer SPI, the stand-in pricer, the pack pricer mappings (shared with QUANT_SERVICE.md section 6) | a what-if on a sample swap prices with the stand-in through the SPI |
+| C5 (planned) | QLRisk provider (**only if its API is declared stable**; otherwise 2.8.x) | QLRisk prices the sample products; the parity test runs |
+| C6 (planned) | QuantLib-SWIG Java: the build script (linux-x86_64), the jar, extraction under the data folder, Java worker pools, parity with QLRisk | the parity test passes on Linux; the tests skip on Windows with the stated reason |
 
 ## 17. Tests
+
+*As built (C1 to C3):* `drishti-compute`'s `ComputePoolTest` (a million rows, crash, loop, CPU and memory limits, isolation, progress,
+the sandbox, cancel), `WarmModeTest` (the Windows way, on every platform), `FanOutTest` (two nodes, a node down), `EnvironmentTest` (an
+offline build from a local wheel, a tampered wheel, a tampered environment, Java libraries), `ApprovalsTest` (memory and SQLite),
+`FairQueueTest`, `ComputeSettingsTest`, the configurable `ComputeLoadTest`; the SDK's pytest suite (`drishti-compute/src/test/python`);
+`ComputeApiTest` in the server (a connector off until approved, four eyes, revocation) and the console's `test_admin_compute.py`. The
+"nothing written outside `<data dir>/compute/`" check is by construction (temporary folders, scratch and environments are all under it).
 
 - **Isolation:** two requests of different users on one pool never share a process at the same time; a module-level variable set by
   one request is not visible to the next (Linux: fork; Windows: reset and recycle).
@@ -431,6 +494,6 @@ Folders under the data folder: `compute/envs/`, `compute/wheels/`, `compute/nati
    the bank (we provide the build script)?
 4. **Operating-system users for pools.** Is per-pool OS-user separation (Linux) wanted in 2.8.0, or is the process isolation of
    [section 7](#7-the-worker-pool) enough to start?
-5. **Pre-approval file.** Should automated deployments be allowed to pre-approve requirements in `config/compute/approved.yaml`, or
+5. **Pre-approval file.** Should automated deployments be allowed to pre-approve requirements in the planned `config/compute/approved.yaml`, or
    must every approval be made in Admin → Compute?
 6. **Vulnerability feed.** Does the bank have a scanner feed (for example an OSV mirror) Drishti should show at approval time?
