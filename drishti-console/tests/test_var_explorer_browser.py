@@ -26,6 +26,9 @@ Screenshots go to DRISHTI_VAR_SHOTS when it names a folder. Skipped when Playwri
 import os
 import subprocess
 import sys
+import time
+import urllib.error
+import urllib.request
 from pathlib import Path
 
 import pytest
@@ -50,7 +53,25 @@ def stack(tmp_path_factory):
                         "--engine", "auto"], capture_output=True, text=True, cwd=ROOT, timeout=600)
     if r.returncode != 0 or not (lake / "risk" / "pnl-vector").is_dir():
         pytest.skip("could not build the VaR demo lake: " + (r.stderr or r.stdout)[-400:])
-    yield from _stack(tmp_path_factory, {"DRISHTI_DELTA_ROOT": str(lake), "DRISHTI_DEMO_ENABLED": "false", "DRISHTI_OFFLINE": "true"})
+    for st in _stack(tmp_path_factory, {"DRISHTI_DELTA_ROOT": str(lake), "DRISHTI_DEMO_ENABLED": "false", "DRISHTI_OFFLINE": "true"}):
+        _engine_ready(str(st))
+        yield st
+
+
+def _engine_ready(base, seconds=120):
+    """Waits until the engine answers the bank's VaR: the Delta connector comes up a moment after the server, and until then every VaR
+    request answers "no P&L vectors", which a page would draw as its error, not as the figures the tests look for."""
+    deadline = time.monotonic() + seconds
+    while True:
+        try:
+            with urllib.request.urlopen(base + "/api/var/scope?scope=BANK", timeout=10) as r:
+                if r.status == 200:
+                    return
+        except (urllib.error.URLError, OSError):
+            pass
+        if time.monotonic() > deadline:
+            pytest.fail(f"the VaR engine did not answer within {seconds} s")
+        time.sleep(1)
 
 
 def shot(pg, name):

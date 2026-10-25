@@ -147,6 +147,7 @@
       $("[data-vx-timing]").textContent = "painted in " + ms + " ms" + (pv ? " · server " + pv.computeMs + " ms, " + pv.cache : "");
       fresh("main", pv ? "aggregated " + int(pv.trades) + " vectors in " + pv.computeMs + " ms" : "");
       document.dispatchEvent(new CustomEvent("var:painted", { detail: { scope: scope, ms: ms } }));
+      if (!S.tree && !S.treeLoading) loadTree();                  // the tree failed while the data was still coming up: the engine answers now
       prefetchChildren();
     });
   }
@@ -554,7 +555,9 @@
   // ---------------------------------------------------------------------------------------------------------------- the tree
   function loadTree() {
     fresh("tree", "loading…", "computing");
+    S.treeLoading = true;
     return api("tree", { hierarchy: S.hierarchy }).then(function (d) {
+      S.treeLoading = false;
       S.tree = d;
       var byId = {};
       d.nodes.forEach(function (n) { byId[n.id] = n; if (n.depth < 2) S.expanded[n.scope] = true; });
@@ -562,7 +565,7 @@
       renderTree();
       renderAdhoc();
       fresh("tree", d.businessDate);
-    }).catch(function (e) { errorBox($("[data-vx-tree]"), e); fresh("tree", "failed", "stale"); });
+    }).catch(function (e) { S.treeLoading = false; errorBox($("[data-vx-tree]"), e); fresh("tree", "failed", "stale"); });
   }
 
   function treeRow(label, scope, depth, v, es, lim, opts) {
@@ -646,7 +649,7 @@
   function renderAdhoc() {
     var t = $("[data-vx-adhoc]");
     t.textContent = "";
-    (S.tree.portfolios || []).forEach(function (p) {
+    ((S.tree && S.tree.portfolios) || []).forEach(function (p) {
       t.appendChild(treeRow(p.name + " · " + p.type.toLowerCase(), p.scope, 0, null, null, null, { adhoc: true }));
     });
     api("baskets", {}, true).then(function (bs) {

@@ -47,6 +47,9 @@
     `pnl-distribution@1`.
   - **API guide:** API_GUIDE.md lists every `/api/v1/var` endpoint (scope, path, history, contributions, tree, status, reload,
     baskets, captures, compare).
+  - **VaR explorer:** when the scopes tree cannot load while the data is still coming up, the explorer loads it again after the next
+    painted scope, and saving a basket no longer fails on the missing tree. The browser tests wait until the engine answers before
+    opening a page.
   - **Settings and tools documented:** CONFIGURATION.md has the `drishti.var` settings and the `DRISHTI_VAR_*` placeholders; TOOLS.md has
     `drishti.py compute` (run, cancel, event, sandboxes, reactive) and `tools/packgen/var/make_var_data.py`; the element sheet regenerated;
     the tutorial counts say twenty-three.
