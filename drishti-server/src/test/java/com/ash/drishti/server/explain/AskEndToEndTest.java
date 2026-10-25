@@ -54,7 +54,7 @@ import org.springframework.test.web.servlet.ResultActions;
         "drishti.explain.ask.enabled=true", "drishti.explain.ask.packs[0]=market-risk", "drishti.explain.ask.values=shown",
         "drishti.explain.ask.model=fake-model", "drishti.explain.ask.api-key=test-key-123", "drishti.explain.ask.timeout=1s",
         "drishti.explain.ask.per-user-per-minute=3", "drishti.explain.ask.max-answer-chars=60",
-        "drishti.identity.database-url=jdbc:sqlite:target/ask-${random.uuid}/identity.db"})
+        "drishti.identity.database-url=jdbc:sqlite:${drishti.test.dir}/ask-${random.uuid}/identity.db"})
 @AutoConfigureMockMvc
 class AskEndToEndTest {
 

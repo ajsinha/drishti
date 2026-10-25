@@ -32,8 +32,8 @@ import org.springframework.test.web.servlet.MockMvc;
 /** {@code drishti.collab.enabled=false}: every collaboration endpoint answers 403 DRS-7004, and the console can ask {@code /collab}. */
 @SpringBootTest(properties = {"drishti.sources.plugins.demo.settings.ticking=false", "drishti.security.enabled=true",
         "drishti.security.secret=test-secret-that-is-at-least-32-bytes-long", "drishti.packs.enabled=finance",
-        "drishti.identity.database-url=jdbc:sqlite:target/collabdisabled-${random.uuid}/identity.db",
-        "drishti.packs.overlay=target/collabdisabled-overlay/added.yaml", "drishti.collab.enabled=false"})
+        "drishti.identity.database-url=jdbc:sqlite:${drishti.test.dir}/collabdisabled-${random.uuid}/identity.db",
+        "drishti.packs.overlay=${drishti.test.dir}/collabdisabled-overlay/added.yaml", "drishti.collab.enabled=false"})
 @AutoConfigureMockMvc
 class CollabDisabledTest {
 

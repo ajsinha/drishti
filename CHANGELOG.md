@@ -17,6 +17,16 @@
 
 ## Unreleased
 
+- **Tests leave nothing behind:** `drishti-server/target/` had grown to about twelve million files: ~13,000 per-test folders
+  (`about-api-*`, `identity-*`, `prefs-*`, `bi-*` …) written under bare `target/...` paths, and ~300 per-context content stores under
+  `target/test-data/fstore`, each holding ~94,000 collaboration seals. The seals came from the shared, never-cleaned test identity
+  database and `target/test-data/collab`: every new content store runs the one-time collaboration import (`CollabImport`) from them, so
+  each context copied everything earlier runs had piled up. A server test fork now writes only into `target/test-run/fork<N>/`
+  (`drishti.test.dir`; `TestRun` in the tests: test properties say `${drishti.test.dir}/...`, seeded folders use `TestRun.dir`,
+  temporary ones `TestRun.temp`) and removes it when it ends, after closing its Spring test contexts; every context gets an empty
+  collaboration folder of its own. The identity, messaging and Iceberg tests that wrote under `target/` or the JVM's temp folder use
+  JUnit's `@TempDir`. The drill builds with `./mvnw clean verify` ([DEVELOPER_GUIDE.md](docs/guides/DEVELOPER_GUIDE.md)).
+
 ## 2.7.0 — Sutra Next: the UI kit, events and children across packs, refresh, layout, forms and the four-mode Sutra designer; the us-equities and gleif packs (2026-10-24)
 
 - **Drill fixes (2.7.0, console suite):** the report designer's YAML tab says whether its text is the draft's yet

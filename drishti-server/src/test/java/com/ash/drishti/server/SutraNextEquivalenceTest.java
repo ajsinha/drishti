@@ -54,7 +54,7 @@ import org.springframework.test.web.servlet.MockMvc;
 class SutraNextEquivalenceTest {
 
     static final String VIEW = "/api/v1/views/ir-curve/CRV-USD-OIS";
-    static final Path SITE = Path.of("target", "test-data", "sutra-next", "sutras").toAbsolutePath();
+    static final Path SITE = TestRun.root().resolve(Path.of("sutra-next", "sutras"));
     /** What names the layout or the moment rather than the page: left out of the comparison. */
     static final Set<String> VOLATILE = Set.of("fingerprint", "layout", "fetchedAt", "generation", "builtAt", "tookMs", "elapsedMs", "servedBy", "timings");
 

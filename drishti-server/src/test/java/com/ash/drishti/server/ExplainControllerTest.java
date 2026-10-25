@@ -40,7 +40,7 @@ import org.springframework.test.web.servlet.MockMvc;
 @SpringBootTest(properties = {"drishti.rachana.hot-reload=false", "drishti.sources.plugins.demo.settings.ticking=false",
         "drishti.security.enabled=true", "drishti.security.secret=test-secret-that-is-at-least-32-bytes-long",
         "drishti.security.roles.desk.kinds[0]=trade", "drishti.security.roles.curves.kinds[0]=curve",
-        "drishti.identity.database-url=jdbc:sqlite:target/explain-${random.uuid}/identity.db"})
+        "drishti.identity.database-url=jdbc:sqlite:${drishti.test.dir}/explain-${random.uuid}/identity.db"})
 @AutoConfigureMockMvc
 class ExplainControllerTest {
 

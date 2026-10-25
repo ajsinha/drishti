@@ -31,7 +31,7 @@ class ProposalStoreContentTest {
 
     @Test
     void twoNodesShareProposalsAndOnlyOneDecisionWins() throws Exception {
-        Path dir = Path.of("target", "content-tests", "governance-" + UUID.randomUUID()).toAbsolutePath();
+        Path dir = com.ash.drishti.server.TestRun.root().resolve(Path.of("content-tests", "governance-" + UUID.randomUUID()));
         Path folder = dir.resolve("governance");
         ProposalStore old = new ProposalStore(folder);
         Proposal before = old.create("risk", 1, "text", "", "old one", "ann");

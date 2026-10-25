@@ -46,7 +46,7 @@ class NetMembershipTest {
 
     @BeforeAll
     static void start() throws Exception {
-        root = Path.of("target", "net-it", "membership-" + System.nanoTime()).toAbsolutePath();
+        root = com.ash.drishti.server.TestRun.root().resolve(Path.of("net-it", "membership-" + System.nanoTime()));
         int[] p = NetNodes.PORTS;
         NetNodes.folder(root.resolve("a/net"), p[0], List.of("region:emea"), List.of(), List.of());
         NetNodes.folder(root.resolve("b/net"), p[1], List.of("region:emea"), List.of(), List.of(p[0]));

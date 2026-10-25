@@ -60,7 +60,7 @@ class HistoryBlockProblemsTest {
             BEFORE.put(k, System.getProperty(k));
         }
         try {
-            root = Files.createTempDirectory("drishti-histblock");
+            root = com.ash.drishti.server.TestRun.temp("drishti-histblock");
             Path pack = Files.createDirectories(root.resolve("packs/histpack"));
             Files.createDirectories(pack.resolve("sutras"));
             Files.createDirectories(root.resolve("files/2026-10-02"));

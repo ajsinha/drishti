@@ -58,7 +58,7 @@ import org.springframework.test.web.servlet.MockMvc;
         "drishti.security.enabled=true", "drishti.security.secret=test-secret-that-is-at-least-32-bytes-long",
         "drishti.security.redact[0]=book",
         "drishti.security.roles.quant.kinds[0]=*", "drishti.security.roles.curves-quant.kinds[0]=curve",
-        "drishti.identity.database-url=jdbc:sqlite:target/search-pivot-${random.uuid}/identity.db"})
+        "drishti.identity.database-url=jdbc:sqlite:${drishti.test.dir}/search-pivot-${random.uuid}/identity.db"})
 @AutoConfigureMockMvc
 @Import(PinnedBusinessDate.class)
 class SearchPivotApiTest {

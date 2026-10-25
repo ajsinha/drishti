@@ -53,7 +53,7 @@ class NetPeerProtocolBench {
     void manyConcurrentForwardedReadsOverHttp1ThenHttp2() throws Exception {
         int concurrency = Integer.getInteger("drishti.net.bench.concurrency", 64);
         int requests = Integer.getInteger("drishti.net.bench.requests", 4000);
-        Path root = Path.of("target", "net-it", "bench-" + System.nanoTime()).toAbsolutePath();
+        Path root = com.ash.drishti.server.TestRun.root().resolve(Path.of("net-it", "bench-" + System.nanoTime()));
         int[] p = NetNodes.PORTS;
         NetNodes.folder(root.resolve("a/net"), p[0], List.of("region:emea"), List.of(), List.of());
         NetNodes.folder(root.resolve("b/net"), p[1], List.of("region:emea"), List.of(), List.of(p[0]));

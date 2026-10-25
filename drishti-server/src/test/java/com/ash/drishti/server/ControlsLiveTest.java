@@ -44,7 +44,7 @@ class ControlsLiveTest {
 
     @DynamicPropertySource
     static void sutras(DynamicPropertyRegistry r) throws Exception {
-        dir = Files.createTempDirectory(Path.of("target"), "ctl-sutras");
+        dir = TestRun.temp("ctl-sutras");
         Files.writeString(dir.resolve("ctl-live.v1.sutra.yaml"), """
                 rachana: 1
                 sutra: ctl-live

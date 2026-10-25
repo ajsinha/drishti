@@ -106,7 +106,7 @@ class NetLiveBiTest {
 
     @BeforeAll
     static void start() throws Exception {
-        Path root = Path.of("target", "net-it", "livebi-" + System.nanoTime()).toAbsolutePath();
+        Path root = com.ash.drishti.server.TestRun.root().resolve(Path.of("net-it", "livebi-" + System.nanoTime()));
         int[] p = NetNodes.PORTS;
         bi(root.resolve("bi"), root.resolve("lake"));
         NetNodes.folder(root.resolve("a/net"), p[0], List.of(), List.of(), List.of());

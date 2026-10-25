@@ -44,7 +44,7 @@ class NetSelectionTest {
 
     @BeforeAll
     static void start() throws Exception {
-        Path root = Path.of("target", "net-it", "selection-" + System.nanoTime()).toAbsolutePath();
+        Path root = com.ash.drishti.server.TestRun.root().resolve(Path.of("net-it", "selection-" + System.nanoTime()));
         int[] p = NetNodes.PORTS;
         NetNodes.folder(root.resolve("a/net"), p[0], List.of(), List.of(), List.of());
         NetNodes.folder(root.resolve("b/net"), p[1], List.of(), List.of(), List.of(p[0]));

@@ -41,7 +41,7 @@ import org.springframework.test.web.servlet.MockMvc;
         "drishti.security.redact=VAR_99,significance",
         "drishti.security.roles.masked.kinds[0]=*", "drishti.security.roles.masked.raw=false",
         "drishti.security.roles.full.kinds[0]=*", "drishti.security.roles.full.raw=true",
-        "drishti.identity.database-url=jdbc:sqlite:target/explainglossary-${random.uuid}/identity.db"})
+        "drishti.identity.database-url=jdbc:sqlite:${drishti.test.dir}/explainglossary-${random.uuid}/identity.db"})
 @AutoConfigureMockMvc
 class ExplainGlossaryTest {
 

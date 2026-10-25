@@ -43,7 +43,7 @@ import org.springframework.test.web.servlet.MvcResult;
  */
 @SpringBootTest(properties = {"drishti.rachana.hot-reload=false", "drishti.sources.plugins.demo.settings.ticking=false",
         "drishti.security.enabled=true", "drishti.security.secret=test-secret-that-is-at-least-32-bytes-long",
-        "drishti.identity.database-url=jdbc:sqlite:target/builder-design-${random.uuid}/identity.db",
+        "drishti.identity.database-url=jdbc:sqlite:${drishti.test.dir}/builder-design-${random.uuid}/identity.db",
         "drishti.builder.max-samples=6", "drishti.builder.max-file-mb=1", "drishti.builder.max-total-mb=4"})
 @AutoConfigureMockMvc
 class BuilderDesignApiTest {

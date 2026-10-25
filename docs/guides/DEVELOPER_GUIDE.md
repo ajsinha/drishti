@@ -346,7 +346,8 @@ refused, with the files that are not documentation listed.
    tree is clean (`drill: commit your changes first`).
 2. `python3 tools/license_headers.py`: every file carries the copyright header.
 3. The whole Java build, every test and every rule, offline, on **Java 21** (`JAVA21_HOME`, default
-   `/usr/lib/jvm/java-21-openjdk-amd64`), the production runtime, containers included. It builds the jar the console tests start. Test
+   `/usr/lib/jvm/java-21-openjdk-amd64`), the production runtime, containers included, after `mvn clean` (`./mvnw -q -o clean verify`:
+   nothing an earlier build or an interrupted run left in `target/` is built on). It builds the jar the console tests start. Test
    classes run in parallel JVM forks inside each module (`drishti.test.forks`, 4 by default, set in the root `pom.xml`; each fork is
    reused for many classes). Anything a test writes at a fixed path carries `${surefire.forkNumber}` (see `drishti-server/pom.xml`);
    Testcontainers and the in-test servers use free ports. A test must not clear or change a JVM-wide setting for the classes that follow
@@ -1491,8 +1492,12 @@ Habits that keep the suite fast and reliable:
 - Name the packs a test needs (`"drishti.packs.enabled=trading"`) rather than relying on the default. The build sets
   `drishti.packs.extra-dirs` to `examples/packs` and the default to `finance` for the server tests, so the tests written against the
   retired `finance` and `logistics` packs keep them as fixtures; a new test should name shipped packs and UPPER_SNAKE fields.
-- Server tests use their own identity database and files under `target/fork<N>/` (`drishti-server/pom.xml`), so they never touch
-  `./data`; a Python test that runs `lake build` or `lake demo` sets `DRISHTI_DATA_DIR` or `DRISHTI_BI_STORE` to a temporary folder and
+- Server tests write only into their fork's run folder, `target/test-run/fork<N>/` (`drishti.test.dir`, `drishti-server/pom.xml`),
+  which the fork removes when it ends (`TestRun` closes the Spring test contexts first), so a run leaves nothing in `target/` but the
+  build's output and never touches `./data`. A test names its folders `${drishti.test.dir}/...` in its properties, seeds a folder before
+  its context starts with `TestRun.dir(name)`, and takes a temporary folder from `TestRun.temp(prefix)`; a test without Spring uses
+  JUnit's `@TempDir`. Never write under a bare `target/...` path: per-test folders there survive every run until `mvn clean` (2.7.0
+  found twelve million files, each content store importing the seals a shared collaboration folder had piled up); a Python test that runs `lake build` or `lake demo` sets `DRISHTI_DATA_DIR` or `DRISHTI_BI_STORE` to a temporary folder and
   passes `--server` (or `--no-signal`) so it never writes into the repository's `data/` or signals a real server.
 - Keep local test data small (a few thousand trades): a laptop is not a scale-test machine.
 - Prefer one assertion chain that reads like the behaviour (`assertThat(p99).as("warm p99 ms").isLessThan(50)`).

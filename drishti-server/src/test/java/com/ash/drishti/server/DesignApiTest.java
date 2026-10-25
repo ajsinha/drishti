@@ -49,8 +49,8 @@ import org.springframework.test.web.servlet.ResultActions;
 @SpringBootTest(properties = {"drishti.rachana.hot-reload=false", "drishti.sources.plugins.demo.settings.ticking=false",
         "drishti.security.enabled=true", "drishti.security.secret=test-secret-that-is-at-least-32-bytes-long",
         "drishti.security.roles.designer.kinds[0]=trade", "drishti.security.roles.designer.kinds[1]=netting-set",
-        "drishti.identity.database-url=jdbc:sqlite:target/design-api-${random.uuid}/identity.db",
-        "drishti.builder.designs.dir=target/design-api-files-${random.uuid}",
+        "drishti.identity.database-url=jdbc:sqlite:${drishti.test.dir}/design-api-${random.uuid}/identity.db",
+        "drishti.builder.designs.dir=${drishti.test.dir}/design-api-files-${random.uuid}",
         "drishti.builder.designs.max-per-user=3", "drishti.builder.designs.max-samples=4", "drishti.builder.designs.max-mb=1",
         "drishti.builder.max-file-mb=1"})
 @AutoConfigureMockMvc
@@ -82,7 +82,7 @@ class DesignApiTest {
 
     private static Path sutraDir() {
         try {
-            Path d = Files.createTempDirectory("drishti-design-api-");
+            Path d = TestRun.temp("drishti-design-api-");
             Files.writeString(d.resolve("ns-sourced.v1.sutra.yaml"), SOURCED);
             return d;
         } catch (IOException e) {

@@ -51,9 +51,9 @@ import org.springframework.test.web.servlet.MvcResult;
  */
 @SpringBootTest(properties = {"drishti.sources.plugins.demo.settings.ticking=false", "drishti.security.enabled=true",
         "drishti.security.secret=test-secret-that-is-at-least-32-bytes-long", "drishti.packs.enabled=finance",
-        "drishti.identity.database-url=jdbc:sqlite:target/fp-api-${random.uuid}/identity.db", "drishti.packs.overlay=target/fp-api-overlay/added.yaml",
-        "drishti.bi.dir=target/fp-api-folder", "drishti.bi.folder-refresh=1s", "drishti.bi.query.store-dir=target/fp-api-store/${random.uuid}",
-        "drishti.packs.samples=developers", "drishti.sources.connectors-dir=target/test-data/fp-api-connectors", "drishti.sources.plugins.file.enabled=false",
+        "drishti.identity.database-url=jdbc:sqlite:${drishti.test.dir}/fp-api-${random.uuid}/identity.db", "drishti.packs.overlay=${drishti.test.dir}/fp-api-overlay/added.yaml",
+        "drishti.bi.dir=${drishti.test.dir}/fp-api-folder", "drishti.bi.folder-refresh=1s", "drishti.bi.query.store-dir=${drishti.test.dir}/fp-api-store/${random.uuid}",
+        "drishti.packs.samples=developers", "drishti.sources.connectors-dir=${drishti.test.dir}/fp-api-connectors", "drishti.sources.plugins.file.enabled=false",
         "drishti.sources.connectors.finance-lake.enabled=false",
         "drishti.sources.connectors.fp-lake.plugin=file", "drishti.sources.connectors.fp-lake.kinds[0]=trade",
         "drishti.sources.connectors.fp-lake.settings.rescan-seconds=3600",
@@ -89,7 +89,7 @@ class FieldParamsApiTest {
 
     @DynamicPropertySource
     static void lake(DynamicPropertyRegistry r) throws Exception {
-        root = Files.createTempDirectory("drishti-fp-lake");
+        root = com.ash.drishti.server.TestRun.temp("drishti-fp-lake");
         List<String> lines = new ArrayList<>();
         for (int i = 0; i < 36; i++) {
             lines.add("{\"id\":\"" + (1000 + i) + "\",\"TRADE_ID\":\"" + (1000 + i) + "\",\"DESK\":\"" + desk(i) + "\",\"PORTFOLIO\":\"" + portfolio(i) + "\",\"LEGAL_ENTITY\":\"LE-"
@@ -103,7 +103,7 @@ class FieldParamsApiTest {
 
     static {
         try {
-            Path folder = Path.of("target/fp-api-folder");
+            Path folder = com.ash.drishti.server.TestRun.root().resolve("fp-api-folder");
             Path datasets = Files.createDirectories(folder.resolve("datasets"));
             Path models = Files.createDirectories(folder.resolve("models"));
             Path reports = Files.createDirectories(folder.resolve("reports"));

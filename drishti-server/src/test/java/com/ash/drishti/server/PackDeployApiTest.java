@@ -94,7 +94,7 @@ class PackDeployApiTest {
             BEFORE.put(k, System.getProperty(k));
         }
         try {
-            root = Files.createTempDirectory("drishti-deploy");
+            root = TestRun.temp("drishti-deploy");
             acme = KeyPairGenerator.getInstance("Ed25519").generateKeyPair();
             Path pack = Files.createDirectories(root.resolve("packs/lakepack"));
             Files.createDirectories(pack.resolve("sutras"));

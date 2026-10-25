@@ -47,8 +47,8 @@ import org.springframework.test.web.servlet.ResultActions;
         "drishti.rachana.studio-save=true", "drishti.rachana.dirs=${java.io.tmpdir}/drishti-about-${random.uuid}",
         "drishti.governance.dir=${java.io.tmpdir}/drishti-about-props-${random.uuid}",
         "drishti.security.enabled=true", "drishti.security.secret=test-secret-that-is-at-least-32-bytes-long",
-        "drishti.identity.database-url=jdbc:sqlite:target/about-api-${random.uuid}/identity.db",
-        "drishti.builder.designs.dir=target/about-api-files-${random.uuid}"})
+        "drishti.identity.database-url=jdbc:sqlite:${drishti.test.dir}/about-api-${random.uuid}/identity.db",
+        "drishti.builder.designs.dir=${drishti.test.dir}/about-api-files-${random.uuid}"})
 @AutoConfigureMockMvc
 class DesignAboutApiTest {
 

@@ -66,14 +66,14 @@ import org.springframework.test.web.servlet.ResultActions;
  */
 @SpringBootTest(properties = {"drishti.sources.plugins.demo.settings.ticking=false", "drishti.security.enabled=true",
         "drishti.security.secret=test-secret-that-is-at-least-32-bytes-long", "drishti.packs.enabled=finance",
-        "drishti.identity.database-url=jdbc:sqlite:target/bi-ai-${random.uuid}/identity.db", "drishti.packs.overlay=target/bi-ai-overlay/added.yaml",
-        "drishti.bi.dir=target/bi-ai-folder", "drishti.bi.folder-refresh=1s", "drishti.bi.query.store-dir=target/bi-ai-store/${random.uuid}",
-        "drishti.packs.samples=developers", "drishti.sources.connectors-dir=target/test-data/bi-ai-connectors", "drishti.sources.plugins.file.enabled=false",
+        "drishti.identity.database-url=jdbc:sqlite:${drishti.test.dir}/bi-ai-${random.uuid}/identity.db", "drishti.packs.overlay=${drishti.test.dir}/bi-ai-overlay/added.yaml",
+        "drishti.bi.dir=${drishti.test.dir}/bi-ai-folder", "drishti.bi.folder-refresh=1s", "drishti.bi.query.store-dir=${drishti.test.dir}/bi-ai-store/${random.uuid}",
+        "drishti.packs.samples=developers", "drishti.sources.connectors-dir=${drishti.test.dir}/bi-ai-connectors", "drishti.sources.plugins.file.enabled=false",
         "drishti.sources.connectors.finance-lake.enabled=false",
         "drishti.sources.connectors.ai-lake.plugin=file", "drishti.sources.connectors.ai-lake.kinds[0]=trade",
         "drishti.sources.connectors.ai-lake.settings.rescan-seconds=3600",
         "drishti.sources.connectors.ai-lake.settings.layout.trade.columns=desk,book,currency,notional,mtm,tradeDate",
-        "drishti.ai.enabled=true", "drishti.ai.dir=target/test-data/bi-ai/ai", "drishti.ai.default-model=mock/m", "drishti.ai.watch=off",
+        "drishti.ai.enabled=true", "drishti.ai.dir=${drishti.test.dir}/bi-ai/ai", "drishti.ai.default-model=mock/m", "drishti.ai.watch=off",
         "drishti.ai.policy.features.[bi-draft].roles[0]=report-author"})
 @AutoConfigureMockMvc
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
@@ -106,16 +106,16 @@ class BiAiTest {
 
     @DynamicPropertySource
     static void lake(DynamicPropertyRegistry r) throws Exception {
-        root = Files.createTempDirectory("drishti-bi-ai-lake");
+        root = com.ash.drishti.server.TestRun.temp("drishti-bi-ai-lake");
         day("2026-10-08");
         r.add("drishti.sources.connectors.ai-lake.settings.root", () -> root.resolve("lake").toString());
     }
 
     static {
         try {
-            Path datasets = Path.of("target/bi-ai-folder/datasets");
-            Path reports = Path.of("target/bi-ai-folder/reports");
-            Path ai = Path.of("target/test-data/bi-ai/ai");
+            Path datasets = com.ash.drishti.server.TestRun.root().resolve("bi-ai-folder/datasets");
+            Path reports = com.ash.drishti.server.TestRun.root().resolve("bi-ai-folder/reports");
+            Path ai = com.ash.drishti.server.TestRun.root().resolve("bi-ai/ai");
             Files.createDirectories(datasets);
             Files.createDirectories(reports);
             Files.createDirectories(ai);
@@ -161,7 +161,7 @@ class BiAiTest {
                           - { id: total, type: card, title: Notional, at: { x: 0, y: 0, w: 3, h: 2 }, wells: { values: [Notional] } }
                           - { id: by-desk, type: bar, title: Notional by desk, at: { x: 0, y: 2, w: 6, h: 4 }, wells: { axis: [trades.desk], values: [Notional] } }
                     """);
-            Path models = Path.of("target/bi-ai-folder/models");
+            Path models = com.ash.drishti.server.TestRun.root().resolve("bi-ai-folder/models");
             Files.createDirectories(models);
             // the same lake through the model layer: a rachana 2 dataset and a model over it
             Files.writeString(datasets.resolve("lake-trade.dataset.yaml"), """

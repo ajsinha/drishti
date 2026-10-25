@@ -77,7 +77,7 @@ class MailRenderTest {
 
     @Test
     void aTemplateDirectoryReplacesTheBundledFile() throws Exception {
-        Path dir = Files.createTempDirectory("mail-templates");
+        Path dir = com.ash.drishti.server.TestRun.temp("mail-templates");
         Files.writeString(dir.resolve("share.txt"), "custom ${headline} ${link}");
         MailRenderer r = new MailRenderer(new MailTemplates(dir.toString()), "Drishti", "x");
         RenderedMail m = r.render(share("n", false), "a@b.test", 1, "sh_1");

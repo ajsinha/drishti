@@ -33,9 +33,9 @@ import org.springframework.test.web.servlet.MockMvc;
 /** The size guard: a picture larger than {@code max-bytes} refuses the share with DRS-7016, and nothing is sent. */
 @SpringBootTest(properties = {"drishti.sources.plugins.demo.settings.ticking=false", "drishti.security.enabled=true",
         "drishti.security.secret=test-secret-that-is-at-least-32-bytes-long", "drishti.packs.enabled=finance",
-        "drishti.identity.database-url=jdbc:sqlite:target/snapshot-limits-${random.uuid}/identity.db",
-        "drishti.packs.overlay=target/snapshot-limits-overlay/added.yaml", "drishti.collab.store=file",
-        "drishti.collab.dir=target/snapshot-limits-${random.uuid}/collab", "drishti.collab.snapshots.enabled=true",
+        "drishti.identity.database-url=jdbc:sqlite:${drishti.test.dir}/snapshot-limits-${random.uuid}/identity.db",
+        "drishti.packs.overlay=${drishti.test.dir}/snapshot-limits-overlay/added.yaml", "drishti.collab.store=file",
+        "drishti.collab.dir=${drishti.test.dir}/snapshot-limits-${random.uuid}/collab", "drishti.collab.snapshots.enabled=true",
         "drishti.collab.snapshots.max-bytes=10000"})
 @AutoConfigureMockMvc
 class SnapshotLimitsTest {

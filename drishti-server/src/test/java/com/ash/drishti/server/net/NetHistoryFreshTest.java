@@ -47,7 +47,7 @@ class NetHistoryFreshTest {
 
     @BeforeAll
     static void start() throws Exception {
-        Path root = Path.of("target", "net-it", "history-fresh-" + System.nanoTime()).toAbsolutePath();
+        Path root = com.ash.drishti.server.TestRun.root().resolve(Path.of("net-it", "history-fresh-" + System.nanoTime()));
         lake = root.resolve("lake");
         try (Stream<Path> all = Files.walk(SOURCE)) {
             for (Path p : all.toList()) {

@@ -59,10 +59,10 @@ import org.springframework.test.web.servlet.ResultActions;
  * recorded once per pack, kind, date and batch, what runs on a ready load (refresh, verify, alerts, notices), and the expectations that
  * flag late data and clear when it lands, driven by a fake clock.
  */
-@SpringBootTest(properties = {"drishti.rachana.hot-reload=false", "drishti.packs.enabled=finance", "drishti.loads.scheduler=false", "drishti.loads.dir=target/test-data/loads-${random.uuid}",
+@SpringBootTest(properties = {"drishti.rachana.hot-reload=false", "drishti.packs.enabled=finance", "drishti.loads.scheduler=false", "drishti.loads.dir=${drishti.test.dir}/loads-${random.uuid}",
         "drishti.security.enabled=true", "drishti.security.secret=test-secret-that-is-at-least-32-bytes-long",
         "drishti.sources.plugins.demo.settings.ticking=false", "drishti.identity.iterations=1000",
-        "drishti.identity.database-url=jdbc:sqlite:target/identity-${random.uuid}/identity.db"})
+        "drishti.identity.database-url=jdbc:sqlite:${drishti.test.dir}/identity-${random.uuid}/identity.db"})
 @AutoConfigureMockMvc
 class LoadsApiTest {
 

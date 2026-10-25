@@ -27,7 +27,6 @@ import com.ash.drishti.identity.collab.OutboxStore;
 import com.ash.drishti.server.collab.Principals;
 import com.ash.drishti.server.security.Principal;
 import io.micrometer.core.instrument.simple.SimpleMeterRegistry;
-import java.nio.file.Files;
 import java.time.Clock;
 import java.time.Duration;
 import java.time.Instant;
@@ -80,7 +79,7 @@ class OutboxDispatcherTest {
 
     @BeforeEach
     void setUp() throws Exception {
-        store = new FileOutboxStore(Files.createTempDirectory("dispatch"));
+        store = new FileOutboxStore(com.ash.drishti.server.TestRun.temp("dispatch"));
         principals = mock(Principals.class);
         ravi = mock(User.class);
         when(ravi.enabled()).thenReturn(true);

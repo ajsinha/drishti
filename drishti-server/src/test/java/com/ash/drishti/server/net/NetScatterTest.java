@@ -66,7 +66,7 @@ class NetScatterTest {
 
     @BeforeAll
     static void start() throws Exception {
-        Path root = Path.of("target", "net-it", "scatter-" + System.nanoTime()).toAbsolutePath();
+        Path root = com.ash.drishti.server.TestRun.root().resolve(Path.of("net-it", "scatter-" + System.nanoTime()));
         int[] p = NetNodes.PORTS;
         trades(root.resolve("a/feeds"), "a", "ENDUR", 6, 1_000_000, true);
         trades(root.resolve("b/feeds"), "b", "MUREX", 3, 3_000_000, false);

@@ -20,10 +20,8 @@ import java.util.Map;
 /** The identity database on SQLite (the default). */
 class SqliteIdentityStoreTest extends IdentityStoreContract {
 
-    private final String file = "target/identity-sqlite-" + System.nanoTime() + "/drishti.db";
-
     @Override
     protected Map<String, Object> database() {
-        return Map.of("drishti.identity.database-url", "jdbc:sqlite:" + file);
+        return Map.of("drishti.identity.database-url", "jdbc:sqlite:" + tmp.resolve("identity/drishti.db"));
     }
 }

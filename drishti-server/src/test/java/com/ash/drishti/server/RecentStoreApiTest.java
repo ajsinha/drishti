@@ -39,7 +39,7 @@ import org.springframework.test.web.servlet.MockMvc;
  */
 // its own connector folder (read before the test environment is final): files other test contexts generate into the shared one, such as trading-store from the trading pack, would merge their settings into these connectors
 @SpringBootTest(properties = {"drishti.rachana.hot-reload=false",
-        "drishti.sources.connectors-dir=target/test-data/recent-store-connectors", "drishti.packs.enabled=finance", "drishti.sources.plugins.demo.enabled=false",
+        "drishti.sources.connectors-dir=${drishti.test.dir}/recent-store-connectors", "drishti.packs.enabled=finance", "drishti.sources.plugins.demo.enabled=false",
         "drishti.sources.plugins.file.enabled=false", "drishti.sources.connectors.finance-lake.enabled=false",
         "drishti.sources.connectors.recent-files.plugin=file", "drishti.sources.connectors.recent-files.kinds[0]=trade",
         "drishti.sources.connectors.recent-files.settings.rescan-seconds=3600",
@@ -64,7 +64,7 @@ class RecentStoreApiTest {
 
     @DynamicPropertySource
     static void stores(DynamicPropertyRegistry r) throws Exception {
-        Path root = Files.createTempDirectory("drishti-recent-store");
+        Path root = TestRun.temp("drishti-recent-store");
         // the recent store's 09-29 book is the lake's minus MX-30000006 (deleted there); 09-01 is only in the lake
         write(root.resolve("recent/2026-09-29/trade.jsonl"), trade("MX-30000001", 11), trade("MX-30000002", 12), trade("sl/ash-6", 13));
         write(root.resolve("lake/2026-09-29/trade.jsonl"), trade("MX-30000001", 21), trade("MX-30000002", 22), trade("MX-30000006", 26));

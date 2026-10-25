@@ -67,7 +67,7 @@ class NetPeerDownTest {
 
     @BeforeAll
     static void start() throws Exception {
-        Path root = Path.of("target", "net-it", "peer-down-" + System.nanoTime()).toAbsolutePath();
+        Path root = com.ash.drishti.server.TestRun.root().resolve(Path.of("net-it", "peer-down-" + System.nanoTime()));
         Path lakeA = copy(root.resolve("lake-a"));
         Path lakeB = copy(root.resolve("lake-b"));
         Path empty = Files.createDirectories(root.resolve("empty-lake"));

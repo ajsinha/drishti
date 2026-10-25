@@ -42,7 +42,6 @@ import com.ash.drishti.server.security.Entitlements;
 import com.ash.drishti.server.security.PackAccess;
 import com.ash.drishti.server.security.Principal;
 import io.micrometer.core.instrument.simple.SimpleMeterRegistry;
-import java.nio.file.Files;
 import java.time.Clock;
 import java.time.Instant;
 import java.time.LocalDate;
@@ -132,7 +131,7 @@ class CommentMailTest {
 
     @Test
     void theMessageRendersThroughTheDispatcherWithTheTitleAndNeverTheValue() throws Exception {
-        OutboxStore store = new FileOutboxStore(Files.createTempDirectory("comment-mail"));
+        OutboxStore store = new FileOutboxStore(com.ash.drishti.server.TestRun.temp("comment-mail"));
         List<RenderedMail> sent = new ArrayList<>();
         User u = mock(User.class);
         when(u.enabled()).thenReturn(true);
@@ -179,7 +178,7 @@ class CommentMailTest {
 
     @Test
     void theEmailNotifierQueuesOneRowForEachPersonWhoWantsTheEventAndHasAnAddress() throws Exception {
-        OutboxStore store = new FileOutboxStore(Files.createTempDirectory("comment-queue"));
+        OutboxStore store = new FileOutboxStore(com.ash.drishti.server.TestRun.temp("comment-queue"));
         User withMail = mock(User.class);
         when(withMail.email()).thenReturn("ravi@desk.test");
         User noMail = mock(User.class);

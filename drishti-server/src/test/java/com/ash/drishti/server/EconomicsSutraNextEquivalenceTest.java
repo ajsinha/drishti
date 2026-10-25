@@ -69,7 +69,7 @@ class EconomicsSutraNextEquivalenceTest {
         SCREENS.put("region-economy", "REGE-AU-NSW");
     }
 
-    static final Path SITE = Path.of("target", "test-data", "sutra-next-economics", "sutras").toAbsolutePath();
+    static final Path SITE = TestRun.root().resolve(Path.of("sutra-next-economics", "sutras"));
     /** What names the layout or the moment rather than the page: left out of the comparison. */
     static final Set<String> VOLATILE = Set.of("fingerprint", "layout", "fetchedAt", "generation", "builtAt", "tookMs", "elapsedMs", "servedBy", "timings");
 

@@ -49,8 +49,8 @@ import org.springframework.test.web.servlet.MockMvc;
  */
 @SpringBootTest(properties = {"drishti.sources.plugins.demo.settings.ticking=false", "drishti.security.enabled=true",
         "drishti.security.secret=test-secret-that-is-at-least-32-bytes-long", "drishti.packs.enabled=finance",
-        "drishti.identity.database-url=jdbc:sqlite:target/noteimport-${random.uuid}/identity.db",
-        "drishti.packs.overlay=target/noteimport-overlay/added.yaml", "drishti.collab.threads.edit-window=2s"})
+        "drishti.identity.database-url=jdbc:sqlite:${drishti.test.dir}/noteimport-${random.uuid}/identity.db",
+        "drishti.packs.overlay=${drishti.test.dir}/noteimport-overlay/added.yaml", "drishti.collab.threads.edit-window=2s"})
 @AutoConfigureMockMvc
 class NoteImportTest {
 

@@ -39,7 +39,7 @@ class NetSharedLakeTest {
 
     @BeforeAll
     static void start() throws Exception {
-        Path root = Path.of("target", "net-it", "lake-" + System.nanoTime()).toAbsolutePath();
+        Path root = com.ash.drishti.server.TestRun.root().resolve(Path.of("net-it", "lake-" + System.nanoTime()));
         int[] p = NetNodes.PORTS;
         NetScatterTest.ALL.clear();
         NetScatterTest.trades(root.resolve("lake"), "l", "ENDUR", 6, 1_000_000, true);

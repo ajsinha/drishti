@@ -21,8 +21,8 @@ import org.springframework.boot.test.context.SpringBootTest;
 /** The share contract with shares and the inbox in the identity database (drishti.collab.store=jpa). */
 @SpringBootTest(properties = {"drishti.sources.plugins.demo.settings.ticking=false", "drishti.security.enabled=true",
         "drishti.security.secret=test-secret-that-is-at-least-32-bytes-long", "drishti.packs.enabled=finance,logistics",
-        "drishti.collab.store=jpa", "drishti.identity.database-url=jdbc:sqlite:target/shareapi-jpa-${random.uuid}/identity.db",
-        "drishti.packs.overlay=target/shareapi-jpa-overlay/added.yaml", "drishti.collab.limits.shares-per-minute=1000",
+        "drishti.collab.store=jpa", "drishti.identity.database-url=jdbc:sqlite:${drishti.test.dir}/shareapi-jpa-${random.uuid}/identity.db",
+        "drishti.packs.overlay=${drishti.test.dir}/shareapi-jpa-overlay/added.yaml", "drishti.collab.limits.shares-per-minute=1000",
         "drishti.collab.inbox.poll=100ms", "drishti.collab.packs.logistics.share-enabled=false"})
 @AutoConfigureMockMvc
 class ShareApiJpaTest extends ShareApiContract {}

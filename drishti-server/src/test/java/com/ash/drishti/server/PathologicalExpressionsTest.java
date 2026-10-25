@@ -77,7 +77,7 @@ class PathologicalExpressionsTest {
     /** The default limits: both files are located problems at start-up; the view, alerts and search refuse cleanly. */
     @Nested
     @SpringBootTest(properties = {"drishti.sources.plugins.demo.settings.ticking=false", "drishti.packs.enabled=finance",
-            "drishti.identity.database-url=jdbc:sqlite:target/prefs-patho-${random.uuid}/identity.db"})
+            "drishti.identity.database-url=jdbc:sqlite:${drishti.test.dir}/prefs-patho-${random.uuid}/identity.db"})
     @AutoConfigureMockMvc
     class DefaultLimits {
 
@@ -149,7 +149,7 @@ class PathologicalExpressionsTest {
     @Nested
     @SpringBootTest(properties = {"drishti.sources.plugins.demo.settings.ticking=false", "drishti.packs.enabled=finance",
             "drishti.rachana.max-expression-depth=10000000", "drishti.rachana.max-expression-length=100000000",
-            "drishti.identity.database-url=jdbc:sqlite:target/prefs-patho2-${random.uuid}/identity.db"})
+            "drishti.identity.database-url=jdbc:sqlite:${drishti.test.dir}/prefs-patho2-${random.uuid}/identity.db"})
     @AutoConfigureMockMvc
     class LiftedLimits {
 

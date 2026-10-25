@@ -31,9 +31,9 @@ import org.springframework.test.context.DynamicPropertySource;
         "drishti.collab.outbox.tick=100ms", "drishti.collab.outbox.backoff=300ms", "drishti.collab.outbox.max-backoff=1s",
         "drishti.collab.outbox.max-attempts=50", "spring.mail.host=127.0.0.1",
         "spring.mail.properties.mail.smtp.connectiontimeout=2000", "spring.mail.properties.mail.smtp.timeout=2000",
-        "drishti.identity.database-url=jdbc:sqlite:target/sharemail-file-${random.uuid}/identity.db",
-        "drishti.packs.overlay=target/sharemail-file-overlay/added.yaml", "drishti.collab.store=file",
-        "drishti.collab.dir=target/sharemail-file-${random.uuid}/collab"})
+        "drishti.identity.database-url=jdbc:sqlite:${drishti.test.dir}/sharemail-file-${random.uuid}/identity.db",
+        "drishti.packs.overlay=${drishti.test.dir}/sharemail-file-overlay/added.yaml", "drishti.collab.store=file",
+        "drishti.collab.dir=${drishti.test.dir}/sharemail-file-${random.uuid}/collab"})
 @AutoConfigureMockMvc
 class ShareMailFileTest extends ShareMailContract {
     static final int PORT = freePort();

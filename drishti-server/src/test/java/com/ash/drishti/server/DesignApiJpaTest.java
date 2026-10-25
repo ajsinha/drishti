@@ -37,8 +37,8 @@ import org.springframework.test.web.servlet.MockMvc;
 /** {@code drishti.builder.designs.store=jpa}: the same API on the identity database. */
 @SpringBootTest(properties = {"drishti.rachana.hot-reload=false", "drishti.sources.plugins.demo.settings.ticking=false",
         "drishti.security.enabled=true", "drishti.security.secret=test-secret-that-is-at-least-32-bytes-long",
-        "drishti.identity.database-url=jdbc:sqlite:target/design-jpa-${random.uuid}/identity.db", "drishti.builder.designs.store=jpa",
-        "drishti.builder.designs.dir=target/design-jpa-must-stay-unused"})
+        "drishti.identity.database-url=jdbc:sqlite:${drishti.test.dir}/design-jpa-${random.uuid}/identity.db", "drishti.builder.designs.store=jpa",
+        "drishti.builder.designs.dir=${drishti.test.dir}/design-jpa-must-stay-unused"})
 @AutoConfigureMockMvc
 class DesignApiJpaTest {
 
@@ -61,7 +61,7 @@ class DesignApiJpaTest {
         assertThat(mvc.perform(get(url + "/samples/document?name=a.json").header("Authorization", ann)).andExpect(status().isOk()).andReturn()
                 .getResponse().getContentAsString()).isEqualTo("{\"x\":1}");
         mvc.perform(get(url).header("Authorization", bob)).andExpect(status().isNotFound());
-        assertThat(java.nio.file.Files.exists(java.nio.file.Path.of("target/design-jpa-must-stay-unused"))).isFalse();
+        assertThat(java.nio.file.Files.exists(TestRun.root().resolve("design-jpa-must-stay-unused"))).isFalse();
         mvc.perform(delete(url).header("Authorization", ann)).andExpect(status().isNoContent());
         assertThat(store.sample("ann", d.path("id").asText(), "a.json")).isEmpty();
     }

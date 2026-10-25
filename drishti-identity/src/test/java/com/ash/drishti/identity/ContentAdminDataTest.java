@@ -29,26 +29,27 @@ import com.ash.drishti.identity.db.EmbedAppEntity;
 import com.ash.drishti.identity.db.IdentityRepositories;
 import com.ash.drishti.identity.db.PackStateEntity;
 import java.nio.charset.StandardCharsets;
-import java.nio.file.Files;
 import java.nio.file.Path;
 import java.time.Instant;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.UUID;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.io.TempDir;
 import org.springframework.transaction.support.TransactionCallback;
 import org.springframework.transaction.support.TransactionTemplate;
 
 /** Embed apps, pack switches and the audit trail in the content store (CONTENT_STORE.md section 9): two nodes on one filesystem root. */
 class ContentAdminDataTest {
 
+    @TempDir
+    Path tmp;
+
     private Path root;
 
     @BeforeEach
     void setUp() throws Exception {
-        Path dir = Path.of("target", "content-tests", "admin-" + UUID.randomUUID()).toAbsolutePath();
-        Files.createDirectories(dir);
+        Path dir = tmp.toAbsolutePath();
         root = dir.resolve("fstore");
     }
 

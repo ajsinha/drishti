@@ -52,9 +52,9 @@ import org.springframework.test.web.servlet.request.MockMvcRequestBuilders;
  */
 @SpringBootTest(properties = {"drishti.sources.plugins.demo.settings.ticking=false", "drishti.security.enabled=true",
         "drishti.security.secret=test-secret-that-is-at-least-32-bytes-long", "drishti.packs.enabled=finance",
-        "drishti.identity.database-url=jdbc:sqlite:target/stmt-rows-${random.uuid}/identity.db", "drishti.packs.overlay=target/stmt-rows-overlay/added.yaml",
-        "drishti.bi.dir=target/stmt-rows-folder", "drishti.bi.folder-refresh=1s", "drishti.bi.query.store-dir=target/stmt-rows-store/${random.uuid}",
-        "drishti.packs.samples=developers", "drishti.sources.connectors-dir=target/test-data/stmt-rows-connectors", "drishti.sources.plugins.file.enabled=false",
+        "drishti.identity.database-url=jdbc:sqlite:${drishti.test.dir}/stmt-rows-${random.uuid}/identity.db", "drishti.packs.overlay=${drishti.test.dir}/stmt-rows-overlay/added.yaml",
+        "drishti.bi.dir=${drishti.test.dir}/stmt-rows-folder", "drishti.bi.folder-refresh=1s", "drishti.bi.query.store-dir=${drishti.test.dir}/stmt-rows-store/${random.uuid}",
+        "drishti.packs.samples=developers", "drishti.sources.connectors-dir=${drishti.test.dir}/stmt-rows-connectors", "drishti.sources.plugins.file.enabled=false",
         "drishti.sources.connectors.finance-lake.enabled=false",
         "drishti.sources.connectors.rows-lake.plugin=file", "drishti.sources.connectors.rows-lake.kinds[0]=trade",
         "drishti.sources.connectors.rows-lake.settings.rescan-seconds=3600",
@@ -84,7 +84,7 @@ class StatementRowsTest {
 
     @DynamicPropertySource
     static void lake(DynamicPropertyRegistry r) throws Exception {
-        root = Files.createTempDirectory("drishti-stmt-rows");
+        root = com.ash.drishti.server.TestRun.temp("drishti-stmt-rows");
         List<String> lines = new ArrayList<>();
         for (int i = 0; i < TRADES; i++) {
             lines.add("{\"id\":\"" + id(i) + "\",\"TRADE_ID\":\"" + id(i) + "\",\"DESK\":\"" + desk(i) + "\",\"NOTIONAL\":" + (1_000.0 + i) + ",\"TRADE_DATE\":\"" + DAY + "\"}");
@@ -118,7 +118,7 @@ class StatementRowsTest {
 
     static {
         try {
-            Path folder = Path.of("target/stmt-rows-folder");
+            Path folder = com.ash.drishti.server.TestRun.root().resolve("stmt-rows-folder");
             Path datasets = Files.createDirectories(folder.resolve("datasets"));
             Path models = Files.createDirectories(folder.resolve("models"));
             Path reports = Files.createDirectories(folder.resolve("reports"));

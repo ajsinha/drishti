@@ -38,8 +38,8 @@ import org.springframework.boot.test.web.server.LocalServerPort;
  */
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT, properties = {"drishti.sources.plugins.demo.settings.ticking=false",
         "drishti.security.enabled=true", "drishti.security.secret=test-secret-that-is-at-least-32-bytes-long", "drishti.packs.enabled=finance",
-        "drishti.identity.database-url=jdbc:sqlite:target/noticestream-${random.uuid}/identity.db",
-        "drishti.packs.overlay=target/noticestream-overlay/added.yaml", "drishti.collab.inbox.poll=100ms"})
+        "drishti.identity.database-url=jdbc:sqlite:${drishti.test.dir}/noticestream-${random.uuid}/identity.db",
+        "drishti.packs.overlay=${drishti.test.dir}/noticestream-overlay/added.yaml", "drishti.collab.inbox.poll=100ms"})
 class NoticeStreamTest {
 
     @LocalServerPort int port;

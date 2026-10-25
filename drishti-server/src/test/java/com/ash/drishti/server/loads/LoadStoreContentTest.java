@@ -35,7 +35,7 @@ class LoadStoreContentTest {
 
     @Test
     void twoNodesSeeOneHistoryAndALateFlagGoesOutOnce() throws Exception {
-        Path dir = Path.of("target", "content-tests", "loads-" + UUID.randomUUID()).toAbsolutePath();
+        Path dir = com.ash.drishti.server.TestRun.root().resolve(Path.of("content-tests", "loads-" + UUID.randomUUID()));
         Path folder = dir.resolve("loads");
         LocalDate d = LocalDate.of(2026, 10, 20);
         LoadStore old = new LoadStore(folder, 100);

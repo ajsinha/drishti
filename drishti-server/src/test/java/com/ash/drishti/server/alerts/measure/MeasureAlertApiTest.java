@@ -36,7 +36,7 @@ import org.springframework.test.web.servlet.MockMvc;
  * by hand and deleted; a bad alert is {@code DRS-9062}; the board tiles list is for administrators.
  */
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT, properties = {"drishti.sources.plugins.demo.settings.tick-ms=40", "drishti.packs.enabled=finance,logistics",
-        "drishti.identity.database-url=jdbc:sqlite:target/prefs-measure-alerts-${random.uuid}/identity.db"})
+        "drishti.identity.database-url=jdbc:sqlite:${drishti.test.dir}/prefs-measure-alerts-${random.uuid}/identity.db"})
 @AutoConfigureMockMvc
 class MeasureAlertApiTest {
 

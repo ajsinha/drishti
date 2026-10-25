@@ -43,7 +43,7 @@ import org.springframework.test.web.servlet.MockMvc;
  * would break a report somebody else published.
  */
 @SpringBootTest(properties = {"drishti.rachana.hot-reload=false", "drishti.sources.plugins.demo.settings.ticking=false", "drishti.packs.enabled=lakepack",
-        "drishti.bi.dir=target/pack-bi-folder", "drishti.bi.query.store-dir=target/pack-bi-store", "drishti.identity.database-url=jdbc:sqlite:target/pack-bi-${random.uuid}/identity.db"})
+        "drishti.bi.dir=${drishti.test.dir}/pack-bi-folder", "drishti.bi.query.store-dir=${drishti.test.dir}/pack-bi-store", "drishti.identity.database-url=jdbc:sqlite:${drishti.test.dir}/pack-bi-${random.uuid}/identity.db"})
 @AutoConfigureMockMvc
 @TestMethodOrder(MethodOrderer.OrderAnnotation.class)
 class PackBiDeployTest {
@@ -95,7 +95,7 @@ class PackBiDeployTest {
             BEFORE.put(k, System.getProperty(k));
         }
         try {
-            root = Files.createTempDirectory("drishti-pack-bi");
+            root = TestRun.temp("drishti-pack-bi");
             Path pack = Files.createDirectories(root.resolve("packs/lakepack"));
             Files.createDirectories(pack.resolve("sutras"));
             Files.writeString(pack.resolve("pack.yaml"), packYaml("1.0.0"));

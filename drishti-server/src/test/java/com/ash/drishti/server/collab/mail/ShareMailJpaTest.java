@@ -31,8 +31,8 @@ import org.springframework.test.context.DynamicPropertySource;
         "drishti.collab.outbox.tick=100ms", "drishti.collab.outbox.backoff=300ms", "drishti.collab.outbox.max-backoff=1s",
         "drishti.collab.outbox.max-attempts=50", "spring.mail.host=127.0.0.1",
         "spring.mail.properties.mail.smtp.connectiontimeout=2000", "spring.mail.properties.mail.smtp.timeout=2000",
-        "drishti.identity.database-url=jdbc:sqlite:target/sharemail-jpa-${random.uuid}/identity.db",
-        "drishti.packs.overlay=target/sharemail-jpa-overlay/added.yaml"})
+        "drishti.identity.database-url=jdbc:sqlite:${drishti.test.dir}/sharemail-jpa-${random.uuid}/identity.db",
+        "drishti.packs.overlay=${drishti.test.dir}/sharemail-jpa-overlay/added.yaml"})
 @AutoConfigureMockMvc
 class ShareMailJpaTest extends ShareMailContract {
     static final int PORT = freePort();
