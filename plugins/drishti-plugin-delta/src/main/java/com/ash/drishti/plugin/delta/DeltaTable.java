@@ -479,7 +479,10 @@ final class DeltaTable {
         StructType schema = new StructType().add(idColumn, StringType.STRING)
                 .add(vectorColumn, new io.delta.kernel.types.ArrayType(io.delta.kernel.types.DoubleType.DOUBLE, true));
         for (String c : textColumns) {
-            schema = schema.add(c, StringType.STRING);
+            // read in the type the table has (QUANTITY is a double): its value comes back as text (a number keeps its digits)
+            io.delta.kernel.types.DataType have = layout.schema() == null || layout.schema().indexOf(c) < 0 ? null
+                    : layout.schema().get(c).getDataType();
+            schema = schema.add(c, have != null && isScalar(have) ? have : StringType.STRING);
         }
         double[][] buf = {new double[512]};
         String[] texts = new String[textColumns.size()];
@@ -494,7 +497,7 @@ final class DeltaTable {
                     for (int c = 0; c < texts.length; c++) {
                         String fixed = partition.get(textColumns.get(c));
                         io.delta.kernel.data.ColumnVector tv = batch.getColumnVector(c + 2);
-                        texts[c] = fixed != null ? fixed : tv.isNullAt(r) ? null : tv.getString(r);
+                        texts[c] = fixed != null ? fixed : tv.isNullAt(r) ? null : text(tv, r);
                     }
                     String id = idv.isNullAt(r) ? "" : idv.getString(r);
                     if (vec.isNullAt(r)) {
