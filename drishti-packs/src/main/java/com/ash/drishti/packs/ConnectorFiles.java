@@ -419,6 +419,48 @@ public final class ConnectorFiles {
                 m.get("description") == null ? "" : String.valueOf(m.get("description")), settings, text, etag(text), null, requires, compute);
     }
 
+    /** A pack template's computation when its plugin is {@code reactive} (empty otherwise, or when it is not usable: the file says why). */
+    public static Map<String, Object> computeOf(Map<String, Object> template) {
+        boolean reactive = "reactive".equals(String.valueOf(template.get("plugin")).trim());
+        if (!reactive) {
+            return Map.of();
+        }
+        try {
+            return compute("template", template, true);
+        } catch (InvalidFile e) {
+            return Map.of();
+        }
+    }
+
+    /** The setting a computation reaches its plugin in ({@link #COMPUTE_SETTING}): the block as JSON; null for none. */
+    public static String computeSetting(Map<String, Object> compute) {
+        if (compute == null || compute.isEmpty()) {
+            return null;
+        }
+        try {
+            return JSON.writeValueAsString(compute);
+        } catch (IOException e) {
+            throw new UncheckedIOException(e);
+        }
+    }
+
+    /** The kinds a template or file names: a list, comma-separated text, or a mapping of kinds to their parameters (reactive). */
+    public static List<String> kindNames(Object kinds) {
+        List<String> out = new ArrayList<>();
+        if (kinds instanceof Map<?, ?> m) {
+            m.keySet().forEach(x -> out.add(String.valueOf(x)));
+        } else if (kinds instanceof List<?> l) {
+            l.forEach(x -> out.add(String.valueOf(x)));
+        } else if (kinds instanceof String s) {
+            for (String x : s.split(",")) {
+                if (!x.isBlank()) {
+                    out.add(x.trim());
+                }
+            }
+        }
+        return out;
+    }
+
     /**
      * A reactive connector's computation as written: {@code mode}, {@code kinds} (a mapping of kinds to their {@code params:} and
      * {@code result:}) and the keys of {@link #COMPUTE_KEYS}. Refused on any other plugin (mode excepted), where they would be ignored.

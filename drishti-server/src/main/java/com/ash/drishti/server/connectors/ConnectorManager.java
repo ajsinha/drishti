@@ -473,10 +473,11 @@ public final class ConnectorManager {
         PackLoader.flatten("", t.get("settings") instanceof Map<?, ?> s ? (Map<String, Object>) s : Map.of(), flat);
         Map<String, String> settings = new LinkedHashMap<>();
         flat.forEach((k, v) -> settings.put(k, env.resolvePlaceholders(String.valueOf(v))));
-        List<String> kinds = new ArrayList<>();
-        if (t.get("kinds") instanceof List<?> l) {
-            l.forEach(x -> kinds.add(String.valueOf(x)));
+        String spec = ConnectorFiles.computeSetting(ConnectorFiles.computeOf(t));   // a reactive connector's computation (REACTIVE_CONNECTORS.md)
+        if (spec != null) {
+            settings.put(ConnectorFiles.COMPUTE_SETTING, env.resolvePlaceholders(spec));
         }
+        List<String> kinds = ConnectorFiles.kindNames(t.get("kinds"));
         String en = t.get("enabled") == null ? "true" : env.resolvePlaceholders(String.valueOf(t.get("enabled")));
         return new SourcesProperties.ConnectorSettings(String.valueOf(t.get("plugin")), Boolean.parseBoolean(en.trim()), kinds, settings);
     }
@@ -486,12 +487,9 @@ public final class ConnectorManager {
         Map<String, Object> d = t.definition();
         Map<String, Object> flat = new LinkedHashMap<>();
         PackLoader.flatten("", d.get("settings") instanceof Map<?, ?> s ? (Map<String, Object>) s : Map.of(), flat);
-        List<String> kinds = new ArrayList<>();
-        if (d.get("kinds") instanceof List<?> l) {
-            l.forEach(x -> kinds.add(String.valueOf(x)));
-        }
+        List<String> kinds = ConnectorFiles.kindNames(d.get("kinds"));
         return files.render("# The default suggested by pack '" + t.pack() + "'.", String.valueOf(d.get("plugin")), d.get("enabled"), kinds,
-                d.get("description") == null ? "" : String.valueOf(d.get("description")), flat);
+                d.get("description") == null ? "" : String.valueOf(d.get("description")), flat, Map.of(), ConnectorFiles.computeOf(d));
     }
 
     // -- reading ---------------------------------------------------------------------------------------------------

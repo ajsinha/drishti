@@ -122,6 +122,23 @@ class SutraWiringTest {
     }
 
     @Test
+    void aComputedSourceTakesTypedParametersAsExpressions() {
+        Sutra s = parse("""
+                  - { id: var, kind: metric, value: $src.SUM, source: { kind: var-result, id: "$.DESK", params: { confidence: ctl.conf, horizon: 1, live: true } } }
+                """);
+        Wiring.Source src = s.panels().get(0).wiring().source();
+        assertThat(src.params()).containsExactly(Map.entry("confidence", "ctl.conf"), Map.entry("horizon", "1"), Map.entry("live", "true"));
+        assertThat(src.expressions()).contains("ctl.conf", "1");
+        assertThat(problems("  - { id: v, kind: kv, source: { kind: var-result, where: \"@.A > 1\", params: { x: 1 } } }\n"))
+                .anySatisfy(p -> assertThat(p.code() + " " + p.message()).contains("DRS-2057").contains("'params' goes with a source read by id"));
+        assertThat(problems("  - { id: v, kind: kv, source: { kind: var-result, id: $.A, params: [1, 2] } }\n"))
+                .anySatisfy(p -> assertThat(p.code() + " " + p.message()).contains("DRS-2012").contains("mapping of parameter names"));
+        assertThat(problems("  - { id: v, kind: kv, source: { kind: var-result, id: $.A, params: { 9x: 1, y: { a: 1 } } } }\n"))
+                .anySatisfy(p -> assertThat(p.message()).contains("'9x' is not a parameter name"))
+                .anySatisfy(p -> assertThat(p.message()).contains("parameter y is an expression"));
+    }
+
+    @Test
     void theOlderFormsStayOptions() {
         Sutra s = parse("""
                   - { id: fx, kind: line, rows: $.POINTS, source: "link($.CURVE, 'ir-curve')" }

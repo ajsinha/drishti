@@ -84,7 +84,7 @@ public final class Results {
     }
 
     /** The kind's document of a result, with its stamp. */
-    static Map<String, Object> document(EngineRequest req, EngineResult r, Map<String, String> inputs, Watermark wm, String engine, Instant at) {
+    static Map<String, Object> document(String kind, EngineRequest req, EngineResult r, Map<String, String> inputs, Watermark wm, String engine, Instant at) {
         Map<String, Object> doc = new LinkedHashMap<>();
         doc.put("ID", req.id());
         if (r.rows().size() == 1) {
@@ -100,7 +100,7 @@ public final class Results {
         }
         Map<String, Object> stamp = new LinkedHashMap<>();
         stamp.put("connector", req.connector());
-        stamp.put("kind", req.kind());
+        stamp.put("kind", kind);
         stamp.put("params", printable(req.params()));
         stamp.put("businessDate", req.asOf().businessDate() == null ? null : req.asOf().businessDate().toString());
         stamp.put("knownAt", req.asOf().knownAt() == null ? null : req.asOf().knownAt().toString());
@@ -115,6 +115,15 @@ public final class Results {
         stamp.put("requestId", req.requestId());
         stamp.put("computedAt", at.toString());
         stamp.put("engine", engine);
+        Map<String, Object> ran = new LinkedHashMap<>();
+        for (String k : List.of("worker", "node", "chunks", "workers", "nodes", "queuedMs", "runMs")) {
+            if (r.meta().get(k) != null) {
+                ran.put(k, r.meta().get(k));
+            }
+        }
+        if (!ran.isEmpty()) {
+            stamp.put("ran", ran);                                   // where it ran: the worker, or the chunks over how many workers and nodes
+        }
         stamp.put("signature", req.viewer().viewSignature());
         stamp.put("resultHash", hash(r));
         doc.put("STAMP", stamp);

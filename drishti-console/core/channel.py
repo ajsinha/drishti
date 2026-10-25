@@ -117,6 +117,8 @@ class ChannelSession:
             return self.backend.sse("/bi/runs/events", self.me, opened=responses), False
         if sub.startswith("monitor:"):
             return self.backend.sse(f"/me/monitors/{quote(sub[8:])}/stream", self.me, opened=responses), False
+        if sub.startswith("compute:") and len(sub) > 8:         # a computed panel's request (REACTIVE_CONNECTORS.md): progress, state, done,
+            return self.backend.sse(f"/compute/requests/{quote(sub[8:], safe='')}/stream", self.me, opened=responses), False   # failed, updated
         return None, False
 
     def _pool(self):

@@ -242,7 +242,9 @@ public final class RachanaSchema {
         source.put("limit", Map.of("type", "integer", "minimum", 1, "maximum", com.ash.drishti.rachana.model.Wiring.Source.MAX_LIMIT));
         source.put("as-of", text(EL + " for the business date read"));
         source.put("pack", text("The pack serving the kind"));
-        common.put("source", Map.of("description", "The record the panel reads: " + EL + " naming a linked entity (it reads as $), or {kind, id | where | search, limit, as-of, pack} (it reads as $src)",
+        source.put("params", Map.of("type", "object", "description", "A computed kind's parameters (a reactive connector): name: " + EL
+                + " (a number or true/false is its own literal); only with id", "additionalProperties", Map.of("type", List.of("string", "number", "boolean"))));
+        common.put("source", Map.of("description", "The record the panel reads: " + EL + " naming a linked entity (it reads as $), or {kind, id | where | search, limit, as-of, pack, params} (it reads as $src)",
                 "oneOf", List.of(Map.of("type", "string"), Map.of("type", "object", "properties", source, "required", List.of("kind")))));
         Map<String, Object> emit = new LinkedHashMap<>();
         emit.put("name", text("The event's name: select, open, drill, filter, change"));

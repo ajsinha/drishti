@@ -15,6 +15,7 @@
  */
 package com.ash.drishti.compute.reactive;
 
+import com.ash.drishti.api.compute.ComputeRef;
 import com.ash.drishti.compute.ConfigValues;
 import java.math.BigDecimal;
 import java.time.LocalDate;
@@ -111,10 +112,7 @@ public record ParamSpec(String name, String type, boolean required, Object dflt,
 
     /** A value as it is written in a canonical id or a key: numbers without trailing zeros, dates as ISO text. */
     static String text(Object v) {
-        if (v instanceof BigDecimal b) {
-            return b.stripTrailingZeros().toPlainString();
-        }
-        return String.valueOf(v);
+        return ComputeRef.text(v);
     }
 
     private static Object convert(String what, String type, Object v, BigDecimal min, BigDecimal max) {

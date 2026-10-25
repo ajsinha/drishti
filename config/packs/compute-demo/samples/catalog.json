@@ -1,0 +1,740 @@
+[
+ {
+  "kind": "path-book",
+  "id": "BOOK-CREDIT",
+  "title": "BOOK-CREDIT",
+  "subtitle": "Credit book · 30 strips of 250 scenario days"
+ },
+ {
+  "kind": "path-book",
+  "id": "BOOK-FX",
+  "title": "BOOK-FX",
+  "subtitle": "FX book · 40 strips of 250 scenario days"
+ },
+ {
+  "kind": "path-book",
+  "id": "BOOK-RATES",
+  "title": "BOOK-RATES",
+  "subtitle": "Rates book · 50 strips of 250 scenario days"
+ },
+ {
+  "kind": "path-strip",
+  "id": "STRIP-RATES-001",
+  "title": "STRIP-RATES-001",
+  "subtitle": "SWAPTION · Rates book"
+ },
+ {
+  "kind": "path-strip",
+  "id": "STRIP-RATES-002",
+  "title": "STRIP-RATES-002",
+  "subtitle": "SWAPTION · Rates book"
+ },
+ {
+  "kind": "path-strip",
+  "id": "STRIP-RATES-003",
+  "title": "STRIP-RATES-003",
+  "subtitle": "OIS · Rates book"
+ },
+ {
+  "kind": "path-strip",
+  "id": "STRIP-RATES-004",
+  "title": "STRIP-RATES-004",
+  "subtitle": "SWAPTION · Rates book"
+ },
+ {
+  "kind": "path-strip",
+  "id": "STRIP-RATES-005",
+  "title": "STRIP-RATES-005",
+  "subtitle": "IRS · Rates book"
+ },
+ {
+  "kind": "path-strip",
+  "id": "STRIP-RATES-006",
+  "title": "STRIP-RATES-006",
+  "subtitle": "SWAPTION · Rates book"
+ },
+ {
+  "kind": "path-strip",
+  "id": "STRIP-RATES-007",
+  "title": "STRIP-RATES-007",
+  "subtitle": "OIS · Rates book"
+ },
+ {
+  "kind": "path-strip",
+  "id": "STRIP-RATES-008",
+  "title": "STRIP-RATES-008",
+  "subtitle": "SWAPTION · Rates book"
+ },
+ {
+  "kind": "path-strip",
+  "id": "STRIP-RATES-009",
+  "title": "STRIP-RATES-009",
+  "subtitle": "IRS · Rates book"
+ },
+ {
+  "kind": "path-strip",
+  "id": "STRIP-RATES-010",
+  "title": "STRIP-RATES-010",
+  "subtitle": "FRA · Rates book"
+ },
+ {
+  "kind": "path-strip",
+  "id": "STRIP-RATES-011",
+  "title": "STRIP-RATES-011",
+  "subtitle": "FRA · Rates book"
+ },
+ {
+  "kind": "path-strip",
+  "id": "STRIP-RATES-012",
+  "title": "STRIP-RATES-012",
+  "subtitle": "OIS · Rates book"
+ },
+ {
+  "kind": "path-strip",
+  "id": "STRIP-RATES-013",
+  "title": "STRIP-RATES-013",
+  "subtitle": "OIS · Rates book"
+ },
+ {
+  "kind": "path-strip",
+  "id": "STRIP-RATES-014",
+  "title": "STRIP-RATES-014",
+  "subtitle": "OIS · Rates book"
+ },
+ {
+  "kind": "path-strip",
+  "id": "STRIP-RATES-015",
+  "title": "STRIP-RATES-015",
+  "subtitle": "SWAPTION · Rates book"
+ },
+ {
+  "kind": "path-strip",
+  "id": "STRIP-RATES-016",
+  "title": "STRIP-RATES-016",
+  "subtitle": "SWAPTION · Rates book"
+ },
+ {
+  "kind": "path-strip",
+  "id": "STRIP-RATES-017",
+  "title": "STRIP-RATES-017",
+  "subtitle": "OIS · Rates book"
+ },
+ {
+  "kind": "path-strip",
+  "id": "STRIP-RATES-018",
+  "title": "STRIP-RATES-018",
+  "subtitle": "FRA · Rates book"
+ },
+ {
+  "kind": "path-strip",
+  "id": "STRIP-RATES-019",
+  "title": "STRIP-RATES-019",
+  "subtitle": "SWAPTION · Rates book"
+ },
+ {
+  "kind": "path-strip",
+  "id": "STRIP-RATES-020",
+  "title": "STRIP-RATES-020",
+  "subtitle": "OIS · Rates book"
+ },
+ {
+  "kind": "path-strip",
+  "id": "STRIP-RATES-021",
+  "title": "STRIP-RATES-021",
+  "subtitle": "OIS · Rates book"
+ },
+ {
+  "kind": "path-strip",
+  "id": "STRIP-RATES-022",
+  "title": "STRIP-RATES-022",
+  "subtitle": "SWAPTION · Rates book"
+ },
+ {
+  "kind": "path-strip",
+  "id": "STRIP-RATES-023",
+  "title": "STRIP-RATES-023",
+  "subtitle": "FRA · Rates book"
+ },
+ {
+  "kind": "path-strip",
+  "id": "STRIP-RATES-024",
+  "title": "STRIP-RATES-024",
+  "subtitle": "FRA · Rates book"
+ },
+ {
+  "kind": "path-strip",
+  "id": "STRIP-RATES-025",
+  "title": "STRIP-RATES-025",
+  "subtitle": "IRS · Rates book"
+ },
+ {
+  "kind": "path-strip",
+  "id": "STRIP-RATES-026",
+  "title": "STRIP-RATES-026",
+  "subtitle": "IRS · Rates book"
+ },
+ {
+  "kind": "path-strip",
+  "id": "STRIP-RATES-027",
+  "title": "STRIP-RATES-027",
+  "subtitle": "IRS · Rates book"
+ },
+ {
+  "kind": "path-strip",
+  "id": "STRIP-RATES-028",
+  "title": "STRIP-RATES-028",
+  "subtitle": "FRA · Rates book"
+ },
+ {
+  "kind": "path-strip",
+  "id": "STRIP-RATES-029",
+  "title": "STRIP-RATES-029",
+  "subtitle": "SWAPTION · Rates book"
+ },
+ {
+  "kind": "path-strip",
+  "id": "STRIP-RATES-030",
+  "title": "STRIP-RATES-030",
+  "subtitle": "OIS · Rates book"
+ },
+ {
+  "kind": "path-strip",
+  "id": "STRIP-RATES-031",
+  "title": "STRIP-RATES-031",
+  "subtitle": "FRA · Rates book"
+ },
+ {
+  "kind": "path-strip",
+  "id": "STRIP-RATES-032",
+  "title": "STRIP-RATES-032",
+  "subtitle": "FRA · Rates book"
+ },
+ {
+  "kind": "path-strip",
+  "id": "STRIP-RATES-033",
+  "title": "STRIP-RATES-033",
+  "subtitle": "OIS · Rates book"
+ },
+ {
+  "kind": "path-strip",
+  "id": "STRIP-RATES-034",
+  "title": "STRIP-RATES-034",
+  "subtitle": "FRA · Rates book"
+ },
+ {
+  "kind": "path-strip",
+  "id": "STRIP-RATES-035",
+  "title": "STRIP-RATES-035",
+  "subtitle": "FRA · Rates book"
+ },
+ {
+  "kind": "path-strip",
+  "id": "STRIP-RATES-036",
+  "title": "STRIP-RATES-036",
+  "subtitle": "IRS · Rates book"
+ },
+ {
+  "kind": "path-strip",
+  "id": "STRIP-RATES-037",
+  "title": "STRIP-RATES-037",
+  "subtitle": "SWAPTION · Rates book"
+ },
+ {
+  "kind": "path-strip",
+  "id": "STRIP-RATES-038",
+  "title": "STRIP-RATES-038",
+  "subtitle": "FRA · Rates book"
+ },
+ {
+  "kind": "path-strip",
+  "id": "STRIP-RATES-039",
+  "title": "STRIP-RATES-039",
+  "subtitle": "SWAPTION · Rates book"
+ },
+ {
+  "kind": "path-strip",
+  "id": "STRIP-RATES-040",
+  "title": "STRIP-RATES-040",
+  "subtitle": "OIS · Rates book"
+ },
+ {
+  "kind": "path-strip",
+  "id": "STRIP-RATES-041",
+  "title": "STRIP-RATES-041",
+  "subtitle": "SWAPTION · Rates book"
+ },
+ {
+  "kind": "path-strip",
+  "id": "STRIP-RATES-042",
+  "title": "STRIP-RATES-042",
+  "subtitle": "FRA · Rates book"
+ },
+ {
+  "kind": "path-strip",
+  "id": "STRIP-RATES-043",
+  "title": "STRIP-RATES-043",
+  "subtitle": "IRS · Rates book"
+ },
+ {
+  "kind": "path-strip",
+  "id": "STRIP-RATES-044",
+  "title": "STRIP-RATES-044",
+  "subtitle": "IRS · Rates book"
+ },
+ {
+  "kind": "path-strip",
+  "id": "STRIP-RATES-045",
+  "title": "STRIP-RATES-045",
+  "subtitle": "FRA · Rates book"
+ },
+ {
+  "kind": "path-strip",
+  "id": "STRIP-RATES-046",
+  "title": "STRIP-RATES-046",
+  "subtitle": "SWAPTION · Rates book"
+ },
+ {
+  "kind": "path-strip",
+  "id": "STRIP-RATES-047",
+  "title": "STRIP-RATES-047",
+  "subtitle": "FRA · Rates book"
+ },
+ {
+  "kind": "path-strip",
+  "id": "STRIP-RATES-048",
+  "title": "STRIP-RATES-048",
+  "subtitle": "OIS · Rates book"
+ },
+ {
+  "kind": "path-strip",
+  "id": "STRIP-RATES-049",
+  "title": "STRIP-RATES-049",
+  "subtitle": "SWAPTION · Rates book"
+ },
+ {
+  "kind": "path-strip",
+  "id": "STRIP-RATES-050",
+  "title": "STRIP-RATES-050",
+  "subtitle": "FRA · Rates book"
+ },
+ {
+  "kind": "path-strip",
+  "id": "STRIP-FX-001",
+  "title": "STRIP-FX-001",
+  "subtitle": "FX-OPT · FX book"
+ },
+ {
+  "kind": "path-strip",
+  "id": "STRIP-FX-002",
+  "title": "STRIP-FX-002",
+  "subtitle": "FX-SWAP · FX book"
+ },
+ {
+  "kind": "path-strip",
+  "id": "STRIP-FX-003",
+  "title": "STRIP-FX-003",
+  "subtitle": "FX-OPT · FX book"
+ },
+ {
+  "kind": "path-strip",
+  "id": "STRIP-FX-004",
+  "title": "STRIP-FX-004",
+  "subtitle": "FX-OPT · FX book"
+ },
+ {
+  "kind": "path-strip",
+  "id": "STRIP-FX-005",
+  "title": "STRIP-FX-005",
+  "subtitle": "FX-OPT · FX book"
+ },
+ {
+  "kind": "path-strip",
+  "id": "STRIP-FX-006",
+  "title": "STRIP-FX-006",
+  "subtitle": "FX-SWAP · FX book"
+ },
+ {
+  "kind": "path-strip",
+  "id": "STRIP-FX-007",
+  "title": "STRIP-FX-007",
+  "subtitle": "FX-FWD · FX book"
+ },
+ {
+  "kind": "path-strip",
+  "id": "STRIP-FX-008",
+  "title": "STRIP-FX-008",
+  "subtitle": "FX-OPT · FX book"
+ },
+ {
+  "kind": "path-strip",
+  "id": "STRIP-FX-009",
+  "title": "STRIP-FX-009",
+  "subtitle": "FX-OPT · FX book"
+ },
+ {
+  "kind": "path-strip",
+  "id": "STRIP-FX-010",
+  "title": "STRIP-FX-010",
+  "subtitle": "FX-OPT · FX book"
+ },
+ {
+  "kind": "path-strip",
+  "id": "STRIP-FX-011",
+  "title": "STRIP-FX-011",
+  "subtitle": "FX-FWD · FX book"
+ },
+ {
+  "kind": "path-strip",
+  "id": "STRIP-FX-012",
+  "title": "STRIP-FX-012",
+  "subtitle": "FX-OPT · FX book"
+ },
+ {
+  "kind": "path-strip",
+  "id": "STRIP-FX-013",
+  "title": "STRIP-FX-013",
+  "subtitle": "FX-OPT · FX book"
+ },
+ {
+  "kind": "path-strip",
+  "id": "STRIP-FX-014",
+  "title": "STRIP-FX-014",
+  "subtitle": "FX-SWAP · FX book"
+ },
+ {
+  "kind": "path-strip",
+  "id": "STRIP-FX-015",
+  "title": "STRIP-FX-015",
+  "subtitle": "FX-OPT · FX book"
+ },
+ {
+  "kind": "path-strip",
+  "id": "STRIP-FX-016",
+  "title": "STRIP-FX-016",
+  "subtitle": "FX-OPT · FX book"
+ },
+ {
+  "kind": "path-strip",
+  "id": "STRIP-FX-017",
+  "title": "STRIP-FX-017",
+  "subtitle": "FX-OPT · FX book"
+ },
+ {
+  "kind": "path-strip",
+  "id": "STRIP-FX-018",
+  "title": "STRIP-FX-018",
+  "subtitle": "FX-OPT · FX book"
+ },
+ {
+  "kind": "path-strip",
+  "id": "STRIP-FX-019",
+  "title": "STRIP-FX-019",
+  "subtitle": "FX-FWD · FX book"
+ },
+ {
+  "kind": "path-strip",
+  "id": "STRIP-FX-020",
+  "title": "STRIP-FX-020",
+  "subtitle": "FX-FWD · FX book"
+ },
+ {
+  "kind": "path-strip",
+  "id": "STRIP-FX-021",
+  "title": "STRIP-FX-021",
+  "subtitle": "FX-FWD · FX book"
+ },
+ {
+  "kind": "path-strip",
+  "id": "STRIP-FX-022",
+  "title": "STRIP-FX-022",
+  "subtitle": "FX-SWAP · FX book"
+ },
+ {
+  "kind": "path-strip",
+  "id": "STRIP-FX-023",
+  "title": "STRIP-FX-023",
+  "subtitle": "FX-OPT · FX book"
+ },
+ {
+  "kind": "path-strip",
+  "id": "STRIP-FX-024",
+  "title": "STRIP-FX-024",
+  "subtitle": "FX-FWD · FX book"
+ },
+ {
+  "kind": "path-strip",
+  "id": "STRIP-FX-025",
+  "title": "STRIP-FX-025",
+  "subtitle": "FX-SWAP · FX book"
+ },
+ {
+  "kind": "path-strip",
+  "id": "STRIP-FX-026",
+  "title": "STRIP-FX-026",
+  "subtitle": "FX-SWAP · FX book"
+ },
+ {
+  "kind": "path-strip",
+  "id": "STRIP-FX-027",
+  "title": "STRIP-FX-027",
+  "subtitle": "FX-FWD · FX book"
+ },
+ {
+  "kind": "path-strip",
+  "id": "STRIP-FX-028",
+  "title": "STRIP-FX-028",
+  "subtitle": "FX-FWD · FX book"
+ },
+ {
+  "kind": "path-strip",
+  "id": "STRIP-FX-029",
+  "title": "STRIP-FX-029",
+  "subtitle": "FX-SWAP · FX book"
+ },
+ {
+  "kind": "path-strip",
+  "id": "STRIP-FX-030",
+  "title": "STRIP-FX-030",
+  "subtitle": "FX-FWD · FX book"
+ },
+ {
+  "kind": "path-strip",
+  "id": "STRIP-FX-031",
+  "title": "STRIP-FX-031",
+  "subtitle": "FX-FWD · FX book"
+ },
+ {
+  "kind": "path-strip",
+  "id": "STRIP-FX-032",
+  "title": "STRIP-FX-032",
+  "subtitle": "FX-SWAP · FX book"
+ },
+ {
+  "kind": "path-strip",
+  "id": "STRIP-FX-033",
+  "title": "STRIP-FX-033",
+  "subtitle": "FX-OPT · FX book"
+ },
+ {
+  "kind": "path-strip",
+  "id": "STRIP-FX-034",
+  "title": "STRIP-FX-034",
+  "subtitle": "FX-OPT · FX book"
+ },
+ {
+  "kind": "path-strip",
+  "id": "STRIP-FX-035",
+  "title": "STRIP-FX-035",
+  "subtitle": "FX-OPT · FX book"
+ },
+ {
+  "kind": "path-strip",
+  "id": "STRIP-FX-036",
+  "title": "STRIP-FX-036",
+  "subtitle": "FX-FWD · FX book"
+ },
+ {
+  "kind": "path-strip",
+  "id": "STRIP-FX-037",
+  "title": "STRIP-FX-037",
+  "subtitle": "FX-OPT · FX book"
+ },
+ {
+  "kind": "path-strip",
+  "id": "STRIP-FX-038",
+  "title": "STRIP-FX-038",
+  "subtitle": "FX-OPT · FX book"
+ },
+ {
+  "kind": "path-strip",
+  "id": "STRIP-FX-039",
+  "title": "STRIP-FX-039",
+  "subtitle": "FX-SWAP · FX book"
+ },
+ {
+  "kind": "path-strip",
+  "id": "STRIP-FX-040",
+  "title": "STRIP-FX-040",
+  "subtitle": "FX-FWD · FX book"
+ },
+ {
+  "kind": "path-strip",
+  "id": "STRIP-CREDIT-001",
+  "title": "STRIP-CREDIT-001",
+  "subtitle": "CDX · Credit book"
+ },
+ {
+  "kind": "path-strip",
+  "id": "STRIP-CREDIT-002",
+  "title": "STRIP-CREDIT-002",
+  "subtitle": "BOND · Credit book"
+ },
+ {
+  "kind": "path-strip",
+  "id": "STRIP-CREDIT-003",
+  "title": "STRIP-CREDIT-003",
+  "subtitle": "BOND · Credit book"
+ },
+ {
+  "kind": "path-strip",
+  "id": "STRIP-CREDIT-004",
+  "title": "STRIP-CREDIT-004",
+  "subtitle": "BOND · Credit book"
+ },
+ {
+  "kind": "path-strip",
+  "id": "STRIP-CREDIT-005",
+  "title": "STRIP-CREDIT-005",
+  "subtitle": "CDX · Credit book"
+ },
+ {
+  "kind": "path-strip",
+  "id": "STRIP-CREDIT-006",
+  "title": "STRIP-CREDIT-006",
+  "subtitle": "CDX · Credit book"
+ },
+ {
+  "kind": "path-strip",
+  "id": "STRIP-CREDIT-007",
+  "title": "STRIP-CREDIT-007",
+  "subtitle": "CDS · Credit book"
+ },
+ {
+  "kind": "path-strip",
+  "id": "STRIP-CREDIT-008",
+  "title": "STRIP-CREDIT-008",
+  "subtitle": "CDX · Credit book"
+ },
+ {
+  "kind": "path-strip",
+  "id": "STRIP-CREDIT-009",
+  "title": "STRIP-CREDIT-009",
+  "subtitle": "CDX · Credit book"
+ },
+ {
+  "kind": "path-strip",
+  "id": "STRIP-CREDIT-010",
+  "title": "STRIP-CREDIT-010",
+  "subtitle": "BOND · Credit book"
+ },
+ {
+  "kind": "path-strip",
+  "id": "STRIP-CREDIT-011",
+  "title": "STRIP-CREDIT-011",
+  "subtitle": "CDS · Credit book"
+ },
+ {
+  "kind": "path-strip",
+  "id": "STRIP-CREDIT-012",
+  "title": "STRIP-CREDIT-012",
+  "subtitle": "CDS · Credit book"
+ },
+ {
+  "kind": "path-strip",
+  "id": "STRIP-CREDIT-013",
+  "title": "STRIP-CREDIT-013",
+  "subtitle": "CDX · Credit book"
+ },
+ {
+  "kind": "path-strip",
+  "id": "STRIP-CREDIT-014",
+  "title": "STRIP-CREDIT-014",
+  "subtitle": "CDX · Credit book"
+ },
+ {
+  "kind": "path-strip",
+  "id": "STRIP-CREDIT-015",
+  "title": "STRIP-CREDIT-015",
+  "subtitle": "BOND · Credit book"
+ },
+ {
+  "kind": "path-strip",
+  "id": "STRIP-CREDIT-016",
+  "title": "STRIP-CREDIT-016",
+  "subtitle": "CDS · Credit book"
+ },
+ {
+  "kind": "path-strip",
+  "id": "STRIP-CREDIT-017",
+  "title": "STRIP-CREDIT-017",
+  "subtitle": "CDS · Credit book"
+ },
+ {
+  "kind": "path-strip",
+  "id": "STRIP-CREDIT-018",
+  "title": "STRIP-CREDIT-018",
+  "subtitle": "CDX · Credit book"
+ },
+ {
+  "kind": "path-strip",
+  "id": "STRIP-CREDIT-019",
+  "title": "STRIP-CREDIT-019",
+  "subtitle": "BOND · Credit book"
+ },
+ {
+  "kind": "path-strip",
+  "id": "STRIP-CREDIT-020",
+  "title": "STRIP-CREDIT-020",
+  "subtitle": "CDX · Credit book"
+ },
+ {
+  "kind": "path-strip",
+  "id": "STRIP-CREDIT-021",
+  "title": "STRIP-CREDIT-021",
+  "subtitle": "BOND · Credit book"
+ },
+ {
+  "kind": "path-strip",
+  "id": "STRIP-CREDIT-022",
+  "title": "STRIP-CREDIT-022",
+  "subtitle": "CDX · Credit book"
+ },
+ {
+  "kind": "path-strip",
+  "id": "STRIP-CREDIT-023",
+  "title": "STRIP-CREDIT-023",
+  "subtitle": "BOND · Credit book"
+ },
+ {
+  "kind": "path-strip",
+  "id": "STRIP-CREDIT-024",
+  "title": "STRIP-CREDIT-024",
+  "subtitle": "BOND · Credit book"
+ },
+ {
+  "kind": "path-strip",
+  "id": "STRIP-CREDIT-025",
+  "title": "STRIP-CREDIT-025",
+  "subtitle": "CDS · Credit book"
+ },
+ {
+  "kind": "path-strip",
+  "id": "STRIP-CREDIT-026",
+  "title": "STRIP-CREDIT-026",
+  "subtitle": "BOND · Credit book"
+ },
+ {
+  "kind": "path-strip",
+  "id": "STRIP-CREDIT-027",
+  "title": "STRIP-CREDIT-027",
+  "subtitle": "BOND · Credit book"
+ },
+ {
+  "kind": "path-strip",
+  "id": "STRIP-CREDIT-028",
+  "title": "STRIP-CREDIT-028",
+  "subtitle": "CDX · Credit book"
+ },
+ {
+  "kind": "path-strip",
+  "id": "STRIP-CREDIT-029",
+  "title": "STRIP-CREDIT-029",
+  "subtitle": "CDX · Credit book"
+ },
+ {
+  "kind": "path-strip",
+  "id": "STRIP-CREDIT-030",
+  "title": "STRIP-CREDIT-030",
+  "subtitle": "CDX · Credit book"
+ }
+]

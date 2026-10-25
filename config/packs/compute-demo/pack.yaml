@@ -1,0 +1,103 @@
+# Project Drishti · Any data. Any domain. One grammar.
+#
+# Copyright (c) 2026 Ashutosh Sinha <ajsinha@gmail.com>.
+# All rights reserved.
+#
+# PROPRIETARY AND CONFIDENTIAL.
+#
+# This file is the confidential and proprietary property of Ashutosh Sinha.
+# Unauthorised copying, use, modification, distribution or disclosure of this
+# file, via any medium, is strictly prohibited except with the express prior
+# written permission of the copyright holder.
+#
+# See the LICENSE file in the root of this repository for the full terms.
+
+pack: compute-demo
+sample: true                        # a demonstration pack: see drishti.packs.samples
+version: 1.0.0
+code: CMPD             # typed alone, opens this pack's overview
+title: Compute demo
+description: >-
+  Sample pack for reactive connectors: three books of synthetic P&L strips (250 scenario days each) and the sum of a book's paths
+  computed when it is asked for, by a Python engine in a compute pool (path-sum) and by its Java twin in the server (path-sum-java), with
+  progress on the screen and a state per panel. Synthetic numbers only. Not loaded unless named in DRISHTI_PACKS.
+kinds: [path-book, path-strip, path-sum, path-sum-java]
+mnemonics:
+  PBOOK: { kind: path-book, label: Path book }
+  PSTRIP: { kind: path-strip, label: P&L strip }
+  PSUM: { kind: path-sum, label: Book path (Python) }
+  PSUMJ: { kind: path-sum-java, label: Book path (Java) }
+graph:
+  id-patterns:
+    - { pattern: "^BOOK-(RATES|FX|CREDIT)$", kind: path-book }
+    - { pattern: "^STRIP-", kind: path-strip }
+  fields:
+    BOOK_ID: { kind: path-book, label: Book }
+  badges:
+    path-book: "$.STRIP_COUNT + ' strips'"
+roles:
+  compute-demo: { kinds: [path-book, path-strip, path-sum, path-sum-java] }
+console:
+  examples:
+    - ["PBOOK BOOK-RATES", "A book's path computed twice: by the Python engine and by the Java engine, with progress"]
+    - ["PSTRIP STRIP-FX-001", "One strip: its 250 scenario P&Ls"]
+    - ["PSUMJ BOOK-FX~delay-ms=50", "The computed answer itself, with its stamp (the id carries the parameters)"]
+columns:
+  path-book: [NAME, DESK, STRIP_COUNT]
+  path-strip: [BOOK_ID, INSTRUMENT, DAYS]
+connectors:
+  path-sum-python:                  # the sample Python engine in the compute pool "sample" (config/compute/compute.yaml)
+    plugin: reactive
+    mode: reactive
+    description: The sum of a book's P&L paths, computed by the sample Python engine in the compute pool, over every worker of it
+    kinds:
+      path-sum:
+        compute: sum-vectors          # what the engine calls it
+        params:
+          delay-ms: { type: int, default: 0, min: 0, max: 500 }     # a pause per tenth of the strips: to watch progress
+        result: { required: [SUM, WORST], types: { SUM: number, WORST: number } }
+    reads:
+      - { kind: path-book, as: book, id: "{id}" }
+      - { kind: path-strip, as: values, ids: "{inputs.book.MEMBERS}", limit: 5000 }
+    engine:
+      type: python
+      entry: drishti_compute.samples.paths:PathSumEngine
+      pool: sample
+      version: "1.0"
+      split: values                 # cut the strips over every worker of the pool (on this node and on its Drishti*net peers)
+      chunk-rows: 20
+      reduce: { sum: [ROWS, SUM], tables: { total: [PNL] }, then: { WORST: "min:total.PNL", BEST: "max:total.PNL" } }
+    triggers:
+      - { on: data-version, kinds: [path-strip], affects: all }
+      - { on: write-back, kinds: [path-strip], affects: "{payload.BOOK_ID}" }
+    coalesce: { quiet: 250ms, max-wait: 2s }
+    cache: { results: 1000, ttl: 1h }
+    limits: { timeout: 30s, wait: 25ms, max-inflight-per-user: 4 }
+  path-sum-java:                    # the same computation by Drishti's own Java engine, in the server's process
+    plugin: reactive
+    mode: reactive
+    description: The sum of a book's P&L paths, computed by Drishti's own Java engine in the server
+    kinds:
+      path-sum-java:
+        compute: sum-vectors
+        params:
+          delay-ms: { type: int, default: 0, min: 0, max: 500 }
+        incremental: true
+        result: { required: [SUM, WORST], types: { SUM: number, WORST: number } }
+    reads:
+      - { kind: path-book, as: book, id: "{id}" }
+      - { kind: path-strip, as: values, ids: "{inputs.book.MEMBERS}", limit: 5000 }
+    engine:
+      type: java
+      class: com.ash.drishti.compute.reactive.samples.VectorSumEngine
+      version: "1.0"
+    triggers:
+      - { on: data-version, kinds: [path-strip], affects: all }
+      - { on: write-back, kinds: [path-strip], affects: "{payload.BOOK_ID}" }
+      - { on: schedule, every: 10m, affects: subscribed }
+    coalesce: { quiet: 250ms, max-wait: 2s }
+    cache: { results: 1000, ttl: 1h }
+    limits: { timeout: 30s, wait: 25ms, max-inflight-per-user: 4 }
+routes:
+  path-sum: path-sum-python
+  path-sum-java: path-sum-java

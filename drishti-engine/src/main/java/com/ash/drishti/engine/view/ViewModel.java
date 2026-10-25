@@ -275,6 +275,23 @@ public record ViewModel(
     @JsonInclude(JsonInclude.Include.NON_NULL)
     public record PanelProvenance(String source, String kind, String fetchedAt, String updatedAt, String staleAfter, boolean stale) {}
 
+    /**
+     * The state of a panel whose source is a computed kind (REACTIVE_CONNECTORS.md section 12.4): never a blank panel. The console draws
+     * the result when there is one (dimmed while {@code computing}, amber when {@code stale}), the progress, and the message in words
+     * ({@code failed}, {@code refused}); it listens to {@code requestId} on the live channel for progress and for the result when it lands.
+     *
+     * @param state {@code ready}, {@code computing}, {@code stale}, {@code failed} or {@code refused}
+     * @param requestId the correlation id of this panel's read (its events go to this viewer only)
+     * @param connector the reactive connector that computes it
+     * @param message why it failed or was refused, or what it waits for; null when ready
+     * @param progress the latest progress ({@code done}, {@code of}, a partial estimate), or null
+     * @param hasResult whether a result (current or last good) is shown
+     * @param stamp the result's stamp (pin, computedAt, engine, inputs), or null
+     */
+    @JsonInclude(JsonInclude.Include.NON_NULL)
+    public record PanelCompute(String state, String requestId, String connector, String message, Map<String, Object> progress, boolean hasResult,
+            Map<String, Object> stamp) {}
+
     @JsonInclude(JsonInclude.Include.NON_NULL)
     /**
      * @param empty nothing to show (the document lacks what the panel asks for); the console says "No data available"
@@ -284,7 +301,19 @@ public record ViewModel(
     public record PanelView(
             String id, String kind, String title, String code, String key, String area, boolean inferred,
             String explanation, PanelData data, String error, boolean empty, Integer span, Integer height, String denied, Wire wire, RefreshView refresh,
-            Map<String, Object> form, PanelProvenance provenance) {
+            Map<String, Object> form, PanelProvenance provenance, PanelCompute compute) {
+
+        /** A panel whose source is not computed. */
+        public PanelView(String id, String kind, String title, String code, String key, String area, boolean inferred,
+                String explanation, PanelData data, String error, boolean empty, Integer span, Integer height, String denied, Wire wire, RefreshView refresh,
+                Map<String, Object> form, PanelProvenance provenance) {
+            this(id, kind, title, code, key, area, inferred, explanation, data, error, empty, span, height, denied, wire, refresh, form, provenance, null);
+        }
+
+        /** The same panel with the state of its computed source (REACTIVE_CONNECTORS.md section 12.4), or none (null). */
+        public PanelView withCompute(PanelCompute next) {
+            return new PanelView(id, kind, title, code, key, area, inferred, explanation, data, error, empty, span, height, denied, wire, refresh, form, provenance, next);
+        }
 
         /** A panel without a provenance of its own (it reads the page's record). */
         public PanelView(String id, String kind, String title, String code, String key, String area, boolean inferred,
@@ -295,7 +324,7 @@ public record ViewModel(
 
         /** The same panel with the provenance of its own {@code source:} (SUTRA_NEXT.md 9), or none (null). */
         public PanelView withProvenance(PanelProvenance next) {
-            return new PanelView(id, kind, title, code, key, area, inferred, explanation, data, error, empty, span, height, denied, wire, refresh, form, next);
+            return new PanelView(id, kind, title, code, key, area, inferred, explanation, data, error, empty, span, height, denied, wire, refresh, form, next, compute);
         }
 
         /** A panel without a form (SUTRA_NEXT.md 10). */
@@ -309,7 +338,7 @@ public record ViewModel(
          * the rules, the hints, the lookups' choices and, for a table, each row's values; null for none.
          */
         public PanelView withForm(Map<String, Object> next) {
-            return new PanelView(id, kind, title, code, key, area, inferred, explanation, data, error, empty, span, height, denied, wire, refresh, next, provenance);
+            return new PanelView(id, kind, title, code, key, area, inferred, explanation, data, error, empty, span, height, denied, wire, refresh, next, provenance, compute);
         }
 
         /** A panel that does not refresh on its own. */
@@ -320,12 +349,12 @@ public record ViewModel(
 
         /** The same panel refreshing as the Sutra says ({@code refresh:}, SUTRA_NEXT.md 9), or not at all (null). */
         public PanelView withRefresh(RefreshView next) {
-            return new PanelView(id, kind, title, code, key, area, inferred, explanation, data, error, empty, span, height, denied, wire, next, form, provenance);
+            return new PanelView(id, kind, title, code, key, area, inferred, explanation, data, error, empty, span, height, denied, wire, next, form, provenance, compute);
         }
 
         /** The same panel showing {@code next} (a mask, a filter), everything else kept. */
         public PanelView withData(PanelData next) {
-            return new PanelView(id, kind, title, code, key, area, inferred, explanation, next, error, empty, span, height, denied, wire, refresh, form, provenance);
+            return new PanelView(id, kind, title, code, key, area, inferred, explanation, next, error, empty, span, height, denied, wire, refresh, form, provenance, compute);
         }
 
         /** A panel without Sutra Next wiring. */
@@ -336,7 +365,7 @@ public record ViewModel(
 
         /** The same panel with its wiring for the console. */
         public PanelView withWire(Wire next) {
-            return new PanelView(id, kind, title, code, key, area, inferred, explanation, data, error, empty, span, height, denied, next, refresh, form, provenance);
+            return new PanelView(id, kind, title, code, key, area, inferred, explanation, data, error, empty, span, height, denied, next, refresh, form, provenance, compute);
         }
 
         /** {@code denied} is set when the panel's {@code source} is an entity the caller may not open (no data, no error). */

@@ -84,17 +84,23 @@ class PythonBridgeTest {
             Viewer v = new Viewer("asha", List.of("risk"), "vs-1");
             ReactiveSpec one = ReactiveSpec.parse(spec("{\"type\":\"python\",\"entry\":\"" + PATHS + "\",\"pool\":\"sample\"}"), "p.yaml", x -> x);
             ReactiveSpec fan = ReactiveSpec.parse(spec("{\"type\":\"python\",\"entry\":\"" + PATHS + "\",\"pool\":\"sample\",\"split\":\"values\","
-                    + "\"chunk-rows\":500,\"reduce\":{\"sum\":[\"ROWS\",\"SUM\"],\"tables\":{\"total\":[\"PNL\"]}}}"), "f.yaml", x -> x);
+                    + "\"chunk-rows\":500,\"reduce\":{\"sum\":[\"ROWS\",\"SUM\"],\"tables\":{\"total\":[\"PNL\"]},\"then\":{\"WORST\":\"min:total.PNL\",\"BEST\":\"max:total.PNL\"}}}"), "f.yaml", x -> x);
             ReactiveSpec jspec = ReactiveSpec.parse(spec("{\"type\":\"java\",\"class\":\"" + VectorSumEngine.class.getName() + "\"}"), "j.yaml", x -> x);
             Map<String, Object> py = answer(hub, sched, "py", one, new PythonRunner(() -> compute, one.engine(), one.engine().reduce()), v);
             Map<String, Object> fanned = answer(hub, sched, "fan", fan, new PythonRunner(() -> compute, fan.engine(), fan.engine().reduce()), v);
             Map<String, Object> jv = answer(hub, sched, "jv", jspec, JavaRunner.of(jspec.engine().entry(), false, "jv"), v);
+            @SuppressWarnings("unchecked")
+            Map<String, Object> ran = (Map<String, Object>) ((Map<String, Object>) fanned.get("STAMP")).get("ran");
+            assertThat(ran).containsEntry("chunks", 4);                                   // 2,000 strips in chunks of 500, over the pool's workers
+            assertThat(((Number) ran.get("workers")).intValue()).isBetween(1, 3);
             for (Map<String, Object> doc : List.of(py, fanned, jv)) {
                 assertThat(((Number) doc.get("ROWS")).intValue()).isEqualTo(n);
                 assertThat(((Number) doc.get("SUM")).doubleValue()).isCloseTo(java.util.Arrays.stream(expect).sum(), org.assertj.core.data.Offset.offset(1e-6));
                 @SuppressWarnings("unchecked")
                 List<Map<String, Object>> total = ((Map<String, List<Map<String, Object>>>) doc.get("TABLES")).get("total");
                 assertThat(total).hasSize(509);
+                assertThat(((Number) doc.get("WORST")).doubleValue()).isCloseTo(java.util.Arrays.stream(expect).min().orElseThrow(),
+                        org.assertj.core.data.Offset.offset(1e-6));
                 assertThat(((Number) total.get(17).get("PNL")).doubleValue()).isCloseTo(expect[17], org.assertj.core.data.Offset.offset(1e-6));
             }
         } finally {

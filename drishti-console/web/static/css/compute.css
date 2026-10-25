@@ -1,0 +1,32 @@
+/*
+ * Project Drishti · Any data. Any domain. One grammar.
+ *
+ * Copyright (c) 2026 Ashutosh Sinha <ajsinha@gmail.com>.
+ * All rights reserved.
+ *
+ * PROPRIETARY AND CONFIDENTIAL.
+ *
+ * This file is the confidential and proprietary property of Ashutosh Sinha.
+ * Unauthorised copying, use, modification, distribution or disclosure of this
+ * file, via any medium, is strictly prohibited except with the express prior
+ * written permission of the copyright holder.
+ *
+ * See the LICENSE file in the root of this repository for the full terms.
+ */
+/* Computed panels (REACTIVE_CONNECTORS.md 12.4; static/js/compute.js): the state line over a panel whose source a reactive connector
+   computes (computing with its progress bar, stale in amber, failed or refused in words) and the last good result dimmed under it while a
+   new one is computed. Theme tokens only. */
+.cmp-state { display: flex; align-items: center; gap: .5rem; margin: 0 0 .5rem; padding: .35rem .5rem; border-radius: var(--d-radius, 4px);
+  font-size: .78rem; color: var(--d-muted); background: var(--d-surface); border: 1px solid var(--d-border); }
+.cmp-state .cmp-t { min-width: 0; overflow-wrap: anywhere; }
+.cmp-bar { position: relative; flex: 0 0 6rem; height: .4rem; border-radius: .2rem; background: var(--d-border); overflow: hidden; }
+.cmp-fill { position: absolute; left: 0; top: 0; bottom: 0; width: 0; background: var(--d-accent); transition: width .25s ease; }
+.cmp-computing .cmp-fill[data-w="0"] { width: 30%; animation: cmp-slide 1.2s ease-in-out infinite; }
+@keyframes cmp-slide { 0% { left: -30%; } 100% { left: 100%; } }
+@media (prefers-reduced-motion: reduce) { .cmp-computing .cmp-fill[data-w="0"] { animation: none; width: 100%; opacity: .4; } .cmp-fill { transition: none; } }
+.cmp-stale { color: var(--d-warn); border-color: var(--d-warn); font-weight: 600; }
+.cmp-failed { color: var(--d-bad, var(--d-neg)); border-color: var(--d-bad, var(--d-neg)); }
+.cmp-refused { color: var(--d-ink); }
+.cmp-req { color: var(--d-muted); font-weight: 400; font-variant-numeric: tabular-nums; }
+.pnl[data-compute="computing"] .cmp-last, .pnl[data-compute="failed"] .cmp-last, .pnl[data-compute="refused"] .cmp-last { opacity: .55; }
+.pnl[data-compute="stale"] .cmp-last { opacity: .8; }

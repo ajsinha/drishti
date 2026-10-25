@@ -112,10 +112,11 @@
     if (a >= 1e4) { return (v / 1e3).toFixed(1) + 'k'; }
     return Math.round(v * 100) / 100;
   }
-  function drawCharts() {
+  function drawCharts(scope) {
     if (!window.echarts) { return; }
     var t = tokens();
-    root.querySelectorAll('.chart[data-chart]').forEach(function (el) {
+    var within = scope && scope.querySelectorAll ? scope : root;      // a panel swapped in (a refresh, a computed result landing), or the page
+    within.querySelectorAll('.chart[data-chart]').forEach(function (el) {
       try {
         var c = window.echarts.getInstanceByDom(el) || window.echarts.init(el, null, { renderer: 'svg' });
         c.setOption(option(el, t), true);
@@ -220,6 +221,7 @@
     dispose: function () { undo.splice(0).forEach(function (f) { f(); }); charts.forEach(function (c) { if (!c.isDisposed()) { c.dispose(); } }); charts = []; },
     enhance: function (r) {
       widths(r); tabsIn(r); surfacesIn(r);
+      if (r && r.querySelector && r.querySelector('.chart[data-chart]')) { drawCharts(r); }
       if (window.drishtiCharts) { window.drishtiCharts.draw(r); }
     },
     redraw: drawCharts,

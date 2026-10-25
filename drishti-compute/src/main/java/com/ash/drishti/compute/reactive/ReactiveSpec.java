@@ -46,9 +46,10 @@ public record ReactiveSpec(Map<String, KindSpec> kinds, List<ReadSpec> reads, En
      * @param required fields a one-row result must have
      * @param types field to type ({@code number}, {@code text}, {@code bool}, {@code list}, {@code object}) a result's fields must have
      * @param maxRows the most rows (and rows per table) a result may have
+     * @param engineKind what the engine calls this computation ({@code compute:}; the kind's own name when absent)
      */
     public record KindSpec(String name, Map<String, ParamSpec> params, List<String> required, Map<String, String> types, int maxRows,
-            boolean incremental) {
+            boolean incremental, String engineKind) {
 
         /** The request's parameters checked and normalised: defaults filled, types converted, unknown names refused; sorted by name. */
         public Map<String, Object> normalise(Map<String, ?> given) {
@@ -80,8 +81,8 @@ public record ReactiveSpec(Map<String, KindSpec> kinds, List<ReadSpec> reads, En
      *
      * @param kind the kind read
      * @param as the input's name ({@code [A-Za-z0-9._-]})
-     * @param id a template of one entity's id ({@code ${id}}, {@code BOOK-${params.book}}), or null
-     * @param ids a template of a list of ids ({@code ${params.members}}: a list or comma-separated text), or null
+     * @param id a template of one entity's id ({@code {id}}, {@code BOOK-{params.book}}), or null
+     * @param ids a template of a list of ids ({@code {params.members}}: a list or comma-separated text), or null
      * @param all every entity of the kind on the date, at most {@code limit}
      * @param limit the most entities read
      */
@@ -190,7 +191,7 @@ public record ReactiveSpec(Map<String, KindSpec> kinds, List<ReadSpec> reads, En
                 types.put(f, t);
             }
             kinds.put(k, new KindSpec(k, params, rc.list("required"), types, rc.integer("max-rows", 100_000, 1, 10_000_000),
-                    kc.flag("incremental", false)));
+                    kc.flag("incremental", false), kc.text("compute", k)));
         }
         List<ReadSpec> reads = new ArrayList<>();
         Object rs = c.raw("reads");
@@ -215,7 +216,7 @@ public record ReactiveSpec(Map<String, KindSpec> kinds, List<ReadSpec> reads, En
                 if ((all ? 1 : 0) + (id != null ? 1 : 0) + (ids != null ? 1 : 0) > 1) {
                     throw new IllegalArgumentException(where + ": reads[" + i + "] says one of id, ids or all");
                 }
-                reads.add(new ReadSpec(kind, as, id == null && ids == null && !all ? "${id}" : id, ids, all, r.integer("limit", 10_000, 1, 5_000_000)));
+                reads.add(new ReadSpec(kind, as, id == null && ids == null && !all ? "{id}" : id, ids, all, r.integer("limit", 10_000, 1, 5_000_000)));
             }
         } else if (rs != null) {
             throw new IllegalArgumentException(where + ": reads is a list of { kind, as, id | ids | all }");

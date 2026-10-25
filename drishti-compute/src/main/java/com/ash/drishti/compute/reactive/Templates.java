@@ -24,18 +24,19 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 /**
- * The small templates of a connector file: an input's ids ({@code ${id}}, {@code BOOK-${params.book}}, {@code ${params.members}}) and the
- * ids a trigger's event affects ({@code ${entity}}, {@code BOOK:${payload.TT_BOOK}}). A value that is a list (or comma-separated text,
- * for {@code ids}) gives one id per element.
+ * The small templates of a connector file: an input's ids ({@code {id}}, {@code BOOK-{params.book}}, {@code {params.members}}) and the
+ * ids a trigger's event affects ({@code {entity}}, {@code BOOK:{payload.TT_BOOK}}). A value that is a list (or comma-separated text,
+ * for {@code ids}) gives one id per element. Single braces: {@code ${NAME}} stays what it is everywhere in a connector file, an
+ * environment variable resolved when the file is read.
  */
 final class Templates {
 
-    private static final Pattern VAR = Pattern.compile("\\$\\{([A-Za-z0-9_.-]+)}");
+    private static final Pattern VAR = Pattern.compile("(?<!\\$)\\{([A-Za-z][A-Za-z0-9_.-]*)}");
 
     private Templates() {}
 
     static boolean isTemplate(String s) {
-        return s != null && s.contains("${");
+        return s != null && VAR.matcher(s).find();
     }
 
     /** One text: each variable replaced by its value (empty when absent). */

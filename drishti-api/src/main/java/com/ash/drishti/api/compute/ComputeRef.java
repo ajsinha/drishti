@@ -13,7 +13,7 @@
  *
  * See the LICENSE file in the root of this repository for the full terms.
  */
-package com.ash.drishti.compute.reactive;
+package com.ash.drishti.api.compute;
 
 import java.net.URLDecoder;
 import java.nio.charset.StandardCharsets;
@@ -61,12 +61,12 @@ public record ComputeRef(String id, Map<String, String> params) {
         return new ComputeRef(decode(parts[0]), p);
     }
 
-    /** The canonical text of an id and its parameters (values written as {@link ParamSpec#text}). */
+    /** The canonical text of an id and its parameters (numbers without trailing zeros). */
     public static String format(String id, Map<String, ?> params) {
         StringBuilder b = new StringBuilder(encode(id == null ? "" : id));
         new TreeMap<>(params == null ? Map.<String, Object>of() : params).forEach((k, v) -> {
             if (v != null) {
-                b.append(SEP).append(encode(k)).append('=').append(encode(ParamSpec.text(v)));
+                b.append(SEP).append(encode(k)).append('=').append(encode(text(v)));
             }
         });
         return b.toString();
@@ -82,6 +82,17 @@ public record ComputeRef(String id, Map<String, String> params) {
             return s;
         }
         return s.replace("%", "%25").replace("~", "%7E").replace("=", "%3D").replace("|", "%7C");
+    }
+
+    /** A parameter's value as it is written in an id or a key: numbers without trailing zeros, everything else as text. */
+    public static String text(Object v) {
+        if (v instanceof java.math.BigDecimal b) {
+            return b.stripTrailingZeros().toPlainString();
+        }
+        if (v instanceof Double d && d == Math.rint(d) && Math.abs(d) < 1e15) {
+            return Long.toString(d.longValue());
+        }
+        return String.valueOf(v);
     }
 
     private static String decode(String s) {

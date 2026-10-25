@@ -15,6 +15,8 @@
  */
 package com.ash.drishti.compute.reactive;
 
+import com.ash.drishti.api.compute.ComputeRef;
+
 import com.ash.drishti.api.AsOf;
 import com.ash.drishti.api.DataNode;
 import com.ash.drishti.api.compute.ComputeEvent;
@@ -305,7 +307,7 @@ public final class ReactiveConnector implements AutoCloseable {
         }
         try {
             EngineInputs inputs = inputs(p, ask.viewer());
-            EngineRequest req = new EngineRequest(f.id, name, p.kind().name(), p.ref().id(), p.params(), p.at(), p.pin(), ask.viewer(),
+            EngineRequest req = new EngineRequest(f.id, name, p.kind().engineKind(), p.ref().id(), p.params(), p.at(), p.pin(), ask.viewer(),
                     ask.cls().label(), seed(p.key()), trigger);
             EngineResult result = incremental(p, req, events, inputs).orElse(null);
             if (result == null) {
@@ -315,7 +317,7 @@ public final class ReactiveConnector implements AutoCloseable {
             }
             Results.validate(p.kind(), result, f.id);
             Instant at = clock.instant();
-            Map<String, Object> doc = Results.document(req, result, p.versions(), wm, runner.identity(), at);
+            Map<String, Object> doc = Results.document(p.kind().name(), req, result, p.versions(), wm, runner.identity(), at);
             ResultCache.Entry entry = new ResultCache.Entry(p.key(), p.base(), doc, wm, at, false);
             boolean kept = cache.put(entry);
             long ms = (System.nanoTime() - t0) / 1_000_000;
@@ -367,11 +369,16 @@ public final class ReactiveConnector implements AutoCloseable {
         }
     }
 
-    /** The inputs of a read, read as the viewer through the normal routing; too many is refused before anything is computed. */
+    /**
+     * The inputs of a read, read as the viewer through the normal routing, in the order {@code reads:} gives them (a later one may take its
+     * ids from an earlier one: {@code {inputs.book.MEMBERS}}); too many is refused before anything is computed.
+     */
     private EngineInputs inputs(Prepared p, Viewer viewer) {
         Map<String, Object> vars = new LinkedHashMap<>();
         vars.put("id", p.ref().id());
         vars.put("params", p.params());
+        Map<String, Object> earlier = new LinkedHashMap<>();
+        vars.put("inputs", earlier);                                   // a later read may name ids an earlier one holds: {inputs.book.MEMBERS}
         Map<String, List<DataNode>> in = new LinkedHashMap<>();
         int total = 0;
         for (ReactiveSpec.ReadSpec r : spec.reads()) {
@@ -395,6 +402,7 @@ public final class ReactiveConnector implements AutoCloseable {
                         + " records (limits.max-input-rows)");
             }
             in.put(r.as(), docs);
+            earlier.put(r.as(), docs.size() == 1 ? docs.get(0).unwrap() : docs.stream().map(DataNode::unwrap).toList());
         }
         if (p.sandbox() != null) {
             in.put("sandbox", p.sandbox().items().stream().map(DataNode::of).toList());

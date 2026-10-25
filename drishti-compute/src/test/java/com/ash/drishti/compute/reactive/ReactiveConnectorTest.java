@@ -15,6 +15,8 @@
  */
 package com.ash.drishti.compute.reactive;
 
+import com.ash.drishti.api.compute.ComputeRef;
+
 import static org.assertj.core.api.Assertions.assertThat;
 
 import com.ash.drishti.api.AsOf;
@@ -60,7 +62,7 @@ class ReactiveConnectorTest {
                                     "result":{"required":["SUM"],"types":{"SUM":"number"}}}},
              "reads":[{"kind":"strip","as":"values","all":true}],
              "engine":{"type":"java","class":"test"},
-             "triggers":[{"on":"write-back","kinds":["strip"],"affects":["${payload.book}"]},
+             "triggers":[{"on":"write-back","kinds":["strip"],"affects":["{payload.book}"]},
                          {"on":"data-version","kinds":["strip"],"affects":"all"},
                          {"on":"live","kinds":["strip"]}],
              "coalesce":{"quiet":"50ms","max-wait":"300ms"},
