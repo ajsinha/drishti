@@ -247,12 +247,24 @@ drishti:
       - /api/v1/bi/runs/estimate        # a run's tier and estimate from metadata only, runs nothing
       - /api/v1/export/*                # Rupaka phase 7: a report, visual or view rendered as PDF, PNG, Excel or CSV for the caller (masked), stores nothing
       - /api/v1/subscriptions/preview   # renders what a subscription would send, for the caller, stores nothing
+      - /api/v1/compute/*/*             # a reactive connector's answer for the caller (REACTIVE_CONNECTORS.md): computed and cached, changes no data
     # WRITE SCOPES (TOKEN_SCOPES in docs/guides/API_GUIDE.md): a token is made with `read` (the default: all of the above) or with
     # scopes from this list (keys in [brackets] keep the colon); each opens the METHOD path patterns under `allow` (* = any method). A scope is only a door: the
     # controller behind it still checks the roles of the token's user at the time of the call, so a token never does more than
     # its user. A write that no scope opens, and nothing in token-never, is refused. Every non-GET endpoint must be declared in
     # token-read-posts, a scope or token-never (TokenScopeGuardTest fails the build otherwise).
     token-scopes:
+      "[risk:write]":
+        description: "Save, share and delete your VaR baskets, capture VaR results, keep your what-if sandboxes and cancel your own computations (VAR_ENGINE.md, REACTIVE_CONNECTORS.md). Your own items only; the bank's data is never changed."
+        allow:
+          - POST /api/v1/var/baskets
+          - DELETE /api/v1/var/baskets/*/*
+          - POST /api/v1/var/captures
+          - POST /api/v1/compute/sandboxes
+          - PUT /api/v1/compute/sandboxes/*
+          - DELETE /api/v1/compute/sandboxes/*
+          - POST /api/v1/compute/sandboxes/*/copy
+          - DELETE /api/v1/compute/requests/*
       "[design:write]":
         description: "Create, edit, check, propose, share and bind Designs, save Sutras from Studio (a save is a proposal with governance on), withdraw your own proposals. Needs the author role."
         allow:
@@ -360,6 +372,10 @@ drishti:
       - "* /api/v1/auth/**"
       - "* /api/v1/admin/tokens/**"
       - "* /api/v1/net/**"                     # Drishti*net: nodes sign their calls with the cluster key; administrators use the console
+      - "* /api/v1/compute/peer/**"            # compute fan-out between nodes: signed with the cluster key, never a token
+      - "* /api/v1/admin/compute/**"           # compute pools, environments and four-eyes approvals: an administrator in the console
+      - "POST /api/v1/compute/events"          # trigger events (the write-back hook): the server and administrators, never a token
+      - "POST /api/v1/var/reload"              # reloading the VaR vectors: an administrator in the console
       - "* /api/v1/embed/**"
       - "* /api/v1/admin/embed/**"
       - "* /api/v1/admin/users/**"

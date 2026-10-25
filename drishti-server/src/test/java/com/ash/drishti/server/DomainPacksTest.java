@@ -42,6 +42,7 @@ class DomainPacksTest {
 
     @Test
     void everyAdvertisedExampleOpensAFullView() throws Exception {
+        int opened = 0;
         for (String pack : com.ash.drishti.packs.PackPaths.DEFAULT_ENABLED.split(",")) {
             JsonNode manifest = new ObjectMapper(new com.fasterxml.jackson.dataformat.yaml.YAMLFactory()).readTree(
                     Files.readString(Path.of("../config/packs", pack, "pack.yaml")));
@@ -50,7 +51,11 @@ class DomainPacksTest {
                 if (ref.kind().equals("news") || ref.kind().equals("quote")) {
                     continue;                                      // served only by the internet connectors, off as shipped
                 }
+                if (!demoServes(pack, ref.kind())) {
+                    continue;                                      // lake only (the VaR kinds): test_var_explorer_browser.py opens them, demo off
+                }
                 ViewModel v = pipeline.view(ref);
+                opened++;
                 assertThat(v.provenance().layout()).as(ref.toString()).startsWith("Sutra ");
                 if (pack.equals("news-and-markets")) {
                     continue;                                      // live headlines and quotes: off as shipped
@@ -59,6 +64,7 @@ class DomainPacksTest {
                 assertThat(links(v)).as(ref + " links").allSatisfy(l -> assertThat(l.status()).as(ref + " -> " + l.text()).isNotEqualTo("missing"));
             }
         }
+        assertThat(opened).as("examples opened").isGreaterThan(20);
     }
 
     /** A core counterparty links across packs: its country of risk to the world-economy pack's economy, its agreement to counterparty-risk. */
@@ -67,6 +73,20 @@ class DomainPacksTest {
         ViewModel v = pipeline.view(commands.require("CPTY CP-NORTHBRIDGE"));
         assertThat(links(v)).filteredOn(l -> l.link() != null && "economy".equals(l.link().kind())).isNotEmpty()
                 .allSatisfy(l -> assertThat(l.status()).isNotEqualTo("missing"));
+    }
+
+    /** The pack's samples catalogue lists the kind, so this test's demo connector serves it (the VaR kinds keep reference samples only). */
+    private static boolean demoServes(String pack, String kind) throws java.io.IOException {
+        Path catalog = Path.of("../config/packs", pack, "samples", "catalog.json");
+        if (!Files.isRegularFile(catalog)) {
+            return false;
+        }
+        for (JsonNode e : new ObjectMapper().readTree(catalog.toFile())) {
+            if (kind.equals(e.path("kind").asText())) {
+                return true;
+            }
+        }
+        return false;
     }
 
     private static java.util.List<PanelData.LinkItem> links(ViewModel v) {

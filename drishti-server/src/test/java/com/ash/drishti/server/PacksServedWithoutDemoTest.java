@@ -70,19 +70,20 @@ class PacksServedWithoutDemoTest {
         assertThat(unserved).as("kinds no non-demo connector serves (PACK_DEVELOPER_GUIDE: never rely on the demo connector)").isEmpty();
     }
 
-    /** True when a derived connector, or a Delta connector on by default with committed test data, serves the kind. */
+    /** True when a derived or reactive connector, or a Delta connector on by default with committed test data, serves the kind. */
     private static boolean served(String pack, String kind, JsonNode connectors, Map<String, JsonNode> datasets) {
         for (Map.Entry<String, JsonNode> e : connectors.properties()) {
             JsonNode c = e.getValue();
-            boolean lists = false;
-            for (JsonNode k : c.path("kinds")) {
+            JsonNode kinds = c.path("kinds");
+            boolean lists = kinds.isObject() ? kinds.has(kind) : false;          // a reactive connector's kinds are a mapping
+            for (JsonNode k : kinds.isArray() ? kinds : com.fasterxml.jackson.databind.node.MissingNode.getInstance()) {
                 lists |= kind.equals(k.asText());
             }
             String plugin = c.path("plugin").asText();
             if (!lists || "demo".equals(plugin)) {
                 continue;
             }
-            if ("derived".equals(plugin)) {
+            if ("derived".equals(plugin) || "reactive".equals(plugin)) {        // computed from other kinds, never from the demo
                 return true;
             }
             JsonNode ds = datasets.get(pack + "/" + kind + "/" + e.getKey());

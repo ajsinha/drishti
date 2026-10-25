@@ -46,6 +46,16 @@ columns:
   path-book: [NAME, DESK, STRIP_COUNT]
   path-strip: [BOOK_ID, INSTRUMENT, DAYS]
 connectors:
+  compute-demo-store:               # the books and strips the engines read: the pack's samples, as standard test data in the demo lake
+    plugin: delta
+    enabled: ${DRISHTI_LAKE_ENABLED:true}
+    kinds: [path-book, path-strip]
+    settings:
+      root: ${DRISHTI_DELTA_ROOT:${drishti.data.dir:./data}/delta}
+      domain: compute-demo
+      layout:
+        path-book: { columns: [BOOK_ID, NAME, DESK, STRIP_COUNT], type-ahead: [NAME] }
+        path-strip: { columns: [STRIP_ID, BOOK_ID, INSTRUMENT, DAYS] }
   path-sum-python:                  # the sample Python engine in the compute pool "sample" (config/compute/compute.yaml)
     plugin: reactive
     mode: reactive
@@ -99,5 +109,7 @@ connectors:
     cache: { results: 1000, ttl: 1h }
     limits: { timeout: 30s, wait: 25ms, max-inflight-per-user: 4 }
 routes:
+  path-book: compute-demo-store
+  path-strip: compute-demo-store
   path-sum: path-sum-python
   path-sum-java: path-sum-java

@@ -21093,6 +21093,14 @@ datasets:
   pack: news-and-markets
   kind: news-topic
   connector: news-store
+- samples: config/packs/compute-demo/samples
+  pack: compute-demo
+  kind: path-book
+  connector: compute-demo-store
+- samples: config/packs/compute-demo/samples
+  pack: compute-demo
+  kind: path-strip
+  connector: compute-demo-store
 - folder: news-and-markets/quote
   pack: news-and-markets
   kind: quote

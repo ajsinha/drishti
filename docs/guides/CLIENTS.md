@@ -38,6 +38,7 @@ that job (the table in section 1); see "Personal API tokens" in [CLI_GUIDE.md](C
 | `design:write` | create, edit, check, propose and share Designs; save Sutras as proposals | the author role |
 | `design:approve` | approve or reject proposed Sutras | the approver or admin role |
 | `packs:admin` | load, unload, deploy and roll back packs; create, change, test and delete connectors; Retry now | the admin role |
+| `risk:write` | save and delete your VaR baskets, capture VaR results, keep what-if sandboxes, cancel your own computations | any user who can open the scope |
 | `loads:write` | announce that a batch of data has landed ([DATA_LOADS.md](DATA_LOADS.md)) | the owner's roles open the kind |
 | `bi:write` | create, edit, propose, publish and delete BI items; restore versions ([BI_GUIDE.md](BI_GUIDE.md)) | the `bi-author` power and a workspace role |
 | `bi:approve` | approve or reject proposed BI items, endorse, import a bundle | the approve power or `bi-steward` |

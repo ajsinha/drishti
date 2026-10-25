@@ -403,7 +403,7 @@ def samples(docs: dict[str, list[dict]]) -> dict[Path, str]:
              "scenario-set": docs["scenario-set"],
              "risk-hierarchy": [n for n in docs["risk-hierarchy"] if n["NODE_ID"] in ("MGMT~DESK-RATES", "LEGAL~LE-NY")],
              "var-node": [r for r in docs["var-node"] if r["NODE_ID"] == "MGMT~DESK-RATES"][-2:],
-             "portfolio": [r for r in docs["portfolio"] if r["PORTFOLIO_ID"] in ("PF-USD-RATES", "PF-ASHA-UNWIND")]}
+             "portfolio": [r for r in docs["portfolio"] if r["PORTFOLIO_ID"] in ("PF-RATES-DESK", "PF-USD-RATES", "PF-ASHA-UNWIND")]}  # the advertised examples among them
     out = {SAMPLES / f"{k}.jsonl": "".join(json.dumps(d, ensure_ascii=False, separators=(",", ":")) + "\n" for d in v) for k, v in picks.items()}
     # the pack's Sutra tests (tests/<kind>/<id>.json and expect.yaml: java -jar <server> sutra test config/packs/market-risk)
     head = "".join(f"# {ln}".rstrip() + "\n" for ln in (ROOT / "config" / "license-header.txt").read_text(encoding="utf-8").strip().splitlines())

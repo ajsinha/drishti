@@ -17,6 +17,10 @@
 
 ## Unreleased
 
+- **Token scope `risk:write`:** a personal API token may save and delete its VaR baskets, capture VaR, keep what-if sandboxes and
+  cancel its own computations; a computed answer (`POST /api/v1/compute/{connector}/{kind}`) needs only `read`. Compute administration
+  and approvals, peer fan-out, trigger events and VaR reload are never open to a token. The compute-demo pack's books and strips are
+  served by its own Delta connector (`compute-demo-store`, standard test data), not the demo connector.
 - **The VaR engine, waves V0 to V3 (2.8.0)** ([VAR_ENGINE.md section 18](docs/architecture/VAR_ENGINE.md#18-as-built-in-280-waves-v0-to-v3),
   [VAR_DATA_MODEL.md section 18](docs/architecture/VAR_DATA_MODEL.md#18-as-built-in-280), [VAR_EXPLORER.md](docs/guides/VAR_EXPLORER.md)):
   - **Data:** the market-risk pack gains `position` (a holding of one instrument in one book netting its trades, LONG or SHORT),

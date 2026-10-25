@@ -46,8 +46,8 @@ import marketdays as MK  # noqa: E402
 import publicsnap as PS  # noqa: E402
 import universe as UV  # noqa: E402
 
-PACKS = ("core", "market-data", "trading", "counterparty-risk", "market-risk", "world-economy", "news-and-markets")
-FROM_SAMPLES = ("world-economy", "news-and-markets")
+PACKS = ("core", "market-data", "trading", "counterparty-risk", "market-risk", "world-economy", "news-and-markets", "compute-demo")
+FROM_SAMPLES = ("world-economy", "news-and-markets", "compute-demo")
 SYSTEMS = ("ENDUR", "CALYPSO", "MUREX")
 KEEP = (CM.PACK, *PS.PACKS)   # real, dated snapshots (capture_market.py, the us-equities and gleif generators): never regenerated here
 
@@ -58,7 +58,7 @@ def has_samples(pack: str, kind: str) -> bool:
 
 
 def delta_connectors(packs_dir: Path) -> dict[str, tuple[str, str]]:
-    """kind -> (pack, connector) for every Delta connector of the seven packs (the trade connectors are per system, handled apart)."""
+    """kind -> (pack, connector) for every Delta connector of these packs (the trade connectors are per system, handled apart)."""
     import yaml
     out = {}
     for pack in PACKS:
