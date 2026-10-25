@@ -17,6 +17,17 @@
 
 ## Unreleased
 
+- **2.8.0 designs (design only, nothing built):** reactive connectors that compute when asked and on events, with point-in-time
+  stamps, coalescing and per-user isolation ([REACTIVE_CONNECTORS.md](docs/architecture/REACTIVE_CONNECTORS.md)); out-of-process
+  Python and Java compute workers with pinned, administrator-approved requirements, QLRisk as the default pricer (design only until
+  its API is stable) and QuantLib's own Java binding in an isolated worker ([PYTHON_COMPUTE.md](docs/architecture/PYTHON_COMPUTE.md));
+  a generic VaR engine over precomputed 509-day P&L vectors for any scope, with what-if and full drill-down
+  ([VAR_ENGINE.md](docs/architecture/VAR_ENGINE.md)) and its data model: positions, portfolios, the vector layout in Delta, cubes,
+  the in-memory vector store and sizing ([VAR_DATA_MODEL.md](docs/architecture/VAR_DATA_MODEL.md)).
+- **WRITE_BACK.md section 18:** forms save through connectors, an applied change triggers reactive connectors, updated records and
+  results are pushed to viewers; build steps W6 and W7. **QUANT_SERVICE.md section 17:** reconciled with the compute workers.
+  **IMPLEMENTATION_PLAN.md:** a 2.8.0 section with its waves; docs/README.md lists the new designs.
+
 ## 2.7.0 — Sutra Next: the UI kit, events and children across packs, refresh, layout, forms and the four-mode Sutra designer; the us-equities and gleif packs (2026-10-24)
 
 - **Drill fixes (2.7.0, console suite):** the report designer's YAML tab says whether its text is the draft's yet

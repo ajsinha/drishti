@@ -19,7 +19,10 @@ Status: **design, not built.** Planned for **2.8.0** (decided 2026-10-19 as 2.7.
 2026-10-20). Related: [DATABASE.md](DATABASE.md) (the one Drishti database: the edit log, lanes, overlays and owned data live in it;
 2.8.0 item 0), [RUPAKA.md](RUPAKA.md) (Sutra and the renderer), [DRISHTI_NET.md](DRISHTI_NET.md) (several servers),
 [GENUI.md](GENUI.md) section 11 (write-back forms, deferred to this design), [BI_DESIGN.md](BI_DESIGN.md) (review and proposals, reused
-here), [CONNECTOR_FILES.md](../connectors/CONNECTOR_FILES.md) (connector files, where `writes:` lives).
+here), [CONNECTOR_FILES.md](../connectors/CONNECTOR_FILES.md) (connector files, where `writes:` lives). **2.8.0 additions (2026-10-24):** forms
+save through connectors, an applied change can trigger a point-in-time calculation in a reactive connector, and updated records and
+results are pushed to the people watching them: [section 18](#18-280-saving-through-connectors-triggers-and-viewers), with
+[REACTIVE_CONNECTORS.md](REACTIVE_CONNECTORS.md) and [VAR_ENGINE.md](VAR_ENGINE.md).
 
 ## Contents
 
@@ -32,7 +35,8 @@ here), [CONNECTOR_FILES.md](../connectors/CONNECTOR_FILES.md) (connector files, 
 10. [On screen](#10-on-screen) · 11. [Several servers: ordering across a cluster](#11-several-servers-drishtinet-ordering-across-a-cluster) ·
 12. [Off by default and controlled by roles](#12-off-by-default-and-controlled-by-roles) ·
 13. [APIs, CLI and configuration](#13-apis-cli-and-configuration) · 14. [Build plan](#14-build-plan) · 15. [Tests](#15-tests) ·
-16. [Decisions](#16-decisions-product-owner-2026-10-19-and-2026-10-20) · 17. [Risks and open questions](#17-risks-and-open-questions)
+16. [Decisions](#16-decisions-product-owner-2026-10-19-and-2026-10-20) · 17. [Risks and open questions](#17-risks-and-open-questions) ·
+18. [2.8.0: saving through connectors, triggers and viewers](#18-280-saving-through-connectors-triggers-and-viewers)
 
 ## 1. The ask
 
@@ -539,6 +543,8 @@ Overlay and owned targets need the first and third levels only; a source target 
 | W3 | **The cluster:** lane ownership by conditional UPDATE (the ring suggests), **fencing** by epoch on every append and apply, forwarding from any node, failover by lease; the **PostgreSQL** shared log, the **S3** log (lease by ETag, fences), the **edit primary** fallback, `edit.log: auto` and its rule, Admin → Edits (store, owners, warnings); the loader folding approved overlays into the next day's lake build (section 16) | the three cluster acceptance tests of section 15 pass on PostgreSQL and on S3; an approved overlay appears in the next lake build and in BI |
 | W4 | `SourcePlugin.write` and **connector `writes:`** (validated at load), **source commands through the outbox** (pending, sent, confirmed; resend by the new owner with the same change id): the one real-amendment pilot (one field of one kind on one connector, JDBC first); pending at source | a source command applied twice by a retry changes the source once; a command without a guard or idempotency clause is refused at load; a command pending when its owner dies is sent once by the new owner |
 | W5 | Form mode, bulk edit, phone, docs and a tutorial (UI, CLI, YAML) | a tutorial edits, approves and sees the change tick on another browser |
+| W6 | **Forms save through connectors** (section 18.1): Submit on a 2.7.0 form turns its draft into a change request; the review and confirm sheet; the `edit.applied` event (section 18.3) | a form's draft submitted from the book desk becomes a change request, is approved and applied, and the draft is closed with the change id |
+| W7 | **Triggers and viewers** (sections 18.3 to 18.6): reactive connectors subscribed to `edit.applied`; recompute status on the submitter's screen; the submitter's own impact; updated records and results pushed to every viewer, masked per viewer | an amended trade recomputes its book's VaR ([VAR_ENGINE.md](VAR_ENGINE.md) step V5); the submitter sees their impact, every viewer sees the new record and shared number within 2 s |
 
 Placement: **2.8.0** (product owner: 2.7.0 on 2026-10-19, 2.8.0 since 2026-10-21; 2.7.0 is Sutra Next), after 2.6.0 (statements, field parameters, the Cassandra connector, drishti-iceberg;
 integration moved after 3.0.0 on 2026-10-20); AI (grounding, AI UI, GenUI, AI management)
@@ -615,3 +621,128 @@ follows as 2.9.0; GenUI's write-back forms build on this. W0 comes first (2026-1
 6. **A source that cannot guard or de-duplicate** (no version, no change-id column, no idempotency key) cannot have a `writes:`
    command; such a source is edited through overlays only.
 7. **Open:** the pilot's kind, field and connector for W4.
+8. **Open (2.8.0 additions, section 18):** should a change whose recompute fails stay applied (proposed: yes, the change is the record;
+   the computation catches up) or be held until the recompute succeeds?
+9. **Open:** must a write-back that changes risk materially (an incremental VaR above a threshold) require a second approver, with the
+   threshold read from the recompute (a pre-trade check), or is that a later feature?
+10. **Open:** should the submitter's own impact (section 18.5) be kept with the change in the edit log for audit, or only shown?
+
+## 18. 2.8.0: saving through connectors, triggers and viewers
+
+Added 2026-10-24 (product owner): **write-back saves via connectors**; **a saved change may trigger a point-in-time calculation** in a
+reactive connector ([REACTIVE_CONNECTORS.md](REACTIVE_CONNECTORS.md)); **updated records, and the results computed from them, are
+pushed to the people watching them**. Everything in this section is planned (2.8.0), on top of sections 1 to 17, which it does not
+change. Three static mock-ups were made with it (kept outside the repository): the review and confirm sheet with its recompute status
+is the third.
+
+### 18.1 From a form's draft to a saved change
+
+Since 2.7.0 a Sutra form saves **drafts only**, per person, through `/api/v1/drafts` ([SUTRA_FORMS_GUIDE.md](../guides/SUTRA_FORMS_GUIDE.md),
+[SUTRA_NEXT.md section 10](SUTRA_NEXT.md#10-forms-and-data-entry)). In 2.8.0 a form gains **Submit**:
+
+```yaml
+form:
+  key: trade_id
+  edit: beside
+  new: drawer
+  save:                                   # planned (2.8.0): where a submitted form goes
+    target: source                        # overlay | owned | source (section 5.1)
+    command: amend-trade                  # edit: a command of the kind's connector's writes: (section 5.4)
+    create: book-trade                    # new: a create command of the same connector
+    approval: one
+    reason: required
+  fields: [ ... ]                         # unchanged: each field's bind is the path the change item writes
+```
+
+| Step | What happens |
+|---|---|
+| 1 | The person fills the form; the draft is kept as in 2.7.0. |
+| 2 | **Submit** opens the review and confirm sheet ([18.2](#182-the-review-and-confirm-sheet)). |
+| 3 | **Confirm** turns the draft into **one change request** (section 6): each changed field is an item (`path` from its `bind`, `from`, `to`), `basedOn` is the version the form was opened on, and the draft's id is kept on the request. |
+| 4 | The server checks the form's rules again as the authority (the `FormExpr` rules of 2.7.0), now **re-reading lookups** (a carried value such as a counterparty's limit is read again at apply time, as the 2.7.0 guide promised for the write). |
+| 5 | The request follows sections 7 to 12: lanes, version check, approval, apply, outbox. |
+| 6 | When the change is applied, the draft is closed with the change id; if it is refused or conflicted, the draft stays, marked with the reason, for the person to edit again. |
+
+**Save via connector.** For a `source` target the **connector is the writer**, through its `writes:` commands (section 5.4), as before;
+a new record uses a `create` command (an `INSERT`, a `POST`, a message), with the same required guard (for a create: *the key does not
+exist yet*) and idempotency clause. `overlay` and `owned` targets are written by the lane owner to the Drishti database (section 5.2).
+A reactive connector is **never** a write target: it computes; it may only be triggered (18.3).
+
+### 18.2 The review and confirm sheet
+
+Before anything is submitted the person sees, in plain words:
+
+- **the difference**, three columns per field: what you saw (the version the form opened on), what is there now, your change; a field
+  that moved underneath is flagged before submit, not after;
+- **where it goes**: *Amend in MUREX through trade-murex (command amend-notional)*, or *Correction kept in Drishti (overlay)*;
+- **who must approve**: *one approver: K. Rao or M. Diaz (not you)*;
+- **what it will recompute**: the reactive connectors whose triggers the change fires, and the scopes affected (*VaR of BOOK-RATES-2
+  and the 4 scopes above it*), read from the triggers' `affects:` expressions without computing anything yet;
+- **the reason** box when the field requires one.
+
+### 18.3 The applied event and triggers
+
+When the lane owner applies a change (section 7, step 5) it publishes an **`edit.applied`** event **after** the transaction commits:
+
+```json
+{ "type": "edit.applied", "changeId": "chg-01JB3Z…", "lane": 17, "seq": 3412,
+  "kind": "trade", "entity": "MX-50000001", "businessDate": "2026-10-23", "target": "source",
+  "paths": ["$.LEGS[0].NOTIONAL"], "by": "asha", "appliedAt": "2026-10-23T14:02:11.204Z" }
+```
+
+- **Durable, because it is the edit log.** The event is a view of an `applied` row; a reactive connector that was down or behind
+  reads the log from the last seq it processed per lane, so no applied change is ever missed, and the seq gives the order.
+- **Paths, not values.** The event says which fields changed, never their values; a connector that needs the new record reads it
+  through the router, pinned to the change's seq, so masks and entitlements apply as everywhere.
+- **Source targets have two moments:** `edit.applied` (Drishti has recorded the change and the command is pending) and
+  `edit.confirmed` (the source confirmed it, section 5.3), or `edit.refused-at-source`. A trigger chooses (`on: write-back, when:
+  applied | confirmed`); risk recomputes usually take `applied` and recompute again on a refusal, so the screen is never behind the
+  record.
+- **The calculation is point-in-time.** The recompute is stamped with the lanes' watermarks it includes (`L17:3412`), so a result says
+  exactly which changes it reflects ([REACTIVE_CONNECTORS.md section 8](REACTIVE_CONNECTORS.md#8-point-in-time-stamping-ordering-and-idempotence)).
+- **Coalesced:** twenty amendments to one book in a second cause one or two recomputes, not twenty
+  ([REACTIVE_CONNECTORS.md section 10](REACTIVE_CONNECTORS.md#10-coalescing-incremental-recompute-and-back-pressure)).
+- In a cluster the owner of the lane publishes the event on Drishti\*net; each affected key's owner recomputes it.
+
+### 18.4 Conflicts
+
+The rules of section 8 are unchanged: a change based on a version whose touched fields have moved is **conflicted**, with the
+three-way diff and *Take theirs*, *Edit again* or *Apply mine anyway* (the `override` role). In addition:
+
+- **A conflicted, refused or withdrawn change fires no trigger.** Only applied changes recompute anything.
+- **Recomputes never conflict.** They are ordered by watermark; a result that started earlier and finished later is dropped, never
+  shown over a newer one.
+- **Two changes to different records of one scope** (two trades of one book) both apply, in their lanes' order; the shared result
+  includes both, each submitter sees their own impact ([18.5](#185-what-each-person-sees)).
+- **A source that refuses a command later** (`edit.refused-at-source`) withdraws the overlay of that change if one was shown, and the
+  triggers recompute again, so computed numbers follow the record back.
+- **A what-if sandbox** based on a record that has since changed says so (*based on version 7; the trade is now at version 8*) and
+  offers to rebase; it never changes by itself.
+
+### 18.5 What each person sees
+
+| Who | Sees |
+|---|---|
+| **the submitter** | the change's state on the cell or row (section 10); a **recompute status** card: which connector, which scopes, *coalesced with 2 other changes*, progress per scope, the stamp when done; and **their own change's impact** (*your change: incremental VaR +1.8m on RATES-NY*), private to them, computed against the state just before their change |
+| **anyone viewing the record** | the updated record on the live channel (section 7, step 5), **masked for them**, with a short *changed by A. Sinha just now* mark (the name shown only if the viewer may see the edit history) |
+| **anyone viewing a computed result the change affects** | the new shared result, stamped (*includes 3 changes since 14:02*); on a `consistency: snapshot` screen an *Update all* offer rather than a silent change ([REACTIVE_CONNECTORS.md section 12.2](REACTIVE_CONNECTORS.md#122-one-as-of-for-the-whole-screen)) |
+| **nobody else** | another person's impact, sandbox or draft is never sent to anyone but its owner ([REACTIVE_CONNECTORS.md section 9](REACTIVE_CONNECTORS.md#9-isolation-two-users-never-see-each-others-answers)) |
+
+### 18.6 Audit
+
+- The compute audit entry of a triggered recompute names the change id that triggered it; a cell's history (section 10) shows
+  *recomputed VaR for 5 scopes (req-01JB4C…)* under the change, so a reviewer can follow a change to every number it moved.
+- The submitter's impact is recorded in the compute audit with the change id (open question 10 in section 17 asks whether it is also
+  kept in the edit log).
+
+### 18.7 Failure
+
+- **A recompute that fails does not undo the change.** The change is the record; the affected results are marked *stale: the
+  recompute after change chg-… failed (reason)* and recompute on the next trigger or read. Open question 8 in section 17.
+- **A reactive connector that is off or not approved** is simply not triggered; the review sheet says *VaR will not be recomputed:
+  var-engine is not approved*.
+
+### 18.8 Build steps
+
+W6 and W7 in section 14. They depend on W1 (the edit log) and on [REACTIVE_CONNECTORS.md](REACTIVE_CONNECTORS.md) steps R1 to R4; the
+VaR use is [VAR_ENGINE.md](VAR_ENGINE.md) step V5.

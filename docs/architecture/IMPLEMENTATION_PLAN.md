@@ -295,6 +295,35 @@ Releases 1.11 to 1.21; each is in [CHANGELOG.md](../../CHANGELOG.md) with detail
 | Connectors that compute (1.21) | `news` and `yfinance` source plugins whose documents are computed when asked for; the `news-and-markets` sample packs | [NEWS.md](../connectors/NEWS.md), [YFINANCE.md](../connectors/YFINANCE.md) |
 | Forms and Reports in the top bar (1.21) | Two top-bar entries beside BI, with a forms home; since 2.0.0 they are entries of Views | [USER_GUIDE.md](../guides/USER_GUIDE.md) |
 
+## 2.8.0: write-back, reactive connectors and VaR (planned)
+
+Scope agreed by the product owner on 2026-10-24: **write-back**, **reactive connectors** and a **generic VaR engine**. Packs stay as they
+are; connectors may be static, live, on-demand or reactive; a screen combines as many connectors as it needs, on one as-of. All of it
+is planned, none of it is built. The designs:
+
+| Design | What it decides |
+|---|---|
+| [WRITE_BACK.md](WRITE_BACK.md) (section 18 added for 2.8.0) | forms save through connectors; an applied change publishes an event that triggers reactive connectors; updated records and results pushed to viewers |
+| [REACTIVE_CONNECTORS.md](REACTIVE_CONNECTORS.md) | the four connector modes; typed parameters on a panel's source; triggers (write-back, live feed, new load, schedule); point-in-time stamps, ordering, idempotence; per-user isolation; coalescing and incremental recompute; one as-of per screen; per-panel failure |
+| [PYTHON_COMPUTE.md](PYTHON_COMPUTE.md) | out-of-process Python and Java compute workers; the connector's requirements (pinned Python wheels, Java libraries with hashes, plugins) in locked environments, approved by an administrator; the pricer interface with QLRisk as default (design only until its API is stable) and QuantLib's own Java binding in an isolated worker (Linux first; skipped on Windows); reconciles [QUANT_SERVICE.md](QUANT_SERVICE.md) |
+| [VAR_ENGINE.md](VAR_ENGINE.md) | VaR, ES, contributions, history and backtesting for any scope (a position, a book, a desk, the bank, any basket of trades) from precomputed 509-day P&L vectors; what-if priced just in time; full drill-down with tables and charts; entitlements and audit; targets for a large bank |
+| [VAR_DATA_MODEL.md](VAR_DATA_MODEL.md) | positions derived from trades; portfolios by hierarchy, rule and basket, resolved point in time; the vector layout in Delta (one row per position, one array column), the rolling window as daily snapshots, restatements, precision, cubes, the in-memory vector store, sharding and sizing |
+
+**Waves, in order** (each with its docs and CHANGELOG entries in the same push):
+
+| Wave | What | Design |
+|---|---|---|
+| 0 | the one Drishti database (unchanged from the table above) | [DATABASE.md](DATABASE.md) |
+| W1–W5 | write-back as designed (lanes, edit log, approval, cluster, outbox and connector writes, forms and phone) | [WRITE_BACK.md](WRITE_BACK.md) section 14 |
+| C1–C3 | compute workers: the supervisor and Python pools (Linux and Windows), Arrow transport, locked environments, approval | [PYTHON_COMPUTE.md](PYTHON_COMPUTE.md) section 16 |
+| R1–R4 | reactive connectors: the plugin and its interface, typed source parameters, cache and single flight, the worker bridge with progress, triggers with coalescing and ordering, per-user isolation | [REACTIVE_CONNECTORS.md](REACTIVE_CONNECTORS.md) section 18 |
+| V0–V3 | VaR data (positions, vectors, hierarchies, vector columns in the lake tools and the Delta plugin), the engine and the VaR explorer, history and backtesting, baskets, entitlements and audit | [VAR_ENGINE.md](VAR_ENGINE.md) section 15, [VAR_DATA_MODEL.md](VAR_DATA_MODEL.md) |
+| W6–W7 | forms save through connectors; applied changes trigger recomputes; viewers updated | [WRITE_BACK.md](WRITE_BACK.md) section 18 |
+| C4–C6, V4 | the pricer interface and stand-in; what-if; **QLRisk only if its API is declared stable, otherwise in 2.8.x**; the QuantLib Java worker with its parity test (Linux) | [PYTHON_COMPUTE.md](PYTHON_COMPUTE.md) section 9, [VAR_ENGINE.md](VAR_ENGINE.md) section 8 |
+| R5–R6, V5–V6 | one as-of per screen; the cluster (key owners, sharded vector store); intraday VaR from write-backs; the targets measured on a real server | [REACTIVE_CONNECTORS.md](REACTIVE_CONNECTORS.md), [VAR_ENGINE.md](VAR_ENGINE.md) section 13 |
+
+Open questions for the product owner are listed at the end of each design.
+
 ## Known gaps
 
 What is open today. None blocks normal use; each is a candidate for a future wave.
@@ -321,6 +350,7 @@ Everything planned up to 2.4.0 is built (see the changelog, [What 2.0.0 contains
 |---|---|---|
 | 0 | **The one Drishti database:** every Drishti-owned relational table (identity today; the edit log, lanes, overlays and owned data next) in one database; SQLite by default, PostgreSQL long term; no migrations: two complete schema files with a parity test, a schema version stamp, a planned `drishti.py db copy` to switch or upgrade; its own file `config/db/database.yaml` (neither was built yet) | [DATABASE.md](DATABASE.md) |
 | W1–W5 | Write-back, with **the edit log on that database**: `drishti_edit_lane` and `drishti_edit_log`, acknowledged after commit, ordered by seq, fenced by epoch; SQLite on one node (W1), PostgreSQL or S3 across a cluster, or one edit primary (W3); source commands through the outbox and connector `writes:` (W4); off by default | [WRITE_BACK.md](WRITE_BACK.md) sections 5, 7, 11, 12, 14 |
+| C, R, V, W6–W7 | Compute workers, reactive connectors, the VaR engine, and write-back's triggers (added 2026-10-24) | [2.8.0: write-back, reactive connectors and VaR](#280-write-back-reactive-connectors-and-var-planned) |
 
 The long tail of BI gaps that the product owner trimmed on 2026-10-11 (window functions, several fact tables in one query, relative-date slicers, per-device layouts, rename detection, BI in pack archives, import rollback, incremental aggregates, live-table history, a board designer) was built after all, in 2.1.0. The platform loose ends (live bridges and plugin jars, proxy gaps, AI streaming and stdio MCP) remain candidates, not plans.
 

@@ -18,6 +18,15 @@
 **Status: proposed; not in a planned release, a later candidate in [IMPLEMENTATION_PLAN.md › Roadmap](IMPLEMENTATION_PLAN.md#roadmap); the decision is
 [ADR-019](adr/019-pricing-is-a-quantlib-service-behind-the-server.md).** Nothing here is built yet (checked against 2.0.0: there is no `drishti-quant-gateway` module, no `drishti.quant.*` server setting and no `quant` power; `drishti.quant` below is the small browser library of Calc).
 
+**2.8.0 update (2026-10-24): read [PYTHON_COMPUTE.md](PYTHON_COMPUTE.md) first.** The product owner decided that computations,
+pricing included, run in **compute workers supervised by the Drishti server** (out-of-process Python workers with QLRisk as the
+default pricer, and an isolated Java worker for QuantLib's own Java binding), used by **reactive connectors**
+([REACTIVE_CONNECTORS.md](REACTIVE_CONNECTORS.md)); the first user is the VaR engine ([VAR_ENGINE.md](VAR_ENGINE.md)). That replaces the
+*deployment shape* proposed below (a separate `drishti-quant` HTTP service); the rest of this document still stands and is reused:
+pricing stays outside the server's JVM, the `quant` power, the packs' pricer mappings (section 6), market data assembled by the server
+for a business date (section 7), caching by trade version and date (section 11). The QuantLib-SWIG Java option rejected in section 3
+*inside the server* is now accepted *in an isolated Java worker*. See [section 17](#17-reconciled-with-the-280-compute-workers).
+
 **Relation to Rūpaka (BI).** This is the server-side pricing service for the terminal and Calc. [RUPAKA.md](RUPAKA.md) section 9.2 plans a different, console-side `QuantEngine` for the analyst workbench of BI phase 9, with QLRisk as its first provider, and keeps it a design until QLRisk's API is declared stable. If both are built they should share the pricer mappings of section 6 rather than keep two. Neither is in the BI pages of 1.20 ([BI_GUIDE.md](../guides/BI_GUIDE.md) section 11 lists what BI does not have yet).
 
 Drishti shows trades, market data and risk, and Calc ([PYTHON_CALC.md](../guides/PYTHON_CALC.md)) lets a user compute
@@ -44,6 +53,7 @@ works with Drishti, how it reaches the screen, and how it would be built.
 14. [Phases](#14-phases)
 15. [Risks and open questions](#15-risks-and-open-questions)
 16. [The console's QuantEngine slot (built, lean)](#16-the-consoles-quantengine-slot-built-lean)
+17. [Reconciled with the 2.8.0 compute workers](#17-reconciled-with-the-280-compute-workers)
 
 ---
 
@@ -315,3 +325,20 @@ Open questions for that day: whether QLRisk wants curves and market data passed 
 cannot, in the sandbox: no network), whether it is fork- and memory-friendly under the worker's address-space limit, and how results with structure (a Greeks table) come back (the stand-in returns
 one float; `price` could return a dict, and the cell's `result` already draws tables and charts). The design for a separate quant *service* the console calls over the network is
 [RUPAKA.md](RUPAKA.md) section 9.2 and sections 2 to 5 above; this slot is the in-process stand-in for it.
+
+## 17. Reconciled with the 2.8.0 compute workers
+
+Decided 2026-10-24 (product owner); the design is [PYTHON_COMPUTE.md](PYTHON_COMPUTE.md).
+
+| This document proposed | 2.8.0 decides |
+|---|---|
+| a separate Python service, `drishti-quant`, reached over HTTP (sections 2, 5, 12) | **compute workers** started and supervised by the server: a pool of out-of-process Python workers, data passed as Arrow, from a locked, administrator-approved environment ([PYTHON_COMPUTE.md sections 4 to 7](PYTHON_COMPUTE.md#4-requires-what-a-connector-needs-to-run)); a remote pool on other machines remains a later option and would look much like the service |
+| QuantLib-Python adapters written in the service (section 5) | a **pricer SPI** with **QLRisk as the default provider** (design only until its API is declared stable) and a stand-in for tests ([PYTHON_COMPUTE.md section 9](PYTHON_COMPUTE.md#9-pricing-one-spi-two-engines)) |
+| QuantLib's Java (SWIG) binding rejected inside the server (section 3) | **accepted in an isolated Java worker**: built per OS (Linux first), packaged in a versioned jar, extracted under the data folder, never loaded in the server; its tests skip on Windows; a parity test against QLRisk |
+| `/api/v1/quant/...` endpoints (section 9) | pricing reaches screens through **reactive connectors** and their kinds (a what-if is a computed kind, [VAR_ENGINE.md section 8](VAR_ENGINE.md#8-what-if-hypothetical-amended-and-unwound-trades)); dedicated endpoints for single-trade pricing may still be added on the same workers |
+| packs' `quant: pricers:` mappings (section 6) | **kept**, shared by every pricer provider |
+| market data for a business date assembled by the server (section 7) | **kept** |
+| the `quant` power, limits, caching, audit (sections 4, 10, 11) | **kept**, joined by the `compute` power and the compute audit ([REACTIVE_CONNECTORS.md section 15](REACTIVE_CONNECTORS.md#15-observability-and-audit)) |
+
+The console's `QuantEngine` slot (section 16) is unchanged: it serves Analyse cells; when QLRisk is stable its adapter and the compute
+pricer SPI share the packs' pricer mappings.
