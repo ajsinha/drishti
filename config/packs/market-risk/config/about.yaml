@@ -341,5 +341,12 @@ kinds:
       POSITIONS.DIRECTION: { term: "Direction", means: "LONG or SHORT: the sign of the position's net quantity." }
       POSITIONS.QUANTITY: { term: "Net quantity", means: "The signed sum of the position's trades' quantities held in the portfolio." }
       POSITIONS.MARKET_VALUE: { term: "Market value", means: "The position's present value on the business date.", unit: "USD" }
+      POSITIONS.POSITION_ID: { term: "Position", means: "The position's id: its book and its instrument (one holding nets every trade of that instrument in the book)." }
+      POSITIONS.INSTRUMENT: { term: "Instrument", means: "What the position holds: the product, its currency and its maturity." }
+      DEFINITION.NODE: { term: "Hierarchy node", means: "For a HIERARCHY portfolio: the node of the bank's hierarchy whose positions it holds (every book under it)." }
+      DEFINITION.RULE: { term: "Rule", means: "For a RULE portfolio: the condition a position's columns must meet to be in it, checked on each business date." }
+      DEFINITION.MEMBERS: { term: "Members", means: "For a BASKET portfolio: the positions and trades someone picked (a trade brings that part of its position)." }
+      ROLLS_UP_TO.ID: { term: "Rolls up to", means: "The desk or book the portfolio reports under." }
+      VALID_FROM: { term: "Valid from", means: "The first business date the portfolio's definition applies to; an earlier date uses the definition then in force." }
       OWNER: { term: "Owner", means: "Who keeps the portfolio's definition." }
       PNL: { term: "P&L vector", means: "The portfolio's P&L under each historical scenario day: the sum of its members' vectors, each trade counted once.", unit: "USD", sign: "Positive is a gain." }
