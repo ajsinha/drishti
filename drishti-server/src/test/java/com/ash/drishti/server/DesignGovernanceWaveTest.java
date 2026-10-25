@@ -49,8 +49,8 @@ import org.springframework.test.web.servlet.ResultActions;
         "drishti.rachana.studio-save=true", "drishti.governance.dir=${java.io.tmpdir}/drishti-w1-props-${random.uuid}",
         "drishti.security.enabled=true", "drishti.security.secret=test-secret-that-is-at-least-32-bytes-long",
         "drishti.security.roles.narrowauthor.kinds[0]=trade", "drishti.security.roles.narrowauthor.author=true",
-        "drishti.identity.database-url=jdbc:sqlite:target/w1-api-${random.uuid}/identity.db",
-        "drishti.builder.designs.dir=target/w1-api-files-${random.uuid}", "drishti.builder.designs.max-notes-kb=1",
+        "drishti.identity.database-url=jdbc:sqlite:${drishti.test.dir}/w1-api-${random.uuid}/identity.db",
+        "drishti.builder.designs.dir=${drishti.test.dir}/w1-api-files-${random.uuid}", "drishti.builder.designs.max-notes-kb=1",
         "drishti.builder.designs.max-scratch=3", "drishti.builder.sample-max-items=10", "drishti.builder.sample-max-string=50"})
 @AutoConfigureMockMvc
 class DesignGovernanceWaveTest {

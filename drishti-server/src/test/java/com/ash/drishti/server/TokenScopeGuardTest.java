@@ -31,7 +31,7 @@ import org.springframework.web.servlet.mvc.method.annotation.RequestMappingHandl
 
 /** The guard: every endpoint that changes anything must say what a personal API token may do with it (read POST, a scope, or never). */
 @SpringBootTest(properties = {"drishti.rachana.hot-reload=false", "drishti.sources.plugins.demo.settings.ticking=false",
-        "drishti.identity.database-url=jdbc:sqlite:target/identity-${random.uuid}/identity.db"})
+        "drishti.identity.database-url=jdbc:sqlite:${drishti.test.dir}/identity-${random.uuid}/identity.db"})
 class TokenScopeGuardTest {
 
     @Autowired @org.springframework.beans.factory.annotation.Qualifier("requestMappingHandlerMapping") RequestMappingHandlerMapping mappings;

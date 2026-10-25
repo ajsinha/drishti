@@ -151,6 +151,7 @@ If you will change the code, continue with [DEVELOPER_GUIDE.md](guides/DEVELOPER
 | Install Calc's Python runtime, offline too, and decide who may use it | [PYTHON_CALC.md › Installing](guides/PYTHON_CALC.md#12-installing-the-python-runtime), [Roles](guides/PYTHON_CALC.md#9-roles-who-may-use-calc) |
 | Deploy, secure and monitor it; keep the lake bounded | [OPERATIONS.md](admin/OPERATIONS.md), [LAKE_MAINTENANCE.md](admin/LAKE_MAINTENANCE.md) |
 | Run several servers as one cluster (Drishti\*net): `config/net/`, Admin → Net, the cluster key, routing, the console's failover | [NET.md](admin/NET.md), [tutorial 19](tutorials/19-a-cluster-of-three.md) |
+| Run Python computations for connectors in worker pools: `config/compute/compute.yaml`, Admin → Compute, approving what a connector requires (four eyes), as many workers as you want, fan-out over nodes | [COMPUTE.md](admin/COMPUTE.md) |
 | Fix something that is not working | [TROUBLESHOOTING.md](guides/TROUBLESHOOTING.md), then the runbooks below |
 | Know how fast it is, and how that is measured | [PERFORMANCE.md](admin/PERFORMANCE.md) |
 | Know how many users a server holds, whether memory stays flat over a day, and how to load-test it | [LOAD_AND_MEMORY.md](admin/LOAD_AND_MEMORY.md) |
@@ -335,6 +336,7 @@ Every file under `docs/`, by folder. Documents marked *moved* are short pointers
 | [PERFORMANCE.md](admin/PERFORMANCE.md) | you want the measured numbers, to measure your own installation, or to tune it |
 | [LOAD_AND_MEMORY.md](admin/LOAD_AND_MEMORY.md) | you need to know how many users a server holds, whether memory stays flat over a day, and how to load-test and memory-profile the server, the console and the browser (strategy, tools, gates, build plan) |
 | [NET.md](admin/NET.md) | you run several servers as one cluster (Drishti\*net, 2.5.0; real addresses only and the last administrator kept across nodes, 2.6.0): a cluster of three, the files of `config/net/`, membership, capability digests, security, routing, the console and several servers, Admin → Net, drain, sizing, troubleshooting |
+| [COMPUTE.md](admin/COMPUTE.md) | you run compute workers (2.8.0, unreleased, steps C1 to C3): pools and how many workers (per pool and per node), fair scheduling, fan-out over Drishti\*net nodes, limits and the sandbox, `requires:`, locked environments and their four-eyes approval, Admin → Compute, Windows, the load test |
 | [LAKE_MAINTENANCE.md](admin/LAKE_MAINTENANCE.md) | you keep Delta tables bounded and fast: retention, compaction, checkpoints and vacuum from Admin → Lakes or `lake maintain`, schedules, history |
 | [SCALE_BENCHMARK.md](admin/SCALE_BENCHMARK.md) | you choose a store or size a server: every store measured at 10,000, 25,000 and 50,000 trades a day, linear scaling fits, labelled extrapolations to a million, and the harness (`tools/bench/`) to run it at a million on a real server |
 

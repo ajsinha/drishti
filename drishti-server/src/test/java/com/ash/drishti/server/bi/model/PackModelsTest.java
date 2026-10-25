@@ -55,7 +55,7 @@ class PackModelsTest {
 
     /** Pack {@code shop} owns orders and regions; pack {@code crm} owns customers. Graph: an order's {@code customer} field is a customer. */
     private final PackRegistry registry = registry();
-    private final ReferenceCatalog graph = new ReferenceCatalog(new GraphProperties(null, Map.of("customer", new GraphProperties.FieldRef("customer", "Customer")), null, null, null));
+    private final ReferenceCatalog graph = new ReferenceCatalog(new GraphProperties(null, Map.of("customer", new GraphProperties.FieldRef("customer", "Customer", null)), null, null, null));
     private final Lake lake = new Lake();
 
     private static PackRegistry registry() {

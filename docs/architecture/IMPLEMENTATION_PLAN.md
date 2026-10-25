@@ -315,7 +315,7 @@ of the VaR engine are built (unreleased: VAR_ENGINE.md section 18, the guide VAR
 |---|---|---|
 | 0 | the one Drishti database (unchanged from the table above) | [DATABASE.md](DATABASE.md) |
 | W1–W5 | write-back as designed (lanes, edit log, approval, cluster, outbox and connector writes, forms and phone) | [WRITE_BACK.md](WRITE_BACK.md) section 14 |
-| C1–C3 | compute workers: the supervisor and Python pools (Linux and Windows), Arrow transport, locked environments, approval | [PYTHON_COMPUTE.md](PYTHON_COMPUTE.md) section 16 |
+| C1–C3 | compute workers: the supervisor and Python pools (Linux and Windows), Arrow transport, locked environments, approval (**built**, unreleased: the `drishti-compute` module, fan-out over N workers and nodes, Admin → Compute, [COMPUTE.md](../admin/COMPUTE.md)) | [PYTHON_COMPUTE.md](PYTHON_COMPUTE.md) section 16 |
 | R1–R4 | reactive connectors: the plugin and its interface, typed source parameters, cache and single flight, the worker bridge with progress, triggers with coalescing and ordering, per-user isolation | [REACTIVE_CONNECTORS.md](REACTIVE_CONNECTORS.md) section 18 |
 | V0–V3 (built) | VaR data (positions, vectors, hierarchies, vector columns in the lake tools and the Delta plugin), the engine and the VaR explorer, history and backtesting, baskets, captures, entitlements and audit; the portfolio and position pages | [VAR_ENGINE.md](VAR_ENGINE.md) section 15, [VAR_DATA_MODEL.md](VAR_DATA_MODEL.md) |
 | W6–W7 | forms save through connectors; applied changes trigger recomputes; viewers updated | [WRITE_BACK.md](WRITE_BACK.md) section 18 |

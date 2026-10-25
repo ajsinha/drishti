@@ -37,22 +37,22 @@ import org.springframework.test.web.servlet.MockMvc;
 
 /** The AI layer end to end through the server with the mock provider and the mock MCP server: no network. */
 @SpringBootTest(properties = {"drishti.rachana.hot-reload=false", "drishti.sources.plugins.demo.settings.ticking=false",
-        "drishti.packs.enabled=market-risk", "drishti.sources.connectors-dir=target/test-data/ai-api-connectors",
-        "drishti.ai.enabled=true", "drishti.ai.dir=target/test-data/ai-api/ai", "drishti.ai.default-model=mock/m", "drishti.ai.watch=off",
+        "drishti.packs.enabled=market-risk", "drishti.sources.connectors-dir=${drishti.test.dir}/ai-api-connectors",
+        "drishti.ai.enabled=true", "drishti.ai.dir=${drishti.test.dir}/ai-api/ai", "drishti.ai.default-model=mock/m", "drishti.ai.watch=off",
         "drishti.ai.policy.features.[admin-only].roles[0]=full", "drishti.security.redact[0]=salary",
-        "drishti.mcp.enabled=true", "drishti.mcp.dir=target/test-data/ai-api/mcp", "drishti.mcp.watch=off",
+        "drishti.mcp.enabled=true", "drishti.mcp.dir=${drishti.test.dir}/ai-api/mcp", "drishti.mcp.watch=off",
         "drishti.mcp.tool-roles.[demo/secret]=nobody",
         "drishti.security.enabled=true", "drishti.security.secret=test-secret-that-is-at-least-32-bytes-long",
         "drishti.security.roles.full.kinds[0]=*", "drishti.security.roles.full.raw=true", "drishti.security.roles.full.admin=true",
         "drishti.security.roles.plain.kinds[0]=*",
-        "drishti.identity.database-url=jdbc:sqlite:target/aiapi-${random.uuid}/identity.db"})
+        "drishti.identity.database-url=jdbc:sqlite:${drishti.test.dir}/aiapi-${random.uuid}/identity.db"})
 @AutoConfigureMockMvc
 class AiApiTest {
 
     @BeforeAll
     static void files() throws Exception {
-        Path ai = Path.of("target/test-data/ai-api/ai");
-        Path mcp = Path.of("target/test-data/ai-api/mcp");
+        Path ai = com.ash.drishti.server.TestRun.root().resolve("ai-api/ai");
+        Path mcp = com.ash.drishti.server.TestRun.root().resolve("ai-api/mcp");
         Files.createDirectories(ai);
         Files.createDirectories(mcp);
         Files.writeString(ai.resolve("mock.yaml"), "type: mock\nmodels:\n  - name: m\nmock:\n  rules:\n    - match: ping\n      reply: pong\n");
@@ -101,10 +101,10 @@ class AiApiTest {
 
     @Test
     void liveReloadPicksUpANewProviderFile() throws Exception {
-        Files.writeString(Path.of("target/test-data/ai-api/ai/extra.yaml"), "type: mock\nmodels:\n  - name: x\n");
+        Files.writeString(com.ash.drishti.server.TestRun.root().resolve("ai-api/ai/extra.yaml"), "type: mock\nmodels:\n  - name: x\n");
         registry.reload();
         assertThat(registry.models()).extracting(m -> m.ref()).contains("extra/x", "mock/m");
-        Files.delete(Path.of("target/test-data/ai-api/ai/extra.yaml"));
+        Files.delete(com.ash.drishti.server.TestRun.root().resolve("ai-api/ai/extra.yaml"));
         registry.reload();
         assertThat(registry.models()).extracting(m -> m.ref()).doesNotContain("extra/x");
         assertThat(mcpRegistry.entries()).hasSize(1);

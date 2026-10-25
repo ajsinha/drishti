@@ -46,7 +46,7 @@ import org.springframework.test.web.servlet.MockMvc;
         "drishti.governance.dir=${java.io.tmpdir}/drishti-pivot-props-${random.uuid}",
         "drishti.security.enabled=true", "drishti.security.secret=test-secret-that-is-at-least-32-bytes-long",
         "drishti.security.roles.desk.kinds[0]=trade", "drishti.security.roles.curves.kinds[0]=curve",
-        "drishti.identity.database-url=jdbc:sqlite:target/pivots-${random.uuid}/identity.db"})
+        "drishti.identity.database-url=jdbc:sqlite:${drishti.test.dir}/pivots-${random.uuid}/identity.db"})
 @AutoConfigureMockMvc
 class PivotApiTest {
 

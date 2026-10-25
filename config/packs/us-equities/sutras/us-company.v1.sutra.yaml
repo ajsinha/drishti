@@ -20,9 +20,11 @@ description: "A US listed company: key facts, ten years of annual financials, re
 doc:
   summary: "A US listed company: key facts, financials over ten years, recent filings (a click opens one beside) and its indexes."
   description: >-
-    One page per company of the Dow 30, the Nasdaq-100 and the S&P 500. The strip gives the ticker, exchange, SIC industry, the
+    One page per company of the Dow 30, the Nasdaq-100 and the S&P 500, and per bank of the pack's bank lists (major US, Canadian
+    and UK banks that file with the SEC). The strip gives the ticker, exchange, SIC industry, the
     latest fiscal year's revenue, net income, net margin and growth, and diluted EPS. Revenue and net income over up to ten fiscal
-    years as a chart and every annual figure in a table (SEC XBRL, 10-K); the latest SEC filings, where a click opens the filing
+    years as a chart and every annual figure in a table (SEC XBRL, 10-K; a foreign bank's 20-F or 40-F, in
+    the currency it reports in); the latest SEC filings, where a click opens the filing
     beside the table with its links to the document and its EDGAR index; key facts (CIK, LEI, SIC, headquarters, founded,
     website); the indexes the company belongs to; where the data comes from. F5 opens its LEI record (the gleif pack), F7 the SIC sector, F6 the live price history
     (off as shipped, internal use only).
@@ -39,6 +41,7 @@ strip:
   - { label: Ticker, bind: $.TICKER, emphasis: true }
   - { label: Industry (SIC), bind: $.SIC_DESCRIPTION }
   - { label: Fiscal year, bind: $.FISCAL_YEAR }
+  - { label: Currency, bind: $.CURRENCY }
   - { label: Revenue, bind: $.REVENUE, fmt: compact }
   - { label: Net income, bind: $.NET_INCOME, fmt: compact, tone: sign }
   - { label: Net margin, bind: $.NET_MARGIN, fmt: margin1, tone: sign }

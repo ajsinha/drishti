@@ -57,7 +57,7 @@ import org.springframework.test.web.servlet.MockMvc;
 @ExtendWith(OutputCaptureExtension.class)
 class IcebergMovedConnectorFileTest {
 
-    static final String CONNECTORS = "target/test-data/iceberg-moved-connectors";
+    static final String CONNECTORS = "${drishti.test.dir}/iceberg-moved-connectors";
     private static final List<String> CREDIT = List.of("credit-limit", "cva", "exposure-profile", "netting-set", "sa-ccr");
     private static final List<String> MARKET = List.of("bond", "fx-rate");
     private static Path base;
@@ -66,7 +66,7 @@ class IcebergMovedConnectorFileTest {
 
     static {
         try {
-            base = Files.createTempDirectory("drishti-iceberg-moved-file");
+            base = com.ash.drishti.server.TestRun.temp("drishti-iceberg-moved-file");
             Path lines = base.resolve("rows.jsonl");
             StringBuilder rows = new StringBuilder();
             int dates = 0;
@@ -87,7 +87,7 @@ class IcebergMovedConnectorFileTest {
             com.ash.drishti.plugin.iceberg.IcebergLoader.main(new String[] {lines.toString(), base.resolve("ice1").toString(), "--engine", "native",
                 "--spill-dir", base.resolve("spill").toString()});
             Files.move(base.resolve("ice1"), base.resolve("ice2"));
-            Path connectors = Path.of(CONNECTORS);
+            Path connectors = com.ash.drishti.server.TestRun.root().resolve("iceberg-moved-connectors");
             if (Files.isDirectory(connectors)) {
                 try (var old = Files.list(connectors)) {
                     for (Path f : old.toList()) {
@@ -161,7 +161,7 @@ class IcebergMovedConnectorFileTest {
         }
 
         // added while the server runs, with a relocate in the Windows form that matches nothing here (QA3B-04)
-        Files.writeString(Path.of(CONNECTORS).resolve("qa-ice-hot.yaml"), "plugin: iceberg\nkinds: [" + String.join(", ", MARKET) + "]\nsettings:\n  root: "
+        Files.writeString(com.ash.drishti.server.TestRun.root().resolve("iceberg-moved-connectors").resolve("qa-ice-hot.yaml"), "plugin: iceberg\nkinds: [" + String.join(", ", MARKET) + "]\nsettings:\n  root: "
                 + base.resolve("ice2") + "\n  domain: market\n  engine: native\n  relocate: 'C:\\Users\\qa\\ice1 -> D:\\lake\\ice2'\n");
         awaitRunning("qa-ice-hot");
         mvc.perform(get("/api/v1/admin/connectors")).andExpect(status().isOk())
@@ -180,7 +180,7 @@ class IcebergMovedConnectorFileTest {
 
         // QA4-05: a relocate it cannot read fails the start naming the pair, in one line; each retry closes the half-started connector quietly
         before = out.getAll().length();
-        Files.writeString(Path.of(CONNECTORS).resolve("qa-ice-bad.yaml"), "plugin: iceberg\nkinds: [bond]\nsettings:\n  root: " + base.resolve("ice2")
+        Files.writeString(com.ash.drishti.server.TestRun.root().resolve("iceberg-moved-connectors").resolve("qa-ice-bad.yaml"), "plugin: iceberg\nkinds: [bond]\nsettings:\n  root: " + base.resolve("ice2")
                 + "\n  domain: market\n  engine: native\n  relocate: '/no/arrow/here'\n");
         long deadline = System.currentTimeMillis() + 30_000;
         while (!out.getAll().substring(before).contains("connector 'qa-ice-bad' failed (attempt 2)") && System.currentTimeMillis() < deadline) {

@@ -47,7 +47,7 @@ class RegistryApiTest {
 
     @DynamicPropertySource
     static void props(DynamicPropertyRegistry r) throws Exception {
-        root = Files.createTempDirectory("drishti-registry");
+        root = TestRun.temp("drishti-registry");
         acme = KeyPairGenerator.getInstance("Ed25519").generateKeyPair();
         Path reg = Files.createDirectories(root.resolve("registry"));
         byte[] archive = PackRegistryClientTest.zip(PackRegistryClientTest.pack("widgets", "1.0.0"));

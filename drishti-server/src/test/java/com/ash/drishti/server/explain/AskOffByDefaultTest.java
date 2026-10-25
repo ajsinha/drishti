@@ -35,7 +35,7 @@ import org.springframework.test.web.servlet.MockMvc;
         "drishti.packs.enabled=market-risk",
         "drishti.security.enabled=true", "drishti.security.secret=test-secret-that-is-at-least-32-bytes-long",
         "drishti.security.roles.full.kinds[0]=*", "drishti.security.roles.full.raw=true",
-        "drishti.identity.database-url=jdbc:sqlite:target/askoff-${random.uuid}/identity.db"})
+        "drishti.identity.database-url=jdbc:sqlite:${drishti.test.dir}/askoff-${random.uuid}/identity.db"})
 @AutoConfigureMockMvc
 class AskOffByDefaultTest {
 

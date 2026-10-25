@@ -107,6 +107,26 @@ SEEDS: list[tuple[str, str, str]] = [
     (BANK, "Postal Savings Bank of China", "300300C1040311005298"), (BANK, "Erste Group", "PQOH26KWDF7CG10L6792"),
     (BANK, "Handelsbanken", "NHBDILHZTYCNBV5UYZ31"), (BANK, "SEB", "F3JS33DEI6XQ4ZBPTN86"), (BANK, "DNB Bank", "549300GKFG0RYRRQ1414"),
     (BANK, "KB Financial Group", "529900TKE4MXG3Q6GW86"),
+    # Canada's other banks (with the five above, the domestic banks GLEIF knows by name; resolved 2026-10-24) and the UK's banks and
+    # building societies that do not file with the SEC (the us-equities pack's BANKS-CA and BANKS-UK lists hold the ones that do)
+    (BANK, "National Bank of Canada", "BSGEFEIOM18Y80CKCV46"), (BANK, "Desjardins Group", "549300B2Q47IR0CR5B54"),
+    (BANK, "EQB (Equitable Bank)", "549300QAXPCRULOPD247"), (BANK, "Laurentian Bank of Canada", "HO0K6ZULL3QE6S6SFW60"),
+    (BANK, "ATB Financial", "549300U08PFO1SAY6V60"), (BANK, "Tangerine Bank", "549300OWIL82AHIVP639"),
+    (BANK, "Manulife Bank of Canada", "5493001ECI4NJPXI5P10"), (BANK, "Home Trust Company", "549300QGO6SATWUR8533"),
+    (BANK, "Concentra Bank", "5493009G8Z6HBT19MD41"), (BANK, "Bridgewater Bank", "549300BSFCEB31FMD625"),
+    (BANK, "CS Alterna Bank", "549300M4EHQ254ACQM10"), (BANK, "First Nations Bank of Canada", "549300CXEHGNN6MSF262"),
+    (BANK, "Wealth One Bank of Canada", "5493004J048J3TVQQC04"), (BANK, "Motus Bank", "549300U7M6ICRGVK0Z63"),
+    (BANK, "Haventree Bank", "549300XXS40F2KXU8Z60"), (BANK, "HomeEquity Bank", "549300SP6Z9JX88GD037"),
+    (BANK, "Vancity Community Investment Bank", "5493009LT0J21LWHNM96"), (BANK, "President's Choice Bank", "549300Z8EUUJQJFFTO04"),
+    (BANK, "Canadian Tire Bank", "549300OAHEWZ9NUJL153"), (BANK, "General Bank of Canada", "549300RKSW7V2RLOFF56"),
+    (BANK, "Santander UK Group Holdings", "549300F5XIFGNNW4CF72"), (BANK, "Nationwide Building Society", "549300XFX12G42QIKN82"),
+    (BANK, "Virgin Money UK", "213800ZK9VGCYYR6O495"), (BANK, "TSB Bank", "549300XP222MV7P3CC54"),
+    (BANK, "Metro Bank Holdings", "984500CDDEAD6C2EDQ64"), (BANK, "Close Brothers Group", "213800W73SYHR14I3X91"),
+    (BANK, "The Co-operative Bank", "213800TLZ6PCLYPSR448"), (BANK, "Coventry Building Society", "2138004G59FXEAZ6IO10"),
+    (BANK, "Yorkshire Building Society", "WXD0EHQRPI7HKN3I5T57"), (BANK, "Skipton Building Society", "66AGRETLUXS4YO5MUH35"),
+    (BANK, "Monzo", "213800WIZ7R66OO87N21"), (BANK, "Starling Bank", "213800AE5VSF3V1PAV23"), (BANK, "Investec", "2138007Z3U5GWDN3MY22"),
+    (BANK, "OSB Group", "213800ZBKL9BHSL2K459"), (BANK, "Paragon Banking Group", "213800S1TDKIB1IUTS72"),
+    (BANK, "Shawbrook Group", "21380071539WSMTM4410"),
     (INSURER, "Allianz", "529900K9B0N5BT694847"), (INSURER, "AXA", "F5WCUMTUM4RKZ1MAIE39"), (INSURER, "Generali", "549300X5UKJVE386ZB61"),
     (INSURER, "Zurich Insurance Group", "529900QVNRBND50TXP03"), (INSURER, "Munich Re", "529900MUF4C20K50JS49"),
     (INSURER, "Swiss Re", "529900PS9YW3YY29F326"), (INSURER, "Prudential plc", "5493001Z3ZE83NGK8Y12"),
@@ -404,7 +424,7 @@ def mapping(http: Http, cache: Path) -> None:
         if not dest.exists():
             link = _load(meta)["data"]["attributes"]["downloadLink"]
             print(f"GLEIF mapping: {name}")
-            body = http.get(link, "application/zip")
+            body = http.get(link, "*/*")                      # the mapping server answers 406 to "application/zip" (2026-10)
             if body is None:
                 print(f"  mapping {name}: download failed", file=sys.stderr)
                 continue

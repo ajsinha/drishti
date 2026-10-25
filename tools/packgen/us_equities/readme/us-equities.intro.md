@@ -61,6 +61,7 @@ fields:
     LEI_SOURCE: Where the LEI came from
     INDEXES: Index memberships (index, name, since)
     INDEX_TEXT: The indexes, as text for searching
+    CURRENCY: The currency its figures are reported in (USD; CAD or GBP for a Canadian or UK bank)
     ASSETS: Total assets, latest fiscal year (USD)
     LIABILITIES: Total liabilities, latest fiscal year (USD)
     EQUITY: Stockholders' equity, latest fiscal year (USD)
@@ -71,7 +72,7 @@ fields:
     LATEST_FILING: Date of the latest filing
     PRICE_HISTORY: Id of its price-history document (read live, internal only)
     PROVENANCE: Source, retrieval date, licence and URL
-  index-membership: {INDEX: Index code (DJIA, NDX, SP500), BY_SECTOR: Members by SIC division, ROWS: The members, PROVENANCE: Source, retrieval date, licence and URL}
+  index-membership: {INDEX: Index code (DJIA, NDX, SP500) or bank list (BANKS-US, BANKS-CA, BANKS-UK), BY_SECTOR: Members by SIC division, ROWS: The members, PROVENANCE: Source, retrieval date, licence and URL}
   sic-sector: {DIVISION: SIC division letter, ROWS: The companies of the code, BY_REVENUE: Companies by revenue, PROVENANCE: Source and licence, CODES_LIST: The SIC codes covered (SIC ALL), BY_DIVISION: Codes by division}
   filing-feed: {FEED: Feed id (a form type or ALL), FORM: The form type, ROWS: The filings, BY: Filings by form, BY_TITLE: Filings by company, PROVENANCE: Source and licence}
   filing:
@@ -87,8 +88,11 @@ fields:
 ---
 ## What it is
 
-Public data on the companies of the Dow 30, the Nasdaq-100 and the S&P 500 (479 with SEC filings): their SEC filings, ten fiscal
-years of annual financials from their XBRL filings, their LEI, their SIC sector and the indexes they belong to. No index weights or
+Public data on the companies of the Dow 30, the Nasdaq-100 and the S&P 500, and on the major US, Canadian and UK banks that file
+with the SEC (three lists kept by Drishti: `IDX BANKS-US`, `IDX BANKS-CA`, `IDX BANKS-UK`): their SEC filings, ten fiscal years of
+annual financials from their XBRL filings (a 10-K, or a foreign bank's 20-F or 40-F in the currency it reports in, `CURRENCY`), their
+LEI, their SIC sector and the indexes and lists they belong to. Banks with no SEC filings (National Bank of Canada, Standard Chartered,
+Nationwide) are not here; the `gleif` pack covers them. No index weights or
 levels, no GICS and no prices are shipped: `price-history` is read live by the `us-equities-prices` connector, off by default and for
 internal use only.
 

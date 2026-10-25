@@ -573,12 +573,12 @@ What was built (2.8.0, unreleased), where it differs from the sections above, an
 |---|---|
 | the pack | the **market-risk** pack (open question 1): the kinds `position`, `portfolio`, `pnl-vector`, `scenario-set`, `risk-hierarchy`, `var-node` (`tools/packgen/banking/var_kinds.py`, written into `pack.yaml` by `make_packs.py`), routed to `risk-store`; mnemonics `POS`, `PORT`, `PNLV`, `SSET`, `HIER`, `VNODE`; Sutras for `portfolio` and `position` |
 | the stored data | `risk-store` (Delta), the vectors in a `list<double>` column (`layout.<kind>.vectors: [PNL]`); demo data from `tools/packgen/var/make_var_data.py` |
-| the engine | **in the server, in Java**: the generic vector store, ordinal sets, parallel sums and the VaR maths in a new module `drishti-compute` (`com.ash.drishti.compute.vector`, `com.ash.drishti.compute.var`); loading, entitlements, baskets, captures and the API in `drishti-server` (`com.ash.drishti.server.var`). Not yet a reactive connector (waves R1 to R4) and no Python package: base VaR is additions and sorts, which Java does next to the data without moving vectors to a worker |
+| the engine | **in the server, in Java**: the generic vector store, ordinal sets, parallel sums and the VaR maths in the module `drishti-compute` beside the compute workers (`com.ash.drishti.compute.vector`, `com.ash.drishti.compute.var`); loading, entitlements, baskets, captures and the API in `drishti-server` (`com.ash.drishti.server.var`). Not yet a reactive connector (waves R1 to R4) and no Python package: base VaR is additions and sorts, which Java does next to the data without moving vectors to a worker |
 | the explorer | a console page (`/var`, `drishti-console/routes/var_routes.py`, `web/static/js/var-explorer.js`, `var-charts.js`, `web/static/css/var.css`) over `/api/v1/var`, not a Sutra: a Sutra's `source:` reads a kind, and the parametrised sources a VaR panel needs come with reactive connectors (R2). The portfolio and position pages are Sutras, with the new UI kit fragment `pnl-distribution@1` |
 
 **The compute boundary.** Everything in V0 to V3 is base VaR: sums of stored vectors and measures over the sums, in the server's JVM on
 a bounded pool (`drishti.var.threads`). The heavy work that needs Python or a pricer (what-if pricing over the scenarios, V4; intraday
-repricing, V5) is a separate request of whole trades to price, which the compute workers of PYTHON_COMPUTE.md serve: any number of
+repricing, V5) is a separate request of whole trades to price, which the compute workers of PYTHON_COMPUTE.md (C1 to C3, built) serve: any number of
 workers (their count is configuration, never code), one trade or a batch each, the 509 values each returns joining the intraday layer
 as a vector. Nothing in the engine assumes one worker or calls one in its request path.
 

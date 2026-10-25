@@ -65,9 +65,9 @@ import org.springframework.test.web.servlet.ResultActions;
  */
 @SpringBootTest(properties = {"drishti.sources.plugins.demo.settings.ticking=false", "drishti.security.enabled=true",
         "drishti.security.secret=test-secret-that-is-at-least-32-bytes-long", "drishti.packs.enabled=finance",
-        "drishti.identity.database-url=jdbc:sqlite:target/dist-api-${random.uuid}/identity.db", "drishti.packs.overlay=target/dist-api-overlay/added.yaml",
-        "drishti.bi.dir=target/dist-api-folder", "drishti.bi.folder-refresh=1s", "drishti.bi.query.store-dir=target/dist-api-store/${random.uuid}",
-        "drishti.packs.samples=developers", "drishti.sources.connectors-dir=target/test-data/dist-api-connectors", "drishti.sources.plugins.file.enabled=false",
+        "drishti.identity.database-url=jdbc:sqlite:${drishti.test.dir}/dist-api-${random.uuid}/identity.db", "drishti.packs.overlay=${drishti.test.dir}/dist-api-overlay/added.yaml",
+        "drishti.bi.dir=${drishti.test.dir}/dist-api-folder", "drishti.bi.folder-refresh=1s", "drishti.bi.query.store-dir=${drishti.test.dir}/dist-api-store/${random.uuid}",
+        "drishti.packs.samples=developers", "drishti.sources.connectors-dir=${drishti.test.dir}/dist-api-connectors", "drishti.sources.plugins.file.enabled=false",
         "drishti.sources.connectors.finance-lake.enabled=false",
         "drishti.sources.connectors.dist-lake.plugin=file", "drishti.sources.connectors.dist-lake.kinds[0]=trade",
         "drishti.sources.connectors.dist-lake.settings.rescan-seconds=3600",
@@ -113,7 +113,7 @@ class DistApiTest {
 
     @DynamicPropertySource
     static void lake(DynamicPropertyRegistry r) throws Exception {
-        root = Files.createTempDirectory("drishti-dist-lake");
+        root = com.ash.drishti.server.TestRun.temp("drishti-dist-lake");
         day("2026-10-07");
         day("2026-10-08");
         r.add("drishti.sources.connectors.dist-lake.settings.root", () -> root.resolve("lake").toString());
@@ -122,8 +122,8 @@ class DistApiTest {
 
     static {
         try {
-            Path datasets = Path.of("target/dist-api-folder/datasets");
-            Path reports = Path.of("target/dist-api-folder/reports");
+            Path datasets = com.ash.drishti.server.TestRun.root().resolve("dist-api-folder/datasets");
+            Path reports = com.ash.drishti.server.TestRun.root().resolve("dist-api-folder/reports");
             Files.createDirectories(datasets);
             Files.createDirectories(reports);
             Files.writeString(datasets.resolve("dist-lake.dataset.yaml"), """

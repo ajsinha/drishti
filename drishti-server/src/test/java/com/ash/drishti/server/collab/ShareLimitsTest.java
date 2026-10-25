@@ -48,8 +48,8 @@ import org.springframework.test.web.servlet.ResultActions;
  */
 @SpringBootTest(properties = {"drishti.sources.plugins.demo.settings.ticking=false", "drishti.security.enabled=true",
         "drishti.security.secret=test-secret-that-is-at-least-32-bytes-long", "drishti.packs.enabled=finance",
-        "drishti.identity.database-url=jdbc:sqlite:target/sharelimits-${random.uuid}/identity.db",
-        "drishti.packs.overlay=target/sharelimits-overlay/added.yaml", "drishti.collab.limits.shares-per-minute=2",
+        "drishti.identity.database-url=jdbc:sqlite:${drishti.test.dir}/sharelimits-${random.uuid}/identity.db",
+        "drishti.packs.overlay=${drishti.test.dir}/sharelimits-overlay/added.yaml", "drishti.collab.limits.shares-per-minute=2",
         "drishti.collab.limits.shares-per-day=3", "drishti.collab.limits.directory-per-minute=2",
         "drishti.collab.text.on-masked-copy=reject", "drishti.collab.text.deny-patterns[0]=[0-9]{3}-[0-9]{2}-[0-9]{4}",
         "drishti.collab.share.undeliverable=silent"})

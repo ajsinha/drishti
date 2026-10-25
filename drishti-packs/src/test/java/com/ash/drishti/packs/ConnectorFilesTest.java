@@ -166,4 +166,19 @@ class ConnectorFilesTest {
         assertThat(d.isEnabled()).isFalse();
         assertThat(d.description()).isEqualTo("A db");
     }
+
+    @Test
+    void aRequiresBlockIsKeptAsWrittenAndThroughAFormEdit(@TempDir Path dir) {
+        ConnectorFiles files = new ConnectorFiles(dir);
+        ConnectorFiles.Definition d = files.parse("var-engine", """
+                plugin: reactive
+                requires:
+                  python: { version: "3.12", lock: requires/var-engine.lock }
+                  plugins: [ { name: drishti-plugin-delta } ]
+                """);
+        assertThat(d.requires()).containsKeys("python", "plugins");
+        String rendered = files.render("# form", "reactive", true, java.util.List.of(), "", java.util.Map.of(), d.requires());
+        assertThat(files.parse("var-engine", rendered).requires()).isEqualTo(d.requires());
+        assertThatThrownBy(() -> files.parse("x", "plugin: file\nrequires: [numpy]\n")).hasMessageContaining("'requires' is a mapping");
+    }
 }

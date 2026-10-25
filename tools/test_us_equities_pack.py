@@ -64,3 +64,25 @@ def test_the_pack_commits_no_prices_weights_or_gics():
     size = sum(p.stat().st_size for p in snap.rglob("*.jsonl.gz"))         # compressed
     assert size < 4_000_000, size
     assert sum(p.stat().st_size for p in (PACK / "samples").iterdir()) < 1_000_000   # reference documents only
+
+
+def test_a_foreign_banks_annual_report_is_a_20f_or_40f_in_its_own_currency():
+    facts = {"ifrs-full": {"Assets": {"units": {"CAD": [
+        {"end": "2024-10-31", "val": 2_000, "form": "40-F", "filed": "2024-12-04", "accn": "a"},
+        {"end": "2025-10-31", "val": 2_100, "form": "40-F", "filed": "2025-12-03", "accn": "b"},
+        {"end": "2025-07-31", "val": 2_050, "form": "6-K", "filed": "2025-08-27", "accn": "q"}]}}}}     # a quarter's 6-K: no
+    rows = F._annual(facts, ["Assets", "ifrs-full:Assets"], "USD", True)
+    assert [(r["year"], r["value"], r["unit"], r["form"]) for r in rows] == [(2024, 2_000, "CAD", "40-F"), (2025, 2_100, "CAD", "40-F")]
+    assert F._unit({"GBP/shares": [], "USD/shares": []}, "USD/shares") == "USD/shares"       # USD when the filer gives it
+    assert F._unit({"GBP/shares": []}, "USD/shares") == "GBP/shares"
+
+
+def test_the_bank_lists_are_in_the_pack_with_their_currencies():
+    idx = {d["INDEX"]: d for d in SNAP.kind_docs("us-equities", "index-membership")}
+    assert {"BANKS-US", "BANKS-CA", "BANKS-UK"} <= set(idx)
+    assert {"RY", "TD", "BNS", "BMO", "CM"} <= {r["TICKER"] for r in idx["BANKS-CA"]["ROWS"]}
+    assert {"HSBC", "BCS", "LYG", "NWG"} <= {r["TICKER"] for r in idx["BANKS-UK"]["ROWS"]}
+    assert {"JPM", "BAC", "C", "WFC", "GS", "MS"} <= {r["TICKER"] for r in idx["BANKS-US"]["ROWS"]}
+    cos = {d["TICKER"]: d for d in SNAP.kind_docs("us-equities", "us-company")}
+    assert cos["RY"]["CURRENCY"] == "CAD" and cos["RY"]["ECONOMY"] == "ECON-CAN" and cos["RY"]["ASSETS"]
+    assert cos["JPM"]["CURRENCY"] == "USD"

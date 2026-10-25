@@ -58,9 +58,9 @@ import org.springframework.test.web.servlet.ResultActions;
  */
 @SpringBootTest(properties = {"drishti.sources.plugins.demo.settings.ticking=false", "drishti.security.enabled=true",
         "drishti.security.secret=test-secret-that-is-at-least-32-bytes-long", "drishti.packs.enabled=finance",
-        "drishti.identity.database-url=jdbc:sqlite:target/bi-dataset-${random.uuid}/identity.db", "drishti.packs.overlay=target/bi-dataset-overlay/added.yaml",
-        "drishti.bi.dir=target/bi-dataset-folder", "drishti.bi.folder-refresh=1s", "drishti.bi.query.store-dir=target/bi-dataset-store/${random.uuid}",
-        "drishti.packs.samples=developers", "drishti.sources.connectors-dir=target/test-data/bi-dataset-connectors", "drishti.sources.plugins.file.enabled=false",
+        "drishti.identity.database-url=jdbc:sqlite:${drishti.test.dir}/bi-dataset-${random.uuid}/identity.db", "drishti.packs.overlay=${drishti.test.dir}/bi-dataset-overlay/added.yaml",
+        "drishti.bi.dir=${drishti.test.dir}/bi-dataset-folder", "drishti.bi.folder-refresh=1s", "drishti.bi.query.store-dir=${drishti.test.dir}/bi-dataset-store/${random.uuid}",
+        "drishti.packs.samples=developers", "drishti.sources.connectors-dir=${drishti.test.dir}/bi-dataset-connectors", "drishti.sources.plugins.file.enabled=false",
         "drishti.sources.connectors.finance-lake.enabled=false",
         "drishti.sources.connectors.test-lake.plugin=file", "drishti.sources.connectors.test-lake.kinds[0]=trade",
         "drishti.sources.connectors.test-lake.settings.rescan-seconds=3600",
@@ -97,7 +97,7 @@ class DatasetApiTest {
 
     @DynamicPropertySource
     static void lake(DynamicPropertyRegistry r) throws Exception {
-        root = Files.createTempDirectory("drishti-bi-lake");
+        root = com.ash.drishti.server.TestRun.temp("drishti-bi-lake");
         day("2026-10-07", 1);
         day("2026-10-08", 1);
         Files.createDirectories(root.resolve("ref"));
@@ -109,7 +109,7 @@ class DatasetApiTest {
 
     static {
         try {
-            Path datasets = Path.of("target/bi-dataset-folder/datasets");
+            Path datasets = com.ash.drishti.server.TestRun.root().resolve("bi-dataset-folder/datasets");
             Files.createDirectories(datasets);
             Files.writeString(datasets.resolve("lake-test.dataset.yaml"), """
                     rachana: 1
@@ -501,7 +501,7 @@ class DatasetApiTest {
 
     @Test @Order(13)
     void aCopyInMyWorkspaceIsADraftOnlyItsOwnerReadsAndItIsNoLongerAModel() throws Exception {
-        String yaml = java.nio.file.Files.readString(Path.of("target/bi-dataset-folder/datasets/lake-test.dataset.yaml"))
+        String yaml = java.nio.file.Files.readString(com.ash.drishti.server.TestRun.root().resolve("bi-dataset-folder/datasets/lake-test.dataset.yaml"))
                 .replace("Trades: { expr: \"count(trades)\" }", "Trades: { expr: \"count(trades)\" }\n  Big: { expr: \"sum(trades.notional, where=trades.notional > 10000)\" }");
         JsonNode created = ok(call("POST", "/api/v1/bi/workspaces/me/items", wes(), Map.of("kind", "dataset", "title", "My copy", "body", yaml)));
         String id = created.path("id").asText();

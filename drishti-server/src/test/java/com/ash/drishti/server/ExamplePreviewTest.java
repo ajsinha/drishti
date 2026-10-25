@@ -47,8 +47,8 @@ import org.springframework.test.web.servlet.ResultActions;
 @SpringBootTest(properties = {"drishti.rachana.hot-reload=false", "drishti.sources.plugins.demo.settings.ticking=false",
         "drishti.packs.enabled=market-risk,counterparty-risk",
         "drishti.security.enabled=true", "drishti.security.secret=test-secret-that-is-at-least-32-bytes-long",
-        "drishti.identity.database-url=jdbc:sqlite:target/example-preview-${random.uuid}/identity.db",
-        "drishti.builder.designs.dir=target/example-preview-files-${random.uuid}"})
+        "drishti.identity.database-url=jdbc:sqlite:${drishti.test.dir}/example-preview-${random.uuid}/identity.db",
+        "drishti.builder.designs.dir=${drishti.test.dir}/example-preview-files-${random.uuid}"})
 @AutoConfigureMockMvc
 class ExamplePreviewTest {
 

@@ -28,7 +28,7 @@
   - **Vector columns:** `layout.<kind>.vectors` keeps a list of numbers as a `list<double>` column out of the document (`lake build
     --vector`, both writers); the Delta plugin streams a date's vectors (`SourcePlugin.vectors`, `VectorSink`) and puts them back into a
     fetched document.
-  - **Engine** (new module `drishti-compute`, and `com.ash.drishti.server.var`): an in-memory vector store (row-major `double[]` chunks,
+  - **Engine** (`drishti-compute`, beside the compute workers: packages `vector` and `var`; and `com.ash.drishti.server.var`): an in-memory vector store (row-major `double[]` chunks,
     hierarchy order, a memory budget), exact set algebra over trade ordinals, a planner over cached node aggregates, parallel sums on a
     bounded pool; VaR (the 6th worst of 509, configurable), ES, standalone, component (adds up to the VaR), incremental and marginal VaR,
     diversification; history, Basel light, Kupiec and Christoffersen; entitlements by node (`drishti.var.access`: positions or
@@ -41,6 +41,33 @@
   - **Pages:** the portfolio's (`PORT PF-RATES-DESK`: positions with VaR and component VaR, a click opens the position's trades beside;
     by product, currency and direction) and the position's (`POS …`: its trades netting, its distribution); UI kit fragment
     `pnl-distribution@1`.
+- **Banks in the public-data packs:** us-equities gains three lists kept by Drishti (`LISTS` in
+  `tools/packgen/us_equities/fetch.py`): `IDX BANKS-US` (39 major US banks), `IDX BANKS-CA` (RBC, TD, Scotiabank, BMO, CIBC,
+  VersaBank) and `IDX BANKS-UK` (HSBC, Barclays, Lloyds, NatWest). A foreign filer's annual report (20-F, 40-F) and IFRS tags are
+  read in the currency it reports in (new `CURRENCY` field; totals over many companies add USD reporters only); a Canadian or UK
+  company links to its economy; total assets fall back to total equity and liabilities; GLEIF name matching strips EDGAR's
+  `/CAN/`-style suffixes and prefers an exact legal name. The gleif pack seeds 37 more banks that do not file with the SEC
+  (National Bank of Canada, Desjardins, EQB, Laurentian, ATB and Canada's other domestic banks GLEIF knows by name; Santander UK,
+  Nationwide, Virgin Money, TSB, Metro, Close Brothers, Co-operative Bank, Monzo, Starling, Investec and other UK banks and
+  building societies), resolved by legal name and country. The GLEIF mapping download sends `Accept: */*` (the server now
+  answers 406 to `application/zip`). Both packs refreshed from their sources (us-equities 503 companies, 1.3 MB; gleif 9,937
+  entities, 3.2 MB).
+- **Compute workers, steps C1 to C3 (2.8.0, [PYTHON_COMPUTE.md](docs/architecture/PYTHON_COMPUTE.md),
+  [COMPUTE.md](docs/admin/COMPUTE.md)):** a new module, `drishti-compute`: a supervisor of out-of-process Python workers in pools (fork
+  mode on Linux, a fresh child per request; warm mode on Windows, reset and recycled), one request per worker, JSON-lines control and
+  Arrow files in a per-request scratch folder under `<data dir>/compute/` (removed when the request ends), correlation ids, progress,
+  cancellation, wall-time, CPU and memory limits, and an audit-hook sandbox (no sockets, no processes, no writes outside the scratch
+  folder). **As many workers as wanted:** the count is configuration per pool and per node (`compute.nodes.<node>`); a request can be
+  split into chunks and fanned out over every worker of this node and of the other Drishti\*net nodes that serve the pool, gathered in
+  order; fair scheduling by class (interactive, event, batch with its share) and by user (turns, an in-flight limit) with bounded
+  queues (`DRS-9203` busy). A pure-Python worker SDK (`drishti_compute`: the engine contract, an Arrow codec with no pyarrow, the
+  sample engine echo/sum/sum-vectors). `requires:` on connector files (Python lock with hashes, Java coordinates with sha256 and a
+  native-code scan, plugins); locked environments built offline with `pip --require-hashes`, a manifest checked at every worker start,
+  read-only; the four-eyes approval (requests and approved items in `drishti_compute_request` and `drishti_compute_approval` of both
+  schema files; revocable; audited): a connector with unapproved requirements stays off and says why. **Admin → Compute**; the
+  configuration `config/compute/compute.yaml` (off as shipped); errors `DRS-9201` to `DRS-9206`. A load test with a configurable
+  worker count (`ComputeLoadTest`; 16 to 64 workers measured, [COMPUTE.md section 9](docs/admin/COMPUTE.md#9-measured-the-load-test)).
+  Still planned: the pricer interface, QLRisk and the QuantLib Java worker (C4 to C6), the reactive connectors (R1 to R6).
 - **2.8.0 designs (design only, nothing built):** reactive connectors that compute when asked and on events, with point-in-time
   stamps, coalescing and per-user isolation ([REACTIVE_CONNECTORS.md](docs/architecture/REACTIVE_CONNECTORS.md)); out-of-process
   Python and Java compute workers with pinned, administrator-approved requirements, QLRisk as the default pricer (design only until
@@ -51,6 +78,25 @@
 - **WRITE_BACK.md section 18:** forms save through connectors, an applied change triggers reactive connectors, updated records and
   results are pushed to viewers; build steps W6 and W7. **QUANT_SERVICE.md section 17:** reconciled with the compute workers.
   **IMPLEMENTATION_PLAN.md:** a 2.8.0 section with its waves; docs/README.md lists the new designs.
+- **Tests leave nothing behind:** `drishti-server/target/` had grown to about twelve million files: ~13,000 per-test folders
+  (`about-api-*`, `identity-*`, `prefs-*`, `bi-*` …) written under bare `target/...` paths, and ~300 per-context content stores under
+  `target/test-data/fstore`, each holding ~94,000 collaboration seals. The seals came from the shared, never-cleaned test identity
+  database and `target/test-data/collab`: every new content store runs the one-time collaboration import (`CollabImport`) from them, so
+  each context copied everything earlier runs had piled up. A server test fork now writes only into `target/test-run/fork<N>/`
+  (`drishti.test.dir`; `TestRun` in the tests: test properties say `${drishti.test.dir}/...`, seeded folders use `TestRun.dir`,
+  temporary ones `TestRun.temp`) and removes it when it ends, after closing its Spring test contexts; every context gets an empty
+  collaboration folder of its own. The identity, messaging and Iceberg tests that wrote under `target/` or the JVM's temp folder use
+  JUnit's `@TempDir`. The drill builds with `./mvnw clean verify` ([DEVELOPER_GUIDE.md](docs/guides/DEVELOPER_GUIDE.md)).
+- **A graph link field can be scoped to its pack** (`graph.fields.<F>.scope: pack`,
+  [PACK_DEVELOPER_GUIDE.md](docs/guides/PACK_DEVELOPER_GUIDE.md)): the field is a link only in the documents of the declaring pack's
+  own kinds. World-economy's `JURISDICTION` (a `JUR-` id) is scoped, so a gleif entity's `JURISDICTION` (`US-DE`) and a core legal
+  entity's (`DE`) are shown as data instead of a *Country* link to a jurisdiction that does not exist (the 2.7.0 known open item); the
+  entity's country is its `LEI_COUNTRY`, which opens the gleif country. The BI layer's declared links and dataset references honour the
+  scope too.
+- **Flaky designer test fixed:** `test_designer_drag_a_field_makes_the_best_visual_and_another_field_improves_it` sometimes made a card
+  of Notional instead of MTM: the line naming the reports a model affects lands in the Fields pane after the designer says it is ready
+  and moves the field list down a row, so a drag started at once picked the field above. The Fields pane now says when it is still
+  (`data-fields-settled="yes"` on `.bi-pane-fields`), and the designer tests wait for it before dragging.
 
 ## 2.7.0 — Sutra Next: the UI kit, events and children across packs, refresh, layout, forms and the four-mode Sutra designer; the us-equities and gleif packs (2026-10-24)
 

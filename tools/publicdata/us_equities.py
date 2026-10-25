@@ -135,7 +135,7 @@ class _Company(B.Source):
 
 
 class Wikidata(_Company):
-    name, title, steps = "wikidata", "Wikidata: index membership (DJIA, Nasdaq-100, S&P 500), headquarters, founded, website, LEI", ("wikidata",)
+    name, title, steps = "wikidata", "Wikidata: index membership (DJIA, Nasdaq-100, S&P 500; the bank lists by CIK), headquarters, founded, website, LEI", ("wikidata",)
     url, licence, licence_url = "https://www.wikidata.org", "CC0 1.0", "https://creativecommons.org/publicdomain/zero/1.0/"
     scope_help = "INDEX:<CODE>=<QID>[=<name>] adds an index's current members"
     cache_prefixes = ("wikidata.json",)

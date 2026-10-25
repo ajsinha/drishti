@@ -74,9 +74,9 @@ import org.springframework.test.web.servlet.MvcResult;
  */
 @SpringBootTest(properties = {"drishti.sources.plugins.demo.settings.ticking=false", "drishti.security.enabled=true",
         "drishti.security.secret=test-secret-that-is-at-least-32-bytes-long", "drishti.packs.enabled=finance",
-        "drishti.identity.database-url=jdbc:sqlite:target/stmt-api-${random.uuid}/identity.db", "drishti.packs.overlay=target/stmt-api-overlay/added.yaml",
-        "drishti.bi.dir=target/stmt-api-folder", "drishti.bi.folder-refresh=1s", "drishti.bi.query.store-dir=target/stmt-api-store/${random.uuid}",
-        "drishti.packs.samples=developers", "drishti.sources.connectors-dir=target/test-data/stmt-api-connectors", "drishti.sources.plugins.file.enabled=false",
+        "drishti.identity.database-url=jdbc:sqlite:${drishti.test.dir}/stmt-api-${random.uuid}/identity.db", "drishti.packs.overlay=${drishti.test.dir}/stmt-api-overlay/added.yaml",
+        "drishti.bi.dir=${drishti.test.dir}/stmt-api-folder", "drishti.bi.folder-refresh=1s", "drishti.bi.query.store-dir=${drishti.test.dir}/stmt-api-store/${random.uuid}",
+        "drishti.packs.samples=developers", "drishti.sources.connectors-dir=${drishti.test.dir}/stmt-api-connectors", "drishti.sources.plugins.file.enabled=false",
         "drishti.sources.connectors.finance-lake.enabled=false",
         "drishti.sources.connectors.stmt-lake.plugin=file", "drishti.sources.connectors.stmt-lake.kinds[0]=trade",
         "drishti.sources.connectors.stmt-lake.settings.rescan-seconds=3600",
@@ -133,7 +133,7 @@ class StatementApiTest {
 
     @DynamicPropertySource
     static void lake(DynamicPropertyRegistry r) throws Exception {
-        root = Files.createTempDirectory("drishti-stmt-lake");
+        root = com.ash.drishti.server.TestRun.temp("drishti-stmt-lake");
         List<String> lines = new ArrayList<>();
         for (int i = 0; i < TRADES; i++) {
             lines.add("{\"id\":\"" + id(i) + "\",\"TRADE_ID\":\"" + id(i) + "\",\"DESK\":\"" + desk(i) + "\",\"PORTFOLIO\":\"BOOK-" + (i % 4) + "\",\"LEGAL_ENTITY\":\"LE-"
@@ -175,7 +175,7 @@ class StatementApiTest {
 
     static {
         try {
-            Path folder = Path.of("target/stmt-api-folder");
+            Path folder = com.ash.drishti.server.TestRun.root().resolve("stmt-api-folder");
             Path datasets = Files.createDirectories(folder.resolve("datasets"));
             Path models = Files.createDirectories(folder.resolve("models"));
             Path reports = Files.createDirectories(folder.resolve("reports"));

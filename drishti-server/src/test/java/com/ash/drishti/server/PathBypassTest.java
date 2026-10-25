@@ -41,7 +41,7 @@ import org.springframework.boot.test.web.server.LocalServerPort;
         "drishti.sources.plugins.demo.settings.ticking=false", "drishti.identity.iterations=1000",
         "drishti.security.metrics-token=scrape-token-for-tests",
         "drishti.security.roles.quant.kinds[0]=*", "drishti.security.roles.quant.calc=true",
-        "drishti.identity.database-url=jdbc:sqlite:target/identity-${random.uuid}/identity.db"})
+        "drishti.identity.database-url=jdbc:sqlite:${drishti.test.dir}/identity-${random.uuid}/identity.db"})
 class PathBypassTest {
 
     @LocalServerPort int port;

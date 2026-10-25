@@ -1,0 +1,30 @@
+# Project Drishti · Any data. Any domain. One grammar.
+#
+# Copyright (c) 2026 Ashutosh Sinha <ajsinha@gmail.com>.
+# All rights reserved.
+#
+# PROPRIETARY AND CONFIDENTIAL.
+#
+# This file is the confidential and proprietary property of Ashutosh Sinha.
+# Unauthorised copying, use, modification, distribution or disclosure of this
+# file, via any medium, is strictly prohibited except with the express prior
+# written permission of the copyright holder.
+#
+# See the LICENSE file in the root of this repository for the full terms.
+
+# The compute worker SDK as a package, for locked environments that pin it by hash like any other wheel
+# (docs/architecture/PYTHON_COMPUTE.md section 5). The server also ships it inside drishti-compute's jar and puts it on the
+# workers' path, so a pool on the site's interpreter ("environment: system") needs no install.
+[build-system]
+requires = ["setuptools>=68"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "drishti-compute"
+version = "0.1.0"
+description = "Drishti compute worker SDK: the engine contract, a pure-Python Arrow codec and the worker loop"
+requires-python = ">=3.10"
+dependencies = []
+
+[tool.setuptools.packages.find]
+include = ["drishti_compute*"]

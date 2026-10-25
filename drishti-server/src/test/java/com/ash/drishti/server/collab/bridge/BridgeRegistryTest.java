@@ -24,7 +24,6 @@ import com.ash.drishti.identity.collab.FileOutboxStore;
 import com.ash.drishti.identity.collab.OutboxItem;
 import com.ash.drishti.server.security.Entitlements;
 import com.ash.drishti.server.security.Principal;
-import java.nio.file.Files;
 import java.time.Duration;
 import java.util.List;
 import java.util.Map;
@@ -104,7 +103,7 @@ class BridgeRegistryTest {
     void theAdminListingNeverShowsTheUrlOrTheSecretAndOnlyAdministratorsSeeIt() throws Exception {
         CollabProperties p = props(List.of("https://hooks.example/"), hook("desk", "json", "U", "S", ALL));
         BridgeRegistry r = new BridgeRegistry(p, Map.of("U", "https://hooks.example/services/PATHSECRET", "S", "SIGNSECRET")::get);
-        var outbox = new FileOutboxStore(Files.createTempDirectory("bridge-admin"));
+        var outbox = new FileOutboxStore(com.ash.drishti.server.TestRun.temp("bridge-admin"));
         outbox.add(OutboxItem.pending("bridge", "desk", "share", "sh_1", java.time.Instant.now()));
         outbox.add(OutboxItem.pending("email", "ravi", "share", "sh_1", java.time.Instant.now()));
         Entitlements ent = mock(Entitlements.class);
@@ -120,7 +119,7 @@ class BridgeRegistryTest {
     void theAdminListingShowsAttemptsAndTheLastErrorOfAFailingDelivery() throws Exception {
         CollabProperties p = props(List.of("https://hooks.example/"), hook("desk", "json", "U", "S", ALL));
         BridgeRegistry r = new BridgeRegistry(p, Map.of("U", "https://hooks.example/services/PATHSECRET", "S", "SIGNSECRET")::get);
-        var outbox = new FileOutboxStore(Files.createTempDirectory("bridge-admin-fail"));
+        var outbox = new FileOutboxStore(com.ash.drishti.server.TestRun.temp("bridge-admin-fail"));
         OutboxItem i = outbox.add(OutboxItem.pending("bridge", "desk", "share", "sh_1", java.time.Instant.now()));
         outbox.retry(i.seq(), 2, java.time.Instant.now().plusSeconds(60), "HTTP 500 from the endpoint");
         Map<String, Object> out = new BridgeAdminController(r, null, outbox, mock(Entitlements.class), p).list(new Principal("root", List.of("admin")));

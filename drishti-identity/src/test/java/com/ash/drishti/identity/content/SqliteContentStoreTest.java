@@ -15,20 +15,20 @@
  */
 package com.ash.drishti.identity.content;
 
-import java.nio.file.Files;
 import java.nio.file.Path;
-import java.util.UUID;
+import org.junit.jupiter.api.io.TempDir;
 
 /** The SQLite backend: the contract, on a database file created from the complete schema file. */
 class SqliteContentStoreTest extends ContentStoreContract {
+
+    @TempDir
+    Path tmp;
 
     private String url;
 
     @Override
     protected ContentStore open() throws Exception {
-        Path dir = Path.of("target", "content-tests", "sqlite-" + UUID.randomUUID());
-        Files.createDirectories(dir);
-        url = "jdbc:sqlite:" + dir.resolve("drishti.db");
+        url = "jdbc:sqlite:" + tmp.resolve("drishti.db");
         return new JdbcContentStore(url, null, null, 1);
     }
 

@@ -85,7 +85,7 @@ class ConnectorApiTest {
 
     @Test
     void createTestEditDisableHistoryAndDeleteAreAuditedAndLive() throws Exception {
-        Path dir = Files.createTempDirectory("api-docs");
+        Path dir = TestRun.temp("api-docs");
         Files.writeString(Files.createDirectories(dir.resolve("2026-10-05")).resolve("item.jsonl"), "{\"id\":\"A\"}\n{\"id\":\"B\"}\n");
 
         // create

@@ -68,7 +68,7 @@ class ReportApiTest {
 
     @DynamicPropertySource
     static void props(DynamicPropertyRegistry r) throws Exception {
-        folder = Files.createTempDirectory("drishti-reports");
+        folder = TestRun.temp("drishti-reports");
         r.add("drishti.reports.folder", folder::toString);
         r.add("drishti.reports.webhooks[0]", () -> "http://127.0.0.1:" + hook.getAddress().getPort() + "/hook");
     }

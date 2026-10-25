@@ -278,7 +278,7 @@ public final class PackModels {
             for (ColumnInfo c : from.columns()) {
                 String[] parts = c.path().split("\\.");
                 String field = parts.length == 2 && parts[1].equals("id") ? parts[0] : parts[parts.length - 1];
-                Optional<String> target = graph.kindOfField(field);
+                Optional<String> target = graph.kindOfField(field, from.kind());
                 if (target.isEmpty() || target.get().equals(from.kind())) {
                     continue;
                 }

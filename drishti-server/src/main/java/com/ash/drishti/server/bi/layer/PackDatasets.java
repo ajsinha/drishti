@@ -27,7 +27,6 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.locks.ReentrantLock;
-import java.util.function.Function;
 import java.util.function.LongSupplier;
 import java.util.function.Predicate;
 import java.util.function.Supplier;
@@ -53,7 +52,7 @@ public final class PackDatasets {
     private final Supplier<List<Pack>> packs;
     private final LongSupplier version;
     private final Describer describer;
-    private final Function<String, Optional<String>> kindOfField;
+    private final java.util.function.BiFunction<String, String, Optional<String>> kindOfField;
     private final Predicate<String> pushes;
     private final boolean liveDefault;
     private final ReentrantLock lock = new ReentrantLock();
@@ -61,11 +60,11 @@ public final class PackDatasets {
     private volatile long builtFor = Long.MIN_VALUE;
 
     /**
-     * @param kindOfField the kind a field names ({@code desk} is a desk), from the link graph
+     * @param kindOfField the kind a field of a kind's documents names ({@code desk} is a desk), from the link graph (a field scoped to another pack names none)
      * @param pushes whether the connector that serves a kind pushes live updates
      * @param liveDefault false keeps every generated dataset a snapshot
      */
-    public PackDatasets(Supplier<List<Pack>> packs, LongSupplier version, Describer describer, Function<String, Optional<String>> kindOfField, Predicate<String> pushes,
+    public PackDatasets(Supplier<List<Pack>> packs, LongSupplier version, Describer describer, java.util.function.BiFunction<String, String, Optional<String>> kindOfField, Predicate<String> pushes,
             boolean liveDefault) {
         this.packs = packs;
         this.version = version;
@@ -96,7 +95,7 @@ public final class PackDatasets {
         if (kind == null || kind.isBlank() || column == null) {
             return Optional.empty();
         }
-        return kindOfField.apply(column).filter(k -> !k.equals(kind));
+        return kindOfField.apply(column, kind).filter(k -> !k.equals(kind));
     }
 
     public Map<String, DatasetDef> all() {
@@ -212,8 +211,8 @@ public final class PackDatasets {
                 continue;
             }
             String leaf = c.path().substring(c.path().lastIndexOf('.') + 1);
-            Optional<String> ref = kindOfField.apply(c.name()).or(() -> kindOfField.apply(c.path())).or(() -> c.path().contains(".") && "id".equals(leaf)
-                    ? kindOfField.apply(c.path().substring(0, c.path().indexOf('.'))) : Optional.empty());
+            Optional<String> ref = kindOfField.apply(c.name(), kind).or(() -> kindOfField.apply(c.path(), kind)).or(() -> c.path().contains(".") && "id".equals(leaf)
+                    ? kindOfField.apply(c.path().substring(0, c.path().indexOf('.')), kind) : Optional.empty());
             String role = ref.isPresent() ? "dimension" : DatasetDefParser.defaultRole(c.type(), null);
             Map<String, Object> vocab = map(vocabulary.containsKey(c.name()) ? vocabulary.get(c.name()) : vocabulary.get(leaf));
             String meaning = vocab.isEmpty() ? null : vocabulary.containsKey(c.name()) ? c.name() : leaf;

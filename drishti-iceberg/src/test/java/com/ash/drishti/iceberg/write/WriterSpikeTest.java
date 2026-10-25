@@ -41,6 +41,7 @@ import java.util.Set;
 import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.io.TempDir;
 
 /**
  * Step I4's spike: parquet-java's writer with {@code PlainParquetConfiguration} and Drishti's own codec factory writes
@@ -120,8 +121,7 @@ public class WriterSpikeTest {                                    // public: the
     }
 
     @Test
-    void parquetWritesWithNoHadoopClassLoaded() throws Exception {
-        Path dir = Files.createTempDirectory("drishti-iceberg-spike");
+    void parquetWritesWithNoHadoopClassLoaded(@TempDir Path dir) throws Exception {
         List<URL> urls = new ArrayList<>();
         for (String entry : System.getProperty("surefire.test.class.path", System.getProperty("java.class.path")).split(File.pathSeparator, -1)) {
             if (!entry.isBlank()) {

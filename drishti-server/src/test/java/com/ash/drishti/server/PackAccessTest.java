@@ -34,8 +34,8 @@ import org.springframework.test.web.servlet.MockMvc;
 
 @SpringBootTest(properties = {"drishti.sources.plugins.demo.settings.ticking=false", "drishti.security.enabled=true",
         "drishti.security.secret=test-secret-that-is-at-least-32-bytes-long", "drishti.packs.enabled=finance,logistics",
-        "drishti.identity.database-url=jdbc:sqlite:target/packaccess-${random.uuid}/identity.db",
-        "drishti.packs.overlay=target/packaccess-overlay/added.yaml"})
+        "drishti.identity.database-url=jdbc:sqlite:${drishti.test.dir}/packaccess-${random.uuid}/identity.db",
+        "drishti.packs.overlay=${drishti.test.dir}/packaccess-overlay/added.yaml"})
 @AutoConfigureMockMvc
 class PackAccessTest {
 
@@ -102,12 +102,12 @@ class PackAccessTest {
     @Test
     void adminsLoadAndUnloadPacksThroughTheOverlay() throws Exception {
         String admin = as("drishti-dev-admin", "admin");
-        java.nio.file.Files.deleteIfExists(java.nio.file.Path.of("target/packaccess-overlay/added.yaml"));
+        java.nio.file.Files.deleteIfExists(TestRun.root().resolve("packaccess-overlay/added.yaml"));
         mvc.perform(post("/api/v1/admin/packs/genomics/load").header("Authorization", admin))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.added[0]").value("genomics"))
                 .andExpect(jsonPath("$.restarting").value(false));                    // tests do not restart: next start
-        org.assertj.core.api.Assertions.assertThat(java.nio.file.Files.readString(java.nio.file.Path.of("target/packaccess-overlay/added.yaml")))
+        org.assertj.core.api.Assertions.assertThat(java.nio.file.Files.readString(TestRun.root().resolve("packaccess-overlay/added.yaml")))
                 .contains("added:", "- genomics");
         mvc.perform(post("/api/v1/admin/packs/finance/load").header("Authorization", admin)).andExpect(status().isBadRequest());     // loaded
         mvc.perform(post("/api/v1/admin/packs/astrology/load").header("Authorization", admin)).andExpect(status().isBadRequest());   // no such pack

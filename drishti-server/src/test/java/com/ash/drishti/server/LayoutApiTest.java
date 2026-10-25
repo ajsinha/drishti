@@ -45,7 +45,7 @@ import org.springframework.test.web.servlet.MockMvc;
         "drishti.governance.dir=${java.io.tmpdir}/drishti-layout-props-${random.uuid}",
         "drishti.security.enabled=true", "drishti.security.secret=test-secret-that-is-at-least-32-bytes-long",
         "drishti.security.roles.desk.kinds[0]=trade", "drishti.security.roles.curves.kinds[0]=curve",
-        "drishti.identity.database-url=jdbc:sqlite:target/layouts-${random.uuid}/identity.db"})
+        "drishti.identity.database-url=jdbc:sqlite:${drishti.test.dir}/layouts-${random.uuid}/identity.db"})
 @AutoConfigureMockMvc
 class LayoutApiTest {
 

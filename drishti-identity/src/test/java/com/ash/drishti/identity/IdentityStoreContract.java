@@ -32,6 +32,7 @@ import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.TestInstance;
+import org.junit.jupiter.api.io.TempDir;
 import org.springframework.context.ConfigurableApplicationContext;
 import org.springframework.context.annotation.AnnotationConfigApplicationContext;
 import org.springframework.core.env.MapPropertySource;
@@ -42,6 +43,10 @@ import org.springframework.core.env.MapPropertySource;
  */
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
 abstract class IdentityStoreContract {
+
+    /** What the contexts write (the content store, a database file), removed after the class. */
+    @TempDir
+    static java.nio.file.Path tmp;
 
     private ConfigurableApplicationContext ctx;
     private final ObjectMapper json = new ObjectMapper();
@@ -60,12 +65,12 @@ abstract class IdentityStoreContract {
         props.put("drishti.identity.iterations", "1000");
         props.put("drishti.identity.seed-admin", "true");
         props.put("drishti.alerts.keep", "60");
-        props.put("drishti.store.root", "target/identity-contract-" + System.nanoTime() + "/fstore");
+        props.put("drishti.store.root", tmp.resolve("fstore-" + System.nanoTime()).toString());
         props.put("drishti.collab.store", "jpa");                  // this contract is the database stores'; the content stores have their own tests
         props.put("drishti.audit.store", "jpa");
         props.put("drishti.embed.store", "jpa");
         props.put("drishti.packs.state-store", "jpa");
-        props.put("drishti.identity.users-file", "target/no-legacy-" + System.nanoTime() + "/users.json");
+        props.put("drishti.identity.users-file", tmp.resolve("no-legacy/users.json").toString());
         c.getEnvironment().getPropertySources().addFirst(new MapPropertySource("test", props));
         c.registerBean(RoleNames.class, () -> RoleNames.of(Set.of("admin", "trader", "risk")));
         c.register(IdentityConfiguration.class);

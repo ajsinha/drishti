@@ -23,18 +23,21 @@ import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.attribute.FileTime;
-import java.util.UUID;
 import java.util.stream.Stream;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.io.TempDir;
 
 /** The filesystem backend: the contract, plus its own rules (visible names only, two stores on one root, stale locks). */
 class FileContentStoreTest extends ContentStoreContract {
+
+    @TempDir
+    Path tmp;
 
     private Path root;
 
     @Override
     protected ContentStore open() {
-        root = Path.of("target", "content-tests", "fs-" + UUID.randomUUID());
+        root = tmp.resolve("fs");
         return new FileContentStore(root);
     }
 

@@ -106,7 +106,7 @@ class RunClusterTest {
 
     @BeforeAll
     static void start() throws Exception {
-        Path root = Path.of("target", "net-it", "runs-" + System.nanoTime()).toAbsolutePath();
+        Path root = com.ash.drishti.server.TestRun.root().resolve(Path.of("net-it", "runs-" + System.nanoTime()));
         int[] p = NetNodes.PORTS;
         bi(root.resolve("bi"), root.resolve("lake"));
         Files.writeString(root.resolve("runs.yaml"), "enabled: true\nlease:\n  renew: 500ms\n  ttl: 2s\n");

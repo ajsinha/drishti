@@ -34,7 +34,7 @@ import org.springframework.test.web.servlet.MockMvc;
  * peers.json, no forwarded request, and the cluster's endpoints answer that the cluster is off.
  */
 @SpringBootTest(properties = {"drishti.rachana.hot-reload=false", "drishti.sources.plugins.demo.settings.ticking=false",
-        "drishti.net.dir=target/net-off-${random.uuid}/config-net"})
+        "drishti.net.dir=${drishti.test.dir}/net-off-${random.uuid}/config-net"})
 @AutoConfigureMockMvc
 class NetOffTest {
 

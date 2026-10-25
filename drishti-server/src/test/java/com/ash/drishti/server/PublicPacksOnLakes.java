@@ -51,7 +51,7 @@ import org.springframework.test.web.servlet.MockMvc;
 abstract class PublicPacksOnLakes {
 
     /** The connector files written from the packs' templates at start: one folder per test fork (the forks run in parallel). */
-    static final String CONNECTORS = "target/test-data/public-pack-connectors-" + ProcessHandle.current().pid();
+    static final String CONNECTORS = TestRun.root().resolve("public-pack-connectors").toString();
 
     @DynamicPropertySource
     static void lake(DynamicPropertyRegistry r) {

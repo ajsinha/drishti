@@ -62,7 +62,7 @@ abstract class PackSutraNextEquivalence {
 
     /** The site Sutra folder of a pack's test: emptied, and given to the server as drishti.rachana.dirs. */
     static Path site(DynamicPropertyRegistry r, String pack) throws Exception {
-        Path site = Path.of("target", "test-data", "sutra-next-" + pack, "sutras").toAbsolutePath();
+        Path site = TestRun.root().resolve(Path.of("sutra-next-" + pack, "sutras"));
         Files.createDirectories(site);
         try (var s = Files.list(site)) {
             for (Path f : s.toList()) {
@@ -84,7 +84,7 @@ abstract class PackSutraNextEquivalence {
 
     /** As {@link #lake(DynamicPropertyRegistry, String, String...)}, the connector (and its folder under target/test-data) named {@code c}. */
     static Path lakeNamed(DynamicPropertyRegistry r, String pack, String c, String... kinds) throws Exception {
-        Path day = Path.of("target", "test-data", c).toAbsolutePath();
+        Path day = TestRun.root().resolve(Path.of(c));
         Files.createDirectories(day);
         r.add("drishti.sources.connectors." + c + ".plugin", () -> "file");
         r.add("drishti.sources.connectors." + c + ".settings.root", day::toString);
@@ -111,7 +111,7 @@ abstract class PackSutraNextEquivalence {
     }
 
     private Path siteDir() {
-        return Path.of("target", "test-data", "sutra-next-" + pack(), "sutras").toAbsolutePath();
+        return TestRun.root().resolve(Path.of("sutra-next-" + pack(), "sutras"));
     }
 
     /** The old layouts and what they need (an old block a deal layout uses), copied beside the pack's Sutras for the "before" view. */

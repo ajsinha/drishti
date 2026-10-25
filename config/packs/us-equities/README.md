@@ -19,7 +19,7 @@ pack: us-equities
 version: 1.0.0
 code: USEQS
 title: US equities
-summary: 'Public data on the companies of the Dow 30, the Nasdaq-100 and the S&P 500: SEC EDGAR companies, SIC sectors, filings and ten years of annual XBRL financials, LEIs from GLEIF and index membership from Wikidata.'
+summary: 'Public data on the companies of the Dow 30, the Nasdaq-100 and the S&P 500, and on major US, Canadian and UK banks that file with the SEC: SEC EDGAR companies, SIC sectors, filings and ten years of annual XBRL financials, LEIs from GLEIF an'
 kinds:
 - us-company
 - index-membership
@@ -80,8 +80,11 @@ generated-by: tools/packgen/us_equities/make.py
 
 ## What it is
 
-Public data on the companies of the Dow 30, the Nasdaq-100 and the S&P 500 (479 with SEC filings): their SEC filings, ten fiscal
-years of annual financials from their XBRL filings, their LEI, their SIC sector and the indexes they belong to. No index weights or
+Public data on the companies of the Dow 30, the Nasdaq-100 and the S&P 500, and on the major US, Canadian and UK banks that file
+with the SEC (three lists kept by Drishti: `IDX BANKS-US`, `IDX BANKS-CA`, `IDX BANKS-UK`): their SEC filings, ten fiscal years of
+annual financials from their XBRL filings (a 10-K, or a foreign bank's 20-F or 40-F in the currency it reports in, `CURRENCY`), their
+LEI, their SIC sector and the indexes and lists they belong to. Banks with no SEC filings (National Bank of Canada, Standard Chartered,
+Nationwide) are not here; the `gleif` pack covers them. No index weights or
 levels, no GICS and no prices are shipped: `price-history` is read live by the `us-equities-prices` connector, off by default and for
 internal use only.
 
@@ -128,6 +131,7 @@ Fields, from 3 sample documents:
 | `LEI_SOURCE` | string | `GLEIF, LEI from Wikidata` | Where the LEI came from |
 | `INDEXES` | list of objects |  | Index memberships (index, name, since) |
 | `INDEX_TEXT` | string | `Dow Jones Industrial Average, Nasdaq-100…` | The indexes, as text for searching |
+| `CURRENCY` | string | `USD` | The currency its figures are reported in (USD; CAD or GBP for a Canadian or UK bank) |
 | `FISCAL_YEAR` | integer | `2025` | Fiscal year |
 | `REVENUE` | integer | `416161000000` | Revenue |
 | `NET_INCOME` | integer | `112010000000` | Net income |
@@ -188,7 +192,7 @@ Nested structures:
 | Path | Fields |
 |---|---|
 | `BY_SECTOR[]` | `LABEL` (string), `VALUE` (integer) |
-| `ROWS[]` | `TICKER` (string), `NAME` (string), `SECTOR` (string), `SIC` (string), `SIC_DESCRIPTION` (string), `EXCHANGE` (string), `REVENUE` (integer), `NET_INCOME` (integer), `NET_MARGIN` (number), `FISCAL_YEAR` (integer), `SINCE` (null) |
+| `ROWS[]` | `TICKER` (string), `NAME` (string), `SECTOR` (string), `SIC` (string), `SIC_DESCRIPTION` (string), `EXCHANGE` (string), `REVENUE` (integer), `NET_INCOME` (integer), `NET_MARGIN` (number), `CURRENCY` (string), `FISCAL_YEAR` (integer), `SINCE` (null) |
 | `PROVENANCE` | `SOURCE` (string), `LICENCE` (string), `NOTE` (string), `RETRIEVED_AT` (date) |
 
 ### `sic-sector`
@@ -216,7 +220,7 @@ Nested structures:
 
 | Path | Fields |
 |---|---|
-| `ROWS[]` | `TICKER` (string), `NAME` (string), `EXCHANGE` (string), `INDEX_TEXT` (string), `REVENUE` (integer), `NET_INCOME` (integer), `NET_MARGIN` (number), `FISCAL_YEAR` (integer) |
+| `ROWS[]` | `TICKER` (string), `NAME` (string), `EXCHANGE` (string), `INDEX_TEXT` (string), `REVENUE` (integer), `NET_INCOME` (integer), `NET_MARGIN` (number), `CURRENCY` (string), `FISCAL_YEAR` (integer) |
 | `BY_REVENUE[]` | `LABEL` (string), `VALUE` (integer) |
 | `PROVENANCE` | `SOURCE` (string), `RETRIEVED_AT` (date), `LICENCE` (string) |
 
@@ -234,9 +238,9 @@ Fields, from 1 sample document:
 | `NAME` | string | `Current reports` | Forms |
 | `FORM` | string | `8-K` | The form type |
 | `FILINGS` | integer | `300` | Filings |
-| `COMPANIES` | integer | `214` | Companies |
+| `COMPANIES` | integer | `222` | Companies |
 | `LATEST` | date | `2026-10-23` | Latest |
-| `EARLIEST` | date | `2026-09-30` | Earliest shown |
+| `EARLIEST` | date | `2026-10-02` | Earliest shown |
 | `ROWS` | list of objects |  | The filings |
 | `BY` | list of objects |  | Filings by form |
 | `BY_TITLE` | string | `Filings by company` | Filings by company |
@@ -358,6 +362,7 @@ Examples:
 | `USEQ JPM` | JPMorgan Chase · a bank's financials |
 | `IDX SP500` | S&P 500 · the members, filterable; a click opens the company beside |
 | `IDX DJIA` | Dow Jones Industrial Average · thirty members |
+| `IDX BANKS-CA` | Canadian banks that file with the SEC · financials in CAD |
 | `SIC 3674` | Semiconductors · the companies of one SIC code by revenue |
 | `SIC ALL` | Every SIC code covered, by revenue |
 | `EDGAR 8-K` | The latest current reports; a click opens the filing beside |
