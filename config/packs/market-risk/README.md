@@ -405,11 +405,11 @@ Fields, from 1 sample document:
 | `CURRENCY` | string | `USD` | — |
 | `COUNTERPARTY` | string | `CP-KESTREL` | link to `counterparty` |
 | `DIRECTION` | string | `SHORT` | — |
-| `QUANTITY` | number | `-180000000.0` | — |
+| `QUANTITY` | number | `-180000000.0` | The trade's quantity: positive for a buy, negative for a sell. |
 | `REPORTING_CCY` | string | `USD` | — |
-| `PV` | integer | `-83827` | — |
+| `PV` | integer | `-83827` | The trade's value on the business date. (USD) |
 | `PNL` | list of integers |  | 509 values, oldest scenario first, stored as a list<double> column (out of the document) |
-| `STATUS` | string | `ok` | — |
+| `STATUS` | string | `ok` | ok, proxied (priced by a proxy) or failed (no vector: counted, never taken as zero). |
 | `PRICER` | string | `demo-factor-model` | — |
 | `MODEL_VERSION` | string | `demo-1` | — |
 | `COMPUTED_AT` | timestamp | `2026-09-30T22:30:00Z` | — |
@@ -434,10 +434,10 @@ Fields, from 1 sample document:
 | `BUSINESS_DATE` | date | `2026-09-30` | — |
 | `SCENARIO_DATES` | list of dates |  | The 509 scenario days, oldest first: index i of every vector is day i |
 | `SCENARIO_COUNT` | integer | `509` | — |
-| `WINDOW_START` | date | `2024-09-17` | — |
-| `WINDOW_END` | date | `2026-09-29` | — |
+| `WINDOW_START` | date | `2024-09-17` | The oldest scenario day. |
+| `WINDOW_END` | date | `2026-09-29` | The newest scenario day: the business day before the business date. |
 | `HORIZON_DAYS` | integer | `1` | — |
-| `REVALUATION` | string | `full` | — |
+| `REVALUATION` | string | `full` | full (every trade repriced under each scenario) or sensitivities (a Taylor expansion), as the batch did it. |
 | `WEIGHTS` | null |  | — |
 | `SOURCE_BATCH` | string | `B-2026-09-30-01` | — |
 | `DESCRIPTION` | string | `Historical simulation, 509 business days…` | — |
@@ -455,8 +455,8 @@ Fields, from 2 sample documents:
 | Field | Type | Example | Description |
 |---|---|---|---|
 | `NODE_ID` | string | `LEGAL~LE-NY` | link to `risk-hierarchy` |
-| `HIERARCHY` | string | `LEGAL` | — |
-| `LEVEL` | string | `legal-entity` | — |
+| `HIERARCHY` | string | `LEGAL` | MGMT: bank, division, desk, book. LEGAL: bank, legal entity, desk, book. A book is in one leaf of each. |
+| `LEVEL` | string | `legal-entity` | bank, division, legal-entity, desk or book. |
 | `PARENT_ID` | string | `LEGAL~BANK` | — |
 | `NAME` | string | `LE-NY` | — |
 | `REF` | object |  | Nested: see below |
@@ -495,12 +495,12 @@ Fields, from 2 sample documents:
 | `PARENT_ID` | string | `MGMT~DIV-MARKETS` | — |
 | `BUSINESS_DATE` | date | `2026-09-29` | — |
 | `SCENARIO_SET_ID` | string | `HS-509` | — |
-| `VAR_99` | integer | `2938233` | — |
-| `ES_975` | integer | `3599094` | — |
+| `VAR_99` | integer | `2938233` | The loss the portfolio is expected not to exceed on 99 of 100 trading days, read from the 1st percentile of the revalued scenario P&L (historical simulation). (USD) |
+| `ES_975` | integer | `3599094` | The average loss on the worst 2.5% of scenario days. It looks into the tail that VaR ignores, and it is the measure the FRTB internal-models approach uses for capital. (USD) |
 | `HYPO_PNL` | integer | `388197` | The node's P&L of the day with its positions unchanged |
 | `EXCEPTION` | boolean | `false` | True when the day's loss exceeded the previous day's VaR |
 | `PREVIOUS_VAR` | integer | `2919754` | — |
-| `LIMIT` | integer | `4200000` | — |
+| `LIMIT` | integer | `4200000` | The node's VaR limit on the day. (USD) |
 | `LIMIT_USE` | number | `0.6996` | — |
 | `POSITION_COUNT` | integer | `24` | — |
 | `TRADE_COUNT` | integer | `172` | — |

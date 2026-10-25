@@ -265,6 +265,52 @@ kinds:
       BOOK_VAR: { term: "Book VaR", means: "The 1-day 99% VaR of the whole book the position is held in.", unit: "USD" }
       PCT_OF_BOOK_VAR: { term: "Share of the book's VaR", means: "The component VaR over the book's VaR." }
       PNL: { term: "P&L vector", means: "The position's P&L under each historical scenario day (509 of them): the sum of its trades' vectors.", unit: "USD", sign: "Positive is a gain." }
+  pnl-vector:
+    title: P&L vector of a trade
+    about: >-
+      ${$.TRADE_ID}'s P&L under each of the ${size($.PNL)} scenario days of ${$.SCENARIO_SET_ID} on ${$.BUSINESS_DATE}, in USD: the grain every
+      VaR is summed from. The trade is ${$.DIRECTION} in position ${$.POSITION_ID} of ${$.TT_BOOK}.
+    guide: market-risk
+    glossary:
+      PNL: { term: "P&L vector", means: "The trade's P&L under each historical scenario day, oldest first: index i is the scenario set's day i.", unit: "USD", sign: "Positive is a gain." }
+      POSITION_ID: { term: "Position", means: "The holding the trade builds or reduces: its vector is the sum of its trades'." }
+      QUANTITY: { term: "Signed quantity", means: "The trade's quantity: positive for a buy, negative for a sell." }
+      PV: { term: "Present value", means: "The trade's value on the business date.", unit: "USD" }
+      STATUS: { term: "Batch status", means: "ok, proxied (priced by a proxy) or failed (no vector: counted, never taken as zero)." }
+  scenario-set:
+    title: Scenario set
+    about: >-
+      ${$.SCENARIO_SET_ID} on ${$.BUSINESS_DATE}: ${$.SCENARIO_COUNT} historical scenario days from ${$.WINDOW_START} to ${$.WINDOW_END}, each
+      day's market move applied to the business date's market, ${$.HORIZON_DAYS}-day horizon.
+    guide: market-risk
+    glossary:
+      SCENARIO_DATES: { term: "Scenario days", means: "The historical days whose moves make the scenarios, oldest first: position i of every P&L vector is day i." }
+      WINDOW_START: { term: "Window start", means: "The oldest scenario day." }
+      WINDOW_END: { term: "Window end", means: "The newest scenario day: the business day before the business date." }
+      REVALUATION: { term: "Revaluation", means: "full (every trade repriced under each scenario) or sensitivities (a Taylor expansion), as the batch did it." }
+  risk-hierarchy:
+    title: Risk hierarchy node
+    about: >-
+      ${$.NAME} is a ${$.LEVEL} of the ${$.HIERARCHY} hierarchy, under ${coalesce($.PARENT_ID, 'nothing: the root')}, with
+      ${size($.BOOKS)} book(s) beneath it and a VaR limit of ${fmt($.LIMIT_VAR, 'compact')} USD.
+    guide: market-risk
+    glossary:
+      HIERARCHY: { term: "Hierarchy", means: "MGMT: bank, division, desk, book. LEGAL: bank, legal entity, desk, book. A book is in one leaf of each." }
+      LEVEL: { term: "Level", means: "bank, division, legal-entity, desk or book." }
+      BOOKS: { term: "Books", means: "Every book beneath the node: its positions are the node's." }
+      LIMIT_VAR: { term: "VaR limit", means: "The 1-day 99% VaR the node may take.", unit: "USD" }
+  var-node:
+    title: Official VaR of a node
+    about: >-
+      ${$.NAME} (${$.HIERARCHY} ${$.LEVEL}) on ${$.BUSINESS_DATE}: VaR ${fmt($.VAR_99, 'compact')} USD, ES ${fmt($.ES_975, 'compact')},
+      hypothetical P&L of the day ${fmt($.HYPO_PNL, 'signed0')}.
+    guide: market-risk
+    glossary:
+      VAR_99: { use: "var99" }
+      ES_975: { use: "es975" }
+      HYPO_PNL: { term: "Hypothetical P&L", means: "The node's P&L of the day with its positions of the day before unchanged: what the backtest compares with VaR.", unit: "USD", sign: "Positive is a gain." }
+      EXCEPTION: { term: "Backtest exception", means: "True when the day's loss was larger than the previous day's VaR." }
+      LIMIT: { term: "VaR limit", means: "The node's VaR limit on the day.", unit: "USD" }
   portfolio:
     title: Portfolio
     about: >-
