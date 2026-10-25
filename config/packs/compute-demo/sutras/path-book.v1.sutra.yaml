@@ -1,0 +1,87 @@
+# Project Drishti · Any data. Any domain. One grammar.
+#
+# Copyright (c) 2026 Ashutosh Sinha <ajsinha@gmail.com>.
+# All rights reserved.
+#
+# PROPRIETARY AND CONFIDENTIAL.
+#
+# This file is the confidential and proprietary property of Ashutosh Sinha.
+# Unauthorised copying, use, modification, distribution or disclosure of this
+# file, via any medium, is strictly prohibited except with the express prior
+# written permission of the copyright holder.
+#
+# See the LICENSE file in the root of this repository for the full terms.
+
+rachana: 1
+sutra: path-book
+version: 1
+description: "A book of synthetic P&L strips, and the sum of their paths computed when the page asks: by a Python engine and by its Java twin."
+doc:
+  summary: "A book's strips and its P&L path computed on request, twice: by the sample Python engine in a compute pool and by the Java engine."
+  description: >-
+    The sample screen of reactive connectors (REACTIVE_CONNECTORS.md). The book's own fields come from the demo data; each of the two
+    computed panels reads its own computed kind with typed parameters (source params): path-sum is computed by the sample Python engine
+    in the compute pool "sample", fanned out over every worker of it; path-sum-java by Drishti's own Java engine in the server. A panel
+    whose result is not ready is drawn computing with its progress and filled from the live channel when the result lands; a failure or
+    a refusal (compute switched off, a parameter not allowed) is said in that panel only. Slow down pauses the engines per tenth of the
+    strips, to watch the progress.
+  params: {}
+  emits: []
+  expects: []
+  examples:
+    - "/v/path-book/BOOK-RATES"
+    - "PBOOK BOOK-FX"
+  since: "2.8.0"
+match: { kind: path-book, priority: 10 }
+title: { pill: "Compute demo · Book", id: $.BOOK_ID, with: $.NAME }
+strip:
+  - { label: Desk, bind: $.DESK }
+  - { label: Strips, bind: $.STRIP_COUNT }
+controls:
+  - { id: slow, kind: segmented, label: Slow down (ms per tenth), options: ["0", "20", "100"], default: "0" }
+panels:
+  - id: py-sum
+    kind: metric
+    title: "Sum of the paths · Python engine"
+    key: F2
+    source: { kind: path-sum, id: "$.BOOK_ID", params: { delay-ms: ctl.slow } }
+    value: "$src.SUM"
+    label: "Sum over 250 days"
+    fmt: amount2
+    caption: "worst day ${fmt($src.WORST, 'amount2')} · path-sum-python"
+  - id: py-path
+    kind: line
+    title: "Book path · Python engine"
+    source: { kind: path-sum, id: "$.BOOK_ID", params: { delay-ms: ctl.slow } }
+    rows: "$src.TABLES.total"
+    x: DAY
+    y: PNL
+    fmt: amount2
+  - id: java-sum
+    kind: metric
+    title: "Sum of the paths · Java engine"
+    key: F3
+    area: right
+    source: { kind: path-sum-java, id: "$.BOOK_ID", params: { delay-ms: ctl.slow } }
+    value: "$src.SUM"
+    label: "Sum over 250 days"
+    fmt: amount2
+    caption: "worst day ${fmt($src.WORST, 'amount2')} · path-sum-java"
+  - id: java-path
+    kind: line
+    title: "Book path · Java engine"
+    area: right
+    source: { kind: path-sum-java, id: "$.BOOK_ID", params: { delay-ms: ctl.slow } }
+    rows: "$src.TABLES.total"
+    x: DAY
+    y: PNL
+    fmt: amount2
+  - id: stamp
+    kind: kv
+    title: "How the Java answer was computed"
+    area: right
+    source: { kind: path-sum-java, id: "$.BOOK_ID", params: { delay-ms: ctl.slow } }
+    rows: "$src.STAMP"
+  - { use: field-list@1, with: { id: book, title: Book, rows: $, area: right } }
+  - { use: data-provenance@1 }
+keys: { F9: raw }

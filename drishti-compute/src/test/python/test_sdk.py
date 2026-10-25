@@ -102,6 +102,21 @@ def test_the_sample_engine_sums_columns_and_vectors(tmp_path):
     assert r.rows[0]["sum"] == 66.0
 
 
+def test_the_path_sum_engine_adds_paths_day_by_day_in_the_shape_of_its_java_twin(tmp_path):
+    from drishti_compute.engine import ComputeError
+    from drishti_compute.samples.paths import PathSumEngine
+    os.makedirs(tmp_path / "in")
+    A.write_file(A.Table([A.utf8("BOOK", ["B1", "B1"]), A.vectors("PNL", 3, [1, -2, 3, 10, 20, -30])]), tmp_path / "in" / "values.arrows")
+    seen = []
+    r = PathSumEngine().compute(_req("sum-vectors", tmp_path), Inputs(str(tmp_path), {"values": "in/values.arrows"}), Progress(seen.append))
+    assert r.rows == [{"ROWS": 2, "WIDTH": 3, "SUM": 2.0, "WORST": -27.0, "BEST": 18.0}]
+    assert r.tables["total"].column("DAY").to_list() == [1, 2, 3] and r.tables["total"].column("PNL").to_list() == [11.0, 18.0, -27.0]
+    assert seen and seen[-1]["done"] == 2
+    A.write_file(A.Table([A.utf8("BOOK", ["B1"])]), tmp_path / "in" / "none.arrows")
+    with pytest.raises(ComputeError, match="no record of values has a PNL path"):
+        PathSumEngine().compute(_req("sum-vectors", tmp_path), Inputs(str(tmp_path), {"values": "in/none.arrows"}), Progress(seen.append))
+
+
 class Worker:
     """A worker process driven over its JSON-lines protocol, as the server's supervisor drives it."""
 

@@ -1871,6 +1871,28 @@ Date           Trade status  Trade version  Quantity  Price        Maturity date
 `⟲2` marks a day the store kept two versions of (the latest shown); `•••` is a field masked for you. Exit codes: 0; 1 when the server
 refused (the code and its message on standard error) or some days could not be read (`partial`); 2 for usage.
 
+### `compute`: reactive connectors (2.8.0)
+
+Asks a reactive connector for a computed kind as you, cancels one of your requests, sends an event to the triggers (administrators),
+lists your what-if sandboxes, and prints Admin's view of the reactive connectors ([REACTIVE_CONNECTOR.md](../connectors/REACTIVE_CONNECTOR.md)):
+
+```text
+drishti.py compute run path-sum-java path-sum-java BOOK-FX --param delay-ms=20     the answer: state, request id, headline fields, stamp
+drishti.py compute run path-sum-python path-sum BOOK-RATES --wait 15000 --json      the whole answer
+drishti.py compute cancel req-mvnbo42x-554223c23f7e
+drishti.py compute event write-back chg-77 --kind path-strip --entity STRIP-FX-001 --payload BOOK_ID=BOOK-FX --watermark L3=12
+drishti.py compute sandboxes
+drishti.py compute reactive
+```
+
+```text
+path-sum-java BOOK-FX~delay-ms=900  REFUSED  (req-mvncbpgc-b05a980336d9)
+  delay-ms for path-sum-java is 900: it must be at least 0 and at most 500
+```
+
+Exit codes: 0 (`ready`, `computing` or `stale`); 1 when the answer is `failed` or `refused`, or the server said no; 2 for usage.
+[Tutorial 23](../tutorials/23-computed-panels.md) walks through them.
+
 ### `server packs deploy`, `history`, `rollback` and `datasource`
 
 Admin → Packs from the terminal ([the whole story with pictures: OPERATIONALISING.md, section 17](OPERATIONALISING.md#17-deploy-from-admin--packs-connectors-history-and-roll-back)).

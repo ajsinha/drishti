@@ -215,7 +215,7 @@ public final class ScreenWire {
         if (!binder.shown(p, c.seen.eval())) {                 // when: over an event that fired, not true: it waits again
             return waiting(s, n, null);
         }
-        return binder.bind(p, c.seen).withWire(wire(p, n, null)).withProvenance(c.fresh);
+        return binder.bind(p, c.seen).withWire(wire(p, n, null)).withProvenance(c.fresh).withCompute(c.compute);
     }
 
     /** Whether a screen panel is drawn at first paint: one whose {@code when} reads an event is (it waits); else its {@code when}. */
@@ -315,10 +315,27 @@ public final class ScreenWire {
     // ---- contexts and sources -------------------------------------------------------------------------------------------------
 
     /** A panel's binding context as the viewer sees it, the raw context the server follows clicks with, and why it is refused. */
-    private record Ctx(BindContext seen, EvalContext raw, String denied, ViewModel.PanelProvenance fresh) {
+    private record Ctx(BindContext seen, EvalContext raw, String denied, ViewModel.PanelProvenance fresh, ViewModel.PanelCompute compute) {
         Ctx(BindContext seen, EvalContext raw, String denied) {
-            this(seen, raw, denied, null);
+            this(seen, raw, denied, null, null);
         }
+    }
+
+    /** The field a computed kind's document says its state in (REACTIVE_CONNECTORS.md section 12.4). */
+    public static final String COMPUTE_FIELD = "COMPUTE";
+
+    /** The state of a computed source's document, or null for a document that is read, not computed. */
+    @SuppressWarnings("unchecked")
+    public static ViewModel.PanelCompute computeOf(Object doc) {
+        if (!(doc instanceof DataNode d) || !(d.get(COMPUTE_FIELD) instanceof DataNode.Obj c)) {
+            return null;
+        }
+        Object progress = c.get("progress").unwrap();
+        Object stamp = d.get("STAMP").unwrap();
+        String message = c.get("message").isNull() ? null : c.get("message").asText();
+        return new ViewModel.PanelCompute(c.get("state").asText(), c.get("requestId").asText(), c.get("connector").asText(), message,
+                progress instanceof Map<?, ?> p ? (Map<String, Object>) p : null, c.get("hasResult").asBoolean(),
+                stamp instanceof Map<?, ?> st ? (Map<String, Object>) st : null);
     }
 
     private Ctx context(Screen s, SutraWiring.Node n) {
@@ -335,7 +352,7 @@ public final class ScreenWire {
             return new Ctx(s.ctx().withEval(seenEval), rawEval, got.denied());
         }
         return new Ctx(s.ctx().withEval(seenEval.withScope(seenScope.withSrc(got.seen()))), rawEval.withScope(rawScope.withSrc(got.raw())), null,
-                provenance(router, src.kind(), got.from()));            // the panel's own freshness (SUTRA_NEXT.md 9)
+                provenance(router, src.kind(), got.from()), computeOf(got.raw()));   // the panel's own freshness (SUTRA_NEXT.md 9) and computed state
     }
 
     /** What a panel says when its source follows a value masked for the reader (SUTRA_NEXT.md 15: a followed masked id shows nothing). */
@@ -348,10 +365,7 @@ public final class ScreenWire {
      * nothing and says "hidden for you", whether it would look the value up by id, by a condition or by a search.
      */
     private boolean followsMasked(Wiring.Source src, EvalContext seen) {
-        for (String expr : java.util.Arrays.asList(src.id(), src.where(), src.search(), src.asOf())) {
-            if (expr == null) {
-                continue;
-            }
+        for (String expr : src.expressions()) {
             var m = EVENT_READ.matcher(expr);
             while (m.find()) {
                 String read = m.group();
@@ -404,8 +418,23 @@ public final class ScreenWire {
             if (id == null || id.isBlank()) {
                 return new Pair(DataNode.missing(), DataNode.missing(), null);
             }
-            return s.cache().computeIfAbsent(src.kind() + "|" + id + "|" + at, k -> {
-                EntityRef ref = EntityRef.of(src.kind(), id);
+            if (!src.params().isEmpty()) {                          // a computed kind: the question and its parameters in one id
+                Map<String, Object> params = new java.util.TreeMap<>();
+                for (Map.Entry<String, String> e : src.params().entrySet()) {
+                    Object pv = soft(() -> Values.simplify(el.compile(e.getValue()).eval(lookup)));
+                    if (Values.masked(pv)) {
+                        return new Pair(null, null, "not available to your role");
+                    }
+                    String t = pv == null ? null : Values.text(pv);
+                    if (t != null && !t.isBlank()) {
+                        params.put(e.getKey(), pv instanceof Number ? pv : t);
+                    }
+                }
+                id = com.ash.drishti.api.compute.ComputeRef.format(id, params);
+            }
+            String asked = id;
+            return s.cache().computeIfAbsent(src.kind() + "|" + asked + "|" + at, k -> {
+                EntityRef ref = EntityRef.of(src.kind(), asked);
                 EntityDocument d = router.fetchAll(Set.of(ref), budget, at).get(ref);
                 return d == null ? new Pair(DataNode.missing(), DataNode.missing(), null) : new Pair(s.redact().apply(d.data()), d.data(), null, d.provenance());
             });

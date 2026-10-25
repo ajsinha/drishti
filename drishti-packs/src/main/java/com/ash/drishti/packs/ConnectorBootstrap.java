@@ -176,11 +176,7 @@ public final class ConnectorBootstrap {
 
     /** The kinds a template names. */
     public static List<String> kindsOf(Map<String, Object> t) {
-        List<String> kinds = new ArrayList<>();
-        if (t.get("kinds") instanceof List<?> l) {
-            l.forEach(x -> kinds.add(String.valueOf(x)));
-        }
-        return kinds;
+        return ConnectorFiles.kindNames(t.get("kinds"));
     }
 
     /** The flag for an edited file whose generating template changed, or null. */
@@ -197,12 +193,9 @@ public final class ConnectorBootstrap {
     private static String fromTemplate(ConnectorFiles files, String name, Map<String, Object> t, String header) {
         Map<String, Object> flat = new LinkedHashMap<>();
         PackLoader.flatten("", t.get("settings") instanceof Map<?, ?> s ? (Map<String, Object>) s : Map.of(), flat);
-        List<String> kinds = new ArrayList<>();
-        if (t.get("kinds") instanceof List<?> l) {
-            l.forEach(x -> kinds.add(String.valueOf(x)));
-        }
+        List<String> kinds = ConnectorFiles.kindNames(t.get("kinds"));
         return files.render(header.isEmpty() ? "" : "# " + header, String.valueOf(t.get("plugin")), t.get("enabled"), kinds,
-                t.get("description") == null ? "" : String.valueOf(t.get("description")), flat);
+                t.get("description") == null ? "" : String.valueOf(t.get("description")), flat, Map.of(), ConnectorFiles.computeOf(t));
     }
 
     @SuppressWarnings("unchecked")
@@ -285,9 +278,7 @@ public final class ConnectorBootstrap {
         } else {
             plugin = String.valueOf(template.get("plugin"));
             enabled = template.get("enabled");
-            if (template.get("kinds") instanceof List<?> l) {
-                l.forEach(x -> kinds.add(String.valueOf(x)));
-            }
+            kinds.addAll(ConnectorFiles.kindNames(template.get("kinds")));
             description = template.get("description") == null ? "" : String.valueOf(template.get("description"));
             PackLoader.flatten("", template.get("settings") instanceof Map<?, ?> s ? (Map<String, Object>) s : Map.of(), settings);
         }

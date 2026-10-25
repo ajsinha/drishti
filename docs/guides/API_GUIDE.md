@@ -2750,6 +2750,22 @@ Administrators only ([COMPUTE.md](../admin/COMPUTE.md)); every decision is audit
 | `POST /api/v1/admin/compute/pools/{pool}/test` | runs the sample engine on the pool as the caller: the worker that answered and the times |
 | `POST /api/v1/admin/compute/running/{id}/cancel` | stops a waiting or running computation on this node (`DRS-9206` when it is not there) |
 
+### Reactive connectors (2.8.0)
+
+Computed kinds are read through the views like any kind (`GET /api/v1/views/{kind}/{id~param=value}`); these are for the live channel
+and for programs ([REACTIVE_CONNECTOR.md](../connectors/REACTIVE_CONNECTOR.md#the-http-api)). Requests and sandboxes are the caller's
+own: another person's is `DRS-9206`, as if it did not exist.
+
+| Method and path | What it does |
+|---|---|
+| `POST /api/v1/compute/{connector}/{kind}` | `{id, params, asOf, wait}`: the answer `{state, requestId, connector, id, message, progress, result}`; `state` is `ready`, `computing`, `stale`, `failed` or `refused` (a refusal is an answer in words, not an error) |
+| `GET /api/v1/compute/requests/{id}/stream` | the request's events (server-sent): `hello`, `progress`, `state`, `done`, `failed`, `updated`; heartbeat every 15 s |
+| `DELETE /api/v1/compute/requests/{id}` | cancels the caller's request; the computation stops when nobody else waits on it |
+| `POST /api/v1/compute/events` | administrators: `{id, type, kind, entity, businessDate, watermark, by, paths, payload}` for every reactive connector's triggers (`write-back`, `live`, `data-version`, `schedule`); an id already processed is ignored; `DRS-5001` for a bad event |
+| `GET /api/v1/compute/sandboxes`, `POST /api/v1/compute/sandboxes` | the caller's private what-if sandboxes; a new one `{connector, title, items}` |
+| `PUT /api/v1/compute/sandboxes/{id}`, `DELETE …/{id}`, `POST …/{id}/copy` | `{items, basedOn}` (a frozen copy, or a sandbox changed since `basedOn`: `DRS-9202`); delete; `{to}` gives a frozen copy |
+| `GET /api/v1/admin/compute/reactive` | administrators: each reactive connector's kinds and parameters, engine, availability, cache, coalescing, computations and latency |
+
 Between Drishti\*net members only (forwarded, signed calls; anything else is `403`): `GET /api/v1/compute/peer/load?pool=` (this node's
 workers, busy, queued), `POST /api/v1/compute/peer/run` (a fan-out chunk, run here as the viewer the call is made for) and
 `POST /api/v1/compute/peer/cancel/{id}`.

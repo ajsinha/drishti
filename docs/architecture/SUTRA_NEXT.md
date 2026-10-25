@@ -336,6 +336,7 @@ is today's option, unchanged (the panel reads that linked entity as `$`).
 | `search` | instead of `id`: an expression for the text searched in the kind; `$src` is the list of the entities found, at most `limit` |
 | `limit` | 1 to 200 (default 20), for `where` and `search` |
 | `as-of` | an expression for the business date read (`YYYY-MM-DD`); the screen's date when absent |
+| `params` | (2.8.0, with `id`) a computed kind's typed parameters, `name: expression` (a number or true/false is its own literal): the server evaluates them as the viewer and reads the kind with the id `ID~name=value`; the reactive connector checks them and the panel shows *computing*, *stale*, *failed* or *refused* in place ([REACTIVE_CONNECTOR.md](../connectors/REACTIVE_CONNECTOR.md#reading-a-computed-kind)); `DRS-2012` for a bad shape, `DRS-2057` with `where` or `search` |
 | `pack` | the pack serving the kind: documentation and lint today (a kind is served by one connector; routing is by kind) |
 | `model` | a BI model source: refused (`DRS-2057`), not built yet |
 

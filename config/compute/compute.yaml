@@ -35,7 +35,7 @@ compute:
   pools:
     sample:                          # the sample engine (echo, sum, sum-vectors): Admin -> Compute -> Test runs it
       type: python
-      engines: [drishti_compute.samples.vectors:VectorEngine]
+      engines: [drishti_compute.samples.vectors:VectorEngine, drishti_compute.samples.paths:PathSumEngine]
       environment: system            # the site's interpreter and the SDK; or { python: "3.12", lock: locks/risk.lock, index: shipped }
       workers:
         min: 0                       # kept warm

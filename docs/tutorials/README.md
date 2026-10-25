@@ -50,6 +50,7 @@ the tutorials say what to do first.
 | 20 | [Statements and field parameters](20-statements-and-field-parameters.md) | a model with field parameters of fields and of measures, a chart the reader switches from DESK to PORTFOLIO and from MTM to NOTIONAL (Build and the parameter slicer), a statement page with its paper, header and footer, page breaks, repeated column titles and groups kept together, previewed page by page in the Paper tab, the PDF and Excel from `drishti.py bi statement`, and one statement per person from one subscription | 40 min | written |
 | 21 | [An entity over time](21-an-entity-over-time.md) | a range after an id (`TRD 1000015 30`, `3M`, `YTD`, `FROM … TO`), the history table with what moved tinted and restated days marked, changes only and DIFF, opening a day as it was, an equity's chart and headline numbers, the `history:` block of a pack, export and a link that pins the dates, the limits and errors; UI, `drishti.py history` and the YAML at every step | 30 min | written |
 | 22 | [Build a screen with the designer](22-build-a-screen-with-the-designer.md) | Customize a book's trades page: a linked record on a click (another pack's credit limits), refresh every 30 s with pause and freshness, let people edit beside the table and in a New drawer (drafts), your page and Reset; the same screen from one Describe line; Outline and Grid; UI, `drishti.py design`/`view` and `/me` calls, and the YAML at every step | 35 min | written |
+| 23 | [Computed panels: a reactive connector](23-computed-panels.md) | switch on the compute workers and the compute-demo sample pack, a book's P&L path computed by a Python engine over a pool's workers and by its Java twin, panels drawn computing with progress and filled in place, typed parameters on a panel's source, the same computation from `drishti.py compute run`, a parameter refused in words, a write-back event that recomputes what a screen watches; UI, CLI and YAML at every step | 25 min | written |
 
 ## What you need once
 
@@ -66,7 +67,7 @@ booking system on the last day are the same on every machine. `MX-20000001` is c
 tutorial that shows it live was captured before that. For history, the trades amended most (ten times each) are ENDUR `1000279` and `1001049`, CALYPSO
 `CLY-4000509` and MUREX `MX-30001745`.
 
-The pictures are made, not drawn: `tools/docs/screenshots.py --guide t01` (to `t19`; the pictures of tutorials 20 to 22 were captured separately) drives a scratch stack with a real browser and writes them to `img/`. When the screens change, run it again.
+The pictures are made, not drawn: `tools/docs/screenshots.py --guide t01` (to `t19`; the pictures of tutorials 20 to 22 were captured separately, those of tutorial 23 by `drishti-console/tests/test_reactive_panels_browser.py`) drives a scratch stack with a real browser and writes them to `img/`. When the screens change, run it again.
 
 ## The sample data
 

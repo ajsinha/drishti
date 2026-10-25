@@ -12,4 +12,5 @@
 #
 # See the LICENSE file in the root of this repository for the full terms.
 
-"""Sample engines shipped with the SDK: ``vectors.VectorEngine`` (echo, sum, sum of vectors)."""
+"""Sample engines shipped with the SDK: ``vectors.VectorEngine`` (echo, sum, sum of vectors) and ``paths.PathSumEngine`` (the sample
+reactive connector's sum of P&L paths)."""

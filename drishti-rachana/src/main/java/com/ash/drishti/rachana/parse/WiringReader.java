@@ -42,7 +42,8 @@ final class WiringReader {
     static final String EVENTS = "DRS-2057";
     static final String CHILDREN = "DRS-2056";
     private static final Pattern NAME = Pattern.compile("[a-z][a-z0-9-]{0,63}");
-    private static final Set<String> SOURCE_KEYS = Set.of("pack", "kind", "id", "where", "search", "limit", "as-of", "model");
+    private static final Set<String> SOURCE_KEYS = Set.of("pack", "kind", "id", "where", "search", "limit", "as-of", "model", "params");
+    private static final Pattern PARAM = Pattern.compile("[A-Za-z][A-Za-z0-9_-]{0,63}");
     private static final Set<String> EMIT_KEYS = Set.of("name", "on", "payload");
     private static final Set<String> GROUP_KEYS = Set.of("place", "show", "source", "waits", "panels");
 
@@ -93,7 +94,7 @@ final class WiringReader {
         Map<String, PNode> m = n.map();
         m.forEach((k, v) -> {
             if (!SOURCE_KEYS.contains(k)) {
-                problem("DRS-2011", "unknown key '" + k + "' in source; a source takes pack, kind, id, where, search, limit, as-of", v);
+                problem("DRS-2011", "unknown key '" + k + "' in source; a source takes pack, kind, id, where, search, limit, as-of, params", v);
             }
         });
         if (m.containsKey("model")) {
@@ -128,7 +129,39 @@ final class WiringReader {
                 limit = v.intValue();
             }
         }
-        return new Wiring.Source(pack, kind, id, where, search, limit, expr(m.get("as-of")));
+        return new Wiring.Source(pack, kind, id, where, search, limit, expr(m.get("as-of")), params(kind, m.get("params"), id != null));
+    }
+
+    /**
+     * A computed kind's parameters (REACTIVE_CONNECTORS.md section 6.1): a mapping of names to expressions ({@code confidence:
+     * ctl.confidence}, {@code horizon: 1}); a number or a switch is its own literal. Only with {@code id}: a computation answers one question.
+     */
+    private Map<String, String> params(String kind, PNode n, boolean single) {
+        if (n == null || n.value() == null) {
+            return Map.of();
+        }
+        if (!n.isMap()) {
+            problem("DRS-2012", "'params' in a source is a mapping of parameter names to expressions ({ confidence: ctl.confidence })", n);
+            return Map.of();
+        }
+        if (!single) {
+            problem(EVENTS, "'params' goes with a source read by id: a computed kind answers one question (" + kind + ")", n);
+            return Map.of();
+        }
+        Map<String, String> out = new java.util.TreeMap<>();
+        n.map().forEach((k, v) -> {
+            if (!PARAM.matcher(k).matches()) {
+                problem("DRS-2012", "'" + k + "' is not a parameter name (letters, digits, '_' and '-', starting with a letter)", v);
+            } else if (v == null || v.value() == null || !v.isScalar()) {
+                problem("DRS-2012", "parameter " + k + " is an expression written as text, a number or true/false", v == null ? n : v);
+            } else {
+                out.put(k, v.text());
+            }
+        });
+        if (out.size() > Wiring.Source.MAX_PARAMS) {
+            problem("DRS-2012", "a source takes at most " + Wiring.Source.MAX_PARAMS + " parameters", n);
+        }
+        return out;
     }
 
     private List<Wiring.Emit> emits(PNode n, PanelKind kind) {

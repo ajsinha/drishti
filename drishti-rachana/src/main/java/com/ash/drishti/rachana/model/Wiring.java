@@ -74,17 +74,29 @@ public record Wiring(Source source, List<Emit> emits, String waits, List<Childre
      * @param search an expression for the text searched, or null
      * @param limit the most entities a where or search source reads
      * @param asOf an expression for the business date read, or null for the screen's
+     * @param params typed parameters of a computed kind (REACTIVE_CONNECTORS.md section 6.1): name to expression, sorted by name; empty
+     *        for a kind that is read, not computed
      */
-    public record Source(String pack, String kind, String id, String where, String search, int limit, String asOf) {
+    public record Source(String pack, String kind, String id, String where, String search, int limit, String asOf, java.util.Map<String, String> params) {
         public static final int DEFAULT_LIMIT = 20;
         public static final int MAX_LIMIT = 200;
+        public static final int MAX_PARAMS = 32;
+
+        public Source {
+            params = params == null ? java.util.Map.of() : java.util.Collections.unmodifiableMap(new java.util.TreeMap<>(params));
+        }
+
+        /** A source without parameters. */
+        public Source(String pack, String kind, String id, String where, String search, int limit, String asOf) {
+            this(pack, kind, id, where, search, limit, asOf, java.util.Map.of());
+        }
 
         /** Whether the source names one entity ({@code $src} a record) rather than a list ({@code $src} a list of records). */
         public boolean single() {
             return id != null;
         }
 
-        /** The expressions of the source, in order (id, where, search, as-of), without the absent ones. */
+        /** The expressions of the source, in order (id, where, search, as-of, then each parameter's), without the absent ones. */
         public List<String> expressions() {
             List<String> out = new ArrayList<>();
             for (String e : new String[] {id, where, search, asOf}) {
@@ -92,6 +104,7 @@ public record Wiring(Source source, List<Emit> emits, String waits, List<Childre
                     out.add(e);
                 }
             }
+            out.addAll(params.values());
             return out;
         }
     }

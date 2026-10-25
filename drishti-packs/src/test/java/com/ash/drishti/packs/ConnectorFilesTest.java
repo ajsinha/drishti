@@ -181,4 +181,23 @@ class ConnectorFilesTest {
         assertThat(files.parse("var-engine", rendered).requires()).isEqualTo(d.requires());
         assertThatThrownBy(() -> files.parse("x", "plugin: file\nrequires: [numpy]\n")).hasMessageContaining("'requires' is a mapping");
     }
+
+    @Test
+    void aReactiveConnectorsComputationReachesItsPluginAndSurvivesTheForm(@TempDir Path dir) {
+        ConnectorFiles files = new ConnectorFiles(dir);
+        String text = "plugin: reactive\nmode: reactive\nkinds:\n  sum-vectors:\n    params:\n      delay-ms: { type: int, default: 0 }\n"
+                + "reads:\n  - { kind: strip, as: values, all: true }\nengine: { type: python, entry: 'a.b:C', pool: sample }\n"
+                + "triggers:\n  - { on: schedule, every: 1m }\nsettings:\n  stale-after: 5m\n";
+        ConnectorFiles.Definition d = files.parse("demo-compute", text);
+        assertThat(d.kinds()).containsExactly("sum-vectors");
+        assertThat(d.compute()).containsKeys("mode", "kinds", "reads", "engine", "triggers");
+        assertThat(d.settings()).containsKey(ConnectorFiles.COMPUTE_SETTING).containsEntry("stale-after", "5m");
+        assertThat(d.settings().get(ConnectorFiles.COMPUTE_SETTING)).contains("\"pool\":\"sample\"");
+        String rendered = files.render("# form", "reactive", true, d.kinds(), "", d.settings(), Map.of(), d.compute());
+        assertThat(rendered).doesNotContain(ConnectorFiles.COMPUTE_SETTING).contains("engine:");
+        assertThat(files.parse("demo-compute", rendered).compute()).isEqualTo(d.compute());
+        assertThatThrownBy(() -> files.parse("x", "plugin: jdbc\nengine: { type: java }\n")).hasMessageContaining("only a connector of plugin reactive");
+        assertThatThrownBy(() -> files.parse("x", "plugin: jdbc\nkinds: { a: {} }\n")).hasMessageContaining("kinds with parameters");
+        assertThatThrownBy(() -> files.parse("x", "plugin: jdbc\nmode: magic\n")).hasMessageContaining("'mode' is static, live, on-demand or reactive");
+    }
 }

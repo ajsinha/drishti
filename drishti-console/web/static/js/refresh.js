@@ -293,6 +293,8 @@
   ticker = setInterval(tick, 1000);
   window.drishtiRefresh = {
     state: function () { return JSON.parse(JSON.stringify(panels, function (k, v) { return k === 'html' ? undefined : v; })); },
-    tick: tick, pauseAll: pauseAll, toggle: toggle, min: MIN
+    tick: tick, pauseAll: pauseAll, toggle: toggle, min: MIN,
+    /** Fetches these panels again now and swaps them in place (static/js/compute.js: a computed panel's result has landed). */
+    fetch: function (ids) { var known = (ids || []).filter(function (id) { return panels[id] && !panels[id].busy; }); return known.length ? fetchPanels(known) : Promise.resolve(); }
   };
 })();

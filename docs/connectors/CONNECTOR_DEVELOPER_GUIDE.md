@@ -1064,7 +1064,7 @@ which.
 ## The README standard
 
 Every connector **type** has a `README.md`: each plugin at its root (`plugins/drishti-plugin-<x>/README.md`, carried in its jar at
-`drishti/readme/<artifactId>/README.md`) and each built-in type (`derived`, `net`) in `docs/connectors/types/<type>/README.md`. Every
+`drishti/readme/<artifactId>/README.md`) and each built-in type (`derived`, `net`, `reactive`) in `docs/connectors/types/<type>/README.md`. Every
 folder of ready-made connector **templates** (`config/connectors.examples/<x>/`) has one too. One or two pages each, for people, for
 Admin → Connectors (a connector's page shows its type's README) and for AI (`GET /api/v1/admin/connectors/types/{type}/readme`). A new
 plugin needs one before it merges: `tools/test_readmes.py` lists the plugin folders, the built-ins and the template folders from the disk

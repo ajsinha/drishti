@@ -34,7 +34,7 @@
    stream would have opened with (the view's generation, the alerts hello, a deleted entity's last frame, the end). */
 (function (root) {
   'use strict';
-  var TYPES = ['view', 'frame', 'gone', 'alert', 'notice', 'row', 'hello', 'tick', 'status', 'answer', 'run'];               // run: a BI run changed (BI_RUNS.md 3.5, subscription biruns)
+  var TYPES = ['view', 'frame', 'gone', 'alert', 'notice', 'row', 'hello', 'tick', 'status', 'answer', 'run', 'progress', 'state', 'done', 'failed', 'updated'];               // run: a BI run changed (BI_RUNS.md 3.5); progress..updated: a computed panel's request (compute:<id>)
   var REPLAY = ['view', 'hello', 'deleted', 'gone'];
 
   function Hub(opts) {

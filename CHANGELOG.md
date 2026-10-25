@@ -41,6 +41,32 @@
   - **Pages:** the portfolio's (`PORT PF-RATES-DESK`: positions with VaR and component VaR, a click opens the position's trades beside;
     by product, currency and direction) and the position's (`POS …`: its trades netting, its distribution); UI kit fragment
     `pnl-distribution@1`.
+- **Reactive connectors, steps R1 to R4 (2.8.0, [REACTIVE_CONNECTORS.md](docs/architecture/REACTIVE_CONNECTORS.md) section 21,
+  [REACTIVE_CONNECTOR.md](docs/connectors/REACTIVE_CONNECTOR.md), [tutorial 23](docs/tutorials/23-computed-panels.md)):** a connector
+  may compute its answer. The built-in plugin `reactive` (in `drishti-compute`) reads a connector file's computation: kinds with typed
+  `params:` (int, decimal, text, scope, bool, enum, date, sandbox-ref; defaults, allowed values, bounds, refused in words), `reads:`
+  (inputs read through the normal routing **as the person asking**, masks applied; a later read may take its ids from an earlier one),
+  `engine:` (a Python engine in a compute pool, cut over every worker of the pool and its Drishti\*net peers with `split` and added up
+  with `reduce`; or a Java `ComputeEngine` in the server: Drishti's own always, others with `compute.in-process-java: true`),
+  `result:` rules, `triggers:` (`write-back`, `live`, `data-version`, `schedule`, with `affects:`), `coalesce:`, `cache:`, `limits:`. A
+  read authorises the viewer, checks the parameters, pins the inputs' data versions, keys the answer with the viewer's view signature (two
+  people with different rights never share one), answers from the cache or joins the computation under way (single flight), admits by
+  class and per person, computes with progress, validates, stamps (pin, inputs, watermark, trigger, engine, where it ran, result hash)
+  and audits (`compute.answer`). Triggers mark results stale and recompute those somebody watches, coalesced (quiet window, maximum wait,
+  one more for what arrived meanwhile), ordered by watermark (a late older result is dropped), each event once. Private what-if
+  sandboxes (`sbx-…`, frozen copies to share). The SPI is in `drishti-api` (`com.ash.drishti.api.compute`). **On a screen:** a panel's
+  `source:` takes `params:` (expressions, evaluated as the viewer; lint `DRS-2012`, `DRS-2057`); the panel is never blank: *computing*
+  with a progress bar from the live channel (`compute:<request>`), filled in place when the result lands; *stale* in amber; *failed* or
+  *refused* in words; the other panels unaffected; live views rebuild as their viewer; charts in a panel swapped in are drawn. **HTTP and
+  CLI:** `POST /api/v1/compute/{connector}/{kind}`, a request's events to its owner only, cancel, `POST /api/v1/compute/events`
+  (administrators; the write-back hook), sandboxes, `GET /api/v1/admin/compute/reactive`; `drishti.py compute run|cancel|event|sandboxes|reactive`.
+  Connector files, pack templates and the form keep a reactive connector's computation. **The sample:** the `compute-demo` pack
+  (synthetic P&L strips; not loaded by default) computes a book's path with the sample Python engine (`PathSumEngine`, new in the SDK)
+  and its Java twin, the same number. **Measured:** a cache hit 4.7 µs inside the connector, a miss with a trivial engine 47 µs, a miss
+  through a Python worker 2.3 ms; a computed panel from the cache 2.7 ms through the server, the same as a plain panel. Not yet:
+  per-event impacts (W6/V5), the disk cache, one as-of per screen (R5), the cluster (R6). Tests: `ReactiveConnectorTest`,
+  `PythonBridgeTest`, `ReactiveOverheadTest`, `ReactiveApiTest`, `SutraWiringTest`, `ConnectorFilesTest`, `test_compute_panels.py`, `test_reactive_panels_browser.py`,
+  `tools/test_computecli.py`.
 - **Banks in the public-data packs:** us-equities gains three lists kept by Drishti (`LISTS` in
   `tools/packgen/us_equities/fetch.py`): `IDX BANKS-US` (39 major US banks), `IDX BANKS-CA` (RBC, TD, Scotiabank, BMO, CIBC,
   VersaBank) and `IDX BANKS-UK` (HSBC, Barclays, Lloyds, NatWest). A foreign filer's annual report (20-F, 40-F) and IFRS tags are

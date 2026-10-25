@@ -15,8 +15,10 @@
 -->
 # Reactive connectors: data that is computed when it is asked for, and again when the world changes
 
-Status: **design, not built.** Planned for **2.8.0** (product owner, 2026-10-24). Everything named below that does not exist in
-the code today (settings, files, endpoints, Java and Python types, kinds) is **planned (2.8.0)**. Related designs:
+Status: **R1 to R4 built (2.8.0, unreleased); R5 and R6 planned.** Designed with the product owner (2026-10-24). What is built, and
+where it differs from the design below, is in [section 21](#21-as-built-r1-to-r4); the reference for people who write and run reactive
+connectors is [REACTIVE_CONNECTOR.md](../connectors/REACTIVE_CONNECTOR.md) and [tutorial 23](../tutorials/23-computed-panels.md).
+Everything named below that section 21 does not list as built is **planned**. Related designs:
 [PYTHON_COMPUTE.md](PYTHON_COMPUTE.md) (the workers that run the computations, `requires:` and approval),
 [VAR_ENGINE.md](VAR_ENGINE.md) (the first reactive connector: a generic VaR engine), [WRITE_BACK.md](WRITE_BACK.md) (a saved change
 can trigger a computation), [SUTRA_NEXT.md](SUTRA_NEXT.md) (screens that read many sources), [LIVE.md](LIVE.md) (how results reach
@@ -44,6 +46,8 @@ the screen), [CONNECTOR_DEVELOPER_GUIDE.md](../connectors/CONNECTOR_DEVELOPER_GU
 18. [Build plan](#18-build-plan)
 19. [Tests](#19-tests)
 20. [Open questions for the product owner](#20-open-questions-for-the-product-owner)
+21. [As built: R1 to R4](#21-as-built-r1-to-r4)
+22. [How the VaR engine plugs in](#22-how-the-var-engine-plugs-in)
 
 ---
 
@@ -612,12 +616,12 @@ The worker pools themselves are configured once per site, in the planned (2.8.0)
 
 | Step | Delivers | Accepted when |
 |---|---|---|
-| R1 | the `reactive` plugin and `ComputeEngine` SPI; typed `params:` on `source:` (lint, view model); the compute request, key, pin and stamp; cache and single flight on one node; an **in-process Java** test engine | a panel reads a computed kind with params; two panels asking the same key cause one computation; a new data version gives a new key |
-| R2 | the worker bridge to the Python pool ([PYTHON_COMPUTE.md](PYTHON_COMPUTE.md) steps C1–C3); progress on the live channel; per-panel states | a Python engine computes a result for a panel, with *computing N%* shown, and a crash shows `failed` in that panel only |
-| R3 | triggers: `write-back`, `live`, `data-version`, `schedule`; `affects:`; coalescing; ordering by watermark; dedupe | 200 events for one key in a second cause at most 2 computations; an older result never replaces a newer; a redelivered event is ignored |
-| R4 | isolation: view signatures in keys, per-recipient masks on push, per-event impacts, private sandboxes | the two-traders test of [section 19](#19-tests) passes |
-| R5 | `consistency: snapshot` and `freshest`; *Newer data · Update all* | a screen of five panels on three connectors shows one pin; an applied edit offers *Update all* and re-pins all panels together |
-| R6 | Drishti\*net: key owners, forwarding, cluster single flight, trigger routing; Admin → Compute; audit; circuit and quarantine | three nodes, one key requested on each at once: one computation; a node killed mid-computation: the next read recomputes on the new owner |
+| R1 (**built**) | the `reactive` plugin and `ComputeEngine` SPI; typed `params:` on `source:` (lint, view model); the compute request, key, pin and stamp; cache and single flight on one node; an **in-process Java** test engine | a panel reads a computed kind with params; two panels asking the same key cause one computation; a new data version gives a new key |
+| R2 (**built**) | the worker bridge to the Python pool ([PYTHON_COMPUTE.md](PYTHON_COMPUTE.md) steps C1–C3); progress on the live channel; per-panel states | a Python engine computes a result for a panel, with *computing N%* shown, and a crash shows `failed` in that panel only |
+| R3 (**built**; `write-back` through the events API until W6) | triggers: `write-back`, `live`, `data-version`, `schedule`; `affects:`; coalescing; ordering by watermark; dedupe | 200 events for one key in a second cause at most 2 computations; an older result never replaces a newer; a redelivered event is ignored |
+| R4 (**built**, except per-event impacts: W6/V5) | isolation: view signatures in keys, per-recipient masks on push, per-event impacts, private sandboxes | the two-traders test of [section 19](#19-tests) passes |
+| R5 (planned) | `consistency: snapshot` and `freshest`; *Newer data · Update all* | a screen of five panels on three connectors shows one pin; an applied edit offers *Update all* and re-pins all panels together |
+| R6 (planned) | Drishti\*net: key owners, forwarding, cluster single flight, trigger routing; Admin → Compute; audit; circuit and quarantine | three nodes, one key requested on each at once: one computation; a node killed mid-computation: the next read recomputes on the new owner |
 
 ## 19. Tests
 
@@ -648,3 +652,62 @@ The worker pools themselves are configured once per site, in the planned (2.8.0)
 5. **Limits.** Are 5 million positions per interactive request and 4 in-flight requests per user the right starting limits?
 6. **In-process Java engines.** Allow trusted, light Java engines inside the server process (with their own classloader), or require
    every engine to run in a worker?
+
+## 21. As built: R1 to R4
+
+Built for 2.8.0 (unreleased), on the compute workers C1 to C3 ([PYTHON_COMPUTE.md](PYTHON_COMPUTE.md)). The reference is
+[REACTIVE_CONNECTOR.md](../connectors/REACTIVE_CONNECTOR.md); the sample is the `compute-demo` pack (not loaded by default).
+
+| Part | As built | Where |
+|---|---|---|
+| SPI | `ComputeEngine`, `EngineManifest`, `EngineRequest`, `EngineInputs` (documents by input name), `EngineResult` (rows, tables, meta), `EngineProgress`, `EngineException`, `ComputeEvent`, `Viewer`, `ComputeRef` (the id with its parameters). The names differ from section 16.1 (`Engine…` rather than `Compute…`) so they do not clash with drishti-compute's worker types | `drishti-api`, `com.ash.drishti.api.compute` |
+| Plugin | `reactive` (built-in, `ReactiveSourcePlugin`), `ReactiveConnector` (the lifecycle), `ReactiveSpec`, `ParamSpec`, `ResultCache`, `Coalescer`, `SeenEvents`, `Watermark`, `Triggers`, `Sandboxes`, `RequestEvents`, `ReactiveHub` (the host the server installs) | `drishti-compute`, `com.ash.drishti.compute.reactive` |
+| Connector file | the design's keys at the top level (`mode`, `kinds` with `params`, `reads`, `engine`, `triggers`, `coalesce`, `cache`, `limits`, `history`, `incremental`); refused on any other plugin. Added: `kinds.<k>.compute` (the engine's name for the kind), `engine.split`/`chunk-rows`/`reduce` (fan-out), `engine.version`, `limits.wait`, `limits.max-input-rows`, `limits.dedupe-window` (the design's `triggers.dedupe-window`), `reads[].ids` and `{inputs.<as>.<FIELD>}` (a read takes its ids from an earlier one) | `ConnectorFiles` |
+| Templates | single braces: `{id}`, `{params.x}`, `{inputs.book.MEMBERS}`, `{payload.BOOK_ID}`, `{entity}`; `${NAME}` stays an environment variable | `Templates` |
+| Result rules | `result: { required, types, max-rows }` instead of a JSON schema file (`result.schema`: planned) | `Results` |
+| Parameters on a panel | `source: { kind, id, params: { name: expression } }`, only with `id`; lint `DRS-2012` (shape) and `DRS-2057` (not with `where`/`search`); evaluated as the viewer (a masked value: *not available to your role*) into the id `ID~name=value` | `WiringReader`, `ScreenWire` |
+| Panel states | `ready`, `computing` (progress), `stale`, `failed`, `refused` in the view model (`PanelView.compute`) and drawn in place; the console follows `compute:<request>` on the live channel and fetches the panel again when it is done or updated | `ViewModel`, `panels.html`, `compute.js` |
+| Lifecycle | authorise (the viewer's kinds), parameters, pin (the read kinds' data versions and the sandbox version), key (with the view signature: a hash of the roles and the embedding app, `Principal.securitySignature`), cache, single flight, admission (per-user in-flight; the pool's fair queue), inputs read and masked as the viewer, engine, progress, validate, stamp (`STAMP`: pin, inputs, watermark, trigger, engine, where it ran, signature, result hash), cache, audit (`compute.answer`, `compute.failed`) | `ReactiveConnector` |
+| Engines | Python in a compute pool (Arrow in and out; fan-out over every worker of the pool and its peers with `split` and `reduce`); Java in the server (Drishti's own always; others with `compute.in-process-java: true`) | `PythonRunner`, `JavaRunner` |
+| Triggers | `write-back` and any event through `POST /api/v1/compute/events` (administrators) and `ReactiveHub.publish` (the write-back module's hook, W6); `live`: the entities of its kinds a watched computation read are followed, a new generation recomputes the results that read them; `data-version`: the load signal and a check every 30 s; `schedule`: `cron` (Spring's six fields) or `every`. `affects`: `all`, `subscribed`, id templates, or an expression a Java engine answers. Coalescing, watermark ordering, dedupe as designed | `Triggers`, `Coalescer` |
+| Isolation | request ids per read, events to the owner only, view signature in keys, inputs masked per viewer, a recomputed result read again by each watcher through their own view, private sandboxes (`sbx-…`, frozen copies), live views rebuilt on behalf of their viewer | `RequestEvents`, `ViewerExecutor` |
+| HTTP and CLI | `POST /api/v1/compute/{connector}/{kind}`, `GET …/requests/{id}/stream`, `DELETE …/requests/{id}`, `POST …/events`, sandboxes, `GET /api/v1/admin/compute/reactive`; `drishti.py compute` `run`, `cancel`, `event`, `sandboxes`, `reactive` | `ReactiveController`, `tools/computecli.py` |
+
+**Not built yet:** per-event impacts for each submitter (section 9.2, with W6 and V5); the result cache on disk (`cache.store: disk`);
+`consistency:` and *Update all* (R5); key owners, forwarding, cluster single flight, quarantine and the circuit (R6); a JSON schema file
+per kind; a `compute` power (any role that may open the kind may compute it); the designer's awareness of parameters (a source with
+`params:` is kept as written).
+
+**Measured** (a workstation, 2026-10-25; `ReactiveOverheadTest`, `PythonBridgeTest` and the compute-demo screen): a cache hit inside the
+connector 4.7 µs at p50 (p99 9.6 µs); a miss with an engine that does nothing 47 µs (p99 183 µs); a miss through a Python worker (fork,
+trivial engine) 2.3 ms; through the server, one computed panel from the cache 2.7 ms, the same as a plain panel (2.6 ms); the
+compute-demo book screen, two computed sources and two 250-point charts, 5.0 ms. A panel never waits longer than `limits.wait`.
+
+## 22. How the VaR engine plugs in
+
+The VaR engine ([VAR_ENGINE.md](VAR_ENGINE.md), steps V0 to V3) becomes the `var-engine` reactive connector (R5/V4) without new
+machinery:
+
+1. **The file.** `config/connectors/var-engine.yaml` with `plugin: reactive`, the kinds of section 5 (`var-result`, `var-contribution`,
+   `var-path`, `var-history`, `what-if`) and their `params:` (`scope` as `type: scope`, `confidence` as `decimal` with `allowed`,
+   `horizon` as `int`, `method` as `enum`, `whatif` as `sandbox-ref`), and `result:` rules (`required: [VAR, ES]`).
+2. **The engine, either of two ways.**
+   - *Java, in the server* (the vector store is Java): a class implementing `ComputeEngine` in `com.ash.drishti…` (so it may run in
+     process), `engine: { type: java, class: …VarComputeEngine }`, with **no `reads:`**: the VaR builder's in-memory vector store is its
+     input, and it must read it **for `request.viewer()`** (the entitlement filter of VAR_ENGINE.md section 12) and **for
+     `request.asOf()`**. `compute` aggregates the scope's vectors and answers `VAR`, `ES` and the path as a table; `incremental`
+     applies a write-back's `delta` vector (`ComputeEvent.payload`); `affected(event, "scopes_of(trade.TT_BOOK)")` returns the book and
+     its ancestors' scope ids from the hierarchy. The vector store's version for the date goes into the pin through `dataVersion` of
+     the kind it serves (`pnl-vector`), so a new load is a new key.
+   - *Python, in a pool* (`compute/drishti-var`): `engine: { type: python, entry: drishti_var.connector:VarEngine, pool: risk }` with
+     `reads: [{ kind: pnl-vector, as: vectors, ids: "{inputs.scope.MEMBERS}" }]` after a read of the scope's members; vectors arrive as
+     fixed-size Arrow vectors; `split: vectors` and `reduce: { tables: { path: [PNL] }, then: { VAR: … } }` spread a bank-wide scope over
+     every worker. Its `requires:` locks numpy and the package and waits for approval.
+3. **What-if.** A `sandbox-ref` parameter names the trader's private sandbox; its items (the hypothetical trades) reach the engine as the
+   input `sandbox`; the key holds the owner, so it is never shared. Pricing those items is C4/C5 (QLRisk) or C6 (QuantLib Java).
+4. **Triggers.** `{ on: write-back, kinds: [trade], affects: "scopes_of(trade.TT_BOOK)", recompute: [var-result, var-contribution] }`
+   (W6 publishes `edit.applied` to `ReactiveHub.publish`), `{ on: data-version, kinds: [pnl-vector], affects: all }`, and a schedule.
+5. **Screens.** The explorer's panels name the kinds with `source: { kind: var-result, id: "'DESK:' + $.DESK_ID", params: { confidence:
+   ctl.confidence } }` and get the computing, stale, failed and refused states for free. The pack routes `var-result: var-engine` beside
+   `pnl-vector: <its store>`.
+

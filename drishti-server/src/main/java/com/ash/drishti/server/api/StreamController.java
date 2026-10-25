@@ -125,7 +125,8 @@ public class StreamController {
         FrameMailbox box = new FrameMailbox();
         ViewStream stream;
         try {
-            stream = new ViewStream(ref, initial, chartSources(initial), hub, pipeline, executor, metrics, f -> {
+            stream = new ViewStream(ref, initial, chartSources(initial), hub, pipeline,
+                    com.ash.drishti.server.compute.ViewerExecutor.of(executor, principal), metrics, f -> {   // rebuilds act for this viewer (computed panels)
                 if (f.patches().stream().anyMatch(p -> "deleted".equals(p.op()))) {
                     recents.forget(ref);              // the command line stops offering a deleted entity as recent
                 }
