@@ -131,6 +131,40 @@ class PythonBridgeTest {
         }
     }
 
+    @Test
+    void theOverheadOfAMissThroughAWorker() throws Exception {
+        assumeTrue(TestCompute.python() != null, "no Python 3.10+ to run workers with");
+        String yaml = "compute:\n  enabled: true\n  pools:\n    sample:\n      engines: [" + TestCompute.VECTORS + "]\n      workers: { min: 2, max: 2 }\n";
+        ScheduledExecutorService sched = Executors.newScheduledThreadPool(1);
+        try (ComputeService compute = TestCompute.service(TestCompute.settings(dir, yaml), dir)) {
+            FakeHost host = new FakeHost();
+            host.compute = compute;
+            ReactiveHub hub = new ReactiveHub();
+            hub.install(host, dir);
+            ReactiveSpec echo = ReactiveSpec.parse("""
+                    {"mode":"reactive","kinds":{"echo":{"params":{"n":{"type":"int","default":0}}}},
+                     "engine":{"type":"python","entry":"drishti_compute.samples.vectors:VectorEngine","pool":"sample"},"limits":{"wait":"20s"}}
+                    """, "e.yaml", x -> x);
+            ReactiveConnector c = new ReactiveConnector("echo", echo, new PythonRunner(() -> compute, echo.engine(), null), hub, sched, Clock.systemUTC()).start();
+            Viewer v = new Viewer("asha", List.of(), "vs");
+            long[] ns = new long[100];
+            for (int i = -10; i < ns.length; i++) {
+                long t = System.nanoTime();
+                Answer a = c.answer(new ReactiveConnector.Ask("echo", "X~n=" + (i + 1000), AsOf.LATEST, v, RequestClass.INTERACTIVE, Duration.ofSeconds(20)));
+                assertThat(a.state()).as(a.message()).isEqualTo(Answer.READY);
+                if (i >= 0) {
+                    ns[i] = System.nanoTime() - t;
+                }
+            }
+            java.util.Arrays.sort(ns);
+            System.out.printf("reactive overhead: a miss through a Python worker (echo, fork mode) p50 %.1f ms, p95 %.1f ms%n", ns[49] / 1e6, ns[94] / 1e6);
+            assertThat(ns[49]).isLessThan(2_000_000_000L);
+            c.close();
+        } finally {
+            sched.shutdownNow();
+        }
+    }
+
     private static Map<String, Object> answer(ReactiveHub hub, ScheduledExecutorService sched, String name, ReactiveSpec spec, EngineRunner runner, Viewer v)
             throws Exception {
         ReactiveConnector c = new ReactiveConnector(name, spec, runner, hub, sched, Clock.systemUTC()).start();
