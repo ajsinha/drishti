@@ -32,6 +32,10 @@
   entity's (`DE`) are shown as data instead of a *Country* link to a jurisdiction that does not exist (the 2.7.0 known open item); the
   entity's country is its `LEI_COUNTRY`, which opens the gleif country. The BI layer's declared links and dataset references honour the
   scope too.
+- **Flaky designer test fixed:** `test_designer_drag_a_field_makes_the_best_visual_and_another_field_improves_it` sometimes made a card
+  of Notional instead of MTM: the line naming the reports a model affects lands in the Fields pane after the designer says it is ready
+  and moves the field list down a row, so a drag started at once picked the field above. The Fields pane now says when it is still
+  (`data-fields-settled="yes"` on `.bi-pane-fields`), and the designer tests wait for it before dragging.
 
 ## 2.7.0 — Sutra Next: the UI kit, events and children across packs, refresh, layout, forms and the four-mode Sutra designer; the us-equities and gleif packs (2026-10-24)
 
