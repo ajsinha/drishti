@@ -20958,6 +20958,81 @@ datasets:
     files:
     - changes-2026-09-30.jsonl.gz
     bytes: 20
+- folder: market-risk/risk-hierarchy
+  pack: market-risk
+  kind: risk-hierarchy
+  connector: risk-store
+  key: NODE_ID
+  dated-by: BUSINESS_DATE
+  first-date: '2026-09-30'
+  last-date: '2026-09-30'
+  documents: 88
+  files:
+  - cob-2026-09-30.jsonl.gz
+  bytes: 2135
+- folder: market-risk/scenario-set
+  pack: market-risk
+  kind: scenario-set
+  connector: risk-store
+  key: SCENARIO_SET_ID
+  dated-by: BUSINESS_DATE
+  first-date: '2026-09-30'
+  last-date: '2026-09-30'
+  documents: 1
+  files:
+  - cob-2026-09-30.jsonl.gz
+  bytes: 1399
+- folder: market-risk/position
+  pack: market-risk
+  kind: position
+  connector: risk-store
+  key: POSITION_ID
+  dated-by: BUSINESS_DATE
+  first-date: '2026-09-30'
+  last-date: '2026-09-30'
+  documents: 196
+  files:
+  - cob-2026-09-30.jsonl.gz
+  bytes: 40841
+- folder: market-risk/pnl-vector
+  pack: market-risk
+  kind: pnl-vector
+  connector: risk-store
+  key: VECTOR_ID
+  dated-by: BUSINESS_DATE
+  first-date: '2026-09-30'
+  last-date: '2026-09-30'
+  documents: 1673
+  files:
+  - cob-2026-09-30.part-001.jsonl.gz
+  - cob-2026-09-30.part-002.jsonl.gz
+  bytes: 2204413
+- folder: market-risk/var-node
+  pack: market-risk
+  kind: var-node
+  connector: risk-store
+  key: VAR_NODE_ID
+  dated-by: BUSINESS_DATE
+  first-date: '2025-10-01'
+  last-date: '2026-09-30'
+  documents: 22000
+  files:
+  - history-2025-10-01-to-2026-09-30.part-001.jsonl.gz
+  - history-2025-10-01-to-2026-09-30.part-002.jsonl.gz
+  - history-2025-10-01-to-2026-09-30.part-003.jsonl.gz
+  bytes: 829559
+- folder: market-risk/portfolio
+  pack: market-risk
+  kind: portfolio
+  connector: risk-store
+  key: PORTFOLIO_ID
+  dated-by: BUSINESS_DATE
+  first-date: '2026-09-30'
+  last-date: '2026-09-30'
+  documents: 7
+  files:
+  - cob-2026-09-30.jsonl.gz
+  bytes: 10665
 - samples: config/packs/world-economy/samples
   pack: world-economy
   kind: country-group

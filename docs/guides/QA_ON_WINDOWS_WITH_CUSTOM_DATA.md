@@ -222,7 +222,7 @@ shows CALYPSO, MUREX and ENDUR together.
 2. Press ▶ (Run).
 
 You should see, after about a minute: the Run window ends with what to start next; `data\delta` now holds the folders
-`trading`, `reference`, `legal`, `collateral`, `credit`, `risk`, `market`, `macro`, `news`, `civic`, `us-equities` and `gleif` (77 tables). This includes the quotes and news snapshot,
+`trading`, `reference`, `legal`, `collateral`, `credit`, `risk`, `market`, `macro`, `news`, `civic`, `us-equities` and `gleif` (83 tables). This includes the quotes and news snapshot,
 the world economy data and the us-equities and gleif public data.
 
 Terminal instead (one line, from any folder):

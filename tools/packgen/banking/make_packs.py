@@ -33,6 +33,7 @@ import sutras as TS  # noqa: E402  (tools/packgen/trades: the production-shaped 
 import calc_snippets
 import layout
 import taxonomy as T
+import var_kinds as VK  # the VaR engine's kinds in the market-risk pack (positions, portfolios, P&L vectors, hierarchies)
 
 ROOT = Path(__file__).resolve().parents[3]
 PACKS = ROOT / "config" / "packs"
@@ -157,6 +158,9 @@ STRIP_PATH = re.compile(r"\$\.([A-Za-z_][A-Za-z0-9_]*)")
 def forms(name: str, kinds: list[str], specs: dict) -> dict:
     out = {}
     for k in kinds:
+        if k in VK.KINDS:                             # the VaR engine's kinds: their key columns
+            out[k] = PF.form_from_columns(VK.FORM_COLUMNS[k], VK.KINDS[k][3])
+            continue
         if k in TS.DERIVED:                           # a derived kind: its fields are the connector's aggregates
             out[k] = [_f(TS.DERIVED[k][3], "id", TS.DERIVED[k][1]), _f("TRADE_COUNT", "number", "Trades"), _f("NOTIONAL", "amount", "Notional"),
                       _f("LAST_MATURITY", "date", "Last maturity")]
@@ -218,12 +222,14 @@ def manifest(name: str) -> dict:
                                                             "user-agent": "${drishti.branding.product:feed} public data feed connector",
                                                             "stale-after": "4d",   # daily feeds: covers a weekend and a holiday
                                                             "refresh-minutes": 60, **extra}}
+    if name == "market-risk":
+        add_var_kinds(m)
     if name in COLUMNS:
         m["columns"] = COLUMNS[name]
     if name in PIVOTS:
         m["pivot"] = PIVOTS[name]
     m["form"] = forms(name, m["kinds"], specs)
-    m["console"] = {"examples": [list(e) for e in EXAMPLES[name]], "help": "config/help.yaml"}
+    m["console"] = {"examples": [list(e) for e in EXAMPLES[name] + (VK.EXAMPLES if name == "market-risk" else [])], "help": "config/help.yaml"}
     if calc_snippets.SNIPPETS.get(name):    # Calc on the pack's kinds, with its snippets under python/ (calc_snippets.py)
         m["python"] = {"enabled": True}
     if name in IMPACT:
@@ -233,6 +239,22 @@ def manifest(name: str) -> dict:
     if not m["graph"]["badges"]:
         del m["graph"]["badges"]
     return m
+
+
+def add_var_kinds(m: dict) -> None:
+    """The VaR engine's kinds (var_kinds.py) in the market-risk manifest: kinds, mnemonics, ids, links, badges, the risk-store's tables
+    (with the P&L vector columns) and routes, and two examples."""
+    store = m["connectors"]["risk-store"]
+    store["settings"] = {**store["settings"], "layout": {**store["settings"].get("layout", {}), **VK.LAYOUT}}
+    for k, (mnem, label, pattern, _id) in VK.KINDS.items():
+        m["kinds"].append(k)
+        m["mnemonics"][mnem] = {"kind": k, "label": label}
+        m["graph"]["id-patterns"].append({"pattern": pattern, "kind": k})
+        store["kinds"].append(k)
+        m["routes"][k] = "risk-store"
+        if k in VK.BADGES:
+            m["graph"]["badges"][k] = VK.BADGES[k]
+    m["graph"]["fields"] = dict(sorted({**m["graph"]["fields"], **{f: {"kind": k, "label": lab} for f, (k, lab) in VK.FIELDS.items()}}.items()))
 
 
 def body_of(src: Path) -> str:

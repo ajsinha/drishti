@@ -118,6 +118,10 @@ class TestData(unittest.TestCase):
             if "snapshot" in ds:
                 self.assertTrue((TD / ds["folder"] / ds["snapshot"]).is_file(), ds)
                 continue
+            if ds.get("dated-by"):                          # the VaR data: dated by its documents, within the test data's days or before
+                self.assertEqual(sorted(f.name for f in (TD / ds["folder"]).glob("*.jsonl.gz")), sorted(ds["files"]), ds["folder"])
+                self.assertLessEqual(ds["last-date"], self.dates[-1], ds["folder"])
+                continue
             folder = TD / ds["folder"]
             self.assertTrue(list(folder.glob(f"snapshot-{self.dates[0]}*.jsonl.gz")), ds["folder"])
             for day in self.dates[1:]:
@@ -159,7 +163,8 @@ class TestData(unittest.TestCase):
         for ds in self.m["datasets"]:
             if "folder" not in ds:
                 continue
-            f = TD / ds["folder"] / ds["snapshot"] if "snapshot" in ds else sorted((TD / ds["folder"]).glob(f"snapshot-{self.dates[0]}*.jsonl.gz"))[0]
+            f = TD / ds["folder"] / ds["snapshot"] if "snapshot" in ds else TD / ds["folder"] / ds["files"][0] if ds.get("dated-by") \
+                else sorted((TD / ds["folder"]).glob(f"snapshot-{self.dates[0]}*.jsonl.gz"))[0]
             for n, d in enumerate(lines(f)):
                 bad = sorted({k for k in names(d) if not UPPER.match(k)})
                 self.assertEqual(bad, [], f"{ds['folder']}: {bad[:5]}")

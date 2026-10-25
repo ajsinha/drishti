@@ -44,6 +44,7 @@ import data_results
 import data_trades
 import layout
 import taxonomy as T
+import var_kinds as VK  # noqa: E402  (the VaR kinds: their samples are written by tools/packgen/var/make_var_data.py)
 import convert as TC  # noqa: E402  (tools/packgen/trades: the common trade schema every source system writes)
 import endur as TE  # noqa: E402
 import schema as TSCHEMA  # noqa: E402
@@ -242,6 +243,8 @@ def main() -> None:
     files = sample_files(docs)
     targets = [PACKS / p / "samples" for p in layout.PACKS]
     existing = {f for t in targets if t.exists() for f in t.rglob("*.json*")}    # the JSONL files, and any older <kind>/<id>.json
+    # the VaR engine's reference samples are tools/packgen/var/make_var_data.py's (from the committed test data), not this generator's
+    existing = {f for f in existing if not (f.parent == PACKS / "market-risk" / "samples" and f.name.split(".")[0] in VK.KINDS)}
     if "--check" in sys.argv:
         stale = [str(f) for f, t in files.items() if not f.exists() or f.read_text(encoding="utf-8") != t] + TT.stale(docs["trade"])
         extra = [str(f) for f in existing - set(files)]

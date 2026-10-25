@@ -21,7 +21,8 @@
 
 One folder per dataset: trades/endur, trades/calypso, trades/murex (5,000 trades each, the common 47-attribute UPPER_SNAKE schema),
 then <pack>/<kind> for every kind of core, market-data, counterparty-risk and market-risk (universe.py). Each folder holds the first
-day's snapshot and each later day's changes (history.py). world-economy and news-and-markets are static reference data already in the
+day's snapshot and each later day's changes (history.py); the market-risk pack's VaR data (positions, P&L vectors, hierarchies, the
+nodes' 250-day history, portfolios) is dated by its documents instead (``dated-by``, tools/packgen/var/make_var_data.py). world-economy and news-and-markets are static reference data already in the
 repository (their packs' samples), so the manifest points at them instead of copying them. The news-and-markets pack's quotes and
 headlines are a real snapshot captured by capture_market.py (data/testdata/news-and-markets/, kept here and listed as they are), and
 so are the us-equities and gleif packs' public data (data/testdata/us-equities/, data/testdata/gleif/: written by their generators,
@@ -125,6 +126,11 @@ def main(argv=None) -> int:
         folder = f"{pack}/{kind}"
         hist = H.DatasetHistory(out / folder, key, days).write(H.doc_states(kind, docs, days, since, members, market))
         datasets.append({"folder": folder, "pack": pack, "kind": kind, "connector": connector, "key": key, **hist})
+    # the VaR engine's data (positions netting the trades just written, a P&L vector per trade, hierarchies, the nodes' history,
+    # portfolios): tools/packgen/var/make_var_data.py, dated by its documents
+    sys.path.insert(0, str(ROOT / "tools" / "packgen" / "var"))
+    import make_var_data as VD  # noqa: E402
+    datasets += VD.write(out, VD.Demo(out, days.dates), with_samples=out.resolve() == (ROOT / "data" / "testdata").resolve())
     for pack in FROM_SAMPLES:
         for kind, (pk, connector) in sorted(owners.items()):
             if pk == pack and has_samples(pack, kind):

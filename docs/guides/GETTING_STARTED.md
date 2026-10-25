@@ -215,7 +215,7 @@ is your clone's):
   news/listed-company: … rows over 60 days
   news/news-topic: … rows over 60 days
 
-Demo lake ready: …/drishti/data/delta: 77 tables, 60 business days 2026-07-08 to 2026-09-30, built in 943 s
+Demo lake ready: …/drishti/data/delta: 83 tables, 60 business days 2026-07-08 to 2026-09-30, built in 943 s
 Feeds: …/drishti/data/feeds/fixing/SOFR-HISTORY.csv (the file connector's sample feed)
 Server: no server at http://localhost:18480: left …/drishti/data/bi-store/lake-rebuilt.json, so a server clears its stored BI columns and rollups at its next start
 Connector files:
@@ -722,7 +722,7 @@ Make the console's Python first (step 5 below makes it on its first run, or by h
 drishti-console\.venv\Scripts\python.exe tools\drishti.py lake demo
 ```
 
-It writes the same 77 tables under `data\delta` as on Linux (sixty business days ending today's business date). The older
+It writes the same 83 tables under `data\delta` as on Linux (sixty business days ending today's business date). The older
 `.\tools\windows\load-delta.ps1` still writes the packs' samples as ten days of history (`tools/packgen/banking/make_data.py
 --lake`), without the multi-source trade tables; use `lake demo`.
 

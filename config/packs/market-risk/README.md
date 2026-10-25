@@ -27,6 +27,12 @@ kinds:
 - frtb-sensitivity
 - pnl-explain
 - trade-valuation
+- position
+- portfolio
+- pnl-vector
+- scenario-set
+- risk-hierarchy
+- var-node
 commands:
   VAR: var
   SCN: stress-scenario
@@ -34,6 +40,12 @@ commands:
   FRTB: frtb-sensitivity
   PNL: pnl-explain
   TVAL: trade-valuation
+  POS: position
+  PORT: portfolio
+  PNLV: pnl-vector
+  SSET: scenario-set
+  HIER: risk-hierarchy
+  VNODE: var-node
   MRSK: pack overview
 depends-on:
   packs:
@@ -243,6 +255,242 @@ Fields, from 765 sample documents:
 
 Links: `COUNTERPARTY` → `counterparty`, `DESK` → `desk`, `PORTFOLIO` → `book`, `TRADER_ID` → `trader`, `TRADE_ID` → `trade`.
 
+### `position`
+
+**Position** · mnemonic `POS` · read through connector `risk-store`.
+
+**Id:** pattern `^POS-`.
+
+Fields, from 2 sample documents:
+
+| Field | Type | Example | Description |
+|---|---|---|---|
+| `POSITION_ID` | string | `POS-BOOK-EQD-2~EQ_ASIAN-USD-2029Q2` | link to `position` |
+| `BUSINESS_DATE` | date | `2026-09-30` | — |
+| `INSTRUMENT_ID` | string | `INS-EQ_ASIAN-USD-2029Q2` | — |
+| `INSTRUMENT` | string | `Equity Asian option USD 2029-04` | — |
+| `POSITION_TYPE` | string | `fungible` | — |
+| `DIRECTION` | string | `SHORT` | — |
+| `QUANTITY` | number | `-810529060.0` | — |
+| `GROSS_QUANTITY` | number | `7050772940.0` | — |
+| `TRADE_IDS` | list of strings |  | link to `trade` |
+| `TRADE_QUANTITIES` | list of objects |  | Nested: see below |
+| `TRADE_COUNT` | integer | `18` | — |
+| `LONG_TRADES` | integer | `9` | — |
+| `SHORT_TRADES` | integer | `9` | — |
+| `LEGAL_ENTITY` | string | `LE-LDN` | link to `legal-entity` |
+| `DIVISION` | string | `DIV-MARKETS` | — |
+| `DESK` | string | `DESK-EQD` | link to `desk` |
+| `TT_BOOK` | string | `BOOK-EQD-2` | link to `book` |
+| `PORTFOLIO` | string | `BOOK-EQD-2` | link to `book` |
+| `STRATEGY` | null |  | — |
+| `COUNTERPARTY` | null |  | link to `counterparty` |
+| `COUNTERPARTIES` | list of strings |  | — |
+| `PRODUCT_GROUP` | string | `Equity` | — |
+| `PRODUCT_TYPE` | string | `EQ_ASIAN` | — |
+| `CURRENCY` | string | `USD` | — |
+| `MARKET_VALUE` | integer | `83350636` | — |
+| `NOTIONAL` | integer | `7050772940` | — |
+| `LINEAR` | boolean | `true` | — |
+| `STATUS` | string | `open` | — |
+| `OPENED_ON` | date | `2024-10-10` | — |
+| `TAGS` | list or list of strings |  | — |
+| `VAR_99` | integer | `52808` | — |
+| `ES_975` | integer | `52234` | — |
+| `COMPONENT_VAR` | integer | `51216` | — |
+| `BOOK_VAR` | integer | `426663` | — |
+| `PCT_OF_BOOK_VAR` | number | `0.12` | — |
+| `SCENARIO_SET_ID` | string | `HS-509` | — |
+
+Nested structures:
+
+| Path | Fields |
+|---|---|
+| `TRADE_QUANTITIES[]` | `TRADE_ID` (string), `QUANTITY` (number), `DIRECTION` (string) |
+
+Links: `COUNTERPARTY` → `counterparty`, `DESK` → `desk`, `LEGAL_ENTITY` → `legal-entity`, `PORTFOLIO` → `book`, `POSITION_ID` → `position`, `TRADE_IDS` → `trade`, `TT_BOOK` → `book`.
+
+### `portfolio`
+
+**Portfolio** · mnemonic `PORT` · read through connector `risk-store`.
+
+**Id:** pattern `^PF-`.
+
+Fields, from 2 sample documents:
+
+| Field | Type | Example | Description |
+|---|---|---|---|
+| `PORTFOLIO_ID` | string | `PF-USD-RATES` | link to `portfolio` |
+| `NAME` | string | `USD rates exposure` | — |
+| `OWNER` | string | `group-risk` | — |
+| `TYPE` | string | `RULE` | — |
+| `DEFINITION` | object |  | Nested: see below |
+| `ROLLS_UP_TO` | object |  | Nested: see below |
+| `LIMIT_VAR` | integer | `1500000` | — |
+| `BUSINESS_DATE` | date | `2026-09-30` | — |
+| `VALID_FROM` | date | `2026-01-02` | — |
+| `VALID_TO` | null |  | — |
+| `SCENARIO_SET_ID` | string | `HS-509` | — |
+| `POSITION_COUNT` | integer | `8` | — |
+| `TRADE_COUNT` | integer | `60` | — |
+| `LONG_COUNT` | integer | `3` | — |
+| `SHORT_COUNT` | integer | `5` | — |
+| `GROSS_MV` | integer | `556442317` | — |
+| `NET_MV` | integer | `150429101` | — |
+| `VAR_99` | integer | `1001253` | — |
+| `ES_975` | integer | `978359` | — |
+| `LIMIT_USE` | number | `0.6675` | — |
+| `POSITIONS` | list of objects |  | Nested: see below |
+| `BY_PRODUCT` | list of objects |  | Nested: see below |
+| `BY_CURRENCY` | list of objects |  | Nested: see below |
+| `BY_DIRECTION` | list of objects |  | Nested: see below |
+| `TOP_CONTRIBUTORS` | list of objects |  | Nested: see below |
+| `ALL_TRADES` | null |  | — |
+
+Nested structures:
+
+| Path | Fields |
+|---|---|
+| `DEFINITION` | `RULE` (string), `MEMBERS` (list of objects) |
+| `ROLLS_UP_TO` | `KIND` (string), `ID` (string) |
+| `POSITIONS[]` | `POSITION_ID` (string), `INSTRUMENT` (string), `DIRECTION` (string), `QUANTITY` (number), `MARKET_VALUE` (integer), `CURRENCY` (string), `TT_BOOK` (string), `DESK` (string), `PRODUCT_GROUP` (string), `PRODUCT_TYPE` (string), `TRADES` (integer), `PARTIAL` (boolean), `VAR_99` (integer), `COMPONENT_VAR` (integer), `PCT_OF_VAR` (number) |
+| `BY_PRODUCT[]` | `KEY` (string), `POSITIONS` (integer), `NET_MV` (integer), `GROSS_MV` (integer), `COMPONENT_VAR` (integer) |
+| `BY_CURRENCY[]` | `KEY` (string), `POSITIONS` (integer), `NET_MV` (integer), `GROSS_MV` (integer), `COMPONENT_VAR` (integer) |
+| `BY_DIRECTION[]` | `KEY` (string), `POSITIONS` (integer), `NET_MV` (integer), `GROSS_MV` (integer), `COMPONENT_VAR` (integer) |
+| `TOP_CONTRIBUTORS[]` | `POSITION_ID` (string), `INSTRUMENT` (string), `DIRECTION` (string), `QUANTITY` (number), `MARKET_VALUE` (integer), `CURRENCY` (string), `TT_BOOK` (string), `DESK` (string), `PRODUCT_GROUP` (string), `PRODUCT_TYPE` (string), `TRADES` (integer), `PARTIAL` (boolean), `VAR_99` (integer), `COMPONENT_VAR` (integer), `PCT_OF_VAR` (number) |
+| `DEFINITION.MEMBERS[]` | `POSITION_ID` (string), `TRADE_ID` (string) |
+
+Links: `PORTFOLIO_ID` → `portfolio`.
+
+### `pnl-vector`
+
+**P&L vector (509 scenarios)** · mnemonic `PNLV` · read through connector `risk-store`.
+
+**Id:** pattern `^PV-`.
+
+Fields, from 1 sample document:
+
+| Field | Type | Example | Description |
+|---|---|---|---|
+| `VECTOR_ID` | string | `PV-MX-20000209-HS-509` | — |
+| `TRADE_ID` | string | `MX-20000209` | link to `trade` |
+| `POSITION_ID` | string | `POS-BOOK-EQD-2~EQ_ASIAN-USD-2029Q2` | link to `position` |
+| `INSTRUMENT_ID` | string | `INS-EQ_ASIAN-USD-2029Q2` | — |
+| `BUSINESS_DATE` | date | `2026-09-30` | — |
+| `SCENARIO_SET_ID` | string | `HS-509` | — |
+| `SOURCE_SYSTEM` | string | `MUREX` | — |
+| `TRADE_VERSIONS` | string | `v5` | — |
+| `LEGAL_ENTITY` | string | `LE-LDN` | link to `legal-entity` |
+| `DIVISION` | string | `DIV-MARKETS` | — |
+| `DESK` | string | `DESK-EQD` | link to `desk` |
+| `TT_BOOK` | string | `BOOK-EQD-2` | link to `book` |
+| `PORTFOLIO` | string | `BOOK-EQD-2` | link to `book` |
+| `STRATEGY` | null |  | — |
+| `PRODUCT_GROUP` | string | `Equity` | — |
+| `PRODUCT_TYPE` | string | `EQ_ASIAN` | — |
+| `CURRENCY` | string | `USD` | — |
+| `COUNTERPARTY` | string | `CP-KESTREL` | link to `counterparty` |
+| `DIRECTION` | string | `SHORT` | — |
+| `QUANTITY` | number | `-180000000.0` | — |
+| `REPORTING_CCY` | string | `USD` | — |
+| `PV` | integer | `-83827` | — |
+| `PNL` | list of integers |  | — |
+| `STATUS` | string | `ok` | — |
+| `PRICER` | string | `demo-factor-model` | — |
+| `MODEL_VERSION` | string | `demo-1` | — |
+| `COMPUTED_AT` | timestamp | `2026-09-30T22:30:00Z` | — |
+| `BATCH_ID` | string | `B-2026-09-30-01` | — |
+| `RESTATEMENT` | integer | `0` | — |
+
+Links: `COUNTERPARTY` → `counterparty`, `DESK` → `desk`, `LEGAL_ENTITY` → `legal-entity`, `PORTFOLIO` → `book`, `POSITION_ID` → `position`, `TRADE_ID` → `trade`, `TT_BOOK` → `book`.
+
+### `scenario-set`
+
+**Scenario set** · mnemonic `SSET` · read through connector `risk-store`.
+
+**Id:** pattern `^HS-`.
+
+Fields, from 1 sample document:
+
+| Field | Type | Example | Description |
+|---|---|---|---|
+| `SCENARIO_SET_ID` | string | `HS-509` | — |
+| `BUSINESS_DATE` | date | `2026-09-30` | — |
+| `SCENARIO_DATES` | list of dates |  | — |
+| `SCENARIO_COUNT` | integer | `509` | — |
+| `WINDOW_START` | date | `2024-09-17` | — |
+| `WINDOW_END` | date | `2026-09-29` | — |
+| `HORIZON_DAYS` | integer | `1` | — |
+| `REVALUATION` | string | `full` | — |
+| `WEIGHTS` | null |  | — |
+| `SOURCE_BATCH` | string | `B-2026-09-30-01` | — |
+| `DESCRIPTION` | string | `Historical simulation, 509 business days…` | — |
+
+### `risk-hierarchy`
+
+**Risk hierarchy node** · mnemonic `HIER` · read through connector `risk-store`.
+
+**Id:** pattern `^(MGMT|LEGAL)~`.
+
+Fields, from 2 sample documents:
+
+| Field | Type | Example | Description |
+|---|---|---|---|
+| `NODE_ID` | string | `LEGAL~LE-NY` | link to `risk-hierarchy` |
+| `HIERARCHY` | string | `LEGAL` | — |
+| `LEVEL` | string | `legal-entity` | — |
+| `PARENT_ID` | string | `LEGAL~BANK` | — |
+| `NAME` | string | `LE-NY` | — |
+| `REF` | object |  | Nested: see below |
+| `CHILDREN` | list of strings |  | — |
+| `BOOKS` | list of strings |  | — |
+| `LIMIT_VAR` | integer | `8500000` | — |
+| `BUSINESS_DATE` | date | `2026-09-30` | — |
+| `VALID_FROM` | date | `2026-01-02` | — |
+| `VALID_TO` | null |  | — |
+
+Nested structures:
+
+| Path | Fields |
+|---|---|
+| `REF` | `KIND` (string), `ID` (string) |
+
+Links: `NODE_ID` → `risk-hierarchy`.
+
+### `var-node`
+
+**Official VaR of a hierarchy node** · mnemonic `VNODE` · read through connector `risk-store`.
+
+**Id:** pattern `^VN-`.
+
+Fields, from 2 sample documents:
+
+| Field | Type | Example | Description |
+|---|---|---|---|
+| `VAR_NODE_ID` | string | `VN-MGMT~DESK-RATES` | — |
+| `NODE_ID` | string | `MGMT~DESK-RATES` | link to `risk-hierarchy` |
+| `HIERARCHY` | string | `MGMT` | — |
+| `LEVEL` | string | `desk` | — |
+| `NAME` | string | `Rates · Swaps and options` | — |
+| `PARENT_ID` | string | `MGMT~DIV-MARKETS` | — |
+| `BUSINESS_DATE` | date | `2026-09-29` | — |
+| `SCENARIO_SET_ID` | string | `HS-509` | — |
+| `VAR_99` | integer | `2938233` | — |
+| `ES_975` | integer | `3599094` | — |
+| `HYPO_PNL` | integer | `388197` | — |
+| `EXCEPTION` | boolean | `false` | — |
+| `PREVIOUS_VAR` | integer | `2919754` | — |
+| `LIMIT` | integer | `4200000` | — |
+| `LIMIT_USE` | number | `0.6996` | — |
+| `POSITION_COUNT` | integer | `24` | — |
+| `TRADE_COUNT` | integer | `172` | — |
+| `BATCH_ID` | string | `B-2026-09-29-01` | — |
+| `OFFICIAL` | boolean | `true` | — |
+| `PNL` | list of integers |  | — (in 50%) |
+| `EXCEPTIONS_250` | integer | `2` | — (in 50%) |
+
+Links: `NODE_ID` → `risk-hierarchy`.
+
 ## Screens and commands
 
 | Command | Kind | Opens |
@@ -253,6 +501,12 @@ Links: `COUNTERPARTY` → `counterparty`, `DESK` → `desk`, `PORTFOLIO` → `bo
 | `FRTB` | `frtb-sensitivity` | FRTB sensitivities |
 | `PNL` | `pnl-explain` | P&L explain |
 | `TVAL` | `trade-valuation` | Trade valuation |
+| `POS` | `position` | Position |
+| `PORT` | `portfolio` | Portfolio |
+| `PNLV` | `pnl-vector` | P&L vector (509 scenarios) |
+| `SSET` | `scenario-set` | Scenario set |
+| `HIER` | `risk-hierarchy` | Risk hierarchy node |
+| `VNODE` | `var-node` | Official VaR of a hierarchy node |
 | `MRSK` | — | The pack's overview: its kinds, how many each holds, an example of each |
 
 Examples:
@@ -263,6 +517,8 @@ Examples:
 | `STR STR-GFC2008-RATES` | Stress · 2008 crisis on the rates desk |
 | `PNL PNL-RATES-1` | P&L explain |
 | `FRTB FRTB-RATES-1` | FRTB sensitivities and charges |
+| `PORT PF-RATES-DESK` | Portfolio · its positions, longs and shorts, VaR and component VaR |
+| `PORT PF-ASHA-UNWIND` | A basket of positions and trades · overlaps the rates desk |
 
 Screens (Sutras):
 
@@ -289,7 +545,7 @@ The connectors it brings (written once to `config/connectors/<name>.yaml`, then 
 
 | Connector | Plugin | Kinds | Enabled |
 |---|---|---|---|
-| `risk-store` | `delta` | `var`, `stress-scenario`, `stress-result`, `frtb-sensitivity`, `pnl-explain`, `trade-valuation` | `${DRISHTI_LAKE_ENABLED:true}` |
+| `risk-store` | `delta` | `var`, `stress-scenario`, `stress-result`, `frtb-sensitivity`, `pnl-explain`, `trade-valuation`, `position`, `portfolio`, `pnl-vector`, `scenario-set`, `risk-hierarchy`, `var-node` | `${DRISHTI_LAKE_ENABLED:true}` |
 
 Settings (environment variables) its connectors read: `DRISHTI_DELTA_ROOT`, `DRISHTI_LAKE_ENABLED`.
 

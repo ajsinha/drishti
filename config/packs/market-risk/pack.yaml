@@ -29,6 +29,12 @@ kinds:
 - frtb-sensitivity
 - pnl-explain
 - trade-valuation
+- position
+- portfolio
+- pnl-vector
+- scenario-set
+- risk-hierarchy
+- var-node
 sutras: sutras
 formats: config/formats.yaml
 mnemonics:
@@ -50,6 +56,24 @@ mnemonics:
   TVAL:
     kind: trade-valuation
     label: Trade valuation
+  POS:
+    kind: position
+    label: Position
+  PORT:
+    kind: portfolio
+    label: Portfolio
+  PNLV:
+    kind: pnl-vector
+    label: P&L vector (509 scenarios)
+  SSET:
+    kind: scenario-set
+    label: Scenario set
+  HIER:
+    kind: risk-hierarchy
+    label: Risk hierarchy node
+  VNODE:
+    kind: var-node
+    label: Official VaR of a hierarchy node
 graph:
   id-patterns:
   - pattern: ^VAR-
@@ -64,15 +88,42 @@ graph:
     kind: pnl-explain
   - pattern: ^TVAL-
     kind: trade-valuation
+  - pattern: ^POS-
+    kind: position
+  - pattern: ^PF-
+    kind: portfolio
+  - pattern: ^PV-
+    kind: pnl-vector
+  - pattern: ^HS-
+    kind: scenario-set
+  - pattern: ^(MGMT|LEGAL)~
+    kind: risk-hierarchy
+  - pattern: ^VN-
+    kind: var-node
   fields:
+    NODE_ID:
+      kind: risk-hierarchy
+      label: Hierarchy node
+    PORTFOLIO_ID:
+      kind: portfolio
+      label: Portfolio
+    POSITION_ID:
+      kind: position
+      label: Position
     SCENARIO:
       kind: stress-scenario
       label: Scenario
+    TRADE_IDS:
+      kind: trade
+      label: Trade
     VAR_RESULT:
       kind: var
       label: VaR
   badges:
     var: fmt($.VAR_99, 'compact')
+    position: fmt($.VAR_99, 'compact')
+    portfolio: fmt($.VAR_99, 'compact')
+    var-node: fmt($.VAR_99, 'compact')
   impact:
     measures:
       trade-valuation: $.MTM
@@ -89,6 +140,12 @@ connectors:
     - frtb-sensitivity
     - pnl-explain
     - trade-valuation
+    - position
+    - portfolio
+    - pnl-vector
+    - scenario-set
+    - risk-hierarchy
+    - var-node
     settings:
       root: ${DRISHTI_DELTA_ROOT:${drishti.data.dir:./data}/delta}
       domain: risk
@@ -119,6 +176,82 @@ connectors:
           sort-by: id
           file-rows: 250000
           row-group-rows: 1000
+        position:
+          columns:
+          - POSITION_ID
+          - INSTRUMENT_ID
+          - INSTRUMENT
+          - DIRECTION
+          - LEGAL_ENTITY
+          - DIVISION
+          - DESK
+          - TT_BOOK
+          - PORTFOLIO
+          - PRODUCT_GROUP
+          - PRODUCT_TYPE
+          - CURRENCY
+          - COUNTERPARTY
+          - QUANTITY
+          - MARKET_VALUE
+          - TRADE_COUNT
+          - VAR_99
+          - ES_975
+          - COMPONENT_VAR
+        pnl-vector:
+          columns:
+          - TRADE_ID
+          - POSITION_ID
+          - INSTRUMENT_ID
+          - LEGAL_ENTITY
+          - DIVISION
+          - DESK
+          - TT_BOOK
+          - PORTFOLIO
+          - PRODUCT_GROUP
+          - PRODUCT_TYPE
+          - CURRENCY
+          - COUNTERPARTY
+          - DIRECTION
+          - QUANTITY
+          - PV
+          - STATUS
+          - SCENARIO_SET_ID
+          - BATCH_ID
+          vectors:
+          - PNL
+        var-node:
+          columns:
+          - NODE_ID
+          - HIERARCHY
+          - LEVEL
+          - NAME
+          - PARENT_ID
+          - VAR_99
+          - ES_975
+          - HYPO_PNL
+          - LIMIT
+          - POSITION_COUNT
+          - TRADE_COUNT
+          vectors:
+          - PNL
+        risk-hierarchy:
+          columns:
+          - NODE_ID
+          - HIERARCHY
+          - LEVEL
+          - PARENT_ID
+          - NAME
+          - LIMIT_VAR
+        portfolio:
+          columns:
+          - PORTFOLIO_ID
+          - NAME
+          - TYPE
+          - OWNER
+          - VAR_99
+          - ES_975
+          - LIMIT_VAR
+          - POSITION_COUNT
 routes:
   var: risk-store
   stress-scenario: risk-store
@@ -126,6 +259,12 @@ routes:
   frtb-sensitivity: risk-store
   pnl-explain: risk-store
   trade-valuation: risk-store
+  position: risk-store
+  portfolio: risk-store
+  pnl-vector: risk-store
+  scenario-set: risk-store
+  risk-hierarchy: risk-store
+  var-node: risk-store
 form:
   var:
   - path: RESULT_ID
@@ -232,6 +371,99 @@ form:
   - path: VALUATION_DATE
     label: Valuation date
     type: date
+  position:
+  - path: POSITION_ID
+    label: Position id
+    type: id
+  - path: DIRECTION
+    label: Direction
+    type: enum
+  - path: DESK
+    label: Desk
+    type: enum
+  - path: TT_BOOK
+    label: TT book
+    type: text
+  - path: PRODUCT_TYPE
+    label: Product type
+    type: text
+  - path: CURRENCY
+    label: Currency
+    type: enum
+  - path: VAR_99
+    label: VaR 99
+    type: text
+  portfolio:
+  - path: PORTFOLIO_ID
+    label: Portfolio id
+    type: id
+  - path: NAME
+    label: Name
+    type: text
+  - path: TYPE
+    label: Type
+    type: enum
+  - path: OWNER
+    label: Owner
+    type: text
+  - path: VAR_99
+    label: VaR 99
+    type: text
+  pnl-vector:
+  - path: VECTOR_ID
+    label: Vector id
+    type: id
+  - path: TRADE_ID
+    label: Trade id
+    type: id
+  - path: POSITION_ID
+    label: Position id
+    type: id
+  - path: DESK
+    label: Desk
+    type: enum
+  - path: TT_BOOK
+    label: TT book
+    type: text
+  scenario-set:
+  - path: SCENARIO_SET_ID
+    label: Scenario set id
+    type: id
+  - path: BUSINESS_DATE
+    label: Business date
+    type: date
+  risk-hierarchy:
+  - path: NODE_ID
+    label: Node id
+    type: id
+  - path: HIERARCHY
+    label: Hierarchy
+    type: text
+  - path: LEVEL
+    label: Level
+    type: enum
+  - path: NAME
+    label: Name
+    type: text
+  - path: LIMIT_VAR
+    label: Limit VaR
+    type: amount
+  var-node:
+  - path: VAR_NODE_ID
+    label: VaR node id
+    type: id
+  - path: NODE_ID
+    label: Node id
+    type: id
+  - path: VAR_99
+    label: VaR 99
+    type: text
+  - path: ES_975
+    label: ES 975
+    type: text
+  - path: HYPO_PNL
+    label: Hypo P&L
+    type: amount
 console:
   examples:
   - - VAR VAR-RATES
@@ -242,6 +474,10 @@ console:
     - P&L explain
   - - FRTB FRTB-RATES-1
     - FRTB sensitivities and charges
+  - - PORT PF-RATES-DESK
+    - Portfolio · its positions, longs and shorts, VaR and component VaR
+  - - PORT PF-ASHA-UNWIND
+    - A basket of positions and trades · overlaps the rates desk
   help: config/help.yaml
 python:
   enabled: true
@@ -261,3 +497,10 @@ history:
     columns: [MTM, PNL_1D, DV01, NOTIONAL]
   pnl-explain:
     columns: [ACTUAL, EXPLAINED, UNEXPLAINED]
+  # the VaR engine's kinds (VAR_ENGINE.md): a node's official VaR over 250 days, a position's and a portfolio's VaR as the batch left them
+  var-node:
+    columns: [VAR_99, ES_975, HYPO_PNL, LIMIT, POSITION_COUNT]
+  position:
+    columns: [QUANTITY, MARKET_VALUE, VAR_99, ES_975, COMPONENT_VAR]
+  portfolio:
+    columns: [VAR_99, ES_975, LIMIT_VAR, POSITION_COUNT, NET_MV]

@@ -23,3 +23,10 @@ history:
     columns: [MTM, PNL_1D, DV01, NOTIONAL]
   pnl-explain:
     columns: [ACTUAL, EXPLAINED, UNEXPLAINED]
+  # the VaR engine's kinds (VAR_ENGINE.md): a node's official VaR over 250 days, a position's and a portfolio's VaR as the batch left them
+  var-node:
+    columns: [VAR_99, ES_975, HYPO_PNL, LIMIT, POSITION_COUNT]
+  position:
+    columns: [QUANTITY, MARKET_VALUE, VAR_99, ES_975, COMPONENT_VAR]
+  portfolio:
+    columns: [VAR_99, ES_975, LIMIT_VAR, POSITION_COUNT, NET_MV]

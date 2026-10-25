@@ -21,7 +21,9 @@
 For every dataset of data/testdata/testdata.yaml (written by tools/testdata/make_testdata.py) it rebuilds the seven daily snapshots
 (the first day's snapshot, then each later day's changes applied by key) and writes each day with `lake build` (tools/lake/build.py)
 into the table the dataset's Delta connector reads: <lake>/<domain>/<kind>/, the trades into trading/trade_endur, trade_calypso and
-trade_murex, partitioned by business date (and PRODUCT_TYPE for trades). Each table is written afresh (its folder is removed first).
+trade_murex, partitioned by business date (and PRODUCT_TYPE for trades). Each table is written afresh (its folder is removed first). A dataset ``dated-by`` a field (the market-risk pack's VaR data,
+tools/packgen/var/make_var_data.py: the trades' P&L vectors of the last business date, the nodes' 250-day VaR history) is loaded in one
+run, each document on its own date, its dates moved with the business dates like every other dataset's.
 Datasets of static reference data (world-economy, news-and-markets) are built from their packs' samples, the same on every day.
 The news-and-markets pack's captured market snapshot (data/testdata/news-and-markets/quote and news: real quotes and headlines,
 written by `drishti.py testdata capture-market`) becomes news/quote and news/news, the same snapshot on every day and never re-dated,
@@ -397,11 +399,56 @@ class DemoLake:
             else:
                 yield state
 
+    #: the fields of a dated dataset's documents (``dated-by``) that hold a date of the data, moved with the business dates
+    DATED_FIELDS = ("BUSINESS_DATE", "COMPUTED_AT", "BATCH_ID", "SOURCE_BATCH", "WINDOW_START", "WINDOW_END")
+    _ISO = re.compile(r"\d{4}-\d{2}-\d{2}")
+
+    def redate_dated(self, doc: dict) -> dict:
+        """A dated document's own dates moved by as many business days as the test data's (its BUSINESS_DATE, the batch that wrote it,
+        a scenario set's window and its SCENARIO_DATES), so a 250-day history or a 509-day scenario window stays whole and in order."""
+        if not self.shift:
+            return doc
+        for f in self.DATED_FIELDS:
+            if isinstance(doc.get(f), str):
+                doc[f] = self._ISO.sub(lambda m: self.move_day(m.group(0)), doc[f])
+        if isinstance(doc.get("SCENARIO_DATES"), list):
+            doc["SCENARIO_DATES"] = [self.move_day(d) if isinstance(d, str) else d for d in doc["SCENARIO_DATES"]]
+        return doc
+
+    def dated_dataset(self, ds: dict, path: pathlib.Path, domain: str, table: str) -> int:
+        """A dataset whose documents carry their own business date (testdata.yaml ``dated-by``: the VaR engine's vectors of the last
+        business date, the nodes' 250-day history): every file loaded in one run, each document on its own date (``lake build --date``)."""
+        stage = self.staging / f"{domain}-{table}.jsonl"
+        rows = 0
+        with stage.open("w", encoding="utf-8") as fh:
+            for f in sorted((self.testdata / ds["folder"]).glob("*.jsonl.gz")):
+                with gzip.open(f, "rt", encoding="utf-8") as src:
+                    for line in src:
+                        if line.strip():
+                            fh.write(json.dumps(self.redate_dated(json.loads(line)), separators=(",", ":"), ensure_ascii=False) + "\n")
+                            rows += 1
+        argv = ["--from", str(stage), "--pack", str(self.packs.dir / ds["pack"]), "--kind", ds["kind"], "--connector", ds["connector"],
+                "--key", ds["key"], "--date", ds["dated-by"], "--lake", str(self.lake), "--engine", self.a.engine, "-q", "--no-stamp"]
+        code, summary = self.lb.run(self.lb.build_parser().parse_args(argv), say=lambda *x, **k: None)
+        if code:
+            print(f"  {domain}/{table}: {summary.get('status')} {summary.get('error', '')}", file=sys.stderr)
+        stage.unlink(missing_ok=True)
+        self.checkpoint(path)
+        self.tables.append(f"{domain}/{table}")
+        self.written.append((ds["pack"], ds["kind"], f"{domain}/{table}"))
+        if not self.a.quiet:
+            days = len(summary.get("rows") or {})
+            print(f"  {domain}/{table}: {rows:,} rows over {days} day{'s' if days != 1 else ''} (dated by {ds['dated-by']})"
+                  + (" (failed)" if code == 1 else ""))
+        return code
+
     def dataset(self, ds: dict) -> int:
         pack, kind, connector = ds["pack"], ds["kind"], ds["connector"]
         domain, table = self.packs.table(pack, connector, kind)
         path = self.lake / domain / table
         shutil.rmtree(path, ignore_errors=True)
+        if ds.get("dated-by"):
+            return self.dated_dataset(ds, path, domain, table)
         key = ds.get("key")
         worst, rows = 0, 0
         stage = self.staging / f"{domain}-{table}.jsonl"
