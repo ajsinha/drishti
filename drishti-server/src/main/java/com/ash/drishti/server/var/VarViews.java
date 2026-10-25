@@ -1,0 +1,607 @@
+/*
+ * Project Drishti · Any data. Any domain. One grammar.
+ *
+ * Copyright (c) 2026 Ashutosh Sinha <ajsinha@gmail.com>.
+ * All rights reserved.
+ *
+ * PROPRIETARY AND CONFIDENTIAL.
+ *
+ * This file is the confidential and proprietary property of Ashutosh Sinha.
+ * Unauthorised copying, use, modification, distribution or disclosure of this
+ * file, via any medium, is strictly prohibited except with the express prior
+ * written permission of the copyright holder.
+ *
+ * See the LICENSE file in the root of this repository for the full terms.
+ */
+package com.ash.drishti.server.var;
+
+import com.ash.drishti.common.DrishtiException;
+import com.ash.drishti.common.ErrorCode;
+import com.ash.drishti.compute.var.Backtest;
+import com.ash.drishti.compute.var.Columns;
+import com.ash.drishti.compute.var.VarBook;
+import com.ash.drishti.compute.var.VarCalc;
+import com.ash.drishti.compute.var.VarMath;
+import com.ash.drishti.compute.vector.OrdinalSet;
+import com.ash.drishti.server.security.Principal;
+import java.time.Instant;
+import java.time.LocalDate;
+import java.util.ArrayList;
+import java.util.Comparator;
+import java.util.LinkedHashMap;
+import java.util.List;
+import java.util.Map;
+
+/**
+ * The VaR engine's answers as the screens and the API return them (VAR_ENGINE.md sections 10 and 14): summaries, never a vector per
+ * part. A headline with its provenance; the P&amp;L path as a histogram, the worst 25, the series and a page of the ranked table; the
+ * contributions of the parts; the history with its backtest; the hierarchy with every node's figures.
+ */
+final class VarViews {
+
+    private static final String ENGINE = "drishti-compute " + versionOf();
+    private final VarService svc;
+
+    VarViews(VarService svc) {
+        this.svc = svc;
+    }
+
+    private static String versionOf() {
+        String v = VarBook.class.getPackage().getImplementationVersion();
+        return v == null ? "dev" : v;
+    }
+
+    // ------------------------------------------------------------------------------------------------------------------- headline
+
+    Map<String, Object> headline(Principal p, String scope, LocalDate date) {
+        VarService.Scoped s = svc.scoped(p, scope, date);
+        VarBook b = s.date().book();
+        List<Part> parts = parts(s, "child");
+        Map<String, Object> out = new LinkedHashMap<>();
+        out.put("scope", scope);
+        out.put("canonical", s.res().canonical());
+        out.put("kind", s.kind());
+        out.put("label", s.label());
+        out.put("node", s.res().node());
+        out.put("businessDate", s.date().date().toString());
+        out.put("var", round(s.measures().var()));
+        out.put("es", round(s.measures().es()));
+        out.put("k", s.measures().k());
+        out.put("esCount", s.measures().esCount());
+        out.put("scenarios", b.width());
+        out.put("confidence", svc.props().confidence());
+        out.put("esConfidence", svc.props().esConfidence());
+        double standalone = 0;
+        for (Part pt : parts) {
+            standalone += svc.calc().measures(pt.vector()).var();
+        }
+        out.put("children", parts.size());
+        out.put("childKind", parts.isEmpty() ? null : parts.get(0).kind());
+        out.put("sumStandalone", parts.isEmpty() ? null : round(standalone));
+        out.put("diversification", parts.size() < 2 ? null : round(standalone - s.measures().var()));
+        double limit = limitOf(s);
+        out.put("limit", Double.isNaN(limit) ? null : round(limit));
+        out.put("limitUse", Double.isNaN(limit) || limit == 0 ? null : s.measures().var() / limit);
+        Map<String, Object> hist = history(s);
+        out.put("backtest", hist.get("backtest"));
+        out.put("ancestors", ancestors(b, s.res().node(), s));
+        out.put("provenance", provenance(s));
+        svc.audit(p, "var-view", s, null);
+        return out;
+    }
+
+    private static double limitOf(VarService.Scoped s) {
+        if (s.res().node() != null) {
+            return s.date().book().node(s.res().node()).limit();
+        }
+        if ("portfolio".equals(s.kind())) {
+            String id = s.res().canonical().substring("PORT:".length());
+            VarDate.Portfolio pf = s.date().portfolios().get(id);
+            return pf == null ? Double.NaN : pf.limit();
+        }
+        return Double.NaN;
+    }
+
+    /** The path from the root to the node, for the breadcrumb (positions and trades: their book's path, then the position). */
+    private static List<Map<String, Object>> ancestors(VarBook b, String node, VarService.Scoped s) {
+        List<Map<String, Object>> out = new ArrayList<>();
+        String n = node;
+        if (n == null && (s.res().position() >= 0 || s.res().trade() >= 0)) {
+            int o = s.res().trade() >= 0 ? s.res().trade() : b.positionFrom(s.res().position());
+            n = "MGMT~" + b.trades().text("TT_BOOK", o);
+            if (s.res().trade() >= 0) {
+                int pi = b.positionOf(o);
+                out.add(crumb(b.positionId(pi), "POS:" + b.positionId(pi)));
+            }
+        }
+        while (n != null && b.node(n) != null) {
+            VarBook.Node nn = b.node(n);
+            out.add(0, crumb(nn.name(), "NODE:" + nn.id()));
+            n = nn.parent();
+        }
+        return out;
+    }
+
+    private static Map<String, Object> crumb(String label, String scope) {
+        Map<String, Object> m = new LinkedHashMap<>();
+        m.put("label", label);
+        m.put("scope", scope);
+        return m;
+    }
+
+    /** How the number was built: the members, the data, the method, the engine, the viewer's view, the time (from the result's stamp). */
+    private Map<String, Object> provenance(VarService.Scoped s) {
+        VarBook b = s.date().book();
+        VarProperties pr = svc.props();
+        int positions = 0;
+        int[] last = {-1};
+        int[] count = {0};
+        s.set().forEach(o -> {
+            int pi = b.positionOf(o);
+            if (pi != last[0]) {
+                last[0] = pi;
+                count[0]++;
+            }
+        });
+        positions = count[0];
+        Map<String, Object> m = new LinkedHashMap<>();
+        m.put("scope", s.res().canonical());
+        m.put("resolved", s.res().notes());
+        m.put("trades", s.set().size());
+        m.put("positions", positions);
+        m.put("failed", b.failed());
+        m.put("hidden", s.hidden());
+        m.put("unknown", s.res().unknown());
+        m.put("vectors", svc.props().kinds().vector() + " · batch of " + s.date().date() + " · data version " + s.date().version());
+        m.put("scenarioSet", b.scenarioSet() + " · " + b.scenarioDates().get(0) + " .. " + b.scenarioDates().get(b.width() - 1));
+        m.put("method", "historical, equal weights, 1-day, " + (pr.rule() == VarMath.RankRule.KTH_WORST ? "k = " + ordinal(s.measures().k())
+                + " worst of " + b.width() : "interpolated between the order statistics"));
+        m.put("es", Math.round(pr.esConfidence() * 1000) / 10.0 + "%, mean of worst " + s.measures().esCount());
+        m.put("components", "Euler on the " + pr.componentWindow() + " scenarios around the VaR rank" + (pr.componentScaleToVar()
+                ? ", scaled to add up to the VaR" : ""));
+        m.put("engine", "VaR engine in the server · " + ENGINE + " · " + svc.sums().threads() + " threads");
+        m.put("view", s.view().full() ? "every node at positions level" : "restricted by node (" + s.hidden() + " trades outside your entitlement)");
+        m.put("membershipHash", s.set().digest());
+        m.put("computedAt", Instant.now().toString());
+        m.put("computeMs", s.computeMs());
+        m.put("cache", s.cached() ? "hit" : "miss");
+        m.put("loadedMs", s.date().loadMs());
+        return m;
+    }
+
+    private static String ordinal(int k) {
+        return k + (k % 100 >= 11 && k % 100 <= 13 ? "th" : switch (k % 10) {
+            case 1 -> "st";
+            case 2 -> "nd";
+            case 3 -> "rd";
+            default -> "th";
+        });
+    }
+
+    // ------------------------------------------------------------------------------------------------------------------- parts
+
+    /** A part of a scope with its vector, the scope text that opens it, and its attributes for the tables. */
+    record Part(String key, String scope, String label, String kind, double[] vector, double size, Map<String, Object> attrs) {}
+
+    /**
+     * The scope's parts: {@code child} (the default: a node's child nodes, a book's positions, a position's trades, an ad-hoc scope's
+     * positions), {@code position}, {@code trade}, {@code desk} or {@code book}. Positions and trades only for a viewer who sees them.
+     */
+    List<Part> parts(VarService.Scoped s, String by) {
+        VarBook b = s.date().book();
+        String mode = by == null || by.isBlank() ? "child" : by;
+        if (mode.equals("child")) {
+            if (s.res().node() != null) {
+                VarBook.Node n = b.node(s.res().node());
+                mode = n.children().isEmpty() ? "position" : "node";
+            } else if (s.res().position() >= 0) {
+                mode = "trade";
+            } else if (s.res().trade() >= 0) {
+                return List.of();
+            } else {
+                mode = "position";
+            }
+        }
+        if ((mode.equals("position") || mode.equals("trade")) && !s.view().seesPositions(s.set())) {
+            if (by == null || by.isBlank() || by.equals("child")) {
+                return List.of();                                        // an aggregate-only viewer: no position level below this node
+            }
+            throw new DrishtiException(ErrorCode.FORBIDDEN, "your role sees this scope in aggregate only: no positions or trades");
+        }
+        List<Part> out = new ArrayList<>();
+        int max = svc.props().maxParts();
+        switch (mode) {
+            case "node" -> {
+                for (String c : b.node(s.res().node()).children()) {
+                    VarBook.Node cn = b.node(c);
+                    if (cn == null || !VarAccess.seesNode(s.view(), cn)) {
+                        continue;
+                    }
+                    OrdinalSet m = cn.members().and(s.set());
+                    double[] v = m.equals(cn.members()) ? b.aggregate(cn.id()) : b.vector(m, svc.sums());
+                    out.add(new Part(cn.id(), "NODE:" + cn.id(), cn.name(), cn.level(), v, Double.NaN, Map.of("level", cn.level())));
+                }
+            }
+            case "desk", "book" -> {
+                String group = mode;
+                String col = group.equals("desk") ? "DESK" : "TT_BOOK";
+                Map<String, OrdinalSet.Builder> groups = new LinkedHashMap<>();
+                s.set().forEach(o -> groups.computeIfAbsent(String.valueOf(b.trades().text(col, o)), k -> new OrdinalSet.Builder()).add(o));
+                groups.forEach((k, g) -> {
+                    OrdinalSet m = g.build();
+                    String node = "MGMT~" + k;
+                    boolean whole = b.node(node) != null && m.equals(b.node(node).members());
+                    out.add(new Part(k, b.node(node) != null ? "NODE:" + node : col.equals("DESK") ? "DESK:" + k : "BOOK:" + k, k, group,
+                            whole ? b.aggregate(node) : b.vector(m, svc.sums()), Double.NaN, Map.of()));
+                });
+            }
+            case "position" -> {
+                int[] last = {-1};
+                List<int[]> runs = new ArrayList<>();
+                s.set().forEach(o -> {
+                    int pi = b.positionOf(o);
+                    if (pi != last[0]) {
+                        runs.add(new int[] {pi, o, o + 1});
+                        last[0] = pi;
+                    } else {
+                        runs.get(runs.size() - 1)[2] = o + 1;
+                    }
+                });
+                for (int[] r : runs.subList(0, Math.min(runs.size(), max))) {
+                    out.add(position(b, s.set(), r[0]));
+                }
+            }
+            case "trade" -> {
+                List<Integer> os = new ArrayList<>();
+                s.set().forEach(os::add);
+                for (int o : os.subList(0, Math.min(os.size(), max))) {
+                    out.add(trade(b, o));
+                }
+            }
+            default -> throw new DrishtiException(ErrorCode.BAD_REQUEST, "by is child, position, trade, desk or book");
+        }
+        return out;
+    }
+
+    private Part position(VarBook b, OrdinalSet set, int pi) {
+        int from = b.positionFrom(pi);
+        int to = b.positionTo(pi);
+        boolean whole = set.coversRange(from, to);
+        double[] v;
+        double qty;
+        Columns pc = b.positions();
+        if (whole) {
+            v = b.positionVector(pi);
+            qty = pc.number("QUANTITY", pi);
+        } else {                                                     // part of a position: the trades of it the scope holds
+            v = new double[b.width()];
+            double q = 0;
+            for (int o = from; o < to; o++) {
+                if (set.contains(o)) {
+                    b.store().addInto(v, o);
+                    q += nz(b.trades().number("QUANTITY", o));
+                }
+            }
+            qty = q;
+        }
+        Map<String, Object> a = new LinkedHashMap<>();
+        a.put("instrument", pc.text("INSTRUMENT", pi));
+        a.put("direction", qty > 0 ? "LONG" : qty < 0 ? "SHORT" : "FLAT");
+        a.put("quantity", qty);
+        a.put("marketValue", nan(pc.number("MARKET_VALUE", pi)));
+        a.put("currency", pc.text("CURRENCY", pi));
+        a.put("book", pc.text("TT_BOOK", pi));
+        a.put("productType", pc.text("PRODUCT_TYPE", pi));
+        a.put("trades", whole ? to - from : set.countIn(from, to));
+        a.put("partial", !whole);
+        String id = b.positionId(pi);
+        return new Part(id, "POS:" + id, pc.text("INSTRUMENT", pi) == null ? id : pc.text("INSTRUMENT", pi), "position", v,
+                Double.isNaN(pc.number("MARKET_VALUE", pi)) ? Double.NaN : pc.number("MARKET_VALUE", pi), a);
+    }
+
+    private static Part trade(VarBook b, int o) {
+        Columns tc = b.trades();
+        double q = nz(tc.number("QUANTITY", o));
+        Map<String, Object> a = new LinkedHashMap<>();
+        a.put("direction", q > 0 ? "LONG" : q < 0 ? "SHORT" : "FLAT");
+        a.put("quantity", q);
+        a.put("productType", tc.text("PRODUCT_TYPE", o));
+        a.put("counterparty", tc.text("COUNTERPARTY", o));
+        a.put("position", tc.text("POSITION_ID", o));
+        a.put("book", tc.text("TT_BOOK", o));
+        a.put("pv", nan(tc.number("PV", o)));
+        String id = b.tradeId(o);
+        return new Part(id, "TRD:" + id, id, "trade", b.tradeVector(o), nz(tc.number("PV", o)) == 0 ? Double.NaN : tc.number("PV", o), a);
+    }
+
+    // ------------------------------------------------------------------------------------------------------------------- contributions
+
+    Map<String, Object> contributions(Principal p, String scope, LocalDate date, String by, String scenario) {
+        VarService.Scoped s = svc.scoped(p, scope, date);
+        VarBook b = s.date().book();
+        List<Part> parts = parts(s, by);
+        List<VarCalc.Part> cp = parts.stream().map(x -> new VarCalc.Part(x.key(), x.label(), x.kind(), x.vector(), x.size())).toList();
+        List<VarCalc.Contribution> cs = svc.calc().contributions(s.vector(), s.measures(), cp);
+        int scen = scenario == null || scenario.isBlank() ? -1 : b.scenarioDates().indexOf(LocalDate.parse(scenario));
+        if (scenario != null && !scenario.isBlank() && scen < 0) {
+            throw new DrishtiException(ErrorCode.BAD_REQUEST, scenario + " is not a scenario date of " + b.scenarioSet());
+        }
+        List<Map<String, Object>> rows = new ArrayList<>();
+        double standalone = 0;
+        double comp = 0;
+        for (int i = 0; i < parts.size(); i++) {
+            Part pt = parts.get(i);
+            VarCalc.Contribution c = cs.get(i);
+            Map<String, Object> r = new LinkedHashMap<>();
+            r.put("key", pt.key());
+            r.put("scope", pt.scope());
+            r.put("label", pt.label());
+            r.put("kind", pt.kind());
+            r.put("standaloneVar", round(c.standaloneVar()));
+            r.put("standaloneEs", round(c.standaloneEs()));
+            r.put("componentVar", round(c.componentVar()));
+            r.put("componentEs", round(c.componentEs()));
+            r.put("pct", c.pct());
+            r.put("incrementalVar", round(c.incrementalVar()));
+            r.put("marginalPer1m", Double.isNaN(c.marginalPer1m()) ? null : round(c.marginalPer1m()));
+            if (scen >= 0) {
+                r.put("scenarioPnl", round(pt.vector()[scen]));
+            }
+            r.putAll(pt.attrs());
+            if (pt.kind().equals("node") || !pt.attrs().containsKey("level")) {
+                r.put("level", pt.attrs().getOrDefault("level", pt.kind()));
+            }
+            standalone += c.standaloneVar();
+            comp += c.componentVar();
+            rows.add(r);
+        }
+        if (scen >= 0) {
+            rows.sort(Comparator.comparingDouble(r -> ((Number) r.get("scenarioPnl")).doubleValue()));
+        } else {
+            rows.sort(Comparator.comparingDouble(r -> -((Number) r.get("componentVar")).doubleValue()));
+        }
+        Map<String, Object> out = new LinkedHashMap<>();
+        out.put("canonical", s.res().canonical());
+        out.put("by", parts.isEmpty() ? null : parts.get(0).kind());
+        out.put("var", round(s.measures().var()));
+        out.put("es", round(s.measures().es()));
+        out.put("sumStandalone", round(standalone));
+        out.put("sumComponent", round(comp));
+        out.put("diversification", round(standalone - s.measures().var()));
+        out.put("truncated", parts.size() >= svc.props().maxParts());
+        if (scen >= 0) {
+            out.put("scenario", scenario);
+            out.put("scenarioPnl", round(s.vector()[scen]));
+            out.put("scenarioRank", rankOf(s.measures().order(), scen));
+        }
+        out.put("rows", rows);
+        out.put("computeMs", s.computeMs());
+        return out;
+    }
+
+    private static int rankOf(int[] order, int scen) {
+        for (int i = 0; i < order.length; i++) {
+            if (order[i] == scen) {
+                return i + 1;
+            }
+        }
+        return -1;
+    }
+
+    // ------------------------------------------------------------------------------------------------------------------- path
+
+    Map<String, Object> path(Principal p, String scope, LocalDate date, int page, int size) {
+        VarService.Scoped s = svc.scoped(p, scope, date);
+        VarBook b = s.date().book();
+        double[] v = s.vector();
+        int[] order = s.measures().order();
+        Map<String, Object> out = new LinkedHashMap<>();
+        out.put("canonical", s.res().canonical());
+        out.put("var", round(s.measures().var()));
+        out.put("es", round(s.measures().es()));
+        out.put("k", s.measures().k());
+        out.put("esCount", s.measures().esCount());
+        VarCalc.Histogram h = VarCalc.histogram(v, svc.props().histogramBins());
+        Map<String, Object> hist = new LinkedHashMap<>();
+        hist.put("edges", roundAll(h.edges()));
+        hist.put("counts", h.counts());
+        out.put("histogram", hist);
+        List<Map<String, Object>> worst = new ArrayList<>();
+        for (int r = 0; r < Math.min(25, order.length); r++) {
+            worst.add(scenarioRow(b, order[r], r + 1, v[order[r]]));
+        }
+        out.put("worst", worst);
+        long[] series = new long[v.length];
+        for (int j = 0; j < v.length; j++) {
+            series[j] = Math.round(v[j]);
+        }
+        out.put("series", series);
+        out.put("dates", List.of(b.scenarioDates().get(0).toString(), b.scenarioDates().get(b.width() - 1).toString()));
+        // the ranked table, a page at a time, with the part that lost most on each scenario
+        List<Part> parts = parts(s, "child");
+        int sz = size <= 0 ? svc.props().pathPage() : Math.min(size, 509);
+        int from = Math.max(0, page) * sz;
+        List<Map<String, Object>> rows = new ArrayList<>();
+        for (int r = from; r < Math.min(order.length, from + sz); r++) {
+            int j = order[r];
+            Map<String, Object> row = scenarioRow(b, j, r + 1, v[j]);
+            Part worstPart = null;
+            for (Part pt : parts) {
+                if (worstPart == null || pt.vector()[j] < worstPart.vector()[j]) {
+                    worstPart = pt;
+                }
+            }
+            if (worstPart != null) {
+                row.put("from", worstPart.label());
+                row.put("fromScope", worstPart.scope());
+                row.put("fromPnl", round(worstPart.vector()[j]));
+            }
+            rows.add(row);
+        }
+        out.put("page", Math.max(0, page));
+        out.put("pageSize", sz);
+        out.put("total", order.length);
+        out.put("rows", rows);
+        out.put("computeMs", s.computeMs());
+        return out;
+    }
+
+    private static Map<String, Object> scenarioRow(VarBook b, int j, int rank, double pnl) {
+        Map<String, Object> m = new LinkedHashMap<>();
+        m.put("rank", rank);
+        m.put("index", j);
+        m.put("date", b.scenarioDates().get(j).toString());
+        m.put("pnl", round(pnl));
+        return m;
+    }
+
+    // ------------------------------------------------------------------------------------------------------------------- history
+
+    Map<String, Object> history(Principal p, String scope, LocalDate date) {
+        return history(svc.scoped(p, scope, date));
+    }
+
+    /**
+     * A node's official history (var-node: VaR, ES and the day's hypothetical P&amp;L over the window) and its backtest; any other scope
+     * replays today's members over the window's scenario days against today's VaR (in-sample: it says so; not a regulatory backtest).
+     */
+    Map<String, Object> history(VarService.Scoped s) {
+        VarBook b = s.date().book();
+        double conf = svc.props().confidence();
+        Map<String, Object> out = new LinkedHashMap<>();
+        List<Map<String, Object>> rows = new ArrayList<>();
+        VarBook.NodeHistory h = s.res().node() != null && s.view().full() ? b.history(s.res().node()) : null;
+        Backtest bt;
+        if (h != null && h.dates().length > 1) {
+            bt = Backtest.of(h.hypo(), h.var(), conf);
+            for (int i = 0; i < h.dates().length; i++) {
+                rows.add(historyRow(h.dates()[i], h.var()[i], h.es()[i], h.hypo()[i], bt.exceptionFlags()[i]));
+            }
+            out.put("mode", "official");
+            out.put("note", "the node's official figures (var-node), one a business day");
+        } else {
+            int n = Math.min(svc.props().historyDays(), b.width());
+            double[] pnl = new double[n];
+            double[] var = new double[n];
+            for (int i = 0; i < n; i++) {
+                pnl[i] = s.vector()[b.width() - n + i];
+                var[i] = s.measures().var();
+            }
+            bt = Backtest.of(pnl, var, conf);
+            for (int i = 0; i < n; i++) {
+                rows.add(historyRow(b.scenarioDates().get(b.width() - n + i), var[i], s.measures().es(), pnl[i], bt.exceptionFlags()[i]));
+            }
+            out.put("mode", "replay");
+            out.put("note", "today's members over the last " + n + " scenario days against today's VaR: in-sample, not a regulatory backtest"
+                    + (s.res().node() != null && !s.view().full() ? " (the official history covers trades outside your entitlement)" : ""));
+        }
+        Map<String, Object> m = new LinkedHashMap<>();
+        m.put("days", bt.days());
+        m.put("exceptions", bt.exceptions());
+        m.put("light", bt.light());
+        m.put("kupiecLr", bt.kupiecLr());
+        m.put("kupiecPValue", bt.kupiecPValue());
+        m.put("christoffersenLr", bt.christoffersenLr());
+        m.put("christoffersenPValue", bt.christoffersenPValue());
+        out.put("backtest", m);
+        out.put("rows", rows);
+        return out;
+    }
+
+    private static Map<String, Object> historyRow(LocalDate d, double var, double es, double pnl, boolean exception) {
+        Map<String, Object> m = new LinkedHashMap<>();
+        m.put("date", d.toString());
+        m.put("var", round(var));
+        m.put("es", round(es));
+        m.put("pnl", round(pnl));
+        m.put("exception", exception);
+        return m;
+    }
+
+    // ------------------------------------------------------------------------------------------------------------------- tree
+
+    /** Every node of a hierarchy the viewer sees, with its VaR, ES, limit and counts (the explorer's left pane). */
+    Map<String, Object> tree(Principal p, String hierarchy, LocalDate date) {
+        VarDate d = svc.date(date);
+        VarBook b = d.book();
+        String h = hierarchy == null || hierarchy.isBlank() ? "MGMT" : hierarchy.toUpperCase(java.util.Locale.ROOT);
+        VarBook.Node root = b.root(h);
+        if (root == null) {
+            throw new DrishtiException(ErrorCode.ENTITY_NOT_FOUND, "no hierarchy " + h + " on " + d.date());
+        }
+        List<Map<String, Object>> rows = new ArrayList<>();
+        walk(p, b, root, 0, rows, date);
+        Map<String, Object> out = new LinkedHashMap<>();
+        out.put("hierarchy", h);
+        out.put("hierarchies", b.nodes().values().stream().filter(n -> n.parent() == null).map(VarBook.Node::hierarchy).sorted().toList());
+        out.put("businessDate", d.date().toString());
+        out.put("nodes", rows);
+        List<Map<String, Object>> ports = new ArrayList<>();
+        d.portfolios().values().forEach(pf -> {
+            Map<String, Object> m = new LinkedHashMap<>();
+            m.put("id", pf.id());
+            m.put("scope", "PORT:" + pf.id());
+            m.put("name", pf.name());
+            m.put("type", pf.type());
+            m.put("owner", pf.owner());
+            ports.add(m);
+        });
+        out.put("portfolios", ports);
+        return out;
+    }
+
+    private void walk(Principal p, VarBook b, VarBook.Node n, int depth, List<Map<String, Object>> rows, LocalDate date) {
+        VarService.Scoped s;
+        try {
+            s = svc.scoped(p, "NODE:" + n.id(), date);
+        } catch (DrishtiException e) {
+            return;
+        }
+        if (s.set().isEmpty() && !s.view().full()) {
+            return;
+        }
+        Map<String, Object> m = new LinkedHashMap<>();
+        m.put("id", n.id());
+        m.put("scope", "NODE:" + n.id());
+        m.put("name", n.name());
+        m.put("level", n.level());
+        m.put("parent", n.parent());
+        m.put("depth", depth);
+        m.put("var", round(s.measures().var()));
+        m.put("es", round(s.measures().es()));
+        m.put("limit", Double.isNaN(n.limit()) ? null : round(n.limit()));
+        m.put("limitUse", Double.isNaN(n.limit()) || n.limit() == 0 ? null : s.measures().var() / n.limit());
+        m.put("trades", s.set().size());
+        m.put("hidden", s.hidden());
+        m.put("expandable", !n.children().isEmpty() || s.view().seesPositions(s.set()));
+        rows.add(m);
+        for (String c : n.children()) {
+            VarBook.Node cn = b.node(c);
+            if (cn != null) {
+                walk(p, b, cn, depth + 1, rows, date);
+            }
+        }
+    }
+
+    // ------------------------------------------------------------------------------------------------------------------- helpers
+
+    static long round(double v) {
+        return Double.isNaN(v) || Double.isInfinite(v) ? 0 : Math.round(v);
+    }
+
+    private static long[] roundAll(double[] v) {
+        long[] out = new long[v.length];
+        for (int i = 0; i < v.length; i++) {
+            out[i] = Math.round(v[i]);
+        }
+        return out;
+    }
+
+    private static double nz(double v) {
+        return Double.isNaN(v) ? 0 : v;
+    }
+
+    private static Object nan(double v) {
+        return Double.isNaN(v) ? null : v;
+    }
+}

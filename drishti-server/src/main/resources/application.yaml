@@ -569,6 +569,16 @@ drishti:
     per-user: 20
     tick: 30s
     keep-runs: 20
+  var:                               # the VaR engine (docs/architecture/VAR_ENGINE.md): VaR of any set of trades from the stored P&L vectors
+    enabled: ${DRISHTI_VAR_ENABLED:true}
+    confidence: 0.99                 # VaR's confidence
+    es-confidence: 0.975             # expected shortfall's
+    rank-rule: kth-worst             # kth-worst (k = ceil(N (1 - a)): the 6th worst of 509) or interpolated
+    component-window: 5              # component VaR averages the scenarios ranked k-2 .. k+2, scaled to add up to the VaR
+    threads: ${DRISHTI_VAR_THREADS:0}                  # cores the vector sums use (0: every core)
+    memory-budget-mb: ${DRISHTI_VAR_MEMORY_MB:0}       # most memory the loaded dates' vectors take (0: a quarter of the heap)
+    hot-dates: 2                     # business dates kept loaded (the newest)
+    history-days: 250                # history and backtest window
   calc:                              # Calc: Python in the browser (docs/guides/PYTHON_CALC.md); the server never runs the code
     enabled: ${DRISHTI_CALC_ENABLED:true}   # also needs a role with calc, and a pack that enables it for the view's kind
     max-column-rows: 250000          # drishti.columns() returns at most this many entities (the browser holds them all)

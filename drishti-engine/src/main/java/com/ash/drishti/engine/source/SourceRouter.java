@@ -1036,6 +1036,30 @@ public final class SourceRouter implements com.ash.drishti.common.LiveSettings {
         return out;
     }
 
+    /**
+     * A date's vector column of the kind (a P&amp;L vector per trade, VAR_DATA_MODEL.md section 15) with some text columns, streamed to
+     * {@code sink} by the first source in routing order that keeps the column as a vector; false when none does.
+     */
+    public boolean vectors(String kind, String column, List<String> texts, AsOf asOf, com.ash.drishti.api.VectorSink sink) throws Exception {
+        for (SourcePlugin p : candidates(kind)) {
+            if (p.vectorColumns(kind).contains(column) && p.vectors(kind, column, texts, asOf, sink)) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    /** Column batches of the kind over a date range from the first source in routing order that answers as columns (RUPAKA.md 6.1). */
+    public Optional<com.ash.drishti.api.ArrowScan> scan(com.ash.drishti.api.ScanRequest request) throws Exception {
+        for (SourcePlugin p : candidates(request.kind())) {
+            Optional<com.ash.drishti.api.ArrowScan> s = p.scan(request);
+            if (s.isPresent()) {
+                return s;
+            }
+        }
+        return Optional.empty();
+    }
+
     /** The paths a source of the kind keeps as columns (the first that keeps any). */
     public java.util.Set<String> columnar(String kind) {
         return candidates(kind).stream().map(p -> p.columnar(kind)).filter(s -> !s.isEmpty()).findFirst().orElse(java.util.Set.of());
