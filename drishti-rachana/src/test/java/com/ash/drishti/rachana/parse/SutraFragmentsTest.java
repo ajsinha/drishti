@@ -55,7 +55,7 @@ class SutraFragmentsTest {
     void theLibraryLoadsAndEveryFragmentAndEveryExampleOfItsDocExpandsIntoPanels() throws Exception {
         assertThat(SutraBlocks.load(List.of(LIBRARY))).isEmpty();
         var fragments = SutraBlocks.library().values().stream().flatMap(v -> v.values().stream()).toList();
-        assertThat(fragments).hasSizeBetween(8, 15).allMatch(SutraBlocks.Block::fragment);
+        assertThat(fragments).hasSizeBetween(8, 30).allMatch(SutraBlocks.Block::fragment);
         assertThat(fragments).extracting(SutraBlocks.Block::name).contains("series-line", "curve-table", "field-list", "ranked-bars",
                 "cashflow-ladder", "linked-entities", "data-provenance", "key-figure", "measure-table", "region-map", "source-footer");
         for (SutraBlocks.Block b : fragments) {

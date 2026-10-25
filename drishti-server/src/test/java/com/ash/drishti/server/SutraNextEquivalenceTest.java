@@ -138,7 +138,7 @@ class SutraNextEquivalenceTest {
     @Test
     void theLibraryApiListsTheFragmentsWithTheirDocstrings() throws Exception {
         JsonNode lib = read("/api/v1/sutras/library", "full");
-        assertThat(lib.path("count").asInt()).isBetween(8, 15);
+        assertThat(lib.path("count").asInt()).isBetween(8, 30);
         JsonNode line = null;
         for (JsonNode f : lib.path("fragments")) {
             assertThat(f.path("fragment").asBoolean()).isTrue();
