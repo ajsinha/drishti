@@ -1,0 +1,133 @@
+{#
+  Project Drishti · Any data. Any domain. One grammar.
+
+  Copyright (c) 2026 Ashutosh Sinha <ajsinha@gmail.com>.
+  All rights reserved.
+
+  PROPRIETARY AND CONFIDENTIAL.
+
+  This file is the confidential and proprietary property of Ashutosh Sinha.
+  Unauthorised copying, use, modification, distribution or disclosure of this
+  file, via any medium, is strictly prohibited except with the express prior
+  written permission of the copyright holder.
+
+  See the LICENSE file in the root of this repository for the full terms.
+#}
+{% extends "base.html" %}
+{% block title %}Compute · {{ PRODUCT }}{% endblock %}
+{% block head %}<link rel="stylesheet" href="/static/css/admin-packs.css?v={{ ASSET_V }}"><link rel="stylesheet" href="/static/css/admin-compute.css?v={{ ASSET_V }}">{% endblock %}
+{% block screen %}admin{% endblock %}
+{% block body_class %}terminal{% endblock %}
+{% block nav %}{% include "terminal/_topbar.html" %}{% endblock %}
+{% block content %}
+<div class="adm" data-compute data-me="{{ c.me }}">
+  {% with tab='compute' %}{% include "admin/_nav.html" %}{% endwith %}
+  <h1 class="ws-h">Compute</h1>
+  <p class="text-muted-d">Out-of-process Python workers for computed connectors: pools of workers on this node ({{ c.node }}) and on the other nodes that serve
+    the same pool, the locked environments they run in, and the approval of every library a connector or pool requires. Nothing a connector
+    requires is fetched, built or run before an administrator other than the person who asked approves it.
+    Settings: <span class="mono">{{ c.origin }}</span>; data under <span class="mono">{{ c.root }}</span>.</p>
+  {% if not c.enabled %}<p class="adm-warn" role="status" data-off><i class="bi bi-info-circle" aria-hidden="true"></i>
+    Compute is switched off on this server (<span class="mono">compute.enabled</span> in <span class="mono">config/compute/compute.yaml</span>). No worker runs;
+    you can still review and approve requirements below.</p>{% endif %}
+  {% if pending %}<p class="adm-warn" role="status" data-pending-banner><i class="bi bi-shield-exclamation" aria-hidden="true"></i>
+    {{ pending | length }} approval request{{ '' if pending | length == 1 else 's' }} waiting: the connectors and pools that asked stay off until decided.</p>{% endif %}
+  <p class="adm-msg" data-msg role="status" aria-live="polite"></p>
+
+  <h2 class="cmp-h">Pools</h2>
+  <div class="tbl-wrap"><table class="tbl adm-tbl" data-pools>
+    <caption class="visually-hidden">Worker pools on this node, their queues and latency</caption>
+    <thead><tr><th scope="col">Pool</th><th scope="col">Workers here</th><th scope="col">Other nodes</th><th scope="col">Queued</th>
+      <th scope="col">Served</th><th scope="col">Latency (ms)</th><th scope="col">State</th><th scope="col"><span class="visually-hidden">Actions</span></th></tr></thead>
+    <tbody>{% for p in pools %}
+      <tr data-pool="{{ p.name }}">
+        <th scope="row" class="cmp-name"><b>{{ p.name }}</b><br><span class="text-muted-d">{{ p.mode or '' }} &middot; {{ p.environment }}</span>
+          <div class="mono text-muted-d cmp-engines">{{ p.engines | join(', ') }}</div></th>
+        <td><span class="mono">{{ p.busy or 0 }}</span> busy &middot; <span class="mono">{{ p.idle or 0 }}</span> idle{% if p.starting %} &middot; <span class="mono">{{ p.starting }}</span> starting{% endif %}
+          <div class="text-muted-d">{{ p.workersMin }}&ndash;{{ p.workersMax }} workers{% if p.batchSlots %}, batch up to {{ p.batchSlots }}{% endif %}</div></td>
+        <td>{% for o in p.peers or [] %}<div><span class="mono">{{ o.node }}</span>: {{ o.workers }} ({{ o.busy }} busy)</div>{% else %}<span class="text-muted-d">none</span>{% endfor %}</td>
+        <td>{% if p.queues %}{% for k, n in p.queues.items() %}<div>{{ k }} <span class="mono">{{ n }}</span></div>{% endfor %}{% else %}<span class="text-muted-d">&ndash;</span>{% endif %}</td>
+        <td><span class="mono">{{ '{:,}'.format(p.served or 0) }}</span>
+          <div class="text-muted-d">{{ p.crashed or 0 }} crashed &middot; {{ p.recycled or 0 }} recycled</div>
+          {% if p.failures %}<div class="t-bad">{% for k, n in p.failures.items() %}{{ k }} {{ n }}{{ ', ' if not loop.last }}{% endfor %}</div>{% endif %}</td>
+        <td>{% if p.runMs %}run p50 <span class="mono">{{ p.runMs.p50 }}</span>, p95 <span class="mono">{{ p.runMs.p95 }}</span>
+          <div class="text-muted-d">queue p95 {{ p.queueMs.p95 }}</div>{% else %}<span class="text-muted-d">&ndash;</span>{% endif %}</td>
+        <td>{% if p.ready == 'ready' %}<span class="st st-ok">ready</span>{% else %}<span class="st st-bad">not ready</span><div class="cmp-why">{{ p.ready }}</div>{% endif %}</td>
+        <td class="adm-actions">{% if c.enabled and 'drishti_compute.samples.vectors:VectorEngine' in (p.engines or []) %}<button type="button" class="fk" data-test>Test</button>{% endif %}
+          {% if p.environment != 'system' %}<button type="button" class="fk" data-build>Build</button>{% endif %}</td></tr>
+    {% else %}<tr data-none><td colspan="8" class="text-muted-d">No pool is configured. Pools are set in <span class="mono">config/compute/compute.yaml</span> (<span class="mono">compute.pools</span>).</td></tr>{% endfor %}</tbody>
+  </table></div>
+
+  <h2 class="cmp-h">Busy now</h2>
+  <div class="tbl-wrap"><table class="tbl adm-tbl" data-busy>
+    <caption class="visually-hidden">Requests running on this node's workers</caption>
+    <thead><tr><th scope="col">Worker</th><th scope="col">Request</th><th scope="col">User</th><th scope="col">Class</th><th scope="col">Kind</th>
+      <th scope="col">For (ms)</th><th scope="col"><span class="visually-hidden">Actions</span></th></tr></thead>
+    <tbody>{% for w in busy %}
+      <tr data-running="{{ w.request }}"><td class="mono">{{ w.id }}</td><td class="mono">{{ w.request }}</td><td>{{ w.user }}</td><td>{{ w['class'] }}</td>
+        <td class="mono">{{ w.kind }}</td><td class="mono">{{ w.forMs }}</td><td class="adm-actions"><button type="button" class="fk cmp-danger" data-cancel>Cancel</button></td></tr>
+    {% else %}<tr data-none><td colspan="7" class="text-muted-d">No request is running.</td></tr>{% endfor %}</tbody>
+  </table></div>
+
+  <h2 class="cmp-h">Approval requests</h2>
+  <div class="tbl-wrap"><table class="tbl adm-tbl" data-approvals>
+    <caption class="visually-hidden">Requests to approve what connectors and pools require</caption>
+    <thead><tr><th scope="col">Request</th><th scope="col">For</th><th scope="col">Requires</th><th scope="col">Asked by</th>
+      <th scope="col">State</th><th scope="col"><span class="visually-hidden">Actions</span></th></tr></thead>
+    <tbody>{% for a in approvals %}
+      <tr data-request="{{ a.id }}" data-state="{{ a.state }}"{% if a.mine %} data-mine{% endif %}>
+        <th scope="row" class="mono cmp-name">{{ a.id }}</th>
+        <td class="mono">{{ a.subject }}</td>
+        <td><details><summary>{% for k, n in a.kinds.items() %}{{ n }} {{ k }}{{ ', ' if not loop.last }}{% endfor %}</summary>
+          <table class="cmp-items"><caption class="visually-hidden">Items of {{ a.id }}</caption>
+            <thead><tr><th scope="col">Kind</th><th scope="col">Name</th><th scope="col">Version</th><th scope="col">Source</th><th scope="col">Native code</th><th scope="col">sha256</th></tr></thead>
+            <tbody>{% for i in a['items'] %}<tr><td>{{ i.kind }}</td><td class="mono">{{ i.name }}</td><td class="mono">{{ i.version }}</td><td>{{ i.source }}</td>
+              <td>{{ 'yes' if i.nativeCode else 'no' }}</td><td class="mono cmp-hash">{{ i.hash }}</td></tr>{% endfor %}</tbody></table></details></td>
+        <td>{{ a.requestedBy }}<div class="text-muted-d">{{ when_local(a.requestedAt) if a.requestedAt else '' }}</div></td>
+        <td>{% if a.state == 'approved' %}<span class="st st-ok">approved</span>{% elif a.state == 'pending' %}<span class="st">pending</span>{% else %}<span class="st st-bad">{{ a.state }}</span>{% endif %}
+          {% if a.decidedBy %}<div class="text-muted-d">by {{ a.decidedBy }}: {{ a.reason }}</div>{% endif %}
+          {% if a.revokedBy %}<div class="text-muted-d">revoked by {{ a.revokedBy }}: {{ a.revokeReason }}</div>{% endif %}</td>
+        <td class="adm-actions">{% if a.state == 'pending' %}{% if a.mine %}<span class="text-muted-d" title="Four eyes: another administrator decides">you asked</span>
+            {% else %}<button type="button" class="fk" data-decide="approve">Approve</button><button type="button" class="fk cmp-danger" data-decide="reject">Reject</button>{% endif %}
+          {% elif a.state == 'approved' %}<button type="button" class="fk cmp-danger" data-decide="revoke">Revoke</button>{% endif %}</td></tr>
+    {% else %}<tr data-none><td colspan="6" class="text-muted-d">No approval request. A connector with a <span class="mono">requires:</span> block, or a pool with a locked environment, files one when it is loaded.</td></tr>{% endfor %}</tbody>
+  </table></div>
+
+  <h2 class="cmp-h">Environments</h2>
+  <div class="tbl-wrap"><table class="tbl adm-tbl" data-envs>
+    <caption class="visually-hidden">Locked Python environments built under the data folder</caption>
+    <thead><tr><th scope="col">Environment</th><th scope="col">Python</th><th scope="col">Packages</th><th scope="col">Built</th><th scope="col">Size</th></tr></thead>
+    <tbody>{% for e in envs %}
+      <tr data-env="{{ e.id }}"><th scope="row" class="mono cmp-name">{{ e.id }}</th><td>{{ e.python or '' }} <span class="text-muted-d">{{ e.platform or '' }}</span></td>
+        <td class="mono cmp-pkgs">{{ (e.packages or []) | join(', ') }}</td>
+        <td>{% if e.built %}{{ when_local(e.builtAt) if e.builtAt else '' }} <span class="text-muted-d">by {{ e.builtBy }}</span>{% else %}<span class="st st-bad">not built</span>{% endif %}
+          {% if e.lastFailure %}<div class="t-bad">{{ e.lastFailure }}</div>{% endif %}</td>
+        <td class="mono">{{ '{:,.1f}'.format((e.bytes or 0) / 1048576) }} MB</td></tr>
+    {% else %}<tr data-none><td colspan="5" class="text-muted-d">No environment is built. Pools on <span class="mono">environment: system</span> run in the site's interpreter.</td></tr>{% endfor %}</tbody>
+  </table></div>
+
+  <h2 class="cmp-h">Recent requests</h2>
+  <div class="tbl-wrap"><table class="tbl adm-tbl" data-recent>
+    <caption class="visually-hidden">The last requests on this node and how they ended</caption>
+    <thead><tr><th scope="col">Request</th><th scope="col">User</th><th scope="col">Pool &middot; kind</th><th scope="col">Class</th><th scope="col">Outcome</th>
+      <th scope="col">Queued (ms)</th><th scope="col">Ran (ms)</th><th scope="col">Worker</th></tr></thead>
+    <tbody>{% for r in recent[:50] %}
+      <tr><td class="mono">{{ r.id }}</td><td>{{ r.user }}</td><td class="mono">{{ r.pool }} &middot; {{ r.kind }}</td><td>{{ r['class'] }}</td>
+        <td>{% if r.outcome == 'done' %}<span class="st st-ok">done</span>{% else %}<span class="st st-bad">{{ r.outcome }}</span>{% endif %}</td>
+        <td class="mono">{{ r.queuedMs }}</td><td class="mono">{{ r.runMs }}</td><td class="mono">{{ r.worker or '' }}</td></tr>
+    {% else %}<tr data-none><td colspan="8" class="text-muted-d">No request yet.</td></tr>{% endfor %}</tbody>
+  </table></div>
+
+  <dialog class="adm-dialog cmp-dialog" data-decide-dialog aria-labelledby="cmpDecideTitle">
+    <div class="ds-head"><h2 id="cmpDecideTitle"><span data-decide-verb>Approve</span> <span class="mono" data-decide-id></span></h2>
+      <button type="button" class="btn-pill btn-ghost" data-close aria-label="Close without deciding">Close</button></div>
+    <p class="text-muted-d" data-decide-help></p>
+    <label>Reason (recorded in the audit log)<textarea class="studio-in" rows="3" maxlength="1000" data-decide-reason required></textarea></label>
+    <p class="adm-msg" data-decide-msg role="status" aria-live="polite"></p>
+    <div class="adm-dlg-actions ds-actions"><button type="button" class="btn-pill btn-ghost" data-close>Cancel</button>
+      <button type="button" class="btn-pill btn-accent" data-decide-go>Approve</button></div>
+  </dialog>
+</div>
+{% endblock %}
+{% block footer %}{% include "_footer.html" %}{% endblock %}
+{% block scripts %}<script src="/static/js/command.js?v={{ ASSET_V }}"></script><script src="/static/js/admin-compute.js?v={{ ASSET_V }}"></script>{% endblock %}
