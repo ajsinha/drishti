@@ -36,6 +36,7 @@ import argparse
 import gzip
 import json
 import os
+import re
 import sys
 import time
 import urllib.error
@@ -47,19 +48,35 @@ ROOT = Path(__file__).resolve().parents[3]
 DEFAULT_CACHE = ROOT / "data" / "cache" / "us-equities"
 USER_AGENT = os.environ.get("DRISHTI_SEC_USER_AGENT", "Drishti research ajsinha@gmail.com")
 INDEXES = {"DJIA": "Q180816", "NDX": "Q507306", "SP500": "Q242345"}
+# curated lists, kept here (not in Wikidata): code -> (name, tickers as the SEC ticker file lists them). Only SEC filers can be in this
+# pack; banks with no SEC filings (National Bank of Canada, Standard Chartered, Nationwide...) are in the gleif pack's bank groups.
+LISTS = {
+    "BANKS-US": ("Major US banks", ["JPM", "BAC", "C", "WFC", "GS", "MS", "BNY", "STT", "NTRS", "USB", "PNC", "TFC", "COF", "SCHW", "AXP",
+                                    "CFG", "FITB", "MTB", "HBAN", "RF", "KEY", "ALLY", "FCNCA", "SYF", "ZION", "FHN", "WAL", "EWBC",
+                                    "CFR", "BOKF", "WTFC", "ONB", "PNFP", "CBSH", "VLY", "FNB", "SSB", "COLB", "UMBF"]),
+    "BANKS-CA": ("Canadian banks", ["RY", "TD", "BNS", "BMO", "CM", "VBNK"]),
+    "BANKS-UK": ("Major UK banks", ["HSBC", "BCS", "LYG", "NWG"]),
+}
+ANNUAL_FORMS = ("10-K", "20-F", "40-F")   # a foreign private issuer's annual report is a 20-F or (Canada) a 40-F
 
-# concept -> the XBRL tags tried in order (us-gaap unless prefixed dei:), the unit and whether it is a point in time
+# concept -> the XBRL tags tried in order (us-gaap unless prefixed dei: or ifrs-full:), the unit and whether it is a point in time; a
+# USD unit means money in the currency the filer reports in (a 40-F in CAD, a 20-F in GBP: _unit)
 CONCEPTS = {
     "REVENUE": (["Revenues", "RevenueFromContractWithCustomerExcludingAssessedTax", "SalesRevenueNet", "RevenuesNetOfInterestExpense",
-                 "RevenueFromContractWithCustomerIncludingAssessedTax", "SalesRevenueGoodsNet"], "USD", False),
-    "NET_INCOME": (["NetIncomeLoss", "ProfitLoss", "NetIncomeLossAvailableToCommonStockholdersBasic"], "USD", False),
-    "ASSETS": (["Assets"], "USD", True),
-    "LIABILITIES": (["Liabilities"], "USD", True),
-    "EQUITY": (["StockholdersEquity", "StockholdersEquityIncludingPortionAttributableToNoncontrollingInterest"], "USD", True),
+                 "RevenueFromContractWithCustomerIncludingAssessedTax", "SalesRevenueGoodsNet", "ifrs-full:Revenue",
+                 "ifrs-full:RevenueFromContractsWithCustomers"], "USD", False),
+    "NET_INCOME": (["NetIncomeLoss", "ProfitLoss", "NetIncomeLossAvailableToCommonStockholdersBasic",
+                    "ifrs-full:ProfitLossAttributableToOwnersOfParent", "ifrs-full:ProfitLoss"], "USD", False),
+    "ASSETS": (["Assets", "ifrs-full:Assets"], "USD", True),
+    "LIABILITIES": (["Liabilities", "ifrs-full:Liabilities"], "USD", True),
+    "EQUITY": (["StockholdersEquity", "StockholdersEquityIncludingPortionAttributableToNoncontrollingInterest",
+                "ifrs-full:EquityAttributableToOwnersOfParent", "ifrs-full:Equity"], "USD", True),
     # used by make.py only to derive total liabilities where a filer reports no Liabilities line (liabilities and equity less total equity)
-    "LIABILITIES_AND_EQUITY": (["LiabilitiesAndStockholdersEquity"], "USD", True),
-    "EQUITY_TOTAL": (["StockholdersEquityIncludingPortionAttributableToNoncontrollingInterest", "StockholdersEquity"], "USD", True),
-    "EPS_DILUTED":(["EarningsPerShareDiluted", "EarningsPerShareBasic"], "USD/shares", False),
+    "LIABILITIES_AND_EQUITY": (["LiabilitiesAndStockholdersEquity", "ifrs-full:EquityAndLiabilities"], "USD", True),
+    "EQUITY_TOTAL": (["StockholdersEquityIncludingPortionAttributableToNoncontrollingInterest", "StockholdersEquity",
+                      "ifrs-full:Equity"], "USD", True),
+    "EPS_DILUTED":(["EarningsPerShareDiluted", "EarningsPerShareBasic", "ifrs-full:DilutedEarningsLossPerShare",
+                   "ifrs-full:BasicEarningsLossPerShare"], "USD/shares", False),
     "SHARES_OUTSTANDING": (["dei:EntityCommonStockSharesOutstanding"], "shares", True),
 }
 YEARS = 10
@@ -126,7 +143,8 @@ def wikidata(http: Http, cache: Path) -> None:
                OPTIONAL {{ ?i rdfs:label ?label FILTER(lang(?label)='en') }} }}"""
         for r in _sparql(http, q):
             rows.append({"index": code, "qid": r["i"].rsplit("/", 1)[-1], "label": r.get("label", ""), "cik": r.get("cik", ""), "since": r.get("start", "")[:10]})
-    qids = sorted({r["qid"] for r in rows})
+    rows += _list_members(http, cache)
+    qids = sorted({r["qid"] for r in rows if r["qid"]})
     facts: dict[str, dict] = {}
     for i in range(0, len(qids), 150):
         values = " ".join("wd:" + q for q in qids[i:i + 150])
@@ -146,6 +164,43 @@ def wikidata(http: Http, cache: Path) -> None:
     _save(out, {"retrieved": time.strftime("%Y-%m-%d"), "members": rows, "facts": facts})
 
 
+def sec_tickers(http: Http, cache: Path) -> None:
+    tick = cache / "sec" / "company_tickers_exchange.json"
+    if not tick.exists():
+        print("SEC: company_tickers_exchange.json")
+        body = http.get("https://www.sec.gov/files/company_tickers_exchange.json")
+        if body is None:
+            raise SystemExit("SEC tickers failed")
+        _save(tick, body)
+
+
+def _list_members(http: Http, cache: Path) -> list[dict]:
+    """The members of the curated LISTS as Wikidata member rows: the CIK from the SEC ticker file, the Wikidata item (for
+    headquarters, founded, website and LEI) by that CIK (P5531) where Wikidata has one. A ticker the SEC file does not know is
+    reported and left out."""
+    sec_tickers(http, cache)
+    by_ticker, _ = sec_maps(cache)
+    rows, ciks = [], set()
+    for code, (_name, tickers) in LISTS.items():
+        for tk in tickers:
+            cik = by_ticker.get(tk)
+            if not cik:
+                print(f"  {code}: {tk} is not in the SEC ticker file, left out", file=sys.stderr)
+                continue
+            rows.append({"index": code, "qid": "", "label": "", "cik": cik, "since": ""})
+            ciks.add(cik)
+    qid_by_cik: dict[str, tuple[str, str]] = {}
+    values = " ".join(f'"{int(c):010d}" "{int(c)}"' for c in sorted(ciks, key=int))
+    if values:
+        q = f"""SELECT ?i ?cik ?label WHERE {{ VALUES ?cik {{ {values} }} ?i wdt:P5531 ?cik .
+               OPTIONAL {{ ?i rdfs:label ?label FILTER(lang(?label)='en') }} }}"""
+        for r in _sparql(http, q):
+            qid_by_cik.setdefault(str(int(r["cik"])), (r["i"].rsplit("/", 1)[-1], r.get("label", "")))
+    for r in rows:
+        r["qid"], r["label"] = qid_by_cik.get(r["cik"], ("", ""))
+    return rows
+
+
 def nasdaq(http: Http, cache: Path) -> None:
     for name in ("nasdaqlisted.txt", "otherlisted.txt"):
         out = cache / "nasdaq" / name
@@ -158,15 +213,26 @@ def nasdaq(http: Http, cache: Path) -> None:
             _save(out, body)
 
 
+def _unit(units: dict, unit: str) -> str:
+    """The unit to read: the one asked for, else for money the filer's own currency (CAD, GBP, EUR: the first three-letter unit
+    with values, with /shares kept for a per-share figure)."""
+    if unit in units or not unit.startswith("USD"):
+        return unit
+    rest = unit[3:]
+    return next((u for u in sorted(units) if len(u) == 3 + len(rest) and u.endswith(rest) and u[:3].isalpha() and u[:3].isupper()), unit)
+
+
 def _annual(facts: dict, tags: list[str], unit: str, instant: bool) -> list[dict]:
     """The last YEARS annual values, one a fiscal year (the year its period ends; the latest filing wins), from the first tag in
-    order that has a value for that year."""
+    order that has a value for that year. Annual means a 10-K, or a foreign filer's 20-F or 40-F; each row says its unit."""
     years: dict[int, dict] = {}
     for tag in tags:
         ns, name = tag.split(":") if ":" in tag else ("us-gaap", tag)
+        units = facts.get(ns, {}).get(name, {}).get("units", {})
+        use = _unit(units, unit)
         best: dict[int, dict] = {}
-        for v in facts.get(ns, {}).get(name, {}).get("units", {}).get(unit, []):
-            if not str(v.get("form", "")).startswith("10-K") or not v.get("end"):
+        for v in units.get(use, []):
+            if not str(v.get("form", "")).startswith(ANNUAL_FORMS) or not v.get("end"):
                 continue
             if not instant:
                 if not v.get("start"):
@@ -178,20 +244,14 @@ def _annual(facts: dict, tags: list[str], unit: str, instant: bool) -> list[dict
             cur = best.get(year)
             if cur is None or (v["end"], v.get("filed", "")) > (cur["end"], cur["filed"]):
                 best[year] = {"year": year, "end": v["end"], "value": v["val"], "tag": name, "filed": v.get("filed", ""),
-                              "form": v.get("form", ""), "accn": v.get("accn", "")}
+                              "form": v.get("form", ""), "accn": v.get("accn", ""), "unit": use}
         for y, r in best.items():
             years.setdefault(y, r)
     return [years[y] for y in sorted(years)][-YEARS:]
 
 
 def sec(http: Http, cache: Path, limit: int | None) -> None:
-    tick = cache / "sec" / "company_tickers_exchange.json"
-    if not tick.exists():
-        print("SEC: company_tickers_exchange.json")
-        body = http.get("https://www.sec.gov/files/company_tickers_exchange.json")
-        if body is None:
-            raise SystemExit("SEC tickers failed")
-        _save(tick, body)
+    sec_tickers(http, cache)
     ciks = universe(cache)[:limit] if limit else universe(cache)
     print(f"SEC: {len(ciks)} companies (submissions and annual facts)")
     for n, cik in enumerate(ciks, 1):
@@ -281,12 +341,17 @@ def gleif(http: Http, cache: Path) -> None:
             sub = cache / "sec" / "submissions" / f"{int(cik):010d}.json"
             if not sub.exists():
                 continue
-            name = json.loads(sub.read_text(encoding="utf-8")).get("name", "")
-            q = urllib.parse.urlencode({"filter[entity.legalName]": name, "filter[entity.legalAddress.country]": "US", "page[size]": "5"})
+            s = json.loads(sub.read_text(encoding="utf-8"))
+            name = re.sub(r"\s*/[A-Z]{2,4}/?\s*$", "", s.get("name", "")).strip()       # EDGAR's suffixes: "/CAN/", "/DE/"
+            biz = (s.get("addresses") or {}).get("business") or {}
+            where = biz.get("stateOrCountry") or biz.get("countryCode") or ""
+            country = "CA" if where[:1] == "A" or where == "B0" else "GB" if where == "X0" else "US"   # EDGAR's codes abroad
+            q = urllib.parse.urlencode({"filter[entity.legalName]": name, "filter[entity.legalAddress.country]": country, "page[size]": "5"})
             body = http.get("https://api.gleif.org/api/v1/lei-records?" + q, "application/vnd.api+json")
             data = json.loads(body).get("data", []) if body else []
             data = [d for d in data if d["attributes"]["entity"].get("status") == "ACTIVE"]
-            rec = data[0] if len(data) == 1 else None
+            exact = [d for d in data if d["attributes"]["entity"]["legalName"]["name"].casefold() == name.casefold()]
+            rec = data[0] if len(data) == 1 else exact[0] if len(exact) == 1 else None
             how = "matched by legal name"
         if rec is None:
             _save(out, {})

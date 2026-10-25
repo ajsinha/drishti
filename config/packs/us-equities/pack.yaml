@@ -13,7 +13,8 @@
 # See the LICENSE file in the root of this repository for the full terms.
 
 
-# US equities · real public data on the companies of the Dow 30, the Nasdaq-100 and the S&P 500: SEC EDGAR (public domain) for the
+# US equities · real public data on the companies of the Dow 30, the Nasdaq-100 and the S&P 500, and on major US, Canadian and UK
+# banks that file with the SEC (the pack's bank lists): SEC EDGAR (public domain) for the
 # companies, their SIC sectors, filings and annual XBRL financials; Wikidata (CC0) for index membership, headquarters and founding;
 # GLEIF (CC0) for the LEI; the Nasdaq Trader symbol directory for the listing market. Hand-written; tools/packgen/us_equities/make.py
 # writes the data (data/testdata/us-equities/<kind>/, built into the lake by tools/build_demo_lakes.py and served by the Delta
@@ -24,8 +25,9 @@ version: 1.0.0
 code: USEQS            # typed alone, opens this pack's overview
 title: US equities
 description: >-
-  Public data on the companies of the Dow 30, the Nasdaq-100 and the S&P 500: SEC EDGAR companies, SIC sectors, filings and ten years
-  of annual XBRL financials, LEIs from GLEIF and index membership from Wikidata. Prices are not shipped: the price-history kind is read
+  Public data on the companies of the Dow 30, the Nasdaq-100 and the S&P 500, and on major US, Canadian and UK banks that file with
+  the SEC: SEC EDGAR companies, SIC sectors, filings and ten years of annual XBRL financials, LEIs from GLEIF and index membership
+  from Wikidata. Prices are not shipped: the price-history kind is read
   live by a connector that is off by default and for internal use only.
 kinds: [us-company, index-membership, sic-sector, filing-feed, filing, financial-fact, price-history]
 formats: config/formats.yaml
@@ -83,6 +85,7 @@ console:
     - ["USEQ JPM", "JPMorgan Chase · a bank's financials"]
     - ["IDX SP500", "S&P 500 · the members, filterable; a click opens the company beside"]
     - ["IDX DJIA", "Dow Jones Industrial Average · thirty members"]
+    - ["IDX BANKS-CA", "Canadian banks that file with the SEC · financials in CAD"]
     - ["SIC 3674", "Semiconductors · the companies of one SIC code by revenue"]
     - ["SIC ALL", "Every SIC code covered, by revenue"]
     - ["EDGAR 8-K", "The latest current reports; a click opens the filing beside"]

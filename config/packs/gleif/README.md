@@ -187,25 +187,25 @@ Links: `ENTITY_LEI` → `lei-entity`, `LEI_COUNTRY` → `lei-country`.
 
 **LEI parent relationship** · mnemonic `LEIR` · read through connector `gleif-store`.
 
-**Id:** field `RELATIONSHIP_ID`; pattern `^LEIREL-`; for example `LEIREL-0292001381F1R1IB5B85-DIRECT`.
+**Id:** field `RELATIONSHIP_ID`; pattern `^LEIREL-`; for example `LEIREL-010PWNH4K3BLIC3I7R03-DIRECT`.
 
 Fields, from 2 sample documents:
 
 | Field | Type | Example | Description |
 |---|---|---|---|
-| `RELATIONSHIP_ID` | string | `LEIREL-0292001381F1R1IB5B85-DIRECT` | LEIREL-<child LEI>-DIRECT or -ULTIMATE |
+| `RELATIONSHIP_ID` | string | `LEIREL-010PWNH4K3BLIC3I7R03-DIRECT` | LEIREL-<child LEI>-DIRECT or -ULTIMATE |
 | `LEVEL` | string | `Direct` | Direct or Ultimate |
-| `CHILD_ENTITY` | string | `0292001381F1R1IB5B85` | The child's LEI; link to `lei-entity` |
-| `PARENT_ENTITY` | string | `2549003PEZXUT7MDBU41` | The parent's LEI; link to `lei-entity` |
+| `CHILD_ENTITY` | string | `010PWNH4K3BLIC3I7R03` | The child's LEI; link to `lei-entity` |
+| `PARENT_ENTITY` | string | `549300COKYB5EGSU1838` | The parent's LEI; link to `lei-entity` |
 | `RELATIONSHIP_STATUS` | string | `ACTIVE` | ACTIVE or INACTIVE |
-| `START` | date | `2006-01-25` | Start of the relationship |
+| `START` | date | `2017-12-06` | Start of the relationship |
 | `PERIODS` | list of objects |  | Accounting and document filing periods |
-| `ACCOUNTING_STANDARD` | string | `IFRS` | Accounting standard of the consolidation |
-| `REGISTRATION_STATUS` | string | `PUBLISHED` | The relationship record's registration status |
-| `INITIAL_REGISTRATION` | date | `2016-07-14` | First registered |
-| `LAST_UPDATE` | date | `2026-07-27` | Last updated |
-| `NEXT_RENEWAL` | date | `2027-07-13` | Next renewal |
-| `LEI_GROUP` | string | `2549003PEZXUT7MDBU41` | link to `lei-group` |
+| `REGISTRATION_STATUS` | string | `LAPSED` | The relationship record's registration status |
+| `INITIAL_REGISTRATION` | date | `2023-08-08` | First registered |
+| `LAST_UPDATE` | date | `2024-10-07` | Last updated |
+| `NEXT_RENEWAL` | date | `2024-10-07` | Next renewal |
+| `LEI_GROUP` | string | `549300B2Q47IR0CR5B54` | link to `lei-group` |
+| `ACCOUNTING_STANDARD` | string | `IFRS` | Accounting standard of the consolidation (in 50%) |
 
 Nested structures:
 
@@ -227,13 +227,13 @@ Fields, from 1 sample document:
 |---|---|---|---|
 | `COUNTRY` | string | `US` | ISO 3166 alpha-2 code (ALL for the directory) |
 | `NAME` | string | `United States of America (the)` | — |
-| `ENTITIES` | integer | `2624` | Entities with a legal address there |
-| `GROUPS_PRESENT` | integer | `502` | Groups present |
-| `GROUPS_HEADQUARTERED` | integer | `435` | — |
-| `LAPSED` | integer | `693` | — |
-| `LATE_RENEWALS` | integer | `703` | — |
+| `ENTITIES` | integer | `2704` | Entities with a legal address there |
+| `GROUPS_PRESENT` | integer | `521` | Groups present |
+| `GROUPS_HEADQUARTERED` | integer | `451` | — |
+| `LAPSED` | integer | `713` | — |
+| `LATE_RENEWALS` | integer | `724` | — |
 | `ROWS` | list of objects |  | The entities (the first 400 by name) |
-| `ROWS_NOTE` | string | `The first 400 of 2,624 entities, by name` | — |
+| `ROWS_NOTE` | string | `The first 400 of 2,704 entities, by name` | — |
 | `GROUP_ROWS` | list of objects |  | Groups present, with their entities there |
 | `BY_LEGAL_FORM` | list of objects |  | Entities by legal form |
 | `BY_CITY` | list of objects |  | Entities by city |

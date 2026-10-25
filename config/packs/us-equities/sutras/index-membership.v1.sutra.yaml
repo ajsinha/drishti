@@ -56,7 +56,7 @@ panels:
     with:
       title: About this list
       area: right
-      text: "Membership as Wikidata (CC0) records it: a statement that the company is part of the index, with no end date. It can lag a change by days or weeks and is not an authoritative constituent list. Index weights and levels are proprietary to the index providers and are not included. Company figures: SEC EDGAR (public domain)."
+      text: "Index membership as Wikidata (CC0) records it: a statement that the company is part of the index, with no end date. It can lag a change by days or weeks and is not an authoritative constituent list. Index weights and levels are proprietary to the index providers and are not included. The bank lists (BANKS-US, BANKS-CA, BANKS-UK) are kept by Drishti and hold the banks that file with the SEC; a Canadian or UK bank reports in its own currency, and the totals add USD reporters only. Company figures: SEC EDGAR (public domain)."
   - { use: field-list@1, with: { id: source, title: Data source and licence, rows: $.PROVENANCE, area: right } }
   - { use: data-provenance@1 }
 keys: { F9: raw }

@@ -17,6 +17,17 @@
 
 ## Unreleased
 
+- **Banks in the public-data packs:** us-equities gains three lists kept by Drishti (`LISTS` in
+  `tools/packgen/us_equities/fetch.py`): `IDX BANKS-US` (39 major US banks), `IDX BANKS-CA` (RBC, TD, Scotiabank, BMO, CIBC,
+  VersaBank) and `IDX BANKS-UK` (HSBC, Barclays, Lloyds, NatWest). A foreign filer's annual report (20-F, 40-F) and IFRS tags are
+  read in the currency it reports in (new `CURRENCY` field; totals over many companies add USD reporters only); a Canadian or UK
+  company links to its economy; total assets fall back to total equity and liabilities; GLEIF name matching strips EDGAR's
+  `/CAN/`-style suffixes and prefers an exact legal name. The gleif pack seeds 37 more banks that do not file with the SEC
+  (National Bank of Canada, Desjardins, EQB, Laurentian, ATB and Canada's other domestic banks GLEIF knows by name; Santander UK,
+  Nationwide, Virgin Money, TSB, Metro, Close Brothers, Co-operative Bank, Monzo, Starling, Investec and other UK banks and
+  building societies), resolved by legal name and country. The GLEIF mapping download sends `Accept: */*` (the server now
+  answers 406 to `application/zip`). Both packs refreshed from their sources (us-equities 503 companies, 1.3 MB; gleif 9,937
+  entities, 3.2 MB).
 - **2.8.0 designs (design only, nothing built):** reactive connectors that compute when asked and on events, with point-in-time
   stamps, coalescing and per-user isolation ([REACTIVE_CONNECTORS.md](docs/architecture/REACTIVE_CONNECTORS.md)); out-of-process
   Python and Java compute workers with pinned, administrator-approved requirements, QLRisk as the default pricer (design only until
