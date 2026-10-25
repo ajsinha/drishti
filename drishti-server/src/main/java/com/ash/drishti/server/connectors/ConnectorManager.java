@@ -964,16 +964,17 @@ public final class ConnectorManager {
             throw new DrishtiException(ErrorCode.CONNECTOR_INVALID, "'plugin' is required");
         }
         Map<String, Object> requires = Map.of();                          // the form has no requires: field; keep the file's (PYTHON_COMPUTE.md section 4)
+        ConnectorFiles.Definition before = safeRead(name);
         if (body.get("requires") instanceof Map<?, ?> r) {
             requires = (Map<String, Object>) r;
-        } else {
-            ConnectorFiles.Definition before = safeRead(name);
-            if (before != null) {
-                requires = before.requires();
-            }
+        } else if (before != null) {
+            requires = before.requires();
         }
+        // nor a computation's (REACTIVE_CONNECTORS.md section 5): a reactive connector's kinds, reads, engine and triggers are kept as written
+        Map<String, Object> compute = before != null && "reactive".equals(String.valueOf(body.get("plugin"))) ? before.compute() : Map.of();
+        flat.remove(ConnectorFiles.COMPUTE_SETTING);
         return files.render("# Written from Admin -> Connectors by " + user + " on " + java.time.LocalDate.now(java.time.ZoneOffset.UTC) + ".", String.valueOf(body.get("plugin")),
-                body.get("enabled"), kinds, body.get("description") == null ? "" : String.valueOf(body.get("description")), flat, requires);
+                body.get("enabled"), kinds, body.get("description") == null ? "" : String.valueOf(body.get("description")), flat, requires, compute);
     }
 
     /** Parses a text as the named connector's file and validates it; throws DRS-5031 with every error. */

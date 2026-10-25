@@ -60,7 +60,15 @@ public final class ConnectorFiles {
 
     /** A connector's logical name: lower case letters, digits and hyphens, starting with a letter or digit. */
     public static final Pattern NAME = Pattern.compile("[a-z0-9][a-z0-9-]{0,63}");
-    private static final Set<String> KEYS = Set.of("name", "plugin", "enabled", "kinds", "description", "settings", "requires");
+    private static final Set<String> KEYS = Set.of("name", "plugin", "enabled", "kinds", "description", "settings", "requires", "mode", "reads",
+            "engine", "triggers", "coalesce", "cache", "limits", "history", "incremental");
+    /** The keys of a computation (docs/architecture/REACTIVE_CONNECTORS.md section 5): only a connector of the {@code reactive} plugin has them. */
+    public static final List<String> COMPUTE_KEYS = List.of("reads", "engine", "triggers", "coalesce", "cache", "limits", "history", "incremental");
+    /** The setting a reactive connector's computation reaches its plugin in: the {@code compute} block as JSON. */
+    public static final String COMPUTE_SETTING = "reactive.spec";
+    /** The connector modes (REACTIVE_CONNECTORS.md section 3). */
+    public static final Set<String> MODES = Set.of("static", "live", "on-demand", "reactive");
+    private static final ObjectMapper JSON = new ObjectMapper();
     private static final Pattern KEY = Pattern.compile("[A-Za-z0-9_][A-Za-z0-9_.-]{0,99}");
     private static final DateTimeFormatter STAMP = DateTimeFormatter.ofPattern("yyyyMMdd'T'HHmmssSSS").withZone(ZoneOffset.UTC);
     private static final int MAX_BYTES = 256 * 1024;
@@ -88,18 +96,28 @@ public final class ConnectorFiles {
      * @param modified when the file was last written (null before it exists)
      * @param requires the {@code requires:} block as written (the compute libraries the connector needs, docs/architecture/PYTHON_COMPUTE.md
      *        section 4), empty when none; nothing in it runs until an administrator approves it
+     * @param compute a reactive connector's computation as written ({@code mode}, {@code kinds} with their {@code params}, {@code reads},
+     *        {@code engine}, {@code triggers}, {@code coalesce}, {@code cache}, {@code limits}, {@code history}), empty for any other connector;
+     *        it reaches the plugin as the setting {@link ConnectorFiles#COMPUTE_SETTING}
      */
     public record Definition(String name, String plugin, String enabled, List<String> kinds, String description,
-            Map<String, String> settings, String text, String etag, Instant modified, Map<String, Object> requires) {
+            Map<String, String> settings, String text, String etag, Instant modified, Map<String, Object> requires, Map<String, Object> compute) {
 
         /** A definition without {@code requires:}. */
         public Definition(String name, String plugin, String enabled, List<String> kinds, String description, Map<String, String> settings,
                 String text, String etag, Instant modified) {
-            this(name, plugin, enabled, kinds, description, settings, text, etag, modified, Map.of());
+            this(name, plugin, enabled, kinds, description, settings, text, etag, modified, Map.of(), Map.of());
+        }
+
+        /** A definition without a computation. */
+        public Definition(String name, String plugin, String enabled, List<String> kinds, String description, Map<String, String> settings,
+                String text, String etag, Instant modified, Map<String, Object> requires) {
+            this(name, plugin, enabled, kinds, description, settings, text, etag, modified, requires, Map.of());
         }
 
         public Definition {
             requires = requires == null ? Map.of() : java.util.Collections.unmodifiableMap(new LinkedHashMap<>(requires));
+            compute = compute == null ? Map.of() : java.util.Collections.unmodifiableMap(new LinkedHashMap<>(compute));
             kinds = kinds == null ? List.of() : List.copyOf(kinds);
             settings = settings == null ? Map.of() : java.util.Collections.unmodifiableMap(new LinkedHashMap<>(settings));
             description = description == null ? "" : description;
@@ -302,11 +320,11 @@ public final class ConnectorFiles {
         ConnectorOverlay.Entry shared = o == null ? null : o.get(name);
         if (shared != null) {
             return new Definition(d.name(), d.plugin(), d.enabled(), d.kinds(), d.description(), d.settings(), text, etag(text), shared.at(),
-                    d.requires());
+                    d.requires(), d.compute());
         }
         try {
             return new Definition(d.name(), d.plugin(), d.enabled(), d.kinds(), d.description(), d.settings(), text, etag(text),
-                    Files.getLastModifiedTime(file(name)).toInstant(), d.requires());
+                    Files.getLastModifiedTime(file(name)).toInstant(), d.requires(), d.compute());
         } catch (IOException e) {
             throw new UncheckedIOException(e);
         }
@@ -329,7 +347,8 @@ public final class ConnectorFiles {
         }
         for (String k : m.keySet()) {
             if (!KEYS.contains(k)) {
-                throw new InvalidFile(name + ".yaml: unknown key '" + k + "' (allowed: plugin, enabled, kinds, description, settings, requires)");
+                throw new InvalidFile(name + ".yaml: unknown key '" + k + "' (allowed: plugin, enabled, kinds, description, settings, requires; "
+                        + "a reactive connector also mode, reads, engine, triggers, coalesce, cache, limits, history)");
             }
         }
         if (m.get("name") != null && !name.equals(String.valueOf(m.get("name")))) {
@@ -350,7 +369,14 @@ public final class ConnectorFiles {
         }
         List<String> kinds = new ArrayList<>();
         Object k = m.get("kinds");
-        if (k instanceof List<?> l) {
+        boolean reactive = "reactive".equals(String.valueOf(plugin).trim());
+        Map<String, Object> compute = compute(name, m, reactive);
+        if (k instanceof Map<?, ?> km) {
+            if (!reactive) {
+                throw new InvalidFile(name + ".yaml: 'kinds' is a list of kinds (kinds with parameters are for plugin: reactive)");
+            }
+            km.keySet().forEach(x -> kinds.add(String.valueOf(x)));
+        } else if (k instanceof List<?> l) {
             l.forEach(x -> kinds.add(String.valueOf(x)));
         } else if (k instanceof String s) {
             for (String x : s.split(",")) {
@@ -376,6 +402,13 @@ public final class ConnectorFiles {
             }
             settings.put(key, v == null ? "" : String.valueOf(v));
         });
+        if (!compute.isEmpty()) {
+            try {
+                settings.put(COMPUTE_SETTING, JSON.writeValueAsString(compute));
+            } catch (IOException e) {
+                throw new InvalidFile(name + ".yaml: its computation cannot be read: " + firstLine(e.getMessage()));
+            }
+        }
         Object req = m.get("requires");
         if (req != null && !(req instanceof Map<?, ?>)) {
             throw new InvalidFile(name + ".yaml: 'requires' is a mapping (python, java, plugins)");
@@ -383,7 +416,38 @@ public final class ConnectorFiles {
         @SuppressWarnings("unchecked")
         Map<String, Object> requires = req == null ? Map.of() : (Map<String, Object>) req;
         return new Definition(name, String.valueOf(plugin).trim(), en == null ? null : String.valueOf(en), kinds,
-                m.get("description") == null ? "" : String.valueOf(m.get("description")), settings, text, etag(text), null, requires);
+                m.get("description") == null ? "" : String.valueOf(m.get("description")), settings, text, etag(text), null, requires, compute);
+    }
+
+    /**
+     * A reactive connector's computation as written: {@code mode}, {@code kinds} (a mapping of kinds to their {@code params:} and
+     * {@code result:}) and the keys of {@link #COMPUTE_KEYS}. Refused on any other plugin (mode excepted), where they would be ignored.
+     */
+    private static Map<String, Object> compute(String name, Map<String, Object> m, boolean reactive) {
+        Object mode = m.get("mode");
+        if (mode != null && !MODES.contains(String.valueOf(mode).trim())) {
+            throw new InvalidFile(name + ".yaml: 'mode' is static, live, on-demand or reactive, not '" + mode + "'");
+        }
+        if (reactive && mode != null && !"reactive".equals(String.valueOf(mode).trim())) {
+            throw new InvalidFile(name + ".yaml: a connector of plugin reactive has mode reactive, not '" + mode + "'");
+        }
+        Map<String, Object> out = new LinkedHashMap<>();
+        for (String key : COMPUTE_KEYS) {
+            if (m.get(key) == null) {
+                continue;
+            }
+            if (!reactive) {
+                throw new InvalidFile(name + ".yaml: '" + key + "' is part of a computation: only a connector of plugin reactive has it");
+            }
+            out.put(key, m.get(key));
+        }
+        if (reactive) {
+            out.put("mode", "reactive");
+            if (m.get("kinds") instanceof Map<?, ?> km) {
+                out.put("kinds", km);
+            }
+        }
+        return out;
     }
 
     /** Reads every file; the ones that cannot be used are left out and their problems returned in {@code problems} (name to message). */
@@ -606,19 +670,39 @@ public final class ConnectorFiles {
     /** As above, keeping a {@code requires:} block (compute libraries) when there is one. */
     public String render(String header, String plugin, Object enabled, List<String> kinds, String description, Map<String, ?> settings,
             Map<String, Object> requires) {
+        return render(header, plugin, enabled, kinds, description, settings, requires, Map.of());
+    }
+
+    /** As above, keeping a reactive connector's computation ({@code mode}, {@code kinds} with parameters, {@code reads}, ...) as written. */
+    public String render(String header, String plugin, Object enabled, List<String> kinds, String description, Map<String, ?> settings,
+            Map<String, Object> requires, Map<String, Object> compute) {
         Map<String, Object> doc = new LinkedHashMap<>();
         doc.put("plugin", plugin);
+        if (compute != null && compute.get("mode") != null) {
+            doc.put("mode", compute.get("mode"));
+        }
         if (enabled != null && !"true".equals(String.valueOf(enabled))) {
             doc.put("enabled", enabled instanceof String s && !s.contains("${") ? Boolean.parseBoolean(s) : enabled);
         }
         if (description != null && !description.isBlank()) {
             doc.put("description", description);
         }
-        if (kinds != null && !kinds.isEmpty()) {
+        if (compute != null && compute.get("kinds") instanceof Map<?, ?> km) {
+            doc.put("kinds", km);
+        } else if (kinds != null && !kinds.isEmpty()) {
             doc.put("kinds", kinds);
         }
-        if (settings != null && !settings.isEmpty()) {
-            doc.put("settings", nest(settings));
+        if (compute != null) {
+            COMPUTE_KEYS.forEach(key -> {
+                if (compute.get(key) != null) {
+                    doc.put(key, compute.get(key));
+                }
+            });
+        }
+        Map<String, Object> plain = new LinkedHashMap<>(settings == null ? Map.of() : settings);
+        plain.remove(COMPUTE_SETTING);                      // the computation is written as itself above, never as JSON in settings
+        if (!plain.isEmpty()) {
+            doc.put("settings", nest(plain));
         }
         try {
             String text = (header == null || header.isBlank() ? "" : header.stripTrailing() + "\n") + yaml.writeValueAsString(doc);
