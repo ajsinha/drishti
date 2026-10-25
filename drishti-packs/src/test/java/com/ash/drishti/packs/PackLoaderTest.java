@@ -154,6 +154,21 @@ class PackLoaderTest {
                 .anyMatch(v -> v.equals("role viewer: child overrides base"));
     }
 
+    /** A graph field with {@code scope: pack} links from the declaring pack's own kinds only (world-economy's JURISDICTION is no link in gleif). */
+    @Test
+    void aGraphFieldScopedToItsPackNamesThePacksKinds(@TempDir Path dir) throws Exception {
+        write(dir, "world", "kinds: [jurisdiction, party]\ngraph: { fields: { JURISDICTION: { kind: jurisdiction, label: Country, scope: pack },"
+                + " PARTY: { kind: party, scope: all } } }\n");
+        PackLoader l = new PackLoader();
+        Map<String, Object> p = l.properties(l.load(dir, List.of("world")));
+        assertThat(p).containsEntry("drishti.graph.fields.JURISDICTION.kind", "jurisdiction")
+                .containsEntry("drishti.graph.fields.JURISDICTION.from[0]", "jurisdiction")
+                .containsEntry("drishti.graph.fields.JURISDICTION.from[1]", "party");
+        assertThat(p.keySet()).noneMatch(k -> k.startsWith("drishti.graph.fields.PARTY.from"));      // all: every kind, as before
+        write(dir, "odd", "kinds: [x]\ngraph: { fields: { X: { kind: x, scope: elsewhere } } }\n");
+        assertThatThrownBy(() -> l.properties(l.load(dir, List.of("odd")))).hasMessageContaining("scope is pack");
+    }
+
     @Test
     void unrelatedPacksStillMayNotClashAndKindsAreNeverOverridden(@TempDir Path dir) throws Exception {
         write(dir, "a", "mnemonics: { TRD: { kind: trade } }\n");

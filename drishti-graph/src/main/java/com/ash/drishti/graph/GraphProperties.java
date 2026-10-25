@@ -69,6 +69,18 @@ public record GraphProperties(
     /**
      * @param kind the kind of the referenced entity
      * @param label the label in the linked-entities panel; defaults to the humanised field name
+     * @param from the kinds whose documents the field links from (a pack's {@code scope: pack} is its own kinds); empty: every kind.
+     *     Another pack's field of the same name is then plain data, not a link that names nothing
      */
-    public record FieldRef(String kind, String label) {}
+    public record FieldRef(String kind, String label, List<String> from) {
+
+        public FieldRef {
+            from = from == null ? List.of() : List.copyOf(from);
+        }
+
+        /** Whether a document of {@code sourceKind} links through this field (always, when the kind is not known). */
+        public boolean appliesTo(String sourceKind) {
+            return from.isEmpty() || sourceKind == null || from.contains(sourceKind);
+        }
+    }
 }

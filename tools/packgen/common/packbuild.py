@@ -76,6 +76,9 @@ class PackSpec:
     # write the generated Sutras in the Sutra Next form: panels as Drishti UI kit fragment uses where one draws them exactly, and a
     # generated doc: docstring (tools/packgen/banking/kit_sutras.py; proved by the pack's PackSutraNextEquivalence test)
     fragments: bool = False
+    # link fields that link from this pack's own kinds only (pack.yaml graph.fields.<F>.scope: pack): a generic name another pack's
+    # documents also carry (world-economy's JURISDICTION, a JUR- id; gleif's is US-DE, core's DE) stays plain data there
+    scoped_fields: set[str] = field(default_factory=set)
 
     @property
     def kinds(self) -> list[Kind]:
@@ -97,7 +100,7 @@ def manifest(spec: PackSpec, known_fields: dict[str, tuple[str, str]]) -> dict:
     for k in kinds:
         for f, (target, label) in k.links.items():
             if f not in known_fields:
-                fields[f] = {"kind": target, "label": label}
+                fields[f] = {"kind": target, "label": label, **({"scope": "pack"} if f in spec.scoped_fields else {})}
             elif known_fields[f][0] != target:   # the field already means another kind: its links would go astray
                 raise SystemExit(f"{spec.name}: link field '{f}' of {k.kind} points at {target}, but the banking packs map it to "
                                  f"{known_fields[f][0]}; use another field name")
