@@ -34,7 +34,8 @@ _HIER = ["LEGAL_ENTITY", "DIVISION", "DESK", "TT_BOOK", "PORTFOLIO"]
 #: the risk-store layout of each kind: promoted columns, and the vector columns (list<double>, out of the document)
 LAYOUT = {
     "position": {"columns": ["POSITION_ID", "INSTRUMENT_ID", "INSTRUMENT", "DIRECTION", *_HIER, "PRODUCT_GROUP", "PRODUCT_TYPE", "CURRENCY",
-                             "COUNTERPARTY", "QUANTITY", "MARKET_VALUE", "TRADE_COUNT", "VAR_99", "ES_975", "COMPONENT_VAR"]},
+                             "COUNTERPARTY", "QUANTITY", "MARKET_VALUE", "TRADE_COUNT", "VAR_99", "ES_975", "COMPONENT_VAR"],
+                 "vectors": ["PNL"]},          # the position's own vector (the sum of its trades'), for its page
     "pnl-vector": {"columns": ["TRADE_ID", "POSITION_ID", "INSTRUMENT_ID", *_HIER, "PRODUCT_GROUP", "PRODUCT_TYPE", "CURRENCY", "COUNTERPARTY",
                                "DIRECTION", "QUANTITY", "PV", "STATUS", "SCENARIO_SET_ID", "BATCH_ID"],
                    "vectors": ["PNL"]},
@@ -42,7 +43,7 @@ LAYOUT = {
                              "TRADE_COUNT"],
                  "vectors": ["PNL"]},
     "risk-hierarchy": {"columns": ["NODE_ID", "HIERARCHY", "LEVEL", "PARENT_ID", "NAME", "LIMIT_VAR"]},
-    "portfolio": {"columns": ["PORTFOLIO_ID", "NAME", "TYPE", "OWNER", "VAR_99", "ES_975", "LIMIT_VAR", "POSITION_COUNT"]},
+    "portfolio": {"columns": ["PORTFOLIO_ID", "NAME", "TYPE", "OWNER", "VAR_99", "ES_975", "LIMIT_VAR", "POSITION_COUNT"], "vectors": ["PNL"]},
 }
 #: the search form (FORM market-risk) of each kind: its key columns
 FORM_COLUMNS = {"position": ["DIRECTION", "DESK", "TT_BOOK", "PRODUCT_TYPE", "CURRENCY", "VAR_99"],

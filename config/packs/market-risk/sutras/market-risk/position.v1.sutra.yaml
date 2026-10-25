@@ -1,0 +1,84 @@
+# Project Drishti · Any data. Any domain. One grammar.
+#
+# Copyright (c) 2026 Ashutosh Sinha <ajsinha@gmail.com>.
+# All rights reserved.
+#
+# PROPRIETARY AND CONFIDENTIAL.
+#
+# This file is the confidential and proprietary property of Ashutosh Sinha.
+# Unauthorised copying, use, modification, distribution or disclosure of this
+# file, via any medium, is strictly prohibited except with the express prior
+# written permission of the copyright holder.
+#
+# See the LICENSE file in the root of this repository for the full terms.
+
+# Hand-written (VAR_DATA_MODEL.md section 3): the generator writes the taxonomy's kinds only. Data: tools/packgen/var/make_var_data.py.
+rachana: 1
+sutra: position
+version: 1
+description: "A position: one instrument held in one book, the trades that build or reduce it, its VaR and its P&L over the scenario days."
+doc:
+  summary: "A position: its instrument, direction and quantity, its trades with their VaR and contributions, its P&L distribution"
+  description: >-
+    A position is a holding: one instrument in one book, its quantity the signed sum of its trades (a buy adds, a sell takes away),
+    LONG or SHORT by the sign. The strip gives the instrument, the direction, the quantity, the market value, the VaR and ES of the
+    position on its own and its component VaR in its book. The trades table lists every trade of it with its own quantity, its own VaR
+    and its component of the position's VaR: a long and a short of one instrument offset, so the components of a hedged position are
+    of both signs and add up to the position's VaR. The distribution is the position's P&L under each scenario day (the sum of its
+    trades' vectors). VAR POS <id> opens the same position in the VaR explorer.
+  params: {}
+  emits: []
+  expects: []
+  examples:
+    - "/v/position/POS-BOOK-RATES-1~CMS_SPREAD_OPT-AUD-2028Q2"
+    - "POS POS-BOOK-RATES-1~CMS_SPREAD_OPT-AUD-2028Q2"
+  since: "2.8.0"
+match: { kind: position, priority: 10 }
+title: { pill: "Market risk · Position", id: $.POSITION_ID, with: $.INSTRUMENT }
+strip:
+  - { label: Direction, bind: $.DIRECTION }
+  - { label: Quantity, bind: $.QUANTITY, fmt: compact }
+  - { label: Market value, bind: $.MARKET_VALUE, fmt: compact, tone: sign }
+  - { label: VaR 99% 1D, bind: $.VAR_99, fmt: compact, emphasis: true }
+  - { label: ES 97.5%, bind: $.ES_975, fmt: compact }
+  - { label: Component VaR in its book, bind: $.COMPONENT_VAR, fmt: compact }
+  - { label: Trades, bind: $.TRADE_COUNT }
+panels:
+  - id: trades
+    kind: table
+    title: "Trades that build or reduce it (component VaR adds up to the position's VaR)"
+    code: TRD
+    key: F2
+    rows: $.TRADE_QUANTITIES
+    empty: No trades
+    columns:
+      - { label: Trade, bind: "@.TRADE_ID", link: true }
+      - { label: Direction, bind: "@.DIRECTION" }
+      - { label: Quantity, bind: "@.QUANTITY", fmt: amount0, total: true }
+      - { label: "VaR 99% (on its own)", bind: "@.VAR_99", fmt: amount0 }
+      - { label: Component VaR, bind: "@.COMPONENT_VAR", fmt: amount0, total: true }
+  - { use: pnl-distribution@1, with: { id: dist, title: "P&L over the scenario days (the sum of its trades' vectors)", rows: $.PNL, var: $.VAR_99, es: $.ES_975, key: F3 } }
+  - id: where
+    kind: kv
+    title: Where it is held
+    area: right
+    columns:
+      - { label: Instrument, bind: $.INSTRUMENT_ID }
+      - { label: Book, bind: $.TT_BOOK, link: true }
+      - { label: Desk, bind: $.DESK, link: true }
+      - { label: Legal entity, bind: $.LEGAL_ENTITY, link: true }
+      - { label: Product, bind: $.PRODUCT_TYPE }
+      - { label: Currency, bind: $.CURRENCY }
+      - { label: Counterparty, bind: $.COUNTERPARTY, link: true }
+      - { label: Notional (gross), bind: $.NOTIONAL, fmt: compact }
+      - { label: Opened, bind: $.OPENED_ON, fmt: date }
+      - { label: Book VaR, bind: $.BOOK_VAR, fmt: compact }
+      - { label: Share of the book's VaR, bind: $.PCT_OF_BOOK_VAR, fmt: pct0 }
+  - use: explainer-note@1
+    with:
+      title: In the VaR explorer
+      area: right
+      text: "Every scenario of this position, its history and its trades' contributions: VAR POS ${$.POSITION_ID} <GO>, or /var?scope=${$.VAR_SCOPE}. Long and short trades of one instrument net in the position's vector; its VaR is never the sum of its trades' VaRs."
+  - { use: data-provenance@1 }
+  - { use: linked-entities@1 }
+keys: { F7: "link($.TT_BOOK, 'book')", F9: raw }

@@ -1,0 +1,73 @@
+# Project Drishti · Any data. Any domain. One grammar.
+#
+# Copyright (c) 2026 Ashutosh Sinha <ajsinha@gmail.com>.
+# All rights reserved.
+#
+# PROPRIETARY AND CONFIDENTIAL.
+#
+# This file is the confidential and proprietary property of Ashutosh Sinha.
+# Unauthorised copying, use, modification, distribution or disclosure of this
+# file, via any medium, is strictly prohibited except with the express prior
+# written permission of the copyright holder.
+#
+# See the LICENSE file in the root of this repository for the full terms.
+
+# The Drishti UI kit (SUTRA_NEXT.md): platform UI vocabulary every server loads, hand-written, versioned, used as { use: pnl-distribution@1, with: {...} }.
+rachana: 1
+fragment: pnl-distribution
+version: 1
+description: "A P&L vector's scenario distribution, with its VaR and expected shortfall marked: the shape of the loss tail at a glance."
+params:
+  id: distribution
+  title: Scenario P&L distribution
+  rows: $.PNL
+  var: $.VAR_99
+  es: $.ES_975
+  var-label: VaR 99%
+  es-label: ES 97.5%
+  unit: USD
+  fmt: compact
+  bins: 40
+  code: DIST
+  key: ''
+  area: ''
+doc:
+  summary: "A P&L vector's scenario distribution with VaR and ES marked (VAR_ENGINE.md section 10)"
+  description: >-
+    The P&L of a position, a portfolio or any scope under each historical scenario day (a list of numbers, 509 of them for the
+    HS-509 set), binned, with vertical lines at minus the VaR and minus the expected shortfall, so the reader sees how far the tail
+    reaches beyond the VaR. Gains are positive; the marks are drawn at the loss side. Pair it with the VaR explorer for the ranked
+    scenarios and their contributors.
+  params:
+    id: { type: id, default: distribution, meaning: "The panel id, unique on the screen" }
+    title: { type: text, default: Scenario P&L distribution, meaning: "The title over the histogram" }
+    rows: { type: expression, default: $.PNL, meaning: "The vector: a list of scenario P&Ls (gains positive)" }
+    var: { type: expression, default: $.VAR_99, meaning: "The VaR, a positive loss; marked at minus its value" }
+    es: { type: expression, default: $.ES_975, meaning: "The expected shortfall, a positive loss; marked at minus its value" }
+    var-label: { type: text, default: VaR 99%, meaning: "The label of the VaR mark" }
+    es-label: { type: text, default: ES 97.5%, meaning: "The label of the ES mark" }
+    unit: { type: text, default: USD, meaning: "The unit of the P&L, said under the axis" }
+    fmt: { type: format, default: compact, meaning: "The named format of the axis and the bins" }
+    bins: { type: number, default: 40, meaning: "How many bins the values are cut into" }
+    code: { type: key, default: DIST, meaning: "The panel's mnemonic code, typed in the command line to jump to it" }
+    key: { type: key, default: '', meaning: "The function key (F2 to F12) that brings the panel forward; none when empty" }
+    area: { type: area, default: '', meaning: "Where the panel sits: main (the default when empty) or right" }
+  emits: []
+  expects: []
+  examples:
+    - { use: pnl-distribution@1, with: { id: dist, title: "The position's P&L over 509 scenario days", rows: $.PNL, var: $.VAR_99, es: $.ES_975, key: F3 } }
+  since: "2.8.0"
+panels:
+  - id: %{id}
+    kind: histogram
+    title: "%{title}"
+    code: %{code}
+    key: %{key}
+    area: %{area}
+    rows: %{rows}
+    bins: %{bins}
+    fmt: %{fmt}
+    unit: %{unit}
+    markers:
+      - { label: "%{var-label}", value: "-%{var}", tone: neg }
+      - { label: "%{es-label}", value: "-%{es}", tone: bad }

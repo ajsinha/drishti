@@ -157,6 +157,14 @@ class Demo:
                 p.update({"VAR_99": round(VM.var(v)), "ES_975": round(VM.es(v)), "COMPONENT_VAR": round(comp[p["POSITION_ID"]]),
                           "BOOK_VAR": round(book_var), "PCT_OF_BOOK_VAR": round(comp[p["POSITION_ID"]] / book_var, 4) if book_var else None,
                           "SCENARIO_SET_ID": SET})
+                # each trade's own VaR and its share of the position's (long and short trades of one instrument offset)
+                tv = {t: self.batch.trade_vectors[t][:self.n] for t in p["TRADE_IDS"]}
+                tcomp = VM.components(v, tv)
+                for row in p["TRADE_QUANTITIES"]:
+                    row["VAR_99"] = round(VM.var(tv[row["TRADE_ID"]]))
+                    row["COMPONENT_VAR"] = round(tcomp[row["TRADE_ID"]])
+                p["PNL"] = v                       # the position's vector (the sum of its trades'): its page's distribution
+                p["VAR_SCOPE"] = "POS:" + p["POSITION_ID"]
 
     # ---------------------------------------------------------------------------------------------------------------- var-node
     def var_nodes(self) -> list[dict]:
@@ -319,7 +327,8 @@ def portfolio_rows(demo: Demo) -> list[dict]:
                      "POSITIONS": lines, "BY_PRODUCT": summary("PRODUCT_TYPE"), "BY_CURRENCY": summary("CURRENCY"),
                      "BY_DIRECTION": summary("DIRECTION"), "TOP_CONTRIBUTORS": lines[:10],
                      "ALL_TRADES": {"KIND": "portfolio-trades", "ID": spec["DEFINITION"].get("NODE", "").split("~")[-1]}
-                     if spec["TYPE"] == "HIERARCHY" else None})
+                     if spec["TYPE"] == "HIERARCHY" else None,
+                     "VAR_SCOPE": "PORT:" + spec["PORTFOLIO_ID"], "PNL": [round(x) for x in total]})
     return rows
 
 
@@ -381,6 +390,7 @@ def write(out: Path, demo: Demo, with_samples: bool = True) -> list[dict]:
 
 FOLDERS = tuple(f"{PACK}/{k}" for k in KEYS)
 SAMPLES = ROOT / "config" / "packs" / PACK / "samples"
+TESTS = ROOT / "config" / "packs" / PACK / "tests"
 
 
 def samples(docs: dict[str, list[dict]]) -> dict[Path, str]:
@@ -394,7 +404,15 @@ def samples(docs: dict[str, list[dict]]) -> dict[Path, str]:
              "risk-hierarchy": [n for n in docs["risk-hierarchy"] if n["NODE_ID"] in ("MGMT~DESK-RATES", "LEGAL~LE-NY")],
              "var-node": [r for r in docs["var-node"] if r["NODE_ID"] == "MGMT~DESK-RATES"][-2:],
              "portfolio": [r for r in docs["portfolio"] if r["PORTFOLIO_ID"] in ("PF-USD-RATES", "PF-ASHA-UNWIND")]}
-    return {SAMPLES / f"{k}.jsonl": "".join(json.dumps(d, ensure_ascii=False, separators=(",", ":")) + "\n" for d in v) for k, v in picks.items()}
+    out = {SAMPLES / f"{k}.jsonl": "".join(json.dumps(d, ensure_ascii=False, separators=(",", ":")) + "\n" for d in v) for k, v in picks.items()}
+    # the pack's Sutra tests (tests/<kind>/<id>.json and expect.yaml: java -jar <server> sutra test config/packs/market-risk)
+    head = "".join(f"# {ln}".rstrip() + "\n" for ln in (ROOT / "config" / "license-header.txt").read_text(encoding="utf-8").strip().splitlines())
+    expect = {"position": "noErrors: true\nnonEmpty: [trades, dist, where]\n", "portfolio": "noErrors: true\nnonEmpty: [positions, dist, top, definition]\n"}
+    for kind, key in (("position", "POSITION_ID"), ("portfolio", "PORTFOLIO_ID")):
+        for d in picks[kind]:
+            out[TESTS / kind / f"{d[key]}.json"] = json.dumps(d, ensure_ascii=False, indent=1) + "\n"
+        out[TESTS / kind / "expect.yaml"] = head + "\n" + expect[kind]
+    return out
 
 
 def update_manifest(testdata: Path, entries: list[dict]) -> None:

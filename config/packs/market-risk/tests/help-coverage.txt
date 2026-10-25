@@ -4,3 +4,5 @@ pnl-explain=1
 stress-result=1
 stress-scenario=1
 var=1
+portfolio=0.76
+position=0.86

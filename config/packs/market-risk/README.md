@@ -267,46 +267,48 @@ Fields, from 2 sample documents:
 |---|---|---|---|
 | `POSITION_ID` | string | `POS-BOOK-EQD-2~EQ_ASIAN-USD-2029Q2` | link to `position` |
 | `BUSINESS_DATE` | date | `2026-09-30` | — |
-| `INSTRUMENT_ID` | string | `INS-EQ_ASIAN-USD-2029Q2` | — |
-| `INSTRUMENT` | string | `Equity Asian option USD 2029-04` | — |
+| `INSTRUMENT_ID` | string | `INS-EQ_ASIAN-USD-2029Q2` | Instrument |
+| `INSTRUMENT` | string | `Equity Asian option USD 2029-04` | What the position holds: the product, its currency, its underlying and its maturity. Trades of the same instrument in one book are one position. |
 | `POSITION_TYPE` | string | `fungible` | — |
-| `DIRECTION` | string | `SHORT` | — |
-| `QUANTITY` | number | `-810529060.0` | — |
+| `DIRECTION` | string | `SHORT` | LONG when the position's net quantity is above zero (more bought than sold), SHORT when below. Its trades may be of both directions: they net. |
+| `QUANTITY` | number | `-810529060.0` | The signed sum of the position's trades' quantities (notional for swaps, units for securities): a buy adds, a sell takes away. |
 | `GROSS_QUANTITY` | number | `7050772940.0` | — |
 | `TRADE_IDS` | list of strings |  | link to `trade` |
 | `TRADE_QUANTITIES` | list of objects |  | Nested: see below |
-| `TRADE_COUNT` | integer | `18` | — |
+| `TRADE_COUNT` | integer | `18` | Trades |
 | `LONG_TRADES` | integer | `9` | — |
 | `SHORT_TRADES` | integer | `9` | — |
-| `LEGAL_ENTITY` | string | `LE-LDN` | link to `legal-entity` |
+| `LEGAL_ENTITY` | string | `LE-LDN` | The bank's legal entity that holds the book.; link to `legal-entity` |
 | `DIVISION` | string | `DIV-MARKETS` | — |
-| `DESK` | string | `DESK-EQD` | link to `desk` |
-| `TT_BOOK` | string | `BOOK-EQD-2` | link to `book` |
+| `DESK` | string | `DESK-EQD` | The desk the book belongs to.; link to `desk` |
+| `TT_BOOK` | string | `BOOK-EQD-2` | The book the position is held in: its trades are all booked there.; link to `book` |
 | `PORTFOLIO` | string | `BOOK-EQD-2` | link to `book` |
 | `STRATEGY` | null |  | — |
-| `COUNTERPARTY` | null |  | link to `counterparty` |
+| `COUNTERPARTY` | null |  | The counterparty of the position's trades when they all share one; empty otherwise.; link to `counterparty` |
 | `COUNTERPARTIES` | list of strings |  | — |
 | `PRODUCT_GROUP` | string | `Equity` | — |
-| `PRODUCT_TYPE` | string | `EQ_ASIAN` | — |
-| `CURRENCY` | string | `USD` | — |
-| `MARKET_VALUE` | integer | `83350636` | — |
-| `NOTIONAL` | integer | `7050772940` | — |
+| `PRODUCT_TYPE` | string | `EQ_ASIAN` | The product of the instrument, as the booking systems name it. |
+| `CURRENCY` | string | `USD` | The instrument's currency. Every P&L and value is in USD, the reporting currency. |
+| `MARKET_VALUE` | integer | `83350636` | The sum of the trades' present values (their mark-to-market) on the business date. (USD) |
+| `NOTIONAL` | integer | `7050772940` | The sum of the trades' quantities without their signs. |
 | `LINEAR` | boolean | `true` | — |
 | `STATUS` | string | `open` | — |
-| `OPENED_ON` | date | `2024-10-10` | — |
+| `OPENED_ON` | date | `2024-10-10` | The trade date of the position's first trade. |
 | `TAGS` | list or list of strings |  | — |
-| `VAR_99` | integer | `52808` | — |
-| `ES_975` | integer | `52234` | — |
-| `COMPONENT_VAR` | integer | `51216` | — |
-| `BOOK_VAR` | integer | `426663` | — |
-| `PCT_OF_BOOK_VAR` | number | `0.12` | — |
+| `VAR_99` | integer | `52808` | The loss the portfolio is expected not to exceed on 99 of 100 trading days, read from the 1st percentile of the revalued scenario P&L (historical simulation). (USD) |
+| `ES_975` | integer | `52234` | The average loss on the worst 2.5% of scenario days. It looks into the tail that VaR ignores, and it is the measure the FRTB internal-models approach uses for capital. (USD) |
+| `COMPONENT_VAR` | integer | `51216` | The position's share of its book's VaR (Euler allocation): the shares of a book's positions add up to the book's VaR; a hedge has a negative share. (USD) |
+| `BOOK_VAR` | integer | `426663` | The 1-day 99% VaR of the whole book the position is held in. (USD) |
+| `PCT_OF_BOOK_VAR` | number | `0.12` | The component VaR over the book's VaR. |
 | `SCENARIO_SET_ID` | string | `HS-509` | — |
+| `PNL` | list of integers |  | The position's P&L under each historical scenario day (509 of them): the sum of its trades' vectors. (USD) |
+| `VAR_SCOPE` | string | `POS:POS-BOOK-EQD-2~EQ_ASIAN-USD-2029Q2` | — |
 
 Nested structures:
 
 | Path | Fields |
 |---|---|
-| `TRADE_QUANTITIES[]` | `TRADE_ID` (string), `QUANTITY` (number), `DIRECTION` (string) |
+| `TRADE_QUANTITIES[]` | `TRADE_ID` (string), `QUANTITY` (number): The trade's signed quantity in the position: a buy positive, a sell negative., `DIRECTION` (string), `VAR_99` (integer): The trade's 1-day 99% VaR as if it were alone. (USD), `COMPONENT_VAR` (integer): The trade's share of the position's VaR. The shares of a long and a short of one instrument have opposite signs and add up to the position's VaR. (USD) |
 
 Links: `COUNTERPARTY` → `counterparty`, `DESK` → `desk`, `LEGAL_ENTITY` → `legal-entity`, `PORTFOLIO` → `book`, `POSITION_ID` → `position`, `TRADE_IDS` → `trade`, `TT_BOOK` → `book`.
 
@@ -322,30 +324,32 @@ Fields, from 2 sample documents:
 |---|---|---|---|
 | `PORTFOLIO_ID` | string | `PF-USD-RATES` | link to `portfolio` |
 | `NAME` | string | `USD rates exposure` | — |
-| `OWNER` | string | `group-risk` | — |
-| `TYPE` | string | `RULE` | — |
+| `OWNER` | string | `group-risk` | Who keeps the portfolio's definition. |
+| `TYPE` | string | `RULE` | HIERARCHY: a node of the bank's hierarchy (a desk, a book). RULE: every position whose columns meet a condition. BASKET: positions and trades someone picked. |
 | `DEFINITION` | object |  | Nested: see below |
 | `ROLLS_UP_TO` | object |  | Nested: see below |
-| `LIMIT_VAR` | integer | `1500000` | — |
+| `LIMIT_VAR` | integer | `1500000` | The VaR the portfolio may take. (USD) |
 | `BUSINESS_DATE` | date | `2026-09-30` | — |
-| `VALID_FROM` | date | `2026-01-02` | — |
+| `VALID_FROM` | date | `2026-01-02` | Valid from |
 | `VALID_TO` | null |  | — |
 | `SCENARIO_SET_ID` | string | `HS-509` | — |
-| `POSITION_COUNT` | integer | `8` | — |
+| `POSITION_COUNT` | integer | `8` | The positions in the portfolio on the business date (a basket naming one trade of a position holds that part of it). |
 | `TRADE_COUNT` | integer | `60` | — |
-| `LONG_COUNT` | integer | `3` | — |
-| `SHORT_COUNT` | integer | `5` | — |
-| `GROSS_MV` | integer | `556442317` | — |
-| `NET_MV` | integer | `150429101` | — |
-| `VAR_99` | integer | `1001253` | — |
-| `ES_975` | integer | `978359` | — |
-| `LIMIT_USE` | number | `0.6675` | — |
+| `LONG_COUNT` | integer | `3` | Positions whose net quantity is above zero. |
+| `SHORT_COUNT` | integer | `5` | Positions whose net quantity is below zero. |
+| `GROSS_MV` | integer | `556442317` | The sum of the positions' market values without their signs. (USD) |
+| `NET_MV` | integer | `150429101` | The sum of the positions' market values: longs and shorts offset. (USD) |
+| `VAR_99` | integer | `1001253` | The loss the portfolio is expected not to exceed on 99 of 100 trading days, read from the 1st percentile of the revalued scenario P&L (historical simulation). (USD) |
+| `ES_975` | integer | `978359` | The average loss on the worst 2.5% of scenario days. It looks into the tail that VaR ignores, and it is the measure the FRTB internal-models approach uses for capital. (USD) |
+| `LIMIT_USE` | number | `0.6675` | The VaR over the portfolio's VaR limit. |
 | `POSITIONS` | list of objects |  | Nested: see below |
 | `BY_PRODUCT` | list of objects |  | Nested: see below |
 | `BY_CURRENCY` | list of objects |  | Nested: see below |
 | `BY_DIRECTION` | list of objects |  | Nested: see below |
 | `TOP_CONTRIBUTORS` | list of objects |  | Nested: see below |
 | `ALL_TRADES` | null |  | — |
+| `VAR_SCOPE` | string | `PORT:PF-USD-RATES` | — |
+| `PNL` | list of integers |  | The portfolio's P&L under each historical scenario day: the sum of its members' vectors, each trade counted once. (USD) |
 
 Nested structures:
 
@@ -353,7 +357,7 @@ Nested structures:
 |---|---|
 | `DEFINITION` | `RULE` (string), `MEMBERS` (list of objects) |
 | `ROLLS_UP_TO` | `KIND` (string), `ID` (string) |
-| `POSITIONS[]` | `POSITION_ID` (string), `INSTRUMENT` (string), `DIRECTION` (string), `QUANTITY` (number), `MARKET_VALUE` (integer), `CURRENCY` (string), `TT_BOOK` (string), `DESK` (string), `PRODUCT_GROUP` (string), `PRODUCT_TYPE` (string), `TRADES` (integer), `PARTIAL` (boolean), `VAR_99` (integer), `COMPONENT_VAR` (integer), `PCT_OF_VAR` (number) |
+| `POSITIONS[]` | `POSITION_ID` (string), `INSTRUMENT` (string), `DIRECTION` (string): LONG or SHORT: the sign of the position's net quantity., `QUANTITY` (number): The signed sum of the position's trades' quantities held in the portfolio., `MARKET_VALUE` (integer): The position's present value on the business date. (USD), `CURRENCY` (string), `TT_BOOK` (string), `DESK` (string), `PRODUCT_GROUP` (string), `PRODUCT_TYPE` (string), `TRADES` (integer), `PARTIAL` (boolean), `VAR_99` (integer): The position's own 1-day 99% VaR, as if it were alone. (USD), `COMPONENT_VAR` (integer): The position's share of the portfolio's VaR (Euler): the shares add up to the portfolio's VaR; a hedge has a negative share. (USD), `PCT_OF_VAR` (number): The component VaR over the portfolio's VaR. |
 | `BY_PRODUCT[]` | `KEY` (string), `POSITIONS` (integer), `NET_MV` (integer), `GROSS_MV` (integer), `COMPONENT_VAR` (integer) |
 | `BY_CURRENCY[]` | `KEY` (string), `POSITIONS` (integer), `NET_MV` (integer), `GROSS_MV` (integer), `COMPONENT_VAR` (integer) |
 | `BY_DIRECTION[]` | `KEY` (string), `POSITIONS` (integer), `NET_MV` (integer), `GROSS_MV` (integer), `COMPONENT_VAR` (integer) |
@@ -526,6 +530,8 @@ Screens (Sutras):
 |---|---|---|
 | `frtb-sensitivity` | `frtb-sensitivity` | Delta, vega and curvature by risk class and bucket (SBM). |
 | `pnl-explain` | `pnl-explain` | Daily P&L attributed to risk factors, new trades and residual. |
+| `portfolio` | `portfolio` | A portfolio in terms of the positions inside it: longs and shorts, market value, VaR, ES and each position's contribution. |
+| `position` | `position` | A position: one instrument held in one book, the trades that build or reduce it, its VaR and its P&L over the scenario days. |
 | `stress-result` | `stress-result` | P&L of a desk under a scenario, by book. |
 | `stress-scenario` | `stress-scenario` | A named historical or hypothetical shock set. |
 | `trade-valuation` | `trade-valuation` | A trade's valuation from the risk engine, for every source system: MTM, one-day P&L and DV01, with what it values (source system, portfolio, desk, product). |

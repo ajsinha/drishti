@@ -46,7 +46,7 @@ def stack(tmp_path_factory):
     work = tmp_path_factory.mktemp("var-lake")
     lake = work / "delta"
     r = subprocess.run([sys.executable, str(ROOT / "tools" / "drishti.py"), "lake", "demo", "--lake", str(lake), "--data-dir", str(work / "data"),
-                        "--connectors-dir", str(work / "connectors"), "--as-of", "data", "--only", VAR_DATA, "--no-signal", "-q",
+                        "--connectors-dir", str(work / "connectors"), "--as-of", "today", "--only", VAR_DATA, "--no-signal", "-q",
                         "--engine", "auto"], capture_output=True, text=True, cwd=ROOT, timeout=600)
     if r.returncode != 0 or not (lake / "risk" / "pnl-vector").is_dir():
         pytest.skip("could not build the VaR demo lake: " + (r.stderr or r.stdout)[-400:])
@@ -198,6 +198,26 @@ def test_an_adhoc_basket_is_built_saved_and_captured(stack, browser):
     # VAR CAPTURE <id> reopens it from the command line
     pg.goto(str(stack) + "/go?q=" + f"VAR CAPTURE {cap} <GO>".replace(" ", "+"))
     wait(pg, "document.querySelector('[data-vx-compare]') && document.querySelector('[data-vx-compare]').dataset.reopened === %r" % cap)
+    pg.close()
+
+
+def test_a_portfolio_page_lists_its_positions_and_opens_one_beside(stack, browser):
+    """The portfolio kind's page (the market-risk pack's portfolio Sutra), the demo connector off: PORT <id> opens it; the positions
+    table has its rows; a click on a position (not its link) opens its trades beside; POS <id> opens the position's own page."""
+    pg = open_var(browser, str(stack), "/go?q=" + "PORT PF-RATES-DESK <GO>".replace(" ", "+"))
+    assert "/v/portfolio/PF-RATES-DESK" in pg.url
+    wait(pg, "document.querySelectorAll('#p-positions tbody tr').length > 3")
+    assert "Rates desk" in pg.content()
+    first = pg.evaluate("document.querySelector('#p-positions tbody tr').cells[0].textContent.trim()")
+    pg.locator("#p-positions tbody tr").first.locator("td").nth(1).click()
+    wait(pg, "document.querySelectorAll('#p-position-trades tbody tr').length > 0")
+    shot(pg, "portfolio-page")
+    pg.goto(str(stack) + "/go?q=" + f"POS {first} <GO>".replace(" ", "+").replace("~", "%7E"))
+    wait(pg, "document.querySelectorAll('#p-trades tbody tr').length > 0 && !!document.querySelector('#p-dist')")
+    assert "/v/position/" in pg.url
+    shot(pg, "position-page")
+    pg.goto(str(stack) + "/v/portfolio/PF-ASHA-UNWIND")                   # a basket of positions and trades
+    wait(pg, "document.querySelectorAll('#p-positions tbody tr').length > 3")
     pg.close()
 
 

@@ -197,6 +197,8 @@ connectors:
           - VAR_99
           - ES_975
           - COMPONENT_VAR
+          vectors:
+          - PNL
         pnl-vector:
           columns:
           - TRADE_ID
@@ -252,6 +254,8 @@ connectors:
           - ES_975
           - LIMIT_VAR
           - POSITION_COUNT
+          vectors:
+          - PNL
 routes:
   var: risk-store
   stress-scenario: risk-store

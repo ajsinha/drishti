@@ -218,3 +218,82 @@ kinds:
     guide: market-risk
     glossary:
       MTM: { use: "MTM" }
+  position:
+    title: Position
+    about: >-
+      ${$.POSITION_ID} holds ${fmt($.QUANTITY, 'compact')} of ${$.INSTRUMENT} in ${$.TT_BOOK}: ${$.DIRECTION}, built from ${$.TRADE_COUNT} trade(s).
+      On its own its 1-day 99% VaR is ${fmt($.VAR_99, 'compact')} USD; in its book it contributes ${fmt($.COMPONENT_VAR, 'compact')}.
+    guide: market-risk
+    glossary:
+      DIRECTION:
+        term: "Direction"
+        means: "LONG when the position's net quantity is above zero (more bought than sold), SHORT when below. Its trades may be of both directions: they net."
+      QUANTITY:
+        term: "Net quantity"
+        means: "The signed sum of the position's trades' quantities (notional for swaps, units for securities): a buy adds, a sell takes away."
+      MARKET_VALUE:
+        term: "Market value"
+        means: "The sum of the trades' present values (their mark-to-market) on the business date."
+        unit: "USD"
+        sign: "Positive is an asset."
+      VAR_99: { use: "var99" }
+      ES_975: { use: "es975" }
+      COMPONENT_VAR:
+        term: "Component VaR"
+        means: "The position's share of its book's VaR (Euler allocation): the shares of a book's positions add up to the book's VaR; a hedge has a negative share."
+        unit: "USD"
+      INSTRUMENT:
+        term: "Instrument"
+        means: "What the position holds: the product, its currency, its underlying and its maturity. Trades of the same instrument in one book are one position."
+      TRADE_QUANTITIES.QUANTITY:
+        term: "Trade quantity"
+        means: "The trade's signed quantity in the position: a buy positive, a sell negative."
+      TRADE_QUANTITIES.VAR_99:
+        term: "Trade's own VaR"
+        means: "The trade's 1-day 99% VaR as if it were alone."
+        unit: "USD"
+      TRADE_QUANTITIES.COMPONENT_VAR:
+        term: "Trade's component VaR"
+        means: "The trade's share of the position's VaR. The shares of a long and a short of one instrument have opposite signs and add up to the position's VaR."
+        unit: "USD"
+      TT_BOOK: { term: "Book", means: "The book the position is held in: its trades are all booked there." }
+      DESK: { term: "Desk", means: "The desk the book belongs to." }
+      LEGAL_ENTITY: { term: "Legal entity", means: "The bank's legal entity that holds the book." }
+      PRODUCT_TYPE: { term: "Product type", means: "The product of the instrument, as the booking systems name it." }
+      CURRENCY: { term: "Currency", means: "The instrument's currency. Every P&L and value is in USD, the reporting currency." }
+      COUNTERPARTY: { term: "Counterparty", means: "The counterparty of the position's trades when they all share one; empty otherwise." }
+      NOTIONAL: { term: "Gross notional", means: "The sum of the trades' quantities without their signs." }
+      OPENED_ON: { term: "Opened", means: "The trade date of the position's first trade." }
+      BOOK_VAR: { term: "Book VaR", means: "The 1-day 99% VaR of the whole book the position is held in.", unit: "USD" }
+      PCT_OF_BOOK_VAR: { term: "Share of the book's VaR", means: "The component VaR over the book's VaR." }
+      PNL: { term: "P&L vector", means: "The position's P&L under each historical scenario day (509 of them): the sum of its trades' vectors.", unit: "USD", sign: "Positive is a gain." }
+  portfolio:
+    title: Portfolio
+    about: >-
+      ${$.NAME} (${$.TYPE}, owned by ${$.OWNER}) holds ${$.POSITION_COUNT} positions, ${$.LONG_COUNT} long and ${$.SHORT_COUNT} short.
+      Its 1-day 99% VaR is ${fmt($.VAR_99, 'compact')} USD, ${fmt($.LIMIT_USE, 'pct0')} of its ${fmt($.LIMIT_VAR, 'compact')} limit.
+    guide: market-risk
+    glossary:
+      TYPE:
+        term: "Portfolio type"
+        means: "HIERARCHY: a node of the bank's hierarchy (a desk, a book). RULE: every position whose columns meet a condition. BASKET: positions and trades someone picked."
+      POSITION_COUNT: { term: "Positions", means: "The positions in the portfolio on the business date (a basket naming one trade of a position holds that part of it)." }
+      LONG_COUNT: { term: "Long positions", means: "Positions whose net quantity is above zero." }
+      SHORT_COUNT: { term: "Short positions", means: "Positions whose net quantity is below zero." }
+      GROSS_MV: { term: "Gross market value", means: "The sum of the positions' market values without their signs.", unit: "USD" }
+      NET_MV: { term: "Net market value", means: "The sum of the positions' market values: longs and shorts offset.", unit: "USD", sign: "Positive is a net asset." }
+      VAR_99: { use: "var99" }
+      ES_975: { use: "es975" }
+      LIMIT_USE: { term: "Limit use", means: "The VaR over the portfolio's VaR limit." }
+      LIMIT_VAR: { term: "VaR limit", means: "The VaR the portfolio may take.", unit: "USD" }
+      POSITIONS.COMPONENT_VAR:
+        term: "Component VaR"
+        means: "The position's share of the portfolio's VaR (Euler): the shares add up to the portfolio's VaR; a hedge has a negative share."
+        unit: "USD"
+      POSITIONS.VAR_99: { term: "VaR on its own", means: "The position's own 1-day 99% VaR, as if it were alone.", unit: "USD" }
+      POSITIONS.PCT_OF_VAR: { term: "Share of VaR", means: "The component VaR over the portfolio's VaR." }
+      POSITIONS.DIRECTION: { term: "Direction", means: "LONG or SHORT: the sign of the position's net quantity." }
+      POSITIONS.QUANTITY: { term: "Net quantity", means: "The signed sum of the position's trades' quantities held in the portfolio." }
+      POSITIONS.MARKET_VALUE: { term: "Market value", means: "The position's present value on the business date.", unit: "USD" }
+      OWNER: { term: "Owner", means: "Who keeps the portfolio's definition." }
+      PNL: { term: "P&L vector", means: "The portfolio's P&L under each historical scenario day: the sum of its members' vectors, each trade counted once.", unit: "USD", sign: "Positive is a gain." }
