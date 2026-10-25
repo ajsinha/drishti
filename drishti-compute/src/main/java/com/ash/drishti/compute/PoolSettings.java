@@ -122,6 +122,9 @@ public record PoolSettings(String name, String type, List<String> engines, Strin
         Object env = c.raw("environment");
         if (env instanceof java.util.Map<?, ?>) {
             ConfigValues e = c.section("environment");
+            if (e.raw("python") instanceof Number n) {
+                throw new IllegalArgumentException(e.where() + ".python is " + n + " as a number: write it in quotes, such as \"3.10\"");
+            }
             locked = com.ash.drishti.compute.env.Requires.parse(java.util.Map.of("python", java.util.Map.of("version", e.text("python", ""),
                     "lock", e.text("lock", ""), "index", e.text("index", "shipped"))), c.where()).python();
         } else if (env != null && !"system".equals(c.text("environment", "system"))) {

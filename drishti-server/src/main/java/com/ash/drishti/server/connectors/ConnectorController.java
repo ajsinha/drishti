@@ -102,6 +102,7 @@ public class ConnectorController {
             @RequestAttribute(Principal.ATTRIBUTE) Principal p) {
         entitlements.requireAdmin(p);
         String text = connectors.textOf(name, body, p.user());
+        connectors.editor(name, p.user());                                   // the requester of any approval its requires: needs (four eyes)
         ConnectorManager.Change c = connectors.save(name, text, unquote(ifMatch), confirm);
         audit.record(p.user(), "connector-saved", name, c.changed().isEmpty() ? "no change" : "settings " + c.changed());
         return withEtag(withWarnings(c));

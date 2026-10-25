@@ -519,7 +519,7 @@ The folder is watched (file events, with polling as a fallback and a safety net,
 ```
 INFO  connector docs-notes started (file)
 INFO  connector docs-notes reconfigured from docs-notes.yaml: RUNNING
-WARN  connector file docs-notes.yaml is not usable; the last good configuration keeps running: docs-notes.yaml: unknown key 'bogus' (allowed: plugin, enabled, kinds, description, settings)
+WARN  connector file docs-notes.yaml is not usable; the last good configuration keeps running: docs-notes.yaml: unknown key 'bogus' (allowed: plugin, enabled, kinds, description, settings, requires)
 INFO  connector file docs-notes.yaml was removed; the connector stops
 ```
 

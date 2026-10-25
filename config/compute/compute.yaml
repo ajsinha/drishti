@@ -1,0 +1,54 @@
+# Project Drishti · Any data. Any domain. One grammar.
+#
+# Copyright (c) 2026 Ashutosh Sinha <ajsinha@gmail.com>.
+# All rights reserved.
+#
+# PROPRIETARY AND CONFIDENTIAL.
+#
+# This file is the confidential and proprietary property of Ashutosh Sinha.
+# Unauthorised copying, use, modification, distribution or disclosure of this
+# file, via any medium, is strictly prohibited except with the express prior
+# written permission of the copyright holder.
+#
+# See the LICENSE file in the root of this repository for the full terms.
+#
+# Compute workers (docs/architecture/PYTHON_COMPUTE.md; the administrator's guide: docs/admin/COMPUTE.md). The server reads this file at
+# start (drishti.compute.file); every key has its default, so a missing key or file means the value shown here. Off as shipped: no worker
+# starts. Everything workers write goes under <data dir>/compute/ (environments, the SDK, request scratch folders); nothing in /tmp.
+compute:
+  enabled: ${DRISHTI_COMPUTE_ENABLED:false}
+  python: ${DRISHTI_PYTHON:}         # the interpreter workers and environments use; empty: python3 (python on Windows)
+  build: manual                      # manual (Admin -> Compute -> Build) or on-approval: when an approved environment is built
+  approval:
+    roles: []                        # roles whose administrators may approve requirements; empty: any administrator (never the requester)
+  scheduling:
+    max-inflight-per-user: 4         # one person's requests running at once on a pool; the rest wait behind other people's
+    queue: { interactive: 256, event: 10000, batch: 100000 }   # waiting requests per pool and class; a full queue answers "busy" (DRS-9203)
+  fan-out:
+    chunk-rows: 5000                 # rows per chunk when one request is split over many workers
+    peers: true                      # also send chunks to the other Drishti*net nodes that serve the pool
+  limits:
+    max-result-bytes: 256MB          # the largest result table a worker may hand back
+  # indexes:                         # named Python package sources (the bank's mirror); public PyPI is never used unless named here
+  #   bank-pypi: { url: "https://pypi.bank.example/simple" }
+  # java-repository: https://maven.bank.example/releases   # Maven layout (folder or URL) for requires.java with source: bank-maven
+  pools:
+    sample:                          # the sample engine (echo, sum, sum-vectors): Admin -> Compute -> Test runs it
+      type: python
+      engines: [drishti_compute.samples.vectors:VectorEngine]
+      environment: system            # the site's interpreter and the SDK; or { python: "3.12", lock: locks/risk.lock, index: shipped }
+      workers:
+        min: 0                       # kept warm
+        max: ${DRISHTI_COMPUTE_SAMPLE_WORKERS:4}   # as many as this node should run: configuration only, no limit in the code
+      mode: auto                     # fork on Linux (a fresh child per request), warm on Windows (reset and recycled)
+      memory: 1GB                    # per worker
+      cpu-seconds: 300               # per request
+      recycle-after: 200             # requests, then the worker is replaced (50 in warm mode when unset)
+      batch-share: 0.25              # batch requests hold at most this share of the workers
+      idle-stop: 5m
+      timeout: 30s                   # an interactive request's budget
+      timeout-batch: 10m
+  # nodes:                           # a node's own worker counts (its Drishti*net id); pools scale out by adding nodes
+  #   drishti-big-1:
+  #     pools:
+  #       sample: { workers: { max: 64 } }

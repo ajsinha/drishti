@@ -142,4 +142,15 @@ class ComputeSettingsTest {
         assertThat(installed.resolve("drishti_compute/worker.py")).exists();
         assertThat(Sdk.install(dir.resolve("sdk"))).isEqualTo(installed);          // the same SDK is extracted once
     }
+
+    @Test
+    void theShippedFileIsOffWithTheSamplePool() {
+        UnaryOperator<String> defaults = v -> v.replaceAll("\\$\\{[A-Z_]+:([^}]*)}", "$1");
+        ComputeSettings s = ComputeSettings.load(Path.of("..", "config", "compute", "compute.yaml"), dir, "", defaults);
+        assertThat(s.enabled()).isFalse();
+        assertThat(s.pool("sample").workersMax()).isEqualTo(4);
+        assertThat(s.pool("sample").engines()).containsExactly(TestCompute.VECTORS);
+        assertThat(s.pool("sample").systemEnvironment()).isTrue();
+        assertThat(s.queueBatch()).isEqualTo(100_000);
+    }
 }

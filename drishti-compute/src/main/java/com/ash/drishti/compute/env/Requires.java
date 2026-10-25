@@ -98,6 +98,9 @@ public record Requires(Python python, List<JavaLib> java, List<String> plugins) 
             if (!(p instanceof Map<?, ?> pm)) {
                 throw new IllegalArgumentException(where + ".requires.python is a mapping (version, lock, index)");
             }
+            if (pm.get("version") instanceof Number n) {
+                throw new IllegalArgumentException(where + ".requires.python.version is " + n + " as a number: write it in quotes, such as \"3.10\"");
+            }
             String version = str(pm.get("version"));
             String lock = str(pm.get("lock"));
             String index = str(pm.get("index"));

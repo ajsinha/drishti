@@ -401,7 +401,19 @@ public enum ErrorCode {
     /** Content store: a key that is not a valid content key (empty, too long, a {@code ..} segment, control characters). */
     CONTENT_BAD_KEY("DRS-5058", 400),
     /** Content store: the backing store (database, bucket, shared folder) could not be reached or answered with an error. */
-    CONTENT_UNAVAILABLE("DRS-5059", 503);
+    CONTENT_UNAVAILABLE("DRS-5059", 503),
+    /** Compute workers (docs/architecture/PYTHON_COMPUTE.md): compute is off on this server ({@code compute.enabled}). */
+    COMPUTE_OFF("DRS-9201", 503),
+    /** Compute: refused before any work (unknown pool, requirements not approved, an environment not built, four eyes, a bad request). */
+    COMPUTE_REFUSED("DRS-9202", 409),
+    /** Compute: the pool's queue for the request's class is full: try again in a moment. */
+    COMPUTE_BUSY("DRS-9203", 429),
+    /** Compute: the computation passed its time budget and was stopped. */
+    COMPUTE_TIMEOUT("DRS-9204", 504),
+    /** Compute: the computation failed, crashed, passed a limit or was refused by its engine; the message says which. */
+    COMPUTE_FAILED("DRS-9205", 502),
+    /** Compute: no such approval request or running computation. */
+    COMPUTE_NOT_FOUND("DRS-9206", 404);
 
     private final String code;
     private final int httpStatus;
