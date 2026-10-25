@@ -469,6 +469,91 @@ final class DeltaTable {
         return new com.ash.drishti.api.ColumnSet(ids.toArray(new String[0]), numbers, text, date == LocalDate.MIN ? null : date);
     }
 
+    /**
+     * The date's rows with one vector column ({@code list<double>}) and some text columns, streamed to {@code sink} batch by batch
+     * (VAR_DATA_MODEL.md section 15): one buffer per read, reused for every row, so a date of millions of vectors is never held here.
+     * Read as stored (no deletion vectors: the vector tables are written without them); partition values come from the log.
+     */
+    void vectors(Layout layout, LocalDate date, String vectorColumn, List<String> textColumns, com.ash.drishti.api.VectorSink sink) {
+        List<Row> files = layout.files().getOrDefault(date, List.of());
+        StructType schema = new StructType().add(idColumn, StringType.STRING)
+                .add(vectorColumn, new io.delta.kernel.types.ArrayType(io.delta.kernel.types.DoubleType.DOUBLE, true));
+        for (String c : textColumns) {
+            schema = schema.add(c, StringType.STRING);
+        }
+        double[][] buf = {new double[512]};
+        String[] texts = new String[textColumns.size()];
+        StructType read = schema;
+        for (Row file : files) {
+            Map<String, String> partition = InternalScanFileUtils.getPartitionValues(file);
+            raw(file, read, Optional.empty(), batch -> {
+                int n = batch.getSize();
+                io.delta.kernel.data.ColumnVector idv = batch.getColumnVector(0);
+                io.delta.kernel.data.ColumnVector vec = batch.getColumnVector(1);
+                for (int r = 0; r < n; r++) {
+                    for (int c = 0; c < texts.length; c++) {
+                        String fixed = partition.get(textColumns.get(c));
+                        io.delta.kernel.data.ColumnVector tv = batch.getColumnVector(c + 2);
+                        texts[c] = fixed != null ? fixed : tv.isNullAt(r) ? null : tv.getString(r);
+                    }
+                    String id = idv.isNullAt(r) ? "" : idv.getString(r);
+                    if (vec.isNullAt(r)) {
+                        sink.row(id, buf[0], -1, texts);
+                        continue;
+                    }
+                    int len = copy(vec.getArray(r), buf);
+                    sink.row(id, buf[0], len, texts);
+                }
+            });
+        }
+    }
+
+    /** One entity's vector columns on one date (a document's page puts them back in place of their markers); empty when none. */
+    Map<String, double[]> vectorsOf(Layout layout, LocalDate date, int fileIndex, String id, List<String> vectorColumns) {
+        List<Row> files = layout.files().getOrDefault(date, List.of());
+        if (fileIndex < 0 || fileIndex >= files.size() || vectorColumns.isEmpty()) {
+            return Map.of();
+        }
+        StructType schema = new StructType().add(idColumn, StringType.STRING);
+        for (String c : vectorColumns) {
+            schema = schema.add(c, new io.delta.kernel.types.ArrayType(io.delta.kernel.types.DoubleType.DOUBLE, true));
+        }
+        io.delta.kernel.expressions.Predicate eq = new io.delta.kernel.expressions.Predicate("=",
+                new io.delta.kernel.expressions.Column(idColumn), io.delta.kernel.expressions.Literal.ofString(id));
+        Map<String, double[]> out = new LinkedHashMap<>();
+        raw(files.get(fileIndex), schema, Optional.of(eq), batch -> {
+            io.delta.kernel.data.ColumnVector idv = batch.getColumnVector(0);
+            for (int r = 0; r < batch.getSize() && out.isEmpty(); r++) {
+                if (idv.isNullAt(r) || !id.equals(idv.getString(r))) {
+                    continue;
+                }
+                for (int c = 0; c < vectorColumns.size(); c++) {
+                    io.delta.kernel.data.ColumnVector v = batch.getColumnVector(c + 1);
+                    if (!v.isNullAt(r)) {
+                        double[][] one = {new double[0]};
+                        int len = copy(v.getArray(r), one);
+                        out.put(vectorColumns.get(c), java.util.Arrays.copyOf(one[0], len));
+                    }
+                }
+            }
+        });
+        return out;
+    }
+
+    /** An array cell's doubles into {@code buf[0]} (grown when short); a null element is NaN. Returns the length. */
+    private static int copy(io.delta.kernel.data.ArrayValue a, double[][] buf) {
+        int len = a.getSize();
+        if (buf[0].length < len) {
+            buf[0] = new double[Math.max(len, buf[0].length * 2)];
+        }
+        io.delta.kernel.data.ColumnVector el = a.getElements();
+        double[] b = buf[0];
+        for (int i = 0; i < len; i++) {
+            b[i] = el.isNullAt(i) ? Double.NaN : el.getDouble(i);
+        }
+        return len;
+    }
+
     private static boolean isScalar(io.delta.kernel.types.DataType t) {
         return t instanceof io.delta.kernel.types.LongType || t instanceof io.delta.kernel.types.IntegerType
                 || t instanceof io.delta.kernel.types.ShortType || t instanceof io.delta.kernel.types.ByteType

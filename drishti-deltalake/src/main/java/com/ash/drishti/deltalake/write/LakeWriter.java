@@ -38,6 +38,7 @@ import io.delta.kernel.hook.PostCommitHook;
 import io.delta.kernel.internal.InternalScanFileUtils;
 import io.delta.kernel.internal.actions.AddFile;
 import io.delta.kernel.internal.actions.SingleAction;
+import io.delta.kernel.types.ArrayType;
 import io.delta.kernel.types.DataType;
 import io.delta.kernel.types.DateType;
 import io.delta.kernel.types.DoubleType;
@@ -184,10 +185,14 @@ public final class LakeWriter {
         return s;
     }
 
+    /** A vector column's type: Parquet LIST of DOUBLE, elements nullable (a missing scenario value is null, never zero). */
+    static final ArrayType VECTOR = new ArrayType(DoubleType.DOUBLE, true);
+
     static DataType type(String t) {
         return switch (t) {
             case "double" -> DoubleType.DOUBLE;
             case "date" -> DateType.DATE;
+            case "vector" -> VECTOR;            // a P&L vector: list<double> (VAR_DATA_MODEL.md section 15)
             default -> StringType.STRING;
         };
     }
@@ -342,6 +347,17 @@ public final class LakeWriter {
             if (t instanceof DoubleType) {
                 return v.isNumber() ? v.asDouble() : null;
             }
+            if (t instanceof ArrayType) {
+                if (!v.isArray()) {
+                    return null;
+                }
+                double[] out = new double[v.size()];
+                for (int i = 0; i < out.length; i++) {
+                    JsonNode x = v.get(i);
+                    out[i] = x != null && x.isNumber() ? x.asDouble() : Double.NaN;
+                }
+                return out;
+            }
             if (t instanceof DateType) {
                 return (int) LocalDate.parse(v.asText().substring(0, 10)).toEpochDay();
             }
@@ -354,7 +370,10 @@ public final class LakeWriter {
         }
     }
 
-    /** One column of a batch over plain values: String, Double, or Integer (days since the epoch) for a date. */
+    /**
+     * One column of a batch over plain values: String, Double, Integer (days since the epoch) for a date, or double[] for a vector
+     * (NaN elements written as null).
+     */
     private record Vector(DataType type, Object[] values) implements ColumnVector {
         @Override
         public DataType getDataType() {
@@ -387,6 +406,48 @@ public final class LakeWriter {
         @Override
         public int getInt(int rowId) {
             return (Integer) values[rowId];
+        }
+
+        @Override
+        public io.delta.kernel.data.ArrayValue getArray(int rowId) {
+            double[] a = (double[]) values[rowId];
+            return new io.delta.kernel.data.ArrayValue() {
+                @Override
+                public int getSize() {
+                    return a.length;
+                }
+
+                @Override
+                public ColumnVector getElements() {
+                    return new Elements(a);
+                }
+            };
+        }
+    }
+
+    /** A vector's elements as a column. */
+    private record Elements(double[] a) implements ColumnVector {
+        @Override
+        public DataType getDataType() {
+            return DoubleType.DOUBLE;
+        }
+
+        @Override
+        public int getSize() {
+            return a.length;
+        }
+
+        @Override
+        public void close() {}
+
+        @Override
+        public boolean isNullAt(int rowId) {
+            return Double.isNaN(a[rowId]);
+        }
+
+        @Override
+        public double getDouble(int rowId) {
+            return a[rowId];
         }
     }
 }

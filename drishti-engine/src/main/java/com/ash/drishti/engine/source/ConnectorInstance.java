@@ -137,6 +137,17 @@ final class ConnectorInstance implements SourcePlugin {
     }
 
     @Override
+    public java.util.Set<String> vectorColumns(String kind) {
+        return delegate.vectorColumns(kind);
+    }
+
+    @Override
+    public boolean vectors(String kind, String column, java.util.List<String> texts, AsOf asOf, com.ash.drishti.api.VectorSink sink)
+            throws Exception {
+        return delegate.vectors(kind, column, texts, asOf, sink);
+    }
+
+    @Override
     public boolean documents(String kind, AsOf asOf, java.util.function.Consumer<EntityDocument> sink) throws Exception {
         return serves(kind) ? delegate.documents(kind, asOf, sink) : true;     // a kind it does not serve: it holds none
     }

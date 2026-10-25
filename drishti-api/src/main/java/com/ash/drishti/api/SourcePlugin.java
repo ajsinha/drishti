@@ -176,6 +176,23 @@ public interface SourcePlugin extends AutoCloseable {
     }
 
     /**
+     * The document paths this source keeps as vector columns for the kind (a Delta table's {@code layout.<kind>.vectors}: a
+     * {@code list<double>} column such as a P&amp;L vector), empty when it keeps none.
+     */
+    default java.util.Set<String> vectorColumns(String kind) {
+        return java.util.Set.of();
+    }
+
+    /**
+     * Every entity of the kind on the business date with its vector {@code column} and the text columns {@code texts} (each one
+     * {@link #columnar} lists), streamed to {@code sink} file by file without holding the date in memory. Returns false, having given
+     * nothing, when the source cannot read the column so; true when it read the date (possibly nothing).
+     */
+    default boolean vectors(String kind, String column, java.util.List<String> texts, AsOf asOf, VectorSink sink) throws Exception {
+        return false;
+    }
+
+    /**
      * Every document of the kind on the business date, in one pass over the source (a whole day read file by file, not
      * entity by entity), for connectors built from other kinds (derived pages). Returns false, having given nothing to
      * {@code sink}, when the source cannot read so (the caller then reads entity by entity); true when it read the date

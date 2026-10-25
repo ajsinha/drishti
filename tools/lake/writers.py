@@ -23,7 +23,8 @@
 
 Both write the same table: ``id`` STRING, ``doc`` STRING (the whole document, nested arrays intact), ``business_date`` DATE, the
 partition columns (STRING, Hive folders ``business_date=2026-10-01/desk=RATES/``) and the promoted columns (DOUBLE when every value
-is a number, else STRING), partitioned by business_date then the partition columns."""
+is a number, else STRING; a vector column, ``layout.<kind>.vectors``, as ``list<double>``), partitioned by business_date then the
+partition columns."""
 from __future__ import annotations
 
 import json
@@ -170,7 +171,8 @@ def existing_layout(uri: str) -> tuple[list[str], dict[str, str]] | None:
         dt = DeltaTable(uri)
         meta = {"partitionColumns": dt.metadata().partition_columns, "schemaString": dt.schema().to_json()}
     schema = json.loads(meta["schemaString"])
-    types = {f["name"]: ("double" if f["type"] in ("double", "float") else "string") for f in schema["fields"]}
+    types = {f["name"]: ("double" if f["type"] in ("double", "float") else "vector" if isinstance(f["type"], dict)
+                         and f["type"].get("type") == "array" else "string") for f in schema["fields"]}
     return list(meta.get("partitionColumns") or []), types
 
 
@@ -192,6 +194,8 @@ def check_layout(t: Table) -> None:
 def _cell(v, kind: str):
     if v is None:
         return None
+    if kind == "vector":                             # a P&L vector: floats, a missing element stays missing (null, never zero)
+        return [None if x is None else float(x) for x in v] if isinstance(v, list) else None
     if kind == "double":
         if isinstance(v, str):                       # an id column an older table keeps as a number: the id's digits
             try:
@@ -238,7 +242,8 @@ def write_deltalake(t: Table, by_day: dict, progress=None) -> dict:
         for n, v in zip(t.partition_names, part.values):
             cols[n] = pa.array([v] * len(rows), pa.string())
         for name, kind in t.promoted.items():
-            cols[name] = pa.array([_cell(r[2].get(name), kind) for r in rows], pa.float64() if kind == "double" else pa.string())
+            cols[name] = pa.array([_cell(r[2].get(name), kind) for r in rows],
+                                  pa.float64() if kind == "double" else pa.list_(pa.float64()) if kind == "vector" else pa.string())
         return pa.table(cols)
 
     def commit(table, replace):

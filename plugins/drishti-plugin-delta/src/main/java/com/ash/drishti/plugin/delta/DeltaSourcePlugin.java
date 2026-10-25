@@ -174,6 +174,11 @@ public final class DeltaSourcePlugin implements SourcePlugin {
      * hit's subtitle, so a name finds its id ({@code Ford} finds {@code F}), not only an id prefix.
      */
     private final Map<String, List<String>> typeAhead = new java.util.concurrent.ConcurrentHashMap<>();
+    /**
+     * Kind to its vector columns ({@code layout.<kind>.vectors: PNL}): {@code list<double>} columns kept out of the document (which holds
+     * a marker {@code {"$vector": "PNL"}} instead), read in bulk by {@link #vectors} and put back into a document {@link #fetch} returns.
+     */
+    private final Map<String, List<String>> vectorCols = new java.util.concurrent.ConcurrentHashMap<>();
     private int maxLoadRows;
     /**
      * Single-entity reads decode a row group each: bounded, so a burst of them cannot exhaust memory; at most {@code max-queued-reads}
@@ -317,6 +322,8 @@ public final class DeltaSourcePlugin implements SourcePlugin {
                 promoted.put(k.substring(7, k.length() - 8), java.util.Arrays.stream(v.split(",")).map(String::trim).filter(x -> !x.isEmpty()).toList());
             } else if (k.startsWith("layout.") && k.endsWith(".type-ahead")) {
                 typeAhead.put(k.substring(7, k.length() - 11), java.util.Arrays.stream(v.split(",")).map(String::trim).filter(x -> !x.isEmpty()).toList());
+            } else if (k.startsWith("layout.") && k.endsWith(".vectors")) {
+                vectorCols.put(k.substring(7, k.length() - 8), java.util.Arrays.stream(v.split(",")).map(String::trim).filter(x -> !x.isEmpty()).toList());
             }
         });
         this.dated = new DatedHitIndex(sourceName, DatedHitIndex.defaultRoot(), ctx.settings(), this::dayHits, (k, d) -> {
@@ -541,6 +548,9 @@ public final class DeltaSourcePlugin implements SourcePlugin {
             problems.ok(ref.kind(), d.toString());           // the date's files were read
             if (json == null) {
                 continue;
+            }
+            if (json.contains("\"$vector\"")) {
+                json = withVectors(ref, l.get(), d, json);
             }
             DataNode doc = context.parseJson(new ByteArrayInputStream(json.getBytes(StandardCharsets.UTF_8)));
             return Optional.of(new EntityDocument(ref, doc, new Provenance(sourceName, l.get().version(), Instant.now(), false,
@@ -997,6 +1007,87 @@ public final class DeltaSourcePlugin implements SourcePlugin {
         } catch (RuntimeException e) {
             return Set.of();
         }
+    }
+
+    @Override
+    public Set<String> vectorColumns(String kind) {
+        List<String> v = vectorCols.get(kind);
+        if (v == null || "effective".equals(modes.get(kind))) {
+            return Set.of();
+        }
+        try {
+            return layout(kind, null).map(l -> {
+                Set<String> have = new java.util.LinkedHashSet<>();
+                v.stream().filter(c -> l.schema().indexOf(c) >= 0).forEach(have::add);
+                return have;
+            }).orElse(Set.of());
+        } catch (RuntimeException e) {
+            return Set.of();
+        }
+    }
+
+    @Override
+    public boolean vectors(String kind, String column, List<String> texts, AsOf asOf, com.ash.drishti.api.VectorSink sink) {
+        if (!vectorColumns(kind).contains(column)) {
+            return false;
+        }
+        Optional<DeltaTable.Layout> l = readableLayout(kind, asOf.knownAt());
+        if (l.isEmpty()) {
+            return true;
+        }
+        Map<String, String> cols = promotedColumns(kind, l.get());
+        List<String> physical = new ArrayList<>();
+        for (String t : texts) {
+            String c = cols.get(t);
+            if (c == null) {
+                return false;                                   // a text column the table does not keep: not answerable as columns
+            }
+            physical.add(c);
+        }
+        List<LocalDate> dates = candidates(kind, l.get(), asOf.businessDate());
+        if (dates.isEmpty()) {
+            return true;
+        }
+        try {
+            tables.get(kind).vectors(l.get(), dates.get(0), column, physical, sink);
+        } catch (RuntimeException e) {
+            throw problems.failed(kind, dates.get(0).toString(), l.get().timestamp(), e);
+        }
+        problems.ok(kind, dates.get(0).toString());
+        return true;
+    }
+
+    /** A document whose vector columns were kept out of it ({@code {"$vector": "PNL"}} markers) with the vectors put back. */
+    private String withVectors(EntityRef ref, DeltaTable.Layout l, LocalDate d, String json) {
+        List<String> cols = vectorCols.getOrDefault(ref.kind(), List.of()).stream().filter(c -> l.schema().indexOf(c) >= 0).toList();
+        if (cols.isEmpty()) {
+            return json;
+        }
+        Map<String, double[]> vecs = tables.get(ref.kind()).vectorsOf(l, d, idMap(ref.kind(), l, d).file(ref.id()), ref.id(), cols);
+        if (vecs.isEmpty()) {
+            return json;
+        }
+        String out = json;
+        for (Map.Entry<String, double[]> e : vecs.entrySet()) {
+            StringBuilder a = new StringBuilder(e.getValue().length * 8).append('[');
+            for (int i = 0; i < e.getValue().length; i++) {
+                double x = e.getValue()[i];
+                if (i > 0) {
+                    a.append(',');
+                }
+                if (Double.isNaN(x) || Double.isInfinite(x)) {
+                    a.append("null");
+                } else if (x == Math.rint(x) && Math.abs(x) < 1e15) {
+                    a.append((long) x);                         // whole currency units stay whole, as the batch wrote them
+                } else {
+                    a.append(x);
+                }
+            }
+            // the marker as the lake tools write it (compact JSON), with or without a space after the colon
+            out = out.replace("{\"$vector\":\"" + e.getKey() + "\"}", a.append(']').toString())
+                    .replace("{\"$vector\": \"" + e.getKey() + "\"}", a.toString());
+        }
+        return out;
     }
 
     @Override

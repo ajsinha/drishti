@@ -20,7 +20,12 @@ open files and, per business date, a set of 8-byte id hashes (to count duplicate
 
 A document is rejected, with the reason, when it has no id (``--key``), no business date (``--date``, unless ``--as-of``), a date
 that is not a date, or when it is not a JSON object; a reject is counted per reason and the first ones are kept with where they were
-(``file:line`` or ``file[n]``)."""
+(``file:line`` or ``file[n]``).
+
+A **vector** field (the pack's ``layout.<kind>.vectors``: a P&L vector of 509 numbers, VAR_DATA_MODEL.md section 15) becomes a column of
+its own (``list<double>``) and leaves the document, which keeps the marker ``{"$vector": "PNL"}`` in its place, so the numbers are not
+stored twice; the Delta connector puts the vector back into a document it serves. A vector that is not a list of numbers (or null) is
+a reject."""
 from __future__ import annotations
 
 import hashlib
@@ -162,7 +167,7 @@ class Stager:
     """Writes accepted documents into staged files by (business date, partition values)."""
 
     def __init__(self, folder: pathlib.Path | None, key: str, date_field: str | None, as_of: date | None,
-                 partition_by: list[str], promote: list[str], flatten: dict | None = None):
+                 partition_by: list[str], promote: list[str], flatten: dict | None = None, vectors: list[str] | None = None):
         self.folder, self.key, self.date_field, self.as_of = folder, key, date_field, as_of
         # flattened fields (the pack's layout.<kind>.flatten: NOTIONAL: LEGS[0].NOTIONAL): a plain field of the document and a
         # column, so searches, totals and BI read it without the document; a field the document already has is never replaced
@@ -170,6 +175,7 @@ class Stager:
         promote = list(promote) + [n for n in self.flatten if n not in promote]
         self.partition_by = list(partition_by)
         self.promote = [p for p in promote if p not in self.partition_by]       # a partition column is a real column already
+        self.vectors = [v for v in (vectors or []) if v not in self.partition_by and v not in self.promote]
         self.parts: dict[tuple, Part] = {}
         self.stats = Stats(numeric={column_name(p): True for p in self.promote})
         self._open: OrderedDict[tuple, object] = OrderedDict()
@@ -207,6 +213,16 @@ class Stager:
             added = {n: v for n, path in self.flatten.items() if n not in doc and (v := get_indexed(doc, path)) is not MISSING}
             if added:
                 doc = {**doc, **added}
+        vecs = {}
+        for p in self.vectors:
+            v = get(doc, p) if isinstance(doc, dict) else MISSING
+            if v is MISSING or v is None:
+                continue
+            if not isinstance(v, list) or not all(_number(x) or x is None for x in v):
+                st.reject(where, f"the vector field '{p}' is not a list of numbers")
+                return
+            vecs[column_name(p)] = v
+            doc = {**doc, p: {"$vector": column_name(p)}} if "." not in p else doc
         values = tuple(scalar_text(get(doc, p)) for p in self.partition_by)
         promoted = {}
         for p in self.promote:
@@ -219,6 +235,7 @@ class Stager:
                 st.numeric[name] = False
                 v = id_text(v) if _number(v) else v
             promoted[name] = v
+        promoted.update(vecs)
         h = int.from_bytes(hashlib.blake2b(ident.encode("utf-8"), digest_size=8).digest(), "big")
         seen = self._seen.setdefault(day, set())
         if h in seen:
@@ -258,7 +275,9 @@ class Stager:
 
     def types(self) -> dict[str, str]:
         """The promoted columns' types from what was read: double when every value present is a number, else string."""
-        return {name: ("double" if ok else "string") for name, ok in self.stats.numeric.items()}
+        out = {name: ("double" if ok else "string") for name, ok in self.stats.numeric.items()}
+        out.update({column_name(v): "vector" for v in self.vectors})
+        return out
 
     def by_day(self) -> dict[date, list[Part]]:
         out: dict[date, list[Part]] = {}

@@ -30,7 +30,7 @@ import java.util.Map;
  *
  * @param table the table's folder
  * @param partitionColumns {@code business_date} then the partition columns
- * @param columns every column with its type ({@code string}, {@code double}, {@code date})
+ * @param columns every column with its type ({@code string}, {@code double}, {@code date}, {@code vector}: a list of doubles)
  * @param promoted the promoted columns, read from the third element of a staged row
  * @param mode {@code overwrite-dates}, {@code overwrite-partitions} or {@code append}
  * @param batchRows rows per batch handed to the Parquet writer

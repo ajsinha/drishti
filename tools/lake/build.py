@@ -23,7 +23,8 @@ Input (--from, repeatable): a file or a folder (*.json, *.jsonl, *.ndjson, *.gz;
 element by element (never read whole); JSON Lines line by line; gzip either way. Each document is one row: id (--key), the whole
 document as JSON (nested arrays stay inside it), business_date (--date FIELD, or --as-of DATE for every document), the partition
 columns (--partition-by A,B: Hive folders business_date=.../A=.../B=...) and the promoted columns (--promote a,b.c: real columns
-readers can filter on without parsing the document).
+readers can filter on without parsing the document) and the vector columns (--vector PNL: a list of numbers as a list<double>
+column, the document keeping only a marker; the P&L vectors of VAR_DATA_MODEL.md section 15).
 
 Table: <lake>/<domain>/<kind>/. With --pack DIR the domain, the promoted columns (settings.layout.<kind>.columns of its Delta
 connector) and the key and date fields (its ingest: block) come from the pack; options given on the command line win.
@@ -179,6 +180,8 @@ def pack_defaults(pack: pathlib.Path, kind: str | None, connector: str | None = 
             out["promote"] = [x.strip() for x in (cols.split(",") if isinstance(cols, str) else cols) if str(x).strip()]
             fl = (lay or {}).get("flatten") or {}
             out["flatten"] = {str(n): str(p) for n, p in fl.items()} if isinstance(fl, dict) else {}
+            vec = (lay or {}).get("vectors") or st.get(f"layout.{kind}.vectors") or []
+            out["vectors"] = [x.strip() for x in (vec.split(",") if isinstance(vec, str) else vec) if str(x).strip()]
             named = (st.get("table") or {}).get(kind) if isinstance(st.get("table"), dict) else st.get(f"table.{kind}")
             out["table"] = named or None
     if kind and isinstance(ing.get(kind), dict):
@@ -193,7 +196,8 @@ def pack_defaults(pack: pathlib.Path, kind: str | None, connector: str | None = 
 def plan(a) -> dict:
     """The run's settings: the options, filled from --pack where they are missing."""
     p = {"pack": a.pack_name, "domain": a.domain, "kind": a.kind, "key": a.key, "date": a.date, "promote": split(a.promote),
-         "partition_by": split(a.partition_by), "connector": getattr(a, "connector", None), "table": getattr(a, "table", None)}
+         "partition_by": split(a.partition_by), "connector": getattr(a, "connector", None), "table": getattr(a, "table", None),
+         "vectors": split(getattr(a, "vector", None))}
     if a.pack:
         d = pack_defaults(pathlib.Path(a.pack), a.kind, p["connector"])
         for k in ("pack", "domain", "kind", "key", "date", "connector", "table"):
@@ -201,6 +205,7 @@ def plan(a) -> dict:
         if not p["promote"] and a.promote is None:
             p["promote"] = d.get("promote") or []
         p["flatten"] = d.get("flatten") or {}
+        p["vectors"] = p.get("vectors") or d.get("vectors") or []
     p["key"] = p["key"] or "id"
     if p["table"] and (not str(p["table"]).replace("_", "").replace("-", "").isalnum()):
         raise BuildError(f"--table is a folder name under the domain, not a path: {p['table']}")
@@ -286,7 +291,7 @@ def _go(a, p, as_of, lake, table, summary, prog, started, say) -> tuple[int, dic
         if old.is_dir():                                   # left by a run of this table that died: we hold its lock
             shutil.rmtree(old, ignore_errors=True)
         staging = old / summary["run"]
-    st = stage.Stager(staging, p["key"], p["date"], as_of, p["partition_by"], p["promote"], p.get("flatten"))
+    st = stage.Stager(staging, p["key"], p["date"], as_of, p["partition_by"], p["promote"], p.get("flatten"), p.get("vectors"))
     try:
         if table:                                          # a table of another partitioning fails before anything is read
             writers.check_layout(writers.Table(table, [stage.column_name(c) for c in p["partition_by"]], {}, a.mode, a.batch_rows, []))
@@ -517,6 +522,8 @@ def add_arguments(p: argparse.ArgumentParser) -> argparse.ArgumentParser:
     g.add_argument("--as-of", metavar="YYYY-MM-DD", help="one business date for every document (a snapshot) instead of --date")
     g.add_argument("--partition-by", action="append", metavar="COL[,COL]", help="partition columns after business_date (dotted paths; up to 4)")
     g.add_argument("--promote", action="append", metavar="COL[,COL]", help="fields to keep as real columns too (default: the pack's layout columns)")
+    g.add_argument("--vector", action="append", metavar="COL[,COL]",
+                   help="list-of-numbers fields kept as list<double> columns, out of the document (default: the pack's layout vectors)")
     g = p.add_argument_group("where")
     g.add_argument("--lake", metavar="DIR", help="the Delta root (the connector's root, DRISHTI_DELTA_ROOT)")
     g.add_argument("--domain", help="the lake domain (default: the pack's Delta connector's domain)")
