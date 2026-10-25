@@ -47,6 +47,13 @@
     `pnl-distribution@1`.
   - **API guide:** API_GUIDE.md lists every `/api/v1/var` endpoint (scope, path, history, contributions, tree, status, reload,
     baskets, captures, compare).
+  - **Settings and tools documented:** CONFIGURATION.md has the `drishti.var` settings and the `DRISHTI_VAR_*` placeholders; TOOLS.md has
+    `drishti.py compute` (run, cancel, event, sandboxes, reactive) and `tools/packgen/var/make_var_data.py`; the element sheet regenerated;
+    the tutorial counts say twenty-three.
+- **The plan (2026-10-25):** IMPLEMENTATION_PLAN.md has the computed-measures roadmap. Fundamental data stays as it is, and every risk measure
+  is computed when asked on one common risk lake, with a Python engine and a reactive connector per measure. Each old stored version is retired
+  in the same release. 2.8.0 is the foundation with VaR; 2.9.0 trading and market risk; 2.10.0 counterparty risk; 2.11.0 balance sheet and
+  regulatory; 2.12.0 AI and GenUI (parked until then); other industries after banking and finance.
 - **Reactive connectors, steps R1 to R4 (2.8.0, [REACTIVE_CONNECTORS.md](docs/architecture/REACTIVE_CONNECTORS.md) section 21,
   [REACTIVE_CONNECTOR.md](docs/connectors/REACTIVE_CONNECTOR.md), [tutorial 23](docs/tutorials/23-computed-panels.md)):** a connector
   may compute its answer. The built-in plugin `reactive` (in `drishti-compute`) reads a connector file's computation: kinds with typed

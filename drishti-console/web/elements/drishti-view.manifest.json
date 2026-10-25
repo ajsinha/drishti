@@ -37,6 +37,7 @@
       "templates/_macros/panels.html"
     ],
     "hourglass-split": [
+      "templates/_macros/panels.html",
       "templates/_macros/view.html"
     ],
     "inbox": [

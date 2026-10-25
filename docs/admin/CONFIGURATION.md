@@ -323,6 +323,9 @@ files (`application-files.yaml`, `application-postgres.yaml`, …) and packs hav
 | `DRISHTI_REPORTS_DIR` | `drishti.reports.folder` | `./data/reports` | Where report files are written. |
 | `DRISHTI_SUTRA_WATCH` | `drishti.rachana.watch` | `auto` | How Sutra hot reload notices edits: `auto` (file events, polling when they are unavailable) or `poll`. |
 | `DRISHTI_CALC_ENABLED` | `drishti.calc.enabled` | `true` | Allow Calc (Python in the browser). |
+| `DRISHTI_VAR_ENABLED` | `drishti.var.enabled` | `true` | Run the VaR engine (`/api/v1/var`, the VaR explorer). |
+| `DRISHTI_VAR_THREADS` | `drishti.var.threads` | `0` | Cores the VaR engine's vector sums use (`0`: every core). |
+| `DRISHTI_VAR_MEMORY_MB` | `drishti.var.memory-budget-mb` | `0` | Most memory the loaded dates' P&L vectors take (`0`: a quarter of the heap). |
 | `DRISHTI_LAYOUTS_ENABLED` | `drishti.layouts.enabled` | `true` | Allow personal layouts. |
 | `DRISHTI_PIVOT_ENABLED` | `drishti.pivot.enabled` | `true` | Allow the Pivot tab. |
 | `DRISHTI_ASK_ENABLED` | `drishti.explain.ask.enabled` | `false` | Turn on Ask about this page (also list packs in `drishti.explain.ask.packs`). |
@@ -1337,6 +1340,32 @@ decides who may use it (roles with `calc`), keeps each user's snippets, and serv
 
 Which views offer Calc is a pack's choice (`python: { enabled: true }` in `pack.yaml`), not configuration; see
 [PACK_DEVELOPER_GUIDE.md](../guides/PACK_MODELLING_GUIDE.md#calc-python-snippets).
+
+### `drishti.var` — the VaR engine
+
+The VaR engine ([VAR_ENGINE.md](../architecture/VAR_ENGINE.md), the explorer [VAR_EXPLORER.md](../guides/VAR_EXPLORER.md)) computes VaR,
+expected shortfall, contributions, history and backtests for any scope from the trades' stored 509-day P&L vectors, as the caller, when
+asked. Nothing it answers is stored except captures.
+
+| Key | Default | Meaning |
+|---|---|---|
+| `enabled` | `true` (`DRISHTI_VAR_ENABLED`) | The engine at all. Off: `/api/v1/var` and the explorer are not served. |
+| `confidence` | `0.99` | VaR's confidence. |
+| `es-confidence` | `0.975` | Expected shortfall's confidence. |
+| `rank-rule` | `kth-worst` | `kth-worst` (k = ceil(N (1 − confidence)): the 6th worst of 509) or `interpolated`. |
+| `component-window` | `5` | Component VaR averages this many scenarios ranked around the VaR scenario (k−2 to k+2). |
+| `threads` | `0` (`DRISHTI_VAR_THREADS`) | Cores the vector sums use; `0` is every core. |
+| `memory-budget-mb` | `0` (`DRISHTI_VAR_MEMORY_MB`) | Most memory the loaded dates' vectors take; `0` is a quarter of the heap. |
+| `hot-dates` | `2` | Business dates kept loaded (the newest). |
+| `history-days` | `250` | The history and backtest window, in business days. |
+| `component-scale-to-var` | `true` | Components are scaled to add up to the VaR exactly (`false`: to the smoothed VaR). |
+| `parallel-rows` | `4096` | The fewest rows a sum splits across threads. |
+| `rows-per-chunk` | `65536` | Rows per chunk of the in-memory vector store. |
+| `histogram-bins` | `42` | Bins of the P&L distribution sent to the screen. |
+| `max-parts` | `5000` | Most parts a contribution table computes at once. |
+| `path-page` | `60` | Rows of the ranked P&L path per page. |
+| `kinds.vector`, `kinds.position`, `kinds.hierarchy`, `kinds.scenario-set`, `kinds.node`, `kinds.portfolio` | `pnl-vector`, `position`, `risk-hierarchy`, `scenario-set`, `var-node`, `portfolio` | The kinds the engine reads (the market-risk pack's). |
+| `access` | `{}` | Per role and hierarchy node, `positions` or `aggregate`: an aggregate-only role sees figures but no positions or trades below that node (`drishti.var.access.<role>[MGMT~DESK-RATES]=aggregate`). |
 
 ### `drishti.bi` — Rupaka (business intelligence), phase 1: the shell and the catalogue
 

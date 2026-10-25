@@ -6,13 +6,13 @@
 
 # Drishti — Implementation Plan
 
-*Revision 1.2 · 2026-10-11 · Author: Ashutosh Sinha · Companion to [ARCHITECTURE.md](ARCHITECTURE.md)*
+*Revision 1.3 · 2026-10-25 · Author: Ashutosh Sinha · Companion to [ARCHITECTURE.md](ARCHITECTURE.md)*
 
 **Built 2026-10-24: the us-equities pack** (`config/packs/us-equities`, [guide](../../config/packs/us-equities/guides/us-equities.md); off by default, enabled through `DRISHTI_PACKS`; as built it covers the members of the three indexes, about 500 companies, to keep the repository small: every listed company is a later step; links company to LEI to a core legal entity where the LEI matches). Planned by the product owner on 2026-10-22: Every NYSE and Nasdaq listed company, Dow 30, Nasdaq-100 and S&P 500 membership, from openly licensed sources first: SEC EDGAR (company facts, filings, SIC codes, ticker to CIK), the Nasdaq Trader symbol lists, GLEIF LEI (CC0) and Wikidata (CC0). Kinds: listed-company (enriched), filing, financial-fact (with history), index-membership, price-history; screens from the Sutra fragment library; links company to LEI to parent to counterparty. Index weights and levels are proprietary, and free price feeds forbid redistribution: internal use only (like the IMF data) until a licensed feed is chosen.
 
 **North star: Sutra Next, one grammar for every screen (product owner, 2026-10-22).** The board/chip paradigm is dropped: Sutra itself grows from an entity browser into the UI library, in ONE grammar, built on today's panels and shared blocks (`use:`/`with:`): a versioned, parameterised fragment library whose every fragment and Sutra carries a `doc:` docstring a component browser and an AI agent read; per-panel sources over several packs; events (`emits`, `@panel.event.path`, `@parent`); nested child panels (expand-row, detail-right/below, tabs; lazy; depth 3); refresh control and freshness; forms with validation; actions that write through connectors' `writes:` (2.8.0 write-back); dynamic screens saved to the workspace; an optional layout grid; and an editor built from the product owner's mock-ups. Design and phases: [SUTRA_NEXT.md](SUTRA_NEXT.md); phase 1 (the library, now the Drishti UI kit in `config/ui-kit` loaded whatever packs are enabled, with assets and brand; docstrings and lint, composite fragments, the ir-curve and economics screens migrated and proved identical, `GET /api/v1/ui-kit`) is built for 2.7.0 (unreleased); since then events and per-panel sources, nested children, refresh and freshness, forms with drafts, the `layout:` grid, every pack screen on fragments and the Sutra designer (Customize, Describe, Outline, Grid; `ui.designer`) are built too, unreleased. The UI Board (2026-10-21) stays parked on branch `ui-board-preview`; it is not in any release.
 
-**Where things stand.** Every wave in this plan is done. The current release is **2.7.0** (Sutra Next, [SUTRA_NEXT.md](SUTRA_NEXT.md): the UI kit, events and children across packs, refresh and freshness, layout, forms with drafts and the four-mode Sutra designer; the us-equities and gleif packs, the per-pack public-data scripts and the README standard); before it **2.6.7** (BI runs, [BI_RUNS.md](BI_RUNS.md); chart any table, [TABLE_CHARTS.md](TABLE_CHARTS.md); mixed Delta and Iceberg storage, [DEMO_DATA.md](../connectors/DEMO_DATA.md#mixed-delta-and-iceberg-storage); gossip on its own port and HTTP/2 between nodes; with 2.6.6, the QA release); next are **2.8.0** (Sutra Next write-back: forms and actions saved through connectors, [WRITE_BACK.md](WRITE_BACK.md); its item 0, the one Drishti store, is begun as the content store, CONTENT_STORE.md; the UI Board stays parked on branch `ui-board-preview`, in no release) and **2.9.0** (AI and the Sajha MCP connector; pages an AI client asks for are dynamic Sutras it composes from the fragment library's docstrings)
+**Where things stand.** Every wave in this plan is done. The current release is **2.7.0** (Sutra Next, [SUTRA_NEXT.md](SUTRA_NEXT.md): the UI kit, events and children across packs, refresh and freshness, layout, forms with drafts and the four-mode Sutra designer; the us-equities and gleif packs, the per-pack public-data scripts and the README standard); before it **2.6.7** (BI runs, [BI_RUNS.md](BI_RUNS.md); chart any table, [TABLE_CHARTS.md](TABLE_CHARTS.md); mixed Delta and Iceberg storage, [DEMO_DATA.md](../connectors/DEMO_DATA.md#mixed-delta-and-iceberg-storage); gossip on its own port and HTTP/2 between nodes; with 2.6.6, the QA release); next are **2.8.0** (Sutra Next write-back: forms and actions saved through connectors, [WRITE_BACK.md](WRITE_BACK.md); its item 0, the one Drishti store, is begun as the content store, CONTENT_STORE.md; the UI Board stays parked on branch `ui-board-preview`, in no release) then **2.9.0 to 2.11.0**, every risk measure computed when asked instead of stored ([the computed-measures roadmap](#the-computed-measures-roadmap-280-to-2120-product-owner-2026-10-25)), and **2.12.0** (AI and the Sajha MCP connector, GenUI; parked on 2026-10-25 until the computed measures are done)
 ([CHANGELOG.md](../../CHANGELOG.md), [RELEASE_NOTES.md](../../RELEASE_NOTES.md)). The table below maps each release to
 the waves it shipped; [What shipped after the waves](#what-shipped-after-the-waves-1100) and [Since 1.10](#since-110) list the work done since
 the last numbered wave, and [Known gaps](#known-gaps) lists what is still open. The wave sections themselves are
@@ -324,6 +324,146 @@ of the VaR engine are built (unreleased: VAR_ENGINE.md section 18, the guide VAR
 
 Open questions for the product owner are listed at the end of each design.
 
+## The computed-measures roadmap: 2.8.0 to 2.12.0 (product owner, 2026-10-25)
+
+**The principle.** Drishti keeps *fundamental* data as it is: masters, trades, terms, market data, public data, and the trade-level
+inputs that upstream engines produce. Everything that can be derived from them is **computed when asked**, for any scope, never stored
+as a summary. The first case was VaR: the stored `VAR-COMM` record read 446.9m while the engine computed 1.97m for the same
+commodities scope. A stored copy of a computed figure drifts, so none is kept.
+
+**The boundary.** Trade-level values stay inputs from the upstream engines: a trade's MtM, its sensitivities, its P&L vectors
+and its exposure paths. Drishti computes everything above the trade:
+- netting, positions and aggregation over any scope;
+- regulatory and risk formulas;
+- what-ifs, pre-deal checks, captures and history.
+
+Pricing trades inside Drishti comes later, through QLRisk once its API is stable ([PYTHON_COMPUTE.md](PYTHON_COMPUTE.md),
+[QUANT_SERVICE.md](QUANT_SERVICE.md)).
+
+**One architecture for every measure:**
+- **One common risk Delta lake** holds every input of every measure:
+  - trades, derived positions, portfolios and hierarchies;
+  - P&L vectors, sensitivities, scenario P&L and exposure paths;
+  - CSAs and netting sets, scenarios, market data;
+  - later cash flows, the banking book and the loan book.
+
+  Ids are shared across all of it (trade, position, counterparty by LEI, netting set, legal entity), and every pack reads the same lake.
+- **The measure framework**, generalised from the VaR engine:
+  - per-trade inputs, with additive totals kept per hierarchy node;
+  - the measure's non-additive rule applied at query time (a percentile, a square root of correlated sums, caps, ratios);
+  - one scope grammar, one memory tiering (memory-mapped date files, lazy history);
+  - baskets, captures, official end-of-day captures, entitlements and audit.
+- **A Python engine per measure** on the compute worker pools (C1–C3: fork or warm pools, fan-out across workers and nodes,
+  approved locked environments). It runs the formulas, the heavy and the what-if work.
+- **A reactive connector per measure** (`plugin: reactive`, R1–R4). Every answer is an ordinary kind: it opens by command, link,
+  API, CLI or AI, and recomputes on a load, a write-back or a schedule. Repeated asks are merged, users are isolated, and what-if
+  sandboxes are supported.
+- **Scopes:** `BANK`, `DESK`, `BOOK`, `POS`, `TRD`, `PORT`, `BASKET`, `CAPTURE`, `WHERE`, joined with `+ - &`. New: `CPTY:` (counterparty),
+  `GROUP:` (connected group through GLEIF parent links), `NSET:` (netting set) and `LE:` (legal entity).
+
+**The retirement rule.** Every item that moves to compute retires its old version **in the same release**; the old and new versions
+never coexist. For each item:
+1. The old command, the old ids and every link open the computed page.
+2. The stored kind is removed, with its samples, test data, Sutra and connector routes (for CTRD, PTRD, LTRD and ITRD, their entries in the
+   trading pack's `derived` connector).
+3. A guard test fails the build if a retired kind returns, or if a stored record carries a field a compute engine produces.
+4. The computed numbers are reconciled against the old stored ones before the old version goes. The release notes explain each difference.
+5. The docs and the CHANGELOG say what was retired, what replaced it and how old links behave.
+
+**How each release is run:**
+- Mock-ups come first for every new explorer or page, and the product owner picks.
+- Each measure's docs are as elaborate as VaR's: a guide, worked examples, help and tutorials.
+- At most two builders work at once:
+  - **Track A** takes the main sequence;
+  - **Track B** takes housekeeping and the groupings and analytics.
+- Each release ends with one drill, a cluster restart, the release and the tag.
+
+### 2.8.0: the foundation, with VaR fully computed
+
+| Item | What |
+|---|---|
+| Housekeeping | Renew the cluster TLS certificate (it expires 2026-11-14). Branding from configuration only: the product name, owner, copyright and notices come from `ui.*` and `drishti.branding.*`, about 26 literal names in templates and scripts are removed, `ui.owner` is added to the console, and a guard test is added |
+| The common risk lake | One layout and shared ids; today's market-risk and counterparty-risk inputs move into it |
+| The measure framework | The VaR engine generalised: per-node additive totals, query-time rules, captures, baskets, official end-of-day captures, memory tiering |
+| Scopes | `CPTY:`, `GROUP:`, `NSET:`, `LE:` |
+| Engine template | A Python engine plus reactive connector template that each measure fills in |
+| Retirement mechanism | Redirects from old commands and ids, removal of stored kinds, the guard test |
+| VaR complete | The old `var` and `var-node` kinds (VAR, VNODE) are retired. The full trade set (about 12,000 live trades), about 25–30 portfolios (one per desk and legal entity, plus rule and basket portfolios). Positions derived on the server by config-driven rules (securities by book and security id, OTC by book and trade; signed quantity; live statuses only). Memory tiering: a float32 hot copy, a memory-mapped file per date, lazy history, official end-of-day captures, sharding, and a benchmark at 1M trades and 50 dates. The elaborate VaR guide and help ([VAR_ENGINE.md](VAR_ENGINE.md), [VAR_DATA_MODEL.md](VAR_DATA_MODEL.md), [VAR_EXPLORER.md](../guides/VAR_EXPLORER.md)) |
+| Admin → Commands | Each command switched on or off by an administrator (the matrix with a side panel and a "what it does" column). A command that is off is blocked everywhere (command, URL, API, CLI, exports, AI, search, links, child panels, BI) with a "not active" answer and its own DRS code. The switches are stored in the Drishti database (both schema files, audited) and spread to every member by gossip; ready for role-based access per command |
+| Write-back | W1–W7 as in [2.8.0: write-back, reactive connectors and VaR](#280-write-back-reactive-connectors-and-var-planned) |
+
+### 2.9.0: trading and market risk
+
+| Order | Command (retired kind) | Computed instead |
+|---|---|---|
+| 1 | CTRD, PTRD, LTRD, ITRD (`counterparty-trades`, `portfolio-trades`, `legal-entity-trades`, `index-trades`) | The counterparty, portfolio, legal-entity and index pages over the scope engine: every trade, paged, with no 1,000-member cap, for any business date, plus the group's exposure and market-risk figures |
+| 2 | TVAL (`trade-valuation`) | Valuation totals: trade MtM summed and broken down over any scope. NSET, margin calls, P&L explain and SA-CCR all build on it |
+| 3 | STR (`stress-result`) | Stress P&L for any scope, from per-trade scenario P&L (full revaluation upstream), and from sensitivities × shocks for scenarios defined on the spot. SCN (scenario definitions) stays fundamental |
+| 4 | FRTB (`frtb-sensitivity`) | The FRTB standardised (sensitivities-based) charge: delta, vega and curvature, with three correlation scenarios, for any scope. Adds per-trade sensitivity tables to the lake |
+| 5 | SIMM (`simm`) | ISDA SIMM initial margin by netting set, from the same sensitivities in CRIF form with ISDA's weights and correlations (versioned yearly). Includes incremental margin before dealing and reconciliation by risk class and bucket |
+| 6 | PNL (`pnl-explain`) | P&L explain from sensitivities × market moves and day-over-day MtM, with the unexplained remainder |
+
+### 2.10.0: counterparty risk
+
+| Order | Command | Kept (fundamental) | Computed instead |
+|---|---|---|---|
+| 1 | NSET (`netting-set`) | Agreement, CSA and trade membership | Net MtM, collateral, EE and PFE peaks, utilisation, CVA and the exposure profile (today stored copies) |
+| 2 | SACCR (`sa-ccr`) | Nothing: retired | Replacement cost, add-ons per hedging set, multiplier and EAD by netting set, counterparty or legal entity; incremental EAD before dealing |
+| 3 | COLL (`collateral-balance`) | Holdings: asset, quantity, held or posted | Market value and value after haircut, from market data and the CSA's haircuts |
+| 4 | MC (`margin-call`) | Actual calls and their events (workflow) | The expected call (MtM − collateral − threshold, then minimum transfer and rounding), shown beside the actual call |
+| 5 | EXP (`exposure-profile`) | Nothing: retired | EE, EPE, effective EPE and PFE at any tenor after netting and collateral, from per-trade MtM per path and tenor. The heaviest data, on the VaR memory tiering |
+| 6 | LIM (`credit-limit`) | Limit amount, measure, tenor buckets, approval | Used, utilisation and status from EXP or SA-CCR at any date; headroom before dealing |
+| 7 | GRP (`counterparty-group`) | Members and the approved limit | Group utilisation over the GLEIF parent links |
+| 8 | CVA (`cva`) | Nothing: retired | CVA and XVA from EXP's exposure profiles and credit curves |
+| 9 | Wrong-way risk | (new) | Exposure that rises as the counterparty weakens, from EXP plus credit factors |
+
+### Groupings and analytics (Track B, shipped in 2.9.0 or 2.10.0 as each is ready)
+
+| Command | Computed instead |
+|---|---|
+| LEIG (`lei-group`) | The ownership group from GLEIF relationships, with no 50-member cap |
+| LEIC (`lei-country`) | Entity counts, lapsed and late renewals per country |
+| SIC (`sic-sector`) | Companies, revenue and net income over the sector's companies |
+| ECG (`country-group`) | GDP, population, growth and inflation summed or weighted over member economies |
+| CORR (`correlation-matrix`) | Correlations from price history for any factor set, window and estimator |
+| USEQ ratios | Margins and growth from the financial facts |
+| PXH analytics | Returns, volatility and beta from price history (internal use only, like the prices) |
+
+### 2.11.0: balance sheet and regulatory
+
+| Order | Measure | New data needed |
+|---|---|---|
+| 1 | Concentration and large exposures: top N by counterparty or connected group, % of Tier 1, checked against the 10%, 20% and 25% limits. The OSFI report goes here once its template is supplied (the nearest public returns are OSFI930 Large Exposures, the 2A schedule and EB/ET) | Tier 1 capital; banking-book exposures beside SA-CCR |
+| 2 | Liquidity: LCR (HQLA levels and caps, outflow and inflow rates, the 75% inflow cap), NSFR (ASF and RSF factors), OSFI NCCF, cash-flow gaps, intraday liquidity | Contractual cash flows per contract, generated from the trades plus a synthetic deposit and funding book; counterparty type, deposit stability, encumbrance; the factor tables from OSFI LAR and Basel as pack config. The retired example pack `examples/packs/liquidity-risk` (`tools/packgen/liquidity/make.py`) is a starting point for the data |
+| 3 | IRRBB: ΔEVE under the six standard shocks, ΔNII | A banking book with repricing cash flows and behavioural assumptions (prepayment, non-maturity deposits) |
+| 4 | Credit risk: IFRS 9 / CECL expected credit loss, stage migration, credit VaR | A loan book with PD term structures, LGD, EAD and stage |
+
+Climate risk is out of scope (product owner, 2026-10-25). Operational, model, conduct and reputational risk are not compute measures:
+they are served by ordinary packs (records, workflows, write-back).
+
+**Kept as fundamental data (not moved):**
+- **Core masters:** counterparty, issuer, legal entity, book, desk, trader, calendar, CCP, clearing account.
+- **Counterparty terms:** agreements and CSAs.
+- **GLEIF:** entities, relationships and mappings.
+- **Market data:** curves, surfaces, cubes, fixings, bonds, equities, indices, correlation inputs.
+- **Engine inputs:** P&L vectors (PNLV), scenario sets (SSET), stress scenario definitions (SCN), portfolio definitions (PORT), the hierarchy (HIER), trades (TRD).
+- **Public data:** SEC filings and facts, IMF macro and forecasts, regional figures, elections, news.
+
+### 2.12.0: AI and generated UI (parked until 2.11.0 is done)
+
+Parked by the product owner on 2026-10-25 and brought back after the computed measures. The scope is unchanged from the plan it replaces:
+- AI, with the Sajha MCP connector and AI management ([AI_MANAGEMENT.md](AI_MANAGEMENT.md)). Drishti's AI layer follows Sajha's
+  LLM provider and model design ([AI_PROVIDERS.md](AI_PROVIDERS.md), [MCP_CLIENT.md](MCP_CLIENT.md)).
+- GenUI ([GENUI.md](GENUI.md)): pages an AI client asks for are dynamic Sutras it composes from the UI kit's fragment docstrings.
+- Every computed measure is an ordinary kind, so the AI reads VaR, FRTB, SA-CCR, liquidity and the rest through the same tools, with
+  the same entitlements, masks and audit.
+
+### After banking and finance: other industries
+
+Once the banking and finance measures are done, the same pattern of fundamental data in one lake, connectors, and computed measures
+served by Python engines and reactive connectors is carried to other industries. Each gets its own packs, connectors and compute
+engines. Which industries, and in what order, is for the product owner to decide then.
+
 ## Known gaps
 
 What is open today. None blocks normal use; each is a candidate for a future wave.
@@ -339,6 +479,8 @@ What is open today. None blocks normal use; each is a candidate for a future wav
 
 **Agreed after 2.1.0 (2026-10-12):** the Rūpaka model architecture and waves W1–W16 for 2.2.0 to 3.0 — see
 [BI_MODEL_ARCHITECTURE.md](BI_MODEL_ARCHITECTURE.md); the gap check is [BI_DESIGN.md section 11](BI_DESIGN.md#11-gap-check-against-power-bi) (the 2.1 study behind it is archived as history: [BI_PARITY_PLAN.md](../archive/BI_PARITY_PLAN.md)).
+
+**Re-ordered again on 2026-10-25 (supersedes the release numbers below):** 2.8.0 is the measure foundation with VaR fully computed, Admin → Commands and write-back; 2.9.0 trading and market risk; 2.10.0 counterparty risk; 2.11.0 balance sheet and regulatory; 2.12.0 AI and GenUI (parked until then); then other industries. See [the computed-measures roadmap](#the-computed-measures-roadmap-280-to-2120-product-owner-2026-10-25).
 
 **Next releases (re-ordered 2026-10-18, twice on 2026-10-19, on 2026-10-21 and on 2026-10-22: 2.7.0 Sutra Next phase 1+ ([SUTRA_NEXT.md](SUTRA_NEXT.md); the UI Board stays parked on branch `ui-board-preview`), 2.8.0 write-back, 2.9.0 AI with GENUI.md folded in):** 2.5.0, Drishti*net, 2.6.0 and 2.6.5 are released (2026-10-19 and 2026-10-20); 2.6.0 was wave D (it starts with no known bug; paginated reports and statements, field parameters in report wells, the Cassandra connector, drishti-iceberg (Iceberg without Hadoop); on 2026-10-20 send and push and integration (PG-wire, Excel feed, embed tokens, SDK events) moved after 3.0.0 and the Sajha MCP connector to the AI release, now 2.9.0); 2.6.5 was history queries (`TRD 1000015 30 <GO>`: an entity over time, [HISTORY_QUERIES.md](HISTORY_QUERIES.md), added between 2.6.0 and 2.7.0 on 2026-10-20); 2.6.6 is the QA-clean release (QA round 3 fixed); 2.6.7 is BI runs ([BI_RUNS.md](BI_RUNS.md), decided 2026-10-20: every BI query through one bounded asynchronous pipeline, the Runs tab, super scale as the architecture at every size), with gossip off the busy path and HTTP/2 for peer data forwarding ([DRISHTI_NET.md](DRISHTI_NET.md#the-transport-between-nodes-as-built-267)) chart any table ([TABLE_CHARTS.md](TABLE_CHARTS.md)) and mixed Delta and Iceberg storage per source system ([DEMO_DATA.md](../connectors/DEMO_DATA.md#mixed-delta-and-iceberg-storage)), all decided 2026-10-20; 2.6.7 is released (2026-10-21). Next: 2.7.0 is Sutra Next phase 1+ (built, unreleased); 2.8.0 is wave W, write-back ([WRITE_BACK.md](WRITE_BACK.md), item 0 the one Drishti database); 2.9.0 is wave I, AI, with the Sajha MCP connector, GenUI ([GENUI.md](GENUI.md)) and AI management ([AI_MANAGEMENT.md](AI_MANAGEMENT.md)); the real-life QA and wave E (QA findings and production readiness) follow; then 3.0.
 

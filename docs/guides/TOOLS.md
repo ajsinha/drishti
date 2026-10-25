@@ -928,6 +928,25 @@ drishti-console/.venv/bin/python tools/drishti.py net check
 drishti-console/.venv/bin/python tools/drishti.py net members --server http://localhost:18480 --token-file ~/.drishti-token
 ```
 
+### 5.10 compute
+
+Reactive connectors from the terminal (2.8.0; `tools/computecli.py`, [REACTIVE_CONNECTOR.md](../connectors/REACTIVE_CONNECTOR.md#the-http-api)), as
+the caller's token:
+- `compute run CONNECTOR KIND ID [--param NAME=VALUE ...] [--wait MS] [--date YYYY-MM-DD]` asks for a computed kind. It prints the answer, or
+  `computing` with the request id when the result is not ready within `--wait` (default 5000 ms).
+- `compute cancel REQUEST` cancels one of the caller's requests.
+- `compute event TYPE ID [--kind] [--entity] [--date] [--payload NAME=VALUE ...] [--watermark LANE=SEQ ...]` sends an event to the
+  connectors' triggers (`write-back`, `live`, `data-version`, `schedule`). Administrators only; an id already processed is ignored.
+- `compute sandboxes` lists the caller's what-if sandboxes.
+- `compute reactive` shows Admin's view of the reactive connectors: kinds, engine, cache, computations and latency.
+
+Exit codes are `0`, `1` (refused, failed, or the server said no) and `2` (usage).
+
+```bash
+drishti-console/.venv/bin/python tools/drishti.py compute run path-sum-python path-sum BOOK-RATES --wait 10000 --json
+drishti-console/.venv/bin/python tools/drishti.py compute event write-back chg-77 --kind path-strip --entity STRIP-FX-001 --payload BOOK_ID=BOOK-FX
+```
+
 ## 6. Store loaders: `tools/load-*.sh`
 
 Each loader writes the banking packs' demo data (1,791 sample documents x 10 business days, and with `--trades N --days D` a
@@ -1027,6 +1046,7 @@ ExecStart=/opt/drishti/drishti-console/.venv/bin/python tools/drishti.py lake ma
 | `tools/packgen/genomics/make.py` | the genomics pack (public reference facts, synthetic samples) |
 | `tools/packgen/world/make.py` (the halves `economics/make.py`, `politics/make.py`) with `tools/realdata/realdata.py` | the world-economy pack from real public data (World Bank, IMF; internal demos only) |
 | `tools/packgen/trades/make_trades.py` | **The trading pack's trades of three source systems** in the common schema (upper-snake, `LEGS` → `CASH_FLOWS` → `RESETS`, `EVENTS`): `--trades N` per system (ENDUR, CALYPSO, MUREX), `--days D` business days with about 6% amended each day, one `<out>/<system>/trades-<date>.jsonl.gz` a day; with `--lake <root>` each goes through `lake build --connector trade-<system>` into that system's table (`trade_endur`, `trade_calypso`, `trade_murex`). Deterministic; 10,000 trades or fewer on a laptop. `drishti-console/.venv/bin/python tools/packgen/trades/make_trades.py --trades 50 --days 2 --out data/build/trades` prints `ENDUR: 50 trades x 2 days -> data/build/trades/endur` and the same for CALYPSO and MUREX. |
+| `tools/packgen/var/make_var_data.py` | **The VaR engine's data** ([VAR_DATA_MODEL.md](../architecture/VAR_DATA_MODEL.md)) from the committed trades and desks: positions, one 509-scenario P&L vector per trade, the scenario set, the MGMT and LEGAL hierarchies with limits, every node's official figures over 250 days, and the demo portfolios, written to `data/testdata/market-risk/<kind>/` with their `testdata.yaml` entries. `--budget N` values at most N trades per book (default 60; `0` is every live trade), `--out` writes elsewhere, and `--check` fails when the committed files differ. Deterministic. |
 | `tools/samplegen/bulk_trades.py` | a large trade book for scale tests, N trades over D business days, as a Delta lake (`load-delta.sh --trades`) |
 
 The examples on this page read the committed test data (`data/testdata`, written by `tools/testdata/make_testdata.py`). It writes the
