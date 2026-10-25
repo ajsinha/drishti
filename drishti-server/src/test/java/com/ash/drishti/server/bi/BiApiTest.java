@@ -54,8 +54,8 @@ import org.springframework.test.web.servlet.ResultActions;
  */
 @SpringBootTest(properties = {"drishti.sources.plugins.demo.settings.ticking=false", "drishti.security.enabled=true",
         "drishti.security.secret=test-secret-that-is-at-least-32-bytes-long", "drishti.packs.enabled=finance,logistics",
-        "drishti.identity.database-url=jdbc:sqlite:target/bi-api-${random.uuid}/identity.db", "drishti.packs.overlay=target/bi-api-overlay/added.yaml",
-        "drishti.bi.dir=target/bi-api-folder", "drishti.bi.folder-refresh=1s"})
+        "drishti.identity.database-url=jdbc:sqlite:${drishti.test.dir}/bi-api-${random.uuid}/identity.db", "drishti.packs.overlay=${drishti.test.dir}/bi-api-overlay/added.yaml",
+        "drishti.bi.dir=${drishti.test.dir}/bi-api-folder", "drishti.bi.folder-refresh=1s"})
 @AutoConfigureMockMvc
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
 @TestMethodOrder(MethodOrderer.OrderAnnotation.class)
@@ -122,10 +122,10 @@ class BiApiTest {
     /** The shipped files exist before the context starts, so the folder's first read sees them (no race with its watcher). */
     static {
         try {
-            Path reports = Path.of("target/bi-api-folder/reports");
+            Path reports = com.ash.drishti.server.TestRun.root().resolve("bi-api-folder/reports");
             Files.createDirectories(reports);
             Files.writeString(reports.resolve("desk-pnl.report.yaml"), "title: Desk profit (shipped)\ndescription: From the BI folder\ntags: [pnl, desk]\nendorsement: certified\npages: []\n");
-            Path datasets = Path.of("target/bi-api-folder/datasets");
+            Path datasets = com.ash.drishti.server.TestRun.root().resolve("bi-api-folder/datasets");
             Files.createDirectories(datasets);
             Files.copy(Path.of("src/test/resources/bi/samples-2.1/datasets/trades-basic.dataset.yaml"), datasets.resolve("trades-basic.dataset.yaml"), java.nio.file.StandardCopyOption.REPLACE_EXISTING);
             Files.writeString(reports.resolve("risk-only.report.yaml"), "title: Risk only\naudience:\n  roles: [steward]\n");

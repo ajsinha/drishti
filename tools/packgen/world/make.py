@@ -69,6 +69,8 @@ def spec() -> PB.PackSpec:
         hand_written={"country-group", "economic-forecast", "economy", "fiscal-position", "labour-market", "macro-indicator", "region-economy"},
         # the politics-and-society screens: generated as kit fragment uses with a doc: (WorldEconomySutraNextEquivalenceTest)
         fragments=True,
+        # a country is a JUR- id here; gleif's JURISDICTION (US-DE) and core's (DE) are other codes, so the link stays in this pack
+        scoped_fields={"JURISDICTION"},
         # the columns the shipped BI models read (config/bi/datasets/world-economics-economies, region-economics-regions): promoted, so a
         # report reads them as columns instead of opening every document
         layouts={"economy": ["NAME", "ISO3", "REGION_NAME", "INCOME_NAME", "GDP_USD_BN", "GDP_PER_CAPITA", "GROWTH", "INFLATION", "UNEMPLOYMENT", "POPULATION_M"],

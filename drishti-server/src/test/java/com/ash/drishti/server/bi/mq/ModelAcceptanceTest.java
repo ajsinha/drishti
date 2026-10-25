@@ -58,9 +58,9 @@ import org.springframework.test.web.servlet.ResultActions;
  */
 @SpringBootTest(properties = {"drishti.sources.plugins.demo.settings.ticking=false", "drishti.security.enabled=true",
         "drishti.security.secret=test-secret-that-is-at-least-32-bytes-long", "drishti.packs.enabled=finance",
-        "drishti.identity.database-url=jdbc:sqlite:target/mq-accept-${random.uuid}/identity.db", "drishti.packs.overlay=target/mq-accept-overlay/added.yaml",
-        "drishti.bi.dir=target/mq-accept-folder", "drishti.bi.folder-refresh=1s", "drishti.bi.query.store-dir=target/mq-accept-store/${random.uuid}",
-        "drishti.packs.samples=developers", "drishti.sources.connectors-dir=target/test-data/mq-accept-connectors", "drishti.sources.plugins.file.enabled=false",
+        "drishti.identity.database-url=jdbc:sqlite:${drishti.test.dir}/mq-accept-${random.uuid}/identity.db", "drishti.packs.overlay=${drishti.test.dir}/mq-accept-overlay/added.yaml",
+        "drishti.bi.dir=${drishti.test.dir}/mq-accept-folder", "drishti.bi.folder-refresh=1s", "drishti.bi.query.store-dir=${drishti.test.dir}/mq-accept-store/${random.uuid}",
+        "drishti.packs.samples=developers", "drishti.sources.connectors-dir=${drishti.test.dir}/mq-accept-connectors", "drishti.sources.plugins.file.enabled=false",
         "drishti.sources.connectors.finance-lake.enabled=false",
         "drishti.sources.connectors.acc-lake.plugin=file", "drishti.sources.connectors.acc-lake.kinds[0]=trade",
         "drishti.sources.connectors.acc-lake.settings.rescan-seconds=3600",
@@ -99,7 +99,7 @@ class ModelAcceptanceTest {
 
     @DynamicPropertySource
     static void lake(DynamicPropertyRegistry r) throws Exception {
-        root = Files.createTempDirectory("drishti-mq-accept-lake");
+        root = com.ash.drishti.server.TestRun.temp("drishti-mq-accept-lake");
         day("2026-10-07", 1);
         day(DAY, 1);
         r.add("drishti.sources.connectors.acc-lake.settings.root", () -> root.resolve("lake").toString());
@@ -107,7 +107,7 @@ class ModelAcceptanceTest {
 
     static {
         try {
-            Path folder = Path.of("target/mq-accept-folder");
+            Path folder = com.ash.drishti.server.TestRun.root().resolve("mq-accept-folder");
             Path datasets = Files.createDirectories(folder.resolve("datasets"));
             Path reports = Files.createDirectories(folder.resolve("reports"));
             Path models = Files.createDirectories(folder.resolve("models"));
@@ -458,7 +458,7 @@ class ModelAcceptanceTest {
     @Test @Order(4)
     void aDatasetReadFromAModelAsksThatModelAsTheReaderAndACycleIsRefused() throws Exception {
         for (String file : List.of("datasets/desk-book.dataset.yaml", "models/desk-view.model.yaml")) {
-            JsonNode checked = ok(call("POST", "/api/v1/bi/models/validate", as("wes", "admin"), Map.of("yaml", Files.readString(Path.of("target/mq-accept-folder").resolve(file)))));
+            JsonNode checked = ok(call("POST", "/api/v1/bi/models/validate", as("wes", "admin"), Map.of("yaml", Files.readString(com.ash.drishti.server.TestRun.root().resolve("mq-accept-folder").resolve(file)))));
             assertThat(checked.path("valid").asBoolean()).as(file + ": " + checked.path("problems")).isTrue();
         }
         Map<String, Object> q = Map.of("mq", 1, "model", "desk-view@1", "select", Map.of("fields", List.of("books.desk"), "measures", List.of("Book notional", "Book trades")),
@@ -481,7 +481,7 @@ class ModelAcceptanceTest {
         call("POST", "/api/v1/bi/mq", reader("rita"), Map.of("mq", 1, "model", "loop-model@1", "select", Map.of("measures", List.of("Total"))))
                 .andExpect(status().isUnprocessableEntity()).andExpect(jsonPath("$.code").value("DRS-9109"));
         JsonNode check = ok(call("POST", "/api/v1/bi/models/validate", as("wes", "admin"),
-                Map.of("yaml", Files.readString(Path.of("target/mq-accept-folder/datasets/loop-a.dataset.yaml")))));
+                Map.of("yaml", Files.readString(com.ash.drishti.server.TestRun.root().resolve("mq-accept-folder/datasets/loop-a.dataset.yaml")))));
         assertThat(check.path("valid").asBoolean()).isFalse();
         assertThat(check.path("problems").toString()).contains("DRS-9109");
     }

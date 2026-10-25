@@ -32,8 +32,8 @@ import org.springframework.boot.test.web.server.LocalServerPort;
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT, properties = {"drishti.rachana.hot-reload=false",
         "drishti.sources.plugins.demo.settings.ticking=false", "drishti.security.enabled=true",
         "drishti.security.secret=test-secret-that-is-at-least-32-bytes-long",
-        "drishti.identity.database-url=jdbc:sqlite:target/upload-limit-${random.uuid}/identity.db",
-        "drishti.builder.designs.dir=target/upload-limit-files-${random.uuid}"})
+        "drishti.identity.database-url=jdbc:sqlite:${drishti.test.dir}/upload-limit-${random.uuid}/identity.db",
+        "drishti.builder.designs.dir=${drishti.test.dir}/upload-limit-files-${random.uuid}"})
 class DesignUploadLimitTest {
 
     @LocalServerPort int port;

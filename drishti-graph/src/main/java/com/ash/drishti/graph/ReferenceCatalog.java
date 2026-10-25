@@ -66,8 +66,16 @@ public final class ReferenceCatalog implements com.ash.drishti.common.LiveSettin
 
     /** The kind of entity a field of this name refers to, per the configured fields ({@code nettingSet} is a netting set). */
     public Optional<String> kindOfField(String field) {
+        return kindOfField(field, null);
+    }
+
+    /**
+     * As {@link #kindOfField(String)}, in a document of {@code sourceKind}: empty when the field is scoped to other kinds (a pack's
+     * {@code scope: pack}), so world-economy's {@code JURISDICTION} is no link in a gleif entity. A null kind: the field's kind.
+     */
+    public Optional<String> kindOfField(String field, String sourceKind) {
         GraphProperties.FieldRef ref = field == null ? null : state.fields().get(field);
-        return ref == null ? Optional.empty() : Optional.of(ref.kind());
+        return ref == null || !ref.appliesTo(sourceKind) ? Optional.empty() : Optional.of(ref.kind());
     }
 
     /** The configured fields that name entities of {@code kind} ({@code counterparty} for counterparties), sorted. */
@@ -90,7 +98,7 @@ public final class ReferenceCatalog implements com.ash.drishti.common.LiveSettin
         }
         o.fields().forEach((field, value) -> {
             GraphProperties.FieldRef ref = fields.get(field);
-            if (ref == null) {
+            if (ref == null || !ref.appliesTo(self == null ? null : self.kind())) {
                 return;
             }
             String label = ref.label() == null ? humanize(field) : ref.label();

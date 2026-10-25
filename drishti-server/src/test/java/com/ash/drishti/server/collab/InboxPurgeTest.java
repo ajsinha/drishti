@@ -20,7 +20,6 @@ import static org.assertj.core.api.Assertions.assertThat;
 import com.ash.drishti.identity.collab.CollabProperties;
 import com.ash.drishti.identity.collab.FileInboxStore;
 import com.ash.drishti.identity.collab.Notice;
-import java.nio.file.Files;
 import java.time.Clock;
 import java.time.Duration;
 import java.time.Instant;
@@ -33,7 +32,7 @@ class InboxPurgeTest {
     @Test
     void rowsOlderThanKeepDaysAreRemoved() throws Exception {
         Instant now = Instant.parse("2026-10-05T09:00:00Z");
-        FileInboxStore store = new FileInboxStore(Files.createTempDirectory("inbox-purge"), 1000);
+        FileInboxStore store = new FileInboxStore(com.ash.drishti.server.TestRun.temp("inbox-purge"), 1000);
         store.add(new Notice(0, "ravi", now.minus(Duration.ofDays(200)), "share", "trade", "MX-1", null, "sh_1", null, null, "ann", null));
         store.add(new Notice(0, "ravi", now.minus(Duration.ofDays(181)), "share", "trade", "MX-2", null, "sh_2", null, null, "ann", null));
         store.add(new Notice(0, "ravi", now.minus(Duration.ofDays(10)), "share", "trade", "MX-3", null, "sh_3", null, null, "ann", null));
@@ -49,7 +48,7 @@ class InboxPurgeTest {
 
     @Test
     void theScheduleDoesNotStartWhenCollaborationIsOff() throws Exception {
-        FileInboxStore store = new FileInboxStore(Files.createTempDirectory("inbox-purge-off"), 1000);
+        FileInboxStore store = new FileInboxStore(com.ash.drishti.server.TestRun.temp("inbox-purge-off"), 1000);
         CollabProperties off = new CollabProperties(false, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null,
                 null);
         try (InboxPurge purge = new InboxPurge(store, off, Clock.systemUTC())) {

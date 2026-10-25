@@ -72,7 +72,7 @@ final class PublicPackLakes {
         String name = String.join("+", packs);
         return BUILT.computeIfAbsent(name, n -> {
             try {
-                return build(Path.of("target", "test-lakes", n + "-" + ProcessHandle.current().pid()).toAbsolutePath(), List.of(packs));
+                return build(TestRun.root().resolve(Path.of("test-lakes", n + "-" + ProcessHandle.current().pid())), List.of(packs));
             } catch (IOException e) {
                 throw new UncheckedIOException(e);
             }

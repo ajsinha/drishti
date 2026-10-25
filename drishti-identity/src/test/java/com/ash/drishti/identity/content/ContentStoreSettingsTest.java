@@ -22,10 +22,10 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.List;
 import java.util.Map;
-import java.util.UUID;
 import java.util.function.UnaryOperator;
 import java.util.stream.Stream;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.io.TempDir;
 
 /** {@code config/store/store.yaml} and its examples load; a missing file is the filesystem default; the cluster check warns on different roots. */
 class ContentStoreSettingsTest {
@@ -56,8 +56,8 @@ class ContentStoreSettingsTest {
     }
 
     @Test
-    void nodesOnDifferentRootsAreReported() {
-        Path root = Path.of("target", "content-tests", "nodes-" + UUID.randomUUID());
+    void nodesOnDifferentRootsAreReported(@TempDir Path tmp) {
+        Path root = tmp.resolve("nodes");
         ContentStore a = new FileContentStore(root);
         assertThat(ContentStoreNodes.announce(a, "node-a")).isEmpty();
         assertThat(ContentStoreNodes.announce(new FileContentStore(root), "node-b")).isEmpty();

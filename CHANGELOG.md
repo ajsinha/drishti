@@ -27,6 +27,25 @@
 - **WRITE_BACK.md section 18:** forms save through connectors, an applied change triggers reactive connectors, updated records and
   results are pushed to viewers; build steps W6 and W7. **QUANT_SERVICE.md section 17:** reconciled with the compute workers.
   **IMPLEMENTATION_PLAN.md:** a 2.8.0 section with its waves; docs/README.md lists the new designs.
+- **Tests leave nothing behind:** `drishti-server/target/` had grown to about twelve million files: ~13,000 per-test folders
+  (`about-api-*`, `identity-*`, `prefs-*`, `bi-*` …) written under bare `target/...` paths, and ~300 per-context content stores under
+  `target/test-data/fstore`, each holding ~94,000 collaboration seals. The seals came from the shared, never-cleaned test identity
+  database and `target/test-data/collab`: every new content store runs the one-time collaboration import (`CollabImport`) from them, so
+  each context copied everything earlier runs had piled up. A server test fork now writes only into `target/test-run/fork<N>/`
+  (`drishti.test.dir`; `TestRun` in the tests: test properties say `${drishti.test.dir}/...`, seeded folders use `TestRun.dir`,
+  temporary ones `TestRun.temp`) and removes it when it ends, after closing its Spring test contexts; every context gets an empty
+  collaboration folder of its own. The identity, messaging and Iceberg tests that wrote under `target/` or the JVM's temp folder use
+  JUnit's `@TempDir`. The drill builds with `./mvnw clean verify` ([DEVELOPER_GUIDE.md](docs/guides/DEVELOPER_GUIDE.md)).
+- **A graph link field can be scoped to its pack** (`graph.fields.<F>.scope: pack`,
+  [PACK_DEVELOPER_GUIDE.md](docs/guides/PACK_DEVELOPER_GUIDE.md)): the field is a link only in the documents of the declaring pack's
+  own kinds. World-economy's `JURISDICTION` (a `JUR-` id) is scoped, so a gleif entity's `JURISDICTION` (`US-DE`) and a core legal
+  entity's (`DE`) are shown as data instead of a *Country* link to a jurisdiction that does not exist (the 2.7.0 known open item); the
+  entity's country is its `LEI_COUNTRY`, which opens the gleif country. The BI layer's declared links and dataset references honour the
+  scope too.
+- **Flaky designer test fixed:** `test_designer_drag_a_field_makes_the_best_visual_and_another_field_improves_it` sometimes made a card
+  of Notional instead of MTM: the line naming the reports a model affects lands in the Fields pane after the designer says it is ready
+  and moves the field list down a row, so a drag started at once picked the field above. The Fields pane now says when it is still
+  (`data-fields-settled="yes"` on `.bi-pane-fields`), and the designer tests wait for it before dragging.
 
 ## 2.7.0 — Sutra Next: the UI kit, events and children across packs, refresh, layout, forms and the four-mode Sutra designer; the us-equities and gleif packs (2026-10-24)
 

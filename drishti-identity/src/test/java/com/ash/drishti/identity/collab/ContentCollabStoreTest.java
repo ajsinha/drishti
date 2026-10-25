@@ -29,7 +29,6 @@ import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
-import java.util.UUID;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
@@ -37,6 +36,7 @@ import java.util.concurrent.Future;
 import java.util.concurrent.TimeUnit;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.io.TempDir;
 
 /**
  * Collaboration in the content store (CONTENT_STORE.md section 9): the same contract as the database and file stores, and two
@@ -44,13 +44,15 @@ import org.junit.jupiter.api.Test;
  */
 class ContentCollabStoreTest {
 
+    @TempDir
+    Path tmp;
+
     private Path dir;
     private Path root;
 
     @BeforeEach
     void setUp() throws Exception {
-        dir = Path.of("target", "content-tests", "collab-" + UUID.randomUUID()).toAbsolutePath();
-        Files.createDirectories(dir);
+        dir = tmp.toAbsolutePath();
         root = dir.resolve("fstore");
     }
 

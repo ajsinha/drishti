@@ -160,7 +160,7 @@ java25_verify() {
   trap "rm -rf '$copy'" EXIT
   git archive HEAD | tar -x -C "$copy"
   cd "$copy"
-  DOCKER_HOST=unix:///nonexistent/drill-java25 TESTCONTAINERS_RYUK_DISABLED=true JAVA_HOME="$JAVA25_HOME" ./mvnw -q -o verify -Ddrishti.test.forks=2 -Dsurefire.rerunFailingTestsCount=1 ${DRILL_MVN_ARGS:-}
+  DOCKER_HOST=unix:///nonexistent/drill-java25 TESTCONTAINERS_RYUK_DISABLED=true JAVA_HOME="$JAVA25_HOME" ./mvnw -q -o clean verify -Ddrishti.test.forks=2 -Dsurefire.rerunFailingTestsCount=1 ${DRILL_MVN_ARGS:-}
 }
 
 # Every run cleans up after itself, passed or failed: the temporary folders the tests made under /tmp during this run
@@ -190,7 +190,8 @@ else
   JAVA21_HOME="${JAVA21_HOME:-/usr/lib/jvm/java-21-openjdk-amd64}"
   [[ -x "$JAVA21_HOME/bin/java" ]] || { echo "drill: no JDK 21 at $JAVA21_HOME (set JAVA21_HOME)" >&2; exit 1; }
   t=$SECONDS
-  JAVA_HOME="$JAVA21_HOME" ./mvnw -q -o verify ${DRILL_MVN_ARGS:-}
+  # clean first: what an earlier build or an interrupted test run left in target/ is never built on or read by this one
+  JAVA_HOME="$JAVA21_HOME" ./mvnw -q -o clean verify ${DRILL_MVN_ARGS:-}
   stage_done "Java 21 verify" $t
   # Java 21 and newer are supported: the same tests again on Java 25, so a library that breaks on a newer JVM (Hadoop and the
   # removed Security Manager, Unsafe memory access) fails the drill.

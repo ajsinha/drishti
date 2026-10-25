@@ -69,7 +69,7 @@ class NetRejoinMissTest {
 
     @Test
     void aRejoiningNodeNeverAnswersNotFoundForWhatOnlyAPeerHolds() throws Exception {
-        Path root = Path.of("target", "net-it", "rejoin-miss-" + System.nanoTime()).toAbsolutePath();
+        Path root = com.ash.drishti.server.TestRun.root().resolve(Path.of("net-it", "rejoin-miss-" + System.nanoTime()));
         Path lakeA = NetPeerDownTest.copy(root.resolve("lake-a"));
         Path empty = Files.createDirectories(root.resolve("empty-lake"));
         int[] p = NetNodes.PORTS;

@@ -54,7 +54,7 @@ import org.springframework.test.web.servlet.MockMvc;
         "drishti.security.roles.quant.kinds[0]=*", "drishti.security.roles.quant.calc=true",
         "drishti.security.roles.curves-quant.kinds[0]=curve", "drishti.security.roles.curves-quant.calc=true",
         "drishti.calc.max-column-rows=25", "drishti.calc.max-snippet-chars=200",
-        "drishti.identity.database-url=jdbc:sqlite:target/identity-${random.uuid}/identity.db"})
+        "drishti.identity.database-url=jdbc:sqlite:${drishti.test.dir}/identity-${random.uuid}/identity.db"})
 @AutoConfigureMockMvc
 @Import(PinnedBusinessDate.class)
 class CalcApiTest {

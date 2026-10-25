@@ -49,7 +49,7 @@ import org.springframework.test.web.servlet.ResultActions;
         "drishti.security.enabled=true", "drishti.security.secret=test-secret-that-is-at-least-32-bytes-long",
         "drishti.rachana.studio-save=true",
         "drishti.security.roles.designer.kinds[0]=trade", "drishti.security.roles.designer.kinds[1]=netting-set",
-        "drishti.identity.database-url=jdbc:sqlite:target/design-open-${random.uuid}/identity.db"})
+        "drishti.identity.database-url=jdbc:sqlite:${drishti.test.dir}/design-open-${random.uuid}/identity.db"})
 @AutoConfigureMockMvc
 class DesignOpenAccessTest {
 
@@ -98,7 +98,7 @@ class DesignOpenAccessTest {
 
     private static Path sutraDir() {
         try {
-            Path d = Files.createTempDirectory("drishti-design-open-");
+            Path d = TestRun.temp("drishti-design-open-");
             Files.writeString(d.resolve("ns-sourced.v1.sutra.yaml"), SOURCED);
             return d;
         } catch (IOException e) {

@@ -21,9 +21,9 @@ import org.springframework.boot.test.context.SpringBootTest;
 /** The same thread contract with threads as files ({@code drishti.collab.store=file}). */
 @SpringBootTest(properties = {"drishti.sources.plugins.demo.settings.ticking=false", "drishti.security.enabled=true",
         "drishti.security.secret=test-secret-that-is-at-least-32-bytes-long", "drishti.packs.enabled=finance,logistics",
-        "drishti.identity.database-url=jdbc:sqlite:target/threadapi-file-${random.uuid}/identity.db",
-        "drishti.packs.overlay=target/threadapi-file-overlay/added.yaml", "drishti.collab.limits.comments-per-minute=1000",
+        "drishti.identity.database-url=jdbc:sqlite:${drishti.test.dir}/threadapi-file-${random.uuid}/identity.db",
+        "drishti.packs.overlay=${drishti.test.dir}/threadapi-file-overlay/added.yaml", "drishti.collab.limits.comments-per-minute=1000",
         "drishti.collab.inbox.poll=100ms", "drishti.collab.threads.edit-window=3s", "drishti.security.registered-users-only=true",
-        "drishti.collab.store=file", "drishti.collab.dir=target/threadapi-file-${random.uuid}/collab"})
+        "drishti.collab.store=file", "drishti.collab.dir=${drishti.test.dir}/threadapi-file-${random.uuid}/collab"})
 @AutoConfigureMockMvc
 class ThreadApiFileTest extends ThreadApiContract {}

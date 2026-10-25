@@ -46,7 +46,7 @@ class NetHistoryMasksTest {
 
     @BeforeAll
     static void start() throws Exception {
-        Path root = Path.of("target", "net-it", "history-masks-" + System.nanoTime()).toAbsolutePath();
+        Path root = com.ash.drishti.server.TestRun.root().resolve(Path.of("net-it", "history-masks-" + System.nanoTime()));
         Path empty = Files.createDirectories(root.resolve("empty-lake"));
         int[] p = NetNodes.PORTS;
         NetNodes.folder(root.resolve("a/net"), p[0], List.of("region:emea"), List.of(), List.of());

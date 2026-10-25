@@ -316,6 +316,16 @@ A link field name means **one kind everywhere**: if another loaded pack also dec
 different kind, the pack is refused. The shipped packs claim `COUNTERPARTY`, `PORTFOLIO`, `BOOK`, `LEGAL_ENTITY`, `TRADER_ID`,
 `TRADE_ID`, `TRADE_IDS`, `ECONOMY`, `NEWS_ID` and many more; pick names that fit your domain and are not taken.
 
+A link field links from **every kind's documents** unless it says otherwise. When the name is generic and other packs' documents carry
+it with other codes, add `scope: pack`: the field is then a link only in the documents of the declaring pack's own kinds, and plain
+data everywhere else. World-economy does this for `JURISDICTION` (its values are `JUR-` ids), so a gleif entity's `JURISDICTION`
+(`US-DE`) and a core legal entity's (`DE`) show as text instead of a link to nothing:
+
+```yaml
+  fields:
+    JURISDICTION: { kind: jurisdiction, label: Country, scope: pack }   # pack: this pack's kinds only; all (the default): every kind
+```
+
 ### Step 7. Impact (F8)
 
 Add under `graph:`:
@@ -846,7 +856,7 @@ data from `config/packs/counterparty-risk/pack.yaml`. Every key here is read eit
 | `kinds` | server | `kinds: [ticket, agent]` | The kinds this pack owns | below |
 | `mnemonics` | server | `TKT: { kind: ticket, label: Ticket }` | The commands | below |
 | `graph.id-patterns` | server | `- { pattern: "^TKT-", kind: ticket }` | Recognise a bare id's kind | below |
-| `graph.fields` | server | `ASSIGNEE: { kind: agent, label: Assigned agent }` | Turn a field's value into a link | below |
+| `graph.fields` | server | `ASSIGNEE: { kind: agent, label: Assigned agent }` | Turn a field's value into a link (`scope: pack`: in this pack's kinds only) | below |
 | `graph.badges` | server | `agent: "$.OPEN_TICKETS + ' open'"` | Text shown beside a link, read from the target | below |
 | `graph.impact` | server | `follow: [CLIENT]`, `measures: { ticket: "$.AGE_HOURS" }` | What F8 rolls up and sums | below |
 | `columns` | server | `ticket: [SUBJECT, STATUS, PRIORITY]` | Key fields in pick lists and searches | [columns](#columns-the-key-fields-of-a-pick-list) |
@@ -1258,7 +1268,7 @@ The server turns the manifest into ordinary settings. Knowing this helps when yo
 | `kinds` | `drishti.packs.kinds.<pack>[i]` |
 | `mnemonics.TKT` | `drishti.commands.mnemonics.TKT.kind` / `.label` |
 | `graph.id-patterns` | `drishti.graph.id-patterns[i]` |
-| `graph.fields.ASSIGNEE` | `drishti.graph.fields.ASSIGNEE.kind` / `.label` |
+| `graph.fields.ASSIGNEE` | `drishti.graph.fields.ASSIGNEE.kind` / `.label` (`scope: pack`: `.from[i]`, the pack's kinds) |
 | `graph.badges.agent` | `drishti.graph.badges.agent` |
 | `graph.impact.*` | `drishti.graph.impact.follow[i]`, `.measures.<kind>`, `.formats.<kind>` |
 | `roles.support` | `drishti.security.roles.support.kinds[i]`, `.raw`, `.author`, `.admin`, `.approve`, `.calc` |

@@ -49,7 +49,7 @@ class AutoDesignerTest {
     private static ShapeService shapes(BuilderProperties props) {
         GraphProperties graph = new GraphProperties(
                 List.of(new GraphProperties.IdPattern("^CP-", "counterparty"), new GraphProperties.IdPattern("^NS-", "netting-set")),
-                Map.of("nettingSet", new GraphProperties.FieldRef("netting-set", "Netting set")), null, null, null);
+                Map.of("nettingSet", new GraphProperties.FieldRef("netting-set", "Netting set", null)), null, null, null);
         return new ShapeService(props, SEMANTICS, new ReferenceCatalog(graph));
     }
 

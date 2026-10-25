@@ -277,6 +277,9 @@ def new_draft(page):
     page.fill("[data-new-title]", "Designer test")
     page.click("[data-new] button[type=submit]")
     page.wait_for_selector("[data-design-root][data-ready=yes]", timeout=30000)
+    # the Fields pane is still: the line naming the reports the model affects lands after ready and moves the list down a row, so a
+    # drag started before it picked the field above (Notional for MTM: the flake of 2026-10-24)
+    page.wait_for_selector(".bi-pane-fields[data-fields-settled=yes]")
     return page.url.rsplit("/", 1)[1]
 
 

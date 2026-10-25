@@ -114,7 +114,7 @@ class NetGroupedPagesTest {
 
     @BeforeAll
     static void start() throws Exception {
-        root = Path.of("target", "net-it", "grouped-" + System.nanoTime()).toAbsolutePath();
+        root = com.ash.drishti.server.TestRun.root().resolve(Path.of("net-it", "grouped-" + System.nanoTime()));
         int[] p = NetNodes.PORTS;
         files(root.resolve("a"), trades("a", 4, 1_000_000, "EUR", true, true));
         files(root.resolve("b"), trades("b", 3, 3_000_000, "GBP", false, true));

@@ -138,10 +138,12 @@
   let D = null;
   document.addEventListener('DOMContentLoaded', () => { D = B.design; if (D && D.modules) { D.modules.push(designer); } });
   function designer() {
-    if (!S.ref) { return; }
-    D.boundModel = S.ref;
     const pane = canvas.querySelector('.bi-pane-fields');
-    if (!pane) { return; }
+    // data-fields-settled=yes once what this module adds above the field list asynchronously (the line naming the reports the model
+    // affects, a perspective's lists) is in: until then the list may still move down, and a drag started on a field lands on another
+    const settled = (work) => Promise.allSettled(work).then(() => { if (pane) { pane.setAttribute('data-fields-settled', 'yes'); } });
+    if (!S.ref || !pane) { settled([]); return; }
+    D.boundModel = S.ref;
     const add = pane.querySelector('[data-add-dataset]');
     if (add) { add.closest('p').hidden = true; }
     const link = pane.querySelector('[data-model-link]');
@@ -167,6 +169,7 @@
       if (m.implicit) { link.href = '/bi/ds/' + encodeURIComponent(m.dataset || ''); link.lastChild.textContent = ' The dataset'; } else { link.hidden = true; }
     }
     // the model item's page: by id when the model list names it
+    const work = [];
     if (!m.implicit) {
       B.layer.get('datasets').then((d) => {
         const it = (d.models || []).find((x) => x.kind === 'model' && x.name === m.name);
@@ -175,15 +178,16 @@
       }).catch(() => {});
     }
     if (!m.implicit) {
-      B.layer.consumers(S.ref).then((r) => {
+      work.push(B.layer.consumers(S.ref).then((r) => {
         const span = head.querySelector('[data-affects]');
         if (!span || !r.known) { return; }
         const n = r.consumers.filter((c) => c.kind === 'report').length;
         span.textContent = 'Changes to the model affect ' + n + (n === 1 ? ' report' : ' reports') + (r.consumers.length > n ? ' and ' + (r.consumers.length - n) + ' other item' + (r.consumers.length - n === 1 ? '' : 's') : '') + '.';
-      });
+      }));
     }
-    perspectivePicker(head, f);
+    work.push(perspectivePicker(head, f));
     localMeasures(pane);
+    settled(work);
     // Query: the selected visual's question as a model query (MQ) or as SQL (DSQL), one plan either way (bi-query-panel.js)
     if (B.queryPanel) {
       B.queryPanel(pane, { ref: S.ref, current: () => (D.selected && S.last && S.last[D.selected]) || null, fields: () => S.fields, on: D.on,
@@ -195,7 +199,7 @@
   function perspectivePicker(head, f) {
     const names = Object.keys(f.perspectives || {});
     D.perspective = (D.model && D.model.perspective) || S.perspective || '';
-    if (!names.length) { return; }
+    if (!names.length) { return Promise.resolve(); }
     const pick = h('select', { class: 'studio-select', 'data-perspective-pick': '', 'aria-label': 'Perspective', disabled: D.readOnly },
       h('option', { value: '', text: 'every field' }), names.map((n) => h('option', { value: n, text: f.perspectives[n].title || n, selected: n === D.perspective })));
     pick.addEventListener('change', () => {
@@ -204,7 +208,7 @@
       lists(f, pick.value).then(() => { if (D.drawFields) { D.drawFields(); } });
     });
     head.appendChild(h('p', {}, h('label', {}, 'Perspective ', pick)));
-    lists(f, D.perspective).then(() => { if (D.drawFields) { D.drawFields(); } });
+    return lists(f, D.perspective).then(() => { if (D.drawFields) { D.drawFields(); } });
   }
   /** A perspective's fields and measures: the server says them (`describe?perspective=`) when its list names only the perspectives. */
   function lists(f, name) {

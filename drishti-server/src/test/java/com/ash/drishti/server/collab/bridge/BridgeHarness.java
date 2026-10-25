@@ -46,7 +46,6 @@ import io.micrometer.core.instrument.simple.SimpleMeterRegistry;
 import java.io.IOException;
 import java.net.InetSocketAddress;
 import java.nio.charset.StandardCharsets;
-import java.nio.file.Files;
 import java.time.Clock;
 import java.time.Duration;
 import java.time.Instant;
@@ -116,7 +115,7 @@ final class BridgeHarness implements AutoCloseable {
         });
         endpoint.start();
         base = "http://127.0.0.1:" + endpoint.getAddress().getPort();
-        outbox = new FileOutboxStore(Files.createTempDirectory("bridge-outbox"));
+        outbox = new FileOutboxStore(com.ash.drishti.server.TestRun.temp("bridge-outbox"));
         env.put("BRIDGE_URL", base + SECRET_PATH);
         env.put("BRIDGE_SECRET", SIGNING_SECRET);
         when(principals.user(any())).thenAnswer(inv -> {

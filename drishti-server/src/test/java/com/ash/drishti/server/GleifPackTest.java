@@ -64,12 +64,28 @@ class GleifPackTest extends PublicPacksOnLakes {
             assertThat(v.provenance().layout()).as(ref.toString()).startsWith("Sutra ");
             assertThat(v.panels()).as(ref.toString()).allSatisfy(p -> assertThat(p.empty()).as(ref + "/" + p.id()).isFalse());
             assertThat(v.panels().stream().filter(p -> p.data() instanceof PanelData.Links)
-                    .flatMap(p -> ((PanelData.Links) p.data()).links().stream())
-                    // world-economy's graph field JURISDICTION links every pack's JURISDICTION to its own jurisdiction kind, which
-                    // holds countries, not GLEIF's subdivisions (US-DE): the gleif pack's own links are the ones checked here
-                    .filter(l -> l.link() == null || !"jurisdiction".equals(l.link().kind())).toList())
+                    .flatMap(p -> ((PanelData.Links) p.data()).links().stream()).toList())
                     .as(ref + " links").allSatisfy(l -> assertThat(l.status()).as(ref + " -> " + l.text()).isNotEqualTo("missing"));
         }
+    }
+
+    /**
+     * An entity's JURISDICTION ({@code US-CA}) is data, not a link: world-economy's graph field of that name is scoped to its own kinds
+     * ({@code scope: pack}), whose JURISDICTION is a JUR- id. The entity's country is its LEI_COUNTRY, which opens the gleif country.
+     */
+    @Test
+    void anEntitysCountryOpensTheGleifCountryAndItsJurisdictionLinksNowhere() throws Exception {
+        ViewModel v = pipeline.view(EntityRef.of("lei-entity", APPLE));
+        var links = v.panels().stream().filter(p -> p.data() instanceof PanelData.Links).flatMap(p -> ((PanelData.Links) p.data()).links().stream())
+                .filter(l -> l.link() != null).toList();
+        assertThat(links).noneMatch(l -> "jurisdiction".equals(l.link().kind()));
+        assertThat(links).anySatisfy(l -> {
+            assertThat(l.link().kind() + " " + l.link().id()).isEqualTo("lei-country US");
+            assertThat(l.status()).isNotEqualTo("missing");
+        });
+        JsonNode card = panel(view("lei-entity", APPLE).path("panels"), "card");
+        assertThat(field(card, "Jurisdiction").path("text").asText()).isEqualTo("US-CA");
+        assertThat(field(card, "Country").path("link").path("kind").asText()).isEqualTo("lei-country");
     }
 
     @Test

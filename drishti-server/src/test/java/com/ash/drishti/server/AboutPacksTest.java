@@ -47,8 +47,8 @@ import org.springframework.boot.test.context.SpringBootTest;
  */
 @SpringBootTest(properties = {"drishti.rachana.hot-reload=false", "drishti.sources.plugins.demo.settings.ticking=false",
         "drishti.packs.enabled=market-risk,counterparty-risk,world-economy",
-        "drishti.identity.database-url=jdbc:sqlite:target/aboutpacks-${random.uuid}/identity.db",
-        "drishti.builder.designs.dir=target/aboutpacks-files-${random.uuid}"})
+        "drishti.identity.database-url=jdbc:sqlite:${drishti.test.dir}/aboutpacks-${random.uuid}/identity.db",
+        "drishti.builder.designs.dir=${drishti.test.dir}/aboutpacks-files-${random.uuid}"})
 class AboutPacksTest {
 
     /** The packs whose kinds all need text: the shipped risk and world-economy packs, and the trading pack their trades come from. */

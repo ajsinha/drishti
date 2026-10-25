@@ -54,9 +54,9 @@ import org.springframework.test.web.servlet.ResultActions;
  */
 @SpringBootTest(properties = {"drishti.sources.plugins.demo.settings.ticking=false", "drishti.security.enabled=true",
         "drishti.security.secret=test-secret-that-is-at-least-32-bytes-long", "drishti.packs.enabled=finance",
-        "drishti.identity.database-url=jdbc:sqlite:target/lang-api-${random.uuid}/identity.db", "drishti.packs.overlay=target/lang-api-overlay/added.yaml",
-        "drishti.bi.dir=target/lang-api-folder", "drishti.bi.folder-refresh=1s", "drishti.bi.query.store-dir=target/lang-api-store/${random.uuid}",
-        "drishti.packs.samples=developers", "drishti.sources.connectors-dir=target/test-data/lang-api-connectors", "drishti.sources.plugins.file.enabled=false",
+        "drishti.identity.database-url=jdbc:sqlite:${drishti.test.dir}/lang-api-${random.uuid}/identity.db", "drishti.packs.overlay=${drishti.test.dir}/lang-api-overlay/added.yaml",
+        "drishti.bi.dir=${drishti.test.dir}/lang-api-folder", "drishti.bi.folder-refresh=1s", "drishti.bi.query.store-dir=${drishti.test.dir}/lang-api-store/${random.uuid}",
+        "drishti.packs.samples=developers", "drishti.sources.connectors-dir=${drishti.test.dir}/lang-api-connectors", "drishti.sources.plugins.file.enabled=false",
         "drishti.sources.connectors.finance-lake.enabled=false",
         "drishti.sources.connectors.lang-lake.plugin=file", "drishti.sources.connectors.lang-lake.kinds[0]=trade",
         "drishti.sources.connectors.lang-lake.settings.rescan-seconds=3600",
@@ -75,7 +75,7 @@ class LanguagesApiTest {
 
     @DynamicPropertySource
     static void lake(DynamicPropertyRegistry r) throws Exception {
-        root = Files.createTempDirectory("drishti-lang-api-lake");
+        root = com.ash.drishti.server.TestRun.temp("drishti-lang-api-lake");
         List<String> lines = new ArrayList<>();
         for (int i = 0; i < 24; i++) {
             String desk = i % 3 == 0 ? "DESK-A" : i % 3 == 1 ? "DESK-B" : "DESK-C";
@@ -90,7 +90,7 @@ class LanguagesApiTest {
 
     static {
         try {
-            Path folder = Path.of("target/lang-api-folder");
+            Path folder = com.ash.drishti.server.TestRun.root().resolve("lang-api-folder");
             Path datasets = Files.createDirectories(folder.resolve("datasets"));
             Path models = Files.createDirectories(folder.resolve("models"));
             Files.writeString(datasets.resolve("lang-trade.dataset.yaml"), """
@@ -486,7 +486,7 @@ class LanguagesApiTest {
         assertThat(new com.ash.drishti.server.bi.mq.MqException(com.ash.drishti.server.bi.mq.MqException.Problem.of("DRS-9163", "measures[0]", "x")).legacy().errorCode().code())
                 .isEqualTo("DRS-9163");
         // Check warns that the hidden measure is still reachable through the columns its roles see
-        JsonNode check = ok(call("POST", "/api/v1/bi/models/validate", admin(), Map.of("yaml", Files.readString(Path.of("target/lang-api-folder/models/lang-model.model.yaml")))));
+        JsonNode check = ok(call("POST", "/api/v1/bi/models/validate", admin(), Map.of("yaml", Files.readString(com.ash.drishti.server.TestRun.root().resolve("lang-api-folder/models/lang-model.model.yaml")))));
         JsonNode warn = null;
         for (JsonNode pr : check.path("problems")) {
             if ("DRS-9132".equals(pr.path("code").asText())) {

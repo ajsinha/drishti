@@ -235,6 +235,16 @@ public final class PackLoader {
                 if (f.get("label") != null) {
                     props.put("drishti.graph.fields." + e.getKey() + ".label", f.get("label"));
                 }
+                // scope: pack links the field from this pack's own kinds only (another pack's field of the same name stays data)
+                Object scope = f.get("scope");
+                if ("pack".equals(scope)) {
+                    for (int i = 0; i < owned.size(); i++) {
+                        props.put("drishti.graph.fields." + e.getKey() + ".from[" + i + "]", owned.get(i));
+                    }
+                } else if (scope != null && !"all".equals(scope)) {
+                    throw new IllegalStateException("pack '" + pack.name() + "': graph field " + e.getKey() + " has scope '" + scope
+                            + "'; the scope is pack (this pack's kinds) or all (every kind, the default)");
+                }
                 offer(claims, overrides, lineage, "field " + e.getKey(), pack.name(), props);
             }
             Map<String, Object> impact = map(graph.get("impact"));

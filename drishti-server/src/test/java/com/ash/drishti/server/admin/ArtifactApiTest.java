@@ -25,7 +25,6 @@ import static org.springframework.test.web.servlet.request.MockMvcRequestBuilder
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
-import com.ash.drishti.common.TempFiles;
 import com.ash.drishti.identity.AuditLog;
 import com.ash.drishti.identity.EmbedAppStore;
 import com.ash.drishti.identity.PreferenceStore;
@@ -67,7 +66,7 @@ class ArtifactApiTest {
 
     @DynamicPropertySource
     static void props(DynamicPropertyRegistry r) throws IOException {
-        root = TempFiles.createDir(Path.of("target"), "artifacts-");
+        root = com.ash.drishti.server.TestRun.temp("artifacts-");
         write("installed/artbase/pack.yaml", "pack: artbase\nversion: 1.0.0\ntitle: Art base\nkinds: [artwidget]\n");
         write("installed/artchild/pack.yaml", "pack: artchild\nversion: 1.0.0\ntitle: Art child\nextends: [artbase]\nkinds: [artgadget]\n");
         write("installed/artlone/pack.yaml", "pack: artlone\nversion: 2.1.0\ntitle: Art lone\nkinds: [artsolo]\n");

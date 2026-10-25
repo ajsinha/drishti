@@ -37,9 +37,9 @@ import com.ash.drishti.server.security.TokenVerifier;
  */
 @SpringBootTest(properties = {"drishti.sources.plugins.demo.settings.ticking=false", "drishti.security.enabled=true",
         "drishti.security.secret=test-secret-that-is-at-least-32-bytes-long", "drishti.packs.enabled=finance",
-        "drishti.identity.database-url=jdbc:sqlite:target/snapshot-off-${random.uuid}/identity.db",
-        "drishti.packs.overlay=target/snapshot-off-overlay/added.yaml", "drishti.collab.store=file",
-        "drishti.collab.dir=target/snapshot-off-${random.uuid}/collab"})
+        "drishti.identity.database-url=jdbc:sqlite:${drishti.test.dir}/snapshot-off-${random.uuid}/identity.db",
+        "drishti.packs.overlay=${drishti.test.dir}/snapshot-off-overlay/added.yaml", "drishti.collab.store=file",
+        "drishti.collab.dir=${drishti.test.dir}/snapshot-off-${random.uuid}/collab"})
 @AutoConfigureMockMvc
 class SnapshotOffByDefaultTest {
 

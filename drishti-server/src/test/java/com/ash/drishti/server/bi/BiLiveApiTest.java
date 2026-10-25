@@ -53,9 +53,9 @@ import org.springframework.boot.test.web.server.LocalServerPort;
  */
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT, properties = {"drishti.sources.plugins.demo.settings.tick-ms=60", "drishti.security.enabled=true",
         "drishti.security.secret=test-secret-that-is-at-least-32-bytes-long", "drishti.security.registered-users-only=false",
-        "drishti.packs.enabled=trading,counterparty-risk,market-risk", "drishti.identity.database-url=jdbc:sqlite:target/bi-live-${random.uuid}/identity.db",
-        "drishti.packs.overlay=target/bi-live-overlay/added.yaml", "drishti.bi.dir=target/bi-live-folder", "drishti.bi.folder-refresh=1s",
-        "drishti.bi.query.store-dir=target/bi-live-store/${random.uuid}", "drishti.bi.live.batch=30ms", "drishti.bi.live.frame=50ms",
+        "drishti.packs.enabled=trading,counterparty-risk,market-risk", "drishti.identity.database-url=jdbc:sqlite:${drishti.test.dir}/bi-live-${random.uuid}/identity.db",
+        "drishti.packs.overlay=${drishti.test.dir}/bi-live-overlay/added.yaml", "drishti.bi.dir=${drishti.test.dir}/bi-live-folder", "drishti.bi.folder-refresh=1s",
+        "drishti.bi.query.store-dir=${drishti.test.dir}/bi-live-store/${random.uuid}", "drishti.bi.live.batch=30ms", "drishti.bi.live.frame=50ms",
         "drishti.bi.live.status=1s", "drishti.bi.live.max-streams-per-user=2"})
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
 @TestMethodOrder(MethodOrderer.OrderAnnotation.class)
@@ -72,7 +72,7 @@ class BiLiveApiTest {
     static {
         try {
             for (String kind : List.of("datasets", "models", "reports")) {                       // a board is a report with board pages since 2.4.0 (R7)
-                Path to = Path.of("target/bi-live-folder/" + kind);
+                Path to = com.ash.drishti.server.TestRun.root().resolve("bi-live-folder/" + kind);
                 Files.createDirectories(to);
                 try (var files = Files.list(Path.of("../config/bi/" + kind))) {
                     for (Path f : files.filter(p -> p.getFileName().toString().contains("live") || p.getFileName().toString().startsWith("desk-wall")).toList()) {

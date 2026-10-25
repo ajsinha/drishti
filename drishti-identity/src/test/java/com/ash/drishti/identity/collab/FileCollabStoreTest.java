@@ -24,25 +24,29 @@ import java.nio.file.Path;
 import java.time.Instant;
 import java.util.List;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.io.TempDir;
 
 /** The file stores pass the same contract as the database stores ({@link CollabStoreChecks}), and survive a restart. */
 class FileCollabStoreTest {
 
+    @TempDir
+    Path tmp;
+
     @Test
     void sharesFollowTheContract() throws Exception {
-        Path dir = Files.createTempDirectory("collab-shares");
+        Path dir = Files.createDirectories(tmp.resolve("collab-shares"));
         CollabStoreChecks.shares(new FileShareStore(dir));
     }
 
     @Test
     void inboxFollowsTheContract() throws Exception {
-        Path dir = Files.createTempDirectory("collab-inbox");
+        Path dir = Files.createDirectories(tmp.resolve("collab-inbox"));
         CollabStoreChecks.inbox(new FileInboxStore(dir, 1000));
     }
 
     @Test
     void inboxPurgeFollowsTheContractAndSurvivesARestart() throws Exception {
-        Path dir = Files.createTempDirectory("collab-inbox-purge");
+        Path dir = Files.createDirectories(tmp.resolve("collab-inbox-purge"));
         FileInboxStore store = new FileInboxStore(dir, 1000);
         CollabStoreChecks.inboxPurge(store);
         store.add(new Notice(0, "keeper", Instant.now().minus(java.time.Duration.ofDays(90)), "share", "trade", "MX-9", null, null, null, null, "ann", null));
@@ -53,7 +57,7 @@ class FileCollabStoreTest {
 
     @Test
     void outboxFollowsTheContractAndSurvivesARestart() throws Exception {
-        Path dir = Files.createTempDirectory("collab-outbox");
+        Path dir = Files.createDirectories(tmp.resolve("collab-outbox"));
         CollabStoreChecks.outbox(new FileOutboxStore(dir));
         FileOutboxStore again = new FileOutboxStore(dir);
         OutboxItem n = again.add(OutboxItem.pending("email", "ravi", "share", "sh_9", Instant.now()));
@@ -63,7 +67,7 @@ class FileCollabStoreTest {
 
     @Test
     void threadsFollowTheContractAndSurviveARestart() throws Exception {
-        Path dir = Files.createTempDirectory("collab-threads");
+        Path dir = Files.createDirectories(tmp.resolve("collab-threads"));
         CollabStoreChecks.threads(new FileThreadStore(dir));
         FileThreadStore again = new FileThreadStore(dir);
         assertThat(again.linkedNotes()).hasSize(1);
@@ -76,7 +80,7 @@ class FileCollabStoreTest {
 
     @Test
     void removalAndHoldsFollowTheContractAndSurviveARestart() throws Exception {
-        Path dir = Files.createTempDirectory("collab-removal");
+        Path dir = Files.createDirectories(tmp.resolve("collab-removal"));
         FileThreadStore threads = new FileThreadStore(dir);
         CollabStoreChecks.removal(threads, new FileShareStore(dir));
         CollabStoreChecks.holds(new FileHoldStore(dir));
@@ -89,7 +93,7 @@ class FileCollabStoreTest {
 
     @Test
     void whatWasWrittenIsThereAfterARestart() throws Exception {
-        Path dir = Files.createTempDirectory("collab-restart");
+        Path dir = Files.createDirectories(tmp.resolve("collab-restart"));
         FileShareStore shares = new FileShareStore(dir);
         FileInboxStore inbox = new FileInboxStore(dir, 1000);
         Share s = new Share(Ulid.next("sh_"), "ann", Instant.now(), "trade", "MX-1", null, null,
@@ -123,7 +127,7 @@ class FileCollabStoreTest {
 
     @Test
     void inboxNeverReusesASequenceNumberAfterPurgingTheNewestRows() throws Exception {
-        Path dir = Files.createTempDirectory("collab-inbox-hw");
+        Path dir = Files.createDirectories(tmp.resolve("collab-inbox-hw"));
         FileInboxStore store = new FileInboxStore(dir, 1000);
         Instant old = Instant.now().minus(java.time.Duration.ofDays(90));
         long last = 0;
@@ -138,7 +142,7 @@ class FileCollabStoreTest {
 
     @Test
     void outboxNeverReusesASequenceNumberAfterPurgingSentRows() throws Exception {
-        Path dir = Files.createTempDirectory("collab-outbox-hw");
+        Path dir = Files.createDirectories(tmp.resolve("collab-outbox-hw"));
         FileOutboxStore store = new FileOutboxStore(dir);
         OutboxItem a = store.add(OutboxItem.pending("email", "ravi", "share", "sh_1", Instant.now()));
         store.sent(a.seq(), Instant.now().minusSeconds(100));

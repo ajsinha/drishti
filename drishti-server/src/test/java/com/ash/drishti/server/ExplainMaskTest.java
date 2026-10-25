@@ -43,7 +43,7 @@ import org.springframework.test.web.servlet.MockMvc;
         "drishti.security.roles.masked.kinds[0]=*", "drishti.security.roles.masked.raw=false",
         "drishti.security.roles.full.kinds[0]=*", "drishti.security.roles.full.raw=true",
         "drishti.security.roles.nocurve.kinds[0]=trade", "drishti.security.roles.nocurve.raw=true",
-        "drishti.identity.database-url=jdbc:sqlite:target/explainmask-${random.uuid}/identity.db"})
+        "drishti.identity.database-url=jdbc:sqlite:${drishti.test.dir}/explainmask-${random.uuid}/identity.db"})
 @AutoConfigureMockMvc
 class ExplainMaskTest {
 

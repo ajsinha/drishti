@@ -20,7 +20,6 @@ import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 import com.ash.drishti.common.DrishtiException;
 import com.ash.drishti.common.ErrorCode;
-import com.ash.drishti.common.TempFiles;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -69,7 +68,7 @@ class ArtifactArchiveTest {
 
     @BeforeEach
     void setUp() throws IOException {
-        root = TempFiles.createDir(Path.of("target"), "artifact-archive-");
+        root = com.ash.drishti.server.TestRun.temp("artifact-archive-");
         live = Files.createDirectories(root.resolve("live"));
         clock = new MutableClock();
         archive = new ArtifactArchive(root.resolve("uninstalled"), clock);

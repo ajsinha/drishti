@@ -19,12 +19,12 @@ import static org.assertj.core.api.Assertions.assertThat;
 
 import com.ash.drishti.api.EntityRef;
 import com.ash.drishti.testkit.DatedSourceContract;
-import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Random;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.io.TempDir;
 
 /** The state store of a message source stays within its budget: the entities written longest ago go first. */
 class StateStoreBudgetTest {
@@ -68,8 +68,7 @@ class StateStoreBudgetTest {
     }
 
     @Test
-    void theOldestEntitiesAreEvictedToStayWithinTheBudget() throws Exception {
-        Path dir = Files.createTempDirectory("state");
+    void theOldestEntitiesAreEvictedToStayWithinTheBudget(@TempDir Path dir) throws Exception {
         Fed f = source(dir, "evict-oldest");
         Random r = new Random(11);
         for (int i = 0; i < 1_000; i++) {                                 // about 4 MB into a 1 MB budget
@@ -85,8 +84,7 @@ class StateStoreBudgetTest {
     }
 
     @Test
-    void warnKeepsEverythingAndSaysSo() throws Exception {
-        Path dir = Files.createTempDirectory("state");
+    void warnKeepsEverythingAndSaysSo(@TempDir Path dir) throws Exception {
         Fed f = source(dir, "warn");
         Random r = new Random(11);
         for (int i = 0; i < 1_000; i++) {
@@ -99,8 +97,7 @@ class StateStoreBudgetTest {
     }
 
     @Test
-    void aMessageTheStoreCannotKeepIsNotAcknowledged() throws Exception {
-        Path dir = Files.createTempDirectory("state");
+    void aMessageTheStoreCannotKeepIsNotAcknowledged(@TempDir Path dir) throws Exception {
         Fed f = source(dir, "evict-oldest");
         assertThat(f.send("MX-1", "{\"tradeId\":\"MX-1\"}")).isTrue();
         assertThat(f.send("MX-2", "not json")).as("unreadable: done with, so it does not come back forever").isTrue();

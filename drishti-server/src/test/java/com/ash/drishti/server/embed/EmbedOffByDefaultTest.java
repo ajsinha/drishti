@@ -30,7 +30,7 @@ import org.springframework.test.web.servlet.MockMvc;
 
 /** Embedding is off unless {@code drishti.embed.enabled}: no token endpoint answers, an embed-shaped token is refused. */
 @SpringBootTest(properties = {"drishti.rachana.hot-reload=false", "drishti.sources.plugins.demo.settings.ticking=false",
-        "drishti.packs.enabled=trading", "drishti.identity.database-url=jdbc:sqlite:target/identity-${random.uuid}/identity.db",
+        "drishti.packs.enabled=trading", "drishti.identity.database-url=jdbc:sqlite:${drishti.test.dir}/identity-${random.uuid}/identity.db",
         "drishti.security.enabled=true", "drishti.security.secret=test-secret-that-is-at-least-32-bytes-long"})
 @AutoConfigureMockMvc
 class EmbedOffByDefaultTest {

@@ -40,8 +40,8 @@ import org.springframework.test.web.servlet.ResultActions;
 @SpringBootTest(properties = {"drishti.rachana.hot-reload=false", "drishti.sources.plugins.demo.settings.ticking=false",
         "drishti.security.enabled=true", "drishti.security.secret=test-secret-that-is-at-least-32-bytes-long",
         "drishti.security.roles.designer.kinds[0]=trade", "drishti.security.roles.designer.kinds[1]=netting-set",
-        "drishti.identity.database-url=jdbc:sqlite:target/ops-api-${random.uuid}/identity.db",
-        "drishti.builder.designs.dir=target/ops-api-files-${random.uuid}", "drishti.builder.designs.max-ops=3"})
+        "drishti.identity.database-url=jdbc:sqlite:${drishti.test.dir}/ops-api-${random.uuid}/identity.db",
+        "drishti.builder.designs.dir=${drishti.test.dir}/ops-api-files-${random.uuid}", "drishti.builder.designs.max-ops=3"})
 @AutoConfigureMockMvc
 class BuilderOpsApiTest {
 

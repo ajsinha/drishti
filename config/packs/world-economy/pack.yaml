@@ -133,6 +133,7 @@ graph:
     JURISDICTION:
       kind: jurisdiction
       label: Country
+      scope: pack
     LABOUR:
       kind: labour-market
       label: Labour market

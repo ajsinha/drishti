@@ -48,8 +48,8 @@ import org.springframework.test.web.servlet.ResultActions;
 @SpringBootTest(properties = {"drishti.rachana.hot-reload=false", "drishti.sources.plugins.demo.settings.ticking=false",
         "drishti.security.enabled=true", "drishti.security.secret=test-secret-that-is-at-least-32-bytes-long",
         "drishti.security.roles.designer.kinds[0]=trade",
-        "drishti.identity.database-url=jdbc:sqlite:target/design-blocks-${random.uuid}/identity.db",
-        "drishti.builder.designs.dir=target/design-blocks-files-${random.uuid}"})
+        "drishti.identity.database-url=jdbc:sqlite:${drishti.test.dir}/design-blocks-${random.uuid}/identity.db",
+        "drishti.builder.designs.dir=${drishti.test.dir}/design-blocks-files-${random.uuid}"})
 @AutoConfigureMockMvc
 class DesignBlocksApiTest {
 
@@ -64,7 +64,7 @@ class DesignBlocksApiTest {
     /** A pack folder as the shipped ones are laid out: sutras/ with a common/ block, samples/<kind>.jsonl with its catalogue. */
     private static Path pack() {
         try {
-            Path p = Files.createTempDirectory("drishti-design-blocks-");
+            Path p = TestRun.temp("drishti-design-blocks-");
             Files.createDirectories(p.resolve("sutras/common"));
             Files.createDirectories(p.resolve("sutras/blk"));
             Files.createDirectories(p.resolve("samples"));

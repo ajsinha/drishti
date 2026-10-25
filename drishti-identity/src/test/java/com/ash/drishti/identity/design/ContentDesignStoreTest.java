@@ -24,7 +24,6 @@ import com.ash.drishti.identity.content.FileContentStore;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.List;
-import java.util.UUID;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
@@ -33,6 +32,7 @@ import java.util.concurrent.TimeUnit;
 import java.util.stream.Stream;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.io.TempDir;
 
 /**
  * Designs in the content store (docs/architecture/CONTENT_STORE.md section 5): two in-process nodes sharing one filesystem store root
@@ -40,13 +40,15 @@ import org.junit.jupiter.api.Test;
  */
 class ContentDesignStoreTest {
 
+    @TempDir
+    Path tmp;
+
     private Path dir;
     private Path root;
 
     @BeforeEach
     void setUp() throws Exception {
-        dir = Path.of("target", "content-tests", "designs-" + UUID.randomUUID()).toAbsolutePath();
-        Files.createDirectories(dir);
+        dir = tmp.toAbsolutePath();
         root = dir.resolve("fstore");
     }
 

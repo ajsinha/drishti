@@ -32,7 +32,7 @@ import org.springframework.test.web.servlet.MockMvc;
 /** {@code POST /api/v1/builder/shape}: the shape of sample documents, for authors only, with the limits enforced cleanly. */
 @SpringBootTest(properties = {"drishti.rachana.hot-reload=false", "drishti.sources.plugins.demo.settings.ticking=false",
         "drishti.security.enabled=true", "drishti.security.secret=test-secret-that-is-at-least-32-bytes-long",
-        "drishti.identity.database-url=jdbc:sqlite:target/builder-${random.uuid}/identity.db",
+        "drishti.identity.database-url=jdbc:sqlite:${drishti.test.dir}/builder-${random.uuid}/identity.db",
         "drishti.builder.max-samples=3", "drishti.builder.max-file-mb=1", "drishti.builder.max-total-mb=2", "drishti.builder.max-depth=6"})
 @AutoConfigureMockMvc
 class BuilderApiTest {

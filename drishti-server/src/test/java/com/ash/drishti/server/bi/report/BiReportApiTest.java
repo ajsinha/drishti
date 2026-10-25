@@ -54,9 +54,9 @@ import org.springframework.test.web.servlet.ResultActions;
  */
 @SpringBootTest(properties = {"drishti.sources.plugins.demo.settings.ticking=false", "drishti.security.enabled=true",
         "drishti.security.secret=test-secret-that-is-at-least-32-bytes-long", "drishti.packs.enabled=finance",
-        "drishti.identity.database-url=jdbc:sqlite:target/bi-report-${random.uuid}/identity.db", "drishti.packs.overlay=target/bi-report-overlay/added.yaml",
-        "drishti.bi.dir=target/bi-report-folder", "drishti.bi.folder-refresh=1s", "drishti.bi.query.store-dir=target/bi-report-store/${random.uuid}",
-        "drishti.packs.samples=developers", "drishti.sources.connectors-dir=target/test-data/bi-report-connectors", "drishti.sources.plugins.file.enabled=false",
+        "drishti.identity.database-url=jdbc:sqlite:${drishti.test.dir}/bi-report-${random.uuid}/identity.db", "drishti.packs.overlay=${drishti.test.dir}/bi-report-overlay/added.yaml",
+        "drishti.bi.dir=${drishti.test.dir}/bi-report-folder", "drishti.bi.folder-refresh=1s", "drishti.bi.query.store-dir=${drishti.test.dir}/bi-report-store/${random.uuid}",
+        "drishti.packs.samples=developers", "drishti.sources.connectors-dir=${drishti.test.dir}/bi-report-connectors", "drishti.sources.plugins.file.enabled=false",
         "drishti.sources.connectors.finance-lake.enabled=false",
         "drishti.sources.connectors.rep-lake.plugin=file", "drishti.sources.connectors.rep-lake.kinds[0]=trade",
         "drishti.sources.connectors.rep-lake.settings.rescan-seconds=3600",
@@ -90,7 +90,7 @@ class BiReportApiTest {
 
     @DynamicPropertySource
     static void lake(DynamicPropertyRegistry r) throws Exception {
-        root = Files.createTempDirectory("drishti-bi-report-lake");
+        root = com.ash.drishti.server.TestRun.temp("drishti-bi-report-lake");
         day("2026-10-07");
         day("2026-10-08");
         r.add("drishti.sources.connectors.rep-lake.settings.root", () -> root.resolve("lake").toString());
@@ -98,8 +98,8 @@ class BiReportApiTest {
 
     static {
         try {
-            Path datasets = Path.of("target/bi-report-folder/datasets");
-            Path reports = Path.of("target/bi-report-folder/reports");
+            Path datasets = com.ash.drishti.server.TestRun.root().resolve("bi-report-folder/datasets");
+            Path reports = com.ash.drishti.server.TestRun.root().resolve("bi-report-folder/reports");
             Files.createDirectories(datasets);
             Files.createDirectories(reports);
             Files.writeString(datasets.resolve("lake-report.dataset.yaml"), """

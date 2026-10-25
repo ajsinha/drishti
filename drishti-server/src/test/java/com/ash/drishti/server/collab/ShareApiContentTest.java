@@ -21,9 +21,9 @@ import org.springframework.boot.test.context.SpringBootTest;
 /** The share contract with shares and the inbox in the content store (the default store, CONTENT_STORE.md section 9). */
 @SpringBootTest(properties = {"drishti.sources.plugins.demo.settings.ticking=false", "drishti.security.enabled=true",
         "drishti.security.secret=test-secret-that-is-at-least-32-bytes-long", "drishti.packs.enabled=finance,logistics",
-        "drishti.collab.store=content", "drishti.store.root=target/shareapi-content-${random.uuid}/fstore",
-        "drishti.identity.database-url=jdbc:sqlite:target/shareapi-content-${random.uuid}/identity.db",
-        "drishti.packs.overlay=target/shareapi-content-overlay/added.yaml", "drishti.collab.limits.shares-per-minute=1000",
+        "drishti.collab.store=content", "drishti.store.root=${drishti.test.dir}/shareapi-content-${random.uuid}/fstore",
+        "drishti.identity.database-url=jdbc:sqlite:${drishti.test.dir}/shareapi-content-${random.uuid}/identity.db",
+        "drishti.packs.overlay=${drishti.test.dir}/shareapi-content-overlay/added.yaml", "drishti.collab.limits.shares-per-minute=1000",
         "drishti.collab.inbox.poll=100ms", "drishti.collab.packs.logistics.share-enabled=false"})
 @AutoConfigureMockMvc
 class ShareApiContentTest extends ShareApiContract {}

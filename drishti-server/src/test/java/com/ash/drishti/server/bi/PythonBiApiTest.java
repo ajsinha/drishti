@@ -51,15 +51,15 @@ import org.springframework.test.web.servlet.ResultActions;
  */
 @SpringBootTest(properties = {"drishti.sources.plugins.demo.settings.ticking=false", "drishti.security.enabled=true",
         "drishti.security.secret=test-secret-that-is-at-least-32-bytes-long", "drishti.packs.enabled=finance",
-        "drishti.identity.database-url=jdbc:sqlite:target/bi-py-${random.uuid}/identity.db", "drishti.packs.overlay=target/bi-py-overlay/added.yaml",
-        "drishti.bi.dir=target/bi-py-folder", "drishti.bi.folder-refresh=1s", "drishti.bi.query.store-dir=target/bi-py-store/${random.uuid}"})
+        "drishti.identity.database-url=jdbc:sqlite:${drishti.test.dir}/bi-py-${random.uuid}/identity.db", "drishti.packs.overlay=${drishti.test.dir}/bi-py-overlay/added.yaml",
+        "drishti.bi.dir=${drishti.test.dir}/bi-py-folder", "drishti.bi.folder-refresh=1s", "drishti.bi.query.store-dir=${drishti.test.dir}/bi-py-store/${random.uuid}"})
 @AutoConfigureMockMvc
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
 @TestMethodOrder(MethodOrderer.OrderAnnotation.class)
 class PythonBiApiTest {
 
     static final Path CONFIG = Path.of("..", "config", "bi");
-    static final Path FOLDER = Path.of("target", "bi-py-folder");
+    static final Path FOLDER = com.ash.drishti.server.TestRun.root().resolve("bi-py-folder");
 
     static {
         try {

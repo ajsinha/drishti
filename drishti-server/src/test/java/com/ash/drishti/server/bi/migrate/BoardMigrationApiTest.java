@@ -46,9 +46,9 @@ import org.springframework.test.web.servlet.MockMvc;
  */
 @SpringBootTest(properties = {"drishti.sources.plugins.demo.settings.ticking=false", "drishti.security.enabled=true",
         "drishti.security.secret=test-secret-that-is-at-least-32-bytes-long", "drishti.packs.enabled=finance",
-        "drishti.identity.database-url=jdbc:sqlite:target/board-migrate-${random.uuid}/identity.db", "drishti.packs.overlay=target/board-migrate-overlay/added.yaml",
-        "drishti.bi.dir=target/board-migrate-folder", "drishti.bi.query.store-dir=target/board-migrate-store/${random.uuid}",
-        "drishti.sources.connectors-dir=target/test-data/board-migrate-connectors", "drishti.sources.plugins.file.enabled=false",
+        "drishti.identity.database-url=jdbc:sqlite:${drishti.test.dir}/board-migrate-${random.uuid}/identity.db", "drishti.packs.overlay=${drishti.test.dir}/board-migrate-overlay/added.yaml",
+        "drishti.bi.dir=${drishti.test.dir}/board-migrate-folder", "drishti.bi.query.store-dir=${drishti.test.dir}/board-migrate-store/${random.uuid}",
+        "drishti.sources.connectors-dir=${drishti.test.dir}/board-migrate-connectors", "drishti.sources.plugins.file.enabled=false",
         "drishti.sources.connectors.finance-lake.enabled=false"})
 @AutoConfigureMockMvc
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)

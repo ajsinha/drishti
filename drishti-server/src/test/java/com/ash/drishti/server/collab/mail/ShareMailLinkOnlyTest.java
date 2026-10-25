@@ -35,8 +35,8 @@ import org.springframework.test.context.DynamicPropertySource;
         "drishti.security.secret=test-secret-that-is-at-least-32-bytes-long", "drishti.packs.enabled=finance,logistics",
         "drishti.collab.limits.shares-per-minute=1000", "drishti.collab.email.enabled=true", "drishti.collab.email.coalesce-window=0", "drishti.collab.console-url=https://drishti.test",
         "drishti.collab.outbox.tick=100ms", "spring.mail.host=127.0.0.1", "drishti.collab.packs.finance.email.content=link-only",
-        "drishti.identity.database-url=jdbc:sqlite:target/sharemail-lo-${random.uuid}/identity.db",
-        "drishti.packs.overlay=target/sharemail-lo-overlay/added.yaml"})
+        "drishti.identity.database-url=jdbc:sqlite:${drishti.test.dir}/sharemail-lo-${random.uuid}/identity.db",
+        "drishti.packs.overlay=${drishti.test.dir}/sharemail-lo-overlay/added.yaml"})
 @AutoConfigureMockMvc
 class ShareMailLinkOnlyTest extends ShareMailSupport {
     static final int PORT = freePort();

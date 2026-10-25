@@ -46,7 +46,7 @@ import org.springframework.test.web.servlet.MockMvc;
         "drishti.search.columns.trade[0]=$.book", "drishti.search.columns.trade[1]=$.mtm",
         "drishti.security.enabled=true", "drishti.security.secret=test-secret-that-is-at-least-32-bytes-long",
         "drishti.security.redact[0]=book",
-        "drishti.identity.database-url=jdbc:sqlite:target/identity-${random.uuid}/identity.db"})
+        "drishti.identity.database-url=jdbc:sqlite:${drishti.test.dir}/identity-${random.uuid}/identity.db"})
 @AutoConfigureMockMvc
 @Import(PinnedBusinessDate.class)
 class ColumnarSearchTest {

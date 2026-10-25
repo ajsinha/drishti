@@ -46,7 +46,7 @@ import org.springframework.test.web.servlet.MockMvc;
 @AutoConfigureMockMvc
 class UiKitApiTest {
 
-    static final Path SITE = Path.of("target", "test-data", "ui-kit-site").toAbsolutePath();
+    static final Path SITE = TestRun.root().resolve(Path.of("ui-kit-site"));
 
     @Autowired MockMvc mvc;
     @Autowired TokenVerifier tokens;
