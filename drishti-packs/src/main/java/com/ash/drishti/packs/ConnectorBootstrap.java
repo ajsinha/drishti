@@ -278,9 +278,7 @@ public final class ConnectorBootstrap {
         } else {
             plugin = String.valueOf(template.get("plugin"));
             enabled = template.get("enabled");
-            if (template.get("kinds") instanceof List<?> l) {
-                l.forEach(x -> kinds.add(String.valueOf(x)));
-            }
+            kinds.addAll(ConnectorFiles.kindNames(template.get("kinds")));
             description = template.get("description") == null ? "" : String.valueOf(template.get("description"));
             PackLoader.flatten("", template.get("settings") instanceof Map<?, ?> s ? (Map<String, Object>) s : Map.of(), settings);
         }

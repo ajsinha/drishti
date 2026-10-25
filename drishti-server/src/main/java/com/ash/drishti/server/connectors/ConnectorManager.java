@@ -538,8 +538,8 @@ public final class ConnectorManager {
                 }
             });
             Map<String, Object> t = p.connectorTemplates().get(name);
-            if (t != null && t.get("kinds") instanceof List<?> l) {
-                l.forEach(x -> kinds.add(String.valueOf(x)));
+            if (t != null) {
+                kinds.addAll(ConnectorFiles.kindNames(t.get("kinds")));
             }
             if (d != null) {
                 d.kinds().stream().filter(k -> p.kinds().contains(k)).forEach(kinds::add);

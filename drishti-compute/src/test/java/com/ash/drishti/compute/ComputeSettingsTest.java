@@ -149,7 +149,7 @@ class ComputeSettingsTest {
         ComputeSettings s = ComputeSettings.load(Path.of("..", "config", "compute", "compute.yaml"), dir, "", defaults);
         assertThat(s.enabled()).isFalse();
         assertThat(s.pool("sample").workersMax()).isEqualTo(4);
-        assertThat(s.pool("sample").engines()).containsExactly(TestCompute.VECTORS);
+        assertThat(s.pool("sample").engines()).containsExactly(TestCompute.VECTORS, "drishti_compute.samples.paths:PathSumEngine");
         assertThat(s.pool("sample").systemEnvironment()).isTrue();
         assertThat(s.queueBatch()).isEqualTo(100_000);
     }

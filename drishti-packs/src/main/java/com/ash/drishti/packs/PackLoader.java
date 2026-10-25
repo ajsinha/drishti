@@ -306,11 +306,15 @@ public final class PackLoader {
                 if (c.get("enabled") != null) {
                     props.put(base + ".enabled", c.get("enabled"));
                 }
-                List<Object> ck = (List<Object>) c.getOrDefault("kinds", List.of());
+                List<String> ck = ConnectorFiles.kindNames(c.get("kinds"));       // a reactive connector's kinds are a mapping (REACTIVE_CONNECTOR.md)
                 for (int i = 0; i < ck.size(); i++) {
                     props.put(base + ".kinds[" + i + "]", ck.get(i));
                 }
                 flatten(base + ".settings.", map(c.get("settings")), props);
+                String spec = ConnectorFiles.computeSetting(ConnectorFiles.computeOf(c));
+                if (spec != null) {
+                    props.put(base + ".settings." + ConnectorFiles.COMPUTE_SETTING, spec);
+                }
                 offer(claims, overrides, lineage, "connector " + e.getKey(), pack.name(), props);
             }
             // routes: which connector answers each of the pack's kinds (the query inside a pack picks the connector)
