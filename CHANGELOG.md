@@ -45,6 +45,8 @@
   - **Pages:** the portfolio's (`PORT PF-RATES-DESK`: positions with VaR and component VaR, a click opens the position's trades beside;
     by product, currency and direction) and the position's (`POS …`: its trades netting, its distribution); UI kit fragment
     `pnl-distribution@1`.
+  - **API guide:** API_GUIDE.md lists every `/api/v1/var` endpoint (scope, path, history, contributions, tree, status, reload,
+    baskets, captures, compare).
 - **Reactive connectors, steps R1 to R4 (2.8.0, [REACTIVE_CONNECTORS.md](docs/architecture/REACTIVE_CONNECTORS.md) section 21,
   [REACTIVE_CONNECTOR.md](docs/connectors/REACTIVE_CONNECTOR.md), [tutorial 23](docs/tutorials/23-computed-panels.md)):** a connector
   may compute its answer. The built-in plugin `reactive` (in `drishti-compute`) reads a connector file's computation: kinds with typed

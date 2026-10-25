@@ -2770,6 +2770,32 @@ Between Drishti\*net members only (forwarded, signed calls; anything else is `40
 workers, busy, queued), `POST /api/v1/compute/peer/run` (a fan-out chunk, run here as the viewer the call is made for) and
 `POST /api/v1/compute/peer/cancel/{id}`.
 
+## VaR engine: `/api/v1/var` (2.8.0)
+
+VaR computed on demand from the trades' 509-day P&L vectors ([VAR_ENGINE.md](../architecture/VAR_ENGINE.md),
+[VAR_EXPLORER.md](VAR_EXPLORER.md)). A scope is the scope grammar's text: `BANK`, `DESK:RATES`, `BOOK:…`, `POS:<id>`, `TRD:<id>`,
+`PORT:<id>`, `BASKET:<owner>/<name>`, `CAPTURE:<id>`, `WHERE …`, joined with `+`, `-` and `&` (`DESK:RATES - TRD:MX-20000001`).
+Every answer is computed as the caller, over the trades they may see, on the request's business date (`asOf`; the newest date with
+vectors when it is later). A scope that does not parse is `400`; one naming positions an aggregate-only viewer may not see is `403`.
+Saving a basket or a capture needs the `risk:write` token scope.
+
+| Method and path | What it does |
+|---|---|
+| `GET /api/v1/var/scope?scope=` | the headline: VaR, ES, diversification, limit, backtest and provenance |
+| `GET /api/v1/var/scopes/{scope}` | the same for a simple scope in the path (`/var/scopes/DESK:RATES`); a scope with a slash uses `?scope=` |
+| `GET /api/v1/var/scope/path?scope=&page=&size=` | the P&L vector: histogram, worst 25, series and a page of the ranked scenarios |
+| `GET /api/v1/var/scope/history?scope=` | VaR, ES and hypothetical P&L over 250 days, the exceptions and the Basel traffic light |
+| `GET /api/v1/var/scope/contributions?scope=&by=&scenario=` | standalone, component, incremental and marginal VaR of the parts; `by` is `child` (the default: child nodes, else positions, else trades), `node`, `position` or `trade` (an aggregate-only viewer gets no position or trade level) |
+| `GET /api/v1/var/tree?hierarchy=` | every node of the hierarchy (default `MGMT`) with its figures, and the stored portfolios |
+| `GET /api/v1/var/status` | the settings (confidence, rank rule, memory budget, hot dates, kinds) and the dates loaded |
+| `POST /api/v1/var/reload` | administrators: drops the loaded dates so the next request reads the lake again (after a load) |
+| `GET /api/v1/var/baskets`, `POST /api/v1/var/baskets` | the caller's baskets and those shared with them; save one `{name, title, scope, sharedWith}` |
+| `GET /api/v1/var/baskets/{owner}/{name}`, `DELETE …/{owner}/{name}` | one basket; delete one of the caller's own (`204`) |
+| `POST /api/v1/var/captures` | `{scope, note}`: captures the scope's VaR now as an immutable record (`201`) |
+| `GET /api/v1/var/captures?scope=`, `GET /api/v1/var/captures/{id}` | the captures (of one scope); one capture with its figures |
+| `GET /api/v1/var/captures/{id}/csv?part=` | a capture as CSV: its provenance as `#` lines, then the vector by scenario date, or its components with `part=components` |
+| `GET /api/v1/var/compare?a=&b=` | two captures side by side, or a capture and now (`b=now`) |
+
 ## Embedding views in another web application
 
 For `<drishti-view>` ([ELEMENTS.md](../architecture/ELEMENTS.md)): a host application shows live Drishti views in its own pages, and Drishti decides who may see what. Off by default; switch it on with `drishti.embed.enabled` (needs `drishti.security.enabled`; settings in [CONFIGURATION.md](../admin/CONFIGURATION.md#drishtiembed--embedded-views-for-other-web-applications)).
