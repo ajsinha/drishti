@@ -60,7 +60,7 @@ public final class ConnectorFiles {
 
     /** A connector's logical name: lower case letters, digits and hyphens, starting with a letter or digit. */
     public static final Pattern NAME = Pattern.compile("[a-z0-9][a-z0-9-]{0,63}");
-    private static final Set<String> KEYS = Set.of("name", "plugin", "enabled", "kinds", "description", "settings");
+    private static final Set<String> KEYS = Set.of("name", "plugin", "enabled", "kinds", "description", "settings", "requires");
     private static final Pattern KEY = Pattern.compile("[A-Za-z0-9_][A-Za-z0-9_.-]{0,99}");
     private static final DateTimeFormatter STAMP = DateTimeFormatter.ofPattern("yyyyMMdd'T'HHmmssSSS").withZone(ZoneOffset.UTC);
     private static final int MAX_BYTES = 256 * 1024;
@@ -86,11 +86,20 @@ public final class ConnectorFiles {
      * @param text the file's text
      * @param etag version of the text, for optimistic concurrency
      * @param modified when the file was last written (null before it exists)
+     * @param requires the {@code requires:} block as written (the compute libraries the connector needs, docs/architecture/PYTHON_COMPUTE.md
+     *        section 4), empty when none; nothing in it runs until an administrator approves it
      */
     public record Definition(String name, String plugin, String enabled, List<String> kinds, String description,
-            Map<String, String> settings, String text, String etag, Instant modified) {
+            Map<String, String> settings, String text, String etag, Instant modified, Map<String, Object> requires) {
+
+        /** A definition without {@code requires:}. */
+        public Definition(String name, String plugin, String enabled, List<String> kinds, String description, Map<String, String> settings,
+                String text, String etag, Instant modified) {
+            this(name, plugin, enabled, kinds, description, settings, text, etag, modified, Map.of());
+        }
 
         public Definition {
+            requires = requires == null ? Map.of() : java.util.Collections.unmodifiableMap(new LinkedHashMap<>(requires));
             kinds = kinds == null ? List.of() : List.copyOf(kinds);
             settings = settings == null ? Map.of() : java.util.Collections.unmodifiableMap(new LinkedHashMap<>(settings));
             description = description == null ? "" : description;
@@ -124,6 +133,8 @@ public final class ConnectorFiles {
     private volatile ConnectorOverlay overlay;
     private final ObjectMapper yaml = new ObjectMapper(new YAMLFactory().disable(YAMLGenerator.Feature.WRITE_DOC_START_MARKER)
             .enable(YAMLGenerator.Feature.MINIMIZE_QUOTES));
+    private static final ObjectMapper REQUIRES_YAML = new ObjectMapper(new YAMLFactory().disable(YAMLGenerator.Feature.WRITE_DOC_START_MARKER)
+            .enable(YAMLGenerator.Feature.MINIMIZE_QUOTES).enable(YAMLGenerator.Feature.ALWAYS_QUOTE_NUMBERS_AS_STRINGS));
 
     /** History and generated-file markers live beside the files (a test, a tool). */
     public ConnectorFiles(Path dir) {
@@ -290,11 +301,12 @@ public final class ConnectorFiles {
         ConnectorOverlay o = overlay;
         ConnectorOverlay.Entry shared = o == null ? null : o.get(name);
         if (shared != null) {
-            return new Definition(d.name(), d.plugin(), d.enabled(), d.kinds(), d.description(), d.settings(), text, etag(text), shared.at());
+            return new Definition(d.name(), d.plugin(), d.enabled(), d.kinds(), d.description(), d.settings(), text, etag(text), shared.at(),
+                    d.requires());
         }
         try {
             return new Definition(d.name(), d.plugin(), d.enabled(), d.kinds(), d.description(), d.settings(), text, etag(text),
-                    Files.getLastModifiedTime(file(name)).toInstant());
+                    Files.getLastModifiedTime(file(name)).toInstant(), d.requires());
         } catch (IOException e) {
             throw new UncheckedIOException(e);
         }
@@ -317,7 +329,7 @@ public final class ConnectorFiles {
         }
         for (String k : m.keySet()) {
             if (!KEYS.contains(k)) {
-                throw new InvalidFile(name + ".yaml: unknown key '" + k + "' (allowed: plugin, enabled, kinds, description, settings)");
+                throw new InvalidFile(name + ".yaml: unknown key '" + k + "' (allowed: plugin, enabled, kinds, description, settings, requires)");
             }
         }
         if (m.get("name") != null && !name.equals(String.valueOf(m.get("name")))) {
@@ -364,8 +376,14 @@ public final class ConnectorFiles {
             }
             settings.put(key, v == null ? "" : String.valueOf(v));
         });
+        Object req = m.get("requires");
+        if (req != null && !(req instanceof Map<?, ?>)) {
+            throw new InvalidFile(name + ".yaml: 'requires' is a mapping (python, java, plugins)");
+        }
+        @SuppressWarnings("unchecked")
+        Map<String, Object> requires = req == null ? Map.of() : (Map<String, Object>) req;
         return new Definition(name, String.valueOf(plugin).trim(), en == null ? null : String.valueOf(en), kinds,
-                m.get("description") == null ? "" : String.valueOf(m.get("description")), settings, text, etag(text), null);
+                m.get("description") == null ? "" : String.valueOf(m.get("description")), settings, text, etag(text), null, requires);
     }
 
     /** Reads every file; the ones that cannot be used are left out and their problems returned in {@code problems} (name to message). */
@@ -582,6 +600,12 @@ public final class ConnectorFiles {
 
     /** Renders a connector as file text (used to generate files from templates and from the form). */
     public String render(String header, String plugin, Object enabled, List<String> kinds, String description, Map<String, ?> settings) {
+        return render(header, plugin, enabled, kinds, description, settings, Map.of());
+    }
+
+    /** As above, keeping a {@code requires:} block (compute libraries) when there is one. */
+    public String render(String header, String plugin, Object enabled, List<String> kinds, String description, Map<String, ?> settings,
+            Map<String, Object> requires) {
         Map<String, Object> doc = new LinkedHashMap<>();
         doc.put("plugin", plugin);
         if (enabled != null && !"true".equals(String.valueOf(enabled))) {
@@ -597,7 +621,12 @@ public final class ConnectorFiles {
             doc.put("settings", nest(settings));
         }
         try {
-            return (header == null || header.isBlank() ? "" : header.stripTrailing() + "\n") + yaml.writeValueAsString(doc);
+            String text = (header == null || header.isBlank() ? "" : header.stripTrailing() + "\n") + yaml.writeValueAsString(doc);
+            if (requires != null && !requires.isEmpty()) {
+                // versions such as "3.10" stay text: written with every number-like string quoted
+                text += REQUIRES_YAML.writeValueAsString(Map.of("requires", requires));
+            }
+            return text;
         } catch (IOException e) {
             throw new UncheckedIOException(e);
         }

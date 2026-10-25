@@ -87,6 +87,11 @@ public final class ConnectorManager {
     private final Set<String> applicationDefined;
     /** Connectors whose file was there at start (so the start-up properties still hold them) and has since been removed: they are gone, not "defined in application.yaml". */
     private final Set<String> goneFiles = java.util.concurrent.ConcurrentHashMap.newKeySet();
+    /** Connectors held off because their {@code requires:} is not approved (PYTHON_COMPUTE.md section 6), with the reason in words. */
+    private final Map<String, String> notApproved = new java.util.concurrent.ConcurrentHashMap<>();
+    /** Who last saved a connector's file through Admin (the requester of its approval: four eyes). */
+    private final Map<String, String> editors = new java.util.concurrent.ConcurrentHashMap<>();
+    private volatile RequirementsGate gate = RequirementsGate.NONE;
     private final List<String> bootstrapMessages;
     private final ReentrantLock scanLock = new ReentrantLock();   // file reads and writes: a ReentrantLock, not synchronized (Java 21 pins virtual threads)
     /** Connectors that must not run: the ones only unloaded packs, or hidden sample packs, used. Their files stay on disk. */
@@ -327,9 +332,63 @@ public final class ConnectorManager {
         seen.put(name, etag);
         fileProblems.remove(name);
         updated.put(name, Instant.now());
+        if (!d.requires().isEmpty()) {
+            Optional<String> refused = gateOf(name, d);
+            if (refused.isPresent()) {
+                notApproved.put(name, refused.get());
+                registry.apply(name, new SourcesProperties.ConnectorSettings(cs.plugin(), false, cs.kinds(), cs.settings()));
+                LOG.warn("connector {} stays off: {}", name, refused.get());
+                return true;
+            }
+        }
+        notApproved.remove(name);
         var st = registry.apply(name, cs);
         LOG.info("connector {} reconfigured from {}.yaml: {}{}", name, name, st.state(), st.problem() == null ? "" : " (" + st.problem() + ")");
         return true;
+    }
+
+    private Optional<String> gateOf(String name, ConnectorFiles.Definition d) {
+        Object by = d.requires().get("requested-by");
+        String requester = by != null && !String.valueOf(by).isBlank() ? String.valueOf(by) : editors.getOrDefault(name, "file " + name + ".yaml");
+        try {
+            return gate.refusal(name, d.requires(), requester);
+        } catch (RuntimeException e) {
+            return Optional.of("its requirements cannot be checked: " + e.getMessage());
+        }
+    }
+
+    /** Wires the approval of {@code requires:} (the compute module); connectors already loaded are checked again. */
+    public void requirementsGate(RequirementsGate g) {
+        gate = g == null ? RequirementsGate.NONE : g;
+        recheckRequirements();
+    }
+
+    /** Checks every connector with {@code requires:} again (after an approval, a rejection or a revocation). */
+    public void recheckRequirements() {
+        scanLock.lock();
+        try {
+            for (String name : files.names()) {
+                ConnectorFiles.Definition d = safeRead(name);
+                if (d != null && !d.requires().isEmpty()) {
+                    seen.remove(name);
+                }
+            }
+            scan();
+        } finally {
+            scanLock.unlock();
+        }
+    }
+
+    /** Remembers who is saving a connector's file through Admin, so its approval request names them (four eyes). */
+    public void editor(String name, String user) {
+        if (user != null && !user.isBlank()) {
+            editors.put(name, user);
+        }
+    }
+
+    /** Why a connector is held off for its requirements, or empty. */
+    public Optional<String> notApproved(String name) {
+        return Optional.ofNullable(notApproved.get(name));
     }
 
     /** What the start-up properties say about the connector, unless its file has been removed since. */
@@ -565,6 +624,17 @@ public final class ConnectorManager {
         m.put("level", shown[0]);
         m.put("label", shown[1]);
         m.put("usedBy", usedBy(name));
+        String held = notApproved.get(name);
+        if (held != null) {                                             // requirements not approved: off, and saying why (PYTHON_COMPUTE.md section 6)
+            m.put("state", "NOT_APPROVED");
+            m.put("health", "DOWN: " + held);
+            m.put("level", "warn");
+            m.put("label", "waiting for approval");
+            @SuppressWarnings("unchecked")
+            List<String> problems = new ArrayList<>((List<String>) m.get("problems"));
+            problems.add(0, held);
+            m.put("problems", problems);
+        }
         m.put("template", t.map(Template::pack).orElse(null));
         TemplateChange tc = templateChange(name);
         m.put("templateChanged", tc == null ? null : tc.message());
@@ -893,8 +963,17 @@ public final class ConnectorManager {
         if (body.get("plugin") == null) {
             throw new DrishtiException(ErrorCode.CONNECTOR_INVALID, "'plugin' is required");
         }
+        Map<String, Object> requires = Map.of();                          // the form has no requires: field; keep the file's (PYTHON_COMPUTE.md section 4)
+        if (body.get("requires") instanceof Map<?, ?> r) {
+            requires = (Map<String, Object>) r;
+        } else {
+            ConnectorFiles.Definition before = safeRead(name);
+            if (before != null) {
+                requires = before.requires();
+            }
+        }
         return files.render("# Written from Admin -> Connectors by " + user + " on " + java.time.LocalDate.now(java.time.ZoneOffset.UTC) + ".", String.valueOf(body.get("plugin")),
-                body.get("enabled"), kinds, body.get("description") == null ? "" : String.valueOf(body.get("description")), flat);
+                body.get("enabled"), kinds, body.get("description") == null ? "" : String.valueOf(body.get("description")), flat, requires);
     }
 
     /** Parses a text as the named connector's file and validates it; throws DRS-5031 with every error. */

@@ -1817,6 +1817,12 @@ The complete list (from `ErrorCode` in `drishti-common`). The first digit groups
 | DRS-5057 | 409 | content conflict | a Design (or other content-store item) changed on another node since it was read: reload and try again |
 | DRS-5058 | 400 | content bad key | a content-store key that is not valid |
 | DRS-5059 | 503 | content unavailable | the content store's database, bucket or shared folder could not be reached |
+| DRS-9201 | 503 | Compute off | `compute.enabled` is false on this server |
+| DRS-9202 | 409 | Compute refused | Refused before any work: unknown pool, requirements not approved or rejected, environment not built, four eyes on a decision |
+| DRS-9203 | 429 | Compute busy | The pool's queue for the request's class is full |
+| DRS-9204 | 504 | Compute timeout | The computation passed its time budget |
+| DRS-9205 | 502 | Compute failed | The computation crashed, passed a limit, was refused by the sandbox or by its engine (the message says which) |
+| DRS-9206 | 404 | Compute not found | No such approval request or running computation |
 | DRS-6001 | 404 | user not found | no such user |
 | DRS-6002 | 409 | user exists | a user with that name already exists |
 | DRS-6003 | 422 | weak password | the password does not meet the password rules |
@@ -2728,6 +2734,25 @@ curl -s -X POST $B/ai/chat -H 'Content-Type: application/json' -d '{"prompt":"hi
 {"type":"about:blank","title":"ai off","status":404,"detail":"DRS-4015 the AI layer is switched off (drishti.ai.enabled)","instance":"/api/v1/ai/chat","code":"DRS-4015"}
 ```
 
+
+## Compute workers (Admin → Compute)
+
+Administrators only ([COMPUTE.md](../admin/COMPUTE.md)); every decision is audited (`compute-approve`, `compute-reject`, `compute-revoke`,
+`compute-build`, `compute-cancel`).
+
+| Method and path | What it does |
+|---|---|
+| `GET /api/v1/admin/compute` | the switch, settings origin and data folder; per pool its workers (busy, idle, starting, on other nodes), queues by class, served, crashed, recycled, failures, latency and readiness; workers busy now; recent requests; environments; approval requests with their items |
+| `POST /api/v1/admin/compute/requests/{id}/approve` | `{reason}`: approves a pending request; refused (`DRS-9202`) for the person who asked (four eyes) or without a reason; `compute.approval.roles` may narrow who decides |
+| `POST /api/v1/admin/compute/requests/{id}/reject` | `{reason}`: the same rules |
+| `POST /api/v1/admin/compute/requests/{id}/revoke` | `{reason}`: the approval stops covering its items; connectors needing them stop |
+| `POST /api/v1/admin/compute/pools/{pool}/build` | builds the pool's approved locked environment (offline, by hash) and answers its id and log; `DRS-9202` when not approved or the build fails |
+| `POST /api/v1/admin/compute/pools/{pool}/test` | runs the sample engine on the pool as the caller: the worker that answered and the times |
+| `POST /api/v1/admin/compute/running/{id}/cancel` | stops a waiting or running computation on this node (`DRS-9206` when it is not there) |
+
+Between Drishti\*net members only (forwarded, signed calls; anything else is `403`): `GET /api/v1/compute/peer/load?pool=` (this node's
+workers, busy, queued), `POST /api/v1/compute/peer/run` (a fan-out chunk, run here as the viewer the call is made for) and
+`POST /api/v1/compute/peer/cancel/{id}`.
 
 ## Embedding views in another web application
 

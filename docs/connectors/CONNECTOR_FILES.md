@@ -124,6 +124,15 @@ settings:                         # the plugin's settings; nesting is flattened 
 - Comments are kept when you edit the YAML in an editor or in the YAML tab. Saving from the **Form** tab rewrites the file from the
   fields (comments are not kept; the earlier text is in `<data dir>/connectors/history/`).
 
+### Compute requirements: `requires:` (2.8.0)
+
+A connector may name the libraries its computation needs: a locked Python environment (`python: {version, lock, index}`), Java
+libraries by Maven coordinates and sha256 (`java:`), and connector plugins (`plugins:`). **A connector whose requirements are not all
+approved by an administrator stays off**: Admin → Connectors shows it as *waiting for approval* (state `NOT_APPROVED`) with the request
+to decide in Admin → Compute. The person who asked is `requires.requested-by`, else the administrator who last saved the file here.
+Editing the connector in the form keeps its `requires:` block. The keys, the lock file and the approval are in
+[COMPUTE.md section 6](../admin/COMPUTE.md#6-requirements-environments-and-approval).
+
 ## 4. Examples, one per store
 
 **Delta Lake** (`config/connectors/trade-endur.yaml`, exactly as the server generated it from the trading pack's template at its first
@@ -519,7 +528,7 @@ The folder is watched (file events, with polling as a fallback and a safety net,
 ```
 INFO  connector docs-notes started (file)
 INFO  connector docs-notes reconfigured from docs-notes.yaml: RUNNING
-WARN  connector file docs-notes.yaml is not usable; the last good configuration keeps running: docs-notes.yaml: unknown key 'bogus' (allowed: plugin, enabled, kinds, description, settings)
+WARN  connector file docs-notes.yaml is not usable; the last good configuration keeps running: docs-notes.yaml: unknown key 'bogus' (allowed: plugin, enabled, kinds, description, settings, requires)
 INFO  connector file docs-notes.yaml was removed; the connector stops
 ```
 
