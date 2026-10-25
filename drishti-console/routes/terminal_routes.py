@@ -28,6 +28,7 @@ from core.backend import BackendError
 from core.csrf import BodyError, json_body
 from routes import api_routes, designer_routes, history_routes
 from routes.common import ident, packs, render
+from routes.var_routes import redirect_for as var_redirect
 
 router = APIRouter(include_in_schema=False)
 
@@ -104,6 +105,9 @@ async def go(request: Request, q: str = ""):
         if len(words) == 1:
             return RedirectResponse("/forms", status_code=303)
         return RedirectResponse(f"/form/{quote(words[1])}" + (f"?kind={quote(words[2])}" if len(words) > 2 else ""), status_code=303)
+    me = getattr(request.state, "identity", None)
+    if (to_var := var_redirect(typed, (me.user if me else "") or "")) is not None:   # VAR DESK RATES: the VaR explorer (var_routes.py)
+        return to_var
     if _SEARCH.match(q.replace("<GO>", "")):
         return RedirectResponse(f"/s?q={quote(q.replace('<GO>', '').strip())}", status_code=303)
     try:

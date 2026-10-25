@@ -1,0 +1,135 @@
+{#
+  Project Drishti · Any data. Any domain. One grammar.
+
+  Copyright (c) 2026 Ashutosh Sinha <ajsinha@gmail.com>.
+  All rights reserved.
+
+  PROPRIETARY AND CONFIDENTIAL.
+
+  This file is the confidential and proprietary property of Ashutosh Sinha.
+  Unauthorised copying, use, modification, distribution or disclosure of this
+  file, via any medium, is strictly prohibited except with the express prior
+  written permission of the copyright holder.
+
+  See the LICENSE file in the root of this repository for the full terms.
+#}
+{# The VaR explorer (VAR_ENGINE.md section 10.1; the approved mock-up var-drilldown): the scope tree with VaR, ES and limit use; the
+   breadcrumb; six tiles; tabs for the P&L path, the VaR/ES history and the contributions; the provenance box. A shell: var-explorer.js
+   fills every panel from /api/var/... and moves the whole screen to a scope in place, panel by panel, each saying when it is computing. #}
+{% extends "base.html" %}
+{% block title %}VaR · {{ scope }} · {{ PRODUCT }}{% endblock %}
+{% block screen %}var{% endblock %}
+{% block body_class %}terminal{% endblock %}
+{% block head %}<link rel="stylesheet" href="/static/css/var.css?v={{ ASSET_V }}">{% endblock %}
+{% block nav %}{% with command_text='VAR ' ~ (scope | replace(':', ' ')) ~ ' <GO>' %}{% include "terminal/_topbar.html" %}{% endwith %}{% endblock %}
+{% block content %}
+<div class="vx" data-var data-scope="{{ scope }}" data-capture="{{ capture }}" data-hierarchy="{{ hierarchy }}" data-user="{{ user }}">
+  <div class="vx-status" aria-live="polite">
+    <span class="vx-cmd mono" data-vx-cmd>VAR {{ scope | replace(':', ' ') }}</span>
+    <span>Business date <b class="mono" data-vx-date>…</b></span>
+    <span>Scenario set <b class="mono" data-vx-set>…</b></span>
+    <span>Data <b class="mono" data-vx-version>…</b></span>
+    <span class="vx-timing mono" data-vx-timing></span>
+  </div>
+  <div class="vx-layout">
+    <aside class="vx-panel vx-tree-panel" aria-label="Scopes">
+      <div class="vx-ph"><h2>Scopes</h2>
+        <select class="vx-select" data-vx-hierarchy aria-label="Hierarchy"><option value="MGMT">Management</option><option value="LEGAL">Legal entity</option></select>
+        <span class="vx-fresh" data-vx-fresh="tree">loading…</span></div>
+      <div class="vx-tree" role="tree" data-vx-tree></div>
+      <div class="vx-sec">Ad-hoc scopes <button type="button" class="btn btn-sm vx-btn" data-vx-new-scope>+ New scope</button></div>
+      <div class="vx-tree vx-adhoc" role="tree" data-vx-adhoc></div>
+    </aside>
+
+    <section class="vx-main">
+      <nav class="vx-crumb" aria-label="Scope path" data-vx-crumb></nav>
+      <div class="vx-builder" data-vx-builder hidden>
+        <div class="vx-ph"><h2>New scope</h2><span class="vx-fresh">unsaved · VaR updates as you change it</span>
+          <button type="button" class="btn btn-sm vx-btn" data-vx-builder-close>Close</button></div>
+        <div class="vx-pb">
+          <label class="vx-lbl" for="vx-scope-text">Scope: positions, trades, rules, nodes and saved scopes, with <span class="mono">+</span> (union), <span class="mono">-</span> (minus) and <span class="mono">&amp;</span> (both)</label>
+          <textarea id="vx-scope-text" class="vx-input mono" rows="2" spellcheck="false" data-vx-scope-text placeholder="POS:POS-BOOK-RATES-1~… + TRD:MX-20000001 - TRD:CLY-3000157"></textarea>
+          <div class="vx-builder-row">
+            <input class="vx-input mono" data-vx-paste placeholder="Paste trade or position ids (comma, space or new line)" aria-label="Paste ids">
+            <button type="button" class="btn btn-sm vx-btn" data-vx-add-ids>Add ids</button>
+            <input class="vx-input mono" data-vx-rule placeholder="Rule: CURRENCY == 'EUR' and DIRECTION == 'SHORT'" aria-label="Rule">
+            <button type="button" class="btn btn-sm vx-btn" data-vx-add-rule>Add rule</button>
+          </div>
+          <div class="vx-builder-row">
+            <select class="vx-select" data-vx-combine aria-label="A scope to combine"></select>
+            <button type="button" class="btn btn-sm vx-btn" data-vx-union>+ union</button>
+            <button type="button" class="btn btn-sm vx-btn" data-vx-minus>− minus</button>
+            <span class="vx-note">or tick rows in the contributions and the tree and <b>Add to basket</b></span>
+          </div>
+          <div class="vx-builder-row">
+            <input class="vx-input" data-vx-name placeholder="Name to save (letters, digits, dashes)" aria-label="Basket name">
+            <input class="vx-input" data-vx-share placeholder="Share read-only with (users or roles, comma)" aria-label="Share with">
+            <button type="button" class="btn btn-sm vx-btn primary" data-vx-save>Save</button>
+            <span class="vx-note" data-vx-builder-msg aria-live="polite"></span>
+          </div>
+        </div>
+      </div>
+      <div class="vx-tiles" data-vx-tiles aria-live="polite"></div>
+      <div class="vx-panel">
+        <div class="vx-tabs" role="tablist" data-vx-tabs>
+          <button class="vx-tab" role="tab" data-tab="path" aria-selected="true">P&amp;L path <span data-vx-n>(509 scenarios)</span></button>
+          <button class="vx-tab" role="tab" data-tab="hist" aria-selected="false">VaR / ES history</button>
+          <button class="vx-tab" role="tab" data-tab="contrib" aria-selected="false">Contributions</button>
+          <button class="vx-tab" role="tab" data-tab="captures" aria-selected="false">Captured results</button>
+          <span class="vx-fresh vx-tab-fresh" data-vx-fresh="main"></span>
+        </div>
+        <div class="vx-pb" data-pane="path">
+          <div class="vx-charts">
+            <div class="vx-cbox"><h3>Distribution of scenario P&amp;L, losses beyond VaR in red</h3><div class="vx-chart" data-vx-histo></div>
+              <div class="vx-legend"><span><i class="lg-var"></i><span data-vx-var-legend>VaR 99%</span></span><span><i class="lg-es"></i><span data-vx-es-legend>ES 97.5%</span></span><span><i class="lg-tail"></i>tail scenarios</span></div></div>
+            <div class="vx-cbox"><h3>Worst 25 scenarios, sorted</h3><div class="vx-chart" data-vx-tail></div></div>
+          </div>
+          <div class="vx-cbox vx-gap"><h3 data-vx-series-title>P&amp;L by scenario date</h3><div class="vx-chart" data-vx-series></div></div>
+          <div class="vx-drill" data-vx-drill hidden></div>
+          <div class="vx-tablebox"><table class="vx-table" data-vx-pathtable><thead><tr><th class="n">Rank</th><th>Scenario date</th><th class="n">P&amp;L</th><th>Largest loss from</th><th class="n">Its P&amp;L</th></tr></thead><tbody></tbody></table></div>
+          <p class="vx-note"><span data-vx-path-note>The highlighted rank is the VaR scenario.</span> <button type="button" class="vx-link" data-vx-more>Next page</button> · <a class="vx-link" data-vx-csv-path href="#">Download the path (CSV)</a></p>
+        </div>
+        <div class="vx-pb" data-pane="hist" hidden>
+          <div class="vx-hist2">
+            <div class="vx-cbox"><h3>VaR, ES and the day's hypothetical P&amp;L; one currency axis, losses below zero</h3><div class="vx-chart" data-vx-hline></div>
+              <div class="vx-legend"><span><i class="lg-var"></i>−VaR</span><span><i class="lg-es"></i>−ES</span><span><i class="lg-pnl"></i>hypothetical P&amp;L</span><span><i class="lg-exc"></i>backtest exception</span></div>
+              <p class="vx-note" data-vx-hist-note></p></div>
+            <div class="vx-tablebox vx-tall"><table class="vx-table" data-vx-histtable><thead><tr><th>Date</th><th class="n">VaR</th><th class="n">ES</th><th class="n">P&amp;L</th><th></th></tr></thead><tbody></tbody></table></div>
+          </div>
+        </div>
+        <div class="vx-pb" data-pane="contrib" hidden>
+          <div class="vx-contrib-bar">
+            <span class="vx-seg" role="group" aria-label="Contributions by">
+              <button type="button" class="vx-segb" data-by="child" aria-pressed="true">Children</button>
+              <button type="button" class="vx-segb" data-by="position" aria-pressed="false">By position</button>
+              <button type="button" class="vx-segb" data-by="trade" aria-pressed="false">By trade</button>
+            </span>
+            <button type="button" class="btn btn-sm vx-btn" data-vx-add-basket disabled>Add to basket</button>
+          </div>
+          <div class="vx-scroll"><table class="vx-table" data-vx-ctable><thead><tr><th class="cb"><span class="visually-hidden">Pick</span></th><th>Scope</th><th class="n">Standalone VaR</th><th class="n">Component VaR</th><th class="n">% of total</th><th class="bar"></th><th class="n">Marginal (per 1m)</th><th class="n">Incremental VaR</th></tr></thead><tbody></tbody></table></div>
+          <p class="vx-note" data-vx-ctable-note>Component VaR adds up to the scope's VaR (Euler, on the VaR scenario's neighbourhood). Incremental VaR = the scope's VaR minus its VaR without the row. Click a row to drill in.</p>
+        </div>
+        <div class="vx-pb" data-pane="captures" hidden>
+          <div class="vx-contrib-bar"><input class="vx-input" data-vx-cap-note placeholder="A note for the capture (optional)" aria-label="Capture note">
+            <button type="button" class="btn btn-sm vx-btn primary" data-vx-capture>Capture VaR</button>
+            <span class="vx-note" data-vx-cap-msg aria-live="polite"></span></div>
+          <div class="vx-scroll"><table class="vx-table" data-vx-captable><thead><tr><th>Capture</th><th>Date</th><th>Captured</th><th>By</th><th class="n">VaR</th><th class="n">ES</th><th>Note</th><th></th></tr></thead><tbody></tbody></table></div>
+          <div class="vx-compare" data-vx-compare hidden></div>
+        </div>
+      </div>
+    </section>
+
+    <aside class="vx-panel vx-prov" aria-label="How this number was built">
+      <div class="vx-ph"><h2>How this number was built</h2></div>
+      <div class="vx-pb">
+        <dl data-vx-prov></dl>
+        <p class="vx-note">Every figure on this page is reproducible from the vector batch, the scenario set and the engine above.</p>
+        <div class="vx-actions"><a class="btn btn-sm vx-btn" data-vx-csv href="#">Export CSV</a>
+          <button type="button" class="btn btn-sm vx-btn" data-vx-capture-side>Capture VaR</button>
+          <button type="button" class="btn btn-sm vx-btn" disabled title="What-if comes with the pricer (2.8.0 wave V4)">What-if…</button></div>
+      </div>
+    </aside>
+  </div>
+</div>
+{% endblock %}
+{% block scripts %}<script src="/static/js/var-charts.js?v={{ ASSET_V }}"></script><script src="/static/js/var-explorer.js?v={{ ASSET_V }}"></script>{% endblock %}

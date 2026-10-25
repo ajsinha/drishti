@@ -417,6 +417,7 @@ final class VarViews {
         }
         out.put("series", series);
         out.put("dates", List.of(b.scenarioDates().get(0).toString(), b.scenarioDates().get(b.width() - 1).toString()));
+        out.put("scenarioDates", b.scenarioDates().stream().map(LocalDate::toString).toList());     // about 6 KB: the series chart's axis
         // the ranked table, a page at a time, with the part that lost most on each scenario
         List<Part> parts = parts(s, "child");
         int sz = size <= 0 ? svc.props().pathPage() : Math.min(size, 509);
