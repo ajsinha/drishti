@@ -32,7 +32,11 @@
   `concentration_hhi` names its column `PEAK_PFE`; live doc examples (ANALYSE, DATASETS, EXPRESSIONS, RACHANA_REFERENCE,
   SUTRA_DEVELOPER_GUIDE, PACK_GENERATORS_GUIDE, DEMO_DATA, KAFKA_CONNECTOR, the core pack README, the expression functions catalogue)
   read live fields. `ExposureOfficialBiTest` proves the Counterparty risk report shows the computed peaks of the latest version from a
-  lake written by the exposure publisher.
+  lake written by the exposure publisher. Tutorials 10, 14 and 18 (and tutorial 12's Desk wall) were retaken on a 2.9.0 demo lake with the
+  generated exposure run (73 netting sets): pictures, figures and command outputs agree; in tutorial 18 the netting-set fact is the
+  official results dataset (`counterparty-exposure-official-netting-sets`, alias `netting_set`). The picture scripts: t10 folds *Used by*
+  and clicks Verdant Agri Holdings; t14's second `NOTEBOOK` constant no longer hides the sample notebook; t18 opens the shipped dataset by
+  its file id.
 - **VaR in BI, from the published official results (2.9.0; product owner, 2026-10-26).** The official end-of-day VaR that the server
   publishes to `risk-results/var-official` is now the read-only kind `var-official` (`VOFF`) of the market-risk pack, served by the
   Delta connector `var-results` (class computed; its contract `config/packs/market-risk/contracts/var-official.contract.yaml`). No
