@@ -55,11 +55,11 @@ layout:
   phone: [tiles, main, side, low, views]
 panels:
   - { id: net-assets, kind: metric, area: tiles, span: 2, value: $.NET_ASSETS, title: Net assets, fmt: compact, unit: USD, caption: "${$.REPORT_DATE}" }
-  - { id: expense-ratio, kind: metric, area: tiles, span: 2, value: $.EXPENSE_RATIO, title: Expense ratio, fmt: ratio2, caption: "prospectus, ${nonblank($.PROSPECTUS_FILED, 'not filed')}" }
+  - { id: expense-ratio, kind: metric, area: tiles, span: 2, when: "$.EXPENSE_RATIO != null", value: $.EXPENSE_RATIO, title: Expense ratio, fmt: ratio2, caption: "prospectus, ${nonblank($.PROSPECTUS_FILED, 'not filed')}" }
   - { id: holding-count, kind: metric, area: tiles, span: 2, value: $.HOLDING_COUNT, title: Holdings, fmt: amount0, caption: "equities ${fmt($.EQUITY_PCT, 'weight2')}" }
   - { id: top-ten, kind: metric, area: tiles, span: 2, value: $.TOP10_PCT, title: Top 10, fmt: weight2, caption: of net assets }
-  - { id: last-year, kind: metric, area: tiles, span: 2, value: $.RETURN_LAST_YEAR, title: Last calendar year, fmt: return2, tone: sign, caption: "${nonblank($.RETURN_YEAR, 'no return filed')}, prospectus" }
-  - { id: turnover, kind: metric, area: tiles, span: 2, value: $.TURNOVER, title: Turnover, fmt: ratio2, caption: last fiscal year }
+  - { id: last-year, kind: metric, area: tiles, span: 2, when: "$.RETURN_LAST_YEAR != null", value: $.RETURN_LAST_YEAR, title: Last calendar year, fmt: return2, tone: sign, caption: "${nonblank($.RETURN_YEAR, 'no return filed')}, prospectus" }
+  - { id: turnover, kind: metric, area: tiles, span: 2, when: "$.TURNOVER != null", value: $.TURNOVER, title: Turnover, fmt: ratio2, caption: last fiscal year }
   - id: top-holdings
     kind: table
     title: "Top 10 holdings of ${fmt($.HOLDING_COUNT, 'amount0')} (a company opens its page)"
@@ -92,8 +92,8 @@ panels:
       - { label: Creation unit (shares), bind: $.CREATION_UNIT, fmt: amount0 }
       - { label: Authorised participants, bind: $.AP_COUNT, fmt: amount0 }
       - { label: Rank by net assets, bind: $.RANK, fmt: amount0 }
-  - { id: by-sector, kind: hbar, title: "Holdings by SIC division (us-equities companies, % of net assets)", area: side, rows: $.BY_SECTOR, label: LABEL, value: PCT, fmt: weight2, key: F3 }
-  - { id: annual-returns, kind: hbar, title: Calendar-year returns (prospectus), area: low, span: 4, rows: $.ANNUAL_RETURNS, label: YEAR, value: RETURN, fmt: return2, tone: sign, key: F4 }
+  - { id: by-sector, kind: hbar, when: "size($.BY_SECTOR) > 0", title: "Holdings by SIC division (us-equities companies, % of net assets)", area: side, rows: $.BY_SECTOR, label: LABEL, value: PCT, fmt: weight2, key: F3 }
+  - { id: annual-returns, kind: hbar, when: "size($.ANNUAL_RETURNS) > 0", title: Calendar-year returns (prospectus), area: low, span: 4, rows: $.ANNUAL_RETURNS, label: YEAR, value: RETURN, fmt: return2, tone: sign, key: F4 }
   - id: flows
     kind: table
     title: "Flows and returns, three months (N-PORT)"

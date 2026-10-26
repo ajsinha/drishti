@@ -256,6 +256,9 @@ class Gleif(B.Source):
             shutil.copy2(shared, dest)
             run.log(f"  gleif: the gleif pack's golden copy reused ({shared})")
             return
+        if run.a.offline and not dest.is_file():
+            run.log("  gleif: not in the cache; the funds are built without GLEIF's relationships")
+            return
         meta = run.dl.get(GOLDEN, run.cache.folder / "gleif" / "publish.json")
         if meta is None:
             return
@@ -324,10 +327,7 @@ def refresh(a, log=print, opener=None) -> int:
     for s in selected:
         man.record(s, s.plan(run), s.normalise(run), out)
     M = _make()
-    if "FUNDS" in scope:
-        M.BUILD.FUNDS = scope["FUNDS"]
-    if "HOLDINGS" in scope:
-        M.BUILD.TOP_N = scope["HOLDINGS"]
+    M.BUILD.FUNDS, M.BUILD.TOP_N = scope.get("FUNDS", 200), scope.get("HOLDINGS", 600)
     args = ["--cache", str(run.cache.folder)]
     if pack_dir != COMMITTED:
         for f in COMMITTED.rglob("*"):

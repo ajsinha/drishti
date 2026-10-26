@@ -51,11 +51,10 @@ PACKS: dict[str, dict] = {
               "keys": {"lei-entity": "LEI", "lei-relationship": "RELATIONSHIP_ID", "lei-mapping": "IDENTIFIER"}},
     "funds": {"connector": "funds-store",
               "source": "SEC Form N-PORT, Form N-CEN and risk/return summary data sets, SEC and Nasdaq Trader ticker files, GLEIF (tools/publicdata/funds.py)",
-              "keys": {"fund": "TICKER", "fund-holder": "TICKER", "index-funds": "INDEX"}},
+              "keys": {"fund": "TICKER", "fund-holder": "TICKER", "index-funds": "INDEX"}, "part-bytes": 1_200_000},
 }
-#: a kind's snapshot is cut into parts of about this many compressed bytes (snapshot-<date>.part-NN.jsonl.gz), so no committed file is
-#: large (tools/testdata/test_testdata.py fails over 5 MB); one part keeps the plain name snapshot-<date>.jsonl.gz
-PART_BYTES = 1_200_000
+#: a pack with "part-bytes" has each kind's snapshot cut into parts of about that many compressed bytes (snapshot-<date>.part-NN.jsonl.gz),
+#: so no committed file is large (tools/testdata/test_testdata.py fails over 5 MB); one part keeps the plain name snapshot-<date>.jsonl.gz
 #: the kinds computed since 2.9.2 instead of stored (docs/guides/GROUPINGS_ANALYTICS_GUIDE.md): never written to the test data again
 COMPUTED = {"us-equities": ["sic-sector"], "gleif": ["lei-group", "lei-country"]}
 #: the documents a pack's samples/ keep as reference (README data structures, docs); the rest of each kind: the first REFERENCE_EACH
@@ -92,11 +91,11 @@ def _lines(kind_docs: dict[str, dict]) -> str:
     return "".join(json.dumps(d, ensure_ascii=False, separators=(",", ":")) + "\n" for d in kind_docs.values())
 
 
-def _parts(kind_docs: dict[str, dict]) -> list[str]:
-    """The kind's JSON Lines cut into parts of about PART_BYTES compressed (whole documents, in order; deterministic)."""
+def _parts(kind_docs: dict[str, dict], part_bytes: int | None) -> list[str]:
+    """The kind's JSON Lines cut into parts of about part_bytes compressed (whole documents, in order; deterministic); one without."""
     lines = [json.dumps(d, ensure_ascii=False, separators=(",", ":")) + "\n" for d in kind_docs.values()]
     whole = "".join(lines)
-    n = max(1, -(-len(_gzip(whole)) // PART_BYTES))
+    n = max(1, -(-len(_gzip(whole)) // part_bytes)) if part_bytes else 1
     if n == 1:
         return [whole]
     target = len(whole.encode("utf-8")) / n
@@ -118,7 +117,7 @@ def files(pack: str, docs: dict[str, dict[str, dict]]) -> dict[str, bytes]:
     when = captured(docs)
     out = {}
     for kind in PACKS[pack]["keys"]:
-        parts = _parts(docs.get(kind, {}))
+        parts = _parts(docs.get(kind, {}), PACKS[pack].get("part-bytes"))
         if len(parts) == 1:
             out[f"{pack}/{kind}/snapshot-{when}.jsonl.gz"] = _gzip(parts[0])
         else:

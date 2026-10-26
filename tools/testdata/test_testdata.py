@@ -93,7 +93,7 @@ class TestData(unittest.TestCase):
     def test_the_docs_quote_as_many_demo_tables_as_lake_demo_builds(self):
         """QA2-205: `lake demo` builds one table per dataset of the manifest; every doc that quotes its count says that many."""
         want = len(self.m["datasets"])
-        said = re.compile(r"(?m)(?:Demo lake ready: [^\n]*?: |the same |each of the |`gleif` \(|`civic` \(|minutes\), |\(943 s\): |^\s+)(\d+) (?:Delta )?tables")
+        said = re.compile(r"(?m)(?:Demo lake ready: [^\n]*?: |the same |each of the |`gleif` \(|`funds` \(|`civic` \(|minutes\), |\(943 s\): |^\s+)(\d+) (?:Delta )?tables")
         wrong = []
         for rel in ("data/testdata/README.md", "docs/guides/GETTING_STARTED.md", "docs/guides/PACKS.md", "docs/guides/DEVELOPER_GUIDE.md",
                     "docs/guides/QA_ON_WINDOWS_WITH_CUSTOM_DATA.md", "docs/connectors/DEMO_DATA.md", "docs/tutorials/01-first-15-minutes.md"):
@@ -132,7 +132,7 @@ class TestData(unittest.TestCase):
                 self.assertTrue(list(folder.glob(f"changes-{day}*.jsonl.gz")), f"{ds['folder']} {day}")
         self.assertEqual({ds["pack"] for ds in self.m["datasets"]},
                          {"core", "market-data", "trading", "counterparty-risk", "market-risk", "world-economy", "news-and-markets",
-                          "us-equities", "gleif", "compute-demo"})
+                          "us-equities", "gleif", "funds", "compute-demo"})
 
     def test_three_source_systems_of_5000_production_shaped_trades_amended_over_the_days(self):
         ids: list[str] = []

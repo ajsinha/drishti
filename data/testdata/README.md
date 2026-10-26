@@ -63,7 +63,7 @@ On Windows, offline, with your own ENDUR files: [How to QA in Windows Environmen
    `RUN_DATE`, `SOURCE_UPDATE_TIME`) move with them, and so does each point of a document's embedded market series (`HISTORY`, `OHLC`,
    `FIXINGS`, `PNL_SERIES`: its `DATE`, by the same number of business days), so a price history has no missing days between the series
    and the stored days. A market document's `CHANGE_1D` is the day's move of its own price (`PRICE`, `LEVEL`, `MID`), and the fields quoted next to the price move with it ([below](#the-datasets)). Measured for sixty days on a fast machine: **943 s (about 15 minutes; up to half an hour on a laptop)**,
-   79 tables, about 2.2 GB on disk (14 tables are static reference data built from the world-economy and
+   82 tables, about 2.7 GB on disk (14 tables are static reference data built from the world-economy and
    news-and-markets packs' samples, 2 the captured quotes and headlines, 8 the us-equities and gleif public data; since 2.9.2 the
    country groups, SIC sectors, ownership groups and LEI countries are computed from them, not stored).
 4. **Start** the server and the console: the run configurations **Drishti server (demo lakes)** (the samples off,

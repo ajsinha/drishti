@@ -89,7 +89,7 @@ def _month(report_date: str, back: int) -> str:
     return f"{y}-{m:02d}"
 
 
-def choose(funds: dict[str, dict], series_tickers: dict[str, list[dict]], listed: dict[str, str], n: int = FUNDS) -> list[dict]:
+def choose(funds: dict[str, dict], series_tickers: dict[str, list[dict]], listed: dict[str, str], n: int | None = None) -> list[dict]:
     """The n largest funds by net assets with a ticker (a share class in the mutual-fund ticker file, or a listed trust's ticker)."""
     have = []
     for key, f in funds.items():
@@ -100,7 +100,7 @@ def choose(funds: dict[str, dict], series_tickers: dict[str, list[dict]], listed
         elif key.startswith("CIK") and listed.get(key[3:]):
             have.append(f)
     have.sort(key=lambda f: (-f["NET_ASSETS"], f["KEY"]))
-    return have[:n]
+    return have[:n or FUNDS]
 
 
 ETFS: dict[str, str] = {}      # ticker -> listing exchange (Nasdaq Trader), filled by build()
