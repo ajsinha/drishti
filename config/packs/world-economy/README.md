@@ -53,9 +53,11 @@ depends-on:
   packs: []
   connectors:
   - civic-store
+  - macro-groupings
   - macro-store
   plugins:
   - delta
+  - derived
   settings:
   - DRISHTI_DELTA_ROOT
   - DRISHTI_LAKE_ENABLED
@@ -282,40 +284,28 @@ Links: `ECONOMY` → `economy`.
 
 ### `country-group`
 
-**Country group** · mnemonic `ECG` · read through connector `macro-store`.
+**Country group** · mnemonic `ECG` · read through connector `macro-groupings`.
 
-**Id:** field `GROUP_ID`; pattern `^ECG-`; for example `ECG-EAS`.
+**Id:** pattern `^ECG-`.
 
-Fields, from 12 sample documents:
+No samples ship: documents are read live from its connector `macro-groupings` (plugin `derived`). The fields its screens show:
 
-| Field | Type | Example | Description |
-|---|---|---|---|
-| `GROUP_ID` | string | `ECG-EAS` | The document's id |
-| `NAME` | string | `East Asia & Pacific` | The World Bank region, income group or the world. |
-| `GROUP_TYPE` | string | `World Bank region` | Whether the group is a region, an income group or the world. |
-| `ECONOMIES` | integer | `36` | The number of economies in the group that the pack covers. |
-| `YEAR` | string | `2025` | Year of the figures |
-| `GDP_USD_BN` | number | `33657` | The group's GDP in current US dollars (World Bank aggregate). (USD billions) |
-| `GDP_PER_CAPITA` | number | `14077.3` | The group's GDP per head, in current US dollars. (USD) |
-| `POPULATION_M` | number | `2390.87` | The group's total population. (millions) |
-| `GROWTH` | number | `3.99734` | The group's yearly real GDP growth (World Bank aggregate). (% a year) |
-| `INFLATION` | number | `2.01821` | Inflation |
-| `GROWTH_PATH` | list of objects |  | Nested: see below |
-| `GDP_PATH` | list of objects |  | Nested: see below |
-| `TOP_ECONOMIES` | list of objects |  | Nested: see below |
-| `MEMBER_ECONOMIES` | list of strings |  | link to `economy` |
-| `PROVENANCE` | object |  | Nested: see below |
-
-Nested structures:
-
-| Path | Fields |
+| Field | Shown as |
 |---|---|
-| `GROWTH_PATH[]` | `YEAR` (string): The calendar year., `GROWTH` (number): Group growth in that year. (% a year) |
-| `GDP_PATH[]` | `YEAR` (string): The calendar year., `GDP` (number): Group GDP in that year. (USD billions) |
-| `TOP_ECONOMIES[]` | `ECONOMY` (string): One of the ten largest economies of the group., `GDP_USD_BN` (number): The economy's GDP in its latest year. (USD billions), `GROWTH` (number): The economy's latest real GDP growth. (% a year) |
-| `PROVENANCE` | `SOURCE` (string): The organisation or organisations whose published data this view shows., `DATASET` (string): The named dataset and its vintage (the release the numbers come from)., `RETRIEVED_AT` (date): The date the data was downloaded by tools/realdata., `LICENCE` (string): The terms under which the source allows reuse; attribution is required., `ATTRIBUTION` (string): The credit line to repeat when the data is shown or republished., `URL` (string): The web page of the dataset. |
-
-Links: `MEMBER_ECONOMIES` → `economy`.
+| `ECONOMIES` | Economies |
+| `GDP_PER_CAPITA` | GDP per capita (USD) |
+| `GDP_USD_BN` | GDP (USD bn) |
+| `GROUP_TYPE` | Type |
+| `GROWTH` | Real growth |
+| `INFLATION` | Inflation (median) |
+| `NAME` | Group |
+| `POPULATION_M` | Population (m) |
+| `ROWS[].GDP_USD_BN` | GDP (USD bn) |
+| `ROWS[].GROWTH` | Real growth |
+| `ROWS[].INFLATION` | Inflation |
+| `ROWS[].POPULATION_M` | Population (m) |
+| `ROWS[].YEAR` | Year |
+| `YEAR` | Latest year |
 
 ### `region-economy`
 
@@ -622,7 +612,7 @@ Screens (Sutras):
 
 | Sutra | Kind | What it shows |
 |---|---|---|
-| `country-group` | `country-group` | A World Bank region or income group (or the world): output, population, growth and its largest economies. |
+| `country-group` | `country-group` | A World Bank region or income group (or the world), computed from its member economies when asked: output, population, growth, inflation and its largest economies. |
 | `economic-forecast` | `economic-forecast` | The IMF World Economic Outlook: growth, inflation, unemployment, external balance and debt, outturn and projections to 2031. |
 | `economy` | `economy` | An economy: output, growth, prices, jobs, debt and external balance, and output by sector, from World Bank, IMF and CIA data. |
 | `fiscal-position` | `fiscal-position` | Government debt and net lending (IMF) with revenue, expense and military spending (World Bank), as shares of GDP. |
@@ -657,8 +647,9 @@ The connectors it brings (written once to `config/connectors/<name>.yaml`, then 
 
 | Connector | Plugin | Kinds | Enabled |
 |---|---|---|---|
-| `macro-store` | `delta` | `economy`, `macro-indicator`, `economic-forecast`, `labour-market`, `fiscal-position`, `country-group`, `region-economy` | `${DRISHTI_LAKE_ENABLED:true}` |
+| `macro-store` | `delta` | `economy`, `macro-indicator`, `economic-forecast`, `labour-market`, `fiscal-position`, `region-economy` | `${DRISHTI_LAKE_ENABLED:true}` |
 | `civic-store` | `delta` | `jurisdiction`, `party`, `office-holder`, `election`, `region`, `social-indicator` | `${DRISHTI_LAKE_ENABLED:true}` |
+| `macro-groupings` | `derived` | `country-group` | `${DRISHTI_LAKE_ENABLED:true}` |
 
 Settings (environment variables) its connectors read: `DRISHTI_DELTA_ROOT`, `DRISHTI_LAKE_ENABLED`.
 

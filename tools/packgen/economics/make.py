@@ -85,14 +85,13 @@ KINDS = [
           P("line", "debtPath", "General government gross debt, % of GDP", "$.debtPath", x="year", y="debt", fmt="pc1", area="right"),
           P("line", "balancePath", "Net lending / borrowing, % of GDP", "$.balancePath", x="year", y="balance", fmt="pc2", key="F3"), SRC],
          links={"economy": ("economy", "Economy")}),
-    Kind("country-group", "ECG", "ECG-", "Country group", G, "A World Bank region or income group (or the world): output, population, growth and its largest economies.", "groupId",
+    Kind("country-group", "ECG", "ECG-", "Country group", G, "A World Bank region or income group (or the world), computed from its member economies when asked: output, population, growth, inflation and its largest economies.", "groupId",
          [("Group", "$.name", None, None, False), ("Type", "$.groupType", None, None, False), ("Economies", "$.economies", "amount0", None, False),
           ("GDP (USD bn)", "$.gdpUsdBn", "amount0", None, False), ("GDP per capita (USD)", "$.gdpPerCapita", "amount0", None, False),
-          ("Population (m)", "$.populationM", "price2", None, False), ("Real growth", "$.growth", "pc2", "sign", True)],
-         [P("line", "growthPath", "Real GDP growth, % a year", "$.growthPath", x="year", y="growth", fmt="pc2", key="F2"),
-          P("table", "topEconomies", "Largest economies", "$.topEconomies", [("Economy", "@.economy", None, None, False), ("GDP (USD bn)", "@.gdpUsdBn", "amount0", None, True),
+          ("Population (m)", "$.populationM", "price2", None, False), ("Real growth", "$.growth", "pc2", "sign", True), ("Inflation (median)", "$.inflation", "pc2", None, False)],
+         [P("table", "topEconomies", "Largest economies", "$.topEconomies", [("Economy", "@.economy", None, None, False), ("GDP (USD bn)", "@.gdpUsdBn", "amount0", None, True),
             ("Growth, %", "@.growth", "pc2", "sign", False)], key="F3"),
-          P("line", "gdpPath", "GDP, USD bn", "$.gdpPath", x="year", y="gdp", fmt="amount0", area="right"), SRC],
+          P("line", "gdpPath", "GDP, USD bn (sum of the members)", "$.gdpPath", x="label", y="value", fmt="amount0", area="right"), SRC],
          links={"memberEconomies": ("economy", "Economies")}),
     Kind("region-economy", "REGE", "REGE-", "Region economy", G, "A state or territory (ISO 3166-2): population, GDP and GDP per head. An illustrative sample, rounded from public figures, not for reporting.", "regionId",
          [("Region", "$.name", None, None, False), ("Code", "$.regionCode", None, None, False), ("Country", "$.countryName", None, None, False),
@@ -191,7 +190,51 @@ def spec() -> PB.PackSpec:
                   "World Factbook (public domain). Every document names its source, dataset, retrieval date and licence in its Data source panel. An economy links to its region and income "
                   "group, labour market, fiscal position, IMF forecast and its headline indicators; the groups link back to their economies. Refresh with `tools/realdata/realdata.py` "
                   "(see docs/guides/REAL_DATA.md)." " The IMF figures (the forecasts, and the debt and net lending behind each fiscal position) are for **internal demonstrations only**: the IMF requires its permission for commercial use, so raise it before any client or external use (docs/guides/REAL_DATA.md, licence note)."),
-        roles={"economist": {"kinds": [k.kind for k in KINDS], "raw": True}})
+        roles={"economist": {"kinds": [k.kind for k in KINDS], "raw": True}},
+        derived={"macro-groupings": {"kinds": ["country-group"], "settings": GROUPINGS}})
+
+
+# ECG: the country groups computed from their member economies when asked (since 2.9.2; docs/guides/GROUPINGS_ANALYTICS_GUIDE.md), never
+# stored. An economy is in its World Bank region (REGION_GROUP), its income group (INCOME_GROUP) and the world (ECG-WLD). Sums: GDP and
+# population; GDP per capita: the members' GDP over their population (both known); real growth: weighted by GDP in USD (the World
+# Bank's weights); inflation: the median of the members (the World Bank's aggregate for consumer prices). Each member's latest year.
+GROUPINGS = {
+    "refresh": "60s",
+    "source-name": "macro-groupings",
+    "country-group": {
+        "from": "economy", "group-by": "$.REGION_GROUP", "also-group-by": {"income": "$.INCOME_GROUP", "world": "'ECG-WLD'"},
+        "id-field": "GROUP_ID", "search-fields": "NAME", "members": "MEMBER_ECONOMIES", "max-members": 100000, "rows-field": "ROWS",
+        "fields": {
+            "ECONOMIES": "count",
+            "GDP_USD_BN": "sum $.GDP_USD_BN",
+            "POPULATION_M": "sum $.POPULATION_M",
+            "GDP_PC_GDP": "sum $.POPULATION_M == null ? null : $.GDP_USD_BN",
+            "GDP_PC_POP": "sum $.GDP_USD_BN == null ? null : $.POPULATION_M",
+            "GROWTH_WEIGHTED": "sum $.GROWTH == null || $.GDP_USD_BN == null ? null : $.GDP_USD_BN * $.GROWTH",
+            "GROWTH_WEIGHT": "sum $.GROWTH == null || $.GDP_USD_BN == null ? null : $.GDP_USD_BN",
+            "INFLATION": "median $.INFLATION",
+            "WITH_GROWTH": "sum $.GROWTH == null ? 0 : 1",
+            "WITH_INFLATION": "sum $.INFLATION == null ? 0 : 1",
+            "REGION_KEYS": "distinct $.REGION_GROUP",
+            "REGION_NAMES": "distinct $.REGION_NAME",
+            "INCOME_NAMES": "distinct $.INCOME_NAME",
+            "YEARS": "distinct $.YEAR",
+            "PROVENANCE": "first $.PROVENANCE",
+        },
+        "rows": {"ECONOMY_ID": "$.ECONOMY_ID", "ECONOMY": "$.NAME", "ISO3": "$.ISO3", "GDP_USD_BN": "$.GDP_USD_BN", "POPULATION_M": "$.POPULATION_M",
+                 "GDP_PER_CAPITA": "$.GDP_PER_CAPITA", "GROWTH": "$.GROWTH", "INFLATION": "$.INFLATION", "YEAR": "$.YEAR", "GDP_PATH": "$.GDP_PATH"},
+        "then": {
+            "NAME": "$.GROUP_ID == 'ECG-WLD' ? 'World' : (size($.REGION_KEYS) == 1 && first($.REGION_KEYS) == $.GROUP_ID ? first($.REGION_NAMES) : first($.INCOME_NAMES))",
+            "GROUP_TYPE": "$.GROUP_ID == 'ECG-WLD' ? 'World' : (size($.REGION_KEYS) == 1 && first($.REGION_KEYS) == $.GROUP_ID ? 'World Bank region' : 'World Bank income group')",
+            "GDP_PER_CAPITA": "$.GDP_PC_POP > 0 ? $.GDP_PC_GDP * 1000 / $.GDP_PC_POP : null",
+            "GROWTH": "$.GROWTH_WEIGHT > 0 ? $.GROWTH_WEIGHTED / $.GROWTH_WEIGHT : null",
+            "YEAR": "last($.YEARS)",
+            "GDP_PATH": "group(flatten($.ROWS[*].GDP_PATH), 'YEAR', 'GDP')",
+            "TOP_ECONOMIES": "$.ROWS",
+        },
+        "sort": {"ROWS": "GDP_USD_BN desc", "TOP_ECONOMIES": "GDP_USD_BN desc 10"},
+    },
+}
 
 
 if __name__ == "__main__":

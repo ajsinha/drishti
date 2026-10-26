@@ -1,5 +1,4 @@
 # Lowest share of shown fields with a glossary entry, per Sutra (a ratchet: raise it when about.yaml grows, never lower it).
-country-group=1
 economic-forecast=1
 economy=1
 election=1

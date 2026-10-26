@@ -79,6 +79,14 @@ class PackSpec:
     # link fields that link from this pack's own kinds only (pack.yaml graph.fields.<F>.scope: pack): a generic name another pack's
     # documents also carry (world-economy's JURISDICTION, a JUR- id; gleif's is US-DE, core's DE) stays plain data there
     scoped_fields: set[str] = field(default_factory=set)
+    # connector -> {"kinds": [...], "settings": {...}}: kinds computed when asked by a derived connector (plugin derived) instead of
+    # stored: no Delta table, no samples and no documents; their ids are the group keys the members name (since 2.9.2,
+    # docs/guides/GROUPINGS_ANALYTICS_GUIDE.md)
+    derived: dict[str, dict] = field(default_factory=dict)
+
+    @property
+    def computed_kinds(self) -> set[str]:
+        return {k for c in self.derived.values() for k in c["kinds"]}
 
     @property
     def kinds(self) -> list[Kind]:
@@ -116,6 +124,7 @@ def manifest(spec: PackSpec, known_fields: dict[str, tuple[str, str]]) -> dict:
     if spec.impact:
         m["graph"]["impact"] = spec.impact
     for d, ks in spec.domains.items():
+        ks = [k for k in ks if k.kind not in spec.computed_kinds]
         settings = {"root": "${DRISHTI_DELTA_ROOT:${drishti.data.dir:./data}/delta}", "domain": d}
         if d in spec.effective_domains:
             settings.update({f"mode.{k.kind}": "effective" for k in ks})
@@ -125,9 +134,12 @@ def manifest(spec: PackSpec, known_fields: dict[str, tuple[str, str]]) -> dict:
         m["connectors"][f"{d}-store"] = {"plugin": "delta", "enabled": "${DRISHTI_LAKE_ENABLED:true}", "kinds": [k.kind for k in ks],
                                          "settings": settings}
         m["routes"].update({k.kind: f"{d}-store" for k in ks})
+    for name, c in spec.derived.items():
+        m["connectors"][name] = {"plugin": "derived", "enabled": "${DRISHTI_LAKE_ENABLED:true}", "kinds": list(c["kinds"]), "settings": c["settings"]}
+        m["routes"].update({k: name for k in c["kinds"]})
     if spec.columns:
         m["columns"] = spec.columns
-    form = {k.kind: PF.form_from_columns(spec.columns[k.kind], k.id_field) for k in kinds if spec.columns.get(k.kind)}
+    form = {k.kind: PF.form_from_columns(spec.columns[k.kind], k.id_field) for k in kinds if spec.columns.get(k.kind) and k.kind not in spec.computed_kinds}
     for kind, over in spec.form_overrides.items():
         for f in form.get(kind, []):
             f.update(over.get(f["path"], {}))
@@ -153,8 +165,9 @@ def overview(spec: PackSpec, docs: dict) -> str:
     first = spec.kinds[0]
     lines += MD.finding(first.mnemonic, first.label, first.prefix, pack=spec.name, code=spec.code)
     lines += ["## Where the data comes from", ""]
-    lines += t(["Connector", "Folder", "Kinds"], [[f"`{d}-store`", f"`data/delta/{d}/`", ", ".join(f"`{k.kind}`" for k in ks)]
-                                                  for d, ks in spec.domains.items()])
+    lines += t(["Connector", "Folder", "Kinds"], [[f"`{d}-store`", f"`data/delta/{d}/`", ", ".join(f"`{k.kind}`" for k in ks if k.kind not in spec.computed_kinds)]
+                                                  for d, ks in spec.domains.items()]
+               + [[f"`{n}`", "computed when asked (plugin `derived`)", ", ".join(f"`{k}`" for k in c["kinds"])] for n, c in spec.derived.items()])
     lines += ["## Kinds", ""]
     lines += t(["Kind", "Name", "Mnemonic", "Identifiers", "What it is"],
                [[f"`{k.kind}`", k.label, f"`{k.mnemonic}`", f"`{k.prefix}…`", k.desc] for k in spec.kinds])
@@ -183,6 +196,8 @@ def check(spec: PackSpec, docs: dict) -> list[str]:
                 v = d.get(f)
                 vals = [v] if isinstance(v, str) else [x for x in v if isinstance(x, str)] if isinstance(v, list) else []
                 for x in vals:
+                    if target in spec.computed_kinds:
+                        continue                                 # a computed kind's page exists as soon as a member names its key
                     if x not in docs.get(target, {}) and x not in spec.external_ids.get(target, set()):
                         problems.append(f"{k.kind}/{id_}: {f} -> {target}/{x} does not exist")
     return problems
@@ -212,7 +227,7 @@ def files(spec: PackSpec, docs: dict, known_fields: dict) -> dict[Path, str]:
                 out[base / "samples" / k.kind / f"{id_}.json"] = _json(spec, d) + "\n"
         out[base / "samples" / "catalog.json"] = _json(spec, catalog) + "\n"
     else:
-        for name, text in SAMPLES.files({k.kind: docs.get(k.kind, {}) for k in spec.kinds}, catalog, SAMPLES.part_mb(sys.argv),
+        for name, text in SAMPLES.files({k.kind: docs.get(k.kind, {}) for k in spec.kinds if k.kind not in spec.computed_kinds}, catalog, SAMPLES.part_mb(sys.argv),
                                         None if spec.compact_json else 1).items():
             out[base / "samples" / name] = text
     out[base / "guides" / f"{spec.name}.md"] = overview(spec, docs)
