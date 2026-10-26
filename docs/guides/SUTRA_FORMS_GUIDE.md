@@ -24,8 +24,9 @@ the Sutra:
 | The table's cells | `edit: cells` | A ✎ marks the editable columns; people type into the cells, like a spreadsheet |
 | A guided drawer | `new: drawer` | **New** opens a drawer over the dimmed page, one step at a time |
 
-Saving keeps a **draft** for each person, on the server. Nothing is sent to the source system yet: write-back through the connectors
-arrives in 2.8.0 ([WRITE_BACK.md](../architecture/WRITE_BACK.md)). The design is
+Saving keeps a **draft** for each person, on the server. A form whose Sutra has `save:` also **submits** the draft as a change: a
+correction kept beside the source, an owned record, or an amendment sent through a connector, after approval where the policy asks
+([section 4a](#4a-submitting-a-change-280-write-back), [WRITE_BACK.md](../architecture/WRITE_BACK.md)). The design is
 [SUTRA_NEXT.md section 10](../architecture/SUTRA_NEXT.md#10-forms-and-data-entry); every key is in
 [RACHANA_REFERENCE.md](RACHANA_REFERENCE.md#forms-form-on-a-panel).
 
@@ -179,6 +180,52 @@ Drafts are kept per person on the server (the content store), through `/api/v1/d
 The page says **You have 2 drafts on this page**, with **Resume** (the form opens again where it was: the row, the cells, the step) and
 **Discard** for each. Every save is checked again on the server with the same rules; a value for a field masked for the person, or a
 change to a field they may not edit, is refused; each save and discard is in the audit log.
+
+## 4a. Submitting a change (2.8.0 write-back)
+
+A form whose Sutra says where it goes, with `save:`, also has **Submit…** (2.8.0, [WRITE_BACK.md](../architecture/WRITE_BACK.md)). Its
+fields' `bind` are the record's fields the change writes:
+
+```yaml
+form:
+  title: Edit trade
+  key: trade_id
+  edit: beside
+  save:                                  # without save:, the form keeps drafts only
+    kind: trade                          # the records' kind (the page's kind when absent: here the page is a book's trades)
+    target: overlay                      # overlay | owned | source
+    approval: one                        # none | one | two (the site's policy may ask for more, never fewer)
+    reason: required                     # required | optional
+    # command: amend-notional            # target source: a command of the connector's writes: (create: for a new record)
+    # connector: trade-murex             # target source: the connector (the one connector of the kind that writes when absent)
+  fields: [ ... ]
+```
+
+| `target` | What Submit does | Shown |
+|---|---|---|
+| `overlay` | keeps a **correction** in Drishti beside the source's value (the source is not changed) | every page that reads the record shows the corrected value, and *How this view was built* says **Edited here** with the change id and who made it |
+| `owned` | saves the record itself (Drishti is its system of record) | every page that reads it |
+| `source` | sends a command of the connector's `writes:` to the source system, through the outbox | *pending at the source* until it confirms; refused, the page shows the source's value again |
+
+**Submit** saves the draft, then opens the **review and confirm sheet**: for each record, what you saw, what is there now and your
+change, with a field that moved since you opened it flagged before you send anything; where it goes (*Correction kept … (overlay)*,
+*Amend in trade-murex (command amend-notional)*); who must approve (*One approver (not you): K. Rao or M. Diaz*); what it will
+recompute (the reactive connectors whose triggers fire on a change to the kind); and the reason box. **Confirm and submit** turns the draft
+into one change request per record. The sheet then follows each change: *Waiting for an approver*, *Approved*, *Applied* (the draft is
+closed with the change id), or *Conflicted: the record moved* / *Refused* with the reason (the draft is kept and the drafts bar says so,
+to edit again). A toast says it too when the sheet is closed.
+
+Who may submit: editing must be on (`config/edit/edit.yaml`), the person needs the **edit** power (Admin → Roles: *Submit edits*), and
+every field they change must be editable for them (not masked, not read-only, their role in `editable-by`). An approver is never the
+person who submitted (four eyes); they decide in **Review → Changes** (Build → Govern → Changes). The server checks everything again, and
+the lane owner checks it once more when it applies the change, against the record as it is then: a field that moved is *conflicted*,
+never written over. A new record from the drawer can be submitted only to `owned` or `source` (with `create:`), never as a correction.
+People who watch the record see the new value at once on its page (masked for them), with *Changed by … just now*.
+
+From the command line, the same request: `drishti.py change submit d-4ab964fa3060 --reason "booking typo"` or
+`drishti.py change propose --kind trade --id MX-20000012 --set NOTIONAL=28001250 --from NOTIONAL=28000000 --reason "booking typo"`
+([TOOLS.md](TOOLS.md)); the API is `POST /api/v1/changes` ([API_GUIDE.md](API_GUIDE.md#write-back-changes-280)). A worked example with
+pictures is [tutorial 24](../tutorials/24-correct-a-trade-and-approve-it.md).
 
 ## 5. With the Sutra designer
 

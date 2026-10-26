@@ -61,7 +61,7 @@ public final class ConnectorFiles {
     /** A connector's logical name: lower case letters, digits and hyphens, starting with a letter or digit. */
     public static final Pattern NAME = Pattern.compile("[a-z0-9][a-z0-9-]{0,63}");
     private static final Set<String> KEYS = Set.of("name", "plugin", "enabled", "kinds", "description", "settings", "requires", "mode", "reads",
-            "engine", "triggers", "coalesce", "cache", "limits", "history", "incremental");
+            "engine", "triggers", "coalesce", "cache", "limits", "history", "incremental", "writes");
     /** The keys of a computation (docs/architecture/REACTIVE_CONNECTORS.md section 5): only a connector of the {@code reactive} plugin has them. */
     public static final List<String> COMPUTE_KEYS = List.of("reads", "engine", "triggers", "coalesce", "cache", "limits", "history", "incremental");
     /** The setting a reactive connector's computation reaches its plugin in: the {@code compute} block as JSON. */
@@ -99,9 +99,19 @@ public final class ConnectorFiles {
      * @param compute a reactive connector's computation as written ({@code mode}, {@code kinds} with their {@code params}, {@code reads},
      *        {@code engine}, {@code triggers}, {@code coalesce}, {@code cache}, {@code limits}, {@code history}), empty for any other connector;
      *        it reaches the plugin as the setting {@link ConnectorFiles#COMPUTE_SETTING}
+     * @param writes the {@code writes:} block as written (WRITE_BACK.md section 5.4): named commands, each with its plugin's template, its
+     *        concurrency guard and idempotency clause; empty when the connector is read-only (every shipped one). The server validates it
+     *        when the connector loads; a connector writes only once an administrator also switches its writes on
      */
     public record Definition(String name, String plugin, String enabled, List<String> kinds, String description,
-            Map<String, String> settings, String text, String etag, Instant modified, Map<String, Object> requires, Map<String, Object> compute) {
+            Map<String, String> settings, String text, String etag, Instant modified, Map<String, Object> requires, Map<String, Object> compute,
+            Map<String, Object> writes) {
+
+        /** A definition without {@code writes:}. */
+        public Definition(String name, String plugin, String enabled, List<String> kinds, String description, Map<String, String> settings,
+                String text, String etag, Instant modified, Map<String, Object> requires, Map<String, Object> compute) {
+            this(name, plugin, enabled, kinds, description, settings, text, etag, modified, requires, compute, Map.of());
+        }
 
         /** A definition without {@code requires:}. */
         public Definition(String name, String plugin, String enabled, List<String> kinds, String description, Map<String, String> settings,
@@ -118,6 +128,7 @@ public final class ConnectorFiles {
         public Definition {
             requires = requires == null ? Map.of() : java.util.Collections.unmodifiableMap(new LinkedHashMap<>(requires));
             compute = compute == null ? Map.of() : java.util.Collections.unmodifiableMap(new LinkedHashMap<>(compute));
+            writes = writes == null ? Map.of() : java.util.Collections.unmodifiableMap(new LinkedHashMap<>(writes));
             kinds = kinds == null ? List.of() : List.copyOf(kinds);
             settings = settings == null ? Map.of() : java.util.Collections.unmodifiableMap(new LinkedHashMap<>(settings));
             description = description == null ? "" : description;
@@ -320,11 +331,11 @@ public final class ConnectorFiles {
         ConnectorOverlay.Entry shared = o == null ? null : o.get(name);
         if (shared != null) {
             return new Definition(d.name(), d.plugin(), d.enabled(), d.kinds(), d.description(), d.settings(), text, etag(text), shared.at(),
-                    d.requires(), d.compute());
+                    d.requires(), d.compute(), d.writes());
         }
         try {
             return new Definition(d.name(), d.plugin(), d.enabled(), d.kinds(), d.description(), d.settings(), text, etag(text),
-                    Files.getLastModifiedTime(file(name)).toInstant(), d.requires(), d.compute());
+                    Files.getLastModifiedTime(file(name)).toInstant(), d.requires(), d.compute(), d.writes());
         } catch (IOException e) {
             throw new UncheckedIOException(e);
         }
@@ -348,7 +359,7 @@ public final class ConnectorFiles {
         for (String k : m.keySet()) {
             if (!KEYS.contains(k)) {
                 throw new InvalidFile(name + ".yaml: unknown key '" + k + "' (allowed: plugin, enabled, kinds, description, settings, requires; "
-                        + "a reactive connector also mode, reads, engine, triggers, coalesce, cache, limits, history)");
+                        + "a reactive connector also mode, reads, engine, triggers, coalesce, cache, limits, history; a connector that writes also writes)");
             }
         }
         if (m.get("name") != null && !name.equals(String.valueOf(m.get("name")))) {
@@ -415,8 +426,17 @@ public final class ConnectorFiles {
         }
         @SuppressWarnings("unchecked")
         Map<String, Object> requires = req == null ? Map.of() : (Map<String, Object>) req;
+        Object wr = m.get("writes");
+        if (wr != null && !(wr instanceof Map<?, ?>)) {
+            throw new InvalidFile(name + ".yaml: 'writes' is a mapping of named commands (WRITE_BACK.md section 5.4)");
+        }
+        if (wr != null && reactive) {
+            throw new InvalidFile(name + ".yaml: a reactive connector computes; it is never a write target (no 'writes')");
+        }
+        @SuppressWarnings("unchecked")
+        Map<String, Object> writes = wr == null ? Map.of() : (Map<String, Object>) wr;
         return new Definition(name, String.valueOf(plugin).trim(), en == null ? null : String.valueOf(en), kinds,
-                m.get("description") == null ? "" : String.valueOf(m.get("description")), settings, text, etag(text), null, requires, compute);
+                m.get("description") == null ? "" : String.valueOf(m.get("description")), settings, text, etag(text), null, requires, compute, writes);
     }
 
     /** A pack template's computation when its plugin is {@code reactive} (empty otherwise, or when it is not usable: the file says why). */
@@ -718,6 +738,12 @@ public final class ConnectorFiles {
     /** As above, keeping a reactive connector's computation ({@code mode}, {@code kinds} with parameters, {@code reads}, ...) as written. */
     public String render(String header, String plugin, Object enabled, List<String> kinds, String description, Map<String, ?> settings,
             Map<String, Object> requires, Map<String, Object> compute) {
+        return render(header, plugin, enabled, kinds, description, settings, requires, compute, Map.of());
+    }
+
+    /** As above, keeping a {@code writes:} block (WRITE_BACK.md section 5.4) as written. */
+    public String render(String header, String plugin, Object enabled, List<String> kinds, String description, Map<String, ?> settings,
+            Map<String, Object> requires, Map<String, Object> compute, Map<String, Object> writes) {
         Map<String, Object> doc = new LinkedHashMap<>();
         doc.put("plugin", plugin);
         if (compute != null && compute.get("mode") != null) {
@@ -745,6 +771,9 @@ public final class ConnectorFiles {
         plain.remove(COMPUTE_SETTING);                      // the computation is written as itself above, never as JSON in settings
         if (!plain.isEmpty()) {
             doc.put("settings", nest(plain));
+        }
+        if (writes != null && !writes.isEmpty()) {
+            doc.put("writes", writes);
         }
         try {
             String text = (header == null || header.isBlank() ? "" : header.stripTrailing() + "\n") + yaml.writeValueAsString(doc);

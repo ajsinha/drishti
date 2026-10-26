@@ -17,6 +17,33 @@
 
 ## Unreleased
 
+- **Write-back W1 to W7 (2.8.0): forms save through connectors, with the edit log on the Drishti database.** A form whose Sutra has
+  `save:` (`target: overlay | owned | source`, `approval`, `reason`, `command`/`create` for a connector's `writes:`) gets **Submit…**:
+  the draft is saved, the review and confirm sheet shows per record what you saw, what is there now and your change (a field that moved
+  is flagged before you send), where it goes, who approves (never you) and what it recomputes, and **Confirm** turns it into change
+  requests (`POST /api/v1/changes`, `/changes/preview`). A change waits for approval in `drishti_edit_request` (four eyes, the policy's
+  approver roles; **Review → Changes**), then is appended to its record's lane in `drishti_edit_log` and acknowledged only after commit;
+  P lanes (64) with one virtual-thread worker each apply in seq order, ownership taken in the database by a conditional update with a
+  lease and every append, apply and command fenced by the epoch (a zombie owner writes nothing); the handler re-checks the person's
+  rights, masks and the form's rules at apply time and conflicts a change whose fields moved (the three-way difference in words), never
+  overwriting. Overlays and owned values are written in the same transaction and laid over every document the router reads (*How this
+  view was built* says *Edited here*; a form's row on another kind's page too); a page watching the record updates (live frames, or drawn
+  again with *Changed … just now*). In a cluster: a shared PostgreSQL edit log (lanes spread by the ring, forwarding to the owner, failover
+  by lease) or an edit primary (the API forwarded to it, overlays followed, *Edits are paused* while it is down); `edit.log: auto` decides.
+  Source commands go through the outbox: `SourcePlugin.write`, connector files' `writes:` validated at load (guard and idempotency
+  required, unknown `:param` refused: Admin → Connectors and Admin → Edits say why), the JDBC plugin's guarded, idempotent statements,
+  `reply` or `next-load` confirmation, resend with the same change id after a failover; File, Delta and Iceberg never write. Every applied
+  change publishes `edit.applied` to the reactive connectors (a `write-back` event with the watermark `L<lane> -> seq`, replayed per lane
+  from the edit log). **Off by default** at every level: `config/edit/edit.yaml` (`edit.enabled: false`), a form's `save:`, a connector's
+  `writes:` switched on by an administrator; the `edit` power on a role (Admin → Roles: *Submit edits*; the shipped `admin` role) and the
+  `edit` token scope. New: Admin → Edits, `drishti.py change propose|submit|list|show|approve|reject|withdraw|history` and `edits status`,
+  DRS-9301 to DRS-9306, `drishti.edit.file` (`DRISHTI_EDIT_FILE`), the book desk's form submits a trade's correction (one approver),
+  tutorial 24, [EDITS.md](docs/admin/EDITS.md). Decisions taken while building and what is not built (the S3 edit log, the lake fold of
+  overlays, the per-column `edit:`): [WRITE_BACK.md section 19](docs/architecture/WRITE_BACK.md#19-as-built-280-2026-10-25)
+  (WriteBackFlowTest, WriteBackOffTest, EditLogTest, LanesTest, EditTriggersTest, JdbcWritesTest, test_write_back.py,
+  test_write_back_browser.py, test_changecli.py). Also: the console's shared live connection now listens for `switches` events, which
+  Admin → Commands sends (they were dropped by the hub).
+
 - **Fixed: a flurry of old notices on opening the console.** When the first live stream opened on a server after a quiet spell (a
   restart, or the only tab reopened), InboxHub re-read its window of the last 100 inbox rows for late commits and pushed them all as
   new, so days-old "Run finished" notices toasted at once. Rows already in the inbox when the stream opens now count as delivered

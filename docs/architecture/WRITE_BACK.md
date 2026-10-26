@@ -15,7 +15,8 @@
 -->
 # Write-back: editing and saving fields on a Sutra page
 
-Status: **design, not built.** Planned for **2.8.0** (decided 2026-10-19 as 2.7.0; moved to 2.8.0 on 2026-10-21; 2.7.0 is Sutra Next since 2026-10-22; AI is 2.9.0); decisions in section 16 (2026-10-19 and
+Status: **W1 to W7 built (2.8.0, unreleased, 2026-10-25): [section 19](#19-as-built-280-2026-10-25)** says what is built, what is not, and the
+decisions taken while building. Planned for **2.8.0** (decided 2026-10-19 as 2.7.0; moved to 2.8.0 on 2026-10-21; 2.7.0 is Sutra Next since 2026-10-22; AI is 2.9.0); decisions in section 16 (2026-10-19 and
 2026-10-20). Related: [DATABASE.md](DATABASE.md) (the one Drishti database: the edit log, lanes, overlays and owned data live in it;
 2.8.0 item 0), [RUPAKA.md](RUPAKA.md) (Sutra and the renderer), [DRISHTI_NET.md](DRISHTI_NET.md) (several servers),
 [GENUI.md](GENUI.md) section 11 (write-back forms, deferred to this design), [BI_DESIGN.md](BI_DESIGN.md) (review and proposals, reused
@@ -36,7 +37,8 @@ results are pushed to the people watching them: [section 18](#18-280-saving-thro
 12. [Off by default and controlled by roles](#12-off-by-default-and-controlled-by-roles) ·
 13. [APIs, CLI and configuration](#13-apis-cli-and-configuration) · 14. [Build plan](#14-build-plan) · 15. [Tests](#15-tests) ·
 16. [Decisions](#16-decisions-product-owner-2026-10-19-and-2026-10-20) · 17. [Risks and open questions](#17-risks-and-open-questions) ·
-18. [2.8.0: saving through connectors, triggers and viewers](#18-280-saving-through-connectors-triggers-and-viewers)
+18. [2.8.0: saving through connectors, triggers and viewers](#18-280-saving-through-connectors-triggers-and-viewers) ·
+19. [As built (2.8.0, 2026-10-25)](#19-as-built-280-2026-10-25)
 
 ## 1. The ask
 
@@ -530,14 +532,14 @@ Overlay and owned targets need the first and third levels only; a source target 
 - **Configuration**, like connectors and Drishti*net, in its own folder `config/edit/`: `edit.yaml` (`enabled: false` as shipped,
   `log: auto`, `primary:`, `s3:`, `follow:`; section 11), `policy.yaml` (defaults per kind and target, approval, the restate role),
   `lanes.yaml` (lanes, max-lane-depth, lane-warn, lane-lease, timeouts), `retention.yaml` (the edit log, section 16). The edit-log
-  tables live in the Drishti database, configured in `config/db/database.yaml` ([DATABASE.md](DATABASE.md)). Writes to a source are
+  tables live in the Drishti database, configured in `config/db/database.yaml` (planned) ([DATABASE.md](DATABASE.md)). Writes to a source are
   the connector file's `writes:` (section 5.4), off unless declared and switched on.
 
 ## 14. Build plan
 
 | Phase | What | Accepted when |
 |---|---|---|
-| W0 | **The one Drishti database** ([DATABASE.md](DATABASE.md), 2.8.0 item 0): one pool and `config/db/database.yaml`, two complete schema files with a parity test, the schema version stamp, `drishti.py db copy` | a 2.6.5 data folder starts with its users and settings; SQLite → PostgreSQL → SQLite keeps every row; a mismatched stamp refuses to start and names `db copy` |
+| W0 | **The one Drishti database** ([DATABASE.md](DATABASE.md), 2.8.0 item 0): one pool and `config/db/database.yaml` (planned), two complete schema files with a parity test, the schema version stamp, `drishti.py db copy` | a 2.6.5 data folder starts with its users and settings; SQLite → PostgreSQL → SQLite keeps every row; a mismatched stamp refuses to start and names `db copy` |
 | W1 | `edit:` in the Sutra schema and lint; Change API; the off-by-default switches and the roles (section 12); **the edit log on a single node with SQLite**: `drishti_edit_lane` and `drishti_edit_log` in both schema files, acknowledgement after commit, replay from `applied_seq`, the epoch checks (trivially one owner); lanes and handler; **owned** kinds and **overlays** as rows in the same transaction (corrections and notes first, section 16), overlays laid over the document at read time; version check; retention; inline edit and the pending bar | two users editing the same field: the second is conflicted with a diff, never silently overwritten; 100,000 concurrent changes over 1,000,000 entities on 64 lanes apply in per-entity order with no lost update (property test); a server killed after an acknowledgement applies the change once after restart; a fresh install is read-only |
 | W2 | Approval (four eyes), Review → Changes, history, CLI | a change needing approval cannot apply without it; self-approval refused |
 | W3 | **The cluster:** lane ownership by conditional UPDATE (the ring suggests), **fencing** by epoch on every append and apply, forwarding from any node, failover by lease; the **PostgreSQL** shared log, the **S3** log (lease by ETag, fences), the **edit primary** fallback, `edit.log: auto` and its rule, Admin → Edits (store, owners, warnings); the loader folding approved overlays into the next day's lake build (section 16) | the three cluster acceptance tests of section 15 pass on PostgreSQL and on S3; an approved overlay appears in the next lake build and in BI |
@@ -591,7 +593,7 @@ follows as 2.9.0; GenUI's write-back forms build on this. W0 comes first (2026-1
 
 4. **One Drishti database** ([DATABASE.md](DATABASE.md)): the edit log, lanes, overlays and owned data live in the same database as
    identity; PostgreSQL long term, SQLite the default for one node; no migrations (two complete schema files, a parity test, a version
-   stamp, `drishti.py db copy`); its own file `config/db/database.yaml`. Built first, as 2.8.0 item 0 (W0).
+   stamp, `drishti.py db copy`); its own file `config/db/database.yaml` (planned). Built first, as 2.8.0 item 0 (W0).
 5. **A durable shared edit log replaces "replicated like user state"** (sections 7 and 11): `drishti_edit_lane` (ownership by
    conditional UPDATE; the ring only suggests) and `drishti_edit_log` (acknowledged only after commit; order by seq; replay from the
    last applied seq); every apply fenced by the epoch in the same transaction; any console to any server, forwarded to the owner.
@@ -620,12 +622,12 @@ follows as 2.9.0; GenUI's write-back forms build on this. W0 comes first (2026-1
    for bulk loads (which go through the loader).
 6. **A source that cannot guard or de-duplicate** (no version, no change-id column, no idempotency key) cannot have a `writes:`
    command; such a source is edited through overlays only.
-7. **Open:** the pilot's kind, field and connector for W4.
+7. **Open:** the pilot's kind, field and connector for W4. *Decided while building (2026-10-25): JDBC first, no shipped connector writes (section 19, decision 11).*
 8. **Open (2.8.0 additions, section 18):** should a change whose recompute fails stay applied (proposed: yes, the change is the record;
-   the computation catches up) or be held until the recompute succeeds?
+   the computation catches up) or be held until the recompute succeeds? *Decided while building (2026-10-25): it stays applied (section 19, decision 8).*
 9. **Open:** must a write-back that changes risk materially (an incremental VaR above a threshold) require a second approver, with the
-   threshold read from the recompute (a pre-trade check), or is that a later feature?
-10. **Open:** should the submitter's own impact (section 18.5) be kept with the change in the edit log for audit, or only shown?
+   threshold read from the recompute (a pre-trade check), or is that a later feature? *Decided while building (2026-10-25): a later feature (decision 9).*
+10. **Open:** should the submitter's own impact (section 18.5) be kept with the change in the edit log for audit, or only shown? *Decided while building (2026-10-25): the compute audit only (decision 10).*
 
 ## 18. 2.8.0: saving through connectors, triggers and viewers
 
@@ -746,3 +748,57 @@ three-way diff and *Take theirs*, *Edit again* or *Apply mine anyway* (the `over
 
 W6 and W7 in section 14. They depend on W1 (the edit log) and on [REACTIVE_CONNECTORS.md](REACTIVE_CONNECTORS.md) steps R1 to R4; the
 VaR use is [VAR_ENGINE.md](VAR_ENGINE.md) step V5.
+
+## 19. As built (2.8.0, 2026-10-25)
+
+W1 to W7 are built (unreleased) in `drishti-server` (`com.ash.drishti.server.edit`), with the JDBC plugin's writes, the router's overlay
+layer in `drishti-engine`, `form.save` in `drishti-rachana`, the console's Submit, Review → Changes and Admin → Edits, and
+`drishti.py change` / `edits`. The administrator's guide is [EDITS.md](../admin/EDITS.md); the author's is
+[SUTRA_FORMS_GUIDE.md section 4a](../guides/SUTRA_FORMS_GUIDE.md#4a-submitting-a-change-280-write-back); a worked example is
+[tutorial 24](../tutorials/24-correct-a-trade-and-approve-it.md).
+
+| Wave | Status | As built |
+|---|---|---|
+| W1 | **built** | `drishti_edit_lane`, `drishti_edit_log` (and `drishti_edit_request`, `drishti_overlay`, `drishti_owned`, `drishti_edit_version`, `drishti_edit_cursor`) in both schema files (the parity test holds); `EditLog`: append fenced by the epoch and acknowledged after commit, ordered by seq, a retry with the same change id not appended twice, `Busy` past `max-lane-depth`; `Lanes`: `murmur3(key) mod P`, one virtual-thread worker per owned lane woken by an append, replay from `applied_seq`; `EditHandler`: re-checks at apply (the switch, the edit power, the kind, masks, the form's roles and read-only fields, restate and override roles), field-level conflict, the form's rules over the record as it is now, overlay or owned rows and the version in the apply's transaction; overlays laid over every document the router reads (`DocumentLayer`), *How this view was built* says *Edited here*; the Change API; the `edit` power and the `edit` token scope; off by default (`config/edit/`); retention (7 years) |
+| W2 | **built** | four-eyes approval (`drishti_edit_request`, compare-and-set decisions, never your own, the policy's approver roles), Review → Changes, a record's history (`GET /entities/{kind}/{id}/history`), `drishti.py change ...` |
+| W3 | **built** (PostgreSQL and the edit primary; S3 not built) | lane ownership by conditional UPDATE with a lease taken on the database's clock, the ring (rendezvous hashing over the alive members) suggesting who tries, renewal every lease/3 and a lane stopped at once when renewal fails, every append, apply and command fenced by the epoch; a change submitted on any node forwarded to its lane's owner (signed, on behalf of the person: `POST /net/edits/append`); applied changes broadcast to the other members (caches dropped, viewers and consoles told); `edit.log: auto` with its rule and the explicit values checked; the edit primary: the other nodes forward the whole write-back API to it (`EditForwardFilter`) and copy its overlays (`edit.follow`), *Edits are paused* while it is unreachable; Admin → Edits with the store, lanes and warnings |
+| W4 | **built** (JDBC) | `SourcePlugin.writeKey/checkWrite/write`; connector files' `writes:` parsed, kept by the form and template updates, validated at load (guard and idempotency required, unknown `:param` refused: a warning on `writes.<command>`, the connector read-only for it); writes switched on per connector by an administrator (audited, the switch ledger); the outbox: `command: pending` in the apply's transaction, sent in seq order, one in flight per record, `sent`/`applied`/`refused` fenced, `reply` and `next-load` confirmation, resend with the same change id after a failover; a refusal withdraws the pending overlay and fires the triggers again. File, Delta and Iceberg connectors never write (the lake is not written per edit); every other plugin is refused at load |
+| W5 | **built** (forms) | Submit on a form beside the table, on the cells' review and on the New drawer's last step; the phone width shows the sheet full-screen; the forms guide, the API and tools guides, the admin guide and tutorial 24 |
+| W6 | **built** | `form.save` (`kind`, `target`, `connector`, `command`, `create`, `approval`, `reason`) in the schema and lint; Submit turns the draft into one change per record (`POST /changes {draft}`), the server re-checks the form's rules, the draft is closed with the change id when applied and marked when refused, conflicted or rejected; the review and confirm sheet (`POST /changes/preview`); the trading pack's book desk ships with `save:` (a trade's correction, one approver) |
+| W7 | **built** | `edit.applied` published after the commit to every reactive connector (`ReactiveHub.publish`, a `write-back` event: the change id as its id, the fields changed, the watermark `L<lane> -> seq`; `when: confirmed` / `refused` for a source target); durable by the edit log (a per-lane cursor, `drishti_edit_cursor`, replayed when a lane is gained); the submitter told of the recompute; every live view of the record (and of the page row) reads it again with its own masks, also for a record no source streams; the consoles hear `edit` events (the submitter's steps, *changed by … just now* for viewers, the name only for who may see the edit history) |
+
+Not built, and why: the per-column `edit:` block of section 4 with inline editing and the pending-change bar (forms with `edit: cells`
+give the same editing; a decision below); the S3 edit log (W3; PostgreSQL is the answer on AWS); folding approved overlays into the next
+lake build (W3; the loader's change, planned); archiving entries past the hot window to signed files (decision 16.3; entries are kept and
+then deleted); the cluster acceptance tests of section 15 on real PostgreSQL nodes (the fencing, failover and ordering are tested on one
+database with several owners); a REST or Kafka plugin's writes (JDBC first, the pilot); the submitter's own incremental impact (it waits
+for VaR's step V5).
+
+**Decided while building (2026-10-25)** (the designs' recommendations where they had one):
+
+1. **The Drishti database is the identity database's pool** for now: DATABASE.md item 0 (`config/db/database.yaml` (planned), `db copy`, the stamp) is
+   not built, so the write-back tables are in the two existing complete schema files and use the identity pool, which is the same database.
+2. **Lease times are epoch milliseconds on the database's clock** (`lease_until BIGINT`), so SQLite and PostgreSQL compare them the same way.
+3. **The entry's signature is a SHA-256 digest** over its lane, seq, change id, epoch and body (`EditLog.intact`); signing with a key is
+   not needed for tamper evidence inside one database.
+4. **What is editable is declared by a form's `save:`** (SUTRA_NEXT.md section 11 and section 18.1 here) rather than an `edit:` block per
+   column: the form already carries the types, rules, roles, read-only fields and masks; `edit: cells` is the inline editing.
+5. **The version check is field-level by value**: each item's `from` (what the person saw) is compared with the field's current value, read
+   from the page row the person saw (a form over another kind's rows) or else the record, overlays included; `basedOn` is kept for audit
+   and the record's `version` counts applied changes.
+6. **A form over another kind's rows** (the book desk's trades) writes the overlay for the record (`trade`, `$.NOTIONAL`) and for the row
+   of the page it was made on (`portfolio-trades`, `$.TRADES[TRADE_ID=…].NOTIONAL`), so both pages show the correction.
+7. **A source target shows its value as pending** (an overlay) until the source confirms; a refusal withdraws it (section 18.4).
+8. **Open question 8: a change whose recompute fails stays applied** (the change is the record; the computation catches up).
+9. **Open question 9: a second approver from a recompute's threshold is a later feature.**
+10. **Open question 10: the submitter's impact is recorded in the compute audit only** (and waits for V5).
+11. **Open question 7: the pilot is JDBC first**; no shipped connector declares `writes:`.
+12. **A person the user directory does not hold** (a token whose roles the site trusts, `registered-users-only: false`) is re-checked at
+    apply time with the roles they submitted with; a person in the directory with their roles now.
+13. **A node with Drishti*net on that expects no peers counts as alone** (auto rule 2): edits use its SQLite log.
+14. **A source change of several fields sends one command per field**, each with its own change id (`<id>#1`, `#2`).
+15. **`edit.log: s3` is refused** with *an S3 edit log is designed, not built*.
+16. **With no `approver-roles`, approvers are the approve power's holders and administrators.**
+17. **A new record cannot be an overlay** (there is no source record to lay it over): `owned` or `source` with `create:`.
+18. **An administrator's overlay withdrawal** (Admin → Edits) is one transaction outside the lanes; the views and the other nodes are told.
+19. **On a shared PostgreSQL database each node caches overlays per record**, dropped by the broadcast of an applied change and every 30 s.

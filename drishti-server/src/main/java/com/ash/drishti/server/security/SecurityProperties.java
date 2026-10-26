@@ -86,12 +86,18 @@ public record SecurityProperties(Boolean enabled, String secret, Duration clockS
      * @param collaborate may share, comment and mention; true unless set to false
      * @param compliance may place legal holds, export the collaboration record and read any share; false unless set
      * @param bi business-intelligence powers (Rupaka): any of {@code bi}, {@code bi-author}, {@code bi-steward}, {@code bi-admin}; an administrator holds all
+     * @param edit may submit changes through write-back (WRITE_BACK.md section 12); false unless set
      */
     public record Role(List<String> kinds, Boolean raw, Boolean author, Boolean admin, Boolean approve, Boolean calc, Boolean layout, Boolean collaborate, Boolean compliance,
-            List<String> bi) {
+            List<String> bi, Boolean edit) {
 
         public Role(List<String> kinds, Boolean raw, Boolean author, Boolean admin, Boolean approve, Boolean calc, Boolean layout, Boolean collaborate, Boolean compliance) {
-            this(kinds, raw, author, admin, approve, calc, layout, collaborate, compliance, null);
+            this(kinds, raw, author, admin, approve, calc, layout, collaborate, compliance, null, null);
+        }
+
+        public Role(List<String> kinds, Boolean raw, Boolean author, Boolean admin, Boolean approve, Boolean calc, Boolean layout, Boolean collaborate, Boolean compliance,
+                List<String> bi) {
+            this(kinds, raw, author, admin, approve, calc, layout, collaborate, compliance, bi, null);
         }
 
         @org.springframework.boot.context.properties.bind.ConstructorBinding
@@ -106,6 +112,7 @@ public record SecurityProperties(Boolean enabled, String secret, Duration clockS
             layout = layout == null || layout;
             collaborate = collaborate == null || collaborate;
             compliance = compliance != null && compliance;
+            edit = edit != null && edit;
         }
     }
 }

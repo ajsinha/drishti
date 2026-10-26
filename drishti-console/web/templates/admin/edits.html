@@ -1,0 +1,88 @@
+{#
+  Project Drishti · Any data. Any domain. One grammar.
+
+  Copyright (c) 2026 Ashutosh Sinha <ajsinha@gmail.com>.
+  All rights reserved.
+
+  PROPRIETARY AND CONFIDENTIAL.
+
+  This file is the confidential and proprietary property of Ashutosh Sinha.
+  Unauthorised copying, use, modification, distribution or disclosure of this
+  file, via any medium, is strictly prohibited except with the express prior
+  written permission of the copyright holder.
+
+  See the LICENSE file in the root of this repository for the full terms.
+#}
+{% extends "base.html" %}
+{% block title %}Edits · {{ PRODUCT }}{% endblock %}
+{% block head %}<link rel="stylesheet" href="/static/css/admin-packs.css?v={{ ASSET_V }}">{% endblock %}
+{% block screen %}admin{% endblock %}
+{% block body_class %}terminal{% endblock %}
+{% block nav %}{% include "terminal/_topbar.html" %}{% endblock %}
+{% block content %}
+<div class="adm" data-edits>
+  {% with tab='edits' %}{% include "admin/_nav.html" %}{% endwith %}
+  <h1 class="ws-h">Edits</h1>
+  <p class="text-muted-d">Write-back: where the edit log lives and why, the lanes (each record's changes go through one lane, in order; lanes apply
+    in parallel), the source commands not confirmed, each connector's <span class="mono">writes:</span> and the corrections shown over the sources.
+    Settings: <span class="mono">{{ s.origin }}</span>.</p>
+  {% if not s.enabled %}<p class="adm-warn" role="status" data-off><i class="bi bi-info-circle" aria-hidden="true"></i>
+    Editing is switched off on this server (<span class="mono">edit.enabled</span> in <span class="mono">config/edit/edit.yaml</span>): no change is
+    accepted and no Submit is shown. Corrections applied earlier are still shown.</p>{% endif %}
+  {% for w in s.warnings or [] %}<p class="adm-warn" role="alert" data-warning><i class="bi bi-exclamation-triangle" aria-hidden="true"></i> {{ w }}</p>{% endfor %}
+
+  <h2 class="cmp-h">The edit log</h2>
+  <dl class="adm-dl" data-store>
+    <dt>Store</dt><dd class="mono">{{ s.store }}</dd>
+    <dt>Mode</dt><dd class="mono">{{ s.mode }}{% if s.primary %} (edit primary {{ s.primary }}){% endif %}</dd>
+    <dt>Why</dt><dd>{{ s.why }}</dd>
+    <dt>This node</dt><dd class="mono">{{ s.node }}</dd>
+    <dt>Editable kinds</dt><dd class="mono">{{ (s.editableKinds or []) | join(', ') or 'none: no Sutra form has save:' }}</dd>
+  </dl>
+
+  {% if s.lanes %}
+  <h2 class="cmp-h">Lanes</h2>
+  <div class="tbl-wrap"><table class="tbl adm-tbl" data-lanes>
+    <caption class="visually-hidden">Each lane's owner, epoch, lease and depth</caption>
+    <thead><tr><th scope="col">Lane</th><th scope="col">Owner</th><th scope="col">Epoch</th><th scope="col">Lease</th><th scope="col">Waiting</th><th scope="col">Oldest wait</th></tr></thead>
+    <tbody>{% for l in s.lanes %}{% if l.depth or l.owner %}
+      <tr><td class="mono">{{ l.lane }}</td><td class="mono">{{ l.owner or '—' }}{% if l.mine %} (this node){% endif %}</td><td class="mono">{{ l.epoch }}</td>
+        <td>{{ 'live' if l.leased else 'run out' }}</td><td class="mono">{{ l.depth }}</td><td class="mono">{{ l.oldestWaitMs ~ ' ms' if l.oldestWaitMs is defined and l.oldestWaitMs is not none else '' }}</td></tr>
+    {% endif %}{% endfor %}</tbody></table></div>
+  {% endif %}
+
+  <h2 class="cmp-h">Source commands not confirmed</h2>
+  {% if not s.unconfirmed %}<p class="text-muted-d">None.</p>{% else %}
+  <div class="tbl-wrap"><table class="tbl adm-tbl" data-unconfirmed>
+    <thead><tr><th scope="col">Change</th><th scope="col">Connector</th><th scope="col">Command</th><th scope="col">Sent</th><th scope="col">Attempts</th></tr></thead>
+    <tbody>{% for u in s.unconfirmed %}<tr><td class="mono">{{ u.id }}</td><td class="mono">{{ u.connector }}</td><td class="mono">{{ u.command }}</td>
+      <td class="mono">{{ u.sentAt[:19] | replace('T', ' ') }}</td><td class="mono">{{ u.attempts }}</td></tr>{% endfor %}</tbody></table></div>
+  {% endif %}
+
+  <h2 class="cmp-h">Connectors that write</h2>
+  {% if not s.connectors %}<p class="text-muted-d">No connector file declares <span class="mono">writes:</span> (none of the shipped ones does).</p>{% else %}
+  <div class="tbl-wrap"><table class="tbl adm-tbl" data-writes>
+    <thead><tr><th scope="col">Connector</th><th scope="col">Commands</th><th scope="col">Problems</th><th scope="col">Writes</th></tr></thead>
+    <tbody>{% for c in s.connectors %}
+      <tr><td class="mono">{{ c.connector }} <span class="text-muted-d">({{ c.plugin }})</span></td><td class="mono">{{ c.commands | join(', ') }}</td>
+        <td>{% for cmd, ps in (c.problems or {}).items() %}{% for p in ps %}<div class="text-danger-d">{{ p }}</div>{% endfor %}{% endfor %}{% if not c.problems %}none{% endif %}</td>
+        <td><form method="post" action="/admin/edits/connectors/{{ c.connector }}" class="d-inline">
+          <input type="hidden" name="on" value="{{ 'false' if c.on else 'true' }}">
+          <label class="visually-hidden" for="why-{{ loop.index }}">Why</label>
+          <input id="why-{{ loop.index }}" name="reason" class="form-control form-control-sm d-inline-block w-auto" placeholder="Why" required maxlength="500">
+          <button class="btn btn-sm {{ 'btn-outline-danger' if c.on else 'btn-primary' }}" type="submit" data-writes-switch="{{ c.connector }}">{{ 'Switch off' if c.on else 'Switch on' }}</button>
+        </form> <span class="cmp-k {{ 'added' if c.on else 'removed' }}">{{ 'on' if c.on else 'off' }}</span></td></tr>
+    {% endfor %}</tbody></table></div>
+  {% endif %}
+
+  <h2 class="cmp-h">Open overlays</h2>
+  <p class="text-muted-d">Corrections shown over a source's value. The next lake build folds an approved one into the lake; a source that agrees closes it.</p>
+  {% if not overlays %}<p class="text-muted-d">None.</p>{% else %}
+  <div class="tbl-wrap"><table class="tbl adm-tbl" data-overlays>
+    <thead><tr><th scope="col">Record</th><th scope="col">Field</th><th scope="col">Value</th><th scope="col">The source says</th><th scope="col">By</th><th scope="col">Change</th></tr></thead>
+    <tbody>{% for o in overlays %}<tr><td><a class="lnk mono" href="/v/{{ o.kind }}/{{ o.entity | urlencode }}">{{ o.kind }} {{ o.entity }}</a></td>
+      <td class="mono">{{ o.path | replace('$.', '') }}</td><td class="mono">{{ o.value }}</td><td class="mono">{{ o.sourceValue if o.sourceValue is not none else '—' }}</td>
+      <td>{{ o.by }}</td><td class="mono">{{ o.change[:16] }}…</td></tr>{% endfor %}</tbody></table></div>
+  {% endif %}
+</div>
+{% endblock %}

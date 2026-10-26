@@ -55,6 +55,8 @@ public final class SwitchLedger {
 
     public static final String COMMAND = "command";
     public static final String PACK = "pack";
+    /** A connector's {@code writes:} switched on by an administrator (WRITE_BACK.md section 12): off unless an entry says on. */
+    public static final String WRITES = "connector-writes";
     public static final String EVERYONE = "*";
 
     /**
@@ -237,7 +239,7 @@ public final class SwitchLedger {
             Map<String, Entry> m = new TreeMap<>(snapshot);
             for (Entry e : theirs) {
                 observe(e.stamp());
-                if (e.scope() == null || e.name() == null || !(COMMAND.equals(e.scope()) || PACK.equals(e.scope()))) {
+                if (e.scope() == null || e.name() == null || !(COMMAND.equals(e.scope()) || PACK.equals(e.scope()) || WRITES.equals(e.scope()))) {
                     continue;
                 }
                 if (e.newerThan(m.get(e.key()))) {

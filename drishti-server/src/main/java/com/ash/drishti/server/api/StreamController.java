@@ -86,6 +86,14 @@ public class StreamController {
         this.executor = drishtiVirtualExecutor;
     }
 
+    /** Write-back (absent in a test that makes the controller itself): keeps a view of a record open for its applied changes. */
+    private org.springframework.beans.factory.ObjectProvider<com.ash.drishti.server.edit.EditRuntime> edits;
+
+    @org.springframework.beans.factory.annotation.Autowired(required = false)
+    void edits(org.springframework.beans.factory.ObjectProvider<com.ash.drishti.server.edit.EditRuntime> e) {
+        this.edits = e;
+    }
+
     @GetMapping(path = "/views/{kind}/{id}/stream", produces = MediaType.TEXT_EVENT_STREAM_VALUE)
     public SseEmitter stream(@PathVariable String kind, @PathVariable String id, AsOf asOf,
             @RequestAttribute(Principal.ATTRIBUTE) Principal principal, jakarta.servlet.http.HttpServletRequest request) {
@@ -107,9 +115,12 @@ public class StreamController {
         // Drishti*net: the node that answered, in "How this view was built", for administrators only (null for anyone else)
         com.ash.drishti.server.net.NetServedBy sb = servedBy == null ? null : servedBy.getIfAvailable();
         String served = sb == null ? null : sb.lineFor(principal);
-        ViewModel shown = com.ash.drishti.server.net.NetServedBy.annotate(initial, served);
+        com.ash.drishti.server.edit.EditRuntime er = edits == null ? null : edits.getIfAvailable();
+        ViewModel shown = com.ash.drishti.server.net.NetServedBy.annotate(com.ash.drishti.server.edit.EditNotes.annotate(er, initial, ref, asOf), served);
         SseEmitter emitter = new SseEmitter(0L);
-        if (!initial.provenance().live()) {
+        // write-back on: a view of the current date stays open even when no source streams the record, so an applied change reaches it
+        boolean edited = er != null && er.layer().active() && (asOf == null || asOf.isLatest());
+        if (!initial.provenance().live() && !edited) {
             // a past business date, or a static source: one view, no ticks, no slot held
             slot.release();
             executor.execute(() -> {

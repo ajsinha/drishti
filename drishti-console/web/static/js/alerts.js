@@ -27,7 +27,7 @@
   document.body.appendChild(tray);
   function esc(s) { return String(s == null ? '' : s).replace(/[&<>"]/g, function (c) { return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]; }); }
   function show() { badge.textContent = String(count); badge.hidden = count <= 0; }
-  window.DrishtiChannel.subscribe('alerts', { alert: onAlert, notice: onNotice, switches: onSwitches });   // on the tab's one live connection (channel.js)
+  window.DrishtiChannel.subscribe('alerts', { alert: onAlert, notice: onNotice, switches: onSwitches, edit: onEdit });   // on the tab's one live connection (channel.js)
   fetch('/api/inbox/count', { headers: { Accept: 'application/json' }, credentials: 'same-origin' })
     .then(function (r) { return r.ok ? r.json() : { unread: 0 }; })
     .then(function (j) { count += (j && j.unread) || 0; show(); })
@@ -52,6 +52,47 @@
     });
     document.dispatchEvent(new CustomEvent('drishti:switches', { detail: d }));
   }
+  /* Write-back (WRITE_BACK.md 18.5): your own change's steps as a toast (and to the review sheet that follows it); a change applied to the
+     record this page shows says "changed by A. Sinha just now" (the name only for who may see the edit history; the page's live view
+     brings the new values, masked for this reader). Everything else hears it as drishti:edit. */
+  function onEdit(d) {
+    document.dispatchEvent(new CustomEvent('drishti:edit', { detail: d }));
+    var page = document.querySelector('[data-view][data-kind]');
+    var here = page && ((page.getAttribute('data-kind') === d.kind && page.getAttribute('data-id') === d.entity)
+      || (page.getAttribute('data-kind') === d.pageKind && page.getAttribute('data-id') === d.pageId));
+    var href = '/v/' + encodeURIComponent(d.kind) + '/' + encodeURIComponent(d.entity);
+    if (d.mine && ['applied', 'refused', 'conflicted', 'rejected', 'approved', 'confirmed', 'refused-at-source'].indexOf(d.type) >= 0) {
+      var what = { applied: 'was applied', refused: 'was refused', conflicted: 'is conflicted: the record moved', rejected: 'was rejected',
+        approved: 'was approved', confirmed: 'was confirmed by the source', 'refused-at-source': 'was refused by the source' }[d.type];
+      toast('sev-' + (d.type === 'applied' || d.type === 'approved' || d.type === 'confirmed' ? 'info' : 'warn') + ' notice', href,
+        '<b>Your change to ' + esc(d.kind) + ' ' + esc(d.entity) + ' ' + what + '</b>' + (d.reason ? '<br>' + esc(d.reason) : ''));
+    }
+    if (here && (d.type === 'applied' || d.type === 'withdrawn-overlay' || d.type === 'refused-at-source')) {
+      var editing = document.querySelector('section.pnl[data-editing], [data-wb-sheet][open]');
+      var words = (d.type === 'applied' ? 'Changed' : 'A correction was withdrawn') + (d.mine ? ' by you' : d.by ? ' by ' + d.by : '') + ' just now';
+      // a page whose source streams gets the new values in its live frames; any other page of the current date is drawn again (its
+      // values read with your masks), unless you are editing on it: then it says so and leaves your work alone
+      if (!editing && !page.hasAttribute('data-live') && !page.hasAttribute('data-static')) {
+        try { sessionStorage.setItem('drishti-edit-mark', JSON.stringify({ kind: page.getAttribute('data-kind'), id: page.getAttribute('data-id'), text: words })); } catch (e) { /* a convenience */ }
+        window.location.reload();
+        return;
+      }
+      editMark(page, words + (editing ? ': it changed while you edited; check your values before you save' : ''));
+    }
+  }
+  function editMark(page, text) {
+    var mark = document.querySelector('[data-edit-mark]');
+    if (!mark) {
+      mark = document.createElement('p'); mark.className = 'asof-banner'; mark.setAttribute('data-edit-mark', ''); mark.setAttribute('role', 'status');
+      page.prepend(mark);
+    }
+    mark.textContent = text;
+  }
+  (function () {                                       // the mark of a change that drew this page again
+    var page = document.querySelector('[data-view][data-kind]'), m = null;
+    try { m = JSON.parse(sessionStorage.getItem('drishti-edit-mark') || 'null'); sessionStorage.removeItem('drishti-edit-mark'); } catch (e) { m = null; }
+    if (page && m && m.kind === page.getAttribute('data-kind') && m.id === page.getAttribute('data-id')) { editMark(page, m.text); }
+  }());
   function toast(cls, href, html) {
     if (tray.querySelectorAll('.toast-a:not(.toast-more)').length >= MAX_TOASTS) {
       moreCount++;

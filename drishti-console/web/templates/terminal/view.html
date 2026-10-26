@@ -156,7 +156,7 @@
 <script src="/static/js/sutra-wire.js?v={{ ASSET_V }}"></script>
 <script src="/static/js/refresh.js?v={{ ASSET_V }}"></script>
 <script src="/static/js/compute.js?v={{ ASSET_V }}"></script>
-{% if not embed and vm.panels | selectattr('form') | list %}<script src="/static/js/form-expr.js?v={{ ASSET_V }}"></script><script src="/static/js/record-forms.js?v={{ ASSET_V }}"></script>{% endif %}
+{% if not embed and vm.panels | selectattr('form') | list %}<script src="/static/js/form-expr.js?v={{ ASSET_V }}"></script><script src="/static/js/write-back.js?v={{ ASSET_V }}"></script><script src="/static/js/record-forms.js?v={{ ASSET_V }}"></script>{% endif %}
 {% if designer and designer.on and not embed %}<link rel="stylesheet" href="/static/css/designer.css?v={{ ASSET_V }}"><script src="/static/js/designer-forms.js?v={{ ASSET_V }}"></script><script src="/static/js/designer-settings.js?v={{ ASSET_V }}"></script><script src="/static/js/designer.js?v={{ ASSET_V }}"></script>{% endif %}
 {% if vm.controls %}<script src="/static/js/multiselect.js?v={{ ASSET_V }}"></script><script src="/static/js/controls.js?v={{ ASSET_V }}"></script>{% endif %}
 {% if calc and calc.offered and calc.allowed %}<script src="/static/vendor/codemirror/codemirror.js?v={{ ASSET_V }}"></script>

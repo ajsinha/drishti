@@ -555,3 +555,98 @@ CREATE TABLE IF NOT EXISTS drishti_compute_approval (
     PRIMARY KEY (item_key, request_id)
 );
 CREATE INDEX IF NOT EXISTS ix_compute_approval_live ON drishti_compute_approval (item_key, revoked_at);
+
+-- Write-back (docs/architecture/WRITE_BACK.md sections 5 to 11): P lanes, each one durable ordered queue with one owner at a time
+-- (ownership taken by a conditional UPDATE, fenced by its epoch); the edit log, one row per change, ordered by (lane, seq), acknowledged
+-- only once its row is committed; changes awaiting approval; overlays and Drishti-owned values written in the same transaction as the
+-- log row's state; each record's version; and how far each consumer of applied changes (the reactive triggers) has read per lane.
+-- Lease times are epoch milliseconds on the database's clock.
+CREATE TABLE IF NOT EXISTS drishti_edit_lane (
+    lane        INTEGER PRIMARY KEY,
+    owner_node  VARCHAR(256),
+    epoch       BIGINT NOT NULL DEFAULT 0,
+    lease_until BIGINT,
+    next_seq    BIGINT NOT NULL DEFAULT 1,
+    applied_seq BIGINT NOT NULL DEFAULT 0
+);
+CREATE TABLE IF NOT EXISTS drishti_edit_log (
+    lane             INTEGER      NOT NULL,
+    seq              BIGINT       NOT NULL,
+    change_id        VARCHAR(64)  NOT NULL UNIQUE,
+    epoch            BIGINT       NOT NULL,
+    state            VARCHAR(16)  NOT NULL,
+    change_key       VARCHAR(1024) NOT NULL,
+    kind             VARCHAR(128) NOT NULL,
+    entity           VARCHAR(512) NOT NULL,
+    business_date    VARCHAR(10)  NOT NULL,
+    target           VARCHAR(16)  NOT NULL,
+    connector        VARCHAR(256),
+    body             TEXT         NOT NULL,
+    command          VARCHAR(16),
+    command_attempts INTEGER      NOT NULL DEFAULT 0,
+    command_sent_at  TIMESTAMP WITH TIME ZONE,
+    command_reason   TEXT,
+    state_reason     TEXT,
+    by_user          VARCHAR(256) NOT NULL,
+    submitted_at     TIMESTAMP WITH TIME ZONE NOT NULL,
+    applied_at       TIMESTAMP WITH TIME ZONE,
+    signature        VARCHAR(128) NOT NULL,
+    PRIMARY KEY (lane, seq)
+);
+CREATE INDEX IF NOT EXISTS ix_edit_log_key ON drishti_edit_log (change_key, lane, seq);
+CREATE INDEX IF NOT EXISTS ix_edit_log_state ON drishti_edit_log (state, submitted_at);
+CREATE INDEX IF NOT EXISTS ix_edit_log_command ON drishti_edit_log (command, lane, seq);
+CREATE TABLE IF NOT EXISTS drishti_edit_request (
+    change_id     VARCHAR(64)   PRIMARY KEY,
+    change_key    VARCHAR(1024) NOT NULL,
+    kind          VARCHAR(128)  NOT NULL,
+    entity        VARCHAR(512)  NOT NULL,
+    target        VARCHAR(16)   NOT NULL,
+    body          TEXT          NOT NULL,
+    state         VARCHAR(16)   NOT NULL,
+    needed        INTEGER       NOT NULL,
+    approvals     TEXT          NOT NULL,
+    by_user       VARCHAR(256)  NOT NULL,
+    submitted_at  TIMESTAMP WITH TIME ZONE NOT NULL,
+    decided_by    VARCHAR(256),
+    decided_at    TIMESTAMP WITH TIME ZONE,
+    reason        TEXT
+);
+CREATE INDEX IF NOT EXISTS ix_edit_request_state ON drishti_edit_request (state, submitted_at);
+CREATE TABLE IF NOT EXISTS drishti_overlay (
+    change_id     VARCHAR(64)   NOT NULL,
+    path          VARCHAR(512)  NOT NULL,
+    kind          VARCHAR(128)  NOT NULL,
+    entity        VARCHAR(512)  NOT NULL,
+    value         TEXT,
+    source_value  TEXT,
+    business_date VARCHAR(10)   NOT NULL,
+    valid_until   VARCHAR(10),
+    state         VARCHAR(16)   NOT NULL,
+    by_user       VARCHAR(256)  NOT NULL,
+    applied_at    TIMESTAMP WITH TIME ZONE NOT NULL,
+    PRIMARY KEY (change_id, path)
+);
+CREATE INDEX IF NOT EXISTS ix_overlay_entity ON drishti_overlay (kind, entity, state);
+CREATE TABLE IF NOT EXISTS drishti_owned (
+    kind       VARCHAR(128) NOT NULL,
+    entity     VARCHAR(512) NOT NULL,
+    path       VARCHAR(512) NOT NULL,
+    value      TEXT,
+    change_id  VARCHAR(64)  NOT NULL,
+    updated_by VARCHAR(256) NOT NULL,
+    updated_at TIMESTAMP WITH TIME ZONE NOT NULL,
+    PRIMARY KEY (kind, entity, path)
+);
+CREATE TABLE IF NOT EXISTS drishti_edit_version (
+    change_key  VARCHAR(1024) PRIMARY KEY,
+    version     BIGINT        NOT NULL,
+    change_id   VARCHAR(64)   NOT NULL,
+    updated_at  TIMESTAMP WITH TIME ZONE NOT NULL
+);
+CREATE TABLE IF NOT EXISTS drishti_edit_cursor (
+    consumer VARCHAR(256) NOT NULL,
+    lane     INTEGER      NOT NULL,
+    seq      BIGINT       NOT NULL,
+    PRIMARY KEY (consumer, lane)
+);

@@ -360,6 +360,7 @@ files (`application-files.yaml`, `application-postgres.yaml`, …) and packs hav
 | `DRISHTI_GOVERNANCE_DIR` | `drishti.governance.dir` | `./data/governance` | Where proposals are kept with `drishti.governance.store: file`; with `content` (the default) the folder is imported once and left in place. |
 | `DRISHTI_DATA_DIR` | `drishti.data.dir` | `./data` | The data folder: the umbrella every runtime path below defaults under (see [The data folder](#the-data-folder-and-the-config-folder)). |
 | `DRISHTI_STORE_FILE` | `drishti.store.file` | `./config/store/store.yaml` | The content store's settings file ([The content store](#the-content-store-configstorestoreyaml)); a missing file means the filesystem store under the data folder. |
+| `DRISHTI_EDIT_FILE` | `drishti.edit.file` | `./config/edit/edit.yaml` | Write-back's settings file ([Write-back](#write-back-configedit)); its siblings `lanes.yaml`, `policy.yaml`, `retention.yaml` are read from the same folder; a missing file means write-back off. |
 | `DRISHTI_STORE_ROOT` | `drishti.store.root` | empty | The filesystem content store's root, over the file's `filesystem.root` (empty: the file's, else `<data folder>/fstore`). |
 | `DRISHTI_BI_STORE` | `drishti.bi.store` | `content` | Where BI workspaces, items, versions, revisions, events, marks, views and settings live: `content` (the content store, every node of a cluster; the identity database's `drishti_bi_*` rows are imported once) or `jpa` (this node's identity database only). See CONTENT_STORE.md section 9. |
 | `DRISHTI_BI_RUNS_STORE` | `drishti.bi.runs.store` | `content` | Where BI runs, their shares, schedules, results and snapshots live: `content` (every node reads them; leases are compare-and-sets in the store; the `drishti_bi_run*` rows and `<data>/bi-runs` are imported once) or `local` (this node's identity database and `store.dir`). |
@@ -1253,6 +1254,37 @@ in their own file, named by `drishti.store.file` (`DRISHTI_STORE_FILE`, default 
 Every node of a cluster must use the same settings; a node that finds another node recorded with a different root logs
 `content store roots differ`. Writes are compare-and-set: an item changed elsewhere since it was read answers `409 DRS-5057`.
 The start logs `content store: <backend> <root> (settings <file>)`.
+
+### Write-back: `config/edit/`
+
+Write-back ([WRITE_BACK.md](../architecture/WRITE_BACK.md); the administrator's guide [EDITS.md](EDITS.md)) has its own folder, named by
+`drishti.edit.file` (`DRISHTI_EDIT_FILE`, default `./config/edit/edit.yaml`; its siblings `lanes.yaml`, `policy.yaml` and `retention.yaml`
+are read from the same folder). A missing file or key means the default. **Off as shipped**: `edit.enabled: false`, so no change is
+accepted anywhere and no Submit is drawn; a fresh install or an upgrade is read-only. The edit log, lanes, approvals, overlays and owned
+values are tables of the Drishti database (the identity database's pool; [DATABASE.md](../architecture/DATABASE.md)).
+
+| File and key | Default | Meaning |
+|---|---|---|
+| `edit.yaml` `edit.enabled` | `${DRISHTI_EDIT_ENABLED:false}` | The site switch. With it off every write answers `403 DRS-9301`; overlays applied earlier are still shown. |
+| `edit.yaml` `edit.log` | `auto` | Where the edit log lives: `auto`, `sqlite` or `postgres`. **auto**: a PostgreSQL Drishti database → `postgres` (lanes spread over the members, failover by lease); a node alone → `sqlite`; a cluster with `edit.primary` → the primary's SQLite; otherwise edits are refused in the cluster (reads carry on). An explicit value is checked: `postgres` needs a PostgreSQL database, `sqlite` in a cluster needs `edit.primary`; else the server starts with editing off and says why. |
+| `edit.yaml` `edit.primary` | empty | In a cluster without PostgreSQL: the node id of the edit primary. It owns every lane; the other nodes forward edits to it and copy its overlays. No failover: while it is down, edits pause (`503 DRS-9306`). |
+| `edit.yaml` `edit.follow` | `1s` | How often the other nodes copy the primary's applied overlays and owned values (and at once when told). |
+| `lanes.yaml` `lanes.lanes` | `64` | P lanes, a power of two; a record's lane is `murmur3(kind:id) mod P`. Change it only with the lanes drained. |
+| `lanes.yaml` `lanes.max-lane-depth` | `1000` | A lane deeper than this refuses new changes: `503 DRS-9304`, the draft is kept. |
+| `lanes.yaml` `lanes.lane-warn` | `2s` | Admin → Edits warns when a lane's oldest change has waited longer. |
+| `lanes.yaml` `lanes.lane-lease` | `10s` | A lane's lease; its owner renews it every third of this, another node may take the lane only after it runs out. |
+| `lanes.yaml` `lanes.command-timeout` | `30s` | A source command sent and not confirmed for longer is listed as unconfirmed on Admin → Edits. |
+| `policy.yaml` `policy.approval.overlay` / `owned` / `source` | `none` / `none` / `one` | Approvals a change needs per target (`none`, `one`, `two`); a form's `save.approval` may ask for more, never fewer. |
+| `policy.yaml` `policy.approver-roles` | `[]` | Who approves; empty: holders of the approve power and administrators. |
+| `policy.yaml` `policy.self-approval` | `false` | Four eyes: nobody approves their own change. |
+| `policy.yaml` `policy.restate-role` / `override-role` | `restate` / `override` | A change to a past business date needs the first; *Apply mine anyway* over a newer value the second. |
+| `policy.yaml` `policy.kinds.<kind>.approval.<target>` | none | A kind's stricter approval. |
+| `retention.yaml` `retention.keep` | `7y` | How long the edit log is kept (finished entries older are deleted, audited `edit-log-purged`). |
+| `retention.yaml` `retention.hot` | `90d` | The hot window (archiving older entries to signed files is planned). |
+
+The `edit` power is a role's (Admin → Roles; the shipped `admin` role has it), and an API token needs the `edit` scope
+(`drishti.security.token-scopes`). A connector writes to its source only when its file declares `writes:` **and** an administrator
+switches its writes on in Admin → Edits ([CONNECTOR_FILES.md](../connectors/CONNECTOR_FILES.md#writes-saving-to-the-source-280)).
 
 ### `drishti.builder.file-binding` and `dev-dir` — development file binding
 

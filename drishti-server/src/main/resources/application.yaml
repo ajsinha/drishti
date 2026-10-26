@@ -97,6 +97,10 @@ drishti:
     # The content store (docs/architecture/CONTENT_STORE.md): user content every node of a cluster can reach. Its settings are in their own file.
     file: ${DRISHTI_STORE_FILE:./config/store/store.yaml}
     root: ${DRISHTI_STORE_ROOT:}   # the filesystem backend's root, over the file's filesystem.root (empty: the file's, else <data folder>/fstore)
+  edit:
+    # Write-back (docs/architecture/WRITE_BACK.md): its settings are in their own folder (edit.yaml, lanes.yaml, policy.yaml, retention.yaml).
+    # Off as shipped (edit.enabled: false there): a fresh install or an upgrade is read-only.
+    file: ${DRISHTI_EDIT_FILE:./config/edit/edit.yaml}
   index:
     # Where the connectors' multi-day type-ahead index keeps closed days as block-compressed segment files (one subfolder per
     # connector). Blank: <data dir>/index, i.e. ./data/index. Size is capped per connector by its index.max-disk; a day that
@@ -216,6 +220,7 @@ drishti:
       - /api/v1/search/pivot/**
       - /api/v1/command
       - /api/v1/forms/*/*/compile        # query by form: writes the criteria out as a search command, nothing else
+      - /api/v1/changes/preview          # write-back's review sheet: what a change would do, written nowhere
       - /api/v1/bi/datasets/*/query     # Rupaka phase 2: a dataset query (fields, measures, filters in the body), masked and row-ruled, changes nothing
       - /api/v1/bi/datasets/validate    # checks a dataset's YAML without storing it
       - /api/v1/bi/mq                   # the model query language (docs/architecture/BI_MODEL_SPEC.md section 5): one query of a model as the caller, changes nothing
@@ -265,6 +270,13 @@ drishti:
           - DELETE /api/v1/compute/sandboxes/*
           - POST /api/v1/compute/sandboxes/*/copy
           - DELETE /api/v1/compute/requests/*
+      "[edit]":
+        description: "Submit changes through write-back (WRITE_BACK.md: forms, the CLI's change propose), approve or reject other people's, withdraw your own. No token has it unless chosen; it never exceeds your roles: the edit power, the field's roles, masks and four eyes all apply, and editing must be on."
+        allow:
+          - POST /api/v1/changes
+          - POST /api/v1/changes/*/approve
+          - POST /api/v1/changes/*/reject
+          - POST /api/v1/changes/*/withdraw
       "[design:write]":
         description: "Create, edit, check, propose, share and bind Designs, save Sutras from Studio (a save is a proposal with governance on), withdraw your own proposals. Needs the author role."
         allow:
@@ -369,6 +381,7 @@ drishti:
       - POST /api/v1/bi/models/*/preview-as     # previews another role's answers: audited, in the console only
       - "* /api/v1/me/**"
       - "* /api/v1/drafts/**"                  # form drafts: personal, kept per person, saved from the console (SUTRA_FORMS_GUIDE.md)
+      - POST /api/v1/admin/edits/**            # write-back's switches (a connector's writes, withdrawing an overlay): an administrator in the console
       - "* /api/v1/auth/**"
       - "* /api/v1/admin/tokens/**"
       - "* /api/v1/net/**"                     # Drishti*net: nodes sign their calls with the cluster key; administrators use the console
@@ -402,7 +415,7 @@ drishti:
       viewer:  { kinds: ["*"], layout: false, bi: [bi] }   # packs add domain roles (trading: trader; market-risk, counterparty-risk); layout: may arrange views (default true)
       author:  { kinds: ["*"], raw: true, author: true, calc: true, bi: [bi, bi-author] }   # calc: may use Calc, Python in the browser (PYTHON_CALC.md)
       approver: { kinds: ["*"], raw: true, author: true, approve: true, calc: true, bi: [bi, bi-author] }   # reviews proposed Sutras (admins may too)
-      admin:   { kinds: ["*"], raw: true, author: true, admin: true, calc: true }
+      admin:   { kinds: ["*"], raw: true, author: true, admin: true, calc: true, edit: true }   # edit: may submit write-back changes (WRITE_BACK.md; editing itself is off until config/edit/edit.yaml turns it on)
     oidc:                              # single sign-on (W20): the console runs the flow, the server verifies the ID token
       enabled: ${DRISHTI_OIDC_ENABLED:false}
       issuer: ${DRISHTI_OIDC_ISSUER:}

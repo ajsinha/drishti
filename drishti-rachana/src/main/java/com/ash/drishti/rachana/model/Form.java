@@ -50,9 +50,27 @@ import java.util.regex.PatternSyntaxException;
  * @param fields the fields, in order
  * @param rules the field and cross-field rules
  * @param hints the values computed as people type
+ * @param save where a submitted form goes (WRITE_BACK.md section 18.1), or null: the form keeps drafts only
  */
 public record Form(String title, String key, String edit, String create, String newLabel, List<String> roles, List<Step> steps,
-        List<Field> fields, List<Rule> rules, List<Hint> hints) {
+        List<Field> fields, List<Rule> rules, List<Hint> hints, Save save) {
+
+    /** A form without {@code save:} (drafts only). */
+    public Form(String title, String key, String edit, String create, String newLabel, List<String> roles, List<Step> steps,
+            List<Field> fields, List<Rule> rules, List<Hint> hints) {
+        this(title, key, edit, create, newLabel, roles, steps, fields, rules, hints, null);
+    }
+
+    /**
+     * Where a submitted form goes (WRITE_BACK.md sections 5 and 18.1): {@code target} {@code overlay} (a correction kept in Drishti, laid
+     * over the source), {@code owned} (Drishti is the record's system of record) or {@code source} (a command of the connector's
+     * {@code writes:}: {@code command} for an edit, {@code create} for a new record); {@code kind} is the kind of the records the form
+     * edits (the page's kind when absent: a form on a book's trades names {@code trade}); {@code approval} the approvals it needs
+     * (0, 1 or 2; the site's policy may raise it, never lower it); {@code reason} true when a reason must come with it.
+     */
+    public record Save(String kind, String target, String connector, String command, String create, int approval, boolean reason) {
+        public static final List<String> TARGETS = List.of("overlay", "owned", "source");
+    }
 
     public static final String KEY = "form";
     public static final List<String> TYPES = List.of("text", "number", "date", "enum", "bool", "textarea", "lookup", "money",
@@ -67,7 +85,9 @@ public record Form(String title, String key, String edit, String create, String 
     private static final Pattern ID = Pattern.compile("^[a-z][a-z0-9_]{0,39}$");
     private static final Pattern BIND = Pattern.compile("^[A-Za-z_][A-Za-z0-9_]{0,63}$");
     private static final Pattern ROLE = Pattern.compile("^[a-z0-9][a-z0-9_-]{0,39}$");
-    private static final Set<String> TOP = Set.of("title", "key", "edit", "new", "new-label", "roles", "steps", "fields", "rules", "hints");
+    private static final Set<String> TOP = Set.of("title", "key", "edit", "new", "new-label", "roles", "steps", "fields", "rules", "hints", "save");
+    private static final Set<String> SAVE = Set.of("kind", "target", "connector", "command", "create", "approval", "reason");
+    private static final Pattern NAME = Pattern.compile("^[a-z0-9][a-z0-9-]{0,63}$");
     private static final Set<String> FIELD = Set.of("id", "label", "type", "bind", "required", "min", "max", "pattern", "max-length",
             "options", "editable-by", "readonly", "reason", "step", "placeholder", "fmt", "new", "currency", "tz", "default");
     private static final Pattern CURRENCY = Pattern.compile("^[A-Z]{3}$");
@@ -219,6 +239,9 @@ public record Form(String title, String key, String edit, String create, String 
                 }
             }
         }
+        if (m.get("save") != null) {
+            save(m.get("save"), create != null, out);
+        }
         if (m.get("hints") != null) {
             if (!(m.get("hints") instanceof List<?> hl)) {
                 out.add("'form.hints' is a list of { label, value, of, fmt, step }");
@@ -229,6 +252,48 @@ public record Form(String title, String key, String edit, String create, String 
             }
         }
         return out;
+    }
+
+    private static void save(Object raw, boolean hasNew, List<String> out) {
+        if (!(raw instanceof Map<?, ?> m)) {
+            out.add("'form.save' is a mapping: { target: overlay|owned|source, command, create, approval, reason }");
+            return;
+        }
+        unknown(m, SAVE, "form.save", out);
+        Object target = m.get("target");
+        if (target == null || !Save.TARGETS.contains(target.toString())) {
+            out.add("'form.save.target' is overlay (a correction kept beside the source's value), owned (the server is the record's system of record) or source (a connector's writes: command), not '"
+                    + target + "'");
+        }
+        for (String k : List.of("kind", "connector", "command", "create")) {
+            if (m.get(k) != null && !NAME.matcher(m.get(k).toString()).matches()) {
+                out.add("'form.save." + k + "' is a name in lower case, digits and -, not '" + m.get(k) + "'");
+            }
+        }
+        if ("source".equals(String.valueOf(target)) && m.get("command") == null) {
+            out.add("'form.save.command' names the connector's writes: command that amends a record (target: source)");
+        }
+        if ("source".equals(String.valueOf(target)) && hasNew && m.get("create") == null) {
+            out.add("'form.save.create' names the connector's writes: command that creates a record: this form starts new ones (new: drawer)");
+        }
+        Object approval = m.get("approval");
+        if (approval != null && approvals(approval.toString()) < 0) {
+            out.add("'form.save.approval' is none, one or two, not '" + approval + "'");
+        }
+        Object reason = m.get("reason");
+        if (reason != null && !List.of("required", "optional").contains(reason.toString())) {
+            out.add("'form.save.reason' is required or optional, not '" + reason + "'");
+        }
+    }
+
+    /** {@code none}, {@code one} or {@code two} (also {@code four-eyes} for one) as a number; -1 when it is none of them. */
+    static int approvals(String v) {
+        return switch (v) {
+            case "none", "0" -> 0;
+            case "one", "1", "four-eyes" -> 1;
+            case "two", "2" -> 2;
+            default -> -1;
+        };
     }
 
     private static void field(Object f, Set<String> steps, Map<String, String> types, List<String> out) {
@@ -498,8 +563,13 @@ public record Form(String title, String key, String edit, String create, String 
                         str(h.get("fmt")), str(h.get("step"))));
             }
         }
+        Save save = null;
+        if (m.get("save") instanceof Map<?, ?> sv) {
+            save = new Save(str(sv.get("kind")), str(sv.get("target")), str(sv.get("connector")), str(sv.get("command")), str(sv.get("create")),
+                    sv.get("approval") == null ? 0 : Math.max(0, approvals(sv.get("approval").toString())), "required".equals(str(sv.get("reason"))));
+        }
         return new Form(str(m.get("title")), str(m.get("key")), str(m.get("edit")), str(m.get("new")), str(m.get("new-label")), strs(m.get("roles")),
-                steps, fields, rules, hints);
+                steps, fields, rules, hints, save);
     }
 
     private static String str(Object o) {
