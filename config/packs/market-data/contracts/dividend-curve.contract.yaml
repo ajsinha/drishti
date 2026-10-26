@@ -1,0 +1,140 @@
+# Project Drishti · Any data. Any domain. One grammar.
+#
+# Copyright (c) 2026 Ashutosh Sinha <ajsinha@gmail.com>.
+# All rights reserved.
+#
+# PROPRIETARY AND CONFIDENTIAL.
+#
+# This file is the confidential and proprietary property of Ashutosh Sinha.
+# Unauthorised copying, use, modification, distribution or disclosure of this
+# file, via any medium, is strictly prohibited except with the express prior
+# written permission of the copyright holder.
+#
+# See the LICENSE file in the root of this repository for the full terms.
+
+# Data contract of the dividend-curve kind (command DIV): docs/contracts/README.md section 16.
+# Drafted by `drishti.py contract bootstrap dividend-curve`; owned by people from then on: confirm the review points, then remove them.
+kind: dividend-curve
+mnemonic: DIV
+pack: market-data
+version: '1.0'
+class: fundamental
+status: active
+title: Dividend curve
+description: Expected dividends by year (implied from dividend futures and forwards).
+source: md-hub
+grain: One row per dividend curve per business date, keyed by CURVE_ID.
+key:
+- CURVE_ID
+id-pattern:
+- ^DIV-
+dated-by: business_date
+cadence:
+  frequency: daily
+  due: to be confirmed
+storage:
+  connector: market-store
+  plugin: delta
+  domain: market
+  table: <root>/market/dividend-curve/
+  test-data:
+  - data/testdata/market-data/dividend-curve
+fields:
+- name: CURVE_ID
+  type: id
+  presence: required
+  description: The record's id (the business key)
+  example: DIV-CSCA
+  pattern: ^DIV-
+- name: UNDERLIER
+  type: id
+  presence: required
+  description: Underlier
+  example: EQ-CSCA
+- name: DIVIDEND_YIELD
+  type: rate
+  presence: required
+  description: Yield
+  example: 0.0275
+- name: POINTS
+  type: record list
+  presence: required
+  description: 'Nested: see nested POINTS[]'
+- name: UNDERLYING_EQUITY
+  type: id
+  presence: optional
+  description: 'Underlying equity: the equity it refers to'
+  example: EQ-CSCA
+  pattern: ^EQ-
+  link: equity
+- name: UNDERLYING_INDEX
+  type: id
+  presence: optional
+  description: 'Underlying index: the equity-index it refers to'
+  example: EQX-NDX
+  pattern: ^EQX-
+  link: equity-index
+nested:
+  POINTS[]:
+  - name: YEAR
+    type: text
+    presence: required
+    example: '2026'
+    enum:
+    - '2026'
+    - '2027'
+    - '2028'
+    - '2029'
+    - '2030'
+    - '2031'
+  - name: AMOUNT
+    type: amount
+    presence: required
+    example: 0.6
+links:
+- field: UNDERLYING_EQUITY
+  kind: equity
+- field: UNDERLYING_INDEX
+  kind: equity-index
+validation:
+- rule: required
+  fields:
+  - CURVE_ID
+  - UNDERLIER
+  - DIVIDEND_YIELD
+  - POINTS
+- rule: unique
+  key:
+  - CURVE_ID
+  per: business_date
+- rule: pattern
+  field: CURVE_ID
+  pattern: ^DIV-
+- rule: link
+  field: UNDERLYING_EQUITY
+  kind: equity
+- rule: link
+  field: UNDERLYING_INDEX
+  kind: equity-index
+- rule: enum
+  field: POINTS[].YEAR
+  values:
+  - '2026'
+  - '2027'
+  - '2028'
+  - '2029'
+  - '2030'
+  - '2031'
+notes:
+- 'Dated by the lake''s business_date partition: `drishti.py lake build` writes each test-data file''s day into it; the documents carry no date
+  field of their own.'
+review:
+- 'required inferred from 100% coverage in 30 documents (15 samples and 15 test-data documents (data/testdata/market-data/dividend-curve/snapshot-2026-07-08.jsonl.gz,
+  data/testdata/market-data/dividend-curve/changes-2026-09-30.jsonl.gz)): confirm each required field is mandatory upstream, and each optional
+  one may be empty.'
+- 'source ''md-hub'' is the test data''s _meta.source (synthetic): name the production system that delivers it.'
+- 'due time of each business date is not known: state it (for example, by 06:00 New York the next business day).'
+- 'enum values inferred from the data, not from a glossary: POINTS[].YEAR: confirm they are closed lists.'
+- 'number types decided by the field''s name: DIVIDEND_YIELD rate, POINTS[].AMOUNT amount: confirm amount, rate or integer.'
+- 'no unit stated for the amounts POINTS[].AMOUNT (docs/contracts/README.md section 7: USD unless stated): confirm the currency.'
+- 'no description in about.yaml or the Sutras for POINTS[].YEAR, POINTS[].AMOUNT: write them in the pack''s config/about.yaml glossary.'

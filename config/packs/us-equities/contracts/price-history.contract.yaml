@@ -1,0 +1,93 @@
+# Project Drishti · Any data. Any domain. One grammar.
+#
+# Copyright (c) 2026 Ashutosh Sinha <ajsinha@gmail.com>.
+# All rights reserved.
+#
+# PROPRIETARY AND CONFIDENTIAL.
+#
+# This file is the confidential and proprietary property of Ashutosh Sinha.
+# Unauthorised copying, use, modification, distribution or disclosure of this
+# file, via any medium, is strictly prohibited except with the express prior
+# written permission of the copyright holder.
+#
+# See the LICENSE file in the root of this repository for the full terms.
+
+# Data contract of the price-history kind (command PXH): docs/contracts/README.md section 16.
+# Drafted by `drishti.py contract bootstrap price-history`; owned by people from then on: confirm the review points, then remove them.
+kind: price-history
+mnemonic: PXH
+pack: us-equities
+version: '1.0'
+class: fundamental
+status: active
+title: Price history (live, internal use only)
+description: 'A company''s quote and a year of daily prices, read live by the us-equities-prices connector: off as shipped, internal use only.'
+source: 'public data: Yahoo Finance (us-equities-prices connector, yfinance plugin)'
+grain: One row per price history (live, internal use only), keyed by a key to be confirmed.
+key: []
+id-pattern:
+- ^PX-
+dated-by: snapshot
+cadence:
+  frequency: intraday
+  due: on demand, when the connector is on
+storage:
+  connector: us-equities-prices
+  plugin: yfinance
+fields:
+- name: AS_OF
+  type: unknown
+  presence: optional
+  description: As of
+- name: CHANGE
+  type: unknown
+  presence: optional
+  description: Change
+- name: CHANGE_PCT
+  type: unknown
+  presence: optional
+  description: Change %
+- name: CURRENCY
+  type: unknown
+  presence: optional
+  description: Currency
+- name: DAY_HIGH
+  type: unknown
+  presence: optional
+  description: Day high
+- name: DAY_LOW
+  type: unknown
+  presence: optional
+  description: Day low
+- name: EXCHANGE
+  type: unknown
+  presence: optional
+  description: Exchange
+- name: FIFTY_TWO_WEEK_HIGH
+  type: unknown
+  presence: optional
+  description: 52-week high
+- name: FIFTY_TWO_WEEK_LOW
+  type: unknown
+  presence: optional
+  description: 52-week low
+- name: MARKET_STATE
+  type: unknown
+  presence: optional
+  description: Market
+- name: PRICE
+  type: unknown
+  presence: optional
+  description: Price
+- name: VOLUME
+  type: unknown
+  presence: optional
+  description: Volume
+links: []
+validation: []
+notes: []
+review:
+- 'no key could be read from the test data, the catalogue or the layout: name the business key.'
+- 'read live through the yfinance connector when it is on: confirm the cadence (intraday, on demand).'
+- 'no samples or test data ship for this kind: the fields are those its Sutras show (and its declared result); state every field''s type and presence.'
+- 'PXH analytics (returns, volatility, beta) become computed (GROUPINGS_AND_ANALYTICS.md): confirm which fields are analytics.'

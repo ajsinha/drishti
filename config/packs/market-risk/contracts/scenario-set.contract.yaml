@@ -1,0 +1,122 @@
+# Project Drishti · Any data. Any domain. One grammar.
+#
+# Copyright (c) 2026 Ashutosh Sinha <ajsinha@gmail.com>.
+# All rights reserved.
+#
+# PROPRIETARY AND CONFIDENTIAL.
+#
+# This file is the confidential and proprietary property of Ashutosh Sinha.
+# Unauthorised copying, use, modification, distribution or disclosure of this
+# file, via any medium, is strictly prohibited except with the express prior
+# written permission of the copyright holder.
+#
+# See the LICENSE file in the root of this repository for the full terms.
+
+# Data contract of the scenario-set kind (command SSET): docs/contracts/README.md section 16.
+# Drafted by `drishti.py contract bootstrap scenario-set`; owned by people from then on: confirm the review points, then remove them.
+kind: scenario-set
+mnemonic: SSET
+pack: market-risk
+version: '1.0'
+class: input
+status: active
+title: Scenario set
+description: Scenario set
+source: Synthetic sample data (tools/packgen/banking)
+grain: One row per scenario set per BUSINESS_DATE, keyed by SCENARIO_SET_ID.
+key:
+- SCENARIO_SET_ID
+id-pattern:
+- ^HS-
+dated-by: BUSINESS_DATE
+cadence:
+  frequency: daily
+  due: to be confirmed
+storage:
+  connector: risk-store
+  plugin: delta
+  domain: risk
+  table: <root>/risk/scenario-set/
+  test-data:
+  - data/testdata/market-risk/scenario-set
+fields:
+- name: SCENARIO_SET_ID
+  type: id
+  presence: required
+  description: The record's id (the business key)
+  example: HS-509
+  pattern: ^HS-
+- name: BUSINESS_DATE
+  type: date
+  presence: required
+  example: '2026-09-30'
+- name: SCENARIO_DATES
+  type: date list
+  presence: required
+  description: 'The historical days whose moves make the scenarios, oldest first: position i of every P&L vector is day i.'
+- name: SCENARIO_COUNT
+  type: integer
+  presence: required
+  example: 509
+- name: WINDOW_START
+  type: date
+  presence: required
+  description: The oldest scenario day.
+  example: '2024-09-17'
+- name: WINDOW_END
+  type: date
+  presence: required
+  description: 'The newest scenario day: the business day before the business date.'
+  example: '2026-09-29'
+- name: HORIZON_DAYS
+  type: integer
+  presence: required
+  example: 1
+- name: REVALUATION
+  type: text
+  presence: required
+  description: full (every trade repriced under each scenario) or sensitivities (a Taylor expansion), as the batch did it.
+  example: full
+- name: WEIGHTS
+  type: unknown
+  presence: optional
+- name: SOURCE_BATCH
+  type: text
+  presence: required
+  example: B-2026-09-30-01
+- name: DESCRIPTION
+  type: text
+  presence: required
+  example: Historical simulation, 509 business days, equal weights
+links: []
+validation:
+- rule: required
+  fields:
+  - SCENARIO_SET_ID
+  - BUSINESS_DATE
+  - SCENARIO_DATES
+  - SCENARIO_COUNT
+  - WINDOW_START
+  - WINDOW_END
+  - HORIZON_DAYS
+  - REVALUATION
+  - SOURCE_BATCH
+  - DESCRIPTION
+- rule: unique
+  key:
+  - SCENARIO_SET_ID
+  per: BUSINESS_DATE
+- rule: pattern
+  field: SCENARIO_SET_ID
+  pattern: ^HS-
+- rule: range
+  field: SCENARIO_COUNT
+  min: 0
+notes: []
+review:
+- 'required inferred from 100% coverage in 2 documents (1 samples and 1 test-data documents (data/testdata/market-risk/scenario-set/cob-2026-09-30.jsonl.gz)):
+  confirm each required field is mandatory upstream, and each optional one may be empty.'
+- 'source is the pack''s first listed source (its README): confirm.'
+- 'due time of each business date is not known: state it (for example, by 06:00 New York the next business day).'
+- 'no description in about.yaml or the Sutras for BUSINESS_DATE, SCENARIO_COUNT, HORIZON_DAYS, WEIGHTS, SOURCE_BATCH, DESCRIPTION: write them
+  in the pack''s config/about.yaml glossary.'

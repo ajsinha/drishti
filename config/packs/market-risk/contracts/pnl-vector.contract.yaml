@@ -1,0 +1,331 @@
+# Project Drishti · Any data. Any domain. One grammar.
+#
+# Copyright (c) 2026 Ashutosh Sinha <ajsinha@gmail.com>.
+# All rights reserved.
+#
+# PROPRIETARY AND CONFIDENTIAL.
+#
+# This file is the confidential and proprietary property of Ashutosh Sinha.
+# Unauthorised copying, use, modification, distribution or disclosure of this
+# file, via any medium, is strictly prohibited except with the express prior
+# written permission of the copyright holder.
+#
+# See the LICENSE file in the root of this repository for the full terms.
+
+# Data contract of the pnl-vector kind (command PNLV): docs/contracts/README.md section 16.
+# Drafted by `drishti.py contract bootstrap pnl-vector`; owned by people from then on: confirm the review points, then remove them.
+kind: pnl-vector
+mnemonic: PNLV
+pack: market-risk
+version: '1.0'
+class: input
+status: active
+title: P&L vector (509 scenarios)
+description: P&L vector of a trade
+source: Synthetic sample data (tools/packgen/banking)
+grain: One row per p&l vector (509 scenarios) per BUSINESS_DATE, keyed by VECTOR_ID.
+key:
+- VECTOR_ID
+id-pattern:
+- ^PV-
+dated-by: BUSINESS_DATE
+cadence:
+  frequency: daily
+  due: to be confirmed
+storage:
+  connector: risk-store
+  plugin: delta
+  domain: risk
+  table: <root>/risk/pnl-vector/
+  columns:
+  - TRADE_ID
+  - POSITION_ID
+  - INSTRUMENT_ID
+  - LEGAL_ENTITY
+  - DIVISION
+  - DESK
+  - TT_BOOK
+  - PORTFOLIO
+  - PRODUCT_GROUP
+  - PRODUCT_TYPE
+  - CURRENCY
+  - COUNTERPARTY
+  - DIRECTION
+  - QUANTITY
+  - PV
+  - STATUS
+  - SCENARIO_SET_ID
+  - BATCH_ID
+  vectors:
+  - PNL
+  test-data:
+  - data/testdata/market-risk/pnl-vector
+fields:
+- name: VECTOR_ID
+  type: id
+  presence: required
+  description: The record's id (the business key)
+  example: PV-MX-20000209-HS-509
+  pattern: ^PV-
+- name: TRADE_ID
+  type: id
+  presence: required
+  description: 'Trade: the trade it refers to'
+  example: MX-20000209
+  pattern: ^(MX|CLY)-\d+$
+  link: trade
+- name: POSITION_ID
+  type: id
+  presence: required
+  description: 'The holding the trade builds or reduces: its vector is the sum of its trades''.'
+  example: POS-BOOK-EQD-2~EQ_ASIAN-USD-2029Q2
+  pattern: ^POS-
+  link: position
+- name: INSTRUMENT_ID
+  type: id
+  presence: required
+  example: INS-EQ_ASIAN-USD-2029Q2
+- name: BUSINESS_DATE
+  type: date
+  presence: required
+  example: '2026-09-30'
+- name: SCENARIO_SET_ID
+  type: id
+  presence: required
+  example: HS-509
+- name: SOURCE_SYSTEM
+  type: text
+  presence: required
+  example: MUREX
+  enum:
+  - CALYPSO
+  - ENDUR
+  - MUREX
+- name: TRADE_VERSIONS
+  type: text
+  presence: required
+  example: v5
+- name: LEGAL_ENTITY
+  type: id
+  presence: required
+  description: 'Legal entity: the legal-entity it refers to'
+  example: LE-LDN
+  pattern: ^LE-
+  link: legal-entity
+- name: DIVISION
+  type: id
+  presence: required
+  example: DIV-MARKETS
+- name: DESK
+  type: id
+  presence: required
+  description: 'Desk: the desk it refers to'
+  example: DESK-EQD
+  pattern: ^DESK-
+  link: desk
+- name: TT_BOOK
+  type: id
+  presence: required
+  description: 'Book: the book it refers to'
+  example: BOOK-EQD-2
+  pattern: ^BOOK-
+  link: book
+- name: PORTFOLIO
+  type: id
+  presence: required
+  description: 'Portfolio: the book it refers to'
+  example: BOOK-EQD-2
+  pattern: ^BOOK-
+  link: book
+- name: STRATEGY
+  type: unknown
+  presence: optional
+- name: PRODUCT_GROUP
+  type: text
+  presence: required
+  example: Equity
+- name: PRODUCT_TYPE
+  type: text
+  presence: required
+  example: EQ_ASIAN
+- name: CURRENCY
+  type: text
+  presence: required
+  example: USD
+  enum:
+  - AUD
+  - CAD
+  - CHF
+  - EUR
+  - GBP
+  - JPY
+  - USD
+- name: COUNTERPARTY
+  type: id
+  presence: required
+  description: 'Counterparty: the counterparty it refers to'
+  example: CP-KESTREL
+  pattern: ^CP-
+  link: counterparty
+- name: DIRECTION
+  type: text
+  presence: required
+  example: SHORT
+  enum:
+  - LONG
+  - SHORT
+- name: QUANTITY
+  type: amount
+  presence: required
+  description: 'The trade''s quantity: positive for a buy, negative for a sell.'
+  example: -180000000.0
+- name: REPORTING_CCY
+  type: text
+  presence: required
+  example: USD
+- name: PV
+  type: amount
+  presence: required
+  unit: USD
+  description: The trade's value on the business date.
+  example: -83827
+- name: PNL
+  type: vector
+  presence: required
+  unit: USD
+  description: 'The trade''s P&L under each historical scenario day, oldest first: index i is the scenario set''s day i.'
+  note: 509 values in the test data
+- name: STATUS
+  type: text
+  presence: required
+  description: 'ok, proxied (priced by a proxy) or failed (no vector: counted, never taken as zero).'
+  example: ok
+- name: PRICER
+  type: text
+  presence: required
+  example: demo-factor-model
+- name: MODEL_VERSION
+  type: text
+  presence: required
+  example: demo-1
+- name: COMPUTED_AT
+  type: timestamp
+  presence: required
+  example: '2026-09-30T22:30:00Z'
+- name: BATCH_ID
+  type: id
+  presence: required
+  example: B-2026-09-30-01
+- name: RESTATEMENT
+  type: integer
+  presence: required
+  example: 0
+links:
+- field: TRADE_ID
+  kind: trade
+- field: POSITION_ID
+  kind: position
+- field: LEGAL_ENTITY
+  kind: legal-entity
+- field: DESK
+  kind: desk
+- field: TT_BOOK
+  kind: book
+- field: PORTFOLIO
+  kind: book
+- field: COUNTERPARTY
+  kind: counterparty
+validation:
+- rule: required
+  fields:
+  - VECTOR_ID
+  - TRADE_ID
+  - POSITION_ID
+  - INSTRUMENT_ID
+  - BUSINESS_DATE
+  - SCENARIO_SET_ID
+  - SOURCE_SYSTEM
+  - TRADE_VERSIONS
+  - LEGAL_ENTITY
+  - DIVISION
+  - DESK
+  - TT_BOOK
+  - PORTFOLIO
+  - PRODUCT_GROUP
+  - PRODUCT_TYPE
+  - CURRENCY
+  - COUNTERPARTY
+  - DIRECTION
+  - QUANTITY
+  - REPORTING_CCY
+  - PV
+  - PNL
+  - STATUS
+  - PRICER
+  - MODEL_VERSION
+  - COMPUTED_AT
+  - BATCH_ID
+  - RESTATEMENT
+- rule: unique
+  key:
+  - VECTOR_ID
+  per: BUSINESS_DATE
+- rule: pattern
+  field: VECTOR_ID
+  pattern: ^PV-
+- rule: link
+  field: TRADE_ID
+  kind: trade
+- rule: link
+  field: POSITION_ID
+  kind: position
+- rule: enum
+  field: SOURCE_SYSTEM
+  values:
+  - CALYPSO
+  - ENDUR
+  - MUREX
+- rule: link
+  field: LEGAL_ENTITY
+  kind: legal-entity
+- rule: link
+  field: DESK
+  kind: desk
+- rule: link
+  field: TT_BOOK
+  kind: book
+- rule: link
+  field: PORTFOLIO
+  kind: book
+- rule: enum
+  field: CURRENCY
+  values:
+  - AUD
+  - CAD
+  - CHF
+  - EUR
+  - GBP
+  - JPY
+  - USD
+- rule: link
+  field: COUNTERPARTY
+  kind: counterparty
+- rule: enum
+  field: DIRECTION
+  values:
+  - LONG
+  - SHORT
+- rule: vector-length
+  field: PNL
+  same: every row of one business date
+notes: []
+review:
+- 'required inferred from 100% coverage in 1674 documents (1 samples and 1673 test-data documents (data/testdata/market-risk/pnl-vector/cob-2026-09-30.part-001.jsonl.gz,
+  data/testdata/market-risk/pnl-vector/cob-2026-09-30.part-002.jsonl.gz)): confirm each required field is mandatory upstream, and each optional
+  one may be empty.'
+- 'source is the pack''s first listed source (its README): confirm.'
+- 'due time of each business date is not known: state it (for example, by 06:00 New York the next business day).'
+- 'enum values inferred from the data, not from a glossary: SOURCE_SYSTEM, CURRENCY, DIRECTION: confirm they are closed lists.'
+- 'no unit stated for the amounts QUANTITY (docs/contracts/README.md section 7: USD unless stated): confirm the currency.'
+- 'no description in about.yaml or the Sutras for INSTRUMENT_ID, BUSINESS_DATE, SCENARIO_SET_ID, SOURCE_SYSTEM, TRADE_VERSIONS, DIVISION, STRATEGY,
+  PRODUCT_GROUP, PRODUCT_TYPE, CURRENCY, DIRECTION, REPORTING_CCY and 5 more: write them in the pack''s config/about.yaml glossary.'

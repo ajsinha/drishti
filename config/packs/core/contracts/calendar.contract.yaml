@@ -1,0 +1,149 @@
+# Project Drishti · Any data. Any domain. One grammar.
+#
+# Copyright (c) 2026 Ashutosh Sinha <ajsinha@gmail.com>.
+# All rights reserved.
+#
+# PROPRIETARY AND CONFIDENTIAL.
+#
+# This file is the confidential and proprietary property of Ashutosh Sinha.
+# Unauthorised copying, use, modification, distribution or disclosure of this
+# file, via any medium, is strictly prohibited except with the express prior
+# written permission of the copyright holder.
+#
+# See the LICENSE file in the root of this repository for the full terms.
+
+# Data contract of the calendar kind (command CAL): docs/contracts/README.md section 16.
+# Drafted by `drishti.py contract bootstrap calendar`; owned by people from then on: confirm the review points, then remove them.
+kind: calendar
+mnemonic: CAL
+pack: core
+version: '1.0'
+class: fundamental
+status: active
+title: Holiday calendar
+description: Business-day calendar (USNY, TARGET, GBLO, JPTO…).
+source: reference-master
+grain: One row per holiday calendar per business date, keyed by CALENDAR_ID.
+key:
+- CALENDAR_ID
+id-pattern:
+- ^CAL-
+dated-by: business_date
+cadence:
+  frequency: daily
+  due: to be confirmed
+storage:
+  connector: reference-store
+  plugin: delta
+  domain: reference
+  table: <root>/reference/calendar/
+  test-data:
+  - data/testdata/core/calendar
+fields:
+- name: CALENDAR_ID
+  type: id
+  presence: required
+  description: The record's id (the business key)
+  example: CAL-EUTA
+  pattern: ^CAL-
+- name: NAME
+  type: text
+  presence: required
+  description: Name
+  example: TARGET2
+- name: HOLIDAYS
+  type: record list
+  presence: required
+  description: 'Nested: see nested HOLIDAYS[]'
+- name: HOLIDAYS_2026
+  type: integer
+  presence: required
+  description: Holidays 2026
+  example: 5
+- name: HOLIDAYS_2027
+  type: integer
+  presence: required
+  description: Holidays 2027
+  example: 3
+- name: NEXT_HOLIDAY
+  type: text
+  presence: required
+  description: Next holiday
+  example: Christmas Day
+- name: NEXT_HOLIDAY_DATE
+  type: date
+  presence: required
+  description: 'On'
+  example: '2026-12-25'
+- name: WEEKEND
+  type: text list
+  presence: required
+nested:
+  HOLIDAYS[]:
+  - name: DATE
+    type: date
+    presence: required
+    description: Date
+    example: '2026-01-01'
+  - name: NAME
+    type: text
+    presence: required
+    description: Holiday
+    example: New Year's Day
+  - name: WEEKDAY
+    type: text
+    presence: required
+    description: Day
+    example: Thursday
+    enum:
+    - Friday
+    - Monday
+    - Thursday
+    - Tuesday
+    - Wednesday
+  - name: YEAR
+    type: integer
+    presence: required
+    example: 2026
+  - name: OBSERVED
+    type: text
+    presence: optional
+    description: Observed
+    example: 'Yes'
+links: []
+validation:
+- rule: required
+  fields:
+  - CALENDAR_ID
+  - NAME
+  - HOLIDAYS
+  - HOLIDAYS_2026
+  - HOLIDAYS_2027
+  - NEXT_HOLIDAY
+  - NEXT_HOLIDAY_DATE
+  - WEEKEND
+- rule: unique
+  key:
+  - CALENDAR_ID
+  per: business_date
+- rule: pattern
+  field: CALENDAR_ID
+  pattern: ^CAL-
+- rule: enum
+  field: HOLIDAYS[].WEEKDAY
+  values:
+  - Friday
+  - Monday
+  - Thursday
+  - Tuesday
+  - Wednesday
+notes:
+- 'Dated by the lake''s business_date partition: `drishti.py lake build` writes each test-data file''s day into it; the documents carry no date
+  field of their own.'
+review:
+- 'required inferred from 100% coverage in 8 documents (4 samples and 4 test-data documents (data/testdata/core/calendar/snapshot-2026-07-08.jsonl.gz,
+  data/testdata/core/calendar/changes-2026-09-30.jsonl.gz)): confirm each required field is mandatory upstream, and each optional one may be empty.'
+- 'source ''reference-master'' is the test data''s _meta.source (synthetic): name the production system that delivers it.'
+- 'due time of each business date is not known: state it (for example, by 06:00 New York the next business day).'
+- 'enum values inferred from the data, not from a glossary: HOLIDAYS[].WEEKDAY: confirm they are closed lists.'
+- 'no description in about.yaml or the Sutras for WEEKEND, HOLIDAYS[].YEAR: write them in the pack''s config/about.yaml glossary.'

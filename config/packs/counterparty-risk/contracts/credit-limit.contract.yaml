@@ -1,0 +1,195 @@
+# Project Drishti · Any data. Any domain. One grammar.
+#
+# Copyright (c) 2026 Ashutosh Sinha <ajsinha@gmail.com>.
+# All rights reserved.
+#
+# PROPRIETARY AND CONFIDENTIAL.
+#
+# This file is the confidential and proprietary property of Ashutosh Sinha.
+# Unauthorised copying, use, modification, distribution or disclosure of this
+# file, via any medium, is strictly prohibited except with the express prior
+# written permission of the copyright holder.
+#
+# See the LICENSE file in the root of this repository for the full terms.
+
+# Data contract of the credit-limit kind (command LIM): docs/contracts/README.md section 16.
+# Drafted by `drishti.py contract bootstrap credit-limit`; owned by people from then on: confirm the review points, then remove them.
+kind: credit-limit
+mnemonic: LIM
+pack: counterparty-risk
+version: '1.0'
+class: fundamental
+status: active
+title: Credit limit
+description: PFE limit by tenor bucket for a counterparty, with utilisation.
+source: limits-system
+grain: One row per credit limit per business date, keyed by LIMIT_ID.
+key:
+- LIMIT_ID
+id-pattern:
+- ^LIM-
+dated-by: business_date
+cadence:
+  frequency: daily
+  due: to be confirmed
+storage:
+  connector: credit-store
+  plugin: delta
+  domain: credit
+  table: <root>/credit/credit-limit/
+  test-data:
+  - data/testdata/counterparty-risk/credit-limit
+fields:
+- name: LIMIT_ID
+  type: id
+  presence: required
+  description: The record's id (the business key)
+  example: LIM-ALDERSHOT
+  pattern: ^LIM-
+- name: COUNTERPARTY_NAME
+  type: text
+  presence: required
+  description: The legal entity the limit applies to.
+  example: Aldershot Pension Trust
+- name: MEASURE
+  type: text
+  presence: required
+  description: The exposure measure the limit is set on, for example the peak of the 95th-percentile potential future exposure.
+  example: PFE 95 peak
+- name: LIMIT
+  type: amount
+  presence: required
+  unit: USD
+  description: The most exposure the bank accepts to the counterparty on this measure.
+  example: 337000000.0
+- name: USED
+  type: amount
+  presence: derived
+  unit: USD
+  description: The exposure measured today against the limit.
+  example: 224800213
+  retiring-in: 2.10.0
+  note: computed by limit usage (LIM) from 2.10.0; removed from the stored record then
+- name: UTILISATION
+  type: rate
+  presence: derived
+  unit: '% of limit'
+  description: 'The share of the limit that is used: used divided by limit. Above 100% is a breach.'
+  example: 0.6671
+  retiring-in: 2.10.0
+  note: computed by limit usage (LIM) from 2.10.0; removed from the stored record then
+- name: STATUS
+  type: text
+  presence: derived
+  description: Status
+  example: Within limit
+  enum:
+  - Early warning
+  - Within limit
+  retiring-in: 2.10.0
+  note: computed by limit usage (LIM) from 2.10.0; removed from the stored record then
+- name: BUCKETS
+  type: record list
+  presence: required
+  description: 'Nested: see nested BUCKETS[]'
+- name: COUNTERPARTY
+  type: id
+  presence: required
+  description: 'Counterparty: the counterparty it refers to'
+  example: CP-ALDERSHOT
+  pattern: ^CP-
+  link: counterparty
+- name: APPROVED_BY
+  type: text
+  presence: required
+  example: Credit Risk Committee
+- name: REVIEW_DUE
+  type: date
+  presence: required
+  example: '2027-03-19'
+nested:
+  BUCKETS[]:
+  - name: BUCKET
+    type: text
+    presence: required
+    description: The range of years to maturity the limit is split into; exposure on trades that mature within it is counted against it.
+    example: 0-1Y
+    enum:
+    - 0-1Y
+    - 1-3Y
+    - 10Y+
+    - 3-5Y
+    - 5-10Y
+  - name: LIMIT
+    type: amount
+    presence: required
+    unit: USD
+    description: The limit that applies to this tenor bucket.
+    example: 337000000
+  - name: USED
+    type: amount
+    presence: derived
+    unit: USD
+    description: The exposure in this tenor bucket.
+    example: 191080181
+    retiring-in: 2.10.0
+    note: computed by limit usage (LIM) from 2.10.0; removed from the stored record then
+  - name: UTILISATION
+    type: rate
+    presence: derived
+    unit: '% of limit'
+    description: 'The share of the limit that is used: used divided by limit. Above 100% is a breach.'
+    example: 0.567
+    retiring-in: 2.10.0
+    note: computed by limit usage (LIM) from 2.10.0; removed from the stored record then
+links:
+- field: COUNTERPARTY
+  kind: counterparty
+validation:
+- rule: required
+  fields:
+  - LIMIT_ID
+  - COUNTERPARTY_NAME
+  - MEASURE
+  - LIMIT
+  - BUCKETS
+  - COUNTERPARTY
+  - APPROVED_BY
+  - REVIEW_DUE
+- rule: unique
+  key:
+  - LIMIT_ID
+  per: business_date
+- rule: pattern
+  field: LIMIT_ID
+  pattern: ^LIM-
+- rule: enum
+  field: STATUS
+  values:
+  - Early warning
+  - Within limit
+- rule: link
+  field: COUNTERPARTY
+  kind: counterparty
+- rule: enum
+  field: BUCKETS[].BUCKET
+  values:
+  - 0-1Y
+  - 1-3Y
+  - 10Y+
+  - 3-5Y
+  - 5-10Y
+notes:
+- 'Dated by the lake''s business_date partition: `drishti.py lake build` writes each test-data file''s day into it; the documents carry no date
+  field of their own.'
+- 'Terms kept, figures computed from 2.10.0 (docs/contracts/LIM.md): the fields marked derived are computed by limit usage (LIM) and leave the
+  stored record then.'
+review:
+- 'required inferred from 100% coverage in 66 documents (18 samples and 48 test-data documents (data/testdata/counterparty-risk/credit-limit/snapshot-2026-07-08.jsonl.gz,
+  data/testdata/counterparty-risk/credit-limit/changes-2026-09-30.jsonl.gz)): confirm each required field is mandatory upstream, and each optional
+  one may be empty.'
+- 'source ''limits-system'' is the test data''s _meta.source (synthetic): name the production system that delivers it.'
+- 'due time of each business date is not known: state it (for example, by 06:00 New York the next business day).'
+- 'enum values inferred from the data, not from a glossary: STATUS, BUCKETS[].BUCKET: confirm they are closed lists.'
+- 'no description in about.yaml or the Sutras for APPROVED_BY, REVIEW_DUE: write them in the pack''s config/about.yaml glossary.'
+- 'STATUS (Within limit, ...) follows from UTILISATION: confirm it is computed, not set by the limits system.'

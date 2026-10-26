@@ -1,0 +1,226 @@
+# Project Drishti · Any data. Any domain. One grammar.
+#
+# Copyright (c) 2026 Ashutosh Sinha <ajsinha@gmail.com>.
+# All rights reserved.
+#
+# PROPRIETARY AND CONFIDENTIAL.
+#
+# This file is the confidential and proprietary property of Ashutosh Sinha.
+# Unauthorised copying, use, modification, distribution or disclosure of this
+# file, via any medium, is strictly prohibited except with the express prior
+# written permission of the copyright holder.
+#
+# See the LICENSE file in the root of this repository for the full terms.
+
+# Data contract of the margin-call kind (command MC): docs/contracts/README.md section 16.
+# Drafted by `drishti.py contract bootstrap margin-call`; owned by people from then on: confirm the review points, then remove them.
+kind: margin-call
+mnemonic: MC
+pack: counterparty-risk
+version: '1.0'
+class: fundamental
+status: active
+title: Margin call
+description: A variation or initial margin call and its settlement status.
+source: collateral-system
+grain: One row per margin call per business date, keyed by CALL_ID.
+key:
+- CALL_ID
+id-pattern:
+- ^MC-
+dated-by: business_date
+cadence:
+  frequency: daily
+  due: to be confirmed
+storage:
+  connector: collateral-store
+  plugin: delta
+  domain: collateral
+  table: <root>/collateral/margin-call/
+  test-data:
+  - data/testdata/counterparty-risk/margin-call
+fields:
+- name: CALL_ID
+  type: id
+  presence: required
+  description: The record's id (the business key)
+  example: MC-ALDERSHOT-FRA-1
+  pattern: ^MC-
+- name: CALL_DATE
+  type: date
+  presence: required
+  description: The day the margin call was issued.
+  example: '2026-09-30'
+- name: MARGIN_TYPE
+  type: text
+  presence: required
+  description: Variation margin settles the change in the value of the trades each day; initial margin is held against the risk of the value moving
+    before a defaulted counterparty can be replaced.
+  example: Variation
+  enum:
+  - Variation
+  - Initial
+- name: DIRECTION
+  type: text
+  presence: required
+  description: Who calls on whom.
+  example: They call
+  enum:
+  - We call
+  - They call
+- name: AMOUNT
+  type: amount
+  presence: required
+  description: Amount
+  example: 18000.0
+- name: STATUS
+  type: text
+  presence: required
+  description: Status
+  example: Agreed
+  enum:
+  - Agreed
+  - Settled
+- name: DISPUTE_AMOUNT
+  type: amount
+  presence: required
+  unit: call currency
+  description: The part of the call the other party does not accept. Undisputed margin is still due on time; the difference goes to dispute resolution.
+  example: 0
+- name: EVENTS
+  type: record list
+  presence: required
+  description: 'Nested: see nested EVENTS[]'
+- name: NETTING_SET
+  type: id
+  presence: required
+  description: 'Netting set: the netting-set it refers to'
+  example: NS-ALDERSHOT-FRA
+  pattern: ^NS-
+  link: netting-set
+- name: CSA
+  type: id
+  presence: required
+  description: 'CSA: the csa it refers to'
+  example: CSA-ALDERSHOT
+  pattern: ^CSA-
+  link: csa
+- name: CURRENCY
+  type: text
+  presence: required
+  example: USD
+nested:
+  EVENTS[]:
+  - name: AT
+    type: text
+    presence: required
+    description: When the step happened.
+    example: 2026-09-30 09:05
+    enum:
+    - 2026-09-28 09:05
+    - 2026-09-28 11:40
+    - 2026-09-29 10:15
+    - 2026-09-30 09:05
+    - 2026-09-30 11:40
+  - name: EVENT
+    type: text
+    presence: required
+    description: The stage of the call, from issue to agreement and settlement.
+    example: Call issued
+    enum:
+    - Agreed
+    - Call issued
+    - Settled
+  - name: BY
+    type: text
+    presence: required
+    description: The party or system that took the step.
+    example: collateral-system
+    enum:
+    - collateral-system
+    - counterparty ops
+    - payments
+links:
+- field: NETTING_SET
+  kind: netting-set
+- field: CSA
+  kind: csa
+validation:
+- rule: required
+  fields:
+  - CALL_ID
+  - CALL_DATE
+  - MARGIN_TYPE
+  - DIRECTION
+  - AMOUNT
+  - STATUS
+  - DISPUTE_AMOUNT
+  - EVENTS
+  - NETTING_SET
+  - CSA
+  - CURRENCY
+- rule: unique
+  key:
+  - CALL_ID
+  per: business_date
+- rule: pattern
+  field: CALL_ID
+  pattern: ^MC-
+- rule: enum
+  field: MARGIN_TYPE
+  values:
+  - Variation
+  - Initial
+- rule: enum
+  field: DIRECTION
+  values:
+  - We call
+  - They call
+- rule: enum
+  field: STATUS
+  values:
+  - Agreed
+  - Settled
+- rule: link
+  field: NETTING_SET
+  kind: netting-set
+- rule: link
+  field: CSA
+  kind: csa
+- rule: enum
+  field: EVENTS[].AT
+  values:
+  - 2026-09-28 09:05
+  - 2026-09-28 11:40
+  - 2026-09-29 10:15
+  - 2026-09-30 09:05
+  - 2026-09-30 11:40
+- rule: enum
+  field: EVENTS[].EVENT
+  values:
+  - Agreed
+  - Call issued
+  - Settled
+- rule: enum
+  field: EVENTS[].BY
+  values:
+  - collateral-system
+  - counterparty ops
+  - payments
+notes:
+- 'Dated by the lake''s business_date partition: `drishti.py lake build` writes each test-data file''s day into it; the documents carry no date
+  field of their own.'
+- Actual calls and their events are kept (workflow); the expected call (MtM minus collateral minus threshold, then minimum transfer and rounding)
+  is computed and shown beside the call. No stored field is the expected call today.
+- 'Terms kept, figures computed from 2.10.0 (docs/contracts/MC.md): the fields marked derived are computed by the expected margin call (MC) and
+  leave the stored record then.'
+review:
+- 'required inferred from 100% coverage in 284 documents (132 samples and 152 test-data documents (data/testdata/counterparty-risk/margin-call/snapshot-2026-07-08.jsonl.gz,
+  data/testdata/counterparty-risk/margin-call/changes-2026-09-30.jsonl.gz)): confirm each required field is mandatory upstream, and each optional
+  one may be empty.'
+- 'source ''collateral-system'' is the test data''s _meta.source (synthetic): name the production system that delivers it.'
+- 'due time of each business date is not known: state it (for example, by 06:00 New York the next business day).'
+- 'enum values inferred from the data, not from a glossary: STATUS, EVENTS[].AT, EVENTS[].EVENT, EVENTS[].BY: confirm they are closed lists.'
+- 'number types decided by the field''s name: AMOUNT amount: confirm amount, rate or integer.'
+- 'no unit stated for the amounts AMOUNT (docs/contracts/README.md section 7: USD unless stated): confirm the currency.'
+- 'no description in about.yaml or the Sutras for CURRENCY: write them in the pack''s config/about.yaml glossary.'

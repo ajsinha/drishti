@@ -1,0 +1,206 @@
+# Project Drishti · Any data. Any domain. One grammar.
+#
+# Copyright (c) 2026 Ashutosh Sinha <ajsinha@gmail.com>.
+# All rights reserved.
+#
+# PROPRIETARY AND CONFIDENTIAL.
+#
+# This file is the confidential and proprietary property of Ashutosh Sinha.
+# Unauthorised copying, use, modification, distribution or disclosure of this
+# file, via any medium, is strictly prohibited except with the express prior
+# written permission of the copyright holder.
+#
+# See the LICENSE file in the root of this repository for the full terms.
+
+# Data contract of the index-membership kind (command IDX): docs/contracts/README.md section 16.
+# Drafted by `drishti.py contract bootstrap index-membership`; owned by people from then on: confirm the review points, then remove them.
+kind: index-membership
+mnemonic: IDX
+pack: us-equities
+version: '1.0'
+class: fundamental
+status: active
+title: Index members
+description: An equity index's members (Dow 30, Nasdaq-100, S&P 500) as Wikidata records them; a click opens the member's summary beside.
+source: 'public data: SEC EDGAR, Nasdaq Trader, GLEIF and Wikidata (tools/publicdata/us_equities.py)'
+grain: One row per index members, keyed by INDEX.
+key:
+- INDEX
+dated-by: snapshot
+cadence:
+  frequency: static
+  due: to be confirmed
+storage:
+  connector: us-equities-store
+  plugin: delta
+  domain: us-equities
+  table: <root>/us-equities/index-membership/
+  columns:
+  - INDEX
+  - NAME
+  - MEMBERS
+  test-data:
+  - data/testdata/us-equities/index-membership
+fields:
+- name: INDEX
+  type: id
+  presence: required
+  description: The record's id (the business key)
+  example: DJIA
+- name: NAME
+  type: text
+  presence: required
+  description: Index
+  example: Dow Jones Industrial Average
+- name: MEMBERS
+  type: integer
+  presence: required
+  description: Members
+  example: 34
+- name: SECTORS
+  type: integer
+  presence: required
+  description: SIC divisions
+  example: 5
+- name: REVENUE
+  type: amount
+  presence: required
+  description: Members' revenue
+  example: 4829280300000
+- name: NET_INCOME
+  type: amount
+  presence: required
+  description: Members' net income
+  example: 804912500000
+- name: BY_SECTOR
+  type: record list
+  presence: required
+  description: 'Nested: see nested BY_SECTOR[]'
+- name: ROWS
+  type: record list
+  presence: required
+  description: 'Nested: see nested ROWS[]'
+- name: PROVENANCE
+  type: record
+  presence: required
+  description: 'Nested: see nested PROVENANCE'
+nested:
+  BY_SECTOR[]:
+  - name: LABEL
+    type: text
+    presence: required
+    example: Manufacturing
+  - name: VALUE
+    type: amount
+    presence: required
+    example: 19
+  ROWS[]:
+  - name: TICKER
+    type: text
+    presence: required
+    example: AAPL
+  - name: NAME
+    type: text
+    presence: required
+    example: Apple Inc.
+  - name: SECTOR
+    type: text
+    presence: required
+    example: Manufacturing
+    enum:
+    - Finance, Insurance and Real Estate
+    - Manufacturing
+    - Retail Trade
+    - Services
+    - Transportation, Communications, Electric, Gas and Sanitary Services
+  - name: SIC
+    type: text
+    presence: required
+    example: '3571'
+  - name: SIC_DESCRIPTION
+    type: text
+    presence: required
+    example: Electronic Computers
+  - name: EXCHANGE
+    type: text
+    presence: required
+    example: Nasdaq
+  - name: REVENUE
+    type: amount
+    presence: optional
+    example: 416161000000
+  - name: NET_INCOME
+    type: amount
+    presence: required
+    example: 112010000000
+  - name: NET_MARGIN
+    type: rate
+    presence: optional
+    example: 26.92
+  - name: CURRENCY
+    type: text
+    presence: required
+    example: USD
+  - name: FISCAL_YEAR
+    type: integer
+    presence: required
+    example: 2025
+  - name: SINCE
+    type: date
+    presence: optional
+    example: '2000-06-05'
+  PROVENANCE:
+  - name: SOURCE
+    type: text
+    presence: required
+    example: Wikidata (index membership as Wikidata records it); SEC EDG…
+  - name: LICENCE
+    type: text
+    presence: required
+    example: CC0 1.0 (Wikidata); public domain (SEC EDGAR)
+  - name: NOTE
+    type: text
+    presence: required
+    example: Membership only. Index weights and levels are proprietary t…
+  - name: RETRIEVED_AT
+    type: date
+    presence: required
+    example: '2026-10-24'
+links: []
+validation:
+- rule: required
+  fields:
+  - INDEX
+  - NAME
+  - MEMBERS
+  - SECTORS
+  - REVENUE
+  - NET_INCOME
+  - BY_SECTOR
+  - ROWS
+  - PROVENANCE
+- rule: unique
+  key:
+  - INDEX
+  per: snapshot
+- rule: enum
+  field: ROWS[].SECTOR
+  values:
+  - Finance, Insurance and Real Estate
+  - Manufacturing
+  - Retail Trade
+  - Services
+  - Transportation, Communications, Electric, Gas and Sanitary Services
+notes: []
+review:
+- 'required inferred from 100% coverage in 7 documents (1 samples and 6 test-data documents (data/testdata/us-equities/index-membership/snapshot-2026-10-24.jsonl.gz)):
+  confirm each required field is mandatory upstream, and each optional one may be empty.'
+- 'a snapshot refreshed when tools/publicdata/us_equities.py runs: confirm the refresh cadence.'
+- 'enum values inferred from the data, not from a glossary: ROWS[].SECTOR: confirm they are closed lists.'
+- 'number types decided by the field''s name: REVENUE amount, NET_INCOME amount, BY_SECTOR[].VALUE amount, ROWS[].REVENUE amount, ROWS[].NET_INCOME
+  amount, ROWS[].NET_MARGIN rate: confirm amount, rate or integer.'
+- 'no unit stated for the amounts REVENUE, NET_INCOME, BY_SECTOR[].VALUE, ROWS[].REVENUE, ROWS[].NET_INCOME (docs/contracts/README.md section
+  7: USD unless stated): confirm the currency.'
+- 'no description in about.yaml or the Sutras for BY_SECTOR[].LABEL, BY_SECTOR[].VALUE, ROWS[].TICKER, ROWS[].NAME, ROWS[].SECTOR, ROWS[].SIC,
+  ROWS[].SIC_DESCRIPTION, ROWS[].EXCHANGE, ROWS[].REVENUE, ROWS[].NET_INCOME, ROWS[].NET_MARGIN, ROWS[].CURRENCY and 6 more: write them in the
+  pack''s config/about.yaml glossary.'

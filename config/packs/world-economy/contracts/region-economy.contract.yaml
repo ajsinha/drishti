@@ -1,0 +1,246 @@
+# Project Drishti · Any data. Any domain. One grammar.
+#
+# Copyright (c) 2026 Ashutosh Sinha <ajsinha@gmail.com>.
+# All rights reserved.
+#
+# PROPRIETARY AND CONFIDENTIAL.
+#
+# This file is the confidential and proprietary property of Ashutosh Sinha.
+# Unauthorised copying, use, modification, distribution or disclosure of this
+# file, via any medium, is strictly prohibited except with the express prior
+# written permission of the copyright holder.
+#
+# See the LICENSE file in the root of this repository for the full terms.
+
+# Data contract of the region-economy kind (command REGE): docs/contracts/README.md section 16.
+# Drafted by `drishti.py contract bootstrap region-economy`; owned by people from then on: confirm the review points, then remove them.
+kind: region-economy
+mnemonic: REGE
+pack: world-economy
+version: '1.0'
+class: fundamental
+status: active
+title: Region economy
+description: 'A state or territory (ISO 3166-2): population, GDP and GDP per head.'
+source: 'public data: Illustrative, rounded from public figures (US Census Bureau Vintage 2023 population estimates and BEA state GDP 2023, current
+  dollars); not for reporting'
+grain: One row per region economy, keyed by REGION_ID.
+key:
+- REGION_ID
+id-pattern:
+- ^REGE-
+dated-by: snapshot
+cadence:
+  frequency: static
+  due: to be confirmed
+storage:
+  connector: macro-store
+  plugin: delta
+  domain: macro
+  table: <root>/macro/region-economy/
+  columns:
+  - ISO3
+  - COUNTRY_NAME
+  - REGION_CODE
+  - NAME
+  - POPULATION
+  - GDP_USD_BN
+  - GDP_PER_CAPITA
+  - YEAR
+  - SOURCE
+  test-data:
+  - config/packs/world-economy/samples
+fields:
+- name: REGION_ID
+  type: id
+  presence: required
+  description: The record's id (the business key)
+  example: REGE-AU-ACT
+  pattern: ^REGE-
+- name: NAME
+  type: text
+  presence: required
+  description: The state or territory.
+  example: Australian Capital Territory
+- name: REGION_CODE
+  type: text
+  presence: required
+  description: The ISO 3166-2 code of the region (AU-NSW, US-CA); the BI map shades the region it names.
+  example: AU-ACT
+- name: ISO3
+  type: text
+  presence: required
+  example: AUS
+  enum:
+  - AUS
+  - USA
+- name: COUNTRY_NAME
+  type: text
+  presence: required
+  description: The country the region belongs to.
+  example: Australia
+  enum:
+  - Australia
+  - United States
+- name: YEAR
+  type: text
+  presence: required
+  example: '2023'
+- name: POPULATION_M
+  type: amount
+  presence: required
+  unit: millions
+  description: People living in the region, rounded to the nearest 10,000 and shown in millions. Illustrative.
+  example: 0.46
+- name: POPULATION
+  type: integer
+  presence: required
+  example: 460000
+- name: GDP_USD_BN
+  type: amount
+  presence: required
+  unit: USD billions
+  description: The region's output in US dollars, rounded to the nearest billion. Illustrative, not for reporting.
+  example: 33
+- name: GDP_PER_CAPITA
+  type: integer
+  presence: required
+  unit: USD
+  description: GDP over population, in US dollars. Illustrative.
+  example: 71739
+- name: SOURCE
+  type: text
+  presence: required
+  example: Illustrative, rounded from public figures (ABS Australian D…
+  enum:
+  - 'Illustrative, rounded from public figures (ABS Australian Demographic Statistics, December 2023, and ABS Australian National Accounts: State
+    Accounts 2022-23, in US dollars at a rounded rate); not for reporting'
+  - Illustrative, rounded from public figures (US Census Bureau Vintage 2023 population estimates and BEA state GDP 2023, current dollars); not
+    for reporting
+- name: FACTS
+  type: record
+  presence: required
+  description: 'Nested: see nested FACTS'
+- name: ECONOMY
+  type: id
+  presence: required
+  description: 'Economy: the economy it refers to'
+  example: ECON-AUS
+  pattern: ^ECON-
+  link: economy
+- name: PROVENANCE
+  type: record
+  presence: required
+  description: 'Nested: see nested PROVENANCE'
+nested:
+  FACTS:
+  - name: STATUS
+    type: text
+    presence: required
+    example: Illustrative, rounded from public figures, not for reporting
+  - name: REGION_CODE
+    type: text
+    presence: required
+    example: AU-ACT
+  - name: POPULATION
+    type: text
+    presence: required
+    example: to the nearest 10,000
+  - name: GDP
+    type: text
+    presence: required
+    example: to the nearest US$ billion
+  PROVENANCE:
+  - name: SOURCE
+    type: text
+    presence: required
+    description: The public figures the illustrative numbers were rounded from.
+    example: Illustrative, rounded from public figures (ABS Australian D…
+    enum:
+    - 'Illustrative, rounded from public figures (ABS Australian Demographic Statistics, December 2023, and ABS Australian National Accounts:
+      State Accounts 2022-23, in US dollars at a rounded rate); not for reporting'
+    - Illustrative, rounded from public figures (US Census Bureau Vintage 2023 population estimates and BEA state GDP 2023, current dollars);
+      not for reporting
+  - name: DATASET
+    type: text
+    presence: required
+    example: Region economics (illustrative sample)
+  - name: RETRIEVED_AT
+    type: date
+    presence: required
+    example: '2026-10-12'
+  - name: LICENCE
+    type: text
+    presence: required
+    example: Illustrative, rounded from public figures; not for reporting
+  - name: ATTRIBUTION
+    type: text
+    presence: required
+    example: Illustrative, rounded from public figures, not for reportin…
+  - name: URL
+    type: unknown
+    presence: optional
+links:
+- field: ECONOMY
+  kind: economy
+validation:
+- rule: required
+  fields:
+  - REGION_ID
+  - NAME
+  - REGION_CODE
+  - ISO3
+  - COUNTRY_NAME
+  - YEAR
+  - POPULATION_M
+  - POPULATION
+  - GDP_USD_BN
+  - GDP_PER_CAPITA
+  - SOURCE
+  - FACTS
+  - ECONOMY
+  - PROVENANCE
+- rule: unique
+  key:
+  - REGION_ID
+  per: snapshot
+- rule: pattern
+  field: REGION_ID
+  pattern: ^REGE-
+- rule: enum
+  field: ISO3
+  values:
+  - AUS
+  - USA
+- rule: enum
+  field: COUNTRY_NAME
+  values:
+  - Australia
+  - United States
+- rule: enum
+  field: SOURCE
+  values:
+  - 'Illustrative, rounded from public figures (ABS Australian Demographic Statistics, December 2023, and ABS Australian National Accounts: State
+    Accounts 2022-23, in US dollars at a rounded rate); not for reporting'
+  - Illustrative, rounded from public figures (US Census Bureau Vintage 2023 population estimates and BEA state GDP 2023, current dollars); not
+    for reporting
+- rule: link
+  field: ECONOMY
+  kind: economy
+- rule: enum
+  field: PROVENANCE.SOURCE
+  values:
+  - 'Illustrative, rounded from public figures (ABS Australian Demographic Statistics, December 2023, and ABS Australian National Accounts: State
+    Accounts 2022-23, in US dollars at a rounded rate); not for reporting'
+  - Illustrative, rounded from public figures (US Census Bureau Vintage 2023 population estimates and BEA state GDP 2023, current dollars); not
+    for reporting
+notes: []
+review:
+- 'required inferred from 100% coverage in 59 documents (59 samples): confirm each required field is mandatory upstream, and each optional one
+  may be empty.'
+- 'key REGION_ID is the field holding the sample catalogue''s id (REGE-AU-ACT): confirm it is the business key.'
+- 'a snapshot refreshed when tools/publicdata/world_economy.py runs: confirm the refresh cadence.'
+- 'enum values inferred from the data, not from a glossary: ISO3, COUNTRY_NAME, SOURCE, PROVENANCE.SOURCE: confirm they are closed lists.'
+- 'no description in about.yaml or the Sutras for ISO3, YEAR, POPULATION, SOURCE, FACTS.STATUS, FACTS.REGION_CODE, FACTS.POPULATION, FACTS.GDP,
+  PROVENANCE.DATASET, PROVENANCE.RETRIEVED_AT, PROVENANCE.LICENCE, PROVENANCE.ATTRIBUTION and 1 more: write them in the pack''s config/about.yaml
+  glossary.'

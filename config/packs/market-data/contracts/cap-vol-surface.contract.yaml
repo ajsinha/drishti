@@ -1,0 +1,143 @@
+# Project Drishti · Any data. Any domain. One grammar.
+#
+# Copyright (c) 2026 Ashutosh Sinha <ajsinha@gmail.com>.
+# All rights reserved.
+#
+# PROPRIETARY AND CONFIDENTIAL.
+#
+# This file is the confidential and proprietary property of Ashutosh Sinha.
+# Unauthorised copying, use, modification, distribution or disclosure of this
+# file, via any medium, is strictly prohibited except with the express prior
+# written permission of the copyright holder.
+#
+# See the LICENSE file in the root of this repository for the full terms.
+
+# Data contract of the cap-vol-surface kind (command CPV): docs/contracts/README.md section 16.
+# Drafted by `drishti.py contract bootstrap cap-vol-surface`; owned by people from then on: confirm the review points, then remove them.
+kind: cap-vol-surface
+mnemonic: CPV
+pack: market-data
+version: '1.0'
+class: fundamental
+status: active
+title: Cap/floor volatility surface
+description: Cap vols by maturity and strike.
+source: md-hub
+grain: One row per cap/floor volatility surface per business date, keyed by SURFACE_ID.
+key:
+- SURFACE_ID
+id-pattern:
+- ^CPV-
+dated-by: business_date
+cadence:
+  frequency: daily
+  due: to be confirmed
+storage:
+  connector: market-store
+  plugin: delta
+  domain: market
+  table: <root>/market/cap-vol-surface/
+  test-data:
+  - data/testdata/market-data/cap-vol-surface
+fields:
+- name: SURFACE_ID
+  type: id
+  presence: required
+  description: The record's id (the business key)
+  example: CPV-AUD
+  pattern: ^CPV-
+- name: CURRENCY
+  type: text
+  presence: required
+  description: Currency
+  example: AUD
+- name: ATM_5Y
+  type: amount
+  presence: required
+  description: 5Y ATM
+  example: 124.3
+- name: GRID
+  type: record list
+  presence: required
+  description: 'Nested: see nested GRID[]'
+- name: MODEL
+  type: text
+  presence: required
+  example: Normal, stripped caplets
+nested:
+  GRID[]:
+  - name: MATURITY
+    type: text
+    presence: required
+    description: Maturity
+    example: 1Y
+    enum:
+    - 10Y
+    - 1Y
+    - 2Y
+    - 3Y
+    - 5Y
+    - 7Y
+  - name: ATM
+    type: amount
+    presence: required
+    description: ATM
+    example: 130.38
+  - name: K_2
+    type: amount
+    presence: required
+    description: 2%
+    example: 140.42
+  - name: K_3
+    type: amount
+    presence: required
+    description: 3%
+    example: 135.86
+  - name: K_4
+    type: amount
+    presence: required
+    description: 4%
+    example: 131.29
+  - name: K_5
+    type: amount
+    presence: required
+    description: 5%
+    example: 134.03
+links: []
+validation:
+- rule: required
+  fields:
+  - SURFACE_ID
+  - CURRENCY
+  - ATM_5Y
+  - GRID
+  - MODEL
+- rule: unique
+  key:
+  - SURFACE_ID
+  per: business_date
+- rule: pattern
+  field: SURFACE_ID
+  pattern: ^CPV-
+- rule: enum
+  field: GRID[].MATURITY
+  values:
+  - 10Y
+  - 1Y
+  - 2Y
+  - 3Y
+  - 5Y
+  - 7Y
+notes:
+- 'Dated by the lake''s business_date partition: `drishti.py lake build` writes each test-data file''s day into it; the documents carry no date
+  field of their own.'
+review:
+- 'required inferred from 100% coverage in 14 documents (7 samples and 7 test-data documents (data/testdata/market-data/cap-vol-surface/snapshot-2026-07-08.jsonl.gz,
+  data/testdata/market-data/cap-vol-surface/changes-2026-09-30.jsonl.gz)): confirm each required field is mandatory upstream, and each optional
+  one may be empty.'
+- 'source ''md-hub'' is the test data''s _meta.source (synthetic): name the production system that delivers it.'
+- 'due time of each business date is not known: state it (for example, by 06:00 New York the next business day).'
+- 'enum values inferred from the data, not from a glossary: GRID[].MATURITY: confirm they are closed lists.'
+- 'no unit stated for the amounts ATM_5Y, GRID[].ATM, GRID[].K_2, GRID[].K_3, GRID[].K_4, GRID[].K_5 (docs/contracts/README.md section 7: USD
+  unless stated): confirm the currency.'
+- 'no description in about.yaml or the Sutras for MODEL: write them in the pack''s config/about.yaml glossary.'

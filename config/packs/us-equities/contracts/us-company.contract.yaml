@@ -1,0 +1,544 @@
+# Project Drishti · Any data. Any domain. One grammar.
+#
+# Copyright (c) 2026 Ashutosh Sinha <ajsinha@gmail.com>.
+# All rights reserved.
+#
+# PROPRIETARY AND CONFIDENTIAL.
+#
+# This file is the confidential and proprietary property of Ashutosh Sinha.
+# Unauthorised copying, use, modification, distribution or disclosure of this
+# file, via any medium, is strictly prohibited except with the express prior
+# written permission of the copyright holder.
+#
+# See the LICENSE file in the root of this repository for the full terms.
+
+# Data contract of the us-company kind (command USEQ): docs/contracts/README.md section 16.
+# Drafted by `drishti.py contract bootstrap us-company`; owned by people from then on: confirm the review points, then remove them.
+kind: us-company
+mnemonic: USEQ
+pack: us-equities
+version: '1.0'
+class: fundamental
+status: active
+title: US company
+description: 'A US listed company: key facts, ten years of annual financials, recent SEC filings and index memberships, from public data.'
+source: 'public data: SEC EDGAR, Nasdaq Trader, GLEIF and Wikidata (tools/publicdata/us_equities.py)'
+grain: One row per us company, keyed by TICKER.
+key:
+- TICKER
+dated-by: snapshot
+cadence:
+  frequency: static
+  due: to be confirmed
+storage:
+  connector: us-equities-store
+  plugin: delta
+  domain: us-equities
+  table: <root>/us-equities/us-company/
+  columns:
+  - TICKER
+  - NAME
+  - LEI_LEGAL_NAME
+  - CIK
+  - LEI
+  - EXCHANGE
+  - INDEX_TEXT
+  - SECTOR
+  - SIC
+  - SIC_DESCRIPTION
+  - STATE_OF_INCORPORATION
+  - REVENUE
+  - NET_MARGIN
+  test-data:
+  - data/testdata/us-equities/us-company
+fields:
+- name: TICKER
+  type: id
+  presence: required
+  description: Ticker
+  example: AAPL
+- name: NAME
+  type: text
+  presence: required
+  example: Apple Inc.
+- name: SEC_NAME
+  type: text
+  presence: required
+  example: Apple Inc.
+- name: CIK
+  type: text
+  presence: required
+  example: 0000320193
+- name: OTHER_TICKERS
+  type: text
+  presence: optional
+  example: C-PN, C-PR
+- name: EXCHANGE
+  type: text
+  presence: required
+  example: Nasdaq
+- name: LISTING
+  type: text
+  presence: required
+  example: Nasdaq Global Select Market
+- name: SIC
+  type: text
+  presence: required
+  example: '3571'
+- name: SIC_DESCRIPTION
+  type: text
+  presence: required
+  description: Industry (SIC)
+  example: Electronic Computers
+- name: DIVISION
+  type: text
+  presence: required
+  example: D
+- name: SECTOR
+  type: text
+  presence: required
+  example: Manufacturing
+- name: STATE_OF_INCORPORATION
+  type: text
+  presence: optional
+  example: CA
+- name: FISCAL_YEAR_END
+  type: text
+  presence: optional
+  example: 09-26
+- name: FILER_CATEGORY
+  type: text
+  presence: optional
+  example: Large accelerated filer
+- name: HEADQUARTERS
+  type: text
+  presence: optional
+  example: Cupertino
+- name: BUSINESS_ADDRESS
+  type: text
+  presence: optional
+  example: CUPERTINO, CA
+- name: FOUNDED
+  type: date
+  presence: optional
+  example: '1976-04-01'
+- name: WEBSITE
+  type: text
+  presence: optional
+  example: https://apple.com/qa/
+- name: PHONE
+  type: text
+  presence: required
+  example: (408) 996-1010
+- name: LEI
+  type: text
+  presence: optional
+  example: HWUPKR0MPOU8FGXBT394
+- name: LEI_LEGAL_NAME
+  type: text
+  presence: optional
+  example: Apple Inc.
+- name: LEI_STATUS
+  type: text
+  presence: optional
+  example: ISSUED
+  enum:
+  - DUPLICATE
+  - ISSUED
+  - LAPSED
+  - RETIRED
+- name: LEI_SOURCE
+  type: text
+  presence: optional
+  example: GLEIF, LEI from Wikidata
+  enum:
+  - GLEIF, LEI from Wikidata
+  - GLEIF, matched by legal name
+  - Wikidata
+- name: INDEXES
+  type: record list
+  presence: required
+  description: 'Nested: see nested INDEXES[]'
+- name: INDEX_TEXT
+  type: text
+  presence: required
+  example: Dow Jones Industrial Average, Nasdaq-100, S&P 500
+- name: CURRENCY
+  type: text
+  presence: required
+  example: USD
+  enum:
+  - CAD
+  - EUR
+  - GBP
+  - USD
+- name: FISCAL_YEAR
+  type: integer
+  presence: required
+  description: Fiscal year
+  example: 2025
+- name: REVENUE
+  type: amount
+  presence: optional
+  description: Revenue
+  example: 416161000000
+- name: NET_INCOME
+  type: amount
+  presence: required
+  description: Net income
+  example: 112010000000
+- name: NET_MARGIN
+  type: rate
+  presence: optional
+  description: Net margin
+  example: 26.92
+- name: REVENUE_GROWTH
+  type: rate
+  presence: optional
+  description: Revenue growth
+  example: 6.43
+- name: ASSETS
+  type: integer
+  presence: required
+  example: 359241000000
+- name: LIABILITIES
+  type: integer
+  presence: required
+  example: 285508000000
+- name: EQUITY
+  type: integer
+  presence: required
+  description: 'Equity: the equity it refers to'
+  example: 73733000000
+  link: equity
+- name: EPS_DILUTED
+  type: amount
+  presence: optional
+  description: Diluted EPS
+  example: 7.46
+- name: SHARES_OUTSTANDING
+  type: integer
+  presence: optional
+  example: 14776353000
+- name: FINANCIALS
+  type: record list
+  presence: required
+  description: 'Nested: see nested FINANCIALS[]'
+- name: FACTS
+  type: record list
+  presence: required
+  description: 'Nested: see nested FACTS[]'
+- name: FILINGS
+  type: record list
+  presence: required
+  description: 'Nested: see nested FILINGS[]'
+- name: INDEX_IDS
+  type: id list
+  presence: required
+  description: 'Index: the index-membership it refers to'
+  link: index-membership
+- name: FACT_IDS
+  type: id list
+  presence: required
+  description: 'Financial fact: the financial-fact it refers to'
+  link: financial-fact
+- name: FILING_IDS
+  type: id list
+  presence: required
+  description: 'Filing: the filing it refers to'
+  link: filing
+- name: LATEST_FILING
+  type: date
+  presence: required
+  example: '2026-10-22'
+- name: SIC_SECTOR
+  type: id
+  presence: required
+  description: 'SIC sector: the sic-sector it refers to'
+  example: '3571'
+  link: sic-sector
+- name: PRICE_HISTORY
+  type: id
+  presence: required
+  example: PX-AAPL
+- name: PROVENANCE
+  type: record
+  presence: required
+  description: 'Nested: see nested PROVENANCE'
+- name: ECONOMY
+  type: id
+  presence: optional
+  description: 'Economy: the economy it refers to'
+  example: ECON-USA
+  pattern: ^ECON-
+  link: economy
+- name: MARKET_WATCH
+  type: id
+  presence: optional
+  description: 'Market watch: the listed-company it refers to'
+  example: CO-AAPL
+  pattern: ^CO-
+  link: listed-company
+nested:
+  INDEXES[]:
+  - name: INDEX
+    type: text
+    presence: required
+    example: DJIA
+    enum:
+    - BANKS-CA
+    - BANKS-UK
+    - BANKS-US
+    - DJIA
+    - NDX
+    - SP500
+  - name: NAME
+    type: text
+    presence: required
+    example: Dow Jones Industrial Average
+    enum:
+    - Canadian banks
+    - Dow Jones Industrial Average
+    - Major UK banks
+    - Major US banks
+    - Nasdaq-100
+    - S&P 500
+  - name: SINCE
+    type: date
+    presence: optional
+    description: Member since
+    example: '1998-05-31'
+  FINANCIALS[]:
+  - name: YEAR
+    type: integer
+    presence: required
+    example: 2016
+  - name: PERIOD_END
+    type: date
+    presence: optional
+    example: '2016-09-24'
+  - name: REVENUE
+    type: amount
+    presence: optional
+    example: 215639000000
+  - name: NET_INCOME
+    type: amount
+    presence: optional
+    example: 45687000000
+  - name: NET_MARGIN
+    type: rate
+    presence: optional
+    example: 21.19
+  - name: ASSETS
+    type: integer
+    presence: optional
+    example: 321686000000
+  - name: LIABILITIES
+    type: integer
+    presence: optional
+    example: 193437000000
+  - name: EQUITY
+    type: integer
+    presence: optional
+    description: 'Equity: the equity it refers to'
+    example: 128249000000
+    link: equity
+  - name: EPS_DILUTED
+    type: amount
+    presence: optional
+    example: 8.31
+  FACTS[]:
+  - name: FACT
+    type: text
+    presence: required
+    example: AAPL-REVENUE
+  - name: LABEL
+    type: text
+    presence: required
+    example: Revenue
+    enum:
+    - Diluted EPS
+    - Net income
+    - Revenue
+    - Shares outstanding
+    - Stockholders' equity
+    - Total assets
+    - Total liabilities
+  FILINGS[]:
+  - name: ACCESSION
+    type: text
+    presence: required
+    example: 0001140361-26-040540
+  - name: FORM
+    type: text
+    presence: required
+    example: '4'
+  - name: FILED
+    type: date
+    presence: required
+    example: '2026-10-22'
+  - name: REPORT_DATE
+    type: date
+    presence: optional
+    example: '2026-10-20'
+  - name: DESCRIPTION
+    type: text
+    presence: required
+    example: Change in beneficial ownership (insider)
+  PROVENANCE:
+  - name: SOURCE
+    type: text
+    presence: required
+    example: U.S. Securities and Exchange Commission, EDGAR (submissions…
+  - name: RETRIEVED_AT
+    type: date
+    presence: required
+    example: '2026-10-24'
+  - name: LICENCE
+    type: text
+    presence: required
+    example: Public domain (SEC EDGAR); CC0 1.0 (Wikidata, GLEIF)
+  - name: URL
+    type: text
+    presence: required
+    example: https://www.sec.gov/cgi-bin/browse-edgar?action=getcompany&…
+links:
+- field: EQUITY
+  kind: equity
+- field: INDEX_IDS
+  kind: index-membership
+- field: FACT_IDS
+  kind: financial-fact
+- field: FILING_IDS
+  kind: filing
+- field: SIC_SECTOR
+  kind: sic-sector
+- field: ECONOMY
+  kind: economy
+- field: MARKET_WATCH
+  kind: listed-company
+- field: FINANCIALS[].EQUITY
+  kind: equity
+validation:
+- rule: required
+  fields:
+  - TICKER
+  - NAME
+  - SEC_NAME
+  - CIK
+  - EXCHANGE
+  - LISTING
+  - SIC
+  - SIC_DESCRIPTION
+  - DIVISION
+  - SECTOR
+  - PHONE
+  - INDEXES
+  - INDEX_TEXT
+  - CURRENCY
+  - FISCAL_YEAR
+  - NET_INCOME
+  - ASSETS
+  - LIABILITIES
+  - EQUITY
+  - FINANCIALS
+  - FACTS
+  - FILINGS
+  - INDEX_IDS
+  - FACT_IDS
+  - FILING_IDS
+  - LATEST_FILING
+  - SIC_SECTOR
+  - PRICE_HISTORY
+  - PROVENANCE
+- rule: unique
+  key:
+  - TICKER
+  per: snapshot
+- rule: enum
+  field: LEI_STATUS
+  values:
+  - DUPLICATE
+  - ISSUED
+  - LAPSED
+  - RETIRED
+- rule: enum
+  field: LEI_SOURCE
+  values:
+  - GLEIF, LEI from Wikidata
+  - GLEIF, matched by legal name
+  - Wikidata
+- rule: enum
+  field: CURRENCY
+  values:
+  - CAD
+  - EUR
+  - GBP
+  - USD
+- rule: link
+  field: EQUITY
+  kind: equity
+- rule: link
+  field: INDEX_IDS
+  kind: index-membership
+- rule: link
+  field: FACT_IDS
+  kind: financial-fact
+- rule: link
+  field: FILING_IDS
+  kind: filing
+- rule: link
+  field: SIC_SECTOR
+  kind: sic-sector
+- rule: link
+  field: ECONOMY
+  kind: economy
+- rule: link
+  field: MARKET_WATCH
+  kind: listed-company
+- rule: enum
+  field: INDEXES[].INDEX
+  values:
+  - BANKS-CA
+  - BANKS-UK
+  - BANKS-US
+  - DJIA
+  - NDX
+  - SP500
+- rule: enum
+  field: INDEXES[].NAME
+  values:
+  - Canadian banks
+  - Dow Jones Industrial Average
+  - Major UK banks
+  - Major US banks
+  - Nasdaq-100
+  - S&P 500
+- rule: link
+  field: FINANCIALS[].EQUITY
+  kind: equity
+- rule: enum
+  field: FACTS[].LABEL
+  values:
+  - Diluted EPS
+  - Net income
+  - Revenue
+  - Shares outstanding
+  - Stockholders' equity
+  - Total assets
+  - Total liabilities
+notes: []
+review:
+- 'required inferred from 100% coverage in 506 documents (3 samples and 503 test-data documents (data/testdata/us-equities/us-company/snapshot-2026-10-24.jsonl.gz)):
+  confirm each required field is mandatory upstream, and each optional one may be empty.'
+- 'a snapshot refreshed when tools/publicdata/us_equities.py runs: confirm the refresh cadence.'
+- 'enum values inferred from the data, not from a glossary: LEI_STATUS, LEI_SOURCE, CURRENCY, INDEXES[].INDEX, INDEXES[].NAME, FACTS[].LABEL:
+  confirm they are closed lists.'
+- 'number types decided by the field''s name: REVENUE amount, NET_INCOME amount, NET_MARGIN rate, REVENUE_GROWTH rate, FINANCIALS[].REVENUE amount,
+  FINANCIALS[].NET_INCOME amount, FINANCIALS[].NET_MARGIN rate: confirm amount, rate or integer.'
+- 'no unit stated for the amounts REVENUE, NET_INCOME, EPS_DILUTED, FINANCIALS[].REVENUE, FINANCIALS[].NET_INCOME, FINANCIALS[].EPS_DILUTED (docs/contracts/README.md
+  section 7: USD unless stated): confirm the currency.'
+- 'no description in about.yaml or the Sutras for NAME, SEC_NAME, CIK, OTHER_TICKERS, EXCHANGE, LISTING, SIC, DIVISION, SECTOR, STATE_OF_INCORPORATION,
+  FISCAL_YEAR_END, FILER_CATEGORY and 37 more: write them in the pack''s config/about.yaml glossary.'
+- 'The ratios (USEQ ratios) become computed from the financial facts (GROUPINGS_AND_ANALYTICS.md): confirm which fields are ratios and mark them
+  derived.'

@@ -1,0 +1,147 @@
+# Project Drishti · Any data. Any domain. One grammar.
+#
+# Copyright (c) 2026 Ashutosh Sinha <ajsinha@gmail.com>.
+# All rights reserved.
+#
+# PROPRIETARY AND CONFIDENTIAL.
+#
+# This file is the confidential and proprietary property of Ashutosh Sinha.
+# Unauthorised copying, use, modification, distribution or disclosure of this
+# file, via any medium, is strictly prohibited except with the express prior
+# written permission of the copyright holder.
+#
+# See the LICENSE file in the root of this repository for the full terms.
+
+# Data contract of the repo-curve kind (command REPO): docs/contracts/README.md section 16.
+# Drafted by `drishti.py contract bootstrap repo-curve`; owned by people from then on: confirm the review points, then remove them.
+kind: repo-curve
+mnemonic: REPO
+pack: market-data
+version: '1.0'
+class: fundamental
+status: active
+title: Repo curve
+description: General-collateral or specials repo rates by term.
+source: md-hub
+grain: One row per repo curve per business date, keyed by CURVE_ID.
+key:
+- CURVE_ID
+id-pattern:
+- ^REPO-
+dated-by: business_date
+cadence:
+  frequency: daily
+  due: to be confirmed
+storage:
+  connector: market-store
+  plugin: delta
+  domain: market
+  table: <root>/market/repo-curve/
+  test-data:
+  - data/testdata/market-data/repo-curve
+fields:
+- name: CURVE_ID
+  type: id
+  presence: required
+  description: The record's id (the business key)
+  example: REPO-AUD
+  pattern: ^REPO-
+- name: CURRENCY
+  type: text
+  presence: required
+  description: Currency
+  example: AUD
+  enum:
+  - AUD
+  - CAD
+  - CHF
+  - EUR
+  - GBP
+  - JPY
+  - USD
+- name: COLLATERAL
+  type: text
+  presence: required
+  description: Collateral
+  example: General collateral (government)
+- name: OVERNIGHT
+  type: amount
+  presence: required
+  description: O/N
+  example: 0.0352
+- name: AS_OF
+  type: date
+  presence: required
+  description: As of
+  example: '2026-09-30'
+- name: POINTS
+  type: record list
+  presence: required
+  description: 'Nested: see nested POINTS[]'
+nested:
+  POINTS[]:
+  - name: TENOR
+    type: text
+    presence: required
+    description: Term
+    example: 'ON'
+    enum:
+    - 1M
+    - 1W
+    - 1Y
+    - 3M
+    - 6M
+    - 'ON'
+  - name: RATE
+    type: rate
+    presence: required
+    description: Rate (%)
+    example: 3.5221
+links: []
+validation:
+- rule: required
+  fields:
+  - CURVE_ID
+  - CURRENCY
+  - COLLATERAL
+  - OVERNIGHT
+  - AS_OF
+  - POINTS
+- rule: unique
+  key:
+  - CURVE_ID
+  per: business_date
+- rule: pattern
+  field: CURVE_ID
+  pattern: ^REPO-
+- rule: enum
+  field: CURRENCY
+  values:
+  - AUD
+  - CAD
+  - CHF
+  - EUR
+  - GBP
+  - JPY
+  - USD
+- rule: enum
+  field: POINTS[].TENOR
+  values:
+  - 1M
+  - 1W
+  - 1Y
+  - 3M
+  - 6M
+  - 'ON'
+notes:
+- 'Dated by the lake''s business_date partition: `drishti.py lake build` writes each test-data file''s day into it; the documents carry no date
+  field of their own.'
+review:
+- 'required inferred from 100% coverage in 21 documents (7 samples and 14 test-data documents (data/testdata/market-data/repo-curve/snapshot-2026-07-08.jsonl.gz,
+  data/testdata/market-data/repo-curve/changes-2026-09-30.jsonl.gz)): confirm each required field is mandatory upstream, and each optional one
+  may be empty.'
+- 'source ''md-hub'' is the test data''s _meta.source (synthetic): name the production system that delivers it.'
+- 'due time of each business date is not known: state it (for example, by 06:00 New York the next business day).'
+- 'enum values inferred from the data, not from a glossary: CURRENCY, POINTS[].TENOR: confirm they are closed lists.'
+- 'number types decided by the field''s name: POINTS[].RATE rate: confirm amount, rate or integer.'
+- 'no unit stated for the amounts OVERNIGHT (docs/contracts/README.md section 7: USD unless stated): confirm the currency.'

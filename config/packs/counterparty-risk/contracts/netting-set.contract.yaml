@@ -1,0 +1,428 @@
+# Project Drishti · Any data. Any domain. One grammar.
+#
+# Copyright (c) 2026 Ashutosh Sinha <ajsinha@gmail.com>.
+# All rights reserved.
+#
+# PROPRIETARY AND CONFIDENTIAL.
+#
+# This file is the confidential and proprietary property of Ashutosh Sinha.
+# Unauthorised copying, use, modification, distribution or disclosure of this
+# file, via any medium, is strictly prohibited except with the express prior
+# written permission of the copyright holder.
+#
+# See the LICENSE file in the root of this repository for the full terms.
+
+# Data contract of the netting-set kind (command NSET): docs/contracts/README.md section 16.
+# Drafted by `drishti.py contract bootstrap netting-set`; owned by people from then on: confirm the review points, then remove them.
+kind: netting-set
+mnemonic: NSET
+pack: counterparty-risk
+version: '1.0'
+class: fundamental
+status: active
+title: Netting set
+description: Trades that net on close-out under one agreement and CSA, with exposure and collateral.
+source: xva-engine
+grain: One row per netting set per business date, keyed by NETTING_SET_ID.
+key:
+- NETTING_SET_ID
+id-pattern:
+- ^NS-
+dated-by: business_date
+cadence:
+  frequency: daily
+  due: to be confirmed
+storage:
+  connector: credit-store
+  plugin: delta
+  domain: credit
+  table: <root>/credit/netting-set/
+  test-data:
+  - data/testdata/counterparty-risk/netting-set
+fields:
+- name: NETTING_SET_ID
+  type: id
+  presence: required
+  description: The record's id (the business key)
+  example: NS-ALDERSHOT-FRA
+  pattern: ^NS-
+- name: TRADE_COUNT
+  type: integer
+  presence: required
+  description: The number of trades that are netted together under the agreement.
+  example: 3
+- name: NET_MTM
+  type: amount
+  presence: derived
+  unit: USD
+  description: The sum of the members' mark to market, positive and negative together. Netting lets a loss on one trade cancel a gain on another
+    if the counterparty defaults.
+  example: -339550
+  retiring-in: 2.10.0
+  note: computed by the netting-set figures (NSET) from 2.10.0; removed from the stored record then
+- name: COLLATERAL
+  type: amount
+  presence: derived
+  unit: USD
+  description: 'The net collateral against the netting set: what is held less what has been posted.'
+  example: -229552
+  retiring-in: 2.10.0
+  note: computed by the netting-set figures (NSET) from 2.10.0; removed from the stored record then
+- name: EE_PEAK
+  type: amount
+  presence: derived
+  unit: USD
+  description: The highest point of the expected-exposure profile over the life of the trades, the average positive exposure on the date where
+    it is largest.
+  example: 141750
+  retiring-in: 2.10.0
+  note: computed by the netting-set figures (NSET) from 2.10.0; removed from the stored record then
+- name: PFE_PEAK
+  type: amount
+  presence: derived
+  unit: USD
+  description: The highest point of the 95th-percentile exposure profile; on 95 of 100 simulated paths the exposure stays below it. It is the
+    measure credit limits are set against.
+  example: 347288
+  retiring-in: 2.10.0
+  note: computed by the netting-set figures (NSET) from 2.10.0; removed from the stored record then
+- name: LIMIT
+  type: amount
+  presence: required
+  unit: USD
+  description: The limit on the counterparty's peak potential future exposure approved for this netting set.
+  example: 5000000.0
+- name: UTILISATION
+  type: rate
+  presence: derived
+  unit: '% of limit'
+  description: 'The share of the limit that is used: used divided by limit. Above 100% is a breach.'
+  example: 0.0695
+  retiring-in: 2.10.0
+  note: computed by the netting-set figures (NSET) from 2.10.0; removed from the stored record then
+- name: CVA
+  type: amount
+  presence: derived
+  unit: USD
+  description: The reduction in the value of the trades for the risk that the counterparty defaults before they mature.
+  example: -7
+  retiring-in: 2.10.0
+  note: computed by the netting-set figures (NSET) from 2.10.0; removed from the stored record then
+- name: PROFILE
+  type: record list
+  presence: derived
+  description: 'Nested: see nested PROFILE[]'
+  retiring-in: 2.10.0
+  note: computed by the netting-set figures (NSET) from 2.10.0; removed from the stored record then
+- name: TRADES
+  type: record list
+  presence: required
+  description: 'Nested: see nested TRADES[]'
+- name: BY_ASSET
+  type: record list
+  presence: derived
+  description: 'Nested: see nested BY_ASSET[]'
+  retiring-in: 2.10.0
+  note: computed by the netting-set figures (NSET) from 2.10.0; removed from the stored record then
+- name: COUNTERPARTY
+  type: id
+  presence: required
+  description: 'Counterparty: the counterparty it refers to'
+  example: CP-ALDERSHOT
+  pattern: ^CP-
+  link: counterparty
+- name: AGREEMENT
+  type: id
+  presence: required
+  description: 'Agreement: the agreement it refers to'
+  example: AGR-ALDERSHOT-ISDA
+  pattern: ^AGR-
+  link: agreement
+- name: CSA
+  type: id
+  presence: required
+  description: 'CSA: the csa it refers to'
+  example: CSA-ALDERSHOT
+  pattern: ^CSA-
+  link: csa
+- name: CREDIT_LIMIT
+  type: id
+  presence: required
+  description: 'Credit limit: the credit-limit it refers to'
+  example: LIM-ALDERSHOT
+  pattern: ^LIM-
+  link: credit-limit
+- name: EXPOSURE_PROFILE
+  type: id
+  presence: required
+  description: 'Exposure profile: the exposure-profile it refers to'
+  example: EXP-ALDERSHOT-FRA
+  pattern: ^EXP-
+  link: exposure-profile
+- name: CVA_RESULT
+  type: id
+  presence: required
+  description: 'CVA: the cva it refers to'
+  example: CVA-ALDERSHOT-FRA
+  pattern: ^CVA-
+  link: cva
+- name: SACCR
+  type: id
+  presence: required
+  description: 'SA-CCR: the sa-ccr it refers to'
+  example: SACCR-ALDERSHOT-FRA
+  pattern: ^SACCR-
+  link: sa-ccr
+- name: SIMM
+  type: id
+  presence: required
+  description: 'SIMM: the simm it refers to'
+  example: SIMM-ALDERSHOT
+  pattern: ^SIMM-
+  link: simm
+- name: COLLATERAL_BALANCE
+  type: id
+  presence: required
+  description: 'Collateral: the collateral-balance it refers to'
+  example: COLL-ALDERSHOT-FRA
+  pattern: ^COLL-
+  link: collateral-balance
+- name: LEGAL_ENTITY
+  type: id
+  presence: required
+  description: 'Legal entity: the legal-entity it refers to'
+  example: LE-FRA
+  pattern: ^LE-
+  link: legal-entity
+- name: NETTING_ENFORCEABLE
+  type: boolean
+  presence: required
+  example: true
+- name: TRADE_IDS
+  type: id list
+  presence: optional
+  description: 'Trade: the trade it refers to'
+  link: trade
+nested:
+  PROFILE[]:
+  - name: TENOR
+    type: text
+    presence: required
+    example: '0'
+  - name: EE
+    type: amount
+    presence: required
+    example: 39314
+  - name: PFE
+    type: amount
+    presence: required
+    example: 121929
+  TRADES[]:
+  - name: TRADE_ID
+    type: id
+    presence: required
+    description: The member trade.
+    example: CLY-3000280
+    pattern: ^(MX|CLY)-\d+$
+    link: trade
+  - name: STATUS
+    type: text
+    presence: required
+    description: Status
+    example: LIVE
+  - name: PRODUCT
+    type: text
+    presence: required
+    description: The kind of instrument the trade is.
+    example: Tri-party repo
+  - name: ASSET_CLASS
+    type: text
+    presence: required
+    example: Securities financing
+  - name: CURRENCY
+    type: text
+    presence: required
+    example: JPY
+    enum:
+    - AUD
+    - CAD
+    - CHF
+    - EUR
+    - GBP
+    - JPY
+    - USD
+  - name: BOOK
+    type: id
+    presence: required
+    description: 'Book: the book it refers to'
+    example: BOOK-SFT-1
+    pattern: ^BOOK-
+    link: book
+  - name: NOTIONAL
+    type: amount
+    presence: required
+    unit: trade currency
+    description: The reference amount of the trade, in the trade's own currency.
+    example: 237000000.0
+  - name: MATURITY
+    type: date
+    presence: required
+    description: The date the trade ends.
+    example: '2027-02-15'
+  - name: MATURITY_BUCKET
+    type: text
+    presence: required
+    example: 0-1Y
+    enum:
+    - 0-1Y
+    - 1-2Y
+    - 10Y+
+    - 2-5Y
+    - 5-10Y
+  - name: MTM
+    type: amount
+    presence: required
+    unit: USD
+    description: The trade's current value, from the bank's side.
+    example: -708216
+  BY_ASSET[]:
+  - name: ASSET
+    type: text
+    presence: required
+    example: Securities financing
+  - name: MTM
+    type: amount
+    presence: required
+    example: -339550
+links:
+- field: COUNTERPARTY
+  kind: counterparty
+- field: AGREEMENT
+  kind: agreement
+- field: CSA
+  kind: csa
+- field: CREDIT_LIMIT
+  kind: credit-limit
+- field: EXPOSURE_PROFILE
+  kind: exposure-profile
+- field: CVA_RESULT
+  kind: cva
+- field: SACCR
+  kind: sa-ccr
+- field: SIMM
+  kind: simm
+- field: COLLATERAL_BALANCE
+  kind: collateral-balance
+- field: LEGAL_ENTITY
+  kind: legal-entity
+- field: TRADE_IDS
+  kind: trade
+- field: TRADES[].TRADE_ID
+  kind: trade
+- field: TRADES[].BOOK
+  kind: book
+validation:
+- rule: required
+  fields:
+  - NETTING_SET_ID
+  - TRADE_COUNT
+  - LIMIT
+  - TRADES
+  - COUNTERPARTY
+  - AGREEMENT
+  - CSA
+  - CREDIT_LIMIT
+  - EXPOSURE_PROFILE
+  - CVA_RESULT
+  - SACCR
+  - SIMM
+  - COLLATERAL_BALANCE
+  - LEGAL_ENTITY
+  - NETTING_ENFORCEABLE
+- rule: unique
+  key:
+  - NETTING_SET_ID
+  per: business_date
+- rule: pattern
+  field: NETTING_SET_ID
+  pattern: ^NS-
+- rule: range
+  field: TRADE_COUNT
+  min: 0
+- rule: link
+  field: COUNTERPARTY
+  kind: counterparty
+- rule: link
+  field: AGREEMENT
+  kind: agreement
+- rule: link
+  field: CSA
+  kind: csa
+- rule: link
+  field: CREDIT_LIMIT
+  kind: credit-limit
+- rule: link
+  field: EXPOSURE_PROFILE
+  kind: exposure-profile
+- rule: link
+  field: CVA_RESULT
+  kind: cva
+- rule: link
+  field: SACCR
+  kind: sa-ccr
+- rule: link
+  field: SIMM
+  kind: simm
+- rule: link
+  field: COLLATERAL_BALANCE
+  kind: collateral-balance
+- rule: link
+  field: LEGAL_ENTITY
+  kind: legal-entity
+- rule: link
+  field: TRADE_IDS
+  kind: trade
+- rule: link
+  field: TRADES[].TRADE_ID
+  kind: trade
+- rule: enum
+  field: TRADES[].CURRENCY
+  values:
+  - AUD
+  - CAD
+  - CHF
+  - EUR
+  - GBP
+  - JPY
+  - USD
+- rule: link
+  field: TRADES[].BOOK
+  kind: book
+- rule: enum
+  field: TRADES[].MATURITY_BUCKET
+  values:
+  - 0-1Y
+  - 1-2Y
+  - 10Y+
+  - 2-5Y
+  - 5-10Y
+notes:
+- 'Dated by the lake''s business_date partition: `drishti.py lake build` writes each test-data file''s day into it; the documents carry no date
+  field of their own.'
+- 'Terms kept, figures computed from 2.10.0 (docs/contracts/NSET.md): the fields marked derived are computed by the netting-set figures (NSET)
+  and leave the stored record then.'
+review:
+- 'required inferred from 100% coverage in 218 documents (66 samples and 152 test-data documents (data/testdata/counterparty-risk/netting-set/snapshot-2026-07-08.jsonl.gz,
+  data/testdata/counterparty-risk/netting-set/changes-2026-09-30.jsonl.gz)): confirm each required field is mandatory upstream, and each optional
+  one may be empty.'
+- 'source ''xva-engine'' is the test data''s _meta.source (synthetic): name the production system that delivers it.'
+- 'due time of each business date is not known: state it (for example, by 06:00 New York the next business day).'
+- 'enum values inferred from the data, not from a glossary: TRADES[].CURRENCY, TRADES[].MATURITY_BUCKET: confirm they are closed lists.'
+- 'number types decided by the field''s name: PROFILE[].EE amount, PROFILE[].PFE amount, BY_ASSET[].MTM amount: confirm amount, rate or integer.'
+- 'no unit stated for the amounts PROFILE[].EE, PROFILE[].PFE, BY_ASSET[].MTM (docs/contracts/README.md section 7: USD unless stated): confirm
+  the currency.'
+- 'no description in about.yaml or the Sutras for NETTING_ENFORCEABLE, PROFILE[].TENOR, PROFILE[].EE, PROFILE[].PFE, TRADES[].ASSET_CLASS, TRADES[].CURRENCY,
+  TRADES[].MATURITY_BUCKET, BY_ASSET[].ASSET, BY_ASSET[].MTM: write them in the pack''s config/about.yaml glossary.'
+- 'TRADE_COUNT and TRADES[].MTM: confirm TRADE_COUNT is computed from the membership and TRADES[].MTM is read from the trade valuations (an input),
+  not stored here.'
+- 'LIMIT is copied from the credit limit: confirm it is read from LIM instead of stored.'

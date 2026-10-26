@@ -1,0 +1,171 @@
+# Project Drishti · Any data. Any domain. One grammar.
+#
+# Copyright (c) 2026 Ashutosh Sinha <ajsinha@gmail.com>.
+# All rights reserved.
+#
+# PROPRIETARY AND CONFIDENTIAL.
+#
+# This file is the confidential and proprietary property of Ashutosh Sinha.
+# Unauthorised copying, use, modification, distribution or disclosure of this
+# file, via any medium, is strictly prohibited except with the express prior
+# written permission of the copyright holder.
+#
+# See the LICENSE file in the root of this repository for the full terms.
+
+# Data contract of the listed-company kind (command CO): docs/contracts/README.md section 16.
+# Drafted by `drishti.py contract bootstrap listed-company`; owned by people from then on: confirm the review points, then remove them.
+kind: listed-company
+mnemonic: CO
+pack: news-and-markets
+version: '1.0'
+class: fundamental
+status: active
+title: Listed company
+description: 'A listed company: its live quote and price history (yfinance connector) and its news headlines (news connector), both computed on
+  demand.'
+source: reference
+grain: One row per listed company, keyed by COMPANY_ID.
+key:
+- COMPANY_ID
+id-pattern:
+- ^CO-
+dated-by: snapshot
+cadence:
+  frequency: static
+  due: to be confirmed
+storage:
+  connector: news-store
+  plugin: delta
+  domain: news
+  table: <root>/news/listed-company/
+  test-data:
+  - config/packs/news-and-markets/samples
+fields:
+- name: COMPANY_ID
+  type: id
+  presence: required
+  description: The record's id (the business key)
+  example: CO-AAPL
+  pattern: ^CO-
+- name: TICKER
+  type: text
+  presence: required
+  description: Ticker
+  example: AAPL
+- name: NAME
+  type: text
+  presence: required
+  example: Apple Inc.
+- name: ALIASES
+  type: text list
+  presence: required
+- name: ALIAS_TEXT
+  type: text
+  presence: required
+  description: Other names
+  example: Apple Inc, AAPL, iPhone
+- name: EXCHANGE
+  type: text
+  presence: required
+  description: Exchange
+  example: Nasdaq
+  enum:
+  - NYSE
+  - Nasdaq
+- name: SECTOR
+  type: text
+  presence: required
+  description: Sector
+  example: Technology
+- name: COUNTRY
+  type: text
+  presence: required
+  description: Country
+  example: US
+- name: ECONOMY
+  type: id
+  presence: required
+  description: 'Economy: the economy it refers to'
+  example: ECON-USA
+  pattern: ^ECON-
+  link: economy
+- name: QUOTE_ID
+  type: id
+  presence: required
+  description: 'Quote: the quote it refers to'
+  example: QUOTE-AAPL
+  pattern: ^QUOTE-
+  link: quote
+- name: NEWS_ID
+  type: id
+  presence: required
+  description: 'Headlines: the news it refers to'
+  example: NEWS-Apple
+  pattern: ^NEWS-
+  link: news
+- name: NEWS_ALL_ID
+  type: id
+  presence: required
+  description: 'All results: the news it refers to'
+  example: NEWS-Apple~all
+  pattern: ^NEWS-
+  link: news
+links:
+- field: ECONOMY
+  kind: economy
+- field: QUOTE_ID
+  kind: quote
+- field: NEWS_ID
+  kind: news
+- field: NEWS_ALL_ID
+  kind: news
+validation:
+- rule: required
+  fields:
+  - COMPANY_ID
+  - TICKER
+  - NAME
+  - ALIASES
+  - ALIAS_TEXT
+  - EXCHANGE
+  - SECTOR
+  - COUNTRY
+  - ECONOMY
+  - QUOTE_ID
+  - NEWS_ID
+  - NEWS_ALL_ID
+- rule: unique
+  key:
+  - COMPANY_ID
+  per: snapshot
+- rule: pattern
+  field: COMPANY_ID
+  pattern: ^CO-
+- rule: enum
+  field: EXCHANGE
+  values:
+  - NYSE
+  - Nasdaq
+- rule: link
+  field: ECONOMY
+  kind: economy
+- rule: link
+  field: QUOTE_ID
+  kind: quote
+- rule: link
+  field: NEWS_ID
+  kind: news
+- rule: link
+  field: NEWS_ALL_ID
+  kind: news
+notes: []
+review:
+- 'required inferred from 100% coverage in 20 documents (20 samples): confirm each required field is mandatory upstream, and each optional one
+  may be empty.'
+- 'key COMPANY_ID is the field holding the sample catalogue''s id (CO-AAPL): confirm it is the business key.'
+- 'source ''reference'' is the test data''s _meta.source (synthetic): name the production system that delivers it.'
+- 'the pack also names ''Hand-written reference data (topics and listed companies)'' for this kind (news-topic, listed-company): state when each
+  source applies.'
+- 'a snapshot refreshed when tools/publicdata/news_and_markets.py runs: confirm the refresh cadence.'
+- 'enum values inferred from the data, not from a glossary: EXCHANGE: confirm they are closed lists.'
+- 'no description in about.yaml or the Sutras for NAME, ALIASES: write them in the pack''s config/about.yaml glossary.'

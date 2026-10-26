@@ -1,0 +1,179 @@
+# Project Drishti · Any data. Any domain. One grammar.
+#
+# Copyright (c) 2026 Ashutosh Sinha <ajsinha@gmail.com>.
+# All rights reserved.
+#
+# PROPRIETARY AND CONFIDENTIAL.
+#
+# This file is the confidential and proprietary property of Ashutosh Sinha.
+# Unauthorised copying, use, modification, distribution or disclosure of this
+# file, via any medium, is strictly prohibited except with the express prior
+# written permission of the copyright holder.
+#
+# See the LICENSE file in the root of this repository for the full terms.
+
+# Data contract of the commodity-curve kind (command CMDC): docs/contracts/README.md section 16.
+# Drafted by `drishti.py contract bootstrap commodity-curve`; owned by people from then on: confirm the review points, then remove them.
+kind: commodity-curve
+mnemonic: CMDC
+pack: market-data
+version: '1.0'
+class: fundamental
+status: active
+title: Commodity forward curve
+description: Futures settlement prices by delivery month.
+source: md-hub
+grain: One row per commodity forward curve per business date, keyed by CURVE_ID.
+key:
+- CURVE_ID
+id-pattern:
+- ^CMDC-
+dated-by: business_date
+cadence:
+  frequency: daily
+  due: to be confirmed
+storage:
+  connector: market-store
+  plugin: delta
+  domain: market
+  table: <root>/market/commodity-curve/
+  test-data:
+  - data/testdata/market-data/commodity-curve
+fields:
+- name: CURVE_ID
+  type: id
+  presence: required
+  description: The record's id (the business key)
+  example: CMDC-BRENT
+  pattern: ^CMDC-
+- name: COMMODITY
+  type: text
+  presence: required
+  description: Commodity
+  example: Brent crude oil
+  enum:
+  - Brent crude oil
+  - Copper
+  - Corn
+  - Gold
+  - Henry Hub natural gas
+  - Silver
+  - Soybeans
+  - WTI crude oil
+- name: FRONT
+  type: amount
+  presence: required
+  description: Front
+  example: 74.6
+- name: SHAPE
+  type: text
+  presence: required
+  description: Shape
+  example: backwardation
+  enum:
+  - backwardation
+  - contango
+- name: ROLL
+  type: amount
+  presence: required
+  description: M1–M12
+  example: -0.4
+- name: POINTS
+  type: record list
+  presence: required
+  description: 'Nested: see nested POINTS[]'
+- name: COMMODITY_REF
+  type: id
+  presence: required
+  description: 'Commodity: the commodity it refers to'
+  example: CMD-BRENT
+  pattern: ^CMD-
+  link: commodity
+- name: UNIT
+  type: text
+  presence: required
+  example: USD/bbl
+  enum:
+  - USD/MMBtu
+  - USD/bbl
+  - USD/lb
+  - USD/oz
+  - USc/bu
+nested:
+  POINTS[]:
+  - name: MONTH
+    type: text
+    presence: required
+    description: Month
+    example: X6
+  - name: PRICE
+    type: amount
+    presence: required
+    description: Price
+    example: 74.6
+  - name: OPEN_INTEREST
+    type: integer
+    presence: required
+    description: OI
+    example: 200000
+links:
+- field: COMMODITY_REF
+  kind: commodity
+validation:
+- rule: required
+  fields:
+  - CURVE_ID
+  - COMMODITY
+  - FRONT
+  - SHAPE
+  - ROLL
+  - POINTS
+  - COMMODITY_REF
+  - UNIT
+- rule: unique
+  key:
+  - CURVE_ID
+  per: business_date
+- rule: pattern
+  field: CURVE_ID
+  pattern: ^CMDC-
+- rule: enum
+  field: COMMODITY
+  values:
+  - Brent crude oil
+  - Copper
+  - Corn
+  - Gold
+  - Henry Hub natural gas
+  - Silver
+  - Soybeans
+  - WTI crude oil
+- rule: enum
+  field: SHAPE
+  values:
+  - backwardation
+  - contango
+- rule: link
+  field: COMMODITY_REF
+  kind: commodity
+- rule: enum
+  field: UNIT
+  values:
+  - USD/MMBtu
+  - USD/bbl
+  - USD/lb
+  - USD/oz
+  - USc/bu
+notes:
+- 'Dated by the lake''s business_date partition: `drishti.py lake build` writes each test-data file''s day into it; the documents carry no date
+  field of their own.'
+review:
+- 'required inferred from 100% coverage in 24 documents (8 samples and 16 test-data documents (data/testdata/market-data/commodity-curve/snapshot-2026-07-08.jsonl.gz,
+  data/testdata/market-data/commodity-curve/changes-2026-09-30.jsonl.gz)): confirm each required field is mandatory upstream, and each optional
+  one may be empty.'
+- 'source ''md-hub'' is the test data''s _meta.source (synthetic): name the production system that delivers it.'
+- 'due time of each business date is not known: state it (for example, by 06:00 New York the next business day).'
+- 'enum values inferred from the data, not from a glossary: COMMODITY, SHAPE, UNIT: confirm they are closed lists.'
+- 'number types decided by the field''s name: POINTS[].PRICE amount: confirm amount, rate or integer.'
+- 'no unit stated for the amounts FRONT, ROLL, POINTS[].PRICE (docs/contracts/README.md section 7: USD unless stated): confirm the currency.'
+- 'no description in about.yaml or the Sutras for UNIT: write them in the pack''s config/about.yaml glossary.'

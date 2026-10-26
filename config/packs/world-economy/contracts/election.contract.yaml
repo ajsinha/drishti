@@ -1,0 +1,257 @@
+# Project Drishti · Any data. Any domain. One grammar.
+#
+# Copyright (c) 2026 Ashutosh Sinha <ajsinha@gmail.com>.
+# All rights reserved.
+#
+# PROPRIETARY AND CONFIDENTIAL.
+#
+# This file is the confidential and proprietary property of Ashutosh Sinha.
+# Unauthorised copying, use, modification, distribution or disclosure of this
+# file, via any medium, is strictly prohibited except with the express prior
+# written permission of the copyright holder.
+#
+# See the LICENSE file in the root of this repository for the full terms.
+
+# Data contract of the election kind (command ELEC): docs/contracts/README.md section 16.
+# Drafted by `drishti.py contract bootstrap election`; owned by people from then on: confirm the review points, then remove them.
+kind: election
+mnemonic: ELEC
+pack: world-economy
+version: '1.0'
+class: fundamental
+status: active
+title: Election
+description: The most recent election to a chamber or to the executive, with the system, term, seats by party and the date of the next one.
+source: 'public data: CIA, The World Factbook (factbook.json mirror, CC0)'
+grain: One row per election, keyed by ELECTION_ID.
+key:
+- ELECTION_ID
+id-pattern:
+- ^ELEC-
+dated-by: snapshot
+cadence:
+  frequency: static
+  due: to be confirmed
+storage:
+  connector: civic-store
+  plugin: delta
+  domain: civic
+  table: <root>/civic/election/
+  test-data:
+  - config/packs/world-economy/samples
+fields:
+- name: ELECTION_ID
+  type: id
+  presence: required
+  description: The record's id (the business key)
+  example: ELEC-ABW-EXE
+  pattern: ^ELEC-
+- name: TITLE
+  type: text
+  presence: required
+  description: The country and the chamber or office.
+  example: Aruba · executive (head of state)
+- name: COUNTRY_NAME
+  type: text
+  presence: required
+  example: Aruba
+- name: CHAMBER
+  type: text
+  presence: required
+  example: Executive
+- name: DATE
+  type: date
+  presence: optional
+  example: '2024-12-06'
+- name: DATE_TEXT
+  type: text
+  presence: optional
+  description: When the most recent election took place, as the Factbook publishes the date.
+  example: 6 December 2024
+- name: SYSTEM
+  type: text
+  presence: optional
+  description: The electoral system, for example plurality, proportional representation or an electoral college.
+  example: the monarchy is hereditary; governor general appointed by t…
+- name: TERM
+  type: text
+  presence: optional
+  example: 4 years
+- name: WINNER
+  type: text
+  presence: optional
+  description: The party with the most seats, or the elected head of state.
+  example: King WILLEM-ALEXANDER of the Netherlands; represented by Go…
+- name: NEXT_ELECTION
+  type: text
+  presence: optional
+  description: When the next election is expected, as published.
+  example: by December 2028
+- name: WOMEN
+  type: text
+  presence: optional
+  example: 42.4%
+- name: SEATS_TEXT
+  type: text
+  presence: optional
+  example: 257 (all directly elected)
+- name: RESULTS
+  type: record list
+  presence: required
+  description: 'Nested: see nested RESULTS[]'
+- name: SUMMARY
+  type: record
+  presence: required
+  description: 'Nested: see nested SUMMARY'
+- name: JURISDICTION
+  type: id
+  presence: required
+  description: 'Country: the jurisdiction it refers to'
+  example: JUR-ABW
+  pattern: ^JUR-
+  link: jurisdiction
+- name: PROVENANCE
+  type: record
+  presence: required
+  description: 'Nested: see nested PROVENANCE'
+nested:
+  SUMMARY:
+  - name: SELECTION
+    type: text
+    presence: optional
+    description: How the head of state is chosen.
+    example: the monarchy is hereditary; governor general appointed by t…
+  - name: HELD_ON
+    type: text
+    presence: optional
+    description: The date, as published.
+    example: 6 December 2024
+  - name: NEXT_ELECTION
+    type: text
+    presence: optional
+    description: The date, as published.
+    example: by December 2028
+  - name: RESULTS
+    type: text
+    presence: optional
+    description: The result as the Factbook publishes it.
+    example: Mike EMAN (AVP) elected prime minister; percent of Staten v…
+  - name: CHAMBER
+    type: text
+    presence: optional
+    description: The legislative chamber.
+    example: Chamber of Deputies (Cámara de Diputados)
+  - name: SEATS
+    type: text
+    presence: optional
+    description: The number of seats and how many are elected.
+    example: 257 (all directly elected)
+  - name: ELECTORAL_SYSTEM
+    type: text
+    presence: optional
+    description: How votes become seats.
+    example: proportional representation
+    enum:
+    - mixed system
+    - other systems
+    - plurality/majority
+    - proportional representation
+  - name: TERM
+    type: text
+    presence: optional
+    description: How long members serve.
+    example: 4 years
+  - name: WOMEN
+    type: text
+    presence: optional
+    unit: '% of seats'
+    description: The share of seats held by women.
+    example: 42.4%
+  PROVENANCE:
+  - name: SOURCE
+    type: text
+    presence: required
+    description: The organisation or organisations whose published data this view shows.
+    example: CIA, The World Factbook (factbook.json mirror, CC0)
+  - name: DATASET
+    type: text
+    presence: required
+    description: The named dataset and its vintage (the release the numbers come from).
+    example: The World Factbook (mirror commit 144d6977b2)
+  - name: RETRIEVED_AT
+    type: date
+    presence: required
+    description: The date the data was downloaded by tools/realdata.
+    example: '2026-10-10'
+  - name: LICENCE
+    type: text
+    presence: required
+    description: The terms under which the source allows reuse; attribution is required.
+    example: Public domain (U.S. Government work); the factbook.json mir…
+  - name: ATTRIBUTION
+    type: text
+    presence: required
+    description: The credit line to repeat when the data is shown or republished.
+    example: Central Intelligence Agency, The World Factbook (public dom…
+  - name: URL
+    type: text
+    presence: required
+    description: The web page of the dataset.
+    example: https://www.cia.gov/the-world-factbook/
+  RESULTS[]:
+  - name: PARTY
+    type: text
+    presence: optional
+    description: A party or group.
+    example: Union for the Homeland (UP)
+  - name: SEATS
+    type: integer
+    presence: required
+    description: The seats it won.
+    example: 48
+  - name: SHARE
+    type: rate
+    presence: required
+    unit: '% of seats'
+    description: Its seats as a share of the seats listed.
+    example: 37.5
+links:
+- field: JURISDICTION
+  kind: jurisdiction
+validation:
+- rule: required
+  fields:
+  - ELECTION_ID
+  - TITLE
+  - COUNTRY_NAME
+  - CHAMBER
+  - RESULTS
+  - SUMMARY
+  - JURISDICTION
+  - PROVENANCE
+- rule: unique
+  key:
+  - ELECTION_ID
+  per: snapshot
+- rule: pattern
+  field: ELECTION_ID
+  pattern: ^ELEC-
+- rule: link
+  field: JURISDICTION
+  kind: jurisdiction
+- rule: enum
+  field: SUMMARY.ELECTORAL_SYSTEM
+  values:
+  - mixed system
+  - other systems
+  - plurality/majority
+  - proportional representation
+notes: []
+review:
+- 'required inferred from 100% coverage in 378 documents (378 samples): confirm each required field is mandatory upstream, and each optional one
+  may be empty.'
+- 'key ELECTION_ID is the field holding the sample catalogue''s id (ELEC-ABW-EXE): confirm it is the business key.'
+- 'a snapshot refreshed when tools/publicdata/world_economy.py runs: confirm the refresh cadence.'
+- 'enum values inferred from the data, not from a glossary: SUMMARY.ELECTORAL_SYSTEM: confirm they are closed lists.'
+- 'no description in about.yaml or the Sutras for COUNTRY_NAME, CHAMBER, DATE, TERM, WOMEN, SEATS_TEXT: write them in the pack''s config/about.yaml
+  glossary.'

@@ -1,0 +1,167 @@
+# Project Drishti · Any data. Any domain. One grammar.
+#
+# Copyright (c) 2026 Ashutosh Sinha <ajsinha@gmail.com>.
+# All rights reserved.
+#
+# PROPRIETARY AND CONFIDENTIAL.
+#
+# This file is the confidential and proprietary property of Ashutosh Sinha.
+# Unauthorised copying, use, modification, distribution or disclosure of this
+# file, via any medium, is strictly prohibited except with the express prior
+# written permission of the copyright holder.
+#
+# See the LICENSE file in the root of this repository for the full terms.
+
+# Data contract of the pnl-explain kind (command PNL): docs/contracts/README.md section 16.
+# Drafted by `drishti.py contract bootstrap pnl-explain`; owned by people from then on: confirm the review points, then remove them.
+kind: pnl-explain
+mnemonic: PNL
+pack: market-risk
+version: '1.0'
+class: computed
+status: retiring
+retiring-in: 2.9.0
+replaced-by: docs/contracts/PNL.md
+title: P&L explain
+description: Daily P&L attributed to risk factors, new trades and residual.
+source: pnl-explain
+grain: One row per p&l explain per business date, keyed by RESULT_ID.
+key:
+- RESULT_ID
+id-pattern:
+- ^PNL-
+dated-by: business_date
+cadence:
+  frequency: daily
+  due: to be confirmed
+storage:
+  connector: risk-store
+  plugin: delta
+  domain: risk
+  table: <root>/risk/pnl-explain/
+  test-data:
+  - data/testdata/market-risk/pnl-explain
+fields:
+- name: RESULT_ID
+  type: id
+  presence: required
+  description: The record's id (the business key)
+  example: PNL-COMM-1
+  pattern: ^PNL-
+- name: DATE
+  type: date
+  presence: required
+  description: The trading day the P&L belongs to.
+  example: '2026-09-30'
+- name: ACTUAL
+  type: integer
+  presence: derived
+  unit: USD
+  description: The change in the book's value over the day as booked, including new trades, fees and carry.
+  example: -79231
+  note: computed by P&L explain; removed when retired
+- name: EXPLAINED
+  type: integer
+  presence: derived
+  unit: USD
+  description: 'The part of the actual P&L that the risk factors account for: each sensitivity multiplied by that day''s move in its factor, plus
+    carry and roll-down.'
+  example: -81630
+  note: computed by P&L explain; removed when retired
+- name: UNEXPLAINED
+  type: integer
+  presence: derived
+  unit: USD
+  description: Actual minus explained. A large or persistent residual points to a missing risk factor, a stale parameter or a pricing difference
+    between the front office and risk.
+  example: 2399
+  note: computed by P&L explain; removed when retired
+- name: ATTRIBUTION
+  type: record list
+  presence: derived
+  description: 'Nested: see nested ATTRIBUTION[]'
+  note: computed by P&L explain; removed when retired
+- name: EXPLAIN_STEPS
+  type: record list
+  presence: derived
+  description: 'Nested: see nested EXPLAIN_STEPS[]'
+  note: computed by P&L explain; removed when retired
+- name: BOOK
+  type: id
+  presence: required
+  description: 'Book: the book it refers to'
+  example: BOOK-COMM-1
+  pattern: ^BOOK-
+  link: book
+nested:
+  ATTRIBUTION[]:
+  - name: FACTOR
+    type: text
+    presence: required
+    example: Rates delta
+    enum:
+    - Carry and theta
+    - Credit
+    - FX delta
+    - New trades
+    - Rates delta
+    - Vega
+  - name: PNL
+    type: amount
+    presence: required
+    unit: USD
+    description: The explained P&L assigned to this risk factor.
+    example: -34285
+  EXPLAIN_STEPS[]:
+  - name: STEP
+    type: text
+    presence: required
+    example: Carry
+  - name: PNL
+    type: amount
+    presence: required
+    unit: USD
+    description: Each step moves the running total from zero to the actual P&L; the last step is the unexplained rest.
+    example: -11428
+links:
+- field: BOOK
+  kind: book
+validation:
+- rule: required
+  fields:
+  - RESULT_ID
+  - DATE
+  - BOOK
+- rule: unique
+  key:
+  - RESULT_ID
+  per: business_date
+- rule: pattern
+  field: RESULT_ID
+  pattern: ^PNL-
+- rule: link
+  field: BOOK
+  kind: book
+- rule: enum
+  field: ATTRIBUTION[].FACTOR
+  values:
+  - Carry and theta
+  - Credit
+  - FX delta
+  - New trades
+  - Rates delta
+  - Vega
+notes:
+- 'Dated by the lake''s business_date partition: `drishti.py lake build` writes each test-data file''s day into it; the documents carry no date
+  field of their own.'
+- 'Retiring in 2.9.0: the stored kind is removed and computed instead by P&L explain (docs/contracts/PNL.md); old ids and links open the computed
+  page.'
+review:
+- 'required inferred from 100% coverage in 60 documents (30 samples and 30 test-data documents (data/testdata/market-risk/pnl-explain/snapshot-2026-07-08.jsonl.gz,
+  data/testdata/market-risk/pnl-explain/changes-2026-09-30.jsonl.gz)): confirm each required field is mandatory upstream, and each optional one
+  may be empty.'
+- 'source ''pnl-explain'' is the test data''s _meta.source (synthetic): name the production system that delivers it.'
+- 'due time of each business date is not known: state it (for example, by 06:00 New York the next business day).'
+- 'enum values inferred from the data, not from a glossary: ATTRIBUTION[].FACTOR: confirm they are closed lists.'
+- 'no description in about.yaml or the Sutras for ATTRIBUTION[].FACTOR, EXPLAIN_STEPS[].STEP: write them in the pack''s config/about.yaml glossary.'
+- 'ACTUAL is the day-over-day MtM change: confirm it is computed from trade valuations, not delivered.'

@@ -1,0 +1,256 @@
+# Project Drishti · Any data. Any domain. One grammar.
+#
+# Copyright (c) 2026 Ashutosh Sinha <ajsinha@gmail.com>.
+# All rights reserved.
+#
+# PROPRIETARY AND CONFIDENTIAL.
+#
+# This file is the confidential and proprietary property of Ashutosh Sinha.
+# Unauthorised copying, use, modification, distribution or disclosure of this
+# file, via any medium, is strictly prohibited except with the express prior
+# written permission of the copyright holder.
+#
+# See the LICENSE file in the root of this repository for the full terms.
+
+# Data contract of the bond kind (command BND): docs/contracts/README.md section 16.
+# Drafted by `drishti.py contract bootstrap bond`; owned by people from then on: confirm the review points, then remove them.
+kind: bond
+mnemonic: BND
+pack: market-data
+version: '1.0'
+class: fundamental
+status: active
+title: Bond (security master)
+description: 'A listed bond: terms, price, yield, spreads and analytics.'
+source: md-hub
+grain: One row per bond (security master) per business date, keyed by ISIN.
+key:
+- ISIN
+id-pattern:
+- ^BND-
+dated-by: business_date
+cadence:
+  frequency: daily
+  due: to be confirmed
+storage:
+  connector: market-store
+  plugin: delta
+  domain: market
+  table: <root>/market/bond/
+  test-data:
+  - data/testdata/market-data/bond
+fields:
+- name: ISIN
+  type: id
+  presence: required
+  description: The record's id (the business key)
+  example: BND-BRVERD054608
+  pattern: ^BND-
+- name: ISIN_CODE
+  type: text
+  presence: required
+  example: BRVERD054608
+- name: ISSUER_NAME
+  type: text
+  presence: required
+  description: Issuer
+  example: Verdant Agri Holdings
+- name: COUPON
+  type: rate
+  presence: required
+  description: Coupon
+  example: 0.0579
+- name: MATURITY
+  type: date
+  presence: required
+  description: Maturity
+  example: '2031-09-15'
+- name: PRICE
+  type: amount
+  presence: required
+  description: Price
+  example: 94.302
+- name: YIELD
+  type: rate
+  presence: required
+  description: Yield
+  example: 0.071
+- name: Z_SPREAD
+  type: rate
+  presence: required
+  description: Z-spread
+  example: 323.0
+- name: MOD_DURATION
+  type: amount
+  presence: required
+  description: Duration
+  example: 4.35
+- name: RATING
+  type: text
+  presence: required
+  description: Rating
+  example: BB-
+- name: TERMS
+  type: record
+  presence: required
+  description: 'Nested: see nested TERMS'
+- name: COUPONS
+  type: record list
+  presence: required
+  description: 'Nested: see nested COUPONS[]'
+- name: HISTORY
+  type: record list
+  presence: required
+  description: 'Nested: see nested HISTORY[]'
+- name: ISSUER
+  type: id
+  presence: required
+  description: 'Reference entity: the issuer it refers to'
+  example: ISS-VERDANT
+  pattern: ^ISS-
+  link: issuer
+- name: BENCHMARK_CURVE
+  type: id
+  presence: required
+  description: 'Benchmark curve: the ir-curve it refers to'
+  example: CRV-USD-GOVT
+  pattern: ^CRV-
+  link: ir-curve
+nested:
+  TERMS:
+  - name: CURRENCY
+    type: text
+    presence: required
+    example: USD
+    enum:
+    - CAD
+    - CHF
+    - EUR
+    - GBP
+    - JPY
+    - USD
+  - name: COUPON_FREQUENCY
+    type: text
+    presence: required
+    example: Semi-annual
+    enum:
+    - Annual
+    - Semi-annual
+  - name: DAY_COUNT
+    type: text
+    presence: required
+    example: ACT/ACT
+  - name: ISSUE_DATE
+    type: date
+    presence: required
+    example: '2021-09-15'
+  - name: AMOUNT_ISSUED
+    type: amount
+    presence: required
+    example: 5100000000
+  - name: SENIORITY
+    type: text
+    presence: required
+    example: Senior unsecured
+    enum:
+    - Senior unsecured
+    - Sovereign
+  - name: CALLABLE
+    type: boolean
+    presence: required
+    example: false
+  - name: CUSIP
+    type: text
+    presence: optional
+    example: 0UST03005
+  COUPONS[]:
+  - name: DATE
+    type: date
+    presence: required
+    description: Date
+    example: '2027-09-15'
+  - name: AMOUNT
+    type: amount
+    presence: required
+    description: Coupon
+    example: 2.895
+  HISTORY[]:
+  - name: DATE
+    type: date
+    presence: required
+    example: '2026-08-19'
+  - name: PRICE
+    type: amount
+    presence: required
+    example: 95.492
+links:
+- field: ISSUER
+  kind: issuer
+- field: BENCHMARK_CURVE
+  kind: ir-curve
+validation:
+- rule: required
+  fields:
+  - ISIN
+  - ISIN_CODE
+  - ISSUER_NAME
+  - COUPON
+  - MATURITY
+  - PRICE
+  - YIELD
+  - Z_SPREAD
+  - MOD_DURATION
+  - RATING
+  - TERMS
+  - COUPONS
+  - HISTORY
+  - ISSUER
+  - BENCHMARK_CURVE
+- rule: unique
+  key:
+  - ISIN
+  per: business_date
+- rule: pattern
+  field: ISIN
+  pattern: ^BND-
+- rule: link
+  field: ISSUER
+  kind: issuer
+- rule: link
+  field: BENCHMARK_CURVE
+  kind: ir-curve
+- rule: enum
+  field: TERMS.CURRENCY
+  values:
+  - CAD
+  - CHF
+  - EUR
+  - GBP
+  - JPY
+  - USD
+- rule: enum
+  field: TERMS.COUPON_FREQUENCY
+  values:
+  - Annual
+  - Semi-annual
+- rule: enum
+  field: TERMS.SENIORITY
+  values:
+  - Senior unsecured
+  - Sovereign
+notes:
+- 'Dated by the lake''s business_date partition: `drishti.py lake build` writes each test-data file''s day into it; the documents carry no date
+  field of their own.'
+review:
+- 'required inferred from 100% coverage in 96 documents (32 samples and 64 test-data documents (data/testdata/market-data/bond/snapshot-2026-07-08.jsonl.gz,
+  data/testdata/market-data/bond/changes-2026-09-30.jsonl.gz)): confirm each required field is mandatory upstream, and each optional one may be
+  empty.'
+- 'source ''md-hub'' is the test data''s _meta.source (synthetic): name the production system that delivers it.'
+- 'due time of each business date is not known: state it (for example, by 06:00 New York the next business day).'
+- 'enum values inferred from the data, not from a glossary: TERMS.CURRENCY, TERMS.COUPON_FREQUENCY, TERMS.SENIORITY: confirm they are closed lists.'
+- 'number types decided by the field''s name: COUPON rate, PRICE amount, YIELD rate, Z_SPREAD rate, TERMS.AMOUNT_ISSUED amount, COUPONS[].AMOUNT
+  amount, HISTORY[].PRICE amount: confirm amount, rate or integer.'
+- 'no unit stated for the amounts PRICE, MOD_DURATION, TERMS.AMOUNT_ISSUED, COUPONS[].AMOUNT, HISTORY[].PRICE (docs/contracts/README.md section
+  7: USD unless stated): confirm the currency.'
+- 'no description in about.yaml or the Sutras for ISIN_CODE, TERMS.CURRENCY, TERMS.COUPON_FREQUENCY, TERMS.DAY_COUNT, TERMS.ISSUE_DATE, TERMS.AMOUNT_ISSUED,
+  TERMS.SENIORITY, TERMS.CALLABLE, TERMS.CUSIP, HISTORY[].DATE, HISTORY[].PRICE: write them in the pack''s config/about.yaml glossary.'

@@ -1,0 +1,239 @@
+# Project Drishti · Any data. Any domain. One grammar.
+#
+# Copyright (c) 2026 Ashutosh Sinha <ajsinha@gmail.com>.
+# All rights reserved.
+#
+# PROPRIETARY AND CONFIDENTIAL.
+#
+# This file is the confidential and proprietary property of Ashutosh Sinha.
+# Unauthorised copying, use, modification, distribution or disclosure of this
+# file, via any medium, is strictly prohibited except with the express prior
+# written permission of the copyright holder.
+#
+# See the LICENSE file in the root of this repository for the full terms.
+
+# Data contract of the country-group kind (command ECG): docs/contracts/README.md section 16.
+# Drafted by `drishti.py contract bootstrap country-group`; owned by people from then on: confirm the review points, then remove them.
+kind: country-group
+mnemonic: ECG
+pack: world-economy
+version: '1.0'
+class: computed
+status: retiring
+retiring-in: 2.9.0 or 2.10.0
+replaced-by: docs/contracts/GROUPINGS_AND_ANALYTICS.md
+title: Country group
+description: 'A World Bank region or income group (or the world): output, population, growth and its largest economies.'
+source: 'public data: World Bank, World Development Indicators'
+grain: One row per country group, keyed by GROUP_ID.
+key:
+- GROUP_ID
+id-pattern:
+- ^ECG-
+dated-by: snapshot
+cadence:
+  frequency: static
+  due: to be confirmed
+storage:
+  connector: macro-store
+  plugin: delta
+  domain: macro
+  table: <root>/macro/country-group/
+  test-data:
+  - config/packs/world-economy/samples
+fields:
+- name: GROUP_ID
+  type: id
+  presence: required
+  description: The record's id (the business key)
+  example: ECG-EAS
+  pattern: ^ECG-
+- name: NAME
+  type: text
+  presence: required
+  description: The World Bank region, income group or the world.
+  example: East Asia & Pacific
+- name: GROUP_TYPE
+  type: text
+  presence: required
+  description: Whether the group is a region, an income group or the world.
+  example: World Bank region
+- name: ECONOMIES
+  type: integer
+  presence: derived
+  description: The number of economies in the group that the pack covers.
+  example: 36
+  note: computed by the country-group aggregation; removed when retired
+- name: YEAR
+  type: text
+  presence: optional
+  example: '2025'
+- name: GDP_USD_BN
+  type: amount
+  presence: derived
+  unit: USD billions
+  description: The group's GDP in current US dollars (World Bank aggregate).
+  example: 33657
+  note: computed by the country-group aggregation; removed when retired
+- name: GDP_PER_CAPITA
+  type: amount
+  presence: derived
+  unit: USD
+  description: The group's GDP per head, in current US dollars.
+  example: 14077.3
+  note: computed by the country-group aggregation; removed when retired
+- name: POPULATION_M
+  type: amount
+  presence: derived
+  unit: millions
+  description: The group's total population.
+  example: 2390.87
+  note: computed by the country-group aggregation; removed when retired
+- name: GROWTH
+  type: rate
+  presence: derived
+  unit: '% a year'
+  description: The group's yearly real GDP growth (World Bank aggregate).
+  example: 3.99734
+  note: computed by the country-group aggregation; removed when retired
+- name: INFLATION
+  type: rate
+  presence: derived
+  example: 2.01821
+  note: computed by the country-group aggregation; removed when retired
+- name: GROWTH_PATH
+  type: record list
+  presence: derived
+  description: 'Nested: see nested GROWTH_PATH[]'
+  note: computed by the country-group aggregation; removed when retired
+- name: GDP_PATH
+  type: record list
+  presence: derived
+  description: 'Nested: see nested GDP_PATH[]'
+  note: computed by the country-group aggregation; removed when retired
+- name: TOP_ECONOMIES
+  type: record list
+  presence: derived
+  description: 'Nested: see nested TOP_ECONOMIES[]'
+  note: computed by the country-group aggregation; removed when retired
+- name: MEMBER_ECONOMIES
+  type: id list
+  presence: required
+  description: 'Economies: the economy it refers to'
+  link: economy
+- name: PROVENANCE
+  type: record
+  presence: required
+  description: 'Nested: see nested PROVENANCE'
+nested:
+  GROWTH_PATH[]:
+  - name: YEAR
+    type: text
+    presence: required
+    description: The calendar year.
+    example: '2015'
+  - name: GROWTH
+    type: rate
+    presence: required
+    unit: '% a year'
+    description: Group growth in that year.
+    example: 4.7589
+  GDP_PATH[]:
+  - name: YEAR
+    type: text
+    presence: required
+    description: The calendar year.
+    example: '2015'
+  - name: GDP
+    type: amount
+    presence: required
+    unit: USD billions
+    description: Group GDP in that year.
+    example: 22388.7
+  TOP_ECONOMIES[]:
+  - name: ECONOMY
+    type: id
+    presence: required
+    description: One of the ten largest economies of the group.
+    example: China
+    link: economy
+  - name: GDP_USD_BN
+    type: amount
+    presence: required
+    unit: USD billions
+    description: The economy's GDP in its latest year.
+    example: 19498
+  - name: GROWTH
+    type: rate
+    presence: required
+    unit: '% a year'
+    description: The economy's latest real GDP growth.
+    example: 4.95995
+  PROVENANCE:
+  - name: SOURCE
+    type: text
+    presence: required
+    description: The organisation or organisations whose published data this view shows.
+    example: World Bank, World Development Indicators
+  - name: DATASET
+    type: text
+    presence: required
+    description: The named dataset and its vintage (the release the numbers come from).
+    example: World Development Indicators (updated 2026-10-08)
+  - name: RETRIEVED_AT
+    type: date
+    presence: required
+    description: The date the data was downloaded by tools/realdata.
+    example: '2026-10-10'
+  - name: LICENCE
+    type: text
+    presence: required
+    description: The terms under which the source allows reuse; attribution is required.
+    example: CC BY 4.0
+  - name: ATTRIBUTION
+    type: text
+    presence: required
+    description: The credit line to repeat when the data is shown or republished.
+    example: 'The World Bank: World Development Indicators (CC BY 4.0).'
+  - name: URL
+    type: text
+    presence: required
+    description: The web page of the dataset.
+    example: https://databank.worldbank.org/source/world-development-ind…
+links:
+- field: MEMBER_ECONOMIES
+  kind: economy
+- field: TOP_ECONOMIES[].ECONOMY
+  kind: economy
+validation:
+- rule: required
+  fields:
+  - GROUP_ID
+  - NAME
+  - GROUP_TYPE
+  - MEMBER_ECONOMIES
+  - PROVENANCE
+- rule: unique
+  key:
+  - GROUP_ID
+  per: snapshot
+- rule: pattern
+  field: GROUP_ID
+  pattern: ^ECG-
+- rule: link
+  field: MEMBER_ECONOMIES
+  kind: economy
+- rule: link
+  field: TOP_ECONOMIES[].ECONOMY
+  kind: economy
+notes:
+- 'Retiring in 2.9.0 or 2.10.0: the stored kind is removed and computed instead by the country-group aggregation (docs/contracts/GROUPINGS_AND_ANALYTICS.md);
+  old ids and links open the computed page.'
+review:
+- 'required inferred from 100% coverage in 12 documents (12 samples): confirm each required field is mandatory upstream, and each optional one
+  may be empty.'
+- 'key GROUP_ID is the field holding the sample catalogue''s id (ECG-EAS): confirm it is the business key.'
+- 'a snapshot refreshed when tools/publicdata/world_economy.py runs: confirm the refresh cadence.'
+- 'number types decided by the field''s name: INFLATION rate: confirm amount, rate or integer.'
+- 'no description in about.yaml or the Sutras for YEAR, INFLATION: write them in the pack''s config/about.yaml glossary.'
+- 'The release is 2.9.0 or 2.10.0 (Track B, shipped as each is ready): confirm which.'

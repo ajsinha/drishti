@@ -1,0 +1,445 @@
+# Project Drishti · Any data. Any domain. One grammar.
+#
+# Copyright (c) 2026 Ashutosh Sinha <ajsinha@gmail.com>.
+# All rights reserved.
+#
+# PROPRIETARY AND CONFIDENTIAL.
+#
+# This file is the confidential and proprietary property of Ashutosh Sinha.
+# Unauthorised copying, use, modification, distribution or disclosure of this
+# file, via any medium, is strictly prohibited except with the express prior
+# written permission of the copyright holder.
+#
+# See the LICENSE file in the root of this repository for the full terms.
+
+# Data contract of the lei-entity kind (command LEI): docs/contracts/README.md section 16.
+# Drafted by `drishti.py contract bootstrap lei-entity`; owned by people from then on: confirm the review points, then remove them.
+kind: lei-entity
+mnemonic: LEI
+pack: gleif
+version: '1.0'
+class: fundamental
+status: active
+title: LEI legal entity
+description: 'A legal entity from its LEI record: key facts, addresses, registration and renewal, parents, children and identifiers.'
+source: 'public data: GLEIF LEI records, relationship records and mapping files (tools/publicdata/gleif.py)'
+grain: One row per lei legal entity, keyed by LEI.
+key:
+- LEI
+id-pattern:
+- ^[0-9A-Z]{18}[0-9]{2}$
+dated-by: snapshot
+cadence:
+  frequency: static
+  due: to be confirmed
+storage:
+  connector: gleif-store
+  plugin: delta
+  domain: gleif
+  table: <root>/gleif/lei-entity/
+  columns:
+  - LEI
+  - NAME
+  - LEI_COUNTRY
+  - LEGAL_CITY
+  - LEGAL_FORM
+  - REGISTRATION_STATUS
+  - RENEWAL_LATE
+  - SEGMENT
+  - NEXT_RENEWAL
+  - US_COMPANY
+  test-data:
+  - data/testdata/gleif/lei-entity
+fields:
+- name: LEI
+  type: id
+  presence: required
+  description: LEI
+  example: HWUPKR0MPOU8FGXBT394
+  pattern: ^[0-9A-Z]{18}[0-9]{2}$
+- name: NAME
+  type: text
+  presence: required
+  example: Apple Inc.
+- name: OTHER_NAMES
+  type: record list
+  presence: optional
+  description: 'Nested: see nested OTHER_NAMES[]'
+- name: LEGAL_FORM
+  type: text
+  presence: required
+  description: Legal form
+  example: For-Profit Corporation General Stock
+- name: JURISDICTION
+  type: id
+  presence: optional
+  description: 'Country: the jurisdiction it refers to'
+  example: US-CA
+  link: jurisdiction
+- name: LEI_COUNTRY
+  type: id
+  presence: required
+  description: 'Country (LEI): the lei-country it refers to'
+  example: US
+  link: lei-country
+- name: COUNTRY_NAME
+  type: text
+  presence: required
+  example: United States of America (the)
+- name: LEGAL_ADDRESS
+  type: text
+  presence: required
+  description: Legal address
+  example: C/O C T Corporation System, 330 N. Brand Blvd, Suite 700, 9…
+- name: LEGAL_CITY
+  type: text
+  presence: required
+  example: Glendale
+- name: HQ_ADDRESS
+  type: text
+  presence: optional
+  example: One Apple Park Way, 95014 Cupertino, US-CA, US
+- name: REGISTERED_AS
+  type: text
+  presence: optional
+  example: '806592'
+- name: ENTITY_STATUS
+  type: text
+  presence: required
+  description: Entity
+  example: ACTIVE
+- name: CREATED
+  type: date
+  presence: optional
+  description: Entity created
+  example: '1977-01-03'
+- name: REGISTRATION_STATUS
+  type: text
+  presence: required
+  example: ISSUED
+- name: INITIAL_REGISTRATION
+  type: date
+  presence: required
+  description: First registered
+  example: '2012-06-06'
+- name: LAST_UPDATE
+  type: date
+  presence: required
+  description: Last updated
+  example: '2026-03-03'
+- name: NEXT_RENEWAL
+  type: date
+  presence: required
+  description: Next renewal
+  example: '2027-03-08'
+- name: RENEWAL_LATE
+  type: boolean
+  presence: required
+  example: false
+- name: MANAGING_LOU
+  type: text
+  presence: required
+  description: Managing LOU
+  example: Bloomberg Finance L.P.
+- name: BICS
+  type: text
+  presence: optional
+  example: APLEUS66XXX
+- name: BIC_COUNT
+  type: integer
+  presence: optional
+  example: 1
+- name: ISIN_COUNT
+  type: integer
+  presence: optional
+  example: 949
+- name: LEI_GROUP
+  type: id
+  presence: required
+  description: 'Ownership group: the lei-group it refers to'
+  example: HWUPKR0MPOU8FGXBT394
+  link: lei-group
+- name: PARENT_EXCEPTIONS
+  type: record list
+  presence: optional
+  description: 'Nested: see nested PARENT_EXCEPTIONS[]'
+- name: CHILDREN
+  type: record list
+  presence: optional
+  description: 'Nested: see nested CHILDREN[]'
+- name: CHILD_COUNT
+  type: integer
+  presence: optional
+  example: 8
+- name: DIRECT_CHILDREN_GLEIF
+  type: integer
+  presence: optional
+  example: 8
+- name: ULTIMATE_CHILDREN_GLEIF
+  type: integer
+  presence: optional
+  example: 20
+- name: MAPPING_IDS
+  type: id list
+  presence: optional
+  description: 'Identifier: the lei-mapping it refers to'
+  link: lei-mapping
+- name: SEGMENT
+  type: text
+  presence: optional
+  description: Why in this pack
+  example: US equities
+- name: US_COMPANY
+  type: id
+  presence: optional
+  description: Ticker
+  example: AAPL
+  link: us-company
+- name: US_COMPANY_NAME
+  type: text
+  presence: optional
+  example: Apple Inc.
+- name: RENEWAL
+  type: text
+  presence: optional
+  example: 'Late: renewal was due 2024-10-07 (lapsed)'
+- name: DIRECT_PARENT
+  type: text
+  presence: optional
+  example: 549300COKYB5EGSU1838
+- name: ULTIMATE_PARENT
+  type: text
+  presence: optional
+  example: 549300B2Q47IR0CR5B54
+- name: PARENTS
+  type: record list
+  presence: optional
+  description: 'Nested: see nested PARENTS[]'
+- name: OPENCORPORATES
+  type: text
+  presence: optional
+  example: nl/34153487
+- name: HQ_COUNTRY
+  type: text
+  presence: optional
+  example: US
+- name: MIC
+  type: text
+  presence: optional
+  description: MIC
+  example: MAQI
+- name: CATEGORY
+  type: text
+  presence: optional
+  example: Fund
+  enum:
+  - Branch
+  - Fund
+- name: SUCCESSOR
+  type: text
+  presence: optional
+  example: 724500ZSA7ZOZHUXBS53
+nested:
+  OTHER_NAMES[]:
+  - name: NAME
+    type: text
+    presence: required
+    example: Apple Computer, Inc.
+  - name: TYPE
+    type: text
+    presence: required
+    example: previous legal name
+    enum:
+    - alternative language legal name
+    - auto ascii transliterated legal name
+    - preferred ascii transliterated legal name
+    - previous legal name
+    - trading or operating name
+  PARENT_EXCEPTIONS[]:
+  - name: LEVEL
+    type: text
+    presence: required
+    description: For
+    example: Direct parent
+    enum:
+    - Direct parent
+    - Ultimate parent
+  - name: REASON
+    type: text
+    presence: required
+    description: Reason
+    example: NATURAL_PERSONS
+    enum:
+    - NATURAL_PERSONS
+    - NON_CONSOLIDATING
+    - NON_PUBLIC
+    - NO_KNOWN_PERSON
+    - NO_LEI
+  - name: MEANING
+    type: text
+    presence: required
+    description: Meaning
+    example: Controlled by natural persons, not by an entity
+    enum:
+    - Controlled by natural persons, not by an entity
+    - No known person controls it (shares widely held)
+    - The parent does not consolidate it (no consolidated accounts that include it)
+    - The parent may not be disclosed (legal obstacle or harm)
+    - no lei
+  CHILDREN[]:
+  - name: LEI
+    type: id
+    presence: required
+    description: The record's id (the business key)
+    example: 2549008YU9EOMHFUA249
+    pattern: ^[0-9A-Z]{18}[0-9]{2}$
+  - name: NAME
+    type: text
+    presence: required
+    example: APPLE OPERATIONS INDIA PRIVATE LIMITED
+  - name: COUNTRY
+    type: text
+    presence: required
+    example: IN
+  - name: KIDS
+    type: integer
+    presence: optional
+    example: 9
+  PARENTS[]:
+  - name: LEVEL
+    type: integer
+    presence: required
+    description: Level
+    example: 1
+  - name: LEI
+    type: id
+    presence: required
+    description: LEI
+    example: 549300COKYB5EGSU1838
+    pattern: ^[0-9A-Z]{18}[0-9]{2}$
+  - name: NAME
+    type: text
+    presence: required
+    example: Desjardins Holding financier inc.
+  - name: RELATIONSHIP
+    type: text
+    presence: required
+    description: Relationship
+    example: Direct parent
+    enum:
+    - Direct and ultimate parent
+    - Direct parent
+    - Higher parent
+    - Ultimate parent
+    - Ultimate parent (chain not reported)
+links:
+- field: JURISDICTION
+  kind: jurisdiction
+- field: LEI_COUNTRY
+  kind: lei-country
+- field: LEI_GROUP
+  kind: lei-group
+- field: MAPPING_IDS
+  kind: lei-mapping
+- field: US_COMPANY
+  kind: us-company
+validation:
+- rule: required
+  fields:
+  - LEI
+  - NAME
+  - LEGAL_FORM
+  - LEI_COUNTRY
+  - COUNTRY_NAME
+  - LEGAL_ADDRESS
+  - LEGAL_CITY
+  - ENTITY_STATUS
+  - REGISTRATION_STATUS
+  - INITIAL_REGISTRATION
+  - LAST_UPDATE
+  - NEXT_RENEWAL
+  - RENEWAL_LATE
+  - MANAGING_LOU
+  - LEI_GROUP
+- rule: unique
+  key:
+  - LEI
+  per: snapshot
+- rule: pattern
+  field: LEI
+  pattern: ^[0-9A-Z]{18}[0-9]{2}$
+- rule: link
+  field: JURISDICTION
+  kind: jurisdiction
+- rule: link
+  field: LEI_COUNTRY
+  kind: lei-country
+- rule: range
+  field: BIC_COUNT
+  min: 0
+- rule: range
+  field: ISIN_COUNT
+  min: 0
+- rule: link
+  field: LEI_GROUP
+  kind: lei-group
+- rule: range
+  field: CHILD_COUNT
+  min: 0
+- rule: link
+  field: MAPPING_IDS
+  kind: lei-mapping
+- rule: link
+  field: US_COMPANY
+  kind: us-company
+- rule: enum
+  field: CATEGORY
+  values:
+  - Branch
+  - Fund
+- rule: enum
+  field: OTHER_NAMES[].TYPE
+  values:
+  - alternative language legal name
+  - auto ascii transliterated legal name
+  - preferred ascii transliterated legal name
+  - previous legal name
+  - trading or operating name
+- rule: enum
+  field: PARENT_EXCEPTIONS[].LEVEL
+  values:
+  - Direct parent
+  - Ultimate parent
+- rule: enum
+  field: PARENT_EXCEPTIONS[].REASON
+  values:
+  - NATURAL_PERSONS
+  - NON_CONSOLIDATING
+  - NON_PUBLIC
+  - NO_KNOWN_PERSON
+  - NO_LEI
+- rule: enum
+  field: PARENT_EXCEPTIONS[].MEANING
+  values:
+  - Controlled by natural persons, not by an entity
+  - No known person controls it (shares widely held)
+  - The parent does not consolidate it (no consolidated accounts that include it)
+  - The parent may not be disclosed (legal obstacle or harm)
+  - no lei
+- rule: enum
+  field: PARENTS[].RELATIONSHIP
+  values:
+  - Direct and ultimate parent
+  - Direct parent
+  - Higher parent
+  - Ultimate parent
+  - Ultimate parent (chain not reported)
+notes: []
+review:
+- 'required inferred from 100% coverage in 2001 documents (1 samples and 2000 test-data documents (data/testdata/gleif/lei-entity/snapshot-2026-10-25.jsonl.gz)):
+  confirm each required field is mandatory upstream, and each optional one may be empty.'
+- 'a snapshot refreshed when tools/publicdata/gleif.py runs: confirm the refresh cadence.'
+- 'enum values inferred from the data, not from a glossary: CATEGORY, OTHER_NAMES[].TYPE, PARENT_EXCEPTIONS[].LEVEL, PARENT_EXCEPTIONS[].REASON,
+  PARENT_EXCEPTIONS[].MEANING, PARENTS[].RELATIONSHIP: confirm they are closed lists.'
+- 'no description in about.yaml or the Sutras for NAME, COUNTRY_NAME, LEGAL_CITY, HQ_ADDRESS, REGISTERED_AS, REGISTRATION_STATUS, RENEWAL_LATE,
+  BICS, BIC_COUNT, ISIN_COUNT, CHILD_COUNT, DIRECT_CHILDREN_GLEIF and 15 more: write them in the pack''s config/about.yaml glossary.'

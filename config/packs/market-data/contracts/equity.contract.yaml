@@ -1,0 +1,277 @@
+# Project Drishti · Any data. Any domain. One grammar.
+#
+# Copyright (c) 2026 Ashutosh Sinha <ajsinha@gmail.com>.
+# All rights reserved.
+#
+# PROPRIETARY AND CONFIDENTIAL.
+#
+# This file is the confidential and proprietary property of Ashutosh Sinha.
+# Unauthorised copying, use, modification, distribution or disclosure of this
+# file, via any medium, is strictly prohibited except with the express prior
+# written permission of the copyright holder.
+#
+# See the LICENSE file in the root of this repository for the full terms.
+
+# Data contract of the equity kind (command EQ): docs/contracts/README.md section 16.
+# Drafted by `drishti.py contract bootstrap equity`; owned by people from then on: confirm the review points, then remove them.
+kind: equity
+mnemonic: EQ
+pack: market-data
+version: '1.0'
+class: fundamental
+status: active
+title: Equity
+description: 'A listed stock: price, dividends, sector and identifiers.'
+source: md-hub
+grain: One row per equity per business date, keyed by TICKER.
+key:
+- TICKER
+id-pattern:
+- ^EQ-
+dated-by: business_date
+cadence:
+  frequency: daily
+  due: to be confirmed
+storage:
+  connector: market-store
+  plugin: delta
+  domain: market
+  table: <root>/market/equity/
+  test-data:
+  - data/testdata/market-data/equity
+fields:
+- name: TICKER
+  type: id
+  presence: required
+  description: The record's id (the business key)
+  example: EQ-CSCA
+  pattern: ^EQ-
+- name: NAME
+  type: text
+  presence: required
+  description: Name
+  example: Cascadia Airlines Inc.
+- name: PRICE
+  type: amount
+  presence: required
+  description: Price
+  example: 21.84
+- name: CHANGE_1D
+  type: amount
+  presence: required
+  description: 1D
+  example: 0.03852
+- name: MARKET_CAP
+  type: integer
+  presence: required
+  description: Market cap
+  example: 34324492441
+- name: SECTOR
+  type: text
+  presence: required
+  description: Sector
+  example: Airlines
+- name: EXCHANGE
+  type: text
+  presence: required
+  description: Exchange
+  example: TSX
+  enum:
+  - Euronext Paris
+  - LSE
+  - NASDAQ
+  - NYSE
+  - SIX
+  - TSE
+  - TSX
+  - Xetra
+- name: CURRENCY
+  type: text
+  presence: required
+  description: Currency
+  example: CAD
+  enum:
+  - CAD
+  - CHF
+  - EUR
+  - GBP
+  - JPY
+  - USD
+- name: BETA
+  type: rate
+  presence: required
+  description: Beta
+  example: 1.46
+- name: HISTORY
+  type: record list
+  presence: required
+  description: 'Nested: see nested HISTORY[]'
+- name: OHLC
+  type: record list
+  presence: required
+  description: 'Nested: see nested OHLC[]'
+- name: IDENTIFIERS
+  type: record
+  presence: required
+  description: 'Nested: see nested IDENTIFIERS'
+- name: ISSUER
+  type: id
+  presence: required
+  description: 'Reference entity: the issuer it refers to'
+  example: ISS-CASCADIA
+  pattern: ^ISS-
+  link: issuer
+- name: EQUITY_VOL_SURFACE
+  type: id
+  presence: required
+  description: 'Equity vol surface: the equity-vol-surface it refers to'
+  example: EQV-CSCA
+  pattern: ^EQV-
+  link: equity-vol-surface
+- name: DIVIDEND_CURVE
+  type: id
+  presence: required
+  description: 'Dividend curve: the dividend-curve it refers to'
+  example: DIV-CSCA
+  pattern: ^DIV-
+  link: dividend-curve
+- name: EQUITY_INDEX
+  type: id
+  presence: optional
+  description: 'Index: the equity-index it refers to'
+  example: EQX-UKX
+  pattern: ^EQX-
+  link: equity-index
+nested:
+  HISTORY[]:
+  - name: DATE
+    type: date
+    presence: required
+    example: '2026-08-19'
+  - name: CLOSE
+    type: amount
+    presence: required
+    example: 18.95
+  OHLC[]:
+  - name: DATE
+    type: date
+    presence: required
+    example: '2026-07-08'
+  - name: OPEN
+    type: amount
+    presence: required
+    example: 18.94
+  - name: HIGH
+    type: amount
+    presence: required
+    example: 19.5
+  - name: LOW
+    type: amount
+    presence: required
+    example: 18.85
+  - name: CLOSE
+    type: amount
+    presence: required
+    example: 19.38
+  - name: VOLUME
+    type: integer
+    presence: required
+    example: 7737428
+  IDENTIFIERS:
+  - name: ISIN
+    type: text
+    presence: required
+    example: CA0CSCA00012
+  - name: BLOOMBERG
+    type: text
+    presence: required
+    example: CSCA TS Equity
+  - name: RIC
+    type: text
+    presence: required
+    example: CSCA.T
+  - name: FIGI
+    type: text
+    presence: required
+    example: BBG2033A30F5
+links:
+- field: ISSUER
+  kind: issuer
+- field: EQUITY_VOL_SURFACE
+  kind: equity-vol-surface
+- field: DIVIDEND_CURVE
+  kind: dividend-curve
+- field: EQUITY_INDEX
+  kind: equity-index
+validation:
+- rule: required
+  fields:
+  - TICKER
+  - NAME
+  - PRICE
+  - CHANGE_1D
+  - MARKET_CAP
+  - SECTOR
+  - EXCHANGE
+  - CURRENCY
+  - BETA
+  - HISTORY
+  - OHLC
+  - IDENTIFIERS
+  - ISSUER
+  - EQUITY_VOL_SURFACE
+  - DIVIDEND_CURVE
+- rule: unique
+  key:
+  - TICKER
+  per: business_date
+- rule: pattern
+  field: TICKER
+  pattern: ^EQ-
+- rule: enum
+  field: EXCHANGE
+  values:
+  - Euronext Paris
+  - LSE
+  - NASDAQ
+  - NYSE
+  - SIX
+  - TSE
+  - TSX
+  - Xetra
+- rule: enum
+  field: CURRENCY
+  values:
+  - CAD
+  - CHF
+  - EUR
+  - GBP
+  - JPY
+  - USD
+- rule: link
+  field: ISSUER
+  kind: issuer
+- rule: link
+  field: EQUITY_VOL_SURFACE
+  kind: equity-vol-surface
+- rule: link
+  field: DIVIDEND_CURVE
+  kind: dividend-curve
+- rule: link
+  field: EQUITY_INDEX
+  kind: equity-index
+notes:
+- 'Dated by the lake''s business_date partition: `drishti.py lake build` writes each test-data file''s day into it; the documents carry no date
+  field of their own.'
+review:
+- 'required inferred from 100% coverage in 30 documents (10 samples and 20 test-data documents (data/testdata/market-data/equity/snapshot-2026-07-08.jsonl.gz,
+  data/testdata/market-data/equity/changes-2026-09-30.jsonl.gz)): confirm each required field is mandatory upstream, and each optional one may
+  be empty.'
+- 'source ''md-hub'' is the test data''s _meta.source (synthetic): name the production system that delivers it.'
+- 'due time of each business date is not known: state it (for example, by 06:00 New York the next business day).'
+- 'enum values inferred from the data, not from a glossary: EXCHANGE, CURRENCY: confirm they are closed lists.'
+- 'number types decided by the field''s name: PRICE amount, BETA rate: confirm amount, rate or integer.'
+- 'no unit stated for the amounts PRICE, CHANGE_1D, HISTORY[].CLOSE, OHLC[].OPEN, OHLC[].HIGH, OHLC[].LOW, OHLC[].CLOSE (docs/contracts/README.md
+  section 7: USD unless stated): confirm the currency.'
+- 'no description in about.yaml or the Sutras for HISTORY[].DATE, HISTORY[].CLOSE, OHLC[].DATE, OHLC[].OPEN, OHLC[].HIGH, OHLC[].LOW, OHLC[].CLOSE,
+  OHLC[].VOLUME, IDENTIFIERS.ISIN, IDENTIFIERS.BLOOMBERG, IDENTIFIERS.RIC, IDENTIFIERS.FIGI: write them in the pack''s config/about.yaml glossary.'

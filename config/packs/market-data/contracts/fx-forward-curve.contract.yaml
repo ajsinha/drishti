@@ -1,0 +1,130 @@
+# Project Drishti · Any data. Any domain. One grammar.
+#
+# Copyright (c) 2026 Ashutosh Sinha <ajsinha@gmail.com>.
+# All rights reserved.
+#
+# PROPRIETARY AND CONFIDENTIAL.
+#
+# This file is the confidential and proprietary property of Ashutosh Sinha.
+# Unauthorised copying, use, modification, distribution or disclosure of this
+# file, via any medium, is strictly prohibited except with the express prior
+# written permission of the copyright holder.
+#
+# See the LICENSE file in the root of this repository for the full terms.
+
+# Data contract of the fx-forward-curve kind (command FXF): docs/contracts/README.md section 16.
+# Drafted by `drishti.py contract bootstrap fx-forward-curve`; owned by people from then on: confirm the review points, then remove them.
+kind: fx-forward-curve
+mnemonic: FXF
+pack: market-data
+version: '1.0'
+class: fundamental
+status: active
+title: FX forward curve
+description: Forward points by tenor for a pair.
+source: md-hub
+grain: One row per fx forward curve per business date, keyed by CURVE_ID.
+key:
+- CURVE_ID
+id-pattern:
+- ^FXF-
+dated-by: business_date
+cadence:
+  frequency: daily
+  due: to be confirmed
+storage:
+  connector: market-store
+  plugin: delta
+  domain: market
+  table: <root>/market/fx-forward-curve/
+  test-data:
+  - data/testdata/market-data/fx-forward-curve
+fields:
+- name: CURVE_ID
+  type: id
+  presence: required
+  description: The record's id (the business key)
+  example: FXF-AUDUSD
+  pattern: ^FXF-
+- name: PAIR
+  type: text
+  presence: required
+  description: Pair
+  example: AUDUSD
+- name: SPOT
+  type: amount
+  presence: required
+  description: Spot
+  example: 0.661
+- name: POINTS_3M
+  type: amount
+  presence: required
+  description: 3M points
+  example: 1.7
+- name: POINTS_1Y
+  type: amount
+  presence: required
+  description: 1Y points
+  example: 6.6
+- name: POINTS
+  type: record list
+  presence: required
+  description: 'Nested: see nested POINTS[]'
+- name: FX_SPOT
+  type: id
+  presence: required
+  description: 'Fx spot: the fx-spot it refers to'
+  example: FX-AUDUSD
+  pattern: ^FX-
+  link: fx-spot
+nested:
+  POINTS[]:
+  - name: TENOR
+    type: text
+    presence: required
+    description: Tenor
+    example: 'ON'
+  - name: PIPS
+    type: amount
+    presence: required
+    description: Points
+    example: 0.0
+  - name: OUTRIGHT
+    type: amount
+    presence: required
+    description: Outright
+    example: 0.661
+links:
+- field: FX_SPOT
+  kind: fx-spot
+validation:
+- rule: required
+  fields:
+  - CURVE_ID
+  - PAIR
+  - SPOT
+  - POINTS_3M
+  - POINTS_1Y
+  - POINTS
+  - FX_SPOT
+- rule: unique
+  key:
+  - CURVE_ID
+  per: business_date
+- rule: pattern
+  field: CURVE_ID
+  pattern: ^FXF-
+- rule: link
+  field: FX_SPOT
+  kind: fx-spot
+notes:
+- 'Dated by the lake''s business_date partition: `drishti.py lake build` writes each test-data file''s day into it; the documents carry no date
+  field of their own.'
+review:
+- 'required inferred from 100% coverage in 36 documents (12 samples and 24 test-data documents (data/testdata/market-data/fx-forward-curve/snapshot-2026-07-08.jsonl.gz,
+  data/testdata/market-data/fx-forward-curve/changes-2026-09-30.jsonl.gz)): confirm each required field is mandatory upstream, and each optional
+  one may be empty.'
+- 'source ''md-hub'' is the test data''s _meta.source (synthetic): name the production system that delivers it.'
+- 'due time of each business date is not known: state it (for example, by 06:00 New York the next business day).'
+- 'no unit stated for the amounts SPOT, POINTS_3M, POINTS_1Y, POINTS[].PIPS, POINTS[].OUTRIGHT (docs/contracts/README.md section 7: USD unless
+  stated): confirm the currency.'

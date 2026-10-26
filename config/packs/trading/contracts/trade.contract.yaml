@@ -1,0 +1,864 @@
+# Project Drishti · Any data. Any domain. One grammar.
+#
+# Copyright (c) 2026 Ashutosh Sinha <ajsinha@gmail.com>.
+# All rights reserved.
+#
+# PROPRIETARY AND CONFIDENTIAL.
+#
+# This file is the confidential and proprietary property of Ashutosh Sinha.
+# Unauthorised copying, use, modification, distribution or disclosure of this
+# file, via any medium, is strictly prohibited except with the express prior
+# written permission of the copyright holder.
+#
+# See the LICENSE file in the root of this repository for the full terms.
+
+# Data contract of the trade kind (command TRD): docs/contracts/README.md section 16.
+# Drafted by `drishti.py contract bootstrap trade`; owned by people from then on: confirm the review points, then remove them.
+kind: trade
+mnemonic: TRD
+pack: trading
+version: '1.0'
+class: fundamental
+status: active
+title: Trade
+description: Securitised auto loans, credit cards or student loans.
+source: murex
+grain: One row per trade per business date, keyed by TRADE_ID.
+key:
+- TRADE_ID
+id-pattern:
+- ^(MX|CLY)-\d+$
+dated-by: business_date
+cadence:
+  frequency: daily
+  due: to be confirmed
+storage:
+  connector: trade-endur
+  plugin: delta
+  domain: trading
+  table: <root>/trading/trade_endur/
+  columns:
+  - TRADE_ID
+  - SOURCE_SYSTEM
+  - PRODUCT_TYPE
+  - PRODUCT_SUB_TYPE
+  - PRODUCT_GROUP
+  - TRADE_STATUS
+  - TRADE_VERSION
+  - BUY_SELL_CODE
+  - CURRENCY
+  - QUANTITY
+  - TRADE_DATE
+  - MATURITY_DATE
+  - COUNTERPARTY
+  - LEGAL_ENTITY
+  - PORTFOLIO
+  - TRADER_ID
+  - NOTIONAL
+  - INDEX_NAME
+  partition-by:
+  - PRODUCT_TYPE
+  test-data:
+  - data/testdata/trades/endur
+  - data/testdata/trades/calypso
+  - data/testdata/trades/murex
+fields:
+- name: SOURCE_SYSTEM
+  type: text
+  presence: required
+  description: Source
+  example: ENDUR
+  enum:
+  - CALYPSO
+  - ENDUR
+  - MUREX
+- name: SOURCE_UPDATE_TIME
+  type: timestamp
+  presence: optional
+  example: '2026-09-30T18:30:00Z'
+- name: TRADE_DATE
+  type: date
+  presence: required
+  description: Trade date
+  example: '2025-06-20'
+- name: INPUT_DATE
+  type: date
+  presence: optional
+  example: '2024-04-19'
+- name: TRADE_ID
+  type: id
+  presence: required
+  description: The record's id (the business key)
+  example: '1000001'
+  link: trade
+- name: TRADE_STATUS
+  type: text
+  presence: required
+  example: VALIDATED
+  enum:
+  - AMENDED
+  - CANCELLED
+  - MATURED
+  - NEW
+  - VALIDATED
+- name: TRADE_ACTION
+  type: text
+  presence: optional
+  example: NEW
+  enum:
+  - AMEND
+  - NEW
+- name: TRADE_VERSION
+  type: text
+  presence: optional
+  example: '1'
+  enum:
+  - '1'
+  - '2'
+  - '3'
+  - '4'
+- name: TRANSACTION_ID
+  type: id
+  presence: required
+  example: '700000000'
+- name: PACKAGE_ID
+  type: id
+  presence: optional
+  example: PKG-0001
+- name: QUANTITY
+  type: amount
+  presence: required
+  example: 72000.0
+- name: PRICE
+  type: amount
+  presence: optional
+  description: Price
+  example: 2332.9131
+- name: BUY_SELL_CODE
+  type: text
+  presence: required
+  example: S
+  enum:
+  - B
+  - S
+- name: PRODUCT_TYPE
+  type: text
+  presence: required
+  example: ComSwap
+- name: PRODUCT_SUB_TYPE
+  type: text
+  presence: required
+  example: ENGY-SWAP
+- name: PRODUCT_GROUP
+  type: text
+  presence: optional
+  example: FX
+- name: PRODUCT_SUB_GROUP
+  type: text
+  presence: optional
+  example: linear
+- name: OPTION_TYPE
+  type: text
+  presence: optional
+  example: Call
+  enum:
+  - Call
+  - Cap
+  - Floor
+  - Payer
+  - Put
+  - Receiver
+- name: STRIKE_PRICE
+  type: rate
+  presence: optional
+  example: 158.79394
+- name: COUNTERPARTY
+  type: id
+  presence: required
+  description: 'Counterparty: the counterparty it refers to'
+  example: CP-HARBORPT
+  pattern: ^CP-
+  link: counterparty
+- name: COUNTERPARTY_UEN
+  type: text
+  presence: required
+  example: UEN0100259
+- name: COUNTERPARTY_COUNTRY_OF_RISK
+  type: text
+  presence: required
+  example: US
+- name: ORIGINAL_COUNTERPARTY
+  type: id
+  presence: optional
+  description: 'Original counterparty: the counterparty it refers to'
+  example: CP-HALCYON
+  pattern: ^CP-
+  link: counterparty
+- name: ORIGINAL_COUNTERPARTY_UEN
+  type: text
+  presence: optional
+  example: UEN0100222
+- name: INTERNAL_EXTERNAL_CODE
+  type: text
+  presence: required
+  example: External
+  enum:
+  - External
+  - Portfolio
+- name: TRANSIT
+  type: text
+  presence: required
+  example: '00107'
+  enum:
+  - '00107'
+  - '00214'
+  - '00321'
+  - 00428
+- name: LEGAL_ENTITY
+  type: id
+  presence: required
+  description: 'Legal entity: the legal-entity it refers to'
+  example: LE-NY
+  pattern: ^LE-
+  link: legal-entity
+- name: PORTFOLIO
+  type: id
+  presence: required
+  description: 'Portfolio: the book it refers to'
+  example: BOOK-COMM-2
+  pattern: ^BOOK-
+  link: book
+- name: TRADER_ID
+  type: id
+  presence: required
+  description: 'Trader: the trader it refers to'
+  example: TRDR-FROSSI
+  pattern: ^TRDR-
+  link: trader
+- name: TRADER_FIRST_NAME
+  type: text
+  presence: required
+  example: F.
+- name: TRADER_LAST_NAME
+  type: text
+  presence: required
+  example: Rossi
+- name: START_DATE
+  type: date
+  presence: required
+  example: '2025-08-01'
+- name: MATURITY_DATE
+  type: date
+  presence: required
+  description: Maturity
+  example: '2028-07-31'
+- name: REGISTRY_DELIVERY_DATE
+  type: date
+  presence: optional
+  example: '2026-06-01'
+- name: CURRENCY
+  type: text
+  presence: required
+  example: USD
+  enum:
+  - AUD
+  - CAD
+  - CHF
+  - EUR
+  - GBP
+  - JPY
+  - USD
+- name: DELIVERY_VERSUS_PAYMENT
+  type: text
+  presence: required
+  example: 'NO'
+  enum:
+  - 'NO'
+  - 'YES'
+- name: STRATEGY
+  type: unknown
+  presence: optional
+- name: INTERNAL_TRADING_STRATEGY
+  type: unknown
+  presence: optional
+- name: NY_CURVE_FLAG
+  type: unknown
+  presence: optional
+- name: VAULT_LOCATION_ALLOCATION
+  type: text
+  presence: optional
+  example: Vault Toronto A
+  enum:
+  - COMEX New York
+  - LME Rotterdam
+  - LME Singapore
+  - Vault London B
+  - Vault Toronto A
+- name: PRECIOUS_METAL_FLAG
+  type: text
+  presence: optional
+  example: Y
+- name: TT_GROUP
+  type: id
+  presence: optional
+  description: 'Desk: the desk it refers to'
+  example: DESK-FX
+  pattern: ^DESK-
+  link: desk
+- name: TT_BOOK
+  type: id
+  presence: optional
+  description: 'Book: the book it refers to'
+  example: BOOK-FX-3
+  pattern: ^BOOK-
+  link: book
+- name: LEASE_PERPETUITY_FLAG
+  type: text
+  presence: optional
+  example: Y
+  enum:
+  - N
+  - Y
+- name: SETTLEMENT_DATE
+  type: date
+  presence: optional
+  example: '2024-04-22'
+- name: LEGS
+  type: record list
+  presence: required
+  description: 'Nested: see nested LEGS[]'
+- name: EVENTS
+  type: record list
+  presence: required
+  description: 'Nested: see nested EVENTS[]'
+nested:
+  LEGS[]:
+  - name: LEG_ID
+    type: id
+    presence: required
+    example: '1'
+  - name: LEG_TYPE
+    type: text
+    presence: required
+    example: FIXED
+    enum:
+    - FIXED
+    - FLOAT
+    - OPTION
+    - PHYSICAL
+  - name: LEG_ECONOMIC_TYPE
+    type: text
+    presence: optional
+    example: Fixed price
+    enum:
+    - Basis
+    - Fee
+    - Fixed price
+    - Floating price
+    - Pay
+    - Receive
+  - name: CURRENCY
+    type: text
+    presence: required
+    example: USD
+    enum:
+    - AUD
+    - CAD
+    - CHF
+    - EUR
+    - GBP
+    - JPY
+    - USD
+  - name: LEASE_CURRENCY
+    type: text
+    presence: optional
+    example: USD
+  - name: FLOAT_SPREAD
+    type: text
+    presence: optional
+    example: '14.2486'
+  - name: PRICE_UNIT
+    type: text
+    presence: optional
+    example: MT
+  - name: NOTIONAL
+    type: amount
+    presence: required
+    example: 167969743.2
+  - name: DISCOUNT_INDEX
+    type: text
+    presence: optional
+    example: DISC-USD
+  - name: SPOT_CONVERSION_FACTOR
+    type: text
+    presence: optional
+    example: '1'
+  - name: PHYSICAL_LOCATION_NAME
+    type: text
+    presence: optional
+    example: Henry Hub
+  - name: INDEX_LOCATION_NAME
+    type: text
+    presence: optional
+    example: Henry Hub
+  - name: RESET_FIXING_SHIFT
+    type: text
+    presence: optional
+    example: '0'
+    enum:
+    - '-2'
+    - '0'
+  - name: RESET_HOLIDAY_SCHEDULE
+    type: text
+    presence: optional
+    example: GBLO
+    enum:
+    - EUTA
+    - GBLO
+    - JPTO
+    - USNY
+  - name: RESET_CONVENTION
+    type: text
+    presence: optional
+    example: Monthly
+    enum:
+    - Annual
+    - Daily
+    - Daily average
+    - Monthly
+    - Quarterly
+    - Semi-annual
+  - name: EMISSIONS_VINTAGE_MIN
+    type: unknown
+    presence: optional
+  - name: EMISSIONS_VINTAGE_MAX
+    type: unknown
+    presence: optional
+  - name: EMISSIONS_VINTAGE_DELIVERY_TYPE
+    type: unknown
+    presence: optional
+  - name: SETTLEMENT_TYPE
+    type: text
+    presence: required
+    example: Cash Settlement
+    enum:
+    - Cash Settlement
+    - Physical Settlement
+  - name: NY_CURVE_FLAG
+    type: unknown
+    presence: optional
+  - name: NUM_RRDC_REC
+    type: unknown
+    presence: optional
+  - name: NUM_PROFILE_REC
+    type: text
+    presence: optional
+    example: '1'
+  - name: DAILY_VOLUME
+    type: text
+    presence: optional
+    example: '95'
+  - name: INDEX
+    type: record
+    presence: required
+    description: 'Nested: see nested LEGS[].INDEX'
+  - name: CASH_FLOWS
+    type: record list
+    presence: required
+    description: 'The leg''s periods: each with its dates, notional, rate or price, and its resets.'
+  LEGS[].INDEX:
+  - name: NAME
+    type: text
+    presence: optional
+    description: The benchmark a floating leg is set by.
+    example: IDX-ALU-3M
+  - name: GROUP
+    type: id
+    presence: optional
+    description: 'Group: the counterparty-group it refers to'
+    example: Metals
+    link: counterparty-group
+  - name: SUB_GROUP
+    type: text
+    presence: optional
+    example: Base metals
+  LEGS[].CASH_FLOWS[]:
+  - name: FLOW_ID
+    type: id
+    presence: required
+    example: '5000001'
+  - name: FLOW_TYPE
+    type: text
+    presence: optional
+    example: Fixed price
+  - name: NOTIONAL
+    type: amount
+    presence: required
+    example: 4665826.2
+  - name: RATE
+    type: text
+    presence: optional
+    example: '2332.9131'
+  - name: FLOAT_SPREAD
+    type: text
+    presence: optional
+    example: '14.2486'
+  - name: START_DATE
+    type: date
+    presence: required
+    example: '2025-08-01'
+  - name: END_DATE
+    type: date
+    presence: required
+    example: '2025-08-31'
+  - name: PAYMENT_DATE
+    type: date
+    presence: required
+    example: '2025-09-07'
+  - name: RATE_DETERMINATION_DATE
+    type: date
+    presence: optional
+    example: '2025-08-31'
+  - name: FIRST_RESET_DATE
+    type: date
+    presence: optional
+    example: '2025-08-01'
+  - name: LAST_RESET_DATE
+    type: date
+    presence: optional
+    example: '2025-08-31'
+  - name: STRIKE_PRICE
+    type: rate
+    presence: required
+    example: 2332.9131
+  - name: RESETS
+    type: record list
+    presence: required
+    description: 'Nested: see nested LEGS[].CASH_FLOWS[].RESETS[]'
+  LEGS[].CASH_FLOWS[].RESETS[]:
+  - name: RESET_ID
+    type: id
+    presence: optional
+    example: '1'
+  - name: ACCRUAL
+    type: amount
+    presence: optional
+    example: 1.0
+  - name: START_DATE
+    type: date
+    presence: required
+    example: '2025-08-01'
+  - name: END_DATE
+    type: date
+    presence: required
+    example: '2025-08-31'
+  - name: RESET_DATE
+    type: date
+    presence: optional
+    example: '2025-08-01'
+  - name: ACCRUAL_START_DATE
+    type: date
+    presence: optional
+    example: '2025-07-28'
+  - name: ACCRUAL_END_DATE
+    type: date
+    presence: optional
+    example: '2025-09-25'
+  - name: RATE
+    type: text
+    presence: optional
+    example: '2217.5435'
+  EVENTS[]:
+  - name: LEG_ID
+    type: id
+    presence: optional
+    example: '1'
+  - name: EVENT_ID
+    type: id
+    presence: optional
+    example: '9000001'
+  - name: EVENT_NUMBER
+    type: integer
+    presence: optional
+    example: 1
+  - name: EVENT_TYPE
+    type: text
+    presence: optional
+    example: RESET
+  - name: PAYMENT_TYPE
+    type: text
+    presence: optional
+    example: Fixing
+  - name: EVENT_DATE
+    type: date
+    presence: optional
+    example: '2026-11-30'
+  - name: AMOUNT
+    type: amount
+    presence: optional
+    example: 14409.01
+  - name: CURRENCY
+    type: text
+    presence: optional
+    example: USD
+    enum:
+    - AUD
+    - CAD
+    - CHF
+    - EUR
+    - GBP
+    - JPY
+    - USD
+  - name: SEQUENCE_NUMBER
+    type: integer
+    presence: optional
+    example: 1
+  - name: VAULT_LOCATION_ALLOCATION
+    type: unknown
+    presence: optional
+  - name: NY_CURVE_FLAG
+    type: unknown
+    presence: optional
+links:
+- field: TRADE_ID
+  kind: trade
+- field: COUNTERPARTY
+  kind: counterparty
+- field: ORIGINAL_COUNTERPARTY
+  kind: counterparty
+- field: LEGAL_ENTITY
+  kind: legal-entity
+- field: PORTFOLIO
+  kind: book
+- field: TRADER_ID
+  kind: trader
+- field: TT_GROUP
+  kind: desk
+- field: TT_BOOK
+  kind: book
+- field: LEGS[].INDEX.GROUP
+  kind: counterparty-group
+validation:
+- rule: required
+  fields:
+  - SOURCE_SYSTEM
+  - TRADE_DATE
+  - TRADE_ID
+  - TRADE_STATUS
+  - TRANSACTION_ID
+  - QUANTITY
+  - BUY_SELL_CODE
+  - PRODUCT_TYPE
+  - PRODUCT_SUB_TYPE
+  - COUNTERPARTY
+  - COUNTERPARTY_UEN
+  - COUNTERPARTY_COUNTRY_OF_RISK
+  - INTERNAL_EXTERNAL_CODE
+  - TRANSIT
+  - LEGAL_ENTITY
+  - PORTFOLIO
+  - TRADER_ID
+  - TRADER_FIRST_NAME
+  - TRADER_LAST_NAME
+  - START_DATE
+  - MATURITY_DATE
+  - CURRENCY
+  - DELIVERY_VERSUS_PAYMENT
+  - LEGS
+  - EVENTS
+- rule: unique
+  key:
+  - TRADE_ID
+  per: business_date
+- rule: enum
+  field: SOURCE_SYSTEM
+  values:
+  - CALYPSO
+  - ENDUR
+  - MUREX
+- rule: link
+  field: TRADE_ID
+  kind: trade
+- rule: enum
+  field: TRADE_STATUS
+  values:
+  - AMENDED
+  - CANCELLED
+  - MATURED
+  - NEW
+  - VALIDATED
+- rule: enum
+  field: TRADE_ACTION
+  values:
+  - AMEND
+  - NEW
+- rule: enum
+  field: TRADE_VERSION
+  values:
+  - '1'
+  - '2'
+  - '3'
+  - '4'
+- rule: enum
+  field: BUY_SELL_CODE
+  values:
+  - B
+  - S
+- rule: enum
+  field: OPTION_TYPE
+  values:
+  - Call
+  - Cap
+  - Floor
+  - Payer
+  - Put
+  - Receiver
+- rule: link
+  field: COUNTERPARTY
+  kind: counterparty
+- rule: link
+  field: ORIGINAL_COUNTERPARTY
+  kind: counterparty
+- rule: enum
+  field: INTERNAL_EXTERNAL_CODE
+  values:
+  - External
+  - Portfolio
+- rule: enum
+  field: TRANSIT
+  values:
+  - '00107'
+  - '00214'
+  - '00321'
+  - 00428
+- rule: link
+  field: LEGAL_ENTITY
+  kind: legal-entity
+- rule: link
+  field: PORTFOLIO
+  kind: book
+- rule: link
+  field: TRADER_ID
+  kind: trader
+- rule: enum
+  field: CURRENCY
+  values:
+  - AUD
+  - CAD
+  - CHF
+  - EUR
+  - GBP
+  - JPY
+  - USD
+- rule: enum
+  field: DELIVERY_VERSUS_PAYMENT
+  values:
+  - 'NO'
+  - 'YES'
+- rule: enum
+  field: VAULT_LOCATION_ALLOCATION
+  values:
+  - COMEX New York
+  - LME Rotterdam
+  - LME Singapore
+  - Vault London B
+  - Vault Toronto A
+- rule: link
+  field: TT_GROUP
+  kind: desk
+- rule: link
+  field: TT_BOOK
+  kind: book
+- rule: enum
+  field: LEASE_PERPETUITY_FLAG
+  values:
+  - N
+  - Y
+- rule: enum
+  field: LEGS[].LEG_TYPE
+  values:
+  - FIXED
+  - FLOAT
+  - OPTION
+  - PHYSICAL
+- rule: enum
+  field: LEGS[].LEG_ECONOMIC_TYPE
+  values:
+  - Basis
+  - Fee
+  - Fixed price
+  - Floating price
+  - Pay
+  - Receive
+- rule: enum
+  field: LEGS[].CURRENCY
+  values:
+  - AUD
+  - CAD
+  - CHF
+  - EUR
+  - GBP
+  - JPY
+  - USD
+- rule: enum
+  field: LEGS[].RESET_FIXING_SHIFT
+  values:
+  - '-2'
+  - '0'
+- rule: enum
+  field: LEGS[].RESET_HOLIDAY_SCHEDULE
+  values:
+  - EUTA
+  - GBLO
+  - JPTO
+  - USNY
+- rule: enum
+  field: LEGS[].RESET_CONVENTION
+  values:
+  - Annual
+  - Daily
+  - Daily average
+  - Monthly
+  - Quarterly
+  - Semi-annual
+- rule: enum
+  field: LEGS[].SETTLEMENT_TYPE
+  values:
+  - Cash Settlement
+  - Physical Settlement
+- rule: link
+  field: LEGS[].INDEX.GROUP
+  kind: counterparty-group
+- rule: enum
+  field: EVENTS[].CURRENCY
+  values:
+  - AUD
+  - CAD
+  - CHF
+  - EUR
+  - GBP
+  - JPY
+  - USD
+notes:
+- 'Dated by the lake''s business_date partition: `drishti.py lake build` writes each test-data file''s day into it; the documents carry no date
+  field of their own.'
+review:
+- 'required inferred from 100% coverage in 2763 documents (765 samples and 1998 test-data documents (data/testdata/trades/endur/snapshot-2026-07-08.jsonl.gz,
+  data/testdata/trades/calypso/snapshot-2026-07-08.jsonl.gz, data/testdata/trades/murex/snapshot-2026-07-08.jsonl.gz)): confirm each required
+  field is mandatory upstream, and each optional one may be empty.'
+- 'source ''murex'' is the test data''s _meta.source (synthetic): name the production system that delivers it.'
+- 'due time of each business date is not known: state it (for example, by 06:00 New York the next business day).'
+- 'LEGS[].FLOAT_SPREAD holds values of several types (number, string): state its one type.'
+- 'LEGS[].CASH_FLOWS[].RATE holds values of several types (number, string): state its one type.'
+- 'LEGS[].CASH_FLOWS[].FLOAT_SPREAD holds values of several types (number, string): state its one type.'
+- 'LEGS[].CASH_FLOWS[].RESETS[].RATE holds values of several types (number, string): state its one type.'
+- 'enum values inferred from the data, not from a glossary: SOURCE_SYSTEM, TRADE_STATUS, TRADE_ACTION, TRADE_VERSION, BUY_SELL_CODE, OPTION_TYPE,
+  INTERNAL_EXTERNAL_CODE, TRANSIT, CURRENCY, DELIVERY_VERSUS_PAYMENT, VAULT_LOCATION_ALLOCATION, LEASE_PERPETUITY_FLAG, LEGS[].LEG_TYPE, LEGS[].LEG_ECONOMIC_TYPE,
+  LEGS[].CURRENCY, LEGS[].RESET_FIXING_SHIFT, LEGS[].RESET_HOLIDAY_SCHEDULE, LEGS[].RESET_CONVENTION, LEGS[].SETTLEMENT_TYPE, EVENTS[].CURRENCY:
+  confirm they are closed lists.'
+- 'number types decided by the field''s name: PRICE amount, STRIKE_PRICE rate, LEGS[].NOTIONAL amount, LEGS[].CASH_FLOWS[].NOTIONAL amount, LEGS[].CASH_FLOWS[].STRIKE_PRICE
+  rate, EVENTS[].AMOUNT amount: confirm amount, rate or integer.'
+- 'no unit stated for the amounts QUANTITY, PRICE, LEGS[].NOTIONAL, LEGS[].CASH_FLOWS[].NOTIONAL, LEGS[].CASH_FLOWS[].RESETS[].ACCRUAL, EVENTS[].AMOUNT
+  (docs/contracts/README.md section 7: USD unless stated): confirm the currency.'
+- 'no description in about.yaml or the Sutras for SOURCE_UPDATE_TIME, INPUT_DATE, TRADE_STATUS, TRADE_ACTION, TRADE_VERSION, TRANSACTION_ID, PACKAGE_ID,
+  QUANTITY, BUY_SELL_CODE, PRODUCT_TYPE, PRODUCT_SUB_TYPE, PRODUCT_GROUP and 76 more: write them in the pack''s config/about.yaml glossary.'

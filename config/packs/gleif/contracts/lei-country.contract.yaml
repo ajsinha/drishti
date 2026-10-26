@@ -1,0 +1,256 @@
+# Project Drishti · Any data. Any domain. One grammar.
+#
+# Copyright (c) 2026 Ashutosh Sinha <ajsinha@gmail.com>.
+# All rights reserved.
+#
+# PROPRIETARY AND CONFIDENTIAL.
+#
+# This file is the confidential and proprietary property of Ashutosh Sinha.
+# Unauthorised copying, use, modification, distribution or disclosure of this
+# file, via any medium, is strictly prohibited except with the express prior
+# written permission of the copyright holder.
+#
+# See the LICENSE file in the root of this repository for the full terms.
+
+# Data contract of the lei-country kind (command LEIC): docs/contracts/README.md section 16.
+# Drafted by `drishti.py contract bootstrap lei-country`; owned by people from then on: confirm the review points, then remove them.
+kind: lei-country
+mnemonic: LEIC
+pack: gleif
+version: '1.0'
+class: computed
+status: retiring
+retiring-in: 2.9.0 or 2.10.0
+replaced-by: docs/contracts/GROUPINGS_AND_ANALYTICS.md
+title: LEI country
+description: Every country of the pack's legal entities, by the number of entities.
+source: 'public data: GLEIF LEI records, relationship records and mapping files (tools/publicdata/gleif.py)'
+grain: One row per lei country, keyed by COUNTRY.
+key:
+- COUNTRY
+dated-by: snapshot
+cadence:
+  frequency: static
+  due: to be confirmed
+storage:
+  connector: gleif-store
+  plugin: delta
+  domain: gleif
+  table: <root>/gleif/lei-country/
+  columns:
+  - COUNTRY
+  - NAME
+  - ENTITIES
+  test-data:
+  - data/testdata/gleif/lei-country
+fields:
+- name: COUNTRY
+  type: id
+  presence: required
+  description: The record's id (the business key)
+  example: US
+- name: NAME
+  type: text
+  presence: required
+  example: United States of America (the)
+- name: ENTITIES
+  type: integer
+  presence: derived
+  description: Entities
+  example: 2704
+  note: computed by the GLEIF country grouping; removed when retired
+- name: GROUPS_PRESENT
+  type: integer
+  presence: derived
+  description: Groups present
+  example: 521
+  note: computed by the GLEIF country grouping; removed when retired
+- name: GROUPS_HEADQUARTERED
+  type: integer
+  presence: derived
+  example: 451
+  note: computed by the GLEIF country grouping; removed when retired
+- name: LAPSED
+  type: integer
+  presence: derived
+  example: 713
+  note: computed by the GLEIF country grouping; removed when retired
+- name: LATE_RENEWALS
+  type: integer
+  presence: derived
+  example: 724
+  note: computed by the GLEIF country grouping; removed when retired
+- name: ROWS
+  type: record list
+  presence: derived
+  description: 'Nested: see nested ROWS[]'
+  note: computed by the GLEIF country grouping; removed when retired
+- name: ROWS_NOTE
+  type: text
+  presence: derived
+  example: The first 400 of 2,704 entities, by name
+  note: computed by the GLEIF country grouping; removed when retired
+- name: GROUP_ROWS
+  type: record list
+  presence: derived
+  description: 'Nested: see nested GROUP_ROWS[]'
+  note: computed by the GLEIF country grouping; removed when retired
+- name: BY_LEGAL_FORM
+  type: record list
+  presence: derived
+  description: 'Nested: see nested BY_LEGAL_FORM[]'
+  note: computed by the GLEIF country grouping; removed when retired
+- name: BY_CITY
+  type: record list
+  presence: derived
+  description: 'Nested: see nested BY_CITY[]'
+  note: computed by the GLEIF country grouping; removed when retired
+- name: PROVENANCE
+  type: record
+  presence: required
+  description: 'Nested: see nested PROVENANCE'
+- name: COUNTRIES
+  type: integer
+  presence: optional
+  description: Countries
+  example: 133
+- name: BY_COUNTRY
+  type: record list
+  presence: optional
+  description: 'Nested: see nested BY_COUNTRY[]'
+nested:
+  ROWS[]:
+  - name: LEI
+    type: text
+    presence: optional
+    example: 5493003P89EPGALWYN87
+  - name: NAME
+    type: text
+    presence: required
+    example: 100 FEDERAL STREET LIMITED PARTNERSHIP
+  - name: CITY
+    type: text
+    presence: optional
+    example: BOSTON
+  - name: GROUP
+    type: id
+    presence: optional
+    description: 'Group: the counterparty-group it refers to'
+    example: 9DJT3UXIJIZJI4WXO774
+    link: counterparty-group
+  - name: LATE
+    type: text
+    presence: optional
+    example: late
+  - name: COUNTRY
+    type: id
+    presence: optional
+    description: Code
+    example: US
+  - name: ENTITIES
+    type: integer
+    presence: optional
+    description: Entities
+    example: 2704
+  - name: GROUPS_HEADQUARTERED
+    type: integer
+    presence: optional
+    description: Groups headquartered
+    example: 451
+  - name: LAPSED
+    type: integer
+    presence: optional
+    description: Lapsed
+    example: 713
+  GROUP_ROWS[]:
+  - name: GROUP_ID
+    type: id
+    presence: required
+    example: 549300EJG376EN5NQE29
+  - name: NAME
+    type: text
+    presence: required
+    example: CVS HEALTH CORPORATION
+  - name: HOME
+    type: text
+    presence: required
+    example: US
+  - name: HERE
+    type: integer
+    presence: required
+    description: Entities here
+    example: 48
+  BY_LEGAL_FORM[]:
+  - name: LABEL
+    type: text
+    presence: required
+    example: Limited Liability Company
+  - name: VALUE
+    type: amount
+    presence: required
+    example: 944
+  BY_CITY[]:
+  - name: LABEL
+    type: text
+    presence: required
+    example: WILMINGTON
+  - name: VALUE
+    type: amount
+    presence: required
+    example: 1413
+  PROVENANCE:
+  - name: SOURCE
+    type: text
+    presence: required
+    example: GLEIF, the Global Legal Entity Identifier Foundation (LEI r…
+  - name: RETRIEVED_AT
+    type: date
+    presence: required
+    example: '2026-10-25'
+  - name: LICENCE
+    type: text
+    presence: required
+    example: 'CC0 1.0 (GLEIF''s terms: free of charge, no restriction; att…'
+  - name: URL
+    type: text
+    presence: required
+    example: https://search.gleif.org/#/search/simpleSearch=US
+  BY_COUNTRY[]:
+  - name: LABEL
+    type: text
+    presence: required
+    example: United States of America (the)
+  - name: VALUE
+    type: amount
+    presence: required
+    example: 2704
+links:
+- field: ROWS[].GROUP
+  kind: counterparty-group
+validation:
+- rule: required
+  fields:
+  - COUNTRY
+  - NAME
+  - PROVENANCE
+- rule: unique
+  key:
+  - COUNTRY
+  per: snapshot
+- rule: link
+  field: ROWS[].GROUP
+  kind: counterparty-group
+notes:
+- 'Retiring in 2.9.0 or 2.10.0: the stored kind is removed and computed instead by the GLEIF country grouping (docs/contracts/GROUPINGS_AND_ANALYTICS.md);
+  old ids and links open the computed page.'
+review:
+- 'required inferred from 100% coverage in 135 documents (1 samples and 134 test-data documents (data/testdata/gleif/lei-country/snapshot-2026-10-25.jsonl.gz)):
+  confirm each required field is mandatory upstream, and each optional one may be empty.'
+- 'a snapshot refreshed when tools/publicdata/gleif.py runs: confirm the refresh cadence.'
+- 'number types decided by the field''s name: BY_LEGAL_FORM[].VALUE amount, BY_CITY[].VALUE amount, BY_COUNTRY[].VALUE amount: confirm amount,
+  rate or integer.'
+- 'no unit stated for the amounts BY_LEGAL_FORM[].VALUE, BY_CITY[].VALUE, BY_COUNTRY[].VALUE (docs/contracts/README.md section 7: USD unless stated):
+  confirm the currency.'
+- 'no description in about.yaml or the Sutras for NAME, GROUPS_HEADQUARTERED, LAPSED, LATE_RENEWALS, ROWS_NOTE, ROWS[].LEI, ROWS[].NAME, ROWS[].CITY,
+  ROWS[].LATE, GROUP_ROWS[].GROUP_ID, GROUP_ROWS[].NAME, GROUP_ROWS[].HOME and 10 more: write them in the pack''s config/about.yaml glossary.'
+- 'The release is 2.9.0 or 2.10.0 (Track B, shipped as each is ready): confirm which.'

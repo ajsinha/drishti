@@ -1,0 +1,178 @@
+# Project Drishti · Any data. Any domain. One grammar.
+#
+# Copyright (c) 2026 Ashutosh Sinha <ajsinha@gmail.com>.
+# All rights reserved.
+#
+# PROPRIETARY AND CONFIDENTIAL.
+#
+# This file is the confidential and proprietary property of Ashutosh Sinha.
+# Unauthorised copying, use, modification, distribution or disclosure of this
+# file, via any medium, is strictly prohibited except with the express prior
+# written permission of the copyright holder.
+#
+# See the LICENSE file in the root of this repository for the full terms.
+
+# Data contract of the risk-hierarchy kind (command HIER): docs/contracts/README.md section 16.
+# Drafted by `drishti.py contract bootstrap risk-hierarchy`; owned by people from then on: confirm the review points, then remove them.
+kind: risk-hierarchy
+mnemonic: HIER
+pack: market-risk
+version: '1.0'
+class: input
+status: active
+title: Risk hierarchy node
+description: Risk hierarchy node
+source: Synthetic sample data (tools/packgen/banking)
+grain: One row per risk hierarchy node per BUSINESS_DATE, keyed by NODE_ID.
+key:
+- NODE_ID
+id-pattern:
+- ^(MGMT|LEGAL)~
+dated-by: BUSINESS_DATE
+cadence:
+  frequency: daily
+  due: to be confirmed
+storage:
+  connector: risk-store
+  plugin: delta
+  domain: risk
+  table: <root>/risk/risk-hierarchy/
+  columns:
+  - NODE_ID
+  - HIERARCHY
+  - LEVEL
+  - PARENT_ID
+  - NAME
+  - LIMIT_VAR
+  test-data:
+  - data/testdata/market-risk/risk-hierarchy
+fields:
+- name: NODE_ID
+  type: id
+  presence: required
+  description: The record's id (the business key)
+  example: LEGAL~LE-NY
+  pattern: ^(MGMT|LEGAL)~
+  link: risk-hierarchy
+- name: HIERARCHY
+  type: text
+  presence: required
+  description: 'MGMT: bank, division, desk, book. LEGAL: bank, legal entity, desk, book. A book is in one leaf of each.'
+  example: LEGAL
+  enum:
+  - LEGAL
+  - MGMT
+- name: LEVEL
+  type: text
+  presence: required
+  description: bank, division, legal-entity, desk or book.
+  example: legal-entity
+  enum:
+  - bank
+  - book
+  - desk
+  - division
+  - legal-entity
+- name: PARENT_ID
+  type: id
+  presence: optional
+  example: LEGAL~BANK
+- name: NAME
+  type: text
+  presence: required
+  example: LE-NY
+- name: REF
+  type: record
+  presence: optional
+  description: 'Nested: see nested REF'
+- name: CHILDREN
+  type: text list
+  presence: required
+- name: BOOKS
+  type: text list
+  presence: required
+  description: 'Every book beneath the node: its positions are the node''s.'
+- name: LIMIT_VAR
+  type: amount
+  presence: required
+  unit: USD
+  description: The 1-day 99% VaR the node may take.
+  example: 8500000
+- name: BUSINESS_DATE
+  type: date
+  presence: required
+  example: '2026-09-30'
+- name: VALID_FROM
+  type: date
+  presence: required
+  example: '2026-01-02'
+- name: VALID_TO
+  type: unknown
+  presence: optional
+nested:
+  REF:
+  - name: KIND
+    type: text
+    presence: required
+    example: legal-entity
+    enum:
+    - book
+    - desk
+    - legal-entity
+  - name: ID
+    type: id
+    presence: required
+    example: LE-NY
+links:
+- field: NODE_ID
+  kind: risk-hierarchy
+validation:
+- rule: required
+  fields:
+  - NODE_ID
+  - HIERARCHY
+  - LEVEL
+  - NAME
+  - CHILDREN
+  - BOOKS
+  - LIMIT_VAR
+  - BUSINESS_DATE
+  - VALID_FROM
+- rule: unique
+  key:
+  - NODE_ID
+  per: BUSINESS_DATE
+- rule: pattern
+  field: NODE_ID
+  pattern: ^(MGMT|LEGAL)~
+- rule: link
+  field: NODE_ID
+  kind: risk-hierarchy
+- rule: enum
+  field: HIERARCHY
+  values:
+  - LEGAL
+  - MGMT
+- rule: enum
+  field: LEVEL
+  values:
+  - bank
+  - book
+  - desk
+  - division
+  - legal-entity
+- rule: enum
+  field: REF.KIND
+  values:
+  - book
+  - desk
+  - legal-entity
+notes: []
+review:
+- 'required inferred from 100% coverage in 90 documents (2 samples and 88 test-data documents (data/testdata/market-risk/risk-hierarchy/cob-2026-09-30.jsonl.gz)):
+  confirm each required field is mandatory upstream, and each optional one may be empty.'
+- 'source is the pack''s first listed source (its README): confirm.'
+- 'due time of each business date is not known: state it (for example, by 06:00 New York the next business day).'
+- 'enum values inferred from the data, not from a glossary: HIERARCHY, LEVEL, REF.KIND: confirm they are closed lists.'
+- 'no description in about.yaml or the Sutras for PARENT_ID, NAME, CHILDREN, BUSINESS_DATE, VALID_FROM, VALID_TO, REF.KIND, REF.ID: write them
+  in the pack''s config/about.yaml glossary.'

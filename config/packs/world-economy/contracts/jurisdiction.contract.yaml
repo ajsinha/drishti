@@ -1,0 +1,407 @@
+# Project Drishti · Any data. Any domain. One grammar.
+#
+# Copyright (c) 2026 Ashutosh Sinha <ajsinha@gmail.com>.
+# All rights reserved.
+#
+# PROPRIETARY AND CONFIDENTIAL.
+#
+# This file is the confidential and proprietary property of Ashutosh Sinha.
+# Unauthorised copying, use, modification, distribution or disclosure of this
+# file, via any medium, is strictly prohibited except with the express prior
+# written permission of the copyright holder.
+#
+# See the LICENSE file in the root of this repository for the full terms.
+
+# Data contract of the jurisdiction kind (command JUR): docs/contracts/README.md section 16.
+# Drafted by `drishti.py contract bootstrap jurisdiction`; owned by people from then on: confirm the review points, then remove them.
+kind: jurisdiction
+mnemonic: JUR
+pack: world-economy
+version: '1.0'
+class: fundamental
+status: active
+title: Jurisdiction
+description: 'A country: government type, capital, legislature and seats by party, office holders, elections and governance indicators, from the
+  CIA World Factbook, World Bank and UNDP.'
+source: 'public data: CIA, The World Factbook (factbook.json mirror, CC0); World Bank, World Development Indicators; World Bank, Worldwide Governance
+  Indicators; UNDP, Human Development Report: composite indices time series'
+grain: One row per jurisdiction, keyed by JURISDICTION_ID.
+key:
+- JURISDICTION_ID
+id-pattern:
+- ^JUR-
+dated-by: snapshot
+cadence:
+  frequency: static
+  due: to be confirmed
+storage:
+  connector: civic-store
+  plugin: delta
+  domain: civic
+  table: <root>/civic/jurisdiction/
+  test-data:
+  - config/packs/world-economy/samples
+fields:
+- name: JURISDICTION_ID
+  type: id
+  presence: required
+  description: The record's id (the business key)
+  example: JUR-ABW
+  pattern: ^JUR-
+- name: NAME
+  type: text
+  presence: required
+  description: The country's common name.
+  example: Aruba
+- name: ISO3
+  type: text
+  presence: required
+  example: ABW
+- name: OFFICIAL_NAME
+  type: text
+  presence: required
+  example: Country of Aruba
+- name: CAPITAL
+  type: text
+  presence: optional
+  description: The seat of government.
+  example: Oranjestad
+- name: REGION_NAME
+  type: text
+  presence: required
+  example: Latin America & Caribbean
+  enum:
+  - East Asia & Pacific
+  - Europe & Central Asia
+  - Latin America & Caribbean
+  - Middle East, North Africa, Afghanistan & Pakistan
+  - North America
+  - South Asia
+  - Sub-Saharan Africa
+- name: POPULATION_M
+  type: amount
+  presence: required
+  unit: millions
+  description: The number of residents (World Bank, mid-year).
+  example: 0.108785
+- name: AREA_KM2
+  type: amount
+  presence: optional
+  unit: square kilometres
+  description: Total area, land and water.
+  example: 180.0
+- name: GOVERNMENT_TYPE
+  type: text
+  presence: optional
+  description: The form of government, as the CIA World Factbook describes it.
+  example: parliamentary democracy; part of the Kingdom of the Netherl…
+- name: CURRENCY
+  type: text
+  presence: optional
+  description: The ISO 4217 code of the currency, from the Factbook exchange-rate entry.
+  example: AFA
+- name: INDEPENDENCE
+  type: text
+  presence: optional
+  example: none (part of the Kingdom of the Netherlands)
+- name: LEGISLATURE_NAME
+  type: text
+  presence: optional
+  example: Legislature (Staten)
+- name: LEGISLATURE_STRUCTURE
+  type: text
+  presence: optional
+  example: unicameral
+  enum:
+  - bicameral
+  - unicameral
+- name: LEGISLATURE
+  type: record list
+  presence: required
+  description: 'Nested: see nested LEGISLATURE[]'
+- name: INDICATORS
+  type: record list
+  presence: required
+  description: 'Indicators: the macro-indicator it refers to'
+  link: macro-indicator
+- name: PARTIES_LISTED
+  type: record list
+  presence: required
+  description: 'Nested: see nested PARTIES_LISTED[]'
+- name: PROFILE
+  type: record
+  presence: required
+  description: 'Nested: see nested PROFILE'
+- name: REGION
+  type: id
+  presence: required
+  description: 'World region: the region it refers to'
+  example: REGN-LCN
+  pattern: ^REGN-
+  link: region
+- name: CHIEF_OF_STATE
+  type: id
+  presence: optional
+  description: 'Chief of state: the office-holder it refers to'
+  example: OFFC-ABW-COS
+  pattern: ^OFFC-
+  link: office-holder
+- name: HEAD_OF_GOVERNMENT
+  type: id
+  presence: optional
+  description: 'Head of government: the office-holder it refers to'
+  example: OFFC-ABW-HOG
+  pattern: ^OFFC-
+  link: office-holder
+- name: LAST_ELECTION
+  type: id
+  presence: optional
+  description: 'Last election: the election it refers to'
+  example: ELEC-ARG-LOW
+  pattern: ^ELEC-
+  link: election
+- name: ELECTIONS
+  type: id list
+  presence: required
+  description: 'Elections: the election it refers to'
+  link: election
+- name: PARTIES
+  type: id list
+  presence: required
+  description: 'Parties with seats: the party it refers to'
+  link: party
+- name: SOCIAL_INDICATORS
+  type: id list
+  presence: required
+  description: 'Indicators: the social-indicator it refers to'
+  link: social-indicator
+- name: PROVENANCE
+  type: record
+  presence: required
+  description: 'Nested: see nested PROVENANCE'
+nested:
+  INDICATORS[]:
+  - name: INDICATOR
+    type: text
+    presence: required
+    description: A society or governance statistic.
+    example: Life expectancy at birth
+  - name: VALUE
+    type: amount
+    presence: required
+    description: The latest published value.
+    example: 76.5
+  - name: YEAR
+    type: text
+    presence: required
+    description: The year of the value.
+    example: '2024'
+  - name: UNIT
+    type: text
+    presence: required
+    description: What the value measures.
+    example: years
+    enum:
+    - '% of GDP'
+    - '% of population'
+    - '% of seats'
+    - index -2.5 to 2.5
+    - index 0-1
+    - index 0-100
+    - years
+  PARTIES_LISTED[]:
+  - name: PARTY
+    type: text
+    presence: required
+    description: A political party as the Factbook publishes the name.
+    example: Accion21
+  PROFILE:
+  - name: OFFICIAL_NAME
+    type: text
+    presence: required
+    description: The conventional long form of the country's name.
+    example: Country of Aruba
+  - name: RELIGIONS
+    type: text
+    presence: optional
+    description: The religious affiliations and their shares, as published.
+    example: Roman Catholic 75.3%, Protestant 4.9% (includes Methodist 0…
+  - name: LEGAL_SYSTEM
+    type: text
+    presence: optional
+    description: The legal tradition of the country.
+    example: civil law system based on the Dutch civil code
+  - name: SUFFRAGE
+    type: text
+    presence: optional
+    description: The voting age and who may vote.
+    example: 18 years of age; universal
+  - name: INDEPENDENCE
+    type: text
+    presence: optional
+    description: When and from whom the country became independent.
+    example: none (part of the Kingdom of the Netherlands)
+  - name: NATIONAL_HOLIDAY
+    type: text
+    presence: optional
+    description: The national day.
+    example: National Anthem and Flag Day, 18 March (1976)
+  - name: LOCATION
+    type: text
+    presence: required
+    description: Where the country is.
+    example: Caribbean, island in the Caribbean Sea, north of Venezuela
+  - name: CURRENCY_TEXT
+    type: text
+    presence: optional
+    description: The currency and its exchange-rate basis, as published.
+    example: Aruban guilders/florins per US dollar -
+  - name: LANGUAGES
+    type: text
+    presence: optional
+    description: The languages spoken and their shares, as published.
+    example: Afghan Persian or Dari (official, lingua franca) 77%, Pasht…
+  PROVENANCE:
+  - name: SOURCE
+    type: text
+    presence: required
+    description: The organisation or organisations whose published data this view shows.
+    example: CIA, The World Factbook (factbook.json mirror, CC0); World …
+  - name: DATASET
+    type: text
+    presence: required
+    description: The named dataset and its vintage (the release the numbers come from).
+    example: The World Factbook (mirror commit 144d6977b2); World Develo…
+  - name: RETRIEVED_AT
+    type: date
+    presence: required
+    description: The date the data was downloaded by tools/realdata.
+    example: '2026-10-10'
+  - name: LICENCE
+    type: text
+    presence: required
+    description: The terms under which the source allows reuse; attribution is required.
+    example: Public domain (U.S. Government work); the factbook.json mir…
+  - name: ATTRIBUTION
+    type: text
+    presence: required
+    description: The credit line to repeat when the data is shown or republished.
+    example: Central Intelligence Agency, The World Factbook (public dom…
+  - name: URL
+    type: text
+    presence: required
+    description: The web page of the dataset.
+    example: https://www.cia.gov/the-world-factbook/
+  LEGISLATURE[]:
+  - name: PARTY
+    type: text
+    presence: optional
+    description: A party or group in the lower chamber, as the Factbook lists it.
+    example: Union for the Homeland (UP)
+  - name: SEATS
+    type: integer
+    presence: required
+    description: The seats the party won at the most recent election.
+    example: 48
+links:
+- field: INDICATORS
+  kind: macro-indicator
+- field: REGION
+  kind: region
+- field: CHIEF_OF_STATE
+  kind: office-holder
+- field: HEAD_OF_GOVERNMENT
+  kind: office-holder
+- field: LAST_ELECTION
+  kind: election
+- field: ELECTIONS
+  kind: election
+- field: PARTIES
+  kind: party
+- field: SOCIAL_INDICATORS
+  kind: social-indicator
+validation:
+- rule: required
+  fields:
+  - JURISDICTION_ID
+  - NAME
+  - ISO3
+  - OFFICIAL_NAME
+  - REGION_NAME
+  - POPULATION_M
+  - LEGISLATURE
+  - INDICATORS
+  - PARTIES_LISTED
+  - PROFILE
+  - REGION
+  - ELECTIONS
+  - PARTIES
+  - SOCIAL_INDICATORS
+  - PROVENANCE
+- rule: unique
+  key:
+  - JURISDICTION_ID
+  per: snapshot
+- rule: pattern
+  field: JURISDICTION_ID
+  pattern: ^JUR-
+- rule: enum
+  field: REGION_NAME
+  values:
+  - East Asia & Pacific
+  - Europe & Central Asia
+  - Latin America & Caribbean
+  - Middle East, North Africa, Afghanistan & Pakistan
+  - North America
+  - South Asia
+  - Sub-Saharan Africa
+- rule: enum
+  field: LEGISLATURE_STRUCTURE
+  values:
+  - bicameral
+  - unicameral
+- rule: link
+  field: INDICATORS
+  kind: macro-indicator
+- rule: link
+  field: REGION
+  kind: region
+- rule: link
+  field: CHIEF_OF_STATE
+  kind: office-holder
+- rule: link
+  field: HEAD_OF_GOVERNMENT
+  kind: office-holder
+- rule: link
+  field: LAST_ELECTION
+  kind: election
+- rule: link
+  field: ELECTIONS
+  kind: election
+- rule: link
+  field: PARTIES
+  kind: party
+- rule: link
+  field: SOCIAL_INDICATORS
+  kind: social-indicator
+- rule: enum
+  field: INDICATORS[].UNIT
+  values:
+  - '% of GDP'
+  - '% of population'
+  - '% of seats'
+  - index -2.5 to 2.5
+  - index 0-1
+  - index 0-100
+  - years
+notes: []
+review:
+- 'required inferred from 100% coverage in 216 documents (216 samples): confirm each required field is mandatory upstream, and each optional one
+  may be empty.'
+- 'key JURISDICTION_ID is the field holding the sample catalogue''s id (JUR-ABW): confirm it is the business key.'
+- 'a snapshot refreshed when tools/publicdata/world_economy.py runs: confirm the refresh cadence.'
+- 'enum values inferred from the data, not from a glossary: REGION_NAME, LEGISLATURE_STRUCTURE, INDICATORS[].UNIT: confirm they are closed lists.'
+- 'number types decided by the field''s name: INDICATORS[].VALUE amount: confirm amount, rate or integer.'
+- 'no unit stated for the amounts INDICATORS[].VALUE (docs/contracts/README.md section 7: USD unless stated): confirm the currency.'
+- 'no description in about.yaml or the Sutras for ISO3, OFFICIAL_NAME, REGION_NAME, INDEPENDENCE, LEGISLATURE_NAME, LEGISLATURE_STRUCTURE: write
+  them in the pack''s config/about.yaml glossary.'

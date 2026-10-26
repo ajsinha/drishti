@@ -1,0 +1,130 @@
+# Project Drishti · Any data. Any domain. One grammar.
+#
+# Copyright (c) 2026 Ashutosh Sinha <ajsinha@gmail.com>.
+# All rights reserved.
+#
+# PROPRIETARY AND CONFIDENTIAL.
+#
+# This file is the confidential and proprietary property of Ashutosh Sinha.
+# Unauthorised copying, use, modification, distribution or disclosure of this
+# file, via any medium, is strictly prohibited except with the express prior
+# written permission of the copyright holder.
+#
+# See the LICENSE file in the root of this repository for the full terms.
+
+# Data contract of the stress-scenario kind (command SCN): docs/contracts/README.md section 16.
+# Drafted by `drishti.py contract bootstrap stress-scenario`; owned by people from then on: confirm the review points, then remove them.
+kind: stress-scenario
+mnemonic: SCN
+pack: market-risk
+version: '1.0'
+class: fundamental
+status: active
+title: Stress scenario
+description: A named historical or hypothetical shock set.
+source: stress-engine
+grain: One row per stress scenario per business date, keyed by SCENARIO_ID.
+key:
+- SCENARIO_ID
+id-pattern:
+- ^SCN-
+dated-by: business_date
+cadence:
+  frequency: daily
+  due: to be confirmed
+storage:
+  connector: risk-store
+  plugin: delta
+  domain: risk
+  table: <root>/risk/stress-scenario/
+  test-data:
+  - data/testdata/market-risk/stress-scenario
+fields:
+- name: SCENARIO_ID
+  type: id
+  presence: required
+  description: The record's id (the business key)
+  example: SCN-COVID2020
+  pattern: ^SCN-
+- name: NAME
+  type: text
+  presence: required
+  description: Name
+  example: COVID-19 March 2020
+- name: TYPE
+  type: text
+  presence: required
+  description: A historical scenario replays the moves of a past episode; a hypothetical one is a designed set of moves that need not have happened.
+  example: Historical
+  enum:
+  - Historical
+  - Hypothetical
+- name: SEVERITY
+  type: text
+  presence: required
+  description: The rating the risk function gives the scenario, which decides how it is used in limits and reporting.
+  example: Severe
+  enum:
+  - Severe
+  - Moderate
+  - Mild
+- name: SHOCKS
+  type: record list
+  presence: required
+  description: 'Nested: see nested SHOCKS[]'
+- name: HORIZON
+  type: text
+  presence: required
+  example: 10 days
+nested:
+  SHOCKS[]:
+  - name: FACTOR
+    type: text
+    presence: required
+    description: The market variable the scenario moves, such as an equity index, a spread or a curve.
+    example: Equities
+  - name: SHOCK
+    type: amount
+    presence: required
+    description: 'How far the factor moves. The unit follows the factor: a proportional change for prices and spreads, percentage points for interest
+      rates, points for volatility.'
+    example: -0.34
+links: []
+validation:
+- rule: required
+  fields:
+  - SCENARIO_ID
+  - NAME
+  - TYPE
+  - SEVERITY
+  - SHOCKS
+  - HORIZON
+- rule: unique
+  key:
+  - SCENARIO_ID
+  per: business_date
+- rule: pattern
+  field: SCENARIO_ID
+  pattern: ^SCN-
+- rule: enum
+  field: TYPE
+  values:
+  - Historical
+  - Hypothetical
+- rule: enum
+  field: SEVERITY
+  values:
+  - Severe
+  - Moderate
+  - Mild
+notes:
+- 'Dated by the lake''s business_date partition: `drishti.py lake build` writes each test-data file''s day into it; the documents carry no date
+  field of their own.'
+review:
+- 'required inferred from 100% coverage in 16 documents (8 samples and 8 test-data documents (data/testdata/market-risk/stress-scenario/snapshot-2026-07-08.jsonl.gz,
+  data/testdata/market-risk/stress-scenario/changes-2026-09-30.jsonl.gz)): confirm each required field is mandatory upstream, and each optional
+  one may be empty.'
+- 'source ''stress-engine'' is the test data''s _meta.source (synthetic): name the production system that delivers it.'
+- 'due time of each business date is not known: state it (for example, by 06:00 New York the next business day).'
+- 'no unit stated for the amounts SHOCKS[].SHOCK (docs/contracts/README.md section 7: USD unless stated): confirm the currency.'
+- 'no description in about.yaml or the Sutras for HORIZON: write them in the pack''s config/about.yaml glossary.'

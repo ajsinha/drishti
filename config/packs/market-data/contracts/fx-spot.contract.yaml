@@ -1,0 +1,201 @@
+# Project Drishti · Any data. Any domain. One grammar.
+#
+# Copyright (c) 2026 Ashutosh Sinha <ajsinha@gmail.com>.
+# All rights reserved.
+#
+# PROPRIETARY AND CONFIDENTIAL.
+#
+# This file is the confidential and proprietary property of Ashutosh Sinha.
+# Unauthorised copying, use, modification, distribution or disclosure of this
+# file, via any medium, is strictly prohibited except with the express prior
+# written permission of the copyright holder.
+#
+# See the LICENSE file in the root of this repository for the full terms.
+
+# Data contract of the fx-spot kind (command FX): docs/contracts/README.md section 16.
+# Drafted by `drishti.py contract bootstrap fx-spot`; owned by people from then on: confirm the review points, then remove them.
+kind: fx-spot
+mnemonic: FX
+pack: market-data
+version: '1.0'
+class: fundamental
+status: active
+title: FX spot rate
+description: Spot rate for a currency pair with bid/ask.
+source: md-hub
+grain: One row per fx spot rate per business date, keyed by PAIR.
+key:
+- PAIR
+id-pattern:
+- ^FX-
+dated-by: business_date
+cadence:
+  frequency: daily
+  due: to be confirmed
+storage:
+  connector: market-store
+  plugin: delta
+  domain: market
+  table: <root>/market/fx-spot/
+  test-data:
+  - data/testdata/market-data/fx-spot
+fields:
+- name: PAIR
+  type: id
+  presence: required
+  description: Pair
+  example: FX-AUDUSD
+  pattern: ^FX-
+- name: PAIR_NAME
+  type: text
+  presence: required
+  example: AUD/USD
+- name: MID
+  type: amount
+  presence: required
+  description: Mid
+  example: 0.661
+- name: BID
+  type: amount
+  presence: required
+  description: Bid
+  example: 0.66097
+- name: ASK
+  type: amount
+  presence: required
+  description: Ask
+  example: 0.66103
+- name: CHANGE_1D
+  type: amount
+  presence: required
+  description: 1D change
+  example: -0.01092
+- name: SPOT_DATE
+  type: date
+  presence: required
+  description: Value date
+  example: '2026-10-02'
+- name: HISTORY
+  type: record list
+  presence: required
+  description: 'Nested: see nested HISTORY[]'
+- name: CONVENTIONS
+  type: record
+  presence: required
+  description: 'Nested: see nested CONVENTIONS'
+- name: FX_FORWARD_CURVE
+  type: id
+  presence: required
+  description: 'Fx forward curve: the fx-forward-curve it refers to'
+  example: FXF-AUDUSD
+  pattern: ^FXF-
+  link: fx-forward-curve
+- name: FX_VOL_SURFACE
+  type: id
+  presence: required
+  description: 'Fx vol surface: the fx-vol-surface it refers to'
+  example: FXV-AUDUSD
+  pattern: ^FXV-
+  link: fx-vol-surface
+nested:
+  HISTORY[]:
+  - name: DATE
+    type: date
+    presence: required
+    example: '2026-08-19'
+  - name: MID
+    type: amount
+    presence: required
+    example: 0.69653
+  CONVENTIONS:
+  - name: BASE
+    type: text
+    presence: required
+    example: AUD
+    enum:
+    - AUD
+    - EUR
+    - GBP
+    - USD
+  - name: QUOTE
+    type: text
+    presence: required
+    example: USD
+  - name: PIP_FACTOR
+    type: integer
+    presence: required
+    example: 10000
+  - name: SPOT_LAG
+    type: text
+    presence: required
+    example: T+2
+  - name: CALENDAR
+    type: id
+    presence: required
+    description: 'Calendar: the calendar it refers to'
+    example: GBLO+USNY
+    link: calendar
+  - name: NDF
+    type: boolean
+    presence: required
+    example: false
+links:
+- field: FX_FORWARD_CURVE
+  kind: fx-forward-curve
+- field: FX_VOL_SURFACE
+  kind: fx-vol-surface
+- field: CONVENTIONS.CALENDAR
+  kind: calendar
+validation:
+- rule: required
+  fields:
+  - PAIR
+  - PAIR_NAME
+  - MID
+  - BID
+  - ASK
+  - CHANGE_1D
+  - SPOT_DATE
+  - HISTORY
+  - CONVENTIONS
+  - FX_FORWARD_CURVE
+  - FX_VOL_SURFACE
+- rule: unique
+  key:
+  - PAIR
+  per: business_date
+- rule: pattern
+  field: PAIR
+  pattern: ^FX-
+- rule: link
+  field: FX_FORWARD_CURVE
+  kind: fx-forward-curve
+- rule: link
+  field: FX_VOL_SURFACE
+  kind: fx-vol-surface
+- rule: enum
+  field: CONVENTIONS.BASE
+  values:
+  - AUD
+  - EUR
+  - GBP
+  - USD
+- rule: link
+  field: CONVENTIONS.CALENDAR
+  kind: calendar
+notes:
+- 'Dated by the lake''s business_date partition: `drishti.py lake build` writes each test-data file''s day into it; the documents carry no date
+  field of their own.'
+review:
+- 'required inferred from 100% coverage in 36 documents (12 samples and 24 test-data documents (data/testdata/market-data/fx-spot/snapshot-2026-07-08.jsonl.gz,
+  data/testdata/market-data/fx-spot/changes-2026-09-30.jsonl.gz)): confirm each required field is mandatory upstream, and each optional one may
+  be empty.'
+- 'source ''md-hub'' is the test data''s _meta.source (synthetic): name the production system that delivers it.'
+- 'the pack also names ''Official public data (ECB, US Treasury, New York Fed, FRED) through the feed connectors'' for this kind (rate-fixing,
+  fx-spot and ir-curve when the feed connectors are on): state when each source applies.'
+- 'due time of each business date is not known: state it (for example, by 06:00 New York the next business day).'
+- 'enum values inferred from the data, not from a glossary: CONVENTIONS.BASE: confirm they are closed lists.'
+- 'no unit stated for the amounts MID, BID, ASK, CHANGE_1D, HISTORY[].MID (docs/contracts/README.md section 7: USD unless stated): confirm the
+  currency.'
+- 'no description in about.yaml or the Sutras for PAIR_NAME, HISTORY[].DATE, HISTORY[].MID, CONVENTIONS.BASE, CONVENTIONS.QUOTE, CONVENTIONS.PIP_FACTOR,
+  CONVENTIONS.SPOT_LAG, CONVENTIONS.NDF: write them in the pack''s config/about.yaml glossary.'

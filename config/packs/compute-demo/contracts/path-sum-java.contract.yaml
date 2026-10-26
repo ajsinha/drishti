@@ -1,0 +1,51 @@
+# Project Drishti · Any data. Any domain. One grammar.
+#
+# Copyright (c) 2026 Ashutosh Sinha <ajsinha@gmail.com>.
+# All rights reserved.
+#
+# PROPRIETARY AND CONFIDENTIAL.
+#
+# This file is the confidential and proprietary property of Ashutosh Sinha.
+# Unauthorised copying, use, modification, distribution or disclosure of this
+# file, via any medium, is strictly prohibited except with the express prior
+# written permission of the copyright holder.
+#
+# See the LICENSE file in the root of this repository for the full terms.
+
+# Data contract of the path-sum-java kind (command PSUMJ): docs/contracts/README.md section 16.
+# Drafted by `drishti.py contract bootstrap path-sum-java`; owned by people from then on: confirm the review points, then remove them.
+kind: path-sum-java
+mnemonic: PSUMJ
+pack: compute-demo
+version: '1.0'
+class: computed
+status: active
+title: Book path (Java)
+description: Book path (Java) (the path-sum-java kind of the compute-demo pack)
+source: 'computed by Drishti: the reactive connector path-sum-java (java engine)'
+grain: One answer per question (the id asked for and its parameters), computed when asked.
+key: []
+dated-by: on request
+cadence:
+  frequency: on change
+  due: computed on request and on its triggers
+storage:
+  connector: path-sum-java
+  plugin: reactive
+fields:
+- name: SUM
+  type: amount
+  presence: required
+- name: WORST
+  type: amount
+  presence: required
+links: []
+validation:
+- rule: required
+  fields:
+  - SUM
+  - WORST
+notes:
+- 'No stored key: an answer''s id is the question asked (the id in the request), the id of the path-book it reads.'
+review:
+- 'no samples or test data ship for this kind: the fields are those its Sutras show (and its declared result); state every field''s type and presence.'

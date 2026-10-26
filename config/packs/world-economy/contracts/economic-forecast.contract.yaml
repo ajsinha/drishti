@@ -1,0 +1,230 @@
+# Project Drishti · Any data. Any domain. One grammar.
+#
+# Copyright (c) 2026 Ashutosh Sinha <ajsinha@gmail.com>.
+# All rights reserved.
+#
+# PROPRIETARY AND CONFIDENTIAL.
+#
+# This file is the confidential and proprietary property of Ashutosh Sinha.
+# Unauthorised copying, use, modification, distribution or disclosure of this
+# file, via any medium, is strictly prohibited except with the express prior
+# written permission of the copyright holder.
+#
+# See the LICENSE file in the root of this repository for the full terms.
+
+# Data contract of the economic-forecast kind (command FCST): docs/contracts/README.md section 16.
+# Drafted by `drishti.py contract bootstrap economic-forecast`; owned by people from then on: confirm the review points, then remove them.
+kind: economic-forecast
+mnemonic: FCST
+pack: world-economy
+version: '1.0'
+class: fundamental
+status: active
+title: Economic forecast
+description: 'The IMF World Economic Outlook: growth, inflation, unemployment, external balance and debt, outturn and projections to 2031.'
+source: 'public data: International Monetary Fund, World Economic Outlook (DataMapper)'
+grain: One row per economic forecast, keyed by FORECAST_ID.
+key:
+- FORECAST_ID
+id-pattern:
+- ^FCST-
+dated-by: snapshot
+cadence:
+  frequency: static
+  due: to be confirmed
+storage:
+  connector: macro-store
+  plugin: delta
+  domain: macro
+  table: <root>/macro/economic-forecast/
+  test-data:
+  - config/packs/world-economy/samples
+fields:
+- name: FORECAST_ID
+  type: id
+  presence: required
+  description: The record's id (the business key)
+  example: FCST-ABW-WEO
+  pattern: ^FCST-
+- name: ECONOMY_NAME
+  type: text
+  presence: required
+  description: The country or territory the figures describe.
+  example: Aruba
+- name: VINTAGE
+  type: text
+  presence: required
+  description: The IMF World Economic Outlook edition the figures come from; the IMF revises them twice a year.
+  example: IMF World Economic Outlook, April 2026 edition
+- name: GROWTH_2027
+  type: rate
+  presence: optional
+  unit: '% a year'
+  description: The IMF projection of real GDP growth in 2027.
+  example: 2
+- name: INFLATION_2027
+  type: rate
+  presence: optional
+  unit: '% a year'
+  description: The IMF projection of average consumer-price inflation in 2027.
+  example: 2
+- name: DEBT_2030
+  type: amount
+  presence: optional
+  unit: '% of GDP'
+  description: The IMF projection of general government gross debt as a share of GDP in 2030.
+  example: 50.3
+- name: PROJECTIONS
+  type: record list
+  presence: required
+  description: 'Nested: see nested PROJECTIONS[]'
+- name: PATH
+  type: record list
+  presence: required
+  description: 'Nested: see nested PATH[]'
+- name: ECONOMY
+  type: id
+  presence: required
+  description: 'Economy: the economy it refers to'
+  example: ECON-ABW
+  pattern: ^ECON-
+  link: economy
+- name: PROVENANCE
+  type: record
+  presence: required
+  description: 'Nested: see nested PROVENANCE'
+nested:
+  PROJECTIONS[]:
+  - name: YEAR
+    type: text
+    presence: required
+    description: The calendar year.
+    example: '2015'
+  - name: GROWTH
+    type: rate
+    presence: required
+    unit: '% a year'
+    description: Yearly change of real GDP.
+    example: 3.6
+  - name: INFLATION
+    type: rate
+    presence: optional
+    unit: '% a year'
+    description: Average consumer-price inflation.
+    example: 0.5
+  - name: UNEMPLOYMENT
+    type: amount
+    presence: optional
+    unit: '% of labour force'
+    description: Share of the labour force without a job.
+    example: 7.3
+  - name: CURRENT_ACCOUNT
+    type: amount
+    presence: optional
+    unit: '% of GDP'
+    description: Balance of trade, income and transfers with the rest of the world.
+    example: 3.9
+  - name: DEBT
+    type: amount
+    presence: optional
+    unit: '% of GDP'
+    description: General government gross debt.
+    example: 74.2
+  - name: NET_LENDING
+    type: amount
+    presence: optional
+    unit: '% of GDP'
+    description: General government revenue minus expenditure.
+    example: -1.5
+  - name: GDP
+    type: amount
+    presence: optional
+    unit: USD billions
+    description: GDP in current US dollars.
+    example: 2.963
+  - name: BASIS
+    type: text
+    presence: required
+    description: Projection for years from the vintage year on, otherwise outturn or estimate.
+    example: Outturn or estimate
+    enum:
+    - Outturn or estimate
+    - Projection
+  PATH[]:
+  - name: YEAR
+    type: text
+    presence: required
+    description: The calendar year.
+    example: '2015'
+  - name: GROWTH
+    type: rate
+    presence: required
+    unit: '% a year'
+    description: Yearly change of real GDP, outturn then projection.
+    example: 3.6
+  PROVENANCE:
+  - name: SOURCE
+    type: text
+    presence: required
+    description: The organisation or organisations whose published data this view shows.
+    example: International Monetary Fund, World Economic Outlook (DataMa…
+  - name: DATASET
+    type: text
+    presence: required
+    description: The named dataset and its vintage (the release the numbers come from).
+    example: World Economic Outlook (April 2026 edition)
+  - name: RETRIEVED_AT
+    type: date
+    presence: required
+    description: The date the data was downloaded by tools/realdata.
+    example: '2026-10-10'
+  - name: LICENCE
+    type: text
+    presence: required
+    description: The terms under which the source allows reuse; attribution is required.
+    example: 'IMF Copyright and Terms of Use: reuse with attribution; com…'
+  - name: ATTRIBUTION
+    type: text
+    presence: required
+    description: The credit line to repeat when the data is shown or republished.
+    example: 'Source: International Monetary Fund, World Economic Outlook…'
+  - name: URL
+    type: text
+    presence: required
+    description: The web page of the dataset.
+    example: https://www.imf.org/external/datamapper
+links:
+- field: ECONOMY
+  kind: economy
+validation:
+- rule: required
+  fields:
+  - FORECAST_ID
+  - ECONOMY_NAME
+  - VINTAGE
+  - PROJECTIONS
+  - PATH
+  - ECONOMY
+  - PROVENANCE
+- rule: unique
+  key:
+  - FORECAST_ID
+  per: snapshot
+- rule: pattern
+  field: FORECAST_ID
+  pattern: ^FCST-
+- rule: link
+  field: ECONOMY
+  kind: economy
+- rule: enum
+  field: PROJECTIONS[].BASIS
+  values:
+  - Outturn or estimate
+  - Projection
+notes: []
+review:
+- 'required inferred from 100% coverage in 192 documents (192 samples): confirm each required field is mandatory upstream, and each optional one
+  may be empty.'
+- 'key FORECAST_ID is the field holding the sample catalogue''s id (FCST-ABW-WEO): confirm it is the business key.'
+- 'a snapshot refreshed when tools/publicdata/world_economy.py runs: confirm the refresh cadence.'
+- 'enum values inferred from the data, not from a glossary: PROJECTIONS[].BASIS: confirm they are closed lists.'

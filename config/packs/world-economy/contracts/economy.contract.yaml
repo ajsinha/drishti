@@ -1,0 +1,376 @@
+# Project Drishti · Any data. Any domain. One grammar.
+#
+# Copyright (c) 2026 Ashutosh Sinha <ajsinha@gmail.com>.
+# All rights reserved.
+#
+# PROPRIETARY AND CONFIDENTIAL.
+#
+# This file is the confidential and proprietary property of Ashutosh Sinha.
+# Unauthorised copying, use, modification, distribution or disclosure of this
+# file, via any medium, is strictly prohibited except with the express prior
+# written permission of the copyright holder.
+#
+# See the LICENSE file in the root of this repository for the full terms.
+
+# Data contract of the economy kind (command ECON): docs/contracts/README.md section 16.
+# Drafted by `drishti.py contract bootstrap economy`; owned by people from then on: confirm the review points, then remove them.
+kind: economy
+mnemonic: ECON
+pack: world-economy
+version: '1.0'
+class: fundamental
+status: active
+title: Economy
+description: 'An economy: output, growth, prices, jobs, debt and external balance, and output by sector, from World Bank, IMF and CIA data.'
+source: 'public data: World Bank, World Development Indicators; International Monetary Fund, World Economic Outlook (DataMapper); CIA, The World
+  Factbook (factbook.json mirror, CC0)'
+grain: One row per economy, keyed by ECONOMY_ID.
+key:
+- ECONOMY_ID
+id-pattern:
+- ^ECON-
+dated-by: snapshot
+cadence:
+  frequency: static
+  due: to be confirmed
+storage:
+  connector: macro-store
+  plugin: delta
+  domain: macro
+  table: <root>/macro/economy/
+  columns:
+  - NAME
+  - ISO3
+  - REGION_NAME
+  - INCOME_NAME
+  - GDP_USD_BN
+  - GDP_PER_CAPITA
+  - GROWTH
+  - INFLATION
+  - UNEMPLOYMENT
+  - POPULATION_M
+  test-data:
+  - config/packs/world-economy/samples
+fields:
+- name: ECONOMY_ID
+  type: id
+  presence: required
+  description: The record's id (the business key)
+  example: ECON-ABW
+  pattern: ^ECON-
+- name: NAME
+  type: text
+  presence: required
+  description: The country or territory, with the name the World Bank uses.
+  example: Aruba
+- name: ISO3
+  type: text
+  presence: required
+  example: ABW
+- name: REGION_NAME
+  type: text
+  presence: required
+  description: The World Bank geographic region the economy belongs to.
+  example: Latin America & Caribbean
+  enum:
+  - East Asia & Pacific
+  - Europe & Central Asia
+  - Latin America & Caribbean
+  - Middle East, North Africa, Afghanistan & Pakistan
+  - North America
+  - South Asia
+  - Sub-Saharan Africa
+- name: INCOME_NAME
+  type: text
+  presence: required
+  example: High income
+  enum:
+  - High income
+  - Low income
+  - Lower middle income
+  - Upper middle income
+- name: CURRENCY
+  type: text
+  presence: optional
+  example: AFA
+- name: CAPITAL
+  type: text
+  presence: optional
+  example: Oranjestad
+- name: YEAR
+  type: text
+  presence: required
+  example: '2024'
+- name: GDP_USD_BN
+  type: amount
+  presence: required
+  unit: USD billions
+  description: The value of all goods and services produced in the economy in a year, in current US dollars at market exchange rates.
+  example: 4.16759
+- name: GDP_PER_CAPITA
+  type: amount
+  presence: required
+  unit: USD
+  description: GDP divided by the mid-year population, in current US dollars.
+  example: 38590.6
+- name: GROWTH
+  type: rate
+  presence: optional
+  unit: '% a year'
+  description: The yearly change of GDP after removing inflation, so it measures the growth of output rather than of prices.
+  example: 6.81078
+- name: INFLATION
+  type: rate
+  presence: optional
+  unit: '% a year'
+  description: The yearly change of consumer prices (the consumer price index).
+  example: 4.25746
+- name: UNEMPLOYMENT
+  type: amount
+  presence: optional
+  unit: '% of labour force'
+  description: The share of the labour force without work but available for and seeking employment (ILO modelled estimate).
+  example: 13.351
+- name: DEBT_TO_GDP
+  type: amount
+  presence: optional
+  unit: '% of GDP'
+  description: General government gross debt as a share of a year's GDP (IMF), the usual measure of how heavy public debt is.
+  example: 48
+- name: CURRENT_ACCOUNT
+  type: amount
+  presence: optional
+  unit: '% of GDP'
+  description: Net exports of goods and services plus net income and transfers, as a share of GDP.
+  example: 5.19137
+- name: RESERVES_USD_BN
+  type: amount
+  presence: optional
+  example: 2.23143
+- name: TRADE_SHARE
+  type: rate
+  presence: optional
+  example: 164.139
+- name: POPULATION_M
+  type: amount
+  presence: required
+  example: 0.108785
+- name: GROWTH_PATH
+  type: record list
+  presence: required
+  description: 'Nested: see nested GROWTH_PATH[]'
+- name: GDP_PATH
+  type: record list
+  presence: required
+  description: 'Nested: see nested GDP_PATH[]'
+- name: SECTORS
+  type: record list
+  presence: required
+  description: 'Nested: see nested SECTORS[]'
+- name: REGION_GROUP
+  type: id
+  presence: required
+  description: 'Region: the country-group it refers to'
+  example: ECG-LCN
+  pattern: ^ECG-
+  link: country-group
+- name: INCOME_GROUP
+  type: id
+  presence: required
+  description: 'Income group: the country-group it refers to'
+  example: ECG-HIC
+  pattern: ^ECG-
+  link: country-group
+- name: LABOUR
+  type: id
+  presence: optional
+  description: 'Labour market: the labour-market it refers to'
+  example: LABR-AFG
+  pattern: ^LABR-
+  link: labour-market
+- name: FISCAL
+  type: id
+  presence: optional
+  description: 'Fiscal position: the fiscal-position it refers to'
+  example: FISC-ABW
+  pattern: ^FISC-
+  link: fiscal-position
+- name: OUTLOOK
+  type: id
+  presence: optional
+  description: 'IMF forecast: the economic-forecast it refers to'
+  example: FCST-ABW-WEO
+  pattern: ^FCST-
+  link: economic-forecast
+- name: INDICATORS
+  type: id list
+  presence: required
+  description: 'Indicators: the macro-indicator it refers to'
+  link: macro-indicator
+- name: PROVENANCE
+  type: record
+  presence: required
+  description: 'Nested: see nested PROVENANCE'
+nested:
+  GROWTH_PATH[]:
+  - name: YEAR
+    type: text
+    presence: required
+    description: The calendar year of the observation.
+    example: '2015'
+  - name: GROWTH
+    type: rate
+    presence: required
+    unit: '% a year'
+    description: Real GDP growth in that year.
+    example: 3.61148
+  GDP_PATH[]:
+  - name: YEAR
+    type: text
+    presence: required
+    description: The calendar year of the observation.
+    example: '2015'
+  - name: GDP
+    type: amount
+    presence: required
+    unit: USD billions
+    description: GDP in current US dollars in that year.
+    example: 2.96291
+  SECTORS[]:
+  - name: SECTOR
+    type: text
+    presence: required
+    description: Agriculture, industry or services, as the World Bank groups value added.
+    example: Services
+    enum:
+    - Agriculture
+    - Industry
+    - Services
+  - name: SHARE
+    type: rate
+    presence: required
+    unit: '% of GDP'
+    description: The sector's value added as a share of GDP.
+    example: 76.2798
+  PROVENANCE:
+  - name: SOURCE
+    type: text
+    presence: required
+    description: The organisation or organisations whose published data this view shows.
+    example: World Bank, World Development Indicators; International Mon…
+  - name: DATASET
+    type: text
+    presence: required
+    description: The named dataset and its vintage (the release the numbers come from).
+    example: World Development Indicators (updated 2026-10-08); World Ec…
+  - name: RETRIEVED_AT
+    type: date
+    presence: required
+    description: The date the data was downloaded by tools/realdata.
+    example: '2026-10-10'
+  - name: LICENCE
+    type: text
+    presence: required
+    description: The terms under which the source allows reuse; attribution is required.
+    example: 'CC BY 4.0; IMF Copyright and Terms of Use: reuse with attri…'
+  - name: ATTRIBUTION
+    type: text
+    presence: required
+    description: The credit line to repeat when the data is shown or republished.
+    example: 'The World Bank: World Development Indicators (CC BY 4.0). S…'
+  - name: URL
+    type: text
+    presence: required
+    description: The web page of the dataset.
+    example: https://databank.worldbank.org/source/world-development-ind…
+links:
+- field: REGION_GROUP
+  kind: country-group
+- field: INCOME_GROUP
+  kind: country-group
+- field: LABOUR
+  kind: labour-market
+- field: FISCAL
+  kind: fiscal-position
+- field: OUTLOOK
+  kind: economic-forecast
+- field: INDICATORS
+  kind: macro-indicator
+validation:
+- rule: required
+  fields:
+  - ECONOMY_ID
+  - NAME
+  - ISO3
+  - REGION_NAME
+  - INCOME_NAME
+  - YEAR
+  - GDP_USD_BN
+  - GDP_PER_CAPITA
+  - POPULATION_M
+  - GROWTH_PATH
+  - GDP_PATH
+  - SECTORS
+  - REGION_GROUP
+  - INCOME_GROUP
+  - INDICATORS
+  - PROVENANCE
+- rule: unique
+  key:
+  - ECONOMY_ID
+  per: snapshot
+- rule: pattern
+  field: ECONOMY_ID
+  pattern: ^ECON-
+- rule: enum
+  field: REGION_NAME
+  values:
+  - East Asia & Pacific
+  - Europe & Central Asia
+  - Latin America & Caribbean
+  - Middle East, North Africa, Afghanistan & Pakistan
+  - North America
+  - South Asia
+  - Sub-Saharan Africa
+- rule: enum
+  field: INCOME_NAME
+  values:
+  - High income
+  - Low income
+  - Lower middle income
+  - Upper middle income
+- rule: link
+  field: REGION_GROUP
+  kind: country-group
+- rule: link
+  field: INCOME_GROUP
+  kind: country-group
+- rule: link
+  field: LABOUR
+  kind: labour-market
+- rule: link
+  field: FISCAL
+  kind: fiscal-position
+- rule: link
+  field: OUTLOOK
+  kind: economic-forecast
+- rule: link
+  field: INDICATORS
+  kind: macro-indicator
+- rule: enum
+  field: SECTORS[].SECTOR
+  values:
+  - Agriculture
+  - Industry
+  - Services
+notes: []
+review:
+- 'required inferred from 100% coverage in 213 documents (213 samples): confirm each required field is mandatory upstream, and each optional one
+  may be empty.'
+- 'key ECONOMY_ID is the field holding the sample catalogue''s id (ECON-ABW): confirm it is the business key.'
+- 'a snapshot refreshed when tools/publicdata/world_economy.py runs: confirm the refresh cadence.'
+- 'enum values inferred from the data, not from a glossary: REGION_NAME, INCOME_NAME, SECTORS[].SECTOR: confirm they are closed lists.'
+- 'number types decided by the field''s name: RESERVES_USD_BN amount, TRADE_SHARE rate: confirm amount, rate or integer.'
+- 'no unit stated for the amounts RESERVES_USD_BN, POPULATION_M (docs/contracts/README.md section 7: USD unless stated): confirm the currency.'
+- 'no description in about.yaml or the Sutras for ISO3, INCOME_NAME, CURRENCY, CAPITAL, YEAR, RESERVES_USD_BN, TRADE_SHARE, POPULATION_M: write
+  them in the pack''s config/about.yaml glossary.'

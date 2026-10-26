@@ -1,0 +1,271 @@
+# Project Drishti · Any data. Any domain. One grammar.
+#
+# Copyright (c) 2026 Ashutosh Sinha <ajsinha@gmail.com>.
+# All rights reserved.
+#
+# PROPRIETARY AND CONFIDENTIAL.
+#
+# This file is the confidential and proprietary property of Ashutosh Sinha.
+# Unauthorised copying, use, modification, distribution or disclosure of this
+# file, via any medium, is strictly prohibited except with the express prior
+# written permission of the copyright holder.
+#
+# See the LICENSE file in the root of this repository for the full terms.
+
+# Data contract of the ir-curve kind (command CRV): docs/contracts/README.md section 16.
+# Drafted by `drishti.py contract bootstrap ir-curve`; owned by people from then on: confirm the review points, then remove them.
+kind: ir-curve
+mnemonic: CRV
+pack: market-data
+version: '1.0'
+class: fundamental
+status: active
+title: Interest rate curve
+description: Discounting (OIS), projection (IBOR/term RFR), government or basis curve for a currency.
+source: md-hub
+grain: One row per interest rate curve per business date, keyed by CURVE_ID.
+key:
+- CURVE_ID
+id-pattern:
+- ^CRV-
+dated-by: business_date
+cadence:
+  frequency: daily
+  due: to be confirmed
+storage:
+  connector: market-store
+  plugin: delta
+  domain: market
+  table: <root>/market/ir-curve/
+  test-data:
+  - data/testdata/market-data/ir-curve
+fields:
+- name: CURVE_ID
+  type: id
+  presence: required
+  description: The record's id (the business key)
+  example: CRV-AUD-BASIS
+  pattern: ^CRV-
+- name: CURRENCY
+  type: text
+  presence: required
+  description: Currency
+  example: AUD
+  enum:
+  - AUD
+  - CAD
+  - CHF
+  - EUR
+  - GBP
+  - JPY
+  - USD
+- name: CURVE_TYPE
+  type: text
+  presence: required
+  description: Type
+  example: Cross-currency basis
+  enum:
+  - Cross-currency basis
+  - Discount (OIS)
+  - Government
+  - Projection
+- name: INDEX
+  type: text
+  presence: required
+  description: Index
+  example: AONIA
+  enum:
+  - AONIA
+  - CORRA
+  - ESTR
+  - SARON
+  - SOFR
+  - SONIA
+  - TONA
+- name: TEN_Y
+  type: amount
+  presence: required
+  description: 10Y
+  example: 0.042199999999999994
+- name: SLOPE_2S_10S
+  type: amount
+  presence: required
+  description: 2s10s
+  example: 51.2
+- name: AS_OF
+  type: date
+  presence: required
+  description: As of
+  example: '2026-09-30'
+- name: POINTS
+  type: record list
+  presence: required
+  description: 'Nested: see nested POINTS[]'
+- name: FORWARDS
+  type: record list
+  presence: required
+  description: 'Nested: see nested FORWARDS[]'
+- name: INTERPOLATION
+  type: text
+  presence: required
+  example: Log-linear on discount factors
+- name: DAY_COUNT
+  type: text
+  presence: required
+  example: ACT/365F
+- name: CALENDAR
+  type: id
+  presence: required
+  description: 'Calendar: the calendar it refers to'
+  example: CAL-GBLO
+  pattern: ^CAL-
+  link: calendar
+- name: FIXING_INDEX
+  type: id
+  presence: required
+  description: 'Fixing index: the rate-fixing it refers to'
+  example: FIX-AONIA
+  pattern: ^FIX-
+  link: rate-fixing
+- name: BUILT_AT
+  type: timestamp
+  presence: required
+  example: '2026-09-30T18:02:41Z'
+- name: SOURCES
+  type: text list
+  presence: required
+nested:
+  POINTS[]:
+  - name: TENOR
+    type: text
+    presence: required
+    example: 1M
+  - name: MATURITY
+    type: date
+    presence: required
+    example: '2026-10-30'
+  - name: INSTRUMENT
+    type: text
+    presence: required
+    example: Deposit / future
+  - name: QUOTE
+    type: amount
+    presence: required
+    example: 0.035983
+  - name: ZERO_RATE
+    type: rate
+    presence: required
+    example: 3.6037
+  - name: DF
+    type: amount
+    presence: required
+    example: 0.997001
+  FORWARDS[]:
+  - name: TENOR
+    type: text
+    presence: required
+    example: 1Y
+    enum:
+    - 10Y
+    - 15Y
+    - 1Y
+    - 20Y
+    - 2Y
+    - 3Y
+    - 5Y
+    - 7Y
+  - name: RATE
+    type: rate
+    presence: required
+    example: 3.7737
+links:
+- field: CALENDAR
+  kind: calendar
+- field: FIXING_INDEX
+  kind: rate-fixing
+validation:
+- rule: required
+  fields:
+  - CURVE_ID
+  - CURRENCY
+  - CURVE_TYPE
+  - INDEX
+  - TEN_Y
+  - SLOPE_2S_10S
+  - AS_OF
+  - POINTS
+  - FORWARDS
+  - INTERPOLATION
+  - DAY_COUNT
+  - CALENDAR
+  - FIXING_INDEX
+  - BUILT_AT
+  - SOURCES
+- rule: unique
+  key:
+  - CURVE_ID
+  per: business_date
+- rule: pattern
+  field: CURVE_ID
+  pattern: ^CRV-
+- rule: enum
+  field: CURRENCY
+  values:
+  - AUD
+  - CAD
+  - CHF
+  - EUR
+  - GBP
+  - JPY
+  - USD
+- rule: enum
+  field: CURVE_TYPE
+  values:
+  - Cross-currency basis
+  - Discount (OIS)
+  - Government
+  - Projection
+- rule: enum
+  field: INDEX
+  values:
+  - AONIA
+  - CORRA
+  - ESTR
+  - SARON
+  - SOFR
+  - SONIA
+  - TONA
+- rule: link
+  field: CALENDAR
+  kind: calendar
+- rule: link
+  field: FIXING_INDEX
+  kind: rate-fixing
+- rule: enum
+  field: FORWARDS[].TENOR
+  values:
+  - 10Y
+  - 15Y
+  - 1Y
+  - 20Y
+  - 2Y
+  - 3Y
+  - 5Y
+  - 7Y
+notes:
+- 'Dated by the lake''s business_date partition: `drishti.py lake build` writes each test-data file''s day into it; the documents carry no date
+  field of their own.'
+review:
+- 'required inferred from 100% coverage in 84 documents (28 samples and 56 test-data documents (data/testdata/market-data/ir-curve/snapshot-2026-07-08.jsonl.gz,
+  data/testdata/market-data/ir-curve/changes-2026-09-30.jsonl.gz)): confirm each required field is mandatory upstream, and each optional one may
+  be empty.'
+- 'source ''md-hub'' is the test data''s _meta.source (synthetic): name the production system that delivers it.'
+- 'the pack also names ''Official public data (ECB, US Treasury, New York Fed, FRED) through the feed connectors'' for this kind (rate-fixing,
+  fx-spot and ir-curve when the feed connectors are on): state when each source applies.'
+- 'due time of each business date is not known: state it (for example, by 06:00 New York the next business day).'
+- 'enum values inferred from the data, not from a glossary: CURRENCY, CURVE_TYPE, INDEX, FORWARDS[].TENOR: confirm they are closed lists.'
+- 'number types decided by the field''s name: POINTS[].ZERO_RATE rate, FORWARDS[].RATE rate: confirm amount, rate or integer.'
+- 'no unit stated for the amounts TEN_Y, SLOPE_2S_10S, POINTS[].QUOTE, POINTS[].DF (docs/contracts/README.md section 7: USD unless stated): confirm
+  the currency.'
+- 'no description in about.yaml or the Sutras for INTERPOLATION, DAY_COUNT, BUILT_AT, SOURCES, POINTS[].TENOR, POINTS[].MATURITY, POINTS[].INSTRUMENT,
+  POINTS[].QUOTE, POINTS[].ZERO_RATE, POINTS[].DF, FORWARDS[].TENOR, FORWARDS[].RATE: write them in the pack''s config/about.yaml glossary.'

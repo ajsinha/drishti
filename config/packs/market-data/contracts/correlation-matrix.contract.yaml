@@ -1,0 +1,124 @@
+# Project Drishti · Any data. Any domain. One grammar.
+#
+# Copyright (c) 2026 Ashutosh Sinha <ajsinha@gmail.com>.
+# All rights reserved.
+#
+# PROPRIETARY AND CONFIDENTIAL.
+#
+# This file is the confidential and proprietary property of Ashutosh Sinha.
+# Unauthorised copying, use, modification, distribution or disclosure of this
+# file, via any medium, is strictly prohibited except with the express prior
+# written permission of the copyright holder.
+#
+# See the LICENSE file in the root of this repository for the full terms.
+
+# Data contract of the correlation-matrix kind (command CORR): docs/contracts/README.md section 16.
+# Drafted by `drishti.py contract bootstrap correlation-matrix`; owned by people from then on: confirm the review points, then remove them.
+kind: correlation-matrix
+mnemonic: CORR
+pack: market-data
+version: '1.0'
+class: computed
+status: retiring
+retiring-in: 2.9.0 or 2.10.0
+replaced-by: docs/contracts/GROUPINGS_AND_ANALYTICS.md
+title: Correlation matrix
+description: Pairwise correlations used by basket, quanto and spread products.
+source: md-hub
+grain: One row per correlation matrix per business date, keyed by MATRIX_ID.
+key:
+- MATRIX_ID
+id-pattern:
+- ^CORR-
+dated-by: business_date
+cadence:
+  frequency: daily
+  due: to be confirmed
+storage:
+  connector: market-store
+  plugin: delta
+  domain: market
+  table: <root>/market/correlation-matrix/
+  test-data:
+  - data/testdata/market-data/correlation-matrix
+fields:
+- name: MATRIX_ID
+  type: id
+  presence: required
+  description: The record's id (the business key)
+  example: CORR-EU-EQ
+  pattern: ^CORR-
+- name: NAME
+  type: text
+  presence: required
+  description: Name
+  example: European equities
+- name: FACTORS
+  type: text list
+  presence: required
+- name: AVERAGE
+  type: rate
+  presence: derived
+  description: Average
+  example: 0.385
+  note: computed by correlations from price history (CORR); removed when retired
+- name: PAIRS
+  type: record list
+  presence: derived
+  description: 'Nested: see nested PAIRS[]'
+  note: computed by correlations from price history (CORR); removed when retired
+- name: WINDOW
+  type: text
+  presence: required
+  example: 2 years, daily log returns
+- name: ESTIMATOR
+  type: text
+  presence: required
+  example: Ledoit-Wolf shrinkage
+nested:
+  PAIRS[]:
+  - name: A
+    type: text
+    presence: required
+    description: Factor 1
+    example: ORBT
+  - name: B
+    type: text
+    presence: required
+    description: Factor 2
+    example: RHNB
+  - name: RHO
+    type: rate
+    presence: required
+    description: ρ
+    example: 0.156
+links: []
+validation:
+- rule: required
+  fields:
+  - MATRIX_ID
+  - NAME
+  - FACTORS
+  - WINDOW
+  - ESTIMATOR
+- rule: unique
+  key:
+  - MATRIX_ID
+  per: business_date
+- rule: pattern
+  field: MATRIX_ID
+  pattern: ^CORR-
+notes:
+- 'Dated by the lake''s business_date partition: `drishti.py lake build` writes each test-data file''s day into it; the documents carry no date
+  field of their own.'
+- 'Retiring in 2.9.0 or 2.10.0: the stored kind is removed and computed instead by correlations from price history (CORR) (docs/contracts/GROUPINGS_AND_ANALYTICS.md);
+  old ids and links open the computed page.'
+review:
+- 'required inferred from 100% coverage in 6 documents (3 samples and 3 test-data documents (data/testdata/market-data/correlation-matrix/snapshot-2026-07-08.jsonl.gz,
+  data/testdata/market-data/correlation-matrix/changes-2026-09-30.jsonl.gz)): confirm each required field is mandatory upstream, and each optional
+  one may be empty.'
+- 'source ''md-hub'' is the test data''s _meta.source (synthetic): name the production system that delivers it.'
+- 'due time of each business date is not known: state it (for example, by 06:00 New York the next business day).'
+- 'number types decided by the field''s name: AVERAGE rate, PAIRS[].RHO rate: confirm amount, rate or integer.'
+- 'no description in about.yaml or the Sutras for FACTORS, WINDOW, ESTIMATOR: write them in the pack''s config/about.yaml glossary.'
+- 'The release is 2.9.0 or 2.10.0 (Track B, shipped as each is ready): confirm which.'

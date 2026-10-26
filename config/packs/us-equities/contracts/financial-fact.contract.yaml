@@ -1,0 +1,213 @@
+# Project Drishti · Any data. Any domain. One grammar.
+#
+# Copyright (c) 2026 Ashutosh Sinha <ajsinha@gmail.com>.
+# All rights reserved.
+#
+# PROPRIETARY AND CONFIDENTIAL.
+#
+# This file is the confidential and proprietary property of Ashutosh Sinha.
+# Unauthorised copying, use, modification, distribution or disclosure of this
+# file, via any medium, is strictly prohibited except with the express prior
+# written permission of the copyright holder.
+#
+# See the LICENSE file in the root of this repository for the full terms.
+
+# Data contract of the financial-fact kind (command FACT): docs/contracts/README.md section 16.
+# Drafted by `drishti.py contract bootstrap financial-fact`; owned by people from then on: confirm the review points, then remove them.
+kind: financial-fact
+mnemonic: FACT
+pack: us-equities
+version: '1.0'
+class: fundamental
+status: active
+title: Financial fact
+description: One financial concept of one company (revenue, net income, assets...) over up to ten fiscal years, from its 10-K XBRL filings.
+source: 'public data: SEC EDGAR, Nasdaq Trader, GLEIF and Wikidata (tools/publicdata/us_equities.py)'
+grain: One row per financial fact, keyed by FACT_ID.
+key:
+- FACT_ID
+dated-by: snapshot
+cadence:
+  frequency: static
+  due: to be confirmed
+storage:
+  connector: us-equities-store
+  plugin: delta
+  domain: us-equities
+  table: <root>/us-equities/financial-fact/
+  columns:
+  - FACT_ID
+  - COMPANY
+  - COMPANY_NAME
+  - CONCEPT
+  - LABEL
+  - LATEST
+  - LATEST_YEAR
+  test-data:
+  - data/testdata/us-equities/financial-fact
+fields:
+- name: FACT_ID
+  type: id
+  presence: required
+  description: The record's id (the business key)
+  example: ABT-REVENUE
+- name: COMPANY
+  type: id
+  presence: required
+  description: Company
+  example: ABT
+  link: us-company
+- name: COMPANY_NAME
+  type: text
+  presence: required
+  example: Abbott Laboratories
+- name: CIK
+  type: text
+  presence: required
+  example: 0000001800
+- name: CONCEPT
+  type: text
+  presence: required
+  description: Concept
+  example: REVENUE
+  enum:
+  - ASSETS
+  - EPS_DILUTED
+  - EQUITY
+  - LIABILITIES
+  - NET_INCOME
+  - REVENUE
+  - SHARES_OUTSTANDING
+- name: LABEL
+  type: text
+  presence: required
+  description: Concept
+  example: Revenue
+  enum:
+  - Diluted EPS
+  - Net income
+  - Revenue
+  - Shares outstanding
+  - Stockholders' equity
+  - Total assets
+  - Total liabilities
+- name: UNIT
+  type: text
+  presence: required
+  description: Unit
+  example: USD
+- name: XBRL_TAG
+  type: text
+  presence: required
+  description: XBRL tags read
+  example: RevenueFromContractWithCustomerExcludingAssessedTax
+- name: LATEST
+  type: amount
+  presence: required
+  description: Latest
+  example: 44328000000
+- name: LATEST_YEAR
+  type: integer
+  presence: required
+  description: Fiscal year
+  example: 2025
+- name: CHANGE_PCT
+  type: rate
+  presence: optional
+  description: Change on the year
+  example: 5.67
+- name: YEARS
+  type: integer
+  presence: required
+  description: Years
+  example: 10
+- name: HISTORY
+  type: record list
+  presence: required
+  description: 'Nested: see nested HISTORY[]'
+nested:
+  HISTORY[]:
+  - name: YEAR
+    type: integer
+    presence: required
+    description: Fiscal year
+    example: 2016
+  - name: PERIOD_END
+    type: date
+    presence: required
+    description: Period end
+    example: '2016-12-31'
+  - name: VALUE
+    type: amount
+    presence: required
+    description: Value
+    example: 20853000000
+  - name: CHANGE_PCT
+    type: rate
+    presence: optional
+    description: Change
+    example: 31.35
+  - name: FILED
+    type: date
+    presence: required
+    description: Filed
+    example: '2019-02-22'
+  - name: ACCESSION
+    type: text
+    presence: required
+    description: Accession
+    example: 0001047469-19-000624
+links:
+- field: COMPANY
+  kind: us-company
+validation:
+- rule: required
+  fields:
+  - FACT_ID
+  - COMPANY
+  - COMPANY_NAME
+  - CIK
+  - CONCEPT
+  - LABEL
+  - UNIT
+  - XBRL_TAG
+  - LATEST
+  - LATEST_YEAR
+  - YEARS
+  - HISTORY
+- rule: unique
+  key:
+  - FACT_ID
+  per: snapshot
+- rule: link
+  field: COMPANY
+  kind: us-company
+- rule: enum
+  field: CONCEPT
+  values:
+  - ASSETS
+  - EPS_DILUTED
+  - EQUITY
+  - LIABILITIES
+  - NET_INCOME
+  - REVENUE
+  - SHARES_OUTSTANDING
+- rule: enum
+  field: LABEL
+  values:
+  - Diluted EPS
+  - Net income
+  - Revenue
+  - Shares outstanding
+  - Stockholders' equity
+  - Total assets
+  - Total liabilities
+notes: []
+review:
+- 'required inferred from 100% coverage in 2002 documents (2 samples and 2000 test-data documents (data/testdata/us-equities/financial-fact/snapshot-2026-10-24.jsonl.gz)):
+  confirm each required field is mandatory upstream, and each optional one may be empty.'
+- 'a snapshot refreshed when tools/publicdata/us_equities.py runs: confirm the refresh cadence.'
+- 'enum values inferred from the data, not from a glossary: CONCEPT, LABEL: confirm they are closed lists.'
+- 'number types decided by the field''s name: CHANGE_PCT rate, HISTORY[].VALUE amount, HISTORY[].CHANGE_PCT rate: confirm amount, rate or integer.'
+- 'no unit stated for the amounts LATEST, HISTORY[].VALUE (docs/contracts/README.md section 7: USD unless stated): confirm the currency.'
+- 'no description in about.yaml or the Sutras for COMPANY_NAME, CIK: write them in the pack''s config/about.yaml glossary.'

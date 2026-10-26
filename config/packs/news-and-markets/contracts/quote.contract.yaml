@@ -1,0 +1,259 @@
+# Project Drishti · Any data. Any domain. One grammar.
+#
+# Copyright (c) 2026 Ashutosh Sinha <ajsinha@gmail.com>.
+# All rights reserved.
+#
+# PROPRIETARY AND CONFIDENTIAL.
+#
+# This file is the confidential and proprietary property of Ashutosh Sinha.
+# Unauthorised copying, use, modification, distribution or disclosure of this
+# file, via any medium, is strictly prohibited except with the express prior
+# written permission of the copyright holder.
+#
+# See the LICENSE file in the root of this repository for the full terms.
+
+# Data contract of the quote kind (command QUOTE): docs/contracts/README.md section 16.
+# Drafted by `drishti.py contract bootstrap quote`; owned by people from then on: confirm the review points, then remove them.
+kind: quote
+mnemonic: QUOTE
+pack: news-and-markets
+version: '1.0'
+class: fundamental
+status: active
+title: Quote and price history
+description: A quote and recent price history for a ticker, as the yfinance connector computed them.
+source: 'public data: Yahoo Finance (yfinance connector)'
+grain: One row per quote and price history, keyed by QUOTE_ID.
+key:
+- QUOTE_ID
+id-pattern:
+- ^QUOTE-
+dated-by: snapshot
+cadence:
+  frequency: intraday
+  due: on demand, when the connector is on
+storage:
+  connector: yfinance
+  plugin: yfinance
+  test-data:
+  - data/testdata/news-and-markets/quote
+fields:
+- name: QUOTE_ID
+  type: id
+  presence: required
+  description: The record's id (the business key)
+  example: QUOTE-AAPL
+  pattern: ^QUOTE-
+  link: quote
+- name: SYMBOL
+  type: text
+  presence: required
+  example: AAPL
+- name: NAME
+  type: text
+  presence: required
+  example: Apple Inc.
+- name: EXCHANGE
+  type: text
+  presence: required
+  description: Exchange
+  example: NasdaqGS
+  enum:
+  - NYSE
+  - NasdaqGS
+- name: CURRENCY
+  type: text
+  presence: required
+  description: Currency
+  example: USD
+- name: INSTRUMENT_TYPE
+  type: text
+  presence: required
+  example: EQUITY
+- name: PRICE
+  type: amount
+  presence: required
+  description: Price
+  example: 343.46
+- name: PREVIOUS_CLOSE
+  type: amount
+  presence: required
+  example: 342.0
+- name: CHANGE
+  type: amount
+  presence: required
+  description: Change
+  example: 1.4599999999999795
+- name: CHANGE_PCT
+  type: rate
+  presence: required
+  description: Change %
+  example: 0.4269005847953157
+- name: DAY_LOW
+  type: amount
+  presence: required
+  example: 340.46
+- name: DAY_HIGH
+  type: amount
+  presence: required
+  example: 347.82
+- name: FIFTY_TWO_WEEK_LOW
+  type: amount
+  presence: required
+  example: 243.42
+- name: FIFTY_TWO_WEEK_HIGH
+  type: amount
+  presence: required
+  example: 348.15
+- name: VOLUME
+  type: amount
+  presence: required
+  example: 59852690.0
+- name: MARKET_CAP
+  type: unknown
+  presence: optional
+- name: MARKET_STATE
+  type: text
+  presence: required
+  description: Market
+  example: CLOSED
+- name: AS_OF
+  type: text
+  presence: required
+  example: 2026-10-16 16:00 America/New_York (snapshot captured 2026-1…
+- name: HISTORY
+  type: record list
+  presence: required
+  description: 'Nested: see nested HISTORY[]'
+- name: DAY_RANGE
+  type: text
+  presence: required
+  example: 340.46 – 347.82
+- name: FIFTY_TWO_WEEK_RANGE
+  type: text
+  presence: required
+  example: 243.42 – 348.15
+- name: HISTORY_RANGE
+  type: text
+  presence: required
+  example: 1y
+- name: INTERVAL
+  type: text
+  presence: required
+  example: 1d
+- name: PROVENANCE
+  type: record
+  presence: required
+  description: 'Nested: see nested PROVENANCE'
+- name: SNAPSHOT
+  type: text
+  presence: required
+  example: Snapshot captured 2026-10-18 03:24 UTC from Yahoo Finance
+- name: SNAPSHOT_CAPTURED_AT
+  type: timestamp
+  presence: required
+  example: '2026-10-18T03:24:33Z'
+nested:
+  HISTORY[]:
+  - name: DATE
+    type: date
+    presence: required
+    example: '2025-10-17'
+  - name: OPEN
+    type: amount
+    presence: required
+    example: 248.02000427246094
+  - name: HIGH
+    type: amount
+    presence: required
+    example: 253.3800048828125
+  - name: LOW
+    type: amount
+    presence: required
+    example: 247.27000427246094
+  - name: CLOSE
+    type: amount
+    presence: required
+    example: 252.2899932861328
+  - name: VOLUME
+    type: amount
+    presence: required
+    example: 49147000.0
+  PROVENANCE:
+  - name: FEED
+    type: text
+    presence: required
+    example: Yahoo Finance public chart endpoint (unofficial)
+  - name: FETCHED
+    type: timestamp
+    presence: required
+    example: '2026-10-18T03:24:33.511628799Z'
+  - name: CACHED_FOR
+    type: text
+    presence: required
+    example: 3600 s
+  - name: TERMS
+    type: text
+    presence: required
+    example: Sample and internal demonstration use only; not for product…
+  - name: SNAPSHOT
+    type: text
+    presence: required
+    example: Snapshot captured 2026-10-18 03:24 UTC from Yahoo Finance; …
+links:
+- field: QUOTE_ID
+  kind: quote
+validation:
+- rule: required
+  fields:
+  - QUOTE_ID
+  - SYMBOL
+  - NAME
+  - EXCHANGE
+  - CURRENCY
+  - INSTRUMENT_TYPE
+  - PRICE
+  - PREVIOUS_CLOSE
+  - CHANGE
+  - CHANGE_PCT
+  - DAY_LOW
+  - DAY_HIGH
+  - FIFTY_TWO_WEEK_LOW
+  - FIFTY_TWO_WEEK_HIGH
+  - VOLUME
+  - MARKET_STATE
+  - AS_OF
+  - HISTORY
+  - DAY_RANGE
+  - FIFTY_TWO_WEEK_RANGE
+  - HISTORY_RANGE
+  - INTERVAL
+  - PROVENANCE
+  - SNAPSHOT
+  - SNAPSHOT_CAPTURED_AT
+- rule: unique
+  key:
+  - QUOTE_ID
+  per: snapshot
+- rule: pattern
+  field: QUOTE_ID
+  pattern: ^QUOTE-
+- rule: link
+  field: QUOTE_ID
+  kind: quote
+- rule: enum
+  field: EXCHANGE
+  values:
+  - NYSE
+  - NasdaqGS
+notes: []
+review:
+- 'required inferred from 100% coverage in 20 documents (0 samples and 20 test-data documents (data/testdata/news-and-markets/quote/snapshot-2026-10-18.jsonl.gz)):
+  confirm each required field is mandatory upstream, and each optional one may be empty.'
+- 'read live through the yfinance connector when it is on: confirm the cadence (intraday, on demand).'
+- 'enum values inferred from the data, not from a glossary: EXCHANGE: confirm they are closed lists.'
+- 'number types decided by the field''s name: PRICE amount, CHANGE_PCT rate: confirm amount, rate or integer.'
+- 'no unit stated for the amounts PRICE, PREVIOUS_CLOSE, CHANGE, DAY_LOW, DAY_HIGH, FIFTY_TWO_WEEK_LOW, FIFTY_TWO_WEEK_HIGH, VOLUME, HISTORY[].OPEN,
+  HISTORY[].HIGH, HISTORY[].LOW, HISTORY[].CLOSE and 1 more (docs/contracts/README.md section 7: USD unless stated): confirm the currency.'
+- 'no description in about.yaml or the Sutras for SYMBOL, NAME, INSTRUMENT_TYPE, PREVIOUS_CLOSE, DAY_LOW, DAY_HIGH, FIFTY_TWO_WEEK_LOW, FIFTY_TWO_WEEK_HIGH,
+  VOLUME, MARKET_CAP, AS_OF, DAY_RANGE and 16 more: write them in the pack''s config/about.yaml glossary.'

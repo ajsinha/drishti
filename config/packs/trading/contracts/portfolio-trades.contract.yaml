@@ -1,0 +1,220 @@
+# Project Drishti · Any data. Any domain. One grammar.
+#
+# Copyright (c) 2026 Ashutosh Sinha <ajsinha@gmail.com>.
+# All rights reserved.
+#
+# PROPRIETARY AND CONFIDENTIAL.
+#
+# This file is the confidential and proprietary property of Ashutosh Sinha.
+# Unauthorised copying, use, modification, distribution or disclosure of this
+# file, via any medium, is strictly prohibited except with the express prior
+# written permission of the copyright holder.
+#
+# See the LICENSE file in the root of this repository for the full terms.
+
+# Data contract of the portfolio-trades kind (command PTRD): docs/contracts/README.md section 16.
+# Drafted by `drishti.py contract bootstrap portfolio-trades`; owned by people from then on: confirm the review points, then remove them.
+kind: portfolio-trades
+mnemonic: PTRD
+pack: trading
+version: '1.0'
+class: computed
+status: retiring
+retiring-in: 2.9.0
+replaced-by: docs/contracts/TRADING_GROUPINGS.md
+title: Portfolio trades (derived from trades)
+description: 'A book''s desk: its trades; a click opens the trade''s cash flows under its row, with the counterparty and its credit limit beside.'
+source: 'computed by Drishti: the derived connector trade-pages over the kind trade'
+grain: One record per PORTFOLIO of the trade records, computed when asked.
+key:
+- PORTFOLIO
+dated-by: on request
+cadence:
+  frequency: on change
+  due: recomputed from its source kind (connector refresh 60s)
+storage:
+  connector: trade-pages
+  plugin: derived
+fields:
+- name: PORTFOLIO
+  type: id
+  presence: required
+  description: The value the trade records are grouped by ($.PORTFOLIO)
+  link: book
+- name: TRADE_IDS
+  type: id list
+  presence: derived
+  description: The ids of the grouped trade records (at most 1000)
+  note: computed by the scope engine; removed when retired
+- name: TRADE_COUNT
+  type: integer
+  presence: derived
+  description: The number of records in the group
+  note: computed by the scope engine; removed when retired
+- name: NOTIONAL
+  type: amount
+  presence: derived
+  description: 'sum over the group of: first($.LEGS).NOTIONAL'
+  note: computed by the scope engine; removed when retired
+- name: SOURCE_SYSTEMS
+  type: text list
+  presence: derived
+  description: 'distinct over the group of: $.SOURCE_SYSTEM'
+  note: computed by the scope engine; removed when retired
+- name: PRODUCT_TYPES
+  type: text list
+  presence: derived
+  description: 'distinct over the group of: $.PRODUCT_TYPE'
+  note: computed by the scope engine; removed when retired
+- name: CURRENCIES
+  type: text list
+  presence: derived
+  description: 'distinct over the group of: $.CURRENCY'
+  note: computed by the scope engine; removed when retired
+- name: LAST_MATURITY
+  type: date
+  presence: derived
+  description: 'max over the group of: $.MATURITY_DATE'
+  note: computed by the scope engine; removed when retired
+- name: PAY_7D
+  type: amount
+  presence: derived
+  description: 'sum over the group of: sum(flatten($.EVENTS)[?nonblank(@.AMOUNT) && nonblank(@.EVENT_DATE)][?days(today(), @.EVENT_DATE) >= 0
+    && days(today(), @.EVENT_DATE) <= 7], ''AMOUNT'')'
+  note: computed by the scope engine; removed when retired
+- name: PAY_7D_EVENTS
+  type: amount
+  presence: derived
+  description: 'sum over the group of: size(flatten($.EVENTS)[?nonblank(@.AMOUNT) && nonblank(@.EVENT_DATE)][?days(today(), @.EVENT_DATE) >= 0
+    && days(today(), @.EVENT_DATE) <= 7])'
+  note: computed by the scope engine; removed when retired
+- name: PAY_30D
+  type: amount
+  presence: derived
+  description: 'sum over the group of: sum(flatten($.EVENTS)[?nonblank(@.AMOUNT) && nonblank(@.EVENT_DATE)][?days(today(), @.EVENT_DATE) >= 0
+    && days(today(), @.EVENT_DATE) <= 30], ''AMOUNT'')'
+  note: computed by the scope engine; removed when retired
+- name: PAY_30D_EVENTS
+  type: amount
+  presence: derived
+  description: 'sum over the group of: size(flatten($.EVENTS)[?nonblank(@.AMOUNT) && nonblank(@.EVENT_DATE)][?days(today(), @.EVENT_DATE) >= 0
+    && days(today(), @.EVENT_DATE) <= 30])'
+  note: computed by the scope engine; removed when retired
+- name: PAY_90D
+  type: amount
+  presence: derived
+  description: 'sum over the group of: sum(flatten($.EVENTS)[?nonblank(@.AMOUNT) && nonblank(@.EVENT_DATE)][?days(today(), @.EVENT_DATE) >= 0
+    && days(today(), @.EVENT_DATE) <= 90], ''AMOUNT'')'
+  note: computed by the scope engine; removed when retired
+- name: PAY_90D_EVENTS
+  type: amount
+  presence: derived
+  description: 'sum over the group of: size(flatten($.EVENTS)[?nonblank(@.AMOUNT) && nonblank(@.EVENT_DATE)][?days(today(), @.EVENT_DATE) >= 0
+    && days(today(), @.EVENT_DATE) <= 90])'
+  note: computed by the scope engine; removed when retired
+- name: TRADES
+  type: record list
+  presence: derived
+  description: One row per grouped trade record
+  note: computed by the scope engine; removed when retired
+nested:
+  TRADES[]:
+  - name: TRADE_ID
+    type: unknown
+    presence: optional
+    description: 'From the trade record: $.TRADE_ID'
+    link: trade
+  - name: SOURCE_SYSTEM
+    type: unknown
+    presence: optional
+    description: 'From the trade record: $.SOURCE_SYSTEM'
+  - name: PRODUCT_TYPE
+    type: unknown
+    presence: optional
+    description: 'From the trade record: $.PRODUCT_TYPE'
+  - name: BUY_SELL_CODE
+    type: unknown
+    presence: optional
+    description: 'From the trade record: $.BUY_SELL_CODE'
+  - name: CURRENCY
+    type: unknown
+    presence: optional
+    description: 'From the trade record: $.CURRENCY'
+  - name: NOTIONAL
+    type: unknown
+    presence: optional
+    description: 'From the trade record: first($.LEGS).NOTIONAL'
+  - name: MATURITY_DATE
+    type: unknown
+    presence: optional
+    description: 'From the trade record: $.MATURITY_DATE'
+  - name: TRADE_STATUS
+    type: unknown
+    presence: optional
+    description: 'From the trade record: $.TRADE_STATUS'
+  - name: INDEX_NAME
+    type: unknown
+    presence: optional
+    description: 'From the trade record: nonblank($.LEGS[0].INDEX.NAME, $.LEGS[1].INDEX.NAME, '''')'
+  - name: COUNTERPARTY
+    type: unknown
+    presence: optional
+    description: 'From the trade record: $.COUNTERPARTY'
+    link: counterparty
+  - name: PORTFOLIO
+    type: unknown
+    presence: optional
+    description: 'From the trade record: $.PORTFOLIO'
+    link: book
+  - name: LEGAL_ENTITY
+    type: unknown
+    presence: optional
+    description: 'From the trade record: $.LEGAL_ENTITY'
+    link: legal-entity
+  - name: EVENTS
+    type: unknown
+    presence: optional
+    description: 'From the trade record: $.EVENTS'
+links:
+- field: PORTFOLIO
+  kind: book
+- field: TRADES[].TRADE_ID
+  kind: trade
+- field: TRADES[].COUNTERPARTY
+  kind: counterparty
+- field: TRADES[].PORTFOLIO
+  kind: book
+- field: TRADES[].LEGAL_ENTITY
+  kind: legal-entity
+validation:
+- rule: required
+  fields:
+  - PORTFOLIO
+- rule: unique
+  key:
+  - PORTFOLIO
+  per: snapshot
+- rule: link
+  field: PORTFOLIO
+  kind: book
+- rule: range
+  field: TRADE_COUNT
+  min: 0
+- rule: link
+  field: TRADES[].TRADE_ID
+  kind: trade
+- rule: link
+  field: TRADES[].COUNTERPARTY
+  kind: counterparty
+- rule: link
+  field: TRADES[].PORTFOLIO
+  kind: book
+- rule: link
+  field: TRADES[].LEGAL_ENTITY
+  kind: legal-entity
+notes:
+- 'Retiring in 2.9.0: the stored kind is removed and computed instead by the scope engine (docs/contracts/TRADING_GROUPINGS.md); old ids and links
+  open the computed page.'
+review:
+- 'field types of a derived kind are read from its connector''s expressions (count, sum, distinct): confirm; rows copy the trade record''s fields,
+  whose contract states their types.'

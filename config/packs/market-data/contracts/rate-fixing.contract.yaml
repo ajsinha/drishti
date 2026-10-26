@@ -1,0 +1,185 @@
+# Project Drishti · Any data. Any domain. One grammar.
+#
+# Copyright (c) 2026 Ashutosh Sinha <ajsinha@gmail.com>.
+# All rights reserved.
+#
+# PROPRIETARY AND CONFIDENTIAL.
+#
+# This file is the confidential and proprietary property of Ashutosh Sinha.
+# Unauthorised copying, use, modification, distribution or disclosure of this
+# file, via any medium, is strictly prohibited except with the express prior
+# written permission of the copyright holder.
+#
+# See the LICENSE file in the root of this repository for the full terms.
+
+# Data contract of the rate-fixing kind (command FIX): docs/contracts/README.md section 16.
+# Drafted by `drishti.py contract bootstrap rate-fixing`; owned by people from then on: confirm the review points, then remove them.
+kind: rate-fixing
+mnemonic: FIX
+pack: market-data
+version: '1.0'
+class: fundamental
+status: active
+title: Rate index fixings
+description: Published overnight and term rate fixings (SOFR, €STR, SONIA…).
+source: md-hub
+grain: One row per rate index fixings per business date, keyed by INDEX_ID.
+key:
+- INDEX_ID
+id-pattern:
+- ^FIX-
+dated-by: business_date
+cadence:
+  frequency: daily
+  due: to be confirmed
+storage:
+  connector: market-store
+  plugin: delta
+  domain: market
+  table: <root>/market/rate-fixing/
+  test-data:
+  - data/testdata/market-data/rate-fixing
+fields:
+- name: INDEX_ID
+  type: id
+  presence: required
+  description: The record's id (the business key)
+  example: FIX-AONIA
+  pattern: ^FIX-
+- name: NAME
+  type: text
+  presence: required
+  description: Index
+  example: AUD Overnight Index Average
+  enum:
+  - AUD Overnight Index Average
+  - Canadian Overnight Repo Rate Average
+  - Euro short-term rate
+  - Secured Overnight Financing Rate
+  - Sterling Overnight Index Average
+  - Swiss Average Rate Overnight
+  - Tokyo Overnight Average Rate
+- name: LATEST
+  type: amount
+  presence: required
+  description: Latest
+  example: 0.03806
+- name: ADMINISTRATOR
+  type: text
+  presence: required
+  description: Administrator
+  example: RBA
+  enum:
+  - Bank of Canada
+  - Bank of England
+  - Bank of Japan
+  - ECB
+  - FRBNY
+  - RBA
+  - SIX
+- name: TENOR
+  type: text
+  presence: required
+  description: Tenor
+  example: Overnight
+- name: CURRENCY
+  type: text
+  presence: required
+  example: AUD
+  enum:
+  - AUD
+  - CAD
+  - CHF
+  - EUR
+  - GBP
+  - JPY
+  - USD
+- name: FIXINGS
+  type: record list
+  presence: required
+  description: 'Nested: see nested FIXINGS[]'
+nested:
+  FIXINGS[]:
+  - name: DATE
+    type: date
+    presence: required
+    description: Date
+    example: '2026-09-30'
+  - name: RATE
+    type: rate
+    presence: required
+    description: Rate
+    example: 0.03806
+  - name: RATE_PCT
+    type: rate
+    presence: required
+    example: 3.806
+  - name: VOLUME_BN
+    type: amount
+    presence: required
+    description: Volume (bn)
+    example: 1075.7
+links: []
+validation:
+- rule: required
+  fields:
+  - INDEX_ID
+  - NAME
+  - LATEST
+  - ADMINISTRATOR
+  - TENOR
+  - CURRENCY
+  - FIXINGS
+- rule: unique
+  key:
+  - INDEX_ID
+  per: business_date
+- rule: pattern
+  field: INDEX_ID
+  pattern: ^FIX-
+- rule: enum
+  field: NAME
+  values:
+  - AUD Overnight Index Average
+  - Canadian Overnight Repo Rate Average
+  - Euro short-term rate
+  - Secured Overnight Financing Rate
+  - Sterling Overnight Index Average
+  - Swiss Average Rate Overnight
+  - Tokyo Overnight Average Rate
+- rule: enum
+  field: ADMINISTRATOR
+  values:
+  - Bank of Canada
+  - Bank of England
+  - Bank of Japan
+  - ECB
+  - FRBNY
+  - RBA
+  - SIX
+- rule: enum
+  field: CURRENCY
+  values:
+  - AUD
+  - CAD
+  - CHF
+  - EUR
+  - GBP
+  - JPY
+  - USD
+notes:
+- 'Dated by the lake''s business_date partition: `drishti.py lake build` writes each test-data file''s day into it; the documents carry no date
+  field of their own.'
+review:
+- 'required inferred from 100% coverage in 21 documents (7 samples and 14 test-data documents (data/testdata/market-data/rate-fixing/snapshot-2026-07-08.jsonl.gz,
+  data/testdata/market-data/rate-fixing/changes-2026-09-30.jsonl.gz)): confirm each required field is mandatory upstream, and each optional one
+  may be empty.'
+- 'source ''md-hub'' is the test data''s _meta.source (synthetic): name the production system that delivers it.'
+- 'the pack also names ''Official public data (ECB, US Treasury, New York Fed, FRED) through the feed connectors'' for this kind (rate-fixing,
+  fx-spot and ir-curve when the feed connectors are on): state when each source applies.'
+- 'due time of each business date is not known: state it (for example, by 06:00 New York the next business day).'
+- 'enum values inferred from the data, not from a glossary: NAME, ADMINISTRATOR, CURRENCY: confirm they are closed lists.'
+- 'number types decided by the field''s name: FIXINGS[].RATE rate, FIXINGS[].RATE_PCT rate, FIXINGS[].VOLUME_BN amount: confirm amount, rate or
+  integer.'
+- 'no unit stated for the amounts LATEST, FIXINGS[].VOLUME_BN (docs/contracts/README.md section 7: USD unless stated): confirm the currency.'
+- 'no description in about.yaml or the Sutras for CURRENCY, FIXINGS[].RATE_PCT: write them in the pack''s config/about.yaml glossary.'

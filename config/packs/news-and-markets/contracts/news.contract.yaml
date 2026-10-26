@@ -1,0 +1,261 @@
+# Project Drishti · Any data. Any domain. One grammar.
+#
+# Copyright (c) 2026 Ashutosh Sinha <ajsinha@gmail.com>.
+# All rights reserved.
+#
+# PROPRIETARY AND CONFIDENTIAL.
+#
+# This file is the confidential and proprietary property of Ashutosh Sinha.
+# Unauthorised copying, use, modification, distribution or disclosure of this
+# file, via any medium, is strictly prohibited except with the express prior
+# written permission of the copyright holder.
+#
+# See the LICENSE file in the root of this repository for the full terms.
+
+# Data contract of the news kind (command NEWS): docs/contracts/README.md section 16.
+# Drafted by `drishti.py contract bootstrap news`; owned by people from then on: confirm the review points, then remove them.
+kind: news
+mnemonic: NEWS
+pack: news-and-markets
+version: '1.0'
+class: fundamental
+status: active
+title: Headlines
+description: 'The headlines for one name, as the news connector computed them: newest first, filtered for relevance, duplicates removed.'
+source: 'public data: Google News (news connector)'
+grain: One row per headlines, keyed by NEWS_ID.
+key:
+- NEWS_ID
+id-pattern:
+- ^NEWS-
+dated-by: snapshot
+cadence:
+  frequency: intraday
+  due: on demand, when the connector is on
+storage:
+  connector: news
+  plugin: news
+  test-data:
+  - data/testdata/news-and-markets/news
+fields:
+- name: NEWS_ID
+  type: id
+  presence: required
+  description: The record's id (the business key)
+  example: NEWS-Alphabet
+  pattern: ^NEWS-
+  link: news
+- name: ENTITY
+  type: text
+  presence: required
+  description: Entity
+  example: Alphabet
+- name: ALIASES
+  type: text list
+  presence: required
+- name: EDITION
+  type: text
+  presence: required
+  description: Edition
+  example: en-US
+  enum:
+  - de-DE
+  - en-US
+  - ja-JP
+- name: RELEVANCE_FILTER
+  type: text
+  presence: required
+  description: Relevance filter
+  example: 'on'
+  enum:
+  - 'off'
+  - 'on'
+- name: COUNT
+  type: integer
+  presence: required
+  description: Headlines
+  example: 15
+- name: FETCHED_AT
+  type: text
+  presence: required
+  description: Fetched
+  example: 2026-10-18 03:25 UTC (snapshot captured 2026-10-18)
+  enum:
+  - 2026-10-18 03:25 UTC (snapshot captured 2026-10-18)
+  - 2026-10-18 03:26 UTC (snapshot captured 2026-10-18)
+  - 2026-10-18 03:27 UTC (snapshot captured 2026-10-18)
+- name: ITEMS
+  type: record list
+  presence: required
+  description: 'Nested: see nested ITEMS[]'
+- name: BY_SOURCE
+  type: record list
+  presence: required
+  description: 'Nested: see nested BY_SOURCE[]'
+- name: PIPELINE
+  type: record list
+  presence: required
+  description: 'Nested: see nested PIPELINE[]'
+- name: FETCHED
+  type: integer
+  presence: required
+  example: 100
+- name: PROVENANCE
+  type: record
+  presence: required
+  description: 'Nested: see nested PROVENANCE'
+- name: SNAPSHOT
+  type: text
+  presence: required
+  example: Snapshot captured 2026-10-18 03:24 UTC from Google News
+- name: SNAPSHOT_CAPTURED_AT
+  type: timestamp
+  presence: required
+  example: '2026-10-18T03:24:33Z'
+nested:
+  ITEMS[]:
+  - name: PUBLISHED
+    type: text
+    presence: required
+    example: 2026-10-18 01:37 UTC
+  - name: SOURCE
+    type: text
+    presence: required
+    example: Simply Wall Street
+  - name: TITLE
+    type: text
+    presence: required
+    example: Alphabet (GOOGL) Plans Toronto Robotaxi Service By 2028
+  - name: LINK
+    type: text
+    presence: required
+    example: https://news.google.com/rss/articles/CBMiugFBVV95cUxOWF9ZUU…
+  - name: SNIPPET
+    type: unknown
+    presence: optional
+  BY_SOURCE[]:
+  - name: SOURCE
+    type: text
+    presence: required
+    example: The Motley Fool
+  - name: COUNT
+    type: integer
+    presence: required
+    example: 3
+  PIPELINE[]:
+  - name: DROPPED
+    type: integer
+    presence: required
+    example: 4
+  - name: KEPT
+    type: integer
+    presence: required
+    example: 96
+  - name: STEP
+    type: text
+    presence: required
+    example: relevance
+    enum:
+    - duplicates
+    - limit
+    - relevance
+  PROVENANCE:
+  - name: FEED
+    type: text
+    presence: required
+    example: Google News RSS (news.google.com)
+  - name: FETCHED
+    type: text
+    presence: required
+    example: 2026-10-18 03:25 UTC
+    enum:
+    - 2026-10-18 03:25 UTC
+    - 2026-10-18 03:26 UTC
+    - 2026-10-18 03:27 UTC
+  - name: CACHED_FOR
+    type: text
+    presence: required
+    example: 3600 s
+  - name: TERMS
+    type: text
+    presence: required
+    example: Headlines and links belong to their publishers; shown for i…
+  - name: SNAPSHOT
+    type: text
+    presence: required
+    example: Snapshot captured 2026-10-18 03:24 UTC from Google News; se…
+links:
+- field: NEWS_ID
+  kind: news
+validation:
+- rule: required
+  fields:
+  - NEWS_ID
+  - ENTITY
+  - ALIASES
+  - EDITION
+  - RELEVANCE_FILTER
+  - COUNT
+  - FETCHED_AT
+  - ITEMS
+  - BY_SOURCE
+  - PIPELINE
+  - FETCHED
+  - PROVENANCE
+  - SNAPSHOT
+  - SNAPSHOT_CAPTURED_AT
+- rule: unique
+  key:
+  - NEWS_ID
+  per: snapshot
+- rule: pattern
+  field: NEWS_ID
+  pattern: ^NEWS-
+- rule: link
+  field: NEWS_ID
+  kind: news
+- rule: enum
+  field: EDITION
+  values:
+  - de-DE
+  - en-US
+  - ja-JP
+- rule: enum
+  field: RELEVANCE_FILTER
+  values:
+  - 'off'
+  - 'on'
+- rule: range
+  field: COUNT
+  min: 0
+- rule: enum
+  field: FETCHED_AT
+  values:
+  - 2026-10-18 03:25 UTC (snapshot captured 2026-10-18)
+  - 2026-10-18 03:26 UTC (snapshot captured 2026-10-18)
+  - 2026-10-18 03:27 UTC (snapshot captured 2026-10-18)
+- rule: range
+  field: BY_SOURCE[].COUNT
+  min: 0
+- rule: enum
+  field: PIPELINE[].STEP
+  values:
+  - duplicates
+  - limit
+  - relevance
+- rule: enum
+  field: PROVENANCE.FETCHED
+  values:
+  - 2026-10-18 03:25 UTC
+  - 2026-10-18 03:26 UTC
+  - 2026-10-18 03:27 UTC
+notes: []
+review:
+- 'required inferred from 100% coverage in 71 documents (0 samples and 71 test-data documents (data/testdata/news-and-markets/news/snapshot-2026-10-18.jsonl.gz)):
+  confirm each required field is mandatory upstream, and each optional one may be empty.'
+- 'read live through the news connector when it is on: confirm the cadence (intraday, on demand).'
+- 'enum values inferred from the data, not from a glossary: EDITION, RELEVANCE_FILTER, FETCHED_AT, PIPELINE[].STEP, PROVENANCE.FETCHED: confirm
+  they are closed lists.'
+- 'no description in about.yaml or the Sutras for ALIASES, FETCHED, SNAPSHOT, SNAPSHOT_CAPTURED_AT, ITEMS[].PUBLISHED, ITEMS[].SOURCE, ITEMS[].TITLE,
+  ITEMS[].LINK, ITEMS[].SNIPPET, BY_SOURCE[].SOURCE, BY_SOURCE[].COUNT, PIPELINE[].DROPPED and 7 more: write them in the pack''s config/about.yaml
+  glossary.'

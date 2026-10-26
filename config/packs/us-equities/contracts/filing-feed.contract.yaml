@@ -1,0 +1,217 @@
+# Project Drishti · Any data. Any domain. One grammar.
+#
+# Copyright (c) 2026 Ashutosh Sinha <ajsinha@gmail.com>.
+# All rights reserved.
+#
+# PROPRIETARY AND CONFIDENTIAL.
+#
+# This file is the confidential and proprietary property of Ashutosh Sinha.
+# Unauthorised copying, use, modification, distribution or disclosure of this
+# file, via any medium, is strictly prohibited except with the express prior
+# written permission of the copyright holder.
+#
+# See the LICENSE file in the root of this repository for the full terms.
+
+# Data contract of the filing-feed kind (command EDGAR): docs/contracts/README.md section 16.
+# Drafted by `drishti.py contract bootstrap filing-feed`; owned by people from then on: confirm the review points, then remove them.
+kind: filing-feed
+mnemonic: EDGAR
+pack: us-equities
+version: '1.0'
+class: fundamental
+status: active
+title: EDGAR filings browser
+description: 'The filings browser: the latest SEC filings of the covered companies, of every form or one; a click opens a filing beside.'
+source: 'public data: SEC EDGAR, Nasdaq Trader, GLEIF and Wikidata (tools/publicdata/us_equities.py)'
+grain: One row per edgar filings browser, keyed by FEED.
+key:
+- FEED
+dated-by: snapshot
+cadence:
+  frequency: static
+  due: to be confirmed
+storage:
+  connector: us-equities-store
+  plugin: delta
+  domain: us-equities
+  table: <root>/us-equities/filing-feed/
+  columns:
+  - FEED
+  - NAME
+  - FILINGS
+  test-data:
+  - data/testdata/us-equities/filing-feed
+fields:
+- name: FEED
+  type: id
+  presence: required
+  description: The record's id (the business key)
+  example: 8-K
+- name: NAME
+  type: text
+  presence: required
+  description: Forms
+  example: Current reports
+- name: FORM
+  type: text
+  presence: optional
+  example: 8-K
+- name: FILINGS
+  type: integer
+  presence: required
+  description: Filings
+  example: 300
+- name: COMPANIES
+  type: integer
+  presence: required
+  description: Companies
+  example: 222
+- name: LATEST
+  type: date
+  presence: required
+  description: Latest
+  example: '2026-10-23'
+- name: EARLIEST
+  type: date
+  presence: required
+  description: Earliest shown
+  example: '2026-10-02'
+- name: ROWS
+  type: record list
+  presence: required
+  description: 'Nested: see nested ROWS[]'
+- name: BY
+  type: record list
+  presence: required
+  description: 'Nested: see nested BY[]'
+- name: BY_TITLE
+  type: text
+  presence: required
+  example: Filings by company
+- name: PROVENANCE
+  type: record
+  presence: required
+  description: 'Nested: see nested PROVENANCE'
+nested:
+  ROWS[]:
+  - name: ACCESSION
+    type: text
+    presence: required
+    example: 0001628280-26-067044
+  - name: FILED
+    type: date
+    presence: required
+    example: '2026-10-23'
+  - name: COMPANY
+    type: id
+    presence: required
+    description: 'Company: the us-company it refers to'
+    example: PNC
+    link: us-company
+  - name: COMPANY_NAME
+    type: text
+    presence: required
+    example: PNC Financial Services
+  - name: FORM
+    type: text
+    presence: required
+    example: 8-K
+    enum:
+    - 10-K
+    - 10-Q
+    - '144'
+    - '4'
+    - 424B2
+    - 8-K
+    - DEF 14A
+    - FWP
+  - name: DESCRIPTION
+    type: text
+    presence: required
+    example: Current report
+    enum:
+    - Annual report
+    - Change in beneficial ownership (insider)
+    - Current report
+    - Definitive proxy statement
+    - Free writing prospectus
+    - Notice of proposed sale of securities
+    - Prospectus
+    - Quarterly report
+  BY[]:
+  - name: LABEL
+    type: text
+    presence: required
+    example: NWSA
+  - name: VALUE
+    type: amount
+    presence: required
+    example: 9
+  PROVENANCE:
+  - name: SOURCE
+    type: text
+    presence: required
+    example: U.S. Securities and Exchange Commission, EDGAR (submissions…
+  - name: RETRIEVED_AT
+    type: date
+    presence: required
+    example: '2026-10-24'
+  - name: LICENCE
+    type: text
+    presence: required
+    example: Public domain (U.S. Government work); SEC EDGAR fair access…
+links:
+- field: ROWS[].COMPANY
+  kind: us-company
+validation:
+- rule: required
+  fields:
+  - FEED
+  - NAME
+  - FILINGS
+  - COMPANIES
+  - LATEST
+  - EARLIEST
+  - ROWS
+  - BY
+  - BY_TITLE
+  - PROVENANCE
+- rule: unique
+  key:
+  - FEED
+  per: snapshot
+- rule: link
+  field: ROWS[].COMPANY
+  kind: us-company
+- rule: enum
+  field: ROWS[].FORM
+  values:
+  - 10-K
+  - 10-Q
+  - '144'
+  - '4'
+  - 424B2
+  - 8-K
+  - DEF 14A
+  - FWP
+- rule: enum
+  field: ROWS[].DESCRIPTION
+  values:
+  - Annual report
+  - Change in beneficial ownership (insider)
+  - Current report
+  - Definitive proxy statement
+  - Free writing prospectus
+  - Notice of proposed sale of securities
+  - Prospectus
+  - Quarterly report
+notes: []
+review:
+- 'required inferred from 100% coverage in 7 documents (1 samples and 6 test-data documents (data/testdata/us-equities/filing-feed/snapshot-2026-10-24.jsonl.gz)):
+  confirm each required field is mandatory upstream, and each optional one may be empty.'
+- 'a snapshot refreshed when tools/publicdata/us_equities.py runs: confirm the refresh cadence.'
+- 'enum values inferred from the data, not from a glossary: ROWS[].FORM, ROWS[].DESCRIPTION: confirm they are closed lists.'
+- 'number types decided by the field''s name: BY[].VALUE amount: confirm amount, rate or integer.'
+- 'no unit stated for the amounts BY[].VALUE (docs/contracts/README.md section 7: USD unless stated): confirm the currency.'
+- 'no description in about.yaml or the Sutras for FORM, BY_TITLE, ROWS[].ACCESSION, ROWS[].FILED, ROWS[].COMPANY_NAME, ROWS[].FORM, ROWS[].DESCRIPTION,
+  BY[].LABEL, BY[].VALUE, PROVENANCE.SOURCE, PROVENANCE.RETRIEVED_AT, PROVENANCE.LICENCE: write them in the pack''s config/about.yaml glossary.'

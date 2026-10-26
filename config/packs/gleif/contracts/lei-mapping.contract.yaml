@@ -1,0 +1,142 @@
+# Project Drishti · Any data. Any domain. One grammar.
+#
+# Copyright (c) 2026 Ashutosh Sinha <ajsinha@gmail.com>.
+# All rights reserved.
+#
+# PROPRIETARY AND CONFIDENTIAL.
+#
+# This file is the confidential and proprietary property of Ashutosh Sinha.
+# Unauthorised copying, use, modification, distribution or disclosure of this
+# file, via any medium, is strictly prohibited except with the express prior
+# written permission of the copyright holder.
+#
+# See the LICENSE file in the root of this repository for the full terms.
+
+# Data contract of the lei-mapping kind (command LEIM): docs/contracts/README.md section 16.
+# Drafted by `drishti.py contract bootstrap lei-mapping`; owned by people from then on: confirm the review points, then remove them.
+kind: lei-mapping
+mnemonic: LEIM
+pack: gleif
+version: '1.0'
+class: fundamental
+status: active
+title: ISIN or BIC to LEI
+description: An ISIN, BIC or MIC and the legal entity GLEIF's mapping files give it.
+source: 'public data: GLEIF LEI records, relationship records and mapping files (tools/publicdata/gleif.py)'
+grain: One row per isin or bic to lei, keyed by IDENTIFIER.
+key:
+- IDENTIFIER
+dated-by: snapshot
+cadence:
+  frequency: static
+  due: to be confirmed
+storage:
+  connector: gleif-store
+  plugin: delta
+  domain: gleif
+  table: <root>/gleif/lei-mapping/
+  columns:
+  - IDENTIFIER
+  - TYPE
+  - ENTITY_LEI
+  - ENTITY_NAME
+  test-data:
+  - data/testdata/gleif/lei-mapping
+fields:
+- name: IDENTIFIER
+  type: id
+  presence: required
+  description: Identifier
+  example: WABTUS3WXXX
+- name: TYPE
+  type: text
+  presence: required
+  description: Type
+  example: BIC
+  enum:
+  - BIC
+  - ISIN
+  - MIC
+- name: ENTITY_LEI
+  type: id
+  presence: required
+  description: 'LEI record: the lei-entity it refers to'
+  example: 06BTX5UWZD0GQ5N5Y745
+  pattern: ^[0-9A-Z]{18}[0-9]{2}$
+  link: lei-entity
+- name: ENTITY_NAME
+  type: text
+  presence: required
+  description: Entity
+  example: WESTINGHOUSE AIR BRAKE TECHNOLOGIES CORPORATION
+- name: COUNTRY
+  type: text
+  presence: required
+  example: US
+- name: LEI_GROUP
+  type: id
+  presence: required
+  description: 'Ownership group: the lei-group it refers to'
+  example: 06BTX5UWZD0GQ5N5Y745
+  link: lei-group
+- name: MAPPING_FILE
+  type: text
+  presence: required
+  description: Mapping file
+  example: LEI-BIC-20260925.zip
+  enum:
+  - LEI-BIC-20260925.zip
+  - LEI-MIC-20261012.zip
+  - isin-lei-20261024T071512.zip
+- name: ISIN_COUNT
+  type: integer
+  presence: optional
+  description: ISINs of the issuer
+  example: 909
+links:
+- field: ENTITY_LEI
+  kind: lei-entity
+- field: LEI_GROUP
+  kind: lei-group
+validation:
+- rule: required
+  fields:
+  - IDENTIFIER
+  - TYPE
+  - ENTITY_LEI
+  - ENTITY_NAME
+  - COUNTRY
+  - LEI_GROUP
+  - MAPPING_FILE
+- rule: unique
+  key:
+  - IDENTIFIER
+  per: snapshot
+- rule: enum
+  field: TYPE
+  values:
+  - BIC
+  - ISIN
+  - MIC
+- rule: link
+  field: ENTITY_LEI
+  kind: lei-entity
+- rule: link
+  field: LEI_GROUP
+  kind: lei-group
+- rule: enum
+  field: MAPPING_FILE
+  values:
+  - LEI-BIC-20260925.zip
+  - LEI-MIC-20261012.zip
+  - isin-lei-20261024T071512.zip
+- rule: range
+  field: ISIN_COUNT
+  min: 0
+notes: []
+review:
+- 'required inferred from 100% coverage in 2002 documents (2 samples and 2000 test-data documents (data/testdata/gleif/lei-mapping/snapshot-2026-10-25.jsonl.gz)):
+  confirm each required field is mandatory upstream, and each optional one may be empty.'
+- 'a snapshot refreshed when tools/publicdata/gleif.py runs: confirm the refresh cadence.'
+- 'enum values inferred from the data, not from a glossary: TYPE, MAPPING_FILE: confirm they are closed lists.'
+- 'no description in about.yaml or the Sutras for COUNTRY: write them in the pack''s config/about.yaml glossary.'

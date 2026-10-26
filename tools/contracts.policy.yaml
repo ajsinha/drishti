@@ -1,0 +1,194 @@
+# Project Drishti · Any data. Any domain. One grammar.
+#
+# Copyright (c) 2026 Ashutosh Sinha <ajsinha@gmail.com>.
+# All rights reserved.
+#
+# PROPRIETARY AND CONFIDENTIAL.
+#
+# This file is the confidential and proprietary property of Ashutosh Sinha.
+# Unauthorised copying, use, modification, distribution or disclosure of this
+# file, via any medium, is strictly prohibited except with the express prior
+# written permission of the copyright holder.
+#
+# See the LICENSE file in the root of this repository for the full terms.
+
+# What `drishti.py contract bootstrap` (tools/contracts.py) cannot read from the data: the product owner's decisions of 2026-10-25
+# (docs/architecture/IMPLEMENTATION_PLAN.md, "The computed-measures roadmap"; docs/contracts/README.md). A draft contract takes its
+# class, status and the fields that are computed figures from here; everything else comes from the pack and its data.
+#
+#   classes      kind -> class when it is not "fundamental" (a kind listed under retiring is "computed")
+#   retiring     kinds whose stored version is retired: release, the contract that replaces it, the measure that computes it, and
+#                the fields that are computed figures (path A[].B for a field of every element of list A)
+#   split        kinds whose terms are kept and whose figures are computed: status stays active, the figures are derived and retiring
+#   notes        kind -> notes copied into the draft
+#   review       kind -> questions copied into the draft's review list
+
+classes:
+  input: [pnl-vector, scenario-set, risk-hierarchy, portfolio, path-book, path-strip]
+  drishti-owned: [position]
+  computed: [path-sum, path-sum-java]
+
+retiring:
+  var:
+    release: 2.8.0
+    contract: VAR.md
+    measure: the VaR engine
+    figures: [VAR_99, ES_975, SVAR, EXCEPTIONS, SCENARIO_PNL, MEAN_PNL, PNL_SERIES, CONTRIBUTIONS]
+  var-node:
+    release: 2.8.0
+    contract: VAR.md
+    measure: the VaR engine
+    figures: [VAR_99, ES_975, HYPO_PNL, EXCEPTION, PREVIOUS_VAR, LIMIT_USE, POSITION_COUNT, TRADE_COUNT, PNL, EXCEPTIONS_250]
+  counterparty-trades: &groupings
+    release: 2.9.0
+    contract: TRADING_GROUPINGS.md
+    measure: the scope engine
+    figures: from-derived-connector
+  portfolio-trades: *groupings
+  legal-entity-trades: *groupings
+  index-trades: *groupings
+  trade-valuation:
+    release: 2.9.0
+    contract: TVAL.md
+    measure: valuation totals (TVAL)
+    figures: []
+  stress-result:
+    release: 2.9.0
+    contract: STR.md
+    measure: stress P&L (STR)
+    figures: [PNL, BY_BOOK]
+  frtb-sensitivity:
+    release: 2.9.0
+    contract: FRTB.md
+    measure: the FRTB standardised charge
+    figures: [DELTA_CHARGE, VEGA_CHARGE, CURVATURE_CHARGE, TOTAL, BY_CLASS]
+  simm:
+    release: 2.9.0
+    contract: SIMM.md
+    measure: ISDA SIMM
+    figures: [TOTAL, POSTED, RECEIVED, RISK_CLASSES]
+  pnl-explain:
+    release: 2.9.0
+    contract: PNL.md
+    measure: P&L explain
+    figures: [ACTUAL, EXPLAINED, UNEXPLAINED, ATTRIBUTION, EXPLAIN_STEPS]
+  sa-ccr:
+    release: 2.10.0
+    contract: SACCR.md
+    measure: SA-CCR
+    figures: [REPLACEMENT_COST, ADD_ON, MULTIPLIER, EAD, RWA, ADD_ONS, HEDGING_SETS]
+  exposure-profile:
+    release: 2.10.0
+    contract: EXP.md
+    measure: the exposure engine (EXP)
+    figures: [EPE, EEPE, PFE_PEAK, BUCKETS]
+  cva:
+    release: 2.10.0
+    contract: CVA.md
+    measure: CVA / XVA
+    figures: [CVA, DVA, FVA, KVA, CS01, COMPONENTS, SENSITIVITIES]
+  lei-group:
+    release: 2.9.0 or 2.10.0
+    contract: GROUPINGS_AND_ANALYTICS.md
+    measure: the GLEIF ownership grouping
+    figures: [MEMBERS, MEMBERS_IN_GLEIF, CAPPED, CAP_NOTE, LEVELS, COUNTRIES, LATE_RENEWALS, TREE, ROWS, BY_COUNTRY, BY_LEGAL_FORM]
+  lei-country:
+    release: 2.9.0 or 2.10.0
+    contract: GROUPINGS_AND_ANALYTICS.md
+    measure: the GLEIF country grouping
+    figures: [ENTITIES, GROUPS_PRESENT, GROUPS_HEADQUARTERED, LAPSED, LATE_RENEWALS, ROWS, ROWS_NOTE, GROUP_ROWS, BY_LEGAL_FORM, BY_CITY]
+  sic-sector:
+    release: 2.9.0 or 2.10.0
+    contract: GROUPINGS_AND_ANALYTICS.md
+    measure: the SIC sector grouping
+    figures: [COMPANIES, REVENUE, NET_INCOME, ROWS, BY_REVENUE]
+  country-group:
+    release: 2.9.0 or 2.10.0
+    contract: GROUPINGS_AND_ANALYTICS.md
+    measure: the country-group aggregation
+    figures: [ECONOMIES, GDP_USD_BN, GDP_PER_CAPITA, POPULATION_M, GROWTH, INFLATION, GROWTH_PATH, GDP_PATH, TOP_ECONOMIES]
+  correlation-matrix:
+    release: 2.9.0 or 2.10.0
+    contract: GROUPINGS_AND_ANALYTICS.md
+    measure: correlations from price history (CORR)
+    figures: [AVERAGE, PAIRS]
+
+split:
+  position:
+    release: 2.8.0
+    contract: VAR.md
+    measure: the VaR engine
+    figures: [VAR_99, ES_975, COMPONENT_VAR, "TRADE_QUANTITIES[].VAR_99", "TRADE_QUANTITIES[].COMPONENT_VAR"]
+  netting-set:
+    release: 2.10.0
+    contract: NSET.md
+    measure: the netting-set figures (NSET)
+    figures: [NET_MTM, COLLATERAL, EE_PEAK, PFE_PEAK, UTILISATION, CVA, PROFILE, BY_ASSET]
+  credit-limit:
+    release: 2.10.0
+    contract: LIM.md
+    measure: limit usage (LIM)
+    figures: [USED, UTILISATION, STATUS, "BUCKETS[].USED", "BUCKETS[].UTILISATION"]
+  counterparty-group:
+    release: 2.10.0
+    contract: GRP.md
+    measure: group utilisation (GRP)
+    figures: [UTILISATION]
+  collateral-balance:
+    release: 2.10.0
+    contract: COLL.md
+    measure: collateral valuation (COLL)
+    figures: [HELD, POSTED, NET, "POSITIONS[].MARKET_VALUE", "POSITIONS[].VALUE"]
+  margin-call:
+    release: 2.10.0
+    contract: MC.md
+    measure: the expected margin call (MC)
+    figures: []
+
+notes:
+  trade-valuation:
+    - "The boundary (IMPLEMENTATION_PLAN.md): a trade's MtM stays an input from the upstream engines; what TVAL computes is the valuation totals over any scope, so no field of this per-trade record is marked derived."
+  margin-call:
+    - "Actual calls and their events are kept (workflow); the expected call (MtM minus collateral minus threshold, then minimum transfer and rounding) is computed and shown beside the call. No stored field is the expected call today."
+  position:
+    - "From 2.8.0 positions are derived on the server by config-driven rules (securities by book and security id, OTC by book and trade); this table is then Drishti's, not an upstream delivery."
+  portfolio:
+    - "The portfolio definitions are an engine input (IMPLEMENTATION_PLAN.md, kept as fundamental data); the figures on a stored portfolio are VaR answers."
+
+review:
+  var:
+    - "LIMIT is a term (the desk's VaR limit), not a figure: confirm it moves to the risk hierarchy (HIER LIMIT_VAR) when VAR is retired."
+  var-node:
+    - "LIMIT is a term: confirm it is read from the risk hierarchy (LIMIT_VAR) after retirement. HYPO_PNL: confirm it is a computed figure and not an upstream input of the backtest."
+  position:
+    - "Class drishti-owned follows docs/contracts/README.md section 4 (POSITION_ID derived by Drishti from 2.8.0): confirm."
+    - "BOOK_VAR, PCT_OF_BOOK_VAR and VAR_SCOPE are VaR answers too, though not on the product owner's list (VAR_99, ES_975, COMPONENT_VAR): confirm they are removed in 2.8.0."
+  portfolio:
+    - "VAR_99, ES_975 and PNL on the stored portfolio are VaR answers: confirm they are removed in 2.8.0 with VAR."
+  netting-set:
+    - "TRADE_COUNT and TRADES[].MTM: confirm TRADE_COUNT is computed from the membership and TRADES[].MTM is read from the trade valuations (an input), not stored here."
+    - "LIMIT is copied from the credit limit: confirm it is read from LIM instead of stored."
+  credit-limit:
+    - "STATUS (Within limit, ...) follows from UTILISATION: confirm it is computed, not set by the limits system."
+  collateral-balance:
+    - "POSITIONS[].HAIRCUT is a CSA term: confirm it is kept on the holding or read from the CSA."
+  frtb-sensitivity:
+    - "SENSITIVITIES[] are per-bucket inputs: confirm they become the per-trade sensitivity table (FRTB.md) and are not kept on this record."
+  pnl-explain:
+    - "ACTUAL is the day-over-day MtM change: confirm it is computed from trade valuations, not delivered."
+  sa-ccr:
+    - "ALPHA (1.4) is a regulatory parameter: confirm it becomes a setting of the SA-CCR engine."
+  exposure-profile:
+    - "PATHS, MODEL and CONFIDENCE describe the simulation run: confirm they move to the exposure-path input's run metadata (EXP.md)."
+  lei-group: &grouping-release
+    - "The release is 2.9.0 or 2.10.0 (Track B, shipped as each is ready): confirm which."
+  lei-country: *grouping-release
+  sic-sector: *grouping-release
+  country-group: *grouping-release
+  correlation-matrix: *grouping-release
+  us-company:
+    - "The ratios (USEQ ratios) become computed from the financial facts (GROUPINGS_AND_ANALYTICS.md): confirm which fields are ratios and mark them derived."
+  price-history:
+    - "PXH analytics (returns, volatility, beta) become computed (GROUPINGS_AND_ANALYTICS.md): confirm which fields are analytics."
+  counterparty:
+    - "NET_MTM, PFE_PEAK and NETTING_SETS[].NET_MTM are computed figures on a fundamental master (docs/contracts/README.md section 3): confirm they are removed when NSET's figures are computed (2.10.0)."

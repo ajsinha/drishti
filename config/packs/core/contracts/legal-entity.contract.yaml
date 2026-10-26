@@ -1,0 +1,202 @@
+# Project Drishti · Any data. Any domain. One grammar.
+#
+# Copyright (c) 2026 Ashutosh Sinha <ajsinha@gmail.com>.
+# All rights reserved.
+#
+# PROPRIETARY AND CONFIDENTIAL.
+#
+# This file is the confidential and proprietary property of Ashutosh Sinha.
+# Unauthorised copying, use, modification, distribution or disclosure of this
+# file, via any medium, is strictly prohibited except with the express prior
+# written permission of the copyright holder.
+#
+# See the LICENSE file in the root of this repository for the full terms.
+
+# Data contract of the legal-entity kind (command LE): docs/contracts/README.md section 16.
+# Drafted by `drishti.py contract bootstrap legal-entity`; owned by people from then on: confirm the review points, then remove them.
+kind: legal-entity
+mnemonic: LE
+pack: core
+version: '1.0'
+class: fundamental
+status: active
+title: Bank legal entity
+description: The bank's own booking entity.
+source: entity-master
+grain: One row per bank legal entity per business date, keyed by ENTITY_ID.
+key:
+- ENTITY_ID
+id-pattern:
+- ^LE-
+dated-by: business_date
+cadence:
+  frequency: daily
+  due: to be confirmed
+storage:
+  connector: reference-store
+  plugin: delta
+  domain: reference
+  table: <root>/reference/legal-entity/
+  test-data:
+  - data/testdata/core/legal-entity
+fields:
+- name: ENTITY_ID
+  type: id
+  presence: required
+  description: The record's id (the business key)
+  example: LE-FRA
+  pattern: ^LE-
+- name: NAME
+  type: text
+  presence: required
+  description: Name
+  example: Drishti Bank Europe AG
+  enum:
+  - Drishti Bank Europe AG
+  - Drishti Bank Securities Inc.
+  - Drishti Bank plc
+  - Drishti Securities Japan K.K.
+- name: LEI
+  type: text
+  presence: required
+  description: LEI
+  example: 549300Z9DXU4T18OK744
+  enum:
+  - 549300BLAOJ55ZE6F474
+  - 549300O1N13GO2II2096
+  - 549300Z8F6KKOGHS7Q83
+  - 549300Z9DXU4T18OK744
+- name: JURISDICTION
+  type: id
+  presence: required
+  description: Jurisdiction
+  example: DE
+  link: jurisdiction
+- name: REGULATOR
+  type: text
+  presence: required
+  description: Regulator
+  example: ECB / BaFin
+  enum:
+  - ECB / BaFin
+  - JFSA
+  - PRA / FCA
+  - SEC / CFTC / FINRA
+- name: DESKS
+  type: record list
+  presence: required
+  description: 'Nested: see nested DESKS[]'
+- name: BOOKS
+  type: record list
+  presence: required
+  description: 'Nested: see nested BOOKS[]'
+nested:
+  DESKS[]:
+  - name: ID
+    type: id
+    presence: required
+    description: Desk
+    example: DESK-SFT
+  - name: NAME
+    type: text
+    presence: required
+    description: Name
+    example: Repo and securities lending
+  BOOKS[]:
+  - name: BOOK
+    type: id
+    presence: required
+    description: 'Book: the book it refers to'
+    example: BOOK-SFT-1
+    pattern: ^BOOK-
+    link: book
+  - name: DESK
+    type: id
+    presence: required
+    description: 'Desk: the desk it refers to'
+    example: Repo and securities lending
+    link: desk
+  - name: VAR
+    type: amount
+    presence: required
+    example: 14855706
+  - name: PNL
+    type: amount
+    presence: required
+    example: -327989
+  - name: MTM
+    type: amount
+    presence: required
+    example: 8879873
+  - name: TRADES
+    type: integer
+    presence: required
+    example: 17
+links:
+- field: JURISDICTION
+  kind: jurisdiction
+- field: BOOKS[].BOOK
+  kind: book
+- field: BOOKS[].DESK
+  kind: desk
+validation:
+- rule: required
+  fields:
+  - ENTITY_ID
+  - NAME
+  - LEI
+  - JURISDICTION
+  - REGULATOR
+  - DESKS
+  - BOOKS
+- rule: unique
+  key:
+  - ENTITY_ID
+  per: business_date
+- rule: pattern
+  field: ENTITY_ID
+  pattern: ^LE-
+- rule: enum
+  field: NAME
+  values:
+  - Drishti Bank Europe AG
+  - Drishti Bank Securities Inc.
+  - Drishti Bank plc
+  - Drishti Securities Japan K.K.
+- rule: enum
+  field: LEI
+  values:
+  - 549300BLAOJ55ZE6F474
+  - 549300O1N13GO2II2096
+  - 549300Z8F6KKOGHS7Q83
+  - 549300Z9DXU4T18OK744
+- rule: link
+  field: JURISDICTION
+  kind: jurisdiction
+- rule: enum
+  field: REGULATOR
+  values:
+  - ECB / BaFin
+  - JFSA
+  - PRA / FCA
+  - SEC / CFTC / FINRA
+- rule: link
+  field: BOOKS[].BOOK
+  kind: book
+- rule: link
+  field: BOOKS[].DESK
+  kind: desk
+notes:
+- 'Dated by the lake''s business_date partition: `drishti.py lake build` writes each test-data file''s day into it; the documents carry no date
+  field of their own.'
+review:
+- 'required inferred from 100% coverage in 12 documents (4 samples and 8 test-data documents (data/testdata/core/legal-entity/snapshot-2026-07-08.jsonl.gz,
+  data/testdata/core/legal-entity/changes-2026-09-30.jsonl.gz)): confirm each required field is mandatory upstream, and each optional one may
+  be empty.'
+- 'source ''entity-master'' is the test data''s _meta.source (synthetic): name the production system that delivers it.'
+- 'due time of each business date is not known: state it (for example, by 06:00 New York the next business day).'
+- 'enum values inferred from the data, not from a glossary: NAME, LEI, REGULATOR: confirm they are closed lists.'
+- 'number types decided by the field''s name: BOOKS[].VAR amount, BOOKS[].PNL amount, BOOKS[].MTM amount: confirm amount, rate or integer.'
+- 'no unit stated for the amounts BOOKS[].VAR, BOOKS[].PNL, BOOKS[].MTM (docs/contracts/README.md section 7: USD unless stated): confirm the currency.'
+- 'no description in about.yaml or the Sutras for BOOKS[].VAR, BOOKS[].PNL, BOOKS[].MTM, BOOKS[].TRADES: write them in the pack''s config/about.yaml
+  glossary.'

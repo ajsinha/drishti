@@ -1,0 +1,131 @@
+# Project Drishti · Any data. Any domain. One grammar.
+#
+# Copyright (c) 2026 Ashutosh Sinha <ajsinha@gmail.com>.
+# All rights reserved.
+#
+# PROPRIETARY AND CONFIDENTIAL.
+#
+# This file is the confidential and proprietary property of Ashutosh Sinha.
+# Unauthorised copying, use, modification, distribution or disclosure of this
+# file, via any medium, is strictly prohibited except with the express prior
+# written permission of the copyright holder.
+#
+# See the LICENSE file in the root of this repository for the full terms.
+
+# Data contract of the commodity-vol-surface kind (command CMDV): docs/contracts/README.md section 16.
+# Drafted by `drishti.py contract bootstrap commodity-vol-surface`; owned by people from then on: confirm the review points, then remove them.
+kind: commodity-vol-surface
+mnemonic: CMDV
+pack: market-data
+version: '1.0'
+class: fundamental
+status: active
+title: Commodity volatility surface
+description: Implied vols by delivery month and moneyness.
+source: md-hub
+grain: One row per commodity volatility surface per business date, keyed by SURFACE_ID.
+key:
+- SURFACE_ID
+id-pattern:
+- ^CMDV-
+dated-by: business_date
+cadence:
+  frequency: daily
+  due: to be confirmed
+storage:
+  connector: market-store
+  plugin: delta
+  domain: market
+  table: <root>/market/commodity-vol-surface/
+  test-data:
+  - data/testdata/market-data/commodity-vol-surface
+fields:
+- name: SURFACE_ID
+  type: id
+  presence: required
+  description: The record's id (the business key)
+  example: CMDV-BRENT
+  pattern: ^CMDV-
+- name: COMMODITY
+  type: text
+  presence: required
+  description: Commodity
+  example: Brent crude oil
+- name: ATM_FRONT
+  type: amount
+  presence: required
+  description: Front ATM
+  example: 31.32
+- name: GRID
+  type: record list
+  presence: required
+  description: 'Nested: see nested GRID[]'
+nested:
+  GRID[]:
+  - name: MONTH
+    type: text
+    presence: required
+    description: Month
+    example: X6
+    enum:
+    - F7
+    - G7
+    - H7
+    - J7
+    - K7
+    - M7
+    - X6
+    - Z6
+  - name: M_90
+    type: amount
+    presence: required
+    description: 90%
+    example: 32.82
+  - name: M_100
+    type: amount
+    presence: required
+    description: 100%
+    example: 31.32
+  - name: M_110
+    type: amount
+    presence: required
+    description: 110%
+    example: 32.12
+links: []
+validation:
+- rule: required
+  fields:
+  - SURFACE_ID
+  - COMMODITY
+  - ATM_FRONT
+  - GRID
+- rule: unique
+  key:
+  - SURFACE_ID
+  per: business_date
+- rule: pattern
+  field: SURFACE_ID
+  pattern: ^CMDV-
+- rule: enum
+  field: GRID[].MONTH
+  values:
+  - F7
+  - G7
+  - H7
+  - J7
+  - K7
+  - M7
+  - X6
+  - Z6
+notes:
+- 'Dated by the lake''s business_date partition: `drishti.py lake build` writes each test-data file''s day into it; the documents carry no date
+  field of their own.'
+review:
+- 'required inferred from 100% coverage in 16 documents (8 samples and 8 test-data documents (data/testdata/market-data/commodity-vol-surface/snapshot-2026-07-08.jsonl.gz,
+  data/testdata/market-data/commodity-vol-surface/changes-2026-09-30.jsonl.gz)): confirm each required field is mandatory upstream, and each optional
+  one may be empty.'
+- 'source ''md-hub'' is the test data''s _meta.source (synthetic): name the production system that delivers it.'
+- 'due time of each business date is not known: state it (for example, by 06:00 New York the next business day).'
+- 'enum values inferred from the data, not from a glossary: GRID[].MONTH: confirm they are closed lists.'
+- 'no unit stated for the amounts ATM_FRONT, GRID[].M_90, GRID[].M_100, GRID[].M_110 (docs/contracts/README.md section 7: USD unless stated):
+  confirm the currency.'

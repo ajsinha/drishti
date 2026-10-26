@@ -1,0 +1,220 @@
+# Project Drishti · Any data. Any domain. One grammar.
+#
+# Copyright (c) 2026 Ashutosh Sinha <ajsinha@gmail.com>.
+# All rights reserved.
+#
+# PROPRIETARY AND CONFIDENTIAL.
+#
+# This file is the confidential and proprietary property of Ashutosh Sinha.
+# Unauthorised copying, use, modification, distribution or disclosure of this
+# file, via any medium, is strictly prohibited except with the express prior
+# written permission of the copyright holder.
+#
+# See the LICENSE file in the root of this repository for the full terms.
+
+# Data contract of the region kind (command REGN): docs/contracts/README.md section 16.
+# Drafted by `drishti.py contract bootstrap region`; owned by people from then on: confirm the review points, then remove them.
+kind: region
+mnemonic: REGN
+pack: world-economy
+version: '1.0'
+class: fundamental
+status: active
+title: World region
+description: 'A World Bank region: its countries, population, life expectancy, women in parliament, Internet use and the government types found
+  in it.'
+source: 'public data: World Bank, World Development Indicators; CIA, The World Factbook (factbook.json mirror, CC0)'
+grain: One row per world region, keyed by REGION_ID.
+key:
+- REGION_ID
+id-pattern:
+- ^REGN-
+dated-by: snapshot
+cadence:
+  frequency: static
+  due: to be confirmed
+storage:
+  connector: civic-store
+  plugin: delta
+  domain: civic
+  table: <root>/civic/region/
+  test-data:
+  - config/packs/world-economy/samples
+fields:
+- name: REGION_ID
+  type: id
+  presence: required
+  description: The record's id (the business key)
+  example: REGN-EAS
+  pattern: ^REGN-
+- name: NAME
+  type: text
+  presence: required
+  description: A World Bank geographic region.
+  example: East Asia & Pacific
+- name: COUNTRIES
+  type: integer
+  presence: required
+  description: The number of countries of the region in the pack.
+  example: 37
+- name: POPULATION_M
+  type: amount
+  presence: required
+  unit: millions
+  description: The region's total population (World Bank aggregate).
+  example: 2390.87
+- name: LIFE_EXPECTANCY
+  type: amount
+  presence: required
+  unit: years
+  description: Years a newborn would live at current mortality (World Bank aggregate).
+  example: 76.7379
+- name: YEAR
+  type: text
+  presence: required
+  example: '2024'
+- name: INTERNET
+  type: amount
+  presence: required
+  unit: '% of population'
+  description: The share of the population that used the Internet in the last three months.
+  example: 88.4
+- name: WOMEN_PARLIAMENT
+  type: amount
+  presence: required
+  unit: '% of seats'
+  description: The share of parliamentary seats held by women (Inter-Parliamentary Union, via the World Bank).
+  example: 23.3498
+- name: URBAN
+  type: amount
+  presence: required
+  example: 64.771
+- name: LIFE_TREND
+  type: record list
+  presence: required
+  description: 'Nested: see nested LIFE_TREND[]'
+- name: INTERNET_TREND
+  type: record list
+  presence: required
+  description: 'Nested: see nested INTERNET_TREND[]'
+- name: GOVERNMENT_TYPES
+  type: record list
+  presence: required
+  description: 'Nested: see nested GOVERNMENT_TYPES[]'
+- name: MEMBER_STATES
+  type: id list
+  presence: required
+  description: 'Countries: the jurisdiction it refers to'
+  link: jurisdiction
+- name: PROVENANCE
+  type: record
+  presence: required
+  description: 'Nested: see nested PROVENANCE'
+nested:
+  LIFE_TREND[]:
+  - name: YEAR
+    type: text
+    presence: required
+    description: The calendar year.
+    example: '2015'
+  - name: VALUE
+    type: amount
+    presence: required
+    unit: years
+    description: Years at birth in that year.
+    example: 75.7926
+  INTERNET_TREND[]:
+  - name: YEAR
+    type: text
+    presence: required
+    description: The calendar year.
+    example: '2015'
+  - name: VALUE
+    type: amount
+    presence: required
+    unit: '% of population'
+    description: Share of the population using the Internet in that year.
+    example: 48.3
+  GOVERNMENT_TYPES[]:
+  - name: TYPE
+    type: text
+    presence: required
+    description: The form of government as the CIA World Factbook words it.
+    example: parliamentary republic
+  - name: COUNT
+    type: integer
+    presence: required
+    description: How many countries of the region have this government type.
+    example: 5
+  PROVENANCE:
+  - name: SOURCE
+    type: text
+    presence: required
+    description: The organisation or organisations whose published data this view shows.
+    example: World Bank, World Development Indicators; CIA, The World Fa…
+  - name: DATASET
+    type: text
+    presence: required
+    description: The named dataset and its vintage (the release the numbers come from).
+    example: World Development Indicators (updated 2026-10-08); The Worl…
+  - name: RETRIEVED_AT
+    type: date
+    presence: required
+    description: The date the data was downloaded by tools/realdata.
+    example: '2026-10-10'
+  - name: LICENCE
+    type: text
+    presence: required
+    description: The terms under which the source allows reuse; attribution is required.
+    example: CC BY 4.0; Public domain (U.S. Government work); the factbo…
+  - name: ATTRIBUTION
+    type: text
+    presence: required
+    description: The credit line to repeat when the data is shown or republished.
+    example: 'The World Bank: World Development Indicators (CC BY 4.0). C…'
+  - name: URL
+    type: text
+    presence: required
+    description: The web page of the dataset.
+    example: https://databank.worldbank.org/source/world-development-ind…
+links:
+- field: MEMBER_STATES
+  kind: jurisdiction
+validation:
+- rule: required
+  fields:
+  - REGION_ID
+  - NAME
+  - COUNTRIES
+  - POPULATION_M
+  - LIFE_EXPECTANCY
+  - YEAR
+  - INTERNET
+  - WOMEN_PARLIAMENT
+  - URBAN
+  - LIFE_TREND
+  - INTERNET_TREND
+  - GOVERNMENT_TYPES
+  - MEMBER_STATES
+  - PROVENANCE
+- rule: unique
+  key:
+  - REGION_ID
+  per: snapshot
+- rule: pattern
+  field: REGION_ID
+  pattern: ^REGN-
+- rule: link
+  field: MEMBER_STATES
+  kind: jurisdiction
+- rule: range
+  field: GOVERNMENT_TYPES[].COUNT
+  min: 0
+notes: []
+review:
+- 'required inferred from 100% coverage in 7 documents (7 samples): confirm each required field is mandatory upstream, and each optional one may
+  be empty.'
+- 'key REGION_ID is the field holding the sample catalogue''s id (REGN-EAS): confirm it is the business key.'
+- 'a snapshot refreshed when tools/publicdata/world_economy.py runs: confirm the refresh cadence.'
+- 'no unit stated for the amounts URBAN (docs/contracts/README.md section 7: USD unless stated): confirm the currency.'
+- 'no description in about.yaml or the Sutras for YEAR, URBAN: write them in the pack''s config/about.yaml glossary.'

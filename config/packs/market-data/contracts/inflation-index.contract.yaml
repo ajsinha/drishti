@@ -1,0 +1,137 @@
+# Project Drishti · Any data. Any domain. One grammar.
+#
+# Copyright (c) 2026 Ashutosh Sinha <ajsinha@gmail.com>.
+# All rights reserved.
+#
+# PROPRIETARY AND CONFIDENTIAL.
+#
+# This file is the confidential and proprietary property of Ashutosh Sinha.
+# Unauthorised copying, use, modification, distribution or disclosure of this
+# file, via any medium, is strictly prohibited except with the express prior
+# written permission of the copyright holder.
+#
+# See the LICENSE file in the root of this repository for the full terms.
+
+# Data contract of the inflation-index kind (command INF): docs/contracts/README.md section 16.
+# Drafted by `drishti.py contract bootstrap inflation-index`; owned by people from then on: confirm the review points, then remove them.
+kind: inflation-index
+mnemonic: INF
+pack: market-data
+version: '1.0'
+class: fundamental
+status: active
+title: Inflation index
+description: Published CPI fixings (US CPI-U NSA, HICPxT, UK RPI…).
+source: md-hub
+grain: One row per inflation index per business date, keyed by INDEX_ID.
+key:
+- INDEX_ID
+id-pattern:
+- ^INF-
+dated-by: business_date
+cadence:
+  frequency: daily
+  due: to be confirmed
+storage:
+  connector: market-store
+  plugin: delta
+  domain: market
+  table: <root>/market/inflation-index/
+  test-data:
+  - data/testdata/market-data/inflation-index
+fields:
+- name: INDEX_ID
+  type: id
+  presence: required
+  description: The record's id (the business key)
+  example: INF-HICPX
+  pattern: ^INF-
+- name: NAME
+  type: text
+  presence: required
+  description: Name
+  example: Euro HICP ex-tobacco
+- name: LATEST
+  type: amount
+  presence: required
+  description: Latest
+  example: 128.4
+- name: YOY
+  type: amount
+  presence: required
+  description: YoY
+  example: 0.021
+- name: LAG
+  type: text
+  presence: required
+  description: Publication lag
+  example: 3 months
+- name: CURRENCY
+  type: text
+  presence: required
+  example: EUR
+- name: FIXINGS
+  type: record list
+  presence: required
+  description: 'Nested: see nested FIXINGS[]'
+- name: INFLATION_CURVE
+  type: id
+  presence: required
+  description: 'Inflation curve: the inflation-curve it refers to'
+  example: INFC-HICPX
+  pattern: ^INFC-
+  link: inflation-curve
+nested:
+  FIXINGS[]:
+  - name: MONTH
+    type: text
+    presence: required
+    description: Month
+    example: 2026-08
+  - name: VALUE
+    type: amount
+    presence: required
+    description: Index
+    example: 128.4
+  - name: YOY
+    type: amount
+    presence: required
+    description: YoY
+    example: 0.021
+links:
+- field: INFLATION_CURVE
+  kind: inflation-curve
+validation:
+- rule: required
+  fields:
+  - INDEX_ID
+  - NAME
+  - LATEST
+  - YOY
+  - LAG
+  - CURRENCY
+  - FIXINGS
+  - INFLATION_CURVE
+- rule: unique
+  key:
+  - INDEX_ID
+  per: business_date
+- rule: pattern
+  field: INDEX_ID
+  pattern: ^INF-
+- rule: link
+  field: INFLATION_CURVE
+  kind: inflation-curve
+notes:
+- 'Dated by the lake''s business_date partition: `drishti.py lake build` writes each test-data file''s day into it; the documents carry no date
+  field of their own.'
+review:
+- 'required inferred from 100% coverage in 8 documents (4 samples and 4 test-data documents (data/testdata/market-data/inflation-index/snapshot-2026-07-08.jsonl.gz,
+  data/testdata/market-data/inflation-index/changes-2026-09-30.jsonl.gz)): confirm each required field is mandatory upstream, and each optional
+  one may be empty.'
+- 'source ''md-hub'' is the test data''s _meta.source (synthetic): name the production system that delivers it.'
+- 'due time of each business date is not known: state it (for example, by 06:00 New York the next business day).'
+- 'number types decided by the field''s name: FIXINGS[].VALUE amount: confirm amount, rate or integer.'
+- 'no unit stated for the amounts LATEST, YOY, FIXINGS[].VALUE, FIXINGS[].YOY (docs/contracts/README.md section 7: USD unless stated): confirm
+  the currency.'
+- 'no description in about.yaml or the Sutras for CURRENCY: write them in the pack''s config/about.yaml glossary.'

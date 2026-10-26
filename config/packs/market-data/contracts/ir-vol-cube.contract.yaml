@@ -1,0 +1,151 @@
+# Project Drishti · Any data. Any domain. One grammar.
+#
+# Copyright (c) 2026 Ashutosh Sinha <ajsinha@gmail.com>.
+# All rights reserved.
+#
+# PROPRIETARY AND CONFIDENTIAL.
+#
+# This file is the confidential and proprietary property of Ashutosh Sinha.
+# Unauthorised copying, use, modification, distribution or disclosure of this
+# file, via any medium, is strictly prohibited except with the express prior
+# written permission of the copyright holder.
+#
+# See the LICENSE file in the root of this repository for the full terms.
+
+# Data contract of the ir-vol-cube kind (command IRV): docs/contracts/README.md section 16.
+# Drafted by `drishti.py contract bootstrap ir-vol-cube`; owned by people from then on: confirm the review points, then remove them.
+kind: ir-vol-cube
+mnemonic: IRV
+pack: market-data
+version: '1.0'
+class: fundamental
+status: active
+title: Swaption volatility cube
+description: Normal (bp) swaption vols by expiry × tenor.
+source: md-hub
+grain: One row per swaption volatility cube per business date, keyed by CUBE_ID.
+key:
+- CUBE_ID
+id-pattern:
+- ^IRV-
+dated-by: business_date
+cadence:
+  frequency: daily
+  due: to be confirmed
+storage:
+  connector: market-store
+  plugin: delta
+  domain: market
+  table: <root>/market/ir-vol-cube/
+  test-data:
+  - data/testdata/market-data/ir-vol-cube
+fields:
+- name: CUBE_ID
+  type: id
+  presence: required
+  description: The record's id (the business key)
+  example: IRV-AUD
+  pattern: ^IRV-
+- name: CURRENCY
+  type: text
+  presence: required
+  description: Currency
+  example: AUD
+- name: MODEL
+  type: text
+  presence: required
+  description: Model
+  example: Normal (Bachelier), SABR smile
+- name: V_1Y_10Y
+  type: amount
+  presence: required
+  description: 1Y×10Y
+  example: 137.22
+- name: V_5Y_5Y
+  type: amount
+  presence: required
+  description: 5Y×5Y
+  example: 132.72
+- name: GRID
+  type: record list
+  presence: required
+  description: 'Nested: see nested GRID[]'
+nested:
+  GRID[]:
+  - name: EXPIRY
+    type: text
+    presence: required
+    description: Expiry
+    example: 1M
+    enum:
+    - 10Y
+    - 1M
+    - 1Y
+    - 2Y
+    - 3M
+    - 5Y
+    - 6M
+  - name: T_1Y
+    type: amount
+    presence: required
+    description: 1Y
+    example: 148.55
+  - name: T_2Y
+    type: amount
+    presence: required
+    description: 2Y
+    example: 146.78
+  - name: T_5Y
+    type: amount
+    presence: required
+    description: 5Y
+    example: 143.74
+  - name: T_10Y
+    type: amount
+    presence: required
+    description: 10Y
+    example: 141.09
+  - name: T_30Y
+    type: amount
+    presence: required
+    description: 30Y
+    example: 136.56
+links: []
+validation:
+- rule: required
+  fields:
+  - CUBE_ID
+  - CURRENCY
+  - MODEL
+  - V_1Y_10Y
+  - V_5Y_5Y
+  - GRID
+- rule: unique
+  key:
+  - CUBE_ID
+  per: business_date
+- rule: pattern
+  field: CUBE_ID
+  pattern: ^IRV-
+- rule: enum
+  field: GRID[].EXPIRY
+  values:
+  - 10Y
+  - 1M
+  - 1Y
+  - 2Y
+  - 3M
+  - 5Y
+  - 6M
+notes:
+- 'Dated by the lake''s business_date partition: `drishti.py lake build` writes each test-data file''s day into it; the documents carry no date
+  field of their own.'
+review:
+- 'required inferred from 100% coverage in 14 documents (7 samples and 7 test-data documents (data/testdata/market-data/ir-vol-cube/snapshot-2026-07-08.jsonl.gz,
+  data/testdata/market-data/ir-vol-cube/changes-2026-09-30.jsonl.gz)): confirm each required field is mandatory upstream, and each optional one
+  may be empty.'
+- 'source ''md-hub'' is the test data''s _meta.source (synthetic): name the production system that delivers it.'
+- 'due time of each business date is not known: state it (for example, by 06:00 New York the next business day).'
+- 'enum values inferred from the data, not from a glossary: GRID[].EXPIRY: confirm they are closed lists.'
+- 'no unit stated for the amounts V_1Y_10Y, V_5Y_5Y, GRID[].T_1Y, GRID[].T_2Y, GRID[].T_5Y, GRID[].T_10Y, GRID[].T_30Y (docs/contracts/README.md
+  section 7: USD unless stated): confirm the currency.'

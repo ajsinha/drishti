@@ -1,0 +1,114 @@
+# Project Drishti · Any data. Any domain. One grammar.
+#
+# Copyright (c) 2026 Ashutosh Sinha <ajsinha@gmail.com>.
+# All rights reserved.
+#
+# PROPRIETARY AND CONFIDENTIAL.
+#
+# This file is the confidential and proprietary property of Ashutosh Sinha.
+# Unauthorised copying, use, modification, distribution or disclosure of this
+# file, via any medium, is strictly prohibited except with the express prior
+# written permission of the copyright holder.
+#
+# See the LICENSE file in the root of this repository for the full terms.
+
+# Data contract of the counterparty-group kind (command GRP): docs/contracts/README.md section 16.
+# Drafted by `drishti.py contract bootstrap counterparty-group`; owned by people from then on: confirm the review points, then remove them.
+kind: counterparty-group
+mnemonic: GRP
+pack: core
+version: '1.0'
+class: fundamental
+status: active
+title: Counterparty group
+description: Economic group of related counterparties (obligor group).
+source: counterparty-master
+grain: One row per counterparty group per business date, keyed by GROUP_ID.
+key:
+- GROUP_ID
+id-pattern:
+- ^GRP-
+dated-by: business_date
+cadence:
+  frequency: daily
+  due: to be confirmed
+storage:
+  connector: reference-store
+  plugin: delta
+  domain: reference
+  table: <root>/reference/counterparty-group/
+  test-data:
+  - data/testdata/core/counterparty-group
+fields:
+- name: GROUP_ID
+  type: id
+  presence: required
+  description: The record's id (the business key)
+  example: GRP-ALDERSHOT
+  pattern: ^GRP-
+- name: NAME
+  type: text
+  presence: required
+  description: Name
+  example: Aldershot Pension Trust
+- name: LIMIT
+  type: amount
+  presence: required
+  description: Group limit
+  example: 337000000.0
+- name: UTILISATION
+  type: rate
+  presence: derived
+  description: Utilisation
+  example: 0.6671
+  retiring-in: 2.10.0
+  note: computed by group utilisation (GRP) from 2.10.0; removed from the stored record then
+- name: MEMBERS
+  type: record list
+  presence: required
+  description: 'Nested: see nested MEMBERS[]'
+nested:
+  MEMBERS[]:
+  - name: ID
+    type: id
+    presence: required
+    description: Counterparty
+    example: CP-ALDERSHOT
+  - name: NAME
+    type: text
+    presence: required
+    description: Name
+    example: Aldershot Pension Trust
+  - name: RATING
+    type: text
+    presence: required
+    description: Rating
+    example: AA-
+links: []
+validation:
+- rule: required
+  fields:
+  - GROUP_ID
+  - NAME
+  - LIMIT
+  - MEMBERS
+- rule: unique
+  key:
+  - GROUP_ID
+  per: business_date
+- rule: pattern
+  field: GROUP_ID
+  pattern: ^GRP-
+notes:
+- 'Dated by the lake''s business_date partition: `drishti.py lake build` writes each test-data file''s day into it; the documents carry no date
+  field of their own.'
+- 'Terms kept, figures computed from 2.10.0 (docs/contracts/GRP.md): the fields marked derived are computed by group utilisation (GRP) and leave
+  the stored record then.'
+review:
+- 'required inferred from 100% coverage in 62 documents (17 samples and 45 test-data documents (data/testdata/core/counterparty-group/snapshot-2026-07-08.jsonl.gz,
+  data/testdata/core/counterparty-group/changes-2026-09-30.jsonl.gz)): confirm each required field is mandatory upstream, and each optional one
+  may be empty.'
+- 'source ''counterparty-master'' is the test data''s _meta.source (synthetic): name the production system that delivers it.'
+- 'due time of each business date is not known: state it (for example, by 06:00 New York the next business day).'
+- 'number types decided by the field''s name: LIMIT amount, UTILISATION rate: confirm amount, rate or integer.'
+- 'no unit stated for the amounts LIMIT (docs/contracts/README.md section 7: USD unless stated): confirm the currency.'

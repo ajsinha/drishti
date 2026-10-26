@@ -1,0 +1,444 @@
+# Project Drishti · Any data. Any domain. One grammar.
+#
+# Copyright (c) 2026 Ashutosh Sinha <ajsinha@gmail.com>.
+# All rights reserved.
+#
+# PROPRIETARY AND CONFIDENTIAL.
+#
+# This file is the confidential and proprietary property of Ashutosh Sinha.
+# Unauthorised copying, use, modification, distribution or disclosure of this
+# file, via any medium, is strictly prohibited except with the express prior
+# written permission of the copyright holder.
+#
+# See the LICENSE file in the root of this repository for the full terms.
+
+# Data contract of the position kind (command POS): docs/contracts/README.md section 16.
+# Drafted by `drishti.py contract bootstrap position`; owned by people from then on: confirm the review points, then remove them.
+kind: position
+mnemonic: POS
+pack: market-risk
+version: '1.0'
+class: drishti-owned
+status: active
+title: Position
+description: 'A position: one instrument held in one book, the trades that build or reduce it, its VaR and its P&L over the scenario days.'
+source: Synthetic sample data (tools/packgen/banking)
+grain: One row per position per BUSINESS_DATE, keyed by POSITION_ID.
+key:
+- POSITION_ID
+id-pattern:
+- ^POS-
+dated-by: BUSINESS_DATE
+cadence:
+  frequency: daily
+  due: to be confirmed
+storage:
+  connector: risk-store
+  plugin: delta
+  domain: risk
+  table: <root>/risk/position/
+  columns:
+  - POSITION_ID
+  - INSTRUMENT_ID
+  - INSTRUMENT
+  - DIRECTION
+  - LEGAL_ENTITY
+  - DIVISION
+  - DESK
+  - TT_BOOK
+  - PORTFOLIO
+  - PRODUCT_GROUP
+  - PRODUCT_TYPE
+  - CURRENCY
+  - COUNTERPARTY
+  - QUANTITY
+  - MARKET_VALUE
+  - TRADE_COUNT
+  - VAR_99
+  - ES_975
+  - COMPONENT_VAR
+  vectors:
+  - PNL
+  test-data:
+  - data/testdata/market-risk/position
+fields:
+- name: POSITION_ID
+  type: id
+  presence: required
+  description: The record's id (the business key)
+  example: POS-BOOK-EQD-2~EQ_ASIAN-USD-2029Q2
+  pattern: ^POS-
+  link: position
+- name: BUSINESS_DATE
+  type: date
+  presence: required
+  example: '2026-09-30'
+- name: INSTRUMENT_ID
+  type: id
+  presence: required
+  description: Instrument
+  example: INS-EQ_ASIAN-USD-2029Q2
+- name: INSTRUMENT
+  type: text
+  presence: required
+  description: 'What the position holds: the product, its currency, its underlying and its maturity. Trades of the same instrument in one book
+    are one position.'
+  example: Equity Asian option USD 2029-04
+- name: POSITION_TYPE
+  type: text
+  presence: required
+  example: fungible
+  enum:
+  - fungible
+  - single-trade
+- name: DIRECTION
+  type: text
+  presence: required
+  description: 'LONG when the position''s net quantity is above zero (more bought than sold), SHORT when below. Its trades may be of both directions:
+    they net.'
+  example: SHORT
+- name: QUANTITY
+  type: amount
+  presence: required
+  description: 'The signed sum of the position''s trades'' quantities (notional for swaps, units for securities): a buy adds, a sell takes away.'
+  example: -810529060.0
+- name: GROSS_QUANTITY
+  type: amount
+  presence: required
+  example: 7050772940.0
+- name: TRADE_IDS
+  type: id list
+  presence: required
+  description: 'Trade: the trade it refers to'
+  link: trade
+- name: TRADE_QUANTITIES
+  type: record list
+  presence: required
+  description: 'Nested: see nested TRADE_QUANTITIES[]'
+- name: TRADE_COUNT
+  type: integer
+  presence: required
+  description: Trades
+  example: 18
+- name: LONG_TRADES
+  type: integer
+  presence: required
+  example: 9
+- name: SHORT_TRADES
+  type: integer
+  presence: required
+  example: 9
+- name: LEGAL_ENTITY
+  type: id
+  presence: required
+  description: The bank's legal entity that holds the book.
+  example: LE-LDN
+  pattern: ^LE-
+  link: legal-entity
+- name: DIVISION
+  type: id
+  presence: required
+  example: DIV-MARKETS
+- name: DESK
+  type: id
+  presence: required
+  description: The desk the book belongs to.
+  example: DESK-EQD
+  pattern: ^DESK-
+  link: desk
+- name: TT_BOOK
+  type: id
+  presence: required
+  description: 'The book the position is held in: its trades are all booked there.'
+  example: BOOK-EQD-2
+  pattern: ^BOOK-
+  link: book
+- name: PORTFOLIO
+  type: id
+  presence: required
+  description: 'Portfolio: the book it refers to'
+  example: BOOK-EQD-2
+  pattern: ^BOOK-
+  link: book
+- name: STRATEGY
+  type: unknown
+  presence: optional
+- name: COUNTERPARTY
+  type: id
+  presence: optional
+  description: The counterparty of the position's trades when they all share one; empty otherwise.
+  example: CP-SUMMIT
+  pattern: ^CP-
+  link: counterparty
+- name: COUNTERPARTIES
+  type: text list
+  presence: required
+- name: PRODUCT_GROUP
+  type: text
+  presence: required
+  example: Equity
+- name: PRODUCT_TYPE
+  type: text
+  presence: required
+  description: The product of the instrument, as the booking systems name it.
+  example: EQ_ASIAN
+- name: CURRENCY
+  type: text
+  presence: required
+  description: The instrument's currency. Every P&L and value is in USD, the reporting currency.
+  example: USD
+  enum:
+  - AUD
+  - CAD
+  - CHF
+  - EUR
+  - GBP
+  - JPY
+  - USD
+- name: MARKET_VALUE
+  type: amount
+  presence: required
+  unit: USD
+  description: The sum of the trades' present values (their mark-to-market) on the business date.
+  example: 83350636
+- name: NOTIONAL
+  type: amount
+  presence: required
+  description: The sum of the trades' quantities without their signs.
+  example: 7050772940
+- name: LINEAR
+  type: boolean
+  presence: required
+  example: true
+- name: STATUS
+  type: text
+  presence: required
+  example: open
+- name: OPENED_ON
+  type: date
+  presence: required
+  description: The trade date of the position's first trade.
+  example: '2024-10-10'
+- name: TAGS
+  type: text list
+  presence: required
+- name: VAR_99
+  type: amount
+  presence: derived
+  unit: USD
+  description: The loss the portfolio is expected not to exceed on 99 of 100 trading days, read from the 1st percentile of the revalued scenario
+    P&L (historical simulation).
+  example: 52808
+  retiring-in: 2.8.0
+  note: computed by the VaR engine from 2.8.0; removed from the stored record then
+- name: ES_975
+  type: amount
+  presence: derived
+  unit: USD
+  description: The average loss on the worst 2.5% of scenario days. It looks into the tail that VaR ignores, and it is the measure the FRTB internal-models
+    approach uses for capital.
+  example: 52234
+  retiring-in: 2.8.0
+  note: computed by the VaR engine from 2.8.0; removed from the stored record then
+- name: COMPONENT_VAR
+  type: amount
+  presence: derived
+  unit: USD
+  description: 'The position''s share of its book''s VaR (Euler allocation): the shares of a book''s positions add up to the book''s VaR; a hedge
+    has a negative share.'
+  example: 51216
+  retiring-in: 2.8.0
+  note: computed by the VaR engine from 2.8.0; removed from the stored record then
+- name: BOOK_VAR
+  type: amount
+  presence: required
+  unit: USD
+  description: The 1-day 99% VaR of the whole book the position is held in.
+  example: 426663
+- name: PCT_OF_BOOK_VAR
+  type: rate
+  presence: required
+  description: The component VaR over the book's VaR.
+  example: 0.12
+- name: SCENARIO_SET_ID
+  type: id
+  presence: required
+  example: HS-509
+- name: PNL
+  type: vector
+  presence: required
+  unit: USD
+  description: 'The position''s P&L under each historical scenario day (509 of them): the sum of its trades'' vectors.'
+  note: 509 values in the test data
+- name: VAR_SCOPE
+  type: text
+  presence: required
+  example: POS:POS-BOOK-EQD-2~EQ_ASIAN-USD-2029Q2
+nested:
+  TRADE_QUANTITIES[]:
+  - name: TRADE_ID
+    type: id
+    presence: required
+    description: Trade
+    example: MX-20000209
+    pattern: ^(MX|CLY)-\d+$
+    link: trade
+  - name: QUANTITY
+    type: amount
+    presence: required
+    description: 'The trade''s signed quantity in the position: a buy positive, a sell negative.'
+    example: -180000000.0
+  - name: DIRECTION
+    type: text
+    presence: required
+    description: Direction
+    example: SHORT
+    enum:
+    - LONG
+    - SHORT
+  - name: VAR_99
+    type: amount
+    presence: derived
+    unit: USD
+    description: The trade's 1-day 99% VaR as if it were alone.
+    example: 10869
+    retiring-in: 2.8.0
+    note: computed by the VaR engine from 2.8.0; removed from the stored record then
+  - name: COMPONENT_VAR
+    type: amount
+    presence: derived
+    unit: USD
+    description: The trade's share of the position's VaR. The shares of a long and a short of one instrument have opposite signs and add up to
+      the position's VaR.
+    example: 12050
+    retiring-in: 2.8.0
+    note: computed by the VaR engine from 2.8.0; removed from the stored record then
+links:
+- field: POSITION_ID
+  kind: position
+- field: TRADE_IDS
+  kind: trade
+- field: LEGAL_ENTITY
+  kind: legal-entity
+- field: DESK
+  kind: desk
+- field: TT_BOOK
+  kind: book
+- field: PORTFOLIO
+  kind: book
+- field: COUNTERPARTY
+  kind: counterparty
+- field: TRADE_QUANTITIES[].TRADE_ID
+  kind: trade
+validation:
+- rule: required
+  fields:
+  - POSITION_ID
+  - BUSINESS_DATE
+  - INSTRUMENT_ID
+  - INSTRUMENT
+  - POSITION_TYPE
+  - DIRECTION
+  - QUANTITY
+  - GROSS_QUANTITY
+  - TRADE_IDS
+  - TRADE_QUANTITIES
+  - TRADE_COUNT
+  - LONG_TRADES
+  - SHORT_TRADES
+  - LEGAL_ENTITY
+  - DIVISION
+  - DESK
+  - TT_BOOK
+  - PORTFOLIO
+  - COUNTERPARTIES
+  - PRODUCT_GROUP
+  - PRODUCT_TYPE
+  - CURRENCY
+  - MARKET_VALUE
+  - NOTIONAL
+  - LINEAR
+  - STATUS
+  - OPENED_ON
+  - TAGS
+  - BOOK_VAR
+  - PCT_OF_BOOK_VAR
+  - SCENARIO_SET_ID
+  - PNL
+  - VAR_SCOPE
+- rule: unique
+  key:
+  - POSITION_ID
+  per: BUSINESS_DATE
+- rule: pattern
+  field: POSITION_ID
+  pattern: ^POS-
+- rule: link
+  field: POSITION_ID
+  kind: position
+- rule: enum
+  field: POSITION_TYPE
+  values:
+  - fungible
+  - single-trade
+- rule: link
+  field: TRADE_IDS
+  kind: trade
+- rule: range
+  field: TRADE_COUNT
+  min: 0
+- rule: link
+  field: LEGAL_ENTITY
+  kind: legal-entity
+- rule: link
+  field: DESK
+  kind: desk
+- rule: link
+  field: TT_BOOK
+  kind: book
+- rule: link
+  field: PORTFOLIO
+  kind: book
+- rule: link
+  field: COUNTERPARTY
+  kind: counterparty
+- rule: enum
+  field: CURRENCY
+  values:
+  - AUD
+  - CAD
+  - CHF
+  - EUR
+  - GBP
+  - JPY
+  - USD
+- rule: vector-length
+  field: PNL
+  same: every row of one business date
+- rule: link
+  field: TRADE_QUANTITIES[].TRADE_ID
+  kind: trade
+- rule: enum
+  field: TRADE_QUANTITIES[].DIRECTION
+  values:
+  - LONG
+  - SHORT
+notes:
+- From 2.8.0 positions are derived on the server by config-driven rules (securities by book and security id, OTC by book and trade); this table
+  is then Drishti's, not an upstream delivery.
+- 'Terms kept, figures computed from 2.8.0 (docs/contracts/VAR.md): the fields marked derived are computed by the VaR engine and leave the stored
+  record then.'
+review:
+- 'required inferred from 100% coverage in 198 documents (2 samples and 196 test-data documents (data/testdata/market-risk/position/cob-2026-09-30.jsonl.gz)):
+  confirm each required field is mandatory upstream, and each optional one may be empty.'
+- 'source is the pack''s first listed source (its README): confirm.'
+- 'due time of each business date is not known: state it (for example, by 06:00 New York the next business day).'
+- 'enum values inferred from the data, not from a glossary: POSITION_TYPE, CURRENCY, TRADE_QUANTITIES[].DIRECTION: confirm they are closed lists.'
+- 'number types decided by the field''s name: NOTIONAL amount, PCT_OF_BOOK_VAR rate: confirm amount, rate or integer.'
+- 'no unit stated for the amounts QUANTITY, GROSS_QUANTITY, NOTIONAL, TRADE_QUANTITIES[].QUANTITY (docs/contracts/README.md section 7: USD unless
+  stated): confirm the currency.'
+- 'no description in about.yaml or the Sutras for BUSINESS_DATE, POSITION_TYPE, GROSS_QUANTITY, LONG_TRADES, SHORT_TRADES, DIVISION, STRATEGY,
+  COUNTERPARTIES, PRODUCT_GROUP, LINEAR, STATUS, TAGS and 2 more: write them in the pack''s config/about.yaml glossary.'
+- 'Class drishti-owned follows docs/contracts/README.md section 4 (POSITION_ID derived by Drishti from 2.8.0): confirm.'
+- 'BOOK_VAR, PCT_OF_BOOK_VAR and VAR_SCOPE are VaR answers too, though not on the product owner''s list (VAR_99, ES_975, COMPONENT_VAR): confirm
+  they are removed in 2.8.0.'

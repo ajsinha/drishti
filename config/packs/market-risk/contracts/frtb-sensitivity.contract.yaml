@@ -1,0 +1,219 @@
+# Project Drishti · Any data. Any domain. One grammar.
+#
+# Copyright (c) 2026 Ashutosh Sinha <ajsinha@gmail.com>.
+# All rights reserved.
+#
+# PROPRIETARY AND CONFIDENTIAL.
+#
+# This file is the confidential and proprietary property of Ashutosh Sinha.
+# Unauthorised copying, use, modification, distribution or disclosure of this
+# file, via any medium, is strictly prohibited except with the express prior
+# written permission of the copyright holder.
+#
+# See the LICENSE file in the root of this repository for the full terms.
+
+# Data contract of the frtb-sensitivity kind (command FRTB): docs/contracts/README.md section 16.
+# Drafted by `drishti.py contract bootstrap frtb-sensitivity`; owned by people from then on: confirm the review points, then remove them.
+kind: frtb-sensitivity
+mnemonic: FRTB
+pack: market-risk
+version: '1.0'
+class: computed
+status: retiring
+retiring-in: 2.9.0
+replaced-by: docs/contracts/FRTB.md
+title: FRTB sensitivities
+description: Delta, vega and curvature by risk class and bucket (SBM).
+source: frtb-engine
+grain: One row per frtb sensitivities per business date, keyed by RESULT_ID.
+key:
+- RESULT_ID
+id-pattern:
+- ^FRTB-
+dated-by: business_date
+cadence:
+  frequency: daily
+  due: to be confirmed
+storage:
+  connector: risk-store
+  plugin: delta
+  domain: risk
+  table: <root>/risk/frtb-sensitivity/
+  test-data:
+  - data/testdata/market-risk/frtb-sensitivity
+fields:
+- name: RESULT_ID
+  type: id
+  presence: required
+  description: The record's id (the business key)
+  example: FRTB-COMM-1
+  pattern: ^FRTB-
+- name: BOOK
+  type: id
+  presence: required
+  description: The trading book the charge is computed for.
+  example: BOOK-COMM-1
+  pattern: ^BOOK-
+  link: book
+- name: DELTA_CHARGE
+  type: amount
+  presence: derived
+  unit: USD
+  description: Capital for the first-order sensitivity of the book to its risk factors, after the regulatory risk weights and the correlations
+    within and between buckets.
+  example: 11613331
+  note: computed by the FRTB standardised charge; removed when retired
+- name: VEGA_CHARGE
+  type: amount
+  presence: derived
+  unit: USD
+  description: Capital for the sensitivity of option values to implied volatility, aggregated like delta.
+  example: 3173321
+  note: computed by the FRTB standardised charge; removed when retired
+- name: CURVATURE_CHARGE
+  type: amount
+  presence: derived
+  unit: USD
+  description: Capital for the loss that delta alone does not capture when an option's value is not linear in the underlying move (the gamma risk).
+  example: 1378886
+  note: computed by the FRTB standardised charge; removed when retired
+- name: TOTAL
+  type: amount
+  presence: derived
+  unit: USD
+  description: The sum of the delta, vega and curvature charges of the book. The full standardised charge adds the default-risk and residual-risk
+    add-ons.
+  example: 16165538
+  note: computed by the FRTB standardised charge; removed when retired
+- name: SENSITIVITIES
+  type: record list
+  presence: required
+  description: 'Nested: see nested SENSITIVITIES[]'
+- name: BY_CLASS
+  type: record list
+  presence: derived
+  description: 'Nested: see nested BY_CLASS[]'
+  note: computed by the FRTB standardised charge; removed when retired
+- name: APPROACH
+  type: text
+  presence: required
+  example: FRTB standardised (SBM)
+nested:
+  SENSITIVITIES[]:
+  - name: RISK_CLASS
+    type: text
+    presence: required
+    description: 'One of the regulatory risk classes: general interest-rate, credit spread (non-securitisation, securitisation), equity, commodity
+      or FX.'
+    example: Commodity
+    enum:
+    - CSR non-securitisation
+    - Commodity
+    - Equity
+    - FX
+    - GIRR
+  - name: BUCKET
+    type: text
+    presence: required
+    description: The regulatory grouping of risk factors inside a risk class, such as a sector, rating or tenor group, with its own risk weight
+      and correlation.
+    example: '1'
+    enum:
+    - '1'
+    - '2'
+    - '3'
+  - name: MEASURE
+    type: text
+    presence: required
+    description: 'Which risk the sensitivity measures: delta (to the price or rate), vega (to volatility) or curvature.'
+    example: Delta
+    enum:
+    - Delta
+    - Vega
+    - Curvature
+  - name: VALUE
+    type: amount
+    presence: required
+    unit: USD
+    description: The change in the value of the book's positions for the prescribed unit move in the factor, before the risk weight is applied.
+    example: -270747
+  BY_CLASS[]:
+  - name: RISK_CLASS
+    type: text
+    presence: required
+    example: Commodity
+    enum:
+    - CSR non-securitisation
+    - Commodity
+    - Equity
+    - FX
+    - GIRR
+  - name: CHARGE
+    type: amount
+    presence: required
+    unit: USD
+    description: The class's contribution to the book's sensitivities-based charge.
+    example: 16165538
+links:
+- field: BOOK
+  kind: book
+validation:
+- rule: required
+  fields:
+  - RESULT_ID
+  - BOOK
+  - SENSITIVITIES
+  - APPROACH
+- rule: unique
+  key:
+  - RESULT_ID
+  per: business_date
+- rule: pattern
+  field: RESULT_ID
+  pattern: ^FRTB-
+- rule: link
+  field: BOOK
+  kind: book
+- rule: enum
+  field: SENSITIVITIES[].RISK_CLASS
+  values:
+  - CSR non-securitisation
+  - Commodity
+  - Equity
+  - FX
+  - GIRR
+- rule: enum
+  field: SENSITIVITIES[].BUCKET
+  values:
+  - '1'
+  - '2'
+  - '3'
+- rule: enum
+  field: SENSITIVITIES[].MEASURE
+  values:
+  - Delta
+  - Vega
+  - Curvature
+- rule: enum
+  field: BY_CLASS[].RISK_CLASS
+  values:
+  - CSR non-securitisation
+  - Commodity
+  - Equity
+  - FX
+  - GIRR
+notes:
+- 'Dated by the lake''s business_date partition: `drishti.py lake build` writes each test-data file''s day into it; the documents carry no date
+  field of their own.'
+- 'Retiring in 2.9.0: the stored kind is removed and computed instead by the FRTB standardised charge (docs/contracts/FRTB.md); old ids and links
+  open the computed page.'
+review:
+- 'required inferred from 100% coverage in 60 documents (30 samples and 30 test-data documents (data/testdata/market-risk/frtb-sensitivity/snapshot-2026-07-08.jsonl.gz,
+  data/testdata/market-risk/frtb-sensitivity/changes-2026-09-30.jsonl.gz)): confirm each required field is mandatory upstream, and each optional
+  one may be empty.'
+- 'source ''frtb-engine'' is the test data''s _meta.source (synthetic): name the production system that delivers it.'
+- 'due time of each business date is not known: state it (for example, by 06:00 New York the next business day).'
+- 'enum values inferred from the data, not from a glossary: SENSITIVITIES[].RISK_CLASS, SENSITIVITIES[].BUCKET, BY_CLASS[].RISK_CLASS: confirm
+  they are closed lists.'
+- 'no description in about.yaml or the Sutras for APPROACH, BY_CLASS[].RISK_CLASS: write them in the pack''s config/about.yaml glossary.'
+- 'SENSITIVITIES[] are per-bucket inputs: confirm they become the per-trade sensitivity table (FRTB.md) and are not kept on this record.'

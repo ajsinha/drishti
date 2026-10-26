@@ -1,0 +1,222 @@
+# Project Drishti · Any data. Any domain. One grammar.
+#
+# Copyright (c) 2026 Ashutosh Sinha <ajsinha@gmail.com>.
+# All rights reserved.
+#
+# PROPRIETARY AND CONFIDENTIAL.
+#
+# This file is the confidential and proprietary property of Ashutosh Sinha.
+# Unauthorised copying, use, modification, distribution or disclosure of this
+# file, via any medium, is strictly prohibited except with the express prior
+# written permission of the copyright holder.
+#
+# See the LICENSE file in the root of this repository for the full terms.
+
+# Data contract of the fiscal-position kind (command FISC): docs/contracts/README.md section 16.
+# Drafted by `drishti.py contract bootstrap fiscal-position`; owned by people from then on: confirm the review points, then remove them.
+kind: fiscal-position
+mnemonic: FISC
+pack: world-economy
+version: '1.0'
+class: fundamental
+status: active
+title: Fiscal position
+description: Government debt and net lending (IMF) with revenue, expense and military spending (World Bank), as shares of GDP.
+source: 'public data: World Bank, World Development Indicators; International Monetary Fund, World Economic Outlook (DataMapper)'
+grain: One row per fiscal position, keyed by FISCAL_ID.
+key:
+- FISCAL_ID
+id-pattern:
+- ^FISC-
+dated-by: snapshot
+cadence:
+  frequency: static
+  due: to be confirmed
+storage:
+  connector: macro-store
+  plugin: delta
+  domain: macro
+  table: <root>/macro/fiscal-position/
+  test-data:
+  - config/packs/world-economy/samples
+fields:
+- name: FISCAL_ID
+  type: id
+  presence: required
+  description: The record's id (the business key)
+  example: FISC-ABW
+  pattern: ^FISC-
+- name: ECONOMY_NAME
+  type: text
+  presence: required
+  description: The country or territory the figures describe.
+  example: Aruba
+- name: YEAR
+  type: text
+  presence: optional
+  example: '2025'
+- name: DEBT
+  type: amount
+  presence: optional
+  unit: '% of GDP'
+  description: All liabilities of the general government that require payment of interest or principal, as a share of GDP (IMF).
+  example: 63.6
+- name: BALANCE
+  type: amount
+  presence: required
+  unit: '% of GDP'
+  description: General government revenue minus total expenditure, as a share of GDP (IMF).
+  example: 1.9
+- name: REVENUE
+  type: amount
+  presence: optional
+  unit: '% of GDP'
+  description: Central government revenue excluding grants, as a share of GDP (World Bank).
+  example: 13.0393
+- name: SPENDING
+  type: amount
+  presence: optional
+  unit: '% of GDP'
+  description: Central government cash payments for operating activities, as a share of GDP (World Bank).
+  example: 39.2201
+- name: MILITARY
+  type: amount
+  presence: optional
+  unit: '% of GDP'
+  description: All spending on the armed forces, as a share of GDP (SIPRI via the World Bank).
+  example: 1.82793
+- name: RATIOS
+  type: record list
+  presence: required
+  description: 'Nested: see nested RATIOS[]'
+- name: DEBT_PATH
+  type: record list
+  presence: required
+  description: 'Nested: see nested DEBT_PATH[]'
+- name: BALANCE_PATH
+  type: record list
+  presence: required
+  description: 'Nested: see nested BALANCE_PATH[]'
+- name: ECONOMY
+  type: id
+  presence: required
+  description: 'Economy: the economy it refers to'
+  example: ECON-ABW
+  pattern: ^ECON-
+  link: economy
+- name: PROVENANCE
+  type: record
+  presence: required
+  description: 'Nested: see nested PROVENANCE'
+nested:
+  DEBT_PATH[]:
+  - name: YEAR
+    type: text
+    presence: required
+    description: The calendar year.
+    example: '2015'
+  - name: DEBT
+    type: amount
+    presence: required
+    unit: '% of GDP'
+    description: General government gross debt in that year (IMF; later years are projections).
+    example: 74.2
+  BALANCE_PATH[]:
+  - name: YEAR
+    type: text
+    presence: required
+    description: The calendar year.
+    example: '2015'
+  - name: BALANCE
+    type: amount
+    presence: required
+    unit: '% of GDP'
+    description: General government balance in that year (IMF; later years are projections).
+    example: -1.5
+  PROVENANCE:
+  - name: SOURCE
+    type: text
+    presence: required
+    description: The organisation or organisations whose published data this view shows.
+    example: World Bank, World Development Indicators; International Mon…
+  - name: DATASET
+    type: text
+    presence: required
+    description: The named dataset and its vintage (the release the numbers come from).
+    example: World Development Indicators (updated 2026-10-08); World Ec…
+  - name: RETRIEVED_AT
+    type: date
+    presence: required
+    description: The date the data was downloaded by tools/realdata.
+    example: '2026-10-10'
+  - name: LICENCE
+    type: text
+    presence: required
+    description: The terms under which the source allows reuse; attribution is required.
+    example: 'CC BY 4.0; IMF Copyright and Terms of Use: reuse with attri…'
+  - name: ATTRIBUTION
+    type: text
+    presence: required
+    description: The credit line to repeat when the data is shown or republished.
+    example: 'The World Bank: World Development Indicators (CC BY 4.0). S…'
+  - name: URL
+    type: text
+    presence: required
+    description: The web page of the dataset.
+    example: https://databank.worldbank.org/source/world-development-ind…
+  RATIOS[]:
+  - name: ITEM
+    type: text
+    presence: required
+    description: A central-government ratio.
+    example: Tax revenue
+    enum:
+    - Expense
+    - Military expenditure
+    - Revenue (excl. grants)
+    - Tax revenue
+  - name: VALUE
+    type: amount
+    presence: required
+    unit: '% of GDP'
+    description: The item as a share of GDP.
+    example: 9.89845
+links:
+- field: ECONOMY
+  kind: economy
+validation:
+- rule: required
+  fields:
+  - FISCAL_ID
+  - ECONOMY_NAME
+  - BALANCE
+  - RATIOS
+  - DEBT_PATH
+  - BALANCE_PATH
+  - ECONOMY
+  - PROVENANCE
+- rule: unique
+  key:
+  - FISCAL_ID
+  per: snapshot
+- rule: pattern
+  field: FISCAL_ID
+  pattern: ^FISC-
+- rule: link
+  field: ECONOMY
+  kind: economy
+- rule: enum
+  field: RATIOS[].ITEM
+  values:
+  - Expense
+  - Military expenditure
+  - Revenue (excl. grants)
+  - Tax revenue
+notes: []
+review:
+- 'required inferred from 100% coverage in 192 documents (192 samples): confirm each required field is mandatory upstream, and each optional one
+  may be empty.'
+- 'key FISCAL_ID is the field holding the sample catalogue''s id (FISC-ABW): confirm it is the business key.'
+- 'a snapshot refreshed when tools/publicdata/world_economy.py runs: confirm the refresh cadence.'
+- 'enum values inferred from the data, not from a glossary: RATIOS[].ITEM: confirm they are closed lists.'
+- 'no description in about.yaml or the Sutras for YEAR: write them in the pack''s config/about.yaml glossary.'

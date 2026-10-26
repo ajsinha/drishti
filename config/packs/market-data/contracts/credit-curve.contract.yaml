@@ -1,0 +1,188 @@
+# Project Drishti · Any data. Any domain. One grammar.
+#
+# Copyright (c) 2026 Ashutosh Sinha <ajsinha@gmail.com>.
+# All rights reserved.
+#
+# PROPRIETARY AND CONFIDENTIAL.
+#
+# This file is the confidential and proprietary property of Ashutosh Sinha.
+# Unauthorised copying, use, modification, distribution or disclosure of this
+# file, via any medium, is strictly prohibited except with the express prior
+# written permission of the copyright holder.
+#
+# See the LICENSE file in the root of this repository for the full terms.
+
+# Data contract of the credit-curve kind (command CDS): docs/contracts/README.md section 16.
+# Drafted by `drishti.py contract bootstrap credit-curve`; owned by people from then on: confirm the review points, then remove them.
+kind: credit-curve
+mnemonic: CDS
+pack: market-data
+version: '1.0'
+class: fundamental
+status: active
+title: Credit curve
+description: CDS par spreads by tenor, recovery and implied default probabilities.
+source: md-hub
+grain: One row per credit curve per business date, keyed by CURVE_ID.
+key:
+- CURVE_ID
+id-pattern:
+- ^CDS-
+dated-by: business_date
+cadence:
+  frequency: daily
+  due: to be confirmed
+storage:
+  connector: market-store
+  plugin: delta
+  domain: market
+  table: <root>/market/credit-curve/
+  test-data:
+  - data/testdata/market-data/credit-curve
+fields:
+- name: CURVE_ID
+  type: id
+  presence: required
+  description: The record's id (the business key)
+  example: CDS-BUND
+  pattern: ^CDS-
+- name: ISSUER_NAME
+  type: text
+  presence: required
+  description: Reference entity
+  example: Federal Republic of Germany
+- name: SPREAD_5Y
+  type: rate
+  presence: required
+  description: 5Y spread
+  example: 9
+- name: RECOVERY
+  type: rate
+  presence: required
+  description: Recovery
+  example: 0.25
+- name: SENIORITY
+  type: text
+  presence: required
+  description: Seniority
+  example: Senior unsecured
+- name: DOC_CLAUSE
+  type: text
+  presence: required
+  description: Doc clause
+  example: MM14
+  enum:
+  - CR14
+  - MM14
+- name: PD_1Y
+  type: rate
+  presence: required
+  description: 1Y PD
+  example: 0.000666
+- name: POINTS
+  type: record list
+  presence: required
+  description: 'Nested: see nested POINTS[]'
+- name: ISSUER
+  type: id
+  presence: required
+  description: 'Reference entity: the issuer it refers to'
+  example: ISS-BUND
+  pattern: ^ISS-
+  link: issuer
+- name: CURRENCY
+  type: text
+  presence: required
+  example: EUR
+  enum:
+  - EUR
+  - USD
+nested:
+  POINTS[]:
+  - name: TENOR
+    type: text
+    presence: required
+    description: Tenor
+    example: 6M
+    enum:
+    - 10Y
+    - 1Y
+    - 2Y
+    - 3Y
+    - 5Y
+    - 6M
+    - 7Y
+  - name: SPREAD
+    type: rate
+    presence: required
+    description: Spread (bp)
+    example: 4.5
+  - name: HAZARD
+    type: amount
+    presence: required
+    description: Hazard
+    example: 0.0006
+  - name: SURVIVAL
+    type: amount
+    presence: required
+    description: Survival
+    example: 0.9997
+links:
+- field: ISSUER
+  kind: issuer
+validation:
+- rule: required
+  fields:
+  - CURVE_ID
+  - ISSUER_NAME
+  - SPREAD_5Y
+  - RECOVERY
+  - SENIORITY
+  - DOC_CLAUSE
+  - PD_1Y
+  - POINTS
+  - ISSUER
+  - CURRENCY
+- rule: unique
+  key:
+  - CURVE_ID
+  per: business_date
+- rule: pattern
+  field: CURVE_ID
+  pattern: ^CDS-
+- rule: enum
+  field: DOC_CLAUSE
+  values:
+  - CR14
+  - MM14
+- rule: link
+  field: ISSUER
+  kind: issuer
+- rule: enum
+  field: CURRENCY
+  values:
+  - EUR
+  - USD
+- rule: enum
+  field: POINTS[].TENOR
+  values:
+  - 10Y
+  - 1Y
+  - 2Y
+  - 3Y
+  - 5Y
+  - 6M
+  - 7Y
+notes:
+- 'Dated by the lake''s business_date partition: `drishti.py lake build` writes each test-data file''s day into it; the documents carry no date
+  field of their own.'
+review:
+- 'required inferred from 100% coverage in 32 documents (16 samples and 16 test-data documents (data/testdata/market-data/credit-curve/snapshot-2026-07-08.jsonl.gz,
+  data/testdata/market-data/credit-curve/changes-2026-09-30.jsonl.gz)): confirm each required field is mandatory upstream, and each optional one
+  may be empty.'
+- 'source ''md-hub'' is the test data''s _meta.source (synthetic): name the production system that delivers it.'
+- 'due time of each business date is not known: state it (for example, by 06:00 New York the next business day).'
+- 'enum values inferred from the data, not from a glossary: DOC_CLAUSE, CURRENCY, POINTS[].TENOR: confirm they are closed lists.'
+- 'number types decided by the field''s name: SPREAD_5Y rate, RECOVERY rate, PD_1Y rate, POINTS[].SPREAD rate: confirm amount, rate or integer.'
+- 'no unit stated for the amounts POINTS[].HAZARD, POINTS[].SURVIVAL (docs/contracts/README.md section 7: USD unless stated): confirm the currency.'
+- 'no description in about.yaml or the Sutras for CURRENCY: write them in the pack''s config/about.yaml glossary.'

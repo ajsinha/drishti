@@ -1,0 +1,196 @@
+# Project Drishti · Any data. Any domain. One grammar.
+#
+# Copyright (c) 2026 Ashutosh Sinha <ajsinha@gmail.com>.
+# All rights reserved.
+#
+# PROPRIETARY AND CONFIDENTIAL.
+#
+# This file is the confidential and proprietary property of Ashutosh Sinha.
+# Unauthorised copying, use, modification, distribution or disclosure of this
+# file, via any medium, is strictly prohibited except with the express prior
+# written permission of the copyright holder.
+#
+# See the LICENSE file in the root of this repository for the full terms.
+
+# Data contract of the equity-index kind (command EQX): docs/contracts/README.md section 16.
+# Drafted by `drishti.py contract bootstrap equity-index`; owned by people from then on: confirm the review points, then remove them.
+kind: equity-index
+mnemonic: EQX
+pack: market-data
+version: '1.0'
+class: fundamental
+status: active
+title: Equity index
+description: Index level with its largest constituents.
+source: md-hub
+grain: One row per equity index per business date, keyed by INDEX_ID.
+key:
+- INDEX_ID
+id-pattern:
+- ^EQX-
+dated-by: business_date
+cadence:
+  frequency: daily
+  due: to be confirmed
+storage:
+  connector: market-store
+  plugin: delta
+  domain: market
+  table: <root>/market/equity-index/
+  test-data:
+  - data/testdata/market-data/equity-index
+fields:
+- name: INDEX_ID
+  type: id
+  presence: required
+  description: The record's id (the business key)
+  example: EQX-NDX
+  pattern: ^EQX-
+- name: NAME
+  type: text
+  presence: required
+  description: Name
+  example: Nasdaq-100
+  enum:
+  - EURO STOXX 50
+  - FTSE 100
+  - Nasdaq-100
+  - Nikkei 225
+  - S&P 500
+- name: LEVEL
+  type: amount
+  presence: required
+  description: Level
+  example: 24530.0
+- name: CHANGE_1D
+  type: amount
+  presence: required
+  description: 1D
+  example: 0.00986
+- name: CONSTITUENT_COUNT
+  type: integer
+  presence: required
+  description: Constituents
+  example: 101
+- name: CURRENCY
+  type: text
+  presence: required
+  description: Currency
+  example: USD
+  enum:
+  - EUR
+  - GBP
+  - JPY
+  - USD
+- name: CONSTITUENTS
+  type: record list
+  presence: required
+  description: 'Nested: see nested CONSTITUENTS[]'
+- name: HISTORY
+  type: record list
+  presence: required
+  description: 'Nested: see nested HISTORY[]'
+- name: EQUITY_VOL_SURFACE
+  type: id
+  presence: required
+  description: 'Equity vol surface: the equity-vol-surface it refers to'
+  example: EQV-NDX
+  pattern: ^EQV-
+  link: equity-vol-surface
+- name: DIVIDEND_CURVE
+  type: id
+  presence: required
+  description: 'Dividend curve: the dividend-curve it refers to'
+  example: DIV-NDX
+  pattern: ^DIV-
+  link: dividend-curve
+nested:
+  CONSTITUENTS[]:
+  - name: EQUITY
+    type: id
+    presence: required
+    description: Equity
+    example: EQ-NVTK
+    pattern: ^EQ-
+    link: equity
+  - name: WEIGHT
+    type: rate
+    presence: required
+    description: Weight
+    example: 0.02
+  HISTORY[]:
+  - name: DATE
+    type: date
+    presence: required
+    example: '2026-08-19'
+  - name: CLOSE
+    type: amount
+    presence: required
+    example: 25294.78
+links:
+- field: EQUITY_VOL_SURFACE
+  kind: equity-vol-surface
+- field: DIVIDEND_CURVE
+  kind: dividend-curve
+- field: CONSTITUENTS[].EQUITY
+  kind: equity
+validation:
+- rule: required
+  fields:
+  - INDEX_ID
+  - NAME
+  - LEVEL
+  - CHANGE_1D
+  - CONSTITUENT_COUNT
+  - CURRENCY
+  - CONSTITUENTS
+  - HISTORY
+  - EQUITY_VOL_SURFACE
+  - DIVIDEND_CURVE
+- rule: unique
+  key:
+  - INDEX_ID
+  per: business_date
+- rule: pattern
+  field: INDEX_ID
+  pattern: ^EQX-
+- rule: enum
+  field: NAME
+  values:
+  - EURO STOXX 50
+  - FTSE 100
+  - Nasdaq-100
+  - Nikkei 225
+  - S&P 500
+- rule: range
+  field: CONSTITUENT_COUNT
+  min: 0
+- rule: enum
+  field: CURRENCY
+  values:
+  - EUR
+  - GBP
+  - JPY
+  - USD
+- rule: link
+  field: EQUITY_VOL_SURFACE
+  kind: equity-vol-surface
+- rule: link
+  field: DIVIDEND_CURVE
+  kind: dividend-curve
+- rule: link
+  field: CONSTITUENTS[].EQUITY
+  kind: equity
+notes:
+- 'Dated by the lake''s business_date partition: `drishti.py lake build` writes each test-data file''s day into it; the documents carry no date
+  field of their own.'
+review:
+- 'required inferred from 100% coverage in 15 documents (5 samples and 10 test-data documents (data/testdata/market-data/equity-index/snapshot-2026-07-08.jsonl.gz,
+  data/testdata/market-data/equity-index/changes-2026-09-30.jsonl.gz)): confirm each required field is mandatory upstream, and each optional one
+  may be empty.'
+- 'source ''md-hub'' is the test data''s _meta.source (synthetic): name the production system that delivers it.'
+- 'due time of each business date is not known: state it (for example, by 06:00 New York the next business day).'
+- 'enum values inferred from the data, not from a glossary: NAME, CURRENCY: confirm they are closed lists.'
+- 'number types decided by the field''s name: CONSTITUENTS[].WEIGHT rate: confirm amount, rate or integer.'
+- 'no unit stated for the amounts LEVEL, CHANGE_1D, HISTORY[].CLOSE (docs/contracts/README.md section 7: USD unless stated): confirm the currency.'
+- 'no description in about.yaml or the Sutras for HISTORY[].DATE, HISTORY[].CLOSE: write them in the pack''s config/about.yaml glossary.'

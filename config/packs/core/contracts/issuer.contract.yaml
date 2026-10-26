@@ -1,0 +1,146 @@
+# Project Drishti · Any data. Any domain. One grammar.
+#
+# Copyright (c) 2026 Ashutosh Sinha <ajsinha@gmail.com>.
+# All rights reserved.
+#
+# PROPRIETARY AND CONFIDENTIAL.
+#
+# This file is the confidential and proprietary property of Ashutosh Sinha.
+# Unauthorised copying, use, modification, distribution or disclosure of this
+# file, via any medium, is strictly prohibited except with the express prior
+# written permission of the copyright holder.
+#
+# See the LICENSE file in the root of this repository for the full terms.
+
+# Data contract of the issuer kind (command ISS): docs/contracts/README.md section 16.
+# Drafted by `drishti.py contract bootstrap issuer`; owned by people from then on: confirm the review points, then remove them.
+kind: issuer
+mnemonic: ISS
+pack: core
+version: '1.0'
+class: fundamental
+status: active
+title: Issuer
+description: Issuer of bonds and reference entity for CDS.
+source: counterparty-master
+grain: One row per issuer per business date, keyed by ISSUER_ID.
+key:
+- ISSUER_ID
+id-pattern:
+- ^ISS-
+dated-by: business_date
+cadence:
+  frequency: daily
+  due: to be confirmed
+storage:
+  connector: reference-store
+  plugin: delta
+  domain: reference
+  table: <root>/reference/issuer/
+  test-data:
+  - data/testdata/core/issuer
+fields:
+- name: ISSUER_ID
+  type: id
+  presence: required
+  description: The record's id (the business key)
+  example: ISS-BUND
+  pattern: ^ISS-
+- name: NAME
+  type: text
+  presence: required
+  description: Name
+  example: Federal Republic of Germany
+- name: RATING
+  type: text
+  presence: required
+  description: Rating
+  example: AAA
+- name: SECTOR
+  type: text
+  presence: required
+  description: Sector
+  example: Sovereign
+- name: COUNTRY
+  type: text
+  presence: required
+  description: Country
+  example: DE
+- name: BONDS
+  type: record list
+  presence: required
+  description: 'Nested: see nested BONDS[]'
+- name: CREDIT_CURVE
+  type: id
+  presence: required
+  description: 'Credit curve: the credit-curve it refers to'
+  example: CDS-BUND
+  pattern: ^CDS-
+  link: credit-curve
+- name: LEI
+  type: text
+  presence: required
+  example: 549300PJ21SGLK7KWI16
+- name: EQUITY
+  type: id
+  presence: optional
+  description: 'Equity: the equity it refers to'
+  example: EQ-CSCA
+  pattern: ^EQ-
+  link: equity
+nested:
+  BONDS[]:
+  - name: ISIN
+    type: text
+    presence: required
+    description: ISIN
+    example: DEBUND064772
+  - name: COUPON
+    type: rate
+    presence: required
+    description: Coupon
+    example: 0.038
+  - name: MATURITY
+    type: date
+    presence: required
+    description: Maturity
+    example: '2031-03-15'
+links:
+- field: CREDIT_CURVE
+  kind: credit-curve
+- field: EQUITY
+  kind: equity
+validation:
+- rule: required
+  fields:
+  - ISSUER_ID
+  - NAME
+  - RATING
+  - SECTOR
+  - COUNTRY
+  - BONDS
+  - CREDIT_CURVE
+  - LEI
+- rule: unique
+  key:
+  - ISSUER_ID
+  per: business_date
+- rule: pattern
+  field: ISSUER_ID
+  pattern: ^ISS-
+- rule: link
+  field: CREDIT_CURVE
+  kind: credit-curve
+- rule: link
+  field: EQUITY
+  kind: equity
+notes:
+- 'Dated by the lake''s business_date partition: `drishti.py lake build` writes each test-data file''s day into it; the documents carry no date
+  field of their own.'
+review:
+- 'required inferred from 100% coverage in 32 documents (16 samples and 16 test-data documents (data/testdata/core/issuer/snapshot-2026-07-08.jsonl.gz,
+  data/testdata/core/issuer/changes-2026-09-30.jsonl.gz)): confirm each required field is mandatory upstream, and each optional one may be empty.'
+- 'source ''counterparty-master'' is the test data''s _meta.source (synthetic): name the production system that delivers it.'
+- 'due time of each business date is not known: state it (for example, by 06:00 New York the next business day).'
+- 'number types decided by the field''s name: BONDS[].COUPON rate: confirm amount, rate or integer.'
+- 'no description in about.yaml or the Sutras for LEI: write them in the pack''s config/about.yaml glossary.'

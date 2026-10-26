@@ -1,0 +1,220 @@
+# Project Drishti · Any data. Any domain. One grammar.
+#
+# Copyright (c) 2026 Ashutosh Sinha <ajsinha@gmail.com>.
+# All rights reserved.
+#
+# PROPRIETARY AND CONFIDENTIAL.
+#
+# This file is the confidential and proprietary property of Ashutosh Sinha.
+# Unauthorised copying, use, modification, distribution or disclosure of this
+# file, via any medium, is strictly prohibited except with the express prior
+# written permission of the copyright holder.
+#
+# See the LICENSE file in the root of this repository for the full terms.
+
+# Data contract of the labour-market kind (command LABR): docs/contracts/README.md section 16.
+# Drafted by `drishti.py contract bootstrap labour-market`; owned by people from then on: confirm the review points, then remove them.
+kind: labour-market
+mnemonic: LABR
+pack: world-economy
+version: '1.0'
+class: fundamental
+status: active
+title: Labour market
+description: Unemployment, participation, youth and female labour, and employment and output by sector.
+source: 'public data: World Bank, World Development Indicators'
+grain: One row per labour market, keyed by LABOUR_ID.
+key:
+- LABOUR_ID
+id-pattern:
+- ^LABR-
+dated-by: snapshot
+cadence:
+  frequency: static
+  due: to be confirmed
+storage:
+  connector: macro-store
+  plugin: delta
+  domain: macro
+  table: <root>/macro/labour-market/
+  test-data:
+  - config/packs/world-economy/samples
+fields:
+- name: LABOUR_ID
+  type: id
+  presence: required
+  description: The record's id (the business key)
+  example: LABR-AFG
+  pattern: ^LABR-
+- name: ECONOMY_NAME
+  type: text
+  presence: required
+  description: The country or territory the figures describe.
+  example: Afghanistan
+- name: YEAR
+  type: text
+  presence: required
+  example: '2025'
+- name: UNEMPLOYMENT
+  type: amount
+  presence: required
+  unit: '% of labour force'
+  description: The share of the labour force without work but available for and seeking employment.
+  example: 13.351
+- name: PARTICIPATION
+  type: amount
+  presence: required
+  unit: '% of population 15+'
+  description: The share of people aged 15 and over who work or look for work.
+  example: 37.457
+- name: YOUTH_UNEMPLOYMENT
+  type: amount
+  presence: required
+  unit: '% of youth labour force'
+  description: The unemployment rate of 15 to 24 year-olds.
+  example: 16.785
+- name: EMPLOYMENT_RATIO
+  type: rate
+  presence: required
+  unit: '% of population 15+'
+  description: The share of people aged 15 and over who are employed.
+  example: 32.457
+- name: FEMALE_PARTICIPATION
+  type: amount
+  presence: required
+  unit: '% of women 15+'
+  description: The labour force participation rate of women aged 15 and over.
+  example: 5.086
+- name: VULNERABLE
+  type: amount
+  presence: required
+  example: 81.7702
+- name: UNEMPLOYMENT_PATH
+  type: record list
+  presence: required
+  description: 'Nested: see nested UNEMPLOYMENT_PATH[]'
+- name: BY_SECTOR
+  type: record list
+  presence: required
+  description: 'Nested: see nested BY_SECTOR[]'
+- name: ECONOMY
+  type: id
+  presence: required
+  description: 'Economy: the economy it refers to'
+  example: ECON-AFG
+  pattern: ^ECON-
+  link: economy
+- name: PROVENANCE
+  type: record
+  presence: required
+  description: 'Nested: see nested PROVENANCE'
+nested:
+  UNEMPLOYMENT_PATH[]:
+  - name: YEAR
+    type: text
+    presence: required
+    description: The calendar year.
+    example: '2015'
+  - name: RATE
+    type: rate
+    presence: required
+    unit: '% of labour force'
+    description: The unemployment rate in that year.
+    example: 9.032
+  BY_SECTOR[]:
+  - name: SECTOR
+    type: text
+    presence: required
+    description: Agriculture, industry or services.
+    example: Agriculture
+    enum:
+    - Agriculture
+    - Industry
+    - Services
+  - name: EMPLOYMENT_SHARE
+    type: rate
+    presence: required
+    unit: '% of employment'
+    description: The sector's share of total employment.
+    example: 51.629
+  - name: VALUE_ADDED_SHARE
+    type: rate
+    presence: optional
+    unit: '% of GDP'
+    description: The sector's share of GDP (value added).
+    example: 34.2931
+  PROVENANCE:
+  - name: SOURCE
+    type: text
+    presence: required
+    description: The organisation or organisations whose published data this view shows.
+    example: World Bank, World Development Indicators
+  - name: DATASET
+    type: text
+    presence: required
+    description: The named dataset and its vintage (the release the numbers come from).
+    example: World Development Indicators (updated 2026-10-08)
+  - name: RETRIEVED_AT
+    type: date
+    presence: required
+    description: The date the data was downloaded by tools/realdata.
+    example: '2026-10-10'
+  - name: LICENCE
+    type: text
+    presence: required
+    description: The terms under which the source allows reuse; attribution is required.
+    example: CC BY 4.0
+  - name: ATTRIBUTION
+    type: text
+    presence: required
+    description: The credit line to repeat when the data is shown or republished.
+    example: 'The World Bank: World Development Indicators (CC BY 4.0).'
+  - name: URL
+    type: text
+    presence: required
+    description: The web page of the dataset.
+    example: https://databank.worldbank.org/source/world-development-ind…
+links:
+- field: ECONOMY
+  kind: economy
+validation:
+- rule: required
+  fields:
+  - LABOUR_ID
+  - ECONOMY_NAME
+  - YEAR
+  - UNEMPLOYMENT
+  - PARTICIPATION
+  - YOUTH_UNEMPLOYMENT
+  - EMPLOYMENT_RATIO
+  - FEMALE_PARTICIPATION
+  - VULNERABLE
+  - UNEMPLOYMENT_PATH
+  - BY_SECTOR
+  - ECONOMY
+  - PROVENANCE
+- rule: unique
+  key:
+  - LABOUR_ID
+  per: snapshot
+- rule: pattern
+  field: LABOUR_ID
+  pattern: ^LABR-
+- rule: link
+  field: ECONOMY
+  kind: economy
+- rule: enum
+  field: BY_SECTOR[].SECTOR
+  values:
+  - Agriculture
+  - Industry
+  - Services
+notes: []
+review:
+- 'required inferred from 100% coverage in 185 documents (185 samples): confirm each required field is mandatory upstream, and each optional one
+  may be empty.'
+- 'key LABOUR_ID is the field holding the sample catalogue''s id (LABR-AFG): confirm it is the business key.'
+- 'a snapshot refreshed when tools/publicdata/world_economy.py runs: confirm the refresh cadence.'
+- 'enum values inferred from the data, not from a glossary: BY_SECTOR[].SECTOR: confirm they are closed lists.'
+- 'no unit stated for the amounts VULNERABLE (docs/contracts/README.md section 7: USD unless stated): confirm the currency.'
+- 'no description in about.yaml or the Sutras for YEAR, VULNERABLE: write them in the pack''s config/about.yaml glossary.'

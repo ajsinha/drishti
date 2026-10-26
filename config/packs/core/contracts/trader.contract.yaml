@@ -1,0 +1,120 @@
+# Project Drishti · Any data. Any domain. One grammar.
+#
+# Copyright (c) 2026 Ashutosh Sinha <ajsinha@gmail.com>.
+# All rights reserved.
+#
+# PROPRIETARY AND CONFIDENTIAL.
+#
+# This file is the confidential and proprietary property of Ashutosh Sinha.
+# Unauthorised copying, use, modification, distribution or disclosure of this
+# file, via any medium, is strictly prohibited except with the express prior
+# written permission of the copyright holder.
+#
+# See the LICENSE file in the root of this repository for the full terms.
+
+# Data contract of the trader kind (command TRDR): docs/contracts/README.md section 16.
+# Drafted by `drishti.py contract bootstrap trader`; owned by people from then on: confirm the review points, then remove them.
+kind: trader
+mnemonic: TRDR
+pack: core
+version: '1.0'
+class: fundamental
+status: active
+title: Trader
+description: A trader and their books.
+source: org-master
+grain: One row per trader per business date, keyed by TRADER_ID.
+key:
+- TRADER_ID
+id-pattern:
+- ^TRDR-
+dated-by: business_date
+cadence:
+  frequency: daily
+  due: to be confirmed
+storage:
+  connector: reference-store
+  plugin: delta
+  domain: reference
+  table: <root>/reference/trader/
+  test-data:
+  - data/testdata/core/trader
+fields:
+- name: TRADER_ID
+  type: id
+  presence: required
+  description: The record's id (the business key)
+  example: TRDR-ASHAH
+  pattern: ^TRDR-
+  link: trader
+- name: NAME
+  type: text
+  presence: required
+  description: Name
+  example: A. Shah
+- name: DESK_NAME
+  type: text
+  presence: required
+  description: Desk
+  example: Rates · Swaps and options
+- name: TRADE_COUNT
+  type: integer
+  presence: required
+  description: Trades
+  example: 76
+- name: BOOKS
+  type: record list
+  presence: required
+  description: 'Nested: see nested BOOKS[]'
+- name: DESK
+  type: id
+  presence: required
+  description: 'Desk: the desk it refers to'
+  example: DESK-RATES
+  pattern: ^DESK-
+  link: desk
+nested:
+  BOOKS[]:
+  - name: ID
+    type: id
+    presence: required
+    description: Book
+    example: BOOK-RATES-1
+links:
+- field: TRADER_ID
+  kind: trader
+- field: DESK
+  kind: desk
+validation:
+- rule: required
+  fields:
+  - TRADER_ID
+  - NAME
+  - DESK_NAME
+  - TRADE_COUNT
+  - BOOKS
+  - DESK
+- rule: unique
+  key:
+  - TRADER_ID
+  per: business_date
+- rule: pattern
+  field: TRADER_ID
+  pattern: ^TRDR-
+- rule: link
+  field: TRADER_ID
+  kind: trader
+- rule: range
+  field: TRADE_COUNT
+  min: 0
+- rule: link
+  field: DESK
+  kind: desk
+notes:
+- 'Dated by the lake''s business_date partition: `drishti.py lake build` writes each test-data file''s day into it; the documents carry no date
+  field of their own.'
+review:
+- 'required inferred from 100% coverage in 40 documents (20 samples and 20 test-data documents (data/testdata/core/trader/snapshot-2026-07-08.jsonl.gz,
+  data/testdata/core/trader/changes-2026-09-30.jsonl.gz)): confirm each required field is mandatory upstream, and each optional one may be empty.'
+- 'source ''org-master'' is the test data''s _meta.source (synthetic): name the production system that delivers it.'
+- 'due time of each business date is not known: state it (for example, by 06:00 New York the next business day).'

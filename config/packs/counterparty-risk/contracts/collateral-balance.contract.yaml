@@ -1,0 +1,179 @@
+# Project Drishti · Any data. Any domain. One grammar.
+#
+# Copyright (c) 2026 Ashutosh Sinha <ajsinha@gmail.com>.
+# All rights reserved.
+#
+# PROPRIETARY AND CONFIDENTIAL.
+#
+# This file is the confidential and proprietary property of Ashutosh Sinha.
+# Unauthorised copying, use, modification, distribution or disclosure of this
+# file, via any medium, is strictly prohibited except with the express prior
+# written permission of the copyright holder.
+#
+# See the LICENSE file in the root of this repository for the full terms.
+
+# Data contract of the collateral-balance kind (command COLL): docs/contracts/README.md section 16.
+# Drafted by `drishti.py contract bootstrap collateral-balance`; owned by people from then on: confirm the review points, then remove them.
+kind: collateral-balance
+mnemonic: COLL
+pack: counterparty-risk
+version: '1.0'
+class: fundamental
+status: active
+title: Collateral balance
+description: Collateral held and posted under a CSA, by asset, after haircuts.
+source: collateral-system
+grain: One row per collateral balance per business date, keyed by BALANCE_ID.
+key:
+- BALANCE_ID
+id-pattern:
+- ^COLL-
+dated-by: business_date
+cadence:
+  frequency: daily
+  due: to be confirmed
+storage:
+  connector: collateral-store
+  plugin: delta
+  domain: collateral
+  table: <root>/collateral/collateral-balance/
+  test-data:
+  - data/testdata/counterparty-risk/collateral-balance
+fields:
+- name: BALANCE_ID
+  type: id
+  presence: required
+  description: The record's id (the business key)
+  example: COLL-ALDERSHOT-FRA
+  pattern: ^COLL-
+- name: HELD
+  type: amount
+  presence: derived
+  unit: USD
+  description: The collateral the bank has received from the counterparty.
+  example: 0
+  retiring-in: 2.10.0
+  note: computed by collateral valuation (COLL) from 2.10.0; removed from the stored record then
+- name: POSTED
+  type: amount
+  presence: derived
+  unit: USD
+  description: The collateral the bank has delivered to the counterparty.
+  example: 229552
+  retiring-in: 2.10.0
+  note: computed by collateral valuation (COLL) from 2.10.0; removed from the stored record then
+- name: NET
+  type: amount
+  presence: derived
+  unit: USD
+  description: Held minus posted.
+  example: -229552
+  retiring-in: 2.10.0
+  note: computed by collateral valuation (COLL) from 2.10.0; removed from the stored record then
+- name: AS_OF
+  type: date
+  presence: required
+  description: As of
+  example: '2026-09-30'
+- name: POSITIONS
+  type: record list
+  presence: required
+  description: 'Nested: see nested POSITIONS[]'
+- name: CSA
+  type: id
+  presence: required
+  description: 'CSA: the csa it refers to'
+  example: CSA-ALDERSHOT
+  pattern: ^CSA-
+  link: csa
+- name: NETTING_SET
+  type: id
+  presence: required
+  description: 'Netting set: the netting-set it refers to'
+  example: NS-ALDERSHOT-FRA
+  pattern: ^NS-
+  link: netting-set
+nested:
+  POSITIONS[]:
+  - name: ASSET
+    type: text
+    presence: required
+    description: The cash or security that is held or posted.
+    example: Solaris Energy Corp. 2031
+  - name: DIRECTION
+    type: text
+    presence: required
+    description: Whether the bank posted the asset or received it.
+    example: Posted
+    enum:
+    - Posted
+    - Received
+    - Held
+  - name: MARKET_VALUE
+    type: amount
+    presence: derived
+    unit: USD
+    description: The current market value of the asset before the haircut.
+    example: 76517
+    retiring-in: 2.10.0
+    note: computed by collateral valuation (COLL) from 2.10.0; removed from the stored record then
+  - name: HAIRCUT
+    type: rate
+    presence: required
+    unit: '% of market value'
+    description: The percentage taken off the market value to allow for the price moving before the asset can be sold. The CSA sets it by asset
+      type and maturity.
+    example: 0.005
+  - name: VALUE
+    type: amount
+    presence: derived
+    unit: USD
+    description: The market value after the haircut, the amount that counts as collateral.
+    example: 76134
+    retiring-in: 2.10.0
+    note: computed by collateral valuation (COLL) from 2.10.0; removed from the stored record then
+links:
+- field: CSA
+  kind: csa
+- field: NETTING_SET
+  kind: netting-set
+validation:
+- rule: required
+  fields:
+  - BALANCE_ID
+  - AS_OF
+  - POSITIONS
+  - CSA
+  - NETTING_SET
+- rule: unique
+  key:
+  - BALANCE_ID
+  per: business_date
+- rule: pattern
+  field: BALANCE_ID
+  pattern: ^COLL-
+- rule: link
+  field: CSA
+  kind: csa
+- rule: link
+  field: NETTING_SET
+  kind: netting-set
+- rule: enum
+  field: POSITIONS[].DIRECTION
+  values:
+  - Posted
+  - Received
+  - Held
+notes:
+- 'Dated by the lake''s business_date partition: `drishti.py lake build` writes each test-data file''s day into it; the documents carry no date
+  field of their own.'
+- 'Terms kept, figures computed from 2.10.0 (docs/contracts/COLL.md): the fields marked derived are computed by collateral valuation (COLL) and
+  leave the stored record then.'
+review:
+- 'required inferred from 100% coverage in 218 documents (66 samples and 152 test-data documents (data/testdata/counterparty-risk/collateral-balance/snapshot-2026-07-08.jsonl.gz,
+  data/testdata/counterparty-risk/collateral-balance/changes-2026-09-30.jsonl.gz)): confirm each required field is mandatory upstream, and each
+  optional one may be empty.'
+- 'source ''collateral-system'' is the test data''s _meta.source (synthetic): name the production system that delivers it.'
+- 'due time of each business date is not known: state it (for example, by 06:00 New York the next business day).'
+- 'POSITIONS[].DIRECTION: the data holds Held, which the glossary''s values (Posted, Received) do not describe: correct the data or the glossary.'
+- 'POSITIONS[].HAIRCUT is a CSA term: confirm it is kept on the holding or read from the CSA.'

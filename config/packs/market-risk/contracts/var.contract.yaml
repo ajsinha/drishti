@@ -1,0 +1,187 @@
+# Project Drishti · Any data. Any domain. One grammar.
+#
+# Copyright (c) 2026 Ashutosh Sinha <ajsinha@gmail.com>.
+# All rights reserved.
+#
+# PROPRIETARY AND CONFIDENTIAL.
+#
+# This file is the confidential and proprietary property of Ashutosh Sinha.
+# Unauthorised copying, use, modification, distribution or disclosure of this
+# file, via any medium, is strictly prohibited except with the express prior
+# written permission of the copyright holder.
+#
+# See the LICENSE file in the root of this repository for the full terms.
+
+# Data contract of the var kind (command VAR): docs/contracts/README.md section 16.
+# Drafted by `drishti.py contract bootstrap var`; owned by people from then on: confirm the review points, then remove them.
+kind: var
+mnemonic: VAR
+pack: market-risk
+version: '1.0'
+class: computed
+status: retiring
+retiring-in: 2.8.0
+replaced-by: docs/contracts/VAR.md
+title: VaR / expected shortfall
+description: Historical VaR and ES for a desk or portfolio, with backtesting.
+source: var-engine
+grain: One row per var / expected shortfall per business date, keyed by RESULT_ID.
+key:
+- RESULT_ID
+id-pattern:
+- ^VAR-
+dated-by: business_date
+cadence:
+  frequency: daily
+  due: to be confirmed
+storage:
+  connector: risk-store
+  plugin: delta
+  domain: risk
+  table: <root>/risk/var/
+  test-data:
+  - data/testdata/market-risk/var
+fields:
+- name: RESULT_ID
+  type: id
+  presence: required
+  description: The record's id (the business key)
+  example: VAR-COMM
+  pattern: ^VAR-
+- name: VAR_99
+  type: amount
+  presence: derived
+  unit: USD
+  description: The loss the portfolio is expected not to exceed on 99 of 100 trading days, read from the 1st percentile of the revalued scenario
+    P&L (historical simulation).
+  example: 10946782
+  note: computed by the VaR engine; removed when retired
+- name: ES_975
+  type: amount
+  presence: derived
+  unit: USD
+  description: The average loss on the worst 2.5% of scenario days. It looks into the tail that VaR ignores, and it is the measure the FRTB internal-models
+    approach uses for capital.
+  example: 12369864
+  note: computed by the VaR engine; removed when retired
+- name: SVAR
+  type: integer
+  presence: derived
+  unit: USD
+  description: VaR calculated with the same model but over a 12-month period of significant stress for the portfolio, instead of the recent past.
+    It feeds the market-risk capital requirement (Basel 2.5).
+  example: 20798886
+  note: computed by the VaR engine; removed when retired
+- name: LIMIT
+  type: amount
+  presence: required
+  unit: USD
+  description: The VaR the desk is approved to run. VaR above it is a limit breach.
+  example: 18920000.0
+- name: EXCEPTIONS
+  type: integer
+  presence: derived
+  unit: days
+  description: The days in the last 250 on which the day's loss was larger than the 99% VaR. Basel's traffic lights count them to judge the model.
+  example: 1
+  note: computed by the VaR engine; removed when retired
+- name: SCENARIO_PNL
+  type: vector
+  presence: derived
+  unit: USD
+  description: The portfolio revalued under each of the 500 historical scenario days; the 1st percentile of this distribution is the VaR.
+  note: computed by the VaR engine; removed when retired; 500 values in the test data
+- name: MEAN_PNL
+  type: amount
+  presence: derived
+  example: -49767
+  note: computed by the VaR engine; removed when retired
+- name: PNL_SERIES
+  type: record list
+  presence: derived
+  description: 'Nested: see nested PNL_SERIES[]'
+  note: computed by the VaR engine; removed when retired
+- name: CONTRIBUTIONS
+  type: record list
+  presence: derived
+  description: 'Nested: see nested CONTRIBUTIONS[]'
+  note: computed by the VaR engine; removed when retired
+- name: DESK
+  type: id
+  presence: required
+  description: 'Desk: the desk it refers to'
+  example: DESK-COMM
+  pattern: ^DESK-
+  link: desk
+- name: METHOD
+  type: text
+  presence: required
+  example: Historical simulation, 1-day, 99%, 500 scenarios
+nested:
+  PNL_SERIES[]:
+  - name: DATE
+    type: date
+    presence: required
+    example: '2026-07-08'
+  - name: PNL
+    type: amount
+    presence: required
+    example: -3990631
+  CONTRIBUTIONS[]:
+  - name: BOOK
+    type: id
+    presence: required
+    description: 'Book: the book it refers to'
+    example: BOOK-COMM-1
+    pattern: ^BOOK-
+    link: book
+  - name: VAR
+    type: amount
+    presence: required
+    unit: USD
+    description: The VaR of one book on its own. Books diversify against each other, so the contributions need not add up to the desk's VaR.
+    example: 7220978
+links:
+- field: DESK
+  kind: desk
+- field: CONTRIBUTIONS[].BOOK
+  kind: book
+validation:
+- rule: required
+  fields:
+  - RESULT_ID
+  - LIMIT
+  - DESK
+  - METHOD
+- rule: unique
+  key:
+  - RESULT_ID
+  per: business_date
+- rule: pattern
+  field: RESULT_ID
+  pattern: ^VAR-
+- rule: vector-length
+  field: SCENARIO_PNL
+  same: every row of one business date
+- rule: link
+  field: DESK
+  kind: desk
+- rule: link
+  field: CONTRIBUTIONS[].BOOK
+  kind: book
+notes:
+- 'Dated by the lake''s business_date partition: `drishti.py lake build` writes each test-data file''s day into it; the documents carry no date
+  field of their own.'
+- 'Retiring in 2.8.0: the stored kind is removed and computed instead by the VaR engine (docs/contracts/VAR.md); old ids and links open the computed
+  page.'
+review:
+- 'required inferred from 100% coverage in 20 documents (10 samples and 10 test-data documents (data/testdata/market-risk/var/snapshot-2026-07-08.jsonl.gz,
+  data/testdata/market-risk/var/changes-2026-09-30.jsonl.gz)): confirm each required field is mandatory upstream, and each optional one may be
+  empty.'
+- 'source ''var-engine'' is the test data''s _meta.source (synthetic): name the production system that delivers it.'
+- 'due time of each business date is not known: state it (for example, by 06:00 New York the next business day).'
+- 'number types decided by the field''s name: MEAN_PNL amount, PNL_SERIES[].PNL amount: confirm amount, rate or integer.'
+- 'no unit stated for the amounts MEAN_PNL, PNL_SERIES[].PNL (docs/contracts/README.md section 7: USD unless stated): confirm the currency.'
+- 'no description in about.yaml or the Sutras for MEAN_PNL, METHOD, PNL_SERIES[].DATE, PNL_SERIES[].PNL: write them in the pack''s config/about.yaml
+  glossary.'
+- 'LIMIT is a term (the desk''s VaR limit), not a figure: confirm it moves to the risk hierarchy (HIER LIMIT_VAR) when VAR is retired.'

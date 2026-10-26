@@ -1,0 +1,177 @@
+# Project Drishti · Any data. Any domain. One grammar.
+#
+# Copyright (c) 2026 Ashutosh Sinha <ajsinha@gmail.com>.
+# All rights reserved.
+#
+# PROPRIETARY AND CONFIDENTIAL.
+#
+# This file is the confidential and proprietary property of Ashutosh Sinha.
+# Unauthorised copying, use, modification, distribution or disclosure of this
+# file, via any medium, is strictly prohibited except with the express prior
+# written permission of the copyright holder.
+#
+# See the LICENSE file in the root of this repository for the full terms.
+
+# Data contract of the agreement kind (command AGR): docs/contracts/README.md section 16.
+# Drafted by `drishti.py contract bootstrap agreement`; owned by people from then on: confirm the review points, then remove them.
+kind: agreement
+mnemonic: AGR
+pack: counterparty-risk
+version: '1.0'
+class: fundamental
+status: active
+title: Master agreement
+description: ISDA, GMRA or GMSLA master agreement with its key elections.
+source: legal-docs
+grain: One row per master agreement per business date, keyed by AGREEMENT_ID.
+key:
+- AGREEMENT_ID
+id-pattern:
+- ^AGR-
+dated-by: business_date
+cadence:
+  frequency: daily
+  due: to be confirmed
+storage:
+  connector: legal-store
+  plugin: delta
+  domain: legal
+  table: <root>/legal/agreement/
+  test-data:
+  - data/testdata/counterparty-risk/agreement
+fields:
+- name: AGREEMENT_ID
+  type: id
+  presence: required
+  description: The record's id (the business key)
+  example: AGR-ALDERSHOT-ISDA
+  pattern: ^AGR-
+- name: TYPE
+  type: text
+  presence: required
+  description: The master agreement form, for example the ISDA 2002 Master Agreement.
+  example: ISDA 2002 Master
+- name: COUNTERPARTY_NAME
+  type: text
+  presence: required
+  description: The legal entity that signed the agreement with the bank.
+  example: Aldershot Pension Trust
+- name: GOVERNING_LAW
+  type: text
+  presence: required
+  description: The law the agreement is read under, which decides how close-out netting is enforced.
+  example: English
+  enum:
+  - English
+  - New York
+- name: SIGNED
+  type: date
+  presence: required
+  description: The date the agreement was signed.
+  example: '2015-12-10'
+- name: CLOSE_OUT_NETTING
+  type: text
+  presence: required
+  description: Whether a legal opinion confirms that on default the trades net to one amount; only then may exposure be netted.
+  example: Enforceable
+- name: ELECTIONS
+  type: record
+  presence: required
+  description: 'Elections: the election it refers to'
+  link: election
+- name: COUNTERPARTY
+  type: id
+  presence: required
+  description: 'Counterparty: the counterparty it refers to'
+  example: CP-ALDERSHOT
+  pattern: ^CP-
+  link: counterparty
+- name: CSA
+  type: id
+  presence: required
+  description: 'CSA: the csa it refers to'
+  example: CSA-ALDERSHOT
+  pattern: ^CSA-
+  link: csa
+nested:
+  ELECTIONS:
+  - name: AUTOMATIC_EARLY_TERMINATION
+    type: boolean
+    presence: required
+    description: Whether the trades end by themselves on certain defaults, without a notice.
+    example: false
+  - name: CROSS_DEFAULT
+    type: text
+    presence: required
+    description: The threshold above which a default on other debt is a default under this agreement.
+    example: 3% of shareholders' equity
+  - name: SET_OFF
+    type: boolean
+    presence: required
+    description: Whether amounts owed under other contracts may be set off against the close-out amount.
+    example: true
+  - name: TERMINATION_CURRENCY
+    type: text
+    presence: required
+    description: The currency the close-out amount is paid in.
+    example: USD
+  - name: ADDITIONAL_TERMINATION_EVENTS
+    type: text
+    presence: required
+    description: Further events, such as a downgrade, that let a party end the trades.
+    example: Rating downgrade below BBB-
+  - name: PROTOCOLS
+    type: text
+    presence: required
+    description: The ISDA protocols both parties adhered to, which amend the agreement.
+    example: ISDA 2020 IBOR Fallbacks; 2018 US Resolution Stay
+links:
+- field: ELECTIONS
+  kind: election
+- field: COUNTERPARTY
+  kind: counterparty
+- field: CSA
+  kind: csa
+validation:
+- rule: required
+  fields:
+  - AGREEMENT_ID
+  - TYPE
+  - COUNTERPARTY_NAME
+  - GOVERNING_LAW
+  - SIGNED
+  - CLOSE_OUT_NETTING
+  - ELECTIONS
+  - COUNTERPARTY
+  - CSA
+- rule: unique
+  key:
+  - AGREEMENT_ID
+  per: business_date
+- rule: pattern
+  field: AGREEMENT_ID
+  pattern: ^AGR-
+- rule: enum
+  field: GOVERNING_LAW
+  values:
+  - English
+  - New York
+- rule: link
+  field: ELECTIONS
+  kind: election
+- rule: link
+  field: COUNTERPARTY
+  kind: counterparty
+- rule: link
+  field: CSA
+  kind: csa
+notes:
+- 'Dated by the lake''s business_date partition: `drishti.py lake build` writes each test-data file''s day into it; the documents carry no date
+  field of their own.'
+review:
+- 'required inferred from 100% coverage in 42 documents (18 samples and 24 test-data documents (data/testdata/counterparty-risk/agreement/snapshot-2026-07-08.jsonl.gz,
+  data/testdata/counterparty-risk/agreement/changes-2026-09-30.jsonl.gz)): confirm each required field is mandatory upstream, and each optional
+  one may be empty.'
+- 'source ''legal-docs'' is the test data''s _meta.source (synthetic): name the production system that delivers it.'
+- 'due time of each business date is not known: state it (for example, by 06:00 New York the next business day).'
+- 'enum values inferred from the data, not from a glossary: GOVERNING_LAW: confirm they are closed lists.'

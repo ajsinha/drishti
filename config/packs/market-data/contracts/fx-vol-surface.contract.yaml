@@ -1,0 +1,176 @@
+# Project Drishti · Any data. Any domain. One grammar.
+#
+# Copyright (c) 2026 Ashutosh Sinha <ajsinha@gmail.com>.
+# All rights reserved.
+#
+# PROPRIETARY AND CONFIDENTIAL.
+#
+# This file is the confidential and proprietary property of Ashutosh Sinha.
+# Unauthorised copying, use, modification, distribution or disclosure of this
+# file, via any medium, is strictly prohibited except with the express prior
+# written permission of the copyright holder.
+#
+# See the LICENSE file in the root of this repository for the full terms.
+
+# Data contract of the fx-vol-surface kind (command FXV): docs/contracts/README.md section 16.
+# Drafted by `drishti.py contract bootstrap fx-vol-surface`; owned by people from then on: confirm the review points, then remove them.
+kind: fx-vol-surface
+mnemonic: FXV
+pack: market-data
+version: '1.0'
+class: fundamental
+status: active
+title: FX volatility surface
+description: Implied vols by expiry and delta (ATM, 25D RR/BF).
+source: md-hub
+grain: One row per fx volatility surface per business date, keyed by SURFACE_ID.
+key:
+- SURFACE_ID
+id-pattern:
+- ^FXV-
+dated-by: business_date
+cadence:
+  frequency: daily
+  due: to be confirmed
+storage:
+  connector: market-store
+  plugin: delta
+  domain: market
+  table: <root>/market/fx-vol-surface/
+  test-data:
+  - data/testdata/market-data/fx-vol-surface
+fields:
+- name: SURFACE_ID
+  type: id
+  presence: required
+  description: The record's id (the business key)
+  example: FXV-AUDUSD
+  pattern: ^FXV-
+- name: PAIR
+  type: text
+  presence: required
+  description: Pair
+  example: AUDUSD
+- name: ATM_1M
+  type: amount
+  presence: required
+  description: 1M ATM
+  example: 9.17
+- name: ATM_1Y
+  type: amount
+  presence: required
+  description: 1Y ATM
+  example: 9.9
+- name: RR_1Y
+  type: amount
+  presence: required
+  description: 1Y 25D RR
+  example: -0.46
+- name: GRID
+  type: record list
+  presence: required
+  description: 'Nested: see nested GRID[]'
+- name: MODEL
+  type: text
+  presence: required
+  example: Vanna-volga smile, delta-quoted
+- name: FX_SPOT
+  type: id
+  presence: required
+  description: 'Fx spot: the fx-spot it refers to'
+  example: FX-AUDUSD
+  pattern: ^FX-
+  link: fx-spot
+nested:
+  GRID[]:
+  - name: EXPIRY
+    type: text
+    presence: required
+    description: Expiry
+    example: 1M
+    enum:
+    - 1M
+    - 1Y
+    - 2Y
+    - 3M
+    - 5Y
+    - 6M
+  - name: P_10
+    type: amount
+    presence: required
+    description: 10D P
+    example: 10.04
+  - name: P_25
+    type: amount
+    presence: required
+    description: 25D P
+    example: 9.6
+  - name: ATM
+    type: amount
+    presence: required
+    description: ATM
+    example: 9.17
+  - name: C_25
+    type: amount
+    presence: required
+    description: 25D C
+    example: 9.24
+  - name: C_10
+    type: amount
+    presence: required
+    description: 10D C
+    example: 9.4
+  - name: RR_25
+    type: amount
+    presence: required
+    example: -0.36
+  - name: BF_25
+    type: amount
+    presence: required
+    example: 0.25
+links:
+- field: FX_SPOT
+  kind: fx-spot
+validation:
+- rule: required
+  fields:
+  - SURFACE_ID
+  - PAIR
+  - ATM_1M
+  - ATM_1Y
+  - RR_1Y
+  - GRID
+  - MODEL
+  - FX_SPOT
+- rule: unique
+  key:
+  - SURFACE_ID
+  per: business_date
+- rule: pattern
+  field: SURFACE_ID
+  pattern: ^FXV-
+- rule: link
+  field: FX_SPOT
+  kind: fx-spot
+- rule: enum
+  field: GRID[].EXPIRY
+  values:
+  - 1M
+  - 1Y
+  - 2Y
+  - 3M
+  - 5Y
+  - 6M
+notes:
+- 'Dated by the lake''s business_date partition: `drishti.py lake build` writes each test-data file''s day into it; the documents carry no date
+  field of their own.'
+review:
+- 'required inferred from 100% coverage in 24 documents (12 samples and 12 test-data documents (data/testdata/market-data/fx-vol-surface/snapshot-2026-07-08.jsonl.gz,
+  data/testdata/market-data/fx-vol-surface/changes-2026-09-30.jsonl.gz)): confirm each required field is mandatory upstream, and each optional
+  one may be empty.'
+- 'source ''md-hub'' is the test data''s _meta.source (synthetic): name the production system that delivers it.'
+- 'due time of each business date is not known: state it (for example, by 06:00 New York the next business day).'
+- 'enum values inferred from the data, not from a glossary: GRID[].EXPIRY: confirm they are closed lists.'
+- 'no unit stated for the amounts ATM_1M, ATM_1Y, RR_1Y, GRID[].P_10, GRID[].P_25, GRID[].ATM, GRID[].C_25, GRID[].C_10, GRID[].RR_25, GRID[].BF_25
+  (docs/contracts/README.md section 7: USD unless stated): confirm the currency.'
+- 'no description in about.yaml or the Sutras for MODEL, GRID[].RR_25, GRID[].BF_25: write them in the pack''s config/about.yaml glossary.'

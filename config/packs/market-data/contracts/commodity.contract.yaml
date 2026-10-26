@@ -1,0 +1,306 @@
+# Project Drishti · Any data. Any domain. One grammar.
+#
+# Copyright (c) 2026 Ashutosh Sinha <ajsinha@gmail.com>.
+# All rights reserved.
+#
+# PROPRIETARY AND CONFIDENTIAL.
+#
+# This file is the confidential and proprietary property of Ashutosh Sinha.
+# Unauthorised copying, use, modification, distribution or disclosure of this
+# file, via any medium, is strictly prohibited except with the express prior
+# written permission of the copyright holder.
+#
+# See the LICENSE file in the root of this repository for the full terms.
+
+# Data contract of the commodity kind (command CMD): docs/contracts/README.md section 16.
+# Drafted by `drishti.py contract bootstrap commodity`; owned by people from then on: confirm the review points, then remove them.
+kind: commodity
+mnemonic: CMD
+pack: market-data
+version: '1.0'
+class: fundamental
+status: active
+title: Commodity
+description: A traded commodity with its benchmark, unit and venue.
+source: md-hub
+grain: One row per commodity per business date, keyed by COMMODITY_ID.
+key:
+- COMMODITY_ID
+id-pattern:
+- ^CMD-
+dated-by: business_date
+cadence:
+  frequency: daily
+  due: to be confirmed
+storage:
+  connector: market-store
+  plugin: delta
+  domain: market
+  table: <root>/market/commodity/
+  test-data:
+  - data/testdata/market-data/commodity
+fields:
+- name: COMMODITY_ID
+  type: id
+  presence: required
+  description: The record's id (the business key)
+  example: CMD-BRENT
+  pattern: ^CMD-
+- name: NAME
+  type: text
+  presence: required
+  description: Name
+  example: Brent crude oil
+  enum:
+  - Brent crude oil
+  - Copper
+  - Corn
+  - Gold
+  - Henry Hub natural gas
+  - Silver
+  - Soybeans
+  - WTI crude oil
+- name: FRONT
+  type: amount
+  presence: required
+  description: Front month
+  example: 74.6
+- name: UNIT
+  type: text
+  presence: required
+  description: Unit
+  example: USD/bbl
+  enum:
+  - USD/MMBtu
+  - USD/bbl
+  - USD/lb
+  - USD/oz
+  - USc/bu
+- name: EXCHANGE
+  type: text
+  presence: required
+  description: Exchange
+  example: ICE
+  enum:
+  - CBOT
+  - COMEX
+  - ICE
+  - NYMEX
+- name: SECTOR
+  type: text
+  presence: required
+  description: Sector
+  example: Energy
+  enum:
+  - Agriculture
+  - Energy
+  - Metals
+- name: OHLC
+  type: record list
+  presence: required
+  description: 'Nested: see nested OHLC[]'
+- name: SPEC
+  type: record
+  presence: required
+  description: 'Nested: see nested SPEC'
+- name: COMMODITY_CURVE
+  type: id
+  presence: required
+  description: 'Commodity curve: the commodity-curve it refers to'
+  example: CMDC-BRENT
+  pattern: ^CMDC-
+  link: commodity-curve
+- name: COMMODITY_VOL_SURFACE
+  type: id
+  presence: required
+  description: 'Commodity vol surface: the commodity-vol-surface it refers to'
+  example: CMDV-BRENT
+  pattern: ^CMDV-
+  link: commodity-vol-surface
+nested:
+  OHLC[]:
+  - name: DATE
+    type: date
+    presence: required
+    example: '2026-07-08'
+  - name: OPEN
+    type: amount
+    presence: required
+    example: 78.82
+  - name: HIGH
+    type: amount
+    presence: required
+    example: 81.67
+  - name: LOW
+    type: amount
+    presence: required
+    example: 77.95
+  - name: CLOSE
+    type: amount
+    presence: required
+    example: 79.99
+  - name: VOLUME
+    type: integer
+    presence: required
+    example: 393381
+  SPEC:
+  - name: CONTRACT
+    type: text
+    presence: required
+    example: BRENT
+    enum:
+    - BRENT
+    - COPPER
+    - CORN
+    - GOLD
+    - NG
+    - SILVER
+    - SOY
+    - WTI
+  - name: UNIT
+    type: text
+    presence: required
+    example: USD/bbl
+    enum:
+    - USD/MMBtu
+    - USD/bbl
+    - USD/lb
+    - USD/oz
+    - USc/bu
+  - name: EXCHANGE
+    type: text
+    presence: required
+    example: ICE
+    enum:
+    - CBOT
+    - COMEX
+    - ICE
+    - NYMEX
+  - name: SETTLEMENT
+    type: text
+    presence: required
+    example: Physical
+    enum:
+    - Physical
+    - Physical (vault)
+  - name: LISTING
+    type: text
+    presence: required
+    example: Monthly
+  - name: TICK_SIZE
+    type: amount
+    presence: required
+    example: 0.01
+  - name: TRADING_HOURS
+    type: text
+    presence: required
+    example: Sun-Fri 18:00-17:00 ET
+links:
+- field: COMMODITY_CURVE
+  kind: commodity-curve
+- field: COMMODITY_VOL_SURFACE
+  kind: commodity-vol-surface
+validation:
+- rule: required
+  fields:
+  - COMMODITY_ID
+  - NAME
+  - FRONT
+  - UNIT
+  - EXCHANGE
+  - SECTOR
+  - OHLC
+  - SPEC
+  - COMMODITY_CURVE
+  - COMMODITY_VOL_SURFACE
+- rule: unique
+  key:
+  - COMMODITY_ID
+  per: business_date
+- rule: pattern
+  field: COMMODITY_ID
+  pattern: ^CMD-
+- rule: enum
+  field: NAME
+  values:
+  - Brent crude oil
+  - Copper
+  - Corn
+  - Gold
+  - Henry Hub natural gas
+  - Silver
+  - Soybeans
+  - WTI crude oil
+- rule: enum
+  field: UNIT
+  values:
+  - USD/MMBtu
+  - USD/bbl
+  - USD/lb
+  - USD/oz
+  - USc/bu
+- rule: enum
+  field: EXCHANGE
+  values:
+  - CBOT
+  - COMEX
+  - ICE
+  - NYMEX
+- rule: enum
+  field: SECTOR
+  values:
+  - Agriculture
+  - Energy
+  - Metals
+- rule: link
+  field: COMMODITY_CURVE
+  kind: commodity-curve
+- rule: link
+  field: COMMODITY_VOL_SURFACE
+  kind: commodity-vol-surface
+- rule: enum
+  field: SPEC.CONTRACT
+  values:
+  - BRENT
+  - COPPER
+  - CORN
+  - GOLD
+  - NG
+  - SILVER
+  - SOY
+  - WTI
+- rule: enum
+  field: SPEC.UNIT
+  values:
+  - USD/MMBtu
+  - USD/bbl
+  - USD/lb
+  - USD/oz
+  - USc/bu
+- rule: enum
+  field: SPEC.EXCHANGE
+  values:
+  - CBOT
+  - COMEX
+  - ICE
+  - NYMEX
+- rule: enum
+  field: SPEC.SETTLEMENT
+  values:
+  - Physical
+  - Physical (vault)
+notes:
+- 'Dated by the lake''s business_date partition: `drishti.py lake build` writes each test-data file''s day into it; the documents carry no date
+  field of their own.'
+review:
+- 'required inferred from 100% coverage in 24 documents (8 samples and 16 test-data documents (data/testdata/market-data/commodity/snapshot-2026-07-08.jsonl.gz,
+  data/testdata/market-data/commodity/changes-2026-09-30.jsonl.gz)): confirm each required field is mandatory upstream, and each optional one
+  may be empty.'
+- 'source ''md-hub'' is the test data''s _meta.source (synthetic): name the production system that delivers it.'
+- 'due time of each business date is not known: state it (for example, by 06:00 New York the next business day).'
+- 'enum values inferred from the data, not from a glossary: NAME, UNIT, EXCHANGE, SECTOR, SPEC.CONTRACT, SPEC.UNIT, SPEC.EXCHANGE, SPEC.SETTLEMENT:
+  confirm they are closed lists.'
+- 'no unit stated for the amounts FRONT, OHLC[].OPEN, OHLC[].HIGH, OHLC[].LOW, OHLC[].CLOSE, SPEC.TICK_SIZE (docs/contracts/README.md section
+  7: USD unless stated): confirm the currency.'
+- 'no description in about.yaml or the Sutras for OHLC[].DATE, OHLC[].OPEN, OHLC[].HIGH, OHLC[].LOW, OHLC[].CLOSE, OHLC[].VOLUME, SPEC.CONTRACT,
+  SPEC.UNIT, SPEC.EXCHANGE, SPEC.SETTLEMENT, SPEC.LISTING, SPEC.TICK_SIZE and 1 more: write them in the pack''s config/about.yaml glossary.'

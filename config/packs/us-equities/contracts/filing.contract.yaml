@@ -1,0 +1,155 @@
+# Project Drishti · Any data. Any domain. One grammar.
+#
+# Copyright (c) 2026 Ashutosh Sinha <ajsinha@gmail.com>.
+# All rights reserved.
+#
+# PROPRIETARY AND CONFIDENTIAL.
+#
+# This file is the confidential and proprietary property of Ashutosh Sinha.
+# Unauthorised copying, use, modification, distribution or disclosure of this
+# file, via any medium, is strictly prohibited except with the express prior
+# written permission of the copyright holder.
+#
+# See the LICENSE file in the root of this repository for the full terms.
+
+# Data contract of the filing kind (command FILING): docs/contracts/README.md section 16.
+# Drafted by `drishti.py contract bootstrap filing`; owned by people from then on: confirm the review points, then remove them.
+kind: filing
+mnemonic: FILING
+pack: us-equities
+version: '1.0'
+class: fundamental
+status: active
+title: SEC filing
+description: 'One SEC filing: its company, form, dates, 8-K items and its links on EDGAR (metadata only; the document stays on sec.gov).'
+source: 'public data: SEC EDGAR, Nasdaq Trader, GLEIF and Wikidata (tools/publicdata/us_equities.py)'
+grain: One row per sec filing, keyed by ACCESSION.
+key:
+- ACCESSION
+id-pattern:
+- ^[0-9]{10}-[0-9]{2}-[0-9]{6}$
+dated-by: snapshot
+cadence:
+  frequency: static
+  due: to be confirmed
+storage:
+  connector: us-equities-store
+  plugin: delta
+  domain: us-equities
+  table: <root>/us-equities/filing/
+  columns:
+  - ACCESSION
+  - COMPANY
+  - COMPANY_NAME
+  - FORM
+  - FILED
+  - REPORT_DATE
+  test-data:
+  - data/testdata/us-equities/filing
+fields:
+- name: ACCESSION
+  type: id
+  presence: required
+  description: The record's id (the business key)
+  example: 0001104659-26-117587
+  pattern: ^[0-9]{10}-[0-9]{2}-[0-9]{6}$
+- name: COMPANY
+  type: id
+  presence: required
+  description: Company
+  example: ABT
+  link: us-company
+- name: COMPANY_NAME
+  type: text
+  presence: required
+  example: Abbott Laboratories
+- name: FORM
+  type: text
+  presence: required
+  description: Form
+  example: 8-K
+- name: FORM_NAME
+  type: text
+  presence: required
+  description: What it is
+  example: Current report
+- name: FILED
+  type: date
+  presence: required
+  description: Filed
+  example: '2026-10-21'
+- name: REPORT_DATE
+  type: date
+  presence: optional
+  description: Report date
+  example: '2026-10-21'
+- name: PRIMARY_DOCUMENT
+  type: text
+  presence: required
+  example: tm2627971d1_8k.htm
+- name: DOCUMENT_DESCRIPTION
+  type: text
+  presence: required
+  example: FORM 8-K
+- name: SIZE_KB
+  type: integer
+  presence: required
+  example: 278
+- name: ITEMS
+  type: record list
+  presence: required
+  description: 'Nested: see nested ITEMS[]'
+- name: ITEMS_TEXT
+  type: text
+  presence: optional
+  example: 8.01, 9.01
+- name: PATH
+  type: text
+  presence: required
+  example: 1800/000110465926117587
+nested:
+  ITEMS[]:
+  - name: ITEM
+    type: text
+    presence: required
+    description: Item
+    example: '8.01'
+  - name: DESCRIPTION
+    type: text
+    presence: required
+    description: What it reports
+    example: Other events
+links:
+- field: COMPANY
+  kind: us-company
+validation:
+- rule: required
+  fields:
+  - ACCESSION
+  - COMPANY
+  - COMPANY_NAME
+  - FORM
+  - FORM_NAME
+  - FILED
+  - PRIMARY_DOCUMENT
+  - DOCUMENT_DESCRIPTION
+  - SIZE_KB
+  - ITEMS
+  - PATH
+- rule: unique
+  key:
+  - ACCESSION
+  per: snapshot
+- rule: pattern
+  field: ACCESSION
+  pattern: ^[0-9]{10}-[0-9]{2}-[0-9]{6}$
+- rule: link
+  field: COMPANY
+  kind: us-company
+notes: []
+review:
+- 'required inferred from 100% coverage in 2002 documents (2 samples and 2000 test-data documents (data/testdata/us-equities/filing/snapshot-2026-10-24.jsonl.gz)):
+  confirm each required field is mandatory upstream, and each optional one may be empty.'
+- 'a snapshot refreshed when tools/publicdata/us_equities.py runs: confirm the refresh cadence.'
+- 'no description in about.yaml or the Sutras for COMPANY_NAME, PRIMARY_DOCUMENT, DOCUMENT_DESCRIPTION, SIZE_KB, ITEMS_TEXT, PATH: write them
+  in the pack''s config/about.yaml glossary.'

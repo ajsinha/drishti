@@ -1,0 +1,212 @@
+# Project Drishti · Any data. Any domain. One grammar.
+#
+# Copyright (c) 2026 Ashutosh Sinha <ajsinha@gmail.com>.
+# All rights reserved.
+#
+# PROPRIETARY AND CONFIDENTIAL.
+#
+# This file is the confidential and proprietary property of Ashutosh Sinha.
+# Unauthorised copying, use, modification, distribution or disclosure of this
+# file, via any medium, is strictly prohibited except with the express prior
+# written permission of the copyright holder.
+#
+# See the LICENSE file in the root of this repository for the full terms.
+
+# Data contract of the lei-relationship kind (command LEIR): docs/contracts/README.md section 16.
+# Drafted by `drishti.py contract bootstrap lei-relationship`; owned by people from then on: confirm the review points, then remove them.
+kind: lei-relationship
+mnemonic: LEIR
+pack: gleif
+version: '1.0'
+class: fundamental
+status: active
+title: LEI parent relationship
+description: 'One consolidation relationship from GLEIF''s level 2 data: the child, its direct or ultimate parent, status and periods.'
+source: 'public data: GLEIF LEI records, relationship records and mapping files (tools/publicdata/gleif.py)'
+grain: One row per lei parent relationship, keyed by RELATIONSHIP_ID.
+key:
+- RELATIONSHIP_ID
+id-pattern:
+- ^LEIREL-
+dated-by: snapshot
+cadence:
+  frequency: static
+  due: to be confirmed
+storage:
+  connector: gleif-store
+  plugin: delta
+  domain: gleif
+  table: <root>/gleif/lei-relationship/
+  columns:
+  - RELATIONSHIP_ID
+  - LEVEL
+  - CHILD_ENTITY
+  - PARENT_ENTITY
+  - RELATIONSHIP_STATUS
+  test-data:
+  - data/testdata/gleif/lei-relationship
+fields:
+- name: RELATIONSHIP_ID
+  type: id
+  presence: required
+  description: The record's id (the business key)
+  example: LEIREL-010PWNH4K3BLIC3I7R03-DIRECT
+  pattern: ^LEIREL-
+- name: LEVEL
+  type: text
+  presence: required
+  example: Direct
+  enum:
+  - Direct
+  - Ultimate
+- name: CHILD_ENTITY
+  type: id
+  presence: required
+  description: 'Child: the lei-entity it refers to'
+  example: 010PWNH4K3BLIC3I7R03
+  pattern: ^[0-9A-Z]{18}[0-9]{2}$
+  link: lei-entity
+- name: PARENT_ENTITY
+  type: id
+  presence: required
+  description: 'Parent: the lei-entity it refers to'
+  example: 549300COKYB5EGSU1838
+  pattern: ^[0-9A-Z]{18}[0-9]{2}$
+  link: lei-entity
+- name: RELATIONSHIP_STATUS
+  type: text
+  presence: required
+  description: Status
+  example: ACTIVE
+- name: START
+  type: date
+  presence: required
+  description: Since
+  example: '2017-12-06'
+- name: PERIODS
+  type: record list
+  presence: required
+  description: 'Nested: see nested PERIODS[]'
+- name: REGISTRATION_STATUS
+  type: text
+  presence: required
+  example: LAPSED
+  enum:
+  - LAPSED
+  - PUBLISHED
+- name: INITIAL_REGISTRATION
+  type: date
+  presence: required
+  description: First registered
+  example: '2023-08-08'
+- name: LAST_UPDATE
+  type: date
+  presence: required
+  description: Last updated
+  example: '2024-10-07'
+- name: NEXT_RENEWAL
+  type: date
+  presence: required
+  description: Next renewal
+  example: '2024-10-07'
+- name: LEI_GROUP
+  type: id
+  presence: required
+  description: 'Ownership group: the lei-group it refers to'
+  example: 549300B2Q47IR0CR5B54
+  link: lei-group
+- name: ACCOUNTING_STANDARD
+  type: text
+  presence: optional
+  description: Accounting standard
+  example: IFRS
+  enum:
+  - IFRS
+  - OTHER_ACCOUNTING_STANDARD
+  - US_GAAP
+nested:
+  PERIODS[]:
+  - name: TYPE
+    type: text
+    presence: required
+    description: Period
+    example: accounting period
+    enum:
+    - accounting period
+    - document filing period
+  - name: START
+    type: date
+    presence: required
+    description: From
+    example: '2021-01-01'
+  - name: END
+    type: date
+    presence: optional
+    example: '2021-12-31'
+links:
+- field: CHILD_ENTITY
+  kind: lei-entity
+- field: PARENT_ENTITY
+  kind: lei-entity
+- field: LEI_GROUP
+  kind: lei-group
+validation:
+- rule: required
+  fields:
+  - RELATIONSHIP_ID
+  - LEVEL
+  - CHILD_ENTITY
+  - PARENT_ENTITY
+  - RELATIONSHIP_STATUS
+  - START
+  - PERIODS
+  - REGISTRATION_STATUS
+  - INITIAL_REGISTRATION
+  - LAST_UPDATE
+  - NEXT_RENEWAL
+  - LEI_GROUP
+- rule: unique
+  key:
+  - RELATIONSHIP_ID
+  per: snapshot
+- rule: pattern
+  field: RELATIONSHIP_ID
+  pattern: ^LEIREL-
+- rule: enum
+  field: LEVEL
+  values:
+  - Direct
+  - Ultimate
+- rule: link
+  field: CHILD_ENTITY
+  kind: lei-entity
+- rule: link
+  field: PARENT_ENTITY
+  kind: lei-entity
+- rule: enum
+  field: REGISTRATION_STATUS
+  values:
+  - LAPSED
+  - PUBLISHED
+- rule: link
+  field: LEI_GROUP
+  kind: lei-group
+- rule: enum
+  field: ACCOUNTING_STANDARD
+  values:
+  - IFRS
+  - OTHER_ACCOUNTING_STANDARD
+  - US_GAAP
+- rule: enum
+  field: PERIODS[].TYPE
+  values:
+  - accounting period
+  - document filing period
+notes: []
+review:
+- 'required inferred from 100% coverage in 2002 documents (2 samples and 2000 test-data documents (data/testdata/gleif/lei-relationship/snapshot-2026-10-25.jsonl.gz)):
+  confirm each required field is mandatory upstream, and each optional one may be empty.'
+- 'a snapshot refreshed when tools/publicdata/gleif.py runs: confirm the refresh cadence.'
+- 'enum values inferred from the data, not from a glossary: LEVEL, REGISTRATION_STATUS, ACCOUNTING_STANDARD, PERIODS[].TYPE: confirm they are
+  closed lists.'
+- 'no description in about.yaml or the Sutras for LEVEL, REGISTRATION_STATUS, PERIODS[].END: write them in the pack''s config/about.yaml glossary.'

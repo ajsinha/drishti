@@ -1,0 +1,214 @@
+# Project Drishti · Any data. Any domain. One grammar.
+#
+# Copyright (c) 2026 Ashutosh Sinha <ajsinha@gmail.com>.
+# All rights reserved.
+#
+# PROPRIETARY AND CONFIDENTIAL.
+#
+# This file is the confidential and proprietary property of Ashutosh Sinha.
+# Unauthorised copying, use, modification, distribution or disclosure of this
+# file, via any medium, is strictly prohibited except with the express prior
+# written permission of the copyright holder.
+#
+# See the LICENSE file in the root of this repository for the full terms.
+
+# Data contract of the desk kind (command DESK): docs/contracts/README.md section 16.
+# Drafted by `drishti.py contract bootstrap desk`; owned by people from then on: confirm the review points, then remove them.
+kind: desk
+mnemonic: DESK
+pack: core
+version: '1.0'
+class: fundamental
+status: active
+title: Desk
+description: 'A trading desk: books, limits and risk results.'
+source: org-master
+grain: One row per desk per business date, keyed by DESK_ID.
+key:
+- DESK_ID
+id-pattern:
+- ^DESK-
+dated-by: business_date
+cadence:
+  frequency: daily
+  due: to be confirmed
+storage:
+  connector: reference-store
+  plugin: delta
+  domain: reference
+  table: <root>/reference/desk/
+  test-data:
+  - data/testdata/core/desk
+fields:
+- name: DESK_ID
+  type: id
+  presence: required
+  description: The record's id (the business key)
+  example: DESK-COMM
+  pattern: ^DESK-
+- name: NAME
+  type: text
+  presence: required
+  description: Name
+  example: Commodities
+- name: HEAD
+  type: text
+  presence: required
+  description: Head
+  example: T. Brennan
+- name: BOOKS
+  type: record list
+  presence: required
+  description: 'Nested: see nested BOOKS[]'
+- name: VAR_99
+  type: amount
+  presence: required
+  description: VaR
+  example: 10946782
+- name: MTM
+  type: amount
+  presence: required
+  description: MTM
+  example: 14609595
+- name: LEGAL_ENTITY
+  type: id
+  presence: required
+  description: 'Legal entity: the legal-entity it refers to'
+  example: LE-NY
+  pattern: ^LE-
+  link: legal-entity
+- name: VAR_RESULT
+  type: id
+  presence: required
+  description: 'VaR: the var it refers to'
+  example: VAR-COMM
+  pattern: ^VAR-
+  link: var
+- name: ASSET_CLASSES
+  type: text list
+  presence: required
+- name: POSITIONS
+  type: record list
+  presence: required
+  description: 'Nested: see nested POSITIONS[]'
+nested:
+  BOOKS[]:
+  - name: ID
+    type: id
+    presence: required
+    description: Book
+    example: BOOK-COMM-1
+  - name: TRADES
+    type: integer
+    presence: required
+    description: Trades
+    example: 28
+  - name: MTM
+    type: amount
+    presence: required
+    description: MTM
+    example: 7760837
+  POSITIONS[]:
+  - name: TRADE_ID
+    type: id
+    presence: required
+    description: Trade
+    example: MX-20000291
+    pattern: ^(MX|CLY)-\d+$
+    link: trade
+  - name: BOOK
+    type: id
+    presence: required
+    description: Book
+    example: BOOK-COMM-1
+    pattern: ^BOOK-
+    link: book
+  - name: CURRENCY
+    type: text
+    presence: required
+    description: Currency
+    example: USD
+    enum:
+    - AUD
+    - CAD
+    - CHF
+    - EUR
+    - GBP
+    - JPY
+    - USD
+  - name: FAMILY
+    type: text
+    presence: required
+    description: Family
+    example: future
+  - name: MTM
+    type: amount
+    presence: required
+    description: MTM
+    example: 324697
+links:
+- field: LEGAL_ENTITY
+  kind: legal-entity
+- field: VAR_RESULT
+  kind: var
+- field: POSITIONS[].TRADE_ID
+  kind: trade
+- field: POSITIONS[].BOOK
+  kind: book
+validation:
+- rule: required
+  fields:
+  - DESK_ID
+  - NAME
+  - HEAD
+  - BOOKS
+  - VAR_99
+  - MTM
+  - LEGAL_ENTITY
+  - VAR_RESULT
+  - ASSET_CLASSES
+  - POSITIONS
+- rule: unique
+  key:
+  - DESK_ID
+  per: business_date
+- rule: pattern
+  field: DESK_ID
+  pattern: ^DESK-
+- rule: link
+  field: LEGAL_ENTITY
+  kind: legal-entity
+- rule: link
+  field: VAR_RESULT
+  kind: var
+- rule: link
+  field: POSITIONS[].TRADE_ID
+  kind: trade
+- rule: link
+  field: POSITIONS[].BOOK
+  kind: book
+- rule: enum
+  field: POSITIONS[].CURRENCY
+  values:
+  - AUD
+  - CAD
+  - CHF
+  - EUR
+  - GBP
+  - JPY
+  - USD
+notes:
+- 'Dated by the lake''s business_date partition: `drishti.py lake build` writes each test-data file''s day into it; the documents carry no date
+  field of their own.'
+review:
+- 'required inferred from 100% coverage in 30 documents (10 samples and 20 test-data documents (data/testdata/core/desk/snapshot-2026-07-08.jsonl.gz,
+  data/testdata/core/desk/changes-2026-09-30.jsonl.gz)): confirm each required field is mandatory upstream, and each optional one may be empty.'
+- 'source ''org-master'' is the test data''s _meta.source (synthetic): name the production system that delivers it.'
+- 'due time of each business date is not known: state it (for example, by 06:00 New York the next business day).'
+- 'VAR_99 is a column a compute engine produces (docs/contracts/README.md section 14) on a record that keeps it: confirm whether it is computed
+  and removed.'
+- 'enum values inferred from the data, not from a glossary: POSITIONS[].CURRENCY: confirm they are closed lists.'
+- 'number types decided by the field''s name: VAR_99 amount, MTM amount, BOOKS[].MTM amount, POSITIONS[].MTM amount: confirm amount, rate or integer.'
+- 'no unit stated for the amounts VAR_99, MTM, BOOKS[].MTM, POSITIONS[].MTM (docs/contracts/README.md section 7: USD unless stated): confirm the
+  currency.'
+- 'no description in about.yaml or the Sutras for ASSET_CLASSES: write them in the pack''s config/about.yaml glossary.'

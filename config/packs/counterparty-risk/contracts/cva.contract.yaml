@@ -1,0 +1,211 @@
+# Project Drishti · Any data. Any domain. One grammar.
+#
+# Copyright (c) 2026 Ashutosh Sinha <ajsinha@gmail.com>.
+# All rights reserved.
+#
+# PROPRIETARY AND CONFIDENTIAL.
+#
+# This file is the confidential and proprietary property of Ashutosh Sinha.
+# Unauthorised copying, use, modification, distribution or disclosure of this
+# file, via any medium, is strictly prohibited except with the express prior
+# written permission of the copyright holder.
+#
+# See the LICENSE file in the root of this repository for the full terms.
+
+# Data contract of the cva kind (command CVA): docs/contracts/README.md section 16.
+# Drafted by `drishti.py contract bootstrap cva`; owned by people from then on: confirm the review points, then remove them.
+kind: cva
+mnemonic: CVA
+pack: counterparty-risk
+version: '1.0'
+class: computed
+status: retiring
+retiring-in: 2.10.0
+replaced-by: docs/contracts/CVA.md
+title: CVA / XVA
+description: Credit, debit and funding valuation adjustments with sensitivities.
+source: xva-engine
+grain: One row per cva / xva per business date, keyed by RESULT_ID.
+key:
+- RESULT_ID
+id-pattern:
+- ^CVA-
+dated-by: business_date
+cadence:
+  frequency: daily
+  due: to be confirmed
+storage:
+  connector: credit-store
+  plugin: delta
+  domain: credit
+  table: <root>/credit/cva/
+  test-data:
+  - data/testdata/counterparty-risk/cva
+fields:
+- name: RESULT_ID
+  type: id
+  presence: required
+  description: The record's id (the business key)
+  example: CVA-ALDERSHOT-FRA
+  pattern: ^CVA-
+- name: CVA
+  type: amount
+  presence: derived
+  unit: USD
+  description: The expected loss from the counterparty defaulting, valued at market spreads and taken off the value of the trades.
+  example: -7
+  note: computed by CVA / XVA; removed when retired
+- name: DVA
+  type: amount
+  presence: derived
+  unit: USD
+  description: 'The mirror image of CVA: the gain from the bank''s own possible default, which reduces what it would owe.'
+  example: 4
+  note: computed by CVA / XVA; removed when retired
+- name: FVA
+  type: amount
+  presence: derived
+  unit: USD
+  description: The cost, or benefit, of funding the collateral and the hedges of uncollateralised trades.
+  example: -407
+  note: computed by CVA / XVA; removed when retired
+- name: KVA
+  type: amount
+  presence: derived
+  unit: USD
+  description: The cost of holding regulatory capital against the trades over their life.
+  example: -1389
+  note: computed by CVA / XVA; removed when retired
+- name: CS01
+  type: amount
+  presence: derived
+  unit: USD per bp
+  description: The change in the CVA for a one basis point rise in the counterparty's credit spread.
+  example: 0
+  note: computed by CVA / XVA; removed when retired
+- name: COMPONENTS
+  type: record list
+  presence: derived
+  description: 'Nested: see nested COMPONENTS[]'
+  note: computed by CVA / XVA; removed when retired
+- name: SENSITIVITIES
+  type: record list
+  presence: derived
+  description: 'Nested: see nested SENSITIVITIES[]'
+  note: computed by CVA / XVA; removed when retired
+- name: NETTING_SET
+  type: id
+  presence: required
+  description: 'Netting set: the netting-set it refers to'
+  example: NS-ALDERSHOT-FRA
+  pattern: ^NS-
+  link: netting-set
+- name: CREDIT_CURVE
+  type: id
+  presence: optional
+  description: 'Credit curve: the credit-curve it refers to'
+  example: CDS-CASCADIA
+  pattern: ^CDS-
+  link: credit-curve
+nested:
+  COMPONENTS[]:
+  - name: NAME
+    type: text
+    presence: required
+    example: CVA
+    enum:
+    - CVA
+    - DVA
+    - FVA
+    - KVA
+  - name: AMOUNT
+    type: amount
+    presence: required
+    example: -7
+  SENSITIVITIES[]:
+  - name: FACTOR
+    type: text
+    presence: required
+    description: The market input that is bumped to see how the adjustment changes.
+    example: Counterparty spread
+    enum:
+    - Counterparty spread
+    - EUR rates
+    - FX vol
+    - Recovery
+    - USD rates
+  - name: BUMP
+    type: text
+    presence: required
+    description: The size of the move applied to the factor.
+    example: +1 bp
+    enum:
+    - +1 bp
+    - +1 vol
+    - +1%
+  - name: DELTA
+    type: integer
+    presence: required
+    unit: USD
+    description: The change in the adjustment for the bump.
+    example: 0
+links:
+- field: NETTING_SET
+  kind: netting-set
+- field: CREDIT_CURVE
+  kind: credit-curve
+validation:
+- rule: required
+  fields:
+  - RESULT_ID
+  - NETTING_SET
+- rule: unique
+  key:
+  - RESULT_ID
+  per: business_date
+- rule: pattern
+  field: RESULT_ID
+  pattern: ^CVA-
+- rule: link
+  field: NETTING_SET
+  kind: netting-set
+- rule: link
+  field: CREDIT_CURVE
+  kind: credit-curve
+- rule: enum
+  field: COMPONENTS[].NAME
+  values:
+  - CVA
+  - DVA
+  - FVA
+  - KVA
+- rule: enum
+  field: SENSITIVITIES[].FACTOR
+  values:
+  - Counterparty spread
+  - EUR rates
+  - FX vol
+  - Recovery
+  - USD rates
+- rule: enum
+  field: SENSITIVITIES[].BUMP
+  values:
+  - +1 bp
+  - +1 vol
+  - +1%
+notes:
+- 'Dated by the lake''s business_date partition: `drishti.py lake build` writes each test-data file''s day into it; the documents carry no date
+  field of their own.'
+- 'Retiring in 2.10.0: the stored kind is removed and computed instead by CVA / XVA (docs/contracts/CVA.md); old ids and links open the computed
+  page.'
+review:
+- 'required inferred from 100% coverage in 215 documents (66 samples and 149 test-data documents (data/testdata/counterparty-risk/cva/snapshot-2026-07-08.jsonl.gz,
+  data/testdata/counterparty-risk/cva/changes-2026-09-30.jsonl.gz)): confirm each required field is mandatory upstream, and each optional one
+  may be empty.'
+- 'source ''xva-engine'' is the test data''s _meta.source (synthetic): name the production system that delivers it.'
+- 'due time of each business date is not known: state it (for example, by 06:00 New York the next business day).'
+- 'enum values inferred from the data, not from a glossary: COMPONENTS[].NAME, SENSITIVITIES[].FACTOR, SENSITIVITIES[].BUMP: confirm they are
+  closed lists.'
+- 'number types decided by the field''s name: COMPONENTS[].AMOUNT amount: confirm amount, rate or integer.'
+- 'no unit stated for the amounts COMPONENTS[].AMOUNT (docs/contracts/README.md section 7: USD unless stated): confirm the currency.'
+- 'no description in about.yaml or the Sutras for COMPONENTS[].NAME, COMPONENTS[].AMOUNT: write them in the pack''s config/about.yaml glossary.'

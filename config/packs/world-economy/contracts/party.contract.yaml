@@ -1,0 +1,198 @@
+# Project Drishti · Any data. Any domain. One grammar.
+#
+# Copyright (c) 2026 Ashutosh Sinha <ajsinha@gmail.com>.
+# All rights reserved.
+#
+# PROPRIETARY AND CONFIDENTIAL.
+#
+# This file is the confidential and proprietary property of Ashutosh Sinha.
+# Unauthorised copying, use, modification, distribution or disclosure of this
+# file, via any medium, is strictly prohibited except with the express prior
+# written permission of the copyright holder.
+#
+# See the LICENSE file in the root of this repository for the full terms.
+
+# Data contract of the party kind (command PARTY): docs/contracts/README.md section 16.
+# Drafted by `drishti.py contract bootstrap party`; owned by people from then on: confirm the review points, then remove them.
+kind: party
+mnemonic: PARTY
+pack: world-economy
+version: '1.0'
+class: fundamental
+status: active
+title: Party
+description: A political party that won seats in the lower chamber at the most recent election, with the chamber's full result.
+source: 'public data: CIA, The World Factbook (factbook.json mirror, CC0)'
+grain: One row per party, keyed by PARTY_ID.
+key:
+- PARTY_ID
+id-pattern:
+- ^PARTY-
+dated-by: snapshot
+cadence:
+  frequency: static
+  due: to be confirmed
+storage:
+  connector: civic-store
+  plugin: delta
+  domain: civic
+  table: <root>/civic/party/
+  test-data:
+  - config/packs/world-economy/samples
+fields:
+- name: PARTY_ID
+  type: id
+  presence: required
+  description: The record's id (the business key)
+  example: PARTY-ARG-01
+  pattern: ^PARTY-
+- name: NAME
+  type: text
+  presence: optional
+  description: The party's name as the CIA World Factbook lists it in the election result.
+  example: Union for the Homeland (UP)
+- name: COUNTRY_NAME
+  type: text
+  presence: required
+  description: The country the party competes in.
+  example: Argentina
+- name: SEATS
+  type: integer
+  presence: required
+  description: The seats the party won in the chamber at the most recent election.
+  example: 48
+- name: SEAT_SHARE
+  type: rate
+  presence: required
+  unit: '% of seats'
+  description: The party's seats as a share of the seats the Factbook lists.
+  example: 37.5
+- name: CHAMBER
+  type: text
+  presence: required
+  description: The legislative chamber the result is for.
+  example: Chamber of Deputies (Cámara de Diputados)
+- name: RANK
+  type: integer
+  presence: required
+  example: 1
+- name: TOTAL_SEATS
+  type: amount
+  presence: required
+  example: 128
+- name: ELECTION_DATE
+  type: text
+  presence: required
+  description: When the most recent election was held, as published.
+  example: 10/22/2023
+- name: RESULTS
+  type: record list
+  presence: required
+  description: 'Nested: see nested RESULTS[]'
+- name: ELECTION
+  type: id
+  presence: required
+  description: 'Election: the election it refers to'
+  example: ELEC-ARG-LOW
+  pattern: ^ELEC-
+  link: election
+- name: JURISDICTION
+  type: id
+  presence: required
+  description: 'Country: the jurisdiction it refers to'
+  example: JUR-ARG
+  pattern: ^JUR-
+  link: jurisdiction
+- name: PROVENANCE
+  type: record
+  presence: required
+  description: 'Nested: see nested PROVENANCE'
+nested:
+  RESULTS[]:
+  - name: PARTY
+    type: text
+    presence: optional
+    description: A party or group in the chamber.
+    example: Union for the Homeland (UP)
+  - name: SEATS
+    type: integer
+    presence: required
+    description: The seats it won.
+    example: 48
+  - name: SHARE
+    type: rate
+    presence: required
+    example: 37.5
+  PROVENANCE:
+  - name: SOURCE
+    type: text
+    presence: required
+    description: The organisation or organisations whose published data this view shows.
+    example: CIA, The World Factbook (factbook.json mirror, CC0)
+  - name: DATASET
+    type: text
+    presence: required
+    description: The named dataset and its vintage (the release the numbers come from).
+    example: The World Factbook (mirror commit 144d6977b2)
+  - name: RETRIEVED_AT
+    type: date
+    presence: required
+    description: The date the data was downloaded by tools/realdata.
+    example: '2026-10-10'
+  - name: LICENCE
+    type: text
+    presence: required
+    description: The terms under which the source allows reuse; attribution is required.
+    example: Public domain (U.S. Government work); the factbook.json mir…
+  - name: ATTRIBUTION
+    type: text
+    presence: required
+    description: The credit line to repeat when the data is shown or republished.
+    example: Central Intelligence Agency, The World Factbook (public dom…
+  - name: URL
+    type: text
+    presence: required
+    description: The web page of the dataset.
+    example: https://www.cia.gov/the-world-factbook/
+links:
+- field: ELECTION
+  kind: election
+- field: JURISDICTION
+  kind: jurisdiction
+validation:
+- rule: required
+  fields:
+  - PARTY_ID
+  - COUNTRY_NAME
+  - SEATS
+  - SEAT_SHARE
+  - CHAMBER
+  - RANK
+  - TOTAL_SEATS
+  - ELECTION_DATE
+  - RESULTS
+  - ELECTION
+  - JURISDICTION
+  - PROVENANCE
+- rule: unique
+  key:
+  - PARTY_ID
+  per: snapshot
+- rule: pattern
+  field: PARTY_ID
+  pattern: ^PARTY-
+- rule: link
+  field: ELECTION
+  kind: election
+- rule: link
+  field: JURISDICTION
+  kind: jurisdiction
+notes: []
+review:
+- 'required inferred from 100% coverage in 282 documents (282 samples): confirm each required field is mandatory upstream, and each optional one
+  may be empty.'
+- 'key PARTY_ID is the field holding the sample catalogue''s id (PARTY-ARG-01): confirm it is the business key.'
+- 'a snapshot refreshed when tools/publicdata/world_economy.py runs: confirm the refresh cadence.'
+- 'number types decided by the field''s name: TOTAL_SEATS amount, RESULTS[].SHARE rate: confirm amount, rate or integer.'
+- 'no unit stated for the amounts TOTAL_SEATS (docs/contracts/README.md section 7: USD unless stated): confirm the currency.'
+- 'no description in about.yaml or the Sutras for RANK, TOTAL_SEATS, RESULTS[].SHARE: write them in the pack''s config/about.yaml glossary.'

@@ -1,0 +1,150 @@
+# Project Drishti · Any data. Any domain. One grammar.
+#
+# Copyright (c) 2026 Ashutosh Sinha <ajsinha@gmail.com>.
+# All rights reserved.
+#
+# PROPRIETARY AND CONFIDENTIAL.
+#
+# This file is the confidential and proprietary property of Ashutosh Sinha.
+# Unauthorised copying, use, modification, distribution or disclosure of this
+# file, via any medium, is strictly prohibited except with the express prior
+# written permission of the copyright holder.
+#
+# See the LICENSE file in the root of this repository for the full terms.
+
+# Data contract of the inflation-curve kind (command INFC): docs/contracts/README.md section 16.
+# Drafted by `drishti.py contract bootstrap inflation-curve`; owned by people from then on: confirm the review points, then remove them.
+kind: inflation-curve
+mnemonic: INFC
+pack: market-data
+version: '1.0'
+class: fundamental
+status: active
+title: Inflation curve
+description: Zero-coupon breakevens by tenor, with monthly seasonality.
+source: md-hub
+grain: One row per inflation curve per business date, keyed by CURVE_ID.
+key:
+- CURVE_ID
+id-pattern:
+- ^INFC-
+dated-by: business_date
+cadence:
+  frequency: daily
+  due: to be confirmed
+storage:
+  connector: market-store
+  plugin: delta
+  domain: market
+  table: <root>/market/inflation-curve/
+  test-data:
+  - data/testdata/market-data/inflation-curve
+fields:
+- name: CURVE_ID
+  type: id
+  presence: required
+  description: The record's id (the business key)
+  example: INFC-HICPX
+  pattern: ^INFC-
+- name: INDEX
+  type: id
+  presence: required
+  description: Index
+  example: INF-HICPX
+- name: BE_5Y
+  type: amount
+  presence: required
+  description: 5Y breakeven
+  example: 0.021588
+- name: BE_10Y
+  type: amount
+  presence: required
+  description: 10Y breakeven
+  example: 0.022497
+- name: POINTS
+  type: record list
+  presence: required
+  description: 'Nested: see nested POINTS[]'
+- name: SEASONALITY
+  type: record list
+  presence: required
+  description: 'Nested: see nested SEASONALITY[]'
+- name: INFLATION_INDEX
+  type: id
+  presence: required
+  description: 'Inflation index: the inflation-index it refers to'
+  example: INF-HICPX
+  pattern: ^INF-
+  link: inflation-index
+nested:
+  POINTS[]:
+  - name: TENOR
+    type: text
+    presence: required
+    example: 1Y
+    enum:
+    - 10Y
+    - 1Y
+    - 20Y
+    - 2Y
+    - 30Y
+    - 5Y
+  - name: BREAKEVEN
+    type: amount
+    presence: required
+    example: 1.994
+  SEASONALITY[]:
+  - name: MONTH
+    type: text
+    presence: required
+    example: Jan
+  - name: FACTOR
+    type: amount
+    presence: required
+    example: 0.00075
+links:
+- field: INFLATION_INDEX
+  kind: inflation-index
+validation:
+- rule: required
+  fields:
+  - CURVE_ID
+  - INDEX
+  - BE_5Y
+  - BE_10Y
+  - POINTS
+  - SEASONALITY
+  - INFLATION_INDEX
+- rule: unique
+  key:
+  - CURVE_ID
+  per: business_date
+- rule: pattern
+  field: CURVE_ID
+  pattern: ^INFC-
+- rule: link
+  field: INFLATION_INDEX
+  kind: inflation-index
+- rule: enum
+  field: POINTS[].TENOR
+  values:
+  - 10Y
+  - 1Y
+  - 20Y
+  - 2Y
+  - 30Y
+  - 5Y
+notes:
+- 'Dated by the lake''s business_date partition: `drishti.py lake build` writes each test-data file''s day into it; the documents carry no date
+  field of their own.'
+review:
+- 'required inferred from 100% coverage in 8 documents (4 samples and 4 test-data documents (data/testdata/market-data/inflation-curve/snapshot-2026-07-08.jsonl.gz,
+  data/testdata/market-data/inflation-curve/changes-2026-09-30.jsonl.gz)): confirm each required field is mandatory upstream, and each optional
+  one may be empty.'
+- 'source ''md-hub'' is the test data''s _meta.source (synthetic): name the production system that delivers it.'
+- 'due time of each business date is not known: state it (for example, by 06:00 New York the next business day).'
+- 'enum values inferred from the data, not from a glossary: POINTS[].TENOR: confirm they are closed lists.'
+- 'no unit stated for the amounts BE_5Y, BE_10Y, POINTS[].BREAKEVEN, SEASONALITY[].FACTOR (docs/contracts/README.md section 7: USD unless stated):
+  confirm the currency.'
+- 'no description in about.yaml or the Sutras for POINTS[].TENOR, POINTS[].BREAKEVEN, SEASONALITY[].MONTH, SEASONALITY[].FACTOR: write them in
+  the pack''s config/about.yaml glossary.'

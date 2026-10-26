@@ -1,0 +1,225 @@
+# Project Drishti · Any data. Any domain. One grammar.
+#
+# Copyright (c) 2026 Ashutosh Sinha <ajsinha@gmail.com>.
+# All rights reserved.
+#
+# PROPRIETARY AND CONFIDENTIAL.
+#
+# This file is the confidential and proprietary property of Ashutosh Sinha.
+# Unauthorised copying, use, modification, distribution or disclosure of this
+# file, via any medium, is strictly prohibited except with the express prior
+# written permission of the copyright holder.
+#
+# See the LICENSE file in the root of this repository for the full terms.
+
+# Data contract of the sa-ccr kind (command SACCR): docs/contracts/README.md section 16.
+# Drafted by `drishti.py contract bootstrap sa-ccr`; owned by people from then on: confirm the review points, then remove them.
+kind: sa-ccr
+mnemonic: SACCR
+pack: counterparty-risk
+version: '1.0'
+class: computed
+status: retiring
+retiring-in: 2.10.0
+replaced-by: docs/contracts/SACCR.md
+title: SA-CCR exposure
+description: 'Regulatory EAD: replacement cost, PFE add-ons by asset class, multiplier.'
+source: capital-engine
+grain: One row per sa-ccr exposure per business date, keyed by CALC_ID.
+key:
+- CALC_ID
+id-pattern:
+- ^SACCR-
+dated-by: business_date
+cadence:
+  frequency: daily
+  due: to be confirmed
+storage:
+  connector: credit-store
+  plugin: delta
+  domain: credit
+  table: <root>/credit/sa-ccr/
+  test-data:
+  - data/testdata/counterparty-risk/sa-ccr
+fields:
+- name: CALC_ID
+  type: id
+  presence: required
+  description: The record's id (the business key)
+  example: SACCR-ALDERSHOT-FRA
+  pattern: ^SACCR-
+- name: REPLACEMENT_COST
+  type: amount
+  presence: derived
+  unit: USD
+  description: The loss if the counterparty defaulted today and the trades were replaced at current market value, less collateral; never below
+    zero.
+  example: 0
+  note: computed by SA-CCR; removed when retired
+- name: ADD_ON
+  type: amount
+  presence: derived
+  unit: USD
+  description: The potential increase in exposure over the next year, built from the add-ons of each asset class with supervisory factors and
+    correlations.
+  example: 791562
+  note: computed by SA-CCR; removed when retired
+- name: MULTIPLIER
+  type: rate
+  presence: derived
+  unit: factor
+  description: A factor between 5% and 1 that reduces the add-on when the netting set is over-collateralised or its value is negative.
+  example: 0.933
+  note: computed by SA-CCR; removed when retired
+- name: EAD
+  type: amount
+  presence: derived
+  unit: USD
+  description: 'The SA-CCR exposure: 1.4 times the replacement cost plus the potential future exposure, where the potential future exposure is
+    the multiplier times the add-on.'
+  example: 1033938
+  note: computed by SA-CCR; removed when retired
+- name: RWA
+  type: amount
+  presence: derived
+  unit: USD
+  description: The exposure at default multiplied by the risk weight of the counterparty. Capital is a percentage of it.
+  example: 206788
+  note: computed by SA-CCR; removed when retired
+- name: ADD_ONS
+  type: record list
+  presence: derived
+  description: 'Nested: see nested ADD_ONS[]'
+  note: computed by SA-CCR; removed when retired
+- name: HEDGING_SETS
+  type: record list
+  presence: derived
+  description: 'Nested: see nested HEDGING_SETS[]'
+  note: computed by SA-CCR; removed when retired
+- name: NETTING_SET
+  type: id
+  presence: required
+  description: 'Netting set: the netting-set it refers to'
+  example: NS-ALDERSHOT-FRA
+  pattern: ^NS-
+  link: netting-set
+- name: ALPHA
+  type: rate
+  presence: required
+  example: 1.4
+nested:
+  ADD_ONS[]:
+  - name: ASSET_CLASS
+    type: text
+    presence: required
+    example: Interest rate
+    enum:
+    - Commodity
+    - Credit
+    - Equity
+    - Foreign exchange
+    - Interest rate
+  - name: ADD_ON
+    type: amount
+    presence: required
+    example: 791562
+  HEDGING_SETS[]:
+  - name: ASSET_CLASS
+    type: text
+    presence: required
+    description: 'The regulatory asset class: interest rate, FX, credit, equity or commodity.'
+    example: Interest rate
+    enum:
+    - Commodity
+    - Credit
+    - Equity
+    - Foreign exchange
+    - Interest rate
+  - name: HEDGING_SET
+    type: text
+    presence: required
+    description: The group of trades within an asset class that can offset one another, for example by currency for interest rates.
+    example: JPY
+    enum:
+    - AUD
+    - CAD
+    - CHF
+    - EUR
+    - GBP
+    - JPY
+    - USD
+  - name: EFFECTIVE_NOTIONAL
+    type: amount
+    presence: required
+    unit: USD
+    description: The hedging set's notional after supervisory delta and maturity adjustments and netting inside the set.
+    example: -89605479
+  - name: SF
+    type: amount
+    presence: required
+    unit: '% of effective notional'
+    description: The regulatory percentage applied to the effective notional to get the add-on.
+    example: 0.005
+links:
+- field: NETTING_SET
+  kind: netting-set
+validation:
+- rule: required
+  fields:
+  - CALC_ID
+  - NETTING_SET
+  - ALPHA
+- rule: unique
+  key:
+  - CALC_ID
+  per: business_date
+- rule: pattern
+  field: CALC_ID
+  pattern: ^SACCR-
+- rule: link
+  field: NETTING_SET
+  kind: netting-set
+- rule: enum
+  field: ADD_ONS[].ASSET_CLASS
+  values:
+  - Commodity
+  - Credit
+  - Equity
+  - Foreign exchange
+  - Interest rate
+- rule: enum
+  field: HEDGING_SETS[].ASSET_CLASS
+  values:
+  - Commodity
+  - Credit
+  - Equity
+  - Foreign exchange
+  - Interest rate
+- rule: enum
+  field: HEDGING_SETS[].HEDGING_SET
+  values:
+  - AUD
+  - CAD
+  - CHF
+  - EUR
+  - GBP
+  - JPY
+  - USD
+notes:
+- 'Dated by the lake''s business_date partition: `drishti.py lake build` writes each test-data file''s day into it; the documents carry no date
+  field of their own.'
+- 'Retiring in 2.10.0: the stored kind is removed and computed instead by SA-CCR (docs/contracts/SACCR.md); old ids and links open the computed
+  page.'
+review:
+- 'required inferred from 100% coverage in 142 documents (66 samples and 76 test-data documents (data/testdata/counterparty-risk/sa-ccr/snapshot-2026-07-08.jsonl.gz,
+  data/testdata/counterparty-risk/sa-ccr/changes-2026-09-30.jsonl.gz)): confirm each required field is mandatory upstream, and each optional one
+  may be empty.'
+- 'source ''capital-engine'' is the test data''s _meta.source (synthetic): name the production system that delivers it.'
+- 'due time of each business date is not known: state it (for example, by 06:00 New York the next business day).'
+- 'enum values inferred from the data, not from a glossary: ADD_ONS[].ASSET_CLASS, HEDGING_SETS[].ASSET_CLASS, HEDGING_SETS[].HEDGING_SET: confirm
+  they are closed lists.'
+- 'number types decided by the field''s name: ALPHA rate, ADD_ONS[].ADD_ON amount: confirm amount, rate or integer.'
+- 'no unit stated for the amounts ADD_ONS[].ADD_ON (docs/contracts/README.md section 7: USD unless stated): confirm the currency.'
+- 'no description in about.yaml or the Sutras for ALPHA, ADD_ONS[].ASSET_CLASS, ADD_ONS[].ADD_ON: write them in the pack''s config/about.yaml
+  glossary.'
+- 'ALPHA (1.4) is a regulatory parameter: confirm it becomes a setting of the SA-CCR engine.'

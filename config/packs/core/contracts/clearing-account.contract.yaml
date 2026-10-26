@@ -1,0 +1,237 @@
+# Project Drishti · Any data. Any domain. One grammar.
+#
+# Copyright (c) 2026 Ashutosh Sinha <ajsinha@gmail.com>.
+# All rights reserved.
+#
+# PROPRIETARY AND CONFIDENTIAL.
+#
+# This file is the confidential and proprietary property of Ashutosh Sinha.
+# Unauthorised copying, use, modification, distribution or disclosure of this
+# file, via any medium, is strictly prohibited except with the express prior
+# written permission of the copyright holder.
+#
+# See the LICENSE file in the root of this repository for the full terms.
+
+# Data contract of the clearing-account kind (command CLR): docs/contracts/README.md section 16.
+# Drafted by `drishti.py contract bootstrap clearing-account`; owned by people from then on: confirm the review points, then remove them.
+kind: clearing-account
+mnemonic: CLR
+pack: core
+version: '1.0'
+class: fundamental
+status: active
+title: Clearing account
+description: An account at a CCP holding cleared trades and margin.
+source: clearing-system
+grain: One row per clearing account per business date, keyed by ACCOUNT_ID.
+key:
+- ACCOUNT_ID
+id-pattern:
+- ^CLR-
+dated-by: business_date
+cadence:
+  frequency: daily
+  due: to be confirmed
+storage:
+  connector: reference-store
+  plugin: delta
+  domain: reference
+  table: <root>/reference/clearing-account/
+  test-data:
+  - data/testdata/core/clearing-account
+fields:
+- name: ACCOUNT_ID
+  type: id
+  presence: required
+  description: The record's id (the business key)
+  example: CLR-CME-1
+  pattern: ^CLR-
+- name: CCP_NAME
+  type: text
+  presence: required
+  description: CCP
+  example: CME Clearing
+  enum:
+  - CME Clearing
+  - Eurex Clearing AG
+  - ICE Clear Europe
+  - Japan Securities Clearing Corp.
+  - LCH Ltd
+- name: IM
+  type: amount
+  presence: required
+  description: IM
+  example: 43200000
+- name: VM_TODAY
+  type: integer
+  presence: required
+  description: VM today
+  example: -559393
+- name: EXCESS
+  type: integer
+  presence: required
+  description: Excess
+  example: 8640000
+- name: TRADES
+  type: record list
+  presence: required
+  description: 'Nested: see nested TRADES[]'
+- name: CCP
+  type: id
+  presence: required
+  description: 'CCP: the ccp it refers to'
+  example: CCP-CME
+  pattern: ^CCP-
+  link: ccp
+nested:
+  TRADES[]:
+  - name: TRADE_ID
+    type: id
+    presence: required
+    description: Trade
+    example: MX-20000067
+    pattern: ^(MX|CLY)-\d+$
+    link: trade
+  - name: STATUS
+    type: text
+    presence: required
+    example: LIVE
+  - name: PRODUCT
+    type: text
+    presence: required
+    description: Product
+    example: Short-term interest rate future
+  - name: ASSET_CLASS
+    type: text
+    presence: required
+    example: Rates
+    enum:
+    - Commodity
+    - Equity
+    - Fixed income
+    - Rates
+  - name: CURRENCY
+    type: text
+    presence: required
+    example: GBP
+    enum:
+    - AUD
+    - CAD
+    - CHF
+    - EUR
+    - GBP
+    - JPY
+    - USD
+  - name: BOOK
+    type: id
+    presence: required
+    description: 'Book: the book it refers to'
+    example: BOOK-RATES-2
+    pattern: ^BOOK-
+    link: book
+  - name: NOTIONAL
+    type: amount
+    presence: required
+    description: Notional
+    example: 201000000.0
+  - name: MATURITY
+    type: date
+    presence: required
+    description: Maturity
+    example: '2027-05-21'
+  - name: MATURITY_BUCKET
+    type: text
+    presence: required
+    example: 0-1Y
+    enum:
+    - 0-1Y
+    - 1-2Y
+    - 10Y+
+    - 2-5Y
+    - 5-10Y
+  - name: MTM
+    type: amount
+    presence: required
+    description: MTM
+    example: 197399
+links:
+- field: CCP
+  kind: ccp
+- field: TRADES[].TRADE_ID
+  kind: trade
+- field: TRADES[].BOOK
+  kind: book
+validation:
+- rule: required
+  fields:
+  - ACCOUNT_ID
+  - CCP_NAME
+  - IM
+  - VM_TODAY
+  - EXCESS
+  - TRADES
+  - CCP
+- rule: unique
+  key:
+  - ACCOUNT_ID
+  per: business_date
+- rule: pattern
+  field: ACCOUNT_ID
+  pattern: ^CLR-
+- rule: enum
+  field: CCP_NAME
+  values:
+  - CME Clearing
+  - Eurex Clearing AG
+  - ICE Clear Europe
+  - Japan Securities Clearing Corp.
+  - LCH Ltd
+- rule: link
+  field: CCP
+  kind: ccp
+- rule: link
+  field: TRADES[].TRADE_ID
+  kind: trade
+- rule: enum
+  field: TRADES[].ASSET_CLASS
+  values:
+  - Commodity
+  - Equity
+  - Fixed income
+  - Rates
+- rule: enum
+  field: TRADES[].CURRENCY
+  values:
+  - AUD
+  - CAD
+  - CHF
+  - EUR
+  - GBP
+  - JPY
+  - USD
+- rule: link
+  field: TRADES[].BOOK
+  kind: book
+- rule: enum
+  field: TRADES[].MATURITY_BUCKET
+  values:
+  - 0-1Y
+  - 1-2Y
+  - 10Y+
+  - 2-5Y
+  - 5-10Y
+notes:
+- 'Dated by the lake''s business_date partition: `drishti.py lake build` writes each test-data file''s day into it; the documents carry no date
+  field of their own.'
+review:
+- 'required inferred from 100% coverage in 12 documents (5 samples and 7 test-data documents (data/testdata/core/clearing-account/snapshot-2026-07-08.jsonl.gz,
+  data/testdata/core/clearing-account/changes-2026-09-30.jsonl.gz)): confirm each required field is mandatory upstream, and each optional one
+  may be empty.'
+- 'source ''clearing-system'' is the test data''s _meta.source (synthetic): name the production system that delivers it.'
+- 'due time of each business date is not known: state it (for example, by 06:00 New York the next business day).'
+- 'enum values inferred from the data, not from a glossary: CCP_NAME, TRADES[].ASSET_CLASS, TRADES[].CURRENCY, TRADES[].MATURITY_BUCKET: confirm
+  they are closed lists.'
+- 'number types decided by the field''s name: IM amount, TRADES[].NOTIONAL amount, TRADES[].MTM amount: confirm amount, rate or integer.'
+- 'no unit stated for the amounts IM, TRADES[].NOTIONAL, TRADES[].MTM (docs/contracts/README.md section 7: USD unless stated): confirm the currency.'
+- 'no description in about.yaml or the Sutras for TRADES[].STATUS, TRADES[].ASSET_CLASS, TRADES[].CURRENCY, TRADES[].MATURITY_BUCKET: write them
+  in the pack''s config/about.yaml glossary.'
