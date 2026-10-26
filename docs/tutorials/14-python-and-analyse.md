@@ -407,10 +407,10 @@ Transform runs for you on the first question):
 $ python3 tools/drishti.py bi mq --model desk-pnl-vs-exposure-py@1 --select result.counterparty,result.name,result.sector --measures "Desk P&L,Exposure (EE peak),P&L per exposure" --limit 3
 result.counterparty  result.name                   result.sector     Desk P&L       Exposure (EE peak)  P&L per exposure
 -------------------  ----------------------------  ----------------  -------------  ------------------  ----------------
-CP-ALDERSHOT         Aldershot Pension Trust       Pensions          9,940,482.84   2,599,390,291.00    0.00
-CP-AURORA            Aurora Sovereign Wealth Fund  Government        -5,475,341.95  1,991,425,202.00    -0.00
-CP-BRAMBLE           Bramble Asset Management      Asset management  6,448,473.64   1,999,491,936.00    0.00
-3 row(s)  as of 2026-10-16  plan p_1f01f95e79f2ef30
+CP-ALDERSHOT         Aldershot Pension Trust       Pensions          9,940,482.84   276,416,536.00      0.04
+CP-AURORA            Aurora Sovereign Wealth Fund  Government        -5,475,341.95  213,663,642.00      -0.03
+CP-BRAMBLE           Bramble Asset Management      Asset management  6,448,473.64   146,933,503.00      0.04
+3 row(s)  as of 2026-10-26
 ```
 
 The item is `config/bi/python/pnl-vs-exposure.python.yaml` (the model queries hand their columns over as the models name them, `NAME` and `SECTOR`;
@@ -418,16 +418,19 @@ the Transform renames them to the table's own `name` and `sector`); the referenc
 
 How would you write such a Transform? In **Analyse**, with **two extracts**. Open the notebook **Desk P&L vs counterparty exposure, in pandas** (the Notebook box in the Extract card).
 
-![Analyse with the sample notebook: the first extract is the trades of the model trading-risk (3 columns); under More extracts, the second is called exposure and reads the same model's netting sets](img/t14/13-analyse-extracts.jpg)
+![Analyse with the sample notebook: the first extract is the trades of the model trading-risk (3 columns); under More extracts, the second is called exposure and reads the same model's computed netting-set exposure](img/t14/13-analyse-extracts.jpg)
 
 You should see `10000 rows, 3 columns.` for the first extract (cut: the lake holds 15,000 trade valuations) (the trades of the model **Trading and counterparty risk**) and, in **More extracts: join
-several datasets**, a second one called `exposure` (`mq:trading-risk@1`, 3 fields: the netting sets of the same model). Each is built for you by the
+several datasets**, a second one called `exposure` (`mq:trading-risk@1`, 3 fields: the netting sets' computed exposure, `set_exposure`, of the same
+model: the exposure engine's official end-of-day results, since 2.9.0). Each is built for you by the
 server, with your row rules and masks. Open the **Python** tab and **Run** its cell.
 
 ![The join cell: df and extract("exposure") grouped and merged; the result is a table of counterparties with their P&L, exposure and P&L per exposure, largest exposure first](img/t14/14-analyse-join.jpg)
 
-You should see the cell (`df` is the trades; `extract("exposure")` is the netting sets' computed exposure, the official results since 2.9.0, so the figures differ from the 2.8.0 picture and text) and a table of counterparties, the largest exposure first:
-`CP-NORTHPLAINS` with exposure `2846661899` (the 76 netting sets are all in the second extract), then `CP-SUMMIT` and the rest. The P&L column adds up the
+You should see the cell (`df` is the trades; `extract("exposure")` is the netting sets' computed exposure, `PEAK_EE`) and a table of
+counterparties, the largest exposure first: `CP-ALDERSHOT` with exposure `276416536`, then `CP-LUMEN` and the rest (the second extract holds the 73
+netting sets the demo's exposure run covers; the join keeps the counterparties of the first extract's 10,000 trades, so Verdant Agri Holdings,
+whose trades are past the cut, is not in it). The P&L column adds up the
 trades **of the extract**, cut at 10,000 rows, so it is not the counterparty's full P&L: the server's figure is the Transform's, or Drishti SQL's below. The same join works in a SQL cell over the extract: the second extract is a table called
 `exposure` (`SELECT ... FROM extract JOIN exposure ON ...`); on the server, one model already joins its facts through the counterparty (Drishti SQL
 `FROM trades JOIN counterparties JOIN set_exposure`). When the pandas join is what you want to keep, press **Promote to a Transform**.
