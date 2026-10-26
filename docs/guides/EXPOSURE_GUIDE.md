@@ -249,6 +249,16 @@ From top to bottom:
 - **How this number was built** (folded): the run, the inputs' versions, the method, the view, the flags, the collateral model; buttons
   **Download the profile (CSV)** and **Capture exposure**.
 
+![EXP BANK: the command line, the scope tree, the bank's tiles and profile, the counterparty board](img/exp/01-bank-board.jpg)
+
+![A netting set's profile with the path fan (5–95% and 25–75% of the 200 paths)](img/exp/02-netting-set-fan.jpg)
+
+![How this number was built, opened on CP-ALDERSHOT](img/exp/07-provenance.jpg)
+
+On a phone the panels stack: the command line, the tree, then the tiles and the chart:
+
+![The explorer on a phone (390 px): the bank](img/exp/08-phone.jpg)
+
 ### 3.3 The tabs
 
 - **Counterparties** (the board): one row per counterparty: a small EE profile, peak PFE, EPE, the stored **limit** and **used**
@@ -270,6 +280,12 @@ From top to bottom:
 - **Captures**: capture now with a note, the scope's captures (id, date, captured, by, peak PFE, EPE, note), **Compare with now**,
   **Compare the two newest**, each capture's CSV; [section 6](#6-captures-and-compare).
 
+![NS-ALDERSHOT-LDN's Collateral tab: the CSA's terms, posted collateral and its effect at the peak tenor](img/exp/03-collateral.jpg)
+
+![Pre-deal on NS-ALDERSHOT-LDN: an unwind by the exact paths method, the incremental PFE by tenor](img/exp/05-predeal.jpg)
+
+![A capture of CP-ALDERSHOT compared with now](img/exp/06-capture-compare.jpg)
+
 ### 3.4 A trade: alone, in its set, the netting benefit
 
 `EXP TRD:<id>` (or a click on a trade) shows the trade **alone**: as its own netting set, uncollateralised, its own profile and peak
@@ -277,6 +293,8 @@ PFE. The tab **In its netting set** shows, per tenor, its **EE contribution** to
 EE and the share (the shares of a set's trades add up to the set's EE at every date). The tile **Netting benefit** is the peak PFE alone
 less the contribution: a trade that offsets its set has a large benefit, often a negative contribution. Buttons open `TRD <id>` and go
 back to the set.
+
+![A trade of NS-ALDERSHOT-LDN: alone, its EE contribution in its set and the netting benefit](img/exp/04-trade-in-set.jpg)
 
 ### 3.5 The no-paths state
 
