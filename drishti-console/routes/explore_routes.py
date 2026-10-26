@@ -176,12 +176,12 @@ async def profile(request: Request):
     return JSONResponse({**out, "inputRows": len(ex.rows), "masked": ex.masked, "truncatedInput": ex.truncated}, headers={"Cache-Control": "no-store"})
 
 
-@router.post("/bi/explore/dsql")
 def _sql_name(request: Request) -> str:
     """The server's SQL by the product's name from configuration (ui.product): "<product> SQL"."""
     return f"{request.app.state.settings.get('ui.product', '')} SQL".strip()
 
 
+@router.post("/bi/explore/dsql")
 async def dsql(request: Request):
     """Body ``{extract: {dataset, ...}, sql}``: one Drishti SQL statement over the model the extract reads (BI_DESIGN.md 3.4), run by the server as the
     signed-in person (their row rules and masks), the cell's row limit applied; ``{columns, rows, rowCount, truncated, ms, engine: server, plan, masked}``.
