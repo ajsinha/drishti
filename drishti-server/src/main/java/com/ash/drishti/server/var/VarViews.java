@@ -170,12 +170,23 @@ final class VarViews {
                 ? ", scaled to add up to the VaR" : ""));
         m.put("engine", "VaR engine in the server · " + ENGINE + " · " + svc.sums().threads() + " threads");
         m.put("view", s.view().full() ? "every node at positions level" : "restricted by node (" + s.hidden() + " trades outside your entitlement)");
+        m.put("tier", tier(s));
         m.put("membershipHash", s.set().digest());
         m.put("computedAt", Instant.now().toString());
         m.put("computeMs", s.computeMs());
         m.put("cache", s.cached() ? "hit" : "miss");
         m.put("loadedMs", s.date().loadMs());
         return m;
+    }
+
+    /** Where the answer's vector came from (VAR.md section 7.3): a node's float64 aggregate, the hot file's float32 rows, or the heap. */
+    static String tier(VarService.Scoped s) {
+        VarBook b = s.date().book();
+        boolean node = s.res().node() != null && b.node(s.res().node()) != null && s.set().equals(b.node(s.res().node()).members());
+        if (node) {
+            return "node aggregate (float64)";
+        }
+        return "mapped".equals(b.tier()) ? "hot file (float32 rows, summed in float64)" : "memory (float64 rows)";
     }
 
     private static String ordinal(int k) {

@@ -50,7 +50,7 @@ public class VarConfiguration {
             ObjectProvider<AuditLog> audit, ObjectProvider<PackRegistry> packs) {
         ParallelSums sums = new ParallelSums(props.threads(), props.parallelRows());
         VarAccess access = new VarAccess(props, entitlements);
-        VarService svc = new VarService(props, new VarLoader(router, props, sums, rules(props, packs)), access,
+        VarService svc = new VarService(props, new VarLoader(router, props, sums, rules(props, packs), new VarTier(props.tier()).start()), access,
                 new VarSaved(store, access::seesAll), new VarOfficialStore(store), audit.getIfAvailable(), sums);
         VarPositions.install(new VarPositions(svc));
         return svc;

@@ -39,6 +39,10 @@ import java.util.function.Supplier;
  * Drishti's: derived here, from the trades and the rules, each time the date is loaded (VAR.md section 3.7). A date whose inputs are
  * not one run (several batch ids, another scenario set, two scenario sets) is refused ({@code DRS-5203}). Reads as the server; what a
  * viewer may see is applied per request.
+ *
+ * <p>With the tiered memory ({@code drishti.var.tier.mode: mapped}, VAR.md section 7.3) the rows stream to a spill file and the date is
+ * written to its hot file and mapped; a date whose hot file was built from the same inputs (the same data versions of its vectors,
+ * hierarchy and scenario set, the same position rules) is opened from that file, without reading its vectors again.
  */
 final class VarLoader {
 
@@ -46,12 +50,23 @@ final class VarLoader {
     private final VarProperties props;
     private final ParallelSums sums;
     private final Supplier<PositionRules> rules;
+    private final VarTier tier;
+    private static final com.fasterxml.jackson.databind.ObjectMapper JSON = new com.fasterxml.jackson.databind.ObjectMapper();
 
     VarLoader(SourceRouter router, VarProperties props, ParallelSums sums, Supplier<PositionRules> rules) {
+        this(router, props, sums, rules, new VarTier(props.tier()));
+    }
+
+    VarLoader(SourceRouter router, VarProperties props, ParallelSums sums, Supplier<PositionRules> rules, VarTier tier) {
         this.router = router;
         this.props = props;
         this.sums = sums;
         this.rules = rules;
+        this.tier = tier;
+    }
+
+    VarTier tier() {
+        return tier;
     }
 
     /** The newest business date that has vectors, or null. */
@@ -78,6 +93,20 @@ final class VarLoader {
         long t0 = System.nanoTime();
         VarProperties.Kinds k = props.kinds();
         AsOf asOf = AsOf.of(date);
+        Map<String, String> versions = new LinkedHashMap<>();
+        for (String kind : k.inputs()) {
+            versions.put(kind, router.dataVersion(kind, asOf).orElse(""));
+        }
+        PositionRules pr = rules.get();
+        String digest = tier.mapped() ? VarTier.digest(date, versions.get(k.vector()), versions.get(k.hierarchy()), versions.get(k.scenarioSet()),
+                pr.digest()) : "";
+        java.util.Optional<java.nio.file.Path> hot = tier.mapped() ? tier.existing(date, digest) : java.util.Optional.empty();
+        if (hot.isPresent()) {
+            VarDate reopened = reopen(date, hot.get(), versions, t0);
+            if (reopened != null) {
+                return reopened;
+            }
+        }
         Map<String, DataNode> sets = documents(k.scenarioSet(), asOf);
         DataNode set = sets.values().stream().findFirst().orElse(null);
         if (set == null) {
@@ -88,8 +117,39 @@ final class VarLoader {
         }
         String setId = text(set, "SCENARIO_SET_ID");
         List<LocalDate> scenarioDates = scenarioDates(date, setId, set);
-        PositionRules pr = rules.get();
-        VarBook.Builder b = new VarBook.Builder(date, setId, scenarioDates, props.rowsPerChunk(), props.memoryBudgetMb() * 1024 * 1024);
+        long budget = props.memoryBudgetMb() * 1024 * 1024;
+        VarBook.Builder b = tier.mapped() ? new VarBook.Builder(date, setId, scenarioDates, budget, tier.target(date, digest))
+                : new VarBook.Builder(date, setId, scenarioDates, props.rowsPerChunk(), budget);
+        try {
+            VarIntake.Summary sum = intake(date, asOf, b, pr, setId);
+            long tVectors = System.nanoTime();
+            for (DataNode n : documents(k.hierarchy(), asOf).values()) {
+                List<String> books = new ArrayList<>();
+                DataNode bs = n.get("BOOKS");
+                for (int i = 0; bs != null && i < bs.size(); i++) {
+                    books.add(bs.get(i).asText());
+                }
+                b.node(text(n, "NODE_ID"), text(n, "HIERARCHY"), text(n, "LEVEL"), text(n, "NAME"), text(n, "PARENT_ID"), books,
+                        number(text(n, "LIMIT_VAR")));
+            }
+            Map<String, VarDate.Portfolio> portfolios = new LinkedHashMap<>();
+            documents(k.portfolio(), asOf).forEach((id, p) -> portfolios.put(id, VarDate.Portfolio.of(id, p)));
+            versions.put("scenarioSet", setId);
+            b.batchId(sum.batchIds().isEmpty() ? "" : sum.batchIds().get(0)).meta(meta(sum, versions));
+            VarBook book = b.build(sums);
+            tier.opened(book);
+            long ms = (System.nanoTime() - t0) / 1_000_000;
+            return new VarDate(date, book, portfolios, versions.get(k.vector()), java.time.Instant.now(), ms, (tVectors - t0) / 1_000_000, sum,
+                    versions, List.of());
+        } catch (RuntimeException e) {
+            b.discard();
+            throw e;
+        }
+    }
+
+    /** Streams the date's vectors through the intake into the builder, then checks the date is one run. */
+    private VarIntake.Summary intake(LocalDate date, AsOf asOf, VarBook.Builder b, PositionRules pr, String setId) {
+        VarProperties.Kinds k = props.kinds();
         List<String> columns = VarIntake.columns(router.columnar(k.vector()), pr);
         VarIntake intake = new VarIntake(b, pr, date, columns.subList(1, columns.size()));
         boolean read;
@@ -118,27 +178,47 @@ final class VarLoader {
         if (!otherSets.isEmpty()) {
             throw inconsistent(date, "vectors of the scenario set " + String.join(", ", otherSets) + " beside the date's set " + setId);
         }
-        long tVectors = System.nanoTime();
-        for (DataNode n : documents(k.hierarchy(), asOf).values()) {
-            List<String> books = new ArrayList<>();
-            DataNode bs = n.get("BOOKS");
-            for (int i = 0; bs != null && i < bs.size(); i++) {
-                books.add(bs.get(i).asText());
-            }
-            b.node(text(n, "NODE_ID"), text(n, "HIERARCHY"), text(n, "LEVEL"), text(n, "NAME"), text(n, "PARENT_ID"), books,
-                    number(text(n, "LIMIT_VAR")));
+        return sum;
+    }
+
+    /** The load's own record kept in the hot file: what the intake counted and the inputs' versions (read back by {@link #reopen}). */
+    private static String meta(VarIntake.Summary sum, Map<String, String> versions) {
+        try {
+            return JSON.writeValueAsString(Map.of("intake", sum, "versions", versions));
+        } catch (com.fasterxml.jackson.core.JsonProcessingException e) {
+            return "{}";
         }
+    }
+
+    /**
+     * A date opened from its hot file (built from the same inputs): mapped, its intake and versions from the file, its portfolios read
+     * again (they are not in the file's digest). Null when the file cannot be used (then the date is built from the lake).
+     */
+    private VarDate reopen(LocalDate date, java.nio.file.Path file, Map<String, String> versions, long t0) {
+        VarBook book;
+        try {
+            book = tier.open(file, t0);
+        } catch (RuntimeException e) {
+            org.slf4j.LoggerFactory.getLogger(VarLoader.class).warn("VaR: the hot file {} is not usable ({}); the date is read from the lake", file,
+                    e.getMessage());
+            return null;
+        }
+        VarIntake.Summary sum;
+        Map<String, String> v = new LinkedHashMap<>(versions);
+        try {
+            com.fasterxml.jackson.databind.JsonNode m = JSON.readTree(book.hot().meta());
+            sum = JSON.treeToValue(m.get("intake"), VarIntake.Summary.class);
+            m.path("versions").fields().forEachRemaining(e -> v.putIfAbsent(e.getKey(), e.getValue().asText()));
+        } catch (Exception e) {
+            book.close();
+            return null;
+        }
+        v.put("scenarioSet", book.scenarioSet());
         Map<String, VarDate.Portfolio> portfolios = new LinkedHashMap<>();
-        documents(k.portfolio(), asOf).forEach((id, p) -> portfolios.put(id, VarDate.Portfolio.of(id, p)));
-        VarBook book = b.build(sums);
-        Map<String, String> versions = new LinkedHashMap<>();
-        for (String kind : k.inputs()) {
-            versions.put(kind, router.dataVersion(kind, asOf).orElse(""));
-        }
-        versions.put("scenarioSet", setId);
+        documents(props.kinds().portfolio(), AsOf.of(date)).forEach((id, p) -> portfolios.put(id, VarDate.Portfolio.of(id, p)));
+        tier.opened(book);
         long ms = (System.nanoTime() - t0) / 1_000_000;
-        return new VarDate(date, book, portfolios, versions.get(k.vector()), java.time.Instant.now(), ms, (tVectors - t0) / 1_000_000, sum,
-                versions, List.of());
+        return new VarDate(date, book, portfolios, v.get(props.kinds().vector()), java.time.Instant.now(), ms, 0, sum, v, List.of());
     }
 
     /** The scenario days, checked: strictly increasing and all before the business date (else the date is not one run). */

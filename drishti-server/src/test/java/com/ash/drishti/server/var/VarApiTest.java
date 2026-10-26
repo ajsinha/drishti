@@ -77,7 +77,7 @@ import org.springframework.test.web.servlet.MockMvc;
         "drishti.security.roles.division-head.kinds[0]=*", "drishti.security.roles.division-head.raw=true",
         "drishti.var.access.division-head[MGMT~DESK-X]=aggregate",
         "drishti.security.roles.curves.kinds[0]=curve",
-        "drishti.var.threads=2",
+        "drishti.var.threads=2", "drishti.var.tier.close-grace-seconds=0",
         "drishti.identity.database-url=jdbc:sqlite:target/identity-${random.uuid}/identity.db"})
 @AutoConfigureMockMvc
 @Import(PinnedBusinessDate.class)
@@ -100,6 +100,7 @@ class VarApiTest {
     @Autowired TokenVerifier tokens;
     @Autowired VarOfficial official;
     @Autowired VarFigures figures;
+    @Autowired VarService service;
     final ObjectMapper json = new ObjectMapper();
 
     private String as(String user, String role) {
@@ -367,6 +368,48 @@ class VarApiTest {
         Thread.sleep(1500);
         mvc.perform(get("/api/v1/var/scope").param("scope", "BANK").param("asOf", after.toString()).header("Authorization", as("rita", "risk")))
                 .andExpect(status().is(422)).andExpect(jsonPath("$.code").value("DRS-5202"));
+    }
+
+    @Test
+    @Order(9)
+    void eachDateIsAMappedHotFileThatOpensAgainWithoutTheLake() throws Exception {
+        String ada = as("ada", "admin");
+        double before = onDay("DESK:DESK-X - TRD:T1").get("var").asDouble();
+        JsonNode st = json.readTree(mvc.perform(get("/api/v1/var/status").header("Authorization", ada)).andExpect(status().isOk()).andReturn()
+                .getResponse().getContentAsString());
+        assertThat(st.at("/tier/mode").asText()).isEqualTo("mapped");
+        assertThat(st.at("/tier/mapping").asText()).contains("unmapped on close");
+        JsonNode day = null;
+        for (JsonNode l : st.get("loaded")) {
+            if (VarLakeFixture.DAY.toString().equals(l.path("businessDate").asText())) {
+                day = l;
+            }
+        }
+        assertThat(day).isNotNull();
+        assertThat(day.get("tier").asText()).isEqualTo("mapped");
+        String hot = day.get("hotFile").asText();
+        assertThat(hot).startsWith(VarLakeFixture.DAY + "/inputs-").endsWith(".vhot");
+        Path file = service.loader().tier().root().resolve(hot);
+        assertThat(file).exists();
+        assertThat(file.toString()).startsWith(Path.of(System.getProperty("drishti.data.dir", "data")).toAbsolutePath().normalize().toString());
+        long reopened = st.at("/tier/reopened").asLong();
+        // an administrator's reload drops the dates; the next request opens the same file again (the inputs did not change)
+        mvc.perform(post("/api/v1/var/reload").header("Authorization", ada)).andExpect(status().isOk());
+        assertThat(onDay("DESK:DESK-X - TRD:T1").get("var").asDouble()).isEqualTo(before);
+        JsonNode after = json.readTree(mvc.perform(get("/api/v1/var/status").header("Authorization", ada)).andReturn().getResponse()
+                .getContentAsString());
+        assertThat(after.at("/tier/reopened").asLong()).isGreaterThan(reopened);
+        JsonNode prov = onDay("DESK:DESK-X - TRD:T1").get("provenance");
+        assertThat(prov.get("tier").asText()).contains("hot file");
+        assertThat(onDay("DESK:DESK-X").at("/provenance/tier").asText()).isEqualTo("node aggregate (float64)");
+        try (var files = Files.walk(service.loader().tier().root())) {
+            assertThat(files.map(p -> p.getFileName().toString()).filter(n -> n.startsWith("."))).as("no hidden files").isEmpty();
+        }
+    }
+
+    private JsonNode onDay(String scope) throws Exception {
+        return json.readTree(mvc.perform(get("/api/v1/var/scope").param("scope", scope).param("asOf", VarLakeFixture.DAY.toString())
+                .header("Authorization", as("rita", "risk"))).andExpect(status().isOk()).andReturn().getResponse().getContentAsString());
     }
 
     /** The rows of the published table: the records its commits added (each commit one date). */

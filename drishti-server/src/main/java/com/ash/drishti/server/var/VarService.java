@@ -167,22 +167,35 @@ public final class VarService implements AutoCloseable {
         ds.sort(java.util.Comparator.reverseOrder());
         for (LocalDate d : ds.subList(Math.min(ds.size(), props.hotDates()), ds.size())) {
             if (!d.equals(keep)) {
-                dates.remove(d);
+                retire(dates.remove(d), false);
                 cache.asMap().keySet().removeIf(k -> k.startsWith(d + "|"));
             }
         }
     }
 
+    /**
+     * A date leaves memory: a mapped one is unmapped once the requests still reading it are done (drishti.var.tier.close-grace-seconds);
+     * its hot file stays for the next request of the date (a history date opens from it) unless it is {@code stale}.
+     */
+    private void retire(CompletableFuture<VarDate> f, boolean stale) {
+        if (f != null) {
+            f.thenAccept(vd -> loader.tier().retire(vd.book(), stale));
+        }
+    }
+
     /** Drops every loaded date (an administrator's reload). */
     void reload() {
-        dates.clear();
+        new ArrayList<>(dates.keySet()).forEach(d -> retire(dates.remove(d), false));
         refused.clear();
         cache.invalidateAll();
     }
 
-    /** Drops one date (the data-load signal of an input of that date): its next request loads it again. */
+    /**
+     * Drops one date (the data-load signal of an input of that date): its next request loads it again. Its hot file goes with it once
+     * unused when the inputs changed (a restatement); unchanged inputs open the same file again.
+     */
     void reload(LocalDate d) {
-        dates.remove(d);
+        retire(dates.remove(d), false);
         refused.remove(d);
         cache.asMap().keySet().removeIf(k -> k.startsWith(d + "|"));
     }
@@ -198,7 +211,12 @@ public final class VarService implements AutoCloseable {
                 m.put("trades", vd.book().tradeCount());
                 m.put("positions", vd.book().positionCount());
                 m.put("nodes", vd.book().nodes().size());
-                m.put("vectorBytes", vd.book().store().bytes());
+                m.put("vectorBytes", vd.book().vectorBytes());
+                m.put("tier", vd.book().tier());
+                m.put("aggregateBytes", vd.book().aggregateBytes());
+                if (vd.book().hot() != null) {
+                    m.put("hotFile", loader.tier().root().relativize(vd.book().hot().file()).toString().replace('\\', '/'));
+                }
                 m.put("loadMs", vd.loadMs());
                 m.put("version", vd.version());
                 m.put("rejected", vd.intake().rejected());
@@ -395,6 +413,7 @@ public final class VarService implements AutoCloseable {
 
     @Override
     public void close() {
+        loader.tier().close();
         sums.close();
     }
 }

@@ -48,12 +48,13 @@ import org.springframework.boot.context.properties.ConfigurationProperties;
  * @param pathPage rows of the P&amp;L path table per page
  * @param positions how positions are derived from the trades when no loaded pack says (a pack's {@code positions:} section wins)
  * @param official the official end-of-day captures and their published results
+ * @param tier where a loaded date's vectors are kept: the memory-mapped hot file (default) or the heap (VAR.md section 7.3)
  */
 @ConfigurationProperties("drishti.var")
 public record VarProperties(Boolean enabled, Double confidence, Double esConfidence, String rankRule, Integer componentWindow,
         Boolean componentScaleToVar, Integer threads, Integer parallelRows, Long memoryBudgetMb, Integer rowsPerChunk, Integer hotDates,
         Integer historyDays, Integer histogramBins, Integer maxParts, Kinds kinds, Map<String, Map<String, String>> access, Integer pathPage,
-        Positions positions, Official official) {
+        Positions positions, Official official, Tier tier) {
 
     /** The kinds the engine reads, as the market-risk pack names them; {@code position} is the kind its derived positions are served as. */
     public record Kinds(String vector, String position, String hierarchy, String scenarioSet, String portfolio) {
@@ -120,6 +121,33 @@ public record VarProperties(Boolean enabled, Double confidence, Double esConfide
         }
     }
 
+    /**
+     * The tiered memory (VAR.md section 7.3): where a loaded date's vectors live.
+     *
+     * @param mode {@code mapped} (default): each loaded date becomes a local hot file (float32 position rows in hierarchy order, the
+     *     aggregates in float64) mapped into memory, the heap keeping the aggregates, columns and links; {@code heap}: every trade's vector
+     *     in float64 on the heap (as before 2.8.0)
+     * @param dir the hot files' folder ({@code <data folder>/var/hot}), one folder per business date
+     * @param diskDates the most hot files kept on disk (the least recently used beyond it are deleted); a date not open is mapped
+     *     again from its file when asked, without reading the lake
+     * @param keepOnShutdown keep the hot files when the server stops (false: they are deleted at shutdown, and at start any left over)
+     * @param closeGraceSeconds how long an evicted date stays mapped for the requests still reading it before it is unmapped
+     */
+    public record Tier(String mode, String dir, Integer diskDates, Boolean keepOnShutdown, Integer closeGraceSeconds) {
+        public Tier {
+            mode = mode == null || mode.isBlank() ? "mapped" : mode.trim().toLowerCase(Locale.ROOT);
+            mode = mode.equals("heap") ? "heap" : "mapped";
+            dir = dir == null || dir.isBlank() ? com.ash.drishti.api.DataDir.under("var/hot") : dir;
+            diskDates = diskDates == null || diskDates < 1 ? 60 : diskDates;
+            keepOnShutdown = keepOnShutdown != null && keepOnShutdown;
+            closeGraceSeconds = closeGraceSeconds == null || closeGraceSeconds < 0 ? 60 : closeGraceSeconds;
+        }
+
+        public boolean mapped() {
+            return mode.equals("mapped");
+        }
+    }
+
     public VarProperties {
         enabled = enabled == null || enabled;
         confidence = confidence == null || confidence <= 0.5 || confidence >= 1 ? 0.99 : confidence;
@@ -140,6 +168,7 @@ public record VarProperties(Boolean enabled, Double confidence, Double esConfide
         pathPage = pathPage == null || pathPage <= 0 ? 60 : pathPage;
         positions = positions == null ? new Positions(null, null) : positions;
         official = official == null ? new Official(null, null, null, null, null) : official;
+        tier = tier == null ? new Tier(null, null, null, null, null) : tier;
     }
 
     public com.ash.drishti.compute.var.VarMath.RankRule rule() {

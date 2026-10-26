@@ -130,6 +130,7 @@ public class VarController {
         m.put("threads", svc.sums().threads());
         m.put("memoryBudgetMb", pr.memoryBudgetMb());
         m.put("hotDates", pr.hotDates());
+        m.put("tier", svc.loader().tier().describe());
         m.put("kinds", pr.kinds().all());
         m.put("positionRules", svc.loader().rules().toString());
         m.put("official", Map.of("enabled", pr.official().enabled(), "publish", pr.official().publish(), "retentionYears",
