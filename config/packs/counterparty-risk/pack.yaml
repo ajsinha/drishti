@@ -35,6 +35,7 @@ kinds:
 - exposure-path
 - exposure-result
 - exposure-whatif
+- exposure-official-cpty
 sutras: sutras
 formats: config/formats.yaml
 mnemonics:
@@ -77,6 +78,9 @@ mnemonics:
   XWIF:
     kind: exposure-whatif
     label: Exposure what-if before dealing (computed, Python)
+  XOFC:
+    kind: exposure-official-cpty
+    label: Exposure official results by netting set and counterparty (published)
 graph:
   id-patterns:
   - pattern: ^AGR-
@@ -182,6 +186,45 @@ connectors:
     settings:
       root: ${DRISHTI_DELTA_ROOT:${drishti.data.dir:./data}/delta}
       domain: collateral
+  exposure-results:
+    plugin: delta
+    enabled: ${DRISHTI_EXPOSURE_ENABLED:true}
+    description: 'The official end-of-day exposure of every netting set, counterparty and group the server publishes (risk-results/exposure-official-cpty),
+      read only: for BI and other readers, never an engine''s input'
+    kinds:
+    - exposure-official-cpty
+    settings:
+      root: ${DRISHTI_DELTA_ROOT:${drishti.data.dir:./data}/delta}
+      domain: risk-results
+      layout:
+        exposure-official-cpty:
+          columns:
+          - HIERARCHY
+          - NODE_ID
+          - NODE_NAME
+          - PARENT_ID
+          - LEVEL
+          - COUNTERPARTY
+          - LEGAL_ENTITY
+          - RESULT_VERSION
+          - RUN_ID
+          - PATHS
+          - CE
+          - EPE
+          - EEPE
+          - PEAK_EE
+          - PEAK_PFE_95
+          - PEAK_PFE_99
+          - EAD_IMM
+          - PEAK_PFE_DATE
+          - PFE_95_1Y
+          - PFE_95_5Y
+          - EE_1Y
+          - EE_5Y
+          - NETTING_SETS
+          - TRADES
+          - FAILED_TRADES
+          - PARTIAL_SETS
   exposure-store:
     plugin: delta
     enabled: ${DRISHTI_LAKE_ENABLED:true}
@@ -366,6 +409,7 @@ routes:
   exposure-path: exposure-store
   exposure-result: exposure-engine
   exposure-whatif: exposure-whatif
+  exposure-official-cpty: exposure-results
 form:
   agreement:
   - path: AGREEMENT_ID
@@ -579,6 +623,22 @@ form:
   - path: RUN_ID
     label: Run id
     type: id
+  exposure-official-cpty:
+  - path: NODE_ID
+    label: Node id
+    type: id
+  - path: HIERARCHY
+    label: Hierarchy
+    type: text
+  - path: COUNTERPARTY
+    label: Counterparty
+    type: number
+  - path: NODE_NAME
+    label: Node name
+    type: text
+  - path: RESULT_VERSION
+    label: Result version
+    type: text
 console:
   examples:
   - - AGR AGR-NORTHBRIDGE-ISDA

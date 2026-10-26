@@ -169,6 +169,24 @@ kinds:
       COLLATERAL_MODEL: { term: "Collateral model", means: "lagged (the CSA's call at the value a margin period of risk earlier), current (today's collateral held throughout) or none." }
     panels:
       profile: { about: "Expected exposure and potential future exposure at each primary date, before and after the candidates." }
+  exposure-official-cpty:
+    title: Exposure official result
+    about: >-
+      ${$.NODE_NAME} (${$.LEVEL}) on ${$.BUSINESS_DATE}: the official end-of-day peak expected exposure of ${fmt($.PEAK_EE, 'compact')} USD
+      and peak 95% potential future exposure of ${fmt($.PEAK_PFE_95, 'compact')} USD, result version ${$.RESULT_VERSION}, as the server
+      captured and published it (read only; EXP ${$.NODE_ID} computes it again now).
+    guide: counterparty-risk
+    glossary:
+      HIERARCHY: { term: "Row type", means: "NSET for a netting set, CPTY for a counterparty (all its netting sets netted path by path), GROUP for a connected group." }
+      NODE_ID: { term: "Scope", means: "The scope the figures are for, in the scope grammar: NSET:<set>, CPTY:<counterparty> or GROUP:<group>." }
+      RESULT_VERSION: { term: "Result version", means: "1, then 2, 3 ... when the date is restated; the latest version is the date's figure." }
+      CE: { use: "ce" }
+      EPE: { use: "epe" }
+      EEPE: { use: "eepe" }
+      PEAK_EE: { term: "Peak expected exposure", means: "The highest expected exposure over the primary dates.", unit: "USD" }
+      PEAK_PFE_95: { term: "Peak PFE (95%)", means: "The highest 95% potential future exposure over the primary dates. Not additive: a counterparty's is its own row, never a sum of its netting sets'.", unit: "USD" }
+      PEAK_PFE_99: { term: "Peak PFE (99%)", means: "The highest 99% potential future exposure over the primary dates. Not additive.", unit: "USD" }
+      EAD_IMM: { term: "Exposure at default (internal model, informational)", means: "1.4 times the effective EPE.", unit: "USD" }
   simulation-run:
     title: Exposure simulation run
     about: >-
