@@ -6060,7 +6060,7 @@ datasets:
     total: 3
     files:
     - snapshot-2026-07-08.jsonl.gz
-    bytes: 427
+    bytes: 235
   - day: '2026-07-09'
     kind: changes
     documents: 0
@@ -20196,10 +20196,6 @@ datasets:
   bytes: 7168291
 - samples: config/packs/world-economy/samples
   pack: world-economy
-  kind: country-group
-  connector: macro-store
-- samples: config/packs/world-economy/samples
-  pack: world-economy
   kind: economic-forecast
   connector: macro-store
 - samples: config/packs/world-economy/samples
@@ -20291,7 +20287,7 @@ datasets:
   captured: '2026-10-24'
   source: SEC EDGAR, Nasdaq Trader, GLEIF and Wikidata (tools/publicdata/us_equities.py)
   documents: 503
-  bytes: 450959
+  bytes: 427385
 - folder: us-equities/index-membership
   pack: us-equities
   kind: index-membership
@@ -20301,17 +20297,7 @@ datasets:
   captured: '2026-10-24'
   source: SEC EDGAR, Nasdaq Trader, GLEIF and Wikidata (tools/publicdata/us_equities.py)
   documents: 6
-  bytes: 26549
-- folder: us-equities/sic-sector
-  pack: us-equities
-  kind: sic-sector
-  connector: us-equities-store
-  key: SIC
-  snapshot: snapshot-2026-10-24.jsonl.gz
-  captured: '2026-10-24'
-  source: SEC EDGAR, Nasdaq Trader, GLEIF and Wikidata (tools/publicdata/us_equities.py)
-  documents: 182
-  bytes: 31238
+  bytes: 23945
 - folder: us-equities/filing-feed
   pack: us-equities
   kind: filing-feed
@@ -20351,17 +20337,7 @@ datasets:
   captured: '2026-10-25'
   source: GLEIF LEI records, relationship records and mapping files (tools/publicdata/gleif.py)
   documents: 9937
-  bytes: 1925345
-- folder: gleif/lei-group
-  pack: gleif
-  kind: lei-group
-  connector: gleif-store
-  key: GROUP_ID
-  snapshot: snapshot-2026-10-25.jsonl.gz
-  captured: '2026-10-25'
-  source: GLEIF LEI records, relationship records and mapping files (tools/publicdata/gleif.py)
-  documents: 591
-  bytes: 456903
+  bytes: 2081762
 - folder: gleif/lei-relationship
   pack: gleif
   kind: lei-relationship
@@ -20372,16 +20348,6 @@ datasets:
   source: GLEIF LEI records, relationship records and mapping files (tools/publicdata/gleif.py)
   documents: 9347
   bytes: 460787
-- folder: gleif/lei-country
-  pack: gleif
-  kind: lei-country
-  connector: gleif-store
-  key: COUNTRY
-  snapshot: snapshot-2026-10-25.jsonl.gz
-  captured: '2026-10-25'
-  source: GLEIF LEI records, relationship records and mapping files (tools/publicdata/gleif.py)
-  documents: 134
-  bytes: 313176
 - folder: gleif/lei-mapping
   pack: gleif
   kind: lei-mapping

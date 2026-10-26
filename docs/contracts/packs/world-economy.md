@@ -26,7 +26,7 @@ One section per command of the pack: the shape of its data, how it is stored and
 | [FCST](#fcst-economic-forecast-economic-forecast) | `economic-forecast` | fundamental | active | 10 | 4 |
 | [LABR](#labr-labour-market-labour-market) | `labour-market` | fundamental | active | 13 | 6 |
 | [FISC](#fisc-fiscal-position-fiscal-position) | `fiscal-position` | fundamental | active | 13 | 5 |
-| [ECG](#ecg-country-group-country-group) | `country-group` | fundamental | active | 15 | 6 |
+| [ECG](#ecg-country-group-country-group) | `country-group` | computed | active | 25 | 0 |
 | [REGE](#rege-region-economy-region-economy) | `region-economy` | fundamental | active | 14 | 5 |
 | [JUR](#jur-jurisdiction-jurisdiction) | `jurisdiction` | fundamental | active | 25 | 7 |
 | [PARTY](#party-party-party) | `party` | fundamental | active | 13 | 6 |
@@ -486,93 +486,77 @@ Government debt and net lending (IMF) with revenue, expense and military spendin
 
 ## ECG: Country group (`country-group`)
 
-A World Bank region or income group (or the world): output, population, growth and its largest economies.
+A World Bank region or income group (or the world), computed from its member economies when asked: output, population, growth, inflation and its largest economies.
 
 |  |  |
 |---|---|
 | Contract | [country-group.contract.yaml](../../../config/packs/world-economy/contracts/country-group.contract.yaml) · version 1.0 |
-| Class | fundamental |
+| Class | computed |
 | Status | active |
-| Source | public data: World Bank, World Development Indicators |
-| Grain | One row per country group, keyed by GROUP_ID. |
+| Source | computed by Drishti: the derived connector macro-groupings over the kind economy |
+| Grain | One record per GROUP_ID of the economy records, computed when asked. |
 | Key | `GROUP_ID` |
 | Id pattern | `^ECG-` |
-| Dated by | `snapshot` |
-| Cadence | static (due: to be confirmed) |
-| Storage | connector `macro-store` (plugin `delta`), table `<root>/macro/country-group/` |
-| Test data | config/packs/world-economy/samples |
+| Dated by | `on request` |
+| Cadence | on change (due: recomputed from its source kind (connector refresh 60s)) |
+| Storage | connector `macro-groupings` (plugin `derived`) |
 
 **Fields**
 
 | Field | Type | Presence | Unit | Description | Example or values | Link |
 |---|---|---|---|---|---|---|
-| `GROUP_ID` | id | required |  | The record's id (the business key) | `ECG-EAS` (pattern `^ECG-`) |  |
-| `NAME` | text | required |  | The World Bank region, income group or the world. | `East Asia & Pacific` |  |
-| `GROUP_TYPE` | text | required |  | Whether the group is a region, an income group or the world. | `World Bank region` |  |
-| `ECONOMIES` | integer | required |  | The number of economies in the group that the pack covers. | `36` |  |
-| `YEAR` | text | optional |  | — | `2025` |  |
-| `GDP_USD_BN` | amount | optional | USD billions | The group's GDP in current US dollars (World Bank aggregate). | `33657` |  |
-| `GDP_PER_CAPITA` | amount | optional | USD | The group's GDP per head, in current US dollars. | `14077.3` |  |
-| `POPULATION_M` | amount | optional | millions | The group's total population. | `2390.87` |  |
-| `GROWTH` | rate | optional | % a year | The group's yearly real GDP growth (World Bank aggregate). | `3.99734` |  |
-| `INFLATION` | rate | optional |  | — | `2.01821` |  |
-| `GROWTH_PATH` | record list | required |  | Nested: see nested GROWTH_PATH[] |  |  |
-| `GDP_PATH` | record list | required |  | Nested: see nested GDP_PATH[] |  |  |
-| `TOP_ECONOMIES` | record list | required |  | Nested: see nested TOP_ECONOMIES[] |  |  |
-| `MEMBER_ECONOMIES` | id list | required |  | Economies: the economy it refers to |  | `economy` |
-| `PROVENANCE` | record | required |  | Nested: see nested PROVENANCE |  |  |
+| `GROUP_ID` | id | required |  | The value the economy records are grouped by ($.REGION_GROUP; each also joins $.INCOME_GROUP, 'ECG-WLD') |  |  |
+| `MEMBER_ECONOMIES` | id list | derived |  | The ids of the grouped economy records (at most 100000) |  |  |
+| `ECONOMIES` | integer | derived |  | The member economies: every economy whose REGION_GROUP or INCOME_GROUP is the key (every economy for ECG-WLD) |  |  |
+| `GDP_USD_BN` | amount | derived |  | The members' GDP summed, USD bn (each at its latest year) |  |  |
+| `POPULATION_M` | amount | derived |  | The members' population summed, millions |  |  |
+| `GDP_PC_GDP` | amount | derived |  | GDP summed over the members whose population is known (the numerator of GDP_PER_CAPITA) |  |  |
+| `GDP_PC_POP` | amount | derived |  | Population summed over the members whose GDP is known (the denominator) |  |  |
+| `GROWTH_WEIGHTED` | amount | derived |  | GDP x real growth summed over the members with both |  |  |
+| `GROWTH_WEIGHT` | amount | derived |  | GDP summed over the members with a growth figure |  |  |
+| `INFLATION` | rate | derived |  | The median of the members' consumer price inflation, % (the World Bank's aggregate for prices) |  |  |
+| `WITH_GROWTH` | integer | derived |  | Members with a growth figure |  |  |
+| `WITH_INFLATION` | integer | derived |  | Members with an inflation figure |  |  |
+| `REGION_KEYS` | text list | derived |  | A helper of the page fields: distinct over the group of: $.REGION_GROUP |  |  |
+| `REGION_NAMES` | text list | derived |  | A helper of the page fields: distinct over the group of: $.REGION_NAME |  |  |
+| `INCOME_NAMES` | text list | derived |  | A helper of the page fields: distinct over the group of: $.INCOME_NAME |  |  |
+| `YEARS` | text list | derived |  | A helper of the page fields: distinct over the group of: $.YEAR |  |  |
+| `PROVENANCE` | record | derived |  | The first member's source and licence (World Bank WDI, IMF, CIA Factbook) |  |  |
+| `ROWS` | record list | derived |  | One row per grouped economy record |  |  |
+| `NAME` | text | derived |  | The group's name: the World Bank region's or income group's name, or World |  |  |
+| `GROUP_TYPE` | text | derived |  | World Bank region, World Bank income group or World |  |  |
+| `GDP_PER_CAPITA` | amount | derived |  | GDP_PC_GDP x 1000 / GDP_PC_POP, USD a person |  |  |
+| `GROWTH` | rate | derived |  | GROWTH_WEIGHTED / GROWTH_WEIGHT: real GDP growth weighted by GDP, % a year |  |  |
+| `YEAR` | text | derived |  | The latest year among the members' figures |  |  |
+| `GDP_PATH` | record list | derived |  | The members' GDP summed by year: label (year), value (USD bn), count (members with a figure that year) |  |  |
+| `TOP_ECONOMIES` | record list | derived |  | The ten largest members by GDP (rows of ROWS) |  |  |
 
-**Nested `GROWTH_PATH[]`**
-
-| Field | Type | Presence | Unit | Description | Example or values | Link |
-|---|---|---|---|---|---|---|
-| `YEAR` | text | required |  | The calendar year. | `2015` |  |
-| `GROWTH` | rate | required | % a year | Group growth in that year. | `4.7589` |  |
-
-**Nested `GDP_PATH[]`**
-
-| Field | Type | Presence | Unit | Description | Example or values | Link |
-|---|---|---|---|---|---|---|
-| `YEAR` | text | required |  | The calendar year. | `2015` |  |
-| `GDP` | amount | required | USD billions | Group GDP in that year. | `22388.7` |  |
-
-**Nested `TOP_ECONOMIES[]`**
+**Nested `ROWS[]`**
 
 | Field | Type | Presence | Unit | Description | Example or values | Link |
 |---|---|---|---|---|---|---|
-| `ECONOMY` | id | required |  | One of the ten largest economies of the group. | `China` | `economy` |
-| `GDP_USD_BN` | amount | required | USD billions | The economy's GDP in its latest year. | `19498` |  |
-| `GROWTH` | rate | required | % a year | The economy's latest real GDP growth. | `4.95995` |  |
+| `ECONOMY_ID` | unknown | optional |  | From the economy record: $.ECONOMY_ID |  |  |
+| `ECONOMY` | unknown | optional |  | From the economy record: $.NAME |  | `economy` |
+| `ISO3` | unknown | optional |  | From the economy record: $.ISO3 |  |  |
+| `GDP_USD_BN` | unknown | optional |  | From the economy record: $.GDP_USD_BN |  |  |
+| `POPULATION_M` | unknown | optional |  | From the economy record: $.POPULATION_M |  |  |
+| `GDP_PER_CAPITA` | unknown | optional |  | From the economy record: $.GDP_PER_CAPITA |  |  |
+| `GROWTH` | unknown | optional |  | From the economy record: $.GROWTH |  |  |
+| `INFLATION` | unknown | optional |  | From the economy record: $.INFLATION |  |  |
+| `YEAR` | unknown | optional |  | From the economy record: $.YEAR |  |  |
+| `GDP_PATH` | unknown | optional |  | From the economy record: $.GDP_PATH |  |  |
 
-**Nested `PROVENANCE`**
-
-| Field | Type | Presence | Unit | Description | Example or values | Link |
-|---|---|---|---|---|---|---|
-| `SOURCE` | text | required |  | The organisation or organisations whose published data this view shows. | `World Bank, World Development Indicators` |  |
-| `DATASET` | text | required |  | The named dataset and its vintage (the release the numbers come from). | `World Development Indicators (updated 2026-10-08)` |  |
-| `RETRIEVED_AT` | date | required |  | The date the data was downloaded by tools/realdata. | `2026-10-10` |  |
-| `LICENCE` | text | required |  | The terms under which the source allows reuse; attribution is required. | `CC BY 4.0` |  |
-| `ATTRIBUTION` | text | required |  | The credit line to repeat when the data is shown or republished. | `The World Bank: World Development Indicators (CC BY 4.0).` |  |
-| `URL` | text | required |  | The web page of the dataset. | `https://databank.worldbank.org/source/world-development-ind…` |  |
-
-**Links:** `MEMBER_ECONOMIES` → `economy`, `TOP_ECONOMIES[].ECONOMY` → `economy`.
+**Links:** `ROWS[].ECONOMY` → `economy`.
 
 **Validation**
 
-- required: fields `GROUP_ID`, `NAME`, `GROUP_TYPE`, `ECONOMIES`, `GROWTH_PATH`, `GDP_PATH`, `TOP_ECONOMIES`, `MEMBER_ECONOMIES`, `PROVENANCE`
+- required: fields `GROUP_ID`
 - unique: key `GROUP_ID`; per snapshot
-- pattern: field GROUP_ID; pattern ^ECG-
-- link: field MEMBER_ECONOMIES; kind economy
-- link: field TOP_ECONOMIES[].ECONOMY; kind economy
+- link: field ROWS[].ECONOMY; kind economy
 
-**To review (6)**
+**Notes**
 
-- required inferred from 100% coverage in 12 documents (12 samples): confirm each required field is mandatory upstream, and each optional one may be empty.
-- key GROUP_ID is the field holding the sample catalogue's id (ECG-EAS): confirm it is the business key.
-- a snapshot refreshed when tools/publicdata/world_economy.py runs: confirm the refresh cadence.
-- number types decided by the field's name: INFLATION rate: confirm amount, rate or integer.
-- no description in about.yaml or the Sutras for YEAR, INFLATION: write them in the pack's config/about.yaml glossary.
-- The release is 2.9.0 or 2.10.0 (Track B, shipped as each is ready): confirm which.
+- Computed when asked by the derived connector macro-groupings from every economy (since 2.9.2, which retired the stored copy of the World Bank's aggregates): docs/guides/GROUPINGS_ANALYTICS_GUIDE.md (Part II).
 
 ## REGE: Region economy (`region-economy`)
 

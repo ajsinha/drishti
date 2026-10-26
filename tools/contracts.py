@@ -630,9 +630,12 @@ class Draft:
     def fields_from_derived(self, spec: dict, figs, entry, key) -> tuple[list[dict], dict]:
         """A derived connector's kind: its id field, the members, the aggregated fields and the rows, read from its settings."""
         src = spec.get("from")
-        agg = {"count": "integer", "sum": "amount", "distinct": "text list", "max": "unknown", "min": "unknown"}
+        agg = {"count": "integer", "sum": "amount", "distinct": "text list", "max": "unknown", "min": "unknown", "avg": "number", "median": "number",
+               "first": "unknown"}
+        also = ", ".join(f"{v}" for v in (spec.get("also-group-by") or {}).values())
         top = [{"name": spec["id-field"], "type": "id", "presence": "required", "description": f"The value the {src} records are grouped by "
-                f"({spec.get('group-by')})", **({"link": self.links[spec["id-field"]]} if self.links.get(spec["id-field"]) else {})}]
+                f"({spec.get('group-by')}{'; each also joins ' + also if also else ''})",
+                **({"link": self.links[spec["id-field"]]} if self.links.get(spec["id-field"]) else {})}]
         if spec.get("members"):
             top.append({"name": spec["members"], "type": "id list", "presence": "derived",
                         "description": f"The ids of the grouped {src} records (at most {spec.get('max-members')})",
@@ -657,7 +660,17 @@ class Draft:
                 if self.links.get(name):
                     r["link"] = self.links[name]
                 rows.append(r)
+            if spec.get("tree"):
+                rows.append({"name": spec["tree"].get("level", "LEVEL"), "type": "integer", "presence": "derived",
+                             "description": f"The row's depth in the group's tree, built from {spec['tree'].get('parent')} (the key 0)"})
             nested[spec["rows-field"] + "[]"] = rows
+        if spec.get("tree"):
+            t = spec["tree"]
+            top.append({"name": t.get("field", "TREE"), "type": "record list", "presence": "derived",
+                        "description": f"The rows as a tree under the key: each row with its CHILDREN, by {t.get('parent')}"})
+            top.append({"name": t.get("levels", "LEVELS"), "type": "integer", "presence": "derived", "description": "The deepest level of the tree"})
+        for name, expr in (spec.get("then") or {}).items():
+            top.append({"name": name, "type": "unknown", "presence": "derived", "description": f"Worked out over the group's page: {str(expr)[:160]}"})
         self.review.append(f"field types of a derived kind are read from its connector's expressions (count, sum, distinct): confirm; "
                            f"rows copy the {src} record's fields, whose contract states their types.")
         return top, nested

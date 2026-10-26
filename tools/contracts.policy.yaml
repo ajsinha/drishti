@@ -25,6 +25,8 @@
 #   retired      kinds retired in a release: removed with their contracts, samples, test data and Sutras; a guard test fails the build
 #                when one returns (tools/test_contracts.py; docs/contracts/README.md section 14)
 #   removed      kind -> the computed figures removed from its stored record in a release: they never return (the same guard)
+#   computed-in-place  kinds whose stored version is retired in a release and which are computed under the same kind, command and ids
+#                since (a derived connector): no Delta table, test data, samples or generator writes them again (the same guard)
 #   engine-columns  measure -> the columns its engine produces: no input or fundamental kind, test data or sample may carry one
 #   notes        kind -> notes copied into the draft
 #   review       kind -> questions copied into the draft's review list
@@ -32,7 +34,8 @@
 classes:
   input: [pnl-vector, scenario-set, risk-hierarchy, portfolio, path-book, path-strip, simulation-run, exposure-path]
   drishti-owned: [position]
-  computed: [path-sum, path-sum-java, var-result, var-whatif, exposure-result, var-official, exposure-official-cpty]   # var-official, exposure-official-cpty: the published official VaR and exposure (read only)
+  computed: [path-sum, path-sum-java, var-result, var-whatif, exposure-result, var-official, exposure-official-cpty,   # var-official, exposure-official-cpty: the published official VaR and exposure (read only)
+             lei-group, lei-country, sic-sector, country-group, correlation-result]   # the groupings and analytics (2.9.2)
 
 retiring: {}
 
@@ -55,7 +58,43 @@ retired:
     measure: the exposure engine (exposure-result)
     note: "EXP EXP-<cp>-<le> and /v/exposure-profile/EXP-<cp>-<le> open EXP NSET:NS-<cp>-<le> (the computed kind exposure-result)"
 
+# The groupings and analytics (2.9.2, docs/guides/GROUPINGS_ANALYTICS_GUIDE.md): the stored pages retired, the same commands and ids
+# computed from the fundamental data when asked.
+computed-in-place:
+  lei-group:
+    release: 2.9.2
+    contract: ../guides/GROUPINGS_ANALYTICS_GUIDE.md
+    measure: the derived connector gleif-groupings (from lei-entity)
+    note: "LEIG <LEI> and /v/lei-group/<LEI> open the group computed from every entity whose LEI_GROUP it is, with no member cap; LEIG ALL the pack-wide page"
+  lei-country:
+    release: 2.9.2
+    contract: ../guides/GROUPINGS_ANALYTICS_GUIDE.md
+    measure: the derived connector gleif-groupings (from lei-entity)
+    note: "LEIC <country> and /v/lei-country/<country> open the country computed from every entity with a legal address there (no 400-row cap); LEIC ALL the directory"
+  sic-sector:
+    release: 2.9.2
+    contract: ../guides/GROUPINGS_ANALYTICS_GUIDE.md
+    measure: the derived connector us-equities-groupings (from us-company)
+    note: "SIC <code> and /v/sic-sector/<code> open the sector computed from its companies (totals of the USD reporters); SIC ALL the directory"
+  country-group:
+    release: 2.9.2
+    contract: ../guides/GROUPINGS_ANALYTICS_GUIDE.md
+    measure: the derived connector macro-groupings (from economy)
+    note: "ECG ECG-<code> and /v/country-group/ECG-<code> open the group computed from its member economies (GDP and population summed, growth GDP-weighted, inflation the median)"
+
 removed:
+  us-company:
+    release: 2.9.2
+    contract: ../guides/GROUPINGS_ANALYTICS_GUIDE.md
+    figures: [NET_MARGIN, REVENUE_GROWTH, "FINANCIALS[].NET_MARGIN"]
+  index-membership:
+    release: 2.9.2
+    contract: ../guides/GROUPINGS_ANALYTICS_GUIDE.md
+    figures: ["ROWS[].NET_MARGIN"]
+  correlation-matrix:
+    release: 2.9.2
+    contract: ../guides/GROUPINGS_ANALYTICS_GUIDE.md
+    figures: [AVERAGE, PAIRS, WINDOW, ESTIMATOR]
   position:
     release: 2.8.0
     contract: ../guides/VAR_GUIDE.md
@@ -81,6 +120,7 @@ removed:
 engine-columns:
   var: [VAR_99, ES_975, COMPONENT_VAR, BOOK_VAR, PCT_OF_BOOK_VAR, PCT_OF_VAR, HYPO_PNL, EXCEPTIONS_250, VAR_RESULT, VAR_ENGINE]
   exposure: [EPE, EEPE, PFE_PEAK, EE_PEAK, PEAK_PFE, PEAK_EE, EAD_IMM, PFE_95, PFE_99, EXPOSURE_ENGINE, EXPOSURE_PROFILE]
+  correlation: [RHO, SHRINKAGE, MIN_RHO, MAX_RHO, FACTOR_STATS]
 
 notes:
   trade-valuation:
@@ -116,16 +156,6 @@ review:
     - "ACTUAL is the day-over-day MtM change: confirm it is computed from trade valuations, not delivered."
   sa-ccr:
     - "ALPHA (1.4) is a regulatory parameter: confirm it becomes a setting of the SA-CCR engine."
-  lei-group: &grouping-release
-    - "The release is 2.9.0 or 2.10.0 (Track B, shipped as each is ready): confirm which."
-  lei-country: *grouping-release
-  sic-sector: *grouping-release
-  country-group: *grouping-release
-  correlation-matrix: *grouping-release
-  us-company:
-    - "The ratios (USEQ ratios) become computed from the financial facts (GROUPINGS_AND_ANALYTICS.md): confirm which fields are ratios and mark them derived."
-  price-history:
-    - "PXH analytics (returns, volatility, beta) become computed (GROUPINGS_AND_ANALYTICS.md): confirm which fields are analytics."
   counterparty:
     - "NET_MTM and NETTING_SETS[].NET_MTM are computed figures on a fundamental master (docs/contracts/README.md section 3): confirm they are removed when NSET's figures are computed (2.10.0); PFE_PEAK left in 2.9.0 (the exposure engine's)."
 
@@ -177,31 +207,6 @@ parked:
       contract: CVA.md
       measure: CVA / XVA
       figures: [CVA, DVA, FVA, KVA, CS01, COMPONENTS, SENSITIVITIES]
-    lei-group:
-      release: 2.9.0 or 2.10.0
-      contract: GROUPINGS_AND_ANALYTICS.md
-      measure: the GLEIF ownership grouping
-      figures: [MEMBERS, MEMBERS_IN_GLEIF, CAPPED, CAP_NOTE, LEVELS, COUNTRIES, LATE_RENEWALS, TREE, ROWS, BY_COUNTRY, BY_LEGAL_FORM]
-    lei-country:
-      release: 2.9.0 or 2.10.0
-      contract: GROUPINGS_AND_ANALYTICS.md
-      measure: the GLEIF country grouping
-      figures: [ENTITIES, GROUPS_PRESENT, GROUPS_HEADQUARTERED, LAPSED, LATE_RENEWALS, ROWS, ROWS_NOTE, GROUP_ROWS, BY_LEGAL_FORM, BY_CITY]
-    sic-sector:
-      release: 2.9.0 or 2.10.0
-      contract: GROUPINGS_AND_ANALYTICS.md
-      measure: the SIC sector grouping
-      figures: [COMPANIES, REVENUE, NET_INCOME, ROWS, BY_REVENUE]
-    country-group:
-      release: 2.9.0 or 2.10.0
-      contract: GROUPINGS_AND_ANALYTICS.md
-      measure: the country-group aggregation
-      figures: [ECONOMIES, GDP_USD_BN, GDP_PER_CAPITA, POPULATION_M, GROWTH, INFLATION, GROWTH_PATH, GDP_PATH, TOP_ECONOMIES]
-    correlation-matrix:
-      release: 2.9.0 or 2.10.0
-      contract: GROUPINGS_AND_ANALYTICS.md
-      measure: correlations from price history (CORR)
-      figures: [AVERAGE, PAIRS]
   split:
     book:
       release: 2.8.0

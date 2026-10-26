@@ -44,17 +44,17 @@ TESTDATA = ROOT / "data" / "testdata"
 PACKS: dict[str, dict] = {
     "us-equities": {"connector": "us-equities-store",
                     "source": "SEC EDGAR, Nasdaq Trader, GLEIF and Wikidata (tools/publicdata/us_equities.py)",
-                    "keys": {"us-company": "TICKER", "index-membership": "INDEX", "sic-sector": "SIC", "filing-feed": "FEED",
+                    "keys": {"us-company": "TICKER", "index-membership": "INDEX", "filing-feed": "FEED",
                              "filing": "ACCESSION", "financial-fact": "FACT_ID"}},
     "gleif": {"connector": "gleif-store",
               "source": "GLEIF LEI records, relationship records and mapping files (tools/publicdata/gleif.py)",
-              "keys": {"lei-entity": "LEI", "lei-group": "GROUP_ID", "lei-relationship": "RELATIONSHIP_ID", "lei-country": "COUNTRY",
-                       "lei-mapping": "IDENTIFIER"}},
+              "keys": {"lei-entity": "LEI", "lei-relationship": "RELATIONSHIP_ID", "lei-mapping": "IDENTIFIER"}},
 }
+#: the kinds computed since 2.9.2 instead of stored (docs/guides/GROUPINGS_ANALYTICS_GUIDE.md): never written to the test data again
+COMPUTED = {"us-equities": ["sic-sector"], "gleif": ["lei-group", "lei-country"]}
 #: the documents a pack's samples/ keep as reference (README data structures, docs); the rest of each kind: the first REFERENCE_EACH
-REFERENCE_IDS = {"us-equities": {"us-company": ["AAPL", "C", "F"], "index-membership": ["DJIA"], "sic-sector": ["3711"],
-                                 "filing-feed": ["8-K"]},
-                 "gleif": {"lei-entity": ["HWUPKR0MPOU8FGXBT394"], "lei-group": ["8I5DZWZKVSZI1NUHU748"], "lei-country": ["US"]}}
+REFERENCE_IDS = {"us-equities": {"us-company": ["AAPL", "C", "F"], "index-membership": ["DJIA"], "filing-feed": ["8-K"]},
+                 "gleif": {"lei-entity": ["HWUPKR0MPOU8FGXBT394"]}}
 REFERENCE_EACH = 2
 
 

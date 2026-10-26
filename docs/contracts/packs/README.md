@@ -19,7 +19,7 @@
 
 Every command (mnemonic) of every pack has a data contract: a YAML file beside its pack (`config/packs/<pack>/contracts/<kind>.contract.yaml`, checked against `tools/contracts.schema.json`) and a section of its pack's page here. The shared rules are in [the contracts README](../README.md); the computed measures that replace the retiring kinds have their own contracts there.
 
-95 contracts, 502 points still to review. Check them with `drishti.py contract check`; draft a new one with `drishti.py contract bootstrap KIND --write`.
+96 contracts, 473 points still to review. Check them with `drishti.py contract check`; draft a new one with `drishti.py contract bootstrap KIND --write`.
 
 | Command | Kind | Pack | Class | Status | Replaced by | To review |
 |---|---|---|---|---|---|---|
@@ -52,9 +52,9 @@ Every command (mnemonic) of every pack has a data contract: a YAML file beside i
 | `XWIF` | `exposure-whatif` | [counterparty-risk](counterparty-risk.md#xwif-exposure-what-if-before-dealing-computed-python-exposure-whatif) | computed | active |  | 0 |
 | `XOFC` | `exposure-official-cpty` | [counterparty-risk](counterparty-risk.md#xofc-exposure-official-results-by-netting-set-and-counterparty-published-exposure-official-cpty) | computed | active |  | 0 |
 | `LEI` | `lei-entity` | [gleif](gleif.md#lei-lei-legal-entity-lei-entity) | fundamental | active |  | 4 |
-| `LEIG` | `lei-group` | [gleif](gleif.md#leig-lei-ownership-group-lei-group) | fundamental | active |  | 7 |
+| `LEIG` | `lei-group` | [gleif](gleif.md#leig-lei-ownership-group-lei-group) | computed | active |  | 0 |
 | `LEIR` | `lei-relationship` | [gleif](gleif.md#leir-lei-parent-relationship-lei-relationship) | fundamental | active |  | 4 |
-| `LEIC` | `lei-country` | [gleif](gleif.md#leic-lei-country-lei-country) | fundamental | active |  | 6 |
+| `LEIC` | `lei-country` | [gleif](gleif.md#leic-lei-country-lei-country) | computed | active |  | 0 |
 | `LEIM` | `lei-mapping` | [gleif](gleif.md#leim-isin-or-bic-to-lei-lei-mapping) | fundamental | active |  | 4 |
 | `CRV` | `ir-curve` | [market-data](market-data.md#crv-interest-rate-curve-ir-curve) | fundamental | active |  | 8 |
 | `REPO` | `repo-curve` | [market-data](market-data.md#repo-repo-curve-repo-curve) | fundamental | active |  | 6 |
@@ -76,6 +76,7 @@ Every command (mnemonic) of every pack has a data contract: a YAML file beside i
 | `FIX` | `rate-fixing` | [market-data](market-data.md#fix-rate-index-fixings-rate-fixing) | fundamental | active |  | 8 |
 | `BND` | `bond` | [market-data](market-data.md#bnd-bond-security-master-bond) | fundamental | active |  | 7 |
 | `CORR` | `correlation-matrix` | [market-data](market-data.md#corr-correlation-matrix-correlation-matrix) | fundamental | active |  | 6 |
+| `CORRC` | `correlation-result` | [market-data](market-data.md#corrc-correlations-of-a-factor-set-computed-from-price-history-correlation-result) | computed | active |  | 0 |
 | `SCN` | `stress-scenario` | [market-risk](market-risk.md#scn-stress-scenario-stress-scenario) | fundamental | active |  | 5 |
 | `STR` | `stress-result` | [market-risk](market-risk.md#str-stress-result-stress-result) | fundamental | active |  | 4 |
 | `FRTB` | `frtb-sensitivity` | [market-risk](market-risk.md#frtb-frtb-sensitivities-frtb-sensitivity) | fundamental | active |  | 6 |
@@ -98,19 +99,19 @@ Every command (mnemonic) of every pack has a data contract: a YAML file beside i
 | `PTRD` | `portfolio-trades` | [trading](trading.md#ptrd-portfolio-trades-derived-from-trades-portfolio-trades) | computed | active |  | 1 |
 | `LTRD` | `legal-entity-trades` | [trading](trading.md#ltrd-legal-entity-trades-derived-from-trades-legal-entity-trades) | computed | active |  | 1 |
 | `ITRD` | `index-trades` | [trading](trading.md#itrd-index-trades-derived-from-trades-index-trades) | computed | active |  | 1 |
-| `USEQ` | `us-company` | [us-equities](us-equities.md#useq-us-company-us-company) | fundamental | active |  | 7 |
+| `USEQ` | `us-company` | [us-equities](us-equities.md#useq-us-company-us-company) | fundamental | active |  | 5 |
 | `IDX` | `index-membership` | [us-equities](us-equities.md#idx-index-members-index-membership) | fundamental | active |  | 6 |
-| `SIC` | `sic-sector` | [us-equities](us-equities.md#sic-sic-sector-sic-sector) | fundamental | active |  | 7 |
+| `SIC` | `sic-sector` | [us-equities](us-equities.md#sic-sic-sector-sic-sector) | computed | active |  | 0 |
 | `EDGAR` | `filing-feed` | [us-equities](us-equities.md#edgar-edgar-filings-browser-filing-feed) | fundamental | active |  | 6 |
 | `FILING` | `filing` | [us-equities](us-equities.md#filing-sec-filing-filing) | fundamental | active |  | 3 |
 | `FACT` | `financial-fact` | [us-equities](us-equities.md#fact-financial-fact-financial-fact) | fundamental | active |  | 6 |
-| `PXH` | `price-history` | [us-equities](us-equities.md#pxh-price-history-live-internal-use-only-price-history) | fundamental | active |  | 4 |
+| `PXH` | `price-history` | [us-equities](us-equities.md#pxh-price-history-live-internal-use-only-price-history) | fundamental | active |  | 3 |
 | `ECON` | `economy` | [world-economy](world-economy.md#econ-economy-economy) | fundamental | active |  | 7 |
 | `MACRO` | `macro-indicator` | [world-economy](world-economy.md#macro-macro-indicator-macro-indicator) | fundamental | active |  | 7 |
 | `FCST` | `economic-forecast` | [world-economy](world-economy.md#fcst-economic-forecast-economic-forecast) | fundamental | active |  | 4 |
 | `LABR` | `labour-market` | [world-economy](world-economy.md#labr-labour-market-labour-market) | fundamental | active |  | 6 |
 | `FISC` | `fiscal-position` | [world-economy](world-economy.md#fisc-fiscal-position-fiscal-position) | fundamental | active |  | 5 |
-| `ECG` | `country-group` | [world-economy](world-economy.md#ecg-country-group-country-group) | fundamental | active |  | 6 |
+| `ECG` | `country-group` | [world-economy](world-economy.md#ecg-country-group-country-group) | computed | active |  | 0 |
 | `REGE` | `region-economy` | [world-economy](world-economy.md#rege-region-economy-region-economy) | fundamental | active |  | 5 |
 | `JUR` | `jurisdiction` | [world-economy](world-economy.md#jur-jurisdiction-jurisdiction) | fundamental | active |  | 7 |
 | `PARTY` | `party` | [world-economy](world-economy.md#party-party-party) | fundamental | active |  | 6 |
