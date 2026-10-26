@@ -82,6 +82,9 @@
 .help-box p:last-child { margin-bottom: 0; }
 .help-tbl { margin: .8rem 0; }
 .help-tbl td, .help-tbl th { white-space: normal; }
+/* WHAT <term> lands on a Knowledge glossary row (docs/knowledge/*.md, a#term-...): the row is marked and kept clear of the sticky bar */
+.help-tbl a[id^="term-"] { scroll-margin-top: 120px; }
+.help-tbl tr:has(a[id^="term-"]:target) td { background: var(--d-accent-tint); }
 .help-foot { margin-top: 2.5rem; padding-top: 1rem; border-top: 1px solid var(--d-border); color: var(--d-faint); font-size: .8rem; }
 .help-results { padding-left: 1.2rem; }
 .help-results li { margin: .8rem 0; }
