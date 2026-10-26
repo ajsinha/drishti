@@ -419,6 +419,15 @@ class SaccrEngine(Engine):
                       tables={"by_netting_set": ..., "hedging_sets": ...})
 ```
 
+### 9.5 Published official results (`saccr-official`, `saccr-official-cpty`)
+
+The two tables of [NSET.md section 9.5](NSET.md#95-published-official-results-nset-official-nset-official-cpty), with the shared columns
+and: `V`, `C`, `NICA`, `RC`, `ADD_ON`, `ADD_ON_IR`, `ADD_ON_FX`, `ADD_ON_CREDIT`, `ADD_ON_EQUITY`, `ADD_ON_COMMODITY`, `PFE`, `EAD`,
+`EAD_UNMARGINED`, `RWA` (DOUBLE, USD); `MULTIPLIER`, `ALPHA` (DOUBLE; netting-set rows only); `MARGINED`, `CAPPED` (BOOLEAN; netting-set
+rows); `NETTING_SETS`, `TRADES`, `EXCLUDED_TRADES` (BIGINT); `SUPERVISORY_TABLE` (STRING). Node and counterparty rows sum EAD, RWA, RC and
+PFE over netting sets (EAD is additive over sets; the multiplier is not, so it is left empty above a set). This is the table a regulatory
+reporting system reads for the EAD of the day.
+
 ## 10. Validation, errors and data quality
 
 | Check | Rule | Outcome |
@@ -546,7 +555,7 @@ AddOn_credit = √((0.5 × 1.08 − 0.8 × 1.14)² + (1 − 0.25) × 1.08² + (1
 
 | Version | Date | Change |
 |---|---|---|
-| 1.0 | 2026-10-25 | First version, PLANNED for 2.10.0; product owner's decisions of 2026-10-25 applied (load signal reloads the engine, inputs kept 7 years) |
+| 1.0 | 2026-10-25 | First version, PLANNED for 2.10.0; product owner's decisions of 2026-10-25 applied (load signal reloads the engine, inputs kept 7 years, published official results) |
 
 ---
 

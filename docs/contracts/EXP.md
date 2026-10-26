@@ -501,6 +501,23 @@ class ExposureWhatIfEngine(Engine):
 Deterministic (no random numbers); a missing candidate path or a different P is `ComputeError("the candidate's paths are not of run
 XR-…: 2,000 paths, the run has 5,000")`.
 
+### 9.6 Published official results (`exposure-official`, `exposure-official-cpty`)
+
+The two tables of [NSET.md section 9.5](NSET.md#95-published-official-results-nset-official-nset-official-cpty) (node rows; restricted
+netting-set, counterparty and group rows), with the shared columns and these figures:
+
+| Column | Type | Meaning |
+|---|---|---|
+| `RUN_ID`, `PATHS`, `CALIBRATION` | STRING, BIGINT, STRING | the run |
+| `CE`, `EPE`, `EEPE`, `PEAK_EE`, `PEAK_PFE_95`, `PEAK_PFE_99`, `EAD_IMM` | DOUBLE | USD (§6.4, §6.5) |
+| `PEAK_PFE_DATE` | DATE | |
+| `PFE_95_1Y`, `PFE_95_5Y`, `EE_1Y`, `EE_5Y` | DOUBLE | the profile at standard tenors, for warehouse queries without arrays |
+| `PROFILE` | STRING | the profile (`TENOR`, `DATE`, `EE`, `ENE`, `EEE`, `PFE_95`, `PFE_99`) as JSON text: the shared table has no vector columns |
+| `NETTING_SETS`, `FAILED_TRADES` | BIGINT | |
+
+Node rows: EE, ENE and EPE are sums over the node's netting sets; PFE and EEPE of a node sum the paths of its netting sets (a batch step of
+the official capture, §7.2), so a node's PFE is the PFE of everything it faces, not a sum of PFEs. No paths are published.
+
 ## 10. Validation, errors and data quality
 
 | Check | Rule | Outcome |
@@ -679,7 +696,7 @@ With Δt = 0.25, 0.25, 0.5 and T = 1 year (t₀ ignored here, CE = 0):
 
 | Version | Date | Change |
 |---|---|---|
-| 1.0 | 2026-10-25 | First version, PLANNED for 2.10.0; product owner's decisions of 2026-10-25 applied (load signal reloads the engine, 7-year retention stated with a cost and a proposal, `LE:` from the trade's booking legal entity) |
+| 1.0 | 2026-10-25 | First version, PLANNED for 2.10.0; product owner's decisions of 2026-10-25 applied (load signal reloads the engine, 7-year retention stated with a cost and a proposal, `LE:` from the trade's booking legal entity, published official results) |
 
 ---
 

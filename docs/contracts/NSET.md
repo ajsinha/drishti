@@ -457,6 +457,28 @@ limits: { timeout: 30s, wait: 50ms, max-inflight-per-user: 4 }
 
 The pack routes the kind (`routes: { nset-figures: nset-engine }`) and keeps `netting-set` routed to `risk-store`.
 
+### 9.5 Published official results (`nset-official`, `nset-official-cpty`)
+
+Every counterparty measure publishes its official end-of-day captures to the read-only results area of the lake
+([README.md section 11](README.md#11-what-drishti-answers-computed-kinds-the-api-captures), product owner 2026-10-25; VaR's table in
+[VAR.md section 9.6](VAR.md#96-captures)). For counterparty measures the natural rows are not only hierarchy nodes, so this contract
+proposes **two tables per measure**, the same for all nine counterparty contracts:
+
+| Table | Rows per business date | Who may read the folder |
+|---|---|---|
+| `risk-results/<measure>-official/` | one per node of `MGMT` and `LEGAL` (the shared columns of README.md section 11): figures summed or computed over the node's trades | as any measure's results: aggregate figures by node, no counterparty named |
+| `risk-results/<measure>-official-cpty/` | one per **netting set**, **counterparty** and **connected group** (proposed; open question 8) | **restricted**: counterparty-level figures name counterparties and their exposures (credit-sensitive, sometimes under information barriers); the storage grants the folder to credit risk, regulatory reporting and the warehouse's restricted zone only; restricted-list counterparties are never published there (they stay in the capture) |
+
+The `-cpty` table has the shared columns with these meanings: `HIERARCHY` is `NSET`, `CPTY` or `GROUP`; `NODE_ID` the scope text
+(`NSET:NS-ALDERSHOT-FRA`); `NODE_NAME` the netting set's or counterparty's name (subject to the `counterparty` kind's masks: a masked name
+is published as the id); `PARENT_ID` the counterparty of a netting set, the group of a counterparty; `LEVEL` `netting-set`, `counterparty`
+or `group`. It adds `COUNTERPARTY`, `LEI`, `LEGAL_ENTITY` (for a netting set) and `RATING` columns.
+
+**NSET's figure columns** (both tables): `NET_MTM`, `GROSS_POSITIVE`, `GROSS_NEGATIVE`, `NETTING_BENEFIT`, `VM_HELD`, `VM_POSTED`,
+`IM_HELD`, `IM_POSTED`, `COLLATERAL`, `CE`, `CE_UNCOLL`, `NEG_EXPOSURE` (DOUBLE, USD), `NGR` (DOUBLE), `NETTING_SETS`, `TRADES`,
+`UNVALUED` (BIGINT). Node rows sum per-set figures over the node's netting sets (a node that cuts a netting set, a desk, publishes the
+partial figures of §6.1 with `PARTIAL_SETS`).
+
 ## 10. Validation, errors and data quality
 
 Adds to README.md section 10:
@@ -601,12 +623,13 @@ gives 0; `PARTIAL_SETS` = 2 and, with `partial-collateral: none`, `CE` = 9.0m.
 | 5 | SFTs: separate `SFT` netting sets (proposed) under GMRA/GMSLA, and are they in scope for the counterparty measures (SA-CCR excludes them; EXP and LIM may include them)? | §13, SACCR.md |
 | 6 | Counterparty coverage model for entitlements: by counterparty, group, sector, country, legal entity, or all of them; and where the restricted list comes from | §11 |
 | 7 | Retention: inputs 7 years (decided); captures of NSET answers the same? | §3.7 |
+| 8 | Published counterparty-level official results: a separate restricted `<measure>-official-cpty` table (proposed) or counterparty rows in the one `<measure>-official` table; and which levels (netting set, counterparty, group) | §9.5 |
 
 ### 16.2 The change table
 
 | Version | Date | Change |
 |---|---|---|
-| 1.0 | 2026-10-25 | First version, PLANNED for 2.10.0: terms and membership kept, figures computed; product owner's decisions of 2026-10-25 applied (load signal reloads the engines, inputs kept 7 years, `LE:` from the trade's booking legal entity) |
+| 1.0 | 2026-10-25 | First version, PLANNED for 2.10.0: terms and membership kept, figures computed; product owner's decisions of 2026-10-25 applied (load signal reloads the engines, inputs kept 7 years, `LE:` from the trade's booking legal entity, published official results with a restricted counterparty-level table) |
 
 ---
 
