@@ -551,7 +551,7 @@ def code_problems() -> list[str]:
 
 # ---- 6. command words and kinds -------------------------------------------------------------------------------------
 
-RESERVED_WORDS = {"BI", "RUPAKA", "FORM"}           # routes/terminal_routes.py: no pack may define these
+RESERVED_WORDS = {"BI", "RUPAKA", "FORM", "VAR"}    # routes/terminal_routes.py (VAR: var_routes.py, the explorer): no pack may define these
 
 
 @functools.lru_cache(maxsize=None)

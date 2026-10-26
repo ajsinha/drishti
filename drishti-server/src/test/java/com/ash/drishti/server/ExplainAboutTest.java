@@ -38,7 +38,7 @@ import org.springframework.test.web.servlet.MockMvc;
 @SpringBootTest(properties = {"drishti.rachana.hot-reload=false", "drishti.sources.plugins.demo.settings.ticking=false",
         "drishti.packs.enabled=market-risk,genomics",
         "drishti.security.enabled=true", "drishti.security.secret=test-secret-that-is-at-least-32-bytes-long",
-        "drishti.security.redact=VAR_99,LIMIT,significance",
+        "drishti.security.redact=PNL,LIMIT,significance",
         "drishti.security.roles.masked.kinds[0]=*", "drishti.security.roles.masked.raw=false",
         "drishti.security.roles.full.kinds[0]=*", "drishti.security.roles.full.raw=true",
         "drishti.identity.database-url=jdbc:sqlite:${drishti.test.dir}/explainabout-${random.uuid}/identity.db"})
@@ -59,42 +59,43 @@ class ExplainAboutTest {
     @Test
     void theShippedAboutFilesLoadWithNoProblem() {
         assertThat(catalog.problems()).isEmpty();
-        assertThat(catalog.forKind("var")).isPresent();
+        assertThat(catalog.forKind("stress-result")).isPresent();
         assertThat(catalog.forKind("variant")).isPresent();
     }
 
     @Test
-    void aVarPageIsDescribedInTheDesksTermsWithThePacksNameAndTheSutrasPack() throws Exception {
-        JsonNode e = explain("full", "var/VAR-COMM");
+    void aStressPageIsDescribedInTheDesksTermsWithThePacksNameAndTheSutrasPack() throws Exception {
+        JsonNode e = explain("full", "stress-result/STR-GFC2008-RATES");
         JsonNode about = e.path("about");
         assertThat(about.path("pack").path("name").asText()).isEqualTo("market-risk");
-        assertThat(about.path("kindTitle").asText()).isEqualTo("Value-at-risk result");
-        assertThat(about.path("text").asText()).startsWith("VAR-COMM is a 1-day 99% historical VaR for DESK-COMM: 10.9m USD, 58% of its 18.9m limit, with 1 exception(s)");
+        assertThat(about.path("kindTitle").asText()).isEqualTo("Stress result");
+        assertThat(about.path("text").asText()).startsWith("STR-GFC2008-RATES: under \"Global financial crisis 2008\" the portfolio changes in value by ")
+                .contains("73.6m USD against a limit of ").contains("67.5m");
         assertThat(e.path("layout").path("sutra").path("pack").asText()).isEqualTo("market-risk");
-        assertThat(about.path("panels").findValuesAsText("id")).contains("scenarios");
-        assertThat(about.path("panels").findValuesAsText("description").toString()).contains("The markers are -VaR (10.9m)");
+        assertThat(about.path("panels").findValuesAsText("id")).contains("books");
+        assertThat(about.path("panels").findValuesAsText("description").toString()).contains("The books add up to the desk's stress P&L of ");
     }
 
     @Test
     void theLocaleOverlayAnswersInFrenchFromTheQueryOrAcceptLanguageAndFallsBackToEnglish() throws Exception {
         String auth = "Bearer " + tokens.mint("u-full", List.of("full"), 300);
-        JsonNode fr = json.readTree(mvc.perform(get("/api/v1/views/var/VAR-COMM/explain?locale=fr").header("Authorization", auth))
+        JsonNode fr = json.readTree(mvc.perform(get("/api/v1/views/stress-result/STR-GFC2008-RATES/explain?locale=fr").header("Authorization", auth))
                 .andExpect(status().isOk()).andReturn().getResponse().getContentAsString(StandardCharsets.UTF_8));
         assertThat(fr.path("locale").asText()).isEqualTo("fr");
-        assertThat(fr.path("about").path("kindTitle").asText()).isEqualTo("Résultat de valeur à risque");
-        assertThat(fr.path("about").path("text").asText()).startsWith("VAR-COMM est une VaR historique à 1 jour et 99 % pour DESK-COMM : 10.9m USD");
-        assertThat(fr.path("about").path("panels").toString()).contains("Les repères sont -VaR");
-        assertThat(fr.path("glossary").toString()).contains("Valeur à risque, 99 %, 1 jour").contains("Exceptions de backtesting");
-        JsonNode viaHeader = json.readTree(mvc.perform(get("/api/v1/views/var/VAR-COMM/explain").header("Authorization", auth)
+        assertThat(fr.path("about").path("kindTitle").asText()).isEqualTo("Résultat de stress");
+        assertThat(fr.path("about").path("text").asText()).startsWith("STR-GFC2008-RATES : sous le scénario « Global financial crisis 2008 »");
+        assertThat(fr.path("about").path("panels").toString()).contains("Les books s'additionnent");
+        assertThat(fr.path("glossary").toString()).contains("Résultat (P&L)").contains("Limite de perte en stress");
+        JsonNode viaHeader = json.readTree(mvc.perform(get("/api/v1/views/stress-result/STR-GFC2008-RATES/explain").header("Authorization", auth)
                 .header("Accept-Language", "de;q=0.9, fr-CA;q=0.8")).andExpect(status().isOk()).andReturn().getResponse().getContentAsString(StandardCharsets.UTF_8));
         assertThat(viaHeader.path("locale").asText()).isEqualTo("fr");                       // fr-CA has no overlay of its own: the language's
         JsonNode untranslated = json.readTree(mvc.perform(get("/api/v1/views/variant/VRNT-APOE-E4/explain?locale=fr").header("Authorization", auth))
                 .andExpect(status().isOk()).andReturn().getResponse().getContentAsString(StandardCharsets.UTF_8));
         assertThat(untranslated.path("about").path("kindTitle").asText()).isEqualTo("Sequence variant");   // key by key: English where there is no translation
-        JsonNode en = explain("full", "var/VAR-COMM");
+        JsonNode en = explain("full", "stress-result/STR-GFC2008-RATES");
         assertThat(en.path("locale").asText()).isEqualTo("en");
-        assertThat(en.path("about").path("kindTitle").asText()).isEqualTo("Value-at-risk result");           // the French answer did not leak into the cache
-        JsonNode unknown = json.readTree(mvc.perform(get("/api/v1/views/var/VAR-COMM/explain?locale=de").header("Authorization", auth))
+        assertThat(en.path("about").path("kindTitle").asText()).isEqualTo("Stress result");           // the French answer did not leak into the cache
+        JsonNode unknown = json.readTree(mvc.perform(get("/api/v1/views/stress-result/STR-GFC2008-RATES/explain?locale=de").header("Authorization", auth))
                 .andExpect(status().isOk()).andReturn().getResponse().getContentAsString(StandardCharsets.UTF_8));
         assertThat(unknown.path("locale").asText()).isEqualTo("en");
     }
@@ -107,12 +108,12 @@ class ExplainAboutTest {
 
     @Test
     void maskedFieldsReadAsTheMaskInTheTextAndNoValueOrMagnitudeOfOneAppearsAnywhere() throws Exception {
-        JsonNode e = explain("masked", "var/VAR-COMM");
+        JsonNode e = explain("masked", "stress-result/STR-GFC2008-RATES");
         String text = e.path("about").path("text").asText();
-        assertThat(text).startsWith("VAR-COMM is a 1-day 99% historical VaR for DESK-COMM: ••• USD");
-        assertThat(text).doesNotContain("10.9m", "58%", "18.9m", "10949577", "18930000");
-        assertThat(e.toString()).doesNotContain("10.9m", "10949577", "18930000", "18.9m");
-        assertThat(e.path("about").path("panels").toString()).doesNotContain("10.9m");   // the panel's text reads the mask too
+        assertThat(text).startsWith("STR-GFC2008-RATES: under \"Global financial crisis 2008\" the portfolio changes in value by ••• USD");
+        assertThat(text).doesNotContain("73.6m", "67.5m", "73602586", "67500000");
+        assertThat(e.toString()).doesNotContain("73.6m", "73602586", "67500000", "67.5m");
+        assertThat(e.path("about").path("panels").toString()).doesNotContain("73.6m");   // the panel's text reads the mask too
         String variant = explain("masked", "variant/VRNT-APOE-E4").path("about").path("text").asText();
         assertThat(variant).contains("classified \"•••\"").doesNotContain("Risk factor");
     }

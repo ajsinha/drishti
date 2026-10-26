@@ -315,9 +315,11 @@ def test_vol_estimators_on_a_simulated_path():
 # ---- risk ---------------------------------------------------------------------------------------------------------------
 
 def test_var_and_es_reproduce_the_engine_on_the_sample():
-    lines = (ROOT / "config/packs/market-risk/samples/var.jsonl").read_text().splitlines()      # one document a line
-    doc = next(json.loads(x) for x in lines if '"RESULT_ID":"VAR-RATES"' in x)
-    assert round(q.historical_var(doc["SCENARIO_PNL"], 0.99)) == doc["VAR_99"]
+    doc = json.loads((ROOT / "config/packs/market-risk/samples/pnl-vector.jsonl").read_text().splitlines()[0])   # a trade's vector
+    pnl = doc["PNL"]
+    assert len(pnl) == 509
+    assert q.historical_var(pnl[:500], 0.99) == -sorted(pnl[:500])[4]           # the 5th worst of 500: the engine's ceil(N (1 - a)) there
+    assert close(q.expected_shortfall(pnl, 0.975), -sum(sorted(pnl)[:13]) / 13, 1e-9)   # the mean of the 13 worst of 509, as the engine's
     pnl = np.arange(1, 101) - 50.0
     assert q.historical_var(pnl, 0.95) == 45 and q.expected_shortfall(pnl, 0.95) == 47.0
     assert close(q.parametric_var(1e6, 0.99), 2326347.874, 1e-9)

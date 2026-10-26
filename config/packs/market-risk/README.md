@@ -243,13 +243,13 @@ Fields, from 2 sample documents:
 | `BUSINESS_DATE` | date | `2026-09-30` | — |
 | `POSITION_RULE` | string | `securities` | securities, listed or otc: the rule that keyed it |
 | `SECURITY_ID` | string | `SEC-WARRANT-USD-01` | The security or exchange contract the position holds; empty for a position of one OTC trade. |
-| `INSTRUMENT_ID` | string | `SEC-WARRANT-USD-01` | Instrument |
+| `INSTRUMENT_ID` | string | `SEC-WARRANT-USD-01` | The key the position rule took: the security or contract, or for an OTC position the trade itself. |
 | `INSTRUMENT` | string | `Equity warrant USD 2027-05` | What the position holds: the security, or for one OTC trade its product, currency and maturity. |
 | `POSITION_TYPE` | string | `fungible` | — |
 | `DIRECTION` | string | `SHORT` | LONG, SHORT or FLAT: the sign of the net quantity |
 | `QUANTITY` | number | `-1772145212.5` | The signed sum of the trades' quantities (a buy adds, a sell takes away) |
 | `GROSS_QUANTITY` | number | `2816087612.5` | — |
-| `TRADE_COUNT` | integer | `9` | Trades |
+| `TRADE_COUNT` | integer | `9` | The trades that make the position on the business date. |
 | `LONG_TRADES` | integer | `2` | — |
 | `SHORT_TRADES` | integer | `7` | — |
 | `TRADE_IDS` | list of strings |  | The trades in the position (each links to the trade); link to `trade` |
@@ -276,7 +276,7 @@ Nested structures:
 
 | Path | Fields |
 |---|---|
-| `TRADES[]` | `TRADE_ID` (string), `QUANTITY` (number): The trade's signed quantity in the position: a buy positive, a sell negative., `DIRECTION` (string), `PV` (number), `PRODUCT_TYPE` (string), `COUNTERPARTY` (string) |
+| `TRADES[]` | `TRADE_ID` (string), `QUANTITY` (number): The trade's signed quantity in the position: a buy positive, a sell negative., `DIRECTION` (string), `PV` (number): The trade's present value on the business date, as the risk batch priced it. (USD), `PRODUCT_TYPE` (string), `COUNTERPARTY` (string) |
 
 Links: `COUNTERPARTY` → `counterparty`, `DESK` → `desk`, `LEGAL_ENTITY` → `legal-entity`, `PORTFOLIO` → `book`, `POSITION_ID` → `position`, `TRADE_IDS` → `trade`, `TT_BOOK` → `book`.
 

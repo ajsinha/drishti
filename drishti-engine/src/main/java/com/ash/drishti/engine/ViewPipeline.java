@@ -152,7 +152,7 @@ public final class ViewPipeline implements com.ash.drishti.common.LiveSettings {
         this.formats = formats;
         this.mnemonics = mnemonics;
         this.bindPool = bindPool;
-        this.wire = new ScreenWire(router, binder, el, graph.linkBudget());
+        this.wire = new ScreenWire(router, binder, el, graph.linkBudget(), this::augmented);
         this.layouts = Caffeine.newBuilder().maximumSize(props.layoutCacheSize()).recordStats().build();
         this.fingerprints = Caffeine.newBuilder().maximumSize(props.fingerprintCacheSize()).build();
         registry.onChange(changed -> layouts.invalidateAll());
@@ -596,9 +596,13 @@ public final class ViewPipeline implements com.ash.drishti.common.LiveSettings {
 
     /** The document as views show it: the stored one, with what the augmenters of its kind add for the caller. */
     private EntityDocument fetch(EntityRef ref, AsOf asOf) {
-        EntityDocument doc = stored(ref, asOf);
+        return augmented(stored(ref, asOf), asOf);
+    }
+
+    /** {@code doc} with what the augmenters of its kind add (also a Sutra Next panel's entity sourced by id: ScreenWire). */
+    private EntityDocument augmented(EntityDocument doc, AsOf asOf) {
         for (ViewAugmenter a : augmenters) {
-            if (a.augments(ref.kind())) {
+            if (doc != null && a.augments(doc.ref().kind())) {
                 doc = a.augment(doc, asOf);
             }
         }

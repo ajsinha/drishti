@@ -63,6 +63,7 @@
 .vx-ubar i.bad { background: var(--d-bad); }
 .vx-ubar i.var { background: var(--d-link); }
 .vx-ubar i.hedge { background: var(--d-ok); }
+.vx-notice { margin: 4px 0 6px; padding: 4px 8px; border-left: 3px solid var(--d-link); color: var(--d-muted); font-size: 12px; }
 .vx-chip { display: inline-block; font: 500 10px var(--d-font-mono); padding: 0 5px; border-radius: 2px; border: 1px solid var(--d-border); color: var(--d-muted); }
 .vx-chip.long { color: var(--d-ok); border-color: var(--d-ok); }
 .vx-chip.short { color: var(--d-neg); border-color: var(--d-neg); }

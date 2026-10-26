@@ -42,8 +42,8 @@ class BankingPacksTest {
         mvc.perform(get("/api/v1/sources"))
                 .andExpect(jsonPath("$.sources[*].name").value(hasItems("reference-store", "market-store", "trade-endur", "trade-calypso", "trade-murex", "trade-pages", "risk-store",
                         "legal-store", "credit-store", "collateral-store")));
-        mvc.perform(get("/api/v1/sutras")).andExpect(jsonPath("$.length()").value(183))
-                .andExpect(jsonPath("$[*].name").value(hasItems("irs-fixfloat", "endur-comswap", "counterparty-trades", "netting-set", "var", "ir-curve", "counterparty")));
+        mvc.perform(get("/api/v1/sutras")).andExpect(jsonPath("$.length()").value(182))
+                .andExpect(jsonPath("$[*].name").value(hasItems("irs-fixfloat", "endur-comswap", "counterparty-trades", "netting-set", "stress-result", "ir-curve", "counterparty")));
         mvc.perform(get("/api/v1/command/suggest").param("q", "NSE"))
                 .andExpect(jsonPath("$[*].mnemonic").value(hasItem("NSET")));
     }
@@ -79,7 +79,7 @@ class BankingPacksTest {
     @Test
     void theChartAndAggregatePanelsHaveTheirSampleData() throws Exception {
         String[][] cases = {
-            {"var/VAR-RATES", "scenarios", "histogram"}, {"pnl-explain/PNL-COMM-1", "explain", "waterfall"},
+            {"pnl-explain/PNL-COMM-1", "explain", "waterfall"},
             {"desk/DESK-RATES", "mtmGrid", "pivot"}, {"desk/DESK-RATES", "tradeCount", "pivot"}, {"legal-entity/LE-NY", "riskReturn", "scatter"},
             {"counterparty/CP-ALDERSHOT", "hierarchy", "graph"}, {"equity/EQ-CSCA", "ohlc", "candlestick"}, {"commodity/CMD-BRENT", "ohlc", "candlestick"},
             {"trade/MX-20000001", "ladder", "hbar"}, {"trade/MX-20000001", "events", "timeline"}, {"trade/1000001", "ladder", "hbar"}};
@@ -89,9 +89,6 @@ class BankingPacksTest {
                     .andExpect(jsonPath(panel + ".kind").value(hasItem(c[2])))
                     .andExpect(jsonPath(panel + ".empty").value(hasItem(false)));
         }
-        mvc.perform(get("/api/v1/views/var/VAR-RATES"))
-                .andExpect(jsonPath("$.panels[?(@.id == 'scenarios')].data.count").value(hasItem(500)))
-                .andExpect(jsonPath("$.panels[?(@.id == 'scenarios')].data.markers[*].label").value(hasItems("VaR 99%", "ES 97.5%", "Mean")));
         mvc.perform(get("/api/v1/views/counterparty/CP-ALDERSHOT"))
                 .andExpect(jsonPath("$.panels[?(@.id == 'hierarchy')].data.nodes[?(@.focus == true)].id").value(hasItem("CP-ALDERSHOT")))
                 .andExpect(jsonPath("$.panels[?(@.id == 'hierarchy')].data.nodes[?(@.id == 'GRP-ALDERSHOT')].link.kind").value(hasItem("counterparty-group")));

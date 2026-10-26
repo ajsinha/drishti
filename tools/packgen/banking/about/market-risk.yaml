@@ -210,6 +210,9 @@ kinds:
       TRADES.QUANTITY:
         term: "Trade quantity"
         means: "The trade's signed quantity in the position: a buy positive, a sell negative."
+      TRADES.PV: { term: "Trade PV", means: "The trade's present value on the business date, as the risk batch priced it.", unit: "USD" }
+      TRADE_COUNT: { term: "Trades", means: "The trades that make the position on the business date." }
+      INSTRUMENT_ID: { term: "Instrument id", means: "The key the position rule took: the security or contract, or for an OTC position the trade itself." }
       TT_BOOK: { term: "Book", means: "The book the position is held in: its trades are all booked there." }
       DESK: { term: "Desk", means: "The desk the book belongs to." }
       LEGAL_ENTITY: { term: "Legal entity", means: "The bank's legal entity that holds the book." }

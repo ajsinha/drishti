@@ -34,7 +34,7 @@ SERVER_ENV = {"DRISHTI_SECURITY_ENABLED": "true", "DRISHTI_TOKEN_SECRET": "about
               "DRISHTI_SECURITY_REDACT": "trader,counterpartyId,patientName,lifecycle.timeline.description,limit",   # `limit` added: a demo only
               "DRISHTI_AUTH_ENABLED": "true", "DRISHTI_SESSION_SECRET": "about-session-secret-0123456789abcdef-xyz", "DRISHTI_SECURE_COOKIE": "false"}
 PASSWORD = "about-pass-2026"
-VAR, ECONOMY = "/v/var/VAR-EQD", "/v/economy/ECON-USA"
+VAR, ECONOMY = "/v/stress-result/STR-GFC2008-RATES", "/v/economy/ECON-USA"   # the stored var kind was retired in 2.8.0
 _state: dict = {"users": False}
 
 

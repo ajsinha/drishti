@@ -48,7 +48,7 @@ import org.springframework.test.web.servlet.ResultActions;
 @SpringBootTest(properties = {"drishti.rachana.hot-reload=false", "drishti.sources.plugins.demo.settings.ticking=false",
         "drishti.packs.enabled=market-risk,genomics,trading",
         "drishti.security.enabled=true", "drishti.security.secret=test-secret-that-is-at-least-32-bytes-long",
-        "drishti.security.redact=VAR_99,significance",
+        "drishti.security.redact=PNL,LIMIT,significance",
         "drishti.security.roles.masked.kinds[0]=*", "drishti.security.roles.masked.raw=false",
         "drishti.security.roles.full.kinds[0]=*", "drishti.security.roles.full.raw=true",
         "drishti.explain.ask.enabled=true", "drishti.explain.ask.packs[0]=market-risk", "drishti.explain.ask.values=shown",
@@ -98,7 +98,7 @@ class AskEndToEndTest {
 
     @Test
     void aQuestionGoesThroughTheFakeEndpointAndTheAnswerComesBack() throws Exception {
-        ask("ann", "full", "var/VAR-COMM", "What is this page?").andExpect(status().isOk()).andExpect(jsonPath("$.answer").value("It is a value-at-risk result."))
+        ask("ann", "full", "stress-result/STR-GFC2008-RATES", "What is this page?").andExpect(status().isOk()).andExpect(jsonPath("$.answer").value("It is a value-at-risk result."))
                 .andExpect(jsonPath("$.sources[0]").value("this page's context"));
         assertThat(MODEL.calls.get()).isEqualTo(1);
         FakeModel.Seen s = MODEL.last();
@@ -109,29 +109,29 @@ class AskEndToEndTest {
         assertThat(body.has("tools")).isFalse();                                  // the model has no tools
         assertThat(body.path("messages").path(0).path("role").asText()).isEqualTo("system");
         String user = body.path("messages").path(1).path("content").asText();
-        assertThat(user).contains("What is this page?").contains("<<<BEGIN UNTRUSTED page-context").contains("<<<BEGIN UNTRUSTED glossary").contains("Value at risk");
+        assertThat(user).contains("What is this page?").contains("<<<BEGIN UNTRUSTED page-context").contains("<<<BEGIN UNTRUSTED glossary").contains("Profit and loss");
         assertThat(user).doesNotContain("test-key-123");                           // the key is a header, never in the text
     }
 
     @Test
     void theAnswerIsCutToTheConfiguredLength() throws Exception {
         MODEL.reply = "word ".repeat(100);
-        String a = json.readTree(ask("bob", "full", "var/VAR-COMM", "q").andExpect(status().isOk()).andReturn().getResponse().getContentAsString(StandardCharsets.UTF_8))
+        String a = json.readTree(ask("bob", "full", "stress-result/STR-GFC2008-RATES", "q").andExpect(status().isOk()).andReturn().getResponse().getContentAsString(StandardCharsets.UTF_8))
                 .path("answer").asText();
         assertThat(a.length()).isLessThanOrEqualTo(60);
     }
 
     @Test
     void aMaskedFieldsValueNeverReachesTheEndpointForACallerWhoCannotSeeIt() throws Exception {
-        String fullText = explain("fran", "full", "var/VAR-COMM").path("about").path("text").asText();
-        String maskedText = explain("mia", "masked", "var/VAR-COMM").path("about").path("text").asText();
+        String fullText = explain("fran", "full", "stress-result/STR-GFC2008-RATES").path("about").path("text").asText();
+        String maskedText = explain("mia", "masked", "stress-result/STR-GFC2008-RATES").path("about").path("text").asText();
         assertThat(fullText).isNotBlank().isNotEqualTo(maskedText);
         assertThat(maskedText).contains("•••");
-        ask("mia", "masked", "var/VAR-COMM", "How big is VaR?").andExpect(status().isOk());
+        ask("mia", "masked", "stress-result/STR-GFC2008-RATES", "How big is VaR?").andExpect(status().isOk());
         String user = json.readTree(MODEL.last().body()).path("messages").path(1).path("content").asText();
         assertThat(user).contains("•••");                          // the mask is what the model saw
-        assertThat(fullText).contains("10.9m");                                   // the figure an unmasked caller sees
-        assertThat(user).doesNotContain("10.9m").doesNotContain("58%");           // ... and the masked caller's prompt has neither it nor what derives from it
+        assertThat(fullText).contains("73.6m");                                   // the figure an unmasked caller sees
+        assertThat(user).doesNotContain("73.6m").doesNotContain("67.5m");           // ... and the masked caller's prompt has neither it nor what derives from it
     }
 
     @Test
@@ -142,40 +142,40 @@ class AskEndToEndTest {
 
     @Test
     void theExplainAnswerSaysWhetherTheBoxMayBeDrawn() throws Exception {
-        assertThat(explain("hal", "full", "var/VAR-COMM").path("ask").path("enabled").asBoolean()).isTrue();
+        assertThat(explain("hal", "full", "stress-result/STR-GFC2008-RATES").path("ask").path("enabled").asBoolean()).isTrue();
         assertThat(explain("hal", "full", "variant/VRNT-APOE-E4").path("ask").path("enabled").asBoolean()).isFalse();
     }
 
     @Test
     void anEmptyOrOverlongQuestionIsRefusedBeforeAnyCall() throws Exception {
-        ask("ivy", "full", "var/VAR-COMM", "   ").andExpect(status().isBadRequest());
-        ask("ivy", "full", "var/VAR-COMM", "x".repeat(501)).andExpect(status().isBadRequest());
+        ask("ivy", "full", "stress-result/STR-GFC2008-RATES", "   ").andExpect(status().isBadRequest());
+        ask("ivy", "full", "stress-result/STR-GFC2008-RATES", "x".repeat(501)).andExpect(status().isBadRequest());
         assertThat(MODEL.calls.get()).isZero();
     }
 
     @Test
     void overTheRatePerUserIsDrs4009ButAnotherUserIsUnaffected() throws Exception {
         for (int i = 0; i < 3; i++) {
-            ask("rate-user", "full", "var/VAR-COMM", "q" + i).andExpect(status().isOk());
+            ask("rate-user", "full", "stress-result/STR-GFC2008-RATES", "q" + i).andExpect(status().isOk());
         }
-        ask("rate-user", "full", "var/VAR-COMM", "one too many").andExpect(status().isTooManyRequests()).andExpect(jsonPath("$.code").value("DRS-4009"));
+        ask("rate-user", "full", "stress-result/STR-GFC2008-RATES", "one too many").andExpect(status().isTooManyRequests()).andExpect(jsonPath("$.code").value("DRS-4009"));
         assertThat(MODEL.calls.get()).isEqualTo(3);
-        ask("other-user", "full", "var/VAR-COMM", "q").andExpect(status().isOk());
+        ask("other-user", "full", "stress-result/STR-GFC2008-RATES", "q").andExpect(status().isOk());
     }
 
     @Test
     void aFailingEndpointIsDrs4008AndTheExplainPageStillWorks() throws Exception {
         MODEL.mode = FakeModel.Mode.ERROR;
-        ask("jo", "full", "var/VAR-COMM", "q").andExpect(status().isBadGateway()).andExpect(jsonPath("$.code").value("DRS-4008"));
+        ask("jo", "full", "stress-result/STR-GFC2008-RATES", "q").andExpect(status().isBadGateway()).andExpect(jsonPath("$.code").value("DRS-4008"));
         MODEL.mode = FakeModel.Mode.GARBAGE;
-        ask("jo", "full", "var/VAR-COMM", "q").andExpect(status().isBadGateway()).andExpect(jsonPath("$.code").value("DRS-4008"));
-        assertThat(explain("jo", "full", "var/VAR-COMM").path("about").path("text").asText()).isNotBlank();   // the offline layers are unaffected
+        ask("jo", "full", "stress-result/STR-GFC2008-RATES", "q").andExpect(status().isBadGateway()).andExpect(jsonPath("$.code").value("DRS-4008"));
+        assertThat(explain("jo", "full", "stress-result/STR-GFC2008-RATES").path("about").path("text").asText()).isNotBlank();   // the offline layers are unaffected
     }
 
     @Test
     void aSlowEndpointIsDrs4008With504() throws Exception {
         MODEL.mode = FakeModel.Mode.SLOW;
-        ask("kay", "full", "var/VAR-COMM", "q").andExpect(status().isGatewayTimeout()).andExpect(jsonPath("$.code").value("DRS-4008"));
+        ask("kay", "full", "stress-result/STR-GFC2008-RATES", "q").andExpect(status().isGatewayTimeout()).andExpect(jsonPath("$.code").value("DRS-4008"));
     }
 
     @Test

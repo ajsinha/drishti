@@ -27,7 +27,7 @@ import pytest
 from test_workbench_browser import browser, page, wait  # noqa: F401 - fixtures and helpers
 from wb_live import BROWSER_WAIT_MS, ROOT, _stack
 
-VIEW = "/v/var/VAR-COMM"
+VIEW = "/v/stress-result/STR-GFC2008-RATES"
 OFF_VIEW = "/v/variant/VRNT-APOE-E4"                                                 # genomics: a pack that did not opt in
 
 
@@ -108,15 +108,15 @@ def test_a_question_reaches_the_fake_endpoint_with_labels_only_and_the_answer_is
     model.fail = False
     model.requests.clear()
     open_drawer(page, live_console, VIEW)
-    page.locator("#aboutDrawer [data-ask-input]").fill("What is VaR 99%?")
+    page.locator("#aboutDrawer [data-ask-input]").fill("What is the stress P&L?")
     page.locator("#aboutDrawer [data-ask-send]").click()
     answer = page.locator("#aboutDrawer [data-ask-answer]")
     answer.wait_for(timeout=BROWSER_WAIT_MS)
     wait(page, "document.querySelector('#aboutDrawer [data-ask-answer]').textContent.includes('99% value at risk')")
     assert len(model.requests) == 1
     user = model.requests[0]["messages"][1]["content"]
-    assert "What is VaR 99%?" in user and "<<<BEGIN UNTRUSTED glossary" in user and "VaR 99% 1D" in user
-    assert "renderedSummary" not in user and "10.9" not in user and "58%" not in user          # labels only: no rendered value of the page is sent
+    assert "What is the stress P&L?" in user and "<<<BEGIN UNTRUSTED glossary" in user and "Profit and loss" in user
+    assert "renderedSummary" not in user and "73.6" not in user and "67.5" not in user          # labels only: no rendered value of the page is sent
     assert not page.errors
 
 
