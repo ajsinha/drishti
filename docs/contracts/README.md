@@ -46,29 +46,29 @@ This page holds the rules every contract shares. A contract states only where it
 **AS BUILT** describes code that exists and is tested. **PLANNED** is the contract the release will implement: column names and rules
 may still change before it ships, and the document records each change.
 
-| Contract | Commands (retired kind) | Release | Status |
+| Contract (a name in code font is not written yet) | Commands (retired kind) | Release | Status |
 |---|---|---|---|
 | [VAR.md](VAR.md) | VAR (`var`), VNODE (`var-node`); also PORT and POS figures | 2.8.0 | AS BUILT (V0–V3), completion PLANNED |
-| [TRADING_GROUPINGS.md](TRADING_GROUPINGS.md) | CTRD, PTRD, LTRD, ITRD (`counterparty-trades`, `portfolio-trades`, `legal-entity-trades`, `index-trades`) | 2.9.0 | PLANNED |
-| [TVAL.md](TVAL.md) | TVAL (`trade-valuation`) | 2.9.0 | PLANNED |
-| [STR.md](STR.md) | STR (`stress-result`); SCN stays fundamental | 2.9.0 | PLANNED |
-| [FRTB.md](FRTB.md) | FRTB (`frtb-sensitivity`) | 2.9.0 | PLANNED |
-| [SIMM.md](SIMM.md) | SIMM (`simm`) | 2.9.0 | PLANNED |
-| [PNL.md](PNL.md) | PNL (`pnl-explain`) | 2.9.0 | PLANNED |
-| [NSET.md](NSET.md) | NSET (`netting-set`): terms kept, figures computed | 2.10.0 | PLANNED |
-| [SACCR.md](SACCR.md) | SACCR (`sa-ccr`) | 2.10.0 | PLANNED |
-| [COLL.md](COLL.md) | COLL (`collateral-balance`): holdings kept, values computed | 2.10.0 | PLANNED |
-| [MC.md](MC.md) | MC (`margin-call`): calls kept, expected call computed | 2.10.0 | PLANNED |
-| [EXP.md](EXP.md) | EXP (`exposure-profile`) | 2.10.0 | PLANNED |
-| [LIM.md](LIM.md) | LIM (`credit-limit`): limits kept, usage computed | 2.10.0 | PLANNED |
-| [GRP.md](GRP.md) | GRP (`counterparty-group`): members kept, usage computed | 2.10.0 | PLANNED |
-| [CVA.md](CVA.md) | CVA (`cva`) | 2.10.0 | PLANNED |
-| [WWR.md](WWR.md) | wrong-way risk (new) | 2.10.0 | PLANNED |
-| [GROUPINGS_AND_ANALYTICS.md](GROUPINGS_AND_ANALYTICS.md) | LEIG, LEIC, SIC, ECG, CORR, USEQ ratios, PXH analytics | 2.9.0 / 2.10.0 | PLANNED |
-| [CONCENTRATION.md](CONCENTRATION.md) | large exposures (new); the OSFI report once its template is supplied | 2.11.0 | PLANNED |
-| [LIQUIDITY.md](LIQUIDITY.md) | LCR, NSFR, NCCF, cash-flow gaps (new) | 2.11.0 | PLANNED |
-| [IRRBB.md](IRRBB.md) | ΔEVE, ΔNII (new) | 2.11.0 | PLANNED |
-| [CREDIT.md](CREDIT.md) | expected credit loss, credit VaR (new) | 2.11.0 | PLANNED |
+| `TRADING_GROUPINGS.md` | CTRD, PTRD, LTRD, ITRD (`counterparty-trades`, `portfolio-trades`, `legal-entity-trades`, `index-trades`) | 2.9.0 | PLANNED |
+| `TVAL.md` | TVAL (`trade-valuation`) | 2.9.0 | PLANNED |
+| `STR.md` | STR (`stress-result`); SCN stays fundamental | 2.9.0 | PLANNED |
+| `FRTB.md` | FRTB (`frtb-sensitivity`) | 2.9.0 | PLANNED |
+| `SIMM.md` | SIMM (`simm`) | 2.9.0 | PLANNED |
+| `PNL.md` | PNL (`pnl-explain`) | 2.9.0 | PLANNED |
+| `NSET.md` | NSET (`netting-set`): terms kept, figures computed | 2.10.0 | PLANNED |
+| `SACCR.md` | SACCR (`sa-ccr`) | 2.10.0 | PLANNED |
+| `COLL.md` | COLL (`collateral-balance`): holdings kept, values computed | 2.10.0 | PLANNED |
+| `MC.md` | MC (`margin-call`): calls kept, expected call computed | 2.10.0 | PLANNED |
+| `EXP.md` | EXP (`exposure-profile`) | 2.10.0 | PLANNED |
+| `LIM.md` | LIM (`credit-limit`): limits kept, usage computed | 2.10.0 | PLANNED |
+| `GRP.md` | GRP (`counterparty-group`): members kept, usage computed | 2.10.0 | PLANNED |
+| `CVA.md` | CVA (`cva`) | 2.10.0 | PLANNED |
+| `WWR.md` | wrong-way risk (new) | 2.10.0 | PLANNED |
+| `GROUPINGS_AND_ANALYTICS.md` | LEIG, LEIC, SIC, ECG, CORR, USEQ ratios, PXH analytics | 2.9.0 / 2.10.0 | PLANNED |
+| `CONCENTRATION.md` | large exposures (new); the OSFI report once its template is supplied | 2.11.0 | PLANNED |
+| `LIQUIDITY.md` | LCR, NSFR, NCCF, cash-flow gaps (new) | 2.11.0 | PLANNED |
+| `IRRBB.md` | ΔEVE, ΔNII (new) | 2.11.0 | PLANNED |
+| `CREDIT.md` | expected credit loss, credit VaR (new) | 2.11.0 | PLANNED |
 
 ## 2. The common risk lake
 
@@ -134,7 +134,7 @@ Every table in the risk lake joins to the masters and to each other through thes
 | `SCENARIO_ID` | A stress scenario | `SCN-…` | `stress-scenario` (SCN) |
 | `BUSINESS_DATE` | The close of business a row describes | `YYYY-MM-DD` | |
 
-**Scopes.** The scope grammar ([VAR.md section 9](VAR.md)) addresses any set of trades through these keys: `BANK`, `DESK:`, `BOOK:`,
+**Scopes.** The scope grammar ([VAR.md section 8](VAR.md#8-scopes)) addresses any set of trades through these keys: `BANK`, `DESK:`, `BOOK:`,
 `POS:`, `TRD:`, `PORT:`, `BASKET:`, `CAPTURE:`, `WHERE:`, and from 2.8.0 `CPTY:`, `GROUP:` (a connected group, through GLEIF parents),
 `NSET:` and `LE:`. Terms combine with `+` (union), `-` (difference) and `&` (intersection). Every measure takes the same scope text.
 
@@ -201,7 +201,7 @@ A **vector** is a fixed-length list of numbers that belongs to one row, such as 
 - **No missing elements:** a vector holds a number in every slot. A scenario a trade cannot be valued under is the engine's to fill
   (with its own rule, written in its run log), never `null` or `NaN`.
 - **In memory:** Drishti may hold a hot copy at lower precision (float32) under a memory budget, while every sum is done in float64.
-  The contract states which ([VAR.md section 11](VAR.md)).
+  The contract states which ([VAR.md section 7](VAR.md#7-what-drishti-builds)).
 - **Test data:** a vector is written as a JSON array in the `.jsonl.gz` files and becomes the `list<double>` column at `lake build`
   (`layout.<kind>.vectors` in the pack's connector settings).
 
@@ -274,7 +274,7 @@ engine answers.
 Every command that moves to the compute model retires its stored version **in the same release**; the two never coexist
 (product owner, 2026-10-25). For each:
 1. **Links keep working.** The old command, its old ids and every link open the computed page at the matching scope (`VAR-COMM` opens
-   `VAR DIVISION:COMM`).
+   `VAR DESK:DESK-COMM`).
 2. **The stored kind is removed:** its samples, test data, Sutra, connector routes, about texts and generators.
 3. **The numbers are reconciled first.** The computed figures are compared with the last stored ones on the test data, and the release
    notes explain every difference (for example, the stored `VAR-COMM` read 446.9m while the engine computes 1.97m).
