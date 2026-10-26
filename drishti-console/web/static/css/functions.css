@@ -47,6 +47,7 @@
 .cmd-tbl th, .cmd-tbl td { white-space: normal; vertical-align: top; }
 .cmd-tbl .cmd-col { text-align: center; width: 6rem; }
 .cmd-tbl .cmd-role { color: var(--d-faint); font-weight: 400; }
+.cmd-tbl .func-ex { white-space: nowrap; }
 .cmd-tbl .cmd-check { width: 20px; height: 20px; accent-color: var(--d-ok); }
 .cmd-tbl .cmd-desc { min-width: 16rem; max-width: 34rem; }
 .cmd-tbl .cmd-code { color: var(--d-accent); font-weight: 600; }
@@ -63,7 +64,7 @@
   vertical-align: middle; }
 .cmd-tbl .cmd-code a { color: var(--d-accent); text-decoration: none; }
 .cmd-tbl .cmd-code a:hover, .cmd-tbl .cmd-code a:focus-visible { text-decoration: underline; }
-.cmd-tbl a.cmd-pack-name { color: var(--d-ink); text-decoration: none; }
+.cmd-tbl a.cmd-pack-name { color: var(--d-ink); text-decoration: underline dotted; text-underline-offset: 3px; }
 .cmd-tbl a.cmd-pack-name:hover, .cmd-tbl a.cmd-pack-name:focus-visible { color: var(--d-accent); text-decoration: underline; }
 .cmd-tbl tr.cmd-is-off > td { color: var(--d-faint); }
 .cmd-tbl .cmd-off-code > span:first-child { text-decoration: line-through; }

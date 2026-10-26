@@ -71,7 +71,7 @@
             <th scope="row" class="mono cmd-code{% if not m.on %} cmd-off-code{% endif %}">{% if m.href %}<a href="{{ m.href }}" data-go="{{ m.go }}" title="Open {{ m.go }}">{{ m.code }}</a>{% else %}<span>{{ m.code }}</span>{% endif %}{% if not m.on %} <span class="st st-bad">off</span>{% endif %}</th>
             <td>{{ m.label }}</td>
             <td class="cmd-desc">{{ m.description or '' }}</td>
-            <td class="mono text-muted-d">{% if m.example %}{{ m.example }}{% else %}<span class="func-form">search form</span>{% endif %}</td>
+            <td class="mono text-muted-d func-ex">{% if m.example %}{{ m.example }}{% else %}<span class="func-form">search form</span>{% endif %}</td>
             {% if admin %}<td class="cmd-col"><input type="checkbox" class="cmd-check" data-switch="command" data-name="{{ m.code }}"{% if m.on %} checked{% endif %}
               aria-label="{{ m.code }} for everyone"></td>
             {% for r in c.roles %}<td class="cmd-col cmd-role" aria-hidden="true">—</td>{% endfor %}{% endif %}

@@ -16,7 +16,7 @@
 picker, a command opening with its example. As an administrator: the matrix, a change batched and undone, Review with what turning a command
 off blocks and a reason, Apply sending one batch, the history in Cluster; and the "not active" page of a command that is off. The stand-in
 server keeps the switches as the real one does. Runs Chromium through Playwright; skipped when Playwright or its Chromium is missing. The
-pictures of docs/admin/COMMANDS.md are written to docs/ only with DRISHTI_SHOTS set (tests/docshots.py)."""
+pictures of docs/admin/COMMANDS.md are made on a real stack over the demo lake by tools/docs/shots/functions.py, not here."""
 import copy
 import socket
 import threading
@@ -29,7 +29,6 @@ pytest.importorskip("playwright.sync_api", reason="needs Playwright (pip install
 from conftest import CONSOLE, FakeBackend  # noqa: E402
 from core.backend import BackendError  # noqa: E402
 from core.auth import Identity  # noqa: E402
-from docshots import docs_img  # noqa: E402
 from test_functions import LISTING  # noqa: E402
 from test_live_tabs_browser import browser  # noqa: E402,F401 - the shared browser fixture
 
@@ -37,12 +36,6 @@ def _free_port() -> int:
     with socket.socket() as s:
         s.bind(("127.0.0.1", 0))
         return s.getsockname()[1]
-
-
-def _shot(page, name, locator=None):
-    path = docs_img("admin/img/" + name)
-    path.parent.mkdir(parents=True, exist_ok=True)
-    (locator or page).screenshot(path=str(path))
 
 
 class SwitchBackend(FakeBackend):
@@ -118,7 +111,6 @@ def test_a_change_is_batched_undone_reviewed_and_applied_with_its_reason(browser
     page.goto(url + "/admin/commands")                                       # redirects to Functions
     assert page.url.endswith("/func")
     assert page.locator("[data-matrix] tr[data-command]").count() == 3
-    _shot(page, "functions-admin.png")
     assert "FRTB SA sensitivities." in page.locator("tr[data-command='FRTB']").inner_text()
 
     var = page.locator("tr[data-command='VAR'] input[data-switch]")
@@ -138,7 +130,6 @@ def test_a_change_is_batched_undone_reviewed_and_applied_with_its_reason(browser
     assert "/v/var/…" in blocks.inner_text() and "Search and type-ahead suggestions" in blocks.inner_text()
     page.wait_for_function("() => document.querySelector('[data-side-blocks]').innerText.includes('market-risk-capital')", timeout=10000)
     page.locator("[data-reason-input]").fill("quarter-end freeze")
-    _shot(page, "admin-commands-review.png")
     page.locator("[data-apply]").click()
     page.wait_for_function("() => document.querySelector('tr[data-command=VAR]') && document.querySelector('tr[data-command=VAR]').dataset.on === 'false'",
                            timeout=15000)                                      # the page reloads with what the server holds
@@ -174,7 +165,6 @@ def test_a_user_sees_only_the_commands_that_are_on_and_opens_one(browser, comman
         assert page.locator("tr[data-command]").count() == 2, "FRTB is off: a user never sees it"
         assert page.locator("[data-switch], [data-review], [data-cluster]").count() == 0
         assert page.locator("[data-counts]").inner_text() == "2 commands you can use"
-        _shot(page, "functions-user.png")
         page.locator("[data-find]").fill("value")
         assert page.locator("tr[data-command]:visible").count() == 1
         assert page.locator("[data-counts]").inner_text() == "1 of 2 commands you can use"
@@ -199,5 +189,4 @@ def test_the_page_of_a_command_turned_off_is_the_not_active_page(browser, comman
     assert r.status == 403
     assert page.locator("[data-command-off='FRTB'] h1").inner_text() == "FRTB is not active on this server"
     assert "Off since 2026-10-24" in page.locator("[data-command-off]").inner_text()
-    _shot(page, "command-not-active.png")
     page.close()
