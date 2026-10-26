@@ -91,6 +91,8 @@ class WriteTest(unittest.TestCase):
         import yaml
         found = 0
         for yml in sorted((ROOT / "config" / "packs").glob("*/pack.yaml")):
+            if yml.parent.name == "compute-demo":     # computed kinds only (the reactive engines' demo): nothing to search by form
+                continue
             m = yaml.safe_load(yml.read_text(encoding="utf-8"))
             self.assertEqual(PF.validate(m), [], yml.parent.name)
             self.assertTrue(m.get("form"), f"{yml.parent.name} has no form: section")
