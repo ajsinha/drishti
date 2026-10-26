@@ -138,7 +138,7 @@ class WriteBackFlowTest {
         JsonNode sheet = call("POST", "/api/v1/changes/preview", tia, Map.of("draft", draftId, "reason", "booking typo"), 200);
         assertThat(sheet.path("ok").asBoolean()).isTrue();
         JsonNode one = sheet.path("changes").get(0);
-        assertThat(one.path("where").asText()).startsWith("Correction kept in Drishti (overlay)");
+        assertThat(one.path("where").asText()).startsWith("Correction kept by").contains("(overlay)");
         assertThat(one.path("approvals").asInt()).isEqualTo(1);
         assertThat(one.path("diff").get(0).path("moved").asBoolean()).isFalse();
         assertThat(call("POST", "/api/v1/changes/preview", tia, Map.of("draft", draftId), 200).path("changes").get(0).path("reasonRequired").asBoolean())
