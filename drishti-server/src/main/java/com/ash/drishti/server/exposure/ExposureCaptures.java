@@ -28,7 +28,7 @@ import java.util.Map;
 import java.util.Set;
 
 /**
- * Captured exposure (EXP.md section 9.2): a scope's answer computed now and kept, immutable: its figures, its profile, its netting sets'
+ * Captured exposure (EXPOSURE_GUIDE.md section 19.2): a scope's answer computed now and kept, immutable: its figures, its profile, its netting sets'
  * figures, the trades it covered and how it was made (the run, the inputs' versions, the collateral model, the confidence). Never the
  * trade paths. Listed per scope, reopened, compared (two captures, or a capture and now) and exported as CSV (the {@code # field:
  * value} lines, then the profile).
@@ -159,7 +159,7 @@ final class ExposureCaptures {
         return o instanceof Number n ? n.doubleValue() : 0;
     }
 
-    /** A capture as CSV: its fields as {@code # field: value} lines, then its profile (EXP.md section 9.3). */
+    /** A capture as CSV: its fields as {@code # field: value} lines, then its profile (EXPOSURE_GUIDE.md section 19.3). */
     @SuppressWarnings("unchecked")
     String csv(Principal p, String id) {
         Map<String, Object> c = get(p, id);

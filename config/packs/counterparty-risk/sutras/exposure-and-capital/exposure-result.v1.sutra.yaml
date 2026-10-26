@@ -12,7 +12,7 @@
 #
 # See the LICENSE file in the root of this repository for the full terms.
 
-# Hand-written (docs/contracts/EXP.md section 9.1): the computed kind exposure-result, a scope's exposure answered by the server's
+# Hand-written (docs/guides/EXPOSURE_GUIDE.md section 19.1): the computed kind exposure-result, a scope's exposure answered by the server's
 # exposure engine (the reactive connector exposure-engine) when the page opens, never stored. A plain page in 2.9.0; the exposure
 # explorer replaces it as the main screen in a later part.
 rachana: 1

@@ -33,7 +33,7 @@ import org.springframework.context.annotation.Configuration;
 import org.springframework.context.event.EventListener;
 
 /**
- * The exposure engine's beans (EXP.md), as VaR's: its settings, the service the API answers from, the computed kind
+ * The exposure engine's beans (EXPOSURE_GUIDE.md), as VaR's: its settings, the service the API answers from, the computed kind
  * {@code exposure-result} (the reactive connector {@code exposure-engine}), the official end-of-day captures (after the data-load signal
  * of an input, and once at start for the newest date), and the exposure figures the netting-set and counterparty pages show.
  */

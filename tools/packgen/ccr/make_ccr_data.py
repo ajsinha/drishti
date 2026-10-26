@@ -12,7 +12,7 @@
 #
 # See the LICENSE file in the root of this repository for the full terms.
 
-"""Writes the exposure engine's demo inputs (docs/contracts/EXP.md section 13) into data/testdata/counterparty-risk/, from the committed
+"""Writes the exposure engine's demo inputs (docs/guides/EXPOSURE_GUIDE.md section 23) into data/testdata/counterparty-risk/, from the committed
 netting sets of the business date (their member trades, MtM, notional, maturity and asset class), as an upstream exposure simulator would
 deliver them:
 
@@ -20,7 +20,7 @@ deliver them:
     exposure-path/    one row per live member trade and grid date up to its maturity (+10 business days): MTM over the 200 paths
                       (the vector column MTM, list<double> in the lake, whole USD), sorted by netting set, trade and grid index
 
-The committed run covers eight netting sets (EXP.md section 13): the four of CP-ALDERSHOT (a securities-financing set, a negative set, a
+The committed run covers eight netting sets (EXPOSURE_GUIDE.md section 23): the four of CP-ALDERSHOT (a securities-financing set, a negative set, a
 large positive set, a structured set), NS-HARBOURLINE-LDN-NY and NS-KESTREL-FRA (threshold-zero CSAs: fully margined, the second a
 negative SFT set), NS-AURORA-TKY (the wrong-way set: every trade one way on one factor) and NS-CASCADIA-TKY. Every other netting set has
 no exposure paths in the demo: its pages say so. No figure is written: every EE, PFE and EPE is the engine's, computed when asked.
@@ -55,7 +55,7 @@ from positions import replay  # noqa: E402  (a dataset's documents on its last d
 
 PACK, CONNECTOR = "counterparty-risk", "exposure-store"
 KEYS = {"simulation-run": "RUN_ID", "exposure-path": "PATH_ROW_ID"}
-#: the netting sets the committed run covers (EXP.md section 13)
+#: the netting sets the committed run covers (EXPOSURE_GUIDE.md section 23)
 COMMITTED = ("NS-ALDERSHOT-FRA", "NS-ALDERSHOT-LDN", "NS-ALDERSHOT-NY", "NS-ALDERSHOT-TKY", "NS-HARBOURLINE-LDN-NY", "NS-KESTREL-FRA",
              "NS-AURORA-TKY", "NS-CASCADIA-TKY")
 WRONG_WAY = {"NS-AURORA-TKY"}

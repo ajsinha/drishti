@@ -31,7 +31,7 @@ import java.util.Map;
 import java.util.zip.CRC32C;
 
 /**
- * The hot exposure file of one business date (EXP.md section 7.2, format 1), written once after the date's first load and then
+ * The hot exposure file of one business date (EXPOSURE_GUIDE.md section 26.2, format 1), written once after the date's first load and then
  * memory-mapped: little-endian, a 256-byte header (magic {@code DRSHEXP1}, version, business date, P, G, the primary count, the sets,
  * the run id, the digest of the inputs it was built from, the batch id), a section table with a CRC-32C per section, and the sections:
  *
@@ -45,7 +45,7 @@ import java.util.zip.CRC32C;
  * </ul>
  *
  * Only the pages a scope touches become resident; the heap keeps the index and the statistics. No trade paths are kept here: they stay
- * in the lake (EXP.md open question 5, decided by default).
+ * in the lake (EXPOSURE_GUIDE.md open question 5, decided by default).
  */
 public final class ExposureHotFile {
 

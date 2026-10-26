@@ -40,7 +40,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 /**
- * The exposure engine's hot files (EXP.md section 7.2): one per loaded business date under {@code <hot-folder>/<date>/}, named by the
+ * The exposure engine's hot files (EXPOSURE_GUIDE.md section 26.2): one per loaded business date under {@code <hot-folder>/<date>/}, named by the
  * digest of the inputs it was built from ({@code run-<16 hex>.xhot}), as VaR's (VAR_GUIDE.md section 26). A date is open (mapped) while it is
  * among the hot dates; evicted, it is unmapped after a grace and its file stays, so the date opens again without the lake. At most
  * {@code disk-dates} files are kept, the least recently used beyond deleted unless the retention keeps them (a month-end within

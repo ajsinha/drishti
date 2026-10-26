@@ -22,7 +22,7 @@ import java.util.Arrays;
 import java.util.List;
 
 /**
- * A simulation run's time grid (EXP.md section 3.2): G dates after the business date, each {@code PRIMARY} (exposure is reported there)
+ * A simulation run's time grid (EXPOSURE_GUIDE.md section 15.2): G dates after the business date, each {@code PRIMARY} (exposure is reported there)
  * or {@code LOOKBACK} (only for collateral: the set's value a margin period of risk before the primary date it serves). Times are years
  * ACT/365 from the business date. A primary date with no look-back point (its look-back would fall on or before the business date: 1W
  * and 2W on a 10-day margin period) keeps today's collateral.
@@ -128,7 +128,7 @@ public final class ExposureGrid {
         "25Y", "30Y"};
     private static final double[] YEARS = {7 / 365.0, 14 / 365.0, 1 / 12.0, 2 / 12.0, 0.25, 0.5, 0.75, 1, 2, 3, 4, 5, 7, 10, 12, 15, 20, 25, 30};
 
-    /** The standard tenor nearest to t (within 4 days or 2%), else the date itself (EXP.md section 9.1). */
+    /** The standard tenor nearest to t (within 4 days or 2%), else the date itself (EXPOSURE_GUIDE.md section 19.1). */
     static String label(double t, LocalDate date) {
         for (int i = 0; i < LABELS.length; i++) {
             if (Math.abs(t - YEARS[i]) <= Math.max(4 / 365.0, 0.02 * YEARS[i])) {

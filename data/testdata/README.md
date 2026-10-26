@@ -228,7 +228,7 @@ the engine computes them. `python3 tools/packgen/var/make_var_data.py --check` s
 
 ## The exposure engine's data (counterparty-risk, dated by its documents)
 
-Two counterparty-risk folders feed the exposure engine ([EXP.md](../../docs/contracts/EXP.md)). They are written by
+Two counterparty-risk folders feed the exposure engine ([EXPOSURE_GUIDE.md](../../docs/guides/EXPOSURE_GUIDE.md)). They are written by
 `tools/packgen/ccr/make_ccr_data.py` (which `make_testdata.py` runs) from the netting sets above, and are **dated by their documents**,
 as the VaR folders are: `lake demo` loads each in one run into the risk lake's domain (`risk/`), moving the run id, the grid dates and the
 rows' ids with the business dates. 7.2 MB in all (2.9.0).

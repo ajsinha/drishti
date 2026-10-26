@@ -695,7 +695,7 @@ Initial margin by risk class and product class.
 
 ## XRUN: Exposure simulation run (`simulation-run`)
 
-An upstream exposure simulation of a business date: its paths, its grid of future dates (primary and look-back), its model and seed; the exposure engine reads it beside the paths (EXP.md section 3.2).
+An upstream exposure simulation of a business date: its paths, its grid of future dates (primary and look-back), its model and seed; the exposure engine reads it beside the paths (EXPOSURE_GUIDE.md section 15.2).
 
 |  |  |
 |---|---|
@@ -707,7 +707,7 @@ An upstream exposure simulation of a business date: its paths, its grid of futur
 | Key | `RUN_ID` |
 | Id pattern | `^XR-[0-9]{4}-[0-9]{2}-[0-9]{2}-[0-9]+$` |
 | Dated by | `BUSINESS_DATE` |
-| Cadence | daily (due: to be agreed with the simulator's owner (EXP.md open question 1); before its paths) |
+| Cadence | daily (due: to be agreed with the simulator's owner (EXPOSURE_GUIDE.md open question 1); before its paths) |
 | Storage | connector `exposure-store` (plugin `delta`), table `<root>/risk/simulation-run/` |
 | Columns | `RUN_ID`, `CALIBRATION`, `PATHS`, `STATUS`, `BATCH_ID` |
 | Test data | data/testdata/counterparty-risk/simulation-run |
@@ -754,7 +754,7 @@ An upstream exposure simulation of a business date: its paths, its grid of futur
 
 **Notes**
 
-- An upstream exposure simulation's record (EXP.md section 3.2): the grid, the paths, the model; one per run and business date. Drishti reads it; nothing in it is computed by Drishti.
+- An upstream exposure simulation's record (EXPOSURE_GUIDE.md section 15.2): the grid, the paths, the model; one per run and business date. Drishti reads it; nothing in it is computed by Drishti.
 
 **To review (4)**
 
@@ -765,7 +765,7 @@ An upstream exposure simulation of a business date: its paths, its grid of futur
 
 ## XPATH: Exposure path (a trade's MtM on every path at a grid date) (`exposure-path`)
 
-One trade's mark to market on every path of a simulation run at one grid date, in USD (the vector column MTM); the grain every exposure is netted, collateralised and counted from (EXP.md section 3.3).
+One trade's mark to market on every path of a simulation run at one grid date, in USD (the vector column MTM); the grain every exposure is netted, collateralised and counted from (EXPOSURE_GUIDE.md section 15.3).
 
 |  |  |
 |---|---|
@@ -777,7 +777,7 @@ One trade's mark to market on every path of a simulation run at one grid date, i
 | Key | `PATH_ROW_ID` |
 | Id pattern | `^XR-[^~]+~.+~[0-9]+$` |
 | Dated by | `BUSINESS_DATE` |
-| Cadence | daily (due: to be agreed with the simulator's owner (EXP.md open question 1); a bank's run often lands 04:00-07:00) |
+| Cadence | daily (due: to be agreed with the simulator's owner (EXPOSURE_GUIDE.md open question 1); a bank's run often lands 04:00-07:00) |
 | Storage | connector `exposure-store` (plugin `delta`), table `<root>/risk/exposure-path/` |
 | Columns | `TRADE_ID`, `NETTING_SET`, `COUNTERPARTY`, `LEGAL_ENTITY`, `DESK`, `TT_BOOK`, `ASSET_CLASS`, `PRODUCT`, `SOURCE_SYSTEM`, `MATURITY_DATE`, `NOTIONAL`, `GRID_INDEX`, `GRID_DATE`, `RUN_ID`, `BATCH_ID`, `STATUS` |
 | Vectors | `MTM` |
@@ -828,7 +828,7 @@ One trade's mark to market on every path of a simulation run at one grid date, i
 
 **Notes**
 
-- One trade's MtM on every path of the run at one grid date (EXP.md section 3.3), the vector column MTM; sparse by maturity (no row after maturity plus 10 business days). DESK, TT_BOOK, ASSET_CLASS, PRODUCT, NOTIONAL and MATURITY_DATE are denormalised for the scopes and checks (as built, 2.9.0).
+- One trade's MtM on every path of the run at one grid date (EXPOSURE_GUIDE.md section 15.3), the vector column MTM; sparse by maturity (no row after maturity plus 10 business days). DESK, TT_BOOK, ASSET_CLASS, PRODUCT, NOTIONAL and MATURITY_DATE are denormalised for the scopes and checks (as built, 2.9.0).
 
 **To review (7)**
 
@@ -842,7 +842,7 @@ One trade's mark to market on every path of a simulation run at one grid date, i
 
 ## EXP: Exposure profile of a scope (computed) (`exposure-result`)
 
-The exposure profile (EE, ENE, EEE, PFE at 95% and 99%, EE without collateral) and the figures (CE, EPE, EEPE, peak EE and PFE, EAD under the internal model) of any counterparty scope (the scope grammar of EXP.md section 8), computed when asked by the server's exposure engine from the simulated paths, as the person asking; never stored.
+The exposure profile (EE, ENE, EEE, PFE at 95% and 99%, EE without collateral) and the figures (CE, EPE, EEPE, peak EE and PFE, EAD under the internal model) of any counterparty scope (the scope grammar of EXPOSURE_GUIDE.md section 4), computed when asked by the server's exposure engine from the simulated paths, as the person asking; never stored.
 
 |  |  |
 |---|---|
@@ -871,23 +871,23 @@ The exposure profile (EE, ENE, EEE, PFE at 95% and 99%, EE without collateral) a
 | `PATHS` | integer | optional |  | — |  |  |
 | `CALIBRATION` | text | optional |  | — |  |  |
 | `CONFIDENCE` | rate | optional |  | q, the confidence of PEAK_PFE and PROFILE[].PFE. | `0.95` |  |
-| `CE` | amount | optional | USD | Current exposure (EXP.md section 6.4). |  |  |
-| `EPE` | amount | optional | USD | Expected positive exposure over min(1 year, the longest maturity) (EXP.md section 6.4). |  |  |
-| `EEPE` | amount | optional | USD | Effective EPE (EXP.md section 6.4). |  |  |
+| `CE` | amount | optional | USD | Current exposure (EXPOSURE_GUIDE.md section 18.4). |  |  |
+| `EPE` | amount | optional | USD | Expected positive exposure over min(1 year, the longest maturity) (EXPOSURE_GUIDE.md section 18.4). |  |  |
+| `EEPE` | amount | optional | USD | Effective EPE (EXPOSURE_GUIDE.md section 18.4). |  |  |
 | `PEAK_EE` | amount | optional | USD | — |  |  |
 | `PEAK_PFE` | amount | optional | USD | The highest PFE at CONFIDENCE over the primary dates; a scope's from its summed paths, never a sum of PFEs. |  |  |
 | `PEAK_PFE_DATE` | date | optional |  | — |  |  |
 | `PEAK_PFE_TENOR` | text | optional |  | — |  |  |
 | `PEAK_PFE_99` | amount | optional | USD | — |  |  |
-| `EAD_IMM` | amount | optional | USD | alpha x EEPE, informational (EXP.md section 6.5). |  |  |
+| `EAD_IMM` | amount | optional | USD | alpha x EEPE, informational (EXPOSURE_GUIDE.md section 18.5). |  |  |
 | `HORIZON_YEARS` | rate | optional |  | T, the horizon EPE and EEPE average over. |  |  |
 | `MPOR_DAYS` | integer | optional |  | The run's look-back in business days (the margin period of risk applied). |  |  |
 | `COLLATERAL_MODEL` | text | optional |  | — | `lagged`, `current`, `none` |  |
-| `PROFILE` | record list | required |  | Per primary date TENOR, DATE, T, EE, ENE, EEE, PFE (at CONFIDENCE), PFE_95, PFE_99, EE_UNCOLL (EXP.md section 9.1). |  |  |
+| `PROFILE` | record list | required |  | Per primary date TENOR, DATE, T, EE, ENE, EEE, PFE (at CONFIDENCE), PFE_95, PFE_99, EE_UNCOLL (EXPOSURE_GUIDE.md section 19.1). |  |  |
 | `BY_NETTING_SET` | record list | optional |  | For a counterparty or larger scope, each netting set's NETTING_SET, COUNTERPARTY, LABEL, PARTIAL, EPE, PEAK_EE, PEAK_PFE and PFE_CONTRIBUTION (adding up to PEAK_PFE); none for a viewer who sees the scope in aggregate only. |  |  |
 | `FLAGS` | text list | optional |  | partial, standalone, MPOR_MISMATCH, incomplete, stale-run, no-paths. |  |  |
 | `NOTE` | text | optional |  | — |  |  |
-| `PROVENANCE` | record | optional |  | The answer's provenance in UPPER_SNAKE (EXP.md section 9.1), with TIER saying where the matrices came from. |  |  |
+| `PROVENANCE` | record | optional |  | The answer's provenance in UPPER_SNAKE (EXPOSURE_GUIDE.md section 19.1), with TIER saying where the matrices came from. |  |  |
 
 **Links:** `RUN_ID` → `simulation-run`.
 
@@ -898,7 +898,7 @@ The exposure profile (EE, ENE, EEE, PFE at 95% and 99%, EE without collateral) a
 **Notes**
 
 - No stored key: an answer's id is the scope asked (the id in the request); EXP <scope> <GO> opens it, and EXP EXP-<cp>-<le> (an id of the retired exposure-profile kind) opens EXP NSET:NS-<cp>-<le>.
-- Computed as the viewer with the exposure engine's entitlements (EXP.md section 11); cached per view signature, data version, scope and parameters.
+- Computed as the viewer with the exposure engine's entitlements (EXPOSURE_GUIDE.md section 9); cached per view signature, data version, scope and parameters.
 
 ## XWIF: Exposure what-if before dealing (computed, Python) (`exposure-whatif`)
 

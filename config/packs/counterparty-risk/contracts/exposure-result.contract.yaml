@@ -13,7 +13,7 @@
 # See the LICENSE file in the root of this repository for the full terms.
 
 # Data contract of the exposure-result kind (command EXP): docs/contracts/README.md section 16; the measure's contract is
-# docs/contracts/EXP.md (section 9.1). Drafted by `drishti.py contract bootstrap exposure-result`, completed by hand (2.9.0).
+# docs/guides/EXPOSURE_GUIDE.md (section 9.1). Drafted by `drishti.py contract bootstrap exposure-result`, completed by hand (2.9.0).
 kind: exposure-result
 mnemonic: EXP
 pack: counterparty-risk
@@ -22,7 +22,7 @@ class: computed
 status: active
 title: Exposure profile of a scope (computed)
 description: The exposure profile (EE, ENE, EEE, PFE at 95% and 99%, EE without collateral) and the figures (CE, EPE, EEPE, peak EE and
-  PFE, EAD under the internal model) of any counterparty scope (the scope grammar of EXP.md section 8), computed when asked by the server's
+  PFE, EAD under the internal model) of any counterparty scope (the scope grammar of EXPOSURE_GUIDE.md section 4), computed when asked by the server's
   exposure engine from the simulated paths, as the person asking; never stored.
 source: 'computed by Drishti: the reactive connector exposure-engine (java engine com.ash.drishti.server.exposure.ExposureResultEngine)'
 grain: One answer per question (the scope asked for, its parameters q, collateral and run, and the business date), computed when asked.
@@ -79,17 +79,17 @@ fields:
   type: amount
   presence: optional
   unit: USD
-  description: Current exposure (EXP.md section 6.4).
+  description: Current exposure (EXPOSURE_GUIDE.md section 18.4).
 - name: EPE
   type: amount
   presence: optional
   unit: USD
-  description: Expected positive exposure over min(1 year, the longest maturity) (EXP.md section 6.4).
+  description: Expected positive exposure over min(1 year, the longest maturity) (EXPOSURE_GUIDE.md section 18.4).
 - name: EEPE
   type: amount
   presence: optional
   unit: USD
-  description: Effective EPE (EXP.md section 6.4).
+  description: Effective EPE (EXPOSURE_GUIDE.md section 18.4).
 - name: PEAK_EE
   type: amount
   presence: optional
@@ -113,7 +113,7 @@ fields:
   type: amount
   presence: optional
   unit: USD
-  description: alpha x EEPE, informational (EXP.md section 6.5).
+  description: alpha x EEPE, informational (EXPOSURE_GUIDE.md section 18.5).
 - name: HORIZON_YEARS
   type: rate
   presence: optional
@@ -129,7 +129,7 @@ fields:
 - name: PROFILE
   type: record list
   presence: required
-  description: Per primary date TENOR, DATE, T, EE, ENE, EEE, PFE (at CONFIDENCE), PFE_95, PFE_99, EE_UNCOLL (EXP.md section 9.1).
+  description: Per primary date TENOR, DATE, T, EE, ENE, EEE, PFE (at CONFIDENCE), PFE_95, PFE_99, EE_UNCOLL (EXPOSURE_GUIDE.md section 19.1).
 - name: BY_NETTING_SET
   type: record list
   presence: optional
@@ -145,7 +145,7 @@ fields:
 - name: PROVENANCE
   type: record
   presence: optional
-  description: The answer's provenance in UPPER_SNAKE (EXP.md section 9.1), with TIER saying where the matrices came from.
+  description: The answer's provenance in UPPER_SNAKE (EXPOSURE_GUIDE.md section 19.1), with TIER saying where the matrices came from.
 links:
 - field: RUN_ID
   kind: simulation-run
@@ -158,6 +158,6 @@ validation:
 notes:
 - 'No stored key: an answer''s id is the scope asked (the id in the request); EXP <scope> <GO> opens it, and EXP EXP-<cp>-<le> (an id of the
   retired exposure-profile kind) opens EXP NSET:NS-<cp>-<le>.'
-- Computed as the viewer with the exposure engine's entitlements (EXP.md section 11); cached per view signature, data version, scope and
+- Computed as the viewer with the exposure engine's entitlements (EXPOSURE_GUIDE.md section 9); cached per view signature, data version, scope and
   parameters.
 review: []

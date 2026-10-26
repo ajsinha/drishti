@@ -7,7 +7,7 @@
 # GRP: counterparty groups and their usage, the data contract
 
 *Version 1.0 · 2026-10-25 · Shared rules: [README.md](README.md) · Model contract: [VAR_GUIDE.md Part II](../guides/VAR_GUIDE.md#14-the-contract-at-a-glance) · Netting and scopes:
-[NSET.md](NSET.md) · Exposure: [EXP.md](EXP.md) · Limits: [LIM.md](LIM.md) · GLEIF: [packs/gleif.md](packs/gleif.md)*
+[NSET.md](NSET.md) · Exposure: [EXPOSURE_GUIDE.md](../guides/EXPOSURE_GUIDE.md) · Limits: [LIM.md](LIM.md) · GLEIF: [packs/gleif.md](packs/gleif.md)*
 
 **Status:** proposed. PLANNED for 2.10.0, not built. Every table, column, setting, kind, endpoint and code below is a proposal; names
 may change before the release, and each change will be recorded in [section 16](#16-open-questions-and-the-change-table).
@@ -146,14 +146,14 @@ For each measure M asked: M at scope `GROUP:<id>` = M over the union of the memb
 | CVA (CVA.md) | Σ members (each with its own credit curve) | yes (no default correlation inside a group: open question 4) |
 | limit usage (LIM) | the group's limits evaluated on the group scope | per limit |
 
-**Member breakdown:** each member's own figure, its share of an additive group figure, and for PFE its contribution (EXP.md section 6.6:
+**Member breakdown:** each member's own figure, its share of an additive group figure, and for PFE its contribution (EXPOSURE_GUIDE.md section 18.6:
 the mean of its exposure over the paths around the group's quantile at the group's peak date, scaled to add up to the group's PFE).
 
 ### 6.4 Where it runs
 
 The resolver is **Java** (`com.ash.drishti.compute.ccr.GroupResolver`, planned): a graph over a few hundred thousand GLEIF relationships
 and the counterparties, built once per date, answering `GROUP:` scopes in microseconds. The usage figures come from each measure's own
-engine at the group scope; group exposure matrices are summed at date load for every kept group (EXP.md section 7.3).
+engine at the group scope; group exposure matrices are summed at date load for every kept group (EXPOSURE_GUIDE.md section 26.3).
 
 ## 7. What Drishti builds
 

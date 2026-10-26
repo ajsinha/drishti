@@ -341,12 +341,12 @@ VaR is good for now."** What is active:
   and tutorial 25. Not built: sharding across Drishti*net (no mechanism yet: VAR_GUIDE.md section 28), what-if pricing (QLRisk).
 
 **2.9.0: EXP brought forward (product owner, 2026-10-26).** Exposure profiles computed for any scope, exactly as VaR was in 2.8.0
-([EXP.md](../contracts/EXP.md)), with the stored `exposure-profile` retired in the same release. **Part 1 built** (2026-10-26): the
+([EXPOSURE_GUIDE.md](../guides/EXPOSURE_GUIDE.md)), with the stored `exposure-profile` retired in the same release. **Part 1 built** (2026-10-26): the
 inputs `simulation-run` and `exposure-path` with their test data (`tools/packgen/ccr`), the Java engine (netting and CSA collateral
 per path with the margin period of risk, EE, ENE, EEE, PFE, EPE, EEPE, contributions, scopes `NSET:`, `CPTY:`, `GROUP:`, `LE:`,
 `DESK:`, `BOOK:`, `TRD:`, `BANK`), the memory-mapped hot file per date, `/api/v1/exposure`, the computed kind `exposure-result`
 (`EXP <scope>`), the `addon` what-if, captures, the official results `exposure-official` and `-cpty`, retention settings, the
-netting-set and counterparty pages' computed figures, and the retirement (the reconciliation of the 76 stored sets in EXP.md section
+netting-set and counterparty pages' computed figures, and the retirement (the reconciliation of the 76 stored sets in EXPOSURE_GUIDE.md section
 14.2). **Part 2 next:** the exposure explorer, the Python what-if engine (`paths`), the CLI, the benchmark, the guide and the
 tutorial. The other counterparty measures (CVA, SA-CCR, LIM, GRP, WWR) stay parked and stored, unchanged.
 

@@ -222,7 +222,7 @@ class TheRetiredStoredVersions(unittest.TestCase):
                                        / "ExposurePublisher.java").read_text(encoding="utf-8").replace('"risk-results"', "risk-results"))
 
     def test_the_stored_exposure_profile_does_not_return(self):
-        """EXP.md section 14: exposure-profile is retired; no netting set or counterparty (nor any input or fundamental kind) carries an
+        """EXPOSURE_GUIDE.md section 22: exposure-profile is retired; no netting set or counterparty (nor any input or fundamental kind) carries an
         exposure figure; the exposure engine's inputs are inputs and its answer is computed."""
         self.assertEqual(self.pol["retired"]["exposure-profile"]["release"], "2.9.0")
         exposure = set(self.pol["engine-columns"]["exposure"])

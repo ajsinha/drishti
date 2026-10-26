@@ -168,7 +168,7 @@ def _rows_walk(rows: list[dict], rows_key: str) -> dict:
 
 def netting_set(d: dict) -> dict:
     """Each listed trade walks; the asset-class totals and the net MTM are the rows added up (plus whatever of them is not
-    listed, which stays put). No exposure figure walks: the exposure engine computes them from the paths (EXP.md section 14)."""
+    listed, which stays put). No exposure figure walks: the exposure engine computes them from the paths (EXPOSURE_GUIDE.md section 22)."""
     rows = d["trades"]
     walk: dict = dict(_rows_walk(rows, "trades"))
     derive: list[dict] = []

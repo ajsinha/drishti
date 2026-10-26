@@ -34,7 +34,7 @@ import java.util.regex.Pattern;
  * What the exposure engine keeps, in the content store (so it follows the cluster and every version is kept):
  *
  * <ul>
- *   <li>{@code exposure/official/<date>.json}: the date's official record (EXP.md section 9.6): the result version, the inputs' versions
+ *   <li>{@code exposure/official/<date>.json}: the date's official record (EXPOSURE_GUIDE.md section 20): the result version, the inputs' versions
  *       and the run, and per netting set, counterparty, group and hierarchy node its figures and profile. A restated date writes a new
  *       version (the store keeps the old one).</li>
  *   <li>{@code exposure/official/<date>-trades-v<n>.json}: every trade's EE contribution per primary date (the audit of who drove the

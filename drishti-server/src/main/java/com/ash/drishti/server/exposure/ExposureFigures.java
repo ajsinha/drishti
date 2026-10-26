@@ -33,7 +33,7 @@ import java.util.Optional;
 import java.util.Set;
 
 /**
- * The exposure engine's figures on the netting-set and counterparty pages (EXP.md section 14.1): neither kind stores a profile, an EE
+ * The exposure engine's figures on the netting-set and counterparty pages (EXPOSURE_GUIDE.md section 22.1): neither kind stores a profile, an EE
  * peak or a PFE peak any more, so when the page is opened the engine computes them as the caller and the view reads them under
  * {@code EXPOSURE_ENGINE}: {@code STATUS} ({@code ok}; {@code no-paths} when the date's run does not cover the netting set or any of the
  * counterparty's; {@code unavailable} with the reason), the scope, the date and run, {@code CE}, {@code EPE}, {@code EEPE},

@@ -63,7 +63,7 @@ compute:
       idle-stop: 5m
       timeout: 60s
       timeout-batch: 10m
-    exposure:                        # the Python exposure engine (the exact what-if: candidates' paths added to their netting sets): docs/guides/EXPOSURE_GUIDE.md section 9
+    exposure:                        # the Python exposure engine (the exact what-if: candidates' paths added to their netting sets): docs/guides/EXPOSURE_GUIDE.md sections 7 and 19.5
       type: python
       engines: [drishti_compute.exposure.whatif:ExposureWhatIfEngine]
       environment: system            # standard library only: no package to approve

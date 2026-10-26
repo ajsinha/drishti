@@ -86,7 +86,7 @@ def netting_sets(trades: dict) -> dict[str, list[dict]]:
 
 
 def profile(members: list[dict], collateral: float) -> list[dict]:
-    """The bucketed profile the retired stored exposure-profile kind carried (EXP.md section 14.2): no longer written to any document
+    """The bucketed profile the retired stored exposure-profile kind carried (EXPOSURE_GUIDE.md section 22.2): no longer written to any document
     (the exposure engine computes profiles from the paths, 2.9.0); kept because the stored CVA and the limits' usage (parked) are
     built on it."""
     net = amount(t["mtm"] for t in members)
@@ -122,7 +122,7 @@ def credit_results(trades: dict, docs: dict) -> None:
             by_asset[t["assetClass"]] += t["mtm"]
         tag = ns[3:]
         docs["netting-set"][ns] = {
-            # no exposure figure (EE peak, PFE peak, profile): the exposure engine computes them from the paths (docs/contracts/EXP.md
+            # no exposure figure (EE peak, PFE peak, profile): the exposure engine computes them from the paths (docs/guides/EXPOSURE_GUIDE.md
             # section 14, retired in 2.9.0); the limit's utilisation and the CVA (parked, stored) still read this generator's profile
             "nettingSetId": ns, "tradeCount": len(members), "netMtm": net, "collateral": coll,
             "limit": limit, "utilisation": round(pfe_peak / limit, 4), "cva": cva,
@@ -325,7 +325,7 @@ def reference(trades: dict, docs: dict) -> None:
         out = {"counterpartyId": f"CP-{cp}", "name": name, "lei": ids.lei(name), "rating": rating, "sector": sector, "country": country, "type": typ,
                "COUNTRY_OF_RISK": country, "UEN": f"UEN{100000 + n * 37:07d}", "economy": f"ECON-{ISO3[country]}",
                "newsId": "NEWS-" + name.replace(" ", "_"),           # its headlines, when the news-and-markets pack's connector is on
-               "netMtm": amount(s["netMtm"] for s in sets),       # no PFE peak: the exposure engine's at CPTY:<id> (EXP.md section 14)
+               "netMtm": amount(s["netMtm"] for s in sets),       # no PFE peak: the exposure engine's at CPTY:<id> (EXPOSURE_GUIDE.md section 22)
                "nettingSets": [{"id": s["nettingSetId"], "agreement": s["agreement"], "trades": s["tradeCount"], "netMtm": s["netMtm"]} for s in sets],
                "kyc": {"status": "Approved", "riskRating": "Standard" if rating[0] == "A" else "Enhanced", "lastReview": "2026-02-11",
                        "emirClassification": "FC" if typ in ("Bank", "Hedge fund", "Insurer", "Asset manager", "Pension fund") else "NFC-",

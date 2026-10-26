@@ -34,7 +34,7 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.locks.ReentrantLock;
 
 /**
- * The official end-of-day exposure captures (EXP.md section 9.6): when a date's run is complete, the server captures every netting set,
+ * The official end-of-day exposure captures (EXPOSURE_GUIDE.md section 20): when a date's run is complete, the server captures every netting set,
  * counterparty and connected group, and every node of the MGMT and LEGAL hierarchies (a node's figures over its trades: the netting
  * sets it covers whole, the sets it cuts recomputed from its trades), at the configured confidences under the default collateral
  * model; every trade's EE contribution per primary date beside it. The records are kept in the content store and published to

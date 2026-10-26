@@ -30,13 +30,13 @@ import java.util.Locale;
 import java.util.Map;
 
 /**
- * Incremental exposure before dealing (EXP.md section 6.7). The {@code addon} method, a conservative proxy computed here: each candidate
+ * Incremental exposure before dealing (EXPOSURE_GUIDE.md section 18.7). The {@code addon} method, a conservative proxy computed here: each candidate
  * is its own netting set (no netting benefit, no collateral) whose PFE at a primary date is
  * {@code max(MTM, 0) + z_q SF d delta sqrt(min(t, M))} and whose EE is {@code max(MTM, 0) + SF d sqrt(min(t, M)) / sqrt(2 pi)} (the mean
  * of the positive part of a normal of that spread), added to the scope's profile; SF is SA-CCR's supervisory factor of the candidate's
  * asset class, d its adjusted notional (an interest-rate trade's notional times its supervisory duration), delta its sign. The exact
  * {@code paths} method (the candidate's paths on the date's run added to its netting set per path, collateral and exposure computed
- * again) runs in the Python exposure engine ({@code exposure-whatif}, docs/guides/EXPOSURE_GUIDE.md section 9), asked by
+ * again) runs in the Python exposure engine ({@code exposure-whatif}, docs/guides/EXPOSURE_GUIDE.md section 19.5), asked by
  * {@link ExposureWhatIfPaths} as the person (DRS-5446 when it is not running); a candidate's paths of another run are refused (DRS-5442)
  * either way.
  */

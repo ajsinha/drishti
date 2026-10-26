@@ -30,7 +30,7 @@ import java.util.Map;
 import java.util.Set;
 
 /**
- * What the Python what-if engine ({@code exposure-whatif}, docs/guides/EXPOSURE_GUIDE.md section 9) reads from the Java engine, as
+ * What the Python what-if engine ({@code exposure-whatif}, docs/guides/EXPOSURE_GUIDE.md section 19.5) reads from the Java engine, as
  * the viewer, through the computed kind {@code exposure-result} with the parameter {@code detail}:
  *
  * <ul>

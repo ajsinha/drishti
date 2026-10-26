@@ -31,14 +31,14 @@ fields:
     NETTING_ENFORCEABLE: Whether close-out netting is enforceable
   credit-limit: {BUCKETS: Limit and usage by tenor bucket, COUNTERPARTY: The counterparty's id, APPROVED_BY: Who approved the limit, REVIEW_DUE: When the limit is next reviewed}
   simulation-run:
-    _: "An upstream exposure simulation of a business date (docs/contracts/EXP.md section 3.2): the paths, the grid of future dates, the model; an input of the exposure engine"
+    _: "An upstream exposure simulation of a business date (docs/guides/EXPOSURE_GUIDE.md section 15.2): the paths, the grid of future dates, the model; an input of the exposure engine"
     RUN_ID: "XR-<date>-<n>"
     GRID_DATES: "The grid's dates, strictly increasing after the business date"
     GRID_ROLE: "PRIMARY (exposure is reported) or LOOKBACK (the value a margin period of risk before, for collateral) per grid date"
     LOOKBACK_OF: "For a look-back date the index of the primary date it serves, -1 for a primary date"
     PRECISION: "float32 or float64: how the paths' values are stored"
   exposure-path:
-    _: "One trade's mark to market on every simulated path at one grid date (docs/contracts/EXP.md section 3.3): the grain every exposure is netted, collateralised and counted from"
+    _: "One trade's mark to market on every simulated path at one grid date (docs/guides/EXPOSURE_GUIDE.md section 15.3): the grain every exposure is netted, collateralised and counted from"
     PATH_ROW_ID: "<run>~<trade>~<grid index>"
     MTM: "P values, path order of the run, stored as a list<double> column (out of the document)"
     GRID_INDEX: "Index into the run's GRID_DATES"
@@ -54,8 +54,9 @@ fields:
 Counterparty credit risk over the trading pack's trades: master agreements and CSAs, netting sets, credit limits, CVA, SA-CCR,
 collateral balances, margin calls and SIMM initial margin, and the **exposure engine's inputs** (2.9.0): an upstream simulation run
 (`simulation-run`) and every trade's mark to market on every path of its grid (`exposure-path`). Exposure is never stored: `EXP
-NSET:NS-ALDERSHOT-FRA <GO>` (the computed kind `exposure-result`, [EXP.md](../../../docs/contracts/EXP.md)) nets the paths per
+NSET:NS-ALDERSHOT-FRA <GO>` (the computed kind `exposure-result`, [EXPOSURE_GUIDE.md Part II](../../../docs/guides/EXPOSURE_GUIDE.md#14-the-contract-at-a-glance)) nets the paths per
 netting set, applies each CSA's collateral path by path with the margin period of risk, and reads EE, ENE, EEE, PFE 95% and 99%, EPE
 and EEPE for any scope (`NSET:`, `CPTY:`, `GROUP:`, `LE:`, `DESK:`, `TRD:`); the netting-set and counterparty pages show the engine's
 figures computed as they open. The stored `exposure-profile` kind (`EXP-<cp>-<le>`) was retired in 2.9.0: `EXP EXP-ALDERSHOT-FRA`
-opens `EXP NSET:NS-ALDERSHOT-FRA`.
+opens `EXP NSET:NS-ALDERSHOT-FRA`. The exposure explorer ([EXPOSURE_GUIDE.md section 3](../../../docs/guides/EXPOSURE_GUIDE.md#3-the-explorer-screen-by-screen))
+walks from the bank to a trade; [tutorial 26](../../../docs/tutorials/26-exposure-from-the-bank-to-a-trade.md) does it on the test data.

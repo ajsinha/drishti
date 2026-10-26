@@ -1429,7 +1429,7 @@ else by `drishti.var.positions`.
 
 ### `drishti.ccr.exposure` — the exposure engine
 
-The exposure engine (the data contract [EXP.md](../contracts/EXP.md)) computes exposure profiles (EE, ENE, effective EE, PFE at any
+The exposure engine (the data contract [EXPOSURE_GUIDE.md](../guides/EXPOSURE_GUIDE.md)) computes exposure profiles (EE, ENE, effective EE, PFE at any
 confidence, EPE, EEPE, the peaks, CE, EAD under the internal model) of any counterparty scope (`NSET:`, `CPTY:`, `GROUP:`, `LE:`,
 `DESK:`, `BOOK:`, `TRD:`, `BANK`, combined with `+ - &`) from an upstream simulation's paths (`simulation-run`, `exposure-path`): netting
 per path, each CSA's collateral per path with the margin period of risk, as the caller, when asked. Nothing it answers is stored except
@@ -1466,7 +1466,7 @@ figures as they open.
 | `official.retention-years` | `7` | The published tables keep their log and removed files this long (time travel). |
 | `official.on-start` | `true` | At start, capture the newest date when it has no official record yet. |
 | `retention.trade-paths-days` | `20` | Full trade paths are kept for the last 20 business dates ... |
-| `retention.trade-paths-month-end-years` | `1` | ... and each month-end for a year. The lake's owner applies it; `GET /api/v1/exposure/retention` lists each date and whether its paths are beyond their window (EXP.md section 12.3, decided 2026-10-26). |
+| `retention.trade-paths-month-end-years` | `1` | ... and each month-end for a year. The lake's owner applies it; `GET /api/v1/exposure/retention` lists each date and whether its paths are beyond their window (EXPOSURE_GUIDE.md section 27.3, decided 2026-10-26). |
 | `retention.set-matrices-years` | `1` | The netting-set matrices (the hot files) of every date within a year are kept on disk ... |
 | `retention.set-matrices-month-end-years` | `7` | ... and each month-end's for seven years. |
 | `retention.statistics-years` | `7` | The official records (every scope's figures and profile) are kept seven years; older ones are removed after each capture. |

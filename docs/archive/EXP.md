@@ -6,8 +6,10 @@
 
 # EXP: exposure profiles (EE, EPE, EEPE, PFE), the data contract
 
-*Version 1.1 · 2026-10-26 · Shared rules: [README.md](README.md) · Model contract: [VAR_GUIDE.md Part II](../guides/VAR_GUIDE.md#14-the-contract-at-a-glance) · Netting and the shared
-counterparty tables: [NSET.md](NSET.md)*
+> **Archived: replaced by [EXPOSURE_GUIDE.md](../guides/EXPOSURE_GUIDE.md) (the data contract is its Part II, [sections 14 to 24](../guides/EXPOSURE_GUIDE.md#14-the-contract-at-a-glance); the scopes [section 4](../guides/EXPOSURE_GUIDE.md#4-scopes), the worked example [section 2](../guides/EXPOSURE_GUIDE.md#2-the-measures-with-worked-numbers), the hot file [section 26](../guides/EXPOSURE_GUIDE.md#26-one-date-in-memory-and-the-hot-file)).** This page is version 1.1 (part 1 as built); the guide carries the contract on as version 1.2 (AS BUILT, part 2). On 2026-10-26 the exposure documents were consolidated into two (product owner): the reference [EXPOSURE_GUIDE.md](../guides/EXPOSURE_GUIDE.md) and the hands-on [tutorial 26](../tutorials/26-exposure-from-the-bank-to-a-trade.md). The section numbers this page cites are its own, before the consolidation; this is history.
+
+*Version 1.1 · 2026-10-26 · Shared rules: [README.md](../contracts/README.md) · Model contract: [VAR_GUIDE.md Part II](../guides/VAR_GUIDE.md#14-the-contract-at-a-glance) · Netting and the shared
+counterparty tables: [NSET.md](../contracts/NSET.md)*
 
 **Status:** **AS BUILT, part 1 (2.9.0):** the inputs and their test data, the Java engine, the API `/api/v1/exposure`, the computed kind
 `exposure-result`, the official results and the retirement of the stored `exposure-profile`. **Part 2 (PLANNED, 2.9.0):** the exposure
@@ -24,8 +26,8 @@ counterparty-risk pack's `pack.yaml` (`exposure-store`, `exposure-engine`); `dat
 This is the contract of Drishti's **exposure engine**: what an upstream exposure simulator delivers (every trade's MtM on every Monte
 Carlo path at every date of a time grid), what Drishti builds from it (netting-set path matrices, collateral on each path, tiered
 memory), and what it answers (EE, ENE, EPE, effective EE and EPE, PFE at any confidence, peaks, contributions, incremental figures before
-dealing) for any scope. It defines the two **shared path tables**, `simulation-run` and `exposure-path`, which [CVA.md](CVA.md),
-[LIM.md](LIM.md), [GRP.md](GRP.md) and [WWR.md](WWR.md) read too.
+dealing) for any scope. It defines the two **shared path tables**, `simulation-run` and `exposure-path`, which [CVA.md](../contracts/CVA.md),
+[LIM.md](../contracts/LIM.md), [GRP.md](../contracts/GRP.md) and [WWR.md](../contracts/WWR.md) read too.
 
 ## Contents
 
@@ -217,7 +219,7 @@ allow pruning. The demo lake (`lake build`) writes the same columns with the wri
 |---|---|---|
 | `netting-set`, `netting-set-member`, `csa` (NSET.md) | `NETTING_SET`, `CSA` | membership (checks), margined or not, thresholds, MTA, IA, rounding, MPOR, IM |
 | `collateral-holding` (COLL.md) | `NETTING_SET` | today's collateral (the `current` collateral model, independent amounts, IM held) |
-| `valuation` ([TVAL.md](TVAL.md)) | `TRADE_ID` | t₀ exposure (today's MtM) and the check that path means start near it |
+| `valuation` ([TVAL.md](../contracts/TVAL.md)) | `TRADE_ID` | t₀ exposure (today's MtM) and the check that path means start near it |
 | `trade` | `TRADE_ID` | maturity (sparse rows), status |
 | `counterparty`, `counterparty-group` | | `CPTY:` and `GROUP:` scopes (GRP.md) |
 | `ir-curve` (market-data) | `CRV-USD-…` | discount factors when `VALUE_BASIS` is `FUTURE` and a discounted figure is asked (CVA.md) |
@@ -244,7 +246,7 @@ allow pruning. The demo lake (`lake build`) writes the same columns with the wri
 | `limit-confidence` | `0.95` | the PFE that LIM uses by default |
 | `rank-rule` | `kth` | §5 |
 | `collateral-model` | `lagged` | `lagged` (§6.3), `current` (today's collateral held constant), `none` |
-| `im-model` | `current` | initial margin held kept at today's amount on every path, `none`; [SIMM.md](SIMM.md) paths later |
+| `im-model` | `current` | initial margin held kept at today's amount on every path, `none`; [SIMM.md](../contracts/SIMM.md) paths later |
 | `alpha` | `1.4` | IMM EAD = alpha × EEPE (informational: §6.5) |
 | `contribution-window` | `21` | paths around the PFE quantile averaged for PFE contributions (§6.6) |
 | `hot-dates` | `2` | dates with mapped path matrices |
@@ -619,7 +621,7 @@ XR-…: 2,000 paths, the run has 5,000")`.
 
 ### 9.6 Published official results (`exposure-official`, `exposure-official-cpty`)
 
-The two tables of [NSET.md section 9.5](NSET.md#95-published-official-results-nset-official-nset-official-cpty) (node rows; restricted
+The two tables of [NSET.md section 9.5](../contracts/NSET.md#95-published-official-results-nset-official-nset-official-cpty) (node rows; restricted
 netting-set, counterparty and group rows), with the shared columns and these figures:
 
 | Column | Type | Meaning |
@@ -955,7 +957,7 @@ With Δt = 0.25, 0.25, 0.5 and T = 1 year (t₀ ignored here, CE = 0):
 - **EE contribution** at t₂ without collateral: paths with V > 0 are 1, 2, 3 (V = 4, 1, 4); A contributes (5 − 1 + 4)/4 = 2.0, B (−1 + 2 + 0)/4 =
   0.25; 2.0 + 0.25 = 2.25 = the uncollateralised EE at t₂.
 
-[CVA.md](CVA.md) section 15 prices CVA from this profile; [WWR.md](WWR.md) section 15 adds credit paths to it.
+[CVA.md](../contracts/CVA.md) section 15 prices CVA from this profile; [WWR.md](../contracts/WWR.md) section 15 adds credit paths to it.
 
 ## 16. Open questions and the change table
 

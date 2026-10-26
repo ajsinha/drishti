@@ -28,7 +28,7 @@ import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
 /**
- * Who sees what of the exposure engine (EXP.md section 11, NSET.md section 11). Each role is given, per counterparty, connected group
+ * Who sees what of the exposure engine (EXPOSURE_GUIDE.md section 9, NSET.md section 11). Each role is given, per counterparty, connected group
  * or bank legal entity, one of three levels ({@code drishti.ccr.exposure.access.<role>[CP-ALDERSHOT]}): {@code trades} (the figures,
  * the netting sets and the trades), {@code aggregate} (the figures only: no netting-set row below it, no trade, no trade
  * contribution) or {@code none}. A netting set takes the widest level of its counterparty, its counterparty's group and its legal

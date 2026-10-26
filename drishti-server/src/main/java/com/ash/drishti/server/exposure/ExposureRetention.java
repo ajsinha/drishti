@@ -26,7 +26,7 @@ import java.util.NavigableSet;
 import java.util.TreeSet;
 
 /**
- * The tiered retention of exposure data (EXP.md section 12.3, accepted by the product owner on 2026-10-26), counted back from the newest
+ * The tiered retention of exposure data (EXPOSURE_GUIDE.md section 27.3, accepted by the product owner on 2026-10-26), counted back from the newest
  * date:
  *
  * <table>

@@ -31,7 +31,7 @@ import java.util.Locale;
 import java.util.Map;
 
 /**
- * The exposure engine's answers as the API and the screens return them (EXP.md section 9): a scope's figures and profile with its
+ * The exposure engine's answers as the API and the screens return them (EXPOSURE_GUIDE.md section 19): a scope's figures and profile with its
  * provenance, the profile alone (for charts, also as CSV), the exposure distribution at a grid date, the contributions of its parts,
  * and the tree of groups, counterparties and netting sets. Amounts are whole USD; times in years.
  */
@@ -184,7 +184,7 @@ final class ExposureViews {
         return out;
     }
 
-    /** The profile as CSV: {@code tenor,date,t,ee,ene,eee,pfe,pfe_99,ee_uncoll} (EXP.md section 9.3). */
+    /** The profile as CSV: {@code tenor,date,t,ee,ene,eee,pfe,pfe_99,ee_uncoll} (EXPOSURE_GUIDE.md section 19.3). */
     String profileCsv(Principal p, String scope, LocalDate date, ExposureService.Ask ask) {
         ExposureService.Scoped s = svc.scoped(p, scope, date, ask);
         StringBuilder sb = new StringBuilder("tenor,date,t,ee,ene,eee,pfe,pfe_99,ee_uncoll\n");
@@ -549,7 +549,7 @@ final class ExposureViews {
         m.put("proxiedTrades", s.date().intake().get("proxied"));
         List<String> warnings = new ArrayList<>(s.date().warnings());
         m.put("warnings", warnings);
-        m.put("method", "Monte Carlo post-processing (EXP.md section 6): netting per path, " + s.ask().collateral() + " collateral, PFE "
+        m.put("method", "Monte Carlo post-processing (EXPOSURE_GUIDE.md section 18): netting per path, " + s.ask().collateral() + " collateral, PFE "
                 + (svc.props().rule() == ExposureMath.Rule.KTH ? "the ceil(P q)-th smallest of " + b.paths() + " paths" : "interpolated")
                 + ", EPE and EEPE over min(1 year, the longest maturity) = " + round4(s.result().stats.horizon) + " years");
         m.put("contributions", "PFE: the " + svc.props().contributionWindow() + " paths around the quantile at the peak date, scaled to add up "

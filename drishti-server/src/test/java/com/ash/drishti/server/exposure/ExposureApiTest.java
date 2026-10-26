@@ -42,7 +42,7 @@ import org.springframework.test.context.DynamicPropertySource;
 import org.springframework.test.web.servlet.MockMvc;
 
 /**
- * The exposure engine's API over a tiny lake whose answers are known by hand (ExposureLakeFixture: EXP.md section 15's worked example in
+ * The exposure engine's API over a tiny lake whose answers are known by hand (ExposureLakeFixture: EXPOSURE_GUIDE.md section 2.1's worked example in
  * USD millions, t = 0.2, 0.4, 1.0): a netting set's profile and figures with lagged CSA collateral, a counterparty's two sets summed per
  * path (EE additive, PFE not), a group, a desk cutting a set, a trade alone, contributions adding up, the distribution, a set the run
  * does not cover (said so), entitlements by counterparty and the name mask, captures and compare, CSV, the official record and its

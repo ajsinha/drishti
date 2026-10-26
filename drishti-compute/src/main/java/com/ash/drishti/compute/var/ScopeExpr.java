@@ -32,7 +32,7 @@ import java.util.TreeSet;
  *   POS:POS-BOOK-FI-1~SEC-GOVT_BOND-USD-03,...               positions (every trade of each)
  *   TRD:MX-20000001,CLY-3000157                               trades
  *   CPTY:CP-KESTREL                                           every trade with that counterparty
- *   NSET:NS-KESTREL-NY,...   GROUP:GRP-KESTREL               netting sets, a connected group (the exposure engine's words, EXP.md 8)
+ *   NSET:NS-KESTREL-NY,...   GROUP:GRP-KESTREL               netting sets, a connected group (the exposure engine's words, EXPOSURE_GUIDE.md section 4)
  *   PORT:PF-USD-RATES                       a portfolio (its definition: a node, a rule or a basket)
  *   BASKET:asha/unwind                      a basket a person saved
  *   WHERE:PRODUCT_GROUP == 'Rates' and CURRENCY == 'USD'      a rule over the positions' columns (PositionRule)

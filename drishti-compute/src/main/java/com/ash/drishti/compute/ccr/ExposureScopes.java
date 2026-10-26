@@ -24,12 +24,12 @@ import java.util.Locale;
 import java.util.Optional;
 
 /**
- * Resolves a scope (the scope grammar of {@link ScopeExpr}, VAR_GUIDE.md section 5, with the counterparty terms of EXP.md section 8) on one
+ * Resolves a scope (the scope grammar of {@link ScopeExpr}, VAR_GUIDE.md section 5, with the counterparty terms of EXPOSURE_GUIDE.md section 4) on one
  * business date of the exposure engine to the trades it means: {@code NSET:} netting sets, {@code CPTY:} a counterparty's trades,
  * {@code GROUP:} the counterparties of a connected group, {@code LE:} the trades booked by a legal entity (the trade's booking entity),
  * {@code DESK:} and {@code BOOK:} by the trades' desk and book, {@code TRD:} trades, {@code BANK} every trade, {@code WHERE:} a rule over
  * the trades' columns; joined with {@code +}, {@code -} and {@code &}. A scope that names only trades ({@code TRD:}) is <em>standalone</em>:
- * its trades are valued as if alone, without collateral (EXP.md section 8). Ids the date does not hold are reported, never dropped
+ * its trades are valued as if alone, without collateral (EXPOSURE_GUIDE.md section 4). Ids the date does not hold are reported, never dropped
  * silently.
  */
 public final class ExposureScopes {

@@ -22,7 +22,7 @@ counterparty-risk contracts of 2.10.0, in the order of the roadmap:
 | 2 | [SACCR.md](SACCR.md) | SA-CCR exposure at default | `saccr-trade` |
 | 3 | [COLL.md](COLL.md) | collateral values | `collateral-balance` (account), `collateral-holding` |
 | 4 | [MC.md](MC.md) | the expected margin call beside the actual one | `margin-call` |
-| 5 | [EXP.md](EXP.md) | EE, EPE, EEPE, PFE from simulated paths | `simulation-run`, `exposure-path` |
+| 5 | [EXPOSURE_GUIDE.md](../guides/EXPOSURE_GUIDE.md) | EE, EPE, EEPE, PFE from simulated paths | `simulation-run`, `exposure-path` |
 | 6 | [LIM.md](LIM.md) | limit usage, headroom, pre-deal check | `credit-limit` |
 | 7 | [GRP.md](GRP.md) | connected groups and their usage | `counterparty-group`, connection rules |
 | 8 | [CVA.md](CVA.md) | CVA, DVA, FVA, BA-CVA | none (reads market data and EXP) |
@@ -114,7 +114,7 @@ ${DRISHTI_DELTA_ROOT}/risk/
 ├── netting-set/          business_date=YYYY-MM-DD/   one row per netting set: terms only      (moved from credit/netting-set; figures removed)
 ├── netting-set-member/   business_date=YYYY-MM-DD/   one row per trade in a netting set       (new)
 ├── valuation/      business_date=YYYY-MM-DD/   one row per trade: MtM                   (TVAL.md; already in risk)
-└── ...                                               the other measures' tables (SACCR.md, COLL.md, MC.md, EXP.md, LIM.md, WWR.md)
+└── ...                                               the other measures' tables (SACCR.md, COLL.md, MC.md, EXPOSURE_GUIDE.md, LIM.md, WWR.md)
 ```
 
 The physical table is the one of every kind (VAR_GUIDE.md section 15.1): `id`, `doc`, `business_date`, the promoted columns. In the column
@@ -359,7 +359,7 @@ set from the trade columns.
 ### 7.2 On disk
 
 Nothing beyond the lake: the netting-set figures are cheap to rebuild at load (a date of 1,000,000 trades loads in seconds). The
-heavy per-date files of the counterparty measures are EXP's path matrices ([EXP.md section 7](EXP.md#7-what-drishti-builds)).
+heavy per-date files of the counterparty measures are EXP's path matrices ([EXPOSURE_GUIDE.md section 26](../guides/EXPOSURE_GUIDE.md#26-one-date-in-memory-and-the-hot-file)).
 
 ### 7.3 Caching
 
@@ -541,7 +541,7 @@ Memory: about 80 MB per date at a large bank (§7.1), shared by every counterpar
 
 | Item | Plan |
 |---|---|
-| Generator | new package `tools/packgen/ccr/` (planned): `make_ccr_data.py` (entry, `--check` as VaR's), `terms.py` (agreements, CSAs, netting sets, membership), `paths.py` (EXP.md), `saccr.py`, `holdings.py`, `ccrmath.py` (the reference Python formulas the tests and the parity checks use). Deterministic: Python's `Random` seeded by text, gzip `mtime` 0, as `tools/packgen/var/make_var_data.py` |
+| Generator | new package `tools/packgen/ccr/` (planned): `make_ccr_data.py` (entry, `--check` as VaR's), `terms.py` (agreements, CSAs, netting sets, membership), `paths.py` (EXPOSURE_GUIDE.md), `saccr.py`, `holdings.py`, `ccrmath.py` (the reference Python formulas the tests and the parity checks use). Deterministic: Python's `Random` seeded by text, gzip `mtime` 0, as `tools/packgen/var/make_var_data.py` |
 | Trades | the committed trades of the trading pack, live on 2026-09-30, at most 10,000 (the local limit) |
 | Netting sets | today's rule kept: one set per (counterparty, booking legal entity), `NS-<counterparty>-<LE short>`: 76 sets, 24 counterparties |
 | Membership | only products a master agreement nets (derivatives in `DERIVATIVES` sets; repo and lending in separate `SFT` sets `NS-<cp>-<le>-SFT`); cash, bonds, loans and deposits are not members (today they are) |
@@ -579,9 +579,9 @@ and `tools/testdata/universe.py` re-runs it over the whole cloned book (amounts 
 |---|---|---|---|
 | `NET_MTM` | Σ members' `mtm` | Σ members' `MTM` from `valuation` | none for the same members and date; the test data then **walk** it daily (`_meta.walk`), so changes files drift from the members' sum |
 | `COLLATERAL` | `NET_MTM × U(0.6, 0.95)` (or × U(0.5, 0.9) when negative), a random share | haircut value of the holdings (COLL.md) | different: the stored one ignores the CSA |
-| `EE_PEAK`, `PFE_PEAK` | max of a closed-form heuristic profile (EXP.md section 14) | EXP.md from paths | different model |
+| `EE_PEAK`, `PFE_PEAK` | max of a closed-form heuristic profile (EXPOSURE_GUIDE.md section 22) | EXPOSURE_GUIDE.md from paths | different model |
 | `UTILISATION` | `PFE_PEAK / LIMIT` with the set's own random `LIMIT` | LIM.md against `credit-limit` | different limit |
-| `counterparty.PFE_PEAK` | the largest netting-set `PFE_PEAK` (max, not a sum) | EXP.md at `CPTY:`: the peak of the summed exposure paths | the stored one understates a counterparty with several sets |
+| `counterparty.PFE_PEAK` | the largest netting-set `PFE_PEAK` (max, not a sum) | EXPOSURE_GUIDE.md at `CPTY:`: the peak of the summed exposure paths | the stored one understates a counterparty with several sets |
 
 **Inconsistencies found in today's test data (2026-10-25)**, explained by the walk of changes files and recorded for the release notes:
 on `NS-ALDERSHOT-FRA` the stored `EE_PEAK` is 2,828,748 while its own `PROFILE[]` peaks at 3,244,739; `PFE_PEAK` is 7,246,659 while

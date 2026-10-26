@@ -12,8 +12,8 @@
 #
 # See the LICENSE file in the root of this repository for the full terms.
 
-"""The what-if engine of the reactive connector ``exposure-whatif`` (docs/guides/EXPOSURE_GUIDE.md section 9, kind
-``exposure-whatif``): a scope's exposure before and after candidate trades, by the exact ``paths`` method (EXP.md section 6.7). Each
+"""The what-if engine of the reactive connector ``exposure-whatif`` (docs/guides/EXPOSURE_GUIDE.md sections 7 and 19.5, kind
+``exposure-whatif``): a scope's exposure before and after candidate trades, by the exact ``paths`` method (EXPOSURE_GUIDE.md section 18.7). Each
 candidate's MtM on every path of the date's run at every grid date is added to its netting set's value V, the set's collateral and
 exposure are computed again (the CSA's terms, today's holdings, the look-back points, the asked collateral model), and the scope's
 exposure becomes ``E_scope - E_set + E'_set`` path by path; a candidate without a netting set is a netting set of its own,

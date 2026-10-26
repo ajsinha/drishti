@@ -2906,7 +2906,7 @@ figures under `VAR_ENGINE`, computed as the page opens.
 
 ## Exposure engine: `/api/v1/exposure` (2.9.0)
 
-Exposure profiles computed on demand from an upstream simulation's paths (the data contract: [EXP.md](../contracts/EXP.md)): every
+Exposure profiles computed on demand from an upstream simulation's paths (the data contract: [EXPOSURE_GUIDE.md](EXPOSURE_GUIDE.md)): every
 trade's MtM on every path of the run's grid (`exposure-path`, the run in `simulation-run`), netted per netting set, collateralised per
 path by its CSA (lagged by the margin period of risk), then EE, ENE, effective EE, PFE, EPE, EEPE, the peaks, CE and EAD under the
 internal model (informational). A scope is the scope grammar's text: `NSET:<netting sets>`, `CPTY:<counterparty>`, `GROUP:<group>`,
@@ -2934,7 +2934,7 @@ the run does not cover is `404 DRS-1001` "no exposure paths for the netting set 
 | `GET /api/v1/exposure/captures/{id}/csv` | a capture as CSV: its fields as `#` lines, then its profile |
 | `GET /api/v1/exposure/compare?a=&b=` | two captures side by side, or a capture and now (`b=now`): the figures' change, the PFE profile's, the members added and removed |
 | `GET /api/v1/exposure/status` | the settings, the hot files (mode, folder, files, bytes, builds, reopenings) and the dates loaded (run, paths, grid, netting sets, trades, tier, hot file, the intake) |
-| `GET /api/v1/exposure/retention` | each date held: whether its trade paths, set matrices, statistics and trade contributions are within their retention ([EXP.md section 12.3](../contracts/EXP.md#123-seven-year-retention-cost-and-the-decision-open-question-2-decided-2026-10-26)), and the dates whose paths are beyond |
+| `GET /api/v1/exposure/retention` | each date held: whether its trade paths, set matrices, statistics and trade contributions are within their retention ([EXPOSURE_GUIDE.md section 27.3](EXPOSURE_GUIDE.md#27-sizes-performance-and-retention)), and the dates whose paths are beyond |
 | `POST /api/v1/exposure/reload` | administrators: drops the loaded dates (the next request maps the date's hot file again, or reads the lake after a load) |
 | `GET /api/v1/exposure/official?asOf=` | a date's official end-of-day record: its result version, the inputs' versions, every netting set's, counterparty's, group's and hierarchy node's figures and profile (a viewer who sees every counterparty) |
 | `POST /api/v1/exposure/official?asOf=` | administrators: captures the date officially now (the data-load signal does it by itself): `{status, resultVersion, scopes, nettingSets, nodes, published}` |

@@ -13,7 +13,7 @@
 # See the LICENSE file in the root of this repository for the full terms.
 
 # Data contract of the simulation-run kind (command XRUN): docs/contracts/README.md section 16.
-# Drafted by `drishti.py contract bootstrap simulation-run`; completed by hand (2.9.0); the measure's contract is docs/contracts/EXP.md (section 3).
+# Drafted by `drishti.py contract bootstrap simulation-run`; completed by hand (2.9.0); the measure's contract is docs/guides/EXPOSURE_GUIDE.md (section 3).
 kind: simulation-run
 mnemonic: XRUN
 pack: counterparty-risk
@@ -22,7 +22,7 @@ class: input
 status: active
 title: Exposure simulation run
 description: 'An upstream exposure simulation of a business date: its paths, its grid of future dates (primary and look-back), its model and seed;
-  the exposure engine reads it beside the paths (EXP.md section 3.2).'
+  the exposure engine reads it beside the paths (EXPOSURE_GUIDE.md section 15.2).'
 source: 'the upstream exposure simulator (test data: tools/packgen/ccr/make_ccr_data.py)'
 grain: One row per simulation run and business date, keyed by RUN_ID; the newest complete run of a date answers.
 key:
@@ -32,7 +32,7 @@ id-pattern:
 dated-by: BUSINESS_DATE
 cadence:
   frequency: daily
-  due: to be agreed with the simulator's owner (EXP.md open question 1); before its paths
+  due: to be agreed with the simulator's owner (EXPOSURE_GUIDE.md open question 1); before its paths
 storage:
   connector: exposure-store
   plugin: delta
@@ -201,7 +201,7 @@ validation:
   field: NETTING_SETS
   kind: netting-set
 notes:
-- 'An upstream exposure simulation''s record (EXP.md section 3.2): the grid, the paths, the model; one per run and business date. Drishti reads
+- 'An upstream exposure simulation''s record (EXPOSURE_GUIDE.md section 15.2): the grid, the paths, the model; one per run and business date. Drishti reads
   it; nothing in it is computed by Drishti.'
 review:
 - 'required inferred from 100% coverage in 2 documents (1 samples and 1 test-data documents (data/testdata/counterparty-risk/simulation-run/cob-2026-09-30.jsonl.gz)):

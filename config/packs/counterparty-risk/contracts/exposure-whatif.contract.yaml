@@ -13,7 +13,7 @@
 # See the LICENSE file in the root of this repository for the full terms.
 
 # Data contract of the exposure-whatif kind (command XWIF): docs/contracts/README.md section 16; the measure's contract is
-# docs/guides/EXPOSURE_GUIDE.md (section 9). Drafted by `drishti.py contract bootstrap exposure-whatif`, completed by hand (2.9.0).
+# docs/guides/EXPOSURE_GUIDE.md (sections 7 and 19.5). Drafted by `drishti.py contract bootstrap exposure-whatif`, completed by hand (2.9.0).
 kind: exposure-whatif
 mnemonic: XWIF
 pack: counterparty-risk
