@@ -39,8 +39,8 @@ Two things reduce it:
 - **Netting.** Under a master agreement (the ISDA for derivatives) the bank may, on default, end every trade and settle one net amount.
   A trade the bank wins nets against one it loses. The trades that net together form a **netting set**.
 - **Collateral.** Under the agreement's credit support annex (the **CSA**) each side posts collateral as the value moves. The bank holds
-  what the counterparty posted; it can lose only what the collateral does not cover, plus how much the value can move in the days it
-  takes to close the counterparty out (the **margin period of risk**).
+  what the counterparty posted, so on default it loses only what the collateral does not cover: the exposure below the CSA's
+  threshold, and how far the value moves in the days it takes to close the counterparty out (the **margin period of risk**).
 
 Because the amount owed depends on future markets, it is **simulated**. An upstream simulator values every trade on a few hundred
 possible market paths at future dates (1 week to 10 years). Drishti then, for any set of trades:
