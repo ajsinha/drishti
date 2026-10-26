@@ -17,6 +17,18 @@
 
 ## Unreleased
 
+- **The exposure explorer's browser test (2.9.1).** `drishti-console/tests/test_exposure_explorer_browser.py`, as the VaR explorer's:
+  over the committed exposure run in a scratch lake (Delta connector, demo off, compute on) it opens `EXP BANK`, the tree and the
+  counterparty board, a counterparty (breadcrumb, tiles, Netting sets), a netting set's Collateral tab (CSA, the signed effect of
+  collateral), a trade in its netting set (netting benefit) and Back; By tenor; the q 95/99 and collateralised switches; the pre-deal
+  what-if by the proxy and by the exact paths method; a netting set without paths; a phone's width; F1 to the exposure guide. No pictures.
+- **The exposure benchmark (2.9.1).** `ExposureTierBenchmark` (drishti-server tests, opt-in like VaR's `VarTierBenchmark`) loads a
+  synthetic date as the server does and times the load, the hot file, reopening, the scopes (bank, a counterparty of 20 sets, a set),
+  contributions by netting set and by trade, the exact pre-deal arithmetic and the proxy; measured at 10,000 and 100,000 trades (P 100
+  to 500, G 24 and 48) with the Python engine's `paths` method timed alone, and extrapolated to 1 M trades at P = 2,000 / 5,000,
+  G = 50 / 100 in [EXPOSURE_GUIDE.md section 27.4](docs/guides/EXPOSURE_GUIDE.md#274-the-benchmark-measured-and-extrapolated-291).
+  It finds three open items (section 28): a large bank's load keeps every set's value matrix on one heap, the trade-path read streams
+  the whole date, and a group of many sets at P = 5,000 is about twice its target.
 - **A control that feeds a panel's own source now recomputes that panel** (ControlReads counts `ctl.<id>` in a source's id, where, search, as-of and parameters): changing CORR's estimator or window on the page re-asks the correlation engine at once (it answered only when the page was opened again with `?ctl.`). The exposure answer page hides its Netting sets table when a single netting set's answer has none.
 - **External data, one help page; every pack guide complete with its data contracts and data retrieval (2.9.1; product owner,
   2026-10-26).** [PUBLIC_DATA.md](docs/guides/PUBLIC_DATA.md) is now the listed help page **External data** (Help → Data; the old
