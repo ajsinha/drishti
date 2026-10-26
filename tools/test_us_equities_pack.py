@@ -52,7 +52,7 @@ def test_annual_values_take_a_year_long_10k_period_the_latest_filing_and_the_fir
 
 def test_the_pack_commits_no_prices_weights_or_gics():
     snap = SNAP.TESTDATA / "us-equities"
-    assert {p.name for p in snap.iterdir()} == {"us-company", "index-membership", "sic-sector", "filing-feed", "filing", "financial-fact"}
+    assert {p.name for p in snap.iterdir()} == {"us-company", "index-membership", "filing-feed", "filing", "financial-fact"}
     names = {p.name for p in (PACK / "samples").iterdir()}
     assert not any(n.startswith("price-history") for n in names)
     catalog = json.loads((PACK / "samples" / "catalog.json").read_text(encoding="utf-8"))

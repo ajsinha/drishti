@@ -43,6 +43,7 @@
   `tools/publicdata/tests/test_funds.py` (a cache cut from the real data sets), `test_funds_browser.py`. The demo stack, the Windows QA
   guide, `start-server.ps1 -DemoLakes` and the IDE configuration load the pack.
 
+- **A control that feeds a panel's own source now recomputes that panel** (ControlReads counts `ctl.<id>` in a source's id, where, search, as-of and parameters): changing CORR's estimator or window on the page re-asks the correlation engine at once (it answered only when the page was opened again with `?ctl.`). The exposure answer page hides its Netting sets table when a single netting set's answer has none.
 - **External data, one help page; every pack guide complete with its data contracts and data retrieval (2.9.1; product owner,
   2026-10-26).** [PUBLIC_DATA.md](docs/guides/PUBLIC_DATA.md) is now the listed help page **External data** (Help → Data; the old
   address `docs-guides-public-data` redirects): every external source of every pack in one table (World Bank, IMF, UNDP, CIA Factbook,

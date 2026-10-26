@@ -48,18 +48,17 @@ def test_make_check_passes_with_a_cache(tmp_path):
                             "--testdata", str(tmp_path / "testdata")], capture_output=True, text=True)
         assert r.returncode == 0, r.stdout + r.stderr
     assert "matches its generator" in r.stdout
-    assert {f.name for f in (pack / "samples").iterdir()} >= {"catalog.json", "lei-entity.jsonl", "lei-group.jsonl", "lei-country.jsonl"}
+    assert {f.name for f in (pack / "samples").iterdir()} >= {"catalog.json", "lei-entity.jsonl"}            # groups and countries are computed since 2.9.2
 
 
 def test_the_committed_pack_keeps_its_scope():
     ents = {d["LEI"]: d for d in SNAP.kind_docs("gleif", "lei-entity")}
-    groups = {d["GROUP_ID"]: d for d in SNAP.kind_docs("gleif", "lei-group")}
     assert 5_000 < len(ents) < 50_000
-    for _, label, lei in F.SEEDS:                                               # every financial institution is in, with its group
+    for _, label, lei in F.SEEDS:                                               # every financial institution is in, with its group's root
         assert lei in ents, label
-        assert ents[lei]["LEI_GROUP"] in groups, label
-    assert all(d["MEMBERS"] <= F.GROUP_CAP + len(d.get("SEEDS", [])) for k, d in groups.items() if k != "ALL")
-    assert any(d.get("CAPPED") and "at most 50" in d["CAP_NOTE"] for d in groups.values())
+        assert ents[lei]["LEI_GROUP"] in ents, label
+    # 2.9.2: groups (LEIG) and countries (LEIC) are computed from the entities (GROUPINGS_ANALYTICS_GUIDE.md); no stored snapshot of them
+    assert not (SNAP.TESTDATA / "gleif" / "lei-group").exists() and not (SNAP.TESTDATA / "gleif" / "lei-country").exists()
     useq = SNAP.kind_docs("us-equities", "us-company")
     with_lei = [c for c in useq if c.get("LEI") in ents]
     assert len(with_lei) > 400 and all(ents[c["LEI"]].get("US_COMPANY") == c["TICKER"] for c in with_lei)

@@ -183,6 +183,8 @@ def retrieval_section(pack: str, items: list[dict]) -> list[str]:
             scripts = sorted({s["external"][i]["script"] for i in o["external"]})
             origin += " — refreshed by " + ", ".join(f"`{x}`" for x in scripts)
             lake = None
+        elif not o.get("generator"):                # a kind data_retrieval.yaml does not describe (a widened local pack): say so
+            origin, lake = "not described in tools/packgen/common/data_retrieval.yaml", None
         else:
             gen = s["generators"][o["generator"]]
             used_gen += [g for g in (o["generator"], o.get("also")) if g and g not in used_gen]
