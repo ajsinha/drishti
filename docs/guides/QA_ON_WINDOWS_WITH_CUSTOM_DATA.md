@@ -145,7 +145,7 @@ You should see: the drop-down at the top right lists **Build demo lakes**, **Loa
    first, see section 4.1.) (This is Maven `package -DskipTests -pl drishti-server -am`
    on the project's `pom.xml`.)
 
-You should see: in the Run window `BUILD SUCCESS`, and the file `drishti-server\target\drishti-server-2.8.0-exec.jar`
+You should see: in the Run window `BUILD SUCCESS`, and the file `drishti-server\target\drishti-server-2.9.0-exec.jar`
 exists.
 
 ---
@@ -285,7 +285,7 @@ Good to know:
 The same lakes can keep **one source system's trades in Apache Iceberg** and the others in Delta Lake (for example your ENDUR
 trades in Delta and the synthetic CALYPSO trades in Iceberg); every page, history, search and BI report must answer exactly as with
 everything in Delta. Iceberg is written by Drishti's own engine from the server jar, so **build the jar first** (step 2.3: the file
-`drishti-server\target\drishti-server-2.8.0-exec.jar` must exist). Stop the server first, as for 3.0.
+`drishti-server\target\drishti-server-2.9.0-exec.jar` must exist). Stop the server first, as for 3.0.
 
 1. **Look first** (changes nothing, prints every step):
 
@@ -546,7 +546,7 @@ says the address is a loopback address, use `<your IPv4>` from `ipconfig` instea
 
 ## 6b. What is new in 2.6.0: check these (30 minutes)
 
-Do this after `git pull` on **main** and a fresh jar (step 2.3: the file is `drishti-server-2.8.0-exec.jar`), with the server and the
+Do this after `git pull` on **main** and a fresh jar (step 2.3: the file is `drishti-server-2.9.0-exec.jar`), with the server and the
 console started as in section 4.
 
 | # | Check | How | You should see |
@@ -564,7 +564,7 @@ Not to check on Windows: the **Cassandra** connector needs a Cassandra or Scylla
 
 ## 6c. History of a trade or an equity (2.6.5)
 
-Needs **2.6.7**: `git pull` on **main**, step 2.3 again (the jar is `drishti-server-2.8.0-exec.jar`), and **restart both** the server and
+Needs **2.6.7**: `git pull` on **main**, step 2.3 again (the jar is `drishti-server-2.9.0-exec.jar`), and **restart both** the server and
 the console. The demo lakes of step 3.0 hold **sixty business days**, enough to show it; your own ENDUR history shows as soon as **two or
 more** of your files are loaded (step 3.2, one per date). Any kind of data has a history, not only trades: a counterparty, a curve, an
 economy.

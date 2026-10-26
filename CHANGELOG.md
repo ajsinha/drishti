@@ -15,7 +15,7 @@
 -->
 # Changelog
 
-## Unreleased
+## 2.9.0 — Exposure computed for any scope, the stored exposure profile retired; VaR and exposure in BI; two documents per measure; the landing headline (2026-10-26)
 
 - **Groupings and analytics computed instead of stored (2.9.2, Track B of the computed-measures roadmap).** Seven pages that were
   stored copies of figures are computed from the fundamental data when opened, and their stored versions are retired in the same change
