@@ -17,6 +17,26 @@
 
 ## Unreleased
 
+- **Docs: exposure in two documents, the guide and tutorial 26 (product owner, 2026-10-26: each measure has exactly two documents and
+  two help entries).** [EXPOSURE_GUIDE.md](docs/guides/EXPOSURE_GUIDE.md) is the one exposure reference: Part I using it (EE, ENE,
+  EEE, PFE, EPE, EEPE and EAD with worked numbers, the explorer screen by screen, scopes, collateral and netting, captures and compare,
+  the pre-deal what-if by the exact `paths` method with compute on or the `addon` proxy, exposure as a kind, entitlements, every
+  `drishti.py exposure` command, every API endpoint and parameter, every `drishti.ccr.exposure` setting, troubleshooting); Part II the
+  data contract, version 1.2 AS BUILT part 2 (all of `EXP.md`: every column, formula, DRS code, the official results, retention, the
+  reconciliation of the 76 stored sets, decisions and the change table); Part III the engine (where it lives, one date in memory and the
+  hot file `DRSHEXP1`, sizes and retention, open items: the benchmark is not built in 2.9.0). [Tutorial
+  26](docs/tutorials/26-exposure-from-the-bank-to-a-trade.md) walks from the bank to a trade on the demo lake, each step in the UI, on
+  the command line and in YAML. `docs/contracts/EXP.md` moved to `docs/archive/` with the archive banner; every reference (contracts and
+  their index, the contract policy, pack contracts, guide and README and their generators, the test-data README, CONFIGURATION,
+  API_GUIDE, TOOLS, IMPLEMENTATION_PLAN, source and settings comments) points at the guide's sections. The help centre lists the
+  exposure guide and tutorial 26 under Use beside VaR's two; F1 and **?** on the exposure explorer open the guide (contextual
+  `exposure`); the page cap is 49.
+- **Docs for exposure part 2:** `drishti.py exposure` with every subcommand (TOOLS section 5.13, CLI_GUIDE); API_GUIDE: `alone`,
+  `profile`, `bands`, `detail` and the exact what-if `paths` method; CONFIGURATION: `drishti.ccr.exposure.kinds.limit`, the `exposure`
+  compute pool and `DRISHTI_COMPUTE_EXPOSURE_WORKERS`; TOOLS: `lake demo --exposure demo|committed` and `make_ccr_data.py --demo`.
+  IMPLEMENTATION_PLAN: the 2.9.0 status (EXP parts 1 and 2, VaR in BI), the Funds and ETFs pack parked as a candidate, and the plan to
+  regenerate the synthetic test data from its generators after 2.9.0. The Windows QA guide, the run configuration "Drishti server (demo
+  lakes)" and `start-server.ps1 -DemoLakes`: the demo lakes cover nine packs (us-equities and gleif added).
 - **The demo lake has exposure for 22 of the 24 counterparties** (product owner, 2026-10-26): `drishti.py lake demo` generates the exposure run for every netting set of the counterparties that fit in 9,500 trades, smallest first and always whole (73 netting sets, 9,000 trades, 200 paths; about a minute, nothing downloaded, nothing committed: `make_ccr_data.py --demo`), in place of the committed run of eight sets, which it contains with the same figures (each trade's paths are seeded by its id). `--exposure committed` loads the committed run alone. CP-SUMMIT and CP-NORTHPLAINS (2,558 trades) stay without paths under the 10,000-trade local limit.
 - **Test runs no longer rewrite the committed screenshots.** The browser tests that take documentation pictures (the designer, grid, forms, refresh, reactive panels of tutorial 23, write-back of tutorial 24, the Excel export picture) write them to the docs folder only when `DRISHTI_SHOTS` is set, as the other picture-taking tests already did; otherwise to `<tmp>/drishti-doc-shots`, which `tools/drill.sh` removes (`drishti-console/tests/docshots.py`). The drill no longer leaves a dirty tree.
 - **VaR in BI, from the published official results (2.9.0; product owner, 2026-10-26).** The official end-of-day VaR that the server
@@ -37,7 +57,7 @@
   the one walk-through, each step linking to the guide's sections. `VAR_EXPLORER.md`, `contracts/VAR.md`, `VAR_ENGINE.md` and
   `VAR_DATA_MODEL.md` moved to `docs/archive/` as history; every reference (docs, contracts, pack guides, `tools/contracts.policy.yaml`,
   source comments) points at the guide's sections. The help centre lists the VaR guide and tutorial 25 (cap 47 pages).
-- **Exposure computed for any scope (2.9.0, EXP part 1; [EXP.md](docs/contracts/EXP.md) 1.1 as built).** An upstream simulation's
+- **Exposure computed for any scope (2.9.0, EXP part 1; [EXP.md](docs/archive/EXP.md) 1.1 as built).** An upstream simulation's
   paths are two new inputs of the counterparty-risk pack: `simulation-run` (`XRUN`: the grid of primary and look-back dates, the paths,
   the model) and `exposure-path` (`XPATH`: every trade's MtM on every path at a grid date, the vector column `MTM`), served by the
   Delta connector `exposure-store` from the risk lake. The exposure engine (`com.ash.drishti.compute.ccr`,

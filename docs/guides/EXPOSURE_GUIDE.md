@@ -24,8 +24,8 @@ III). The hands-on walk-through is [tutorial 26](../tutorials/26-exposure-from-t
 trade). In the console, **F1** on the explorer (or its **?**) opens this guide.
 
 On 2026-10-26 the product owner's rule for measures (each measure has exactly two documents, the guide and one tutorial, and two help
-entries) folded the exposure data contract `EXP.md` into Part II of this guide; the contract is kept as history in the
-[archive](../archive/README.md). Where the original proposal said otherwise, the code wins and the difference is stated (**As built:**).
+entries) folded the exposure data contract `EXP.md` into Part II of this guide;
+the contract is kept as history in the [archive](../archive/README.md). Where the original proposal said otherwise, the code wins and the difference is stated (**As built:**).
 VaR follows the same rule: [VAR_GUIDE.md](VAR_GUIDE.md) and tutorial 25.
 
 Every number below that is not a hand-made example is the engine's on the demo lake that `drishti.py lake demo` builds by default
