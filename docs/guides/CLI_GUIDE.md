@@ -1913,7 +1913,7 @@ drishti.py var whatif 'DESK:RATES' --trades new-swap.json --stress-window 250   
 ```
 
 Exit codes: 0; 1 when the server said no (the code and its message on standard error) or a what-if was refused or failed; 2 for usage.
-[Tutorial 24](../tutorials/24-var-from-the-bank-to-a-trade.md) walks through them with the demo data.
+[Tutorial 25](../tutorials/25-var-from-the-bank-to-a-trade.md) walks through them with the demo data.
 
 ### `server packs deploy`, `history`, `rollback` and `datasource`
 

@@ -336,7 +336,7 @@ VaR is good for now."** What is active:
   built** (2026-10-25): everything but memory tiering, the 1 M-trade benchmark, the Python engine and the VaR guide. **Part 2 built**
   (2026-10-26): memory tiering (memory-mapped float32 hot files, lazy history dates), the benchmark (measured at 100,000 × 5,
   extrapolated to 1 M × 50), the computed kinds `var-result` and `var-whatif` with the Python VaR engine, `drishti.py var`, the VaR guide
-  and tutorial 24. Not built: sharding across Drishti*net (no mechanism yet: VAR.md section 7.4), what-if pricing (QLRisk).
+  and tutorial 25. Not built: sharding across Drishti*net (no mechanism yet: VAR.md section 7.4), what-if pricing (QLRisk).
 
 Everything else in this section is **PARKED**: the 2.9.0, 2.10.0 and 2.11.0 measures, the groupings and analytics, the DESK/BOOK/TRDR/CPTY
 figures other than VaR, and 2.12.0 (AI and GenUI). Their stored kinds stay active and unchanged, and their contracts are kept as designs

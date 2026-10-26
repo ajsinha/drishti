@@ -59,7 +59,7 @@
     `var-whatif` (`VWIF`, the Python VaR engine `drishti_compute.var` in the new compute pool `var`: hypothetical trades from a private
     sandbox, incremental VaR in order and alone, component VaR and ES after, the stressed window); contracts, about texts, the pack README.
   - **`drishti.py var`**: show, parts, path, history, tree, status, capture, captures, compare, basket, baskets, official, reload, whatif.
-  - Docs: VAR.md 1.4, VAR_ENGINE.md (13.2, 18.7), VAR_DATA_MODEL.md (12, 14, 18.5), the new VAR_GUIDE.md and tutorial 24, VAR_EXPLORER,
+  - Docs: VAR.md 1.4, VAR_ENGINE.md (13.2, 18.7), VAR_DATA_MODEL.md (12, 14, 18.5), the new VAR_GUIDE.md and tutorial 25, VAR_EXPLORER,
     CONFIGURATION, API_GUIDE, TOOLS, CLI_GUIDE, the help centre. Tests: MappedVectorsTest, VarHotFileTest, VarTestDataPrecisionTest,
     VarApiTest, test_var_engine.py, test_varcli.py.
 - **VaR complete, part 1** ([VAR.md](docs/contracts/VAR.md) 1.3, AS BUILT):
