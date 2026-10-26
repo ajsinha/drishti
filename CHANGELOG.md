@@ -17,6 +17,23 @@
 
 ## Unreleased
 
+- **Knowledge: what the words of your data mean, and how the data connects them (2.9.2; product owner, 2026-10-26).** A new section at
+  the top of the help centre, [docs/knowledge/](docs/knowledge/README.md): a home with every term A to Z, and one page per domain,
+  [Market risk](docs/knowledge/market-risk.md), [Counterparty credit risk](docs/knowledge/counterparty-credit-risk.md),
+  [Trades and products](docs/knowledge/trades-and-products.md), [Entities and ownership](docs/knowledge/entities-and-ownership.md),
+  [Market data](docs/knowledge/market-data.md), [Data and contracts](docs/knowledge/data-and-contracts.md) and
+  [Economies](docs/knowledge/economies.md). Each has the same seven parts: the idea in plain words, a glossary (each term with the
+  command that shows it on the demo data), how the data connects (the kinds, their link columns from the packs' contracts and the id
+  conventions), a worked example with real numbers and their business date, questions to ask your data, common confusions, and where
+  to go deeper. The glossary is one data file, `docs/knowledge/glossary.yaml` (137 terms), written into the pages by
+  `tools/knowledge.py` (`--check` fails when a page differs; `tools/test_knowledge.py`). **`WHAT`** is a new reserved word (the pack
+  loader, `drishti.py pack check`, the command catalog): `WHAT <GO>` opens the Knowledge home, `WHAT <term> <GO>` the term's glossary
+  entry (its long name or a synonym, any case: `WHAT PFE`, `WHAT netting set`, `WHAT value at risk`), other words a search of the
+  Knowledge pages; the type-ahead lists the terms. A **What does this mean?** link beside the help on the VaR and exposure explorers
+  and on the `VRES`, `DESK`, `CPTY`, `NSET`, `CSA` and `EXP` views opens the page or entry (`knowledge:` in `config/help.yaml`);
+  Knowledge is in Build → Learn and Help. USER_GUIDE (reserved words, a Knowledge section), PACK_DEVELOPER_GUIDE, BI_GUIDE, CLI_GUIDE,
+  COMMANDS.md and HISTORY_QUERIES name `WHAT` among the reserved words. Tests: `drishti-console/tests/test_knowledge.py`, `test_help.py`
+  (seven sections, at most 62 listed pages), `ReservedMnemonicTest`, `test_drishti_cli.py`.
 - **The exposure explorer's browser test (2.9.1).** `drishti-console/tests/test_exposure_explorer_browser.py`, as the VaR explorer's:
   over the committed exposure run in a scratch lake (Delta connector, demo off, compute on) it opens `EXP BANK`, the tree and the
   counterparty board, a counterparty (breadcrumb, tiles, Netting sets), a netting set's Collateral tab (CSA, the signed effect of

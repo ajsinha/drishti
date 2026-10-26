@@ -91,8 +91,34 @@ use the World Bank's codes: regions such as `ECG-ECS` (Europe and Central Asia),
 
 ## 4. A worked example on the demo data
 
-<!-- example:start -->
-<!-- example:end -->
+The world-economy pack's public data (World Bank WDI updated 2026-10-08, IMF World Economic Outlook April 2026, CIA World Factbook;
+retrieved 2026-10-10). These records are not dated by business date: every date reads the same snapshot.
+
+**From a counterparty to its economy.** `CPTY CP-ALDERSHOT <GO>`: Aldershot Pension Trust, a UK pension fund rated AA-, country of risk
+GB. Its `ECONOMY` link is `ECON-GBR`:
+
+| `ECON ECON-GBR` | Value | Read it as |
+|---|---|---|
+| GDP (2025) | 4,002.6 bn USD | the 5th largest of 213 economies; 3,695.5 bn in 2024, 3,420.8 bn in 2023 |
+| GDP per capita | 57,602 USD | 69.5 million people |
+| Real growth | 1.39% | after 0.27% in 2023 and 1.08% in 2024 |
+| Inflation | 3.88% | consumer prices, above the Bank of England's 2% target |
+| Unemployment | 4.75% | ILO estimate |
+| Current account | −3.13% of GDP | the UK borrows from abroad to pay for it |
+| Region and income group | `ECG-ECS` (Europe and Central Asia), `ECG-HIC` (high income) | its two country groups |
+
+**Its outlook.** `FCST FCST-GBR-WEO <GO>` (IMF World Economic Outlook, April 2026): growth 0.8% in 2026 and 1.3% in 2027, inflation
+2.4% in 2027, government debt 102.9% of GDP in 2030. The record mixes outturns (2015 to 2025: −10.0% growth in 2020, 9.1% inflation in
+2022) with projections; each row says which.
+
+**Its peers.** `ECG ECG-HIC <GO>`, computed from its 84 member economies when opened: GDP 75,910 bn USD, growth 1.88% (weighted by
+GDP), median inflation 2.34%. The UK grows more slowly and its prices rise faster than the high-income median. `ECG ECG-WLD <GO>`: 213
+economies, 117,327 bn USD, growth 2.80%.
+
+**What the data hasn't told you.** Debt appears twice, and the two disagree: `FISC FISC-GBR <GO>` says 102.3% of GDP for 2025, while
+`ECON ECON-GBR` shows 102.6%. The economy record took the IMF series' *last* year, the projection for 2031, though the record's year
+is 2025. It is the same for 181 of the 189 economies that have both (the United States: 123.9% in 2025 on `FISC`, 142.1% on `ECON`).
+Until the economy record is corrected, read government debt from `FISC`, which carries its year, and its path from the forecast.
 
 ## 5. Questions to ask your data
 

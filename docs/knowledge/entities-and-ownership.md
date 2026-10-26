@@ -101,8 +101,42 @@ relationship is `LEIREL-<child>-DIRECT` or `-ULTIMATE`. On the bank's side: `LE-
 
 ## 4. A worked example on the demo data
 
-<!-- example:start -->
-<!-- example:end -->
+Two sides, two sources: the GLEIF snapshot the gleif pack commits (retrieved 2026-10-25: 9,937 legal entities in 590 ownership groups
+across 133 countries) and the bank's own core records (business date 2026-10-26).
+
+**Who owns whom, from GLEIF.** `LEI 010PWNH4K3BLIC3I7R03 <GO>` is *Gestion Placements Desjardins Inc.*, Montreal. Its record names its
+parents:
+
+```text
+FÉDÉRATION DES CAISSES DESJARDINS DU QUÉBEC   549300B2Q47IR0CR5B54   ultimate parent (level 2), LEI issued, renews 2027-11-10
+  └─ Desjardins Holding financier inc.        549300COKYB5EGSU1838   direct parent (level 1), LEI issued
+       └─ Gestion Placements Desjardins Inc.  010PWNH4K3BLIC3I7R03   LEI LAPSED: renewal was due 2024-10-07
+```
+
+The relationship itself is a record too: `LEIR LEIREL-010PWNH4K3BLIC3I7R03-DIRECT <GO>`. The group, computed when opened:
+`LEIG 549300B2Q47IR0CR5B54 <GO>` has 26 members (all of GLEIF's 26) in 2 countries, and **7 of them have let their LEI lapse**. A
+credit officer onboarding any of them would want to know.
+
+**A large group.** `LEIG 8I5DZWZKVSZI1NUHU748 <GO>` (JPMorgan Chase & Co.): 50 members in the committed snapshot of 173 in GLEIF's
+golden copy (the snapshot keeps at most 50 a group; the computation has no cap), 13 countries, 2 levels, 5 late renewals.
+`LEIG HWUPKR0MPOU8FGXBT394 <GO>` (Apple Inc.): the whole group, 21 of 21, in 15 countries, none late; its record links to the
+us-equities company `AAPL` and to 949 ISINs. `LEIC GB <GO>`: 1,274 entities registered in the United Kingdom, 225 of them lapsed.
+
+**The bank's side.** `LE LE-FRA <GO>` is *Drishti Bank Europe AG*, LEI `549300Z9DXU4T18OK744`, jurisdiction DE, regulated by the ECB and
+BaFin; it books the repo and securities lending desk. The bank has four such entities: `LE-NY`, `LE-LDN`, `LE-FRA`, `LE-TKY`.
+
+`CPTY CP-MERIDIAN <GO>` (Meridian Life Assurance, a US insurer rated A+) and `CPTY CP-MERIDIAN-RE <GO>` (Meridian Reinsurance Ltd,
+Bermuda, rated A) are two counterparties in one obligor group, `GRP GRP-MERIDIAN <GO>`, with one group limit of 15.1 billion USD.
+`drishti.py exposure show GROUP:GRP-MERIDIAN` adds their netting sets' exposures path by path: «GRP_MERIDIAN»
+
+**Country of risk at work.** `CPTY CP-KESTREL <GO>` (Kestrel Global Macro Fund, a hedge fund, BBB-) is registered in the Cayman
+Islands, and its country of risk and economy link are the Cayman Islands too (`ECON-CYM`). Every one of the 24 counterparties' records
+names `LE-NY` as its relationship owner, while their trades are booked by all four legal entities: `NS-ALDERSHOT-LDN` holds Aldershot's
+trades booked in London.
+
+**What the data hasn't told you.** The demo counterparties are fictitious: their LEIs (`549300H5KZ2QJHEAMB55` for Aldershot) are not in
+the GLEIF snapshot, so `LEI` finds nothing for them. With real counterparties, the same code is the bridge from the bank's credit view
+to the public ownership tree, and a counterparty group that disagrees with the LEI group is worth a credit officer's look.
 
 ## 5. Questions to ask your data
 

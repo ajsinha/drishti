@@ -107,8 +107,37 @@ has an id (an LEI, an ISIN, a ticker, a booking system's trade id). A computed k
 
 ## 4. A worked example on the demo data
 
-<!-- example:start -->
-<!-- example:end -->
+**The classes, counted.** `drishti.py contract list` names every command's contract: of the 97 commands of the shipped packs, **70**
+are fundamental, **8** engine inputs (`PNLV`, `SSET`, `HIER`, `PORT`, `XRUN`, `XPATH` and the compute demo's two), **1** is Drishti's own
+(`POS`, the derived positions) and **18** are computed (among them `VRES`, `EXP`, `LEIG`, `LEIC`, `SIC`, `ECG`, `CORRC`, `EQB`, `CTRD`).
+
+**One contract, read.** `drishti.py contract show NSET` (the netting-set kind, `config/packs/counterparty-risk/contracts/netting-set.contract.yaml`):
+
+```text
+kind: netting-set   mnemonic: NSET   pack: counterparty-risk   class: fundamental   source: xva-engine
+grain: One row per netting set per business date, keyed by NETTING_SET_ID.     id-pattern: ^NS-     cadence: daily
+storage: the credit-store connector, a Delta table <root>/credit/netting-set/, test data data/testdata/counterparty-risk/netting-set
+fields: NETTING_SET_ID, TRADE_COUNT, NET_MTM (USD), COLLATERAL (USD, held less posted), LIMIT, UTILISATION, CVA, TRADES[], BY_ASSET[] ...
+links:  COUNTERPARTY → counterparty, AGREEMENT → agreement, CSA → csa, CREDIT_LIMIT → credit-limit, CVA_RESULT → cva, SACCR → sa-ccr,
+        SIMM → simm, COLLATERAL_BALANCE → collateral-balance, LEGAL_ENTITY → legal-entity, TRADE_IDS → trade
+```
+
+**One trade, walked along the links.** Each step is a click on a link field, or the command beside it:
+
+```text
+TRD CLY-4000879           a CALYPSO repurchase agreement, EUR, book BOOK-SFT-3, booked by LE-FRA, counterparty CP-ALDERSHOT
+ └─ NSET NS-ALDERSHOT-FRA  its netting set: Aldershot's trades booked in Frankfurt (43 trades on 2026-07-08)
+     ├─ CSA CSA-ALDERSHOT  the collateral terms: thresholds 10m each way, MTA 500,000, MPOR 10 business days
+     │   └─ AGR AGR-ALDERSHOT-ISDA   the ISDA 2002 Master, English law, close-out netting enforceable
+     ├─ COLL COLL-ALDERSHOT-FRA     the collateral held and posted for this set
+     └─ CPTY CP-ALDERSHOT  the counterparty: Aldershot Pension Trust, AA-, country of risk GB
+         └─ ECON ECON-GBR  its economy (world-economy pack): GDP, growth, inflation, debt
+```
+
+Five packs (trading, counterparty-risk, core, world-economy, and market-data for the credit curve) answer that one path, each from its
+own source, joined only by ids that the contracts declare as links.
+
+«WALK_CHECK»
 
 ## 5. Questions to ask your data
 
