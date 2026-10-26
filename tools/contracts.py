@@ -173,6 +173,8 @@ def _dataset_files(d: dict, testdata: Path) -> list[Path]:
         return [folder / f for day in days for f in day.get("files") or []]
     if d.get("files"):
         return [folder / f for f in d["files"]]
+    if d.get("parts"):
+        return [folder / f for f in d["parts"]]
     if d.get("snapshot"):
         return [folder / d["snapshot"]]
     return []

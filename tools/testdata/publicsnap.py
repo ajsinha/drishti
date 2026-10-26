@@ -49,12 +49,18 @@ PACKS: dict[str, dict] = {
     "gleif": {"connector": "gleif-store",
               "source": "GLEIF LEI records, relationship records and mapping files (tools/publicdata/gleif.py)",
               "keys": {"lei-entity": "LEI", "lei-relationship": "RELATIONSHIP_ID", "lei-mapping": "IDENTIFIER"}},
+    "funds": {"connector": "funds-store",
+              "source": "SEC Form N-PORT, Form N-CEN and risk/return summary data sets, SEC and Nasdaq Trader ticker files, GLEIF (tools/publicdata/funds.py)",
+              "keys": {"fund": "TICKER", "fund-holder": "TICKER", "index-funds": "INDEX"}, "part-bytes": 1_200_000},
 }
+#: a pack with "part-bytes" has each kind's snapshot cut into parts of about that many compressed bytes (snapshot-<date>.part-NN.jsonl.gz),
+#: so no committed file is large (tools/testdata/test_testdata.py fails over 5 MB); one part keeps the plain name snapshot-<date>.jsonl.gz
 #: the kinds computed since 2.9.2 instead of stored (docs/guides/GROUPINGS_ANALYTICS_GUIDE.md): never written to the test data again
 COMPUTED = {"us-equities": ["sic-sector"], "gleif": ["lei-group", "lei-country"]}
 #: the documents a pack's samples/ keep as reference (README data structures, docs); the rest of each kind: the first REFERENCE_EACH
 REFERENCE_IDS = {"us-equities": {"us-company": ["AAPL", "C", "F"], "index-membership": ["DJIA"], "filing-feed": ["8-K"]},
-                 "gleif": {"lei-entity": ["HWUPKR0MPOU8FGXBT394"]}}
+                 "gleif": {"lei-entity": ["HWUPKR0MPOU8FGXBT394"]},
+                 "funds": {"fund": ["QQQ"], "fund-holder": ["AAPL"], "index-funds": ["NDX"]}}
 REFERENCE_EACH = 2
 
 
@@ -85,10 +91,39 @@ def _lines(kind_docs: dict[str, dict]) -> str:
     return "".join(json.dumps(d, ensure_ascii=False, separators=(",", ":")) + "\n" for d in kind_docs.values())
 
 
+def _parts(kind_docs: dict[str, dict], part_bytes: int | None) -> list[str]:
+    """The kind's JSON Lines cut into parts of about part_bytes compressed (whole documents, in order; deterministic); one without."""
+    lines = [json.dumps(d, ensure_ascii=False, separators=(",", ":")) + "\n" for d in kind_docs.values()]
+    whole = "".join(lines)
+    n = max(1, -(-len(_gzip(whole)) // part_bytes)) if part_bytes else 1
+    if n == 1:
+        return [whole]
+    target = len(whole.encode("utf-8")) / n
+    out, cur, size = [], [], 0
+    for line in lines:
+        cur.append(line)
+        size += len(line.encode("utf-8"))
+        if size >= target and len(out) < n - 1:
+            out.append("".join(cur))
+            cur, size = [], 0
+    if cur:
+        out.append("".join(cur))
+    return out
+
+
 def files(pack: str, docs: dict[str, dict[str, dict]]) -> dict[str, bytes]:
-    """{"<pack>/<kind>/snapshot-<date>.jsonl.gz": bytes} for every kind the pack keeps in the test data."""
+    """{"<pack>/<kind>/snapshot-<date>.jsonl.gz": bytes} for every kind the pack keeps in the test data; a large kind in parts,
+    snapshot-<date>.part-01.jsonl.gz, part-02 ..."""
     when = captured(docs)
-    return {f"{pack}/{kind}/snapshot-{when}.jsonl.gz": _gzip(_lines(docs.get(kind, {}))) for kind in PACKS[pack]["keys"]}
+    out = {}
+    for kind in PACKS[pack]["keys"]:
+        parts = _parts(docs.get(kind, {}), PACKS[pack].get("part-bytes"))
+        if len(parts) == 1:
+            out[f"{pack}/{kind}/snapshot-{when}.jsonl.gz"] = _gzip(parts[0])
+        else:
+            for i, text in enumerate(parts, 1):
+                out[f"{pack}/{kind}/snapshot-{when}.part-{i:02d}.jsonl.gz"] = _gzip(text)
+    return out
 
 
 def write(testdata: Path, pack: str, docs: dict[str, dict[str, dict]]) -> list[Path]:
@@ -108,25 +143,36 @@ def write(testdata: Path, pack: str, docs: dict[str, dict[str, dict]]) -> list[P
     return out + [testdata / "testdata.yaml"]
 
 
-def _newest(testdata: Path, pack: str, kind: str) -> Path | None:
+def _newest_all(testdata: Path, pack: str, kind: str) -> list[Path]:
+    """The files of a kind's newest snapshot: one, or its parts in order."""
     got = sorted((Path(testdata) / pack / kind).glob("snapshot-*.jsonl.gz"))
-    return got[-1] if got else None
+    if not got:
+        return []
+    day = got[-1].name[len("snapshot-"):len("snapshot-") + 10]
+    return [f for f in got if f.name[len("snapshot-"):len("snapshot-") + 10] == day]
+
+
+def _newest(testdata: Path, pack: str, kind: str) -> Path | None:
+    got = _newest_all(testdata, pack, kind)
+    return got[0] if got else None
 
 
 def read(testdata: Path, pack: str) -> dict[str, dict[str, dict]]:
     out: dict[str, dict[str, dict]] = {}
     for kind, key in PACKS[pack]["keys"].items():
-        f = _newest(testdata, pack, kind)
-        if f is None:
+        fs = _newest_all(testdata, pack, kind)
+        if not fs:
             continue
-        with gzip.open(f, "rt", encoding="utf-8") as fh:
-            out[kind] = {_id(d, key): d for d in (json.loads(x) for x in fh if x.strip())}
+        out[kind] = {}
+        for f in fs:
+            with gzip.open(f, "rt", encoding="utf-8") as fh:
+                out[kind].update({_id(d, key): d for d in (json.loads(x) for x in fh if x.strip())})
     return out
 
 
 def kind_docs(pack: str, kind: str, testdata: Path = TESTDATA) -> list[dict]:
     """One kind's documents from the newest snapshot (empty when there is none)."""
-    return list(read(testdata, pack).get(kind, {}).values()) if _newest(testdata, pack, kind) else []
+    return list(read(testdata, pack).get(kind, {}).values()) if _newest_all(testdata, pack, kind) else []
 
 
 def differences(testdata: Path, pack: str, docs: dict[str, dict[str, dict]]) -> list[str]:
@@ -144,7 +190,8 @@ def differences(testdata: Path, pack: str, docs: dict[str, dict[str, dict]]) -> 
         for f in (testdata / pack / kind).glob("snapshot-*.jsonl.gz"):
             if str(f.relative_to(testdata)).replace("\\", "/") not in want:
                 bad.append(f"data/testdata/{f.relative_to(testdata)} (not written by the generator)")
-    listed = {(d["pack"], d["kind"], d.get("snapshot")) for d in _manifest(testdata).get("datasets") or []}
+    listed = {(d["pack"], d["kind"], name) for d in _manifest(testdata).get("datasets") or []
+              for name in (d.get("parts") or [d.get("snapshot")])}
     for rel in want:
         p, kind, name = rel.split("/")
         if (p, kind, name) not in listed:
@@ -157,14 +204,19 @@ def datasets(testdata: Path) -> list[dict]:
     out = []
     for pack, spec in PACKS.items():
         for kind, key in spec["keys"].items():
-            f = _newest(testdata, pack, kind)
-            if f is None:
+            fs = _newest_all(testdata, pack, kind)
+            if not fs:
                 continue
-            with gzip.open(f, "rt", encoding="utf-8") as fh:
-                n = sum(1 for x in fh if x.strip())
-            out.append({"folder": f"{pack}/{kind}", "pack": pack, "kind": kind, "connector": spec["connector"], "key": key,
-                        "snapshot": f.name, "captured": f.name[len("snapshot-"):-len(".jsonl.gz")], "source": spec["source"],
-                        "documents": n, "bytes": f.stat().st_size})
+            n = 0
+            for f in fs:
+                with gzip.open(f, "rt", encoding="utf-8") as fh:
+                    n += sum(1 for x in fh if x.strip())
+            entry = {"folder": f"{pack}/{kind}", "pack": pack, "kind": kind, "connector": spec["connector"], "key": key,
+                     "snapshot": fs[0].name, "captured": fs[0].name[len("snapshot-"):len("snapshot-") + 10], "source": spec["source"],
+                     "documents": n, "bytes": sum(f.stat().st_size for f in fs)}
+            if len(fs) > 1:
+                entry["parts"] = [f.name for f in fs]
+            out.append(entry)
     return out
 
 

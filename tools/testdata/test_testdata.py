@@ -93,7 +93,7 @@ class TestData(unittest.TestCase):
     def test_the_docs_quote_as_many_demo_tables_as_lake_demo_builds(self):
         """QA2-205: `lake demo` builds one table per dataset of the manifest; every doc that quotes its count says that many."""
         want = len(self.m["datasets"])
-        said = re.compile(r"(?m)(?:Demo lake ready: [^\n]*?: |the same |each of the |`gleif` \(|`civic` \(|minutes\), |\(943 s\): |^\s+)(\d+) (?:Delta )?tables")
+        said = re.compile(r"(?m)(?:Demo lake ready: [^\n]*?: |the same |each of the |`gleif` \(|`funds` \(|`civic` \(|minutes\), |\(943 s\): |^\s+)(\d+) (?:Delta )?tables")
         wrong = []
         for rel in ("data/testdata/README.md", "docs/guides/GETTING_STARTED.md", "docs/guides/PACKS.md", "docs/guides/DEVELOPER_GUIDE.md",
                     "docs/guides/QA_ON_WINDOWS_WITH_CUSTOM_DATA.md", "docs/connectors/DEMO_DATA.md", "docs/tutorials/01-first-15-minutes.md"):
@@ -117,6 +117,10 @@ class TestData(unittest.TestCase):
                 continue
             if "snapshot" in ds:
                 self.assertTrue((TD / ds["folder"] / ds["snapshot"]).is_file(), ds)
+                for part in ds.get("parts") or []:          # a large snapshot in parts: every part there, the first one named
+                    self.assertTrue((TD / ds["folder"] / part).is_file(), part)
+                if ds.get("parts"):
+                    self.assertEqual(ds["parts"][0], ds["snapshot"], ds["folder"])
                 continue
             if ds.get("dated-by"):                          # the VaR data: dated by its documents, within the test data's days or before
                 self.assertEqual(sorted(f.name for f in (TD / ds["folder"]).glob("*.jsonl.gz")), sorted(ds["files"]), ds["folder"])
@@ -128,7 +132,7 @@ class TestData(unittest.TestCase):
                 self.assertTrue(list(folder.glob(f"changes-{day}*.jsonl.gz")), f"{ds['folder']} {day}")
         self.assertEqual({ds["pack"] for ds in self.m["datasets"]},
                          {"core", "market-data", "trading", "counterparty-risk", "market-risk", "world-economy", "news-and-markets",
-                          "us-equities", "gleif", "compute-demo"})
+                          "us-equities", "gleif", "funds", "compute-demo"})
 
     def test_three_source_systems_of_5000_production_shaped_trades_amended_over_the_days(self):
         ids: list[str] = []
@@ -158,6 +162,20 @@ class TestData(unittest.TestCase):
             for i in range(1, 5):
                 today, before = days[i][some], days[i - 1][some]
                 self.assertAlmostEqual(today["CHANGE_1D"], today[price] / before[price] - 1, places=4, msg=f"{folder} {some} day {i}")
+
+    def test_every_committed_data_file_is_gzipped_and_small(self):
+        """Git hosts and a Windows checkout stay comfortable: every data file under data/testdata is gzipped (only the manifest and
+        the README are not) and none is over 5 MB; a large kind is cut into parts (tools/testdata/publicsnap.py PART_BYTES)."""
+        plain, big = [], []
+        for f in sorted(TD.rglob("*")):
+            if not f.is_file() or f.parent == TD and f.name in ("README.md", "testdata.yaml"):
+                continue
+            if not f.name.endswith(".gz"):
+                plain.append(str(f.relative_to(TD)))
+            elif f.stat().st_size > 5 * 1024 * 1024:
+                big.append(f"{f.relative_to(TD)} ({f.stat().st_size / 1e6:.1f} MB)")
+        self.assertEqual(plain, [], "data files not gzipped")
+        self.assertEqual(big, [], "data files over 5 MB: cut them into parts")
 
     def test_every_attribute_is_upper_snake(self):
         for ds in self.m["datasets"]:

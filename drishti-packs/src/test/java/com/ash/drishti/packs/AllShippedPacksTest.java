@@ -35,7 +35,7 @@ class AllShippedPacksTest {
     static final Path EXAMPLES = Path.of("..", "examples", "packs").toAbsolutePath().normalize();
 
     /** Shipped but not on by default: switched on with DRISHTI_PACKS (their READMEs say how). */
-    static final List<String> OPT_IN = List.of("us-equities", "gleif", "compute-demo");
+    static final List<String> OPT_IN = List.of("us-equities", "gleif", "funds", "compute-demo");
 
     @Test
     void theShippedPacksAreTheDefaultOnesPlusTheOptInOnesAndLoadTogether() {

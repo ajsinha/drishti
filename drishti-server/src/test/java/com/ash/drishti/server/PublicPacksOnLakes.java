@@ -43,7 +43,7 @@ import org.springframework.test.web.servlet.MockMvc;
  * news-and-markets, static reference data). Nothing is served from a pack's samples. The subclasses share one context.
  */
 @SpringBootTest(properties = {"drishti.rachana.hot-reload=false", "drishti.sources.plugins.demo.enabled=false",
-        "drishti.packs.enabled=core,world-economy,news-and-markets,us-equities,gleif",
+        "drishti.packs.enabled=core,world-economy,news-and-markets,us-equities,gleif,funds",
         "drishti.sources.plugins.file.enabled=false",
         "drishti.security.enabled=true", "drishti.security.secret=test-secret-that-is-at-least-32-bytes-long",
         "drishti.security.roles.full.kinds[0]=*", "drishti.security.roles.full.raw=true"})
@@ -55,7 +55,7 @@ abstract class PublicPacksOnLakes {
 
     @DynamicPropertySource
     static void lake(DynamicPropertyRegistry r) {
-        Path lake = PublicPackLakes.lake("world-economy", "news-and-markets", "us-equities", "gleif");
+        Path lake = PublicPackLakes.lake("world-economy", "news-and-markets", "us-equities", "gleif", "funds");
         try {                                                      // the connector files are written from the packs' templates at start
             Path dir = Path.of(CONNECTORS);
             if (Files.isDirectory(dir)) {

@@ -97,9 +97,19 @@ final class PublicPackLakes {
             JsonNode settings = connector.path("settings");
             List<String> promoted = new ArrayList<>();
             settings.path("layout").path(kind).path("columns").forEach(c -> promoted.add(c.asText()));
-            TreeMap<String, JsonNode> docs = ds.has("snapshot")
-                    ? snapshot(TESTDATA.resolve(ds.path("folder").asText()).resolve(ds.path("snapshot").asText()), ds.path("key").asText())
-                    : samples(Path.of("..").resolve(ds.path("samples").asText()), kind);
+            TreeMap<String, JsonNode> docs = new TreeMap<>();
+            if (ds.has("snapshot")) {                      // one file, or a large kind's parts (the funds pack's holdings)
+                List<String> files = new ArrayList<>();
+                ds.path("parts").forEach(p -> files.add(p.asText()));
+                if (files.isEmpty()) {
+                    files.add(ds.path("snapshot").asText());
+                }
+                for (String f : files) {
+                    docs.putAll(snapshot(TESTDATA.resolve(ds.path("folder").asText()).resolve(f), ds.path("key").asText()));
+                }
+            } else {
+                docs = samples(Path.of("..").resolve(ds.path("samples").asText()), kind);
+            }
             table(lake.resolve(settings.path("domain").asText(pack)).resolve(kind), stage.resolve(pack + "-" + kind + ".rows"), docs, promoted);
         }
         try (var walk = Files.walk(stage)) {

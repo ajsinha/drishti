@@ -54,9 +54,15 @@ kind (*Data contracts*); this page is the one place for the external sources the
 | gleif | `api` | GLEIF LEI API: LEI records, legal forms, countries, LEI issuers, `https://api.gleif.org/api/v1` | CC0 1.0 | committable |
 | gleif | `mapping` | GLEIF mapping files: BIC, ISIN, MIC, OpenCorporates to LEI, `https://mapping.gleif.org` | CC0 1.0 | committable |
 | gleif | `golden-lei` | GLEIF golden copy, level 1 bulk file, for full-country pulls (never by default) | CC0 1.0 | data folder only (its size, not its licence) |
+| funds | `tickers` | SEC ticker files: fund share classes and listed trusts, `https://www.sec.gov/files/company_tickers_mf.json`, `company_tickers_exchange.json` | public domain (US Government work) | committable |
+| funds | `nasdaq` | Nasdaq Trader symbol directory (which tickers are ETFs), `https://www.nasdaqtrader.com/dynamic/SymDir/` | public symbol directory files | committable |
+| funds | `nport` | SEC Form N-PORT data sets (holdings, derivatives, counterparties, flows, monthly returns; about 450 MB a quarter), `https://www.sec.gov/data-research/sec-markets-data/form-n-port-data-sets` | public domain (US Government work); SEC fair access policy | committable (the downloads stay in the data folder) |
+| funds | `ncen` | SEC Form N-CEN data sets (ETF facts, service providers, authorised participants), `https://www.sec.gov/data-research/sec-markets-data/form-n-cen-data-sets` | public domain (US Government work) | committable |
+| funds | `rr` | SEC mutual fund prospectus risk/return summary data sets (expense ratio, turnover, calendar-year returns), `https://www.sec.gov/data-research/sec-markets-data/mutual-fund-prospectus-riskreturn-summary-data-sets` | public domain (US Government work) | committable |
+| funds | `gleif` | GLEIF golden copy level 2: fund relationships (managed by, sub-fund of, feeder to), `https://goldencopy.gleif.org` | CC0 1.0 | committable |
 
-A new pack built on external data adds its rows here and a section of its own below (the funds pack, SEC N-PORT and N-CEN, is
-being added this way). The market-data pack's committed samples and test data are synthetic: its official sources are optional and
+A new pack built on external data adds its rows here and a section of its own below (the funds pack, SEC N-PORT and N-CEN, came
+this way). The market-data pack's committed samples and test data are synthetic: its official sources are optional and
 always go to the data folder. Every other pack (core, trading, market-risk, counterparty-risk, compute-demo) holds synthetic or
 computed data only, and has no external source.
 
@@ -73,6 +79,7 @@ output are its own.
 | `market-data` | `tools/publicdata/official_market_data.py` | `tools/publicdata/market-data.sh` | `tools\windows\publicdata-market-data.ps1` |
 | `us-equities` | `tools/publicdata/us_equities.py` | `tools/publicdata/us-equities.sh` | `tools\windows\publicdata-us-equities.ps1` |
 | `gleif` | `tools/publicdata/gleif.py` | `tools/publicdata/gleif.sh` | `tools\windows\publicdata-gleif.ps1` |
+| `funds` | `tools/publicdata/funds.py` | `tools/publicdata/funds.sh` | `tools\windows\publicdata-funds.ps1` |
 
 Every script has the same commands and the same options. `--help` on the script, on `status` and on `refresh` prints its worked
 examples and its wrappers:
@@ -540,6 +547,52 @@ python3 tools/publicdata/gleif.py refresh golden golden-lei api mapping --scope 
 
 **Check it:** `make.py --check` (run by the refresh); `LEI 8I5DZWZKVSZI1NUHU748 <GO>` opens an entity, `LEIG ALL <GO>` every group.
 **Offline:** `refresh --offline` reproduces the committed data from the cache byte for byte.
+
+## funds
+
+**Sources:** `tickers` (the SEC's fund share class and listed-company ticker files), `nasdaq` (the Nasdaq Trader symbol directory:
+which tickers are ETFs), `nport` (the newest quarter of the SEC's Form N-PORT data sets), `ncen` (the newest four quarters of the Form
+N-CEN data sets), `rr` (the newest four quarters of the prospectus risk/return summary data sets) and `gleif` (GLEIF's level 2
+relationship records, reused from the gleif pack's cache when it has them). The SEC's data sets are U.S. public domain; GLEIF's are
+CC0 1.0.
+
+`tools/publicdata/funds.py` downloads the data sets into its cache and runs the pack's generator, `tools/packgen/funds/make.py` (the
+build, offline: it streams the N-PORT tables once and keeps the 200 largest funds and ETFs by net assets that have a ticker), then
+`make.py --check`. SEC requests use exactly the us-equities pack's User-Agent setting (`DRISHTI_SEC_USER_AGENT`, else
+`tools/packgen/us_equities/fetch.py`'s default) and one request at a time.
+
+**The downloads are large** (an N-PORT quarter is about 450 MB, four quarters of risk/return summaries about 200 MB, N-CEN 6 to 16 MB
+a quarter) and stay in `<data>/publicdata/cache/funds`, never in git; a file younger than `--max-age` hours (a week by default) is
+reused. **Where the refresh writes:** the committed snapshot, gzipped JSON Lines under `data/testdata/funds/<kind>/` (the fund kind
+in parts of about 1.2 MB, 5.5 MB in all), listed in `data/testdata/testdata.yaml` and served from the demo lake by the pack's Delta
+connector `funds-store`; `samples/`, the README, the guide and the glossary (`config/about.yaml`) of `config/packs/funds`. Rebuild
+the lake after a refresh: `python3 tools/drishti.py lake demo`.
+
+```bash
+python3 tools/publicdata/funds.py status                           # the committed funds, each source's licence, last refresh and cache size
+python3 tools/publicdata/funds.py refresh --dry-run                # the quarters and files a refresh would fetch; changes nothing
+python3 tools/publicdata/funds.py refresh                          # the committed pack: about 700 MB of downloads, then make.py and --check
+python3 tools/publicdata/funds.py refresh --offline                # rebuild the committed pack from the downloads only
+python3 tools/publicdata/funds.py refresh ncen rr --since 2025     # every quarter of the census and the summaries since 2025
+python3 tools/publicdata/funds.py refresh --scope FUNDS:300,HOLDINGS:1000
+                                                                   # the 300 largest, 1,000 holdings a fund, in <data>/publicdata/funds
+```
+
+On Windows: `.\tools\windows\publicdata-funds.ps1 status`, `.\tools\windows\publicdata-funds.ps1 refresh --dry-run`,
+`.\tools\windows\publicdata-funds.ps1 refresh`; on Linux and macOS `tools/publicdata/funds.sh` takes the same arguments.
+
+- **The 200.** Every fund's newest N-PORT report in the quarter (amendments win over the report they amend), ranked by net assets;
+  a fund needs a ticker (a share class in `company_tickers_mf.json`, or, for a unit investment trust such as SPY or DIA, its
+  listed ticker in `company_tickers_exchange.json`). Money market funds file Form N-MFP, not N-PORT, so they are not among them.
+- **The holdings.** A fund keeps its 600 largest holdings by value (every S&P 500 fund whole) and the totals of the rest; the
+  reverse look-through (`HELD`) counts every holding. The index tab's weights are computed from SEC data (shares outstanding times
+  the price the filings imply) because index weights are proprietary.
+- **`--scope`** widens the build: `FUNDS:<n>` the n largest funds, `HOLDINGS:<n>` the holdings kept a fund. A widened build goes to
+  `<data>/publicdata/funds` (`packs/funds` and `testdata/funds`); `--into-pack` writes it over the committed pack, on purpose only.
+
+**Check it:** `make.py --check` (run by the refresh); `FUND QQQ <GO>` opens a fund, `HELD AAPL <GO>` the funds holding Apple.
+**Offline:** `refresh --offline` rebuilds the committed data from the downloads; without them `make.py --check` checks the committed
+snapshot against what it derives. The guide is [FUNDS_GUIDE.md](FUNDS_GUIDE.md) (Part III: where the data comes from).
 
 ## What every refresh does
 

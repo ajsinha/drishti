@@ -26,6 +26,7 @@ settings:
 - range
 - interval
 - id-prefix
+- benchmark
 - kind
 - timeout-seconds
 - cache-ttl-seconds
@@ -71,6 +72,7 @@ for since the start. Two connectors use it: `yfinance` (news-and-markets pack, k
 | `range` | string |  | History span: 1mo, 3mo, 6mo, 1y, 5y, ytd, max ... |
 | `interval` | string |  | Bar size: 1d, 1wk, 1mo, 60m ... |
 | `id-prefix` | string |  | Prefix of entity ids (QUOTE-) |
+| `benchmark` | string |  | Symbol the price-history analytics compute beta against (SPY) |
 | `kind` | string |  | Kind served (quote) |
 | `timeout-seconds` | int |  | One request |
 | `cache-ttl-seconds` | int |  | How long a symbol's answer is reused |

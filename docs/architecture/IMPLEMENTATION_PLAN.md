@@ -365,11 +365,14 @@ pack on the Delta connector `var-results` over `risk-results/var-official`, with
 and `market-risk-var-latest`, model and report `market-risk-var`: VaR 99% and ES 97.5% by node, never summed) (VAR_GUIDE.md
 section 19).
 
-**Parked: a Funds and ETFs pack (candidate, 2026-10-26).** US funds and ETFs from public data: SEC N-PORT holdings, the N-CEN census,
-the risk/return summaries, the mutual-fund ticker file, N-MFP (money-market funds), 13F holdings, GLEIF's fund relationships and the
-Nasdaq ETF flag. FUND pages; look-through from a fund to its holdings in USEQ, GLEIF and IDX; an ETF against its index; a fund's
-derivative counterparties. The full N-PORT is never committed to the repository: a refresh script and a small committed snapshot, as
-the other public-data packs; prices internal-only. Design on request; nothing is built until the product owner asks.
+**Built (2.9.2): the Funds and ETFs pack (product owner, 2026-10-26).** The `funds` pack: the 200 largest US mutual funds and ETFs by
+net assets from SEC public data (the newest Form N-PORT data set, four quarters of Form N-CEN and of the prospectus risk/return
+summaries, the SEC and Nasdaq Trader ticker files, GLEIF's fund relationships). Kinds `fund` (FUND: the fact sheet, with the tabs
+Look-through holdings and the fund against its index, as on the approved mock-ups), `fund-holder` (HELD: the funds holding a us-equities
+company, also USEQ's Held by funds tab) and `index-funds` (TRACK: the funds tracking an index, also on IDX). Index weights are computed
+from SEC data (shares outstanding times the price the filings imply); no prices. A 5.6 MB gzipped snapshot in parts
+(`data/testdata/funds`), the refresh script `tools/publicdata/funds.py` (downloads kept in the data folder), contracts, the guide
+[FUNDS_GUIDE.md](../guides/FUNDS_GUIDE.md) and tutorial 28. Not built from the candidate: N-MFP (money-market funds) and 13F holdings.
 
 **After 2.9.0: synthetic test data from its generators (to plan).** A plan for regenerating the synthetic test data from the
 deterministic generators (`tools/packgen`, `tools/testdata/make_testdata.py`) instead of committing it; public data stays committed. The plan is shown
@@ -523,6 +526,23 @@ Parked by the product owner on 2026-10-25 and brought back after the computed me
 Once the banking and finance measures are done, the same pattern of fundamental data in one lake, connectors, and computed measures
 served by Python engines and reactive connectors is carried to other industries. Each gets its own packs, connectors and compute
 engines. Which industries, and in what order, is for the product owner to decide then.
+
+## 2.9.3 (planned): VaR from scenario PVs, in any reporting currency (product owner, 2026-10-26)
+
+Decided after 2.9.1: the upstream engine gives **scenario PVs** (each live trade revalued under each historical scenario) and the
+**base PV**, and FX rates are available; Drishti computes the P&L vectors itself and reports VaR and ES **in a chosen currency**.
+The P&L-vector input of 2.8.0 stays supported (a bank sends either).
+
+| Part | What |
+|---|---|
+| Input | per trade and scenario: `PV` in the trade's currency (or one stated currency), the base PV of the same run, the scenario set's order; FX: today's rates and each scenario's (or derived from the FX history of the scenario dates) |
+| P&L at load | `P&L(s) = PV(s) × FX(s) − PV(base) × FX(base)` into the reporting currency; same valuation date for both PVs; same scenario order for every trade; a scenario that failed to price flagged, never zero-filled (a new DRS code) |
+| Reporting currency | VaR, ES, components, captures, official results and the basket tray in USD, EUR, CAD or any currency with FX; the currency move is part of the risk, so the same trades give different VaR per currency |
+| Engine | vectors per reporting currency built at load (USD always; others on first ask, cached per date), on the existing memory tiering |
+| Docs and screens | mock-ups for the currency picker first; VAR_GUIDE Part II (the contract) for PV input; tutorial 25; the Market risk Knowledge page ("From scenario PV to the P&L vector"); test data regenerated as scenario PVs and FX |
+
+Open questions for the product owner: (1) PVs in each trade's currency or one currency; (2) scenario FX supplied or derived from the
+scenario dates' FX history; (3) cross rates via USD or direct pairs; (4) the holding period (1-day moves, as today).
 
 ## Known gaps
 

@@ -1,0 +1,64 @@
+# Project Drishti · Any data. Any domain. One grammar.
+#
+# Copyright (c) 2026 Ashutosh Sinha <ajsinha@gmail.com>.
+# All rights reserved.
+#
+# PROPRIETARY AND CONFIDENTIAL.
+#
+# This file is the confidential and proprietary property of Ashutosh Sinha.
+# Unauthorised copying, use, modification, distribution or disclosure of this
+# file, via any medium, is strictly prohibited except with the express prior
+# written permission of the copyright holder.
+#
+# See the LICENSE file in the root of this repository for the full terms.
+
+# The funds pack's own block: the funds holding one company, from a fund-holder record (the HELD page, and the us-equities company
+# page's "Held by funds" tab, which reads the record as its source).
+rachana: 1
+fragment: holder-list
+version: 1
+description: "The funds that hold one company, by value: each fund's weight, value and shares as it filed them on Form N-PORT."
+params:
+  id: holders
+  title: Held by funds
+  rec: $
+  key: ''
+  code: ''
+  area: ''
+  empty: No fund of the pack holds this company
+doc:
+  summary: "The funds that hold one company, by value: each fund's weight, value and shares as it filed them on Form N-PORT."
+  description: >-
+    One row a fund: the fund (opens its page), its type, the company's weight in the fund (percent of its net assets), the value and
+    the shares it holds, and the date of the report. Read from a fund-holder record: the page's own ($) or a linked one ($src) on a
+    page of another pack.
+  params:
+    id: { type: id, default: holders, meaning: "The panel id, unique on the screen" }
+    title: { type: text, default: Held by funds, meaning: "The title over the table" }
+    rec: { type: expression, default: $, meaning: "The fund-holder record: $ on its own page, $src where a panel reads it as its source" }
+    key: { type: key, default: '', meaning: "The function key (F2 to F12) that brings the panel forward; none when empty" }
+    code: { type: key, default: '', meaning: "The panel's mnemonic code, typed in the command line to jump to it; none when empty" }
+    area: { type: area, default: '', meaning: "Where the panel sits: main (the default when empty), right, or an area of the screen's layout" }
+    empty: { type: text, default: No fund of the pack holds this company, meaning: "The words shown when no fund holds it" }
+  emits: []
+  expects: []
+  examples:
+    - { use: holder-list@1, with: { id: holders, rec: $ } }
+  since: "2.9.2"
+panels:
+  - id: %{id}
+    kind: table
+    title: "%{title}"
+    key: %{key}
+    code: %{code}
+    area: %{area}
+    rows: "%{rec}.HOLDERS"
+    empty: "%{empty}"
+    columns:
+      - { label: Fund, bind: "link(@.FUND, 'fund', @.FUND_NAME)" }
+      - { label: Ticker, bind: "@.FUND" }
+      - { label: Type, bind: "@.TYPE" }
+      - { label: Weight in the fund, bind: "@.PCT", fmt: weight3 }
+      - { label: Value, bind: "@.VALUE", fmt: compact, total: true }
+      - { label: Shares, bind: "@.SHARES", fmt: compact, total: true }
+      - { label: Report date, bind: "@.REPORT_DATE", fmt: date }

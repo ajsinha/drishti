@@ -223,7 +223,7 @@ class SoakConfigurationTest(unittest.TestCase):
         with tempfile.TemporaryDirectory() as tmp:
             murex = self.lake(Path(tmp) / "murex", ["trading/trade_murex", "reference/counterparty", "credit/netting-set"])
             files = net_soak.connector_files(murex, "trading,counterparty-risk")
-            self.assertEqual({"trade-endur", "trade-calypso", "market-store", "legal-store", "collateral-store"}, set(files))
+            self.assertEqual({"trade-endur", "trade-calypso", "market-store", "legal-store", "collateral-store", "exposure-store", "exposure-results"}, set(files))   # 2.9.0: the exposure paths and the published results are Delta too
             doc = yaml.safe_load(files["trade-endur"])
             self.assertEqual(("delta", False, ["trade"]), (doc["plugin"], doc["enabled"], doc["kinds"]))
             self.assertIn("enabled: false\n", files["trade-endur"])                  # a YAML boolean, never the string "false" (SOAK2-02)

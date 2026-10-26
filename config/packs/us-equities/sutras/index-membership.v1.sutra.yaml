@@ -51,6 +51,22 @@ panels:
         panels:
           - { use: us-equities/company-card@1, with: { id: member, title: "${@parent.open.id}", rec: $src } }
           - { use: series-line@1, with: { id: member-revenue, title: "Revenue by fiscal year, USD", rows: $src.FINANCIALS, x: YEAR, y: REVENUE, fmt: compact } }
+  - id: tracked-by
+    kind: table
+    title: "ETFs and funds tracking it (the funds pack; a fund opens its page)"
+    area: right
+    key: F4
+    code: ETF
+    when: "$.INDEX != 'BANKS-US' && $.INDEX != 'BANKS-CA' && $.INDEX != 'BANKS-UK'"     # a bank list is no index a fund tracks
+    source: { pack: funds, kind: index-funds, id: $.INDEX }
+    rows: $src.ROWS
+    search: false
+    empty: No fund of the funds pack tracks it (or the pack is off)
+    columns:
+      - { label: Fund, bind: "link(@.FUND, 'fund', @.FUND)" }
+      - { label: Type, bind: "@.TYPE" }
+      - { label: Net assets, bind: "@.NET_ASSETS", fmt: compact }
+      - { label: "Expense ratio (%)", bind: "@.EXPENSE_RATIO", fmt: amount2 }
   - { use: ranked-bars@1, with: { id: by-sector, title: Members by SIC division, rows: "group($.ROWS, 'SECTOR')", label: label, value: value, fmt: amount0, area: right, key: F3 } }
   - use: explainer-note@1
     with:

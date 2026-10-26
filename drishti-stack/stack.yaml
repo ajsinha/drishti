@@ -48,7 +48,7 @@ nodes:
     home: repo
     heap: 3g
     jvm: [-XX:G1PeriodicGCInterval=60000]
-    packs: core,market-data,trading,counterparty-risk,market-risk,world-economy,news-and-markets,us-equities,gleif
+    packs: core,market-data,trading,counterparty-risk,market-risk,world-economy,news-and-markets,us-equities,gleif,funds
 
   # synthetic ENDUR and CALYPSO trades (ids 10000000+, CLY-30000000+); its data and connectors under data/stack/nodes/drishti-b
   - name: drishti-b
@@ -73,4 +73,4 @@ console:
   servers: [drishti-main]          # the console is given these alone and learns the other servers from the cluster
   settings:
     DRISHTI_CONSOLE_HOST: 0.0.0.0
-    DRISHTI_PACKS: core,market-data,trading,counterparty-risk,market-risk,world-economy,news-and-markets,us-equities,gleif
+    DRISHTI_PACKS: core,market-data,trading,counterparty-risk,market-risk,world-economy,news-and-markets,us-equities,gleif,funds

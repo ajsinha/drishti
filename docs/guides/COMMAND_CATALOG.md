@@ -17,11 +17,11 @@
 
 # The command catalog
 
-Every command of the command line: its own words and forms, the 10 packs' codes, and the 97 mnemonics the packs define, each with what it does and an example. A pack's mnemonics work when the pack is switched on ([PACKS.md](PACKS.md)); how to type them is in [USER_GUIDE.md](USER_GUIDE.md).
+Every command of the command line: its own words and forms, the 11 packs' codes, and the 100 mnemonics the packs define, each with what it does and an example. A pack's mnemonics work when the pack is switched on ([PACKS.md](PACKS.md)); how to type them is in [USER_GUIDE.md](USER_GUIDE.md).
 
 **Data** says what kind of data a command shows ([the data contracts](../contracts/README.md#3-four-kinds-of-data)): *fundamental* (masters, terms, market and public data, kept as delivered), *engine input* (what upstream engines deliver for the computed measures), *Drishti's own* (made by Drishti) and *computed* (worked out when asked). **Change** says when a command moves to the compute model, or when the figures on a record start to be computed instead of stored ([the roadmap](../architecture/IMPLEMENTATION_PLAN.md#the-computed-measures-roadmap-280-to-2120-product-owner-2026-10-25)). Each mnemonic's fields are in its data contract ([every command's contract](../contracts/packs/README.md)).
 
-In numbers: 70 fundamental, 8 engine input, 1 Drishti's own and 18 computed; 0 move to the compute model and 0 keep their record while its figures become computed.
+In numbers: 73 fundamental, 8 engine input, 1 Drishti's own and 18 computed; 0 move to the compute model and 0 keep their record while its figures become computed.
 
 ## Contents
 
@@ -31,6 +31,7 @@ In numbers: 70 fundamental, 8 engine input, 1 Drishti's own and 18 computed; 0 m
 - [Compute demo (`compute-demo`)](#compute-demo-compute-demo)
 - [Core (`core`)](#core-core)
 - [Counterparty credit risk (`counterparty-risk`)](#counterparty-credit-risk-counterparty-risk)
+- [Funds and ETFs (`funds`)](#funds-and-etfs-funds)
 - [GLEIF legal entities (`gleif`)](#gleif-legal-entities-gleif)
 - [Market data (`market-data`)](#market-data-market-data)
 - [Market risk (`market-risk`)](#market-risk-market-risk)
@@ -72,6 +73,7 @@ A pack's code typed alone opens the pack's overview.
 | `CMPD` | `compute-demo` | Sample pack for reactive connectors: three books of synthetic P&L strips (250 scenario days each) and the sum of a book's paths computed when it is asked for, by a Python engine in a compute pool (path-sum) and by its Java twin in the server (path-sum-java), with progress on the screen and a state per panel. Synthetic numbers only. Not loaded unless named in DRISHTI_PACKS. |
 | `CORE` | `core` | The parties and organisation every pack builds on: counterparties (with country of risk and UEN), groups, issuers, CCPs, legal entities, books and portfolios, desks, traders and holiday calendars. |
 | `CCR` | `counterparty-risk` | ISDA master agreements and CSAs, netting sets, exposure and PFE, CVA/XVA, SA-CCR, credit limits, collateral, margin calls and SIMM. |
+| `FUNDS` | `funds` | The 200 largest US mutual funds and ETFs by net assets with their holdings, from SEC public data: Form N-PORT holdings, derivatives and counterparties, flows and monthly returns; Form N-CEN census facts; prospectus fees, turnover and calendar-year returns. A holding opens its company (us-equities), a company lists the funds that hold it, an index the funds that track it. |
 | `GLEIF` | `gleif` | Legal Entity Identifiers from GLEIF (CC0): the legal entities of the us-equities companies' ownership groups and of the large banks (the FSB's G-SIBs and others), insurers, asset managers and market infrastructures, with their parents and children, addresses, registration and renewal, BICs and ISINs. Off by default; with us-equities on, a company and its LEI record link both ways. |
 | `MKT` | `market-data` | Curves, volatility surfaces, FX, equities, credit, inflation, commodities, fixings and bonds. |
 | `MRSK` | `market-risk` | Value at risk, stress testing, FRTB sensitivities and P&L explain. |
@@ -128,6 +130,16 @@ ISDA master agreements and CSAs, netting sets, exposure and PFE, CVA/XVA, SA-CCR
 | `EXP` | Exposure profile of a scope (computed) | The exposure profile (EE, ENE, EEE, PFE at 95% and 99%, EE without collateral) and the figures (CE, EPE, EEPE, peak EE and PFE, EAD under the internal model) of any counterparty scope (the scope grammar of EXPOSURE_GUIDE.md section 4), computed when asked by the server's exposure engine from the simulated paths, as the person asking; never stored. | `EXP NSET:NS-ALDERSHOT-FRA` | computed |  |
 | `XWIF` | Exposure what-if before dealing (computed, Python) | A scope's exposure before and after candidate trades kept in the person's private sandbox, by the exact paths method (each candidate's values on every path of the day's run added to its netting set, collateral and exposure computed again), computed when asked by the Python exposure engine from the scope's exposure-result; never stored. |  | computed |  |
 | `XOFC` | Exposure official results by netting set and counterparty (published) | The official end-of-day exposure (current exposure, EPE, effective EPE, peak EE, peak PFE at 95% and 99%) of every netting set, counterparty and connected group, as the server captured and published it (one row per scope, business date and result version); read only, for BI and other readers, never an engine's input. | `XOFC NSET:NS-ALDERSHOT-FRA` | computed |  |
+
+## Funds and ETFs (`funds`)
+
+The 200 largest US mutual funds and ETFs by net assets with their holdings, from SEC public data: Form N-PORT holdings, derivatives and counterparties, flows and monthly returns; Form N-CEN census facts; prospectus fees, turnover and calendar-year returns. A holding opens its company (us-equities), a company lists the funds that hold it, an index the funds that track it.
+
+| Command | Opens | What it does | Example | Data | Change |
+|---|---|---|---|---|---|
+| `FUND` | Fund or ETF | A US mutual fund or ETF from SEC public data: the fact sheet, the look-through holdings with derivatives and counterparties, and the fund against its index. | `FUND QQQ` | fundamental |  |
+| `HELD` | Funds holding a company | The reverse look-through: every fund of the pack that holds one us-equities company, by value, and the share of the company they own. | `HELD AAPL` | fundamental |  |
+| `TRACK` | Funds tracking an index | The funds and ETFs of the pack that track one us-equities index, by net assets, with their cost and how closely they follow it. | `TRACK SP500` | fundamental |  |
 
 ## GLEIF legal entities (`gleif`)
 
