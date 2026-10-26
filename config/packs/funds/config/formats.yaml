@@ -1,0 +1,21 @@
+# Project Drishti · Any data. Any domain. One grammar.
+#
+# Copyright (c) 2026 Ashutosh Sinha <ajsinha@gmail.com>.
+# All rights reserved.
+#
+# PROPRIETARY AND CONFIDENTIAL.
+#
+# This file is the confidential and proprietary property of Ashutosh Sinha.
+# Unauthorised copying, use, modification, distribution or disclosure of this
+# file, via any medium, is strictly prohibited except with the express prior
+# written permission of the copyright holder.
+#
+# See the LICENSE file in the root of this repository for the full terms.
+
+# Funds formats. Weights, returns and ratios are stored as filed, in percent (7.1 means 7.1%), so these add the suffix without scaling.
+formats:
+  weight2: { type: number, decimals: 2, suffix: " %" }
+  weight3: { type: number, decimals: 3, suffix: " %" }
+  ratio2:  { type: number, decimals: 2, suffix: " %" }
+  tilt2:   { type: number, decimals: 2, sign: always, suffix: " pts" }
+  return2: { type: number, decimals: 2, sign: always, suffix: " %" }

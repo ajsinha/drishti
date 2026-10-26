@@ -20358,3 +20358,39 @@ datasets:
   source: GLEIF LEI records, relationship records and mapping files (tools/publicdata/gleif.py)
   documents: 3381
   bytes: 43100
+- folder: funds/fund
+  pack: funds
+  kind: fund
+  connector: funds-store
+  key: TICKER
+  snapshot: snapshot-2026-10-26.part-01.jsonl.gz
+  captured: '2026-10-26'
+  source: SEC Form N-PORT, Form N-CEN and risk/return summary data sets, SEC and Nasdaq Trader ticker files, GLEIF (tools/publicdata/funds.py)
+  documents: 200
+  bytes: 4983888
+  parts:
+  - snapshot-2026-10-26.part-01.jsonl.gz
+  - snapshot-2026-10-26.part-02.jsonl.gz
+  - snapshot-2026-10-26.part-03.jsonl.gz
+  - snapshot-2026-10-26.part-04.jsonl.gz
+  - snapshot-2026-10-26.part-05.jsonl.gz
+- folder: funds/fund-holder
+  pack: funds
+  kind: fund-holder
+  connector: funds-store
+  key: TICKER
+  snapshot: snapshot-2026-10-26.jsonl.gz
+  captured: '2026-10-26'
+  source: SEC Form N-PORT, Form N-CEN and risk/return summary data sets, SEC and Nasdaq Trader ticker files, GLEIF (tools/publicdata/funds.py)
+  documents: 503
+  bytes: 589645
+- folder: funds/index-funds
+  pack: funds
+  kind: index-funds
+  connector: funds-store
+  key: INDEX
+  snapshot: snapshot-2026-10-26.jsonl.gz
+  captured: '2026-10-26'
+  source: SEC Form N-PORT, Form N-CEN and risk/return summary data sets, SEC and Nasdaq Trader ticker files, GLEIF (tools/publicdata/funds.py)
+  documents: 3
+  bytes: 1108

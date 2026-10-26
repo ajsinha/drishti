@@ -19,7 +19,7 @@
 
 Every command (mnemonic) of every pack has a data contract: a YAML file beside its pack (`config/packs/<pack>/contracts/<kind>.contract.yaml`, checked against `tools/contracts.schema.json`) and a section of its pack's page here. The shared rules are in [the contracts README](../README.md); the computed measures that replace the retiring kinds have their own contracts there.
 
-97 contracts, 468 points still to review. Check them with `drishti.py contract check`; draft a new one with `drishti.py contract bootstrap KIND --write`.
+100 contracts, 468 points still to review. Check them with `drishti.py contract check`; draft a new one with `drishti.py contract bootstrap KIND --write`.
 
 | Command | Kind | Pack | Class | Status | Replaced by | To review |
 |---|---|---|---|---|---|---|
@@ -51,6 +51,9 @@ Every command (mnemonic) of every pack has a data contract: a YAML file beside i
 | `EXP` | `exposure-result` | [counterparty-risk](counterparty-risk.md#exp-exposure-profile-of-a-scope-computed-exposure-result) | computed | active |  | 0 |
 | `XWIF` | `exposure-whatif` | [counterparty-risk](counterparty-risk.md#xwif-exposure-what-if-before-dealing-computed-python-exposure-whatif) | computed | active |  | 0 |
 | `XOFC` | `exposure-official-cpty` | [counterparty-risk](counterparty-risk.md#xofc-exposure-official-results-by-netting-set-and-counterparty-published-exposure-official-cpty) | computed | active |  | 0 |
+| `FUND` | `fund` | [funds](funds.md#fund-fund-or-etf-fund) | fundamental | active |  | 0 |
+| `HELD` | `fund-holder` | [funds](funds.md#held-funds-holding-a-company-fund-holder) | fundamental | active |  | 0 |
+| `TRACK` | `index-funds` | [funds](funds.md#track-funds-tracking-an-index-index-funds) | fundamental | active |  | 0 |
 | `LEI` | `lei-entity` | [gleif](gleif.md#lei-lei-legal-entity-lei-entity) | fundamental | active |  | 4 |
 | `LEIG` | `lei-group` | [gleif](gleif.md#leig-lei-ownership-group-lei-group) | computed | active |  | 0 |
 | `LEIR` | `lei-relationship` | [gleif](gleif.md#leir-lei-parent-relationship-lei-relationship) | fundamental | active |  | 4 |

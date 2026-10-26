@@ -202,7 +202,8 @@ def test_the_help_centre_has_six_sections_and_about_forty_pages():
     # 51: plus the groupings and analytics' two (the guide and tutorial 27, 2.9.2), the same rule.
     # 52: plus External data (docs/guides/PUBLIC_DATA.md, 2.9.1), the product owner's request of 2026-10-26: a separate help page for
     # external data extraction, with examples.
-    assert 30 <= total <= 52, total
+    # 54: plus the funds pack's two (the funds and ETFs guide and tutorial 28, 2.9.2), the same rule (two documents, two entries).
+    assert 30 <= total <= 54, total
 
 
 def test_every_old_help_address_still_opens_something(client):
@@ -230,7 +231,7 @@ def test_the_tutorials_page_renders_the_tutorials_index_and_each_tutorial_opens_
     page = client.get("/help/tutorials")
     assert page.status_code == 200 and "Your first 15 minutes" in page.text and "Run it in production" in page.text
     links = sorted(set(re.findall(r'href="(/help/docs-tutorials-[0-9a-z-]+)"', page.text)))
-    assert len(links) == 27, links
+    assert len(links) == 28, links
     shots = 0
     for href in links:
         t = client.get(href)

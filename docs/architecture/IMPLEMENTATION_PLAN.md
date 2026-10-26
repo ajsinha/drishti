@@ -365,11 +365,14 @@ pack on the Delta connector `var-results` over `risk-results/var-official`, with
 and `market-risk-var-latest`, model and report `market-risk-var`: VaR 99% and ES 97.5% by node, never summed) (VAR_GUIDE.md
 section 19).
 
-**Parked: a Funds and ETFs pack (candidate, 2026-10-26).** US funds and ETFs from public data: SEC N-PORT holdings, the N-CEN census,
-the risk/return summaries, the mutual-fund ticker file, N-MFP (money-market funds), 13F holdings, GLEIF's fund relationships and the
-Nasdaq ETF flag. FUND pages; look-through from a fund to its holdings in USEQ, GLEIF and IDX; an ETF against its index; a fund's
-derivative counterparties. The full N-PORT is never committed to the repository: a refresh script and a small committed snapshot, as
-the other public-data packs; prices internal-only. Design on request; nothing is built until the product owner asks.
+**Built (2.9.2): the Funds and ETFs pack (product owner, 2026-10-26).** The `funds` pack: the 200 largest US mutual funds and ETFs by
+net assets from SEC public data (the newest Form N-PORT data set, four quarters of Form N-CEN and of the prospectus risk/return
+summaries, the SEC and Nasdaq Trader ticker files, GLEIF's fund relationships). Kinds `fund` (FUND: the fact sheet, with the tabs
+Look-through holdings and the fund against its index, as on the approved mock-ups), `fund-holder` (HELD: the funds holding a us-equities
+company, also USEQ's Held by funds tab) and `index-funds` (TRACK: the funds tracking an index, also on IDX). Index weights are computed
+from SEC data (shares outstanding times the price the filings imply); no prices. A 5.6 MB gzipped snapshot in parts
+(`data/testdata/funds`), the refresh script `tools/publicdata/funds.py` (downloads kept in the data folder), contracts, the guide
+[FUNDS_GUIDE.md](../guides/FUNDS_GUIDE.md) and tutorial 28. Not built from the candidate: N-MFP (money-market funds) and 13F holdings.
 
 **After 2.9.0: synthetic test data from its generators (to plan).** A plan for regenerating the synthetic test data from the
 deterministic generators (`tools/packgen`, `tools/testdata/make_testdata.py`) instead of committing it; public data stays committed. The plan is shown
