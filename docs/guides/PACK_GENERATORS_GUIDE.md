@@ -426,6 +426,16 @@ regenerates the pages. `drishti.py contract check` (and `drishti-console/tests/t
 contract, a contract is invalid, or the samples and test data drift from it, so regenerating a pack's samples with new fields means
 updating its contracts in the same change.
 
+**Every pack guide ends with its data contracts and its data retrieval (2.9.1).** A generator that writes a pack's guide appends
+`guide_data.sections(pack_dir)` (`tools/packgen/common/guide_data.py`): *Data contracts*, every kind's contract with every column (type,
+key, presence, unit, example or values, link), and *Data retrieval*, where each kind's data comes from (an external source with its
+licence, internal-only flag and refresh script; a generator of synthetic data; or a Drishti engine), how it reaches the lake, checking
+and offline. Where the data comes from is config, `tools/packgen/common/data_retrieval.yaml`: a new pack adds its default origin and
+the kinds that differ (a computed kind needs nothing: its contract names its engine). A pack without a guide generator is kept by
+`python3 tools/packgen/common/guide_data.py` (`--check`): compute-demo's whole guide, and a generated block at the end of the
+hand-written news-and-markets guide. External sources themselves are documented on the
+[External data](PUBLIC_DATA.md) page.
+
 ## Generating a pack from JSON Lines
 
 `drishti.py pack new` turns existing data (one JSON document per line, or the loader envelope `{"kind","id","doc"}`) into a complete

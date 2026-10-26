@@ -37,6 +37,7 @@ ROOT = HERE.parents[2]
 sys.path.insert(0, str(HERE.parent / "common"))
 import packsamples as PS  # noqa: E402
 import readme as README  # noqa: E402  (the pack README standard)
+import guide_data as GD  # noqa: E402  (the guide's Data contracts and Data retrieval sections)
 sys.path.insert(0, str(HERE))
 import fetch as F  # noqa: E402
 sys.path.insert(0, str(ROOT / "tools" / "testdata"))
@@ -510,7 +511,7 @@ def _rel(p: Path) -> str:
 def files(docs: dict[str, dict[str, dict]]) -> dict[Path, str]:
     ref = SNAP.reference("us-equities", docs)                     # a few reference documents: the data itself is in data/testdata
     out = {PACK / "samples" / name: text for name, text in PS.files(ref, catalog(ref), catalog_indent=None).items()}
-    out[PACK / "guides" / "us-equities.md"] = guide(docs)
+    out[PACK / "guides" / "us-equities.md"] = guide(docs).rstrip() + "\n\n" + "\n".join(GD.sections(PACK)).rstrip() + "\n"
     out[PACK / "README.md"] = README.render_pack(PACK, files=out, intro=HERE / "readme" / "us-equities.intro.md")
     return out
 

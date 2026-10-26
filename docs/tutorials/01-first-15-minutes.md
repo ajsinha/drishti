@@ -36,6 +36,8 @@ In these tutorials `<GO>` means "press Enter", commands are run from the reposit
 programs from [GETTING_STARTED.md](../guides/GETTING_STARTED.md): the **server** reads the data (port 18480), the **console** is the web pages you open (port 17480).
 Every step says what to do **in the UI** (IntelliJ IDEA and PyCharm run configurations, or the console's pages) and **from the command line** where a command exists.
 
+**Where this data comes from.** The banking packs' data is synthetic test data (fictitious names, `tools/testdata/make_testdata.py`); the `world-economy` pack's figures are published data from the World Bank (CC BY 4.0), UNDP (CC BY 3.0 IGO) and the CIA World Factbook (public domain), plus IMF forecasts that are **internal only**, fetched by `tools/publicdata/world_economy.py`; the `news-and-markets` pack's quotes and headlines are a captured snapshot of Yahoo Finance and Google News, **internal only** (`tools/publicdata/news_and_markets.py`). Each source, its licence and how to refresh it: [External data](../guides/PUBLIC_DATA.md).
+
 ## What you will learn
 
 - how to build Drishti, build the demo lakes and start it with sign-in on (the way every tutorial here runs);
