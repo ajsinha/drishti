@@ -18,7 +18,7 @@
 Write-back lets people change records from a Sutra's forms, the CLI (`drishti.py change`) and the API, as change requests: checked as
 the person, approved by someone else where the policy says so, applied one at a time per record, in order, and audited. The design, with
 the reasons behind each choice, is [WRITE_BACK.md](../architecture/WRITE_BACK.md); how a Sutra author makes a form submit is in the forms
-guide ([SUTRA_FORMS_GUIDE.md](../guides/SUTRA_FORMS_GUIDE.md#submitting-a-change-280-write-back)); a worked example is
+guide ([SUTRA_FORMS_GUIDE.md](../guides/SUTRA_FORMS_GUIDE.md#4a-submitting-a-change-280-write-back)); a worked example is
 [tutorial 24](../tutorials/24-correct-a-trade-and-approve-it.md).
 
 **It is off as shipped**, at three levels, and all must be on before anything is written:

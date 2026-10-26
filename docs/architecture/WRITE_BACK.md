@@ -532,14 +532,14 @@ Overlay and owned targets need the first and third levels only; a source target 
 - **Configuration**, like connectors and Drishti*net, in its own folder `config/edit/`: `edit.yaml` (`enabled: false` as shipped,
   `log: auto`, `primary:`, `s3:`, `follow:`; section 11), `policy.yaml` (defaults per kind and target, approval, the restate role),
   `lanes.yaml` (lanes, max-lane-depth, lane-warn, lane-lease, timeouts), `retention.yaml` (the edit log, section 16). The edit-log
-  tables live in the Drishti database, configured in `config/db/database.yaml` ([DATABASE.md](DATABASE.md)). Writes to a source are
+  tables live in the Drishti database, configured in `config/db/database.yaml` (planned) ([DATABASE.md](DATABASE.md)). Writes to a source are
   the connector file's `writes:` (section 5.4), off unless declared and switched on.
 
 ## 14. Build plan
 
 | Phase | What | Accepted when |
 |---|---|---|
-| W0 | **The one Drishti database** ([DATABASE.md](DATABASE.md), 2.8.0 item 0): one pool and `config/db/database.yaml`, two complete schema files with a parity test, the schema version stamp, `drishti.py db copy` | a 2.6.5 data folder starts with its users and settings; SQLite → PostgreSQL → SQLite keeps every row; a mismatched stamp refuses to start and names `db copy` |
+| W0 | **The one Drishti database** ([DATABASE.md](DATABASE.md), 2.8.0 item 0): one pool and `config/db/database.yaml` (planned), two complete schema files with a parity test, the schema version stamp, `drishti.py db copy` | a 2.6.5 data folder starts with its users and settings; SQLite → PostgreSQL → SQLite keeps every row; a mismatched stamp refuses to start and names `db copy` |
 | W1 | `edit:` in the Sutra schema and lint; Change API; the off-by-default switches and the roles (section 12); **the edit log on a single node with SQLite**: `drishti_edit_lane` and `drishti_edit_log` in both schema files, acknowledgement after commit, replay from `applied_seq`, the epoch checks (trivially one owner); lanes and handler; **owned** kinds and **overlays** as rows in the same transaction (corrections and notes first, section 16), overlays laid over the document at read time; version check; retention; inline edit and the pending bar | two users editing the same field: the second is conflicted with a diff, never silently overwritten; 100,000 concurrent changes over 1,000,000 entities on 64 lanes apply in per-entity order with no lost update (property test); a server killed after an acknowledgement applies the change once after restart; a fresh install is read-only |
 | W2 | Approval (four eyes), Review → Changes, history, CLI | a change needing approval cannot apply without it; self-approval refused |
 | W3 | **The cluster:** lane ownership by conditional UPDATE (the ring suggests), **fencing** by epoch on every append and apply, forwarding from any node, failover by lease; the **PostgreSQL** shared log, the **S3** log (lease by ETag, fences), the **edit primary** fallback, `edit.log: auto` and its rule, Admin → Edits (store, owners, warnings); the loader folding approved overlays into the next day's lake build (section 16) | the three cluster acceptance tests of section 15 pass on PostgreSQL and on S3; an approved overlay appears in the next lake build and in BI |
@@ -593,7 +593,7 @@ follows as 2.9.0; GenUI's write-back forms build on this. W0 comes first (2026-1
 
 4. **One Drishti database** ([DATABASE.md](DATABASE.md)): the edit log, lanes, overlays and owned data live in the same database as
    identity; PostgreSQL long term, SQLite the default for one node; no migrations (two complete schema files, a parity test, a version
-   stamp, `drishti.py db copy`); its own file `config/db/database.yaml`. Built first, as 2.8.0 item 0 (W0).
+   stamp, `drishti.py db copy`); its own file `config/db/database.yaml` (planned). Built first, as 2.8.0 item 0 (W0).
 5. **A durable shared edit log replaces "replicated like user state"** (sections 7 and 11): `drishti_edit_lane` (ownership by
    conditional UPDATE; the ring only suggests) and `drishti_edit_log` (acknowledged only after commit; order by seq; replay from the
    last applied seq); every apply fenced by the epoch in the same transaction; any console to any server, forwarded to the owner.
@@ -776,7 +776,7 @@ for VaR's step V5).
 
 **Decided while building (2026-10-25)** (the designs' recommendations where they had one):
 
-1. **The Drishti database is the identity database's pool** for now: DATABASE.md item 0 (`config/db/database.yaml`, `db copy`, the stamp) is
+1. **The Drishti database is the identity database's pool** for now: DATABASE.md item 0 (`config/db/database.yaml` (planned), `db copy`, the stamp) is
    not built, so the write-back tables are in the two existing complete schema files and use the identity pool, which is the same database.
 2. **Lease times are epoch milliseconds on the database's clock** (`lease_until BIGINT`), so SQLite and PostgreSQL compare them the same way.
 3. **The entry's signature is a SHA-256 digest** over its lane, seq, change id, epoch and body (`EditLog.intact`); signing with a key is

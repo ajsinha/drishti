@@ -954,7 +954,7 @@ curl -s -X POST "$DRISHTI/api/v1/drafts" -H "Authorization: Bearer $TOKEN" -H 'C
 ### Write-back: changes (2.8.0)
 
 A change to a record's fields, submitted from a form's draft, the CLI (`drishti.py change`) or a program
-([WRITE_BACK.md](../architecture/WRITE_BACK.md); the forms guide, [SUTRA_FORMS_GUIDE.md](SUTRA_FORMS_GUIDE.md#submitting-a-change-280-write-back)). Off as
+([WRITE_BACK.md](../architecture/WRITE_BACK.md); the forms guide, [SUTRA_FORMS_GUIDE.md](SUTRA_FORMS_GUIDE.md#4a-submitting-a-change-280-write-back)). Off as
 shipped: with `edit.enabled: false` in `config/edit/edit.yaml` every write answers `403 DRS-9301`. A field is editable only when a Sutra's
 `form:` with `save:` names it; the caller needs the `edit` power on a role (Admin → Roles) and an API token the `edit` scope. The console
 passes these through as `/api/changes`.
