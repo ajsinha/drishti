@@ -305,7 +305,6 @@ No samples ship: documents are read live from its connector `macro-groupings` (p
 | `ROWS[].INFLATION` | Inflation |
 | `ROWS[].POPULATION_M` | Population (m) |
 | `ROWS[].YEAR` | Year |
-| `YEAR` | Latest year |
 
 ### `region-economy`
 
