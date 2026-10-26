@@ -1324,6 +1324,7 @@ def build_parser() -> argparse.ArgumentParser:
 
     load_module("historycmd", "historycmd.py").register(groups, srv, {"Api": Api, "CliError": CliError, "say_json": say_json})   # history KIND ID (2.6.5)
     load_module("computecli", "computecli.py").register(groups, srv, {"Api": Api, "CliError": CliError, "say_json": say_json})   # compute run|cancel|event (2.8.0)
+    load_module("changecli", "changecli.py").register(groups, srv, {"Api": Api, "CliError": CliError, "say_json": say_json})     # change propose|submit|approve..., edits status (2.8.0)
     load_module("varcli", "varcli.py").register(groups, srv, {"Api": Api, "CliError": CliError, "say_json": say_json})   # var show|parts|path|whatif (2.8.0)
     load_module("contracts", "contracts.py").register(groups)                                                       # contract list|show|check|docs|bootstrap
     vw = group("view", "A rendered entity view in the terminal, as the caller's token sees it (masks apply)")

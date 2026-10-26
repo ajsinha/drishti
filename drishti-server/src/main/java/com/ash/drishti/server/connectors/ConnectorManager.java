@@ -936,6 +936,10 @@ public final class ConnectorManager {
                 }
             }
         }
+        // writes: (WRITE_BACK.md section 5.4): a command without its guard or idempotency clause, or naming an unknown :param, is refused
+        // and the connector stays read-only for it; said as a warning, so the connector itself still loads and reads
+        com.ash.drishti.server.edit.ConnectorWrites.problems(d, registry.plugin(d.name())).forEach((cmd, ps) ->
+                ps.forEach(m -> out.add(new Problem("warning", "writes." + cmd, m + " (this command is refused: the connector stays read-only for it)"))));
         return out;
     }
 
@@ -972,7 +976,8 @@ public final class ConnectorManager {
         Map<String, Object> compute = before != null && "reactive".equals(String.valueOf(body.get("plugin"))) ? before.compute() : Map.of();
         flat.remove(ConnectorFiles.COMPUTE_SETTING);
         return files.render("# Written from Admin -> Connectors by " + user + " on " + java.time.LocalDate.now(java.time.ZoneOffset.UTC) + ".", String.valueOf(body.get("plugin")),
-                body.get("enabled"), kinds, body.get("description") == null ? "" : String.valueOf(body.get("description")), flat, requires, compute);
+                body.get("enabled"), kinds, body.get("description") == null ? "" : String.valueOf(body.get("description")), flat, requires, compute,
+                before == null ? Map.of() : before.writes());          // nor writes: (WRITE_BACK.md section 5.4): kept as written
     }
 
     /** Parses a text as the named connector's file and validates it; throws DRS-5031 with every error. */

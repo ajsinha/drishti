@@ -66,8 +66,17 @@ public class ViewController {
         String subtitle = v.title().pill() == null ? kind : v.title().pill().replace("Trade · ", "")
                 + (v.title().with() == null ? "" : " · " + v.title().with().text());
         recents.touch(principal.user(), new EntityHit(ref, v.title().id(), subtitle));
+        v = com.ash.drishti.server.edit.EditNotes.annotate(edits == null ? null : edits.getIfAvailable(), v, ref, asOf);   // overlays laid over it
         com.ash.drishti.server.net.NetServedBy sb = servedBy == null ? null : servedBy.getIfAvailable();
         return sb == null ? v : sb.annotate(principal, v);       // Drishti*net: the node that answered, for administrators only
+    }
+
+    /** Write-back: "How this view was built" names the overlays laid over the record (absent in a test that makes the controller itself). */
+    private org.springframework.beans.factory.ObjectProvider<com.ash.drishti.server.edit.EditRuntime> edits;
+
+    @org.springframework.beans.factory.annotation.Autowired(required = false)
+    void edits(org.springframework.beans.factory.ObjectProvider<com.ash.drishti.server.edit.EditRuntime> e) {
+        this.edits = e;
     }
 
     /** The Sutras, for a view drawn with one the reader names (absent in a test that makes the controller itself). */

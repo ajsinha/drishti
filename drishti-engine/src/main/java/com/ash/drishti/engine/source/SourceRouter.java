@@ -198,13 +198,26 @@ public final class SourceRouter implements com.ash.drishti.common.LiveSettings {
      */
     CompletableFuture<EntityDocument> fetch(EntityRef ref, Duration timeout, AsOf asOf, Duration peerTimeout) {
         List<String> restarting = registry.restartingFor(ref.kind(), routes.get(ref.kind()));
+        DocumentLayer l = layer;
         if (!restarting.isEmpty()) {
             // a connector of the kind is being restarted (its file changed, a retry) and is out of routing for its drain and its start: the
             // read waits for it, as a query does (ServerSourceGateway), instead of answering "no source" or "not found" meanwhile (QA2-202)
             return CompletableFuture.runAsync(() -> registry.awaitStarted(restarting, RESTART_WAIT), executor)
-                    .thenCompose(x -> fetchNow(ref, timeout, asOf, peerTimeout));
+                    .thenCompose(x -> fetchNow(ref, timeout, asOf, peerTimeout)).thenApply(d -> l.apply(d, asOf));
         }
-        return fetchNow(ref, timeout, asOf, peerTimeout);
+        CompletableFuture<EntityDocument> read = fetchNow(ref, timeout, asOf, peerTimeout);
+        return l == DocumentLayer.NONE ? read : read.thenApply(d -> l.apply(d, asOf));
+    }
+
+    private volatile DocumentLayer layer = DocumentLayer.NONE;
+
+    /** Installs what is laid over every document read and every tick (write-back's overlays); {@link DocumentLayer#NONE} removes it. */
+    public void layer(DocumentLayer l) {
+        layer = l == null ? DocumentLayer.NONE : l;
+    }
+
+    public DocumentLayer layer() {
+        return layer;
     }
 
     /** How long a read waits for a connector of its kind that is being (re)started: its drain and its start. */
@@ -772,6 +785,24 @@ public final class SourceRouter implements com.ash.drishti.common.LiveSettings {
      * {@link Subscription#NONE} when no source can push it (the view then stays static).
      */
     public Subscription subscribe(EntityRef ref, java.util.function.Consumer<EntityDocument> listener) {
+        DocumentLayer l = layer;
+        if (l == DocumentLayer.NONE) {
+            return subscribeSource(ref, listener);
+        }
+        // every tick carries what is laid over it; an applied change to the record reads it again and ticks it, also for a record
+        // that no source streams (write-back's viewers, WRITE_BACK.md section 18.5)
+        Subscription source = subscribeSource(ref, d -> listener.accept(l.apply(d, AsOf.LATEST)));
+        Subscription edits = l.watch(ref, () -> fetch(ref).thenAccept(listener));
+        if (source == Subscription.NONE && edits == Subscription.NONE) {
+            return Subscription.NONE;
+        }
+        return () -> {
+            source.close();
+            edits.close();
+        };
+    }
+
+    private Subscription subscribeSource(EntityRef ref, java.util.function.Consumer<EntityDocument> listener) {
         List<SourcePlugin> live = new ArrayList<>(candidates(ref.kind()).stream().filter(p -> p.manifest().capabilities().live()).toList());
         liveFirst(live);
         // ticks come from the source the view read: the first live source that holds the entity (a real stream before the

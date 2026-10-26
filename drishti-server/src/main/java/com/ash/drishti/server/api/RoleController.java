@@ -46,7 +46,13 @@ public class RoleController {
 
     /** A role as an administrator writes it. */
     public record RoleRequest(String description, List<String> kinds, Boolean raw, Boolean author, Boolean approve, Boolean admin, Boolean calc,
-            Boolean layout, Boolean collaborate, Boolean compliance, List<String> bi) {}
+            Boolean layout, Boolean collaborate, Boolean compliance, List<String> bi, Boolean edit) {
+
+        public RoleRequest(String description, List<String> kinds, Boolean raw, Boolean author, Boolean approve, Boolean admin, Boolean calc,
+                Boolean layout, Boolean collaborate, Boolean compliance, List<String> bi) {
+            this(description, kinds, raw, author, approve, admin, calc, layout, collaborate, compliance, bi, null);
+        }
+    }
 
     private final RoleCatalog roles;
     private final UserService users;
@@ -76,6 +82,7 @@ public class RoleController {
             m.put("layout", r.layout());
             m.put("collaborate", r.collaborate());
             m.put("compliance", r.compliance());
+            m.put("edit", r.edit());
             m.put("bi", new java.util.TreeSet<>(r.bi()));
             m.put("builtIn", r.builtIn());
             m.put("updatedAt", r.updatedAt());
@@ -101,7 +108,8 @@ public class RoleController {
         return roles.save(new RoleDefinition(name, r.description(), kinds, Boolean.TRUE.equals(r.raw()), Boolean.TRUE.equals(r.author()),
                 Boolean.TRUE.equals(r.approve()), Boolean.TRUE.equals(r.admin()), Boolean.TRUE.equals(r.calc()), !Boolean.FALSE.equals(r.layout()),
                 !Boolean.FALSE.equals(r.collaborate()), Boolean.TRUE.equals(r.compliance()), false, null, "",
-                r.bi() == null ? roles.find(name).map(RoleDefinition::bi).orElse(java.util.Set.of()) : new java.util.HashSet<>(r.bi())), p.user());   // absent: keep, so Admin, Roles never wipes them
+                r.bi() == null ? roles.find(name).map(RoleDefinition::bi).orElse(java.util.Set.of()) : new java.util.HashSet<>(r.bi()),
+                r.edit() == null ? roles.find(name).map(RoleDefinition::edit).orElse(false) : r.edit()), p.user());   // absent: keep   // absent: keep, so Admin, Roles never wipes them
     }
 
     @DeleteMapping("/{name}")

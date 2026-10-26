@@ -552,3 +552,98 @@ CREATE TABLE IF NOT EXISTS drishti_compute_approval (
     PRIMARY KEY (item_key, request_id)
 );
 CREATE INDEX IF NOT EXISTS ix_compute_approval_live ON drishti_compute_approval (item_key, revoked_at);
+
+-- Write-back (docs/architecture/WRITE_BACK.md sections 5 to 11): P lanes, each one durable ordered queue with one owner at a time
+-- (ownership taken by a conditional UPDATE, fenced by its epoch); the edit log, one row per change, ordered by (lane, seq), acknowledged
+-- only once its row is committed; changes awaiting approval; overlays and Drishti-owned values written in the same transaction as the
+-- log row's state; each record's version; and how far each consumer of applied changes (the reactive triggers) has read per lane.
+-- Lease times are epoch milliseconds on the database's clock.
+CREATE TABLE IF NOT EXISTS drishti_edit_lane (
+    lane        INTEGER PRIMARY KEY,
+    owner_node  TEXT,
+    epoch       INTEGER NOT NULL DEFAULT 0,
+    lease_until INTEGER,
+    next_seq    INTEGER NOT NULL DEFAULT 1,
+    applied_seq INTEGER NOT NULL DEFAULT 0
+);
+CREATE TABLE IF NOT EXISTS drishti_edit_log (
+    lane             INTEGER NOT NULL,
+    seq              INTEGER NOT NULL,
+    change_id        TEXT    NOT NULL UNIQUE,
+    epoch            INTEGER NOT NULL,
+    state            TEXT    NOT NULL,
+    change_key       TEXT    NOT NULL,
+    kind             TEXT    NOT NULL,
+    entity           TEXT    NOT NULL,
+    business_date    TEXT    NOT NULL,
+    target           TEXT    NOT NULL,
+    connector        TEXT,
+    body             TEXT    NOT NULL,
+    command          TEXT,
+    command_attempts INTEGER NOT NULL DEFAULT 0,
+    command_sent_at  TIMESTAMP,
+    command_reason   TEXT,
+    state_reason     TEXT,
+    by_user          TEXT    NOT NULL,
+    submitted_at     TIMESTAMP NOT NULL,
+    applied_at       TIMESTAMP,
+    signature        TEXT    NOT NULL,
+    PRIMARY KEY (lane, seq)
+);
+CREATE INDEX IF NOT EXISTS ix_edit_log_key ON drishti_edit_log (change_key, lane, seq);
+CREATE INDEX IF NOT EXISTS ix_edit_log_state ON drishti_edit_log (state, submitted_at);
+CREATE INDEX IF NOT EXISTS ix_edit_log_command ON drishti_edit_log (command, lane, seq);
+CREATE TABLE IF NOT EXISTS drishti_edit_request (
+    change_id     TEXT    PRIMARY KEY,
+    change_key    TEXT    NOT NULL,
+    kind          TEXT    NOT NULL,
+    entity        TEXT    NOT NULL,
+    target        TEXT    NOT NULL,
+    body          TEXT    NOT NULL,
+    state         TEXT    NOT NULL,
+    needed        INTEGER NOT NULL,
+    approvals     TEXT    NOT NULL,
+    by_user       TEXT    NOT NULL,
+    submitted_at  TIMESTAMP NOT NULL,
+    decided_by    TEXT,
+    decided_at    TIMESTAMP,
+    reason        TEXT
+);
+CREATE INDEX IF NOT EXISTS ix_edit_request_state ON drishti_edit_request (state, submitted_at);
+CREATE TABLE IF NOT EXISTS drishti_overlay (
+    change_id     TEXT    NOT NULL,
+    path          TEXT    NOT NULL,
+    kind          TEXT    NOT NULL,
+    entity        TEXT    NOT NULL,
+    value         TEXT,
+    source_value  TEXT,
+    business_date TEXT    NOT NULL,
+    valid_until   TEXT,
+    state         TEXT    NOT NULL,
+    by_user       TEXT    NOT NULL,
+    applied_at    TIMESTAMP NOT NULL,
+    PRIMARY KEY (change_id, path)
+);
+CREATE INDEX IF NOT EXISTS ix_overlay_entity ON drishti_overlay (kind, entity, state);
+CREATE TABLE IF NOT EXISTS drishti_owned (
+    kind       TEXT    NOT NULL,
+    entity     TEXT    NOT NULL,
+    path       TEXT    NOT NULL,
+    value      TEXT,
+    change_id  TEXT    NOT NULL,
+    updated_by TEXT    NOT NULL,
+    updated_at TIMESTAMP NOT NULL,
+    PRIMARY KEY (kind, entity, path)
+);
+CREATE TABLE IF NOT EXISTS drishti_edit_version (
+    change_key  TEXT    PRIMARY KEY,
+    version     INTEGER NOT NULL,
+    change_id   TEXT    NOT NULL,
+    updated_at  TIMESTAMP NOT NULL
+);
+CREATE TABLE IF NOT EXISTS drishti_edit_cursor (
+    consumer TEXT    NOT NULL,
+    lane     INTEGER NOT NULL,
+    seq      INTEGER NOT NULL,
+    PRIMARY KEY (consumer, lane)
+);

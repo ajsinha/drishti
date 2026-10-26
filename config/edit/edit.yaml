@@ -1,0 +1,25 @@
+# Project Drishti · Any data. Any domain. One grammar.
+#
+# Copyright (c) 2026 Ashutosh Sinha <ajsinha@gmail.com>.
+# All rights reserved.
+#
+# PROPRIETARY AND CONFIDENTIAL.
+#
+# This file is the confidential and proprietary property of Ashutosh Sinha.
+# Unauthorised copying, use, modification, distribution or disclosure of this
+# file, via any medium, is strictly prohibited except with the express prior
+# written permission of the copyright holder.
+#
+# See the LICENSE file in the root of this repository for the full terms.
+
+# Write-back (docs/architecture/WRITE_BACK.md; the administrator's guide: docs/admin/EDITS.md). The server reads this folder at start
+# (drishti.edit.file points at this file); every key has its default, so a missing key or file means the value shown here.
+# OFF as shipped: no change is accepted anywhere (UI, CLI, API) and no Submit is shown. Three levels must all be on before anything
+# is written: this switch, the field's form (a Sutra's form with save:), and for a source target the connector's writes: switched on
+# in Admin -> Edits.
+edit:
+  enabled: ${DRISHTI_EDIT_ENABLED:false}
+  log: auto            # auto | sqlite | postgres: where the edit log lives (the auto rule: a PostgreSQL Drishti database -> postgres;
+                       # a node alone -> sqlite; a cluster with an edit primary -> its SQLite; otherwise edits are refused in the cluster)
+  primary: ""          # in a cluster without PostgreSQL: the node id of the edit primary (no failover: edits pause while it is down)
+  follow: 1s           # how often the other nodes copy the primary's applied overlays and owned values

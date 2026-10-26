@@ -99,6 +99,21 @@ public final class Entitlements {
         return has(p, com.ash.drishti.identity.RoleDefinition::collaborate);
     }
 
+    /**
+     * The write-back {@code edit} power (WRITE_BACK.md section 12): without it every page reads as today. Like {@code compliance}, the
+     * all-roles grant {@code *} does not imply it; with sign-in off it is held, as every power is.
+     */
+    public boolean mayEdit(Principal p) {
+        return !props.enabled() || p.roles().stream().map(roles::find).anyMatch(r -> r.isPresent() && r.get().edit());
+    }
+
+    /** {@code 403} without the {@code edit} power. */
+    public void requireEdit(Principal p) {
+        if (!mayEdit(p)) {
+            throw new DrishtiException(ErrorCode.FORBIDDEN, p.user() + " does not hold the edit power (Admin -> Roles)");
+        }
+    }
+
     /** Roles with {@code compliance}: holds, exports, reading any share. */
     public boolean mayCompliance(Principal p) {
         return props.enabled() ? p.roles().stream().map(roles::find).anyMatch(r -> r.isPresent() && r.get().compliance())

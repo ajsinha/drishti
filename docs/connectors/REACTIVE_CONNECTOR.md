@@ -169,7 +169,7 @@ with its text in the log only. Heavy or untrusted Java belongs in a Java worker 
 
 | `on:` | Fires when | Built how |
 |---|---|---|
-| `write-back` | a change is applied (`edit.applied`) | `POST /api/v1/compute/events` (administrators, service tokens) and `ReactiveHub.publish` in Java, which the write-back module calls when it lands (W6) |
+| `write-back` | a change is applied (`edit.applied`) | `POST /api/v1/compute/events` (administrators, service tokens) and `ReactiveHub.publish` in Java, which write-back calls after every applied change (built 2026-10-25: the change id as the event id, the fields changed, the watermark `L<lane> -> seq`; `when: applied`, and `confirmed` or `refused` for a source target) |
 | `live` | a live connector delivers a message | each entity of the trigger's kinds that a watched computation read is followed (router subscribe); a new generation recomputes the results that read it |
 | `data-version` | a kind's data version moves (a load is published) | the load signal (the connector depends on its `reads:` kinds) and a check every 30 s |
 | `schedule` | `cron` (six fields, in `zone`) or `every` | a timer per trigger |

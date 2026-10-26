@@ -913,7 +913,7 @@ curl -s $B/health/live
 ### Form drafts
 
 What a person typed into a panel's `form:` ([SUTRA_FORMS_GUIDE.md](SUTRA_FORMS_GUIDE.md), SUTRA_NEXT.md section 10), kept for them on the
-server until 2.8.0 writes it through a connector. Only the owner ever reads a draft. The console passes these through as `/api/drafts`.
+server; a form whose Sutra has `save:` submits it as change requests ([Write-back: changes](#write-back-changes-280)). Only the owner ever reads a draft. The console passes these through as `/api/drafts`.
 
 | Method | Path | Notes |
 |---|---|---|
@@ -950,6 +950,58 @@ curl -s -X POST "$DRISHTI/api/v1/drafts" -H "Authorization: Bearer $TOKEN" -H 'C
   "records": [{ "record": "MX-20000008", "values": { "notional": 40000000, "comment": "Client hedge" },
                 "was": { "trade_id": "MX-20000008", "notional": 158000000 } }] }'
 ```
+
+### Write-back: changes (2.8.0)
+
+A change to a record's fields, submitted from a form's draft, the CLI (`drishti.py change`) or a program
+([WRITE_BACK.md](../architecture/WRITE_BACK.md); the forms guide, [SUTRA_FORMS_GUIDE.md](SUTRA_FORMS_GUIDE.md#4a-submitting-a-change-280-write-back)). Off as
+shipped: with `edit.enabled: false` in `config/edit/edit.yaml` every write answers `403 DRS-9301`. A field is editable only when a Sutra's
+`form:` with `save:` names it; the caller needs the `edit` power on a role (Admin → Roles) and an API token the `edit` scope. The console
+passes these through as `/api/changes`.
+
+| Method | Path | Notes |
+|---|---|---|
+| `GET` | `/changes/settings` | `{enabled, mayEdit, approver, kinds}`: whether this person may submit here (the console draws Submit only then) |
+| `POST` | `/changes` | body `{draft, reason}` (a form's draft: one change per record) or `{kind, entity, items: [{field \| path, from, to}], reason, sutra?, panel?, businessDate?, basedOn?, override?, id?}` → `202` with `changes: [{id, kind, entity, target, state: awaiting\|queued, needed?, lane?, seq?}]` |
+| `POST` | `/changes/preview` | the same body: the review and confirm sheet (per change the difference `diff: [{field, saw, now, wanted, moved}]`, `where`, `approvals`, `approvers`, `recompute`, `reasonRequired`); writes nothing (a read for a token) |
+| `GET` | `/changes?state=&kind=&entity=&mine=&limit=` | changes newest first: `awaiting` (the approval queue, with `mayDecide`), `queued`, `applied`, `refused`, `conflicted`, `rejected`, `withdrawn` |
+| `GET` | `/changes/{id}` | one change as the caller may see it (a masked field's values masked), with its state, lane and seq, the reason it was refused or conflicted, and a source command's state |
+| `POST` | `/changes/{id}/approve` | `{note?}`: an approval (the policy's approver roles, else the approve power or an administrator; never the submitter: `403 DRS-9302`); the last approval needed puts it in its lane |
+| `POST` | `/changes/{id}/reject` | `{reason}` (required): the change ends rejected; its draft is kept, marked |
+| `POST` | `/changes/{id}/withdraw` | the submitter withdraws a change that still awaits approval |
+| `GET` | `/entities/{kind}/{id}/history` | the record's changes from the edit log, newest first, and its `version` (what a form opens on) |
+
+What happens to a submitted change: it is checked as the person (masks: a change can never carry a masked field; the field's roles; a
+read-only field; a reason when the form asks for one; a past business date needs the `restate` role; *Apply mine anyway* the `override`
+role) and either waits for approval or is appended to its record's lane and acknowledged once committed (`queued`, with `lane` and `seq`).
+The lane's owner then checks everything again, compares each field with what the person saw (`from`): a field that moved is
+`conflicted` with the three-way difference in `stateReason`, never written over. An applied overlay shows on every page that reads the
+record (and the page row a form edited), named in *How this view was built*; a source target's command goes out through the outbox.
+Errors: `403 DRS-9301` (off), `403 DRS-9302` (refused, in words), `409 DRS-9303` (no longer awaiting), `503 DRS-9304` (the lane is full:
+busy, the draft is kept), `404 DRS-9305`, `503 DRS-9306` (edits paused: the edit primary is not reachable, or the cluster has no shared
+edit log). Every step is audited (`edit-submitted`, `edit-approved`, `edit-rejected`, `edit-applied`, `edit-conflicted`, `edit-refused`,
+`edit-confirmed`, `edit-refused-at-source`, `form-draft-closed`).
+
+```bash
+curl -s -X POST "$DRISHTI/api/v1/changes" -H "Authorization: Bearer $TOKEN" -H 'Content-Type: application/json' -d '{
+  "kind": "trade", "entity": "MX-20000012", "reason": "booking typo",
+  "items": [{ "field": "NOTIONAL", "from": 28000000, "to": 28001250 }] }'
+# {"changes":[{"id":"chg-01M5V6GM7NCKSR506RQ86M7YVV","kind":"trade","entity":"MX-20000012","target":"overlay","state":"awaiting","needed":1}]}
+curl -s -X POST "$DRISHTI/api/v1/changes/chg-01M5V6GM7NCKSR506RQ86M7YVV/approve" -H "Authorization: Bearer $CHECKER" -H 'Content-Type: application/json' -d '{"note":"ticket 4411"}'
+```
+
+Administrators (Admin → Edits; the switches never for a token):
+
+| Method | Path | Notes |
+|---|---|---|
+| `GET` | `/admin/edits` | where the edit log lives and why (the auto rule), this node, every lane's owner, epoch, lease, depth and oldest wait, the warnings, source commands sent and not confirmed past `command-timeout`, each connector's `writes:` (commands, problems, on or off), the editable kinds |
+| `GET` | `/admin/edits/overlays` | the open overlays: every correction shown over a source's value, with the source's value |
+| `POST` | `/admin/edits/connectors/{name}` | `{on, reason}`: switches a connector's `writes:` on or off (audited `connector-writes-on` / `-off`) |
+| `POST` | `/admin/edits/overlays/{change}/withdraw` | `{reason}`: the change's overlays stop showing (audited `edit-overlay-withdrawn`) |
+
+Between the nodes of a cluster (signed, node-only, never for a token): `POST /net/edits/append` (a change forwarded to its lane's owner,
+appended there on behalf of the person), `POST /net/edits/changed` (a change applied elsewhere: caches dropped, views and consoles told),
+`GET /net/edits/follow?after=<lane>:<seq>,...` or `?change=<id>` (an edit primary's applied changes, which the other nodes copy).
 
 ### Personal: settings, packs, workspaces, monitors, alerts
 
@@ -1833,6 +1885,12 @@ The complete list (from `ErrorCode` in `drishti-common`). The first digit groups
 | DRS-9204 | 504 | Compute timeout | The computation passed its time budget |
 | DRS-9205 | 502 | Compute failed | The computation crashed, passed a limit, was refused by the sandbox or by its engine (the message says which) |
 | DRS-9206 | 404 | Compute not found | No such approval request or running computation |
+| DRS-9301 | 403 | Editing is off | Write-back is switched off on this server (`edit.enabled: false` in `config/edit/edit.yaml`) |
+| DRS-9302 | 403 | Edit refused | The change is refused, in words: the field is not editable for you (no Sutra's form with `save:`, a mask, a role, read-only, a restatement without the role, your own change to approve), or its target cannot be used |
+| DRS-9303 | 409 | Edit conflict | The change is no longer awaiting approval, or the fields moved since you opened the record |
+| DRS-9304 | 503 | Edit lane busy | The record's lane is full (`lanes.max-lane-depth`): try again in a moment; your draft is kept |
+| DRS-9305 | 404 | Change not found | No such change |
+| DRS-9306 | 503 | Edits paused | The edit primary is not reachable, or this cluster has no shared edit log; reading is not affected |
 | DRS-6001 | 404 | user not found | no such user |
 | DRS-6002 | 409 | user exists | a user with that name already exists |
 | DRS-6003 | 422 | weak password | the password does not meet the password rules |
@@ -3027,6 +3085,7 @@ patterns, and the server decides in one filter (`TokenScopes`):
 | `packs:admin` | `POST /admin/packs/{name}/load` and `/unload`, `PUT /admin/packs/{name}`, `POST /admin/registry/**` (install and roll back), `POST /admin/connectors/**`, deploy an archive (`POST /admin/packs/deploy`, `POST` and `DELETE /admin/packs/deploy/{id}`), `POST /admin/packs/{name}/rollback`, **Load data** (`POST /admin/packs/{name}/data`), the create-connectors step of a deploy (`POST /admin/packs/deploy/{id}/connectors`), and every write under `/admin/connectors` (`PUT`, `DELETE`, `.../enabled`, `.../reset`, `.../test`, `.../restore/{id}`), and **Retry now** (`POST /admin/retry/{area}`) | `admin` |
 | `ai:use` | `POST /ai/chat`, `POST /ai/mcp/{server}/tools/{tool}` ([AI](#ai-and-mcp-apiv1ai-and-apiv1adminai)) and the BI hooks `POST /bi/ai/draft`, `/bi/ai/ask`, `/bi/ai/explain`, `/bi/ai/suggest`, `/bi/ai/explain-checks`, `/bi/ai/dataset-helper` ([BI with AI](#bi-with-ai-apiv1biai)) | any signed-in user, under the AI policy (and the BI power each hook needs) |
 | `ai:admin` | `POST /admin/ai/test` | `admin` |
+| `edit` | Write-back ([changes](#write-back-changes-280)): `POST /changes`, `POST /changes/{id}/approve`, `/reject` and `/withdraw`. No token has it unless chosen; another write scope never implies it; Admin → Edits' switches are never open to a token | the `edit` power (and, to approve, an approver role, never your own change), the field's roles; editing must be on |
 
 There is no `admin` scope and no `data:admin`: the server has no data-loading endpoint (data is loaded by your ETL, or staged by
 `drishti.py data`; `loads:write` only *announces* that a batch landed), and users, roles, tokens, sign-in, caches, installing and uninstalling artifacts (`/admin/artifacts`), the audit log, shares, comments, notes, your console workspaces (`/me/workspaces`; BI workspaces are opened by `bi:write` and

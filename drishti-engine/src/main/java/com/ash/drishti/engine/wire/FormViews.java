@@ -77,6 +77,17 @@ public final class FormViews {
         out.put("new", f.create());
         out.put("newLabel", f.newLabel());
         out.put("roles", f.roles());
+        if (f.save() != null) {                                       // write-back (2.8.0): where Submit sends the change
+            Map<String, Object> sv = new LinkedHashMap<>();
+            sv.put("target", f.save().target());
+            put(sv, "kind", f.save().kind());
+            put(sv, "connector", f.save().connector());
+            put(sv, "command", f.save().command());
+            put(sv, "create", f.save().create());
+            sv.put("approval", f.save().approval());
+            sv.put("reason", f.save().reason());
+            out.put("save", sv);
+        }
         out.put("steps", f.steps().stream().map(s -> Map.of("id", s.id(), "label", s.label() == null ? s.id() : s.label())).toList());
         List<Map<String, Object>> fields = new ArrayList<>();
         List<String> masked = new ArrayList<>();

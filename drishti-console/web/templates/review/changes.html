@@ -1,0 +1,65 @@
+{#
+  Project Drishti · Any data. Any domain. One grammar.
+
+  Copyright (c) 2026 Ashutosh Sinha <ajsinha@gmail.com>.
+  All rights reserved.
+
+  PROPRIETARY AND CONFIDENTIAL.
+
+  This file is the confidential and proprietary property of Ashutosh Sinha.
+  Unauthorised copying, use, modification, distribution or disclosure of this
+  file, via any medium, is strictly prohibited except with the express prior
+  written permission of the copyright holder.
+
+  See the LICENSE file in the root of this repository for the full terms.
+#}
+{% extends "base.html" %}
+{% block title %}Changes · {{ PRODUCT }}{% endblock %}
+{% block body_class %}terminal{% endblock %}
+{% block nav %}{% include "terminal/_topbar.html" %}{% endblock %}
+{% block content %}
+<div class="adm reviews" data-changes>
+  <nav class="crumbs" aria-label="Breadcrumb"><a href="/build/reviews">Reviews</a> · <a href="/review/changes">Changes</a></nav>
+  <h1>Changes</h1>
+  <p class="text-muted-d">Changes submitted from forms, the CLI and the API (write-back). A change that needs approval waits here until an approver
+    other than the person who made it approves it; then it takes its place in its record's lane and is applied in order. A rejected change keeps its
+    draft for its author to edit again.</p>
+  {% if settings and not settings.enabled %}<p class="adm-warn" role="status" data-edit-off><i class="bi bi-info-circle" aria-hidden="true"></i>
+    Editing is switched off on this server (<span class="mono">edit.enabled</span> in <span class="mono">config/edit/edit.yaml</span>): nothing can be
+    submitted or approved.</p>{% endif %}
+  <nav class="tabs-inline" aria-label="Filter">
+    {% for s, label in [('awaiting', 'Waiting for approval'), ('queued', 'Queued'), ('applied', 'Applied'), ('conflicted', 'Conflicted'), ('refused', 'Refused'), ('rejected', 'Rejected'), ('all', 'All')] %}
+    <a class="lnk{% if state == s and not mine %} on{% endif %}" href="/review/changes?state={{ s }}"{% if state == s and not mine %} aria-current="page"{% endif %}>{{ label }}</a>{% endfor %}
+    <a class="lnk{% if mine %} on{% endif %}" href="/review/changes?state=all&amp;mine=1"{% if mine %} aria-current="page"{% endif %}>Mine</a>
+  </nav>
+  {% if error %}<p class="asof-banner" role="alert"><i class="bi bi-exclamation-triangle" aria-hidden="true"></i> <span class="mono">{{ drs_message(error.code, error.detail) }}</span></p>
+  {% elif not changes %}<p class="text-muted-d" data-none>Nothing here.</p>
+  {% else %}
+  <section class="pnl"><div class="pnl-b"><div class="tbl-wrap"><table class="tbl" data-change-list>
+    <caption class="visually-hidden">Changes, newest first</caption>
+    <thead><tr><th scope="col">Change</th><th scope="col">Record</th><th scope="col">What</th><th scope="col">Why</th><th scope="col">By</th>
+      <th scope="col">When</th><th scope="col">State</th><th scope="col"><span class="visually-hidden">Decide</span></th></tr></thead>
+    <tbody>{% for c in changes %}
+      <tr data-change="{{ c.id }}"><td class="mono">{{ c.id[:16] }}…</td>
+        <td><a class="lnk mono" href="/v/{{ c.kind }}/{{ c.entity | urlencode }}">{{ c.kind }} {{ c.entity }}</a></td>
+        <td>{% for it in c['items'] %}<div class="mono">{{ it.path | replace('$.', '') }}: {{ it['from'] if it['from'] is not none else '—' }} → <b>{{ it.to }}</b></div>{% endfor %}
+          <div class="text-muted-d">{{ 'Correction (overlay)' if c.target == 'overlay' else 'Owned record' if c.target == 'owned' else 'Amend in ' ~ (c.connector or 'the source') }}</div></td>
+        <td>{{ c.reason }}</td><td>{{ c.by }}</td><td class="mono">{{ (c.at or '')[:16] | replace('T', ' ') }}</td>
+        <td><span class="cmp-k {{ 'added' if c.state == 'applied' else 'removed' if c.state in ('rejected', 'refused', 'conflicted', 'withdrawn') else 'changed' }}">{{ c.state }}</span>
+          {% if c.needed %}<div class="text-muted-d">{{ (c.approvals or []) | length }} of {{ c.needed }} approval{{ '' if c.needed == 1 else 's' }}</div>{% endif %}
+          {% if c.stateReason %}<div class="text-muted-d">{{ c.stateReason }}</div>{% endif %}
+          {% if c.commandState %}<div class="text-muted-d">at the source: {{ c.commandState }}{% if c.commandReason %} ({{ c.commandReason }}){% endif %}</div>{% endif %}</td>
+        <td>{% if c.mayDecide %}
+          <form method="post" action="/review/changes/{{ c.id }}/approve" class="d-inline"><input type="hidden" name="note" value="">
+            <button class="btn btn-sm btn-primary" type="submit" data-approve="{{ c.id }}">Approve</button></form>
+          <form method="post" action="/review/changes/{{ c.id }}/reject" class="d-inline" data-reject-form>
+            <label class="visually-hidden" for="why-{{ loop.index }}">Why it is rejected</label>
+            <input id="why-{{ loop.index }}" name="note" class="form-control form-control-sm d-inline-block w-auto" placeholder="Why it is rejected" required maxlength="500">
+            <button class="btn btn-sm btn-outline-danger" type="submit" data-reject="{{ c.id }}">Reject</button></form>
+          {% elif c.state == 'awaiting' and me and c.by == me.user %}
+          <form method="post" action="/review/changes/{{ c.id }}/withdraw" class="d-inline"><button class="btn btn-sm btn-outline-secondary" type="submit">Withdraw</button></form>
+          {% endif %}</td></tr>
+    {% endfor %}</tbody></table></div></div></section>
+  {% endif %}
+</div>
+{% endblock %}

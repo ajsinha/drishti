@@ -143,6 +143,20 @@ are refused (*'engine' is part of a computation: only a connector of plugin reac
 template and a template update keep it as written. Templates in it use single braces (`{id}`, `{params.x}`): `${NAME}` is an environment
 variable, as everywhere in the file.
 
+### Writes: saving to the source (2.8.0)
+
+A connector may declare `writes:`: named commands that change a record in its source, used by write-back's `source` target
+([WRITE_BACK.md section 5.4](../architecture/WRITE_BACK.md#54-how-a-write-is-described-connector-writes); the administrator's guide
+[EDITS.md section 6](../admin/EDITS.md#6-writing-to-a-source-writes)). Each command has the `kind` it amends, the extra `params:` a Sutra
+may supply, its plugin's block (`jdbc:` with `sql`, the guard `expect-rows` and the idempotency clause `already-applied`), `confirm:`
+(`reply` or `next-load`) and `timeout:`. In 2.8.0 only the JDBC plugin writes ([JDBC_QUERIES.md section 16](JDBC_QUERIES.md#16-writes-commands-that-change-a-record-280));
+the File, Delta and Iceberg connectors never do (a lake is not written per edit) and every other plugin is refused (*plugin … cannot
+write*). A command without its guard or idempotency clause, or naming an unknown `:param`, is refused when the connector loads: the
+problem shows as a warning on `writes.<command>` here and on Admin → Edits, and the connector stays read-only for it. Declaring `writes:`
+writes nothing: an administrator must also switch the connector's writes on in Admin → Edits (audited). The form and template updates
+keep the block as written; a reactive connector may not have one (it computes, it is never a write target). None of the shipped files
+in `config/connectors.examples/` declares one.
+
 ## 4. Examples, one per store
 
 **Delta Lake** (`config/connectors/trade-endur.yaml`, exactly as the server generated it from the trading pack's template at its first

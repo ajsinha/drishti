@@ -55,7 +55,7 @@ public final class NetCallFilter extends OncePerRequestFilter {
     public static final String CLAIMS = "drishti.net.claims";
     /** The endpoints only a node may call. */
     static final Set<String> NODE_ONLY = Set.of("gossip", "ping", "digest", "fetch", "search", "suggest", "state", "subscribe", "reverse", "group", "history",
-            "switches");
+            "switches", "edits");
     private static final int MAX_BODY = 16 * 1024 * 1024;
 
     private final NetService net;
@@ -142,7 +142,7 @@ public final class NetCallFilter extends OncePerRequestFilter {
         chain.doFilter(wrapped, res);
     }
 
-    static void problem(HttpServletResponse res, int status, String code, String detail) throws IOException {
+    public static void problem(HttpServletResponse res, int status, String code, String detail) throws IOException {
         res.setStatus(status);
         res.setContentType("application/problem+json");
         res.getWriter().write("{\"title\":\"net\",\"status\":" + status + ",\"code\":\"" + code + "\",\"detail\":\""

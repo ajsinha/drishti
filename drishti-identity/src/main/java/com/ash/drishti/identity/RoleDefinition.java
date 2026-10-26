@@ -36,10 +36,18 @@ import java.util.List;
  * @param updatedAt last change (null for built-in roles)
  * @param updatedBy who made it (empty for built-in roles)
  * @param bi business-intelligence powers held ({@link #BI_POWERS}); each one above {@code bi} also needs {@code bi} to open the page
+ * @param edit may submit changes through write-back (WRITE_BACK.md section 12: the {@code edit} power); false unless granted
  */
 public record RoleDefinition(String name, String description, List<String> kinds, boolean raw, boolean author, boolean approve,
         boolean admin, boolean calc, boolean layout, boolean collaborate, boolean compliance, boolean builtIn, Instant updatedAt, String updatedBy,
-        java.util.Set<String> bi) {
+        java.util.Set<String> bi, boolean edit) {
+
+    /** A role without the write-back {@code edit} power. */
+    public RoleDefinition(String name, String description, List<String> kinds, boolean raw, boolean author, boolean approve, boolean admin,
+            boolean calc, boolean layout, boolean collaborate, boolean compliance, boolean builtIn, Instant updatedAt, String updatedBy,
+            java.util.Set<String> bi) {
+        this(name, description, kinds, raw, author, approve, admin, calc, layout, collaborate, compliance, builtIn, updatedAt, updatedBy, bi, false);
+    }
 
     /** The business-intelligence powers (Rupaka): open BI, author, steward (certify), administer BI settings. */
     public static final List<String> BI_POWERS = List.of("bi", "bi-author", "bi-steward", "bi-admin");

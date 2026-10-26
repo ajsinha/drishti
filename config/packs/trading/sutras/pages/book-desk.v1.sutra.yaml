@@ -50,6 +50,11 @@ panels:
       edit: beside
       new: drawer
       new-label: New trade
+      save:                                   # 2.8.0 write-back (WRITE_BACK.md 18.1): Submit sends a trade's correction, kept in Drishti
+        kind: trade                           # over the booking system's value (an overlay), after one approver (never the submitter)
+        target: overlay
+        approval: one
+        reason: required
       steps: [ { id: who, label: Who }, { id: what, label: What }, { id: check, label: Check } ]
       fields:
         - { id: trade_id, label: Trade, bind: TRADE_ID, readonly: true, reason: "set by the booking system", new: false }
