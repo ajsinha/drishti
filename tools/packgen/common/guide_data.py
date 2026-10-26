@@ -73,14 +73,14 @@ def contracts(pack_dir: Path) -> list[dict]:
     return [found[k] for k in order if k in found] + [c for k, c in found.items() if k not in order]
 
 
-def _testdata() -> dict[str, dict]:
-    """data/testdata/testdata.yaml's datasets by kind (the first: a kind of the trading pack has three)."""
+def _testdata() -> dict[str, list[dict]]:
+    """data/testdata/testdata.yaml's datasets by kind (a kind may have several: the trading pack's trade has one a booking system)."""
     if not TESTDATA.is_file():
         return {}
-    out: dict[str, dict] = {}
+    out: dict[str, list[dict]] = {}
     for d in (yaml.safe_load(TESTDATA.read_text(encoding="utf-8")) or {}).get("datasets") or []:
         if isinstance(d, dict) and d.get("kind"):
-            out.setdefault(d["kind"], d)
+            out.setdefault(d["kind"], []).append(d)
     return out
 
 
@@ -126,7 +126,7 @@ def contracts_section(pack: str, items: list[dict]) -> list[str]:
         key = set(c.get("key") or [])
         out += [f"### {c['mnemonic']}: {c['title']} (`{c['kind']}`)", "", " ".join(str(c.get("description", "")).split()), ""]
         facts = [f"**Class** {c.get('class')}" + (f", retiring in {c['retiring-in']}" if c.get("status") == "retiring" else ""),
-                 f"**Key** {', '.join(f'`{k}`' for k in key) or '—'}",
+                 f"**Key** {', '.join(f'`{k}`' for k in c.get('key') or []) or '—'}",
                  f"**Dated by** `{c.get('dated-by')}`",
                  f"**Cadence** {(c.get('cadence') or {}).get('frequency', '')}",
                  f"**Stored by** connector `{st.get('connector')}` (plugin `{st.get('plugin')}`)" + (f", table `{st['table']}`" if st.get("table") else "")]
@@ -161,7 +161,8 @@ def retrieval_section(pack: str, items: list[dict]) -> list[str]:
     out = ["## Data retrieval", "",
            "Where each kind's data comes from, how it reaches the lake and how to check it. Three origins: **external** data, fetched "
            "from a public source by the pack's refresh script (each source, its licence and worked examples on the "
-           f"{EXTERNAL_PAGE} help page); **synthetic** test data, written by a generator with fictitious names; **computed** by a "
+           f"{EXTERNAL_PAGE} help page); **synthetic** test data (or hand-written reference data), written by a generator with "
+           "fictitious names; **computed** by a "
            "Drishti engine when it is asked, never stored by a source.", ""]
     rows, used_ext, used_gen = [], [], []
     for c in items:
@@ -173,7 +174,7 @@ def retrieval_section(pack: str, items: list[dict]) -> list[str]:
             how = " ".join(str(c.get("source", "")).split())
             for lead in ("computed by Drishti: ", "Drishti "):
                 how = how[len(lead):] if how.startswith(lead) else how
-            origin = "computed by Drishti: " + how + (f"; see the {guide}" if guide else "")
+            origin = "computed by Drishti: " + how + (f"; see {guide}" if guide else "")
             lake = "nothing to load: computed from its inputs when asked" if st.get("plugin") in ("reactive", "derived", "var-positions") else \
                 f"published by the server to `{st.get('table', '').replace('<root>/', '<data>/delta/')}`"
         elif o.get("external"):
@@ -185,16 +186,20 @@ def retrieval_section(pack: str, items: list[dict]) -> list[str]:
         else:
             gen = s["generators"][o["generator"]]
             used_gen += [g for g in (o["generator"], o.get("also")) if g and g not in used_gen]
-            origin = f"synthetic: `{gen['run']}`" + (f" (and `{s['generators'][o['also']]['run']}` for samples/)" if o.get("also") else "")
+            origin = f"{gen.get('label', 'synthetic')}: `{gen['run']}`" + (f" (and `{s['generators'][o['also']]['run']}` for samples/)" if o.get("also") else "")
             if o.get("official"):
                 used_ext += [i for i in o["official"] if i not in used_ext]
                 origin += "; official public data optional: " + "; ".join(_ext(s, o["official"])) + \
                           " (`tools/publicdata/official_market_data.py`, to the data folder; read live by the feed connectors, off as shipped)"
             lake = None
         if lake is None:
-            d = td.get(c["kind"])
-            if d and d.get("folder"):
-                lake = f"`data/testdata/{d['folder']}/` → `lake demo` → connector `{d.get('connector')}`"
+            d = (td.get(c["kind"]) or [None])[0]
+            folders = [x["folder"] for x in td.get(c["kind"]) or [] if x.get("folder")]
+            if folders:
+                lake = ", ".join(f"`data/testdata/{f}/`" for f in folders) + " → `lake demo` → connector " + \
+                       ", ".join(f"`{x.get('connector')}`" for x in td[c["kind"]] if x.get("folder"))
+                if conn and conn not in {x.get("connector") for x in td[c["kind"]]}:
+                    lake += f"; live through connector `{conn}` (plugin `{st.get('plugin')}`) when it is switched on (off as shipped)"
             elif d and d.get("samples"):
                 lake = f"`{d['samples']}/` → `lake demo` → connector `{d.get('connector')}`"
             elif st.get("test-data"):

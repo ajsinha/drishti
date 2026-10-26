@@ -676,7 +676,7 @@ A scope's exposure before and after candidate trades kept in the person's privat
 
 The official end-of-day exposure (current exposure, EPE, effective EPE, peak EE, peak PFE at 95% and 99%) of every netting set, counterparty and connected group, as the server captured and published it (one row per scope, business date and result version); read only, for BI and other readers, never an engine's input.
 
-**Class** computed · **Key** `RESULT_VERSION`, `NODE_ID` · **Dated by** `BUSINESS_DATE` · **Cadence** daily · **Stored by** connector `exposure-results` (plugin `delta`), table `<root>/risk-results/exposure-official-cpty/`.
+**Class** computed · **Key** `NODE_ID`, `RESULT_VERSION` · **Dated by** `BUSINESS_DATE` · **Cadence** daily · **Stored by** connector `exposure-results` (plugin `delta`), table `<root>/risk-results/exposure-official-cpty/`.
 
 **Grain:** One row per scope (netting set, counterparty or group) per BUSINESS_DATE and RESULT_VERSION, keyed by NODE_ID and RESULT_VERSION; the latest version of a date is the date's figure. **Contract:** `contracts/exposure-official-cpty.contract.yaml` ([full contract page](../../../../docs/contracts/packs/counterparty-risk.md#xofc-exposure-official-results-by-netting-set-and-counterparty-published-exposure-official-cpty)).
 
@@ -723,7 +723,7 @@ The official end-of-day exposure (current exposure, EPE, effective EPE, peak EE,
 
 ## Data retrieval
 
-Where each kind's data comes from, how it reaches the lake and how to check it. Three origins: **external** data, fetched from a public source by the pack's refresh script (each source, its licence and worked examples on the [External data](../../../../docs/guides/PUBLIC_DATA.md) help page); **synthetic** test data, written by a generator with fictitious names; **computed** by a Drishti engine when it is asked, never stored by a source.
+Where each kind's data comes from, how it reaches the lake and how to check it. Three origins: **external** data, fetched from a public source by the pack's refresh script (each source, its licence and worked examples on the [External data](../../../../docs/guides/PUBLIC_DATA.md) help page); **synthetic** test data (or hand-written reference data), written by a generator with fictitious names; **computed** by a Drishti engine when it is asked, never stored by a source.
 
 | Command | Kind | Origin | How it reaches Drishti |
 |---|---|---|---|

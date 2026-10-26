@@ -99,7 +99,8 @@ scripts:
       - ["refresh --offline", "the same from the download cache only"]
       - ["refresh --scope NAME:allianz,CAP:200", "a widened build in <data>/publicdata/gleif"]
 
-# Generators of synthetic (or hand-written) data: id -> the command, what it writes and its check.
+# Generators of synthetic (or hand-written) data: id -> the command, what it writes, its check and the origin it is shown as (label,
+# default "synthetic").
 generators:
   testdata: { run: "python3 tools/testdata/make_testdata.py", check: "python3 tools/testdata/make_testdata.py --check",
               what: "sixty business days of every dataset of the seven packs into data/testdata/<pack>/<kind>/ (the universe: tools/testdata/universe.py; deterministic, fictitious names)" }
@@ -111,28 +112,28 @@ generators:
          what: "the VaR engine's inputs into data/testdata/market-risk/<kind>/, as an upstream risk batch would deliver them, from the committed trades (VAR_GUIDE.md)" }
   ccr: { run: "python3 tools/packgen/ccr/make_ccr_data.py", check: "python3 -m pytest -q tools/packgen/ccr/test_ccr_data.py",
          what: "the exposure engine's inputs into data/testdata/counterparty-risk/<kind>/, as an upstream exposure simulator would deliver them, from the committed netting sets (EXPOSURE_GUIDE.md)" }
-  news-reference: { run: "python3 config/packs/news-and-markets/tools/make_samples.py",
+  news-reference: { run: "python3 config/packs/news-and-markets/tools/make_samples.py", label: "hand-written reference data",
                     what: "hand-written reference data (topics and listed companies) into the pack's samples/" }
   compute-demo: { run: "python3 config/packs/compute-demo/tools/make_samples.py",
                   what: "synthetic P&L strips (a seeded random walk) into the pack's samples/" }
 
 # The guide that explains each engine (by the connector named in a computed kind's contract).
 engines:
-  var-engine: "[VaR guide](../../../../docs/guides/VAR_GUIDE.md)"
-  var-whatif: "[VaR guide](../../../../docs/guides/VAR_GUIDE.md)"
-  var-results: "[VaR guide](../../../../docs/guides/VAR_GUIDE.md) (official results)"
-  var-positions: "[VaR guide](../../../../docs/guides/VAR_GUIDE.md) (positions)"
-  exposure-engine: "[Exposure guide](../../../../docs/guides/EXPOSURE_GUIDE.md)"
-  exposure-whatif: "[Exposure guide](../../../../docs/guides/EXPOSURE_GUIDE.md)"
-  exposure-results: "[Exposure guide](../../../../docs/guides/EXPOSURE_GUIDE.md) (official results)"
-  correlation-engine: "[Groupings and analytics guide](../../../../docs/guides/GROUPINGS_ANALYTICS_GUIDE.md)"
-  equity-analytics: "[Groupings and analytics guide](../../../../docs/guides/GROUPINGS_ANALYTICS_GUIDE.md)"
-  gleif-groupings: "[Groupings and analytics guide](../../../../docs/guides/GROUPINGS_ANALYTICS_GUIDE.md)"
-  us-equities-groupings: "[Groupings and analytics guide](../../../../docs/guides/GROUPINGS_ANALYTICS_GUIDE.md)"
-  macro-groupings: "[Groupings and analytics guide](../../../../docs/guides/GROUPINGS_ANALYTICS_GUIDE.md)"
+  var-engine: "the [VaR guide](../../../../docs/guides/VAR_GUIDE.md)"
+  var-whatif: "the [VaR guide](../../../../docs/guides/VAR_GUIDE.md)"
+  var-results: "the [VaR guide](../../../../docs/guides/VAR_GUIDE.md) (official results)"
+  var-positions: "the [VaR guide](../../../../docs/guides/VAR_GUIDE.md) (positions)"
+  exposure-engine: "the [Exposure guide](../../../../docs/guides/EXPOSURE_GUIDE.md)"
+  exposure-whatif: "the [Exposure guide](../../../../docs/guides/EXPOSURE_GUIDE.md)"
+  exposure-results: "the [Exposure guide](../../../../docs/guides/EXPOSURE_GUIDE.md) (official results)"
+  correlation-engine: "the [Groupings and analytics guide](../../../../docs/guides/GROUPINGS_ANALYTICS_GUIDE.md)"
+  equity-analytics: "the [Groupings and analytics guide](../../../../docs/guides/GROUPINGS_ANALYTICS_GUIDE.md)"
+  gleif-groupings: "the [Groupings and analytics guide](../../../../docs/guides/GROUPINGS_ANALYTICS_GUIDE.md)"
+  us-equities-groupings: "the [Groupings and analytics guide](../../../../docs/guides/GROUPINGS_ANALYTICS_GUIDE.md)"
+  macro-groupings: "the [Groupings and analytics guide](../../../../docs/guides/GROUPINGS_ANALYTICS_GUIDE.md)"
   trade-pages: "the derived connector's settings in the trading pack's pack.yaml (`trade-pages`)"
-  path-sum-python: "[reactive connectors](../../../../docs/architecture/REACTIVE_CONNECTORS.md)"
-  path-sum-java: "[reactive connectors](../../../../docs/architecture/REACTIVE_CONNECTORS.md)"
+  path-sum-python: "the [reactive connectors](../../../../docs/architecture/REACTIVE_CONNECTORS.md)"
+  path-sum-java: "the [reactive connectors](../../../../docs/architecture/REACTIVE_CONNECTORS.md)"
 
 # Each pack: the default origin of its stored kinds and the kinds that differ. An entry is {generator: id} or {external: [ids]};
 # `live` names the external sources a connector reads live when switched on (off as shipped), next to the committed data.

@@ -578,7 +578,7 @@ A scope's VaR and ES before and after hypothetical trades kept in the person's p
 
 The official end-of-day VaR and ES of every node of the MGMT and LEGAL hierarchies, as the server captured and published them (one row per node, business date and result version); read only, for BI and other readers, never an engine's input.
 
-**Class** computed · **Key** `RESULT_VERSION`, `NODE_ID` · **Dated by** `BUSINESS_DATE` · **Cadence** daily · **Stored by** connector `var-results` (plugin `delta`), table `<root>/risk-results/var-official/`.
+**Class** computed · **Key** `NODE_ID`, `RESULT_VERSION` · **Dated by** `BUSINESS_DATE` · **Cadence** daily · **Stored by** connector `var-results` (plugin `delta`), table `<root>/risk-results/var-official/`.
 
 **Grain:** One row per hierarchy node per BUSINESS_DATE and RESULT_VERSION, keyed by NODE_ID and RESULT_VERSION; the latest version of a date is the date's figure. **Contract:** `contracts/var-official.contract.yaml` ([full contract page](../../../../docs/contracts/packs/market-risk.md#voff-var-official-results-published-var-official)).
 
@@ -618,7 +618,7 @@ The official end-of-day VaR and ES of every node of the MGMT and LEGAL hierarchi
 
 ## Data retrieval
 
-Where each kind's data comes from, how it reaches the lake and how to check it. Three origins: **external** data, fetched from a public source by the pack's refresh script (each source, its licence and worked examples on the [External data](../../../../docs/guides/PUBLIC_DATA.md) help page); **synthetic** test data, written by a generator with fictitious names; **computed** by a Drishti engine when it is asked, never stored by a source.
+Where each kind's data comes from, how it reaches the lake and how to check it. Three origins: **external** data, fetched from a public source by the pack's refresh script (each source, its licence and worked examples on the [External data](../../../../docs/guides/PUBLIC_DATA.md) help page); **synthetic** test data (or hand-written reference data), written by a generator with fictitious names; **computed** by a Drishti engine when it is asked, never stored by a source.
 
 | Command | Kind | Origin | How it reaches Drishti |
 |---|---|---|---|

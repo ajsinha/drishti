@@ -331,14 +331,14 @@ Nested `PROVENANCE`:
 
 ## Data retrieval
 
-Where each kind's data comes from, how it reaches the lake and how to check it. Three origins: **external** data, fetched from a public source by the pack's refresh script (each source, its licence and worked examples on the [External data](../../../../docs/guides/PUBLIC_DATA.md) help page); **synthetic** test data, written by a generator with fictitious names; **computed** by a Drishti engine when it is asked, never stored by a source.
+Where each kind's data comes from, how it reaches the lake and how to check it. Three origins: **external** data, fetched from a public source by the pack's refresh script (each source, its licence and worked examples on the [External data](../../../../docs/guides/PUBLIC_DATA.md) help page); **synthetic** test data (or hand-written reference data), written by a generator with fictitious names; **computed** by a Drishti engine when it is asked, never stored by a source.
 
 | Command | Kind | Origin | How it reaches Drishti |
 |---|---|---|---|
-| `TOPIC` | `news-topic` | synthetic: `python3 config/packs/news-and-markets/tools/make_samples.py` | `config/packs/news-and-markets/samples/` → `lake demo` → connector `news-store` |
-| `NEWS` | `news` | external: Google News RSS headlines (the news connector) (the headlines belong to their publishers; **internal only**) — refreshed by `tools/publicdata/news_and_markets.py` | `data/testdata/news-and-markets/news/` → `lake demo` → connector `news-store` |
-| `CO` | `listed-company` | synthetic: `python3 config/packs/news-and-markets/tools/make_samples.py` | `config/packs/news-and-markets/samples/` → `lake demo` → connector `news-store` |
-| `QUOTE` | `quote` | external: Yahoo Finance quotes and daily history (the yfinance connector) (Yahoo terms: personal use, no redistribution; **internal only**) — refreshed by `tools/publicdata/news_and_markets.py` | `data/testdata/news-and-markets/quote/` → `lake demo` → connector `news-store` |
+| `TOPIC` | `news-topic` | hand-written reference data: `python3 config/packs/news-and-markets/tools/make_samples.py` | `config/packs/news-and-markets/samples/` → `lake demo` → connector `news-store` |
+| `NEWS` | `news` | external: Google News RSS headlines (the news connector) (the headlines belong to their publishers; **internal only**) — refreshed by `tools/publicdata/news_and_markets.py` | `data/testdata/news-and-markets/news/` → `lake demo` → connector `news-store`; live through connector `news` (plugin `news`) when it is switched on (off as shipped) |
+| `CO` | `listed-company` | hand-written reference data: `python3 config/packs/news-and-markets/tools/make_samples.py` | `config/packs/news-and-markets/samples/` → `lake demo` → connector `news-store` |
+| `QUOTE` | `quote` | external: Yahoo Finance quotes and daily history (the yfinance connector) (Yahoo terms: personal use, no redistribution; **internal only**) — refreshed by `tools/publicdata/news_and_markets.py` | `data/testdata/news-and-markets/quote/` → `lake demo` → connector `news-store`; live through connector `yfinance` (plugin `yfinance`) when it is switched on (off as shipped) |
 
 ### External sources
 
