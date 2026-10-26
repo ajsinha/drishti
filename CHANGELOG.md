@@ -17,6 +17,7 @@
 
 ## Unreleased
 
+- **Drill:** runs the compute worker SDK's Python tests (`drishti-compute/src/test/python`, the VaR what-if engine among them).
 - **Write-back W1 to W7 (2.8.0): forms save through connectors, with the edit log on the Drishti database.** A form whose Sutra has
   `save:` (`target: overlay | owned | source`, `approval`, `reason`, `command`/`create` for a connector's `writes:`) gets **Submit…**:
   the draft is saved, the review and confirm sheet shows per record what you saw, what is there now and your change (a field that moved

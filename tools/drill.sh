@@ -117,6 +117,8 @@ python_tool_tests() {
     timeout --kill-after=30 600 uv run -q --with deltalake --with pyarrow --with pyyaml --with "moto[server]==5.2.3" python -m unittest -q tools/lake/test_s3_simulators.py 2>&1 | grep -v '^{"at"'
     # the real-data tools (tools/realdata) are pytest-style functions on recorded fixtures: no network, a few seconds
     timeout --kill-after=30 600 uv run -q --with pytest --with pyyaml python -m pytest -q -p no:cacheprovider tools/realdata/tests
+    # the compute worker SDK and its engines (the VaR what-if among them): pure Python, no servers
+    timeout --kill-after=30 600 uv run -q --with pytest python -m pytest -q -p no:cacheprovider drishti-compute/src/test/python
   fi
 }
 
