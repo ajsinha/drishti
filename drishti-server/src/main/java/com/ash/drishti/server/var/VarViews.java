@@ -43,13 +43,28 @@ final class VarViews {
     static final String ENGINE_VERSION = versionOf();
     private static final String ENGINE = "drishti-compute " + ENGINE_VERSION;
     private final VarService svc;
+    private final VarSelection selection;
 
     VarViews(VarService svc) {
         this.svc = svc;
+        this.selection = new VarSelection(svc);
     }
 
     VarService service() {
         return svc;
+    }
+
+    /** The basket tray's terms, parts, notices and hints. */
+    VarSelection selection() {
+        return selection;
+    }
+
+    /** A part's standalone VaR: a term's is the term alone inside the scope (its vector holds only the trades allocated to it). */
+    private double standalone(Part pt) {
+        if (pt.attrs().get("alone") instanceof Number n) {
+            return n.doubleValue();
+        }
+        return svc.calc().measures(pt.vector()).var();
     }
 
     private static String versionOf() {
@@ -62,7 +77,7 @@ final class VarViews {
     Map<String, Object> headline(Principal p, String scope, LocalDate date) {
         VarService.Scoped s = svc.scoped(p, scope, date);
         VarBook b = s.date().book();
-        List<Part> parts = parts(s, "child");
+        List<Part> parts = parts(s, "child", p);
         Map<String, Object> out = new LinkedHashMap<>();
         out.put("scope", scope);
         out.put("canonical", s.res().canonical());
@@ -79,7 +94,29 @@ final class VarViews {
         out.put("esConfidence", svc.props().esConfidence());
         double standalone = 0;
         for (Part pt : parts) {
-            standalone += svc.calc().measures(pt.vector()).var();
+            standalone += standalone(pt);
+        }
+        out.put("trades", s.set().size());
+        out.put("empty", s.set().isEmpty());
+        if (s.kind().equals("adhoc") || s.kind().equals("basket")) {
+            try {
+                out.put("terms", VarSelection.describe(selection.terms(p, s.res().canonical())));
+            } catch (IllegalArgumentException e) {
+                out.put("terms", List.of());
+            }
+            if (s.kind().equals("basket") && p != null) {
+                String id = s.res().canonical().substring("BASKET:".length());
+                svc.saved().basket(p, id).ifPresent(bk -> {
+                    Map<String, Object> m = new LinkedHashMap<>();
+                    m.put("id", bk.get("id"));
+                    m.put("name", bk.get("name"));
+                    m.put("owner", bk.get("owner"));
+                    m.put("scope", bk.get("scope"));
+                    m.put("sharedWith", bk.get("sharedWith"));
+                    m.put("version", bk.get("version"));
+                    out.put("basket", m);
+                });
+            }
         }
         out.put("children", parts.size());
         out.put("childKind", parts.isEmpty() ? null : parts.get(0).kind());
@@ -158,6 +195,7 @@ final class VarViews {
         m.put("failed", b.failed());
         m.put("hidden", s.hidden());
         m.put("unknown", s.res().unknown());
+        m.put("notices", selection.notices(s));
         m.put("vectors", svc.props().kinds().vector() + " · batch " + String.join(", ", s.date().intake().batchIds()) + " of " + s.date().date()
                 + " · data version " + s.date().version());
         m.put("inputs", s.date().inputs());
@@ -216,8 +254,8 @@ final class VarViews {
         }
     }
 
-    List<Part> parts(VarService.Scoped s, String by) {
-        return partsOf(s, by).list();
+    List<Part> parts(VarService.Scoped s, String by, Principal p) {
+        return partsOf(s, by, p).list();
     }
 
     /**
@@ -226,7 +264,7 @@ final class VarViews {
      * only for a viewer who sees them. More positions or trades than {@code max-parts}: the largest by gross size (market value, else
      * PV, else quantity) are kept, and the answer says so.
      */
-    Parts partsOf(VarService.Scoped s, String by) {
+    Parts partsOf(VarService.Scoped s, String by, Principal p) {
         VarBook b = s.date().book();
         String mode = by == null || by.isBlank() ? "child" : by.trim().toLowerCase(java.util.Locale.ROOT);
         if (mode.equals("node") && (s.res().node() == null || b.node(s.res().node()).children().isEmpty())) {
@@ -242,8 +280,12 @@ final class VarViews {
             } else if (s.res().trade() >= 0) {
                 return new Parts(List.of(), 0);
             } else {
-                mode = "position";
+                mode = selection.byTerms(p, s) ? "part" : "position";
             }
+        }
+        if (mode.equals("part")) {
+            List<Part> terms = selection.parts(p, s);
+            return new Parts(terms, terms.size());
         }
         if ((mode.equals("position") || mode.equals("trade")) && !s.view().seesPositions(s.set())) {
             if (by == null || by.isBlank() || by.equals("child")) {
@@ -304,7 +346,7 @@ final class VarViews {
                     out.add(trade(b, o));
                 }
             }
-            default -> throw new DrishtiException(ErrorCode.BAD_REQUEST, "by is child, node, position, trade, desk or book");
+            default -> throw new DrishtiException(ErrorCode.BAD_REQUEST, "by is child, node, part, position, trade, desk or book");
         }
         return new Parts(out, Math.max(total[0], out.size()));
     }
@@ -408,7 +450,7 @@ final class VarViews {
     Map<String, Object> contributions(Principal p, String scope, LocalDate date, String by, String scenario) {
         VarService.Scoped s = svc.scoped(p, scope, date);
         VarBook b = s.date().book();
-        Parts ps = partsOf(s, by);
+        Parts ps = partsOf(s, by, p);
         List<Part> parts = ps.list();
         List<VarCalc.Part> cp = parts.stream().map(x -> new VarCalc.Part(x.key(), x.label(), x.kind(), x.vector(), x.size())).toList();
         List<VarCalc.Contribution> cs = svc.calc().contributions(s.vector(), s.measures(), cp);
@@ -427,7 +469,7 @@ final class VarViews {
             r.put("scope", pt.scope());
             r.put("label", pt.label());
             r.put("kind", pt.kind());
-            r.put("standaloneVar", round(c.standaloneVar()));
+            r.put("standaloneVar", round(pt.attrs().get("alone") instanceof Number n ? n.doubleValue() : c.standaloneVar()));
             r.put("standaloneEs", round(c.standaloneEs()));
             r.put("componentVar", round(c.componentVar()));
             r.put("componentEs", round(c.componentEs()));
@@ -441,7 +483,7 @@ final class VarViews {
             if (pt.kind().equals("node") || !pt.attrs().containsKey("level")) {
                 r.put("level", pt.attrs().getOrDefault("level", pt.kind()));
             }
-            standalone += c.standaloneVar();
+            standalone += pt.attrs().get("alone") instanceof Number n ? n.doubleValue() : c.standaloneVar();
             comp += c.componentVar();
             rows.add(r);
         }
@@ -510,7 +552,7 @@ final class VarViews {
         out.put("dates", List.of(b.scenarioDates().get(0).toString(), b.scenarioDates().get(b.width() - 1).toString()));
         out.put("scenarioDates", b.scenarioDates().stream().map(LocalDate::toString).toList());     // about 6 KB: the series chart's axis
         // the ranked table, a page at a time, with the part that lost most on each scenario
-        List<Part> parts = parts(s, "child");
+        List<Part> parts = parts(s, "child", p);
         int sz = size <= 0 ? svc.props().pathPage() : Math.min(size, 509);
         int from = Math.max(0, page) * sz;
         List<Map<String, Object>> rows = new ArrayList<>();

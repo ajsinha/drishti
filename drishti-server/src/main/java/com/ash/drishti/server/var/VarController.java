@@ -49,6 +49,8 @@ import org.springframework.web.bind.annotation.RestController;
  *   GET  /api/v1/var/scope/path?scope=&amp;page=&amp;size=      histogram, worst 25, series, a page of the ranked scenarios
  *   GET  /api/v1/var/scope/history?scope=                VaR, ES and hypothetical P&amp;L over 250 days, exceptions, traffic light
  *   GET  /api/v1/var/scope/contributions?scope=&amp;by=&amp;scenario=   standalone, component, incremental and marginal VaR of the parts
+ *   GET  /api/v1/var/hints?q=&amp;limit=                  the basket tray's type-ahead: type, id, name, trades, standalone VaR
+ *   POST /api/v1/var/what-if {scope, items}             a pre-deal what-if: copies of booked trades scaled, before and after (Python)
  *   GET  /api/v1/var/tree?hierarchy=MGMT                 every node with its figures; the stored portfolios
  *   GET  /api/v1/var/status                              what is loaded, the settings
  *   GET|POST /api/v1/var/baskets, GET|DELETE /api/v1/var/baskets/{owner}/{name}
@@ -64,6 +66,7 @@ public class VarController {
     private final VarViews views;
     private final VarCaptures captures;
     private final VarOfficial official;
+    private final VarWhatIf whatIf;
     private final Entitlements entitlements;
 
     VarController(VarService svc, VarViews views, VarOfficial official, Entitlements entitlements) {
@@ -71,6 +74,7 @@ public class VarController {
         this.official = official;
         this.views = views;
         this.captures = new VarCaptures(svc, views);
+        this.whatIf = new VarWhatIf(svc);
         this.entitlements = entitlements;
     }
 
@@ -111,6 +115,20 @@ public class VarController {
     public Map<String, Object> contributions(@RequestParam String scope, @RequestParam(required = false) String by,
             @RequestParam(required = false) String scenario, AsOf asOf, @RequestAttribute(Principal.ATTRIBUTE) Principal p) {
         return views.contributions(p, scope(scope), date(asOf), by, scenario);
+    }
+
+    /** The basket tray's type-ahead: what {@code q} may name, each with its type, id, name, trade count and standalone VaR as the caller. */
+    @GetMapping("/hints")
+    public List<Map<String, Object>> hints(@RequestParam(required = false) String q, @RequestParam(defaultValue = "8") int limit, AsOf asOf,
+            @RequestAttribute(Principal.ATTRIBUTE) Principal p) {
+        return views.selection().hints(p, q, limit, date(asOf));
+    }
+
+    /** A pre-deal what-if: {@code {scope, items: [{copyOf, factor, label}]}}, by the Python VaR engine (503 DRS-5205 when it is not running). */
+    @PostMapping("/what-if")
+    public Map<String, Object> whatIf(@RequestBody Map<String, Object> body, AsOf asOf, @RequestAttribute(Principal.ATTRIBUTE) Principal p) {
+        entitlements.requireOpen(p, svc.props().kinds().vector());
+        return whatIf.whatIf(p, body, date(asOf));
     }
 
     @GetMapping("/tree")

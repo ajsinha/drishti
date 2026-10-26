@@ -97,6 +97,7 @@ public class VarConfiguration {
         if (p != null) {
             java.util.List<com.ash.drishti.engine.ViewAugmenter> all = new java.util.ArrayList<>(p.augmenters());
             all.add(f);                                                // beside the others (the exposure engine's on netting sets)
+            all.add(new VarTradeLinks(f.service()));                   // a trade page's Risk links: its P&L vector and its VaR
             p.augmenters(all);
         }
         return f;

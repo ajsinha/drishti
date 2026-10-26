@@ -74,6 +74,7 @@ public class ExposureConfiguration {
         if (p != null) {
             List<ViewAugmenter> all = new ArrayList<>(p.augmenters());
             all.add(f);
+            all.add(new ExposureTradeLinks(svc));                      // a trade page's Risk links: its exposure
             p.augmenters(all);
         }
         return f;

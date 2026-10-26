@@ -135,6 +135,32 @@ final class ExposureService implements AutoCloseable {
         return date(asked, false);
     }
 
+    /**
+     * The date a page's link would read, only when it is loaded already (a trade page never waits for a run to load); when it is not, its
+     * load starts in the background and the answer is empty.
+     */
+    java.util.Optional<ExposureDate> loadedDate(LocalDate asked) {
+        LocalDate latest = props.enabled() ? loader.latest() : null;
+        if (latest == null) {
+            return java.util.Optional.empty();
+        }
+        LocalDate d = asked == null || asked.isAfter(latest) ? latest : asked;
+        CompletableFuture<ExposureDate> f = dates.get(d);
+        if (f != null && f.isDone() && !f.isCompletedExceptionally()) {
+            return java.util.Optional.of(f.join());
+        }
+        if (f == null) {
+            CompletableFuture.runAsync(() -> {
+                try {
+                    date(d);
+                } catch (RuntimeException e) {
+                    // the page says the run is not loaded; the explorer says why
+                }
+            });
+        }
+        return java.util.Optional.empty();
+    }
+
     /** The date a request reads: the one asked when it has paths, else the newest on or before it. */
     ExposureDate date(LocalDate asked, boolean strict) {
         if (!props.enabled()) {

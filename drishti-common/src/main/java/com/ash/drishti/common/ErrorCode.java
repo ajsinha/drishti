@@ -117,6 +117,11 @@ public enum ErrorCode {
     VAR_INCONSISTENT_DATE("DRS-5203", 422),
     /** VaR: a date's vectors need more memory than the engine's budget (drishti.var.memory-budget-mb): capacity, try later or raise it. */
     VAR_CAPACITY("DRS-5204", 503),
+    /**
+     * VaR: a pre-deal what-if (a copy of a booked trade, scaled, added to a scope) runs in the Python VaR engine, the reactive connector
+     * {@code var-whatif} (compute pool {@code var}); it is not running on this server (the compute workers are off) or did not answer in time.
+     */
+    VAR_WHATIF_UNAVAILABLE("DRS-5205", 503),
     /** Exposure: a bad scope word or parameter ({@code q}, {@code collateral}, {@code date} not a grid date, {@code by}, {@code run}). */
     EXPOSURE_BAD_PARAMETER("DRS-5440", 400),
     /**
