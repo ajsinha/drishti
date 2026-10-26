@@ -288,7 +288,7 @@ On a phone the panels stack: the command line, the tree, then the tiles and the 
 - **Netting sets** (counterparty or ad-hoc): per set its CSA, EE profile, EPE, **peak PFE alone** and **PFE contribution** (the shares
   that add up to the scope's peak, [section 18](#18-the-computation), 18.6) and share; a total row.
 - **Collateral** (netting set): the CSA (thresholds them / us, minimum transfers, independent amount, rounding, MPOR and remargin
-  frequency), at the peak tenor EE without collateral, the mean collateral on the paths, EE with collateral and the benefit; today's net
+  frequency), at the peak tenor EE without collateral, the mean collateral on the paths, EE with collateral and the *Effect of collateral* (signed: −65% lower, +380% higher); today's net
   MtM, collateral held (net), initial margin held, the trades, the collateral model, the look-back used, the `MPOR_MISMATCH` flag and
   the dates that keep today's collateral (no look-back point after today).
 - **Trades** (netting set): every trade, 25 a page, by EE contribution at the set's peak date (read from the lake on request): product,

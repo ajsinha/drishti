@@ -277,8 +277,9 @@ MX-30002052 · Convertible bond               85,294,748       108.3  -37,442,24
 
 **What it means.** The set's net MtM today is −122.4 million (the bank owes Aldershot) and the bank has **posted** 98.8 million of
 collateral. Early on, the uncollateralised EE is zero (the set is far out of the money) but the collateralised EE is not: on the paths
-where the MtM recovers within the margin period, the posted collateral is owed back. That is why the Collateral tab's benefit at 2M is
-negative (EE 19.0 million with collateral against 4.0 million without; the bank's tile, by contrast, shows collateral cutting EE by 65%). Later, collateral works for the bank: without it the peak PFE is 371.7 million at 3Y, with it 78.7 million at 2M. Trades'
+where the MtM recovers within the margin period, the posted collateral is owed back. That is why the Collateral tab's *Effect of collateral* at 2M
+is **+380%** (EE 19.0 million with collateral against 4.0 million without; the bank's *Collateral effect* tile, by contrast, reads **−65%**:
+collateral cuts the bank's EE at 2W by 65%). Later, collateral works for the bank: without it the peak PFE is 371.7 million at 3Y, with it 78.7 million at 2M. Trades'
 contributions inside a set can be large and of either sign; they add up to the set's figure.
 
 **You should see** EE 18,989,108 with collateral and 3,952,491 without at 2M, the peak PFE 78,724,064 at 2M, and at 1Y 44.5% of the paths
@@ -401,7 +402,21 @@ Peak EE   251,660,238  250,032,684   -1,627,554
   exact: each candidate's paths on the run XR-2026-09-30-01 added to its netting set path by path, collateral and exposure computed again by the Python exposure engine (exposure-whatif)
 ```
 
-and the proxy, from a candidates file that gives the candidate's asset class, notional and maturity (the addon is sized on them):
+and the proxy (`--like` sends the trade's asset class, notional, maturity, MtM and delta, read from its netting set's contributions:
+the addon is sized on them):
+
+```text
+$ drishti.py exposure whatif CPTY:CP-ALDERSHOT --like MX-30001587 --factor -1 --set NS-ALDERSHOT-LDN --method addon
+what-if on CPTY:CP-ALDERSHOT  method addon  proxy  run XR-2026-09-30-01
+Figure    Before       After        Incremental
+--------  -----------  -----------  -----------
+Peak PFE  395,309,044  954,803,774  559,494,730
+EPE        69,278,939  141,723,078   72,444,139
+Peak EE   251,660,238  270,874,278            —
+  a conservative proxy: each candidate a netting set of its own, uncollateralised, with SA-CCR's supervisory factor; the exact method (paths) runs in the Python exposure engine
+```
+
+A candidate that is not a copy of a booked trade comes from a candidates file with the same terms; this one gives the same answer:
 
 ```json
 [{"tradeId": "CANDIDATE-1", "label": "the unwind of MX-30001587", "nettingSet": "NS-ALDERSHOT-LDN",
@@ -528,5 +543,5 @@ published tables in the lake.
 | *no exposure paths for this netting set* (or `404 DRS-1001 no exposure paths for the netting set …`) | the run does not cover it: in the demo, CP-SUMMIT and CP-NORTHPLAINS have no paths; the tree marks them *no paths* |
 | other numbers than these | you built the lake with `--as-of today` or `--exposure committed`; rebuild with `--as-of data` and the default `--exposure demo` |
 | the `paths` what-if answers `503 DRS-5446` | the compute workers are off: `DRISHTI_COMPUTE_ENABLED=true`, and Admin → Compute shows the pool `exposure` |
-| the `addon` what-if adds nothing | the candidate has no asset class, notional or maturity (`--like` alone gives none): use `--candidates` with them, or the UI's Pre-deal tab |
+| the `addon` what-if adds nothing | a `--candidates` entry without `assetClass`, `notional` or `maturityDate` (the addon is sized on them; `--like` fills them from the booked trade) |
 | no *official* chip | the date's record is not taken yet: it is taken at start once the connectors are up, or by an administrator with `drishti.py exposure official --capture` |
