@@ -50,12 +50,12 @@ may still change before it ships, and the document records each change.
 | Contract (a name in code font is not written yet) | Commands (retired kind) | Release | Status |
 |---|---|---|---|
 | [VAR.md](VAR.md) | VAR (`var`), VNODE (`var-node`); also PORT and POS figures | 2.8.0 | AS BUILT (V0–V3), completion PLANNED |
-| `TRADING_GROUPINGS.md` | CTRD, PTRD, LTRD, ITRD (`counterparty-trades`, `portfolio-trades`, `legal-entity-trades`, `index-trades`) | 2.9.0 | PLANNED |
-| `TVAL.md` | TVAL (`trade-valuation`) | 2.9.0 | PLANNED |
-| `STR.md` | STR (`stress-result`); SCN stays fundamental | 2.9.0 | PLANNED |
-| `FRTB.md` | FRTB (`frtb-sensitivity`) | 2.9.0 | PLANNED |
-| `SIMM.md` | SIMM (`simm`) | 2.9.0 | PLANNED |
-| `PNL.md` | PNL (`pnl-explain`) | 2.9.0 | PLANNED |
+| [TRADING_GROUPINGS.md](TRADING_GROUPINGS.md) | CTRD, PTRD, LTRD, ITRD (`counterparty-trades`, `portfolio-trades`, `legal-entity-trades`, `index-trades`) | 2.9.0 | PLANNED |
+| [TVAL.md](TVAL.md) | TVAL (`trade-valuation`) | 2.9.0 | PLANNED |
+| [STR.md](STR.md) | STR (`stress-result`); SCN stays fundamental | 2.9.0 | PLANNED |
+| [FRTB.md](FRTB.md) | FRTB (`frtb-sensitivity`) | 2.9.0 | PLANNED |
+| [SIMM.md](SIMM.md) | SIMM (`simm`) | 2.9.0 | PLANNED |
+| [PNL.md](PNL.md) | PNL (`pnl-explain`) | 2.9.0 | PLANNED |
 | `NSET.md` | NSET (`netting-set`): terms kept, figures computed | 2.10.0 | PLANNED |
 | `SACCR.md` | SACCR (`sa-ccr`) | 2.10.0 | PLANNED |
 | `COLL.md` | COLL (`collateral-balance`): holdings kept, values computed | 2.10.0 | PLANNED |

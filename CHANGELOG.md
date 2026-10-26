@@ -17,6 +17,13 @@
 
 ## Unreleased
 
+- **Contracts of the 2.9.0 computed market-risk measures (planned):** docs/contracts/TRADING_GROUPINGS.md, TVAL.md, STR.md, FRTB.md,
+  SIMM.md and PNL.md. The shared inputs in the common risk lake are `valuation`, `sensitivity` (with the ISDA CRIF mapping),
+  `scenario-pnl`, `market-move`, `pnl-event` and `risk-limit`, plus optional `default-risk`, `residual-risk`, `simm-addon` and
+  `crif-external`. Each contract has its computation, the structures in memory, its Python engine and reactive connector, the API, the
+  published `-official` table, proposed DRS codes, a test-data plan, the retirement of the stored kind with a reconciliation, a worked
+  example and open questions. The contracts index links them.
+
 - **Plan: published official results** (product owner, 2026-10-25): every computed measure publishes its official end-of-day captures to a
   read-only results area of the lake, `risk-results/<measure>-official`, for other systems; engines never read it. Documented in
   docs/contracts/README.md section 11, VAR.md 1.2 (the `var-official` columns) and the implementation plan.
