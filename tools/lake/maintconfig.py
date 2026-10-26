@@ -48,6 +48,34 @@ SETTINGS = ("keep-business-days", "target-file-mb", "checkpoint", "vacuum-hours"
 TABLE_DEFAULTS = {"keep-business-days": None, "target-file-mb": 128, "checkpoint": True, "vacuum-hours": 168}
 VACUUM_SAFE_HOURS = 168
 HISTORY_KEEP = 2000
+#: the domains whose dates and time travel are kept at least this many years, whatever a table's settings say (the risk lake's inputs
+#: and the published official results: 7 years, docs/contracts/VAR.md section 16.1 question 10). A lake's ``retain-years:`` mapping
+#: changes it per domain (0: no floor).
+RETAIN_YEARS = {"risk": 7, "risk-results": 7}
+BUSINESS_DAYS_A_YEAR = 261
+
+
+def retain_days(years: int) -> int:
+    """Calendar days in ``years`` whole years, with their leap days (7 years: 2,557 days)."""
+    return years * 365 + (years + 3) // 4
+
+
+def retention_floor(name: str, conf: dict, retain: dict | None = None) -> tuple[dict, list[str]]:
+    """A table's settings with its domain's floor applied (``name`` is <domain>/<table>): vacuum never removes a file younger than the
+    kept years, and retention never deletes a business date younger than them; what was raised is said. Other domains: unchanged."""
+    years = {**RETAIN_YEARS, **(retain or {})}.get(name.split("/")[0])
+    if not years:
+        return conf, []
+    out, notes = dict(conf), []
+    hours = retain_days(int(years)) * 24
+    if conf.get("vacuum-hours") is not None and int(conf["vacuum-hours"]) < hours:
+        out["vacuum-hours"] = hours
+        notes.append(f"vacuum-hours {conf['vacuum-hours']} raised to {hours}: the {name.split('/')[0]} domain keeps {years} years of time travel")
+    days = int(years) * BUSINESS_DAYS_A_YEAR
+    if conf.get("keep-business-days") is not None and int(conf["keep-business-days"]) < days:
+        out["keep-business-days"] = days
+        notes.append(f"keep-business-days {conf['keep-business-days']} raised to {days}: the {name.split('/')[0]} domain keeps {years} years of dates")
+    return out, notes
 
 
 def data_dir() -> pathlib.Path:
