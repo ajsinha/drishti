@@ -83,7 +83,7 @@ ${DRISHTI_DELTA_ROOT}/risk/
 ├── saccr-trade/          business_date=YYYY-MM-DD/   one row per trade and risk driver: SA-CCR classification and terms   (new)
 ├── netting-set/, netting-set-member/, csa/            NSET.md: margined or not, TH, MTA, MPOR, disputes, cleared
 ├── collateral-balance/, collateral-holding/           COLL.md: C and NICA (haircut values)
-└── trade-valuation/                                   TVAL.md: V (MtM per trade)
+└── valuation/                                   TVAL.md: V (MtM per trade)
 ```
 
 ### 3.2 Decision: an input table, with Drishti computing the formula parts
@@ -157,7 +157,7 @@ maturity bucket, supervisory factor, add-ons, RC, multiplier, EAD, RWA. A table 
 | Kind | Read for |
 |---|---|
 | `netting-set`, `netting-set-member`, `csa` (NSET.md) | margined or not, `CLEARED`, `THRESHOLD_THEM`, `MTA_THEM`, `MPOR_DAYS`, `MARGIN_FREQUENCY_DAYS`, `DISPUTES_LAST_2Q`, `ILLIQUID_COLLATERAL`, member count (the 5,000-trade MPOR floor) |
-| `trade-valuation` (`TVAL.md`) | V = Σ MTM of the set's derivative members |
+| `valuation` ([TVAL.md](TVAL.md)) | V = Σ MTM of the set's derivative members |
 | `collateral-holding` (COLL.md) | C (VM and IM held − posted, haircut values) and NICA |
 | `counterparty` (core) | the counterparty's type and rating for the RWA hook |
 | `trade` | rule-derived rows (§3.2), maturity cross-check |
@@ -386,7 +386,7 @@ reads:
   - { kind: saccr-trade, as: trades, all: true }
   - { kind: netting-set, as: sets, all: true }
   - { kind: csa, as: csas, all: true }
-  - { kind: trade-valuation, as: valuations, all: true }
+  - { kind: valuation, as: valuations, all: true }
   - { kind: collateral-holding, as: holdings, all: true }
 engine:
   type: python
@@ -397,7 +397,7 @@ engine:
   chunk-rows: 50000
   reduce: { sum: [EAD, RWA, RC, PFE, NETTING_SETS, TRADES] }
 triggers:
-  - { on: data-version, kinds: [saccr-trade, netting-set-member, csa, trade-valuation, collateral-holding], affects: all }
+  - { on: data-version, kinds: [saccr-trade, netting-set-member, csa, valuation, collateral-holding], affects: all }
 coalesce: { quiet: 250ms, max-wait: 2s }
 cache: { results: 2000, ttl: 1d }
 limits: { timeout: 30s, wait: 50ms, max-inflight-per-user: 4 }
@@ -443,8 +443,8 @@ reporting system reads for the EAD of the day.
 | Membership | `NETTING_SET` equals the membership | membership wins, flagged |
 | Margined terms | a margined set's CSA has TH, MTA, MPOR | treated as unmargined, flagged |
 
-**Proposed DRS codes** (5310–5319): `DRS-5310` (400, bad scope or candidate row: the reason), `DRS-5311` (409, the date's
-classification is incomplete and `strict=true`), `DRS-5312` (400, a what-if names a netting set the date does not have).
+**Proposed DRS codes** (5410–5419): `DRS-5410` (400, bad scope or candidate row: the reason), `DRS-5411` (409, the date's
+classification is incomplete and `strict=true`), `DRS-5412` (400, a what-if names a netting set the date does not have).
 
 ## 11. Entitlements and audit
 

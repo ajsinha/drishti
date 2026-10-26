@@ -82,7 +82,7 @@ A legal entity the bank trades with: identifiers (LEI, UEN), rating, sector, cou
 | `ID` | id | required |  | Netting set | `NS-ALDERSHOT-FRA` |  |
 | `AGREEMENT` | id | required |  | Agreement | `AGR-ALDERSHOT-ISDA` (pattern `^AGR-`) | `agreement` |
 | `TRADES` | integer | required |  | Trades | `3` |  |
-| `NET_MTM` | amount | required |  | Net MTM | `-339550` |  |
+| `NET_MTM` | amount | derived (retiring in 2.10.0) | USD | Net MTM *computed by the counterparty's figures (CPTY:, net MtM from the trade valuations, PFE from EXP) from 2.10.0; removed from the stored record then* | `-339550` |  |
 
 **Nested `KYC`**
 

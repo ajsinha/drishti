@@ -113,7 +113,7 @@ ${DRISHTI_DELTA_ROOT}/risk/
 ├── csa/                  business_date=YYYY-MM-DD/   one row per CSA                          (moved from legal/csa; terms made numeric)
 ├── netting-set/          business_date=YYYY-MM-DD/   one row per netting set: terms only      (moved from credit/netting-set; figures removed)
 ├── netting-set-member/   business_date=YYYY-MM-DD/   one row per trade in a netting set       (new)
-├── trade-valuation/      business_date=YYYY-MM-DD/   one row per trade: MtM                   (TVAL.md; already in risk)
+├── valuation/      business_date=YYYY-MM-DD/   one row per trade: MtM                   (TVAL.md; already in risk)
 └── ...                                               the other measures' tables (SACCR.md, COLL.md, MC.md, EXP.md, LIM.md, WWR.md)
 ```
 
@@ -127,7 +127,7 @@ engine reads it (**R**) or it is kept for people and links (**–**).
 | `csa` | `CSA_ID` | CSA × date | daily snapshot | to be agreed | SACCR, COLL, MC, EXP, CVA |
 | `netting-set` | `NETTING_SET_ID` | netting set × date | daily snapshot | to be agreed | every counterparty measure |
 | `netting-set-member` | `MEMBER_ID` | trade × netting set × date | daily | with the trade valuations | every counterparty measure |
-| `trade-valuation` | `VALUATION_ID` | trade × date | daily (TVAL.md) | the risk batch's | every counterparty measure |
+| `valuation` | `VALUATION_KEY` (the trade id) | trade × date | daily (TVAL.md) | the risk batch's | every counterparty measure |
 
 ### 3.2 `netting-set`: the terms of a netting set (kept)
 
@@ -160,7 +160,7 @@ a large bank about 100,000). **Source:** the legal or collateral system that map
 **Decision proposed:** membership is a fact of the legal and collateral systems (which agreement a trade was confirmed under), not a
 by-product of pricing, so it gets **its own table**, one row per member trade. Today it is copied three times: `TRADES[]` on the
 netting-set record (with each trade's MtM), `NETTING_SET` on the trade valuation, and the counterparty's `NETTING_SETS[]`. From 2.10.0
-this table is the source of truth; `NETTING_SET` on `trade-valuation` and on `exposure-path` rows is a denormalised copy checked against
+this table is the source of truth; `NETTING_SET` on `valuation` and on `exposure-path` rows is a denormalised copy checked against
 it (§10).
 
 **Grain:** one row per trade and netting set per business date. **Key:** `MEMBER_ID` = `<NETTING_SET_ID>~<TRADE_ID>`; natural key
@@ -212,7 +212,7 @@ haircuts), MC (the call), EXP (collateral on each path) and CVA (via EXP). Today
 | `MPOR_DAYS` | integer | DOUBLE | required | R | business days | | margin period of risk the bank assumes (today text) | `10` |
 | `DISPUTES_LAST_2Q` | integer | DOUBLE | optional | R | | | margin disputes longer than the MPOR in the last two quarters (SA-CCR doubles the MPOR above 2) | `0` |
 | `ILLIQUID_COLLATERAL` | boolean | STRING | optional | R | | | illiquid collateral or hard-to-replace trades in the set (MPOR floor 20 days) | `false` |
-| `IM_MODEL` | text | STRING | optional | R | | | `SIMM`, `SCHEDULE`, `NONE` (IM is `SIMM.md`'s) | `NONE` |
+| `IM_MODEL` | text | STRING | optional | R | | | `SIMM`, `SCHEDULE`, `NONE` (IM is [SIMM.md](SIMM.md)'s) | `NONE` |
 | `IM_THRESHOLD` | amount | doc | optional | R | CSA ccy | | IM threshold under the uncleared-margin rules | `50000000` |
 | `SEGREGATED_IM` | boolean | doc | optional | R | | | IM held in a bankruptcy-remote account (excluded from NICA in SA-CCR) | `true` |
 | `ELIGIBLE[]` | record list | doc | required | R | | | the eligibility schedule, below | |
@@ -245,12 +245,18 @@ Example row (test data shape, numbers from today's sample):
  "BATCH_ID": "B-2026-09-30-01"}
 ```
 
-### 3.6 `trade-valuation`: the trades' MtM (read; defined by `TVAL.md`)
+### 3.6 `valuation`: the trades' MtM (read; defined by [TVAL.md](TVAL.md))
 
 The netting engine reads, per member trade and date: `TRADE_ID`, `SOURCE_SYSTEM`, `MTM` (USD, the bank's side, positive an asset),
-`TRADE_STATUS`, `PRODUCT_GROUP`, `PRODUCT_TYPE`, `CURRENCY`, `NOTIONAL`, `MATURITY_DATE`, `PORTFOLIO`, `DESK`, `BATCH_ID`. The column
-contract is `TVAL.md`'s (written beside this one); this contract adds one rule: **every member trade must have a valuation on the date**
-(a missing one is counted as `unvalued` in provenance and the set's figures are marked incomplete, never taken as 0).
+`STATUS`, `NOTIONAL`, `BATCH_ID`, and the columns TVAL derives from the trade master (`TRADE_STATUS`, `PRODUCT_GROUP`, `PRODUCT_TYPE`,
+`CURRENCY`, `MATURITY_DATE`, `TT_BOOK`, `DESK`, `LEGAL_ENTITY`, `COUNTERPARTY`, `NETTING_SET`). The column contract is
+[TVAL.md section 3.2](TVAL.md#32-valuation-one-row-per-trade-per-business-date-planned); this contract adds one rule: **every member trade
+must have a valuation on the date** (a missing one is counted as `unvalued` in provenance and the set's figures are marked incomplete,
+never taken as 0).
+
+**Alignment with TVAL.md and SIMM.md:** both derive a trade's netting set from `netting-set.TRADE_IDS` (TVAL.md section 4, SIMM.md
+section 4). From 2.10.0 `TRADE_IDS` leaves the netting-set record and the membership is `netting-set-member` (§3.3): their derivation reads
+that table instead (one change in each engine's loader; open question 9).
 
 ### 3.7 Cadence, due time and delivery
 
@@ -268,7 +274,7 @@ contract is `TVAL.md`'s (written beside this one); this contract adds one rule: 
 | Master (kind, pack) | Key | Read for |
 |---|---|---|
 | `trade` (trading; ENDUR, CALYPSO, MUREX) | `TRADE_ID`, `SOURCE_SYSTEM` | live status, booking `LEGAL_ENTITY`, `COUNTERPARTY`, product, dates; the membership checks (§10) |
-| `trade-valuation` (market-risk, `TVAL.md`) | `TRADE_ID` | MtM |
+| `valuation` (market-risk, [TVAL.md](TVAL.md)) | `TRADE_ID` | MtM |
 | `counterparty` (core) | `COUNTERPARTY_ID` | name, `LEI`, rating, sector, country, `GROUP`; the `CPTY:` and `GROUP:` scopes |
 | `counterparty-group` (core; GRP.md) | `GROUP_ID` | the `GROUP:` scope's members |
 | `lei-entity`, `lei-relationship` (gleif) | `LEI` | the connected group through parents (GRP.md) |
@@ -319,7 +325,7 @@ default (`drishti.ccr.nset.partial-collateral: none | pro-rata-positive-mtm`, op
 | Setting | Default | Meaning |
 |---|---|---|
 | `drishti.ccr.enabled` | `true` | the counterparty engines and their APIs |
-| `drishti.ccr.kinds.*` | `netting-set`, `netting-set-member`, `agreement`, `csa`, `trade-valuation`, … | the kinds read (one key per input of the nine contracts) |
+| `drishti.ccr.kinds.*` | `netting-set`, `netting-set-member`, `agreement`, `csa`, `valuation`, … | the kinds read (one key per input of the nine contracts) |
 | `drishti.ccr.hot-dates` | `2` | business dates kept loaded (as VaR) |
 | `drishti.ccr.live-statuses` | `[NEW, VALIDATED, AMENDED]` | trade statuses that count |
 | `drishti.ccr.nset.standalone-when-not-enforceable` | `true` | §5 |
@@ -441,14 +447,14 @@ kinds:
 reads:                                         # as the viewer; the engine reads the date from CcrBook, these pin the versions
   - { kind: netting-set, as: sets, all: true }
   - { kind: netting-set-member, as: members, all: true }
-  - { kind: trade-valuation, as: valuations, all: true }
+  - { kind: valuation, as: valuations, all: true }
   - { kind: collateral-holding, as: holdings, all: true }
 engine:
   type: java
   entry: com.ash.drishti.compute.ccr.NettingSetEngine
   version: "1.0"
 triggers:
-  - { on: data-version, kinds: [netting-set, netting-set-member, trade-valuation, csa, collateral-holding], affects: all }
+  - { on: data-version, kinds: [netting-set, netting-set-member, valuation, csa, collateral-holding], affects: all }
   - { on: write-back, kinds: [netting-set-member], affects: "NSET:{payload.NETTING_SET}" }
 coalesce: { quiet: 250ms, max-wait: 2s }
 cache: { results: 2000, ttl: 1d }
@@ -485,22 +491,22 @@ Adds to README.md section 10:
 
 | Check | Rule | Outcome |
 |---|---|---|
-| One set per trade | a `TRADE_ID` (with `SOURCE_SYSTEM`) in two netting sets on one date | load fails (`DRS-5301`) |
+| One set per trade | a `TRADE_ID` (with `SOURCE_SYSTEM`) in two netting sets on one date | load fails (`DRS-5401`) |
 | Same counterparty | `netting-set-member.COUNTERPARTY` = the set's `COUNTERPARTY` and = the trade's `COUNTERPARTY` | row kept, flagged, counted `mismatched` |
 | Same legal entity | the member's `LEGAL_ENTITY` = the set's = the trade's booking `LEGAL_ENTITY` | row kept, flagged (the trade's wins for `LE:`) |
 | Live member | the trade is live on the date (`drishti.ccr.live-statuses`, maturity on or after the date) | dead members ignored, counted |
 | In product scope | the trade's `PRODUCT_GROUP` is in the set's `PRODUCT_SCOPE`; a non-derivative in a `DERIVATIVES` set | flagged `out-of-scope`; still netted unless `drishti.ccr.nset.exclude-out-of-scope` (open question 2) |
-| Valued | every member has a `trade-valuation` row on the date | counted `unvalued`; the set's answer is `incomplete` |
-| Denormalised copies agree | `trade-valuation.NETTING_SET` and `exposure-path.NETTING_SET` equal the membership | flagged; membership wins |
+| Valued | every member has a `valuation` row on the date | counted `unvalued`; the set's answer is `incomplete` |
+| Denormalised copies agree | `valuation.NETTING_SET` and `exposure-path.NETTING_SET` equal the membership | flagged; membership wins |
 | Terms complete | a set with a `CSA` whose numeric terms are missing | set treated as unmargined, flagged |
 | CSA link | `netting-set.CSA` exists and names the same `COUNTERPARTY` | flagged |
 
-**Proposed DRS codes** (range 5300–5309, to be confirmed by the lead):
+**Proposed DRS codes** (range 5400–5409, to be confirmed by the lead):
 
 | HTTP | Code | When |
 |---|---|---|
-| 400 | `DRS-5300` | no or bad scope; unknown `by` |
-| 409 | `DRS-5301` | the date's membership is inconsistent (a trade in two sets): the date is not loaded, the previous date answers with a warning |
+| 400 | `DRS-5400` | no or bad scope; unknown `by` |
+| 409 | `DRS-5401` | the date's membership is inconsistent (a trade in two sets): the date is not loaded, the previous date answers with a warning |
 | 404 | `DRS-1001` | no netting sets for the date |
 | 403 | `DRS-5002`-style refusal | outside the viewer's counterparty coverage (§11); the shared code of the measure framework |
 | 502 | `DRS-1003` | an input cannot be read |
@@ -511,7 +517,7 @@ Counterparty data is sensitive (names, exposures, collateral, ratings; often und
 
 | Rule | Proposed |
 |---|---|
-| Who may use NSET | a caller who may open `netting-set` and `trade-valuation` |
+| Who may use NSET | a caller who may open `netting-set` and `valuation` |
 | Coverage by counterparty | `drishti.ccr.access.<role>` lists counterparties, groups, legal entities, sectors or countries the role covers, each `trades` (figures, netting sets and trades), `aggregate` (figures only) or `none`; no entry: everything at `trades` |
 | Restricted list | counterparties on the bank's restricted (wall-crossed) list are `none` for every role except those named; they are counted under `HIDDEN`, never named |
 | Field masks | the `counterparty` kind's masks (`NAME`, `LEI`, `KYC`, `RATING`) apply in every answer, export and capture: a masked name shows the id only |
@@ -571,7 +577,7 @@ and `tools/testdata/universe.py` re-runs it over the whole cloned book (amounts 
 
 | Stored figure | How it was made | Computed instead | Expected difference |
 |---|---|---|---|
-| `NET_MTM` | Σ members' `mtm` | Σ members' `MTM` from `trade-valuation` | none for the same members and date; the test data then **walk** it daily (`_meta.walk`), so changes files drift from the members' sum |
+| `NET_MTM` | Σ members' `mtm` | Σ members' `MTM` from `valuation` | none for the same members and date; the test data then **walk** it daily (`_meta.walk`), so changes files drift from the members' sum |
 | `COLLATERAL` | `NET_MTM × U(0.6, 0.95)` (or × U(0.5, 0.9) when negative), a random share | haircut value of the holdings (COLL.md) | different: the stored one ignores the CSA |
 | `EE_PEAK`, `PFE_PEAK` | max of a closed-form heuristic profile (EXP.md section 14) | EXP.md from paths | different model |
 | `UTILISATION` | `PFE_PEAK / LIMIT` with the set's own random `LIMIT` | LIM.md against `credit-limit` | different limit |
@@ -624,6 +630,7 @@ gives 0; `PARTIAL_SETS` = 2 and, with `partial-collateral: none`, `CE` = 9.0m.
 | 6 | Counterparty coverage model for entitlements: by counterparty, group, sector, country, legal entity, or all of them; and where the restricted list comes from | §11 |
 | 7 | Retention: inputs 7 years (decided); captures of NSET answers the same? | §3.7 |
 | 8 | Published counterparty-level official results: a separate restricted `<measure>-official-cpty` table (proposed) or counterparty rows in the one `<measure>-official` table; and which levels (netting set, counterparty, group) | §9.5 |
+| 9 | TVAL and SIMM read membership from `netting-set.TRADE_IDS` (2.9.0); move both to `netting-set-member` in 2.10.0 (proposed), or keep `TRADE_IDS` on the netting-set record as a derived list? | §3.6 |
 
 ### 16.2 The change table
 

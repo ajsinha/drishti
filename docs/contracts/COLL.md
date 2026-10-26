@@ -289,7 +289,7 @@ documents, prices them and returns the record of §9.1 as one row with `HOLDINGS
 | Links | `BALANCE_ID`, `NETTING_SET`, `CSA` exist and agree | flagged |
 | Haircut sent | a `HAIRCUT` on a holding | ignored, flagged `haircut-from-csa` |
 
-**Proposed DRS codes** (5320–5329): `DRS-5320` (400, bad scope or what-if rows), `DRS-5321` (404, a CSA without an eligibility schedule
+**Proposed DRS codes** (5420–5429): `DRS-5420` (400, bad scope or what-if rows), `DRS-5421` (404, a CSA without an eligibility schedule
 asked in `strict` mode).
 
 ## 11. Entitlements and audit

@@ -89,7 +89,7 @@ ${DRISHTI_DELTA_ROOT}/risk/
 ├── simulation-run/   business_date=YYYY-MM-DD/                   one row per simulation run and date: the grid and the run's identity
 ├── exposure-path/    business_date=YYYY-MM-DD/run_id=<RUN_ID>/   one row per trade × grid date: MTM over the P paths  (the large table)
 ├── credit-path/      business_date=YYYY-MM-DD/run_id=<RUN_ID>/   optional: counterparty credit on the same paths (WWR.md)
-└── netting-set/, netting-set-member/, csa/, trade-valuation/     NSET.md
+└── netting-set/, netting-set-member/, csa/, valuation/     NSET.md
 ```
 
 | Kind | Key | Grain | Read by | Cadence | Due |
@@ -126,7 +126,7 @@ The paths of `exposure-path` are ordered by this row exactly as the P&L vectors 
 
 **The grid.** Recommended (not required): daily to 2 weeks, weekly to 3 months, monthly to 1 year, quarterly to 5 years, semi-annual to
 10 years, annual to 30 years (about 50 primary dates), each with one look-back date `LOOKBACK_DAYS` before it, shared where two coincide.
-Drishti reports exposure at primary dates only; t₀ (the business date) comes from `trade-valuation` (the current MtM), not from the paths.
+Drishti reports exposure at primary dates only; t₀ (the business date) comes from `valuation` (the current MtM), not from the paths.
 
 ### 3.3 `exposure-path`: every trade's MtM on every path (the large input)
 
@@ -191,7 +191,7 @@ allow pruning. The demo lake (`lake build`) writes the same columns with the wri
 |---|---|---|
 | `netting-set`, `netting-set-member`, `csa` (NSET.md) | `NETTING_SET`, `CSA` | membership (checks), margined or not, thresholds, MTA, IA, rounding, MPOR, IM |
 | `collateral-holding` (COLL.md) | `NETTING_SET` | today's collateral (the `current` collateral model, independent amounts, IM held) |
-| `trade-valuation` (`TVAL.md`) | `TRADE_ID` | t₀ exposure (today's MtM) and the check that path means start near it |
+| `valuation` ([TVAL.md](TVAL.md)) | `TRADE_ID` | t₀ exposure (today's MtM) and the check that path means start near it |
 | `trade` | `TRADE_ID` | maturity (sparse rows), status |
 | `counterparty`, `counterparty-group` | | `CPTY:` and `GROUP:` scopes (GRP.md) |
 | `ir-curve` (market-data) | `CRV-USD-…` | discount factors when `VALUE_BASIS` is `FUTURE` and a discounted figure is asked (CVA.md) |
@@ -218,7 +218,7 @@ allow pruning. The demo lake (`lake build`) writes the same columns with the wri
 | `limit-confidence` | `0.95` | the PFE that LIM uses by default |
 | `rank-rule` | `kth` | §5 |
 | `collateral-model` | `lagged` | `lagged` (§6.3), `current` (today's collateral held constant), `none` |
-| `im-model` | `current` | initial margin held kept at today's amount on every path, `none`; `SIMM.md` paths later |
+| `im-model` | `current` | initial margin held kept at today's amount on every path, `none`; [SIMM.md](SIMM.md) paths later |
 | `alpha` | `1.4` | IMM EAD = alpha × EEPE (informational: §6.5) |
 | `contribution-window` | `21` | paths around the PFE quantile averaged for PFE contributions (§6.6) |
 | `hot-dates` | `2` | dates with mapped path matrices |
@@ -530,12 +530,12 @@ the official capture, §7.2), so a node's PFE is the PFE of everything it faces,
 | Sparse rows | no row after maturity is fine; a missing row **before** `MATURITY_DATE` + 10 business days | trade `incomplete`, its set flagged |
 | Membership | `NETTING_SET` equals `netting-set-member` | membership wins, flagged |
 | Coverage | every live member trade has rows | missing trades counted, sets flagged `incomplete` |
-| t₀ consistency | the mean of `MTM` at the first grid date within a tolerance of the trade's `trade-valuation.MTM` (default 5% of notional-scaled vol, or 10% of |MTM| when larger) | warning listed per trade (an upstream mismatch of trade version or market data) |
+| t₀ consistency | the mean of `MTM` at the first grid date within a tolerance of the trade's `valuation.MTM` (default 5% of notional-scaled vol, or 10% of |MTM| when larger) | warning listed per trade (an upstream mismatch of trade version or market data) |
 | One run | one `BATCH_ID` per run; `RUN_ID` matches the run row | run not loaded; previous answers with a warning |
 
-**Proposed DRS codes** (5340–5349): `DRS-5340` (400, bad scope or parameter: `q`, `collateral`, `date` not a grid date), `DRS-5341`
-(409, the date's run is inconsistent or incomplete and the request asked `strict=true`), `DRS-5342` (400, what-if candidates not on the
-run: P or grid differ), `DRS-5343` (503, the scope needs a batch job: a bank-wide PFE; the answer names the job), `DRS-1001` (404, no
+**Proposed DRS codes** (5440–5449): `DRS-5440` (400, bad scope or parameter: `q`, `collateral`, `date` not a grid date), `DRS-5441`
+(409, the date's run is inconsistent or incomplete and the request asked `strict=true`), `DRS-5442` (400, what-if candidates not on the
+run: P or grid differ), `DRS-5443` (503, the scope needs a batch job: a bank-wide PFE; the answer names the job), `DRS-1001` (404, no
 run for the date), `DRS-1003` (502, unreadable input).
 
 ## 11. Entitlements and audit

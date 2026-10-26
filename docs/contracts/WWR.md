@@ -308,7 +308,7 @@ class WwrEngine(Engine):
 | Coverage | counterparties with exposure but no credit path | Hull–White for them, flagged |
 | References | a reference that resolves to no LEI | not matched, counted `unresolved-references` |
 
-**Proposed DRS codes** (5380–5389): `DRS-5380` (400, bad scope or parameter), `DRS-5381` (409, the Hull–White calibration does not
+**Proposed DRS codes** (5480–5489): `DRS-5480` (400, bad scope or parameter), `DRS-5481` (409, the Hull–White calibration does not
 converge for a counterparty: the answer lists it and uses independence).
 
 ## 11. Entitlements and audit

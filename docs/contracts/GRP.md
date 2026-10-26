@@ -243,7 +243,7 @@ limits: { timeout: 60s, wait: 100ms, max-inflight-per-user: 4 }
 | GLEIF freshness | the GLEIF data date within `drishti.ccr.groups.gleif-max-age-days` (7) | flagged `stale-gleif` |
 | Cycles | a GLEIF parent cycle | broken at the first repeat, flagged |
 
-**Proposed DRS codes** (5360–5369): `DRS-5360` (400, bad group id or parameters), `DRS-5361` (404, no group for the counterparty when
+**Proposed DRS codes** (5460–5469): `DRS-5460` (400, bad group id or parameters), `DRS-5461` (404, no group for the counterparty when
 asked `strict`).
 
 ## 11. Entitlements and audit

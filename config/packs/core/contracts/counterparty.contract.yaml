@@ -176,9 +176,13 @@ nested:
     example: 3
   - name: NET_MTM
     type: amount
-    presence: required
+    presence: derived
+    unit: USD
     description: Net MTM
     example: -339550
+    retiring-in: 2.10.0
+    note: computed by the counterparty's figures (CPTY:, net MtM from the trade valuations, PFE from EXP) from 2.10.0; removed from the stored record
+      then
   KYC:
   - name: STATUS
     type: text

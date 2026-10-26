@@ -73,6 +73,13 @@ credit limits system; daily snapshot; due **to be agreed** (open question 1); lo
 
 ### 3.2 `credit-limit`: the approved limits (kept)
 
+**One limit table with the market-risk measures (proposed).** [STR.md section 3.5](STR.md#35-risk-limit-limits-by-measure-and-scope-fundamental)
+proposes `risk-limit`, one table of limits by measure and scope (`LIMIT_ID`, `MEASURE`, `SCOPE`, `LIMIT`, `WARNING_AT`, `APPROVED_BY`,
+`VALID_FROM`, `VALID_TO`). Credit limits have the same shape plus tenor buckets and approval terms, so this contract proposes that
+credit limits **are rows of that one table**: the columns below are `risk-limit`'s with the credit ones optional, the counterparty measures
+join its `MEASURE` enum, and the `credit-limit` kind (command `LIM`, ids `LIM-*`) becomes the view of the rows whose measure is a
+counterparty measure. If the product owner prefers two tables (open question 6), `credit-limit` keeps exactly these columns on its own.
+
 | Column | JSON | Delta | Req. | Engine | Unit | Meaning | Example |
 |---|---|---|---|---|---|---|---|
 | `LIMIT_ID` | id | `id` STRING | required | R | | | `LIM-ALDERSHOT` |
@@ -86,11 +93,12 @@ credit limits system; daily snapshot; due **to be agreed** (open question 1); lo
 | `LIMIT` | amount | DOUBLE | required | R | `CURRENCY` | the overall limit | `337000000` |
 | `CURRENCY` | ccy | STRING | required | R | | | `USD` |
 | `BUCKETS[]` | record list | doc | optional | R | | tenor buckets: `BUCKET` (label), `FROM_YEARS`, `TO_YEARS` (a grid date t belongs when FROM < t ≤ TO; the first bucket also holds t₀), `LIMIT`; for `SETTLEMENT`, `FROM_DAYS`, `TO_DAYS` | `{"BUCKET": "1-3Y", "FROM_YEARS": 1, "TO_YEARS": 3, "LIMIT": 337000000}` |
-| `WARNING_LEVEL` | rate | DOUBLE | optional | R | | utilisation at which the status is `WARNING` (default 0.8) | `0.8` |
+| `WARNING_AT` | rate | DOUBLE | optional | R | | utilisation at which the status is `WARNING` (default 0.8) | `0.8` |
 | `LIMIT_TYPE` | text | STRING | optional | R | | `HARD` (a breach declines the trade) or `SOFT` (a breach refers it) | `HARD` |
 | `TEMPORARY_EXCESS` | amount | DOUBLE | optional | R | | an approved excess above `LIMIT` | `0` |
 | `EXCESS_EXPIRES` | date | STRING | optional | R | | | |
 | `APPROVED_BY`, `APPROVED_ON`, `REVIEW_DUE` | text, date, date | doc / STRING | required | R (`REVIEW_DUE`) | | | `Credit Risk Committee`, `2026-03-19`, `2027-03-19` |
+| `VALID_FROM`, `VALID_TO` | date | STRING | optional | R | | the validity, as `risk-limit` | `2026-03-19`, empty |
 | `LIMIT_STATUS` | text | STRING | optional | R | | `ACTIVE`, `SUSPENDED`, `EXPIRED` (the limit itself, set by the limits system) | `ACTIVE` |
 | `COUNTERPARTY_NAME` | text | doc | optional | – | | display (masked as the counterparty's name) | `Aldershot Pension Trust` |
 | `BATCH_ID` | id | STRING | required | – | | | |
@@ -146,8 +154,8 @@ For limit L with scope S, buckets b with (FROM_b, TO_b], primary grid dates t_k 
 
 ```
 UTIL_b      = USAGE_b / LIMIT_b                          HEADROOM_b = LIMIT_b − USAGE_b
-STATUS_b    = OK                 UTIL_b < WARNING_LEVEL
-              WARNING            WARNING_LEVEL ≤ UTIL_b ≤ 1
+STATUS_b    = OK                 UTIL_b < WARNING_AT
+              WARNING            WARNING_AT ≤ UTIL_b ≤ 1
               EXCESS_APPROVED    1 < UTIL_b and USAGE_b ≤ LIMIT_b + TEMPORARY_EXCESS (not expired)
               BREACH             otherwise
 STATUS_L    = the worst STATUS_b (and the overall limit's)
@@ -258,7 +266,7 @@ engine:
   split: limits
   chunk-rows: 500
 triggers:
-  - { on: data-version, kinds: [credit-limit, exposure-path, saccr-trade, trade-valuation, netting-set-member, csa, collateral-holding], affects: all }
+  - { on: data-version, kinds: [credit-limit, exposure-path, saccr-trade, valuation, netting-set-member, csa, collateral-holding], affects: all }
   - { on: schedule, cron: "0 30 6 * * MON-FRI", zone: America/New_York }      # the morning limit run (batch class)
 cache: { results: 5000, ttl: 1d }
 limits: { timeout: 60s, wait: 100ms, max-inflight-per-user: 4 }
@@ -270,7 +278,7 @@ requires: { python: { version: "3.12", lock: requires/drishti-ccr.lock } }
 class LimitEngine(Engine):
     kinds = ("limit-usage", "limit-predeal")
     def compute(self, req, inputs, progress):
-        limits = inputs.arrow("limits")      # LIMIT_ID, SCOPE, MEASURE, CONFIDENCE, LIMIT, WARNING_LEVEL, LIMIT_TYPE, TEMPORARY_EXCESS,
+        limits = inputs.arrow("limits")      # LIMIT_ID, SCOPE, MEASURE, CONFIDENCE, LIMIT, WARNING_AT, LIMIT_TYPE, TEMPORARY_EXCESS,
                                              # EXCESS_EXPIRES, BUCKETS (list<struct<BUCKET, FROM, TO, LIMIT>>)
         profiles = inputs.arrow("exposure")  # SCOPE, T float64, DATE, EE, PFE   (EXP's PROFILE per scope)
         eads = inputs.arrow("saccr")         # SCOPE, EAD
@@ -289,7 +297,7 @@ class LimitEngine(Engine):
 | Duplicates | two active limits with the same scope, measure and confidence | both kept, flagged |
 | Inputs | the measure's input incomplete (EXP run incomplete, SA-CCR unclassified trades) | usage computed, flagged `incomplete` |
 
-**Proposed DRS codes** (5350–5359): `DRS-5350` (400, bad scope, limit id or pre-deal request), `DRS-5351` (409, the pre-deal candidate
+**Proposed DRS codes** (5450–5459): `DRS-5450` (400, bad scope, limit id or pre-deal request), `DRS-5451` (409, the pre-deal candidate
 cannot be valued by the chosen method: no paths on the run and `method=paths`).
 
 ## 11. Entitlements and audit
@@ -359,6 +367,7 @@ bucket breaches: headroom 0.5 / (0.674 × 0.04 × √0.5) = **26.2**.
 | 3 | Which PFE does a limit use: real-world calibration (EXP open question 4) or the CVA run? | §3.2 |
 | 4 | Pre-deal detail by role (decision only for sales) | §11 |
 | 5 | Bucket membership of a grid date: (FROM, TO] (proposed) or [FROM, TO)? | §3.2 |
+| 6 | Credit limits as rows of the one `risk-limit` table (STR.md section 3.5, proposed here) or a `credit-limit` table of their own? | §3.2 |
 
 ### 16.2 The change table
 

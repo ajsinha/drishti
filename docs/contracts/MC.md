@@ -15,7 +15,7 @@ may change before the release, and each change will be recorded in [section 16](
 This is the contract of **margin calls**: Drishti keeps the **actual calls** and their events (a workflow the collateral system owns)
 and computes the **expected call** of each CSA from the netting set's MtM, the collateral balance and the CSA's terms, shown beside the
 actual call with the difference explained. Variation margin is computed here; initial margin comes from ISDA SIMM, whose contract is
-`SIMM.md` (written beside this one).
+[SIMM.md](SIMM.md) (written beside this one).
 
 ## Contents
 
@@ -48,7 +48,7 @@ removed from it; it moves to the risk lake and its text values become enums (§3
 |---|---|
 | `margin-call` moved to the risk lake, enums, amounts signed by direction | PLANNED |
 | Expected VM call per CSA (credit support amount, delivery and return amounts, thresholds, MTA, IA, rounding) | PLANNED |
-| Expected IM call from SIMM (`SIMM.md`) with the IM threshold | PLANNED |
+| Expected IM call from SIMM ([SIMM.md](SIMM.md)) with the IM threshold | PLANNED |
 | Actual against expected: match, difference, not called, unexpected, direction mismatch; dispute analysis | PLANNED |
 | Computed kind `margin-expected`, reactive connector `mc-engine` (Python) | PLANNED |
 
@@ -72,7 +72,7 @@ ${DRISHTI_DELTA_ROOT}/risk/
 ├── margin-call/          business_date=YYYY-MM-DD/   one row per call (kept; moved from collateral/margin-call)
 ├── csa/, netting-set/, netting-set-member/           NSET.md
 ├── collateral-holding/                               COLL.md
-└── trade-valuation/                                  TVAL.md
+└── valuation/                                  TVAL.md
 ```
 
 Source: the collateral management system, intraday as calls are issued and at the end of day (due **to be agreed**, open question 1).
@@ -107,9 +107,9 @@ Load signal reloads the date (product owner, 2026-10-25); kept 7 years.
 | Kind | Read for |
 |---|---|
 | `csa` (NSET.md) | `THRESHOLD_US`, `THRESHOLD_THEM`, `MTA_US`, `MTA_THEM`, `INDEPENDENT_AMOUNT`, `ROUNDING`, `ROUNDING_METHOD`, `MARGIN_FREQUENCY_DAYS`, `IM_THRESHOLD`, `CSA_CURRENCY` |
-| `trade-valuation` (`TVAL.md`) | the netting set's MtM at the valuation date |
+| `valuation` ([TVAL.md](TVAL.md)) | the netting set's MtM at the valuation date |
 | `coll-valuation` (COLL.md) | VM and IM balances (contractual values) at the valuation date, plus pending transfers |
-| `SIMM.md`'s computed IM | IM required, both directions, per netting set |
+| `simm-margin` ([SIMM.md](SIMM.md)) | `IM_COLLECT` and `IM_POST` per netting set |
 | `fx-spot` | the CSA currency |
 
 ## 5. Conventions specific to margin calls
@@ -131,7 +131,7 @@ Load signal reloads the date (product owner, 2026-10-25); kept 7 years.
 | `valuation-lag-days` | `1` | §5 |
 | `tolerance-rel`, `tolerance-rounding-units` | `0.005`, `1` | §5 |
 | `combined-mta` | `false` | under the uncleared-margin rules VM and IM share one MTA (true: the MTA applies to VM + IM together) |
-| `im-source` | `simm` | `simm` (`SIMM.md`), `none` |
+| `im-source` | `simm` | `simm` ([SIMM.md](SIMM.md)), `none` |
 
 ### 6.2 Expected VM call
 
@@ -155,9 +155,9 @@ Rounding to `ROUNDING` with `ROUNDING_METHOD` (`DELIVERY_UP_RETURN_DOWN` as abov
 ### 6.3 Expected IM call
 
 ```
-IM_REQUIRED_THEM = max(SIMM IM the counterparty must post − IM_THRESHOLD, 0)        (SIMM.md)
+IM_REQUIRED_THEM = max(IM_COLLECT − IM_THRESHOLD, 0)        (simm-margin's IM_COLLECT, SIMM.md section 9)
 IM_CALL          = IM_REQUIRED_THEM − IM_HELD                     + : we call;  − : we return IM
-IM_REQUIRED_US   = max(SIMM IM the bank must post − IM_THRESHOLD, 0);  expected IM the counterparty calls = IM_REQUIRED_US − IM_POSTED
+IM_REQUIRED_US   = max(IM_POST − IM_THRESHOLD, 0);  expected IM the counterparty calls = IM_REQUIRED_US − IM_POSTED
 MTA: the CSA's, alone or combined with VM (combined-mta); rounding as VM
 ```
 
@@ -241,13 +241,14 @@ reads:
   - { kind: csa, as: csas, all: true }
   - { kind: nset-figures, as: sets, id: "{id}" }          # E per netting set (NSET.md)
   - { kind: coll-valuation, as: collateral, id: "{id}" }  # balances (COLL.md)
+  - { kind: simm-margin, as: im, id: "{id}" }             # IM_COLLECT, IM_POST (SIMM.md)
 engine:
   type: python
   entry: drishti_ccr.margin:MarginEngine
   pool: risk
   version: "1.0"
 triggers:
-  - { on: data-version, kinds: [margin-call, csa, trade-valuation, collateral-holding], affects: all }
+  - { on: data-version, kinds: [margin-call, csa, valuation, collateral-holding], affects: all }
   - { on: write-back, kinds: [margin-call], affects: "CSA:{payload.CSA}" }
 cache: { results: 2000, ttl: 1d }
 limits: { timeout: 20s, wait: 50ms, max-inflight-per-user: 4 }
@@ -277,7 +278,7 @@ class MarginEngine(Engine):
 | Terms | the CSA's numeric terms present | `unknown`, flagged |
 | Duplicates | two open calls on one CSA, margin type and direction on one date | both kept, flagged |
 
-**Proposed DRS codes** (5330–5339): `DRS-5330` (400, bad scope or what-if), `DRS-5331` (404, a call id unknown on the date).
+**Proposed DRS codes** (5430–5439): `DRS-5430` (400, bad scope or what-if), `DRS-5431` (404, a call id unknown on the date).
 
 ## 11. Entitlements and audit
 

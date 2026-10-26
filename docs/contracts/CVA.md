@@ -46,7 +46,7 @@ own: everything it needs is EXP's paths, market data and configuration.
 | Part | Status |
 |---|---|
 | CVA unilateral and bilateral (first to default), DVA, FCA and FBA, CS01 and recovery sensitivity | PLANNED |
-| KVA and MVA hooks (KVA from projected capital, MVA from `SIMM.md`'s IM) | PLANNED (hooks) |
+| KVA and MVA hooks (KVA from projected capital, MVA from [SIMM.md](SIMM.md)'s IM) | PLANNED (hooks) |
 | BA-CVA reduced (MAR50) from SA-CCR EAD; SA-CVA out of scope (needs upstream CVA sensitivities) | PLANNED |
 | Proxy credit curves for counterparties without CDS | PLANNED |
 | Computed kind `cva-result`, reactive connector `cva-engine` (Python) | PLANNED |
@@ -76,7 +76,7 @@ CVA has **no input table of its own**. It reads:
 | `saccr-trade` and its result | [SACCR.md](SACCR.md) | EAD and effective maturity per netting set for BA-CVA |
 | `credit-curve` (market-data pack) | the pack's contract | `POINTS[]` (`TENOR`, `SPREAD` in bp, `HAZARD`, `SURVIVAL`), `RECOVERY`, `CURRENCY` |
 | `ir-curve` (market-data pack) | the pack's contract | the USD OIS discount curve (`POINTS[]`) |
-| SIMM IM (`SIMM.md`) | | IM profile for the MVA hook |
+| SIMM IM ([SIMM.md](SIMM.md)) | | IM profile for the MVA hook |
 
 Cadence: whenever its inputs change (the reactive triggers, §9.4). Due: after the exposure run and the end-of-day market data.
 
@@ -141,7 +141,7 @@ ee-point mid: replace EE*(t_k) by (EE*(t_{k−1}) + EE*(t_k)) / 2, EE*(t_0) = th
 
 **Hooks** (shown only when enabled, labelled *indicative*): **KVA** = −Σ_k K(t_k) · hurdle · Δt_k · DF(t_k), with K(t) the projected
 capital of the set (8% × RW × EAD(t), EAD(t) from EXP's remaining EEPE × alpha); **MVA** = −Σ_k IM(t_k) · (s_F − r_IM) · Δt_k · DF(t_k)
-with IM(t) from `SIMM.md` (constant at today's IM until an IM profile exists).
+with IM(t) from [SIMM.md](SIMM.md) (constant at today's IM until an IM profile exists).
 
 ### 6.4 Sensitivities
 
@@ -308,11 +308,11 @@ The discount curve id above is an example; the market-data pack's USD OIS curve 
 |---|---|---|
 | Curve | the counterparty's `CREDIT_CURVE` exists on the date with ≥ 2 points, survival decreasing, recovery in [0, 1) | proxy curve, flagged |
 | Run | EXP's run is `RISK_NEUTRAL` | computed, flagged `real-world-exposure` |
-| Discount | the discount curve exists | `DRS-5371` |
+| Discount | the discount curve exists | `DRS-5471` |
 | Grid | the curve's last point before the profile's last date | flat extrapolation of hazard, flagged |
-| Own curve | configured and present when `bilateral` | `DRS-5371` |
+| Own curve | configured and present when `bilateral` | `DRS-5471` |
 
-**Proposed DRS codes** (5370–5379): `DRS-5370` (400, bad scope or parameter), `DRS-5371` (409, a required curve is missing on the date).
+**Proposed DRS codes** (5470–5479): `DRS-5470` (400, bad scope or parameter), `DRS-5471` (409, a required curve is missing on the date).
 
 ## 11. Entitlements and audit
 

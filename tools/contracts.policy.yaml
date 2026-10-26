@@ -138,7 +138,7 @@ split:
     release: 2.10.0
     contract: NSET.md
     measure: the counterparty's figures (CPTY:, net MtM from the trade valuations, PFE from EXP)
-    figures: [NET_MTM, PFE_PEAK]
+    figures: [NET_MTM, PFE_PEAK, "NETTING_SETS[].NET_MTM"]
   netting-set:
     release: 2.10.0
     contract: NSET.md
