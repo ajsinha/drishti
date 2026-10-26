@@ -155,8 +155,8 @@ class DerivedSourcePluginTest {
         assertThatThrownBy(() -> started(Map.of(), r)).isInstanceOf(PluginNotConfigured.class);
         assertThatThrownBy(() -> started(Map.of("x.from", "trade"), r)).hasMessageContaining("group-by is required");
         assertThatThrownBy(() -> started(Map.of("x.from", "x", "x.group-by", "$.a"), r)).hasMessageContaining("cannot be built from itself");
-        assertThatThrownBy(() -> started(Map.of("x.from", "trade", "x.group-by", "$.a", "x.fields.y", "median $.m"), r))
-                .hasMessageContaining("must start with count, sum");
+        assertThatThrownBy(() -> started(Map.of("x.from", "trade", "x.group-by", "$.a", "x.fields.y", "mode $.m"), r))
+                .hasMessageContaining("must start with count, sum, avg, median");
         assertThatThrownBy(() -> started(Map.of("x.from", "trade", "x.group-by", "$.a", "x.fields.y", "sum"), r))
                 .hasMessageContaining("needs an expression");
         assertThatThrownBy(() -> started(Map.of("x.from", "trade", "x.group-by", "$.a +"), r)).hasMessageContaining("is not an expression");

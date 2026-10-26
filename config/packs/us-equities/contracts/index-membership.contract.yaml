@@ -57,25 +57,6 @@ fields:
   presence: required
   description: Members
   example: 34
-- name: SECTORS
-  type: integer
-  presence: required
-  description: SIC divisions
-  example: 5
-- name: REVENUE
-  type: amount
-  presence: required
-  description: Members' revenue
-  example: 4829280300000
-- name: NET_INCOME
-  type: amount
-  presence: required
-  description: Members' net income
-  example: 804912500000
-- name: BY_SECTOR
-  type: record list
-  presence: required
-  description: 'Nested: see nested BY_SECTOR[]'
 - name: ROWS
   type: record list
   presence: required
@@ -85,15 +66,6 @@ fields:
   presence: required
   description: 'Nested: see nested PROVENANCE'
 nested:
-  BY_SECTOR[]:
-  - name: LABEL
-    type: text
-    presence: required
-    example: Manufacturing
-  - name: VALUE
-    type: amount
-    presence: required
-    example: 19
   ROWS[]:
   - name: TICKER
     type: text
@@ -133,10 +105,6 @@ nested:
     type: amount
     presence: required
     example: 112010000000
-  - name: NET_MARGIN
-    type: rate
-    presence: optional
-    example: 26.92
   - name: CURRENCY
     type: text
     presence: required
@@ -173,10 +141,6 @@ validation:
   - INDEX
   - NAME
   - MEMBERS
-  - SECTORS
-  - REVENUE
-  - NET_INCOME
-  - BY_SECTOR
   - ROWS
   - PROVENANCE
 - rule: unique
@@ -191,16 +155,13 @@ validation:
   - Retail Trade
   - Services
   - Transportation, Communications, Electric, Gas and Sanitary Services
-notes: []
+notes:
+- 'ROWS[].NET_MARGIN left the record in 2.9.2: a member''s net margin is computed from its revenue and net income (docs/guides/GROUPINGS_ANALYTICS_GUIDE.md
+  section 16).'
+- 'SECTORS, REVENUE, NET_INCOME and BY_SECTOR left the record in 2.9.2: the page sums the members'' rows (USD reporters) and counts their SIC
+  divisions (docs/guides/GROUPINGS_ANALYTICS_GUIDE.md section 16). The membership (ROWS) and MEMBERS stay.'
 review:
 - 'required inferred from 100% coverage in 7 documents (1 samples and 6 test-data documents (data/testdata/us-equities/index-membership/snapshot-2026-10-24.jsonl.gz)):
   confirm each required field is mandatory upstream, and each optional one may be empty.'
 - 'a snapshot refreshed when tools/publicdata/us_equities.py runs: confirm the refresh cadence.'
 - 'enum values inferred from the data, not from a glossary: ROWS[].SECTOR: confirm they are closed lists.'
-- 'number types decided by the field''s name: REVENUE amount, NET_INCOME amount, BY_SECTOR[].VALUE amount, ROWS[].REVENUE amount, ROWS[].NET_INCOME
-  amount, ROWS[].NET_MARGIN rate: confirm amount, rate or integer.'
-- 'no unit stated for the amounts REVENUE, NET_INCOME, BY_SECTOR[].VALUE, ROWS[].REVENUE, ROWS[].NET_INCOME (docs/contracts/README.md section
-  7: USD unless stated): confirm the currency.'
-- 'no description in about.yaml or the Sutras for BY_SECTOR[].LABEL, BY_SECTOR[].VALUE, ROWS[].TICKER, ROWS[].NAME, ROWS[].SECTOR, ROWS[].SIC,
-  ROWS[].SIC_DESCRIPTION, ROWS[].EXCHANGE, ROWS[].REVENUE, ROWS[].NET_INCOME, ROWS[].NET_MARGIN, ROWS[].CURRENCY and 6 more: write them in the
-  pack''s config/about.yaml glossary.'

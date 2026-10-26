@@ -28,7 +28,7 @@ One section per command of the pack: the shape of its data, how it is stored and
 | [FXV](#fxv-fx-volatility-surface-fx-vol-surface) | `fx-vol-surface` | fundamental | active | 8 | 6 |
 | [IRV](#irv-swaption-volatility-cube-ir-vol-cube) | `ir-vol-cube` | fundamental | active | 6 | 5 |
 | [CPV](#cpv-capfloor-volatility-surface-cap-vol-surface) | `cap-vol-surface` | fundamental | active | 5 | 6 |
-| [EQ](#eq-equity-equity) | `equity` | fundamental | active | 16 | 7 |
+| [EQ](#eq-equity-equity) | `equity` | fundamental | active | 15 | 6 |
 | [EQX](#eqx-equity-index-equity-index) | `equity-index` | fundamental | active | 10 | 7 |
 | [DIV](#div-dividend-curve-dividend-curve) | `dividend-curve` | fundamental | active | 6 | 7 |
 | [EQV](#eqv-equity-volatility-surface-equity-vol-surface) | `equity-vol-surface` | fundamental | active | 7 | 6 |
@@ -40,7 +40,9 @@ One section per command of the pack: the shape of its data, how it is stored and
 | [CMDV](#cmdv-commodity-volatility-surface-commodity-vol-surface) | `commodity-vol-surface` | fundamental | active | 4 | 5 |
 | [FIX](#fix-rate-index-fixings-rate-fixing) | `rate-fixing` | fundamental | active | 7 | 8 |
 | [BND](#bnd-bond-security-master-bond) | `bond` | fundamental | active | 15 | 7 |
-| [CORR](#corr-correlation-matrix-correlation-matrix) | `correlation-matrix` | fundamental | active | 7 | 6 |
+| [CORR](#corr-correlation-matrix-correlation-matrix) | `correlation-matrix` | fundamental | active | 5 | 6 |
+| [CORRC](#corrc-correlations-of-a-factor-set-computed-from-price-history-correlation-result) | `correlation-result` | computed | active | 14 | 0 |
+| [EQB](#eqb-an-equitys-beta-against-its-index-computed-from-price-history-equity-beta) | `equity-beta` | computed | active | 12 | 0 |
 
 ## CRV: Interest rate curve (`ir-curve`)
 
@@ -535,7 +537,6 @@ A listed stock: price, dividends, sector and identifiers.
 | `SECTOR` | text | required |  | Sector | `Airlines` |  |
 | `EXCHANGE` | text | required |  | Exchange | `Euronext Paris`, `LSE`, `NASDAQ`, `NYSE`, `SIX`, `TSE`, `TSX`, `Xetra` |  |
 | `CURRENCY` | text | required |  | Currency | `CAD`, `CHF`, `EUR`, `GBP`, `JPY`, `USD` |  |
-| `BETA` | rate | required |  | Beta | `1.46` |  |
 | `HISTORY` | record list | required |  | Nested: see nested HISTORY[] |  |  |
 | `OHLC` | record list | required |  | Nested: see nested OHLC[] |  |  |
 | `IDENTIFIERS` | record | required |  | Nested: see nested IDENTIFIERS |  |  |
@@ -575,7 +576,7 @@ A listed stock: price, dividends, sector and identifiers.
 
 **Validation**
 
-- required: fields `TICKER`, `NAME`, `PRICE`, `CHANGE_1D`, `MARKET_CAP`, `SECTOR`, `EXCHANGE`, `CURRENCY`, `BETA`, `HISTORY`, `OHLC`, `IDENTIFIERS`, `ISSUER`, `EQUITY_VOL_SURFACE`, `DIVIDEND_CURVE`
+- required: fields `TICKER`, `NAME`, `PRICE`, `CHANGE_1D`, `MARKET_CAP`, `SECTOR`, `EXCHANGE`, `CURRENCY`, `HISTORY`, `OHLC`, `IDENTIFIERS`, `ISSUER`, `EQUITY_VOL_SURFACE`, `DIVIDEND_CURVE`
 - unique: key `TICKER`; per business_date
 - pattern: field TICKER; pattern ^EQ-
 - enum: field EXCHANGE; values `Euronext Paris`, `LSE`, `NASDAQ`, `NYSE`, `SIX`, `TSE`, `TSX`, `Xetra`
@@ -588,14 +589,14 @@ A listed stock: price, dividends, sector and identifiers.
 **Notes**
 
 - Dated by the lake's business_date partition: `drishti.py lake build` writes each test-data file's day into it; the documents carry no date field of their own.
+- BETA left the record in 2.9.2: the computed kind equity-beta (EQB) works it out from the equity's and its index's price histories (docs/guides/GROUPINGS_ANALYTICS_GUIDE.md section 17).
 
-**To review (7)**
+**To review (6)**
 
 - required inferred from 100% coverage in 30 documents (10 samples and 20 test-data documents (data/testdata/market-data/equity/snapshot-2026-07-08.jsonl.gz, data/testdata/market-data/equity/changes-2026-09-30.jsonl.gz)): confirm each required field is mandatory upstream, and each optional one may be empty.
 - source 'md-hub' is the test data's _meta.source (synthetic): name the production system that delivers it.
 - due time of each business date is not known: state it (for example, by 06:00 New York the next business day).
 - enum values inferred from the data, not from a glossary: EXCHANGE, CURRENCY: confirm they are closed lists.
-- number types decided by the field's name: PRICE amount, BETA rate: confirm amount, rate or integer.
 - no unit stated for the amounts PRICE, CHANGE_1D, HISTORY[].CLOSE, OHLC[].OPEN, OHLC[].HIGH, OHLC[].LOW, OHLC[].CLOSE (docs/contracts/README.md section 7: USD unless stated): confirm the currency.
 - no description in about.yaml or the Sutras for HISTORY[].DATE, HISTORY[].CLOSE, OHLC[].DATE, OHLC[].OPEN, OHLC[].HIGH, OHLC[].LOW, OHLC[].CLOSE, OHLC[].VOLUME, IDENTIFIERS.ISIN, IDENTIFIERS.BLOOMBERG, IDENTIFIERS.RIC, IDENTIFIERS.FIGI: write them in the pack's config/about.yaml glossary.
 
@@ -1356,7 +1357,7 @@ A listed bond: terms, price, yield, spreads and analytics.
 
 ## CORR: Correlation matrix (`correlation-matrix`)
 
-Pairwise correlations used by basket, quanto and spread products.
+A correlation set: the factors whose pairwise correlations basket, quanto and spread products use. Since 2.9.2 the set keeps its definition only; the correlations are the computed kind correlation-result (CORRC), worked out from the factors' price history when asked.
 
 |  |  |
 |---|---|
@@ -1379,18 +1380,8 @@ Pairwise correlations used by basket, quanto and spread products.
 | `MATRIX_ID` | id | required |  | The record's id (the business key) | `CORR-EU-EQ` (pattern `^CORR-`) |  |
 | `NAME` | text | required |  | Name | `European equities` |  |
 | `FACTORS` | text list | required |  | — |  |  |
-| `AVERAGE` | rate | required |  | Average | `0.385` |  |
-| `PAIRS` | record list | required |  | Nested: see nested PAIRS[] |  |  |
-| `WINDOW` | text | required |  | — | `2 years, daily log returns` |  |
-| `ESTIMATOR` | text | required |  | — | `Ledoit-Wolf shrinkage` |  |
-
-**Nested `PAIRS[]`**
-
-| Field | Type | Presence | Unit | Description | Example or values | Link |
-|---|---|---|---|---|---|---|
-| `A` | text | required |  | Factor 1 | `ORBT` |  |
-| `B` | text | required |  | Factor 2 | `RHNB` |  |
-| `RHO` | rate | required |  | ρ | `0.156` |  |
+| `EQUITY_IDS` | id list | required |  | The factors that are equities (their price history: HISTORY[].CLOSE) |  | `equity` |
+| `FX_IDS` | id list | required |  | The factors that are FX pairs (their history: HISTORY[].MID) |  | `fx-spot` |
 
 **Validation**
 
@@ -1401,6 +1392,7 @@ Pairwise correlations used by basket, quanto and spread products.
 **Notes**
 
 - Dated by the lake's business_date partition: `drishti.py lake build` writes each test-data file's day into it; the documents carry no date field of their own.
+- AVERAGE, PAIRS, WINDOW and ESTIMATOR left the record in 2.9.2: the correlations are computed (correlation-result, docs/guides/GROUPINGS_ANALYTICS_GUIDE.md section 15).
 
 **To review (6)**
 
@@ -1410,3 +1402,108 @@ Pairwise correlations used by basket, quanto and spread products.
 - number types decided by the field's name: AVERAGE rate, PAIRS[].RHO rate: confirm amount, rate or integer.
 - no description in about.yaml or the Sutras for FACTORS, WINDOW, ESTIMATOR: write them in the pack's config/about.yaml glossary.
 - The release is 2.9.0 or 2.10.0 (Track B, shipped as each is ready): confirm which.
+
+## CORRC: Correlations of a factor set (computed from price history) (`correlation-result`)
+
+The pairwise correlations of a correlation set's factors, computed when asked from their daily closes in the lake (log returns over a window, Pearson or Ledoit-Wolf) by the server's Java engine, as the person asking; never stored.
+
+|  |  |
+|---|---|
+| Contract | [correlation-result.contract.yaml](../../../config/packs/market-data/contracts/correlation-result.contract.yaml) · version 1.0 |
+| Class | computed |
+| Status | active |
+| Source | computed by Drishti: the reactive connector correlation-engine (java engine com.ash.drishti.compute.reactive.analytics.CorrelationEngine) |
+| Grain | One answer per question (the correlation set asked for, its window and estimator, and the business date), computed when asked. |
+| Key | — |
+| Id pattern | — |
+| Dated by | `on request` |
+| Cadence | on change (due: computed on request and again when the correlation sets, equities or FX spots load (data-version trigger)) |
+| Storage | connector `correlation-engine` (plugin `reactive`) |
+
+**Fields**
+
+| Field | Type | Presence | Unit | Description | Example or values | Link |
+|---|---|---|---|---|---|---|
+| `MATRIX_ID` | id | required |  | The correlation set asked for (the id; parameters ride on it as CORR-EU-EQ~window=20~estimator=ledoit-wolf) | `CORR-EU-EQ` |  |
+| `NAME` | text | required |  | The set's name |  |  |
+| `FACTORS` | id list | required |  | The factors' market-data ids, equities first (EQUITY_IDS, then FX_IDS) |  |  |
+| `ESTIMATOR` | text | required |  | The estimator used (parameter estimator, default pearson) | `pearson`, `ledoit-wolf` |  |
+| `WINDOW` | integer | required |  | The daily log returns used (parameter window; 0, the default, or a window longer than the history uses every return) |  |  |
+| `AVAILABLE` | integer | required |  | The returns the factors' common dates allow (the dates every factor has, less one) |  |  |
+| `FROM` | date | required |  | The first close of the window |  |  |
+| `TO` | date | required |  | The last close of the window |  |  |
+| `AVERAGE` | rate | required |  | The mean of the pairwise correlations |  |  |
+| `MIN_RHO` | rate | required |  | The lowest pairwise correlation |  |  |
+| `MAX_RHO` | rate | required |  | The highest pairwise correlation |  |  |
+| `SHRINKAGE` | rate | optional |  | Ledoit-Wolf only, the shrinkage intensity toward no correlation (0 none, 1 all the way) |  |  |
+| `PAIRS` | record list | required |  | Nested: see nested PAIRS[] |  |  |
+| `FACTOR_STATS` | record list | required |  | Nested: see nested FACTOR_STATS[] |  |  |
+
+**Nested `PAIRS[]`**
+
+| Field | Type | Presence | Unit | Description | Example or values | Link |
+|---|---|---|---|---|---|---|
+| `A` | id | required |  | The first factor |  |  |
+| `B` | id | required |  | The second factor |  |  |
+| `RHO` | rate | required |  | Their correlation, to four decimals |  |  |
+
+**Nested `FACTOR_STATS[]`**
+
+| Field | Type | Presence | Unit | Description | Example or values | Link |
+|---|---|---|---|---|---|---|
+| `FACTOR` | id | required |  | — |  |  |
+| `LAST` | amount | required |  | The last close of the window |  |  |
+| `RETURN` | rate | required |  | The simple return over the window (a fraction) |  |  |
+| `VOLATILITY` | rate | required |  | The standard deviation of the daily log returns times the square root of 252 (a fraction) |  |  |
+
+**Validation**
+
+- required: fields `AVERAGE`, `PAIRS`, `WINDOW`
+
+**Notes**
+
+- No stored key: an answer's id is the question asked, the id of the correlation set (correlation-matrix) it reads.
+- Errors are said in words (an engine refusal): no such set, fewer than two factors, a factor without price history, fewer than three common dates, a price of zero or less, a factor that did not move over the window, an estimator other than pearson or ledoit-wolf.
+
+## EQB: An equity's beta against its index (computed from price history) (`equity-beta`)
+
+An equity's beta, alpha, correlation and R squared against its index (EQUITY_INDEX), the regression of their daily log returns over a window, computed when asked from both price histories by the server's Java engine, as the person asking; never stored. It replaces the security master's stored BETA (retired in 2.9.2).
+
+|  |  |
+|---|---|
+| Contract | [equity-beta.contract.yaml](../../../config/packs/market-data/contracts/equity-beta.contract.yaml) · version 1.0 |
+| Class | computed |
+| Status | active |
+| Source | computed by Drishti: the reactive connector equity-analytics (java engine com.ash.drishti.compute.reactive.analytics.BetaEngine) |
+| Grain | One answer per question (the equity asked for, its window and the business date), computed when asked. |
+| Key | — |
+| Id pattern | — |
+| Dated by | `on request` |
+| Cadence | on change (due: computed on request and again when the equities or indices load (data-version trigger)) |
+| Storage | connector `equity-analytics` (plugin `reactive`) |
+
+**Fields**
+
+| Field | Type | Presence | Unit | Description | Example or values | Link |
+|---|---|---|---|---|---|---|
+| `EQUITY` | id | required |  | The equity asked for (the id; the window rides on it as EQ-NVTK~window=20) | `EQ-NVTK` |  |
+| `INDEX` | id | required |  | The index it is measured against (the equity's EQUITY_INDEX) |  |  |
+| `WINDOW` | integer | required |  | The daily returns used (parameter window; 0, the default, or a window longer than the history uses every return) |  |  |
+| `AVAILABLE` | integer | required |  | The returns the two histories' common dates allow |  |  |
+| `FROM` | date | required |  | — |  |  |
+| `TO` | date | required |  | — |  |  |
+| `BETA` | rate | required |  | cov(r, r_index) / var(r_index) of the daily log returns |  |  |
+| `ALPHA` | rate | required |  | The regression's intercept, a daily log return |  |  |
+| `CORRELATION` | rate | required |  | — |  |  |
+| `R_SQUARED` | rate | required |  | — |  |  |
+| `VOLATILITY` | rate | required |  | The equity's sample standard deviation of the daily log returns x sqrt(252), a fraction |  |  |
+| `INDEX_VOLATILITY` | rate | required |  | The index's, the same way |  |  |
+
+**Validation**
+
+- required: fields `BETA`, `INDEX`, `WINDOW`
+
+**Notes**
+
+- No stored key: an answer's id is the question asked, the id of the equity it reads.
+- Errors are said in words (an engine refusal): no such equity, an equity that names no index, an index without price history, fewer than three common dates, an index that did not move over the window.

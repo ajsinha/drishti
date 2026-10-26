@@ -21,13 +21,13 @@ One section per command of the pack: the shape of its data, how it is stored and
 
 | Command | Kind | Class | Status | Fields | To review |
 |---|---|---|---|---|---|
-| [USEQ](#useq-us-company-us-company) | `us-company` | fundamental | active | 48 | 7 |
-| [IDX](#idx-index-members-index-membership) | `index-membership` | fundamental | active | 9 | 6 |
-| [SIC](#sic-sic-sector-sic-sector) | `sic-sector` | fundamental | active | 13 | 7 |
+| [USEQ](#useq-us-company-us-company) | `us-company` | fundamental | active | 46 | 5 |
+| [IDX](#idx-index-members-index-membership) | `index-membership` | fundamental | active | 5 | 3 |
+| [SIC](#sic-sic-sector-sic-sector) | `sic-sector` | computed | active | 19 | 0 |
 | [EDGAR](#edgar-edgar-filings-browser-filing-feed) | `filing-feed` | fundamental | active | 11 | 6 |
 | [FILING](#filing-sec-filing-filing) | `filing` | fundamental | active | 13 | 3 |
-| [FACT](#fact-financial-fact-financial-fact) | `financial-fact` | fundamental | active | 13 | 6 |
-| [PXH](#pxh-price-history-live-internal-use-only-price-history) | `price-history` | fundamental | active | 12 | 4 |
+| [FACT](#fact-financial-fact-financial-fact) | `financial-fact` | fundamental | active | 12 | 5 |
+| [PXH](#pxh-price-history-live-internal-use-only-price-history) | `price-history` | fundamental | active | 13 | 3 |
 
 ## USEQ: US company (`us-company`)
 
@@ -45,7 +45,7 @@ A US listed company: key facts, ten years of annual financials, recent SEC filin
 | Dated by | `snapshot` |
 | Cadence | static (due: to be confirmed) |
 | Storage | connector `us-equities-store` (plugin `delta`), table `<root>/us-equities/us-company/` |
-| Columns | `TICKER`, `NAME`, `LEI_LEGAL_NAME`, `CIK`, `LEI`, `EXCHANGE`, `INDEX_TEXT`, `SECTOR`, `SIC`, `SIC_DESCRIPTION`, `STATE_OF_INCORPORATION`, `REVENUE`, `NET_MARGIN` |
+| Columns | `TICKER`, `NAME`, `LEI_LEGAL_NAME`, `CIK`, `LEI`, `EXCHANGE`, `INDEX_TEXT`, `SECTOR`, `SIC`, `SIC_DESCRIPTION`, `STATE_OF_INCORPORATION`, `REVENUE` |
 | Test data | data/testdata/us-equities/us-company |
 
 **Fields**
@@ -81,8 +81,6 @@ A US listed company: key facts, ten years of annual financials, recent SEC filin
 | `FISCAL_YEAR` | integer | required |  | Fiscal year | `2025` |  |
 | `REVENUE` | amount | optional |  | Revenue | `416161000000` |  |
 | `NET_INCOME` | amount | required |  | Net income | `112010000000` |  |
-| `NET_MARGIN` | rate | optional |  | Net margin | `26.92` |  |
-| `REVENUE_GROWTH` | rate | optional |  | Revenue growth | `6.43` |  |
 | `ASSETS` | integer | required |  | — | `359241000000` |  |
 | `LIABILITIES` | integer | required |  | — | `285508000000` |  |
 | `EQUITY` | integer | required |  | Equity: the equity it refers to | `73733000000` | `equity` |
@@ -117,7 +115,6 @@ A US listed company: key facts, ten years of annual financials, recent SEC filin
 | `PERIOD_END` | date | optional |  | — | `2016-09-24` |  |
 | `REVENUE` | amount | optional |  | — | `215639000000` |  |
 | `NET_INCOME` | amount | optional |  | — | `45687000000` |  |
-| `NET_MARGIN` | rate | optional |  | — | `21.19` |  |
 | `ASSETS` | integer | optional |  | — | `321686000000` |  |
 | `LIABILITIES` | integer | optional |  | — | `193437000000` |  |
 | `EQUITY` | integer | optional |  | Equity: the equity it refers to | `128249000000` | `equity` |
@@ -170,15 +167,17 @@ A US listed company: key facts, ten years of annual financials, recent SEC filin
 - link: field FINANCIALS[].EQUITY; kind equity
 - enum: field FACTS[].LABEL; values `Diluted EPS`, `Net income`, `Revenue`, `Shares outstanding`, `Stockholders' equity`, `Total assets`, `Total liabilities`
 
-**To review (7)**
+**Notes**
+
+- NET_MARGIN, REVENUE_GROWTH and FINANCIALS[].NET_MARGIN left the record in 2.9.2: the pages compute them from REVENUE, NET_INCOME and FINANCIALS (docs/guides/GROUPINGS_ANALYTICS_GUIDE.md section 16).
+
+**To review (5)**
 
 - required inferred from 100% coverage in 506 documents (3 samples and 503 test-data documents (data/testdata/us-equities/us-company/snapshot-2026-10-24.jsonl.gz)): confirm each required field is mandatory upstream, and each optional one may be empty.
 - a snapshot refreshed when tools/publicdata/us_equities.py runs: confirm the refresh cadence.
 - enum values inferred from the data, not from a glossary: LEI_STATUS, LEI_SOURCE, CURRENCY, INDEXES[].INDEX, INDEXES[].NAME, FACTS[].LABEL: confirm they are closed lists.
-- number types decided by the field's name: REVENUE amount, NET_INCOME amount, NET_MARGIN rate, REVENUE_GROWTH rate, FINANCIALS[].REVENUE amount, FINANCIALS[].NET_INCOME amount, FINANCIALS[].NET_MARGIN rate: confirm amount, rate or integer.
 - no unit stated for the amounts REVENUE, NET_INCOME, EPS_DILUTED, FINANCIALS[].REVENUE, FINANCIALS[].NET_INCOME, FINANCIALS[].EPS_DILUTED (docs/contracts/README.md section 7: USD unless stated): confirm the currency.
 - no description in about.yaml or the Sutras for NAME, SEC_NAME, CIK, OTHER_TICKERS, EXCHANGE, LISTING, SIC, DIVISION, SECTOR, STATE_OF_INCORPORATION, FISCAL_YEAR_END, FILER_CATEGORY and 37 more: write them in the pack's config/about.yaml glossary.
-- The ratios (USEQ ratios) become computed from the financial facts (GROUPINGS_AND_ANALYTICS.md): confirm which fields are ratios and mark them derived.
 
 ## IDX: Index members (`index-membership`)
 
@@ -206,19 +205,8 @@ An equity index's members (Dow 30, Nasdaq-100, S&P 500) as Wikidata records them
 | `INDEX` | id | required |  | The record's id (the business key) | `DJIA` |  |
 | `NAME` | text | required |  | Index | `Dow Jones Industrial Average` |  |
 | `MEMBERS` | integer | required |  | Members | `34` |  |
-| `SECTORS` | integer | required |  | SIC divisions | `5` |  |
-| `REVENUE` | amount | required |  | Members' revenue | `4829280300000` |  |
-| `NET_INCOME` | amount | required |  | Members' net income | `804912500000` |  |
-| `BY_SECTOR` | record list | required |  | Nested: see nested BY_SECTOR[] |  |  |
 | `ROWS` | record list | required |  | Nested: see nested ROWS[] |  |  |
 | `PROVENANCE` | record | required |  | Nested: see nested PROVENANCE |  |  |
-
-**Nested `BY_SECTOR[]`**
-
-| Field | Type | Presence | Unit | Description | Example or values | Link |
-|---|---|---|---|---|---|---|
-| `LABEL` | text | required |  | — | `Manufacturing` |  |
-| `VALUE` | amount | required |  | — | `19` |  |
 
 **Nested `ROWS[]`**
 
@@ -232,7 +220,6 @@ An equity index's members (Dow 30, Nasdaq-100, S&P 500) as Wikidata records them
 | `EXCHANGE` | text | required |  | — | `Nasdaq` |  |
 | `REVENUE` | amount | optional |  | — | `416161000000` |  |
 | `NET_INCOME` | amount | required |  | — | `112010000000` |  |
-| `NET_MARGIN` | rate | optional |  | — | `26.92` |  |
 | `CURRENCY` | text | required |  | — | `USD` |  |
 | `FISCAL_YEAR` | integer | required |  | — | `2025` |  |
 | `SINCE` | date | optional |  | — | `2000-06-05` |  |
@@ -248,117 +235,85 @@ An equity index's members (Dow 30, Nasdaq-100, S&P 500) as Wikidata records them
 
 **Validation**
 
-- required: fields `INDEX`, `NAME`, `MEMBERS`, `SECTORS`, `REVENUE`, `NET_INCOME`, `BY_SECTOR`, `ROWS`, `PROVENANCE`
+- required: fields `INDEX`, `NAME`, `MEMBERS`, `ROWS`, `PROVENANCE`
 - unique: key `INDEX`; per snapshot
 - enum: field ROWS[].SECTOR; values `Finance, Insurance and Real Estate`, `Manufacturing`, `Retail Trade`, `Services`, `Transportation, Communications, Electric, Gas and Sanitary Services`
 
-**To review (6)**
+**Notes**
+
+- ROWS[].NET_MARGIN left the record in 2.9.2: a member's net margin is computed from its revenue and net income (docs/guides/GROUPINGS_ANALYTICS_GUIDE.md section 16).
+- SECTORS, REVENUE, NET_INCOME and BY_SECTOR left the record in 2.9.2: the page sums the members' rows (USD reporters) and counts their SIC divisions (docs/guides/GROUPINGS_ANALYTICS_GUIDE.md section 16). The membership (ROWS) and MEMBERS stay.
+
+**To review (3)**
 
 - required inferred from 100% coverage in 7 documents (1 samples and 6 test-data documents (data/testdata/us-equities/index-membership/snapshot-2026-10-24.jsonl.gz)): confirm each required field is mandatory upstream, and each optional one may be empty.
 - a snapshot refreshed when tools/publicdata/us_equities.py runs: confirm the refresh cadence.
 - enum values inferred from the data, not from a glossary: ROWS[].SECTOR: confirm they are closed lists.
-- number types decided by the field's name: REVENUE amount, NET_INCOME amount, BY_SECTOR[].VALUE amount, ROWS[].REVENUE amount, ROWS[].NET_INCOME amount, ROWS[].NET_MARGIN rate: confirm amount, rate or integer.
-- no unit stated for the amounts REVENUE, NET_INCOME, BY_SECTOR[].VALUE, ROWS[].REVENUE, ROWS[].NET_INCOME (docs/contracts/README.md section 7: USD unless stated): confirm the currency.
-- no description in about.yaml or the Sutras for BY_SECTOR[].LABEL, BY_SECTOR[].VALUE, ROWS[].TICKER, ROWS[].NAME, ROWS[].SECTOR, ROWS[].SIC, ROWS[].SIC_DESCRIPTION, ROWS[].EXCHANGE, ROWS[].REVENUE, ROWS[].NET_INCOME, ROWS[].NET_MARGIN, ROWS[].CURRENCY and 6 more: write them in the pack's config/about.yaml glossary.
 
 ## SIC: SIC sector (`sic-sector`)
 
-A sector by its SIC code: its companies ranked by revenue; a click opens a company's summary beside.
+A sector by its SIC code, computed from the companies when asked: its companies ranked by revenue; a click opens a company's summary beside.
 
 |  |  |
 |---|---|
 | Contract | [sic-sector.contract.yaml](../../../config/packs/us-equities/contracts/sic-sector.contract.yaml) · version 1.0 |
-| Class | fundamental |
+| Class | computed |
 | Status | active |
-| Source | public data: SEC EDGAR, Nasdaq Trader, GLEIF and Wikidata (tools/publicdata/us_equities.py) |
-| Grain | One row per sic sector, keyed by SIC. |
+| Source | computed by Drishti: the derived connector us-equities-groupings over the kind us-company |
+| Grain | One record per SIC of the us-company records, computed when asked. |
 | Key | `SIC` |
 | Id pattern | — |
-| Dated by | `snapshot` |
-| Cadence | static (due: to be confirmed) |
-| Storage | connector `us-equities-store` (plugin `delta`), table `<root>/us-equities/sic-sector/` |
-| Columns | `SIC`, `DESCRIPTION`, `SECTOR`, `COMPANIES` |
-| Test data | data/testdata/us-equities/sic-sector |
+| Dated by | `on request` |
+| Cadence | on change (due: recomputed from its source kind (connector refresh 60s)) |
+| Storage | connector `us-equities-groupings` (plugin `derived`) |
 
 **Fields**
 
 | Field | Type | Presence | Unit | Description | Example or values | Link |
 |---|---|---|---|---|---|---|
-| `SIC` | id | required |  | SIC | `3711` |  |
-| `DESCRIPTION` | text | required |  | Industry | `Motor Vehicles & Passenger Car Bodies` |  |
-| `DIVISION` | text | optional |  | — | `D` |  |
-| `SECTOR` | text | required |  | Division | `Manufacturing` |  |
-| `COMPANIES` | integer | required |  | Companies | `4` |  |
-| `REVENUE` | amount | required |  | Revenue | `495557800000` |  |
-| `NET_INCOME` | amount | required |  | Net income | `704800000` |  |
-| `ROWS` | record list | optional |  | Nested: see nested ROWS[] |  |  |
-| `BY_REVENUE` | record list | optional |  | Nested: see nested BY_REVENUE[] |  |  |
-| `PROVENANCE` | record | required |  | Nested: see nested PROVENANCE |  |  |
-| `CODES` | integer | optional |  | SIC codes | `181` |  |
-| `CODES_LIST` | record list | optional |  | Nested: see nested CODES_LIST[] |  |  |
-| `BY_DIVISION` | record list | optional |  | Nested: see nested BY_DIVISION[] |  |  |
+| `SIC` | id | required |  | The value the us-company records are grouped by ($.SIC; each also joins 'ALL') |  |  |
+| `TICKERS` | id list | derived |  | The ids of the grouped us-company records (at most 100000) |  |  |
+| `COMPANIES` | integer | derived |  | The companies whose SIC is the key (every currency) |  |  |
+| `DESCRIPTIONS` | text list | derived |  | A helper of the page fields: distinct over the group of: $.SIC_DESCRIPTION |  |  |
+| `DIVISIONS` | text list | derived |  | A helper of the page fields: distinct over the group of: $.DIVISION |  |  |
+| `SECTORS` | text list | derived |  | A helper of the page fields: distinct over the group of: $.SECTOR |  |  |
+| `CODE_LIST` | text list | derived |  | A helper of the page fields: distinct over the group of: $.SIC |  |  |
+| `REVENUE` | amount | derived |  | The latest fiscal year revenue summed over the companies that report in USD |  |  |
+| `NET_INCOME` | amount | derived |  | The latest fiscal year net income summed over the USD reporters |  |  |
+| `NON_USD` | integer | derived |  | Companies that report in another currency: counted, not summed |  |  |
+| `PROVENANCE` | record | derived |  | The first company's source and licence (SEC EDGAR) |  |  |
+| `ROWS` | record list | derived |  | One row per grouped us-company record |  |  |
+| `DESCRIPTION` | text | derived |  | The SIC code's description as the SEC gives it ('Every SIC code of the companies covered' for ALL) |  |  |
+| `DIVISION` | text | derived |  | The SIC division letter |  |  |
+| `SECTOR` | text | derived |  | The SIC division name |  |  |
+| `CODES` | integer | derived |  | The number of SIC codes among the companies (1, or every code on ALL) |  |  |
+| `NET_MARGIN` | rate | derived |  | NET_INCOME / REVENUE x 100 (USD reporters), in per cent |  |  |
+| `BY_REVENUE` | record list | derived |  | The USD reporters with revenue, largest first, the top 15 (rows of ROWS) |  |  |
+| `BY_DIVISION` | record list | derived |  | Revenue of the USD reporters by SIC division: label, value, count; largest first |  |  |
 
 **Nested `ROWS[]`**
 
 | Field | Type | Presence | Unit | Description | Example or values | Link |
 |---|---|---|---|---|---|---|
-| `TICKER` | text | required |  | — | `F` |  |
-| `NAME` | text | required |  | — | `Ford Motor Company` |  |
-| `EXCHANGE` | text | required |  | — | `NYSE, NYSE, NYSE, NYSE` |  |
-| `INDEX_TEXT` | text | required |  | — | `S&P 500` |  |
-| `REVENUE` | amount | optional |  | — | `187267000000` |  |
-| `NET_INCOME` | amount | required |  | — | `-8162000000` |  |
-| `NET_MARGIN` | rate | optional |  | — | `-4.36` |  |
-| `CURRENCY` | text | required |  | — | `CAD`, `EUR`, `GBP`, `USD` |  |
-| `FISCAL_YEAR` | integer | required |  | — | `2025` |  |
-
-**Nested `BY_REVENUE[]`**
-
-| Field | Type | Presence | Unit | Description | Example or values | Link |
-|---|---|---|---|---|---|---|
-| `LABEL` | text | required |  | — | `F` |  |
-| `VALUE` | amount | required |  | — | `187267000000` |  |
-
-**Nested `PROVENANCE`**
-
-| Field | Type | Presence | Unit | Description | Example or values | Link |
-|---|---|---|---|---|---|---|
-| `SOURCE` | text | required |  | — | `U.S. Securities and Exchange Commission, EDGAR (Standard In…` |  |
-| `RETRIEVED_AT` | date | required |  | — | `2026-10-24` |  |
-| `LICENCE` | text | required |  | — | `Public domain (U.S. Government work); SEC EDGAR fair access…` |  |
-
-**Nested `CODES_LIST[]`**
-
-| Field | Type | Presence | Unit | Description | Example or values | Link |
-|---|---|---|---|---|---|---|
-| `SIC` | id | required |  | The record's id (the business key) | `6324` |  |
-| `DESCRIPTION` | text | required |  | Industry | `Hospital & Medical Service Plans` |  |
-| `SECTOR` | text | required |  | Division | `Finance, Insurance and Real Estate` |  |
-| `COMPANIES` | integer | required |  | Companies | `5` |  |
-| `REVENUE` | amount | required |  | Revenue, latest FY | `1246033000000` |  |
-
-**Nested `BY_DIVISION[]`**
-
-| Field | Type | Presence | Unit | Description | Example or values | Link |
-|---|---|---|---|---|---|---|
-| `LABEL` | text | required |  | — | `Manufacturing` |  |
-| `VALUE` | amount | required |  | — | `5609615057000` |  |
+| `TICKER` | unknown | optional |  | From the us-company record: $.TICKER |  |  |
+| `NAME` | unknown | optional |  | From the us-company record: $.NAME |  |  |
+| `EXCHANGE` | unknown | optional |  | From the us-company record: $.EXCHANGE |  |  |
+| `INDEX_TEXT` | unknown | optional |  | From the us-company record: $.INDEX_TEXT |  |  |
+| `SECTOR` | unknown | optional |  | From the us-company record: $.SECTOR |  |  |
+| `REVENUE` | unknown | optional |  | From the us-company record: $.REVENUE |  |  |
+| `NET_INCOME` | unknown | optional |  | From the us-company record: $.NET_INCOME |  |  |
+| `NET_MARGIN` | unknown | optional |  | From the us-company record: $.REVENUE ? $.NET_INCOME / $.REVENUE * 100 : null |  |  |
+| `CURRENCY` | unknown | optional |  | From the us-company record: $.CURRENCY |  |  |
+| `FISCAL_YEAR` | unknown | optional |  | From the us-company record: $.FISCAL_YEAR |  |  |
 
 **Validation**
 
-- required: fields `SIC`, `DESCRIPTION`, `SECTOR`, `COMPANIES`, `REVENUE`, `NET_INCOME`, `PROVENANCE`
+- required: fields `SIC`
 - unique: key `SIC`; per snapshot
-- enum: field ROWS[].CURRENCY; values `CAD`, `EUR`, `GBP`, `USD`
 
-**To review (7)**
+**Notes**
 
-- required inferred from 100% coverage in 183 documents (1 samples and 182 test-data documents (data/testdata/us-equities/sic-sector/snapshot-2026-10-24.jsonl.gz)): confirm each required field is mandatory upstream, and each optional one may be empty.
-- a snapshot refreshed when tools/publicdata/us_equities.py runs: confirm the refresh cadence.
-- enum values inferred from the data, not from a glossary: ROWS[].CURRENCY: confirm they are closed lists.
-- number types decided by the field's name: REVENUE amount, NET_INCOME amount, ROWS[].REVENUE amount, ROWS[].NET_INCOME amount, ROWS[].NET_MARGIN rate, BY_REVENUE[].VALUE amount, CODES_LIST[].REVENUE amount, BY_DIVISION[].VALUE amount: confirm amount, rate or integer.
-- no unit stated for the amounts REVENUE, NET_INCOME, ROWS[].REVENUE, ROWS[].NET_INCOME, BY_REVENUE[].VALUE, CODES_LIST[].REVENUE, BY_DIVISION[].VALUE (docs/contracts/README.md section 7: USD unless stated): confirm the currency.
-- no description in about.yaml or the Sutras for DIVISION, ROWS[].TICKER, ROWS[].NAME, ROWS[].EXCHANGE, ROWS[].INDEX_TEXT, ROWS[].REVENUE, ROWS[].NET_INCOME, ROWS[].NET_MARGIN, ROWS[].CURRENCY, ROWS[].FISCAL_YEAR, BY_REVENUE[].LABEL, BY_REVENUE[].VALUE and 5 more: write them in the pack's config/about.yaml glossary.
-- The release is 2.9.0 or 2.10.0 (Track B, shipped as each is ready): confirm which.
+- Computed when asked by the derived connector us-equities-groupings from every us-company (since 2.9.2, which retired the stored page): docs/guides/GROUPINGS_ANALYTICS_GUIDE.md (Part II). Totals add the USD reporters only.
 
 ## EDGAR: EDGAR filings browser (`filing-feed`)
 
@@ -532,7 +487,6 @@ One financial concept of one company (revenue, net income, assets...) over up to
 | `XBRL_TAG` | text | required |  | XBRL tags read | `RevenueFromContractWithCustomerExcludingAssessedTax` |  |
 | `LATEST` | amount | required |  | Latest | `44328000000` |  |
 | `LATEST_YEAR` | integer | required |  | Fiscal year | `2025` |  |
-| `CHANGE_PCT` | rate | optional |  | Change on the year | `5.67` |  |
 | `YEARS` | integer | required |  | Years | `10` |  |
 | `HISTORY` | record list | required |  | Nested: see nested HISTORY[] |  |  |
 
@@ -543,7 +497,6 @@ One financial concept of one company (revenue, net income, assets...) over up to
 | `YEAR` | integer | required |  | Fiscal year | `2016` |  |
 | `PERIOD_END` | date | required |  | Period end | `2016-12-31` |  |
 | `VALUE` | amount | required |  | Value | `20853000000` |  |
-| `CHANGE_PCT` | rate | optional |  | Change | `31.35` |  |
 | `FILED` | date | required |  | Filed | `2019-02-22` |  |
 | `ACCESSION` | text | required |  | Accession | `0001047469-19-000624` |  |
 
@@ -557,12 +510,15 @@ One financial concept of one company (revenue, net income, assets...) over up to
 - enum: field CONCEPT; values `ASSETS`, `EPS_DILUTED`, `EQUITY`, `LIABILITIES`, `NET_INCOME`, `REVENUE`, `SHARES_OUTSTANDING`
 - enum: field LABEL; values `Diluted EPS`, `Net income`, `Revenue`, `Shares outstanding`, `Stockholders' equity`, `Total assets`, `Total liabilities`
 
-**To review (6)**
+**Notes**
+
+- CHANGE_PCT and HISTORY[].CHANGE_PCT left the record in 2.9.2: the page computes each year's change from the values (docs/guides/GROUPINGS_ANALYTICS_GUIDE.md section 16).
+
+**To review (5)**
 
 - required inferred from 100% coverage in 2002 documents (2 samples and 2000 test-data documents (data/testdata/us-equities/financial-fact/snapshot-2026-10-24.jsonl.gz)): confirm each required field is mandatory upstream, and each optional one may be empty.
 - a snapshot refreshed when tools/publicdata/us_equities.py runs: confirm the refresh cadence.
 - enum values inferred from the data, not from a glossary: CONCEPT, LABEL: confirm they are closed lists.
-- number types decided by the field's name: CHANGE_PCT rate, HISTORY[].VALUE amount, HISTORY[].CHANGE_PCT rate: confirm amount, rate or integer.
 - no unit stated for the amounts LATEST, HISTORY[].VALUE (docs/contracts/README.md section 7: USD unless stated): confirm the currency.
 - no description in about.yaml or the Sutras for COMPANY_NAME, CIK: write them in the pack's config/about.yaml glossary.
 
@@ -599,10 +555,29 @@ A company's quote and a year of daily prices, read live by the us-equities-price
 | `MARKET_STATE` | unknown | optional |  | Market |  |  |
 | `PRICE` | unknown | optional |  | Price |  |  |
 | `VOLUME` | unknown | optional |  | Volume |  |  |
+| `ANALYTICS` | record | derived |  | Computed from the closes when the history is read (PXH analytics, since 2.9.2): nested ANALYTICS |  |  |
 
-**To review (4)**
+**Nested `ANALYTICS`**
+
+| Field | Type | Presence | Unit | Description | Example or values | Link |
+|---|---|---|---|---|---|---|
+| `OBSERVATIONS` | integer | derived |  | The daily closes the history holds |  |  |
+| `RETURN_1M` | rate | derived |  | close / close 21 trading days earlier - 1 (empty when the history is shorter) |  |  |
+| `RETURN_3M` | rate | derived |  | the same over 63 trading days |  |  |
+| `RETURN_6M` | rate | derived |  | the same over 126 trading days |  |  |
+| `RETURN_PERIOD` | rate | derived |  | the last close over the first - 1 |  |  |
+| `VOLATILITY` | rate | derived |  | the sample standard deviation of the daily log returns x sqrt(252) |  |  |
+| `MAX_DRAWDOWN` | rate | derived |  | the largest fall from a running high to a later close, negative |  |  |
+| `BENCHMARK` | text | derived |  | The symbol beta is measured against (the connector setting benchmark, SPY as shipped) |  |  |
+| `BETA` | amount | derived |  | cov(daily log returns, the benchmark's) / var(the benchmark's), on their common dates; empty with fewer than 21 common closes |  |  |
+| `CORRELATION` | rate | derived |  | the correlation of the daily log returns with the benchmark's |  |  |
+
+**Notes**
+
+- ANALYTICS is computed by the yfinance plugin from the history it has just read (PriceAnalytics, docs/guides/GROUPINGS_ANALYTICS_GUIDE.md section 17): nothing is stored, and the figures are internal use only like the prices; the connector is off as shipped.
+
+**To review (3)**
 
 - no key could be read from the test data, the catalogue or the layout: name the business key.
 - read live through the yfinance connector when it is on: confirm the cadence (intraday, on demand).
 - no samples or test data ship for this kind: the fields are those its Sutras show (and its declared result); state every field's type and presence.
-- PXH analytics (returns, volatility, beta) become computed (GROUPINGS_AND_ANALYTICS.md): confirm which fields are analytics.

@@ -190,12 +190,12 @@ def cap_vol_surface(ccy: str) -> dict:
 
 
 def equity(t: str) -> dict:
-    name, iss, exch, ccy, px, sector, beta, idx = N.EQUITIES[t]
+    name, iss, exch, ccy, px, sector, _beta, idx = N.EQUITIES[t]   # the security master's beta is not written: EQB computes it (2.9.2)
     hist = history("eq" + t, px, 0.017, dp=2)
     shares = rng("sh" + t).randint(300, 4000) * 1e6
     out = {"ticker": f"EQ-{t}", "name": name, "price": px, "change1d": round(hist[-1]["close"] / hist[-2]["close"] - 1, 5),
            "marketCap": round(px * shares * (N.FX.get(ccy + "USD", 1 / N.FX.get("USD" + ccy, 1)) if ccy != "USD" else 1)),
-           "sector": sector, "exchange": exch, "currency": ccy, "beta": beta, "history": hist, "ohlc": ohlc("eq" + t, px, 0.017, shares * 0.004),
+           "sector": sector, "exchange": exch, "currency": ccy, "history": hist, "ohlc": ohlc("eq" + t, px, 0.017, shares * 0.004),
            "identifiers": {"isin": ids.isin({"USD": "US", "EUR": "FR", "GBP": "GB", "JPY": "JP", "CHF": "CH", "CAD": "CA"}[ccy], t + "0001"),
                            "bloomberg": f"{t} {exch[:2].upper()} Equity", "ric": f"{t}.{exch[:1]}", "figi": "BBG" + hashlib.sha1(t.encode()).hexdigest()[:9].upper()},
            "issuer": f"ISS-{iss}", "equityVolSurface": f"EQV-{t}", "dividendCurve": f"DIV-{t}"}
@@ -342,13 +342,11 @@ def bonds() -> dict[str, dict]:
 
 
 def correlation_matrix(cid: str) -> dict:
+    """A correlation set: its definition only, a name and its factors (equities and FX pairs, by their market-data ids). The
+    correlations are computed when asked from the factors' price history (CORRC, corr_kinds.py; since 2.9.2): nothing here is a figure."""
     name, factors = N.CORRELATIONS[cid]
-    pairs = []
-    for a in range(len(factors)):
-        for b in range(a + 1, len(factors)):
-            pairs.append({"a": factors[a], "b": factors[b], "rho": round(rng(cid + str(a) + str(b)).uniform(0.15, 0.78), 3)})
-    return {"matrixId": cid, "name": name, "factors": factors, "average": round(sum(p["rho"] for p in pairs) / len(pairs), 3), "pairs": pairs,
-            "window": "2 years, daily log returns", "estimator": "Ledoit-Wolf shrinkage"}
+    return {"matrixId": cid, "name": name, "factors": factors,
+            "equityIds": [f"EQ-{f}" for f in factors if f in N.EQUITIES], "fxIds": [f"FX-{f}" for f in factors if f in N.FX]}
 
 
 def build() -> dict[str, dict[str, dict]]:

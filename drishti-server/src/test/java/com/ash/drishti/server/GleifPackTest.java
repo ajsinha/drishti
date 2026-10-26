@@ -119,7 +119,7 @@ class GleifPackTest extends PublicPacksOnLakes {
         assertThat(v.path("provenance").path("sutra").asText()).isEqualTo("lei-group");
         JsonNode tree = panel(v.path("panels"), "tree").path("data").path("rows");
         assertThat(tree.size()).isEqualTo(1);                                            // the ultimate parent
-        assertThat(tree.get(0).path("cells").get(2).path("text").asText()).isEqualTo(JPM);
+        assertThat(tree.get(0).path("cells").get(3).path("text").asText()).isEqualTo(JPM);          // Entity, Country, Level, LEI
         assertThat(tree.get(0).path("children").size()).isPositive();                   // its children, and theirs below them
         JsonNode members = panel(v.path("panels"), "members").path("data").path("rows");
         assertThat(members.size()).isBetween(10, 50);

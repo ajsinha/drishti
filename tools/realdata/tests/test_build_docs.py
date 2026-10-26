@@ -44,12 +44,17 @@ def test_economy_values_are_the_dataset_values():
 
 def test_links_point_at_documents_that_exist():
     kinds = {k: set(v) for k, v in ECO.items()}
+    groups = {f"ECG-{g}" for g in D.G}                    # the country groups are computed from these keys (since 2.9.2)
     for e in ECO["economy"].values():
-        for f, k in (("regionGroup", "country-group"), ("incomeGroup", "country-group"), ("labour", "labour-market"), ("fiscal", "fiscal-position"), ("outlook", "economic-forecast")):
+        for f in ("regionGroup", "incomeGroup"):
+            assert e[f] is None or e[f] in groups, (e["economyId"], f)
+        for f, k in (("labour", "labour-market"), ("fiscal", "fiscal-position"), ("outlook", "economic-forecast")):
             assert e[f] is None or e[f] in kinds[k], (e["economyId"], f)
         assert all(i in kinds["macro-indicator"] for i in e["indicators"])
-    for g in ECO["country-group"].values():
-        assert all(m in kinds["economy"] for m in g["memberEconomies"])
+
+
+def test_no_country_group_is_stored():
+    assert "country-group" not in ECO                     # computed from the economies when asked (GROUPINGS_ANALYTICS_GUIDE.md)
 
 
 def test_politics_documents_are_published_facts():

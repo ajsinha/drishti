@@ -209,9 +209,28 @@ public final class DerivedSourcePlugin implements SourcePlugin {
         if (k == null) {
             return List.of();
         }
-        String t = text == null ? "" : text.trim().toLowerCase(Locale.ROOT);
-        return snapshot(asOf).pages().ids(kind).stream().sorted().filter(id -> id.toLowerCase(Locale.ROOT).contains(t)).limit(limit)
-                .map(id -> new EntityHit(EntityRef.of(kind, id), id, kind + " · from " + k.from())).toList();
+        String raw = text == null ? "" : text.trim().toLowerCase(Locale.ROOT);
+        String t = raw.equals("*") ? "" : raw;                  // * lists every page (a directory panel: SIC ALL's codes)
+        Pages pages = snapshot(asOf).pages();
+        if (k.searchFields().isEmpty()) {
+            return pages.ids(kind).stream().sorted().filter(id -> id.toLowerCase(Locale.ROOT).contains(t)).limit(limit)
+                    .map(id -> new EntityHit(EntityRef.of(kind, id), id, kind + " · from " + k.from())).toList();
+        }
+        // search-fields: the id or a page field (a group's name) holds the text; a hit is labelled by the first field
+        List<EntityHit> out = new ArrayList<>();
+        for (String id : pages.ids(kind).stream().sorted().toList()) {
+            if (out.size() >= limit) {
+                break;
+            }
+            DataNode page = id.toLowerCase(Locale.ROOT).contains(t) && t.isEmpty() ? null : pages.page(kind, id);
+            String label = page == null ? id : page.get(k.searchFields().get(0)).isNull() ? id : page.get(k.searchFields().get(0)).asText();
+            boolean hit = id.toLowerCase(Locale.ROOT).contains(t)
+                    || (page != null && k.searchFields().stream().anyMatch(f -> !page.get(f).isNull() && page.get(f).asText().toLowerCase(Locale.ROOT).contains(t)));
+            if (hit) {
+                out.add(new EntityHit(EntityRef.of(kind, id), label, kind + " · " + id));
+            }
+        }
+        return out;
     }
 
     /** What this plugin's own definition says a field of one of its derived kinds means, or empty (not its kind, or not a field of it). */
@@ -625,9 +644,10 @@ public final class DerivedSourcePlugin implements SourcePlugin {
                                 String.format("%,d", refs.size()), e.getKey());
                     }
                     for (DerivedKind k : e.getValue()) {
-                        String g = k.keyOf(d.data());
-                        if (g != null) {
-                            groups.get(k).computeIfAbsent(g, x -> new HashMap<>()).put(d.ref().id(), k.compact(d.data(), todayOf(asOf)));
+                        DataNode member = null;
+                        for (String g : k.keysOf(d.data())) {   // a member of several groups (also-group-by) is read once
+                            member = member == null ? k.compact(d.data(), todayOf(asOf)) : member;
+                            groups.get(k).computeIfAbsent(g, x -> new HashMap<>()).put(d.ref().id(), member);
                         }
                     }
                     LocalDate dd = d.provenance().businessDate();
@@ -787,13 +807,15 @@ public final class DerivedSourcePlugin implements SourcePlugin {
                     java.util.Set<String> rowsDone = new java.util.HashSet<>(2);
                     Map<String, Object[]> fieldValues = new HashMap<>(2);   // once per signature: kinds of one pack share them
                     for (DerivedKind k : ks) {
-                        String g = k.keyOf(d.data());
-                        if (g == null) {
+                        List<String> keys = k.keysOf(d.data());
+                        if (keys.isEmpty()) {
                             continue;
                         }
                         Object[] values = fieldValues.computeIfAbsent(rowKeys.get(k.signature()), x -> k.fieldValues(d.data(), today));
-                        totals.get(k.kind()).computeIfAbsent(g, x -> k.totals()).add(id, values);
-                        store.put("m" + SEP + k.kind() + SEP + g + SEP + id, NOTHING);
+                        for (String g : keys) {
+                            totals.get(k.kind()).computeIfAbsent(g, x -> k.totals()).add(id, values);
+                            store.put("m" + SEP + k.kind() + SEP + g + SEP + id, NOTHING);
+                        }
                         String sig = rowKeys.get(k.signature());
                         if (k.hasRows() && rowsDone.add(sig)) {
                             store.put("r" + SEP + sig + SEP + id, k.rowBytes(d.data(), today));
@@ -971,8 +993,7 @@ public final class DerivedSourcePlugin implements SourcePlugin {
             n++;
             Map<String, DataNode> made = new HashMap<>(4);   // one compact copy per signature: the grouped kinds of a pack share it
             for (DerivedKind k : kinds) {
-                String g = k.keyOf(d.data());
-                if (g != null) {                       // kept as the values the kind reads, not the document (a day of large documents)
+                for (String g : k.keysOf(d.data())) {   // kept as the values the kind reads, not the document (a day of large documents)
                     DataNode member = made.computeIfAbsent(k.signature(), x -> k.compact(d.data(), today));
                     groups.get(k).computeIfAbsent(g, x -> new HashMap<>()).put(d.ref().id(), member);
                 }

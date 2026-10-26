@@ -18,7 +18,7 @@
 
 Legal Entity Identifiers (LEI) and **who owns whom**, from GLEIF: 9,937 legal entities in 590 ownership groups across
 133 countries, retrieved from GLEIF's golden copy of 2026-10-25. The groups are those of the us-equities companies (their
-ultimate parent with every entity it consolidates) and of 145 large financial institutions: the FSB's global systemically
+ultimate parent with every entity it consolidates) and of 111 large financial institutions: the FSB's global systemically
 important banks, other large banks, insurers, asset managers and market infrastructures. Everything is published data under
 **CC0**, not samples.
 
@@ -32,8 +32,8 @@ The pack is **off by default**: add it to the packs a server loads, `DRISHTI_PAC
 | Type | Opens | Examples |
 |---|---|---|
 | `LEI <code>` | an entity: key facts, addresses, registration and renewal (late renewal flagged), its parents chain, its children (a click opens the child's summary beside), BICs and ISINs, the us-equities company | `LEI 8I5DZWZKVSZI1NUHU748`, `LEI HWUPKR0MPOU8FGXBT394` |
-| `LEIG <code>` | a group: the ultimate parent with its whole tree, counts by country and legal form; a click on a member opens it beside | `LEIG 8I5DZWZKVSZI1NUHU748`; `LEIG ALL` lists every group and searches the entities |
-| `LEIC <country>` | a country: the pack's entities there, the groups present, legal forms and cities | `LEIC US`, `LEIC GB`; `LEIC ALL` lists every country |
+| `LEIG <code>` | a group, computed from the entities when asked: the ultimate parent with its whole tree, counts by country and legal form, no member cap; a click on a member opens it beside | `LEIG 8I5DZWZKVSZI1NUHU748`; `LEIG ALL` lists every group and searches the entities |
+| `LEIC <country>` | a country, computed from the entities when asked: every entity of the pack there, the groups present, legal forms and cities | `LEIC US`, `LEIC GB`; `LEIC ALL` lists every country |
 | `LEIR <id>` | one relationship: child, parent, direct or ultimate, status, periods, accounting standard | `LEIR LEIREL-<child LEI>-DIRECT`, from an entity |
 | `LEIM <identifier>` | an ISIN, BIC or MIC and the LEI it maps to | a BIC or ISIN from an entity page |
 
@@ -45,12 +45,14 @@ A bare LEI (twenty characters) opens its entity.
 |---|---|---|
 | `lei-entity` | 9,937 | legal name and other names, legal form (ELF), category, jurisdiction, legal and headquarters addresses, entity and registration status, created, first registered, last updated, next renewal (late renewals flagged), the managing LOU, BICs, the ISIN count, OpenCorporates id, the direct and ultimate parent, the parents chain, the direct children, reporting exceptions |
 | `lei-relationship` | 9,347 | one consolidation relationship of an entity to its direct parent (or, when none is in the pack, its ultimate parent): status, relationship and accounting periods, accounting standard, the record's registration and renewal |
-| `lei-group` | 591 | an ultimate parent with its tree (a tree table), every member, counts by country and legal form; `ALL` lists the groups |
-| `lei-country` | 134 | the entities of one legal-address country, the groups present, legal forms and cities; `ALL` lists the countries |
+| `lei-group` | computed (590 and `ALL`) | an ultimate parent with its tree (a tree table), every member, counts by country and legal form; `ALL` lists the groups. Computed from the entities when asked by the derived connector `gleif-groupings` (since 2.9.2): nothing is stored |
+| `lei-country` | computed (133 and `ALL`) | the entities of one legal-address country, the groups present, legal forms and cities; `ALL` lists the countries. Computed like the groups |
 | `lei-mapping` | 3,381 | an identifier and its LEI: every BIC and MIC of the entities, and up to 5 ISINs of each seed entity |
 
-**The cap.** A group keeps at most 50 entities, the nearest levels first; 85 groups are larger in GLEIF and their page says so
-(`MEMBERS_IN_GLEIF`). A wider build of any group goes to the data folder (*Refreshing the data*). The groups are built from the
+**The cap.** The committed data keeps at most 50 entities a group, the nearest levels first (the size of the snapshot); 86 groups are
+larger in GLEIF and their page says so (`MEMBERS_IN_GLEIF`, from the ultimate parent's `GLEIF_GROUP_SIZE`). The computation itself has no
+cap: a group page counts and lists every entity of the group the lake holds. The formulas are in
+[GROUPINGS_ANALYTICS_GUIDE.md](../../../../docs/guides/GROUPINGS_ANALYTICS_GUIDE.md). A wider build of any group goes to the data folder (*Refreshing the data*). The groups are built from the
 consolidation relationships only (`IS_DIRECTLY_CONSOLIDATED_BY`, `IS_ULTIMATELY_CONSOLIDATED_BY`); fund management, sub-fund, feeder
 and branch relationships are not ownership and are left out. A member whose direct parent is not reported hangs under the ultimate
 parent in the tree. An entity with no reported parent may carry a reporting exception (controlled by natural persons, not
@@ -59,7 +61,7 @@ consolidated, no known person) which its page shows.
 **Late renewal.** An LEI must be renewed every year. A registration whose next renewal date has passed, or which GLEIF lists as
 `LAPSED`, is flagged *Late* on its page, in its group and in its country; 2,288 of the pack's entities are late today.
 
-Segments of the groups: US equities 481, Bank 74, G-SIB 29, Insurer 22, Asset manager 14, Market infrastructure 9.
+Segments of the groups: US equities 481, Bank 66, G-SIB 17, Insurer 16, Asset manager 11, Market infrastructure 4.
 
 **Where the data lives.** The documents are committed as Drishti's standard test data: one gzipped JSON Lines snapshot per
 kind, `data/testdata/gleif/<kind>/snapshot-<date>.jsonl.gz`, listed in `data/testdata/testdata.yaml`. `python3 tools/drishti.py lake demo`

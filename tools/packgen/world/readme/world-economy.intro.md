@@ -37,7 +37,7 @@ fields:
   macro-indicator: {INDICATOR: Indicator name, COUNTRY_NAME: The country, DEFINITION: The source's definition of the indicator, PREVIOUS_YEAR: Year of the previous value, OF_COUNT: Countries ranked}
   labour-market: {YEAR: Year of the figures, VULNERABLE: Vulnerable employment (% of total employment)}
   fiscal-position: {YEAR: Year of the figures}
-  country-group: {YEAR: Year of the figures, INFLATION: Inflation, consumer prices (% a year)}
+  country-group: {YEAR: The latest year of the members' figures, INFLATION: The members' median consumer price inflation (% a year), GROWTH: Real GDP growth weighted by GDP (% a year), ROWS: Every member economy}
   region-economy: {ISO3: The country's ISO alpha-3 code, YEAR: Year of the figures, POPULATION: Population, SOURCE: Where the figures come from}
   jurisdiction: {ISO3: ISO alpha-3 code, OFFICIAL_NAME: Official name, REGION_NAME: World Bank region, INDEPENDENCE: Independence (as the Factbook writes it), LEGISLATURE_NAME: The legislature's name, LEGISLATURE_STRUCTURE: Unicameral or bicameral}
   party: {RANK: Rank by seats, TOTAL_SEATS: Seats in the chamber}

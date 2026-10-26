@@ -63,8 +63,9 @@ On Windows, offline, with your own ENDUR files: [How to QA in Windows Environmen
    `RUN_DATE`, `SOURCE_UPDATE_TIME`) move with them, and so does each point of a document's embedded market series (`HISTORY`, `OHLC`,
    `FIXINGS`, `PNL_SERIES`: its `DATE`, by the same number of business days), so a price history has no missing days between the series
    and the stored days. A market document's `CHANGE_1D` is the day's move of its own price (`PRICE`, `LEVEL`, `MID`), and the fields quoted next to the price move with it ([below](#the-datasets)). Measured for sixty days on a fast machine: **943 s (about 15 minutes; up to half an hour on a laptop)**,
-   83 tables, about 2.2 GB on disk (15 tables are static reference data built from the world-economy and
-   news-and-markets packs' samples, 2 the captured quotes and headlines, 11 the us-equities and gleif public data).
+   79 tables, about 2.2 GB on disk (14 tables are static reference data built from the world-economy and
+   news-and-markets packs' samples, 2 the captured quotes and headlines, 8 the us-equities and gleif public data; since 2.9.2 the
+   country groups, SIC sectors, ownership groups and LEI countries are computed from them, not stored).
 4. **Start** the server and the console: the run configurations **Drishti server (demo lakes)** (the samples off,
    `DRISHTI_DEMO_ENABLED=false`, so every page reads the lakes; with the samples on, a sample answers before the lake for an id both
    hold) and **Drishti console**. The server reads `data/delta` by default (`DRISHTI_DELTA_ROOT` moves it).
@@ -162,7 +163,7 @@ Built from the packs' samples (static reference data already in the repository, 
 
 | Pack | Connector → tables |
 |---|---|
-| `world-economy` samples | `macro-store` → `macro/`: `country-group`, `economic-forecast`, `economy`, `fiscal-position`, `labour-market`, `macro-indicator`, `region-economy` |
+| `world-economy` samples | `macro-store` → `macro/`: `economic-forecast`, `economy`, `fiscal-position`, `labour-market`, `macro-indicator`, `region-economy` |
 | `world-economy` samples | `civic-store` → `civic/`: `election`, `jurisdiction`, `office-holder`, `party`, `region`, `social-indicator` |
 | `news-and-markets` samples | `news-store` → `news/`: `listed-company`, `news-topic` |
 | `news-and-markets/quote`, `news-and-markets/news` (captured) | `news-store` → `news/`: `quote`, `news` (below) |
@@ -290,8 +291,8 @@ Guarded by `tools/testdata/test_capture_market.py` (a stub server, never the int
 
 The us-equities and gleif packs carry published public data, not generated documents. It follows the same pattern as everything
 here: one gzipped JSON Lines snapshot per kind, `us-equities/<kind>/snapshot-<date>.jsonl.gz` (us-company, index-membership,
-sic-sector, filing-feed, filing, financial-fact) and `gleif/<kind>/snapshot-<date>.jsonl.gz` (lei-entity, lei-group, lei-relationship,
-lei-country, lei-mapping), about 4.3 MB in all, each listed in `testdata.yaml` with its key, capture date, source, documents and size.
+filing-feed, filing, financial-fact) and `gleif/<kind>/snapshot-<date>.jsonl.gz` (lei-entity, lei-relationship, lei-mapping), about
+3.8 MB in all (the SIC sectors, ownership groups and LEI countries are computed from them since 2.9.2, never stored), each listed in `testdata.yaml` with its key, capture date, source, documents and size.
 
 - **In the lake.** `lake demo` writes each kind into `us-equities/<kind>` and `gleif/<kind>` (the same snapshot on every day, never
   re-dated); the packs' Delta connectors `us-equities-store` and `gleif-store` serve them, so both packs work with the demo connector

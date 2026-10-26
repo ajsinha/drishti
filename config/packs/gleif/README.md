@@ -36,9 +36,11 @@ commands:
 depends-on:
   packs: []
   connectors:
+  - gleif-groupings
   - gleif-store
   plugins:
   - delta
+  - derived
   settings:
   - DRISHTI_DELTA_ROOT
   - DRISHTI_LAKE_ENABLED
@@ -120,10 +122,12 @@ Fields, from 1 sample document:
 | `CHILD_COUNT` | integer | `8` | Number of children in the pack |
 | `DIRECT_CHILDREN_GLEIF` | integer | `8` | Number of direct children in GLEIF |
 | `ULTIMATE_CHILDREN_GLEIF` | integer | `20` | Number of entities naming it ultimate parent in GLEIF |
+| `GLEIF_GROUP_SIZE` | integer | `21` | — |
 | `MAPPING_IDS` | list of strings |  | Its identifier documents (lei-mapping); link to `lei-mapping` |
 | `SEGMENT` | string | `US equities` | Why it is a seed (US equities, G-SIB, bank, insurer, asset manager, market infrastructure) |
 | `US_COMPANY` | string | `AAPL` | The us-equities company's ticker, a link to it |
 | `US_COMPANY_NAME` | string | `Apple Inc.` | The us-equities company's name |
+| `PROVENANCE` | object |  | Nested: see below |
 
 Nested structures:
 
@@ -132,56 +136,40 @@ Nested structures:
 | `OTHER_NAMES[]` | `NAME` (string), `TYPE` (string) |
 | `PARENT_EXCEPTIONS[]` | `LEVEL` (string), `REASON` (string), `MEANING` (string) |
 | `CHILDREN[]` | `LEI` (string), `NAME` (string), `COUNTRY` (string), `KIDS` (integer) |
+| `PROVENANCE` | `SOURCE` (string), `RETRIEVED_AT` (date), `LICENCE` (string), `URL` (string) |
 
 Links: `LEI_COUNTRY` → `lei-country`, `LEI_GROUP` → `lei-group`, `MAPPING_IDS` → `lei-mapping`.
 
 ### `lei-group`
 
-**LEI ownership group** · mnemonic `LEIG` · read through connector `gleif-store`.
+**LEI ownership group** · mnemonic `LEIG` · read through connector `gleif-groupings`.
 
-**Id:** field `GROUP_ID`; for example `8I5DZWZKVSZI1NUHU748`.
+**Id:** set by its connector (no samples ship).
 
-Fields, from 1 sample document:
+No samples ship: documents are read live from its connector `gleif-groupings` (plugin `derived`). The fields its screens show:
 
-| Field | Type | Example | Description |
-|---|---|---|---|
-| `GROUP_ID` | string | `8I5DZWZKVSZI1NUHU748` | The ultimate parent's LEI (ALL for the browse document) |
-| `NAME` | string | `JPMORGAN CHASE & CO.` | — |
-| `ENTITY_LEI` | string | `8I5DZWZKVSZI1NUHU748` | The ultimate parent's entity; link to `lei-entity` |
-| `COUNTRY` | string | `US` | — |
-| `COUNTRY_NAME` | string | `United States of America (the)` | — |
-| `LEI_COUNTRY` | string | `US` | Country; link to `lei-country` |
-| `LEGAL_FORM` | string | `Corporation` | Legal form |
-| `SEGMENT` | string | `G-SIB, US equities` | Segment |
-| `MEMBERS` | integer | `50` | Members the pack keeps |
-| `MEMBERS_IN_GLEIF` | integer | `173` | Members GLEIF has |
-| `CAPPED` | boolean | `true` | True when GLEIF has more members than the pack keeps |
-| `CAP_NOTE` | string | `The group has 173 entities in GLEIF; the…` | The cap in words |
-| `LEVELS` | integer | `2` | Depth of the tree |
-| `COUNTRIES` | integer | `13` | Countries |
-| `LATE_RENEWALS` | integer | `5` | — |
-| `SEEDS` | list of objects |  | The seeds that brought the group in |
-| `US_COMPANY` | string | `JPM` | — |
-| `TREE` | list of objects |  | The tree from the ultimate parent (CHILDREN nested) |
-| `ROWS` | list of objects |  | Every member with its country and level |
-| `BY_COUNTRY` | list of objects |  | Members by country |
-| `BY_LEGAL_FORM` | list of objects |  | Members by legal form |
-| `PROVENANCE` | object |  | Source, retrieval date, licence and URL |
-
-Nested structures:
-
-| Path | Fields |
+| Field | Shown as |
 |---|---|
-| `SEEDS[]` | `LEI` (string), `LABEL` (string), `SEGMENT` (string), `TICKER` (string) |
-| `TREE[]` | `LEI` (string), `NAME` (string), `COUNTRY` (string), `CHILDREN` (list of objects) |
-| `TREE[].CHILDREN[]` | `LEI` (string), `NAME` (string), `COUNTRY` (string), `CHILDREN` (list of objects) |
-| `TREE[].CHILDREN[].CHILDREN[]` | `LEI` (string), `NAME` (string), `COUNTRY` (string) |
-| `ROWS[]` | `LEI` (string), `NAME` (string), `COUNTRY` (string), `LEVEL` (integer), `LATE` (string) |
-| `BY_COUNTRY[]` | `LABEL` (string), `VALUE` (integer) |
-| `BY_LEGAL_FORM[]` | `LABEL` (string), `VALUE` (integer) |
-| `PROVENANCE` | `SOURCE` (string), `RETRIEVED_AT` (date), `LICENCE` (string), `URL` (string) |
+| `COUNTRIES` | Countries |
+| `GROUPS` | Groups |
+| `GROUP_ROWS[].COUNTRY` | Home |
+| `GROUP_ROWS[].GLEIF_GROUP_SIZE` | In GLEIF |
+| `GROUP_ROWS[].NAME` | Group |
+| `GROUP_ROWS[].SEGMENT` | Segment |
+| `LAPSED` | Lapsed |
+| `LEGAL_CITY` | City |
+| `LEGAL_FORM` | Legal form |
+| `LEI_COUNTRY` | Country |
+| `LEVELS` | Levels |
+| `MEMBERS` | Entities |
+| `MEMBERS_IN_GLEIF` | Members (GLEIF) |
+| `REGISTRATION_STATUS` | Registration |
+| `SEGMENT` | Segment |
+| `TREE[].COUNTRY` | Country |
+| `TREE[].LEI` | LEI |
+| `TREE[].LEVEL` | Level |
 
-Links: `ENTITY_LEI` → `lei-entity`, `LEI_COUNTRY` → `lei-country`.
+Links: `LEI_COUNTRY` → `lei-country`.
 
 ### `lei-relationship`
 
@@ -217,37 +205,21 @@ Links: `CHILD_ENTITY` → `lei-entity`, `LEI_GROUP` → `lei-group`, `PARENT_ENT
 
 ### `lei-country`
 
-**LEI country** · mnemonic `LEIC` · read through connector `gleif-store`.
+**LEI country** · mnemonic `LEIC` · read through connector `gleif-groupings`.
 
-**Id:** field `COUNTRY`; for example `US`.
+**Id:** set by its connector (no samples ship).
 
-Fields, from 1 sample document:
+No samples ship: documents are read live from its connector `gleif-groupings` (plugin `derived`). The fields its screens show:
 
-| Field | Type | Example | Description |
-|---|---|---|---|
-| `COUNTRY` | string | `US` | ISO 3166 alpha-2 code (ALL for the directory) |
-| `NAME` | string | `United States of America (the)` | — |
-| `ENTITIES` | integer | `2704` | Entities with a legal address there |
-| `GROUPS_PRESENT` | integer | `521` | Groups present |
-| `GROUPS_HEADQUARTERED` | integer | `451` | — |
-| `LAPSED` | integer | `713` | — |
-| `LATE_RENEWALS` | integer | `724` | — |
-| `ROWS` | list of objects |  | The entities (the first 400 by name) |
-| `ROWS_NOTE` | string | `The first 400 of 2,704 entities, by name` | — |
-| `GROUP_ROWS` | list of objects |  | Groups present, with their entities there |
-| `BY_LEGAL_FORM` | list of objects |  | Entities by legal form |
-| `BY_CITY` | list of objects |  | Entities by city |
-| `PROVENANCE` | object |  | Source, retrieval date, licence and URL |
-
-Nested structures:
-
-| Path | Fields |
+| Field | Shown as |
 |---|---|
-| `ROWS[]` | `LEI` (string), `NAME` (string), `CITY` (string), `GROUP` (string), `LATE` (string) |
-| `GROUP_ROWS[]` | `GROUP_ID` (string), `NAME` (string), `HOME` (string), `HERE` (integer) |
-| `BY_LEGAL_FORM[]` | `LABEL` (string), `VALUE` (integer) |
-| `BY_CITY[]` | `LABEL` (string), `VALUE` (integer) |
-| `PROVENANCE` | `SOURCE` (string), `RETRIEVED_AT` (date), `LICENCE` (string), `URL` (string) |
+| `COUNTRIES` | Countries |
+| `COUNTRY_ROWS[].value` | Entities |
+| `ENTITIES` | Entities |
+| `GROUPS_HEADQUARTERED` | Groups headquartered |
+| `GROUPS_PRESENT` | Groups present |
+| `GROUP_ROWS[].value` | Entities here |
+| `LAPSED` | Lapsed |
 
 ### `lei-mapping`
 
@@ -287,10 +259,10 @@ Examples:
 |---|---|
 | `LEI 8I5DZWZKVSZI1NUHU748` | JPMorgan Chase & Co. · parents, children (a click opens one beside), identifiers, the listed company |
 | `LEI HWUPKR0MPOU8FGXBT394` | Apple Inc. · its LEI record and the us-equities company |
-| `LEIG 8I5DZWZKVSZI1NUHU748` | JPMorgan Chase & Co.'s ownership group · the tree, counts by country and legal form |
+| `LEIG 8I5DZWZKVSZI1NUHU748` | JPMorgan Chase & Co.'s ownership group, computed from the entities · the tree, counts by country and legal form |
 | `LEIG MLU0ZO3ML4LN2LL2TL39` | HSBC Holdings · a global bank's group |
 | `LEIG ALL` | Every ownership group, and a search of the entities |
-| `LEIC GB` | United Kingdom · the entities with a British legal address |
+| `LEIC GB` | United Kingdom, computed from the entities · every entity with a British legal address |
 | `LEIC ALL` | Every country of the entities |
 
 Screens (Sutras):
@@ -299,9 +271,9 @@ Screens (Sutras):
 |---|---|---|
 | `lei-browse` | `lei-group` | Search and browse the pack's legal entities: a search box over every entity, every ownership group, groups by segment and entities by country. |
 | `lei-countries` | `lei-country` | Every country of the pack's legal entities, by the number of entities. |
-| `lei-country` | `lei-country` | A country's legal entities in the pack: the entities, the groups present, legal forms and cities. |
+| `lei-country` | `lei-country` | A country's legal entities in the pack, computed from the entities when asked: the entities, the groups present, legal forms and cities. |
 | `lei-entity` | `lei-entity` | A legal entity from its LEI record: key facts, addresses, registration and renewal, parents, children and identifiers. |
-| `lei-group` | `lei-group` | An ownership group: the ultimate parent with its whole tree, every member, and counts by country and legal form. |
+| `lei-group` | `lei-group` | An ownership group, computed from the entities when asked: the ultimate parent with its whole tree, every member, and counts by country and legal form. |
 | `lei-mapping` | `lei-mapping` | An ISIN, BIC or MIC and the legal entity GLEIF's mapping files give it. |
 | `lei-relationship` | `lei-relationship` | One consolidation relationship from GLEIF's level 2 data: the child, its direct or ultimate parent, status and periods. |
 
@@ -325,7 +297,8 @@ The connectors it brings (written once to `config/connectors/<name>.yaml`, then 
 
 | Connector | Plugin | Kinds | Enabled |
 |---|---|---|---|
-| `gleif-store` | `delta` | `lei-entity`, `lei-group`, `lei-relationship`, `lei-country`, `lei-mapping` | `${DRISHTI_LAKE_ENABLED:true}` |
+| `gleif-store` | `delta` | `lei-entity`, `lei-relationship`, `lei-mapping` | `${DRISHTI_LAKE_ENABLED:true}` |
+| `gleif-groupings` | `derived` | `lei-group`, `lei-country` | `${DRISHTI_LAKE_ENABLED:true}` |
 
 Settings (environment variables) its connectors read: `DRISHTI_DELTA_ROOT`, `DRISHTI_LAKE_ENABLED`.
 

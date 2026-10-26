@@ -38,7 +38,7 @@ strip:
   - { label: Concept, bind: $.LABEL }
   - { label: Latest, bind: $.LATEST, fmt: compact, emphasis: true }
   - { label: Fiscal year, bind: $.LATEST_YEAR }
-  - { label: Change on the year, bind: $.CHANGE_PCT, fmt: growth1, tone: sign }
+  - { label: Change on the year, bind: "size($.HISTORY) > 1 && $.HISTORY[size($.HISTORY) - 2].VALUE ? ($.LATEST - $.HISTORY[size($.HISTORY) - 2].VALUE) / abs($.HISTORY[size($.HISTORY) - 2].VALUE) * 100 : null", fmt: growth1, tone: sign }
   - { label: Unit, bind: $.UNIT }
 panels:
   - { use: series-line@1, with: { id: history-line, title: "${$.LABEL} by fiscal year (${$.UNIT})", rows: $.HISTORY, x: YEAR, y: VALUE, fmt: compact, key: F2 } }
@@ -52,7 +52,7 @@ panels:
       - { label: Fiscal year, bind: "@.YEAR" }
       - { label: Period end, bind: "@.PERIOD_END", fmt: date }
       - { label: Value, bind: "@.VALUE", fmt: amount2 }
-      - { label: Change, bind: "@.CHANGE_PCT", fmt: growth1, tone: sign }
+      - { label: Change, bind: "#index > 0 && $.HISTORY[#index - 1].VALUE ? (@.VALUE - $.HISTORY[#index - 1].VALUE) / abs($.HISTORY[#index - 1].VALUE) * 100 : null", fmt: growth1, tone: sign }
       - { label: Form, bind: "@.FORM" }
       - { label: Filed, bind: "@.FILED", fmt: date }
       - { label: Accession, bind: "@.ACCESSION" }

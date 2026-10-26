@@ -48,7 +48,6 @@ storage:
   - SIC_DESCRIPTION
   - STATE_OF_INCORPORATION
   - REVENUE
-  - NET_MARGIN
   test-data:
   - data/testdata/us-equities/us-company
 fields:
@@ -187,16 +186,6 @@ fields:
   presence: required
   description: Net income
   example: 112010000000
-- name: NET_MARGIN
-  type: rate
-  presence: optional
-  description: Net margin
-  example: 26.92
-- name: REVENUE_GROWTH
-  type: rate
-  presence: optional
-  description: Revenue growth
-  example: 6.43
 - name: ASSETS
   type: integer
   presence: required
@@ -325,10 +314,6 @@ nested:
     type: amount
     presence: optional
     example: 45687000000
-  - name: NET_MARGIN
-    type: rate
-    presence: optional
-    example: 21.19
   - name: ASSETS
     type: integer
     presence: optional
@@ -527,18 +512,16 @@ validation:
   - Stockholders' equity
   - Total assets
   - Total liabilities
-notes: []
+notes:
+- 'NET_MARGIN, REVENUE_GROWTH and FINANCIALS[].NET_MARGIN left the record in 2.9.2: the pages compute them from REVENUE, NET_INCOME and FINANCIALS
+  (docs/guides/GROUPINGS_ANALYTICS_GUIDE.md section 16).'
 review:
 - 'required inferred from 100% coverage in 506 documents (3 samples and 503 test-data documents (data/testdata/us-equities/us-company/snapshot-2026-10-24.jsonl.gz)):
   confirm each required field is mandatory upstream, and each optional one may be empty.'
 - 'a snapshot refreshed when tools/publicdata/us_equities.py runs: confirm the refresh cadence.'
 - 'enum values inferred from the data, not from a glossary: LEI_STATUS, LEI_SOURCE, CURRENCY, INDEXES[].INDEX, INDEXES[].NAME, FACTS[].LABEL:
   confirm they are closed lists.'
-- 'number types decided by the field''s name: REVENUE amount, NET_INCOME amount, NET_MARGIN rate, REVENUE_GROWTH rate, FINANCIALS[].REVENUE amount,
-  FINANCIALS[].NET_INCOME amount, FINANCIALS[].NET_MARGIN rate: confirm amount, rate or integer.'
 - 'no unit stated for the amounts REVENUE, NET_INCOME, EPS_DILUTED, FINANCIALS[].REVENUE, FINANCIALS[].NET_INCOME, FINANCIALS[].EPS_DILUTED (docs/contracts/README.md
   section 7: USD unless stated): confirm the currency.'
 - 'no description in about.yaml or the Sutras for NAME, SEC_NAME, CIK, OTHER_TICKERS, EXCHANGE, LISTING, SIC, DIVISION, SECTOR, STATE_OF_INCORPORATION,
   FISCAL_YEAR_END, FILER_CATEGORY and 37 more: write them in the pack''s config/about.yaml glossary.'
-- 'The ratios (USEQ ratios) become computed from the financial facts (GROUPINGS_AND_ANALYTICS.md): confirm which fields are ratios and mark them
-  derived.'

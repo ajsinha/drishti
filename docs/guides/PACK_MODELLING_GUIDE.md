@@ -165,6 +165,12 @@ routes:
 - **Fields.** `count`; `sum`, `avg`, `min`, `max` over an expression (values that are missing or not numbers are
   skipped); `distinct` (the sorted distinct values); `first` (the first member's value, members in id order).
 - **`where`** keeps only the members that count (the help-desk pack's `where: $.STATUS != 'Closed'`).
+- **Beyond grouping (2.9.2).** `median` is a field aggregate too; `also-group-by` puts a member in further groups (a region, an income
+  group, `'ALL'`); `then` works fields out over the page (a ratio, a weighted average, `group(...)`); `sort` orders a list field;
+  `tree` builds the group's own hierarchy from a parent column; `unlisted` keeps a page over everything to its figures; `search-fields`
+  lets the type-ahead find a group by a page field. The gleif, us-equities and world-economy packs compute LEIG, LEIC, SIC and ECG this
+  way ([GROUPINGS_ANALYTICS_GUIDE.md](GROUPINGS_ANALYTICS_GUIDE.md) Part III; every setting in
+  [the derived connector's README](../connectors/types/derived/README.md)).
 - **Links.** Declare the members field under `graph.fields` (`TRADE_IDS: { kind: trade, label: Trade }`) and the
   members show as links; an `id-field` that is already a link field (`COUNTERPARTY`) links the derived entity to its key's.
 - **Business dates.** A picked date is computed from that date's members, so a derived kind has history wherever its

@@ -41,6 +41,8 @@ kinds:
 - rate-fixing
 - bond
 - correlation-matrix
+- correlation-result
+- equity-beta
 commands:
   CRV: ir-curve
   REPO: repo-curve
@@ -62,13 +64,17 @@ commands:
   FIX: rate-fixing
   BND: bond
   CORR: correlation-matrix
+  CORRC: correlation-result
+  EQB: equity-beta
   MKT: pack overview
 depends-on:
   packs:
   - core
   connectors:
+  - correlation-engine
   - ecb-estr-feed
   - ecb-fx-feed
+  - equity-analytics
   - fred-feed
   - market-store
   - nyfed-sofr-feed
@@ -76,6 +82,7 @@ depends-on:
   plugins:
   - delta
   - feed
+  - reactive
   settings:
   - DRISHTI_DELTA_ROOT
   - DRISHTI_FEED_ECB_ESTR
@@ -317,7 +324,6 @@ Fields, from 10 sample documents:
 | `SECTOR` | string | `Airlines` | Sector |
 | `EXCHANGE` | string | `TSX` | Exchange |
 | `CURRENCY` | string | `CAD` | Currency |
-| `BETA` | number | `1.46` | Beta |
 | `HISTORY` | list of objects |  | Daily closes |
 | `OHLC` | list of objects |  | Open, high, low and close bars |
 | `IDENTIFIERS` | object |  | Other identifiers (ISIN, exchange codes) |
@@ -648,17 +654,27 @@ Fields, from 3 sample documents:
 |---|---|---|---|
 | `MATRIX_ID` | string | `CORR-EU-EQ` | The document's id |
 | `NAME` | string | `European equities` | Name |
-| `FACTORS` | list of strings |  | The risk factors of the matrix |
-| `AVERAGE` | number | `0.385` | Average |
-| `PAIRS` | list of objects |  | Correlations by pair of factors |
-| `WINDOW` | string | `2 years, daily log returns` | Estimation window |
-| `ESTIMATOR` | string | `Ledoit-Wolf shrinkage` | Estimation method, e.g. Ledoit-Wolf shrinkage |
+| `FACTORS` | list of strings |  | The risk factors of the set |
+| `EQUITY_IDS` | list of strings |  | The factors that are equities (their price history); link to `equity` |
+| `FX_IDS` | list or list of strings |  | The factors that are FX pairs (their price history); link to `fx-spot` |
 
-Nested structures:
+Links: `EQUITY_IDS` → `equity`, `FX_IDS` → `fx-spot`.
 
-| Path | Fields |
-|---|---|
-| `PAIRS[]` | `A` (string), `B` (string), `RHO` (number) |
+### `correlation-result`
+
+**Correlations of a factor set (computed from price history)** · mnemonic `CORRC` · read through connector `correlation-engine`.
+
+**Id:** set by its connector (no samples ship).
+
+No samples ship: documents are read live from its connector `correlation-engine` (plugin `reactive`).
+
+### `equity-beta`
+
+**An equity's beta against its index (computed from price history)** · mnemonic `EQB` · read through connector `equity-analytics`.
+
+**Id:** set by its connector (no samples ship).
+
+No samples ship: documents are read live from its connector `equity-analytics` (plugin `reactive`).
 
 ## Screens and commands
 
@@ -684,6 +700,8 @@ Nested structures:
 | `FIX` | `rate-fixing` | Rate index fixings |
 | `BND` | `bond` | Bond (security master) |
 | `CORR` | `correlation-matrix` | Correlation matrix |
+| `CORRC` | `correlation-result` | Correlations of a factor set (computed from price history) |
+| `EQB` | `equity-beta` | An equity's beta against its index (computed from price history) |
 | `MKT` | — | The pack's overview: its kinds, how many each holds, an example of each |
 
 Examples:
@@ -695,6 +713,9 @@ Examples:
 | `EQ EQ-NVTK` | Equity · price history, identifiers |
 | `CDS CDS-SOLARIS` | Credit curve · spreads, hazard rates |
 | `CMDC CMDC-WTI` | WTI futures curve · backwardation |
+| `CORR CORR-EU-EQ` | European equities · correlations computed from the factors' price history (window and estimator on the page) |
+| `CORRC CORR-G10FX~estimator=ledoit-wolf` | The computed kind itself: G10 FX correlations, Ledoit-Wolf shrinkage |
+| `EQB EQ-NVTK` | Novatek's beta against the Nasdaq-100, computed from both price histories |
 
 Screens (Sutras):
 
@@ -705,7 +726,7 @@ Screens (Sutras):
 | `commodity-curve` | `commodity-curve` | Futures settlement prices by delivery month. |
 | `commodity-vol-surface` | `commodity-vol-surface` | Implied vols by delivery month and moneyness. |
 | `commodity` | `commodity` | A traded commodity with its benchmark, unit and venue. |
-| `correlation-matrix` | `correlation-matrix` | Pairwise correlations used by basket, quanto and spread products. |
+| `correlation-matrix` | `correlation-matrix` | A factor set's pairwise correlations, computed when the page opens from the factors' price history, for a window and an estimator. |
 | `credit-curve` | `credit-curve` | CDS par spreads by tenor, recovery and implied default probabilities. |
 | `dividend-curve` | `dividend-curve` | Expected dividends by year (implied from dividend futures and forwards). |
 | `equity-index` | `equity-index` | Index level with its largest constituents. |
@@ -745,6 +766,8 @@ The connectors it brings (written once to `config/connectors/<name>.yaml`, then 
 | `ecb-fx-feed` | `feed` | `fx-spot` | `${DRISHTI_FEED_ECB_FX:false}` |
 | `us-treasury-feed` | `feed` | `ir-curve` | `${DRISHTI_FEED_US_TREASURY:false}` |
 | `fred-feed` | `feed` | `rate-fixing` | `${DRISHTI_FEED_FRED:false}` |
+| `correlation-engine` | `reactive` | `correlation-result` | `${DRISHTI_LAKE_ENABLED:true}` |
+| `equity-analytics` | `reactive` | `equity-beta` | `${DRISHTI_LAKE_ENABLED:true}` |
 
 Settings (environment variables) its connectors read: `DRISHTI_DELTA_ROOT`, `DRISHTI_FEED_ECB_ESTR`, `DRISHTI_FEED_ECB_FX`, `DRISHTI_FEED_FRED`, `DRISHTI_FEED_NYFED_SOFR`, `DRISHTI_FEED_US_TREASURY`, `DRISHTI_FRED_SERIES`, `DRISHTI_LAKE_ENABLED`, `FRED_API_KEY`.
 

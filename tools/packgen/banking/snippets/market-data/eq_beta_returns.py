@@ -13,7 +13,7 @@
 # See the LICENSE file in the root of this repository for the full terms.
 
 # title: Beta, correlation and return distribution against the index
-# description: Daily log returns of the stock and of its index from their price histories, aligned by date: an OLS regression with statsmodels (beta, alpha, R squared, the summary), the correlation, set beside the beta the security master holds, and the returns' skew, excess kurtosis and Jarque-Bera normality test (scipy).
+# description: Daily log returns of the stock and of its index from their price histories, aligned by date: an OLS regression with statsmodels (beta, alpha, R squared, the summary), the correlation, set beside the beta Drishti computes (EQB, the page's Beta panel), and the returns' skew, excess kurtosis and Jarque-Bera normality test (scipy).
 # kinds: equity
 # example: EQ EQ-HLXP
 
@@ -38,9 +38,9 @@ y, x = rets[view.id], rets[index_id]
 model = sm.OLS(y, sm.add_constant(x)).fit()
 beta, alpha = model.params[index_id], model.params["const"]
 show(pd.DataFrame({
-    "MEASURE": ["beta (OLS)", "beta (security master)", "alpha, daily", "R squared", "correlation", "days",
+    "MEASURE": ["beta (OLS)", "alpha, daily", "R squared", "correlation", "days",
                 f"{view.id} vol, annual", f"{index_id} vol, annual"],
-    "VALUE": [beta, doc.get("BETA"), alpha, model.rsquared, y.corr(x), len(rets),
+    "VALUE": [beta, alpha, model.rsquared, y.corr(x), len(rets),
               y.std(ddof=1) * np.sqrt(252), x.std(ddof=1) * np.sqrt(252)],
 }), title=f"{view.id} against {index_id} ({idx.get('NAME', '')}), daily log returns")
 print(model.summary(title=f"OLS: {view.id} returns on {index_id} returns"))

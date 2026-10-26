@@ -34,6 +34,7 @@ import calc_snippets
 import layout
 import taxonomy as T
 import var_kinds as VK  # the VaR engine's kinds in the market-risk pack (positions, portfolios, P&L vectors, hierarchies)
+import corr_kinds as CK  # CORR computed from price history in the market-data pack (since 2.9.2)
 import ccr_kinds as XK  # the exposure engine's kinds in the counterparty-risk pack (the simulation run, the paths, exposure-result)
 
 ROOT = Path(__file__).resolve().parents[3]
@@ -159,7 +160,7 @@ STRIP_PATH = re.compile(r"\$\.([A-Za-z_][A-Za-z0-9_]*)")
 def forms(name: str, kinds: list[str], specs: dict) -> dict:
     out = {}
     for k in kinds:
-        if k in VK.COMPUTED or k in XK.COMPUTED:      # a computed kind (its id is a scope): no search form
+        if k in VK.COMPUTED or k in XK.COMPUTED or k in CK.COMPUTED:   # a computed kind (its id is a scope or a set): no search form
             continue
         if k in VK.KINDS:                             # the VaR engine's kinds: their key columns
             out[k] = PF.form_from_columns(VK.FORM_COLUMNS[k], VK.KINDS[k][3])
@@ -229,6 +230,7 @@ def manifest(name: str) -> dict:
                                                             "user-agent": "${drishti.branding.product:feed} public data feed connector",
                                                             "stale-after": "4d",   # daily feeds: covers a weekend and a holiday
                                                             "refresh-minutes": 60, **extra}}
+        add_corr_kinds(m)
     if name == "market-risk":
         add_var_kinds(m)
     if name == "counterparty-risk":
@@ -238,7 +240,7 @@ def manifest(name: str) -> dict:
     if name in PIVOTS:
         m["pivot"] = PIVOTS[name]
     m["form"] = forms(name, m["kinds"], specs)
-    extra = VK.EXAMPLES if name == "market-risk" else XK.EXAMPLES if name == "counterparty-risk" else []
+    extra = VK.EXAMPLES if name == "market-risk" else XK.EXAMPLES if name == "counterparty-risk" else CK.EXAMPLES if name == "market-data" else []
     m["console"] = {"examples": [list(e) for e in EXAMPLES[name] + extra], "help": "config/help.yaml"}
     if calc_snippets.SNIPPETS.get(name):    # Calc on the pack's kinds, with its snippets under python/ (calc_snippets.py)
         m["python"] = {"enabled": True}
@@ -270,6 +272,16 @@ def add_var_kinds(m: dict) -> None:
             m["graph"]["badges"][k] = VK.BADGES[k]
     m["connectors"].update(VK.CONNECTORS)
     m["graph"]["fields"] = dict(sorted({**m["graph"]["fields"], **{f: {"kind": k, "label": lab} for f, (k, lab) in VK.FIELDS.items()}}.items()))
+
+
+def add_corr_kinds(m: dict) -> None:
+    """CORR computed from price history (corr_kinds.py) in the market-data manifest: the computed kind correlation-result, its mnemonic,
+    route and the reactive correlation-engine."""
+    for k, (mnem, label, _pattern, _id) in CK.KINDS.items():
+        m["kinds"].append(k)
+        m["mnemonics"][mnem] = {"kind": k, "label": label}
+        m["routes"][k] = CK.SERVED_BY[k]
+    m["connectors"].update(CK.CONNECTORS)
 
 
 def add_ccr_kinds(m: dict) -> None:

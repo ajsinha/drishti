@@ -54,11 +54,13 @@ desk ─► VaR ─► stress results ◄─ stress scenario        book ─► 
 | `DISCOUNT_CURVE` | Discount curve | `ir-curve` | `market-data` | `market` |
 | `DIVIDEND_CURVE` | Dividend curve | `dividend-curve` | `market-data` | `market` |
 | `EQUITY` | Equity | `equity` | `market-data` | `market` |
+| `EQUITY_IDS` | Equity | `equity` | `market-data` | `market` |
 | `EQUITY_INDEX` | Index | `equity-index` | `market-data` | `market` |
 | `EQUITY_VOL_SURFACE` | Equity vol surface | `equity-vol-surface` | `market-data` | `market` |
 | `FIXING_INDEX` | Fixing index | `rate-fixing` | `market-data` | `market` |
 | `FORWARD_CURVE` | Forward curve | `ir-curve` | `market-data` | `market` |
 | `FX_FORWARD_CURVE` | Fx forward curve | `fx-forward-curve` | `market-data` | `market` |
+| `FX_IDS` | FX spot | `fx-spot` | `market-data` | `market` |
 | `FX_SPOT` | Fx spot | `fx-spot` | `market-data` | `market` |
 | `FX_VOL_SURFACE` | Fx vol surface | `fx-vol-surface` | `market-data` | `market` |
 | `GROUP` | Group | `counterparty-group` | `core` | `reference` |

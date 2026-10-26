@@ -20,11 +20,11 @@ description: "Search and browse the pack's legal entities: a search box over eve
 doc:
   summary: "Search the legal entities by name or LEI, and browse every ownership group (a click opens the group's summary beside)."
   description: >-
-    The pack's front page (LEIG ALL). The search box finds legal entities by name, LEI, city or legal form across the whole pack
-    (the first 50 found; each name a link to its page). The groups table lists every ownership group, largest first, with its
-    home country, segment (US equities, G-SIB, bank, insurer, asset manager, market infrastructure), the members the pack keeps and
-    the members GLEIF has; a click opens the group's facts and its members by country beside it. On the right: groups by segment,
-    entities by country, and the source.
+    The pack's front page (LEIG ALL), computed from the entities when it is opened (since 2.9.2). The search box finds legal entities
+    by name, LEI, city or legal form across the whole pack (the first 50 found; each name a link to its page). The groups table lists
+    every ownership group's ultimate parent, largest in GLEIF first, with its home country, segment (US equities, G-SIB, bank,
+    insurer, asset manager, market infrastructure) and the members GLEIF has; a click opens the group's computed facts and its members
+    by country beside it. On the right: the seeded entities by segment, entities by country, and the source.
   params: {}
   emits: []
   expects: []
@@ -37,10 +37,10 @@ title: { pill: GLEIF · Search and browse, id: $.GROUP_ID, with: $.NAME }
 controls:
   - { id: q, kind: search, label: Find entities, default: bank, placement: header, panel: found }
 strip:
-  - { label: Entities, bind: $.ENTITIES, fmt: entities0, emphasis: true }
+  - { label: Entities, bind: $.MEMBERS, fmt: entities0, emphasis: true }
   - { label: Groups, bind: $.GROUPS, fmt: entities0 }
   - { label: Countries, bind: $.COUNTRIES }
-  - { label: Groups capped, bind: $.CAPPED_GROUPS }
+  - { label: Lapsed, bind: $.LAPSED }
   - { label: Late renewals, bind: "$.LATE_RENEWALS + ' late: renewal failed'", tone: status }
 panels:
   - id: found
@@ -60,18 +60,17 @@ panels:
       - { label: Group, bind: "link(@.LEI_GROUP, 'lei-group')" }
   - id: groups
     kind: table
-    title: Every ownership group, largest first (a click opens it beside)
+    title: Every ownership group, largest in GLEIF first (a click opens it beside)
     key: F3
     code: GRPS
-    rows: $.ROWS
+    rows: $.GROUP_ROWS
     columns:
       - { label: Group, bind: "@.NAME" }
       - { label: Home, bind: "@.COUNTRY" }
       - { label: Segment, bind: "@.SEGMENT" }
-      - { label: Members, bind: "@.MEMBERS", fmt: entities0, total: true }
-      - { label: In GLEIF, bind: "@.MEMBERS_IN_GLEIF", fmt: entities0 }
+      - { label: In GLEIF, bind: "@.GLEIF_GROUP_SIZE", fmt: entities0 }
     emits:
-      - { name: open, on: row-click, payload: { id: { bind: "@.GROUP_ID", type: id }, ref: { bind: "@.COUNTRY", type: text } } }
+      - { name: open, on: row-click, payload: { id: { bind: "@.LEI", type: id }, ref: { bind: "@.COUNTRY", type: text } } }
     children:
       - place: detail-right
         source: { kind: lei-group, id: "@parent.open.id" }
@@ -85,18 +84,18 @@ panels:
               - { label: Group page, bind: "link($src.GROUP_ID, 'lei-group', 'Open the group tree')" }
               - { label: Home, bind: "link($src.LEI_COUNTRY, 'lei-country', $src.COUNTRY_NAME)" }
               - { label: Segment, bind: $src.SEGMENT }
-              - { label: Members kept, bind: $src.MEMBERS, fmt: entities0 }
+              - { label: Members, bind: $src.MEMBERS, fmt: entities0 }
               - { label: Members in GLEIF, bind: $src.MEMBERS_IN_GLEIF, fmt: entities0 }
               - { label: Levels, bind: $src.LEVELS }
               - { label: Late renewals, bind: $src.LATE_RENEWALS }
-          - { use: ranked-bars@1, with: { id: picked-countries, title: Members by country, rows: $src.BY_COUNTRY, fmt: entities0 } }
-  - { use: ranked-bars@1, with: { id: by-segment, title: Groups by segment, rows: $.BY_SEGMENT, fmt: entities0, area: right, key: F4 } }
-  - { use: ranked-bars@1, with: { id: by-country, title: Entities by country (top 20), rows: $.BY_COUNTRY, fmt: entities0, area: right } }
+          - { use: ranked-bars@1, with: { id: picked-countries, title: Members by country, rows: $src.BY_COUNTRY, label: label, value: value, fmt: entities0 } }
+  - { use: ranked-bars@1, with: { id: by-segment, title: Seeded entities by segment, rows: $.BY_SEGMENT, label: label, value: value, fmt: entities0, area: right, key: F4 } }
+  - { use: ranked-bars@1, with: { id: by-country, title: Entities by country (top 20), rows: $.BY_COUNTRY, label: label, value: value, fmt: entities0, area: right } }
   - use: explainer-note@1
     with:
       title: About this pack
       area: right
-      text: "Legal Entity Identifiers from GLEIF (CC0 1.0; attribution appreciated): the ownership groups of the us-equities companies and of large banks (the FSB's G-SIBs and others), insurers, asset managers and market infrastructures, at most 50 entities a group. LEIC ALL lists the countries; LEI <code> opens an entity."
+      text: "Legal Entity Identifiers from GLEIF (CC0 1.0; attribution appreciated): the ownership groups of the us-equities companies and of large banks (the FSB's G-SIBs and others), insurers, asset managers and market infrastructures; the committed data keeps at most 50 entities a group. The groups and countries are computed from the entities when asked, with no cap. LEIC ALL lists the countries; LEI <code> opens an entity."
   - { use: field-list@1, with: { id: source, title: Data source and licence, rows: $.PROVENANCE, area: right } }
   - { use: data-provenance@1 }
 keys: { F6: "link('ALL', 'lei-country', 'Countries')", F9: raw }

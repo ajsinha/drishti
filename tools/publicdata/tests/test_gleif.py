@@ -81,15 +81,18 @@ def test_offline_build_from_the_recorded_cache_is_complete_and_deterministic(tmp
     assert ents[APPLE]["BICS"] == "APLEUS66XXX" and ents[APPLE]["LEI_COUNTRY"] == "US"
     kid = next(k for k, d in ents.items() if d.get("DIRECT_PARENT") == APPLE)
     assert ents[kid]["LEI_GROUP"] == APPLE and ents[kid]["PARENTS"][0]["LEI"] == APPLE
-    groups = {d["GROUP_ID"]: d for d in snap(pack, "lei-group")}
-    assert groups[APPLE]["TREE"][0]["LEI"] == APPLE and groups[APPLE]["TREE"][0]["CHILDREN"]
-    assert "ALL" in groups and groups["ALL"]["GROUPS"] == 2
+    # the groups and countries are computed from the entities when asked (since 2.9.2): none is written, the ultimate parent says
+    # its group's size in GLEIF
+    assert snap(pack, "lei-group") == [] and snap(pack, "lei-country") == []
+    members = [d for d in ents.values() if d["LEI_GROUP"] == APPLE]
+    assert ents[APPLE]["GLEIF_GROUP_SIZE"] >= len(members) > 1
+    assert len({d["LEI_GROUP"] for d in ents.values()}) == 2
+    assert ents[APPLE]["PROVENANCE"]["RETRIEVED_AT"]
     rels = {d["RELATIONSHIP_ID"]: d for d in snap(pack, "lei-relationship")}
     assert rels[f"LEIREL-{kid}-DIRECT"]["PARENT_ENTITY"] == APPLE
     maps = {d["IDENTIFIER"]: d for d in snap(pack, "lei-mapping")}
     assert maps["APLEUS66XXX"]["ENTITY_LEI"] == APPLE and maps["APLEUS66XXX"]["TYPE"] == "BIC"
-    countries = {d["COUNTRY"] for d in snap(pack, "lei-country")}
-    assert {"US", "ALL"} <= countries
+    assert "US" in {d["LEI_COUNTRY"] for d in ents.values()}
     assert (pack / "pack.yaml").is_file() and (pack / "guides" / "gleif.md").is_file()
     first = built(pack)
     assert GL.refresh(ns(cache, offline=True, out=str(out)), log=lambda *_: None) == 0
@@ -124,8 +127,9 @@ def test_scope_name_widens_into_the_data_folder_through_the_api(cache, data_dir)
     ents = {d["LEI"] for d in snap(pack, "lei-entity")}
     assert {d["id"] for d in moodys_kids} <= ents
     assert any("filter[fulltext]=moody" in u for u in calls)
-    groups = {d["GROUP_ID"]: d for d in snap(pack, "lei-group")}
-    assert "at most 5 a group" in groups[MOODYS]["CAP_NOTE"]                                 # CAP:5, the found entities kept beyond it
+    docs = {d["LEI"]: d for d in snap(pack, "lei-entity")}
+    kept = [d for d in docs.values() if d["LEI_GROUP"] == MOODYS]
+    assert docs[MOODYS]["GLEIF_GROUP_SIZE"] >= len(kept) >= 3                                 # CAP:5, the found entities kept beyond it
     assert GL.F.GROUP_CAP == 50                                                                 # put back
 
 

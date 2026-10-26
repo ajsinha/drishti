@@ -17,11 +17,11 @@
 
 # The command catalog
 
-Every command of the command line: its own words and forms, the 10 packs' codes, and the 95 mnemonics the packs define, each with what it does and an example. A pack's mnemonics work when the pack is switched on ([PACKS.md](PACKS.md)); how to type them is in [USER_GUIDE.md](USER_GUIDE.md).
+Every command of the command line: its own words and forms, the 10 packs' codes, and the 97 mnemonics the packs define, each with what it does and an example. A pack's mnemonics work when the pack is switched on ([PACKS.md](PACKS.md)); how to type them is in [USER_GUIDE.md](USER_GUIDE.md).
 
 **Data** says what kind of data a command shows ([the data contracts](../contracts/README.md#3-four-kinds-of-data)): *fundamental* (masters, terms, market and public data, kept as delivered), *engine input* (what upstream engines deliver for the computed measures), *Drishti's own* (made by Drishti) and *computed* (worked out when asked). **Change** says when a command moves to the compute model, or when the figures on a record start to be computed instead of stored ([the roadmap](../architecture/IMPLEMENTATION_PLAN.md#the-computed-measures-roadmap-280-to-2120-product-owner-2026-10-25)). Each mnemonic's fields are in its data contract ([every command's contract](../contracts/packs/README.md)).
 
-In numbers: 74 fundamental, 8 engine input, 1 Drishti's own and 12 computed; 0 move to the compute model and 0 keep their record while its figures become computed.
+In numbers: 70 fundamental, 8 engine input, 1 Drishti's own and 18 computed; 0 move to the compute model and 0 keep their record while its figures become computed.
 
 ## Contents
 
@@ -135,9 +135,9 @@ Legal Entity Identifiers from GLEIF (CC0): the legal entities of the us-equities
 | Command | Opens | What it does | Example | Data | Change |
 |---|---|---|---|---|---|
 | `LEI` | LEI legal entity | A legal entity from its LEI record: key facts, addresses, registration and renewal, parents, children and identifiers. | `LEI 8I5DZWZKVSZI1NUHU748` | fundamental |  |
-| `LEIG` | LEI ownership group | An ownership group: the ultimate parent with its whole tree, every member, and counts by country and legal form. | `LEIG 8I5DZWZKVSZI1NUHU748` | fundamental |  |
+| `LEIG` | LEI ownership group | An ownership group, computed from the entities when asked: the ultimate parent with its whole tree, every member, and counts by country and legal form. | `LEIG 8I5DZWZKVSZI1NUHU748` | computed |  |
 | `LEIR` | LEI parent relationship | One consolidation relationship from GLEIF's level 2 data: the child, its direct or ultimate parent, status and periods. | `LEIR LEIREL-010PWNH4K3BLIC3I7R03-DIRECT` | fundamental |  |
-| `LEIC` | LEI country | A country's legal entities in the pack: the entities, the groups present, legal forms and cities. | `LEIC GB` | fundamental |  |
+| `LEIC` | LEI country | A country's legal entities in the pack, computed from the entities when asked: the entities, the groups present, legal forms and cities. | `LEIC GB` | computed |  |
 | `LEIM` | ISIN or BIC to LEI | An ISIN, BIC or MIC and the legal entity GLEIF's mapping files give it. | `LEIM WABTUS3WXXX` | fundamental |  |
 
 ## Market data (`market-data`)
@@ -165,7 +165,9 @@ Curves, volatility surfaces, FX, equities, credit, inflation, commodities, fixin
 | `CMDV` | Commodity volatility surface | Implied vols by delivery month and moneyness. | `CMDV CMDV-BRENT` | fundamental |  |
 | `FIX` | Rate index fixings | Published overnight and term rate fixings (SOFR, €STR, SONIA…). | `FIX FIX-AONIA` | fundamental |  |
 | `BND` | Bond (security master) | A listed bond: terms, price, yield, spreads and analytics. | `BND BND-BRVERD054608` | fundamental |  |
-| `CORR` | Correlation matrix | Pairwise correlations used by basket, quanto and spread products. | `CORR CORR-EU-EQ` | fundamental |  |
+| `CORR` | Correlation matrix | A correlation set: the factors whose pairwise correlations basket, quanto and spread products use. Since 2.9.2 the set keeps its definition only; the correlations are the computed kind correlation-result (CORRC), worked out from the factors' price history when asked. | `CORR CORR-EU-EQ` | fundamental |  |
+| `CORRC` | Correlations of a factor set (computed from price history) | The pairwise correlations of a correlation set's factors, computed when asked from their daily closes in the lake (log returns over a window, Pearson or Ledoit-Wolf) by the server's Java engine, as the person asking; never stored. | `CORRC CORR-G10FX~estimator=ledoit-wolf` | computed |  |
+| `EQB` | An equity's beta against its index (computed from price history) | An equity's beta, alpha, correlation and R squared against its index (EQUITY_INDEX), the regression of their daily log returns over a window, computed when asked from both price histories by the server's Java engine, as the person asking; never stored. It replaces the security master's stored BETA (retired in 2.9.2). | `EQB EQ-NVTK` | computed |  |
 
 ## Market risk (`market-risk`)
 
@@ -218,7 +220,7 @@ Public data on the companies of the Dow 30, the Nasdaq-100 and the S&P 500, and 
 |---|---|---|---|---|---|
 | `USEQ` | US company | A US listed company: key facts, ten years of annual financials, recent SEC filings and index memberships, from public data. | `USEQ AAPL` | fundamental |  |
 | `IDX` | Index members | An equity index's members (Dow 30, Nasdaq-100, S&P 500) as Wikidata records them; a click opens the member's summary beside. | `IDX SP500` | fundamental |  |
-| `SIC` | SIC sector | A sector by its SIC code: its companies ranked by revenue; a click opens a company's summary beside. | `SIC 3674` | fundamental |  |
+| `SIC` | SIC sector | A sector by its SIC code, computed from the companies when asked: its companies ranked by revenue; a click opens a company's summary beside. | `SIC 3674` | computed |  |
 | `EDGAR` | EDGAR filings browser | The filings browser: the latest SEC filings of the covered companies, of every form or one; a click opens a filing beside. | `EDGAR 8-K` | fundamental |  |
 | `FILING` | SEC filing | One SEC filing: its company, form, dates, 8-K items and its links on EDGAR (metadata only; the document stays on sec.gov). | `FILING 0001104659-26-117587` | fundamental |  |
 | `FACT` | Financial fact | One financial concept of one company (revenue, net income, assets...) over up to ten fiscal years, from its 10-K XBRL filings. | `FACT AAPL-REVENUE` | fundamental |  |
@@ -235,7 +237,7 @@ Real public economic data for about 200 economies: output, growth, prices, jobs,
 | `FCST` | Economic forecast | The IMF World Economic Outlook: growth, inflation, unemployment, external balance and debt, outturn and projections to 2031. | `FCST FCST-JPN-WEO` | fundamental |  |
 | `LABR` | Labour market | Unemployment, participation, youth and female labour, and employment and output by sector. | `LABR LABR-NGA` | fundamental |  |
 | `FISC` | Fiscal position | Government debt and net lending (IMF) with revenue, expense and military spending (World Bank), as shares of GDP. | `FISC FISC-USA` | fundamental |  |
-| `ECG` | Country group | A World Bank region or income group (or the world): output, population, growth and its largest economies. | `ECG ECG-SAS` | fundamental |  |
+| `ECG` | Country group | A World Bank region or income group (or the world), computed from its member economies when asked: output, population, growth, inflation and its largest economies. | `ECG ECG-SAS` | computed |  |
 | `REGE` | Region economy | A state or territory (ISO 3166-2): population, GDP and GDP per head. | `REGE REGE-AU-NSW` | fundamental |  |
 | `JUR` | Jurisdiction | A country: government type, capital, legislature and seats by party, office holders, elections and governance indicators, from the CIA World Factbook, World Bank and UNDP. | `JUR JUR-IND` | fundamental |  |
 | `PARTY` | Party | A political party that won seats in the lower chamber at the most recent election, with the chamber's full result. | `PARTY PARTY-IND-01` | fundamental |  |

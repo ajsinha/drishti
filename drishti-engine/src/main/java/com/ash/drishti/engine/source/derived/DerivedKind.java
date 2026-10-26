@@ -50,15 +50,32 @@ import java.util.Set;
  *   rows:                         # optional: one row per member, for a table (in the field `rows`, or rows-field)
  *     trade: $.tradeId
  *     mtm: $.mtm
+ *   also-group-by:                # optional: further groups each member joins (an economy: its region, its income group, the world)
+ *     income: $.INCOME_GROUP
+ *     world: "'ECG-WLD'"
+ *   unlisted: ALL                 # optional: keys whose page keeps no member ids or rows once its then fields are worked out from them
+ *   then: ...                     # optional: fields worked out over the page, and a tree of the rows ({@link DerivedPage})
  * </pre>
  *
- * Aggregates: {@code count}, {@code sum}, {@code avg}, {@code min}, {@code max}, {@code distinct} (sorted values),
- * {@code first} (the first member's value, members in id order). Numbers that are missing or not numbers are skipped.
+ * Aggregates: {@code count}, {@code sum}, {@code avg}, {@code median}, {@code min}, {@code max}, {@code distinct} (sorted values),
+ * {@code first} (the first member's value, members in id order). Numbers that are missing or not numbers are skipped; the median of
+ * an even count is the mean of the middle two.
  */
 public final class DerivedKind {
 
     enum Op {
-        COUNT, SUM, AVG, MIN, MAX, DISTINCT, FIRST
+        COUNT, SUM, AVG, MEDIAN, MIN, MAX, DISTINCT, FIRST
+    }
+
+    /** The median of some numbers (the mean of the middle two of an even count), or null when there are none. */
+    static Double median(List<Double> values) {
+        if (values.isEmpty()) {
+            return null;
+        }
+        List<Double> s = new ArrayList<>(values);
+        java.util.Collections.sort(s);
+        int n = s.size();
+        return n % 2 == 1 ? s.get(n / 2) : (s.get(n / 2 - 1) + s.get(n / 2)) / 2;
     }
 
     record Field(String name, Op op, Expr expr, String source) {}
@@ -75,6 +92,14 @@ public final class DerivedKind {
     private final String rowsField;
     private final int maxMembers;
     private final Formats formats;
+    /** Further group keys a member joins besides {@link #groupBy} (also-group-by), in name order. */
+    private List<Expr> alsoGroupBy = List.of();
+    /** Keys whose page keeps no member ids or rows once its then fields and tree are worked out (unlisted: a page over everything). */
+    private Set<String> unlisted = Set.of();
+    /** The then fields and the tree laid over each page, or null. */
+    private DerivedPage page;
+    /** Page fields a search matches besides the id (search-fields: NAME): the type-ahead finds a group by its name. */
+    private List<String> searchFields = List.of();
     /** What {@link #compact} computes from a member (source kind, fields, row columns): kinds with the same signature share it. */
     private String signature;
 
@@ -140,6 +165,29 @@ public final class DerivedKind {
                 }
             });
             made.signature = sig.toString();
+            Map<String, Expr> also = new java.util.TreeMap<>();
+            String ap = p + "also-group-by.";
+            settings.forEach((k, v) -> {
+                if (k.startsWith(ap)) {
+                    also.put(k.substring(ap.length()), compile(kind, "also-group-by." + k.substring(ap.length()), v, el));
+                }
+            });
+            made.alsoGroupBy = List.copyOf(also.values());
+            String un = settings.get(p + "unlisted");
+            if (un != null && !un.isBlank()) {
+                Set<String> keys = new LinkedHashSet<>();
+                for (String u : un.split(",")) {
+                    if (!u.isBlank()) {
+                        keys.add(u.trim());
+                    }
+                }
+                made.unlisted = Set.copyOf(keys);
+            }
+            made.page = DerivedPage.parse(kind, p, settings, made.rowsField, el, formats);
+            String sf = settings.get(p + "search-fields");
+            if (sf != null && !sf.isBlank()) {
+                made.searchFields = java.util.Arrays.stream(sf.split(",")).map(String::trim).filter(s -> !s.isEmpty()).toList();
+            }
             out.add(made);
         }
         return out;
@@ -153,7 +201,7 @@ public final class DerivedKind {
         try {
             op = Op.valueOf(opName);
         } catch (IllegalArgumentException e) {
-            throw new IllegalArgumentException(kind + ".fields." + name + ": '" + s + "' must start with count, sum, avg, min, max, distinct or first");
+            throw new IllegalArgumentException(kind + ".fields." + name + ": '" + s + "' must start with count, sum, avg, median, min, max, distinct or first");
         }
         String expr = space < 0 ? null : s.substring(space + 1).trim();
         if (op != Op.COUNT && (expr == null || expr.isEmpty())) {
@@ -168,6 +216,11 @@ public final class DerivedKind {
         } catch (RuntimeException e) {
             throw new IllegalArgumentException(kind + "." + what + ": '" + src + "' is not an expression: " + e.getMessage(), e);
         }
+    }
+
+    /** The page fields a search matches besides the id, in order (the first one labels a hit). */
+    List<String> searchFields() {
+        return searchFields;
     }
 
     public String kind() {
@@ -193,6 +246,7 @@ public final class DerivedKind {
                 case COUNT -> "Number of " + from + " records";
                 case SUM -> "Sum of " + operand(f) + " over the " + from + " records";
                 case AVG -> "Average of " + operand(f) + " over the " + from + " records";
+                case MEDIAN -> "Median of " + operand(f) + " over the " + from + " records";
                 case MIN -> "Smallest " + operand(f) + " among the " + from + " records";
                 case MAX -> "Largest " + operand(f) + " among the " + from + " records";
                 case DISTINCT -> "The different values of " + operand(f) + " among the " + from + " records";
@@ -214,18 +268,62 @@ public final class DerivedKind {
         return from;
     }
 
-    /** The group a member falls in, or null when it is filtered out or has no key. */
+    /** The group a member falls in, or null when it is filtered out or has no key (its further groups: {@link #keysOf}). */
     String keyOf(DataNode member) {
         EvalContext c = EvalContext.of(member, formats);
         if (where != null && !Values.truthy(safe(where, c))) {
             return null;
         }
-        Object k = Values.simplify(safe(groupBy, c));
+        return keyText(safe(groupBy, c));
+    }
+
+    /** Every group a member falls in: its group-by key and each also-group-by key (each once); empty when it is filtered out. */
+    List<String> keysOf(DataNode member) {
+        if (alsoGroupBy.isEmpty()) {
+            String k = keyOf(member);
+            return k == null ? List.of() : List.of(k);
+        }
+        EvalContext c = EvalContext.of(member, formats);
+        if (where != null && !Values.truthy(safe(where, c))) {
+            return List.of();
+        }
+        Set<String> out = new LinkedHashSet<>();
+        String k = keyText(safe(groupBy, c));
+        if (k != null) {
+            out.add(k);
+        }
+        for (Expr e : alsoGroupBy) {
+            String a = keyText(safe(e, c));
+            if (a != null) {
+                out.add(a);
+            }
+        }
+        return List.copyOf(out);
+    }
+
+    private static String keyText(Object raw) {
+        Object k = Values.simplify(raw);
         if (Values.isNull(k)) {
             return null;
         }
         String key = Values.text(k).trim();
         return key.isEmpty() ? null : key;
+    }
+
+    /** Lays the tree and the then fields over a page's map (also used by Drishti*net's merge of a group's shares). */
+    void finish(String key, Map<String, Object> doc) {
+        if (page != null) {
+            page.finish(key, doc);
+        }
+        if (unlisted.contains(key)) {
+            doc.put(membersField, List.of());
+            if (doc.containsKey(rowsField)) {
+                doc.put(rowsField, List.of());
+            }
+            if (page != null && page.treeField() != null) {
+                doc.remove(page.treeField());                  // a page over everything keeps no tree of everything either
+            }
+        }
     }
 
     /** The derived entity for one group: its key, the members' ids (sorted) and each aggregate. */
@@ -275,12 +373,14 @@ public final class DerivedKind {
         private final int[] n = new int[fields.size()];
         private final Double[] best = new Double[fields.size()];
         private final List<Set<String>> distinct = new ArrayList<>();
+        private final List<List<Double>> all = new ArrayList<>();
         private final String[] firstId = new String[fields.size()];
         private final Object[] first = new Object[fields.size()];
 
         Totals() {
             for (int i = 0; i < fields.size(); i++) {
                 distinct.add(fields.get(i).op() == Op.DISTINCT ? new java.util.TreeSet<>() : null);
+                all.add(fields.get(i).op() == Op.MEDIAN ? new ArrayList<>() : null);
             }
         }
 
@@ -308,6 +408,9 @@ public final class DerivedKind {
                     default -> {
                         if (Values.isNumber(v)) {
                             double d = Values.number(v);
+                            if (all.get(i) != null) {
+                                all.get(i).add(d);
+                            }
                             sum[i] += d;
                             n[i]++;
                             best[i] = best[i] == null ? d : f.op() == Op.MIN ? Math.min(best[i], d) : Math.max(best[i], d);
@@ -327,6 +430,7 @@ public final class DerivedKind {
                     case DISTINCT -> List.copyOf(distinct.get(i));
                     case SUM -> Values.normalise(sum[i]);
                     case AVG -> n[i] == 0 ? null : Values.normalise(sum[i] / n[i]);
+                    case MEDIAN -> all.get(i).isEmpty() ? null : Values.normalise(median(all.get(i)));
                     case MIN, MAX -> best[i] == null ? null : Values.normalise(best[i]);
                 });
             }
@@ -380,7 +484,8 @@ public final class DerivedKind {
      * The group's page from its totals and its listed members' ids and rows (read from the disk, ids in order): the same
      * document {@link #build} makes.
      */
-    DataNode buildStored(String key, long count, Map<String, Object> totals, List<String> listed, java.util.function.Function<String, byte[]> row) {
+    DataNode buildStored(String key, long count, Map<String, Object> totals, List<String> listedIds, java.util.function.Function<String, byte[]> row) {
+        List<String> listed = listedIds;
         Map<String, Object> doc = new LinkedHashMap<>();
         doc.put("id", key);
         doc.put(idField, key);
@@ -408,6 +513,7 @@ public final class DerivedKind {
             }
             doc.put(rowsField, rows);
         }
+        finish(key, doc);
         return DataNode.of(doc);
     }
 
@@ -480,7 +586,7 @@ public final class DerivedKind {
             aggregates.put(fields.get(i).name(), aggregate(fields.get(i), ids, id -> Values.simplify(members.get(id).get(name))));
         }
         Map<String, Object> doc = assembleHead(key, ids, aggregates);
-        List<String> listed = listed(ids);
+        List<String> listed = listed(key, ids);
         if (!rowColumns.isEmpty()) {
             List<Map<String, Object>> rows = new ArrayList<>(listed.size());
             for (String id : listed) {
@@ -494,6 +600,7 @@ public final class DerivedKind {
             }
             doc.put(rowsField, rows);
         }
+        finish(key, doc);
         return DataNode.of(doc);
     }
 
@@ -523,21 +630,21 @@ public final class DerivedKind {
      * columns it reads, one group at a time.
      */
     Map<String, DataNode> buildAll(com.ash.drishti.api.ColumnSet c, String groupBySource) {
-        String keyPath = where == null ? plainPath(groupBySource) : null;
+        String keyPath = where == null && alsoGroupBy.isEmpty() ? plainPath(groupBySource) : null;
         List<String> keyPaths = List.copyOf(keyPaths());
         List<String> all = List.copyOf(paths().orElseThrow());
         Map<String, List<Integer>> groups = new java.util.HashMap<>();
         for (int i = 0; i < c.size(); i++) {
-            String key;
             if (keyPath != null) {
                 Object v = c.value(keyPath, i);
-                key = v == null ? null : Values.text(v instanceof Double d ? Values.normalise(d) : v).trim();
-                key = key == null || key.isEmpty() ? null : key;
+                String key = v == null ? null : Values.text(v instanceof Double d ? Values.normalise(d) : v).trim();
+                if (key != null && !key.isEmpty()) {
+                    groups.computeIfAbsent(key, x -> new ArrayList<>()).add(i);
+                }
             } else {
-                key = keyOf(rowOf(c, i, keyPaths));
-            }
-            if (key != null) {
-                groups.computeIfAbsent(key, x -> new ArrayList<>()).add(i);
+                for (String key : keysOf(rowOf(c, i, keyPaths))) {
+                    groups.computeIfAbsent(key, x -> new ArrayList<>()).add(i);
+                }
             }
         }
         boolean direct = fields.stream().allMatch(f -> f.op() == Op.COUNT || fieldPath(f) != null);
@@ -587,10 +694,14 @@ public final class DerivedKind {
         double total = 0;
         int n = 0;
         double best = Double.NaN;
+        List<Double> seen = op == Op.MEDIAN ? new ArrayList<>() : null;
         for (int i : rows) {
             double v = nums[i];
             if (Double.isNaN(v)) {
                 continue;
+            }
+            if (seen != null) {
+                seen.add(v);
             }
             total += v;
             n++;
@@ -599,6 +710,7 @@ public final class DerivedKind {
         return switch (op) {
             case SUM -> Values.normalise(total);
             case AVG -> n == 0 ? null : Values.normalise(total / n);
+            case MEDIAN -> n == 0 ? null : Values.normalise(median(seen));
             case MIN, MAX -> n == 0 ? null : Values.normalise(best);
             default -> null;
         };
@@ -633,17 +745,17 @@ public final class DerivedKind {
         doc.put("derivedFrom", from);
         doc.putAll(aggregates);
         doc.put("memberCount", (long) ids.size());
-        doc.put(membersField, listed(ids));
+        doc.put(membersField, listed(key, ids));
         return doc;
     }
 
-    private List<String> listed(List<String> ids) {
+    private List<String> listed(String key, List<String> ids) {
         return ids.size() > maxMembers ? ids.subList(0, maxMembers) : ids;   // a desk of 200,000 trades lists 1,000
     }
 
     private DataNode assemble(String key, List<String> ids, Map<String, Object> aggregates, java.util.function.Function<String, DataNode> member) {
         Map<String, Object> doc = assembleHead(key, ids, aggregates);
-        List<String> listed = listed(ids);
+        List<String> listed = listed(key, ids);
         if (!rowColumns.isEmpty()) {
             List<Map<String, Object>> rows = new ArrayList<>(listed.size());
             for (String id : listed) {
@@ -657,6 +769,7 @@ public final class DerivedKind {
             }
             doc.put(rowsField, rows);
         }
+        finish(key, doc);
         return DataNode.of(doc);
     }
 
@@ -667,6 +780,7 @@ public final class DerivedKind {
     java.util.Optional<java.util.Set<String>> paths() {
         java.util.Set<String> raw = new java.util.LinkedHashSet<>();
         groupBy.paths(raw::add);
+        alsoGroupBy.forEach(e -> e.paths(raw::add));
         if (where != null) {
             where.paths(raw::add);
         }
@@ -725,6 +839,7 @@ public final class DerivedKind {
     java.util.Set<String> keyPaths() {
         java.util.Set<String> out = new java.util.LinkedHashSet<>();
         groupBy.paths(p -> out.add(p.substring(2)));
+        alsoGroupBy.forEach(e -> e.paths(p -> out.add(p.substring(2))));
         if (where != null) {
             where.paths(p -> out.add(p.substring(2)));
         }
@@ -740,6 +855,7 @@ public final class DerivedKind {
         int n = 0;
         Double best = null;
         Set<String> distinct = new LinkedHashSet<>();
+        List<Double> seen = new ArrayList<>();
         for (String id : ids) {
             Object v = value.apply(id);
             if (f.op() == Op.FIRST) {
@@ -757,11 +873,13 @@ public final class DerivedKind {
             double d = Values.number(v);
             total += d;
             n++;
+            seen.add(d);
             best = best == null ? d : f.op() == Op.MIN ? Math.min(best, d) : Math.max(best, d);
         }
         return switch (f.op()) {
             case SUM -> Values.normalise(total);
             case AVG -> n == 0 ? null : Values.normalise(total / n);
+            case MEDIAN -> n == 0 ? null : Values.normalise(median(seen));
             case MIN, MAX -> best == null ? null : Values.normalise(best);
             case DISTINCT -> distinct.stream().sorted().toList();
             default -> null;

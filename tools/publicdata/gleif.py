@@ -488,9 +488,9 @@ def main(argv: list[str] | None = None) -> int:
     a = ap.parse_args(argv)
     try:
         if a.command == "status":
-            n = len(SNAP.kind_docs(PACK, "lei-entity"))                        # the committed data: data/testdata/gleif
-            groups = SNAP.kind_docs(PACK, "lei-group")
-            when = groups[0].get("PROVENANCE", {}).get("RETRIEVED_AT", "?") if groups else "-"
+            ents = SNAP.kind_docs(PACK, "lei-entity")                           # the committed data: data/testdata/gleif
+            n = len(ents)
+            when = ents[0].get("PROVENANCE", {}).get("RETRIEVED_AT", "?") if ents else "-"
             print(f"committed pack: {n} entities, golden copy of {when}")
             return B.status(PACK, SOURCES, Path(a.cache) if a.cache else B.data_dir() / "publicdata" / "cache" / PACK,
                             "config/packs/gleif; a widened build <data>/publicdata/gleif/packs/gleif")

@@ -45,8 +45,9 @@ Every kind has a mnemonic (see *Kinds*). Type it with an identifier, the start o
 
 | Connector | Folder | Kinds |
 |---|---|---|
-| `macro-store` | `data/delta/macro/` | `economy`, `macro-indicator`, `economic-forecast`, `labour-market`, `fiscal-position`, `country-group`, `region-economy` |
+| `macro-store` | `data/delta/macro/` | `economy`, `macro-indicator`, `economic-forecast`, `labour-market`, `fiscal-position`, `region-economy` |
 | `civic-store` | `data/delta/civic/` | `jurisdiction`, `party`, `office-holder`, `election`, `region`, `social-indicator` |
+| `macro-groupings` | computed when asked (plugin `derived`) | `country-group` |
 
 ## Kinds
 
@@ -57,7 +58,7 @@ Every kind has a mnemonic (see *Kinds*). Type it with an identifier, the start o
 | `economic-forecast` | Economic forecast | `FCST` | `FCST-…` | The IMF World Economic Outlook: growth, inflation, unemployment, external balance and debt, outturn and projections to 2031. |
 | `labour-market` | Labour market | `LABR` | `LABR-…` | Unemployment, participation, youth and female labour, and employment and output by sector. |
 | `fiscal-position` | Fiscal position | `FISC` | `FISC-…` | Government debt and net lending (IMF) with revenue, expense and military spending (World Bank), as shares of GDP. |
-| `country-group` | Country group | `ECG` | `ECG-…` | A World Bank region or income group (or the world): output, population, growth and its largest economies. |
+| `country-group` | Country group | `ECG` | `ECG-…` | A World Bank region or income group (or the world), computed from its member economies when asked: output, population, growth, inflation and its largest economies. |
 | `region-economy` | Region economy | `REGE` | `REGE-…` | A state or territory (ISO 3166-2): population, GDP and GDP per head. An illustrative sample, rounded from public figures, not for reporting. |
 | `jurisdiction` | Jurisdiction | `JUR` | `JUR-…` | A country: government type, capital, legislature and seats by party, office holders, elections and governance indicators, from the CIA World Factbook, World Bank and UNDP. |
 | `party` | Party | `PARTY` | `PARTY-…` | A political party that won seats in the lower chamber at the most recent election, with the chamber's full result. |
@@ -108,9 +109,9 @@ Government debt and net lending (IMF) with revenue, expense and military spendin
 
 ### Country group (`country-group`)
 
-A World Bank region or income group (or the world): output, population, growth and its largest economies.
+A World Bank region or income group (or the world), computed from its member economies when asked: output, population, growth, inflation and its largest economies.
 
-**Fields its Sutra reads:** `NAME`, `GROUP_TYPE`, `ECONOMIES`, `GDP_USD_BN`, `GDP_PER_CAPITA`, `POPULATION_M`, `GROWTH`, `GROWTH_PATH`, `TOP_ECONOMIES`, `GDP_PATH`, `PROVENANCE`.
+**Fields its Sutra reads:** `NAME`, `GROUP_TYPE`, `ECONOMIES`, `GDP_USD_BN`, `GDP_PER_CAPITA`, `POPULATION_M`, `GROWTH`, `INFLATION`, `TOP_ECONOMIES`, `GDP_PATH`, `PROVENANCE`.
 
 **Links:** `MEMBER_ECONOMIES` → Economies (`economy`).
 

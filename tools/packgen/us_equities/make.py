@@ -156,10 +156,6 @@ def _nasdaq(cache: Path) -> dict[str, dict]:
     return out
 
 
-def _usd_sum(rows: list[dict], key: str):
-    """A total of the rows that report in USD (a total over CAD and GBP figures would mean nothing)."""
-    return sum(r[key] or 0 for r in rows if r.get("CURRENCY", "USD") == "USD")
-
 
 def build(cache: Path) -> dict[str, dict[str, dict]]:
     wd = _load_json(cache / "wikidata.json")
@@ -225,11 +221,10 @@ def build(cache: Path) -> dict[str, dict[str, dict]]:
         for y in years:
             rev, ni = (series["REVENUE"].get(y) or {}).get("value"), (series["NET_INCOME"].get(y) or {}).get("value")
             fin.append({"YEAR": y, "PERIOD_END": next((series[k][y]["end"] for k in ("REVENUE", "NET_INCOME", "ASSETS") if y in series[k]), ""),
-                        "REVENUE": rev, "NET_INCOME": ni, "NET_MARGIN": _r(ni / rev * 100, 2) if rev and ni is not None else None,
+                        "REVENUE": rev, "NET_INCOME": ni,
                         "ASSETS": (series["ASSETS"].get(y) or {}).get("value"), "LIABILITIES": (series["LIABILITIES"].get(y) or {}).get("value"),
                         "EQUITY": (series["EQUITY"].get(y) or {}).get("value"), "EPS_DILUTED": (series["EPS_DILUTED"].get(y) or {}).get("value")})
         last = fin[-1] if fin else {}
-        prev = fin[-2] if len(fin) > 1 else {}
         shares = raw.get("SHARES_OUTSTANDING") or []
         idx = member.get(cik, {})
         currency = next((r["unit"] for k in ("REVENUE", "ASSETS", "NET_INCOME") for r in reversed(raw.get(k) or []) if r.get("unit")), "USD")
@@ -242,14 +237,14 @@ def build(cache: Path) -> dict[str, dict[str, dict]]:
             fact_ids.append({"FACT": fid, "LABEL": label})
             hist = []
             for i, r in enumerate(rows):
-                chg = (r["value"] - rows[i - 1]["value"]) / abs(rows[i - 1]["value"]) * 100 if i and rows[i - 1]["value"] else None
-                hist.append({"YEAR": r["year"], "PERIOD_END": r["end"], "VALUE": r["value"], "CHANGE_PCT": _r(chg, 2), "FILED": r.get("filed", ""),
+                # the change on the year is not written: the page computes it from the values (since 2.9.2)
+                hist.append({"YEAR": r["year"], "PERIOD_END": r["end"], "VALUE": r["value"], "FILED": r.get("filed", ""),
                              "ACCESSION": r.get("accn", "")})
             lv = rows[-1]
             unit_used = lv.get("unit", unit.replace("/share", "/shares")).replace("/shares", "/share")
             facts[fid] = {"FACT_ID": fid, "COMPANY": ticker, "COMPANY_NAME": name, "CIK": c10, "CONCEPT": concept, "LABEL": label, "UNIT": unit_used,
                           "XBRL_TAG": ", ".join(sorted({r.get("tag", "") for r in rows})), "LATEST": lv["value"], "LATEST_YEAR": lv["year"],
-                          "CHANGE_PCT": hist[-1]["CHANGE_PCT"], "YEARS": len(hist), "HISTORY": hist,
+                          "YEARS": len(hist), "HISTORY": hist,
                           "_meta": _meta(f"XBRL companyfacts ({(lv.get('form') or '10-K').removesuffix('/A')})", retrieved)}
         flist = []
         for fl in sub.get("filings", []):
@@ -276,8 +271,8 @@ def build(cache: Path) -> dict[str, dict[str, dict]]:
             "LEI": lei, "LEI_LEGAL_NAME": g.get("legalName", ""), "LEI_STATUS": g.get("registration", ""), "LEI_SOURCE": ("GLEIF, " + g["how"]) if g.get("how") else ("Wikidata" if lei else ""),
             "INDEXES": [{"INDEX": k, "NAME": INDEX_NAMES[k], "SINCE": v["since"]} for k, v in sorted(idx.items())],
             "INDEX_TEXT": ", ".join(INDEX_NAMES[k] for k in sorted(idx)),
-            "CURRENCY": currency, "FISCAL_YEAR": last.get("YEAR"), "REVENUE": last.get("REVENUE"), "NET_INCOME": last.get("NET_INCOME"), "NET_MARGIN": last.get("NET_MARGIN"),
-            "REVENUE_GROWTH": _r((last["REVENUE"] - prev["REVENUE"]) / abs(prev["REVENUE"]) * 100, 2) if last.get("REVENUE") and prev.get("REVENUE") else None,
+            # the ratios (net margin, revenue growth) are not written: the pages compute them from these facts (since 2.9.2)
+            "CURRENCY": currency, "FISCAL_YEAR": last.get("YEAR"), "REVENUE": last.get("REVENUE"), "NET_INCOME": last.get("NET_INCOME"),
             "ASSETS": last.get("ASSETS"), "LIABILITIES": last.get("LIABILITIES"), "EQUITY": last.get("EQUITY"), "EPS_DILUTED": last.get("EPS_DILUTED"),
             "SHARES_OUTSTANDING": shares[-1]["value"] if shares else None,
             "FINANCIALS": fin, "FACTS": fact_ids, "FILINGS": flist,
@@ -307,45 +302,17 @@ def build(cache: Path) -> dict[str, dict[str, dict]]:
             hit = next((i for i in c["INDEXES"] if i["INDEX"] == code), None)
             if hit:
                 rows.append({"TICKER": t, "NAME": c["NAME"], "SECTOR": c["SECTOR"], "SIC": c["SIC"], "SIC_DESCRIPTION": c["SIC_DESCRIPTION"],
-                             "EXCHANGE": c["EXCHANGE"], "REVENUE": c["REVENUE"], "NET_INCOME": c["NET_INCOME"], "NET_MARGIN": c["NET_MARGIN"],
+                             "EXCHANGE": c["EXCHANGE"], "REVENUE": c["REVENUE"], "NET_INCOME": c["NET_INCOME"],
                              "CURRENCY": c["CURRENCY"], "FISCAL_YEAR": c["FISCAL_YEAR"], "SINCE": hit["SINCE"]})
-        by_sector: dict[str, int] = {}
-        for r in rows:
-            by_sector[r["SECTOR"]] = by_sector.get(r["SECTOR"], 0) + 1
-        indexes[code] = {"INDEX": code, "NAME": label, "MEMBERS": len(rows), "SECTORS": len(by_sector),
-                         "REVENUE": _usd_sum(rows, "REVENUE"), "NET_INCOME": _usd_sum(rows, "NET_INCOME"),
-                         "BY_SECTOR": [{"LABEL": k, "VALUE": v} for k, v in sorted(by_sector.items(), key=lambda kv: (-kv[1], kv[0]))],
+        # the members' totals (revenue, net income, SIC divisions) are not written: the page computes them from the rows (since 2.9.2)
+        indexes[code] = {"INDEX": code, "NAME": label, "MEMBERS": len(rows),
                          "ROWS": rows, "PROVENANCE": {**(PROV_LIST if code in F.LISTS else PROV_INDEX), "RETRIEVED_AT": retrieved},
                          "_meta": {"source": "drishti list" if code in F.LISTS else "wikidata",
                                    "dataset": "a curated list of SEC filers" if code in F.LISTS else "index membership (Wikidata P361)",
                                    "retrievedAt": retrieved, "licence": "public domain" if code in F.LISTS else "CC0", "generation": 1}}
 
-    # SIC pages, and the directory of them (SIC ALL)
-    sics: dict[str, dict] = {}
-    for t, c in companies.items():
-        if c["SIC"]:
-            sics.setdefault(c["SIC"], []).append(c)
-    sectors: dict[str, dict] = {}
-    for sic, cs in sorted(sics.items()):
-        cs = sorted(cs, key=lambda c: -(c["REVENUE"] or 0))
-        rows = [{"TICKER": c["TICKER"], "NAME": c["NAME"], "EXCHANGE": c["EXCHANGE"], "INDEX_TEXT": c["INDEX_TEXT"], "REVENUE": c["REVENUE"],
-                 "NET_INCOME": c["NET_INCOME"], "NET_MARGIN": c["NET_MARGIN"], "CURRENCY": c["CURRENCY"], "FISCAL_YEAR": c["FISCAL_YEAR"]} for c in cs]
-        sectors[sic] = {"SIC": sic, "DESCRIPTION": cs[0]["SIC_DESCRIPTION"], "DIVISION": cs[0]["DIVISION"], "SECTOR": cs[0]["SECTOR"], "COMPANIES": len(rows),
-                        "REVENUE": _usd_sum(rows, "REVENUE"), "NET_INCOME": _usd_sum(rows, "NET_INCOME"),
-                        "ROWS": rows, "BY_REVENUE": [{"LABEL": r["TICKER"], "VALUE": r["REVENUE"]} for r in rows if r["REVENUE"] and r["CURRENCY"] == "USD"][:15],
-                        "PROVENANCE": {"SOURCE": SOURCE_SEC + " (Standard Industrial Classification as each filer reports it)", "RETRIEVED_AT": retrieved, "LICENCE": LICENCE_SEC},
-                        "_meta": {"source": "sec-edgar", "dataset": "submissions (SIC)", "retrievedAt": retrieved, "licence": "public domain", "generation": 1}}
-    div_rev: dict[str, float] = {}
-    for s in sectors.values():
-        div_rev[s["SECTOR"]] = div_rev.get(s["SECTOR"], 0) + s["REVENUE"]
-    sectors["ALL"] = {"SIC": "ALL", "DESCRIPTION": "Every SIC code of the companies covered", "DIVISION": "", "SECTOR": "All divisions",
-                      "COMPANIES": len(companies), "CODES": len(sectors), "REVENUE": sum(s["REVENUE"] for s in sectors.values()),
-                      "NET_INCOME": sum(s["NET_INCOME"] for s in sectors.values()),
-                      "CODES_LIST": [{"SIC": s["SIC"], "DESCRIPTION": s["DESCRIPTION"], "SECTOR": s["SECTOR"], "COMPANIES": s["COMPANIES"], "REVENUE": s["REVENUE"]}
-                                     for s in sorted(sectors.values(), key=lambda s: -s["REVENUE"])],
-                      "BY_DIVISION": [{"LABEL": k, "VALUE": v} for k, v in sorted(div_rev.items(), key=lambda kv: -kv[1])],
-                      "PROVENANCE": {"SOURCE": SOURCE_SEC + " (Standard Industrial Classification as each filer reports it)", "RETRIEVED_AT": retrieved, "LICENCE": LICENCE_SEC},
-                      "_meta": {"source": "sec-edgar", "dataset": "submissions (SIC)", "retrievedAt": retrieved, "licence": "public domain", "generation": 1}}
+    # The SIC sectors (SIC) are not written: the us-equities-groupings connector computes them from the companies when asked
+    # (since 2.9.2; docs/guides/GROUPINGS_ANALYTICS_GUIDE.md).
 
     # the filings browser: the latest filings of the covered companies, all forms and by form
     feeds: dict[str, dict] = {}
@@ -366,7 +333,7 @@ def build(cache: Path) -> dict[str, dict[str, dict]]:
                       "PROVENANCE": {"SOURCE": SOURCE_SEC + " (submissions: the latest filings of each company covered)", "RETRIEVED_AT": retrieved, "LICENCE": LICENCE_SEC},
                       "_meta": {"source": "sec-edgar", "dataset": "submissions (recent filings)", "retrievedAt": retrieved, "licence": "public domain", "generation": 1}}
 
-    return {"us-company": companies, "index-membership": indexes, "sic-sector": sectors, "filing-feed": feeds, "filing": filings, "financial-fact": facts}
+    return {"us-company": companies, "index-membership": indexes, "filing-feed": feeds, "filing": filings, "financial-fact": facts}
 
 
 def _meta(dataset: str, retrieved: str) -> dict:
@@ -386,8 +353,6 @@ def catalog(docs: dict[str, dict[str, dict]]) -> list[dict]:
         out.append({"kind": "index-membership", "id": i, "title": i, "subtitle": f"Index · {d['NAME']} · {d['MEMBERS']} members"})
     for i, d in docs.get("us-company", {}).items():
         out.append({"kind": "us-company", "id": i, "title": i, "subtitle": f"US company · {d['NAME']} · {d['SIC_DESCRIPTION']}"})
-    for i, d in docs.get("sic-sector", {}).items():
-        out.append({"kind": "sic-sector", "id": i, "title": f"SIC {i}", "subtitle": f"Sector · {d['DESCRIPTION']} · {d['COMPANIES']} companies"})
     for i, d in docs.get("filing-feed", {}).items():
         out.append({"kind": "filing-feed", "id": i, "title": f"EDGAR {i}", "subtitle": f"Filings · {d['NAME']}"})
     for i, d in docs.get("financial-fact", {}).items():
@@ -430,7 +395,7 @@ The pack is **off by default**: add it to the packs a server loads, `DRISHTI_PAC
 |---|---|---|
 | `USEQ <ticker>` | a company: key facts, financials table and chart, recent filings (a click opens one beside), index memberships | `USEQ AAPL`, `USEQ JPM`, `USEQ BRK-B` |
 | `IDX <index>` | an index's members, filterable; a click opens the member's summary beside | `IDX SP500`, `IDX NDX`, `IDX DJIA`, `IDX BANKS-US`, `IDX BANKS-CA`, `IDX BANKS-UK` |
-| `SIC <code>` | a sector (Standard Industrial Classification): its companies by revenue | `SIC 3674`, `SIC 6021`; `SIC ALL` lists every code |
+| `SIC <code>` | a sector (Standard Industrial Classification), computed from the companies when asked: its companies by revenue, totals of the USD reporters | `SIC 3674`, `SIC 6021`; `SIC ALL` lists every code |
 | `EDGAR <form>` | the filings browser: the latest filings, all or of one form; a click opens the filing beside | `EDGAR ALL`, `EDGAR 10-K`, `EDGAR 8-K`, `EDGAR 4`, `EDGAR DEF-14A` |
 | `FILING <accession>` | one filing: form, dates, 8-K items and its EDGAR links | from a company's filings |
 | `FACT <ticker>-<concept>` | one financial concept of a company over ten fiscal years | `FACT AAPL-REVENUE`, `FACT MSFT-NET-INCOME` |
@@ -444,11 +409,11 @@ The concepts are `REVENUE`, `NET-INCOME`, `ASSETS`, `LIABILITIES`, `EQUITY`, `EP
 |---|---|---|
 | `us-company` | {companies} | CIK, ticker, exchange and listing market, SIC with its description and division, state of incorporation, fiscal year end, LEI, headquarters, founded, website, index memberships, the latest year's figures, ten years of financials, the latest {filings_per} filings |
 | `index-membership` | {indexes} | the members as Wikidata records them, with their sector and latest revenue; members by sector |
-| `sic-sector` | {sectors} | the companies of one SIC code ranked by revenue; `ALL` lists every code |
+| `sic-sector` | computed ({sectors} codes and `ALL`) | the companies of one SIC code ranked by revenue; `ALL` lists every code. Computed from the companies when asked by the derived connector `us-equities-groupings` (since 2.9.2): nothing is stored |
 | `filing-feed` | {feeds} | the latest {feed_rows} filings of the companies, all forms or one |
 | `filing` | {filing_count} | one filing: form, filing and report dates, document, 8-K items, links to the document and its EDGAR index |
 | `financial-fact` | {fact_count} | one concept of one company: up to ten annual values with the change, the XBRL tag and the filing each came from |
-| `price-history` | live only | the quote and a year of daily prices, from the price connector when a site switches it on |
+| `price-history` | live only | the quote, a year of daily prices and the analytics computed from them when read (returns, volatility, drawdown, beta against the benchmark), from the price connector when a site switches it on; nothing is stored |
 
 Members per index or list: {members}. The bank lists (BANKS-US, BANKS-CA, BANKS-UK) are kept by Drishti (`LISTS` in
 `tools/packgen/us_equities/fetch.py`) and hold banks that file with the SEC. Annual values are those of the annual reports (10-K, or
@@ -531,7 +496,7 @@ def guide(docs: dict[str, dict[str, dict]]) -> str:
     any_doc = next(iter(cos.values()), {})
     idx = docs.get("index-membership", {})
     return GUIDE.format(companies=f"{len(cos):,}", retrieved=any_doc.get("PROVENANCE", {}).get("RETRIEVED_AT", ""), indexes=len(idx),
-                        sectors=len(docs.get("sic-sector", {})), feeds=len(docs.get("filing-feed", {})), feed_rows=FEED_ROWS,
+                        sectors=len({c["SIC"] for c in cos.values() if c.get("SIC")}), feeds=len(docs.get("filing-feed", {})), feed_rows=FEED_ROWS,
                         filing_count=f"{len(docs.get('filing', {})):,}", fact_count=f"{len(docs.get('financial-fact', {})):,}",
                         filings_per=max((len(c["FILINGS"]) for c in cos.values()), default=0),
                         members=", ".join(f"{d['NAME']} {d['MEMBERS']}" for d in idx.values()),

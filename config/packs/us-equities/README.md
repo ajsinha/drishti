@@ -40,14 +40,17 @@ commands:
 depends-on:
   packs: []
   connectors:
+  - us-equities-groupings
   - us-equities-prices
   - us-equities-store
   plugins:
   - delta
+  - derived
   - yfinance
   settings:
   - DRISHTI_DELTA_ROOT
   - DRISHTI_LAKE_ENABLED
+  - DRISHTI_US_EQUITIES_BENCHMARK
   - DRISHTI_US_EQUITIES_PRICES_ENABLED
   - DRISHTI_YFINANCE_URL
 sources:
@@ -135,8 +138,6 @@ Fields, from 3 sample documents:
 | `FISCAL_YEAR` | integer | `2025` | Fiscal year |
 | `REVENUE` | integer | `416161000000` | Revenue |
 | `NET_INCOME` | integer | `112010000000` | Net income |
-| `NET_MARGIN` | number | `26.92` | Net margin |
-| `REVENUE_GROWTH` | number | `6.43` | Revenue growth |
 | `ASSETS` | integer | `359241000000` | Total assets, latest fiscal year (USD) |
 | `LIABILITIES` | integer | `285508000000` | Total liabilities, latest fiscal year (USD) |
 | `EQUITY` | integer | `73733000000` | Stockholders' equity, latest fiscal year (USD) |
@@ -160,7 +161,7 @@ Nested structures:
 | Path | Fields |
 |---|---|
 | `INDEXES[]` | `INDEX` (string), `NAME` (string), `SINCE` (date) |
-| `FINANCIALS[]` | `YEAR` (integer), `PERIOD_END` (date), `REVENUE` (integer), `NET_INCOME` (integer), `NET_MARGIN` (number), `ASSETS` (integer), `LIABILITIES` (integer), `EQUITY` (integer), `EPS_DILUTED` (number) |
+| `FINANCIALS[]` | `YEAR` (integer), `PERIOD_END` (date), `REVENUE` (integer), `NET_INCOME` (integer), `ASSETS` (integer), `LIABILITIES` (integer), `EQUITY` (integer), `EPS_DILUTED` (number) |
 | `FACTS[]` | `FACT` (string), `LABEL` (string) |
 | `FILINGS[]` | `ACCESSION` (string), `FORM` (string), `FILED` (date), `REPORT_DATE` (date), `DESCRIPTION` (string) |
 | `PROVENANCE` | `SOURCE` (string), `RETRIEVED_AT` (date), `LICENCE` (string), `URL` (string) |
@@ -180,49 +181,34 @@ Fields, from 1 sample document:
 | `INDEX` | string | `DJIA` | Index code (DJIA |
 | `NAME` | string | `Dow Jones Industrial Average` | Index |
 | `MEMBERS` | integer | `34` | Members |
-| `SECTORS` | integer | `5` | SIC divisions |
-| `REVENUE` | integer | `4829280300000` | Members' revenue |
-| `NET_INCOME` | integer | `804912500000` | Members' net income |
-| `BY_SECTOR` | list of objects |  | Members by SIC division |
-| `ROWS` | list of objects |  | The members |
+| `ROWS` | list of objects |  | The members (the totals and divisions are computed on the page) |
 | `PROVENANCE` | object |  | Source |
 
 Nested structures:
 
 | Path | Fields |
 |---|---|
-| `BY_SECTOR[]` | `LABEL` (string), `VALUE` (integer) |
-| `ROWS[]` | `TICKER` (string), `NAME` (string), `SECTOR` (string), `SIC` (string), `SIC_DESCRIPTION` (string), `EXCHANGE` (string), `REVENUE` (integer), `NET_INCOME` (integer), `NET_MARGIN` (number), `CURRENCY` (string), `FISCAL_YEAR` (integer), `SINCE` (null) |
+| `ROWS[]` | `TICKER` (string), `NAME` (string), `SECTOR` (string), `SIC` (string), `SIC_DESCRIPTION` (string), `EXCHANGE` (string), `REVENUE` (integer), `NET_INCOME` (integer), `CURRENCY` (string), `FISCAL_YEAR` (integer), `SINCE` (null) |
 | `PROVENANCE` | `SOURCE` (string), `LICENCE` (string), `NOTE` (string), `RETRIEVED_AT` (date) |
 
 ### `sic-sector`
 
-**SIC sector** · mnemonic `SIC` · read through connector `us-equities-store`.
+**SIC sector** · mnemonic `SIC` · read through connector `us-equities-groupings`.
 
-**Id:** field `SIC`; for example `3711`.
+**Id:** set by its connector (no samples ship).
 
-Fields, from 1 sample document:
+No samples ship: documents are read live from its connector `us-equities-groupings` (plugin `derived`). The fields its screens show:
 
-| Field | Type | Example | Description |
-|---|---|---|---|
-| `SIC` | string | `3711` | SIC |
-| `DESCRIPTION` | string | `Motor Vehicles & Passenger Car Bodies` | Industry |
-| `DIVISION` | string | `D` | SIC division letter |
-| `SECTOR` | string | `Manufacturing` | Division |
-| `COMPANIES` | integer | `4` | Companies |
-| `REVENUE` | integer | `495557800000` | Revenue |
-| `NET_INCOME` | integer | `704800000` | Net income |
-| `ROWS` | list of objects |  | The companies of the code |
-| `BY_REVENUE` | list of objects |  | Companies by revenue |
-| `PROVENANCE` | object |  | Source and licence |
-
-Nested structures:
-
-| Path | Fields |
+| Field | Shown as |
 |---|---|
-| `ROWS[]` | `TICKER` (string), `NAME` (string), `EXCHANGE` (string), `INDEX_TEXT` (string), `REVENUE` (integer), `NET_INCOME` (integer), `NET_MARGIN` (number), `CURRENCY` (string), `FISCAL_YEAR` (integer) |
-| `BY_REVENUE[]` | `LABEL` (string), `VALUE` (integer) |
-| `PROVENANCE` | `SOURCE` (string), `RETRIEVED_AT` (date), `LICENCE` (string) |
+| `CODES` | SIC codes |
+| `COMPANIES` | Companies |
+| `DESCRIPTION` | Industry |
+| `NET_INCOME` | Net income |
+| `NET_MARGIN` | Net margin |
+| `REVENUE` | Revenue |
+| `SECTOR` | Division |
+| `SIC` | SIC |
 
 ### `filing-feed`
 
@@ -306,7 +292,6 @@ Fields, from 2 sample documents:
 | `XBRL_TAG` | string | `RevenueFromContractWithCustomerExcluding…` | XBRL tags read |
 | `LATEST` | integer | `44328000000` | Latest |
 | `LATEST_YEAR` | integer | `2025` | Fiscal year |
-| `CHANGE_PCT` | number | `5.67` | Change on the year |
 | `YEARS` | integer | `10` | Years |
 | `HISTORY` | list of objects |  | Values by fiscal year |
 
@@ -314,7 +299,7 @@ Nested structures:
 
 | Path | Fields |
 |---|---|
-| `HISTORY[]` | `YEAR` (integer), `PERIOD_END` (date), `VALUE` (integer), `CHANGE_PCT` (number), `FILED` (date), `ACCESSION` (string) |
+| `HISTORY[]` | `YEAR` (integer), `PERIOD_END` (date), `VALUE` (integer), `FILED` (date), `ACCESSION` (string) |
 
 Links: `COMPANY` → `us-company`.
 
@@ -328,6 +313,14 @@ No samples ship: documents are read live from its connector `us-equities-prices`
 
 | Field | Shown as |
 |---|---|
+| `ANALYTICS.CORRELATION` | Correlation |
+| `ANALYTICS.MAX_DRAWDOWN` | Largest drawdown |
+| `ANALYTICS.OBSERVATIONS` | Daily closes |
+| `ANALYTICS.RETURN_1M` | Return 1 month |
+| `ANALYTICS.RETURN_3M` | Return 3 months |
+| `ANALYTICS.RETURN_6M` | Return 6 months |
+| `ANALYTICS.RETURN_PERIOD` | Return over the history |
+| `ANALYTICS.VOLATILITY` | Volatility (annualised) |
 | `AS_OF` | As of |
 | `CHANGE` | Change |
 | `CHANGE_PCT` | Change % |
@@ -363,8 +356,8 @@ Examples:
 | `IDX SP500` | S&P 500 · the members, filterable; a click opens the company beside |
 | `IDX DJIA` | Dow Jones Industrial Average · thirty members |
 | `IDX BANKS-CA` | Canadian banks that file with the SEC · financials in CAD |
-| `SIC 3674` | Semiconductors · the companies of one SIC code by revenue |
-| `SIC ALL` | Every SIC code covered, by revenue |
+| `SIC 3674` | Semiconductors, computed from the companies · the companies of one SIC code by revenue |
+| `SIC ALL` | Every SIC code covered, by revenue (computed) |
 | `EDGAR 8-K` | The latest current reports; a click opens the filing beside |
 | `FACT AAPL-REVENUE` | Apple's revenue over ten fiscal years |
 
@@ -376,9 +369,9 @@ Screens (Sutras):
 | `filing` | `filing` | One SEC filing: its company, form, dates, 8-K items and its links on EDGAR (metadata only; the document stays on sec.gov). |
 | `financial-fact` | `financial-fact` | One financial concept of one company (revenue, net income, assets...) over up to ten fiscal years, from its 10-K XBRL filings. |
 | `index-membership` | `index-membership` | An equity index's members (Dow 30, Nasdaq-100, S&P 500) as Wikidata records them; a click opens the member's summary beside. |
-| `price-history` | `price-history` | A company's quote and a year of daily prices, read live by the us-equities-prices connector: off as shipped, internal use only. |
+| `price-history` | `price-history` | A company's quote, a year of daily prices and their analytics (returns, volatility, beta), read live by the us-equities-prices connector: off as shipped, internal use only. |
 | `sic-directory` | `sic-sector` | Every SIC code of the covered companies, by revenue, and revenue by SIC division. |
-| `sic-sector` | `sic-sector` | A sector by its SIC code: its companies ranked by revenue; a click opens a company's summary beside. |
+| `sic-sector` | `sic-sector` | A sector by its SIC code, computed from the companies when asked: its companies ranked by revenue; a click opens a company's summary beside. |
 | `us-company` | `us-company` | A US listed company: key facts, ten years of annual financials, recent SEC filings and index memberships, from public data. |
 
 ## Data sources and licences
@@ -402,10 +395,11 @@ The connectors it brings (written once to `config/connectors/<name>.yaml`, then 
 
 | Connector | Plugin | Kinds | Enabled |
 |---|---|---|---|
-| `us-equities-store` | `delta` | `us-company`, `index-membership`, `sic-sector`, `filing-feed`, `filing`, `financial-fact` | `${DRISHTI_LAKE_ENABLED:true}` |
+| `us-equities-store` | `delta` | `us-company`, `index-membership`, `filing-feed`, `filing`, `financial-fact` | `${DRISHTI_LAKE_ENABLED:true}` |
 | `us-equities-prices` | `yfinance` | `price-history` | `${DRISHTI_US_EQUITIES_PRICES_ENABLED:false}` |
+| `us-equities-groupings` | `derived` | `sic-sector` | `${DRISHTI_LAKE_ENABLED:true}` |
 
-Settings (environment variables) its connectors read: `DRISHTI_DELTA_ROOT`, `DRISHTI_LAKE_ENABLED`, `DRISHTI_US_EQUITIES_PRICES_ENABLED`, `DRISHTI_YFINANCE_URL`.
+Settings (environment variables) its connectors read: `DRISHTI_DELTA_ROOT`, `DRISHTI_LAKE_ENABLED`, `DRISHTI_US_EQUITIES_BENCHMARK`, `DRISHTI_US_EQUITIES_PRICES_ENABLED`, `DRISHTI_YFINANCE_URL`.
 
 ## Refreshing the data
 

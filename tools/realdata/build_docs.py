@@ -112,7 +112,7 @@ def _code(key: str) -> str:
 # =================================================================== economics
 def economics(d: Data | None = None) -> dict[str, dict[str, dict]]:
     d = d or Data()
-    docs: dict[str, dict] = {k: {} for k in ("economy", "macro-indicator", "economic-forecast", "labour-market", "fiscal-position", "country-group", "region-economy")}
+    docs: dict[str, dict] = {k: {} for k in ("economy", "macro-indicator", "economic-forecast", "labour-market", "fiscal-position", "region-economy")}
     p_wb = d.prov("wdi")
     if d.no_imf:
         p_all, p_imf, p_wbimf = d.prov("wdi", "factbook"), None, p_wb
@@ -202,17 +202,9 @@ def economics(d: Data | None = None) -> dict[str, dict[str, dict]]:
                 "forecastId": f"FCST-{iso}-WEO", "economyName": name, "vintage": vint, "growth2027": fg.get("2027"), "inflation2027": d.FC["f_inflation"].get(iso, {}).get("2027"),
                 "debt2030": d.FC["f_debt"].get(iso, {}).get("2030"), "projections": rows,
                 "path": [{"year": y, "growth": v} for y, v in sorted(fg.items())], "economy": f"ECON-{iso}", "provenance": p_imf, "_meta": d.meta_of(p_imf)}
-    # ---- country groups (World Bank regions, income groups, the world)
-    for gid, g in d.G.items():
-        members = sorted((i for i, c in d.C.items() if (c["region"] == gid or c["income"] == gid or gid == "WLD") and f"ECON-{i}" in docs["economy"]),
-                         key=lambda i: -(d.val("gdp", i) or 0))
-        gy, gdp = d.last("gdp", gid)
-        docs["country-group"][f"ECG-{gid}"] = {
-            "groupId": f"ECG-{gid}", "name": g["name"], "groupType": {"region": "World Bank region", "income": "World Bank income group", "world": "World"}[g["type"]],
-            "economies": len(members), "year": str(gy) if gy else None, "gdpUsdBn": gdp, "gdpPerCapita": d.val("gdp_pc", gid), "populationM": d.val("population", gid),
-            "growth": d.val("gdp_growth", gid), "inflation": d.val("inflation", gid), "growthPath": d.path("gdp_growth", gid, "growth"), "gdpPath": d.path("gdp", gid, "gdp"),
-            "topEconomies": [{"economy": d.C[i]["name"], "gdpUsdBn": d.val("gdp", i), "growth": d.val("gdp_growth", i)} for i in members[:10]],
-            "memberEconomies": [f"ECON-{i}" for i in members], "provenance": p_wb, "_meta": d.meta_of(p_wb)}
+    # The country groups (World Bank regions, income groups, the world) are not written: the world-economy pack's macro-groupings
+    # connector computes them from the economies when asked (since 2.9.2; docs/guides/GROUPINGS_ANALYTICS_GUIDE.md). An economy names
+    # its region and income group (regionGroup, incomeGroup), which is all the grouping needs.
     _regions(docs)
     return docs
 

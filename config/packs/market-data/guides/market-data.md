@@ -80,7 +80,7 @@ Load real data into each domain's folder, or point a domain at a database instea
 | `commodity-vol-surface` | Commodity volatility surface | `CMDV` | `CMDV-…` | `SURFACE_ID` | Implied vols by delivery month and moneyness. |
 | `rate-fixing` | Rate index fixings | `FIX` | `FIX-…` | `INDEX_ID` | Published overnight and term rate fixings (SOFR, €STR, SONIA…). |
 | `bond` | Bond (security master) | `BND` | `BND-…` | `ISIN` | A listed bond: terms, price, yield, spreads and analytics. |
-| `correlation-matrix` | Correlation matrix | `CORR` | `CORR-…` | `MATRIX_ID` | Pairwise correlations used by basket, quanto and spread products. |
+| `correlation-matrix` | Correlation matrix | `CORR` | `CORR-…` | `MATRIX_ID` | A set of factors whose pairwise correlations basket, quanto and spread products use: the correlations are computed from the factors' price history when asked (since 2.9.2). |
 
 ### Interest rate curve (`ir-curve`)
 
@@ -136,7 +136,7 @@ Cap vols by maturity and strike.
 
 A listed stock: price, dividends, sector and identifiers.
 
-**Fields its Sutra reads:** `NAME`, `PRICE`, `CHANGE_1D`, `MARKET_CAP`, `SECTOR`, `EXCHANGE`, `CURRENCY`, `BETA`, `HISTORY`, `IDENTIFIERS`, `OHLC`.
+**Fields its Sutra reads:** `NAME`, `PRICE`, `CHANGE_1D`, `MARKET_CAP`, `SECTOR`, `EXCHANGE`, `CURRENCY`, `HISTORY`, `IDENTIFIERS`, `OHLC`.
 
 **Links:** `ISSUER` → Issuer (`issuer`), `EQUITY_VOL_SURFACE` → Vol surface (`equity-vol-surface`), `DIVIDEND_CURVE` → Dividends (`dividend-curve`), `EQUITY_INDEX` → Index (`equity-index`).
 
@@ -224,9 +224,11 @@ A listed bond: terms, price, yield, spreads and analytics.
 
 ### Correlation matrix (`correlation-matrix`)
 
-Pairwise correlations used by basket, quanto and spread products.
+A set of factors whose pairwise correlations basket, quanto and spread products use: the correlations are computed from the factors' price history when asked (since 2.9.2).
 
-**Fields its Sutra reads:** `NAME`, `FACTORS`, `AVERAGE`, `PAIRS`.
+**Fields its Sutra reads:** `NAME`, `FACTORS`.
+
+**Links:** `EQUITY_IDS` → Equity (`equity`), `FX_IDS` → FX spot (`fx-spot`).
 
 ## Who can see it
 

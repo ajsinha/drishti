@@ -175,7 +175,6 @@ connectors:
     - economic-forecast
     - labour-market
     - fiscal-position
-    - country-group
     - region-economy
     settings:
       root: ${DRISHTI_DELTA_ROOT:${drishti.data.dir:./data}/delta}
@@ -217,13 +216,71 @@ connectors:
     settings:
       root: ${DRISHTI_DELTA_ROOT:${drishti.data.dir:./data}/delta}
       domain: civic
+  macro-groupings:
+    plugin: derived
+    enabled: ${DRISHTI_LAKE_ENABLED:true}
+    kinds:
+    - country-group
+    settings:
+      refresh: 60s
+      source-name: macro-groupings
+      country-group:
+        from: economy
+        group-by: $.REGION_GROUP
+        also-group-by:
+          income: $.INCOME_GROUP
+          world: '''ECG-WLD'''
+        id-field: GROUP_ID
+        search-fields: NAME
+        members: MEMBER_ECONOMIES
+        max-members: 100000
+        rows-field: ROWS
+        fields:
+          ECONOMIES: count
+          GDP_USD_BN: sum $.GDP_USD_BN
+          POPULATION_M: sum $.POPULATION_M
+          GDP_PC_GDP: 'sum $.POPULATION_M == null ? null : $.GDP_USD_BN'
+          GDP_PC_POP: 'sum $.GDP_USD_BN == null ? null : $.POPULATION_M'
+          GROWTH_WEIGHTED: 'sum $.GROWTH == null || $.GDP_USD_BN == null ? null : $.GDP_USD_BN * $.GROWTH'
+          GROWTH_WEIGHT: 'sum $.GROWTH == null || $.GDP_USD_BN == null ? null : $.GDP_USD_BN'
+          INFLATION: median $.INFLATION
+          WITH_GROWTH: 'sum $.GROWTH == null ? 0 : 1'
+          WITH_INFLATION: 'sum $.INFLATION == null ? 0 : 1'
+          REGION_KEYS: distinct $.REGION_GROUP
+          REGION_NAMES: distinct $.REGION_NAME
+          INCOME_NAMES: distinct $.INCOME_NAME
+          YEARS: distinct $.YEAR
+          PROVENANCE: first $.PROVENANCE
+        rows:
+          ECONOMY_ID: $.ECONOMY_ID
+          ECONOMY: $.NAME
+          ISO3: $.ISO3
+          GDP_USD_BN: $.GDP_USD_BN
+          POPULATION_M: $.POPULATION_M
+          GDP_PER_CAPITA: $.GDP_PER_CAPITA
+          GROWTH: $.GROWTH
+          INFLATION: $.INFLATION
+          YEAR: $.YEAR
+          GDP_PATH: $.GDP_PATH
+        then:
+          NAME: '$.GROUP_ID == ''ECG-WLD'' ? ''World'' : (size($.REGION_KEYS) == 1 && first($.REGION_KEYS) == $.GROUP_ID ? first($.REGION_NAMES)
+            : first($.INCOME_NAMES))'
+          GROUP_TYPE: '$.GROUP_ID == ''ECG-WLD'' ? ''World'' : (size($.REGION_KEYS) == 1 && first($.REGION_KEYS) == $.GROUP_ID ? ''World Bank
+            region'' : ''World Bank income group'')'
+          GDP_PER_CAPITA: '$.GDP_PC_POP > 0 ? $.GDP_PC_GDP * 1000 / $.GDP_PC_POP : null'
+          GROWTH: '$.GROWTH_WEIGHT > 0 ? $.GROWTH_WEIGHTED / $.GROWTH_WEIGHT : null'
+          YEAR: last($.YEARS)
+          GDP_PATH: group(flatten($.ROWS[*].GDP_PATH), 'YEAR', 'GDP')
+          TOP_ECONOMIES: $.ROWS
+        sort:
+          ROWS: GDP_USD_BN desc
+          TOP_ECONOMIES: GDP_USD_BN desc 10
 routes:
   economy: macro-store
   macro-indicator: macro-store
   economic-forecast: macro-store
   labour-market: macro-store
   fiscal-position: macro-store
-  country-group: macro-store
   region-economy: macro-store
   jurisdiction: civic-store
   party: civic-store
@@ -231,6 +288,7 @@ routes:
   election: civic-store
   region: civic-store
   social-indicator: civic-store
+  country-group: macro-groupings
 console:
   examples:
   - - ECON ECON-IND
@@ -474,28 +532,6 @@ form:
     type: number
   - path: MILITARY
     label: Military / GDP (%)
-    type: number
-  country-group:
-  - path: GROUP_ID
-    label: Group id
-    type: id
-  - path: NAME
-    label: Name
-    type: text
-  - path: GROUP_TYPE
-    label: Type
-    type: enum
-  - path: ECONOMIES
-    label: Economies
-    type: number
-  - path: GDP_USD_BN
-    label: GDP (USD bn)
-    type: number
-  - path: POPULATION_M
-    label: Population (m)
-    type: number
-  - path: GROWTH
-    label: Real growth (%)
     type: number
   region-economy:
   - path: REGION_ID

@@ -148,6 +148,7 @@ public final class GroupShares {
         if (!k.rowColumnNames().isEmpty()) {
             doc.put(k.rowsField(), listed.stream().map(rows::get).toList());
         }
+        k.finish(key, doc);                                // the then fields and the tree, over the combined page
         return DataNode.of(doc);
     }
 
@@ -180,6 +181,9 @@ public final class GroupShares {
                     }
                 }
                 return first == null ? null : first.page().get(name);
+            }
+            case "median" -> {
+                return shares.size() == 1 ? shares.get(0).page().get(name) : null;   // medians of parts do not make the whole's
             }
             default -> {
                 double total = 0;

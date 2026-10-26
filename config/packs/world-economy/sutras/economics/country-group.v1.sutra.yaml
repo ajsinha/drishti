@@ -14,19 +14,20 @@
 
 
 # Hand-written since 2.7.0 (Sutra Next phase 1): built from the Drishti UI kit (config/ui-kit/fragments, loaded by every server).
-# tools/packgen/world/make.py leaves it alone (hand_written); SutraNextEquivalenceTest proves it draws exactly what the generated
-# layout drew.
+# tools/packgen/world/make.py leaves it alone (hand_written). Since 2.9.2 the group is computed from its member economies when asked
+# (the macro-groupings connector; docs/guides/GROUPINGS_ANALYTICS_GUIDE.md), so the page is no longer the stored layout's twin.
 rachana: 1
 sutra: country-group
 version: 1
-description: "A World Bank region or income group (or the world): output, population, growth and its largest economies."
+description: "A World Bank region or income group (or the world), computed from its member economies when asked: output, population, growth, inflation and its largest economies."
 doc:
-  summary: "A World Bank region or income group: its output, population and growth, and its largest economies."
+  summary: "A World Bank region or income group computed from its member economies: output, population, growth and inflation, and its largest economies."
   description: >-
-    One page per World Bank region or income group (and the world): the real GDP growth path, its largest economies by GDP
-    with their growth, the GDP path beside it, the data source and licence, how the view was built and its links (F7 opens
-    its member economies). The strip gives the group, its type, the number of economies, GDP, GDP per capita, population
-    and real growth.
+    One page per World Bank region or income group (and the world), computed when it is opened from every economy whose region or
+    income group it is (since 2.9.2; docs/guides/GROUPINGS_ANALYTICS_GUIDE.md): GDP and population summed, GDP per capita as their
+    ratio, real growth weighted by GDP, inflation the median of the members (as the World Bank aggregates it), each member at its
+    latest year. Its largest economies by GDP with their growth, every member economy, the GDP path (the members' GDP summed by
+    year) beside it, the data source and licence, how the view was built and its links (F7 opens its member economies).
   params: {}
   emits: []
   expects: []
@@ -35,7 +36,7 @@ doc:
     - "ECG ECG-SAS"
   since: "2.7.0"
 match: { kind: country-group, priority: 10 }
-title: { pill: Economics · Country group, id: $.GROUP_ID }
+title: { pill: Economics · Country group (computed), id: $.GROUP_ID, with: $.NAME }
 strip:
   - { label: Group, bind: $.NAME }
   - { label: Type, bind: $.GROUP_TYPE }
@@ -44,11 +45,28 @@ strip:
   - { label: GDP per capita (USD), bind: $.GDP_PER_CAPITA, fmt: amount0 }
   - { label: Population (m), bind: $.POPULATION_M, fmt: price2 }
   - { label: Real growth, bind: $.GROWTH, fmt: pc2, tone: sign, emphasis: true }
+  - { label: Inflation (median), bind: $.INFLATION, fmt: pc2 }
 panels:
-  - { use: series-line@1, with: { id: growthPath, title: "Real GDP growth, % a year", key: F2, rows: $.GROWTH_PATH, x: YEAR, y: GROWTH, fmt: pc2 } }
   - use: measure-table@1
     with: { id: topEconomies, title: Largest economies, key: F3, rows: $.TOP_ECONOMIES, name-label: Economy, name: ECONOMY,
             first-label: GDP (USD bn), first: GDP_USD_BN, first-fmt: amount0, second-label: "Growth, %", second: GROWTH, second-fmt: pc2, second-tone: sign }
-  - { use: series-line@1, with: { id: gdpPath, title: "GDP, USD bn", area: right, rows: $.GDP_PATH, x: YEAR, y: GDP, fmt: amount0 } }
+  - id: members
+    kind: table
+    title: Every member economy (largest first)
+    key: F2
+    rows: $.ROWS
+    columns:
+      - { label: Economy, bind: "link(@.ECONOMY_ID, 'economy', @.ECONOMY)" }
+      - { label: GDP (USD bn), bind: "@.GDP_USD_BN", fmt: amount0, total: true }
+      - { label: Population (m), bind: "@.POPULATION_M", fmt: price2, total: true }
+      - { label: Real growth, bind: "@.GROWTH", fmt: pc2, tone: sign }
+      - { label: Inflation, bind: "@.INFLATION", fmt: pc2 }
+      - { label: Year, bind: "@.YEAR" }
+  - { use: series-line@1, with: { id: gdpPath, title: "GDP, USD bn (the members summed)", area: right, rows: $.GDP_PATH, x: label, y: value, fmt: amount0 } }
+  - use: explainer-note@1
+    with:
+      title: How this group is computed
+      area: right
+      text: "Computed when the page opens from the member economies (each economy names its World Bank region and income group; every economy is in the world): GDP and population are summed, GDP per capita is their ratio, real growth is weighted by GDP in US dollars, and inflation is the members' median, as the World Bank aggregates consumer prices. Each member counts at its latest year, so a group's figures can differ a little from the World Bank's own published aggregates, which estimate the members that have not reported."
   - { use: source-footer@1 }
 keys: { F7: "link($.MEMBER_ECONOMIES, 'economy')", F8: impact, F9: raw }

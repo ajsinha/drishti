@@ -42,7 +42,7 @@ import org.springframework.test.context.DynamicPropertySource;
 import org.springframework.test.web.servlet.MockMvc;
 
 /**
- * Sutra Next phase 1: the world-economy pack's seven economics screens, rebuilt from the fragment library, draw exactly what the
+ * Sutra Next phase 1: the world-economy pack's economics screens, rebuilt from the fragment library, draw exactly what the
  * generated, inline layouts drew, on the pack's committed samples: the same view model (title, strip, panels in order, their titles,
  * values, formats, masks, links) for a reader who sees everything and for one whose role masks fields. The inline layouts are set
  * beside them as version 2 (test data) and the views compared, leaving out only what names the layout itself (its version and
@@ -56,11 +56,13 @@ import org.springframework.test.web.servlet.MockMvc;
 @AutoConfigureMockMvc
 class EconomicsSutraNextEquivalenceTest {
 
-    /** Each migrated Sutra and a committed sample it draws. */
+    /**
+     * Each migrated Sutra and a committed sample it draws. The country group (ECG) left the list in 2.9.2: it is computed from its member
+     * economies since (docs/guides/GROUPINGS_ANALYTICS_GUIDE.md), and its page shows what the stored layout could not.
+     */
     static final Map<String, String> SCREENS = new LinkedHashMap<>();
 
     static {
-        SCREENS.put("country-group", "ECG-SAS");
         SCREENS.put("economic-forecast", "FCST-JPN-WEO");
         SCREENS.put("economy", "ECON-IND");
         SCREENS.put("fiscal-position", "FISC-USA");
@@ -119,7 +121,10 @@ class EconomicsSutraNextEquivalenceTest {
     }
 
     @Test
-    void theSevenMigratedEconomicsScreensDrawExactlyWhatTheInlineLayoutsDrewForAFullAndAMaskedReader() throws Exception {
+    void theSixMigratedEconomicsScreensDrawExactlyWhatTheInlineLayoutsDrewForAFullAndAMaskedReader() throws Exception {
+        // the country groups are computed (2.9.2): built once before the economies' links to them are resolved, so both reads agree
+        mvc.perform(get("/api/v1/views/country-group/ECG-SAS").header("Authorization", "Bearer " + tokens.mint("u-full", List.of("full"), 300)))
+                .andExpect(status().isOk());
         Map<String, JsonNode[]> after = new LinkedHashMap<>();
         for (String kind : SCREENS.keySet()) {
             JsonNode full = read(kind, "full");

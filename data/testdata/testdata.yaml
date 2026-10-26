@@ -6060,7 +6060,7 @@ datasets:
     total: 3
     files:
     - snapshot-2026-07-08.jsonl.gz
-    bytes: 427
+    bytes: 235
   - day: '2026-07-09'
     kind: changes
     documents: 0
@@ -9894,420 +9894,420 @@ datasets:
     total: 10
     files:
     - snapshot-2026-07-08.jsonl.gz
-    bytes: 15527
+    bytes: 15476
   - day: '2026-07-09'
     kind: changes
     documents: 10
     total: 10
     files:
     - changes-2026-07-09.jsonl.gz
-    bytes: 15536
+    bytes: 15484
   - day: '2026-07-10'
     kind: changes
     documents: 10
     total: 10
     files:
     - changes-2026-07-10.jsonl.gz
-    bytes: 15532
+    bytes: 15481
   - day: '2026-07-13'
     kind: changes
     documents: 10
     total: 10
     files:
     - changes-2026-07-13.jsonl.gz
-    bytes: 15527
+    bytes: 15473
   - day: '2026-07-14'
     kind: changes
     documents: 10
     total: 10
     files:
     - changes-2026-07-14.jsonl.gz
-    bytes: 15509
+    bytes: 15457
   - day: '2026-07-15'
     kind: changes
     documents: 10
     total: 10
     files:
     - changes-2026-07-15.jsonl.gz
-    bytes: 15497
+    bytes: 15446
   - day: '2026-07-16'
     kind: changes
     documents: 10
     total: 10
     files:
     - changes-2026-07-16.jsonl.gz
-    bytes: 15507
+    bytes: 15454
   - day: '2026-07-17'
     kind: changes
     documents: 10
     total: 10
     files:
     - changes-2026-07-17.jsonl.gz
-    bytes: 15501
+    bytes: 15448
   - day: '2026-07-20'
     kind: changes
     documents: 10
     total: 10
     files:
     - changes-2026-07-20.jsonl.gz
-    bytes: 15488
+    bytes: 15432
   - day: '2026-07-21'
     kind: changes
     documents: 10
     total: 10
     files:
     - changes-2026-07-21.jsonl.gz
-    bytes: 15483
+    bytes: 15431
   - day: '2026-07-22'
     kind: changes
     documents: 10
     total: 10
     files:
     - changes-2026-07-22.jsonl.gz
-    bytes: 15501
+    bytes: 15447
   - day: '2026-07-23'
     kind: changes
     documents: 10
     total: 10
     files:
     - changes-2026-07-23.jsonl.gz
-    bytes: 15472
+    bytes: 15417
   - day: '2026-07-24'
     kind: changes
     documents: 10
     total: 10
     files:
     - changes-2026-07-24.jsonl.gz
-    bytes: 15451
+    bytes: 15398
   - day: '2026-07-27'
     kind: changes
     documents: 10
     total: 10
     files:
     - changes-2026-07-27.jsonl.gz
-    bytes: 15446
+    bytes: 15392
   - day: '2026-07-28'
     kind: changes
     documents: 10
     total: 10
     files:
     - changes-2026-07-28.jsonl.gz
-    bytes: 15453
+    bytes: 15399
   - day: '2026-07-29'
     kind: changes
     documents: 10
     total: 10
     files:
     - changes-2026-07-29.jsonl.gz
-    bytes: 15434
+    bytes: 15381
   - day: '2026-07-30'
     kind: changes
     documents: 10
     total: 10
     files:
     - changes-2026-07-30.jsonl.gz
-    bytes: 15438
+    bytes: 15386
   - day: '2026-07-31'
     kind: changes
     documents: 10
     total: 10
     files:
     - changes-2026-07-31.jsonl.gz
-    bytes: 15459
+    bytes: 15402
   - day: '2026-08-03'
     kind: changes
     documents: 10
     total: 10
     files:
     - changes-2026-08-03.jsonl.gz
-    bytes: 15481
+    bytes: 15428
   - day: '2026-08-04'
     kind: changes
     documents: 10
     total: 10
     files:
     - changes-2026-08-04.jsonl.gz
-    bytes: 15472
+    bytes: 15417
   - day: '2026-08-05'
     kind: changes
     documents: 10
     total: 10
     files:
     - changes-2026-08-05.jsonl.gz
-    bytes: 15496
+    bytes: 15439
   - day: '2026-08-06'
     kind: changes
     documents: 10
     total: 10
     files:
     - changes-2026-08-06.jsonl.gz
-    bytes: 15493
+    bytes: 15435
   - day: '2026-08-07'
     kind: changes
     documents: 10
     total: 10
     files:
     - changes-2026-08-07.jsonl.gz
-    bytes: 15499
+    bytes: 15443
   - day: '2026-08-10'
     kind: changes
     documents: 10
     total: 10
     files:
     - changes-2026-08-10.jsonl.gz
-    bytes: 15485
+    bytes: 15431
   - day: '2026-08-11'
     kind: changes
     documents: 10
     total: 10
     files:
     - changes-2026-08-11.jsonl.gz
-    bytes: 15482
+    bytes: 15426
   - day: '2026-08-12'
     kind: changes
     documents: 10
     total: 10
     files:
     - changes-2026-08-12.jsonl.gz
-    bytes: 15500
+    bytes: 15443
   - day: '2026-08-13'
     kind: changes
     documents: 10
     total: 10
     files:
     - changes-2026-08-13.jsonl.gz
-    bytes: 15507
+    bytes: 15452
   - day: '2026-08-14'
     kind: changes
     documents: 10
     total: 10
     files:
     - changes-2026-08-14.jsonl.gz
-    bytes: 15503
+    bytes: 15448
   - day: '2026-08-17'
     kind: changes
     documents: 10
     total: 10
     files:
     - changes-2026-08-17.jsonl.gz
-    bytes: 15483
+    bytes: 15429
   - day: '2026-08-18'
     kind: changes
     documents: 10
     total: 10
     files:
     - changes-2026-08-18.jsonl.gz
-    bytes: 15487
+    bytes: 15433
   - day: '2026-08-19'
     kind: changes
     documents: 10
     total: 10
     files:
     - changes-2026-08-19.jsonl.gz
-    bytes: 15484
+    bytes: 15433
   - day: '2026-08-20'
     kind: changes
     documents: 10
     total: 10
     files:
     - changes-2026-08-20.jsonl.gz
-    bytes: 15503
+    bytes: 15448
   - day: '2026-08-21'
     kind: changes
     documents: 10
     total: 10
     files:
     - changes-2026-08-21.jsonl.gz
-    bytes: 15504
+    bytes: 15453
   - day: '2026-08-24'
     kind: changes
     documents: 10
     total: 10
     files:
     - changes-2026-08-24.jsonl.gz
-    bytes: 15505
+    bytes: 15452
   - day: '2026-08-25'
     kind: changes
     documents: 10
     total: 10
     files:
     - changes-2026-08-25.jsonl.gz
-    bytes: 15505
+    bytes: 15454
   - day: '2026-08-26'
     kind: changes
     documents: 10
     total: 10
     files:
     - changes-2026-08-26.jsonl.gz
-    bytes: 15502
+    bytes: 15448
   - day: '2026-08-27'
     kind: changes
     documents: 10
     total: 10
     files:
     - changes-2026-08-27.jsonl.gz
-    bytes: 15534
+    bytes: 15479
   - day: '2026-08-28'
     kind: changes
     documents: 10
     total: 10
     files:
     - changes-2026-08-28.jsonl.gz
-    bytes: 15537
+    bytes: 15484
   - day: '2026-08-31'
     kind: changes
     documents: 10
     total: 10
     files:
     - changes-2026-08-31.jsonl.gz
-    bytes: 15530
+    bytes: 15474
   - day: '2026-09-01'
     kind: changes
     documents: 10
     total: 10
     files:
     - changes-2026-09-01.jsonl.gz
-    bytes: 15548
+    bytes: 15494
   - day: '2026-09-02'
     kind: changes
     documents: 10
     total: 10
     files:
     - changes-2026-09-02.jsonl.gz
-    bytes: 15530
+    bytes: 15479
   - day: '2026-09-03'
     kind: changes
     documents: 10
     total: 10
     files:
     - changes-2026-09-03.jsonl.gz
-    bytes: 15542
+    bytes: 15488
   - day: '2026-09-04'
     kind: changes
     documents: 10
     total: 10
     files:
     - changes-2026-09-04.jsonl.gz
-    bytes: 15554
+    bytes: 15502
   - day: '2026-09-08'
     kind: changes
     documents: 10
     total: 10
     files:
     - changes-2026-09-08.jsonl.gz
-    bytes: 15558
+    bytes: 15501
   - day: '2026-09-09'
     kind: changes
     documents: 10
     total: 10
     files:
     - changes-2026-09-09.jsonl.gz
-    bytes: 15551
+    bytes: 15494
   - day: '2026-09-10'
     kind: changes
     documents: 10
     total: 10
     files:
     - changes-2026-09-10.jsonl.gz
-    bytes: 15554
+    bytes: 15499
   - day: '2026-09-11'
     kind: changes
     documents: 10
     total: 10
     files:
     - changes-2026-09-11.jsonl.gz
-    bytes: 15556
+    bytes: 15505
   - day: '2026-09-14'
     kind: changes
     documents: 10
     total: 10
     files:
     - changes-2026-09-14.jsonl.gz
-    bytes: 15554
+    bytes: 15499
   - day: '2026-09-15'
     kind: changes
     documents: 10
     total: 10
     files:
     - changes-2026-09-15.jsonl.gz
-    bytes: 15541
+    bytes: 15485
   - day: '2026-09-16'
     kind: changes
     documents: 10
     total: 10
     files:
     - changes-2026-09-16.jsonl.gz
-    bytes: 15537
+    bytes: 15481
   - day: '2026-09-17'
     kind: changes
     documents: 10
     total: 10
     files:
     - changes-2026-09-17.jsonl.gz
-    bytes: 15526
+    bytes: 15470
   - day: '2026-09-18'
     kind: changes
     documents: 10
     total: 10
     files:
     - changes-2026-09-18.jsonl.gz
-    bytes: 15526
+    bytes: 15469
   - day: '2026-09-21'
     kind: changes
     documents: 10
     total: 10
     files:
     - changes-2026-09-21.jsonl.gz
-    bytes: 15535
+    bytes: 15480
   - day: '2026-09-22'
     kind: changes
     documents: 10
     total: 10
     files:
     - changes-2026-09-22.jsonl.gz
-    bytes: 15522
+    bytes: 15465
   - day: '2026-09-23'
     kind: changes
     documents: 10
     total: 10
     files:
     - changes-2026-09-23.jsonl.gz
-    bytes: 15512
+    bytes: 15456
   - day: '2026-09-24'
     kind: changes
     documents: 10
     total: 10
     files:
     - changes-2026-09-24.jsonl.gz
-    bytes: 15518
+    bytes: 15464
   - day: '2026-09-25'
     kind: changes
     documents: 10
     total: 10
     files:
     - changes-2026-09-25.jsonl.gz
-    bytes: 15494
+    bytes: 15442
   - day: '2026-09-28'
     kind: changes
     documents: 10
     total: 10
     files:
     - changes-2026-09-28.jsonl.gz
-    bytes: 15493
+    bytes: 15443
   - day: '2026-09-29'
     kind: changes
     documents: 10
     total: 10
     files:
     - changes-2026-09-29.jsonl.gz
-    bytes: 15478
+    bytes: 15430
   - day: '2026-09-30'
     kind: changes
     documents: 10
     total: 10
     files:
     - changes-2026-09-30.jsonl.gz
-    bytes: 15491
+    bytes: 15439
 - folder: market-data/equity-index
   pack: market-data
   kind: equity-index
@@ -20196,10 +20196,6 @@ datasets:
   bytes: 7168291
 - samples: config/packs/world-economy/samples
   pack: world-economy
-  kind: country-group
-  connector: macro-store
-- samples: config/packs/world-economy/samples
-  pack: world-economy
   kind: economic-forecast
   connector: macro-store
 - samples: config/packs/world-economy/samples
@@ -20291,7 +20287,7 @@ datasets:
   captured: '2026-10-24'
   source: SEC EDGAR, Nasdaq Trader, GLEIF and Wikidata (tools/publicdata/us_equities.py)
   documents: 503
-  bytes: 450959
+  bytes: 427385
 - folder: us-equities/index-membership
   pack: us-equities
   kind: index-membership
@@ -20301,17 +20297,7 @@ datasets:
   captured: '2026-10-24'
   source: SEC EDGAR, Nasdaq Trader, GLEIF and Wikidata (tools/publicdata/us_equities.py)
   documents: 6
-  bytes: 26549
-- folder: us-equities/sic-sector
-  pack: us-equities
-  kind: sic-sector
-  connector: us-equities-store
-  key: SIC
-  snapshot: snapshot-2026-10-24.jsonl.gz
-  captured: '2026-10-24'
-  source: SEC EDGAR, Nasdaq Trader, GLEIF and Wikidata (tools/publicdata/us_equities.py)
-  documents: 182
-  bytes: 31238
+  bytes: 23656
 - folder: us-equities/filing-feed
   pack: us-equities
   kind: filing-feed
@@ -20341,7 +20327,7 @@ datasets:
   captured: '2026-10-24'
   source: SEC EDGAR, Nasdaq Trader, GLEIF and Wikidata (tools/publicdata/us_equities.py)
   documents: 3480
-  bytes: 511350
+  bytes: 367647
 - folder: gleif/lei-entity
   pack: gleif
   kind: lei-entity
@@ -20351,17 +20337,7 @@ datasets:
   captured: '2026-10-25'
   source: GLEIF LEI records, relationship records and mapping files (tools/publicdata/gleif.py)
   documents: 9937
-  bytes: 1925345
-- folder: gleif/lei-group
-  pack: gleif
-  kind: lei-group
-  connector: gleif-store
-  key: GROUP_ID
-  snapshot: snapshot-2026-10-25.jsonl.gz
-  captured: '2026-10-25'
-  source: GLEIF LEI records, relationship records and mapping files (tools/publicdata/gleif.py)
-  documents: 591
-  bytes: 456903
+  bytes: 2081762
 - folder: gleif/lei-relationship
   pack: gleif
   kind: lei-relationship
@@ -20372,16 +20348,6 @@ datasets:
   source: GLEIF LEI records, relationship records and mapping files (tools/publicdata/gleif.py)
   documents: 9347
   bytes: 460787
-- folder: gleif/lei-country
-  pack: gleif
-  kind: lei-country
-  connector: gleif-store
-  key: COUNTRY
-  snapshot: snapshot-2026-10-25.jsonl.gz
-  captured: '2026-10-25'
-  source: GLEIF LEI records, relationship records and mapping files (tools/publicdata/gleif.py)
-  documents: 134
-  bytes: 313176
 - folder: gleif/lei-mapping
   pack: gleif
   kind: lei-mapping

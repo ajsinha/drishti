@@ -21,7 +21,8 @@ version: '1.0'
 class: fundamental
 status: active
 title: Correlation matrix
-description: Pairwise correlations used by basket, quanto and spread products.
+description: 'A correlation set: the factors whose pairwise correlations basket, quanto and spread products use. Since 2.9.2 the set keeps its
+  definition only; the correlations are the computed kind correlation-result (CORRC), worked out from the factors'' price history when asked.'
 source: md-hub
 grain: One row per correlation matrix per business date, keyed by MATRIX_ID.
 key:
@@ -54,40 +55,16 @@ fields:
 - name: FACTORS
   type: text list
   presence: required
-- name: AVERAGE
-  type: rate
+- name: EQUITY_IDS
+  type: id list
   presence: required
-  description: Average
-  example: 0.385
-- name: PAIRS
-  type: record list
+  description: 'The factors that are equities (their price history: HISTORY[].CLOSE)'
+  link: equity
+- name: FX_IDS
+  type: id list
   presence: required
-  description: 'Nested: see nested PAIRS[]'
-- name: WINDOW
-  type: text
-  presence: required
-  example: 2 years, daily log returns
-- name: ESTIMATOR
-  type: text
-  presence: required
-  example: Ledoit-Wolf shrinkage
-nested:
-  PAIRS[]:
-  - name: A
-    type: text
-    presence: required
-    description: Factor 1
-    example: ORBT
-  - name: B
-    type: text
-    presence: required
-    description: Factor 2
-    example: RHNB
-  - name: RHO
-    type: rate
-    presence: required
-    description: ρ
-    example: 0.156
+  description: 'The factors that are FX pairs (their history: HISTORY[].MID)'
+  link: fx-spot
 links: []
 validation:
 - rule: required
@@ -109,6 +86,8 @@ validation:
 notes:
 - 'Dated by the lake''s business_date partition: `drishti.py lake build` writes each test-data file''s day into it; the documents carry no date
   field of their own.'
+- 'AVERAGE, PAIRS, WINDOW and ESTIMATOR left the record in 2.9.2: the correlations are computed (correlation-result, docs/guides/GROUPINGS_ANALYTICS_GUIDE.md
+  section 15).'
 review:
 - 'required inferred from 100% coverage in 6 documents (3 samples and 3 test-data documents (data/testdata/market-data/correlation-matrix/snapshot-2026-07-08.jsonl.gz,
   data/testdata/market-data/correlation-matrix/changes-2026-09-30.jsonl.gz)): confirm each required field is mandatory upstream, and each optional

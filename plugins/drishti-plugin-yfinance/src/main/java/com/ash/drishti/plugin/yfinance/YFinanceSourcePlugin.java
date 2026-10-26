@@ -71,6 +71,8 @@ public final class YFinanceSourcePlugin implements SourcePlugin {
     private volatile String health = "UP";
     private com.ash.drishti.api.proxy.ProxySettings proxy = com.ash.drishti.api.proxy.ProxySettings.none();
     private volatile Instant lastUpdate;
+    /** The symbol beta and correlation are measured against (setting {@code benchmark}); empty: none. */
+    private volatile String benchmark = "";
 
     @Override
     public PluginManifest manifest() {
@@ -91,6 +93,8 @@ public final class YFinanceSourcePlugin implements SourcePlugin {
             }
         }
         this.fetcher = new HttpFetcher(b.build(), settings, proxy);
+        String bm = ctx.settings().getOrDefault("benchmark", "");
+        this.benchmark = bm == null || !SYMBOL.matcher(bm.strip()).matches() ? "" : bm.strip().toUpperCase(Locale.ROOT);
         // nothing is fetched at start: there is no symbol yet and the web may be unreachable
     }
 
@@ -117,6 +121,7 @@ public final class YFinanceSourcePlugin implements SourcePlugin {
         doc.put("fiftyTwoWeekRange", range(f.quote().get("fiftyTwoWeekLow"), f.quote().get("fiftyTwoWeekHigh")));
         doc.put("historyRange", settings.range());
         doc.put("interval", settings.interval());
+        doc.putAll(analytics(symbol, f.quote()));
         Map<String, Object> source = new LinkedHashMap<>();
         source.put("feed", "Yahoo Finance public chart endpoint (unofficial)");
         source.put("fetched", f.at().toString());
@@ -126,6 +131,29 @@ public final class YFinanceSourcePlugin implements SourcePlugin {
         index.add(new EntityHit(EntityRef.of(ref.kind(), settings.idPrefix() + symbol), symbol, "quote · " + f.quote().get("name")));
         return Optional.of(new EntityDocument(EntityRef.of(ref.kind(), settings.idPrefix() + symbol),
                 context.parseJson(new ByteArrayInputStream(JSON.writeValueAsBytes(com.ash.drishti.common.UpperSnake.keys(doc)))), new Provenance(settings.sourceName(), f.at().toEpochMilli(), f.at(), false)));
+    }
+
+    /**
+     * Returns, volatility and beta from the history just read ({@link PriceAnalytics}), against the benchmark's history (read and cached as
+     * any symbol); without the benchmark (none set, or Yahoo cannot answer for it) beta and correlation are empty.
+     */
+    @SuppressWarnings("unchecked")
+    private Map<String, Object> analytics(String symbol, Map<String, Object> quote) {
+        List<Map<String, Object>> mine = quote.get("history") instanceof List<?> h ? (List<Map<String, Object>>) h : List.of();
+        List<Map<String, Object>> bench = null;
+        if (!benchmark.isEmpty() && !benchmark.equals(symbol)) {
+            try {
+                Fetched b = results(benchmark);
+                bench = b.quote() != null && b.quote().get("history") instanceof List<?> h ? (List<Map<String, Object>>) h : null;
+            } catch (Exception e) {
+                bench = null;                                       // the analytics without beta: the page still opens
+            }
+        } else if (benchmark.equals(symbol)) {
+            bench = mine;
+        }
+        Map<String, Object> out = new LinkedHashMap<>();
+        out.put("analytics", PriceAnalytics.of(mine, bench, benchmark));
+        return out;
     }
 
     private static String range(Object low, Object high) {

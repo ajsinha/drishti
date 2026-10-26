@@ -473,15 +473,20 @@ never coexist. For each item:
 
 ### Groupings and analytics (Track B, shipped in 2.9.0 or 2.10.0 as each is ready)
 
-| Command | Computed instead |
-|---|---|
-| LEIG (`lei-group`) | The ownership group from GLEIF relationships, with no 50-member cap |
-| LEIC (`lei-country`) | Entity counts, lapsed and late renewals per country |
-| SIC (`sic-sector`) | Companies, revenue and net income over the sector's companies |
-| ECG (`country-group`) | GDP, population, growth and inflation summed or weighted over member economies |
-| CORR (`correlation-matrix`) | Correlations from price history for any factor set, window and estimator |
-| USEQ ratios | Margins and growth from the financial facts |
-| PXH analytics | Returns, volatility and beta from price history (internal use only, like the prices) |
+| Command | Computed instead | Status |
+|---|---|---|
+| LEIG (`lei-group`) | The ownership group from GLEIF relationships, with no 50-member cap | **Built 2026-10-26 (2.9.2)**: the derived connector `gleif-groupings` from `lei-entity`; tree and levels from `DIRECT_PARENT` |
+| LEIC (`lei-country`) | Entity counts, lapsed and late renewals per country | **Built 2026-10-26 (2.9.2)**: `gleif-groupings`; every entity listed (no 400-row cap) |
+| SIC (`sic-sector`) | Companies, revenue and net income over the sector's companies | **Built 2026-10-26 (2.9.2)**: `us-equities-groupings` from `us-company`; totals of the USD reporters |
+| ECG (`country-group`) | GDP, population, growth and inflation summed or weighted over member economies | **Built 2026-10-26 (2.9.2)**: `macro-groupings` from `economy`; growth GDP-weighted, inflation the median |
+| CORR (`correlation-matrix`) | Correlations from price history for any factor set, window and estimator | **Built 2026-10-26 (2.9.2)**: the set keeps its factors; `correlation-result` (CORRC) by the reactive Java `CorrelationEngine`, Pearson or Ledoit-Wolf over a window |
+| USEQ ratios | Margins and growth from the financial facts | **Built 2026-10-26 (2.9.2)**: worked out by the pages from `REVENUE`, `NET_INCOME`, `FINANCIALS[]` |
+| PXH analytics | Returns, volatility and beta from price history (internal use only, like the prices) | **Built 2026-10-26 (2.9.2)**: by the `yfinance` plugin as the history is read; off as shipped |
+| FACT changes, IDX totals | A fact's change on the year; an index's members' revenue, net income and divisions | **Built 2026-10-26 (2.9.2)**: worked out by the pages from the values and the member rows |
+| EQ beta (`equity` `BETA`) | An equity's beta against its index from both price histories | **Built 2026-10-26 (2.9.2)**: the computed kind `equity-beta` (`EQB`) by the reactive Java `BetaEngine`; the equity page's Beta panel |
+
+The reference is [GROUPINGS_ANALYTICS_GUIDE.md](../guides/GROUPINGS_ANALYTICS_GUIDE.md) (Part II the contracts and the reconciliation
+with the retired stored pages), the hands-on companion [tutorial 27](../tutorials/27-groupings-and-analytics.md).
 
 ### 2.11.0: balance sheet and regulatory
 

@@ -171,7 +171,9 @@ class TheRetiredStoredVersions(unittest.TestCase):
             pack = next(p for p, m in self.manifests.items() if kind in (m.get("kinds") or []))
             want = {f.replace("[]", "") for f in entry["figures"]}
             for d in self.docs_of(pack, kind):
-                self.assertEqual(self.names(d) & want, set(), f"{kind} {d.get(next(iter(d)))} carries a removed figure")
+                # top-level: true, the plain names are the record's own fields (index-membership's members keep their REVENUE rows)
+                have = (set(d) | {n for n in self.names(d) if "." in n}) if entry.get("top-level") else self.names(d)
+                self.assertEqual(have & want, set(), f"{kind} {d.get(next(iter(d)))} carries a removed figure")
             c = yaml.safe_load(C.contract_file(C.PACKS, pack, kind).read_text(encoding="utf-8"))
             fields = {f["name"] for f in c.get("fields") or []} | {f"{p.replace('[]', '')}.{f['name']}" for p, fs in (c.get("nested") or {}).items()
                                                                    for f in fs}
@@ -236,6 +238,55 @@ class TheRetiredStoredVersions(unittest.TestCase):
         self.assertEqual(by_kind["exposure-path"]["class"], "input")
         self.assertEqual(by_kind["exposure-result"]["class"], "computed")
         self.assertNotIn("exposure-profile", by_kind)
+
+    def test_a_grouping_computed_in_place_keeps_no_stored_version(self):
+        """GROUPINGS_ANALYTICS_GUIDE.md: LEIG, LEIC, SIC and ECG are computed from the fundamental data by a derived connector since 2.9.2,
+        under the same kind, command and ids. Their stored version never returns: no Delta connector serves the kind, no sample, test
+        data or test-data folder holds it, no public-data generator writes it, and the contract says computed by the derived connector."""
+        cip = self.pol["computed-in-place"]
+        self.assertEqual(set(cip), {"lei-group", "lei-country", "sic-sector", "country-group"})
+        snap_spec = importlib.util.spec_from_file_location("publicsnap", C.ROOT / "tools" / "testdata" / "publicsnap.py")
+        snap = importlib.util.module_from_spec(snap_spec)
+        snap_spec.loader.exec_module(snap)
+        by_kind = {cmd["kind"]: c for cmd, _, c in C.contracts()}
+        for kind, entry in cip.items():
+            self.assertEqual(entry["release"], "2.9.2", kind)
+            pack = next(p for p, m in self.manifests.items() if kind in (m.get("kinds") or []))
+            m = self.manifests[pack]
+            self.assertEqual(m["connectors"][m["routes"][kind]]["plugin"], "derived", f"{kind} is not computed by a derived connector")
+            for name, conn in m["connectors"].items():
+                if conn.get("plugin") != "derived":
+                    self.assertNotIn(kind, conn.get("kinds") or [], f"{pack}: {name} serves the retired stored {kind}")
+                    self.assertNotIn(kind, ((conn.get("settings") or {}).get("layout") or {}), f"{pack}: {name} lays out {kind}")
+            self.assertFalse(any((C.PACKS / pack / "samples").glob(f"{kind}.jsonl*")), f"{pack} samples of {kind}")
+            self.assertNotIn(kind, {d.get("kind") for d in self.testdata["datasets"]}, f"test data of {kind}")
+            self.assertFalse(any((C.TESTDATA / p / kind).exists() for p in self.manifests), f"a test-data folder of {kind}")
+            self.assertNotIn(kind, (snap.PACKS.get(pack) or {}).get("keys", {}), f"the public-data generator of {pack} writes {kind}")
+            self.assertEqual((by_kind[kind]["class"], by_kind[kind]["storage"]["plugin"]), ("computed", "derived"), kind)
+        self.assertEqual(set(snap.COMPUTED["gleif"]) | set(snap.COMPUTED["us-equities"]), {"lei-group", "lei-country", "sic-sector"})
+
+    def test_correlations_and_ratios_are_computed(self):
+        """CORR keeps its factors and computes its correlations (correlation-result, a reactive Java engine); the USEQ ratios and PXH
+        analytics are worked out when read (GROUPINGS_ANALYTICS_GUIDE.md sections 15 to 17)."""
+        by_kind = {cmd["kind"]: c for cmd, _, c in C.contracts()}
+        self.assertEqual((by_kind["correlation-result"]["class"], by_kind["correlation-result"]["storage"]["plugin"]), ("computed", "reactive"))
+        self.assertEqual(by_kind["correlation-matrix"]["class"], "fundamental")
+        md = self.manifests["market-data"]
+        engine = md["connectors"]["correlation-engine"]["engine"]["class"]
+        self.assertTrue((C.ROOT / "drishti-compute" / "src" / "main" / "java" / Path(*engine.split("."))).with_suffix(".java").is_file(), engine)
+        for d in self.docs_of("market-data", "correlation-matrix"):
+            self.assertTrue(d.get("EQUITY_IDS") or d.get("FX_IDS"), d.get("MATRIX_ID"))
+        self.assertEqual(self.pol["removed"]["us-company"]["figures"], ["NET_MARGIN", "REVENUE_GROWTH", "FINANCIALS[].NET_MARGIN"])
+        analytics = {f["name"] for f in (by_kind["price-history"].get("nested") or {}).get("ANALYTICS") or []}
+        self.assertTrue({"RETURN_1M", "VOLATILITY", "BETA", "MAX_DRAWDOWN"} <= analytics)
+        self.assertFalse((C.TESTDATA / "us-equities" / "price-history").exists())       # the prices stay live only, never stored
+        # the facts' yearly change, the index pages' totals and the equities' beta: computed too (2.9.2)
+        self.assertIn("HISTORY[].CHANGE_PCT", self.pol["removed"]["financial-fact"]["figures"])
+        self.assertTrue({"REVENUE", "NET_INCOME", "SECTORS", "BY_SECTOR"} <= set(self.pol["removed"]["index-membership"]["figures"]))
+        self.assertEqual(self.pol["removed"]["equity"]["figures"], ["BETA"])
+        self.assertEqual((by_kind["equity-beta"]["class"], by_kind["equity-beta"]["storage"]["plugin"]), ("computed", "reactive"))
+        beta = md["connectors"]["equity-analytics"]["engine"]["class"]
+        self.assertTrue((C.ROOT / "drishti-compute" / "src" / "main" / "java" / Path(*beta.split("."))).with_suffix(".java").is_file(), beta)
 
     def test_every_file_starts_with_the_licence(self):
         for f in sorted(C.PACKS.glob("*/contracts/*.contract.yaml")):
