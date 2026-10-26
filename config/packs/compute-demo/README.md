@@ -34,11 +34,15 @@ commands:
 depends-on:
   packs: []
   connectors:
+  - compute-demo-store
   - path-sum-java
   - path-sum-python
   plugins:
+  - delta
   - reactive
-  settings: []
+  settings:
+  - DRISHTI_DELTA_ROOT
+  - DRISHTI_LAKE_ENABLED
 sources:
 - name: Synthetic P&L strips (a seeded random walk, config/packs/compute-demo/tools/make_samples.py)
   licence: Proprietary (part of Drishti)
@@ -69,7 +73,7 @@ Every kind the pack owns, read from its manifest, its samples and its Sutras: ho
 
 ### `path-book`
 
-**Path book** · mnemonic `PBOOK`.
+**Path book** · mnemonic `PBOOK` · read through connector `compute-demo-store`.
 
 **Id:** field `BOOK_ID`; pattern `^BOOK-(RATES|FX|CREDIT)$`; for example `BOOK-CREDIT`.
 
@@ -88,7 +92,7 @@ Links: `BOOK_ID` → `path-book`.
 
 ### `path-strip`
 
-**P&L strip** · mnemonic `PSTRIP`.
+**P&L strip** · mnemonic `PSTRIP` · read through connector `compute-demo-store`.
 
 **Id:** field `STRIP_ID`; pattern `^STRIP-`; for example `STRIP-RATES-001`.
 
@@ -162,8 +166,11 @@ The connectors it brings (written once to `config/connectors/<name>.yaml`, then 
 
 | Connector | Plugin | Kinds | Enabled |
 |---|---|---|---|
+| `compute-demo-store` | `delta` | `path-book`, `path-strip` | `${DRISHTI_LAKE_ENABLED:true}` |
 | `path-sum-python` | `reactive` | `path-sum` | on |
 | `path-sum-java` | `reactive` | `path-sum-java` | on |
+
+Settings (environment variables) its connectors read: `DRISHTI_DELTA_ROOT`, `DRISHTI_LAKE_ENABLED`.
 
 ## Refreshing the data
 

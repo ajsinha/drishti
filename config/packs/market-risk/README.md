@@ -326,50 +326,51 @@ A set of positions: a hierarchy node, a rule over the positions' columns, or a b
 
 **Id:** pattern `^PF-`.
 
-Fields, from 2 sample documents:
+Fields, from 3 sample documents:
 
 | Field | Type | Example | Description |
 |---|---|---|---|
-| `PORTFOLIO_ID` | string | `PF-USD-RATES` | link to `portfolio` |
-| `NAME` | string | `USD rates exposure` | — |
-| `OWNER` | string | `group-risk` | Who keeps the portfolio's definition. |
-| `TYPE` | string | `RULE` | HIERARCHY, RULE or BASKET |
+| `PORTFOLIO_ID` | string | `PF-RATES-DESK` | link to `portfolio` |
+| `NAME` | string | `Rates desk (New York)` | — |
+| `OWNER` | string | `rates-risk` | Who keeps the portfolio's definition. |
+| `TYPE` | string | `HIERARCHY` | HIERARCHY, RULE or BASKET |
 | `DEFINITION` | object |  | NODE (a hierarchy node), RULE (a condition) or MEMBERS (positions and trades) |
 | `ROLLS_UP_TO` | object |  | Nested: see below |
-| `LIMIT_VAR` | integer | `1500000` | The VaR the portfolio may take. (USD) |
+| `LIMIT_VAR` | integer | `4600000` | The VaR the portfolio may take. (USD) |
 | `BUSINESS_DATE` | date | `2026-09-30` | — |
-| `VALID_FROM` | date | `2026-01-02` | Valid from |
+| `VALID_FROM` | date | `2026-01-02` | The first business date the portfolio's definition applies to; an earlier date uses the definition then in force. |
 | `VALID_TO` | null |  | — |
 | `SCENARIO_SET_ID` | string | `HS-509` | — |
-| `POSITION_COUNT` | integer | `8` | The positions in the portfolio on the business date (a basket naming one trade of a position holds that part of it). |
-| `TRADE_COUNT` | integer | `60` | — |
-| `LONG_COUNT` | integer | `3` | Positions whose net quantity is above zero. |
-| `SHORT_COUNT` | integer | `5` | Positions whose net quantity is below zero. |
-| `GROSS_MV` | integer | `556442317` | The sum of the positions' market values without their signs. (USD) |
-| `NET_MV` | integer | `150429101` | The sum of the positions' market values: longs and shorts offset. (USD) |
-| `VAR_99` | integer | `1001253` | The loss the portfolio is expected not to exceed on 99 of 100 trading days, read from the 1st percentile of the revalued scenario P&L (historical simulation). (USD) |
-| `ES_975` | integer | `978359` | The average loss on the worst 2.5% of scenario days. It looks into the tail that VaR ignores, and it is the measure the FRTB internal-models approach uses for capital. (USD) |
-| `LIMIT_USE` | number | `0.6675` | The VaR over the portfolio's VaR limit. |
+| `POSITION_COUNT` | integer | `24` | The positions in the portfolio on the business date (a basket naming one trade of a position holds that part of it). |
+| `TRADE_COUNT` | integer | `172` | — |
+| `LONG_COUNT` | integer | `14` | Positions whose net quantity is above zero. |
+| `SHORT_COUNT` | integer | `10` | Positions whose net quantity is below zero. |
+| `GROSS_MV` | integer | `1065077778` | The sum of the positions' market values without their signs. (USD) |
+| `NET_MV` | integer | `352474636` | The sum of the positions' market values: longs and shorts offset. (USD) |
+| `VAR_99` | integer | `3012892` | The loss the portfolio is expected not to exceed on 99 of 100 trading days, read from the 1st percentile of the revalued scenario P&L (historical simulation). (USD) |
+| `ES_975` | integer | `3690544` | The average loss on the worst 2.5% of scenario days. It looks into the tail that VaR ignores, and it is the measure the FRTB internal-models approach uses for capital. (USD) |
+| `LIMIT_USE` | number | `0.655` | The VaR over the portfolio's VaR limit. |
 | `POSITIONS` | list of objects |  | The positions on the date, each with its VaR and component VaR |
 | `BY_PRODUCT` | list of objects |  | Nested: see below |
 | `BY_CURRENCY` | list of objects |  | Nested: see below |
 | `BY_DIRECTION` | list of objects |  | Nested: see below |
 | `TOP_CONTRIBUTORS` | list of objects |  | Nested: see below |
-| `ALL_TRADES` | null |  | — |
-| `VAR_SCOPE` | string | `PORT:PF-USD-RATES` | — |
+| `ALL_TRADES` | object |  | Nested: see below |
+| `VAR_SCOPE` | string | `PORT:PF-RATES-DESK` | — |
 | `PNL` | list of integers |  | The portfolio's P&L under the scenario days, each trade counted once |
 
 Nested structures:
 
 | Path | Fields |
 |---|---|
-| `DEFINITION` | `RULE` (string), `MEMBERS` (list of objects) |
-| `ROLLS_UP_TO` | `KIND` (string), `ID` (string) |
-| `POSITIONS[]` | `POSITION_ID` (string), `INSTRUMENT` (string), `DIRECTION` (string): LONG or SHORT: the sign of the position's net quantity., `QUANTITY` (number): The signed sum of the position's trades' quantities held in the portfolio., `MARKET_VALUE` (integer): The position's present value on the business date. (USD), `CURRENCY` (string), `TT_BOOK` (string), `DESK` (string), `PRODUCT_GROUP` (string), `PRODUCT_TYPE` (string), `TRADES` (integer), `PARTIAL` (boolean), `VAR_99` (integer): The position's own 1-day 99% VaR, as if it were alone. (USD), `COMPONENT_VAR` (integer): The position's share of the portfolio's VaR (Euler): the shares add up to the portfolio's VaR; a hedge has a negative share. (USD), `PCT_OF_VAR` (number): The component VaR over the portfolio's VaR. |
+| `DEFINITION` | `NODE` (string): For a HIERARCHY portfolio: the node of the bank's hierarchy whose positions it holds (every book under it)., `RULE` (string): For a RULE portfolio: the condition a position's columns must meet to be in it, checked on each business date., `MEMBERS` (list of objects): For a BASKET portfolio: the positions and trades someone picked (a trade brings that part of its position). |
+| `ROLLS_UP_TO` | `KIND` (string), `ID` (string): The desk or book the portfolio reports under. |
+| `POSITIONS[]` | `POSITION_ID` (string): The position's id: its book and its instrument (one holding nets every trade of that instrument in the book)., `INSTRUMENT` (string): What the position holds: the product, its currency and its maturity., `DIRECTION` (string): LONG or SHORT: the sign of the position's net quantity., `QUANTITY` (number): The signed sum of the position's trades' quantities held in the portfolio., `MARKET_VALUE` (integer): The position's present value on the business date. (USD), `CURRENCY` (string), `TT_BOOK` (string), `DESK` (string), `PRODUCT_GROUP` (string), `PRODUCT_TYPE` (string), `TRADES` (integer), `PARTIAL` (boolean), `VAR_99` (integer): The position's own 1-day 99% VaR, as if it were alone. (USD), `COMPONENT_VAR` (integer): The position's share of the portfolio's VaR (Euler): the shares add up to the portfolio's VaR; a hedge has a negative share. (USD), `PCT_OF_VAR` (number): The component VaR over the portfolio's VaR. |
 | `BY_PRODUCT[]` | `KEY` (string), `POSITIONS` (integer), `NET_MV` (integer), `GROSS_MV` (integer), `COMPONENT_VAR` (integer) |
 | `BY_CURRENCY[]` | `KEY` (string), `POSITIONS` (integer), `NET_MV` (integer), `GROSS_MV` (integer), `COMPONENT_VAR` (integer) |
 | `BY_DIRECTION[]` | `KEY` (string), `POSITIONS` (integer), `NET_MV` (integer), `GROSS_MV` (integer), `COMPONENT_VAR` (integer) |
 | `TOP_CONTRIBUTORS[]` | `POSITION_ID` (string), `INSTRUMENT` (string), `DIRECTION` (string), `QUANTITY` (number), `MARKET_VALUE` (integer), `CURRENCY` (string), `TT_BOOK` (string), `DESK` (string), `PRODUCT_GROUP` (string), `PRODUCT_TYPE` (string), `TRADES` (integer), `PARTIAL` (boolean), `VAR_99` (integer), `COMPONENT_VAR` (integer), `PCT_OF_VAR` (number) |
+| `ALL_TRADES` | `KIND` (string), `ID` (string) |
 | `DEFINITION.MEMBERS[]` | `POSITION_ID` (string), `TRADE_ID` (string) |
 
 Links: `PORTFOLIO_ID` → `portfolio`.
