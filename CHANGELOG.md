@@ -15,6 +15,10 @@
 -->
 # Changelog
 
+## Unreleased
+
+- **About and Competitive rewritten (product owner, 2026-10-26).** About: the headline and tagline from configuration, what Drishti is now (risk computed for any scope, data contracts, Knowledge), twenty feature cards (VaR for any scope, counterparty exposure, data contracts, Knowledge, Functions, write-back, external data, the eleven packs …), measured VaR and exposure figures with their sources, the areas Measure risk and Understand, new use cases. Competitive: as of October 2026, a third paragraph on risk computed when asked, and five new rows: risk for any set of trades, a data contract for every command, external data with sources and scripts, forms that save, and explaining the data from the data.
+
 ## 2.9.1 — Functions (FUNC) for everyone; groupings and analytics computed; External data and complete pack guides; the exposure benchmark (2026-10-26)
 
 - **Groupings and analytics computed instead of stored (2.9.1, Track B of the computed-measures roadmap).** Seven pages that were

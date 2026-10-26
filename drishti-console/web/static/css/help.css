@@ -89,6 +89,7 @@
 .ab-hero .about-mark { width: 120px; height: 72px; color: var(--d-accent); }
 .ab-hero .about-mark .eye { stroke: var(--d-ink); }
 .about-tag { font-size: 1.15rem; color: var(--d-accent) !important; margin-bottom: .6rem !important; }
+.about-headline { font-size: clamp(1.3rem, 2.6vw, 1.75rem); font-weight: 700; margin: .2rem 0 .3rem !important; text-wrap: balance; }
 .about-list { margin: 0; padding-left: 1.1rem; } .about-list li { margin: .25rem 0; }
 .pnl-help { margin-left: .5rem; color: var(--d-faint); font-size: .8rem; }
 .pnl-help:hover { color: var(--d-accent); text-decoration: none; }
