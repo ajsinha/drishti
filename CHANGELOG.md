@@ -17,6 +17,12 @@
 
 ## Unreleased
 
+- **The VaR data contract** ([docs/contracts/VAR.md](docs/contracts/VAR.md)): every input table of the VaR engine (`pnl-vector`,
+  `scenario-set`, `risk-hierarchy`, `portfolio`, `position`, `var-node`) column by column with types, keys and examples; the in-memory
+  structures and their sizes; the scope grammar as the parser accepts it; every `/api/v1/var` answer, basket and capture field; the
+  checks and errors; the retirement of `var` and `var-node` with the `VAR-COMM` reconciliation; the planned 2.8.0 contract (derived
+  positions, tiered memory and its hot file, the computed kinds); a worked example. Linked from VAR_ENGINE.md, VAR_DATA_MODEL.md and
+  VAR_EXPLORER.md.
 - **Token scope `risk:write`:** a personal API token may save and delete its VaR baskets, capture VaR, keep what-if sandboxes and
   cancel its own computations; a computed answer (`POST /api/v1/compute/{connector}/{kind}`) needs only `read`. Compute administration
   and approvals, peer fan-out, trigger events and VaR reload are never open to a token. The compute-demo pack's books and strips are

@@ -15,6 +15,8 @@
 -->
 # The VaR engine: value at risk for any set of trades, with full drill-down
 
+The data contract: [docs/contracts/VAR.md](../contracts/VAR.md) (every input column, structure and answer, checked against the code).
+
 Status: **partly built (2.8.0, unreleased).** Waves **V0 to V3 are built** (the data, the engine, the VaR explorer, history and
 backtesting, baskets, captures, entitlements and audit): what was built, how it differs from this design and the decisions taken on
 its open questions are in [section 18](#18-as-built-in-280-waves-v0-to-v3); the user guide is [VAR_EXPLORER.md](../guides/VAR_EXPLORER.md).

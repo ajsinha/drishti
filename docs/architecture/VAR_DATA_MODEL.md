@@ -15,6 +15,8 @@
 -->
 # The VaR data model: positions, portfolios and the P&L vector store
 
+The data contract: [docs/contracts/VAR.md](../contracts/VAR.md) (every input column, structure and answer, checked against the code).
+
 Status: **partly built (2.8.0, unreleased).** The data of waves V0 to V3 is built: positions, portfolios, the trades' P&L vectors as a
 `list<double>` column, hierarchies, the nodes' history, the vector store in memory; [section 18](#18-as-built-in-280) says what was
 built, the **vector grain chosen (the trade)** and where it differs from the sections above. This is the companion of
