@@ -25,7 +25,7 @@
   data contract, version 1.2 AS BUILT part 2 (all of `EXP.md`: every column, formula, DRS code, the official results, retention, the
   reconciliation of the 76 stored sets, decisions and the change table); Part III the engine (where it lives, one date in memory and the
   hot file `DRSHEXP1`, sizes and retention, open items: the benchmark is not built in 2.9.0). [Tutorial
-  26](docs/tutorials/26-exposure-from-the-bank-to-a-trade.md) walks from the bank to a trade on the demo lake, each step in the UI, on
+  26](docs/tutorials/26-exposure-from-the-bank-to-a-trade.md) walks from the bank to a trade on the demo lake in eight steps with screenshots, each step in the UI, on
   the command line and in YAML. `docs/contracts/EXP.md` moved to `docs/archive/` with the archive banner; every reference (contracts and
   their index, the contract policy, pack contracts, guide and README and their generators, the test-data README, CONFIGURATION,
   API_GUIDE, TOOLS, IMPLEMENTATION_PLAN, source and settings comments) points at the guide's sections. The help centre lists the

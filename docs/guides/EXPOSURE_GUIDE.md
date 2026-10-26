@@ -197,7 +197,25 @@ How to read it:
   by path (they do not net against each other), but their bad cases fall on different paths and dates, so the quantile of the sum is
   below the sum of the quantiles. That is why Drishti sums path matrices, never stored PFEs.
 
-The bank and the legal entities on the test data: run `drishti.py exposure tree` (tutorial 26 step 1 shows its output).
+**The bank and its legal entities** (the default demo lake: 73 netting sets with paths of 76, 9,000 trades; `drishti.py exposure
+show BANK`, `tree`; tutorial 26 steps 1 and 2):
+
+| Scope | Peak PFE 95% | EPE | Note |
+|---|---|---|---|
+| **BANK** | **2,810,548,173** at 2W (PFE 99% 3,206,146,568) | 932,040,446 | EEPE 2,273,100,403, peak EE 2,277,693,394, CE 1,538,664,088, EAD (info) 3,182,340,564 |
+| LE:LE-NY | 2,099,522,960 | 446,296,174 | |
+| LE:LE-LDN | 558,444,526 at 2M | 287,724,306 | EEPE 337,893,858; 17 netting sets, 2,946 trades |
+| LE:LE-TKY | 413,651,335 | 189,819,841 | |
+| LE:LE-FRA | 110,169,381 | 18,824,186 | |
+
+The legal entities' peaks sum to 3.18 bn against the bank's 2.81 bn: the same diversification as above. Collateral matters most at the
+bank: at 2W the bank's EE is 2.28 bn collateralised against 6.54 bn uncollateralised. In the explorer the figures come from the hot
+file, float32 matrices summed in float64, so a counterparty's or netting set's figures can differ from the float64 ones above in the
+last dollars (CP-ALDERSHOT's peak PFE reads 395,309,044 there against 395,309,055 on the heap; [section 26](#26-one-date-in-memory-and-the-hot-file)).
+
+At CP-ALDERSHOT the **PFE contributions** (the shares that add up to its peak) are NS-ALDERSHOT-NY 346,434,588 (87.6%), FRA 20,319,972,
+TKY 16,102,106 and LDN 12,452,378: LDN's peak alone is 78.7m but it peaks at 2M, while the counterparty peaks at 2W, when LDN's exposure
+is small. Its stored credit limit LIM-ALDERSHOT is 8,843,000,000, so the limit used reads 4.5% ([section 28](#28-open-items)).
 
 ## 3. The explorer, screen by screen
 
@@ -570,6 +588,8 @@ system environment, `DRISHTI_COMPUTE_EXPOSURE_WORKERS` workers (4), 2 GB, 300 CP
 | `422 DRS-5444` counted in the provenance | rows rejected at load (vector length, NaN, grid index) | fix the rows upstream; never padded |
 | `403` on a `TRD:`, `DESK:`, `BOOK:`, `WHERE:` scope | your role sees a touched set only in aggregate | ask for `trades` access ([section 9](#9-who-sees-what-entitlements-and-audit)) |
 | the board's *used* is tiny (0.1% to 5%) | the stored credit limits were sized on the retired stored profiles | known, [section 28](#28-open-items) |
+| `drishti.py exposure whatif --like <trade> --method addon` adds 0 | `--like` sends no asset class, notional or maturity, which the addon needs (a known defect, [section 28](#28-open-items)) | use `--candidates FILE.json` with `assetClass`, `notional`, `maturityDate`, `mtm`, `delta`, or the explorer's Pre-deal tab |
+| the tile *Collateral benefit* shows "−65%" for a 65% reduction, or "−-380%" when collateral raises EE | a display defect of the sign ([section 28](#28-open-items)) | read the Collateral tab's EE with and without collateral |
 | the first answer of a date is slow | the date's rows are read from the lake and the hot file written | the next answers map the hot file; `status` shows it |
 | the flag `MPOR_MISMATCH` | a CSA's MPOR (+ frequency − 1) differs from the run's look-back | the run's look-back is used (decided) |
 | a trade listed in the load's t₀ check | its paths' mean at the first grid date departs from today's MtM | expected for short trades on the test data's amortising model; in production an upstream trade-version or market-data mismatch |
@@ -1540,6 +1560,7 @@ trade paths are the lake owner's: `GET /api/v1/exposure/retention` lists each da
 | `upstreamRef` candidates (an upstream what-if service) | not built (§24.1, question 8) |
 | Pruning trade-path reads by `NETTING_SET` statistics | planned (§26.2) |
 | Limits (LIM) and CVA | parked; still built on the stored profile's figures |
+| Known defects found writing tutorial 26 | `whatif --like` sends no asset class, notional or maturity (the addon then adds 0); the *Collateral benefit* tile and the Collateral tab's benefit put a "−" before the percentage (a 65% reduction reads "−65%", a rise "−-380%"); compare on another user's capture answers 404, not 403 |
 
 ---
 
