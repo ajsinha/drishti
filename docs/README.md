@@ -23,6 +23,7 @@ If you will change the code, continue with [DEVELOPER_GUIDE.md](guides/DEVELOPER
 
 | Section | Pages |
 |---|---|
+| **Knowledge** | [Home and glossary](knowledge/README.md) · [Market risk](knowledge/market-risk.md) · [Counterparty credit risk](knowledge/counterparty-credit-risk.md) · [Trades and products](knowledge/trades-and-products.md) · [Entities and ownership](knowledge/entities-and-ownership.md) · [Market data](knowledge/market-data.md) · [Data and contracts](knowledge/data-and-contracts.md) · [Economies](knowledge/economies.md) (also `WHAT <GO>`) |
 | **Start** | [Install and run](guides/GETTING_STARTED.md) · [Tutorials](tutorials/README.md) |
 | **Use** | [User guide](guides/USER_GUIDE.md) · [Query by form](guides/QUERY_BY_FORM.md) · [Reports and subscriptions](guides/SCHEDULED_REPORTS.md) · Sharing and collaboration (console guide) · [Calc](guides/PYTHON_CALC.md) · [VaR guide](guides/VAR_GUIDE.md) · [Scripts, notebooks and Excel](guides/CLIENTS.md) |
 | **BI** | [BI guide](guides/BI_GUIDE.md) · [BI recipes](guides/BI_RECIPES.md) · [Datasets](guides/DATASETS.md) · [Reports](guides/REPORTS.md) · [Statements](guides/STATEMENTS.md) · [Boards](guides/BOARDS.md) · [Governance](guides/BI_GOVERNANCE.md) · [Distribution](guides/DISTRIBUTION.md) · [Python in BI](guides/PYTHON_BI.md) · [Analyse](guides/ANALYSE.md) · [AI in BI](guides/BI_AI.md) |
@@ -35,6 +36,7 @@ If you will change the code, continue with [DEVELOPER_GUIDE.md](guides/DEVELOPER
 
 | Folder | What is in it |
 |---|---|
+| [knowledge/](knowledge/README.md) | what the words of a bank's data mean and how Drishti's data connects them: one page per domain, the glossary (`glossary.yaml`, `WHAT <term>`) |
 | [tutorials/](tutorials/README.md) | the twenty-seven hands-on tutorials: a worked example each, on the demo data, with commands, real output and screenshots |
 | [guides/](guides/) | install and run, the user guide, business intelligence (Rūpaka), packs and the command line, the Sutra and Rachana guides, panels, clients, API and troubleshooting; `examples/` holds working Sutras |
 | [connectors/](connectors/) | connecting your data: the Connectors reference, the connector files, TLS and proxy, the developer guide, a design document per store (Delta Lake, PostgreSQL, Aerospike, Cassandra, files …) and demo data |
