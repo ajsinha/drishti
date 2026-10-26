@@ -13,6 +13,30 @@
 
   See the LICENSE file in the root of this repository for the full terms.
 -->
+# Drishti 2.9.1 — release notes
+
+*2026-10-26.* **Every command in one directory (`FUNC`); groupings and analytics computed, not stored; one External data page; every pack's guide carries its data contracts and where its data comes from.**
+
+- **Functions, `FUNC`** ([COMMANDS.md](docs/admin/COMMANDS.md)): Views → *Functions* lists every command you can use, by pack, with
+  what it does and an example; `FUNC <words>` filters it. A pack's name opens its search form; a command opens with its example.
+  Administrators see the same page with the commands that are off and the Everyone switches, review, history and the cluster's
+  versions; `/admin/commands` opens it. The server still decides who may switch.
+- **Groupings and analytics computed instead of stored** ([GROUPINGS_ANALYTICS_GUIDE.md](docs/guides/GROUPINGS_ANALYTICS_GUIDE.md),
+  tutorial 27): LEIG (no member cap), LEIC, SIC, ECG (summed or weighted over member economies, as the World Bank does), CORR (a new
+  correlation engine, window and estimator picked on the page), the USEQ ratios, the yearly change of a financial fact, IDX totals,
+  equity beta (a new engine, `EQB`) and the price-history analytics (internal-only, off as shipped). Their stored versions are retired;
+  old ids open the computed pages. **The numbers change** where the stored ones were set by hand (correlations ~0.4 stored, ~0.1
+  computed; equity betas near zero on the demo's independent price series); the reconciliation is in the guide.
+- **External data** ([the page](docs/guides/PUBLIC_DATA.md)): every external source with its URL, licence and use; IMF, Yahoo and
+  Google News data marked internal only; each refresh script with real `status` and dry-run examples on Linux and Windows.
+- **Every pack's guide** now ends with its **data contracts** (every kind, every column) and its **data retrieval** (per kind: external
+  with its script, synthetic with its generator, or computed with its engine), generated from the contracts, so they cannot drift.
+- **Fixed:** a control that feeds a computed panel (CORR's estimator and window) now recomputes it at once; the exposure answer page
+  no longer shows an empty netting-sets table for a single netting set.
+- **Exposure:** the benchmark (`ExposureTierBenchmark`, measured at 10,000 and 100,000 trades, extrapolated to 1M) and the explorer's
+  browser test.
+- **Tested:** the drill passed licence headers, Java 21, Java 25, the tools and the console.
+
 # Drishti 2.9.0 — release notes
 
 *2026-10-26.* **Exposure is computed for any scope, down to a trade; the stored exposure profile is retired; VaR and exposure reach BI; each measure has one guide and one tutorial.**
