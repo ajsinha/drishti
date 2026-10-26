@@ -44,7 +44,10 @@ public final class Sdk {
             "drishti_compute/worker.py",
             "drishti_compute/samples/__init__.py",
             "drishti_compute/samples/vectors.py",
-            "drishti_compute/samples/paths.py");
+            "drishti_compute/samples/paths.py",
+            "drishti_compute/var/__init__.py",
+            "drishti_compute/var/measures.py",
+            "drishti_compute/var/whatif.py");
 
     private static final String RESOURCES = "drishti-compute-sdk/";
 
