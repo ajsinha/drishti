@@ -336,7 +336,7 @@ VaR is good for now."** What is active:
 
 Everything else in this section is **PARKED**: the 2.9.0, 2.10.0 and 2.11.0 measures, the groupings and analytics, the DESK/BOOK/TRDR/CPTY
 figures other than VaR, and 2.12.0 (AI and GenUI). Their stored kinds stay active and unchanged, and their contracts are kept as designs
-in docs/contracts. The other 2.8.0 items stay in 2.8.0 (confirmed by the product owner, 2026-10-25): housekeeping (the TLS certificate, branding from configuration), Admin → Commands and write-back W1–W7. The
+in docs/contracts. The other 2.8.0 items stay in 2.8.0 (confirmed by the product owner, 2026-10-25): housekeeping (branding from configuration), Admin → Commands and write-back W1–W7. The
 release numbers below are the plan of record for when a parked item is brought back.
 
 **The principle.** Drishti keeps *fundamental* data as it is: masters, trades, terms, market data, public data, and the trade-level
@@ -395,7 +395,7 @@ never coexist. For each item:
 
 | Item | What |
 |---|---|
-| Housekeeping | Renew the cluster TLS certificate (it expires 2026-11-14). Branding from configuration only: the product name, owner, copyright and notices come from `ui.*` and `drishti.branding.*`, about 26 literal names in templates and scripts are removed, `ui.owner` is added to the console, and a guard test is added |
+| Housekeeping | (The "TLS certificate expires 2026-11-14" item is closed: the local cluster uses no TLS; the warning came from TLS tests that mint short-lived certificates on every run.) Branding from configuration only: the product name, owner, copyright and notices come from `ui.*` and `drishti.branding.*`, about 26 literal names in templates and scripts are removed, `ui.owner` is added to the console, and a guard test is added |
 | The common risk lake | One layout and shared ids; today's market-risk and counterparty-risk inputs move into it |
 | The measure framework | The VaR engine generalised: per-node additive totals, query-time rules, captures, baskets, official end-of-day captures, memory tiering |
 | Scopes | `CPTY:`, `GROUP:`, `NSET:`, `LE:` |
