@@ -106,3 +106,546 @@ Role `market-risk`: kinds `*`, raw JSON.
 ## F8 impact
 
 Amounts at stake: `trade-valuation` by `$.MTM`.
+
+## Data contracts
+
+Every kind of the pack has a data contract: a YAML file beside the pack (`config/packs/market-risk/contracts/<kind>.contract.yaml`, checked against `tools/contracts.schema.json`) that says what one record is, its key, how it is stored and dated, and every column. This section is generated from those files; the same files give the contract pages ([docs/contracts/packs/market-risk.md](../../../../docs/contracts/packs/market-risk.md), with each kind's validation rules and the points still to review). Check them against the pack and its data with `python3 tools/contracts.py check` (or `drishti.py contract check`); show one with `python3 tools/contracts.py show <MNEMONIC>`.
+
+| Command | Kind | Class | Key | Grain | Columns |
+|---|---|---|---|---|---|
+| `SCN` | `stress-scenario` | fundamental | `SCENARIO_ID` | One row per stress scenario per business date, keyed by SCENARIO_ID. | 8 |
+| `STR` | `stress-result` | fundamental | `RESULT_ID` | One row per stress result per business date, keyed by RESULT_ID. | 9 |
+| `FRTB` | `frtb-sensitivity` | fundamental | `RESULT_ID` | One row per frtb sensitivities per business date, keyed by RESULT_ID. | 15 |
+| `PNL` | `pnl-explain` | fundamental | `RESULT_ID` | One row per p&l explain per business date, keyed by RESULT_ID. | 12 |
+| `TVAL` | `trade-valuation` | fundamental | `VALUATION_ID` | One row per trade valuation per business date, keyed by VALUATION_ID. | 21 |
+| `POS` | `position` | drishti-owned | `POSITION_ID` | One position per business date, derived (never stored); POS-<TT_BOOK>~<security> or POS-<TT_BOOK>~<trade>. | 38 |
+| `PORT` | `portfolio` | input | `PORTFOLIO_ID` | One row per portfolio per BUSINESS_DATE, keyed by PORTFOLIO_ID. | 17 |
+| `PNLV` | `pnl-vector` | input | `VECTOR_ID` | One row per p&l vector (509 scenarios) per BUSINESS_DATE, keyed by VECTOR_ID. | 32 |
+| `SSET` | `scenario-set` | input | `SCENARIO_SET_ID` | One row per scenario set per BUSINESS_DATE, keyed by SCENARIO_SET_ID. | 11 |
+| `HIER` | `risk-hierarchy` | input | `NODE_ID` | One row per risk hierarchy node per BUSINESS_DATE, keyed by NODE_ID. | 14 |
+| `VRES` | `var-result` | computed | — | One answer per question (the scope asked for and the business date), computed when asked. | 22 |
+| `VWIF` | `var-whatif` | computed | — | One answer per question (the scope, the sandbox and the parameters, the business date), computed when asked. | 19 |
+| `VOFF` | `var-official` | computed | `NODE_ID`, `RESULT_VERSION` | One row per hierarchy node per BUSINESS_DATE and RESULT_VERSION, keyed by NODE_ID and RESULT_VERSION; the latest version of a date is the date's figure. | 25 |
+
+*Class*: **fundamental** data is delivered by a source system and stored; **input** is stored data an engine reads; **computed** is worked out by Drishti when asked and never stored by a source; **drishti-owned** is kept by Drishti itself.
+
+### SCN: Stress scenario (`stress-scenario`)
+
+A named historical or hypothetical shock set.
+
+**Class** fundamental · **Key** `SCENARIO_ID` · **Dated by** `business_date` · **Cadence** daily · **Stored by** connector `risk-store` (plugin `delta`), table `<root>/risk/stress-scenario/` · **Ids** `^SCN-`.
+
+**Grain:** One row per stress scenario per business date, keyed by SCENARIO_ID. **Contract:** `contracts/stress-scenario.contract.yaml` ([full contract page](../../../../docs/contracts/packs/market-risk.md#scn-stress-scenario-stress-scenario)).
+
+| Column | Type | Key | Presence | Unit | Example or values | Link | Meaning |
+|---|---|---|---|---|---|---|---|
+| `SCENARIO_ID` | id | key | required |  | `SCN-COVID2020` (pattern `^SCN-`) |  | The record's id (the business key) |
+| `NAME` | text |  | required |  | `COVID-19 March 2020` |  | Name |
+| `TYPE` | text |  | required |  | `Historical`, `Hypothetical` |  | A historical scenario replays the moves of a past episode; a hypothetical one is a designed set of moves that need not have happened. |
+| `SEVERITY` | text |  | required |  | `Severe`, `Moderate`, `Mild` |  | The rating the risk function gives the scenario, which decides how it is used in limits and reporting. |
+| `SHOCKS` | record list |  | required |  |  |  | Nested: see nested SHOCKS[] |
+| `HORIZON` | text |  | required |  | `10 days` |  | — |
+
+Nested `SHOCKS[]`:
+
+| Column | Type | Key | Presence | Unit | Example or values | Link | Meaning |
+|---|---|---|---|---|---|---|---|
+| `FACTOR` | text |  | required |  | `Equities` |  | The market variable the scenario moves, such as an equity index, a spread or a curve. |
+| `SHOCK` | amount |  | required |  | `-0.34` |  | How far the factor moves. The unit follows the factor: a proportional change for prices and spreads, percentage points for interest rates, points for volatility. |
+
+- Dated by the lake's business_date partition: `drishti.py lake build` writes each test-data file's day into it; the documents carry no date field of their own.
+
+### STR: Stress result (`stress-result`)
+
+P&L of a desk under a scenario, by book.
+
+**Class** fundamental · **Key** `RESULT_ID` · **Dated by** `business_date` · **Cadence** daily · **Stored by** connector `risk-store` (plugin `delta`), table `<root>/risk/stress-result/` · **Ids** `^STR-`.
+
+**Grain:** One row per stress result per business date, keyed by RESULT_ID. **Contract:** `contracts/stress-result.contract.yaml` ([full contract page](../../../../docs/contracts/packs/market-risk.md#str-stress-result-stress-result)).
+
+| Column | Type | Key | Presence | Unit | Example or values | Link | Meaning |
+|---|---|---|---|---|---|---|---|
+| `RESULT_ID` | id | key | required |  | `STR-COVID2020-COMM` (pattern `^STR-`) |  | The record's id (the business key) |
+| `SCENARIO_NAME` | text |  | required |  | `Bear steepener 2s10s +75 bp`, `COVID-19 March 2020`, `Emerging-market crisis`, `Global financial crisis 2008`, `Inflation surprise`, `Oil supply shock`, `Parallel rates +200 bp`, `USD +15% vs all` |  | The stress scenario the portfolio was revalued under. |
+| `PNL` | amount |  | required | USD | `-79098347` |  | The change in value over the period of the result. In a stress result, the revaluation of the portfolio under the scenario. |
+| `LIMIT` | amount |  | required | USD | `-75700000.0` |  | The largest loss the desk accepts under this scenario. A P&L below the limit is a breach. |
+| `BY_BOOK` | record list |  | required |  |  |  | Nested: see nested BY_BOOK[] |
+| `SCENARIO` | id |  | required |  | `SCN-COVID2020` (pattern `^SCN-`) | `stress-scenario` | Scenario: the stress-scenario it refers to |
+| `DESK` | id |  | required |  | `DESK-COMM` (pattern `^DESK-`) | `desk` | Desk: the desk it refers to |
+
+Nested `BY_BOOK[]`:
+
+| Column | Type | Key | Presence | Unit | Example or values | Link | Meaning |
+|---|---|---|---|---|---|---|---|
+| `BOOK` | id |  | required |  | `BOOK-COMM-1` (pattern `^BOOK-`) | `book` | Book: the book it refers to |
+| `PNL` | amount |  | required | USD | `-25019855` |  | The book's share of the scenario P&L. |
+
+**Links:** `SCENARIO` → `stress-scenario`, `DESK` → `desk`, `BY_BOOK[].BOOK` → `book`.
+
+- Dated by the lake's business_date partition: `drishti.py lake build` writes each test-data file's day into it; the documents carry no date field of their own.
+
+### FRTB: FRTB sensitivities (`frtb-sensitivity`)
+
+Delta, vega and curvature by risk class and bucket (SBM).
+
+**Class** fundamental · **Key** `RESULT_ID` · **Dated by** `business_date` · **Cadence** daily · **Stored by** connector `risk-store` (plugin `delta`), table `<root>/risk/frtb-sensitivity/` · **Ids** `^FRTB-`.
+
+**Grain:** One row per frtb sensitivities per business date, keyed by RESULT_ID. **Contract:** `contracts/frtb-sensitivity.contract.yaml` ([full contract page](../../../../docs/contracts/packs/market-risk.md#frtb-frtb-sensitivities-frtb-sensitivity)).
+
+| Column | Type | Key | Presence | Unit | Example or values | Link | Meaning |
+|---|---|---|---|---|---|---|---|
+| `RESULT_ID` | id | key | required |  | `FRTB-COMM-1` (pattern `^FRTB-`) |  | The record's id (the business key) |
+| `BOOK` | id |  | required |  | `BOOK-COMM-1` (pattern `^BOOK-`) | `book` | The trading book the charge is computed for. |
+| `DELTA_CHARGE` | amount |  | required | USD | `11613331` |  | Capital for the first-order sensitivity of the book to its risk factors, after the regulatory risk weights and the correlations within and between buckets. |
+| `VEGA_CHARGE` | amount |  | required | USD | `3173321` |  | Capital for the sensitivity of option values to implied volatility, aggregated like delta. |
+| `CURVATURE_CHARGE` | amount |  | required | USD | `1378886` |  | Capital for the loss that delta alone does not capture when an option's value is not linear in the underlying move (the gamma risk). |
+| `TOTAL` | amount |  | required | USD | `16165538` |  | The sum of the delta, vega and curvature charges of the book. The full standardised charge adds the default-risk and residual-risk add-ons. |
+| `SENSITIVITIES` | record list |  | required |  |  |  | Nested: see nested SENSITIVITIES[] |
+| `BY_CLASS` | record list |  | required |  |  |  | Nested: see nested BY_CLASS[] |
+| `APPROACH` | text |  | required |  | `FRTB standardised (SBM)` |  | — |
+
+Nested `SENSITIVITIES[]`:
+
+| Column | Type | Key | Presence | Unit | Example or values | Link | Meaning |
+|---|---|---|---|---|---|---|---|
+| `RISK_CLASS` | text |  | required |  | `CSR non-securitisation`, `Commodity`, `Equity`, `FX`, `GIRR` |  | One of the regulatory risk classes: general interest-rate, credit spread (non-securitisation, securitisation), equity, commodity or FX. |
+| `BUCKET` | text |  | required |  | `1`, `2`, `3` |  | The regulatory grouping of risk factors inside a risk class, such as a sector, rating or tenor group, with its own risk weight and correlation. |
+| `MEASURE` | text |  | required |  | `Delta`, `Vega`, `Curvature` |  | Which risk the sensitivity measures: delta (to the price or rate), vega (to volatility) or curvature. |
+| `VALUE` | amount |  | required | USD | `-270747` |  | The change in the value of the book's positions for the prescribed unit move in the factor, before the risk weight is applied. |
+
+Nested `BY_CLASS[]`:
+
+| Column | Type | Key | Presence | Unit | Example or values | Link | Meaning |
+|---|---|---|---|---|---|---|---|
+| `RISK_CLASS` | text |  | required |  | `CSR non-securitisation`, `Commodity`, `Equity`, `FX`, `GIRR` |  | — |
+| `CHARGE` | amount |  | required | USD | `16165538` |  | The class's contribution to the book's sensitivities-based charge. |
+
+**Links:** `BOOK` → `book`.
+
+- Dated by the lake's business_date partition: `drishti.py lake build` writes each test-data file's day into it; the documents carry no date field of their own.
+
+### PNL: P&L explain (`pnl-explain`)
+
+Daily P&L attributed to risk factors, new trades and residual.
+
+**Class** fundamental · **Key** `RESULT_ID` · **Dated by** `business_date` · **Cadence** daily · **Stored by** connector `risk-store` (plugin `delta`), table `<root>/risk/pnl-explain/` · **Ids** `^PNL-`.
+
+**Grain:** One row per p&l explain per business date, keyed by RESULT_ID. **Contract:** `contracts/pnl-explain.contract.yaml` ([full contract page](../../../../docs/contracts/packs/market-risk.md#pnl-pl-explain-pnl-explain)).
+
+| Column | Type | Key | Presence | Unit | Example or values | Link | Meaning |
+|---|---|---|---|---|---|---|---|
+| `RESULT_ID` | id | key | required |  | `PNL-COMM-1` (pattern `^PNL-`) |  | The record's id (the business key) |
+| `DATE` | date |  | required |  | `2026-09-30` |  | The trading day the P&L belongs to. |
+| `ACTUAL` | integer |  | required | USD | `-79231` |  | The change in the book's value over the day as booked, including new trades, fees and carry. |
+| `EXPLAINED` | integer |  | required | USD | `-81630` |  | The part of the actual P&L that the risk factors account for: each sensitivity multiplied by that day's move in its factor, plus carry and roll-down. |
+| `UNEXPLAINED` | integer |  | required | USD | `2399` |  | Actual minus explained. A large or persistent residual points to a missing risk factor, a stale parameter or a pricing difference between the front office and risk. |
+| `ATTRIBUTION` | record list |  | required |  |  |  | Nested: see nested ATTRIBUTION[] |
+| `EXPLAIN_STEPS` | record list |  | required |  |  |  | Nested: see nested EXPLAIN_STEPS[] |
+| `BOOK` | id |  | required |  | `BOOK-COMM-1` (pattern `^BOOK-`) | `book` | Book: the book it refers to |
+
+Nested `ATTRIBUTION[]`:
+
+| Column | Type | Key | Presence | Unit | Example or values | Link | Meaning |
+|---|---|---|---|---|---|---|---|
+| `FACTOR` | text |  | required |  | `Carry and theta`, `Credit`, `FX delta`, `New trades`, `Rates delta`, `Vega` |  | — |
+| `PNL` | amount |  | required | USD | `-34285` |  | The explained P&L assigned to this risk factor. |
+
+Nested `EXPLAIN_STEPS[]`:
+
+| Column | Type | Key | Presence | Unit | Example or values | Link | Meaning |
+|---|---|---|---|---|---|---|---|
+| `STEP` | text |  | required |  | `Carry` |  | — |
+| `PNL` | amount |  | required | USD | `-11428` |  | Each step moves the running total from zero to the actual P&L; the last step is the unexplained rest. |
+
+**Links:** `BOOK` → `book`.
+
+- Dated by the lake's business_date partition: `drishti.py lake build` writes each test-data file's day into it; the documents carry no date field of their own.
+
+### TVAL: Trade valuation (`trade-valuation`)
+
+A trade's valuation from the risk engine, for every source system: MTM, one-day P&L and DV01, with what it values (source system, portfolio, desk, product).
+
+**Class** fundamental · **Key** `VALUATION_ID` · **Dated by** `business_date` · **Cadence** daily · **Stored by** connector `risk-store` (plugin `delta`), table `<root>/risk/trade-valuation/` · **Ids** `^TVAL-`.
+
+**Grain:** One row per trade valuation per business date, keyed by VALUATION_ID. **Contract:** `contracts/trade-valuation.contract.yaml` ([full contract page](../../../../docs/contracts/packs/market-risk.md#tval-trade-valuation-trade-valuation)).
+
+| Column | Type | Key | Presence | Unit | Example or values | Link | Meaning |
+|---|---|---|---|---|---|---|---|
+| `VALUATION_ID` | id | key | required |  | `TVAL-1000001` (pattern `^TVAL-`) |  | The record's id (the business key) |
+| `TRADE_ID` | id |  | required |  | `1000001` | `trade` | Trade: the trade it refers to |
+| `SOURCE_SYSTEM` | text |  | required |  | `CALYPSO`, `ENDUR`, `MUREX` |  | Source |
+| `PRODUCT_TYPE` | text |  | required |  | `ComSwap` |  | Product |
+| `PRODUCT_GROUP` | text |  | required |  | `Commodity` |  | Group |
+| `PORTFOLIO` | id |  | required |  | `BOOK-COMM-2` (pattern `^BOOK-`) | `book` | Portfolio: the book it refers to |
+| `DESK` | id |  | required |  | `DESK-COMM` (pattern `^DESK-`) | `desk` | Desk: the desk it refers to |
+| `COUNTERPARTY` | id |  | required |  | `CP-HARBORPT` (pattern `^CP-`) | `counterparty` | Counterparty: the counterparty it refers to |
+| `NETTING_SET` | id |  | optional |  | `NS-BRAMBLE-LDN` (pattern `^NS-`) | `netting-set` | Netting set: the netting-set it refers to |
+| `TRADER_ID` | id |  | required |  | `TRDR-FROSSI` (pattern `^TRDR-`) | `trader` | Trader: the trader it refers to |
+| `BUY_SELL_CODE` | text |  | required |  | `B`, `S` |  | — |
+| `TRADE_STATUS` | text |  | required |  | `AMENDED`, `CANCELLED`, `MATURED`, `NEW`, `VALIDATED` |  | Status |
+| `CURRENCY` | text |  | required |  | `AUD`, `CAD`, `CHF`, `EUR`, `GBP`, `JPY`, `USD` |  | Currency |
+| `NOTIONAL` | amount |  | required |  | `167969743.2` |  | Notional |
+| `MTM` | amount |  | required |  | `4121280` |  | MTM |
+| `MTM_CURRENCY` | text |  | required |  | `USD` |  | — |
+| `PNL_1D` | amount |  | required |  | `-277804` |  | P&L 1D |
+| `DV01` | amount |  | required |  | `0` |  | DV01 |
+| `TRADE_DATE` | date |  | required |  | `2025-06-20` |  | — |
+| `MATURITY_DATE` | date |  | required |  | `2028-07-31` |  | Maturity |
+| `VALUATION_DATE` | date |  | required |  | `2026-09-30` |  | Valued |
+
+**Links:** `TRADE_ID` → `trade`, `PORTFOLIO` → `book`, `DESK` → `desk`, `COUNTERPARTY` → `counterparty`, `NETTING_SET` → `netting-set`, `TRADER_ID` → `trader`.
+
+- Dated by the lake's business_date partition: `drishti.py lake build` writes each test-data file's day into it; the documents carry no date field of their own.
+- The boundary (IMPLEMENTATION_PLAN.md): a trade's MtM stays an input from the upstream engines; what TVAL computes is the valuation totals over any scope, so no field of this per-trade record is marked derived.
+
+### POS: Position (`position`)
+
+A position: one security held in one book (or one OTC trade), the trades that build or reduce it, and its VaR computed as the page opens.
+
+**Class** drishti-owned · **Key** `POSITION_ID` · **Dated by** `BUSINESS_DATE` · **Cadence** daily · **Stored by** connector `var-positions` (plugin `var-positions`) · **Ids** `^POS-`.
+
+**Grain:** One position per business date, derived (never stored); POS-<TT_BOOK>~<security> or POS-<TT_BOOK>~<trade>. **Contract:** `contracts/position.contract.yaml` ([full contract page](../../../../docs/contracts/packs/market-risk.md#pos-position-position)).
+
+| Column | Type | Key | Presence | Unit | Example or values | Link | Meaning |
+|---|---|---|---|---|---|---|---|
+| `POSITION_ID` | id | key | required |  | `POS-BOOK-EQD-2~SEC-WARRANT-USD-01` |  | — |
+| `BUSINESS_DATE` | date |  | required |  | `2026-09-30` |  | — |
+| `POSITION_RULE` | text |  | required |  | `securities` |  | How Drishti keyed the position (the market-risk pack's positions: rules): securities by book and security, listed by book and contract, otc one per trade. |
+| `SECURITY_ID` | id |  | optional |  | `SEC-WARRANT-USD-01` |  | The security or exchange contract the position holds; empty for a position of one OTC trade. |
+| `INSTRUMENT_ID` | id |  | required |  | `SEC-WARRANT-USD-01` |  | Instrument |
+| `INSTRUMENT` | text |  | required |  | `Equity warrant USD 2027-05` |  | What the position holds: the security, or for one OTC trade its product, currency and maturity. |
+| `POSITION_TYPE` | text |  | required |  | `fungible` |  | — |
+| `DIRECTION` | text |  | required |  | `SHORT` |  | LONG when the position's net quantity is above zero (more bought than sold), SHORT when below. Its trades may be of both directions: they net. |
+| `QUANTITY` | amount |  | required |  | `-1772145212.5` |  | The signed sum of the position's trades' quantities (notional for swaps, units for securities): a buy adds, a sell takes away. |
+| `GROSS_QUANTITY` | amount |  | required |  | `2816087612.5` |  | — |
+| `TRADE_COUNT` | integer |  | required |  | `9` |  | Trades |
+| `LONG_TRADES` | integer |  | required |  | `2` |  | — |
+| `SHORT_TRADES` | integer |  | required |  | `7` |  | — |
+| `TRADE_IDS` | id list |  | required |  |  | `trade` | Trade: the trade it refers to |
+| `TRADES` | record list |  | required |  |  |  | Nested: see nested TRADES[] |
+| `LEGAL_ENTITY` | id |  | required |  | `LE-LDN` (pattern `^LE-`) | `legal-entity` | The bank's legal entity that holds the book. |
+| `DIVISION` | id |  | required |  | `DIV-MARKETS` |  | — |
+| `DESK` | id |  | required |  | `DESK-EQD` (pattern `^DESK-`) | `desk` | The desk the book belongs to. |
+| `TT_BOOK` | id |  | required |  | `BOOK-EQD-2` (pattern `^BOOK-`) | `book` | The book the position is held in: its trades are all booked there. |
+| `PORTFOLIO` | id |  | required |  | `BOOK-EQD-2` (pattern `^BOOK-`) | `book` | Portfolio: the book it refers to |
+| `STRATEGY` | unknown |  | optional |  |  |  | — |
+| `COUNTERPARTY` | id |  | required |  | `CP-SUMMIT` (pattern `^CP-`) | `counterparty` | The counterparty of the position's trades when they all share one; empty otherwise. |
+| `PRODUCT_GROUP` | text |  | required |  | `Equity` |  | — |
+| `PRODUCT_TYPE` | text |  | required |  | `WARRANT` |  | The product of the instrument, as the booking systems name it. |
+| `CURRENCY` | text |  | required |  | `USD` |  | The instrument's currency. Every P&L and value is in USD, the reporting currency. |
+| `COUNTERPARTIES` | text list |  | required |  |  |  | — |
+| `MARKET_VALUE` | amount |  | required | USD | `41691425` |  | The sum of the trades' present values (their mark-to-market) on the business date. |
+| `NOTIONAL` | amount |  | required |  | `2816087612` |  | The sum of the trades' quantities without their signs. |
+| `TAGS` | list |  | required |  |  |  | — |
+| `STATUS` | text |  | required |  | `open` |  | — |
+| `SCENARIO_SET_ID` | id |  | required |  | `HS-509` |  | — |
+| `VAR_SCOPE` | text |  | required |  | `POS:POS-BOOK-EQD-2~SEC-WARRANT-USD-01` |  | — |
+
+Nested `TRADES[]`:
+
+| Column | Type | Key | Presence | Unit | Example or values | Link | Meaning |
+|---|---|---|---|---|---|---|---|
+| `TRADE_ID` | id |  | required |  | `MX-20000274` (pattern `^(MX\|CLY)-\d+$`) | `trade` | Trade |
+| `QUANTITY` | amount |  | required |  | `-179000000.0` |  | The trade's signed quantity in the position: a buy positive, a sell negative. |
+| `DIRECTION` | text |  | required |  | `SHORT` |  | Direction |
+| `PV` | amount |  | required |  | `3143714.0` |  | PV |
+| `PRODUCT_TYPE` | text |  | required |  | `WARRANT` |  | — |
+| `COUNTERPARTY` | id |  | required |  | `CP-SUMMIT` (pattern `^CP-`) | `counterparty` | Counterparty |
+
+**Links:** `TRADE_IDS` → `trade`, `LEGAL_ENTITY` → `legal-entity`, `DESK` → `desk`, `TT_BOOK` → `book`, `PORTFOLIO` → `book`, `COUNTERPARTY` → `counterparty`, `TRADES[].TRADE_ID` → `trade`, `TRADES[].COUNTERPARTY` → `counterparty`.
+
+- Positions are derived by Drishti when a date loads (docs/guides/VAR_GUIDE.md section 15.6), by the market-risk pack's positions: rules (securities by book and security id, listed by book and contract, OTC by book and trade), and served from the VaR engine's memory by the var-positions connector: no upstream delivers them and nothing stores them. Their VaR figures are computed as the page opens (VAR_ENGINE), never stored.
+
+### PORT: Portfolio (`portfolio`)
+
+A portfolio in terms of the positions inside it: longs and shorts, market value, VaR, ES and each position's contribution.
+
+**Class** input · **Key** `PORTFOLIO_ID` · **Dated by** `BUSINESS_DATE` · **Cadence** daily · **Stored by** connector `risk-store` (plugin `delta`), table `<root>/risk/portfolio/` · **Ids** `^PF-`.
+
+**Grain:** One row per portfolio per BUSINESS_DATE, keyed by PORTFOLIO_ID. **Contract:** `contracts/portfolio.contract.yaml` ([full contract page](../../../../docs/contracts/packs/market-risk.md#port-portfolio-portfolio)).
+
+| Column | Type | Key | Presence | Unit | Example or values | Link | Meaning |
+|---|---|---|---|---|---|---|---|
+| `PORTFOLIO_ID` | id | key | required |  | `PF-ASHA-UNWIND` (pattern `^PF-`) | `portfolio` | The record's id (the business key) |
+| `NAME` | text |  | required |  | `Unwind candidates (Asha)` |  | — |
+| `OWNER` | text |  | required |  | `asha` |  | Who keeps the portfolio's definition. |
+| `TYPE` | text |  | required |  | `BASKET`, `HIERARCHY`, `RULE` |  | HIERARCHY: a node of the bank's hierarchy (a desk, a legal entity, a book). RULE: every position whose columns meet a condition. BASKET: positions and trades someone picked. |
+| `DEFINITION` | record |  | required |  |  |  | Nested: see nested DEFINITION |
+| `ROLLS_UP_TO` | record |  | required |  |  |  | Nested: see nested ROLLS_UP_TO |
+| `LIMIT_VAR` | amount |  | required | USD | `1800000` |  | The VaR the portfolio may take. |
+| `BUSINESS_DATE` | date |  | required |  | `2026-09-30` |  | — |
+| `VALID_FROM` | date |  | required |  | `2026-01-02` |  | The first business date the portfolio's definition applies to; an earlier date uses the definition then in force. |
+| `VALID_TO` | unknown |  | optional |  |  |  | — |
+
+Nested `DEFINITION`:
+
+| Column | Type | Key | Presence | Unit | Example or values | Link | Meaning |
+|---|---|---|---|---|---|---|---|
+| `MEMBERS` | record list |  | optional |  |  |  | For a BASKET portfolio: the positions and trades someone picked (a trade brings that part of its position). |
+| `NODE` | text |  | optional |  | `MGMT~DESK-RATES` |  | For a HIERARCHY portfolio: the node of the bank's hierarchy whose positions it holds (every book under it). |
+| `RULE` | text |  | optional |  | `PRODUCT_GROUP in ('Rates', 'Fixed income', 'Money market') …` |  | For a RULE portfolio: the condition a position's columns must meet to be in it, checked on each business date. |
+
+Nested `DEFINITION.MEMBERS[]`:
+
+| Column | Type | Key | Presence | Unit | Example or values | Link | Meaning |
+|---|---|---|---|---|---|---|---|
+| `POSITION_ID` | id |  | optional |  | `POS-BOOK-RATES-1~MX-20000002` (pattern `^POS-`) | `position` | Position: the position it refers to |
+| `TRADE_ID` | id |  | optional |  | `CLY-3000087` | `trade` | Trade: the trade it refers to |
+
+Nested `ROLLS_UP_TO`:
+
+| Column | Type | Key | Presence | Unit | Example or values | Link | Meaning |
+|---|---|---|---|---|---|---|---|
+| `KIND` | text |  | required |  | `division` |  | — |
+| `ID` | id |  | required |  | `DIV-MARKETS` |  | The desk or book the portfolio reports under. |
+
+**Links:** `PORTFOLIO_ID` → `portfolio`, `DEFINITION.MEMBERS[].POSITION_ID` → `position`, `DEFINITION.MEMBERS[].TRADE_ID` → `trade`.
+
+- The portfolio definitions are an engine input (IMPLEMENTATION_PLAN.md); the figures of the retired stored record (VaR, ES, positions, contributions, P&L) are computed as the page opens (VAR_ENGINE), never stored.
+
+### PNLV: P&L vector (509 scenarios) (`pnl-vector`)
+
+P&L vector of a trade
+
+**Class** input · **Key** `VECTOR_ID` · **Dated by** `BUSINESS_DATE` · **Cadence** daily · **Stored by** connector `risk-store` (plugin `delta`), table `<root>/risk/pnl-vector/` · **Ids** `^PV-`.
+
+**Grain:** One row per p&l vector (509 scenarios) per BUSINESS_DATE, keyed by VECTOR_ID. **Contract:** `contracts/pnl-vector.contract.yaml` ([full contract page](../../../../docs/contracts/packs/market-risk.md#pnlv-pl-vector-509-scenarios-pnl-vector)).
+
+| Column | Type | Key | Presence | Unit | Example or values | Link | Meaning |
+|---|---|---|---|---|---|---|---|
+| `VECTOR_ID` | id | key | required |  | `PV-MX-20000274-HS-509` (pattern `^PV-`) |  | The record's id (the business key) |
+| `TRADE_ID` | id |  | required |  | `MX-20000274` (pattern `^(MX\|CLY)-\d+$`) | `trade` | Trade: the trade it refers to |
+| `SECURITY_ID` | id |  | optional |  | `SEC-WARRANT-USD-01` |  | The security or exchange contract the trade is in (securities and listed products): Drishti keys the trade's position by book and security. |
+| `INSTRUMENT` | text |  | required |  | `Equity warrant USD 2027-05` |  | — |
+| `BUSINESS_DATE` | date |  | required |  | `2026-09-30` |  | — |
+| `SCENARIO_SET_ID` | id |  | required |  | `HS-509` |  | — |
+| `SOURCE_SYSTEM` | text |  | required |  | `CALYPSO`, `MUREX` |  | — |
+| `TRADE_VERSIONS` | text |  | required |  | `v4` |  | — |
+| `TRADE_STATUS` | text |  | required |  | `AMENDED`, `VALIDATED` |  | The trade's status the batch priced: NEW, VALIDATED and AMENDED count on the date; others are left out. |
+| `MATURITY_DATE` | date |  | required |  | `2027-05-26` |  | — |
+| `LEGAL_ENTITY` | id |  | required |  | `LE-LDN` (pattern `^LE-`) | `legal-entity` | Legal entity: the legal-entity it refers to |
+| `DIVISION` | id |  | required |  | `DIV-MARKETS` |  | — |
+| `DESK` | id |  | required |  | `DESK-EQD` (pattern `^DESK-`) | `desk` | Desk: the desk it refers to |
+| `TT_BOOK` | id |  | required |  | `BOOK-EQD-2` (pattern `^BOOK-`) | `book` | Book: the book it refers to |
+| `PORTFOLIO` | id |  | required |  | `BOOK-EQD-2` (pattern `^BOOK-`) | `book` | Portfolio: the book it refers to |
+| `STRATEGY` | unknown |  | optional |  |  |  | — |
+| `PRODUCT_GROUP` | text |  | required |  | `Equity`, `FX`, `Securities financing` |  | — |
+| `PRODUCT_TYPE` | text |  | required |  | `WARRANT` |  | — |
+| `CURRENCY` | text |  | required |  | `CAD`, `CHF`, `EUR`, `GBP`, `JPY`, `USD` |  | — |
+| `COUNTERPARTY` | id |  | required |  | `CP-SUMMIT` (pattern `^CP-`) | `counterparty` | Counterparty: the counterparty it refers to |
+| `DIRECTION` | text |  | required |  | `LONG`, `SHORT` |  | — |
+| `QUANTITY` | amount |  | required |  | `-179000000.0` |  | The trade's quantity: positive for a buy, negative for a sell. |
+| `TAGS` | text |  | optional |  | `option` |  | — |
+| `REPORTING_CCY` | text |  | required |  | `USD` |  | — |
+| `PV` | amount |  | required | USD | `3143714` |  | The trade's value on the business date. |
+| `PNL` | vector |  | required | USD |  |  | The trade's P&L under each historical scenario day, oldest first: index i is the scenario set's day i. *509 values in the test data* |
+| `STATUS` | text |  | required |  | `ok` |  | ok, proxied (priced by a proxy) or failed (no vector: counted, never taken as zero). |
+| `PRICER` | text |  | required |  | `demo-factor-model` |  | — |
+| `MODEL_VERSION` | text |  | required |  | `demo-2` |  | — |
+| `COMPUTED_AT` | timestamp |  | required |  | `2026-09-30T22:30:00Z` |  | — |
+| `BATCH_ID` | id |  | required |  | `B-2026-09-30-01` |  | — |
+| `RESTATEMENT` | integer |  | required |  | `0` |  | — |
+
+**Links:** `TRADE_ID` → `trade`, `LEGAL_ENTITY` → `legal-entity`, `DESK` → `desk`, `TT_BOOK` → `book`, `PORTFOLIO` → `book`, `COUNTERPARTY` → `counterparty`.
+
+### SSET: Scenario set (`scenario-set`)
+
+Scenario set
+
+**Class** input · **Key** `SCENARIO_SET_ID` · **Dated by** `BUSINESS_DATE` · **Cadence** daily · **Stored by** connector `risk-store` (plugin `delta`), table `<root>/risk/scenario-set/` · **Ids** `^HS-`.
+
+**Grain:** One row per scenario set per BUSINESS_DATE, keyed by SCENARIO_SET_ID. **Contract:** `contracts/scenario-set.contract.yaml` ([full contract page](../../../../docs/contracts/packs/market-risk.md#sset-scenario-set-scenario-set)).
+
+| Column | Type | Key | Presence | Unit | Example or values | Link | Meaning |
+|---|---|---|---|---|---|---|---|
+| `SCENARIO_SET_ID` | id | key | required |  | `HS-509` (pattern `^HS-`) |  | The record's id (the business key) |
+| `BUSINESS_DATE` | date |  | required |  | `2026-09-30` |  | — |
+| `SCENARIO_DATES` | date list |  | required |  |  |  | The historical days whose moves make the scenarios, oldest first: position i of every P&L vector is day i. |
+| `SCENARIO_COUNT` | integer |  | required |  | `509` |  | — |
+| `WINDOW_START` | date |  | required |  | `2024-09-17` |  | The oldest scenario day. |
+| `WINDOW_END` | date |  | required |  | `2026-09-29` |  | The newest scenario day: the business day before the business date. |
+| `HORIZON_DAYS` | integer |  | required |  | `1` |  | — |
+| `REVALUATION` | text |  | required |  | `full` |  | full (every trade repriced under each scenario) or sensitivities (a Taylor expansion), as the batch did it. |
+| `WEIGHTS` | unknown |  | optional |  |  |  | — |
+| `SOURCE_BATCH` | text |  | required |  | `B-2026-09-30-01` |  | — |
+| `DESCRIPTION` | text |  | required |  | `Historical simulation, 509 business days, equal weights` |  | — |
+
+### HIER: Risk hierarchy node (`risk-hierarchy`)
+
+Risk hierarchy node
+
+**Class** input · **Key** `NODE_ID` · **Dated by** `BUSINESS_DATE` · **Cadence** daily · **Stored by** connector `risk-store` (plugin `delta`), table `<root>/risk/risk-hierarchy/` · **Ids** `^(MGMT|LEGAL)~`.
+
+**Grain:** One row per risk hierarchy node per BUSINESS_DATE, keyed by NODE_ID. **Contract:** `contracts/risk-hierarchy.contract.yaml` ([full contract page](../../../../docs/contracts/packs/market-risk.md#hier-risk-hierarchy-node-risk-hierarchy)).
+
+| Column | Type | Key | Presence | Unit | Example or values | Link | Meaning |
+|---|---|---|---|---|---|---|---|
+| `NODE_ID` | id | key | required |  | `LEGAL~LE-NY` (pattern `^(MGMT\|LEGAL)~`) | `risk-hierarchy` | The record's id (the business key) |
+| `HIERARCHY` | text |  | required |  | `LEGAL`, `MGMT` |  | MGMT: bank, division, desk, book. LEGAL: bank, legal entity, desk, book. A book is in one leaf of each. |
+| `LEVEL` | text |  | required |  | `bank`, `book`, `desk`, `division`, `legal-entity` |  | bank, division, legal-entity, desk or book. |
+| `PARENT_ID` | id |  | optional |  | `LEGAL~BANK` |  | — |
+| `NAME` | text |  | required |  | `LE-NY` |  | — |
+| `REF` | record |  | optional |  |  |  | Nested: see nested REF |
+| `CHILDREN` | text list |  | required |  |  |  | — |
+| `BOOKS` | text list |  | required |  |  |  | Every book beneath the node: its positions are the node's. |
+| `LIMIT_VAR` | amount |  | required | USD | `8500000` |  | The 1-day 99% VaR the node may take. |
+| `BUSINESS_DATE` | date |  | required |  | `2026-09-30` |  | — |
+| `VALID_FROM` | date |  | required |  | `2026-01-02` |  | — |
+| `VALID_TO` | unknown |  | optional |  |  |  | — |
+
+Nested `REF`:
+
+| Column | Type | Key | Presence | Unit | Example or values | Link | Meaning |
+|---|---|---|---|---|---|---|---|
+| `KIND` | text |  | required |  | `book`, `desk`, `legal-entity` |  | — |
+| `ID` | id |  | required |  | `LE-NY` |  | — |
+
+**Links:** `NODE_ID` → `risk-hierarchy`.
+
+### VRES: VaR of a scope (computed) (`var-result`)
+
+The VaR, ES, decomposition, worst scenarios and P&L vector of any scope (the scope grammar of VAR_GUIDE.md section 5), computed when asked by the server's VaR engine as the person asking; never stored.
+
+**Class** computed · **Key** — · **Dated by** `on request` · **Cadence** on change · **Stored by** connector `var-engine` (plugin `reactive`).
+
+**Grain:** One answer per question (the scope asked for and the business date), computed when asked. **Contract:** `contracts/var-result.contract.yaml` ([full contract page](../../../../docs/contracts/packs/market-risk.md#vres-var-of-a-scope-computed-var-result)).
+
+| Column | Type | Key | Presence | Unit | Example or values | Link | Meaning |
+|---|---|---|---|---|---|---|---|
+| `SCOPE` | text |  | required |  | `DESK:RATES` |  | The scope as asked (the id; a ~ inside a node id is written %7E). |
+| `CANONICAL` | text |  | required |  |  |  | The scope's canonical text (VAR_GUIDE.md section 5.2). |
+| `SCOPE_KIND` | text |  | required |  | `node`, `position`, `trade`, `portfolio`, `basket`, `capture`, `rule`, `counterparty`, `legal-entity`, `adhoc` |  | — |
+| `LABEL` | text |  | required |  |  |  | — |
+| `NODE` | id |  | optional |  |  |  | The hierarchy node when the scope is exactly one node. |
+| `BUSINESS_DATE` | date |  | required |  |  |  | — |
+| `VAR` | amount |  | required | USD |  |  | VaR at CONFIDENCE, positive for a loss (VAR_GUIDE.md section 18.1). |
+| `ES` | amount |  | required | USD |  |  | Expected shortfall at ES_CONFIDENCE (VAR_GUIDE.md section 18.2). |
+| `CONFIDENCE` | rate |  | required |  | `0.99` |  | — |
+| `ES_CONFIDENCE` | rate |  | required |  | `0.975` |  | — |
+| `K` | integer |  | required |  |  |  | The VaR rank (the 6th worst of 509 at 99%). |
+| `ES_COUNT` | integer |  | required |  |  |  | — |
+| `SCENARIOS` | integer |  | required |  |  |  | — |
+| `LIMIT` | amount |  | optional | USD |  |  | — |
+| `LIMIT_USE` | rate |  | optional |  |  |  | — |
+| `SUM_STANDALONE` | amount |  | optional | USD |  |  | — |
+| `DIVERSIFICATION` | amount |  | optional | USD |  |  | — |
+| `BACKTEST` | record |  | required |  |  |  | DAYS, EXCEPTIONS, LIGHT, KUPIEC_LR, KUPIEC_P_VALUE, CHRISTOFFERSEN_LR, CHRISTOFFERSEN_P_VALUE (VAR_GUIDE.md section 18.4). |
+| `CHILDREN` | record list |  | required |  |  |  | The default parts (VAR_GUIDE.md section 11.3) with KEY, SCOPE, LABEL, KIND, STANDALONE_VAR, COMPONENT_VAR, COMPONENT_ES, INCREMENTAL_VAR, PCT. |
+| `WORST` | record list |  | required |  |  |  | The 25 worst scenarios (RANK, INDEX, DATE, PNL). |
+| `PNL` | vector |  | required | USD |  |  | The scope's P&L under each scenario day, oldest first (unrounded). |
+| `PROVENANCE` | record |  | required |  |  |  | The headline's provenance in UPPER_SNAKE (VAR_GUIDE.md section 11.2), with TIER saying where the vector came from. |
+
+- No stored key: an answer's id is the scope asked (the id in the request); VAR <scope> <GO> opens the same answer in the explorer.
+- Computed as the viewer with the explorer's entitlements (VAR_GUIDE.md section 9); cached per view signature, data version and scope.
+
+### VWIF: VaR what-if (computed, Python) (`var-whatif`)
+
+A scope's VaR and ES before and after hypothetical trades kept in the person's private sandbox, and its stressed window, computed when asked by the Python VaR engine from the scope's var-result; never stored.
+
+**Class** computed · **Key** — · **Dated by** `on request` · **Cadence** on change · **Stored by** connector `var-whatif` (plugin `reactive`).
+
+**Grain:** One answer per question (the scope, the sandbox and the parameters, the business date), computed when asked. **Contract:** `contracts/var-whatif.contract.yaml` ([full contract page](../../../../docs/contracts/packs/market-risk.md#vwif-var-what-if-computed-python-var-whatif)).
+
+| Column | Type | Key | Presence | Unit | Example or values | Link | Meaning |
+|---|---|---|---|---|---|---|---|
+| `SCOPE` | text |  | required |  |  |  | The base scope (the id), e.g. DESK:RATES - TRD:X to take a trade out exactly. |
+| `CANONICAL` | text |  | required |  |  |  | — |
+| `BUSINESS_DATE` | date |  | required |  |  |  | — |
+| `ITEMS` | integer |  | required |  |  |  | The hypothetical trades of the sandbox (0 without one). |
+| `BEFORE_VAR` | amount |  | required | USD |  |  | — |
+| `AFTER_VAR` | amount |  | required | USD |  |  | — |
+| `CHANGE_VAR` | amount |  | required | USD |  |  | — |
+| `BEFORE_ES` | amount |  | required | USD |  |  | — |
+| `AFTER_ES` | amount |  | required | USD |  |  | — |
+| `CHANGE_ES` | amount |  | required | USD |  |  | — |
+| `LIMIT` | amount |  | optional | USD |  |  | — |
+| `LIMIT_USE_BEFORE` | rate |  | optional |  |  |  | — |
+| `LIMIT_USE_AFTER` | rate |  | optional |  |  |  | — |
+| `CONFIDENCE` | rate |  | required |  |  |  | — |
+| `ES_CONFIDENCE` | rate |  | required |  |  |  | — |
+| `STRESS_WINDOW` | integer |  | required |  |  |  | Scenario days of the stressed window (0 when not asked). |
+| `STRESSED_VAR_BEFORE` | amount |  | optional | USD |  |  | The largest VaR over every run of STRESS_WINDOW consecutive scenario days, before the what-if. |
+| `STRESSED_VAR_AFTER` | amount |  | optional | USD |  |  | — |
+| `STRESSED_FROM` | integer |  | optional |  |  |  | The index of the stressed window's first scenario day. |
+
+**Links:** `SCOPE` → `var-result`.
+
+- No stored key: an answer's id is the base scope (the id in the request); the parameters ride on it (sandbox, stress-window, component-window).
+- The hypothetical trades' vectors are supplied in the sandbox (one P&L per scenario day, priced elsewhere); taking trades out is the scope's own algebra. Pricing through QLRisk is parked until its API is stable.
+- The tables items (each trade's standalone, incremental in order and alone, component VaR and ES) and pnl (DAY, BEFORE, AFTER) come with the answer.
+
+### VOFF: VaR official results (published) (`var-official`)
+
+The official end-of-day VaR and ES of every node of the MGMT and LEGAL hierarchies, as the server captured and published them (one row per node, business date and result version); read only, for BI and other readers, never an engine's input.
+
+**Class** computed · **Key** `RESULT_VERSION`, `NODE_ID` · **Dated by** `BUSINESS_DATE` · **Cadence** daily · **Stored by** connector `var-results` (plugin `delta`), table `<root>/risk-results/var-official/`.
+
+**Grain:** One row per hierarchy node per BUSINESS_DATE and RESULT_VERSION, keyed by NODE_ID and RESULT_VERSION; the latest version of a date is the date's figure. **Contract:** `contracts/var-official.contract.yaml` ([full contract page](../../../../docs/contracts/packs/market-risk.md#voff-var-official-results-published-var-official)).
+
+| Column | Type | Key | Presence | Unit | Example or values | Link | Meaning |
+|---|---|---|---|---|---|---|---|
+| `BUSINESS_DATE` | date |  | required |  |  |  | The business date (the partition column business_date). |
+| `HIERARCHY` | text |  | required |  | `MGMT`, `LEGAL` |  | — |
+| `NODE_ID` | id | key | required |  | `MGMT~DESK-RATES` | `risk-hierarchy` | — |
+| `NODE_NAME` | text |  | required |  |  |  | — |
+| `PARENT_ID` | id |  | optional |  |  |  | The parent node (none for the bank). |
+| `LEVEL` | text |  | required |  | `bank`, `legal-entity`, `division`, `desk`, `book` |  | — |
+| `CAPTURE_ID` | id |  | required |  |  |  | The official capture the row was written from (VAR CAPTURE <id> opens it). |
+| `RESULT_VERSION` | integer | key | required |  |  |  | 1, then 2, 3 ... on a restatement. |
+| `INPUT_VERSIONS` | text |  | required |  |  |  | The inputs' versions, batch ids and position rules' digest, as JSON text. |
+| `COMPUTED_AT` | timestamp |  | required |  |  |  | — |
+| `CONTRACT_VERSION` | text |  | required |  | `1.3` |  | — |
+| `VAR` | amount |  | required | USD |  |  | VaR at CONFIDENCE, positive for a loss. Not additive across nodes. |
+| `ES` | amount |  | required | USD |  |  | Expected shortfall at ES_CONFIDENCE, positive for a loss. Not additive across nodes. |
+| `CONFIDENCE` | rate |  | required |  | `0.99` |  | — |
+| `ES_CONFIDENCE` | rate |  | required |  | `0.975` |  | — |
+| `SCENARIO_SET_ID` | id |  | required |  | `HS-509` |  | — |
+| `STANDALONE_SUM` | amount |  | optional | USD |  |  | The sum of the children's VaR (positions for a book). |
+| `DIVERSIFICATION` | amount |  | optional | USD |  |  | STANDALONE_SUM minus VAR. |
+| `HYPO_PNL` | amount |  | optional | USD |  |  | The node's hypothetical P&L for the date (the backtest's input). |
+| `LIMIT` | amount |  | optional | USD |  |  | The node's VaR limit from the hierarchy. |
+| `LIMIT_USE` | rate |  | optional |  |  |  | VAR / LIMIT. |
+| `TRADE_COUNT` | integer |  | required |  |  |  | — |
+| `POSITION_COUNT` | integer |  | required |  |  |  | — |
+| `EXCEPTIONS_250` | integer |  | optional |  |  |  | Backtest exceptions over the official history (up to 250 days). |
+| `TRAFFIC_LIGHT` | text |  | optional |  | `green`, `amber`, `red` |  | — |
+
+**Links:** `NODE_ID` → `risk-hierarchy`.
+
+- Append only (delta.appendOnly), 7 years of log and removed files: a restated date adds rows with the next RESULT_VERSION; nothing is overwritten. The BI model market-risk-var keeps the latest version of each node and date.
+- No engine reads it: the only connector over risk-results is this read-only one (tools/test_contracts.py).
+- The id is <NODE_ID>@<date>#v<RESULT_VERSION>; VAR NODE:<NODE_ID> opens the explorer at the node.
+
+## Data retrieval
+
+Where each kind's data comes from, how it reaches the lake and how to check it. Three origins: **external** data, fetched from a public source by the pack's refresh script (each source, its licence and worked examples on the [External data](../../../../docs/guides/PUBLIC_DATA.md) help page); **synthetic** test data, written by a generator with fictitious names; **computed** by a Drishti engine when it is asked, never stored by a source.
+
+| Command | Kind | Origin | How it reaches Drishti |
+|---|---|---|---|
+| `SCN` | `stress-scenario` | synthetic: `python3 tools/testdata/make_testdata.py` (and `python3 tools/packgen/banking/make_data.py` for samples/) | `data/testdata/market-risk/stress-scenario/` → `lake demo` → connector `risk-store` |
+| `STR` | `stress-result` | synthetic: `python3 tools/testdata/make_testdata.py` (and `python3 tools/packgen/banking/make_data.py` for samples/) | `data/testdata/market-risk/stress-result/` → `lake demo` → connector `risk-store` |
+| `FRTB` | `frtb-sensitivity` | synthetic: `python3 tools/testdata/make_testdata.py` (and `python3 tools/packgen/banking/make_data.py` for samples/) | `data/testdata/market-risk/frtb-sensitivity/` → `lake demo` → connector `risk-store` |
+| `PNL` | `pnl-explain` | synthetic: `python3 tools/testdata/make_testdata.py` (and `python3 tools/packgen/banking/make_data.py` for samples/) | `data/testdata/market-risk/pnl-explain/` → `lake demo` → connector `risk-store` |
+| `TVAL` | `trade-valuation` | synthetic: `python3 tools/testdata/make_testdata.py` (and `python3 tools/packgen/banking/make_data.py` for samples/) | `data/testdata/market-risk/trade-valuation/` → `lake demo` → connector `risk-store` |
+| `POS` | `position` | computed by Drishti: (the VaR engine derives positions from the trades of pnl-vector when a date loads, docs/guides/VAR_GUIDE.md section 15.6); see the [VaR guide](../../../../docs/guides/VAR_GUIDE.md) (positions) | nothing to load: computed from its inputs when asked |
+| `PORT` | `portfolio` | synthetic: `python3 tools/packgen/var/make_var_data.py` | `data/testdata/market-risk/portfolio/` → `lake demo` → connector `risk-store` |
+| `PNLV` | `pnl-vector` | synthetic: `python3 tools/packgen/var/make_var_data.py` | `data/testdata/market-risk/pnl-vector/` → `lake demo` → connector `risk-store` |
+| `SSET` | `scenario-set` | synthetic: `python3 tools/packgen/var/make_var_data.py` | `data/testdata/market-risk/scenario-set/` → `lake demo` → connector `risk-store` |
+| `HIER` | `risk-hierarchy` | synthetic: `python3 tools/packgen/var/make_var_data.py` | `data/testdata/market-risk/risk-hierarchy/` → `lake demo` → connector `risk-store` |
+| `VRES` | `var-result` | computed by Drishti: the reactive connector var-engine (java engine com.ash.drishti.server.var.VarResultEngine); see the [VaR guide](../../../../docs/guides/VAR_GUIDE.md) | nothing to load: computed from its inputs when asked |
+| `VWIF` | `var-whatif` | computed by Drishti: the reactive connector var-whatif (python engine drishti_compute.var.whatif:VarWhatIfEngine, pool var); see the [VaR guide](../../../../docs/guides/VAR_GUIDE.md) | nothing to load: computed from its inputs when asked |
+| `VOFF` | `var-official` | computed by Drishti: the official end-of-day capture (VarOfficial), appended by VarPublisher to risk-results/var-official; see the [VaR guide](../../../../docs/guides/VAR_GUIDE.md) (official results) | published by the server to `<data>/delta/risk-results/var-official/` |
+
+### Generators
+
+| Generator | Writes | Check |
+|---|---|---|
+| `python3 tools/testdata/make_testdata.py` | sixty business days of every dataset of the seven packs into data/testdata/<pack>/<kind>/ (the universe: tools/testdata/universe.py; deterministic, fictitious names) | `python3 tools/testdata/make_testdata.py --check` |
+| `python3 tools/packgen/banking/make_data.py` | the pack's few reference documents in samples/ (from the taxonomy, tools/packgen/banking/taxonomy.py) | `python3 tools/packgen/banking/make_data.py --check` |
+| `python3 tools/packgen/var/make_var_data.py` | the VaR engine's inputs into data/testdata/market-risk/<kind>/, as an upstream risk batch would deliver them, from the committed trades (VAR_GUIDE.md) | `python3 -m pytest -q tools/packgen/var/test_var_data.py` |
+
+### Into the lake, checking, offline
+
+- **The lake.** `python3 tools/drishti.py lake demo` reads `data/testdata/testdata.yaml` and writes every dataset (test data, the packs' samples and the committed public-data snapshots) into `<data>/delta/<domain>/<kind>/`, where the pack's Delta connector serves it; a computed kind needs nothing loaded. `lake build` loads your own large JSON exports the same way ([Tools](../../../../docs/guides/TOOLS.md)).
+- **Checking.** `python3 tools/contracts.py check` compares every contract with the pack and its data; each generator's `--check` (above) fails when the committed files differ from what it would write; in the console, `<MNEMONIC> <GO>` lists a kind and the pack's code opens its overview with the count of each kind.
+- **Offline.** Everything committed works without a network: the test data, the samples and the public-data snapshots are in the repository and `lake demo` reads only them. A refresh script runs offline from its download cache (`--offline`); a connector that reaches the internet (news, yfinance, the public-data feeds) is off as shipped and never starts on a machine configured offline (`drishti.offline.plugins`).

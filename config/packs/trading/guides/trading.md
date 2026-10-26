@@ -85,3 +85,373 @@ Role `trader`: kinds `trade`, `ir-curve`, `repo-curve`, `fx-spot`, `fx-forward-c
 ## F8 impact
 
 Amounts at stake: `trade` by `first($.LEGS).NOTIONAL`.
+
+## Data contracts
+
+Every kind of the pack has a data contract: a YAML file beside the pack (`config/packs/trading/contracts/<kind>.contract.yaml`, checked against `tools/contracts.schema.json`) that says what one record is, its key, how it is stored and dated, and every column. This section is generated from those files; the same files give the contract pages ([docs/contracts/packs/trading.md](../../../../docs/contracts/packs/trading.md), with each kind's validation rules and the points still to review). Check them against the pack and its data with `python3 tools/contracts.py check` (or `drishti.py contract check`); show one with `python3 tools/contracts.py show <MNEMONIC>`.
+
+| Command | Kind | Class | Key | Grain | Columns |
+|---|---|---|---|---|---|
+| `TRD` | `trade` | fundamental | `TRADE_ID` | One row per trade per business date, keyed by TRADE_ID. | 107 |
+| `CTRD` | `counterparty-trades` | computed | `COUNTERPARTY` | One record per COUNTERPARTY of the trade records, computed when asked. | 28 |
+| `PTRD` | `portfolio-trades` | computed | `PORTFOLIO` | One record per PORTFOLIO of the trade records, computed when asked. | 28 |
+| `LTRD` | `legal-entity-trades` | computed | `LEGAL_ENTITY` | One record per LEGAL_ENTITY of the trade records, computed when asked. | 28 |
+| `ITRD` | `index-trades` | computed | `INDEX_NAME` | One record per INDEX_NAME of the trade records, computed when asked. | 28 |
+
+*Class*: **fundamental** data is delivered by a source system and stored; **input** is stored data an engine reads; **computed** is worked out by Drishti when asked and never stored by a source; **drishti-owned** is kept by Drishti itself.
+
+### TRD: Trade (`trade`)
+
+Trade
+
+**Class** fundamental · **Key** `TRADE_ID` · **Dated by** `business_date` · **Cadence** daily · **Stored by** connector `trade-endur` (plugin `delta`), table `<root>/trading/trade_endur/` · **Ids** `^(MX|CLY)-\d+$`.
+
+**Grain:** One row per trade per business date, keyed by TRADE_ID. **Contract:** `contracts/trade.contract.yaml` ([full contract page](../../../../docs/contracts/packs/trading.md#trd-trade-trade)).
+
+| Column | Type | Key | Presence | Unit | Example or values | Link | Meaning |
+|---|---|---|---|---|---|---|---|
+| `SOURCE_SYSTEM` | text |  | required |  | `CALYPSO`, `ENDUR`, `MUREX` |  | Source |
+| `SOURCE_UPDATE_TIME` | timestamp |  | optional |  | `2026-09-30T18:30:00Z` |  | — |
+| `TRADE_DATE` | date |  | required |  | `2025-06-20` |  | Trade date |
+| `INPUT_DATE` | date |  | optional |  | `2024-04-19` |  | — |
+| `TRADE_ID` | id | key | required |  | `1000001` | `trade` | The record's id (the business key) |
+| `TRADE_STATUS` | text |  | required |  | `AMENDED`, `CANCELLED`, `MATURED`, `NEW`, `VALIDATED` |  | — |
+| `TRADE_ACTION` | text |  | optional |  | `AMEND`, `NEW` |  | — |
+| `TRADE_VERSION` | text |  | optional |  | `1`, `2`, `3`, `4` |  | — |
+| `TRANSACTION_ID` | id |  | required |  | `700000000` |  | — |
+| `PACKAGE_ID` | id |  | optional |  | `PKG-0001` |  | — |
+| `QUANTITY` | amount |  | required |  | `72000.0` |  | — |
+| `PRICE` | amount |  | optional |  | `2332.9131` |  | Price |
+| `BUY_SELL_CODE` | text |  | required |  | `B`, `S` |  | — |
+| `PRODUCT_TYPE` | text |  | required |  | `ComSwap` |  | — |
+| `PRODUCT_SUB_TYPE` | text |  | required |  | `ENGY-SWAP` |  | — |
+| `PRODUCT_GROUP` | text |  | optional |  | `FX` |  | — |
+| `PRODUCT_SUB_GROUP` | text |  | optional |  | `linear` |  | — |
+| `OPTION_TYPE` | text |  | optional |  | `Call`, `Cap`, `Floor`, `Payer`, `Put`, `Receiver` |  | — |
+| `STRIKE_PRICE` | rate |  | optional |  | `158.79394` |  | — |
+| `COUNTERPARTY` | id |  | required |  | `CP-HARBORPT` (pattern `^CP-`) | `counterparty` | Counterparty: the counterparty it refers to |
+| `COUNTERPARTY_UEN` | text |  | required |  | `UEN0100259` |  | — |
+| `COUNTERPARTY_COUNTRY_OF_RISK` | text |  | required |  | `US` |  | — |
+| `ORIGINAL_COUNTERPARTY` | id |  | optional |  | `CP-HALCYON` (pattern `^CP-`) | `counterparty` | Original counterparty: the counterparty it refers to |
+| `ORIGINAL_COUNTERPARTY_UEN` | text |  | optional |  | `UEN0100222` |  | — |
+| `INTERNAL_EXTERNAL_CODE` | text |  | required |  | `External`, `Portfolio` |  | — |
+| `TRANSIT` | text |  | required |  | `00107`, `00214`, `00321`, `00428` |  | — |
+| `LEGAL_ENTITY` | id |  | required |  | `LE-NY` (pattern `^LE-`) | `legal-entity` | Legal entity: the legal-entity it refers to |
+| `PORTFOLIO` | id |  | required |  | `BOOK-COMM-2` (pattern `^BOOK-`) | `book` | Portfolio: the book it refers to |
+| `TRADER_ID` | id |  | required |  | `TRDR-FROSSI` (pattern `^TRDR-`) | `trader` | Trader: the trader it refers to |
+| `TRADER_FIRST_NAME` | text |  | required |  | `F.` |  | — |
+| `TRADER_LAST_NAME` | text |  | required |  | `Rossi` |  | — |
+| `START_DATE` | date |  | required |  | `2025-08-01` |  | — |
+| `MATURITY_DATE` | date |  | required |  | `2028-07-31` |  | Maturity |
+| `REGISTRY_DELIVERY_DATE` | date |  | optional |  | `2026-06-01` |  | — |
+| `CURRENCY` | text |  | required |  | `AUD`, `CAD`, `CHF`, `EUR`, `GBP`, `JPY`, `USD` |  | — |
+| `DELIVERY_VERSUS_PAYMENT` | text |  | required |  | `NO`, `YES` |  | — |
+| `STRATEGY` | unknown |  | optional |  |  |  | — |
+| `INTERNAL_TRADING_STRATEGY` | unknown |  | optional |  |  |  | — |
+| `NY_CURVE_FLAG` | unknown |  | optional |  |  |  | — |
+| `VAULT_LOCATION_ALLOCATION` | text |  | optional |  | `COMEX New York`, `LME Rotterdam`, `LME Singapore`, `Vault London B`, `Vault Toronto A` |  | — |
+| `PRECIOUS_METAL_FLAG` | text |  | optional |  | `Y` |  | — |
+| `TT_GROUP` | id |  | optional |  | `DESK-FX` (pattern `^DESK-`) | `desk` | Desk: the desk it refers to |
+| `TT_BOOK` | id |  | optional |  | `BOOK-FX-3` (pattern `^BOOK-`) | `book` | Book: the book it refers to |
+| `LEASE_PERPETUITY_FLAG` | text |  | optional |  | `N`, `Y` |  | — |
+| `SETTLEMENT_DATE` | date |  | optional |  | `2024-04-22` |  | — |
+| `LEGS` | record list |  | required |  |  |  | Nested: see nested LEGS[] |
+| `EVENTS` | record list |  | required |  |  |  | Nested: see nested EVENTS[] |
+
+Nested `LEGS[]`:
+
+| Column | Type | Key | Presence | Unit | Example or values | Link | Meaning |
+|---|---|---|---|---|---|---|---|
+| `LEG_ID` | id |  | required |  | `1` |  | — |
+| `LEG_TYPE` | text |  | required |  | `FIXED`, `FLOAT`, `OPTION`, `PHYSICAL` |  | — |
+| `LEG_ECONOMIC_TYPE` | text |  | optional |  | `Basis`, `Fee`, `Fixed price`, `Floating price`, `Pay`, `Receive` |  | — |
+| `CURRENCY` | text |  | required |  | `AUD`, `CAD`, `CHF`, `EUR`, `GBP`, `JPY`, `USD` |  | — |
+| `LEASE_CURRENCY` | text |  | optional |  | `USD` |  | — |
+| `FLOAT_SPREAD` | text |  | optional |  | `14.2486` |  | — |
+| `PRICE_UNIT` | text |  | optional |  | `MT` |  | — |
+| `NOTIONAL` | amount |  | required |  | `167969743.2` |  | — |
+| `DISCOUNT_INDEX` | text |  | optional |  | `DISC-USD` |  | — |
+| `SPOT_CONVERSION_FACTOR` | text |  | optional |  | `1` |  | — |
+| `PHYSICAL_LOCATION_NAME` | text |  | optional |  | `Henry Hub` |  | — |
+| `INDEX_LOCATION_NAME` | text |  | optional |  | `Henry Hub` |  | — |
+| `RESET_FIXING_SHIFT` | text |  | optional |  | `-2`, `0` |  | — |
+| `RESET_HOLIDAY_SCHEDULE` | text |  | optional |  | `EUTA`, `GBLO`, `JPTO`, `USNY` |  | — |
+| `RESET_CONVENTION` | text |  | optional |  | `Annual`, `Daily`, `Daily average`, `Monthly`, `Quarterly`, `Semi-annual` |  | — |
+| `EMISSIONS_VINTAGE_MIN` | unknown |  | optional |  |  |  | — |
+| `EMISSIONS_VINTAGE_MAX` | unknown |  | optional |  |  |  | — |
+| `EMISSIONS_VINTAGE_DELIVERY_TYPE` | unknown |  | optional |  |  |  | — |
+| `SETTLEMENT_TYPE` | text |  | required |  | `Cash Settlement`, `Physical Settlement` |  | — |
+| `NY_CURVE_FLAG` | unknown |  | optional |  |  |  | — |
+| `NUM_RRDC_REC` | unknown |  | optional |  |  |  | — |
+| `NUM_PROFILE_REC` | text |  | optional |  | `1` |  | — |
+| `DAILY_VOLUME` | text |  | optional |  | `95` |  | — |
+| `INDEX` | record |  | required |  |  |  | Nested: see nested LEGS[].INDEX |
+| `CASH_FLOWS` | record list |  | required |  |  |  | The leg's periods: each with its dates, notional, rate or price, and its resets. |
+
+Nested `LEGS[].INDEX`:
+
+| Column | Type | Key | Presence | Unit | Example or values | Link | Meaning |
+|---|---|---|---|---|---|---|---|
+| `NAME` | text |  | optional |  | `IDX-ALU-3M` |  | The benchmark a floating leg is set by. |
+| `GROUP` | id |  | optional |  | `Metals` | `counterparty-group` | Group: the counterparty-group it refers to |
+| `SUB_GROUP` | text |  | optional |  | `Base metals` |  | — |
+
+Nested `LEGS[].CASH_FLOWS[]`:
+
+| Column | Type | Key | Presence | Unit | Example or values | Link | Meaning |
+|---|---|---|---|---|---|---|---|
+| `FLOW_ID` | id |  | required |  | `5000001` |  | — |
+| `FLOW_TYPE` | text |  | optional |  | `Fixed price` |  | — |
+| `NOTIONAL` | amount |  | required |  | `4665826.2` |  | — |
+| `RATE` | text |  | optional |  | `2332.9131` |  | — |
+| `FLOAT_SPREAD` | text |  | optional |  | `14.2486` |  | — |
+| `START_DATE` | date |  | required |  | `2025-08-01` |  | — |
+| `END_DATE` | date |  | required |  | `2025-08-31` |  | — |
+| `PAYMENT_DATE` | date |  | required |  | `2025-09-07` |  | — |
+| `RATE_DETERMINATION_DATE` | date |  | optional |  | `2025-08-31` |  | — |
+| `FIRST_RESET_DATE` | date |  | optional |  | `2025-08-01` |  | — |
+| `LAST_RESET_DATE` | date |  | optional |  | `2025-08-31` |  | — |
+| `STRIKE_PRICE` | rate |  | required |  | `2332.9131` |  | — |
+| `RESETS` | record list |  | required |  |  |  | Nested: see nested LEGS[].CASH_FLOWS[].RESETS[] |
+
+Nested `LEGS[].CASH_FLOWS[].RESETS[]`:
+
+| Column | Type | Key | Presence | Unit | Example or values | Link | Meaning |
+|---|---|---|---|---|---|---|---|
+| `RESET_ID` | id |  | optional |  | `1` |  | — |
+| `ACCRUAL` | amount |  | optional |  | `1.0` |  | — |
+| `START_DATE` | date |  | required |  | `2025-08-01` |  | — |
+| `END_DATE` | date |  | required |  | `2025-08-31` |  | — |
+| `RESET_DATE` | date |  | optional |  | `2025-08-01` |  | — |
+| `ACCRUAL_START_DATE` | date |  | optional |  | `2025-07-28` |  | — |
+| `ACCRUAL_END_DATE` | date |  | optional |  | `2025-09-25` |  | — |
+| `RATE` | text |  | optional |  | `2217.5435` |  | — |
+
+Nested `EVENTS[]`:
+
+| Column | Type | Key | Presence | Unit | Example or values | Link | Meaning |
+|---|---|---|---|---|---|---|---|
+| `LEG_ID` | id |  | optional |  | `1` |  | — |
+| `EVENT_ID` | id |  | optional |  | `9000001` |  | — |
+| `EVENT_NUMBER` | integer |  | optional |  | `1` |  | — |
+| `EVENT_TYPE` | text |  | optional |  | `RESET` |  | — |
+| `PAYMENT_TYPE` | text |  | optional |  | `Fixing` |  | — |
+| `EVENT_DATE` | date |  | optional |  | `2026-11-30` |  | — |
+| `AMOUNT` | amount |  | optional |  | `14409.01` |  | — |
+| `CURRENCY` | text |  | optional |  | `AUD`, `CAD`, `CHF`, `EUR`, `GBP`, `JPY`, `USD` |  | — |
+| `SEQUENCE_NUMBER` | integer |  | optional |  | `1` |  | — |
+| `VAULT_LOCATION_ALLOCATION` | unknown |  | optional |  |  |  | — |
+| `NY_CURVE_FLAG` | unknown |  | optional |  |  |  | — |
+
+**Links:** `TRADE_ID` → `trade`, `COUNTERPARTY` → `counterparty`, `ORIGINAL_COUNTERPARTY` → `counterparty`, `LEGAL_ENTITY` → `legal-entity`, `PORTFOLIO` → `book`, `TRADER_ID` → `trader`, `TT_GROUP` → `desk`, `TT_BOOK` → `book`, `LEGS[].INDEX.GROUP` → `counterparty-group`.
+
+- Dated by the lake's business_date partition: `drishti.py lake build` writes each test-data file's day into it; the documents carry no date field of their own.
+- Several source systems: the connector trade-endur and trade-calypso, trade-murex each serve this kind from a table of their own with the same layout; the storage above is the first one's.
+
+### CTRD: Counterparty trades (derived from trades) (`counterparty-trades`)
+
+Every trade with a counterparty, from every source system: its trades (every status, a status filter), upcoming payments, notional by product type and index, maturities, payments by month.
+
+**Class** computed · **Key** `COUNTERPARTY` · **Dated by** `on request` · **Cadence** on change · **Stored by** connector `trade-pages` (plugin `derived`).
+
+**Grain:** One record per COUNTERPARTY of the trade records, computed when asked. **Contract:** `contracts/counterparty-trades.contract.yaml` ([full contract page](../../../../docs/contracts/packs/trading.md#ctrd-counterparty-trades-derived-from-trades-counterparty-trades)).
+
+| Column | Type | Key | Presence | Unit | Example or values | Link | Meaning |
+|---|---|---|---|---|---|---|---|
+| `COUNTERPARTY` | id | key | required |  |  | `counterparty` | The value the trade records are grouped by ($.COUNTERPARTY) |
+| `TRADE_IDS` | id list |  | derived |  |  |  | The ids of the grouped trade records (at most 1000) |
+| `TRADE_COUNT` | integer |  | optional |  |  |  | The number of records in the group |
+| `NOTIONAL` | amount |  | optional |  |  |  | sum over the group of: first($.LEGS).NOTIONAL |
+| `SOURCE_SYSTEMS` | text list |  | optional |  |  |  | distinct over the group of: $.SOURCE_SYSTEM |
+| `PRODUCT_TYPES` | text list |  | optional |  |  |  | distinct over the group of: $.PRODUCT_TYPE |
+| `CURRENCIES` | text list |  | optional |  |  |  | distinct over the group of: $.CURRENCY |
+| `LAST_MATURITY` | date |  | optional |  |  |  | max over the group of: $.MATURITY_DATE |
+| `PAY_7D` | amount |  | optional |  |  |  | sum over the group of: sum(flatten($.EVENTS)[?nonblank(@.AMOUNT) && nonblank(@.EVENT_DATE)][?days(today(), @.EVENT_DATE) >= 0 && days(today(), @.EVENT_DATE) <= 7], 'AMOUNT') |
+| `PAY_7D_EVENTS` | amount |  | optional |  |  |  | sum over the group of: size(flatten($.EVENTS)[?nonblank(@.AMOUNT) && nonblank(@.EVENT_DATE)][?days(today(), @.EVENT_DATE) >= 0 && days(today(), @.EVENT_DATE) <= 7]) |
+| `PAY_30D` | amount |  | optional |  |  |  | sum over the group of: sum(flatten($.EVENTS)[?nonblank(@.AMOUNT) && nonblank(@.EVENT_DATE)][?days(today(), @.EVENT_DATE) >= 0 && days(today(), @.EVENT_DATE) <= 30], 'AMOUNT') |
+| `PAY_30D_EVENTS` | amount |  | optional |  |  |  | sum over the group of: size(flatten($.EVENTS)[?nonblank(@.AMOUNT) && nonblank(@.EVENT_DATE)][?days(today(), @.EVENT_DATE) >= 0 && days(today(), @.EVENT_DATE) <= 30]) |
+| `PAY_90D` | amount |  | optional |  |  |  | sum over the group of: sum(flatten($.EVENTS)[?nonblank(@.AMOUNT) && nonblank(@.EVENT_DATE)][?days(today(), @.EVENT_DATE) >= 0 && days(today(), @.EVENT_DATE) <= 90], 'AMOUNT') |
+| `PAY_90D_EVENTS` | amount |  | optional |  |  |  | sum over the group of: size(flatten($.EVENTS)[?nonblank(@.AMOUNT) && nonblank(@.EVENT_DATE)][?days(today(), @.EVENT_DATE) >= 0 && days(today(), @.EVENT_DATE) <= 90]) |
+| `TRADES` | record list |  | derived |  |  |  | One row per grouped trade record |
+
+Nested `TRADES[]`:
+
+| Column | Type | Key | Presence | Unit | Example or values | Link | Meaning |
+|---|---|---|---|---|---|---|---|
+| `TRADE_ID` | unknown |  | optional |  |  | `trade` | From the trade record: $.TRADE_ID |
+| `SOURCE_SYSTEM` | unknown |  | optional |  |  |  | From the trade record: $.SOURCE_SYSTEM |
+| `PRODUCT_TYPE` | unknown |  | optional |  |  |  | From the trade record: $.PRODUCT_TYPE |
+| `BUY_SELL_CODE` | unknown |  | optional |  |  |  | From the trade record: $.BUY_SELL_CODE |
+| `CURRENCY` | unknown |  | optional |  |  |  | From the trade record: $.CURRENCY |
+| `NOTIONAL` | unknown |  | optional |  |  |  | From the trade record: first($.LEGS).NOTIONAL |
+| `MATURITY_DATE` | unknown |  | optional |  |  |  | From the trade record: $.MATURITY_DATE |
+| `TRADE_STATUS` | unknown |  | optional |  |  |  | From the trade record: $.TRADE_STATUS |
+| `INDEX_NAME` | unknown |  | optional |  |  |  | From the trade record: nonblank($.LEGS[0].INDEX.NAME, $.LEGS[1].INDEX.NAME, '') |
+| `COUNTERPARTY` | unknown |  | optional |  |  | `counterparty` | From the trade record: $.COUNTERPARTY |
+| `PORTFOLIO` | unknown |  | optional |  |  | `book` | From the trade record: $.PORTFOLIO |
+| `LEGAL_ENTITY` | unknown |  | optional |  |  | `legal-entity` | From the trade record: $.LEGAL_ENTITY |
+| `EVENTS` | unknown |  | optional |  |  |  | From the trade record: $.EVENTS |
+
+**Links:** `COUNTERPARTY` → `counterparty`, `TRADES[].TRADE_ID` → `trade`, `TRADES[].COUNTERPARTY` → `counterparty`, `TRADES[].PORTFOLIO` → `book`, `TRADES[].LEGAL_ENTITY` → `legal-entity`.
+
+### PTRD: Portfolio trades (derived from trades) (`portfolio-trades`)
+
+Every trade of a portfolio (book), from every source system: its trades (every status, a status filter), upcoming payments, notional by product type and index, maturities, payments by month.
+
+**Class** computed · **Key** `PORTFOLIO` · **Dated by** `on request` · **Cadence** on change · **Stored by** connector `trade-pages` (plugin `derived`).
+
+**Grain:** One record per PORTFOLIO of the trade records, computed when asked. **Contract:** `contracts/portfolio-trades.contract.yaml` ([full contract page](../../../../docs/contracts/packs/trading.md#ptrd-portfolio-trades-derived-from-trades-portfolio-trades)).
+
+| Column | Type | Key | Presence | Unit | Example or values | Link | Meaning |
+|---|---|---|---|---|---|---|---|
+| `PORTFOLIO` | id | key | required |  |  | `book` | The value the trade records are grouped by ($.PORTFOLIO) |
+| `TRADE_IDS` | id list |  | derived |  |  |  | The ids of the grouped trade records (at most 1000) |
+| `TRADE_COUNT` | integer |  | optional |  |  |  | The number of records in the group |
+| `NOTIONAL` | amount |  | optional |  |  |  | sum over the group of: first($.LEGS).NOTIONAL |
+| `SOURCE_SYSTEMS` | text list |  | optional |  |  |  | distinct over the group of: $.SOURCE_SYSTEM |
+| `PRODUCT_TYPES` | text list |  | optional |  |  |  | distinct over the group of: $.PRODUCT_TYPE |
+| `CURRENCIES` | text list |  | optional |  |  |  | distinct over the group of: $.CURRENCY |
+| `LAST_MATURITY` | date |  | optional |  |  |  | max over the group of: $.MATURITY_DATE |
+| `PAY_7D` | amount |  | optional |  |  |  | sum over the group of: sum(flatten($.EVENTS)[?nonblank(@.AMOUNT) && nonblank(@.EVENT_DATE)][?days(today(), @.EVENT_DATE) >= 0 && days(today(), @.EVENT_DATE) <= 7], 'AMOUNT') |
+| `PAY_7D_EVENTS` | amount |  | optional |  |  |  | sum over the group of: size(flatten($.EVENTS)[?nonblank(@.AMOUNT) && nonblank(@.EVENT_DATE)][?days(today(), @.EVENT_DATE) >= 0 && days(today(), @.EVENT_DATE) <= 7]) |
+| `PAY_30D` | amount |  | optional |  |  |  | sum over the group of: sum(flatten($.EVENTS)[?nonblank(@.AMOUNT) && nonblank(@.EVENT_DATE)][?days(today(), @.EVENT_DATE) >= 0 && days(today(), @.EVENT_DATE) <= 30], 'AMOUNT') |
+| `PAY_30D_EVENTS` | amount |  | optional |  |  |  | sum over the group of: size(flatten($.EVENTS)[?nonblank(@.AMOUNT) && nonblank(@.EVENT_DATE)][?days(today(), @.EVENT_DATE) >= 0 && days(today(), @.EVENT_DATE) <= 30]) |
+| `PAY_90D` | amount |  | optional |  |  |  | sum over the group of: sum(flatten($.EVENTS)[?nonblank(@.AMOUNT) && nonblank(@.EVENT_DATE)][?days(today(), @.EVENT_DATE) >= 0 && days(today(), @.EVENT_DATE) <= 90], 'AMOUNT') |
+| `PAY_90D_EVENTS` | amount |  | optional |  |  |  | sum over the group of: size(flatten($.EVENTS)[?nonblank(@.AMOUNT) && nonblank(@.EVENT_DATE)][?days(today(), @.EVENT_DATE) >= 0 && days(today(), @.EVENT_DATE) <= 90]) |
+| `TRADES` | record list |  | derived |  |  |  | One row per grouped trade record |
+
+Nested `TRADES[]`:
+
+| Column | Type | Key | Presence | Unit | Example or values | Link | Meaning |
+|---|---|---|---|---|---|---|---|
+| `TRADE_ID` | unknown |  | optional |  |  | `trade` | From the trade record: $.TRADE_ID |
+| `SOURCE_SYSTEM` | unknown |  | optional |  |  |  | From the trade record: $.SOURCE_SYSTEM |
+| `PRODUCT_TYPE` | unknown |  | optional |  |  |  | From the trade record: $.PRODUCT_TYPE |
+| `BUY_SELL_CODE` | unknown |  | optional |  |  |  | From the trade record: $.BUY_SELL_CODE |
+| `CURRENCY` | unknown |  | optional |  |  |  | From the trade record: $.CURRENCY |
+| `NOTIONAL` | unknown |  | optional |  |  |  | From the trade record: first($.LEGS).NOTIONAL |
+| `MATURITY_DATE` | unknown |  | optional |  |  |  | From the trade record: $.MATURITY_DATE |
+| `TRADE_STATUS` | unknown |  | optional |  |  |  | From the trade record: $.TRADE_STATUS |
+| `INDEX_NAME` | unknown |  | optional |  |  |  | From the trade record: nonblank($.LEGS[0].INDEX.NAME, $.LEGS[1].INDEX.NAME, '') |
+| `COUNTERPARTY` | unknown |  | optional |  |  | `counterparty` | From the trade record: $.COUNTERPARTY |
+| `PORTFOLIO` | unknown |  | optional |  |  | `book` | From the trade record: $.PORTFOLIO |
+| `LEGAL_ENTITY` | unknown |  | optional |  |  | `legal-entity` | From the trade record: $.LEGAL_ENTITY |
+| `EVENTS` | unknown |  | optional |  |  |  | From the trade record: $.EVENTS |
+
+**Links:** `PORTFOLIO` → `book`, `TRADES[].TRADE_ID` → `trade`, `TRADES[].COUNTERPARTY` → `counterparty`, `TRADES[].PORTFOLIO` → `book`, `TRADES[].LEGAL_ENTITY` → `legal-entity`.
+
+### LTRD: Legal entity trades (derived from trades) (`legal-entity-trades`)
+
+Every trade a legal entity of the bank booked, from every source system: its trades (every status, a status filter), upcoming payments, notional by product type and index, maturities, payments by month.
+
+**Class** computed · **Key** `LEGAL_ENTITY` · **Dated by** `on request` · **Cadence** on change · **Stored by** connector `trade-pages` (plugin `derived`).
+
+**Grain:** One record per LEGAL_ENTITY of the trade records, computed when asked. **Contract:** `contracts/legal-entity-trades.contract.yaml` ([full contract page](../../../../docs/contracts/packs/trading.md#ltrd-legal-entity-trades-derived-from-trades-legal-entity-trades)).
+
+| Column | Type | Key | Presence | Unit | Example or values | Link | Meaning |
+|---|---|---|---|---|---|---|---|
+| `LEGAL_ENTITY` | id | key | required |  |  | `legal-entity` | The value the trade records are grouped by ($.LEGAL_ENTITY) |
+| `TRADE_IDS` | id list |  | derived |  |  |  | The ids of the grouped trade records (at most 1000) |
+| `TRADE_COUNT` | integer |  | optional |  |  |  | The number of records in the group |
+| `NOTIONAL` | amount |  | optional |  |  |  | sum over the group of: first($.LEGS).NOTIONAL |
+| `SOURCE_SYSTEMS` | text list |  | optional |  |  |  | distinct over the group of: $.SOURCE_SYSTEM |
+| `PRODUCT_TYPES` | text list |  | optional |  |  |  | distinct over the group of: $.PRODUCT_TYPE |
+| `CURRENCIES` | text list |  | optional |  |  |  | distinct over the group of: $.CURRENCY |
+| `LAST_MATURITY` | date |  | optional |  |  |  | max over the group of: $.MATURITY_DATE |
+| `PAY_7D` | amount |  | optional |  |  |  | sum over the group of: sum(flatten($.EVENTS)[?nonblank(@.AMOUNT) && nonblank(@.EVENT_DATE)][?days(today(), @.EVENT_DATE) >= 0 && days(today(), @.EVENT_DATE) <= 7], 'AMOUNT') |
+| `PAY_7D_EVENTS` | amount |  | optional |  |  |  | sum over the group of: size(flatten($.EVENTS)[?nonblank(@.AMOUNT) && nonblank(@.EVENT_DATE)][?days(today(), @.EVENT_DATE) >= 0 && days(today(), @.EVENT_DATE) <= 7]) |
+| `PAY_30D` | amount |  | optional |  |  |  | sum over the group of: sum(flatten($.EVENTS)[?nonblank(@.AMOUNT) && nonblank(@.EVENT_DATE)][?days(today(), @.EVENT_DATE) >= 0 && days(today(), @.EVENT_DATE) <= 30], 'AMOUNT') |
+| `PAY_30D_EVENTS` | amount |  | optional |  |  |  | sum over the group of: size(flatten($.EVENTS)[?nonblank(@.AMOUNT) && nonblank(@.EVENT_DATE)][?days(today(), @.EVENT_DATE) >= 0 && days(today(), @.EVENT_DATE) <= 30]) |
+| `PAY_90D` | amount |  | optional |  |  |  | sum over the group of: sum(flatten($.EVENTS)[?nonblank(@.AMOUNT) && nonblank(@.EVENT_DATE)][?days(today(), @.EVENT_DATE) >= 0 && days(today(), @.EVENT_DATE) <= 90], 'AMOUNT') |
+| `PAY_90D_EVENTS` | amount |  | optional |  |  |  | sum over the group of: size(flatten($.EVENTS)[?nonblank(@.AMOUNT) && nonblank(@.EVENT_DATE)][?days(today(), @.EVENT_DATE) >= 0 && days(today(), @.EVENT_DATE) <= 90]) |
+| `TRADES` | record list |  | derived |  |  |  | One row per grouped trade record |
+
+Nested `TRADES[]`:
+
+| Column | Type | Key | Presence | Unit | Example or values | Link | Meaning |
+|---|---|---|---|---|---|---|---|
+| `TRADE_ID` | unknown |  | optional |  |  | `trade` | From the trade record: $.TRADE_ID |
+| `SOURCE_SYSTEM` | unknown |  | optional |  |  |  | From the trade record: $.SOURCE_SYSTEM |
+| `PRODUCT_TYPE` | unknown |  | optional |  |  |  | From the trade record: $.PRODUCT_TYPE |
+| `BUY_SELL_CODE` | unknown |  | optional |  |  |  | From the trade record: $.BUY_SELL_CODE |
+| `CURRENCY` | unknown |  | optional |  |  |  | From the trade record: $.CURRENCY |
+| `NOTIONAL` | unknown |  | optional |  |  |  | From the trade record: first($.LEGS).NOTIONAL |
+| `MATURITY_DATE` | unknown |  | optional |  |  |  | From the trade record: $.MATURITY_DATE |
+| `TRADE_STATUS` | unknown |  | optional |  |  |  | From the trade record: $.TRADE_STATUS |
+| `INDEX_NAME` | unknown |  | optional |  |  |  | From the trade record: nonblank($.LEGS[0].INDEX.NAME, $.LEGS[1].INDEX.NAME, '') |
+| `COUNTERPARTY` | unknown |  | optional |  |  | `counterparty` | From the trade record: $.COUNTERPARTY |
+| `PORTFOLIO` | unknown |  | optional |  |  | `book` | From the trade record: $.PORTFOLIO |
+| `LEGAL_ENTITY` | unknown |  | optional |  |  | `legal-entity` | From the trade record: $.LEGAL_ENTITY |
+| `EVENTS` | unknown |  | optional |  |  |  | From the trade record: $.EVENTS |
+
+**Links:** `LEGAL_ENTITY` → `legal-entity`, `TRADES[].TRADE_ID` → `trade`, `TRADES[].COUNTERPARTY` → `counterparty`, `TRADES[].PORTFOLIO` → `book`, `TRADES[].LEGAL_ENTITY` → `legal-entity`.
+
+### ITRD: Index trades (derived from trades) (`index-trades`)
+
+Every trade with a leg on an index (the first leg that names one): its trades (every status, a status filter), upcoming payments, notional by product type and index, maturities, payments by month.
+
+**Class** computed · **Key** `INDEX_NAME` · **Dated by** `on request` · **Cadence** on change · **Stored by** connector `trade-pages` (plugin `derived`).
+
+**Grain:** One record per INDEX_NAME of the trade records, computed when asked. **Contract:** `contracts/index-trades.contract.yaml` ([full contract page](../../../../docs/contracts/packs/trading.md#itrd-index-trades-derived-from-trades-index-trades)).
+
+| Column | Type | Key | Presence | Unit | Example or values | Link | Meaning |
+|---|---|---|---|---|---|---|---|
+| `INDEX_NAME` | id | key | required |  |  |  | The value the trade records are grouped by (nonblank($.LEGS[0].INDEX.NAME, $.LEGS[1].INDEX.NAME)) |
+| `TRADE_IDS` | id list |  | derived |  |  |  | The ids of the grouped trade records (at most 1000) |
+| `TRADE_COUNT` | integer |  | optional |  |  |  | The number of records in the group |
+| `NOTIONAL` | amount |  | optional |  |  |  | sum over the group of: first($.LEGS).NOTIONAL |
+| `SOURCE_SYSTEMS` | text list |  | optional |  |  |  | distinct over the group of: $.SOURCE_SYSTEM |
+| `PRODUCT_TYPES` | text list |  | optional |  |  |  | distinct over the group of: $.PRODUCT_TYPE |
+| `CURRENCIES` | text list |  | optional |  |  |  | distinct over the group of: $.CURRENCY |
+| `LAST_MATURITY` | date |  | optional |  |  |  | max over the group of: $.MATURITY_DATE |
+| `PAY_7D` | amount |  | optional |  |  |  | sum over the group of: sum(flatten($.EVENTS)[?nonblank(@.AMOUNT) && nonblank(@.EVENT_DATE)][?days(today(), @.EVENT_DATE) >= 0 && days(today(), @.EVENT_DATE) <= 7], 'AMOUNT') |
+| `PAY_7D_EVENTS` | amount |  | optional |  |  |  | sum over the group of: size(flatten($.EVENTS)[?nonblank(@.AMOUNT) && nonblank(@.EVENT_DATE)][?days(today(), @.EVENT_DATE) >= 0 && days(today(), @.EVENT_DATE) <= 7]) |
+| `PAY_30D` | amount |  | optional |  |  |  | sum over the group of: sum(flatten($.EVENTS)[?nonblank(@.AMOUNT) && nonblank(@.EVENT_DATE)][?days(today(), @.EVENT_DATE) >= 0 && days(today(), @.EVENT_DATE) <= 30], 'AMOUNT') |
+| `PAY_30D_EVENTS` | amount |  | optional |  |  |  | sum over the group of: size(flatten($.EVENTS)[?nonblank(@.AMOUNT) && nonblank(@.EVENT_DATE)][?days(today(), @.EVENT_DATE) >= 0 && days(today(), @.EVENT_DATE) <= 30]) |
+| `PAY_90D` | amount |  | optional |  |  |  | sum over the group of: sum(flatten($.EVENTS)[?nonblank(@.AMOUNT) && nonblank(@.EVENT_DATE)][?days(today(), @.EVENT_DATE) >= 0 && days(today(), @.EVENT_DATE) <= 90], 'AMOUNT') |
+| `PAY_90D_EVENTS` | amount |  | optional |  |  |  | sum over the group of: size(flatten($.EVENTS)[?nonblank(@.AMOUNT) && nonblank(@.EVENT_DATE)][?days(today(), @.EVENT_DATE) >= 0 && days(today(), @.EVENT_DATE) <= 90]) |
+| `TRADES` | record list |  | derived |  |  |  | One row per grouped trade record |
+
+Nested `TRADES[]`:
+
+| Column | Type | Key | Presence | Unit | Example or values | Link | Meaning |
+|---|---|---|---|---|---|---|---|
+| `TRADE_ID` | unknown |  | optional |  |  | `trade` | From the trade record: $.TRADE_ID |
+| `SOURCE_SYSTEM` | unknown |  | optional |  |  |  | From the trade record: $.SOURCE_SYSTEM |
+| `PRODUCT_TYPE` | unknown |  | optional |  |  |  | From the trade record: $.PRODUCT_TYPE |
+| `BUY_SELL_CODE` | unknown |  | optional |  |  |  | From the trade record: $.BUY_SELL_CODE |
+| `CURRENCY` | unknown |  | optional |  |  |  | From the trade record: $.CURRENCY |
+| `NOTIONAL` | unknown |  | optional |  |  |  | From the trade record: first($.LEGS).NOTIONAL |
+| `MATURITY_DATE` | unknown |  | optional |  |  |  | From the trade record: $.MATURITY_DATE |
+| `TRADE_STATUS` | unknown |  | optional |  |  |  | From the trade record: $.TRADE_STATUS |
+| `INDEX_NAME` | unknown |  | optional |  |  |  | From the trade record: nonblank($.LEGS[0].INDEX.NAME, $.LEGS[1].INDEX.NAME, '') |
+| `COUNTERPARTY` | unknown |  | optional |  |  | `counterparty` | From the trade record: $.COUNTERPARTY |
+| `PORTFOLIO` | unknown |  | optional |  |  | `book` | From the trade record: $.PORTFOLIO |
+| `LEGAL_ENTITY` | unknown |  | optional |  |  | `legal-entity` | From the trade record: $.LEGAL_ENTITY |
+| `EVENTS` | unknown |  | optional |  |  |  | From the trade record: $.EVENTS |
+
+**Links:** `TRADES[].TRADE_ID` → `trade`, `TRADES[].COUNTERPARTY` → `counterparty`, `TRADES[].PORTFOLIO` → `book`, `TRADES[].LEGAL_ENTITY` → `legal-entity`.
+
+## Data retrieval
+
+Where each kind's data comes from, how it reaches the lake and how to check it. Three origins: **external** data, fetched from a public source by the pack's refresh script (each source, its licence and worked examples on the [External data](../../../../docs/guides/PUBLIC_DATA.md) help page); **synthetic** test data, written by a generator with fictitious names; **computed** by a Drishti engine when it is asked, never stored by a source.
+
+| Command | Kind | Origin | How it reaches Drishti |
+|---|---|---|---|
+| `TRD` | `trade` | synthetic: `python3 tools/testdata/make_testdata.py` | `data/testdata/trades/endur/` → `lake demo` → connector `trade-endur` |
+| `CTRD` | `counterparty-trades` | computed by Drishti: the derived connector trade-pages over the kind trade; see the the derived connector's settings in the trading pack's pack.yaml (`trade-pages`) | nothing to load: computed from its inputs when asked |
+| `PTRD` | `portfolio-trades` | computed by Drishti: the derived connector trade-pages over the kind trade; see the the derived connector's settings in the trading pack's pack.yaml (`trade-pages`) | nothing to load: computed from its inputs when asked |
+| `LTRD` | `legal-entity-trades` | computed by Drishti: the derived connector trade-pages over the kind trade; see the the derived connector's settings in the trading pack's pack.yaml (`trade-pages`) | nothing to load: computed from its inputs when asked |
+| `ITRD` | `index-trades` | computed by Drishti: the derived connector trade-pages over the kind trade; see the the derived connector's settings in the trading pack's pack.yaml (`trade-pages`) | nothing to load: computed from its inputs when asked |
+
+### Generators
+
+| Generator | Writes | Check |
+|---|---|---|
+| `python3 tools/testdata/make_testdata.py` | 5,000 trades a booking system into data/testdata/trades/{endur,calypso,murex}/ in the common 47-attribute UPPER_SNAKE schema (tools/packgen/trades/schema.py) | `python3 tools/testdata/make_testdata.py --check` |
+
+### Into the lake, checking, offline
+
+- **The lake.** `python3 tools/drishti.py lake demo` reads `data/testdata/testdata.yaml` and writes every dataset (test data, the packs' samples and the committed public-data snapshots) into `<data>/delta/<domain>/<kind>/`, where the pack's Delta connector serves it; a computed kind needs nothing loaded. `lake build` loads your own large JSON exports the same way ([Tools](../../../../docs/guides/TOOLS.md)).
+- **Checking.** `python3 tools/contracts.py check` compares every contract with the pack and its data; each generator's `--check` (above) fails when the committed files differ from what it would write; in the console, `<MNEMONIC> <GO>` lists a kind and the pack's code opens its overview with the count of each kind.
+- **Offline.** Everything committed works without a network: the test data, the samples and the public-data snapshots are in the repository and `lake demo` reads only them. A refresh script runs offline from its download cache (`--offline`); a connector that reaches the internet (news, yfinance, the public-data feeds) is off as shipped and never starts on a machine configured offline (`drishti.offline.plugins`).

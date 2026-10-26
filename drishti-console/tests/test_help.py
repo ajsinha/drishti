@@ -200,7 +200,9 @@ def test_the_help_centre_has_six_sections_and_about_forty_pages():
     # 47: the 45 pages plus VaR's two (the VaR guide and tutorial 25), the product owner's request of 2026-10-26: VaR help is two pages.
     # 49: plus exposure's two (the exposure guide and tutorial 26), the same rule (each measure has exactly two documents and two entries).
     # 51: plus the groupings and analytics' two (the guide and tutorial 27, 2.9.2), the same rule.
-    assert 30 <= total <= 51, total
+    # 52: plus External data (docs/guides/PUBLIC_DATA.md, 2.9.1), the product owner's request of 2026-10-26: a separate help page for
+    # external data extraction, with examples.
+    assert 30 <= total <= 52, total
 
 
 def test_every_old_help_address_still_opens_something(client):

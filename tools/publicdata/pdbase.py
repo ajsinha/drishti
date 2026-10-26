@@ -308,17 +308,43 @@ class Run:
         return default
 
 
+# Each script's pack, which names its wrappers: tools/publicdata/<pack>.sh and tools/windows/publicdata-<pack>.ps1.
+WRAPPERS = {"world_economy.py": "world-economy", "news_and_markets.py": "news-and-markets",
+            "official_market_data.py": "market-data", "us_equities.py": "us-equities", "gleif.py": "gleif"}
+
+
+def examples(description: str, prog: str) -> str:
+    """The worked examples of a script's docstring (its indented `python3 tools/publicdata/...` lines and their notes) and the
+    shell and Windows wrappers that run it, shown at the end of every subcommand's --help."""
+    lines, keep = [], False
+    for line in (description or "").splitlines():
+        if line.startswith("    python3 tools/publicdata/"):
+            keep = True
+        elif not line.startswith("        "):
+            keep = False
+        if keep:
+            lines.append(line)
+    pack = WRAPPERS.get(prog)
+    if pack:
+        lines += ["", f"    tools/publicdata/{pack}.sh <the same arguments>                 Linux and macOS",
+                  f"    .\\tools\\windows\\publicdata-{pack}.ps1 <the same arguments>        Windows (PowerShell)"]
+    return ("examples:\n" + "\n".join(lines) + "\n\nguide: docs/guides/PUBLIC_DATA.md (Help → Data → External data)") if lines else ""
+
+
 def parser(prog: str, description: str, sources: list[Source], extra=None) -> argparse.ArgumentParser:
     ap = argparse.ArgumentParser(prog=prog, description=description, formatter_class=argparse.RawDescriptionHelpFormatter)
     sub = ap.add_subparsers(dest="command", required=True)
+    shown = examples(description, prog)
     for name, what in (("status", "each source: licence, use, last refreshed, cached size"), ("list", "the same as status")):
-        s = sub.add_parser(name, help=what)
+        s = sub.add_parser(name, help=what, description=what + " (offline: reads the manifest and the cache only)",
+                           formatter_class=argparse.RawDescriptionHelpFormatter, epilog=shown)
         s.set_defaults(command="status")
         s.add_argument("--cache", help="the download cache (default <data>/publicdata/cache/<pack>)")
     r = sub.add_parser("refresh", help="fetch, normalise and write; then the pack's own check",
                        formatter_class=argparse.RawDescriptionHelpFormatter,
                        epilog="sources: " + ", ".join(s.name for s in sources) + "\n" +
-                              "\n".join(f"--scope for {s.name}: {s.scope_help}" for s in sources if s.scope_help))
+                              "\n".join(f"--scope for {s.name}: {s.scope_help}" for s in sources if s.scope_help) +
+                              ("\n\n" + shown if shown else ""))
     r.add_argument("sources", nargs="*", metavar="SOURCE", help="one or more of: " + ", ".join(s.name for s in sources) + " (default: all of them)")
     r.add_argument("--years", type=int, help="this many years of history, ending with the latest")
     r.add_argument("--since", type=int, metavar="YEAR", help="history from this year")

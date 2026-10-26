@@ -135,3 +135,430 @@ An account at a CCP holding cleared trades and margin.
 ## Who can see it
 
 No extra roles: any user assigned the pack (or a pack that extends it) can open its kinds.
+
+## Data contracts
+
+Every kind of the pack has a data contract: a YAML file beside the pack (`config/packs/core/contracts/<kind>.contract.yaml`, checked against `tools/contracts.schema.json`) that says what one record is, its key, how it is stored and dated, and every column. This section is generated from those files; the same files give the contract pages ([docs/contracts/packs/core.md](../../../../docs/contracts/packs/core.md), with each kind's validation rules and the points still to review). Check them against the pack and its data with `python3 tools/contracts.py check` (or `drishti.py contract check`); show one with `python3 tools/contracts.py show <MNEMONIC>`.
+
+| Command | Kind | Class | Key | Grain | Columns |
+|---|---|---|---|---|---|
+| `CPTY` | `counterparty` | fundamental | `COUNTERPARTY_ID` | One row per counterparty per business date, keyed by COUNTERPARTY_ID. | 36 |
+| `GRP` | `counterparty-group` | fundamental | `GROUP_ID` | One row per counterparty group per business date, keyed by GROUP_ID. | 8 |
+| `ISS` | `issuer` | fundamental | `ISSUER_ID` | One row per issuer per business date, keyed by ISSUER_ID. | 12 |
+| `CCP` | `ccp` | fundamental | `CCP_ID` | One row per central counterparty per business date, keyed by CCP_ID. | 8 |
+| `LE` | `legal-entity` | fundamental | `ENTITY_ID` | One row per bank legal entity per business date, keyed by ENTITY_ID. | 15 |
+| `BOOK` | `book` | fundamental | `BOOK_ID` | One row per book per business date, keyed by BOOK_ID. | 21 |
+| `DESK` | `desk` | fundamental | `DESK_ID` | One row per desk per business date, keyed by DESK_ID. | 16 |
+| `TRDR` | `trader` | fundamental | `TRADER_ID` | One row per trader per business date, keyed by TRADER_ID. | 7 |
+| `CAL` | `calendar` | fundamental | `CALENDAR_ID` | One row per holiday calendar per business date, keyed by CALENDAR_ID. | 13 |
+| `CLR` | `clearing-account` | fundamental | `ACCOUNT_ID` | One row per clearing account per business date, keyed by ACCOUNT_ID. | 17 |
+
+*Class*: **fundamental** data is delivered by a source system and stored; **input** is stored data an engine reads; **computed** is worked out by Drishti when asked and never stored by a source; **drishti-owned** is kept by Drishti itself.
+
+### CPTY: Counterparty (`counterparty`)
+
+A legal entity the bank trades with: identifiers (LEI, UEN), rating, sector, country of risk and parent group.
+
+**Class** fundamental · **Key** `COUNTERPARTY_ID` · **Dated by** `business_date` · **Cadence** daily · **Stored by** connector `reference-store` (plugin `delta`), table `<root>/reference/counterparty/` · **Ids** `^CP-`.
+
+**Grain:** One row per counterparty per business date, keyed by COUNTERPARTY_ID. **Contract:** `contracts/counterparty.contract.yaml` ([full contract page](../../../../docs/contracts/packs/core.md#cpty-counterparty-counterparty)).
+
+| Column | Type | Key | Presence | Unit | Example or values | Link | Meaning |
+|---|---|---|---|---|---|---|---|
+| `COUNTERPARTY_ID` | id | key | required |  | `CP-ALDERSHOT` (pattern `^CP-`) |  | The record's id (the business key) |
+| `NAME` | text |  | required |  | `Aldershot Pension Trust` |  | Name |
+| `LEI` | text |  | required |  | `549300H5KZ2QJHEAMB55` |  | LEI |
+| `RATING` | text |  | required |  | `AA-` |  | Rating |
+| `SECTOR` | text |  | required |  | `Pensions` |  | Sector |
+| `COUNTRY` | text |  | required |  | `GB` |  | — |
+| `TYPE` | text |  | required |  | `Pension fund` |  | Type |
+| `COUNTRY_OF_RISK` | text |  | required |  | `GB` |  | Country of risk |
+| `UEN` | text |  | required |  | `UEN0100037` |  | UEN |
+| `ECONOMY` | id |  | required |  | `ECON-GBR` (pattern `^ECON-`) | `economy` | Economy: the economy it refers to |
+| `NEWS_ID` | id |  | required |  | `NEWS-Aldershot_Pension_Trust` (pattern `^NEWS-`) | `news` | Headlines: the news it refers to |
+| `NET_MTM` | amount |  | required |  | `15036789` |  | Net MTM |
+| `NETTING_SETS` | record list |  | required |  |  | `netting-set` | Netting set: the netting-set it refers to |
+| `KYC` | record |  | required |  |  |  | Nested: see nested KYC |
+| `GROUP` | id |  | required |  | `GRP-ALDERSHOT` (pattern `^GRP-`) | `counterparty-group` | Group: the counterparty-group it refers to |
+| `CREDIT_LIMIT` | id |  | required |  | `LIM-ALDERSHOT` (pattern `^LIM-`) | `credit-limit` | Credit limit: the credit-limit it refers to |
+| `HIERARCHY` | record |  | required |  |  |  | Nested: see nested HIERARCHY |
+| `CREDIT_CURVE` | id |  | optional |  | `CDS-CASCADIA` (pattern `^CDS-`) | `credit-curve` | Credit curve: the credit-curve it refers to |
+| `LEGAL_ENTITY` | id |  | optional |  | `LE-NY` (pattern `^LE-`) | `legal-entity` | Legal entity: the legal-entity it refers to |
+
+Nested `NETTING_SETS[]`:
+
+| Column | Type | Key | Presence | Unit | Example or values | Link | Meaning |
+|---|---|---|---|---|---|---|---|
+| `ID` | id |  | required |  | `NS-ALDERSHOT-FRA` |  | Netting set |
+| `AGREEMENT` | id |  | required |  | `AGR-ALDERSHOT-ISDA` (pattern `^AGR-`) | `agreement` | Agreement |
+| `TRADES` | integer |  | required |  | `3` |  | Trades |
+| `NET_MTM` | amount |  | required |  | `-339550` |  | Net MTM |
+
+Nested `KYC`:
+
+| Column | Type | Key | Presence | Unit | Example or values | Link | Meaning |
+|---|---|---|---|---|---|---|---|
+| `STATUS` | text |  | required |  | `Approved` |  | Status |
+| `RISK_RATING` | text |  | required |  | `Enhanced`, `Standard` |  | Risk rating |
+| `LAST_REVIEW` | date |  | required |  | `2026-02-11` |  | Last review |
+| `EMIR_CLASSIFICATION` | text |  | required |  | `FC`, `NFC-` |  | EMIR classification |
+| `PD_1Y` | rate |  | required |  | `0.0004` |  | PD (1 year) |
+
+Nested `HIERARCHY`:
+
+| Column | Type | Key | Presence | Unit | Example or values | Link | Meaning |
+|---|---|---|---|---|---|---|---|
+| `NODES` | record list |  | required |  |  |  | Nested: see nested HIERARCHY.NODES[] |
+| `EDGES` | record list |  | required |  |  |  | Nested: see nested HIERARCHY.EDGES[] |
+
+Nested `HIERARCHY.NODES[]`:
+
+| Column | Type | Key | Presence | Unit | Example or values | Link | Meaning |
+|---|---|---|---|---|---|---|---|
+| `ID` | id |  | required |  | `GRP-ALDERSHOT` |  | — |
+| `LABEL` | text |  | required |  | `Aldershot Pension Trust` |  | — |
+| `TYPE` | text |  | required |  | `Agreement`, `CSA`, `Counterparty`, `Group (ultimate parent)`, `Netting set` |  | — |
+
+Nested `HIERARCHY.EDGES[]`:
+
+| Column | Type | Key | Presence | Unit | Example or values | Link | Meaning |
+|---|---|---|---|---|---|---|---|
+| `FROM` | id |  | required |  | `GRP-ALDERSHOT` |  | — |
+| `TO` | id |  | required |  | `CP-ALDERSHOT` |  | — |
+| `LABEL` | text |  | required |  | `nets`, `parent of`, `secured by`, `signed` |  | — |
+
+**Links:** `ECONOMY` → `economy`, `NEWS_ID` → `news`, `NETTING_SETS` → `netting-set`, `GROUP` → `counterparty-group`, `CREDIT_LIMIT` → `credit-limit`, `CREDIT_CURVE` → `credit-curve`, `LEGAL_ENTITY` → `legal-entity`, `NETTING_SETS[].AGREEMENT` → `agreement`.
+
+- Dated by the lake's business_date partition: `drishti.py lake build` writes each test-data file's day into it; the documents carry no date field of their own.
+
+### GRP: Counterparty group (`counterparty-group`)
+
+Economic group of related counterparties (obligor group).
+
+**Class** fundamental · **Key** `GROUP_ID` · **Dated by** `business_date` · **Cadence** daily · **Stored by** connector `reference-store` (plugin `delta`), table `<root>/reference/counterparty-group/` · **Ids** `^GRP-`.
+
+**Grain:** One row per counterparty group per business date, keyed by GROUP_ID. **Contract:** `contracts/counterparty-group.contract.yaml` ([full contract page](../../../../docs/contracts/packs/core.md#grp-counterparty-group-counterparty-group)).
+
+| Column | Type | Key | Presence | Unit | Example or values | Link | Meaning |
+|---|---|---|---|---|---|---|---|
+| `GROUP_ID` | id | key | required |  | `GRP-ALDERSHOT` (pattern `^GRP-`) |  | The record's id (the business key) |
+| `NAME` | text |  | required |  | `Aldershot Pension Trust` |  | Name |
+| `LIMIT` | amount |  | required |  | `337000000.0` |  | Group limit |
+| `UTILISATION` | rate |  | required |  | `0.6671` |  | Utilisation |
+| `MEMBERS` | record list |  | required |  |  |  | Nested: see nested MEMBERS[] |
+
+Nested `MEMBERS[]`:
+
+| Column | Type | Key | Presence | Unit | Example or values | Link | Meaning |
+|---|---|---|---|---|---|---|---|
+| `ID` | id |  | required |  | `CP-ALDERSHOT` |  | Counterparty |
+| `NAME` | text |  | required |  | `Aldershot Pension Trust` |  | Name |
+| `RATING` | text |  | required |  | `AA-` |  | Rating |
+
+- Dated by the lake's business_date partition: `drishti.py lake build` writes each test-data file's day into it; the documents carry no date field of their own.
+
+### ISS: Issuer (`issuer`)
+
+Issuer of bonds and reference entity for CDS.
+
+**Class** fundamental · **Key** `ISSUER_ID` · **Dated by** `business_date` · **Cadence** daily · **Stored by** connector `reference-store` (plugin `delta`), table `<root>/reference/issuer/` · **Ids** `^ISS-`.
+
+**Grain:** One row per issuer per business date, keyed by ISSUER_ID. **Contract:** `contracts/issuer.contract.yaml` ([full contract page](../../../../docs/contracts/packs/core.md#iss-issuer-issuer)).
+
+| Column | Type | Key | Presence | Unit | Example or values | Link | Meaning |
+|---|---|---|---|---|---|---|---|
+| `ISSUER_ID` | id | key | required |  | `ISS-BUND` (pattern `^ISS-`) |  | The record's id (the business key) |
+| `NAME` | text |  | required |  | `Federal Republic of Germany` |  | Name |
+| `RATING` | text |  | required |  | `AAA` |  | Rating |
+| `SECTOR` | text |  | required |  | `Sovereign` |  | Sector |
+| `COUNTRY` | text |  | required |  | `DE` |  | Country |
+| `BONDS` | record list |  | required |  |  |  | Nested: see nested BONDS[] |
+| `CREDIT_CURVE` | id |  | required |  | `CDS-BUND` (pattern `^CDS-`) | `credit-curve` | Credit curve: the credit-curve it refers to |
+| `LEI` | text |  | required |  | `549300PJ21SGLK7KWI16` |  | — |
+| `EQUITY` | id |  | optional |  | `EQ-CSCA` (pattern `^EQ-`) | `equity` | Equity: the equity it refers to |
+
+Nested `BONDS[]`:
+
+| Column | Type | Key | Presence | Unit | Example or values | Link | Meaning |
+|---|---|---|---|---|---|---|---|
+| `ISIN` | text |  | required |  | `DEBUND064772` |  | ISIN |
+| `COUPON` | rate |  | required |  | `0.038` |  | Coupon |
+| `MATURITY` | date |  | required |  | `2031-03-15` |  | Maturity |
+
+**Links:** `CREDIT_CURVE` → `credit-curve`, `EQUITY` → `equity`.
+
+- Dated by the lake's business_date partition: `drishti.py lake build` writes each test-data file's day into it; the documents carry no date field of their own.
+
+### CCP: Central counterparty (`ccp`)
+
+A clearing house with its default fund and margin model.
+
+**Class** fundamental · **Key** `CCP_ID` · **Dated by** `business_date` · **Cadence** daily · **Stored by** connector `reference-store` (plugin `delta`), table `<root>/reference/ccp/` · **Ids** `^CCP-`.
+
+**Grain:** One row per central counterparty per business date, keyed by CCP_ID. **Contract:** `contracts/ccp.contract.yaml` ([full contract page](../../../../docs/contracts/packs/core.md#ccp-central-counterparty-ccp)).
+
+| Column | Type | Key | Presence | Unit | Example or values | Link | Meaning |
+|---|---|---|---|---|---|---|---|
+| `CCP_ID` | id | key | required |  | `CCP-CME` (pattern `^CCP-`) |  | The record's id (the business key) |
+| `NAME` | text |  | required |  | `CME Clearing` |  | Name |
+| `DEFAULT_FUND` | amount |  | required |  | `720000000.0` |  | Default fund |
+| `IM_POSTED` | amount |  | required |  | `43200000` |  | IM posted |
+| `MARGIN_MODEL` | text |  | required |  | `SPAN 2` |  | Model |
+| `ACCOUNTS` | record list |  | required |  |  |  | Nested: see nested ACCOUNTS[] |
+
+Nested `ACCOUNTS[]`:
+
+| Column | Type | Key | Presence | Unit | Example or values | Link | Meaning |
+|---|---|---|---|---|---|---|---|
+| `ID` | id |  | required |  | `CLR-CME-1` |  | Account |
+| `IM` | amount |  | required |  | `43200000` |  | IM |
+
+- Dated by the lake's business_date partition: `drishti.py lake build` writes each test-data file's day into it; the documents carry no date field of their own.
+
+### LE: Bank legal entity (`legal-entity`)
+
+The bank's own booking entity.
+
+**Class** fundamental · **Key** `ENTITY_ID` · **Dated by** `business_date` · **Cadence** daily · **Stored by** connector `reference-store` (plugin `delta`), table `<root>/reference/legal-entity/` · **Ids** `^LE-`.
+
+**Grain:** One row per bank legal entity per business date, keyed by ENTITY_ID. **Contract:** `contracts/legal-entity.contract.yaml` ([full contract page](../../../../docs/contracts/packs/core.md#le-bank-legal-entity-legal-entity)).
+
+| Column | Type | Key | Presence | Unit | Example or values | Link | Meaning |
+|---|---|---|---|---|---|---|---|
+| `ENTITY_ID` | id | key | required |  | `LE-FRA` (pattern `^LE-`) |  | The record's id (the business key) |
+| `NAME` | text |  | required |  | `Drishti Bank Europe AG`, `Drishti Bank Securities Inc.`, `Drishti Bank plc`, `Drishti Securities Japan K.K.` |  | Name |
+| `LEI` | text |  | required |  | `549300BLAOJ55ZE6F474`, `549300O1N13GO2II2096`, `549300Z8F6KKOGHS7Q83`, `549300Z9DXU4T18OK744` |  | LEI |
+| `JURISDICTION` | id |  | required |  | `DE` | `jurisdiction` | Jurisdiction |
+| `REGULATOR` | text |  | required |  | `ECB / BaFin`, `JFSA`, `PRA / FCA`, `SEC / CFTC / FINRA` |  | Regulator |
+| `DESKS` | record list |  | required |  |  |  | Nested: see nested DESKS[] |
+| `BOOKS` | record list |  | required |  |  |  | Nested: see nested BOOKS[] |
+
+Nested `DESKS[]`:
+
+| Column | Type | Key | Presence | Unit | Example or values | Link | Meaning |
+|---|---|---|---|---|---|---|---|
+| `ID` | id |  | required |  | `DESK-SFT` |  | Desk |
+| `NAME` | text |  | required |  | `Repo and securities lending` |  | Name |
+
+Nested `BOOKS[]`:
+
+| Column | Type | Key | Presence | Unit | Example or values | Link | Meaning |
+|---|---|---|---|---|---|---|---|
+| `BOOK` | id |  | required |  | `BOOK-SFT-1` (pattern `^BOOK-`) | `book` | Book: the book it refers to |
+| `DESK` | id |  | required |  | `Repo and securities lending` | `desk` | Desk: the desk it refers to |
+| `VAR` | amount |  | required |  | `14855706` |  | — |
+| `PNL` | amount |  | required |  | `-327989` |  | — |
+| `MTM` | amount |  | required |  | `8879873` |  | — |
+| `TRADES` | integer |  | required |  | `17` |  | — |
+
+**Links:** `JURISDICTION` → `jurisdiction`, `BOOKS[].BOOK` → `book`, `BOOKS[].DESK` → `desk`.
+
+- Dated by the lake's business_date partition: `drishti.py lake build` writes each test-data file's day into it; the documents carry no date field of their own.
+
+### BOOK: Book (`book`)
+
+A trading book: owner desk, trades and risk.
+
+**Class** fundamental · **Key** `BOOK_ID` · **Dated by** `business_date` · **Cadence** daily · **Stored by** connector `reference-store` (plugin `delta`), table `<root>/reference/book/` · **Ids** `^BOOK-`.
+
+**Grain:** One row per book per business date, keyed by BOOK_ID. **Contract:** `contracts/book.contract.yaml` ([full contract page](../../../../docs/contracts/packs/core.md#book-book-book)).
+
+| Column | Type | Key | Presence | Unit | Example or values | Link | Meaning |
+|---|---|---|---|---|---|---|---|
+| `BOOK_ID` | id | key | required |  | `BOOK-COMM-1` (pattern `^BOOK-`) | `path-book` | The record's id (the business key) |
+| `NAME` | text |  | required |  | `Commodities · book 1` |  | Name |
+| `DESK_NAME` | text |  | required |  | `Commodities` |  | Desk |
+| `TRADE_COUNT` | integer |  | required |  | `28` |  | Trades |
+| `MTM` | amount |  | required |  | `7760837` |  | MTM |
+| `DV01` | amount |  | required |  | `0` |  | DV01 |
+| `TOP_TRADES` | record list |  | required |  |  |  | Nested: see nested TOP_TRADES[] |
+| `DESK` | id |  | required |  | `DESK-COMM` (pattern `^DESK-`) | `desk` | Desk: the desk it refers to |
+| `ACCOUNTING_TREATMENT` | text |  | required |  | `Fair value (FVTPL)` |  | — |
+| `REGULATORY_BOOK` | text |  | required |  | `Trading book` |  | — |
+| `VOLCKER` | text |  | required |  | `Market making` |  | — |
+
+Nested `TOP_TRADES[]`:
+
+| Column | Type | Key | Presence | Unit | Example or values | Link | Meaning |
+|---|---|---|---|---|---|---|---|
+| `TRADE_ID` | id |  | required |  | `MX-20000340` (pattern `^(MX\|CLY)-\d+$`) | `trade` | Trade |
+| `STATUS` | text |  | required |  | `AMENDED`, `LIVE`, `NEW`, `VALIDATED` |  | — |
+| `PRODUCT` | text |  | required |  | `Calendar spread` |  | Product |
+| `ASSET_CLASS` | text |  | required |  | `Commodity` |  | — |
+| `CURRENCY` | text |  | required |  | `AUD`, `CAD`, `CHF`, `EUR`, `GBP`, `JPY`, `USD` |  | — |
+| `BOOK` | id |  | required |  | `BOOK-COMM-1` |  | — |
+| `NOTIONAL` | amount |  | required |  | `143000000.0` |  | Notional |
+| `MATURITY` | date |  | required |  | `2026-10-07` |  | Maturity |
+| `MATURITY_BUCKET` | text |  | required |  | `0-1Y`, `1-2Y`, `10Y+`, `2-5Y`, `5-10Y` |  | — |
+| `MTM` | amount |  | required |  | `3656838` |  | MTM |
+
+**Links:** `BOOK_ID` → `path-book`, `DESK` → `desk`, `TOP_TRADES[].TRADE_ID` → `trade`.
+
+- Dated by the lake's business_date partition: `drishti.py lake build` writes each test-data file's day into it; the documents carry no date field of their own.
+
+### DESK: Desk (`desk`)
+
+A trading desk: books, limits and risk results.
+
+**Class** fundamental · **Key** `DESK_ID` · **Dated by** `business_date` · **Cadence** daily · **Stored by** connector `reference-store` (plugin `delta`), table `<root>/reference/desk/` · **Ids** `^DESK-`.
+
+**Grain:** One row per desk per business date, keyed by DESK_ID. **Contract:** `contracts/desk.contract.yaml` ([full contract page](../../../../docs/contracts/packs/core.md#desk-desk-desk)).
+
+| Column | Type | Key | Presence | Unit | Example or values | Link | Meaning |
+|---|---|---|---|---|---|---|---|
+| `DESK_ID` | id | key | required |  | `DESK-COMM` (pattern `^DESK-`) |  | The record's id (the business key) |
+| `NAME` | text |  | required |  | `Commodities` |  | Name |
+| `HEAD` | text |  | required |  | `T. Brennan` |  | Head |
+| `BOOKS` | record list |  | required |  |  |  | Nested: see nested BOOKS[] |
+| `MTM` | amount |  | required |  | `14609595` |  | MTM |
+| `LEGAL_ENTITY` | id |  | required |  | `LE-NY` (pattern `^LE-`) | `legal-entity` | Legal entity: the legal-entity it refers to |
+| `ASSET_CLASSES` | text list |  | required |  |  |  | — |
+| `POSITIONS` | record list |  | required |  |  |  | Nested: see nested POSITIONS[] |
+
+Nested `BOOKS[]`:
+
+| Column | Type | Key | Presence | Unit | Example or values | Link | Meaning |
+|---|---|---|---|---|---|---|---|
+| `ID` | id |  | required |  | `BOOK-COMM-1` |  | Book |
+| `TRADES` | integer |  | required |  | `28` |  | Trades |
+| `MTM` | amount |  | required |  | `7760837` |  | MTM |
+
+Nested `POSITIONS[]`:
+
+| Column | Type | Key | Presence | Unit | Example or values | Link | Meaning |
+|---|---|---|---|---|---|---|---|
+| `TRADE_ID` | id |  | required |  | `MX-20000291` (pattern `^(MX\|CLY)-\d+$`) | `trade` | Trade |
+| `BOOK` | id |  | required |  | `BOOK-COMM-1` (pattern `^BOOK-`) | `book` | Book |
+| `CURRENCY` | text |  | required |  | `AUD`, `CAD`, `CHF`, `EUR`, `GBP`, `JPY`, `USD` |  | Currency |
+| `FAMILY` | text |  | required |  | `future` |  | Family |
+| `MTM` | amount |  | required |  | `324697` |  | MTM |
+
+**Links:** `LEGAL_ENTITY` → `legal-entity`, `POSITIONS[].TRADE_ID` → `trade`, `POSITIONS[].BOOK` → `book`.
+
+- Dated by the lake's business_date partition: `drishti.py lake build` writes each test-data file's day into it; the documents carry no date field of their own.
+- The desk's VaR is the engine's (DESK:<id>), computed as the page opens (VAR_ENGINE); VAR_99 and VAR_RESULT left the record in 2.8.0.
+
+### TRDR: Trader (`trader`)
+
+A trader and their books.
+
+**Class** fundamental · **Key** `TRADER_ID` · **Dated by** `business_date` · **Cadence** daily · **Stored by** connector `reference-store` (plugin `delta`), table `<root>/reference/trader/` · **Ids** `^TRDR-`.
+
+**Grain:** One row per trader per business date, keyed by TRADER_ID. **Contract:** `contracts/trader.contract.yaml` ([full contract page](../../../../docs/contracts/packs/core.md#trdr-trader-trader)).
+
+| Column | Type | Key | Presence | Unit | Example or values | Link | Meaning |
+|---|---|---|---|---|---|---|---|
+| `TRADER_ID` | id | key | required |  | `TRDR-ASHAH` (pattern `^TRDR-`) | `trader` | The record's id (the business key) |
+| `NAME` | text |  | required |  | `A. Shah` |  | Name |
+| `DESK_NAME` | text |  | required |  | `Rates · Swaps and options` |  | Desk |
+| `TRADE_COUNT` | integer |  | required |  | `76` |  | Trades |
+| `BOOKS` | record list |  | required |  |  |  | Nested: see nested BOOKS[] |
+| `DESK` | id |  | required |  | `DESK-RATES` (pattern `^DESK-`) | `desk` | Desk: the desk it refers to |
+
+Nested `BOOKS[]`:
+
+| Column | Type | Key | Presence | Unit | Example or values | Link | Meaning |
+|---|---|---|---|---|---|---|---|
+| `ID` | id |  | required |  | `BOOK-RATES-1` |  | Book |
+
+**Links:** `TRADER_ID` → `trader`, `DESK` → `desk`.
+
+- Dated by the lake's business_date partition: `drishti.py lake build` writes each test-data file's day into it; the documents carry no date field of their own.
+
+### CAL: Holiday calendar (`calendar`)
+
+Business-day calendar (USNY, TARGET, GBLO, JPTO…).
+
+**Class** fundamental · **Key** `CALENDAR_ID` · **Dated by** `business_date` · **Cadence** daily · **Stored by** connector `reference-store` (plugin `delta`), table `<root>/reference/calendar/` · **Ids** `^CAL-`.
+
+**Grain:** One row per holiday calendar per business date, keyed by CALENDAR_ID. **Contract:** `contracts/calendar.contract.yaml` ([full contract page](../../../../docs/contracts/packs/core.md#cal-holiday-calendar-calendar)).
+
+| Column | Type | Key | Presence | Unit | Example or values | Link | Meaning |
+|---|---|---|---|---|---|---|---|
+| `CALENDAR_ID` | id | key | required |  | `CAL-EUTA` (pattern `^CAL-`) |  | The record's id (the business key) |
+| `NAME` | text |  | required |  | `TARGET2` |  | Name |
+| `HOLIDAYS` | record list |  | required |  |  |  | Nested: see nested HOLIDAYS[] |
+| `HOLIDAYS_2026` | integer |  | required |  | `5` |  | Holidays 2026 |
+| `HOLIDAYS_2027` | integer |  | required |  | `3` |  | Holidays 2027 |
+| `NEXT_HOLIDAY` | text |  | required |  | `Christmas Day` |  | Next holiday |
+| `NEXT_HOLIDAY_DATE` | date |  | required |  | `2026-12-25` |  | On |
+| `WEEKEND` | text list |  | required |  |  |  | — |
+
+Nested `HOLIDAYS[]`:
+
+| Column | Type | Key | Presence | Unit | Example or values | Link | Meaning |
+|---|---|---|---|---|---|---|---|
+| `DATE` | date |  | required |  | `2026-01-01` |  | Date |
+| `NAME` | text |  | required |  | `New Year's Day` |  | Holiday |
+| `WEEKDAY` | text |  | required |  | `Friday`, `Monday`, `Thursday`, `Tuesday`, `Wednesday` |  | Day |
+| `YEAR` | integer |  | required |  | `2026` |  | — |
+| `OBSERVED` | text |  | optional |  | `Yes` |  | Observed |
+
+- Dated by the lake's business_date partition: `drishti.py lake build` writes each test-data file's day into it; the documents carry no date field of their own.
+
+### CLR: Clearing account (`clearing-account`)
+
+An account at a CCP holding cleared trades and margin.
+
+**Class** fundamental · **Key** `ACCOUNT_ID` · **Dated by** `business_date` · **Cadence** daily · **Stored by** connector `reference-store` (plugin `delta`), table `<root>/reference/clearing-account/` · **Ids** `^CLR-`.
+
+**Grain:** One row per clearing account per business date, keyed by ACCOUNT_ID. **Contract:** `contracts/clearing-account.contract.yaml` ([full contract page](../../../../docs/contracts/packs/core.md#clr-clearing-account-clearing-account)).
+
+| Column | Type | Key | Presence | Unit | Example or values | Link | Meaning |
+|---|---|---|---|---|---|---|---|
+| `ACCOUNT_ID` | id | key | required |  | `CLR-CME-1` (pattern `^CLR-`) |  | The record's id (the business key) |
+| `CCP_NAME` | text |  | required |  | `CME Clearing`, `Eurex Clearing AG`, `ICE Clear Europe`, `Japan Securities Clearing Corp.`, `LCH Ltd` |  | CCP |
+| `IM` | amount |  | required |  | `43200000` |  | IM |
+| `VM_TODAY` | integer |  | required |  | `-559393` |  | VM today |
+| `EXCESS` | integer |  | required |  | `8640000` |  | Excess |
+| `TRADES` | record list |  | required |  |  |  | Nested: see nested TRADES[] |
+| `CCP` | id |  | required |  | `CCP-CME` (pattern `^CCP-`) | `ccp` | CCP: the ccp it refers to |
+
+Nested `TRADES[]`:
+
+| Column | Type | Key | Presence | Unit | Example or values | Link | Meaning |
+|---|---|---|---|---|---|---|---|
+| `TRADE_ID` | id |  | required |  | `MX-20000067` (pattern `^(MX\|CLY)-\d+$`) | `trade` | Trade |
+| `STATUS` | text |  | required |  | `LIVE` |  | — |
+| `PRODUCT` | text |  | required |  | `Short-term interest rate future` |  | Product |
+| `ASSET_CLASS` | text |  | required |  | `Commodity`, `Equity`, `Fixed income`, `Rates` |  | — |
+| `CURRENCY` | text |  | required |  | `AUD`, `CAD`, `CHF`, `EUR`, `GBP`, `JPY`, `USD` |  | — |
+| `BOOK` | id |  | required |  | `BOOK-RATES-2` (pattern `^BOOK-`) | `book` | Book: the book it refers to |
+| `NOTIONAL` | amount |  | required |  | `201000000.0` |  | Notional |
+| `MATURITY` | date |  | required |  | `2027-05-21` |  | Maturity |
+| `MATURITY_BUCKET` | text |  | required |  | `0-1Y`, `1-2Y`, `10Y+`, `2-5Y`, `5-10Y` |  | — |
+| `MTM` | amount |  | required |  | `197399` |  | MTM |
+
+**Links:** `CCP` → `ccp`, `TRADES[].TRADE_ID` → `trade`, `TRADES[].BOOK` → `book`.
+
+- Dated by the lake's business_date partition: `drishti.py lake build` writes each test-data file's day into it; the documents carry no date field of their own.
+
+## Data retrieval
+
+Where each kind's data comes from, how it reaches the lake and how to check it. Three origins: **external** data, fetched from a public source by the pack's refresh script (each source, its licence and worked examples on the [External data](../../../../docs/guides/PUBLIC_DATA.md) help page); **synthetic** test data, written by a generator with fictitious names; **computed** by a Drishti engine when it is asked, never stored by a source.
+
+| Command | Kind | Origin | How it reaches Drishti |
+|---|---|---|---|
+| `CPTY` | `counterparty` | synthetic: `python3 tools/testdata/make_testdata.py` (and `python3 tools/packgen/banking/make_data.py` for samples/) | `data/testdata/core/counterparty/` → `lake demo` → connector `reference-store` |
+| `GRP` | `counterparty-group` | synthetic: `python3 tools/testdata/make_testdata.py` (and `python3 tools/packgen/banking/make_data.py` for samples/) | `data/testdata/core/counterparty-group/` → `lake demo` → connector `reference-store` |
+| `ISS` | `issuer` | synthetic: `python3 tools/testdata/make_testdata.py` (and `python3 tools/packgen/banking/make_data.py` for samples/) | `data/testdata/core/issuer/` → `lake demo` → connector `reference-store` |
+| `CCP` | `ccp` | synthetic: `python3 tools/testdata/make_testdata.py` (and `python3 tools/packgen/banking/make_data.py` for samples/) | `data/testdata/core/ccp/` → `lake demo` → connector `reference-store` |
+| `LE` | `legal-entity` | synthetic: `python3 tools/testdata/make_testdata.py` (and `python3 tools/packgen/banking/make_data.py` for samples/) | `data/testdata/core/legal-entity/` → `lake demo` → connector `reference-store` |
+| `BOOK` | `book` | synthetic: `python3 tools/testdata/make_testdata.py` (and `python3 tools/packgen/banking/make_data.py` for samples/) | `data/testdata/core/book/` → `lake demo` → connector `reference-store` |
+| `DESK` | `desk` | synthetic: `python3 tools/testdata/make_testdata.py` (and `python3 tools/packgen/banking/make_data.py` for samples/) | `data/testdata/core/desk/` → `lake demo` → connector `reference-store` |
+| `TRDR` | `trader` | synthetic: `python3 tools/testdata/make_testdata.py` (and `python3 tools/packgen/banking/make_data.py` for samples/) | `data/testdata/core/trader/` → `lake demo` → connector `reference-store` |
+| `CAL` | `calendar` | synthetic: `python3 tools/testdata/make_testdata.py` (and `python3 tools/packgen/banking/make_data.py` for samples/) | `data/testdata/core/calendar/` → `lake demo` → connector `reference-store` |
+| `CLR` | `clearing-account` | synthetic: `python3 tools/testdata/make_testdata.py` (and `python3 tools/packgen/banking/make_data.py` for samples/) | `data/testdata/core/clearing-account/` → `lake demo` → connector `reference-store` |
+
+### Generators
+
+| Generator | Writes | Check |
+|---|---|---|
+| `python3 tools/testdata/make_testdata.py` | sixty business days of every dataset of the seven packs into data/testdata/<pack>/<kind>/ (the universe: tools/testdata/universe.py; deterministic, fictitious names) | `python3 tools/testdata/make_testdata.py --check` |
+| `python3 tools/packgen/banking/make_data.py` | the pack's few reference documents in samples/ (from the taxonomy, tools/packgen/banking/taxonomy.py) | `python3 tools/packgen/banking/make_data.py --check` |
+
+### Into the lake, checking, offline
+
+- **The lake.** `python3 tools/drishti.py lake demo` reads `data/testdata/testdata.yaml` and writes every dataset (test data, the packs' samples and the committed public-data snapshots) into `<data>/delta/<domain>/<kind>/`, where the pack's Delta connector serves it; a computed kind needs nothing loaded. `lake build` loads your own large JSON exports the same way ([Tools](../../../../docs/guides/TOOLS.md)).
+- **Checking.** `python3 tools/contracts.py check` compares every contract with the pack and its data; each generator's `--check` (above) fails when the committed files differ from what it would write; in the console, `<MNEMONIC> <GO>` lists a kind and the pack's code opens its overview with the count of each kind.
+- **Offline.** Everything committed works without a network: the test data, the samples and the public-data snapshots are in the repository and `lake demo` reads only them. A refresh script runs offline from its download cache (`--offline`); a connector that reaches the internet (news, yfinance, the public-data feeds) is off as shipped and never starts on a machine configured offline (`drishti.offline.plugins`).

@@ -124,3 +124,421 @@ After a refresh, rebuild the lake so the server reads the new snapshot: `python3
 
 The picture
 above is made by `tools/packgen/us_equities/shot.py` (its own scratch server and console on 18742 and 18743).
+
+## Data contracts
+
+Every kind of the pack has a data contract: a YAML file beside the pack (`config/packs/us-equities/contracts/<kind>.contract.yaml`, checked against `tools/contracts.schema.json`) that says what one record is, its key, how it is stored and dated, and every column. This section is generated from those files; the same files give the contract pages ([docs/contracts/packs/us-equities.md](../../../../docs/contracts/packs/us-equities.md), with each kind's validation rules and the points still to review). Check them against the pack and its data with `python3 tools/contracts.py check` (or `drishti.py contract check`); show one with `python3 tools/contracts.py show <MNEMONIC>`.
+
+| Command | Kind | Class | Key | Grain | Columns |
+|---|---|---|---|---|---|
+| `USEQ` | `us-company` | fundamental | `TICKER` | One row per us company, keyed by TICKER. | 68 |
+| `IDX` | `index-membership` | fundamental | `INDEX` | One row per index members, keyed by INDEX. | 20 |
+| `SIC` | `sic-sector` | computed | `SIC` | One record per SIC of the us-company records, computed when asked. | 29 |
+| `EDGAR` | `filing-feed` | fundamental | `FEED` | One row per edgar filings browser, keyed by FEED. | 22 |
+| `FILING` | `filing` | fundamental | `ACCESSION` | One row per sec filing, keyed by ACCESSION. | 15 |
+| `FACT` | `financial-fact` | fundamental | `FACT_ID` | One row per financial fact, keyed by FACT_ID. | 17 |
+| `PXH` | `price-history` | fundamental | — | One row per price history (live, internal use only), keyed by a key to be confirmed. | 23 |
+
+*Class*: **fundamental** data is delivered by a source system and stored; **input** is stored data an engine reads; **computed** is worked out by Drishti when asked and never stored by a source; **drishti-owned** is kept by Drishti itself.
+
+### USEQ: US company (`us-company`)
+
+A US listed company: key facts, ten years of annual financials, recent SEC filings and index memberships, from public data.
+
+**Class** fundamental · **Key** `TICKER` · **Dated by** `snapshot` · **Cadence** static · **Stored by** connector `us-equities-store` (plugin `delta`), table `<root>/us-equities/us-company/`.
+
+**Grain:** One row per us company, keyed by TICKER. **Contract:** `contracts/us-company.contract.yaml` ([full contract page](../../../../docs/contracts/packs/us-equities.md#useq-us-company-us-company)).
+
+| Column | Type | Key | Presence | Unit | Example or values | Link | Meaning |
+|---|---|---|---|---|---|---|---|
+| `TICKER` | id | key | required |  | `AAPL` |  | Ticker |
+| `NAME` | text |  | required |  | `Apple Inc.` |  | — |
+| `SEC_NAME` | text |  | required |  | `Apple Inc.` |  | — |
+| `CIK` | text |  | required |  | `0000320193` |  | — |
+| `OTHER_TICKERS` | text |  | optional |  | `C-PN, C-PR` |  | — |
+| `EXCHANGE` | text |  | required |  | `Nasdaq` |  | — |
+| `LISTING` | text |  | required |  | `Nasdaq Global Select Market` |  | — |
+| `SIC` | text |  | required |  | `3571` |  | — |
+| `SIC_DESCRIPTION` | text |  | required |  | `Electronic Computers` |  | Industry (SIC) |
+| `DIVISION` | text |  | required |  | `D` |  | — |
+| `SECTOR` | text |  | required |  | `Manufacturing` |  | — |
+| `STATE_OF_INCORPORATION` | text |  | optional |  | `CA` |  | — |
+| `FISCAL_YEAR_END` | text |  | optional |  | `09-26` |  | — |
+| `FILER_CATEGORY` | text |  | optional |  | `Large accelerated filer` |  | — |
+| `HEADQUARTERS` | text |  | optional |  | `Cupertino` |  | — |
+| `BUSINESS_ADDRESS` | text |  | optional |  | `CUPERTINO, CA` |  | — |
+| `FOUNDED` | date |  | optional |  | `1976-04-01` |  | — |
+| `WEBSITE` | text |  | optional |  | `https://apple.com/qa/` |  | — |
+| `PHONE` | text |  | required |  | `(408) 996-1010` |  | — |
+| `LEI` | text |  | optional |  | `HWUPKR0MPOU8FGXBT394` |  | — |
+| `LEI_LEGAL_NAME` | text |  | optional |  | `Apple Inc.` |  | — |
+| `LEI_STATUS` | text |  | optional |  | `DUPLICATE`, `ISSUED`, `LAPSED`, `RETIRED` |  | — |
+| `LEI_SOURCE` | text |  | optional |  | `GLEIF, LEI from Wikidata`, `GLEIF, matched by legal name`, `Wikidata` |  | — |
+| `INDEXES` | record list |  | required |  |  |  | Nested: see nested INDEXES[] |
+| `INDEX_TEXT` | text |  | required |  | `Dow Jones Industrial Average, Nasdaq-100, S&P 500` |  | — |
+| `CURRENCY` | text |  | required |  | `CAD`, `EUR`, `GBP`, `USD` |  | — |
+| `FISCAL_YEAR` | integer |  | required |  | `2025` |  | Fiscal year |
+| `REVENUE` | amount |  | optional |  | `416161000000` |  | Revenue |
+| `NET_INCOME` | amount |  | required |  | `112010000000` |  | Net income |
+| `ASSETS` | integer |  | required |  | `359241000000` |  | — |
+| `LIABILITIES` | integer |  | required |  | `285508000000` |  | — |
+| `EQUITY` | integer |  | required |  | `73733000000` | `equity` | Equity: the equity it refers to |
+| `EPS_DILUTED` | amount |  | optional |  | `7.46` |  | Diluted EPS |
+| `SHARES_OUTSTANDING` | integer |  | optional |  | `14776353000` |  | — |
+| `FINANCIALS` | record list |  | required |  |  |  | Nested: see nested FINANCIALS[] |
+| `FACTS` | record list |  | required |  |  |  | Nested: see nested FACTS[] |
+| `FILINGS` | record list |  | required |  |  |  | Nested: see nested FILINGS[] |
+| `INDEX_IDS` | id list |  | required |  |  | `index-membership` | Index: the index-membership it refers to |
+| `FACT_IDS` | id list |  | required |  |  | `financial-fact` | Financial fact: the financial-fact it refers to |
+| `FILING_IDS` | id list |  | required |  |  | `filing` | Filing: the filing it refers to |
+| `LATEST_FILING` | date |  | required |  | `2026-10-22` |  | — |
+| `SIC_SECTOR` | id |  | required |  | `3571` | `sic-sector` | SIC sector: the sic-sector it refers to |
+| `PRICE_HISTORY` | id |  | required |  | `PX-AAPL` |  | — |
+| `PROVENANCE` | record |  | required |  |  |  | Nested: see nested PROVENANCE |
+| `ECONOMY` | id |  | optional |  | `ECON-USA` (pattern `^ECON-`) | `economy` | Economy: the economy it refers to |
+| `MARKET_WATCH` | id |  | optional |  | `CO-AAPL` (pattern `^CO-`) | `listed-company` | Market watch: the listed-company it refers to |
+
+Nested `INDEXES[]`:
+
+| Column | Type | Key | Presence | Unit | Example or values | Link | Meaning |
+|---|---|---|---|---|---|---|---|
+| `INDEX` | text |  | required |  | `BANKS-CA`, `BANKS-UK`, `BANKS-US`, `DJIA`, `NDX`, `SP500` |  | — |
+| `NAME` | text |  | required |  | `Canadian banks`, `Dow Jones Industrial Average`, `Major UK banks`, `Major US banks`, `Nasdaq-100`, `S&P 500` |  | — |
+| `SINCE` | date |  | optional |  | `1998-05-31` |  | Member since |
+
+Nested `FINANCIALS[]`:
+
+| Column | Type | Key | Presence | Unit | Example or values | Link | Meaning |
+|---|---|---|---|---|---|---|---|
+| `YEAR` | integer |  | required |  | `2016` |  | — |
+| `PERIOD_END` | date |  | optional |  | `2016-09-24` |  | — |
+| `REVENUE` | amount |  | optional |  | `215639000000` |  | — |
+| `NET_INCOME` | amount |  | optional |  | `45687000000` |  | — |
+| `ASSETS` | integer |  | optional |  | `321686000000` |  | — |
+| `LIABILITIES` | integer |  | optional |  | `193437000000` |  | — |
+| `EQUITY` | integer |  | optional |  | `128249000000` | `equity` | Equity: the equity it refers to |
+| `EPS_DILUTED` | amount |  | optional |  | `8.31` |  | — |
+
+Nested `FACTS[]`:
+
+| Column | Type | Key | Presence | Unit | Example or values | Link | Meaning |
+|---|---|---|---|---|---|---|---|
+| `FACT` | text |  | required |  | `AAPL-REVENUE` |  | — |
+| `LABEL` | text |  | required |  | `Diluted EPS`, `Net income`, `Revenue`, `Shares outstanding`, `Stockholders' equity`, `Total assets`, `Total liabilities` |  | — |
+
+Nested `FILINGS[]`:
+
+| Column | Type | Key | Presence | Unit | Example or values | Link | Meaning |
+|---|---|---|---|---|---|---|---|
+| `ACCESSION` | text |  | required |  | `0001140361-26-040540` |  | — |
+| `FORM` | text |  | required |  | `4` |  | — |
+| `FILED` | date |  | required |  | `2026-10-22` |  | — |
+| `REPORT_DATE` | date |  | optional |  | `2026-10-20` |  | — |
+| `DESCRIPTION` | text |  | required |  | `Change in beneficial ownership (insider)` |  | — |
+
+Nested `PROVENANCE`:
+
+| Column | Type | Key | Presence | Unit | Example or values | Link | Meaning |
+|---|---|---|---|---|---|---|---|
+| `SOURCE` | text |  | required |  | `U.S. Securities and Exchange Commission, EDGAR (submissions…` |  | — |
+| `RETRIEVED_AT` | date |  | required |  | `2026-10-24` |  | — |
+| `LICENCE` | text |  | required |  | `Public domain (SEC EDGAR); CC0 1.0 (Wikidata, GLEIF)` |  | — |
+| `URL` | text |  | required |  | `https://www.sec.gov/cgi-bin/browse-edgar?action=getcompany&…` |  | — |
+
+**Links:** `EQUITY` → `equity`, `INDEX_IDS` → `index-membership`, `FACT_IDS` → `financial-fact`, `FILING_IDS` → `filing`, `SIC_SECTOR` → `sic-sector`, `ECONOMY` → `economy`, `MARKET_WATCH` → `listed-company`, `FINANCIALS[].EQUITY` → `equity`.
+
+- NET_MARGIN, REVENUE_GROWTH and FINANCIALS[].NET_MARGIN left the record in 2.9.2: the pages compute them from REVENUE, NET_INCOME and FINANCIALS (docs/guides/GROUPINGS_ANALYTICS_GUIDE.md section 16).
+
+### IDX: Index members (`index-membership`)
+
+An equity index's members (Dow 30, Nasdaq-100, S&P 500) as Wikidata records them; a click opens the member's summary beside.
+
+**Class** fundamental · **Key** `INDEX` · **Dated by** `snapshot` · **Cadence** static · **Stored by** connector `us-equities-store` (plugin `delta`), table `<root>/us-equities/index-membership/`.
+
+**Grain:** One row per index members, keyed by INDEX. **Contract:** `contracts/index-membership.contract.yaml` ([full contract page](../../../../docs/contracts/packs/us-equities.md#idx-index-members-index-membership)).
+
+| Column | Type | Key | Presence | Unit | Example or values | Link | Meaning |
+|---|---|---|---|---|---|---|---|
+| `INDEX` | id | key | required |  | `DJIA` |  | The record's id (the business key) |
+| `NAME` | text |  | required |  | `Dow Jones Industrial Average` |  | Index |
+| `MEMBERS` | integer |  | required |  | `34` |  | Members |
+| `ROWS` | record list |  | required |  |  |  | Nested: see nested ROWS[] |
+| `PROVENANCE` | record |  | required |  |  |  | Nested: see nested PROVENANCE |
+
+Nested `ROWS[]`:
+
+| Column | Type | Key | Presence | Unit | Example or values | Link | Meaning |
+|---|---|---|---|---|---|---|---|
+| `TICKER` | text |  | required |  | `AAPL` |  | — |
+| `NAME` | text |  | required |  | `Apple Inc.` |  | — |
+| `SECTOR` | text |  | required |  | `Finance, Insurance and Real Estate`, `Manufacturing`, `Retail Trade`, `Services`, `Transportation, Communications, Electric, Gas and Sanitary Services` |  | — |
+| `SIC` | text |  | required |  | `3571` |  | — |
+| `SIC_DESCRIPTION` | text |  | required |  | `Electronic Computers` |  | — |
+| `EXCHANGE` | text |  | required |  | `Nasdaq` |  | — |
+| `REVENUE` | amount |  | optional |  | `416161000000` |  | — |
+| `NET_INCOME` | amount |  | required |  | `112010000000` |  | — |
+| `CURRENCY` | text |  | required |  | `USD` |  | — |
+| `FISCAL_YEAR` | integer |  | required |  | `2025` |  | — |
+| `SINCE` | date |  | optional |  | `2000-06-05` |  | — |
+
+Nested `PROVENANCE`:
+
+| Column | Type | Key | Presence | Unit | Example or values | Link | Meaning |
+|---|---|---|---|---|---|---|---|
+| `SOURCE` | text |  | required |  | `Wikidata (index membership as Wikidata records it); SEC EDG…` |  | — |
+| `LICENCE` | text |  | required |  | `CC0 1.0 (Wikidata); public domain (SEC EDGAR)` |  | — |
+| `NOTE` | text |  | required |  | `Membership only. Index weights and levels are proprietary t…` |  | — |
+| `RETRIEVED_AT` | date |  | required |  | `2026-10-24` |  | — |
+
+- ROWS[].NET_MARGIN left the record in 2.9.2: a member's net margin is computed from its revenue and net income (docs/guides/GROUPINGS_ANALYTICS_GUIDE.md section 16).
+- SECTORS, REVENUE, NET_INCOME and BY_SECTOR left the record in 2.9.2: the page sums the members' rows (USD reporters) and counts their SIC divisions (docs/guides/GROUPINGS_ANALYTICS_GUIDE.md section 16). The membership (ROWS) and MEMBERS stay.
+
+### SIC: SIC sector (`sic-sector`)
+
+A sector by its SIC code, computed from the companies when asked: its companies ranked by revenue; a click opens a company's summary beside.
+
+**Class** computed · **Key** `SIC` · **Dated by** `on request` · **Cadence** on change · **Stored by** connector `us-equities-groupings` (plugin `derived`).
+
+**Grain:** One record per SIC of the us-company records, computed when asked. **Contract:** `contracts/sic-sector.contract.yaml` ([full contract page](../../../../docs/contracts/packs/us-equities.md#sic-sic-sector-sic-sector)).
+
+| Column | Type | Key | Presence | Unit | Example or values | Link | Meaning |
+|---|---|---|---|---|---|---|---|
+| `SIC` | id | key | required |  |  |  | The value the us-company records are grouped by ($.SIC; each also joins 'ALL') |
+| `TICKERS` | id list |  | derived |  |  |  | The ids of the grouped us-company records (at most 100000) |
+| `COMPANIES` | integer |  | derived |  |  |  | The companies whose SIC is the key (every currency) |
+| `DESCRIPTIONS` | text list |  | derived |  |  |  | A helper of the page fields: distinct over the group of: $.SIC_DESCRIPTION |
+| `DIVISIONS` | text list |  | derived |  |  |  | A helper of the page fields: distinct over the group of: $.DIVISION |
+| `SECTORS` | text list |  | derived |  |  |  | A helper of the page fields: distinct over the group of: $.SECTOR |
+| `CODE_LIST` | text list |  | derived |  |  |  | A helper of the page fields: distinct over the group of: $.SIC |
+| `REVENUE` | amount |  | derived |  |  |  | The latest fiscal year revenue summed over the companies that report in USD |
+| `NET_INCOME` | amount |  | derived |  |  |  | The latest fiscal year net income summed over the USD reporters |
+| `NON_USD` | integer |  | derived |  |  |  | Companies that report in another currency: counted, not summed |
+| `PROVENANCE` | record |  | derived |  |  |  | The first company's source and licence (SEC EDGAR) |
+| `ROWS` | record list |  | derived |  |  |  | One row per grouped us-company record |
+| `DESCRIPTION` | text |  | derived |  |  |  | The SIC code's description as the SEC gives it ('Every SIC code of the companies covered' for ALL) |
+| `DIVISION` | text |  | derived |  |  |  | The SIC division letter |
+| `SECTOR` | text |  | derived |  |  |  | The SIC division name |
+| `CODES` | integer |  | derived |  |  |  | The number of SIC codes among the companies (1, or every code on ALL) |
+| `NET_MARGIN` | rate |  | derived |  |  |  | NET_INCOME / REVENUE x 100 (USD reporters), in per cent |
+| `BY_REVENUE` | record list |  | derived |  |  |  | The USD reporters with revenue, largest first, the top 15 (rows of ROWS) |
+| `BY_DIVISION` | record list |  | derived |  |  |  | Revenue of the USD reporters by SIC division: label, value, count; largest first |
+
+Nested `ROWS[]`:
+
+| Column | Type | Key | Presence | Unit | Example or values | Link | Meaning |
+|---|---|---|---|---|---|---|---|
+| `TICKER` | unknown |  | optional |  |  |  | From the us-company record: $.TICKER |
+| `NAME` | unknown |  | optional |  |  |  | From the us-company record: $.NAME |
+| `EXCHANGE` | unknown |  | optional |  |  |  | From the us-company record: $.EXCHANGE |
+| `INDEX_TEXT` | unknown |  | optional |  |  |  | From the us-company record: $.INDEX_TEXT |
+| `SECTOR` | unknown |  | optional |  |  |  | From the us-company record: $.SECTOR |
+| `REVENUE` | unknown |  | optional |  |  |  | From the us-company record: $.REVENUE |
+| `NET_INCOME` | unknown |  | optional |  |  |  | From the us-company record: $.NET_INCOME |
+| `NET_MARGIN` | unknown |  | optional |  |  |  | From the us-company record: $.REVENUE ? $.NET_INCOME / $.REVENUE * 100 : null |
+| `CURRENCY` | unknown |  | optional |  |  |  | From the us-company record: $.CURRENCY |
+| `FISCAL_YEAR` | unknown |  | optional |  |  |  | From the us-company record: $.FISCAL_YEAR |
+
+- Computed when asked by the derived connector us-equities-groupings from every us-company (since 2.9.2, which retired the stored page): docs/guides/GROUPINGS_ANALYTICS_GUIDE.md (Part II). Totals add the USD reporters only.
+
+### EDGAR: EDGAR filings browser (`filing-feed`)
+
+The filings browser: the latest SEC filings of the covered companies, of every form or one; a click opens a filing beside.
+
+**Class** fundamental · **Key** `FEED` · **Dated by** `snapshot` · **Cadence** static · **Stored by** connector `us-equities-store` (plugin `delta`), table `<root>/us-equities/filing-feed/`.
+
+**Grain:** One row per edgar filings browser, keyed by FEED. **Contract:** `contracts/filing-feed.contract.yaml` ([full contract page](../../../../docs/contracts/packs/us-equities.md#edgar-edgar-filings-browser-filing-feed)).
+
+| Column | Type | Key | Presence | Unit | Example or values | Link | Meaning |
+|---|---|---|---|---|---|---|---|
+| `FEED` | id | key | required |  | `8-K` |  | The record's id (the business key) |
+| `NAME` | text |  | required |  | `Current reports` |  | Forms |
+| `FORM` | text |  | optional |  | `8-K` |  | — |
+| `FILINGS` | integer |  | required |  | `300` |  | Filings |
+| `COMPANIES` | integer |  | required |  | `222` |  | Companies |
+| `LATEST` | date |  | required |  | `2026-10-23` |  | Latest |
+| `EARLIEST` | date |  | required |  | `2026-10-02` |  | Earliest shown |
+| `ROWS` | record list |  | required |  |  |  | Nested: see nested ROWS[] |
+| `BY` | record list |  | required |  |  |  | Nested: see nested BY[] |
+| `BY_TITLE` | text |  | required |  | `Filings by company` |  | — |
+| `PROVENANCE` | record |  | required |  |  |  | Nested: see nested PROVENANCE |
+
+Nested `ROWS[]`:
+
+| Column | Type | Key | Presence | Unit | Example or values | Link | Meaning |
+|---|---|---|---|---|---|---|---|
+| `ACCESSION` | text |  | required |  | `0001628280-26-067044` |  | — |
+| `FILED` | date |  | required |  | `2026-10-23` |  | — |
+| `COMPANY` | id |  | required |  | `PNC` | `us-company` | Company: the us-company it refers to |
+| `COMPANY_NAME` | text |  | required |  | `PNC Financial Services` |  | — |
+| `FORM` | text |  | required |  | `10-K`, `10-Q`, `144`, `4`, `424B2`, `8-K`, `DEF 14A`, `FWP` |  | — |
+| `DESCRIPTION` | text |  | required |  | `Annual report`, `Change in beneficial ownership (insider)`, `Current report`, `Definitive proxy statement`, `Free writing prospectus`, `Notice of proposed sale of securities`, `Prospectus`, `Quarterly report` |  | — |
+
+Nested `BY[]`:
+
+| Column | Type | Key | Presence | Unit | Example or values | Link | Meaning |
+|---|---|---|---|---|---|---|---|
+| `LABEL` | text |  | required |  | `NWSA` |  | — |
+| `VALUE` | amount |  | required |  | `9` |  | — |
+
+Nested `PROVENANCE`:
+
+| Column | Type | Key | Presence | Unit | Example or values | Link | Meaning |
+|---|---|---|---|---|---|---|---|
+| `SOURCE` | text |  | required |  | `U.S. Securities and Exchange Commission, EDGAR (submissions…` |  | — |
+| `RETRIEVED_AT` | date |  | required |  | `2026-10-24` |  | — |
+| `LICENCE` | text |  | required |  | `Public domain (U.S. Government work); SEC EDGAR fair access…` |  | — |
+
+**Links:** `ROWS[].COMPANY` → `us-company`.
+
+### FILING: SEC filing (`filing`)
+
+One SEC filing: its company, form, dates, 8-K items and its links on EDGAR (metadata only; the document stays on sec.gov).
+
+**Class** fundamental · **Key** `ACCESSION` · **Dated by** `snapshot` · **Cadence** static · **Stored by** connector `us-equities-store` (plugin `delta`), table `<root>/us-equities/filing/` · **Ids** `^[0-9]{10}-[0-9]{2}-[0-9]{6}$`.
+
+**Grain:** One row per sec filing, keyed by ACCESSION. **Contract:** `contracts/filing.contract.yaml` ([full contract page](../../../../docs/contracts/packs/us-equities.md#filing-sec-filing-filing)).
+
+| Column | Type | Key | Presence | Unit | Example or values | Link | Meaning |
+|---|---|---|---|---|---|---|---|
+| `ACCESSION` | id | key | required |  | `0001104659-26-117587` (pattern `^[0-9]{10}-[0-9]{2}-[0-9]{6}$`) |  | The record's id (the business key) |
+| `COMPANY` | id |  | required |  | `ABT` | `us-company` | Company |
+| `COMPANY_NAME` | text |  | required |  | `Abbott Laboratories` |  | — |
+| `FORM` | text |  | required |  | `8-K` |  | Form |
+| `FORM_NAME` | text |  | required |  | `Current report` |  | What it is |
+| `FILED` | date |  | required |  | `2026-10-21` |  | Filed |
+| `REPORT_DATE` | date |  | optional |  | `2026-10-21` |  | Report date |
+| `PRIMARY_DOCUMENT` | text |  | required |  | `tm2627971d1_8k.htm` |  | — |
+| `DOCUMENT_DESCRIPTION` | text |  | required |  | `FORM 8-K` |  | — |
+| `SIZE_KB` | integer |  | required |  | `278` |  | — |
+| `ITEMS` | record list |  | required |  |  |  | Nested: see nested ITEMS[] |
+| `ITEMS_TEXT` | text |  | optional |  | `8.01, 9.01` |  | — |
+| `PATH` | text |  | required |  | `1800/000110465926117587` |  | — |
+
+Nested `ITEMS[]`:
+
+| Column | Type | Key | Presence | Unit | Example or values | Link | Meaning |
+|---|---|---|---|---|---|---|---|
+| `ITEM` | text |  | required |  | `8.01` |  | Item |
+| `DESCRIPTION` | text |  | required |  | `Other events` |  | What it reports |
+
+**Links:** `COMPANY` → `us-company`.
+
+### FACT: Financial fact (`financial-fact`)
+
+One financial concept of one company (revenue, net income, assets...) over up to ten fiscal years, from its 10-K XBRL filings.
+
+**Class** fundamental · **Key** `FACT_ID` · **Dated by** `snapshot` · **Cadence** static · **Stored by** connector `us-equities-store` (plugin `delta`), table `<root>/us-equities/financial-fact/`.
+
+**Grain:** One row per financial fact, keyed by FACT_ID. **Contract:** `contracts/financial-fact.contract.yaml` ([full contract page](../../../../docs/contracts/packs/us-equities.md#fact-financial-fact-financial-fact)).
+
+| Column | Type | Key | Presence | Unit | Example or values | Link | Meaning |
+|---|---|---|---|---|---|---|---|
+| `FACT_ID` | id | key | required |  | `ABT-REVENUE` |  | The record's id (the business key) |
+| `COMPANY` | id |  | required |  | `ABT` | `us-company` | Company |
+| `COMPANY_NAME` | text |  | required |  | `Abbott Laboratories` |  | — |
+| `CIK` | text |  | required |  | `0000001800` |  | — |
+| `CONCEPT` | text |  | required |  | `ASSETS`, `EPS_DILUTED`, `EQUITY`, `LIABILITIES`, `NET_INCOME`, `REVENUE`, `SHARES_OUTSTANDING` |  | Concept |
+| `LABEL` | text |  | required |  | `Diluted EPS`, `Net income`, `Revenue`, `Shares outstanding`, `Stockholders' equity`, `Total assets`, `Total liabilities` |  | Concept |
+| `UNIT` | text |  | required |  | `USD` |  | Unit |
+| `XBRL_TAG` | text |  | required |  | `RevenueFromContractWithCustomerExcludingAssessedTax` |  | XBRL tags read |
+| `LATEST` | amount |  | required |  | `44328000000` |  | Latest |
+| `LATEST_YEAR` | integer |  | required |  | `2025` |  | Fiscal year |
+| `YEARS` | integer |  | required |  | `10` |  | Years |
+| `HISTORY` | record list |  | required |  |  |  | Nested: see nested HISTORY[] |
+
+Nested `HISTORY[]`:
+
+| Column | Type | Key | Presence | Unit | Example or values | Link | Meaning |
+|---|---|---|---|---|---|---|---|
+| `YEAR` | integer |  | required |  | `2016` |  | Fiscal year |
+| `PERIOD_END` | date |  | required |  | `2016-12-31` |  | Period end |
+| `VALUE` | amount |  | required |  | `20853000000` |  | Value |
+| `FILED` | date |  | required |  | `2019-02-22` |  | Filed |
+| `ACCESSION` | text |  | required |  | `0001047469-19-000624` |  | Accession |
+
+**Links:** `COMPANY` → `us-company`.
+
+- CHANGE_PCT and HISTORY[].CHANGE_PCT left the record in 2.9.2: the page computes each year's change from the values (docs/guides/GROUPINGS_ANALYTICS_GUIDE.md section 16).
+
+### PXH: Price history (live, internal use only) (`price-history`)
+
+A company's quote and a year of daily prices, read live by the us-equities-prices connector: off as shipped, internal use only.
+
+**Class** fundamental · **Key** — · **Dated by** `snapshot` · **Cadence** intraday · **Stored by** connector `us-equities-prices` (plugin `yfinance`) · **Ids** `^PX-`.
+
+**Grain:** One row per price history (live, internal use only), keyed by a key to be confirmed. **Contract:** `contracts/price-history.contract.yaml` ([full contract page](../../../../docs/contracts/packs/us-equities.md#pxh-price-history-live-internal-use-only-price-history)).
+
+| Column | Type | Key | Presence | Unit | Example or values | Link | Meaning |
+|---|---|---|---|---|---|---|---|
+| `AS_OF` | unknown |  | optional |  |  |  | As of |
+| `CHANGE` | unknown |  | optional |  |  |  | Change |
+| `CHANGE_PCT` | unknown |  | optional |  |  |  | Change % |
+| `CURRENCY` | unknown |  | optional |  |  |  | Currency |
+| `DAY_HIGH` | unknown |  | optional |  |  |  | Day high |
+| `DAY_LOW` | unknown |  | optional |  |  |  | Day low |
+| `EXCHANGE` | unknown |  | optional |  |  |  | Exchange |
+| `FIFTY_TWO_WEEK_HIGH` | unknown |  | optional |  |  |  | 52-week high |
+| `FIFTY_TWO_WEEK_LOW` | unknown |  | optional |  |  |  | 52-week low |
+| `MARKET_STATE` | unknown |  | optional |  |  |  | Market |
+| `PRICE` | unknown |  | optional |  |  |  | Price |
+| `VOLUME` | unknown |  | optional |  |  |  | Volume |
+| `ANALYTICS` | record |  | derived |  |  |  | Computed from the closes when the history is read (PXH analytics, since 2.9.2): nested ANALYTICS |
+
+Nested `ANALYTICS`:
+
+| Column | Type | Key | Presence | Unit | Example or values | Link | Meaning |
+|---|---|---|---|---|---|---|---|
+| `OBSERVATIONS` | integer |  | derived |  |  |  | The daily closes the history holds |
+| `RETURN_1M` | rate |  | derived |  |  |  | close / close 21 trading days earlier - 1 (empty when the history is shorter) |
+| `RETURN_3M` | rate |  | derived |  |  |  | the same over 63 trading days |
+| `RETURN_6M` | rate |  | derived |  |  |  | the same over 126 trading days |
+| `RETURN_PERIOD` | rate |  | derived |  |  |  | the last close over the first - 1 |
+| `VOLATILITY` | rate |  | derived |  |  |  | the sample standard deviation of the daily log returns x sqrt(252) |
+| `MAX_DRAWDOWN` | rate |  | derived |  |  |  | the largest fall from a running high to a later close, negative |
+| `BENCHMARK` | text |  | derived |  |  |  | The symbol beta is measured against (the connector setting benchmark, SPY as shipped) |
+| `BETA` | amount |  | derived |  |  |  | cov(daily log returns, the benchmark's) / var(the benchmark's), on their common dates; empty with fewer than 21 common closes |
+| `CORRELATION` | rate |  | derived |  |  |  | the correlation of the daily log returns with the benchmark's |
+
+- ANALYTICS is computed by the yfinance plugin from the history it has just read (PriceAnalytics, docs/guides/GROUPINGS_ANALYTICS_GUIDE.md section 17): nothing is stored, and the figures are internal use only like the prices; the connector is off as shipped.
+
+## Data retrieval
+
+Where each kind's data comes from, how it reaches the lake and how to check it. Three origins: **external** data, fetched from a public source by the pack's refresh script (each source, its licence and worked examples on the [External data](../../../../docs/guides/PUBLIC_DATA.md) help page); **synthetic** test data, written by a generator with fictitious names; **computed** by a Drishti engine when it is asked, never stored by a source.
+
+| Command | Kind | Origin | How it reaches Drishti |
+|---|---|---|---|
+| `USEQ` | `us-company` | external: SEC EDGAR: tickers, submissions, XBRL company facts (public domain (US Government work); EDGAR fair access policy); Wikidata: index membership and company facts (CC0 1.0); Nasdaq Trader symbol directory (public symbol directory files); GLEIF LEI records (each company's LEI) (CC0 1.0) — refreshed by `tools/publicdata/us_equities.py` | `data/testdata/us-equities/us-company/` → `lake demo` → connector `us-equities-store` |
+| `IDX` | `index-membership` | external: Wikidata: index membership and company facts (CC0 1.0) — refreshed by `tools/publicdata/us_equities.py` | `data/testdata/us-equities/index-membership/` → `lake demo` → connector `us-equities-store` |
+| `SIC` | `sic-sector` | computed by Drishti: the derived connector us-equities-groupings over the kind us-company; see the [Groupings and analytics guide](../../../../docs/guides/GROUPINGS_ANALYTICS_GUIDE.md) | nothing to load: computed from its inputs when asked |
+| `EDGAR` | `filing-feed` | external: SEC EDGAR: tickers, submissions, XBRL company facts (public domain (US Government work); EDGAR fair access policy) — refreshed by `tools/publicdata/us_equities.py` | `data/testdata/us-equities/filing-feed/` → `lake demo` → connector `us-equities-store` |
+| `FILING` | `filing` | external: SEC EDGAR: tickers, submissions, XBRL company facts (public domain (US Government work); EDGAR fair access policy) — refreshed by `tools/publicdata/us_equities.py` | `data/testdata/us-equities/filing/` → `lake demo` → connector `us-equities-store` |
+| `FACT` | `financial-fact` | external: SEC EDGAR: tickers, submissions, XBRL company facts (public domain (US Government work); EDGAR fair access policy) — refreshed by `tools/publicdata/us_equities.py` | `data/testdata/us-equities/financial-fact/` → `lake demo` → connector `us-equities-store` |
+| `PXH` | `price-history` | external: Yahoo Finance daily prices (the us-equities-prices connector) (Yahoo terms: personal use, no redistribution; **internal only**) — refreshed by `tools/publicdata/us_equities.py` | read live by connector `us-equities-prices` (plugin `yfinance`) when it is switched on; nothing is committed |
+
+### External sources
+
+| Source | Where | Licence | Internal only | Refresh |
+|---|---|---|---|---|
+| SEC EDGAR: tickers, submissions, XBRL company facts | https://data.sec.gov | public domain (US Government work); EDGAR fair access policy | no | `python3 tools/publicdata/us_equities.py refresh sec` |
+| Wikidata: index membership and company facts | https://query.wikidata.org/sparql | CC0 1.0 | no | `python3 tools/publicdata/us_equities.py refresh wikidata` |
+| Nasdaq Trader symbol directory | https://www.nasdaqtrader.com/dynamic/SymDir/ | public symbol directory files | no | `python3 tools/publicdata/us_equities.py refresh nasdaq` |
+| GLEIF LEI records (each company's LEI) | https://api.gleif.org/api/v1 | CC0 1.0 | no | `python3 tools/publicdata/us_equities.py refresh gleif` |
+| Yahoo Finance daily prices (the us-equities-prices connector) | https://finance.yahoo.com | Yahoo terms: personal use, no redistribution | **yes** | `python3 tools/publicdata/us_equities.py refresh prices` |
+
+**Internal only:** Yahoo Finance daily prices (the us-equities-prices connector). The terms restrict reuse or forbid redistribution: the data is for internal demonstrations only, never written into a committed folder without `--internal-ok`, and must be raised with the owner before any client or external use.
+
+```bash
+python3 tools/publicdata/us_equities.py status                           # each source: licence, internal only or not, last refreshed (offline)
+python3 tools/publicdata/us_equities.py refresh --dry-run                # what would be fetched and written; changes nothing
+python3 tools/publicdata/us_equities.py refresh                          # the committed pack: data/testdata/us-equities, samples/ and this guide, then make.py --check
+python3 tools/publicdata/us_equities.py refresh --offline                # the same from the download cache only
+python3 tools/publicdata/us_equities.py refresh --scope TSLA,FILINGS:40  # a widened build in <data>/publicdata/us-equities
+```
+
+The same through the wrappers: `tools/publicdata/us-equities.sh status` on Linux and macOS, `.\tools\windows\publicdata-us-equities.ps1 status` on Windows (every argument is passed on).
+
+### Into the lake, checking, offline
+
+- **The lake.** `python3 tools/drishti.py lake demo` reads `data/testdata/testdata.yaml` and writes every dataset (test data, the packs' samples and the committed public-data snapshots) into `<data>/delta/<domain>/<kind>/`, where the pack's Delta connector serves it; a computed kind needs nothing loaded. `lake build` loads your own large JSON exports the same way ([Tools](../../../../docs/guides/TOOLS.md)).
+- **Checking.** `python3 tools/contracts.py check` compares every contract with the pack and its data; each generator's `--check` (above) fails when the committed files differ from what it would write; in the console, `<MNEMONIC> <GO>` lists a kind and the pack's code opens its overview with the count of each kind.
+- **Offline.** Everything committed works without a network: the test data, the samples and the public-data snapshots are in the repository and `lake demo` reads only them. A refresh script runs offline from its download cache (`--offline`); a connector that reaches the internet (news, yfinance, the public-data feeds) is off as shipped and never starts on a machine configured offline (`drishti.offline.plugins`).

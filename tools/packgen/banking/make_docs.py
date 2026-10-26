@@ -36,6 +36,7 @@ sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "trades"))
 import schema as TSCHEMA  # noqa: E402
 sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "common"))
 import readme as README  # noqa: E402  (the pack README standard: each pack's README.md, from its intro in readme/)
+import guide_data as GD  # noqa: E402  (every guide's Data contracts and Data retrieval sections)
 
 ROOT = Path(__file__).resolve().parents[3]
 PACKS = ROOT / "config" / "packs"
@@ -201,6 +202,7 @@ def overview(name: str, docs: dict) -> str:
     if impact:
         lines += ["## F8 impact", "", "Amounts at stake: " + ", ".join(f"`{k}` by `{v}`" for k, v in impact["measures"].items())
                   + (". Dependents roll up through " + ", ".join(f"`{f}`" for f in impact.get("follow", [])) if impact.get("follow") else "") + ".", ""]
+    lines += GD.sections(PACKS / name)
     return "\n".join(lines)
 
 
