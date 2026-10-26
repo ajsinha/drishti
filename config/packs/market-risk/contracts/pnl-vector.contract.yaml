@@ -39,13 +39,14 @@ storage:
   table: <root>/risk/pnl-vector/
   columns:
   - TRADE_ID
-  - POSITION_ID
-  - INSTRUMENT_ID
+  - SECURITY_ID
+  - INSTRUMENT
   - LEGAL_ENTITY
   - DIVISION
   - DESK
   - TT_BOOK
   - PORTFOLIO
+  - STRATEGY
   - PRODUCT_GROUP
   - PRODUCT_TYPE
   - CURRENCY
@@ -53,7 +54,11 @@ storage:
   - DIRECTION
   - QUANTITY
   - PV
+  - TAGS
+  - TRADE_STATUS
+  - MATURITY_DATE
   - STATUS
+  - REPORTING_CCY
   - SCENARIO_SET_ID
   - BATCH_ID
   vectors:
@@ -65,26 +70,25 @@ fields:
   type: id
   presence: required
   description: The record's id (the business key)
-  example: PV-MX-20000209-HS-509
+  example: PV-MX-20000274-HS-509
   pattern: ^PV-
 - name: TRADE_ID
   type: id
   presence: required
   description: 'Trade: the trade it refers to'
-  example: MX-20000209
+  example: MX-20000274
   pattern: ^(MX|CLY)-\d+$
   link: trade
-- name: POSITION_ID
+- name: SECURITY_ID
   type: id
+  presence: optional
+  description: 'The security or exchange contract the trade is in (securities and listed products): Drishti keys the trade''s position by book
+    and security.'
+  example: SEC-WARRANT-USD-01
+- name: INSTRUMENT
+  type: text
   presence: required
-  description: 'The holding the trade builds or reduces: its vector is the sum of its trades''.'
-  example: POS-BOOK-EQD-2~EQ_ASIAN-USD-2029Q2
-  pattern: ^POS-
-  link: position
-- name: INSTRUMENT_ID
-  type: id
-  presence: required
-  example: INS-EQ_ASIAN-USD-2029Q2
+  example: Equity warrant USD 2027-05
 - name: BUSINESS_DATE
   type: date
   presence: required
@@ -99,12 +103,23 @@ fields:
   example: MUREX
   enum:
   - CALYPSO
-  - ENDUR
   - MUREX
 - name: TRADE_VERSIONS
   type: text
   presence: required
-  example: v5
+  example: v4
+- name: TRADE_STATUS
+  type: text
+  presence: required
+  description: 'The trade''s status the batch priced: NEW, VALIDATED and AMENDED count on the date; others are left out.'
+  example: AMENDED
+  enum:
+  - AMENDED
+  - VALIDATED
+- name: MATURITY_DATE
+  type: date
+  presence: required
+  example: '2027-05-26'
 - name: LEGAL_ENTITY
   type: id
   presence: required
@@ -144,16 +159,19 @@ fields:
   type: text
   presence: required
   example: Equity
+  enum:
+  - Equity
+  - FX
+  - Securities financing
 - name: PRODUCT_TYPE
   type: text
   presence: required
-  example: EQ_ASIAN
+  example: WARRANT
 - name: CURRENCY
   type: text
   presence: required
   example: USD
   enum:
-  - AUD
   - CAD
   - CHF
   - EUR
@@ -164,7 +182,7 @@ fields:
   type: id
   presence: required
   description: 'Counterparty: the counterparty it refers to'
-  example: CP-KESTREL
+  example: CP-SUMMIT
   pattern: ^CP-
   link: counterparty
 - name: DIRECTION
@@ -178,7 +196,11 @@ fields:
   type: amount
   presence: required
   description: 'The trade''s quantity: positive for a buy, negative for a sell.'
-  example: -180000000.0
+  example: -179000000.0
+- name: TAGS
+  type: text
+  presence: optional
+  example: option
 - name: REPORTING_CCY
   type: text
   presence: required
@@ -188,7 +210,7 @@ fields:
   presence: required
   unit: USD
   description: The trade's value on the business date.
-  example: -83827
+  example: 3143714
 - name: PNL
   type: vector
   presence: required
@@ -207,7 +229,7 @@ fields:
 - name: MODEL_VERSION
   type: text
   presence: required
-  example: demo-1
+  example: demo-2
 - name: COMPUTED_AT
   type: timestamp
   presence: required
@@ -223,8 +245,6 @@ fields:
 links:
 - field: TRADE_ID
   kind: trade
-- field: POSITION_ID
-  kind: position
 - field: LEGAL_ENTITY
   kind: legal-entity
 - field: DESK
@@ -240,12 +260,13 @@ validation:
   fields:
   - VECTOR_ID
   - TRADE_ID
-  - POSITION_ID
-  - INSTRUMENT_ID
+  - INSTRUMENT
   - BUSINESS_DATE
   - SCENARIO_SET_ID
   - SOURCE_SYSTEM
   - TRADE_VERSIONS
+  - TRADE_STATUS
+  - MATURITY_DATE
   - LEGAL_ENTITY
   - DIVISION
   - DESK
@@ -276,15 +297,16 @@ validation:
 - rule: link
   field: TRADE_ID
   kind: trade
-- rule: link
-  field: POSITION_ID
-  kind: position
 - rule: enum
   field: SOURCE_SYSTEM
   values:
   - CALYPSO
-  - ENDUR
   - MUREX
+- rule: enum
+  field: TRADE_STATUS
+  values:
+  - AMENDED
+  - VALIDATED
 - rule: link
   field: LEGAL_ENTITY
   kind: legal-entity
@@ -298,9 +320,14 @@ validation:
   field: PORTFOLIO
   kind: book
 - rule: enum
+  field: PRODUCT_GROUP
+  values:
+  - Equity
+  - FX
+  - Securities financing
+- rule: enum
   field: CURRENCY
   values:
-  - AUD
   - CAD
   - CHF
   - EUR
@@ -320,12 +347,13 @@ validation:
   same: every row of one business date
 notes: []
 review:
-- 'required inferred from 100% coverage in 1674 documents (1 samples and 1673 test-data documents (data/testdata/market-risk/pnl-vector/cob-2026-09-30.part-001.jsonl.gz,
-  data/testdata/market-risk/pnl-vector/cob-2026-09-30.part-002.jsonl.gz)): confirm each required field is mandatory upstream, and each optional
-  one may be empty.'
+- 'required inferred from 100% coverage in 2001 documents (1 samples and 2000 test-data documents (data/testdata/market-risk/pnl-vector/cob-2026-09-30.part-001.jsonl.gz,
+  data/testdata/market-risk/pnl-vector/cob-2026-09-30.part-002.jsonl.gz, data/testdata/market-risk/pnl-vector/cob-2026-09-30.part-003.jsonl.gz)):
+  confirm each required field is mandatory upstream, and each optional one may be empty.'
 - 'source is the pack''s first listed source (its README): confirm.'
 - 'due time of each business date is not known: state it (for example, by 06:00 New York the next business day).'
-- 'enum values inferred from the data, not from a glossary: SOURCE_SYSTEM, CURRENCY, DIRECTION: confirm they are closed lists.'
+- 'enum values inferred from the data, not from a glossary: SOURCE_SYSTEM, TRADE_STATUS, PRODUCT_GROUP, CURRENCY, DIRECTION: confirm they are
+  closed lists.'
 - 'no unit stated for the amounts QUANTITY (docs/contracts/README.md section 7: USD unless stated): confirm the currency.'
-- 'no description in about.yaml or the Sutras for INSTRUMENT_ID, BUSINESS_DATE, SCENARIO_SET_ID, SOURCE_SYSTEM, TRADE_VERSIONS, DIVISION, STRATEGY,
-  PRODUCT_GROUP, PRODUCT_TYPE, CURRENCY, DIRECTION, REPORTING_CCY and 5 more: write them in the pack''s config/about.yaml glossary.'
+- 'no description in about.yaml or the Sutras for INSTRUMENT, BUSINESS_DATE, SCENARIO_SET_ID, SOURCE_SYSTEM, TRADE_VERSIONS, MATURITY_DATE, DIVISION,
+  STRATEGY, PRODUCT_GROUP, PRODUCT_TYPE, CURRENCY, DIRECTION and 7 more: write them in the pack''s config/about.yaml glossary.'

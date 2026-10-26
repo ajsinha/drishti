@@ -21,12 +21,6 @@ sources:
   internal-only: false
   used-for: every document in samples/ and the demo lake
 fields:
-  var:
-    MEAN_PNL: Mean scenario P&L (USD)
-    PNL_SERIES: Scenario P&L values
-    CONTRIBUTIONS: VaR contribution by book
-    DESK: The desk's id (core pack)
-    METHOD: Method, e.g. historical simulation, 1-day, 99%, 500 scenarios
   stress-scenario: {SHOCKS: The shocks applied, by risk factor, HORIZON: Horizon of the scenario}
   stress-result: {BY_BOOK: Stress P&L by book, DESK: The desk's id}
   frtb-sensitivity: {SENSITIVITIES: Sensitivities by risk factor, BY_CLASS: Capital by risk class, APPROACH: The FRTB approach, e.g. standardised (SBM)}
@@ -42,25 +36,23 @@ fields:
     MTM_CURRENCY: Currency of the mark-to-market
     TRADE_DATE: The trade's trade date
   position:
-    _: "A holding of one instrument in one book, netting the trades that build or reduce it (VAR_DATA_MODEL.md section 18). Data: tools/packgen/var/make_var_data.py."
-    POSITION_ID: "POS-<book>~<instrument>: one position per instrument per book on a business date"
-    INSTRUMENT_ID: "The instrument: product, currency, underlying and maturity quarter"
+    _: "A position Drishti derives from the trades when it loads a date, by the pack's positions: rules (docs/contracts/VAR.md section 3.7): served from the VaR engine by the var-positions connector, never stored"
+    POSITION_ID: "POS-<book>~<security> for securities and listed products (fungible: the trades net), POS-<book>~<trade> for an OTC trade"
+    POSITION_RULE: "securities, listed or otc: the rule that keyed it"
     DIRECTION: "LONG, SHORT or FLAT: the sign of the net quantity"
     QUANTITY: "The signed sum of the trades' quantities (a buy adds, a sell takes away)"
     TRADE_IDS: "The trades in the position (each links to the trade)"
-    TRADE_QUANTITIES: "Each trade's signed quantity, its own VaR and its component of the position's VaR"
-    COMPONENT_VAR: "The position's share of its book's VaR (Euler; the shares add up to the book's VaR)"
-    PNL: "The position's P&L under the 509 scenario days: the sum of its trades' vectors (a list<double> column in the lake)"
+    TRADES: "Each trade's signed quantity, direction, PV, product and counterparty"
   portfolio:
-    _: "A set of positions: a hierarchy node, a rule over the positions' columns, or a basket of positions and trades. Portfolios may overlap."
+    _: "A portfolio definition: a hierarchy node, a rule over the positions' columns, or a basket of positions and trades. Portfolios may overlap; their VaR is computed when asked"
     TYPE: "HIERARCHY, RULE or BASKET"
     DEFINITION: "NODE (a hierarchy node), RULE (a condition) or MEMBERS (positions and trades)"
-    POSITIONS: "The positions on the date, each with its VaR and component VaR"
-    PNL: "The portfolio's P&L under the scenario days, each trade counted once"
+    LIMIT_VAR: "The portfolio's VaR limit (USD), an input"
   pnl-vector:
-    _: "One trade's P&L under each of the 509 scenario days, in USD: the grain every VaR is summed from"
+    _: "One trade's P&L under each of the 509 scenario days, in USD: the grain every VaR is summed from, with the trade's terms the server derives its position from"
     VECTOR_ID: "PV-<trade>-HS-509"
-    POSITION_ID: "The position the trade belongs to"
+    SECURITY_ID: "The security or exchange contract of a securities or listed trade (the demo's are synthetic)"
+    TRADE_STATUS: "The trade's status: NEW, VALIDATED and AMENDED count on the date"
     PNL: "509 values, oldest scenario first, stored as a list<double> column (out of the document)"
   scenario-set:
     _: "The scenario days of a business date: HS-509, historical simulation over 509 business days"
@@ -69,16 +61,15 @@ fields:
     _: "A node of a hierarchy: MGMT (bank, division, desk, book) or LEGAL (bank, legal entity, desk, book), with its VaR limit"
     BOOKS: "Every book beneath the node"
     LIMIT_VAR: "The node's VaR limit (USD)"
-  var-node:
-    _: "A node's official VaR, ES and hypothetical P&L on one business date (250 days kept: the backtest)"
-    HYPO_PNL: "The node's P&L of the day with its positions unchanged"
-    EXCEPTION: "True when the day's loss exceeded the previous day's VaR"
 ---
 ## What it is
 
-Market-risk results over the trading pack's trades: value at risk and expected shortfall by desk, stress scenarios and their results,
-FRTB standardised sensitivities, P&L explain and trade valuations (mark-to-market, P&L and sensitivities per trade). Since 2.8.0
-(unreleased) also the **VaR engine's data**: positions (holdings netting their trades), portfolios (hierarchy, rule, basket), one P&L
-vector per trade over 509 historical scenario days, the MGMT and LEGAL hierarchies with VaR limits and every node's 250-day history.
-The VaR explorer (`VAR DESK DESK-RATES <GO>`, [VAR_EXPLORER.md](../../../docs/guides/VAR_EXPLORER.md)) computes VaR, ES and
-contributions for any set of these trades; `PORT <id>` and `POS <id>` open a portfolio's and a position's pages.
+Market-risk results over the trading pack's trades: stress scenarios and their results, FRTB standardised sensitivities, P&L explain and
+trade valuations (mark-to-market, P&L and sensitivities per trade), and the **VaR engine's inputs** (2.8.0, unreleased): one P&L vector
+per live trade over 509 historical scenario days, the scenario set, the MGMT and LEGAL hierarchies with VaR limits, and portfolio
+definitions (hierarchy, rule, basket). Value at risk is never stored: the VaR explorer (`VAR DESK DESK-RATES <GO>`,
+[VAR_EXPLORER.md](../../../docs/guides/VAR_EXPLORER.md)) computes VaR, ES and contributions for any set of these trades, the portfolio
+and position pages (`PORT <id>`, `POS <id>`) show the engine's figures computed as they open, and each business date's official figures
+are the engine's end-of-day captures. Positions are Drishti's: derived from the trades by this pack's `positions:` rules (securities by
+book and security, listed by book and contract, OTC one per trade) when a date loads ([VAR.md](../../../docs/contracts/VAR.md)).
+The stored `var` (VAR-<desk>) and `var-node` kinds were retired in 2.8.0: `VAR VAR-COMM` opens the explorer at `DESK:COMM`.

@@ -118,7 +118,87 @@ class TheRepository(unittest.TestCase):
                 f = field(c, name, parent)
                 self.assertEqual((f["presence"], f.get("retiring-in")), ("derived", str(entry["release"])), f"{kind} {path}")
         pos = by_kind["position"]
-        self.assertEqual([f["name"] for f in pos["fields"] if f["presence"] == "derived"], ["VAR_99", "ES_975", "COMPONENT_VAR"])
+        self.assertEqual((pos["class"], pos["storage"]["plugin"]), ("drishti-owned", "var-positions"))
+        self.assertEqual([f["name"] for f in pos["fields"] if f["presence"] == "derived"], [])
+
+
+class TheRetiredStoredVersions(unittest.TestCase):
+    """The guard of docs/contracts/README.md section 14: a retired kind never returns, a figure removed from a stored record never comes
+    back, no input or fundamental kind (nor any test data or sample) carries a column a compute engine produces, and no connector reads
+    the published results (an engine computes from the risk lake's inputs only)."""
+
+    @classmethod
+    def setUpClass(cls):
+        cls.pol = C.policy()
+        cls.manifests = C.manifests()
+        cls.testdata = yaml.safe_load((C.TESTDATA / "testdata.yaml").read_text(encoding="utf-8"))
+
+    def docs_of(self, pack: str, kind: str) -> list[dict]:
+        samples, tdocs, _ = C.read_documents(C.PACKS / pack, kind, C.TESTDATA)
+        return samples + tdocs
+
+    @staticmethod
+    def names(doc, path: str = "") -> set[str]:
+        """Every field name in a document at any depth, and every dotted path (A.B for a field of a list A's elements)."""
+        out = set()
+        if isinstance(doc, dict):
+            for k, v in doc.items():
+                out |= {k, f"{path}{k}"}
+                out |= TheRetiredStoredVersions.names(v, f"{path}{k}.")
+        elif isinstance(doc, list):
+            for x in doc:
+                out |= TheRetiredStoredVersions.names(x, path)
+        return out
+
+    def test_a_retired_kind_never_returns(self):
+        retired = self.pol["retired"]
+        self.assertTrue({"var", "var-node"} <= set(retired))
+        for kind in retired:
+            for pack, m in self.manifests.items():
+                self.assertNotIn(kind, m.get("kinds") or [], f"{pack} declares the retired kind {kind}")
+                self.assertNotIn(kind, m.get("routes") or {}, f"{pack} routes the retired kind {kind}")
+                self.assertNotIn(kind, {(v or {}).get("kind") for v in (m.get("mnemonics") or {}).values()}, f"{pack}: a mnemonic of {kind}")
+                self.assertFalse((C.PACKS / pack / "samples" / f"{kind}.jsonl").exists(), f"{pack} samples of {kind}")
+                self.assertFalse((C.PACKS / pack / "contracts" / f"{kind}.contract.yaml").exists(), f"{pack} contract of {kind}")
+                self.assertFalse((C.PACKS / pack / "tests" / kind).exists(), f"{pack} Sutra tests of {kind}")
+                sutras = [f for f in (C.PACKS / pack).rglob("*.sutra.yaml") if f"kind: {kind}," in f.read_text(encoding="utf-8")]
+                self.assertEqual(sutras, [], f"{pack}: a Sutra of {kind}")
+            self.assertNotIn(kind, {d.get("kind") for d in self.testdata["datasets"]}, f"test data of {kind}")
+            self.assertFalse(any((C.TESTDATA / p / kind).exists() for p in self.manifests), f"a test-data folder of {kind}")
+
+    def test_a_removed_figure_never_comes_back(self):
+        for kind, entry in self.pol["removed"].items():
+            pack = next(p for p, m in self.manifests.items() if kind in (m.get("kinds") or []))
+            want = {f.replace("[]", "") for f in entry["figures"]}
+            for d in self.docs_of(pack, kind):
+                self.assertEqual(self.names(d) & want, set(), f"{kind} {d.get(next(iter(d)))} carries a removed figure")
+            c = yaml.safe_load(C.contract_file(C.PACKS, pack, kind).read_text(encoding="utf-8"))
+            fields = {f["name"] for f in c.get("fields") or []} | {f"{p.replace('[]', '')}.{f['name']}" for p, fs in (c.get("nested") or {}).items()
+                                                                   for f in fs}
+            self.assertEqual(fields & want, set(), f"the {kind} contract lists a removed figure")
+
+    def test_no_input_or_fundamental_kind_carries_an_engine_column(self):
+        engine = {c for cols in self.pol["engine-columns"].values() for c in cols}
+        checked = 0
+        for cmd, f, c in C.contracts():
+            if c is None or c.get("class") not in ("input", "fundamental", "drishti-owned"):
+                continue
+            fields = {x["name"] for x in c.get("fields") or []} | {x["name"] for fs in (c.get("nested") or {}).values() for x in fs}
+            self.assertEqual(fields & engine, set(), f"the {cmd['kind']} contract ({c['class']}) lists an engine's column")
+            for d in self.docs_of(cmd["pack"], cmd["kind"]):
+                self.assertEqual(self.names(d) & engine, set(), f"{cmd['kind']} data carries an engine's column")
+            checked += 1
+        self.assertGreater(checked, 50)
+
+    def test_no_connector_reads_the_published_results(self):
+        texts = [(p, json.dumps(m.get("connectors") or {})) for p, m in self.manifests.items()]
+        app = C.ROOT / "drishti-server" / "src" / "main" / "resources" / "application.yaml"
+        server = yaml.safe_load(app.read_text(encoding="utf-8"))
+        texts.append(("application.yaml", json.dumps(((server.get("drishti") or {}).get("sources") or {}).get("connectors") or {})))
+        for where, text in texts:
+            self.assertNotIn("risk-results", text, f"{where}: a connector reads risk-results (published results are never an engine's input)")
+        self.assertIn("risk-results", (C.ROOT / "drishti-server" / "src" / "main" / "java" / "com" / "ash" / "drishti" / "server" / "var"
+                                       / "VarPublisher.java").read_text(encoding="utf-8").replace('"risk-results"', "risk-results"))
 
     def test_every_file_starts_with_the_licence(self):
         for f in sorted(C.PACKS.glob("*/contracts/*.contract.yaml")):

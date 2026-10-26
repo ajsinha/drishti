@@ -22,7 +22,7 @@ doc:
   description: >-
     A trading desk: books, limits and risk results. One page per desk, its panels: books; MTM grid (by book and currency, USD);
     trades by book and product family; trades by book; how the view was built; the entities it links to. The strip gives Name,
-    Head, Books, VaR and MTM. Linked entities: legal entity (legal-entity) and var (var).
+    Head, Books, VaR 99% 1D (engine) and MTM. Linked entities: legal entity (legal-entity).
   params: {}
   emits: []
   expects: []
@@ -36,7 +36,7 @@ strip:
   - { label: Name, bind: $.NAME }
   - { label: Head, bind: $.HEAD }
   - { label: Books, bind: size($.BOOKS) }
-  - { label: VaR, bind: $.VAR_99, fmt: compact, emphasis: true }
+  - { label: VaR 99% 1D (engine), bind: $.VAR_ENGINE.VAR, fmt: compact, emphasis: true }
   - { label: MTM, bind: $.MTM, fmt: signed0, tone: sign }
 panels:
   - id: books

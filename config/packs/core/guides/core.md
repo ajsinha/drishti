@@ -106,9 +106,9 @@ A trading book: owner desk, trades and risk.
 
 A trading desk: books, limits and risk results.
 
-**Fields its Sutra reads:** `NAME`, `HEAD`, `BOOKS`, `VAR_99`, `MTM`, `POSITIONS`.
+**Fields its Sutra reads:** `NAME`, `HEAD`, `BOOKS`, `VAR_ENGINE`, `MTM`, `POSITIONS`.
 
-**Links:** `LEGAL_ENTITY` → Legal entity (`legal-entity`), `VAR_RESULT` → VaR (`var`).
+**Links:** `LEGAL_ENTITY` → Legal entity (`legal-entity`).
 
 ### Trader (`trader`)
 

@@ -21,9 +21,10 @@ version: '1.0'
 class: drishti-owned
 status: active
 title: Position
-description: 'A position: one instrument held in one book, the trades that build or reduce it, its VaR and its P&L over the scenario days.'
-source: Synthetic sample data (tools/packgen/banking)
-grain: One row per position per BUSINESS_DATE, keyed by POSITION_ID.
+description: 'A position: one security held in one book (or one OTC trade), the trades that build or reduce it, and its VaR computed as the page
+  opens.'
+source: Drishti (the VaR engine derives positions from the trades of pnl-vector when a date loads, docs/contracts/VAR.md section 3.7)
+grain: One position per business date, derived (never stored); POS-<TT_BOOK>~<security> or POS-<TT_BOOK>~<trade>.
 key:
 - POSITION_ID
 id-pattern:
@@ -31,66 +32,44 @@ id-pattern:
 dated-by: BUSINESS_DATE
 cadence:
   frequency: daily
-  due: to be confirmed
+  due: when the date's pnl-vector rows are loaded (derived at once)
 storage:
-  connector: risk-store
-  plugin: delta
-  domain: risk
-  table: <root>/risk/position/
-  columns:
-  - POSITION_ID
-  - INSTRUMENT_ID
-  - INSTRUMENT
-  - DIRECTION
-  - LEGAL_ENTITY
-  - DIVISION
-  - DESK
-  - TT_BOOK
-  - PORTFOLIO
-  - PRODUCT_GROUP
-  - PRODUCT_TYPE
-  - CURRENCY
-  - COUNTERPARTY
-  - QUANTITY
-  - MARKET_VALUE
-  - TRADE_COUNT
-  - VAR_99
-  - ES_975
-  - COMPONENT_VAR
-  vectors:
-  - PNL
-  test-data:
-  - data/testdata/market-risk/position
+  connector: var-positions
+  plugin: var-positions
 fields:
 - name: POSITION_ID
   type: id
   presence: required
-  description: The record's id (the business key)
-  example: POS-BOOK-EQD-2~EQ_ASIAN-USD-2029Q2
-  pattern: ^POS-
-  link: position
+  example: POS-BOOK-EQD-2~SEC-WARRANT-USD-01
 - name: BUSINESS_DATE
   type: date
   presence: required
   example: '2026-09-30'
+- name: POSITION_RULE
+  type: text
+  presence: required
+  description: 'How Drishti keyed the position (the market-risk pack''s positions: rules): securities by book and security, listed by book and
+    contract, otc one per trade.'
+  example: securities
+- name: SECURITY_ID
+  type: id
+  presence: optional
+  description: The security or exchange contract the position holds; empty for a position of one OTC trade.
+  example: SEC-WARRANT-USD-01
 - name: INSTRUMENT_ID
   type: id
   presence: required
   description: Instrument
-  example: INS-EQ_ASIAN-USD-2029Q2
+  example: SEC-WARRANT-USD-01
 - name: INSTRUMENT
   type: text
   presence: required
-  description: 'What the position holds: the product, its currency, its underlying and its maturity. Trades of the same instrument in one book
-    are one position.'
-  example: Equity Asian option USD 2029-04
+  description: 'What the position holds: the security, or for one OTC trade its product, currency and maturity.'
+  example: Equity warrant USD 2027-05
 - name: POSITION_TYPE
   type: text
   presence: required
   example: fungible
-  enum:
-  - fungible
-  - single-trade
 - name: DIRECTION
   type: text
   presence: required
@@ -101,33 +80,33 @@ fields:
   type: amount
   presence: required
   description: 'The signed sum of the position''s trades'' quantities (notional for swaps, units for securities): a buy adds, a sell takes away.'
-  example: -810529060.0
+  example: -1772145212.5
 - name: GROSS_QUANTITY
   type: amount
   presence: required
-  example: 7050772940.0
+  example: 2816087612.5
+- name: TRADE_COUNT
+  type: integer
+  presence: required
+  description: Trades
+  example: 9
+- name: LONG_TRADES
+  type: integer
+  presence: required
+  example: 2
+- name: SHORT_TRADES
+  type: integer
+  presence: required
+  example: 7
 - name: TRADE_IDS
   type: id list
   presence: required
   description: 'Trade: the trade it refers to'
   link: trade
-- name: TRADE_QUANTITIES
+- name: TRADES
   type: record list
   presence: required
-  description: 'Nested: see nested TRADE_QUANTITIES[]'
-- name: TRADE_COUNT
-  type: integer
-  presence: required
-  description: Trades
-  example: 18
-- name: LONG_TRADES
-  type: integer
-  presence: required
-  example: 9
-- name: SHORT_TRADES
-  type: integer
-  presence: required
-  example: 9
+  description: 'Nested: see nested TRADES[]'
 - name: LEGAL_ENTITY
   type: id
   presence: required
@@ -165,14 +144,11 @@ fields:
   presence: optional
 - name: COUNTERPARTY
   type: id
-  presence: optional
+  presence: required
   description: The counterparty of the position's trades when they all share one; empty otherwise.
   example: CP-SUMMIT
   pattern: ^CP-
   link: counterparty
-- name: COUNTERPARTIES
-  type: text list
-  presence: required
 - name: PRODUCT_GROUP
   type: text
   presence: required
@@ -181,141 +157,77 @@ fields:
   type: text
   presence: required
   description: The product of the instrument, as the booking systems name it.
-  example: EQ_ASIAN
+  example: WARRANT
 - name: CURRENCY
   type: text
   presence: required
   description: The instrument's currency. Every P&L and value is in USD, the reporting currency.
   example: USD
-  enum:
-  - AUD
-  - CAD
-  - CHF
-  - EUR
-  - GBP
-  - JPY
-  - USD
+- name: COUNTERPARTIES
+  type: text list
+  presence: required
 - name: MARKET_VALUE
   type: amount
   presence: required
   unit: USD
   description: The sum of the trades' present values (their mark-to-market) on the business date.
-  example: 83350636
+  example: 41691425
 - name: NOTIONAL
   type: amount
   presence: required
   description: The sum of the trades' quantities without their signs.
-  example: 7050772940
-- name: LINEAR
-  type: boolean
+  example: 2816087612
+- name: TAGS
+  type: list
   presence: required
-  example: true
 - name: STATUS
   type: text
   presence: required
   example: open
-- name: OPENED_ON
-  type: date
-  presence: required
-  description: The trade date of the position's first trade.
-  example: '2024-10-10'
-- name: TAGS
-  type: text list
-  presence: required
-- name: VAR_99
-  type: amount
-  presence: derived
-  unit: USD
-  description: The loss the portfolio is expected not to exceed on 99 of 100 trading days, read from the 1st percentile of the revalued scenario
-    P&L (historical simulation).
-  example: 52808
-  retiring-in: 2.8.0
-  note: computed by the VaR engine from 2.8.0; removed from the stored record then
-- name: ES_975
-  type: amount
-  presence: derived
-  unit: USD
-  description: The average loss on the worst 2.5% of scenario days. It looks into the tail that VaR ignores, and it is the measure the FRTB internal-models
-    approach uses for capital.
-  example: 52234
-  retiring-in: 2.8.0
-  note: computed by the VaR engine from 2.8.0; removed from the stored record then
-- name: COMPONENT_VAR
-  type: amount
-  presence: derived
-  unit: USD
-  description: 'The position''s share of its book''s VaR (Euler allocation): the shares of a book''s positions add up to the book''s VaR; a hedge
-    has a negative share.'
-  example: 51216
-  retiring-in: 2.8.0
-  note: computed by the VaR engine from 2.8.0; removed from the stored record then
-- name: BOOK_VAR
-  type: amount
-  presence: required
-  unit: USD
-  description: The 1-day 99% VaR of the whole book the position is held in.
-  example: 426663
-- name: PCT_OF_BOOK_VAR
-  type: rate
-  presence: required
-  description: The component VaR over the book's VaR.
-  example: 0.12
 - name: SCENARIO_SET_ID
   type: id
   presence: required
   example: HS-509
-- name: PNL
-  type: vector
-  presence: required
-  unit: USD
-  description: 'The position''s P&L under each historical scenario day (509 of them): the sum of its trades'' vectors.'
-  note: 509 values in the test data
 - name: VAR_SCOPE
   type: text
   presence: required
-  example: POS:POS-BOOK-EQD-2~EQ_ASIAN-USD-2029Q2
+  example: POS:POS-BOOK-EQD-2~SEC-WARRANT-USD-01
 nested:
-  TRADE_QUANTITIES[]:
+  TRADES[]:
   - name: TRADE_ID
     type: id
     presence: required
     description: Trade
-    example: MX-20000209
+    example: MX-20000274
     pattern: ^(MX|CLY)-\d+$
     link: trade
   - name: QUANTITY
     type: amount
     presence: required
     description: 'The trade''s signed quantity in the position: a buy positive, a sell negative.'
-    example: -180000000.0
+    example: -179000000.0
   - name: DIRECTION
     type: text
     presence: required
     description: Direction
     example: SHORT
-    enum:
-    - LONG
-    - SHORT
-  - name: VAR_99
+  - name: PV
     type: amount
-    presence: derived
-    unit: USD
-    description: The trade's 1-day 99% VaR as if it were alone.
-    example: 10869
-    retiring-in: 2.8.0
-    note: computed by the VaR engine from 2.8.0; removed from the stored record then
-  - name: COMPONENT_VAR
-    type: amount
-    presence: derived
-    unit: USD
-    description: The trade's share of the position's VaR. The shares of a long and a short of one instrument have opposite signs and add up to
-      the position's VaR.
-    example: 12050
-    retiring-in: 2.8.0
-    note: computed by the VaR engine from 2.8.0; removed from the stored record then
+    presence: required
+    description: PV
+    example: 3143714.0
+  - name: PRODUCT_TYPE
+    type: text
+    presence: required
+    example: WARRANT
+  - name: COUNTERPARTY
+    type: id
+    presence: required
+    description: Counterparty
+    example: CP-SUMMIT
+    pattern: ^CP-
+    link: counterparty
 links:
-- field: POSITION_ID
-  kind: position
 - field: TRADE_IDS
   kind: trade
 - field: LEGAL_ENTITY
@@ -328,65 +240,49 @@ links:
   kind: book
 - field: COUNTERPARTY
   kind: counterparty
-- field: TRADE_QUANTITIES[].TRADE_ID
+- field: TRADES[].TRADE_ID
   kind: trade
+- field: TRADES[].COUNTERPARTY
+  kind: counterparty
 validation:
 - rule: required
   fields:
   - POSITION_ID
   - BUSINESS_DATE
+  - POSITION_RULE
   - INSTRUMENT_ID
   - INSTRUMENT
   - POSITION_TYPE
   - DIRECTION
   - QUANTITY
   - GROSS_QUANTITY
-  - TRADE_IDS
-  - TRADE_QUANTITIES
   - TRADE_COUNT
   - LONG_TRADES
   - SHORT_TRADES
+  - TRADE_IDS
+  - TRADES
   - LEGAL_ENTITY
   - DIVISION
   - DESK
   - TT_BOOK
   - PORTFOLIO
-  - COUNTERPARTIES
+  - COUNTERPARTY
   - PRODUCT_GROUP
   - PRODUCT_TYPE
   - CURRENCY
+  - COUNTERPARTIES
   - MARKET_VALUE
   - NOTIONAL
-  - LINEAR
-  - STATUS
-  - OPENED_ON
   - TAGS
-  - BOOK_VAR
-  - PCT_OF_BOOK_VAR
+  - STATUS
   - SCENARIO_SET_ID
-  - PNL
   - VAR_SCOPE
-- rule: unique
-  key:
-  - POSITION_ID
-  per: BUSINESS_DATE
-- rule: pattern
-  field: POSITION_ID
-  pattern: ^POS-
-- rule: link
-  field: POSITION_ID
-  kind: position
-- rule: enum
-  field: POSITION_TYPE
-  values:
-  - fungible
-  - single-trade
-- rule: link
-  field: TRADE_IDS
-  kind: trade
 - rule: range
   field: TRADE_COUNT
   min: 0
+- rule: link
+  field: TRADE_IDS
+  kind: trade
 - rule: link
   field: LEGAL_ENTITY
   kind: legal-entity
@@ -402,43 +298,23 @@ validation:
 - rule: link
   field: COUNTERPARTY
   kind: counterparty
-- rule: enum
-  field: CURRENCY
-  values:
-  - AUD
-  - CAD
-  - CHF
-  - EUR
-  - GBP
-  - JPY
-  - USD
-- rule: vector-length
-  field: PNL
-  same: every row of one business date
 - rule: link
-  field: TRADE_QUANTITIES[].TRADE_ID
+  field: TRADES[].TRADE_ID
   kind: trade
-- rule: enum
-  field: TRADE_QUANTITIES[].DIRECTION
-  values:
-  - LONG
-  - SHORT
+- rule: link
+  field: TRADES[].COUNTERPARTY
+  kind: counterparty
 notes:
-- From 2.8.0 positions are derived on the server by config-driven rules (securities by book and security id, OTC by book and trade); this table
-  is then Drishti's, not an upstream delivery.
-- 'Terms kept, figures computed from 2.8.0 (docs/contracts/VAR.md): the fields marked derived are computed by the VaR engine and leave the stored
-  record then.'
+- 'Positions are derived by Drishti when a date loads (docs/contracts/VAR.md section 3.7), by the market-risk pack''s positions: rules (securities
+  by book and security id, listed by book and contract, OTC by book and trade), and served from the VaR engine''s memory by the var-positions
+  connector: no upstream delivers them and nothing stores them. Their VaR figures are computed as the page opens (VAR_ENGINE), never stored.'
 review:
-- 'required inferred from 100% coverage in 198 documents (2 samples and 196 test-data documents (data/testdata/market-risk/position/cob-2026-09-30.jsonl.gz)):
-  confirm each required field is mandatory upstream, and each optional one may be empty.'
+- 'required inferred from 100% coverage in 2 documents (2 samples): confirm each required field is mandatory upstream, and each optional one may
+  be empty.'
+- 'no key could be read from the test data, the catalogue or the layout: name the business key.'
 - 'source is the pack''s first listed source (its README): confirm.'
-- 'due time of each business date is not known: state it (for example, by 06:00 New York the next business day).'
-- 'enum values inferred from the data, not from a glossary: POSITION_TYPE, CURRENCY, TRADE_QUANTITIES[].DIRECTION: confirm they are closed lists.'
-- 'number types decided by the field''s name: NOTIONAL amount, PCT_OF_BOOK_VAR rate: confirm amount, rate or integer.'
-- 'no unit stated for the amounts QUANTITY, GROSS_QUANTITY, NOTIONAL, TRADE_QUANTITIES[].QUANTITY (docs/contracts/README.md section 7: USD unless
-  stated): confirm the currency.'
-- 'no description in about.yaml or the Sutras for BUSINESS_DATE, POSITION_TYPE, GROSS_QUANTITY, LONG_TRADES, SHORT_TRADES, DIVISION, STRATEGY,
-  COUNTERPARTIES, PRODUCT_GROUP, LINEAR, STATUS, TAGS and 2 more: write them in the pack''s config/about.yaml glossary.'
-- 'Class drishti-owned follows docs/contracts/README.md section 4 (POSITION_ID derived by Drishti from 2.8.0): confirm.'
-- 'BOOK_VAR, PCT_OF_BOOK_VAR and VAR_SCOPE are VaR answers too, though not on the product owner''s list (VAR_99, ES_975, COMPONENT_VAR): confirm
-  they are removed in 2.8.0.'
+- 'number types decided by the field''s name: NOTIONAL amount, TRADES[].PV amount: confirm amount, rate or integer.'
+- 'no unit stated for the amounts QUANTITY, GROSS_QUANTITY, NOTIONAL, TRADES[].QUANTITY, TRADES[].PV (docs/contracts/README.md section 7: USD
+  unless stated): confirm the currency.'
+- 'no description in about.yaml or the Sutras for POSITION_ID, BUSINESS_DATE, POSITION_TYPE, GROSS_QUANTITY, LONG_TRADES, SHORT_TRADES, DIVISION,
+  STRATEGY, PRODUCT_GROUP, COUNTERPARTIES, TAGS, STATUS and 3 more: write them in the pack''s config/about.yaml glossary.'

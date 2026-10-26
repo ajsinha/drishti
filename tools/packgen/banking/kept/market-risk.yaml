@@ -17,16 +17,31 @@
 # History queries (TRD 1000015 30, docs/architecture/HISTORY_QUERIES.md section 6): how this pack's kinds look over time.
 # Only the shape: any dated kind has a history without an entry here.
 history:
-  var:
-    columns: [VAR_99, ES_975, SVAR, LIMIT, EXCEPTIONS, MEAN_PNL]
   trade-valuation:
     columns: [MTM, PNL_1D, DV01, NOTIONAL]
   pnl-explain:
     columns: [ACTUAL, EXPLAINED, UNEXPLAINED]
-  # the VaR engine's kinds (VAR_ENGINE.md): a node's official VaR over 250 days, a position's and a portfolio's VaR as the batch left them
-  var-node:
-    columns: [VAR_99, ES_975, HYPO_PNL, LIMIT, POSITION_COUNT]
+  # the VaR engine's kinds (VAR_ENGINE.md): a position (derived by Drishti) and a portfolio's definition over time; their VaR history is
+  # the official end-of-day captures (VAR <scope> <GO>, History tab), never a stored column
   position:
-    columns: [QUANTITY, MARKET_VALUE, VAR_99, ES_975, COMPONENT_VAR]
+    columns: [QUANTITY, MARKET_VALUE, TRADE_COUNT]
   portfolio:
-    columns: [VAR_99, ES_975, LIMIT_VAR, POSITION_COUNT, NET_MV]
+    columns: [LIMIT_VAR]
+
+# How Drishti derives positions from the trades of a business date when it loads the date (docs/contracts/VAR.md section 3.7): the
+# VaR engine reads this section (else its drishti.var.positions setting). A trade counts when its TRADE_STATUS is live and it has not
+# matured; the first rule whose groups (PRODUCT_GROUP) or types (PRODUCT_TYPE) hold it keys its position by the first of the rule's key
+# fields the trade carries: POSITION_ID = POS-<TT_BOOK>~<key>, so a security's trades in one book are one fungible position. No key
+# (or no rule): one position per trade, POS-<TT_BOOK>~<TRADE_ID> (OTC). tools/packgen/var/make_var_data.py reads it too.
+positions:
+  live-statuses: [NEW, VALIDATED, AMENDED]
+  rules:
+    - name: securities                  # bonds, notes, bills, shares and warrants: by book and security
+      groups: [Fixed income]
+      types: [EQ_CASH, WARRANT, CONVERTIBLE_BOND, INFL_LINKED_BOND, T_BILL, COMMERCIAL_PAPER, CERT_DEPOSIT]
+      key: [SECURITY_ID, ISIN, TICKER]
+    - name: listed                      # exchange-traded futures and options: by book and contract
+      types: [BOND_FUTURE, STIR_FUTURE, STIR_FUT_OPT, EQ_FUTURE_SINGLE, EQ_INDEX_FUTURE, EQ_OPTION_LISTED, EQ_INDEX_OPTION, CMD_FUTURE,
+              CMD_FUT_OPTION, ComFut, EMISSIONS_FUTURE]
+      key: [SECURITY_ID, CONTRACT]
+    - name: otc                         # everything else: one position per trade

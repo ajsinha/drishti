@@ -21,93 +21,16 @@ One section per command of the pack: the shape of its data, how it is stored and
 
 | Command | Kind | Class | Status | Fields | To review |
 |---|---|---|---|---|---|
-| [VAR](#var-var--expected-shortfall-var) | `var` | computed | retiring in 2.8.0 | 12 | 7 |
 | [SCN](#scn-stress-scenario-stress-scenario) | `stress-scenario` | fundamental | active | 6 | 5 |
 | [STR](#str-stress-result-stress-result) | `stress-result` | fundamental | active | 7 | 4 |
 | [FRTB](#frtb-frtb-sensitivities-frtb-sensitivity) | `frtb-sensitivity` | fundamental | active | 9 | 6 |
 | [PNL](#pnl-pl-explain-pnl-explain) | `pnl-explain` | fundamental | active | 8 | 6 |
 | [TVAL](#tval-trade-valuation-trade-valuation) | `trade-valuation` | fundamental | active | 21 | 7 |
-| [POS](#pos-position-position) | `position` | drishti-owned | active | 38 | 9 |
-| [PORT](#port-portfolio-portfolio) | `portfolio` | input | active | 28 | 13 |
-| [PNLV](#pnlv-pl-vector-509-scenarios-pnl-vector) | `pnl-vector` | input | active | 29 | 6 |
+| [POS](#pos-position-position) | `position` | drishti-owned | active | 32 | 6 |
+| [PORT](#port-portfolio-portfolio) | `portfolio` | input | active | 10 | 5 |
+| [PNLV](#pnlv-pl-vector-509-scenarios-pnl-vector) | `pnl-vector` | input | active | 32 | 6 |
 | [SSET](#sset-scenario-set-scenario-set) | `scenario-set` | input | active | 11 | 4 |
 | [HIER](#hier-risk-hierarchy-node-risk-hierarchy) | `risk-hierarchy` | input | active | 12 | 5 |
-| [VNODE](#vnode-official-var-of-a-hierarchy-node-var-node) | `var-node` | computed | retiring in 2.8.0 | 21 | 8 |
-
-## VAR: VaR / expected shortfall (`var`)
-
-Historical VaR and ES for a desk or portfolio, with backtesting.
-
-|  |  |
-|---|---|
-| Contract | [var.contract.yaml](../../../config/packs/market-risk/contracts/var.contract.yaml) · version 1.0 |
-| Class | computed |
-| Status | retiring in 2.8.0, replaced by docs/contracts/VAR.md |
-| Source | var-engine |
-| Grain | One row per var / expected shortfall per business date, keyed by RESULT_ID. |
-| Key | `RESULT_ID` |
-| Id pattern | `^VAR-` |
-| Dated by | `business_date` |
-| Cadence | daily (due: to be confirmed) |
-| Storage | connector `risk-store` (plugin `delta`), table `<root>/risk/var/` |
-| Test data | data/testdata/market-risk/var |
-
-**Fields**
-
-| Field | Type | Presence | Unit | Description | Example or values | Link |
-|---|---|---|---|---|---|---|
-| `RESULT_ID` | id | required |  | The record's id (the business key) | `VAR-COMM` (pattern `^VAR-`) |  |
-| `VAR_99` | amount | derived | USD | The loss the portfolio is expected not to exceed on 99 of 100 trading days, read from the 1st percentile of the revalued scenario P&L (historical simulation). *computed by the VaR engine; removed when retired* | `10946782` |  |
-| `ES_975` | amount | derived | USD | The average loss on the worst 2.5% of scenario days. It looks into the tail that VaR ignores, and it is the measure the FRTB internal-models approach uses for capital. *computed by the VaR engine; removed when retired* | `12369864` |  |
-| `SVAR` | integer | derived | USD | VaR calculated with the same model but over a 12-month period of significant stress for the portfolio, instead of the recent past. It feeds the market-risk capital requirement (Basel 2.5). *computed by the VaR engine; removed when retired* | `20798886` |  |
-| `LIMIT` | amount | required | USD | The VaR the desk is approved to run. VaR above it is a limit breach. | `18920000.0` |  |
-| `EXCEPTIONS` | integer | derived | days | The days in the last 250 on which the day's loss was larger than the 99% VaR. Basel's traffic lights count them to judge the model. *computed by the VaR engine; removed when retired* | `1` |  |
-| `SCENARIO_PNL` | vector | derived | USD | The portfolio revalued under each of the 500 historical scenario days; the 1st percentile of this distribution is the VaR. *computed by the VaR engine; removed when retired; 500 values in the test data* |  |  |
-| `MEAN_PNL` | amount | derived |  | — *computed by the VaR engine; removed when retired* | `-49767` |  |
-| `PNL_SERIES` | record list | derived |  | Nested: see nested PNL_SERIES[] *computed by the VaR engine; removed when retired* |  |  |
-| `CONTRIBUTIONS` | record list | derived |  | Nested: see nested CONTRIBUTIONS[] *computed by the VaR engine; removed when retired* |  |  |
-| `DESK` | id | required |  | Desk: the desk it refers to | `DESK-COMM` (pattern `^DESK-`) | `desk` |
-| `METHOD` | text | required |  | — | `Historical simulation, 1-day, 99%, 500 scenarios` |  |
-
-**Nested `PNL_SERIES[]`**
-
-| Field | Type | Presence | Unit | Description | Example or values | Link |
-|---|---|---|---|---|---|---|
-| `DATE` | date | required |  | — | `2026-07-08` |  |
-| `PNL` | amount | required |  | — | `-3990631` |  |
-
-**Nested `CONTRIBUTIONS[]`**
-
-| Field | Type | Presence | Unit | Description | Example or values | Link |
-|---|---|---|---|---|---|---|
-| `BOOK` | id | required |  | Book: the book it refers to | `BOOK-COMM-1` (pattern `^BOOK-`) | `book` |
-| `VAR` | amount | required | USD | The VaR of one book on its own. Books diversify against each other, so the contributions need not add up to the desk's VaR. | `7220978` |  |
-
-**Links:** `DESK` → `desk`, `CONTRIBUTIONS[].BOOK` → `book`.
-
-**Validation**
-
-- required: fields `RESULT_ID`, `LIMIT`, `DESK`, `METHOD`
-- unique: key `RESULT_ID`; per business_date
-- pattern: field RESULT_ID; pattern ^VAR-
-- vector-length: field SCENARIO_PNL; same every row of one business date
-- link: field DESK; kind desk
-- link: field CONTRIBUTIONS[].BOOK; kind book
-
-**Notes**
-
-- Dated by the lake's business_date partition: `drishti.py lake build` writes each test-data file's day into it; the documents carry no date field of their own.
-- Retiring in 2.8.0: the stored kind is removed and computed instead by the VaR engine (docs/contracts/VAR.md); old ids and links open the computed page.
-
-**To review (7)**
-
-- required inferred from 100% coverage in 20 documents (10 samples and 10 test-data documents (data/testdata/market-risk/var/snapshot-2026-07-08.jsonl.gz, data/testdata/market-risk/var/changes-2026-09-30.jsonl.gz)): confirm each required field is mandatory upstream, and each optional one may be empty.
-- source 'var-engine' is the test data's _meta.source (synthetic): name the production system that delivers it.
-- due time of each business date is not known: state it (for example, by 06:00 New York the next business day).
-- number types decided by the field's name: MEAN_PNL amount, PNL_SERIES[].PNL amount: confirm amount, rate or integer.
-- no unit stated for the amounts MEAN_PNL, PNL_SERIES[].PNL (docs/contracts/README.md section 7: USD unless stated): confirm the currency.
-- no description in about.yaml or the Sutras for MEAN_PNL, METHOD, PNL_SERIES[].DATE, PNL_SERIES[].PNL: write them in the pack's config/about.yaml glossary.
-- LIMIT is a term (the desk's VaR limit), not a figure: confirm it moves to the risk hierarchy (HIER LIMIT_VAR) when VAR is retired.
 
 ## SCN: Stress scenario (`stress-scenario`)
 
@@ -447,114 +370,96 @@ A trade's valuation from the risk engine, for every source system: MTM, one-day 
 
 ## POS: Position (`position`)
 
-A position: one instrument held in one book, the trades that build or reduce it, its VaR and its P&L over the scenario days.
+A position: one security held in one book (or one OTC trade), the trades that build or reduce it, and its VaR computed as the page opens.
 
 |  |  |
 |---|---|
 | Contract | [position.contract.yaml](../../../config/packs/market-risk/contracts/position.contract.yaml) · version 1.0 |
 | Class | drishti-owned |
 | Status | active |
-| Source | Synthetic sample data (tools/packgen/banking) |
-| Grain | One row per position per BUSINESS_DATE, keyed by POSITION_ID. |
+| Source | Drishti (the VaR engine derives positions from the trades of pnl-vector when a date loads, docs/contracts/VAR.md section 3.7) |
+| Grain | One position per business date, derived (never stored); POS-<TT_BOOK>~<security> or POS-<TT_BOOK>~<trade>. |
 | Key | `POSITION_ID` |
 | Id pattern | `^POS-` |
 | Dated by | `BUSINESS_DATE` |
-| Cadence | daily (due: to be confirmed) |
-| Storage | connector `risk-store` (plugin `delta`), table `<root>/risk/position/` |
-| Columns | `POSITION_ID`, `INSTRUMENT_ID`, `INSTRUMENT`, `DIRECTION`, `LEGAL_ENTITY`, `DIVISION`, `DESK`, `TT_BOOK`, `PORTFOLIO`, `PRODUCT_GROUP`, `PRODUCT_TYPE`, `CURRENCY`, `COUNTERPARTY`, `QUANTITY`, `MARKET_VALUE`, `TRADE_COUNT`, `VAR_99`, `ES_975`, `COMPONENT_VAR` |
-| Vectors | `PNL` |
-| Test data | data/testdata/market-risk/position |
+| Cadence | daily (due: when the date's pnl-vector rows are loaded (derived at once)) |
+| Storage | connector `var-positions` (plugin `var-positions`) |
 
 **Fields**
 
 | Field | Type | Presence | Unit | Description | Example or values | Link |
 |---|---|---|---|---|---|---|
-| `POSITION_ID` | id | required |  | The record's id (the business key) | `POS-BOOK-EQD-2~EQ_ASIAN-USD-2029Q2` (pattern `^POS-`) | `position` |
+| `POSITION_ID` | id | required |  | — | `POS-BOOK-EQD-2~SEC-WARRANT-USD-01` |  |
 | `BUSINESS_DATE` | date | required |  | — | `2026-09-30` |  |
-| `INSTRUMENT_ID` | id | required |  | Instrument | `INS-EQ_ASIAN-USD-2029Q2` |  |
-| `INSTRUMENT` | text | required |  | What the position holds: the product, its currency, its underlying and its maturity. Trades of the same instrument in one book are one position. | `Equity Asian option USD 2029-04` |  |
-| `POSITION_TYPE` | text | required |  | — | `fungible`, `single-trade` |  |
+| `POSITION_RULE` | text | required |  | How Drishti keyed the position (the market-risk pack's positions: rules): securities by book and security, listed by book and contract, otc one per trade. | `securities` |  |
+| `SECURITY_ID` | id | optional |  | The security or exchange contract the position holds; empty for a position of one OTC trade. | `SEC-WARRANT-USD-01` |  |
+| `INSTRUMENT_ID` | id | required |  | Instrument | `SEC-WARRANT-USD-01` |  |
+| `INSTRUMENT` | text | required |  | What the position holds: the security, or for one OTC trade its product, currency and maturity. | `Equity warrant USD 2027-05` |  |
+| `POSITION_TYPE` | text | required |  | — | `fungible` |  |
 | `DIRECTION` | text | required |  | LONG when the position's net quantity is above zero (more bought than sold), SHORT when below. Its trades may be of both directions: they net. | `SHORT` |  |
-| `QUANTITY` | amount | required |  | The signed sum of the position's trades' quantities (notional for swaps, units for securities): a buy adds, a sell takes away. | `-810529060.0` |  |
-| `GROSS_QUANTITY` | amount | required |  | — | `7050772940.0` |  |
+| `QUANTITY` | amount | required |  | The signed sum of the position's trades' quantities (notional for swaps, units for securities): a buy adds, a sell takes away. | `-1772145212.5` |  |
+| `GROSS_QUANTITY` | amount | required |  | — | `2816087612.5` |  |
+| `TRADE_COUNT` | integer | required |  | Trades | `9` |  |
+| `LONG_TRADES` | integer | required |  | — | `2` |  |
+| `SHORT_TRADES` | integer | required |  | — | `7` |  |
 | `TRADE_IDS` | id list | required |  | Trade: the trade it refers to |  | `trade` |
-| `TRADE_QUANTITIES` | record list | required |  | Nested: see nested TRADE_QUANTITIES[] |  |  |
-| `TRADE_COUNT` | integer | required |  | Trades | `18` |  |
-| `LONG_TRADES` | integer | required |  | — | `9` |  |
-| `SHORT_TRADES` | integer | required |  | — | `9` |  |
+| `TRADES` | record list | required |  | Nested: see nested TRADES[] |  |  |
 | `LEGAL_ENTITY` | id | required |  | The bank's legal entity that holds the book. | `LE-LDN` (pattern `^LE-`) | `legal-entity` |
 | `DIVISION` | id | required |  | — | `DIV-MARKETS` |  |
 | `DESK` | id | required |  | The desk the book belongs to. | `DESK-EQD` (pattern `^DESK-`) | `desk` |
 | `TT_BOOK` | id | required |  | The book the position is held in: its trades are all booked there. | `BOOK-EQD-2` (pattern `^BOOK-`) | `book` |
 | `PORTFOLIO` | id | required |  | Portfolio: the book it refers to | `BOOK-EQD-2` (pattern `^BOOK-`) | `book` |
 | `STRATEGY` | unknown | optional |  | — |  |  |
-| `COUNTERPARTY` | id | optional |  | The counterparty of the position's trades when they all share one; empty otherwise. | `CP-SUMMIT` (pattern `^CP-`) | `counterparty` |
-| `COUNTERPARTIES` | text list | required |  | — |  |  |
+| `COUNTERPARTY` | id | required |  | The counterparty of the position's trades when they all share one; empty otherwise. | `CP-SUMMIT` (pattern `^CP-`) | `counterparty` |
 | `PRODUCT_GROUP` | text | required |  | — | `Equity` |  |
-| `PRODUCT_TYPE` | text | required |  | The product of the instrument, as the booking systems name it. | `EQ_ASIAN` |  |
-| `CURRENCY` | text | required |  | The instrument's currency. Every P&L and value is in USD, the reporting currency. | `AUD`, `CAD`, `CHF`, `EUR`, `GBP`, `JPY`, `USD` |  |
-| `MARKET_VALUE` | amount | required | USD | The sum of the trades' present values (their mark-to-market) on the business date. | `83350636` |  |
-| `NOTIONAL` | amount | required |  | The sum of the trades' quantities without their signs. | `7050772940` |  |
-| `LINEAR` | boolean | required |  | — | `True` |  |
+| `PRODUCT_TYPE` | text | required |  | The product of the instrument, as the booking systems name it. | `WARRANT` |  |
+| `CURRENCY` | text | required |  | The instrument's currency. Every P&L and value is in USD, the reporting currency. | `USD` |  |
+| `COUNTERPARTIES` | text list | required |  | — |  |  |
+| `MARKET_VALUE` | amount | required | USD | The sum of the trades' present values (their mark-to-market) on the business date. | `41691425` |  |
+| `NOTIONAL` | amount | required |  | The sum of the trades' quantities without their signs. | `2816087612` |  |
+| `TAGS` | list | required |  | — |  |  |
 | `STATUS` | text | required |  | — | `open` |  |
-| `OPENED_ON` | date | required |  | The trade date of the position's first trade. | `2024-10-10` |  |
-| `TAGS` | text list | required |  | — |  |  |
-| `VAR_99` | amount | derived (retiring in 2.8.0) | USD | The loss the portfolio is expected not to exceed on 99 of 100 trading days, read from the 1st percentile of the revalued scenario P&L (historical simulation). *computed by the VaR engine from 2.8.0; removed from the stored record then* | `52808` |  |
-| `ES_975` | amount | derived (retiring in 2.8.0) | USD | The average loss on the worst 2.5% of scenario days. It looks into the tail that VaR ignores, and it is the measure the FRTB internal-models approach uses for capital. *computed by the VaR engine from 2.8.0; removed from the stored record then* | `52234` |  |
-| `COMPONENT_VAR` | amount | derived (retiring in 2.8.0) | USD | The position's share of its book's VaR (Euler allocation): the shares of a book's positions add up to the book's VaR; a hedge has a negative share. *computed by the VaR engine from 2.8.0; removed from the stored record then* | `51216` |  |
-| `BOOK_VAR` | amount | required | USD | The 1-day 99% VaR of the whole book the position is held in. | `426663` |  |
-| `PCT_OF_BOOK_VAR` | rate | required |  | The component VaR over the book's VaR. | `0.12` |  |
 | `SCENARIO_SET_ID` | id | required |  | — | `HS-509` |  |
-| `PNL` | vector | required | USD | The position's P&L under each historical scenario day (509 of them): the sum of its trades' vectors. *509 values in the test data* |  |  |
-| `VAR_SCOPE` | text | required |  | — | `POS:POS-BOOK-EQD-2~EQ_ASIAN-USD-2029Q2` |  |
+| `VAR_SCOPE` | text | required |  | — | `POS:POS-BOOK-EQD-2~SEC-WARRANT-USD-01` |  |
 
-**Nested `TRADE_QUANTITIES[]`**
+**Nested `TRADES[]`**
 
 | Field | Type | Presence | Unit | Description | Example or values | Link |
 |---|---|---|---|---|---|---|
-| `TRADE_ID` | id | required |  | Trade | `MX-20000209` (pattern `^(MX\|CLY)-\d+$`) | `trade` |
-| `QUANTITY` | amount | required |  | The trade's signed quantity in the position: a buy positive, a sell negative. | `-180000000.0` |  |
-| `DIRECTION` | text | required |  | Direction | `LONG`, `SHORT` |  |
-| `VAR_99` | amount | derived (retiring in 2.8.0) | USD | The trade's 1-day 99% VaR as if it were alone. *computed by the VaR engine from 2.8.0; removed from the stored record then* | `10869` |  |
-| `COMPONENT_VAR` | amount | derived (retiring in 2.8.0) | USD | The trade's share of the position's VaR. The shares of a long and a short of one instrument have opposite signs and add up to the position's VaR. *computed by the VaR engine from 2.8.0; removed from the stored record then* | `12050` |  |
+| `TRADE_ID` | id | required |  | Trade | `MX-20000274` (pattern `^(MX\|CLY)-\d+$`) | `trade` |
+| `QUANTITY` | amount | required |  | The trade's signed quantity in the position: a buy positive, a sell negative. | `-179000000.0` |  |
+| `DIRECTION` | text | required |  | Direction | `SHORT` |  |
+| `PV` | amount | required |  | PV | `3143714.0` |  |
+| `PRODUCT_TYPE` | text | required |  | — | `WARRANT` |  |
+| `COUNTERPARTY` | id | required |  | Counterparty | `CP-SUMMIT` (pattern `^CP-`) | `counterparty` |
 
-**Links:** `POSITION_ID` → `position`, `TRADE_IDS` → `trade`, `LEGAL_ENTITY` → `legal-entity`, `DESK` → `desk`, `TT_BOOK` → `book`, `PORTFOLIO` → `book`, `COUNTERPARTY` → `counterparty`, `TRADE_QUANTITIES[].TRADE_ID` → `trade`.
+**Links:** `TRADE_IDS` → `trade`, `LEGAL_ENTITY` → `legal-entity`, `DESK` → `desk`, `TT_BOOK` → `book`, `PORTFOLIO` → `book`, `COUNTERPARTY` → `counterparty`, `TRADES[].TRADE_ID` → `trade`, `TRADES[].COUNTERPARTY` → `counterparty`.
 
 **Validation**
 
-- required: fields `POSITION_ID`, `BUSINESS_DATE`, `INSTRUMENT_ID`, `INSTRUMENT`, `POSITION_TYPE`, `DIRECTION`, `QUANTITY`, `GROSS_QUANTITY`, `TRADE_IDS`, `TRADE_QUANTITIES`, `TRADE_COUNT`, `LONG_TRADES`, `SHORT_TRADES`, `LEGAL_ENTITY`, `DIVISION`, `DESK`, `TT_BOOK`, `PORTFOLIO`, `COUNTERPARTIES`, `PRODUCT_GROUP`, `PRODUCT_TYPE`, `CURRENCY`, `MARKET_VALUE`, `NOTIONAL`, `LINEAR`, `STATUS`, `OPENED_ON`, `TAGS`, `BOOK_VAR`, `PCT_OF_BOOK_VAR`, `SCENARIO_SET_ID`, `PNL`, `VAR_SCOPE`
-- unique: key `POSITION_ID`; per BUSINESS_DATE
-- pattern: field POSITION_ID; pattern ^POS-
-- link: field POSITION_ID; kind position
-- enum: field POSITION_TYPE; values `fungible`, `single-trade`
-- link: field TRADE_IDS; kind trade
+- required: fields `POSITION_ID`, `BUSINESS_DATE`, `POSITION_RULE`, `INSTRUMENT_ID`, `INSTRUMENT`, `POSITION_TYPE`, `DIRECTION`, `QUANTITY`, `GROSS_QUANTITY`, `TRADE_COUNT`, `LONG_TRADES`, `SHORT_TRADES`, `TRADE_IDS`, `TRADES`, `LEGAL_ENTITY`, `DIVISION`, `DESK`, `TT_BOOK`, `PORTFOLIO`, `COUNTERPARTY`, `PRODUCT_GROUP`, `PRODUCT_TYPE`, `CURRENCY`, `COUNTERPARTIES`, `MARKET_VALUE`, `NOTIONAL`, `TAGS`, `STATUS`, `SCENARIO_SET_ID`, `VAR_SCOPE`
 - range: field TRADE_COUNT; min 0
+- link: field TRADE_IDS; kind trade
 - link: field LEGAL_ENTITY; kind legal-entity
 - link: field DESK; kind desk
 - link: field TT_BOOK; kind book
 - link: field PORTFOLIO; kind book
 - link: field COUNTERPARTY; kind counterparty
-- enum: field CURRENCY; values `AUD`, `CAD`, `CHF`, `EUR`, `GBP`, `JPY`, `USD`
-- vector-length: field PNL; same every row of one business date
-- link: field TRADE_QUANTITIES[].TRADE_ID; kind trade
-- enum: field TRADE_QUANTITIES[].DIRECTION; values `LONG`, `SHORT`
+- link: field TRADES[].TRADE_ID; kind trade
+- link: field TRADES[].COUNTERPARTY; kind counterparty
 
 **Notes**
 
-- From 2.8.0 positions are derived on the server by config-driven rules (securities by book and security id, OTC by book and trade); this table is then Drishti's, not an upstream delivery.
-- Terms kept, figures computed from 2.8.0 (docs/contracts/VAR.md): the fields marked derived are computed by the VaR engine and leave the stored record then.
+- Positions are derived by Drishti when a date loads (docs/contracts/VAR.md section 3.7), by the market-risk pack's positions: rules (securities by book and security id, listed by book and contract, OTC by book and trade), and served from the VaR engine's memory by the var-positions connector: no upstream delivers them and nothing stores them. Their VaR figures are computed as the page opens (VAR_ENGINE), never stored.
 
-**To review (9)**
+**To review (6)**
 
-- required inferred from 100% coverage in 198 documents (2 samples and 196 test-data documents (data/testdata/market-risk/position/cob-2026-09-30.jsonl.gz)): confirm each required field is mandatory upstream, and each optional one may be empty.
+- required inferred from 100% coverage in 2 documents (2 samples): confirm each required field is mandatory upstream, and each optional one may be empty.
+- no key could be read from the test data, the catalogue or the layout: name the business key.
 - source is the pack's first listed source (its README): confirm.
-- due time of each business date is not known: state it (for example, by 06:00 New York the next business day).
-- enum values inferred from the data, not from a glossary: POSITION_TYPE, CURRENCY, TRADE_QUANTITIES[].DIRECTION: confirm they are closed lists.
-- number types decided by the field's name: NOTIONAL amount, PCT_OF_BOOK_VAR rate: confirm amount, rate or integer.
-- no unit stated for the amounts QUANTITY, GROSS_QUANTITY, NOTIONAL, TRADE_QUANTITIES[].QUANTITY (docs/contracts/README.md section 7: USD unless stated): confirm the currency.
-- no description in about.yaml or the Sutras for BUSINESS_DATE, POSITION_TYPE, GROSS_QUANTITY, LONG_TRADES, SHORT_TRADES, DIVISION, STRATEGY, COUNTERPARTIES, PRODUCT_GROUP, LINEAR, STATUS, TAGS and 2 more: write them in the pack's config/about.yaml glossary.
-- Class drishti-owned follows docs/contracts/README.md section 4 (POSITION_ID derived by Drishti from 2.8.0): confirm.
-- BOOK_VAR, PCT_OF_BOOK_VAR and VAR_SCOPE are VaR answers too, though not on the product owner's list (VAR_99, ES_975, COMPONENT_VAR): confirm they are removed in 2.8.0.
+- number types decided by the field's name: NOTIONAL amount, TRADES[].PV amount: confirm amount, rate or integer.
+- no unit stated for the amounts QUANTITY, GROSS_QUANTITY, NOTIONAL, TRADES[].QUANTITY, TRADES[].PV (docs/contracts/README.md section 7: USD unless stated): confirm the currency.
+- no description in about.yaml or the Sutras for POSITION_ID, BUSINESS_DATE, POSITION_TYPE, GROSS_QUANTITY, LONG_TRADES, SHORT_TRADES, DIVISION, STRATEGY, PRODUCT_GROUP, COUNTERPARTIES, TAGS, STATUS and 3 more: write them in the pack's config/about.yaml glossary.
 
 ## PORT: Portfolio (`portfolio`)
 
@@ -572,188 +477,69 @@ A portfolio in terms of the positions inside it: longs and shorts, market value,
 | Dated by | `BUSINESS_DATE` |
 | Cadence | daily (due: to be confirmed) |
 | Storage | connector `risk-store` (plugin `delta`), table `<root>/risk/portfolio/` |
-| Columns | `PORTFOLIO_ID`, `NAME`, `TYPE`, `OWNER`, `VAR_99`, `ES_975`, `LIMIT_VAR`, `POSITION_COUNT` |
-| Vectors | `PNL` |
+| Columns | `PORTFOLIO_ID`, `NAME`, `TYPE`, `OWNER`, `LIMIT_VAR` |
 | Test data | data/testdata/market-risk/portfolio |
 
 **Fields**
 
 | Field | Type | Presence | Unit | Description | Example or values | Link |
 |---|---|---|---|---|---|---|
-| `PORTFOLIO_ID` | id | required |  | The record's id (the business key) | `PF-RATES-DESK` (pattern `^PF-`) | `portfolio` |
-| `NAME` | text | required |  | — | `Rates desk (New York)` |  |
-| `OWNER` | text | required |  | Who keeps the portfolio's definition. | `rates-risk` |  |
-| `TYPE` | text | required |  | HIERARCHY: a node of the bank's hierarchy (a desk, a book). RULE: every position whose columns meet a condition. BASKET: positions and trades someone picked. | `HIERARCHY` |  |
+| `PORTFOLIO_ID` | id | required |  | The record's id (the business key) | `PF-ASHA-UNWIND` (pattern `^PF-`) | `portfolio` |
+| `NAME` | text | required |  | — | `Unwind candidates (Asha)` |  |
+| `OWNER` | text | required |  | Who keeps the portfolio's definition. | `asha` |  |
+| `TYPE` | text | required |  | HIERARCHY: a node of the bank's hierarchy (a desk, a legal entity, a book). RULE: every position whose columns meet a condition. BASKET: positions and trades someone picked. | `BASKET`, `HIERARCHY`, `RULE` |  |
 | `DEFINITION` | record | required |  | Nested: see nested DEFINITION |  |  |
 | `ROLLS_UP_TO` | record | required |  | Nested: see nested ROLLS_UP_TO |  |  |
-| `LIMIT_VAR` | amount | required | USD | The VaR the portfolio may take. | `4600000` |  |
+| `LIMIT_VAR` | amount | required | USD | The VaR the portfolio may take. | `1800000` |  |
 | `BUSINESS_DATE` | date | required |  | — | `2026-09-30` |  |
 | `VALID_FROM` | date | required |  | The first business date the portfolio's definition applies to; an earlier date uses the definition then in force. | `2026-01-02` |  |
 | `VALID_TO` | unknown | optional |  | — |  |  |
-| `SCENARIO_SET_ID` | id | required |  | — | `HS-509` |  |
-| `POSITION_COUNT` | integer | required |  | The positions in the portfolio on the business date (a basket naming one trade of a position holds that part of it). | `24` |  |
-| `TRADE_COUNT` | integer | required |  | — | `172` |  |
-| `LONG_COUNT` | integer | required |  | Positions whose net quantity is above zero. | `14` |  |
-| `SHORT_COUNT` | integer | required |  | Positions whose net quantity is below zero. | `10` |  |
-| `GROSS_MV` | integer | required | USD | The sum of the positions' market values without their signs. | `1065077778` |  |
-| `NET_MV` | amount | required | USD | The sum of the positions' market values: longs and shorts offset. | `352474636` |  |
-| `VAR_99` | amount | derived (retiring in 2.8.0) | USD | The loss the portfolio is expected not to exceed on 99 of 100 trading days, read from the 1st percentile of the revalued scenario P&L (historical simulation). *computed by the VaR engine from 2.8.0; removed from the stored record then* | `3012892` |  |
-| `ES_975` | amount | derived (retiring in 2.8.0) | USD | The average loss on the worst 2.5% of scenario days. It looks into the tail that VaR ignores, and it is the measure the FRTB internal-models approach uses for capital. *computed by the VaR engine from 2.8.0; removed from the stored record then* | `3690544` |  |
-| `LIMIT_USE` | rate | required |  | The VaR over the portfolio's VaR limit. | `0.655` |  |
-| `POSITIONS` | record list | required |  | Nested: see nested POSITIONS[] |  |  |
-| `BY_PRODUCT` | record list | required |  | Nested: see nested BY_PRODUCT[] |  |  |
-| `BY_CURRENCY` | record list | required |  | Nested: see nested BY_CURRENCY[] |  |  |
-| `BY_DIRECTION` | record list | required |  | Nested: see nested BY_DIRECTION[] |  |  |
-| `TOP_CONTRIBUTORS` | record list | required |  | Nested: see nested TOP_CONTRIBUTORS[] |  |  |
-| `ALL_TRADES` | record | optional |  | Nested: see nested ALL_TRADES |  |  |
-| `VAR_SCOPE` | text | required |  | — | `PORT:PF-RATES-DESK` |  |
-| `PNL` | vector | derived (retiring in 2.8.0) | USD | The portfolio's P&L under each historical scenario day: the sum of its members' vectors, each trade counted once. *computed by the VaR engine from 2.8.0; removed from the stored record then; 509 values in the test data* |  |  |
 
 **Nested `DEFINITION`**
 
 | Field | Type | Presence | Unit | Description | Example or values | Link |
 |---|---|---|---|---|---|---|
-| `NODE` | text | optional |  | For a HIERARCHY portfolio: the node of the bank's hierarchy whose positions it holds (every book under it). | `MGMT~DESK-RATES` |  |
-| `RULE` | text | optional |  | For a RULE portfolio: the condition a position's columns must meet to be in it, checked on each business date. | `PRODUCT_GROUP in ('Rates', 'Fixed income', 'Money markets')…` |  |
 | `MEMBERS` | record list | optional |  | For a BASKET portfolio: the positions and trades someone picked (a trade brings that part of its position). |  |  |
-
-**Nested `ROLLS_UP_TO`**
-
-| Field | Type | Presence | Unit | Description | Example or values | Link |
-|---|---|---|---|---|---|---|
-| `KIND` | text | required |  | — | `desk` |  |
-| `ID` | id | required |  | The desk or book the portfolio reports under. | `DESK-RATES` |  |
-
-**Nested `POSITIONS[]`**
-
-| Field | Type | Presence | Unit | Description | Example or values | Link |
-|---|---|---|---|---|---|---|
-| `POSITION_ID` | id | required |  | The position's id: its book and its instrument (one holding nets every trade of that instrument in the book). | `POS-BOOK-RATES-1~CMS_SPREAD_OPT-AUD-2028Q2` (pattern `^POS-`) | `position` |
-| `INSTRUMENT` | text | required |  | What the position holds: the product, its currency and its maturity. | `CMS spread option AUD 2028-06` |  |
-| `DIRECTION` | text | required |  | LONG or SHORT: the sign of the position's net quantity. | `LONG` |  |
-| `QUANTITY` | amount | required |  | The signed sum of the position's trades' quantities held in the portfolio. | `3729781440.0` |  |
-| `MARKET_VALUE` | amount | required | USD | The position's present value on the business date. | `34842645` |  |
-| `CURRENCY` | text | required |  | Currency | `AUD`, `CAD`, `CHF`, `EUR`, `GBP`, `JPY`, `USD` |  |
-| `TT_BOOK` | id | required |  | Book | `BOOK-RATES-1` (pattern `^BOOK-`) | `book` |
-| `DESK` | id | required |  | Desk: the desk it refers to | `DESK-RATES` (pattern `^DESK-`) | `desk` |
-| `PRODUCT_GROUP` | text | required |  | — | `Rates` |  |
-| `PRODUCT_TYPE` | text | required |  | — | `CMS_SPREAD_OPT` |  |
-| `TRADES` | integer | required |  | — | `8` |  |
-| `PARTIAL` | boolean | required |  | — | `False` |  |
-| `VAR_99` | amount | required | USD | The position's own 1-day 99% VaR, as if it were alone. | `1200274` |  |
-| `COMPONENT_VAR` | amount | required | USD | The position's share of the portfolio's VaR (Euler): the shares add up to the portfolio's VaR; a hedge has a negative share. | `873399` |  |
-| `PCT_OF_VAR` | rate | required |  | The component VaR over the portfolio's VaR. | `0.2899` |  |
-
-**Nested `BY_PRODUCT[]`**
-
-| Field | Type | Presence | Unit | Description | Example or values | Link |
-|---|---|---|---|---|---|---|
-| `KEY` | text | required |  | — | `CMS_SPREAD_OPT` |  |
-| `POSITIONS` | integer | required |  | — | `3` |  |
-| `NET_MV` | amount | required |  | — | `27587182` |  |
-| `GROSS_MV` | integer | required |  | — | `42098108` |  |
-| `COMPONENT_VAR` | amount | required |  | — | `1711764` |  |
-
-**Nested `BY_CURRENCY[]`**
-
-| Field | Type | Presence | Unit | Description | Example or values | Link |
-|---|---|---|---|---|---|---|
-| `KEY` | text | required |  | — | `AUD`, `CAD`, `CHF`, `EUR`, `GBP`, `JPY`, `USD` |  |
-| `POSITIONS` | integer | required |  | — | `4` |  |
-| `NET_MV` | amount | required |  | — | `19937477` |  |
-| `GROSS_MV` | integer | required |  | — | `69132877` |  |
-| `COMPONENT_VAR` | amount | required |  | — | `1695103` |  |
-
-**Nested `BY_DIRECTION[]`**
-
-| Field | Type | Presence | Unit | Description | Example or values | Link |
-|---|---|---|---|---|---|---|
-| `KEY` | text | required |  | — | `LONG` |  |
-| `POSITIONS` | integer | required |  | — | `14` |  |
-| `NET_MV` | amount | required |  | — | `222870572` |  |
-| `GROSS_MV` | integer | required |  | — | `615936406` |  |
-| `COMPONENT_VAR` | amount | required |  | — | `3763974` |  |
-
-**Nested `TOP_CONTRIBUTORS[]`**
-
-| Field | Type | Presence | Unit | Description | Example or values | Link |
-|---|---|---|---|---|---|---|
-| `POSITION_ID` | id | required |  | Position: the position it refers to | `POS-BOOK-RATES-1~CMS_SPREAD_OPT-AUD-2028Q2` (pattern `^POS-`) | `position` |
-| `INSTRUMENT` | text | required |  | — | `CMS spread option AUD 2028-06` |  |
-| `DIRECTION` | text | required |  | — | `LONG`, `SHORT` |  |
-| `QUANTITY` | amount | required |  | — | `3729781440.0` |  |
-| `MARKET_VALUE` | amount | required |  | — | `34842645` |  |
-| `CURRENCY` | text | required |  | — | `AUD`, `CAD`, `CHF`, `EUR`, `GBP`, `JPY`, `USD` |  |
-| `TT_BOOK` | id | required |  | Book: the book it refers to | `BOOK-RATES-1` (pattern `^BOOK-`) | `book` |
-| `DESK` | id | required |  | Desk: the desk it refers to | `DESK-RATES` (pattern `^DESK-`) | `desk` |
-| `PRODUCT_GROUP` | text | required |  | — | `Rates` |  |
-| `PRODUCT_TYPE` | text | required |  | — | `CMS_SPREAD_OPT` |  |
-| `TRADES` | integer | required |  | — | `8` |  |
-| `PARTIAL` | boolean | required |  | — | `False` |  |
-| `VAR_99` | amount | required |  | — | `1200274` |  |
-| `COMPONENT_VAR` | amount | required |  | — | `873399` |  |
-| `PCT_OF_VAR` | rate | required |  | — | `0.2899` |  |
-
-**Nested `ALL_TRADES`**
-
-| Field | Type | Presence | Unit | Description | Example or values | Link |
-|---|---|---|---|---|---|---|
-| `KIND` | text | required |  | — | `portfolio-trades` |  |
-| `ID` | id | required |  | — | `DESK-RATES` |  |
+| `NODE` | text | optional |  | For a HIERARCHY portfolio: the node of the bank's hierarchy whose positions it holds (every book under it). | `MGMT~DESK-RATES` |  |
+| `RULE` | text | optional |  | For a RULE portfolio: the condition a position's columns must meet to be in it, checked on each business date. | `PRODUCT_GROUP in ('Rates', 'Fixed income', 'Money market') …` |  |
 
 **Nested `DEFINITION.MEMBERS[]`**
 
 | Field | Type | Presence | Unit | Description | Example or values | Link |
 |---|---|---|---|---|---|---|
-| `POSITION_ID` | id | optional |  | Position: the position it refers to | `POS-BOOK-RATES-1~ACCRETING_SWAP-USD-2029Q1` (pattern `^POS-`) | `position` |
-| `TRADE_ID` | id | optional |  | Trade: the trade it refers to | `CLY-3000087` (pattern `^(MX\|CLY)-\d+$`) | `trade` |
+| `POSITION_ID` | id | optional |  | Position: the position it refers to | `POS-BOOK-RATES-1~MX-20000002` (pattern `^POS-`) | `position` |
+| `TRADE_ID` | id | optional |  | Trade: the trade it refers to | `CLY-3000087` | `trade` |
 
-**Links:** `PORTFOLIO_ID` → `portfolio`, `POSITIONS[].POSITION_ID` → `position`, `POSITIONS[].TT_BOOK` → `book`, `POSITIONS[].DESK` → `desk`, `TOP_CONTRIBUTORS[].POSITION_ID` → `position`, `TOP_CONTRIBUTORS[].TT_BOOK` → `book`, `TOP_CONTRIBUTORS[].DESK` → `desk`, `DEFINITION.MEMBERS[].POSITION_ID` → `position`, `DEFINITION.MEMBERS[].TRADE_ID` → `trade`.
+**Nested `ROLLS_UP_TO`**
+
+| Field | Type | Presence | Unit | Description | Example or values | Link |
+|---|---|---|---|---|---|---|
+| `KIND` | text | required |  | — | `division` |  |
+| `ID` | id | required |  | The desk or book the portfolio reports under. | `DIV-MARKETS` |  |
+
+**Links:** `PORTFOLIO_ID` → `portfolio`, `DEFINITION.MEMBERS[].POSITION_ID` → `position`, `DEFINITION.MEMBERS[].TRADE_ID` → `trade`.
 
 **Validation**
 
-- required: fields `PORTFOLIO_ID`, `NAME`, `OWNER`, `TYPE`, `DEFINITION`, `ROLLS_UP_TO`, `LIMIT_VAR`, `BUSINESS_DATE`, `VALID_FROM`, `SCENARIO_SET_ID`, `POSITION_COUNT`, `TRADE_COUNT`, `LONG_COUNT`, `SHORT_COUNT`, `GROSS_MV`, `NET_MV`, `LIMIT_USE`, `POSITIONS`, `BY_PRODUCT`, `BY_CURRENCY`, `BY_DIRECTION`, `TOP_CONTRIBUTORS`, `VAR_SCOPE`
+- required: fields `PORTFOLIO_ID`, `NAME`, `OWNER`, `TYPE`, `DEFINITION`, `ROLLS_UP_TO`, `LIMIT_VAR`, `BUSINESS_DATE`, `VALID_FROM`
 - unique: key `PORTFOLIO_ID`; per BUSINESS_DATE
 - pattern: field PORTFOLIO_ID; pattern ^PF-
 - link: field PORTFOLIO_ID; kind portfolio
-- range: field POSITION_COUNT; min 0
-- range: field TRADE_COUNT; min 0
-- range: field LONG_COUNT; min 0
-- range: field SHORT_COUNT; min 0
-- vector-length: field PNL; same every row of one business date
-- link: field POSITIONS[].POSITION_ID; kind position
-- enum: field POSITIONS[].CURRENCY; values `AUD`, `CAD`, `CHF`, `EUR`, `GBP`, `JPY`, `USD`
-- link: field POSITIONS[].TT_BOOK; kind book
-- link: field POSITIONS[].DESK; kind desk
-- enum: field BY_CURRENCY[].KEY; values `AUD`, `CAD`, `CHF`, `EUR`, `GBP`, `JPY`, `USD`
-- link: field TOP_CONTRIBUTORS[].POSITION_ID; kind position
-- enum: field TOP_CONTRIBUTORS[].DIRECTION; values `LONG`, `SHORT`
-- enum: field TOP_CONTRIBUTORS[].CURRENCY; values `AUD`, `CAD`, `CHF`, `EUR`, `GBP`, `JPY`, `USD`
-- link: field TOP_CONTRIBUTORS[].TT_BOOK; kind book
-- link: field TOP_CONTRIBUTORS[].DESK; kind desk
+- enum: field TYPE; values `BASKET`, `HIERARCHY`, `RULE`
 - link: field DEFINITION.MEMBERS[].POSITION_ID; kind position
 - link: field DEFINITION.MEMBERS[].TRADE_ID; kind trade
 
 **Notes**
 
-- The portfolio definitions are an engine input (IMPLEMENTATION_PLAN.md, kept as fundamental data); the figures on a stored portfolio are VaR answers.
-- Terms kept, figures computed from 2.8.0 (docs/contracts/VAR.md): the fields marked derived are computed by the VaR engine and leave the stored record then.
+- The portfolio definitions are an engine input (IMPLEMENTATION_PLAN.md); the figures of the retired stored record (VaR, ES, positions, contributions, P&L) are computed as the page opens (VAR_ENGINE), never stored.
 
-**To review (13)**
+**To review (5)**
 
-- required inferred from 100% coverage in 10 documents (3 samples and 7 test-data documents (data/testdata/market-risk/portfolio/cob-2026-09-30.jsonl.gz)): confirm each required field is mandatory upstream, and each optional one may be empty.
+- required inferred from 100% coverage in 31 documents (3 samples and 28 test-data documents (data/testdata/market-risk/portfolio/cob-2026-09-30.jsonl.gz)): confirm each required field is mandatory upstream, and each optional one may be empty.
 - source is the pack's first listed source (its README): confirm.
 - due time of each business date is not known: state it (for example, by 06:00 New York the next business day).
-- POSITIONS[].COMPONENT_VAR is a column a compute engine produces (docs/contracts/README.md section 14) on a record that keeps it: confirm whether it is computed and removed.
-- BY_PRODUCT[].COMPONENT_VAR is a column a compute engine produces (docs/contracts/README.md section 14) on a record that keeps it: confirm whether it is computed and removed.
-- BY_CURRENCY[].COMPONENT_VAR is a column a compute engine produces (docs/contracts/README.md section 14) on a record that keeps it: confirm whether it is computed and removed.
-- BY_DIRECTION[].COMPONENT_VAR is a column a compute engine produces (docs/contracts/README.md section 14) on a record that keeps it: confirm whether it is computed and removed.
-- TOP_CONTRIBUTORS[].COMPONENT_VAR is a column a compute engine produces (docs/contracts/README.md section 14) on a record that keeps it: confirm whether it is computed and removed.
-- enum values inferred from the data, not from a glossary: POSITIONS[].CURRENCY, BY_CURRENCY[].KEY, TOP_CONTRIBUTORS[].DIRECTION, TOP_CONTRIBUTORS[].CURRENCY: confirm they are closed lists.
-- number types decided by the field's name: LIMIT_USE rate, POSITIONS[].PCT_OF_VAR rate, BY_PRODUCT[].NET_MV amount, BY_PRODUCT[].COMPONENT_VAR amount, BY_CURRENCY[].NET_MV amount, BY_CURRENCY[].COMPONENT_VAR amount, BY_DIRECTION[].NET_MV amount, BY_DIRECTION[].COMPONENT_VAR amount, TOP_CONTRIBUTORS[].MARKET_VALUE amount, TOP_CONTRIBUTORS[].VAR_99 amount, TOP_CONTRIBUTORS[].COMPONENT_VAR amount, TOP_CONTRIBUTORS[].PCT_OF_VAR rate: confirm amount, rate or integer.
-- no unit stated for the amounts POSITIONS[].QUANTITY, BY_PRODUCT[].NET_MV, BY_PRODUCT[].COMPONENT_VAR, BY_CURRENCY[].NET_MV, BY_CURRENCY[].COMPONENT_VAR, BY_DIRECTION[].NET_MV, BY_DIRECTION[].COMPONENT_VAR, TOP_CONTRIBUTORS[].QUANTITY, TOP_CONTRIBUTORS[].MARKET_VALUE, TOP_CONTRIBUTORS[].VAR_99, TOP_CONTRIBUTORS[].COMPONENT_VAR (docs/contracts/README.md section 7: USD unless stated): confirm the currency.
-- no description in about.yaml or the Sutras for NAME, BUSINESS_DATE, VALID_TO, SCENARIO_SET_ID, TRADE_COUNT, VAR_SCOPE, ROLLS_UP_TO.KIND, POSITIONS[].PRODUCT_GROUP, POSITIONS[].PRODUCT_TYPE, POSITIONS[].TRADES, POSITIONS[].PARTIAL, BY_PRODUCT[].KEY and 28 more: write them in the pack's config/about.yaml glossary.
-- VAR_99, ES_975 and PNL on the stored portfolio are VaR answers: confirm they are removed in 2.8.0 with VAR.
+- enum values inferred from the data, not from a glossary: TYPE: confirm they are closed lists.
+- no description in about.yaml or the Sutras for NAME, BUSINESS_DATE, VALID_TO, ROLLS_UP_TO.KIND: write them in the pack's config/about.yaml glossary.
 
 ## PNLV: P&L vector (509 scenarios) (`pnl-vector`)
 
@@ -771,7 +557,7 @@ P&L vector of a trade
 | Dated by | `BUSINESS_DATE` |
 | Cadence | daily (due: to be confirmed) |
 | Storage | connector `risk-store` (plugin `delta`), table `<root>/risk/pnl-vector/` |
-| Columns | `TRADE_ID`, `POSITION_ID`, `INSTRUMENT_ID`, `LEGAL_ENTITY`, `DIVISION`, `DESK`, `TT_BOOK`, `PORTFOLIO`, `PRODUCT_GROUP`, `PRODUCT_TYPE`, `CURRENCY`, `COUNTERPARTY`, `DIRECTION`, `QUANTITY`, `PV`, `STATUS`, `SCENARIO_SET_ID`, `BATCH_ID` |
+| Columns | `TRADE_ID`, `SECURITY_ID`, `INSTRUMENT`, `LEGAL_ENTITY`, `DIVISION`, `DESK`, `TT_BOOK`, `PORTFOLIO`, `STRATEGY`, `PRODUCT_GROUP`, `PRODUCT_TYPE`, `CURRENCY`, `COUNTERPARTY`, `DIRECTION`, `QUANTITY`, `PV`, `TAGS`, `TRADE_STATUS`, `MATURITY_DATE`, `STATUS`, `REPORTING_CCY`, `SCENARIO_SET_ID`, `BATCH_ID` |
 | Vectors | `PNL` |
 | Test data | data/testdata/market-risk/pnl-vector |
 
@@ -779,63 +565,67 @@ P&L vector of a trade
 
 | Field | Type | Presence | Unit | Description | Example or values | Link |
 |---|---|---|---|---|---|---|
-| `VECTOR_ID` | id | required |  | The record's id (the business key) | `PV-MX-20000209-HS-509` (pattern `^PV-`) |  |
-| `TRADE_ID` | id | required |  | Trade: the trade it refers to | `MX-20000209` (pattern `^(MX\|CLY)-\d+$`) | `trade` |
-| `POSITION_ID` | id | required |  | The holding the trade builds or reduces: its vector is the sum of its trades'. | `POS-BOOK-EQD-2~EQ_ASIAN-USD-2029Q2` (pattern `^POS-`) | `position` |
-| `INSTRUMENT_ID` | id | required |  | — | `INS-EQ_ASIAN-USD-2029Q2` |  |
+| `VECTOR_ID` | id | required |  | The record's id (the business key) | `PV-MX-20000274-HS-509` (pattern `^PV-`) |  |
+| `TRADE_ID` | id | required |  | Trade: the trade it refers to | `MX-20000274` (pattern `^(MX\|CLY)-\d+$`) | `trade` |
+| `SECURITY_ID` | id | optional |  | The security or exchange contract the trade is in (securities and listed products): Drishti keys the trade's position by book and security. | `SEC-WARRANT-USD-01` |  |
+| `INSTRUMENT` | text | required |  | — | `Equity warrant USD 2027-05` |  |
 | `BUSINESS_DATE` | date | required |  | — | `2026-09-30` |  |
 | `SCENARIO_SET_ID` | id | required |  | — | `HS-509` |  |
-| `SOURCE_SYSTEM` | text | required |  | — | `CALYPSO`, `ENDUR`, `MUREX` |  |
-| `TRADE_VERSIONS` | text | required |  | — | `v5` |  |
+| `SOURCE_SYSTEM` | text | required |  | — | `CALYPSO`, `MUREX` |  |
+| `TRADE_VERSIONS` | text | required |  | — | `v4` |  |
+| `TRADE_STATUS` | text | required |  | The trade's status the batch priced: NEW, VALIDATED and AMENDED count on the date; others are left out. | `AMENDED`, `VALIDATED` |  |
+| `MATURITY_DATE` | date | required |  | — | `2027-05-26` |  |
 | `LEGAL_ENTITY` | id | required |  | Legal entity: the legal-entity it refers to | `LE-LDN` (pattern `^LE-`) | `legal-entity` |
 | `DIVISION` | id | required |  | — | `DIV-MARKETS` |  |
 | `DESK` | id | required |  | Desk: the desk it refers to | `DESK-EQD` (pattern `^DESK-`) | `desk` |
 | `TT_BOOK` | id | required |  | Book: the book it refers to | `BOOK-EQD-2` (pattern `^BOOK-`) | `book` |
 | `PORTFOLIO` | id | required |  | Portfolio: the book it refers to | `BOOK-EQD-2` (pattern `^BOOK-`) | `book` |
 | `STRATEGY` | unknown | optional |  | — |  |  |
-| `PRODUCT_GROUP` | text | required |  | — | `Equity` |  |
-| `PRODUCT_TYPE` | text | required |  | — | `EQ_ASIAN` |  |
-| `CURRENCY` | text | required |  | — | `AUD`, `CAD`, `CHF`, `EUR`, `GBP`, `JPY`, `USD` |  |
-| `COUNTERPARTY` | id | required |  | Counterparty: the counterparty it refers to | `CP-KESTREL` (pattern `^CP-`) | `counterparty` |
+| `PRODUCT_GROUP` | text | required |  | — | `Equity`, `FX`, `Securities financing` |  |
+| `PRODUCT_TYPE` | text | required |  | — | `WARRANT` |  |
+| `CURRENCY` | text | required |  | — | `CAD`, `CHF`, `EUR`, `GBP`, `JPY`, `USD` |  |
+| `COUNTERPARTY` | id | required |  | Counterparty: the counterparty it refers to | `CP-SUMMIT` (pattern `^CP-`) | `counterparty` |
 | `DIRECTION` | text | required |  | — | `LONG`, `SHORT` |  |
-| `QUANTITY` | amount | required |  | The trade's quantity: positive for a buy, negative for a sell. | `-180000000.0` |  |
+| `QUANTITY` | amount | required |  | The trade's quantity: positive for a buy, negative for a sell. | `-179000000.0` |  |
+| `TAGS` | text | optional |  | — | `option` |  |
 | `REPORTING_CCY` | text | required |  | — | `USD` |  |
-| `PV` | amount | required | USD | The trade's value on the business date. | `-83827` |  |
+| `PV` | amount | required | USD | The trade's value on the business date. | `3143714` |  |
 | `PNL` | vector | required | USD | The trade's P&L under each historical scenario day, oldest first: index i is the scenario set's day i. *509 values in the test data* |  |  |
 | `STATUS` | text | required |  | ok, proxied (priced by a proxy) or failed (no vector: counted, never taken as zero). | `ok` |  |
 | `PRICER` | text | required |  | — | `demo-factor-model` |  |
-| `MODEL_VERSION` | text | required |  | — | `demo-1` |  |
+| `MODEL_VERSION` | text | required |  | — | `demo-2` |  |
 | `COMPUTED_AT` | timestamp | required |  | — | `2026-09-30T22:30:00Z` |  |
 | `BATCH_ID` | id | required |  | — | `B-2026-09-30-01` |  |
 | `RESTATEMENT` | integer | required |  | — | `0` |  |
 
-**Links:** `TRADE_ID` → `trade`, `POSITION_ID` → `position`, `LEGAL_ENTITY` → `legal-entity`, `DESK` → `desk`, `TT_BOOK` → `book`, `PORTFOLIO` → `book`, `COUNTERPARTY` → `counterparty`.
+**Links:** `TRADE_ID` → `trade`, `LEGAL_ENTITY` → `legal-entity`, `DESK` → `desk`, `TT_BOOK` → `book`, `PORTFOLIO` → `book`, `COUNTERPARTY` → `counterparty`.
 
 **Validation**
 
-- required: fields `VECTOR_ID`, `TRADE_ID`, `POSITION_ID`, `INSTRUMENT_ID`, `BUSINESS_DATE`, `SCENARIO_SET_ID`, `SOURCE_SYSTEM`, `TRADE_VERSIONS`, `LEGAL_ENTITY`, `DIVISION`, `DESK`, `TT_BOOK`, `PORTFOLIO`, `PRODUCT_GROUP`, `PRODUCT_TYPE`, `CURRENCY`, `COUNTERPARTY`, `DIRECTION`, `QUANTITY`, `REPORTING_CCY`, `PV`, `PNL`, `STATUS`, `PRICER`, `MODEL_VERSION`, `COMPUTED_AT`, `BATCH_ID`, `RESTATEMENT`
+- required: fields `VECTOR_ID`, `TRADE_ID`, `INSTRUMENT`, `BUSINESS_DATE`, `SCENARIO_SET_ID`, `SOURCE_SYSTEM`, `TRADE_VERSIONS`, `TRADE_STATUS`, `MATURITY_DATE`, `LEGAL_ENTITY`, `DIVISION`, `DESK`, `TT_BOOK`, `PORTFOLIO`, `PRODUCT_GROUP`, `PRODUCT_TYPE`, `CURRENCY`, `COUNTERPARTY`, `DIRECTION`, `QUANTITY`, `REPORTING_CCY`, `PV`, `PNL`, `STATUS`, `PRICER`, `MODEL_VERSION`, `COMPUTED_AT`, `BATCH_ID`, `RESTATEMENT`
 - unique: key `VECTOR_ID`; per BUSINESS_DATE
 - pattern: field VECTOR_ID; pattern ^PV-
 - link: field TRADE_ID; kind trade
-- link: field POSITION_ID; kind position
-- enum: field SOURCE_SYSTEM; values `CALYPSO`, `ENDUR`, `MUREX`
+- enum: field SOURCE_SYSTEM; values `CALYPSO`, `MUREX`
+- enum: field TRADE_STATUS; values `AMENDED`, `VALIDATED`
 - link: field LEGAL_ENTITY; kind legal-entity
 - link: field DESK; kind desk
 - link: field TT_BOOK; kind book
 - link: field PORTFOLIO; kind book
-- enum: field CURRENCY; values `AUD`, `CAD`, `CHF`, `EUR`, `GBP`, `JPY`, `USD`
+- enum: field PRODUCT_GROUP; values `Equity`, `FX`, `Securities financing`
+- enum: field CURRENCY; values `CAD`, `CHF`, `EUR`, `GBP`, `JPY`, `USD`
 - link: field COUNTERPARTY; kind counterparty
 - enum: field DIRECTION; values `LONG`, `SHORT`
 - vector-length: field PNL; same every row of one business date
 
 **To review (6)**
 
-- required inferred from 100% coverage in 1674 documents (1 samples and 1673 test-data documents (data/testdata/market-risk/pnl-vector/cob-2026-09-30.part-001.jsonl.gz, data/testdata/market-risk/pnl-vector/cob-2026-09-30.part-002.jsonl.gz)): confirm each required field is mandatory upstream, and each optional one may be empty.
+- required inferred from 100% coverage in 2001 documents (1 samples and 2000 test-data documents (data/testdata/market-risk/pnl-vector/cob-2026-09-30.part-001.jsonl.gz, data/testdata/market-risk/pnl-vector/cob-2026-09-30.part-002.jsonl.gz, data/testdata/market-risk/pnl-vector/cob-2026-09-30.part-003.jsonl.gz)): confirm each required field is mandatory upstream, and each optional one may be empty.
 - source is the pack's first listed source (its README): confirm.
 - due time of each business date is not known: state it (for example, by 06:00 New York the next business day).
-- enum values inferred from the data, not from a glossary: SOURCE_SYSTEM, CURRENCY, DIRECTION: confirm they are closed lists.
+- enum values inferred from the data, not from a glossary: SOURCE_SYSTEM, TRADE_STATUS, PRODUCT_GROUP, CURRENCY, DIRECTION: confirm they are closed lists.
 - no unit stated for the amounts QUANTITY (docs/contracts/README.md section 7: USD unless stated): confirm the currency.
-- no description in about.yaml or the Sutras for INSTRUMENT_ID, BUSINESS_DATE, SCENARIO_SET_ID, SOURCE_SYSTEM, TRADE_VERSIONS, DIVISION, STRATEGY, PRODUCT_GROUP, PRODUCT_TYPE, CURRENCY, DIRECTION, REPORTING_CCY and 5 more: write them in the pack's config/about.yaml glossary.
+- no description in about.yaml or the Sutras for INSTRUMENT, BUSINESS_DATE, SCENARIO_SET_ID, SOURCE_SYSTEM, TRADE_VERSIONS, MATURITY_DATE, DIVISION, STRATEGY, PRODUCT_GROUP, PRODUCT_TYPE, CURRENCY, DIRECTION and 7 more: write them in the pack's config/about.yaml glossary.
 
 ## SSET: Scenario set (`scenario-set`)
 
@@ -947,78 +737,3 @@ Risk hierarchy node
 - due time of each business date is not known: state it (for example, by 06:00 New York the next business day).
 - enum values inferred from the data, not from a glossary: HIERARCHY, LEVEL, REF.KIND: confirm they are closed lists.
 - no description in about.yaml or the Sutras for PARENT_ID, NAME, CHILDREN, BUSINESS_DATE, VALID_FROM, VALID_TO, REF.KIND, REF.ID: write them in the pack's config/about.yaml glossary.
-
-## VNODE: Official VaR of a hierarchy node (`var-node`)
-
-Official VaR of a node
-
-|  |  |
-|---|---|
-| Contract | [var-node.contract.yaml](../../../config/packs/market-risk/contracts/var-node.contract.yaml) · version 1.0 |
-| Class | computed |
-| Status | retiring in 2.8.0, replaced by docs/contracts/VAR.md |
-| Source | Synthetic sample data (tools/packgen/banking) |
-| Grain | One row per official var of a hierarchy node per BUSINESS_DATE, keyed by VAR_NODE_ID. |
-| Key | `VAR_NODE_ID` |
-| Id pattern | `^VN-` |
-| Dated by | `BUSINESS_DATE` |
-| Cadence | daily (due: to be confirmed) |
-| Storage | connector `risk-store` (plugin `delta`), table `<root>/risk/var-node/` |
-| Columns | `NODE_ID`, `HIERARCHY`, `LEVEL`, `NAME`, `PARENT_ID`, `VAR_99`, `ES_975`, `HYPO_PNL`, `LIMIT`, `POSITION_COUNT`, `TRADE_COUNT` |
-| Vectors | `PNL` |
-| Test data | data/testdata/market-risk/var-node |
-
-**Fields**
-
-| Field | Type | Presence | Unit | Description | Example or values | Link |
-|---|---|---|---|---|---|---|
-| `VAR_NODE_ID` | id | required |  | The record's id (the business key) | `VN-MGMT~DESK-RATES` (pattern `^VN-`) |  |
-| `NODE_ID` | id | required |  | Hierarchy node: the risk-hierarchy it refers to | `MGMT~DESK-RATES` (pattern `^(MGMT\|LEGAL)~`) | `risk-hierarchy` |
-| `HIERARCHY` | text | required |  | — | `LEGAL`, `MGMT` |  |
-| `LEVEL` | text | required |  | — | `bank`, `book`, `desk` |  |
-| `NAME` | text | required |  | — | `Rates · Swaps and options` |  |
-| `PARENT_ID` | id | optional |  | — | `MGMT~DIV-MARKETS` |  |
-| `BUSINESS_DATE` | date | required |  | — | `2026-09-29` |  |
-| `SCENARIO_SET_ID` | id | required |  | — | `HS-509` |  |
-| `VAR_99` | amount | derived | USD | The loss the portfolio is expected not to exceed on 99 of 100 trading days, read from the 1st percentile of the revalued scenario P&L (historical simulation). *computed by the VaR engine; removed when retired* | `2938233` |  |
-| `ES_975` | amount | derived | USD | The average loss on the worst 2.5% of scenario days. It looks into the tail that VaR ignores, and it is the measure the FRTB internal-models approach uses for capital. *computed by the VaR engine; removed when retired* | `3599094` |  |
-| `HYPO_PNL` | amount | derived | USD | The node's P&L of the day with its positions of the day before unchanged: what the backtest compares with VaR. *computed by the VaR engine; removed when retired* | `388197` |  |
-| `EXCEPTION` | boolean | derived |  | True when the day's loss was larger than the previous day's VaR. *computed by the VaR engine; removed when retired* | `False` |  |
-| `PREVIOUS_VAR` | amount | derived |  | — *computed by the VaR engine; removed when retired* | `2919754` |  |
-| `LIMIT` | amount | required | USD | The node's VaR limit on the day. | `4200000` |  |
-| `LIMIT_USE` | rate | derived |  | — *computed by the VaR engine; removed when retired* | `0.6996` |  |
-| `POSITION_COUNT` | integer | derived |  | — *computed by the VaR engine; removed when retired* | `24` |  |
-| `TRADE_COUNT` | integer | derived |  | — *computed by the VaR engine; removed when retired* | `172` |  |
-| `BATCH_ID` | id | required |  | — | `B-2026-09-29-01` |  |
-| `OFFICIAL` | boolean | required |  | — | `True` |  |
-| `PNL` | vector | derived |  | — *computed by the VaR engine; removed when retired; 509 values in the test data* |  |  |
-| `EXCEPTIONS_250` | integer | derived |  | — *computed by the VaR engine; removed when retired* | `2` |  |
-
-**Links:** `NODE_ID` → `risk-hierarchy`.
-
-**Validation**
-
-- required: fields `VAR_NODE_ID`, `NODE_ID`, `HIERARCHY`, `LEVEL`, `NAME`, `BUSINESS_DATE`, `SCENARIO_SET_ID`, `LIMIT`, `BATCH_ID`, `OFFICIAL`
-- unique: key `VAR_NODE_ID`; per BUSINESS_DATE
-- pattern: field VAR_NODE_ID; pattern ^VN-
-- link: field NODE_ID; kind risk-hierarchy
-- enum: field HIERARCHY; values `LEGAL`, `MGMT`
-- enum: field LEVEL; values `bank`, `book`, `desk`
-- range: field POSITION_COUNT; min 0
-- range: field TRADE_COUNT; min 0
-- vector-length: field PNL; same every row of one business date
-
-**Notes**
-
-- Retiring in 2.8.0: the stored kind is removed and computed instead by the VaR engine (docs/contracts/VAR.md); old ids and links open the computed page.
-
-**To review (8)**
-
-- required inferred from 100% coverage in 2002 documents (2 samples and 2000 test-data documents (data/testdata/market-risk/var-node/history-2025-10-01-to-2026-09-30.part-001.jsonl.gz)): confirm each required field is mandatory upstream, and each optional one may be empty.
-- source is the pack's first listed source (its README): confirm.
-- due time of each business date is not known: state it (for example, by 06:00 New York the next business day).
-- enum values inferred from the data, not from a glossary: HIERARCHY, LEVEL: confirm they are closed lists.
-- number types decided by the field's name: PREVIOUS_VAR amount, LIMIT_USE rate: confirm amount, rate or integer.
-- no unit stated for the amounts PREVIOUS_VAR (docs/contracts/README.md section 7: USD unless stated): confirm the currency.
-- no description in about.yaml or the Sutras for HIERARCHY, LEVEL, NAME, PARENT_ID, BUSINESS_DATE, SCENARIO_SET_ID, PREVIOUS_VAR, LIMIT_USE, POSITION_COUNT, TRADE_COUNT, BATCH_ID, OFFICIAL and 2 more: write them in the pack's config/about.yaml glossary.
-- LIMIT is a term: confirm it is read from the risk hierarchy (LIMIT_VAR) after retirement. HYPO_PNL: confirm it is a computed figure and not an upstream input of the backtest.

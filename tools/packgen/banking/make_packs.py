@@ -72,7 +72,7 @@ EXAMPLES = {  # command, what it shows (ids from make_data.py's deterministic da
     "trading": [("TRD MX-20000001", "Interest rate swap (Murex) · legs side by side, flows and fixings"), ("TRD 1000001", "Commodity swap (Endur) · legs, resets, events"),
                 ("TRD CLY-3000086", "Single-name CDS (Calypso) · premium leg payments"), ("TRD 1000015", "Warehouse warrants (Endur) · inventory, delivery and payment legs"),
                 ("CTRD CP-ALDERSHOT", "A counterparty's trades in every system · payments, notional by product")],
-    "market-risk": [("VAR VAR-RATES", "Rates desk VaR · P&L series, contributions"), ("STR STR-GFC2008-RATES", "Stress · 2008 crisis on the rates desk"),
+    "market-risk": [("STR STR-GFC2008-RATES", "Stress · 2008 crisis on the rates desk"),
                     ("PNL PNL-RATES-1", "P&L explain"), ("FRTB FRTB-RATES-1", "FRTB sensitivities and charges")],
     "counterparty-risk": [("AGR AGR-NORTHBRIDGE-ISDA", "ISDA master agreement · elections"), ("NSET NS-SUMMIT-NY", "Netting set · 108 trades, exposure, CVA"), ("LIM LIM-SUMMIT", "Credit limit · utilisation by tenor"),
                           ("CVA CVA-SUMMIT-NY", "CVA / XVA"), ("SACCR SACCR-SUMMIT-NY", "SA-CCR exposure at default")],
@@ -243,17 +243,21 @@ def manifest(name: str) -> dict:
 
 def add_var_kinds(m: dict) -> None:
     """The VaR engine's kinds (var_kinds.py) in the market-risk manifest: kinds, mnemonics, ids, links, badges, the risk-store's tables
-    (with the P&L vector columns) and routes, and two examples."""
+    (with the P&L vector columns) and routes, the var-positions connector (the positions Drishti derives, served from the engine), and
+    two examples."""
     store = m["connectors"]["risk-store"]
     store["settings"] = {**store["settings"], "layout": {**store["settings"].get("layout", {}), **VK.LAYOUT}}
     for k, (mnem, label, pattern, _id) in VK.KINDS.items():
         m["kinds"].append(k)
         m["mnemonics"][mnem] = {"kind": k, "label": label}
         m["graph"]["id-patterns"].append({"pattern": pattern, "kind": k})
-        store["kinds"].append(k)
-        m["routes"][k] = "risk-store"
+        connector = VK.SERVED_BY.get(k, "risk-store")
+        if connector == "risk-store":
+            store["kinds"].append(k)
+        m["routes"][k] = connector
         if k in VK.BADGES:
             m["graph"]["badges"][k] = VK.BADGES[k]
+    m["connectors"].update(VK.CONNECTORS)
     m["graph"]["fields"] = dict(sorted({**m["graph"]["fields"], **{f: {"kind": k, "label": lab} for f, (k, lab) in VK.FIELDS.items()}}.items()))
 
 

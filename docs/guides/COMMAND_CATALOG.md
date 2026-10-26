@@ -17,11 +17,11 @@
 
 # The command catalog
 
-Every command of the command line: its own words and forms, the 10 packs' codes, and the 90 mnemonics the packs define, each with what it does and an example. A pack's mnemonics work when the pack is switched on ([PACKS.md](PACKS.md)); how to type them is in [USER_GUIDE.md](USER_GUIDE.md).
+Every command of the command line: its own words and forms, the 10 packs' codes, and the 88 mnemonics the packs define, each with what it does and an example. A pack's mnemonics work when the pack is switched on ([PACKS.md](PACKS.md)); how to type them is in [USER_GUIDE.md](USER_GUIDE.md).
 
 **Data** says what kind of data a command shows ([the data contracts](../contracts/README.md#3-four-kinds-of-data)): *fundamental* (masters, terms, market and public data, kept as delivered), *engine input* (what upstream engines deliver for the computed measures), *Drishti's own* (made by Drishti) and *computed* (worked out when asked). **Change** says when a command moves to the compute model, or when the figures on a record start to be computed instead of stored ([the roadmap](../architecture/IMPLEMENTATION_PLAN.md#the-computed-measures-roadmap-280-to-2120-product-owner-2026-10-25)). Each mnemonic's fields are in its data contract ([every command's contract](../contracts/packs/README.md)).
 
-In numbers: 75 fundamental, 6 engine input, 1 Drishti's own and 8 computed; 2 move to the compute model and 3 keep their record while its figures become computed.
+In numbers: 75 fundamental, 6 engine input, 1 Drishti's own and 6 computed; 0 move to the compute model and 0 keep their record while its figures become computed.
 
 ## Contents
 
@@ -101,7 +101,7 @@ The parties and organisation every pack builds on: counterparties (with country 
 | `CCP` | Central counterparty | A clearing house with its default fund and margin model. | `CCP CCP-CME` | fundamental |  |
 | `LE` | Bank legal entity | The bank's own booking entity. | `LE LE-NY` | fundamental |  |
 | `BOOK` | Book | A trading book: owner desk, trades and risk. | `BOOK BOOK-RATES-1` | fundamental |  |
-| `DESK` | Desk | A trading desk: books, limits and risk results. | `DESK DESK-RATES` | fundamental | Figures computed from 2.8.0: `VAR_99`, `VAR_RESULT` |
+| `DESK` | Desk | A trading desk: books, limits and risk results. | `DESK DESK-RATES` | fundamental |  |
 | `TRDR` | Trader | A trader and their books. | `TRDR TRDR-ASHAH` | fundamental |  |
 | `CAL` | Holiday calendar | Business-day calendar (USNY, TARGET, GBLO, JPTO…). | `CAL CAL-EUTA` | fundamental |  |
 | `CLR` | Clearing account | An account at a CCP holding cleared trades and margin. | `CLR CLR-CME-1` | fundamental |  |
@@ -168,18 +168,16 @@ Value at risk, stress testing, FRTB sensitivities and P&L explain.
 
 | Command | Opens | What it does | Example | Data | Change |
 |---|---|---|---|---|---|
-| `VAR` | VaR / expected shortfall | Historical VaR and ES for a desk or portfolio, with backtesting. | `VAR VAR-RATES` | computed | Moves to compute in 2.8.0: [VAR.md](../contracts/VAR.md) |
 | `SCN` | Stress scenario | A named historical or hypothetical shock set. | `SCN SCN-COVID2020` | fundamental |  |
 | `STR` | Stress result | P&L of a desk under a scenario, by book. | `STR STR-GFC2008-RATES` | fundamental |  |
 | `FRTB` | FRTB sensitivities | Delta, vega and curvature by risk class and bucket (SBM). | `FRTB FRTB-RATES-1` | fundamental |  |
 | `PNL` | P&L explain | Daily P&L attributed to risk factors, new trades and residual. | `PNL PNL-RATES-1` | fundamental |  |
 | `TVAL` | Trade valuation | A trade's valuation from the risk engine, for every source system: MTM, one-day P&L and DV01, with what it values (source system, portfolio, desk, product). | `TVAL TVAL-1000001` | fundamental |  |
-| `POS` | Position | A position: one instrument held in one book, the trades that build or reduce it, its VaR and its P&L over the scenario days. | `POS POS-BOOK-EQD-2~EQ_ASIAN-USD-2029Q2` | Drishti's own | Figures computed from 2.8.0: `VAR_99`, `ES_975`, `COMPONENT_VAR` |
-| `PORT` | Portfolio | A portfolio in terms of the positions inside it: longs and shorts, market value, VaR, ES and each position's contribution. | `PORT PF-RATES-DESK` | engine input | Figures computed from 2.8.0: `VAR_99`, `ES_975`, `PNL` |
-| `PNLV` | P&L vector (509 scenarios) | P&L vector of a trade | `PNLV PV-MX-20000209-HS-509` | engine input |  |
+| `POS` | Position | A position: one security held in one book (or one OTC trade), the trades that build or reduce it, and its VaR computed as the page opens. | `POS POS-BOOK-EQD-2~SEC-WARRANT-USD-01` | Drishti's own |  |
+| `PORT` | Portfolio | A portfolio in terms of the positions inside it: longs and shorts, market value, VaR, ES and each position's contribution. | `PORT PF-RATES-DESK` | engine input |  |
+| `PNLV` | P&L vector (509 scenarios) | P&L vector of a trade | `PNLV PV-MX-20000274-HS-509` | engine input |  |
 | `SSET` | Scenario set | Scenario set | `SSET HS-509` | engine input |  |
 | `HIER` | Risk hierarchy node | Risk hierarchy node | `HIER LEGAL~LE-NY` | engine input |  |
-| `VNODE` | Official VaR of a hierarchy node | Official VaR of a node | `VNODE VN-MGMT~DESK-RATES` | computed | Moves to compute in 2.8.0: [VAR.md](../contracts/VAR.md) |
 
 ## News and markets (`news-and-markets`)
 

@@ -20,6 +20,10 @@
 #   retiring     kinds whose stored version is retired: release, the contract that replaces it, the measure that computes it, and
 #                the fields that are computed figures (path A[].B for a field of every element of list A)
 #   split        kinds whose terms are kept and whose figures are computed: status stays active, the figures are derived and retiring
+#   retired      kinds retired in a release: removed with their contracts, samples, test data and Sutras; a guard test fails the build
+#                when one returns (tools/test_contracts.py; docs/contracts/README.md section 14)
+#   removed      kind -> the computed figures removed from its stored record in a release: they never return (the same guard)
+#   engine-columns  measure -> the columns its engine produces: no input or fundamental kind, test data or sample may carry one
 #   notes        kind -> notes copied into the draft
 #   review       kind -> questions copied into the draft's review list
 
@@ -28,34 +32,39 @@ classes:
   drishti-owned: [position]
   computed: [path-sum, path-sum-java]
 
-retiring:
+retiring: {}
+
+split: {}
+
+retired:
   var:
     release: 2.8.0
     contract: VAR.md
     measure: the VaR engine
-    figures: [VAR_99, ES_975, SVAR, EXCEPTIONS, SCENARIO_PNL, MEAN_PNL, PNL_SERIES, CONTRIBUTIONS]
+    note: "VAR <id> and /v/var/<id> open the VaR explorer at the matching scope (VAR-COMM: DESK:COMM)"
   var-node:
     release: 2.8.0
     contract: VAR.md
-    measure: the VaR engine
-    figures: [VAR_99, ES_975, HYPO_PNL, EXCEPTION, PREVIOUS_VAR, LIMIT_USE, POSITION_COUNT, TRADE_COUNT, PNL, EXCEPTIONS_250]
+    measure: the VaR engine's official end-of-day captures
+    note: "a node's history is its official end-of-day captures; VN-<node> opens the explorer at NODE:<node>"
 
-split:
+removed:
   position:
     release: 2.8.0
     contract: VAR.md
-    measure: the VaR engine
-    figures: [VAR_99, ES_975, COMPONENT_VAR, "TRADE_QUANTITIES[].VAR_99", "TRADE_QUANTITIES[].COMPONENT_VAR"]
+    figures: [VAR_99, ES_975, COMPONENT_VAR, BOOK_VAR, PCT_OF_BOOK_VAR, PNL, "TRADE_QUANTITIES[].VAR_99", "TRADE_QUANTITIES[].COMPONENT_VAR"]
   desk:
     release: 2.8.0
     contract: VAR.md
-    measure: the VaR engine
     figures: [VAR_99, VAR_RESULT]
   portfolio:
     release: 2.8.0
     contract: VAR.md
-    measure: the VaR engine
-    figures: [VAR_99, ES_975, PNL]
+    figures: [VAR_99, ES_975, LIMIT_USE, POSITION_COUNT, TRADE_COUNT, LONG_COUNT, SHORT_COUNT, GROSS_MV, NET_MV, POSITIONS, BY_PRODUCT,
+              BY_CURRENCY, BY_DIRECTION, TOP_CONTRIBUTORS, PNL, ALL_TRADES, SCENARIO_SET_ID]
+
+engine-columns:
+  var: [VAR_99, ES_975, COMPONENT_VAR, BOOK_VAR, PCT_OF_BOOK_VAR, PCT_OF_VAR, HYPO_PNL, EXCEPTIONS_250, VAR_RESULT, VAR_ENGINE]
 
 notes:
   trade-valuation:
@@ -63,20 +72,13 @@ notes:
   margin-call:
     - "Actual calls and their events are kept (workflow); the expected call (MtM minus collateral minus threshold, then minimum transfer and rounding) is computed and shown beside the call. No stored field is the expected call today."
   position:
-    - "From 2.8.0 positions are derived on the server by config-driven rules (securities by book and security id, OTC by book and trade); this table is then Drishti's, not an upstream delivery."
+    - "Positions are derived by Drishti when a date loads (docs/contracts/VAR.md section 3.7), by the market-risk pack's positions: rules (securities by book and security id, listed by book and contract, OTC by book and trade), and served from the VaR engine's memory by the var-positions connector: no upstream delivers them and nothing stores them. Their VaR figures are computed as the page opens (VAR_ENGINE), never stored."
   portfolio:
-    - "The portfolio definitions are an engine input (IMPLEMENTATION_PLAN.md, kept as fundamental data); the figures on a stored portfolio are VaR answers."
+    - "The portfolio definitions are an engine input (IMPLEMENTATION_PLAN.md); the figures of the retired stored record (VaR, ES, positions, contributions, P&L) are computed as the page opens (VAR_ENGINE), never stored."
+  desk:
+    - "The desk's VaR is the engine's (DESK:<id>), computed as the page opens (VAR_ENGINE); VAR_99 and VAR_RESULT left the record in 2.8.0."
 
 review:
-  var:
-    - "LIMIT is a term (the desk's VaR limit), not a figure: confirm it moves to the risk hierarchy (HIER LIMIT_VAR) when VAR is retired."
-  var-node:
-    - "LIMIT is a term: confirm it is read from the risk hierarchy (LIMIT_VAR) after retirement. HYPO_PNL: confirm it is a computed figure and not an upstream input of the backtest."
-  position:
-    - "Class drishti-owned follows docs/contracts/README.md section 4 (POSITION_ID derived by Drishti from 2.8.0): confirm."
-    - "BOOK_VAR, PCT_OF_BOOK_VAR and VAR_SCOPE are VaR answers too, though not on the product owner's list (VAR_99, ES_975, COMPONENT_VAR): confirm they are removed in 2.8.0."
-  portfolio:
-    - "VAR_99, ES_975 and PNL on the stored portfolio are VaR answers: confirm they are removed in 2.8.0 with VAR."
   netting-set:
     - "TRADE_COUNT and TRADES[].MTM: confirm TRADE_COUNT is computed from the membership and TRADES[].MTM is read from the trade valuations (an input), not stored here."
     - "LIMIT is copied from the credit limit: confirm it is read from LIM instead of stored."

@@ -257,10 +257,8 @@ Fields, from 10 sample documents:
 | `NAME` | string | `Commodities` | Name |
 | `HEAD` | string | `T. Brennan` | Head |
 | `BOOKS` | list of objects |  | Its books |
-| `VAR_99` | integer | `10946782` | VaR |
 | `MTM` | integer | `14609595` | MTM |
 | `LEGAL_ENTITY` | string | `LE-NY` | link to `legal-entity` |
-| `VAR_RESULT` | string | `VAR-COMM` | Its value-at-risk result id |
 | `ASSET_CLASSES` | list of strings |  | Asset classes it trades |
 | `POSITIONS` | list of objects |  | Its positions by asset class |
 

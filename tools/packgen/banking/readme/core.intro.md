@@ -50,7 +50,6 @@ fields:
     VOLCKER: Volcker Rule activity classification, e.g. Market making
   desk:
     BOOKS: Its books
-    VAR_RESULT: Its value-at-risk result id
     ASSET_CLASSES: Asset classes it trades
     POSITIONS: Its positions by asset class
   trader:

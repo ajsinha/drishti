@@ -42,12 +42,7 @@ storage:
   - NAME
   - TYPE
   - OWNER
-  - VAR_99
-  - ES_975
   - LIMIT_VAR
-  - POSITION_COUNT
-  vectors:
-  - PNL
   test-data:
   - data/testdata/market-risk/portfolio
 fields:
@@ -55,24 +50,28 @@ fields:
   type: id
   presence: required
   description: The record's id (the business key)
-  example: PF-RATES-DESK
+  example: PF-ASHA-UNWIND
   pattern: ^PF-
   link: portfolio
 - name: NAME
   type: text
   presence: required
-  example: Rates desk (New York)
+  example: Unwind candidates (Asha)
 - name: OWNER
   type: text
   presence: required
   description: Who keeps the portfolio's definition.
-  example: rates-risk
+  example: asha
 - name: TYPE
   type: text
   presence: required
-  description: 'HIERARCHY: a node of the bank''s hierarchy (a desk, a book). RULE: every position whose columns meet a condition. BASKET: positions
-    and trades someone picked.'
-  example: HIERARCHY
+  description: 'HIERARCHY: a node of the bank''s hierarchy (a desk, a legal entity, a book). RULE: every position whose columns meet a condition.
+    BASKET: positions and trades someone picked.'
+  example: BASKET
+  enum:
+  - BASKET
+  - HIERARCHY
+  - RULE
 - name: DEFINITION
   type: record
   presence: required
@@ -86,7 +85,7 @@ fields:
   presence: required
   unit: USD
   description: The VaR the portfolio may take.
-  example: 4600000
+  example: 1800000
 - name: BUSINESS_DATE
   type: date
   presence: required
@@ -99,101 +98,12 @@ fields:
 - name: VALID_TO
   type: unknown
   presence: optional
-- name: SCENARIO_SET_ID
-  type: id
-  presence: required
-  example: HS-509
-- name: POSITION_COUNT
-  type: integer
-  presence: required
-  description: The positions in the portfolio on the business date (a basket naming one trade of a position holds that part of it).
-  example: 24
-- name: TRADE_COUNT
-  type: integer
-  presence: required
-  example: 172
-- name: LONG_COUNT
-  type: integer
-  presence: required
-  description: Positions whose net quantity is above zero.
-  example: 14
-- name: SHORT_COUNT
-  type: integer
-  presence: required
-  description: Positions whose net quantity is below zero.
-  example: 10
-- name: GROSS_MV
-  type: integer
-  presence: required
-  unit: USD
-  description: The sum of the positions' market values without their signs.
-  example: 1065077778
-- name: NET_MV
-  type: amount
-  presence: required
-  unit: USD
-  description: 'The sum of the positions'' market values: longs and shorts offset.'
-  example: 352474636
-- name: VAR_99
-  type: amount
-  presence: derived
-  unit: USD
-  description: The loss the portfolio is expected not to exceed on 99 of 100 trading days, read from the 1st percentile of the revalued scenario
-    P&L (historical simulation).
-  example: 3012892
-  retiring-in: 2.8.0
-  note: computed by the VaR engine from 2.8.0; removed from the stored record then
-- name: ES_975
-  type: amount
-  presence: derived
-  unit: USD
-  description: The average loss on the worst 2.5% of scenario days. It looks into the tail that VaR ignores, and it is the measure the FRTB internal-models
-    approach uses for capital.
-  example: 3690544
-  retiring-in: 2.8.0
-  note: computed by the VaR engine from 2.8.0; removed from the stored record then
-- name: LIMIT_USE
-  type: rate
-  presence: required
-  description: The VaR over the portfolio's VaR limit.
-  example: 0.655
-- name: POSITIONS
-  type: record list
-  presence: required
-  description: 'Nested: see nested POSITIONS[]'
-- name: BY_PRODUCT
-  type: record list
-  presence: required
-  description: 'Nested: see nested BY_PRODUCT[]'
-- name: BY_CURRENCY
-  type: record list
-  presence: required
-  description: 'Nested: see nested BY_CURRENCY[]'
-- name: BY_DIRECTION
-  type: record list
-  presence: required
-  description: 'Nested: see nested BY_DIRECTION[]'
-- name: TOP_CONTRIBUTORS
-  type: record list
-  presence: required
-  description: 'Nested: see nested TOP_CONTRIBUTORS[]'
-- name: ALL_TRADES
-  type: record
-  presence: optional
-  description: 'Nested: see nested ALL_TRADES'
-- name: VAR_SCOPE
-  type: text
-  presence: required
-  example: PORT:PF-RATES-DESK
-- name: PNL
-  type: vector
-  presence: derived
-  unit: USD
-  description: 'The portfolio''s P&L under each historical scenario day: the sum of its members'' vectors, each trade counted once.'
-  retiring-in: 2.8.0
-  note: computed by the VaR engine from 2.8.0; removed from the stored record then; 509 values in the test data
 nested:
   DEFINITION:
+  - name: MEMBERS
+    type: record list
+    presence: optional
+    description: 'For a BASKET portfolio: the positions and trades someone picked (a trade brings that part of its position).'
   - name: NODE
     type: text
     presence: optional
@@ -203,277 +113,13 @@ nested:
     type: text
     presence: optional
     description: 'For a RULE portfolio: the condition a position''s columns must meet to be in it, checked on each business date.'
-    example: PRODUCT_GROUP in ('Rates', 'Fixed income', 'Money markets')…
-  - name: MEMBERS
-    type: record list
-    presence: optional
-    description: 'For a BASKET portfolio: the positions and trades someone picked (a trade brings that part of its position).'
-  ROLLS_UP_TO:
-  - name: KIND
-    type: text
-    presence: required
-    example: desk
-  - name: ID
-    type: id
-    presence: required
-    description: The desk or book the portfolio reports under.
-    example: DESK-RATES
-  POSITIONS[]:
-  - name: POSITION_ID
-    type: id
-    presence: required
-    description: 'The position''s id: its book and its instrument (one holding nets every trade of that instrument in the book).'
-    example: POS-BOOK-RATES-1~CMS_SPREAD_OPT-AUD-2028Q2
-    pattern: ^POS-
-    link: position
-  - name: INSTRUMENT
-    type: text
-    presence: required
-    description: 'What the position holds: the product, its currency and its maturity.'
-    example: CMS spread option AUD 2028-06
-  - name: DIRECTION
-    type: text
-    presence: required
-    description: 'LONG or SHORT: the sign of the position''s net quantity.'
-    example: LONG
-  - name: QUANTITY
-    type: amount
-    presence: required
-    description: The signed sum of the position's trades' quantities held in the portfolio.
-    example: 3729781440.0
-  - name: MARKET_VALUE
-    type: amount
-    presence: required
-    unit: USD
-    description: The position's present value on the business date.
-    example: 34842645
-  - name: CURRENCY
-    type: text
-    presence: required
-    description: Currency
-    example: AUD
-    enum:
-    - AUD
-    - CAD
-    - CHF
-    - EUR
-    - GBP
-    - JPY
-    - USD
-  - name: TT_BOOK
-    type: id
-    presence: required
-    description: Book
-    example: BOOK-RATES-1
-    pattern: ^BOOK-
-    link: book
-  - name: DESK
-    type: id
-    presence: required
-    description: 'Desk: the desk it refers to'
-    example: DESK-RATES
-    pattern: ^DESK-
-    link: desk
-  - name: PRODUCT_GROUP
-    type: text
-    presence: required
-    example: Rates
-  - name: PRODUCT_TYPE
-    type: text
-    presence: required
-    example: CMS_SPREAD_OPT
-  - name: TRADES
-    type: integer
-    presence: required
-    example: 8
-  - name: PARTIAL
-    type: boolean
-    presence: required
-    example: false
-  - name: VAR_99
-    type: amount
-    presence: required
-    unit: USD
-    description: The position's own 1-day 99% VaR, as if it were alone.
-    example: 1200274
-  - name: COMPONENT_VAR
-    type: amount
-    presence: required
-    unit: USD
-    description: 'The position''s share of the portfolio''s VaR (Euler): the shares add up to the portfolio''s VaR; a hedge has a negative share.'
-    example: 873399
-  - name: PCT_OF_VAR
-    type: rate
-    presence: required
-    description: The component VaR over the portfolio's VaR.
-    example: 0.2899
-  BY_PRODUCT[]:
-  - name: KEY
-    type: text
-    presence: required
-    example: CMS_SPREAD_OPT
-  - name: POSITIONS
-    type: integer
-    presence: required
-    example: 3
-  - name: NET_MV
-    type: amount
-    presence: required
-    example: 27587182
-  - name: GROSS_MV
-    type: integer
-    presence: required
-    example: 42098108
-  - name: COMPONENT_VAR
-    type: amount
-    presence: required
-    example: 1711764
-  BY_CURRENCY[]:
-  - name: KEY
-    type: text
-    presence: required
-    example: AUD
-    enum:
-    - AUD
-    - CAD
-    - CHF
-    - EUR
-    - GBP
-    - JPY
-    - USD
-  - name: POSITIONS
-    type: integer
-    presence: required
-    example: 4
-  - name: NET_MV
-    type: amount
-    presence: required
-    example: 19937477
-  - name: GROSS_MV
-    type: integer
-    presence: required
-    example: 69132877
-  - name: COMPONENT_VAR
-    type: amount
-    presence: required
-    example: 1695103
-  BY_DIRECTION[]:
-  - name: KEY
-    type: text
-    presence: required
-    example: LONG
-  - name: POSITIONS
-    type: integer
-    presence: required
-    example: 14
-  - name: NET_MV
-    type: amount
-    presence: required
-    example: 222870572
-  - name: GROSS_MV
-    type: integer
-    presence: required
-    example: 615936406
-  - name: COMPONENT_VAR
-    type: amount
-    presence: required
-    example: 3763974
-  TOP_CONTRIBUTORS[]:
-  - name: POSITION_ID
-    type: id
-    presence: required
-    description: 'Position: the position it refers to'
-    example: POS-BOOK-RATES-1~CMS_SPREAD_OPT-AUD-2028Q2
-    pattern: ^POS-
-    link: position
-  - name: INSTRUMENT
-    type: text
-    presence: required
-    example: CMS spread option AUD 2028-06
-  - name: DIRECTION
-    type: text
-    presence: required
-    example: LONG
-    enum:
-    - LONG
-    - SHORT
-  - name: QUANTITY
-    type: amount
-    presence: required
-    example: 3729781440.0
-  - name: MARKET_VALUE
-    type: amount
-    presence: required
-    example: 34842645
-  - name: CURRENCY
-    type: text
-    presence: required
-    example: AUD
-    enum:
-    - AUD
-    - CAD
-    - CHF
-    - EUR
-    - GBP
-    - JPY
-    - USD
-  - name: TT_BOOK
-    type: id
-    presence: required
-    description: 'Book: the book it refers to'
-    example: BOOK-RATES-1
-    pattern: ^BOOK-
-    link: book
-  - name: DESK
-    type: id
-    presence: required
-    description: 'Desk: the desk it refers to'
-    example: DESK-RATES
-    pattern: ^DESK-
-    link: desk
-  - name: PRODUCT_GROUP
-    type: text
-    presence: required
-    example: Rates
-  - name: PRODUCT_TYPE
-    type: text
-    presence: required
-    example: CMS_SPREAD_OPT
-  - name: TRADES
-    type: integer
-    presence: required
-    example: 8
-  - name: PARTIAL
-    type: boolean
-    presence: required
-    example: false
-  - name: VAR_99
-    type: amount
-    presence: required
-    example: 1200274
-  - name: COMPONENT_VAR
-    type: amount
-    presence: required
-    example: 873399
-  - name: PCT_OF_VAR
-    type: rate
-    presence: required
-    example: 0.2899
-  ALL_TRADES:
-  - name: KIND
-    type: text
-    presence: required
-    example: portfolio-trades
-  - name: ID
-    type: id
-    presence: required
-    example: DESK-RATES
+    example: PRODUCT_GROUP in ('Rates', 'Fixed income', 'Money market') …
   DEFINITION.MEMBERS[]:
   - name: POSITION_ID
     type: id
     presence: optional
     description: 'Position: the position it refers to'
-    example: POS-BOOK-RATES-1~ACCRETING_SWAP-USD-2029Q1
+    example: POS-BOOK-RATES-1~MX-20000002
     pattern: ^POS-
     link: position
   - name: TRADE_ID
@@ -481,23 +127,20 @@ nested:
     presence: optional
     description: 'Trade: the trade it refers to'
     example: CLY-3000087
-    pattern: ^(MX|CLY)-\d+$
     link: trade
+  ROLLS_UP_TO:
+  - name: KIND
+    type: text
+    presence: required
+    example: division
+  - name: ID
+    type: id
+    presence: required
+    description: The desk or book the portfolio reports under.
+    example: DIV-MARKETS
 links:
 - field: PORTFOLIO_ID
   kind: portfolio
-- field: POSITIONS[].POSITION_ID
-  kind: position
-- field: POSITIONS[].TT_BOOK
-  kind: book
-- field: POSITIONS[].DESK
-  kind: desk
-- field: TOP_CONTRIBUTORS[].POSITION_ID
-  kind: position
-- field: TOP_CONTRIBUTORS[].TT_BOOK
-  kind: book
-- field: TOP_CONTRIBUTORS[].DESK
-  kind: desk
 - field: DEFINITION.MEMBERS[].POSITION_ID
   kind: position
 - field: DEFINITION.MEMBERS[].TRADE_ID
@@ -514,20 +157,6 @@ validation:
   - LIMIT_VAR
   - BUSINESS_DATE
   - VALID_FROM
-  - SCENARIO_SET_ID
-  - POSITION_COUNT
-  - TRADE_COUNT
-  - LONG_COUNT
-  - SHORT_COUNT
-  - GROSS_MV
-  - NET_MV
-  - LIMIT_USE
-  - POSITIONS
-  - BY_PRODUCT
-  - BY_CURRENCY
-  - BY_DIRECTION
-  - TOP_CONTRIBUTORS
-  - VAR_SCOPE
 - rule: unique
   key:
   - PORTFOLIO_ID
@@ -538,74 +167,12 @@ validation:
 - rule: link
   field: PORTFOLIO_ID
   kind: portfolio
-- rule: range
-  field: POSITION_COUNT
-  min: 0
-- rule: range
-  field: TRADE_COUNT
-  min: 0
-- rule: range
-  field: LONG_COUNT
-  min: 0
-- rule: range
-  field: SHORT_COUNT
-  min: 0
-- rule: vector-length
-  field: PNL
-  same: every row of one business date
-- rule: link
-  field: POSITIONS[].POSITION_ID
-  kind: position
 - rule: enum
-  field: POSITIONS[].CURRENCY
+  field: TYPE
   values:
-  - AUD
-  - CAD
-  - CHF
-  - EUR
-  - GBP
-  - JPY
-  - USD
-- rule: link
-  field: POSITIONS[].TT_BOOK
-  kind: book
-- rule: link
-  field: POSITIONS[].DESK
-  kind: desk
-- rule: enum
-  field: BY_CURRENCY[].KEY
-  values:
-  - AUD
-  - CAD
-  - CHF
-  - EUR
-  - GBP
-  - JPY
-  - USD
-- rule: link
-  field: TOP_CONTRIBUTORS[].POSITION_ID
-  kind: position
-- rule: enum
-  field: TOP_CONTRIBUTORS[].DIRECTION
-  values:
-  - LONG
-  - SHORT
-- rule: enum
-  field: TOP_CONTRIBUTORS[].CURRENCY
-  values:
-  - AUD
-  - CAD
-  - CHF
-  - EUR
-  - GBP
-  - JPY
-  - USD
-- rule: link
-  field: TOP_CONTRIBUTORS[].TT_BOOK
-  kind: book
-- rule: link
-  field: TOP_CONTRIBUTORS[].DESK
-  kind: desk
+  - BASKET
+  - HIERARCHY
+  - RULE
 - rule: link
   field: DEFINITION.MEMBERS[].POSITION_ID
   kind: position
@@ -613,35 +180,13 @@ validation:
   field: DEFINITION.MEMBERS[].TRADE_ID
   kind: trade
 notes:
-- The portfolio definitions are an engine input (IMPLEMENTATION_PLAN.md, kept as fundamental data); the figures on a stored portfolio are VaR
-  answers.
-- 'Terms kept, figures computed from 2.8.0 (docs/contracts/VAR.md): the fields marked derived are computed by the VaR engine and leave the stored
-  record then.'
+- The portfolio definitions are an engine input (IMPLEMENTATION_PLAN.md); the figures of the retired stored record (VaR, ES, positions, contributions,
+  P&L) are computed as the page opens (VAR_ENGINE), never stored.
 review:
-- 'required inferred from 100% coverage in 10 documents (3 samples and 7 test-data documents (data/testdata/market-risk/portfolio/cob-2026-09-30.jsonl.gz)):
+- 'required inferred from 100% coverage in 31 documents (3 samples and 28 test-data documents (data/testdata/market-risk/portfolio/cob-2026-09-30.jsonl.gz)):
   confirm each required field is mandatory upstream, and each optional one may be empty.'
 - 'source is the pack''s first listed source (its README): confirm.'
 - 'due time of each business date is not known: state it (for example, by 06:00 New York the next business day).'
-- 'POSITIONS[].COMPONENT_VAR is a column a compute engine produces (docs/contracts/README.md section 14) on a record that keeps it: confirm whether
-  it is computed and removed.'
-- 'BY_PRODUCT[].COMPONENT_VAR is a column a compute engine produces (docs/contracts/README.md section 14) on a record that keeps it: confirm whether
-  it is computed and removed.'
-- 'BY_CURRENCY[].COMPONENT_VAR is a column a compute engine produces (docs/contracts/README.md section 14) on a record that keeps it: confirm
-  whether it is computed and removed.'
-- 'BY_DIRECTION[].COMPONENT_VAR is a column a compute engine produces (docs/contracts/README.md section 14) on a record that keeps it: confirm
-  whether it is computed and removed.'
-- 'TOP_CONTRIBUTORS[].COMPONENT_VAR is a column a compute engine produces (docs/contracts/README.md section 14) on a record that keeps it: confirm
-  whether it is computed and removed.'
-- 'enum values inferred from the data, not from a glossary: POSITIONS[].CURRENCY, BY_CURRENCY[].KEY, TOP_CONTRIBUTORS[].DIRECTION, TOP_CONTRIBUTORS[].CURRENCY:
-  confirm they are closed lists.'
-- 'number types decided by the field''s name: LIMIT_USE rate, POSITIONS[].PCT_OF_VAR rate, BY_PRODUCT[].NET_MV amount, BY_PRODUCT[].COMPONENT_VAR
-  amount, BY_CURRENCY[].NET_MV amount, BY_CURRENCY[].COMPONENT_VAR amount, BY_DIRECTION[].NET_MV amount, BY_DIRECTION[].COMPONENT_VAR amount,
-  TOP_CONTRIBUTORS[].MARKET_VALUE amount, TOP_CONTRIBUTORS[].VAR_99 amount, TOP_CONTRIBUTORS[].COMPONENT_VAR amount, TOP_CONTRIBUTORS[].PCT_OF_VAR
-  rate: confirm amount, rate or integer.'
-- 'no unit stated for the amounts POSITIONS[].QUANTITY, BY_PRODUCT[].NET_MV, BY_PRODUCT[].COMPONENT_VAR, BY_CURRENCY[].NET_MV, BY_CURRENCY[].COMPONENT_VAR,
-  BY_DIRECTION[].NET_MV, BY_DIRECTION[].COMPONENT_VAR, TOP_CONTRIBUTORS[].QUANTITY, TOP_CONTRIBUTORS[].MARKET_VALUE, TOP_CONTRIBUTORS[].VAR_99,
-  TOP_CONTRIBUTORS[].COMPONENT_VAR (docs/contracts/README.md section 7: USD unless stated): confirm the currency.'
-- 'no description in about.yaml or the Sutras for NAME, BUSINESS_DATE, VALID_TO, SCENARIO_SET_ID, TRADE_COUNT, VAR_SCOPE, ROLLS_UP_TO.KIND, POSITIONS[].PRODUCT_GROUP,
-  POSITIONS[].PRODUCT_TYPE, POSITIONS[].TRADES, POSITIONS[].PARTIAL, BY_PRODUCT[].KEY and 28 more: write them in the pack''s config/about.yaml
+- 'enum values inferred from the data, not from a glossary: TYPE: confirm they are closed lists.'
+- 'no description in about.yaml or the Sutras for NAME, BUSINESS_DATE, VALID_TO, ROLLS_UP_TO.KIND: write them in the pack''s config/about.yaml
   glossary.'
-- 'VAR_99, ES_975 and PNL on the stored portfolio are VaR answers: confirm they are removed in 2.8.0 with VAR.'

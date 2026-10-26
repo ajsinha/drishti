@@ -19,7 +19,7 @@
 
 Every command (mnemonic) of every pack has a data contract: a YAML file beside its pack (`config/packs/<pack>/contracts/<kind>.contract.yaml`, checked against `tools/contracts.schema.json`) and a section of its pack's page here. The shared rules are in [the contracts README](../README.md); the computed measures that replace the retiring kinds have their own contracts there.
 
-90 contracts, 528 points still to review. Check them with `drishti.py contract check`; draft a new one with `drishti.py contract bootstrap KIND --write`.
+88 contracts, 502 points still to review. Check them with `drishti.py contract check`; draft a new one with `drishti.py contract bootstrap KIND --write`.
 
 | Command | Kind | Pack | Class | Status | Replaced by | To review |
 |---|---|---|---|---|---|---|
@@ -72,18 +72,16 @@ Every command (mnemonic) of every pack has a data contract: a YAML file beside i
 | `FIX` | `rate-fixing` | [market-data](market-data.md#fix-rate-index-fixings-rate-fixing) | fundamental | active |  | 8 |
 | `BND` | `bond` | [market-data](market-data.md#bnd-bond-security-master-bond) | fundamental | active |  | 7 |
 | `CORR` | `correlation-matrix` | [market-data](market-data.md#corr-correlation-matrix-correlation-matrix) | fundamental | active |  | 6 |
-| `VAR` | `var` | [market-risk](market-risk.md#var-var--expected-shortfall-var) | computed | retiring in 2.8.0 | VAR.md | 7 |
 | `SCN` | `stress-scenario` | [market-risk](market-risk.md#scn-stress-scenario-stress-scenario) | fundamental | active |  | 5 |
 | `STR` | `stress-result` | [market-risk](market-risk.md#str-stress-result-stress-result) | fundamental | active |  | 4 |
 | `FRTB` | `frtb-sensitivity` | [market-risk](market-risk.md#frtb-frtb-sensitivities-frtb-sensitivity) | fundamental | active |  | 6 |
 | `PNL` | `pnl-explain` | [market-risk](market-risk.md#pnl-pl-explain-pnl-explain) | fundamental | active |  | 6 |
 | `TVAL` | `trade-valuation` | [market-risk](market-risk.md#tval-trade-valuation-trade-valuation) | fundamental | active |  | 7 |
-| `POS` | `position` | [market-risk](market-risk.md#pos-position-position) | drishti-owned | active |  | 9 |
-| `PORT` | `portfolio` | [market-risk](market-risk.md#port-portfolio-portfolio) | input | active |  | 13 |
+| `POS` | `position` | [market-risk](market-risk.md#pos-position-position) | drishti-owned | active |  | 6 |
+| `PORT` | `portfolio` | [market-risk](market-risk.md#port-portfolio-portfolio) | input | active |  | 5 |
 | `PNLV` | `pnl-vector` | [market-risk](market-risk.md#pnlv-pl-vector-509-scenarios-pnl-vector) | input | active |  | 6 |
 | `SSET` | `scenario-set` | [market-risk](market-risk.md#sset-scenario-set-scenario-set) | input | active |  | 4 |
 | `HIER` | `risk-hierarchy` | [market-risk](market-risk.md#hier-risk-hierarchy-node-risk-hierarchy) | input | active |  | 5 |
-| `VNODE` | `var-node` | [market-risk](market-risk.md#vnode-official-var-of-a-hierarchy-node-var-node) | computed | retiring in 2.8.0 | VAR.md | 8 |
 | `TOPIC` | `news-topic` | [news-and-markets](news-and-markets.md#topic-news-topic-news-topic) | fundamental | active |  | 7 |
 | `NEWS` | `news` | [news-and-markets](news-and-markets.md#news-headlines-news) | fundamental | active |  | 4 |
 | `CO` | `listed-company` | [news-and-markets](news-and-markets.md#co-listed-company-listed-company) | fundamental | active |  | 7 |

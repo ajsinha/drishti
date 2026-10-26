@@ -51,7 +51,7 @@ PACKS = {
     "market-risk": {
         "title": "Market risk", "requires": ["market-data", "trading"],
         "description": "Value at risk, stress testing, FRTB sensitivities and P&L explain.",
-        "kinds": {"risk": ["var", "stress-scenario", "stress-result", "frtb-sensitivity", "pnl-explain", "trade-valuation"]}},
+        "kinds": {"risk": ["stress-scenario", "stress-result", "frtb-sensitivity", "pnl-explain", "trade-valuation"]}},
     "counterparty-risk": {
         "title": "Counterparty credit risk", "requires": ["trading"],
         "description": "ISDA master agreements and CSAs, netting sets, exposure and PFE, CVA/XVA, SA-CCR, credit limits, collateral, "
