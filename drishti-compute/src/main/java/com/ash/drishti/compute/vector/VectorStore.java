@@ -26,7 +26,7 @@ import java.util.List;
  *
  * <p>Immutable once built ({@link Builder}), so any number of readers sum at once without locks. Knows vectors, not VaR.
  */
-public final class VectorStore {
+public final class VectorStore implements Vectors {
 
     private final int width;
     private final int rows;
@@ -40,10 +40,12 @@ public final class VectorStore {
         this.chunks = chunks;
     }
 
+    @Override
     public int width() {
         return width;
     }
 
+    @Override
     public int rows() {
         return rows;
     }
@@ -52,26 +54,31 @@ public final class VectorStore {
         return rowsPerChunk;
     }
 
+    @Override
     public int chunkCount() {
         return chunks.length;
     }
 
     /** Bytes the vectors hold in memory (the budget's measure). */
+    @Override
     public long bytes() {
         return (long) rows * width * Double.BYTES;
     }
 
     /** Value {@code j} of row {@code row}. */
+    @Override
     public double value(int row, int j) {
         return chunks[row / rowsPerChunk][(row % rowsPerChunk) * width + j];
     }
 
     /** Row {@code row} copied into {@code out} (length {@code >= width}). */
+    @Override
     public void copy(int row, double[] out) {
         System.arraycopy(chunks[row / rowsPerChunk], (row % rowsPerChunk) * width, out, 0, width);
     }
 
     /** Row {@code row} added into {@code acc}: the inner loop of every sum. */
+    @Override
     public void addInto(double[] acc, int row) {
         double[] c = chunks[row / rowsPerChunk];
         int off = (row % rowsPerChunk) * width;
@@ -93,6 +100,7 @@ public final class VectorStore {
      * Rows {@code from} (included) to {@code to} (excluded) added into {@code acc}: a node of the primary hierarchy is such a run of
      * ordinals, summed as one sequential scan per chunk.
      */
+    @Override
     public void addRangeInto(double[] acc, int from, int to) {
         int r = from;
         while (r < to) {
@@ -208,8 +216,13 @@ public final class VectorStore {
     /** A load that would take more memory than the configured budget ({@code drishti.var.memory-budget-mb}). */
     public static final class BudgetExceeded extends RuntimeException {
         public BudgetExceeded(int rows, int width, long budget) {
+            this(rows, width, budget, (long) width * Double.BYTES);
+        }
+
+        /** {@code bytesPerRow}: what a row costs (8 x width on the heap, 4 x width in the float32 hot file). */
+        public BudgetExceeded(int rows, int width, long budget, long bytesPerRow) {
             super(String.format("%,d vectors of %d values need %,d MB; the vector store's budget is %,d MB (drishti.var.memory-budget-mb)",
-                    rows, width, (long) rows * width * Double.BYTES / (1024 * 1024), budget / (1024 * 1024)));
+                    rows, width, (long) rows * bytesPerRow / (1024 * 1024), budget / (1024 * 1024)));
         }
     }
 }

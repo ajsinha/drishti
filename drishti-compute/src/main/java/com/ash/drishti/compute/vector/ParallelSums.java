@@ -60,7 +60,7 @@ public final class ParallelSums implements AutoCloseable {
     }
 
     /** The sum of the vectors of {@code set}: {@code width} doubles. */
-    public double[] sum(VectorStore store, OrdinalSet set) {
+    public double[] sum(Vectors store, OrdinalSet set) {
         double[] acc = new double[store.width()];
         if (set.isEmpty()) {
             return acc;
@@ -94,12 +94,12 @@ public final class ParallelSums implements AutoCloseable {
     }
 
     /** The sum of the rows {@code from..to} (a node of the primary hierarchy). */
-    public double[] sumRange(VectorStore store, int from, int to) {
+    public double[] sumRange(Vectors store, int from, int to) {
         return sum(store, OrdinalSet.range(from, to));
     }
 
     /** Each part's sum (the children of a scope), the parts summed on the pool at once; part {@code i}'s sum at index {@code i}. */
-    public double[][] sums(VectorStore store, List<OrdinalSet> parts) {
+    public double[][] sums(Vectors store, List<OrdinalSet> parts) {
         double[][] out = new double[parts.size()][];
         if (parts.size() <= 1) {
             for (int i = 0; i < parts.size(); i++) {
@@ -121,13 +121,32 @@ public final class ParallelSums implements AutoCloseable {
         return out;
     }
 
-    private static double[] join(Future<double[]> f) {
+    /**
+     * Runs tasks on the pool and returns their results in task order (the load's parallel steps: a hot file's rows written a batch at a
+     * time). A task that fails fails the whole call with its cause.
+     */
+    public <T> List<T> all(List<? extends java.util.concurrent.Callable<T>> tasks) {
+        List<Future<T>> fs = new ArrayList<>();
+        for (java.util.concurrent.Callable<T> t : tasks) {
+            fs.add(pool.submit(t));
+        }
+        List<T> out = new ArrayList<>(fs.size());
+        for (Future<T> f : fs) {
+            out.add(join(f));
+        }
+        return out;
+    }
+
+    private static <T> T join(Future<T> f) {
         try {
             return f.get();
         } catch (InterruptedException e) {
             Thread.currentThread().interrupt();
             throw new IllegalStateException("interrupted while summing vectors", e);
         } catch (ExecutionException e) {
+            if (e.getCause() instanceof RuntimeException re) {
+                throw re;                                              // a closed matrix, a full disk: said as it is
+            }
             throw new IllegalStateException("a vector sum failed: " + e.getCause(), e.getCause());
         }
     }

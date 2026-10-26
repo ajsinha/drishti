@@ -15,9 +15,18 @@
  */
 package com.ash.drishti.compute.var;
 
+import com.ash.drishti.compute.vector.MappedMatrix;
 import com.ash.drishti.compute.vector.OrdinalSet;
 import com.ash.drishti.compute.vector.ParallelSums;
+import com.ash.drishti.compute.vector.PermutedVectors;
+import com.ash.drishti.compute.vector.RowSpill;
 import com.ash.drishti.compute.vector.VectorStore;
+import com.ash.drishti.compute.vector.Vectors;
+import java.io.IOException;
+import java.io.UncheckedIOException;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.StandardCopyOption;
 import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -36,6 +45,12 @@ import java.util.concurrent.ConcurrentHashMap;
  * <p>The vector grain is the trade: a position's vector is the sum of its trades' (a run of ordinals), so a trade, a position, a book
  * and any basket of trades or positions are all exact, and a long and a short in one position net in the sum. Immutable once built,
  * except the cache of position vectors; any number of requests read it at once.
+ *
+ * <p><b>Two tiers</b> (VAR.md section 7.3). <em>Heap</em>: every trade's vector in float64 {@code double[]} chunks. <em>Mapped</em>
+ * (the default in the server): the load streams the rows to a local spill file, sums the aggregates from it in float64, writes the date's
+ * hot file ({@link VarHotFile}: float32 position rows in hierarchy order, the trades of positions of several trades, the aggregates in
+ * float64) and maps it; the heap keeps the aggregates, columns and links. Sums read float32 rows into float64 accumulators; a node's
+ * figures come from its float64 aggregate, so they are the lake's.
  */
 public final class VarBook {
 
@@ -73,10 +88,23 @@ public final class VarBook {
         }
     }
 
+    /**
+     * A mapped date's hot file: the file, its matrices (float32 positions; the trades of positions of several trades, or null), the
+     * digest of the inputs it was built from, the server's own record (JSON) and when it was written.
+     */
+    public record Hot(Path file, MappedMatrix positions, MappedMatrix trades, String digest, String meta, long writtenAt) {}
+
+    /**
+     * Where a mapped load writes: the spill of the lake's rows (a temporary file, deleted after the build), the hot file being written
+     * (in the folder of its final name, moved there when complete) and its final name, and the digest of the inputs.
+     */
+    public record HotTarget(Path spill, Path part, Path file, String digest) {}
+
     private final LocalDate businessDate;
     private final String scenarioSet;
     private final List<LocalDate> scenarioDates;
-    private final VectorStore store;
+    private final Vectors store;
+    private final Hot hot;
     private final String[] tradeIds;
     private final Map<String, Integer> tradeOrdinal;
     private final Columns trades;
@@ -95,12 +123,14 @@ public final class VarBook {
     private final long loadMillis;
     private final Map<Integer, double[]> positionCache = new ConcurrentHashMap<>();
 
-    VarBook(Builder b, VectorStore store, String[] tradeIds, Columns trades, int[] positionOf, String[] positionIds, int[] posFrom, int[] posTo,
-            Columns positions, Map<String, Node> nodes, Map<String, int[]> bookRange, Map<String, double[]> aggregates, long loadMillis) {
-        this.businessDate = b.businessDate;
-        this.scenarioSet = b.scenarioSet;
-        this.scenarioDates = List.copyOf(b.scenarioDates);
+    VarBook(LocalDate businessDate, String scenarioSet, List<LocalDate> scenarioDates, Vectors store, String[] tradeIds, Columns trades,
+            int[] positionOf, String[] positionIds, int[] posFrom, int[] posTo, Columns positions, Map<String, Node> nodes,
+            Map<String, int[]> bookRange, Map<String, double[]> aggregates, int failed, long loadMillis, Hot hot) {
+        this.businessDate = businessDate;
+        this.scenarioSet = scenarioSet;
+        this.scenarioDates = List.copyOf(scenarioDates);
         this.store = store;
+        this.hot = hot;
         this.tradeIds = tradeIds;
         this.tradeOrdinal = new HashMap<>(tradeIds.length * 2);
         for (int i = 0; i < tradeIds.length; i++) {
@@ -121,7 +151,7 @@ public final class VarBook {
         this.aggregates = aggregates;
         this.tradeUpper = upperIndex(tradeIds);
         this.positionUpper = upperIndex(positionIds);
-        this.failed = b.failed;
+        this.failed = failed;
         this.loadMillis = loadMillis;
     }
 
@@ -137,8 +167,60 @@ public final class VarBook {
         return scenarioDates;
     }
 
-    public VectorStore store() {
+    /** The trades' vectors (heap rows, or the hot file's rows served position by position). */
+    public Vectors store() {
         return store;
+    }
+
+    /** {@code mapped} (the hot file) or {@code heap}. */
+    public String tier() {
+        return hot == null ? "heap" : "mapped";
+    }
+
+    /** The hot file of a mapped date, or null. */
+    public Hot hot() {
+        return hot;
+    }
+
+    /** Bytes of vectors the date holds: float64 rows on the heap, or the hot file's float32 matrices (mapped, resident when used). */
+    public long vectorBytes() {
+        return store.bytes();
+    }
+
+    /** Bytes the aggregates take on the heap (float64, one row per book and node). */
+    public long aggregateBytes() {
+        return (long) aggregates.size() * store.width() * Double.BYTES;
+    }
+
+    /** Unmaps a mapped date once no request reads it (its evicition); a heap date has nothing to release. */
+    public void close() {
+        if (hot != null) {
+            hot.positions().close();
+            if (hot.trades() != null) {
+                hot.trades().close();
+            }
+        }
+    }
+
+    /** As {@link #close}, then deletes the hot file once both matrices are unmapped (a stale date, or the disk tier's eviction). */
+    public void closeAndDelete() {
+        if (hot == null) {
+            return;
+        }
+        java.util.concurrent.atomic.AtomicInteger open = new java.util.concurrent.atomic.AtomicInteger(hot.trades() == null ? 1 : 2);
+        Runnable delete = () -> {
+            if (open.decrementAndGet() == 0) {
+                try {
+                    Files.deleteIfExists(hot.file());
+                } catch (IOException e) {
+                    // removed at the next start or shutdown
+                }
+            }
+        };
+        hot.positions().closeThen(delete);
+        if (hot.trades() != null) {
+            hot.trades().closeThen(delete);
+        }
     }
 
     public int width() {
@@ -255,8 +337,16 @@ public final class VarBook {
         return positions;
     }
 
-    /** A position's vector: the sum of its trades' (cached; a few thousand values per position at most). */
+    /**
+     * A position's vector: the sum of its trades' (on the heap: cached, a few thousand values per position at most; mapped: its float32
+     * row of the hot file, read when asked).
+     */
     public double[] positionVector(int index) {
+        if (hot != null) {
+            double[] v = new double[store.width()];
+            hot.positions().copy(index, v);
+            return v;
+        }
         return positionCache.computeIfAbsent(index, i -> {
             double[] acc = new double[store.width()];
             store.addRangeInto(acc, posFrom[i], posTo[i]);
@@ -413,14 +503,45 @@ public final class VarBook {
         }
     }
 
+    /**
+     * The nodes of the hierarchies from their rows ({@code id, hierarchy, level, name, parent}), books and limits: children from the
+     * parents, each node's books those the date has trades in, its members the union of their runs.
+     */
+    static Map<String, Node> nodes(List<String[]> nodeRows, Map<String, List<String>> nodeBooks, Map<String, Double> nodeLimits,
+            Map<String, int[]> books) {
+        Map<String, List<String>> children = new HashMap<>();
+        for (String[] r : nodeRows) {
+            if (r[4] != null) {
+                children.computeIfAbsent(r[4], k -> new ArrayList<>()).add(r[0]);
+            }
+        }
+        Map<String, Node> out = new LinkedHashMap<>();
+        for (String[] r : nodeRows) {
+            List<String> bs = nodeBooks.getOrDefault(r[0], List.of()).stream().filter(books::containsKey).toList();
+            OrdinalSet.Builder m = new OrdinalSet.Builder();
+            for (String b : bs) {
+                m.addRange(books.get(b)[0], books.get(b)[1]);
+            }
+            out.put(r[0], new Node(r[0], r[1], r[2], r[3], r[4], List.copyOf(children.getOrDefault(r[0], List.of())), bs,
+                    nodeLimits.getOrDefault(r[0], Double.NaN), m.build()));
+        }
+        return out;
+    }
+
     // ---------------------------------------------------------------------------------------------------------------------- building
 
-    /** Gathers one business date's rows in any order, then sorts them into hierarchy order and sums the aggregates. */
+    /**
+     * Gathers one business date's rows in any order, then sorts them into hierarchy order and sums the aggregates: on the heap, or
+     * (with a {@link HotTarget}) through a spill file into the date's hot file, which is then mapped.
+     */
     public static final class Builder {
         private final LocalDate businessDate;
         private final String scenarioSet;
         private final List<LocalDate> scenarioDates;
         private final VectorStore.Builder vectors;
+        private final RowSpill spill;
+        private final HotTarget target;
+        private final java.util.concurrent.locks.ReentrantLock lock = new java.util.concurrent.locks.ReentrantLock();
         private final List<String> ids = new ArrayList<>();
         private final Columns.Builder tradeCols = new Columns.Builder(TRADE_TEXTS, TRADE_NUMBERS);
         private final java.util.Set<String> seen = new java.util.HashSet<>();
@@ -428,33 +549,73 @@ public final class VarBook {
         private final Map<String, List<String>> nodeBooks = new HashMap<>();
         private final Map<String, Double> nodeLimits = new HashMap<>();
         private int failed;
+        private String batchId = "";
+        private String meta = "";
 
+        /** A date held on the heap, in float64 chunks of {@code rowsPerChunk} rows, within {@code budgetBytes} (8 bytes a value). */
         public Builder(LocalDate businessDate, String scenarioSet, List<LocalDate> scenarioDates, int rowsPerChunk, long budgetBytes) {
             this.businessDate = businessDate;
             this.scenarioSet = scenarioSet;
             this.scenarioDates = scenarioDates;
             this.vectors = new VectorStore.Builder(scenarioDates.size(), rowsPerChunk, budgetBytes);
+            this.spill = null;
+            this.target = null;
+        }
+
+        /**
+         * A date written to its hot file and mapped: the rows go to {@code target.spill()} as they arrive, within {@code budgetBytes}
+         * measured as the float32 hot copy (4 bytes a value).
+         */
+        public Builder(LocalDate businessDate, String scenarioSet, List<LocalDate> scenarioDates, long budgetBytes, HotTarget target) {
+            this.businessDate = businessDate;
+            this.scenarioSet = scenarioSet;
+            this.scenarioDates = scenarioDates;
+            this.vectors = null;
+            this.target = target;
+            this.spill = new RowSpill(target.spill(), scenarioDates.size(), budgetBytes, (long) scenarioDates.size() * Float.BYTES);
         }
 
         public int width() {
-            return vectors.width();
+            return scenarioDates.size();
+        }
+
+        /** The run the vectors come from (written in the hot file's header). */
+        public Builder batchId(String id) {
+            this.batchId = id == null ? "" : id;
+            return this;
+        }
+
+        /** The server's own record of the date (JSON: what the load counted, the inputs' versions), kept in the hot file. */
+        public Builder meta(String json) {
+            this.meta = json == null ? "" : json;
+            return this;
         }
 
         /**
          * A trade's vector and attributes ({@link #TRADE_TEXTS}, {@link #TRADE_NUMBERS} order); a row with no vector is counted failed.
-         * The same trade id twice is refused ({@link DuplicateTrade}): the date would count it twice in every node.
+         * The same trade id twice is refused ({@link DuplicateTrade}): the date would count it twice in every node. Rows may arrive from
+         * several reader threads.
          */
-        public synchronized void trade(String id, double[] values, int length, String[] texts, double[] numbers) {
-            if (!seen.add(id)) {
-                throw new DuplicateTrade(id);
+        public void trade(String id, double[] values, int length, String[] texts, double[] numbers) {
+            lock.lock();
+            try {
+                if (!seen.add(id)) {
+                    throw new DuplicateTrade(id);
+                }
+                if (length < 0) {
+                    failed++;
+                    return;
+                }
+                if (spill != null) {
+                    spill.add(values, length);
+                } else {
+                    vectors.add(values, length);
+                }
+                ids.add(id);
+                tradeCols.add(texts, numbers);
+            } finally {
+                lock.unlock();
             }
-            if (length < 0) {
-                failed++;
-                return;
-            }
-            vectors.add(values, length);
-            ids.add(id);
-            tradeCols.add(texts, numbers);
         }
 
         /** A node of a hierarchy, with the books beneath it. */
@@ -468,7 +629,14 @@ public final class VarBook {
             return ids.size();
         }
 
-        /** Sorts, permutes, indexes and sums. */
+        /** Gives up a load that failed: the spill file is deleted. */
+        public void discard() {
+            if (spill != null) {
+                spill.close();
+            }
+        }
+
+        /** Sorts, permutes, indexes and sums; a mapped date also writes its hot file and maps it. */
         public VarBook build(ParallelSums sums) {
             long t0 = System.nanoTime();
             Columns cols = tradeCols.build();
@@ -478,7 +646,6 @@ public final class VarBook {
             for (int i = 0; i < n && sorted; i++) {
                 sorted = order[i] == i;
             }
-            VectorStore store = sorted ? vectors.build() : vectors.permuted(order);
             Columns tcols = sorted ? cols : cols.permuted(order);
             String[] tids = new String[n];
             for (int i = 0; i < n; i++) {
@@ -519,7 +686,42 @@ public final class VarBook {
                 to[k] = runs.get(k)[1];
                 derivePosition(pc, tcols, from[k], to[k]);
             }
-            Map<String, Node> nodes = nodes(books);
+            Map<String, Node> nodes = nodes(nodeRows, nodeBooks, nodeLimits, books);
+            String[] positionIds = pids.toArray(new String[0]);
+            Columns pcols = pc.build();
+            if (spill == null) {
+                VectorStore store = sorted ? vectors.build() : vectors.permuted(order);
+                Map<String, double[]> agg = aggregates(store, books, nodes, sums);
+                long ms = (System.nanoTime() - t0) / 1_000_000;
+                return new VarBook(businessDate, scenarioSet, scenarioDates, store, tids, tcols, posOf, positionIds, from, to, pcols, nodes, books,
+                        agg, failed, ms, null);
+            }
+            try {
+                MappedMatrix lake = spill.finish();
+                Vectors rows = sorted ? lake : new PermutedVectors(lake, order);
+                Map<String, double[]> agg = aggregates(rows, books, nodes, sums);
+                VarHotFile.write(target.part(), new VarHotFile.Content(businessDate, scenarioSet, scenarioDates, tids, tcols, positionIds, from,
+                        to, pcols, books, nodes, agg, failed, batchId, target.digest(), meta), rows, sums);
+                Files.move(target.part(), target.file(), StandardCopyOption.REPLACE_EXISTING, StandardCopyOption.ATOMIC_MOVE);
+            } catch (IOException e) {
+                throw new UncheckedIOException("the hot file of " + businessDate + " could not be written: " + e.getMessage(), e);
+            } finally {
+                spill.close();
+                try {
+                    Files.deleteIfExists(target.part());
+                } catch (IOException e) {
+                    // the part file is in the date's folder, removed with it
+                }
+            }
+            try {
+                return VarHotFile.open(target.file(), (System.nanoTime() - t0) / 1_000_000);
+            } catch (IOException e) {
+                throw new UncheckedIOException("the hot file of " + businessDate + " could not be opened: " + e.getMessage(), e);
+            }
+        }
+
+        /** Every book's vector (one pass per book run, on the pool), then every node's bottom-up from the roots; all in float64. */
+        private static Map<String, double[]> aggregates(Vectors store, Map<String, int[]> books, Map<String, Node> nodes, ParallelSums sums) {
             Map<String, double[]> agg = new ConcurrentHashMap<>();
             List<String> bookNames = new ArrayList<>(books.keySet());
             List<OrdinalSet> bookSets = bookNames.stream().map(b -> OrdinalSet.range(books.get(b)[0], books.get(b)[1])).toList();
@@ -532,8 +734,7 @@ public final class VarBook {
                     sumUp(node, nodes, agg, store.width());
                 }
             }
-            long ms = (System.nanoTime() - t0) / 1_000_000;
-            return new VarBook(this, store, tids, tcols, posOf, pids.toArray(new String[0]), from, to, pc.build(), nodes, books, agg, ms);
+            return agg;
         }
 
         /**
@@ -586,26 +787,6 @@ public final class VarBook {
             texts[POSITION_TEXTS.indexOf("STATUS")] = q == 0 ? "flat" : "open";
             texts[POSITION_TEXTS.indexOf("POSITION_TYPE")] = to - from > 1 ? "fungible" : "single-trade";
             pc.add(texts, new double[] {q, anyPv ? mv : Double.NaN, gross, to - from, longs, shorts});
-        }
-
-        private Map<String, Node> nodes(Map<String, int[]> books) {
-            Map<String, List<String>> children = new HashMap<>();
-            for (String[] r : nodeRows) {
-                if (r[4] != null) {
-                    children.computeIfAbsent(r[4], k -> new ArrayList<>()).add(r[0]);
-                }
-            }
-            Map<String, Node> out = new LinkedHashMap<>();
-            for (String[] r : nodeRows) {
-                List<String> bs = nodeBooks.getOrDefault(r[0], List.of()).stream().filter(books::containsKey).toList();
-                OrdinalSet.Builder m = new OrdinalSet.Builder();
-                for (String b : bs) {
-                    m.addRange(books.get(b)[0], books.get(b)[1]);
-                }
-                out.put(r[0], new Node(r[0], r[1], r[2], r[3], r[4], List.copyOf(children.getOrDefault(r[0], List.of())), bs,
-                        nodeLimits.getOrDefault(r[0], Double.NaN), m.build()));
-            }
-            return out;
         }
 
         private static double[] sumUp(Node n, Map<String, Node> nodes, Map<String, double[]> agg, int width) {

@@ -160,4 +160,23 @@ final class SyntheticBank {
         VarBook.Builder b = new VarBook.Builder(LocalDate.of(2026, 9, 30), "HS-509", dates(), 65_536, budget);
         return fill(b, seed).build(sums);
     }
+
+    /** The same bank written to a hot file in {@code dir} and mapped (VAR.md section 7.3). */
+    VarBook buildMapped(long seed, ParallelSums sums, long budget, java.nio.file.Path dir) {
+        VarBook.HotTarget t = target(dir, "2026-09-30-HS-509.vhot", "digest-" + seed);
+        VarBook.Builder b = new VarBook.Builder(LocalDate.of(2026, 9, 30), "HS-509", dates(), budget, t).batchId("B-1")
+                .meta("{\"seed\":" + seed + "}");
+        return fill(b, seed).build(sums);
+    }
+
+    /** A hot target in {@code dir}: its spill and part files made, as the server's temporary-file service makes them. */
+    static VarBook.HotTarget target(java.nio.file.Path dir, String name, String digest) {
+        try {
+            java.nio.file.Path spill = java.nio.file.Files.createTempFile(dir, "spill-", ".f64");
+            java.nio.file.Path part = java.nio.file.Files.createTempFile(dir, "hot-", ".part");
+            return new VarBook.HotTarget(spill, part, dir.resolve(name), digest);
+        } catch (java.io.IOException e) {
+            throw new java.io.UncheckedIOException(e);
+        }
+    }
 }

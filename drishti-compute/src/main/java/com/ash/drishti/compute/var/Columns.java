@@ -37,8 +37,32 @@ public final class Columns {
         this.rows = rows;
     }
 
+    /**
+     * Columns from their parts (a hot file read back, {@link VarHotFile}): per text column its dictionary and a code per row, per number
+     * column a value per row, every array {@code rows} long.
+     */
+    static Columns of(int rows, Map<String, String[]> dicts, Map<String, int[]> codes, Map<String, double[]> numbers) {
+        Columns c = new Columns(rows);
+        codes.forEach((k, v) -> {
+            c.codes.put(k, v);
+            c.dicts.put(k, dicts.getOrDefault(k, new String[0]));
+        });
+        c.numbers.putAll(numbers);
+        return c;
+    }
+
     public int rows() {
         return rows;
+    }
+
+    /** The text columns, in order. */
+    public List<String> textColumns() {
+        return List.copyOf(codes.keySet());
+    }
+
+    /** The number columns, in order. */
+    public List<String> numberColumns() {
+        return List.copyOf(numbers.keySet());
     }
 
     public boolean has(String column) {
