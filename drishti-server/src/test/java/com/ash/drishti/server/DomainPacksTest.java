@@ -40,6 +40,9 @@ class DomainPacksTest {
     @Autowired ViewPipeline pipeline;
     @Autowired com.ash.drishti.engine.command.CommandParser commands;
 
+    /** Panels the exposure engine fills from the lake's paths (2.9.0): empty in the demo, which has no lake; ExposureApiTest covers them. */
+    private static final java.util.Set<String> ENGINE_PANELS = java.util.Set.of("netting-set/exposure");
+
     @Test
     void everyAdvertisedExampleOpensAFullView() throws Exception {
         int opened = 0;
@@ -60,7 +63,9 @@ class DomainPacksTest {
                 if (pack.equals("news-and-markets")) {
                     continue;                                      // live headlines and quotes: off as shipped
                 }
-                assertThat(v.panels()).as(ref.toString()).allSatisfy(p -> assertThat(p.empty()).as(ref + "/" + p.id()).isFalse());
+                assertThat(v.panels()).as(ref.toString())
+                        .filteredOn(p -> !ENGINE_PANELS.contains(ref.kind() + "/" + p.id()))
+                        .allSatisfy(p -> assertThat(p.empty()).as(ref + "/" + p.id()).isFalse());
                 assertThat(links(v)).as(ref + " links").allSatisfy(l -> assertThat(l.status()).as(ref + " -> " + l.text()).isNotEqualTo("missing"));
             }
         }

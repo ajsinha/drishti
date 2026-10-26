@@ -18,7 +18,6 @@ package com.ash.drishti.server.var;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 import com.ash.drishti.server.PinnedBusinessDate;
 import com.fasterxml.jackson.databind.JsonNode;
