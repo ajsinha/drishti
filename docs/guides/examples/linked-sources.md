@@ -15,7 +15,7 @@
 -->
 # Linked sources
 
-Panels that read other entities with `source: "link(id, kind)"`: the counterparty's netting sets, a netting set's exposure and a desk's pivot, all fetched live.
+Panels that read other entities with `source: "link(id, kind)"`: the counterparty's netting sets, a netting set's MTM by asset (its exposure is computed by the exposure engine since 2.9.0, not stored on the record) and a desk's pivot, all fetched live.
 
 **This example is not self-contained.** Its JSON names the entities (`CP-SUMMIT`, `NS-SUMMIT-NY`, `DESK-FI`), and the panels read those from a running server with the demo packs (`counterparty-risk`, `market-risk`). Without them the panels say they are waiting for the entity.
 
