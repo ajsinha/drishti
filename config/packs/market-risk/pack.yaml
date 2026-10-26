@@ -116,6 +116,12 @@ graph:
     TRADE_IDS:
       kind: trade
       label: Trade
+    PNL_VECTOR_ID:                    # a trade page's Risk links (risk-links@1): set on the view by the VaR engine when the trade is live
+      kind: pnl-vector
+      label: P&L vector
+    VAR_RESULT_ID:
+      kind: var-result
+      label: VaR of this trade
   badges:
     position: fmt($.QUANTITY, 'compact')
     portfolio: $.TYPE

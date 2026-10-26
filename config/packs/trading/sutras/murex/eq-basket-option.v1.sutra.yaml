@@ -55,5 +55,6 @@ panels:
   - { use: trading/events@1 }
   - { use: trading/payments@1 }
   - { use: data-provenance@1 }
+  - { use: risk-links@1 }
   - { use: linked-entities@1 }
 keys: { F7: "link($.COUNTERPARTY, 'counterparty-trades')", F8: impact, F9: raw }
