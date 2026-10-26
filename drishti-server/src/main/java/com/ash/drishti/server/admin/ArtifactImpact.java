@@ -183,6 +183,28 @@ public final class ArtifactImpact {
         return impact("pack", "", name, found, false, "", notes);
     }
 
+    /**
+     * What turning a command off stops (Admin → Commands): what names its one kind, the BI datasets that read it and what is built on
+     * them, saved searches, monitors, alerts, subscriptions, workspaces, shares and embed hosts. Nothing is blocked: a command is turned
+     * back on at any time.
+     */
+    public Impact ofKind(String command, String kind) {
+        Map<String, List<Item>> found = new LinkedHashMap<>();
+        Set<String> kinds = Set.of(kind.toLowerCase(Locale.ROOT));
+        Set<String> datasets = new LinkedHashSet<>();
+        for (BiRow r : biRows()) {
+            if ("dataset".equals(r.subtype()) && r.pairs().stream().anyMatch(p -> "kind".equals(p[0]) && kinds.contains(p[1].toLowerCase(Locale.ROOT)))) {
+                add(found, "datasets", r.name(), r.owner(), "reads " + kind + r.state());
+                datasets.add(r.name());
+            }
+        }
+        addBiDependants(found, datasets, "dataset");
+        scanPrefs(found, kindMatcher(kinds), KIND_KEYS);
+        scanShares(found, kinds);
+        scanEmbeds(found, kinds);
+        return impact("command", "", command, found, false, "", List.of());
+    }
+
     // ---- connectors -------------------------------------------------------------------------------------------------------------
 
     private Impact connector(String name) {

@@ -23,7 +23,7 @@
 <div class="adm" data-embedding>
   {% with tab='embedding' %}{% include "admin/_nav.html" %}{% endwith %}
   <h1 class="ws-h">Embedding <a class="emb-help" href="/help/user-management#embedding-host-applications" aria-label="Help: embedding host applications" title="Help: embedding host applications">?</a></h1>
-  <p class="text-muted-d">The web applications allowed to show {{ PRODUCT }} views in their own pages (Drishti Elements). Each host application
+  <p class="text-muted-d">The web applications allowed to show {{ PRODUCT }} views in their own pages ({{ PRODUCT }} Elements). Each host application
     has exact origins, a client secret or a public key it authenticates with, and the scopes it may use and the kinds and BI reports it may show. Usage counts since
     {% if since %}{{ when_local(since) }}{% else %}the server started{% endif %} and starts again at a restart.
     See <a href="/help/user-management#embedding-host-applications">Embedding host applications</a>.

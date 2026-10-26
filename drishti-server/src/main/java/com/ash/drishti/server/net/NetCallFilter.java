@@ -15,6 +15,7 @@
  */
 package com.ash.drishti.server.net;
 
+import com.ash.drishti.common.Branding;
 import com.ash.drishti.net.security.ClusterKey;
 import com.ash.drishti.net.security.NetHeaders;
 import com.ash.drishti.net.security.OnBehalfOf;
@@ -53,7 +54,8 @@ public final class NetCallFilter extends OncePerRequestFilter {
     /** Request attribute: the verified on-behalf-of claims of a forwarded call. */
     public static final String CLAIMS = "drishti.net.claims";
     /** The endpoints only a node may call. */
-    static final Set<String> NODE_ONLY = Set.of("gossip", "ping", "digest", "fetch", "search", "suggest", "state", "subscribe", "reverse", "group", "history");
+    static final Set<String> NODE_ONLY = Set.of("gossip", "ping", "digest", "fetch", "search", "suggest", "state", "subscribe", "reverse", "group", "history",
+            "switches");
     private static final int MAX_BODY = 16 * 1024 * 1024;
 
     private final NetService net;
@@ -86,7 +88,7 @@ public final class NetCallFilter extends OncePerRequestFilter {
         if (signature == null) {
             if (nodeOnly) {
                 if (!net.running()) {
-                    problem(res, 404, "DRS-5050", "Drishti*net is off on this node");
+                    problem(res, 404, "DRS-5050", Branding.netName() + " is off on this node");
                 } else {
                     net.refused(req.getRemoteAddr(), "", "no cluster credential on " + path);
                     problem(res, 401, "DRS-5051", "this endpoint is for the cluster's nodes only: no cluster credential");
@@ -97,7 +99,7 @@ public final class NetCallFilter extends OncePerRequestFilter {
             return;
         }
         if (!net.running() && !("gossip".equals(endpoint) && net.node().isPresent())) {
-            problem(res, 404, "DRS-5050", "Drishti*net is off on this node");
+            problem(res, 404, "DRS-5050", Branding.netName() + " is off on this node");
             return;
         }
         byte[] body = req.getInputStream().readNBytes(MAX_BODY + 1);

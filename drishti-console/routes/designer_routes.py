@@ -525,7 +525,7 @@ async def describe_line(request: Request):
             draft = (await backend.designs("POST", "", me, {"name": "", "kind": p.kind, "sutra": yaml_text}))["id"]
         await backend.view(p.kind, p.id, me, design=draft)
     except BackendError as e:
-        out.update(ok=False, messages=[*p.messages, f"Drishti could not draw it: {e.detail}"])
+        out.update(ok=False, messages=[*p.messages, f"{request.app.state.settings.get('ui.product', '') or 'The server'} could not draw it: {e.detail}"])
         return out
     out.update(yaml=yaml_text, draft=draft, kind=p.kind, id=p.id, preview=f"/v/{quote(p.kind)}/{quote(p.id)}?design={draft}&embed=1",
                open=f"/v/{quote(p.kind)}/{quote(p.id)}?design={draft}")

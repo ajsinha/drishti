@@ -17,7 +17,8 @@
    waterfall, histogram, scatter, candlestick and graph kinds. #}
 
 {% macro cell_text(c) -%}
-{%- if c.link -%}<a class="lnk" href="/v/{{ c.link.kind }}/{{ c.link.id }}">{{ c.text }}</a>
+{%- if c.tone == 'inactive' -%}<span class="lnk-off" title="Not active: an administrator turned this command off">{{ c.text }}</span> <span class="lk-badge lk-off">not active</span>
+{%- elif c.link -%}<a class="lnk" href="/v/{{ c.link.kind }}/{{ c.link.id }}">{{ c.text }}</a>
 {%- elif c.text is string and (c.text.startswith('https://') or c.text.startswith('http://')) and ' ' not in c.text -%}<a class="lnk ext" href="{{ c.text }}" target="_blank" rel="noopener noreferrer nofollow" title="{{ c.text }}">{{ c.text }}</a>
 {%- else -%}{{ c.text }}{%- endif -%}
 {%- endmacro %}
@@ -341,7 +342,7 @@
 {# A panel whose document lacks what its Sutra asks for (or whose data could not be read) says so, calmly. #}
 {% macro no_data(p) -%}
 {% if p.denied %}<p class="pnl-empty pnl-denied" role="status" data-denied><i class="bi bi-lock" aria-hidden="true"></i> {{ p.denied | capitalize }}
-  <span class="pnl-empty-why">{% if p.denied == 'hidden for you' %}It follows a value that is masked for you, so it shows nothing; pick a row whose value you can see.{% elif p.denied == 'not available to your role' %}The value it follows is hidden from your role where it is kept.{% else %}This panel reads another kind of entity that your roles do not allow you to open.{% endif %}</span></p>
+  <span class="pnl-empty-why">{% if p.denied == 'hidden for you' %}It follows a value that is masked for you, so it shows nothing; pick a row whose value you can see.{% elif p.denied == 'not available to your role' %}The value it follows is hidden from your role where it is kept.{% elif p.denied.startswith('not active') %}An administrator turned off the command this panel reads; it shows nothing until the command is on again.{% else %}This panel reads another kind of entity that your roles do not allow you to open.{% endif %}</span></p>
 {% else %}<p class="pnl-empty" role="status"{% if p.error %} title="{{ p.error }}"{% endif %}>
   <i class="bi bi-inbox" aria-hidden="true"></i> {{ 'No linked entities' if p.kind == 'links' else ((p.data.emptyLabel if (p.data is mapping and p.data.emptyLabel) else none) or 'No data available') }}
   {% if p.error %}<span class="pnl-empty-why">The data did not have the shape this panel expects.</span>{% endif %}</p>{% endif %}

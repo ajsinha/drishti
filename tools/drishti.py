@@ -787,6 +787,41 @@ def cmd_server_packs(a, extra) -> int:
     return 0
 
 
+def cmd_server_commands(a, extra) -> int:
+    """Admin -> Commands (docs/admin/COMMANDS.md): list the commands with their state, turn some off or on with a reason, or the history."""
+    api = Api.from_args(a)
+    if a.commands_cmd in ("on", "off"):
+        changes = [{"scope": "pack" if a.pack else "command", "name": n if a.pack else n.upper(), "on": a.commands_cmd == "on"} for n in a.names]
+        res = api.json("POST", "/api/v1/admin/commands", {"reason": a.reason or "", "changes": changes})
+        if getattr(a, "json", False):
+            say_json(res)
+        else:
+            print(f"{', '.join(c['name'] for c in changes)} {'on' if a.commands_cmd == 'on' else 'off'}; "
+                  f"{res.get('off', 0)} of {res.get('total', 0)} commands off; every server of the cluster follows within seconds")
+        return 0
+    if a.commands_cmd == "history":
+        res = api.json("GET", "/api/v1/admin/commands/history?limit=" + str(a.limit))
+        if getattr(a, "json", False):
+            say_json(res)
+            return 0
+        for e in res.get("items", []):
+            print(f"{str(e.get('at', ''))[:19]:<20}{e.get('scope', ''):<8}{e.get('name', ''):<20}{'on' if e.get('on') else 'off':<5}"
+                  f"{e.get('actor', ''):<16}{e.get('reason', '')}")
+        return 0
+    res = api.json("GET", "/api/v1/admin/commands")
+    if getattr(a, "json", False):
+        say_json(res)
+        return 0
+    print(f"{res.get('total', 0)} commands, {res.get('off', 0)} off; switches {res.get('hash', '')[:8] or 'none'} on {res.get('node', '')}")
+    for p in res.get("packs", []):
+        print(f"\n{p['name']}{'' if p.get('on') else '  (pack off)'}")
+        for c in p.get("commands", []):
+            if a.off and c.get("on"):
+                continue
+            print(f"  {c['code']:<8}{'on' if c.get('on') else 'OFF':<5}{c.get('label', ''):<34}{c.get('description', '')[:70]}")
+    return 0
+
+
 # ------------------------------------------------------------------------------------------------ design (the Screen Designer's designs)
 
 def design_summary(d: dict) -> str:
@@ -1168,6 +1203,22 @@ def build_parser() -> argparse.ArgumentParser:
         if act != "list":
             p.add_argument("name", help="the pack's name")
     load_module("serverpacks", "serverpacks.py").register(sys.modules[__name__], ps, srv)
+    scm = sv.add_parser("commands", help="server commands list|off|on|history: Admin -> Commands (commands on or off for everyone, with a reason)",
+                        description="Commands on or off for everyone (docs/admin/COMMANDS.md). An administrator; a personal API token is refused "
+                                    "(token-never): use it where sign-in is off, as --user, or use Admin -> Commands.")
+    cms = scm.add_subparsers(dest="commands_cmd", metavar="ACTION", required=True)
+    for act, what in (("list", "every command by pack: on or off, and what it does"), ("off", "turn commands (or, with --pack, packs) off for everyone"),
+                      ("on", "turn commands (or, with --pack, packs) on again"), ("history", "the changes, newest first: who, when, why, on which server")):
+        c = cms.add_parser(act, help=what, description=what, parents=[srv])
+        c.set_defaults(func=cmd_server_commands)
+        if act in ("on", "off"):
+            c.add_argument("names", nargs="+", help="the commands' mnemonics (FRTB EQV), or the packs' names with --pack")
+            c.add_argument("--pack", action="store_true", help="the names are packs, not commands")
+            c.add_argument("--reason", help="why (kept in the audit log)")
+        elif act == "list":
+            c.add_argument("--off", action="store_true", help="only the commands that are off")
+        else:
+            c.add_argument("--limit", type=int, default=50, help="most changes listed (default 50)")
 
     # connector --------------------------------------------------------------------------------------------
     cs = group("connector", "Connectors over REST (Admin -> Connectors): list, get, apply a YAML file, test, enable, delete (administrator; a token needs packs:admin)")

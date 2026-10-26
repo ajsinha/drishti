@@ -72,7 +72,7 @@ public class DistConfiguration {
     public SubscriptionService subscriptionService(PreferenceStore store, ContentExporter exports, UserService users, Principals principals, Entitlements entitlements,
             BiService bi, AuditLog audit, ObjectProvider<JavaMailSender> sender, CollabProperties collab, DistProperties props, Environment env, BusinessDates dates,
             LoadService loads, ObjectProvider<com.ash.drishti.server.bi.ai.BiAiService> ai, com.ash.drishti.server.notify.NotifyChannels notify,
-            com.ash.drishti.server.notify.PhoneBook phones, @Value("${drishti.branding.product:Drishti}") String product) {
+            com.ash.drishti.server.notify.PhoneBook phones, @Value("${drishti.branding.product:}") String product) {
         String from = collab.email().from();
         String host = from.contains("@") ? from.substring(from.indexOf('@') + 1) : "localhost";
         JavaMailSender smtp = sender.getIfAvailable();

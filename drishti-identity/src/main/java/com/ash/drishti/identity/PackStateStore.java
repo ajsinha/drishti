@@ -28,6 +28,11 @@ import org.springframework.transaction.support.TransactionTemplate;
 /**
  * Which packs administrators switched off (Admin → Packs), kept in the identity database. Every access check reads an
  * immutable snapshot (lock-free); changes are serialised, audited, and apply at the next request.
+ *
+ * <p>With the switches ledger attached ({@link #ledger}, the server's default since 2.8.0), a pack's state is the ledger's {@code pack}
+ * entry: the same table as the commands' switches, spread to every node of a cluster by Drishti*net, so nodes with databases of their own
+ * agree. The states kept before (this table or the content store document) are imported into the ledger once, when it has no entry for
+ * the pack.
  */
 public final class PackStateStore {
 
@@ -39,6 +44,7 @@ public final class PackStateStore {
     private final AuditLog audit;
     private final ReentrantLock writes = new ReentrantLock();
     private volatile Map<String, State> snapshot;
+    private volatile SwitchLedger ledger;
 
     /** The content store document of every pack's state ({@code drishti.packs.state-store=content}, the default). */
     public static final class Doc {
@@ -83,7 +89,26 @@ public final class PackStateStore {
 
     /** Moves whenever the states are read again (a pack switched on or off): callers that cache what follows from them compare it. */
     public long version() {
-        return version.get();
+        SwitchLedger l = ledger;
+        return version.get() + (l == null ? 0 : l.version());
+    }
+
+    /**
+     * Keeps the packs' states in the switches ledger from now on; the states held here that the ledger has no entry for are imported into
+     * it, stamped with the time they were set.
+     */
+    public void ledger(SwitchLedger l) {
+        writes.lock();
+        try {
+            java.util.List<SwitchLedger.Entry> old = new java.util.ArrayList<>();
+            snapshot.values().stream().filter(st -> l.find(SwitchLedger.PACK, st.name()).isEmpty()).forEach(st -> old.add(new SwitchLedger.Entry(
+                    SwitchLedger.PACK, st.name(), SwitchLedger.EVERYONE, st.enabled(), "imported from the pack states", st.updatedBy(),
+                    (st.updatedAt() == null ? 0 : st.updatedAt().toEpochMilli()) << 16, l.node(), st.updatedAt())));
+            l.merge(old);
+            this.ledger = l;
+        } finally {
+            writes.unlock();
+        }
     }
 
     private final java.util.concurrent.atomic.AtomicLong version = new java.util.concurrent.atomic.AtomicLong();
@@ -100,15 +125,34 @@ public final class PackStateStore {
 
     /** True unless an administrator switched the pack off. */
     public boolean enabled(String pack) {
+        SwitchLedger l = ledger;
+        if (l != null) {
+            return l.on(SwitchLedger.PACK, pack);
+        }
         State s = snapshot.get(pack);
         return s == null || s.enabled();
     }
 
     public Optional<State> find(String pack) {
+        SwitchLedger l = ledger;
+        if (l != null) {
+            return l.find(SwitchLedger.PACK, pack).map(e -> new State(pack, e.on(), e.at(), e.actor()));
+        }
         return Optional.ofNullable(snapshot.get(pack));
     }
 
     public State set(String pack, boolean enabled, String actor) {
+        return set(pack, enabled, actor, "");
+    }
+
+    /** Switches the pack on or off for everyone, with the reason the audit log keeps. */
+    public State set(String pack, boolean enabled, String actor, String reason) {
+        SwitchLedger l = ledger;
+        if (l != null) {
+            l.set(java.util.List.of(new SwitchLedger.Change(SwitchLedger.PACK, pack, enabled)), reason, actor);
+            audit.record(actor, enabled ? "pack-enabled" : "pack-disabled", pack, reason == null ? "" : reason);
+            return find(pack).orElseThrow();
+        }
         writes.lock();
         try {
             if (content != null) {

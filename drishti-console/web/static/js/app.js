@@ -21,6 +21,11 @@ window.drsMessage = function (p, fallback) {
   if (/^DRS-\d+$/.test(code)) { detail = detail.split(code + ': ').join('').split(code + ' ').join('').split(code).join('').trim(); }
   return detail ? code + ': ' + detail : code;
 };
+/* "Back to where I was" on the not-active page (a command an administrator turned off): the page before, when it was one of ours. */
+document.addEventListener('click', function (e) {
+  var a = e.target && e.target.closest ? e.target.closest('[data-back]') : null;
+  if (a && window.history.length > 1 && document.referrer.indexOf(window.location.origin + '/') === 0) { e.preventDefault(); window.history.back(); }
+});
 (function () {
   'use strict';
   var root = document.documentElement;

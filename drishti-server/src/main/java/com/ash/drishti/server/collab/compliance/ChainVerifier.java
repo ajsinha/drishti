@@ -15,6 +15,7 @@
  */
 package com.ash.drishti.server.collab.compliance;
 
+import com.ash.drishti.common.Branding;
 import com.ash.drishti.common.DrishtiException;
 import com.ash.drishti.common.ErrorCode;
 import com.ash.drishti.identity.collab.CommentThread;
@@ -142,7 +143,7 @@ public final class ChainVerifier {
             }
             seals.get("comment:" + c.id()).ifPresent(seal -> {
                 if (!seal.hash().equals(Seals.commentHash(c))) {
-                    problems.add("comment " + c.id() + " was changed outside Drishti (text, author, state or masked ranges)");
+                    problems.add("comment " + c.id() + " was changed outside " + Branding.name("the server") + " (text, author, state or masked ranges)");
                 }
             });
         }
@@ -156,7 +157,7 @@ public final class ChainVerifier {
             if (seal.isEmpty() || seal.get().hash().equals(Seals.holdHash(h))) {
                 ok++;
             } else if (problems.size() < max) {
-                problems.add(new Problem("hold", Long.toString(h.id()), "the hold was changed outside Drishti"));
+                problems.add(new Problem("hold", Long.toString(h.id()), "the hold was changed outside " + Branding.name("the server")));
             }
         }
         var head = seals.get("holds:head");

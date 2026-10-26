@@ -27,13 +27,31 @@
   document.body.appendChild(tray);
   function esc(s) { return String(s == null ? '' : s).replace(/[&<>"]/g, function (c) { return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]; }); }
   function show() { badge.textContent = String(count); badge.hidden = count <= 0; }
-  window.DrishtiChannel.subscribe('alerts', { alert: onAlert, notice: onNotice });   // on the tab's one live connection (channel.js)
+  window.DrishtiChannel.subscribe('alerts', { alert: onAlert, notice: onNotice, switches: onSwitches });   // on the tab's one live connection (channel.js)
   fetch('/api/inbox/count', { headers: { Accept: 'application/json' }, credentials: 'same-origin' })
     .then(function (r) { return r.ok ? r.json() : { unread: 0 }; })
     .then(function (j) { count += (j && j.unread) || 0; show(); })
     .catch(function () { /* the count is a convenience */ });
   document.addEventListener('drishti:unread', function (e) { count = e.detail; });
   var MAX_TOASTS = 3, more = null, moreCount = 0;                      // a burst shows three toasts and one "N more on the bell"
+  /* Admin -> Commands changed what is on (docs/admin/COMMANDS.md): a page of a kind now off is drawn again (the server says "not active"),
+     the not-active page of a command now on too, and links to a kind now off stop being links at once. Other pages hear it as drishti:switches. */
+  function onSwitches(d) {
+    var kinds = (d && d.kinds) || [], commands = (d && d.commands) || [];
+    var page = document.querySelector('[data-view][data-kind]'), off = document.querySelector('[data-command-off]');
+    if ((page && kinds.indexOf(page.getAttribute('data-kind')) >= 0) || (off && commands.indexOf(off.getAttribute('data-command-off')) < 0)) {
+      window.location.reload();
+      return;
+    }
+    kinds.forEach(function (k) {
+      document.querySelectorAll('a[href^="/v/' + k + '/"]').forEach(function (a) {
+        var s = document.createElement('span');
+        s.className = 'lnk-off'; s.textContent = a.textContent; s.title = 'Not active: an administrator turned this command off';
+        a.replaceWith(s);
+      });
+    });
+    document.dispatchEvent(new CustomEvent('drishti:switches', { detail: d }));
+  }
   function toast(cls, href, html) {
     if (tray.querySelectorAll('.toast-a:not(.toast-more)').length >= MAX_TOASTS) {
       moreCount++;

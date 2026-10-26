@@ -120,6 +120,14 @@ public class AlertController {
         return AlertEngine.suggestions(all, kind);
     }
 
+    private volatile com.ash.drishti.server.switches.SwitchEvents switches;
+
+    /** Admin → Commands: a change of the switches is told on every stream ({@code switches}), so open pages follow it at once. */
+    @org.springframework.beans.factory.annotation.Autowired(required = false)
+    void switches(com.ash.drishti.server.switches.SwitchEvents s) {
+        this.switches = s;
+    }
+
     @GetMapping(path = "/stream", produces = MediaType.TEXT_EVENT_STREAM_VALUE)
     public SseEmitter stream(@RequestAttribute(Principal.ATTRIBUTE) Principal p) {
         SseEmitter emitter = new SseEmitter(0L);
@@ -133,6 +141,8 @@ public class AlertController {
         Subscription alerts = engine.listen(p.user(), put::accept);
         // notices (shares first) ride the same stream: one connection, one bell (COLLABORATION.md, Decision 10)
         Subscription notices = hub.listen(p.user(), put::accept);
+        com.ash.drishti.server.switches.SwitchEvents sw = switches;
+        AutoCloseable switched = sw == null ? () -> { } : sw.listen(put::accept);
         executor.execute(() -> {
             try {
                 emitter.send(SseEmitter.event().name("hello").data(Map.of("user", p.user())));
@@ -146,6 +156,8 @@ public class AlertController {
                         // rendered now, for this reader: no entity id without access, masked spans scrubbed, no data values
                         com.ash.drishti.server.collab.InboxService.Row row = inbox.render(n, p);
                         emitter.send(SseEmitter.event().name("notice").id(Long.toString(n.seq())).data(row, MediaType.APPLICATION_JSON));
+                    } else if (e instanceof com.ash.drishti.server.switches.SwitchEvents.Changed c) {
+                        emitter.send(SseEmitter.event().name("switches").data(c, MediaType.APPLICATION_JSON));
                     }
                 }
             } catch (IOException | IllegalStateException e) {
@@ -155,6 +167,11 @@ public class AlertController {
             } finally {
                 alerts.close();
                 notices.close();
+                try {
+                    switched.close();
+                } catch (Exception ignored) {
+                    // a listener removed from a list: nothing to fail
+                }
             }
         });
         return emitter;

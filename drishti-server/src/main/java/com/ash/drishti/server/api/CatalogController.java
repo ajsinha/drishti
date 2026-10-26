@@ -116,15 +116,31 @@ public class CatalogController {
             m.put("version", p.version());
             m.put("title", p.title());
             m.put("description", p.description());
-            m.put("console", p.manifest().getOrDefault("console", Map.of()));
+            m.put("console", withoutInactive(p.manifest().getOrDefault("console", Map.of())));
             m.put("sample", p.sample());
-            m.put("kinds", p.kinds());
-            m.put("links", links(p.manifest()));                   // graph.fields: which fields name which kinds (the designer's linked records)
+            m.put("kinds", p.kinds().stream().filter(k -> !packAccess.commandOff(k)).toList());   // a command turned off: its kind is not named
+            Map<String, Object> links = links(p.manifest());
+            links.values().removeIf(l -> l instanceof Map<?, ?> r && packAccess.commandOff(String.valueOf(r.get("kind"))));
+            m.put("links", links);                 // graph.fields: which fields name which kinds (the designer's linked records)
             m.put("python", packRegistry.python(p.name()));        // Calc: enabled, and starter snippets (PYTHON_CALC.md)
             m.put("assigned", assigned.contains(p.name()));
             m.put("active", active.contains(p.name()));
             return m;
         }).toList();
+    }
+
+    /** The pack's console settings without the example commands whose command an administrator turned off (Admin → Commands). */
+    private Object withoutInactive(Object console) {
+        if (!(console instanceof Map<?, ?> c) || !(c.get("examples") instanceof List<?> examples) || packAccess.commands() == null) {
+            return console;
+        }
+        Map<Object, Object> out = new java.util.LinkedHashMap<>(c);
+        out.put("examples", examples.stream().filter(e -> {
+            Object cmd = e instanceof List<?> l && !l.isEmpty() ? l.get(0) : e;
+            String head = String.valueOf(cmd).trim().split("\\s+", 2)[0];
+            return packAccess.commands().commandOn(head);
+        }).toList());
+        return out;
     }
 
     /** A pack's {@code graph.fields} as {@code {FIELD: {kind, label}}}: the fields that name another entity. */

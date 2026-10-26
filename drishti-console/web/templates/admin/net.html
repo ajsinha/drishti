@@ -23,7 +23,7 @@
 {% set node = members.node or {} %}
 <div class="adm" data-net data-tab="{{ tab }}">
   {% with tab='net' %}{% include "admin/_nav.html" %}{% endwith %}
-  <h1 class="ws-h" id="netTitle">Drishti*net <a class="emb-help" href="/help/net" aria-label="Help: Drishti*net" title="Help: Drishti*net">?</a></h1>
+  <h1 class="ws-h" id="netTitle">{{ PRODUCT }}*net <a class="emb-help" href="/help/net" aria-label="Help: {{ PRODUCT }}*net" title="Help: {{ PRODUCT }}*net">?</a></h1>
   <details class="adm-about"><summary>About this page</summary>
   <p class="text-muted-d">Several {{ PRODUCT }} servers acting as one: each tells the others, by gossip, which packs and data it serves, and a request
     that one cannot answer is answered by another, so a person connected to any server sees the same pages. This page is the cluster as the server
@@ -42,7 +42,7 @@
     {% if console.enabled %}<span class="net-chip" data-console-on>Console on <b class="mono">{{ console.active }}</b></span>{% endif %}
   </div>
 
-  <div class="net-tabs" role="tablist" aria-label="Drishti*net" data-tabs>
+  <div class="net-tabs" role="tablist" aria-label="{{ PRODUCT }}*net" data-tabs>
     <button type="button" role="tab" id="netTabMembers" aria-controls="netPaneMembers" aria-selected="{{ 'true' if tab == 'members' else 'false' }}" {% if tab != 'members' %}tabindex="-1"{% endif %} data-tab="members">Members</button>
     <button type="button" role="tab" id="netTabMap" aria-controls="netPaneMap" aria-selected="{{ 'true' if tab == 'map' else 'false' }}" {% if tab != 'map' %}tabindex="-1"{% endif %} data-tab="map">Capability map</button>
     <button type="button" role="tab" id="netTabRouting" aria-controls="netPaneRouting" aria-selected="{{ 'true' if tab == 'routing' else 'false' }}" {% if tab != 'routing' %}tabindex="-1"{% endif %} data-tab="routing">Routing</button>
@@ -54,7 +54,7 @@
   <section role="tabpanel" id="netPaneMembers" aria-labelledby="netTabMembers" data-pane="members" {% if tab != 'members' %}hidden{% endif %}>
     {% if not members.enabled %}
     <div class="net-empty">
-      <p>Drishti*net is off on this server: it is a single server, exactly as without the cluster. To switch it on, give it
+      <p>{{ PRODUCT }}*net is off on this server: it is a single server, exactly as without the cluster. To switch it on, give it
         <span class="mono">node.yaml</span> with <span class="mono">enabled: true</span> and the cluster key from the environment; it advertises
         this machine's real address with the server's port (or the <span class="mono">advertise-url</span> you name: never localhost, 127.x or 0.0.0.0):</p>
       <pre class="mono net-pre">enabled: true

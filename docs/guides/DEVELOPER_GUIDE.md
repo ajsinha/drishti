@@ -563,7 +563,9 @@ Tests may use `@Autowired` fields (`@Autowired MockMvc mvc;`), because test clas
   `@ConfigurationProperties` record whose compact constructor supplies the defaults (`LiveProperties`, `SearchProperties`,
   `GovernanceProperties`, `QueryProperties`). Industry vocabulary belongs in packs, never in core code (ADR-010): no attribute name such
   as `TRADE_ID` appears in Java. The product name and legal notices are configuration too (`drishti.branding.*` on the server, `ui.*` in
-  the console).
+  the console): a message names the product with `Branding.sqlName()`, `Branding.netName()` or `Branding.name(fallback)`, a template
+  with `{{ PRODUCT }}`, a script with `document.body.dataset.product`; `BrandingLiteralTest` and `tests/test_branding_guard.py` fail on
+  a literal.
 - **Virtual threads.** `spring.threads.virtual.enabled: true` runs every request on a virtual thread. Blocking I/O (a source read, a
   link fan-out) is fine and cheap. `EngineConfiguration` provides `drishtiVirtualExecutor` (a thread per task) for fetches and SSE
   writers, `drishtiBindPool` (a `ForkJoinPool`, `drishti.engine.bind-parallelism`, 0 = one per core) for CPU-bound panel binding, and

@@ -15,6 +15,7 @@
  */
 package com.ash.drishti.identity;
 
+import com.ash.drishti.common.Branding;
 import com.ash.drishti.identity.db.AuditEventEntity;
 import com.ash.drishti.identity.db.IdentityRepositories;
 import java.time.Instant;
@@ -106,7 +107,7 @@ public final class JpaAuditLog implements AuditLog {
                 var seal = seals.get("audit:" + e.id);
                 if (seal.isEmpty()) {
                     if (sealedYet && problems.size() < max) {
-                        problems.add("audit row " + e.id + " has no seal (added outside Drishti)");
+                        problems.add("audit row " + e.id + " has no seal (added outside " + Branding.name("the server") + ")");
                     }
                     continue;
                 }

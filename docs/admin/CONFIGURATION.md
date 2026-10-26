@@ -922,7 +922,10 @@ Check: `curl -s localhost:18480/api/v1/studio/settings` returns `{"approve":…,
 | `copyright` | the Drishti copyright line | Returned by `GET /api/v1/about`. |
 | `notice` | `Unauthorised copying, use or distribution is prohibited.` | The legal notice beside it (also in the public `/public/about`). |
 
-The console has its own copy under `ui:` (`product`, `tagline`, `copyright`, `notice`; see [`ui`](#ui)): set both when you rebrand.
+The console has its own copy under `ui:` (`product`, `tagline`, `owner`, `copyright`, `notice`; see [`ui`](#ui)): set both when you rebrand.
+Messages name the product's features after `product` (`<product> SQL` in a SQL error, `<product>*net` in a cluster answer); no server
+message writes the name in code, and `BrandingLiteralTest` (drishti-it) fails on a literal. Header names (`X-Drishti-…`) and the
+`DRISHTI_` variables are identifiers and keep their names.
 
 ### `drishti.identity` — users, passwords and the identity database
 
@@ -2698,7 +2701,8 @@ sign-on settings (`auth.oidc`) apply to every server; each server verifies the I
 | Key | Default | Meaning |
 |---|---|---|
 | `default_theme` | `terminal` | `terminal`, `light`, `wallstreet`, `blue`, `green`, `crimson`, `crimson-dark`, `terminal-green`, `terminal-crimson`, `terminal-blue`. Users can choose their own. |
-| `product` / `tagline` | `Drishti` / `Any data. Any domain. One grammar.` | Shown in the top bar and sign-in page. |
+| `product` / `tagline` | `Drishti` / `Any data. Any domain. One grammar.` | Shown in the top bar and sign-in page, and wherever a page or script names the product: its features follow it (`<product> SQL`, `<product> Elements`, `<product>*net`). No template or script writes the name itself (templates use `{{ PRODUCT }}`, scripts read `<body data-product>`); a guard test (`tests/test_branding_guard.py`) fails on a literal. |
+| `owner` / `owner_email` | `Ashutosh Sinha` / `ajsinha@gmail.com` | Who holds the rights, and an address beside the name (blank for none): the Author section of the About page. The server has `drishti.branding.owner`. |
 | `user`, `user_display`, `desk` | `ash` (`DRISHTI_USER`), `Ash`, `Rates desk` | The acting user when `auth.enabled` is false (local development only). |
 | `user_cache_seconds` | `10` | How long a console worker reuses what the server said about a user (settings, packs, view layouts, saved pivots, BI powers) before asking again. A change made on this console is seen at once by all its workers (the user stamps, see `server.workers`); this bounds how long another console behind the same address shows the old choice. |
 | `about_prefetch` | `true` (`DRISHTI_ABOUT_PREFETCH`) | Fetch the page's *About this page* answer once the view is idle, so table headers, strip and key-value labels that have a glossary entry are underlined (with a hint) before the drawer is opened. It costs the server one explain per page view: the view is derived again for the caller and kept `drishti.explain.cache-ttl`, so opening the drawer afterwards is free. Set `false` on a busy installation; the labels are then underlined when the drawer is first opened ([PERFORMANCE.md](PERFORMANCE.md#about-this-page-and-its-cost)). |
@@ -2707,7 +2711,7 @@ sign-on settings (`auth.oidc`) apply to every server; each server verifies the I
 | `landing_examples` | `4` | How many example commands the landing page plays. They are the example commands (`console.examples`) of the packs switched on, so the landing page never names an entity of a pack that is not installed; with none, it shows the form `<MNEMONIC> <ID> <GO>`. Studio's first preview is the first of these examples too. |
 | `product_native` / `product_meaning` | `दृष्टि` / `Drishti (दृष्टि) means <em>sight</em>.` | The product name in its own script (blank for none) and one line on its meaning, on the About page. |
 | `copyright` / `notice` | the Drishti copyright and a ban on unauthorised copying | The legal lines in the footer and on the About page. Change them here, never in code; the server has the same under `drishti.branding`. |
-| `error_advice` | a short text for each of `DRS-1001`, `DRS-1002`, `DRS-1003`, `DRS-1004`, `DRS-1007`, `DRS-4003`, `DRS-4004`, and `default` | What an error page tells the user to do, by the code the server answered with. `{kind}` and `{id}` in a text become the entity asked for; a code with no entry gets `default`. Edit it so the advice fits your site (who to ask, which channel). |
+| `error_advice` | a short text for each of `DRS-1001`, `DRS-1002`, `DRS-1003`, `DRS-1004`, `DRS-1016`, `DRS-1007`, `DRS-4003`, `DRS-4004`, and `default` | What an error page tells the user to do, by the code the server answered with. `{kind}` and `{id}` in a text become the entity asked for; a code with no entry gets `default`. Edit it so the advice fits your site (who to ask, which channel). |
 | `showcase` | four screenshots of the retired finance example pack | The landing page's pictures: `{slug, title, cmd, sutra}` each, the image being `web/static/img/shot-<slug>.png`. A caption names its `cmd` only when that command is one of the packs' examples. |
 
 ### `embed` — embedded views

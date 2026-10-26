@@ -15,6 +15,7 @@
  */
 package com.ash.drishti.server.bi.sql;
 
+import com.ash.drishti.common.Branding;
 import java.util.Set;
 
 /** The functions of Drishti SQL (docs/guides/SQL.md): which aggregate, which only run over the answer's rows, which compute a value, and the refused ones. */
@@ -38,9 +39,9 @@ final class SqlFunctions {
         if (FORBIDDEN.contains(name)) {
             boolean file = name.startsWith("READ_") || name.endsWith("_SCAN") || "GLOB".equals(name);
             return new DsqlException(file ? DsqlException.SCOPE : DsqlException.FUNCTION, name.toLowerCase(java.util.Locale.ROOT) + "() is refused: "
-                    + (file ? "Drishti SQL reads the model's datasets only, never a file, URL or connector" : "Drishti SQL computes the same answer every time"), null, at);
+                    + (file ? Branding.sqlName() + " reads the model's datasets only, never a file, URL or connector" : Branding.sqlName() + " computes the same answer every time"), null, at);
         }
-        return new DsqlException(DsqlException.FUNCTION, name.toLowerCase(java.util.Locale.ROOT) + "() is not a function of Drishti SQL",
+        return new DsqlException(DsqlException.FUNCTION, name.toLowerCase(java.util.Locale.ROOT) + "() is not a function of " + Branding.sqlName(),
                 "aggregates: SUM, AVG, MIN, MAX, COUNT, COUNT(DISTINCT), PERCENTILE_CONT; values: COALESCE, ABS, ROUND, UPPER, LOWER, LENGTH, CASE, CAST; windows over the answer: RANK, DENSE_RANK, ROW_NUMBER, PERCENT_RANK, LAG, LEAD", at);
     }
 }

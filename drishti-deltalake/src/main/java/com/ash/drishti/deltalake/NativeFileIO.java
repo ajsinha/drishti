@@ -43,7 +43,7 @@ import java.util.concurrent.locks.ReentrantLock;
 public final class NativeFileIO implements FileIO {
 
     /** The message of every refused write. */
-    static final String READ_ONLY = "the native Delta engine only reads: Drishti does not write Delta tables (its loaders use delta-rs)";
+    static final String READ_ONLY = "the native Delta engine only reads: the server does not write Delta tables (its loaders use delta-rs)";
 
     private static final Set<String> S3_SCHEMES = Set.of("s3", "s3a", "s3n");
 

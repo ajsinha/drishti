@@ -381,4 +381,19 @@ abstract class IdentityStoreContract {
         assertThat(log.find(new AccessLog.Filter("old", null, null, null, null, null, 50))).isEmpty();
         assertThat(log.stats()).containsEntry("dropped", 0L);
     }
+
+    @Test
+    void switchesAreKeptInTheDatabaseAndTheNewerByStampAndNodeWins() {
+        SwitchLedgerChecks.ledger(bean(com.ash.drishti.identity.db.IdentityRepositories.Switches.class),
+                bean(com.ash.drishti.identity.db.IdentityRepositories.SwitchLog.class), bean(org.springframework.transaction.support.TransactionTemplate.class));
+        PackStateStore packs = bean(PackStateStore.class);
+        SwitchLedger ledger = bean(SwitchLedger.class);
+        long before = packs.version();
+        packs.set("contract-pack", false, "drishti-dev-admin", "quarter end");
+        assertThat(packs.enabled("contract-pack")).isFalse();
+        assertThat(ledger.find(SwitchLedger.PACK, "contract-pack")).get().extracting(SwitchLedger.Entry::reason).isEqualTo("quarter end");
+        assertThat(packs.version()).as("a pack switch moves the version the access caches compare").isGreaterThan(before);
+        packs.set("contract-pack", true, "drishti-dev-admin", "");
+        assertThat(packs.enabled("contract-pack")).isTrue();
+    }
 }

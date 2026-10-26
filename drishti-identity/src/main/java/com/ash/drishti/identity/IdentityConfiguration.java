@@ -329,11 +329,23 @@ public class IdentityConfiguration {
         return new AlertHistory(alerts, identityTransactions, Integer.parseInt(env.getProperty("drishti.alerts.keep", "1000")));
     }
 
+    /**
+     * The administrators' switches of commands and packs (docs/admin/COMMANDS.md): this database is their system of record; Drishti*net
+     * spreads them (the server wires the gossip and names the node).
+     */
+    @Bean
+    public SwitchLedger switchLedger(IdentityRepositories.Switches switches, IdentityRepositories.SwitchLog switchLog,
+            TransactionTemplate identityTransactions, org.springframework.core.env.Environment env) {
+        return new SwitchLedger(switches, switchLog, identityTransactions, nodeName(env), java.time.Clock.systemUTC());
+    }
+
     @Bean
     public PackStateStore packStateStore(IdentityRepositories.PackStates states, TransactionTemplate identityTransactions, JpaAuditLog auditLog,
-            com.ash.drishti.identity.content.ContentStore content, org.springframework.core.env.Environment env) {
+            com.ash.drishti.identity.content.ContentStore content, org.springframework.core.env.Environment env, SwitchLedger switches) {
         boolean jpa = "jpa".equalsIgnoreCase(env.getProperty("drishti.packs.state-store", "content").trim());
-        return new PackStateStore(states, identityTransactions, auditLog, jpa ? null : content);
+        PackStateStore store = new PackStateStore(states, identityTransactions, auditLog, jpa ? null : content);
+        store.ledger(switches);
+        return store;
     }
 
     /** Host applications for embedded views (Drishti Elements); the limits are the defaults a new registration gets. */
@@ -359,13 +371,14 @@ public class IdentityConfiguration {
      */
     @Bean(destroyMethod = "shutdownNow")
     public java.util.concurrent.ScheduledExecutorService identityRefresher(RoleStore roles, PackStateStore packs, EmbedAppStore embedApps,
-            org.springframework.core.env.Environment env, com.ash.drishti.identity.content.TxContentStore contentTransactions) {
+            org.springframework.core.env.Environment env, com.ash.drishti.identity.content.TxContentStore contentTransactions, SwitchLedger switches) {
         long every = Long.parseLong(env.getProperty("drishti.identity.refresh-seconds", "15"));
         var exec = java.util.concurrent.Executors.newSingleThreadScheduledExecutor(Thread.ofVirtual().name("drishti-identity-refresh").factory());
         exec.scheduleWithFixedDelay(() -> {
             try {
                 roles.refresh();
                 packs.refresh();
+                switches.refresh();
                 embedApps.refresh();
                 contentTransactions.recover();
             } catch (RuntimeException e) {

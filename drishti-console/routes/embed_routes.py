@@ -65,6 +65,11 @@ async def cors(request: Request, response: Response) -> Response:
     return response
 
 
+def _elements(request: Request) -> str:
+    """The library by the product's name from configuration (ui.product): "<product> Elements"."""
+    return f"{request.app.state.settings.get('ui.product', '')} Elements".strip()
+
+
 async def refuse(request: Request, status: int, code: str, detail: str, retry_after: str | None = None) -> Response:
     headers = {"Cache-Control": "no-store"}
     if retry_after:
@@ -180,7 +185,7 @@ async def versioned(request: Request, version: str, rest: str):
     exact = dist.resolve(version)
     if exact is None:
         if dist.SEMVER.fullmatch(version):
-            return await refuse(request, 410, "DRS-8006", f"this console serves Drishti Elements {dist.VERSION}, not {version}: pin {dist.VERSION}, or use the alias {dist.VERSION.split('.')[0]}")
+            return await refuse(request, 410, "DRS-8006", f"this console serves {_elements(request)} {dist.VERSION}, not {version}: pin {dist.VERSION}, or use the alias {dist.VERSION.split('.')[0]}")
         return await refuse(request, 404, "DRS-9404", f"no such element version: {version}")
     if version != exact:
         return await cors(request, RedirectResponse(f"{API_BASE}/elements/{exact}/{rest}", status_code=302, headers={"Cache-Control": "public, max-age=60"}))
@@ -189,7 +194,7 @@ async def versioned(request: Request, version: str, rest: str):
     else:
         path = dist.files().get(rest)
         if path is None:
-            return await refuse(request, 404, "DRS-9404", f"no such file in Drishti Elements {exact}: {rest}")
+            return await refuse(request, 404, "DRS-9404", f"no such file in {_elements(request)} {exact}: {rest}")
         body, media, etag = path.read_bytes(), "text/javascript", '"' + dist.sri(path.read_bytes()) + '"'
     response = await send(request, body, media, etag)
     if response.status_code == 200:

@@ -30,6 +30,18 @@ public final class IdentityRepositories {
 
     public interface PackStates extends JpaRepository<PackStateEntity, String> {}
 
+    /** The administrators' switches of commands and packs (Admin → Commands): the newest state of each. */
+    public interface Switches extends JpaRepository<SwitchEntity, String> {}
+
+    /** Every change of a switch, newest first for the history. */
+    public interface SwitchLog extends JpaRepository<SwitchLogEntity, Long> {
+        List<SwitchLogEntity> findAllByOrderByIdDesc(Pageable page);
+
+        List<SwitchLogEntity> findByScopeAndNameOrderByIdDesc(String scope, String name, Pageable page);
+
+        boolean existsByScopeAndNameAndGranteeAndStampAndNode(String scope, String name, String grantee, long stamp, String node);
+    }
+
     public interface EmbedApps extends JpaRepository<EmbedAppEntity, String> {}
 
     public interface BiWorkspaces extends JpaRepository<BiEntities.BiWorkspace, String> {}

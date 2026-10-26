@@ -73,7 +73,7 @@ def peer_problem(status: int, content_type: str, text: str) -> bool:
 def joining_problem(status: int, text: str) -> bool:
     """The server's ``502 DRS-5052`` "this node is still joining Drishti*net": it has just started or rejoined and does not know yet which
     peers hold the data (SOAK3-01). It is not counted against the server; a read is tried once on another server, which knows."""
-    return status == 502 and bool(re.search(r'"code"\s*:\s*"DRS-5052"', text or "")) and "still joining Drishti*net" in (text or "")
+    return status == 502 and bool(re.search(r'"code"\s*:\s*"DRS-5052"', text or "")) and "still joining" in (text or "")
 
 
 class BackendError(Exception):

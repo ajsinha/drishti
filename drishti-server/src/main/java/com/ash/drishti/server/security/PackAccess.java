@@ -92,6 +92,24 @@ public final class PackAccess {
         return o.byKind();
     }
 
+    /** The commands administrators turned off (Admin → Commands): their kinds are not active for anyone. None until wired. */
+    private volatile CommandSwitches commands;
+
+    /** Wires the commands' switches: a kind whose command is off is allowed to no one ({@link #kindAllowed}, {@link #kindAssigned}). */
+    public void commands(CommandSwitches c) {
+        this.commands = c;
+    }
+
+    public CommandSwitches commands() {
+        return commands;
+    }
+
+    /** True when an administrator turned the kind's command off. */
+    public boolean commandOff(String kind) {
+        CommandSwitches c = commands;
+        return c != null && !c.active(kind);
+    }
+
     /** Packs hidden from this server's own users at the moment of asking (Drishti*net's peer-only packs, served to peers only). */
     private volatile java.util.function.Predicate<String> hidden = p -> false;
 
@@ -189,6 +207,11 @@ public final class PackAccess {
      * one off first); switching a pack on switches on what it builds on.
      */
     public void setEnabled(String pack, boolean on, String actor) {
+        setEnabled(pack, on, actor, "");
+    }
+
+    /** As {@link #setEnabled(String, boolean, String)}, with the reason the switches' audit log keeps. */
+    public void setEnabled(String pack, boolean on, String actor, String reason) {
         if (!installed().contains(pack)) {
             throw new DrishtiException(ErrorCode.BAD_REQUEST, "'" + pack + "' is not loaded; installed: " + installed());
         }
@@ -197,12 +220,12 @@ public final class PackAccess {
             if (!needs.isEmpty()) {
                 throw new DrishtiException(ErrorCode.BAD_REQUEST, "'" + pack + "' is needed by " + needs + "; switch those off first");
             }
-            states.set(pack, false, actor);
+            states.set(pack, false, actor, reason);
             return;
         }
         for (String p : closure(pack)) {
             if (!states.enabled(p) || p.equals(pack)) {
-                states.set(p, true, actor);
+                states.set(p, true, actor, reason);
             }
         }
     }
@@ -303,6 +326,9 @@ public final class PackAccess {
      * by one that is.
      */
     public boolean kindAllowed(String user, String kind) {
+        if (commandOff(kind)) {
+            return false;
+        }
         String owner = kindOwner().get(kind);
         return owner == null || (states.enabled(owner) && !hidden.test(owner) && effective(user).contains(owner));
     }
@@ -327,6 +353,9 @@ public final class PackAccess {
      * the user has it switched on; kinds no pack owns are always reachable. A switched-off pack for everyone is not reachable.
      */
     public boolean kindAssigned(String user, String kind) {
+        if (commandOff(kind)) {
+            return false;
+        }
         String owner = kindOwner().get(kind);
         if (owner == null) {
             return true;

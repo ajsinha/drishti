@@ -42,6 +42,9 @@ import java.util.function.UnaryOperator;
 public final class Entitlements {
 
     public static final String DENIED = "no access";
+    /** A link's badge, and a panel's note, when an administrator turned the command off (Admin → Commands). */
+    public static final String INACTIVE = "not active";
+    public static final String INACTIVE_PANEL = "not active (turned off by an administrator)";
     private final SecurityProperties props;
     private final PackAccess packs;
     private final RoleCatalog roles;
@@ -79,6 +82,9 @@ public final class Entitlements {
 
     /** The reason {@link #mayReach} or {@link #mayOpen} fails, as a short code: ok, no-access (role), no-pack (not assigned), pack-off. */
     public String reachState(Principal p, String kind) {
+        if (packs.commandOff(kind)) {
+            return "command-off";
+        }
         if (!roleAllows(p, kind)) {
             return "no-access";
         }
@@ -125,8 +131,16 @@ public final class Entitlements {
             throw new DrishtiException(ErrorCode.NO_SOURCE_FOR_KIND, "pack removed: '" + gone + "' provided " + kind
                     + " entities and was unloaded; its views are unavailable until it is loaded again");
         }
+        requireActive(kind);
         if (!mayOpen(p, kind)) {
             throw new DrishtiException(ErrorCode.FORBIDDEN, p.user() + " may not open " + kind + " entities");
+        }
+    }
+
+    /** {@code 403 DRS-1016} when an administrator turned the kind's command off, whoever asks. */
+    public void requireActive(String kind) {
+        if (packs.commandOff(kind)) {
+            throw packs.commands().refusal(kind);
         }
     }
 
@@ -356,27 +370,52 @@ public final class Entitlements {
         return !props.enabled() || p.roles().contains("*") ? List.of("*") : p.roles();
     }
 
-    /** Disables links the principal may not follow: linked-entity rows, cell links and link keys. */
+    /**
+     * Disables links the principal may not follow: linked-entity rows, cell links of tables and link keys. A link to a kind whose command
+     * an administrator turned off says "not active" (struck through, not clickable), and a panel that reads such a kind says so instead of
+     * "no access".
+     */
     public ViewModel restrict(Principal p, ViewModel v) {
         List<ViewModel.PanelView> panels = new ArrayList<>();
         for (ViewModel.PanelView pv : v.panels()) {
             if (pv.form() != null) {                 // a form's fields this person may not edit are locked and say so (SUTRA_NEXT.md 10)
                 pv = pv.withForm(com.ash.drishti.engine.wire.FormViews.forRoles(pv.form(), formRoles(p)));
             }
+            if (pv.denied() != null && pv.denied().startsWith("no access to ") && packs.commandOff(pv.denied().substring("no access to ".length()))) {
+                pv = new ViewModel.PanelView(pv.id(), pv.kind(), pv.title(), pv.code(), pv.key(), pv.area(), pv.inferred(), pv.explanation(), pv.data(),
+                        pv.error(), pv.empty(), pv.span(), pv.height(), INACTIVE_PANEL, pv.wire(), pv.refresh(), pv.form(), pv.provenance(), pv.compute());
+            }
             if (pv.data() instanceof PanelData.Links l) {
-                List<PanelData.LinkItem> items = l.links().stream().map(i -> i.link() != null && !mayOpen(p, i.link().kind())
-                        ? new PanelData.LinkItem(i.label(), i.text(), null, DENIED, "denied") : i).toList();
+                List<PanelData.LinkItem> items = l.links().stream().map(i -> i.link() == null || mayOpen(p, i.link().kind()) ? i
+                        : packs.commandOff(i.link().kind()) ? new PanelData.LinkItem(i.label(), i.text(), null, INACTIVE, "inactive")
+                        : new PanelData.LinkItem(i.label(), i.text(), null, DENIED, "denied")).toList();
                 panels.add(pv.withData(new PanelData.Links(items)));
+            } else if (pv.data() instanceof PanelData.Table t && t.rows() != null) {
+                panels.add(pv.withData(new PanelData.Table(t.columns(), t.numeric(), rows(p, t.rows()), t.total(), t.more(), t.search(), t.pivot(),
+                        t.expand(), t.levels(), t.root(), t.emptyLabel())));
             } else {
                 panels.add(pv);
             }
         }
-        List<ViewModel.KeyView> keys = v.keys().stream().map(k -> k.link() != null && !mayOpen(p, k.link().kind())
-                ? new ViewModel.KeyView(k.key(), k.label() + " (" + DENIED + ")", "denied", null, null) : k).toList();
+        List<ViewModel.KeyView> keys = v.keys().stream().map(k -> k.link() == null || mayOpen(p, k.link().kind()) ? k
+                : new ViewModel.KeyView(k.key(), k.label() + " (" + (packs.commandOff(k.link().kind()) ? INACTIVE : DENIED) + ")", "denied", null, null))
+                .toList();
         ViewModel.TitleView t = v.title();
         if (t.with() != null && t.with().link() != null && !mayOpen(p, t.with().link().kind())) {
             t = new ViewModel.TitleView(t.pill(), t.id(), new ViewModel.Cell(null, t.with().text(), null, null, false, null));
         }
         return new ViewModel(v.ref(), v.mnemonic(), t, v.strip(), panels, keys, v.provenance(), v.timings(), v.controls(), v.selects(), v.layout());
+    }
+
+    /** The rows with each cell link the principal may not follow taken away: "inactive" (struck through) when the command is off. */
+    private List<PanelData.Row> rows(Principal p, List<PanelData.Row> rows) {
+        List<PanelData.Row> out = new ArrayList<>(rows.size());
+        for (PanelData.Row r : rows) {
+            List<ViewModel.Cell> cells = r.cells() == null ? null : r.cells().stream().map(c -> c == null || c.link() == null || mayOpen(p, c.link().kind()) ? c
+                    : new ViewModel.Cell(c.label(), c.text(), packs.commandOff(c.link().kind()) ? "inactive" : c.tone(), null, c.emphasis(), c.path())).toList();
+            List<PanelData.Row> kids = r.children() == null || r.children().isEmpty() ? r.children() : rows(p, r.children());
+            out.add(new PanelData.Row(cells, r.highlight(), r.path(), kids, r.pick(), r.crumb(), r.kidsTotal(), r.ev()));
+        }
+        return out;
     }
 }

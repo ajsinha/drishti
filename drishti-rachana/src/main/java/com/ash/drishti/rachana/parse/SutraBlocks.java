@@ -214,7 +214,7 @@ public final class SutraBlocks {
                             next.computeIfAbsent(plain, k -> new TreeMap<>()).put(b.version(), b);
                         } else if (kitNames.contains(plain)) {
                             clashes.add(new SutraProblem(BLOCK, (pack == null ? "the site block " : "pack " + pack + "'s ") + plain
-                                    + " has the name of a Drishti UI kit fragment: the kit's wins" + (pack == null ? " (rename it)"
+                                    + " has the name of a UI kit fragment: the kit's wins" + (pack == null ? " (rename it)"
                                     : "; use " + pack + "/" + plain + "@" + b.version() + " for the pack's"), new SourceLocation(f.toString(), 1, 1)));
                         } else {
                             next.computeIfAbsent(plain, k -> new TreeMap<>()).put(b.version(), b);   // a later folder (a more specific pack) wins

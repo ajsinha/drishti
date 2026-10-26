@@ -177,7 +177,7 @@ public final class RachanaSchema {
     private static Map<String, Object> use() {
         Map<String, Object> props = new LinkedHashMap<>();
         props.put("use", Map.of("type", "string", "pattern", "^([a-z][a-z0-9-]{0,63}/)?[a-z][a-z0-9-]{1,63}(@[0-9]+)?$",
-                "description", "A Drishti UI kit fragment (name@version) or a pack's own block or fragment (pack/name@version, or its plain name): its panels go here"));
+                "description", "A UI kit fragment (name@version) or a pack's own block or fragment (pack/name@version, or its plain name): its panels go here"));
         props.put("with", Map.of("type", "object", "description", "The block's parameters (its params:), each one value; the block's defaults otherwise"));
         props.put("refresh", refreshSchema("Fetch every panel the use brings again on an interval"));
         props.put("form", formSchema());

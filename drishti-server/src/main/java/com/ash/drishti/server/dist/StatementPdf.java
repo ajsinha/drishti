@@ -15,6 +15,7 @@
  */
 package com.ash.drishti.server.dist;
 
+import com.ash.drishti.common.Branding;
 import java.io.ByteArrayOutputStream;
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
@@ -43,7 +44,7 @@ final class StatementPdf {
         objects.add(PdfWriter.bytes("<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica /Encoding /WinAnsiEncoding >>"));
         objects.add(PdfWriter.bytes("<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica-Bold /Encoding /WinAnsiEncoding >>"));
         objects.add(PdfWriter.bytes("<< /Font << /F1 3 0 R /F2 4 0 R >> >>"));
-        objects.add(PdfWriter.bytes("<< /Title (" + PdfWriter.escape(title) + ") /Producer (Drishti statements) >>"));
+        objects.add(PdfWriter.bytes("<< /Title (" + PdfWriter.escape(title) + ") /Producer (" + PdfWriter.escape(Branding.current().feature("statements")) + ") >>"));
         String box = "[0 0 " + PdfWriter.f(doc.width()) + " " + PdfWriter.f(doc.height()) + "]";
         for (StatementPages.Page p : doc.pages()) {
             byte[] packed = PdfWriter.deflate(content(p));

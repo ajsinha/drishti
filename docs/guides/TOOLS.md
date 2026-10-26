@@ -101,7 +101,7 @@ server take `--server` (default `DRISHTI_SERVER`, then `http://localhost:18480`)
 | `pack` | `pack make`, `pack new`, `pack regenerate`, `pack diff`, `pack catalogue`, `pack i18n`, `pack check`, `pack about-check`, `pack bundle`, `pack verify`, `pack deploy`, `pack rollback`, `pack publish`, `pack keygen`, `pack install` | [5.2](#52-pack) |
 | `data` | `data profile`, `data ingest`, `data load`, `data landed`, `data loads` | [5.3](#53-data) |
 | `lake` | `lake build`, `lake publish`, `lake scan`, `lake status`, `lake demo`, `lake maintain` | [4](#4-lake-build-a-large-json-export-into-a-delta-lake) |
-| `server` | `server health`, `server caches`, `server packs`, `server smoke` | [5.4](#54-server-and-doctor) |
+| `server` | `server health`, `server caches`, `server packs`, `server commands`, `server smoke` | [5.4](#54-server-and-doctor) |
 | `connector` | `connector list`, `connector get`, `connector apply`, `connector delete`, `connector test`, `connector plugins`, `connector enable`, `connector disable`, `connector reset`, `connector history` | [5.5](#55-connector) |
 | `net` | `net list`, `net check`, `net add-peer`, `net set`, `net members` | [5.9](#59-net) |
 | `design` | `design list`, `design create`, `design get`, `design save`, `design check`, `design propose`, `design approve`, `design reject`, `design proposals`, `design export`, `design import`, `design bind`, `design autodesign`, `design delete` | [5.6](#56-design) |
@@ -731,8 +731,10 @@ total rows: 300
 
 `server health` (exit `1` unless OK), `server caches` (what the engine and each connector hold; `server caches purge NAME|all`
 drops a cache, and grouped pages kept on disk are rebuilt from the lake at once: Admin → Caches from the terminal),
-`server packs list|load|unload|on|off|deploy|history|rollback|datasource` (Admin → Packs from
-the terminal) and `server smoke` (opens sample views of every kind on two dates; exit `1` on any failure, the check after a deploy).
+`server packs list|load|unload|on|off|deploy|history|rollback|datasource` (Admin → Packs from the terminal), `server commands list|off|on|history`
+(Admin → Commands from the terminal: commands, or with `--pack` packs, on or off for everyone with `--reason`; an administrator, and as the
+admin endpoints are never for a personal token, it runs where sign-in is off (`--user`); [COMMANDS.md](../admin/COMMANDS.md))
+and `server smoke` (opens sample views of every kind on two dates; exit `1` on any failure, the check after a deploy).
 `doctor` checks this machine without changing anything (paths shortened):
 
 ```

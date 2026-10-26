@@ -17,6 +17,8 @@
    on the implicit model at once), the person's datasets and the models; New model; and one dataset's grain, keys, meanings, time mode and security. */
 (function () {
   'use strict';
+  // the product's name from configuration (ui.product, on <body data-product>); its SQL is "<product> SQL"
+  const PRODUCT = (document.body && document.body.dataset.product) || '', SQL_NAME = (PRODUCT + ' SQL').trim();
   const B = window.drishtiBi;
   const canvas = document.getElementById('biCanvas');
   if (!canvas || !B || !B.layer) { return; }
@@ -137,7 +139,7 @@
       if (i.masked.length) { sec.appendChild(h('li', {}, 'Masked for readers without raw access: ', h('code', { text: i.masked.join(', ') }))); }
       if (!sec.children.length) { sec.appendChild(h('li', { text: i.generated ? 'The pack\'s entitlements decide who may read it (whoever may open the ' + i.source.kind + ' kind). No row rule: a model adds one when it needs one.' : 'No row rule: everyone who may read the dataset sees every row.' })); }
       q('[data-yaml]').textContent = d.yaml;
-      q('[data-yaml-note]').textContent = i.generated ? 'Written by Drishti from the pack; read-only. To change it, Narrow it: a dataset of your own that extends this one.'
+      q('[data-yaml-note]').textContent = i.generated ? 'Written by ' + (PRODUCT || 'the server') + ' from the pack; read-only. To change it, Narrow it: a dataset of your own that extends this one.'
         : i.readOnly ? 'The dataset as stored; you may not change it here (a shipped file, or no edit right in its workspace). Narrow it to make your own.' : 'The dataset as stored.';
       if (B.layerOps && i.item) { B.layerOps(root, Object.assign({}, i, { hasTests: /^tests:/m.test(d.yaml || '') })); }
       q('[data-narrow]').href = '/bi/datasets/new-layer?extends=' + encodeURIComponent(i.name);

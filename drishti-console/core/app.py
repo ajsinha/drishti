@@ -233,7 +233,7 @@ def create_app(settings: Settings) -> FastAPI:
                         workspace_routes, collab_routes, thread_routes, collab_admin_routes, embed_admin_routes, connector_routes, form_routes,
                         ai_routes)
 
-    from routes import artifact_routes, compute_admin_routes, drafts_routes, history_routes, lake_maint_routes, lake_routes, net_routes, var_routes
+    from routes import admin_commands_routes, artifact_routes, compute_admin_routes, drafts_routes, history_routes, lake_maint_routes, lake_routes, net_routes, var_routes
 
     def _lake_schedules(app):
         from core.lake_maint import maintenance
@@ -322,6 +322,8 @@ def create_app(settings: Settings) -> FastAPI:
         CLOCK_TZ=settings.get("ui.clock_tz", "America/New_York"),
         CLOCK_LABEL=settings.get("ui.clock_label", "NY"),
         COPYRIGHT=settings.get("ui.copyright", ""),
+        OWNER=settings.get("ui.owner", ""),
+        OWNER_EMAIL=settings.get("ui.owner_email", ""),
         BI_LIVE={
             "min_interval_ms": _bounded(settings.get("bi.live.min_interval_ms", 250), 100, 5000, 250),
             "stale_seconds": _bounded(settings.get("bi.live.stale_seconds", 30), 5, 600, 30),
@@ -460,6 +462,7 @@ def create_app(settings: Settings) -> FastAPI:
     app.include_router(thread_routes.router)
     app.include_router(collab_admin_routes.router)
     app.include_router(embed_admin_routes.router)
+    app.include_router(admin_commands_routes.router)    # Admin -> Commands (docs/admin/COMMANDS.md)
     app.include_router(compute_admin_routes.router)     # Admin -> Compute (docs/admin/COMPUTE.md)
     app.include_router(connector_routes.router)
     app.include_router(artifact_routes.router)

@@ -191,7 +191,7 @@ public final class PeerSources implements SourceRouter.Fallback {
     }
 
     /** What a read nothing here holds says while this node is joining; the console tries such a read once on another server. */
-    public static final String JOINING = "this node is still joining Drishti*net and does not know yet which nodes hold ";
+    public static final String JOINING = "this node is still joining the cluster and does not know yet which nodes hold ";
 
     /**
      * On a node still joining (SOAK3-01), a read that none of its sources holds waits for its peers' first digests: routing.yaml's

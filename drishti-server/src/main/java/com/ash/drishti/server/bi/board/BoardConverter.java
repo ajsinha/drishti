@@ -15,6 +15,7 @@
  */
 package com.ash.drishti.server.bi.board;
 
+import com.ash.drishti.common.Branding;
 import com.ash.drishti.server.bi.report.ReportYaml;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -176,7 +177,7 @@ public final class BoardConverter {
                 break;
             }
         }
-        String note = "# CONVERTED from the board " + (origin == null || origin.isBlank() ? "" : origin + " ") + "by Drishti 2.4.0: a board is a report whose pages have layout: board\n"
+        String note = "# CONVERTED from the board " + (origin == null || origin.isBlank() ? "" : origin + " ") + "by " + Branding.name("the server") + " 2.4.0: a board is a report whose pages have layout: board\n"
                 + "# (docs/guides/BOARDS.md). Each tile is a visual of type tile showing a visual of another report (from:); rotate and notify are under board:.\n\n";
         String head = out.toString();
         while (head.endsWith("\n\n")) {

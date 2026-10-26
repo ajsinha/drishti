@@ -19,10 +19,11 @@
 {% block nav %}{% if not embed %}{% with command_text=id %}{% include "terminal/_topbar.html" %}{% endwith %}{% endif %}{% endblock %}
 {% block content %}
 <div class="thome">
+  {% if error.code == 'DRS-1016' %}{% include "terminal/_inactive.html" %}{% else %}
   <h1 class="mono">{{ id }}</h1>
   <p class="pnl-err" role="alert"><i class="bi bi-exclamation-triangle" aria-hidden="true"></i> {{ drs_message(error.code, error.detail, " · ") }}</p>
   <p class="text-muted-d">{{ drs_advice(error.code, kind, id) }}</p>
-  <p><a href="/t">Back to the terminal</a></p>
+  <p><a href="/t">Back to the terminal</a></p>{% endif %}
 </div>
 {% endblock %}
 {% block scripts %}<script src="/static/js/command.js?v={{ ASSET_V }}"></script><script src="/static/js/view.js?v={{ ASSET_V }}"></script>{% endblock %}

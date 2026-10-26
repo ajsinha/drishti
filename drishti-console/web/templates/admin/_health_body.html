@@ -80,8 +80,8 @@
 </svg>
 {% endif %}
 {% if h.net and h.net.enabled %}{% set nm = h.net.members %}{% set nt = h.net.last10Minutes or {} %}
-<h2 class="ws-h">Drishti*net</h2>
-<section class="pnl" aria-label="Drishti*net" data-net-health><div class="pnl-b"><p>
+<h2 class="ws-h">{{ PRODUCT }}*net</h2>
+<section class="pnl" aria-label="{{ PRODUCT }}*net" data-net-health><div class="pnl-b"><p>
   {% if h.net.running %}This server is node <b class="mono">{{ h.net.nodeId }}</b>{% if h.net.drained %} (drained){% endif %}: <b>{{ nm.alive }}</b> alive,
   <b class="{{ 't-warn' if nm.suspect }}">{{ nm.suspect }}</b> suspect, {{ nm.dead }} dead, {{ nm.left }} left.
   Last ten minutes: <b class="mono">{{ nt.forwarded or 0 }}</b> requests sent to peers, <b class="mono {{ 't-neg' if nt.failed }}">{{ nt.failed or 0 }}</b> failed.

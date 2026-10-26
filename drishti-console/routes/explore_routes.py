@@ -176,6 +176,11 @@ async def profile(request: Request):
     return JSONResponse({**out, "inputRows": len(ex.rows), "masked": ex.masked, "truncatedInput": ex.truncated}, headers={"Cache-Control": "no-store"})
 
 
+def _sql_name(request: Request) -> str:
+    """The server's SQL by the product's name from configuration (ui.product): "<product> SQL"."""
+    return f"{request.app.state.settings.get('ui.product', '')} SQL".strip()
+
+
 @router.post("/bi/explore/dsql")
 async def dsql(request: Request):
     """Body ``{extract: {dataset, ...}, sql}``: one Drishti SQL statement over the model the extract reads (BI_DESIGN.md 3.4), run by the server as the
@@ -186,14 +191,14 @@ async def dsql(request: Request):
     spec = body.get("extract") if isinstance(body.get("extract"), dict) else {}
     ref = model_ref(str(spec.get("dataset") or body.get("model") or ""))
     if not ref:
-        return _fail(ExploreError("DRS-9070", 422, "Drishti SQL reads a model or a dataset's implicit model; this extract is a version 1 dataset: "
+        return _fail(ExploreError("DRS-9070", 422, f"{_sql_name(request)} reads a model or a dataset's implicit model; this extract is a version 1 dataset: "
                                                    "choose 'over the extract' for this cell"))
     t0 = time.monotonic()
     try:
         out = await request.app.state.backend.bi("POST", "/sql", ident(request), dsql_request(str(body.get("sql", "")), ref, limits), wait=QUERY_WAIT_SECONDS)
     except (BackendError, ExploreError) as e:
         if isinstance(e, BackendError) and e.status in (404, 405):
-            return _fail(ExploreError("DRS-9070", 501, "this server does not run Drishti SQL yet: choose 'over the extract' for this cell"))
+            return _fail(ExploreError("DRS-9070", 501, f"this server does not run {_sql_name(request)} yet: choose 'over the extract' for this cell"))
         return _fail(e)
     return JSONResponse({**dsql_answer(out, limits, round((time.monotonic() - t0) * 1000)), "model": ref}, headers={"Cache-Control": "no-store"})
 

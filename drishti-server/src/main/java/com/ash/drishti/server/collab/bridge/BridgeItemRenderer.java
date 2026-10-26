@@ -15,6 +15,7 @@
  */
 package com.ash.drishti.server.collab.bridge;
 
+import com.ash.drishti.common.Branding;
 import com.ash.drishti.identity.User;
 import com.ash.drishti.identity.collab.Comment;
 import com.ash.drishti.identity.collab.CommentThread;
@@ -73,7 +74,7 @@ public final class BridgeItemRenderer {
         this.titles = titles;
         this.links = links;
         this.props = props;
-        this.product = product == null || product.isBlank() ? "Drishti" : product;
+        this.product = product == null || product.isBlank() ? Branding.name("the console") : product;
         this.clock = clock;
     }
 

@@ -15,6 +15,7 @@
  */
 package com.ash.drishti.server.net;
 
+import com.ash.drishti.common.Branding;
 import com.ash.drishti.net.member.Member;
 import com.ash.drishti.net.member.MemberState;
 import io.micrometer.core.instrument.FunctionCounter;
@@ -46,7 +47,7 @@ public final class NetHealth {
         this.identity = identity;
         if (meters != null) {
             for (MemberState s : MemberState.values()) {
-                Gauge.builder("drishti.net.members", this, h -> h.count(s)).description("Drishti*net members in a state, this node included")
+                Gauge.builder("drishti.net.members", this, h -> h.count(s)).description(Branding.netName() + " members in a state, this node included")
                         .tag("state", s.wire()).register(meters);
             }
             FunctionCounter.builder("drishti.net.gossip.rounds", net, n -> n.node().map(x -> x.gossiper().rounds()).orElse(0L))

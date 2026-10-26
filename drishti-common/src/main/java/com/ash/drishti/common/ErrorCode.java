@@ -38,6 +38,11 @@ public enum ErrorCode {
     HISTORY_TIMEOUT("DRS-1014", 504),
     /** The connector a kind is routed to is being restarted (its file changed, a retry) and was not back within the read's wait. */
     CONNECTOR_RESTARTING("DRS-1015", 503),
+    /**
+     * An administrator turned the command off (Admin → Commands): its kind is not active on this server, by command, link, API, export, BI
+     * or AI alike, and nothing of it is shown.
+     */
+    COMMAND_OFF("DRS-1016", 403),
     SUTRA_PARSE("DRS-2001", 422),
     SUTRA_INVALID("DRS-2002", 422),
     SUTRA_NOT_FOUND("DRS-2003", 404),

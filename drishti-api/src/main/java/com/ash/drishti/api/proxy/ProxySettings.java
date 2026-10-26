@@ -237,7 +237,7 @@ public final class ProxySettings {
         }
         String scheme = uri.getScheme().toLowerCase(Locale.ROOT);
         if (scheme.equals("https")) {
-            throw new ProxyException(what + ": a proxy reached over TLS (https://) is not supported by the JDK and SDK clients Drishti uses; "
+            throw new ProxyException(what + ": a proxy reached over TLS (https://) is not supported by the JDK and SDK clients this server uses; "
                     + "use http://" + uri.getHost() + ":" + portOf(uri) + " (https targets are still tunnelled with CONNECT and keep their own TLS)");
         }
         if (!scheme.equals("http")) {

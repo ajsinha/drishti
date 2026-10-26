@@ -55,7 +55,7 @@ public class OutboxAdminController {
 
     public OutboxAdminController(OutboxStore store, OutboxDispatcher dispatcher, Entitlements entitlements, Principals principals,
             CollabProperties props, List<Notifier> notifiers,
-            @org.springframework.beans.factory.annotation.Value("${drishti.branding.product:Drishti}") String product) {
+            @org.springframework.beans.factory.annotation.Value("${drishti.branding.product:}") String product) {
         this.store = store;
         this.dispatcher = dispatcher;
         this.entitlements = entitlements;

@@ -130,7 +130,7 @@ def sql_to_slice(sql: str, columns: list[str]) -> dict:
     dsql = any(_MEASURE.match(i) or _QUALIFIED.match(i.split(" ")[0]) for i in items)          # Drishti SQL over the model: aliases, MEASURE('...'), joins by relationship
     if dsql and re.search(r"\bunion\b|\bselect\b", c.get("from", ""), re.I) or not dsql and (
             c.get("from", "").split(" ")[0].lower() != "extract" or re.search(r"\bjoin\b|\bunion\b|\bselect\b", c.get("from", ""), re.I)):
-        notes.append("Only a query over the table extract (no join, no sub-query), or Drishti SQL over the model, is read; the visual shows the fields it could find.")
+        notes.append("Only a query over the table extract (no join, no sub-query), or SQL over the model (its aliases and MEASURE(...)), is read; the visual shows the fields it could find.")
     plain, aggs = [], []
     for item in items:
         if item == "*":

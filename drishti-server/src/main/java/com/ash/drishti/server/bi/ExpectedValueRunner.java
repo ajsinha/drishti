@@ -15,6 +15,7 @@
  */
 package com.ash.drishti.server.bi;
 
+import com.ash.drishti.common.Branding;
 import com.ash.drishti.common.DrishtiException;
 import com.ash.drishti.common.ErrorCode;
 import com.ash.drishti.identity.AuditLog;
@@ -267,7 +268,7 @@ public final class ExpectedValueRunner {
         String label = t.name() != null && !t.name().isBlank() ? t.name() : text;
         ExpectedValue named = new ExpectedValue(label, null, null, List.of(), t.row(), t.column(), List.of(), null, t.expect(), t.min(), t.max(), t.absolute(), t.percent(), t.role());
         if (sqlTests == null) {
-            return new Outcome(label, "sql", text, t.expectText(), null, "error", "Drishti SQL is not available on this server", role);
+            return new Outcome(label, "sql", text, t.expectText(), null, "error", Branding.sqlName() + " is not available on this server", role);
         }
         try {
             QueryService.Result r = sqlTests.run(as(p, role), model, text);

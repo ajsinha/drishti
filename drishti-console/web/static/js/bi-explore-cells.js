@@ -19,6 +19,8 @@
    a table, a chart (ECharts, formatter strings removed by the runner) or an image; never markup. */
 (function () {
   'use strict';
+  // the product's name from configuration (ui.product, on <body data-product>); its SQL is "<product> SQL"
+  const PRODUCT = (document.body && document.body.dataset.product) || '', SQL_NAME = (PRODUCT + ' SQL').trim();
   var B = window.drishtiBi, X = B && B.explore;
   if (!X) { return; }
   var h = B.h, q = B.q, qa = B.qa, clear = B.clear, root = document.getElementById('bx');
@@ -65,7 +67,7 @@
         });
       }
       if (kind === 'sql') {
-        bar.appendChild(h('small', { class: 'text-muted-d', 'data-sql-engine': sqlEngine(), text: sqlEngine() === 'server' ? 'Drishti SQL, run by the server over the model' : 'Over the extract, on the console' }));
+        bar.appendChild(h('small', { class: 'text-muted-d', 'data-sql-engine': sqlEngine(), text: sqlEngine() === 'server' ? SQL_NAME + ', run by the server over the model' : 'Over the extract, on the console' }));
         var pb = h('button', { type: 'button', class: 'btn-pill btn-ghost', 'data-promote-report': '' }, 'Promote to a report visual');
         pb.addEventListener('click', function () { X.promoteReport({ sql: cell.source }, 'SQL', pb); });
         bar.appendChild(pb);
@@ -85,7 +87,7 @@
     if (kind === 'sql') {
       var showSql = function (r, engine) {
         clear(cell.out);
-        var where = engine === 'dsql' ? 'Drishti SQL, run by the server over ' + r.model + ' as you' + (r.plan ? ' · plan ' + String(r.plan).slice(0, 12) : '') + (r.masked && r.masked.length ? ' · masked: ' + r.masked.join(', ') : '')
+        var where = engine === 'dsql' ? SQL_NAME + ', run by the server over ' + r.model + ' as you' + (r.plan ? ' · plan ' + String(r.plan).slice(0, 12) : '') + (r.masked && r.masked.length ? ' · masked: ' + r.masked.join(', ') : '')
           : 'over the extract, run by the console';
         cell.out.appendChild(h('p', { class: 'bi-result-meta', 'data-engine': engine, text: r.rowCount + ' rows' + (r.truncated ? ' (cut to the SQL row limit)' : '') + ' in ' + r.ms + ' ms · ' + where }));
         var host = h('div', { class: 'tbl-wrap' });

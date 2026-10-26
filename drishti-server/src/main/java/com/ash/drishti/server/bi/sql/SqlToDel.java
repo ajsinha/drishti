@@ -15,6 +15,7 @@
  */
 package com.ash.drishti.server.bi.sql;
 
+import com.ash.drishti.common.Branding;
 import com.ash.drishti.server.bi.expr.DelPrinter;
 import java.util.ArrayList;
 import java.util.List;
@@ -53,7 +54,7 @@ final class SqlToDel {
                 List<String> items = new ArrayList<>();
                 for (SqlAst.Expr x : i.items()) {
                     if (x instanceof SqlAst.SubqueryExpr s) {
-                        throw new DsqlException(DsqlException.SHAPE, "IN (SELECT ...) is not Drishti SQL: a semi-join is a relationship of the model", null, s.at());
+                        throw new DsqlException(DsqlException.SHAPE, "IN (SELECT ...) is not " + Branding.sqlName() + ": a semi-join is a relationship of the model", null, s.at());
                     }
                     items.add(del(x));
                 }
@@ -65,7 +66,7 @@ final class SqlToDel {
             case SqlAst.Case c -> caseExpr(c);
             case SqlAst.Cast c -> cast(c);
             case SqlAst.Call c -> call(c);
-            case SqlAst.SubqueryExpr s -> throw new DsqlException(DsqlException.SHAPE, "a subquery as a value is not Drishti SQL", null, s.at());
+            case SqlAst.SubqueryExpr s -> throw new DsqlException(DsqlException.SHAPE, "a subquery as a value is not " + Branding.sqlName(), null, s.at());
         };
     }
 
@@ -136,7 +137,7 @@ final class SqlToDel {
 
     private String call(SqlAst.Call c) {
         if (c.over() != null) {
-            throw new DsqlException(DsqlException.WINDOW, "a window function inside a measure is not Drishti SQL", "rank the answer's rows: put it in the SELECT list", c.at());
+            throw new DsqlException(DsqlException.WINDOW, "a window function inside a measure is not " + Branding.sqlName(), "rank the answer's rows: put it in the SELECT list", c.at());
         }
         String f = c.name();
         List<String> args = new ArrayList<>();

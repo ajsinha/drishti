@@ -28,7 +28,7 @@ If you will change the code, continue with [DEVELOPER_GUIDE.md](guides/DEVELOPER
 | **BI** | [BI guide](guides/BI_GUIDE.md) · [BI recipes](guides/BI_RECIPES.md) · [Datasets](guides/DATASETS.md) · [Reports](guides/REPORTS.md) · [Statements](guides/STATEMENTS.md) · [Boards](guides/BOARDS.md) · [Governance](guides/BI_GOVERNANCE.md) · [Distribution](guides/DISTRIBUTION.md) · [Python in BI](guides/PYTHON_BI.md) · [Analyse](guides/ANALYSE.md) · [AI in BI](guides/BI_AI.md) |
 | **Data** | [Connectors](connectors/CONNECTORS.md) (a section per plugin) · [Connector files](connectors/CONNECTOR_FILES.md) · [TLS and proxy](connectors/TLS.md) · [Data loads](guides/DATA_LOADS.md) |
 | **Build** | [Packs](guides/PACKS.md) · [Pack developer guide](guides/PACK_DEVELOPER_GUIDE.md) · [Schema to pack](guides/SCHEMA_TO_PACK.md) · [Rachana guide](guides/SUTRA_DEVELOPER_GUIDE.md) · [Rachana reference](guides/RACHANA_REFERENCE.md) · [Panels](guides/PANELS.md) · [Examples](guides/examples/README.md) · [Build workbench](guides/SCREEN_DESIGNER.md) · [Connector developer guide](connectors/CONNECTOR_DEVELOPER_GUIDE.md) · [Developer guide](guides/DEVELOPER_GUIDE.md) · [Embedding](guides/ELEMENTS.md) |
-| **Operate** | [Configuration](admin/CONFIGURATION.md) · [Operations](admin/OPERATIONS.md) · [Users and roles](admin/USER_MANAGEMENT.md) · [Install and uninstall safely](admin/ARTIFACTS.md) · [API](guides/API_GUIDE.md) · [Command line](guides/CLI_GUIDE.md) · [Tools](guides/TOOLS.md) · [AI providers](architecture/AI_PROVIDERS.md) · [Troubleshooting](guides/TROUBLESHOOTING.md) · [Release notes](../RELEASE_NOTES.md) |
+| **Operate** | [Configuration](admin/CONFIGURATION.md) · [Operations](admin/OPERATIONS.md) · [Users and roles](admin/USER_MANAGEMENT.md) · [Commands on and off](admin/COMMANDS.md) · [Install and uninstall safely](admin/ARTIFACTS.md) · [API](guides/API_GUIDE.md) · [Command line](guides/CLI_GUIDE.md) · [Tools](guides/TOOLS.md) · [AI providers](architecture/AI_PROVIDERS.md) · [Troubleshooting](guides/TROUBLESHOOTING.md) · [Release notes](../RELEASE_NOTES.md) |
 | In the repository only | [architecture/](architecture/ARCHITECTURE.md) (design notes and [decision records](architecture/adr/README.md)), the per-plugin [connector documents](connectors/), the [runbooks](admin/runbooks/source-down.md), [qa/](qa/) |
 
 ## How these documents are organised
@@ -148,6 +148,7 @@ If you will change the code, continue with [DEVELOPER_GUIDE.md](guides/DEVELOPER
 | If you want to… | Read |
 |---|---|
 | Create users, give roles and packs, read the audit log | [USER_MANAGEMENT.md](admin/USER_MANAGEMENT.md) |
+| Turn a command (FRTB, EQV, …) or a pack off for everyone, with a reason; every server of a cluster follows | [COMMANDS.md](admin/COMMANDS.md) |
 | Define roles, or switch a pack off for everyone | [USER_GUIDE.md › Administration](guides/USER_GUIDE.md#administration) |
 | Look up any setting and its environment variable | [CONFIGURATION.md](admin/CONFIGURATION.md) |
 | Install Calc's Python runtime, offline too, and decide who may use it | [PYTHON_CALC.md › Installing](guides/PYTHON_CALC.md#12-installing-the-python-runtime), [Roles](guides/PYTHON_CALC.md#9-roles-who-may-use-calc) |
