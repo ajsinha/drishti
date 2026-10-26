@@ -1762,6 +1762,12 @@ is recorded in the date's record (`publishError`) and logged; the capture stands
 
 No vectors and no trade or position rows are published; the capture itself keeps the node's vector for audit.
 
+**In BI (2.9.0).** The published table is also the read-only kind `var-official` (`VOFF`) of the market-risk pack, served by the Delta
+connector `var-results` for BI and other readers (still no engine reads it; the guard allows only a read-only connector of computed
+kinds). The sample report **Market risk: VaR** (`config/bi/reports/market-risk-var.report.yaml`, model `market-risk-var`;
+[BI_GUIDE.md](BI_GUIDE.md)) shows the bank's VaR and ES, VaR by desk and by legal entity, the bank and a desk over time, and every node
+with its limit use, from the latest result version of each date; it never adds VaRs across nodes.
+
 ## 20. Validation, errors and data quality
 
 ### 20.1 At `lake build` (as built)

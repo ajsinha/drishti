@@ -191,7 +191,26 @@ class TheRetiredStoredVersions(unittest.TestCase):
         self.assertGreater(checked, 50)
 
     def test_no_connector_reads_the_published_results(self):
-        texts = [(p, json.dumps(m.get("connectors") or {})) for p, m in self.manifests.items()]
+        """No engine's input is a published result. The one exception is a read-only Delta connector over risk-results whose kinds are all
+        computed (var-official, for BI since 2.9.0): it is left out of the text check, and no reactive connector may read or trigger on its kinds."""
+        published = set()
+        texts = []
+        for p, m in self.manifests.items():
+            conns = dict(m.get("connectors") or {})
+            for name, c in list(conns.items()):
+                kinds = c.get("kinds") or []
+                if ((c.get("settings") or {}).get("domain") == "risk-results" and c.get("plugin") == "delta" and kinds
+                        and set(kinds) <= set(self.pol["classes"]["computed"])):
+                    published |= set(kinds)
+                    del conns[name]
+            texts.append((p, json.dumps(conns)))
+        self.assertIn("var-official", published)
+        for p, m in self.manifests.items():
+            for name, c in (m.get("connectors") or {}).items():
+                if c.get("plugin") != "reactive":
+                    continue
+                used = {r.get("kind") for r in c.get("reads") or []} | {k for t in c.get("triggers") or [] for k in t.get("kinds") or []}
+                self.assertEqual(used & published, set(), f"{p}: the reactive connector {name} reads a published result")
         app = C.ROOT / "drishti-server" / "src" / "main" / "resources" / "application.yaml"
         server = yaml.safe_load(app.read_text(encoding="utf-8"))
         texts.append(("application.yaml", json.dumps(((server.get("drishti") or {}).get("sources") or {}).get("connectors") or {})))

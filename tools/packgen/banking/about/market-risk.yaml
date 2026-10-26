@@ -308,6 +308,22 @@ kinds:
       LIMIT_USE: { term: "Limit use", means: "The VaR over the node's or portfolio's VaR limit." }
       PNL: { term: "P&L vector", means: "The scope's P&L under each historical scenario day, oldest first: the sum of its trades' vectors.", unit: "USD" }
       PROVENANCE.TIER: { term: "Tier", means: "Where the vector came from: a node's float64 aggregate, the date's memory-mapped hot file (float32 rows summed in float64), or the heap." }
+  var-official:
+    title: VaR official result
+    about: >-
+      ${$.NODE_NAME} (${$.LEVEL}, ${$.HIERARCHY}) on ${$.BUSINESS_DATE}: the official end-of-day 1-day VaR of ${fmt($.VAR, 'compact')} USD
+      and expected shortfall of ${fmt($.ES, 'compact')} USD, result version ${$.RESULT_VERSION}, as the server captured and published it
+      (read only; VAR NODE:${$.NODE_ID} opens the explorer at the node).
+    guide: market-risk
+    glossary:
+      NODE_ID: { term: "Hierarchy node", means: "The node of the MGMT or LEGAL hierarchy the row is for." }
+      VAR: { use: "var99" }
+      ES: { use: "es975" }
+      RESULT_VERSION: { term: "Result version", means: "1, then 2, 3 ... when the date is restated; the latest version is the date's figure." }
+      HYPO_PNL: { term: "Hypothetical P&L", means: "The node's P&L for the date on its positions of the day before (the backtest's input).", unit: "USD" }
+      LIMIT_USE: { term: "Limit use", means: "The VaR over the node's VaR limit." }
+      EXCEPTIONS_250: { term: "Backtest exceptions", means: "Days in the official history (up to 250) whose loss exceeded the VaR of the day before." }
+      TRAFFIC_LIGHT: { term: "Traffic light", means: "The Basel backtesting zone: green, amber or red." }
   var-whatif:
     title: VaR what-if
     about: >-

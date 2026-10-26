@@ -18,7 +18,9 @@ tools/packgen/var/make_var_data.py into data/testdata/market-risk/ and served by
 as a list<double> column (``vectors:``). Positions are Drishti's: derived from the trades by the pack's rules when a date loads and
 served from the engine by the var-positions connector. No kind stores a VaR figure: the pages show the engine's, computed when opened.
 The computed kinds (VAR_GUIDE.md section 8) are served by reactive connectors: var-result by the server's Java engine (var-engine), var-whatif
-by the Python engine in the compute pool "var" (var-whatif), each read as the viewer."""
+by the Python engine in the compute pool "var" (var-whatif), each read as the viewer. The published official end-of-day results
+(risk-results/var-official, written by the server's VarPublisher) are the read-only kind var-official of the Delta connector var-results,
+for BI and other readers only: no engine reads it (tools/test_contracts.py)."""
 from __future__ import annotations
 
 #: kind -> (mnemonic, label, id pattern, id field)
@@ -31,12 +33,25 @@ KINDS = {
     # the computed kinds: the id is a scope (DESK:RATES), so no id pattern claims them
     "var-result": ("VRES", "VaR of a scope (computed)", None, None),
     "var-whatif": ("VWIF", "VaR what-if (computed, Python)", None, None),
+    # the published official results: one row per node, business date and result version (id <NODE_ID>@<date>#v<n>); no pattern
+    "var-official": ("VOFF", "VaR official results (published)", None, None),
 }
 #: kinds not served by risk-store: the connector each is routed to
-SERVED_BY = {"position": "var-positions", "var-result": "var-engine", "var-whatif": "var-whatif"}
+SERVED_BY = {"position": "var-positions", "var-result": "var-engine", "var-whatif": "var-whatif", "var-official": "var-results"}
 _INPUTS = ["pnl-vector", "risk-hierarchy", "scenario-set", "portfolio"]
 #: the connectors besides risk-store: the positions the server derives, from the VaR engine's memory; the computed kinds
 CONNECTORS = {
+    # read only: the table the server's VarPublisher appends the official captures to (VAR_GUIDE.md section 19); BI reads it, no engine does
+    "var-results": {
+        "plugin": "delta", "enabled": "${DRISHTI_VAR_ENABLED:true}",
+        "description": "The official end-of-day VaR results the server publishes (risk-results/var-official), read only: for BI and "
+                       "other readers, never an engine's input",
+        "kinds": ["var-official"],
+        "settings": {"root": "${DRISHTI_DELTA_ROOT:${drishti.data.dir:./data}/delta}", "domain": "risk-results",
+                     "layout": {"var-official": {"columns": ["HIERARCHY", "NODE_ID", "NODE_NAME", "PARENT_ID", "LEVEL", "CAPTURE_ID",
+                                                             "RESULT_VERSION", "VAR", "ES", "LIMIT", "LIMIT_USE", "DIVERSIFICATION", "HYPO_PNL",
+                                                             "EXCEPTIONS_250", "TRAFFIC_LIGHT"]}}},
+    },
     "var-positions": {"plugin": "var-positions", "enabled": "${DRISHTI_VAR_ENABLED:true}", "kinds": ["position"]},
     "var-engine": {
         "plugin": "reactive", "mode": "reactive", "enabled": "${DRISHTI_VAR_ENABLED:true}",
@@ -87,7 +102,8 @@ FORM_COLUMNS = {"position": ["DIRECTION", "DESK", "TT_BOOK", "PRODUCT_TYPE", "CU
                 "portfolio": ["NAME", "TYPE", "OWNER", "LIMIT_VAR"],
                 "pnl-vector": ["TRADE_ID", "SECURITY_ID", "DESK", "TT_BOOK"],
                 "scenario-set": ["BUSINESS_DATE"],
-                "risk-hierarchy": ["HIERARCHY", "LEVEL", "NAME", "LIMIT_VAR"]}
+                "risk-hierarchy": ["HIERARCHY", "LEVEL", "NAME", "LIMIT_VAR"],
+                "var-official": ["NODE_ID", "HIERARCHY", "LEVEL", "NODE_NAME", "RESULT_VERSION", "TRAFFIC_LIGHT"]}
 BADGES = {"position": "fmt($.QUANTITY, 'compact')", "portfolio": "$.TYPE"}
 #: the computed kinds' fields (VAR_GUIDE.md section 8): read as an ordinary kind, never stored
 COMPUTED = ("var-result", "var-whatif")

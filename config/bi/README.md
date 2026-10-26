@@ -29,11 +29,13 @@ config/bi/
                                   Python dataset (source.python) over two model queries: DATASETS.md section 11 says what the 2.1 composed and derived datasets became
   models/     <id>.model.yaml     2.2 data models: datasets as aliases, relationships, measures, hierarchies, rollups (BI_MODEL_SPEC.md section 2); samples:
                                   trades-basic, trading-risk, trading-cashflows, counterparty-exposure, desk-pnl-vs-exposure-py, live-trading, live-exposure,
-                                  region-economics, world-economics; a report reads one with `model: <name>@1`
+                                  region-economics, world-economics, market-risk-var (2.9.0: the published official VaR); a report reads one with
+                                  `model: <name>@1`
   reports/    <id>.report.yaml    pages of visuals over a model: filters, bookmarks, drill-through, theme, tooltip pages, interactions; drawn since phase 3;
                                   a page with layout: board is a wall of tiles (2.4.0: the boards desk-wall and python-wall are reports here)
                                   (commented samples: trades-overview, counterparty-risk, cashflow-ladder, live-trading-desk, live-exposure, python-desk-risk,
-                                  region-economics, world-economics, the boards desk-wall and python-wall, and pnl-vs-exposure over two datasets: REPORTS.md section 16)
+                                  region-economics, world-economics, market-risk-var (VaR from the published official results), the boards desk-wall
+                                  and python-wall, and pnl-vs-exposure over two datasets: REPORTS.md section 16)
   boards/     <id>.board.yaml     2.3 boards (no samples ship): read as reports with board pages until converted (drishti.py bi migrate --boards config/bi/boards --write)
   themes/     <id>.theme.yaml     2.4.0 theme items: series colours, good and bad colours, a font, format defaults per kind of visual (samples: corporate, print)
   notebooks/  <id>.notebook.yaml  an analyst notebook: stored, versioned and published like any item, but not run (phase 9; one sample: pnl-vs-exposure-pandas, two extracts joined in pandas)

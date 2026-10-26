@@ -33,6 +33,7 @@ kinds:
 - risk-hierarchy
 - var-result
 - var-whatif
+- var-official
 commands:
   SCN: stress-scenario
   STR: stress-result
@@ -46,6 +47,7 @@ commands:
   HIER: risk-hierarchy
   VRES: var-result
   VWIF: var-whatif
+  VOFF: var-official
   MRSK: pack overview
 depends-on:
   packs:
@@ -55,6 +57,7 @@ depends-on:
   - risk-store
   - var-engine
   - var-positions
+  - var-results
   - var-whatif
   plugins:
   - delta
@@ -444,6 +447,16 @@ About: VaR what-if.
 
 No samples ship: documents are read live from its connector `var-whatif` (plugin `reactive`).
 
+### `var-official`
+
+**VaR official results (published)** · mnemonic `VOFF` · read through connector `var-results`.
+
+About: VaR official result.
+
+**Id:** set by its connector (no samples ship).
+
+No samples ship: documents are read live from its connector `var-results` (plugin `delta`).
+
 ## Screens and commands
 
 | Command | Kind | Opens |
@@ -460,6 +473,7 @@ No samples ship: documents are read live from its connector `var-whatif` (plugin
 | `HIER` | `risk-hierarchy` | Risk hierarchy node |
 | `VRES` | `var-result` | VaR of a scope (computed) |
 | `VWIF` | `var-whatif` | VaR what-if (computed, Python) |
+| `VOFF` | `var-official` | VaR official results (published) |
 | `MRSK` | — | The pack's overview: its kinds, how many each holds, an example of each |
 
 Examples:
@@ -500,6 +514,7 @@ The connectors it brings (written once to `config/connectors/<name>.yaml`, then 
 | Connector | Plugin | Kinds | Enabled |
 |---|---|---|---|
 | `risk-store` | `delta` | `stress-scenario`, `stress-result`, `frtb-sensitivity`, `pnl-explain`, `trade-valuation`, `portfolio`, `pnl-vector`, `scenario-set`, `risk-hierarchy` | `${DRISHTI_LAKE_ENABLED:true}` |
+| `var-results` | `delta` | `var-official` | `${DRISHTI_VAR_ENABLED:true}` |
 | `var-positions` | `var-positions` | `position` | `${DRISHTI_VAR_ENABLED:true}` |
 | `var-engine` | `reactive` | `var-result` | `${DRISHTI_VAR_ENABLED:true}` |
 | `var-whatif` | `reactive` | `var-whatif` | `${DRISHTI_VAR_ENABLED:true}` |

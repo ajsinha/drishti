@@ -300,8 +300,20 @@ open item page says so on its next load (`404 DRS-9001`). A file that does not p
 as a problem, with the message, in *Admin, BI settings* and on *Health* (`bi.problems`); fixing the file clears it. A bad file that never parsed has no item, only the
 problem. Shipped items cannot be edited here: change the file. Details: [config/bi/README.md](../../config/bi/README.md).
 
-Drishti ships **nine models** in `models/` (`trades-basic`, `trading-risk`, `trading-cashflows`, `counterparty-exposure`, `desk-pnl-vs-exposure-py`, the live `live-trading` and `live-exposure`, `world-economics` and `region-economics`) over one-table datasets in `datasets/`, **eleven reports** (`trades-overview`, `counterparty-risk`, `cashflow-ladder`, `live-trading-desk`, `live-exposure`, `python-desk-risk`, `pnl-vs-exposure`, `world-economics`, `region-economics`, and the boards `desk-wall` and `python-wall`, which are reports with board pages since 2.4.0), **four Python items** (`desk-pnl-volatility`, `pnl-histogram`, `pnl-vega` and the Transform `pnl-vs-exposure`), one notebook and two themes, each commented and marked `sample: true` ([config/bi/README.md](../../config/bi/README.md)). The two map samples: `world-economics` (real World Bank data) and `region-economics` (Australian and US states: illustrative figures, rounded from public figures, not for reporting). A sample is hidden from the people who may not see sample packs
+Drishti ships **ten models** in `models/` (`trades-basic`, `trading-risk`, `trading-cashflows`, `counterparty-exposure`, `desk-pnl-vs-exposure-py`, the live `live-trading` and `live-exposure`, `world-economics`, `region-economics` and `market-risk-var`) over one-table datasets in `datasets/`, **twelve reports** (`trades-overview`, `counterparty-risk`, `cashflow-ladder`, `live-trading-desk`, `live-exposure`, `python-desk-risk`, `pnl-vs-exposure`, `world-economics`, `region-economics`, `market-risk-var`, and the boards `desk-wall` and `python-wall`, which are reports with board pages since 2.4.0), **four Python items** (`desk-pnl-volatility`, `pnl-histogram`, `pnl-vega` and the Transform `pnl-vs-exposure`), one notebook and two themes, each commented and marked `sample: true` ([config/bi/README.md](../../config/bi/README.md)). The two map samples: `world-economics` (real World Bank data) and `region-economics` (Australian and US states: illustrative figures, rounded from public figures, not for reporting). A sample is hidden from the people who may not see sample packs
 (*Admin, Packs, Hide samples from business users* or *from everyone*), exactly as a sample pack is.
+
+**VaR in BI (2.9.0).** The sample report **Market risk: VaR** (`config/bi/reports/market-risk-var.report.yaml`, model `market-risk-var`)
+reads the official end-of-day VaR the server publishes ([VAR_GUIDE.md section 19](VAR_GUIDE.md#19-official-end-of-day-results)), never a
+stored VaR record: the market-risk pack serves the published table as the read-only kind `var-official` (connector `var-results`). The
+dataset `market-risk-var-official` holds every result version; `market-risk-var-latest` keeps the latest version of each node and date
+(`grain: { one-row-per: NODE_ID, keep: latest by RESULT_VERSION }`), and the model reads that one. VaR is not additive, so no measure
+sums it: `VaR 99%` and `ES 97.5%` are `max()` of a node's one row (over several nodes, the largest, never a total), and `Bank VaR` and
+`Bank ES` are the bank node's own figures. The report: the bank's VaR, ES and limit use; VaR by desk (management hierarchy) and by legal
+entity (legal hierarchy), each bar drilling through to a **Node** page; the bank over time and, on its own page, a desk chosen in a
+slicer over time (pick a window of dates in the toolbar; the demo has one date, 2026-09-30, so one point); every node with VaR, ES,
+limit and limit use (over 90% in red). A node id opens the node in the terminal; `VAR NODE:<id> <GO>` opens the VaR explorer (a report
+cannot run a command, so the page says so).
 
 ```yaml
 # config/bi/reports/liquidity-daily.report.yaml
