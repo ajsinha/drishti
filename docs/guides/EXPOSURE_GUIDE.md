@@ -28,10 +28,12 @@ entries) folded the exposure data contract `EXP.md` into Part II of this guide; 
 [archive](../archive/README.md). Where the original proposal said otherwise, the code wins and the difference is stated (**As built:**).
 VaR follows the same rule: [VAR_GUIDE.md](VAR_GUIDE.md) and tutorial 25.
 
-Every number below that is not a hand-made example is the engine's on the committed test data: the counterparty-risk pack's run
-`XR-2026-09-30-01` (business date 2026-09-30, 200 paths, 24 grid dates of which 13 primary), eight netting sets with paths, 627 trades.
-The figures are those of `drishti-compute/src/test/resources/ccr/reference.json`, which `ExposureParityTest` checks the Java engine
-against (to 1e-6 USD on the heap).
+Every number below that is not a hand-made example is the engine's on the demo lake that `drishti.py lake demo` builds by default
+(`--exposure demo`): the run `XR-2026-09-30-01` (business date 2026-09-30, 200 paths, 24 grid dates of which 13 primary) generated for
+every netting set of 22 of the 24 counterparties (73 netting sets, about 9,000 trades). The committed run of eight netting sets (627
+trades) is a subset with the same figures; the netting-set and CP-ALDERSHOT figures are also those of
+`drishti-compute/src/test/resources/ccr/reference.json`, which `ExposureParityTest` checks the Java engine against (to 1e-6 USD on the
+heap). [Section 23](#23-test-data-and-generators) says how the data is made.
 
 ## Contents
 
@@ -279,8 +281,9 @@ back to the set.
 ### 3.5 The no-paths state
 
 A netting set or counterparty the reference data knows but the run does not cover shows only "no exposure paths for the netting set NS-…
-on <date>" and a note: the engine computes from the day's simulated paths; nothing is shown, never an old figure. On the test data 68 of
-the 76 netting sets have no paths ([section 23](#23-test-data-and-generators)).
+on <date>" and a note: the engine computes from the day's simulated paths; nothing is shown, never an old figure. In the default demo lake the
+three netting sets of CP-SUMMIT and CP-NORTHPLAINS have no paths; with `lake demo --exposure committed` 68 of the 76 have none
+([section 23](#23-test-data-and-generators)).
 
 ## 4. Scopes
 
@@ -538,7 +541,7 @@ system environment, `DRISHTI_COMPUTE_EXPOSURE_WORKERS` workers (4), 2 GB, 300 CP
 
 | Symptom | Cause | What to do |
 |---|---|---|
-| "no exposure paths for the netting set NS-… on <date>" (`404 DRS-1001`; the kind's `STATUS: no-paths`) | the reference data knows the set or counterparty, the day's run does not cover it (68 of 76 sets on the test data) | expected for those sets; in production, check the simulator's coverage: `drishti.py exposure status` counts `setsWithoutPaths` |
+| "no exposure paths for the netting set NS-… on <date>" (`404 DRS-1001`; the kind's `STATUS: no-paths`) | the reference data knows the set or counterparty, the day's run does not cover it (CP-SUMMIT's and CP-NORTHPLAINS's three sets in the default demo lake; 68 of 76 with `--exposure committed`) | expected for those sets; in production, check the simulator's coverage: `drishti.py exposure status` counts `setsWithoutPaths` |
 | `404 DRS-1001` "no run for the date" | no complete `simulation-run` on `asOf` | another date (`--date`), or load the run; the load signal reloads it |
 | `501`/`503 DRS-5446` on a what-if | `method: paths` and the Python engine is not running | start with `DRISHTI_COMPUTE_ENABLED=true` (pool `exposure`); or `--method addon` |
 | `400 DRS-5442` | candidate paths of another run, or another number of paths | candidates from the same `RUN_ID`, P paths each |
@@ -1330,7 +1333,15 @@ at ρ = 0.95; its credit paths are not written) and NS-CASCADIA-TKY. Members, Mt
 records' (`TRADES[]`), live on the date (maturity on or after it); desks from the core pack's desks. The volatilities per unit notional
 and year: rates 1.2%, FX 4.5%, credit 2.5%, equity 9%, commodity 8%; the trade's direction a seeded coin. Every CSA of the test data
 calls variation margin (no unmargined set: `collateral=none` and `TRD:` show a set unmargined). The other 68 netting sets have no paths
-in the demo; `--full --out <dir>` writes every set that fits in 10,000 trades (73 of 76) at 500 paths. `drishti-compute`'s
+in the committed run; `--full --out <dir>` writes every set that fits in 10,000 trades (73 of 76) at 500 paths.
+
+**The demo lake (2.9.0, product owner 2026-10-26).** `drishti.py lake demo` (`tools/lake/demo.py`) does not load the committed run by
+default: with `--exposure demo` (the default) it generates the run for every netting set of the counterparties that fit in 9,500
+trades, smallest first and always whole: **22 of the 24 counterparties, 73 netting sets, about 9,000 trades, 200 paths** (about a
+minute and 100 MB in the lake's staging folder, nothing downloaded, never committed), by `make_ccr_data.py --demo` (`write_demo`) from the
+committed netting sets and CSAs, on the committed run's grid and seeds. Each trade's paths are seeded by its id, so the eight committed
+sets have exactly the committed figures. CP-SUMMIT and CP-NORTHPLAINS (2,558 trades) stay without paths under the 10,000-trade local
+limit. `--exposure committed` loads the committed run of eight sets alone (the fast path, and what the Java tests read). `drishti-compute`'s
 `src/test/resources/ccr/reference.json` holds `ccrmath.py`'s figures of every committed set and of CP-ALDERSHOT; `ExposureParityTest`
 checks the Java engine against them on the heap (float64: to 1e-6 USD) and through the hot file (float32: within 2^-23 of the set's
 largest value). `lake demo` moves the run id, the rows' ids and the grid dates with the business dates.
