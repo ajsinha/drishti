@@ -32,6 +32,8 @@ About 20 minutes.
   `CLY-4000509` and MUREX `MX-30001745`.
 - For the command-line steps: `DRISHTI_SERVER` and `DRISHTI_TOKEN` set, as at the end of tutorial 1.
 
+**Where this data comes from.** Steps 1 to 6 use synthetic test data (fictitious names); in step 7 the `world-economy` pack's figures are published data from the World Bank (CC BY 4.0), UNDP (CC BY 3.0 IGO) and the CIA World Factbook (public domain), plus IMF forecasts that are **internal only**, fetched by `tools/publicdata/world_economy.py`. Each source, its licence and how to refresh it: [External data](../guides/PUBLIC_DATA.md).
+
 ## What you will learn
 
 - the command line's grammar: mnemonics, ids, bare ids and names, pick lists;

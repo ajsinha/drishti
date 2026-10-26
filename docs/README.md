@@ -83,7 +83,7 @@ If you will change the code, continue with [DEVELOPER_GUIDE.md](guides/DEVELOPER
 | Fill in a form instead of writing a search (`FORM trading <GO>`, Forms in the Views menu) | [QUERY_BY_FORM.md](guides/QUERY_BY_FORM.md) |
 | Choose what a panel shows with dropdowns, toggles and sliders; read a trade down to its fixings | [USER_GUIDE.md › Controls](guides/USER_GUIDE.md#controls-on-a-screen-choose-what-a-panel-shows), [A deep trade](guides/USER_GUIDE.md#a-deep-trade-legs-cashflows-and-fixings) |
 | Read what is in the world-economy pack, where it comes from and under what licence (IMF data: internal demonstrations only) | [REAL_DATA.md](guides/REAL_DATA.md) |
-| Refresh or widen a pack built on public data (world-economy, news-and-markets, market-data): one script a pack | [PUBLIC_DATA.md](guides/PUBLIC_DATA.md) |
+| Where external data comes from (every source, licence, internal-only flag) and refreshing or widening a pack built on it: one script a pack, with examples | [External data, PUBLIC_DATA.md](guides/PUBLIC_DATA.md) |
 | Look at a past date, or compare two dates | [USER_GUIDE.md › Business dates](guides/USER_GUIDE.md#business-dates-live-or-a-day-in-the-past), [Compare](guides/USER_GUIDE.md#compare-what-changed) |
 | See what depends on an entity (F8) | [Impact guide](guides/USER_GUIDE.md#f8--impact) |
 | Download CSV or JSON, print, or share a link | [USER_GUIDE.md › Export, print and share](guides/USER_GUIDE.md#export-print-and-share) |
@@ -230,7 +230,7 @@ Every file under `docs/`, by folder. Documents marked *moved* are short pointers
 | [DATA_LOADS.md](guides/DATA_LOADS.md) | your ETL has loaded a batch and Drishti should refresh, verify, check alerts, tell people and flag late data: the load API and CLI, expectations, the Data loads page, the token scope, recipes |
 | [OPERATIONALISING.md](guides/OPERATIONALISING.md) | you ship what you built to servers by copying: bundle, verify, deploy, promote, roll back (no API) |
 | [REAL_DATA.md](guides/REAL_DATA.md) | you use or refresh the real public data in the world-economy pack: sources, licences (IMF data: internal demonstrations only), the pipeline that regenerates them |
-| [PUBLIC_DATA.md](guides/PUBLIC_DATA.md) | you refresh or widen a pack built on public data: the per-pack scripts in `tools/publicdata/`, sources and licences, the internal-only rule, adding a source, Windows |
+| [PUBLIC_DATA.md](guides/PUBLIC_DATA.md) | the External data help page: every external source of every pack (URL, licence, internal only or not); you refresh or widen a pack built on it (worked examples on Linux and Windows): the per-pack scripts in `tools/publicdata/`, sources and licences, the internal-only rule, adding a source, Windows |
 | [BI_GUIDE.md](guides/BI_GUIDE.md) | what BI is and is not built, the BI menu and keyword, the four powers, workspace roles, items and versions, audiences, shipped files, BI settings, the CLI |
 | [tutorial 10](tutorials/10-first-bi-report.md) | build a report from scratch in the designer (cards, a map, a bar, a slicer), view, click and drill, publish, filter like Power BI, slicers across packs, a phone, two datasets in one report, relative dates, a tablet and the entity view |
 | [EXPRESSIONS.md](guides/EXPRESSIONS.md) | the Python-like expression language (DEL) of measures, derived columns, filters and row rules: grammar, every function, problems and fixes, recipes |

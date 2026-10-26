@@ -17,6 +17,28 @@
 
 ## Unreleased
 
+- **External data, one help page; every pack guide complete with its data contracts and data retrieval (2.9.1; product owner,
+  2026-10-26).** [PUBLIC_DATA.md](docs/guides/PUBLIC_DATA.md) is now the listed help page **External data** (Help → Data; the old
+  address `docs-guides-public-data` redirects): every external source of every pack in one table (World Bank, IMF, UNDP, CIA Factbook,
+  Yahoo Finance, Google News, ECB, US Treasury, NY Fed, SEC EDGAR, Wikidata, Nasdaq Trader, GLEIF) with its URL, licence and use, the
+  internal-only data said plainly (the IMF figures and anything from Yahoo, with the Google News headlines), the five refresh scripts and
+  their wrappers, worked examples of `status`, `refresh --dry-run` and `refresh SOURCE` with real output, on Linux and on Windows, how
+  external data reaches the server, checking and offline use, and a section per pack (a place for the funds pack to add its own). Every
+  pack's guide (core, market-data, trading, market-risk, counterparty-risk, world-economy, news-and-markets, us-equities, gleif and
+  compute-demo, which gets its first guide and help entry) ends with two generated sections: **Data contracts** (every kind from its
+  `contracts/*.contract.yaml`: class, key, grain, storage, and every column with its type, key, presence, unit, example or values and link)
+  and **Data retrieval** (per kind: external with source, licence, internal-only flag and refresh script; synthetic with its generator;
+  or computed with its engine and guide; how it reaches the lake, checking, offline). They come from the pack generators
+  (`make_docs.py`, `packbuild.py`, the us-equities and gleif `make.py`) through the new `tools/packgen/common/guide_data.py`, with where
+  each kind's data comes from in `tools/packgen/common/data_retrieval.yaml`; `guide_data.py --check` keeps compute-demo's guide and the
+  generated block of the hand-written news-and-markets guide current. The contract pages (`docs/contracts/packs/<pack>.md`) are generated
+  from the same files and point to the guides. Each pack README points to its guide's two sections and names its external sources
+  (the market-data README now names `official_market_data.py`). The scripts: every subcommand's `--help` ends with the script's worked
+  examples and its two wrappers; the gleif dry run no longer says "about 1 requests" before the universe is known; new
+  `tools/publicdata/tests/test_scripts.py` (docstring examples, `--help`, the wrappers, `status` with no network, the page names every
+  script and source). Tutorials 01, 02, 06, 10, 15 and 27 and the tutorials' README say where their data comes from, linking the page.
+  The help centre lists 52 pages (the cap in `test_help.py` raised by one, citing the request).
+
 - **Functions, `FUNC`: the command directory, under Views, for everyone (2.9.1; product owner, 2026-10-26).** Views → *Functions*
   (`/func`) or `FUNC <GO>` lists every command you can use, grouped by pack, with what it does and its example; `FUNC <words>` opens it
   filtered (`FUNC exposure`, `FUNC VAR`, `FUNC trading`: every word must appear in a command's code, title, description or its pack), kept
