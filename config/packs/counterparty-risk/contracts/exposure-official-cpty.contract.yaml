@@ -1,0 +1,226 @@
+# Project Drishti · Any data. Any domain. One grammar.
+#
+# Copyright (c) 2026 Ashutosh Sinha <ajsinha@gmail.com>.
+# All rights reserved.
+#
+# PROPRIETARY AND CONFIDENTIAL.
+#
+# This file is the confidential and proprietary property of Ashutosh Sinha.
+# Unauthorised copying, use, modification, distribution or disclosure of this
+# file, via any medium, is strictly prohibited except with the express prior
+# written permission of the copyright holder.
+#
+# See the LICENSE file in the root of this repository for the full terms.
+
+# Data contract of the exposure-official-cpty kind (command XOFC): docs/contracts/README.md section 16; the table is described in
+# docs/guides/EXPOSURE_GUIDE.md section 20 ("Published official results") and NSET.md section 9.5. Written by hand after var-official's (2.9.0).
+kind: exposure-official-cpty
+mnemonic: XOFC
+pack: counterparty-risk
+version: '1.1'
+class: computed
+status: active
+title: Exposure official results by netting set and counterparty (published)
+description: The official end-of-day exposure (current exposure, EPE, effective EPE, peak EE, peak PFE at 95% and 99%) of every netting set,
+  counterparty and connected group, as the server captured and published it (one row per scope, business date and result version); read
+  only, for BI and other readers, never an engine's input.
+source: 'computed by Drishti: the official end-of-day exposure capture (ExposureOfficial), appended by ExposurePublisher to
+  risk-results/exposure-official-cpty'
+grain: One row per scope (netting set, counterparty or group) per BUSINESS_DATE and RESULT_VERSION, keyed by NODE_ID and RESULT_VERSION;
+  the latest version of a date is the date's figure.
+key:
+- NODE_ID
+- RESULT_VERSION
+dated-by: BUSINESS_DATE
+cadence:
+  frequency: daily
+  due: when the date's inputs load (the data-load signal), at start for the newest date without a record, or by an administrator
+storage:
+  connector: exposure-results
+  plugin: delta
+  domain: risk-results
+  table: <root>/risk-results/exposure-official-cpty/
+  partition-by:
+  - business_date
+  columns:
+  - HIERARCHY
+  - NODE_ID
+  - NODE_NAME
+  - PARENT_ID
+  - LEVEL
+  - COUNTERPARTY
+  - LEGAL_ENTITY
+  - RESULT_VERSION
+  - RUN_ID
+  - PATHS
+  - CE
+  - EPE
+  - EEPE
+  - PEAK_EE
+  - PEAK_PFE_95
+  - PEAK_PFE_99
+  - EAD_IMM
+  - PEAK_PFE_DATE
+  - PFE_95_1Y
+  - PFE_95_5Y
+  - EE_1Y
+  - EE_5Y
+  - NETTING_SETS
+  - TRADES
+  - FAILED_TRADES
+  - PARTIAL_SETS
+fields:
+- name: BUSINESS_DATE
+  type: date
+  presence: required
+  description: The business date (the partition column business_date).
+- name: HIERARCHY
+  type: text
+  presence: required
+  enum: [NSET, CPTY, GROUP]
+  description: 'The row type: a netting set, a counterparty (its netting sets netted path by path) or a connected group.'
+- name: NODE_ID
+  type: id
+  presence: required
+  description: The scope, in the scope grammar (EXP <NODE_ID> computes it again now).
+  example: NSET:NS-ALDERSHOT-FRA
+- name: NODE_NAME
+  type: text
+  presence: required
+  description: The netting set's id for a netting set; the counterparty's name for a counterparty; the group's id for a group.
+- name: PARENT_ID
+  type: id
+  presence: optional
+  description: A netting set's counterparty; a counterparty's group; none for a group.
+- name: LEVEL
+  type: text
+  presence: required
+  enum: [netting-set, counterparty, group]
+- name: COUNTERPARTY
+  type: id
+  presence: optional
+  link: counterparty
+  description: The counterparty of a netting-set or counterparty row (none for a group).
+  example: CP-ALDERSHOT
+- name: LEGAL_ENTITY
+  type: id
+  presence: optional
+  description: The bank's legal entity of a netting set.
+- name: RESULT_VERSION
+  type: integer
+  presence: required
+  description: 1, then 2, 3 ... on a restatement.
+- name: INPUT_VERSIONS
+  type: text
+  presence: required
+  description: The inputs' versions, as JSON text.
+- name: COMPUTED_AT
+  type: timestamp
+  presence: required
+- name: CONTRACT_VERSION
+  type: text
+  presence: required
+  example: '1.1'
+- name: RUN_ID
+  type: id
+  presence: required
+  link: simulation-run
+- name: PATHS
+  type: integer
+  presence: required
+- name: CALIBRATION
+  type: text
+  presence: optional
+- name: CE
+  type: amount
+  presence: optional
+  unit: USD
+  description: Current exposure after collateral.
+- name: EPE
+  type: amount
+  presence: optional
+  unit: USD
+  description: Expected positive exposure over the first year. Additive across netting sets.
+- name: EEPE
+  type: amount
+  presence: optional
+  unit: USD
+  description: Effective expected positive exposure. Not additive.
+- name: PEAK_EE
+  type: amount
+  presence: optional
+  unit: USD
+  description: The highest expected exposure over the primary dates. A sum of netting sets' peaks is a reporting sum, not the peak of the sum.
+- name: PEAK_PFE_95
+  type: amount
+  presence: optional
+  unit: USD
+  description: The highest 95% potential future exposure over the primary dates. Not additive; a counterparty's is its own row.
+- name: PEAK_PFE_99
+  type: amount
+  presence: optional
+  unit: USD
+  description: The highest 99% potential future exposure. Not additive.
+- name: EAD_IMM
+  type: amount
+  presence: optional
+  unit: USD
+  description: 1.4 times EEPE (informational).
+- name: PEAK_PFE_DATE
+  type: date
+  presence: optional
+- name: PFE_95_1Y
+  type: amount
+  presence: optional
+  unit: USD
+- name: PFE_95_5Y
+  type: amount
+  presence: optional
+  unit: USD
+- name: EE_1Y
+  type: amount
+  presence: optional
+  unit: USD
+- name: EE_5Y
+  type: amount
+  presence: optional
+  unit: USD
+- name: PROFILE
+  type: text
+  presence: optional
+  description: The profile (TENOR, DATE, EE, ENE, EEE, PFE_95, PFE_99) as JSON text.
+- name: NETTING_SETS
+  type: integer
+  presence: optional
+- name: TRADES
+  type: integer
+  presence: optional
+- name: FAILED_TRADES
+  type: integer
+  presence: optional
+- name: PARTIAL_SETS
+  type: integer
+  presence: optional
+links:
+- field: COUNTERPARTY
+  kind: counterparty
+- field: RUN_ID
+  kind: simulation-run
+validation:
+- rule: required
+  fields:
+  - NODE_ID
+  - RESULT_VERSION
+- rule: unique
+  key:
+  - NODE_ID
+  - RESULT_VERSION
+  per: BUSINESS_DATE
+notes:
+- 'Append only (delta.appendOnly), the retention years of log and removed files: a restated date adds rows with the next RESULT_VERSION;
+  nothing is overwritten. The BI datasets counterparty-exposure-official-netting-sets and -counterparties keep the latest version of each
+  scope and date.'
+- 'Restricted: it names counterparties. No engine reads it: the only connectors over risk-results are read-only ones of computed kinds
+  (tools/test_contracts.py).'
+- 'The id is <HIERARCHY>:<NODE_ID>@<date>#v<RESULT_VERSION>; EXP <NODE_ID> computes the scope again now.'
+review: []

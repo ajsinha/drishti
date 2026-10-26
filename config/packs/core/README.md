@@ -97,7 +97,7 @@ Fields, from 18 sample documents:
 | `ECONOMY` | string | `ECON-GBR` | The country of risk's economy (world-economy pack, when it is on) |
 | `NEWS_ID` | string | `NEWS-Aldershot_Pension_Trust` | Its headlines (news-and-markets pack, when it is on) |
 | `NET_MTM` | integer | `15036789` | Net MTM |
-| `NETTING_SETS` | list of objects |  | Its netting sets with exposure figures |
+| `NETTING_SETS` | list of objects |  | Its netting sets (trades, net MTM); their exposure is computed (EXP NSET:<id>), not stored |
 | `KYC` | object |  | Know-your-customer record (status, risk rating, last review, EMIR classification, one-year PD) |
 | `GROUP` | string | `GRP-ALDERSHOT` | link to `counterparty-group` |
 | `CREDIT_LIMIT` | string | `LIM-ALDERSHOT` | Its credit limit (USD) |

@@ -165,7 +165,7 @@ You should see the provenance and, under `data` (the netting sets and the hierar
   "UEN": "UEN0100407",
   "ECONOMY": "ECON-BMU",
   "NET_MTM": -191313445.24,
-  "PFE_PEAK": 3125658100,
+  "CREDIT_LIMIT": 3500000000,
   "NETTING_SETS": [
     { "ID": "NS-MERIDIAN-RE-FRA", "AGREEMENT": "AGR-MERIDIAN-RE-ISDA", "TRADES": 45, "NET_MTM": 10804024.63 },
     { "ID": "NS-MERIDIAN-RE-LDN", "AGREEMENT": "AGR-MERIDIAN-RE-ISDA", "TRADES": 191, "NET_MTM": -316071571.84 },
@@ -278,11 +278,11 @@ strip:
   - { label: Country of risk, bind: $.COUNTRY_OF_RISK }
   - { label: UEN, bind: $.UEN }
   - { label: Net MTM, bind: $.NET_MTM, fmt: signed0, tone: sign }
-  - { label: PFE peak, bind: $.PFE_PEAK, fmt: compact }
+  - { label: Credit limit, bind: $.CREDIT_LIMIT, fmt: compact }
   - { label: Netting sets, bind: "size($.NETTING_SETS) + ' sets, ' + fmt(sum($.NETTING_SETS, 'TRADES'), 'amount0') + ' trades'" }
 ```
 
-You should see `Rating A` (highlighted), `Country of risk BM`, `UEN UEN0100407`, `Net MTM −191,313,445` in the negative colour, `PFE peak 3.1bn` and `Netting sets 4 sets, 596 trades`.
+You should see `Rating A` (highlighted), `Country of risk BM`, `UEN UEN0100407`, `Net MTM −191,313,445` in the negative colour, `Credit limit 3.5bn` and `Netting sets 4 sets, 596 trades`.
 
 Four things just happened:
 
@@ -410,7 +410,7 @@ strip:
   - { label: Country of risk, bind: $.COUNTRY_OF_RISK }
   - { label: UEN, bind: $.UEN }
   - { label: Net MTM, bind: $.NET_MTM, fmt: signed0, tone: sign }
-  - { label: PFE peak, bind: $.PFE_PEAK, fmt: compact }
+  - { label: Credit limit, bind: $.CREDIT_LIMIT, fmt: compact }
   - { label: Netting sets, bind: "size($.NETTING_SETS) + ' sets, ' + fmt(sum($.NETTING_SETS, 'TRADES'), 'amount0') + ' trades'" }
 panels:
   - id: identity
@@ -1041,7 +1041,7 @@ Every strip item and column may have a `label`. Leave it out and the label is th
 1. `label:` in the Sutra;
 2. the **pack taxonomy**: `labels:` in the pack's `config/semantics.yaml` (`NET_MTM: Net MTM (USD)`);
 3. the **global taxonomy**: `labels:` in the core semantics, or the site's replacement file;
-4. the field name in words, with the packs' `acronyms:` spelled right: `UEN` → **UEN**, `KYC.EMIR_CLASSIFICATION` → **EMIR classification**, `PFE_PEAK` → **PFE peak**.
+4. the field name in words, with the packs' `acronyms:` spelled right: `UEN` → **UEN**, `KYC.EMIR_CLASSIFICATION` → **EMIR classification**, `PEAK_PFE` → **Peak PFE**.
 
 So a pack teaches Drishti its vocabulary once, and every Sutra and every inferred screen in that pack uses it (the `core` pack's `config/semantics.yaml` lists the acronyms: MTM, PV, DV01, PFE, CVA,
 KYC, EMIR, LEI, UEN…). The practical rule: write a `label:` only where this layout needs different words from the rest of the pack; fix a label that is wrong everywhere in the taxonomy, not in thirty

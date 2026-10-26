@@ -1,0 +1,54 @@
+# Project Drishti · Any data. Any domain. One grammar.
+#
+# Copyright (c) 2026 Ashutosh Sinha <ajsinha@gmail.com>.
+# All rights reserved.
+#
+# PROPRIETARY AND CONFIDENTIAL.
+#
+# This file is the confidential and proprietary property of Ashutosh Sinha.
+# Unauthorised copying, use, modification, distribution or disclosure of this
+# file, via any medium, is strictly prohibited except with the express prior
+# written permission of the copyright holder.
+#
+# See the LICENSE file in the root of this repository for the full terms.
+
+# STORED SAMPLE (2.9.0): the published official end-of-day exposure of every netting set, counterparty and group, as the server appends it to
+# risk-results/exposure-official-cpty (docs/guides/EXPOSURE_GUIDE.md section 20), read through the counterparty-risk pack's read-only Delta connector
+# exposure-results (kind exposure-official-cpty). Every result version of a date is a row here, and the three row types (HIERARCHY NSET, CPTY,
+# GROUP) sit side by side: never add them up together. The datasets counterparty-exposure-official-netting-sets and
+# counterparty-exposure-official-counterparties keep one row type each, the latest version of each scope and date; the models read those.
+# The business date is the built-in column businessDate (the table's partition); every column below is promoted in the connector's layout, so
+# the table is scanned as columns. Exposure is never stored on a netting set or counterparty record: these are the engine's numbers of record.
+
+rachana: 2
+expressions: 2                  # DEL v2, the Python-like expression language (docs/guides/EXPRESSIONS.md)
+dataset: counterparty-exposure-official
+version: 1.0.0
+title: "Exposure official results (every version)"
+description: "The official end-of-day exposure (EPE, effective EPE, peak EE, peak PFE at 95% and 99%) of every netting set, counterparty and connected group, one row per scope, business date and result version (a restated date adds a version), as published to risk-results/exposure-official-cpty."
+sample: true
+endorsement: "promoted"
+tags: [sample, counterparty-risk, exposure]
+source: { connector: exposure-results, kind: exposure-official-cpty }
+refresh: { on-load: true }
+columns:
+  HIERARCHY:      { type: string }                       # NSET (netting set), CPTY (counterparty) or GROUP
+  NODE_ID:        { type: string }                       # the scope: NSET:NS-..., CPTY:CP-..., GROUP:...
+  NODE_NAME:      { type: string }                       # the netting set's id; the counterparty's name; the group's id
+  PARENT_ID:      { type: string }
+  LEVEL:          { type: string }
+  COUNTERPARTY:   { type: string, references: counterparty }
+  LEGAL_ENTITY:   { type: string }
+  RESULT_VERSION: { type: integer }
+  RUN_ID:         { type: string }
+  CE:             { type: decimal, format: amount0 }
+  EPE:            { type: decimal, format: amount0 }                     # additive across netting sets
+  EEPE:           { type: decimal, format: amount0, additive: false }
+  PEAK_EE:        { type: decimal, format: amount0, additive: false }   # a sum of set peaks is a reporting sum, not the peak of the sum
+  PEAK_PFE_95:    { type: decimal, format: amount0, additive: false }   # PFE is not additive: a counterparty's is its own CPTY row
+  PEAK_PFE_99:    { type: decimal, format: amount0, additive: false }
+  EAD_IMM:        { type: decimal, format: amount0, additive: false }
+  NETTING_SETS:   { type: integer }
+  TRADES:         { type: integer }
+security:
+  masked: [NODE_NAME]           # a counterparty row's NODE_NAME is the counterparty's name: masked as counterparties.NAME is

@@ -38,7 +38,7 @@ help cards from one description. Each generated file says so in a comment near t
 | `news-and-markets`; retired: `finance`, `logistics` | hand-written; the samples come from the pack's `tools/` folder (`config/packs/news-and-markets/tools/make_samples.py`, `examples/packs/finance/tools/`, `examples/packs/logistics/tools/`) |
 
 **Attribute names.** Every document, Sutra, form, column list and BI item of the seven shipped packs names attributes in
-UPPER_SNAKE (`COUNTERPARTY_ID`, `NET_MTM`, `EE_PEAK`, `ZERO_RATE`, `GDP_USD_BN`), as production systems write them. The
+UPPER_SNAKE (`COUNTERPARTY_ID`, `NET_MTM`, `PEAK_EE`, `ZERO_RATE`, `GDP_USD_BN`), as production systems write them. The
 banking and world-economy generators build their documents with short internal names and turn them into the written
 names at one boundary, `tools/packgen/common/upper.py` (`name`, `record` for documents and their `_meta.walk`, `kind`
 for a taxonomy kind's Sutra paths, columns and links); a new field in a generator is written in UPPER_SNAKE without more

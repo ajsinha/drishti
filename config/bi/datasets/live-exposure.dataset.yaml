@@ -22,7 +22,7 @@ dataset: live-exposure
 version: 1
 title: Live exposure
 description: >-
-  Netting sets with their net mark-to-market, collateral, expected and potential future exposure and limit utilisation, updated as they tick.
+  Netting sets with their net mark-to-market, collateral and limit utilisation, updated as they tick (the computed exposure, EE and PFE peaks, is the exposure engine's official end-of-day result: the models counterparty-exposure and trading-risk).
 sample: true
 endorsement: promoted
 tags: [sample, counterparty-risk, live, streaming]
@@ -38,8 +38,6 @@ tables:
       TRADE_COUNT:   integer
       NET_MTM:       { type: decimal, format: signed0 }
       COLLATERAL:   { type: decimal, format: signed0 }
-      EE_PEAK:       { type: decimal, format: amount0 }
-      PFE_PEAK:      { type: decimal, format: amount0 }
       LIMIT:        { type: decimal, format: amount0 }
       UTILISATION:  decimal
 
@@ -52,12 +50,6 @@ measures:
   Collateral:
     expr: "sum(netting.COLLATERAL)"
     format: signed0
-  EE peak:
-    expr: "sum(netting.EE_PEAK)"
-    format: amount0
-  PFE peak:
-    expr: "sum(netting.PFE_PEAK)"
-    format: amount0
   Max utilisation:
     expr: "max(netting.UTILISATION)"
   Worst net MTM:

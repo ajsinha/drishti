@@ -13,7 +13,7 @@
 # See the LICENSE file in the root of this repository for the full terms.
 
 """UPPER_SNAKE attribute names: every document a shipped pack carries names its attributes as production systems do
-(COUNTERPARTY_ID, NET_MTM, EE_PEAK, ZERO_RATE, TENOR), whatever the generator calls them inside.
+(COUNTERPARTY_ID, NET_MTM, PEAK_EE, ZERO_RATE, TENOR), whatever the generator calls them inside.
 
 The banking, world-economy and news generators build their documents with short internal names (counterpartyId, netMtm,
 zeroRate); this module is the one boundary that turns them into the names a pack writes:

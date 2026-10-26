@@ -21,6 +21,9 @@
 # CONVERTED from datasets/desk-pnl-vs-exposure-py.dataset.yaml (rachana: 1) by the dataset-to-model converter (drishti.py bi migrate --models;
 # docs/architecture/BI_MODEL_SPEC.md section 8). The model keeps the old name and table names as aliases, so fields read as before.
 
+# EDITED AFTER CONVERSION (2.9.0): the retired stored exposure (EE_PEAK, PFE_PEAK) left the netting set; exposure is read from the
+# published official results (counterparty-exposure-official-*, docs/guides/BI_GUIDE.md "Exposure in BI"). This file is no longer the converter's output.
+
 rachana: 2
 expressions: 2                  # DEL v2, the Python-like expression language (docs/guides/EXPRESSIONS.md)
 model: desk-pnl-vs-exposure-py
@@ -36,6 +39,6 @@ datasets:                       # alias: the dataset it reads, and its role (a f
 
 measures:
   Desk P&L:           { expr: "sum(result.desk_pnl)", format: signed0 }
-  Exposure (EE peak): { expr: "sum(result.ee_peak)", format: amount0 }
+  Exposure (EE peak): { expr: "sum(result.ee_peak)", format: amount0, description: "The netting sets' computed peak expected exposure (counterparty-exposure's measure, from the official results) summed per counterparty: a reporting sum of the sets' peaks." }
   P&L per exposure:   { expr: "ratio(sum(result.desk_pnl), sum(result.ee_peak))", format: signed2, description: "Computed in YAML over the frame the Transform returned." }
   Counterparties:     { expr: "count(result)" }

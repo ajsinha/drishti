@@ -19,12 +19,15 @@
 # CONVERTED from datasets/live-exposure.dataset.yaml (rachana: 1) by the dataset-to-model converter (drishti.py bi migrate --models;
 # docs/architecture/BI_MODEL_SPEC.md section 8). The model keeps the old name and table names as aliases, so fields read as before.
 
+# EDITED AFTER CONVERSION (2.9.0): the retired stored exposure (EE_PEAK, PFE_PEAK) left the netting set; exposure is read from the
+# published official results (counterparty-exposure-official-*, docs/guides/BI_GUIDE.md "Exposure in BI"). This file is no longer the converter's output.
+
 rachana: 2
 expressions: 2                  # DEL v2, the Python-like expression language (docs/guides/EXPRESSIONS.md)
 model: live-exposure
 version: 1.0.0
 title: "Live exposure"
-description: "Netting sets with their net mark-to-market, collateral, expected and potential future exposure and limit utilisation, updated as they tick."
+description: "Netting sets with their net mark-to-market, collateral and limit utilisation, updated as they tick. The computed exposure (EE and PFE peaks) is not live: it is the exposure engine's official end-of-day result, in the models counterparty-exposure and trading-risk."
 sample: true
 endorsement: "promoted"
 tags: [sample, counterparty-risk, live, streaming]
@@ -36,7 +39,5 @@ measures:
   Netting sets:    { expr: "count(netting)" }
   Net MTM:         { expr: "sum(netting.NET_MTM)", format: signed0 }
   Collateral:      { expr: "sum(netting.COLLATERAL)", format: signed0 }
-  EE peak:         { expr: "sum(netting.EE_PEAK)", format: amount0 }
-  PFE peak:        { expr: "sum(netting.PFE_PEAK)", format: amount0 }
   Max utilisation: { expr: "max(netting.UTILISATION)" }
   Worst net MTM:   { expr: "min(netting.NET_MTM)", format: signed0 }

@@ -29,7 +29,7 @@ shot = register("t18", OUT / "t18")
 DATA = ROOT / "docs" / "tutorials" / "data"
 WORKSPACE = "Exposure desk"
 AUDIENCE = ["risk", "desk-head", "admin"]
-TRADE, NETTING, COUNTERPARTY, DESK = "pack.market-risk.trade-valuation", "pack.counterparty-risk.netting-set", "pack.core.counterparty", "pack.core.desk"
+TRADE, NETTING, COUNTERPARTY, DESK = "pack.market-risk.trade-valuation", "counterparty-exposure-official-netting-sets", "pack.core.counterparty", "pack.core.desk"
 STATE: dict = {}
 
 
@@ -76,7 +76,7 @@ def grains(c: Ctx):
     ensure(c)
     login(c, height=900)
     for name, pic in ((TRADE, "01-trade-dataset.jpg"), (NETTING, "02-netting-set-dataset.jpg")):
-        go(c, "/bi/ds/" + name, wait='[data-layer-dataset][data-ready="yes"]', settle=1200)
+        go(c, "/bi/ds/" + (name if name.startswith("pack.") else "file:dataset:" + name), wait='[data-layer-dataset][data-ready="yes"]', settle=1200)
         c.page.evaluate("window.scrollTo(0, 0)")
         c.save(pic, clip={"x": 240, "y": 56, "width": 1040, "height": 640})
 
@@ -114,8 +114,16 @@ def designer(c: Ctx):
         alias.fill("trade")
         alias.press("Tab")
         p.wait_for_selector('[data-box="trade"]', timeout=15000)
+    # 2.9.0: the netting sets' exposure is the engine's official results (counterparty-exposure-official-netting-sets): the tutorial calls it netting_set
+    box = p.locator('[data-box="counterparty_exposure_official_netting_sets"]')
+    if box.count():
+        box.first.click()
+        alias = p.locator("[data-insp-alias]")
+        alias.fill("netting_set")
+        alias.press("Tab")
+        p.wait_for_selector('[data-box="netting_set"]', timeout=15000)
     p.select_option('[data-role-of="netting_set"]', "fact")                 # trades reference netting sets, so it was guessed a dimension: it is a fact
-    p.wait_for_selector('[data-suggestion="trade.NETTING_SET->netting_set.id"]', timeout=15000)
+    p.wait_for_selector('[data-suggestion="netting_set.COUNTERPARTY->counterparty.id"]', timeout=15000)   # 2.9.0: no trade.NETTING_SET suggestion (not the netting-set kind)
     p.wait_for_timeout(1500)
     elem_shot(c, "04-canvas-suggestions.jpg", '[data-pane="canvas"]', pad=8)
     for s in ("trade.COUNTERPARTY->counterparty.id", "netting_set.COUNTERPARTY->counterparty.id", "trade.DESK->desk.id"):
@@ -124,7 +132,7 @@ def designer(c: Ctx):
     p.wait_for_timeout(1000)
     elem_shot(c, "05-relationships.jpg", "[data-suggestions-box]", pad=8, extra=260)
     p.click('[data-tab="measures"]')
-    for alias, col, name in (("trade", "MTM", "MTM"), ("trade", "PNL_1D", "P&L 1d"), ("trade", "*", "Trades"), ("netting_set", "EE_PEAK", "Exposure (EE peak)"),
+    for alias, col, name in (("trade", "MTM", "MTM"), ("trade", "PNL_1D", "P&L 1d"), ("trade", "*", "Trades"), ("netting_set", "PEAK_EE", "Exposure (EE peak)"),
                              ("netting_set", "*", "Netting sets")):
         p.select_option("[data-nm-alias]", alias)
         p.select_option("[data-nm-column]", col)

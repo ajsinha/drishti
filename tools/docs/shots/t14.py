@@ -158,12 +158,12 @@ def analyse_extracts(c: Ctx):
     for it in (listing if isinstance(listing, list) else listing.get("items", [])):
         if it["title"].startswith("Join of P&L and exposure"):
             bi(c, "DELETE", "/items/" + it["id"])
-    c.page.set_viewport_size({"width": 1280, "height": 900})
+    c.page.set_viewport_size({"width": 1280, "height": 1100})        # 2.9.0: the model has two more facts, so the extracts sit lower
     c.page.goto(c.base + "/bi/explore?item=" + NOTEBOOK)
     c.page.wait_for_selector("[data-extra='exposure']", timeout=60000)
     c.page.wait_for_function("() => /rows/.test(document.querySelector('[data-info]').textContent)", timeout=60000)
     c.page.evaluate("window.scrollTo(0, 0)")
-    c.save("13-analyse-extracts.jpg", clip={"x": 240, "y": 56, "width": 1040, "height": 844})
+    c.save("13-analyse-extracts.jpg", clip={"x": 240, "y": 56, "width": 1040, "height": 1044})
     c.page.click("#bxT-python")
     c.page.click("[data-cells=python] [data-run]")
     c.page.wait_for_selector("[data-cells=python] .bx-out table", timeout=90000)
@@ -363,7 +363,7 @@ CONSOLE_CODE = ('live = df[df["TRADE_STATUS"] != "MATURED"]\n'
                 'print(len(live), "live trades of", len(df))\n'
                 'show(by_book, "Live notional by book, top 8")\n'
                 'chart(by_book, kind="bar", x="PORTFOLIO", y="NOTIONAL")\n')
-NOTEBOOK = "Live notional by book"
+LIVE_NOTEBOOK = "Live notional by book"
 
 
 @shot("28-pyconsole.jpg", also=("29-pyconsole-promoted.jpg",))
@@ -371,7 +371,7 @@ def pyconsole(c: Ctx):
     """Step 13: the browser Python console on the trading pack's trades (Pyodide in the page), then the same cell promoted to the console backend."""
     login(c, height=900)
     quiet_inbox(c)
-    clean_items(c, NOTEBOOK)
+    clean_items(c, LIVE_NOTEBOOK)
     p = c.page
     go(c, "/pyconsole", height=1400, wait="[data-dataset]", settle=500)
     p.wait_for_function("() => [...document.querySelectorAll('[data-dataset] option')].some(o => o.value === 'dataset:pack.trading.trade')", timeout=30000)
@@ -389,7 +389,7 @@ def pyconsole(c: Ctx):
     p.locator("[data-out] [data-pc-chart] canvas").wait_for(timeout=30000)
     p.wait_for_timeout(800)
     c.save("28-pyconsole.jpg", "section[aria-labelledby=pcCodeH]")
-    p.fill("[data-ptitle]", NOTEBOOK)
+    p.fill("[data-ptitle]", LIVE_NOTEBOOK)
     p.click("[data-promote]")
     p.wait_for_function("() => document.getElementById('pc').getAttribute('data-promoted')", timeout=120000)
     p.wait_for_timeout(500)

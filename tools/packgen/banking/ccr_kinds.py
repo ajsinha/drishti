@@ -20,7 +20,10 @@ served by the pack's Delta connector exposure-store from the risk lake's domain 
 server's Java engine through the reactive connector exposure-engine, read as the viewer; exposure-whatif (XWIF <scope> <GO>) by the Python
 exposure engine in the compute pool exposure (the exact pre-deal what-if: candidates' paths added to their netting sets, from a private
 sandbox), through the reactive connector exposure-whatif; the netting-set and counterparty pages show
-the engine's figures computed as they open (EXPOSURE_ENGINE). The stored exposure-profile kind was retired in 2.9.0 (EXPOSURE_GUIDE.md section 22)."""
+the engine's figures computed as they open (EXPOSURE_ENGINE). The stored exposure-profile kind was retired in 2.9.0 (EXPOSURE_GUIDE.md section 22).
+The published official end-of-day results of every netting set, counterparty and group (risk-results/exposure-official-cpty, written by
+the server's ExposurePublisher, EXPOSURE_GUIDE.md section 20) are the read-only kind exposure-official-cpty of the Delta connector
+exposure-results, for BI and other readers only: no engine reads it (tools/test_contracts.py)."""
 from __future__ import annotations
 
 #: kind -> (mnemonic, label, id pattern, id field)
@@ -30,13 +33,27 @@ KINDS = {
     # the computed kind: its id is a scope (NSET:NS-ALDERSHOT-FRA), so no id pattern claims it
     "exposure-result": ("EXP", "Exposure profile of a scope (computed)", None, None),
     "exposure-whatif": ("XWIF", "Exposure what-if before dealing (computed, Python)", None, None),
+    # the published official results: one row per netting set, counterparty or group, business date and result version; no pattern
+    "exposure-official-cpty": ("XOFC", "Exposure official results by netting set and counterparty (published)", None, None),
 }
 _INPUTS = ["simulation-run", "exposure-path", "netting-set", "csa", "collateral-balance"]
 _ROOT = "${DRISHTI_DELTA_ROOT:${drishti.data.dir:./data}/delta}"
 #: the connectors the kinds are served by
 SERVED_BY = {"simulation-run": "exposure-store", "exposure-path": "exposure-store", "exposure-result": "exposure-engine",
-             "exposure-whatif": "exposure-whatif"}
+             "exposure-whatif": "exposure-whatif", "exposure-official-cpty": "exposure-results"}
+#: the published columns of risk-results/exposure-official-cpty that readers scan (ExposurePublisher.CPTY_COLUMNS less the JSON texts)
+OFFICIAL_COLUMNS = ["HIERARCHY", "NODE_ID", "NODE_NAME", "PARENT_ID", "LEVEL", "COUNTERPARTY", "LEGAL_ENTITY", "RESULT_VERSION", "RUN_ID",
+                    "PATHS", "CE", "EPE", "EEPE", "PEAK_EE", "PEAK_PFE_95", "PEAK_PFE_99", "EAD_IMM", "PEAK_PFE_DATE", "PFE_95_1Y",
+                    "PFE_95_5Y", "EE_1Y", "EE_5Y", "NETTING_SETS", "TRADES", "FAILED_TRADES", "PARTIAL_SETS"]
 CONNECTORS = {
+    # read only: the table the server's ExposurePublisher appends the official captures to (EXPOSURE_GUIDE.md section 20); BI reads it, no engine does
+    "exposure-results": {
+        "plugin": "delta", "enabled": "${DRISHTI_EXPOSURE_ENABLED:true}",
+        "description": "The official end-of-day exposure of every netting set, counterparty and group the server publishes "
+                       "(risk-results/exposure-official-cpty), read only: for BI and other readers, never an engine's input",
+        "kinds": ["exposure-official-cpty"],
+        "settings": {"root": _ROOT, "domain": "risk-results", "layout": {"exposure-official-cpty": {"columns": OFFICIAL_COLUMNS}}},
+    },
     "exposure-store": {
         "plugin": "delta", "enabled": "${DRISHTI_LAKE_ENABLED:true}", "kinds": ["simulation-run", "exposure-path"],
         "settings": {"root": _ROOT, "domain": "risk", "layout": {
@@ -89,7 +106,8 @@ CONNECTORS = {
 FIELDS = {"RUN_ID": ("simulation-run", "Simulation run")}
 #: the search form of each stored kind: its key columns
 FORM_COLUMNS = {"simulation-run": ["CALIBRATION", "PATHS", "STATUS"],
-                "exposure-path": ["TRADE_ID", "NETTING_SET", "COUNTERPARTY", "GRID_DATE", "RUN_ID"]}
+                "exposure-path": ["TRADE_ID", "NETTING_SET", "COUNTERPARTY", "GRID_DATE", "RUN_ID"],
+                "exposure-official-cpty": ["NODE_ID", "HIERARCHY", "COUNTERPARTY", "NODE_NAME", "RESULT_VERSION"]}
 COMPUTED = ("exposure-result", "exposure-whatif")
 EXAMPLES = [("EXP NSET:NS-ALDERSHOT-FRA", "Exposure profile of a netting set · EE, PFE 95 and 99, EPE, EEPE computed from the paths"),
             ("EXP CPTY:CP-ALDERSHOT", "A counterparty's exposure · its four netting sets summed path by path (PFE is not a sum of PFEs)")]

@@ -19,7 +19,7 @@
 
 Every command (mnemonic) of every pack has a data contract: a YAML file beside its pack (`config/packs/<pack>/contracts/<kind>.contract.yaml`, checked against `tools/contracts.schema.json`) and a section of its pack's page here. The shared rules are in [the contracts README](../README.md); the computed measures that replace the retiring kinds have their own contracts there.
 
-94 contracts, 502 points still to review. Check them with `drishti.py contract check`; draft a new one with `drishti.py contract bootstrap KIND --write`.
+95 contracts, 502 points still to review. Check them with `drishti.py contract check`; draft a new one with `drishti.py contract bootstrap KIND --write`.
 
 | Command | Kind | Pack | Class | Status | Replaced by | To review |
 |---|---|---|---|---|---|---|
@@ -50,6 +50,7 @@ Every command (mnemonic) of every pack has a data contract: a YAML file beside i
 | `XPATH` | `exposure-path` | [counterparty-risk](counterparty-risk.md#xpath-exposure-path-a-trades-mtm-on-every-path-at-a-grid-date-exposure-path) | input | active |  | 7 |
 | `EXP` | `exposure-result` | [counterparty-risk](counterparty-risk.md#exp-exposure-profile-of-a-scope-computed-exposure-result) | computed | active |  | 0 |
 | `XWIF` | `exposure-whatif` | [counterparty-risk](counterparty-risk.md#xwif-exposure-what-if-before-dealing-computed-python-exposure-whatif) | computed | active |  | 0 |
+| `XOFC` | `exposure-official-cpty` | [counterparty-risk](counterparty-risk.md#xofc-exposure-official-results-by-netting-set-and-counterparty-published-exposure-official-cpty) | computed | active |  | 0 |
 | `LEI` | `lei-entity` | [gleif](gleif.md#lei-lei-legal-entity-lei-entity) | fundamental | active |  | 4 |
 | `LEIG` | `lei-group` | [gleif](gleif.md#leig-lei-ownership-group-lei-group) | fundamental | active |  | 7 |
 | `LEIR` | `lei-relationship` | [gleif](gleif.md#leir-lei-parent-relationship-lei-relationship) | fundamental | active |  | 4 |

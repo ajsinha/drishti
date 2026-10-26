@@ -12,7 +12,7 @@
 #
 # See the LICENSE file in the root of this repository for the full terms.
 
-# SAMPLE PYTHON TRANSFORM: two frames in (one-day P&L by counterparty from trading-risk, exposure by counterparty from counterparty-exposure), one frame out.
+# SAMPLE PYTHON TRANSFORM: two frames in (one-day P&L by counterparty from trading-risk, exposure by counterparty from counterparty-exposure: since 2.9.0 the exposure engine's computed peaks, its official end-of-day results), one frame out.
 # The frames are pandas DataFrames of what the person running it may see (their row rules, their masks): the server asks the two datasets as them and
 # hands the answers over. The frame it returns is the table of the derived dataset desk-pnl-vs-exposure-py. Reference: docs/guides/PYTHON_BI.md section 13.
 

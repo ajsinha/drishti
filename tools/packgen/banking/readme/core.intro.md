@@ -26,11 +26,10 @@ fields:
     NEWS_ID: Its headlines (news-and-markets pack, when it is on)
     CREDIT_CURVE: Its credit curve (market-data pack)
     COUNTRY: Country of incorporation (ISO 3166 alpha-2)
-    PFE_PEAK: Peak potential future exposure over all its netting sets (USD)
     KYC: Know-your-customer record (status, risk rating, last review, EMIR classification, one-year PD)
     CREDIT_LIMIT: Its credit limit (USD)
     HIERARCHY: The group, agreements and netting sets above and below it, as nodes and edges for the hierarchy panel
-    NETTING_SETS: Its netting sets with exposure figures
+    NETTING_SETS: Its netting sets (trades, net MTM); their exposure is computed (EXP NSET:<id>), not stored
   counterparty-group:
     MEMBERS: The counterparties in the group
   issuer:

@@ -34,6 +34,7 @@ kinds:
 - exposure-path
 - exposure-result
 - exposure-whatif
+- exposure-official-cpty
 commands:
   AGR: agreement
   CSA: csa
@@ -48,6 +49,7 @@ commands:
   XPATH: exposure-path
   EXP: exposure-result
   XWIF: exposure-whatif
+  XOFC: exposure-official-cpty
   CCR: pack overview
 depends-on:
   packs:
@@ -56,6 +58,7 @@ depends-on:
   - collateral-store
   - credit-store
   - exposure-engine
+  - exposure-results
   - exposure-store
   - exposure-whatif
   - legal-store
@@ -502,6 +505,16 @@ About: Exposure what-if before dealing.
 
 No samples ship: documents are read live from its connector `exposure-whatif` (plugin `reactive`).
 
+### `exposure-official-cpty`
+
+**Exposure official results by netting set and counterparty (published)** · mnemonic `XOFC` · read through connector `exposure-results`.
+
+About: Exposure official result.
+
+**Id:** set by its connector (no samples ship).
+
+No samples ship: documents are read live from its connector `exposure-results` (plugin `delta`).
+
 ## Screens and commands
 
 | Command | Kind | Opens |
@@ -519,6 +532,7 @@ No samples ship: documents are read live from its connector `exposure-whatif` (p
 | `XPATH` | `exposure-path` | Exposure path (a trade's MtM on every path at a grid date) |
 | `EXP` | `exposure-result` | Exposure profile of a scope (computed) |
 | `XWIF` | `exposure-whatif` | Exposure what-if before dealing (computed, Python) |
+| `XOFC` | `exposure-official-cpty` | Exposure official results by netting set and counterparty (published) |
 | `CCR` | — | The pack's overview: its kinds, how many each holds, an example of each |
 
 Examples:
@@ -565,6 +579,7 @@ The connectors it brings (written once to `config/connectors/<name>.yaml`, then 
 | `legal-store` | `delta` | `agreement`, `csa` | `${DRISHTI_LAKE_ENABLED:true}` |
 | `credit-store` | `delta` | `netting-set`, `credit-limit`, `cva`, `sa-ccr` | `${DRISHTI_LAKE_ENABLED:true}` |
 | `collateral-store` | `delta` | `collateral-balance`, `margin-call`, `simm` | `${DRISHTI_LAKE_ENABLED:true}` |
+| `exposure-results` | `delta` | `exposure-official-cpty` | `${DRISHTI_EXPOSURE_ENABLED:true}` |
 | `exposure-store` | `delta` | `simulation-run`, `exposure-path` | `${DRISHTI_LAKE_ENABLED:true}` |
 | `exposure-engine` | `reactive` | `exposure-result` | `${DRISHTI_EXPOSURE_ENABLED:true}` |
 | `exposure-whatif` | `reactive` | `exposure-whatif` | `${DRISHTI_EXPOSURE_ENABLED:true}` |

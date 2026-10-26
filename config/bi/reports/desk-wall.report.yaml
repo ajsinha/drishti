@@ -82,13 +82,13 @@ pages:
         from: { report: live-exposure, visual: netmtm }
         at: { x: 3, y: 0, w: 3, h: 3 }
         alert: { on: Net MTM, warn: { op: lt, value: 0 }, crit: { op: lt, value: -300000000 } }
-      - id: ee
+      - id: collateral
         type: tile
-        from: { report: live-exposure, visual: ee }
+        from: { report: live-exposure, visual: collateral }
         at: { x: 6, y: 0, w: 3, h: 3 }
-      - id: pfe
+      - id: utilisation
         type: tile
-        from: { report: live-exposure, visual: pfe }
+        from: { report: live-exposure, visual: utilisation }
         at: { x: 9, y: 0, w: 3, h: 3 }
       - id: worst
         type: tile

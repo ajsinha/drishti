@@ -21,6 +21,9 @@
 # CONVERTED from datasets/desk-pnl-vs-exposure-py.dataset.yaml (rachana: 1) by the dataset-to-model converter (drishti.py bi migrate --models;
 # docs/architecture/BI_MODEL_SPEC.md section 8). The model keeps the old name and table names as aliases, so fields read as before.
 
+# EDITED AFTER CONVERSION (2.9.0): the retired stored exposure (EE_PEAK, PFE_PEAK) left the netting set; exposure is read from the
+# published official results (counterparty-exposure-official-*, docs/guides/BI_GUIDE.md "Exposure in BI"). This file is no longer the converter's output.
+
 rachana: 2
 expressions: 2                  # DEL v2, the Python-like expression language (docs/guides/EXPRESSIONS.md)
 dataset: desk-pnl-vs-exposure-py-result
@@ -34,7 +37,7 @@ source:
   python: pnl-vs-exposure
   inputs:                       # each a model query, asked as the reader (their row rules and masks)
     pnl: { model: trading-risk@1, select: { fields: [counterparties.id, counterparties.NAME], measures: [P&L 1d, Trades] } }
-    exposure: { model: counterparty-exposure@1, select: { fields: [counterparties.id, counterparties.SECTOR], measures: [Exposure (EE peak), Exposure (PFE peak)] } }
+    exposure: { model: counterparty-exposure@1, select: { fields: [counterparties.id, counterparties.SECTOR], measures: [Exposure (EE peak), Exposure (PFE peak)] } }   # the computed peaks (2.9.0): the sets' EE peaks summed, the counterparty's own PFE
   params: { floor: 1.0 }
 grain: { keys: [counterparty] }   # the converter takes the first column as the key: check it says what one row is
 columns:

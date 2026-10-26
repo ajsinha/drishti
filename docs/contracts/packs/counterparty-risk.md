@@ -34,6 +34,7 @@ One section per command of the pack: the shape of its data, how it is stored and
 | [XPATH](#xpath-exposure-path-a-trades-mtm-on-every-path-at-a-grid-date-exposure-path) | `exposure-path` | input | active | 20 | 7 |
 | [EXP](#exp-exposure-profile-of-a-scope-computed-exposure-result) | `exposure-result` | computed | active | 27 | 0 |
 | [XWIF](#xwif-exposure-what-if-before-dealing-computed-python-exposure-whatif) | `exposure-whatif` | computed | active | 27 | 0 |
+| [XOFC](#xofc-exposure-official-results-by-netting-set-and-counterparty-published-exposure-official-cpty) | `exposure-official-cpty` | computed | active | 32 | 0 |
 
 ## AGR: Master agreement (`agreement`)
 
@@ -960,3 +961,72 @@ A scope's exposure before and after candidate trades kept in the person's privat
 - No stored key: an answer's id is the base scope (the id in the request); the parameters ride on it (sandbox, q, collateral, sets).
 - The candidates' paths are supplied in the sandbox (TRADE_ID, LABEL, NETTING_SET, MTM of G x P values of the run, MTM0, LIFE_YEARS, RUN_ID), priced elsewhere (an upstream what-if service, or a copy of a booked trade's paths, scaled); a candidate joins a netting set the scope covers whole, or none (a netting set of its own, uncollateralised).
 - The tables profile (TENOR, DATE, T, EE_BASE, EE, ENE_BASE, ENE, PFE_BASE, PFE, INCREMENTAL_EE, INCREMENTAL_PFE) and items (TRADE_ID, LABEL, NETTING_SET, PEAK_PFE_ALONE, INCREMENTAL_PEAK_PFE) come with the answer.
+
+## XOFC: Exposure official results by netting set and counterparty (published) (`exposure-official-cpty`)
+
+The official end-of-day exposure (current exposure, EPE, effective EPE, peak EE, peak PFE at 95% and 99%) of every netting set, counterparty and connected group, as the server captured and published it (one row per scope, business date and result version); read only, for BI and other readers, never an engine's input.
+
+|  |  |
+|---|---|
+| Contract | [exposure-official-cpty.contract.yaml](../../../config/packs/counterparty-risk/contracts/exposure-official-cpty.contract.yaml) · version 1.1 |
+| Class | computed |
+| Status | active |
+| Source | computed by Drishti: the official end-of-day exposure capture (ExposureOfficial), appended by ExposurePublisher to risk-results/exposure-official-cpty |
+| Grain | One row per scope (netting set, counterparty or group) per BUSINESS_DATE and RESULT_VERSION, keyed by NODE_ID and RESULT_VERSION; the latest version of a date is the date's figure. |
+| Key | `NODE_ID`, `RESULT_VERSION` |
+| Id pattern | — |
+| Dated by | `BUSINESS_DATE` |
+| Cadence | daily (due: when the date's inputs load (the data-load signal), at start for the newest date without a record, or by an administrator) |
+| Storage | connector `exposure-results` (plugin `delta`), table `<root>/risk-results/exposure-official-cpty/` |
+| Columns | `HIERARCHY`, `NODE_ID`, `NODE_NAME`, `PARENT_ID`, `LEVEL`, `COUNTERPARTY`, `LEGAL_ENTITY`, `RESULT_VERSION`, `RUN_ID`, `PATHS`, `CE`, `EPE`, `EEPE`, `PEAK_EE`, `PEAK_PFE_95`, `PEAK_PFE_99`, `EAD_IMM`, `PEAK_PFE_DATE`, `PFE_95_1Y`, `PFE_95_5Y`, `EE_1Y`, `EE_5Y`, `NETTING_SETS`, `TRADES`, `FAILED_TRADES`, `PARTIAL_SETS` |
+| Partitioned by | `business_date` |
+
+**Fields**
+
+| Field | Type | Presence | Unit | Description | Example or values | Link |
+|---|---|---|---|---|---|---|
+| `BUSINESS_DATE` | date | required |  | The business date (the partition column business_date). |  |  |
+| `HIERARCHY` | text | required |  | The row type: a netting set, a counterparty (its netting sets netted path by path) or a connected group. | `NSET`, `CPTY`, `GROUP` |  |
+| `NODE_ID` | id | required |  | The scope, in the scope grammar (EXP <NODE_ID> computes it again now). | `NSET:NS-ALDERSHOT-FRA` |  |
+| `NODE_NAME` | text | required |  | The netting set's id for a netting set; the counterparty's name for a counterparty; the group's id for a group. |  |  |
+| `PARENT_ID` | id | optional |  | A netting set's counterparty; a counterparty's group; none for a group. |  |  |
+| `LEVEL` | text | required |  | — | `netting-set`, `counterparty`, `group` |  |
+| `COUNTERPARTY` | id | optional |  | The counterparty of a netting-set or counterparty row (none for a group). | `CP-ALDERSHOT` | `counterparty` |
+| `LEGAL_ENTITY` | id | optional |  | The bank's legal entity of a netting set. |  |  |
+| `RESULT_VERSION` | integer | required |  | 1, then 2, 3 ... on a restatement. |  |  |
+| `INPUT_VERSIONS` | text | required |  | The inputs' versions, as JSON text. |  |  |
+| `COMPUTED_AT` | timestamp | required |  | — |  |  |
+| `CONTRACT_VERSION` | text | required |  | — | `1.1` |  |
+| `RUN_ID` | id | required |  | — |  | `simulation-run` |
+| `PATHS` | integer | required |  | — |  |  |
+| `CALIBRATION` | text | optional |  | — |  |  |
+| `CE` | amount | optional | USD | Current exposure after collateral. |  |  |
+| `EPE` | amount | optional | USD | Expected positive exposure over the first year. Additive across netting sets. |  |  |
+| `EEPE` | amount | optional | USD | Effective expected positive exposure. Not additive. |  |  |
+| `PEAK_EE` | amount | optional | USD | The highest expected exposure over the primary dates. A sum of netting sets' peaks is a reporting sum, not the peak of the sum. |  |  |
+| `PEAK_PFE_95` | amount | optional | USD | The highest 95% potential future exposure over the primary dates. Not additive; a counterparty's is its own row. |  |  |
+| `PEAK_PFE_99` | amount | optional | USD | The highest 99% potential future exposure. Not additive. |  |  |
+| `EAD_IMM` | amount | optional | USD | 1.4 times EEPE (informational). |  |  |
+| `PEAK_PFE_DATE` | date | optional |  | — |  |  |
+| `PFE_95_1Y` | amount | optional | USD | — |  |  |
+| `PFE_95_5Y` | amount | optional | USD | — |  |  |
+| `EE_1Y` | amount | optional | USD | — |  |  |
+| `EE_5Y` | amount | optional | USD | — |  |  |
+| `PROFILE` | text | optional |  | The profile (TENOR, DATE, EE, ENE, EEE, PFE_95, PFE_99) as JSON text. |  |  |
+| `NETTING_SETS` | integer | optional |  | — |  |  |
+| `TRADES` | integer | optional |  | — |  |  |
+| `FAILED_TRADES` | integer | optional |  | — |  |  |
+| `PARTIAL_SETS` | integer | optional |  | — |  |  |
+
+**Links:** `COUNTERPARTY` → `counterparty`, `RUN_ID` → `simulation-run`.
+
+**Validation**
+
+- required: fields `NODE_ID`, `RESULT_VERSION`
+- unique: key `NODE_ID`, `RESULT_VERSION`; per BUSINESS_DATE
+
+**Notes**
+
+- Append only (delta.appendOnly), the retention years of log and removed files: a restated date adds rows with the next RESULT_VERSION; nothing is overwritten. The BI datasets counterparty-exposure-official-netting-sets and -counterparties keep the latest version of each scope and date.
+- Restricted: it names counterparties. No engine reads it: the only connectors over risk-results are read-only ones of computed kinds (tools/test_contracts.py).
+- The id is <HIERARCHY>:<NODE_ID>@<date>#v<RESULT_VERSION>; EXP <NODE_ID> computes the scope again now.

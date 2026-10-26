@@ -701,7 +701,7 @@ wins:
    `labels: { NET_MTM: Net MTM (USD) }`; a more specific pack wins over a general one;
 3. the **global taxonomy**: `labels:` in the core semantics (or the site's replacement, `drishti.inference.semantics-file`);
 4. the field name in words, spelled with the packs' and the core's `acronyms:` (the `core` pack lists MTM, PV, DV01, PFE, EE, CVA, VaR,
-   KYC, EMIR, LEI, UEN, FX, OIS…): `PFE_PEAK` → *PFE peak*, `PD_1Y` → *PD 1y*, a camel-case `dv01ByTenor` → *DV01 by tenor*.
+   KYC, EMIR, LEI, UEN, FX, OIS…): `PEAK_PFE` → *Peak PFE*, `PD_1Y` → *PD 1y*, a camel-case `dv01ByTenor` → *DV01 by tenor*.
 
 An expression that reads no field (`"'Fixed'"`) gets the expression text itself as its label, so give such columns a label. Inference
 labels the fields it lays out the same way.

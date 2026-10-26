@@ -22,7 +22,7 @@ description: Trades and netting sets of the model cp-risk, joined by counterpart
 dataset: mq:cp-risk@1
 fields: [trade.COUNTERPARTY, trade.MTM, trade.PNL_1D]
 extracts:
-  - { name: exposure, dataset: mq:cp-risk@1, fields: [netting_set.COUNTERPARTY, netting_set.EE_PEAK] }
+  - { name: exposure, dataset: mq:cp-risk@1, fields: [netting_set.COUNTERPARTY, netting_set.PEAK_EE] }
 cells:
   - type: python
     source: |
@@ -30,15 +30,15 @@ cells:
       naive = df.merge(ns, on="COUNTERPARTY", how="inner")
       print("trade rows", len(df), " netting-set rows", len(ns), " rows after the row join", len(naive))
       print("P&L 1d   true %.0f   row join %.0f" % (df["PNL_1D"].sum(), naive["PNL_1D"].sum()))
-      print("EE peak  true %.0f   row join %.0f" % (ns["EE_PEAK"].sum(), naive["EE_PEAK"].sum()))
+      print("EE peak  true %.0f   row join %.0f" % (ns["PEAK_EE"].sum(), naive["PEAK_EE"].sum()))
     target: server
   - type: python
     source: |
       mtm = df.groupby("COUNTERPARTY", as_index=False)["MTM"].sum()
-      ee = extract("exposure").groupby("COUNTERPARTY", as_index=False)["EE_PEAK"].sum()
-      g = mtm.merge(ee, on="COUNTERPARTY", how="left").sort_values("EE_PEAK", ascending=False).head(10)
+      ee = extract("exposure").groupby("COUNTERPARTY", as_index=False)["PEAK_EE"].sum()
+      g = mtm.merge(ee, on="COUNTERPARTY", how="left").sort_values("PEAK_EE", ascending=False).head(10)
       result = {"title": {"text": "MTM and expected exposure of the ten largest counterparties"}, "legend": {"top": 24},
                 "xAxis": {"type": "category", "data": list(g["COUNTERPARTY"]), "axisLabel": {"rotate": 30}}, "yAxis": {"type": "value"},
                 "series": [{"name": "MTM", "type": "bar", "data": [float(v) for v in g["MTM"]]},
-                           {"name": "Exposure (EE peak)", "type": "bar", "data": [float(v) for v in g["EE_PEAK"]]}]}
+                           {"name": "Exposure (EE peak)", "type": "bar", "data": [float(v) for v in g["PEAK_EE"]]}]}
     target: server

@@ -673,7 +673,7 @@ functions:
     description: "The position of each row of the answer by the aggregate, 1 for the highest (desc=False: 1 for the lowest); ties share a rank and leave gaps."
     examples:
       - { expr: "rank(sum(trades.MTM))", says: "MTM rank, best first" }
-      - { expr: "rank(sum(netting_sets.EE_PEAK), by=[counterparties.SECTOR])", says: "exposure rank within each sector" }
+      - { expr: "rank(sum(set_exposure.PEAK_EE), by=[counterparties.SECTOR])", says: "exposure rank within each sector" }
     edge-cases:
       nulls: "None values rank last."
 

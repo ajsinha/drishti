@@ -192,7 +192,7 @@ class TheRetiredStoredVersions(unittest.TestCase):
 
     def test_no_connector_reads_the_published_results(self):
         """No engine's input is a published result. The one exception is a read-only Delta connector over risk-results whose kinds are all
-        computed (var-official, for BI since 2.9.0): it is left out of the text check, and no reactive connector may read or trigger on its kinds."""
+        computed (var-official and exposure-official-cpty, for BI since 2.9.0): it is left out of the text check, and no reactive connector may read or trigger on its kinds."""
         published = set()
         texts = []
         for p, m in self.manifests.items():
@@ -205,6 +205,7 @@ class TheRetiredStoredVersions(unittest.TestCase):
                     del conns[name]
             texts.append((p, json.dumps(conns)))
         self.assertIn("var-official", published)
+        self.assertIn("exposure-official-cpty", published)
         for p, m in self.manifests.items():
             for name, c in (m.get("connectors") or {}).items():
                 if c.get("plugin") != "reactive":
