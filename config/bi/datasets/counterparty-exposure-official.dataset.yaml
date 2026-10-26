@@ -37,7 +37,7 @@ columns:
   NODE_NAME:      { type: string }                       # the netting set's id; the counterparty's name; the group's id
   PARENT_ID:      { type: string }
   LEVEL:          { type: string }
-  COUNTERPARTY:   { type: string }                       # the counterparty id (a pack reference here would stop the columnar scan)
+  COUNTERPARTY:   { type: string, references: counterparty }
   LEGAL_ENTITY:   { type: string }
   RESULT_VERSION: { type: integer }
   RUN_ID:         { type: string }

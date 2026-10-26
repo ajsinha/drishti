@@ -76,7 +76,7 @@ def grains(c: Ctx):
     ensure(c)
     login(c, height=900)
     for name, pic in ((TRADE, "01-trade-dataset.jpg"), (NETTING, "02-netting-set-dataset.jpg")):
-        go(c, "/bi/ds/" + name, wait='[data-layer-dataset][data-ready="yes"]', settle=1200)
+        go(c, "/bi/ds/" + (name if name.startswith("pack.") else "file:dataset:" + name), wait='[data-layer-dataset][data-ready="yes"]', settle=1200)
         c.page.evaluate("window.scrollTo(0, 0)")
         c.save(pic, clip={"x": 240, "y": 56, "width": 1040, "height": 640})
 
