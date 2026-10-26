@@ -13,6 +13,43 @@
 
   See the LICENSE file in the root of this repository for the full terms.
 -->
+# Drishti 2.8.0 — release notes
+
+*2026-10-26.* **Every command has a data contract; VaR is computed for any scope, never stored; commands can be switched off; forms save.**
+The scope of 2.8.0 was narrowed by the product owner to fundamentals and VaR; the other computed measures are parked with their
+designs kept ([IMPLEMENTATION_PLAN.md](docs/architecture/IMPLEMENTATION_PLAN.md#the-computed-measures-roadmap-280-to-2120-product-owner-2026-10-25)).
+
+- **Data contracts** ([docs/contracts](docs/contracts/README.md)): the shared rules (keys, types, dates, signs, vectors, delivery,
+  validation, entitlements, versioning, retirement); a machine-readable contract for every command
+  (`config/packs/<pack>/contracts/<kind>.contract.yaml`, `drishti.py contract`), generated pages, and the **command catalog**
+  ([COMMAND_CATALOG.md](docs/guides/COMMAND_CATALOG.md)): every command with what it does and an example. The detailed VaR contract is
+  [VAR.md](docs/contracts/VAR.md); the parked measures' contracts (FRTB, SIMM, SA-CCR, EXP, CVA, stress, P&L explain …) are kept as designs.
+- **VaR, complete** ([VAR_GUIDE.md](docs/guides/VAR_GUIDE.md), tutorial 25):
+  - the stored `var` and `var-node` kinds are **retired**: `VAR-*` ids and links open the explorer; positions, portfolios and desks
+    carry no stored VaR figure, their pages show the engine's, computed as the reader; a guard test keeps it so;
+  - **every live trade** valued (9,572 trades), **positions derived by Drishti** from config rules (securities by book and security,
+    listed by book and contract, OTC one per trade), 28 portfolios; new scope words `LE:` and `CPTY:`;
+  - **official end-of-day captures** of every node, published to `risk-results/var-official` for other systems; the **data-load signal
+    reloads** the engine; vectors kept **7 years**; bad vectors, duplicate trades and mixed runs refused with DRS-5201..5204;
+  - **memory tiering**: a memory-mapped float32 hot file per date (sums in float64), history reopened in milliseconds; benchmark
+    measured at 100k trades and extrapolated to 1M × 50 dates;
+  - `VRES` (VaR as an ordinary page) and `VWIF` (what-if on the Python workers: before and after, incremental, stressed window);
+    `drishti.py var`.
+  - **The numbers change:** with every live trade the bank's VaR on the test data is about 112m (the 1,673-trade sample gave 9.9m); the
+    old stored VAR-COMM (446.9m) was not a historical-simulation figure.
+- **Admin → Commands** ([COMMANDS.md](docs/admin/COMMANDS.md)): switch any command off for everyone; it then answers "not active"
+  everywhere (page, API, command, CLI, search, exports, BI, AI; `403 DRS-1016`), stored in the Drishti database and gossiped to every
+  server; ready for role-based access.
+- **Write-back** ([WRITE_BACK.md](docs/architecture/WRITE_BACK.md), [EDITS.md](docs/admin/EDITS.md), tutorial 24, off by default):
+  forms save through an edit log in the Drishti database, with four-eyes approval, a cluster mode, JDBC writes through an outbox, and
+  reactive recomputes and live updates after each change.
+- **Branding from configuration:** the product name, owner, copyright and notices come from configuration only; guard tests.
+- **Fixed:** opening the console no longer replays old notices as a flurry of toasts; VaR explorer and official capture wait for the
+  lake's connectors at start.
+- **Known open:** the VRES page shows the 99% confidence as "1"; sharding one date across Drishti*net members, pricing a what-if trade,
+  the S3 edit log and inline cell editing are not built; the drill's browser tests rewrite documentation screenshots.
+- **Tested:** the drill passed licence headers, Java 21, Java 25, the tools and the console.
+
 # Drishti 2.7.0 — release notes
 
 *2026-10-24.* **Sutra Next: screens that respond, built from one UI kit, designed in plain words; two public-data packs.**

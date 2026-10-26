@@ -151,7 +151,7 @@ ports of their own, so that nothing of yours is touched: the seven shipped packs
 ```bash
 export JAVA_HOME=/usr/lib/jvm/java-21-openjdk-amd64
 DRISHTI_PORT=18996 DRISHTI_PACKS=core,market-data,trading,counterparty-risk,market-risk,world-economy,news-and-markets,helpdesk \
-  java -jar drishti-server/target/drishti-server-2.7.0-exec.jar
+  java -jar drishti-server/target/drishti-server-2.8.0-exec.jar
 DRISHTI_BACKEND_URL=http://127.0.0.1:18996 DRISHTI_CONSOLE_PORT=17996 drishti-console/.venv/bin/python drishti-console/run_drishti_web.py
 ```
 
@@ -558,7 +558,7 @@ nonEmpty: [history]       # these panels must render with data on every sample
 ```
 
 ```bash
-java -jar drishti-server/target/drishti-server-2.7.0-exec.jar sutra test config/packs/helpdesk --junit target/sutra-tests.xml
+java -jar drishti-server/target/drishti-server-2.8.0-exec.jar sutra test config/packs/helpdesk --junit target/sutra-tests.xml
 ```
 
 ```text

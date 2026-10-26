@@ -278,7 +278,7 @@ And the machine itself, in one command, before you start anything:
 ```text
 $ python3 tools/drishti.py doctor --server http://localhost:18480
 GREEN  java                    /usr/lib/jvm/java-21-openjdk-amd64/bin/java: Java 21.0 (Ubuntu)
-GREEN  server jar              ~/drishti/drishti-server/target/drishti-server-2.7.0-exec.jar (version 2.5.0)
+GREEN  server jar              ~/drishti/drishti-server/target/drishti-server-2.8.0-exec.jar (version 2.5.0)
 GREEN  python                  /usr/bin/python3: Python 3.14.4
 GREEN  python pyyaml           installed
 YELLOW python deltalake        not installed (needed for data ingest --store delta)
@@ -290,7 +290,7 @@ GREEN  console venv            ~/drishti/drishti-console/.venv
 GREEN  configured directories  none of DRISHTI_DELTA_ROOT, DRISHTI_FILES_ROOT, DRISHTI_PACKS_INSTALLED is set
 GREEN  port 18480              in use by Drishti: status UP
 GREEN  port 17480              in use by Drishti: answers 404 on /actuator/health, as the Drishti console does
-YELLOW server                  http://localhost:18480: version 2.7.0, java 21.0.12.1, status DEGRADED
+YELLOW server                  http://localhost:18480: version 2.8.0, java 21.0.12.1, status DEGRADED
 GREEN  token                   accepted; this token acts as drishti-dev-admin: scopes bi:write, design:write, loads:write, packs:admin
 doctor: 0 red, 3 yellow
 ```

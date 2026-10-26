@@ -94,7 +94,7 @@ Now ask the machine whether it is ready. `doctor` prints green, yellow and red l
 ```text
 $ drishti-console/.venv/bin/python tools/drishti.py doctor
 GREEN  java                    /usr/lib/jvm/java-21-openjdk-amd64/bin/java: Java 21.0 (Ubuntu)
-GREEN  server jar              ~/drishti/drishti-server/target/drishti-server-2.7.0-exec.jar (version 2.5.0)
+GREEN  server jar              ~/drishti/drishti-server/target/drishti-server-2.8.0-exec.jar (version 2.5.0)
 GREEN  python                  ~/drishti/drishti-console/.venv/bin/python: Python 3.13.15
 GREEN  python pyyaml           installed
 GREEN  python deltalake        installed
@@ -126,7 +126,7 @@ export DRISHTI_SECURITY_ENABLED=true
 export DRISHTI_TOKEN_SECRET=drishti-dev-only-token-secret-change-me-0123456789
 export DRISHTI_SEED_ADMIN=true
 mkdir -p data/tmp/server        # Java's temp folder for the server: native libraries unpack here, not in /tmp
-java -Djava.io.tmpdir=data/tmp/server -jar drishti-server/target/drishti-server-2.7.0-exec.jar
+java -Djava.io.tmpdir=data/tmp/server -jar drishti-server/target/drishti-server-2.8.0-exec.jar
 ```
 
 The console, in the second (the same token secret, so the two trust each other):
@@ -361,7 +361,7 @@ With it, `doctor` checks the token too, and the server answers. `server health` 
 ```text
 $ drishti-console/.venv/bin/python tools/drishti.py doctor --server http://localhost:18480
 ...
-GREEN  server                  http://localhost:18480: version 2.7.0, java 21.0.12.1, status OK
+GREEN  server                  http://localhost:18480: version 2.8.0, java 21.0.12.1, status OK
 GREEN  token                   accepted; this token 'SLq29IMYJkTj' acts as drishti-dev-admin: scopes design:write, loads:write, packs:admin, bi:write, expires 2026-11-16T21:47:27.779Z
 doctor: all clear
 ```
