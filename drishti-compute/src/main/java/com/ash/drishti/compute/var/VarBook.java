@@ -30,7 +30,8 @@ import java.util.concurrent.ConcurrentHashMap;
  * One business date of the VaR engine in memory (VAR_DATA_MODEL.md sections 11 to 13): every trade's P&amp;L vector in a
  * {@link VectorStore}, ordered by the primary hierarchy (legal entity, desk, book, position, trade) so a book and a position are each
  * one run of ordinals; the trades' and the positions' attributes column by column; the hierarchies' nodes with their members; the
- * node aggregates (every book's and node's vector, summed once when the date is loaded); and the nodes' official history.
+ * node aggregates (every book's and node's vector, summed once when the date is loaded). Positions are derived here from the trades'
+ * {@code POSITION_ID} (set by the loader from the configured rules, {@link PositionRules}): each is one run of the sorted trades.
  *
  * <p>The vector grain is the trade: a position's vector is the sum of its trades' (a run of ordinals), so a trade, a position, a book
  * and any basket of trades or positions are all exact, and a long and a short in one position net in the sum. Immutable once built,
@@ -40,19 +41,37 @@ public final class VarBook {
 
     /** The trades' text columns the engine keeps (from the pnl-vector rows), in this order. */
     public static final List<String> TRADE_TEXTS = List.of("POSITION_ID", "LEGAL_ENTITY", "DIVISION", "DESK", "TT_BOOK", "PORTFOLIO",
-            "PRODUCT_GROUP", "PRODUCT_TYPE", "CURRENCY", "COUNTERPARTY", "DIRECTION", "INSTRUMENT_ID");
+            "PRODUCT_GROUP", "PRODUCT_TYPE", "CURRENCY", "COUNTERPARTY", "DIRECTION", "INSTRUMENT_ID", "SECURITY_ID", "INSTRUMENT", "STRATEGY",
+            "TAGS", "POSITION_RULE");
     public static final List<String> TRADE_NUMBERS = List.of("QUANTITY", "PV");
-    /** The positions' columns (from the position records). */
+    /**
+     * The positions' columns, derived from their trades when the date is built (VAR.md section 3.7): the first trade's instrument,
+     * hierarchy, product and rule; the direction of the net quantity; the counterparty when every trade has the same one; the tags of
+     * every trade; and the sums (signed quantity, market value from the trades' PV, notional as the gross quantity, trade counts).
+     */
     public static final List<String> POSITION_TEXTS = List.of("INSTRUMENT_ID", "INSTRUMENT", "DIRECTION", "LEGAL_ENTITY", "DIVISION", "DESK",
-            "TT_BOOK", "PORTFOLIO", "PRODUCT_GROUP", "PRODUCT_TYPE", "CURRENCY", "COUNTERPARTY", "STRATEGY", "TAGS", "STATUS");
-    public static final List<String> POSITION_NUMBERS = List.of("QUANTITY", "MARKET_VALUE", "NOTIONAL", "TRADE_COUNT");
+            "TT_BOOK", "PORTFOLIO", "PRODUCT_GROUP", "PRODUCT_TYPE", "CURRENCY", "COUNTERPARTY", "STRATEGY", "TAGS", "STATUS", "SECURITY_ID",
+            "POSITION_RULE", "POSITION_TYPE");
+    public static final List<String> POSITION_NUMBERS = List.of("QUANTITY", "MARKET_VALUE", "NOTIONAL", "TRADE_COUNT", "LONG_TRADES",
+            "SHORT_TRADES");
 
     /** A node of a hierarchy: its books and its members (the union of its books' runs). */
     public record Node(String id, String hierarchy, String level, String name, String parent, List<String> children, List<String> books,
             double limit, OrdinalSet members) {}
 
-    /** A node's official figures over time (var-node), oldest first. */
-    public record NodeHistory(LocalDate[] dates, double[] var, double[] es, double[] hypo, double[] limit) {}
+    /** The same trade id twice on one date: the date is refused whole (VAR.md section 10.4). */
+    public static final class DuplicateTrade extends IllegalStateException {
+        private final String tradeId;
+
+        public DuplicateTrade(String tradeId) {
+            super("the trade " + tradeId + " has two P&L vectors on one business date: one row per trade, date and scenario set");
+            this.tradeId = tradeId;
+        }
+
+        public String tradeId() {
+            return tradeId;
+        }
+    }
 
     private final LocalDate businessDate;
     private final String scenarioSet;
@@ -70,8 +89,8 @@ public final class VarBook {
     private final Map<String, Node> nodes;
     private final Map<String, int[]> bookRange;
     private final Map<String, double[]> aggregates;
-    private final Map<String, NodeHistory> history;
-    private final Map<String, double[]> officialVectors;
+    private final Map<String, Integer> tradeUpper;
+    private final Map<String, Integer> positionUpper;
     private final int failed;
     private final long loadMillis;
     private final Map<Integer, double[]> positionCache = new ConcurrentHashMap<>();
@@ -100,8 +119,8 @@ public final class VarBook {
         this.nodes = nodes;
         this.bookRange = bookRange;
         this.aggregates = aggregates;
-        this.history = Map.copyOf(b.history);
-        this.officialVectors = Map.copyOf(b.officialVectors);
+        this.tradeUpper = upperIndex(tradeIds);
+        this.positionUpper = upperIndex(positionIds);
         this.failed = b.failed;
         this.loadMillis = loadMillis;
     }
@@ -143,6 +162,15 @@ public final class VarBook {
         return loadMillis;
     }
 
+    /** Ids by their upper-case form, for a lookup that ignores case; two ids equal in upper case map to -1 (ambiguous). */
+    private static Map<String, Integer> upperIndex(String[] ids) {
+        Map<String, Integer> out = new HashMap<>(ids.length * 2);
+        for (int i = 0; i < ids.length; i++) {
+            out.merge(ids[i].toUpperCase(java.util.Locale.ROOT), i, (a, x) -> -1);
+        }
+        return out;
+    }
+
     public String tradeId(int ordinal) {
         return tradeIds[ordinal];
     }
@@ -150,6 +178,47 @@ public final class VarBook {
     /** The ordinal of a trade, -1 when the date has no vector for it. */
     public int tradeOrdinal(String id) {
         return tradeOrdinal.getOrDefault(id, -1);
+    }
+
+    /**
+     * The ordinal of a trade written in any case: the id as written when the date has it, else the one id equal to it ignoring case
+     * (a booking system's ids are text and may be lower case; the scope keeps what was typed). -1 when none, or when two ids differ
+     * only in case.
+     */
+    public int tradeOrdinalAnyCase(String id) {
+        int o = tradeOrdinal(id);
+        return o >= 0 ? o : tradeUpper.getOrDefault(id.toUpperCase(java.util.Locale.ROOT), -1);
+    }
+
+    /** A position's index written in any case, as {@link #tradeOrdinalAnyCase}. */
+    public int positionIndexAnyCase(String id) {
+        int p = positionIndex(id);
+        return p >= 0 ? p : positionUpper.getOrDefault(id.toUpperCase(java.util.Locale.ROOT), -1);
+    }
+
+    /** The trades whose text column {@code column} holds one of {@code values}, compared ignoring case: a scope by a trade attribute. */
+    public OrdinalSet tradesWhere(String column, java.util.Collection<String> values) {
+        String[] dict = trades.dictionary(column);
+        boolean[] wanted = new boolean[dict.length];
+        boolean any = false;
+        for (int c = 0; c < dict.length; c++) {
+            for (String v : values) {
+                if (dict[c].equalsIgnoreCase(v)) {
+                    wanted[c] = true;
+                    any = true;
+                }
+            }
+        }
+        OrdinalSet.Builder b = new OrdinalSet.Builder();
+        if (any) {
+            for (int o = 0; o < tradeIds.length; o++) {
+                int code = trades.code(column, o);
+                if (code >= 0 && wanted[code]) {
+                    b.add(o);
+                }
+            }
+        }
+        return b.build();
     }
 
     public Columns trades() {
@@ -236,15 +305,6 @@ public final class VarBook {
     /** A node's vector (summed when the date was loaded); a book's too, under its node id or its book name. */
     public double[] aggregate(String nodeOrBook) {
         return aggregates.get(nodeOrBook);
-    }
-
-    public NodeHistory history(String nodeId) {
-        return history.get(nodeId);
-    }
-
-    /** The node's vector as the batch's precomputation stored it (var-node), to compare with this engine's sum; null when none. */
-    public double[] officialVector(String nodeId) {
-        return officialVectors.get(nodeId);
     }
 
     /** The root of a hierarchy ({@code MGMT~BANK}), or null. */
@@ -363,13 +423,10 @@ public final class VarBook {
         private final VectorStore.Builder vectors;
         private final List<String> ids = new ArrayList<>();
         private final Columns.Builder tradeCols = new Columns.Builder(TRADE_TEXTS, TRADE_NUMBERS);
-        private final Map<String, String[]> positionTexts = new LinkedHashMap<>();
-        private final Map<String, double[]> positionNumbers = new LinkedHashMap<>();
+        private final java.util.Set<String> seen = new java.util.HashSet<>();
         private final List<String[]> nodeRows = new ArrayList<>();
         private final Map<String, List<String>> nodeBooks = new HashMap<>();
         private final Map<String, Double> nodeLimits = new HashMap<>();
-        private final Map<String, NodeHistory> history = new HashMap<>();
-        private final Map<String, double[]> officialVectors = new HashMap<>();
         private int failed;
 
         public Builder(LocalDate businessDate, String scenarioSet, List<LocalDate> scenarioDates, int rowsPerChunk, long budgetBytes) {
@@ -383,8 +440,14 @@ public final class VarBook {
             return vectors.width();
         }
 
-        /** A trade's vector and attributes ({@link #TRADE_TEXTS}, {@link #TRADE_NUMBERS} order); a row with no vector is counted failed. */
+        /**
+         * A trade's vector and attributes ({@link #TRADE_TEXTS}, {@link #TRADE_NUMBERS} order); a row with no vector is counted failed.
+         * The same trade id twice is refused ({@link DuplicateTrade}): the date would count it twice in every node.
+         */
         public synchronized void trade(String id, double[] values, int length, String[] texts, double[] numbers) {
+            if (!seen.add(id)) {
+                throw new DuplicateTrade(id);
+            }
             if (length < 0) {
                 failed++;
                 return;
@@ -394,25 +457,11 @@ public final class VarBook {
             tradeCols.add(texts, numbers);
         }
 
-        /** A position record: its columns ({@link #POSITION_TEXTS}, {@link #POSITION_NUMBERS} order). */
-        public void position(String id, String[] texts, double[] numbers) {
-            positionTexts.put(id, texts.clone());
-            positionNumbers.put(id, numbers.clone());
-        }
-
         /** A node of a hierarchy, with the books beneath it. */
         public void node(String id, String hierarchy, String level, String name, String parent, List<String> books, double limit) {
             nodeRows.add(new String[] {id, hierarchy, level, name, parent});
             nodeBooks.put(id, List.copyOf(books));
             nodeLimits.put(id, limit);
-        }
-
-        public void history(String nodeId, NodeHistory h) {
-            history.put(nodeId, h);
-        }
-
-        public void officialVector(String nodeId, double[] v) {
-            officialVectors.put(nodeId, v);
         }
 
         public int trades() {
@@ -435,7 +484,7 @@ public final class VarBook {
             for (int i = 0; i < n; i++) {
                 tids[i] = ids.get(order[i]);
             }
-            // positions: runs of POSITION_ID in the sorted trades (a trade whose position has no record makes one from itself)
+            // positions: runs of POSITION_ID in the sorted trades (a trade without one is a position of its own)
             List<String> pids = new ArrayList<>();
             List<int[]> runs = new ArrayList<>();
             int[] posOf = new int[n];
@@ -468,21 +517,7 @@ public final class VarBook {
             for (int k = 0; k < pids.size(); k++) {
                 from[k] = runs.get(k)[0];
                 to[k] = runs.get(k)[1];
-                String[] texts = positionTexts.get(pids.get(k));
-                double[] nums = positionNumbers.get(pids.get(k));
-                if (texts == null) {                                  // no record: from its first trade
-                    int o = from[k];
-                    texts = new String[POSITION_TEXTS.size()];
-                    for (int c = 0; c < texts.length; c++) {
-                        texts[c] = tcols.has(POSITION_TEXTS.get(c)) ? tcols.text(POSITION_TEXTS.get(c), o) : null;
-                    }
-                    double q = 0;
-                    for (int o2 = from[k]; o2 < to[k]; o2++) {
-                        q += Double.isNaN(tcols.number("QUANTITY", o2)) ? 0 : tcols.number("QUANTITY", o2);
-                    }
-                    nums = new double[] {q, Double.NaN, Double.NaN, to[k] - from[k]};
-                }
-                pc.add(texts, nums);
+                derivePosition(pc, tcols, from[k], to[k]);
             }
             Map<String, Node> nodes = nodes(books);
             Map<String, double[]> agg = new ConcurrentHashMap<>();
@@ -499,6 +534,58 @@ public final class VarBook {
             }
             long ms = (System.nanoTime() - t0) / 1_000_000;
             return new VarBook(this, store, tids, tcols, posOf, pids.toArray(new String[0]), from, to, pc.build(), nodes, books, agg, ms);
+        }
+
+        /**
+         * A position's columns from its run of trades (VAR.md section 3.7: Drishti derives positions; nothing upstream sends them): the
+         * first trade's instrument, hierarchy, product and rule; the direction of the net quantity; the counterparty when every trade
+         * has the same one (else empty); the tags of every trade; the signed and gross quantities, the market value (the trades' PV)
+         * and the counts.
+         */
+        private static void derivePosition(Columns.Builder pc, Columns t, int from, int to) {
+            String[] texts = new String[POSITION_TEXTS.size()];
+            for (int c = 0; c < texts.length; c++) {
+                String col = POSITION_TEXTS.get(c);
+                texts[c] = t.has(col) ? t.text(col, from) : null;
+            }
+            double q = 0;
+            double mv = 0;
+            double gross = 0;
+            int longs = 0;
+            int shorts = 0;
+            boolean anyPv = false;
+            String cpty = t.text("COUNTERPARTY", from);
+            java.util.TreeSet<String> tags = new java.util.TreeSet<>();
+            for (int o = from; o < to; o++) {
+                double tq = t.number("QUANTITY", o);
+                if (!Double.isNaN(tq)) {
+                    q += tq;
+                    gross += Math.abs(tq);
+                    longs += tq > 0 ? 1 : 0;
+                    shorts += tq < 0 ? 1 : 0;
+                }
+                double pv = t.number("PV", o);
+                if (!Double.isNaN(pv)) {
+                    mv += pv;
+                    anyPv = true;
+                }
+                if (cpty != null && !cpty.equals(t.text("COUNTERPARTY", o))) {
+                    cpty = "";
+                }
+                String tg = t.text("TAGS", o);
+                if (tg != null && !tg.isEmpty()) {
+                    tags.addAll(List.of(tg.split("\\|")));
+                }
+            }
+            if (texts[POSITION_TEXTS.indexOf("INSTRUMENT_ID")] == null) {
+                texts[POSITION_TEXTS.indexOf("INSTRUMENT_ID")] = t.text("POSITION_ID", from);
+            }
+            texts[POSITION_TEXTS.indexOf("DIRECTION")] = q > 0 ? "LONG" : q < 0 ? "SHORT" : "FLAT";
+            texts[POSITION_TEXTS.indexOf("COUNTERPARTY")] = cpty;
+            texts[POSITION_TEXTS.indexOf("TAGS")] = String.join("|", tags);
+            texts[POSITION_TEXTS.indexOf("STATUS")] = q == 0 ? "flat" : "open";
+            texts[POSITION_TEXTS.indexOf("POSITION_TYPE")] = to - from > 1 ? "fungible" : "single-trade";
+            pc.add(texts, new double[] {q, anyPv ? mv : Double.NaN, gross, to - from, longs, shorts});
         }
 
         private Map<String, Node> nodes(Map<String, int[]> books) {

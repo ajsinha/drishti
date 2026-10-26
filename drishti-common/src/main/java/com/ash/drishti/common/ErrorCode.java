@@ -101,6 +101,17 @@ public enum ErrorCode {
     LOAD_PACK_NOT_FOUND("DRS-5011", 404),
     /** A data-load announcement names a kind the pack does not own. */
     LOAD_KIND_UNKNOWN("DRS-5012", 422),
+    /**
+     * VaR: a row of a date's P&amp;L vectors rejected when the date loads (a vector of the wrong length, NaN or infinity in it, not in USD,
+     * a failed row with a vector); never padded or loaded in part. Counted and listed in the answer's provenance, not thrown.
+     */
+    VAR_ROW_REJECTED("DRS-5201", 422),
+    /** VaR: the same trade has two P&amp;L vectors on one business date: the date is not loaded. */
+    VAR_DUPLICATE_TRADE("DRS-5202", 422),
+    /** VaR: a date's inputs are not one run (several batch ids, a vector of another scenario set, two scenario sets, a bad scenario set). */
+    VAR_INCONSISTENT_DATE("DRS-5203", 422),
+    /** VaR: a date's vectors need more memory than the engine's budget (drishti.var.memory-budget-mb): capacity, try later or raise it. */
+    VAR_CAPACITY("DRS-5204", 503),
     /** A connector file or draft that fails validation. */
     CONNECTOR_INVALID("DRS-5031", 422),
     /** A connector changed since it was read (ETag mismatch), already exists, or is in use and the change was not confirmed. */

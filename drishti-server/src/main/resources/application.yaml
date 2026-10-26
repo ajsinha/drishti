@@ -592,23 +592,31 @@ drishti:
     rank-rule: kth-worst             # kth-worst (k = ceil(N (1 - a)): the 6th worst of 509) or interpolated
     component-window: 5              # component VaR averages the scenarios ranked k-2 .. k+2, scaled to add up to the VaR
     threads: ${DRISHTI_VAR_THREADS:0}                  # cores the vector sums use (0: every core)
-    memory-budget-mb: ${DRISHTI_VAR_MEMORY_MB:0}       # most memory the loaded dates' vectors take (0: a quarter of the heap)
+    memory-budget-mb: ${DRISHTI_VAR_MEMORY_MB:0}       # most memory one date's vectors take (0: a quarter of the heap); over it: 503 DRS-5204
     hot-dates: 2                     # business dates kept loaded (the newest)
     history-days: 250                # history and backtest window
     component-scale-to-var: true     # components scaled to add up to the VaR exactly (false: to the smoothed VaR)
     parallel-rows: 4096              # the fewest rows a sum splits across threads
     rows-per-chunk: 65536            # rows per chunk of the in-memory vector store
     histogram-bins: 42               # bins of the P&L distribution sent to the screen
-    max-parts: 5000                  # most parts a contribution table computes at once
+    max-parts: 5000                  # most parts a contribution table computes at once (more: the largest by gross size, and said)
     path-page: 60                    # rows of the ranked P&L path per page
-    kinds:                           # the kinds the engine reads (the market-risk pack's)
+    kinds:                           # the kinds the engine reads (the market-risk pack's), and the kind its derived positions are served as
       vector: pnl-vector
       position: position
       hierarchy: risk-hierarchy
       scenario-set: scenario-set
-      node: var-node
       portfolio: portfolio
     access: {}                       # per role, per node: positions | aggregate (drishti.var.access.<role>[MGMT~DESK-RATES]=aggregate)
+    positions:                       # how positions are derived from the trades when no loaded pack has a positions: section (the market-risk pack's wins)
+      live-statuses: [NEW, VALIDATED, AMENDED]   # trade statuses that count on their date (a row with no status counts)
+      rules: []                      # first match wins: {name, groups: [PRODUCT_GROUP...], types: [PRODUCT_TYPE...], key: [SECURITY_ID, ISIN...]}; none: one position per trade
+    official:                        # the official end-of-day captures (docs/contracts/VAR.md section 9.6)
+      enabled: ${DRISHTI_VAR_OFFICIAL:true}       # capture every node of every hierarchy when a date's inputs are complete (after the data-load signal)
+      publish: true                  # also append them to <root>/risk-results/var-official (Delta, append-only) for other systems
+      root: ${DRISHTI_DELTA_ROOT:${drishti.data.dir:./data}/delta}   # the risk lake's root; an s3:// root is not published by this writer
+      retention-years: 7             # the published table keeps its log and removed files (time travel) this long
+      on-start: true                 # at start, capture the newest date when it has no official record yet
   calc:                              # Calc: Python in the browser (docs/guides/PYTHON_CALC.md); the server never runs the code
     enabled: ${DRISHTI_CALC_ENABLED:true}   # also needs a role with calc, and a pack that enables it for the view's kind
     max-column-rows: 250000          # drishti.columns() returns at most this many entities (the browser holds them all)

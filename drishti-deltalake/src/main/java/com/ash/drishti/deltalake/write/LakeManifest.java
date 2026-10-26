@@ -30,15 +30,28 @@ import java.util.Map;
  *
  * @param table the table's folder
  * @param partitionColumns {@code business_date} then the partition columns
- * @param columns every column with its type ({@code string}, {@code double}, {@code date}, {@code vector}: a list of doubles)
+ * @param columns every column with its type ({@code string}, {@code double}, {@code long}, {@code date}, {@code vector}: a list of
+ *     doubles)
  * @param promoted the promoted columns, read from the third element of a staged row
  * @param mode {@code overwrite-dates}, {@code overwrite-partitions} or {@code append}
  * @param batchRows rows per batch handed to the Parquet writer
  * @param statsColumns the columns that keep min/max statistics (never the document)
  * @param parts the staged files
+ * @param properties Delta table properties set when the table is created ({@code delta.logRetentionDuration},
+ *     {@code delta.deletedFileRetentionDuration}, {@code delta.appendOnly}); an existing table keeps its own
  */
 public record LakeManifest(String table, List<String> partitionColumns, List<Column> columns, List<String> promoted, String mode,
-        int batchRows, List<String> statsColumns, List<Part> parts) {
+        int batchRows, List<String> statsColumns, List<Part> parts, Map<String, String> properties) {
+
+    public LakeManifest {
+        properties = properties == null ? Map.of() : Map.copyOf(properties);
+    }
+
+    /** A manifest with no table properties. */
+    public LakeManifest(String table, List<String> partitionColumns, List<Column> columns, List<String> promoted, String mode, int batchRows,
+            List<String> statsColumns, List<Part> parts) {
+        this(table, partitionColumns, columns, promoted, mode, batchRows, statsColumns, parts, Map.of());
+    }
 
     /** A column and its type. */
     public record Column(String name, String type) {}
@@ -59,8 +72,10 @@ public record LakeManifest(String table, List<String> partitionColumns, List<Col
             p.path("values").fields().forEachRemaining(e -> values.put(e.getKey(), e.getValue().isNull() ? null : e.getValue().asText()));
             parts.add(new Part(Path.of(p.path("file").asText()), p.path("rows").asLong(), values));
         }
+        Map<String, String> properties = new LinkedHashMap<>();
+        n.path("properties").fields().forEachRemaining(e -> properties.put(e.getKey(), e.getValue().asText()));
         LakeManifest m = new LakeManifest(n.path("table").asText(), strings(n.path("partitionColumns")), columns, strings(n.path("promoted")),
-                n.path("mode").asText("overwrite-dates"), n.path("batchRows").asInt(50_000), strings(n.path("statsColumns")), parts);
+                n.path("mode").asText("overwrite-dates"), n.path("batchRows").asInt(50_000), strings(n.path("statsColumns")), parts, properties);
         m.check();
         return m;
     }

@@ -296,7 +296,7 @@ public final class ViewPipeline implements com.ash.drishti.common.LiveSettings {
 
     /** The stored document of {@code ref} as of {@code asOf} (the source's cache serves repeats). */
     public EntityDocument document(EntityRef ref, AsOf asOf) {
-        return fetch(ref, asOf);
+        return stored(ref, asOf);
     }
 
     /** The view of an already fetched document, with what explaining it needs; as {@link #view(EntityRef, AsOf, UnaryOperator, Predicate)}. */
@@ -582,7 +582,30 @@ public final class ViewPipeline implements com.ash.drishti.common.LiveSettings {
         return out;
     }
 
+    /** What adds to a document as its page shows it (the VaR engine's figures on a position, a portfolio, a desk): none by default. */
+    private volatile List<ViewAugmenter> augmenters = List.of();
+
+    /** Sets the augmenters every view, preview and panel record read applies, in order (the stored document is never changed). */
+    public void augmenters(List<ViewAugmenter> list) {
+        this.augmenters = list == null ? List.of() : List.copyOf(list);
+    }
+
+    public List<ViewAugmenter> augmenters() {
+        return augmenters;
+    }
+
+    /** The document as views show it: the stored one, with what the augmenters of its kind add for the caller. */
     private EntityDocument fetch(EntityRef ref, AsOf asOf) {
+        EntityDocument doc = stored(ref, asOf);
+        for (ViewAugmenter a : augmenters) {
+            if (a.augments(ref.kind())) {
+                doc = a.augment(doc, asOf);
+            }
+        }
+        return doc;
+    }
+
+    private EntityDocument stored(EntityRef ref, AsOf asOf) {
         try {
             return router.fetch(ref, asOf.businessDate() == null ? dates.resolve(asOf) : asOf).join();
         } catch (CompletionException e) {

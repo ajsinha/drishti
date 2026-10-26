@@ -27,14 +27,19 @@ import java.util.TreeSet;
  *
  * <pre>
  *   BANK                                   the whole bank (the primary hierarchy's root)
- *   LE:LE-NY   DIV:MARKETS   DESK:RATES   BOOK:BOOK-RATES-2   NODE:MGMT~DESK-RATES      a node of a hierarchy
- *   POS:POS-BOOK-RATES-2~IRS_FIXFLOAT-USD-2032Q2,...          positions (every trade of each)
+ *   DIV:MARKETS   DESK:RATES   BOOK:BOOK-RATES-2   NODE:MGMT~DESK-RATES      a node of a hierarchy
+ *   LE:LE-NY                                                  the trades booked by a legal entity (their LEGAL_ENTITY)
+ *   POS:POS-BOOK-FI-1~SEC-GOVT_BOND-USD-03,...               positions (every trade of each)
  *   TRD:MX-20000001,CLY-3000157                               trades
+ *   CPTY:CP-KESTREL                                           every trade with that counterparty
  *   PORT:PF-USD-RATES                       a portfolio (its definition: a node, a rule or a basket)
  *   BASKET:asha/unwind                      a basket a person saved
  *   WHERE:PRODUCT_GROUP == 'Rates' and CURRENCY == 'USD'      a rule over the positions' columns (PositionRule)
  *   A + B   A - B   A &amp; B   ( ... )            union, difference, intersection; &amp; binds before + and -
  * </pre>
+ *
+ * The ids of {@code POS}, {@code TRD} and {@code CPTY} are kept as written (a booking system's ids are text and may be lower case;
+ * they are matched ignoring case when the date has no exact id); every other argument but a basket's or a capture's is upper case.
  *
  * An operator stands between spaces ({@code DESK:RATES - POS:X}); a hyphen inside an id ({@code MX-20000001}) is part of the id.
  * {@link #toString()} is the canonical text: words upper case, the ids of a list sorted, the terms of a union sorted, so equal scopes
@@ -43,11 +48,14 @@ import java.util.TreeSet;
 public sealed interface ScopeExpr {
 
     /** The words a reference may start with. */
-    Set<String> WORDS = Set.of("BANK", "LE", "DIV", "DESK", "BOOK", "NODE", "POS", "TRD", "PORT", "BASKET", "WHERE", "CAPTURE");
+    Set<String> WORDS = Set.of("BANK", "LE", "DIV", "DESK", "BOOK", "NODE", "POS", "TRD", "CPTY", "PORT", "BASKET", "WHERE", "CAPTURE");
+
+    /** The words whose argument is a list of ids ({@code a,b}), kept as written. */
+    Set<String> LISTS = Set.of("POS", "TRD", "CPTY");
 
     /** One reference: a word and its argument (empty for BANK). */
     record Ref(String word, String arg) implements ScopeExpr {
-        /** The argument as a list of ids (POS and TRD lists), sorted and unique. */
+        /** The argument as a list of ids (POS, TRD and CPTY lists), sorted and unique. */
         public List<String> ids() {
             return new ArrayList<>(new TreeSet<>(Arrays.stream(arg.split(",")).map(String::trim).filter(s -> !s.isEmpty()).toList()));
         }
@@ -57,7 +65,7 @@ public sealed interface ScopeExpr {
             if (word.equals("BANK")) {
                 return "BANK";
             }
-            if (word.equals("POS") || word.equals("TRD")) {
+            if (LISTS.contains(word)) {
                 return word + ":" + String.join(",", ids());
             }
             return word + ":" + arg;
@@ -245,7 +253,7 @@ public sealed interface ScopeExpr {
             int start = i;
             while (i < s.length()) {
                 char c = s.charAt(i);
-                if (Character.isWhitespace(c) && !(word.equals("POS") || word.equals("TRD")) || c == '(' || c == ')') {
+                if (Character.isWhitespace(c) && !LISTS.contains(word) || c == '(' || c == ')') {
                     break;
                 }
                 if (Character.isWhitespace(c)) {            // a list of ids may be written "a, b": keep going after a comma
@@ -265,7 +273,7 @@ public sealed interface ScopeExpr {
             if (a.isEmpty()) {
                 throw new IllegalArgumentException(word + ": names nothing");
             }
-            return word.equals("BASKET") || word.equals("CAPTURE") ? a : a.toUpperCase(Locale.ROOT);
+            return word.equals("BASKET") || word.equals("CAPTURE") || LISTS.contains(word) ? a : a.toUpperCase(Locale.ROOT);
         }
 
         /** A rule runs to the end, to an operator between spaces outside quotes and parentheses, or to an unmatched ')'. */

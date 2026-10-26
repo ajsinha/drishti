@@ -152,7 +152,16 @@ final class VarViews {
         m.put("failed", b.failed());
         m.put("hidden", s.hidden());
         m.put("unknown", s.res().unknown());
-        m.put("vectors", svc.props().kinds().vector() + " · batch of " + s.date().date() + " · data version " + s.date().version());
+        m.put("vectors", svc.props().kinds().vector() + " · batch " + String.join(", ", s.date().intake().batchIds()) + " of " + s.date().date()
+                + " · data version " + s.date().version());
+        m.put("inputs", s.date().inputs());
+        m.put("rejected", s.date().intake().rejected());
+        m.put("rejections", s.date().intake().rejections());
+        m.put("excluded", s.date().intake().excluded());
+        m.put("positionRules", s.date().intake().rules());
+        List<String> warnings = new ArrayList<>(s.date().warnings());
+        warnings.addAll(s.res().warnings());
+        m.put("warnings", warnings);
         m.put("scenarioSet", b.scenarioSet() + " · " + b.scenarioDates().get(0) + " .. " + b.scenarioDates().get(b.width() - 1));
         m.put("method", "historical, equal weights, 1-day, " + (pr.rule() == VarMath.RankRule.KTH_WORST ? "k = " + ordinal(s.measures().k())
                 + " worst of " + b.width() : "interpolated between the order statistics"));
@@ -183,13 +192,30 @@ final class VarViews {
     /** A part of a scope with its vector, the scope text that opens it, and its attributes for the tables. */
     record Part(String key, String scope, String label, String kind, double[] vector, double size, Map<String, Object> attrs) {}
 
+    /** The parts computed, and how many there were before {@code max-parts} kept the largest. */
+    record Parts(List<Part> list, int total) {
+        boolean truncated() {
+            return total > list.size();
+        }
+    }
+
+    List<Part> parts(VarService.Scoped s, String by) {
+        return partsOf(s, by).list();
+    }
+
     /**
      * The scope's parts: {@code child} (the default: a node's child nodes, a book's positions, a position's trades, an ad-hoc scope's
-     * positions), {@code position}, {@code trade}, {@code desk} or {@code book}. Positions and trades only for a viewer who sees them.
+     * positions), {@code node} (a node's child nodes), {@code position}, {@code trade}, {@code desk} or {@code book}. Positions and trades
+     * only for a viewer who sees them. More positions or trades than {@code max-parts}: the largest by gross size (market value, else
+     * PV, else quantity) are kept, and the answer says so.
      */
-    List<Part> parts(VarService.Scoped s, String by) {
+    Parts partsOf(VarService.Scoped s, String by) {
         VarBook b = s.date().book();
-        String mode = by == null || by.isBlank() ? "child" : by;
+        String mode = by == null || by.isBlank() ? "child" : by.trim().toLowerCase(java.util.Locale.ROOT);
+        if (mode.equals("node") && (s.res().node() == null || b.node(s.res().node()).children().isEmpty())) {
+            throw new DrishtiException(ErrorCode.BAD_REQUEST, "by=node lists a node's child nodes; " + s.res().canonical()
+                    + (s.res().node() == null ? " is not a node" : " has none") + ": use by=position, trade, desk or book");
+        }
         if (mode.equals("child")) {
             if (s.res().node() != null) {
                 VarBook.Node n = b.node(s.res().node());
@@ -197,19 +223,20 @@ final class VarViews {
             } else if (s.res().position() >= 0) {
                 mode = "trade";
             } else if (s.res().trade() >= 0) {
-                return List.of();
+                return new Parts(List.of(), 0);
             } else {
                 mode = "position";
             }
         }
         if ((mode.equals("position") || mode.equals("trade")) && !s.view().seesPositions(s.set())) {
             if (by == null || by.isBlank() || by.equals("child")) {
-                return List.of();                                        // an aggregate-only viewer: no position level below this node
+                return new Parts(List.of(), 0);                          // an aggregate-only viewer: no position level below this node
             }
             throw new DrishtiException(ErrorCode.FORBIDDEN, "your role sees this scope in aggregate only: no positions or trades");
         }
         List<Part> out = new ArrayList<>();
         int max = svc.props().maxParts();
+        int[] total = {0};
         switch (mode) {
             case "node" -> {
                 for (String c : b.node(s.res().node()).children()) {
@@ -247,20 +274,63 @@ final class VarViews {
                         runs.get(runs.size() - 1)[2] = o + 1;
                     }
                 });
-                for (int[] r : runs.subList(0, Math.min(runs.size(), max))) {
+                total[0] = runs.size();
+                for (int[] r : largest(runs, max, r -> positionSize(b, s.set(), r[0]))) {
                     out.add(position(b, s.set(), r[0]));
                 }
             }
             case "trade" -> {
                 List<Integer> os = new ArrayList<>();
                 s.set().forEach(os::add);
-                for (int o : os.subList(0, Math.min(os.size(), max))) {
+                total[0] = os.size();
+                for (int o : largest(os, max, o -> tradeSize(b, o))) {
                     out.add(trade(b, o));
                 }
             }
-            default -> throw new DrishtiException(ErrorCode.BAD_REQUEST, "by is child, position, trade, desk or book");
+            default -> throw new DrishtiException(ErrorCode.BAD_REQUEST, "by is child, node, position, trade, desk or book");
+        }
+        return new Parts(out, Math.max(total[0], out.size()));
+    }
+
+    /** At most {@code max} of the items, the largest by {@code size} (ties: the first), kept in their order. */
+    private static <T> List<T> largest(List<T> items, int max, java.util.function.ToDoubleFunction<T> size) {
+        if (items.size() <= max) {
+            return items;
+        }
+        Integer[] idx = new Integer[items.size()];
+        double[] sz = new double[items.size()];
+        for (int i = 0; i < idx.length; i++) {
+            idx[i] = i;
+            sz[i] = size.applyAsDouble(items.get(i));
+        }
+        java.util.Arrays.sort(idx, (a, c) -> sz[a] != sz[c] ? Double.compare(sz[c], sz[a]) : Integer.compare(a, c));
+        Integer[] keep = java.util.Arrays.copyOf(idx, max);
+        java.util.Arrays.sort(keep);
+        List<T> out = new ArrayList<>(max);
+        for (Integer i : keep) {
+            out.add(items.get(i));
         }
         return out;
+    }
+
+    /** A position's gross size: its market value, else its trades' PV, else their quantities (absolute values). */
+    private static double positionSize(VarBook b, OrdinalSet set, int pi) {
+        double mv = b.positions().number("MARKET_VALUE", pi);
+        if (!Double.isNaN(mv) && set.coversRange(b.positionFrom(pi), b.positionTo(pi))) {
+            return Math.abs(mv);
+        }
+        double s = 0;
+        for (int o = b.positionFrom(pi); o < b.positionTo(pi); o++) {
+            if (set.contains(o)) {
+                s += tradeSize(b, o);
+            }
+        }
+        return s;
+    }
+
+    private static double tradeSize(VarBook b, int o) {
+        double pv = b.trades().number("PV", o);
+        return Double.isNaN(pv) ? Math.abs(nz(b.trades().number("QUANTITY", o))) : Math.abs(pv);
     }
 
     private Part position(VarBook b, OrdinalSet set, int pi) {
@@ -292,6 +362,8 @@ final class VarViews {
         a.put("currency", pc.text("CURRENCY", pi));
         a.put("book", pc.text("TT_BOOK", pi));
         a.put("productType", pc.text("PRODUCT_TYPE", pi));
+        a.put("securityId", pc.text("SECURITY_ID", pi));
+        a.put("rule", pc.text("POSITION_RULE", pi));
         a.put("trades", whole ? to - from : set.countIn(from, to));
         a.put("partial", !whole);
         String id = b.positionId(pi);
@@ -319,7 +391,8 @@ final class VarViews {
     Map<String, Object> contributions(Principal p, String scope, LocalDate date, String by, String scenario) {
         VarService.Scoped s = svc.scoped(p, scope, date);
         VarBook b = s.date().book();
-        List<Part> parts = parts(s, by);
+        Parts ps = partsOf(s, by);
+        List<Part> parts = ps.list();
         List<VarCalc.Part> cp = parts.stream().map(x -> new VarCalc.Part(x.key(), x.label(), x.kind(), x.vector(), x.size())).toList();
         List<VarCalc.Contribution> cs = svc.calc().contributions(s.vector(), s.measures(), cp);
         int scen = scenario == null || scenario.isBlank() ? -1 : b.scenarioDates().indexOf(LocalDate.parse(scenario));
@@ -347,7 +420,7 @@ final class VarViews {
             if (scen >= 0) {
                 r.put("scenarioPnl", round(pt.vector()[scen]));
             }
-            r.putAll(pt.attrs());
+            pt.attrs().forEach((k, v) -> r.put(k, v != null && svc.access().masked(p, k) ? com.ash.drishti.api.DataNode.MASK : v));
             if (pt.kind().equals("node") || !pt.attrs().containsKey("level")) {
                 r.put("level", pt.attrs().getOrDefault("level", pt.kind()));
             }
@@ -368,7 +441,8 @@ final class VarViews {
         out.put("sumStandalone", round(standalone));
         out.put("sumComponent", round(comp));
         out.put("diversification", round(standalone - s.measures().var()));
-        out.put("truncated", parts.size() >= svc.props().maxParts());
+        out.put("truncated", ps.truncated());
+        out.put("total", ps.total());
         if (scen >= 0) {
             out.put("scenario", scenario);
             out.put("scenarioPnl", round(s.vector()[scen]));
@@ -463,15 +537,18 @@ final class VarViews {
     }
 
     /**
-     * A node's official history (var-node: VaR, ES and the day's hypothetical P&amp;L over the window) and its backtest; any other scope
-     * replays today's members over the window's scenario days against today's VaR (in-sample: it says so; not a regulatory backtest).
+     * A node's official history (its official end-of-day captures: VaR, ES and the day's hypothetical P&amp;L over the window) and its
+     * backtest; any other scope replays today's members over the window's scenario days against today's VaR (in-sample: it says so; not
+     * a regulatory backtest). The Basel light of a history shorter than 250 days scales its limits (VAR.md section 6.5): it is shown with
+     * its days, and is not a regulatory zone before 250.
      */
     Map<String, Object> history(VarService.Scoped s) {
         VarBook b = s.date().book();
         double conf = svc.props().confidence();
         Map<String, Object> out = new LinkedHashMap<>();
         List<Map<String, Object>> rows = new ArrayList<>();
-        VarBook.NodeHistory h = s.res().node() != null && s.view().full() ? b.history(s.res().node()) : null;
+        VarOfficialStore.NodeHistory h = s.res().node() != null && s.view().full()
+                ? svc.official().history(s.res().node(), s.date().date(), svc.props().historyDays()) : null;
         Backtest bt;
         if (h != null && h.dates().length > 1) {
             bt = Backtest.of(h.hypo(), h.var(), conf);
@@ -479,7 +556,7 @@ final class VarViews {
                 rows.add(historyRow(h.dates()[i], h.var()[i], h.es()[i], h.hypo()[i], bt.exceptionFlags()[i]));
             }
             out.put("mode", "official");
-            out.put("note", "the node's official figures (var-node), one a business day");
+            out.put("note", "the node's official end-of-day captures, one a business day (" + h.dates().length + " days)");
         } else {
             int n = Math.min(svc.props().historyDays(), b.width());
             double[] pnl = new double[n];

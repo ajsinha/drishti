@@ -16,28 +16,28 @@
 package com.ash.drishti.server.var;
 
 import com.ash.drishti.api.AsOf;
-import com.ash.drishti.api.ColumnBatch;
 import com.ash.drishti.api.DataNode;
 import com.ash.drishti.api.EntityDocument;
-import com.ash.drishti.api.ScanRequest;
 import com.ash.drishti.common.DrishtiException;
 import com.ash.drishti.common.ErrorCode;
+import com.ash.drishti.compute.var.PositionRules;
 import com.ash.drishti.compute.var.VarBook;
 import com.ash.drishti.compute.vector.ParallelSums;
 import com.ash.drishti.engine.source.SourceRouter;
 import java.time.LocalDate;
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.TreeMap;
+import java.util.function.Supplier;
 
 /**
- * Reads one business date of the VaR engine's data through the connectors the kinds are routed to (the market-risk pack's
+ * Reads one business date of the VaR engine's inputs through the connectors the kinds are routed to (the market-risk pack's
  * {@code risk-store} in the demo; the bank's lake in production) and builds the {@link VarBook}: the trades' vectors streamed from the
- * vector column straight into the store (no document is parsed for them), the positions, the hierarchies with their limits, the
- * scenario set, the nodes' official history and their stored vectors, and the portfolios' definitions. Reads as the server; what a
+ * vector column straight into the store (no document is parsed for them), each row checked and given its position by the configured
+ * rules ({@link VarIntake}), then the hierarchies with their limits, the scenario set, and the portfolios' definitions. Positions are
+ * Drishti's: derived here, from the trades and the rules, each time the date is loaded (VAR.md section 3.7). A date whose inputs are
+ * not one run (several batch ids, another scenario set, two scenario sets) is refused ({@code DRS-5203}). Reads as the server; what a
  * viewer may see is applied per request.
  */
 final class VarLoader {
@@ -45,16 +45,33 @@ final class VarLoader {
     private final SourceRouter router;
     private final VarProperties props;
     private final ParallelSums sums;
+    private final Supplier<PositionRules> rules;
 
-    VarLoader(SourceRouter router, VarProperties props, ParallelSums sums) {
+    VarLoader(SourceRouter router, VarProperties props, ParallelSums sums, Supplier<PositionRules> rules) {
         this.router = router;
         this.props = props;
         this.sums = sums;
+        this.rules = rules;
     }
 
     /** The newest business date that has vectors, or null. */
     LocalDate latest() {
         return router.latestDate(props.kinds().vector()).orElse(null);
+    }
+
+    /** The newest date with vectors before {@code date}, or null (a date that cannot be loaded is answered by the one before). */
+    LocalDate previous(LocalDate date) {
+        return router.heldDates(props.kinds().vector()).map(s -> s.lower(date)).orElse(null);
+    }
+
+    /** The vector table's data version of a date (a refused date is not read again while it is unchanged). */
+    String version(LocalDate date) {
+        return router.dataVersion(props.kinds().vector(), AsOf.of(date)).orElse("");
+    }
+
+    /** The position rules a load uses now (a pack's section, else the server's setting). */
+    PositionRules rules() {
+        return rules.get();
     }
 
     VarDate load(LocalDate date) {
@@ -66,125 +83,86 @@ final class VarLoader {
         if (set == null) {
             throw new DrishtiException(ErrorCode.ENTITY_NOT_FOUND, "no scenario set for " + date + " (kind " + k.scenarioSet() + ")");
         }
-        List<LocalDate> scenarioDates = new ArrayList<>();
-        DataNode sd = set.get("SCENARIO_DATES");
-        for (int i = 0; i < sd.size(); i++) {
-            scenarioDates.add(LocalDate.parse(sd.get(i).asText()));
+        if (sets.size() > 1) {
+            throw inconsistent(date, sets.size() + " scenario sets (" + String.join(", ", sets.keySet()) + "): one per date");
         }
         String setId = text(set, "SCENARIO_SET_ID");
+        List<LocalDate> scenarioDates = scenarioDates(date, setId, set);
+        PositionRules pr = rules.get();
         VarBook.Builder b = new VarBook.Builder(date, setId, scenarioDates, props.rowsPerChunk(), props.memoryBudgetMb() * 1024 * 1024);
-        List<String> texts = new ArrayList<>(List.of("TRADE_ID"));
-        texts.addAll(VarBook.TRADE_TEXTS);
-        texts.addAll(VarBook.TRADE_NUMBERS);
-        int nt = VarBook.TRADE_TEXTS.size();
-        String[] tt = new String[nt];
-        double[] tn = new double[VarBook.TRADE_NUMBERS.size()];
+        List<String> columns = VarIntake.columns(router.columnar(k.vector()), pr);
+        VarIntake intake = new VarIntake(b, pr, date, columns.subList(1, columns.size()));
         boolean read;
         try {
-            read = router.vectors(k.vector(), "PNL", texts, asOf, (id, values, len, row) -> {
-                System.arraycopy(row, 1, tt, 0, nt);
-                for (int i = 0; i < tn.length; i++) {
-                    tn[i] = number(row[1 + nt + i]);
-                }
-                b.trade(row[0] == null ? id : row[0], values, len, tt, tn);
-            });
+            read = router.vectors(k.vector(), "PNL", columns, asOf, (id, values, len, row) -> intake.row(id, values, len, row));
         } catch (com.ash.drishti.compute.vector.VectorStore.BudgetExceeded e) {
-            throw new DrishtiException(ErrorCode.BAD_REQUEST, e.getMessage());
+            throw new DrishtiException(ErrorCode.VAR_CAPACITY, e.getMessage() + ": the engine has no room for this date now; raise "
+                    + "drishti.var.memory-budget-mb or the server's heap, or keep fewer dates loaded (drishti.var.hot-dates)");
+        } catch (VarBook.DuplicateTrade e) {
+            throw new DrishtiException(ErrorCode.VAR_DUPLICATE_TRADE, "the P&L vectors of " + date + " are not loaded: " + e.getMessage());
         } catch (DrishtiException e) {
             throw e;
         } catch (Exception e) {
             throw new DrishtiException(ErrorCode.SOURCE_FAILED, "the P&L vectors of " + date + " could not be read: " + e.getMessage());
         }
         if (!read) {
-            throw new DrishtiException(ErrorCode.SOURCE_FAILED, "no connector keeps " + k.vector() + ".PNL as a vector column "
-                    + "(the pack's layout." + k.vector() + ".vectors)");
+            throw new DrishtiException(ErrorCode.SOURCE_FAILED, "no connector keeps " + k.vector() + ".PNL as a vector column with the columns "
+                    + columns + " (the pack's layout." + k.vector() + ".columns and .vectors)");
+        }
+        VarIntake.Summary sum = intake.summary();
+        if (sum.batchIds().size() > 1) {
+            throw inconsistent(date, "the vectors come from " + sum.batchIds().size() + " runs (BATCH_ID " + String.join(", ", sum.batchIds())
+                    + "): one run per date");
+        }
+        List<String> otherSets = sum.scenarioSets().stream().filter(s -> !s.equals(setId)).toList();
+        if (!otherSets.isEmpty()) {
+            throw inconsistent(date, "vectors of the scenario set " + String.join(", ", otherSets) + " beside the date's set " + setId);
         }
         long tVectors = System.nanoTime();
-        for (DataNode p : documents(k.position(), asOf).values()) {
-            String[] pt = new String[VarBook.POSITION_TEXTS.size()];
-            for (int i = 0; i < pt.length; i++) {
-                String f = VarBook.POSITION_TEXTS.get(i);
-                pt[i] = f.equals("TAGS") ? tags(p.get("TAGS")) : text(p, f);
-            }
-            double[] pn = new double[VarBook.POSITION_NUMBERS.size()];
-            for (int i = 0; i < pn.length; i++) {
-                pn[i] = number(text(p, VarBook.POSITION_NUMBERS.get(i)));
-            }
-            b.position(text(p, "POSITION_ID"), pt, pn);
-        }
         for (DataNode n : documents(k.hierarchy(), asOf).values()) {
             List<String> books = new ArrayList<>();
             DataNode bs = n.get("BOOKS");
-            for (int i = 0; i < bs.size(); i++) {
+            for (int i = 0; bs != null && i < bs.size(); i++) {
                 books.add(bs.get(i).asText());
             }
             b.node(text(n, "NODE_ID"), text(n, "HIERARCHY"), text(n, "LEVEL"), text(n, "NAME"), text(n, "PARENT_ID"), books,
                     number(text(n, "LIMIT_VAR")));
         }
-        history(b, date);
-        try {
-            router.vectors(k.node(), "PNL", List.of("NODE_ID"), asOf, (id, values, len, row) -> {
-                if (len > 0 && row[0] != null) {
-                    b.officialVector(row[0], java.util.Arrays.copyOf(values, len));
-                }
-            });
-        } catch (Exception e) {
-            // the nodes' stored vectors are a cross-check, not needed for a figure
-        }
         Map<String, VarDate.Portfolio> portfolios = new LinkedHashMap<>();
         documents(k.portfolio(), asOf).forEach((id, p) -> portfolios.put(id, VarDate.Portfolio.of(id, p)));
         VarBook book = b.build(sums);
-        String version = router.dataVersion(k.vector(), asOf).orElse("");
+        Map<String, String> versions = new LinkedHashMap<>();
+        for (String kind : k.inputs()) {
+            versions.put(kind, router.dataVersion(kind, asOf).orElse(""));
+        }
+        versions.put("scenarioSet", setId);
         long ms = (System.nanoTime() - t0) / 1_000_000;
-        return new VarDate(date, book, portfolios, version, java.time.Instant.now(), ms, (tVectors - t0) / 1_000_000);
+        return new VarDate(date, book, portfolios, versions.get(k.vector()), java.time.Instant.now(), ms, (tVectors - t0) / 1_000_000, sum,
+                versions, List.of());
     }
 
-    /** The nodes' official VaR, ES and hypothetical P&amp;L over the history window ending on the date (var-node, read as columns). */
-    private void history(VarBook.Builder b, LocalDate date) {
-        LocalDate from = date.minusDays((long) Math.ceil(props.historyDays() * 7.0 / 5.0) + 14);
-        Map<String, TreeMap<LocalDate, double[]>> rows = new HashMap<>();
-        List<String> paths = List.of("NODE_ID", "VAR_99", "ES_975", "HYPO_PNL", "LIMIT");
-        try {
-            var scan = router.scan(new ScanRequest(props.kinds().node(), paths, from, date));
-            if (scan.isEmpty()) {
-                return;
+    /** The scenario days, checked: strictly increasing and all before the business date (else the date is not one run). */
+    private static List<LocalDate> scenarioDates(LocalDate date, String setId, DataNode set) {
+        List<LocalDate> out = new ArrayList<>();
+        DataNode sd = set.get("SCENARIO_DATES");
+        for (int i = 0; sd != null && i < sd.size(); i++) {
+            LocalDate d = LocalDate.parse(sd.get(i).asText());
+            if (!out.isEmpty() && !d.isAfter(out.get(out.size() - 1))) {
+                throw inconsistent(date, "the scenario set " + setId + " is not in date order at " + d);
             }
-            try (var s = scan.get()) {
-                ColumnBatch cb;
-                while ((cb = s.next()) != null) {
-                    for (int r = 0; r < cb.rows(); r++) {
-                        Object node = cb.value(0, r);
-                        if (node == null) {
-                            continue;
-                        }
-                        double[] v = {num(cb.value(1, r)), num(cb.value(2, r)), num(cb.value(3, r)), num(cb.value(4, r))};
-                        rows.computeIfAbsent(node.toString(), x -> new TreeMap<>()).put(cb.businessDate(), v);
-                    }
-                }
+            if (!d.isBefore(date)) {
+                throw inconsistent(date, "the scenario set " + setId + " has the scenario day " + d + ", not before the business date");
             }
-        } catch (Exception e) {
-            return;                                                 // no history: the screens say so
+            out.add(d);
         }
-        rows.forEach((node, byDate) -> {
-            List<LocalDate> ds = new ArrayList<>(byDate.keySet());
-            int start = Math.max(0, ds.size() - props.historyDays());
-            int n = ds.size() - start;
-            LocalDate[] dates = new LocalDate[n];
-            double[] var = new double[n];
-            double[] es = new double[n];
-            double[] hypo = new double[n];
-            double[] limit = new double[n];
-            for (int i = 0; i < n; i++) {
-                LocalDate d = ds.get(start + i);
-                double[] v = byDate.get(d);
-                dates[i] = d;
-                var[i] = v[0];
-                es[i] = v[1];
-                hypo[i] = v[2];
-                limit[i] = v[3];
-            }
-            b.history(node, new VarBook.NodeHistory(dates, var, es, hypo, limit));
-        });
+        if (out.isEmpty()) {
+            throw inconsistent(date, "the scenario set " + setId + " has no SCENARIO_DATES");
+        }
+        return out;
+    }
+
+    private static DrishtiException inconsistent(LocalDate date, String why) {
+        return new DrishtiException(ErrorCode.VAR_INCONSISTENT_DATE, "the VaR inputs of " + date + " are not loaded: " + why);
     }
 
     private Map<String, DataNode> documents(String kind, AsOf asOf) {
@@ -203,17 +181,6 @@ final class VarLoader {
         return v == null || v.isMissing() || v.isNull() ? null : v.asText();
     }
 
-    private static String tags(DataNode list) {
-        if (list == null || list.isMissing() || list.isNull()) {
-            return "";
-        }
-        List<String> out = new ArrayList<>();
-        for (int i = 0; i < list.size(); i++) {
-            out.add(list.get(i).asText());
-        }
-        return String.join("|", out);
-    }
-
     static double number(String s) {
         if (s == null || s.isBlank()) {
             return Double.NaN;
@@ -223,9 +190,5 @@ final class VarLoader {
         } catch (NumberFormatException e) {
             return Double.NaN;
         }
-    }
-
-    private static double num(Object o) {
-        return o instanceof Number n ? n.doubleValue() : o == null ? Double.NaN : number(o.toString());
     }
 }

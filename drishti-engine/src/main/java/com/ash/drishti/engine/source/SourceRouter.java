@@ -1036,6 +1036,25 @@ public final class SourceRouter implements com.ash.drishti.common.LiveSettings {
         return out;
     }
 
+    /** Every business date the kind's sources hold (their union), or empty when none can say without reading data. */
+    public Optional<java.util.NavigableSet<java.time.LocalDate>> heldDates(String kind) {
+        java.util.TreeSet<java.time.LocalDate> out = null;
+        for (SourcePlugin p : candidates(kind)) {
+            try {
+                Optional<java.util.NavigableSet<java.time.LocalDate>> d = p.heldDates(kind);
+                if (d.isPresent()) {
+                    if (out == null) {
+                        out = new java.util.TreeSet<>();
+                    }
+                    out.addAll(d.get());
+                }
+            } catch (RuntimeException e) {
+                // a source that cannot say does not stop the others
+            }
+        }
+        return Optional.ofNullable(out);
+    }
+
     /**
      * A date's vector column of the kind (a P&amp;L vector per trade, VAR_DATA_MODEL.md section 15) with some text columns, streamed to
      * {@code sink} by the first source in routing order that keeps the column as a vector; false when none does.

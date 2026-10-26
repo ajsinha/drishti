@@ -135,6 +135,48 @@ class VarBookTest {
     }
 
     @Test
+    void idsInAnyCaseALegalEntityByItsTradesAndACounterparty() {
+        ScopeResolver res = new ScopeResolver(book, defs());
+        assertThat(res.resolve("TRD:t-4 + POS:pos-1").set()).isEqualTo(res.resolve("TRD:T-4 + POS:POS-1").set());
+        // LE: is the trades' booking legal entity; the synthetic LEGAL tree rolls up the same books, so no warning
+        ScopeResolver.Resolution le = res.resolve("LE:LE-1");
+        assertThat(le.set()).isEqualTo(book.node("LEGAL~LE-1").members());
+        assertThat(le.node()).isEqualTo("LEGAL~LE-1");
+        assertThat(le.warnings()).isEmpty();
+        assertThat(res.resolve("le:1").set()).isEqualTo(le.set());
+        // a counterparty's trades, across positions and books
+        ScopeResolver.Resolution cp = res.resolve("CPTY:cp-7");
+        int n = 0;
+        for (int o = 0; o < book.tradeCount(); o++) {
+            n += "CP-7".equals(book.trades().text("COUNTERPARTY", o)) ? 1 : 0;
+        }
+        assertThat(cp.set().size()).isEqualTo(n).isPositive();
+        assertThat(res.resolve("CPTY:CP-NONE").unknown()).containsExactly("CPTY:CP-NONE");
+    }
+
+    @Test
+    void positionsAreDerivedFromTheirTradesAndADuplicateTradeIsRefused() {
+        for (int p = 0; p < 20; p++) {
+            double q = 0;
+            int longs = 0;
+            for (int o = book.positionFrom(p); o < book.positionTo(p); o++) {
+                q += book.trades().number("QUANTITY", o);
+                longs += book.trades().number("QUANTITY", o) > 0 ? 1 : 0;
+            }
+            assertThat(book.positions().number("QUANTITY", p)).isEqualTo(q);
+            assertThat(book.positions().number("LONG_TRADES", p)).isEqualTo(longs);
+            assertThat(book.positions().number("TRADE_COUNT", p)).isEqualTo(book.positionTo(p) - book.positionFrom(p));
+            assertThat(book.positions().text("DIRECTION", p)).isEqualTo(q > 0 ? "LONG" : q < 0 ? "SHORT" : "FLAT");
+            assertThat(book.positions().text("POSITION_TYPE", p)).isEqualTo("fungible");
+        }
+        VarBook.Builder b = new VarBook.Builder(java.time.LocalDate.of(2026, 9, 30), "HS-3", List.of(java.time.LocalDate.of(2026, 9, 1),
+                java.time.LocalDate.of(2026, 9, 2), java.time.LocalDate.of(2026, 9, 3)), 1024, Long.MAX_VALUE);
+        b.trade("T-1", new double[] {1, 2, 3}, 3, new String[VarBook.TRADE_TEXTS.size()], new double[] {1, 0});
+        org.assertj.core.api.Assertions.assertThatThrownBy(() -> b.trade("T-1", new double[] {1, 2, 3}, 3, new String[VarBook.TRADE_TEXTS.size()],
+                new double[] {1, 0})).isInstanceOf(VarBook.DuplicateTrade.class).hasMessageContaining("T-1");
+    }
+
+    @Test
     void tradePositionAndDeskVarAreConsistent() {
         VarCalc calc = VarCalc.defaults();
         int p = 0;

@@ -23,9 +23,9 @@ import java.util.Optional;
 
 /**
  * Resolves a scope ({@link ScopeExpr}) on one business date to the set of trade ordinals it means (VAR_DATA_MODEL.md section 13.1):
- * a node to its books' runs, positions to theirs, trades to theirs, a rule over every position's columns, a portfolio or a basket
- * through its definition. Combinations are set operations, so an overlap is counted once. Ids the date does not hold are reported,
- * never silently dropped.
+ * a node to its books' runs, positions to theirs, trades to theirs, a legal entity or a counterparty to the trades that carry it, a rule
+ * over every position's columns, a portfolio or a basket through its definition. Combinations are set operations, so an overlap is
+ * counted once. Ids the date does not hold are reported, never silently dropped.
  */
 public final class ScopeResolver {
 
@@ -53,8 +53,10 @@ public final class ScopeResolver {
      * @param trade the trade ordinal when the scope is exactly one trade, else -1
      * @param unknown the ids it names that the date does not hold
      * @param notes what was resolved how (for the provenance box)
+     * @param warnings data-quality findings about what was resolved (a legal entity's trades outside its node of the LEGAL hierarchy)
      */
-    public record Resolution(OrdinalSet set, String canonical, String node, int position, int trade, List<String> unknown, List<String> notes) {}
+    public record Resolution(OrdinalSet set, String canonical, String node, int position, int trade, List<String> unknown, List<String> notes,
+            List<String> warnings) {}
 
     private static final int MAX_DEPTH = 8;
     private final VarBook book;
@@ -69,7 +71,8 @@ public final class ScopeResolver {
         ScopeExpr e = ScopeExpr.parse(text);
         List<String> unknown = new ArrayList<>();
         List<String> notes = new ArrayList<>();
-        OrdinalSet set = eval(e, unknown, notes, 0);
+        List<String> warnings = new ArrayList<>();
+        OrdinalSet set = eval(e, unknown, notes, warnings, 0);
         String node = null;
         int position = -1;
         int trade = -1;
@@ -79,16 +82,16 @@ public final class ScopeResolver {
                 default -> null;
             };
             if (r.word().equals("POS") && r.ids().size() == 1) {
-                position = book.positionIndex(r.ids().get(0));
+                position = book.positionIndexAnyCase(r.ids().get(0));
             }
             if (r.word().equals("TRD") && r.ids().size() == 1) {
-                trade = book.tradeOrdinal(r.ids().get(0));
+                trade = book.tradeOrdinalAnyCase(r.ids().get(0));
             }
         }
-        return new Resolution(set, e.toString(), node, position, trade, List.copyOf(unknown), List.copyOf(notes));
+        return new Resolution(set, e.toString(), node, position, trade, List.copyOf(unknown), List.copyOf(notes), List.copyOf(warnings));
     }
 
-    private OrdinalSet eval(ScopeExpr e, List<String> unknown, List<String> notes, int depth) {
+    private OrdinalSet eval(ScopeExpr e, List<String> unknown, List<String> notes, List<String> warnings, int depth) {
         if (depth > MAX_DEPTH) {
             throw new IllegalArgumentException("the scope refers to itself through its baskets or portfolios");
         }
@@ -96,19 +99,22 @@ public final class ScopeResolver {
             case ScopeExpr.Union u -> {
                 OrdinalSet s = OrdinalSet.empty();
                 for (ScopeExpr t : u.terms()) {
-                    s = s.or(eval(t, unknown, notes, depth));
+                    s = s.or(eval(t, unknown, notes, warnings, depth));
                 }
                 yield s;
             }
-            case ScopeExpr.Minus m -> eval(m.left(), unknown, notes, depth).andNot(eval(m.right(), unknown, notes, depth));
-            case ScopeExpr.And a -> eval(a.left(), unknown, notes, depth).and(eval(a.right(), unknown, notes, depth));
-            case ScopeExpr.Ref r -> ref(r, unknown, notes, depth);
+            case ScopeExpr.Minus m -> eval(m.left(), unknown, notes, warnings, depth).andNot(eval(m.right(), unknown, notes, warnings, depth));
+            case ScopeExpr.And a -> eval(a.left(), unknown, notes, warnings, depth).and(eval(a.right(), unknown, notes, warnings, depth));
+            case ScopeExpr.Ref r -> ref(r, unknown, notes, warnings, depth);
         };
     }
 
-    private OrdinalSet ref(ScopeExpr.Ref r, List<String> unknown, List<String> notes, int depth) {
+    private OrdinalSet ref(ScopeExpr.Ref r, List<String> unknown, List<String> notes, List<String> warnings, int depth) {
         switch (r.word()) {
-            case "BANK", "LE", "DIV", "DESK", "BOOK", "NODE" -> {
+            case "LE" -> {
+                return legalEntity(r, unknown, notes, warnings);
+            }
+            case "BANK", "DIV", "DESK", "BOOK", "NODE" -> {
                 String id = nodeId(r);
                 if (id == null) {
                     unknown.add(r.toString());
@@ -120,7 +126,7 @@ public final class ScopeResolver {
             case "POS" -> {
                 OrdinalSet.Builder b = new OrdinalSet.Builder();
                 for (String id : r.ids()) {
-                    int p = book.positionIndex(id);
+                    int p = book.positionIndexAnyCase(id);
                     if (p < 0) {
                         unknown.add(id);
                     } else {
@@ -132,7 +138,7 @@ public final class ScopeResolver {
             case "TRD" -> {
                 OrdinalSet.Builder b = new OrdinalSet.Builder();
                 for (String id : r.ids()) {
-                    int o = book.tradeOrdinal(id);
+                    int o = book.tradeOrdinalAnyCase(id);
                     if (o < 0) {
                         unknown.add(id);
                     } else {
@@ -140,6 +146,15 @@ public final class ScopeResolver {
                     }
                 }
                 return b.build();
+            }
+            case "CPTY" -> {
+                OrdinalSet s = book.tradesWhere("COUNTERPARTY", r.ids());
+                if (s.isEmpty()) {
+                    unknown.add(r.toString());
+                } else {
+                    notes.add("counterparty " + String.join(", ", r.ids()) + ": " + s.size() + " trades");
+                }
+                return s;
             }
             case "WHERE" -> {
                 PositionRule rule = new PositionRule(r.arg());
@@ -163,7 +178,7 @@ public final class ScopeResolver {
                     return OrdinalSet.empty();
                 }
                 notes.add("portfolio " + r.arg() + " = " + def.get());
-                return eval(ScopeExpr.parse(def.get()), unknown, notes, depth + 1);
+                return eval(ScopeExpr.parse(def.get()), unknown, notes, warnings, depth + 1);
             }
             case "BASKET" -> {
                 Optional<String> def = defs.basket(r.arg());
@@ -172,7 +187,7 @@ public final class ScopeResolver {
                     return OrdinalSet.empty();
                 }
                 notes.add("basket " + r.arg());
-                return eval(ScopeExpr.parse(def.get()), unknown, notes, depth + 1);
+                return eval(ScopeExpr.parse(def.get()), unknown, notes, warnings, depth + 1);
             }
             case "CAPTURE" -> {
                 Optional<String> def = defs.capture(r.arg());
@@ -181,10 +196,47 @@ public final class ScopeResolver {
                     return OrdinalSet.empty();
                 }
                 notes.add("the members of capture " + r.arg());
-                return eval(ScopeExpr.parse(def.get()), unknown, notes, depth + 1);
+                return eval(ScopeExpr.parse(def.get()), unknown, notes, warnings, depth + 1);
             }
             default -> throw new IllegalArgumentException("not a scope word: " + r.word());
         }
+    }
+
+    /**
+     * A legal entity's trades: those whose booking {@code LEGAL_ENTITY} is it ({@code LE:NY} is {@code LE-NY} too), the source of truth
+     * (VAR.md section 8.5, decided 2026-10-25). The LEGAL hierarchy rolls up by books; when its node holds other trades, or misses some
+     * of the entity's, the answer is still the trades' entity and the difference is a data-quality warning.
+     */
+    private OrdinalSet legalEntity(ScopeExpr.Ref r, List<String> unknown, List<String> notes, List<String> warnings) {
+        String a = r.arg().toUpperCase(Locale.ROOT);
+        OrdinalSet s = book.tradesWhere("LEGAL_ENTITY", List.of(a));
+        String id = a;
+        if (s.isEmpty() && !a.startsWith("LE-")) {
+            s = book.tradesWhere("LEGAL_ENTITY", List.of("LE-" + a));
+            id = "LE-" + a;
+        }
+        String node = nodeId(r);
+        if (s.isEmpty()) {
+            if (node == null) {
+                unknown.add(r.toString());
+                return OrdinalSet.empty();
+            }
+            notes.add("node " + node + " (no trade carries the legal entity)");
+            return book.node(node).members();
+        }
+        notes.add("legal entity " + id + ": " + s.size() + " trades booked by it");
+        if (node != null) {
+            OrdinalSet members = book.node(node).members();
+            int outside = s.andNot(members).size();
+            int foreign = members.andNot(s).size();
+            if (outside > 0) {
+                warnings.add(outside + " trades booked by " + id + " sit outside " + node + " in the LEGAL hierarchy (their books roll up elsewhere)");
+            }
+            if (foreign > 0) {
+                warnings.add(node + " holds " + foreign + " trades booked by another legal entity");
+            }
+        }
+        return s;
     }
 
     /**

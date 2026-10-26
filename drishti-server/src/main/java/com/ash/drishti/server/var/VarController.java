@@ -53,6 +53,7 @@ import org.springframework.web.bind.annotation.RestController;
  *   GET  /api/v1/var/status                              what is loaded, the settings
  *   GET|POST /api/v1/var/baskets, GET|DELETE /api/v1/var/baskets/{owner}/{name}
  *   POST /api/v1/var/captures {scope, note}; GET /api/v1/var/captures?scope=; GET /api/v1/var/captures/{id}[/csv]; GET /api/v1/var/compare?a=&amp;b=
+ *   GET  /api/v1/var/official?asOf=                     a date's official end-of-day record; POST runs it (administrators)
  * </pre>
  */
 @RestController
@@ -62,11 +63,13 @@ public class VarController {
     private final VarService svc;
     private final VarViews views;
     private final VarCaptures captures;
+    private final VarOfficial official;
     private final Entitlements entitlements;
 
-    public VarController(VarService svc, Entitlements entitlements) {
+    VarController(VarService svc, VarViews views, VarOfficial official, Entitlements entitlements) {
         this.svc = svc;
-        this.views = new VarViews(svc);
+        this.official = official;
+        this.views = views;
         this.captures = new VarCaptures(svc, views);
         this.entitlements = entitlements;
     }
@@ -128,6 +131,9 @@ public class VarController {
         m.put("memoryBudgetMb", pr.memoryBudgetMb());
         m.put("hotDates", pr.hotDates());
         m.put("kinds", pr.kinds().all());
+        m.put("positionRules", svc.loader().rules().toString());
+        m.put("official", Map.of("enabled", pr.official().enabled(), "publish", pr.official().publish(), "retentionYears",
+                pr.official().retentionYears(), "dates", svc.official().dates().size()));
         m.put("loaded", svc.loaded());
         return m;
     }
@@ -137,7 +143,28 @@ public class VarController {
     public Map<String, Object> reload(@RequestAttribute(Principal.ATTRIBUTE) Principal p) {
         entitlements.requireAdmin(p);
         svc.reload();
+        svc.audit(p.user(), "var-reload", "all dates", "an administrator's reload");
         return Map.of("reloaded", true);
+    }
+
+    // ------------------------------------------------------------------------------------------------------------------- official
+
+    /** A date's official end-of-day record (every node's figures and capture id), for a viewer who sees every node. */
+    @GetMapping("/official")
+    public Map<String, Object> officialRecord(AsOf asOf, @RequestAttribute(Principal.ATTRIBUTE) Principal p) {
+        if (!svc.access().seesAll(p)) {
+            throw new DrishtiException(ErrorCode.FORBIDDEN, "the official record covers every node: your role sees only some of them");
+        }
+        LocalDate d = svc.date(date(asOf)).date();
+        return svc.official().index(d).orElseThrow(() -> new DrishtiException(ErrorCode.ENTITY_NOT_FOUND, "no official VaR record of " + d));
+    }
+
+    /** Captures a date officially now (the data-load signal does it by itself). Administrators only; says what it did. */
+    @PostMapping("/official")
+    public Map<String, Object> captureOfficial(AsOf asOf, @RequestAttribute(Principal.ATTRIBUTE) Principal p) {
+        entitlements.requireAdmin(p);
+        LocalDate d = svc.date(date(asOf)).date();
+        return official.capture(d);
     }
 
     // ------------------------------------------------------------------------------------------------------------------- baskets
@@ -151,7 +178,10 @@ public class VarController {
     @PostMapping("/baskets")
     public Map<String, Object> saveBasket(@RequestBody Map<String, Object> body, @RequestAttribute(Principal.ATTRIBUTE) Principal p) {
         entitlements.requireOpen(p, svc.props().kinds().vector());
-        return svc.saved().saveBasket(p, body);
+        Map<String, Object> b = svc.saved().saveBasket(p, body);
+        svc.audit(p.user(), "var-basket-save", String.valueOf(b.get("id")), "version=" + b.get("version") + " scope=" + b.get("scope")
+                + " sharedWith=" + b.get("sharedWith"));
+        return b;
     }
 
     @GetMapping("/baskets/{owner}/{name}")
@@ -166,6 +196,7 @@ public class VarController {
         if (!owner.equals(com.ash.drishti.identity.content.ContentDocs.name(p.user())) || !svc.saved().deleteBasket(p, name)) {
             throw new DrishtiException(ErrorCode.ENTITY_NOT_FOUND, "no basket " + owner + "/" + name + " of yours");
         }
+        svc.audit(p.user(), "var-basket-delete", owner + "/" + name, "deleted by its owner");
     }
 
     // ------------------------------------------------------------------------------------------------------------------- captures

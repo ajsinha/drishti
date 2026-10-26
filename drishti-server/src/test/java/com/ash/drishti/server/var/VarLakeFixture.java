@@ -30,8 +30,11 @@ import java.util.Map;
 
 /**
  * A tiny VaR lake written with Drishti's lake writer, whose answers are known by hand: 20 scenarios, five trades in four positions in
- * three books of two desks, a position netting a long of 100 and a short of 40 units of one instrument, the MGMT and LEGAL trees, a
- * node history with one exception, and a RULE and a BASKET portfolio. Every vector is a multiple of the unit path {@link #U}.
+ * three books of two desks, a position netting a long of 100 and a short of 40 units of one security, the MGMT and LEGAL trees, and a
+ * RULE and a BASKET portfolio. Every vector is a multiple of the unit path {@link #U}. Beside them, rows the engine must not count: a
+ * trade of no risk booked by another legal entity than its book's (a warning for {@code LE:}), a cancelled trade, a vector one value
+ * short and a vector with a null in it (both rejected, DRS-5201). Positions are not in the lake: the engine derives them by the rules
+ * the test sets (Fixed income by book and SECURITY_ID; everything else one position per trade).
  */
 final class VarLakeFixture {
 
@@ -41,18 +44,32 @@ final class VarLakeFixture {
     static final double[] U = {1, 2, -1, -8, 3, 0, 1, -10, 2, 4, -2, 1, 0, 5, -3, 2, 1, -1, 6, -4};
     /** A second instrument, unrelated: worst on scenario 12. */
     static final double[] V = {0, 1, 2, -1, 0, 3, -2, 1, 0, -1, 2, 0, -9, 1, 0, -1, 2, 1, 0, -3};
+    /** The positions the rules derive. */
+    static final String POS_A = "POS-BOOK-1~SEC-A";
+    static final String POS_B = "POS-BOOK-1~SEC-B";
+    static final String POS_C = "POS-BOOK-2~T4";
+    static final String POS_D = "POS-BOOK-3~SEC-D";
     private static final ObjectMapper JSON = new ObjectMapper();
 
-    /** trade id, position, book, desk, legal entity, currency, quantity, its vector */
-    record Trade(String id, String pos, String book, String desk, String le, String ccy, double qty, double[] v) {}
+    /** trade id, security (null: OTC), book, desk, legal entity, currency, counterparty, status, quantity, its vector (a list may hold null) */
+    record Trade(String id, String security, String book, String desk, String le, String ccy, String cpty, String status, double qty, Object v) {}
 
     static List<Trade> trades() {
+        List<Object> withNull = new ArrayList<>();
+        for (double x : U) {
+            withNull.add(x);
+        }
+        withNull.set(4, null);
         return List.of(
-                new Trade("T1", "POS-A", "BOOK-1", "DESK-X", "LE-A", "USD", 100, scale(U, 100)),
-                new Trade("T2", "POS-A", "BOOK-1", "DESK-X", "LE-A", "USD", -40, scale(U, -40)),
-                new Trade("T3", "POS-B", "BOOK-1", "DESK-X", "LE-A", "EUR", 10, scale(V, 10)),
-                new Trade("T4", "POS-C", "BOOK-2", "DESK-X", "LE-A", "EUR", -20, scale(U, -20)),
-                new Trade("T5", "POS-D", "BOOK-3", "DESK-Y", "LE-B", "USD", 50, scale(V, 50)));
+                new Trade("T1", "SEC-A", "BOOK-1", "DESK-X", "LE-A", "USD", "CP-1", "VALIDATED", 100, scale(U, 100)),
+                new Trade("T2", "SEC-A", "BOOK-1", "DESK-X", "LE-A", "USD", "CP-1", "AMENDED", -40, scale(U, -40)),
+                new Trade("T3", "SEC-B", "BOOK-1", "DESK-X", "LE-A", "EUR", "CP-1", "NEW", 10, scale(V, 10)),
+                new Trade("T4", null, "BOOK-2", "DESK-X", "LE-A", "EUR", "CP-1", "VALIDATED", -20, scale(U, -20)),
+                new Trade("T5", "SEC-D", "BOOK-3", "DESK-Y", "LE-B", "USD", "CP-2", "VALIDATED", 50, scale(V, 50)),
+                new Trade("T9", null, "BOOK-2", "DESK-X", "LE-B", "USD", "CP-1", "VALIDATED", 0, scale(U, 0)),
+                new Trade("T6", null, "BOOK-2", "DESK-X", "LE-A", "USD", "CP-1", "CANCELLED", 1000, scale(U, 1000)),
+                new Trade("T7", null, "BOOK-2", "DESK-X", "LE-A", "USD", "CP-1", "VALIDATED", 5, java.util.Arrays.copyOf(scale(U, 5), N - 1)),
+                new Trade("T8", null, "BOOK-2", "DESK-X", "LE-A", "USD", "CP-1", "VALIDATED", 5, withNull));
     }
 
     static double[] scale(double[] a, double f) {
@@ -75,100 +92,76 @@ final class VarLakeFixture {
         return out;
     }
 
-    /** Writes the lake under {@code root}/risk/; returns root. */
+    /** Writes the business date {@link #DAY} under {@code root}/risk/; returns root. */
     static Path write(Path root) throws Exception {
-        return write(root, 1.0);
+        return write(root, DAY, 1.0, false, false);
     }
 
-    /** The lake with every vector times {@code factor} (a restated batch: the data change under a capture). */
-    static Path write(Path root, double factor) throws Exception {
+    /**
+     * One business date: every vector times {@code factor} (a restated batch: the data change under a capture); {@code mixedRuns}: the
+     * vectors come from two batch runs (the date is refused, DRS-5203); {@code duplicate}: T1 has a second vector (DRS-5202).
+     */
+    static Path write(Path root, LocalDate day, double factor, boolean mixedRuns, boolean duplicate) throws Exception {
         Path work = Files.createDirectories(root.resolve("_work"));
         List<Map<String, Object>> vectors = new ArrayList<>();
-        Map<String, Map<String, Object>> positions = new LinkedHashMap<>();
-        for (Trade t : trades()) {
+        int i = 0;
+        List<Trade> trades = new ArrayList<>(trades());
+        if (duplicate) {
+            trades.add(new Trade("T1", "SEC-A", "BOOK-1", "DESK-X", "LE-A", "USD", "CP-1", "VALIDATED", 1, scale(U, 1)));
+        }
+        for (Trade t : trades) {
             Map<String, Object> d = new LinkedHashMap<>();
-            d.put("VECTOR_ID", "PV-" + t.id());
+            d.put("VECTOR_ID", "PV-" + t.id() + (vectors.stream().anyMatch(v -> t.id().equals(v.get("TRADE_ID"))) ? "-again" : ""));
             d.put("TRADE_ID", t.id());
-            d.put("POSITION_ID", t.pos());
-            d.put("BUSINESS_DATE", DAY.toString());
+            d.put("BUSINESS_DATE", day.toString());
+            d.put("SCENARIO_SET_ID", "HS-20");
+            d.put("BATCH_ID", mixedRuns && i++ % 2 == 1 ? "B-" + day + "-02" : "B-" + day + "-01");
             d.put("LEGAL_ENTITY", t.le());
             d.put("DIVISION", "DIV-M");
             d.put("DESK", t.desk());
             d.put("TT_BOOK", t.book());
             d.put("PORTFOLIO", t.book());
-            d.put("PRODUCT_GROUP", "Rates");
-            d.put("PRODUCT_TYPE", "IRS");
+            d.put("PRODUCT_GROUP", t.security() == null ? "Rates" : "Fixed income");
+            d.put("PRODUCT_TYPE", t.security() == null ? "IRS" : "GOVT_BOND");
+            d.put("SECURITY_ID", t.security());
             d.put("CURRENCY", t.ccy());
-            d.put("COUNTERPARTY", "CP-1");
-            d.put("DIRECTION", t.qty() > 0 ? "LONG" : "SHORT");
-            d.put("INSTRUMENT_ID", "INS-" + t.pos());
+            d.put("COUNTERPARTY", t.cpty());
+            d.put("DIRECTION", t.qty() >= 0 ? "LONG" : "SHORT");
             d.put("QUANTITY", t.qty());
             d.put("PV", 1000.0);
-            d.put("PNL", scale(t.v(), factor));
+            d.put("TRADE_STATUS", t.status());
+            d.put("MATURITY_DATE", "2030-01-15");
+            d.put("STATUS", "ok");
+            d.put("REPORTING_CCY", "USD");
+            d.put("PNL", t.v() instanceof double[] a ? scale(a, factor) : t.v());
             vectors.add(d);
-            Map<String, Object> p = positions.computeIfAbsent(t.pos(), k -> new LinkedHashMap<>());
-            p.put("POSITION_ID", t.pos());
-            p.put("BUSINESS_DATE", DAY.toString());
-            p.put("INSTRUMENT_ID", "INS-" + t.pos());
-            p.put("INSTRUMENT", "Swap " + t.pos());
-            p.put("LEGAL_ENTITY", t.le());
-            p.put("DIVISION", "DIV-M");
-            p.put("DESK", t.desk());
-            p.put("TT_BOOK", t.book());
-            p.put("PORTFOLIO", t.book());
-            p.put("PRODUCT_GROUP", "Rates");
-            p.put("PRODUCT_TYPE", "IRS");
-            p.put("CURRENCY", t.ccy());
-            p.put("QUANTITY", ((Number) p.getOrDefault("QUANTITY", 0.0)).doubleValue() + t.qty());
-            p.put("MARKET_VALUE", 2_000_000.0);
-            p.put("TAGS", List.of("hedge"));
-            p.put("TRADE_COUNT", ((Number) p.getOrDefault("TRADE_COUNT", 0)).intValue() + 1);
         }
-        positions.values().forEach(p -> p.put("DIRECTION", ((Number) p.get("QUANTITY")).doubleValue() >= 0 ? "LONG" : "SHORT"));
-        table(root, work, "pnl-vector", "VECTOR_ID", vectors, List.of("TRADE_ID", "POSITION_ID", "LEGAL_ENTITY", "DIVISION", "DESK", "TT_BOOK",
-                "PORTFOLIO", "PRODUCT_GROUP", "PRODUCT_TYPE", "CURRENCY", "COUNTERPARTY", "DIRECTION", "INSTRUMENT_ID", "QUANTITY", "PV"), "PNL");
-        table(root, work, "position", "POSITION_ID", new ArrayList<>(positions.values()), List.of("POSITION_ID", "DIRECTION", "TT_BOOK", "DESK",
-                "CURRENCY", "QUANTITY", "MARKET_VALUE"), null);
+        table(root, work, "pnl-vector", "VECTOR_ID", vectors, List.of("TRADE_ID", "LEGAL_ENTITY", "DIVISION", "DESK", "TT_BOOK", "PORTFOLIO",
+                "PRODUCT_GROUP", "PRODUCT_TYPE", "SECURITY_ID", "CURRENCY", "COUNTERPARTY", "DIRECTION", "QUANTITY", "PV", "TRADE_STATUS",
+                "MATURITY_DATE", "STATUS", "REPORTING_CCY", "SCENARIO_SET_ID", "BATCH_ID"), "PNL");
         table(root, work, "scenario-set", "SCENARIO_SET_ID",
-                List.of(Map.of("SCENARIO_SET_ID", "HS-20", "BUSINESS_DATE", DAY.toString(), "SCENARIO_DATES", scenarioDates())), List.of(), null);
+                List.of(Map.of("SCENARIO_SET_ID", "HS-20", "BUSINESS_DATE", day.toString(), "SCENARIO_DATES", scenarioDates())), List.of(), null);
         List<Map<String, Object>> nodes = new ArrayList<>();
-        nodes.add(node("MGMT~BANK", "MGMT", "bank", null, List.of("BOOK-1", "BOOK-2", "BOOK-3"), 5000));
-        nodes.add(node("MGMT~DESK-X", "MGMT", "desk", "MGMT~BANK", List.of("BOOK-1", "BOOK-2"), 1000));
-        nodes.add(node("MGMT~DESK-Y", "MGMT", "desk", "MGMT~BANK", List.of("BOOK-3"), 600));
-        nodes.add(node("MGMT~BOOK-1", "MGMT", "book", "MGMT~DESK-X", List.of("BOOK-1"), 800));
-        nodes.add(node("MGMT~BOOK-2", "MGMT", "book", "MGMT~DESK-X", List.of("BOOK-2"), 500));
-        nodes.add(node("MGMT~BOOK-3", "MGMT", "book", "MGMT~DESK-Y", List.of("BOOK-3"), 600));
-        nodes.add(node("LEGAL~BANK", "LEGAL", "bank", null, List.of("BOOK-1", "BOOK-2", "BOOK-3"), 5000));
-        nodes.add(node("LEGAL~LE-A", "LEGAL", "legal-entity", "LEGAL~BANK", List.of("BOOK-1", "BOOK-2"), 1000));
-        nodes.add(node("LEGAL~LE-B", "LEGAL", "legal-entity", "LEGAL~BANK", List.of("BOOK-3"), 600));
+        nodes.add(node(day, "MGMT~BANK", "MGMT", "bank", null, List.of("BOOK-1", "BOOK-2", "BOOK-3"), 5000));
+        nodes.add(node(day, "MGMT~DESK-X", "MGMT", "desk", "MGMT~BANK", List.of("BOOK-1", "BOOK-2"), 1000));
+        nodes.add(node(day, "MGMT~DESK-Y", "MGMT", "desk", "MGMT~BANK", List.of("BOOK-3"), 600));
+        nodes.add(node(day, "MGMT~BOOK-1", "MGMT", "book", "MGMT~DESK-X", List.of("BOOK-1"), 800));
+        nodes.add(node(day, "MGMT~BOOK-2", "MGMT", "book", "MGMT~DESK-X", List.of("BOOK-2"), 500));
+        nodes.add(node(day, "MGMT~BOOK-3", "MGMT", "book", "MGMT~DESK-Y", List.of("BOOK-3"), 600));
+        nodes.add(node(day, "LEGAL~BANK", "LEGAL", "bank", null, List.of("BOOK-1", "BOOK-2", "BOOK-3"), 5000));
+        nodes.add(node(day, "LEGAL~LE-A", "LEGAL", "legal-entity", "LEGAL~BANK", List.of("BOOK-1", "BOOK-2"), 1000));
+        nodes.add(node(day, "LEGAL~LE-B", "LEGAL", "legal-entity", "LEGAL~BANK", List.of("BOOK-3"), 600));
         table(root, work, "risk-hierarchy", "NODE_ID", nodes, List.of("NODE_ID", "LIMIT_VAR"), null);
-        // DESK-X's official history: 4 days, a loss of 900 on the third beyond the VaR of 700 the day before
-        List<Map<String, Object>> hist = new ArrayList<>();
-        double[] var = {600, 700, 750, 640};
-        double[] hypo = {100, -300, -900, 50};
-        LocalDate[] days = {DAY.minusDays(5), DAY.minusDays(2), DAY.minusDays(1), DAY};
-        for (int i = 0; i < 4; i++) {
-            Map<String, Object> h = new LinkedHashMap<>();
-            h.put("VAR_NODE_ID", "VN-MGMT~DESK-X");
-            h.put("NODE_ID", "MGMT~DESK-X");
-            h.put("BUSINESS_DATE", days[i].toString());
-            h.put("VAR_99", var[i]);
-            h.put("ES_975", var[i] * 1.2);
-            h.put("HYPO_PNL", hypo[i]);
-            h.put("LIMIT", 1000.0);
-            hist.add(h);
-        }
-        table(root, work, "var-node", "VAR_NODE_ID", hist, List.of("NODE_ID", "VAR_99", "ES_975", "HYPO_PNL", "LIMIT"), null);
         List<Map<String, Object>> ports = List.of(
-                Map.of("PORTFOLIO_ID", "PF-EUR", "BUSINESS_DATE", DAY.toString(), "NAME", "Euro", "TYPE", "RULE", "OWNER", "risk",
+                Map.of("PORTFOLIO_ID", "PF-EUR", "BUSINESS_DATE", day.toString(), "NAME", "Euro", "TYPE", "RULE", "OWNER", "risk",
                         "DEFINITION", Map.of("RULE", "CURRENCY == 'EUR'"), "LIMIT_VAR", 400.0),
-                Map.of("PORTFOLIO_ID", "PF-MIX", "BUSINESS_DATE", DAY.toString(), "NAME", "Mix", "TYPE", "BASKET", "OWNER", "risk",
-                        "DEFINITION", Map.of("MEMBERS", List.of(Map.of("POSITION_ID", "POS-B"), Map.of("TRADE_ID", "T4"), Map.of("TRADE_ID", "T5")))));
+                Map.of("PORTFOLIO_ID", "PF-MIX", "BUSINESS_DATE", day.toString(), "NAME", "Mix", "TYPE", "BASKET", "OWNER", "risk",
+                        "DEFINITION", Map.of("MEMBERS", List.of(Map.of("POSITION_ID", POS_B), Map.of("TRADE_ID", "T4"), Map.of("TRADE_ID", "T5")))));
         table(root, work, "portfolio", "PORTFOLIO_ID", ports, List.of("NAME", "TYPE"), null);
         return root;
     }
 
-    private static Map<String, Object> node(String id, String h, String level, String parent, List<String> books, double limit) {
+    private static Map<String, Object> node(LocalDate day, String id, String h, String level, String parent, List<String> books, double limit) {
         Map<String, Object> m = new LinkedHashMap<>();
         m.put("NODE_ID", id);
         m.put("HIERARCHY", h);
@@ -177,7 +170,7 @@ final class VarLakeFixture {
         m.put("NAME", id.substring(id.indexOf('~') + 1));
         m.put("BOOKS", books);
         m.put("LIMIT_VAR", limit);
-        m.put("BUSINESS_DATE", DAY.toString());
+        m.put("BUSINESS_DATE", day.toString());
         return m;
     }
 

@@ -15,6 +15,9 @@
  */
 package com.ash.drishti.server.var;
 
+import com.ash.drishti.compute.var.PositionRules;
+import java.util.ArrayList;
+import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
@@ -31,37 +34,89 @@ import org.springframework.boot.context.properties.ConfigurationProperties;
  * @param componentScaleToVar components scaled so they add up to the VaR exactly (true), else to the smoothed VaR
  * @param threads the cores the vector sums use (0: every core)
  * @param parallelRows the fewest rows worth splitting across threads
- * @param memoryBudgetMb the most memory the hot dates' vectors may take (0: a quarter of the heap); a date that would exceed it is
- *     refused with the reason, never loaded in part
+ * @param memoryBudgetMb the most memory one date's vectors may take (0: a quarter of the heap); a date that would exceed it is refused
+ *     with the reason (503, DRS-5204), never loaded in part
  * @param rowsPerChunk rows per chunk of the vector store
  * @param hotDates business dates kept loaded at once (the newest first; older ones are dropped)
  * @param historyDays the history and backtest window (250 business days)
  * @param histogramBins the bins of the P&amp;L distribution sent to the screen
- * @param maxParts the most parts a contribution table computes at once (more: the largest by gross exposure, and said)
- * @param kinds the kinds the engine reads (vectors, positions, hierarchy, scenario set, node history, portfolios)
+ * @param maxParts the most parts a contribution table computes at once (more: the largest by gross size, and said)
+ * @param kinds the kinds the engine reads (vectors, hierarchy, scenario set, portfolios) and serves (positions)
  * @param access per role, the hierarchy nodes it may see and how: {@code MGMT~DESK-RATES: positions} (its numbers, children, positions
  *     and trades) or {@code aggregate} (numbers and children, never a position); a role without an entry sees every node at
  *     {@code positions} level when it may open the vector kind, else nothing
  * @param pathPage rows of the P&amp;L path table per page
+ * @param positions how positions are derived from the trades when no loaded pack says (a pack's {@code positions:} section wins)
+ * @param official the official end-of-day captures and their published results
  */
 @ConfigurationProperties("drishti.var")
 public record VarProperties(Boolean enabled, Double confidence, Double esConfidence, String rankRule, Integer componentWindow,
         Boolean componentScaleToVar, Integer threads, Integer parallelRows, Long memoryBudgetMb, Integer rowsPerChunk, Integer hotDates,
-        Integer historyDays, Integer histogramBins, Integer maxParts, Kinds kinds, Map<String, Map<String, String>> access, Integer pathPage) {
+        Integer historyDays, Integer histogramBins, Integer maxParts, Kinds kinds, Map<String, Map<String, String>> access, Integer pathPage,
+        Positions positions, Official official) {
 
-    /** The kinds the engine reads, as the market-risk pack names them. */
-    public record Kinds(String vector, String position, String hierarchy, String scenarioSet, String node, String portfolio) {
+    /** The kinds the engine reads, as the market-risk pack names them; {@code position} is the kind its derived positions are served as. */
+    public record Kinds(String vector, String position, String hierarchy, String scenarioSet, String portfolio) {
         public Kinds {
             vector = vector == null ? "pnl-vector" : vector;
             position = position == null ? "position" : position;
             hierarchy = hierarchy == null ? "risk-hierarchy" : hierarchy;
             scenarioSet = scenarioSet == null ? "scenario-set" : scenarioSet;
-            node = node == null ? "var-node" : node;
             portfolio = portfolio == null ? "portfolio" : portfolio;
         }
 
         public List<String> all() {
-            return List.of(vector, position, hierarchy, scenarioSet, node, portfolio);
+            return List.of(vector, position, hierarchy, scenarioSet, portfolio);
+        }
+
+        /** The kinds whose load changes a date's answers (the data-load signal reloads the date): the inputs. */
+        public List<String> inputs() {
+            return List.of(vector, hierarchy, scenarioSet, portfolio);
+        }
+    }
+
+    /**
+     * The server's own position rules (VAR.md section 3.7), used when no loaded pack has a {@code positions:} section.
+     *
+     * @param liveStatuses the trade statuses that count on their date (default NEW, VALIDATED, AMENDED)
+     * @param rules first match wins: {@code name}, {@code groups} (PRODUCT_GROUP), {@code types} (PRODUCT_TYPE), {@code key} (the fields
+     *     whose first present value keys the position); none: every trade is a position of its own
+     */
+    public record Positions(List<String> liveStatuses, List<Rule> rules) {
+        public record Rule(String name, List<String> groups, List<String> types, List<String> key) {}
+
+        public PositionRules toRules() {
+            List<PositionRules.Rule> out = new ArrayList<>();
+            int n = 0;
+            for (Rule r : rules == null ? List.<Rule>of() : rules) {
+                n++;
+                out.add(new PositionRules.Rule(r.name() == null ? "rule-" + n : r.name(), set(r.groups()), set(r.types()),
+                        r.key() == null ? List.of() : r.key()));
+            }
+            return new PositionRules(liveStatuses, out);
+        }
+
+        private static java.util.Set<String> set(List<String> l) {
+            return l == null ? java.util.Set.of() : new LinkedHashSet<>(l);
+        }
+    }
+
+    /**
+     * The official end-of-day captures (VAR.md section 9.6).
+     *
+     * @param enabled capture every node of every hierarchy when a date's inputs are complete (after the data-load signal)
+     * @param publish also write them to {@code <root>/risk-results/var-official} for other systems
+     * @param root the Delta root the results are published under (the risk lake's root)
+     * @param retentionYears the years the published table keeps its log and removed files (time travel), 7 by default
+     * @param onStart at start, capture the newest date when it has no official record yet (a lake built while the server was down)
+     */
+    public record Official(Boolean enabled, Boolean publish, String root, Integer retentionYears, Boolean onStart) {
+        public Official {
+            enabled = enabled == null || enabled;
+            publish = publish == null || publish;
+            root = root == null || root.isBlank() ? null : root;
+            retentionYears = retentionYears == null || retentionYears < 1 ? 7 : retentionYears;
+            onStart = onStart == null || onStart;
         }
     }
 
@@ -80,9 +135,11 @@ public record VarProperties(Boolean enabled, Double confidence, Double esConfide
         historyDays = historyDays == null || historyDays <= 1 ? 250 : historyDays;
         histogramBins = histogramBins == null || histogramBins < 5 ? 42 : histogramBins;
         maxParts = maxParts == null || maxParts <= 0 ? 5000 : maxParts;
-        kinds = kinds == null ? new Kinds(null, null, null, null, null, null) : kinds;
+        kinds = kinds == null ? new Kinds(null, null, null, null, null) : kinds;
         access = access == null ? Map.of() : access;
         pathPage = pathPage == null || pathPage <= 0 ? 60 : pathPage;
+        positions = positions == null ? new Positions(null, null) : positions;
+        official = official == null ? new Official(null, null, null, null, null) : official;
     }
 
     public com.ash.drishti.compute.var.VarMath.RankRule rule() {

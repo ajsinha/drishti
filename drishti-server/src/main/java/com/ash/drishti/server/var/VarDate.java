@@ -28,8 +28,32 @@ import java.util.Map;
  *
  * @param version the vector table's data version (the pin a result is stamped with)
  * @param loadMs the whole load, {@code vectorMs} the vectors' part
+ * @param intake the rows rejected and left out, the batch ids, the position rules the date was built with
+ * @param versions every input kind's data version on the date (vectors, scenario set, hierarchy, portfolios)
+ * @param warnings what the answers of this date say about it (the date asked could not be loaded, this one is answered instead)
  */
-record VarDate(LocalDate date, VarBook book, Map<String, Portfolio> portfolios, String version, Instant loadedAt, long loadMs, long vectorMs) {
+record VarDate(LocalDate date, VarBook book, Map<String, Portfolio> portfolios, String version, Instant loadedAt, long loadMs, long vectorMs,
+        VarIntake.Summary intake, Map<String, String> versions, List<String> warnings) {
+
+    VarDate {
+        versions = versions == null ? Map.of() : Map.copyOf(versions);
+        warnings = warnings == null ? List.of() : List.copyOf(warnings);
+    }
+
+    /** The same date with a warning more (answered in place of a date that could not be loaded). */
+    VarDate warned(String warning) {
+        List<String> w = new ArrayList<>(warnings);
+        w.add(warning);
+        return new VarDate(date, book, portfolios, version, loadedAt, loadMs, vectorMs, intake, versions, w);
+    }
+
+    /** The input tables' versions and batch ids, as an official capture and the provenance record them. */
+    Map<String, Object> inputs() {
+        Map<String, Object> m = new java.util.LinkedHashMap<>(versions);
+        m.put("batchIds", intake == null ? List.of() : intake.batchIds());
+        m.put("positionRules", intake == null ? "" : intake.rulesDigest());
+        return m;
+    }
 
     /**
      * A stored portfolio (the {@code portfolio} kind): its definition as scope text.

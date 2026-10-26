@@ -45,29 +45,37 @@ import org.springframework.test.web.servlet.MockMvc;
 
 /**
  * The VaR engine's API over a tiny lake whose answers are known by hand (VarLakeFixture: 20 scenarios, so VaR 99% and ES 97.5% are
- * the worst scenario's loss): the bank, desks, a position netting a long and a short, single trades, RULE and BASKET portfolios and a
- * union of overlapping ones, contributions adding up to the VaR, the official history with its exception, entitlements by node
- * (positions or aggregate level), saved baskets, and captures that read back exactly after the data changes.
+ * the worst scenario's loss): positions derived by the rules (a security's trades in one book net; a swap is its own position), rows
+ * that do not count (cancelled, rejected), the bank, desks, a legal entity by its trades, a counterparty, single trades in any case,
+ * RULE and BASKET portfolios and a union of overlapping ones, contributions adding up to the VaR, entitlements by node and field masks,
+ * saved baskets, captures that read back exactly after the data changes, the official end-of-day captures with their history and
+ * published table, a restated date, a date that is not one run and a date with a duplicate trade.
  */
 @SpringBootTest(properties = {"drishti.rachana.hot-reload=false", "drishti.packs.enabled=finance",
         "drishti.sources.plugins.demo.enabled=false", "drishti.sources.connectors.finance-lake.enabled=false",
         "drishti.sources.connectors.risk-lake.plugin=delta",
-        "drishti.sources.connectors.risk-lake.kinds[0]=pnl-vector", "drishti.sources.connectors.risk-lake.kinds[1]=position",
-        "drishti.sources.connectors.risk-lake.kinds[2]=scenario-set", "drishti.sources.connectors.risk-lake.kinds[3]=risk-hierarchy",
-        "drishti.sources.connectors.risk-lake.kinds[4]=var-node", "drishti.sources.connectors.risk-lake.kinds[5]=portfolio",
+        "drishti.sources.connectors.risk-lake.kinds[0]=pnl-vector", "drishti.sources.connectors.risk-lake.kinds[1]=scenario-set",
+        "drishti.sources.connectors.risk-lake.kinds[2]=risk-hierarchy", "drishti.sources.connectors.risk-lake.kinds[3]=portfolio",
         "drishti.sources.connectors.risk-lake.settings.domain=risk",
         "drishti.sources.connectors.risk-lake.settings.refresh-seconds=1",
-        "drishti.sources.connectors.risk-lake.settings.layout.pnl-vector.columns=TRADE_ID,POSITION_ID,LEGAL_ENTITY,DIVISION,DESK,TT_BOOK,PORTFOLIO,"
-                + "PRODUCT_GROUP,PRODUCT_TYPE,CURRENCY,COUNTERPARTY,DIRECTION,INSTRUMENT_ID,QUANTITY,PV",
+        "drishti.sources.connectors.risk-lake.settings.layout.pnl-vector.columns=TRADE_ID,LEGAL_ENTITY,DIVISION,DESK,TT_BOOK,PORTFOLIO,"
+                + "PRODUCT_GROUP,PRODUCT_TYPE,SECURITY_ID,CURRENCY,COUNTERPARTY,DIRECTION,QUANTITY,PV,TRADE_STATUS,MATURITY_DATE,STATUS,REPORTING_CCY,"
+                + "SCENARIO_SET_ID,BATCH_ID",
         "drishti.sources.connectors.risk-lake.settings.layout.pnl-vector.vectors=PNL",
-        "drishti.sources.connectors.risk-lake.settings.layout.var-node.columns=NODE_ID,VAR_99,ES_975,HYPO_PNL,LIMIT",
-        "drishti.sources.routes.pnl-vector=risk-lake", "drishti.sources.routes.position=risk-lake",
+        "drishti.sources.connectors.var-positions.plugin=var-positions", "drishti.sources.connectors.var-positions.kinds[0]=position",
+        "drishti.sources.routes.pnl-vector=risk-lake", "drishti.sources.routes.position=var-positions",
         "drishti.sources.routes.scenario-set=risk-lake", "drishti.sources.routes.risk-hierarchy=risk-lake",
-        "drishti.sources.routes.var-node=risk-lake", "drishti.sources.routes.portfolio=risk-lake",
+        "drishti.sources.routes.portfolio=risk-lake",
+        "drishti.var.positions.rules[0].name=securities", "drishti.var.positions.rules[0].groups[0]=Fixed income",
+        "drishti.var.positions.rules[0].key[0]=SECURITY_ID",
+        "drishti.var.official.on-start=false",
         "drishti.security.enabled=true", "drishti.security.secret=test-secret-that-is-at-least-32-bytes-long",
-        "drishti.security.roles.risk.kinds[0]=*",
-        "drishti.security.roles.desk-y.kinds[0]=*", "drishti.var.access.desk-y[MGMT~DESK-Y]=positions",
-        "drishti.security.roles.division-head.kinds[0]=*", "drishti.var.access.division-head[MGMT~DESK-X]=aggregate",
+        "drishti.security.redact[0]=COUNTERPARTY",
+        "drishti.security.roles.risk.kinds[0]=*", "drishti.security.roles.risk.raw=true",
+        "drishti.security.roles.masked.kinds[0]=*", "drishti.security.roles.masked.raw=false",
+        "drishti.security.roles.desk-y.kinds[0]=*", "drishti.security.roles.desk-y.raw=true", "drishti.var.access.desk-y[MGMT~DESK-Y]=positions",
+        "drishti.security.roles.division-head.kinds[0]=*", "drishti.security.roles.division-head.raw=true",
+        "drishti.var.access.division-head[MGMT~DESK-X]=aggregate",
         "drishti.security.roles.curves.kinds[0]=curve",
         "drishti.var.threads=2",
         "drishti.identity.database-url=jdbc:sqlite:target/identity-${random.uuid}/identity.db"})
@@ -77,16 +85,21 @@ import org.springframework.test.web.servlet.MockMvc;
 class VarApiTest {
 
     static Path lake;
+    static final java.time.LocalDate PREV = VarLakeFixture.DAY.minusDays(1);
 
     @DynamicPropertySource
     static void lake(DynamicPropertyRegistry r) throws Exception {
         lake = Files.createDirectories(Path.of("target", "var-lake-" + System.nanoTime())).toAbsolutePath();
+        VarLakeFixture.write(lake, PREV, 1.0, false, false);
         VarLakeFixture.write(lake);
         r.add("drishti.sources.connectors.risk-lake.settings.root", lake::toString);
+        r.add("drishti.var.official.root", lake::toString);
     }
 
     @Autowired MockMvc mvc;
     @Autowired TokenVerifier tokens;
+    @Autowired VarOfficial official;
+    @Autowired VarFigures figures;
     final ObjectMapper json = new ObjectMapper();
 
     private String as(String user, String role) {
@@ -113,29 +126,54 @@ class VarApiTest {
         assertThat(bank.get("sumStandalone").asDouble()).isEqualTo(390 + 450);
         assertThat(bank.get("diversification").asDouble()).isEqualTo(300);
         assertThat(bank.get("limit").asDouble()).isEqualTo(5000);
-        assertThat(bank.at("/provenance/trades").asInt()).isEqualTo(5);
-        assertThat(bank.at("/provenance/positions").asInt()).isEqualTo(4);
+        // T1-T5 and T9 count; the cancelled T6 is left out, T7 (19 values) and T8 (a null in it) are rejected
+        assertThat(bank.at("/provenance/trades").asInt()).isEqualTo(6);
+        assertThat(bank.at("/provenance/positions").asInt()).isEqualTo(5);
+        assertThat(bank.at("/provenance/excluded").asInt()).isEqualTo(1);
+        assertThat(bank.at("/provenance/rejected").asInt()).isEqualTo(2);
+        assertThat(bank.at("/provenance/rejections").toString()).contains("DRS-5201 T7: the vector has 19 values").contains("T8: the vector holds");
+        assertThat(bank.at("/provenance/inputs/batchIds").toString()).contains("B-2026-09-30-01");
+        assertThat(bank.at("/provenance/inputs/pnl-vector").asText()).isNotBlank();
         assertThat(var("DESK:DESK-X")).isEqualTo(390);
         assertThat(var("DESK:X")).isEqualTo(390);                             // DESK:X is DESK-X
-        assertThat(var("LE:LE-B")).isEqualTo(450);
         assertThat(var("BOOK:BOOK-1")).isEqualTo(590);
-        // a position netting a long of 100 and a short of 40: 60 units, VaR 600; its trades alone 1000 and 240
-        assertThat(var("POS:POS-A")).isEqualTo(600);
+        // a security's long of 100 and short of 40 in one book: one position of 60 units, VaR 600; its trades alone 1000 and 240
+        assertThat(var("POS:" + VarLakeFixture.POS_A)).isEqualTo(600);
         assertThat(var("TRD:T1")).isEqualTo(1000);
+        assertThat(var("TRD:t1")).isEqualTo(1000);                            // an id in another case
         assertThat(var("TRD:T2")).isEqualTo(240);
         assertThat(var("TRD:T1,T2")).isEqualTo(600);
-        JsonNode pos = getJson("/api/v1/var/scope", "POS:POS-A", as("rita", "risk"));
+        assertThat(var("POS:" + VarLakeFixture.POS_C)).isEqualTo(var("TRD:T4"));   // a swap is a position of its own
+        JsonNode pos = getJson("/api/v1/var/scope", "POS:" + VarLakeFixture.POS_A, as("rita", "risk"));
         assertThat(pos.get("kind").asText()).isEqualTo("position");
         assertThat(pos.get("ancestors").get(pos.get("ancestors").size() - 1).get("scope").asText()).isEqualTo("NODE:MGMT~BOOK-1");
+        JsonNode trades = getJson("/api/v1/var/scope/contributions?by=trade", "POS:" + VarLakeFixture.POS_A, as("rita", "risk"));
+        assertThat(trades.get("rows")).hasSize(2);
+        assertThat(trades.get("rows").get(0).get("position").asText()).isEqualTo(VarLakeFixture.POS_A);
     }
 
     @Test
     @Order(2)
+    void aLegalEntityIsItsTradesAndACounterpartyItsTrades() throws Exception {
+        // LE-B books T5 (BOOK-3) and T9 (BOOK-2, of no risk): the trades' entity is the answer, the LEGAL tree's difference a warning
+        JsonNode le = getJson("/api/v1/var/scope", "LE:LE-B", as("rita", "risk"));
+        assertThat(le.get("var").asDouble()).isEqualTo(450);
+        assertThat(le.at("/provenance/trades").asInt()).isEqualTo(2);
+        assertThat(le.at("/provenance/warnings").toString()).contains("1 trades booked by LE-B sit outside LEGAL~LE-B");
+        assertThat(getJson("/api/v1/var/scope", "LE:LE-A", as("rita", "risk")).at("/provenance/warnings").toString())
+                .contains("LEGAL~LE-A holds 1 trades booked by another legal entity");
+        assertThat(var("CPTY:CP-2")).isEqualTo(450);
+        assertThat(var("CPTY:cp-1")).isEqualTo(var("DESK:DESK-X"));
+    }
+
+    @Test
+    @Order(3)
     void portfoliosOfEveryTypeAndOverlapsCountOnce() throws Exception {
-        assertThat(var("PORT:PF-EUR")).isEqualTo(120);                        // the rule CURRENCY == 'EUR': POS-B and POS-C
-        assertThat(var("PORT:PF-MIX")).isEqualTo(540);                        // POS-B, T4, T5
-        assertThat(var("PORT:PF-EUR + PORT:PF-MIX")).isEqualTo(540);          // the overlap (POS-B, T4) once
+        assertThat(var("PORT:PF-EUR")).isEqualTo(120);                        // the rule CURRENCY == 'EUR': POS_B and POS_C
+        assertThat(var("PORT:PF-MIX")).isEqualTo(540);                        // POS_B, T4, T5
+        assertThat(var("PORT:PF-EUR + PORT:PF-MIX")).isEqualTo(540);          // the overlap (POS_B, T4) once
         assertThat(var("WHERE:CURRENCY == 'EUR'")).isEqualTo(120);
+        assertThat(var("WHERE:POSITION_RULE == 'securities' and SECURITY_ID == 'SEC-A'")).isEqualTo(600);
         assertThat(var("BANK - DESK:DESK-Y")).isEqualTo(390);                 // a difference
         JsonNode c = getJson("/api/v1/var/scope/contributions", "BANK", as("rita", "risk"));
         double sum = 0;
@@ -145,8 +183,12 @@ class VarApiTest {
         assertThat(sum).isCloseTo(540, within(1.0));                            // components add up to the VaR (rounded each)
         assertThat(c.get("rows").get(0).get("key").asText()).isEqualTo("MGMT~DESK-X");     // 347 before DESK-Y's 193
         assertThat(c.get("rows").get(0).get("componentVar").asDouble()).isEqualTo(347);
+        assertThat(getJson("/api/v1/var/scope/contributions?by=node", "BANK", as("rita", "risk")).get("rows")).hasSize(2);
+        mvc.perform(get("/api/v1/var/scope/contributions").param("scope", "TRD:T1").param("by", "node").header("Authorization", as("rita", "risk")))
+                .andExpect(status().isBadRequest()).andExpect(jsonPath("$.detail").value(containsString("is not a node")));
         JsonNode byTrade = getJson("/api/v1/var/scope/contributions?by=trade", "BOOK:BOOK-1", as("rita", "risk"));
         assertThat(byTrade.get("rows")).hasSize(3);
+        assertThat(byTrade.get("truncated").asBoolean()).isFalse();
         JsonNode drill = getJson("/api/v1/var/scope/contributions?scenario=" + VarLakeFixture.scenarioDates().get(12), "BANK", as("rita", "risk"));
         assertThat(drill.get("scenarioPnl").asDouble()).isEqualTo(-540);
         assertThat(drill.get("scenarioRank").asInt()).isEqualTo(1);
@@ -154,8 +196,8 @@ class VarApiTest {
     }
 
     @Test
-    @Order(3)
-    void pathHistoryAndTree() throws Exception {
+    @Order(4)
+    void pathReplayHistoryAndTree() throws Exception {
         JsonNode p = getJson("/api/v1/var/scope/path?page=0&size=5", "BANK", as("rita", "risk"));
         assertThat(p.get("series")).hasSize(20);
         assertThat(p.get("worst").get(0).get("pnl").asDouble()).isEqualTo(-540);
@@ -166,29 +208,30 @@ class VarApiTest {
             binned += n.asInt();
         }
         assertThat(binned).isEqualTo(20);
-        JsonNode h = getJson("/api/v1/var/scope/history", "DESK:DESK-X", as("rita", "risk"));
-        assertThat(h.get("mode").asText()).isEqualTo("official");
-        assertThat(h.at("/backtest/exceptions").asInt()).isEqualTo(1);
-        assertThat(h.get("rows").get(2).get("exception").asBoolean()).isTrue();
-        assertThat(getJson("/api/v1/var/scope/history", "TRD:T1", as("rita", "risk")).get("mode").asText()).isEqualTo("replay");
+        // no official record yet: every scope replays today's members
+        assertThat(getJson("/api/v1/var/scope/history", "DESK:DESK-X", as("rita", "risk")).get("mode").asText()).isEqualTo("replay");
         JsonNode t = getJson("/api/v1/var/tree", "", as("rita", "risk"));
         assertThat(t.get("nodes")).hasSize(6);
         assertThat(t.get("portfolios")).hasSize(2);
     }
 
     @Test
-    @Order(4)
-    void entitlementsByNode() throws Exception {
+    @Order(5)
+    void entitlementsByNodeAndFieldMasks() throws Exception {
         // positions level on DESK-Y only: the bank is what they see of it, the rest counted as hidden
         JsonNode bank = getJson("/api/v1/var/scope", "BANK", as("yan", "desk-y"));
         assertThat(bank.get("var").asDouble()).isEqualTo(450);
-        assertThat(bank.at("/provenance/hidden").asInt()).isEqualTo(4);
+        assertThat(bank.at("/provenance/hidden").asInt()).isEqualTo(5);
         mvc.perform(get("/api/v1/var/scope").param("scope", "TRD:T1").header("Authorization", as("yan", "desk-y")))
                 .andExpect(status().isForbidden()).andExpect(jsonPath("$.detail").value(containsString("position by position")));
-        // aggregate level on DESK-X: its numbers, never a position
+        // aggregate level on DESK-X: its numbers, never a position, a trade or a basket portfolio of them
         assertThat(getJson("/api/v1/var/scope", "DESK:DESK-X", as("dora", "division-head")).get("var").asDouble()).isEqualTo(390);
         mvc.perform(get("/api/v1/var/scope/contributions").param("scope", "DESK:DESK-X").param("by", "position")
                 .header("Authorization", as("dora", "division-head"))).andExpect(status().isForbidden());
+        mvc.perform(get("/api/v1/var/scope").param("scope", "PORT:PF-MIX").header("Authorization", as("dora", "division-head")))
+                .andExpect(status().isForbidden());
+        mvc.perform(get("/api/v1/var/scope").param("scope", "CPTY:CP-1").header("Authorization", as("dora", "division-head")))
+                .andExpect(status().isForbidden());
         JsonNode below = getJson("/api/v1/var/scope/contributions", "BOOK:BOOK-1", as("dora", "division-head"));
         assertThat(below.get("rows")).isEmpty();
         String all = mvc.perform(get("/api/v1/var/tree").header("Authorization", as("dora", "division-head"))).andReturn().getResponse()
@@ -199,14 +242,21 @@ class VarApiTest {
                 .andExpect(status().isForbidden());
         mvc.perform(get("/api/v1/var/scope").param("scope", "TEAM:X").header("Authorization", as("rita", "risk")))
                 .andExpect(status().isBadRequest()).andExpect(jsonPath("$.detail").value(containsString("not a scope word")));
+        // a masked counterparty: masked in the trade rows, and no scope may select by it
+        JsonNode masked = getJson("/api/v1/var/scope/contributions?by=trade", "BOOK:BOOK-1", as("mo", "masked"));
+        assertThat(masked.get("rows").get(0).get("counterparty").asText()).isEqualTo("•••");
+        assertThat(getJson("/api/v1/var/scope/contributions?by=trade", "BOOK:BOOK-1", as("rita", "risk")).get("rows").get(0)
+                .get("counterparty").asText()).isEqualTo("CP-1");
+        mvc.perform(get("/api/v1/var/scope").param("scope", "CPTY:CP-1").header("Authorization", as("mo", "masked")))
+                .andExpect(status().isForbidden()).andExpect(jsonPath("$.detail").value(containsString("masked")));
     }
 
     @Test
-    @Order(5)
+    @Order(6)
     void basketsAndCapturesReadBackExactlyAfterTheDataChanges() throws Exception {
         String rita = as("rita", "risk");
         mvc.perform(post("/api/v1/var/baskets").header("Authorization", rita).contentType(MediaType.APPLICATION_JSON)
-                .content("{\"name\":\"netted\",\"title\":\"Netted swaps\",\"scope\":\"TRD:T1,T2 + POS:POS-B\"}"))
+                .content("{\"name\":\"netted\",\"title\":\"Netted swaps\",\"scope\":\"TRD:T1,T2 + POS:" + VarLakeFixture.POS_B + "\"}"))
                 .andExpect(status().isOk()).andExpect(jsonPath("$.id").value("rita/netted")).andExpect(jsonPath("$.type").value("BASKET"));
         double basketVar = var("BASKET:rita/netted");
         JsonNode cap = json.readTree(mvc.perform(post("/api/v1/var/captures").header("Authorization", rita).contentType(MediaType.APPLICATION_JSON)
@@ -218,10 +268,33 @@ class VarApiTest {
         // someone else cannot read Rita's basket or capture
         mvc.perform(get("/api/v1/var/captures/" + id).header("Authorization", as("ola", "risk"))).andExpect(status().isNotFound());
 
-        // the batch is restated: every vector doubles; the capture keeps its numbers, now moves
-        VarLakeFixture.write(lake, 2.0);
+        // the official end-of-day records of both dates: every node of both hierarchies, published for other systems
+        JsonNode prev = json.readTree(mvc.perform(post("/api/v1/var/official").param("asOf", PREV.toString()).header("Authorization", as("ada", "admin")))
+                .andExpect(status().isOk()).andReturn().getResponse().getContentAsString());
+        assertThat(prev.get("status").asText()).isEqualTo("captured");
+        assertThat(prev.get("nodes").asInt()).isEqualTo(9);
+        assertThat(prev.get("published").asBoolean()).isTrue();
+        assertThat(official.capture(VarLakeFixture.DAY).get("status")).isEqualTo("captured");
+        assertThat(official.capture(VarLakeFixture.DAY).get("status")).isEqualTo("unchanged");        // the same inputs: not again
+        JsonNode h = getJson("/api/v1/var/scope/history", "DESK:DESK-X", rita);
+        assertThat(h.get("mode").asText()).isEqualTo("official");
+        assertThat(h.get("rows")).hasSize(2);
+        assertThat(h.get("rows").get(1).get("var").asDouble()).isEqualTo(390);
+        JsonNode record = getJson("/api/v1/var/official", "", rita);
+        String deskCapture = record.at("/nodes/MGMT~DESK-X/captureId").asText();
+        assertThat(var("CAPTURE:" + deskCapture)).isEqualTo(390);                          // an official capture's members, as a scope
+        mvc.perform(get("/api/v1/var/official").header("Authorization", as("yan", "desk-y"))).andExpect(status().isForbidden());
+        assertThat(published()).isEqualTo(18);
+
+        // the batch is restated: every vector doubles; the data-load signal reloads the date and captures it again (result version 2)
+        VarLakeFixture.write(lake, VarLakeFixture.DAY, 2.0, false, false);
         Thread.sleep(1500);
-        mvc.perform(post("/api/v1/var/reload").header("Authorization", as("ada", "admin"))).andExpect(status().isOk());
+        official.onLoad("pnl-vector", VarLakeFixture.DAY);
+        for (int i = 0; i < 100 && getJson("/api/v1/var/official", "", rita).get("resultVersion").asInt() < 2; i++) {
+            Thread.sleep(100);
+        }
+        assertThat(getJson("/api/v1/var/official", "", rita).get("resultVersion").asInt()).isEqualTo(2);
+        assertThat(published()).isEqualTo(27);                                              // appended, never overwritten
         assertThat(var("BASKET:rita/netted")).isEqualTo(2 * basketVar);
         JsonNode again = json.readTree(mvc.perform(get("/api/v1/var/captures/" + id).header("Authorization", rita)).andExpect(status().isOk())
                 .andReturn().getResponse().getContentAsString());
@@ -236,8 +309,83 @@ class VarApiTest {
         JsonNode list = json.readTree(mvc.perform(get("/api/v1/var/captures").param("scope", "BASKET:rita/netted").header("Authorization", rita))
                 .andReturn().getResponse().getContentAsString());
         assertThat(list).hasSize(1);
+        JsonNode deskList = json.readTree(mvc.perform(get("/api/v1/var/captures").param("scope", "DESK:DESK-X").header("Authorization", rita))
+                .andReturn().getResponse().getContentAsString());
+        assertThat(deskList).hasSize(2);                                // the official ones: a date's latest result version each
+        assertThat(deskList.get(0).get("note").asText()).contains("result version 2");
         String csv = mvc.perform(get("/api/v1/var/captures/" + id + "/csv").header("Authorization", rita)).andExpect(status().isOk())
                 .andReturn().getResponse().getContentAsString();
         assertThat(csv).contains("scenario_date,pnl").contains("# note: before");
+    }
+
+    @Test
+    @Order(7)
+    void positionsAreServedAsTheirKindAndTheirPagesShowTheEnginesFigures() throws Exception {
+        JsonNode doc = json.readTree(mvc.perform(get("/api/v1/entities/position/" + VarLakeFixture.POS_A + "/raw")
+                .header("Authorization", as("rita", "risk"))).andExpect(status().isOk()).andReturn().getResponse().getContentAsString());
+        String text = doc.toString();
+        assertThat(text).contains("\"TRADE_IDS\":[\"T1\",\"T2\"]").contains("\"POSITION_RULE\":\"securities\"").contains("\"QUANTITY\":60.0")
+                .doesNotContain("VAR_99").doesNotContain("VAR_ENGINE");
+        mvc.perform(get("/api/v1/views/position/" + VarLakeFixture.POS_A).header("Authorization", as("rita", "risk"))).andExpect(status().isOk());
+        // the page's figures: computed as the viewer when the page is read (twice the hand-computed VaR now the batch is restated)
+        com.ash.drishti.api.EntityDocument stored = new com.ash.drishti.api.EntityDocument(com.ash.drishti.api.EntityRef.of("position",
+                VarLakeFixture.POS_A), com.ash.drishti.api.DataNode.of(java.util.Map.of("POSITION_ID", VarLakeFixture.POS_A)),
+                new com.ash.drishti.api.Provenance("var-positions", 1, java.time.Instant.now(), false, VarLakeFixture.DAY));
+        com.ash.drishti.api.EntityDocument[] seen = new com.ash.drishti.api.EntityDocument[1];
+        com.ash.drishti.server.net.NetCaller.with(new com.ash.drishti.server.net.NetCaller.Caller(
+                new com.ash.drishti.server.security.Principal("rita", List.of("risk")), null, "t"),
+                () -> seen[0] = figures.augment(stored, com.ash.drishti.api.AsOf.of(VarLakeFixture.DAY)));
+        JsonNode f = json.readTree(json.writeValueAsString(seen[0].data().unwrap())).get(VarFigures.FIELD);
+        assertThat(f.get("VAR").asDouble()).isEqualTo(1200);
+        assertThat(f.get("TRADES")).hasSize(2);
+        assertThat(f.get("BOOK_VAR").asDouble()).isEqualTo(1180);
+        assertThat(f.get("PNL")).hasSize(20);
+        assertThat(figures.augment(stored, com.ash.drishti.api.AsOf.of(VarLakeFixture.DAY)).data().get(VarFigures.FIELD).get("STATUS").asText())
+                .isEqualTo("unavailable");                                                  // outside a request: no viewer, no figures
+        com.ash.drishti.server.net.NetCaller.with(new com.ash.drishti.server.net.NetCaller.Caller(
+                new com.ash.drishti.server.security.Principal("rita", List.of("risk")), null, "t"),
+                () -> seen[0] = figures.augment(new com.ash.drishti.api.EntityDocument(com.ash.drishti.api.EntityRef.of("portfolio", "PF-MIX"),
+                        com.ash.drishti.api.DataNode.of(java.util.Map.of("PORTFOLIO_ID", "PF-MIX")), stored.provenance()), null));
+        JsonNode pf = json.readTree(json.writeValueAsString(seen[0].data().unwrap())).get(VarFigures.FIELD);
+        assertThat(pf.get("VAR").asDouble()).isEqualTo(1080);
+        assertThat(pf.get("POSITIONS")).hasSize(3);
+        assertThat(pf.get("BY_CURRENCY")).isNotEmpty();
+    }
+
+    @Test
+    @Order(8)
+    void aDateThatIsNotOneRunIsAnsweredByTheDateBeforeAndADuplicateTradeIsRefused() throws Exception {
+        java.time.LocalDate next = VarLakeFixture.DAY.plusDays(1);
+        VarLakeFixture.write(lake, next, 1.0, true, false);
+        Thread.sleep(1500);
+        JsonNode bank = json.readTree(mvc.perform(get("/api/v1/var/scope").param("scope", "BANK").param("asOf", next.toString())
+                .header("Authorization", as("rita", "risk"))).andExpect(status().isOk()).andReturn().getResponse().getContentAsString());
+        assertThat(bank.get("businessDate").asText()).isEqualTo(VarLakeFixture.DAY.toString());
+        assertThat(bank.at("/provenance/warnings").toString()).contains("not loaded").contains("2 runs").contains("answered from 2026-09-30");
+        java.time.LocalDate after = next.plusDays(1);
+        VarLakeFixture.write(lake, after, 1.0, false, true);
+        Thread.sleep(1500);
+        mvc.perform(get("/api/v1/var/scope").param("scope", "BANK").param("asOf", after.toString()).header("Authorization", as("rita", "risk")))
+                .andExpect(status().is(422)).andExpect(jsonPath("$.code").value("DRS-5202"));
+    }
+
+    /** The rows of the published table: the records its commits added (each commit one date). */
+    private long published() throws Exception {
+        Path log = lake.resolve("risk-results").resolve("var-official").resolve("_delta_log");
+        long rows = 0;
+        boolean appendOnly = false;
+        try (var files = Files.list(log)) {
+            for (Path f : files.filter(x -> x.toString().endsWith(".json")).toList()) {
+                for (String line : Files.readAllLines(f)) {
+                    JsonNode a = json.readTree(line);
+                    if (a.has("add")) {
+                        rows += json.readTree(a.at("/add/stats").asText()).path("numRecords").asLong();
+                    }
+                    appendOnly |= "true".equals(a.at("/metaData/configuration/delta.appendOnly").asText());
+                }
+            }
+        }
+        assertThat(appendOnly).isTrue();
+        return rows;
     }
 }

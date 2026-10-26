@@ -45,9 +45,12 @@ final class VarSaved {
 
     private static final Pattern NAME = Pattern.compile("[a-z0-9][a-z0-9._-]{0,63}");
     private final ContentDocs docs;
+    /** Who may read the official end-of-day captures: a viewer who sees every node at positions level. */
+    private final java.util.function.Predicate<Principal> seesAll;
 
-    VarSaved(ContentStore store) {
+    VarSaved(ContentStore store, java.util.function.Predicate<Principal> seesAll) {
         this.docs = new ContentDocs(store);
+        this.seesAll = seesAll;
     }
 
     static String slug(String name) {
@@ -105,7 +108,10 @@ final class VarSaved {
         return b.filter(m -> readable(p, m));
     }
 
-    private static boolean readable(Principal p, Map<String, Object> m) {
+    private boolean readable(Principal p, Map<String, Object> m) {
+        if (Boolean.TRUE.equals(m.get("official"))) {
+            return seesAll.test(p);
+        }
         if (p.user().equals(m.get("owner"))) {
             return true;
         }
@@ -162,11 +168,17 @@ final class VarSaved {
         return Optional.empty();
     }
 
-    /** The captures the caller may read, newest first, optionally of one scope (canonical text). */
+    /**
+     * The captures people made that the caller may read, newest first, optionally of one scope (canonical text). The official
+     * end-of-day captures are listed from their dates' records instead ({@link VarOfficialStore#captures}).
+     */
     @SuppressWarnings("unchecked")
     List<Map<String, Object>> captures(Principal p, String canonical) {
         List<Map<String, Object>> out = new ArrayList<>();
         for (String key : docs.store().list("var/captures/")) {
+            if (key.startsWith(VarOfficialStore.FOLDER)) {
+                continue;
+            }
             docs.value(key, Map.class).map(m -> (Map<String, Object>) m).filter(m -> readable(p, m))
                     .filter(m -> canonical == null || canonical.equals(m.get("canonical"))).ifPresent(m -> {
                         Map<String, Object> s = new LinkedHashMap<>();
