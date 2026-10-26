@@ -17,7 +17,8 @@
 
 Built in 2.8.0 (unreleased): waves V0 to V3 of [VAR_ENGINE.md](../architecture/VAR_ENGINE.md) (the data, the engine, the explorer,
 history and backtesting, baskets, captures, entitlements and audit). What-if pricing, intraday recomputes and the cluster's sharded
-store are later waves (V4 to V6). The data model is [VAR_DATA_MODEL.md](../architecture/VAR_DATA_MODEL.md).
+store are later waves (V4 to V6). The data model is [VAR_DATA_MODEL.md](../architecture/VAR_DATA_MODEL.md). The data contract (every
+input column, structure and answer) is [VAR.md](../contracts/VAR.md).
 
 The explorer answers one question for any set of trades: *how much could this lose in a day, and where does that loss come from?* It
 reads the stored P&L vectors (one per trade: its P&L under each of 509 historical scenario days) and adds them up. It never reprices.

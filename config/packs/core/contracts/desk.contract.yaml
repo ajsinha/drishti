@@ -62,9 +62,11 @@ fields:
   description: 'Nested: see nested BOOKS[]'
 - name: VAR_99
   type: amount
-  presence: required
+  presence: derived
   description: VaR
   example: 10946782
+  retiring-in: 2.8.0
+  note: computed by the VaR engine from 2.8.0; removed from the stored record then
 - name: MTM
   type: amount
   presence: required
@@ -79,11 +81,13 @@ fields:
   link: legal-entity
 - name: VAR_RESULT
   type: id
-  presence: required
+  presence: derived
   description: 'VaR: the var it refers to'
   example: VAR-COMM
   pattern: ^VAR-
   link: var
+  retiring-in: 2.8.0
+  note: computed by the VaR engine from 2.8.0; removed from the stored record then
 - name: ASSET_CLASSES
   type: text list
   presence: required
@@ -162,10 +166,8 @@ validation:
   - NAME
   - HEAD
   - BOOKS
-  - VAR_99
   - MTM
   - LEGAL_ENTITY
-  - VAR_RESULT
   - ASSET_CLASSES
   - POSITIONS
 - rule: unique
@@ -200,13 +202,13 @@ validation:
 notes:
 - 'Dated by the lake''s business_date partition: `drishti.py lake build` writes each test-data file''s day into it; the documents carry no date
   field of their own.'
+- 'Terms kept, figures computed from 2.8.0 (docs/contracts/VAR.md): the fields marked derived are computed by the VaR engine and leave the stored
+  record then.'
 review:
 - 'required inferred from 100% coverage in 30 documents (10 samples and 20 test-data documents (data/testdata/core/desk/snapshot-2026-07-08.jsonl.gz,
   data/testdata/core/desk/changes-2026-09-30.jsonl.gz)): confirm each required field is mandatory upstream, and each optional one may be empty.'
 - 'source ''org-master'' is the test data''s _meta.source (synthetic): name the production system that delivers it.'
 - 'due time of each business date is not known: state it (for example, by 06:00 New York the next business day).'
-- 'VAR_99 is a column a compute engine produces (docs/contracts/README.md section 14) on a record that keeps it: confirm whether it is computed
-  and removed.'
 - 'enum values inferred from the data, not from a glossary: POSITIONS[].CURRENCY: confirm they are closed lists.'
 - 'number types decided by the field''s name: VAR_99 amount, MTM amount, BOOKS[].MTM amount, POSITIONS[].MTM amount: confirm amount, rate or integer.'
 - 'no unit stated for the amounts VAR_99, MTM, BOOKS[].MTM, POSITIONS[].MTM (docs/contracts/README.md section 7: USD unless stated): confirm the

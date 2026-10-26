@@ -27,7 +27,7 @@ One section per command of the pack: the shape of its data, how it is stored and
 | [CCP](#ccp-central-counterparty-ccp) | `ccp` | fundamental | active | 6 | 5 |
 | [LE](#le-bank-legal-entity-legal-entity) | `legal-entity` | fundamental | active | 7 | 7 |
 | [BOOK](#book-book-book) | `book` | fundamental | active | 11 | 7 |
-| [DESK](#desk-desk-desk) | `desk` | fundamental | active | 10 | 8 |
+| [DESK](#desk-desk-desk) | `desk` | fundamental | active | 10 | 7 |
 | [TRDR](#trdr-trader-trader) | `trader` | fundamental | active | 6 | 3 |
 | [CAL](#cal-holiday-calendar-calendar) | `calendar` | fundamental | active | 8 | 5 |
 | [CLR](#clr-clearing-account-clearing-account) | `clearing-account` | fundamental | active | 7 | 7 |
@@ -503,10 +503,10 @@ A trading desk: books, limits and risk results.
 | `NAME` | text | required |  | Name | `Commodities` |  |
 | `HEAD` | text | required |  | Head | `T. Brennan` |  |
 | `BOOKS` | record list | required |  | Nested: see nested BOOKS[] |  |  |
-| `VAR_99` | amount | required |  | VaR | `10946782` |  |
+| `VAR_99` | amount | derived (retiring in 2.8.0) |  | VaR *computed by the VaR engine from 2.8.0; removed from the stored record then* | `10946782` |  |
 | `MTM` | amount | required |  | MTM | `14609595` |  |
 | `LEGAL_ENTITY` | id | required |  | Legal entity: the legal-entity it refers to | `LE-NY` (pattern `^LE-`) | `legal-entity` |
-| `VAR_RESULT` | id | required |  | VaR: the var it refers to | `VAR-COMM` (pattern `^VAR-`) | `var` |
+| `VAR_RESULT` | id | derived (retiring in 2.8.0) |  | VaR: the var it refers to *computed by the VaR engine from 2.8.0; removed from the stored record then* | `VAR-COMM` (pattern `^VAR-`) | `var` |
 | `ASSET_CLASSES` | text list | required |  | — |  |  |
 | `POSITIONS` | record list | required |  | Nested: see nested POSITIONS[] |  |  |
 
@@ -532,7 +532,7 @@ A trading desk: books, limits and risk results.
 
 **Validation**
 
-- required: fields `DESK_ID`, `NAME`, `HEAD`, `BOOKS`, `VAR_99`, `MTM`, `LEGAL_ENTITY`, `VAR_RESULT`, `ASSET_CLASSES`, `POSITIONS`
+- required: fields `DESK_ID`, `NAME`, `HEAD`, `BOOKS`, `MTM`, `LEGAL_ENTITY`, `ASSET_CLASSES`, `POSITIONS`
 - unique: key `DESK_ID`; per business_date
 - pattern: field DESK_ID; pattern ^DESK-
 - link: field LEGAL_ENTITY; kind legal-entity
@@ -544,13 +544,13 @@ A trading desk: books, limits and risk results.
 **Notes**
 
 - Dated by the lake's business_date partition: `drishti.py lake build` writes each test-data file's day into it; the documents carry no date field of their own.
+- Terms kept, figures computed from 2.8.0 (docs/contracts/VAR.md): the fields marked derived are computed by the VaR engine and leave the stored record then.
 
-**To review (8)**
+**To review (7)**
 
 - required inferred from 100% coverage in 30 documents (10 samples and 20 test-data documents (data/testdata/core/desk/snapshot-2026-07-08.jsonl.gz, data/testdata/core/desk/changes-2026-09-30.jsonl.gz)): confirm each required field is mandatory upstream, and each optional one may be empty.
 - source 'org-master' is the test data's _meta.source (synthetic): name the production system that delivers it.
 - due time of each business date is not known: state it (for example, by 06:00 New York the next business day).
-- VAR_99 is a column a compute engine produces (docs/contracts/README.md section 14) on a record that keeps it: confirm whether it is computed and removed.
 - enum values inferred from the data, not from a glossary: POSITIONS[].CURRENCY: confirm they are closed lists.
 - number types decided by the field's name: VAR_99 amount, MTM amount, BOOKS[].MTM amount, POSITIONS[].MTM amount: confirm amount, rate or integer.
 - no unit stated for the amounts VAR_99, MTM, BOOKS[].MTM, POSITIONS[].MTM (docs/contracts/README.md section 7: USD unless stated): confirm the currency.

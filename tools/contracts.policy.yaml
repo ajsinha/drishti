@@ -119,6 +119,11 @@ split:
     contract: VAR.md
     measure: the VaR engine
     figures: [VAR_99, ES_975, COMPONENT_VAR, "TRADE_QUANTITIES[].VAR_99", "TRADE_QUANTITIES[].COMPONENT_VAR"]
+  desk:
+    release: 2.8.0
+    contract: VAR.md
+    measure: the VaR engine
+    figures: [VAR_99, VAR_RESULT]
   netting-set:
     release: 2.10.0
     contract: NSET.md
