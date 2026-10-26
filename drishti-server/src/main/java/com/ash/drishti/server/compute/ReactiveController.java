@@ -85,6 +85,7 @@ public class ReactiveController {
     @SuppressWarnings("unchecked")
     public Map<String, Object> ask(@PathVariable String connector, @PathVariable String kind, @RequestBody Map<String, Object> body,
             @RequestAttribute(Principal.ATTRIBUTE) Principal p) {
+        entitlements.requireOpen(p, kind);                              // the kind's role, pack and command, as for a view
         ReactiveConnector c = connector(connector);
         Map<String, Object> params = body.get("params") instanceof Map<?, ?> m ? (Map<String, Object>) m : Map.of();
         String ref = ComputeRef.format(String.valueOf(body.getOrDefault("id", "")), params);

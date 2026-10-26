@@ -113,6 +113,36 @@ CREATE TABLE IF NOT EXISTS drishti_pack_state (
     updated_by TEXT    NOT NULL DEFAULT ''
 );
 
+-- Administrators' switches (docs/admin/COMMANDS.md): commands and packs on or off, the system of record that Drishti*net gossip spreads.
+-- One row per scope (command | pack), name and grantee (* is everyone; a role once commands are granted per role); last writer wins by
+-- (stamp, node), stamp being a hybrid logical clock. The log keeps every applied change (who, when, why), learned ones included, once.
+CREATE TABLE IF NOT EXISTS drishti_switch (
+    id         TEXT    PRIMARY KEY,
+    scope      TEXT    NOT NULL,
+    name       TEXT    NOT NULL,
+    grantee    TEXT    NOT NULL DEFAULT '*',
+    enabled    INTEGER NOT NULL,
+    reason     TEXT    NOT NULL DEFAULT '',
+    actor      TEXT    NOT NULL DEFAULT '',
+    stamp      INTEGER NOT NULL,
+    node       TEXT    NOT NULL DEFAULT '',
+    updated_at TIMESTAMP NOT NULL
+);
+CREATE TABLE IF NOT EXISTS drishti_switch_log (
+    id         INTEGER PRIMARY KEY AUTOINCREMENT,
+    scope      TEXT    NOT NULL,
+    name       TEXT    NOT NULL,
+    grantee    TEXT    NOT NULL DEFAULT '*',
+    enabled    INTEGER NOT NULL,
+    reason     TEXT    NOT NULL DEFAULT '',
+    actor      TEXT    NOT NULL DEFAULT '',
+    stamp      INTEGER NOT NULL,
+    node       TEXT    NOT NULL DEFAULT '',
+    at         TIMESTAMP NOT NULL,
+    applied_at TIMESTAMP NOT NULL
+);
+CREATE UNIQUE INDEX IF NOT EXISTS ux_switch_log_change ON drishti_switch_log (scope, name, grantee, stamp, node);
+
 CREATE TABLE IF NOT EXISTS drishti_alert (
     id         INTEGER PRIMARY KEY AUTOINCREMENT,
     username   TEXT    NOT NULL,

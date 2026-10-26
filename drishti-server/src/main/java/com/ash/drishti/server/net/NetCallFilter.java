@@ -54,7 +54,8 @@ public final class NetCallFilter extends OncePerRequestFilter {
     /** Request attribute: the verified on-behalf-of claims of a forwarded call. */
     public static final String CLAIMS = "drishti.net.claims";
     /** The endpoints only a node may call. */
-    static final Set<String> NODE_ONLY = Set.of("gossip", "ping", "digest", "fetch", "search", "suggest", "state", "subscribe", "reverse", "group", "history");
+    static final Set<String> NODE_ONLY = Set.of("gossip", "ping", "digest", "fetch", "search", "suggest", "state", "subscribe", "reverse", "group", "history",
+            "switches");
     private static final int MAX_BODY = 16 * 1024 * 1024;
 
     private final NetService net;

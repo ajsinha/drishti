@@ -132,6 +132,7 @@ public final class NetService implements AutoCloseable {
     private volatile ClusterKey key;
     private volatile Node node;
     private volatile String digestHash = "";
+    private volatile String switchesHash = "";
     private final PeerHttp http;
     private DirectoryWatcher watcher;
 
@@ -309,7 +310,7 @@ public final class NetService implements AutoCloseable {
             return;
         }
         Member self = new Member(id, advert, incarnation, 0, MemberState.ALIVE, digestHash, version, Member.PROTOCOL,
-                c.node().tags(), clock.millis(), false, openGossipPort(c));
+                c.node().tags(), clock.millis(), false, openGossipPort(c), switchesHash);
         MemberTable table = new MemberTable(self, clock);
         Gossiper g = new Gossiper(table, () -> config().gossip(), http, clock, new java.security.SecureRandom(), exchanges);
         List<String> rejoin = saved.map(PeersFile.Saved::rejoinUrls).orElse(List.of());
@@ -524,6 +525,26 @@ public final class NetService implements AutoCloseable {
 
     public String digestHash() {
         return digestHash;
+    }
+
+    /** The switches ledger's hash this node gossips (set by the switches sync when the ledger changes); peers told at once. */
+    public void switchesHash(String hash) {
+        String h = hash == null ? "" : hash;
+        if (h.equals(this.switchesHash)) {
+            return;
+        }
+        this.switchesHash = h;
+        Node n = node;
+        if (n != null) {
+            n.table.updateSelf(m -> m.withSwitchesHash(h));
+            if (!n.leaving) {
+                announce();
+            }
+        }
+    }
+
+    public String switchesHash() {
+        return switchesHash;
     }
 
     /** The {@code tls.*} settings for calls to {@code url}: node.yaml's, with the matching peer file's overrides. */

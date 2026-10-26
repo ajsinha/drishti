@@ -384,6 +384,8 @@ drishti:
       - "* /api/v1/admin/connectors/*/index/**"   # reloading a connector's type-ahead index: an admin from the console, not a token
       - "* /api/v1/admin/loads/**"
       - "* /api/v1/admin/artifacts/**"        # install, disable, uninstall, restore: an administrator from the console, never a token
+      - "* /api/v1/admin/commands"            # Admin -> Commands: commands and packs on or off, audited with a reason; never a token
+      - "* /api/v1/admin/commands/**"
       - "* /api/v1/admin/collab/**"
       - "* /api/v1/admin/reports/**"
       - "* /api/v1/admin/subscriptions/**"

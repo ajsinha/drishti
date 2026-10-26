@@ -44,6 +44,8 @@ public final class GossipPath extends OncePerRequestFilter {
     static final String GOSSIP = "/api/v1/net/gossip";
     static final String PING = "/api/v1/net/ping";
     static final String DIGEST = "/api/v1/net/digest";
+    /** The switches ledger (Admin → Commands), pulled by a peer whose gossip showed a different hash: on the control lane, so here. */
+    static final String SWITCHES = "/api/v1/net/switches";
     /** A member table is small; this is the cap of any call between nodes. */
     private static final int MAX_BODY = 16 * 1024 * 1024;
 
@@ -51,11 +53,17 @@ public final class GossipPath extends OncePerRequestFilter {
     private final Supplier<DigestService> digests;
     private final GossipConnector port;
     private final ObjectMapper json = new ObjectMapper();
+    private volatile Supplier<Object> switches = () -> null;
 
     public GossipPath(NetService net, Supplier<DigestService> digests, GossipConnector port) {
         this.net = net;
         this.digests = digests;
         this.port = port;
+    }
+
+    /** What {@code GET /api/v1/net/switches} answers (this node's switches ledger), or null while there is none. */
+    public void switches(Supplier<Object> s) {
+        this.switches = s == null ? () -> null : s;
     }
 
     @Override
@@ -67,7 +75,7 @@ public final class GossipPath extends OncePerRequestFilter {
     protected void doFilterInternal(HttpServletRequest req, HttpServletResponse res, FilterChain chain) throws ServletException, IOException {
         String path = req.getRequestURI().substring(req.getContextPath().length());
         String method = req.getMethod();
-        boolean ours = GOSSIP.equals(path) && "POST".equals(method) || (PING.equals(path) || DIGEST.equals(path)) && "GET".equals(method);
+        boolean ours = GOSSIP.equals(path) && "POST".equals(method) || (PING.equals(path) || DIGEST.equals(path) || SWITCHES.equals(path)) && "GET".equals(method);
         if (!ours) {
             if (port != null && port.isGossipPort(req.getLocalPort())) {
                 NetCallFilter.problem(res, 404, "DRS-5056", "this port serves " + Branding.netName() + " gossip, probes and digests only; the server's port serves "
@@ -142,6 +150,12 @@ public final class GossipPath extends OncePerRequestFilter {
                 m.put("target", url);
                 m.put("answered", net.http().ping(url));
                 answer = m;
+            }
+        } else if (SWITCHES.equals(path)) {
+            answer = switches.get();
+            if (answer == null) {
+                NetCallFilter.problem(res, 404, "DRS-5050", "this node keeps no switches");
+                return;
             }
         } else {
             DigestService d = digests.get();

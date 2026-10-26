@@ -47,8 +47,14 @@ public class NetConfiguration {
      * guards, the token filter and any admission gate.
      */
     @Bean
-    public FilterRegistrationBean<GossipPath> gossipPath(NetService net, ObjectProvider<DigestService> digests, GossipConnector port) {
-        FilterRegistrationBean<GossipPath> r = new FilterRegistrationBean<>(new GossipPath(net, digests::getIfAvailable, port));
+    public FilterRegistrationBean<GossipPath> gossipPath(NetService net, ObjectProvider<DigestService> digests, GossipConnector port,
+            ObjectProvider<com.ash.drishti.identity.SwitchLedger> switches) {
+        GossipPath path = new GossipPath(net, digests::getIfAvailable, port);
+        path.switches(() -> {
+            com.ash.drishti.identity.SwitchLedger l = switches.getIfAvailable();
+            return l == null ? null : com.ash.drishti.server.switches.SwitchSync.toWire(net.nodeId(), l);
+        });
+        FilterRegistrationBean<GossipPath> r = new FilterRegistrationBean<>(path);
         r.addUrlPatterns("/*");
         r.setOrder(org.springframework.core.Ordered.HIGHEST_PRECEDENCE);
         return r;

@@ -177,6 +177,7 @@ public class CommandController {
         Optional<EntityRef> named = pick ? Optional.empty() : parser.parse(text);
         String head = text.split("\\s+", 2)[0];
         boolean listable = mnemonics.of(head.toUpperCase(Locale.ROOT)).isPresent();
+        mnemonics.of(head.toUpperCase(Locale.ROOT)).ifPresent(m -> entitlements.requireActive(m.kind()));   // a command turned off: DRS-1016
         if (!listable && !text.contains(" ")) {                       // MKT, market-data: the pack's overview
             Optional<String> pack = packs.byCodeOrName(text);
             if (pack.isPresent()) {
@@ -229,8 +230,9 @@ public class CommandController {
         var shares = sc.ask(peers, path, asOf, principal, sc.suggestBudget(), "suggest", null);
         List<Suggestion> merged = sc.mergeSuggestions(local, shares, limit == null ? Math.max(local.size(), 10) : limit, q);
         // this node's masks and kinds again on what the peers suggested, for the kinds whose packs are here (masks twice)
-        return masks.apply(principal, q, merged.stream().filter(s -> s.kind() == null || packAccess == null || packAccess.ownerOf(s.kind()) == null
-                || entitlements.mayOpen(principal, s.kind())).toList(), asOf);
+        // a command turned off is off on every node (the switches are the cluster's): its kind is never suggested, whoever holds it
+        return masks.apply(principal, q, merged.stream().filter(s -> s.kind() == null || packAccess == null
+                || !packAccess.commandOff(s.kind()) && (packAccess.ownerOf(s.kind()) == null || entitlements.mayOpen(principal, s.kind()))).toList(), asOf);
     }
 
     private org.springframework.beans.factory.ObjectProvider<com.ash.drishti.server.net.SearchScatter> scatter;
