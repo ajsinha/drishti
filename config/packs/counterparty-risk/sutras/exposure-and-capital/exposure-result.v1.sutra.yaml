@@ -73,6 +73,7 @@ panels:
   - id: sets
     kind: table
     title: Netting sets
+    when: "size($.BY_NETTING_SET) > 0"          # a single netting set's answer lists none
     key: F4
     rows: $.BY_NETTING_SET
     columns:

@@ -67,6 +67,9 @@ public final class ControlReads {
             ids.addAll(ControlRules.references(c.bind()));
         }
         p.options().values().forEach(v -> walk(v, ids));
+        if (p.wiring().source() != null) {            // a source's id, where, search, as-of and parameters (params: { estimator: ctl.estimator })
+            p.wiring().source().expressions().forEach(e -> ids.addAll(ControlRules.references(e)));
+        }
         if (p.body() != null) {
             ids.addAll(panel(p.body()));
         }
