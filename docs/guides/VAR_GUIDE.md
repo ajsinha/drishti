@@ -853,9 +853,10 @@ listed, and standalone); the new trade's component VaR in the scope; overlaid di
 the event trigger recomputes the real scopes; the sandbox is left as it was. Without QLRisk declared stable, what-if offers only the
 changes that need no pricing.
 
-**Intraday events.** Overnight vectors describe the morning's positions; the design keeps an **intraday layer** on top of them:
+**Intraday events.** Overnight vectors describe the morning's positions; the design keeps an **intraday layer** on top of them,
+recomputed on the reactive connectors' triggers ([REACTIVE_CONNECTORS.md section 7](../architecture/REACTIVE_CONNECTORS.md#7-triggers-computing-on-events)):
 
-| Event | Trigger ([REACTIVE_CONNECTORS.md section 7](../architecture/REACTIVE_CONNECTORS.md#7-triggers-computing-on-events)) | Effect on the intraday layer |
+| Event | Trigger | Effect on the intraday layer |
 |---|---|---|
 | a trade amended or booked through Drishti's write-back | `write-back` (change applied) | the trade is priced over the 509 scenarios; its intraday vector replaces the stored one |
 | a trade booked or amended in the source system, seen on Kafka | `live` | the same |
@@ -1568,7 +1569,7 @@ built: a node's backtest reads its official `HYPO_PNL`; any other scope replays 
 | One run | all rows of a date carry one `BATCH_ID` and the scenario set's `SCENARIO_SET_ID`; otherwise the date is not loaded (`DRS-5203`) and the date before it is answered, with a warning |
 | Restatement | rewrite the whole date (`lake build` replaces a business date); `RESTATEMENT` + 1; a new `BATCH_ID` |
 
-**Sequence** ([README.md section 9](../contracts/README.md#9-delivery-writing-a-business-date)):
+**Sequence**, following the shared delivery rules ([README.md section 9](../contracts/README.md#9-delivery-writing-a-business-date)):
 
 ```
  upstream batch                                   Drishti

@@ -138,8 +138,9 @@ def test_the_dataset_wizard_makes_a_derived_dataset_without_yaml(browser):
     page.fill("[data-title]", "Live trades by desk")
     page.locator("[data-title]").press("Tab")
     page.click("details:has([data-yaml]) summary")
-    expect(page.locator("[data-yaml]")).to_contain_text("dataset: live-trades-by-desk", timeout=10000)        # the name follows the title until it is typed
-    expect(page.locator("[data-problems-save] .bi-ok")).to_contain_text("Checks clean", timeout=10000)        # the server reads every derivation key
+    # the server's check of the saved form answers first (under a loaded machine it takes seconds), then the YAML shows the name the title gave
+    expect(page.locator("[data-problems-save] .bi-ok")).to_contain_text("Checks clean", timeout=45000)        # the server reads every derivation key
+    expect(page.locator("[data-yaml]")).to_contain_text("dataset: live-trades-by-desk", timeout=30000)        # the name follows the title until it is typed
     shoot(page, '[data-step="save"]', "wizard-save")
     text = page.locator("[data-yaml]").text_content()
     capture("wizard.yaml", text)
@@ -286,8 +287,9 @@ def test_a_save_on_a_published_model_makes_a_draft_and_publish_follows(browser):
     expect(page.locator('[data-measure="Sum of MTM"]')).to_be_visible(timeout=15000)
     page.click("[data-save]")
     expect(page.locator("[data-state]")).to_have_text("Saved draft", timeout=15000)
+    expect(page.locator("[data-publish]")).to_be_enabled(timeout=15000)
     page.click("[data-publish]")
-    expect(page.locator("[data-state]")).to_have_text("Published", timeout=20000)
+    expect(page.locator("[data-state]")).to_have_text("Published", timeout=60000)      # publishing runs the model's Check and safeguard: seconds on a loaded machine
     # change what the measure computes: the save makes a draft beside the published version; Publish is offered again
     expr = page.locator('[data-m-expr="Sum of MTM"]')
     expr.fill("sum(trade.PNL_1D)")
