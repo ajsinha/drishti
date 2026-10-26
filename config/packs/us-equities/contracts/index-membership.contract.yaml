@@ -133,10 +133,6 @@ nested:
     type: amount
     presence: required
     example: 112010000000
-  - name: NET_MARGIN
-    type: rate
-    presence: optional
-    example: 26.92
   - name: CURRENCY
     type: text
     presence: required
@@ -191,16 +187,18 @@ validation:
   - Retail Trade
   - Services
   - Transportation, Communications, Electric, Gas and Sanitary Services
-notes: []
+notes:
+- 'ROWS[].NET_MARGIN left the record in 2.9.2: a member''s net margin is computed from its revenue and net income (docs/guides/GROUPINGS_ANALYTICS_GUIDE.md
+  section 16).'
 review:
 - 'required inferred from 100% coverage in 7 documents (1 samples and 6 test-data documents (data/testdata/us-equities/index-membership/snapshot-2026-10-24.jsonl.gz)):
   confirm each required field is mandatory upstream, and each optional one may be empty.'
 - 'a snapshot refreshed when tools/publicdata/us_equities.py runs: confirm the refresh cadence.'
 - 'enum values inferred from the data, not from a glossary: ROWS[].SECTOR: confirm they are closed lists.'
 - 'number types decided by the field''s name: REVENUE amount, NET_INCOME amount, BY_SECTOR[].VALUE amount, ROWS[].REVENUE amount, ROWS[].NET_INCOME
-  amount, ROWS[].NET_MARGIN rate: confirm amount, rate or integer.'
+  amount, : confirm amount, rate or integer.'
 - 'no unit stated for the amounts REVENUE, NET_INCOME, BY_SECTOR[].VALUE, ROWS[].REVENUE, ROWS[].NET_INCOME (docs/contracts/README.md section
   7: USD unless stated): confirm the currency.'
 - 'no description in about.yaml or the Sutras for BY_SECTOR[].LABEL, BY_SECTOR[].VALUE, ROWS[].TICKER, ROWS[].NAME, ROWS[].SECTOR, ROWS[].SIC,
-  ROWS[].SIC_DESCRIPTION, ROWS[].EXCHANGE, ROWS[].REVENUE, ROWS[].NET_INCOME, ROWS[].NET_MARGIN, ROWS[].CURRENCY and 6 more: write them in the
-  pack''s config/about.yaml glossary.'
+  ROWS[].SIC_DESCRIPTION, ROWS[].EXCHANGE, ROWS[].REVENUE, ROWS[].NET_INCOME, ROWS[].CURRENCY and 6 more: write them in the pack''s config/about.yaml
+  glossary.'

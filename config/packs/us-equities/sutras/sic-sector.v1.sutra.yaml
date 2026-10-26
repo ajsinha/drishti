@@ -16,13 +16,15 @@
 rachana: 1
 sutra: sic-sector
 version: 1
-description: "A sector by its SIC code: its companies ranked by revenue; a click opens a company's summary beside."
+description: "A sector by its SIC code, computed from the companies when asked: its companies ranked by revenue; a click opens a company's summary beside."
 doc:
   summary: "The companies of one SIC code ranked by revenue, with a click opening one beside the table."
   description: >-
     The covered companies the SEC classifies under one Standard Industrial Classification code, largest revenue first: ticker,
-    name, indexes, latest revenue and fiscal year. Clicking a company opens its key facts and its revenue and net income over the
-    years beside the table. The right column ranks the fifteen largest by revenue. SIC ALL lists every code (sic-directory).
+    name, indexes, latest revenue and fiscal year. Computed from the companies when it is opened (since 2.9.2;
+    docs/guides/GROUPINGS_ANALYTICS_GUIDE.md): the revenue, net income and net margin add the USD reporters only, and the strip says
+    how many report in another currency. Clicking a company opens its key facts and its revenue and net income over the years beside
+    the table. The right column ranks the fifteen largest by revenue. SIC ALL lists every code (sic-directory).
   params: {}
   emits: []
   expects: []
@@ -31,7 +33,7 @@ doc:
     - "SIC 6021"
   since: "2.7.0"
 match: { kind: sic-sector, priority: 10 }
-title: { pill: US equities · SIC sector, id: $.SIC, with: $.DESCRIPTION }
+title: { pill: US equities · SIC sector (computed), id: $.SIC, with: $.DESCRIPTION }
 strip:
   - { label: SIC, bind: $.SIC, emphasis: true }
   - { label: Industry, bind: $.DESCRIPTION }
@@ -39,6 +41,8 @@ strip:
   - { label: Companies, bind: $.COMPANIES }
   - { label: Revenue, bind: $.REVENUE, fmt: compact }
   - { label: Net income, bind: $.NET_INCOME, fmt: compact, tone: sign }
+  - { label: Net margin, bind: $.NET_MARGIN, fmt: margin1, tone: sign }
+  - { label: Not in USD, bind: "$.NON_USD > 0 ? $.NON_USD + ' not summed' : 'None'" }
 panels:
   - use: row-picker@1
     with: { id: companies, title: "Companies by revenue (a click opens one beside)", rows: $.ROWS, event: open, key: TICKER, key-label: Ticker, ref: TICKER,
@@ -51,7 +55,7 @@ panels:
         panels:
           - { use: us-equities/company-card@1, with: { id: company, title: "${@parent.open.id}", rec: $src } }
           - { use: us-equities/annual-financials@1, with: { id: company-fin, rows: $src.FINANCIALS } }
-  - { use: ranked-bars@1, with: { id: by-revenue, title: "Largest by revenue, USD", rows: $.BY_REVENUE, fmt: compact, area: right, key: F3 } }
+  - { use: ranked-bars@1, with: { id: by-revenue, title: "Largest by revenue, USD", rows: $.BY_REVENUE, label: TICKER, value: REVENUE, fmt: compact, area: right, key: F3 } }
   - { use: field-list@1, with: { id: source, title: Data source and licence, rows: $.PROVENANCE, area: right } }
   - { use: data-provenance@1 }
 keys: { F9: raw }

@@ -55,7 +55,7 @@ panels:
       - { label: Fiscal year, bind: "%{rec}.FISCAL_YEAR" }
       - { label: Revenue, bind: "%{rec}.REVENUE", fmt: compact }
       - { label: Net income, bind: "%{rec}.NET_INCOME", fmt: compact, tone: sign }
-      - { label: Net margin, bind: "%{rec}.NET_MARGIN", fmt: margin1, tone: sign }
+      - { label: Net margin, bind: "%{rec}.REVENUE ? %{rec}.NET_INCOME / %{rec}.REVENUE * 100 : null", fmt: margin1, tone: sign }
       - { label: Diluted EPS (USD), bind: "%{rec}.EPS_DILUTED", fmt: price2 }
       - { label: Shares outstanding, bind: "%{rec}.SHARES_OUTSTANDING", fmt: compact }
       - { label: CIK, bind: "%{rec}.CIK" }

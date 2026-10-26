@@ -13,228 +13,156 @@
 # See the LICENSE file in the root of this repository for the full terms.
 
 # Data contract of the sic-sector kind (command SIC): docs/contracts/README.md section 16.
-# Drafted by `drishti.py contract bootstrap sic-sector`; owned by people from then on: confirm the review points, then remove them.
+# Drafted by `drishti.py contract bootstrap sic-sector`; completed by hand (2.9.2).
 kind: sic-sector
 mnemonic: SIC
 pack: us-equities
 version: '1.0'
-class: fundamental
+class: computed
 status: active
 title: SIC sector
-description: 'A sector by its SIC code: its companies ranked by revenue; a click opens a company''s summary beside.'
-source: 'public data: SEC EDGAR, Nasdaq Trader, GLEIF and Wikidata (tools/publicdata/us_equities.py)'
-grain: One row per sic sector, keyed by SIC.
+description: 'A sector by its SIC code, computed from the companies when asked: its companies ranked by revenue; a click opens a company''s summary
+  beside.'
+source: 'computed by Drishti: the derived connector us-equities-groupings over the kind us-company'
+grain: One record per SIC of the us-company records, computed when asked.
 key:
 - SIC
-dated-by: snapshot
+dated-by: on request
 cadence:
-  frequency: static
-  due: to be confirmed
+  frequency: on change
+  due: recomputed from its source kind (connector refresh 60s)
 storage:
-  connector: us-equities-store
-  plugin: delta
-  domain: us-equities
-  table: <root>/us-equities/sic-sector/
-  columns:
-  - SIC
-  - DESCRIPTION
-  - SECTOR
-  - COMPANIES
-  test-data:
-  - data/testdata/us-equities/sic-sector
+  connector: us-equities-groupings
+  plugin: derived
 fields:
 - name: SIC
   type: id
   presence: required
-  description: SIC
-  example: '3711'
-- name: DESCRIPTION
-  type: text
-  presence: required
-  description: Industry
-  example: Motor Vehicles & Passenger Car Bodies
-- name: DIVISION
-  type: text
-  presence: optional
-  example: D
-- name: SECTOR
-  type: text
-  presence: required
-  description: Division
-  example: Manufacturing
+  description: The value the us-company records are grouped by ($.SIC; each also joins 'ALL')
+- name: TICKERS
+  type: id list
+  presence: derived
+  description: The ids of the grouped us-company records (at most 100000)
 - name: COMPANIES
   type: integer
-  presence: required
-  description: Companies
-  example: 4
+  presence: derived
+  description: The companies whose SIC is the key (every currency)
+- name: DESCRIPTIONS
+  type: text list
+  presence: derived
+  description: 'A helper of the page fields: distinct over the group of: $.SIC_DESCRIPTION'
+- name: DIVISIONS
+  type: text list
+  presence: derived
+  description: 'A helper of the page fields: distinct over the group of: $.DIVISION'
+- name: SECTORS
+  type: text list
+  presence: derived
+  description: 'A helper of the page fields: distinct over the group of: $.SECTOR'
+- name: CODE_LIST
+  type: text list
+  presence: derived
+  description: 'A helper of the page fields: distinct over the group of: $.SIC'
 - name: REVENUE
   type: amount
-  presence: required
-  description: Revenue
-  example: 495557800000
+  presence: derived
+  description: The latest fiscal year revenue summed over the companies that report in USD
 - name: NET_INCOME
   type: amount
-  presence: required
-  description: Net income
-  example: 704800000
-- name: ROWS
-  type: record list
-  presence: optional
-  description: 'Nested: see nested ROWS[]'
-- name: BY_REVENUE
-  type: record list
-  presence: optional
-  description: 'Nested: see nested BY_REVENUE[]'
+  presence: derived
+  description: The latest fiscal year net income summed over the USD reporters
+- name: NON_USD
+  type: integer
+  presence: derived
+  description: 'Companies that report in another currency: counted, not summed'
 - name: PROVENANCE
   type: record
-  presence: required
-  description: 'Nested: see nested PROVENANCE'
+  presence: derived
+  description: The first company's source and licence (SEC EDGAR)
+- name: ROWS
+  type: record list
+  presence: derived
+  description: One row per grouped us-company record
+- name: DESCRIPTION
+  type: text
+  presence: derived
+  description: The SIC code's description as the SEC gives it ('Every SIC code of the companies covered' for ALL)
+- name: DIVISION
+  type: text
+  presence: derived
+  description: The SIC division letter
+- name: SECTOR
+  type: text
+  presence: derived
+  description: The SIC division name
 - name: CODES
   type: integer
-  presence: optional
-  description: SIC codes
-  example: 181
-- name: CODES_LIST
+  presence: derived
+  description: The number of SIC codes among the companies (1, or every code on ALL)
+- name: NET_MARGIN
+  type: rate
+  presence: derived
+  description: NET_INCOME / REVENUE x 100 (USD reporters), in per cent
+- name: BY_REVENUE
   type: record list
-  presence: optional
-  description: 'Nested: see nested CODES_LIST[]'
+  presence: derived
+  description: The USD reporters with revenue, largest first, the top 15 (rows of ROWS)
 - name: BY_DIVISION
   type: record list
-  presence: optional
-  description: 'Nested: see nested BY_DIVISION[]'
+  presence: derived
+  description: 'Revenue of the USD reporters by SIC division: label, value, count; largest first'
 nested:
   ROWS[]:
   - name: TICKER
-    type: text
-    presence: required
-    example: F
+    type: unknown
+    presence: optional
+    description: 'From the us-company record: $.TICKER'
   - name: NAME
-    type: text
-    presence: required
-    example: Ford Motor Company
+    type: unknown
+    presence: optional
+    description: 'From the us-company record: $.NAME'
   - name: EXCHANGE
-    type: text
-    presence: required
-    example: NYSE, NYSE, NYSE, NYSE
+    type: unknown
+    presence: optional
+    description: 'From the us-company record: $.EXCHANGE'
   - name: INDEX_TEXT
-    type: text
-    presence: required
-    example: S&P 500
-  - name: REVENUE
-    type: amount
+    type: unknown
     presence: optional
-    example: 187267000000
-  - name: NET_INCOME
-    type: amount
-    presence: required
-    example: -8162000000
-  - name: NET_MARGIN
-    type: rate
-    presence: optional
-    example: -4.36
-  - name: CURRENCY
-    type: text
-    presence: required
-    example: USD
-    enum:
-    - CAD
-    - EUR
-    - GBP
-    - USD
-  - name: FISCAL_YEAR
-    type: integer
-    presence: required
-    example: 2025
-  BY_REVENUE[]:
-  - name: LABEL
-    type: text
-    presence: required
-    example: F
-  - name: VALUE
-    type: amount
-    presence: required
-    example: 187267000000
-  PROVENANCE:
-  - name: SOURCE
-    type: text
-    presence: required
-    example: U.S. Securities and Exchange Commission, EDGAR (Standard In…
-  - name: RETRIEVED_AT
-    type: date
-    presence: required
-    example: '2026-10-24'
-  - name: LICENCE
-    type: text
-    presence: required
-    example: Public domain (U.S. Government work); SEC EDGAR fair access…
-  CODES_LIST[]:
-  - name: SIC
-    type: id
-    presence: required
-    description: The record's id (the business key)
-    example: '6324'
-  - name: DESCRIPTION
-    type: text
-    presence: required
-    description: Industry
-    example: Hospital & Medical Service Plans
+    description: 'From the us-company record: $.INDEX_TEXT'
   - name: SECTOR
-    type: text
-    presence: required
-    description: Division
-    example: Finance, Insurance and Real Estate
-  - name: COMPANIES
-    type: integer
-    presence: required
-    description: Companies
-    example: 5
+    type: unknown
+    presence: optional
+    description: 'From the us-company record: $.SECTOR'
   - name: REVENUE
-    type: amount
-    presence: required
-    description: Revenue, latest FY
-    example: 1246033000000
-  BY_DIVISION[]:
-  - name: LABEL
-    type: text
-    presence: required
-    example: Manufacturing
-  - name: VALUE
-    type: amount
-    presence: required
-    example: 5609615057000
+    type: unknown
+    presence: optional
+    description: 'From the us-company record: $.REVENUE'
+  - name: NET_INCOME
+    type: unknown
+    presence: optional
+    description: 'From the us-company record: $.NET_INCOME'
+  - name: NET_MARGIN
+    type: unknown
+    presence: optional
+    description: 'From the us-company record: $.REVENUE ? $.NET_INCOME / $.REVENUE * 100 : null'
+  - name: CURRENCY
+    type: unknown
+    presence: optional
+    description: 'From the us-company record: $.CURRENCY'
+  - name: FISCAL_YEAR
+    type: unknown
+    presence: optional
+    description: 'From the us-company record: $.FISCAL_YEAR'
 links: []
 validation:
 - rule: required
   fields:
   - SIC
-  - DESCRIPTION
-  - SECTOR
-  - COMPANIES
-  - REVENUE
-  - NET_INCOME
-  - PROVENANCE
 - rule: unique
   key:
   - SIC
   per: snapshot
-- rule: enum
-  field: ROWS[].CURRENCY
-  values:
-  - CAD
-  - EUR
-  - GBP
-  - USD
-notes: []
-review:
-- 'required inferred from 100% coverage in 183 documents (1 samples and 182 test-data documents (data/testdata/us-equities/sic-sector/snapshot-2026-10-24.jsonl.gz)):
-  confirm each required field is mandatory upstream, and each optional one may be empty.'
-- 'a snapshot refreshed when tools/publicdata/us_equities.py runs: confirm the refresh cadence.'
-- 'enum values inferred from the data, not from a glossary: ROWS[].CURRENCY: confirm they are closed lists.'
-- 'number types decided by the field''s name: REVENUE amount, NET_INCOME amount, ROWS[].REVENUE amount, ROWS[].NET_INCOME amount, ROWS[].NET_MARGIN
-  rate, BY_REVENUE[].VALUE amount, CODES_LIST[].REVENUE amount, BY_DIVISION[].VALUE amount: confirm amount, rate or integer.'
-- 'no unit stated for the amounts REVENUE, NET_INCOME, ROWS[].REVENUE, ROWS[].NET_INCOME, BY_REVENUE[].VALUE, CODES_LIST[].REVENUE, BY_DIVISION[].VALUE
-  (docs/contracts/README.md section 7: USD unless stated): confirm the currency.'
-- 'no description in about.yaml or the Sutras for DIVISION, ROWS[].TICKER, ROWS[].NAME, ROWS[].EXCHANGE, ROWS[].INDEX_TEXT, ROWS[].REVENUE, ROWS[].NET_INCOME,
-  ROWS[].NET_MARGIN, ROWS[].CURRENCY, ROWS[].FISCAL_YEAR, BY_REVENUE[].LABEL, BY_REVENUE[].VALUE and 5 more: write them in the pack''s config/about.yaml
-  glossary.'
-- 'The release is 2.9.0 or 2.10.0 (Track B, shipped as each is ready): confirm which.'
+notes:
+- 'Computed when asked by the derived connector us-equities-groupings from every us-company (since 2.9.2, which retired the stored page): docs/guides/GROUPINGS_ANALYTICS_GUIDE.md
+  (Part II). Totals add the USD reporters only.'
+review: []

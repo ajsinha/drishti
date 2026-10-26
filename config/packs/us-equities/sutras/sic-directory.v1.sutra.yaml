@@ -20,9 +20,10 @@ description: "Every SIC code of the covered companies, by revenue, and revenue b
 doc:
   summary: "Every SIC code of the covered companies with its company count and revenue; revenue by SIC division."
   description: >-
-    The directory of sectors (SIC ALL): one row a Standard Industrial Classification code that at least one covered company
-    reports, with its description, division, number of companies and their latest revenue, largest first; the code opens its
-    sector page. The right column totals revenue by SIC division (Manufacturing, Finance, Services...).
+    The directory of sectors (SIC ALL), computed from the companies when it is opened (since 2.9.2): one row a Standard Industrial
+    Classification code that at least one covered company reports, with its description, division, number of companies and their
+    latest revenue (USD reporters); the code opens its sector page. The right column totals revenue by SIC division (Manufacturing,
+    Finance, Services...).
   params: {}
   emits: []
   expects: []
@@ -31,7 +32,7 @@ doc:
     - "SIC ALL"
   since: "2.7.0"
 match: { kind: sic-sector, where: "$.SIC == 'ALL'", priority: 20 }
-title: { pill: US equities · Sectors, id: $.SIC, with: $.DESCRIPTION }
+title: { pill: US equities · Sectors (computed), id: $.SIC, with: $.DESCRIPTION }
 strip:
   - { label: SIC codes, bind: $.CODES, emphasis: true }
   - { label: Companies, bind: $.COMPANIES }
@@ -40,17 +41,18 @@ strip:
 panels:
   - id: codes
     kind: table
-    title: SIC codes by revenue
+    title: SIC codes (sort by a column)
     key: F2
-    rows: $.CODES_LIST
-    limit: 500
+    source: { kind: sic-sector, search: "''", limit: 1000 }
+    rows: $src
+    where: "@.SIC != 'ALL'"
     columns:
       - { label: SIC, bind: "link(@.SIC, 'sic-sector')" }
       - { label: Industry, bind: "@.DESCRIPTION" }
       - { label: Division, bind: "@.SECTOR" }
       - { label: Companies, bind: "@.COMPANIES", total: true }
       - { label: "Revenue, latest FY", bind: "@.REVENUE", fmt: compact, total: true }
-  - { use: ranked-bars@1, with: { id: by-division, title: "Revenue by SIC division, USD", rows: $.BY_DIVISION, fmt: compact, area: right, key: F3 } }
+  - { use: ranked-bars@1, with: { id: by-division, title: "Revenue by SIC division, USD", rows: $.BY_DIVISION, label: label, value: value, fmt: compact, area: right, key: F3 } }
   - { use: field-list@1, with: { id: source, title: Data source and licence, rows: $.PROVENANCE, area: right } }
   - { use: data-provenance@1 }
 keys: { F9: raw }

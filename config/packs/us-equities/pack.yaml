@@ -73,7 +73,6 @@ form:                          # FORM us-equities: the search form of each kind
     - { path: SIC_DESCRIPTION, label: SIC industry, type: text, group: Sector }
     - { path: STATE_OF_INCORPORATION, type: enum, group: Sector }
     - { path: REVENUE, type: number, group: Financials }
-    - { path: NET_MARGIN, label: "Net margin (%)", type: number, group: Financials }
   filing:
     - { path: ACCESSION, type: id, group: Filing }
     - { path: COMPANY, type: text, group: Filing }
@@ -86,8 +85,8 @@ console:
     - ["IDX SP500", "S&P 500 · the members, filterable; a click opens the company beside"]
     - ["IDX DJIA", "Dow Jones Industrial Average · thirty members"]
     - ["IDX BANKS-CA", "Canadian banks that file with the SEC · financials in CAD"]
-    - ["SIC 3674", "Semiconductors · the companies of one SIC code by revenue"]
-    - ["SIC ALL", "Every SIC code covered, by revenue"]
+    - ["SIC 3674", "Semiconductors, computed from the companies · the companies of one SIC code by revenue"]
+    - ["SIC ALL", "Every SIC code covered, by revenue (computed)"]
     - ["EDGAR 8-K", "The latest current reports; a click opens the filing beside"]
     - ["FACT AAPL-REVENUE", "Apple's revenue over ten fiscal years"]
   help: config/help.yaml
@@ -107,21 +106,18 @@ connectors:
   us-equities-store:
     plugin: delta
     enabled: ${DRISHTI_LAKE_ENABLED:true}
-    kinds: [us-company, index-membership, sic-sector, filing-feed, filing, financial-fact]
+    kinds: [us-company, index-membership, filing-feed, filing, financial-fact]
     settings:
       root: ${DRISHTI_DELTA_ROOT:${drishti.data.dir:./data}/delta}
       domain: us-equities
       layout:
         us-company:
           columns: [TICKER, NAME, LEI_LEGAL_NAME, CIK, LEI, EXCHANGE, INDEX_TEXT, SECTOR, SIC, SIC_DESCRIPTION, STATE_OF_INCORPORATION,
-                    REVENUE, NET_MARGIN]
+                    REVENUE]
           type-ahead: [NAME, LEI, LEI_LEGAL_NAME]
         index-membership:
           columns: [INDEX, NAME, MEMBERS]
           type-ahead: [NAME]
-        sic-sector:
-          columns: [SIC, DESCRIPTION, SECTOR, COMPANIES]
-          type-ahead: [DESCRIPTION]
         filing-feed:
           columns: [FEED, NAME, FILINGS]
           type-ahead: [NAME]
@@ -146,10 +142,64 @@ connectors:
       cache-ttl-seconds: 300
       cache-max-symbols: 200
       user-agent: ${drishti.branding.product:Drishti} us-equities prices (internal use only)
+      benchmark: ${DRISHTI_US_EQUITIES_BENCHMARK:SPY}     # beta and correlation are measured against it (PXH analytics, computed when read)
+  # SIC: computed from the companies when asked (since 2.9.2; docs/guides/GROUPINGS_ANALYTICS_GUIDE.md). A company is in its SIC code's
+  # sector and in ALL (the directory, which keeps its aggregates only). Totals add the USD reporters only (CAD, GBP and EUR filers are
+  # counted, not summed); a company's net margin is its net income over its revenue.
+  us-equities-groupings:
+    plugin: derived
+    enabled: ${DRISHTI_LAKE_ENABLED:true}
+    kinds: [sic-sector]
+    settings:
+      refresh: 60s
+      source-name: us-equities-groupings
+      sic-sector:
+        from: us-company
+        group-by: $.SIC
+        also-group-by: { all: "'ALL'" }
+        unlisted: ALL
+        id-field: SIC
+        search-fields: DESCRIPTION          # SIC semicon: the type-ahead finds a sector by its description
+        members: TICKERS
+        max-members: 100000
+        rows-field: ROWS
+        fields:
+          COMPANIES: count
+          DESCRIPTIONS: distinct $.SIC_DESCRIPTION
+          DIVISIONS: distinct $.DIVISION
+          SECTORS: distinct $.SECTOR
+          CODE_LIST: distinct $.SIC
+          REVENUE: "sum $.CURRENCY == 'USD' ? $.REVENUE : null"
+          NET_INCOME: "sum $.CURRENCY == 'USD' ? $.NET_INCOME : null"
+          NON_USD: "sum $.CURRENCY != 'USD' ? 1 : 0"
+          PROVENANCE: first $.PROVENANCE
+        rows:
+          TICKER: $.TICKER
+          NAME: $.NAME
+          EXCHANGE: $.EXCHANGE
+          INDEX_TEXT: $.INDEX_TEXT
+          SECTOR: $.SECTOR
+          REVENUE: $.REVENUE
+          NET_INCOME: $.NET_INCOME
+          NET_MARGIN: "$.REVENUE ? $.NET_INCOME / $.REVENUE * 100 : null"
+          CURRENCY: $.CURRENCY
+          FISCAL_YEAR: $.FISCAL_YEAR
+        then:
+          DESCRIPTION: "$.SIC == 'ALL' ? 'Every SIC code of the companies covered' : first($.DESCRIPTIONS)"
+          DIVISION: "$.SIC == 'ALL' ? '' : first($.DIVISIONS)"
+          SECTOR: "$.SIC == 'ALL' ? 'All divisions' : first($.SECTORS)"
+          CODES: size($.CODE_LIST)
+          NET_MARGIN: "$.REVENUE ? $.NET_INCOME / $.REVENUE * 100 : null"
+          BY_REVENUE: "$.ROWS[?@.CURRENCY == 'USD' && @.REVENUE > 0]"
+          BY_DIVISION: "group($.ROWS[?@.CURRENCY == 'USD'], 'SECTOR', 'REVENUE')"
+        sort:
+          ROWS: REVENUE desc
+          BY_REVENUE: REVENUE desc 15
+          BY_DIVISION: value desc
 routes:
   us-company: us-equities-store
   index-membership: us-equities-store
-  sic-sector: us-equities-store
+  sic-sector: us-equities-groupings
   filing-feed: us-equities-store
   filing: us-equities-store
   financial-fact: us-equities-store

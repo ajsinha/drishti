@@ -73,7 +73,7 @@ fields:
     PRICE_HISTORY: Id of its price-history document (read live, internal only)
     PROVENANCE: Source, retrieval date, licence and URL
   index-membership: {INDEX: Index code (DJIA, NDX, SP500) or bank list (BANKS-US, BANKS-CA, BANKS-UK), BY_SECTOR: Members by SIC division, ROWS: The members, PROVENANCE: Source, retrieval date, licence and URL}
-  sic-sector: {DIVISION: SIC division letter, ROWS: The companies of the code, BY_REVENUE: Companies by revenue, PROVENANCE: Source and licence, CODES_LIST: The SIC codes covered (SIC ALL), BY_DIVISION: Codes by division}
+  sic-sector: {DIVISION: SIC division letter, ROWS: The companies of the code (computed), BY_REVENUE: Companies by revenue (USD reporters), PROVENANCE: Source and licence, NON_USD: Companies reporting in another currency (not summed), NET_MARGIN: Net income over revenue (%), BY_DIVISION: Revenue by division (SIC ALL)}
   filing-feed: {FEED: Feed id (a form type or ALL), FORM: The form type, ROWS: The filings, BY: Filings by form, BY_TITLE: Filings by company, PROVENANCE: Source and licence}
   filing:
     ACCESSION: SEC accession number

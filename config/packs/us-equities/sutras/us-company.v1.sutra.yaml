@@ -43,8 +43,8 @@ strip:
   - { label: Fiscal year, bind: $.FISCAL_YEAR }
   - { label: Revenue, bind: $.REVENUE, fmt: compact }
   - { label: Net income, bind: $.NET_INCOME, fmt: compact, tone: sign }
-  - { label: Net margin, bind: $.NET_MARGIN, fmt: margin1, tone: sign }
-  - { label: Revenue growth, bind: $.REVENUE_GROWTH, fmt: growth1, tone: sign }
+  - { label: Net margin, bind: "$.REVENUE ? $.NET_INCOME / $.REVENUE * 100 : null", fmt: margin1, tone: sign }
+  - { label: Revenue growth, bind: "first($.FINANCIALS[?@.YEAR == $.FISCAL_YEAR - 1]).REVENUE ? ($.REVENUE - first($.FINANCIALS[?@.YEAR == $.FISCAL_YEAR - 1]).REVENUE) / abs(first($.FINANCIALS[?@.YEAR == $.FISCAL_YEAR - 1]).REVENUE) * 100 : null", fmt: growth1, tone: sign }
   - { label: Diluted EPS, bind: $.EPS_DILUTED, fmt: price2 }
 panels:
   - { use: us-equities/annual-financials@1, with: { chart-key: F2, key: F3 } }

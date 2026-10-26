@@ -21,7 +21,7 @@ params: { id: financials, title: "Annual financials (10-K, USD)", chart-title: "
 doc:
   summary: "A company's annual financials: revenue and net income as a chart over the years, and every figure in a table."
   description: >-
-    Two panels over a list of fiscal years (us-company FINANCIALS rows: YEAR, PERIOD_END, REVENUE, NET_INCOME, NET_MARGIN,
+    Two panels over a list of fiscal years (us-company FINANCIALS rows: YEAR, PERIOD_END, REVENUE, NET_INCOME, the net margin computed from them,
     ASSETS, LIABILITIES, EQUITY, EPS_DILUTED): an area chart of revenue and net income, one point a year, and a table of every
     figure, the newest year last. The figures are the annual values of the company's 10-K XBRL filings.
   params:
@@ -63,7 +63,7 @@ panels:
       - { label: Period end, bind: "@.PERIOD_END", fmt: date }
       - { label: Revenue, bind: "@.REVENUE", fmt: compact }
       - { label: Net income, bind: "@.NET_INCOME", fmt: compact, tone: sign }
-      - { label: Net margin, bind: "@.NET_MARGIN", fmt: margin1, tone: sign }
+      - { label: Net margin, bind: "@.REVENUE ? @.NET_INCOME / @.REVENUE * 100 : null", fmt: margin1, tone: sign }
       - { label: Total assets, bind: "@.ASSETS", fmt: compact }
       - { label: Total liabilities, bind: "@.LIABILITIES", fmt: compact }
       - { label: Equity, bind: "@.EQUITY", fmt: compact }

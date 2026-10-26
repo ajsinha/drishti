@@ -31,7 +31,7 @@ The pack is **off by default**: add it to the packs a server loads, `DRISHTI_PAC
 |---|---|---|
 | `USEQ <ticker>` | a company: key facts, financials table and chart, recent filings (a click opens one beside), index memberships | `USEQ AAPL`, `USEQ JPM`, `USEQ BRK-B` |
 | `IDX <index>` | an index's members, filterable; a click opens the member's summary beside | `IDX SP500`, `IDX NDX`, `IDX DJIA`, `IDX BANKS-US`, `IDX BANKS-CA`, `IDX BANKS-UK` |
-| `SIC <code>` | a sector (Standard Industrial Classification): its companies by revenue | `SIC 3674`, `SIC 6021`; `SIC ALL` lists every code |
+| `SIC <code>` | a sector (Standard Industrial Classification), computed from the companies when asked: its companies by revenue, totals of the USD reporters | `SIC 3674`, `SIC 6021`; `SIC ALL` lists every code |
 | `EDGAR <form>` | the filings browser: the latest filings, all or of one form; a click opens the filing beside | `EDGAR ALL`, `EDGAR 10-K`, `EDGAR 8-K`, `EDGAR 4`, `EDGAR DEF-14A` |
 | `FILING <accession>` | one filing: form, dates, 8-K items and its EDGAR links | from a company's filings |
 | `FACT <ticker>-<concept>` | one financial concept of a company over ten fiscal years | `FACT AAPL-REVENUE`, `FACT MSFT-NET-INCOME` |
@@ -45,11 +45,11 @@ The concepts are `REVENUE`, `NET-INCOME`, `ASSETS`, `LIABILITIES`, `EQUITY`, `EP
 |---|---|---|
 | `us-company` | 503 | CIK, ticker, exchange and listing market, SIC with its description and division, state of incorporation, fiscal year end, LEI, headquarters, founded, website, index memberships, the latest year's figures, ten years of financials, the latest 20 filings |
 | `index-membership` | 6 | the members as Wikidata records them, with their sector and latest revenue; members by sector |
-| `sic-sector` | 182 | the companies of one SIC code ranked by revenue; `ALL` lists every code |
+| `sic-sector` | computed (181 codes and `ALL`) | the companies of one SIC code ranked by revenue; `ALL` lists every code. Computed from the companies when asked by the derived connector `us-equities-groupings` (since 2.9.2): nothing is stored |
 | `filing-feed` | 6 | the latest 300 filings of the companies, all forms or one |
 | `filing` | 10,040 | one filing: form, filing and report dates, document, 8-K items, links to the document and its EDGAR index |
 | `financial-fact` | 3,480 | one concept of one company: up to ten annual values with the change, the XBRL tag and the filing each came from |
-| `price-history` | live only | the quote and a year of daily prices, from the price connector when a site switches it on |
+| `price-history` | live only | the quote, a year of daily prices and the analytics computed from them when read (returns, volatility, drawdown, beta against the benchmark), from the price connector when a site switches it on; nothing is stored |
 
 Members per index or list: Dow Jones Industrial Average 34, Nasdaq-100 77, S&P 500 459, Major US banks 39, Canadian banks 6, Major UK banks 4. The bank lists (BANKS-US, BANKS-CA, BANKS-UK) are kept by Drishti (`LISTS` in
 `tools/packgen/us_equities/fetch.py`) and hold banks that file with the SEC. Annual values are those of the annual reports (10-K, or
