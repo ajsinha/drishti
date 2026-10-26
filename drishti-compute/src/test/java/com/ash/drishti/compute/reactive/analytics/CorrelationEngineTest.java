@@ -69,7 +69,7 @@ class CorrelationEngineTest {
         Map<String, Object> row = CorrelationEngine.correlate("CORR-T", "Test", List.of("EQ-A", "EQ-B"), List.of(a, b), 3, "pearson");
         assertThat(row.get("AVAILABLE")).isEqualTo(5);
         assertThat(row.get("WINDOW")).isEqualTo(3);
-        assertThat(row.get("FROM")).isEqualTo("2026-09-05");
+        assertThat(row.get("FROM")).isEqualTo("2026-09-03");                 // the last four common closes: 03, 05, 06, 07
     }
 
     @Test

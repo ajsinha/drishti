@@ -122,6 +122,9 @@ class EconomicsSutraNextEquivalenceTest {
 
     @Test
     void theSixMigratedEconomicsScreensDrawExactlyWhatTheInlineLayoutsDrewForAFullAndAMaskedReader() throws Exception {
+        // the country groups are computed (2.9.2): built once before the economies' links to them are resolved, so both reads agree
+        mvc.perform(get("/api/v1/views/country-group/ECG-SAS").header("Authorization", "Bearer " + tokens.mint("u-full", List.of("full"), 300)))
+                .andExpect(status().isOk());
         Map<String, JsonNode[]> after = new LinkedHashMap<>();
         for (String kind : SCREENS.keySet()) {
             JsonNode full = read(kind, "full");

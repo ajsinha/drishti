@@ -185,6 +185,7 @@ class DerivedPageTest {
         assertThat(p.search("grp", "entity g2", 10)).extracting(h -> h.ref().id()).containsExactly("G2");
         assertThat(p.search("grp", "entity g2", 10).get(0).title()).isEqualTo("Entity G2");
         assertThat(p.search("grp", "", 10)).hasSize(3);
+        assertThat(p.search("grp", "*", 10)).hasSize(3);                                  // * lists every page
         assertThat(started(settings()).search("grp", "entity", 10)).isEmpty();          // without search-fields: ids only
     }
 

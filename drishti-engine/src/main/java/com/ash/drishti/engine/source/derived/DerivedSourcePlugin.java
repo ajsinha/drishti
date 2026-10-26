@@ -209,7 +209,8 @@ public final class DerivedSourcePlugin implements SourcePlugin {
         if (k == null) {
             return List.of();
         }
-        String t = text == null ? "" : text.trim().toLowerCase(Locale.ROOT);
+        String raw = text == null ? "" : text.trim().toLowerCase(Locale.ROOT);
+        String t = raw.equals("*") ? "" : raw;                  // * lists every page (a directory panel: SIC ALL's codes)
         Pages pages = snapshot(asOf).pages();
         if (k.searchFields().isEmpty()) {
             return pages.ids(kind).stream().sorted().filter(id -> id.toLowerCase(Locale.ROOT).contains(t)).limit(limit)

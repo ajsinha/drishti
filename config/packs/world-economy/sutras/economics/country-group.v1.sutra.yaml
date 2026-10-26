@@ -46,7 +46,6 @@ strip:
   - { label: Population (m), bind: $.POPULATION_M, fmt: price2 }
   - { label: Real growth, bind: $.GROWTH, fmt: pc2, tone: sign, emphasis: true }
   - { label: Inflation (median), bind: $.INFLATION, fmt: pc2 }
-  - { label: Latest year, bind: $.YEAR }
 panels:
   - use: measure-table@1
     with: { id: topEconomies, title: Largest economies, key: F3, rows: $.TOP_ECONOMIES, name-label: Economy, name: ECONOMY,

@@ -43,7 +43,7 @@ panels:
     kind: table
     title: SIC codes (sort by a column)
     key: F2
-    source: { kind: sic-sector, search: "''", limit: 1000 }
+    source: { kind: sic-sector, search: "'*'", limit: 200 }
     rows: $src
     where: "@.SIC != 'ALL'"
     columns:
