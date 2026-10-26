@@ -191,6 +191,8 @@ public final class LakeWriter {
 
     /** A vector column's type: Parquet LIST of DOUBLE, elements nullable (a missing scenario value is null, never zero). */
     static final ArrayType VECTOR = new ArrayType(DoubleType.DOUBLE, true);
+    /** A float32 vector column (exposure paths may be stored so, EXPOSURE_GUIDE.md section 15): Parquet LIST of FLOAT. */
+    static final ArrayType VECTOR32 = new ArrayType(io.delta.kernel.types.FloatType.FLOAT, true);
 
     static DataType type(String t) {
         return switch (t) {
@@ -198,6 +200,7 @@ public final class LakeWriter {
             case "long" -> LongType.LONG;
             case "date" -> DateType.DATE;
             case "vector" -> VECTOR;            // a P&L vector: list<double> (VAR_GUIDE.md section 29.3)
+            case "vector32" -> VECTOR32;        // exposure paths in float32: list<float>
             default -> StringType.STRING;
         };
     }
@@ -424,6 +427,7 @@ public final class LakeWriter {
         @Override
         public io.delta.kernel.data.ArrayValue getArray(int rowId) {
             double[] a = (double[]) values[rowId];
+            DataType el = type instanceof ArrayType at ? at.getElementType() : DoubleType.DOUBLE;
             return new io.delta.kernel.data.ArrayValue() {
                 @Override
                 public int getSize() {
@@ -432,17 +436,22 @@ public final class LakeWriter {
 
                 @Override
                 public ColumnVector getElements() {
-                    return new Elements(a);
+                    return new Elements(a, el);
                 }
             };
         }
     }
 
-    /** A vector's elements as a column. */
-    private record Elements(double[] a) implements ColumnVector {
+    /** A vector's elements as a column: doubles, or floats (a float32 vector column). */
+    private record Elements(double[] a, DataType type) implements ColumnVector {
         @Override
         public DataType getDataType() {
-            return DoubleType.DOUBLE;
+            return type;
+        }
+
+        @Override
+        public float getFloat(int rowId) {
+            return (float) a[rowId];
         }
 
         @Override

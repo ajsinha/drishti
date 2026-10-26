@@ -122,15 +122,16 @@ public class ExposureController {
     @GetMapping("/scope/distribution")
     public Map<String, Object> distribution(@RequestParam String scope, @RequestParam(required = false) String date,
             @RequestParam(defaultValue = "0") int bins, @RequestParam(required = false) String q, @RequestParam(required = false) String collateral,
-            AsOf asOf, @RequestAttribute(Principal.ATTRIBUTE) Principal p) {
-        return views.distribution(p, scope(scope), date(asOf), ask(q, collateral, null, null), date, bins);
+            @RequestParam(defaultValue = "false") boolean bands, AsOf asOf, @RequestAttribute(Principal.ATTRIBUTE) Principal p) {
+        return views.distribution(p, scope(scope), date(asOf), ask(q, collateral, null, null), date, bins, bands);
     }
 
     @GetMapping("/scope/contributions")
     public Map<String, Object> contributions(@RequestParam String scope, @RequestParam(required = false) String by,
             @RequestParam(required = false) String figure, @RequestParam(required = false) String date, @RequestParam(required = false) String q,
-            @RequestParam(required = false) String collateral, AsOf asOf, @RequestAttribute(Principal.ATTRIBUTE) Principal p) {
-        return views.contributions(p, scope(scope), date(asOf), ask(q, collateral, null, null), by, figure, date);
+            @RequestParam(required = false) String collateral, @RequestParam(defaultValue = "false") boolean alone,
+            @RequestParam(defaultValue = "false") boolean profile, AsOf asOf, @RequestAttribute(Principal.ATTRIBUTE) Principal p) {
+        return views.contributions(p, scope(scope), date(asOf), ask(q, collateral, null, null), by, figure, date, alone, profile);
     }
 
     @GetMapping("/tree")

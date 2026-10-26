@@ -299,7 +299,8 @@ class ExposureApiTest {
         // at 1Y: 1.645 x 0.04 x 10m x sqrt(1) = 658k more PFE at that date
         assertThat(w.at("/incremental/profile/2/incrementalPfe").asLong()).isBetween(657_000L, 659_000L);
         mvc.perform(post("/api/v1/exposure/what-if").header("Authorization", as("rita", "risk")).contentType(MediaType.APPLICATION_JSON)
-                .content(body.replace("addon", "paths"))).andExpect(status().is(501)).andExpect(jsonPath("$.code").value("DRS-5446"));
+                .content(body.replace("addon", "paths").replace("\"mtm\": 0}", "\"mtm\": 0, \"nettingSet\": \"NS-X\", \"paths\": {\"copyOf\": \"B\"}}")))
+                .andExpect(status().is(503)).andExpect(jsonPath("$.code").value("DRS-5446"));      // no Python engine (exposure-whatif) here
         mvc.perform(post("/api/v1/exposure/what-if").header("Authorization", as("rita", "risk")).contentType(MediaType.APPLICATION_JSON)
                 .content(body.replace("\"mtm\": 0}", "\"mtm\": 0, \"paths\": {\"runId\": \"XR-OTHER\"}}"))).andExpect(status().isBadRequest())
                 .andExpect(jsonPath("$.code").value("DRS-5442"));
@@ -389,5 +390,81 @@ class ExposureApiTest {
         assertThat(fx.get("STATUS").asText()).isEqualTo("ok");
         assertThat(fx.get("EPE").asLong()).isEqualTo(950_000L);
         assertThat(fx.get("NOTE").asText()).contains("EXP NSET:NS-X <GO>");
+    }
+
+    @Test
+    @Order(10)
+    void theExplorersFieldsAndThePythonEnginesInputs() throws Exception {
+        // where a scope sits, a netting set's collateral, a counterparty above it
+        JsonNode x = scope("NSET:NS-X");
+        assertThat(x.at("/ancestors/0/scope").asText()).isEqualTo("BANK");
+        assertThat(x.at("/ancestors/1/scope").asText()).isEqualTo("LE:LE-A");
+        assertThat(x.at("/ancestors/2/scope").asText()).isEqualTo("CPTY:CP-1");
+        assertThat(x.at("/collateral/thresholdThem").asLong()).isEqualTo(1_000_000L);
+        assertThat(x.at("/collateral/margined").asBoolean()).isTrue();
+        assertThat(x.at("/collateral/atPeak/tenor").asText()).isEqualTo(x.get("peakPfeTenor").asText());
+        assertThat(x.at("/collateral/atPeak/eeUncoll").asLong()).isEqualTo(2_250_000L);      // the worked example at t2: 2.25m without collateral
+        assertThat(x.at("/collateral/atPeak/ee").asLong()).isEqualTo(1_500_000L);
+        JsonNode t = scope("TRD:B");
+        assertThat(t.at("/ancestors/3/scope").asText()).isEqualTo("NSET:NS-X");
+        assertThat(t.at("/trade/desk").asText()).isEqualTo("DESK-B");
+        assertThat(scope("CPTY:CP-1").at("/ancestors/1/scope").asText()).isEqualTo("LE:LE-A");
+        // the tree: tenors, the bank's and the legal entities' figures, each node's EE line
+        JsonNode tree = get("/api/v1/exposure/tree", as("rita", "risk"), "q", "0.75");
+        assertThat(tree.get("tenors")).hasSize(3);
+        assertThat(tree.at("/bankNode/peakPfe").asLong()).isPositive();
+        assertThat(tree.at("/legalEntities/0/scope").asText()).isEqualTo("LE:LE-A");
+        assertThat(tree.toString()).contains("\"ee\":[").contains("\"csa\":\"VM, ");
+        // trades: attributes, the peak PFE alone, the EE contribution at every primary date (they add up to the set's EE)
+        JsonNode c = get("/api/v1/exposure/scope/contributions", as("rita", "risk"), "scope", "NSET:NS-X", "by", "trade", "figure", "EE", "q", "0.75",
+                "alone", "true", "profile", "true");
+        assertThat(c.get("rows")).hasSize(2);
+        long sum = 0;
+        for (JsonNode r : c.get("rows")) {
+            assertThat(r.get("profile")).hasSize(3);
+            assertThat(r.has("peakPfeAlone")).isTrue();
+            sum += r.get("profile").get(1).asLong();
+        }
+        assertThat(sum).isBetween(1_499_999L, 1_500_001L);
+        JsonNode d = get("/api/v1/exposure/scope/distribution", as("rita", "risk"), "scope", "NSET:NS-X", "bands", "true");
+        assertThat(d.get("bands")).hasSize(3);
+        assertThat(d.at("/bands/1/q95").asLong()).isEqualTo(3_000_000L);
+        // the Python engine's inputs through exposure-result with detail
+        connectors.write("exposure-engine", """
+                plugin: reactive
+                mode: reactive
+                kinds:
+                  exposure-result:
+                    compute: exposure-result
+                    params:
+                      q: { type: decimal, default: 0.95, min: 0.5, max: 0.9999 }
+                      collateral: { type: enum, options: [lagged, current, none], default: lagged }
+                      run: { type: text, default: "" }
+                      detail: { type: enum, options: [none, whatif, set], default: none }
+                      sets: { type: text, default: "" }
+                    result: { required: [SCOPE, STATUS, PROFILE] }
+                engine: { type: java, class: com.ash.drishti.server.exposure.ExposureResultEngine, version: "1.0" }
+                limits: { wait: 5s }
+                """);
+        manager.scan();
+        try {
+            String body = "{\"id\": \"CPTY:CP-1\", \"asOf\": \"" + ExposureLakeFixture.DAY + "\", \"params\": {\"q\": 0.75, \"detail\": \"whatif\"},"
+                    + " \"wait\": 10000}";
+            JsonNode a = json.readTree(mvc.perform(post("/api/v1/compute/exposure-engine/exposure-result").header("Authorization", as("rita", "risk"))
+                    .contentType(MediaType.APPLICATION_JSON).content(body)).andExpect(status().isOk()).andReturn().getResponse().getContentAsString());
+            JsonNode r = a.get("result");
+            assertThat(r.get("E_SCOPE")).as(a.toString()).hasSize(3 * ExposureLakeFixture.P);
+            assertThat(r.get("PRIMARY")).hasSize(6);
+            assertThat(r.get("WHATIF_SETS").toString()).contains("NSET:NS-X~collateral=lagged~detail=set").contains("NSET:NS-Y");
+            JsonNode s = json.readTree(mvc.perform(post("/api/v1/compute/exposure-engine/exposure-result").header("Authorization", as("rita", "risk"))
+                    .contentType(MediaType.APPLICATION_JSON).content(body.replace("CPTY:CP-1", "NSET:NS-X").replace("whatif", "set")))
+                    .andReturn().getResponse().getContentAsString()).get("result");
+            assertThat(s.get("V")).hasSize(6 * ExposureLakeFixture.P);
+            assertThat(s.get("TH_THEM").asDouble()).isEqualTo(1_000_000.0);
+            assertThat(s.get("E_SET")).hasSize(3 * ExposureLakeFixture.P);
+        } finally {
+            connectors.delete("exposure-engine");
+            manager.scan();
+        }
     }
 }

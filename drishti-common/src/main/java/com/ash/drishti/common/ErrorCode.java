@@ -135,8 +135,11 @@ public enum ErrorCode {
     EXPOSURE_ROW_REJECTED("DRS-5444", 422),
     /** Exposure: a date's netting-set matrices need more memory than the budget (drishti.ccr.exposure.memory-budget-gb). */
     EXPOSURE_CAPACITY("DRS-5445", 503),
-    /** Exposure: a what-if method this server does not run (the exact {@code paths} method runs in the Python engine, exposure-whatif). */
-    EXPOSURE_METHOD_UNAVAILABLE("DRS-5446", 501),
+    /**
+     * Exposure: the exact what-if (method {@code paths}) could not be answered: the Python exposure engine (the reactive connector
+     * {@code exposure-whatif} and its compute pool) is not running on this server, or did not answer in time.
+     */
+    EXPOSURE_METHOD_UNAVAILABLE("DRS-5446", 503),
     /** A connector file or draft that fails validation. */
     CONNECTOR_INVALID("DRS-5031", 422),
     /** A connector changed since it was read (ETag mismatch), already exists, or is in use and the change was not confirmed. */

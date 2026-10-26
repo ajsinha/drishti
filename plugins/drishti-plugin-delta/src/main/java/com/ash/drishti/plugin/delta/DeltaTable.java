@@ -470,14 +470,14 @@ final class DeltaTable {
     }
 
     /**
-     * The date's rows with one vector column ({@code list<double>}) and some text columns, streamed to {@code sink} batch by batch
-     * (VAR_GUIDE.md section 29.3): one buffer per read, reused for every row, so a date of millions of vectors is never held here.
-     * Read as stored (no deletion vectors: the vector tables are written without them); partition values come from the log.
+     * The date's rows with one vector column ({@code list<double>}, or {@code list<float>}: exposure paths may be float32,
+     * EXPOSURE_GUIDE.md section 15) and some text columns, streamed to {@code sink} batch by batch (VAR_GUIDE.md section 29.3): one
+     * buffer per read, reused for every row, so a date of millions of vectors is never held here. A float32 element is widened to a
+     * double exactly. Read as stored (no deletion vectors: the vector tables are written without them); partition values come from the log.
      */
     void vectors(Layout layout, LocalDate date, String vectorColumn, List<String> textColumns, com.ash.drishti.api.VectorSink sink) {
         List<Row> files = layout.files().getOrDefault(date, List.of());
-        StructType schema = new StructType().add(idColumn, StringType.STRING)
-                .add(vectorColumn, new io.delta.kernel.types.ArrayType(io.delta.kernel.types.DoubleType.DOUBLE, true));
+        StructType schema = new StructType().add(idColumn, StringType.STRING).add(vectorColumn, vectorType(layout, vectorColumn));
         for (String c : textColumns) {
             // read in the type the table has (QUANTITY is a double): its value comes back as text (a number keeps its digits)
             io.delta.kernel.types.DataType have = layout.schema() == null || layout.schema().indexOf(c) < 0 ? null
@@ -519,7 +519,7 @@ final class DeltaTable {
         }
         StructType schema = new StructType().add(idColumn, StringType.STRING);
         for (String c : vectorColumns) {
-            schema = schema.add(c, new io.delta.kernel.types.ArrayType(io.delta.kernel.types.DoubleType.DOUBLE, true));
+            schema = schema.add(c, vectorType(layout, c));
         }
         io.delta.kernel.expressions.Predicate eq = new io.delta.kernel.expressions.Predicate("=",
                 new io.delta.kernel.expressions.Column(idColumn), io.delta.kernel.expressions.Literal.ofString(id));
@@ -543,7 +543,17 @@ final class DeltaTable {
         return out;
     }
 
-    /** An array cell's doubles into {@code buf[0]} (grown when short); a null element is NaN. Returns the length. */
+    /** A vector column's read type: the table's own element type when it is {@code float} (float32), else {@code list<double>}. */
+    static io.delta.kernel.types.ArrayType vectorType(Layout layout, String column) {
+        if (layout.schema() != null && layout.schema().indexOf(column) >= 0
+                && layout.schema().get(column).getDataType() instanceof io.delta.kernel.types.ArrayType at
+                && at.getElementType() instanceof io.delta.kernel.types.FloatType) {
+            return new io.delta.kernel.types.ArrayType(io.delta.kernel.types.FloatType.FLOAT, true);
+        }
+        return new io.delta.kernel.types.ArrayType(io.delta.kernel.types.DoubleType.DOUBLE, true);
+    }
+
+    /** An array cell's values into {@code buf[0]} (grown when short): doubles, or floats widened; a null element is NaN. Returns the length. */
     private static int copy(io.delta.kernel.data.ArrayValue a, double[][] buf) {
         int len = a.getSize();
         if (buf[0].length < len) {
@@ -551,8 +561,9 @@ final class DeltaTable {
         }
         io.delta.kernel.data.ColumnVector el = a.getElements();
         double[] b = buf[0];
+        boolean f32 = el.getDataType() instanceof io.delta.kernel.types.FloatType;
         for (int i = 0; i < len; i++) {
-            b[i] = el.isNullAt(i) ? Double.NaN : el.getDouble(i);
+            b[i] = el.isNullAt(i) ? Double.NaN : f32 ? el.getFloat(i) : el.getDouble(i);
         }
         return len;
     }

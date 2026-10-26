@@ -49,6 +49,7 @@ Every command (mnemonic) of every pack has a data contract: a YAML file beside i
 | `XRUN` | `simulation-run` | [counterparty-risk](counterparty-risk.md#xrun-exposure-simulation-run-simulation-run) | input | active |  | 4 |
 | `XPATH` | `exposure-path` | [counterparty-risk](counterparty-risk.md#xpath-exposure-path-a-trades-mtm-on-every-path-at-a-grid-date-exposure-path) | input | active |  | 7 |
 | `EXP` | `exposure-result` | [counterparty-risk](counterparty-risk.md#exp-exposure-profile-of-a-scope-computed-exposure-result) | computed | active |  | 0 |
+| `XWIF` | `exposure-whatif` | [counterparty-risk](counterparty-risk.md#xwif-exposure-what-if-before-dealing-computed-python-exposure-whatif) | computed | active |  | 0 |
 | `LEI` | `lei-entity` | [gleif](gleif.md#lei-lei-legal-entity-lei-entity) | fundamental | active |  | 4 |
 | `LEIG` | `lei-group` | [gleif](gleif.md#leig-lei-ownership-group-lei-group) | fundamental | active |  | 7 |
 | `LEIR` | `lei-relationship` | [gleif](gleif.md#leir-lei-parent-relationship-lei-relationship) | fundamental | active |  | 4 |

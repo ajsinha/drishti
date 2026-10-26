@@ -79,11 +79,25 @@ public final class ExposureResultEngine implements ComputeEngine {
         Object q = req.param("q", null);
         Object c = req.param("collateral", null);
         Object run = req.param("run", null);
+        Object detail = req.param("detail", null);
+        Object whatIfSets = req.param("sets", null);
         Map<String, Object> head;
+        Map<String, Object> whatIf = new LinkedHashMap<>();
         try {
             ExposureService.Ask ask = ExposureService.Ask.of(svc.props(), q == null ? null : String.valueOf(q), c == null ? null : String.valueOf(c),
                     run == null ? null : String.valueOf(run), null);
             head = views.scope(p, scope, date, ask);
+            String dt = detail == null ? "" : String.valueOf(detail).trim().toLowerCase(java.util.Locale.ROOT);
+            if (dt.equals("whatif") || dt.equals("set")) {                // the Python what-if engine's inputs (ExposureWhatIfInputs)
+                ExposureService.Scoped s = svc.scoped(p, scope, date, ask);
+                if (dt.equals("whatif")) {
+                    ExposureWhatIfInputs.base(s, whatIfSets == null ? "" : String.valueOf(whatIfSets), svc.props().rankRule(), whatIf);
+                } else {
+                    ExposureWhatIfInputs.set(s, whatIf);
+                }
+            } else if (!dt.isEmpty() && !dt.equals("none")) {
+                throw new EngineException("detail is none, whatif or set, not " + detail);
+            }
         } catch (DrishtiException e) {
             if (e.errorCode() == ErrorCode.ENTITY_NOT_FOUND && e.getMessage().contains("no exposure paths for")) {
                 return noPaths(scope, e.getMessage().replaceFirst("^DRS-\\d{4} ", ""), date);
@@ -144,6 +158,7 @@ public final class ExposureResultEngine implements ComputeEngine {
             row.put("NOTE", asked + " was a stored exposure profile, retired in 2.9.0: this is " + scope + ", computed from the paths");
         }
         row.put("PROVENANCE", upper(head.get("provenance")));
+        row.putAll(whatIf);
         Map<String, Object> meta = new LinkedHashMap<>();
         meta.put("engine", "exposure-engine");
         meta.put("tier", head.get("provenance") instanceof Map<?, ?> m ? m.get("tier") : null);

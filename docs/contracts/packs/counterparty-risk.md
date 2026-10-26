@@ -33,6 +33,7 @@ One section per command of the pack: the shape of its data, how it is stored and
 | [XRUN](#xrun-exposure-simulation-run-simulation-run) | `simulation-run` | input | active | 24 | 4 |
 | [XPATH](#xpath-exposure-path-a-trades-mtm-on-every-path-at-a-grid-date-exposure-path) | `exposure-path` | input | active | 20 | 7 |
 | [EXP](#exp-exposure-profile-of-a-scope-computed-exposure-result) | `exposure-result` | computed | active | 27 | 0 |
+| [XWIF](#xwif-exposure-what-if-before-dealing-computed-python-exposure-whatif) | `exposure-whatif` | computed | active | 27 | 0 |
 
 ## AGR: Master agreement (`agreement`)
 
@@ -898,3 +899,64 @@ The exposure profile (EE, ENE, EEE, PFE at 95% and 99%, EE without collateral) a
 
 - No stored key: an answer's id is the scope asked (the id in the request); EXP <scope> <GO> opens it, and EXP EXP-<cp>-<le> (an id of the retired exposure-profile kind) opens EXP NSET:NS-<cp>-<le>.
 - Computed as the viewer with the exposure engine's entitlements (EXP.md section 11); cached per view signature, data version, scope and parameters.
+
+## XWIF: Exposure what-if before dealing (computed, Python) (`exposure-whatif`)
+
+A scope's exposure before and after candidate trades kept in the person's private sandbox, by the exact paths method (each candidate's values on every path of the day's run added to its netting set, collateral and exposure computed again), computed when asked by the Python exposure engine from the scope's exposure-result; never stored.
+
+|  |  |
+|---|---|
+| Contract | [exposure-whatif.contract.yaml](../../../config/packs/counterparty-risk/contracts/exposure-whatif.contract.yaml) · version 1.0 |
+| Class | computed |
+| Status | active |
+| Source | computed by Drishti: the reactive connector exposure-whatif (python engine drishti_compute.exposure.whatif:ExposureWhatIfEngine, pool exposure) |
+| Grain | One answer per question (the scope, the sandbox, the parameters q, collateral and sets, the business date), computed when asked. |
+| Key | — |
+| Id pattern | — |
+| Dated by | `on request` |
+| Cadence | on change (due: computed on request and again when the date's inputs load (data-version trigger); never for a sandbox by a trigger) |
+| Storage | connector `exposure-whatif` (plugin `reactive`) |
+
+**Fields**
+
+| Field | Type | Presence | Unit | Description | Example or values | Link |
+|---|---|---|---|---|---|---|
+| `SCOPE` | text | required |  | The base scope (the id), e.g. CPTY:CP-ALDERSHOT or NSET:NS-ALDERSHOT-NY. |  |  |
+| `CANONICAL` | text | required |  | — |  |  |
+| `BUSINESS_DATE` | date | required |  | — |  |  |
+| `RUN_ID` | text | required |  | The simulation run every candidate's paths must be of. |  |  |
+| `CONFIDENCE` | rate | required |  | — |  |  |
+| `COLLATERAL_MODEL` | text | required |  | lagged, current or none, as asked. |  |  |
+| `METHOD` | text | required |  | paths (the exact method; the conservative addon proxy is the Java engine's, POST /api/v1/exposure/what-if). |  |  |
+| `ITEMS` | integer | required |  | The candidate trades of the sandbox (0 without one). |  |  |
+| `BEFORE_PEAK_PFE` | amount | required | USD | — |  |  |
+| `AFTER_PEAK_PFE` | amount | required | USD | — |  |  |
+| `CHANGE_PEAK_PFE` | amount | required | USD | — |  |  |
+| `BEFORE_PEAK_PFE_TENOR` | text | optional |  | — |  |  |
+| `AFTER_PEAK_PFE_TENOR` | text | optional |  | — |  |  |
+| `BEFORE_EPE` | amount | required | USD | — |  |  |
+| `AFTER_EPE` | amount | required | USD | — |  |  |
+| `CHANGE_EPE` | amount | required | USD | — |  |  |
+| `BEFORE_EEPE` | amount | required | USD | — |  |  |
+| `AFTER_EEPE` | amount | required | USD | — |  |  |
+| `CHANGE_EEPE` | amount | required | USD | — |  |  |
+| `BEFORE_PEAK_EE` | amount | required | USD | — |  |  |
+| `AFTER_PEAK_EE` | amount | required | USD | — |  |  |
+| `CHANGE_PEAK_EE` | amount | required | USD | — |  |  |
+| `BEFORE_CE` | amount | required | USD | — |  |  |
+| `AFTER_CE` | amount | required | USD | — |  |  |
+| `CHANGE_CE` | amount | required | USD | — |  |  |
+| `FLAGS` | text | optional |  | exact. |  |  |
+| `ENGINE` | text | required |  | — |  |  |
+
+**Links:** `SCOPE` → `exposure-result`.
+
+**Validation**
+
+- required: fields `BEFORE_PEAK_PFE`, `AFTER_PEAK_PFE`
+
+**Notes**
+
+- No stored key: an answer's id is the base scope (the id in the request); the parameters ride on it (sandbox, q, collateral, sets).
+- The candidates' paths are supplied in the sandbox (TRADE_ID, LABEL, NETTING_SET, MTM of G x P values of the run, MTM0, LIFE_YEARS, RUN_ID), priced elsewhere (an upstream what-if service, or a copy of a booked trade's paths, scaled); a candidate joins a netting set the scope covers whole, or none (a netting set of its own, uncollateralised).
+- The tables profile (TENOR, DATE, T, EE_BASE, EE, ENE_BASE, ENE, PFE_BASE, PFE, INCREMENTAL_EE, INCREMENTAL_PFE) and items (TRADE_ID, LABEL, NETTING_SET, PEAK_PFE_ALONE, INCREMENTAL_PEAK_PFE) come with the answer.

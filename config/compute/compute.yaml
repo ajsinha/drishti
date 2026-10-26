@@ -63,6 +63,21 @@ compute:
       idle-stop: 5m
       timeout: 60s
       timeout-batch: 10m
+    exposure:                        # the Python exposure engine (the exact what-if: candidates' paths added to their netting sets): docs/guides/EXPOSURE_GUIDE.md section 9
+      type: python
+      engines: [drishti_compute.exposure.whatif:ExposureWhatIfEngine]
+      environment: system            # standard library only: no package to approve
+      workers:
+        min: 0
+        max: ${DRISHTI_COMPUTE_EXPOSURE_WORKERS:4}
+      mode: auto
+      memory: 2GB                    # a few netting sets' value matrices (G x P each) and the scope's exposure matrix
+      cpu-seconds: 300
+      recycle-after: 200
+      batch-share: 0.25
+      idle-stop: 5m
+      timeout: 60s
+      timeout-batch: 10m
   # nodes:                           # a node's own worker counts (its Drishti*net id); pools scale out by adding nodes
   #   drishti-big-1:
   #     pools:

@@ -116,7 +116,7 @@ final class ExposureLoader {
         tier.opened(book);
         versions.put("runId", runId);
         long ms = (System.nanoTime() - t0) / 1_000_000;
-        return new ExposureDate(date, book, ref.known, ref.names, ref.groups, versions.get(k.paths()), java.time.Instant.now(), ms, book.intake(),
+        return new ExposureDate(date, book, ref.known, ref.names, ref.groups, ref.limits, versions.get(k.paths()), java.time.Instant.now(), ms, book.intake(),
                 versions, List.of());
     }
 
@@ -233,6 +233,7 @@ final class ExposureLoader {
         final Map<String, String> names = new HashMap<>();
         final Map<String, List<String>> groups = new LinkedHashMap<>();
         final Map<String, List<String>> liveMembers = new HashMap<>();
+        final Map<String, ExposureDate.Limit> limits = new HashMap<>();
 
         @Override
         public CsaTerms terms(String set) {
@@ -303,6 +304,14 @@ final class ExposureLoader {
                 }
             }
             r.groups.put(e.getKey(), ms);
+        }
+        for (Map.Entry<String, DataNode> e : documents(k.limit(), asOf).entrySet()) {     // read as stored: the limit only (LIM is parked)
+            DataNode l = e.getValue();
+            String cp = text(l, "COUNTERPARTY");
+            double amount = l.get("LIMIT").asDouble();
+            if (cp != null && !Double.isNaN(amount) && amount > 0) {
+                r.limits.putIfAbsent(cp, new ExposureDate.Limit(e.getKey(), amount, text(l, "MEASURE")));
+            }
         }
         return r;
     }

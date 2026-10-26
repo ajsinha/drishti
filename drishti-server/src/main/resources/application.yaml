@@ -673,6 +673,7 @@ drishti:
         counterparty: counterparty
         group: counterparty-group
         hierarchy: risk-hierarchy
+        limit: credit-limit          # the stored credit limits, read as stored (the explorer's limit column; LIM stays parked)
       access: {}                     # per role, per counterparty, group or legal entity: trades | aggregate | none (drishti.ccr.exposure.access.<role>[CP-ALDERSHOT]=aggregate)
       official:                      # the official end-of-day captures (docs/contracts/EXP.md section 9.6)
         enabled: ${DRISHTI_EXPOSURE_OFFICIAL:true}   # capture every netting set, counterparty, group and hierarchy node when a date's run is complete

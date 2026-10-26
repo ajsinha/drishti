@@ -60,7 +60,7 @@ public record ExposureProperties(Boolean enabled, List<Double> confidence, Doubl
 
     /** The kinds the engine reads, as the counterparty-risk pack names them. */
     public record Kinds(String run, String paths, String nettingSet, String csa, String collateral, String counterparty, String group,
-            String hierarchy) {
+            String hierarchy, String limit) {
         public Kinds {
             run = run == null ? "simulation-run" : run;
             paths = paths == null ? "exposure-path" : paths;
@@ -70,6 +70,7 @@ public record ExposureProperties(Boolean enabled, List<Double> confidence, Doubl
             counterparty = counterparty == null ? "counterparty" : counterparty;
             group = group == null ? "counterparty-group" : group;
             hierarchy = hierarchy == null ? "risk-hierarchy" : hierarchy;
+            limit = limit == null ? "credit-limit" : limit;
         }
 
         /** The kinds whose data-load signal reloads a date's answers. */
@@ -78,7 +79,7 @@ public record ExposureProperties(Boolean enabled, List<Double> confidence, Doubl
         }
 
         public List<String> all() {
-            return List.of(run, paths, nettingSet, csa, collateral, counterparty, group, hierarchy);
+            return List.of(run, paths, nettingSet, csa, collateral, counterparty, group, hierarchy, limit);
         }
     }
 
@@ -141,7 +142,7 @@ public record ExposureProperties(Boolean enabled, List<Double> confidence, Doubl
         maxParts = maxParts == null || maxParts <= 0 ? 5000 : maxParts;
         histogramBins = histogramBins == null || histogramBins < 5 ? 42 : histogramBins;
         t0Tolerance = t0Tolerance == null || t0Tolerance <= 0 ? 0.10 : t0Tolerance;
-        kinds = kinds == null ? new Kinds(null, null, null, null, null, null, null, null) : kinds;
+        kinds = kinds == null ? new Kinds(null, null, null, null, null, null, null, null, null) : kinds;
         access = access == null ? Map.of() : access;
         official = official == null ? new Official(null, null, null, null, null) : official;
         retention = retention == null ? new Retention(null, null, null, null, null, null) : retention;

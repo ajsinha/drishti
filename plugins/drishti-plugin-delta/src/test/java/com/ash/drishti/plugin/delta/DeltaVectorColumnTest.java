@@ -51,6 +51,11 @@ class DeltaVectorColumnTest {
 
     /** Writes {@code rows} trades' vectors with Drishti's writer; returns each trade's vector. */
     private Map<String, double[]> write(Path table, int rows) throws Exception {
+        return write(table, rows, "vector");
+    }
+
+    /** The same with the vector column's type: {@code vector} ({@code list<double>}) or {@code vector32} ({@code list<float>}). */
+    private Map<String, double[]> write(Path table, int rows, String vectorType) throws Exception {
         Random r = new Random(7);
         Map<String, double[]> want = new LinkedHashMap<>();
         List<String> lines = new ArrayList<>();
@@ -70,7 +75,7 @@ class DeltaVectorColumnTest {
         Files.write(rowsFile, lines, StandardCharsets.UTF_8);
         String m = "{\"table\":\"" + table + "\",\"partitionColumns\":[\"business_date\"],\"columns\":["
                 + "{\"name\":\"id\",\"type\":\"string\"},{\"name\":\"doc\",\"type\":\"string\"},{\"name\":\"business_date\",\"type\":\"date\"},"
-                + "{\"name\":\"DESK\",\"type\":\"string\"},{\"name\":\"TT_BOOK\",\"type\":\"string\"},{\"name\":\"PNL\",\"type\":\"vector\"}],"
+                + "{\"name\":\"DESK\",\"type\":\"string\"},{\"name\":\"TT_BOOK\",\"type\":\"string\"},{\"name\":\"PNL\",\"type\":\"" + vectorType + "\"}],"
                 + "\"promoted\":[\"DESK\",\"TT_BOOK\",\"PNL\"],\"mode\":\"overwrite-dates\",\"batchRows\":11,\"statsColumns\":[\"id\",\"business_date\"],"
                 + "\"parts\":[{\"file\":\"" + rowsFile + "\",\"values\":{\"business_date\":\"" + DAY + "\"}}]}";
         Path mf = tmp.resolve("manifest.json");
@@ -123,6 +128,29 @@ class DeltaVectorColumnTest {
 
             // a column the kind does not keep as a vector is not answered as one
             assertThat(p.vectors("pnl-vector", "PV", List.of(), AsOf.of(DAY), (id, values, len, texts) -> { })).isFalse();
+        } finally {
+            p.close();
+        }
+    }
+
+    /** Float32 vectors ({@code list<float>}, exposure paths: EXPOSURE_GUIDE.md section 15) are read too, each value widened exactly. */
+    @Test
+    void float32VectorsAreReadWidenedToDoubles() throws Exception {
+        Path root = tmp.resolve("lake32");
+        Map<String, double[]> want = write(root.resolve("risk/pnl-vector"), 12, "vector32");
+        DeltaSourcePlugin p = plugin(root);
+        try {
+            Map<String, double[]> got = new LinkedHashMap<>();
+            assertThat(p.vectors("pnl-vector", "PNL", List.of("TT_BOOK"), AsOf.of(DAY),
+                    (id, values, len, texts) -> got.put(id, java.util.Arrays.copyOf(values, len)))).isTrue();
+            assertThat(got).hasSize(12);
+            want.forEach((id, v) -> {
+                for (int j = 0; j < N; j++) {
+                    assertThat(got.get(id)[j]).as(id + "[" + j + "]").isEqualTo((double) (float) v[j]);
+                }
+            });
+            var doc = p.fetch(EntityRef.of("pnl-vector", "MX-20000003"), AsOf.of(DAY)).orElseThrow().data();
+            assertThat(doc.get("PNL").get(7).asDouble()).isEqualTo((double) (float) want.get("MX-20000003")[7]);
         } finally {
             p.close();
         }
