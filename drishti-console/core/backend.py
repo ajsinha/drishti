@@ -356,6 +356,16 @@ class BackendClient:
             kw.update(raw=True, with_headers=True)
         return await self._send(method, "/var" + path, ident, **kw)
 
+    async def exposure(self, method: str, path: str, ident, body=None, raw: bool = False, **params) -> Any:
+        """The exposure engine (/api/v1/exposure, docs/guides/EXPOSURE_GUIDE.md section 12), as the user. The first answer of a business
+        date loads its paths (or maps its hot file): it may take longer than a page read, so this waits up to a minute."""
+        kw: dict[str, Any] = {"params": {k: v for k, v in params.items() if v not in (None, "")}, "timeout": 60.0}
+        if body is not None:
+            kw["json"] = body
+        if raw:
+            kw.update(raw=True, with_headers=True)
+        return await self._send(method, "/exposure" + path, ident, **kw)
+
     async def sources(self, ident=None) -> dict:
         return await self._get("/sources", ident)
 

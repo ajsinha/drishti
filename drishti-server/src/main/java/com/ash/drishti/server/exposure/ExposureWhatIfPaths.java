@@ -98,8 +98,8 @@ final class ExposureWhatIfPaths {
             String ref = ComputeRef.format(base.res().canonical(), params);
             Answer a = c.answer(new ReactiveConnector.Ask(KIND, ref, AsOf.of(d.date()), Viewers.of(p), RequestClass.INTERACTIVE, WAIT));
             if (!a.ready() || a.document() == null) {
-                throw new DrishtiException(a.state().equals(Answer.REFUSED) || a.state().equals(Answer.FAILED) ? ErrorCode.EXPOSURE_BAD_PARAMETER
-                        : ErrorCode.EXPOSURE_METHOD_UNAVAILABLE, "the Python exposure engine " + (a.state().equals(Answer.COMPUTING)
+                // failed: the engine said why (a candidate's paths, a netting set outside the scope); refused or still computing: not available
+                throw new DrishtiException(a.state().equals(Answer.FAILED) ? ErrorCode.EXPOSURE_BAD_PARAMETER : ErrorCode.EXPOSURE_METHOD_UNAVAILABLE, "the Python exposure engine " + (a.state().equals(Answer.COMPUTING)
                         ? "did not answer within " + WAIT.toSeconds() + " s" : "answered " + a.state()) + (a.message() == null ? "" : ": " + a.message()));
             }
             Map<String, Object> out = answer(a.document(), base, scope, b, items.size());
