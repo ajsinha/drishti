@@ -973,6 +973,11 @@ python3 tools/drishti.py contract check
 python3 tools/drishti.py contract bootstrap my-kind --write && python3 tools/drishti.py contract docs
 ```
 
+
+**The command catalog.** `python3 tools/command_catalog.py` writes [COMMAND_CATALOG.md](COMMAND_CATALOG.md): every command of the command
+line with what it does and an example, from the packs, their contracts and `tools/commands.builtin.yaml` (the command line's own words and
+forms). `--check` fails when it is stale; a console test runs the same check.
+
 ## 6. Store loaders: `tools/load-*.sh`
 
 Each loader writes the banking packs' demo data (1,791 sample documents x 10 business days, and with `--trades N --days D` a

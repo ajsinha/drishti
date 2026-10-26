@@ -220,6 +220,7 @@ Every file under `docs/`, by folder. Documents marked *moved* are short pointers
 | [CLIENTS.md](guides/CLIENTS.md) | you read Drishti from a script, a notebook or Excel: personal API tokens and scopes, the Python client, Power Query |
 | [PYTHON_CALC.md](guides/PYTHON_CALC.md) | you run Python on a view (`Alt+C`): the `drishti` module, output, packs' snippets, roles, the security model, installing the runtime, measured sizes and speed, limits |
 | [PACKS.md](guides/PACKS.md) | you load, switch, assign or change a domain pack |
+| [COMMAND_CATALOG.md](guides/COMMAND_CATALOG.md) | you want every command in one list: the command line's own words, the packs' codes and every mnemonic, with what it does, an example, its kind of data and whether it moves to the compute model (generated) |
 | [PACK_DEVELOPER_GUIDE.md](guides/PACK_DEVELOPER_GUIDE.md) | you build a pack or need any `pack.yaml` key: kinds, links, roles, Sutras, tests, generators, signing; a worked help-desk pack |
 | [SCHEMA_TO_PACK.md](guides/SCHEMA_TO_PACK.md) | you have JSON Schema (and perhaps JSON Lines) and want a whole pack: the rules, the `x-drishti-*` annotations, Build → New pack, the command line |
 | [CLI_GUIDE.md](guides/CLI_GUIDE.md) | you work from a terminal or a pipeline: `tools/drishti.py` (`sutra`, `pack new|check|about-check|publish|install`, `data ingest|load|landed|loads`, `server packs`, `design create|check|propose|approve`), every option with real output, recipes, JSON formats, exit codes |

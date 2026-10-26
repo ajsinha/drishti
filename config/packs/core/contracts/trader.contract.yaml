@@ -59,9 +59,11 @@ fields:
   example: Rates · Swaps and options
 - name: TRADE_COUNT
   type: integer
-  presence: required
+  presence: derived
   description: Trades
   example: 76
+  retiring-in: 2.8.0
+  note: computed by the scope engine (TRDR:, counted from the trades) from 2.8.0; removed from the stored record then
 - name: BOOKS
   type: record list
   presence: required
@@ -91,7 +93,6 @@ validation:
   - TRADER_ID
   - NAME
   - DESK_NAME
-  - TRADE_COUNT
   - BOOKS
   - DESK
 - rule: unique
@@ -113,6 +114,8 @@ validation:
 notes:
 - 'Dated by the lake''s business_date partition: `drishti.py lake build` writes each test-data file''s day into it; the documents carry no date
   field of their own.'
+- 'Terms kept, figures computed from 2.8.0 (docs/contracts/VAR.md): the fields marked derived are computed by the scope engine (TRDR:, counted
+  from the trades) and leave the stored record then.'
 review:
 - 'required inferred from 100% coverage in 40 documents (20 samples and 20 test-data documents (data/testdata/core/trader/snapshot-2026-07-08.jsonl.gz,
   data/testdata/core/trader/changes-2026-09-30.jsonl.gz)): confirm each required field is mandatory upstream, and each optional one may be empty.'

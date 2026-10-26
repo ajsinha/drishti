@@ -122,8 +122,23 @@ split:
   desk:
     release: 2.8.0
     contract: VAR.md
-    measure: the VaR engine
-    figures: [VAR_99, VAR_RESULT]
+    measure: the VaR engine and the scope engine (MtM summed from the trade valuations)
+    figures: [VAR_99, VAR_RESULT, MTM, POSITIONS]
+  book:
+    release: 2.8.0
+    contract: VAR.md
+    measure: the scope engine (counts, MtM and DV01 summed from the trades and their valuations)
+    figures: [TRADE_COUNT, MTM, DV01, TOP_TRADES]
+  trader:
+    release: 2.8.0
+    contract: VAR.md
+    measure: the scope engine (TRDR:, counted from the trades)
+    figures: [TRADE_COUNT]
+  counterparty:
+    release: 2.10.0
+    contract: NSET.md
+    measure: the counterparty's figures (CPTY:, net MtM from the trade valuations, PFE from EXP)
+    figures: [NET_MTM, PFE_PEAK]
   netting-set:
     release: 2.10.0
     contract: NSET.md

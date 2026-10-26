@@ -199,8 +199,8 @@ contains the words (`BOND UST 2030`) opens as before. A search (`TRD desk=rates 
 several trades (`TRD MX-2000 30`) gives the pick list, and each of its rows opens that trade's history. Aliases keep the range:
 `MYBOOK 30` is `BOOK BOOK-RATES-1 30`.
 
-Mnemonics come from the packs that are switched on. The full list, pack by pack, is in
-[PACKS.md](PACKS.md#the-packs-that-ship). The most used ones, from the seven default packs:
+Mnemonics come from the packs that are switched on. Every command, with what it does and an example, is in
+[COMMAND_CATALOG.md](COMMAND_CATALOG.md); the packs themselves are in [PACKS.md](PACKS.md#the-packs-that-ship). The most used ones, from the seven default packs:
 
 | Mnemonic | Kind | Example |
 |---|---|---|

@@ -66,12 +66,14 @@ fields:
   description: VaR
   example: 10946782
   retiring-in: 2.8.0
-  note: computed by the VaR engine from 2.8.0; removed from the stored record then
+  note: computed by the VaR engine and the scope engine (MtM summed from the trade valuations) from 2.8.0; removed from the stored record then
 - name: MTM
   type: amount
-  presence: required
+  presence: derived
   description: MTM
   example: 14609595
+  retiring-in: 2.8.0
+  note: computed by the VaR engine and the scope engine (MtM summed from the trade valuations) from 2.8.0; removed from the stored record then
 - name: LEGAL_ENTITY
   type: id
   presence: required
@@ -87,14 +89,16 @@ fields:
   pattern: ^VAR-
   link: var
   retiring-in: 2.8.0
-  note: computed by the VaR engine from 2.8.0; removed from the stored record then
+  note: computed by the VaR engine and the scope engine (MtM summed from the trade valuations) from 2.8.0; removed from the stored record then
 - name: ASSET_CLASSES
   type: text list
   presence: required
 - name: POSITIONS
   type: record list
-  presence: required
+  presence: derived
   description: 'Nested: see nested POSITIONS[]'
+  retiring-in: 2.8.0
+  note: computed by the VaR engine and the scope engine (MtM summed from the trade valuations) from 2.8.0; removed from the stored record then
 nested:
   BOOKS[]:
   - name: ID
@@ -166,10 +170,8 @@ validation:
   - NAME
   - HEAD
   - BOOKS
-  - MTM
   - LEGAL_ENTITY
   - ASSET_CLASSES
-  - POSITIONS
 - rule: unique
   key:
   - DESK_ID
@@ -202,8 +204,8 @@ validation:
 notes:
 - 'Dated by the lake''s business_date partition: `drishti.py lake build` writes each test-data file''s day into it; the documents carry no date
   field of their own.'
-- 'Terms kept, figures computed from 2.8.0 (docs/contracts/VAR.md): the fields marked derived are computed by the VaR engine and leave the stored
-  record then.'
+- 'Terms kept, figures computed from 2.8.0 (docs/contracts/VAR.md): the fields marked derived are computed by the VaR engine and the scope engine
+  (MtM summed from the trade valuations) and leave the stored record then.'
 review:
 - 'required inferred from 100% coverage in 30 documents (10 samples and 20 test-data documents (data/testdata/core/desk/snapshot-2026-07-08.jsonl.gz,
   data/testdata/core/desk/changes-2026-09-30.jsonl.gz)): confirm each required field is mandatory upstream, and each optional one may be empty.'

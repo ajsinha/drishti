@@ -65,8 +65,8 @@ A legal entity the bank trades with: identifiers (LEI, UEN), rating, sector, cou
 | `UEN` | text | required |  | UEN | `UEN0100037` |  |
 | `ECONOMY` | id | required |  | Economy: the economy it refers to | `ECON-GBR` (pattern `^ECON-`) | `economy` |
 | `NEWS_ID` | id | required |  | Headlines: the news it refers to | `NEWS-Aldershot_Pension_Trust` (pattern `^NEWS-`) | `news` |
-| `NET_MTM` | amount | required |  | Net MTM | `15036789` |  |
-| `PFE_PEAK` | amount | required |  | — | `145548971` |  |
+| `NET_MTM` | amount | derived (retiring in 2.10.0) |  | Net MTM *computed by the counterparty's figures (CPTY:, net MtM from the trade valuations, PFE from EXP) from 2.10.0; removed from the stored record then* | `15036789` |  |
+| `PFE_PEAK` | amount | derived (retiring in 2.10.0) |  | — *computed by the counterparty's figures (CPTY:, net MtM from the trade valuations, PFE from EXP) from 2.10.0; removed from the stored record then* | `145548971` |  |
 | `NETTING_SETS` | record list | required |  | Netting set: the netting-set it refers to |  | `netting-set` |
 | `KYC` | record | required |  | Nested: see nested KYC |  |  |
 | `GROUP` | id | required |  | Group: the counterparty-group it refers to | `GRP-ALDERSHOT` (pattern `^GRP-`) | `counterparty-group` |
@@ -121,7 +121,7 @@ A legal entity the bank trades with: identifiers (LEI, UEN), rating, sector, cou
 
 **Validation**
 
-- required: fields `COUNTERPARTY_ID`, `NAME`, `LEI`, `RATING`, `SECTOR`, `COUNTRY`, `TYPE`, `COUNTRY_OF_RISK`, `UEN`, `ECONOMY`, `NEWS_ID`, `NET_MTM`, `PFE_PEAK`, `NETTING_SETS`, `KYC`, `GROUP`, `CREDIT_LIMIT`, `HIERARCHY`
+- required: fields `COUNTERPARTY_ID`, `NAME`, `LEI`, `RATING`, `SECTOR`, `COUNTRY`, `TYPE`, `COUNTRY_OF_RISK`, `UEN`, `ECONOMY`, `NEWS_ID`, `NETTING_SETS`, `KYC`, `GROUP`, `CREDIT_LIMIT`, `HIERARCHY`
 - unique: key `COUNTERPARTY_ID`; per business_date
 - pattern: field COUNTERPARTY_ID; pattern ^CP-
 - link: field ECONOMY; kind economy
@@ -140,6 +140,7 @@ A legal entity the bank trades with: identifiers (LEI, UEN), rating, sector, cou
 **Notes**
 
 - Dated by the lake's business_date partition: `drishti.py lake build` writes each test-data file's day into it; the documents carry no date field of their own.
+- Terms kept, figures computed from 2.10.0 (docs/contracts/NSET.md): the fields marked derived are computed by the counterparty's figures (CPTY:, net MtM from the trade valuations, PFE from EXP) and leave the stored record then.
 
 **To review (8)**
 
@@ -424,10 +425,10 @@ A trading book: owner desk, trades and risk.
 | `BOOK_ID` | id | required |  | The record's id (the business key) | `BOOK-COMM-1` (pattern `^BOOK-`) | `path-book` |
 | `NAME` | text | required |  | Name | `Commodities · book 1` |  |
 | `DESK_NAME` | text | required |  | Desk | `Commodities` |  |
-| `TRADE_COUNT` | integer | required |  | Trades | `28` |  |
-| `MTM` | amount | required |  | MTM | `7760837` |  |
-| `DV01` | amount | required |  | DV01 | `0` |  |
-| `TOP_TRADES` | record list | required |  | Nested: see nested TOP_TRADES[] |  |  |
+| `TRADE_COUNT` | integer | derived (retiring in 2.8.0) |  | Trades *computed by the scope engine (counts, MtM and DV01 summed from the trades and their valuations) from 2.8.0; removed from the stored record then* | `28` |  |
+| `MTM` | amount | derived (retiring in 2.8.0) |  | MTM *computed by the scope engine (counts, MtM and DV01 summed from the trades and their valuations) from 2.8.0; removed from the stored record then* | `7760837` |  |
+| `DV01` | amount | derived (retiring in 2.8.0) |  | DV01 *computed by the scope engine (counts, MtM and DV01 summed from the trades and their valuations) from 2.8.0; removed from the stored record then* | `0` |  |
+| `TOP_TRADES` | record list | derived (retiring in 2.8.0) |  | Nested: see nested TOP_TRADES[] *computed by the scope engine (counts, MtM and DV01 summed from the trades and their valuations) from 2.8.0; removed from the stored record then* |  |  |
 | `DESK` | id | required |  | Desk: the desk it refers to | `DESK-COMM` (pattern `^DESK-`) | `desk` |
 | `ACCOUNTING_TREATMENT` | text | required |  | — | `Fair value (FVTPL)` |  |
 | `REGULATORY_BOOK` | text | required |  | — | `Trading book` |  |
@@ -452,7 +453,7 @@ A trading book: owner desk, trades and risk.
 
 **Validation**
 
-- required: fields `BOOK_ID`, `NAME`, `DESK_NAME`, `TRADE_COUNT`, `MTM`, `DV01`, `TOP_TRADES`, `DESK`, `ACCOUNTING_TREATMENT`, `REGULATORY_BOOK`, `VOLCKER`
+- required: fields `BOOK_ID`, `NAME`, `DESK_NAME`, `DESK`, `ACCOUNTING_TREATMENT`, `REGULATORY_BOOK`, `VOLCKER`
 - unique: key `BOOK_ID`; per business_date
 - pattern: field BOOK_ID; pattern ^BOOK-
 - link: field BOOK_ID; kind path-book
@@ -466,6 +467,7 @@ A trading book: owner desk, trades and risk.
 **Notes**
 
 - Dated by the lake's business_date partition: `drishti.py lake build` writes each test-data file's day into it; the documents carry no date field of their own.
+- Terms kept, figures computed from 2.8.0 (docs/contracts/VAR.md): the fields marked derived are computed by the scope engine (counts, MtM and DV01 summed from the trades and their valuations) and leave the stored record then.
 
 **To review (7)**
 
@@ -503,12 +505,12 @@ A trading desk: books, limits and risk results.
 | `NAME` | text | required |  | Name | `Commodities` |  |
 | `HEAD` | text | required |  | Head | `T. Brennan` |  |
 | `BOOKS` | record list | required |  | Nested: see nested BOOKS[] |  |  |
-| `VAR_99` | amount | derived (retiring in 2.8.0) |  | VaR *computed by the VaR engine from 2.8.0; removed from the stored record then* | `10946782` |  |
-| `MTM` | amount | required |  | MTM | `14609595` |  |
+| `VAR_99` | amount | derived (retiring in 2.8.0) |  | VaR *computed by the VaR engine and the scope engine (MtM summed from the trade valuations) from 2.8.0; removed from the stored record then* | `10946782` |  |
+| `MTM` | amount | derived (retiring in 2.8.0) |  | MTM *computed by the VaR engine and the scope engine (MtM summed from the trade valuations) from 2.8.0; removed from the stored record then* | `14609595` |  |
 | `LEGAL_ENTITY` | id | required |  | Legal entity: the legal-entity it refers to | `LE-NY` (pattern `^LE-`) | `legal-entity` |
-| `VAR_RESULT` | id | derived (retiring in 2.8.0) |  | VaR: the var it refers to *computed by the VaR engine from 2.8.0; removed from the stored record then* | `VAR-COMM` (pattern `^VAR-`) | `var` |
+| `VAR_RESULT` | id | derived (retiring in 2.8.0) |  | VaR: the var it refers to *computed by the VaR engine and the scope engine (MtM summed from the trade valuations) from 2.8.0; removed from the stored record then* | `VAR-COMM` (pattern `^VAR-`) | `var` |
 | `ASSET_CLASSES` | text list | required |  | — |  |  |
-| `POSITIONS` | record list | required |  | Nested: see nested POSITIONS[] |  |  |
+| `POSITIONS` | record list | derived (retiring in 2.8.0) |  | Nested: see nested POSITIONS[] *computed by the VaR engine and the scope engine (MtM summed from the trade valuations) from 2.8.0; removed from the stored record then* |  |  |
 
 **Nested `BOOKS[]`**
 
@@ -532,7 +534,7 @@ A trading desk: books, limits and risk results.
 
 **Validation**
 
-- required: fields `DESK_ID`, `NAME`, `HEAD`, `BOOKS`, `MTM`, `LEGAL_ENTITY`, `ASSET_CLASSES`, `POSITIONS`
+- required: fields `DESK_ID`, `NAME`, `HEAD`, `BOOKS`, `LEGAL_ENTITY`, `ASSET_CLASSES`
 - unique: key `DESK_ID`; per business_date
 - pattern: field DESK_ID; pattern ^DESK-
 - link: field LEGAL_ENTITY; kind legal-entity
@@ -544,7 +546,7 @@ A trading desk: books, limits and risk results.
 **Notes**
 
 - Dated by the lake's business_date partition: `drishti.py lake build` writes each test-data file's day into it; the documents carry no date field of their own.
-- Terms kept, figures computed from 2.8.0 (docs/contracts/VAR.md): the fields marked derived are computed by the VaR engine and leave the stored record then.
+- Terms kept, figures computed from 2.8.0 (docs/contracts/VAR.md): the fields marked derived are computed by the VaR engine and the scope engine (MtM summed from the trade valuations) and leave the stored record then.
 
 **To review (7)**
 
@@ -581,7 +583,7 @@ A trader and their books.
 | `TRADER_ID` | id | required |  | The record's id (the business key) | `TRDR-ASHAH` (pattern `^TRDR-`) | `trader` |
 | `NAME` | text | required |  | Name | `A. Shah` |  |
 | `DESK_NAME` | text | required |  | Desk | `Rates · Swaps and options` |  |
-| `TRADE_COUNT` | integer | required |  | Trades | `76` |  |
+| `TRADE_COUNT` | integer | derived (retiring in 2.8.0) |  | Trades *computed by the scope engine (TRDR:, counted from the trades) from 2.8.0; removed from the stored record then* | `76` |  |
 | `BOOKS` | record list | required |  | Nested: see nested BOOKS[] |  |  |
 | `DESK` | id | required |  | Desk: the desk it refers to | `DESK-RATES` (pattern `^DESK-`) | `desk` |
 
@@ -595,7 +597,7 @@ A trader and their books.
 
 **Validation**
 
-- required: fields `TRADER_ID`, `NAME`, `DESK_NAME`, `TRADE_COUNT`, `BOOKS`, `DESK`
+- required: fields `TRADER_ID`, `NAME`, `DESK_NAME`, `BOOKS`, `DESK`
 - unique: key `TRADER_ID`; per business_date
 - pattern: field TRADER_ID; pattern ^TRDR-
 - link: field TRADER_ID; kind trader
@@ -605,6 +607,7 @@ A trader and their books.
 **Notes**
 
 - Dated by the lake's business_date partition: `drishti.py lake build` writes each test-data file's day into it; the documents carry no date field of their own.
+- Terms kept, figures computed from 2.8.0 (docs/contracts/VAR.md): the fields marked derived are computed by the scope engine (TRDR:, counted from the trades) and leave the stored record then.
 
 **To review (3)**
 
