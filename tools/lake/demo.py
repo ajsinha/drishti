@@ -24,6 +24,9 @@ into the table the dataset's Delta connector reads: <lake>/<domain>/<kind>/, the
 trade_murex, partitioned by business date (and PRODUCT_TYPE for trades). Each table is written afresh (its folder is removed first). A dataset ``dated-by`` a field (the market-risk pack's VaR data,
 tools/packgen/var/make_var_data.py: the trades' P&L vectors of the last business date, the nodes' 250-day VaR history) is loaded in one
 run, each document on its own date, its dates moved with the business dates like every other dataset's.
+The exposure engine's paths are the exception: by default (`--exposure demo`) they are generated from the committed netting sets
+and CSAs for every netting set of 22 of the 24 counterparties (about 9,000 trades, about a minute; the committed run of eight sets
+is a subset with the same figures), `--exposure committed` loads the committed run alone.
 Datasets of static reference data (world-economy, news-and-markets) are built from their packs' samples, the same on every day.
 The news-and-markets pack's captured market snapshot (data/testdata/news-and-markets/quote and news: real quotes and headlines,
 written by `drishti.py testdata capture-market`) becomes news/quote and news/news, the same snapshot on every day and never re-dated,
@@ -421,13 +424,33 @@ class DemoLake:
                 doc[f] = [self.move_day(d) if isinstance(d, str) else d for d in doc[f]]
         return doc
 
+    #: the exposure run's folders: generated for the demo in place of the committed run (``--exposure demo``, the default)
+    EXPOSURE_FOLDERS = ("counterparty-risk/simulation-run", "counterparty-risk/exposure-path")
+
+    def dated_source(self, ds: dict) -> pathlib.Path:
+        """Where a dated dataset's files are read: the committed folder, except the exposure run with ``--exposure demo``: the demo run
+        (tools/packgen/ccr/make_ccr_data.py ``write_demo``: every netting set of 22 of the 24 counterparties, about 9,000 trades, the
+        committed run's paths and grid, so the committed sets' figures are the same), written once into the staging folder from the
+        committed netting sets and CSAs: about a minute and 100 MB, never committed, nothing downloaded."""
+        if self.a.exposure != "demo" or ds["folder"] not in self.EXPOSURE_FOLDERS:
+            return self.testdata / ds["folder"]
+        out = self.staging / "exposure-demo"
+        if not (out / ds["folder"]).is_dir():
+            sys.path.insert(0, str(ROOT / "tools" / "packgen" / "ccr"))
+            import make_ccr_data
+            started = time.monotonic()
+            n_sets, n_trades, _ = make_ccr_data.write_demo(self.testdata, out, self.manifest.dates)
+            if not self.a.quiet:
+                print(f"  exposure demo run: {n_sets} netting sets, {n_trades:,} trades generated in {time.monotonic() - started:.0f} s")
+        return out / ds["folder"]
+
     def dated_dataset(self, ds: dict, path: pathlib.Path, domain: str, table: str) -> int:
         """A dataset whose documents carry their own business date (testdata.yaml ``dated-by``: the VaR engine's vectors of the last
         business date, the nodes' 250-day history): every file loaded in one run, each document on its own date (``lake build --date``)."""
         stage = self.staging / f"{domain}-{table}.jsonl"
         rows = 0
         with stage.open("w", encoding="utf-8") as fh:
-            for f in sorted((self.testdata / ds["folder"]).glob("*.jsonl.gz")):
+            for f in sorted(self.dated_source(ds).glob("*.jsonl.gz")):
                 with gzip.open(f, "rt", encoding="utf-8") as src:
                     for line in src:
                         if line.strip():
@@ -606,6 +629,9 @@ def add_arguments(p: argparse.ArgumentParser) -> argparse.ArgumentParser:
     p.add_argument("--no-signal", action="store_true", help="tell no server, and leave no stamp for one")
     p.add_argument("--signal-once", action="store_true", help="tell each table once, for its newest date, not each table and date "
                    "(a running server reads the older dates again by itself)")
+    p.add_argument("--exposure", choices=("demo", "committed"), default="demo", help="the exposure paths: demo (default) generates every "
+                   "netting set of 22 of the 24 counterparties (about 9,000 trades, a minute, nothing downloaded), committed loads the "
+                   "committed run of eight sets")
     p.add_argument("-q", "--quiet", action="store_true", help="only the summary")
     return p
 

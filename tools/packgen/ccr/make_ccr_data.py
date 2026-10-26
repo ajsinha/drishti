@@ -61,6 +61,7 @@ COMMITTED = ("NS-ALDERSHOT-FRA", "NS-ALDERSHOT-LDN", "NS-ALDERSHOT-NY", "NS-ALDE
 WRONG_WAY = {"NS-AURORA-TKY"}
 PATHS, FULL_PATHS = 200, 500
 MAX_TRADES = 10_000                       # the local limit: never more trades in one run on a developer's machine
+DEMO_TRADES = 9_500                       # the demo run (lake demo): whole counterparties, smallest first, within this many trades
 PART_BYTES = 1_200_000                    # compressed bytes per file, about
 QS = [0.95, 0.99]
 REFERENCE = ROOT / "drishti-compute" / "src" / "test" / "resources" / "ccr" / "reference.json"
@@ -371,6 +372,34 @@ def reconcile(inputs: Inputs, stored: dict[str, dict], part: str) -> list[dict]:
     return out
 
 
+def demo_sets(inputs: Inputs, limit: int = DEMO_TRADES) -> list[str]:
+    """The demo run's netting sets: every set of each counterparty, counterparties smallest first, as many as fit in ``limit`` trades
+    together, so a counterparty, its group and its legal entities are whole (never some of a counterparty's sets). The committed run's
+    sets are among them on the test data (its counterparties are small), and a trade's paths do not depend on which sets a run holds
+    (paths.py seeds each trade by its id), so the committed figures are the demo's figures for those sets."""
+    by_cp: dict[str, list[str]] = {}
+    for ns, s in inputs.sets.items():
+        if inputs.members(ns):
+            by_cp.setdefault(s.get("COUNTERPARTY") or ns, []).append(ns)
+    out, n = [], 0
+    for cp, sets in sorted(by_cp.items(), key=lambda kv: (sum(len(inputs.members(ns)) for ns in kv[1]), kv[0])):
+        k = sum(len(inputs.members(ns)) for ns in sets)
+        if n + k <= limit:
+            out += sets
+            n += k
+    return sorted(out)
+
+
+def write_demo(testdata: Path, out: Path, dates: list[str]) -> tuple[int, int, list[dict]]:
+    """The demo run (``demo_sets``, the committed run's paths and grid) as test-data files under ``out``: (sets, trades, entries).
+    tools/lake/demo.py loads it in place of the committed run, so the demo lake has exposure for most counterparties; nothing of it is
+    committed (about 100 MB)."""
+    inputs = Inputs(testdata, dates)
+    run = Run(inputs, demo_sets(inputs))
+    docs, _ = build(run)
+    return len(run.sets), sum(len(v) for v in run.trades.values()), write(out, docs)
+
+
 def main(argv=None) -> int:
     p = argparse.ArgumentParser(description=__doc__.split("\n\n")[0], formatter_class=argparse.RawDescriptionHelpFormatter,
                                 epilog=__doc__.split("\n\n", 1)[1])
@@ -378,6 +407,8 @@ def main(argv=None) -> int:
     p.add_argument("--out", help="where to write (default: --testdata, with its testdata.yaml entries and the parity reference)")
     p.add_argument("--check", action="store_true", help="fail if the committed files differ from what would be written")
     p.add_argument("--full", action="store_true", help=f"every netting set that fits in {MAX_TRADES:,} trades, {FULL_PATHS} paths (needs --out)")
+    p.add_argument("--demo", action="store_true", help=f"the demo run: whole counterparties within {DEMO_TRADES:,} trades, {PATHS} paths "
+                   "(needs --out; tools/lake/demo.py runs it)")
     p.add_argument("--reconcile", metavar="I/N", help="stored against computed for part I of N of the netting sets (JSON lines to stdout); "
                    "reads --stored")
     p.add_argument("--stored", help="the retired exposure-profile folder (2.8.0's data/testdata/counterparty-risk/exposure-profile)")
@@ -390,6 +421,13 @@ def main(argv=None) -> int:
         stored = replay(Path(a.stored), "PROFILE_ID", dates) if a.stored else {}
         for r in reconcile(inputs, stored, a.reconcile):
             print(dumps(r), flush=True)
+        return 0
+    if a.demo:
+        if not a.out:
+            raise SystemExit("--demo writes outside the repository: give --out")
+        n_sets, n_trades, entries = write_demo(td, Path(a.out), dates)
+        print(f"wrote the demo run: {n_sets} netting sets, {n_trades:,} trades, {PATHS} paths: "
+              f"{sum(e['bytes'] for e in entries) / 1e6:.1f} MB in {a.out}")
         return 0
     if a.full:
         if not a.out:
