@@ -84,7 +84,7 @@ class SnapshotLayoutTest {
         SnapshotModel m = new SnapshotLayout(960, 1800, 8, 12).build(view(List.of(panel("c", "Prices", c, null),
                 panel("l", "Trend", new PanelData.Chart(List.of("a", "b"), List.of(new PanelData.Series("s", List.of(1.0, 3.0), null)), null, null, null, null, null, null), null))),
                 null, MARK);
-        assertThat(m.allText()).contains("open the view in the console to see it");
+        assertThat(m.allText()).contains("open the view in " + com.ash.drishti.common.Branding.name("the console") + " to see it");   // the configured product, when a test installed one
         byte[] png = new SnapshotPainter().png(m);
         var img = javax.imageio.ImageIO.read(new java.io.ByteArrayInputStream(png));
         assertThat(img.getWidth()).isEqualTo(m.width());

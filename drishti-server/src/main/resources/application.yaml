@@ -389,6 +389,7 @@ drishti:
       - "* /api/v1/admin/compute/**"           # compute pools, environments and four-eyes approvals: an administrator in the console
       - "POST /api/v1/compute/events"          # trigger events (the write-back hook): the server and administrators, never a token
       - "POST /api/v1/var/reload"              # reloading the VaR vectors: an administrator in the console
+      - "POST /api/v1/var/official"            # running the official end-of-day VaR capture: an administrator in the console
       - "* /api/v1/embed/**"
       - "* /api/v1/admin/embed/**"
       - "* /api/v1/admin/users/**"

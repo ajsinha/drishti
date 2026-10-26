@@ -166,7 +166,7 @@ class DesignOpenAccessTest {
             assertThat(p.path("data").isNull() || p.path("data").isMissingNode()).as(id).isTrue();
             assertThat(p.path("empty").asBoolean()).as(id).isTrue();
         }
-        var shown = view.deepCopy();                     // the view minus every timing: a millisecond figure such as 3.93 is not a curve value
+        var shown = view.deepCopy();                     // the view minus every timing and timestamp: a figure such as 3.93 there is not a curve value
         dropTimings(shown);
         assertThat(shown.toString()).doesNotContain("3.93", "3.54", "USD-SOFR");
     }
@@ -221,7 +221,8 @@ class DesignOpenAccessTest {
         if (node instanceof com.fasterxml.jackson.databind.node.ObjectNode o) {
             java.util.List<String> drop = new java.util.ArrayList<>();
             o.fieldNames().forEachRemaining(f -> {
-                if (f.equals("timings") || f.endsWith("Ms") || f.endsWith("Millis") || f.equals("ms")) {
+                // timestamps too: fetchedAt 05:50:03.935… once read as the curve value 3.93
+                if (f.equals("timings") || f.endsWith("Ms") || f.endsWith("Millis") || f.equals("ms") || f.endsWith("At")) {
                     drop.add(f);
                 }
             });
