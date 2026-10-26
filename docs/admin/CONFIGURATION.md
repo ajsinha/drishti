@@ -336,6 +336,7 @@ files (`application-files.yaml`, `application-postgres.yaml`, …) and packs hav
 | `DRISHTI_EXPOSURE_HOT_DIR` | `drishti.ccr.exposure.hot-folder` | `./data/ccr/hot` | The exposure hot files' folder (one folder per business date); under the data folder unless set. |
 | `DRISHTI_EXPOSURE_TIER` | `drishti.ccr.exposure.tier` | `mapped` | Where a loaded date's matrices live: `mapped` (a memory-mapped float32 hot file per date) or `heap` (float64 on the heap). |
 | `DRISHTI_EXPOSURE_OFFICIAL` | `drishti.ccr.exposure.official.enabled` | `true` | Capture every netting set, counterparty, group and hierarchy node officially at the end of each loaded date, and publish to `risk-results/exposure-official` and `exposure-official-cpty`. |
+| `DRISHTI_COMPUTE_EXPOSURE_WORKERS` | `compute.pools.exposure.workers.max` (`config/compute/compute.yaml`) | `4` | Python workers of the compute pool `exposure` (the Python exposure engine: the exact pre-deal what-if, method `paths`) on this node; the compute workers run only with `DRISHTI_COMPUTE_ENABLED=true`, else the exact what-if answers `503 DRS-5446`. |
 | `DRISHTI_LAYOUTS_ENABLED` | `drishti.layouts.enabled` | `true` | Allow personal layouts. |
 | `DRISHTI_PIVOT_ENABLED` | `drishti.pivot.enabled` | `true` | Allow the Pivot tab. |
 | `DRISHTI_ASK_ENABLED` | `drishti.explain.ask.enabled` | `false` | Turn on Ask about this page (also list packs in `drishti.explain.ask.packs`). |
@@ -1429,13 +1430,16 @@ else by `drishti.var.positions`.
 
 ### `drishti.ccr.exposure` — the exposure engine
 
-The exposure engine (the data contract [EXPOSURE_GUIDE.md](../guides/EXPOSURE_GUIDE.md)) computes exposure profiles (EE, ENE, effective EE, PFE at any
+The exposure engine (the guide and data contract [EXPOSURE_GUIDE.md](../guides/EXPOSURE_GUIDE.md), its settings in [section 12](../guides/EXPOSURE_GUIDE.md#12-settings)) computes exposure profiles (EE, ENE, effective EE, PFE at any
 confidence, EPE, EEPE, the peaks, CE, EAD under the internal model) of any counterparty scope (`NSET:`, `CPTY:`, `GROUP:`, `LE:`,
 `DESK:`, `BOOK:`, `TRD:`, `BANK`, combined with `+ - &`) from an upstream simulation's paths (`simulation-run`, `exposure-path`): netting
 per path, each CSA's collateral per path with the margin period of risk, as the caller, when asked. Nothing it answers is stored except
 captures: the ones people make, and the official end-of-day captures of every netting set, counterparty, group and hierarchy node, which
 it also publishes to `risk-results/exposure-official` and `exposure-official-cpty`. The netting-set and counterparty pages show its
-figures as they open.
+figures as they open. The exact pre-deal what-if (method `paths`) runs in the Python exposure engine, the compute pool `exposure` of
+`config/compute/compute.yaml` (`drishti_compute.exposure.whatif:ExposureWhatIfEngine`, standard library only, up to
+`DRISHTI_COMPUTE_EXPOSURE_WORKERS` workers of 2 GB, timeout 60 s), behind the reactive connector `exposure-whatif`; it needs the
+compute workers on (`DRISHTI_COMPUTE_ENABLED=true`), otherwise that method answers `503 DRS-5446` and the `addon` proxy still works.
 
 | Key | Default | Meaning |
 |---|---|---|
@@ -1459,6 +1463,7 @@ figures as they open.
 | `histogram-bins` | `42` | Bins of an exposure distribution (`/scope/distribution`). |
 | `t0-tolerance` | `0.10` | The load lists a trade whose paths' mean at the first grid date departs from its MtM today by more than this share of it (or 5% of its notional, the larger). |
 | `kinds.run`, `kinds.paths`, `kinds.netting-set`, `kinds.csa`, `kinds.collateral`, `kinds.counterparty`, `kinds.group`, `kinds.hierarchy` | `simulation-run`, `exposure-path`, `netting-set`, `csa`, `collateral-balance`, `counterparty`, `counterparty-group`, `risk-hierarchy` | The kinds the engine reads. The data-load signal of the first five reloads that date and captures it officially. |
+| `kinds.limit` | `credit-limit` | The stored credit limits, read as stored for the explorer's limit column and a counterparty's limit use (LIM stays parked: usage is not computed against them; the stored limits were sized on the retired profiles, so the use reads low). |
 | `access` | `{}` | Per role and counterparty, group or legal entity: `trades`, `aggregate` (figures, no netting set or trade below it) or `none` (`drishti.ccr.exposure.access.<role>[CP-ALDERSHOT]=aggregate`); a role with entries sees nothing else, a role without sees all at `trades` when it may open `exposure-path`. |
 | `official.enabled` | `true` (`DRISHTI_EXPOSURE_OFFICIAL`) | Capture every netting set, counterparty, group and hierarchy node officially when a date's run is complete (after the data-load signal, and once at start). |
 | `official.publish` | `true` | Also append the official figures to `<root>/risk-results/exposure-official` (hierarchy nodes) and `exposure-official-cpty` (netting sets, counterparties, groups: restricted). Append-only; no engine reads them. |

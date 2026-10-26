@@ -78,7 +78,7 @@ final class ExposureService implements AutoCloseable {
 
     /**
      * A scope as people type it, in the scope grammar: an id of the retired stored exposure profile ({@code EXP-ALDERSHOT-FRA}, EXPOSURE_GUIDE.md
-     * section 14) is its netting set ({@code NSET:NS-ALDERSHOT-FRA}); a spaced scope ({@code NSET NS-ALDERSHOT-FRA}) takes its colon.
+     * section 22) is its netting set ({@code NSET:NS-ALDERSHOT-FRA}); a spaced scope ({@code NSET NS-ALDERSHOT-FRA}) takes its colon.
      */
     static String scopeText(String typed) {
         String t = typed == null ? "" : typed.trim();

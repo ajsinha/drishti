@@ -7,7 +7,7 @@
 # LIM: credit limits and their usage, the data contract
 
 *Version 1.0 · 2026-10-25 · Shared rules: [README.md](README.md) · Model contract: [VAR_GUIDE.md Part II](../guides/VAR_GUIDE.md#14-the-contract-at-a-glance) · Netting: [NSET.md](NSET.md) ·
-Usage measures: [EXPOSURE_GUIDE.md](EXPOSURE_GUIDE.md), [SACCR.md](SACCR.md) · Groups: [GRP.md](GRP.md)*
+Usage measures: [EXPOSURE_GUIDE.md](../guides/EXPOSURE_GUIDE.md), [SACCR.md](SACCR.md) · Groups: [GRP.md](GRP.md)*
 
 **Status:** proposed. PLANNED for 2.10.0, not built. Every table, column, setting, kind, endpoint and code below is a proposal; names
 may change before the release, and each change will be recorded in [section 16](#16-open-questions-and-the-change-table).
@@ -57,7 +57,7 @@ share of a counterparty) and a structured measure.
 officers, the front office (pre-deal), and limit monitoring (breaches and early warnings every morning).
 
 **In words:** each limit names a **scope** and a **measure**. Usage is the measure computed for the scope: for a PFE limit, the peak of
-the scope's PFE profile in each tenor bucket (from [EXPOSURE_GUIDE.md](EXPOSURE_GUIDE.md), where exposures of several netting sets add per path before the
+the scope's PFE profile in each tenor bucket (from [EXPOSURE_GUIDE.md](../guides/EXPOSURE_GUIDE.md), where exposures of several netting sets add per path before the
 quantile is taken); for an EAD limit, the SA-CCR EAD ([SACCR.md](SACCR.md)); for a settlement limit, the largest amount due from the
 counterparty on one settlement day. **Utilisation** = usage / limit, per bucket; the limit's status is that of its worst bucket:
 `OK` below the warning level (80%), `WARNING` from it, `BREACH` above 100%, `EXCESS_APPROVED` within an approved temporary excess.

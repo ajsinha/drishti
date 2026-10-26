@@ -123,7 +123,7 @@ def credit_results(trades: dict, docs: dict) -> None:
         tag = ns[3:]
         docs["netting-set"][ns] = {
             # no exposure figure (EE peak, PFE peak, profile): the exposure engine computes them from the paths (docs/guides/EXPOSURE_GUIDE.md
-            # section 14, retired in 2.9.0); the limit's utilisation and the CVA (parked, stored) still read this generator's profile
+            # section 22, retired in 2.9.0); the limit's utilisation and the CVA (parked, stored) still read this generator's profile
             "nettingSetId": ns, "tradeCount": len(members), "netMtm": net, "collateral": coll,
             "limit": limit, "utilisation": round(pfe_peak / limit, 4), "cva": cva,
             # every member (largest |MTM| first; a set past MEMBER_ROWS lists that many and says so: TRADES of TRADE_COUNT), for the page to page through

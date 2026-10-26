@@ -154,7 +154,8 @@ exists.
 
 ### 3.0 One command for everything (recommended)
 
-`tools\build_demo_lakes.py` builds **every** demo lake from start to finish: every dataset of the seven packs over all **sixty business
+`tools\build_demo_lakes.py` builds **every** demo lake from start to finish: every dataset of the nine packs (the seven the server enables by default, `PackPaths.DEFAULT_ENABLED`, plus us-equities and gleif
+from their public-data snapshots) over all **sixty business
 days** of the committed test data (moved to end on the date of your newest ENDUR file), then replaces the synthetic ENDUR trades with
 **your** files, one per date. It is steps 3.1 and 3.2 below in one go. Stop the server first if it is running.
 
@@ -375,7 +376,7 @@ What **Drishti server (demo lakes)** sets (Run → Edit Configurations… → Ap
 | Main class | `com.ash.drishti.server.DrishtiApplication` |
 | VM options | `-Xmx4g` |
 | Working directory | the project folder, `C:\Users\asinh09\IdeaProjects\drishti-orig` |
-| Environment variables | the seven packs, samples off, **offline mode** (`DRISHTI_OFFLINE=true`), port 18480, sign-in on with the `drishti-dev-admin` account |
+| Environment variables | the nine packs of the demo lakes (`DRISHTI_PACKS=core,market-data,trading,counterparty-risk,market-risk,world-economy,news-and-markets,us-equities,gleif`; without it the server enables only the seven of `PackPaths.DEFAULT_ENABLED`, not us-equities or gleif), samples off, **offline mode** (`DRISHTI_OFFLINE=true`), port 18480, sign-in on with the `drishti-dev-admin` account |
 
 If the configuration says **module not specified** or its main class is red: IntelliJ lost the Maven modules (usually
 PyCharm was opened on the same folder: see step 2.2). Open the **Maven** tool window (the **m** on the right edge) → **Reload All Maven Projects**
@@ -386,7 +387,7 @@ If the drop-down has no **Drishti** folder (IntelliJ did not pick up `run-config
 Application**, fill in the table above, and paste this into *Environment variables* (one line):
 
 ```
-DRISHTI_PACKS=core,market-data,trading,counterparty-risk,market-risk,world-economy,news-and-markets;DRISHTI_DEMO_ENABLED=false;DRISHTI_OFFLINE=true;DRISHTI_PORT=18480;DRISHTI_SECURITY_ENABLED=true;DRISHTI_TOKEN_SECRET=drishti-dev-only-token-secret-change-me-0123456789;DRISHTI_SEED_ADMIN=true;DRISHTI_SEED_USERNAME=drishti-dev-admin;DRISHTI_SEED_PASSWORD=drishti-dev-admin123;DRISHTI_STUDIO_SAVE=true;DRISHTI_EXTERNAL_LIB=C:\Users\asinh09\IdeaProjects\drishti-orig\external_lib
+DRISHTI_PACKS=core,market-data,trading,counterparty-risk,market-risk,world-economy,news-and-markets,us-equities,gleif;DRISHTI_DEMO_ENABLED=false;DRISHTI_OFFLINE=true;DRISHTI_PORT=18480;DRISHTI_SECURITY_ENABLED=true;DRISHTI_TOKEN_SECRET=drishti-dev-only-token-secret-change-me-0123456789;DRISHTI_SEED_ADMIN=true;DRISHTI_SEED_USERNAME=drishti-dev-admin;DRISHTI_SEED_PASSWORD=drishti-dev-admin123;DRISHTI_STUDIO_SAVE=true;DRISHTI_EXTERNAL_LIB=C:\Users\asinh09\IdeaProjects\drishti-orig\external_lib
 ```
 
 **Way B: the script, from any PowerShell window** (no IntelliJ needed; it runs the jar of step 2.3)
@@ -399,7 +400,7 @@ DRISHTI_PACKS=core,market-data,trading,counterparty-risk,market-risk,world-econo
    ```
 
    It runs the newest `drishti-server\target\drishti-server-*-exec.jar` with exactly the settings of **Drishti server
-   (demo lakes)**: the seven packs on the lakes, samples off, **offline mode**, sign-in on, port 18480, a 4 GB heap. Its
+   (demo lakes)**: the nine packs on the lakes, samples off, **offline mode**, sign-in on, port 18480, a 4 GB heap. Its
    first line says so: `Drishti server: … offline demo on the lakes (sign in as drishti-dev-admin)`.
 3. To stop it: click in that window and press **Ctrl+C**.
 

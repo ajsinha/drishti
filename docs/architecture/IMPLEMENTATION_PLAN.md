@@ -12,7 +12,7 @@
 
 **North star: Sutra Next, one grammar for every screen (product owner, 2026-10-22).** The board/chip paradigm is dropped: Sutra itself grows from an entity browser into the UI library, in ONE grammar, built on today's panels and shared blocks (`use:`/`with:`): a versioned, parameterised fragment library whose every fragment and Sutra carries a `doc:` docstring a component browser and an AI agent read; per-panel sources over several packs; events (`emits`, `@panel.event.path`, `@parent`); nested child panels (expand-row, detail-right/below, tabs; lazy; depth 3); refresh control and freshness; forms with validation; actions that write through connectors' `writes:` (2.8.0 write-back); dynamic screens saved to the workspace; an optional layout grid; and an editor built from the product owner's mock-ups. Design and phases: [SUTRA_NEXT.md](SUTRA_NEXT.md); phase 1 (the library, now the Drishti UI kit in `config/ui-kit` loaded whatever packs are enabled, with assets and brand; docstrings and lint, composite fragments, the ir-curve and economics screens migrated and proved identical, `GET /api/v1/ui-kit`) is built for 2.7.0 (unreleased); since then events and per-panel sources, nested children, refresh and freshness, forms with drafts, the `layout:` grid, every pack screen on fragments and the Sutra designer (Customize, Describe, Outline, Grid; `ui.designer`) are built too, unreleased. The UI Board (2026-10-21) stays parked on branch `ui-board-preview`; it is not in any release.
 
-**Where things stand.** Every wave in this plan is done. The current release is **2.8.0** (2026-10-26: the data contract of every command, VaR computed for any scope and never stored, Admin → Commands, write-back, branding from configuration; [the computed-measures roadmap](#the-computed-measures-roadmap-280-to-2120-product-owner-2026-10-25)); before it **2.7.0** (Sutra Next, [SUTRA_NEXT.md](SUTRA_NEXT.md): the UI kit, events and children across packs, refresh and freshness, layout, forms with drafts and the four-mode Sutra designer; the us-equities and gleif packs, the per-pack public-data scripts and the README standard); before it **2.6.7** (BI runs, [BI_RUNS.md](BI_RUNS.md); chart any table, [TABLE_CHARTS.md](TABLE_CHARTS.md); mixed Delta and Iceberg storage, [DEMO_DATA.md](../connectors/DEMO_DATA.md#mixed-delta-and-iceberg-storage); gossip on its own port and HTTP/2 between nodes; with 2.6.6, the QA release); next are **2.8.0** (Sutra Next write-back: forms and actions saved through connectors, [WRITE_BACK.md](WRITE_BACK.md); its item 0, the one Drishti store, is begun as the content store, CONTENT_STORE.md; the UI Board stays parked on branch `ui-board-preview`, in no release) with the data contracts of every command and VaR complete; everything after it (the other computed measures, 2.9.0 to 2.11.0, and AI with GenUI, 2.12.0) is parked since 2026-10-25 ([the computed-measures roadmap](#the-computed-measures-roadmap-280-to-2120-product-owner-2026-10-25))
+**Where things stand.** Every wave in this plan is done. **2.9.0** is built and unreleased: exposure (EXP) computed for any scope like VaR, parts 1 and 2, with its guide and tutorial 26, and VaR in BI ([the computed-measures roadmap](#the-computed-measures-roadmap-280-to-2120-product-owner-2026-10-25)). The current release is **2.8.0** (2026-10-26: the data contract of every command, VaR computed for any scope and never stored, Admin → Commands, write-back, branding from configuration; [the computed-measures roadmap](#the-computed-measures-roadmap-280-to-2120-product-owner-2026-10-25)); before it **2.7.0** (Sutra Next, [SUTRA_NEXT.md](SUTRA_NEXT.md): the UI kit, events and children across packs, refresh and freshness, layout, forms with drafts and the four-mode Sutra designer; the us-equities and gleif packs, the per-pack public-data scripts and the README standard); before it **2.6.7** (BI runs, [BI_RUNS.md](BI_RUNS.md); chart any table, [TABLE_CHARTS.md](TABLE_CHARTS.md); mixed Delta and Iceberg storage, [DEMO_DATA.md](../connectors/DEMO_DATA.md#mixed-delta-and-iceberg-storage); gossip on its own port and HTTP/2 between nodes; with 2.6.6, the QA release); next are **2.8.0** (Sutra Next write-back: forms and actions saved through connectors, [WRITE_BACK.md](WRITE_BACK.md); its item 0, the one Drishti store, is begun as the content store, CONTENT_STORE.md; the UI Board stays parked on branch `ui-board-preview`, in no release) with the data contracts of every command and VaR complete; everything after it (the other computed measures, 2.9.0 to 2.11.0, and AI with GenUI, 2.12.0) is parked since 2026-10-25 ([the computed-measures roadmap](#the-computed-measures-roadmap-280-to-2120-product-owner-2026-10-25))
 ([CHANGELOG.md](../../CHANGELOG.md), [RELEASE_NOTES.md](../../RELEASE_NOTES.md)). The table below maps each release to
 the waves it shipped; [What shipped after the waves](#what-shipped-after-the-waves-1100) and [Since 1.10](#since-110) list the work done since
 the last numbered wave, and [Known gaps](#known-gaps) lists what is still open. The wave sections themselves are
@@ -344,11 +344,34 @@ VaR is good for now."** What is active:
 ([EXPOSURE_GUIDE.md](../guides/EXPOSURE_GUIDE.md)), with the stored `exposure-profile` retired in the same release. **Part 1 built** (2026-10-26): the
 inputs `simulation-run` and `exposure-path` with their test data (`tools/packgen/ccr`), the Java engine (netting and CSA collateral
 per path with the margin period of risk, EE, ENE, EEE, PFE, EPE, EEPE, contributions, scopes `NSET:`, `CPTY:`, `GROUP:`, `LE:`,
-`DESK:`, `BOOK:`, `TRD:`, `BANK`), the memory-mapped hot file per date, `/api/v1/exposure`, the computed kind `exposure-result`
-(`EXP <scope>`), the `addon` what-if, captures, the official results `exposure-official` and `-cpty`, retention settings, the
-netting-set and counterparty pages' computed figures, and the retirement (the reconciliation of the 76 stored sets in EXPOSURE_GUIDE.md section
-14.2). **Part 2 next:** the exposure explorer, the Python what-if engine (`paths`), the CLI, the benchmark, the guide and the
-tutorial. The other counterparty measures (CVA, SA-CCR, LIM, GRP, WWR) stay parked and stored, unchanged.
+`DESK:`, `BOOK:`, `TRD:`, `BANK`, `WHERE:`), the memory-mapped hot file per date (`DRSHEXP1`), `/api/v1/exposure`, the computed kind
+`exposure-result` (`EXP <scope>`), the `addon` what-if, captures, the official results `exposure-official` and `-cpty`, retention
+settings, the netting-set and counterparty pages' computed figures, and the retirement (the reconciliation of the 76 stored sets in
+EXPOSURE_GUIDE.md section 22.2). **Part 2 built** (2026-10-26): the exposure explorer (`/exposure`, `EXP <scope> <GO>`: breadcrumb,
+tree, tiles, the profile chart and path fan, the tabs by level, the pre-deal what-if, captures and compare), the Python what-if engine
+(`exposure-whatif`, `XWIF`, the exact `paths` method, compute pool `exposure`), `drishti.py exposure` (`tools/expcli.py`), float32
+paths in the Delta reader, `drishti.ccr.exposure.kinds.limit` (the stored credit limits read as stored), and the documentation in two
+documents by the product owner's rule (one guide and one tutorial per measure): [EXPOSURE_GUIDE.md](../guides/EXPOSURE_GUIDE.md) (the
+contract EXP.md folded in as its Part II, version 1.2; the old page archived) and
+[tutorial 26](../tutorials/26-exposure-from-the-bank-to-a-trade.md). **Not built in 2.9.0:** the exposure benchmark at a large bank's
+size, sharding across Drishti\*net, a restricted list (EXPOSURE_GUIDE.md section 28). The other counterparty measures (CVA, SA-CCR, LIM,
+GRP, WWR) stay parked and stored, unchanged; the stored credit limits were sized on the retired profiles, so their use reads very low
+against the computed PFE until LIM is brought back.
+
+**2.9.0: VaR in BI (2026-10-26).** The published official VaR results are a read-only kind `var-official` (`VOFF`) of the market-risk
+pack on the Delta connector `var-results` over `risk-results/var-official`, with the BI samples (datasets `market-risk-var-official`
+and `market-risk-var-latest`, model and report `market-risk-var`: VaR 99% and ES 97.5% by node, never summed) (VAR_GUIDE.md
+section 19).
+
+**Parked: a Funds and ETFs pack (candidate, 2026-10-26).** US funds and ETFs from public data: SEC N-PORT holdings, the N-CEN census,
+the risk/return summaries, the mutual-fund ticker file, N-MFP (money-market funds), 13F holdings, GLEIF's fund relationships and the
+Nasdaq ETF flag. FUND pages; look-through from a fund to its holdings in USEQ, GLEIF and IDX; an ETF against its index; a fund's
+derivative counterparties. The full N-PORT is never committed to the repository: a refresh script and a small committed snapshot, as
+the other public-data packs; prices internal-only. Design on request; nothing is built until the product owner asks.
+
+**After 2.9.0: synthetic test data from its generators (to plan).** A plan for regenerating the synthetic test data from the
+deterministic generators (`tools/packgen`, `tools/testdata/make_testdata.py`) instead of committing it; public data stays committed. The plan is shown
+to the product owner before anything is built.
 
 Everything else in this section is **PARKED**: the 2.9.0, 2.10.0 and 2.11.0 measures (but EXP, above), the groupings and analytics, the DESK/BOOK/TRDR/CPTY
 figures other than VaR, and 2.12.0 (AI and GenUI). Their stored kinds stay active and unchanged, and their contracts are kept as designs
@@ -441,7 +464,7 @@ never coexist. For each item:
 | 2 | SACCR (`sa-ccr`) | Nothing: retired | Replacement cost, add-ons per hedging set, multiplier and EAD by netting set, counterparty or legal entity; incremental EAD before dealing |
 | 3 | COLL (`collateral-balance`) | Holdings: asset, quantity, held or posted | Market value and value after haircut, from market data and the CSA's haircuts |
 | 4 | MC (`margin-call`) | Actual calls and their events (workflow) | The expected call (MtM − collateral − threshold, then minimum transfer and rounding), shown beside the actual call |
-| 5 | EXP (`exposure-profile`) | Nothing: retired | EE, EPE, effective EPE and PFE at any tenor after netting and collateral, from per-trade MtM per path and tenor. The heaviest data, on the VaR memory tiering. **Brought forward to 2.9.0: part 1 built 2026-10-26** (above) |
+| 5 | EXP (`exposure-profile`) | Nothing: retired | EE, EPE, effective EPE and PFE at any tenor after netting and collateral, from per-trade MtM per path and tenor. The heaviest data, on the VaR memory tiering. **Brought forward to 2.9.0: parts 1 and 2 built 2026-10-26** (above) |
 | 6 | LIM (`credit-limit`) | Limit amount, measure, tenor buckets, approval | Used, utilisation and status from EXP or SA-CCR at any date; headroom before dealing |
 | 7 | GRP (`counterparty-group`) | Members and the approved limit | Group utilisation over the GLEIF parent links |
 | 8 | CVA (`cva`) | Nothing: retired | CVA and XVA from EXP's exposure profiles and credit curves |

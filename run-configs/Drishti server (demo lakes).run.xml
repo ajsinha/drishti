@@ -30,7 +30,7 @@
     <option name="WORKING_DIRECTORY" value="$PROJECT_DIR$" />
     <envs>
       <env name="MALLOC_ARENA_MAX" value="2" />
-      <env name="DRISHTI_PACKS" value="core,market-data,trading,counterparty-risk,market-risk,world-economy,news-and-markets" />
+      <env name="DRISHTI_PACKS" value="core,market-data,trading,counterparty-risk,market-risk,world-economy,news-and-markets,us-equities,gleif" />
       <env name="DRISHTI_STUDIO_SAVE" value="true" />
       <env name="DRISHTI_SECURITY_ENABLED" value="true" />
       <env name="DRISHTI_TOKEN_SECRET" value="drishti-dev-only-token-secret-change-me-0123456789" />

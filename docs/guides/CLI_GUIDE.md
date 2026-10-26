@@ -1915,6 +1915,36 @@ drishti.py var whatif 'DESK:RATES' --trades new-swap.json --stress-window 250   
 Exit codes: 0; 1 when the server said no (the code and its message on standard error) or a what-if was refused or failed; 2 for usage.
 [Tutorial 25](../tutorials/25-var-from-the-bank-to-a-trade.md) walks through them with the demo data.
 
+### `exposure`: the exposure engine (2.9.0)
+
+Exposure of any counterparty scope as you see it, from the terminal (the API `/api/v1/exposure`; the user guide
+[EXPOSURE_GUIDE.md](EXPOSURE_GUIDE.md), the reference [TOOLS.md section 5.13](TOOLS.md#513-exposure)). Quote a scope for the shell;
+`--date` picks the business date, `--q` the PFE confidence, `--collateral lagged|current|none` the collateral model, `--json` prints
+the answer:
+
+```text
+drishti.py exposure show CPTY:CP-ALDERSHOT                           peak PFE, EPE, EEPE, CE, EAD, limit use and the profile
+drishti.py exposure show NSET:NS-ALDERSHOT-LDN --q 0.99 --date 2026-09-30
+drishti.py exposure parts CPTY:CP-ALDERSHOT                          contributions to the peak PFE by netting set (they add up)
+drishti.py exposure parts NSET:NS-ALDERSHOT-NY --by trade --figure EE --top 10
+drishti.py exposure tree                                             bank, legal entities, counterparties, netting sets
+drishti.py exposure profile NSET:NS-ALDERSHOT-NY --csv > ns-ny.csv   the profile as CSV
+drishti.py exposure distribution NSET:NS-ALDERSHOT-NY --at 1Y        the distribution at a date and the path fan
+drishti.py exposure status                                           settings, hot files and loaded dates
+drishti.py exposure capture CPTY:CP-ALDERSHOT --note 'before the unwind'
+drishti.py exposure captures --scope CPTY:CP-ALDERSHOT
+drishti.py exposure compare XCAP-20260930-1 now
+drishti.py exposure official --date 2026-09-30                       the official end-of-day record (--capture: administrators)
+drishti.py exposure retention                                        what is kept of each date held
+drishti.py exposure reload                                           drop the loaded dates (administrators)
+drishti.py exposure whatif CPTY:CP-ALDERSHOT --like CLY-4000879 --factor -1 --set NS-ALDERSHOT-FRA   exact, the Python engine
+drishti.py exposure whatif CPTY:CP-ALDERSHOT --candidates new-swap.json --method addon               the conservative proxy
+```
+
+Exit codes: 0; 1 when the server said no (the code and its message on standard error); 2 for usage. The exact what-if (`--method
+paths`, the default) needs the compute workers (`DRISHTI_COMPUTE_ENABLED=true`); without them it is `DRS-5446`.
+[Tutorial 26](../tutorials/26-exposure-from-the-bank-to-a-trade.md) walks through them with the test data.
+
 ### `server packs deploy`, `history`, `rollback` and `datasource`
 
 Admin → Packs from the terminal ([the whole story with pictures: OPERATIONALISING.md, section 17](OPERATIONALISING.md#17-deploy-from-admin--packs-connectors-history-and-roll-back)).
