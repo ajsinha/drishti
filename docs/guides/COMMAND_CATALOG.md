@@ -17,11 +17,11 @@
 
 # The command catalog
 
-Every command of the command line: its own words and forms, the 10 packs' codes, and the 93 mnemonics the packs define, each with what it does and an example. A pack's mnemonics work when the pack is switched on ([PACKS.md](PACKS.md)); how to type them is in [USER_GUIDE.md](USER_GUIDE.md).
+Every command of the command line: its own words and forms, the 10 packs' codes, and the 94 mnemonics the packs define, each with what it does and an example. A pack's mnemonics work when the pack is switched on ([PACKS.md](PACKS.md)); how to type them is in [USER_GUIDE.md](USER_GUIDE.md).
 
 **Data** says what kind of data a command shows ([the data contracts](../contracts/README.md#3-four-kinds-of-data)): *fundamental* (masters, terms, market and public data, kept as delivered), *engine input* (what upstream engines deliver for the computed measures), *Drishti's own* (made by Drishti) and *computed* (worked out when asked). **Change** says when a command moves to the compute model, or when the figures on a record start to be computed instead of stored ([the roadmap](../architecture/IMPLEMENTATION_PLAN.md#the-computed-measures-roadmap-280-to-2120-product-owner-2026-10-25)). Each mnemonic's fields are in its data contract ([every command's contract](../contracts/packs/README.md)).
 
-In numbers: 74 fundamental, 8 engine input, 1 Drishti's own and 10 computed; 0 move to the compute model and 0 keep their record while its figures become computed.
+In numbers: 74 fundamental, 8 engine input, 1 Drishti's own and 11 computed; 0 move to the compute model and 0 keep their record while its figures become computed.
 
 ## Contents
 
