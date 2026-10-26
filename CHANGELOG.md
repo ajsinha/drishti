@@ -17,6 +17,11 @@
 
 ## Unreleased
 
+- **The exposure explorer's browser test (2.9.1).** `drishti-console/tests/test_exposure_explorer_browser.py`, as the VaR explorer's:
+  over the committed exposure run in a scratch lake (Delta connector, demo off, compute on) it opens `EXP BANK`, the tree and the
+  counterparty board, a counterparty (breadcrumb, tiles, Netting sets), a netting set's Collateral tab (CSA, the signed effect of
+  collateral), a trade in its netting set (netting benefit) and Back; By tenor; the q 95/99 and collateralised switches; the pre-deal
+  what-if by the proxy and by the exact paths method; a netting set without paths; a phone's width; F1 to the exposure guide. No pictures.
 - **The exposure benchmark (2.9.1).** `ExposureTierBenchmark` (drishti-server tests, opt-in like VaR's `VarTierBenchmark`) loads a
   synthetic date as the server does and times the load, the hot file, reopening, the scopes (bank, a counterparty of 20 sets, a set),
   contributions by netting set and by trade, the exact pre-deal arithmetic and the proxy; measured at 10,000 and 100,000 trades (P 100
