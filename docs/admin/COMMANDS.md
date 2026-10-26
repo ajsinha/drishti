@@ -58,13 +58,14 @@ An administrator (someone with the `admin` role, the same rule that shows the Ad
 - The commands that are **off** too, greyed, struck through, with an *off* chip, and never a link. **Show** keeps only the commands that are
   on or off. The count reads *N commands · X on · Y off*.
 - The **Everyone** column turns a command on or off for everyone; a pack's row has a **Pack** switch that turns the whole pack on or off, as
-  Admin → Packs does. The greyed role columns are where commands will be granted per role later; today only Everyone is used.
+  Admin → Packs does. Everyone is the only column today: a column per role will appear when role-based access per command is built
+  (the switches already record a grantee, `*` for everyone).
 - **Undo** and **Review changes**, with the side panel and its reason (below).
 - **Cluster** (a section that opens): the version of the switches each server of the cluster holds (*in step*, or *catching up* for a few
   seconds after a change) and the **History** of changes.
 
 ![Functions as an administrator, filtered to one pack (FUNC market-risk): FRTB is off, struck through and not a link; the Everyone and
-Pack switches, the greyed role columns, Undo and Review changes](img/functions/functions-admin.png)
+Pack switches, Undo and Review changes](img/functions/functions-admin.png)
 
 The server alone decides who may change a switch: the switches' API refuses anyone who is not an administrator (`403`), whatever page or
 script asks. Admin → Commands in the Admin menu opens this page.

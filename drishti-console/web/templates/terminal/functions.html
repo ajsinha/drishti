@@ -51,21 +51,18 @@
         <button type="button" class="btn-pill btn-accent" data-review disabled>Review changes</button>
         {% endif %}
       </div>
-      {% if admin %}<p class="text-muted-d cmd-roles-note">Today only the <b>Everyone</b> column is used. The role columns arrive with role-based access.</p>{% endif %}
       <p class="adm-msg" data-msg role="status" aria-live="polite"></p>
       <div class="tbl-wrap"><table class="tbl adm-tbl cmd-tbl" data-matrix data-plain>
         <caption class="visually-hidden">{% if admin %}Commands by pack, what each does, and who may use it{% else %}The commands you can use, by pack, and what each does{% endif %}</caption>
         <thead><tr><th scope="col">Command</th><th scope="col">Opens</th><th scope="col">What it does</th><th scope="col">Example</th>
-          {% if admin %}<th scope="col" class="cmd-col">Everyone</th>
-          {% for r in c.roles %}<th scope="col" class="cmd-col cmd-role" title="Role-based access to commands is not built yet">{{ r }}</th>{% endfor %}{% endif %}</tr></thead>
+          {% if admin %}<th scope="col" class="cmd-col">Everyone</th>{% endif %}</tr></thead>
         {% for p in c.packs %}
         <tbody data-pack="{{ p.name }}" data-pack-text="{{ (p.name ~ ' ' ~ (p.title or '')) | lower }}"{% if admin %} data-pack-on="{{ 'true' if p.on else 'false' }}"{% if p.neededBy %} data-needed-by="{{ p.neededBy | join(', ') }}"{% endif %}{% endif %}{% if not p.shown %} hidden{% endif %}>
           <tr class="cmd-pack"><th scope="rowgroup" colspan="4"><a class="cmd-pack-name" href="{{ p.form }}" title="Its search form: FORM {{ p.name }}">{{ p.title or p.name }}</a> <span class="mono text-muted-d">{{ p.name }}</span>
             <span class="text-muted-d" data-pack-counts>· {{ p.commands | length }} command{{ '' if p.commands | length == 1 else 's' }}</span>
             {% if admin and not p.on %}<span class="st st-bad">pack off</span>{% endif %}</th>
             {% if admin %}<td class="cmd-col"><label class="cmd-switch"><input type="checkbox" data-switch="pack" data-name="{{ p.name }}"{% if p.on %} checked{% endif %}
-              aria-label="Pack {{ p.name }} on for everyone"> <span>Pack</span></label></td>
-            {% for r in c.roles %}<td class="cmd-col cmd-role" aria-hidden="true">—</td>{% endfor %}{% endif %}</tr>
+              aria-label="Pack {{ p.name }} on for everyone"> <span>Pack</span></label></td>{% endif %}</tr>
           {% for m in p.commands %}
           <tr data-command="{{ m.code }}" data-kind="{{ m.kind }}" data-on="{{ 'true' if m.on else 'false' }}" data-text="{{ m.text }}"{% if not m.on %} class="cmd-is-off"{% endif %}{% if m.hidden %} hidden{% endif %}{% if m.since %} data-since="{{ m.since[:10] }}"{% endif %}{% if m.reason %} data-reason="{{ m.reason }}"{% endif %}>
             <th scope="row" class="mono cmd-code{% if not m.on %} cmd-off-code{% endif %}">{% if m.href %}<a href="{{ m.href }}" data-go="{{ m.go }}" title="Open {{ m.go }}">{{ m.code }}</a>{% else %}<span>{{ m.code }}</span>{% endif %}{% if not m.on %} <span class="st st-bad">off</span>{% endif %}</th>
@@ -73,8 +70,7 @@
             <td class="cmd-desc">{{ m.description or '' }}</td>
             <td class="mono text-muted-d func-ex">{% if m.example %}{{ m.example }}{% else %}<span class="func-form">search form</span>{% endif %}</td>
             {% if admin %}<td class="cmd-col"><input type="checkbox" class="cmd-check" data-switch="command" data-name="{{ m.code }}"{% if m.on %} checked{% endif %}
-              aria-label="{{ m.code }} for everyone"></td>
-            {% for r in c.roles %}<td class="cmd-col cmd-role" aria-hidden="true">—</td>{% endfor %}{% endif %}
+              aria-label="{{ m.code }} for everyone"></td>{% endif %}
           </tr>{% endfor %}
         </tbody>{% endfor %}
       </table></div>

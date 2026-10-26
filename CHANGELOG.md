@@ -30,6 +30,9 @@
   command word (the pack loader, `drishti.py pack check`, type-ahead). Docs: [COMMANDS.md](docs/admin/COMMANDS.md) is now *Functions
   (FUNC)* with pictures for a user and an administrator, USER_GUIDE (Views menu, reserved words), API_GUIDE, COMMAND_CATALOG, BI_GUIDE,
   PACK_DEVELOPER_GUIDE, CLI_GUIDE, TOOLS, TROUBLESHOOTING, NET; F1 on the page opens COMMANDS.md.
+- Functions matches the approved mock-up: the administrator's view has only the Everyone switch column; the greyed role columns and
+  their note are gone (a column per role appears when role-based access per command is built; the API still lists the roles). Pictures
+  retaken; nothing scrolls sideways at the default width.
 
 ## 2.9.0 — Exposure computed for any scope, the stored exposure profile retired; VaR and exposure in BI; two documents per measure; the landing headline (2026-10-26)
 

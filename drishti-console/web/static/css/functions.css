@@ -43,10 +43,8 @@
 .cmd-bar .btn-pill { min-height: 36px; }
 .cmd-pending { padding: .1rem .6rem; border-radius: 1rem; background: var(--d-emph-bg); color: var(--d-warn); font-size: .8rem; }
 .cmd-pending[hidden] { display: none; }
-.cmd-roles-note { margin: .3rem 0 .6rem; font-size: .85rem; }
 .cmd-tbl th, .cmd-tbl td { white-space: normal; vertical-align: top; }
 .cmd-tbl .cmd-col { text-align: center; width: 6rem; }
-.cmd-tbl .cmd-role { color: var(--d-faint); font-weight: 400; }
 .cmd-tbl .func-ex { white-space: nowrap; }
 .cmd-tbl .cmd-check { width: 20px; height: 20px; accent-color: var(--d-ok); }
 .cmd-tbl .cmd-desc { min-width: 16rem; max-width: 34rem; }

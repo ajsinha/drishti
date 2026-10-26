@@ -13,7 +13,7 @@
 # See the LICENSE file in the root of this repository for the full terms.
 
 """Functions, FUNC (docs/admin/COMMANDS.md): the command directory for everyone (a user sees only the commands that are on, no switches; an
-administrator sees the matrix: commands × Everyone, greyed role columns, off commands, the batch sent with its reason, the history and impact
+administrator sees the matrix: commands × Everyone (no role columns until per-role access is built), off commands, the batch sent with its reason, the history and impact
 passed through); the reserved word FUNC; /admin/commands redirecting; and the "not active" page a command an administrator turned off
 answers with, by its page or the typed command; links and panels that read it say so."""
 import pytest
@@ -54,16 +54,17 @@ def as_user(monkeypatch):
     monkeypatch.setattr(Identity, "is_admin", property(lambda self: False))
 
 
-def test_an_administrator_sees_the_matrix_with_off_commands_switches_role_columns_and_each_servers_version(client, backend, monkeypatch):
+def test_an_administrator_sees_the_matrix_with_off_commands_the_everyone_switch_and_each_servers_version(client, backend, monkeypatch):
     with_admin(backend, monkeypatch, [])
     page = client.get("/func").text
-    for text in ("data-functions", "data-commands", 'data-matrix', "Everyone", ">auditor<", ">trader<", "The role columns arrive with role-based access",
+    for text in ("data-functions", "data-commands", 'data-matrix', "Everyone",
                  'data-command="FRTB"', 'data-on="false"', "FRTB SA sensitivities.", "FRTB FRTB-RATES-1", 'data-switch="pack" data-name="market-risk"',
                  'data-needed-by="counterparty-risk"', "Review changes", "data-undo", "Reason (kept in the audit log)", "data-show",
                  "Applies on every server of the cluster within seconds", "Version on each server", "n-b", "catching up", "in step",
                  "1 of 2 in step", "data-cluster", "History", "functions.js", "functions.css"):
         assert text in page, text
     assert "1 off" in page and "3 commands" in page
+    assert ">auditor<" not in page and "cmd-role" not in page and "role columns" not in page, "only the Everyone column (the approved mock-up)"
     assert '<span>FRTB</span> <span class="st st-bad">off</span>' in page, "an off command is struck through and not a link"
     assert 'href="/go?q=FRTB' not in page
     assert '<a href="/go?q=TRD%201000015" data-go="TRD 1000015"' in page
