@@ -136,7 +136,7 @@ final class VarPositions {
         m.put("STATUS", pc.text("STATUS", p));
         m.put("SCENARIO_SET_ID", b.scenarioSet());
         m.put("VAR_SCOPE", "POS:" + id);
-        m.put("DERIVED_BY", "Drishti's position rules " + d.intake().rulesDigest() + " (VAR.md section 3.7)");
+        m.put("DERIVED_BY", "the server's position rules " + d.intake().rulesDigest() + " (VAR.md section 3.7)");
         return m;
     }
 }
