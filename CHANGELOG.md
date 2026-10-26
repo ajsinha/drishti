@@ -17,6 +17,7 @@
 
 ## Unreleased
 
+- **Test runs no longer rewrite the committed screenshots.** The browser tests that take documentation pictures (the designer, grid, forms, refresh, reactive panels of tutorial 23, write-back of tutorial 24, the Excel export picture) write them to the docs folder only when `DRISHTI_SHOTS` is set, as the other picture-taking tests already did; otherwise to `<tmp>/drishti-doc-shots`, which `tools/drill.sh` removes (`drishti-console/tests/docshots.py`). The drill no longer leaves a dirty tree.
 - **The landing page's headline** (product owner, 2026-10-26): "See what your data hasn't told you yet.", with the tagline "Any data. Any domain. One grammar." under it as the subtitle; both from configuration (`ui.headline`, `ui.headline_accent`, `ui.tagline`; [CONFIGURATION.md](docs/admin/CONFIGURATION.md)).
 - **Docs: VaR in two documents** (product owner, 2026-10-26). [VAR_GUIDE.md](docs/guides/VAR_GUIDE.md) is now the one VaR reference
   (Part I using VaR, the explorer, scopes, captures, what-if, CLI, API, settings; Part II the data contract, still version 1.4; Part III

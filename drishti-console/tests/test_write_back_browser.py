@@ -25,8 +25,9 @@ import pytest
 
 from test_workbench_browser import browser, wait  # noqa: F401 - fixtures and helpers
 from wb_live import _stack
+from docshots import docs_img
 
-IMG = Path(__file__).resolve().parents[2] / "docs" / "tutorials" / "img" / "t24"
+IMG = docs_img("tutorials/img/t24")                 # docs/tutorials/img/t24 only when DRISHTI_SHOTS is set (docshots.py)
 DESK = "/v/portfolio-trades/BOOK-RATES-2?sutra=book-desk"
 
 

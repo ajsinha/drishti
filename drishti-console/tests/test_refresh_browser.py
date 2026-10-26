@@ -31,8 +31,9 @@ import pytest
 
 from test_workbench_browser import browser, wait  # noqa: F401 - fixtures and helpers
 from wb_live import _stack
+from docshots import docs_img
 
-IMG = Path(__file__).resolve().parents[2] / "docs" / "guides" / "img" / "designer"
+IMG = docs_img("guides/img/designer")                 # docs/guides/img/designer only when DRISHTI_SHOTS is set (docshots.py)
 LINE = "TRD BOOK-RATES-2 · click a trade → cash flows + CPTY limits · refresh 2s"
 ENV = {"DRISHTI_UI_DESIGNER": "true", "DRISHTI_VIEWS_REFRESH_MIN_SECONDS": "2"}
 

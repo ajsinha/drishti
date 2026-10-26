@@ -260,7 +260,7 @@ def test_the_excel_export_has_native_charts_and_a_masked_column_is_never_plotted
             shutil.copytree(out, keep, dirs_exist_ok=True, ignore=shutil.ignore_patterns("profile"))
         pages = sorted(out.glob("page-*.png"), key=lambda p: int(p.stem.split("-")[1]))[1:2]       # the sheet after About: the data and its chart beside it, fitted to one page's width
         if pages:
-            target = ROOT / "docs" / "guides" / "img" / "bi-dist"
+            target = (ROOT / "docs" / "guides" / "img" / "bi-dist") if os.environ.get("DRISHTI_SHOTS") else out / "doc-shot"   # the docs folder only when retaking pictures
             target.mkdir(parents=True, exist_ok=True)
             subprocess.run(["convert", *map(str, pages), "+append", "-trim", "-bordercolor", "white", "-border", "14", "-quality", "85", str(target / "export-excel-chart.jpg")],
                            check=True, timeout=60)

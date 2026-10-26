@@ -26,8 +26,9 @@ import pytest
 from test_designer_browser import BOOK, page_in, stack  # noqa: F401 - the stack (ui.designer on) and pages
 from test_workbench_browser import browser, wait  # noqa: F401
 from wb_live import post
+from docshots import docs_img
 
-IMG = Path(__file__).resolve().parents[2] / "docs" / "guides" / "img" / "designer"
+IMG = docs_img("guides/img/designer")                 # docs/guides/img/designer only when DRISHTI_SHOTS is set (docshots.py)
 TABLE = """  - id: trades
     kind: table
     title: Trades

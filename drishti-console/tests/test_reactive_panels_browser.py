@@ -29,8 +29,9 @@ import pytest
 
 from test_workbench_browser import browser, wait  # noqa: F401 - fixtures and helpers
 from wb_live import _stack
+from docshots import docs_img
 
-IMG = Path(__file__).resolve().parents[2] / "docs" / "tutorials" / "img" / "t23"
+IMG = docs_img("tutorials/img/t23")                 # docs/tutorials/img/t23 only when DRISHTI_SHOTS is set (docshots.py)
 ENV = {"DRISHTI_PACKS": "core,compute-demo", "DRISHTI_COMPUTE_ENABLED": "true", "DRISHTI_PYTHON": sys.executable, "DRISHTI_LAKE_ENABLED": "false",
        "DRISHTI_PACKS_SAMPLES": "visible"}
 
