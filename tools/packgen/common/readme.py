@@ -147,6 +147,10 @@ def problems_connector(path: Path) -> list[str]:
 
 # -- pack READMEs ----------------------------------------------------------------------------------------------------------
 
+# A pack whose public-data refresh script is not named after it (tools/publicdata/<pack with underscores>.py).
+PUBLICDATA = {"market-data": "official_market_data.py"}
+
+
 def find_intro(pack: str) -> Path | None:
     """The hand-written intro of a pack: under its generator (``tools/packgen/<gen>/readme/``) or ``tools/packgen/intros/``."""
     hits = sorted(PACKGEN.glob(f"*/readme/{pack}.intro.md")) + sorted(PACKGEN.glob(f"intros/{pack}.intro.md"))
@@ -392,7 +396,7 @@ def render_pack(pack_dir: Path, generator: str | None = None, files: dict | None
     connectors = m.get("connectors") or {}
     routes = m.get("routes") or {}
     notes = imeta.get("fields") or {}
-    publicdata = ROOT / "tools" / "publicdata" / (name.replace("-", "_") + ".py")
+    publicdata = ROOT / "tools" / "publicdata" / (PUBLICDATA.get(name) or name.replace("-", "_") + ".py")
     refresh = imeta.get("refresh") or (str(publicdata.relative_to(ROOT)) if publicdata.is_file() else generator)
     packs = [p for p in (m.get("extends") or []) + (m.get("requires") or []) if p]
     own = set(connectors)
@@ -522,6 +526,17 @@ def render_pack(pack_dir: Path, generator: str | None = None, files: dict | None
     if sources:
         out += _table(["Source", "Licence", "Internal only", "Used for"], [[s.get("name", ""), s.get("licence", ""), "yes" if s.get("internal-only") else "no",
                                                                            s.get("used-for", "")] for s in sources])
+    guide_files = [g.get("file") for g in (yaml.safe_load(F.text("config/help.yaml") or "{}") or {}).get("guides") or [] if g.get("file")]
+    if F.glob("contracts/*.contract.yaml"):
+        where = f"[{guide_files[0]}]({guide_files[0]})" if guide_files else "the pack's guide"
+        out += [f"Every kind's data contract (each column: type, key, example, links) and where its data comes from (an external source and "
+                f"its refresh script, a generator of synthetic data, or a Drishti engine) are in the guide, {where}: *Data contracts* and "
+                "*Data retrieval*.", ""]
+    ext = [s for s in sources if (s.get("name") or "").strip() and not str(s.get("licence", "")).startswith("Proprietary")]
+    if ext:
+        out += ["External data: " + "; ".join(f"{s['name']}" + (" (**internal only**)" if s.get("internal-only") else "") for s in ext) +
+                ". Each source's URL, licence, refresh script and worked examples (Linux and Windows) are on the External data help page, "
+                "[docs/guides/PUBLIC_DATA.md](../../../docs/guides/PUBLIC_DATA.md).", ""]
     # -- enabling
     out += ["## Enabling and dependencies", ""]
     if isec.get("Enabling and dependencies"):
@@ -546,8 +561,9 @@ def render_pack(pack_dir: Path, generator: str | None = None, files: dict | None
     if isec.get("Refreshing the data"):
         out += [isec["Refreshing the data"], ""]
     if publicdata.is_file():
-        out += [f"`python3 {publicdata.relative_to(ROOT)} status` shows what the pack holds and how old it is; `refresh` fetches, rebuilds and "
-                f"checks (docs/guides/PUBLIC_DATA.md).", ""]
+        out += [f"`python3 {publicdata.relative_to(ROOT)} status` lists the external sources, their licences and when each was last refreshed "
+                "(offline); `refresh --dry-run` shows what a refresh would fetch and write, changing nothing; `refresh` fetches, writes and "
+                "checks. The External data help page (docs/guides/PUBLIC_DATA.md) has worked examples for Linux and Windows.", ""]
     out += [f"The pack's files are written by `{generator}`; its `--check` fails when the committed files differ from what it would write.", ""]
     # -- see also
     out += ["## See also", ""]

@@ -115,3 +115,320 @@ After a refresh, rebuild the lake so the server reads the new snapshot: `python3
 `python3 tools/build_demo_lakes.py`), then restart the server or let it pick the tables up at its next refresh.
 
 The picture above is made by `tools/packgen/gleif/shot.py` (its own scratch server and console on 18760 and 18761).
+
+## Data contracts
+
+Every kind of the pack has a data contract: a YAML file beside the pack (`config/packs/gleif/contracts/<kind>.contract.yaml`, checked against `tools/contracts.schema.json`) that says what one record is, its key, how it is stored and dated, and every column. This section is generated from those files; the same files give the contract pages ([docs/contracts/packs/gleif.md](../../../../docs/contracts/packs/gleif.md), with each kind's validation rules and the points still to review). Check them against the pack and its data with `python3 tools/contracts.py check` (or `drishti.py contract check`); show one with `python3 tools/contracts.py show <MNEMONIC>`.
+
+| Command | Kind | Class | Key | Grain | Columns |
+|---|---|---|---|---|---|
+| `LEI` | `lei-entity` | fundamental | `LEI` | One row per lei legal entity, keyed by LEI. | 60 |
+| `LEIG` | `lei-group` | computed | `GROUP_ID` | One record per GROUP_ID of the lei-entity records, computed when asked. | 46 |
+| `LEIR` | `lei-relationship` | fundamental | `RELATIONSHIP_ID` | One row per lei parent relationship, keyed by RELATIONSHIP_ID. | 16 |
+| `LEIC` | `lei-country` | computed | `COUNTRY` | One record per COUNTRY of the lei-entity records, computed when asked. | 28 |
+| `LEIM` | `lei-mapping` | fundamental | `IDENTIFIER` | One row per isin or bic to lei, keyed by IDENTIFIER. | 8 |
+
+*Class*: **fundamental** data is delivered by a source system and stored; **input** is stored data an engine reads; **computed** is worked out by Drishti when asked and never stored by a source; **drishti-owned** is kept by Drishti itself.
+
+### LEI: LEI legal entity (`lei-entity`)
+
+A legal entity from its LEI record: key facts, addresses, registration and renewal, parents, children and identifiers.
+
+**Class** fundamental · **Key** `LEI` · **Dated by** `snapshot` · **Cadence** static · **Stored by** connector `gleif-store` (plugin `delta`), table `<root>/gleif/lei-entity/` · **Ids** `^[0-9A-Z]{18}[0-9]{2}$`.
+
+**Grain:** One row per lei legal entity, keyed by LEI. **Contract:** `contracts/lei-entity.contract.yaml` ([full contract page](../../../../docs/contracts/packs/gleif.md#lei-lei-legal-entity-lei-entity)).
+
+| Column | Type | Key | Presence | Unit | Example or values | Link | Meaning |
+|---|---|---|---|---|---|---|---|
+| `LEI` | id | key | required |  | `HWUPKR0MPOU8FGXBT394` (pattern `^[0-9A-Z]{18}[0-9]{2}$`) |  | LEI |
+| `NAME` | text |  | required |  | `Apple Inc.` |  | — |
+| `OTHER_NAMES` | record list |  | optional |  |  |  | Nested: see nested OTHER_NAMES[] |
+| `LEGAL_FORM` | text |  | required |  | `For-Profit Corporation General Stock` |  | Legal form |
+| `JURISDICTION` | id |  | optional |  | `US-CA` | `jurisdiction` | Country: the jurisdiction it refers to |
+| `LEI_COUNTRY` | id |  | required |  | `US` | `lei-country` | Country (LEI): the lei-country it refers to |
+| `COUNTRY_NAME` | text |  | required |  | `United States of America (the)` |  | — |
+| `LEGAL_ADDRESS` | text |  | required |  | `C/O C T Corporation System, 330 N. Brand Blvd, Suite 700, 9…` |  | Legal address |
+| `LEGAL_CITY` | text |  | required |  | `Glendale` |  | — |
+| `HQ_ADDRESS` | text |  | optional |  | `One Apple Park Way, 95014 Cupertino, US-CA, US` |  | — |
+| `REGISTERED_AS` | text |  | optional |  | `806592` |  | — |
+| `ENTITY_STATUS` | text |  | required |  | `ACTIVE` |  | Entity |
+| `CREATED` | date |  | optional |  | `1977-01-03` |  | Entity created |
+| `REGISTRATION_STATUS` | text |  | required |  | `ISSUED` |  | — |
+| `INITIAL_REGISTRATION` | date |  | required |  | `2012-06-06` |  | First registered |
+| `LAST_UPDATE` | date |  | required |  | `2026-03-03` |  | Last updated |
+| `NEXT_RENEWAL` | date |  | required |  | `2027-03-08` |  | Next renewal |
+| `RENEWAL_LATE` | boolean |  | required |  | `False` |  | — |
+| `MANAGING_LOU` | text |  | required |  | `Bloomberg Finance L.P.` |  | Managing LOU |
+| `BICS` | text |  | optional |  | `APLEUS66XXX` |  | — |
+| `BIC_COUNT` | integer |  | optional |  | `1` |  | — |
+| `ISIN_COUNT` | integer |  | optional |  | `949` |  | — |
+| `LEI_GROUP` | id |  | required |  | `HWUPKR0MPOU8FGXBT394` | `lei-group` | Ownership group: the lei-group it refers to |
+| `PARENT_EXCEPTIONS` | record list |  | optional |  |  |  | Nested: see nested PARENT_EXCEPTIONS[] |
+| `CHILDREN` | record list |  | optional |  |  |  | Nested: see nested CHILDREN[] |
+| `CHILD_COUNT` | integer |  | optional |  | `8` |  | — |
+| `DIRECT_CHILDREN_GLEIF` | integer |  | optional |  | `8` |  | — |
+| `ULTIMATE_CHILDREN_GLEIF` | integer |  | optional |  | `20` |  | — |
+| `GLEIF_GROUP_SIZE` | integer |  | optional |  | `173` |  | On an ultimate parent: its ownership group's size in GLEIF's golden copy, itself included (an input from GLEIF; the computed LEIG reads it as MEMBERS_IN_GLEIF) |
+| `MAPPING_IDS` | id list |  | optional |  |  | `lei-mapping` | Identifier: the lei-mapping it refers to |
+| `SEGMENT` | text |  | optional |  | `US equities` |  | Why in this pack |
+| `US_COMPANY` | id |  | optional |  | `AAPL` | `us-company` | Ticker |
+| `US_COMPANY_NAME` | text |  | optional |  | `Apple Inc.` |  | — |
+| `RENEWAL` | text |  | optional |  | `Late: renewal was due 2024-10-07 (lapsed)` |  | — |
+| `DIRECT_PARENT` | text |  | optional |  | `549300COKYB5EGSU1838` |  | — |
+| `ULTIMATE_PARENT` | text |  | optional |  | `549300B2Q47IR0CR5B54` |  | — |
+| `PARENTS` | record list |  | optional |  |  |  | Nested: see nested PARENTS[] |
+| `OPENCORPORATES` | text |  | optional |  | `nl/34153487` |  | — |
+| `HQ_COUNTRY` | text |  | optional |  | `US` |  | — |
+| `MIC` | text |  | optional |  | `MAQI` |  | MIC |
+| `CATEGORY` | text |  | optional |  | `Branch`, `Fund` |  | — |
+| `SUCCESSOR` | text |  | optional |  | `724500ZSA7ZOZHUXBS53` |  | — |
+| `PROVENANCE` | record |  | required |  |  |  | Nested: see nested PROVENANCE |
+
+Nested `OTHER_NAMES[]`:
+
+| Column | Type | Key | Presence | Unit | Example or values | Link | Meaning |
+|---|---|---|---|---|---|---|---|
+| `NAME` | text |  | required |  | `Apple Computer, Inc.` |  | — |
+| `TYPE` | text |  | required |  | `alternative language legal name`, `auto ascii transliterated legal name`, `preferred ascii transliterated legal name`, `previous legal name`, `trading or operating name` |  | — |
+
+Nested `PARENT_EXCEPTIONS[]`:
+
+| Column | Type | Key | Presence | Unit | Example or values | Link | Meaning |
+|---|---|---|---|---|---|---|---|
+| `LEVEL` | text |  | required |  | `Direct parent`, `Ultimate parent` |  | For |
+| `REASON` | text |  | required |  | `NATURAL_PERSONS`, `NON_CONSOLIDATING`, `NON_PUBLIC`, `NO_KNOWN_PERSON`, `NO_LEI` |  | Reason |
+| `MEANING` | text |  | required |  | `Controlled by natural persons, not by an entity`, `No known person controls it (shares widely held)`, `The parent does not consolidate it (no consolidated accounts that include it)`, `The parent may not be disclosed (legal obstacle or harm)`, `no lei` |  | Meaning |
+
+Nested `CHILDREN[]`:
+
+| Column | Type | Key | Presence | Unit | Example or values | Link | Meaning |
+|---|---|---|---|---|---|---|---|
+| `LEI` | id |  | required |  | `2549008YU9EOMHFUA249` (pattern `^[0-9A-Z]{18}[0-9]{2}$`) |  | The record's id (the business key) |
+| `NAME` | text |  | required |  | `APPLE OPERATIONS INDIA PRIVATE LIMITED` |  | — |
+| `COUNTRY` | text |  | required |  | `IN` |  | — |
+| `KIDS` | integer |  | optional |  | `9` |  | — |
+
+Nested `PARENTS[]`:
+
+| Column | Type | Key | Presence | Unit | Example or values | Link | Meaning |
+|---|---|---|---|---|---|---|---|
+| `LEVEL` | integer |  | required |  | `1` |  | Level |
+| `LEI` | id |  | required |  | `549300COKYB5EGSU1838` (pattern `^[0-9A-Z]{18}[0-9]{2}$`) |  | LEI |
+| `NAME` | text |  | required |  | `Desjardins Holding financier inc.` |  | — |
+| `RELATIONSHIP` | text |  | required |  | `Direct and ultimate parent`, `Direct parent`, `Higher parent`, `Ultimate parent`, `Ultimate parent (chain not reported)` |  | Relationship |
+
+Nested `PROVENANCE`:
+
+| Column | Type | Key | Presence | Unit | Example or values | Link | Meaning |
+|---|---|---|---|---|---|---|---|
+| `SOURCE` | text |  | required |  | `GLEIF, the Global Legal Entity Identifier Foundation (LEI records, golden copy level 2, mapping files)` |  | — |
+| `RETRIEVED_AT` | date |  | required |  | `2026-10-25` |  | — |
+| `LICENCE` | text |  | required |  | `CC0 1.0 (GLEIF's terms: free of charge, no restriction; attribution appreciated)` |  | — |
+| `URL` | text |  | required |  | `https://search.gleif.org/#/record/HWUPKR0MPOU8FGXBT394` |  | — |
+
+**Links:** `JURISDICTION` → `jurisdiction`, `LEI_COUNTRY` → `lei-country`, `LEI_GROUP` → `lei-group`, `MAPPING_IDS` → `lei-mapping`, `US_COMPANY` → `us-company`.
+
+### LEIG: LEI ownership group (`lei-group`)
+
+An ownership group, computed from the entities when asked: the ultimate parent with its whole tree, every member, and counts by country and legal form.
+
+**Class** computed · **Key** `GROUP_ID` · **Dated by** `on request` · **Cadence** on change · **Stored by** connector `gleif-groupings` (plugin `derived`).
+
+**Grain:** One record per GROUP_ID of the lei-entity records, computed when asked. **Contract:** `contracts/lei-group.contract.yaml` ([full contract page](../../../../docs/contracts/packs/gleif.md#leig-lei-ownership-group-lei-group)).
+
+| Column | Type | Key | Presence | Unit | Example or values | Link | Meaning |
+|---|---|---|---|---|---|---|---|
+| `GROUP_ID` | id | key | required |  |  |  | The value the lei-entity records are grouped by ($.LEI_GROUP; each also joins 'ALL') |
+| `MEMBER_LEIS` | id list |  | derived |  |  |  | The ids of the grouped lei-entity records (at most 100000) |
+| `MEMBERS` | integer |  | derived |  |  |  | The entities in the group: every lei-entity whose LEI_GROUP is the key (no cap) |
+| `LATE_RENEWALS` | integer |  | derived |  |  |  | Members whose LEI renewal is late (RENEWAL_LATE) |
+| `LAPSED` | integer |  | derived |  |  |  | Members whose registration is LAPSED |
+| `COUNTRY_LIST` | text list |  | derived |  |  |  | A helper of the page fields: distinct over the group of: $.LEI_COUNTRY |
+| `GROUP_LIST` | text list |  | derived |  |  |  | A helper of the page fields: distinct over the group of: $.LEI_GROUP |
+| `ROOT_NAME` | text list |  | derived |  |  |  | A helper of the page fields: distinct over the group of: $.LEI == $.LEI_GROUP ? $.NAME : null |
+| `ROOT_COUNTRY` | text list |  | derived |  |  |  | A helper of the page fields: distinct over the group of: $.LEI == $.LEI_GROUP ? $.LEI_COUNTRY : null |
+| `ROOT_COUNTRY_NAME` | text list |  | derived |  |  |  | A helper of the page fields: distinct over the group of: $.LEI == $.LEI_GROUP ? $.COUNTRY_NAME : null |
+| `ROOT_LEGAL_FORM` | text list |  | derived |  |  |  | A helper of the page fields: distinct over the group of: $.LEI == $.LEI_GROUP ? $.LEGAL_FORM : null |
+| `ROOT_SEGMENT` | text list |  | derived |  |  |  | A helper of the page fields: distinct over the group of: $.LEI == $.LEI_GROUP ? $.SEGMENT : null |
+| `ROOT_US_COMPANY` | text list |  | derived |  |  |  | A helper of the page fields: distinct over the group of: $.LEI == $.LEI_GROUP ? $.US_COMPANY : null |
+| `GLEIF_GROUP_SIZE` | integer |  | derived |  |  |  | The ultimate parent's GLEIF_GROUP_SIZE: the group's size in GLEIF's golden copy (an input) |
+| `PROVENANCE` | record |  | derived |  |  |  | The first member's source and licence (GLEIF, CC0) |
+| `ROWS` | record list |  | derived |  |  |  | One row per grouped lei-entity record |
+| `TREE` | record list |  | derived |  |  |  | The group as a tree from the ultimate parent: each node a row with its CHILDREN; a member whose direct parent is outside the group hangs under the ultimate parent |
+| `LEVELS` | integer |  | derived |  |  |  | The deepest level of the tree (the ultimate parent is 0) |
+| `NAME` | text |  | derived |  |  |  | The ultimate parent's legal name ('Every ownership group of the pack' for ALL) |
+| `ENTITY_LEI` | id |  | derived |  |  |  | The ultimate parent (the key; empty for ALL) |
+| `LEI_COUNTRY` | text |  | derived |  |  |  | The ultimate parent's legal-address country |
+| `COUNTRY_NAME` | text |  | derived |  |  |  | That country's name |
+| `LEGAL_FORM` | text |  | derived |  |  |  | The ultimate parent's legal form |
+| `SEGMENT` | text |  | derived |  |  |  | The ultimate parent's segment when it is a seed (US equities, G-SIB, bank, ...) |
+| `US_COMPANY` | id |  | derived |  |  |  | The ultimate parent's us-equities ticker, when listed |
+| `COUNTRIES` | integer |  | derived |  |  |  | The number of different legal-address countries among the members |
+| `GROUPS` | integer |  | derived |  |  |  | The number of ownership groups among the members (1 on a group page; every group on ALL) |
+| `MEMBERS_IN_GLEIF` | integer |  | derived |  |  |  | The larger of GLEIF_GROUP_SIZE and MEMBERS |
+| `CAPPED` | boolean |  | derived |  |  |  | True when GLEIF has more members than the lake holds (the committed snapshot keeps at most 50 a group) |
+| `BY_COUNTRY` | record list |  | derived |  |  |  | Members by country code: rows of label, value (members) and count, largest first, the top 20 |
+| `BY_LEGAL_FORM` | record list |  | derived |  |  |  | Members by legal form, largest first, the top 15 |
+| `GROUP_ROWS` | record list |  | derived |  |  |  | ALL only: the rows of every group's ultimate parent, largest in GLEIF first (empty on a group page) |
+| `BY_SEGMENT` | record list |  | derived |  |  |  | The seeded members by segment |
+
+Nested `ROWS[]`:
+
+| Column | Type | Key | Presence | Unit | Example or values | Link | Meaning |
+|---|---|---|---|---|---|---|---|
+| `LEI` | unknown |  | optional |  |  |  | From the lei-entity record: $.LEI |
+| `NAME` | unknown |  | optional |  |  |  | From the lei-entity record: $.NAME |
+| `COUNTRY` | unknown |  | optional |  |  |  | From the lei-entity record: $.LEI_COUNTRY |
+| `CITY` | unknown |  | optional |  |  |  | From the lei-entity record: $.LEGAL_CITY |
+| `LEGAL_FORM` | unknown |  | optional |  |  |  | From the lei-entity record: nonblank($.LEGAL_FORM, 'Not given') |
+| `PARENT` | unknown |  | optional |  |  |  | From the lei-entity record: $.DIRECT_PARENT |
+| `STATUS` | unknown |  | optional |  |  |  | From the lei-entity record: $.REGISTRATION_STATUS |
+| `LATE` | unknown |  | optional |  |  |  | From the lei-entity record: $.RENEWAL_LATE ? 'late' : null |
+| `SEGMENT` | unknown |  | optional |  |  |  | From the lei-entity record: $.SEGMENT |
+| `GROUP` | unknown |  | optional |  |  | `counterparty-group` | From the lei-entity record: $.LEI_GROUP |
+| `GLEIF_GROUP_SIZE` | unknown |  | optional |  |  |  | From the lei-entity record: $.GLEIF_GROUP_SIZE |
+| `US_COMPANY` | unknown |  | optional |  |  | `us-company` | From the lei-entity record: $.US_COMPANY |
+| `LEVEL` | integer |  | derived |  |  |  | The row's depth in the group's tree, built from PARENT (the key 0) |
+
+**Links:** `ROWS[].GROUP` → `counterparty-group`, `ROWS[].US_COMPANY` → `us-company`.
+
+- Computed when asked by the derived connector gleif-groupings from every lei-entity (since 2.9.2, which retired the stored page and its 50-member cap): the formulas, the inputs and the reconciliation with the retired page are in docs/guides/GROUPINGS_ANALYTICS_GUIDE.md (Part II).
+
+### LEIR: LEI parent relationship (`lei-relationship`)
+
+One consolidation relationship from GLEIF's level 2 data: the child, its direct or ultimate parent, status and periods.
+
+**Class** fundamental · **Key** `RELATIONSHIP_ID` · **Dated by** `snapshot` · **Cadence** static · **Stored by** connector `gleif-store` (plugin `delta`), table `<root>/gleif/lei-relationship/` · **Ids** `^LEIREL-`.
+
+**Grain:** One row per lei parent relationship, keyed by RELATIONSHIP_ID. **Contract:** `contracts/lei-relationship.contract.yaml` ([full contract page](../../../../docs/contracts/packs/gleif.md#leir-lei-parent-relationship-lei-relationship)).
+
+| Column | Type | Key | Presence | Unit | Example or values | Link | Meaning |
+|---|---|---|---|---|---|---|---|
+| `RELATIONSHIP_ID` | id | key | required |  | `LEIREL-010PWNH4K3BLIC3I7R03-DIRECT` (pattern `^LEIREL-`) |  | The record's id (the business key) |
+| `LEVEL` | text |  | required |  | `Direct`, `Ultimate` |  | — |
+| `CHILD_ENTITY` | id |  | required |  | `010PWNH4K3BLIC3I7R03` (pattern `^[0-9A-Z]{18}[0-9]{2}$`) | `lei-entity` | Child: the lei-entity it refers to |
+| `PARENT_ENTITY` | id |  | required |  | `549300COKYB5EGSU1838` (pattern `^[0-9A-Z]{18}[0-9]{2}$`) | `lei-entity` | Parent: the lei-entity it refers to |
+| `RELATIONSHIP_STATUS` | text |  | required |  | `ACTIVE` |  | Status |
+| `START` | date |  | required |  | `2017-12-06` |  | Since |
+| `PERIODS` | record list |  | required |  |  |  | Nested: see nested PERIODS[] |
+| `REGISTRATION_STATUS` | text |  | required |  | `LAPSED`, `PUBLISHED` |  | — |
+| `INITIAL_REGISTRATION` | date |  | required |  | `2023-08-08` |  | First registered |
+| `LAST_UPDATE` | date |  | required |  | `2024-10-07` |  | Last updated |
+| `NEXT_RENEWAL` | date |  | required |  | `2024-10-07` |  | Next renewal |
+| `LEI_GROUP` | id |  | required |  | `549300B2Q47IR0CR5B54` | `lei-group` | Ownership group: the lei-group it refers to |
+| `ACCOUNTING_STANDARD` | text |  | optional |  | `IFRS`, `OTHER_ACCOUNTING_STANDARD`, `US_GAAP` |  | Accounting standard |
+
+Nested `PERIODS[]`:
+
+| Column | Type | Key | Presence | Unit | Example or values | Link | Meaning |
+|---|---|---|---|---|---|---|---|
+| `TYPE` | text |  | required |  | `accounting period`, `document filing period` |  | Period |
+| `START` | date |  | required |  | `2021-01-01` |  | From |
+| `END` | date |  | optional |  | `2021-12-31` |  | — |
+
+**Links:** `CHILD_ENTITY` → `lei-entity`, `PARENT_ENTITY` → `lei-entity`, `LEI_GROUP` → `lei-group`.
+
+### LEIC: LEI country (`lei-country`)
+
+A country's legal entities in the pack, computed from the entities when asked: the entities, the groups present, legal forms and cities.
+
+**Class** computed · **Key** `COUNTRY` · **Dated by** `on request` · **Cadence** on change · **Stored by** connector `gleif-groupings` (plugin `derived`).
+
+**Grain:** One record per COUNTRY of the lei-entity records, computed when asked. **Contract:** `contracts/lei-country.contract.yaml` ([full contract page](../../../../docs/contracts/packs/gleif.md#leic-lei-country-lei-country)).
+
+| Column | Type | Key | Presence | Unit | Example or values | Link | Meaning |
+|---|---|---|---|---|---|---|---|
+| `COUNTRY` | id | key | required |  |  |  | The value the lei-entity records are grouped by ($.LEI_COUNTRY; each also joins 'ALL') |
+| `MEMBER_LEIS` | id list |  | derived |  |  |  | The ids of the grouped lei-entity records (at most 100000) |
+| `ENTITIES` | integer |  | derived |  |  |  | The entities with a legal address in the country: every lei-entity whose LEI_COUNTRY is the key (no row cap) |
+| `NAMES` | text list |  | derived |  |  |  | A helper of the page fields: distinct over the group of: $.COUNTRY_NAME |
+| `COUNTRY_LIST` | text list |  | derived |  |  |  | A helper of the page fields: distinct over the group of: $.LEI_COUNTRY |
+| `GROUP_LIST` | text list |  | derived |  |  |  | A helper of the page fields: distinct over the group of: $.LEI_GROUP |
+| `GROUPS_HEADQUARTERED` | integer |  | derived |  |  |  | Members that are their own ultimate parent (LEI equals LEI_GROUP) |
+| `LAPSED` | integer |  | derived |  |  |  | Members whose registration is LAPSED |
+| `LATE_RENEWALS` | integer |  | derived |  |  |  | Members whose LEI renewal is late |
+| `PROVENANCE` | record |  | derived |  |  |  | The first member's source and licence |
+| `ROWS` | record list |  | derived |  |  |  | One row per grouped lei-entity record |
+| `NAME` | text |  | derived |  |  |  | The country's name ('Every country of the entities in the pack' for ALL) |
+| `COUNTRIES` | integer |  | derived |  |  |  | The number of countries among the members (1, or every country on ALL) |
+| `GROUPS_PRESENT` | integer |  | derived |  |  |  | The number of ownership groups with a member here |
+| `BY_LEGAL_FORM` | record list |  | derived |  |  |  | Members by legal form: label, value, count; the top 15 |
+| `BY_CITY` | record list |  | derived |  |  |  | Members by legal-address city; the top 15 |
+| `GROUP_ROWS` | record list |  | derived |  |  |  | Members by ownership group: label (the group key, an LEI), value (members here), largest first |
+| `BY_COUNTRY` | record list |  | derived |  |  |  | Members by country name; the top 20 (ALL) |
+| `COUNTRY_ROWS` | record list |  | derived |  |  |  | ALL only: every country code with its members, largest first |
+
+Nested `ROWS[]`:
+
+| Column | Type | Key | Presence | Unit | Example or values | Link | Meaning |
+|---|---|---|---|---|---|---|---|
+| `LEI` | unknown |  | optional |  |  |  | From the lei-entity record: $.LEI |
+| `NAME` | unknown |  | optional |  |  |  | From the lei-entity record: $.NAME |
+| `COUNTRY` | unknown |  | optional |  |  |  | From the lei-entity record: $.LEI_COUNTRY |
+| `COUNTRY_NAME` | unknown |  | optional |  |  |  | From the lei-entity record: $.COUNTRY_NAME |
+| `CITY` | unknown |  | optional |  |  |  | From the lei-entity record: nonblank($.LEGAL_CITY, 'Not given') |
+| `LEGAL_FORM` | unknown |  | optional |  |  |  | From the lei-entity record: nonblank($.LEGAL_FORM, 'Not given') |
+| `GROUP` | unknown |  | optional |  |  | `counterparty-group` | From the lei-entity record: $.LEI_GROUP |
+| `STATUS` | unknown |  | optional |  |  |  | From the lei-entity record: $.REGISTRATION_STATUS |
+| `LATE` | unknown |  | optional |  |  |  | From the lei-entity record: $.RENEWAL_LATE ? 'late' : null |
+
+**Links:** `ROWS[].GROUP` → `counterparty-group`.
+
+- Computed when asked by the derived connector gleif-groupings from every lei-entity (since 2.9.2, which retired the stored page and its 400-row cap): docs/guides/GROUPINGS_ANALYTICS_GUIDE.md (Part II).
+
+### LEIM: ISIN or BIC to LEI (`lei-mapping`)
+
+An ISIN, BIC or MIC and the legal entity GLEIF's mapping files give it.
+
+**Class** fundamental · **Key** `IDENTIFIER` · **Dated by** `snapshot` · **Cadence** static · **Stored by** connector `gleif-store` (plugin `delta`), table `<root>/gleif/lei-mapping/`.
+
+**Grain:** One row per isin or bic to lei, keyed by IDENTIFIER. **Contract:** `contracts/lei-mapping.contract.yaml` ([full contract page](../../../../docs/contracts/packs/gleif.md#leim-isin-or-bic-to-lei-lei-mapping)).
+
+| Column | Type | Key | Presence | Unit | Example or values | Link | Meaning |
+|---|---|---|---|---|---|---|---|
+| `IDENTIFIER` | id | key | required |  | `WABTUS3WXXX` |  | Identifier |
+| `TYPE` | text |  | required |  | `BIC`, `ISIN`, `MIC` |  | Type |
+| `ENTITY_LEI` | id |  | required |  | `06BTX5UWZD0GQ5N5Y745` (pattern `^[0-9A-Z]{18}[0-9]{2}$`) | `lei-entity` | LEI record: the lei-entity it refers to |
+| `ENTITY_NAME` | text |  | required |  | `WESTINGHOUSE AIR BRAKE TECHNOLOGIES CORPORATION` |  | Entity |
+| `COUNTRY` | text |  | required |  | `US` |  | — |
+| `LEI_GROUP` | id |  | required |  | `06BTX5UWZD0GQ5N5Y745` | `lei-group` | Ownership group: the lei-group it refers to |
+| `MAPPING_FILE` | text |  | required |  | `LEI-BIC-20260925.zip`, `LEI-MIC-20261012.zip`, `isin-lei-20261024T071512.zip` |  | Mapping file |
+| `ISIN_COUNT` | integer |  | optional |  | `909` |  | ISINs of the issuer |
+
+**Links:** `ENTITY_LEI` → `lei-entity`, `LEI_GROUP` → `lei-group`.
+
+## Data retrieval
+
+Where each kind's data comes from, how it reaches the lake and how to check it. Three origins: **external** data, fetched from a public source by the pack's refresh script (each source, its licence and worked examples on the [External data](../../../../docs/guides/PUBLIC_DATA.md) help page); **synthetic** test data (or hand-written reference data), written by a generator with fictitious names; **computed** by a Drishti engine when it is asked, never stored by a source.
+
+| Command | Kind | Origin | How it reaches Drishti |
+|---|---|---|---|
+| `LEI` | `lei-entity` | external: GLEIF LEI API: LEI records, legal forms, countries, LEI issuers (CC0 1.0 (attribution appreciated)); GLEIF golden copy, level 2: relationship records and reporting exceptions (CC0 1.0 (attribution appreciated)); GLEIF mapping files: BIC, ISIN, MIC and OpenCorporates to LEI (CC0 1.0) — refreshed by `tools/publicdata/gleif.py` | `data/testdata/gleif/lei-entity/` → `lake demo` → connector `gleif-store` |
+| `LEIG` | `lei-group` | computed by Drishti: the derived connector gleif-groupings over the kind lei-entity; see the [Groupings and analytics guide](../../../../docs/guides/GROUPINGS_ANALYTICS_GUIDE.md) | nothing to load: computed from its inputs when asked |
+| `LEIR` | `lei-relationship` | external: GLEIF LEI API: LEI records, legal forms, countries, LEI issuers (CC0 1.0 (attribution appreciated)); GLEIF golden copy, level 2: relationship records and reporting exceptions (CC0 1.0 (attribution appreciated)); GLEIF mapping files: BIC, ISIN, MIC and OpenCorporates to LEI (CC0 1.0) — refreshed by `tools/publicdata/gleif.py` | `data/testdata/gleif/lei-relationship/` → `lake demo` → connector `gleif-store` |
+| `LEIC` | `lei-country` | computed by Drishti: the derived connector gleif-groupings over the kind lei-entity; see the [Groupings and analytics guide](../../../../docs/guides/GROUPINGS_ANALYTICS_GUIDE.md) | nothing to load: computed from its inputs when asked |
+| `LEIM` | `lei-mapping` | external: GLEIF LEI API: LEI records, legal forms, countries, LEI issuers (CC0 1.0 (attribution appreciated)); GLEIF golden copy, level 2: relationship records and reporting exceptions (CC0 1.0 (attribution appreciated)); GLEIF mapping files: BIC, ISIN, MIC and OpenCorporates to LEI (CC0 1.0) — refreshed by `tools/publicdata/gleif.py` | `data/testdata/gleif/lei-mapping/` → `lake demo` → connector `gleif-store` |
+
+### External sources
+
+| Source | Where | Licence | Internal only | Refresh |
+|---|---|---|---|---|
+| GLEIF LEI API: LEI records, legal forms, countries, LEI issuers | https://api.gleif.org/api/v1 | CC0 1.0 (attribution appreciated) | no | `python3 tools/publicdata/gleif.py refresh api` |
+| GLEIF golden copy, level 2: relationship records and reporting exceptions | https://goldencopy.gleif.org | CC0 1.0 (attribution appreciated) | no | `python3 tools/publicdata/gleif.py refresh golden` |
+| GLEIF mapping files: BIC, ISIN, MIC and OpenCorporates to LEI | https://mapping.gleif.org | CC0 1.0 | no | `python3 tools/publicdata/gleif.py refresh mapping` |
+
+```bash
+python3 tools/publicdata/gleif.py status                                # each source: licence, internal only or not, last refreshed (offline)
+python3 tools/publicdata/gleif.py refresh --dry-run                     # what would be fetched and written; changes nothing
+python3 tools/publicdata/gleif.py refresh                               # the committed pack: data/testdata/gleif, samples/ and this guide, then make.py --check
+python3 tools/publicdata/gleif.py refresh --offline                     # the same from the download cache only
+python3 tools/publicdata/gleif.py refresh --scope NAME:allianz,CAP:200  # a widened build in <data>/publicdata/gleif
+```
+
+The same through the wrappers: `tools/publicdata/gleif.sh status` on Linux and macOS, `.\tools\windows\publicdata-gleif.ps1 status` on Windows (every argument is passed on).
+
+### Into the lake, checking, offline
+
+- **The lake.** `python3 tools/drishti.py lake demo` reads `data/testdata/testdata.yaml` and writes every dataset (test data, the packs' samples and the committed public-data snapshots) into `<data>/delta/<domain>/<kind>/`, where the pack's Delta connector serves it; a computed kind needs nothing loaded. `lake build` loads your own large JSON exports the same way ([Tools](../../../../docs/guides/TOOLS.md)).
+- **Checking.** `python3 tools/contracts.py check` compares every contract with the pack and its data; each generator's `--check` (above) fails when the committed files differ from what it would write; in the console, `<MNEMONIC> <GO>` lists a kind and the pack's code opens its overview with the count of each kind.
+- **Offline.** Everything committed works without a network: the test data, the samples and the public-data snapshots are in the repository and `lake demo` reads only them. A refresh script runs offline from its download cache (`--offline`); a connector that reaches the internet (news, yfinance, the public-data feeds) is off as shipped and never starts on a machine configured offline (`drishti.offline.plugins`).

@@ -171,7 +171,9 @@ class Api(_Source):
     cache_prefixes = ("api",)
 
     def plan(self, run: B.Run) -> list[str]:
-        return [f"{F.API}/lei-records?filter[lei]=<200 LEIs> (about {len(run.leis) // F.BATCH + 1} requests)",
+        many = (f"about {len(run.leis) // F.BATCH + 1} request(s)" if run.leis else
+                "one request per 200 entities; the count is known once the golden copy is reduced")
+        return [f"{F.API}/lei-records?filter[lei]=<200 LEIs> ({many})",
                 f"{F.API}/entity-legal-forms, /countries, /lei-issuers (paged, about 20 requests)"] + \
                [f"{F.API}/lei-records?filter[fulltext]={t}" for t in run.names] + \
                [f"{F.API}/lei-records?filter[entity.legalAddress.country]={c} (at most {run.a.max_pages} pages of 200)"

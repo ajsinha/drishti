@@ -38,6 +38,7 @@ sys.path.insert(0, str(ROOT / "tools" / "packgen" / "banking"))
 sys.path.insert(0, str(ROOT / "tools"))
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 import make_docs as MD  # noqa: E402  (the banking guides' shared sections)
+import guide_data as GD  # noqa: E402  (a pack's Data contracts and Data retrieval sections, when it has contracts)
 import make_sutras as MS  # noqa: E402  (the Rachana writer the banking packs use)
 import packsamples as SAMPLES  # noqa: E402  (samples/<kind>.jsonl, one document a line)
 import packform as PF  # noqa: E402  (the form: section: query by form, FORM <pack>)
@@ -179,6 +180,7 @@ def overview(spec: PackSpec, docs: dict) -> str:
     if spec.roles:
         lines += ["## Who can see it", ""]
         lines += [f"Role `{r}`: kinds {', '.join(f'`{x}`' for x in v['kinds'])}{', raw JSON' if v.get('raw') else ''}." for r, v in spec.roles.items()] + [""]
+    lines += GD.sections(pack_dir(spec))
     return "\n".join(lines).rstrip() + "\n"
 
 

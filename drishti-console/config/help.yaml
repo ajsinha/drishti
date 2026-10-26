@@ -74,6 +74,7 @@ categories:
       - { slug: connectors, doc: connectors/CONNECTORS.md, title: Connectors, icon: plug, summary: "One reference with a section per plugin (file, Delta, Iceberg, DuckDB, PostgreSQL, MongoDB, Redis, Aerospike, Cassandra, S3, REST, feeds, news, Kafka, ActiveMQ, RabbitMQ, demo): when to use it and a connector file." }
       - { slug: connector-files, doc: connectors/CONNECTOR_FILES.md, title: Connector files and Admin → Connectors, icon: file-earmark-code, summary: "One YAML file per connector in config/connectors: the format, how packs suggest templates, several connectors serving one kind (the union of trade connectors), precedence, live reload, the Admin page, the API and the CLI." }
       - { slug: connector-tls, doc: connectors/TLS.md, title: "TLS and proxy", icon: lock, summary: "The shared tls settings (private CA, PEM, PKCS12 and JKS, mutual TLS, expiry, rotation) and the outbound HTTP proxy for connectors, AI providers and MCP servers." }
+      - { slug: external-data, doc: guides/PUBLIC_DATA.md, title: "External data", icon: cloud-download, summary: "Every external source of every pack (World Bank, IMF, UNDP, CIA Factbook, Yahoo Finance, Google News, ECB, US Treasury, NY Fed, SEC EDGAR, Wikidata, Nasdaq Trader, GLEIF): where it comes from, its licence, which are internal only (IMF, Yahoo), the refresh script of each pack with worked examples of status, --dry-run and refresh on Linux and Windows, what it writes, checking and offline use." }
       - { slug: data-loads, doc: guides/DATA_LOADS.md, title: "Data loads", icon: cloud-arrow-down, summary: "Your ETL loads the data; Drishti acts on it. One call (API or drishti.py data landed) makes Drishti refresh, check expectations and alert on a missing load." }
   - id: build
     name: Build
@@ -111,6 +112,8 @@ categories:
 # slug or slug#anchor. Documents that left the list (architecture, the per-plugin connector pages, the runbooks) are still in
 # the help centre at their path slug, so the old addresses keep working.
 moved:
+  docs-guides-public-data: external-data   # docs/guides/PUBLIC_DATA.md, listed as External data (2.9.1)
+  public-data: external-data
   lake-maintenance: docs-admin-lake-maintenance   # Admin -> Lakes -> Maintain's help link (docs/admin/LAKE_MAINTENANCE.md, in the reference)
   net: docs-admin-net                 # Admin -> Net's help link (docs/admin/NET.md, the Drishti*net operator's guide, in the reference)
   drishti-net: docs-admin-net          # Drishti*net by its name

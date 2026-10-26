@@ -994,7 +994,10 @@ def render_pack(pack: str, items: list[tuple[dict, Path, dict | None]]) -> str:
     out = _md_header() + [f"# Data contracts of the {pack} pack", "",
                           f"One section per command of the pack: the shape of its data, how it is stored and checked, and what a person still "
                           f"has to confirm. The rules every contract shares are in [the contracts README](../README.md); the index of every "
-                          f"command is [packs/README.md](README.md).", ""]
+                          f"command is [packs/README.md](README.md). The pack's guide, "
+                          f"[config/packs/{pack}/guides/{pack}.md](../../../config/packs/{pack}/guides/{pack}.md), shows the same contracts "
+                          f"(generated from the same files, tools/packgen/common/guide_data.py) next to how to use the pack and where each "
+                          f"kind's data comes from (*Data retrieval*).", ""]
     out += R._table(["Command", "Kind", "Class", "Status", "Fields", "To review"], [[
         f"[{c['mnemonic']}](#{_anchor(c)})", f"`{c['kind']}`", c["class"], _status(c), str(len(c.get('fields') or [])), str(len(c.get('review') or []))]
         for _, _, c in items if c])

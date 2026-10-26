@@ -156,6 +156,8 @@ Screens (Sutras):
 | Synthetic P&L strips (a seeded random walk, config/packs/compute-demo/tools/make_samples.py) | Proprietary (part of Drishti) | no | path-book, path-strip |
 | Computed on request by the reactive connectors path-sum-python and path-sum-java | Proprietary (part of Drishti) | no | path-sum, path-sum-java |
 
+Every kind's data contract (each column: type, key, example, links) and where its data comes from (an external source and its refresh script, a generator of synthetic data, or a Drishti engine) are in the guide, [guides/compute-demo.md](guides/compute-demo.md): *Data contracts* and *Data retrieval*.
+
 ## Enabling and dependencies
 
 Builds on no other pack.
@@ -182,4 +184,5 @@ The pack's files are written by `tools/packgen/readme.py compute-demo`; its `--c
 
 ## See also
 
+- [Compute demo pack](guides/compute-demo.md): Reactive connectors on synthetic P&L strips: a book's path computed by a Python and a Java engine; the data contract of every kind and where its data comes from.
 - [Packs](../../../docs/guides/PACKS.md) and the [pack developer's guide](../../../docs/guides/PACK_DEVELOPER_GUIDE.md) (the README standard).

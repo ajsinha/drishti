@@ -233,3 +233,875 @@ A set of factors whose pairwise correlations basket, quanto and spread products 
 ## Who can see it
 
 No extra roles: any user assigned the pack (or a pack that extends it) can open its kinds.
+
+## Data contracts
+
+Every kind of the pack has a data contract: a YAML file beside the pack (`config/packs/market-data/contracts/<kind>.contract.yaml`, checked against `tools/contracts.schema.json`) that says what one record is, its key, how it is stored and dated, and every column. This section is generated from those files; the same files give the contract pages ([docs/contracts/packs/market-data.md](../../../../docs/contracts/packs/market-data.md), with each kind's validation rules and the points still to review). Check them against the pack and its data with `python3 tools/contracts.py check` (or `drishti.py contract check`); show one with `python3 tools/contracts.py show <MNEMONIC>`.
+
+| Command | Kind | Class | Key | Grain | Columns |
+|---|---|---|---|---|---|
+| `CRV` | `ir-curve` | fundamental | `CURVE_ID` | One row per interest rate curve per business date, keyed by CURVE_ID. | 23 |
+| `REPO` | `repo-curve` | fundamental | `CURVE_ID` | One row per repo curve per business date, keyed by CURVE_ID. | 8 |
+| `FX` | `fx-spot` | fundamental | `PAIR` | One row per fx spot rate per business date, keyed by PAIR. | 19 |
+| `FXF` | `fx-forward-curve` | fundamental | `CURVE_ID` | One row per fx forward curve per business date, keyed by CURVE_ID. | 10 |
+| `FXV` | `fx-vol-surface` | fundamental | `SURFACE_ID` | One row per fx volatility surface per business date, keyed by SURFACE_ID. | 16 |
+| `IRV` | `ir-vol-cube` | fundamental | `CUBE_ID` | One row per swaption volatility cube per business date, keyed by CUBE_ID. | 12 |
+| `CPV` | `cap-vol-surface` | fundamental | `SURFACE_ID` | One row per cap/floor volatility surface per business date, keyed by SURFACE_ID. | 11 |
+| `EQ` | `equity` | fundamental | `TICKER` | One row per equity per business date, keyed by TICKER. | 27 |
+| `EQX` | `equity-index` | fundamental | `INDEX_ID` | One row per equity index per business date, keyed by INDEX_ID. | 14 |
+| `DIV` | `dividend-curve` | fundamental | `CURVE_ID` | One row per dividend curve per business date, keyed by CURVE_ID. | 8 |
+| `EQV` | `equity-vol-surface` | fundamental | `SURFACE_ID` | One row per equity volatility surface per business date, keyed by SURFACE_ID. | 13 |
+| `CDS` | `credit-curve` | fundamental | `CURVE_ID` | One row per credit curve per business date, keyed by CURVE_ID. | 14 |
+| `INF` | `inflation-index` | fundamental | `INDEX_ID` | One row per inflation index per business date, keyed by INDEX_ID. | 11 |
+| `INFC` | `inflation-curve` | fundamental | `CURVE_ID` | One row per inflation curve per business date, keyed by CURVE_ID. | 11 |
+| `CMD` | `commodity` | fundamental | `COMMODITY_ID` | One row per commodity per business date, keyed by COMMODITY_ID. | 23 |
+| `CMDC` | `commodity-curve` | fundamental | `CURVE_ID` | One row per commodity forward curve per business date, keyed by CURVE_ID. | 11 |
+| `CMDV` | `commodity-vol-surface` | fundamental | `SURFACE_ID` | One row per commodity volatility surface per business date, keyed by SURFACE_ID. | 8 |
+| `FIX` | `rate-fixing` | fundamental | `INDEX_ID` | One row per rate index fixings per business date, keyed by INDEX_ID. | 11 |
+| `BND` | `bond` | fundamental | `ISIN` | One row per bond (security master) per business date, keyed by ISIN. | 27 |
+| `CORR` | `correlation-matrix` | fundamental | `MATRIX_ID` | One row per correlation matrix per business date, keyed by MATRIX_ID. | 5 |
+| `CORRC` | `correlation-result` | computed | — | One answer per question (the correlation set asked for, its window and estimator, and the business date), computed when asked. | 21 |
+| `EQB` | `equity-beta` | computed | — | One answer per question (the equity asked for, its window and the business date), computed when asked. | 12 |
+
+*Class*: **fundamental** data is delivered by a source system and stored; **input** is stored data an engine reads; **computed** is worked out by Drishti when asked and never stored by a source; **drishti-owned** is kept by Drishti itself.
+
+### CRV: Interest rate curve (`ir-curve`)
+
+Discounting (OIS), projection (IBOR/term RFR), government or basis curve for a currency.
+
+**Class** fundamental · **Key** `CURVE_ID` · **Dated by** `business_date` · **Cadence** daily · **Stored by** connector `market-store` (plugin `delta`), table `<root>/market/ir-curve/` · **Ids** `^CRV-`.
+
+**Grain:** One row per interest rate curve per business date, keyed by CURVE_ID. **Contract:** `contracts/ir-curve.contract.yaml` ([full contract page](../../../../docs/contracts/packs/market-data.md#crv-interest-rate-curve-ir-curve)).
+
+| Column | Type | Key | Presence | Unit | Example or values | Link | Meaning |
+|---|---|---|---|---|---|---|---|
+| `CURVE_ID` | id | key | required |  | `CRV-AUD-BASIS` (pattern `^CRV-`) |  | The record's id (the business key) |
+| `CURRENCY` | text |  | required |  | `AUD`, `CAD`, `CHF`, `EUR`, `GBP`, `JPY`, `USD` |  | Currency |
+| `CURVE_TYPE` | text |  | required |  | `Cross-currency basis`, `Discount (OIS)`, `Government`, `Projection` |  | Type |
+| `INDEX` | text |  | required |  | `AONIA`, `CORRA`, `ESTR`, `SARON`, `SOFR`, `SONIA`, `TONA` |  | Index |
+| `TEN_Y` | amount |  | required |  | `0.042199999999999994` |  | 10Y |
+| `SLOPE_2S_10S` | amount |  | required |  | `51.2` |  | 2s10s |
+| `AS_OF` | date |  | required |  | `2026-09-30` |  | As of |
+| `POINTS` | record list |  | required |  |  |  | Nested: see nested POINTS[] |
+| `FORWARDS` | record list |  | required |  |  |  | Nested: see nested FORWARDS[] |
+| `INTERPOLATION` | text |  | required |  | `Log-linear on discount factors` |  | — |
+| `DAY_COUNT` | text |  | required |  | `ACT/365F` |  | — |
+| `CALENDAR` | id |  | required |  | `CAL-GBLO` (pattern `^CAL-`) | `calendar` | Calendar: the calendar it refers to |
+| `FIXING_INDEX` | id |  | required |  | `FIX-AONIA` (pattern `^FIX-`) | `rate-fixing` | Fixing index: the rate-fixing it refers to |
+| `BUILT_AT` | timestamp |  | required |  | `2026-09-30T18:02:41Z` |  | — |
+| `SOURCES` | text list |  | required |  |  |  | — |
+
+Nested `POINTS[]`:
+
+| Column | Type | Key | Presence | Unit | Example or values | Link | Meaning |
+|---|---|---|---|---|---|---|---|
+| `TENOR` | text |  | required |  | `1M` |  | — |
+| `MATURITY` | date |  | required |  | `2026-10-30` |  | — |
+| `INSTRUMENT` | text |  | required |  | `Deposit / future` |  | — |
+| `QUOTE` | amount |  | required |  | `0.035983` |  | — |
+| `ZERO_RATE` | rate |  | required |  | `3.6037` |  | — |
+| `DF` | amount |  | required |  | `0.997001` |  | — |
+
+Nested `FORWARDS[]`:
+
+| Column | Type | Key | Presence | Unit | Example or values | Link | Meaning |
+|---|---|---|---|---|---|---|---|
+| `TENOR` | text |  | required |  | `10Y`, `15Y`, `1Y`, `20Y`, `2Y`, `3Y`, `5Y`, `7Y` |  | — |
+| `RATE` | rate |  | required |  | `3.7737` |  | — |
+
+**Links:** `CALENDAR` → `calendar`, `FIXING_INDEX` → `rate-fixing`.
+
+- Dated by the lake's business_date partition: `drishti.py lake build` writes each test-data file's day into it; the documents carry no date field of their own.
+
+### REPO: Repo curve (`repo-curve`)
+
+General-collateral or specials repo rates by term.
+
+**Class** fundamental · **Key** `CURVE_ID` · **Dated by** `business_date` · **Cadence** daily · **Stored by** connector `market-store` (plugin `delta`), table `<root>/market/repo-curve/` · **Ids** `^REPO-`.
+
+**Grain:** One row per repo curve per business date, keyed by CURVE_ID. **Contract:** `contracts/repo-curve.contract.yaml` ([full contract page](../../../../docs/contracts/packs/market-data.md#repo-repo-curve-repo-curve)).
+
+| Column | Type | Key | Presence | Unit | Example or values | Link | Meaning |
+|---|---|---|---|---|---|---|---|
+| `CURVE_ID` | id | key | required |  | `REPO-AUD` (pattern `^REPO-`) |  | The record's id (the business key) |
+| `CURRENCY` | text |  | required |  | `AUD`, `CAD`, `CHF`, `EUR`, `GBP`, `JPY`, `USD` |  | Currency |
+| `COLLATERAL` | text |  | required |  | `General collateral (government)` |  | Collateral |
+| `OVERNIGHT` | amount |  | required |  | `0.0352` |  | O/N |
+| `AS_OF` | date |  | required |  | `2026-09-30` |  | As of |
+| `POINTS` | record list |  | required |  |  |  | Nested: see nested POINTS[] |
+
+Nested `POINTS[]`:
+
+| Column | Type | Key | Presence | Unit | Example or values | Link | Meaning |
+|---|---|---|---|---|---|---|---|
+| `TENOR` | text |  | required |  | `1M`, `1W`, `1Y`, `3M`, `6M`, `ON` |  | Term |
+| `RATE` | rate |  | required |  | `3.5221` |  | Rate (%) |
+
+- Dated by the lake's business_date partition: `drishti.py lake build` writes each test-data file's day into it; the documents carry no date field of their own.
+
+### FX: FX spot rate (`fx-spot`)
+
+Spot rate for a currency pair with bid/ask.
+
+**Class** fundamental · **Key** `PAIR` · **Dated by** `business_date` · **Cadence** daily · **Stored by** connector `market-store` (plugin `delta`), table `<root>/market/fx-spot/` · **Ids** `^FX-`.
+
+**Grain:** One row per fx spot rate per business date, keyed by PAIR. **Contract:** `contracts/fx-spot.contract.yaml` ([full contract page](../../../../docs/contracts/packs/market-data.md#fx-fx-spot-rate-fx-spot)).
+
+| Column | Type | Key | Presence | Unit | Example or values | Link | Meaning |
+|---|---|---|---|---|---|---|---|
+| `PAIR` | id | key | required |  | `FX-AUDUSD` (pattern `^FX-`) |  | Pair |
+| `PAIR_NAME` | text |  | required |  | `AUD/USD` |  | — |
+| `MID` | amount |  | required |  | `0.661` |  | Mid |
+| `BID` | amount |  | required |  | `0.66097` |  | Bid |
+| `ASK` | amount |  | required |  | `0.66103` |  | Ask |
+| `CHANGE_1D` | amount |  | required |  | `-0.01092` |  | 1D change |
+| `SPOT_DATE` | date |  | required |  | `2026-10-02` |  | Value date |
+| `HISTORY` | record list |  | required |  |  |  | Nested: see nested HISTORY[] |
+| `CONVENTIONS` | record |  | required |  |  |  | Nested: see nested CONVENTIONS |
+| `FX_FORWARD_CURVE` | id |  | required |  | `FXF-AUDUSD` (pattern `^FXF-`) | `fx-forward-curve` | Fx forward curve: the fx-forward-curve it refers to |
+| `FX_VOL_SURFACE` | id |  | required |  | `FXV-AUDUSD` (pattern `^FXV-`) | `fx-vol-surface` | Fx vol surface: the fx-vol-surface it refers to |
+
+Nested `HISTORY[]`:
+
+| Column | Type | Key | Presence | Unit | Example or values | Link | Meaning |
+|---|---|---|---|---|---|---|---|
+| `DATE` | date |  | required |  | `2026-08-19` |  | — |
+| `MID` | amount |  | required |  | `0.69653` |  | — |
+
+Nested `CONVENTIONS`:
+
+| Column | Type | Key | Presence | Unit | Example or values | Link | Meaning |
+|---|---|---|---|---|---|---|---|
+| `BASE` | text |  | required |  | `AUD`, `EUR`, `GBP`, `USD` |  | — |
+| `QUOTE` | text |  | required |  | `USD` |  | — |
+| `PIP_FACTOR` | integer |  | required |  | `10000` |  | — |
+| `SPOT_LAG` | text |  | required |  | `T+2` |  | — |
+| `CALENDAR` | id |  | required |  | `GBLO+USNY` | `calendar` | Calendar: the calendar it refers to |
+| `NDF` | boolean |  | required |  | `False` |  | — |
+
+**Links:** `FX_FORWARD_CURVE` → `fx-forward-curve`, `FX_VOL_SURFACE` → `fx-vol-surface`, `CONVENTIONS.CALENDAR` → `calendar`.
+
+- Dated by the lake's business_date partition: `drishti.py lake build` writes each test-data file's day into it; the documents carry no date field of their own.
+
+### FXF: FX forward curve (`fx-forward-curve`)
+
+Forward points by tenor for a pair.
+
+**Class** fundamental · **Key** `CURVE_ID` · **Dated by** `business_date` · **Cadence** daily · **Stored by** connector `market-store` (plugin `delta`), table `<root>/market/fx-forward-curve/` · **Ids** `^FXF-`.
+
+**Grain:** One row per fx forward curve per business date, keyed by CURVE_ID. **Contract:** `contracts/fx-forward-curve.contract.yaml` ([full contract page](../../../../docs/contracts/packs/market-data.md#fxf-fx-forward-curve-fx-forward-curve)).
+
+| Column | Type | Key | Presence | Unit | Example or values | Link | Meaning |
+|---|---|---|---|---|---|---|---|
+| `CURVE_ID` | id | key | required |  | `FXF-AUDUSD` (pattern `^FXF-`) |  | The record's id (the business key) |
+| `PAIR` | text |  | required |  | `AUDUSD` |  | Pair |
+| `SPOT` | amount |  | required |  | `0.661` |  | Spot |
+| `POINTS_3M` | amount |  | required |  | `1.7` |  | 3M points |
+| `POINTS_1Y` | amount |  | required |  | `6.6` |  | 1Y points |
+| `POINTS` | record list |  | required |  |  |  | Nested: see nested POINTS[] |
+| `FX_SPOT` | id |  | required |  | `FX-AUDUSD` (pattern `^FX-`) | `fx-spot` | Fx spot: the fx-spot it refers to |
+
+Nested `POINTS[]`:
+
+| Column | Type | Key | Presence | Unit | Example or values | Link | Meaning |
+|---|---|---|---|---|---|---|---|
+| `TENOR` | text |  | required |  | `ON` |  | Tenor |
+| `PIPS` | amount |  | required |  | `0.0` |  | Points |
+| `OUTRIGHT` | amount |  | required |  | `0.661` |  | Outright |
+
+**Links:** `FX_SPOT` → `fx-spot`.
+
+- Dated by the lake's business_date partition: `drishti.py lake build` writes each test-data file's day into it; the documents carry no date field of their own.
+
+### FXV: FX volatility surface (`fx-vol-surface`)
+
+Implied vols by expiry and delta (ATM, 25D RR/BF).
+
+**Class** fundamental · **Key** `SURFACE_ID` · **Dated by** `business_date` · **Cadence** daily · **Stored by** connector `market-store` (plugin `delta`), table `<root>/market/fx-vol-surface/` · **Ids** `^FXV-`.
+
+**Grain:** One row per fx volatility surface per business date, keyed by SURFACE_ID. **Contract:** `contracts/fx-vol-surface.contract.yaml` ([full contract page](../../../../docs/contracts/packs/market-data.md#fxv-fx-volatility-surface-fx-vol-surface)).
+
+| Column | Type | Key | Presence | Unit | Example or values | Link | Meaning |
+|---|---|---|---|---|---|---|---|
+| `SURFACE_ID` | id | key | required |  | `FXV-AUDUSD` (pattern `^FXV-`) |  | The record's id (the business key) |
+| `PAIR` | text |  | required |  | `AUDUSD` |  | Pair |
+| `ATM_1M` | amount |  | required |  | `9.17` |  | 1M ATM |
+| `ATM_1Y` | amount |  | required |  | `9.9` |  | 1Y ATM |
+| `RR_1Y` | amount |  | required |  | `-0.46` |  | 1Y 25D RR |
+| `GRID` | record list |  | required |  |  |  | Nested: see nested GRID[] |
+| `MODEL` | text |  | required |  | `Vanna-volga smile, delta-quoted` |  | — |
+| `FX_SPOT` | id |  | required |  | `FX-AUDUSD` (pattern `^FX-`) | `fx-spot` | Fx spot: the fx-spot it refers to |
+
+Nested `GRID[]`:
+
+| Column | Type | Key | Presence | Unit | Example or values | Link | Meaning |
+|---|---|---|---|---|---|---|---|
+| `EXPIRY` | text |  | required |  | `1M`, `1Y`, `2Y`, `3M`, `5Y`, `6M` |  | Expiry |
+| `P_10` | amount |  | required |  | `10.04` |  | 10D P |
+| `P_25` | amount |  | required |  | `9.6` |  | 25D P |
+| `ATM` | amount |  | required |  | `9.17` |  | ATM |
+| `C_25` | amount |  | required |  | `9.24` |  | 25D C |
+| `C_10` | amount |  | required |  | `9.4` |  | 10D C |
+| `RR_25` | amount |  | required |  | `-0.36` |  | — |
+| `BF_25` | amount |  | required |  | `0.25` |  | — |
+
+**Links:** `FX_SPOT` → `fx-spot`.
+
+- Dated by the lake's business_date partition: `drishti.py lake build` writes each test-data file's day into it; the documents carry no date field of their own.
+
+### IRV: Swaption volatility cube (`ir-vol-cube`)
+
+Normal (bp) swaption vols by expiry × tenor.
+
+**Class** fundamental · **Key** `CUBE_ID` · **Dated by** `business_date` · **Cadence** daily · **Stored by** connector `market-store` (plugin `delta`), table `<root>/market/ir-vol-cube/` · **Ids** `^IRV-`.
+
+**Grain:** One row per swaption volatility cube per business date, keyed by CUBE_ID. **Contract:** `contracts/ir-vol-cube.contract.yaml` ([full contract page](../../../../docs/contracts/packs/market-data.md#irv-swaption-volatility-cube-ir-vol-cube)).
+
+| Column | Type | Key | Presence | Unit | Example or values | Link | Meaning |
+|---|---|---|---|---|---|---|---|
+| `CUBE_ID` | id | key | required |  | `IRV-AUD` (pattern `^IRV-`) |  | The record's id (the business key) |
+| `CURRENCY` | text |  | required |  | `AUD` |  | Currency |
+| `MODEL` | text |  | required |  | `Normal (Bachelier), SABR smile` |  | Model |
+| `V_1Y_10Y` | amount |  | required |  | `137.22` |  | 1Y×10Y |
+| `V_5Y_5Y` | amount |  | required |  | `132.72` |  | 5Y×5Y |
+| `GRID` | record list |  | required |  |  |  | Nested: see nested GRID[] |
+
+Nested `GRID[]`:
+
+| Column | Type | Key | Presence | Unit | Example or values | Link | Meaning |
+|---|---|---|---|---|---|---|---|
+| `EXPIRY` | text |  | required |  | `10Y`, `1M`, `1Y`, `2Y`, `3M`, `5Y`, `6M` |  | Expiry |
+| `T_1Y` | amount |  | required |  | `148.55` |  | 1Y |
+| `T_2Y` | amount |  | required |  | `146.78` |  | 2Y |
+| `T_5Y` | amount |  | required |  | `143.74` |  | 5Y |
+| `T_10Y` | amount |  | required |  | `141.09` |  | 10Y |
+| `T_30Y` | amount |  | required |  | `136.56` |  | 30Y |
+
+- Dated by the lake's business_date partition: `drishti.py lake build` writes each test-data file's day into it; the documents carry no date field of their own.
+
+### CPV: Cap/floor volatility surface (`cap-vol-surface`)
+
+Cap vols by maturity and strike.
+
+**Class** fundamental · **Key** `SURFACE_ID` · **Dated by** `business_date` · **Cadence** daily · **Stored by** connector `market-store` (plugin `delta`), table `<root>/market/cap-vol-surface/` · **Ids** `^CPV-`.
+
+**Grain:** One row per cap/floor volatility surface per business date, keyed by SURFACE_ID. **Contract:** `contracts/cap-vol-surface.contract.yaml` ([full contract page](../../../../docs/contracts/packs/market-data.md#cpv-capfloor-volatility-surface-cap-vol-surface)).
+
+| Column | Type | Key | Presence | Unit | Example or values | Link | Meaning |
+|---|---|---|---|---|---|---|---|
+| `SURFACE_ID` | id | key | required |  | `CPV-AUD` (pattern `^CPV-`) |  | The record's id (the business key) |
+| `CURRENCY` | text |  | required |  | `AUD` |  | Currency |
+| `ATM_5Y` | amount |  | required |  | `124.3` |  | 5Y ATM |
+| `GRID` | record list |  | required |  |  |  | Nested: see nested GRID[] |
+| `MODEL` | text |  | required |  | `Normal, stripped caplets` |  | — |
+
+Nested `GRID[]`:
+
+| Column | Type | Key | Presence | Unit | Example or values | Link | Meaning |
+|---|---|---|---|---|---|---|---|
+| `MATURITY` | text |  | required |  | `10Y`, `1Y`, `2Y`, `3Y`, `5Y`, `7Y` |  | Maturity |
+| `ATM` | amount |  | required |  | `130.38` |  | ATM |
+| `K_2` | amount |  | required |  | `140.42` |  | 2% |
+| `K_3` | amount |  | required |  | `135.86` |  | 3% |
+| `K_4` | amount |  | required |  | `131.29` |  | 4% |
+| `K_5` | amount |  | required |  | `134.03` |  | 5% |
+
+- Dated by the lake's business_date partition: `drishti.py lake build` writes each test-data file's day into it; the documents carry no date field of their own.
+
+### EQ: Equity (`equity`)
+
+A listed stock: price, dividends, sector and identifiers.
+
+**Class** fundamental · **Key** `TICKER` · **Dated by** `business_date` · **Cadence** daily · **Stored by** connector `market-store` (plugin `delta`), table `<root>/market/equity/` · **Ids** `^EQ-`.
+
+**Grain:** One row per equity per business date, keyed by TICKER. **Contract:** `contracts/equity.contract.yaml` ([full contract page](../../../../docs/contracts/packs/market-data.md#eq-equity-equity)).
+
+| Column | Type | Key | Presence | Unit | Example or values | Link | Meaning |
+|---|---|---|---|---|---|---|---|
+| `TICKER` | id | key | required |  | `EQ-CSCA` (pattern `^EQ-`) |  | The record's id (the business key) |
+| `NAME` | text |  | required |  | `Cascadia Airlines Inc.` |  | Name |
+| `PRICE` | amount |  | required |  | `21.84` |  | Price |
+| `CHANGE_1D` | amount |  | required |  | `0.03852` |  | 1D |
+| `MARKET_CAP` | integer |  | required |  | `34324492441` |  | Market cap |
+| `SECTOR` | text |  | required |  | `Airlines` |  | Sector |
+| `EXCHANGE` | text |  | required |  | `Euronext Paris`, `LSE`, `NASDAQ`, `NYSE`, `SIX`, `TSE`, `TSX`, `Xetra` |  | Exchange |
+| `CURRENCY` | text |  | required |  | `CAD`, `CHF`, `EUR`, `GBP`, `JPY`, `USD` |  | Currency |
+| `HISTORY` | record list |  | required |  |  |  | Nested: see nested HISTORY[] |
+| `OHLC` | record list |  | required |  |  |  | Nested: see nested OHLC[] |
+| `IDENTIFIERS` | record |  | required |  |  |  | Nested: see nested IDENTIFIERS |
+| `ISSUER` | id |  | required |  | `ISS-CASCADIA` (pattern `^ISS-`) | `issuer` | Reference entity: the issuer it refers to |
+| `EQUITY_VOL_SURFACE` | id |  | required |  | `EQV-CSCA` (pattern `^EQV-`) | `equity-vol-surface` | Equity vol surface: the equity-vol-surface it refers to |
+| `DIVIDEND_CURVE` | id |  | required |  | `DIV-CSCA` (pattern `^DIV-`) | `dividend-curve` | Dividend curve: the dividend-curve it refers to |
+| `EQUITY_INDEX` | id |  | optional |  | `EQX-UKX` (pattern `^EQX-`) | `equity-index` | Index: the equity-index it refers to |
+
+Nested `HISTORY[]`:
+
+| Column | Type | Key | Presence | Unit | Example or values | Link | Meaning |
+|---|---|---|---|---|---|---|---|
+| `DATE` | date |  | required |  | `2026-08-19` |  | — |
+| `CLOSE` | amount |  | required |  | `18.95` |  | — |
+
+Nested `OHLC[]`:
+
+| Column | Type | Key | Presence | Unit | Example or values | Link | Meaning |
+|---|---|---|---|---|---|---|---|
+| `DATE` | date |  | required |  | `2026-07-08` |  | — |
+| `OPEN` | amount |  | required |  | `18.94` |  | — |
+| `HIGH` | amount |  | required |  | `19.5` |  | — |
+| `LOW` | amount |  | required |  | `18.85` |  | — |
+| `CLOSE` | amount |  | required |  | `19.38` |  | — |
+| `VOLUME` | integer |  | required |  | `7737428` |  | — |
+
+Nested `IDENTIFIERS`:
+
+| Column | Type | Key | Presence | Unit | Example or values | Link | Meaning |
+|---|---|---|---|---|---|---|---|
+| `ISIN` | text |  | required |  | `CA0CSCA00012` |  | — |
+| `BLOOMBERG` | text |  | required |  | `CSCA TS Equity` |  | — |
+| `RIC` | text |  | required |  | `CSCA.T` |  | — |
+| `FIGI` | text |  | required |  | `BBG2033A30F5` |  | — |
+
+**Links:** `ISSUER` → `issuer`, `EQUITY_VOL_SURFACE` → `equity-vol-surface`, `DIVIDEND_CURVE` → `dividend-curve`, `EQUITY_INDEX` → `equity-index`.
+
+- Dated by the lake's business_date partition: `drishti.py lake build` writes each test-data file's day into it; the documents carry no date field of their own.
+- BETA left the record in 2.9.2: the computed kind equity-beta (EQB) works it out from the equity's and its index's price histories (docs/guides/GROUPINGS_ANALYTICS_GUIDE.md section 17).
+
+### EQX: Equity index (`equity-index`)
+
+Index level with its largest constituents.
+
+**Class** fundamental · **Key** `INDEX_ID` · **Dated by** `business_date` · **Cadence** daily · **Stored by** connector `market-store` (plugin `delta`), table `<root>/market/equity-index/` · **Ids** `^EQX-`.
+
+**Grain:** One row per equity index per business date, keyed by INDEX_ID. **Contract:** `contracts/equity-index.contract.yaml` ([full contract page](../../../../docs/contracts/packs/market-data.md#eqx-equity-index-equity-index)).
+
+| Column | Type | Key | Presence | Unit | Example or values | Link | Meaning |
+|---|---|---|---|---|---|---|---|
+| `INDEX_ID` | id | key | required |  | `EQX-NDX` (pattern `^EQX-`) |  | The record's id (the business key) |
+| `NAME` | text |  | required |  | `EURO STOXX 50`, `FTSE 100`, `Nasdaq-100`, `Nikkei 225`, `S&P 500` |  | Name |
+| `LEVEL` | amount |  | required |  | `24530.0` |  | Level |
+| `CHANGE_1D` | amount |  | required |  | `0.00986` |  | 1D |
+| `CONSTITUENT_COUNT` | integer |  | required |  | `101` |  | Constituents |
+| `CURRENCY` | text |  | required |  | `EUR`, `GBP`, `JPY`, `USD` |  | Currency |
+| `CONSTITUENTS` | record list |  | required |  |  |  | Nested: see nested CONSTITUENTS[] |
+| `HISTORY` | record list |  | required |  |  |  | Nested: see nested HISTORY[] |
+| `EQUITY_VOL_SURFACE` | id |  | required |  | `EQV-NDX` (pattern `^EQV-`) | `equity-vol-surface` | Equity vol surface: the equity-vol-surface it refers to |
+| `DIVIDEND_CURVE` | id |  | required |  | `DIV-NDX` (pattern `^DIV-`) | `dividend-curve` | Dividend curve: the dividend-curve it refers to |
+
+Nested `CONSTITUENTS[]`:
+
+| Column | Type | Key | Presence | Unit | Example or values | Link | Meaning |
+|---|---|---|---|---|---|---|---|
+| `EQUITY` | id |  | required |  | `EQ-NVTK` (pattern `^EQ-`) | `equity` | Equity |
+| `WEIGHT` | rate |  | required |  | `0.02` |  | Weight |
+
+Nested `HISTORY[]`:
+
+| Column | Type | Key | Presence | Unit | Example or values | Link | Meaning |
+|---|---|---|---|---|---|---|---|
+| `DATE` | date |  | required |  | `2026-08-19` |  | — |
+| `CLOSE` | amount |  | required |  | `25294.78` |  | — |
+
+**Links:** `EQUITY_VOL_SURFACE` → `equity-vol-surface`, `DIVIDEND_CURVE` → `dividend-curve`, `CONSTITUENTS[].EQUITY` → `equity`.
+
+- Dated by the lake's business_date partition: `drishti.py lake build` writes each test-data file's day into it; the documents carry no date field of their own.
+
+### DIV: Dividend curve (`dividend-curve`)
+
+Expected dividends by year (implied from dividend futures and forwards).
+
+**Class** fundamental · **Key** `CURVE_ID` · **Dated by** `business_date` · **Cadence** daily · **Stored by** connector `market-store` (plugin `delta`), table `<root>/market/dividend-curve/` · **Ids** `^DIV-`.
+
+**Grain:** One row per dividend curve per business date, keyed by CURVE_ID. **Contract:** `contracts/dividend-curve.contract.yaml` ([full contract page](../../../../docs/contracts/packs/market-data.md#div-dividend-curve-dividend-curve)).
+
+| Column | Type | Key | Presence | Unit | Example or values | Link | Meaning |
+|---|---|---|---|---|---|---|---|
+| `CURVE_ID` | id | key | required |  | `DIV-CSCA` (pattern `^DIV-`) |  | The record's id (the business key) |
+| `UNDERLIER` | id |  | required |  | `EQ-CSCA` |  | Underlier |
+| `DIVIDEND_YIELD` | rate |  | required |  | `0.0275` |  | Yield |
+| `POINTS` | record list |  | required |  |  |  | Nested: see nested POINTS[] |
+| `UNDERLYING_EQUITY` | id |  | optional |  | `EQ-CSCA` (pattern `^EQ-`) | `equity` | Underlying equity: the equity it refers to |
+| `UNDERLYING_INDEX` | id |  | optional |  | `EQX-NDX` (pattern `^EQX-`) | `equity-index` | Underlying index: the equity-index it refers to |
+
+Nested `POINTS[]`:
+
+| Column | Type | Key | Presence | Unit | Example or values | Link | Meaning |
+|---|---|---|---|---|---|---|---|
+| `YEAR` | text |  | required |  | `2026`, `2027`, `2028`, `2029`, `2030`, `2031` |  | — |
+| `AMOUNT` | amount |  | required |  | `0.6` |  | — |
+
+**Links:** `UNDERLYING_EQUITY` → `equity`, `UNDERLYING_INDEX` → `equity-index`.
+
+- Dated by the lake's business_date partition: `drishti.py lake build` writes each test-data file's day into it; the documents carry no date field of their own.
+
+### EQV: Equity volatility surface (`equity-vol-surface`)
+
+Implied vols by expiry and moneyness.
+
+**Class** fundamental · **Key** `SURFACE_ID` · **Dated by** `business_date` · **Cadence** daily · **Stored by** connector `market-store` (plugin `delta`), table `<root>/market/equity-vol-surface/` · **Ids** `^EQV-`.
+
+**Grain:** One row per equity volatility surface per business date, keyed by SURFACE_ID. **Contract:** `contracts/equity-vol-surface.contract.yaml` ([full contract page](../../../../docs/contracts/packs/market-data.md#eqv-equity-volatility-surface-equity-vol-surface)).
+
+| Column | Type | Key | Presence | Unit | Example or values | Link | Meaning |
+|---|---|---|---|---|---|---|---|
+| `SURFACE_ID` | id | key | required |  | `EQV-CSCA` (pattern `^EQV-`) |  | The record's id (the business key) |
+| `UNDERLIER` | id |  | required |  | `EQ-CSCA` |  | Underlier |
+| `ATM_1M` | amount |  | required |  | `37.54` |  | 1M ATM |
+| `ATM_1Y` | amount |  | required |  | `36.67` |  | 1Y ATM |
+| `SKEW_1Y` | amount |  | required |  | `3.63` |  | 1Y skew (90–110) |
+| `GRID` | record list |  | required |  |  |  | Nested: see nested GRID[] |
+| `MODEL` | text |  | required |  | `SVI, moneyness-quoted` |  | — |
+
+Nested `GRID[]`:
+
+| Column | Type | Key | Presence | Unit | Example or values | Link | Meaning |
+|---|---|---|---|---|---|---|---|
+| `EXPIRY` | text |  | required |  | `1M`, `1Y`, `2Y`, `3M`, `5Y`, `6M` |  | Expiry |
+| `M_80` | amount |  | required |  | `43.17` |  | 80% |
+| `M_90` | amount |  | required |  | `40.35` |  | 90% |
+| `M_100` | amount |  | required |  | `37.54` |  | 100% |
+| `M_110` | amount |  | required |  | `36.64` |  | 110% |
+| `M_120` | amount |  | required |  | `35.74` |  | 120% |
+
+- Dated by the lake's business_date partition: `drishti.py lake build` writes each test-data file's day into it; the documents carry no date field of their own.
+
+### CDS: Credit curve (`credit-curve`)
+
+CDS par spreads by tenor, recovery and implied default probabilities.
+
+**Class** fundamental · **Key** `CURVE_ID` · **Dated by** `business_date` · **Cadence** daily · **Stored by** connector `market-store` (plugin `delta`), table `<root>/market/credit-curve/` · **Ids** `^CDS-`.
+
+**Grain:** One row per credit curve per business date, keyed by CURVE_ID. **Contract:** `contracts/credit-curve.contract.yaml` ([full contract page](../../../../docs/contracts/packs/market-data.md#cds-credit-curve-credit-curve)).
+
+| Column | Type | Key | Presence | Unit | Example or values | Link | Meaning |
+|---|---|---|---|---|---|---|---|
+| `CURVE_ID` | id | key | required |  | `CDS-BUND` (pattern `^CDS-`) |  | The record's id (the business key) |
+| `ISSUER_NAME` | text |  | required |  | `Federal Republic of Germany` |  | Reference entity |
+| `SPREAD_5Y` | rate |  | required |  | `9` |  | 5Y spread |
+| `RECOVERY` | rate |  | required |  | `0.25` |  | Recovery |
+| `SENIORITY` | text |  | required |  | `Senior unsecured` |  | Seniority |
+| `DOC_CLAUSE` | text |  | required |  | `CR14`, `MM14` |  | Doc clause |
+| `PD_1Y` | rate |  | required |  | `0.000666` |  | 1Y PD |
+| `POINTS` | record list |  | required |  |  |  | Nested: see nested POINTS[] |
+| `ISSUER` | id |  | required |  | `ISS-BUND` (pattern `^ISS-`) | `issuer` | Reference entity: the issuer it refers to |
+| `CURRENCY` | text |  | required |  | `EUR`, `USD` |  | — |
+
+Nested `POINTS[]`:
+
+| Column | Type | Key | Presence | Unit | Example or values | Link | Meaning |
+|---|---|---|---|---|---|---|---|
+| `TENOR` | text |  | required |  | `10Y`, `1Y`, `2Y`, `3Y`, `5Y`, `6M`, `7Y` |  | Tenor |
+| `SPREAD` | rate |  | required |  | `4.5` |  | Spread (bp) |
+| `HAZARD` | amount |  | required |  | `0.0006` |  | Hazard |
+| `SURVIVAL` | amount |  | required |  | `0.9997` |  | Survival |
+
+**Links:** `ISSUER` → `issuer`.
+
+- Dated by the lake's business_date partition: `drishti.py lake build` writes each test-data file's day into it; the documents carry no date field of their own.
+
+### INF: Inflation index (`inflation-index`)
+
+Published CPI fixings (US CPI-U NSA, HICPxT, UK RPI…).
+
+**Class** fundamental · **Key** `INDEX_ID` · **Dated by** `business_date` · **Cadence** daily · **Stored by** connector `market-store` (plugin `delta`), table `<root>/market/inflation-index/` · **Ids** `^INF-`.
+
+**Grain:** One row per inflation index per business date, keyed by INDEX_ID. **Contract:** `contracts/inflation-index.contract.yaml` ([full contract page](../../../../docs/contracts/packs/market-data.md#inf-inflation-index-inflation-index)).
+
+| Column | Type | Key | Presence | Unit | Example or values | Link | Meaning |
+|---|---|---|---|---|---|---|---|
+| `INDEX_ID` | id | key | required |  | `INF-HICPX` (pattern `^INF-`) |  | The record's id (the business key) |
+| `NAME` | text |  | required |  | `Euro HICP ex-tobacco` |  | Name |
+| `LATEST` | amount |  | required |  | `128.4` |  | Latest |
+| `YOY` | amount |  | required |  | `0.021` |  | YoY |
+| `LAG` | text |  | required |  | `3 months` |  | Publication lag |
+| `CURRENCY` | text |  | required |  | `EUR` |  | — |
+| `FIXINGS` | record list |  | required |  |  |  | Nested: see nested FIXINGS[] |
+| `INFLATION_CURVE` | id |  | required |  | `INFC-HICPX` (pattern `^INFC-`) | `inflation-curve` | Inflation curve: the inflation-curve it refers to |
+
+Nested `FIXINGS[]`:
+
+| Column | Type | Key | Presence | Unit | Example or values | Link | Meaning |
+|---|---|---|---|---|---|---|---|
+| `MONTH` | text |  | required |  | `2026-08` |  | Month |
+| `VALUE` | amount |  | required |  | `128.4` |  | Index |
+| `YOY` | amount |  | required |  | `0.021` |  | YoY |
+
+**Links:** `INFLATION_CURVE` → `inflation-curve`.
+
+- Dated by the lake's business_date partition: `drishti.py lake build` writes each test-data file's day into it; the documents carry no date field of their own.
+
+### INFC: Inflation curve (`inflation-curve`)
+
+Zero-coupon breakevens by tenor, with monthly seasonality.
+
+**Class** fundamental · **Key** `CURVE_ID` · **Dated by** `business_date` · **Cadence** daily · **Stored by** connector `market-store` (plugin `delta`), table `<root>/market/inflation-curve/` · **Ids** `^INFC-`.
+
+**Grain:** One row per inflation curve per business date, keyed by CURVE_ID. **Contract:** `contracts/inflation-curve.contract.yaml` ([full contract page](../../../../docs/contracts/packs/market-data.md#infc-inflation-curve-inflation-curve)).
+
+| Column | Type | Key | Presence | Unit | Example or values | Link | Meaning |
+|---|---|---|---|---|---|---|---|
+| `CURVE_ID` | id | key | required |  | `INFC-HICPX` (pattern `^INFC-`) |  | The record's id (the business key) |
+| `INDEX` | id |  | required |  | `INF-HICPX` |  | Index |
+| `BE_5Y` | amount |  | required |  | `0.021588` |  | 5Y breakeven |
+| `BE_10Y` | amount |  | required |  | `0.022497` |  | 10Y breakeven |
+| `POINTS` | record list |  | required |  |  |  | Nested: see nested POINTS[] |
+| `SEASONALITY` | record list |  | required |  |  |  | Nested: see nested SEASONALITY[] |
+| `INFLATION_INDEX` | id |  | required |  | `INF-HICPX` (pattern `^INF-`) | `inflation-index` | Inflation index: the inflation-index it refers to |
+
+Nested `POINTS[]`:
+
+| Column | Type | Key | Presence | Unit | Example or values | Link | Meaning |
+|---|---|---|---|---|---|---|---|
+| `TENOR` | text |  | required |  | `10Y`, `1Y`, `20Y`, `2Y`, `30Y`, `5Y` |  | — |
+| `BREAKEVEN` | amount |  | required |  | `1.994` |  | — |
+
+Nested `SEASONALITY[]`:
+
+| Column | Type | Key | Presence | Unit | Example or values | Link | Meaning |
+|---|---|---|---|---|---|---|---|
+| `MONTH` | text |  | required |  | `Jan` |  | — |
+| `FACTOR` | amount |  | required |  | `0.00075` |  | — |
+
+**Links:** `INFLATION_INDEX` → `inflation-index`.
+
+- Dated by the lake's business_date partition: `drishti.py lake build` writes each test-data file's day into it; the documents carry no date field of their own.
+
+### CMD: Commodity (`commodity`)
+
+A traded commodity with its benchmark, unit and venue.
+
+**Class** fundamental · **Key** `COMMODITY_ID` · **Dated by** `business_date` · **Cadence** daily · **Stored by** connector `market-store` (plugin `delta`), table `<root>/market/commodity/` · **Ids** `^CMD-`.
+
+**Grain:** One row per commodity per business date, keyed by COMMODITY_ID. **Contract:** `contracts/commodity.contract.yaml` ([full contract page](../../../../docs/contracts/packs/market-data.md#cmd-commodity-commodity)).
+
+| Column | Type | Key | Presence | Unit | Example or values | Link | Meaning |
+|---|---|---|---|---|---|---|---|
+| `COMMODITY_ID` | id | key | required |  | `CMD-BRENT` (pattern `^CMD-`) |  | The record's id (the business key) |
+| `NAME` | text |  | required |  | `Brent crude oil`, `Copper`, `Corn`, `Gold`, `Henry Hub natural gas`, `Silver`, `Soybeans`, `WTI crude oil` |  | Name |
+| `FRONT` | amount |  | required |  | `74.6` |  | Front month |
+| `UNIT` | text |  | required |  | `USD/MMBtu`, `USD/bbl`, `USD/lb`, `USD/oz`, `USc/bu` |  | Unit |
+| `EXCHANGE` | text |  | required |  | `CBOT`, `COMEX`, `ICE`, `NYMEX` |  | Exchange |
+| `SECTOR` | text |  | required |  | `Agriculture`, `Energy`, `Metals` |  | Sector |
+| `OHLC` | record list |  | required |  |  |  | Nested: see nested OHLC[] |
+| `SPEC` | record |  | required |  |  |  | Nested: see nested SPEC |
+| `COMMODITY_CURVE` | id |  | required |  | `CMDC-BRENT` (pattern `^CMDC-`) | `commodity-curve` | Commodity curve: the commodity-curve it refers to |
+| `COMMODITY_VOL_SURFACE` | id |  | required |  | `CMDV-BRENT` (pattern `^CMDV-`) | `commodity-vol-surface` | Commodity vol surface: the commodity-vol-surface it refers to |
+
+Nested `OHLC[]`:
+
+| Column | Type | Key | Presence | Unit | Example or values | Link | Meaning |
+|---|---|---|---|---|---|---|---|
+| `DATE` | date |  | required |  | `2026-07-08` |  | — |
+| `OPEN` | amount |  | required |  | `78.82` |  | — |
+| `HIGH` | amount |  | required |  | `81.67` |  | — |
+| `LOW` | amount |  | required |  | `77.95` |  | — |
+| `CLOSE` | amount |  | required |  | `79.99` |  | — |
+| `VOLUME` | integer |  | required |  | `393381` |  | — |
+
+Nested `SPEC`:
+
+| Column | Type | Key | Presence | Unit | Example or values | Link | Meaning |
+|---|---|---|---|---|---|---|---|
+| `CONTRACT` | text |  | required |  | `BRENT`, `COPPER`, `CORN`, `GOLD`, `NG`, `SILVER`, `SOY`, `WTI` |  | — |
+| `UNIT` | text |  | required |  | `USD/MMBtu`, `USD/bbl`, `USD/lb`, `USD/oz`, `USc/bu` |  | — |
+| `EXCHANGE` | text |  | required |  | `CBOT`, `COMEX`, `ICE`, `NYMEX` |  | — |
+| `SETTLEMENT` | text |  | required |  | `Physical`, `Physical (vault)` |  | — |
+| `LISTING` | text |  | required |  | `Monthly` |  | — |
+| `TICK_SIZE` | amount |  | required |  | `0.01` |  | — |
+| `TRADING_HOURS` | text |  | required |  | `Sun-Fri 18:00-17:00 ET` |  | — |
+
+**Links:** `COMMODITY_CURVE` → `commodity-curve`, `COMMODITY_VOL_SURFACE` → `commodity-vol-surface`.
+
+- Dated by the lake's business_date partition: `drishti.py lake build` writes each test-data file's day into it; the documents carry no date field of their own.
+
+### CMDC: Commodity forward curve (`commodity-curve`)
+
+Futures settlement prices by delivery month.
+
+**Class** fundamental · **Key** `CURVE_ID` · **Dated by** `business_date` · **Cadence** daily · **Stored by** connector `market-store` (plugin `delta`), table `<root>/market/commodity-curve/` · **Ids** `^CMDC-`.
+
+**Grain:** One row per commodity forward curve per business date, keyed by CURVE_ID. **Contract:** `contracts/commodity-curve.contract.yaml` ([full contract page](../../../../docs/contracts/packs/market-data.md#cmdc-commodity-forward-curve-commodity-curve)).
+
+| Column | Type | Key | Presence | Unit | Example or values | Link | Meaning |
+|---|---|---|---|---|---|---|---|
+| `CURVE_ID` | id | key | required |  | `CMDC-BRENT` (pattern `^CMDC-`) |  | The record's id (the business key) |
+| `COMMODITY` | text |  | required |  | `Brent crude oil`, `Copper`, `Corn`, `Gold`, `Henry Hub natural gas`, `Silver`, `Soybeans`, `WTI crude oil` |  | Commodity |
+| `FRONT` | amount |  | required |  | `74.6` |  | Front |
+| `SHAPE` | text |  | required |  | `backwardation`, `contango` |  | Shape |
+| `ROLL` | amount |  | required |  | `-0.4` |  | M1–M12 |
+| `POINTS` | record list |  | required |  |  |  | Nested: see nested POINTS[] |
+| `COMMODITY_REF` | id |  | required |  | `CMD-BRENT` (pattern `^CMD-`) | `commodity` | Commodity: the commodity it refers to |
+| `UNIT` | text |  | required |  | `USD/MMBtu`, `USD/bbl`, `USD/lb`, `USD/oz`, `USc/bu` |  | — |
+
+Nested `POINTS[]`:
+
+| Column | Type | Key | Presence | Unit | Example or values | Link | Meaning |
+|---|---|---|---|---|---|---|---|
+| `MONTH` | text |  | required |  | `X6` |  | Month |
+| `PRICE` | amount |  | required |  | `74.6` |  | Price |
+| `OPEN_INTEREST` | integer |  | required |  | `200000` |  | OI |
+
+**Links:** `COMMODITY_REF` → `commodity`.
+
+- Dated by the lake's business_date partition: `drishti.py lake build` writes each test-data file's day into it; the documents carry no date field of their own.
+
+### CMDV: Commodity volatility surface (`commodity-vol-surface`)
+
+Implied vols by delivery month and moneyness.
+
+**Class** fundamental · **Key** `SURFACE_ID` · **Dated by** `business_date` · **Cadence** daily · **Stored by** connector `market-store` (plugin `delta`), table `<root>/market/commodity-vol-surface/` · **Ids** `^CMDV-`.
+
+**Grain:** One row per commodity volatility surface per business date, keyed by SURFACE_ID. **Contract:** `contracts/commodity-vol-surface.contract.yaml` ([full contract page](../../../../docs/contracts/packs/market-data.md#cmdv-commodity-volatility-surface-commodity-vol-surface)).
+
+| Column | Type | Key | Presence | Unit | Example or values | Link | Meaning |
+|---|---|---|---|---|---|---|---|
+| `SURFACE_ID` | id | key | required |  | `CMDV-BRENT` (pattern `^CMDV-`) |  | The record's id (the business key) |
+| `COMMODITY` | text |  | required |  | `Brent crude oil` |  | Commodity |
+| `ATM_FRONT` | amount |  | required |  | `31.32` |  | Front ATM |
+| `GRID` | record list |  | required |  |  |  | Nested: see nested GRID[] |
+
+Nested `GRID[]`:
+
+| Column | Type | Key | Presence | Unit | Example or values | Link | Meaning |
+|---|---|---|---|---|---|---|---|
+| `MONTH` | text |  | required |  | `F7`, `G7`, `H7`, `J7`, `K7`, `M7`, `X6`, `Z6` |  | Month |
+| `M_90` | amount |  | required |  | `32.82` |  | 90% |
+| `M_100` | amount |  | required |  | `31.32` |  | 100% |
+| `M_110` | amount |  | required |  | `32.12` |  | 110% |
+
+- Dated by the lake's business_date partition: `drishti.py lake build` writes each test-data file's day into it; the documents carry no date field of their own.
+
+### FIX: Rate index fixings (`rate-fixing`)
+
+Published overnight and term rate fixings (SOFR, €STR, SONIA…).
+
+**Class** fundamental · **Key** `INDEX_ID` · **Dated by** `business_date` · **Cadence** daily · **Stored by** connector `market-store` (plugin `delta`), table `<root>/market/rate-fixing/` · **Ids** `^FIX-`.
+
+**Grain:** One row per rate index fixings per business date, keyed by INDEX_ID. **Contract:** `contracts/rate-fixing.contract.yaml` ([full contract page](../../../../docs/contracts/packs/market-data.md#fix-rate-index-fixings-rate-fixing)).
+
+| Column | Type | Key | Presence | Unit | Example or values | Link | Meaning |
+|---|---|---|---|---|---|---|---|
+| `INDEX_ID` | id | key | required |  | `FIX-AONIA` (pattern `^FIX-`) |  | The record's id (the business key) |
+| `NAME` | text |  | required |  | `AUD Overnight Index Average`, `Canadian Overnight Repo Rate Average`, `Euro short-term rate`, `Secured Overnight Financing Rate`, `Sterling Overnight Index Average`, `Swiss Average Rate Overnight`, `Tokyo Overnight Average Rate` |  | Index |
+| `LATEST` | amount |  | required |  | `0.03806` |  | Latest |
+| `ADMINISTRATOR` | text |  | required |  | `Bank of Canada`, `Bank of England`, `Bank of Japan`, `ECB`, `FRBNY`, `RBA`, `SIX` |  | Administrator |
+| `TENOR` | text |  | required |  | `Overnight` |  | Tenor |
+| `CURRENCY` | text |  | required |  | `AUD`, `CAD`, `CHF`, `EUR`, `GBP`, `JPY`, `USD` |  | — |
+| `FIXINGS` | record list |  | required |  |  |  | Nested: see nested FIXINGS[] |
+
+Nested `FIXINGS[]`:
+
+| Column | Type | Key | Presence | Unit | Example or values | Link | Meaning |
+|---|---|---|---|---|---|---|---|
+| `DATE` | date |  | required |  | `2026-09-30` |  | Date |
+| `RATE` | rate |  | required |  | `0.03806` |  | Rate |
+| `RATE_PCT` | rate |  | required |  | `3.806` |  | — |
+| `VOLUME_BN` | amount |  | required |  | `1075.7` |  | Volume (bn) |
+
+- Dated by the lake's business_date partition: `drishti.py lake build` writes each test-data file's day into it; the documents carry no date field of their own.
+
+### BND: Bond (security master) (`bond`)
+
+A listed bond: terms, price, yield, spreads and analytics.
+
+**Class** fundamental · **Key** `ISIN` · **Dated by** `business_date` · **Cadence** daily · **Stored by** connector `market-store` (plugin `delta`), table `<root>/market/bond/` · **Ids** `^BND-`.
+
+**Grain:** One row per bond (security master) per business date, keyed by ISIN. **Contract:** `contracts/bond.contract.yaml` ([full contract page](../../../../docs/contracts/packs/market-data.md#bnd-bond-security-master-bond)).
+
+| Column | Type | Key | Presence | Unit | Example or values | Link | Meaning |
+|---|---|---|---|---|---|---|---|
+| `ISIN` | id | key | required |  | `BND-BRVERD054608` (pattern `^BND-`) |  | The record's id (the business key) |
+| `ISIN_CODE` | text |  | required |  | `BRVERD054608` |  | — |
+| `ISSUER_NAME` | text |  | required |  | `Verdant Agri Holdings` |  | Issuer |
+| `COUPON` | rate |  | required |  | `0.0579` |  | Coupon |
+| `MATURITY` | date |  | required |  | `2031-09-15` |  | Maturity |
+| `PRICE` | amount |  | required |  | `94.302` |  | Price |
+| `YIELD` | rate |  | required |  | `0.071` |  | Yield |
+| `Z_SPREAD` | rate |  | required |  | `323.0` |  | Z-spread |
+| `MOD_DURATION` | amount |  | required |  | `4.35` |  | Duration |
+| `RATING` | text |  | required |  | `BB-` |  | Rating |
+| `TERMS` | record |  | required |  |  |  | Nested: see nested TERMS |
+| `COUPONS` | record list |  | required |  |  |  | Nested: see nested COUPONS[] |
+| `HISTORY` | record list |  | required |  |  |  | Nested: see nested HISTORY[] |
+| `ISSUER` | id |  | required |  | `ISS-VERDANT` (pattern `^ISS-`) | `issuer` | Reference entity: the issuer it refers to |
+| `BENCHMARK_CURVE` | id |  | required |  | `CRV-USD-GOVT` (pattern `^CRV-`) | `ir-curve` | Benchmark curve: the ir-curve it refers to |
+
+Nested `TERMS`:
+
+| Column | Type | Key | Presence | Unit | Example or values | Link | Meaning |
+|---|---|---|---|---|---|---|---|
+| `CURRENCY` | text |  | required |  | `CAD`, `CHF`, `EUR`, `GBP`, `JPY`, `USD` |  | — |
+| `COUPON_FREQUENCY` | text |  | required |  | `Annual`, `Semi-annual` |  | — |
+| `DAY_COUNT` | text |  | required |  | `ACT/ACT` |  | — |
+| `ISSUE_DATE` | date |  | required |  | `2021-09-15` |  | — |
+| `AMOUNT_ISSUED` | amount |  | required |  | `5100000000` |  | — |
+| `SENIORITY` | text |  | required |  | `Senior unsecured`, `Sovereign` |  | — |
+| `CALLABLE` | boolean |  | required |  | `False` |  | — |
+| `CUSIP` | text |  | optional |  | `0UST03005` |  | — |
+
+Nested `COUPONS[]`:
+
+| Column | Type | Key | Presence | Unit | Example or values | Link | Meaning |
+|---|---|---|---|---|---|---|---|
+| `DATE` | date |  | required |  | `2027-09-15` |  | Date |
+| `AMOUNT` | amount |  | required |  | `2.895` |  | Coupon |
+
+Nested `HISTORY[]`:
+
+| Column | Type | Key | Presence | Unit | Example or values | Link | Meaning |
+|---|---|---|---|---|---|---|---|
+| `DATE` | date |  | required |  | `2026-08-19` |  | — |
+| `PRICE` | amount |  | required |  | `95.492` |  | — |
+
+**Links:** `ISSUER` → `issuer`, `BENCHMARK_CURVE` → `ir-curve`.
+
+- Dated by the lake's business_date partition: `drishti.py lake build` writes each test-data file's day into it; the documents carry no date field of their own.
+
+### CORR: Correlation matrix (`correlation-matrix`)
+
+A correlation set: the factors whose pairwise correlations basket, quanto and spread products use. Since 2.9.2 the set keeps its definition only; the correlations are the computed kind correlation-result (CORRC), worked out from the factors' price history when asked.
+
+**Class** fundamental · **Key** `MATRIX_ID` · **Dated by** `business_date` · **Cadence** daily · **Stored by** connector `market-store` (plugin `delta`), table `<root>/market/correlation-matrix/` · **Ids** `^CORR-`.
+
+**Grain:** One row per correlation matrix per business date, keyed by MATRIX_ID. **Contract:** `contracts/correlation-matrix.contract.yaml` ([full contract page](../../../../docs/contracts/packs/market-data.md#corr-correlation-matrix-correlation-matrix)).
+
+| Column | Type | Key | Presence | Unit | Example or values | Link | Meaning |
+|---|---|---|---|---|---|---|---|
+| `MATRIX_ID` | id | key | required |  | `CORR-EU-EQ` (pattern `^CORR-`) |  | The record's id (the business key) |
+| `NAME` | text |  | required |  | `European equities` |  | Name |
+| `FACTORS` | text list |  | required |  |  |  | — |
+| `EQUITY_IDS` | id list |  | required |  |  | `equity` | The factors that are equities (their price history: HISTORY[].CLOSE) |
+| `FX_IDS` | id list |  | required |  |  | `fx-spot` | The factors that are FX pairs (their history: HISTORY[].MID) |
+
+- Dated by the lake's business_date partition: `drishti.py lake build` writes each test-data file's day into it; the documents carry no date field of their own.
+- AVERAGE, PAIRS, WINDOW and ESTIMATOR left the record in 2.9.2: the correlations are computed (correlation-result, docs/guides/GROUPINGS_ANALYTICS_GUIDE.md section 15).
+
+### CORRC: Correlations of a factor set (computed from price history) (`correlation-result`)
+
+The pairwise correlations of a correlation set's factors, computed when asked from their daily closes in the lake (log returns over a window, Pearson or Ledoit-Wolf) by the server's Java engine, as the person asking; never stored.
+
+**Class** computed · **Key** — · **Dated by** `on request` · **Cadence** on change · **Stored by** connector `correlation-engine` (plugin `reactive`).
+
+**Grain:** One answer per question (the correlation set asked for, its window and estimator, and the business date), computed when asked. **Contract:** `contracts/correlation-result.contract.yaml` ([full contract page](../../../../docs/contracts/packs/market-data.md#corrc-correlations-of-a-factor-set-computed-from-price-history-correlation-result)).
+
+| Column | Type | Key | Presence | Unit | Example or values | Link | Meaning |
+|---|---|---|---|---|---|---|---|
+| `MATRIX_ID` | id |  | required |  | `CORR-EU-EQ` |  | The correlation set asked for (the id; parameters ride on it as CORR-EU-EQ~window=20~estimator=ledoit-wolf) |
+| `NAME` | text |  | required |  |  |  | The set's name |
+| `FACTORS` | id list |  | required |  |  |  | The factors' market-data ids, equities first (EQUITY_IDS, then FX_IDS) |
+| `ESTIMATOR` | text |  | required |  | `pearson`, `ledoit-wolf` |  | The estimator used (parameter estimator, default pearson) |
+| `WINDOW` | integer |  | required |  |  |  | The daily log returns used (parameter window; 0, the default, or a window longer than the history uses every return) |
+| `AVAILABLE` | integer |  | required |  |  |  | The returns the factors' common dates allow (the dates every factor has, less one) |
+| `FROM` | date |  | required |  |  |  | The first close of the window |
+| `TO` | date |  | required |  |  |  | The last close of the window |
+| `AVERAGE` | rate |  | required |  |  |  | The mean of the pairwise correlations |
+| `MIN_RHO` | rate |  | required |  |  |  | The lowest pairwise correlation |
+| `MAX_RHO` | rate |  | required |  |  |  | The highest pairwise correlation |
+| `SHRINKAGE` | rate |  | optional |  |  |  | Ledoit-Wolf only, the shrinkage intensity toward no correlation (0 none, 1 all the way) |
+| `PAIRS` | record list |  | required |  |  |  | Nested: see nested PAIRS[] |
+| `FACTOR_STATS` | record list |  | required |  |  |  | Nested: see nested FACTOR_STATS[] |
+
+Nested `PAIRS[]`:
+
+| Column | Type | Key | Presence | Unit | Example or values | Link | Meaning |
+|---|---|---|---|---|---|---|---|
+| `A` | id |  | required |  |  |  | The first factor |
+| `B` | id |  | required |  |  |  | The second factor |
+| `RHO` | rate |  | required |  |  |  | Their correlation, to four decimals |
+
+Nested `FACTOR_STATS[]`:
+
+| Column | Type | Key | Presence | Unit | Example or values | Link | Meaning |
+|---|---|---|---|---|---|---|---|
+| `FACTOR` | id |  | required |  |  |  | — |
+| `LAST` | amount |  | required |  |  |  | The last close of the window |
+| `RETURN` | rate |  | required |  |  |  | The simple return over the window (a fraction) |
+| `VOLATILITY` | rate |  | required |  |  |  | The standard deviation of the daily log returns times the square root of 252 (a fraction) |
+
+- No stored key: an answer's id is the question asked, the id of the correlation set (correlation-matrix) it reads.
+- Errors are said in words (an engine refusal): no such set, fewer than two factors, a factor without price history, fewer than three common dates, a price of zero or less, a factor that did not move over the window, an estimator other than pearson or ledoit-wolf.
+
+### EQB: An equity's beta against its index (computed from price history) (`equity-beta`)
+
+An equity's beta, alpha, correlation and R squared against its index (EQUITY_INDEX), the regression of their daily log returns over a window, computed when asked from both price histories by the server's Java engine, as the person asking; never stored. It replaces the security master's stored BETA (retired in 2.9.2).
+
+**Class** computed · **Key** — · **Dated by** `on request` · **Cadence** on change · **Stored by** connector `equity-analytics` (plugin `reactive`).
+
+**Grain:** One answer per question (the equity asked for, its window and the business date), computed when asked. **Contract:** `contracts/equity-beta.contract.yaml` ([full contract page](../../../../docs/contracts/packs/market-data.md#eqb-an-equitys-beta-against-its-index-computed-from-price-history-equity-beta)).
+
+| Column | Type | Key | Presence | Unit | Example or values | Link | Meaning |
+|---|---|---|---|---|---|---|---|
+| `EQUITY` | id |  | required |  | `EQ-NVTK` |  | The equity asked for (the id; the window rides on it as EQ-NVTK~window=20) |
+| `INDEX` | id |  | required |  |  |  | The index it is measured against (the equity's EQUITY_INDEX) |
+| `WINDOW` | integer |  | required |  |  |  | The daily returns used (parameter window; 0, the default, or a window longer than the history uses every return) |
+| `AVAILABLE` | integer |  | required |  |  |  | The returns the two histories' common dates allow |
+| `FROM` | date |  | required |  |  |  | — |
+| `TO` | date |  | required |  |  |  | — |
+| `BETA` | rate |  | required |  |  |  | cov(r, r_index) / var(r_index) of the daily log returns |
+| `ALPHA` | rate |  | required |  |  |  | The regression's intercept, a daily log return |
+| `CORRELATION` | rate |  | required |  |  |  | — |
+| `R_SQUARED` | rate |  | required |  |  |  | — |
+| `VOLATILITY` | rate |  | required |  |  |  | The equity's sample standard deviation of the daily log returns x sqrt(252), a fraction |
+| `INDEX_VOLATILITY` | rate |  | required |  |  |  | The index's, the same way |
+
+- No stored key: an answer's id is the question asked, the id of the equity it reads.
+- Errors are said in words (an engine refusal): no such equity, an equity that names no index, an index without price history, fewer than three common dates, an index that did not move over the window.
+
+## Data retrieval
+
+Where each kind's data comes from, how it reaches the lake and how to check it. Three origins: **external** data, fetched from a public source by the pack's refresh script (each source, its licence and worked examples on the [External data](../../../../docs/guides/PUBLIC_DATA.md) help page); **synthetic** test data (or hand-written reference data), written by a generator with fictitious names; **computed** by a Drishti engine when it is asked, never stored by a source.
+
+| Command | Kind | Origin | How it reaches Drishti |
+|---|---|---|---|
+| `CRV` | `ir-curve` | synthetic: `python3 tools/testdata/make_testdata.py` (and `python3 tools/packgen/banking/make_data.py` for samples/); official public data optional: US Treasury daily par yield curve (public domain (US Government work)) (`tools/publicdata/official_market_data.py`, to the data folder; read live by the feed connectors, off as shipped) | `data/testdata/market-data/ir-curve/` → `lake demo` → connector `market-store` |
+| `REPO` | `repo-curve` | synthetic: `python3 tools/testdata/make_testdata.py` (and `python3 tools/packgen/banking/make_data.py` for samples/) | `data/testdata/market-data/repo-curve/` → `lake demo` → connector `market-store` |
+| `FX` | `fx-spot` | synthetic: `python3 tools/testdata/make_testdata.py` (and `python3 tools/packgen/banking/make_data.py` for samples/); official public data optional: ECB euro reference FX rates (ECB: free reuse with the source acknowledged) (`tools/publicdata/official_market_data.py`, to the data folder; read live by the feed connectors, off as shipped) | `data/testdata/market-data/fx-spot/` → `lake demo` → connector `market-store` |
+| `FXF` | `fx-forward-curve` | synthetic: `python3 tools/testdata/make_testdata.py` (and `python3 tools/packgen/banking/make_data.py` for samples/) | `data/testdata/market-data/fx-forward-curve/` → `lake demo` → connector `market-store` |
+| `FXV` | `fx-vol-surface` | synthetic: `python3 tools/testdata/make_testdata.py` (and `python3 tools/packgen/banking/make_data.py` for samples/) | `data/testdata/market-data/fx-vol-surface/` → `lake demo` → connector `market-store` |
+| `IRV` | `ir-vol-cube` | synthetic: `python3 tools/testdata/make_testdata.py` (and `python3 tools/packgen/banking/make_data.py` for samples/) | `data/testdata/market-data/ir-vol-cube/` → `lake demo` → connector `market-store` |
+| `CPV` | `cap-vol-surface` | synthetic: `python3 tools/testdata/make_testdata.py` (and `python3 tools/packgen/banking/make_data.py` for samples/) | `data/testdata/market-data/cap-vol-surface/` → `lake demo` → connector `market-store` |
+| `EQ` | `equity` | synthetic: `python3 tools/testdata/make_testdata.py` (and `python3 tools/packgen/banking/make_data.py` for samples/) | `data/testdata/market-data/equity/` → `lake demo` → connector `market-store` |
+| `EQX` | `equity-index` | synthetic: `python3 tools/testdata/make_testdata.py` (and `python3 tools/packgen/banking/make_data.py` for samples/) | `data/testdata/market-data/equity-index/` → `lake demo` → connector `market-store` |
+| `DIV` | `dividend-curve` | synthetic: `python3 tools/testdata/make_testdata.py` (and `python3 tools/packgen/banking/make_data.py` for samples/) | `data/testdata/market-data/dividend-curve/` → `lake demo` → connector `market-store` |
+| `EQV` | `equity-vol-surface` | synthetic: `python3 tools/testdata/make_testdata.py` (and `python3 tools/packgen/banking/make_data.py` for samples/) | `data/testdata/market-data/equity-vol-surface/` → `lake demo` → connector `market-store` |
+| `CDS` | `credit-curve` | synthetic: `python3 tools/testdata/make_testdata.py` (and `python3 tools/packgen/banking/make_data.py` for samples/) | `data/testdata/market-data/credit-curve/` → `lake demo` → connector `market-store` |
+| `INF` | `inflation-index` | synthetic: `python3 tools/testdata/make_testdata.py` (and `python3 tools/packgen/banking/make_data.py` for samples/) | `data/testdata/market-data/inflation-index/` → `lake demo` → connector `market-store` |
+| `INFC` | `inflation-curve` | synthetic: `python3 tools/testdata/make_testdata.py` (and `python3 tools/packgen/banking/make_data.py` for samples/) | `data/testdata/market-data/inflation-curve/` → `lake demo` → connector `market-store` |
+| `CMD` | `commodity` | synthetic: `python3 tools/testdata/make_testdata.py` (and `python3 tools/packgen/banking/make_data.py` for samples/) | `data/testdata/market-data/commodity/` → `lake demo` → connector `market-store` |
+| `CMDC` | `commodity-curve` | synthetic: `python3 tools/testdata/make_testdata.py` (and `python3 tools/packgen/banking/make_data.py` for samples/) | `data/testdata/market-data/commodity-curve/` → `lake demo` → connector `market-store` |
+| `CMDV` | `commodity-vol-surface` | synthetic: `python3 tools/testdata/make_testdata.py` (and `python3 tools/packgen/banking/make_data.py` for samples/) | `data/testdata/market-data/commodity-vol-surface/` → `lake demo` → connector `market-store` |
+| `FIX` | `rate-fixing` | synthetic: `python3 tools/testdata/make_testdata.py` (and `python3 tools/packgen/banking/make_data.py` for samples/); official public data optional: SOFR, Federal Reserve Bank of New York (NY Fed terms of use: reuse with attribution); Euro short-term rate (ECB) (ECB: free reuse with the source acknowledged) (`tools/publicdata/official_market_data.py`, to the data folder; read live by the feed connectors, off as shipped) | `data/testdata/market-data/rate-fixing/` → `lake demo` → connector `market-store` |
+| `BND` | `bond` | synthetic: `python3 tools/testdata/make_testdata.py` (and `python3 tools/packgen/banking/make_data.py` for samples/) | `data/testdata/market-data/bond/` → `lake demo` → connector `market-store` |
+| `CORR` | `correlation-matrix` | synthetic: `python3 tools/testdata/make_testdata.py` (and `python3 tools/packgen/banking/make_data.py` for samples/) | `data/testdata/market-data/correlation-matrix/` → `lake demo` → connector `market-store` |
+| `CORRC` | `correlation-result` | computed by Drishti: the reactive connector correlation-engine (java engine com.ash.drishti.compute.reactive.analytics.CorrelationEngine); see the [Groupings and analytics guide](../../../../docs/guides/GROUPINGS_ANALYTICS_GUIDE.md) | nothing to load: computed from its inputs when asked |
+| `EQB` | `equity-beta` | computed by Drishti: the reactive connector equity-analytics (java engine com.ash.drishti.compute.reactive.analytics.BetaEngine); see the [Groupings and analytics guide](../../../../docs/guides/GROUPINGS_ANALYTICS_GUIDE.md) | nothing to load: computed from its inputs when asked |
+
+### External sources
+
+| Source | Where | Licence | Internal only | Refresh |
+|---|---|---|---|---|
+| US Treasury daily par yield curve | https://home.treasury.gov/resource-center/data-chart-center/interest-rates | public domain (US Government work) | no | `python3 tools/publicdata/official_market_data.py refresh us-treasury` |
+| ECB euro reference FX rates | https://www.ecb.europa.eu/stats/eurofxref/eurofxref-hist.zip | ECB: free reuse with the source acknowledged | no | `python3 tools/publicdata/official_market_data.py refresh ecb-fx` |
+| SOFR, Federal Reserve Bank of New York | https://markets.newyorkfed.org/api/rates/secured/sofr | NY Fed terms of use: reuse with attribution | no | `python3 tools/publicdata/official_market_data.py refresh sofr` |
+| Euro short-term rate (ECB) | https://data-api.ecb.europa.eu/service/data/EST | ECB: free reuse with the source acknowledged | no | `python3 tools/publicdata/official_market_data.py refresh estr` |
+
+```bash
+python3 tools/publicdata/official_market_data.py status                                          # each source: licence, internal only or not, last refreshed (offline)
+python3 tools/publicdata/official_market_data.py refresh --dry-run                               # what would be fetched and written; changes nothing
+python3 tools/publicdata/official_market_data.py refresh                                         # a year of official history into <data>/publicdata/market-data (never over the synthetic samples)
+python3 tools/publicdata/official_market_data.py refresh ecb-fx --years 5 --scope USDMXN,EURSEK  # more history and more pairs
+```
+
+The same through the wrappers: `tools/publicdata/market-data.sh status` on Linux and macOS, `.\tools\windows\publicdata-market-data.ps1 status` on Windows (every argument is passed on).
+
+### Generators
+
+| Generator | Writes | Check |
+|---|---|---|
+| `python3 tools/testdata/make_testdata.py` | sixty business days of every dataset of the seven packs into data/testdata/<pack>/<kind>/ (the universe: tools/testdata/universe.py; deterministic, fictitious names) | `python3 tools/testdata/make_testdata.py --check` |
+| `python3 tools/packgen/banking/make_data.py` | the pack's few reference documents in samples/ (from the taxonomy, tools/packgen/banking/taxonomy.py) | `python3 tools/packgen/banking/make_data.py --check` |
+
+### Into the lake, checking, offline
+
+- **The lake.** `python3 tools/drishti.py lake demo` reads `data/testdata/testdata.yaml` and writes every dataset (test data, the packs' samples and the committed public-data snapshots) into `<data>/delta/<domain>/<kind>/`, where the pack's Delta connector serves it; a computed kind needs nothing loaded. `lake build` loads your own large JSON exports the same way ([Tools](../../../../docs/guides/TOOLS.md)).
+- **Checking.** `python3 tools/contracts.py check` compares every contract with the pack and its data; each generator's `--check` (above) fails when the committed files differ from what it would write; in the console, `<MNEMONIC> <GO>` lists a kind and the pack's code opens its overview with the count of each kind.
+- **Offline.** Everything committed works without a network: the test data, the samples and the public-data snapshots are in the repository and `lake demo` reads only them. A refresh script runs offline from its download cache (`--offline`); a connector that reaches the internet (news, yfinance, the public-data feeds) is off as shipped and never starts on a machine configured offline (`drishti.offline.plugins`).

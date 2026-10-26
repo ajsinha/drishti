@@ -31,6 +31,8 @@ About 40 minutes.
   ([SCREEN_DESIGNER.md](../guides/SCREEN_DESIGNER.md)) goes further; this tutorial is the shortest route to a finished screen.
 - For the command-line checks: the console's Python (tutorial 1); `sutra lint` and `sutra preview` run the server jar's Sutra tool locally, with no server needed.
 
+**Where this data comes from.** The country pages of the map step are the `world-economy` pack's, published data from the World Bank (CC BY 4.0), UNDP (CC BY 3.0 IGO) and the CIA World Factbook (public domain), plus IMF forecasts that are **internal only**, fetched by `tools/publicdata/world_economy.py`. Each source, its licence and how to refresh it: [External data](../guides/PUBLIC_DATA.md).
+
 ## What you will learn
 
 - how to start a design from documents, and what the auto-design gives you;

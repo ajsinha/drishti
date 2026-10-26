@@ -289,6 +289,10 @@ The groups use the consolidation relationships only; fund management, sub-fund, 
 | GLEIF mapping files (BIC, ISIN, MIC, OpenCorporates to LEI) | CC0 1.0 (the BIC file with SWIFT, the ISIN file with ANNA) | no | the identifiers of the entities |
 | GLEIF golden copy, level 1 bulk file | CC0 1.0 | no | full-country pulls into the data folder only (golden-lei source; never committed, for its size) |
 
+Every kind's data contract (each column: type, key, example, links) and where its data comes from (an external source and its refresh script, a generator of synthetic data, or a Drishti engine) are in the guide, [guides/gleif.md](guides/gleif.md): *Data contracts* and *Data retrieval*.
+
+External data: GLEIF golden copy, level 2 (relationship records, reporting exceptions); GLEIF LEI API (lei-records, entity-legal-forms, countries, lei-issuers); GLEIF mapping files (BIC, ISIN, MIC, OpenCorporates to LEI); GLEIF golden copy, level 1 bulk file. Each source's URL, licence, refresh script and worked examples (Linux and Windows) are on the External data help page, [docs/guides/PUBLIC_DATA.md](../../../docs/guides/PUBLIC_DATA.md).
+
 ## Enabling and dependencies
 
 Builds on no other pack.
@@ -304,7 +308,7 @@ Settings (environment variables) its connectors read: `DRISHTI_DELTA_ROOT`, `DRI
 
 ## Refreshing the data
 
-`python3 tools/publicdata/gleif.py status` shows what the pack holds and how old it is; `refresh` fetches, rebuilds and checks (docs/guides/PUBLIC_DATA.md).
+`python3 tools/publicdata/gleif.py status` lists the external sources, their licences and when each was last refreshed (offline); `refresh --dry-run` shows what a refresh would fetch and write, changing nothing; `refresh` fetches, writes and checks. The External data help page (docs/guides/PUBLIC_DATA.md) has worked examples for Linux and Windows.
 
 The pack's files are written by `tools/packgen/gleif/make.py`; its `--check` fails when the committed files differ from what it would write.
 
