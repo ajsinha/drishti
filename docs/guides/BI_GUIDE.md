@@ -325,6 +325,21 @@ endorsement: promoted
 pages: []
 ```
 
+**Exposure in BI (2.9.0).** The netting-set and counterparty records no longer store exposure (`EE_PEAK`, `PFE_PEAK` and the profile were
+retired): the exposure engine computes it, and its official end-of-day results are published to `risk-results/exposure-official-cpty`
+([EXP.md section 9.6](../contracts/EXP.md#96-published-official-results-exposure-official-exposure-official-cpty)). The counterparty-risk pack
+serves that table as the read-only kind `exposure-official-cpty` (command `XOFC`, connector `exposure-results`). The dataset
+`counterparty-exposure-official` holds every row (netting sets, counterparties and groups, every result version);
+`counterparty-exposure-official-netting-sets` and `counterparty-exposure-official-counterparties` keep one row type each, the latest version
+of each scope and date. The models `counterparty-exposure` and `trading-risk` read them as two more facts, `set_exposure` and
+`cpty_exposure`, related to `counterparties.id`, and keep their measure names: **Exposure (EE peak)** is `sum(set_exposure.PEAK_EE)`, the
+netting sets' computed peaks summed (a reporting sum of set peaks), and **Exposure (PFE peak)** is `sum(cpty_exposure.PEAK_PFE_95)`, each
+counterparty's own peak 95% PFE (its sets netted path by path), never a sum of its sets' PFEs; over several counterparties it is a
+reporting sum of theirs. So the reports **Counterparty risk** and **Desk P&L vs counterparty exposure**, the Python Transform behind
+`desk-pnl-vs-exposure-py` and the notebook `pnl-vs-exposure-pandas` show computed figures. The live model `live-exposure` keeps only what the
+netting set still carries as it ticks (net MTM, collateral, utilisation): its EE and PFE peak cards (and the *Desk wall* tiles) became
+**Collateral** and **Max utilisation**, since the published results change once a day and a live dataset is not joined to that cached table.
+
 **Admin, BI settings** (`/admin/bi`, needs `bi-admin`):
 
 ![Admin, BI settings](img/bi/10-settings.jpg)

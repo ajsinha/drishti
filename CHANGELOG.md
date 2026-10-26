@@ -19,6 +19,20 @@
 
 - **The demo lake has exposure for 22 of the 24 counterparties** (product owner, 2026-10-26): `drishti.py lake demo` generates the exposure run for every netting set of the counterparties that fit in 9,500 trades, smallest first and always whole (73 netting sets, 9,000 trades, 200 paths; about a minute, nothing downloaded, nothing committed: `make_ccr_data.py --demo`), in place of the committed run of eight sets, which it contains with the same figures (each trade's paths are seeded by its id). `--exposure committed` loads the committed run alone. CP-SUMMIT and CP-NORTHPLAINS (2,558 trades) stay without paths under the 10,000-trade local limit.
 - **Test runs no longer rewrite the committed screenshots.** The browser tests that take documentation pictures (the designer, grid, forms, refresh, reactive panels of tutorial 23, write-back of tutorial 24, the Excel export picture) write them to the docs folder only when `DRISHTI_SHOTS` is set, as the other picture-taking tests already did; otherwise to `<tmp>/drishti-doc-shots`, which `tools/drill.sh` removes (`drishti-console/tests/docshots.py`). The drill no longer leaves a dirty tree.
+- **Exposure in BI, from the published official results (2.9.0).** The official end-of-day exposure of every netting set, counterparty
+  and group (`risk-results/exposure-official-cpty`) is now the read-only kind `exposure-official-cpty` (`XOFC`) of the counterparty-risk
+  pack on the Delta connector `exposure-results` (class computed; contract `exposure-official-cpty.contract.yaml`; the columns promoted
+  in the layout; `tools/test_contracts.py` expects it among the read-only published kinds). New BI datasets
+  `counterparty-exposure-official` (every row and version) and `-netting-sets` / `-counterparties` (latest RESULT_VERSION, one row type
+  each). The models `counterparty-exposure` and `trading-risk` keep their measures and read the computed peaks: **Exposure (EE peak)**
+  sums the netting sets' `PEAK_EE`, **Exposure (PFE peak)** reads each counterparty's own `PEAK_PFE_95` (never a sum of its sets' PFEs);
+  the reports Counterparty risk and Desk P&L vs counterparty exposure, the Transform `pnl-vs-exposure`, the notebook
+  `pnl-vs-exposure-pandas` and the tutorial data of tutorials 10, 14 and 18 (`cp-risk`, `cp-risk-extracts`) follow. The live model
+  `live-exposure` drops EE and PFE peak (its cards and the Desk wall tiles show Collateral and Max utilisation). The Calc snippet
+  `concentration_hhi` names its column `PEAK_PFE`; live doc examples (ANALYSE, DATASETS, EXPRESSIONS, RACHANA_REFERENCE,
+  SUTRA_DEVELOPER_GUIDE, PACK_GENERATORS_GUIDE, DEMO_DATA, KAFKA_CONNECTOR, the core pack README, the expression functions catalogue)
+  read live fields. `ExposureOfficialBiTest` proves the Counterparty risk report shows the computed peaks of the latest version from a
+  lake written by the exposure publisher.
 - **VaR in BI, from the published official results (2.9.0; product owner, 2026-10-26).** The official end-of-day VaR that the server
   publishes to `risk-results/var-official` is now the read-only kind `var-official` (`VOFF`) of the market-risk pack, served by the
   Delta connector `var-results` (class computed; its contract `config/packs/market-risk/contracts/var-official.contract.yaml`). No

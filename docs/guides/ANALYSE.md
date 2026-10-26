@@ -67,13 +67,13 @@ Choose a dataset, tick the fields (columns of its tables; `id` is added for you 
 (10,000); a cut says so (`60 rows of 4,000 (cut to the row limit)`). Columns are named for the table's column (`DESK`, not `trade.DESK`); two columns of the same name keep their
 table (`trade_DESK`).
 
-**More than one extract.** *More extracts: join several datasets* (under the form) adds further extracts to the notebook, each a name, a dataset and fields, built for you by the server exactly as the first is (your row rules, your masks; `bi.explore.max_extracts`, 6, besides the first). A **Python** cell reads one as `extract("name")` (a pandas DataFrame; a copy, so changing it changes nothing else), or by the dataset it came from, and joins them in pandas; a **SQL** cell reads each as a table of that name. Real output of the sample notebook (below), with two extracts, the trades of `trading-risk` as `df` and the netting sets of `counterparty-exposure` as `exposure`, joined in a Python cell:
+**More than one extract.** *More extracts: join several datasets* (under the form) adds further extracts to the notebook, each a name, a dataset and fields, built for you by the server exactly as the first is (your row rules, your masks; `bi.explore.max_extracts`, 6, besides the first). A **Python** cell reads one as `extract("name")` (a pandas DataFrame; a copy, so changing it changes nothing else), or by the dataset it came from, and joins them in pandas; a **SQL** cell reads each as a table of that name. Real output of the sample notebook (below), with two extracts, the trades of `trading-risk` as `df` and the netting sets' computed exposure of `counterparty-exposure` (the official results, `set_exposure`) as `exposure`, joined in a Python cell:
 
 ![The notebook's extracts: the first extract opened, and the second, exposure, under More extracts](../tutorials/img/t14/13-analyse-extracts.jpg)
 
 ```python
 pnl = df.groupby("COUNTERPARTY", as_index=False)["PNL_1D"].sum().rename(columns={"COUNTERPARTY": "counterparty", "PNL_1D": "desk_pnl"})
-ee = extract("exposure").groupby("counterparty", as_index=False)["EE_PEAK"].sum().rename(columns={"EE_PEAK": "ee_peak"})
+ee = extract("exposure").groupby("counterparty", as_index=False)["PEAK_EE"].sum().rename(columns={"PEAK_EE": "ee_peak"})
 joined = pnl.merge(ee, on="counterparty", how="left")
 joined["pnl_per_exposure"] = joined["desk_pnl"] / joined["ee_peak"]
 result = joined.sort_values("ee_peak", ascending=False).head(15)
@@ -184,7 +184,7 @@ title: Desk notional, first look
 dataset: mq:trades-basic@1       # the model it reads (mq:<model>@<major>, or dataset:<name> for a dataset's implicit model)
 fields: [trade.TRADE_ID, trade.DESK, trade.PORTFOLIO, trade.NOTIONAL, trade.MTM]
 extracts:                       # optional: further extracts, read by a cell as extract("name") and in SQL as a table of that name
-  - { name: exposure, dataset: mq:counterparty-exposure@1, fields: [netting_sets.COUNTERPARTY, netting_sets.EE_PEAK] }
+  - { name: exposure, dataset: mq:counterparty-exposure@1, fields: [set_exposure.COUNTERPARTY, set_exposure.PEAK_EE] }   # the netting sets' computed exposure (2.9.0)
 cells:
   - type: slice
     slice: { rows: [DESK], columns: [], values: [{ field: NOTIONAL, agg: sum }], filters: [] }

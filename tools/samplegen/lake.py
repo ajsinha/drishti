@@ -44,9 +44,9 @@ from samplegen.layout import Layout, layouts_for_domain, write_days, write_parti
 sys.path.insert(0, str(pathlib.Path(__file__).resolve().parent.parent / "packgen" / "common"))
 import packsamples  # noqa: E402  (samples/<kind>.jsonl or samples/<kind>/<id>.json)
 
-VARY = {"MTM", "NET_MTM", "DV01", "PV", "NPV", "EE_PEAK", "PFE_95_PEAK", "PFE_PEAK", "SPOT", "LAST_PRICE", "PRICE", "LEVEL", "MID",
+VARY = {"MTM", "NET_MTM", "DV01", "PV", "NPV", "SPOT", "LAST_PRICE", "PRICE", "LEVEL", "MID",
         "UTILISATION", "USED", "COLLATERAL_POSTED", "CVA", "FIXING", "RATE", "ZERO_RATE",
-        # the retired example packs still write the short names
+        # the retired example packs still write the short names (exposure peaks among them; the banking packs store none since 2.9.0)
         "mtm", "netMtm", "dv01", "pv", "npv", "eePeak", "pfe95Peak", "pfePeak", "spot", "lastPrice", "price", "level", "mid",
         "utilisation", "used", "collateralPosted", "cva", "fixing", "rate", "zeroRate"}
 

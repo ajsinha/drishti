@@ -1122,7 +1122,7 @@ The position of each row of the answer by the aggregate, 1 for the highest (desc
 | Example | What it says |
 |---|---|
 | `rank(sum(trades.MTM))` | MTM rank, best first |
-| `rank(sum(netting_sets.EE_PEAK), by=[counterparties.SECTOR])` | exposure rank within each sector |
+| `rank(sum(set_exposure.PEAK_EE), by=[counterparties.SECTOR])` | exposure rank within each sector |
 
 * **None:** None values rank last.
 
@@ -2014,16 +2014,16 @@ percentile(trades.NOTIONAL, 0.99)
 
 ```python
 # by: counterparties.NAME
-sum(netting_sets.EE_PEAK)
+sum(set_exposure.PEAK_EE)
 ```
 
-Exposure lives on the netting sets: group by what netting sets reach (counterparties), not by desk.
+Exposure is the exposure engine's official result per netting set (`set_exposure`, since 2.9.0): group by what netting sets reach (counterparties), not by desk.
 
 #### R32 · Counterparty rank by PFE
 
 ```python
 # by: counterparties.NAME
-rank(sum(netting_sets.PFE_PEAK))
+rank(sum(cpty_exposure.PEAK_PFE_95))
 ```
 
 `rank` is over the rows of the answer, 1 for the highest (`desc=False` for the lowest first). A top 10 is a filter on it (a visual's *Top N*, or MQ
@@ -2047,24 +2047,24 @@ percent_rank(sum(trades.MTM))
 
 ```python
 # by: counterparties.NAME
-ratio(sum(netting_sets.PFE_PEAK), sum(netting_sets.LIMIT))
+max(netting_sets.UTILISATION)
 ```
 
 #### R36 · Headroom under the limit
 
 ```python
 # by: counterparties.NAME
-sum(netting_sets.LIMIT) - sum(netting_sets.PFE_PEAK)
+sum(netting_sets.LIMIT) - sum(netting_sets.LIMIT * netting_sets.UTILISATION)
 ```
 
 #### R37 · Limit breaches
 
 ```python
 # by: counterparties.SECTOR
-count(netting_sets, where=netting_sets.PFE_PEAK > netting_sets.LIMIT)
+count(netting_sets, where=netting_sets.UTILISATION > 1)
 ```
 
-A condition between two columns of the same row is fine inside `where=`.
+A condition on a column of the row (or between two columns of the same row) is fine inside `where=`.
 
 #### R38 · Netting sets above 80 % utilised
 

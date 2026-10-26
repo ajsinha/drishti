@@ -26,27 +26,27 @@ for cid in cps["id"]:
     pds[cid] = ((await drishti.get_async("counterparty", cid)).get("KYC") or {}).get("PD_1Y", 0.0)
     x = await drishti.get_async("exposure-result", "CPTY:" + cid)
     pfe[cid] = x.get("PEAK_PFE") if x.get("STATUS") == "ok" else None
-cps["PFE_PEAK"] = cps["id"].map(pfe)
-cps = cps[cps["PFE_PEAK"].fillna(0) > 0].copy()
+cps["PEAK_PFE"] = cps["id"].map(pfe)
+cps = cps[cps["PEAK_PFE"].fillna(0) > 0].copy()
 cps["PD 1Y"] = cps["id"].map(pds)
-cps["expected loss"] = cps["PD 1Y"] * 0.6 * cps["PFE_PEAK"]
-total = cps["PFE_PEAK"].sum()
+cps["expected loss"] = cps["PD 1Y"] * 0.6 * cps["PEAK_PFE"]
+total = cps["PEAK_PFE"].sum()
 
 rows = []
 for by in ["ID", "SECTOR", "RATING", "COUNTRY"]:
-    g = cps.groupby(by)["PFE_PEAK"].sum()
+    g = cps.groupby(by)["PEAK_PFE"].sum()
     h = q.hhi(g)
     rows.append({"BY": "COUNTERPARTY" if by == "ID" else by, "groups": len(g), "HHI": h, "equivalent equal groups": 1 / h,
                  "largest": g.idxmax(), "largest share": g.max() / total})
 show(pd.DataFrame(rows), title=f"Concentration of peak PFE, {len(cps)} counterparties, {total:,.0f} in all")
 
-top = cps.sort_values("PFE_PEAK", ascending=False).head(10).reset_index(drop=True)
-top["share"] = top["PFE_PEAK"] / total
+top = cps.sort_values("PEAK_PFE", ascending=False).head(10).reset_index(drop=True)
+top["share"] = top["PEAK_PFE"] / total
 top["cumulative share"] = top["share"].cumsum()
-show(top[["ID", "NAME", "RATING", "SECTOR", "COUNTRY", "PFE_PEAK", "share", "cumulative share", "PD 1Y", "expected loss"]],
+show(top[["ID", "NAME", "RATING", "SECTOR", "COUNTRY", "PEAK_PFE", "share", "cumulative share", "PD 1Y", "expected loss"]],
      title=f"Top ten names: the top five hold {top['share'].head(5).sum():.0%}")
 order = ["AAA", "AA+", "AA", "AA-", "A+", "A", "A-", "BBB+", "BBB", "BBB-", "BB+", "BB", "BB-", "B+", "B", "B-"]
-by_rating = cps.groupby("RATING").agg(names=("ID", "size"), exposure=("PFE_PEAK", "sum"), expected_loss=("expected loss", "sum"))
+by_rating = cps.groupby("RATING").agg(names=("ID", "size"), exposure=("PEAK_PFE", "sum"), expected_loss=("expected loss", "sum"))
 by_rating = by_rating.reindex([r for r in order if r in by_rating.index])
 show(by_rating, title="By rating grade")
 chart(by_rating.reset_index(), kind="bar", x="RATING", y="exposure", title="Peak PFE by rating")

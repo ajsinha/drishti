@@ -29,7 +29,8 @@ config/bi/
                                   Python dataset (source.python) over two model queries: DATASETS.md section 11 says what the 2.1 composed and derived datasets became
   models/     <id>.model.yaml     2.2 data models: datasets as aliases, relationships, measures, hierarchies, rollups (BI_MODEL_SPEC.md section 2); samples:
                                   trades-basic, trading-risk, trading-cashflows, counterparty-exposure, desk-pnl-vs-exposure-py, live-trading, live-exposure,
-                                  region-economics, world-economics, market-risk-var (2.9.0: the published official VaR); a report reads one with
+                                  region-economics, world-economics, market-risk-var (2.9.0: the published official VaR; counterparty-exposure and
+                                  trading-risk read the published official exposure, counterparty-exposure-official-*); a report reads one with
                                   `model: <name>@1`
   reports/    <id>.report.yaml    pages of visuals over a model: filters, bookmarks, drill-through, theme, tooltip pages, interactions; drawn since phase 3;
                                   a page with layout: board is a wall of tiles (2.4.0: the boards desk-wall and python-wall are reports here)

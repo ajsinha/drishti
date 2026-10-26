@@ -21,7 +21,7 @@ rachana: 1
 report: live-exposure
 version: 1
 title: Live exposure
-description: Netting sets, net MTM, collateral and limit utilisation, redrawn as they tick (computed exposure, EE and PFE peaks, is end-of-day: the Counterparty risk report).
+description: "Netting sets, net MTM, collateral and limit utilisation, redrawn as they tick (the computed exposure, EE and PFE peaks, is end-of-day: the Counterparty risk report)."
 sample: true
 endorsement: promoted
 tags: [sample, counterparty-risk, live, streaming]

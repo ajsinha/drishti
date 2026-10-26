@@ -121,7 +121,7 @@ A topic without a kind carries envelopes, so one topic can carry many kinds:
 topic: risk.envelopes
 key:   netting-set/NS-ALDERSHOT-FRA
 value: {"kind": "netting-set", "id": "NS-ALDERSHOT-FRA",
-        "doc": {"NETTING_SET_ID": "NS-ALDERSHOT-FRA", "TRADE_COUNT": 3, "NET_MTM": -339550, "COLLATERAL": -229552, "PFE_PEAK": 347288}}
+        "doc": {"NETTING_SET_ID": "NS-ALDERSHOT-FRA", "TRADE_COUNT": 3, "NET_MTM": -339550, "COLLATERAL": -229552, "UTILISATION": 0.42}}
 ```
 
 Every envelope is parsed (the kind and id are inside the value). **Key envelopes `<kind>/<id>`**: compaction keeps the
