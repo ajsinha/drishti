@@ -56,15 +56,15 @@ may still change before it ships, and the document records each change.
 | [FRTB.md](FRTB.md) | FRTB (`frtb-sensitivity`) | 2.9.0 | PLANNED |
 | [SIMM.md](SIMM.md) | SIMM (`simm`) | 2.9.0 | PLANNED |
 | [PNL.md](PNL.md) | PNL (`pnl-explain`) | 2.9.0 | PLANNED |
-| `NSET.md` | NSET (`netting-set`): terms kept, figures computed | 2.10.0 | PLANNED |
-| `SACCR.md` | SACCR (`sa-ccr`) | 2.10.0 | PLANNED |
-| `COLL.md` | COLL (`collateral-balance`): holdings kept, values computed | 2.10.0 | PLANNED |
-| `MC.md` | MC (`margin-call`): calls kept, expected call computed | 2.10.0 | PLANNED |
-| `EXP.md` | EXP (`exposure-profile`) | 2.10.0 | PLANNED |
-| `LIM.md` | LIM (`credit-limit`): limits kept, usage computed | 2.10.0 | PLANNED |
-| `GRP.md` | GRP (`counterparty-group`): members kept, usage computed | 2.10.0 | PLANNED |
-| `CVA.md` | CVA (`cva`) | 2.10.0 | PLANNED |
-| `WWR.md` | wrong-way risk (new) | 2.10.0 | PLANNED |
+| [NSET.md](NSET.md) | NSET (`netting-set`): terms kept, figures computed | 2.10.0 | PLANNED |
+| [SACCR.md](SACCR.md) | SACCR (`sa-ccr`) | 2.10.0 | PLANNED |
+| [COLL.md](COLL.md) | COLL (`collateral-balance`): holdings kept, values computed | 2.10.0 | PLANNED |
+| [MC.md](MC.md) | MC (`margin-call`): calls kept, expected call computed | 2.10.0 | PLANNED |
+| [EXP.md](EXP.md) | EXP (`exposure-profile`) | 2.10.0 | PLANNED |
+| [LIM.md](LIM.md) | LIM (`credit-limit`): limits kept, usage computed | 2.10.0 | PLANNED |
+| [GRP.md](GRP.md) | GRP (`counterparty-group`): members kept, usage computed | 2.10.0 | PLANNED |
+| [CVA.md](CVA.md) | CVA (`cva`) | 2.10.0 | PLANNED |
+| [WWR.md](WWR.md) | wrong-way risk (new) | 2.10.0 | PLANNED |
 | `GROUPINGS_AND_ANALYTICS.md` | LEIG, LEIC, SIC, ECG, CORR, USEQ ratios, PXH analytics | 2.9.0 / 2.10.0 | PLANNED |
 | `CONCENTRATION.md` | large exposures (new); the OSFI report once its template is supplied | 2.11.0 | PLANNED |
 | `LIQUIDITY.md` | LCR, NSFR, NCCF, cash-flow gaps (new) | 2.11.0 | PLANNED |

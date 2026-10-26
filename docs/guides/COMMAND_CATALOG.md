@@ -116,12 +116,12 @@ ISDA master agreements and CSAs, netting sets, exposure and PFE, CVA/XVA, SA-CCR
 | `CSA` | Credit support annex | Collateral terms: thresholds, minimum transfer, eligible collateral and haircuts. | `CSA CSA-ALDERSHOT` | fundamental |  |
 | `NSET` | Netting set | Trades that net on close-out under one agreement and CSA, with exposure and collateral. | `NSET NS-SUMMIT-NY` | fundamental | Figures computed from 2.10.0: `NET_MTM`, `COLLATERAL`, `EE_PEAK`, `PFE_PEAK`, `UTILISATION`, `CVA`, `PROFILE`, `BY_ASSET` |
 | `LIM` | Credit limit | PFE limit by tenor bucket for a counterparty, with utilisation. | `LIM LIM-SUMMIT` | fundamental | Figures computed from 2.10.0: `USED`, `UTILISATION`, `STATUS` |
-| `EXP` | Exposure profile | Simulated EE, EPE, ENE and PFE by time bucket for a netting set. | `EXP EXP-ALDERSHOT-FRA` | computed | Moves to compute in 2.10.0: `EXP.md` |
-| `CVA` | CVA / XVA | Credit, debit and funding valuation adjustments with sensitivities. | `CVA CVA-SUMMIT-NY` | computed | Moves to compute in 2.10.0: `CVA.md` |
-| `SACCR` | SA-CCR exposure | Regulatory EAD: replacement cost, PFE add-ons by asset class, multiplier. | `SACCR SACCR-SUMMIT-NY` | computed | Moves to compute in 2.10.0: `SACCR.md` |
+| `EXP` | Exposure profile | Simulated EE, EPE, ENE and PFE by time bucket for a netting set. | `EXP EXP-ALDERSHOT-FRA` | computed | Moves to compute in 2.10.0: [EXP.md](../contracts/EXP.md) |
+| `CVA` | CVA / XVA | Credit, debit and funding valuation adjustments with sensitivities. | `CVA CVA-SUMMIT-NY` | computed | Moves to compute in 2.10.0: [CVA.md](../contracts/CVA.md) |
+| `SACCR` | SA-CCR exposure | Regulatory EAD: replacement cost, PFE add-ons by asset class, multiplier. | `SACCR SACCR-SUMMIT-NY` | computed | Moves to compute in 2.10.0: [SACCR.md](../contracts/SACCR.md) |
 | `COLL` | Collateral balance | Collateral held and posted under a CSA, by asset, after haircuts. | `COLL COLL-ALDERSHOT-FRA` | fundamental | Figures computed from 2.10.0: `HELD`, `POSTED`, `NET` |
 | `MC` | Margin call | A variation or initial margin call and its settlement status. | `MC MC-ALDERSHOT-FRA-1` | fundamental |  |
-| `SIMM` | ISDA SIMM initial margin | Initial margin by risk class and product class. | `SIMM SIMM-ALDERSHOT` | computed | Moves to compute in 2.9.0: `SIMM.md` |
+| `SIMM` | ISDA SIMM initial margin | Initial margin by risk class and product class. | `SIMM SIMM-ALDERSHOT` | computed | Moves to compute in 2.9.0: [SIMM.md](../contracts/SIMM.md) |
 
 ## GLEIF legal entities (`gleif`)
 
@@ -170,10 +170,10 @@ Value at risk, stress testing, FRTB sensitivities and P&L explain.
 |---|---|---|---|---|---|
 | `VAR` | VaR / expected shortfall | Historical VaR and ES for a desk or portfolio, with backtesting. | `VAR VAR-RATES` | computed | Moves to compute in 2.8.0: [VAR.md](../contracts/VAR.md) |
 | `SCN` | Stress scenario | A named historical or hypothetical shock set. | `SCN SCN-COVID2020` | fundamental |  |
-| `STR` | Stress result | P&L of a desk under a scenario, by book. | `STR STR-GFC2008-RATES` | computed | Moves to compute in 2.9.0: `STR.md` |
-| `FRTB` | FRTB sensitivities | Delta, vega and curvature by risk class and bucket (SBM). | `FRTB FRTB-RATES-1` | computed | Moves to compute in 2.9.0: `FRTB.md` |
-| `PNL` | P&L explain | Daily P&L attributed to risk factors, new trades and residual. | `PNL PNL-RATES-1` | computed | Moves to compute in 2.9.0: `PNL.md` |
-| `TVAL` | Trade valuation | A trade's valuation from the risk engine, for every source system: MTM, one-day P&L and DV01, with what it values (source system, portfolio, desk, product). | `TVAL TVAL-1000001` | computed | Moves to compute in 2.9.0: `TVAL.md` |
+| `STR` | Stress result | P&L of a desk under a scenario, by book. | `STR STR-GFC2008-RATES` | computed | Moves to compute in 2.9.0: [STR.md](../contracts/STR.md) |
+| `FRTB` | FRTB sensitivities | Delta, vega and curvature by risk class and bucket (SBM). | `FRTB FRTB-RATES-1` | computed | Moves to compute in 2.9.0: [FRTB.md](../contracts/FRTB.md) |
+| `PNL` | P&L explain | Daily P&L attributed to risk factors, new trades and residual. | `PNL PNL-RATES-1` | computed | Moves to compute in 2.9.0: [PNL.md](../contracts/PNL.md) |
+| `TVAL` | Trade valuation | A trade's valuation from the risk engine, for every source system: MTM, one-day P&L and DV01, with what it values (source system, portfolio, desk, product). | `TVAL TVAL-1000001` | computed | Moves to compute in 2.9.0: [TVAL.md](../contracts/TVAL.md) |
 | `POS` | Position | A position: one instrument held in one book, the trades that build or reduce it, its VaR and its P&L over the scenario days. | `POS POS-BOOK-EQD-2~EQ_ASIAN-USD-2029Q2` | Drishti's own | Figures computed from 2.8.0: `VAR_99`, `ES_975`, `COMPONENT_VAR` |
 | `PORT` | Portfolio | A portfolio in terms of the positions inside it: longs and shorts, market value, VaR, ES and each position's contribution. | `PORT PF-RATES-DESK` | engine input |  |
 | `PNLV` | P&L vector (509 scenarios) | P&L vector of a trade | `PNLV PV-MX-20000209-HS-509` | engine input |  |
@@ -199,10 +199,10 @@ Trades in 125 products across rates, FX, credit, equity, commodities, inflation,
 | Command | Opens | What it does | Example | Data | Change |
 |---|---|---|---|---|---|
 | `TRD` | Trade | Trade | `TRD MX-20000001` | fundamental |  |
-| `CTRD` | Counterparty trades (derived from trades) | Every trade with a counterparty, from every source system: its trades (every status, a status filter), upcoming payments, notional by product type and index, maturities, payments by month. | `CTRD CP-ALDERSHOT` | computed | Moves to compute in 2.9.0: `TRADING_GROUPINGS.md` |
-| `PTRD` | Portfolio trades (derived from trades) | Every trade of a portfolio (book), from every source system: its trades (every status, a status filter), upcoming payments, notional by product type and index, maturities, payments by month. |  | computed | Moves to compute in 2.9.0: `TRADING_GROUPINGS.md` |
-| `LTRD` | Legal entity trades (derived from trades) | Every trade a legal entity of the bank booked, from every source system: its trades (every status, a status filter), upcoming payments, notional by product type and index, maturities, payments by month. |  | computed | Moves to compute in 2.9.0: `TRADING_GROUPINGS.md` |
-| `ITRD` | Index trades (derived from trades) | Every trade with a leg on an index (the first leg that names one): its trades (every status, a status filter), upcoming payments, notional by product type and index, maturities, payments by month. |  | computed | Moves to compute in 2.9.0: `TRADING_GROUPINGS.md` |
+| `CTRD` | Counterparty trades (derived from trades) | Every trade with a counterparty, from every source system: its trades (every status, a status filter), upcoming payments, notional by product type and index, maturities, payments by month. | `CTRD CP-ALDERSHOT` | computed | Moves to compute in 2.9.0: [TRADING_GROUPINGS.md](../contracts/TRADING_GROUPINGS.md) |
+| `PTRD` | Portfolio trades (derived from trades) | Every trade of a portfolio (book), from every source system: its trades (every status, a status filter), upcoming payments, notional by product type and index, maturities, payments by month. |  | computed | Moves to compute in 2.9.0: [TRADING_GROUPINGS.md](../contracts/TRADING_GROUPINGS.md) |
+| `LTRD` | Legal entity trades (derived from trades) | Every trade a legal entity of the bank booked, from every source system: its trades (every status, a status filter), upcoming payments, notional by product type and index, maturities, payments by month. |  | computed | Moves to compute in 2.9.0: [TRADING_GROUPINGS.md](../contracts/TRADING_GROUPINGS.md) |
+| `ITRD` | Index trades (derived from trades) | Every trade with a leg on an index (the first leg that names one): its trades (every status, a status filter), upcoming payments, notional by product type and index, maturities, payments by month. |  | computed | Moves to compute in 2.9.0: [TRADING_GROUPINGS.md](../contracts/TRADING_GROUPINGS.md) |
 
 ## US equities (`us-equities`)
 

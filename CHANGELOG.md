@@ -17,6 +17,13 @@
 
 ## Unreleased
 
+- **Contracts of the 2.10.0 computed counterparty-risk measures (planned):** docs/contracts/NSET.md, SACCR.md, COLL.md, MC.md, EXP.md,
+  LIM.md, GRP.md, CVA.md and WWR.md. New inputs in the common risk lake: `netting-set-member` (membership as its own table), `csa`
+  (structured eligibility and haircuts), `simulation-run` and `exposure-path` (MtM per trade per grid date over the paths), `saccr-trade`,
+  `collateral-holding`, and optional `credit-path`. Each has its regulation and formulas (CRE52 for SA-CCR), pre-deal what-ifs, two
+  published official tables (node rows, and restricted counterparty rows), proposed DRS codes 5400–5489, the reconciliation of today's
+  stored figures, worked examples and open questions. The counterparty contract marks `NETTING_SETS[].NET_MTM` as computed.
+
 - **Contracts of the 2.9.0 computed market-risk measures (planned):** docs/contracts/TRADING_GROUPINGS.md, TVAL.md, STR.md, FRTB.md,
   SIMM.md and PNL.md. The shared inputs in the common risk lake are `valuation`, `sensitivity` (with the ISDA CRIF mapping),
   `scenario-pnl`, `market-move`, `pnl-event` and `risk-limit`, plus optional `default-risk`, `residual-risk`, `simm-addon` and
