@@ -22,7 +22,7 @@ version: 1.0.0
 title: Counterparty P&L and exposure
 datasets:
   trade: {dataset: pack.market-risk.trade-valuation@^1, role: fact}     # every trade's valuation (MTM, P&L) from every source system
-  netting_set: {dataset: pack.counterparty-risk.netting-set@^1, role: fact}
+  netting_set: {dataset: counterparty-exposure-official-netting-sets@^1, role: fact}   # the computed exposure of each netting set (2.9.0)
   counterparty: {dataset: pack.core.counterparty@^1, role: dimension}
   desk: {dataset: pack.core.desk@^1, role: dimension}
 relationships:
@@ -33,7 +33,7 @@ measures:
   MTM: {expr: sum(trade.MTM), format: signed0}
   P&L 1d: {expr: sum(trade.PNL_1D), format: signed0}
   Trades: {expr: count(trade)}
-  Exposure (EE peak): {expr: sum(netting_set.EE_PEAK), format: amount0}
+  Exposure (EE peak): {expr: sum(netting_set.PEAK_EE), format: amount0}
   Netting sets: {expr: count(netting_set)}
   MTM per exposure: {expr: "measure('MTM') / measure('Exposure (EE peak)')", format: signed2}
 security:

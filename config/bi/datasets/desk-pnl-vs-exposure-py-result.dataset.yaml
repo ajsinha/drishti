@@ -34,7 +34,7 @@ source:
   python: pnl-vs-exposure
   inputs:                       # each a model query, asked as the reader (their row rules and masks)
     pnl: { model: trading-risk@1, select: { fields: [counterparties.id, counterparties.NAME], measures: [P&L 1d, Trades] } }
-    exposure: { model: counterparty-exposure@1, select: { fields: [counterparties.id, counterparties.SECTOR], measures: [Exposure (EE peak), Exposure (PFE peak)] } }
+    exposure: { model: counterparty-exposure@1, select: { fields: [counterparties.id, counterparties.SECTOR], measures: [Exposure (EE peak), Exposure (PFE peak)] } }   # the computed peaks (2.9.0): the sets' EE peaks summed, the counterparty's own PFE
   params: { floor: 1.0 }
 grain: { keys: [counterparty] }   # the converter takes the first column as the key: check it says what one row is
 columns:

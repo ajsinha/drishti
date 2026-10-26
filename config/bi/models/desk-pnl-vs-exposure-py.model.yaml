@@ -36,6 +36,6 @@ datasets:                       # alias: the dataset it reads, and its role (a f
 
 measures:
   Desk P&L:           { expr: "sum(result.desk_pnl)", format: signed0 }
-  Exposure (EE peak): { expr: "sum(result.ee_peak)", format: amount0 }
+  Exposure (EE peak): { expr: "sum(result.ee_peak)", format: amount0, description: "The netting sets' computed peak expected exposure (counterparty-exposure's measure, from the official results) summed per counterparty: a reporting sum of the sets' peaks." }
   P&L per exposure:   { expr: "ratio(sum(result.desk_pnl), sum(result.ee_peak))", format: signed2, description: "Computed in YAML over the frame the Transform returned." }
   Counterparties:     { expr: "count(result)" }

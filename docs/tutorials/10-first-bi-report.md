@@ -411,20 +411,24 @@ up alone at the visual's fields, and the two answers are joined on the dimension
 
 ![The model designer on Trading and counterparty risk: the fact tables trades and netting_sets, the dimensions counterparties, desks and books, and the lines between them](img/t10/26-two-facts-model.jpg)
 
-You should see five datasets under their aliases: two **facts**, `trades` and `netting_sets`, and three **dimensions**, `counterparties`, `desks`
+You should see the datasets under their aliases: the **facts** `trades` and `netting_sets`, and the **dimensions** `counterparties`, `desks`
 and `books`, with a line for each relationship (from the many side to the one side): `trades.COUNTERPARTY → counterparties.id` and
 `netting_sets.COUNTERPARTY → counterparties.id`, the two paths that meet at the counterparty. (`trades.NETTING_SET → netting_sets.id` is an
-**inactive** relationship, `active: false`, so the two facts are never joined row to row.) Press the **Measures** tab.
+**inactive** relationship, `active: false`, so the two facts are never joined row to row.) Since 2.9.0 two more facts sit beside them,
+`set_exposure` and `cpty_exposure`: the exposure engine's official end-of-day results for each netting set and each counterparty (the datasets
+`counterparty-exposure-official-netting-sets` and `-counterparties`), related to `counterparties.id` the same way; the netting-set record no
+longer stores exposure. (The pictures were taken in 2.8.0 and show the five datasets only.) Press the **Measures** tab.
 
 ![The Measures tab: P&L 1d = sum(trades.PNL_1D), Exposure (EE peak) = sum(netting_sets.EE_PEAK), and P&L per exposure = measure('P&L 1d') / measure('Exposure (EE peak)')](img/t10/27-two-facts-measures.jpg)
 
-You should see `P&L 1d` (`sum(trades.PNL_1D)`), `Exposure (EE peak)` (`sum(netting_sets.EE_PEAK)`) and `P&L per exposure`,
+You should see `P&L 1d` (`sum(trades.PNL_1D)`), `Exposure (EE peak)` (`sum(set_exposure.PEAK_EE)`: the netting sets' computed peaks; the
+2.8.0 picture shows the retired `sum(netting_sets.EE_PEAK)`) and `P&L per exposure`,
 `measure('P&L 1d') / measure('Exposure (EE peak)')`: the ratio of the two sums, whatever the grouping. Now open the report **Desk P&L vs
 counterparty exposure** from the catalogue.
 
 ![The report: three cards, a Sector slicer, bars of P&L and exposure for the ten counterparties with the most exposure, a donut of exposure by sector, and a table](img/t10/29-two-datasets-report.jpg)
 
-You should see `Desk P&L` `91,932,705`, `Exposure (EE peak)` `40,648,705,220` and the ratio `0.00`, the ten counterparties with the most exposure
+You should see `Desk P&L` `91,932,705`, `Exposure (EE peak)` (`40,648,705,220` in the 2.8.0 pictures; the computed peaks of your date now) and the ratio `0.00`, the ten counterparties with the most exposure
 as pairs of bars, a donut of exposure by sector and the table of every counterparty. In the Sector slicer choose **Banking**.
 
 ![Banking chosen: the cards read 51,389,455 and 6,781,678,461, the bars keep only banks, the donut is Banking 100%](img/t10/30-sector-chosen.jpg)
@@ -435,7 +439,7 @@ slicer on the dimension filters **both** facts. Click a slice of the donut inste
 shrinks to the trades of your desks (the exposure does not: the model says `may-see-all` for the netting sets); open it as an analyst and the
 names read `•••` (the bars are ranked by the counterparty's **id**, which is not masked, so the report still works).
 
-**From the command line** the table of the report is one model query; the server says how it answered (the two facts aggregated alone, then
+**From the command line** the table of the report is one model query (the exposure figures below are 2.8.0's stored peaks; yours are the computed ones); the server says how it answered (the two facts aggregated alone, then
 joined):
 
 ```text
@@ -445,7 +449,7 @@ $ python3 tools/drishti.py bi mq --model trading-risk@1 --select counterparties.
 ["Summit Clearing LLC","Financial services",-31728275.089999977,2638994501.0,-0.01202286517761864]
 ["Aldershot Pension Trust","Pensions",9940482.839999989,2599390291.0,0.0038241594093882027]
 ["Harbor Point Bank","Banking",16248725.440000003,2552263980.0,0.006366396880310164]
-["2 fact tables, each aggregated alone at the query's fields and then joined: [trades, counterparties, netting_sets]","a measure that combines measures of different grains is worked out over the joined results: P&L per exposure"]
+["2 fact tables, each aggregated alone at the query's fields and then joined: [trades, counterparties, set_exposure]","a measure that combines measures of different grains is worked out over the joined results: P&L per exposure"]
 ```
 
 **In the YAML** (`config/bi/models/trading-risk.model.yaml`), the part that makes it work:
@@ -454,14 +458,19 @@ $ python3 tools/drishti.py bi mq --model trading-risk@1 --select counterparties.
 datasets:
   trades:         { dataset: trading-risk-trades, role: fact }
   netting_sets:   { dataset: trading-risk-netting-sets, role: fact }
+  set_exposure:   { dataset: counterparty-exposure-official-netting-sets, role: fact }    # the computed exposure (2.9.0)
+  cpty_exposure:  { dataset: counterparty-exposure-official-counterparties, role: fact }
   counterparties: { dataset: trading-risk-counterparties, role: dimension }
 relationships:                  # from the MANY side to the ONE side
   - { from: trades.COUNTERPARTY, to: counterparties.id }
   - { from: trades.NETTING_SET, to: netting_sets.id, active: false }
   - { from: netting_sets.COUNTERPARTY, to: counterparties.id }
+  - { from: set_exposure.COUNTERPARTY, to: counterparties.id }
+  - { from: cpty_exposure.COUNTERPARTY, to: counterparties.id }
 measures:
   P&L 1d:             { expr: "sum(trades.PNL_1D)", format: signed0 }
-  Exposure (EE peak): { expr: "sum(netting_sets.EE_PEAK)", format: amount0 }
+  Exposure (EE peak): { expr: "sum(set_exposure.PEAK_EE)", format: amount0 }        # a reporting sum of the sets' computed peaks
+  Exposure (PFE peak): { expr: "sum(cpty_exposure.PEAK_PFE_95)", format: amount0 }  # the counterparty's own row, never a sum of its sets' PFEs
   P&L per exposure:   { expr: "measure('P&L 1d') / measure('Exposure (EE peak)')", format: signed2 }
 ```
 

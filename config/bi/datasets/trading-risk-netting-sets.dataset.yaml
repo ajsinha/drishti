@@ -36,8 +36,6 @@ columns:
   TRADE_COUNT:  { type: integer }
   NET_MTM:      { type: decimal, format: signed0 }
   COLLATERAL:   { type: decimal, format: signed0 }
-  EE_PEAK:      { type: decimal, format: amount0 }
-  PFE_PEAK:     { type: decimal, format: amount0 }
   LIMIT:        { type: decimal, format: amount0 }
   UTILISATION:  { type: decimal }
 security:

@@ -26,21 +26,27 @@ expressions: 2                  # DEL v2, the Python-like expression language (d
 model: counterparty-exposure
 version: 1.0.0
 title: "Counterparty exposure"
-description: "Expected and potential future exposure (peak) of the netting sets, by counterparty, sector and country. No trades and no row rule: it answers \"how much could we lose to this counterparty\" on its own, and joins to other datasets (desk P&L, for one) through the counterparty."
+description: "Expected and potential future exposure (peak), computed by the exposure engine (the official end-of-day results), by counterparty, sector and country. No trades and no row rule: it answers \"how much could we lose to this counterparty\" on its own, and joins to other datasets (desk P&L, for one) through the counterparty."
 sample: true
 endorsement: "promoted"
 tags: [sample, counterparty-risk, multi-dataset]
 
 datasets:                       # alias: the dataset it reads, and its role (a fact is added up; a dimension groups and filters)
   netting_sets:   { dataset: counterparty-exposure-netting-sets, role: fact }
+  # since 2.9.0 the exposure figures are the exposure engine's official end-of-day results (risk-results/exposure-official-cpty), the
+  # latest result version of each scope and date: the netting-set and counterparty records no longer store them (EXP.md section 9.6)
+  set_exposure:   { dataset: counterparty-exposure-official-netting-sets, role: fact }
+  cpty_exposure:  { dataset: counterparty-exposure-official-counterparties, role: fact }
   counterparties: { dataset: counterparty-exposure-counterparties, role: dimension }
 
 relationships:                  # from the MANY side to the ONE side
   - { from: netting_sets.COUNTERPARTY, to: counterparties.id }
+  - { from: set_exposure.COUNTERPARTY, to: counterparties.id }
+  - { from: cpty_exposure.COUNTERPARTY, to: counterparties.id }
 
 measures:
-  Exposure (EE peak):  { expr: "sum(netting_sets.EE_PEAK)", format: amount0, description: "Sum of the netting sets' expected-exposure peaks." }
-  Exposure (PFE peak): { expr: "sum(netting_sets.PFE_PEAK)", format: amount0 }
+  Exposure (EE peak):  { expr: "sum(set_exposure.PEAK_EE)", format: amount0, description: "The netting sets' computed peak expected exposure (the exposure engine's official end-of-day result, latest version), summed over the netting sets of the visual's row: a reporting sum of the sets' peaks, not the peak of the counterparty's expected exposure." }
+  Exposure (PFE peak): { expr: "sum(cpty_exposure.PEAK_PFE_95)", format: amount0, description: "The counterparty's computed peak 95% PFE: the exposure engine's counterparty row (all its netting sets netted path by path), never a sum of its sets' PFEs. By counterparty it is that counterparty's own figure; over several counterparties (a sector, the total) it is a reporting sum of their PFEs, not the PFE of the group." }
   Netting sets:        { expr: "count(netting_sets)" }
   Collateral:          { expr: "sum(netting_sets.COLLATERAL)", format: signed0 }
 

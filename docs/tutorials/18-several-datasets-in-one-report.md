@@ -56,11 +56,11 @@ lives in.)
 
 You should see what one row is (*One row per trade valuation per business date*), the key (`id`), the time mode (*snapshot*), the source (*the
 trade-valuation kind of the market-risk pack, through risk-store*) and the columns: `COUNTERPARTY` **references** `counterparty`, `DESK` references
-`desk`, `NETTING_SET` references `netting-set`, `PORTFOLIO` references `book`, `TRADER_ID` references `trader`. Now open **Netting set** (search `netting`).
+`desk`, `NETTING_SET` references `netting-set`, `PORTFOLIO` references `book`, `TRADER_ID` references `trader`. Now open **Exposure official results: netting sets** (search `exposure official`).
 
 ![The Netting set dataset page: one row per netting set per business date, from the counterparty credit risk pack, with expected and potential future exposure peaks](img/t18/02-netting-set-dataset.jpg)
 
-You should see *One row per netting-set per business date*: a different grain. A netting set has a counterparty (`COUNTERPARTY` references it) and exposure figures (`EE_PEAK`, `PFE_PEAK`); it has **no desk**. Both datasets reach the counterparty, which is what lets them meet; only trades reach a desk.
+You should see one row per netting set per business date: a different grain. Since 2.9.0 a netting set's record keeps no exposure figure: exposure is computed by the exposure engine, and this dataset is its official end-of-day result for each netting set (the latest result version), with the set's counterparty (`COUNTERPARTY` references it) and the computed peaks (`PEAK_EE`, `PEAK_PFE_95`); it has **no desk**. (The pictures of this tutorial were taken in 2.8.0 on the netting-set kind's own dataset, **Netting set**, which then stored `EE_PEAK`; the steps are the same and the figures are now the engine's, so the totals you see differ from the ones printed here. The checks the tutorial makes hold as written.) Both datasets reach the counterparty, which is what lets them meet; only trades reach a desk.
 
 **From the command line** each dataset is asked through its **implicit model** (`dataset:<name>`: the dataset as a fact, its pack dimensions one hop away, a default measure per amount column):
 
@@ -71,16 +71,15 @@ Count of trade_valuation  Sum of MTM        Sum of PNL_1D
 15000                     2,796,077,088.55  91,932,704.89
 1 row(s)  as of 2026-10-16  plan p_907036d95aed07e7
 
-$ python3 tools/drishti.py bi mq --model dataset:pack.counterparty-risk.netting-set --measures "Count of netting_set,Sum of EE_PEAK"
-Count of netting_set  Sum of EE_PEAK
---------------------  --------------
-76                    40648705220
-1 row(s)  as of 2026-10-16  plan p_228389e508ea1ffc
-warning: connector 'credit-store' cannot scan netting-set as columns for table netting_set: reading documents one by one (slow for a large table; promote the columns in the connector's layout, or fewer columns)
+$ python3 tools/drishti.py bi mq --model counterparty-exposure@1 --measures "Exposure (EE peak)"
+Exposure (EE peak)
+------------------
+40648705220
+1 row(s)  as of 2026-10-16  (2.8.0's stored figure; yours is the computed one)
 ```
 
-(The warning is honest: the netting sets are few, 76 a day, so reading them as documents is quick; a big table would promote its columns in the
-connector's layout.)
+(The official results are a Delta table whose columns the pack's connector `exposure-results` promotes, so they are scanned as columns; the
+model `counterparty-exposure` reads the same dataset.)
 
 **The YAML** of a pack dataset is written by Drishti from the pack (read-only; **Narrow it** makes a dataset of your own that `extends` it, [DATASETS.md section 14](../guides/DATASETS.md#14-derivation-subset-filter-grain-derive-group-22-wave-a)). The part that matters here is the grain:
 
@@ -107,7 +106,7 @@ Keep four numbers: **15,000 trades, MTM 2,796,077,089, P&L 91,932,705** and **76
 
 ## Step 2 · One model, two facts
 
-Still on **Models**, press **New model**. Title it `CP risk`, choose the workspace **Exposure desk**, and tick **Counterparty**, **Desk**, **Netting set** and **Trade valuation**.
+Still on **Models**, press **New model**. Title it `CP risk`, choose the workspace **Exposure desk**, and tick **Counterparty**, **Desk**, **Exposure official results: netting sets** and **Trade valuation** (give it the alias `netting_set` in its box, so the names below match; the 2.8.0 pictures show the old **Netting set**).
 
 ![The New model form: title CP risk, workspace Exposure desk, Counterparty and Desk ticked among the datasets of every pack](img/t18/03-new-model.jpg)
 
@@ -116,11 +115,11 @@ so the names below match). The designer guessed each box's **role**: `trade` is 
 
 ![The canvas: counterparty, desk, trade and netting_set (now a fact) with their problems pinned; the suggestions netting_set.COUNTERPARTY to counterparty.id, trade.COUNTERPARTY to counterparty.id, trade.DESK to desk.id, and trade.NETTING_SET to netting_set.id proposed inactive because both are facts](img/t18/04-canvas-suggestions.jpg)
 
-You should see the suggestions, each one click: `netting_set.COUNTERPARTY → counterparty.id`, `trade.COUNTERPARTY → counterparty.id` and `trade.DESK → desk.id` with **Add**, and `trade.NETTING_SET → netting_set.id` with **Add as inactive** and the reason *two facts: proposed inactive; relate both to a shared dimension instead*. That reason is the whole idea of this tutorial: two facts meet **through a dimension they share**, never row to row. Press **Add** on the first three and **Dismiss** the fourth (and any other the packs offer, such as `trade.PORTFOLIO → book`, which this model does not need).
+You should see the suggestions, each one click: `netting_set.COUNTERPARTY → counterparty.id`, `trade.COUNTERPARTY → counterparty.id` and `trade.DESK → desk.id` with **Add**, and `trade.NETTING_SET → netting_set.id` with **Add as inactive** and the reason *two facts: proposed inactive; relate both to a shared dimension instead*. That reason is the whole idea of this tutorial: two facts meet **through a dimension they share**, never row to row. Press **Add** on the first three and **Dismiss** the fourth (and any other the packs offer, such as `trade.PORTFOLIO → book`, which this model does not need). Since 2.9.0 the fourth, `trade.NETTING_SET → netting_set.id`, is not offered at all (the netting-set fact is now the official results dataset, not the netting-set kind trades reference); the 2.8.0 picture above still shows it, and the lesson stands: the facts meet through the counterparty.
 
 ![The three relationships accepted, each many-to-one and from the pack, and the inactive suggestion between the two facts left over](img/t18/05-relationships.jpg)
 
-The pinned problems are gone and the lines are drawn (`* → 1`). Open the **Measures** tab. **New measure from a column** gives a measure with the right default: choose the dataset `trade`, the column `MTM`, **Add measure**; it arrives as `Sum of MTM`, `sum(trade.MTM)`, adding up. Rename it `MTM` in its row. Do the same for `trade` `PNL_1D` (`P&L 1d`), `trade` *count the rows* (`Trades`), `netting_set` `EE_PEAK` (`Exposure (EE peak)`) and `netting_set` *count the rows* (`Netting sets`):
+The pinned problems are gone and the lines are drawn (`* → 1`). Open the **Measures** tab. **New measure from a column** gives a measure with the right default: choose the dataset `trade`, the column `MTM`, **Add measure**; it arrives as `Sum of MTM`, `sum(trade.MTM)`, adding up. Rename it `MTM` in its row. Do the same for `trade` `PNL_1D` (`P&L 1d`), `trade` *count the rows* (`Trades`), `netting_set` `PEAK_EE` (`Exposure (EE peak)`) and `netting_set` *count the rows* (`Netting sets`):
 
 ![The Measures tab: MTM, P&L 1d, Trades, Exposure (EE peak) and Netting sets, each with its formula in the expression editor](img/t18/06-measures.jpg)
 
@@ -149,7 +148,7 @@ id: md_fc33f6b2
 title: Counterparty P&L and exposure
 datasets:
   trade: {dataset: pack.market-risk.trade-valuation@^1, role: fact}     # every trade's valuation (MTM, P&L) from every source system
-  netting_set: {dataset: pack.counterparty-risk.netting-set@^1, role: fact}
+  netting_set: {dataset: counterparty-exposure-official-netting-sets@^1, role: fact}
   counterparty: {dataset: pack.core.counterparty@^1, role: dimension}
   desk: {dataset: pack.core.desk@^1, role: dimension}
 relationships:
@@ -160,7 +159,7 @@ measures:
   MTM: { expr: sum(trade.MTM), format: signed0, id: m_mtm }
   P&L 1d: { expr: sum(trade.PNL_1D), format: signed0, id: m_p_l_1d }
   Trades: { expr: count(trade), id: m_trades }
-  Exposure (EE peak): { expr: sum(netting_set.EE_PEAK), format: amount0, id: m_exposure_ee_peak }
+  Exposure (EE peak): { expr: sum(netting_set.PEAK_EE), format: amount0, id: m_exposure_ee_peak }
   Netting sets: { expr: count(netting_set), id: m_netting_sets }
   MTM per exposure: { expr: "measure('MTM') / measure('Exposure (EE peak)')", format: signed2, id: m_mtm_per_exposure }
 security:
@@ -252,7 +251,6 @@ Technology           503,951,245.12  1482785337          0.34
 Utilities            10,866,798.56   5101072719          0.00
 11 row(s)  as of 2026-10-16  plan p_923c8678df005e9f
 warning: connector 'reference-store' cannot scan counterparty as columns for table counterparty: reading documents one by one (slow for a large table; promote the columns in the connector's layout, or fewer columns)
-warning: connector 'credit-store' cannot scan netting-set as columns for table netting_set: reading documents one by one (slow for a large table; promote the columns in the connector's layout, or fewer columns)
 warning: 2 fact tables, each aggregated alone at the query's fields and then joined: [trade, counterparty, netting_set]
 warning: a measure that combines measures of different grains is worked out over the joined results: MTM per exposure
 ```
@@ -277,7 +275,7 @@ warning: 2 fact tables, each aggregated alone at the query's fields and then joi
 
 ## Step 4 · Why Drishti does not join rows across facts
 
-If both facts reach the counterparty, why not join each trade to its counterparty's netting sets and add up? Because the honest answer needs care. Open **Analyse** and the notebook [cp-risk-extracts.notebook.yaml](data/cp-risk-extracts.notebook.yaml) (create it as an item in the workspace, then choose it in the **Notebook** box). It holds **two extracts** of the model, each built by the server for you (your row rules, your masks): `df` is the trades (`COUNTERPARTY`, `MTM`, `PNL_1D`), and `extract("exposure")` is the netting sets (`COUNTERPARTY`, `EE_PEAK`):
+If both facts reach the counterparty, why not join each trade to its counterparty's netting sets and add up? Because the honest answer needs care. Open **Analyse** and the notebook [cp-risk-extracts.notebook.yaml](data/cp-risk-extracts.notebook.yaml) (create it as an item in the workspace, then choose it in the **Notebook** box). It holds **two extracts** of the model, each built by the server for you (your row rules, your masks): `df` is the trades (`COUNTERPARTY`, `MTM`, `PNL_1D`), and `extract("exposure")` is the netting sets (`COUNTERPARTY`, `PEAK_EE`):
 
 ![Analyse with the notebook open: the first extract, 10,000 rows of trades from the model cp-risk (cut), and a second named exposure under More extracts](img/t18/13-two-extracts.jpg)
 
@@ -302,7 +300,7 @@ Its exposure is step 1's total again (`40,648,705,220`); its MTM is the extract'
 
 ```text
 $ curl -s -b jar -H 'Content-Type: application/json' -X POST $CONSOLE/bi/explore/python -d '{"extract":{"dataset":"mq:cp-risk@1","fields":["trade.COUNTERPARTY","trade.MTM","trade.PNL_1D"]},
-    "extracts":[{"name":"exposure","dataset":"mq:cp-risk@1","fields":["netting_set.COUNTERPARTY","netting_set.EE_PEAK"]}], "source":"..."}'
+    "extracts":[{"name":"exposure","dataset":"mq:cp-risk@1","fields":["netting_set.COUNTERPARTY","netting_set.PEAK_EE"]}], "source":"..."}'
 {"kind":"cell","stdout":"trade rows 10000  netting-set rows 76  rows after the row join 32293\nP&L 1d   true 95776737   row join 401769051\n...","inputRows":10000,"target":"server", ...}
 ```
 
@@ -339,7 +337,7 @@ The fix the message offers is the design: group by what both facts reach (the co
 $ python3 tools/drishti.py bi expr validate "measure('MTM') / measure('Exposure (EE peak)')" --model cp-risk@1
 valid  (del2, aggregate scope, type decimal)
 
-$ python3 tools/drishti.py bi expr validate "sum(trade.MTM) / sum(netting_set.EE_PEAK)" --model cp-risk@1
+$ python3 tools/drishti.py bi expr validate "sum(trade.MTM) / sum(netting_set.PEAK_EE)" --model cp-risk@1
 INVALID  (del2, aggregate scope, type decimal)
   error   DRS-9156  at 0-41: a model query would refuse this measure: the measures aggregate [trade, netting_set], which no many-to-one path connects: ask for them in separate queries
       fix: aggregate each fact in a measure of its own, or join the facts through a shared dimension
@@ -352,7 +350,7 @@ definitions, each worked out at its own grain first (and follows them if they ch
 is refused the same way when it is asked:
 
 ```text
-$ python3 tools/drishti.py bi mq --model cp-risk@1 --define "X=sum(trade.MTM / netting_set.EE_PEAK)" --measures X
+$ python3 tools/drishti.py bi mq --model cp-risk@1 --define "X=sum(trade.MTM / netting_set.PEAK_EE)" --measures X
 drishti: the server said 422 DRS-9156: DRS-9156 the measures aggregate [trade, netting_set], which no many-to-one path connects: ask for them in separate queries.
 Group by a field they all reach (counterparty.COUNTERPARTY_ID, counterparty.NAME, counterparty.LEI, counterparty.RATING) or ask the measures apart.
 ```

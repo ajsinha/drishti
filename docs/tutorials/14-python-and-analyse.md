@@ -426,11 +426,11 @@ server, with your row rules and masks. Open the **Python** tab and **Run** its c
 
 ![The join cell: df and extract("exposure") grouped and merged; the result is a table of counterparties with their P&L, exposure and P&L per exposure, largest exposure first](img/t14/14-analyse-join.jpg)
 
-You should see the cell (`df` is the trades; `extract("exposure")` is the netting sets) and a table of counterparties, the largest exposure first:
+You should see the cell (`df` is the trades; `extract("exposure")` is the netting sets' computed exposure, the official results since 2.9.0, so the figures differ from the 2.8.0 picture and text) and a table of counterparties, the largest exposure first:
 `CP-NORTHPLAINS` with exposure `2846661899` (the 76 netting sets are all in the second extract), then `CP-SUMMIT` and the rest. The P&L column adds up the
 trades **of the extract**, cut at 10,000 rows, so it is not the counterparty's full P&L: the server's figure is the Transform's, or Drishti SQL's below. The same join works in a SQL cell over the extract: the second extract is a table called
 `exposure` (`SELECT ... FROM extract JOIN exposure ON ...`); on the server, one model already joins its facts through the counterparty (Drishti SQL
-`FROM trades JOIN counterparties JOIN netting_sets`). When the pandas join is what you want to keep, press **Promote to a Transform**.
+`FROM trades JOIN counterparties JOIN set_exposure`). When the pandas join is what you want to keep, press **Promote to a Transform**.
 
 ![After promoting: "Python transform draft saved in your workspace: Join of P&L and exposure (transform). Each extract("name") became a parameter of run()..."](img/t14/15-promote-transform.jpg)
 
