@@ -200,7 +200,7 @@ def counterparty(c: Ctx):
     open_report(c, CPTY, wait_map=True)
     c.page.evaluate("window.scrollTo(0, 0)")
     c.save("21-counterparty.jpg")
-    click_mark(c.page, "by-counterparty", "Halcyon Shipping plc")
+    click_mark(c.page, "by-counterparty", "Verdant Agri Holdings")      # 2.9.0: the largest computed EE peak of the demo lake
     settled(c.page)
     c.page.wait_for_timeout(1500)
     c.save("22-counterparty-select.jpg")
@@ -249,6 +249,9 @@ def two_facts(c: Ctx):
     measures (P&L 1d from the trades, exposure from the netting sets, and the ratio of the two)."""
     login(c, height=900)
     go(c, "/bi/md/" + RISK_MODEL, wait="[data-md-root][data-ready=yes]", settle=1800)
+    used = c.page.locator("summary", has_text="Used by")
+    if used.count():                                     # fold the list of reports and live queries, so the canvas is in the picture
+        used.first.click()
     c.page.click('[data-tab="canvas"]')
     c.page.wait_for_timeout(1500)
     c.page.evaluate("window.scrollTo(0, 0)")

@@ -354,19 +354,19 @@ You should see the same figures as the bookmark gave. *Click a mark to* **highli
 
 ## Step 9 · Counterparty risk: slicers across packs, and drill-through
 
-Open the shipped report **Counterparty risk**. It reads the model **Trading and counterparty risk** (`trading-risk@1`), which joins three packs (trade valuations from `market-risk`, counterparties, desks and books from `core`, netting sets from `counterparty-risk`), and its two slicers, Sector and Country, are `scope: report`: they filter every page and reach the trades and the netting sets **through the relationships**.
+Open the shipped report **Counterparty risk**. It reads the model **Trading and counterparty risk** (`trading-risk@1`), which joins three packs (trade valuations from `market-risk`, counterparties, desks and books from `core`, netting sets and their computed exposure from `counterparty-risk`), and its two slicers, Sector and Country, are `scope: report`: they filter every page and reach the trades and the netting sets **through the relationships**.
 
 ![Counterparty risk: cards for exposure, slicers for sector and country, the ten counterparties with the highest exposure](img/t10/21-counterparty.jpg)
 
-You should see exposure cards (`40,648,705,220` EE peak, `92,604,754,421` PFE peak, `76` netting sets), the two dropdown slicers and a bar of the ten counterparties with the highest expected exposure (a **top 10** filter again), Northern Plains Energy Canada first. Click the bar of **Halcyon Shipping plc**.
+You should see exposure cards (`2,613,297,860` EE peak, `4,823,023,222` PFE peak, `76` netting sets), the two dropdown slicers and a bar of the ten counterparties with the highest expected exposure (a **top 10** filter again), Verdant Agri Holdings first. The exposure is the exposure engine's: its official end-of-day results for the date (since 2.9.0 a netting set no longer stores it). EE peak adds up the netting sets' computed peaks; PFE peak is each counterparty's own peak 95% PFE (its sets netted path by path), never a sum of its sets' PFEs. The demo's run covers 73 of the 76 netting sets (22 of the 24 counterparties), so three sets count as netting sets but carry no exposure. Click the bar of **Verdant Agri Holdings**.
 
-![Halcyon Shipping plc selected: a chip, the cards answering for it, its bar highlighted, and an arrow icon in the visual's header: drill through](img/t10/22-counterparty-select.jpg)
+![Verdant Agri Holdings selected: a chip, the cards answering for it, its bar highlighted, and an arrow icon in the visual's header: drill through](img/t10/22-counterparty-select.jpg)
 
-You should see a chip, the cards narrowed to that counterparty (`2,100,393,518` expected exposure) and, in the bar's header, a **drill-through** button. Press it.
+You should see a chip, the cards narrowed to that counterparty (`357,967,560` expected exposure, `579,773,568` PFE, `4` netting sets) and, in the bar's header, a **drill-through** button. Press it.
 
 ![The counterparty's own page: the name carried as a chip, four cards, and its trades with ids that open the terminal](img/t10/23-drill-through.jpg)
 
-You should see a second page, **Counterparty**, with the name carried in as a chip **and in the address** (so the link can be shared), a **Back** button, four cards (`608` trades, notional `157,772,189,914`) and a table of its trades, highest MTM first, whose ids are links: `MX-30003139` (a MUREX zero-coupon swap of DESK-RATES) opens that trade's view in the terminal.
+You should see a second page, **Counterparty**, with the name carried in as a chip **and in the address** (so the link can be shared), a **Back** button, four cards (`576` trades, notional `157,075,666,627`) and a table of its trades, highest MTM first, whose ids are links: `MX-30000477` (a MUREX zero-coupon swap of DESK-RATES) opens that trade's view in the terminal.
 
 **From the command line**, the bar and the drill-through page are two model queries:
 
@@ -375,18 +375,18 @@ $ python3 tools/drishti.py bi mq --model trading-risk@1 --select counterparties.
     --measures "Exposure (EE peak),Exposure (PFE peak)" --sort="-Exposure (EE peak)" --limit 3
 counterparties.NAME            Exposure (EE peak)  Exposure (PFE peak)
 -----------------------------  ------------------  -------------------
-Northern Plains Energy Canada  2,846,661,899.00    6,618,488,915.00
-Summit Clearing LLC            2,638,994,501.00    6,267,982,439.00
-Aldershot Pension Trust        2,599,390,291.00    5,900,834,180.00
-3 row(s)  as of 2026-10-16  plan p_c8d200416d786832
+Verdant Agri Holdings          357,967,560.00      579,773,568.00
+Aldershot Pension Trust        276,416,536.00      395,309,044.00
+Lumen Semiconductor AG         246,199,964.00      378,348,501.00
+3 row(s)  as of 2026-10-26
 $ python3 tools/drishti.py bi mq --model trading-risk@1 --select trades.TRADE_ID,trades.DESK,trades.PRODUCT_TYPE --measures MTM \
-    --where "counterparties.NAME=Halcyon Shipping plc" --sort=-MTM --limit 3
+    --where "counterparties.NAME=Verdant Agri Holdings" --sort=-MTM --limit 3
 trades.TRADE_ID  trades.DESK  trades.PRODUCT_TYPE  MTM
 ---------------  -----------  -------------------  --------------
-MX-30003139      DESK-RATES   ZC_SWAP              109,538,863.39
-MX-30001819      DESK-RATES   ACCRETING_SWAP       77,363,035.99
-MX-30002230      DESK-RATES   OIS                  73,904,909.87
-3 row(s)  as of 2026-10-16  plan p_95fd0ea4dc7544fa
+MX-30000477      DESK-RATES   ZC_SWAP              180,296,948.16
+MX-30000098      DESK-RATES   SWAPTION_EUR         109,975,217.40
+MX-30000487      DESK-RATES   ACCRETING_SWAP       86,607,994.99
+3 row(s)  as of 2026-10-26
 ```
 
 **In the YAML** the drill-through is two lines of `config/bi/reports/counterparty-risk.report.yaml`: the bar's `drillthrough: { page: counterparty, field: counterparties.NAME }` and the target page's `drillthrough: { fields: [counterparties.NAME] }`.
@@ -409,46 +409,47 @@ up alone at the visual's fields, and the two answers are joined on the dimension
 **In the UI.** Choose **Models** and open **Trading and counterparty risk** (`trading-risk`, `model 1.0.0 · published`) in the designer, on the
 **Canvas** tab.
 
-![The model designer on Trading and counterparty risk: the fact tables trades and netting_sets, the dimensions counterparties, desks and books, and the lines between them](img/t10/26-two-facts-model.jpg)
+![The model designer on Trading and counterparty risk: the fact tables trades, netting_sets and cpty_exposure on the canvas, with the lines between them](img/t10/26-two-facts-model.jpg)
 
 You should see the datasets under their aliases: the **facts** `trades` and `netting_sets`, and the **dimensions** `counterparties`, `desks`
 and `books`, with a line for each relationship (from the many side to the one side): `trades.COUNTERPARTY → counterparties.id` and
 `netting_sets.COUNTERPARTY → counterparties.id`, the two paths that meet at the counterparty. (`trades.NETTING_SET → netting_sets.id` is an
-**inactive** relationship, `active: false`, so the two facts are never joined row to row.) Since 2.9.0 two more facts sit beside them,
-`set_exposure` and `cpty_exposure`: the exposure engine's official end-of-day results for each netting set and each counterparty (the datasets
-`counterparty-exposure-official-netting-sets` and `-counterparties`), related to `counterparties.id` the same way; the netting-set record no
-longer stores exposure. (The pictures were taken in 2.8.0 and show the five datasets only.) Press the **Measures** tab.
+**inactive** relationship, `active: false`, so the two facts are never joined row to row.) Two more facts sit beside them, `set_exposure`
+and `cpty_exposure` (scroll the canvas to see them all): the exposure engine's official end-of-day results for each netting set and each
+counterparty (the datasets `counterparty-exposure-official-netting-sets` and `-counterparties`), related to `counterparties.id` the same way;
+since 2.9.0 the netting-set record no longer stores exposure. Press the **Measures** tab.
 
-![The Measures tab: P&L 1d = sum(trades.PNL_1D), Exposure (EE peak) = sum(netting_sets.EE_PEAK), and P&L per exposure = measure('P&L 1d') / measure('Exposure (EE peak)')](img/t10/27-two-facts-measures.jpg)
+![The Measures tab of the model: 17 measures, New measure from a column, Write a formula and Quick calculation above the list](img/t10/27-two-facts-measures.jpg)
 
-You should see `P&L 1d` (`sum(trades.PNL_1D)`), `Exposure (EE peak)` (`sum(set_exposure.PEAK_EE)`: the netting sets' computed peaks; the
-2.8.0 picture shows the retired `sum(netting_sets.EE_PEAK)`) and `P&L per exposure`,
+Scroll to the list. You should see `P&L 1d` (`sum(trades.PNL_1D)`), `Exposure (EE peak)` (`sum(set_exposure.PEAK_EE)`: the netting sets'
+computed peaks), `Exposure (PFE peak)` (`sum(cpty_exposure.PEAK_PFE_95)`: each counterparty's own) and `P&L per exposure`,
 `measure('P&L 1d') / measure('Exposure (EE peak)')`: the ratio of the two sums, whatever the grouping. Now open the report **Desk P&L vs
 counterparty exposure** from the catalogue.
 
 ![The report: three cards, a Sector slicer, bars of P&L and exposure for the ten counterparties with the most exposure, a donut of exposure by sector, and a table](img/t10/29-two-datasets-report.jpg)
 
-You should see `Desk P&L` `91,932,705`, `Exposure (EE peak)` (`40,648,705,220` in the 2.8.0 pictures; the computed peaks of your date now) and the ratio `0.00`, the ten counterparties with the most exposure
+You should see `Desk P&L` `91,932,705`, `Exposure (EE peak)` `2,613,297,860` and the ratio `0.04`, the ten counterparties with the most exposure
 as pairs of bars, a donut of exposure by sector and the table of every counterparty. In the Sector slicer choose **Banking**.
 
-![Banking chosen: the cards read 51,389,455 and 6,781,678,461, the bars keep only banks, the donut is Banking 100%](img/t10/30-sector-chosen.jpg)
+![Banking chosen: the cards read 51,389,455 and 430,980,479, the bars keep only banks, the donut is Banking 100%](img/t10/30-sector-chosen.jpg)
 
-You should see a chip `Sector: Banking`, the cards narrowed to the banks (`Desk P&L` `51,389,455`, exposure `6,781,678,461`), four banks in the
-bar chart (Harbor Point Bank, Tokai Mutual Trust Bank, Rheintal Landesbank, Harbourline Bank London Branch) and the donut a single slice: one
+You should see a chip `Sector: Banking`, the cards narrowed to the banks (`Desk P&L` `51,389,455`, exposure `430,980,479`), four banks in the
+bar chart (Rheintal Landesbank, Tokai Mutual Trust Bank, Harbor Point Bank, and Harbourline Bank London Branch with P&L but no exposure: the demo's
+exposure run does not cover it) and the donut a single slice: one
 slicer on the dimension filters **both** facts. Click a slice of the donut instead and the same happens. Open the report as a desk head and the P&L
-shrinks to the trades of your desks (the exposure does not: the model says `may-see-all` for the netting sets); open it as an analyst and the
+shrinks to the trades of your desks (the exposure does not: the model says `may-see-all` for the netting sets and their exposure); open it as an analyst and the
 names read `•••` (the bars are ranked by the counterparty's **id**, which is not masked, so the report still works).
 
-**From the command line** the table of the report is one model query (the exposure figures below are 2.8.0's stored peaks; yours are the computed ones); the server says how it answered (the two facts aggregated alone, then
+**From the command line** the table of the report is one model query; the server says how it answered (the two facts aggregated alone, then
 joined):
 
 ```text
 $ python3 tools/drishti.py bi mq --model trading-risk@1 --select counterparties.NAME,counterparties.SECTOR \
     --measures "P&L 1d,Exposure (EE peak),P&L per exposure" --sort="-Exposure (EE peak)" --limit 4 --json | jq -c '.rows[], .meta.warnings'
-["Northern Plains Energy Canada","Utilities",-4950242.0,2846661899.0,-0.0017389638023886727]
-["Summit Clearing LLC","Financial services",-31728275.089999977,2638994501.0,-0.01202286517761864]
-["Aldershot Pension Trust","Pensions",9940482.839999989,2599390291.0,0.0038241594093882027]
-["Harbor Point Bank","Banking",16248725.440000003,2552263980.0,0.006366396880310164]
+["Verdant Agri Holdings","Agriculture",-1922002.510000001,357967560.0,-0.005369208623261843]
+["Aldershot Pension Trust","Pensions",9940482.839999989,276416536.0,0.03596196878756917]
+["Lumen Semiconductor AG","Technology",4904332.2199999895,246199964.0,0.019920117535029327]
+["Tokai Mutual Trust Bank","Banking",17466808.070000015,215361523.0,0.08110459021038784]
 ["2 fact tables, each aggregated alone at the query's fields and then joined: [trades, counterparties, set_exposure]","a measure that combines measures of different grains is worked out over the joined results: P&L per exposure"]
 ```
 
