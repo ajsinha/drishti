@@ -1,0 +1,53 @@
+# Project Drishti · Any data. Any domain. One grammar.
+#
+# Copyright (c) 2026 Ashutosh Sinha <ajsinha@gmail.com>.
+# All rights reserved.
+#
+# PROPRIETARY AND CONFIDENTIAL.
+#
+# This file is the confidential and proprietary property of Ashutosh Sinha.
+# Unauthorised copying, use, modification, distribution or disclosure of this
+# file, via any medium, is strictly prohibited except with the express prior
+# written permission of the copyright holder.
+#
+# See the LICENSE file in the root of this repository for the full terms.
+
+# Hand-written from the Drishti UI kit (config/ui-kit/fragments) and the pack's fragment (sutras/common/holder-list).
+rachana: 1
+sutra: fund-holder
+version: 1
+description: "The reverse look-through: every fund of the pack that holds one us-equities company, by value, and the share of the company they own."
+doc:
+  summary: "The funds holding one company, by value; how many, what they hold together and the share of the company it is."
+  description: >-
+    One page per us-equities company held by at least one of the pack's funds. The strip: the company, how many funds and ETFs hold
+    it, their value together, the shares they hold and the share of its outstanding shares that is, its average and largest weight in
+    a fund. The table lists every fund (a click on a fund opens it) with the company's weight, value and shares; the company opens
+    its us-equities page. Every holding counts, not only the 600 a fund page keeps.
+  params: {}
+  emits: []
+  expects: []
+  examples:
+    - "/v/fund-holder/AAPL"
+    - "HELD NVDA"
+  since: "2.9.2"
+match: { kind: fund-holder, priority: 10 }
+title: { pill: Funds · Held by funds, id: $.TICKER, with: $.NAME }
+strip:
+  - { label: Company, bind: "link($.COMPANY, 'us-company', $.NAME)" }
+  - { label: Funds, bind: $.FUNDS, fmt: amount0, emphasis: true }
+  - { label: of which ETFs, bind: $.ETFS, fmt: amount0 }
+  - { label: Value held, bind: $.TOTAL_VALUE, fmt: compact }
+  - { label: Share of its shares, bind: $.PCT_OF_SHARES, fmt: weight2 }
+  - { label: Average weight, bind: $.AVG_WEIGHT, fmt: weight3 }
+  - { label: Largest weight, bind: $.MAX_WEIGHT, fmt: weight2 }
+panels:
+  - { use: funds/holder-list@1, with: { id: holders, title: "Funds holding ${$.NAME}, by value (a fund opens its page)", rec: $, key: F2, code: HLD } }
+  - { use: ranked-bars@1, with: { id: by-weight, title: "The ten largest weights in a fund (%)", rows: $.TOP_WEIGHTS, label: FUND, value: PCT, fmt: weight2, area: right, key: F3 } }
+  - use: explainer-note@1
+    with:
+      title: About this page
+      area: right
+      text: "Public data (U.S. public domain): every holding of the company in the pack's 200 funds, as each filed it on Form N-PORT for its own report date, shares and value as filed. The share of the company's shares compares the shares held with those outstanding on its latest 10-K cover (us-equities); it is left empty where the filed count cannot be compared. Source: tools/publicdata/funds.py."
+  - { use: data-provenance@1 }
+keys: { F5: "link($.COMPANY, 'us-company', $.NAME)", F9: raw }

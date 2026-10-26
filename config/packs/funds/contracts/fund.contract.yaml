@@ -1,0 +1,1507 @@
+# Project Drishti · Any data. Any domain. One grammar.
+#
+# Copyright (c) 2026 Ashutosh Sinha <ajsinha@gmail.com>.
+# All rights reserved.
+#
+# PROPRIETARY AND CONFIDENTIAL.
+#
+# This file is the confidential and proprietary property of Ashutosh Sinha.
+# Unauthorised copying, use, modification, distribution or disclosure of this
+# file, via any medium, is strictly prohibited except with the express prior
+# written permission of the copyright holder.
+#
+# See the LICENSE file in the root of this repository for the full terms.
+
+# Data contract of the fund kind (command FUND): docs/contracts/README.md section 16.
+# Drafted by `drishti.py contract bootstrap fund`; reviewed by the pack owner (2.9.2): the review points are resolved in notes.
+kind: fund
+mnemonic: FUND
+pack: funds
+version: '1.0'
+class: fundamental
+status: active
+title: Fund or ETF
+description: 'A US mutual fund or ETF from SEC public data: the fact sheet, the look-through holdings with derivatives and counterparties, and
+  the fund against its index.'
+source: 'public data: SEC Form N-PORT, Form N-CEN and risk/return summary data sets, SEC and Nasdaq Trader ticker files, GLEIF (tools/publicdata/funds.py)'
+grain: One row per fund or etf, keyed by TICKER.
+key:
+- TICKER
+dated-by: snapshot
+cadence:
+  frequency: static
+  due: quarterly, when the SEC publishes the data sets (tools/publicdata/funds.py)
+storage:
+  connector: funds-store
+  plugin: delta
+  domain: funds
+  table: <root>/funds/fund/
+  columns:
+  - TICKER
+  - NAME
+  - TYPE
+  - TICKERS
+  - ADVISER
+  - INDEX_ID
+  - NET_ASSETS
+  - EXPENSE_RATIO
+  - HOLDING_COUNT
+  - REPORT_DATE
+  - RANK
+  test-data:
+  - data/testdata/funds/fund
+fields:
+- name: TICKER
+  type: id
+  presence: required
+  description: 'The fund''s ticker: its ETF share class where it has one, else its oldest share class; a unit investment trust''s listed ticker.
+    Source: SEC company_tickers_mf.json, N-CEN SECURITY_EXCHANGE, the Nasdaq Trader directory, company_tickers_exchange.json.'
+  example: QQQ
+- name: NAME
+  type: text
+  presence: required
+  description: 'The series name as filed (upper-case names title-cased). Source: N-PORT FUND_REPORTED_INFO.SERIES_NAME.'
+  example: Invesco QQQ Trust, Series 1
+- name: TYPE
+  type: text
+  presence: required
+  description: 'ETF, Mutual fund, Mutual fund with an ETF share class, or ETF (unit investment trust). Source: N-CEN FUND_REPORTED_INFO.IS_ETF,
+    ETF.tsv, the Nasdaq Trader directory.'
+  example: ETF
+  enum:
+  - ETF
+  - Mutual fund
+  - Mutual fund with an ETF share class
+  - ETF (unit investment trust)
+- name: FUND_KEY
+  type: text
+  presence: required
+  description: 'The SEC series id, or CIK<cik> for a fund without one (a unit investment trust). Source: N-PORT FUND_REPORTED_INFO.SERIES_ID,
+    REGISTRANT.CIK.'
+  example: S000101292
+- name: SERIES_ID
+  type: id
+  presence: optional
+  description: 'The SEC series id (S and nine digits). Source: N-PORT FUND_REPORTED_INFO.SERIES_ID.'
+  example: S000101292
+- name: CIK
+  type: text
+  presence: required
+  description: 'The registrant''s SEC Central Index Key (ten digits). Source: N-PORT REGISTRANT.CIK.'
+  example: 0001067839
+- name: REGISTRANT
+  type: text
+  presence: required
+  description: 'The trust or company the series belongs to. Source: N-PORT REGISTRANT.REGISTRANT_NAME.'
+  example: Invesco QQQ Trust, Series 1
+- name: LEI
+  type: text
+  presence: required
+  description: 'The fund''s (series'') LEI; opens its GLEIF record. Source: N-PORT FUND_REPORTED_INFO.SERIES_LEI.'
+  example: 549300VY6FEJBCIMET58
+- name: REGISTRANT_LEI
+  type: text
+  presence: required
+  description: 'The registrant''s LEI. Source: N-PORT REGISTRANT.LEI.'
+  example: 549300VY6FEJBCIMET58
+- name: TICKERS
+  type: text
+  presence: required
+  description: 'Every share class ticker, the fund''s own first; the type-ahead matches any of them (FUND VTSAX opens VTI). Source: SEC company_tickers_mf.json.'
+  example: QQQ
+- name: CLASSES
+  type: record list
+  presence: required
+  description: 'Each share class: id, ticker, name, expense ratio and three-month return. Source: company_tickers_mf.json, N-CEN SHARES_OUTSTANDING,
+    risk/return summary, N-PORT MONTHLY_TOTAL_RETURN.'
+- name: CLASS_COUNT
+  type: integer
+  presence: required
+  unit: classes
+  description: 'How many share classes the fund has. Source: company_tickers_mf.json.'
+  example: 1
+- name: PRIMARY_CLASS
+  type: text
+  presence: optional
+  description: 'The class id of TICKER; its fees and returns are the page''s. Source: company_tickers_mf.json.'
+  example: C000271435
+- name: IS_ETF
+  type: boolean
+  presence: required
+  description: 'True when the fund is, or has, an exchange-traded share class. Source: N-CEN IS_ETF, ETF.tsv, SECURITY_EXCHANGE; the Nasdaq Trader
+    directory.'
+  example: true
+- name: IS_INDEX
+  type: boolean
+  presence: required
+  description: 'True when the fund says it is an index fund, or its name names a tracked index. Source: N-CEN FUND_REPORTED_INFO.IS_INDEX.'
+  example: true
+- name: IS_FUND_OF_FUNDS
+  type: boolean
+  presence: required
+  description: 'True when the fund invests in other funds. Source: N-CEN FUND_REPORTED_INFO.IS_FUND_OF_FUND.'
+  example: false
+- name: IS_TARGET_DATE
+  type: boolean
+  presence: required
+  description: 'True for a target-date fund. Source: N-CEN FUND_REPORTED_INFO.IS_TARGET_DATE.'
+  example: false
+- name: IS_MASTER_FEEDER
+  type: boolean
+  presence: required
+  description: 'True when the fund is part of a master-feeder structure. Source: N-CEN FUND_REPORTED_INFO.IS_MASTER_FEEDER.'
+  example: false
+- name: INDEX_ID
+  type: id
+  presence: optional
+  description: 'The us-equities index the fund tracks (SP500, NDX, DJIA), matched by its name; opens IDX. Source: computed from the name (N-CEN
+    says whether a fund is an index fund, not which index).'
+  example: NDX
+- name: EXCHANGE
+  type: text
+  presence: optional
+  description: 'Where the ETF share class lists. Source: the Nasdaq Trader directory; N-CEN SECURITY_EXCHANGE.'
+  example: Nasdaq
+- name: CREATION_UNIT
+  type: amount
+  presence: optional
+  unit: shares
+  description: 'Shares in one creation unit of the ETF. Source: N-CEN ETF.NUM_SHARES_PER_CREATION_UNIT.'
+  example: 100000.0
+- name: AP_COUNT
+  type: integer
+  presence: optional
+  unit: firms
+  description: 'How many authorised participants the ETF reports. Source: N-CEN AUTHORIZED_PARTICIPANT.'
+  example: 40
+- name: AUTHORISED_PARTICIPANTS
+  type: record list
+  presence: required
+  description: 'The ten most active authorised participants by purchases and redemptions. Source: N-CEN AUTHORIZED_PARTICIPANT.'
+- name: ADVISER
+  type: text
+  presence: optional
+  description: 'The fund''s investment adviser. Source: N-CEN ADVISER.ADVISER_NAME.'
+  example: The Vanguard Group, Inc.
+- name: ADVISER_LEI
+  type: text
+  presence: optional
+  description: 'The adviser''s LEI; opens its GLEIF record. Source: N-CEN ADVISER.ADVISER_LEI.'
+  example: 5493002789CX3L0CJP65
+- name: SUB_ADVISERS
+  type: text
+  presence: optional
+  description: 'Up to six sub-advisers. Source: N-CEN ADVISER (sub-advisers).'
+  example: Geode Capital Management, LLC
+- name: CUSTODIAN
+  type: text
+  presence: optional
+  description: 'The fund''s custodian (not a sub-custodian). Source: N-CEN CUSTODIAN.CUSTODIAN_NAME.'
+  example: JPMorgan Chase Bank NA
+- name: CUSTODIAN_LEI
+  type: text
+  presence: optional
+  description: 'The custodian''s LEI. Source: N-CEN CUSTODIAN.CUSTODIAN_LEI.'
+  example: 7H6GLXDRUGQFU57RNE97
+- name: ADMINISTRATOR
+  type: text
+  presence: optional
+  description: 'The fund''s administrator (not a sub-administrator). Source: N-CEN ADMIN.ADMIN_NAME.'
+  example: THE VANGUARD GROUP, INC.
+- name: TRANSFER_AGENT
+  type: text
+  presence: optional
+  description: 'The fund''s transfer agent. Source: N-CEN TRANSFER_AGENT.TRANSFERAGENT_NAME.'
+  example: The Vanguard Group, Inc.
+- name: AUDITOR
+  type: text
+  presence: optional
+  description: 'The registrant''s independent public accountant. Source: N-CEN PUBLIC_ACCOUNTANT.PUB_ACCOUNTANT_NAME.'
+  example: PRICEWATERHOUSECOOPERS LLP
+- name: AUDITOR_LEI
+  type: text
+  presence: optional
+  description: 'The accountant''s LEI. Source: N-CEN PUBLIC_ACCOUNTANT.PUB_ACCOUNTANT_LEI.'
+  example: 5493002GVO7EO8RNNS37
+  enum:
+  - 254900WYZPGQGKV3RF07
+  - 254900Y3CIB1KF938C31
+  - 5493002GVO7EO8RNNS37
+  - N/A
+- name: LENDS_SECURITIES
+  type: boolean
+  presence: required
+  description: 'True when the fund lent securities in the year. Source: N-CEN FUND_REPORTED_INFO.DID_LEND_SECURITIES.'
+  example: false
+- name: NCEN_PERIOD
+  type: date
+  presence: optional
+  description: 'The fiscal year end of the N-CEN report used. Source: N-CEN SUBMISSION.REPORT_ENDING_PERIOD.'
+  example: '2025-12-31'
+- name: NCEN_ACCESSION
+  type: text
+  presence: optional
+  description: 'The N-CEN filing used. Source: N-CEN SUBMISSION.ACCESSION_NUMBER.'
+  example: 0000036405-26-000103
+- name: GLEIF_RELATIONSHIPS
+  type: record list
+  presence: required
+  description: 'The fund''s relationships in GLEIF: managed by, sub-fund of (its umbrella), feeder to. Source: GLEIF golden copy level 2 (rr.csv).'
+- name: RANK
+  type: integer
+  presence: required
+  description: 'The fund''s rank by net assets among the funds with a ticker. Source: computed.'
+  example: 7
+- name: REPORT_DATE
+  type: date
+  presence: required
+  description: 'The date the N-PORT report is as of. Source: N-PORT SUBMISSION.REPORT_DATE.'
+  example: '2026-06-30'
+- name: FILED
+  type: date
+  presence: required
+  description: 'The date the N-PORT report was filed. Source: N-PORT SUBMISSION.FILING_DATE.'
+  example: '2026-08-28'
+- name: ACCESSION
+  type: text
+  presence: required
+  description: 'The N-PORT filing used. Source: N-PORT SUBMISSION.ACCESSION_NUMBER.'
+  example: 0001067839-26-000030
+- name: NPORT_URL
+  type: text
+  presence: required
+  description: 'The filing''s folder on EDGAR. Source: computed from CIK and ACCESSION.'
+  example: https://www.sec.gov/Archives/edgar/data/1067839/00010678392…
+- name: TOTAL_ASSETS
+  type: amount
+  presence: required
+  unit: USD
+  description: 'Total assets. Source: N-PORT FUND_REPORTED_INFO.TOTAL_ASSETS.'
+  example: 492478331786.57
+- name: NET_ASSETS
+  type: amount
+  presence: required
+  unit: USD
+  description: 'Net assets: what the 200 are chosen by. Source: N-PORT FUND_REPORTED_INFO.NET_ASSETS.'
+  example: 490103179941.66
+- name: EXPENSE_RATIO
+  type: rate
+  presence: optional
+  unit: '%'
+  description: 'The net expense ratio of the fund''s share class (gross where no net one is filed). Source: risk/return summary NetExpensesOverAssets,
+    ExpensesOverAssets.'
+  example: 0.18
+- name: GROSS_EXPENSE_RATIO
+  type: rate
+  presence: optional
+  unit: '%'
+  description: 'Total annual operating expenses before waivers. Source: risk/return summary ExpensesOverAssets.'
+  example: 0.18
+- name: MANAGEMENT_FEE
+  type: amount
+  presence: optional
+  unit: '%'
+  description: 'The management fee. Source: risk/return summary ManagementFeesOverAssets.'
+  example: 0.18
+- name: TURNOVER
+  type: amount
+  presence: optional
+  unit: '%'
+  description: 'Portfolio turnover in the last fiscal year. Source: risk/return summary PortfolioTurnoverRate.'
+  example: 7.98
+- name: PROSPECTUS_FILED
+  type: date
+  presence: optional
+  description: 'The date of the risk/return summary used. Source: risk/return summary sub.tsv filed.'
+  example: '2025-12-19'
+- name: ANNUAL_RETURNS
+  type: record list
+  presence: required
+  description: 'Up to ten calendar-year total returns of the share class (the prospectus bar chart). Source: risk/return summary AnnualReturnPercent,
+    AnnlRtrPct.'
+- name: RETURN_LAST_YEAR
+  type: amount
+  presence: optional
+  unit: '%'
+  description: 'The latest calendar-year return filed. Source: risk/return summary AnnualReturnPercent, AnnlRtrPct.'
+  example: 25.58
+- name: RETURN_YEAR
+  type: integer
+  presence: optional
+  description: 'The year of RETURN_LAST_YEAR. Source: risk/return summary.'
+  example: 2024
+- name: RETURN_3M
+  type: amount
+  presence: required
+  unit: '%'
+  description: 'The share class''s three monthly returns of the report compounded. Source: N-PORT MONTHLY_TOTAL_RETURN.'
+  example: 27.64
+- name: FLOWS
+  type: record list
+  presence: required
+  description: 'Each of the report''s three months: sales, reinvestments, redemptions, net flow and the class''s return. Source: N-PORT FUND_REPORTED_INFO
+    SALES_FLOW_MON1-3 ....'
+- name: SALES
+  type: amount
+  presence: required
+  unit: USD
+  description: 'The three months'' sales. Source: N-PORT SALES_FLOW_MON1-3.'
+  example: 216564959011.07
+- name: REDEMPTIONS
+  type: amount
+  presence: required
+  unit: USD
+  description: 'The three months'' redemptions. Source: N-PORT REDEMPTION_FLOW_MON1-3.'
+  example: 205720139470.74
+- name: REINVESTMENT
+  type: amount
+  presence: required
+  unit: USD
+  description: 'The three months'' reinvested distributions. Source: N-PORT REINVESTMENT_FLOW_MON1-3.'
+  example: 0
+- name: NET_FLOW
+  type: amount
+  presence: required
+  unit: USD
+  description: 'Sales plus reinvestment less redemptions over the three months. Source: computed.'
+  example: 10844819540.33
+- name: HOLDING_COUNT
+  type: integer
+  presence: required
+  unit: holdings
+  description: 'Every holding the fund reported. Source: N-PORT FUND_REPORTED_HOLDING.'
+  example: 105
+- name: HOLDINGS_SHOWN
+  type: integer
+  presence: required
+  unit: holdings
+  description: 'Holdings kept in HOLDINGS (the 600 largest by value). Source: computed.'
+  example: 105
+- name: HOLDINGS_REST_COUNT
+  type: integer
+  presence: required
+  unit: holdings
+  description: 'Holdings not kept. Source: computed.'
+  example: 0
+- name: HOLDINGS_REST_PCT
+  type: rate
+  presence: required
+  unit: '% of net assets'
+  description: 'The weight of the holdings not kept. Source: computed.'
+  example: 0
+- name: HOLDINGS_REST_VALUE
+  type: amount
+  presence: required
+  unit: USD
+  description: 'The value of the holdings not kept. Source: computed.'
+  example: 0
+- name: TOP10_PCT
+  type: rate
+  presence: required
+  unit: '% of net assets'
+  description: 'The weight of the ten largest holdings. Source: computed.'
+  example: 45.0
+- name: TOP50_PCT
+  type: rate
+  presence: required
+  unit: '% of net assets'
+  description: 'The weight of the fifty largest holdings. Source: computed.'
+  example: 87.448
+- name: HHI
+  type: amount
+  presence: required
+  description: 'The sum of the squared weights (as fractions): 1 is one holding, near 0 is many small ones. Source: computed.'
+  example: 0.02927
+- name: LARGEST
+  type: text
+  presence: required
+  description: 'The largest holding by value. Source: computed.'
+  example: NVIDIA Corp.
+- name: LARGEST_PCT
+  type: rate
+  presence: required
+  unit: '% of net assets'
+  description: 'The largest holding''s weight. Source: computed.'
+  example: 7.596757
+- name: WITH_LEI
+  type: integer
+  presence: required
+  unit: holdings
+  description: 'Holdings whose issuer LEI was filed. Source: computed.'
+  example: 101
+- name: EQUITY_PCT
+  type: rate
+  presence: required
+  unit: '% of net assets'
+  description: 'The weight of common equity (asset category EC). Source: computed.'
+  example: 99.927
+- name: US_COMPANY_PCT
+  type: rate
+  presence: required
+  unit: '% of net assets'
+  description: 'The weight of the holdings that are us-equities companies. Source: computed.'
+  example: 88.825
+- name: US_COMPANIES
+  type: integer
+  presence: required
+  unit: companies
+  description: 'How many us-equities companies the fund holds. Source: computed.'
+  example: 73
+- name: BY_ASSET
+  type: record list
+  presence: required
+  description: 'The weight by N-PORT asset category. Source: computed.'
+- name: BY_ISSUER_TYPE
+  type: record list
+  presence: required
+  description: 'The weight by issuer type. Source: computed.'
+- name: BY_COUNTRY
+  type: record list
+  presence: required
+  description: 'The weight by country, the largest ten. Source: computed.'
+- name: BY_SECTOR
+  type: record list
+  presence: required
+  description: 'The weight of the us-equities companies held, by SIC division. Source: computed.'
+- name: DERIVATIVE_COUNT
+  type: integer
+  presence: required
+  unit: positions
+  description: 'How many derivatives the fund holds. Source: computed.'
+  example: 1
+- name: DERIVATIVES_NOTIONAL
+  type: amount
+  presence: required
+  unit: USD
+  description: 'The notionals added up, by size. Source: computed.'
+  example: 327348711.0
+- name: DERIVATIVES
+  type: record list
+  presence: required
+  description: 'The fifty largest derivative positions by notional, with their counterparties. Source: N-PORT part C.11.'
+- name: COUNTERPARTIES
+  type: record list
+  presence: required
+  description: 'The counterparties of the derivatives and repos, by notional: positions, notional, value. Source: N-PORT DERIVATIVE_COUNTERPARTY,
+    REPURCHASE_COUNTERPARTY.'
+- name: COUNTERPARTY_COUNT
+  type: integer
+  presence: required
+  unit: counterparties
+  description: 'How many counterparties. Source: computed.'
+  example: 1
+- name: HOLDINGS
+  type: record list
+  presence: required
+  description: 'The 600 largest holdings by value, each with its identifiers and links. Source: N-PORT FUND_REPORTED_HOLDING, IDENTIFIERS.'
+- name: VIEWS
+  type: record list
+  presence: required
+  description: 'The page''s tabs: Look-through holdings, and the fund against its index when there is one. Source: computed.'
+- name: PROVENANCE
+  type: record
+  presence: required
+  description: 'Nested: see nested PROVENANCE'
+- name: MOST_HELD_COMPANY
+  type: id
+  presence: optional
+  description: 'The largest us-equities company the fund holds. Source: computed.'
+  example: NVDA
+  link: us-company
+- name: MOST_HELD_NAME
+  type: text
+  presence: optional
+  description: 'That company''s name. Source: us-equities.'
+  example: Nvidia
+- name: ALSO_HELD_BY
+  type: record list
+  presence: required
+  description: 'The ten other funds holding that company the most, by value. Source: computed from fund-holder.'
+- name: VS_INDEX
+  type: record
+  presence: optional
+  description: 'The fund against its tracked index (or the S&P 500 for reference); index weights computed from SEC data. Source: computed.'
+- name: ACTIVE_SHARE
+  type: rate
+  presence: optional
+  unit: '%'
+  description: 'Half the sum of the differences between the fund''s and the index''s weights (VS_INDEX). Source: computed.'
+  example: 27.31
+nested:
+  CLASSES[]:
+  - name: CLASS_ID
+    type: id
+    presence: required
+    description: 'The SEC class id (C and nine digits). Source: company_tickers_mf.json classId.'
+    example: C000271435
+  - name: TICKER
+    type: id
+    presence: required
+    description: 'The share class''s ticker. Source: company_tickers_mf.json symbol.'
+    example: QQQ
+  - name: EXPENSE_RATIO
+    type: rate
+    presence: optional
+    unit: '%'
+    description: 'The class''s net expense ratio (gross where no net one is filed). Source: risk/return summary NetExpensesOverAssets, ExpensesOverAssets.'
+    example: 0.18
+  - name: RETURN_3M
+    type: amount
+    presence: optional
+    unit: '%'
+    description: 'The class''s three monthly returns compounded. Source: N-PORT MONTHLY_TOTAL_RETURN.'
+    example: 27.64
+  - name: CLASS_NAME
+    type: text
+    presence: optional
+    description: 'The class''s name (Admiral Shares, Class A ...). Source: N-CEN SHARES_OUTSTANDING.CLASS_NAME.'
+    example: Investor Shares
+  GLEIF_RELATIONSHIPS[]:
+  - name: TYPE
+    type: text
+    presence: required
+    description: 'Managed by, Sub-fund of or Feeder to. Source: GLEIF rr.csv Relationship.RelationshipType.'
+    example: Managed by
+    enum:
+    - Managed by
+    - Sub-fund of
+    - Feeder to
+  - name: LEI
+    type: text
+    presence: required
+    description: 'The manager''s, umbrella''s or master fund''s LEI. Source: GLEIF rr.csv Relationship.EndNode.NodeID.'
+    example: EJW8VXOT5RJ3PPMVEB49
+  - name: STATUS
+    type: text
+    presence: required
+    description: 'ACTIVE or INACTIVE. Source: GLEIF rr.csv Relationship.RelationshipStatus.'
+    example: ACTIVE
+  ANNUAL_RETURNS[]:
+  - name: YEAR
+    type: text
+    presence: required
+    description: 'The calendar year. Source: risk/return summary num.tsv ddate.'
+    example: '2015'
+  - name: RETURN
+    type: amount
+    presence: required
+    unit: '%'
+    description: 'The year''s total return. Source: risk/return summary AnnualReturnPercent, AnnlRtrPct.'
+    example: 9.53
+  FLOWS[]:
+  - name: MONTH
+    type: text
+    presence: required
+    description: 'The month (yyyy-mm), the third being the report''s. Source: computed from REPORT_DATE.'
+    example: 2026-04
+    enum:
+    - 2026-03
+    - 2026-04
+    - 2026-05
+    - 2026-06
+    - 2026-07
+  - name: SALES
+    type: amount
+    presence: required
+    unit: USD
+    description: 'Shares sold (subscriptions), by value. Source: N-PORT FUND_REPORTED_INFO.SALES_FLOW_MONn.'
+    example: 56960297589.31
+  - name: REINVESTMENT
+    type: amount
+    presence: required
+    unit: USD
+    description: 'Distributions reinvested. Source: N-PORT FUND_REPORTED_INFO.REINVESTMENT_FLOW_MONn.'
+    example: 0.0
+  - name: REDEMPTIONS
+    type: amount
+    presence: required
+    unit: USD
+    description: 'Shares redeemed, by value. Source: N-PORT FUND_REPORTED_INFO.REDEMPTION_FLOW_MONn.'
+    example: 46510905488.86
+  - name: NET_FLOW
+    type: amount
+    presence: required
+    unit: USD
+    description: 'Sales plus reinvestment less redemptions. Source: computed.'
+    example: 10449392100.45
+  - name: RETURN
+    type: amount
+    presence: required
+    unit: '%'
+    description: 'The share class''s total return in the month. Source: N-PORT MONTHLY_TOTAL_RETURN.MONTHLY_TOTAL_RETURNn.'
+    example: 15.656032
+  BY_ASSET[]:
+  - name: KEY
+    type: text
+    presence: required
+    description: 'The code grouped by (an asset category, issuer type, country or SIC division). Source: computed.'
+    example: EC
+  - name: LABEL
+    type: text
+    presence: required
+    description: 'The code in words; Other (n) gathers the smallest. Source: computed.'
+    example: Common equity
+  - name: PCT
+    type: rate
+    presence: required
+    unit: '% of net assets'
+    description: 'The holdings'' weight added up. Source: computed from N-PORT PERCENTAGE.'
+    example: 99.927
+  - name: VALUE
+    type: amount
+    presence: required
+    unit: USD
+    description: 'The holdings'' value added up. Source: computed from N-PORT CURRENCY_VALUE.'
+    example: 489744804272.0
+  - name: COUNT
+    type: integer
+    presence: required
+    unit: holdings
+    description: 'The number of holdings in the group. Source: computed.'
+    example: 102
+  BY_ISSUER_TYPE[]:
+  - name: KEY
+    type: text
+    presence: required
+    description: 'The code grouped by (an asset category, issuer type, country or SIC division). Source: computed.'
+    example: CORP
+  - name: LABEL
+    type: text
+    presence: required
+    description: 'The code in words; Other (n) gathers the smallest. Source: computed.'
+    example: Corporate
+  - name: PCT
+    type: rate
+    presence: required
+    unit: '% of net assets'
+    description: 'The holdings'' weight added up. Source: computed from N-PORT PERCENTAGE.'
+    example: 99.927
+  - name: VALUE
+    type: amount
+    presence: required
+    unit: USD
+    description: 'The holdings'' value added up. Source: computed from N-PORT CURRENCY_VALUE.'
+    example: 489744804272.0
+  - name: COUNT
+    type: integer
+    presence: required
+    unit: holdings
+    description: 'The number of holdings in the group. Source: computed.'
+    example: 102
+  BY_COUNTRY[]:
+  - name: KEY
+    type: text
+    presence: required
+    description: 'The code grouped by (an asset category, issuer type, country or SIC division). Source: computed.'
+    example: US
+  - name: LABEL
+    type: text
+    presence: required
+    description: 'The code in words; Other (n) gathers the smallest. Source: computed.'
+    example: US
+  - name: PCT
+    type: rate
+    presence: required
+    unit: '% of net assets'
+    description: 'The holdings'' weight added up. Source: computed from N-PORT PERCENTAGE.'
+    example: 94.927
+  - name: VALUE
+    type: amount
+    presence: required
+    unit: USD
+    description: 'The holdings'' value added up. Source: computed from N-PORT CURRENCY_VALUE.'
+    example: 465238883928.0
+  - name: COUNT
+    type: integer
+    presence: required
+    unit: holdings
+    description: 'The number of holdings in the group. Source: computed.'
+    example: 93
+  BY_SECTOR[]:
+  - name: KEY
+    type: text
+    presence: required
+    description: 'The code grouped by (an asset category, issuer type, country or SIC division). Source: computed.'
+    example: Manufacturing
+  - name: LABEL
+    type: text
+    presence: required
+    description: 'The code in words; Other (n) gathers the smallest. Source: computed.'
+    example: Manufacturing
+  - name: PCT
+    type: rate
+    presence: required
+    unit: '% of net assets'
+    description: 'The holdings'' weight added up. Source: computed from N-PORT PERCENTAGE.'
+    example: 55.896
+  - name: VALUE
+    type: amount
+    presence: required
+    unit: USD
+    description: 'The holdings'' value added up. Source: computed from N-PORT CURRENCY_VALUE.'
+    example: 273949722310.0
+  - name: COUNT
+    type: integer
+    presence: required
+    unit: holdings
+    description: 'The number of holdings in the group. Source: computed.'
+    example: 37
+  DERIVATIVES[]:
+  - name: NAME
+    type: text
+    presence: required
+    description: 'The issuer''s name as the fund filed it. Source: N-PORT FUND_REPORTED_HOLDING.ISSUER_NAME.'
+    example: N/A
+  - name: TITLE
+    type: text
+    presence: required
+    description: 'The title of the security or contract. Source: N-PORT FUND_REPORTED_HOLDING.ISSUER_TITLE.'
+    example: CME E-Mini NASDAQ 100 Index Future
+  - name: DERIVATIVE
+    type: text
+    presence: required
+    description: 'FWD, FUT, SWP, OPT, SWO, WAR or OTH for a derivative; empty otherwise. Source: N-PORT FUND_REPORTED_HOLDING.DERIVATIVE_CAT.'
+    example: FUT
+    enum:
+    - FWD
+    - FUT
+    - SWP
+    - OPT
+    - SWO
+    - WAR
+    - OTH
+  - name: PAYOFF
+    type: text
+    presence: optional
+    description: 'Long, Short or N/A. Source: N-PORT FUND_REPORTED_HOLDING.PAYOFF_PROFILE.'
+    example: N/A
+    enum:
+    - Long
+    - Short
+    - N/A
+  - name: CURRENCY
+    type: text
+    presence: required
+    description: 'The currency the holding is denominated in. Source: N-PORT FUND_REPORTED_HOLDING.CURRENCY_CODE.'
+    example: USD
+  - name: VALUE
+    type: amount
+    presence: optional
+    unit: USD
+    description: 'The holding''s value as reported, in US dollars. Source: N-PORT FUND_REPORTED_HOLDING.CURRENCY_VALUE.'
+    example: 8409789.3
+  - name: PCT
+    type: rate
+    presence: optional
+    unit: '% of net assets'
+    description: 'The holding''s value over the fund''s net assets. Source: N-PORT FUND_REPORTED_HOLDING.PERCENTAGE.'
+    example: 0.001716
+  - name: CPTY
+    type: text
+    presence: required
+    description: 'The derivative''s or repo''s counterparty (''(cleared)'' for a centrally cleared repo). Source: N-PORT DERIVATIVE_COUNTERPARTY,
+      REPURCHASE_COUNTERPARTY.'
+    example: Chicago Mercantile Exchange Inc.
+  - name: CPTY_LEI
+    type: text
+    presence: required
+    description: 'The counterparty''s LEI; opens its GLEIF record. Source: N-PORT DERIVATIVE_COUNTERPARTY_LEI, REPURCHASE_COUNTERPARTY.LEI.'
+    example: SNZ2OJLFK8MNNCLQOF39
+  - name: NOTIONAL
+    type: amount
+    presence: optional
+    description: 'A derivative''s notional (a forward''s amount bought), as filed. Source: N-PORT FUT_FWD_NONFOREIGNCUR_CONTRACT, NONFOREIGN_EXCHANGE_SWAP,
+      FWD_FOREIGNCUR_CONTRACT_SWAP, SWAPTION_OPTION_WARNT_DERIV.'
+    example: 327348710.7
+  - name: EXPIRY
+    type: date
+    presence: optional
+    description: 'A derivative''s expiry, termination or settlement date; a repo''s maturity. Source: N-PORT the derivative tables, REPURCHASE_AGREEMENT.MATURITY_DATE.'
+    example: '2026-09-18'
+  - name: UNREALIZED
+    type: amount
+    presence: optional
+    unit: USD
+    description: 'A derivative''s unrealised appreciation (negative: depreciation). Source: N-PORT the derivative tables, UNREALIZED_APPRECIATION.'
+    example: 8409789.3
+  - name: REFERENCE
+    type: text
+    presence: optional
+    description: 'The index or basket a derivative references. Source: N-PORT DESC_REF_INDEX_BASKET.INDEX_NAME.'
+    example: NASDAQ 100 Stock Index
+  - name: TYPE
+    type: text
+    presence: required
+    description: 'The derivative category in words (Future, Swap, Option ...). Source: computed from DERIVATIVE_CAT.'
+    example: Future
+    enum:
+    - Forward
+    - Future
+    - Swap
+    - Option
+    - Swaption
+    - Warrant
+    - Other
+  COUNTERPARTIES[]:
+  - name: NAME
+    type: text
+    presence: required
+    description: 'The counterparty. Source: N-PORT DERIVATIVE_COUNTERPARTY_NAME.'
+    example: Chicago Mercantile Exchange Inc.
+  - name: LEI
+    type: text
+    presence: optional
+    description: 'The counterparty''s LEI; opens its GLEIF record. Source: N-PORT DERIVATIVE_COUNTERPARTY_LEI.'
+    example: SNZ2OJLFK8MNNCLQOF39
+  - name: POSITIONS
+    type: integer
+    presence: required
+    unit: positions
+    description: 'Positions with the counterparty. Source: computed.'
+    example: 1
+  - name: NOTIONAL
+    type: amount
+    presence: required
+    unit: USD
+    description: 'Their notionals added up, by size. Source: computed.'
+    example: 327348711.0
+  - name: VALUE
+    type: amount
+    presence: required
+    unit: USD
+    description: 'Their values added up. Source: computed.'
+    example: 8409789.0
+  HOLDINGS[]:
+  - name: NAME
+    type: text
+    presence: required
+    description: 'The issuer''s name as the fund filed it. Source: N-PORT FUND_REPORTED_HOLDING.ISSUER_NAME.'
+    example: NVIDIA Corp.
+  - name: TITLE
+    type: text
+    presence: required
+    description: 'The title of the security or contract. Source: N-PORT FUND_REPORTED_HOLDING.ISSUER_TITLE.'
+    example: NVIDIA Corp.
+  - name: CUSIP
+    type: text
+    presence: optional
+    description: 'The security''s CUSIP (none for N/A or zeros). Source: N-PORT FUND_REPORTED_HOLDING.ISSUER_CUSIP.'
+    example: 67066G104
+  - name: ISIN
+    type: text
+    presence: optional
+    description: 'The security''s ISIN where the fund gave one. Source: N-PORT IDENTIFIERS.IDENTIFIER_ISIN.'
+    example: US67066G1040
+  - name: LEI
+    type: text
+    presence: optional
+    description: 'The issuer''s Legal Entity Identifier; opens its GLEIF record (gleif pack). Source: N-PORT FUND_REPORTED_HOLDING.ISSUER_LEI.'
+    example: 549300S4KLFTLO7GSQ80
+  - name: ASSET
+    type: text
+    presence: required
+    description: 'N-PORT''s asset category: EC common equity, EP preferred, DBT debt, ABS-MBS, ABS-ASBS, ABS-CBDO, ABS-O, DCO, DCR, DE, DFE, DIR,
+      DO derivatives, SN, LON, RA repo, STIV, RE, COMM, OTHER. Source: N-PORT FUND_REPORTED_HOLDING.ASSET_CAT.'
+    example: EC
+  - name: ISSUER_TYPE
+    type: text
+    presence: required
+    description: 'CORP, UST, USGA, USGSE, MUN, NUSS (non-US sovereign), PF (private fund), RF (registered fund), OTHER. Source: N-PORT FUND_REPORTED_HOLDING.ISSUER_TYPE.'
+    example: CORP
+  - name: COUNTRY
+    type: text
+    presence: required
+    description: 'The country of investment or issuer (ISO 3166). Source: N-PORT FUND_REPORTED_HOLDING.INVESTMENT_COUNTRY.'
+    example: US
+  - name: CURRENCY
+    type: text
+    presence: required
+    description: 'The currency the holding is denominated in. Source: N-PORT FUND_REPORTED_HOLDING.CURRENCY_CODE.'
+    example: USD
+  - name: VALUE
+    type: amount
+    presence: required
+    unit: USD
+    description: 'The holding''s value as reported, in US dollars. Source: N-PORT FUND_REPORTED_HOLDING.CURRENCY_VALUE.'
+    example: 37231945639.46
+  - name: PCT
+    type: rate
+    presence: required
+    unit: '% of net assets'
+    description: 'The holding''s value over the fund''s net assets. Source: N-PORT FUND_REPORTED_HOLDING.PERCENTAGE.'
+    example: 7.596757
+  - name: BALANCE
+    type: amount
+    presence: required
+    description: 'Shares, principal amount or contracts held, in UNIT. Source: N-PORT FUND_REPORTED_HOLDING.BALANCE.'
+    example: 186075994.0
+  - name: UNIT
+    type: text
+    presence: required
+    description: 'NS shares, PA principal amount, NC contracts, OU other units. Source: N-PORT FUND_REPORTED_HOLDING.UNIT.'
+    example: NS
+    enum:
+    - NS
+    - PA
+    - NC
+    - OU
+  - name: PAYOFF
+    type: text
+    presence: required
+    description: 'Long, Short or N/A. Source: N-PORT FUND_REPORTED_HOLDING.PAYOFF_PROFILE.'
+    example: Long
+    enum:
+    - Long
+    - Short
+    - N/A
+  - name: COMPANY
+    type: id
+    presence: optional
+    description: 'The us-equities company the holding is (by ticker, else by the issuer''s LEI for an equity); opens USEQ. Source: computed: the
+      committed us-equities companies.'
+    example: NVDA
+    link: us-company
+  - name: SECTOR
+    type: text
+    presence: optional
+    description: 'The SIC division of the us-equities company. Source: us-equities us-company.SECTOR (SEC EDGAR).'
+    example: Manufacturing
+  - name: ALSO_IN
+    type: integer
+    presence: optional
+    unit: funds
+    description: 'How many other funds of the pack hold the same company. Source: computed from every fund''s holdings.'
+    example: 86
+  - name: TICKER
+    type: id
+    presence: optional
+    description: 'The security''s ticker where the fund gave one, written as us-equities writes it (BRK/B is BRK-B). Source: N-PORT IDENTIFIERS.IDENTIFIER_TICKER.'
+    example: NVDA
+  - name: DERIVATIVE
+    type: text
+    presence: optional
+    description: 'FWD, FUT, SWP, OPT, SWO, WAR or OTH for a derivative; empty otherwise. Source: N-PORT FUND_REPORTED_HOLDING.DERIVATIVE_CAT.'
+    example: SWP
+    enum:
+    - FWD
+    - FUT
+    - SWP
+    - OPT
+    - SWO
+    - WAR
+    - OTH
+  - name: CPTY
+    type: text
+    presence: optional
+    description: 'The derivative''s or repo''s counterparty (''(cleared)'' for a centrally cleared repo). Source: N-PORT DERIVATIVE_COUNTERPARTY,
+      REPURCHASE_COUNTERPARTY.'
+    example: LCH Ltd.
+  - name: CPTY_LEI
+    type: text
+    presence: optional
+    description: 'The counterparty''s LEI; opens its GLEIF record. Source: N-PORT DERIVATIVE_COUNTERPARTY_LEI, REPURCHASE_COUNTERPARTY.LEI.'
+    example: F226TOH6YD6XJB17KS62
+  - name: NOTIONAL
+    type: amount
+    presence: optional
+    description: 'A derivative''s notional (a forward''s amount bought), as filed. Source: N-PORT FUT_FWD_NONFOREIGNCUR_CONTRACT, NONFOREIGN_EXCHANGE_SWAP,
+      FWD_FOREIGNCUR_CONTRACT_SWAP, SWAPTION_OPTION_WARNT_DERIV.'
+    example: 3516800000.0
+  - name: EXPIRY
+    type: date
+    presence: optional
+    description: 'A derivative''s expiry, termination or settlement date; a repo''s maturity. Source: N-PORT the derivative tables, REPURCHASE_AGREEMENT.MATURITY_DATE.'
+    example: '2051-06-16'
+  - name: UNREALIZED
+    type: amount
+    presence: optional
+    unit: USD
+    description: 'A derivative''s unrealised appreciation (negative: depreciation). Source: N-PORT the derivative tables, UNREALIZED_APPRECIATION.'
+    example: 1208405914.91
+  - name: REFERENCE
+    type: text
+    presence: optional
+    description: 'The index or basket a derivative references. Source: N-PORT DESC_REF_INDEX_BASKET.INDEX_NAME.'
+    example: S&P500 EMINI FUT Sep26
+  - name: FUND
+    type: text
+    presence: optional
+    description: 'The pack''s fund the holding is (a fund of funds holding another fund); opens FUND. Source: computed: the share class tickers.'
+    example: ABALX
+  VIEWS[]:
+  - name: VIEW
+    type: text
+    presence: required
+    description: 'LOOK_THROUGH or VS_INDEX. Source: computed.'
+    example: LOOK_THROUGH
+    enum:
+    - LOOK_THROUGH
+    - VS_INDEX
+  - name: TITLE
+    type: text
+    presence: required
+    description: 'The tab''s title. Source: computed.'
+    example: Look-through holdings
+  PROVENANCE:
+  - name: SOURCE
+    type: text
+    presence: required
+    description: 'Where the data comes from. Source: written by tools/packgen/funds/build.py.'
+    example: 'U.S. Securities and Exchange Commission: Form N-PORT, Form …'
+  - name: LICENCE
+    type: text
+    presence: required
+    description: 'The source''s licence (public domain). Source: written by tools/packgen/funds/build.py.'
+    example: Public domain (U.S. Government work); SEC fair access polic…
+  - name: RETRIEVED_AT
+    type: date
+    presence: required
+    description: 'The date the data sets were downloaded. Source: the download cache.'
+    example: '2026-10-26'
+  - name: NOTE
+    type: text
+    presence: required
+    description: 'What the document holds and from which filings. Source: written by tools/packgen/funds/build.py.'
+    example: Holdings, flows and returns as the fund filed them on Form …
+    enum:
+    - Holdings, flows and returns as the fund filed them on Form N-PORT for 2026-05-31; census facts from its newest Form N-CEN; fees and calendar-year
+      returns from its newest prospectus risk/return summary. No prices or NAV history.
+    - Holdings, flows and returns as the fund filed them on Form N-PORT for 2026-06-30; census facts from its newest Form N-CEN; fees and calendar-year
+      returns from its newest prospectus risk/return summary. No prices or NAV history.
+    - Holdings, flows and returns as the fund filed them on Form N-PORT for 2026-07-31; census facts from its newest Form N-CEN; fees and calendar-year
+      returns from its newest prospectus risk/return summary. No prices or NAV history.
+  ALSO_HELD_BY[]:
+  - name: FUND
+    type: text
+    presence: required
+    description: 'The fund''s ticker; opens FUND. Source: computed.'
+    example: VTI
+  - name: FUND_NAME
+    type: text
+    presence: required
+    description: 'The fund''s name. Source: N-PORT FUND_REPORTED_INFO.SERIES_NAME.'
+    example: Vanguard Total Stock Market Index Fund
+  - name: TYPE
+    type: text
+    presence: required
+    description: 'The fund''s type. Source: N-CEN FUND_REPORTED_INFO.IS_ETF, the Nasdaq Trader directory.'
+    example: Mutual fund with an ETF share class
+    enum:
+    - ETF
+    - Mutual fund
+    - Mutual fund with an ETF share class
+    - ETF (unit investment trust)
+  - name: PCT
+    type: rate
+    presence: required
+    unit: '% of net assets'
+    description: 'The company''s weight in the fund (every line of it added). Source: N-PORT FUND_REPORTED_HOLDING.PERCENTAGE.'
+    example: 6.3554
+  - name: VALUE
+    type: amount
+    presence: required
+    unit: USD
+    description: 'The value the fund holds. Source: N-PORT FUND_REPORTED_HOLDING.CURRENCY_VALUE.'
+    example: 146036467451.0
+  - name: SHARES
+    type: amount
+    presence: required
+    unit: shares
+    description: 'The shares the fund holds (balances in shares only). Source: N-PORT FUND_REPORTED_HOLDING.BALANCE.'
+    example: 729853903.0
+  - name: REPORT_DATE
+    type: date
+    presence: required
+    description: 'The date the fund''s report is as of. Source: N-PORT SUBMISSION.REPORT_DATE.'
+    example: '2026-06-30'
+  - name: NET_ASSETS
+    type: amount
+    presence: required
+    unit: USD
+    description: 'The fund''s net assets. Source: N-PORT FUND_REPORTED_INFO.NET_ASSETS.'
+    example: 2297839156547.89
+  VS_INDEX:
+  - name: INDEX_ID
+    type: id
+    presence: required
+    description: 'The us-equities index. Source: us-equities index-membership.'
+    example: NDX
+  - name: INDEX_NAME
+    type: text
+    presence: required
+    description: 'Its name. Source: us-equities index-membership.'
+    example: Nasdaq-100
+  - name: BASIS
+    type: text
+    presence: required
+    description: 'tracks (the fund tracks it) or reference (an equity fund compared with the S&P 500). Source: computed.'
+    example: tracks
+    enum:
+    - tracks
+    - reference
+  - name: WEIGHTING
+    type: text
+    presence: required
+    description: 'market capitalisation computed from SEC data, or equal weights. Source: computed.'
+    example: market capitalisation computed from SEC data
+  - name: MEMBERS
+    type: integer
+    presence: required
+    unit: companies
+    description: 'The index''s members as the us-equities pack lists them. Source: us-equities index-membership (Wikidata).'
+    example: 77
+  - name: MEMBERS_WEIGHTED
+    type: integer
+    presence: required
+    unit: companies
+    description: 'Members with a market capitalisation the filings support. Source: computed.'
+    example: 67
+  - name: MEMBERS_NOT_WEIGHTED
+    type: text
+    presence: optional
+    description: 'Members left out of the weights, by ticker. Source: computed.'
+    example: BIDU, BKNG, CTAS, EXPE, GOOGL, MSTR, PDD, PLTR, SHOP, TEAM
+    enum:
+    - ACGL, ACN, AOS, BF-B, BIO, BKNG, BRK-B, CME, CTAS, EL, EXPE, FFIV, FOXA, FRT, GOOGL, HRL, LEN, LH, MA, META, MKC, NWSA, PKG, RL, SPG, STZ,
+      TAP, TSN, UAA, UHS, XRX
+    - BIDU, BKNG, CTAS, EXPE, GOOGL, MSTR, PDD, PLTR, SHOP, TEAM
+  - name: MEMBERS_HELD
+    type: amount
+    presence: required
+    unit: companies
+    description: 'Listed members the fund holds. Source: computed.'
+    example: 55
+  - name: FUND_IN_INDEX_PCT
+    type: rate
+    presence: required
+    unit: '% of net assets'
+    description: 'The fund''s weight in the listed members. Source: computed.'
+    example: 69.44
+  - name: NOT_IN_INDEX_PCT
+    type: rate
+    presence: required
+    unit: '% of net assets'
+    description: 'The rest: other companies, cash, futures. Source: computed.'
+    example: 30.56
+  - name: ACTIVE_SHARE
+    type: rate
+    presence: required
+    unit: '%'
+    description: 'Half the sum of the absolute weight differences over the members weighted. Source: computed.'
+    example: 27.31
+  - name: LARGEST_DIFF_COMPANY
+    type: text
+    presence: required
+    description: 'The company with the largest difference. Source: computed.'
+    example: AAPL
+  - name: LARGEST_DIFF_NAME
+    type: text
+    presence: required
+    description: 'Its name. Source: us-equities.'
+    example: Apple Inc.
+  - name: LARGEST_DIFF
+    type: amount
+    presence: required
+    unit: '% points'
+    description: 'Fund weight less index weight. Source: computed.'
+    example: -7.469
+  - name: AS_OF
+    type: date
+    presence: required
+    description: 'The fund''s report date. Source: N-PORT SUBMISSION.REPORT_DATE.'
+    example: '2026-06-30'
+  - name: ROWS
+    type: record list
+    presence: required
+    description: 'The 25 largest weights in either, side by side. Source: computed.'
+  - name: SECTORS
+    type: record list
+    presence: required
+    description: 'Fund and index weights by SIC division. Source: computed.'
+  VS_INDEX.ROWS[]:
+  - name: COMPANY
+    type: id
+    presence: required
+    description: 'The us-equities company. Source: us-equities.'
+    example: AAPL
+    link: us-company
+  - name: NAME
+    type: text
+    presence: required
+    description: 'Its name. Source: us-equities.'
+    example: Apple Inc.
+  - name: SECTOR
+    type: text
+    presence: required
+    description: 'Its SIC division. Source: us-equities.'
+    example: Manufacturing
+  - name: FUND_PCT
+    type: rate
+    presence: required
+    unit: '%'
+    description: 'The company''s weight in the fund over the members weighted. Source: computed.'
+    example: 11.031
+  - name: INDEX_PCT
+    type: rate
+    presence: required
+    unit: '%'
+    description: 'Its computed market-cap weight in the index. Source: computed: SEC shares outstanding times the price N-PORT implies.'
+    example: 18.5
+  - name: DIFF
+    type: amount
+    presence: required
+    unit: '% points'
+    description: 'Fund less index. Source: computed.'
+    example: -7.469
+  VS_INDEX.SECTORS[]:
+  - name: SECTOR
+    type: text
+    presence: required
+    description: 'The division. Source: us-equities.'
+    example: Manufacturing
+  - name: FUND_PCT
+    type: rate
+    presence: required
+    unit: '%'
+    description: 'The fund''s weight in it. Source: computed.'
+    example: 67.01
+  - name: INDEX_PCT
+    type: rate
+    presence: required
+    unit: '%'
+    description: 'The index''s weight in it. Source: computed.'
+    example: 61.31
+  - name: TILT
+    type: amount
+    presence: required
+    unit: '% points'
+    description: 'Fund less index. Source: computed.'
+    example: 5.7
+  AUTHORISED_PARTICIPANTS[]:
+  - name: NAME
+    type: text
+    presence: required
+    description: 'The authorised participant. Source: N-CEN AUTHORIZED_PARTICIPANT.PARTICIPANT_NAME.'
+    example: Merrill Lynch Pro
+  - name: LEI
+    type: text
+    presence: required
+    description: 'Its LEI. Source: N-CEN AUTHORIZED_PARTICIPANT.PARTICIPANT_LEI.'
+    example: 549300PMHS66E71I2D34
+  - name: PURCHASES
+    type: amount
+    presence: required
+    unit: USD
+    description: 'Creation units it bought over the year, by value. Source: N-CEN AUTHORIZED_PARTICIPANT.PURCHASE_VALUE.'
+    example: 14638424000.0
+  - name: REDEMPTIONS
+    type: amount
+    presence: required
+    unit: USD
+    description: 'Creation units it redeemed over the year, by value. Source: N-CEN AUTHORIZED_PARTICIPANT.REDEEM_VALUE.'
+    example: 6246681000.0
+links:
+- field: MOST_HELD_COMPANY
+  kind: us-company
+- field: HOLDINGS[].COMPANY
+  kind: us-company
+- field: VS_INDEX.ROWS[].COMPANY
+  kind: us-company
+validation:
+- rule: required
+  fields:
+  - TICKER
+  - NAME
+  - TYPE
+  - FUND_KEY
+  - CIK
+  - REGISTRANT
+  - LEI
+  - REGISTRANT_LEI
+  - TICKERS
+  - CLASSES
+  - CLASS_COUNT
+  - IS_ETF
+  - IS_INDEX
+  - IS_FUND_OF_FUNDS
+  - IS_TARGET_DATE
+  - IS_MASTER_FEEDER
+  - AUTHORISED_PARTICIPANTS
+  - LENDS_SECURITIES
+  - GLEIF_RELATIONSHIPS
+  - RANK
+  - REPORT_DATE
+  - FILED
+  - ACCESSION
+  - NPORT_URL
+  - TOTAL_ASSETS
+  - NET_ASSETS
+  - ANNUAL_RETURNS
+  - RETURN_3M
+  - FLOWS
+  - SALES
+  - REDEMPTIONS
+  - REINVESTMENT
+  - NET_FLOW
+  - HOLDING_COUNT
+  - HOLDINGS_SHOWN
+  - HOLDINGS_REST_COUNT
+  - HOLDINGS_REST_PCT
+  - HOLDINGS_REST_VALUE
+  - TOP10_PCT
+  - TOP50_PCT
+  - HHI
+  - LARGEST
+  - LARGEST_PCT
+  - WITH_LEI
+  - EQUITY_PCT
+  - US_COMPANY_PCT
+  - US_COMPANIES
+  - BY_ASSET
+  - BY_ISSUER_TYPE
+  - BY_COUNTRY
+  - BY_SECTOR
+  - DERIVATIVE_COUNT
+  - DERIVATIVES_NOTIONAL
+  - DERIVATIVES
+  - COUNTERPARTIES
+  - COUNTERPARTY_COUNT
+  - HOLDINGS
+  - VIEWS
+  - PROVENANCE
+  - ALSO_HELD_BY
+- rule: unique
+  key:
+  - TICKER
+  per: snapshot
+- rule: enum
+  field: TYPE
+  values:
+  - ETF
+  - Mutual fund
+  - Mutual fund with an ETF share class
+  - ETF (unit investment trust)
+- rule: range
+  field: CLASS_COUNT
+  min: 0
+- rule: range
+  field: AP_COUNT
+  min: 0
+- rule: range
+  field: HOLDING_COUNT
+  min: 0
+- rule: range
+  field: HOLDINGS_REST_COUNT
+  min: 0
+- rule: range
+  field: DERIVATIVE_COUNT
+  min: 0
+- rule: range
+  field: COUNTERPARTY_COUNT
+  min: 0
+- rule: link
+  field: MOST_HELD_COMPANY
+  kind: us-company
+- rule: enum
+  field: GLEIF_RELATIONSHIPS[].TYPE
+  values:
+  - Managed by
+  - Sub-fund of
+  - Feeder to
+- rule: range
+  field: BY_ASSET[].COUNT
+  min: 0
+- rule: range
+  field: BY_ISSUER_TYPE[].COUNT
+  min: 0
+- rule: range
+  field: BY_COUNTRY[].COUNT
+  min: 0
+- rule: range
+  field: BY_SECTOR[].COUNT
+  min: 0
+- rule: enum
+  field: DERIVATIVES[].DERIVATIVE
+  values:
+  - FWD
+  - FUT
+  - SWP
+  - OPT
+  - SWO
+  - WAR
+  - OTH
+- rule: enum
+  field: DERIVATIVES[].PAYOFF
+  values:
+  - Long
+  - Short
+  - N/A
+- rule: enum
+  field: DERIVATIVES[].TYPE
+  values:
+  - Forward
+  - Future
+  - Swap
+  - Option
+  - Swaption
+  - Warrant
+  - Other
+- rule: enum
+  field: HOLDINGS[].UNIT
+  values:
+  - NS
+  - PA
+  - NC
+  - OU
+- rule: enum
+  field: HOLDINGS[].PAYOFF
+  values:
+  - Long
+  - Short
+  - N/A
+- rule: link
+  field: HOLDINGS[].COMPANY
+  kind: us-company
+- rule: enum
+  field: HOLDINGS[].DERIVATIVE
+  values:
+  - FWD
+  - FUT
+  - SWP
+  - OPT
+  - SWO
+  - WAR
+  - OTH
+- rule: enum
+  field: VIEWS[].VIEW
+  values:
+  - LOOK_THROUGH
+  - VS_INDEX
+    returns from its newest prospectus risk/return summary. No prices or NAV history.
+  - Holdings, flows and returns as the fund filed them on Form N-PORT for 2026-06-30; census facts from its newest Form N-CEN; fees and calendar-year
+    returns from its newest prospectus risk/return summary. No prices or NAV history.
+  - Holdings, flows and returns as the fund filed them on Form N-PORT for 2026-07-31; census facts from its newest Form N-CEN; fees and calendar-year
+    returns from its newest prospectus risk/return summary. No prices or NAV history.
+- rule: enum
+  field: ALSO_HELD_BY[].TYPE
+  values:
+  - ETF
+  - Mutual fund
+  - Mutual fund with an ETF share class
+  - ETF (unit investment trust)
+- rule: enum
+  field: VS_INDEX.BASIS
+  values:
+  - tracks
+  - reference
+    TAP, TSN, UAA, UHS, XRX
+  - BIDU, BKNG, CTAS, EXPE, GOOGL, MSTR, PDD, PLTR, SHOP, TEAM
+- rule: link
+  field: VS_INDEX.ROWS[].COMPANY
+  kind: us-company
+notes:
+- "Reviewed by the pack owner (2.9.2): every figure is as the SEC data sets publish it; amounts are US dollars as N-PORT reports them (CURRENCY_VALUE), weights and ratios are in percent as filed (a weight of 7.1 is 7.1% of net assets)."
+- "A holding's BALANCE is in its UNIT (NS shares, PA principal amount, NC contracts) and a derivative's NOTIONAL in the currency it was filed in; neither is converted."
+- "A snapshot: refreshed when tools/publicdata/funds.py runs (the SEC publishes each data set quarterly); the same documents on every business day of the demo lake."
+- "Optional fields are empty where the fund did not file them: N-CEN facts for a fund whose census is not in the four quarters read, fees and returns for a fund without a risk/return summary (a unit investment trust)."
+review: []

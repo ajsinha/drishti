@@ -46,6 +46,13 @@ strip:
   - { label: Net margin, bind: "$.REVENUE ? $.NET_INCOME / $.REVENUE * 100 : null", fmt: margin1, tone: sign }
   - { label: Revenue growth, bind: "first($.FINANCIALS[?@.YEAR == $.FISCAL_YEAR - 1]).REVENUE ? ($.REVENUE - first($.FINANCIALS[?@.YEAR == $.FISCAL_YEAR - 1]).REVENUE) / abs(first($.FINANCIALS[?@.YEAR == $.FISCAL_YEAR - 1]).REVENUE) * 100 : null", fmt: growth1, tone: sign }
   - { label: Diluted EPS, bind: $.EPS_DILUTED, fmt: price2 }
+layout:                        # the funds pack's reverse look-through as tabs under the company (since 2.9.2); empty while it is off
+  areas:
+    - "main right"
+    - "funds right"
+  columns: [8, 4]
+  tabs: [funds]
+  phone: [main, funds, right]
 panels:
   - { use: us-equities/annual-financials@1, with: { chart-key: F2, key: F3 } }
   - use: us-equities/filing-list@1
@@ -56,6 +63,34 @@ panels:
         waits: Pick a filing to see its details and EDGAR links
         panels:
           - { use: us-equities/filing-card@1, with: { id: picked-filing, title: "Filing ${@parent.open.id}", rec: $src } }
+  - id: held-by-funds
+    kind: table
+    title: "Held by funds (a fund opens its page)"
+    area: funds
+    key: F8
+    code: HLD
+    source: { pack: funds, kind: fund-holder, id: $.TICKER }
+    rows: $src.HOLDERS
+    empty: No fund of the funds pack holds this company (or the pack is off)
+    columns:
+      - { label: Fund, bind: "link(@.FUND, 'fund', @.FUND_NAME)" }
+      - { label: Type, bind: "@.TYPE" }
+      - { label: Weight in the fund, bind: "@.PCT", fmt: amount2 }
+      - { label: Value, bind: "@.VALUE", fmt: compact, total: true }
+      - { label: Shares, bind: "@.SHARES", fmt: compact, total: true }
+      - { label: Report date, bind: "@.REPORT_DATE", fmt: date }
+  - id: fund-ownership
+    kind: kv
+    title: Fund ownership
+    area: funds
+    source: { pack: funds, kind: fund-holder, id: $.TICKER }
+    columns:
+      - { label: Funds holding it, bind: "link($src.TICKER, 'fund-holder', fmt($src.FUNDS, 'amount0') + ' of the 200 largest')" }
+      - { label: of which ETFs, bind: $src.ETFS, fmt: amount0 }
+      - { label: Value held, bind: $src.TOTAL_VALUE, fmt: compact }
+      - { label: "Share of its shares (%)", bind: $src.PCT_OF_SHARES, fmt: amount2 }
+      - { label: "Average weight in a fund (%)", bind: $src.AVG_WEIGHT, fmt: amount2 }
+      - { label: Largest holder, bind: "link($src.TOP_HOLDER, 'fund', $src.TOP_HOLDER)" }
   - { use: us-equities/company-card@1, with: { area: right, code: CO } }
   - id: indexes
     kind: table

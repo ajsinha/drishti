@@ -133,11 +133,27 @@ async def go(request: Request, q: str = ""):
     if r.get("pack"):                       # a pack's code typed alone (MKT): its overview
         return RedirectResponse(f"/p/{quote(r['pack'])}", status_code=303)
     hist = (r.get("history") or {}).get("query")   # TRD 1000015 30: the entity over time (HISTORY_QUERIES.md section 4.3)
+    if not r.get("ref") and r.get("matched") == 0 and not hist and len(q.replace("<GO>", "").split()) == 2:
+        if (alias := await _one_suggestion(request, q.replace("<GO>", "").strip())) is not None:
+            return RedirectResponse(f"/v/{alias['kind']}/{quote(alias['id'])}", status_code=303)   # FUND VTSAX: the fund whose share class it is
     if not r.get("ref"):                    # several (or no) entities: a pick list, as on a Bloomberg terminal
         return RedirectResponse(f"/s?q={quote(r.get('list') or q)}" + (f"&{hist}" if hist else ""), status_code=303)
     if hist:
         return RedirectResponse(f"/v/{r['ref']['kind']}/{quote(r['ref']['id'])}/history?{hist}", status_code=303)
     return RedirectResponse(f"/v/{r['ref']['kind']}/{quote(r['ref']['id'])}", status_code=303)
+
+
+async def _one_suggestion(request: Request, typed: str) -> dict | None:
+    """A mnemonic and a word no id starts with (FUND VTSAX, a share class of the fund VTI): the type-ahead's one entity of that
+    mnemonic whose title or subtitle names the word as a whole word, or None (then the pick list says nothing matched)."""
+    head, word = typed.split(None, 1)
+    try:
+        found = await request.app.state.backend.suggest(typed, ident(request))
+    except Exception:                            # noqa: BLE001  (an older server, a refusal: the pick list as before)
+        return None
+    hits = [s for s in found or [] if s.get("type") == "entity" and (s.get("mnemonic") or "").upper() == head.upper()
+            and re.search(rf"(?<![\w-]){re.escape(word)}(?![\w-])", f"{s.get('title', '')} {s.get('subtitle', '')}", re.I)]
+    return hits[0] if len(hits) == 1 else None
 
 
 @router.get("/impact/{kind}/{id_:path}")

@@ -1,0 +1,65 @@
+# Project Drishti · Any data. Any domain. One grammar.
+#
+# Copyright (c) 2026 Ashutosh Sinha <ajsinha@gmail.com>.
+# All rights reserved.
+#
+# PROPRIETARY AND CONFIDENTIAL.
+#
+# This file is the confidential and proprietary property of Ashutosh Sinha.
+# Unauthorised copying, use, modification, distribution or disclosure of this
+# file, via any medium, is strictly prohibited except with the express prior
+# written permission of the copyright holder.
+#
+# See the LICENSE file in the root of this repository for the full terms.
+
+# Hand-written from the Drishti UI kit (config/ui-kit/fragments).
+rachana: 1
+sutra: index-funds
+version: 1
+description: "The funds and ETFs of the pack that track one us-equities index, by net assets, with their cost and how closely they follow it."
+doc:
+  summary: "The funds tracking an index, by net assets: type, expense ratio, members held and active share against the computed index."
+  description: >-
+    One page per us-equities index that at least one of the pack's funds tracks (S&P 500, Nasdaq-100, Dow Jones Industrial Average).
+    The strip: the index, how many funds and ETFs track it and their net assets together. The table lists each fund (a click opens
+    it) with its type, net assets, expense ratio, the index members it holds and its active share against the index weights computed
+    from SEC data. A fund tracks an index when its name names it (N-CEN says whether a fund is an index fund, not which index).
+  params: {}
+  emits: []
+  expects: []
+  examples:
+    - "/v/index-funds/SP500"
+    - "TRACK NDX"
+  since: "2.9.2"
+match: { kind: index-funds, priority: 10 }
+title: { pill: Funds · Funds tracking an index, id: $.INDEX, with: $.NAME }
+strip:
+  - { label: Index, bind: "link($.INDEX, 'index-membership', $.NAME)" }
+  - { label: Funds, bind: $.FUNDS, fmt: amount0, emphasis: true }
+  - { label: of which ETFs, bind: $.ETFS, fmt: amount0 }
+  - { label: Net assets together, bind: $.TOTAL_NET_ASSETS, fmt: compact }
+  - { label: Largest, bind: "link($.LARGEST, 'fund', $.LARGEST)" }
+panels:
+  - id: trackers
+    kind: table
+    title: "Funds tracking the ${$.NAME}, by net assets (a fund opens its page)"
+    key: F2
+    code: TRK
+    rows: $.ROWS
+    columns:
+      - { label: Fund, bind: "link(@.FUND, 'fund', @.NAME)" }
+      - { label: Ticker, bind: "@.FUND" }
+      - { label: Type, bind: "@.TYPE" }
+      - { label: Net assets, bind: "@.NET_ASSETS", fmt: compact, total: true }
+      - { label: Expense ratio, bind: "@.EXPENSE_RATIO", fmt: ratio2 }
+      - { label: Members held, bind: "@.MEMBERS_HELD", fmt: amount0 }
+      - { label: Active share*, bind: "@.ACTIVE_SHARE", fmt: weight2 }
+      - { label: Report date, bind: "@.REPORT_DATE", fmt: date }
+  - { use: ranked-bars@1, with: { id: by-assets, title: "Net assets (USD)", rows: $.ROWS, label: FUND, value: NET_ASSETS, fmt: compact, area: right, key: F3 } }
+  - use: explainer-note@1
+    with:
+      title: About this page
+      area: right
+      text: "Public data (U.S. public domain). * Active share is half the sum of the differences between the fund's weights and the index weights, over the members the pack can weight: the index weights are computed from SEC data (shares outstanding times the price the funds' filings imply), not the provider's, so a fund that replicates its index shows a few percent rather than zero. Source: tools/publicdata/funds.py."
+  - { use: data-provenance@1 }
+keys: { F5: "link($.INDEX, 'index-membership', $.NAME)", F9: raw }

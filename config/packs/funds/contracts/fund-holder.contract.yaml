@@ -1,0 +1,269 @@
+# Project Drishti · Any data. Any domain. One grammar.
+#
+# Copyright (c) 2026 Ashutosh Sinha <ajsinha@gmail.com>.
+# All rights reserved.
+#
+# PROPRIETARY AND CONFIDENTIAL.
+#
+# This file is the confidential and proprietary property of Ashutosh Sinha.
+# Unauthorised copying, use, modification, distribution or disclosure of this
+# file, via any medium, is strictly prohibited except with the express prior
+# written permission of the copyright holder.
+#
+# See the LICENSE file in the root of this repository for the full terms.
+
+# Data contract of the fund-holder kind (command HELD): docs/contracts/README.md section 16.
+# Drafted by `drishti.py contract bootstrap fund-holder`; reviewed by the pack owner (2.9.2): the review points are resolved in notes.
+kind: fund-holder
+mnemonic: HELD
+pack: funds
+version: '1.0'
+class: fundamental
+status: active
+title: Funds holding a company
+description: 'The reverse look-through: every fund of the pack that holds one us-equities company, by value, and the share of the company they
+  own.'
+source: 'public data: SEC Form N-PORT, Form N-CEN and risk/return summary data sets, SEC and Nasdaq Trader ticker files, GLEIF (tools/publicdata/funds.py)'
+grain: One row per funds holding a company, keyed by TICKER.
+key:
+- TICKER
+dated-by: snapshot
+cadence:
+  frequency: static
+  due: quarterly, when the SEC publishes the data sets (tools/publicdata/funds.py)
+storage:
+  connector: funds-store
+  plugin: delta
+  domain: funds
+  table: <root>/funds/fund-holder/
+  columns:
+  - TICKER
+  - NAME
+  - FUNDS
+  - TOTAL_VALUE
+  - PCT_OF_SHARES
+  test-data:
+  - data/testdata/funds/fund-holder
+fields:
+- name: TICKER
+  type: id
+  presence: required
+  description: 'The us-equities company''s ticker. Source: us-equities us-company.TICKER.'
+  example: AAPL
+- name: NAME
+  type: text
+  presence: required
+  description: 'The company''s name. Source: us-equities us-company.NAME.'
+  example: Apple Inc.
+- name: COMPANY
+  type: id
+  presence: required
+  description: 'The company; opens USEQ. Source: us-equities.'
+  example: AAPL
+  link: us-company
+- name: SECTOR
+  type: text
+  presence: required
+  description: 'Its SIC division. Source: us-equities us-company.SECTOR.'
+  example: Manufacturing
+- name: FUNDS
+  type: integer
+  presence: required
+  unit: funds
+  description: 'How many of the pack''s funds hold it. Source: computed from every fund''s holdings.'
+  example: 85
+- name: ETFS
+  type: integer
+  presence: required
+  unit: funds
+  description: 'How many of them are ETFs. Source: computed.'
+  example: 26
+- name: TOTAL_VALUE
+  type: amount
+  presence: required
+  unit: USD
+  description: 'The value the funds hold together. Source: computed from N-PORT CURRENCY_VALUE.'
+  example: 831040821744.0
+- name: TOTAL_SHARES
+  type: amount
+  presence: required
+  unit: shares
+  description: 'The shares the funds hold together. Source: computed from N-PORT BALANCE.'
+  example: 2809918580.0
+- name: SHARES_OUTSTANDING
+  type: integer
+  presence: optional
+  unit: shares
+  description: 'The company''s shares outstanding (10-K cover). Source: us-equities us-company.SHARES_OUTSTANDING (SEC XBRL dei).'
+  example: 14776353000
+- name: PCT_OF_SHARES
+  type: rate
+  presence: optional
+  unit: '%'
+  description: 'Shares held over shares outstanding; empty where the filed count cannot be compared. Source: computed.'
+  example: 19.016
+- name: AVG_WEIGHT
+  type: rate
+  presence: required
+  unit: '% of net assets'
+  description: 'Its average weight in the funds holding it. Source: computed.'
+  example: 5.425
+- name: MAX_WEIGHT
+  type: rate
+  presence: required
+  unit: '% of net assets'
+  description: 'Its largest weight in a fund. Source: computed.'
+  example: 14.5683
+- name: TOP_HOLDER
+  type: text
+  presence: required
+  description: 'The fund holding the most, by value. Source: computed.'
+  example: VTI
+- name: HOLDERS
+  type: record list
+  presence: required
+  description: 'Every fund holding it, by value (at most 250). Source: computed.'
+- name: TOP_WEIGHTS
+  type: record list
+  presence: required
+  description: 'The ten funds where it weighs the most. Source: computed.'
+- name: PROVENANCE
+  type: record
+  presence: required
+  description: 'Nested: see nested PROVENANCE'
+nested:
+  HOLDERS[]:
+  - name: FUND
+    type: id
+    presence: required
+    description: 'The fund''s ticker; opens FUND. Source: computed.'
+    example: VTI
+    link: fund
+  - name: FUND_NAME
+    type: text
+    presence: required
+    description: 'The fund''s name. Source: N-PORT FUND_REPORTED_INFO.SERIES_NAME.'
+    example: Vanguard Total Stock Market Index Fund
+  - name: TYPE
+    type: text
+    presence: required
+    description: 'The fund''s type. Source: N-CEN FUND_REPORTED_INFO.IS_ETF, the Nasdaq Trader directory.'
+    example: Mutual fund with an ETF share class
+    enum:
+    - ETF
+    - Mutual fund
+    - Mutual fund with an ETF share class
+    - ETF (unit investment trust)
+  - name: PCT
+    type: rate
+    presence: required
+    unit: '% of net assets'
+    description: 'The company''s weight in the fund (every line of it added). Source: N-PORT FUND_REPORTED_HOLDING.PERCENTAGE.'
+    example: 5.8716
+  - name: VALUE
+    type: amount
+    presence: required
+    unit: USD
+    description: 'The value the fund holds. Source: N-PORT FUND_REPORTED_HOLDING.CURRENCY_VALUE.'
+    example: 134920536524.0
+  - name: SHARES
+    type: amount
+    presence: optional
+    unit: shares
+    description: 'The shares the fund holds (balances in shares only). Source: N-PORT FUND_REPORTED_HOLDING.BALANCE.'
+    example: 466272244.0
+  - name: REPORT_DATE
+    type: date
+    presence: required
+    description: 'The date the fund''s report is as of. Source: N-PORT SUBMISSION.REPORT_DATE.'
+    example: '2026-06-30'
+  - name: NET_ASSETS
+    type: amount
+    presence: required
+    unit: USD
+    description: 'The fund''s net assets. Source: N-PORT FUND_REPORTED_INFO.NET_ASSETS.'
+    example: 2297839156547.89
+  TOP_WEIGHTS[]:
+  - name: FUND
+    type: id
+    presence: required
+    description: 'The fund''s ticker. Source: computed.'
+    example: VGT
+    link: fund
+  - name: PCT
+    type: rate
+    presence: required
+    unit: '% of net assets'
+    description: 'The company''s weight in it. Source: computed.'
+    example: 14.5683
+  PROVENANCE:
+  - name: SOURCE
+    type: text
+    presence: required
+    description: 'Where the data comes from. Source: written by tools/packgen/funds/build.py.'
+    example: 'U.S. Securities and Exchange Commission: Form N-PORT, Form …'
+  - name: LICENCE
+    type: text
+    presence: required
+    description: 'The source''s licence (public domain). Source: written by tools/packgen/funds/build.py.'
+    example: Public domain (U.S. Government work); SEC fair access polic…
+  - name: RETRIEVED_AT
+    type: date
+    presence: required
+    description: 'The date the data sets were downloaded. Source: the download cache.'
+    example: '2026-10-26'
+  - name: NOTE
+    type: text
+    presence: required
+    description: 'What the document holds and from which filings. Source: written by tools/packgen/funds/build.py.'
+    example: Every holding of the pack's funds in this company (Form N-P…
+links:
+- field: COMPANY
+  kind: us-company
+- field: HOLDERS[].FUND
+  kind: fund
+- field: TOP_WEIGHTS[].FUND
+  kind: fund
+validation:
+- rule: required
+  fields:
+  - TICKER
+  - NAME
+  - COMPANY
+  - SECTOR
+  - FUNDS
+  - ETFS
+  - TOTAL_VALUE
+  - TOTAL_SHARES
+  - AVG_WEIGHT
+  - MAX_WEIGHT
+  - TOP_HOLDER
+  - HOLDERS
+  - TOP_WEIGHTS
+  - PROVENANCE
+- rule: unique
+  key:
+  - TICKER
+  per: snapshot
+- rule: link
+  field: COMPANY
+  kind: us-company
+- rule: link
+  field: HOLDERS[].FUND
+  kind: fund
+- rule: enum
+  field: HOLDERS[].TYPE
+  values:
+  - ETF
+  - Mutual fund
+  - Mutual fund with an ETF share class
+  - ETF (unit investment trust)
+- rule: link
+  field: TOP_WEIGHTS[].FUND
+  kind: fund
+notes:
+- "Reviewed by the pack owner (2.9.2): every figure is as the SEC data sets publish it; amounts are US dollars as N-PORT reports them (CURRENCY_VALUE), weights and ratios are in percent as filed (a weight of 7.1 is 7.1% of net assets)."
+- "A holding's BALANCE is in its UNIT (NS shares, PA principal amount, NC contracts) and a derivative's NOTIONAL in the currency it was filed in; neither is converted."
+- "A snapshot: refreshed when tools/publicdata/funds.py runs (the SEC publishes each data set quarterly); the same documents on every business day of the demo lake."
+- "Optional fields are empty where the fund did not file them: N-CEN facts for a fund whose census is not in the four quarters read, fees and returns for a fund without a risk/return summary (a unit investment trust)."
+review: []

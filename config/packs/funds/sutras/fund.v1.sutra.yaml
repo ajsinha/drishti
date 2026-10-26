@@ -1,0 +1,245 @@
+# Project Drishti · Any data. Any domain. One grammar.
+#
+# Copyright (c) 2026 Ashutosh Sinha <ajsinha@gmail.com>.
+# All rights reserved.
+#
+# PROPRIETARY AND CONFIDENTIAL.
+#
+# This file is the confidential and proprietary property of Ashutosh Sinha.
+# Unauthorised copying, use, modification, distribution or disclosure of this
+# file, via any medium, is strictly prohibited except with the express prior
+# written permission of the copyright holder.
+#
+# See the LICENSE file in the root of this repository for the full terms.
+
+# Hand-written from the mock-ups the product owner approved (2026-10-26): the fact sheet (A) is the page; the look-through (B) and the
+# fund against its index (C) are its tabs, as on the exposure explorer. The pack's fragments (sutras/common) draw B and C.
+rachana: 1
+sutra: fund
+version: 1
+description: "A US mutual fund or ETF from SEC public data: the fact sheet, the look-through holdings with derivatives and counterparties, and the fund against its index."
+doc:
+  summary: "A fund's fact sheet; tabs: the look-through holdings (derivatives, counterparties, who else holds its largest company) and the fund against its index."
+  description: >-
+    One page per fund of the 200 largest US mutual funds and ETFs by net assets. The strip names the ticker, the type, the index it
+    tracks, the date of its Form N-PORT report and its SEC series. The tiles give net assets, the expense ratio, the number of holdings,
+    the weight of the ten largest, the latest calendar-year return and the portfolio turnover. Below: the ten largest holdings (a
+    company opens its us-equities page), the fund's facts (adviser, LEI, share classes, creation unit and exchange of an ETF), its
+    holdings by SIC division, calendar-year returns, three months of flows and monthly returns, and its service providers (Form
+    N-CEN). The tabs: Look-through holdings (concentration, asset types, derivatives with their counterparties, every holding kept
+    with its identifiers, and the other funds holding its largest company) and the fund against its index (members held, active
+    share, weights side by side, the tilt by SIC division; the index weights computed from SEC data, as the tab says).
+  params: {}
+  emits: []
+  expects: []
+  examples:
+    - "/v/fund/QQQ"
+    - "FUND VTI"
+  since: "2.9.2"
+match: { kind: fund, priority: 10 }
+title: { pill: Funds · Fund or ETF, id: $.TICKER, with: $.NAME }
+strip:
+  - { label: Ticker, bind: $.TICKER, emphasis: true }
+  - { label: Type, bind: $.TYPE }
+  - { label: Tracks, bind: "nonblank($.VS_INDEX.BASIS == 'tracks' ? $.VS_INDEX.INDEX_NAME : '', $.IS_INDEX ? 'an index' : 'no index (actively managed)')" }
+  - { label: N-PORT report, bind: $.REPORT_DATE, fmt: date }
+  - { label: SEC series, bind: "nonblank($.SERIES_ID, 'unit investment trust')" }
+  - { label: CIK, bind: $.CIK }
+layout:
+  areas:
+    - "tiles tiles"
+    - "main side"
+    - "low low"
+    - "views views"
+  columns: [7, 5]
+  phone: [tiles, main, side, low, views]
+panels:
+  - { id: net-assets, kind: metric, area: tiles, span: 2, value: $.NET_ASSETS, title: Net assets, fmt: compact, unit: USD, caption: "${$.REPORT_DATE}" }
+  - { id: expense-ratio, kind: metric, area: tiles, span: 2, value: $.EXPENSE_RATIO, title: Expense ratio, fmt: ratio2, caption: "prospectus, ${nonblank($.PROSPECTUS_FILED, 'not filed')}" }
+  - { id: holding-count, kind: metric, area: tiles, span: 2, value: $.HOLDING_COUNT, title: Holdings, fmt: amount0, caption: "equities ${fmt($.EQUITY_PCT, 'weight2')}" }
+  - { id: top-ten, kind: metric, area: tiles, span: 2, value: $.TOP10_PCT, title: Top 10, fmt: weight2, caption: of net assets }
+  - { id: last-year, kind: metric, area: tiles, span: 2, value: $.RETURN_LAST_YEAR, title: Last calendar year, fmt: return2, tone: sign, caption: "${nonblank($.RETURN_YEAR, 'no return filed')}, prospectus" }
+  - { id: turnover, kind: metric, area: tiles, span: 2, value: $.TURNOVER, title: Turnover, fmt: ratio2, caption: last fiscal year }
+  - id: top-holdings
+    kind: table
+    title: "Top 10 holdings of ${fmt($.HOLDING_COUNT, 'amount0')} (a company opens its page)"
+    area: main
+    key: F2
+    code: TOP
+    rows: $.HOLDINGS
+    limit: 10
+    moreLabel: "'the other ' + fmt($.HOLDING_COUNT - 10, 'amount0') + ' in the Look-through tab'"
+    search: false
+    columns:
+      - { label: Holding, bind: "nonblank(@.COMPANY) ? link(@.COMPANY, 'us-company', @.NAME) : (nonblank(@.FUND) ? link(@.FUND, 'fund', @.NAME) : @.NAME)" }
+      - { label: Ticker, bind: "nonblank(@.TICKER, @.COMPANY, '')" }
+      - { label: SIC division, bind: "nonblank(@.SECTOR, '')" }
+      - { label: Weight, bind: "@.PCT", fmt: weight2 }
+      - { label: Value, bind: "@.VALUE", fmt: compact }
+  - id: the-fund
+    kind: kv
+    title: The fund
+    area: side
+    code: FND
+    columns:
+      - { label: Type, bind: $.TYPE }
+      - { label: Index, bind: "nonblank($.INDEX_ID) ? link($.INDEX_ID, 'index-membership', $.VS_INDEX.INDEX_NAME) : 'none matched'" }
+      - { label: Adviser, bind: "nonblank($.ADVISER_LEI) ? link($.ADVISER_LEI, 'lei-entity', $.ADVISER) : nonblank($.ADVISER, '–')" }
+      - { label: Registrant, bind: $.REGISTRANT }
+      - { label: Fund LEI, bind: "nonblank($.LEI) ? link($.LEI, 'lei-entity', $.LEI) : '–'" }
+      - { label: Share classes, bind: $.TICKERS }
+      - { label: Exchange, bind: "nonblank($.EXCHANGE, '–')" }
+      - { label: Creation unit (shares), bind: $.CREATION_UNIT, fmt: amount0 }
+      - { label: Authorised participants, bind: $.AP_COUNT, fmt: amount0 }
+      - { label: Rank by net assets, bind: $.RANK, fmt: amount0 }
+  - { id: by-sector, kind: hbar, title: "Holdings by SIC division (us-equities companies, % of net assets)", area: side, rows: $.BY_SECTOR, label: LABEL, value: PCT, fmt: weight2, key: F3 }
+  - { id: annual-returns, kind: hbar, title: Calendar-year returns (prospectus), area: low, span: 4, rows: $.ANNUAL_RETURNS, label: YEAR, value: RETURN, fmt: return2, tone: sign, key: F4 }
+  - id: flows
+    kind: table
+    title: "Flows and returns, three months (N-PORT)"
+    area: low
+    span: 4
+    rows: $.FLOWS
+    search: false
+    columns:
+      - { label: Month, bind: "@.MONTH" }
+      - { label: Sales, bind: "@.SALES", fmt: compact, total: true }
+      - { label: Redemptions, bind: "@.REDEMPTIONS", fmt: compact, total: true }
+      - { label: Net flow, bind: "@.NET_FLOW", fmt: compact, tone: sign, total: true }
+      - { label: Return, bind: "@.RETURN", fmt: return2, tone: sign }
+  - id: providers
+    kind: kv
+    title: Service providers (N-CEN, GLEIF)
+    area: low
+    span: 4
+    columns:
+      - { label: Custodian, bind: "nonblank($.CUSTODIAN_LEI) ? link($.CUSTODIAN_LEI, 'lei-entity', $.CUSTODIAN) : nonblank($.CUSTODIAN, '–')" }
+      - { label: Auditor, bind: "nonblank($.AUDITOR, '–')" }
+      - { label: Administrator, bind: "nonblank($.ADMINISTRATOR, '–')" }
+      - { label: Transfer agent, bind: "nonblank($.TRANSFER_AGENT, '–')" }
+      - { label: Sub-advisers, bind: "nonblank($.SUB_ADVISERS, '–')" }
+      - { label: Census period, bind: "nonblank($.NCEN_PERIOD, 'no N-CEN found')" }
+  - id: views
+    kind: tabs
+    title: Look-through and index
+    area: views
+    key: F5
+    code: VIEW
+    each: $.VIEWS
+    tabTitle: "@.TITLE"
+    panels:
+      # ---- B · Look-through holdings
+      - id: concentration
+        kind: kv
+        title: Concentration
+        when: "@.VIEW == 'LOOK_THROUGH'"
+        columns:
+          - { label: Top 10, bind: $.TOP10_PCT, fmt: weight2 }
+          - { label: Top 50, bind: $.TOP50_PCT, fmt: weight2 }
+          - { label: "Herfindahl (sum of squared weights)", bind: $.HHI }
+          - { label: Largest holding, bind: "$.LARGEST + ' ' + fmt($.LARGEST_PCT, 'weight2')" }
+          - { label: Holdings with an LEI, bind: "fmt($.WITH_LEI, 'amount0') + ' of ' + fmt($.HOLDING_COUNT, 'amount0')" }
+          - { label: us-equities companies held, bind: "fmt($.US_COMPANIES, 'amount0') + ', ' + fmt($.US_COMPANY_PCT, 'weight2') + ' of net assets'" }
+          - { label: Holdings shown, bind: "fmt($.HOLDINGS_SHOWN, 'amount0') + ($.HOLDINGS_REST_COUNT > 0 ? '; the other ' + fmt($.HOLDINGS_REST_COUNT, 'amount0') + ' hold ' + fmt($.HOLDINGS_REST_PCT, 'weight2') : '')" }
+      - { id: by-asset, kind: hbar, title: "By asset type (% of net assets)", when: "@.VIEW == 'LOOK_THROUGH'", rows: $.BY_ASSET, label: LABEL, value: PCT, fmt: weight2 }
+      - { id: by-issuer, kind: hbar, title: "By issuer type (% of net assets)", when: "@.VIEW == 'LOOK_THROUGH'", rows: $.BY_ISSUER_TYPE, label: LABEL, value: PCT, fmt: weight2 }
+      - id: derivatives
+        kind: table
+        title: "Derivatives and counterparties (N-PORT part C): ${fmt($.DERIVATIVE_COUNT, 'amount0')} positions, the largest by notional"
+        when: "@.VIEW == 'LOOK_THROUGH' && $.DERIVATIVE_COUNT > 0"
+        rows: $.DERIVATIVES
+        columns:
+          - { label: Instrument, bind: "@.NAME + (nonblank(@.REFERENCE) ? ' · ' + @.REFERENCE : '')" }
+          - { label: Type, bind: "@.TYPE" }
+          - { label: Counterparty, bind: "nonblank(@.CPTY_LEI) ? link(@.CPTY_LEI, 'lei-entity', @.CPTY) : nonblank(@.CPTY, '–')" }
+          - { label: Notional, bind: "@.NOTIONAL", fmt: compact }
+          - { label: Value, bind: "@.VALUE", fmt: compact, tone: sign }
+          - { label: Expiry, bind: "@.EXPIRY", fmt: date }
+      - id: counterparties
+        kind: table
+        title: "Counterparties of derivatives and repos (an LEI opens GLEIF)"
+        when: "@.VIEW == 'LOOK_THROUGH' && size($.COUNTERPARTIES) > 0"
+        rows: $.COUNTERPARTIES
+        search: false
+        columns:
+          - { label: Counterparty, bind: "nonblank(@.LEI) ? link(@.LEI, 'lei-entity', @.NAME) : @.NAME" }
+          - { label: Positions, bind: "@.POSITIONS", fmt: amount0 }
+          - { label: Notional, bind: "@.NOTIONAL", fmt: compact }
+          - { label: Value, bind: "@.VALUE", fmt: compact, tone: sign }
+      - id: holdings
+        kind: table
+        title: "Holdings: ${fmt($.HOLDINGS_SHOWN, 'amount0')} of ${fmt($.HOLDING_COUNT, 'amount0')}, by value (each links to its issuer)"
+        when: "@.VIEW == 'LOOK_THROUGH'"
+        rows: $.HOLDINGS
+        columns:
+          - { label: Issuer, bind: "nonblank(@.COMPANY) ? link(@.COMPANY, 'us-company', @.NAME) : (nonblank(@.FUND) ? link(@.FUND, 'fund', @.NAME) : (nonblank(@.LEI) ? link(@.LEI, 'lei-entity', @.NAME) : @.NAME))" }
+          - { label: Weight, bind: "@.PCT", fmt: weight3 }
+          - { label: Value, bind: "@.VALUE", fmt: compact, tone: sign }
+          - { label: Asset, bind: "nonblank(@.ASSET, '–')" }
+          - { label: Ticker, bind: "nonblank(@.TICKER, @.COMPANY, '')" }
+          - { label: ISIN, bind: "nonblank(@.ISIN, '')" }
+          - { label: CUSIP, bind: "nonblank(@.CUSIP, '')" }
+          - { label: Country, bind: "nonblank(@.COUNTRY, '')" }
+          - { label: Also in, bind: "nonblank(@.COMPANY) ? link(@.COMPANY, 'fund-holder', fmt(@.ALSO_IN, 'amount0') + ' funds') : ''" }
+      - id: also-held-by
+        kind: table
+        title: "Who else holds ${$.MOST_HELD_NAME} (HELD ${$.MOST_HELD_COMPANY})"
+        when: "@.VIEW == 'LOOK_THROUGH' && size($.ALSO_HELD_BY) > 0"
+        rows: $.ALSO_HELD_BY
+        search: false
+        columns:
+          - { label: Fund, bind: "link(@.FUND, 'fund', @.FUND_NAME)" }
+          - { label: Type, bind: "@.TYPE" }
+          - { label: Weight, bind: "@.PCT", fmt: weight2 }
+          - { label: Value, bind: "@.VALUE", fmt: compact }
+          - { label: Report date, bind: "@.REPORT_DATE", fmt: date }
+      # ---- C · the fund against its index
+      - id: coverage
+        kind: kv
+        title: Coverage
+        when: "@.VIEW == 'VS_INDEX'"
+        columns:
+          - { label: Index, bind: "link($.VS_INDEX.INDEX_ID, 'index-membership', $.VS_INDEX.INDEX_NAME)" }
+          - { label: Compared as, bind: "$.VS_INDEX.BASIS == 'tracks' ? 'the index the fund tracks' : 'a reference: the fund tracks none of these indexes'" }
+          - { label: Members held, bind: "fmt($.VS_INDEX.MEMBERS_HELD, 'amount0') + ' of ' + fmt($.VS_INDEX.MEMBERS, 'amount0') + ' listed members'" }
+          - { label: In the listed members, bind: $.VS_INDEX.FUND_IN_INDEX_PCT, fmt: weight2 }
+          - { label: "Elsewhere (other companies, cash, futures)", bind: $.VS_INDEX.NOT_IN_INDEX_PCT, fmt: weight2 }
+          - { label: Active share, bind: $.VS_INDEX.ACTIVE_SHARE, fmt: weight2 }
+          - { label: Largest difference, bind: "$.VS_INDEX.LARGEST_DIFF_NAME + ' ' + fmt($.VS_INDEX.LARGEST_DIFF, 'tilt2')" }
+          - { label: Index weights, bind: "$.VS_INDEX.WEIGHTING + ' (' + fmt($.VS_INDEX.MEMBERS_WEIGHTED, 'amount0') + ' members)'" }
+          - { label: Members not weighted, bind: "nonblank($.VS_INDEX.MEMBERS_NOT_WEIGHTED, 'none')" }
+          - { label: As of, bind: "'holdings ' + $.VS_INDEX.AS_OF + '; members as the us-equities pack lists them'" }
+      - id: weights
+        kind: table
+        title: "Weight in the fund and in the index* (% of the weighted members), the 25 largest"
+        when: "@.VIEW == 'VS_INDEX'"
+        rows: $.VS_INDEX.ROWS
+        columns:
+          - { label: Company, bind: "link(@.COMPANY, 'us-company', @.NAME)" }
+          - { label: SIC division, bind: "@.SECTOR" }
+          - { label: Fund, bind: "@.FUND_PCT", fmt: weight3 }
+          - { label: Index*, bind: "@.INDEX_PCT", fmt: weight3 }
+          - { label: Difference, bind: "@.DIFF", fmt: tilt2, tone: sign }
+      - id: sector-tilt
+        kind: table
+        title: "Tilt by SIC division (fund − index, % points)"
+        when: "@.VIEW == 'VS_INDEX'"
+        rows: $.VS_INDEX.SECTORS
+        search: false
+        columns:
+          - { label: SIC division, bind: "@.SECTOR" }
+          - { label: Fund, bind: "@.FUND_PCT", fmt: weight2 }
+          - { label: Index*, bind: "@.INDEX_PCT", fmt: weight2 }
+          - { label: Tilt, bind: "@.TILT", fmt: tilt2, tone: sign }
+      - id: weights-note
+        kind: markdown
+        title: "* How the index weights are made"
+        when: "@.VIEW == 'VS_INDEX'"
+        text: "Index weights are proprietary to the index providers and not in public data. Here each member's weight is its market capitalisation computed from SEC data: the shares outstanding on its latest 10-K cover (us-equities) times the price the funds' N-PORT filings imply (value over shares, the median across the funds). A member whose filed share count the holdings cannot support (none filed, a scale error, one class of several) is left out and named above, and both sides are compared over the members weighted. Where too few members can be weighted the tab uses equal weights and says so. The Dow Jones Industrial Average is price-weighted by its provider, so against it the computed market-cap weights differ by design."
+  - use: explainer-note@1
+    with:
+      title: About this page
+      area: low
+      text: "Public data (U.S. public domain). Holdings, flows and monthly returns as the fund filed them on Form N-PORT for the report date above; facts and service providers from its newest Form N-CEN; the expense ratio (net where the fund reports one), turnover and calendar-year returns from its newest prospectus risk/return summary (the share class of this ticker). A fund keeps its 600 largest holdings with the totals of the rest; the funds that hold a company count every holding. No prices or NAV history are shipped. Source: tools/publicdata/funds.py."
+  - { use: source-footer@1 }
+keys: { F6: "link($.MOST_HELD_COMPANY, 'fund-holder', 'Funds holding ' + $.MOST_HELD_NAME)", F7: "link($.INDEX_ID, 'index-funds', 'Funds tracking the index')", F9: raw }

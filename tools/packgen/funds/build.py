@@ -42,7 +42,9 @@ ASSET = {"EC": "Common equity", "EP": "Preferred equity", "DBT": "Debt", "ABS-MB
          "COMM": "Commodity", "OTHER": "Other"}
 ISSUER = {"CORP": "Corporate", "UST": "US Treasury", "USGA": "US government agency", "USGSE": "US government-sponsored entity",
           "MUN": "Municipal", "NUSS": "Non-US sovereign", "PF": "Private fund", "RF": "Registered fund", "OTHER": "Other"}
-DERIV = {"FWD": "Forward", "FUT": "Future", "SWP": "Swap", "OPT": "Option", "SWO": "Swaption", "WAR": "Warrant", "OTH": "Other"}
+DERIV_FIELDS = ("NAME", "TITLE", "DERIVATIVE", "PAYOFF", "CURRENCY", "VALUE", "PCT", "CPTY", "CPTY_LEI", "NOTIONAL", "EXPIRY", "UNREALIZED",
+                "REFERENCE")
+DERIV = {"FWD":"Forward", "FUT": "Future", "SWP": "Swap", "OPT": "Option", "SWO": "Swaption", "WAR": "Warrant", "OTH": "Other"}
 MIC = {"ARCX": "NYSE Arca", "XNYS": "NYSE", "XNAS": "Nasdaq", "XNMS": "Nasdaq", "XNGS": "Nasdaq", "BATS": "Cboe BZX", "XASE": "NYSE American",
        "XCBO": "Cboe", "CBOE": "Cboe", "EDGX": "Cboe EDGX"}
 # A fund's tracked index, by its name (N-CEN says whether a fund is an index fund, not which index): the us-equities index codes.
@@ -244,7 +246,6 @@ def build(cache: Path, us: dict[str, dict], indexes: dict[str, dict], retrieved:
     tracking = _index_funds(docs_fund, indexes, retrieved)
     for t, d in docs_fund.items():
         d["HOLDINGS"] = [_compact(h) for h in d["HOLDINGS"]]
-        d["TOP_HOLDINGS"] = d["HOLDINGS"][:10]
     log(f"  {len(docs_fund)} funds, {sum(len(d['HOLDINGS']) for d in docs_fund.values()):,} holdings kept "
         f"(of {sum(len(v) for v in all_rows.values()):,}), {len(holders)} companies held, {len(tracking)} indexes tracked")
     return {"fund": docs_fund, "fund-holder": holders, "index-funds": tracking}
@@ -345,7 +346,8 @@ def _fund(f, rank, t, cen, classes, rows, rets, rr, relations, companies, retrie
         "BY_ASSET": _group(rows, "ASSET", ASSET), "BY_ISSUER_TYPE": _group(rows, "ISSUER_TYPE", ISSUER),
         "BY_COUNTRY": _group(rows, "COUNTRY", top=10), "BY_SECTOR": _group([h for h in rows if h["COMPANY"]], "SECTOR"),
         "DERIVATIVE_COUNT": len(deriv), "DERIVATIVES_NOTIONAL": _r(sum(abs(h.get("NOTIONAL") or 0) for h in deriv), 0),
-        "DERIVATIVES": [_compact({**h, "TYPE": DERIV.get(h["DERIVATIVE"], h["DERIVATIVE"])}) for h in deriv_rows],
+        "DERIVATIVES": [_compact({**{k: h.get(k) for k in DERIV_FIELDS}, "TYPE": DERIV.get(h["DERIVATIVE"], h["DERIVATIVE"])})
+                        for h in deriv_rows],
         "COUNTERPARTIES": cp_rows, "COUNTERPARTY_COUNT": len(cps),
         "HOLDINGS": kept,
         "VIEWS": [{"VIEW": "LOOK_THROUGH", "TITLE": "Look-through holdings"}],

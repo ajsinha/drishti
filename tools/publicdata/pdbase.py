@@ -310,7 +310,7 @@ class Run:
 
 # Each script's pack, which names its wrappers: tools/publicdata/<pack>.sh and tools/windows/publicdata-<pack>.ps1.
 WRAPPERS = {"world_economy.py": "world-economy", "news_and_markets.py": "news-and-markets",
-            "official_market_data.py": "market-data", "us_equities.py": "us-equities", "gleif.py": "gleif"}
+            "official_market_data.py": "market-data", "us_equities.py": "us-equities", "gleif.py": "gleif", "funds.py": "funds"}
 
 
 def examples(description: str, prog: str) -> str:

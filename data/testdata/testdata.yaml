@@ -20367,7 +20367,7 @@ datasets:
   captured: '2026-10-26'
   source: SEC Form N-PORT, Form N-CEN and risk/return summary data sets, SEC and Nasdaq Trader ticker files, GLEIF (tools/publicdata/funds.py)
   documents: 200
-  bytes: 5083863
+  bytes: 4972248
   parts:
   - snapshot-2026-10-26.part-01.jsonl.gz
   - snapshot-2026-10-26.part-02.jsonl.gz

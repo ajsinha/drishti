@@ -38,14 +38,17 @@ ROOT = HERE.parents[2]
 sys.path.insert(0, str(HERE.parent / "common"))
 import packsamples as PS  # noqa: E402
 import readme as README  # noqa: E402  (the pack README standard)
+import guide_data as GD  # noqa: E402  (the guide's Data contracts and Data retrieval sections)
 sys.path.insert(0, str(HERE))
 import build as BUILD  # noqa: E402
+import glossary as GLOSSARY  # noqa: E402
 import read as R  # noqa: E402
 sys.path.insert(0, str(ROOT / "tools" / "testdata"))
 import publicsnap as SNAP  # noqa: E402  (the standard data pattern: data/testdata/<pack>/<kind>/)
 
 PACK = ROOT / "config" / "packs" / "funds"
 NAME = "funds"
+HEADER = "\n".join(Path(__file__).read_text(encoding="utf-8").splitlines()[:13]) + "\n\n"     # the licence header of a YAML file
 
 
 def default_cache() -> Path:
@@ -195,7 +198,8 @@ def guide(docs: dict[str, dict[str, dict]]) -> str:
 def files(docs: dict[str, dict[str, dict]]) -> dict[Path, str]:
     ref = SNAP.reference(NAME, docs)                     # a few reference documents: the data itself is in data/testdata
     out = {PACK / "samples" / name: text for name, text in PS.files(ref, catalog(ref), catalog_indent=None).items()}
-    out[PACK / "guides" / "funds.md"] = guide(docs)
+    out[PACK / "config" / "about.yaml"] = GLOSSARY.about_yaml(HEADER)
+    out[PACK / "guides" / "funds.md"] = guide(docs).rstrip() + "\n\n" + "\n".join(GD.sections(PACK)).rstrip() + "\n"
     out[PACK / "README.md"] = README.render_pack(PACK, files=out, intro=HERE / "readme" / "funds.intro.md")
     return out
 

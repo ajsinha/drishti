@@ -67,6 +67,21 @@ external:
                licence: "CC0 1.0 (attribution appreciated)", internal: false, script: tools/publicdata/gleif.py, source: api }
   gleif-mapping: { title: "GLEIF mapping files: BIC, ISIN, MIC and OpenCorporates to LEI", url: "https://mapping.gleif.org",
                    licence: "CC0 1.0", internal: false, script: tools/publicdata/gleif.py, source: mapping }
+  sec-nport: { title: "SEC Form N-PORT data sets (holdings, derivatives, counterparties, flows, monthly returns)",
+               url: "https://www.sec.gov/data-research/sec-markets-data/form-n-port-data-sets",
+               licence: "public domain (US Government work); SEC fair access policy", internal: false, script: tools/publicdata/funds.py, source: nport }
+  sec-ncen: { title: "SEC Form N-CEN data sets (ETF facts, service providers, authorised participants)",
+              url: "https://www.sec.gov/data-research/sec-markets-data/form-n-cen-data-sets",
+              licence: "public domain (US Government work); SEC fair access policy", internal: false, script: tools/publicdata/funds.py, source: ncen }
+  sec-rr: { title: "SEC mutual fund prospectus risk/return summary data sets (expense ratio, turnover, calendar-year returns)",
+            url: "https://www.sec.gov/data-research/sec-markets-data/mutual-fund-prospectus-riskreturn-summary-data-sets",
+            licence: "public domain (US Government work); SEC fair access policy", internal: false, script: tools/publicdata/funds.py, source: rr }
+  sec-fund-tickers: { title: "SEC ticker files (company_tickers_mf.json, company_tickers_exchange.json)", url: "https://www.sec.gov/file/company-tickers",
+                      licence: "public domain (US Government work)", internal: false, script: tools/publicdata/funds.py, source: tickers }
+  nasdaq-funds: { title: "Nasdaq Trader symbol directory (which tickers are ETFs)", url: "https://www.nasdaqtrader.com/dynamic/SymDir/",
+                  licence: "public symbol directory files", internal: false, script: tools/publicdata/funds.py, source: nasdaq }
+  gleif-funds: { title: "GLEIF golden copy level 2: fund relationships (managed by, sub-fund of, feeder to)", url: "https://goldencopy.gleif.org",
+                 licence: "CC0 1.0", internal: false, script: tools/publicdata/funds.py, source: gleif }
 
 # The refresh scripts (tools/publicdata/): their wrappers' pack name and the examples each guide shows besides status and --dry-run.
 scripts:
@@ -98,6 +113,12 @@ scripts:
       - ["refresh", "the committed pack: data/testdata/gleif, samples/ and this guide, then make.py --check"]
       - ["refresh --offline", "the same from the download cache only"]
       - ["refresh --scope NAME:allianz,CAP:200", "a widened build in <data>/publicdata/gleif"]
+  tools/publicdata/funds.py:
+    wrapper: funds
+    examples:
+      - ["refresh", "the committed pack: data/testdata/funds, samples/, the README and this guide, then make.py --check"]
+      - ["refresh --offline", "the same from the downloads only (about 700 MB in <data>/publicdata/cache/funds)"]
+      - ["refresh --scope FUNDS:300,HOLDINGS:1000", "a widened build in <data>/publicdata/funds"]
 
 # Generators of synthetic (or hand-written) data: id -> the command, what it writes, its check and the origin it is shown as (label,
 # default "synthetic").
@@ -189,5 +210,10 @@ packs:
       price-history: { external: [yahoo-prices] }
   gleif:
     default: { external: [gleif-api, gleif-golden, gleif-mapping] }
+  funds:
+    default: { external: [sec-nport, sec-ncen, sec-rr, sec-fund-tickers, nasdaq-funds, gleif-funds] }
+    kinds:
+      fund-holder: { external: [sec-nport] }
+      index-funds: { external: [sec-nport, sec-rr] }
   compute-demo:
     default: { generator: compute-demo }
