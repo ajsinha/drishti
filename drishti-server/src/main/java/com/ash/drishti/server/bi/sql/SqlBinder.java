@@ -15,6 +15,7 @@
  */
 package com.ash.drishti.server.bi.sql;
 
+import com.ash.drishti.common.Branding;
 import com.ash.drishti.server.bi.dataset.Dataset;
 import com.ash.drishti.server.bi.expr.Fields;
 import com.ash.drishti.server.bi.mq.ModelQuery;
@@ -73,7 +74,7 @@ public final class SqlBinder {
         boolean aggregates = false;
         for (SqlAst.Item it : s.items()) {
             if (it.star()) {
-                throw new DsqlException(DsqlException.SHAPE, "SELECT * is not Drishti SQL", "name the columns: SELECT trades.desk, MEASURE('MTM') ...", it.at());
+                throw new DsqlException(DsqlException.SHAPE, "SELECT * is not " + Branding.sqlName(), "name the columns: SELECT trades.desk, MEASURE('MTM') ...", it.at());
             }
             SqlAst.Expr e = it.expr();
             if (SqlAst.any(e, x -> x instanceof SqlAst.Call c && c.over() != null)) {
@@ -109,9 +110,9 @@ public final class SqlBinder {
                 define.put(source, del.del(e));
                 measureList.add(source);
             } else if (e instanceof SqlAst.Literal) {
-                throw new DsqlException(DsqlException.SHAPE, "a constant column is not Drishti SQL", "select fields and measures", it.at());
+                throw new DsqlException(DsqlException.SHAPE, "a constant column is not " + Branding.sqlName(), "select fields and measures", it.at());
             } else {
-                throw new DsqlException(DsqlException.SHAPE, "a computed row column (" + text(e) + ") is not Drishti SQL",
+                throw new DsqlException(DsqlException.SHAPE, "a computed row column (" + text(e) + ") is not " + Branding.sqlName(),
                         "make it a derived column of the dataset (derive: { expr: ... }), or compute it over the answer in a WITH query", it.at());
             }
             String name = unique(it.alias() != null ? it.alias() : e instanceof SqlAst.Column c ? c.text() : source, outs);
@@ -322,7 +323,7 @@ public final class SqlBinder {
                 List<Object> values = new ArrayList<>();
                 for (SqlAst.Expr x : i.items()) {
                     if (x instanceof SqlAst.SubqueryExpr s) {
-                        throw new DsqlException(DsqlException.SHAPE, "IN (SELECT ...) is not Drishti SQL: a semi-join is a relationship of the model", "JOIN the table, or filter its field",
+                        throw new DsqlException(DsqlException.SHAPE, "IN (SELECT ...) is not " + Branding.sqlName() + ": a semi-join is a relationship of the model", "JOIN the table, or filter its field",
                                 s.at());
                     }
                     if (!(x instanceof SqlAst.Literal l)) {

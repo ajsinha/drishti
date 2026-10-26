@@ -15,6 +15,7 @@
  */
 package com.ash.drishti.server.net;
 
+import com.ash.drishti.common.Branding;
 import com.ash.drishti.net.config.HostAddress;
 import com.ash.drishti.net.config.NetConfig;
 import com.ash.drishti.net.config.NetFolder;
@@ -570,7 +571,7 @@ public final class NetService implements AutoCloseable {
         Node n = node;
         if (n == null) {
             throw new com.ash.drishti.common.DrishtiException(com.ash.drishti.common.ErrorCode.NET_OFF,
-                    "Drishti*net is off on this node: config/net/node.yaml does not say enabled: true (see docs/admin/NET.md)");
+                    Branding.netName() + " is off on this node: config/net/node.yaml does not say enabled: true (see docs/admin/NET.md)");
         }
         return n;
     }

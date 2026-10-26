@@ -15,6 +15,7 @@
  */
 package com.ash.drishti.server.collab.mail;
 
+import com.ash.drishti.common.Branding;
 import java.util.LinkedHashMap;
 import java.util.Map;
 
@@ -40,7 +41,7 @@ public final class MailRenderer {
 
     public MailRenderer(MailTemplates templates, String product, String host) {
         this.templates = templates;
-        this.product = product == null || product.isBlank() ? "Drishti" : product;
+        this.product = product == null || product.isBlank() ? Branding.name("the console") : product;
         this.host = host == null || host.isBlank() ? "localhost" : host;
     }
 

@@ -15,6 +15,7 @@
  */
 package com.ash.drishti.server.bi.sql;
 
+import com.ash.drishti.common.Branding;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Locale;
@@ -66,20 +67,20 @@ public final class DsqlParser {
         DsqlParser ps = new DsqlParser(lex(sql));
         Tok first = ps.peek();
         if (first.type() == T.IDENT && WRITES.contains(first.upper())) {
-            throw new DsqlException(DsqlException.SYNTAX, "Drishti SQL is read-only: " + first.upper() + " is refused; a statement is one SELECT (or WITH ... SELECT)", null,
+            throw new DsqlException(DsqlException.SYNTAX, Branding.sqlName() + " is read-only: " + first.upper() + " is refused; a statement is one SELECT (or WITH ... SELECT)", null,
                     first.start(), first.end());
         }
         boolean explain = ps.word("EXPLAIN");
         if (!ps.isWord("SELECT") && !ps.isWord("WITH") && !ps.isOp("(")) {
             Tok t = ps.peek();
-            throw new DsqlException(DsqlException.SYNTAX, "a Drishti SQL statement starts with SELECT or WITH" + (t.type() == T.EOF ? "" : ", not '" + t.text() + "'"), null, t.start(),
+            throw new DsqlException(DsqlException.SYNTAX, "a " + Branding.sqlName() + " statement starts with SELECT or WITH" + (t.type() == T.EOF ? "" : ", not '" + t.text() + "'"), null, t.start(),
                     t.end());
         }
         SqlAst.Query q = ps.query();
         ps.op(";");
         Tok t = ps.peek();
         if (t.type() != T.EOF) {
-            throw new DsqlException(DsqlException.SYNTAX, ps.toks.get(ps.p - 1).text().equals(";") ? "one statement only: Drishti SQL takes a single SELECT"
+            throw new DsqlException(DsqlException.SYNTAX, ps.toks.get(ps.p - 1).text().equals(";") ? "one statement only: " + Branding.sqlName() + " takes a single SELECT"
                     : "unexpected '" + t.text() + "'", null, t.start(), t.end());
         }
         return new SqlAst.Statement(q, explain);
@@ -266,7 +267,7 @@ public final class DsqlParser {
             List<SqlAst.Cte> with = new ArrayList<>();
             if (word("WITH")) {
                 if (isWord("RECURSIVE")) {
-                    throw new DsqlException(DsqlException.SHAPE, "recursive queries are not Drishti SQL", null, peek().start(), peek().end());
+                    throw new DsqlException(DsqlException.SHAPE, "recursive queries are not " + Branding.sqlName(), null, peek().start(), peek().end());
                 }
                 do {
                     int cat = peek().start();
@@ -304,7 +305,7 @@ public final class DsqlParser {
         while (true) {
             int at = peek().start();
             if (isWord("INTERSECT") || isWord("EXCEPT")) {
-                throw new DsqlException(DsqlException.SHAPE, peek().upper() + " is not Drishti SQL (yet)", "UNION [ALL], or a filter on the field", peek().start(), peek().end());
+                throw new DsqlException(DsqlException.SHAPE, peek().upper() + " is not " + Branding.sqlName() + " (yet)", "UNION [ALL], or a filter on the field", peek().start(), peek().end());
             }
             if (!word("UNION")) {
                 return left;
@@ -353,7 +354,7 @@ public final class DsqlParser {
             from.add(tableRef(null, null));
             while (true) {
                 if (op(",")) {
-                    throw new DsqlException(DsqlException.JOIN, "a comma join (FROM a, b) is not Drishti SQL", "JOIN b (the model's relationship is used)", toks.get(p - 1).start());
+                    throw new DsqlException(DsqlException.JOIN, "a comma join (FROM a, b) is not " + Branding.sqlName(), "JOIN b (the model's relationship is used)", toks.get(p - 1).start());
                 }
                 String kind = joinKind();
                 if (kind == null) {
@@ -365,7 +366,7 @@ public final class DsqlParser {
                 if (word("ON")) {
                     on = expr();
                 } else if (isWord("USING")) {
-                    throw new DsqlException(DsqlException.JOIN, "JOIN ... USING is not Drishti SQL", "JOIN without ON uses the model's relationship", peek().start(), peek().end());
+                    throw new DsqlException(DsqlException.JOIN, "JOIN ... USING is not " + Branding.sqlName(), "JOIN without ON uses the model's relationship", peek().start(), peek().end());
                 }
                 from.add(new SqlAst.From(t.table(), t.subquery(), t.alias(), kind, on, jat));
             }
@@ -414,7 +415,7 @@ public final class DsqlParser {
             return "left";
         }
         if (isWord("RIGHT") || isWord("FULL") || isWord("CROSS") || isWord("NATURAL")) {
-            throw new DsqlException(DsqlException.JOIN, peek().upper() + " JOIN is not Drishti SQL", "JOIN or LEFT JOIN along a relationship of the model", peek().start(), peek().end());
+            throw new DsqlException(DsqlException.JOIN, peek().upper() + " JOIN is not " + Branding.sqlName(), "JOIN or LEFT JOIN along a relationship of the model", peek().start(), peek().end());
         }
         return null;
     }
@@ -435,7 +436,7 @@ public final class DsqlParser {
                     t.end());
         }
         if (op("(")) {
-            throw new DsqlException(DsqlException.FUNCTION, "table functions (" + table + "(...)) are not Drishti SQL: tables are the model's aliases", null, at, peek().start());
+            throw new DsqlException(DsqlException.FUNCTION, "table functions (" + table + "(...)) are not " + Branding.sqlName() + ": tables are the model's aliases", null, at, peek().start());
         }
         String alias = null;
         if (word("AS")) {
@@ -649,7 +650,7 @@ public final class DsqlParser {
         op("+");
         SqlAst.Expr e = primary();
         if (op("::")) {
-            throw new DsqlException(DsqlException.SHAPE, "'::' casts are not Drishti SQL", "CAST(x AS type)", at);
+            throw new DsqlException(DsqlException.SHAPE, "'::' casts are not " + Branding.sqlName(), "CAST(x AS type)", at);
         }
         return e;
     }
@@ -676,7 +677,7 @@ public final class DsqlParser {
                     }
                     SqlAst.Expr e = expr();
                     if (isOp(",")) {
-                        throw new DsqlException(DsqlException.SHAPE, "row values ((a, b)) are not Drishti SQL", null, peek().start());
+                        throw new DsqlException(DsqlException.SHAPE, "row values ((a, b)) are not " + Branding.sqlName(), null, peek().start());
                     }
                     expectOp(")", "to close the bracket");
                     return e;
@@ -703,7 +704,7 @@ public final class DsqlParser {
                         return new SqlAst.Literal(toks.get(p - 1).text(), u.toLowerCase(Locale.ROOT), at);
                     }
                 }
-                case "INTERVAL" -> throw new DsqlException(DsqlException.SHAPE, "INTERVAL is not Drishti SQL (yet)", "compare with DATE '...' literals", at, t.end());
+                case "INTERVAL" -> throw new DsqlException(DsqlException.SHAPE, "INTERVAL is not " + Branding.sqlName() + " (yet)", "compare with DATE '...' literals", at, t.end());
                 case "CASE" -> {
                     return caseExpr();
                 }
@@ -729,7 +730,7 @@ public final class DsqlParser {
                     expectOp(")", "to close CAST");
                     return new SqlAst.Cast(v, ty.toString(), at);
                 }
-                case "EXISTS" -> throw new DsqlException(DsqlException.SHAPE, "EXISTS is not Drishti SQL: a semi-join is a relationship of the model", null, at, t.end());
+                case "EXISTS" -> throw new DsqlException(DsqlException.SHAPE, "EXISTS is not " + Branding.sqlName() + ": a semi-join is a relationship of the model", null, at, t.end());
                 default -> { }
             }
         }
@@ -743,7 +744,7 @@ public final class DsqlParser {
         List<String> parts = new ArrayList<>(List.of(t.text()));
         while (op(".")) {
             if (op("*")) {
-                throw new DsqlException(DsqlException.SHAPE, t.text() + ".* is not Drishti SQL", "name the columns", at);
+                throw new DsqlException(DsqlException.SHAPE, t.text() + ".* is not " + Branding.sqlName(), "name the columns", at);
             }
             Tok n = peek();
             if (n.type() != T.IDENT && n.type() != T.QIDENT) {
@@ -753,7 +754,7 @@ public final class DsqlParser {
             parts.add(n.text());
         }
         if (isOp("(")) {
-            throw new DsqlException(DsqlException.FUNCTION, "'" + String.join(".", parts) + "(...)' is not a function of Drishti SQL", null, at, peek().end());
+            throw new DsqlException(DsqlException.FUNCTION, "'" + String.join(".", parts) + "(...)' is not a function of " + Branding.sqlName(), null, at, peek().end());
         }
         return new SqlAst.Column(parts, at);
     }
@@ -814,7 +815,7 @@ public final class DsqlParser {
             within = o.get(0).expr();
         }
         if (word("FILTER")) {
-            throw new DsqlException(DsqlException.SHAPE, "FILTER (WHERE ...) on an aggregate is not Drishti SQL (yet)", "a local measure with where=: SUM(x) as a DEL measure sum(x, where=...)", at);
+            throw new DsqlException(DsqlException.SHAPE, "FILTER (WHERE ...) on an aggregate is not " + Branding.sqlName() + " (yet)", "a local measure with where=: SUM(x) as a DEL measure sum(x, where=...)", at);
         }
         SqlAst.Over over = null;
         if (word("OVER")) {
@@ -829,7 +830,7 @@ public final class DsqlParser {
             }
             List<SqlAst.Order> order = isWord("ORDER") ? orderBy() : List.of();
             if (isWord("ROWS") || isWord("RANGE")) {
-                throw new DsqlException(DsqlException.SHAPE, "window frames (ROWS/RANGE) are not Drishti SQL (yet)", "a DEL window measure: moving_avg(agg, n, order)", peek().start());
+                throw new DsqlException(DsqlException.SHAPE, "window frames (ROWS/RANGE) are not " + Branding.sqlName() + " (yet)", "a DEL window measure: moving_avg(agg, n, order)", peek().start());
             }
             expectOp(")", "to close OVER (...)");
             over = new SqlAst.Over(partition, order, oat);

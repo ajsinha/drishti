@@ -15,6 +15,7 @@
  */
 package com.ash.drishti.server.collab.compliance;
 
+import com.ash.drishti.common.Branding;
 import com.ash.drishti.common.DrishtiException;
 import com.ash.drishti.common.ErrorCode;
 import com.ash.drishti.identity.AuditLog;
@@ -663,7 +664,7 @@ public final class ExportService implements AutoCloseable {
         m.put("requestedBy", job.requester);
         m.put("requestedAt", job.created);
         m.put("completedAt", clock.instant());
-        m.put("software", Map.of("product", "Drishti", "version", version));
+        m.put("software", Map.of("product", Branding.name(""), "version", version));
         m.put("filters", job.filters);
         m.put("counts", counts);
         m.put("files", files);

@@ -15,6 +15,7 @@
  */
 package com.ash.drishti.server.collab.bridge;
 
+import com.ash.drishti.common.Branding;
 import com.ash.drishti.common.DrishtiException;
 import com.ash.drishti.common.ErrorCode;
 import com.ash.drishti.identity.AccessLog;
@@ -67,7 +68,7 @@ public final class BridgeSender implements OutboxChannel {
         this.props = props;
         this.audit = audit;
         this.clock = clock;
-        this.product = product == null || product.isBlank() ? "Drishti" : product;
+        this.product = product == null || product.isBlank() ? Branding.name("the console") : product;
     }
 
     @Override

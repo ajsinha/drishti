@@ -15,6 +15,7 @@
  */
 package com.ash.drishti.server.compute;
 
+import com.ash.drishti.common.Branding;
 import com.ash.drishti.common.DrishtiException;
 import com.ash.drishti.common.ErrorCode;
 import com.ash.drishti.compute.ComputeException;
@@ -184,7 +185,7 @@ public class ComputeController {
 
     private static void requirePeer() {
         if (!NetCaller.fromPeer()) {
-            throw new DrishtiException(ErrorCode.FORBIDDEN, "only another Drishti*net member may call this");
+            throw new DrishtiException(ErrorCode.FORBIDDEN, "only another " + Branding.netName() + " member may call this");
         }
     }
 

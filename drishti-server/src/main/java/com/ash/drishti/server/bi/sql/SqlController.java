@@ -15,6 +15,7 @@
  */
 package com.ash.drishti.server.bi.sql;
 
+import com.ash.drishti.common.Branding;
 import com.ash.drishti.common.DrishtiException;
 import com.ash.drishti.common.ErrorCode;
 import com.ash.drishti.identity.AuditLog;
@@ -114,7 +115,7 @@ public class SqlController {
 
     private void enabled() {
         if (!sql.properties().enabled()) {
-            throw new DrishtiException(ErrorCode.BI_OFF, "Drishti SQL is switched off on this server (drishti.bi.sql.enabled)");
+            throw new DrishtiException(ErrorCode.BI_OFF, Branding.sqlName() + " is switched off on this server (drishti.bi.sql.enabled)");
         }
     }
 

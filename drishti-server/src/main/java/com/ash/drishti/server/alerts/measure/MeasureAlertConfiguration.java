@@ -89,7 +89,7 @@ public class MeasureAlertConfiguration {
     @SuppressWarnings("java:S107")
     public AlertChannels alertChannels(InboxService inbox, InboxHub hub, ObjectProvider<JavaMailSender> sender, CollabProperties collab, ObjectProvider<BridgeNotifier> bridges,
             com.ash.drishti.server.notify.NotifyChannels notify, com.ash.drishti.server.notify.PhoneBook phones,
-            @Value("${drishti.branding.product:Drishti}") String product) {
+            @Value("${drishti.branding.product:}") String product) {
         String from = collab.email().from();
         String host = from.contains("@") ? from.substring(from.indexOf('@') + 1) : "localhost";
         JavaMailSender smtp = sender.getIfAvailable();
@@ -104,7 +104,7 @@ public class MeasureAlertConfiguration {
     @SuppressWarnings("java:S107")
     public MeasureAlertService measureAlertService(PreferenceStore store, BiValueReader bi, FieldValueReader fields, ServerAlertSources sources, BoardAlertSource boards,
             AlertChannels channels, UserService users, Principals principals, SecurityProperties security, AuditLog audit, MeasureAlertProperties props, BusinessDates dates, LoadService loads,
-            ObjectProvider<BridgeItemRenderer> renderer, CollabProperties collab, org.springframework.core.env.Environment env, @Value("${drishti.branding.product:Drishti}") String product,
+            ObjectProvider<BridgeItemRenderer> renderer, CollabProperties collab, org.springframework.core.env.Environment env, @Value("${drishti.branding.product:}") String product,
             ObjectProvider<com.ash.drishti.server.bi.mq.ModelCatalog> models) {
         ValueReader reader = (spec, who, date) -> spec.source().type().equals("field") ? fields.read(spec, who, date) : bi.read(spec, who, date);
         // with security off the signed-in name need not be a user of the directory: it is still a person to alert (no email address, the rights security-off gives)

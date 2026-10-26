@@ -161,7 +161,7 @@ public class CollabConfiguration {
     @Bean(destroyMethod = "close")
     public OutboxDispatcher outboxDispatcher(OutboxStore outbox, CollabProperties props, Principals principals, List<ItemRenderer> renderers,
             ObjectProvider<JavaMailSender> sender, io.micrometer.core.instrument.MeterRegistry meters, EmailNotifier email,
-            List<OutboxChannel> channels, BridgeNotifier bridges, @Value("${drishti.branding.product:Drishti}") String product) {
+            List<OutboxChannel> channels, BridgeNotifier bridges, @Value("${drishti.branding.product:}") String product) {
         String from = props.email().from();
         String host = from.contains("@") ? from.substring(from.indexOf('@') + 1) : "localhost";
         JavaMailSender smtp = sender.getIfAvailable();

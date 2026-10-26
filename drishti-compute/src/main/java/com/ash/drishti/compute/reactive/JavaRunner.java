@@ -57,7 +57,7 @@ public final class JavaRunner implements EngineRunner {
         boolean shipped = className.startsWith("com.ash.drishti.");
         if (!shipped && !inProcessAllowed) {
             throw new IllegalArgumentException(connector + ": engine " + className + " would run inside the server; this server allows only "
-                    + "Drishti's own Java engines there (compute.in-process-java: false)");
+                    + "the server's own Java engines there (compute.in-process-java: false)");
         }
         try {
             ClassLoader cl = Thread.currentThread().getContextClassLoader() != null ? Thread.currentThread().getContextClassLoader() : JavaRunner.class.getClassLoader();

@@ -73,7 +73,7 @@
         <p class="bs-actions"><label class="btn-pill btn-ghost" for="wbFiles"><i class="bi bi-plus-lg" aria-hidden="true"></i> Add files
           <input id="wbFiles" class="bs-file" type="file" multiple accept=".json,.jsonl,application/json" data-add-files></label>
           <a class="btn-pill btn-ghost" href="/build/new#store" title="Stored entities and schemas are added when a design is created">More ways</a>
-          <a class="btn-pill btn-ghost" href="/build/designs/{{ design.id }}/shape/download?kind=shape" download="shape.json" title="The schema with Drishti's x-drishti roles">shape.json</a>
+          <a class="btn-pill btn-ghost" href="/build/designs/{{ design.id }}/shape/download?kind=shape" download="shape.json" title="The schema with {{ PRODUCT }}'s x-drishti roles">shape.json</a>
           <a class="btn-pill btn-ghost" href="/build/designs/{{ design.id }}/shape/download?kind=schema" download="schema.json" title="Plain JSON Schema, annotations removed">JSON Schema</a></p>
         <p class="text-muted-d" data-data-note></p>
       </section>

@@ -177,7 +177,7 @@ final class CassandraSessions {
             return (AuthProvider) c.getConstructor(String.class).newInstance(r);
         } catch (ClassNotFoundException e) {
             throw new IllegalArgumentException("sigv4: true needs AWS's SigV4 plug-in for the Cassandra driver (software.aws.mcs:"
-                    + "aws-sigv4-auth-cassandra-java-driver-plugin) in the plugin folder; it is not shipped with Drishti", e);
+                    + "aws-sigv4-auth-cassandra-java-driver-plugin) in the plugin folder; it is not shipped with the server", e);
         } catch (ReflectiveOperationException e) {
             throw new IllegalArgumentException("sigv4: AWS's SigV4 plug-in could not be started: " + e, e);
         }

@@ -35,8 +35,49 @@ public record Branding(String product, String tagline, String owner, String copy
         notice = notice == null ? "" : notice;
     }
 
+    /** The branding the server was configured with, until {@link #install} is called: empty. */
+    private static volatile Branding current = new Branding(null, null, null, null, null);
+
     /** The product name, or {@code fallback} when none is configured. */
     public String productOr(String fallback) {
         return product.isBlank() ? fallback : product;
+    }
+
+    /** A feature named after the product: {@code feature("SQL")} is {@code "<product> SQL"}, just {@code "SQL"} with no product. */
+    public String feature(String name) {
+        return product.isBlank() ? name : product + " " + name;
+    }
+
+    /** The cluster by the product's name: {@code "<product>*net"}, or {@code "the cluster"} with no product. */
+    public String net() {
+        return product.isBlank() ? "the cluster" : product + "*net";
+    }
+
+    /**
+     * Makes {@code b} the branding that code without a Spring context (parsers, renderers, problem texts) names the product by;
+     * the server installs its {@code drishti.branding.*} once at start.
+     */
+    public static void install(Branding b) {
+        current = b == null ? new Branding(null, null, null, null, null) : b;
+    }
+
+    /** The installed branding (empty before the server installs one). */
+    public static Branding current() {
+        return current;
+    }
+
+    /** The server's SQL by the product's name, {@code "<product> SQL"}. */
+    public static String sqlName() {
+        return current.feature("SQL");
+    }
+
+    /** The cluster by the product's name, {@code "<product>*net"}. */
+    public static String netName() {
+        return current.net();
+    }
+
+    /** The product's name, or {@code fallback} when none is configured (the installed branding). */
+    public static String name(String fallback) {
+        return current.productOr(fallback);
     }
 }

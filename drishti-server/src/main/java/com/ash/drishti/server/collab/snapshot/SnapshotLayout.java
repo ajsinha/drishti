@@ -15,6 +15,7 @@
  */
 package com.ash.drishti.server.collab.snapshot;
 
+import com.ash.drishti.common.Branding;
 import com.ash.drishti.engine.view.PanelData;
 import com.ash.drishti.engine.view.ViewModel;
 import com.ash.drishti.engine.view.ViewModel.Cell;
@@ -101,7 +102,7 @@ public final class SnapshotLayout {
             drawn++;
         }
         if (left > 0) {
-            pen.text(M, y + 12, "… " + left + (left == 1 ? " more panel" : " more panels") + " not shown: open the view in Drishti", 11, false, GREY);
+            pen.text(M, y + 12, "… " + left + (left == 1 ? " more panel" : " more panels") + " not shown: open the view in " + Branding.name("the console"), 11, false, GREY);
             y += ROW + 4;
         }
         int height = Math.min(maxHeight, Math.max(160, y + 8 + BAND_HEIGHT));
@@ -430,7 +431,7 @@ public final class SnapshotLayout {
 
     private int placeholder(Pen pen, int y, String kind) {
         pen.items.add(new SnapshotModel.Box(M + 6, y, width - 2 * M - 12, 40, RULE, false));
-        pen.text(M + 16, y + 24, "The " + nz(kind) + " panel is a chart: open the view in Drishti to see it", 12, false, GREY);
+        pen.text(M + 16, y + 24, "The " + nz(kind) + " panel is a chart: open the view in " + Branding.name("the console") + " to see it", 12, false, GREY);
         return y + 48;
     }
 

@@ -21,6 +21,8 @@
    version, the semver bump it needs (one click), and who is affected. */
 (function () {
   'use strict';
+  // the product's name from configuration (ui.product, on <body data-product>); its SQL is "<product> SQL"
+  const PRODUCT = (document.body && document.body.dataset.product) || '', SQL_NAME = (PRODUCT + ' SQL').trim();
   const M = window.drishtiModel, B = window.drishtiBi;
   if (!M || !B) { return; }
   const h = M.h, q = M.q;
@@ -308,7 +310,7 @@
     let box = q('[data-model-tests]', pane);
     if (!box) {
       box = h('section', { class: 'bi-sec', 'data-model-tests': '' }, h('h3', { text: 'Expected values' }),
-        h('p', { class: 'text-muted-d', text: 'Tests the model declares (tests: in the YAML): a Drishti SQL question and the figure it must give, run on the saved model as you or a role you hold.' }),
+        h('p', { class: 'text-muted-d', text: 'Tests the model declares (tests: in the YAML): a ' + SQL_NAME + ' question and the figure it must give, run on the saved model as you or a role you hold.' }),
         h('ul', { class: 'bi-layer-list', 'data-model-tests-list': '' }),
         h('p', {}, h('label', {}, 'Run as ', h('select', { class: 'studio-select', 'data-tests-role': '', 'aria-label': 'Run the tests as a role' }, h('option', { value: '', text: 'yourself' }))), ' ',
           h('button', { type: 'button', class: 'btn-pill btn-ghost', 'data-tests-run': '' }, B.icon('clipboard-check'), ' Run the tests'), ' ',
@@ -347,7 +349,7 @@
   /** The Tests designer: a name, a Drishti SQL question, the figure it must give (a number, at least, at most, or a range), a tolerance, and the role to run it as. */
   function testForm() {
     const name = h('input', { class: 'studio-in', 'data-test-name': '', placeholder: 'FX desk MTM', 'aria-label': 'Test name' });
-    const sql = h('textarea', { class: 'studio-in mono', rows: '2', 'data-test-sql': '', placeholder: "SELECT MEASURE('Sum of mtm') FROM trade WHERE trade.desk = 'DESK-FX'", 'aria-label': 'Drishti SQL question' });
+    const sql = h('textarea', { class: 'studio-in mono', rows: '2', 'data-test-sql': '', placeholder: "SELECT MEASURE('Sum of mtm') FROM trade WHERE trade.desk = 'DESK-FX'", 'aria-label': SQL_NAME + ' question' });
     const how = sel([['eq', 'equals'], ['min', 'at least'], ['max', 'at most'], ['range', 'between']], 'eq', { 'data-test-how': '', 'aria-label': 'The figure must be' });
     const a = h('input', { class: 'studio-in mono', type: 'number', step: 'any', 'data-test-a': '', 'aria-label': 'Expected value', placeholder: '125000' });
     const b = h('input', { class: 'studio-in mono', type: 'number', step: 'any', 'data-test-b': '', 'aria-label': 'Upper bound', placeholder: '130000', hidden: true });
@@ -367,7 +369,7 @@
       B.near(add, 'Added ' + n + '. It runs on the saved draft (autosaved): Run the tests.', false);
     });
     return h('fieldset', { class: 'bi-form bi-md-testform', 'data-test-form': '', 'data-keep': '' }, h('legend', { text: 'Add an expected value' }),
-      h('label', { class: 'bi-frow' }, h('span', { text: 'Name' }), name), h('label', { class: 'bi-frow' }, h('span', { text: 'Question (Drishti SQL)' }), sql),
+      h('label', { class: 'bi-frow' }, h('span', { text: 'Name' }), name), h('label', { class: 'bi-frow' }, h('span', { text: 'Question (' + SQL_NAME + ')' }), sql),
       h('div', { class: 'bi-md-row' }, h('label', {}, 'The figure is ', how), a, b, h('label', {}, 'give or take ', tol), h('label', {}, 'run as ', role), add));
   }
 

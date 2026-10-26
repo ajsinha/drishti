@@ -217,7 +217,7 @@
     });
     renderCrumb(d);
     renderProv(d.provenance, d);
-    document.title = "VaR · " + d.label + " · Drishti";
+    document.title = "VaR · " + d.label + (document.body.dataset.product ? " · " + document.body.dataset.product : "");
   }
 
   function renderCrumb(d) {

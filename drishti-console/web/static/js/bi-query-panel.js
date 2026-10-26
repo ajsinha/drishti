@@ -19,6 +19,8 @@
    printer, not a parser: the console never reads SQL for meaning); the server checks and runs it. Also B.mq.sql for Analyse's starter cells. */
 (function () {
   'use strict';
+  // the product's name from configuration (ui.product, on <body data-product>); its SQL is "<product> SQL"
+  const PRODUCT = (document.body && document.body.dataset.product) || '', SQL_NAME = (PRODUCT + ' SQL').trim();
   const B = window.drishtiBi;
   if (!B || !B.mq) { return; }
   const h = B.h;
@@ -163,7 +165,7 @@
         B.clear(out).appendChild(host);
         B.runs.settle(g, { el: host, body: host }, { title: 'Run as SQL', reask: (w, extra) => B.ask('/sql', Object.assign({}, body, extra || {}), w) }).then((a) => { if (a) { drawAnswer(a); } });
         return null;
-      }).catch((e) => { B.clear(out).appendChild(h('span', { class: 'bi-bad', 'data-qp-error': e.code || '', text: e.status === 404 ? 'This server does not run Drishti SQL yet.' : e.message })); }));
+      }).catch((e) => { B.clear(out).appendChild(h('span', { class: 'bi-bad', 'data-qp-error': e.code || '', text: e.status === 404 ? 'This server does not run ' + SQL_NAME + ' yet.' : e.message })); }));
     });
     function drawAnswer(a) {
       const plan = (a.meta || {}).plan || (a.meta || {}).planHash || '';

@@ -15,6 +15,7 @@
  */
 package com.ash.drishti.server.net;
 
+import com.ash.drishti.common.Branding;
 import com.ash.drishti.net.security.ClusterKey;
 import com.ash.drishti.net.security.NetHeaders;
 import com.ash.drishti.net.security.OnBehalfOf;
@@ -86,7 +87,7 @@ public final class NetCallFilter extends OncePerRequestFilter {
         if (signature == null) {
             if (nodeOnly) {
                 if (!net.running()) {
-                    problem(res, 404, "DRS-5050", "Drishti*net is off on this node");
+                    problem(res, 404, "DRS-5050", Branding.netName() + " is off on this node");
                 } else {
                     net.refused(req.getRemoteAddr(), "", "no cluster credential on " + path);
                     problem(res, 401, "DRS-5051", "this endpoint is for the cluster's nodes only: no cluster credential");
@@ -97,7 +98,7 @@ public final class NetCallFilter extends OncePerRequestFilter {
             return;
         }
         if (!net.running() && !("gossip".equals(endpoint) && net.node().isPresent())) {
-            problem(res, 404, "DRS-5050", "Drishti*net is off on this node");
+            problem(res, 404, "DRS-5050", Branding.netName() + " is off on this node");
             return;
         }
         byte[] body = req.getInputStream().readNBytes(MAX_BODY + 1);

@@ -15,6 +15,7 @@
  */
 package com.ash.drishti.server.bi.mq;
 
+import com.ash.drishti.common.Branding;
 import com.ash.drishti.server.bi.dataset.Dataset;
 import com.ash.drishti.server.bi.engine.ArrowIpcWriter;
 import com.ash.drishti.server.bi.engine.QueryRequest;
@@ -355,7 +356,7 @@ final class DatasetSources implements StagedTables {
     private Answer fromSql(String table, DatasetDef d) {
         ModelCatalog.SqlViews views = catalog.sqlViews();
         if (views == null) {
-            throw new MqException(MqException.Problem.of("DRS-9108", "source.sql", "Drishti SQL is not available on this server (drishti.bi.sql.enabled)"));
+            throw new MqException(MqException.Problem.of("DRS-9108", "source.sql", Branding.sqlName() + " is not available on this server (drishti.bi.sql.enabled)"));
         }
         MqService.Bound inner = inner(table, d.source().model());
         java.time.LocalDate date = outer.from() != null && (outer.to() == null || outer.from().equals(outer.to())) ? outer.from() : null;

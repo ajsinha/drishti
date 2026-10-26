@@ -54,7 +54,7 @@ final class LocalWriteFileIO implements FileIO {
 
     static Path local(String path) {
         if (!LocalPaths.isLocal(path)) {
-            throw new UnsupportedOperationException("Drishti's lake writer writes local tables only, not " + path
+            throw new UnsupportedOperationException("the lake writer writes local tables only, not " + path
                     + " (use --engine deltalake for object storage)");
         }
         return Path.of(LocalPaths.toLocal(path, LocalPaths.WINDOWS));

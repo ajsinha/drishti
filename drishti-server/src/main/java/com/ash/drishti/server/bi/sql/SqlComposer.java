@@ -15,6 +15,7 @@
  */
 package com.ash.drishti.server.bi.sql;
 
+import com.ash.drishti.common.Branding;
 import java.util.ArrayList;
 import java.util.LinkedHashMap;
 import java.util.LinkedHashSet;
@@ -71,7 +72,7 @@ final class SqlComposer {
     private String query(SqlAst.Query q, boolean top) {
         for (SqlAst.Cte c : q.with()) {
             if (!top) {
-                throw new DsqlException(DsqlException.SHAPE, "a WITH inside a subquery is not Drishti SQL (yet)", "put every WITH query at the top", c.at());
+                throw new DsqlException(DsqlException.SHAPE, "a WITH inside a subquery is not " + Branding.sqlName() + " (yet)", "put every WITH query at the top", c.at());
             }
             if (cteTables.containsKey(c.name().toLowerCase(Locale.ROOT))) {
                 throw new DsqlException(DsqlException.SHAPE, "the WITH query '" + c.name() + "' is named twice", null, c.at());
@@ -91,10 +92,10 @@ final class SqlComposer {
             throw new DsqlException(DsqlException.SHAPE, what + " is not one SELECT over the model's tables", "make it a plain SELECT ... FROM <alias> ...", at);
         }
         if (s.items().stream().anyMatch(i -> i.expr() != null && SqlAst.any(i.expr(), x -> x instanceof SqlAst.Call c && c.over() != null))) {
-            throw new DsqlException(DsqlException.SHAPE, "a window inside " + what + " is not Drishti SQL (yet)", "rank in the outer SELECT", at);
+            throw new DsqlException(DsqlException.SHAPE, "a window inside " + what + " is not " + Branding.sqlName() + " (yet)", "rank in the outer SELECT", at);
         }
         if (!q.orderBy().isEmpty() || q.limit() != null) {
-            throw new DsqlException(DsqlException.SHAPE, "ORDER BY and LIMIT after a UNION inside " + what + " are not Drishti SQL", null, at);
+            throw new DsqlException(DsqlException.SHAPE, "ORDER BY and LIMIT after a UNION inside " + what + " are not " + Branding.sqlName(), null, at);
         }
         String table = "t_" + leaves.size();
         leaves.add(new LeafUse(table, binder.leaf(s)));
@@ -217,7 +218,7 @@ final class SqlComposer {
         shapes.add("join");
         if (!s.groupBy().isEmpty() || s.having() != null || s.items().stream().anyMatch(i -> i.expr() != null && SqlAst.any(i.expr(),
                 x -> x instanceof SqlAst.Call c && SqlFunctions.AGGREGATES.contains(c.name()) && c.over() == null))) {
-            throw new DsqlException(DsqlException.SHAPE, "aggregating answers again (GROUP BY or an aggregate over WITH queries) is not Drishti SQL",
+            throw new DsqlException(DsqlException.SHAPE, "aggregating answers again (GROUP BY or an aggregate over WITH queries) is not " + Branding.sqlName(),
                     "aggregate in the model: a measure, or a SELECT with GROUP BY over the model's tables", s.at());
         }
         if (s.time() != null) {
@@ -293,7 +294,7 @@ final class SqlComposer {
             case SqlAst.Unary u -> "NOT".equals(u.op()) ? "(NOT " + expr(u.operand(), sensitiveUse) + ")" : "(-" + expr(u.operand(), sensitiveUse) + ")";
             case SqlAst.In i -> "(" + expr(i.value(), sensitiveUse) + (i.negated() ? " NOT IN (" : " IN (") + String.join(", ", i.items().stream().map(x -> {
                 if (x instanceof SqlAst.SubqueryExpr s) {
-                    throw new DsqlException(DsqlException.SHAPE, "IN (SELECT ...) is not Drishti SQL", "JOIN the WITH query", s.at());
+                    throw new DsqlException(DsqlException.SHAPE, "IN (SELECT ...) is not " + Branding.sqlName(), "JOIN the WITH query", s.at());
                 }
                 return expr(x, sensitiveUse);
             }).toList()) + "))";
@@ -316,7 +317,7 @@ final class SqlComposer {
             }
             case SqlAst.Cast c -> "CAST(" + expr(c.value(), sensitiveUse) + " AS " + castType(c) + ")";
             case SqlAst.Call c -> call(c, sensitiveUse);
-            case SqlAst.SubqueryExpr s -> throw new DsqlException(DsqlException.SHAPE, "a subquery as a value is not Drishti SQL", null, s.at());
+            case SqlAst.SubqueryExpr s -> throw new DsqlException(DsqlException.SHAPE, "a subquery as a value is not " + Branding.sqlName(), null, s.at());
         };
     }
 
@@ -341,7 +342,7 @@ final class SqlComposer {
             case "DATE" -> "DATE";
             case "TIMESTAMP" -> "TIMESTAMP";
             case "BOOLEAN", "BOOL" -> "BOOLEAN";
-            default -> throw new DsqlException(DsqlException.SHAPE, "CAST to " + c.type() + " is not Drishti SQL", "VARCHAR, INTEGER, DOUBLE, DECIMAL, DATE, TIMESTAMP, BOOLEAN", c.at());
+            default -> throw new DsqlException(DsqlException.SHAPE, "CAST to " + c.type() + " is not " + Branding.sqlName(), "VARCHAR, INTEGER, DOUBLE, DECIMAL, DATE, TIMESTAMP, BOOLEAN", c.at());
         };
     }
 

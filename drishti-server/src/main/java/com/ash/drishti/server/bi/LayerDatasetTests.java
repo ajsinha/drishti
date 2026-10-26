@@ -15,6 +15,7 @@
  */
 package com.ash.drishti.server.bi;
 
+import com.ash.drishti.common.Branding;
 import com.ash.drishti.server.bi.dataset.ExpectedValue;
 import com.ash.drishti.server.bi.engine.ArrowIpcWriter;
 import com.ash.drishti.server.bi.engine.QueryService;
@@ -69,7 +70,7 @@ final class LayerDatasetTests {
         String role = t.hasNonNull("role") && !t.path("role").asText().isBlank() ? t.path("role").asText() : chosen == null || chosen.isBlank() ? null : chosen;
         String label = t.path("name").asText(kind);
         if (sql == null) {
-            return error(label, kind, "", "", "Drishti SQL is not available on this server, so a dataset's tests cannot run", role);
+            return error(label, kind, "", "", Branding.sqlName() + " is not available on this server, so a dataset's tests cannot run", role);
         }
         try {
             Principal as = runner.as(p, role);

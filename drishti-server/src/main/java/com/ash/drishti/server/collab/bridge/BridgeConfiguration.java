@@ -56,14 +56,14 @@ public class BridgeConfiguration {
     @Bean
     public BridgeItemRenderer bridgeItemRenderer(ShareStore shares, ThreadStore threads, Principals principals, Entitlements entitlements,
             MailContentPolicy policy, PanelTitles titles, LinkBuilder links, CollabProperties props,
-            com.ash.drishti.server.collab.thread.CommentRenderer comments, @Value("${drishti.branding.product:Drishti}") String product) {
+            com.ash.drishti.server.collab.thread.CommentRenderer comments, @Value("${drishti.branding.product:}") String product) {
         return new BridgeItemRenderer(shares, threads, principals, entitlements, policy, titles, links, props, comments, product, Clock.systemUTC());
     }
 
     @Bean
     public BridgeSender bridgeSender(BridgeRegistry registry, BridgeItemRenderer renderer, RateLimits limits, CollabProperties props, AuditLog audit,
             ObjectProvider<com.ash.drishti.identity.AccessLog> accessLog, @Value("${drishti.access-log.enabled:true}") boolean accessLogOn,
-            @Value("${drishti.branding.product:Drishti}") String product) {
+            @Value("${drishti.branding.product:}") String product) {
         return new BridgeSender(registry, renderer, new BridgeClient(props.bridges().timeout()), limits, props, audit,
                 accessLogOn ? accessLog.getIfAvailable() : null, Clock.systemUTC(), product);
     }

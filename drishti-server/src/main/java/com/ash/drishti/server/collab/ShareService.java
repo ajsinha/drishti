@@ -15,6 +15,7 @@
  */
 package com.ash.drishti.server.collab;
 
+import com.ash.drishti.common.Branding;
 import com.ash.drishti.api.AsOf;
 import com.ash.drishti.api.EntityDocument;
 import com.ash.drishti.api.EntityRef;
@@ -185,7 +186,7 @@ public final class ShareService {
         String panel = blank(req.panel()) ? null : req.panel().trim();
         requirePackSharing(kind);
         if (req.channels() != null && Boolean.TRUE.equals(req.channels().email()) && !emailAvailable()) {
-            throw new DrishtiException(ErrorCode.MAIL_UNAVAILABLE, "email is not configured on this server; send in Drishti only");
+            throw new DrishtiException(ErrorCode.MAIL_UNAVAILABLE, "email is not configured on this server; send in " + Branding.name("the console") + " only");
         }
         entitlements.requireOpen(sender, kind);
         if (gate != null) {
@@ -244,7 +245,7 @@ public final class ShareService {
         notices.forEach(hub::publish);
         if (wantsEmail(req)) {
             notifiers.stream().filter(n -> "email".equals(n.channel())).map(Notifier::trouble).filter(t -> t != null).findFirst().ifPresent(
-                    t -> warnings.add("Email is configured but the mail server is failing (" + t + "); the note is in Drishti and the mail will be tried again."));
+                    t -> warnings.add("Email is configured but the mail server is failing (" + t + "); the note is in " + Branding.name("the console") + " and the mail will be tried again."));
         }
         return new Result(share.id(), link(share.id()), pin, reached.size(), props.share().tell() ? skipped(sender, people, kind) : List.of(), warnings);
     }

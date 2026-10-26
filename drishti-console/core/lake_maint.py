@@ -157,7 +157,7 @@ class LakeMaintenance:
                 built = own.built(root)
                 foreign = [n for n in names if n not in built]
                 if foreign:
-                    raise LakeError(403, f"{', '.join(foreign)}: {own.FOREIGN}; Drishti never compacts or vacuums such a table", "DRS-5002")
+                    raise LakeError(403, f"{', '.join(foreign)}: {own.FOREIGN}; this console never compacts or vacuums such a table", "DRS-5002")
             out[str(root)] = sorted(set(names))
         return out
 

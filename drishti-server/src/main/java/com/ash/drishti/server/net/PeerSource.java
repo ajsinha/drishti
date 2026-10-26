@@ -15,6 +15,7 @@
  */
 package com.ash.drishti.server.net;
 
+import com.ash.drishti.common.Branding;
 import com.ash.drishti.api.AsOf;
 import com.ash.drishti.api.EntityDocument;
 import com.ash.drishti.api.EntityRef;
@@ -283,6 +284,6 @@ public final class PeerSource implements SourcePlugin {
 
     @Override
     public String health() {
-        return "UP (Drishti*net peer " + nodeId + ")";
+        return "UP (" + Branding.netName() + " peer " + nodeId + ")";
     }
 }

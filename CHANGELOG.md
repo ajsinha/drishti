@@ -17,6 +17,14 @@
 
 ## Unreleased
 
+- **Branding from configuration only (product owner, 2026-10-25).** No console template or script, and no server message, writes the
+  product's name: it comes from `ui.product` (templates `{{ PRODUCT }}`, scripts `<body data-product>`) and `drishti.branding.product`
+  (`Branding.sqlName()`, `Branding.netName()`, `Branding.name(..)`), and features follow it: `<product> SQL`, `<product> Elements`,
+  `<product>*net`. New `ui.owner` and `ui.owner_email` name the author on the About page. The fallback fonts are now
+  "Product Wordmark" and "Product Tagline" (element sheet rebuilt). Guard tests: `tests/test_branding_guard.py` (console: templates,
+  scripts, a rebranded About page) and `BrandingLiteralTest` (drishti-it: string literals of the server's main code). Licence headers,
+  header names (`X-Drishti-…`), `DRISHTI_` variables and code identifiers are unchanged. docs/admin/CONFIGURATION.md.
+
 - **Scope narrowed (product owner, 2026-10-25): fundamentals and VaR only.**
   - Active: the data contracts of every command, and VaR complete.
   - Parked, designs kept: every other computed measure and its retirement.

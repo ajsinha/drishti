@@ -24,9 +24,9 @@
   <h1>Data loads <a class="mono" href="/admin/packs/{{ pack | urlencode }}" title="Open pack {{ pack }}">{{ pack }}</a></h1>
   {% with tab='packs' %}{% include "admin/_nav.html" %}{% endwith %}
   <p><a href="/admin/packs">&larr; Packs</a></p>
-  <p class="text-muted-d">Your ETL tells Drishti when a batch has landed (<a href="/help/data-loads">Telling Drishti new data has landed</a>);
-    Drishti then refreshes what it caches, checks the data is readable, evaluates alert rules, and tells the people this pack names.
-    Drishti does not load the data: it reads it where it lives. <span class="mono">/</span> focuses the filter, <span class="mono">e</span> opens the expectations settings.</p>
+  <p class="text-muted-d">Your ETL tells {{ PRODUCT }} when a batch has landed (<a href="/help/data-loads">Telling {{ PRODUCT }} new data has landed</a>);
+    {{ PRODUCT }} then refreshes what it caches, checks the data is readable, evaluates alert rules, and tells the people this pack names.
+    {{ PRODUCT }} does not load the data: it reads it where it lives. <span class="mono">/</span> focuses the filter, <span class="mono">e</span> opens the expectations settings.</p>
 
   <h2 class="ws-h" id="expectations">Expectations</h2>
   <p class="text-muted-d">What this pack expects to land each business day, and its state now

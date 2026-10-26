@@ -96,6 +96,8 @@ ui:
   product_meaning: Drishti (दृष्टि) means <em>sight</em>.
   copyright: Copyright © 2026 Ashutosh Sinha. All rights reserved. Proprietary and confidential.
   notice: Unauthorised copying, use or distribution is prohibited.
+  owner: Ashutosh Sinha             # who holds the rights: the About page's Author (the server's drishti.branding.owner)
+  owner_email: ajsinha@gmail.com    # beside the owner on the About page (blank for none)
   user: ${DRISHTI_USER:ash}          # acting user until sign-in lands (Wave 10)
   # how long a worker reuses what the server says about a user (settings, packs, layouts, pivots); a change on this console reaches
   # every worker at once through the user stamps (<console data>/user-stamps); this bounds another console behind the same address

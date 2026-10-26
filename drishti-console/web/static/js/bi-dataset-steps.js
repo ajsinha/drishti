@@ -19,6 +19,8 @@
    grain, each column's aggregation), Preview (the server's answer as you) and Save (title, name, workspace, masks, the YAML). */
 (function () {
   'use strict';
+  // the product's name from configuration (ui.product, on <body data-product>); its SQL is "<product> SQL"
+  const PRODUCT = (document.body && document.body.dataset.product) || '', SQL_NAME = (PRODUCT + ' SQL').trim();
   const L = window.drishtiLw;
   if (!L) { return; }
   const B = L.B, h = L.h, q = L.q;
@@ -54,7 +56,7 @@
     }).catch(() => {}) : Promise.resolve());
     sm.addEventListener('change', sqlLoad);
     if (B.exprEditor) {
-      B.exprEditor(sq, { scope: 'aggregate', label: 'Drishti SQL statement', functions: false, fields: () => sqlFields, measures: () => sqlMeasures,
+      B.exprEditor(sq, { scope: 'aggregate', label: SQL_NAME + ' statement', functions: false, fields: () => sqlFields, measures: () => sqlMeasures,
         words: ['SELECT', 'FROM', 'WHERE', 'JOIN', 'GROUP BY', 'ORDER BY', 'HAVING', 'LIMIT', 'AS', 'AND', 'OR', 'NOT', 'IN', 'DESC', 'ASC', 'MEASURE', 'COUNT', 'SUM', 'AVG', 'MIN', 'MAX', 'DISTINCT', 'CASE', 'WHEN', 'THEN', 'ELSE', 'END'],
         measureInsert: (n) => "MEASURE('" + n.replace(/'/g, "''") + "')",
         check: (text) => (sm.value ? B.api('POST', '/sql/validate', { sql: text, model: sm.value }) : Promise.resolve({ valid: true, problems: [{ code: '', level: 'info', message: 'Choose the model the SQL reads to check it as you type.' }] })),
@@ -102,7 +104,7 @@
       }
       out.appendChild(h('span', { 'data-sql-ok': '', text: 'The SQL checks: ' + (W.sqlColumns.length ? W.sqlColumns.map((c) => c.name + ' (' + c.type + ')').join(', ') : 'it reads the model') + '.' }));
       return true;
-    }).catch((e) => { out.appendChild(h('span', { class: 'bi-bad', 'data-sql-problem': e.code || '', text: e.status === 404 ? 'This server does not run Drishti SQL yet.' : e.message })); return false; }));
+    }).catch((e) => { out.appendChild(h('span', { class: 'bi-bad', 'data-sql-problem': e.code || '', text: e.status === 404 ? 'This server does not run ' + SQL_NAME + ' yet.' : e.message })); return false; }));
   }
   L.leave.root = () => {
     const W = L.W;
@@ -322,7 +324,7 @@
       return B.busy(btn, () => B.sql(W.sql, W.sqlModel, 20).then((a) => {
         table(host, a.columns || [], a.rows || []);
         meta.textContent = (a.rowCount != null ? a.rowCount : (a.rows || []).length) + ' rows, as you' + ((a.meta || {}).millis != null ? ', in ' + a.meta.millis + ' ms' : '') + '.';
-      })).catch((e) => { meta.textContent = e.status === 404 ? 'This server does not run Drishti SQL yet.' : e.message; });
+      })).catch((e) => { meta.textContent = e.status === 404 ? 'This server does not run ' + SQL_NAME + ' yet.' : e.message; });
     }
     if (!W.savedId && !W.previewOk) {                                   // the server previews a saved draft: never made behind the person's back
       return B.confirm(btn, 'The server previews a saved draft. Save this dataset as a draft (you can delete it, and Save later updates the same draft) and preview it?', 'Save the draft and preview')

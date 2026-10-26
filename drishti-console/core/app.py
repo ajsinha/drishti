@@ -322,6 +322,8 @@ def create_app(settings: Settings) -> FastAPI:
         CLOCK_TZ=settings.get("ui.clock_tz", "America/New_York"),
         CLOCK_LABEL=settings.get("ui.clock_label", "NY"),
         COPYRIGHT=settings.get("ui.copyright", ""),
+        OWNER=settings.get("ui.owner", ""),
+        OWNER_EMAIL=settings.get("ui.owner_email", ""),
         BI_LIVE={
             "min_interval_ms": _bounded(settings.get("bi.live.min_interval_ms", 250), 100, 5000, 250),
             "stale_seconds": _bounded(settings.get("bi.live.stale_seconds", 30), 5, 600, 30),

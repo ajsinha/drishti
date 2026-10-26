@@ -32,7 +32,9 @@ public class BrandingConfiguration {
 
     @Bean
     public Branding branding(BrandingProperties p) {
-        return new Branding(p.getProduct(), p.getTagline(), p.getOwner(), p.getCopyright(), p.getNotice());
+        Branding b = new Branding(p.getProduct(), p.getTagline(), p.getOwner(), p.getCopyright(), p.getNotice());
+        Branding.install(b);
+        return b;
     }
 
     /** Bound from configuration; read once into {@link Branding}. */
