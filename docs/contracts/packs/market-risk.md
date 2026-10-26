@@ -33,6 +33,7 @@ One section per command of the pack: the shape of its data, how it is stored and
 | [HIER](#hier-risk-hierarchy-node-risk-hierarchy) | `risk-hierarchy` | input | active | 12 | 5 |
 | [VRES](#vres-var-of-a-scope-computed-var-result) | `var-result` | computed | active | 22 | 0 |
 | [VWIF](#vwif-var-what-if-computed-python-var-whatif) | `var-whatif` | computed | active | 19 | 0 |
+| [VOFF](#voff-var-official-results-published-var-official) | `var-official` | computed | active | 25 | 0 |
 
 ## SCN: Stress scenario (`stress-scenario`)
 
@@ -845,3 +846,66 @@ A scope's VaR and ES before and after hypothetical trades kept in the person's p
 - No stored key: an answer's id is the base scope (the id in the request); the parameters ride on it (sandbox, stress-window, component-window).
 - The hypothetical trades' vectors are supplied in the sandbox (one P&L per scenario day, priced elsewhere); taking trades out is the scope's own algebra. Pricing through QLRisk is parked until its API is stable.
 - The tables items (each trade's standalone, incremental in order and alone, component VaR and ES) and pnl (DAY, BEFORE, AFTER) come with the answer.
+
+## VOFF: VaR official results (published) (`var-official`)
+
+The official end-of-day VaR and ES of every node of the MGMT and LEGAL hierarchies, as the server captured and published them (one row per node, business date and result version); read only, for BI and other readers, never an engine's input.
+
+|  |  |
+|---|---|
+| Contract | [var-official.contract.yaml](../../../config/packs/market-risk/contracts/var-official.contract.yaml) · version 1.0 |
+| Class | computed |
+| Status | active |
+| Source | computed by Drishti: the official end-of-day capture (VarOfficial), appended by VarPublisher to risk-results/var-official |
+| Grain | One row per hierarchy node per BUSINESS_DATE and RESULT_VERSION, keyed by NODE_ID and RESULT_VERSION; the latest version of a date is the date's figure. |
+| Key | `NODE_ID`, `RESULT_VERSION` |
+| Id pattern | — |
+| Dated by | `BUSINESS_DATE` |
+| Cadence | daily (due: when the date's inputs load (the data-load signal), at start for the newest date without a record, or by an administrator) |
+| Storage | connector `var-results` (plugin `delta`), table `<root>/risk-results/var-official/` |
+| Columns | `HIERARCHY`, `NODE_ID`, `NODE_NAME`, `PARENT_ID`, `LEVEL`, `CAPTURE_ID`, `RESULT_VERSION`, `VAR`, `ES`, `LIMIT`, `LIMIT_USE`, `DIVERSIFICATION`, `HYPO_PNL`, `EXCEPTIONS_250`, `TRAFFIC_LIGHT` |
+| Partitioned by | `business_date` |
+
+**Fields**
+
+| Field | Type | Presence | Unit | Description | Example or values | Link |
+|---|---|---|---|---|---|---|
+| `BUSINESS_DATE` | date | required |  | The business date (the partition column business_date). |  |  |
+| `HIERARCHY` | text | required |  | — | `MGMT`, `LEGAL` |  |
+| `NODE_ID` | id | required |  | — | `MGMT~DESK-RATES` | `risk-hierarchy` |
+| `NODE_NAME` | text | required |  | — |  |  |
+| `PARENT_ID` | id | optional |  | The parent node (none for the bank). |  |  |
+| `LEVEL` | text | required |  | — | `bank`, `legal-entity`, `division`, `desk`, `book` |  |
+| `CAPTURE_ID` | id | required |  | The official capture the row was written from (VAR CAPTURE <id> opens it). |  |  |
+| `RESULT_VERSION` | integer | required |  | 1, then 2, 3 ... on a restatement. |  |  |
+| `INPUT_VERSIONS` | text | required |  | The inputs' versions, batch ids and position rules' digest, as JSON text. |  |  |
+| `COMPUTED_AT` | timestamp | required |  | — |  |  |
+| `CONTRACT_VERSION` | text | required |  | — | `1.3` |  |
+| `VAR` | amount | required | USD | VaR at CONFIDENCE, positive for a loss. Not additive across nodes. |  |  |
+| `ES` | amount | required | USD | Expected shortfall at ES_CONFIDENCE, positive for a loss. Not additive across nodes. |  |  |
+| `CONFIDENCE` | rate | required |  | — | `0.99` |  |
+| `ES_CONFIDENCE` | rate | required |  | — | `0.975` |  |
+| `SCENARIO_SET_ID` | id | required |  | — | `HS-509` |  |
+| `STANDALONE_SUM` | amount | optional | USD | The sum of the children's VaR (positions for a book). |  |  |
+| `DIVERSIFICATION` | amount | optional | USD | STANDALONE_SUM minus VAR. |  |  |
+| `HYPO_PNL` | amount | optional | USD | The node's hypothetical P&L for the date (the backtest's input). |  |  |
+| `LIMIT` | amount | optional | USD | The node's VaR limit from the hierarchy. |  |  |
+| `LIMIT_USE` | rate | optional |  | VAR / LIMIT. |  |  |
+| `TRADE_COUNT` | integer | required |  | — |  |  |
+| `POSITION_COUNT` | integer | required |  | — |  |  |
+| `EXCEPTIONS_250` | integer | optional |  | Backtest exceptions over the official history (up to 250 days). |  |  |
+| `TRAFFIC_LIGHT` | text | optional |  | — | `green`, `amber`, `red` |  |
+
+**Links:** `NODE_ID` → `risk-hierarchy`.
+
+**Validation**
+
+- required: fields `NODE_ID`, `RESULT_VERSION`, `VAR`, `ES`
+- unique: key `NODE_ID`, `RESULT_VERSION`; per BUSINESS_DATE
+- link: field NODE_ID; kind risk-hierarchy
+
+**Notes**
+
+- Append only (delta.appendOnly), 7 years of log and removed files: a restated date adds rows with the next RESULT_VERSION; nothing is overwritten. The BI model market-risk-var keeps the latest version of each node and date.
+- No engine reads it: the only connector over risk-results is this read-only one (tools/test_contracts.py).
+- The id is <NODE_ID>@<date>#v<RESULT_VERSION>; VAR NODE:<NODE_ID> opens the explorer at the node.

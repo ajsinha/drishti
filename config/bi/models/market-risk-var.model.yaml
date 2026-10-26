@@ -1,0 +1,49 @@
+# Project Drishti · Any data. Any domain. One grammar.
+#
+# Copyright (c) 2026 Ashutosh Sinha <ajsinha@gmail.com>.
+# All rights reserved.
+#
+# PROPRIETARY AND CONFIDENTIAL.
+#
+# This file is the confidential and proprietary property of Ashutosh Sinha.
+# Unauthorised copying, use, modification, distribution or disclosure of this
+# file, via any medium, is strictly prohibited except with the express prior
+# written permission of the copyright holder.
+#
+# See the LICENSE file in the root of this repository for the full terms.
+
+# STORED SAMPLE (2.9.0): VaR in BI, from the published official results (docs/guides/VAR_GUIDE.md section 19). One table: every node of the
+# MGMT and LEGAL hierarchies (bank, legal entity, division, desk, book) on every business date, the latest result version.
+#
+# VaR and ES are NOT ADDITIVE: the bank's VaR is not the sum of its desks' (diversification), and a node's VaR on two dates is not a total.
+# So no measure here sums them. Each row is one node on one date, and every VaR measure takes that node's own value: max() over the rows of
+# one node and date is that row. Over several nodes (a visual without the node) max() is the largest of them, never a total; group by the
+# node, or filter to one, to read a figure. The bank's own figures have their own measures (Bank VaR, Bank ES), filtered to MGMT~BANK.
+
+rachana: 2
+expressions: 2                  # DEL v2, the Python-like expression language (docs/guides/EXPRESSIONS.md)
+model: market-risk-var
+version: 1.0.0
+title: "Market risk: VaR (official)"
+description: "The official end-of-day 1-day VaR (99%) and expected shortfall (97.5%) of every node of the bank's hierarchies, by node, level (bank, legal entity, division, desk, book), hierarchy and business date, with each node's VaR limit, limit use, hypothetical P&L and backtest. VaR is not additive: every measure reads a node's own value, never a sum across nodes."
+sample: true
+endorsement: "promoted"
+tags: [sample, market-risk, var]
+
+datasets:                       # alias: the dataset it reads, and its role
+  nodes: { dataset: market-risk-var-latest, role: fact }
+
+measures:
+  VaR 99%:          { expr: "max(nodes.VAR)", format: amount0, additive: false, description: "The node's official 1-day VaR at 99%, USD. Not additive: at one node and date it is that node's own figure (max over its one row); over several nodes it is the largest of them, never their sum. Group by node or filter to one." }
+  ES 97.5%:         { expr: "max(nodes.ES)", format: amount0, additive: false, description: "The node's official expected shortfall at 97.5%, USD. Not additive, read as VaR 99% is: the node's own figure, never a sum across nodes." }
+  Bank VaR:         { expr: "max(nodes.VAR, where=nodes.NODE_ID == 'MGMT~BANK')", format: amount0, additive: false, description: "The bank's own official VaR (the MGMT hierarchy's root), not a sum of its parts." }
+  Bank ES:          { expr: "max(nodes.ES, where=nodes.NODE_ID == 'MGMT~BANK')", format: amount0, additive: false, description: "The bank's own official expected shortfall (the MGMT hierarchy's root)." }
+  VaR limit:        { expr: "max(nodes.LIMIT)", format: amount0, additive: false, description: "The node's VaR limit from the hierarchy (the node's own value, never summed)." }
+  Limit use:        { expr: "max(nodes.LIMIT_USE)", format: pct, additive: false, description: "The node's VaR over its limit (the node's own value; over several nodes, the highest)." }
+  Hypothetical P&L: { expr: "max(nodes.HYPO_PNL)", format: signed0, additive: false, description: "The node's hypothetical P&L for the date, the backtest's input (the node's own value, never summed)." }
+  Diversification:  { expr: "max(nodes.DIVERSIFICATION)", format: amount0, additive: false, description: "The sum of the node's children's standalone VaRs minus its VaR: what holding them together saves." }
+  Backtest exceptions: { expr: "max(nodes.EXCEPTIONS_250)", additive: false, description: "Days in the official history (up to 250) whose loss exceeded the VaR of the day before, for the node." }
+  Nodes:            { expr: "count(nodes)", description: "How many nodes (one row per node and date)." }
+
+hierarchies:
+  Node: [nodes.HIERARCHY, nodes.LEVEL, nodes.NODE_NAME]

@@ -17,6 +17,17 @@
 
 ## Unreleased
 
+- **VaR in BI, from the published official results (2.9.0; product owner, 2026-10-26).** The official end-of-day VaR that the server
+  publishes to `risk-results/var-official` is now the read-only kind `var-official` (`VOFF`) of the market-risk pack, served by the
+  Delta connector `var-results` (class computed; its contract `config/packs/market-risk/contracts/var-official.contract.yaml`). No
+  engine reads it: `tools/test_contracts.py` still fails a connector over `risk-results` unless it is a read-only Delta connector of
+  computed kinds that no reactive connector reads or triggers on. The new BI samples are the datasets `market-risk-var-official` (every
+  result version) and `market-risk-var-latest` (the latest version of each node and date), the model `market-risk-var` (VaR 99% and
+  ES 97.5% by node, hierarchy, level and business date, with limit, limit use, hypothetical P&L and backtest; no measure sums VaR) and
+  the report `market-risk-var` (bank VaR and ES, VaR by desk and by legal entity, the bank and a desk over time, every node with its
+  limit use, a drill-through to a node page). `VarOfficialBiTest` checks it over a lake the server's own publisher writes (a restated
+  date, two dates). The demo has one business date of VaR inputs (2026-09-30), so its lines have one point until more dates are captured.
+  [BI_GUIDE.md](docs/guides/BI_GUIDE.md), [VAR_GUIDE.md section 19](docs/guides/VAR_GUIDE.md#19-official-end-of-day-results).
 - **The landing page's headline** (product owner, 2026-10-26): "See what your data hasn't told you yet.", with the tagline "Any data. Any domain. One grammar." under it as the subtitle; both from configuration (`ui.headline`, `ui.headline_accent`, `ui.tagline`; [CONFIGURATION.md](docs/admin/CONFIGURATION.md)).
 - **Docs: VaR in two documents** (product owner, 2026-10-26). [VAR_GUIDE.md](docs/guides/VAR_GUIDE.md) is now the one VaR reference
   (Part I using VaR, the explorer, scopes, captures, what-if, CLI, API, settings; Part II the data contract, still version 1.4; Part III

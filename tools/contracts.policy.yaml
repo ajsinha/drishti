@@ -31,7 +31,7 @@
 classes:
   input: [pnl-vector, scenario-set, risk-hierarchy, portfolio, path-book, path-strip, simulation-run, exposure-path]
   drishti-owned: [position]
-  computed: [path-sum, path-sum-java, var-result, var-whatif, exposure-result]
+  computed: [path-sum, path-sum-java, var-result, var-whatif, exposure-result, var-official]   # var-official: the published official VaR (read only)
 
 retiring: {}
 
