@@ -417,6 +417,15 @@ the pack calls `readme.render_pack(pack_dir, files=out)` with the files it is ab
 pack without a generator runs `python3 tools/packgen/readme.py <pack>`, and `python3 tools/packgen/readme.py --all --check` checks
 every pack.
 
+**Every command needs a data contract too.** Each kind that has a mnemonic gets `config/packs/<pack>/contracts/<kind>.contract.yaml`:
+its class and status, source, grain, key, dating, cadence, storage, every field (type, presence, unit, description, example, values,
+link) and its validation rules ([docs/contracts/README.md section 16](../contracts/README.md#16-contracts-of-every-command)). Unlike
+the README, a contract is drafted once and then owned by people: `drishti.py contract bootstrap <kind> --write` reads the pack, its
+samples and test data, its glossary and its Sutras, and lists what it inferred under `review` to confirm; then `drishti.py contract docs`
+regenerates the pages. `drishti.py contract check` (and `drishti-console/tests/test_data_contracts.py`) fails when a mnemonic has no
+contract, a contract is invalid, or the samples and test data drift from it, so regenerating a pack's samples with new fields means
+updating its contracts in the same change.
+
 ## Generating a pack from JSON Lines
 
 `drishti.py pack new` turns existing data (one JSON document per line, or the loader envelope `{"kind","id","doc"}`) into a complete

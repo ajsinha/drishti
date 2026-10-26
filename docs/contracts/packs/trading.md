@@ -21,7 +21,7 @@ One section per command of the pack: the shape of its data, how it is stored and
 
 | Command | Kind | Class | Status | Fields | To review |
 |---|---|---|---|---|---|
-| [TRD](#trd-trade-trade) | `trade` | fundamental | active | 47 | 11 |
+| [TRD](#trd-trade-trade) | `trade` | fundamental | active | 47 | 12 |
 | [CTRD](#ctrd-counterparty-trades-derived-from-trades-counterparty-trades) | `counterparty-trades` | computed | retiring in 2.9.0 | 15 | 1 |
 | [PTRD](#ptrd-portfolio-trades-derived-from-trades-portfolio-trades) | `portfolio-trades` | computed | retiring in 2.9.0 | 15 | 1 |
 | [LTRD](#ltrd-legal-entity-trades-derived-from-trades-legal-entity-trades) | `legal-entity-trades` | computed | retiring in 2.9.0 | 15 | 1 |
@@ -29,14 +29,14 @@ One section per command of the pack: the shape of its data, how it is stored and
 
 ## TRD: Trade (`trade`)
 
-Securitised auto loans, credit cards or student loans.
+Trade
 
 |  |  |
 |---|---|
 | Contract | [trade.contract.yaml](../../../config/packs/trading/contracts/trade.contract.yaml) · version 1.0 |
 | Class | fundamental |
 | Status | active |
-| Source | murex |
+| Source | murex, calypso |
 | Grain | One row per trade per business date, keyed by TRADE_ID. |
 | Key | `TRADE_ID` |
 | Id pattern | `^(MX\|CLY)-\d+$` |
@@ -223,12 +223,14 @@ Securitised auto loans, credit cards or student loans.
 **Notes**
 
 - Dated by the lake's business_date partition: `drishti.py lake build` writes each test-data file's day into it; the documents carry no date field of their own.
+- Several source systems: the connector trade-endur and trade-calypso, trade-murex each serve this kind from a table of their own with the same layout; the storage above is the first one's.
 
-**To review (11)**
+**To review (12)**
 
 - required inferred from 100% coverage in 2763 documents (765 samples and 1998 test-data documents (data/testdata/trades/endur/snapshot-2026-07-08.jsonl.gz, data/testdata/trades/calypso/snapshot-2026-07-08.jsonl.gz, data/testdata/trades/murex/snapshot-2026-07-08.jsonl.gz)): confirm each required field is mandatory upstream, and each optional one may be empty.
-- source 'murex' is the test data's _meta.source (synthetic): name the production system that delivers it.
+- source 'murex, calypso' is the test data's _meta.source (synthetic): name the production system that delivers it.
 - due time of each business date is not known: state it (for example, by 06:00 New York the next business day).
+- the id pattern ^(MX|CLY)-\d+$ does not match every TRADE_ID in the data (for example 1000001): widen the pattern or state the id rule.
 - LEGS[].FLOAT_SPREAD holds values of several types (number, string): state its one type.
 - LEGS[].CASH_FLOWS[].RATE holds values of several types (number, string): state its one type.
 - LEGS[].CASH_FLOWS[].FLOAT_SPREAD holds values of several types (number, string): state its one type.
@@ -316,7 +318,7 @@ Every trade with a counterparty, from every source system: its trades (every sta
 
 ## PTRD: Portfolio trades (derived from trades) (`portfolio-trades`)
 
-A book's desk: its trades; a click opens the trade's cash flows under its row, with the counterparty and its credit limit beside.
+Every trade of a portfolio (book), from every source system: its trades (every status, a status filter), upcoming payments, notional by product type and index, maturities, payments by month.
 
 |  |  |
 |---|---|

@@ -35,6 +35,8 @@ cadence:
 storage:
   connector: news
   plugin: news
+  other-connectors:
+  - news-store
   test-data:
   - data/testdata/news-and-markets/news
 fields:
@@ -249,7 +251,9 @@ validation:
   - 2026-10-18 03:25 UTC
   - 2026-10-18 03:26 UTC
   - 2026-10-18 03:27 UTC
-notes: []
+notes:
+- 'Several source systems: the connector news and news-store each serve this kind from a table of their own with the same layout; the storage
+  above is the first one''s.'
 review:
 - 'required inferred from 100% coverage in 71 documents (0 samples and 71 test-data documents (data/testdata/news-and-markets/news/snapshot-2026-10-18.jsonl.gz)):
   confirm each required field is mandatory upstream, and each optional one may be empty.'

@@ -23,7 +23,7 @@ status: retiring
 retiring-in: 2.9.0 or 2.10.0
 replaced-by: docs/contracts/GROUPINGS_AND_ANALYTICS.md
 title: LEI country
-description: Every country of the pack's legal entities, by the number of entities.
+description: 'A country''s legal entities in the pack: the entities, the groups present, legal forms and cities.'
 source: 'public data: GLEIF LEI records, relationship records and mapping files (tools/publicdata/gleif.py)'
 grain: One row per lei country, keyed by COUNTRY.
 key:

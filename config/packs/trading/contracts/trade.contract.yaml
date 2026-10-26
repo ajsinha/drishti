@@ -21,8 +21,8 @@ version: '1.0'
 class: fundamental
 status: active
 title: Trade
-description: Securitised auto loans, credit cards or student loans.
-source: murex
+description: Trade
+source: murex, calypso
 grain: One row per trade per business date, keyed by TRADE_ID.
 key:
 - TRADE_ID
@@ -56,6 +56,9 @@ storage:
   - TRADER_ID
   - NOTIONAL
   - INDEX_NAME
+  other-connectors:
+  - trade-calypso
+  - trade-murex
   partition-by:
   - PRODUCT_TYPE
   test-data:
@@ -842,12 +845,15 @@ validation:
 notes:
 - 'Dated by the lake''s business_date partition: `drishti.py lake build` writes each test-data file''s day into it; the documents carry no date
   field of their own.'
+- 'Several source systems: the connector trade-endur and trade-calypso, trade-murex each serve this kind from a table of their own with the same
+  layout; the storage above is the first one''s.'
 review:
 - 'required inferred from 100% coverage in 2763 documents (765 samples and 1998 test-data documents (data/testdata/trades/endur/snapshot-2026-07-08.jsonl.gz,
   data/testdata/trades/calypso/snapshot-2026-07-08.jsonl.gz, data/testdata/trades/murex/snapshot-2026-07-08.jsonl.gz)): confirm each required
   field is mandatory upstream, and each optional one may be empty.'
-- 'source ''murex'' is the test data''s _meta.source (synthetic): name the production system that delivers it.'
+- 'source ''murex, calypso'' is the test data''s _meta.source (synthetic): name the production system that delivers it.'
 - 'due time of each business date is not known: state it (for example, by 06:00 New York the next business day).'
+- 'the id pattern ^(MX|CLY)-\d+$ does not match every TRADE_ID in the data (for example 1000001): widen the pattern or state the id rule.'
 - 'LEGS[].FLOAT_SPREAD holds values of several types (number, string): state its one type.'
 - 'LEGS[].CASH_FLOWS[].RATE holds values of several types (number, string): state its one type.'
 - 'LEGS[].CASH_FLOWS[].FLOAT_SPREAD holds values of several types (number, string): state its one type.'

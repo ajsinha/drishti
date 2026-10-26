@@ -23,7 +23,7 @@ status: active
 title: Social indicator
 description: 'A social or governance statistic of one country over time, with the regional comparison: health, education, inequality, rights and
   rule of law.'
-source: 'public data: World Bank, World Development Indicators'
+source: 'public data: World Bank, World Development Indicators, World Bank, Worldwide Governance Indicators'
 grain: One row per social indicator, keyed by INDICATOR_ID.
 key:
 - INDICATOR_ID

@@ -40,6 +40,7 @@ This page holds the rules every contract shares. A contract states only where it
 - [13. Versioning a contract](#13-versioning-a-contract)
 - [14. Retiring the stored version](#14-retiring-the-stored-version)
 - [15. The sections of every contract](#15-the-sections-of-every-contract)
+- [16. Contracts of every command](#16-contracts-of-every-command)
 
 ## 1. Status of each contract
 
@@ -69,6 +70,10 @@ may still change before it ships, and the document records each change.
 | [LIQUIDITY.md](LIQUIDITY.md) | LCR, NSFR, NCCF, cash-flow gaps (new) | 2.11.0 | PLANNED |
 | [IRRBB.md](IRRBB.md) | ΔEVE, ΔNII (new) | 2.11.0 | PLANNED |
 | [CREDIT.md](CREDIT.md) | expected credit loss, credit VaR (new) | 2.11.0 | PLANNED |
+
+The table lists the contracts of the computed measures. Every command that exists today, stored or computed, also has a
+machine-readable contract of its own data ([section 16](#16-contracts-of-every-command)); a retiring kind's contract names the
+document above that replaces it.
 
 ## 2. The common risk lake
 
@@ -305,6 +310,42 @@ Each contract in this folder has the same sections, in this order, so any two ca
 14. **Retiring the stored version:** what is removed, how old ids map, and the reconciliation.
 15. **A worked example:** small numbers, end to end, that a reader can check by hand.
 16. **Open questions and the change table.**
+
+
+## 16. Contracts of every command
+
+Every command (mnemonic) of every pack has a **data contract of its own data**, so anyone can see the shape of what a command holds and
+act on it: one YAML file beside its pack, `config/packs/<pack>/contracts/<kind>.contract.yaml`, and a section of its pack's page under
+[packs/](packs/README.md) (the index of every command, its class and status). The pages are generated from the YAML files; the YAML files
+are the contracts.
+
+**What a contract file says** (checked against `tools/contracts.schema.json`):
+
+| Key | What it holds |
+|---|---|
+| `kind`, `mnemonic`, `pack`, `version` | Which command; the contract's version ([section 13](#13-versioning-a-contract)), `"1.0"` today |
+| `class` | `fundamental`, `input`, `drishti-owned` or `computed` ([section 3](#3-four-kinds-of-data)) |
+| `status` | `active`, or `retiring` with `retiring-in` (the release) and `replaced-by` (the contract in this folder that replaces it) |
+| `title`, `description`, `source` | The command's label, what it shows, and the upstream system (or `public data: <publisher>`, or `computed by Drishti: ...`) |
+| `grain`, `key`, `id-pattern` | One sentence: one row per ...; the business key; the id patterns of the pack's graph |
+| `dated-by`, `cadence` | The business-date field (`business_date` for the lake's partition, `snapshot`, or `on request`); `frequency` (`daily`, `intraday`, `static`, `on change`) and `due` |
+| `storage` | The connector and plugin; for Delta the domain, the table path under the lake root, the promoted columns, the vectors, the partitions and the test-data folders |
+| `fields`, `nested` | Each field: `name`, `type` ([section 5](#5-types-names-and-encodings), plus `record`, `text list`, `id list`, `date list`, `list` and `unknown`), `presence` (`required`, `optional`, `derived`), `unit`, `description`, `example`, `enum`, `pattern`, `link`; a figure that a compute engine will produce is `derived` with a `note` (and `retiring-in` when its record stays). `nested` lists the fields of each nested path (`TRADES[]`, `KYC`) the same way |
+| `links`, `validation` | The fields that link to another kind; the rules: `required`, `unique` (key per date), `enum`, `pattern`, `link`, `range`, `vector-length` |
+| `notes`, `review` | What a reader should know; the points a person must still confirm (anything the draft inferred rather than read) |
+
+**How a contract is made and kept true** (`drishti.py contract`, [TOOLS.md](../guides/TOOLS.md)):
+- `contract bootstrap KIND --write` drafts one from the pack (mnemonics, graph, connectors and their layout), its samples and test data
+  (`data/testdata`), its `config/about.yaml` glossary (descriptions, units, values) and its Sutras (labels). The product owner's decisions
+  that the data cannot tell (class, retirement, which fields are computed figures) come from `tools/contracts.policy.yaml`. What the draft
+  infers instead of reads (required from 100% coverage, an enum from a few values, a number's type from its name, a missing unit or
+  description) goes to `review`, never into the contract as a fact. From then on people own the file: confirm a point, edit the
+  contract, remove the point.
+- `contract check` fails when a command has no contract, a contract breaks the schema or no longer names its pack and command, a
+  retirement differs from the policy, or the contract no longer matches the pack and its data (a field added or gone, a required field
+  empty, a value outside an enum, a changed type, link or id pattern). `contract docs` writes the pages; `--check` fails when they are stale.
+- Tests: `tools/test_contracts.py` (every contract against its data) and `drishti-console/tests/test_data_contracts.py` (one contract per
+  command, valid, pages current).
 
 ---
 

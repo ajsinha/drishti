@@ -23,7 +23,7 @@ status: retiring
 retiring-in: 2.9.0 or 2.10.0
 replaced-by: docs/contracts/GROUPINGS_AND_ANALYTICS.md
 title: SIC sector
-description: Every SIC code of the covered companies, by revenue, and revenue by SIC division.
+description: 'A sector by its SIC code: its companies ranked by revenue; a click opens a company''s summary beside.'
 source: 'public data: SEC EDGAR, Nasdaq Trader, GLEIF and Wikidata (tools/publicdata/us_equities.py)'
 grain: One row per sic sector, keyed by SIC.
 key:

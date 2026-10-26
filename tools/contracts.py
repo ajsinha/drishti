@@ -468,7 +468,7 @@ class Draft:
         public = bool(isrc) and all("proprietary" not in str(s.get("licence", "")).lower() for s in isrc)
         named = [s for s in isrc if re.search(rf"(^|[\s,]){re.escape(self.kind)}([\s,]|$)", str(s.get("used-for", "")))]
         if metas:
-            name = metas.most_common(1)[0][0]
+            name = ", ".join(n for n, k in metas.most_common() if k * 20 >= sum(metas.values()))
             if public:
                 return f"public data: {name}"
             self.review.append(f"source '{name}' is the test data's _meta.source (synthetic): name the production system that delivers it.")
@@ -527,6 +527,11 @@ class Draft:
                 out["columns"] = list(layout["columns"])
             if layout.get("vectors"):
                 out["vectors"] = list(layout["vectors"])
+        others = sorted({d.get("connector") for d in self.sets if d.get("connector") and d.get("connector") != self.route})
+        if others:
+            out["other-connectors"] = others
+            self.notes.append(f"Several source systems: the connector {self.route} and " + ", ".join(others) + " each serve this kind "
+                              "from a table of their own with the same layout; the storage above is the first one's.")
         parts = [p for d in self.sets for p in d.get("partition-by") or []]
         if parts:
             out["partition-by"] = sorted(set(parts), key=parts.index)
@@ -584,6 +589,11 @@ class Draft:
                 and min(st.values.values()) >= 2 and len(st.values) * 2 < st.present:
             f["enum"] = sorted(st.values)
             self.enums_inferred.append(full)
+        if name in key and not path and self.patterns.get(self.kind) and st is not None and not _matches(st.values, self.patterns[self.kind]):
+            odd = next((v for v in st.values if isinstance(v, str) and not any(re.search(p, v) for p in self.patterns[self.kind])), None)
+            if odd is not None:
+                self.review.append(f"the id pattern {', '.join(self.patterns[self.kind])} does not match every {name} in the data (for "
+                                   f"example {odd}): widen the pattern or state the id rule.")
         if name in key and self.patterns.get(self.kind) and st is not None and _matches(st.values, self.patterns[self.kind]):
             f["pattern"] = "|".join(self.patterns[self.kind])
         elif link_ok and len(self.patterns.get(link) or []) == 1 and st is not None and _matches(st.values, self.patterns[link]):
@@ -685,7 +695,8 @@ class Draft:
         klass = self.klass()
         title = self.cmd["label"]
         about_title = ((self.about.get("kinds") or {}).get(self.kind) or {}).get("title")
-        sutra_desc = next((R._first_sentence(s["description"]) for s in self.sutras if s["description"]), "")
+        base = [s for s in self.sutras if Path(s["file"]).name.startswith(self.kind + ".")] if len(self.sutras) > 1 else self.sutras
+        sutra_desc = next((R._first_sentence(s["description"]) for s in base if s["description"]), "")
         description = sutra_desc or about_title or f"{title} (the {self.kind} kind of the {self.pack} pack)"
         source = self.source()
         dated = self.dated_by()

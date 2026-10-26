@@ -40,6 +40,7 @@
         "columns": {"type": "array", "items": {"type": "string"}},
         "vectors": {"type": "array", "items": {"type": "string"}},
         "partition-by": {"type": "array", "items": {"type": "string"}},
+        "other-connectors": {"type": "array", "items": {"type": "string"}},
         "test-data": {"type": "array", "items": {"type": "string"}}
       }
     },

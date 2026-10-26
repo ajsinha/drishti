@@ -62,6 +62,7 @@ repository root. Scratch output (`lake`, `lake2`, `build/...`) goes into the clo
 | Keep a lake small and fast | | `drishti.py lake maintain` (on a timer) |
 | Load the demo data into Postgres, DuckDB, MongoDB, Redis, Aerospike, Cassandra, Iceberg, files or Delta | | `tools/load-*.sh`, `drishti.py data load` |
 | Check a machine before a demo | Admin → **Health** | `drishti.py doctor`, `drishti.py server smoke` |
+| See or check the shape of a command's data (its data contract), or draft the contract of a new kind | | `drishti.py contract list`, `contract show`, `contract check`, `contract docs`, `contract bootstrap` |
 
 Use the page for a one-off file, a first look at new data, or when you want to see each choice before it is made. Use the command
 line for anything that repeats, runs at night, or lives in a pipeline: it has exit codes, a lock, a log line and a JSON summary,
@@ -109,6 +110,7 @@ server take `--server` (default `DRISHTI_SERVER`, then `http://localhost:18480`)
 | `bi` | `bi workspace`, `bi catalogue`, `bi expr`, `bi migrate`, `bi sql`, `bi model`, `bi mq`, `bi item`, `bi dataset`, `bi transform`, `bi statement` | [5.7](#57-bi) |
 | `view` | `view get`, `view explain` | [5.8](#58-view-and-completion) |
 | `history` | `drishti.py history KIND ID` (`--days`, `--range`, `--from`/`--to`, `--diff`, `--changes-only`, `--csv`, `--json`): one entity over business days, as the console's history page shows it | [CLI_GUIDE.md](CLI_GUIDE.md) |
+| `contract` | `contract list`, `contract show`, `contract check`, `contract docs`, `contract bootstrap` | [5.11](#511-contract) |
 | `completion` | `drishti.py completion bash` (also `zsh`, `powershell`) | [5.8](#58-view-and-completion) |
 
 The group modules live beside it and are not run on their own: `tools/authoring.py` (`data profile`, `pack regenerate|diff|catalogue|i18n`),
@@ -947,6 +949,30 @@ drishti-console/.venv/bin/python tools/drishti.py compute run path-sum-python pa
 drishti-console/.venv/bin/python tools/drishti.py compute event write-back chg-77 --kind path-strip --entity STRIP-FX-001 --payload BOOK_ID=BOOK-FX
 ```
 
+
+### 5.11 contract
+
+The data contract of every command (`tools/contracts.py`, also run on its own as `python3 tools/contracts.py ...`;
+[docs/contracts/README.md section 16](../contracts/README.md#16-contracts-of-every-command)). Each mnemonic's contract is
+`config/packs/<pack>/contracts/<kind>.contract.yaml`, checked against `tools/contracts.schema.json`. No server is needed.
+- `contract list` prints every command with its kind, pack, class, status and the number of points still to review.
+- `contract show NSET` prints one contract (by command or kind; `--json` as JSON).
+- `contract check` fails when a command has no contract, a contract is invalid or no longer matches its pack (identity, id pattern,
+  links, the retirements in `tools/contracts.policy.yaml`) and its samples and test data (fields added or gone, a required field empty,
+  a value outside an enum, a changed type). `--no-data` skips the data and takes a second.
+- `contract docs` writes `docs/contracts/packs/<pack>.md` and the index `docs/contracts/packs/README.md`; `--check` fails when they are stale.
+- `contract bootstrap KIND` drafts a contract from the pack, its samples and test data, its `config/about.yaml` glossary and its Sutras,
+  and prints it; `--write` saves it (`--force` replaces one that exists), `--all` drafts every command without one. What the draft infers
+  rather than reads is listed under `review` for a person to confirm.
+
+Exit codes are `0`, `1` (a problem found, or the contract exists) and `2` (usage). `--packs DIR` and `--testdata DIR` point at other folders.
+
+```bash
+python3 tools/drishti.py contract show NSET
+python3 tools/drishti.py contract check
+python3 tools/drishti.py contract bootstrap my-kind --write && python3 tools/drishti.py contract docs
+```
+
 ## 6. Store loaders: `tools/load-*.sh`
 
 Each loader writes the banking packs' demo data (1,791 sample documents x 10 business days, and with `--trades N --days D` a
@@ -1039,6 +1065,7 @@ ExecStart=/opt/drishti/drishti-console/.venv/bin/python tools/drishti.py lake ma
 | `tools/packgen/comswap_synth.py` | **The synthetic Endur-like commodity-swap book**: deals with 1 to 4 legs, monthly cash flows, resets, events, packages and novations; upper-case keys in a fixed order, digit-string codes that must stay text, blanks spelt as `""`, `null`, `0` and a missing key. `--mix` makes a whole book (ComSwap, ComFut, Cash, Commodity and a rare CallNot by `PRODUCT_TYPE`). Deterministic (`--seed`); at most 10,000 deals. Every value is invented. |
 | `tools/packgen/note_synth.py` | a synthetic structured note of another shape (camelCase keys; note, coupon periods, observations, fixings; a call schedule and a basket of underlyings), to show the pack generator is generic. Every value is invented. |
 | `tools/packgen/pack_from_jsonl.py` | the engine of `drishti.py pack new`: a complete pack from a folder of JSON Lines |
+| `tools/contracts.py` | the data contract of every command (`drishti.py contract`, [5.11](#511-contract)): drafts one from a pack and its data, checks them all, writes `docs/contracts/packs`; the schema `tools/contracts.schema.json` and the product owner's decisions `tools/contracts.policy.yaml` beside it |
 | `tools/packgen/readme.py` | a pack's `README.md` (the README standard, [PACK_GENERATORS_GUIDE.md](PACK_GENERATORS_GUIDE.md#the-readme-standard)) for a pack without a generator of its own; `--all --check` fails on any pack whose README is missing, stale or breaks the standard |
 | `tools/connector_readmes.py` | the settings tables of every connector README (from `plugin-settings.yaml`) and the file tables of the template folders' READMEs; `--check` fails when one is stale ([CONNECTOR_DEVELOPER_GUIDE.md](../connectors/CONNECTOR_DEVELOPER_GUIDE.md#the-readme-standard)) |
 | `tools/packgen/banking/make_data.py`, `make_packs.py`, `make_sutras.py`, `make_docs.py` | the banking packs: their sample data and lake, manifests, Sutras and guides, from one taxonomy |

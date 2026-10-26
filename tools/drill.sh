@@ -102,6 +102,7 @@ python_tool_tests() {
   python3 -m unittest -q tools/test_cli_loads.py
   python3 -m unittest -q tools/test_pack_form.py
   python3 -m unittest -q tools/test_schemapack.py
+  python3 -m unittest -q tools/test_contracts.py        # the data contract of every command: valid, current with its pack and data, pages current
   python3 tools/testdata/make_testdata.py --check     # the committed test data (data/testdata) is what its generator writes
   python3 -m unittest -q tools/testdata/test_testdata.py
   if command -v uv >/dev/null; then                  # the lake writers and maintenance need deltalake; uv provides it without installing

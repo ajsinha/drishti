@@ -587,7 +587,7 @@ A state or territory (ISO 3166-2): population, GDP and GDP per head.
 | Contract | [region-economy.contract.yaml](../../../config/packs/world-economy/contracts/region-economy.contract.yaml) · version 1.0 |
 | Class | fundamental |
 | Status | active |
-| Source | public data: Illustrative, rounded from public figures (US Census Bureau Vintage 2023 population estimates and BEA state GDP 2023, current dollars); not for reporting |
+| Source | public data: Illustrative, rounded from public figures (US Census Bureau Vintage 2023 population estimates and BEA state GDP 2023, current dollars); not for reporting, Illustrative, rounded from public figures (ABS Australian Demographic Statistics, December 2023, and ABS Australian National Accounts: State Accounts 2022-23, in US dollars at a rounded rate); not for reporting |
 | Grain | One row per region economy, keyed by REGION_ID. |
 | Key | `REGION_ID` |
 | Id pattern | `^REGE-` |
@@ -1119,7 +1119,7 @@ A social or governance statistic of one country over time, with the regional com
 | Contract | [social-indicator.contract.yaml](../../../config/packs/world-economy/contracts/social-indicator.contract.yaml) · version 1.0 |
 | Class | fundamental |
 | Status | active |
-| Source | public data: World Bank, World Development Indicators |
+| Source | public data: World Bank, World Development Indicators, World Bank, Worldwide Governance Indicators |
 | Grain | One row per social indicator, keyed by INDICATOR_ID. |
 | Key | `INDICATOR_ID` |
 | Id pattern | `^SOCI-` |

@@ -263,7 +263,7 @@ An equity index's members (Dow 30, Nasdaq-100, S&P 500) as Wikidata records them
 
 ## SIC: SIC sector (`sic-sector`)
 
-Every SIC code of the covered companies, by revenue, and revenue by SIC division.
+A sector by its SIC code: its companies ranked by revenue; a click opens a company's summary beside.
 
 |  |  |
 |---|---|

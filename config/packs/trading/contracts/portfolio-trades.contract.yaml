@@ -23,7 +23,8 @@ status: retiring
 retiring-in: 2.9.0
 replaced-by: docs/contracts/TRADING_GROUPINGS.md
 title: Portfolio trades (derived from trades)
-description: 'A book''s desk: its trades; a click opens the trade''s cash flows under its row, with the counterparty and its credit limit beside.'
+description: 'Every trade of a portfolio (book), from every source system: its trades (every status, a status filter), upcoming payments, notional
+  by product type and index, maturities, payments by month.'
 source: 'computed by Drishti: the derived connector trade-pages over the kind trade'
 grain: One record per PORTFOLIO of the trade records, computed when asked.
 key:

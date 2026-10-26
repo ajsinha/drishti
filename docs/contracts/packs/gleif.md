@@ -156,7 +156,7 @@ A legal entity from its LEI record: key facts, addresses, registration and renew
 
 ## LEIG: LEI ownership group (`lei-group`)
 
-Search and browse the pack's legal entities: a search box over every entity, every ownership group, groups by segment and entities by country.
+An ownership group: the ultimate parent with its whole tree, every member, and counts by country and legal form.
 
 |  |  |
 |---|---|
@@ -378,7 +378,7 @@ One consolidation relationship from GLEIF's level 2 data: the child, its direct 
 
 ## LEIC: LEI country (`lei-country`)
 
-Every country of the pack's legal entities, by the number of entities.
+A country's legal entities in the pack: the entities, the groups present, legal forms and cities.
 
 |  |  |
 |---|---|

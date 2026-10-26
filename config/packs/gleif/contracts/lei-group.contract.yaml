@@ -23,8 +23,7 @@ status: retiring
 retiring-in: 2.9.0 or 2.10.0
 replaced-by: docs/contracts/GROUPINGS_AND_ANALYTICS.md
 title: LEI ownership group
-description: 'Search and browse the pack''s legal entities: a search box over every entity, every ownership group, groups by segment and entities
-  by country.'
+description: 'An ownership group: the ultimate parent with its whole tree, every member, and counts by country and legal form.'
 source: 'public data: GLEIF LEI records, relationship records and mapping files (tools/publicdata/gleif.py)'
 grain: One row per lei ownership group, keyed by GROUP_ID.
 key:

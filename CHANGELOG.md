@@ -17,6 +17,19 @@
 
 ## Unreleased
 
+- **Data contracts of every command** ([docs/contracts/README.md section 16](docs/contracts/README.md#16-contracts-of-every-command),
+  [docs/contracts/packs/README.md](docs/contracts/packs/README.md)): each of the 90 mnemonics of the ten packs has
+  `config/packs/<pack>/contracts/<kind>.contract.yaml`: class (fundamental, input, drishti-owned, computed), status (the kinds moving to
+  the compute model are `retiring` with their release and the contract that replaces them; a split kind's computed figures are
+  `derived` and `retiring-in`), source, grain, key, id pattern, dating, cadence, storage (connector, table, columns, vectors), every
+  field and nested field (type, presence, unit, description, example, values, pattern, link), links, validation rules and the points a
+  person must still confirm (`review`, 506 in all). `drishti.py contract list|show|check|docs|bootstrap` (`tools/contracts.py`, the
+  schema `tools/contracts.schema.json`, the product owner's decisions `tools/contracts.policy.yaml`) drafts a contract from a pack and its
+  data, checks every contract against the schema, its pack and its samples and test data, and generates a page per pack under
+  `docs/contracts/packs`. Tests: `tools/test_contracts.py` (in the drill's tool tests) and `drishti-console/tests/test_data_contracts.py`.
+  Found on the way: the collateral balances' `POSITIONS[].DIRECTION` holds `Held`, which the counterparty-risk glossary describes as
+  `Received` (a review point of the COLL contract).
+
 - **Token scope `risk:write`:** a personal API token may save and delete its VaR baskets, capture VaR, keep what-if sandboxes and
   cancel its own computations; a computed answer (`POST /api/v1/compute/{connector}/{kind}`) needs only `read`. Compute administration
   and approvals, peer fan-out, trigger events and VaR reload are never open to a token. The compute-demo pack's books and strips are

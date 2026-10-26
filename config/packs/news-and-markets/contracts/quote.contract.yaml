@@ -35,6 +35,8 @@ cadence:
 storage:
   connector: yfinance
   plugin: yfinance
+  other-connectors:
+  - news-store
   test-data:
   - data/testdata/news-and-markets/quote
 fields:
@@ -246,7 +248,9 @@ validation:
   values:
   - NYSE
   - NasdaqGS
-notes: []
+notes:
+- 'Several source systems: the connector yfinance and news-store each serve this kind from a table of their own with the same layout; the storage
+  above is the first one''s.'
 review:
 - 'required inferred from 100% coverage in 20 documents (0 samples and 20 test-data documents (data/testdata/news-and-markets/quote/snapshot-2026-10-18.jsonl.gz)):
   confirm each required field is mandatory upstream, and each optional one may be empty.'

@@ -19,7 +19,7 @@
 
 Every command (mnemonic) of every pack has a data contract: a YAML file beside its pack (`config/packs/<pack>/contracts/<kind>.contract.yaml`, checked against `tools/contracts.schema.json`) and a section of its pack's page here. The shared rules are in [the contracts README](../README.md); the computed measures that replace the retiring kinds have their own contracts there.
 
-90 contracts, 519 points still to review. Check them with `drishti.py contract check`; draft a new one with `drishti.py contract bootstrap KIND --write`.
+90 contracts, 520 points still to review. Check them with `drishti.py contract check`; draft a new one with `drishti.py contract bootstrap KIND --write`.
 
 | Command | Kind | Pack | Class | Status | Replaced by | To review |
 |---|---|---|---|---|---|---|
@@ -88,7 +88,7 @@ Every command (mnemonic) of every pack has a data contract: a YAML file beside i
 | `NEWS` | `news` | [news-and-markets](news-and-markets.md#news-headlines-news) | fundamental | active |  | 4 |
 | `CO` | `listed-company` | [news-and-markets](news-and-markets.md#co-listed-company-listed-company) | fundamental | active |  | 7 |
 | `QUOTE` | `quote` | [news-and-markets](news-and-markets.md#quote-quote-and-price-history-quote) | fundamental | active |  | 6 |
-| `TRD` | `trade` | [trading](trading.md#trd-trade-trade) | fundamental | active |  | 11 |
+| `TRD` | `trade` | [trading](trading.md#trd-trade-trade) | fundamental | active |  | 12 |
 | `CTRD` | `counterparty-trades` | [trading](trading.md#ctrd-counterparty-trades-derived-from-trades-counterparty-trades) | computed | retiring in 2.9.0 | TRADING_GROUPINGS.md | 1 |
 | `PTRD` | `portfolio-trades` | [trading](trading.md#ptrd-portfolio-trades-derived-from-trades-portfolio-trades) | computed | retiring in 2.9.0 | TRADING_GROUPINGS.md | 1 |
 | `LTRD` | `legal-entity-trades` | [trading](trading.md#ltrd-legal-entity-trades-derived-from-trades-legal-entity-trades) | computed | retiring in 2.9.0 | TRADING_GROUPINGS.md | 1 |

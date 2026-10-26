@@ -168,6 +168,10 @@ The headlines for one name, as the news connector computed them: newest first, f
 - enum: field PIPELINE[].STEP; values `duplicates`, `limit`, `relevance`
 - enum: field PROVENANCE.FETCHED; values `2026-10-18 03:25 UTC`, `2026-10-18 03:26 UTC`, `2026-10-18 03:27 UTC`
 
+**Notes**
+
+- Several source systems: the connector news and news-store each serve this kind from a table of their own with the same layout; the storage above is the first one's.
+
 **To review (4)**
 
 - required inferred from 100% coverage in 71 documents (0 samples and 71 test-data documents (data/testdata/news-and-markets/news/snapshot-2026-10-18.jsonl.gz)): confirm each required field is mandatory upstream, and each optional one may be empty.
@@ -312,6 +316,10 @@ A quote and recent price history for a ticker, as the yfinance connector compute
 - pattern: field QUOTE_ID; pattern ^QUOTE-
 - link: field QUOTE_ID; kind quote
 - enum: field EXCHANGE; values `NYSE`, `NasdaqGS`
+
+**Notes**
+
+- Several source systems: the connector yfinance and news-store each serve this kind from a table of their own with the same layout; the storage above is the first one's.
 
 **To review (6)**
 
