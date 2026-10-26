@@ -41,7 +41,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 /**
- * The tiered memory's files (VAR.md section 7.3): one hot file per loaded business date under {@code <data folder>/var/hot/<date>/},
+ * The tiered memory's files (VAR_GUIDE.md section 26): one hot file per loaded business date under {@code <data folder>/var/hot/<date>/},
  * named by the digest of the inputs it was built from ({@code inputs-<16 hex>.vhot}). A date is <em>open</em> (mapped, its aggregates
  * and columns on the heap) while it is among the hot dates; evicted, it is unmapped after a grace for the requests still reading it, and
  * its file stays on disk, so the date opens again by mapping, without the lake (a history date opened lazily). At most

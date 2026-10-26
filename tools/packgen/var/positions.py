@@ -12,7 +12,7 @@
 #
 # See the LICENSE file in the root of this repository for the full terms.
 
-"""The demo risk batch: one P&L vector per live trade, and the positions Drishti derives from them (docs/contracts/VAR.md section 3.7).
+"""The demo risk batch: one P&L vector per live trade, and the positions Drishti derives from them (docs/guides/VAR_GUIDE.md section 15.6).
 
 **Positions are Drishti's**, derived by the server when it loads a date, by the rules of the market-risk pack's ``positions:`` section
 (the same rules are read here, :class:`Rules`, and applied the same way as the server's ``PositionRules``): a trade is live when its

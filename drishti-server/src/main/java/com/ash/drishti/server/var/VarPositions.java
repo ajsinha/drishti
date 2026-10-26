@@ -27,7 +27,7 @@ import java.util.concurrent.atomic.AtomicReference;
 import java.util.function.Consumer;
 
 /**
- * The positions Drishti derives (VAR.md section 3.7) as documents of the {@code position} kind, served by the {@code var-positions}
+ * The positions Drishti derives (VAR_GUIDE.md section 15.6) as documents of the {@code position} kind, served by the {@code var-positions}
  * connector ({@link VarPositionsPlugin}): a position's instrument and key, its direction and signed quantity, its trades (each with its
  * own quantity, direction, PV, product and counterparty), where it is held, its market value and counts. No VaR figure is stored on it:
  * its page shows the engine's figures computed when asked ({@link VarFigures}). Positions live in memory with their date; this builds
@@ -136,7 +136,7 @@ final class VarPositions {
         m.put("STATUS", pc.text("STATUS", p));
         m.put("SCENARIO_SET_ID", b.scenarioSet());
         m.put("VAR_SCOPE", "POS:" + id);
-        m.put("DERIVED_BY", "the server's position rules " + d.intake().rulesDigest() + " (VAR.md section 3.7)");
+        m.put("DERIVED_BY", "the server's position rules " + d.intake().rulesDigest() + " (VAR_GUIDE.md section 15.6)");
         return m;
     }
 }

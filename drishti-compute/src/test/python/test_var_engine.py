@@ -12,7 +12,7 @@
 #
 # See the LICENSE file in the root of this repository for the full terms.
 
-"""The Python VaR engine (docs/contracts/VAR.md sections 6, 9.7 and 15): its measures give the worked example's numbers exactly as
+"""The Python VaR engine (docs/guides/VAR_GUIDE.md sections 18, 8 and 2.1): its measures give the worked example's numbers exactly as
 the Java engine does (N = 10, alpha 80%, a component window of 3), and the what-if engine of ``var-whatif`` adds hypothetical trades to a
 scope's vector: putting back the hedge the scope took out gives the book again, each item's incremental VaR in order and alone, the
 components of the new trades, the stressed window, and refusals in words."""

@@ -36,11 +36,11 @@ import java.util.function.Supplier;
  * {@code risk-store} in the demo; the bank's lake in production) and builds the {@link VarBook}: the trades' vectors streamed from the
  * vector column straight into the store (no document is parsed for them), each row checked and given its position by the configured
  * rules ({@link VarIntake}), then the hierarchies with their limits, the scenario set, and the portfolios' definitions. Positions are
- * Drishti's: derived here, from the trades and the rules, each time the date is loaded (VAR.md section 3.7). A date whose inputs are
+ * Drishti's: derived here, from the trades and the rules, each time the date is loaded (VAR_GUIDE.md section 15.6). A date whose inputs are
  * not one run (several batch ids, another scenario set, two scenario sets) is refused ({@code DRS-5203}). Reads as the server; what a
  * viewer may see is applied per request.
  *
- * <p>With the tiered memory ({@code drishti.var.tier.mode: mapped}, VAR.md section 7.3) the rows stream to a spill file and the date is
+ * <p>With the tiered memory ({@code drishti.var.tier.mode: mapped}, VAR_GUIDE.md section 26) the rows stream to a spill file and the date is
  * written to its hot file and mapped; a date whose hot file was built from the same inputs (the same data versions of its vectors,
  * hierarchy and scenario set, the same position rules) is opened from that file, without reading its vectors again.
  */

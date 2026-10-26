@@ -27,7 +27,7 @@ transaction log gets longer. **Maintenance** does what Drishti's readers cannot 
 
 **The risk lake keeps 7 years.** The tables of the domains `risk` (the VaR engine's inputs: P&L vectors, scenario sets, hierarchies,
 portfolios) and `risk-results` (the published official results) keep 7 years of business dates and of time travel, whatever their
-settings say ([VAR.md section 16.1](../contracts/VAR.md#161-open-questions), the product owner's decision of 2026-10-25): a lower
+settings say ([VAR_GUIDE.md section 23.1](../guides/VAR_GUIDE.md#231-open-questions-of-the-contract), the product owner's decision of 2026-10-25): a lower
 `vacuum-hours` or `keep-business-days` is raised to 7 years (61,368 hours; 1,827 business days) and the run reports it as
 `retention-floor`. `lake build` creates those tables with `delta.logRetentionDuration` and `delta.deletedFileRetentionDuration` of 2,557
 days, so a checkpoint's log clean-up keeps the log as long. A lake's `retain-years:` mapping changes the floor per domain

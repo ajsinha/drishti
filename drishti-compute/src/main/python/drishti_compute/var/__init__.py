@@ -12,7 +12,7 @@
 #
 # See the LICENSE file in the root of this repository for the full terms.
 
-"""Drishti's Python VaR engine (docs/contracts/VAR.md sections 6.6 and 9.7): the measures of VaR, ES and their decomposition, the same
+"""Drishti's Python VaR engine (docs/guides/VAR_GUIDE.md sections 8 and 8.3): the measures of VaR, ES and their decomposition, the same
 rules as the Java engine (``com.ash.drishti.compute.var.VarMath``), and the what-if engine of the reactive connector ``var-whatif``.
 Java keeps the additive aggregation (a scope's vector, summed over the hot store); Python receives the few vectors it needs and does
 what does not add: what-if trades on top of a scope, the stressed window. Standard library only: it runs on every worker."""

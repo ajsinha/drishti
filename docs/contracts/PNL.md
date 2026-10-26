@@ -7,7 +7,7 @@
 # PNL, P&L explain: the data contract
 
 *Version 1.0 · 2026-10-25 · **Status:** proposed (PLANNED for 2.9.0) · Shared rules: [README.md](README.md) · Model contract:
-[VAR.md](VAR.md) · Inputs shared with [TVAL.md](TVAL.md) (valuations) and [FRTB.md](FRTB.md) (sensitivities)*
+[VAR_GUIDE.md Part II](../guides/VAR_GUIDE.md#14-the-contract-at-a-glance) · Inputs shared with [TVAL.md](TVAL.md) (valuations) and [FRTB.md](FRTB.md) (sensitivities)*
 
 This is the planned data contract of **PNL**, P&L explain: the day-over-day P&L of any set of trades, from the upstream engine's
 valuations, attributed to market moves through the trades' sensitivities (delta, gamma, vega), to time (theta and carry), to new,
@@ -212,7 +212,7 @@ measure (open question 6).
 
 `HYPOTHETICAL(S)` = Σ over the trades of S alive at T−1 (continuing, amended, ended) of (ACTUAL_t − AMENDMENT_t − FEES_t): yesterday's
 trades under today's market, no new trades, no amendments, no fees: the input VaR's backtest needs. Proposed: the official end-of-day capture of P&L explain provides each node's hypothetical P&L to VaR's official history
-(replacing today's stand-in, the node's P&L on the newest scenario day: the stored `var-node` was retired in 2.8.0; [VAR.md section 6.5](VAR.md#65-history-and-backtest)).
+(replacing today's stand-in, the node's P&L on the newest scenario day: the stored `var-node` was retired in 2.8.0; [VAR_GUIDE.md section 18.4](../guides/VAR_GUIDE.md#184-history-and-backtest)).
 
 ### 6.6 Settings (`drishti.pnl`, proposed)
 
@@ -245,7 +245,7 @@ Trades of A ∪ B share one ordinal space for the pair (the T index plus the end
 
 ## 8. Scopes
 
-Every scope of [VAR.md section 8](VAR.md#8-scopes) and its planned words, plus `INDEX:` and `TRDR:`. Resolved on T; an ended trade is
+Every scope of [VAR_GUIDE.md section 5](../guides/VAR_GUIDE.md#5-scopes-portfolios-and-baskets) and its planned words, plus `INDEX:` and `TRDR:`. Resolved on T; an ended trade is
 in a scope when it was in it on T−1. Fully additive: answered exactly from node aggregates and runs.
 
 ## 9. What Drishti answers

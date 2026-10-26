@@ -30,7 +30,7 @@ import java.util.Map;
 import java.util.Set;
 
 /**
- * Captured VaR (VAR_ENGINE.md section 10.4): a scope computed now and kept, immutable, with everything needed to read it back exactly
+ * Captured VaR (VAR_GUIDE.md section 6): a scope computed now and kept, immutable, with everything needed to read it back exactly
  * as it was even after the data changes: the numbers (VaR, ES, each member's component VaR, the worst 25 scenarios), the full vector,
  * the resolved member trades, and the provenance (scope, date, data version, scenario set, method and rank rule, engine, viewer, time,
  * a note). Captures are listed per scope, reopened, compared (two captures, or a capture and now) and exported as CSV.

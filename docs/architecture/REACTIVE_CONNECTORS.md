@@ -20,7 +20,7 @@ where it differs from the design below, is in [section 21](#21-as-built-r1-to-r4
 connectors is [REACTIVE_CONNECTOR.md](../connectors/REACTIVE_CONNECTOR.md) and [tutorial 23](../tutorials/23-computed-panels.md).
 Everything named below that section 21 does not list as built is **planned**. Related designs:
 [PYTHON_COMPUTE.md](PYTHON_COMPUTE.md) (the workers that run the computations, `requires:` and approval),
-[VAR_ENGINE.md](VAR_ENGINE.md) (the first reactive connector: a generic VaR engine), [WRITE_BACK.md](WRITE_BACK.md) (a saved change
+[VAR_GUIDE.md Part III](../guides/VAR_GUIDE.md#24-where-the-engine-lives) (the first reactive connector: a generic VaR engine), [WRITE_BACK.md](WRITE_BACK.md) (a saved change
 can trigger a computation), [SUTRA_NEXT.md](SUTRA_NEXT.md) (screens that read many sources), [LIVE.md](LIVE.md) (how results reach
 the screen), [CONNECTOR_DEVELOPER_GUIDE.md](../connectors/CONNECTOR_DEVELOPER_GUIDE.md) (the connector SPI as built).
 
@@ -79,7 +79,7 @@ for the same business date, and each panel says on its own if its source failed.
 | **static** | read stored records | in the store, written by a loader | yes, from the store's dated partitions | only when a new load is published (the data version moves) | `delta`, `iceberg`, `jdbc`, `duckdb`, `cassandra`, `file` |
 | **live** | read the latest value and subscribe to its changes | in a stream or a cache fed by one | through a lake behind it, if any | yes, every message | `kafka`, `rabbitmq`, `activemq`, `redis` in subscribe mode |
 | **on-demand** | call a service; the id is the question | nowhere: the answer is fetched or worked out per call, then cached | only if the service can answer for a date | no | `news`, `yfinance`, `rest` |
-| **reactive** (new) | **run a computation** parameterised by the request, over data read from other connectors | the result is computed, stamped and cached; nothing is stored unless the connector says so | yes: the computation is run on the inputs **as of** the picked date | **yes: the result is recomputed and pushed when a declared trigger fires** | planned (2.8.0): `var-engine` ([VAR_ENGINE.md](VAR_ENGINE.md)) |
+| **reactive** (new) | **run a computation** parameterised by the request, over data read from other connectors | the result is computed, stamped and cached; nothing is stored unless the connector says so | yes: the computation is run on the inputs **as of** the picked date | **yes: the result is recomputed and pushed when a declared trigger fires** | planned (2.8.0): `var-engine` ([VAR_GUIDE.md Part III](../guides/VAR_GUIDE.md#24-where-the-engine-lives)) |
 
 - The first three exist today and do not change. Writing `mode:` in their connector files is optional (the plugin's manifest already
   says what it can do: `live`, `search`, `dated`); a planned (2.8.0) `mode` field in the manifest makes it visible in Admin →
@@ -135,7 +135,7 @@ description: Generic VaR, ES and what-if over precomputed 509-day P&L vectors
 kinds:
   var-result:                          # one answer: VaR, ES and the headline numbers for one scope
     params:
-      scope:      { type: scope, required: true }          # a hierarchy node, a saved basket, or a scope expression (VAR_ENGINE.md section 6)
+      scope:      { type: scope, required: true }          # a hierarchy node, a saved basket, or a scope expression (VAR_GUIDE.md section 5)
       confidence: { type: decimal, default: 0.99, allowed: [0.95, 0.975, 0.99] }
       horizon:    { type: int, default: 1, allowed: [1, 10] }
       method:     { type: enum, default: historical, options: [historical, age-weighted, filtered] }
@@ -227,7 +227,7 @@ Inside the server every read of a reactive kind becomes one **compute request**:
 | Step | What happens | Where |
 |---|---|---|
 | 1. **Receive** | The router sends the read to the connector the kind is routed to, exactly as today. | server |
-| 2. **Authorise** | The viewer's roles may open the kind; the viewer holds the planned (2.8.0) `compute` power for computed kinds; the scope is within the viewer's entitlements ([VAR_ENGINE.md section 12](VAR_ENGINE.md#12-entitlements-and-audit)). Refused in words, before any work. | server |
+| 2. **Authorise** | The viewer's roles may open the kind; the viewer holds the planned (2.8.0) `compute` power for computed kinds; the scope is within the viewer's entitlements ([VAR_GUIDE.md section 9](../guides/VAR_GUIDE.md#9-who-sees-what-entitlements-and-audit)). Refused in words, before any work. | server |
 | 3. **Pin the as-of** | The request's as-of is resolved to concrete input versions (the Delta table version of `pnl-vector` for the date, the edit-log watermark), once, and recorded as a **pin** ([section 8](#8-point-in-time-stamping-ordering-and-idempotence)). | server |
 | 4. **Key** | The canonical key: connector, kind, id, normalised params, pin, the viewer's **view signature** ([section 9](#9-isolation-two-users-never-see-each-others-answers)), engine version, environment lock hash. | server |
 | 5. **Cache and single flight** | A cached result for the key is answered at once. A request for a key already being computed **joins** that computation (one computation, many waiters, each answered under its own request id). | server, then the key's owner node ([section 14](#14-several-servers-drishtinet)) |
@@ -267,7 +267,7 @@ Each trigger says which results it affects with `affects:`:
 - `subscribed`: only results some open screen is watching.
 - an **expression** over the event (Rachana-EL, as panels use): `"scopes_of(trade.TT_BOOK)"` returns the keys the event touches. The
   function `scopes_of` is supplied by the connector (for VaR: the book and its ancestors in the hierarchy, plus every saved ad-hoc
-  scope that contains the trade; [VAR_ENGINE.md section 9](VAR_ENGINE.md#9-intraday-events-write-backs-and-feeds)).
+  scope that contains the trade; [VAR_GUIDE.md section 8.4](../guides/VAR_GUIDE.md#84-what-if-pricing-and-intraday-recomputes-planned)).
 
 Only affected results that **somebody is watching** are recomputed at once; the others are only marked stale and recompute on their
 next read. A trigger never computes for a screen nobody has open.
@@ -401,7 +401,7 @@ A burst of events for one key (twenty amendments to one book in a second) must n
 
 A connector may declare that a kind is **incremental**: given the previous result and the events since, it can produce the new result
 without starting again. For VaR this is natural: the P&L vector of a scope is a sum, so an amended trade changes the scope's vector by
-(new vector − old vector), and only the scopes above the trade change ([VAR_ENGINE.md section 9](VAR_ENGINE.md#9-intraday-events-write-backs-and-feeds)).
+(new vector − old vector), and only the scopes above the trade change ([VAR_GUIDE.md section 8.4](../guides/VAR_GUIDE.md#84-what-if-pricing-and-intraday-recomputes-planned)).
 The connector's entry point receives `previous` (result plus stamp) and `events`; it may answer *full recompute needed* when the
 events are too many or of a kind it cannot apply incrementally. Every Nth incremental result (`incremental.verify-every`, default 50)
 is checked against a full recompute in the background; a difference beyond tolerance is a health warning and the full result wins.
@@ -685,7 +685,7 @@ compute-demo book screen, two computed sources and two 250-point charts, 5.0 ms.
 
 ## 22. How the VaR engine plugs in
 
-The VaR engine ([VAR_ENGINE.md](VAR_ENGINE.md), steps V0 to V3) becomes the `var-engine` reactive connector (R5/V4) without new
+The VaR engine ([VAR_GUIDE.md Part III](../guides/VAR_GUIDE.md#24-where-the-engine-lives), steps V0 to V3) becomes the `var-engine` reactive connector (R5/V4) without new
 machinery:
 
 1. **The file.** `config/connectors/var-engine.yaml` with `plugin: reactive`, the kinds of section 5 (`var-result`, `var-contribution`,
@@ -694,7 +694,7 @@ machinery:
 2. **The engine, either of two ways.**
    - *Java, in the server* (the vector store is Java): a class implementing `ComputeEngine` in `com.ash.drishti…` (so it may run in
      process), `engine: { type: java, class: …VarComputeEngine }`, with **no `reads:`**: the VaR builder's in-memory vector store is its
-     input, and it must read it **for `request.viewer()`** (the entitlement filter of VAR_ENGINE.md section 12) and **for
+     input, and it must read it **for `request.viewer()`** (the entitlement filter of VAR_GUIDE.md section 9) and **for
      `request.asOf()`**. `compute` aggregates the scope's vectors and answers `VAR`, `ES` and the path as a table; `incremental`
      applies a write-back's `delta` vector (`ComputeEvent.payload`); `affected(event, "scopes_of(trade.TT_BOOK)")` returns the book and
      its ancestors' scope ids from the hierarchy. The vector store's version for the date goes into the pin through `dataVersion` of

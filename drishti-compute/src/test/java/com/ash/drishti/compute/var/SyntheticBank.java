@@ -161,7 +161,7 @@ final class SyntheticBank {
         return fill(b, seed).build(sums);
     }
 
-    /** The same bank written to a hot file in {@code dir} and mapped (VAR.md section 7.3). */
+    /** The same bank written to a hot file in {@code dir} and mapped (VAR_GUIDE.md section 26). */
     VarBook buildMapped(long seed, ParallelSums sums, long budget, java.nio.file.Path dir) {
         VarBook.HotTarget t = target(dir, "2026-09-30-HS-509.vhot", "digest-" + seed);
         VarBook.Builder b = new VarBook.Builder(LocalDate.of(2026, 9, 30), "HS-509", dates(), budget, t).batchId("B-1")

@@ -12,7 +12,7 @@
 #
 # See the LICENSE file in the root of this repository for the full terms.
 
-"""The synthetic market behind the demo P&L vectors (VAR_DATA_MODEL.md section 16): daily moves of about forty risk factors over the
+"""The synthetic market behind the demo P&L vectors (VAR_GUIDE.md section 22.2): daily moves of about forty risk factors over the
 509 scenario days, plus one more day (the business date's own move, for the hypothetical P&L the backtest compares with VaR).
 
 What makes the vectors realistic enough for a VaR demo:

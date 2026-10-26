@@ -17,7 +17,8 @@
 # class, status and the fields that are computed figures from here; everything else comes from the pack and its data.
 #
 #   classes      kind -> class when it is not "fundamental" (a kind listed under retiring is "computed")
-#   retiring     kinds whose stored version is retired: release, the contract that replaces it, the measure that computes it, and
+#   retiring     kinds whose stored version is retired: release, the contract that replaces it (a path under docs/contracts/; VaR's
+#                is ../guides/VAR_GUIDE.md, Part II, since the VaR documents were consolidated on 2026-10-26), the measure that computes it, and
 #                the fields that are computed figures (path A[].B for a field of every element of list A)
 #   split        kinds whose terms are kept and whose figures are computed: status stays active, the figures are derived and retiring
 #   retired      kinds retired in a release: removed with their contracts, samples, test data and Sutras; a guard test fails the build
@@ -39,27 +40,27 @@ split: {}
 retired:
   var:
     release: 2.8.0
-    contract: VAR.md
+    contract: ../guides/VAR_GUIDE.md
     measure: the VaR engine
     note: "VAR <id> and /v/var/<id> open the VaR explorer at the matching scope (VAR-COMM: DESK:COMM)"
   var-node:
     release: 2.8.0
-    contract: VAR.md
+    contract: ../guides/VAR_GUIDE.md
     measure: the VaR engine's official end-of-day captures
     note: "a node's history is its official end-of-day captures; VN-<node> opens the explorer at NODE:<node>"
 
 removed:
   position:
     release: 2.8.0
-    contract: VAR.md
+    contract: ../guides/VAR_GUIDE.md
     figures: [VAR_99, ES_975, COMPONENT_VAR, BOOK_VAR, PCT_OF_BOOK_VAR, PNL, "TRADE_QUANTITIES[].VAR_99", "TRADE_QUANTITIES[].COMPONENT_VAR"]
   desk:
     release: 2.8.0
-    contract: VAR.md
+    contract: ../guides/VAR_GUIDE.md
     figures: [VAR_99, VAR_RESULT]
   portfolio:
     release: 2.8.0
-    contract: VAR.md
+    contract: ../guides/VAR_GUIDE.md
     figures: [VAR_99, ES_975, LIMIT_USE, POSITION_COUNT, TRADE_COUNT, LONG_COUNT, SHORT_COUNT, GROSS_MV, NET_MV, POSITIONS, BY_PRODUCT,
               BY_CURRENCY, BY_DIRECTION, TOP_CONTRIBUTORS, PNL, ALL_TRADES, SCENARIO_SET_ID]
 
@@ -72,7 +73,7 @@ notes:
   margin-call:
     - "Actual calls and their events are kept (workflow); the expected call (MtM minus collateral minus threshold, then minimum transfer and rounding) is computed and shown beside the call. No stored field is the expected call today."
   position:
-    - "Positions are derived by Drishti when a date loads (docs/contracts/VAR.md section 3.7), by the market-risk pack's positions: rules (securities by book and security id, listed by book and contract, OTC by book and trade), and served from the VaR engine's memory by the var-positions connector: no upstream delivers them and nothing stores them. Their VaR figures are computed as the page opens (VAR_ENGINE), never stored."
+    - "Positions are derived by Drishti when a date loads (docs/guides/VAR_GUIDE.md section 15.6), by the market-risk pack's positions: rules (securities by book and security id, listed by book and contract, OTC by book and trade), and served from the VaR engine's memory by the var-positions connector: no upstream delivers them and nothing stores them. Their VaR figures are computed as the page opens (VAR_ENGINE), never stored."
   portfolio:
     - "The portfolio definitions are an engine input (IMPLEMENTATION_PLAN.md); the figures of the retired stored record (VaR, ES, positions, contributions, P&L) are computed as the page opens (VAR_ENGINE), never stored."
   desk:
@@ -188,12 +189,12 @@ parked:
   split:
     book:
       release: 2.8.0
-      contract: VAR.md
+      contract: ../guides/VAR_GUIDE.md
       measure: the scope engine (counts, MtM and DV01 summed from the trades and their valuations)
       figures: [TRADE_COUNT, MTM, DV01, TOP_TRADES]
     trader:
       release: 2.8.0
-      contract: VAR.md
+      contract: ../guides/VAR_GUIDE.md
       measure: the scope engine (TRDR:, counted from the trades)
       figures: [TRADE_COUNT]
     counterparty:

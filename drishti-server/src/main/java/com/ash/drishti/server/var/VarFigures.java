@@ -33,7 +33,7 @@ import java.util.Optional;
 import java.util.Set;
 
 /**
- * The VaR engine's figures on the pages of the position, portfolio and desk (VAR.md section 14.3): none of these kinds stores a VaR any
+ * The VaR engine's figures on the pages of the position, portfolio and desk (VAR_GUIDE.md section 21.3): none of these kinds stores a VaR any
  * more, so when the page is opened the engine computes them as the caller (their entitlements by node, their field masks) and the view
  * reads them under {@code VAR_ENGINE}: a position's VaR and ES, its component in its book and its trades' own VaR and components; a
  * portfolio's VaR, ES, limit use, positions with their components, the split by product, currency and direction, and its P&amp;L over

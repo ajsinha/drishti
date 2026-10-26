@@ -138,7 +138,7 @@ def choose(engine: str, jar: str | None = None, java: str | None = None) -> tupl
 # ------------------------------------------------------------------------------------------------ the table
 
 def retention_properties(uri: str) -> dict[str, str]:
-    """The Delta properties a new table of a kept domain is created with (the risk lake: 7 years, docs/contracts/VAR.md section 16.1
+    """The Delta properties a new table of a kept domain is created with (the risk lake: 7 years, docs/guides/VAR_GUIDE.md section 23.1
     question 10): its log and its removed files are kept that long, so its time travel reaches back that far (a vacuum or a log
     clean-up never takes them sooner). Empty for any other domain: the table keeps Delta's defaults."""
     import maintconfig

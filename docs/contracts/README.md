@@ -45,7 +45,7 @@ This page holds the rules every contract shares. A contract states only where it
 ## 1. Status of each contract
 
 **Scope (product owner, 2026-10-25): "Just fundamentals and VaR is good for now."** The active work is the contracts of every
-command (the fundamental data, [section 16](#16-contracts-of-every-command)) and VaR ([VAR.md](VAR.md)). Every other computed measure is
+command (the fundamental data, [section 16](#16-contracts-of-every-command)) and VaR ([VAR_GUIDE.md Part II](../guides/VAR_GUIDE.md#14-the-contract-at-a-glance)). Every other computed measure is
 **PARKED**: its contract stays here as a design, the stored kind it would replace stays active and unchanged, and nothing of it is built
 until the product owner brings it back. Release numbers in the parked contracts are provisional.
 
@@ -54,7 +54,7 @@ may still change before it ships, and the document records each change.
 
 | Contract (a name in code font is not written yet) | Commands (retired kind) | Release | Status |
 |---|---|---|---|
-| [VAR.md](VAR.md) | VAR (`var`), VNODE (`var-node`): both retired; also PORT, POS and DESK figures | 2.8.0 | AS BUILT (part 1: retirement, derived positions, official captures); memory tiering and the Python engine PLANNED |
+| [VAR_GUIDE.md Part II](../guides/VAR_GUIDE.md#14-the-contract-at-a-glance) | VAR (`var`), VNODE (`var-node`): both retired; also PORT, POS and DESK figures | 2.8.0 | AS BUILT (part 1: retirement, derived positions, official captures; part 2: memory tiering, the computed kinds and the Python engine); Part II of the VaR guide since 2026-10-26 |
 | [TRADING_GROUPINGS.md](TRADING_GROUPINGS.md) | CTRD, PTRD, LTRD, ITRD (`counterparty-trades`, `portfolio-trades`, `legal-entity-trades`, `index-trades`) | 2.9.0 | PARKED (design kept) |
 | [TVAL.md](TVAL.md) | TVAL (`trade-valuation`) | 2.9.0 | PARKED (design kept) |
 | [STR.md](STR.md) | STR (`stress-result`); SCN stays fundamental | 2.9.0 | PARKED (design kept) |
@@ -144,7 +144,7 @@ Every table in the risk lake joins to the masters and to each other through thes
 | `SCENARIO_ID` | A stress scenario | `SCN-…` | `stress-scenario` (SCN) |
 | `BUSINESS_DATE` | The close of business a row describes | `YYYY-MM-DD` | |
 
-**Scopes.** The scope grammar ([VAR.md section 8](VAR.md#8-scopes)) addresses any set of trades through these keys: `BANK`, `DESK:`, `BOOK:`,
+**Scopes.** The scope grammar ([VAR_GUIDE.md section 5](../guides/VAR_GUIDE.md#5-scopes-portfolios-and-baskets)) addresses any set of trades through these keys: `BANK`, `DESK:`, `BOOK:`,
 `POS:`, `TRD:`, `PORT:`, `BASKET:`, `CAPTURE:`, `WHERE:`, and from 2.8.0 `CPTY:`, `GROUP:` (a connected group, through GLEIF parents),
 `NSET:` and `LE:`. Terms combine with `+` (union), `-` (difference) and `&` (intersection). Every measure takes the same scope text.
 
@@ -211,7 +211,7 @@ A **vector** is a fixed-length list of numbers that belongs to one row, such as 
 - **No missing elements:** a vector holds a number in every slot. A scenario a trade cannot be valued under is the engine's to fill
   (with its own rule, written in its run log), never `null` or `NaN`.
 - **In memory:** Drishti may hold a hot copy at lower precision (float32) under a memory budget, while every sum is done in float64.
-  The contract states which ([VAR.md section 7](VAR.md#7-what-drishti-builds)).
+  The contract states which ([VAR_GUIDE.md section 25](../guides/VAR_GUIDE.md#25-one-business-date-in-memory)).
 - **Test data:** a vector is written as a JSON array in the `.jsonl.gz` files and becomes the `list<double>` column at `lake build`
   (`layout.<kind>.vectors` in the pack's connector settings).
 
@@ -313,7 +313,7 @@ Every command that moves to the compute model retires its stored version **in th
    `VAR DESK:COMM`, built in 2.8.0).
 2. **The stored kind is removed:** its samples, test data, Sutra, connector routes, about texts and generators.
 3. **The numbers are reconciled first.** The computed figures are compared with the last stored ones on the test data, and the release
-   notes explain every difference (for example, the stored `VAR-COMM` read 446.9m while the engine computed 1.97m on a sample and 17.5m on every live trade: VAR.md section 14.2).
+   notes explain every difference (for example, the stored `VAR-COMM` read 446.9m while the engine computed 1.97m on a sample and 17.5m on every live trade: VAR_GUIDE.md section 21.2).
 4. **A guard test** (`tools/test_contracts.py`, `TheRetiredStoredVersions` for VaR) fails the build when a retired kind returns, or when an input table or a fundamental kind carries a column a compute
    engine produces (`VAR_99`, `ES_975`, `COMPONENT_VAR`, `EAD`, `PFE_PEAK`, `UTILISATION` …).
 5. **Docs and CHANGELOG** say what was retired, what replaced it, and how old links behave.

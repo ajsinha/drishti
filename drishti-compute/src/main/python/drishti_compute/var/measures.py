@@ -13,7 +13,7 @@
 # See the LICENSE file in the root of this repository for the full terms.
 
 """VaR, ES and their decomposition over a vector of scenario P&Ls (gains positive), exactly as the Java engine computes them
-(``VarMath``, ``VarCalc``; VAR.md section 6): k = ceil(N (1 - a) - 1e-9) clamped to [1, N]; scenarios ordered worst first, ties by the
+(``VarMath``, ``VarCalc``; VAR_GUIDE.md section 18): k = ceil(N (1 - a) - 1e-9) clamped to [1, N]; scenarios ordered worst first, ties by the
 older scenario; VaR = -(k-th worst) or interpolated; ES = -mean of the k_ES worst; component VaR = -scale x mean of the part over the
 scope's scenarios ranked k-h .. k+h; incremental VaR = VaR(scope) - VaR(scope without the part). Plus the stressed window: the largest
 VaR over every run of ``window`` consecutive scenario days."""

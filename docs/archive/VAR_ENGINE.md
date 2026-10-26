@@ -15,19 +15,21 @@
 -->
 # The VaR engine: value at risk for any set of trades, with full drill-down
 
-The data contract: [docs/contracts/VAR.md](../contracts/VAR.md) (every input column, structure and answer, checked against the code).
+> **Archived: replaced by [VAR_GUIDE.md](../guides/VAR_GUIDE.md) (how the engine works is its Part III, [sections 24 to 31](../guides/VAR_GUIDE.md#24-where-the-engine-lives); what the design proposed and was not built is [section 30](../guides/VAR_GUIDE.md#30-the-design-record)).** On 2026-10-26 the VaR documents were consolidated into two (product owner): the reference [VAR_GUIDE.md](../guides/VAR_GUIDE.md) and the hands-on [tutorial 25](../tutorials/25-var-from-the-bank-to-a-trade.md). The section numbers this page cites are those of the documents before the consolidation; this is history.
+
+The data contract: [docs/contracts/VAR.md](VAR.md) (every input column, structure and answer, checked against the code).
 
 Status: **partly built (2.8.0, unreleased).** Waves **V0 to V3 are built** (the data, the engine, the VaR explorer, history and
 backtesting, baskets, captures, entitlements and audit), and so are *VaR complete* parts 1 and 2 (retired stored kinds, derived positions,
 official captures; the tiered memory with memory-mapped hot files, the benchmark, the computed kinds through reactive connectors with a
 Python VaR engine for what-if and the stressed window, `drishti.py var`): what was built, how it differs from this design and the
 decisions taken on its open questions are in [section 18](#18-as-built-in-280-waves-v0-to-v3); the user guide is
-[VAR_GUIDE.md](../guides/VAR_GUIDE.md) (the screen: [VAR_EXPLORER.md](../guides/VAR_EXPLORER.md)). Still **planned**: what-if *pricing*
+[VAR_GUIDE.md](../guides/VAR_GUIDE.md) (the screen: [VAR_EXPLORER.md](VAR_EXPLORER.md)). Still **planned**: what-if *pricing*
 through QLRisk (only when its API is declared stable), intraday recomputes (V5) and the sharded store across Drishti\*net (V6: the
-mechanism is not built, [VAR.md section 7.4](../contracts/VAR.md#74-sharding-across-drishtinet-planned-not-built)). Elsewhere in this
-design, a part section 18 does not list as built is **planned**. Related: [REACTIVE_CONNECTORS.md](REACTIVE_CONNECTORS.md) (the connector type
-the engine is), [PYTHON_COMPUTE.md](PYTHON_COMPUTE.md) (where its code runs and how its libraries are approved),
-[WRITE_BACK.md](WRITE_BACK.md) (a booked or amended trade recomputes the VaR it affects), [DEMO_DATA.md](../connectors/DEMO_DATA.md)
+mechanism is not built, [VAR.md section 7.4](VAR.md#74-sharding-across-drishtinet-planned-not-built)). Elsewhere in this
+design, a part section 18 does not list as built is **planned**. Related: [REACTIVE_CONNECTORS.md](../architecture/REACTIVE_CONNECTORS.md) (the connector type
+the engine is), [PYTHON_COMPUTE.md](../architecture/PYTHON_COMPUTE.md) (where its code runs and how its libraries are approved),
+[WRITE_BACK.md](../architecture/WRITE_BACK.md) (a booked or amended trade recomputes the VaR it affects), [DEMO_DATA.md](../connectors/DEMO_DATA.md)
 (the data pattern every pack follows). **The data model is in a companion document, [VAR_DATA_MODEL.md](VAR_DATA_MODEL.md):** positions
 derived from trades, portfolios (hierarchies, rules, baskets) and membership in time, the P&L vector's layout in Delta (options
 compared), partitioning, the rolling window, versions and restatements, precision, cubes, the in-memory vector store, sharding and
@@ -80,7 +82,7 @@ The product owner (2026-10-24) wants an **enterprise-grade, fully generic VaR en
 3. **Additive where it can be, honest where it cannot.** P&L vectors and ES contributions add up; VaR does not. The screens never sum
    VaRs; they show diversification explicitly.
 4. **Every number reproducible.** Each result carries its stamp (input versions, scenario set, method, engine and environment,
-   [REACTIVE_CONNECTORS.md section 8](REACTIVE_CONNECTORS.md#8-point-in-time-stamping-ordering-and-idempotence)), so the same number
+   [REACTIVE_CONNECTORS.md section 8](../architecture/REACTIVE_CONNECTORS.md#8-point-in-time-stamping-ordering-and-idempotence)), so the same number
    can be recomputed years later.
 5. **Entitled as the viewer.** A person sees VaR only over positions they may see, or in aggregate where they are entitled only to
    aggregates ([section 12](#12-entitlements-and-audit)).
@@ -106,10 +108,10 @@ The product owner (2026-10-24) wants an **enterprise-grade, fully generic VaR en
 |---|---|---|
 | **The pack** | kinds (`position`, `risk-hierarchy`, `pnl-vector`, `scenario-set`, `var-node`, `pnl-hypothetical`, `var-result`, `var-contribution`, `var-path`, `var-history`, `what-if`), routes, Sutras (the VaR explorer, the what-if panel) | the existing **market-risk** pack (`config/packs/market-risk`), which then had the stored VaR kind (retired in 2.8.0), the `risk-store` Delta connector and the risk domain (open question 1: a separate `var` pack instead) |
 | **Stored data** | positions, hierarchies, position vectors, scenario sets, precomputed node vectors, hypothetical P&L | the static connector **`risk-store`** (Delta), from `data/testdata/market-risk/<kind>/` in the demo and the bank's batch in production ([section 5.4](#54-storage-layout-and-the-data-pattern)) |
-| **The computation** | scope algebra, measures, contributions, history, backtests, what-if | the reactive connector **`var-engine`** ([REACTIVE_CONNECTORS.md section 5](REACTIVE_CONNECTORS.md#5-the-connector-file)) |
-| **The maths** | quantiles, ES, Euler allocation, backtests | a versioned Python package, `compute/drishti-var`, with its own tests; installed into the var-engine's locked environment ([PYTHON_COMPUTE.md](PYTHON_COMPUTE.md)) |
+| **The computation** | scope algebra, measures, contributions, history, backtests, what-if | the reactive connector **`var-engine`** ([REACTIVE_CONNECTORS.md section 5](../architecture/REACTIVE_CONNECTORS.md#5-the-connector-file)) |
+| **The maths** | quantiles, ES, Euler allocation, backtests | a versioned Python package, `compute/drishti-var`, with its own tests; installed into the var-engine's locked environment ([PYTHON_COMPUTE.md](../architecture/PYTHON_COMPUTE.md)) |
 | **Summing large scopes** | adding millions of vectors | the **vector store** of `drishti-compute`: a generic, additive push-down next to the data ([section 13.3](#133-where-the-arithmetic-happens)) |
-| **Pricing (what-if only)** | 509 scenario prices per changed trade | the pricer SPI: QLRisk by default, QuantLib-Java as the Java alternative ([PYTHON_COMPUTE.md section 9](PYTHON_COMPUTE.md#9-pricing-one-spi-two-engines)) |
+| **Pricing (what-if only)** | 509 scenario prices per changed trade | the pricer SPI: QLRisk by default, QuantLib-Java as the Java alternative ([PYTHON_COMPUTE.md section 9](../architecture/PYTHON_COMPUTE.md#9-pricing-one-spi-two-engines)) |
 
 ```
                  ┌─────────── market-risk pack: kinds, routes, Sutras (no code) ────────────┐
@@ -173,7 +175,7 @@ One record per position, business date and scenario set.
 | `var-basket` | saved basket | the scope expression, owner, sharing, description | artificial portfolios kept and shared ([section 6.3](#63-baskets-saved-artificial-portfolios)) |
 
 The computed kinds (`var-result`, `var-contribution`, `var-path`, `var-history`, `what-if`) are answers of `var-engine`, not stored
-data ([REACTIVE_CONNECTORS.md section 5](REACTIVE_CONNECTORS.md#5-the-connector-file)). `var-node` is written by the overnight
+data ([REACTIVE_CONNECTORS.md section 5](../architecture/REACTIVE_CONNECTORS.md#5-the-connector-file)). `var-node` is written by the overnight
 precomputation ([section 13.4](#134-the-overnight-precomputation)) and is otherwise ordinary lake data.
 
 The existing `var` kind of the market-risk pack (desk-level records with a `SCENARIO_PNL` array) stays as it is; open question 2 asks
@@ -203,7 +205,7 @@ The engine follows the data pattern every pack follows ([DEMO_DATA.md](../connec
 - **Promoted columns** (the connector's `layout:`) for the hierarchy and filter attributes, so scope filters run on columns without
   decoding vectors.
 - **Row groups** of about 64 MB; files of about 512 MB; no deletion vectors; `OPTIMIZE` after each load (the AWS layout guidance in
-  [AWS_DELTA_LAKE.md](AWS_DELTA_LAKE.md) applies unchanged).
+  [AWS_DELTA_LAKE.md](../architecture/AWS_DELTA_LAKE.md) applies unchanged).
 - **float64 in storage, float64 in sums.** Summing millions of float32 values loses whole currency units at bank scale; open question
   4 asks whether a float32 hot cache is acceptable.
 
@@ -253,7 +255,7 @@ outside the viewer's entitlement.
 - **Static or dynamic:** a basket of listed positions is static; a basket of nodes and filters is dynamic (it means whatever matches on
   the date viewed). The screen says which.
 - **Sharing:** private by default; shared read-only with named people or roles; each reader sees it through their own entitlements.
-- **Kept** in the content store ([CONTENT_STORE.md](CONTENT_STORE.md)), so it follows its owner across nodes; every change audited.
+- **Kept** in the content store ([CONTENT_STORE.md](../architecture/CONTENT_STORE.md)), so it follows its owner across nodes; every change audited.
 
 ## 7. Measures and methods
 
@@ -285,7 +287,7 @@ such on every screen that shows it.
 ## 8. What-if: hypothetical, amended and unwound trades
 
 A **sandbox** is a person's private what-if: a base scope and a list of changes. Only its owner sees or changes it
-([REACTIVE_CONNECTORS.md section 9](REACTIVE_CONNECTORS.md#9-isolation-two-users-never-see-each-others-answers)).
+([REACTIVE_CONNECTORS.md section 9](../architecture/REACTIVE_CONNECTORS.md#9-isolation-two-users-never-see-each-others-answers)).
 
 | Change | How its vector is obtained | Pricing needed |
 |---|---|---|
@@ -297,7 +299,7 @@ A **sandbox** is a person's private what-if: a base scope and a list of changes.
 
 **Pricing over the scenario days.** The pricer receives the trade, the base market of the business date (assembled by the server as
 QUANT_SERVICE.md section 7 describes) and the scenario set's market moves, and returns the 509 P&Ls. QLRisk's
-`MarketRiskEngine.scenario_pnl` is the default path ([PYTHON_COMPUTE.md section 9.2](PYTHON_COMPUTE.md#92-qlrisk-default-python)).
+`MarketRiskEngine.scenario_pnl` is the default path ([PYTHON_COMPUTE.md section 9.2](../architecture/PYTHON_COMPUTE.md#92-qlrisk-default-python)).
 The pricer's scenario moves must be the **same moves the batch used**; a **reprice check** proves it: for a sample of existing trades
 in the scope, the engine reprices them and compares with their stored vectors, and shows the agreement on the what-if panel (*parity
 with the batch: 0.02%*). A scope whose check fails beyond tolerance shows its what-if numbers in amber with the reason.
@@ -305,7 +307,7 @@ with the batch: 0.02%*). A scope whose check fails beyond tolerance shows its wh
 **Results.** For the sandbox the engine returns: before and after VaR, ES and limit use; each change's incremental VaR (in the order
 listed, and standalone); the new trade's component VaR in the scope; overlaid distributions; and a waterfall from before to after.
 
-**From what-if to booking.** *Book via write-back…* turns a sandbox's change into a change request ([WRITE_BACK.md](WRITE_BACK.md));
+**From what-if to booking.** *Book via write-back…* turns a sandbox's change into a change request ([WRITE_BACK.md](../architecture/WRITE_BACK.md));
 it goes through the field's approval and the source's `writes:` command like any other edit. Once it is applied, the event trigger
 recomputes the real scopes ([section 9](#9-intraday-events-write-backs-and-feeds)); the sandbox is left as it was.
 
@@ -317,7 +319,7 @@ partial unwind of linear positions, move) and the stand-in pricer in tests; amen
 Overnight vectors describe the morning's positions. During the day trades are booked, amended and cancelled. The engine keeps an
 **intraday layer** on top of the stored vectors.
 
-| Event | Trigger ([REACTIVE_CONNECTORS.md section 7](REACTIVE_CONNECTORS.md#7-triggers-computing-on-events)) | Effect on the intraday layer |
+| Event | Trigger ([REACTIVE_CONNECTORS.md section 7](../architecture/REACTIVE_CONNECTORS.md#7-triggers-computing-on-events)) | Effect on the intraday layer |
 |---|---|---|
 | a trade amended or booked through Drishti's write-back | `write-back` (change applied) | the trade is priced over the 509 scenarios (as for what-if); its intraday vector replaces the stored one |
 | a trade booked or amended in the source system, seen on Kafka | `live` | the same |
@@ -325,12 +327,12 @@ Overnight vectors describe the morning's positions. During the day trades are bo
 | the overnight batch publishes new vectors | `data-version` | the intraday layer of that date is dropped: the batch's vectors include the day's trades |
 
 - **Incremental:** an event changes the vector of the trade's book and every node above it by (new − old), and every saved basket that
-  contains the trade; nothing else is recomputed ([REACTIVE_CONNECTORS.md section 10.2](REACTIVE_CONNECTORS.md#102-incremental-recompute)).
+  contains the trade; nothing else is recomputed ([REACTIVE_CONNECTORS.md section 10.2](../architecture/REACTIVE_CONNECTORS.md#102-incremental-recompute)).
 - **Stamped:** an intraday result says which events it includes (`L17:3412`, `trade-kafka p3:182277`) and is labelled *intraday*;
   the official end-of-day numbers come only from the batch.
 - **Per-event impact:** the submitter of a write-back receives their own change's incremental VaR, computed against the state just
   before their event, under their change id; everyone watching the scope receives the new shared number
-  ([REACTIVE_CONNECTORS.md section 9.2](REACTIVE_CONNECTORS.md#92-two-traders-two-amendments-the-same-second)).
+  ([REACTIVE_CONNECTORS.md section 9.2](../architecture/REACTIVE_CONNECTORS.md#92-two-traders-two-amendments-the-same-second)).
 - **Without pricing:** until a pricer is available (QLRisk not yet stable), an amended or booked trade cannot get an intraday vector;
   its scopes are marked *intraday change not reflected: pricing unavailable*, and cancellations (which need no pricing) are applied.
 
@@ -361,7 +363,7 @@ Opened on any scope (a command proposed as `VARX <scope>`, from a desk or book p
 ### 10.2 As a Sutra (planned)
 
 The explorer is an ordinary Sutra of the market-risk pack built from UI kit fragments, reading the reactive kinds through `source:`
-with `params:` ([REACTIVE_CONNECTORS.md section 12](REACTIVE_CONNECTORS.md#12-one-screen-many-connectors)). New fragments it needs
+with `params:` ([REACTIVE_CONNECTORS.md section 12](../architecture/REACTIVE_CONNECTORS.md#12-one-screen-many-connectors)). New fragments it needs
 (a distribution histogram with marked lines, a sorted-tail chart, a hierarchy tree with measures) go into the UI kit, so any pack can
 use them.
 
@@ -417,7 +419,7 @@ Each role is given, per node of the hierarchy, one of three levels (planned, in 
   individual trades through aggregates).
 - Field masks apply as everywhere (a masked counterparty is `•••` in tables and cannot be filtered on).
 - The cache key includes the viewer's view signature, so two viewers with different rights never share a result
-  ([REACTIVE_CONNECTORS.md section 9](REACTIVE_CONNECTORS.md#9-isolation-two-users-never-see-each-others-answers)).
+  ([REACTIVE_CONNECTORS.md section 9](../architecture/REACTIVE_CONNECTORS.md#9-isolation-two-users-never-see-each-others-answers)).
 
 ### 12.2 Audit
 
@@ -457,7 +459,7 @@ extrapolation to 2 to 5 million positions assumes summing stays memory-bound (it
 rows, as section 13.3 and VAR_DATA_MODEL.md section 14.2 plan.
 
 **The tiered store (2.8.0, *VaR complete* part 2).** Each loaded date is a memory-mapped float32 hot file
-([VAR.md section 7.3](../contracts/VAR.md#73-the-tiered-memory-and-the-hot-file-as-built-280)). The opt-in benchmark
+([VAR.md section 7.3](VAR.md#73-the-tiered-memory-and-the-hot-file-as-built-280)). The opt-in benchmark
 `drishti-compute/src/test/java/com/ash/drishti/compute/var/VarTierBenchmark.java` was **measured at 100,000 trades × 5 dates** on this
 workstation (a million-trade run once took it down) and extrapolated to the planned **1 M trades × 50 dates**:
 
@@ -491,7 +493,7 @@ to a bank of billions: 5.86 × 10⁻⁸ of the VaR; VAR.md section 7.3).
 | a filter scope over the whole bank (all 2 million positions considered) | 3 s on a three-node cluster | | |
 | loading a date into memory (sort into hierarchy order, permute, sum every node) | | 3.4 s for 1 M trades (after reading); the demo's 1,673 trades: 0.6 s from the lake | minutes for 5 M, as section 13.4 says |
 | VaR and ES history, 250 days, of a precomputed node | 300 ms |
-| VaR history, 250 days, of an ad-hoc scope of up to 10,000 positions | 60 s, as a visible job ([BI_RUNS.md](BI_RUNS.md)), then cached |
+| VaR history, 250 days, of an ad-hoc scope of up to 10,000 positions | 60 s, as a visible job ([BI_RUNS.md](../architecture/BI_RUNS.md)), then cached |
 | position-level component VaR for the whole bank | 30 s, as a job |
 | what-if: one vanilla trade priced over 509 scenarios | 3 s (depends on the pricer; QLRisk to be measured) |
 | what-if: 100 trades | 60 s, with progress |
@@ -532,7 +534,7 @@ For the reference bank this is about one pass over 8 GB plus 5,000 small quantil
 ## 14. APIs and CLI
 
 The computed kinds are read like any kind (Sutra `source:`, BI, `GET /api/v1/views/...`) and through the compute API
-([REACTIVE_CONNECTORS.md section 16](REACTIVE_CONNECTORS.md#16-the-spi-and-the-apis)). A thin, readable surface is added for programs
+([REACTIVE_CONNECTORS.md section 16](../architecture/REACTIVE_CONNECTORS.md#16-the-spi-and-the-apis)). A thin, readable surface is added for programs
 (all planned, 2.8.0):
 
 | Method and path | Returns |
@@ -556,7 +558,7 @@ The computed kinds are read like any kind (Sutra `source:`, BI, `GET /api/v1/vie
 | V2 (built) | history and backtesting: the overnight precomputation, `var-node` history, exceptions, traffic light, Kupiec and Christoffersen | the history tab shows 250 days for any node with exceptions marked |
 | V3 (built, with captures) | baskets, entitlements by node (`positions`, `aggregate`), audit entries, official numbers | an aggregate-only viewer sees a division's numbers and never a position; every answer is audited |
 | V4 | what-if: sandboxes, unwind and linear scaling (no pricing), the reprice check; **pricing through QLRisk if its API is stable** (else 2.8.x); the QuantLib-Java parity | a sandbox removing three trades matches the scope minus those trades exactly; with QLRisk, a new swap's incremental VaR is shown in under 3 s |
-| V5 | intraday: `write-back` and `data-version` triggers, the intraday layer, per-event impacts, pushes ([WRITE_BACK.md section 18](WRITE_BACK.md#18-280-saving-through-connectors-triggers-and-viewers)) | two traders' amendments to one book: each sees their own impact, both see one shared number stamped with both events |
+| V5 | intraday: `write-back` and `data-version` triggers, the intraday layer, per-event impacts, pushes ([WRITE_BACK.md section 18](../architecture/WRITE_BACK.md#18-280-saving-through-connectors-triggers-and-viewers)) | two traders' amendments to one book: each sees their own impact, both see one shared number stamped with both events |
 | V6 | scale: the hot vector store, sharding across Drishti\*net, the targets of [section 13.2](#132-targets) measured on a real server | the measured numbers are published in the scale document; any target missed has a stated reason and plan |
 
 ## 16. Tests
@@ -596,7 +598,7 @@ The computed kinds are read like any kind (Sutra `source:`, BI, `GET /api/v1/vie
 ## 18. As built in 2.8.0: waves V0 to V3
 
 What was built (2.8.0, unreleased), where it differs from the sections above, and why. The user guide is
-[VAR_EXPLORER.md](../guides/VAR_EXPLORER.md); the data as built is [VAR_DATA_MODEL.md section 18](VAR_DATA_MODEL.md#18-as-built-in-280).
+[VAR_EXPLORER.md](VAR_EXPLORER.md); the data as built is [VAR_DATA_MODEL.md section 18](VAR_DATA_MODEL.md#18-as-built-in-280).
 
 ### 18.1 Where it lives
 
@@ -684,7 +686,7 @@ and captured, the portfolio and position pages, a phone), with the demo connecto
 
 ### 18.6 VaR complete, part 1 (2.8.0)
 
-The contract as built is [VAR.md](../contracts/VAR.md) (version 1.3); this section lists what changed in the engine.
+The contract as built is [VAR.md](VAR.md) (version 1.3); this section lists what changed in the engine.
 
 | Change | As built |
 |---|---|
@@ -709,7 +711,7 @@ benchmark, the Python engine and reactive connector, the VaR guide (VAR_GUIDE.md
 
 ### 18.7 VaR complete, part 2 (2.8.0)
 
-The contract as built is [VAR.md](../contracts/VAR.md) version 1.4.
+The contract as built is [VAR.md](VAR.md) version 1.4.
 
 | Change | As built |
 |---|---|

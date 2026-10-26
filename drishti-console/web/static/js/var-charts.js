@@ -13,7 +13,7 @@
  *
  * See the LICENSE file in the root of this repository for the full terms.
  */
-/* The VaR explorer's charts (VAR_ENGINE.md section 10.1): plain SVG, no library, a few hundred elements at most, coloured by classes
+/* The VaR explorer's charts (VAR_GUIDE.md section 3): plain SVG, no library, a few hundred elements at most, coloured by classes
    (var.css reads the theme's tokens), with a hover tip. The server sends summaries (bins, the worst 25, one series), never a vector
    per part, so every chart draws in a few milliseconds.
 

@@ -6,15 +6,17 @@
 
 # VaR: the data contract
 
-*Version 1.4 · 2026-10-26 · Shared rules: [README.md](README.md) · Design: [VAR_ENGINE.md](../architecture/VAR_ENGINE.md),
-[VAR_DATA_MODEL.md](../architecture/VAR_DATA_MODEL.md) · User guide: [VAR_GUIDE.md](../guides/VAR_GUIDE.md) (the screen:
-[VAR_EXPLORER.md](../guides/VAR_EXPLORER.md))*
+> **Archived: replaced by [VAR_GUIDE.md](../guides/VAR_GUIDE.md) (the data contract is its Part II, [sections 14 to 23](../guides/VAR_GUIDE.md#14-the-contract-at-a-glance); the scopes [section 5](../guides/VAR_GUIDE.md#5-scopes-portfolios-and-baskets), the memory tiers [section 26](../guides/VAR_GUIDE.md#26-the-tiered-memory-and-the-hot-file)).** The contract is unchanged (version 1.4). On 2026-10-26 the VaR documents were consolidated into two (product owner): the reference [VAR_GUIDE.md](../guides/VAR_GUIDE.md) and the hands-on [tutorial 25](../tutorials/25-var-from-the-bank-to-a-trade.md). The section numbers this page cites are those of the documents before the consolidation; this is history.
+
+*Version 1.4 · 2026-10-26 · Shared rules: [README.md](../contracts/README.md) · Design: [VAR_ENGINE.md](VAR_ENGINE.md),
+[VAR_DATA_MODEL.md](VAR_DATA_MODEL.md) · User guide: [VAR_GUIDE.md](../guides/VAR_GUIDE.md) (the screen:
+[VAR_EXPLORER.md](VAR_EXPLORER.md))*
 
 This is the data contract of Drishti's VaR engine: what an upstream risk batch delivers, what Drishti builds from it, and what Drishti
 answers. Every column, type, key and formula below was checked against the code and the committed test data on 2026-10-25. Where the
 designs say otherwise, the code wins and the difference is noted (**Design differs**). The shared rules of every contract (the common
 risk lake, keys, types, dates, signs, vectors, delivery, validation, answers, entitlements, versioning, retirement) are in
-[README.md](README.md); this page states only where VaR differs or adds to them.
+[README.md](../contracts/README.md); this page states only where VaR differs or adds to them.
 
 **Sources of truth checked:** `tools/packgen/var/make_var_data.py`, `positions.py`, `portfolios.py`, `factors.py`, `varmath.py`, `rules.py`;
 `config/packs/market-risk/pack.yaml`, `config/packs/market-risk/config/about.yaml`, the pack's `samples/`; the test data in
@@ -167,7 +169,7 @@ is raised (61,368 hours; 1,827 business days) and the run says so (`retention-fl
 ([LAKE_MAINTENANCE.md](../admin/LAKE_MAINTENANCE.md)). The connector only reads, and never vacuums.
 
 **The common risk lake (planned).** The VaR tables are already in domain `risk` behind `risk-store`. From 2.8.0 every risk pack reads
-the same lake through that one connector ([README.md section 2](README.md#2-the-common-risk-lake)); nothing changes for VaR's tables.
+the same lake through that one connector ([README.md section 2](../contracts/README.md#2-the-common-risk-lake)); nothing changes for VaR's tables.
 
 ### 3.2 `pnl-vector`: one P&L vector per trade (AS BUILT)
 
@@ -229,7 +231,7 @@ streamed into the vector store; no document is parsed. Each row passes `VarIntak
 the provenance); otherwise it gets its position (§3.7) and joins the store. A null `PNL` is a **failed** row: counted
 (`provenance.failed`), never taken as zero.
 
-**The vector** ([README.md section 8](README.md#8-vectors-and-other-arrays)):
+**The vector** ([README.md section 8](../contracts/README.md#8-vectors-and-other-arrays)):
 
 | Property | Contract |
 |---|---|
@@ -382,7 +384,7 @@ explorer at `NODE:<NODE_ID>` (§14).
 | One run | all rows of a date carry one `BATCH_ID` and the scenario set's `SCENARIO_SET_ID`; otherwise the date is not loaded (`DRS-5203`) and the date before it is answered, with a warning |
 | Restatement | rewrite the whole date (`lake build` replaces a business date); `RESTATEMENT` + 1; a new `BATCH_ID` |
 
-**Sequence** ([README.md section 9](README.md#9-delivery-writing-a-business-date)):
+**Sequence** ([README.md section 9](../contracts/README.md#9-delivery-writing-a-business-date)):
 
 ```
  upstream batch                                   Drishti
@@ -429,7 +431,7 @@ Positions link to trades (`graph.fields.TRADE_IDS` → `trade`); the explorer li
 
 | Convention | Rule |
 |---|---|
-| P&L sign | gain positive, loss negative ([README.md section 7](README.md#7-currencies-units-and-signs)) |
+| P&L sign | gain positive, loss negative ([README.md section 7](../contracts/README.md#7-currencies-units-and-signs)) |
 | VaR, ES | **reported as positive numbers** for a loss (VaR = −(k-th worst P&L)); a scope whose k-th worst scenario is a gain has a **negative** VaR, shown as such |
 | Component VaR | signed: a hedge has a negative component; components add up to the scope's VaR |
 | Currency | USD for every vector and every figure (`REPORTING_CCY`); no FX conversion in the engine |
@@ -1082,11 +1084,11 @@ question 10): the content store keeps every version, and nothing deletes them.
 The node history (§6.5, mode `official`) reads the dates' records: each date's latest result version. `GET /captures?scope=<a node>`
 lists the node's official captures (a date's latest result version each) beside people's, for a viewer who sees every node. The backtest
 of a record counts exceptions over the official history up to the day before plus the day (`exceptions250`, `light`). Captures remain the
-only stored copy of a computed figure ([README.md section 11](README.md#11-what-drishti-answers-computed-kinds-the-api-captures)).
+only stored copy of a computed figure ([README.md section 11](../contracts/README.md#11-what-drishti-answers-computed-kinds-the-api-captures)).
 
 **Published official results (as built; decided 2026-10-25).** Each official capture run is also appended to
 `${DRISHTI_DELTA_ROOT}/risk-results/var-official/` (`drishti.var.official.root`) for other systems ([README.md section
-11](README.md#11-what-drishti-answers-computed-kinds-the-api-captures)), by Drishti's own lake writer, one Delta commit per run: one
+11](../contracts/README.md#11-what-drishti-answers-computed-kinds-the-api-captures)), by Drishti's own lake writer, one Delta commit per run: one
 row per node of `MGMT` and `LEGAL` per business date and result version. The table is created **append-only** (`delta.appendOnly`) with
 7 years of log and removed files (`delta.logRetentionDuration`, `delta.deletedFileRetentionDuration`: `interval 2557 days`), so nothing
 is ever overwritten: a restated date adds rows with the next `RESULT_VERSION`, and the latest version of a date is the rows with the

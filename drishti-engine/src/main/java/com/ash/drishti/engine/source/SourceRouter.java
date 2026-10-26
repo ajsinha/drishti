@@ -1087,7 +1087,7 @@ public final class SourceRouter implements com.ash.drishti.common.LiveSettings {
     }
 
     /**
-     * A date's vector column of the kind (a P&amp;L vector per trade, VAR_DATA_MODEL.md section 15) with some text columns, streamed to
+     * A date's vector column of the kind (a P&amp;L vector per trade, VAR_GUIDE.md section 29.3) with some text columns, streamed to
      * {@code sink} by the first source in routing order that keeps the column as a vector; false when none does.
      */
     public boolean vectors(String kind, String column, List<String> texts, AsOf asOf, com.ash.drishti.api.VectorSink sink) throws Exception {

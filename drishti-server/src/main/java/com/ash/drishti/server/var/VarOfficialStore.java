@@ -29,7 +29,7 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 /**
- * Where the official end-of-day captures live (VAR.md section 9.6), in the content store beside the people's captures, so they follow
+ * Where the official end-of-day captures live (VAR_GUIDE.md section 19), in the content store beside the people's captures, so they follow
  * the cluster and every version is kept:
  *
  * <ul>

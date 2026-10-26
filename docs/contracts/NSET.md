@@ -6,7 +6,7 @@
 
 # NSET: netting sets, the data contract
 
-*Version 1.0 · 2026-10-25 · Shared rules: [README.md](README.md) · Model contract: [VAR.md](VAR.md) · Roadmap:
+*Version 1.0 · 2026-10-25 · Shared rules: [README.md](README.md) · Model contract: [VAR_GUIDE.md Part II](../guides/VAR_GUIDE.md#14-the-contract-at-a-glance) · Roadmap:
 [IMPLEMENTATION_PLAN.md](../architecture/IMPLEMENTATION_PLAN.md#the-computed-measures-roadmap-280-to-2120-product-owner-2026-10-25)*
 
 **Status:** proposed. PLANNED for 2.10.0, not built. Every table, column, setting, kind, endpoint and code below is a proposal; names
@@ -29,7 +29,7 @@ counterparty-risk contracts of 2.10.0, in the order of the roadmap:
 | 9 | [WWR.md](WWR.md) | wrong-way risk | `credit-path` (optional) |
 
 The shared rules of every contract are in [README.md](README.md). Where a rule is the same as VaR's (scope grammar, captures,
-provenance, entitlements, the reactive connector), this page refers to [VAR.md](VAR.md) and states only the difference.
+provenance, entitlements, the reactive connector), this page refers to [VAR_GUIDE.md Part II](../guides/VAR_GUIDE.md#14-the-contract-at-a-glance) and states only the difference.
 
 **Sources read for this contract (2026-10-25):** `config/packs/counterparty-risk/contracts/*.contract.yaml`, its `samples/`,
 `data/testdata/counterparty-risk/`, `config/packs/core/contracts/counterparty.contract.yaml` and `counterparty-group.contract.yaml`,
@@ -76,7 +76,7 @@ netting-set figures of a counterparty, and every other scope the same way. The A
 | Terms tables in the common risk lake (`netting-set`, `agreement`, `csa`), moved from domains `credit` and `legal` to `risk` | PLANNED |
 | Membership table `netting-set-member` (one row per trade per date) | PLANNED |
 | The netting-set figures computed for any scope (Java, additive) | PLANNED |
-| Scope words `NSET:`, `CPTY:`, `GROUP:`, `LE:` for counterparty measures | PLANNED (2.8.0 adds them to the grammar, VAR.md section 8.5) |
+| Scope words `NSET:`, `CPTY:`, `GROUP:`, `LE:` for counterparty measures | PLANNED (2.8.0 adds them to the grammar, VAR_GUIDE.md section 5.5) |
 | Computed kind `nset-figures`, reactive connector `nset-engine` | PLANNED |
 | Retirement of the stored figures and the counterparty master's figures; guard test | PLANNED |
 
@@ -117,7 +117,7 @@ ${DRISHTI_DELTA_ROOT}/risk/
 └── ...                                               the other measures' tables (SACCR.md, COLL.md, MC.md, EXP.md, LIM.md, WWR.md)
 ```
 
-The physical table is the one of every kind (VAR.md section 3.1): `id`, `doc`, `business_date`, the promoted columns. In the column
+The physical table is the one of every kind (VAR_GUIDE.md section 15.1): `id`, `doc`, `business_date`, the promoted columns. In the column
 tables below **Delta** is the promoted column's type, or `doc` when the field stays in the document; **Engine** says whether the NSET
 engine reads it (**R**) or it is kept for people and links (**–**).
 
@@ -342,7 +342,7 @@ Java engine; no Python is needed. What-if (adding candidate trades) goes through
 
 ### 7.1 One business date in memory (`CcrBook`, planned)
 
-`CcrBook` is the counterparty analogue of `VarBook` (VAR.md section 7.1), shared by all nine measures, built once per date:
+`CcrBook` is the counterparty analogue of `VarBook` (VAR_GUIDE.md section 25), shared by all nine measures, built once per date:
 
 | Structure | Content | Size per 1,000,000 trades / 100,000 netting sets |
 |---|---|---|
@@ -368,7 +368,7 @@ answers, as VaR (README.md section 11). A load signal of any read kind drops the
 
 ## 8. Scopes
 
-The scope grammar is VaR's (VAR.md section 8): terms `BANK`, `LE:`, `DIV:`, `DESK:`, `BOOK:`, `NODE:`, `POS:`, `TRD:`, `PORT:`,
+The scope grammar is VaR's (VAR_GUIDE.md section 5): terms `BANK`, `LE:`, `DIV:`, `DESK:`, `BOOK:`, `NODE:`, `POS:`, `TRD:`, `PORT:`,
 `BASKET:`, `CAPTURE:`, `WHERE:`, joined with `+`, `-` and `&`. Counterparty measures add or rely on:
 
 | Term | Resolves to (counterparty measures) | Reads |
@@ -423,7 +423,7 @@ The command `NSET <id> <GO>` with a netting-set id opens the kept `netting-set` 
 | `GET /scope` | `scope`, `asOf` | the record of §9.1 as JSON (camelCase) |
 | `GET /scope/contributions` | `scope`, `by` (`child` default, `netting-set`, `trade`, `asset`, `legal-entity`, `counterparty`), `asOf` | rows: `key`, `scope`, `label`, `kind`, `trades`, `netMtm`, `grossPositive`, `collateral`, `ce`, `partial` |
 | `GET /scope/trades` | `scope`, `page`, `size` (≤ 1,000), `sort` (`mtm`, `-mtm`, `maturity`), `asOf` | the member trades, paged, no cap on the total: `tradeId`, `sourceSystem`, `nettingSet`, `product`, `assetClass`, `currency`, `book`, `notional`, `maturity`, `mtm`, `status` |
-| `POST /captures`, `GET /captures`, `GET /captures/{id}`, `GET /captures/{id}/csv` | as VaR | captures of NSET answers (VAR.md section 9.6), kept in the content store under `ccr/captures/` |
+| `POST /captures`, `GET /captures`, `GET /captures/{id}`, `GET /captures/{id}/csv` | as VaR | captures of NSET answers (VAR_GUIDE.md section 6), kept in the content store under `ccr/captures/` |
 | `GET /status`, `POST /reload` | | loaded dates, counts; reload (administrators) |
 
 ### 9.3 CSV
@@ -467,7 +467,7 @@ The pack routes the kind (`routes: { nset-figures: nset-engine }`) and keeps `ne
 
 Every counterparty measure publishes its official end-of-day captures to the read-only results area of the lake
 ([README.md section 11](README.md#11-what-drishti-answers-computed-kinds-the-api-captures), product owner 2026-10-25; VaR's table in
-[VAR.md section 9.6](VAR.md#96-captures)). For counterparty measures the natural rows are not only hierarchy nodes, so this contract
+[VAR_GUIDE.md section 19](../guides/VAR_GUIDE.md#19-official-end-of-day-results)). For counterparty measures the natural rows are not only hierarchy nodes, so this contract
 proposes **two tables per measure**, the same for all nine counterparty contracts:
 
 | Table | Rows per business date | Who may read the folder |
@@ -513,7 +513,7 @@ Adds to README.md section 10:
 
 ## 11. Entitlements and audit
 
-Counterparty data is sensitive (names, exposures, collateral, ratings; often under information barriers). Rules beyond VAR.md section 11:
+Counterparty data is sensitive (names, exposures, collateral, ratings; often under information barriers). Rules beyond VAR_GUIDE.md section 9:
 
 | Rule | Proposed |
 |---|---|

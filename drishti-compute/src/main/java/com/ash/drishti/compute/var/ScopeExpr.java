@@ -23,7 +23,7 @@ import java.util.Set;
 import java.util.TreeSet;
 
 /**
- * A scope written as text (VAR_ENGINE.md section 6.1), parsed into a tree: any set of trades.
+ * A scope written as text (VAR_GUIDE.md section 5.2), parsed into a tree: any set of trades.
  *
  * <pre>
  *   BANK                                   the whole bank (the primary hierarchy's root)

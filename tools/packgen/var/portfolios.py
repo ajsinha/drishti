@@ -12,7 +12,7 @@
 #
 # See the LICENSE file in the root of this repository for the full terms.
 
-"""The demo portfolios (docs/contracts/VAR.md section 3.5): definitions only, of the three types, overlapping on purpose.
+"""The demo portfolios (docs/guides/VAR_GUIDE.md section 15.5): definitions only, of the three types, overlapping on purpose.
 
 - **HIERARCHY**: one per desk (``PF-<DESK>-DESK`` on ``MGMT~DESK-<x>``) and one per legal entity (``PF-LE-<x>`` on ``LEGAL~LE-<x>``),
   and a book (``PF-COMM-BOOK-1``);

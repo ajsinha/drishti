@@ -2840,8 +2840,8 @@ workers, busy, queued), `POST /api/v1/compute/peer/run` (a fan-out chunk, run he
 
 ## VaR engine: `/api/v1/var` (2.8.0)
 
-VaR computed on demand from the trades' 509-day P&L vectors (the data contract: [VAR.md](../contracts/VAR.md);
-[VAR_ENGINE.md](../architecture/VAR_ENGINE.md); the user guide [VAR_GUIDE.md](VAR_GUIDE.md), the screen [VAR_EXPLORER.md](VAR_EXPLORER.md)). A scope is the scope grammar's text: `BANK`,
+VaR computed on demand from the trades' 509-day P&L vectors (the complete guide: [VAR_GUIDE.md](VAR_GUIDE.md), the API in its
+[section 11](VAR_GUIDE.md#11-the-api) and the data contract in Part II). A scope is the scope grammar's text: `BANK`,
 `LE:<entity>` (the trades booked by it), `DIV:`, `DESK:RATES`, `BOOK:…`, `NODE:<node>`, `POS:<id>`, `TRD:<id>`, `CPTY:<counterparty>`,
 `PORT:<id>`, `BASKET:<owner>/<name>`, `CAPTURE:<id>`, `WHERE:<rule>`, joined with `+`, `-` and `&` (`DESK:RATES - TRD:MX-20000001`);
 ids of `POS`, `TRD` and `CPTY` are kept as written and matched ignoring case. Every answer is computed as the caller, over the trades
@@ -2852,7 +2852,7 @@ sees the counterparty masked. A date's vectors over the memory budget answer `50
 `422 DRS-5202`. Every headline's `provenance` carries the input tables' versions and batch ids (`inputs`), the rows rejected
 (`rejected`, `rejections`: `DRS-5201` with the reason) and left out as not live (`excluded`), the position rules and any `warnings`
 (a legal entity's trades outside its `LEGAL` node), and `tier`: where the vector came from (`node aggregate (float64)`, `hot file
-(float32 rows, summed in float64)` or `memory (float64 rows)`; [VAR.md section 7.3](../contracts/VAR.md#73-the-tiered-memory-and-the-hot-file-as-built-280)). Saving a basket or a capture needs the `risk:write` token scope; saving and deleting
+(float32 rows, summed in float64)` or `memory (float64 rows)`; [VAR_GUIDE.md section 26](VAR_GUIDE.md#26-the-tiered-memory-and-the-hot-file)). Saving a basket or a capture needs the `risk:write` token scope; saving and deleting
 a basket and a reload are audited (`var-basket-save`, `var-basket-delete`, `var-reload`).
 
 | Method and path | What it does |
@@ -2871,10 +2871,10 @@ a basket and a reload are audited (`var-basket-save`, `var-basket-delete`, `var-
 | `GET /api/v1/var/captures?scope=`, `GET /api/v1/var/captures/{id}` | the captures (of one scope); one capture with its figures |
 | `GET /api/v1/var/captures/{id}/csv?part=` | a capture as CSV: its provenance as `#` lines, then the vector by scenario date, or its components with `part=components` |
 | `GET /api/v1/var/compare?a=&b=` | two captures side by side, or a capture and now (`b=now`) |
-| `GET /api/v1/var/official?asOf=` | a date's official end-of-day record: its result version, the inputs' versions and batch ids, and every node of every hierarchy with its VaR, ES, hypothetical P&L, limit, counts, backtest and capture id (a viewer who sees every node; [VAR.md section 9.6](../contracts/VAR.md#96-captures)) |
+| `GET /api/v1/var/official?asOf=` | a date's official end-of-day record: its result version, the inputs' versions and batch ids, and every node of every hierarchy with its VaR, ES, hypothetical P&L, limit, counts, backtest and capture id (a viewer who sees every node; [VAR_GUIDE.md section 19](VAR_GUIDE.md#19-official-end-of-day-results)) |
 | `POST /api/v1/var/official?asOf=` | administrators: captures the date officially now (the data-load signal of an input does it by itself): `{status: captured, restated, unchanged or skipped, resultVersion, nodes, published}` |
 
-**VaR as a computed kind** (2.8.0; [VAR.md section 9.7](../contracts/VAR.md#97-the-computed-kinds-as-built-280)). The market-risk pack's
+**VaR as a computed kind** (2.8.0; [VAR_GUIDE.md section 8](VAR_GUIDE.md#8-what-if-and-var-as-a-kind)). The market-risk pack's
 reactive connectors serve `var-result` (the Java engine; `VRES <scope>`) and `var-whatif` (the Python VaR engine; `VWIF <scope>`)
 through the compute API, computed as the caller with the explorer's entitlements:
 

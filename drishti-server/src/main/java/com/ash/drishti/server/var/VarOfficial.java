@@ -30,7 +30,7 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.locks.ReentrantLock;
 
 /**
- * The official end-of-day captures (VAR.md section 9.6): when a date's inputs are complete, every node of every hierarchy (MGMT and
+ * The official end-of-day captures (VAR_GUIDE.md section 19): when a date's inputs are complete, every node of every hierarchy (MGMT and
  * LEGAL) is captured by the server as the official record: the node's VaR, ES, components, worst scenarios and vector, its hypothetical
  * P&amp;L and backtest over the official history, the inputs' versions and batch ids, and the membership the position rules derived
  * (recorded once per date). The node history of the explorer reads these records; the same figures are published to
@@ -103,7 +103,7 @@ final class VarOfficial implements AutoCloseable {
     }
 
     /**
-     * The data-load signal of a kind on a date (VAR.md section 16.1 Q5, decided): an input of the engine (vectors, scenario set,
+     * The data-load signal of a kind on a date (VAR_GUIDE.md section 23.1 Q5, decided): an input of the engine (vectors, scenario set,
      * hierarchy, portfolios, or the trades positions come from) reloads that date, then the date is captured officially in the
      * background. Other kinds do nothing.
      */
@@ -302,7 +302,7 @@ final class VarOfficial implements AutoCloseable {
         return f;
     }
 
-    /** The published row of a node (VAR.md section 9.6). */
+    /** The published row of a node (VAR_GUIDE.md section 19). */
     private Map<String, Object> row(VarDate d, VarBook.Node n, Map<String, Object> f, long version, String computedAt, Map<String, Object> inputs) {
         Map<String, Object> r = new LinkedHashMap<>();
         r.put("HIERARCHY", n.hierarchy());

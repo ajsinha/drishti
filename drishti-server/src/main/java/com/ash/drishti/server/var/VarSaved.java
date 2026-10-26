@@ -38,7 +38,7 @@ import java.util.regex.Pattern;
  *       as a BASKET (its members) or a RULE (a condition); private to its owner, shared read-only with named people or roles. A
  *       reader sees it through their own entitlements. Read as {@code BASKET:<owner>/<name>}.</li>
  *   <li><b>Captures</b> ({@code var/captures/<owner>/<id>.json}): an immutable snapshot of a scope's VaR at one moment: the numbers,
- *       the full vector, the members, and how they were made (VAR_ENGINE.md section 10.4). Never changed once written.</li>
+ *       the full vector, the members, and how they were made (VAR_GUIDE.md section 6). Never changed once written.</li>
  * </ul>
  */
 final class VarSaved {

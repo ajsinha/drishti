@@ -379,7 +379,7 @@ A position: one security held in one book (or one OTC trade), the trades that bu
 | Contract | [position.contract.yaml](../../../config/packs/market-risk/contracts/position.contract.yaml) · version 1.0 |
 | Class | drishti-owned |
 | Status | active |
-| Source | Drishti (the VaR engine derives positions from the trades of pnl-vector when a date loads, docs/contracts/VAR.md section 3.7) |
+| Source | Drishti (the VaR engine derives positions from the trades of pnl-vector when a date loads, docs/guides/VAR_GUIDE.md section 15.6) |
 | Grain | One position per business date, derived (never stored); POS-<TT_BOOK>~<security> or POS-<TT_BOOK>~<trade>. |
 | Key | `POSITION_ID` |
 | Id pattern | `^POS-` |
@@ -452,7 +452,7 @@ A position: one security held in one book (or one OTC trade), the trades that bu
 
 **Notes**
 
-- Positions are derived by Drishti when a date loads (docs/contracts/VAR.md section 3.7), by the market-risk pack's positions: rules (securities by book and security id, listed by book and contract, OTC by book and trade), and served from the VaR engine's memory by the var-positions connector: no upstream delivers them and nothing stores them. Their VaR figures are computed as the page opens (VAR_ENGINE), never stored.
+- Positions are derived by Drishti when a date loads (docs/guides/VAR_GUIDE.md section 15.6), by the market-risk pack's positions: rules (securities by book and security id, listed by book and contract, OTC by book and trade), and served from the VaR engine's memory by the var-positions connector: no upstream delivers them and nothing stores them. Their VaR figures are computed as the page opens (VAR_ENGINE), never stored.
 
 **To review (6)**
 
@@ -742,7 +742,7 @@ Risk hierarchy node
 
 ## VRES: VaR of a scope (computed) (`var-result`)
 
-The VaR, ES, decomposition, worst scenarios and P&L vector of any scope (the scope grammar of VAR.md section 8), computed when asked by the server's VaR engine as the person asking; never stored.
+The VaR, ES, decomposition, worst scenarios and P&L vector of any scope (the scope grammar of VAR_GUIDE.md section 5), computed when asked by the server's VaR engine as the person asking; never stored.
 
 |  |  |
 |---|---|
@@ -762,13 +762,13 @@ The VaR, ES, decomposition, worst scenarios and P&L vector of any scope (the sco
 | Field | Type | Presence | Unit | Description | Example or values | Link |
 |---|---|---|---|---|---|---|
 | `SCOPE` | text | required |  | The scope as asked (the id; a ~ inside a node id is written %7E). | `DESK:RATES` |  |
-| `CANONICAL` | text | required |  | The scope's canonical text (VAR.md section 8.2). |  |  |
+| `CANONICAL` | text | required |  | The scope's canonical text (VAR_GUIDE.md section 5.2). |  |  |
 | `SCOPE_KIND` | text | required |  | — | `node`, `position`, `trade`, `portfolio`, `basket`, `capture`, `rule`, `counterparty`, `legal-entity`, `adhoc` |  |
 | `LABEL` | text | required |  | — |  |  |
 | `NODE` | id | optional |  | The hierarchy node when the scope is exactly one node. |  |  |
 | `BUSINESS_DATE` | date | required |  | — |  |  |
-| `VAR` | amount | required | USD | VaR at CONFIDENCE, positive for a loss (VAR.md section 6.2). |  |  |
-| `ES` | amount | required | USD | Expected shortfall at ES_CONFIDENCE (VAR.md section 6.3). |  |  |
+| `VAR` | amount | required | USD | VaR at CONFIDENCE, positive for a loss (VAR_GUIDE.md section 18.1). |  |  |
+| `ES` | amount | required | USD | Expected shortfall at ES_CONFIDENCE (VAR_GUIDE.md section 18.2). |  |  |
 | `CONFIDENCE` | rate | required |  | — | `0.99` |  |
 | `ES_CONFIDENCE` | rate | required |  | — | `0.975` |  |
 | `K` | integer | required |  | The VaR rank (the 6th worst of 509 at 99%). |  |  |
@@ -778,11 +778,11 @@ The VaR, ES, decomposition, worst scenarios and P&L vector of any scope (the sco
 | `LIMIT_USE` | rate | optional |  | — |  |  |
 | `SUM_STANDALONE` | amount | optional | USD | — |  |  |
 | `DIVERSIFICATION` | amount | optional | USD | — |  |  |
-| `BACKTEST` | record | required |  | DAYS, EXCEPTIONS, LIGHT, KUPIEC_LR, KUPIEC_P_VALUE, CHRISTOFFERSEN_LR, CHRISTOFFERSEN_P_VALUE (VAR.md section 6.5). |  |  |
-| `CHILDREN` | record list | required |  | The default parts (VAR.md section 9.3) with KEY, SCOPE, LABEL, KIND, STANDALONE_VAR, COMPONENT_VAR, COMPONENT_ES, INCREMENTAL_VAR, PCT. |  |  |
+| `BACKTEST` | record | required |  | DAYS, EXCEPTIONS, LIGHT, KUPIEC_LR, KUPIEC_P_VALUE, CHRISTOFFERSEN_LR, CHRISTOFFERSEN_P_VALUE (VAR_GUIDE.md section 18.4). |  |  |
+| `CHILDREN` | record list | required |  | The default parts (VAR_GUIDE.md section 11.3) with KEY, SCOPE, LABEL, KIND, STANDALONE_VAR, COMPONENT_VAR, COMPONENT_ES, INCREMENTAL_VAR, PCT. |  |  |
 | `WORST` | record list | required |  | The 25 worst scenarios (RANK, INDEX, DATE, PNL). |  |  |
 | `PNL` | vector | required | USD | The scope's P&L under each scenario day, oldest first (unrounded). |  |  |
-| `PROVENANCE` | record | required |  | The headline's provenance in UPPER_SNAKE (VAR.md section 9.2), with TIER saying where the vector came from. |  |  |
+| `PROVENANCE` | record | required |  | The headline's provenance in UPPER_SNAKE (VAR_GUIDE.md section 11.2), with TIER saying where the vector came from. |  |  |
 
 **Validation**
 
@@ -791,7 +791,7 @@ The VaR, ES, decomposition, worst scenarios and P&L vector of any scope (the sco
 **Notes**
 
 - No stored key: an answer's id is the scope asked (the id in the request); VAR <scope> <GO> opens the same answer in the explorer.
-- Computed as the viewer with the explorer's entitlements (VAR.md section 11); cached per view signature, data version and scope.
+- Computed as the viewer with the explorer's entitlements (VAR_GUIDE.md section 9); cached per view signature, data version and scope.
 
 ## VWIF: VaR what-if (computed, Python) (`var-whatif`)
 

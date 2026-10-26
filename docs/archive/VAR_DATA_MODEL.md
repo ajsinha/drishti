@@ -15,7 +15,9 @@
 -->
 # The VaR data model: positions, portfolios and the P&L vector store
 
-The data contract: [docs/contracts/VAR.md](../contracts/VAR.md) (every input column, structure and answer, checked against the code).
+> **Archived: replaced by [VAR_GUIDE.md](../guides/VAR_GUIDE.md) (the inputs are its [section 15](../guides/VAR_GUIDE.md#15-inputs-from-upstream-engines), memory and sizing [sections 25 to 27](../guides/VAR_GUIDE.md#25-one-business-date-in-memory), the vector in the lake [section 29](../guides/VAR_GUIDE.md#29-the-pl-vector-in-the-lake)).** On 2026-10-26 the VaR documents were consolidated into two (product owner): the reference [VAR_GUIDE.md](../guides/VAR_GUIDE.md) and the hands-on [tutorial 25](../tutorials/25-var-from-the-bank-to-a-trade.md). The section numbers this page cites are those of the documents before the consolidation; this is history.
+
+The data contract: [docs/contracts/VAR.md](VAR.md) (every input column, structure and answer, checked against the code).
 
 Status: **partly built (2.8.0, unreleased).** The data of waves V0 to V3 is built: positions, portfolios, the trades' P&L vectors as a
 `list<double>` column, hierarchies, the nodes' history, the vector store in memory; [section 18](#18-as-built-in-280) says what was
@@ -247,7 +249,7 @@ VERSION: 7
 A basket is **static**: its members are fixed until its owner changes them (each change a new version). A basket may also combine
 nodes and rules with the scope algebra (`DESK:RATES-NY - BASKET:asha/...`, [VAR_ENGINE.md section 6](VAR_ENGINE.md#6-scope-algebra-any-set-of-trades)).
 
-Rule portfolios and baskets are Drishti-owned records (the content store, [CONTENT_STORE.md](CONTENT_STORE.md)), every
+Rule portfolios and baskets are Drishti-owned records (the content store, [CONTENT_STORE.md](../architecture/CONTENT_STORE.md)), every
 version kept and audited.
 
 ## 5. Membership in time, and overlap
@@ -343,7 +345,7 @@ by shifting. Even under sensitivity-based (Taylor) revaluation the base sensitiv
 ## 9. Versions, time travel, restatements and reruns
 
 - **The pin of a COB** is the Delta table version after its load. The engine's results stamp it
-  ([REACTIVE_CONNECTORS.md section 8](REACTIVE_CONNECTORS.md#8-point-in-time-stamping-ordering-and-idempotence)).
+  ([REACTIVE_CONNECTORS.md section 8](../architecture/REACTIVE_CONNECTORS.md#8-point-in-time-stamping-ordering-and-idempotence)).
 - **Time travel:** *VaR of RATES-NY for COB 2026-09-15 as it was known on 2026-09-16 at 09:00* reads the table at that instant (the
   Delta plugin's existing `knownAt` read), before any later restatement.
 - **Restatement** (the batch reruns a COB, or some positions failed and are repriced): a new commit replaces the affected rows of that
@@ -414,7 +416,7 @@ plan is used (tested, [section 16.4](#164-the-planners-choice-is-invisible)).
 ## 12. Serving from memory
 
 **As built (2.8.0):** the design below is the heap tier (`drishti.var.tier.mode: heap`); the server's default is the **tiered memory**
-of [VAR.md section 7.3](../contracts/VAR.md#73-the-tiered-memory-and-the-hot-file-as-built-280): each loaded date a memory-mapped hot
+of [VAR.md section 7.3](VAR.md#73-the-tiered-memory-and-the-hot-file-as-built-280): each loaded date a memory-mapped hot
 file under `<data folder>/var/hot/<date>/` (float32 **position** rows in hierarchy order, the trades of fungible positions, float64
 aggregates, the columns and links), the heap holding the aggregates, columns and links only, a history date opened by mapping its file.
 Where the build differs from 12.1 to 12.4 is in section 18.5.
@@ -468,7 +470,7 @@ static void addInto(double[] acc, double[] chunk, int offset) {        // acc.le
 - The COB's ordinals are split into **shards of contiguous ranges** aligned to legal entities and desks (a desk is never split), about
   equal in bytes, and spread over the nodes that serve the var-engine by the Drishti\*net ring, **two replicas each** (a node leaving
   costs no reload on the critical path).
-- A query's coordinator (the owner of the request key, [REACTIVE_CONNECTORS.md section 14](REACTIVE_CONNECTORS.md#14-several-servers-drishtinet))
+- A query's coordinator (the owner of the request key, [REACTIVE_CONNECTORS.md section 14](../architecture/REACTIVE_CONNECTORS.md#14-several-servers-drishtinet))
   sends each shard owner its part of the bitmap and receives a partial sum (509 doubles, 4 KB), then adds the partials. Network traffic
   is tiny; the work is local to the data.
 - Node and cube vectors are small and replicated to every var-engine node.
@@ -522,7 +524,7 @@ way: the basket includes the whole position and says so.
 
 **As built (2.8.0):** the hot copy is float32 in a memory-mapped file (the *float32 in memory* column below, on local disk and in the
 page cache, none of it on the heap); measured at 100,000 trades × 5 dates and extrapolated to 1 M × 50 in
-[VAR.md section 12.2](../contracts/VAR.md#122-the-tiered-store-measured-and-extrapolated-as-built-280): 237.7 MB a date measured, about
+[VAR.md section 12.2](VAR.md#122-the-tiered-store-measured-and-extrapolated-as-built-280): 237.7 MB a date measured, about
 2.25 GB a date and 113 GB for 50 dates extrapolated; the whole bank from resident rows 3.4 ms at 100,000 trades (about 60 GB/s), about
 35 ms at a million; reopening a history date 23 ms (about 0.25 s at a million).
 
@@ -724,7 +726,7 @@ kind holds the demo's (and a bank's own) definitions.
 
 ### 18.4 VaR complete, part 1 (2.8.0): what changed in the data
 
-The contract is [VAR.md](../contracts/VAR.md) (version 1.3). Section 18.2's table is the V0 to V3 state; from part 1:
+The contract is [VAR.md](VAR.md) (version 1.3). Section 18.2's table is the V0 to V3 state; from part 1:
 
 | Kind | Change |
 |---|---|
@@ -737,7 +739,7 @@ The contract is [VAR.md](../contracts/VAR.md) (version 1.3). Section 18.2's tabl
 
 ### 18.5 VaR complete, part 2 (2.8.0): the tiered memory
 
-The contract is [VAR.md](../contracts/VAR.md) version 1.4 (section 7.3 has the hot file's format and the precision measured).
+The contract is [VAR.md](VAR.md) version 1.4 (section 7.3 has the hot file's format and the precision measured).
 
 | Design (sections 10, 12, 14) | As built |
 |---|---|

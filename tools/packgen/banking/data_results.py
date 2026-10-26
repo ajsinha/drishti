@@ -231,7 +231,7 @@ def market_results(trades: dict, docs: dict) -> None:
         contrib = {b: book_var(books[b]) for b in sorted(bl)}
         var99 = round(math.sqrt(fsum(v * v for v in contrib.values())) * 0.85)
         limit = round(var99 * r.uniform(1.25, 1.8), -4)
-        # the retired stored VaR (the var kind, 2.8.0: VaR is the engine's, docs/contracts/VAR.md section 14) drew the desk's P&L
+        # the retired stored VaR (the var kind, 2.8.0: VaR is the engine's, docs/guides/VAR_GUIDE.md section 21) drew the desk's P&L
         # series from this generator: the draws stay so every other result keeps its numbers
         for _ in days:
             r.gauss(0, 1)

@@ -38,6 +38,10 @@ categories:
       - { slug: reports-page, doc: guides/SCHEDULED_REPORTS.md, title: Reports and subscriptions, icon: file-earmark-bar-graph, summary: "The Reports page: scheduled searches, when they run and where the file goes, export, and subscriptions by email." }
       - { slug: sharing-and-discussion, title: Sharing and collaboration, icon: chat-square-text, summary: "Send a view with a note, read your inbox, discuss a number: what travels is your words and a link, and everyone sees the view with their own permissions." }
       - { slug: python-calc, doc: guides/PYTHON_CALC.md, title: "Calc · Python on any view", icon: filetype-py, summary: "Alt+C: Python in your browser on the screen you are on. The drishti module, tables and charts, drishti_bi (ask a BI dataset as you) and Graphic Walker, packs' snippets, roles, limits." }
+      # VaR is two pages (product owner, 2026-10-26): the one reference and the one tutorial. Their path slugs are kept, so the
+      # explorer's F1 (contextual var below) and the tutorials page's links open the same pages.
+      - { slug: docs-guides-var-guide, doc: guides/VAR_GUIDE.md, title: "VaR guide", icon: graph-down-arrow, summary: "Value at risk for any set of trades: every measure with worked numbers, the explorer screen by screen, positions, scopes, portfolios and baskets, captures, history and backtesting, what-if and VaR as a kind, who sees what, the CLI, the API and settings; the data contract (every column, formula, answer and error code, official results, retention); how the engine keeps a date in memory and on disk, sizing and the benchmark." }
+      - { slug: docs-tutorials-25-var-from-the-bank-to-a-trade, doc: tutorials/25-var-from-the-bank-to-a-trade.md, title: "VaR tutorial: from the bank to a trade", icon: mortarboard, kind: tutorial, summary: "Twelve hands-on steps on the test data, each in the UI, on the command line and in YAML: open the bank's VaR, drill to a trade, the P&L path and contributions, your own scopes, derived positions, a basket captured and compared, the backtest, the hot file, VRES and a what-if by the Python engine, entitlements." }
       - { slug: clients, doc: guides/CLIENTS.md, title: Scripts, notebooks and Excel, icon: filetype-py, summary: "Personal API tokens, the Python client, and Excel through Power Query: read anything you may open, from code." }
   - id: bi
     name: BI
@@ -214,7 +218,7 @@ contextual:
   search: user-guide
   compare: user-guide
   history: user-guide#history-an-entity-over-time
-  var: docs-guides-var-guide        # the VaR explorer (F1 and its ?): the VaR guide, unlisted (the centre's 45 pages are full)
+  var: docs-guides-var-guide        # the VaR explorer (F1 and its ?): the VaR guide, listed under Use
   bi-designer: bi-guide#26-bi-studio-authoring-as-one-product-wave-c-240
   bi-theme-designer: reports#52-themes
   bi-transform: python-bi#17-data-prep-the-transform-editor-240

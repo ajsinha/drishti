@@ -178,7 +178,7 @@ Value at risk, stress testing, FRTB sensitivities and P&L explain.
 | `PNLV` | P&L vector (509 scenarios) | P&L vector of a trade | `PNLV PV-MX-20000274-HS-509` | engine input |  |
 | `SSET` | Scenario set | Scenario set | `SSET HS-509` | engine input |  |
 | `HIER` | Risk hierarchy node | Risk hierarchy node | `HIER LEGAL~LE-NY` | engine input |  |
-| `VRES` | VaR of a scope (computed) | The VaR, ES, decomposition, worst scenarios and P&L vector of any scope (the scope grammar of VAR.md section 8), computed when asked by the server's VaR engine as the person asking; never stored. | `VRES DESK:RATES` | computed |  |
+| `VRES` | VaR of a scope (computed) | The VaR, ES, decomposition, worst scenarios and P&L vector of any scope (the scope grammar of VAR_GUIDE.md section 5), computed when asked by the server's VaR engine as the person asking; never stored. | `VRES DESK:RATES` | computed |  |
 | `VWIF` | VaR what-if (computed, Python) | A scope's VaR and ES before and after hypothetical trades kept in the person's private sandbox, and its stressed window, computed when asked by the Python VaR engine from the scope's var-result; never stored. |  | computed |  |
 
 ## News and markets (`news-and-markets`)

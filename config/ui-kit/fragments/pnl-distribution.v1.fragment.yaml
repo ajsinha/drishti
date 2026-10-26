@@ -32,7 +32,7 @@ params:
   key: ''
   area: ''
 doc:
-  summary: "A P&L vector's scenario distribution with VaR and ES marked (VAR_ENGINE.md section 10)"
+  summary: "A P&L vector's scenario distribution with VaR and ES marked (VAR_GUIDE.md section 3)"
   description: >-
     The P&L of a position, a portfolio or any scope under each historical scenario day (a list of numbers, 509 of them for the
     HS-509 set), binned, with vertical lines at minus the VaR and minus the expected shortfall, so the reader sees how far the tail

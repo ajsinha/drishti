@@ -27,7 +27,7 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.condition.EnabledIfSystemProperty;
 
 /**
- * The engine at bank scale, in memory only (VAR_ENGINE.md section 13, VAR_DATA_MODEL.md section 14): a synthetic bank of a size you
+ * The engine at bank scale, in memory only (VAR_GUIDE.md sections 27.2 and 27.4): a synthetic bank of a size you
  * choose, never written anywhere, and the operations the design sets targets for. Not run by default: it needs memory (rows x 509 x 8
  * bytes, twice while the rows are put in hierarchy order).
  *

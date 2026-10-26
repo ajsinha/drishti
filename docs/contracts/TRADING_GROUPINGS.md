@@ -7,7 +7,7 @@
 # CTRD, PTRD, LTRD, ITRD, the trading groupings: the data contract
 
 *Version 1.0 · 2026-10-25 · **Status:** proposed (PLANNED for 2.9.0) · Shared rules: [README.md](README.md) · Model contract:
-[VAR.md](VAR.md) · Figures from [TVAL.md](TVAL.md) and [VAR.md](VAR.md)*
+[VAR_GUIDE.md Part II](../guides/VAR_GUIDE.md#14-the-contract-at-a-glance) · Figures from [TVAL.md](TVAL.md) and [VAR_GUIDE.md Part II](../guides/VAR_GUIDE.md#14-the-contract-at-a-glance)*
 
 This is the planned data contract of the four **trading groupings**: the pages that list every trade with a counterparty (CTRD), in a
 portfolio or book (PTRD), booked by one of the bank's legal entities (LTRD), or with a leg on an index (ITRD). Today they are stored
@@ -15,7 +15,7 @@ summaries made by a `derived` connector over the trade master, capped at 1,000 m
 over the scope engine**: every trade, paged, sorted and filtered on the server, for any business date, with the scope's valuation
 (TVAL) and VaR beside it. Everything here is a **proposal**; names may change, and each change will be recorded in
 [section 16](#16-open-questions-and-the-change-table). The shared rules are in [README.md](README.md); the scope grammar, captures,
-baskets and entitlements are VaR's ([VAR.md](VAR.md)).
+baskets and entitlements are VaR's ([VAR_GUIDE.md Part II](../guides/VAR_GUIDE.md#14-the-contract-at-a-glance)).
 
 **Sources read for this contract (2026-10-25):** `config/packs/trading/pack.yaml` (the connector `trade-pages`, its four kinds'
 `group-by`, `max-members: 1000`, `fields` and `rows`), `config/packs/trading/contracts/{counterparty-trades,portfolio-trades,legal-entity-trades,index-trades,trade}.contract.yaml`,
@@ -82,7 +82,7 @@ the **live** trades of the same set.
 ## 3. Inputs from upstream engines
 
 **None of its own.** The groupings read the trade master (fundamental, through the trading pack's connectors) and, for figures, the
-TVAL and VaR engines' inputs ([TVAL.md section 3](TVAL.md#3-inputs-from-upstream-engines), [VAR.md section 3](VAR.md#3-inputs-from-upstream-engines)).
+TVAL and VaR engines' inputs ([TVAL.md section 3](TVAL.md#3-inputs-from-upstream-engines), [VAR_GUIDE.md section 15](../guides/VAR_GUIDE.md#15-inputs-from-upstream-engines)).
 The fields read from each trade:
 
 | Field (trade contract) | Type | Used for | Example |
@@ -167,7 +167,7 @@ All of these are additive or distinct-counts over trades: computed per answer fr
 | Figure | From | Over |
 |---|---|---|
 | `MTM`, `MTM_GROSS`, `DV01` | TVAL ([TVAL.md section 6](TVAL.md#6-the-computation)) | the live trades of *S* |
-| `VAR`, `ES` | VaR ([VAR.md section 6](VAR.md#6-the-computation)) | the same set; a scope VaR cannot answer (a trade without a vector) is counted `missing` |
+| `VAR`, `ES` | VaR ([VAR_GUIDE.md section 18](../guides/VAR_GUIDE.md#18-the-computation)) | the same set; a scope VaR cannot answer (a trade without a vector) is counted `missing` |
 | Exposure, limits | `EXP.md`, `LIM.md` (2.10.0) | the counterparty's netting sets |
 
 The page asks each engine with the same canonical scope text and date; each figure carries its own provenance. A figure an engine is
@@ -191,13 +191,13 @@ connector rebuilds it; an intraday trade change through the stream or a write-ba
 
 | Term | Meaning | Reads |
 |---|---|---|
-| `CPTY:<id>` | the trades with that counterparty (built in 2.8.0, [VAR.md section 8.5](VAR.md#85-scope-words-by-a-trades-attribute)) | `COUNTERPARTY` |
+| `CPTY:<id>` | the trades with that counterparty (built in 2.8.0, [VAR_GUIDE.md section 5.5](../guides/VAR_GUIDE.md#55-scope-words-by-a-trades-attribute)) | `COUNTERPARTY` |
 | `LE:<id>` | the trades booked by the bank's legal entity: the trade's **booking `LEGAL_ENTITY`** is the source of truth (product owner, 2026-10-25) | `LEGAL_ENTITY` |
 | `INDEX:<name>` | **new**: the trades with any leg on the index (`LEGS[].INDEX.NAME`) | the trade's legs |
 | `TRDR:<id>` | **new**: the trades of a trader | `TRADER_ID` |
 | `STATUS:<s>[,<s>…]` | **new, list scope only**: the trades with those statuses; combined with `&` (`CPTY:X & STATUS:CANCELLED`) | `TRADE_STATUS` |
 
-`INDEX`, `TRDR` and `STATUS` are letters only, as the grammar requires ([VAR.md section 8.2](VAR.md#82-grammar-as-the-parser-accepts-it));
+`INDEX`, `TRDR` and `STATUS` are letters only, as the grammar requires ([VAR_GUIDE.md section 5.2](../guides/VAR_GUIDE.md#52-the-grammar));
 index names upper-case as every argument (`INDEX:uscpi` is `INDEX:USCPI`; the committed names are all upper case).
 
 ### 8.2 `BOOK:` and the trade's book

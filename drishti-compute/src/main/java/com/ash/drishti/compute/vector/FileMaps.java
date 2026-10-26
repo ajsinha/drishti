@@ -28,7 +28,7 @@ import java.nio.channels.FileChannel;
 
 /**
  * Maps a region of a file read-only and unmaps it on request, never leaving it to the garbage collector when the JVM can do better
- * (VAR.md section 7.3: a hot file is unmapped when its date is evicted, so its pages and, on Windows, the file itself are released at
+ * (VAR_GUIDE.md section 26: a hot file is unmapped when its date is evicted, so its pages and, on Windows, the file itself are released at
  * once). On Java 22 and later the region is mapped in a shared {@code Arena} of the foreign-memory API (looked up at run time: the code
  * is compiled for Java 21, where that API is a preview); closing the arena unmaps it, and a read after that fails with an exception
  * instead of touching freed memory. On Java 21 the mapping is a {@link MappedByteBuffer} released through the JDK's cleaner. Either way the

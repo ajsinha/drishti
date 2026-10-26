@@ -16,7 +16,7 @@
 package com.ash.drishti.compute.var;
 
 /**
- * VaR backtesting over a history (VAR_ENGINE.md section 11): a day is an <b>exception</b> when its loss (hypothetical P&amp;L below zero)
+ * VaR backtesting over a history (VAR_GUIDE.md section 7): a day is an <b>exception</b> when its loss (hypothetical P&amp;L below zero)
  * is larger than the previous day's VaR. Over the last 250 days the count gives the Basel traffic light (green 0-4, amber 5-9, red 10 or
  * more); Kupiec's proportion-of-failures test asks whether the exception rate fits the confidence; Christoffersen's test asks whether
  * exceptions come independently (not in clusters).

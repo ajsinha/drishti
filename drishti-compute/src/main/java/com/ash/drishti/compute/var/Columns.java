@@ -22,7 +22,7 @@ import java.util.List;
 import java.util.Map;
 
 /**
- * Attributes of many rows, column by column (the position index of VAR_DATA_MODEL.md section 12.1): a text column is an {@code int}
+ * Attributes of many rows, column by column (the position index of VAR_GUIDE.md section 25): a text column is an {@code int}
  * code per row into a dictionary (books, desks, currencies repeat, so a few hundred bytes a row at most), a number column a
  * {@code double[]} (NaN where none). No object per row.
  */

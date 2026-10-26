@@ -6,7 +6,7 @@
 
 # EXP: exposure profiles (EE, EPE, EEPE, PFE), the data contract
 
-*Version 1.0 · 2026-10-25 · Shared rules: [README.md](README.md) · Model contract: [VAR.md](VAR.md) · Netting and the shared
+*Version 1.0 · 2026-10-25 · Shared rules: [README.md](README.md) · Model contract: [VAR_GUIDE.md Part II](../guides/VAR_GUIDE.md#14-the-contract-at-a-glance) · Netting and the shared
 counterparty tables: [NSET.md](NSET.md)*
 
 **Status:** proposed. PLANNED for 2.10.0, not built. Every table, column, setting, kind, endpoint and code below is a proposal; names
@@ -100,7 +100,7 @@ ${DRISHTI_DELTA_ROOT}/risk/
 ### 3.2 `simulation-run`: the run's identity and grid (reference row)
 
 **Grain:** one row per run and business date. **Row count:** 1 per date (a second, *stressed* calibration run is open question 4).
-The paths of `exposure-path` are ordered by this row exactly as the P&L vectors are ordered by the scenario set (VAR.md section 3.3).
+The paths of `exposure-path` are ordered by this row exactly as the P&L vectors are ordered by the scenario set (VAR_GUIDE.md section 15.3).
 
 | Column | JSON | Delta | Req. | Engine | Unit | Meaning | Example |
 |---|---|---|---|---|---|---|---|
@@ -295,7 +295,7 @@ remaining maturity in the scope, capped at 1 year. Sums and means in float64.
 | EE contribution with collateral | `c_i(k) = (1/P) Σ_p (MTM_i(p,k) − w_i(p,k) C_n(p,k)) · 1{E_n(p,k) > 0}`, `w_i` = MTM_i / V_n on the path (0 when V_n = 0) | EE_n(k) |
 | EPE contribution | Σ_k c_i(k) Δt_k / T | EPE |
 | EE of a netting set in a counterparty | EE_n(k) | EE of the counterparty (additive) |
-| PFE contribution of a part *j* | `−` mean of the part's E (sets) or MTM (trades) over the `contribution-window` paths ranked around the quantile at the peak date, scaled to add up to PEAK_PFE (as VaR's component VaR, VAR.md section 6.4) | PEAK_PFE |
+| PFE contribution of a part *j* | `−` mean of the part's E (sets) or MTM (trades) over the `contribution-window` paths ranked around the quantile at the peak date, scaled to add up to PEAK_PFE (as VaR's component VaR, VAR_GUIDE.md section 18.3) | PEAK_PFE |
 | Incremental PFE of a part | PEAK_PFE(scope) − PEAK_PFE(scope without the part) | does not add up |
 
 ### 6.7 Pre-deal: incremental exposure
@@ -331,7 +331,7 @@ interactive time.
 ### 7.2 On disk: the hot exposure file per date (proposed)
 
 `<hot-folder>/<YYYY-MM-DD>/<RUN_ID>.xhot`, little-endian, written once after the first load of the date, memory-mapped, the layout
-style of VaR's hot file (VAR.md section 7.3): a header (magic `DRSHEXP1`, version, business date, P, G, primary count, sets, run id,
+style of VaR's hot file (VAR_GUIDE.md section 26): a header (magic `DRSHEXP1`, version, business date, P, G, primary count, sets, run id,
 data version of the date's `exposure-path` files, batch id), a section table with CRC-32C, and sections:
 
 | Section | Content | Size (100,000 sets, P = 5,000, G = 100) | Size (P = 2,000, G = 50) |
@@ -371,7 +371,7 @@ Answers cached by (canonical scope, date, run id, data versions, parameters, vie
 
 ## 8. Scopes
 
-Scope grammar of VAR.md section 8 with the counterparty terms of NSET.md section 8 (`NSET:`, `CPTY:`, `GROUP:`, `LE:`).
+Scope grammar of VAR_GUIDE.md section 5 with the counterparty terms of NSET.md section 8 (`NSET:`, `CPTY:`, `GROUP:`, `LE:`).
 
 | Scope | How the exposure matrix is formed | Cost |
 |---|---|---|

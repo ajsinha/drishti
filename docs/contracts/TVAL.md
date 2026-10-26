@@ -7,14 +7,14 @@
 # TVAL, trade valuation totals: the data contract
 
 *Version 1.0 · 2026-10-25 · **Status:** proposed (PLANNED for 2.9.0) · Shared rules: [README.md](README.md) · Model contract:
-[VAR.md](VAR.md) · Roadmap: [IMPLEMENTATION_PLAN.md](../architecture/IMPLEMENTATION_PLAN.md#the-computed-measures-roadmap-280-to-2120-product-owner-2026-10-25)*
+[VAR_GUIDE.md Part II](../guides/VAR_GUIDE.md#14-the-contract-at-a-glance) · Roadmap: [IMPLEMENTATION_PLAN.md](../architecture/IMPLEMENTATION_PLAN.md#the-computed-measures-roadmap-280-to-2120-product-owner-2026-10-25)*
 
 This is the planned data contract of **TVAL**: the valuation of any set of trades, summed and broken down when asked, from one
 valuation row per trade that an upstream engine delivers. It replaces the stored kind `trade-valuation`. Everything here is a
 **proposal** for the 2.9.0 build: names may still change, and each change will be recorded in [section 16](#16-open-questions-and-the-change-table).
 The shared rules (the common risk lake, keys, types, dates, signs, delivery, validation, answers, entitlements, versioning, retirement)
 are in [README.md](README.md); the scope grammar, captures, baskets, official end-of-day captures and the entitlement model are VaR's
-([VAR.md](VAR.md)) and are referred to, not repeated.
+([VAR_GUIDE.md Part II](../guides/VAR_GUIDE.md#14-the-contract-at-a-glance)) and are referred to, not repeated.
 
 **Sources read for this contract (2026-10-25):** `config/packs/market-risk/contracts/trade-valuation.contract.yaml`, the pack's
 `samples/trade-valuation.jsonl` (765 records), `data/testdata/market-risk/trade-valuation/` (a snapshot of 12,076 on 2026-07-08 and
@@ -96,14 +96,14 @@ ${DRISHTI_DELTA_ROOT}/risk/
 ```
 
 Served by the common connector `risk-store` (`plugin: delta`, domain `risk`; [README.md section 2](README.md#2-the-common-risk-lake)).
-The physical layout follows VaR's ([VAR.md section 3.1](VAR.md#31-where-they-live)): `id` STRING (the key below), `doc` STRING (the
+The physical layout follows VaR's ([VAR_GUIDE.md section 15.1](../guides/VAR_GUIDE.md#151-where-they-live)): `id` STRING (the key below), `doc` STRING (the
 whole row as JSON, for audit), `business_date` DATE (the partition) and the promoted columns marked **P** below.
 
 ### 3.2 `valuation`: one row per trade per business date (PLANNED)
 
 **Grain:** one row per trade, business date and valuation run. **Key:** `VALUATION_KEY` = `<TRADE_ID>` (unique per date); the natural
 key is (`BUSINESS_DATE`, `TRADE_ID`). **Rows:** every trade alive on the date (statuses `NEW`, `VALIDATED`, `AMENDED`, maturity on or
-after the date; [VAR.md open question 1](VAR.md#161-open-questions)), plus trades that matured or were cancelled **on** the date (so
+after the date; [VAR_GUIDE.md section 23.1, open question 1](../guides/VAR_GUIDE.md#231-open-questions-of-the-contract)), plus trades that matured or were cancelled **on** the date (so
 P&L explain sees their last value, §3.4). **Partitioning:** `business_date`; rows sorted by `TT_BOOK`, then `TRADE_ID` (proposed;
 the engine does not depend on the order). **Cadence:** once per business date after the close; intraday rows are open question 2.
 **Due:** to be agreed (open question 1). **Retention:** 7 years (product owner, 2026-10-25), Delta time travel kept for the same.
@@ -164,7 +164,7 @@ trades; the day-over-day change shows it under *gone*).
 |---|---|---|
 | `trade` (TRD; connectors `trade-endur`, `trade-calypso`, `trade-murex`) | `TRADE_ID` | live status, book (`TT_BOOK`, else `PORTFOLIO`: open question 5), counterparty, legal entity, product, currency, maturity, trader, version; the derived columns of §3.2 |
 | `netting-set` (NSET) | `TRADE_IDS` | the trade's netting set (the trade master has none; the retired record carried `NETTING_SET`) |
-| `risk-hierarchy` (HIER) | `NODE_ID`, `BOOKS` | the nodes and their books, as VaR ([VAR.md section 3.4](VAR.md#34-risk-hierarchy-the-trees-and-their-limits-as-built)) |
+| `risk-hierarchy` (HIER) | `NODE_ID`, `BOOKS` | the nodes and their books, as VaR ([VAR_GUIDE.md section 15.4](../guides/VAR_GUIDE.md#154-risk-hierarchy-the-trees-and-their-limits-as-built)) |
 | `fx-rate` (market-data pack) | currency pair, date | USD → reporting currency at the close of the date (§6.2) |
 | `counterparty` (CPTY), `lei-entity` (LEI), `legal-entity` (LE), `book`, `desk` | ids | labels and the `CPTY:`, `GROUP:`, `LE:` scopes |
 
@@ -241,7 +241,7 @@ waits for pricing through QLRisk (out of this contract).
 | `drishti.tval.hot-dates` | `3` | dates kept loaded (two for a day-over-day change, one spare) |
 | `drishti.tval.max-groups` | `5000` | most groups a breakdown returns (the rest summed as *other*) |
 | `drishti.tval.maturity-buckets` | `0-1Y, 1-2Y, 2-5Y, 5-10Y, 10Y+` | the `MATURITY_BUCKET` grouping (from the remaining life on the date) |
-| `drishti.tval.access` | `{}` | per role and node: `positions` or `aggregate` (VaR's model, [VAR.md section 11](VAR.md#11-entitlements-and-audit)) |
+| `drishti.tval.access` | `{}` | per role and node: `positions` or `aggregate` (VaR's model, [VAR_GUIDE.md section 9](../guides/VAR_GUIDE.md#9-who-sees-what-entitlements-and-audit)) |
 
 ## 7. What Drishti builds
 
@@ -257,7 +257,7 @@ At the date's load (first request, or the load signal):
 | Node aggregates | per hierarchy node: Σ of each amount column, Σ positive and negative MtM, the counts (12 doubles a node) |
 | Membership | `OrdinalSet` per resolved scope (VaR's bitsets), cached with the answer |
 
-The planner is VaR's ([VAR.md section 7.1](VAR.md#71-as-built-one-business-date-varbook)): a scope that is a node answers from
+The planner is VaR's ([VAR_GUIDE.md section 25](../guides/VAR_GUIDE.md#25-one-business-date-in-memory)): a scope that is a node answers from
 its aggregate; a node minus a few trades subtracts them; otherwise one pass over the set's ordinals. A breakdown is one pass over the
 set, accumulating into an array indexed by the group code.
 
@@ -277,7 +277,7 @@ Three hot dates of a 1 M-trade bank hold about 330 MB. No memory tiering is need
 
 ## 8. Scopes
 
-Every scope of [VAR.md section 8](VAR.md#8-scopes), including the planned `CPTY:`, `GROUP:`, `NSET:`, `LE:` (the trade's booking
+Every scope of [VAR_GUIDE.md section 5](../guides/VAR_GUIDE.md#5-scopes-portfolios-and-baskets), including the planned `CPTY:`, `GROUP:`, `NSET:`, `LE:` (the trade's booking
 `LEGAL_ENTITY`, product owner 2026-10-25), and the words [TRADING_GROUPINGS.md](TRADING_GROUPINGS.md#8-scopes) adds (`INDEX:`,
 `TRDR:`). **Everything is additive**, so every scope is answered exactly from node aggregates and runs. `WHERE:` rules see the
 position columns (VaR's) and, for TVAL, the trade columns of §7.1 (`MTM`, `NOTIONAL`, `MATURITY_BUCKET`, …) through `TWHERE:` (open
@@ -295,7 +295,7 @@ Base `/api/v1/tval`, JSON, as the caller; `scope` and `asOf` as VaR; errors RFC 
 | `GET /scope/breakdown` | `scope`, `asOf`, `ccy`, `by` (one or two of `DESK`, `TT_BOOK`, `LEGAL_ENTITY`, `COUNTERPARTY`, `NETTING_SET`, `PRODUCT_GROUP`, `PRODUCT_TYPE`, `CURRENCY`, `SOURCE_SYSTEM`, `TRADER_ID`, `MATURITY_BUCKET`, `child`), `sort` (`mtm`, `-mtm`, `gross`, `name`), `limit` | groups with the totals of §6.1 each |
 | `GET /scope/trades` | `scope`, `asOf`, `ccy`, `page`, `size` (≤ 1,000), `sort` (any column), `filter` (a `TWHERE` rule) | the trades with their values, paged, no cap on the total |
 | `GET /scope/change` | `scope`, `asOf`, `from` (default the previous business date), `ccy` | the bridge of §6.3, with `new` and `gone` trades (first 200 each) |
-| `POST /captures`, `GET /captures`, `GET /captures/{id}`, `GET /captures/{id}/csv`, `GET /compare` | as VaR ([VAR.md section 9.6](VAR.md#96-captures)) | captures of TVAL answers (`TVCAP-<yyyymmdd>-<n>`) |
+| `POST /captures`, `GET /captures`, `GET /captures/{id}`, `GET /captures/{id}/csv`, `GET /compare` | as VaR ([VAR_GUIDE.md section 6](../guides/VAR_GUIDE.md#6-captures-and-compare)) | captures of TVAL answers (`TVCAP-<yyyymmdd>-<n>`) |
 | `GET /status`, `POST /reload` | | as VaR |
 
 ### 9.2 The totals
@@ -308,7 +308,7 @@ Base `/api/v1/tval`, JSON, as the caller; `scope` and `asOf` as VaR; errors RFC 
 | `pnl1d`, `dv01`, `cs01`, `notional`, `accrued` | integer or null | §6.1; null when no trade of the scope carries the value |
 | `trades`, `valued`, `proxied`, `failed`, `missing`, `ended` | integer | counts |
 | `children` | list | default parts (`by=child`): `{key, scope, label, mtm, mtmGross, dv01, trades}` |
-| `provenance` | object | VaR's fields ([VAR.md section 9.2](VAR.md#92-the-headline-get-scope)) plus `valuation` (`valuation · batches B-… · data version …`), `fxRate`, `fxSource`, `fxDate`, `batchIds` (one per source system) |
+| `provenance` | object | VaR's fields ([VAR_GUIDE.md section 11.2](../guides/VAR_GUIDE.md#112-the-headline-get-scope-and-its-provenance)) plus `valuation` (`valuation · batches B-… · data version …`), `fxRate`, `fxSource`, `fxDate`, `batchIds` (one per source system) |
 
 ### 9.3 Trades (paged)
 
@@ -365,7 +365,7 @@ the reactive cache holds the record. A load signal on `valuation` or `trade` dro
 ### 9.6 Official end-of-day captures and the published table
 
 When a date's `valuation` rows are complete, Drishti captures every node of both hierarchies (`MGMT`, `LEGAL`) as the official record
-(VaR's mechanism, [VAR.md section 9.6](VAR.md#96-captures)) and publishes it to `${DRISHTI_DELTA_ROOT}/risk-results/tval-official/`
+(VaR's mechanism, [VAR_GUIDE.md section 19](../guides/VAR_GUIDE.md#19-official-end-of-day-results)) and publishes it to `${DRISHTI_DELTA_ROOT}/risk-results/tval-official/`
 ([README.md section 11](README.md#11-what-drishti-answers-computed-kinds-the-api-captures), product owner 2026-10-25): one row per node
 per business date, the shared columns (`BUSINESS_DATE`, `HIERARCHY`, `NODE_ID`, `NODE_NAME`, `PARENT_ID`, `LEVEL`, `CAPTURE_ID`,
 `RESULT_VERSION`, `INPUT_VERSIONS`, `COMPUTED_AT`, `CONTRACT_VERSION`) and TVAL's figures:
@@ -402,7 +402,7 @@ Codes marked *proposed* do not exist yet; the release assigns them (the range `D
 
 ## 11. Entitlements and audit
 
-As VaR ([VAR.md section 11](VAR.md#11-entitlements-and-audit)), with its own setting `drishti.tval.access` and the kind `valuation`
+As VaR ([VAR_GUIDE.md section 9](../guides/VAR_GUIDE.md#9-who-sees-what-entitlements-and-audit)), with its own setting `drishti.tval.access` and the kind `valuation`
 as the gate (a role that may not open `valuation` may not use TVAL). An `aggregate` role sees totals and breakdowns by node, desk and
 book, never `GET /scope/trades`, a breakdown by `COUNTERPARTY` or `TRADER_ID` below its nodes (open question 6), or the trades CSV.
 Masked fields (a masked `COUNTERPARTY`) are masked in rows and breakdown keys (*masked* as one group). **Audit:** `tval-view` for scopes
@@ -429,7 +429,7 @@ Measured numbers will be recorded in this section after the build (a `TvalScaleB
 |---|---|
 | Folder | `data/testdata/market-risk/valuation/cob-<date>.jsonl.gz`, one file per business date, listed in `data/testdata/testdata.yaml` |
 | Dates | the last **5** business dates (2026-09-24 to 2026-09-30) for the day-over-day change and P&L explain; open question 7 |
-| Trades | the full live set the VaR generator uses (about 9,572 on 2026-09-30; at most 10,000 trades in any local test data, as [VAR.md section 13.1](VAR.md#131-what-the-repository-ships-verified-2026-10-25-version-13)) |
+| Trades | the full live set the VaR generator uses (about 9,572 on 2026-09-30; at most 10,000 trades in any local test data, as [VAR_GUIDE.md section 22.1](../guides/VAR_GUIDE.md#221-what-the-repository-ships-verified-2026-10-25-version-13)) |
 | Generator | a new `tools/packgen/risk/valuations.py` (proposed), run by `tools/testdata/make_testdata.py`; deterministic (Python `Random` seeded by text, as `tools/packgen/var/factors.py`) |
 | Consistency | **MtM moves with the VaR factor model:** MTM_{t,D} = MTM_{t,D−1} + the trade's P&L under the day's own factor move (the 510th element of its VaR path, `make_var_data.py`), so `PNL_1D` = the day's MtM change for continuing trades and P&L explain reconciles (PNL.md §13) |
 | `--check` | regenerates into a temporary folder and fails when a committed file differs |

@@ -41,12 +41,12 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
 
 /**
- * The float32 hot copy on the committed test data (VAR.md sections 7.3 and 13: 9,572 live trades of 2026-09-30 in 7,984 positions, the
+ * The float32 hot copy on the committed test data (VAR_GUIDE.md sections 26 and 22: 9,572 live trades of 2026-09-30 in 7,984 positions, the
  * market-risk pack's position rules, the 88 hierarchy nodes), read straight from {@code data/testdata/market-risk/}: the same date built
  * on the heap (float64, as the lake holds it) and through its hot file. Every node's VaR and ES are the same to the cent (float64
  * aggregates); every position's, every book's minus a trade, every counterparty's and a set of baskets are within the stated
  * tolerance: <b>1 USD and 1e-7 of the VaR</b>, under the proven bound 2^-24 x the date's gross P&amp;L of the worst scenario. The
- * largest differences found are printed (they are quoted in VAR.md section 7.3).
+ * largest differences found are printed (they are quoted in VAR_GUIDE.md section 26).
  */
 class VarTestDataPrecisionTest {
 

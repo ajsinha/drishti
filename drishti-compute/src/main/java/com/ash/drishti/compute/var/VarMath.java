@@ -16,7 +16,7 @@
 package com.ash.drishti.compute.var;
 
 /**
- * The measures of historical-simulation VaR read from a scope's P&amp;L vector (gains positive), VAR_ENGINE.md section 7. Every
+ * The measures of historical-simulation VaR read from a scope's P&amp;L vector (gains positive), VAR_GUIDE.md section 18. Every
  * function works on plain {@code double[]} and returns losses as positive numbers.
  *
  * <ul>
@@ -34,7 +34,7 @@ public final class VarMath {
 
     private static final double EPS = 1e-9;
 
-    /** How VaR is read from the sorted vector (open question 3 of VAR_ENGINE.md; {@code drishti.var.rank-rule}). */
+    /** How VaR is read from the sorted vector (open question 3 of the engine design, VAR_GUIDE.md section 23.2; {@code drishti.var.rank-rule}). */
     public enum RankRule { KTH_WORST, INTERPOLATED }
 
     private VarMath() {}

@@ -39,7 +39,7 @@ import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestController;
 
 /**
- * The VaR engine's API (VAR_ENGINE.md section 14). A scope is the scope grammar's text in the {@code scope} parameter
+ * The VaR engine's API (VAR_GUIDE.md section 11). A scope is the scope grammar's text in the {@code scope} parameter
  * ({@code DESK:RATES - TRD:MX-20000001}); every answer is computed as the caller, over the trades they may see, on the request's business
  * date (the newest date with vectors when it is later). Errors are the usual problem details: a scope that does not parse is 400, a
  * scope naming positions an aggregate-only viewer may not see is 403.

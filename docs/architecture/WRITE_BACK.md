@@ -23,7 +23,7 @@ decisions taken while building. Planned for **2.8.0** (decided 2026-10-19 as 2.7
 here), [CONNECTOR_FILES.md](../connectors/CONNECTOR_FILES.md) (connector files, where `writes:` lives). **2.8.0 additions (2026-10-24):** forms
 save through connectors, an applied change can trigger a point-in-time calculation in a reactive connector, and updated records and
 results are pushed to the people watching them: [section 18](#18-280-saving-through-connectors-triggers-and-viewers), with
-[REACTIVE_CONNECTORS.md](REACTIVE_CONNECTORS.md) and [VAR_ENGINE.md](VAR_ENGINE.md).
+[REACTIVE_CONNECTORS.md](REACTIVE_CONNECTORS.md) and [VAR_GUIDE.md Part III](../guides/VAR_GUIDE.md#24-where-the-engine-lives).
 
 ## Contents
 
@@ -546,7 +546,7 @@ Overlay and owned targets need the first and third levels only; a source target 
 | W4 | `SourcePlugin.write` and **connector `writes:`** (validated at load), **source commands through the outbox** (pending, sent, confirmed; resend by the new owner with the same change id): the one real-amendment pilot (one field of one kind on one connector, JDBC first); pending at source | a source command applied twice by a retry changes the source once; a command without a guard or idempotency clause is refused at load; a command pending when its owner dies is sent once by the new owner |
 | W5 | Form mode, bulk edit, phone, docs and a tutorial (UI, CLI, YAML) | a tutorial edits, approves and sees the change tick on another browser |
 | W6 | **Forms save through connectors** (section 18.1): Submit on a 2.7.0 form turns its draft into a change request; the review and confirm sheet; the `edit.applied` event (section 18.3) | a form's draft submitted from the book desk becomes a change request, is approved and applied, and the draft is closed with the change id |
-| W7 | **Triggers and viewers** (sections 18.3 to 18.6): reactive connectors subscribed to `edit.applied`; recompute status on the submitter's screen; the submitter's own impact; updated records and results pushed to every viewer, masked per viewer | an amended trade recomputes its book's VaR ([VAR_ENGINE.md](VAR_ENGINE.md) step V5); the submitter sees their impact, every viewer sees the new record and shared number within 2 s |
+| W7 | **Triggers and viewers** (sections 18.3 to 18.6): reactive connectors subscribed to `edit.applied`; recompute status on the submitter's screen; the submitter's own impact; updated records and results pushed to every viewer, masked per viewer | an amended trade recomputes its book's VaR (step V5, [VAR_GUIDE.md section 30](../guides/VAR_GUIDE.md#30-the-design-record)); the submitter sees their impact, every viewer sees the new record and shared number within 2 s |
 
 Placement: **2.8.0** (product owner: 2.7.0 on 2026-10-19, 2.8.0 since 2026-10-21; 2.7.0 is Sutra Next), after 2.6.0 (statements, field parameters, the Cassandra connector, drishti-iceberg;
 integration moved after 3.0.0 on 2026-10-20); AI (grounding, AI UI, GenUI, AI management)
@@ -747,7 +747,7 @@ three-way diff and *Take theirs*, *Edit again* or *Apply mine anyway* (the `over
 ### 18.8 Build steps
 
 W6 and W7 in section 14. They depend on W1 (the edit log) and on [REACTIVE_CONNECTORS.md](REACTIVE_CONNECTORS.md) steps R1 to R4; the
-VaR use is [VAR_ENGINE.md](VAR_ENGINE.md) step V5.
+VaR use is step V5 of [VAR_GUIDE.md section 30](../guides/VAR_GUIDE.md#30-the-design-record).
 
 ## 19. As built (2.8.0, 2026-10-25)
 

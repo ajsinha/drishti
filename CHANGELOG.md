@@ -17,6 +17,13 @@
 
 ## Unreleased
 
+- **Docs: VaR in two documents** (product owner, 2026-10-26). [VAR_GUIDE.md](docs/guides/VAR_GUIDE.md) is now the one VaR reference
+  (Part I using VaR, the explorer, scopes, captures, what-if, CLI, API, settings; Part II the data contract, still version 1.4; Part III
+  how the engine stores a date, sizing, the benchmark and open items), and [tutorial 25](docs/tutorials/25-var-from-the-bank-to-a-trade.md)
+  the one walk-through, each step linking to the guide's sections. `VAR_EXPLORER.md`, `contracts/VAR.md`, `VAR_ENGINE.md` and
+  `VAR_DATA_MODEL.md` moved to `docs/archive/` as history; every reference (docs, contracts, pack guides, `tools/contracts.policy.yaml`,
+  source comments) points at the guide's sections. The help centre lists the VaR guide and tutorial 25 (cap 47 pages).
+
 ## 2.8.0 — Data contracts for every command; VaR computed for any scope; Admin → Commands; write-back; branding from configuration (2026-10-26)
 
 - **VaR's official capture at start waits for the lake:** it tried once, before the Delta connector was up, and never again. It now retries every five seconds for up to ten minutes; after that, the next data-load signal captures the date.
@@ -73,7 +80,7 @@
   "Product Wordmark" and "Product Tagline" (element sheet rebuilt). Guard tests: `tests/test_branding_guard.py` (console: templates,
   scripts, a rebranded About page) and `BrandingLiteralTest` (drishti-it: string literals of the server's main code). Licence headers,
   header names (`X-Drishti-…`), `DRISHTI_` variables and code identifiers are unchanged. docs/admin/CONFIGURATION.md.
-- **VaR complete, part 2** ([VAR.md](docs/contracts/VAR.md) 1.4, AS BUILT):
+- **VaR complete, part 2** ([VAR.md](docs/archive/VAR.md) 1.4, AS BUILT):
   - **Tiered memory** (`drishti.var.tier`, default `mapped`): each loaded date is written once to a local **hot file** under
     `<data folder>/var/hot/<date>/` (format 1: float32 position rows in hierarchy order, the trades of fungible positions, float64 node
     and book aggregates, columns, ids, runs, nodes, a CRC32C per section) and memory-mapped; the heap keeps the aggregates, columns and
@@ -93,7 +100,7 @@
   - Docs: VAR.md 1.4, VAR_ENGINE.md (13.2, 18.7), VAR_DATA_MODEL.md (12, 14, 18.5), the new VAR_GUIDE.md and tutorial 25, VAR_EXPLORER,
     CONFIGURATION, API_GUIDE, TOOLS, CLI_GUIDE, the help centre. Tests: MappedVectorsTest, VarHotFileTest, VarTestDataPrecisionTest,
     VarApiTest, test_var_engine.py, test_varcli.py.
-- **VaR complete, part 1** ([VAR.md](docs/contracts/VAR.md) 1.3, AS BUILT):
+- **VaR complete, part 1** ([VAR.md](docs/archive/VAR.md) 1.3, AS BUILT):
   - **The stored `var` and `var-node` kinds are retired**: kinds, mnemonic `VNODE`, samples, test data, Sutras, about texts, the Calc
     snippets that read them (seven in market-risk, `desk_performance.py` in core) and their contracts. `VAR VAR-COMM` and `/v/var/VAR-COMM`
     open the explorer at `DESK:COMM` with a notice; `VN-<node>` opens `NODE:<node>`. `VAR` stays the explorer's word.
@@ -165,7 +172,7 @@
   Found on the way: the collateral balances' `POSITIONS[].DIRECTION` holds `Held`, which the counterparty-risk glossary describes as
   `Received` (a review point of the COLL contract).
 
-- **The VaR data contract** ([docs/contracts/VAR.md](docs/contracts/VAR.md)): every input table of the VaR engine (`pnl-vector`,
+- **The VaR data contract** ([docs/contracts/VAR.md](docs/archive/VAR.md)): every input table of the VaR engine (`pnl-vector`,
   `scenario-set`, `risk-hierarchy`, `portfolio`, `position`, `var-node`) column by column with types, keys and examples; the in-memory
   structures and their sizes; the scope grammar as the parser accepts it; every `/api/v1/var` answer, basket and capture field; the
   checks and errors; the retirement of `var` and `var-node` with the `VAR-COMM` reconciliation; the planned 2.8.0 contract (derived
@@ -175,8 +182,8 @@
   cancel its own computations; a computed answer (`POST /api/v1/compute/{connector}/{kind}`) needs only `read`. Compute administration
   and approvals, peer fan-out, trigger events and VaR reload are never open to a token. The compute-demo pack's books and strips are
   served by its own Delta connector (`compute-demo-store`, standard test data), not the demo connector.
-- **The VaR engine, waves V0 to V3 (2.8.0)** ([VAR_ENGINE.md section 18](docs/architecture/VAR_ENGINE.md#18-as-built-in-280-waves-v0-to-v3),
-  [VAR_DATA_MODEL.md section 18](docs/architecture/VAR_DATA_MODEL.md#18-as-built-in-280), [VAR_EXPLORER.md](docs/guides/VAR_EXPLORER.md)):
+- **The VaR engine, waves V0 to V3 (2.8.0)** ([VAR_ENGINE.md section 18](docs/archive/VAR_ENGINE.md#18-as-built-in-280-waves-v0-to-v3),
+  [VAR_DATA_MODEL.md section 18](docs/archive/VAR_DATA_MODEL.md#18-as-built-in-280), [VAR_EXPLORER.md](docs/archive/VAR_EXPLORER.md)):
   - **Data:** the market-risk pack gains `position` (a holding of one instrument in one book netting its trades, LONG or SHORT),
     `portfolio` (HIERARCHY, RULE or BASKET, overlapping), `pnl-vector` (one 509-scenario P&L vector per trade: the grain, so trade,
     position and any basket are exact), `scenario-set`, `risk-hierarchy` (MGMT and LEGAL trees with VaR limits) and `var-node` (each
@@ -269,8 +276,8 @@
   Python and Java compute workers with pinned, administrator-approved requirements, QLRisk as the default pricer (design only until
   its API is stable) and QuantLib's own Java binding in an isolated worker ([PYTHON_COMPUTE.md](docs/architecture/PYTHON_COMPUTE.md));
   a generic VaR engine over precomputed 509-day P&L vectors for any scope, with what-if and full drill-down
-  ([VAR_ENGINE.md](docs/architecture/VAR_ENGINE.md)) and its data model: positions, portfolios, the vector layout in Delta, cubes,
-  the in-memory vector store and sizing ([VAR_DATA_MODEL.md](docs/architecture/VAR_DATA_MODEL.md)).
+  ([VAR_ENGINE.md](docs/archive/VAR_ENGINE.md)) and its data model: positions, portfolios, the vector layout in Delta, cubes,
+  the in-memory vector store and sizing ([VAR_DATA_MODEL.md](docs/archive/VAR_DATA_MODEL.md)).
 - **WRITE_BACK.md section 18:** forms save through connectors, an applied change triggers reactive connectors, updated records and
   results are pushed to viewers; build steps W6 and W7. **QUANT_SERVICE.md section 17:** reconciled with the compute workers.
   **IMPLEMENTATION_PLAN.md:** a 2.8.0 section with its waves; docs/README.md lists the new designs.

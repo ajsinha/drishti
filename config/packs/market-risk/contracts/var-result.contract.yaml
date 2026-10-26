@@ -13,7 +13,7 @@
 # See the LICENSE file in the root of this repository for the full terms.
 
 # Data contract of the var-result kind (command VRES): docs/contracts/README.md section 16; the measure's contract is
-# docs/contracts/VAR.md (section 9.7). Drafted by `drishti.py contract bootstrap var-result`, completed by hand (2.8.0).
+# docs/guides/VAR_GUIDE.md (section 8). Drafted by `drishti.py contract bootstrap var-result`, completed by hand (2.8.0).
 kind: var-result
 mnemonic: VRES
 pack: market-risk
@@ -21,7 +21,7 @@ version: '1.0'
 class: computed
 status: active
 title: VaR of a scope (computed)
-description: The VaR, ES, decomposition, worst scenarios and P&L vector of any scope (the scope grammar of VAR.md section 8), computed
+description: The VaR, ES, decomposition, worst scenarios and P&L vector of any scope (the scope grammar of VAR_GUIDE.md section 5), computed
   when asked by the server's VaR engine as the person asking; never stored.
 source: 'computed by Drishti: the reactive connector var-engine (java engine com.ash.drishti.server.var.VarResultEngine)'
 grain: One answer per question (the scope asked for and the business date), computed when asked.
@@ -42,7 +42,7 @@ fields:
 - name: CANONICAL
   type: text
   presence: required
-  description: The scope's canonical text (VAR.md section 8.2).
+  description: The scope's canonical text (VAR_GUIDE.md section 5.2).
 - name: SCOPE_KIND
   type: text
   presence: required
@@ -61,12 +61,12 @@ fields:
   type: amount
   presence: required
   unit: USD
-  description: VaR at CONFIDENCE, positive for a loss (VAR.md section 6.2).
+  description: VaR at CONFIDENCE, positive for a loss (VAR_GUIDE.md section 18.1).
 - name: ES
   type: amount
   presence: required
   unit: USD
-  description: Expected shortfall at ES_CONFIDENCE (VAR.md section 6.3).
+  description: Expected shortfall at ES_CONFIDENCE (VAR_GUIDE.md section 18.2).
 - name: CONFIDENCE
   type: rate
   presence: required
@@ -103,11 +103,11 @@ fields:
 - name: BACKTEST
   type: record
   presence: required
-  description: DAYS, EXCEPTIONS, LIGHT, KUPIEC_LR, KUPIEC_P_VALUE, CHRISTOFFERSEN_LR, CHRISTOFFERSEN_P_VALUE (VAR.md section 6.5).
+  description: DAYS, EXCEPTIONS, LIGHT, KUPIEC_LR, KUPIEC_P_VALUE, CHRISTOFFERSEN_LR, CHRISTOFFERSEN_P_VALUE (VAR_GUIDE.md section 18.4).
 - name: CHILDREN
   type: record list
   presence: required
-  description: The default parts (VAR.md section 9.3) with KEY, SCOPE, LABEL, KIND, STANDALONE_VAR, COMPONENT_VAR, COMPONENT_ES,
+  description: The default parts (VAR_GUIDE.md section 11.3) with KEY, SCOPE, LABEL, KIND, STANDALONE_VAR, COMPONENT_VAR, COMPONENT_ES,
     INCREMENTAL_VAR, PCT.
 - name: WORST
   type: record list
@@ -121,7 +121,7 @@ fields:
 - name: PROVENANCE
   type: record
   presence: required
-  description: The headline's provenance in UPPER_SNAKE (VAR.md section 9.2), with TIER saying where the vector came from.
+  description: The headline's provenance in UPPER_SNAKE (VAR_GUIDE.md section 11.2), with TIER saying where the vector came from.
 links: []
 validation:
 - rule: required
@@ -131,5 +131,5 @@ validation:
   - PNL
 notes:
 - 'No stored key: an answer''s id is the scope asked (the id in the request); VAR <scope> <GO> opens the same answer in the explorer.'
-- Computed as the viewer with the explorer's entitlements (VAR.md section 11); cached per view signature, data version and scope.
+- Computed as the viewer with the explorer's entitlements (VAR_GUIDE.md section 9); cached per view signature, data version and scope.
 review: []

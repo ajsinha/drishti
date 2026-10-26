@@ -36,7 +36,7 @@ fields:
     MTM_CURRENCY: Currency of the mark-to-market
     TRADE_DATE: The trade's trade date
   position:
-    _: "A position Drishti derives from the trades when it loads a date, by the pack's positions: rules (docs/contracts/VAR.md section 3.7): served from the VaR engine by the var-positions connector, never stored"
+    _: "A position Drishti derives from the trades when it loads a date, by the pack's positions: rules (docs/guides/VAR_GUIDE.md section 15.6): served from the VaR engine by the var-positions connector, never stored"
     POSITION_ID: "POS-<book>~<security> for securities and listed products (fungible: the trades net), POS-<book>~<trade> for an OTC trade"
     POSITION_RULE: "securities, listed or otc: the rule that keyed it"
     DIRECTION: "LONG, SHORT or FLAT: the sign of the net quantity"
@@ -68,8 +68,8 @@ Market-risk results over the trading pack's trades: stress scenarios and their r
 trade valuations (mark-to-market, P&L and sensitivities per trade), and the **VaR engine's inputs** (2.8.0, unreleased): one P&L vector
 per live trade over 509 historical scenario days, the scenario set, the MGMT and LEGAL hierarchies with VaR limits, and portfolio
 definitions (hierarchy, rule, basket). Value at risk is never stored: the VaR explorer (`VAR DESK DESK-RATES <GO>`,
-[VAR_EXPLORER.md](../../../docs/guides/VAR_EXPLORER.md)) computes VaR, ES and contributions for any set of these trades, the portfolio
+[VAR_GUIDE.md section 3](../../../docs/guides/VAR_GUIDE.md#3-the-explorer-screen-by-screen)) computes VaR, ES and contributions for any set of these trades, the portfolio
 and position pages (`PORT <id>`, `POS <id>`) show the engine's figures computed as they open, and each business date's official figures
 are the engine's end-of-day captures. Positions are Drishti's: derived from the trades by this pack's `positions:` rules (securities by
-book and security, listed by book and contract, OTC one per trade) when a date loads ([VAR.md](../../../docs/contracts/VAR.md)).
+book and security, listed by book and contract, OTC one per trade) when a date loads ([VAR_GUIDE.md Part II](../../../docs/guides/VAR_GUIDE.md#14-the-contract-at-a-glance)).
 The stored `var` (VAR-<desk>) and `var-node` kinds were retired in 2.8.0: `VAR VAR-COMM` opens the explorer at `DESK:COMM`.

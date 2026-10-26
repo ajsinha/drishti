@@ -12,7 +12,7 @@
 #
 # See the LICENSE file in the root of this repository for the full terms.
 
-"""lake build with a vector column (VAR_DATA_MODEL.md section 15): a P&L vector of numbers becomes a list<double> column, out of the
+"""lake build with a vector column (VAR_GUIDE.md section 29.3): a P&L vector of numbers becomes a list<double> column, out of the
 document (which keeps a {"$vector": "PNL"} marker), read back equal to the bit; a vector that is not a list of numbers is a reject.
 
     uv run --with deltalake --with pyarrow --with pyyaml --with pytest python -m pytest tools/lake/test_vectors.py -q

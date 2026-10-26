@@ -32,7 +32,7 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.condition.EnabledIfSystemProperty;
 
 /**
- * The tiered store at bank scale (VAR.md sections 7.3 and 12.2, VAR_ENGINE.md section 13): {@code T} synthetic trades over {@code D}
+ * The tiered store at bank scale (VAR_GUIDE.md sections 26 and 27.3): {@code T} synthetic trades over {@code D}
  * business dates, each date built through its spill into a float32 hot file and mapped, as the server does. Not run by default; it
  * writes {@code D x T x 509 x 4} bytes of hot files (plus a float64 spill of one date at a time) under {@code drishti.var.tier.dir}
  * and deletes them at the end.

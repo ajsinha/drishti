@@ -22,7 +22,7 @@ import java.util.Locale;
 import java.util.Optional;
 
 /**
- * Resolves a scope ({@link ScopeExpr}) on one business date to the set of trade ordinals it means (VAR_DATA_MODEL.md section 13.1):
+ * Resolves a scope ({@link ScopeExpr}) on one business date to the set of trade ordinals it means (VAR_GUIDE.md section 5.3):
  * a node to its books' runs, positions to theirs, trades to theirs, a legal entity or a counterparty to the trades that carry it, a rule
  * over every position's columns, a portfolio or a basket through its definition. Combinations are set operations, so an overlap is
  * counted once. Ids the date does not hold are reported, never silently dropped.
@@ -204,7 +204,7 @@ public final class ScopeResolver {
 
     /**
      * A legal entity's trades: those whose booking {@code LEGAL_ENTITY} is it ({@code LE:NY} is {@code LE-NY} too), the source of truth
-     * (VAR.md section 8.5, decided 2026-10-25). The LEGAL hierarchy rolls up by books; when its node holds other trades, or misses some
+     * (VAR_GUIDE.md section 5.5, decided 2026-10-25). The LEGAL hierarchy rolls up by books; when its node holds other trades, or misses some
      * of the entity's, the answer is still the trades' entity and the difference is a data-quality warning.
      */
     private OrdinalSet legalEntity(ScopeExpr.Ref r, List<String> unknown, List<String> notes, List<String> warnings) {

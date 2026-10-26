@@ -24,7 +24,7 @@ element by element (never read whole); JSON Lines line by line; gzip either way.
 document as JSON (nested arrays stay inside it), business_date (--date FIELD, or --as-of DATE for every document), the partition
 columns (--partition-by A,B: Hive folders business_date=.../A=.../B=...) and the promoted columns (--promote a,b.c: real columns
 readers can filter on without parsing the document) and the vector columns (--vector PNL: a list of numbers as a list<double>
-column, the document keeping only a marker; the P&L vectors of VAR_DATA_MODEL.md section 15).
+column, the document keeping only a marker; the P&L vectors of VAR_GUIDE.md section 29.3).
 
 Table: <lake>/<domain>/<kind>/. With --pack DIR the domain, the promoted columns (settings.layout.<kind>.columns of its Delta
 connector) and the key and date fields (its ingest: block) come from the pack; options given on the command line win.

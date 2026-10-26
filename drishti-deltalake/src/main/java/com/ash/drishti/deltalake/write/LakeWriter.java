@@ -197,7 +197,7 @@ public final class LakeWriter {
             case "double" -> DoubleType.DOUBLE;
             case "long" -> LongType.LONG;
             case "date" -> DateType.DATE;
-            case "vector" -> VECTOR;            // a P&L vector: list<double> (VAR_DATA_MODEL.md section 15)
+            case "vector" -> VECTOR;            // a P&L vector: list<double> (VAR_GUIDE.md section 29.3)
             default -> StringType.STRING;
         };
     }

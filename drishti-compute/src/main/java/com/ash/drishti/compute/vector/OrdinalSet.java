@@ -19,7 +19,7 @@ import java.util.BitSet;
 import java.util.function.IntConsumer;
 
 /**
- * A set of row ordinals (VAR_DATA_MODEL.md section 13): what a scope resolves to on one business date. Union, difference and
+ * A set of row ordinals (VAR_GUIDE.md section 25): what a scope resolves to on one business date. Union, difference and
  * intersection are exact set operations, so two overlapping portfolios combined count a position once; a node of the hierarchy is
  * one run of ordinals. One bit per row of the date (2 million rows: 250 KB), immutable: every operation returns a new set.
  *

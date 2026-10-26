@@ -96,7 +96,7 @@ class PackPythonTest {
         packs.forEach(p -> titles.put(p.name(), PackPython.of(p).snippets().stream().map(PackPython.Snippet::title).toList()));
         assertThat(packs).allMatch(p -> PackPython.of(p).enabled());
         // the library of tools/packgen/banking/snippets: each pack's starter among at least ten (PYTHON_CALC.md, Snippet catalogue)
-        // market-risk keeps six since 2.8.0: its seven VaR snippets read the retired stored var kind (VaR is the engine's: docs/contracts/VAR.md)
+        // market-risk keeps six since 2.8.0: its seven VaR snippets read the retired stored var kind (VaR is the engine's: docs/guides/VAR_GUIDE.md)
         assertThat(titles.get("market-risk"))
                 .contains("Stress results: scenarios by desk, limits and the worst case", "P&L explain quality across books")
                 .noneMatch(t -> t.startsWith("VaR"))

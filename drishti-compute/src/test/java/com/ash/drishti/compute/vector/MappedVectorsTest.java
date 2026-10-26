@@ -32,7 +32,7 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
 
 /**
- * The mapped tiers of the vector store (VAR.md section 7.3): a float32 and a float64 matrix in a file read back like the heap store
+ * The mapped tiers of the vector store (VAR_GUIDE.md section 26): a float32 and a float64 matrix in a file read back like the heap store
  * (several mappings when told to), rows grouped into positions served from their group rows, a permuted view, the load's spill, and the
  * guard that unmaps only when no reader is inside: readers racing a close never crash, they finish or are told the date was unloaded.
  */

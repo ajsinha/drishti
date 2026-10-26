@@ -13,7 +13,7 @@
  *
  * See the LICENSE file in the root of this repository for the full terms.
  */
-/* The VaR explorer (VAR_ENGINE.md section 10.1, docs/guides/VAR_EXPLORER.md). One page for any scope: a click on a tree row, a
+/* The VaR explorer (docs/guides/VAR_GUIDE.md section 3). One page for any scope: a click on a tree row, a
    breadcrumb, a contribution row or a command moves every panel to the new scope in place (no page load). Each panel says when it is
    computing and is painted as soon as its answer arrives; answers are kept per scope and business date, and the children of the
    selected node are fetched ahead while the user reads, so drilling down is instant. The time from a click to the painted panels is

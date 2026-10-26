@@ -6,7 +6,7 @@
 
 # MC: margin calls, the data contract
 
-*Version 1.0 · 2026-10-25 · Shared rules: [README.md](README.md) · Model contract: [VAR.md](VAR.md) · CSAs and netting sets:
+*Version 1.0 · 2026-10-25 · Shared rules: [README.md](README.md) · Model contract: [VAR_GUIDE.md Part II](../guides/VAR_GUIDE.md#14-the-contract-at-a-glance) · CSAs and netting sets:
 [NSET.md](NSET.md) · Collateral values: [COLL.md](COLL.md)*
 
 **Status:** proposed. PLANNED for 2.10.0, not built. Every table, column, setting, kind, endpoint and code below is a proposal; names

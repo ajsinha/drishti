@@ -22,7 +22,7 @@ A document is rejected, with the reason, when it has no id (``--key``), no busin
 that is not a date, or when it is not a JSON object; a reject is counted per reason and the first ones are kept with where they were
 (``file:line`` or ``file[n]``).
 
-A **vector** field (the pack's ``layout.<kind>.vectors``: a P&L vector of 509 numbers, VAR_DATA_MODEL.md section 15) becomes a column of
+A **vector** field (the pack's ``layout.<kind>.vectors``: a P&L vector of 509 numbers, VAR_GUIDE.md section 29.3) becomes a column of
 its own (``list<double>``) and leaves the document, which keeps the marker ``{"$vector": "PNL"}`` in its place, so the numbers are not
 stored twice; the Delta connector puts the vector back into a document it serves. A vector that is not a list of numbers (or null) is
 a reject."""

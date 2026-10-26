@@ -27,7 +27,7 @@ import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
 /**
- * Who sees what of the VaR engine (VAR_ENGINE.md section 12.1). Each role is given, per node of a hierarchy, one of two levels
+ * Who sees what of the VaR engine (VAR_GUIDE.md section 9). Each role is given, per node of a hierarchy, one of two levels
  * ({@code drishti.var.access.<role>[<node>]}): {@code positions} (the node's numbers, its children, its positions and their trades) or
  * {@code aggregate} (the node's numbers and every node beneath it, never a position or a trade). A role with no entry sees every node
  * at {@code positions} level when it may open the vector kind; a caller who may not open it sees nothing.

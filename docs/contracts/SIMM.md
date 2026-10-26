@@ -7,7 +7,7 @@
 # ISDA SIMM initial margin: the data contract
 
 *Version 1.0 · 2026-10-25 · **Status:** proposed (PLANNED for 2.9.0) · Shared rules: [README.md](README.md) · Model contract:
-[VAR.md](VAR.md) · Inputs shared with [FRTB.md](FRTB.md) (the `sensitivity` table and the sensitivity store)*
+[VAR_GUIDE.md Part II](../guides/VAR_GUIDE.md#14-the-contract-at-a-glance) · Inputs shared with [FRTB.md](FRTB.md) (the `sensitivity` table and the sensitivity store)*
 
 This is the planned data contract of Drishti's **ISDA SIMM** engine: the Standard Initial Margin Model of the International Swaps and
 Derivatives Association for uncleared derivatives, computed when asked for a **netting set** (the margin), and for any other scope as

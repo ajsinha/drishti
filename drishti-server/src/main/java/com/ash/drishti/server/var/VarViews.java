@@ -33,7 +33,7 @@ import java.util.List;
 import java.util.Map;
 
 /**
- * The VaR engine's answers as the screens and the API return them (VAR_ENGINE.md sections 10 and 14): summaries, never a vector per
+ * The VaR engine's answers as the screens and the API return them (VAR_GUIDE.md sections 3 and 11): summaries, never a vector per
  * part. A headline with its provenance; the P&amp;L path as a histogram, the worst 25, the series and a page of the ranked table; the
  * contributions of the parts; the history with its backtest; the hierarchy with every node's figures.
  */
@@ -185,7 +185,7 @@ final class VarViews {
         return m;
     }
 
-    /** Where the answer's vector came from (VAR.md section 7.3): a node's float64 aggregate, the hot file's float32 rows, or the heap. */
+    /** Where the answer's vector came from (VAR_GUIDE.md section 26): a node's float64 aggregate, the hot file's float32 rows, or the heap. */
     static String tier(VarService.Scoped s) {
         VarBook b = s.date().book();
         boolean node = s.res().node() != null && b.node(s.res().node()) != null && s.set().equals(b.node(s.res().node()).members());
@@ -556,7 +556,7 @@ final class VarViews {
     /**
      * A node's official history (its official end-of-day captures: VaR, ES and the day's hypothetical P&amp;L over the window) and its
      * backtest; any other scope replays today's members over the window's scenario days against today's VaR (in-sample: it says so; not
-     * a regulatory backtest). The Basel light of a history shorter than 250 days scales its limits (VAR.md section 6.5): it is shown with
+     * a regulatory backtest). The Basel light of a history shorter than 250 days scales its limits (VAR_GUIDE.md section 18.4): it is shown with
      * its days, and is not a regulatory zone before 250.
      */
     Map<String, Object> history(VarService.Scoped s) {

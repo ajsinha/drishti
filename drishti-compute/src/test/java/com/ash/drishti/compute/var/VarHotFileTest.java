@@ -36,7 +36,7 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
 
 /**
- * The tiered store (VAR.md section 7.3): a date built through the spill into its hot file and mapped answers like the same date on the
+ * The tiered store (VAR_GUIDE.md section 26): a date built through the spill into its hot file and mapped answers like the same date on the
  * heap. Node figures are the same to the bit (the aggregates are float64 in both); any other scope is within the float32 bound
  * {@link #bound}: each stored value is rounded once to float32 (relative error at most 2^-24), sums are float64, and VaR and ES are
  * order statistics (moving every scenario by at most E moves them by at most E). The file reopens to the same answers, its checksums

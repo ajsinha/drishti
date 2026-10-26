@@ -260,7 +260,7 @@ drishti:
     # token-read-posts, a scope or token-never (TokenScopeGuardTest fails the build otherwise).
     token-scopes:
       "[risk:write]":
-        description: "Save, share and delete your VaR baskets, capture VaR results, keep your what-if sandboxes and cancel your own computations (VAR_ENGINE.md, REACTIVE_CONNECTORS.md). Your own items only; the bank's data is never changed."
+        description: "Save, share and delete your VaR baskets, capture VaR results, keep your what-if sandboxes and cancel your own computations (VAR_GUIDE.md, REACTIVE_CONNECTORS.md). Your own items only; the bank's data is never changed."
         allow:
           - POST /api/v1/var/baskets
           - DELETE /api/v1/var/baskets/*/*
@@ -601,7 +601,7 @@ drishti:
     per-user: 20
     tick: 30s
     keep-runs: 20
-  var:                               # the VaR engine (docs/architecture/VAR_ENGINE.md): VaR of any set of trades from the stored P&L vectors
+  var:                               # the VaR engine (docs/guides/VAR_GUIDE.md): VaR of any set of trades from the stored P&L vectors
     enabled: ${DRISHTI_VAR_ENABLED:true}
     confidence: 0.99                 # VaR's confidence
     es-confidence: 0.975             # expected shortfall's
@@ -617,7 +617,7 @@ drishti:
     histogram-bins: 42               # bins of the P&L distribution sent to the screen
     max-parts: 5000                  # most parts a contribution table computes at once (more: the largest by gross size, and said)
     path-page: 60                    # rows of the ranked P&L path per page
-    tier:                            # the tiered memory (docs/contracts/VAR.md section 7.3): where a loaded date's vectors live
+    tier:                            # the tiered memory (docs/guides/VAR_GUIDE.md section 26): where a loaded date's vectors live
       mode: ${DRISHTI_VAR_TIER:mapped}                 # mapped: each date a float32 hot file, memory-mapped (heap: aggregates, columns, links); heap: float64 rows on the heap
       dir: ${DRISHTI_VAR_HOT_DIR:${drishti.data.dir:./data}/var/hot}   # one folder per business date; never under the repository
       disk-dates: 60                 # hot files kept on disk (least recently used beyond are deleted); a date not open maps its file again, no lake read
@@ -633,7 +633,7 @@ drishti:
     positions:                       # how positions are derived from the trades when no loaded pack has a positions: section (the market-risk pack's wins)
       live-statuses: [NEW, VALIDATED, AMENDED]   # trade statuses that count on their date (a row with no status counts)
       rules: []                      # first match wins: {name, groups: [PRODUCT_GROUP...], types: [PRODUCT_TYPE...], key: [SECURITY_ID, ISIN...]}; none: one position per trade
-    official:                        # the official end-of-day captures (docs/contracts/VAR.md section 9.6)
+    official:                        # the official end-of-day captures (docs/guides/VAR_GUIDE.md section 19)
       enabled: ${DRISHTI_VAR_OFFICIAL:true}       # capture every node of every hierarchy when a date's inputs are complete (after the data-load signal)
       publish: true                  # also append them to <root>/risk-results/var-official (Delta, append-only) for other systems
       root: ${DRISHTI_DELTA_ROOT:${drishti.data.dir:./data}/delta}   # the risk lake's root; an s3:// root is not published by this writer

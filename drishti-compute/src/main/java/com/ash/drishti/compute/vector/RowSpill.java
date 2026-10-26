@@ -26,7 +26,7 @@ import java.nio.file.StandardOpenOption;
 
 /**
  * Rows of float64 values written to a local file as a load reads them, in the lake's order, so a date of any size is read without
- * holding its vectors on the heap (VAR.md section 7.3). When the rows are all in, {@link #finish} maps the file for the build's
+ * holding its vectors on the heap (VAR_GUIDE.md section 26). When the rows are all in, {@link #finish} maps the file for the build's
  * reads (the node aggregates in float64, the hot file's float32 rows); {@link #close} unmaps and deletes it. Not thread-safe: the caller
  * serialises {@link #add} (the load's builder holds a lock).
  */

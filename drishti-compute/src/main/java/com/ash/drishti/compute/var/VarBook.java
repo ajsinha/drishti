@@ -36,7 +36,7 @@ import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
 /**
- * One business date of the VaR engine in memory (VAR_DATA_MODEL.md sections 11 to 13): every trade's P&amp;L vector in a
+ * One business date of the VaR engine in memory (VAR_GUIDE.md section 25): every trade's P&amp;L vector in a
  * {@link VectorStore}, ordered by the primary hierarchy (legal entity, desk, book, position, trade) so a book and a position are each
  * one run of ordinals; the trades' and the positions' attributes column by column; the hierarchies' nodes with their members; the
  * node aggregates (every book's and node's vector, summed once when the date is loaded). Positions are derived here from the trades'
@@ -46,7 +46,7 @@ import java.util.concurrent.ConcurrentHashMap;
  * and any basket of trades or positions are all exact, and a long and a short in one position net in the sum. Immutable once built,
  * except the cache of position vectors; any number of requests read it at once.
  *
- * <p><b>Two tiers</b> (VAR.md section 7.3). <em>Heap</em>: every trade's vector in float64 {@code double[]} chunks. <em>Mapped</em>
+ * <p><b>Two tiers</b> (VAR_GUIDE.md section 26). <em>Heap</em>: every trade's vector in float64 {@code double[]} chunks. <em>Mapped</em>
  * (the default in the server): the load streams the rows to a local spill file, sums the aggregates from it in float64, writes the date's
  * hot file ({@link VarHotFile}: float32 position rows in hierarchy order, the trades of positions of several trades, the aggregates in
  * float64) and maps it; the heap keeps the aggregates, columns and links. Sums read float32 rows into float64 accumulators; a node's
@@ -60,7 +60,7 @@ public final class VarBook {
             "TAGS", "POSITION_RULE");
     public static final List<String> TRADE_NUMBERS = List.of("QUANTITY", "PV");
     /**
-     * The positions' columns, derived from their trades when the date is built (VAR.md section 3.7): the first trade's instrument,
+     * The positions' columns, derived from their trades when the date is built (VAR_GUIDE.md section 15.6): the first trade's instrument,
      * hierarchy, product and rule; the direction of the net quantity; the counterparty when every trade has the same one; the tags of
      * every trade; and the sums (signed quantity, market value from the trades' PV, notional as the gross quantity, trade counts).
      */
@@ -74,7 +74,7 @@ public final class VarBook {
     public record Node(String id, String hierarchy, String level, String name, String parent, List<String> children, List<String> books,
             double limit, OrdinalSet members) {}
 
-    /** The same trade id twice on one date: the date is refused whole (VAR.md section 10.4). */
+    /** The same trade id twice on one date: the date is refused whole (VAR_GUIDE.md section 20.3). */
     public static final class DuplicateTrade extends IllegalStateException {
         private final String tradeId;
 
@@ -408,7 +408,7 @@ public final class VarBook {
     }
 
     /**
-     * The sum of the vectors of {@code set}, planned (VAR_DATA_MODEL.md section 11.3): from the top of the primary hierarchy down, a node
+     * The sum of the vectors of {@code set}, planned (VAR_GUIDE.md section 25): from the top of the primary hierarchy down, a node
      * the set covers whole is its aggregate; a node it covers but for a few trades is the aggregate minus those; a node it does not touch
      * is skipped; a book it covers in part sums the set's runs in it. Whatever the plan, the vector is the same (to the bit for whole
      * numbers, within rounding for others); the cost is the number of aggregates and uncovered rows, not the size of the nodes.
@@ -738,7 +738,7 @@ public final class VarBook {
         }
 
         /**
-         * A position's columns from its run of trades (VAR.md section 3.7: Drishti derives positions; nothing upstream sends them): the
+         * A position's columns from its run of trades (VAR_GUIDE.md section 15.6: Drishti derives positions; nothing upstream sends them): the
          * first trade's instrument, hierarchy, product and rule; the direction of the net quantity; the counterparty when every trade
          * has the same one (else empty); the tags of every trade; the signed and gross quantities, the market value (the trades' PV)
          * and the counts.

@@ -24,7 +24,7 @@ import java.util.Map;
 import org.springframework.boot.context.properties.ConfigurationProperties;
 
 /**
- * The VaR engine (VAR_ENGINE.md): value at risk for any set of trades from the stored P&amp;L vectors, in the server.
+ * The VaR engine (VAR_GUIDE.md): value at risk for any set of trades from the stored P&amp;L vectors, in the server.
  *
  * @param enabled the engine and its API are on
  * @param confidence VaR's confidence (0.99)
@@ -48,7 +48,7 @@ import org.springframework.boot.context.properties.ConfigurationProperties;
  * @param pathPage rows of the P&amp;L path table per page
  * @param positions how positions are derived from the trades when no loaded pack says (a pack's {@code positions:} section wins)
  * @param official the official end-of-day captures and their published results
- * @param tier where a loaded date's vectors are kept: the memory-mapped hot file (default) or the heap (VAR.md section 7.3)
+ * @param tier where a loaded date's vectors are kept: the memory-mapped hot file (default) or the heap (VAR_GUIDE.md section 26)
  */
 @ConfigurationProperties("drishti.var")
 public record VarProperties(Boolean enabled, Double confidence, Double esConfidence, String rankRule, Integer componentWindow,
@@ -77,7 +77,7 @@ public record VarProperties(Boolean enabled, Double confidence, Double esConfide
     }
 
     /**
-     * The server's own position rules (VAR.md section 3.7), used when no loaded pack has a {@code positions:} section.
+     * The server's own position rules (VAR_GUIDE.md section 15.6), used when no loaded pack has a {@code positions:} section.
      *
      * @param liveStatuses the trade statuses that count on their date (default NEW, VALIDATED, AMENDED)
      * @param rules first match wins: {@code name}, {@code groups} (PRODUCT_GROUP), {@code types} (PRODUCT_TYPE), {@code key} (the fields
@@ -103,7 +103,7 @@ public record VarProperties(Boolean enabled, Double confidence, Double esConfide
     }
 
     /**
-     * The official end-of-day captures (VAR.md section 9.6).
+     * The official end-of-day captures (VAR_GUIDE.md section 19).
      *
      * @param enabled capture every node of every hierarchy when a date's inputs are complete (after the data-load signal)
      * @param publish also write them to {@code <root>/risk-results/var-official} for other systems
@@ -122,7 +122,7 @@ public record VarProperties(Boolean enabled, Double confidence, Double esConfide
     }
 
     /**
-     * The tiered memory (VAR.md section 7.3): where a loaded date's vectors live.
+     * The tiered memory (VAR_GUIDE.md section 26): where a loaded date's vectors live.
      *
      * @param mode {@code mapped} (default): each loaded date becomes a local hot file (float32 position rows in hierarchy order, the
      *     aggregates in float64) mapped into memory, the heap keeping the aggregates, columns and links; {@code heap}: every trade's vector

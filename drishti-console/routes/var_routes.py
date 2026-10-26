@@ -12,13 +12,13 @@
 #
 # See the LICENSE file in the root of this repository for the full terms.
 
-"""The VaR explorer (docs/architecture/VAR_ENGINE.md section 10, docs/guides/VAR_EXPLORER.md): ``VAR DESK RATES <GO>`` opens
+"""The VaR explorer (docs/guides/VAR_GUIDE.md section 3): ``VAR DESK RATES <GO>`` opens
 ``/var?scope=DESK:RATES``. The page is a shell; web/static/js/var-explorer.js fills its panels from the same-origin JSON below, which
 asks the server's VaR engine (/api/v1/var) with the user's own identity, so entitlements by node and masks apply as on every screen.
 
 Command words after VAR (``VAR BANK``, ``VAR LE LE-NY``, ``VAR DIV MARKETS``, ``VAR DESK RATES``, ``VAR BOOK BOOK-RATES-1``,
 ``VAR POS <position>``, ``VAR TRD <trade>``, ``VAR CPTY <counterparty>``, ``VAR PORT <portfolio>``, ``VAR SCOPE <basket or portfolio>``,
-``VAR CAPTURE <id>``) are read here. The stored ``var`` and ``var-node`` kinds were retired in 2.8.0 (docs/contracts/VAR.md section 14):
+``VAR CAPTURE <id>``) are read here. The stored ``var`` and ``var-node`` kinds were retired in 2.8.0 (docs/guides/VAR_GUIDE.md section 21):
 an old id (``VAR VAR-COMM``, ``/v/var/VAR-COMM``, ``/v/var-node/VN-MGMT~DESK-RATES``) opens the explorer at the matching scope."""
 from __future__ import annotations
 

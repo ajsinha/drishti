@@ -23,7 +23,7 @@ status: active
 title: Position
 description: 'A position: one security held in one book (or one OTC trade), the trades that build or reduce it, and its VaR computed as the page
   opens.'
-source: Drishti (the VaR engine derives positions from the trades of pnl-vector when a date loads, docs/contracts/VAR.md section 3.7)
+source: Drishti (the VaR engine derives positions from the trades of pnl-vector when a date loads, docs/guides/VAR_GUIDE.md section 15.6)
 grain: One position per business date, derived (never stored); POS-<TT_BOOK>~<security> or POS-<TT_BOOK>~<trade>.
 key:
 - POSITION_ID
@@ -305,7 +305,7 @@ validation:
   field: TRADES[].COUNTERPARTY
   kind: counterparty
 notes:
-- 'Positions are derived by Drishti when a date loads (docs/contracts/VAR.md section 3.7), by the market-risk pack''s positions: rules (securities
+- 'Positions are derived by Drishti when a date loads (docs/guides/VAR_GUIDE.md section 15.6), by the market-risk pack''s positions: rules (securities
   by book and security id, listed by book and contract, OTC by book and trade), and served from the VaR engine''s memory by the var-positions
   connector: no upstream delivers them and nothing stores them. Their VaR figures are computed as the page opens (VAR_ENGINE), never stored.'
 review:

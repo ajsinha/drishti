@@ -19,7 +19,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 /**
- * The figures a screen shows for one scope, computed from its vector and its parts' (VAR_ENGINE.md section 7): the headline measures,
+ * The figures a screen shows for one scope, computed from its vector and its parts' (VAR_GUIDE.md section 18): the headline measures,
  * each part's standalone, component, incremental and marginal VaR, a histogram with its VaR and ES marks, the worst scenarios. All
  * of it is small (a few hundred numbers) whatever the scope's size: the screens are sent summaries, never vectors per part.
  *

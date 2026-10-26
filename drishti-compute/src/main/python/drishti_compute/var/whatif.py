@@ -12,7 +12,7 @@
 #
 # See the LICENSE file in the root of this repository for the full terms.
 
-"""The what-if engine of the reactive connector ``var-whatif`` (docs/contracts/VAR.md section 9.7, kind ``var-whatif``): a scope's VaR
+"""The what-if engine of the reactive connector ``var-whatif`` (docs/guides/VAR_GUIDE.md section 8, kind ``var-whatif``): a scope's VaR
 before and after hypothetical trades, and its stressed window.
 
 Inputs: ``base``, the scope's ``var-result`` (the Java engine's answer, read as the viewer: its ``PNL`` vector, ``VAR``, ``ES``,

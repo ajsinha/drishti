@@ -514,14 +514,14 @@ history:
     columns: [MTM, PNL_1D, DV01, NOTIONAL]
   pnl-explain:
     columns: [ACTUAL, EXPLAINED, UNEXPLAINED]
-  # the VaR engine's kinds (VAR_ENGINE.md): a position (derived by Drishti) and a portfolio's definition over time; their VaR history is
+  # the VaR engine's kinds (VAR_GUIDE.md): a position (derived by Drishti) and a portfolio's definition over time; their VaR history is
   # the official end-of-day captures (VAR <scope> <GO>, History tab), never a stored column
   position:
     columns: [QUANTITY, MARKET_VALUE, TRADE_COUNT]
   portfolio:
     columns: [LIMIT_VAR]
 
-# How Drishti derives positions from the trades of a business date when it loads the date (docs/contracts/VAR.md section 3.7): the
+# How Drishti derives positions from the trades of a business date when it loads the date (docs/guides/VAR_GUIDE.md section 15.6): the
 # VaR engine reads this section (else its drishti.var.positions setting). A trade counts when its TRADE_STATUS is live and it has not
 # matured; the first rule whose groups (PRODUCT_GROUP) or types (PRODUCT_TYPE) hold it keys its position by the first of the rule's key
 # fields the trade carries: POSITION_ID = POS-<TT_BOOK>~<key>, so a security's trades in one book are one fungible position. No key

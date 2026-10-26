@@ -13,7 +13,7 @@
 # See the LICENSE file in the root of this repository for the full terms.
 
 """The committed VaR demo inputs (data/testdata/market-risk/, tools/packgen/var/make_var_data.py) are what an upstream batch delivers
-and nothing more (docs/contracts/VAR.md):
+and nothing more (docs/guides/VAR_GUIDE.md):
 
 - one P&L vector per live trade (every one: statuses NEW, VALIDATED, AMENDED, not matured), 509 finite values each, one batch run,
   unique trade ids;

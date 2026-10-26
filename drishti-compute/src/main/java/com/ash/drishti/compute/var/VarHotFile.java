@@ -35,7 +35,7 @@ import java.util.concurrent.Callable;
 import java.util.zip.CRC32C;
 
 /**
- * The hot file of one business date (VAR.md section 7.3, format 1, as built in 2.8.0): a local, write-once, little-endian file under the
+ * The hot file of one business date (VAR_GUIDE.md section 26, format 1, as built in 2.8.0): a local, write-once, little-endian file under the
  * data folder that holds everything the engine needs to answer a date without the lake: the trades' and positions' columns and ids, the
  * positions' runs, the books and nodes, the node aggregates in float64, and the vectors as a <b>float32</b> matrix of <b>positions</b> in
  * hierarchy order (plus the trades of positions of more than one trade). It is memory-mapped: the heap keeps the aggregates, columns and

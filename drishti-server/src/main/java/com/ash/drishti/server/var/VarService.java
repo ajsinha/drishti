@@ -35,7 +35,7 @@ import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ConcurrentHashMap;
 
 /**
- * The VaR engine in the server (VAR_ENGINE.md): the loaded business dates, scope resolution as the viewer, the scope's vector (planned
+ * The VaR engine in the server (VAR_GUIDE.md): the loaded business dates, scope resolution as the viewer, the scope's vector (planned
  * over the node aggregates) and its measures, cached per date, data version, viewer and scope. The screens' answers are built from
  * what this returns ({@link VarViews}); baskets and captures are kept by {@link VarSaved}, the official end-of-day records by
  * {@link VarOfficialStore}.
@@ -322,7 +322,7 @@ public final class VarService implements AutoCloseable {
         return s;
     }
 
-    /** A stored portfolio of type BASKET (named positions and trades): probing it is naming them (VAR.md section 8.3). */
+    /** A stored portfolio of type BASKET (named positions and trades): probing it is naming them (VAR_GUIDE.md section 5.3). */
     private static boolean basket(VarDate d, String id) {
         VarDate.Portfolio pf = d.portfolios().get(id);
         return pf != null && "BASKET".equals(pf.type());
@@ -384,7 +384,7 @@ public final class VarService implements AutoCloseable {
         };
     }
 
-    /** One audit entry per answer delivered (VAR_ENGINE.md section 12.2): who, what scope, which date and view, the result, the time. */
+    /** One audit entry per answer delivered (VAR_GUIDE.md section 9): who, what scope, which date and view, the result, the time. */
     void audit(Principal p, String action, Scoped s, String extra) {
         if (audit == null) {
             return;

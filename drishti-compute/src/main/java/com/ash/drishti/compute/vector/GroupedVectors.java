@@ -16,7 +16,7 @@
 package com.ash.drishti.compute.vector;
 
 /**
- * Member rows served from their groups' rows (VAR.md section 7.3: a trade's vector from its position's): rows are grouped in
+ * Member rows served from their groups' rows (VAR_GUIDE.md section 26: a trade's vector from its position's): rows are grouped in
  * contiguous runs ({@code groupFrom[g] .. groupTo[g]}); a group keeps one row, the sum of its members, and only the members of groups of
  * more than one keep rows of their own. A run of member ordinals that covers whole groups is summed from the group rows (one row per
  * position, however many trades it has), and only the edges of a group held in part read member rows. For a bank whose trades are

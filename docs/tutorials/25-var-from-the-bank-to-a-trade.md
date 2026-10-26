@@ -20,8 +20,9 @@ pack's VaR data into a lake, open the bank's VaR, drill down to one trade withou
 write your own scopes (a desk minus a book plus a portfolio; a rule), see how Drishti derives positions, save a basket and capture it,
 read the history and the backtest, look at how the date sits in memory and on disk, read VaR as an ordinary computed kind, and ask the
 Python engine what a hedge would do. Each step shows the UI, the command line (`drishti.py var …`) and the YAML behind it, with real
-output from the committed test data. The complete reference is [VAR_GUIDE.md](../guides/VAR_GUIDE.md); the explorer's page is
-[VAR_EXPLORER.md](../guides/VAR_EXPLORER.md); the data contract is [VAR.md](../contracts/VAR.md).
+output from the committed test data. Everything else about VaR (every measure, column, setting, endpoint and error code, the data
+contract and how the engine stores a date) is in the one reference, [VAR_GUIDE.md](../guides/VAR_GUIDE.md); each step ends with the guide's sections
+that go further.
 
 ## Time to complete
 
@@ -96,6 +97,8 @@ connectors:
 **You should see** VaR 112,035,906 and ES 160,132,107 on 2026-09-30, over 9,572 trades in 7,984 positions. On the 6th worst of the 509
 days the bank loses 112 million; the two divisions alone would add up to 130 million: holding them together saves 18 million.
 
+**Further in the guide:** [section 15.1](../guides/VAR_GUIDE.md#151-where-they-live) (the inputs), [section 2.2](../guides/VAR_GUIDE.md#22-on-the-test-data) (the bank's numbers read).
+
 ## Step 2 · Drill down from the bank to a trade
 
 **In the UI.** Click *Markets*, then *Rates · Swaps and options*, then `BOOK-RATES-1`, open the **Contributions** tab, click a position,
@@ -123,11 +126,16 @@ Drishti Bank                     112,035,906  160,132,107      53.4%    9572
     Credit trading               130,670,864  189,194,564      65.3%     943
 ```
 
+Other ways in: `VAR LE LE-NY`, `VAR BOOK BOOK-RATES-1`, `VAR CPTY CP-SUMMIT` (every trade with a counterparty), `VAR PORT
+PF-USD-RATES`; the retired stored ids still work (`VAR VAR-RATES` opens `DESK:RATES` and says so).
+
 (The output lists every node; a few rows are shown.) The same with `--hierarchy MGMT`, and in the UI with the *Legal entity* choice above
 the tree.
 
 **You should see** that New York alone (144.3 million) has a larger VaR than the whole bank: London's and Frankfurt's trades gain on
 New York's worst days.
+
+**Further in the guide:** [section 3.3](../guides/VAR_GUIDE.md#33-drill-down-bank-desk-book-position-trade) (drill down), [section 10](../guides/VAR_GUIDE.md#10-the-command-line) (the command line).
 
 ## Step 3 · Read the P&L path: what the VaR is
 
@@ -158,6 +166,8 @@ the 13 worst (509 × 2.5% = 12.7, rounded up): 75,377,415. Click a row in the UI
 
 **You should see** rank 6 (2025-12-24) equal to the VaR, and `BOOK-RATES-3` losing most on five of the six worst days.
 
+**Further in the guide:** [section 3.4](../guides/VAR_GUIDE.md#34-the-tabs) (the tabs), [sections 18.1 and 18.2](../guides/VAR_GUIDE.md#181-var) (the formulas).
+
 ## Step 4 · Contributions: who makes the VaR
 
 **In the UI.** The **Contributions** tab of the desk: its three books, their standalone, component, incremental and marginal VaR.
@@ -181,6 +191,8 @@ BOOK-RATES-3      61,499,103     18,740,573      25.1       26,690,191    44,710
 **You should see** the components adding up to the desk's VaR to the dollar (74,633,680), and `BOOK-RATES-1`'s **negative** incremental
 VaR: take the book out and the desk's VaR rises by 5.1 million. `BOOK-RATES-3` is the riskiest alone (61.5 million) but contributes the
 least: its worst days are not the desk's.
+
+**Further in the guide:** [section 2](../guides/VAR_GUIDE.md#2-the-measures-with-worked-numbers) (the measures by hand), [section 18.3](../guides/VAR_GUIDE.md#183-decomposition-of-a-scope-into-parts) (the decomposition).
 
 ## Step 5 · Your own scope: nodes, portfolios, rules
 
@@ -213,7 +225,7 @@ VAR WHERE:CURRENCY == 'EUR' and DIRECTION == 'SHORT'  ·  ...  ·  rule  ·  202
   700 trades in 595 positions
 ```
 
-**The grammar** (the full table is in [VAR_GUIDE.md section 5.2](../guides/VAR_GUIDE.md#52-the-scope-grammar)): nodes (`BANK`, `DESK:RATES`,
+**The grammar** (the full table is in [VAR_GUIDE.md section 5.2](../guides/VAR_GUIDE.md#52-the-grammar)): nodes (`BANK`, `DESK:RATES`,
 `BOOK:…`, `LE:NY`), `POS:`, `TRD:`, `CPTY:`, `PORT:`, `BASKET:`, `CAPTURE:`, `WHERE:<rule>`, combined with `+` (union), `-` (minus) and `&`
 (both, binding first); operators stand between spaces, so `MX-30000121` stays one id. A bad scope is refused in words:
 
@@ -224,6 +236,8 @@ drishti: the server said 400 DRS-5001: DRS-5001 DESK: names nothing
 
 **You should see** that the rates desk without the swap `MX-30000121` has a VaR of 74,720,890, 87,210 more than with it: that one swap
 hedges the desk (its incremental VaR is −87,210).
+
+**Further in the guide:** [section 5](../guides/VAR_GUIDE.md#5-scopes-portfolios-and-baskets) (scopes, portfolios and baskets).
 
 ## Step 6 · Positions are derived, never delivered
 
@@ -264,6 +278,8 @@ VAR POS:POS-BOOK-EQD-2~SEC-WARRANT-USD-01  ·  POS-BOOK-EQD-2~SEC-WARRANT-USD-01
 quantile is taken. The bond future of step 2 is in `POS-BOOK-RATES-1~XCH-BOND_FUTURE-AUD-02` (the *listed* rule); a swap is a position of
 its own (`POS-<book>~<trade>`, the *otc* rule).
 
+**Further in the guide:** [section 4](../guides/VAR_GUIDE.md#4-positions-derived-never-delivered) and [section 15.6](../guides/VAR_GUIDE.md#156-positions-derived-by-drishti-as-built) (every rule and column).
+
 ## Step 7 · Save a basket, capture it, compare
 
 **In the UI.** Open a scope, the **Captured results** tab, a note, **Capture VaR**, then **Compare with now**:
@@ -284,11 +300,14 @@ $ drishti.py var compare CAP-20260930-89
   "varChange": 0.0, "esChange": 0.0, "membersAdded": [], "membersRemoved": [], "components": [ ... ] }
 ```
 
-Your capture id differs (the content store numbers them). The basket opens anywhere as `BASKET:rita/rates-short`, or `VAR SCOPE
+**CSV** on the capture downloads its vector by scenario date (or, with `?part=components`, its components). Your capture id differs
+(the content store numbers them). The basket opens anywhere as `BASKET:rita/rates-short`, or `VAR SCOPE
 rates-short <GO>`.
 
 **You should see** the shorts alone with a VaR of 282.4 million, nearly four times the desk's 74.6 million: the desk's longs hedge them.
 A capture never changes: restate the batch and it still reopens with these numbers.
+
+**Further in the guide:** [section 5.8](../guides/VAR_GUIDE.md#58-baskets) (baskets), [section 6](../guides/VAR_GUIDE.md#6-captures-and-compare) (captures and compare).
 
 ## Step 8 · History and the backtest
 
@@ -316,6 +335,8 @@ day's hypothetical P&L). Green is up to 4 exceptions in 250 days, amber 5 to 9, 
 exceptions are too many or too few, a Christoffersen p-value below 0.05 that they cluster.
 
 **You should see** green with 3 exceptions for the FX desk (2.5 expected at 99%); the bank replays amber with 5.
+
+**Further in the guide:** [section 7](../guides/VAR_GUIDE.md#7-history-and-backtesting) (history), [section 18.4](../guides/VAR_GUIDE.md#184-history-and-backtest) (the backtest's formulas), [section 19](../guides/VAR_GUIDE.md#19-official-end-of-day-results) (official records).
 
 ## Step 9 · How the date sits in memory and on disk
 
@@ -354,7 +375,9 @@ the same file again (`reopened` goes up) without reading the lake. At shutdown t
 
 **You should see** `mode: mapped`, one file, and `node aggregate (float64)` as the tier of every node; `hot file (float32 rows, summed in
 float64)` for any other scope. On the test data both give exactly the lake's numbers ([VAR_GUIDE.md section
-9.3](../guides/VAR_GUIDE.md#93-precision-float32-rows-float64-sums)).
+26.6](../guides/VAR_GUIDE.md#266-precision-float32-rows-float64-sums)).
+
+**Further in the guide:** [section 26](../guides/VAR_GUIDE.md#26-the-tiered-memory-and-the-hot-file) (the tiers and the hot file), [section 27](../guides/VAR_GUIDE.md#27-sizes-performance-and-the-benchmark) (sizes and the benchmark).
 
 ## Step 10 · VaR as an ordinary kind
 
@@ -396,6 +419,8 @@ var-engine:
 ```
 
 **You should see** the explorer's figures (74,633,680 and 75,377,415): it is the same engine, computed as you, with your entitlements.
+
+**Further in the guide:** [section 8.1](../guides/VAR_GUIDE.md#81-var-result-the-java-engine) (`var-result`).
 
 ## Step 11 · What would a hedge do? The Python engine
 
@@ -440,6 +465,8 @@ sandbox is yours alone (`drishti.py compute sandboxes`).
 **You should see** the desk's VaR fall by 27.0 million (from 74.6 to 47.6 million) and the stressed VaR (the worst run of 250
 consecutive scenario days) from 85.3 to 59.6 million: the hedge takes out most of `BOOK-RATES-3`'s tail.
 
+**Further in the guide:** [section 8.2](../guides/VAR_GUIDE.md#82-var-whatif-the-python-engine) and [section 8.3](../guides/VAR_GUIDE.md#83-where-it-runs-the-java-engine-and-the-python-engine-as-built-280) (the Python engine).
+
 ## Step 12 · Who sees what
 
 **The YAML.** Restrict a role to nodes, at one of two levels:
@@ -459,11 +486,13 @@ computed kinds of steps 10 and 11 answer the same way: they are computed as you.
 **You should see** in *How this number was built*, as a restricted user, *View: restricted by node (… trades outside your
 entitlement)* for the bank: the bank's 9,572 trades less the rates desk's 1,487, so 8,085 outside, and the bank's VaR equal to the desk's.
 
+**Further in the guide:** [section 9](../guides/VAR_GUIDE.md#9-who-sees-what-entitlements-and-audit) (entitlements and audit).
+
 ## Next steps
 
-- Read [VAR_GUIDE.md](../guides/VAR_GUIDE.md): the measures by hand on ten scenarios, the data flow and restatements, the scope grammar
-  in full, sizing for a bank of a million trades, troubleshooting.
-- Load your own batch: the columns are in [VAR.md section 3](../contracts/VAR.md#3-inputs-from-upstream-engines); send the data-load
+- Read [VAR_GUIDE.md](../guides/VAR_GUIDE.md): the measures by hand on ten scenarios, the data flow and restatements, the scope grammar in full, the
+  data contract (Part II), sizing for a bank of a million trades and the benchmark (Part III), troubleshooting.
+- Load your own batch: the columns are in [VAR_GUIDE.md section 15](../guides/VAR_GUIDE.md#15-inputs-from-upstream-engines); send the data-load
   signal ([tutorial 7](07-load-data-daily.md)) and the date is reloaded and captured officially.
 - Put a computed VaR on your own screen: a Sutra panel can read `var-result` like [tutorial 23](23-computed-panels.md)'s computed panels.
 
@@ -475,4 +504,4 @@ entitlement)* for the bank: the bank's 9,572 trades less the rates desk's 1,487,
 | other numbers than these | you built the lake with `--as-of today`: trades matured since 2026-09-30 drop out; rebuild with `--as-of data` |
 | `PORT <id>` says *no source holds portfolio/…* | the page opens on today's date; pick **2026-09-30** in the date box (the explorer finds the newest date by itself) |
 | step 11 answers *could not start* | the compute workers are off: `DRISHTI_COMPUTE_ENABLED=true`, and Admin → Compute shows the pool `var` |
-| *the vectors of … were unloaded while this answer was computed* | ask again ([VAR_GUIDE.md section 15](../guides/VAR_GUIDE.md#15-troubleshooting)) |
+| *the vectors of … were unloaded while this answer was computed* | ask again ([VAR_GUIDE.md section 13](../guides/VAR_GUIDE.md#13-troubleshooting)) |

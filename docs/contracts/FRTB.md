@@ -7,7 +7,7 @@
 # FRTB standardised approach: the data contract
 
 *Version 1.0 · 2026-10-25 · **Status:** proposed (PLANNED for 2.9.0) · Shared rules: [README.md](README.md) · Model contract:
-[VAR.md](VAR.md) · The same sensitivities feed [SIMM.md](SIMM.md), [STR.md](STR.md) and [PNL.md](PNL.md)*
+[VAR_GUIDE.md Part II](../guides/VAR_GUIDE.md#14-the-contract-at-a-glance) · The same sensitivities feed [SIMM.md](SIMM.md), [STR.md](STR.md) and [PNL.md](PNL.md)*
 
 This is the planned data contract of Drishti's **FRTB standardised approach** (SA) engine: the sensitivities-based method (SBM) of the
 Basel Committee's *Minimum capital requirements for market risk* (BCBS d457, January 2019, consolidated as chapter **MAR21** of the
@@ -100,7 +100,7 @@ ${DRISHTI_DELTA_ROOT}/risk/
 └── residual-risk/    business_date=YYYY-MM-DD/                  one row per trade subject to the RRAO           (PLANNED, optional)
 ```
 
-Served by `risk-store` (domain `risk`). Physical layout as VaR's ([VAR.md section 3.1](VAR.md#31-where-they-live)); every column the
+Served by `risk-store` (domain `risk`). Physical layout as VaR's ([VAR_GUIDE.md section 15.1](../guides/VAR_GUIDE.md#151-where-they-live)); every column the
 engines read is promoted (**P**). Retention 7 years (product owner, 2026-10-25). The data-load signal of each table reloads the date
 in the engine automatically (product owner, 2026-10-25).
 
@@ -389,13 +389,13 @@ currencies × 3 curves × 12 tenors; CSR 5,000 issuers × 5 tenors × 2 bases; E
 | RRAO aggregates | per node: Σ exotic notional, Σ other notional | 16 B a node |
 | Netting-set aggregates (SIMM) | per netting set, the same sparse vector | [SIMM.md section 7](SIMM.md#7-what-drishti-builds) |
 
-**A scope's net sensitivities** use VaR's planner ([VAR.md section 7.1](VAR.md#71-as-built-one-business-date-varbook)): node
+**A scope's net sensitivities** use VaR's planner ([VAR_GUIDE.md section 25](../guides/VAR_GUIDE.md#25-one-business-date-in-memory)): node
 aggregates for whole nodes, minus the rows of missing trades, plus the rows of extra trades, accumulated into a dense float64 array
 indexed by factor ordinal (2 MB at 250,000 factors; one per thread), then compacted to the non-zero factors. The order of additions
 is fixed (node order, then ordinal order), so the same scope gives the same bits.
 
 **Memory tiering.** At 250 MB a date plus aggregates, no float32 copy is needed; history dates are opened lazily from the lake as
-VaR's (§7.3 of VAR.md). Captures keep the scope's net sensitivities, so a capture is reproducible without the lake.
+VaR's (VAR_GUIDE.md §26). Captures keep the scope's net sensitivities, so a capture is reproducible without the lake.
 
 ### 7.3 Load
 
@@ -405,10 +405,10 @@ and counted), sum the node aggregates in one pass per book then up the tree. Abo
 
 ## 8. Scopes
 
-Every scope of [VAR.md section 8](VAR.md#8-scopes) and its planned words, plus `INDEX:` and `TRDR:` of
+Every scope of [VAR_GUIDE.md section 5](../guides/VAR_GUIDE.md#5-scopes-portfolios-and-baskets) and its planned words, plus `INDEX:` and `TRDR:` of
 [TRADING_GROUPINGS.md](TRADING_GROUPINGS.md#81-words-added-proposed). The net sensitivity of a factor over a scope is additive and
 resolved exactly from aggregates and runs; the charge is not and is computed per scope. **Positions:** a position's sensitivities are
-the sum of its trades' (positions derived as in [VAR.md section 3.7](VAR.md#37-positions-derived-by-drishti-as-built)).
+the sum of its trades' (positions derived as in [VAR_GUIDE.md section 15.6](../guides/VAR_GUIDE.md#156-positions-derived-by-drishti-as-built)).
 
 ## 9. What Drishti answers
 
@@ -426,7 +426,7 @@ Base `/api/v1/frtb`, JSON, as the caller; `scope`, `asOf` as VaR.
 | `GET /scope/drc`, `GET /scope/rrao` | `scope`, `asOf` | per bucket and obligor; per type |
 | `GET /scope/sensitivities.csv` | `scope`, `asOf`, `riskClass` | the scope's net sensitivities (one line per factor) |
 | `POST /what-if` | body `{scope, add: [sensitivity rows of a trade not booked], remove: [trade ids]}` | the headline with and without, and the change (a private sandbox, REACTIVE_CONNECTOR's `sandbox-ref`) |
-| `POST /captures` … `GET /compare` | as VaR ([VAR.md section 9.6](VAR.md#96-captures)) | captures `FRCAP-<yyyymmdd>-<n>`, with the scope's net sensitivities |
+| `POST /captures` … `GET /compare` | as VaR ([VAR_GUIDE.md section 6](../guides/VAR_GUIDE.md#6-captures-and-compare)) | captures `FRCAP-<yyyymmdd>-<n>`, with the scope's net sensitivities |
 | `GET /status`, `POST /reload` | | as VaR |
 
 ### 9.2 The headline
@@ -555,7 +555,7 @@ Deterministic (no random numbers), pure (no files, no network). A what-if adds t
 ### 9.7 Official end-of-day captures and the published table
 
 When a date's `sensitivity` (and, when delivered, `default-risk`, `residual-risk`) rows are complete, Drishti captures every node of
-both hierarchies as the official record (VaR's mechanism, [VAR.md section 9.6](VAR.md#96-captures)) and publishes it to
+both hierarchies as the official record (VaR's mechanism, [VAR_GUIDE.md section 19](../guides/VAR_GUIDE.md#19-official-end-of-day-results)) and publishes it to
 `${DRISHTI_DELTA_ROOT}/risk-results/frtb-official/` ([README.md section 11](README.md#11-what-drishti-answers-computed-kinds-the-api-captures),
 product owner 2026-10-25): one row per node per business date, the shared columns (`BUSINESS_DATE`, `HIERARCHY`, `NODE_ID`,
 `NODE_NAME`, `PARENT_ID`, `LEVEL`, `CAPTURE_ID`, `RESULT_VERSION`, `INPUT_VERSIONS`, `COMPUTED_AT`, `CONTRACT_VERSION`) and FRTB's
@@ -596,7 +596,7 @@ README section 10 holds; the codes below are **proposed** (range `DRS-532x` for 
 
 ## 11. Entitlements and audit
 
-VaR's model ([VAR.md section 11](VAR.md#11-entitlements-and-audit)) with `drishti.frtb.access` and the gate kind `sensitivity`. An
+VaR's model ([VAR_GUIDE.md section 9](../guides/VAR_GUIDE.md#9-who-sees-what-entitlements-and-audit)) with `drishti.frtb.access` and the gate kind `sensitivity`. An
 `aggregate` role sees the headline, classes and buckets of its nodes, never a factor table filtered to one trade, trade contributions,
 or a CSV of a scope below its nodes. **Audit:** `frtb-view` (every headline of more than 10,000 trades or of a node), `frtb-capture`,
 `frtb-what-if`, `frtb-export`.

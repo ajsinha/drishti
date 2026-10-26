@@ -48,7 +48,7 @@ compute:
       idle-stop: 5m
       timeout: 30s                   # an interactive request's budget
       timeout-batch: 10m
-    var:                             # the Python VaR engine (what-if trades on a scope, the stressed window): docs/contracts/VAR.md section 9.7
+    var:                             # the Python VaR engine (what-if trades on a scope, the stressed window): docs/guides/VAR_GUIDE.md section 8
       type: python
       engines: [drishti_compute.var.whatif:VarWhatIfEngine]
       environment: system            # standard library only: no package to approve

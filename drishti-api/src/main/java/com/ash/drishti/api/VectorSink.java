@@ -16,7 +16,7 @@
 package com.ash.drishti.api;
 
 /**
- * Receives the rows of a vector column, one entity at a time, as a source decodes them (VAR_DATA_MODEL.md section 15): a P&amp;L
+ * Receives the rows of a vector column, one entity at a time, as a source decodes them (VAR_GUIDE.md section 29.3): a P&amp;L
  * vector of 509 scenario values per trade, read once per business date into a vector store. The source reuses {@code values}
  * and {@code texts} for the next row, so a sink copies what it keeps; nothing is boxed and no object is made per value.
  */

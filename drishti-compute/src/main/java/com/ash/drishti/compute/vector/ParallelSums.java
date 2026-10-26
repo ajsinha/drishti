@@ -25,7 +25,7 @@ import java.util.concurrent.ThreadFactory;
 import java.util.concurrent.atomic.AtomicInteger;
 
 /**
- * Sums of many vectors on every core, with a bounded pool (VAR_DATA_MODEL.md section 12.3). A set of ordinals is split by chunk of the
+ * Sums of many vectors on every core, with a bounded pool (VAR_GUIDE.md section 25). A set of ordinals is split by chunk of the
  * store; each chunk's rows are summed into a private accumulator on a pool thread, and the accumulators are added in chunk order, so the
  * same set gives the same bits every time whatever the threads did. Memory bandwidth, not arithmetic, is the limit: one sequential
  * pass over the rows of the set.

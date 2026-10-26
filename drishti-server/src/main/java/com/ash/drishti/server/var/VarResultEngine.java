@@ -33,7 +33,7 @@ import java.util.Map;
 import java.util.concurrent.atomic.AtomicReference;
 
 /**
- * The computed kind {@code var-result} (VAR.md section 9.7, as built in 2.8.0): a scope's VaR answered by the server's VaR engine through
+ * The computed kind {@code var-result} (VAR_GUIDE.md section 8, as built in 2.8.0): a scope's VaR answered by the server's VaR engine through
  * the market-risk pack's reactive connector {@code var-engine} ({@code plugin: reactive}, {@code engine.type: java}), so VaR opens as an
  * ordinary kind: {@code VRES DESK:RATES <GO>}, {@code /v/var-result/DESK:RATES}, the entities API, the CLI, search and the AI tools, with
  * the same entitlements as the explorer (the answer is computed as the viewer: their nodes, their masks, their audit entry). Java keeps

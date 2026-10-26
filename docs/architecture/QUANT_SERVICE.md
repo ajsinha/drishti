@@ -21,7 +21,7 @@
 **2.8.0 update (2026-10-24): read [PYTHON_COMPUTE.md](PYTHON_COMPUTE.md) first.** The product owner decided that computations,
 pricing included, run in **compute workers supervised by the Drishti server** (out-of-process Python workers with QLRisk as the
 default pricer, and an isolated Java worker for QuantLib's own Java binding), used by **reactive connectors**
-([REACTIVE_CONNECTORS.md](REACTIVE_CONNECTORS.md)); the first user is the VaR engine ([VAR_ENGINE.md](VAR_ENGINE.md)). That replaces the
+([REACTIVE_CONNECTORS.md](REACTIVE_CONNECTORS.md)); the first user is the VaR engine ([VAR_GUIDE.md Part III](../guides/VAR_GUIDE.md#24-where-the-engine-lives)). That replaces the
 *deployment shape* proposed below (a separate `drishti-quant` HTTP service); the rest of this document still stands and is reused:
 pricing stays outside the server's JVM, the `quant` power, the packs' pricer mappings (section 6), market data assembled by the server
 for a business date (section 7), caching by trade version and date (section 11). The QuantLib-SWIG Java option rejected in section 3
@@ -335,7 +335,7 @@ Decided 2026-10-24 (product owner); the design is [PYTHON_COMPUTE.md](PYTHON_COM
 | a separate Python service, `drishti-quant`, reached over HTTP (sections 2, 5, 12) | **compute workers** started and supervised by the server: a pool of out-of-process Python workers, data passed as Arrow, from a locked, administrator-approved environment ([PYTHON_COMPUTE.md sections 4 to 7](PYTHON_COMPUTE.md#4-requires-what-a-connector-needs-to-run)); a remote pool on other machines remains a later option and would look much like the service |
 | QuantLib-Python adapters written in the service (section 5) | a **pricer SPI** with **QLRisk as the default provider** (design only until its API is declared stable) and a stand-in for tests ([PYTHON_COMPUTE.md section 9](PYTHON_COMPUTE.md#9-pricing-one-spi-two-engines)) |
 | QuantLib's Java (SWIG) binding rejected inside the server (section 3) | **accepted in an isolated Java worker**: built per OS (Linux first), packaged in a versioned jar, extracted under the data folder, never loaded in the server; its tests skip on Windows; a parity test against QLRisk |
-| `/api/v1/quant/...` endpoints (section 9) | pricing reaches screens through **reactive connectors** and their kinds (a what-if is a computed kind, [VAR_ENGINE.md section 8](VAR_ENGINE.md#8-what-if-hypothetical-amended-and-unwound-trades)); dedicated endpoints for single-trade pricing may still be added on the same workers |
+| `/api/v1/quant/...` endpoints (section 9) | pricing reaches screens through **reactive connectors** and their kinds (a what-if is a computed kind, [VAR_GUIDE.md section 8.4](../guides/VAR_GUIDE.md#84-what-if-pricing-and-intraday-recomputes-planned)); dedicated endpoints for single-trade pricing may still be added on the same workers |
 | packs' `quant: pricers:` mappings (section 6) | **kept**, shared by every pricer provider |
 | market data for a business date assembled by the server (section 7) | **kept** |
 | the `quant` power, limits, caching, audit (sections 4, 10, 11) | **kept**, joined by the `compute` power and the compute audit ([REACTIVE_CONNECTORS.md section 15](REACTIVE_CONNECTORS.md#15-observability-and-audit)) |

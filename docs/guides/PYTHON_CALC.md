@@ -151,7 +151,7 @@ run, how long it took, split into **packages** (loading libraries the code impor
    same rule as the engine's, so `VAR TRD MX-20000274 <GO>` shows the same figures) and a histogram of the 509 scenarios.
 4. Change `0.01` to `0.025` and run again: the 97.5% VaR, in a few milliseconds this time.
 
-The VaR of a position, a portfolio, a desk or any set of trades is the engine's ([VAR_EXPLORER.md](VAR_EXPLORER.md)); the stored desk
+The VaR of a position, a portfolio, a desk or any set of trades is the engine's ([VAR_GUIDE.md section 3](VAR_GUIDE.md#3-the-explorer-screen-by-screen)); the stored desk
 VaR records (`VAR VAR-RATES`) and the snippets that read them were retired in 2.8.0.
 
 ## 5. The `drishti` module

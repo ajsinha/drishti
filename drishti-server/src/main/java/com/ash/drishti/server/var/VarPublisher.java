@@ -31,7 +31,7 @@ import java.util.List;
 import java.util.Map;
 
 /**
- * Publishes the official end-of-day results to {@code <root>/risk-results/var-official/} (VAR.md section 9.6, docs/contracts/README.md
+ * Publishes the official end-of-day results to {@code <root>/risk-results/var-official/} (VAR_GUIDE.md section 19, docs/contracts/README.md
  * section 11) for other systems: one row per node of every hierarchy per business date, appended as one Delta commit per capture run
  * by Drishti's own lake writer. The table is append-only ({@code delta.appendOnly}): a restated date adds rows with the next
  * {@code RESULT_VERSION}, nothing is overwritten. Its log and removed files are kept for the retention years (7 by default), so its
@@ -39,13 +39,13 @@ import java.util.Map;
  */
 final class VarPublisher {
 
-    /** The contract version the rows carry (VAR.md's change table). */
+    /** The contract version the rows carry (VAR_GUIDE.md section 23.4, the change table). */
     static final String CONTRACT_VERSION = "1.3";
     static final String FOLDER = "risk-results";
     static final String TABLE = "var-official";
     private static final ObjectMapper JSON = new ObjectMapper();
 
-    /** The published columns and their types, in order (VAR.md section 9.6; BUSINESS_DATE is the partition column business_date). */
+    /** The published columns and their types, in order (VAR_GUIDE.md section 19; BUSINESS_DATE is the partition column business_date). */
     static final Map<String, String> COLUMNS = columns();
 
     private final Path table;

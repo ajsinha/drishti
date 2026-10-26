@@ -6,7 +6,7 @@
 
 # LIM: credit limits and their usage, the data contract
 
-*Version 1.0 · 2026-10-25 · Shared rules: [README.md](README.md) · Model contract: [VAR.md](VAR.md) · Netting: [NSET.md](NSET.md) ·
+*Version 1.0 · 2026-10-25 · Shared rules: [README.md](README.md) · Model contract: [VAR_GUIDE.md Part II](../guides/VAR_GUIDE.md#14-the-contract-at-a-glance) · Netting: [NSET.md](NSET.md) ·
 Usage measures: [EXP.md](EXP.md), [SACCR.md](SACCR.md) · Groups: [GRP.md](GRP.md)*
 
 **Status:** proposed. PLANNED for 2.10.0, not built. Every table, column, setting, kind, endpoint and code below is a proposal; names
@@ -290,7 +290,7 @@ class LimitEngine(Engine):
 
 | Check | Rule | Outcome |
 |---|---|---|
-| Scope | `SCOPE` parses (VAR.md section 8.2) and resolves on the date | unresolved: limit flagged `unknown-scope`, usage empty |
+| Scope | `SCOPE` parses (VAR_GUIDE.md section 5.2) and resolves on the date | unresolved: limit flagged `unknown-scope`, usage empty |
 | Measure | in the enum; `CONFIDENCE` in (0.5, 1) for `PFE` | row rejected |
 | Buckets | contiguous, increasing, non-overlapping; bucket limits ≥ 0 | row rejected |
 | Parent | `PARENT_LIMIT` exists; no cycles | flagged |

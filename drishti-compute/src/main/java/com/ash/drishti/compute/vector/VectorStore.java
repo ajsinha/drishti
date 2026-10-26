@@ -20,7 +20,7 @@ import java.util.List;
 
 /**
  * Vectors of one width (509 scenario P&amp;Ls) addressed by ordinal, in memory, row-major in {@code double[]} chunks
- * (VAR_DATA_MODEL.md section 12): row {@code i} is {@code width} contiguous doubles, so summing rows walks contiguous memory and the
+ * (VAR_GUIDE.md section 25): row {@code i} is {@code width} contiguous doubles, so summing rows walks contiguous memory and the
  * JIT turns the inner loop into SIMD additions. A chunk holds {@code rowsPerChunk} rows (65,536 by default: 267 MB of 509-wide rows),
  * far below Java's array limit; there is no object per row and nothing is boxed.
  *

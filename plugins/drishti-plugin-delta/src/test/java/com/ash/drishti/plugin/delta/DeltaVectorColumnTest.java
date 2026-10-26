@@ -37,7 +37,7 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
 
 /**
- * A vector column (VAR_DATA_MODEL.md section 15): P&amp;L vectors of 509 doubles written as {@code list<double>} by Drishti's lake
+ * A vector column (VAR_GUIDE.md section 29.3): P&amp;L vectors of 509 doubles written as {@code list<double>} by Drishti's lake
  * writer, the document keeping a {@code {"$vector": "PNL"}} marker, read back to the bit in bulk ({@link DeltaSourcePlugin#vectors},
  * streamed to a sink with promoted text columns beside) and in a fetched document (the marker replaced by the array).
  */

@@ -471,7 +471,7 @@ final class DeltaTable {
 
     /**
      * The date's rows with one vector column ({@code list<double>}) and some text columns, streamed to {@code sink} batch by batch
-     * (VAR_DATA_MODEL.md section 15): one buffer per read, reused for every row, so a date of millions of vectors is never held here.
+     * (VAR_GUIDE.md section 29.3): one buffer per read, reused for every row, so a date of millions of vectors is never held here.
      * Read as stored (no deletion vectors: the vector tables are written without them); partition values come from the log.
      */
     void vectors(Layout layout, LocalDate date, String vectorColumn, List<String> textColumns, com.ash.drishti.api.VectorSink sink) {

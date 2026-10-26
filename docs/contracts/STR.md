@@ -7,7 +7,7 @@
 # STR, stress P&L: the data contract
 
 *Version 1.0 · 2026-10-25 · **Status:** proposed (PLANNED for 2.9.0) · Shared rules: [README.md](README.md) · Model contract:
-[VAR.md](VAR.md) · Sensitivities: [FRTB.md](FRTB.md#32-sensitivity-one-row-per-trade-and-risk-factor-the-shared-table)*
+[VAR_GUIDE.md Part II](../guides/VAR_GUIDE.md#14-the-contract-at-a-glance) · Sensitivities: [FRTB.md](FRTB.md#32-sensitivity-one-row-per-trade-and-risk-factor-the-shared-table)*
 
 This is the planned data contract of **STR**: the P&L of any set of trades under a stress scenario, computed when asked, either by
 **summing per-trade full-revaluation P&L** that the upstream engine delivers for the bank's defined scenarios, or by **applying a
@@ -270,7 +270,7 @@ sensitivity method, nets its sensitivities once and dots them with each scenario
 
 ## 8. Scopes
 
-Every scope of [VAR.md section 8](VAR.md#8-scopes) and its planned words, plus `INDEX:` and `TRDR:`
+Every scope of [VAR_GUIDE.md section 5](../guides/VAR_GUIDE.md#5-scopes-portfolios-and-baskets) and its planned words, plus `INDEX:` and `TRDR:`
 ([TRADING_GROUPINGS.md](TRADING_GROUPINGS.md#81-words-added-proposed)). Everything in STR is additive over trades for a fixed scenario;
 only the worst-scenario and limit-use figures are taken after the sum.
 
@@ -404,7 +404,7 @@ Codes are **proposed** (range `DRS-531x`).
 ## 11. Entitlements and audit
 
 VaR's model with `drishti.stress.access`, gate kinds `scenario-pnl` (full) and `sensitivity` (sensitivity method). User scenarios: the
-owner and those it is shared with (as baskets, [VAR.md section 9.5](VAR.md#95-baskets)). **Audit:** `stress-view` for node scopes and
+owner and those it is shared with (as baskets, [VAR_GUIDE.md section 5.8](../guides/VAR_GUIDE.md#58-baskets)). **Audit:** `stress-view` for node scopes and
 scopes of more than 10,000 trades, `stress-scenario-save` (user scenarios), `stress-capture`, `stress-export`.
 
 ## 12. Performance and sizing

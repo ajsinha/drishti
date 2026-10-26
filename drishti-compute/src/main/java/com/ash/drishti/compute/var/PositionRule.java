@@ -23,7 +23,7 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 /**
- * The condition of a RULE portfolio or a {@code WHERE:} scope (VAR_DATA_MODEL.md section 4.2): the small part of DEL evaluated over a
+ * The condition of a RULE portfolio or a {@code WHERE:} scope (VAR_GUIDE.md section 5.4): the small part of DEL evaluated over a
  * position's columns, the same grammar as tools/packgen/var/rules.py (so a rule's members are the same in the demo data and here).
  *
  * <pre>

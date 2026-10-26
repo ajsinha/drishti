@@ -29,7 +29,7 @@ import java.util.Set;
 import java.util.function.Function;
 
 /**
- * How Drishti derives positions from the trades of a business date when it loads the date (VAR.md section 3.7): configuration, never
+ * How Drishti derives positions from the trades of a business date when it loads the date (VAR_GUIDE.md section 15.6): configuration, never
  * code. A trade is live when its status is one of the live statuses (a trade with no status is live: the batch valued it); the first
  * rule whose product groups or product types hold the trade decides its position's key, the first of the rule's key fields the trade
  * carries (a security id, an ISIN, a ticker, an exchange contract). A trade with no such field, or matched by no rule, is a position of

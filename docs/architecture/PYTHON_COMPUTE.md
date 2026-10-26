@@ -23,7 +23,7 @@ database, and Admin → Compute ([COMPUTE.md](../admin/COMPUTE.md), the operator
 stand-in (C4), QLRisk (C5, and **design only** until its author declares its API stable), the QuantLib Java worker (C6), the reactive
 connectors that send work to the pools (REACTIVE_CONNECTORS.md R1 to R6), the planned `drishti.py compute`, the pre-approval file and per-pool OS
 users. Each section says what differs from the build where it does. Related: [REACTIVE_CONNECTORS.md](REACTIVE_CONNECTORS.md) (the connectors that use these workers),
-[VAR_ENGINE.md](VAR_ENGINE.md) (the first user), [QUANT_SERVICE.md](QUANT_SERVICE.md) (the earlier pricing-service proposal,
+[VAR_GUIDE.md Part III](../guides/VAR_GUIDE.md#24-where-the-engine-lives) (the first user), [QUANT_SERVICE.md](QUANT_SERVICE.md) (the earlier pricing-service proposal,
 reconciled in [section 14](#14-how-this-fits-with-what-exists)), [PYTHON_BI.md](../guides/PYTHON_BI.md) (the console's Python runner,
 built).
 
@@ -314,7 +314,7 @@ class VarEngine(Engine):
 
 ## 9. Pricing: one SPI, two engines
 
-Base VaR never prices (it adds precomputed vectors, [VAR_ENGINE.md](VAR_ENGINE.md)). Pricing is needed for **what-if** (a hypothetical,
+Base VaR never prices (it adds precomputed vectors, [VAR_GUIDE.md Part III](../guides/VAR_GUIDE.md#24-where-the-engine-lives)). Pricing is needed for **what-if** (a hypothetical,
 amended or partly unwound trade priced over the 509 scenario days) and for stresses.
 
 ### 9.1 The pricer SPI
@@ -350,7 +350,7 @@ class Pricer(Protocol):                                  # planned, 2.8.0, in dr
 - **Its own thread pool:** QLRisk has a multi-threaded engine (`engine.max_workers`); inside a worker it is limited to the worker's
   CPU share (default 1 thread per worker, so the pool, not the library, decides parallelism).
 - **When QLRisk is not stable in time:** what-if in 2.8.0 is limited to what needs no pricing (removing or scaling a linear position,
-  [VAR_ENGINE.md section 8](VAR_ENGINE.md#8-what-if-hypothetical-amended-and-unwound-trades)) and the stand-in pricer for tests; full
+  [VAR_GUIDE.md section 8.4](../guides/VAR_GUIDE.md#84-what-if-pricing-and-intraday-recomputes-planned)) and the stand-in pricer for tests; full
   what-if pricing moves to 2.8.x.
 
 ### 9.3 QuantLib-SWIG Java (decided)

@@ -25,7 +25,7 @@ import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicInteger;
 
 /**
- * A row-major matrix of float32 or float64 values in a file, memory-mapped read-only (VAR.md section 7.3: the hot file's position and
+ * A row-major matrix of float32 or float64 values in a file, memory-mapped read-only (VAR_GUIDE.md section 26: the hot file's position and
  * trade matrices; the load's spill of float64 rows). Only the pages a sum touches become resident; the operating system keeps or drops
  * them like any file cache, so a date's vectors do not take the Java heap. Rows are mapped in pieces of at most 2 GB (a mapping's limit);
  * a row never straddles two pieces. Every sum accumulates in {@code double}.

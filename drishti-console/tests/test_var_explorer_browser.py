@@ -12,7 +12,7 @@
 #
 # See the LICENSE file in the root of this repository for the full terms.
 
-"""The VaR explorer in a real browser (VAR_ENGINE.md section 10, docs/guides/VAR_EXPLORER.md), over the market-risk pack's committed VaR
+"""The VaR explorer in a real browser (docs/guides/VAR_GUIDE.md section 3), over the market-risk pack's committed VaR
 data built into a scratch lake (lake demo --only market-risk/<the VaR kinds>) and served by its Delta connector, the demo connector OFF:
 
 - VAR DESK DESK-RATES <GO> opens the explorer on the desk; the bank, a division, the desk, a book, a position and a trade each move every
@@ -248,7 +248,7 @@ def test_a_portfolio_page_lists_its_positions_and_opens_one_beside(stack, browse
 
 
 def test_the_newest_date_is_captured_officially_at_start(stack):
-    """Every node of both hierarchies (MGMT and LEGAL) captured by the server for the newest date (VAR.md section 9.6)."""
+    """Every node of both hierarchies (MGMT and LEGAL) captured by the server for the newest date (VAR_GUIDE.md section 19)."""
     import json
     deadline = time.monotonic() + 120
     record = None

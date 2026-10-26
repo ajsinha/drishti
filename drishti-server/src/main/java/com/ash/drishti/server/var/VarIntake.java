@@ -27,7 +27,7 @@ import java.util.Map;
 import java.util.TreeSet;
 
 /**
- * One date's P&amp;L vector rows on their way into the {@link VarBook} (VAR.md sections 3.7 and 10.4), row by row as the connector
+ * One date's P&amp;L vector rows on their way into the {@link VarBook} (VAR_GUIDE.md sections 15.6 and 20.3), row by row as the connector
  * streams them: a vector of the wrong length, with NaN or infinity, in another currency, or a failed row that carries a vector is
  * rejected ({@code DRS-5201}: counted and listed, never padded); a trade that is not live on the date (its status, its maturity) is left
  * out; every other row gets its position from the configured rules and goes to the builder (a trade id seen twice refuses the date).
@@ -35,7 +35,7 @@ import java.util.TreeSet;
  */
 final class VarIntake {
 
-    /** The trade columns read besides the engine's own when the table keeps them (VAR.md section 3.2). */
+    /** The trade columns read besides the engine's own when the table keeps them (VAR_GUIDE.md section 15.2). */
     static final List<String> OPTIONAL = List.of("TRADE_STATUS", "MATURITY_DATE", "BATCH_ID", "SCENARIO_SET_ID", "REPORTING_CCY", "STATUS");
     /** The engine's columns the vector table must keep (the rest of the trade columns are read when kept). */
     static final List<String> REQUIRED = List.of("LEGAL_ENTITY", "DESK", "TT_BOOK");

@@ -12,7 +12,7 @@
 #
 # See the LICENSE file in the root of this repository for the full terms.
 
-"""The risk lake keeps 7 years (docs/contracts/VAR.md section 16.1 question 10): a table lake build creates in the domains risk and
+"""The risk lake keeps 7 years (docs/guides/VAR_GUIDE.md section 23.1 question 10): a table lake build creates in the domains risk and
 risk-results keeps its Delta log and its removed files 7 years (its time travel), and lake maintenance never vacuums a file or deletes a
 business date younger than that, whatever a table's settings say (a lake's retain-years changes it per domain). Other domains keep
 their own settings.

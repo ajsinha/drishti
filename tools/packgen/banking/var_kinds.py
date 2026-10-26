@@ -12,12 +12,12 @@
 #
 # See the LICENSE file in the root of this repository for the full terms.
 
-"""The VaR engine's kinds in the market-risk pack (docs/contracts/VAR.md): what make_packs.py adds to the pack's manifest beside the
+"""The VaR engine's kinds in the market-risk pack (docs/guides/VAR_GUIDE.md): what make_packs.py adds to the pack's manifest beside the
 taxonomy's kinds. The engine's inputs (P&L vectors, scenario set, hierarchies, portfolio definitions) are written by
 tools/packgen/var/make_var_data.py into data/testdata/market-risk/ and served by the pack's Delta connector risk-store, the P&L vectors
 as a list<double> column (``vectors:``). Positions are Drishti's: derived from the trades by the pack's rules when a date loads and
 served from the engine by the var-positions connector. No kind stores a VaR figure: the pages show the engine's, computed when opened.
-The computed kinds (VAR.md section 9.7) are served by reactive connectors: var-result by the server's Java engine (var-engine), var-whatif
+The computed kinds (VAR_GUIDE.md section 8) are served by reactive connectors: var-result by the server's Java engine (var-engine), var-whatif
 by the Python engine in the compute pool "var" (var-whatif), each read as the viewer."""
 from __future__ import annotations
 
@@ -89,7 +89,7 @@ FORM_COLUMNS = {"position": ["DIRECTION", "DESK", "TT_BOOK", "PRODUCT_TYPE", "CU
                 "scenario-set": ["BUSINESS_DATE"],
                 "risk-hierarchy": ["HIERARCHY", "LEVEL", "NAME", "LIMIT_VAR"]}
 BADGES = {"position": "fmt($.QUANTITY, 'compact')", "portfolio": "$.TYPE"}
-#: the computed kinds' fields (VAR.md section 9.7): read as an ordinary kind, never stored
+#: the computed kinds' fields (VAR_GUIDE.md section 8): read as an ordinary kind, never stored
 COMPUTED = ("var-result", "var-whatif")
 EXAMPLES = [("PORT PF-RATES-DESK", "Portfolio · its positions, longs and shorts, VaR and component VaR (computed as you open it)"),
             ("PORT PF-ASHA-UNWIND", "A basket of positions and trades · overlaps the rates desk"),

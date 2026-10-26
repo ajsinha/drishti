@@ -37,7 +37,7 @@ import java.util.Set;
 import java.util.function.Consumer;
 
 /**
- * The {@code var-positions} connector plugin: the positions Drishti derives from the trades when a date loads (VAR.md section 3.7),
+ * The {@code var-positions} connector plugin: the positions Drishti derives from the trades when a date loads (VAR_GUIDE.md section 15.6),
  * served as the {@code position} kind from the VaR engine's memory (never stored: rebuilt from the date's trades and the rules,
  * reproducible). Dated: a position is read on a business date, the newest with vectors when it is later. A read when the engine is off
  * or has no vectors finds nothing.

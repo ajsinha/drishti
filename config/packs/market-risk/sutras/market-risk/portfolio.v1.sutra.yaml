@@ -12,7 +12,7 @@
 #
 # See the LICENSE file in the root of this repository for the full terms.
 
-# Hand-written (docs/contracts/VAR.md section 3.5): a stored portfolio is a definition; its positions and figures are the VaR engine's,
+# Hand-written (docs/guides/VAR_GUIDE.md section 15.5): a stored portfolio is a definition; its positions and figures are the VaR engine's,
 # added under VAR_ENGINE as the page opens (VarFigures), never stored. Data: tools/packgen/var/make_var_data.py.
 rachana: 1
 sutra: portfolio

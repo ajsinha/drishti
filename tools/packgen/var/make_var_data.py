@@ -12,7 +12,7 @@
 #
 # See the LICENSE file in the root of this repository for the full terms.
 
-"""Writes the VaR engine's demo inputs (docs/contracts/VAR.md) into data/testdata/market-risk/, from the committed trades of the business
+"""Writes the VaR engine's demo inputs (docs/guides/VAR_GUIDE.md) into data/testdata/market-risk/, from the committed trades of the business
 date (data/testdata/trades/*) and the core pack's desks, as an upstream risk batch would deliver them:
 
     pnl-vector/       one P&L vector per live trade: 509 scenario P&Ls in USD, the vector column PNL (list<double> in the lake), with the
@@ -21,9 +21,9 @@ date (data/testdata/trades/*) and the core pack's desks, as an upstream risk bat
     risk-hierarchy/   the MGMT tree (bank, division, desk, book) and the LEGAL tree (bank, legal entity, desk, book), with VaR limits
     portfolio/        portfolio definitions of the three types (HIERARCHY, RULE, BASKET), overlapping on purpose: no figures
 
-No position, no VaR and no node history is written: positions are derived by the server from the trades and the pack's rules (VAR.md
+No position, no VaR and no node history is written: positions are derived by the server from the trades and the pack's rules (VAR_GUIDE.md
 section 3.7), every figure is computed when asked, and a node's history is its official end-of-day captures. Every live trade is valued
-(statuses NEW, VALIDATED, AMENDED; maturity on or after the date; VAR.md section 16.1 question 1), about 9,600 trades. Every file is
+(statuses NEW, VALIDATED, AMENDED; maturity on or after the date; VAR_GUIDE.md section 23.1 question 1), about 9,600 trades. Every file is
 dated by its documents' BUSINESS_DATE (testdata.yaml ``dated-by``); the vectors are split into files of about 1.2 MB. Deterministic:
 the same trades give the same files, byte for byte.
 

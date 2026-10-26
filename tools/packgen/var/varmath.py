@@ -13,7 +13,7 @@
 # See the LICENSE file in the root of this repository for the full terms.
 
 """The VaR measures the demo data stores beside its vectors (a position's and a portfolio's VaR, ES and component VaR), by exactly the
-rules the server's engine uses (com.ash.drishti.compute.var.VarMath; VAR_ENGINE.md section 7), so a stored figure and the engine's
+rules the server's engine uses (com.ash.drishti.compute.var.VarMath; VAR_GUIDE.md section 18), so a stored figure and the engine's
 answer are the same number:
 
 - VaR(a) is minus the k-th worst value, k = ceil(N (1 - a)): the 6th worst of 509 at 99%.

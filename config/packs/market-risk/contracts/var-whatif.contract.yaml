@@ -13,7 +13,7 @@
 # See the LICENSE file in the root of this repository for the full terms.
 
 # Data contract of the var-whatif kind (command VWIF): docs/contracts/README.md section 16; the measure's contract is
-# docs/contracts/VAR.md (section 9.7). Drafted by `drishti.py contract bootstrap var-whatif`, completed by hand (2.8.0).
+# docs/guides/VAR_GUIDE.md (section 8). Drafted by `drishti.py contract bootstrap var-whatif`, completed by hand (2.8.0).
 kind: var-whatif
 mnemonic: VWIF
 pack: market-risk
