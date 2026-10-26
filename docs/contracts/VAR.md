@@ -1270,16 +1270,16 @@ incremental VaR is 0) but raises ES from 6.5 to 8.5: the short trade hedged the 
 | 2 | Where are derived positions kept: in memory only, the Drishti database, or a Drishti-owned table in the risk lake? Are they versioned per date for audit? | §3.7 |
 | 3 | The committed trades have no `SECURITY_ID`, `ISIN`, ticker or contract: should the generator add synthetic security ids, and which product groups are *securities* and *listed*? | §3.7 |
 | 4 | Due time of the batch (for example 06:00 New York the next business day) and the completeness rule per book | §3.9 |
-| 5 | Should the data-load signal of `pnl-vector` (and of the hierarchy and portfolios) reload the date in the engine automatically? Today only `POST /api/v1/var/reload` does, and a restated date stays stale until then | §3.9 |
+| 5 | **Decided (product owner, 2026-10-25): yes.** The data-load signal of `pnl-vector`, `scenario-set`, `risk-hierarchy` and `portfolio` reloads that date in the engine automatically (the same as `POST /api/v1/var/reload` for the date), so a restated date is never stale. Built in 2.8.0 | §3.9 |
 | 6 | Several scenario sets on one date (a stressed set `SVAR-250`): select by `SCENARIO_SET_ID` (a scope or request parameter), and which is the default? | §3.3 |
 | 7 | Lake layout for the vectors at bank scale: sort by hierarchy and partition by scenario set (both designed, not built); file and row-group sizes; `BYTE_STREAM_SPLIT` + ZSTD | §3.1 |
 | 8 | In the hot file, keep a float32 trade matrix (`TMAT`) or always read trades from the lake? | §7.3 |
 | 9 | API details: accept `by=node` explicitly (today a server error off a node); a capacity error rather than `400` for the memory budget; *largest by gross exposure* when parts exceed `max-parts` | §9.1, §10.4 |
-| 10 | Retention of official end-of-day captures and of the vectors in the lake (VAR_ENGINE.md open question 6) | §9.6 |
+| 10 | **Decided (product owner, 2026-10-25): vectors are kept for 7 years** in the lake (Delta `VACUUM` and log retention set so that 7 years of dates and their time travel stay readable). Official end-of-day captures follow the same 7 years unless the product owner says otherwise | §9.6 |
 | 11 | Field masks in VaR answers: a masked `COUNTERPARTY` appears in trade contribution rows today | §11 |
 | 12 | Computed kind names (`var-result` …) and field names (`VAR` with `CONFIDENCE`, or `VAR_99`): the guard test forbids `VAR_99` only on input and fundamental kinds | §9.7 |
 | 13 | The Basel light for short histories: the scaled limits make a single exception *red* below 14 days and *amber* below 32; keep, or require a minimum number of days? | §6.5 |
-| 14 | `LE:` semantics: by the trade's `LEGAL_ENTITY` column or by the `LEGAL` hierarchy, when they disagree | §8.5 |
+| 14 | **Decided (product owner, 2026-10-25): `LE:` is the bank's legal entity.** The trade's booking `LEGAL_ENTITY` is the source of truth; the `LEGAL` hierarchy rolls up from it, and a trade whose `LEGAL_ENTITY` disagrees with its book's place in the `LEGAL` hierarchy is reported as a data-quality warning in the answer's provenance | §8.5 |
 
 ### 16.2 Where the code and the designs disagree (recorded 2026-10-25)
 
@@ -1296,7 +1296,7 @@ incremental VaR is 0) but raises ES from 6.5 to 8.5: the short trade hedged the 
 | `by` values | API_GUIDE.md: `child`, `node`, `position`, `trade` | `child`, `position`, `trade`, `desk`, `book` |
 | Truncated parts | the largest by gross exposure | the first `max-parts` in ordinal order |
 | Provenance | the input tables' versions and batch ids | the vector table's stamp only |
-| Load signal | README.md section 9: the signal reloads the date | the signal does not reach the engine |
+| Load signal | README.md section 9: the signal reloads the date (confirmed 2026-10-25) | the signal does not reach the engine yet: fixed in 2.8.0 |
 | `VAR-COMM` mapping | README.md section 14: `DIVISION:COMM` | the record is the desk `DESK-COMM`; the division word is `DIV:` |
 | Scope sections | README.md sections 4 and 8 point to *VAR.md section 9* (scopes) and *section 11* (memory) | the shared section order puts scopes in section 8 and memory in section 7 |
 
@@ -1305,6 +1305,7 @@ incremental VaR is 0) but raises ES from 6.5 to 8.5: the short trade hedged the 
 | Version | Date | Change |
 |---|---|---|
 | 1.0 | 2026-10-25 | First version: waves V0 to V3 as built, checked against the code and the test data; the rest of 2.8.0 as the planned contract |
+| 1.1 | 2026-10-25 | Product owner's decisions: the data-load signal reloads the engine automatically; vectors kept 7 years; `LE:` is the bank's legal entity (the trade's booking `LEGAL_ENTITY`) |
 
 ---
 
