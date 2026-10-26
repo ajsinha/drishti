@@ -342,13 +342,11 @@ def bonds() -> dict[str, dict]:
 
 
 def correlation_matrix(cid: str) -> dict:
+    """A correlation set: its definition only, a name and its factors (equities and FX pairs, by their market-data ids). The
+    correlations are computed when asked from the factors' price history (CORRC, corr_kinds.py; since 2.9.2): nothing here is a figure."""
     name, factors = N.CORRELATIONS[cid]
-    pairs = []
-    for a in range(len(factors)):
-        for b in range(a + 1, len(factors)):
-            pairs.append({"a": factors[a], "b": factors[b], "rho": round(rng(cid + str(a) + str(b)).uniform(0.15, 0.78), 3)})
-    return {"matrixId": cid, "name": name, "factors": factors, "average": round(sum(p["rho"] for p in pairs) / len(pairs), 3), "pairs": pairs,
-            "window": "2 years, daily log returns", "estimator": "Ledoit-Wolf shrinkage"}
+    return {"matrixId": cid, "name": name, "factors": factors,
+            "equityIds": [f"EQ-{f}" for f in factors if f in N.EQUITIES], "fxIds": [f"FX-{f}" for f in factors if f in N.FX]}
 
 
 def build() -> dict[str, dict[str, dict]]:

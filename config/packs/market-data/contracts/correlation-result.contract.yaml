@@ -1,0 +1,136 @@
+# Project Drishti · Any data. Any domain. One grammar.
+#
+# Copyright (c) 2026 Ashutosh Sinha <ajsinha@gmail.com>.
+# All rights reserved.
+#
+# PROPRIETARY AND CONFIDENTIAL.
+#
+# This file is the confidential and proprietary property of Ashutosh Sinha.
+# Unauthorised copying, use, modification, distribution or disclosure of this
+# file, via any medium, is strictly prohibited except with the express prior
+# written permission of the copyright holder.
+#
+# See the LICENSE file in the root of this repository for the full terms.
+
+# Data contract of the correlation-result kind (command CORRC): docs/contracts/README.md section 16; the measure is documented in
+# docs/guides/GROUPINGS_ANALYTICS_GUIDE.md (section 15). Drafted by `drishti.py contract bootstrap correlation-result`, completed by hand (2.9.2).
+kind: correlation-result
+mnemonic: CORRC
+pack: market-data
+version: '1.0'
+class: computed
+status: active
+title: Correlations of a factor set (computed from price history)
+description: The pairwise correlations of a correlation set's factors, computed when asked from their daily closes in the lake (log returns
+  over a window, Pearson or Ledoit-Wolf) by the server's Java engine, as the person asking; never stored.
+source: 'computed by Drishti: the reactive connector correlation-engine (java engine com.ash.drishti.compute.reactive.analytics.CorrelationEngine)'
+grain: One answer per question (the correlation set asked for, its window and estimator, and the business date), computed when asked.
+key: []
+dated-by: on request
+cadence:
+  frequency: on change
+  due: computed on request and again when the correlation sets, equities or FX spots load (data-version trigger)
+storage:
+  connector: correlation-engine
+  plugin: reactive
+fields:
+- name: MATRIX_ID
+  type: id
+  presence: required
+  description: The correlation set asked for (the id; parameters ride on it as CORR-EU-EQ~window=20~estimator=ledoit-wolf)
+  example: CORR-EU-EQ
+- name: NAME
+  type: text
+  presence: required
+  description: The set's name
+- name: FACTORS
+  type: id list
+  presence: required
+  description: The factors' market-data ids, equities first (EQUITY_IDS, then FX_IDS)
+- name: ESTIMATOR
+  type: text
+  presence: required
+  description: The estimator used (parameter estimator, default pearson)
+  enum: [pearson, ledoit-wolf]
+- name: WINDOW
+  type: integer
+  presence: required
+  description: The daily log returns used (parameter window; 0, the default, or a window longer than the history uses every return)
+- name: AVAILABLE
+  type: integer
+  presence: required
+  description: The returns the factors' common dates allow (the dates every factor has, less one)
+- name: FROM
+  type: date
+  presence: required
+  description: The first close of the window
+- name: TO
+  type: date
+  presence: required
+  description: The last close of the window
+- name: AVERAGE
+  type: rate
+  presence: required
+  description: The mean of the pairwise correlations
+- name: MIN_RHO
+  type: rate
+  presence: required
+  description: The lowest pairwise correlation
+- name: MAX_RHO
+  type: rate
+  presence: required
+  description: The highest pairwise correlation
+- name: SHRINKAGE
+  type: rate
+  presence: optional
+  description: Ledoit-Wolf only, the shrinkage intensity toward no correlation (0 none, 1 all the way)
+- name: PAIRS
+  type: record list
+  presence: required
+  description: 'Nested: see nested PAIRS[]'
+- name: FACTOR_STATS
+  type: record list
+  presence: required
+  description: 'Nested: see nested FACTOR_STATS[]'
+nested:
+  PAIRS[]:
+  - name: A
+    type: id
+    presence: required
+    description: The first factor
+  - name: B
+    type: id
+    presence: required
+    description: The second factor
+  - name: RHO
+    type: rate
+    presence: required
+    description: Their correlation, to four decimals
+  FACTOR_STATS[]:
+  - name: FACTOR
+    type: id
+    presence: required
+  - name: LAST
+    type: amount
+    presence: required
+    description: The last close of the window
+  - name: RETURN
+    type: rate
+    presence: required
+    description: The simple return over the window (a fraction)
+  - name: VOLATILITY
+    type: rate
+    presence: required
+    description: The standard deviation of the daily log returns times the square root of 252 (a fraction)
+links: []
+validation:
+- rule: required
+  fields:
+  - AVERAGE
+  - PAIRS
+  - WINDOW
+notes:
+- 'No stored key: an answer''s id is the question asked, the id of the correlation set (correlation-matrix) it reads.'
+- 'Errors are said in words (an engine refusal): no such set, fewer than two factors, a factor without price history, fewer than three common
+  dates, a price of zero or less, a factor that did not move over the window, an estimator other than pearson or ledoit-wolf.'
+review: []

@@ -42,6 +42,7 @@ kinds:
 - rate-fixing
 - bond
 - correlation-matrix
+- correlation-result
 sutras: sutras
 formats: config/formats.yaml
 mnemonics:
@@ -105,6 +106,9 @@ mnemonics:
   CORR:
     kind: correlation-matrix
     label: Correlation matrix
+  CORRC:
+    kind: correlation-result
+    label: Correlations of a factor set (computed from price history)
 graph:
   id-patterns:
   - pattern: ^CRV-
@@ -181,6 +185,9 @@ graph:
     EQUITY:
       kind: equity
       label: Equity
+    EQUITY_IDS:
+      kind: equity
+      label: Equity
     EQUITY_INDEX:
       kind: equity-index
       label: Index
@@ -196,6 +203,9 @@ graph:
     FX_FORWARD_CURVE:
       kind: fx-forward-curve
       label: Fx forward curve
+    FX_IDS:
+      kind: fx-spot
+      label: FX spot
     FX_SPOT:
       kind: fx-spot
       label: Fx spot
@@ -318,6 +328,69 @@ connectors:
       refresh-minutes: 60
       api-key: ${FRED_API_KEY:}
       series: ${DRISHTI_FRED_SERIES:DGS10,DFF}
+  correlation-engine:
+    plugin: reactive
+    mode: reactive
+    enabled: ${DRISHTI_LAKE_ENABLED:true}
+    description: 'The correlations of a factor set computed when asked from its factors'' daily closes (log returns over a window, Pearson or
+      Ledoit-Wolf), by the server''s Java engine, as the viewer: CORRC CORR-EU-EQ <GO>'
+    kinds:
+      correlation-result:
+        compute: correlation
+        params:
+          window:
+            type: int
+            default: 0
+            min: 0
+            max: 5000
+          estimator:
+            type: enum
+            options:
+            - pearson
+            - ledoit-wolf
+            default: pearson
+        result:
+          required:
+          - AVERAGE
+          - PAIRS
+          - WINDOW
+          types:
+            AVERAGE: number
+            PAIRS: list
+            WINDOW: number
+    reads:
+    - kind: correlation-matrix
+      as: set
+      id: '{id}'
+    - kind: equity
+      as: equities
+      ids: '{inputs.set.EQUITY_IDS}'
+      limit: 200
+    - kind: fx-spot
+      as: fx
+      ids: '{inputs.set.FX_IDS}'
+      limit: 200
+    engine:
+      type: java
+      class: com.ash.drishti.compute.reactive.analytics.CorrelationEngine
+      version: '1.0'
+    triggers:
+    - 'on': data-version
+      kinds:
+      - correlation-matrix
+      - equity
+      - fx-spot
+      affects: all
+    coalesce:
+      quiet: 250ms
+      max-wait: 2s
+    cache:
+      results: 500
+      ttl: 1h
+    limits:
+      timeout: 30s
+      wait: 5s
+      max-inflight-per-user: 4
 routes:
   ir-curve: market-store
   repo-curve: market-store
@@ -339,6 +412,7 @@ routes:
   rate-fixing: market-store
   bond: market-store
   correlation-matrix: market-store
+  correlation-result: correlation-engine
 form:
   ir-curve:
   - path: CURVE_ID
@@ -675,9 +749,6 @@ form:
   - path: FACTORS
     label: Factors
     type: text
-  - path: AVERAGE
-    label: Average
-    type: text
 console:
   examples:
   - - CRV CRV-USD-OIS
@@ -690,6 +761,10 @@ console:
     - Credit curve · spreads, hazard rates
   - - CMDC CMDC-WTI
     - WTI futures curve · backwardation
+  - - CORR CORR-EU-EQ
+    - European equities · correlations computed from the factors' price history (window and estimator on the page)
+  - - CORRC CORR-G10FX~estimator=ledoit-wolf
+    - 'The computed kind itself: G10 FX correlations, Ledoit-Wolf shrinkage'
   help: config/help.yaml
 python:
   enabled: true

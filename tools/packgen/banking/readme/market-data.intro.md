@@ -63,10 +63,9 @@ fields:
     COUPONS: Coupon schedule
     HISTORY: Daily price and yield
   correlation-matrix:
-    FACTORS: The risk factors of the matrix
-    PAIRS: Correlations by pair of factors
-    WINDOW: Estimation window
-    ESTIMATOR: Estimation method, e.g. Ledoit-Wolf shrinkage
+    FACTORS: The risk factors of the set
+    EQUITY_IDS: The factors that are equities (their price history)
+    FX_IDS: The factors that are FX pairs (their price history)
 ---
 ## What it is
 
