@@ -17,7 +17,9 @@ beside the taxonomy's kinds, as var_kinds.py does for VaR. The engine's inputs (
 ``simulation-run`` and ``exposure-path``) are written by tools/packgen/ccr/make_ccr_data.py into data/testdata/counterparty-risk/ and
 served by the pack's Delta connector exposure-store from the risk lake's domain (``risk/``), the paths as a list<double> column
 (``vectors: [MTM]``). No kind stores an exposure figure: the computed kind exposure-result (EXP <scope> <GO>) is answered by the
-server's Java engine through the reactive connector exposure-engine, read as the viewer; the netting-set and counterparty pages show
+server's Java engine through the reactive connector exposure-engine, read as the viewer; exposure-whatif (XWIF <scope> <GO>) by the Python
+exposure engine in the compute pool exposure (the exact pre-deal what-if: candidates' paths added to their netting sets, from a private
+sandbox), through the reactive connector exposure-whatif; the netting-set and counterparty pages show
 the engine's figures computed as they open (EXPOSURE_ENGINE). The stored exposure-profile kind was retired in 2.9.0 (EXP.md section 14)."""
 from __future__ import annotations
 
@@ -27,11 +29,13 @@ KINDS = {
     "exposure-path": ("XPATH", "Exposure path (a trade's MtM on every path at a grid date)", "^XR-[^~]+~.+~[0-9]+$", "PATH_ROW_ID"),
     # the computed kind: its id is a scope (NSET:NS-ALDERSHOT-FRA), so no id pattern claims it
     "exposure-result": ("EXP", "Exposure profile of a scope (computed)", None, None),
+    "exposure-whatif": ("XWIF", "Exposure what-if before dealing (computed, Python)", None, None),
 }
 _INPUTS = ["simulation-run", "exposure-path", "netting-set", "csa", "collateral-balance"]
 _ROOT = "${DRISHTI_DELTA_ROOT:${drishti.data.dir:./data}/delta}"
 #: the connectors the kinds are served by
-SERVED_BY = {"simulation-run": "exposure-store", "exposure-path": "exposure-store", "exposure-result": "exposure-engine"}
+SERVED_BY = {"simulation-run": "exposure-store", "exposure-path": "exposure-store", "exposure-result": "exposure-engine",
+             "exposure-whatif": "exposure-whatif"}
 CONNECTORS = {
     "exposure-store": {
         "plugin": "delta", "enabled": "${DRISHTI_LAKE_ENABLED:true}", "kinds": ["simulation-run", "exposure-path"],
@@ -48,7 +52,9 @@ CONNECTORS = {
         "kinds": {"exposure-result": {"compute": "exposure-result",
                                       "params": {"q": {"type": "decimal", "default": 0.95, "min": 0.5, "max": 0.9999},
                                                  "collateral": {"type": "enum", "options": ["lagged", "current", "none"], "default": "lagged"},
-                                                 "run": {"type": "text", "default": ""}},
+                                                 "run": {"type": "text", "default": ""},
+                                                 "detail": {"type": "enum", "options": ["none", "whatif", "set"], "default": "none"},
+                                                 "sets": {"type": "text", "default": ""}},
                                       "result": {"required": ["SCOPE", "STATUS", "PROFILE"],
                                                  "types": {"EPE": "number", "PEAK_PFE": "number"}}}},
         "engine": {"type": "java", "class": "com.ash.drishti.server.exposure.ExposureResultEngine", "version": "1.0"},
@@ -57,13 +63,34 @@ CONNECTORS = {
         "cache": {"results": 1000, "ttl": "1h"},
         "limits": {"timeout": "60s", "wait": "5s", "max-inflight-per-user": 4},
     },
+    "exposure-whatif": {
+        "plugin": "reactive", "mode": "reactive", "enabled": "${DRISHTI_EXPOSURE_ENABLED:true}",
+        "description": "A scope's exposure before and after candidate trades (a private sandbox), exact: each candidate's paths on the run "
+                       "added to its netting set, collateral and exposure computed again by the Python exposure engine in the compute pool "
+                       "exposure from the scope's exposure-result: XWIF <scope> <GO>",
+        "kinds": {"exposure-whatif": {"compute": "exposure-whatif",
+                                      "params": {"sandbox": {"type": "sandbox-ref"},
+                                                 "q": {"type": "decimal", "default": 0.95, "min": 0.5, "max": 0.9999},
+                                                 "collateral": {"type": "enum", "options": ["lagged", "current", "none"], "default": "lagged"},
+                                                 "sets": {"type": "text", "default": ""}},
+                                      "result": {"required": ["BEFORE_PEAK_PFE", "AFTER_PEAK_PFE"],
+                                                 "types": {"BEFORE_PEAK_PFE": "number", "AFTER_PEAK_PFE": "number"}}}},
+        "reads": [{"kind": "exposure-result", "as": "base",
+                   "id": "{id}~collateral={params.collateral}~detail=whatif~q={params.q}~sets={params.sets}"},
+                  {"kind": "exposure-result", "as": "sets", "ids": "{inputs.base.WHATIF_SETS}", "limit": 50}],
+        "engine": {"type": "python", "entry": "drishti_compute.exposure.whatif:ExposureWhatIfEngine", "pool": "exposure", "version": "1.0"},
+        "triggers": [{"on": "data-version", "kinds": _INPUTS, "affects": "all"}],
+        "coalesce": {"quiet": "1s", "max-wait": "10s"},
+        "cache": {"results": 200, "ttl": "1h"},
+        "limits": {"timeout": "60s", "wait": "250ms", "max-inflight-per-user": 2},
+    },
 }
 #: link fields the kinds carry (field -> (kind, label)); NETTING_SET, COUNTERPARTY and LEGAL_ENTITY link through the packs' own fields
 FIELDS = {"RUN_ID": ("simulation-run", "Simulation run")}
 #: the search form of each stored kind: its key columns
 FORM_COLUMNS = {"simulation-run": ["CALIBRATION", "PATHS", "STATUS"],
                 "exposure-path": ["TRADE_ID", "NETTING_SET", "COUNTERPARTY", "GRID_DATE", "RUN_ID"]}
-COMPUTED = ("exposure-result",)
+COMPUTED = ("exposure-result", "exposure-whatif")
 EXAMPLES = [("EXP NSET:NS-ALDERSHOT-FRA", "Exposure profile of a netting set · EE, PFE 95 and 99, EPE, EEPE computed from the paths"),
             ("EXP CPTY:CP-ALDERSHOT", "A counterparty's exposure · its four netting sets summed path by path (PFE is not a sum of PFEs)")]
 #: the kinds whose data this generator does not write (tools/packgen/ccr/make_ccr_data.py does): no samples from make_data.py

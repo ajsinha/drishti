@@ -148,6 +148,25 @@ kinds:
       BY_NETTING_SET.PFE_CONTRIBUTION: { term: "PFE contribution", means: "The netting set's share of the scope's peak PFE: its mean exposure on the paths around the quantile at the peak date, scaled so the shares add up to the peak.", unit: "USD" }
     panels:
       profile: { about: "The expected exposure and the 95% and 99% potential future exposure at each primary date, computed from the simulated paths after netting and collateral." }
+  exposure-whatif:
+    title: Exposure what-if before dealing
+    about: >-
+      ${$.CANONICAL} on ${$.BUSINESS_DATE}: peak ${fmt($.CONFIDENCE, 'pct0')} potential future exposure ${fmt($.BEFORE_PEAK_PFE, 'compact')}
+      USD before and ${fmt($.AFTER_PEAK_PFE, 'compact')} after the ${$.ITEMS} candidate trade(s) of your sandbox, each added path by path
+      to its netting set and collateralised again by the Python exposure engine (exact, run ${$.RUN_ID}).
+    guide: counterparty-risk
+    glossary:
+      BEFORE_PEAK_PFE: { term: "Peak PFE before", means: "The scope's peak potential future exposure as booked.", unit: "USD" }
+      AFTER_PEAK_PFE: { term: "Peak PFE after", means: "The scope's peak potential future exposure with the candidate trades added to their netting sets.", unit: "USD" }
+      CHANGE_PEAK_PFE: { term: "Incremental peak PFE", means: "Peak PFE after minus before: what the candidates add to the exposure the credit limit is set on.", unit: "USD" }
+      BEFORE_EPE: { term: "EPE before", means: "The scope's expected positive exposure over the first year as booked.", unit: "USD" }
+      AFTER_EPE: { term: "EPE after", means: "The expected positive exposure with the candidates.", unit: "USD" }
+      CHANGE_EPE: { term: "Incremental EPE", means: "EPE after minus before.", unit: "USD" }
+      ITEMS: { term: "Candidate trades", means: "The trades of your private sandbox, each with its values on every path of the day's run at every grid date." }
+      METHOD: { term: "Method", means: "paths: the exact method, the candidates' own simulated values netted and collateralised with their netting set." }
+      COLLATERAL_MODEL: { term: "Collateral model", means: "lagged (the CSA's call at the value a margin period of risk earlier), current (today's collateral held throughout) or none." }
+    panels:
+      profile: { about: "Expected exposure and potential future exposure at each primary date, before and after the candidates." }
   simulation-run:
     title: Exposure simulation run
     about: >-

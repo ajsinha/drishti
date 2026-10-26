@@ -30,16 +30,21 @@ import java.util.Map;
  * @param known every netting set of the date's {@code netting-set} records: its counterparty and legal entity, with paths or not
  * @param names the counterparties' names (for labels; masked per viewer)
  * @param groups each connected group's member counterparties
+ * @param limits each counterparty's stored credit limit ({@code credit-limit}, read as stored: LIM stays parked), by counterparty
  * @param versions every input kind's data version on the date
  * @param warnings what every answer of this date says about it (a date answered in place of another, a run refused)
  */
 record ExposureDate(LocalDate date, ExposureBook book, Map<String, Known> known, Map<String, String> names, Map<String, List<String>> groups,
-        String version, Instant loadedAt, long loadMs, Map<String, Object> intake, Map<String, String> versions, List<String> warnings) {
+        Map<String, Limit> limits, String version, Instant loadedAt, long loadMs, Map<String, Object> intake, Map<String, String> versions, List<String> warnings) {
 
     /** A netting set the reference data knows. */
     record Known(String id, String counterparty, String legalEntity, String csa, int members) {}
 
+    /** A counterparty's credit limit as the limits system stores it: its id, the amount (USD) and the measure it is set on. */
+    record Limit(String id, double amount, String measure) {}
+
     ExposureDate {
+        limits = limits == null ? Map.of() : Map.copyOf(limits);
         versions = versions == null ? Map.of() : Map.copyOf(versions);
         warnings = warnings == null ? List.of() : List.copyOf(warnings);
     }
@@ -47,7 +52,7 @@ record ExposureDate(LocalDate date, ExposureBook book, Map<String, Known> known,
     ExposureDate warned(String warning) {
         List<String> w = new ArrayList<>(warnings);
         w.add(warning);
-        return new ExposureDate(date, book, known, names, groups, version, loadedAt, loadMs, intake, versions, w);
+        return new ExposureDate(date, book, known, names, groups, limits, version, loadedAt, loadMs, intake, versions, w);
     }
 
     /** The input tables' versions and the run, as an official capture and the provenance record them. */

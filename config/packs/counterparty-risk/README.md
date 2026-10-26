@@ -33,6 +33,7 @@ kinds:
 - simulation-run
 - exposure-path
 - exposure-result
+- exposure-whatif
 commands:
   AGR: agreement
   CSA: csa
@@ -46,6 +47,7 @@ commands:
   XRUN: simulation-run
   XPATH: exposure-path
   EXP: exposure-result
+  XWIF: exposure-whatif
   CCR: pack overview
 depends-on:
   packs:
@@ -55,6 +57,7 @@ depends-on:
   - credit-store
   - exposure-engine
   - exposure-store
+  - exposure-whatif
   - legal-store
   plugins:
   - delta
@@ -488,6 +491,16 @@ No samples ship: documents are read live from its connector `exposure-engine` (p
 
 Links: `RUN_ID` → `simulation-run`.
 
+### `exposure-whatif`
+
+**Exposure what-if before dealing (computed, Python)** · mnemonic `XWIF` · read through connector `exposure-whatif`.
+
+About: Exposure what-if before dealing.
+
+**Id:** set by its connector (no samples ship).
+
+No samples ship: documents are read live from its connector `exposure-whatif` (plugin `reactive`).
+
 ## Screens and commands
 
 | Command | Kind | Opens |
@@ -504,6 +517,7 @@ Links: `RUN_ID` → `simulation-run`.
 | `XRUN` | `simulation-run` | Exposure simulation run |
 | `XPATH` | `exposure-path` | Exposure path (a trade's MtM on every path at a grid date) |
 | `EXP` | `exposure-result` | Exposure profile of a scope (computed) |
+| `XWIF` | `exposure-whatif` | Exposure what-if before dealing (computed, Python) |
 | `CCR` | — | The pack's overview: its kinds, how many each holds, an example of each |
 
 Examples:
@@ -552,6 +566,7 @@ The connectors it brings (written once to `config/connectors/<name>.yaml`, then 
 | `collateral-store` | `delta` | `collateral-balance`, `margin-call`, `simm` | `${DRISHTI_LAKE_ENABLED:true}` |
 | `exposure-store` | `delta` | `simulation-run`, `exposure-path` | `${DRISHTI_LAKE_ENABLED:true}` |
 | `exposure-engine` | `reactive` | `exposure-result` | `${DRISHTI_EXPOSURE_ENABLED:true}` |
+| `exposure-whatif` | `reactive` | `exposure-whatif` | `${DRISHTI_EXPOSURE_ENABLED:true}` |
 
 Settings (environment variables) its connectors read: `DRISHTI_DELTA_ROOT`, `DRISHTI_EXPOSURE_ENABLED`, `DRISHTI_LAKE_ENABLED`.
 

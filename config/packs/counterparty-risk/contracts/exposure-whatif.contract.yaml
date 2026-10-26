@@ -1,0 +1,156 @@
+# Project Drishti · Any data. Any domain. One grammar.
+#
+# Copyright (c) 2026 Ashutosh Sinha <ajsinha@gmail.com>.
+# All rights reserved.
+#
+# PROPRIETARY AND CONFIDENTIAL.
+#
+# This file is the confidential and proprietary property of Ashutosh Sinha.
+# Unauthorised copying, use, modification, distribution or disclosure of this
+# file, via any medium, is strictly prohibited except with the express prior
+# written permission of the copyright holder.
+#
+# See the LICENSE file in the root of this repository for the full terms.
+
+# Data contract of the exposure-whatif kind (command XWIF): docs/contracts/README.md section 16; the measure's contract is
+# docs/guides/EXPOSURE_GUIDE.md (section 9). Drafted by `drishti.py contract bootstrap exposure-whatif`, completed by hand (2.9.0).
+kind: exposure-whatif
+mnemonic: XWIF
+pack: counterparty-risk
+version: '1.0'
+class: computed
+status: active
+title: Exposure what-if before dealing (computed, Python)
+description: A scope's exposure before and after candidate trades kept in the person's private sandbox, by the exact paths method (each
+  candidate's values on every path of the day's run added to its netting set, collateral and exposure computed again), computed when asked
+  by the Python exposure engine from the scope's exposure-result; never stored.
+source: 'computed by Drishti: the reactive connector exposure-whatif (python engine drishti_compute.exposure.whatif:ExposureWhatIfEngine,
+  pool exposure)'
+grain: One answer per question (the scope, the sandbox, the parameters q, collateral and sets, the business date), computed when asked.
+key: []
+dated-by: on request
+cadence:
+  frequency: on change
+  due: computed on request and again when the date's inputs load (data-version trigger); never for a sandbox by a trigger
+storage:
+  connector: exposure-whatif
+  plugin: reactive
+fields:
+- name: SCOPE
+  type: text
+  presence: required
+  description: The base scope (the id), e.g. CPTY:CP-ALDERSHOT or NSET:NS-ALDERSHOT-NY.
+- name: CANONICAL
+  type: text
+  presence: required
+- name: BUSINESS_DATE
+  type: date
+  presence: required
+- name: RUN_ID
+  type: text
+  presence: required
+  description: The simulation run every candidate's paths must be of.
+- name: CONFIDENCE
+  type: rate
+  presence: required
+- name: COLLATERAL_MODEL
+  type: text
+  presence: required
+  description: lagged, current or none, as asked.
+- name: METHOD
+  type: text
+  presence: required
+  description: paths (the exact method; the conservative addon proxy is the Java engine's, POST /api/v1/exposure/what-if).
+- name: ITEMS
+  type: integer
+  presence: required
+  description: The candidate trades of the sandbox (0 without one).
+- name: BEFORE_PEAK_PFE
+  type: amount
+  presence: required
+  unit: USD
+- name: AFTER_PEAK_PFE
+  type: amount
+  presence: required
+  unit: USD
+- name: CHANGE_PEAK_PFE
+  type: amount
+  presence: required
+  unit: USD
+- name: BEFORE_PEAK_PFE_TENOR
+  type: text
+  presence: optional
+- name: AFTER_PEAK_PFE_TENOR
+  type: text
+  presence: optional
+- name: BEFORE_EPE
+  type: amount
+  presence: required
+  unit: USD
+- name: AFTER_EPE
+  type: amount
+  presence: required
+  unit: USD
+- name: CHANGE_EPE
+  type: amount
+  presence: required
+  unit: USD
+- name: BEFORE_EEPE
+  type: amount
+  presence: required
+  unit: USD
+- name: AFTER_EEPE
+  type: amount
+  presence: required
+  unit: USD
+- name: CHANGE_EEPE
+  type: amount
+  presence: required
+  unit: USD
+- name: BEFORE_PEAK_EE
+  type: amount
+  presence: required
+  unit: USD
+- name: AFTER_PEAK_EE
+  type: amount
+  presence: required
+  unit: USD
+- name: CHANGE_PEAK_EE
+  type: amount
+  presence: required
+  unit: USD
+- name: BEFORE_CE
+  type: amount
+  presence: required
+  unit: USD
+- name: AFTER_CE
+  type: amount
+  presence: required
+  unit: USD
+- name: CHANGE_CE
+  type: amount
+  presence: required
+  unit: USD
+- name: FLAGS
+  type: text
+  presence: optional
+  description: exact.
+- name: ENGINE
+  type: text
+  presence: required
+links:
+- field: SCOPE
+  kind: exposure-result
+validation:
+- rule: required
+  fields:
+  - BEFORE_PEAK_PFE
+  - AFTER_PEAK_PFE
+notes:
+- 'No stored key: an answer''s id is the base scope (the id in the request); the parameters ride on it (sandbox, q, collateral, sets).'
+- The candidates' paths are supplied in the sandbox (TRADE_ID, LABEL, NETTING_SET, MTM of G x P values of the run, MTM0, LIFE_YEARS,
+  RUN_ID), priced elsewhere (an upstream what-if service, or a copy of a booked trade's paths, scaled); a candidate joins a netting set the
+  scope covers whole, or none (a netting set of its own, uncollateralised).
+- The tables profile (TENOR, DATE, T, EE_BASE, EE, ENE_BASE, ENE, PFE_BASE, PFE, INCREMENTAL_EE, INCREMENTAL_PFE) and items (TRADE_ID,
+  LABEL, NETTING_SET, PEAK_PFE_ALONE, INCREMENTAL_PEAK_PFE) come with the answer.
+review: []

@@ -41,9 +41,11 @@ final class ExposureViews {
     static final String ENGINE_VERSION = versionOf();
     private static final List<Double> QUANTILES = List.of(0.5, 0.9, 0.95, 0.975, 0.99);
     private final ExposureService svc;
+    private final ExposureExplorer explorer;
 
     ExposureViews(ExposureService svc) {
         this.svc = svc;
+        this.explorer = new ExposureExplorer(svc);
     }
 
     ExposureService service() {
@@ -91,6 +93,7 @@ final class ExposureViews {
         out.put("byNettingSet", byNettingSet(p, s));
         out.put("flags", s.result().flags);
         out.put("provenance", provenance(s));
+        explorer.augment(p, s, out);
         svc.audit(p, "ccr-view", s, null);
         return out;
     }
@@ -212,6 +215,11 @@ final class ExposureViews {
 
     /** The exposure distribution at a grid date: a histogram, the quantiles, the mean and the share of paths with no exposure. */
     Map<String, Object> distribution(Principal p, String scope, LocalDate asOf, ExposureService.Ask ask, String date, int bins) {
+        return distribution(p, scope, asOf, ask, date, bins, false);
+    }
+
+    /** The distribution at a date; with {@code bands}, also the path fan: the quantiles 5, 25, 50, 75 and 95% at every primary date. */
+    Map<String, Object> distribution(Principal p, String scope, LocalDate asOf, ExposureService.Ask ask, String date, int bins, boolean bands) {
         ExposureService.Scoped s = svc.scoped(p, scope, asOf, ask);
         ExposureBook b = s.date().book();
         int i = primary(b.grid(), date);
@@ -249,6 +257,9 @@ final class ExposureViews {
         out.put("mean", Math.round(s.result().stats.ee[i]));
         out.put("zeroShare", (double) zero / pp);
         out.put("paths", pp);
+        if (bands) {
+            out.put("bands", ExposureExplorer.fan(s, svc.props().rule()));
+        }
         svc.audit(p, "ccr-view", s, "distribution");
         return out;
     }
@@ -267,6 +278,15 @@ final class ExposureViews {
     }
 
     Map<String, Object> contributions(Principal p, String scope, LocalDate date, ExposureService.Ask ask, String by, String figure, String at) {
+        return contributions(p, scope, date, ask, by, figure, at, false, false);
+    }
+
+    /**
+     * The contributions; by trade with {@code alone}, each trade's peak PFE alone (uncollateralised) too, and with {@code profile} each
+     * part's EE contribution at every primary date (ExposureExplorer).
+     */
+    Map<String, Object> contributions(Principal p, String scope, LocalDate date, ExposureService.Ask ask, String by, String figure, String at,
+            boolean alone, boolean profile) {
         ExposureService.Scoped s = svc.scoped(p, scope, date, ask);
         String mode = by == null || by.isBlank() || by.equalsIgnoreCase("child") ? childOf(s.kind()) : by.trim().toLowerCase(Locale.ROOT);
         String fig = figure == null || figure.isBlank() ? "PFE" : figure.trim().toUpperCase(Locale.ROOT);
@@ -304,6 +324,12 @@ final class ExposureViews {
             r.put("pct", c.pct());
             r.put("incremental", c.incremental() == null ? null : Math.round(c.incremental()));
             rows.add(r);
+        }
+        if (mode.equals("trade")) {
+            explorer.trades(s, rows, alone);
+        }
+        if (profile) {
+            ExposureExplorer.profiles(s, rows, parts);
         }
         ExposureMath.Stats st = s.result().stats;
         int qa = st.at(ask.q());
@@ -398,6 +424,7 @@ final class ExposureViews {
             n.put("id", k.id());
             n.put("legalEntity", k.legalEntity());
             n.put("members", k.members());
+            n.put("csa", s >= 0 ? ExposureExplorer.csaLabel(b.set(s).csa()) : k.csa() == null ? "none" : k.csa());
             if (s < 0) {
                 n.put("noPaths", true);
             } else if (v.detailsSet(s)) {
@@ -412,8 +439,15 @@ final class ExposureViews {
         for (Map<String, Object> cp : cps.values()) {
             @SuppressWarnings("unchecked")
             boolean any = ((List<Map<String, Object>>) cp.get("children")).stream().anyMatch(n -> !Boolean.TRUE.equals(n.get("noPaths")));
+            @SuppressWarnings("unchecked")
+            List<String> les = ((List<Map<String, Object>>) cp.get("children")).stream().map(n -> String.valueOf(n.get("legalEntity"))).distinct()
+                    .sorted().toList();
+            cp.put("legalEntities", les);
             if (any) {
-                figures(cp, svc.scoped(p, "CPTY:" + cp.get("id"), d.date(), ask));
+                ExposureService.Scoped cs = svc.scoped(p, "CPTY:" + cp.get("id"), d.date(), ask);
+                figures(cp, cs);
+                cp.put("homeLegalEntity", ExposureExplorer.homeLegalEntity(b, String.valueOf(cp.get("id"))));
+                cp.put("limit", explorer.limit(cs, String.valueOf(cp.get("id"))));
             } else {
                 cp.put("noPaths", true);
             }
@@ -435,6 +469,19 @@ final class ExposureViews {
         out.put("runId", b.runId());
         out.put("confidence", ask.q());
         out.put("bank", "BANK");
+        out.put("tenors", ExposureExplorer.tenors(b.grid()));
+        out.put("bankNode", nodeFigures(p, d, ask, "BANK", "Bank"));
+        List<Map<String, Object>> les = new ArrayList<>();
+        new java.util.TreeSet<>(cps.values().stream().flatMap(cp -> {
+            @SuppressWarnings("unchecked")
+            List<String> l = (List<String>) cp.get("legalEntities");
+            return l.stream();
+        }).filter(x -> !x.equals("null")).toList()).forEach(le -> {
+            Map<String, Object> n = nodeFigures(p, d, ask, "LE:" + le, le);
+            n.put("counterparties", cps.values().stream().filter(cp -> ((List<?>) cp.get("legalEntities")).contains(le)).map(cp -> cp.get("id")).toList());
+            les.add(n);
+        });
+        out.put("legalEntities", les);
         out.put("groups", groups);
         out.put("nettingSetsWithPaths", b.sets().size());
         out.put("nettingSetsKnown", d.known().size());
@@ -444,10 +491,29 @@ final class ExposureViews {
     private static void figures(Map<String, Object> n, ExposureService.Scoped s) {
         ExposureMath.Stats st = s.result().stats;
         int qa = st.at(s.ask().q());
+        ExposureGrid g = s.date().book().grid();
         n.put("epe", Math.round(st.epe));
         n.put("peakPfe", Math.round(st.peakPfe[qa]));
+        n.put("peakPfeTenor", st.peakAt[qa] < 0 ? null : g.tenor(g.primaryAt(st.peakAt[qa])));
         n.put("peakEe", Math.round(st.peakEe));
+        n.put("ee", ExposureExplorer.eeLine(st));
         n.put("flags", s.result().flags);
+    }
+
+    /** The bank's or a legal entity's node of the tree: its figures, or why an interactive answer cannot sum it (a batch job). */
+    private Map<String, Object> nodeFigures(Principal p, ExposureDate d, ExposureService.Ask ask, String scope, String label) {
+        Map<String, Object> n = new LinkedHashMap<>();
+        n.put("scope", scope);
+        n.put("id", scope.contains(":") ? scope.substring(scope.indexOf(':') + 1) : scope);
+        n.put("label", label);
+        try {
+            ExposureService.Scoped s = svc.scoped(p, scope, d.date(), ask);
+            figures(n, s);
+            n.put("nettingSets", s.result().pieces.size());
+        } catch (DrishtiException e) {
+            n.put("note", e.getMessage().replaceFirst("^DRS-\\d{4} ", ""));
+        }
+        return n;
     }
 
     // ---------------------------------------------------------------------------------------------------------------------- provenance

@@ -36,17 +36,20 @@ import java.util.Map;
  * of the positive part of a normal of that spread), added to the scope's profile; SF is SA-CCR's supervisory factor of the candidate's
  * asset class, d its adjusted notional (an interest-rate trade's notional times its supervisory duration), delta its sign. The exact
  * {@code paths} method (the candidate's paths on the date's run added to its netting set per path, collateral and exposure computed
- * again) runs in the Python exposure engine ({@code exposure-whatif}, EXP.md section 9.5): asked here it is refused (DRS-5446); a
- * candidate's paths of another run are refused (DRS-5442) either way.
+ * again) runs in the Python exposure engine ({@code exposure-whatif}, docs/guides/EXPOSURE_GUIDE.md section 9), asked by
+ * {@link ExposureWhatIfPaths} as the person (DRS-5446 when it is not running); a candidate's paths of another run are refused (DRS-5442)
+ * either way.
  */
 final class ExposureWhatIf {
 
     /** SA-CCR's supervisory factors by asset class (CRE52; single-name credit at an A rating). */
     static final Map<String, Double> SF = Map.of("rates", 0.005, "fx", 0.04, "credit", 0.0054, "equity", 0.32, "commodity", 0.18);
     private final ExposureService svc;
+    private final ExposureWhatIfPaths paths;
 
     ExposureWhatIf(ExposureService svc) {
         this.svc = svc;
+        this.paths = new ExposureWhatIfPaths(svc);
     }
 
     /** The factor class of an asset class as the trades name it (Rates, FX, Credit, Equity, Commodity and their kin). */
@@ -101,7 +104,9 @@ final class ExposureWhatIf {
         }
         String method = String.valueOf(body.getOrDefault("method", "addon")).trim().toLowerCase(Locale.ROOT);
         Object qq = body.get("q");
-        ExposureService.Ask ask = ExposureService.Ask.of(svc.props(), qq == null ? null : String.valueOf(qq), null, null, null);
+        Object cc = body.get("collateral");
+        ExposureService.Ask ask = ExposureService.Ask.of(svc.props(), qq == null ? null : String.valueOf(qq), cc == null ? null : String.valueOf(cc),
+                null, null);
         List<Map<String, Object>> cands = body.get("candidates") instanceof List<?> l ? (List<Map<String, Object>>) l : List.of();
         if (cands.isEmpty()) {
             throw new DrishtiException(ErrorCode.EXPOSURE_BAD_PARAMETER, "a what-if has candidates: [{tradeId, assetClass, notional, maturityDate, mtm}]");
@@ -115,9 +120,7 @@ final class ExposureWhatIf {
             }
         }
         if (method.equals("paths")) {
-            throw new DrishtiException(ErrorCode.EXPOSURE_METHOD_UNAVAILABLE, "the exact what-if (method paths: the candidates' paths on the run "
-                    + b.runId() + ") runs in the Python exposure engine (exposure-whatif), not available on this server yet; ask method addon "
-                    + "for the conservative proxy");
+            return paths.whatIf(p, scope, base, ask, cands, date);
         }
         if (!method.equals("addon")) {
             throw new DrishtiException(ErrorCode.EXPOSURE_BAD_PARAMETER, "method is addon or paths, not " + method);
