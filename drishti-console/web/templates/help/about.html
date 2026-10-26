@@ -22,8 +22,9 @@
 <section class="help-hero ab-hero" id="top">
   {{ brand_mark("about-mark") }}
   <h1>{{ PRODUCT }}{% if PRODUCT_NATIVE %} <span class="lp-grad">{{ PRODUCT_NATIVE }}</span>{% endif %}</h1>
+  {% if HEADLINE %}<p class="about-headline">{{ HEADLINE }}</p>{% endif %}
   <p class="about-tag">{{ TAGLINE }}</p>
-  <p>A live, keyboard-driven terminal and BI workbench that shows any record from any system as a dense, linked, ticking view, without a screen coded for each product.</p>
+  <p>A live, keyboard-driven terminal, risk engine and BI workbench: any record from any system as a dense, linked, ticking view, risk computed for any set of trades when you ask, and every figure explained down to the data it came from.</p>
   <p><span class="ab-ver mono" data-version>Version {{ (info.version if info and info.version else ASSET_V) }}</span></p>
   <div class="ab-cta">
     {% if AUTH_ENABLED and not me %}<a class="btn-pill btn-accent" href="/login"><i class="bi bi-box-arrow-in-right" aria-hidden="true"></i> Sign in</a>
@@ -33,30 +34,34 @@
 </section>
 <div class="help-wrap ab">
   <section class="ab-sec" id="what"><h2>What is {{ PRODUCT }}</h2>
-    <p>{{ PRODUCT }} ({{ PRODUCT_NATIVE or 'दृष्टि' }}, Sanskrit for <em>sight</em>) lets a person see a trade, a patient, a gene or an economy the same way: one live page, linked to what it relates to, showing only what that person may see.
-       A short screen grammar called <b>Rachana</b> describes a view, a <b>Sutra</b> is a screen written in it, and <b>inference</b> completes whatever a Sutra leaves out.</p></section>
+    <p>{{ PRODUCT }} ({{ PRODUCT_NATIVE or 'दृष्टि' }}, Sanskrit for <em>sight</em>) lets a person see a trade, a counterparty, a fund or an economy the same way: one live page, linked to what it relates to, showing only what that person may see.
+       A short screen grammar called <b>Rachana</b> describes a view, a <b>Sutra</b> is a screen written in it, and <b>inference</b> completes whatever a Sutra leaves out.
+       Above the trades, {{ PRODUCT }} computes risk when it is asked (value at risk, expected shortfall and counterparty exposure) for any set of trades you can describe, and never stores a computed figure as a summary.</p></section>
   <section class="ab-sec" id="problem"><h2>The problem it solves</h2>
-    <p>Every system has its own screens, built one by one, in their own style, with their own access rules. Adding a source means a project, and the figures on a page rarely say what they mean or where they came from.
-       {{ PRODUCT }} replaces the per-product screen with a grammar: connect the data, and views, search, reports and alerts come with it, masked the same way everywhere.</p></section>
+    <p>Every system has its own screens, built one by one, with their own access rules. Risk is published overnight for the hierarchy it was set up with, so a new question waits for a batch. Figures rarely say what they mean, where they came from or whether they were delivered or computed.
+       {{ PRODUCT }} replaces the per-product screen with a grammar, computes risk for the scope you ask about from the trade-level inputs your engines already produce, and gives every command a data contract, so you can see what your data has not told you yet.</p></section>
   <section class="ab-sec" id="features"><h2>Key features</h2>
   <div class="ab-cards">
-    <article class="ab-card"><i class="bi bi-terminal" aria-hidden="true"></i><h3>The command line</h3><p>Type a mnemonic and a key (TRD MX-20000001, CPTY, HELP) with suggestions as you type, or a search in plain words; every screen is reachable from the keyboard.</p></article>
-    <article class="ab-card"><i class="bi bi-grid-1x2" aria-hidden="true"></i><h3>Sutras and the Build workbench</h3><p>A screen is a short Rachana (Sutra) file; the Build workbench designs, tests, versions and ships them without code.</p></article>
-    <article class="ab-card"><i class="bi bi-funnel" aria-hidden="true"></i><h3>Query by form</h3><p>Filter, sort and pick from a form with the same power as the command line, kept per data version so it answers in a fraction of a second over tens of millions of trades.</p></article>
-    <article class="ab-card"><i class="bi bi-broadcast" aria-hidden="true"></i><h3>Live updates</h3><p>Views tick as the data changes; only what changed is sent.</p></article>
-    <article class="ab-card"><i class="bi bi-plug" aria-hidden="true"></i><h3>Any connector as a file</h3><p>Add a database, lake or message source from a file (Delta Lake, Iceberg, PostgreSQL, Aerospike, Apache Cassandra and ScyllaDB, MongoDB, Kafka and more): TLS, proxy and secrets are settings and no restart is needed.</p></article>
-    <article class="ab-card"><i class="bi bi-boxes" aria-hidden="true"></i><h3>Domain packs</h3><p>Seven packs: core reference data, market data, trading (production-shaped trades from ENDUR, CALYPSO and MUREX), counterparty and market risk, the world economy and news, each with its own Sutras, words and sample data.</p></article>
-    <article class="ab-card"><i class="bi bi-shield-lock" aria-hidden="true"></i><h3>Masks and roles everywhere</h3><p>One mask decides what each person sees, in views, search, exports, reports, notebooks and the AI layer.</p></article>
-    <article class="ab-card"><i class="bi bi-share" aria-hidden="true"></i><h3>Share, discuss, inbox</h3><p>Send a view or a finding, comment on it, and keep an inbox of what concerns you.</p></article>
-    <article class="ab-card"><i class="bi bi-calendar-check" aria-hidden="true"></i><h3>Reports, statements and subscriptions</h3><p>Scheduled and on-demand reports, with subscriptions per person; statements laid out on paper, page-exact in PDF and Excel, one per recipient with their own masks.</p></article>
-    <article class="ab-card"><i class="bi bi-bar-chart-line" aria-hidden="true"></i><h3>Rupaka BI</h3><p>Models and datasets rooted in the packs, a Python-like expression language and SQL, reports and boards built in BI Studio with themes and conditional formatting, field parameters that let a reader switch what a visual draws, standing queries that push live answers, governance and review.</p></article>
-    <article class="ab-card"><i class="bi bi-filetype-py" aria-hidden="true"></i><h3>Python, where it belongs</h3><p>Python measures, visuals and Transforms run sandboxed on the console with warm workers; data prep step by step with a profile after each step; your own Python in the browser on a masked extract, promoted to the server.</p></article>
-    <article class="ab-card"><i class="bi bi-bell" aria-hidden="true"></i><h3>Alerts</h3><p>Rules over live data raise alerts that reach the inbox, with history.</p></article>
-    <article class="ab-card"><i class="bi bi-stars" aria-hidden="true"></i><h3>AI layer</h3><p>Off by default; when on, it sees only what the person may see and answers with masked data.</p></article>
-    <article class="ab-card"><i class="bi bi-window-stack" aria-hidden="true"></i><h3>{{ PRODUCT }} Elements</h3><p>Embed a view, a report or a panel in another web page with one tag.</p></article>
-    <article class="ab-card"><i class="bi bi-diagram-3" aria-hidden="true"></i><h3>{{ PRODUCT }}*net</h3><p>Several servers act as one: any of them answers any request with the caller's masks, a search covers every server's data, and the console moves to another server when one stops, with no new sign-in. Members advertise real addresses only, and the cluster always keeps an enabled administrator.</p></article>
-    <article class="ab-card"><i class="bi bi-palette" aria-hidden="true"></i><h3>Ten themes</h3><p>Terminal, Parchment, Wall Street, Blue, Green, Crimson and Crimson dark, and the Terminal look in green, crimson or blue; every text colour is checked at 4.5:1 on every ground.</p></article>
-    <article class="ab-card"><i class="bi bi-globe2" aria-hidden="true"></i><h3>Real public data, offline too</h3><p>The world-economy pack loads real public series with their sources named; a captured market snapshot lets the news-and-markets pack run with no internet.</p></article>
+    <article class="ab-card"><i class="bi bi-terminal" aria-hidden="true"></i><h3>The command line</h3><p>Type a mnemonic and a key (TRD MX-20000001, CPTY CP-ALDERSHOT) with suggestions as you type, or plain words; any entity over time (TRD 1000015 30). <code>FUNC</code> lists every command you can use; <code>WHAT &lt;term&gt;</code> explains a term.</p></article>
+    <article class="ab-card"><i class="bi bi-graph-down-arrow" aria-hidden="true"></i><h3>VaR for any scope</h3><p>Historical VaR and expected shortfall for the bank, a desk, a portfolio, a counterparty or any mix of portfolios, trades and rules: diversification applied, drill down to a trade, captures, backtesting, a what-if and a selection tray to build and save your own mix.</p></article>
+    <article class="ab-card"><i class="bi bi-shield-check" aria-hidden="true"></i><h3>Counterparty exposure</h3><p>EE, PFE, EPE and EEPE from simulated paths, netted per netting set with each CSA's collateral path by path; from the bank to one trade, its netting benefit and an exact pre-deal check.</p></article>
+    <article class="ab-card"><i class="bi bi-file-earmark-ruled" aria-hidden="true"></i><h3>A data contract for every command</h3><p>Every kind of record has a checked contract (every column, unit and meaning; delivered or computed), and every pack's guide says where each kind's data comes from.</p></article>
+    <article class="ab-card"><i class="bi bi-mortarboard" aria-hidden="true"></i><h3>Knowledge</h3><p>Pages that explain each domain (market risk, counterparty credit risk and more) in plain words, with a glossary, how the records connect and worked examples on your own data.</p></article>
+    <article class="ab-card"><i class="bi bi-grid-1x2" aria-hidden="true"></i><h3>Sutras and the designer</h3><p>A screen is a short Rachana (Sutra) file built from a library of fragments: events, child panels, forms, refresh and layout, designed in four modes and shipped without code.</p></article>
+    <article class="ab-card"><i class="bi bi-funnel" aria-hidden="true"></i><h3>Query by form</h3><p>Filter, sort and pick from a form with the same power as the command line, answering in a fraction of a second over tens of millions of trades.</p></article>
+    <article class="ab-card"><i class="bi bi-pencil-square" aria-hidden="true"></i><h3>Write-back</h3><p>Forms save through an edit log with four-eyes approval and recompute the views that depend on the change. Off by default.</p></article>
+    <article class="ab-card"><i class="bi bi-broadcast" aria-hidden="true"></i><h3>Live updates</h3><p>Views tick as the data changes; only what changed is sent; computed panels recompute on loads and on your controls.</p></article>
+    <article class="ab-card"><i class="bi bi-plug" aria-hidden="true"></i><h3>Any connector as a file</h3><p>Delta Lake, Iceberg, PostgreSQL, Aerospike, Cassandra and ScyllaDB, MongoDB, Kafka and more, added from a file: TLS, proxy and secrets are settings and no restart is needed.</p></article>
+    <article class="ab-card"><i class="bi bi-boxes" aria-hidden="true"></i><h3>Domain packs</h3><p>Core reference data, market data, trading (production-shaped trades from ENDUR, CALYPSO and MUREX), market and counterparty risk, the world economy, news and markets, US equities, GLEIF ownership, and US funds and ETFs.</p></article>
+    <article class="ab-card"><i class="bi bi-globe2" aria-hidden="true"></i><h3>External data, named and offline</h3><p>SEC filings and fund holdings, GLEIF, public macro and market data: each source with its licence and a refresh script for Linux and Windows, and a snapshot that runs with no internet.</p></article>
+    <article class="ab-card"><i class="bi bi-list-columns-reverse" aria-hidden="true"></i><h3>Functions and switches</h3><p>One directory of every command for everyone; administrators switch a command off everywhere (page, API, CLI, search, exports, BI and AI) from the same page.</p></article>
+    <article class="ab-card"><i class="bi bi-shield-lock" aria-hidden="true"></i><h3>Masks and roles everywhere</h3><p>One mask decides what each person sees, in views, search, exports, reports, notebooks, risk answers and the AI layer.</p></article>
+    <article class="ab-card"><i class="bi bi-bar-chart-line" aria-hidden="true"></i><h3>Rupaka BI</h3><p>Models and datasets rooted in the packs, including the official VaR and exposure results; a Python-like expression language and SQL; reports and boards in BI Studio; governance and review.</p></article>
+    <article class="ab-card"><i class="bi bi-filetype-py" aria-hidden="true"></i><h3>Python, where it belongs</h3><p>Python measures, visuals and Transforms, sandboxed; risk engines on warm compute pools; your own Python in the browser on a masked extract.</p></article>
+    <article class="ab-card"><i class="bi bi-calendar-check" aria-hidden="true"></i><h3>Reports, alerts and the inbox</h3><p>Scheduled reports and statements, page-exact in PDF and Excel, one per recipient with their own masks; rules that raise alerts; share and discuss a finding.</p></article>
+    <article class="ab-card"><i class="bi bi-diagram-3" aria-hidden="true"></i><h3>{{ PRODUCT }}*net</h3><p>Several servers act as one: any of them answers any request with the caller's masks, and the console moves to another server when one stops, with no new sign-in.</p></article>
+    <article class="ab-card"><i class="bi bi-window-stack" aria-hidden="true"></i><h3>{{ PRODUCT }} Elements and AI</h3><p>Embed a view, report or panel in another page with one tag. The AI layer is off by default and, when on, sees only what the person may see.</p></article>
+    <article class="ab-card"><i class="bi bi-palette" aria-hidden="true"></i><h3>Ten themes</h3><p>Terminal, Parchment, Wall Street, Blue, Green, Crimson and Crimson dark, and the Terminal look in green, crimson or blue; every text colour checked at 4.5:1.</p></article>
   </div></section>
   <section class="ab-sec" id="performance"><h2>Measured performance</h2>
   <div class="ab-stats">
@@ -70,20 +75,24 @@
     <div class="ab-stat"><b>146 requests/s</b><span>50 simultaneous users over 8.2 million trades (three systems, seven days) in a Delta lake; no failures, heap 1.8 GB of an 8 GB cap</span><code>docs/architecture/SCALE_STRATEGY.md</code></div>
     <div class="ab-stat"><b>18 ms</b><span>a single trade at that scale, p50 (p95 54 ms); a counterparty's grouped page 70 ms (p95 99 ms)</span><code>docs/architecture/SCALE_STRATEGY.md</code></div>
     <div class="ab-stat"><b>3 ms</b><span>a table date's id map after a restart (memory-mapped from disk; 729 ms before)</span><code>docs/admin/SCALE_BENCHMARK.md</code></div>
+    <div class="ab-stat"><b>3.4 ms</b><span>the bank's VaR over 100,000 trades from the memory-mapped hot file (about 35 ms extrapolated to 1,000,000 trades with the pages resident)</span><code>docs/guides/VAR_GUIDE.md</code></div>
+    <div class="ab-stat"><b>8.1 ms</b><span>the bank's exposure profile over 10,000 trades in 901 netting sets, 200 paths; a counterparty of 20 sets 0.3 ms; an exact pre-deal 3.1 ms on the Python engine</span><code>docs/guides/EXPOSURE_GUIDE.md</code></div>
     <div class="ab-stat"><b>about 50 ms</b><span>three {{ PRODUCT }}*net servers list each other after the third starts (in-process test, 1 s gossip rounds); 13,542 signed calls through a key rotation, none refused</span><code>docs/admin/NET.md</code></div>
   </div>
   <p class="text-muted-d">Recorded on a developer workstation; method and conditions are in <a href="/help/docs-admin-performance">Measured performance</a>.</p></section>
   <section class="ab-sec" id="capabilities"><h2>Capabilities by area</h2>
   <div class="ab-areas">
-    <section class="ab-area"><h3>Explore</h3><p>Command line and mnemonics; query by form; search and pick lists; linked entities; a past business date.</p></section>
-    <section class="ab-area"><h3>Build</h3><p>The Rachana screen grammar; Sutras and the Build workbench; inference for shapes with no Sutra; packs from a schema or a JSONL file.</p></section>
-    <section class="ab-area"><h3>Analyse</h3><p>Rupaka models with measures, filter context and time intelligence; BI Studio for reports, boards, statements and themes; field parameters; Python measures, visuals and data prep; Analyse notebooks and the Python console.</p></section>
-    <section class="ab-area"><h3>Operate</h3><p>Connectors as files; data loads; Delta lakes and their maintenance; caches; health; packs; roles and masks; tokens and audit; several servers as one with {{ PRODUCT }}*net.</p></section>
+    <section class="ab-area"><h3>Explore</h3><p>Command line and mnemonics; <code>FUNC</code>; query by form; search and pick lists; linked entities; any entity over time; a past business date.</p></section>
+    <section class="ab-area"><h3>Measure risk</h3><p>VaR and ES for any scope with captures, backtesting and what-if; the selection tray; counterparty exposure from the bank to a trade with pre-deal; official end-of-day results for other systems.</p></section>
+    <section class="ab-area"><h3>Understand</h3><p>Knowledge pages and <code>WHAT</code>; data contracts for every command; each pack's data retrieval; External data with sources and licences; how every number was built.</p></section>
+    <section class="ab-area"><h3>Build</h3><p>The Rachana grammar and its fragment library; Sutras and the designer; inference for shapes with no Sutra; packs from a schema or a JSONL file; forms that save.</p></section>
+    <section class="ab-area"><h3>Analyse</h3><p>Rupaka models with measures and time intelligence; BI Studio for reports, boards and statements; Python measures, visuals and data prep; Analyse notebooks.</p></section>
+    <section class="ab-area"><h3>Operate</h3><p>Connectors as files; data loads and Delta lakes; packs and command switches; roles and masks; tokens and audit; several servers as one with {{ PRODUCT }}*net.</p></section>
     <section class="ab-area"><h3>Collaborate</h3><p>Share, discussion and inbox; reports and subscriptions; alerts; embedding with {{ PRODUCT }} Elements.</p></section>
   </div></section>
   <section class="ab-sec ab-compete" id="competitive"><h2>Competitive advantage</h2>
-    <p>Terminals show market data, platform screens show one vendor's trades, low-code tools need a screen built per table, and BI tools stop at the chart.
-       {{ PRODUCT }} is one grammar for all of them: live, linked, masked, self-hosted and keyboard-first.</p>
+    <p>Terminals show market data, platform screens show one vendor's trades, risk systems publish overnight for a fixed hierarchy, low-code tools need a screen built per table, and BI tools stop at the chart.
+       {{ PRODUCT }} is one grammar for all of them, with risk computed for the question you ask and every figure explained: live, linked, masked, self-hosted and keyboard-first.</p>
     <p><a class="btn-pill btn-accent" href="/about/competitive"><i class="bi bi-diagram-3" aria-hidden="true"></i> Read the competitive analysis</a></p></section>
   <section class="ab-sec" id="stack"><h2>Technology stack</h2>
     <ul class="about-list">
@@ -94,10 +103,11 @@
     </ul></section>
   <section class="ab-sec" id="use-cases"><h2>Use cases</h2>
     <ul class="about-list">
-      <li><b>Trading desks.</b> Trades, positions and P&amp;L as linked live views, with the netting set one key away.</li>
-      <li><b>Risk.</b> Limits, VaR and exposure with the figures explained in the page's own words.</li>
-      <li><b>Operations.</b> Loads, breaks and queues watched live, with alerts and an inbox.</li>
-      <li><b>Public data.</b> World economy series for research, with sources named.</li>
+      <li><b>Trading desks.</b> Trades, positions and P&amp;L as linked live views, with the netting set one key away and the VaR of any mix of portfolios in seconds.</li>
+      <li><b>Market risk.</b> VaR and ES for the scope in question, its contributions and its backtest, before and after a trade.</li>
+      <li><b>Credit risk.</b> A counterparty's exposure across its netting sets, what collateral does to it, and the effect of a new trade before it is booked.</li>
+      <li><b>Research.</b> Companies, filings, funds and their holdings, ownership groups and the world economy, with sources and licences named.</li>
+      <li><b>Learning the business.</b> Knowledge pages and <code>WHAT</code> explain each term on the bank's own data.</li>
       <li><b>Anywhere data lives.</b> Point a connector at a system and get views the same day, with no screen coded.</li>
     </ul></section>
   <section class="ab-sec" id="author"><h2>Author</h2>

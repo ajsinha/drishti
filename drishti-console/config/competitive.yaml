@@ -15,7 +15,7 @@
 # Competitive landscape. Categories, not vendors: a comparison naming one product's features would be wrong by its
 # next release and is not ours to state. Each row says where a category's centre of gravity sits (as understood in
 # September 2026) and how Drishti does it. Values: Yes | Partial | No.
-as_of: September 2026
+as_of: October 2026
 categories:
   - { id: terminal, name: Market data terminals, examples: "Bloomberg Terminal, LSEG Workspace, FactSet" }
   - { id: platform, name: Trading and risk platform screens, examples: "Murex, Calypso, FIS and in-house trade and risk systems" }
@@ -36,6 +36,11 @@ intro:
     to make are not terminals. Drishti describes screens in a grammar (<strong>Rachana</strong>), writes
     one short <strong>Sutra</strong> per product family, infers the rest from the data's shape, and serves
     it all as a live, linked, keyboard-driven terminal over your own systems.
+  - >-
+    Since 2.8 it also computes risk above the trade when it is asked: VaR and expected shortfall, and
+    counterparty exposure (EE, PFE, EPE, EEPE), for any set of trades a person can describe, from the bank down
+    to one trade, from the trade-level inputs your risk engines already produce. Nothing computed is stored as
+    a summary, so a figure cannot drift from its trades.
 rows:
   - id: any-entity
     cap: One screen per entity, for any entity from any of your systems
@@ -181,6 +186,86 @@ rows:
       - >-
         One Spring Boot server and one console. Every front-end asset is vendored, and the console runs under
         a strict content security policy with no inline script or style.
+  - id: risk-any-scope
+    cap: Risk for any set of trades, computed when asked, down to one trade
+    terminal: Partial
+    platform: Partial
+    lowcode: "No"
+    bi: "No"
+    drishti: "Yes"
+    problem: >-
+      Risk systems publish VaR and exposure overnight for the hierarchy they were configured with. A new question
+      (these three portfolios together, this counterparty without that trade, the bank if this deal is done) waits
+      for a batch run, or is answered by adding up figures that do not add up.
+    how:
+      - >-
+        Drishti keeps each trade's P&amp;L vector and each trade's simulated MtM paths, the inputs the upstream engines
+        produce, and computes VaR, ES and the exposure profile for any scope typed as text: a desk, a portfolio, a
+        counterparty, a rule, or any mix joined with <code>+ - &amp;</code>. Diversification and netting are applied, not
+        summed away; every figure drills down to the trades that make it; a pre-deal what-if answers before a trade is
+        booked. Official end-of-day results are published for other systems. Measured: the bank's VaR over 100,000
+        trades in a few milliseconds from memory (VAR_GUIDE.md section 27).
+  - id: contracts
+    cap: A data contract for every command
+    terminal: Partial
+    platform: Partial
+    lowcode: "No"
+    bi: Partial
+    drishti: "Yes"
+    problem: >-
+      Screens rarely say what a field means, where it comes from or whether it is a delivered fact or a computed
+      figure, so the same number is read two ways and nobody can tell which is right.
+    how:
+      - >-
+        Every kind of record has a machine-checked contract (every column, its type, key, unit and meaning, and
+        whether it is fundamental data, an engine's input or computed by Drishti). Each pack's guide carries its
+        contracts and where each kind's data comes from, generated from the same files, and the build fails when
+        data and contract disagree.
+  - id: external-data
+    cap: External data with its sources, licences and refresh scripts named
+    terminal: "Yes"
+    platform: Partial
+    lowcode: "No"
+    bi: Partial
+    drishti: "Yes"
+    problem: >-
+      Public data (filings, ownership, macro series, fund holdings) arrives through ad-hoc downloads whose source,
+      licence and freshness nobody remembers, and stops working the day the machine has no internet.
+    how:
+      - >-
+        Each public-data pack (world economy, market data, US equities, GLEIF, funds and ETFs) has its own refresh
+        script for Linux and Windows with <code>status</code>, a dry run and a refresh, one help page lists every source
+        with its licence and any internal-only use, and a gzipped snapshot in the repository lets the demo run
+        offline.
+  - id: write-back
+    cap: Forms that save back, with four-eyes approval
+    terminal: "No"
+    platform: "Yes"
+    lowcode: "Yes"
+    bi: Partial
+    drishti: "Yes"
+    problem: >-
+      A viewing screen that cannot correct a record sends people to another tool, and an editing tool without
+      review lets one person change the books.
+    how:
+      - >-
+        Forms save through an edit log in Drishti's own database, with four-eyes approval, a cluster mode and JDBC
+        writes through an outbox; views that depend on the change recompute and tick. Off by default.
+  - id: learn
+    cap: Explains what the data means, from the data itself
+    terminal: Partial
+    platform: "No"
+    lowcode: "No"
+    bi: "No"
+    drishti: "Yes"
+    problem: >-
+      A newcomer sees PFE, netting set or expected shortfall on a screen and has nowhere to learn what it means
+      or how it relates to the rest of the data.
+    how:
+      - >-
+        <code>FUNC</code> lists every command with what it does; <code>WHAT &lt;term&gt;</code> explains a term with an example
+        on your own data; the Knowledge pages explain each domain (market risk, counterparty credit risk and more)
+        and how its records connect; every page says how its figures were built.
   - id: content
     cap: Market data content and analytics
     terminal: "Yes"

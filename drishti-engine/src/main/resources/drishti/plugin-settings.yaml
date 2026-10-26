@@ -418,6 +418,7 @@ plugins:
       - { name: range, desc: "History span: 1mo, 3mo, 6mo, 1y, 5y, ytd, max ...", group: mapping }
       - { name: interval, desc: "Bar size: 1d, 1wk, 1mo, 60m ...", group: mapping }
       - { name: id-prefix, desc: "Prefix of entity ids (QUOTE-)", group: mapping }
+      - { name: benchmark, desc: "Symbol the price-history analytics compute beta against (SPY)", group: mapping }
       - { name: kind, desc: "Kind served (quote)", group: mapping }
       - { name: timeout-seconds, type: int, desc: "One request", group: tuning }
       - { name: cache-ttl-seconds, type: int, desc: "How long a symbol's answer is reused", group: tuning }
