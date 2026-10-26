@@ -167,7 +167,7 @@ final class VarOfficial implements AutoCloseable {
         if (svc.props().official().publish() && publisher.table() != null) {
             try {
                 long v = publisher.publish(date, rows);
-                index.put("published", publisher.table().toString() + " (Delta version " + v + ")");
+                index.put("published", "risk-results/var-official (Delta version " + v + ")");   // never the server's own folder
             } catch (java.io.IOException | RuntimeException e) {
                 index.put("publishError", String.valueOf(e.getMessage()));
                 LOG.warn("the official VaR results of {} could not be published to {}: {}", date, publisher.table(), e.getMessage());

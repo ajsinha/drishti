@@ -389,7 +389,7 @@ currencies × 3 curves × 12 tenors; CSR 5,000 issuers × 5 tenors × 2 bases; E
 | RRAO aggregates | per node: Σ exotic notional, Σ other notional | 16 B a node |
 | Netting-set aggregates (SIMM) | per netting set, the same sparse vector | [SIMM.md section 7](SIMM.md#7-what-drishti-builds) |
 
-**A scope's net sensitivities** use VaR's planner ([VAR.md section 7.1](VAR.md#71-as-built-one-business-date-in-memory-varbook)): node
+**A scope's net sensitivities** use VaR's planner ([VAR.md section 7.1](VAR.md#71-as-built-one-business-date-varbook)): node
 aggregates for whole nodes, minus the rows of missing trades, plus the rows of extra trades, accumulated into a dense float64 array
 indexed by factor ordinal (2 MB at 250,000 factors; one per thread), then compacted to the non-zero factors. The order of additions
 is fixed (node order, then ordinal order), so the same scope gives the same bits.

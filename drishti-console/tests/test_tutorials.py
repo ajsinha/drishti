@@ -45,11 +45,11 @@ def anchors(path: Path) -> set:
     return {slug(h) for h in HEADING.findall(text)}
 
 
-def test_there_are_twenty_three_written_tutorials_and_the_index_names_every_one():
-    assert [p.name[:2] for p in WRITTEN] == [f"{i:02d}" for i in range(1, 24)]
+def test_there_are_twenty_five_written_tutorials_and_the_index_names_every_one():
+    assert [p.name[:2] for p in WRITTEN] == [f"{i:02d}" for i in range(1, 26)]
     index = (TUTORIALS / "README.md").read_text()
     rows = re.findall(r"^\|\s*(\d{1,2})\s*\|", index, re.M)
-    assert [int(r) for r in rows] == list(range(1, 24))
+    assert [int(r) for r in rows] == list(range(1, 26))
     assert "coming" not in index.split("## What you need once")[0].split("## The tutorials")[1]
     for p in WRITTEN:
         assert p.name in index, p.name

@@ -212,7 +212,7 @@
     var tiles = [
       ["VaR " + conf + "% · 1 day", C.money(d["var"]), d.k + "th worst of " + d.scenarios, null],
       ["ES " + esc + "%", C.money(d.es), "mean of worst " + d.esCount, null],
-      ["Sum of standalone VaR", d.sumStandalone === null ? "—" : C.money(d.sumStandalone), d.children + " " + (d.childKind || "children") + (d.children === 1 ? "" : "s"), null],
+      ["Sum of standalone VaR", d.sumStandalone === null ? "—" : C.money(d.sumStandalone), d.childKind ? d.children + " " + d.childKind + (d.children === 1 ? "" : "s") : (d.children ? d.children + " parts" : "no parts"), null],
       ["Diversification", d.diversification === null ? "—" : "−" + C.money(d.diversification),
         d.diversification === null ? "single part" : (d.diversification / d.sumStandalone * 100).toFixed(1) + "% of standalone", null],
       ["Limit utilisation", u === null || u === undefined ? "—" : (u * 100).toFixed(0) + "%", d.limit ? "limit " + C.money(d.limit) : "no limit set", u === null || u === undefined ? null : utilClass(u)],

@@ -43,6 +43,12 @@ Each kind is read from the Delta Lake folder of its **data domain** (`data/delta
 |---|---|---|---|---|
 | `risk-store` | `data/delta/risk/` | Market-risk results: VaR, stress, FRTB, P&L explain | snapshot (every business date) | `stress-scenario`, `stress-result`, `frtb-sensitivity`, `pnl-explain`, `trade-valuation` |
 
+### Value at risk: the VaR engine
+
+The pack's VaR is computed, never stored: the server adds up one P&L vector per live trade (`pnl-vector`, 509 historical scenario days) for any set of trades you name, from the bank down to a trade, with ES, component, incremental and marginal VaR, history and backtests. `VAR BANK <GO>`, `VAR DESK DESK-RATES <GO>` and `VAR SCOPE DESK:DESK-RATES - TRD:MX-30000121 <GO>` open the explorer (F1 there opens the VaR guide); positions (`POS`) are derived by the pack's `positions:` rules; portfolios (`PORT`) are definitions whose figures are computed as their page opens; `VRES <scope> <GO>` reads a scope's VaR as an ordinary kind (`var-result`) and `VWIF <scope> <GO>` a what-if (`var-whatif`, the Python engine). Each loaded date lives in a memory-mapped hot file under the data folder (`drishti.var.tier`). From the command line: `drishti.py var show 'DESK:RATES'`.
+
+The VaR guide (`docs/guides/VAR_GUIDE.md`) explains every number with worked examples, the data flow, the scope grammar, the memory tiers and sizing, entitlements, the CLI and the API; tutorial 25 (`docs/tutorials/25-var-from-the-bank-to-a-trade.md`) walks through it on the test data; the data contract is `docs/contracts/VAR.md`.
+
 Load real data into each domain's folder, or point a domain at a database instead by overriding its connector in the site configuration. For a demonstration lake built from the generated samples, run `uv run --with deltalake --with pyarrow python tools/packgen/banking/make_data.py --lake data/delta`.
 
 ## Kinds

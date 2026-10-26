@@ -51,6 +51,7 @@ the tutorials say what to do first.
 | 21 | [An entity over time](21-an-entity-over-time.md) | a range after an id (`TRD 1000015 30`, `3M`, `YTD`, `FROM … TO`), the history table with what moved tinted and restated days marked, changes only and DIFF, opening a day as it was, an equity's chart and headline numbers, the `history:` block of a pack, export and a link that pins the dates, the limits and errors; UI, `drishti.py history` and the YAML at every step | 30 min | written |
 | 22 | [Build a screen with the designer](22-build-a-screen-with-the-designer.md) | Customize a book's trades page: a linked record on a click (another pack's credit limits), refresh every 30 s with pause and freshness, let people edit beside the table and in a New drawer (drafts), your page and Reset; the same screen from one Describe line; Outline and Grid; UI, `drishti.py design`/`view` and `/me` calls, and the YAML at every step | 35 min | written |
 | 23 | [Computed panels: a reactive connector](23-computed-panels.md) | switch on the compute workers and the compute-demo sample pack, a book's P&L path computed by a Python engine over a pool's workers and by its Java twin, panels drawn computing with progress and filled in place, typed parameters on a panel's source, the same computation from `drishti.py compute run`, a parameter refused in words, a write-back event that recomputes what a screen watches; UI, CLI and YAML at every step | 25 min | written |
+| 25 | [VaR from the bank to a trade](25-var-from-the-bank-to-a-trade.md) | build the VaR test data into a lake, open the bank's VaR and drill to a trade in place, read the P&L path and contributions that add up, write scopes (a desk minus a book plus a portfolio, a rule), see positions derived by the pack's rules, save a basket, capture and compare it, read the history and backtest, see the date's memory-mapped hot file, read VaR as a kind (`VRES`) and ask the Python engine what a hedge would do (`drishti.py var whatif`); UI, CLI and YAML at every step | 40 min | written |
 
 ## What you need once
 
@@ -67,7 +68,7 @@ booking system on the last day are the same on every machine. `MX-20000001` is c
 tutorial that shows it live was captured before that. For history, the trades amended most (ten times each) are ENDUR `1000279` and `1001049`, CALYPSO
 `CLY-4000509` and MUREX `MX-30001745`.
 
-The pictures are made, not drawn: `tools/docs/screenshots.py --guide t01` (to `t19`; the pictures of tutorials 20 to 22 were captured separately, those of tutorial 23 by `drishti-console/tests/test_reactive_panels_browser.py`) drives a scratch stack with a real browser and writes them to `img/`. When the screens change, run it again.
+The pictures are made, not drawn: `tools/docs/screenshots.py --guide t01` (to `t19`; the pictures of tutorials 20 to 22 were captured separately, those of tutorial 23 by `drishti-console/tests/test_reactive_panels_browser.py`; tutorial 25's by `--guide t25`, which builds its own VaR lake) drives a scratch stack with a real browser and writes them to `img/`. When the screens change, run it again.
 
 ## The sample data
 

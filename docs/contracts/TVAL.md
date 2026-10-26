@@ -257,7 +257,7 @@ At the date's load (first request, or the load signal):
 | Node aggregates | per hierarchy node: Σ of each amount column, Σ positive and negative MtM, the counts (12 doubles a node) |
 | Membership | `OrdinalSet` per resolved scope (VaR's bitsets), cached with the answer |
 
-The planner is VaR's ([VAR.md section 7.1](VAR.md#71-as-built-one-business-date-in-memory-varbook)): a scope that is a node answers from
+The planner is VaR's ([VAR.md section 7.1](VAR.md#71-as-built-one-business-date-varbook)): a scope that is a node answers from
 its aggregate; a node minus a few trades subtracts them; otherwise one pass over the set's ordinals. A breakdown is one pass over the
 set, accumulating into an array indexed by the group code.
 

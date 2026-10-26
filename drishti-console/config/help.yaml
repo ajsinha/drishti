@@ -214,6 +214,7 @@ contextual:
   search: user-guide
   compare: user-guide
   history: user-guide#history-an-entity-over-time
+  var: docs-guides-var-guide        # the VaR explorer (F1 and its ?): the VaR guide, unlisted (the centre's 45 pages are full)
   bi-designer: bi-guide#26-bi-studio-authoring-as-one-product-wave-c-240
   bi-theme-designer: reports#52-themes
   bi-transform: python-bi#17-data-prep-the-transform-editor-240

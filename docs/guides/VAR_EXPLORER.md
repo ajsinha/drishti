@@ -15,10 +15,13 @@
 -->
 # The VaR explorer: value at risk for any set of trades
 
-Built in 2.8.0 (unreleased): waves V0 to V3 of [VAR_ENGINE.md](../architecture/VAR_ENGINE.md) (the data, the engine, the explorer,
-history and backtesting, baskets, captures, entitlements and audit). What-if pricing, intraday recomputes and the cluster's sharded
-store are later waves (V4 to V6). The data model is [VAR_DATA_MODEL.md](../architecture/VAR_DATA_MODEL.md). The data contract (every
-input column, structure and answer) is [VAR.md](../contracts/VAR.md).
+Built in 2.8.0 (unreleased): the explorer screen of [VAR_ENGINE.md](../architecture/VAR_ENGINE.md). This page is about the screen: how
+to open it, its panels, its controls and its settings. **The complete guide** to VaR in Drishti (every measure with worked numbers, the
+data flow, positions and portfolios, history and backtesting, the memory tiers and sizing, the computed kinds, the CLI and the API) is
+[VAR_GUIDE.md](VAR_GUIDE.md); **F1** or the **?** on the explorer opens it. The hands-on walk-through is
+[tutorial 25](../tutorials/25-var-from-the-bank-to-a-trade.md). The data contract (every input column, structure and answer) is
+[VAR.md](../contracts/VAR.md); the data model is [VAR_DATA_MODEL.md](../architecture/VAR_DATA_MODEL.md). What-if pricing through a
+pricer, intraday recomputes and the cluster's sharded store are later waves.
 
 The explorer answers one question for any set of trades: *how much could this lose in a day, and where does that loss come from?* It
 reads the stored P&L vectors (one per trade: its P&L under each of 509 historical scenario days) and adds them up. It never reprices.
@@ -72,8 +75,10 @@ Three columns, as the approved mock-up:
   diversification, the limit use, the backtest exceptions over 250 days with the Basel light), and the tabs.
 - **How this number was built** (right): the scope as resolved, the positions and trades included, those without a vector, those
   outside your entitlement, unknown ids, the vector batch and data version, the scenario set and its window, the method and rank rule,
-  the ES rule, how components are allocated, the engine and its threads, your view, the members' hash, the time taken and whether it
-  came from the cache. **Export CSV** (the scope's path), **Capture VaR**.
+  the ES rule, how components are allocated, the engine and its threads, your view, the **tier** the vector came from (a node's float64
+  aggregate, the date's memory-mapped hot file, or memory: [VAR_GUIDE.md section 9](VAR_GUIDE.md#9-the-memory-model-heap-hot-files-and-disk)),
+  the members' hash, the time taken and whether it came from the cache. **Export CSV** (the scope's path), **Capture VaR**. The **?** in the
+  status line opens the VaR guide.
 
 Every panel says *computing…* while it waits and is painted as soon as its answer arrives; the status line says how long the click
 took (*painted in 14 ms · server 2 ms, hit*). Moving to another scope never reloads the page.
@@ -197,7 +202,7 @@ GET  /api/v1/var/scope/path?scope=…&page=0&size=60          histogram, worst 2
 GET  /api/v1/var/scope/history?scope=…                      250 days of VaR, ES, hypothetical P&L, exceptions, backtest
 GET  /api/v1/var/scope/contributions?scope=…&by=child|node|position|trade|desk|book&scenario=2025-01-31
 GET  /api/v1/var/tree?hierarchy=MGMT                        every node you see with its figures, and the stored portfolios
-GET  /api/v1/var/status                                     the settings and the loaded dates
+GET  /api/v1/var/status                                     the settings, the tiers (hot files open and on disk) and the loaded dates
 POST /api/v1/var/reload                                     drop the loaded dates (administrators; after a new load)
 GET  /api/v1/var/baskets          POST /api/v1/var/baskets {"name": "unwind", "scope": "POS:… + TRD:…", "sharedWith": ["risk"]}
 GET  /api/v1/var/baskets/{owner}/{name}      DELETE /api/v1/var/baskets/{owner}/{name}
@@ -250,8 +255,9 @@ drishti:
 | `drishti.var.rank-rule` | `kth-worst` | k = ceil(N (1 − a)): the 6th worst of 509; or `interpolated` |
 | `drishti.var.component-window` | 5 | the scenarios around the VaR rank component VaR averages |
 | `drishti.var.threads` | 0: every core (`DRISHTI_VAR_THREADS`) | the bounded pool vector sums run on |
-| `drishti.var.memory-budget-mb` | 0: a quarter of the heap (`DRISHTI_VAR_MEMORY_MB`) | the most memory the loaded dates' vectors take; a date that would exceed it is refused, never loaded in part |
-| `drishti.var.hot-dates` | 2 | business dates kept loaded |
+| `drishti.var.memory-budget-mb` | 0: a quarter of the heap (`DRISHTI_VAR_MEMORY_MB`) | the most memory one date's vectors take (the float32 copy when mapped); a date that would exceed it is refused, never loaded in part |
+| `drishti.var.hot-dates` | 2 | business dates kept open |
+| `drishti.var.tier.*` | `mapped`, `<data folder>/var/hot`, 60 dates on disk | where a date's vectors live: a memory-mapped float32 hot file per date (`heap`: float64 on the heap); [VAR_GUIDE.md section 9](VAR_GUIDE.md#9-the-memory-model-heap-hot-files-and-disk) |
 | `drishti.var.history-days` | 250 | the history and backtest window |
 | `drishti.var.kinds` | the market-risk pack's | the kinds the engine reads (vectors, hierarchy, scenario set, portfolios; positions are served as `position`) |
 | `drishti.var.positions` | the live statuses, no rule | the position rules when no pack has a `positions:` section |
@@ -279,3 +285,4 @@ synthetic too. The node history starts with the first official capture.
 | *Not for your role* | your role may not open the vectors, or sees the scope in aggregate only | ask for the level you need |
 | *Unknown ids* in the provenance | the ids are not in the date's batch (matured, cancelled, typed wrong) | check them; nothing else changes |
 | the history says *Replay* | the scope is not a node, or you see the node in part | as designed: replay is in-sample |
+| *the vectors of … were unloaded while this answer was computed* | the date was evicted while you waited | ask again; more in [VAR_GUIDE.md section 15](VAR_GUIDE.md#15-troubleshooting) |

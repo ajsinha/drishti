@@ -130,6 +130,18 @@ def overview(name: str, docs: dict) -> str:
                   "cash flows open under the row, its counterparty (core) and credit limit (counterparty-risk) fill the right column, and the "
                   "trades can be edited beside the table or started in a New trade drawer (kept as drafts). See the Sutra developer guide, "
                   "section 11a, and the forms guide.", ""]
+    if name == "market-risk":
+        lines += ["### Value at risk: the VaR engine", "",
+                  "The pack's VaR is computed, never stored: the server adds up one P&L vector per live trade (`pnl-vector`, 509 historical "
+                  "scenario days) for any set of trades you name, from the bank down to a trade, with ES, component, incremental and marginal "
+                  "VaR, history and backtests. `VAR BANK <GO>`, `VAR DESK DESK-RATES <GO>` and `VAR SCOPE DESK:DESK-RATES - TRD:MX-30000121 <GO>` "
+                  "open the explorer (F1 there opens the VaR guide); positions (`POS`) are derived by the pack's `positions:` rules; portfolios "
+                  "(`PORT`) are definitions whose figures are computed as their page opens; `VRES <scope> <GO>` reads a scope's VaR as an "
+                  "ordinary kind (`var-result`) and `VWIF <scope> <GO>` a what-if (`var-whatif`, the Python engine). Each loaded date lives in a "
+                  "memory-mapped hot file under the data folder (`drishti.var.tier`). From the command line: `drishti.py var show 'DESK:RATES'`.", "",
+                  "The VaR guide (`docs/guides/VAR_GUIDE.md`) explains every number with worked examples, the data flow, the scope grammar, the "
+                  "memory tiers and sizing, entitlements, the CLI and the API; tutorial 25 (`docs/tutorials/25-var-from-the-bank-to-a-trade.md`) walks through "
+                  "it on the test data; the data contract is `docs/contracts/VAR.md`.", ""]
     if name == "market-data":
         lines += ["### Public data feeds", "", "Real market data from public sources, each its own connector and **off by default**. Switch one "
                   "on with its environment variable (or `drishti.sources.connectors.<name>.enabled: true` in the site configuration). "
