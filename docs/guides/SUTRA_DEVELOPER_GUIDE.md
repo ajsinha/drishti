@@ -282,7 +282,7 @@ strip:
   - { label: Netting sets, bind: "size($.NETTING_SETS) + ' sets, ' + fmt(sum($.NETTING_SETS, 'TRADES'), 'amount0') + ' trades'" }
 ```
 
-You should see `Rating A` (highlighted), `Country of risk BM`, `UEN UEN0100407`, `Net MTM −191,313,445` in the negative colour, `PFE peak 3.1bn` and `Netting sets 4 sets, 596 trades`.
+You should see `Rating A` (highlighted), `Country of risk BM`, `UEN UEN0100407`, `Net MTM −191,313,445` in the negative colour, `Credit limit 3.5bn` and `Netting sets 4 sets, 596 trades`.
 
 Four things just happened:
 

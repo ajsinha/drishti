@@ -340,11 +340,11 @@ pages:
 ```
 
 A tile is a visual of a report (the report supplies the data, **as the person looking**) placed on a 12-column grid, with an optional `alert`: amber when the `warn` condition holds, red when `crit` does, and the footer says the word as well, so colour is never the only signal. Net MTM below 0 is a warning, below -1 billion critical (Losses: below -1.5 billion, below -2.5 billion);
-the live net MTM here (`-311,235,202`) is below 0 but above -1 billion, hence amber, and Losses (`-1,792,303,610`) likewise. A tile that turns red can also **tell people** (`notify:` on its alert; [BOARDS.md](../guides/BOARDS.md) section 4). The second page is another report over another live dataset:
+the live net MTM here (`-310,188,982`) is below 0 but above -1 billion, hence amber, and Losses (`-1,789,927,256`) likewise. A tile that turns red can also **tell people** (`notify:` on its alert; [BOARDS.md](../guides/BOARDS.md) section 4). The second page is another report over another live dataset:
 
 ![The second page: Counterparty exposure tiles](img/t12/09-board-exposure.jpg)
 
-You should see the tab **Counterparty exposure** with exposure tiles from the report *Live exposure*. Pages are tabs; a board can hold as many as you like.
+You should see the tab **Counterparty exposure** with tiles from the report *Live exposure*: netting sets, net MTM (red: below -300 million), collateral and the highest limit utilisation, then the most negative netting sets and the busiest limits. (Since 2.9.0 the EE and PFE peaks are not live tiles: exposure is computed once a day by the exposure engine; the report *Counterparty risk* shows it.) Pages are tabs; a board can hold as many as you like.
 **On the command line** the board is a report of the catalogue like any other:
 
 ```text

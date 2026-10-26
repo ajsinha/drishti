@@ -79,7 +79,7 @@ joined["pnl_per_exposure"] = joined["desk_pnl"] / joined["ee_peak"]
 result = joined.sort_values("ee_peak", ascending=False).head(15)
 ```
 
-![The join cell's result: counterparties with their P&L, expected exposure and P&L per exposure; the line says Python, server, 220 ms, 750 rows](../tutorials/img/t14/14-analyse-join.jpg)
+![The join cell's result: counterparties with their P&L, computed expected exposure and P&L per exposure; the line says Python, server and the rows of the extract](../tutorials/img/t14/14-analyse-join.jpg)
 
 Every extract is the reader's, so a join of two extracts shows **their** rows: the join key that the server masks for them (the counterparty id, for a reader without the raw power) arrives masked and the join finds nothing, which is the mask doing its job. Each extract counts toward the answer's `masked`, and each is cut to `bi.explore.max_rows` separately. Python in the browser cannot read further extracts (Pyodide gets the first only): a cell that calls `extract(...)` runs on the server.
 

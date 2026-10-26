@@ -556,9 +556,9 @@ You should see the bar the whole width, then the cards in two columns. A phone, 
 
 **A counterparty's own view inside the report.** The sample **Counterparty risk** has a page *Counterparty lookup*: a bar of the ten largest counterparties and, beside it, a visual of `type: entity-view` with `wells: { key: [counterparties.id] }`. Open it and click a bar:
 
-![Counterparty lookup: a bar of ten counterparties with CP-NORTHPLAINS selected, and its Drishti view beside it with the netting sets](img/t10/32-entity-view.jpg)
+![Counterparty lookup: a bar of ten counterparties with CP-VERDANT selected, and its Drishti view beside it with the netting sets](img/t10/32-entity-view.jpg)
 
-You should see the counterparty's own **Drishti view** (its name, rating, net MTM and netting sets) in the frame beside the bar, with a chip `counterparties.id: CP-NORTHPLAINS` (the first bar: the largest expected exposure). It is the view page built **for you**: someone who may not see a field does not see it here either. [REPORTS.md section 3.4](../guides/REPORTS.md#34-the-entity-view).
+You should see the counterparty's own **Drishti view** (its name, rating, net MTM and netting sets) in the frame beside the bar, with a chip `counterparties.id: CP-VERDANT` (the first bar: the largest computed expected exposure). It is the view page built **for you**: someone who may not see a field does not see it here either. [REPORTS.md section 3.4](../guides/REPORTS.md#34-the-entity-view).
 
 ## Step 13 · A dataset and a model of your own, in the wizard
 

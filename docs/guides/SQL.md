@@ -37,14 +37,14 @@ LIMIT  20
 ```
 
 Every example on this page runs on the shipped model **`trading-risk`** (`config/bi/models/trading-risk.model.yaml`: tables `trades`,
-`netting_sets`, `counterparties`, `desks`, `books`, columns in the packs' UPPER_SNAKE names) over the demo lakes
+`netting_sets`, `set_exposure`, `cpty_exposure` (the computed exposure, 2.9.0), `counterparties`, `desks`, `books`, columns in the packs' UPPER_SNAKE names) over the demo lakes
 (`drishti.py lake demo`, [data/testdata/README.md](../../data/testdata/README.md)), asked as the seeded administrator. The demo lakes end on
 **today's** business date, so your dates differ from the ones captured here. The figures were captured on the seven-day lakes of 2.5.0
 (2026-10-07 to 2026-10-16); the lakes hold sixty business days since 2.6.5, and a figure may differ on yours. The statement above answered six counterparties, the first `["Northern Plains Energy Canada", -251066943.0, 528,
 125556404805.7]`.
 
-A filter on `trades` does not reach `netting_sets`: `MEASURE('Exposure (PFE peak)')` in the statement above is refused with `DRS-9156` (the
-measures aggregate `[trades, netting_sets]`, which no many-to-one path connects) and the fix names the fields both reach. Without the `WHERE`,
+A filter on `trades` does not reach `cpty_exposure` (since 2.9.0 the computed exposure, the official results): `MEASURE('Exposure (PFE peak)')` in the statement above is refused with `DRS-9156` (the
+measures aggregate `[trades, cpty_exposure]`, which no many-to-one path connects) and the fix names the fields both reach. Without the `WHERE`,
 `SELECT counterparties.NAME, MEASURE('MTM'), MEASURE('Exposure (PFE peak)') FROM trades JOIN counterparties GROUP BY counterparties.NAME` is
 answered, each fact aggregated alone and joined (the warning says so).
 
@@ -128,11 +128,11 @@ the rows of their own desks only, and a different `signature`.
 
 ```sql
 WITH m AS (SELECT trades.COUNTERPARTY AS cp, MEASURE('MTM') AS mtm FROM trades GROUP BY trades.COUNTERPARTY),
-     e AS (SELECT netting_sets.COUNTERPARTY AS cp, MEASURE('Exposure (EE peak)') AS ee FROM netting_sets GROUP BY netting_sets.COUNTERPARTY)
+     e AS (SELECT set_exposure.COUNTERPARTY AS cp, MEASURE('Exposure (EE peak)') AS ee FROM set_exposure GROUP BY set_exposure.COUNTERPARTY)
 SELECT m.cp, m.mtm, e.ee
 FROM   m LEFT JOIN e ON m.cp = e.cp
 ORDER  BY m.cp
--- ["CP-ALDERSHOT", 470417505.43, 2599390291.0], ["CP-AURORA", 548784382.85, 1991425202.0], ...
+-- ["CP-ALDERSHOT", 470417505.43, 276416536.0], ["CP-AURORA", 548784382.85, 213663642.0], ...   (the computed exposure, 2.9.0)
 
 SELECT trades.DESK AS desk, MEASURE('Notional') AS notional, RANK() OVER (ORDER BY notional DESC) AS r
 FROM   trades GROUP BY trades.DESK ORDER BY r                  -- a window over the answer
