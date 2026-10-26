@@ -25,7 +25,12 @@
   [Economies](docs/knowledge/economies.md). Each has the same seven parts: the idea in plain words, a glossary (each term with the
   command that shows it on the demo data), how the data connects (the kinds, their link columns from the packs' contracts and the id
   conventions), a worked example with real numbers and their business date, questions to ask your data, common confusions, and where
-  to go deeper. The glossary is one data file, `docs/knowledge/glossary.yaml` (137 terms), written into the pages by
+  to go deeper. Market risk also explains how a P&L vector is made from scenario PVs (same valuation date, absolute and relative
+  shifts, scenario FX, one scenario order, failed never zero, full revaluation or sensitivities; VaR from scenario PVs in any reporting
+  currency is planned for 2.9.3) and why VaR adds the trades' P&L, not quantity times the move. The worked examples are read from a
+  scratch server over the default demo lake on 2026-10-26, and each ends with what the data hasn't told you (a cancelled trade still in
+  its netting set's exposure, a valuation of an older trade version, stored utilisations far from the computed ones, ECON's debt being
+  the IMF's 2031 projection, an FX value date left behind). The glossary is one data file, `docs/knowledge/glossary.yaml` (139 terms), written into the pages by
   `tools/knowledge.py` (`--check` fails when a page differs; `tools/test_knowledge.py`). **`WHAT`** is a new reserved word (the pack
   loader, `drishti.py pack check`, the command catalog): `WHAT <GO>` opens the Knowledge home, `WHAT <term> <GO>` the term's glossary
   entry (its long name or a synonym, any case: `WHAT PFE`, `WHAT netting set`, `WHAT value at risk`), other words a search of the
@@ -34,6 +39,8 @@
   Knowledge is in Build → Learn and Help. USER_GUIDE (reserved words, a Knowledge section), PACK_DEVELOPER_GUIDE, BI_GUIDE, CLI_GUIDE,
   COMMANDS.md and HISTORY_QUERIES name `WHAT` among the reserved words. Tests: `drishti-console/tests/test_knowledge.py`, `test_help.py`
   (seven sections, at most 62 listed pages), `ReservedMnemonicTest`, `test_drishti_cli.py`.
+  [VAR_GUIDE.md section 5.6](docs/guides/VAR_GUIDE.md#56-examples-on-the-test-data) rerun on the default demo lake (2026-10-26:
+  the bank 126.5m on 8,566 live trades) with why it differs from the `--as-of data` date (112.0m).
 - **About and Competitive rewritten (product owner, 2026-10-26).** About: the headline and tagline from configuration, what Drishti is now (risk computed for any scope, data contracts, Knowledge), twenty feature cards (VaR for any scope, counterparty exposure, data contracts, Knowledge, Functions, write-back, external data, the eleven packs …), measured VaR and exposure figures with their sources, the areas Measure risk and Understand, new use cases. Competitive: as of October 2026, a third paragraph on risk computed when asked, and five new rows: risk for any set of trades, a data contract for every command, external data with sources and scripts, forms that save, and explaining the data from the data.
 
 ## 2.9.1 — Functions (FUNC) for everyone; groupings and analytics computed; External data and complete pack guides; the exposure benchmark (2026-10-26)
