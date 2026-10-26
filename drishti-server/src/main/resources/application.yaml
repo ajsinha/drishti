@@ -603,7 +603,13 @@ drishti:
     histogram-bins: 42               # bins of the P&L distribution sent to the screen
     max-parts: 5000                  # most parts a contribution table computes at once (more: the largest by gross size, and said)
     path-page: 60                    # rows of the ranked P&L path per page
-    kinds:                           # the kinds the engine reads (the market-risk pack's), and the kind its derived positions are served as
+    tier:                            # the tiered memory (docs/contracts/VAR.md section 7.3): where a loaded date's vectors live
+      mode: ${DRISHTI_VAR_TIER:mapped}                 # mapped: each date a float32 hot file, memory-mapped (heap: aggregates, columns, links); heap: float64 rows on the heap
+      dir: ${DRISHTI_VAR_HOT_DIR:${drishti.data.dir:./data}/var/hot}   # one folder per business date; never under the repository
+      disk-dates: 60                 # hot files kept on disk (least recently used beyond are deleted); a date not open maps its file again, no lake read
+      keep-on-shutdown: false        # false: the hot files are deleted at shutdown (and any left over at start)
+      close-grace-seconds: 60        # an evicted date stays mapped this long for the requests still reading it
+    kinds:                         # the kinds the engine reads (the market-risk pack's), and the kind its derived positions are served as
       vector: pnl-vector
       position: position
       hierarchy: risk-hierarchy
