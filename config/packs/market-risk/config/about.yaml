@@ -293,3 +293,33 @@ kinds:
       ROLLS_UP_TO.ID: { term: "Rolls up to", means: "The desk or book the portfolio reports under." }
       VALID_FROM: { term: "Valid from", means: "The first business date the portfolio's definition applies to; an earlier date uses the definition then in force." }
       OWNER: { term: "Owner", means: "Who keeps the portfolio's definition." }
+  var-result:
+    title: VaR of a scope
+    about: >-
+      ${$.LABEL} on ${$.BUSINESS_DATE}: a 1-day VaR of ${fmt($.VAR, 'compact')} USD at ${$.CONFIDENCE} confidence and an expected
+      shortfall of ${fmt($.ES, 'compact')} USD, computed when asked by the server's VaR engine from every trade's P&L vector, as you see
+      them (VAR ${$.CANONICAL} opens the same answer in the explorer).
+    guide: market-risk
+    glossary:
+      SCOPE: { term: "Scope", means: "The set of trades asked about, in the scope grammar: BANK, DESK:RATES, POS:<id>, PORT:<id>, BANK - DESK:CREDIT." }
+      VAR: { use: "var99" }
+      ES: { use: "es975" }
+      K: { term: "VaR rank", means: "Which worst scenario the VaR is: the 6th worst of 509 at 99%." }
+      SUM_STANDALONE: { term: "Sum of standalone VaRs", means: "The VaRs of the parts, each as if alone, added up.", unit: "USD" }
+      DIVERSIFICATION: { term: "Diversification", means: "The sum of the parts' standalone VaRs minus the scope's VaR: what holding them together saves.", unit: "USD" }
+      LIMIT_USE: { term: "Limit use", means: "The VaR over the node's or portfolio's VaR limit." }
+      PNL: { term: "P&L vector", means: "The scope's P&L under each historical scenario day, oldest first: the sum of its trades' vectors.", unit: "USD" }
+      PROVENANCE.TIER: { term: "Tier", means: "Where the vector came from: a node's float64 aggregate, the date's memory-mapped hot file (float32 rows summed in float64), or the heap." }
+  var-whatif:
+    title: VaR what-if
+    about: >-
+      ${$.CANONICAL} on ${$.BUSINESS_DATE}: VaR ${fmt($.BEFORE_VAR, 'compact')} USD before and ${fmt($.AFTER_VAR, 'compact')} USD after the
+      ${$.ITEMS} hypothetical trade(s) of your sandbox, computed by the Python VaR engine; the stressed window over
+      ${$.STRESS_WINDOW} scenario days.
+    guide: market-risk
+    glossary:
+      BEFORE_VAR: { term: "VaR before", means: "The scope's 1-day 99% VaR as booked.", unit: "USD" }
+      AFTER_VAR: { term: "VaR after", means: "The scope's VaR with the sandbox's hypothetical trades added.", unit: "USD" }
+      CHANGE_VAR: { term: "Change in VaR", means: "VaR after minus VaR before: what the trades do to the scope's VaR.", unit: "USD" }
+      STRESSED_VAR_BEFORE: { term: "Stressed VaR", means: "The largest VaR over every run of the stress window's consecutive scenario days.", unit: "USD" }
+      ITEMS: { term: "What-if trades", means: "The hypothetical trades of your private sandbox, each with its P&L over the scenarios." }

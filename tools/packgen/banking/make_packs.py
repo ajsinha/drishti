@@ -158,6 +158,8 @@ STRIP_PATH = re.compile(r"\$\.([A-Za-z_][A-Za-z0-9_]*)")
 def forms(name: str, kinds: list[str], specs: dict) -> dict:
     out = {}
     for k in kinds:
+        if k in VK.COMPUTED:                          # a computed kind (its id is a scope): no search form
+            continue
         if k in VK.KINDS:                             # the VaR engine's kinds: their key columns
             out[k] = PF.form_from_columns(VK.FORM_COLUMNS[k], VK.KINDS[k][3])
             continue
@@ -250,7 +252,8 @@ def add_var_kinds(m: dict) -> None:
     for k, (mnem, label, pattern, _id) in VK.KINDS.items():
         m["kinds"].append(k)
         m["mnemonics"][mnem] = {"kind": k, "label": label}
-        m["graph"]["id-patterns"].append({"pattern": pattern, "kind": k})
+        if pattern:                                       # a computed kind's id is a scope: no pattern claims it
+            m["graph"]["id-patterns"].append({"pattern": pattern, "kind": k})
         connector = VK.SERVED_BY.get(k, "risk-store")
         if connector == "risk-store":
             store["kinds"].append(k)

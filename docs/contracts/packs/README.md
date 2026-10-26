@@ -19,7 +19,7 @@
 
 Every command (mnemonic) of every pack has a data contract: a YAML file beside its pack (`config/packs/<pack>/contracts/<kind>.contract.yaml`, checked against `tools/contracts.schema.json`) and a section of its pack's page here. The shared rules are in [the contracts README](../README.md); the computed measures that replace the retiring kinds have their own contracts there.
 
-88 contracts, 502 points still to review. Check them with `drishti.py contract check`; draft a new one with `drishti.py contract bootstrap KIND --write`.
+90 contracts, 502 points still to review. Check them with `drishti.py contract check`; draft a new one with `drishti.py contract bootstrap KIND --write`.
 
 | Command | Kind | Pack | Class | Status | Replaced by | To review |
 |---|---|---|---|---|---|---|
@@ -82,6 +82,8 @@ Every command (mnemonic) of every pack has a data contract: a YAML file beside i
 | `PNLV` | `pnl-vector` | [market-risk](market-risk.md#pnlv-pl-vector-509-scenarios-pnl-vector) | input | active |  | 6 |
 | `SSET` | `scenario-set` | [market-risk](market-risk.md#sset-scenario-set-scenario-set) | input | active |  | 4 |
 | `HIER` | `risk-hierarchy` | [market-risk](market-risk.md#hier-risk-hierarchy-node-risk-hierarchy) | input | active |  | 5 |
+| `VRES` | `var-result` | [market-risk](market-risk.md#vres-var-of-a-scope-computed-var-result) | computed | active |  | 0 |
+| `VWIF` | `var-whatif` | [market-risk](market-risk.md#vwif-var-what-if-computed-python-var-whatif) | computed | active |  | 0 |
 | `TOPIC` | `news-topic` | [news-and-markets](news-and-markets.md#topic-news-topic-news-topic) | fundamental | active |  | 7 |
 | `NEWS` | `news` | [news-and-markets](news-and-markets.md#news-headlines-news) | fundamental | active |  | 4 |
 | `CO` | `listed-company` | [news-and-markets](news-and-markets.md#co-listed-company-listed-company) | fundamental | active |  | 7 |

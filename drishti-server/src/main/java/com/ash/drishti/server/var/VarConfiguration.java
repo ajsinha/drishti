@@ -73,7 +73,9 @@ public class VarConfiguration {
 
     @Bean
     VarViews varViews(VarService svc) {
-        return new VarViews(svc);
+        VarViews v = new VarViews(svc);
+        VarResultEngine.install(v);                                    // the computed kind var-result (the reactive connector var-engine)
+        return v;
     }
 
     @Bean(destroyMethod = "close")

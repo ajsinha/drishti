@@ -31,6 +31,8 @@ One section per command of the pack: the shape of its data, how it is stored and
 | [PNLV](#pnlv-pl-vector-509-scenarios-pnl-vector) | `pnl-vector` | input | active | 32 | 6 |
 | [SSET](#sset-scenario-set-scenario-set) | `scenario-set` | input | active | 11 | 4 |
 | [HIER](#hier-risk-hierarchy-node-risk-hierarchy) | `risk-hierarchy` | input | active | 12 | 5 |
+| [VRES](#vres-var-of-a-scope-computed-var-result) | `var-result` | computed | active | 22 | 0 |
+| [VWIF](#vwif-var-what-if-computed-python-var-whatif) | `var-whatif` | computed | active | 19 | 0 |
 
 ## SCN: Stress scenario (`stress-scenario`)
 
@@ -737,3 +739,109 @@ Risk hierarchy node
 - due time of each business date is not known: state it (for example, by 06:00 New York the next business day).
 - enum values inferred from the data, not from a glossary: HIERARCHY, LEVEL, REF.KIND: confirm they are closed lists.
 - no description in about.yaml or the Sutras for PARENT_ID, NAME, CHILDREN, BUSINESS_DATE, VALID_FROM, VALID_TO, REF.KIND, REF.ID: write them in the pack's config/about.yaml glossary.
+
+## VRES: VaR of a scope (computed) (`var-result`)
+
+The VaR, ES, decomposition, worst scenarios and P&L vector of any scope (the scope grammar of VAR.md section 8), computed when asked by the server's VaR engine as the person asking; never stored.
+
+|  |  |
+|---|---|
+| Contract | [var-result.contract.yaml](../../../config/packs/market-risk/contracts/var-result.contract.yaml) · version 1.0 |
+| Class | computed |
+| Status | active |
+| Source | computed by Drishti: the reactive connector var-engine (java engine com.ash.drishti.server.var.VarResultEngine) |
+| Grain | One answer per question (the scope asked for and the business date), computed when asked. |
+| Key | — |
+| Id pattern | — |
+| Dated by | `on request` |
+| Cadence | on change (due: computed on request and again when the date's inputs load (data-version trigger)) |
+| Storage | connector `var-engine` (plugin `reactive`) |
+
+**Fields**
+
+| Field | Type | Presence | Unit | Description | Example or values | Link |
+|---|---|---|---|---|---|---|
+| `SCOPE` | text | required |  | The scope as asked (the id; a ~ inside a node id is written %7E). | `DESK:RATES` |  |
+| `CANONICAL` | text | required |  | The scope's canonical text (VAR.md section 8.2). |  |  |
+| `SCOPE_KIND` | text | required |  | — | `node`, `position`, `trade`, `portfolio`, `basket`, `capture`, `rule`, `counterparty`, `legal-entity`, `adhoc` |  |
+| `LABEL` | text | required |  | — |  |  |
+| `NODE` | id | optional |  | The hierarchy node when the scope is exactly one node. |  |  |
+| `BUSINESS_DATE` | date | required |  | — |  |  |
+| `VAR` | amount | required | USD | VaR at CONFIDENCE, positive for a loss (VAR.md section 6.2). |  |  |
+| `ES` | amount | required | USD | Expected shortfall at ES_CONFIDENCE (VAR.md section 6.3). |  |  |
+| `CONFIDENCE` | rate | required |  | — | `0.99` |  |
+| `ES_CONFIDENCE` | rate | required |  | — | `0.975` |  |
+| `K` | integer | required |  | The VaR rank (the 6th worst of 509 at 99%). |  |  |
+| `ES_COUNT` | integer | required |  | — |  |  |
+| `SCENARIOS` | integer | required |  | — |  |  |
+| `LIMIT` | amount | optional | USD | — |  |  |
+| `LIMIT_USE` | rate | optional |  | — |  |  |
+| `SUM_STANDALONE` | amount | optional | USD | — |  |  |
+| `DIVERSIFICATION` | amount | optional | USD | — |  |  |
+| `BACKTEST` | record | required |  | DAYS, EXCEPTIONS, LIGHT, KUPIEC_LR, KUPIEC_P_VALUE, CHRISTOFFERSEN_LR, CHRISTOFFERSEN_P_VALUE (VAR.md section 6.5). |  |  |
+| `CHILDREN` | record list | required |  | The default parts (VAR.md section 9.3) with KEY, SCOPE, LABEL, KIND, STANDALONE_VAR, COMPONENT_VAR, COMPONENT_ES, INCREMENTAL_VAR, PCT. |  |  |
+| `WORST` | record list | required |  | The 25 worst scenarios (RANK, INDEX, DATE, PNL). |  |  |
+| `PNL` | vector | required | USD | The scope's P&L under each scenario day, oldest first (unrounded). |  |  |
+| `PROVENANCE` | record | required |  | The headline's provenance in UPPER_SNAKE (VAR.md section 9.2), with TIER saying where the vector came from. |  |  |
+
+**Validation**
+
+- required: fields `VAR`, `ES`, `PNL`
+
+**Notes**
+
+- No stored key: an answer's id is the scope asked (the id in the request); VAR <scope> <GO> opens the same answer in the explorer.
+- Computed as the viewer with the explorer's entitlements (VAR.md section 11); cached per view signature, data version and scope.
+
+## VWIF: VaR what-if (computed, Python) (`var-whatif`)
+
+A scope's VaR and ES before and after hypothetical trades kept in the person's private sandbox, and its stressed window, computed when asked by the Python VaR engine from the scope's var-result; never stored.
+
+|  |  |
+|---|---|
+| Contract | [var-whatif.contract.yaml](../../../config/packs/market-risk/contracts/var-whatif.contract.yaml) · version 1.0 |
+| Class | computed |
+| Status | active |
+| Source | computed by Drishti: the reactive connector var-whatif (python engine drishti_compute.var.whatif:VarWhatIfEngine, pool var) |
+| Grain | One answer per question (the scope, the sandbox and the parameters, the business date), computed when asked. |
+| Key | — |
+| Id pattern | — |
+| Dated by | `on request` |
+| Cadence | on change (due: computed on request and again when the date's inputs load (data-version trigger); never for a sandbox by a trigger) |
+| Storage | connector `var-whatif` (plugin `reactive`) |
+
+**Fields**
+
+| Field | Type | Presence | Unit | Description | Example or values | Link |
+|---|---|---|---|---|---|---|
+| `SCOPE` | text | required |  | The base scope (the id), e.g. DESK:RATES - TRD:X to take a trade out exactly. |  |  |
+| `CANONICAL` | text | required |  | — |  |  |
+| `BUSINESS_DATE` | date | required |  | — |  |  |
+| `ITEMS` | integer | required |  | The hypothetical trades of the sandbox (0 without one). |  |  |
+| `BEFORE_VAR` | amount | required | USD | — |  |  |
+| `AFTER_VAR` | amount | required | USD | — |  |  |
+| `CHANGE_VAR` | amount | required | USD | — |  |  |
+| `BEFORE_ES` | amount | required | USD | — |  |  |
+| `AFTER_ES` | amount | required | USD | — |  |  |
+| `CHANGE_ES` | amount | required | USD | — |  |  |
+| `LIMIT` | amount | optional | USD | — |  |  |
+| `LIMIT_USE_BEFORE` | rate | optional |  | — |  |  |
+| `LIMIT_USE_AFTER` | rate | optional |  | — |  |  |
+| `CONFIDENCE` | rate | required |  | — |  |  |
+| `ES_CONFIDENCE` | rate | required |  | — |  |  |
+| `STRESS_WINDOW` | integer | required |  | Scenario days of the stressed window (0 when not asked). |  |  |
+| `STRESSED_VAR_BEFORE` | amount | optional | USD | The largest VaR over every run of STRESS_WINDOW consecutive scenario days, before the what-if. |  |  |
+| `STRESSED_VAR_AFTER` | amount | optional | USD | — |  |  |
+| `STRESSED_FROM` | integer | optional |  | The index of the stressed window's first scenario day. |  |  |
+
+**Links:** `SCOPE` → `var-result`.
+
+**Validation**
+
+- required: fields `BEFORE_VAR`, `AFTER_VAR`
+
+**Notes**
+
+- No stored key: an answer's id is the base scope (the id in the request); the parameters ride on it (sandbox, stress-window, component-window).
+- The hypothetical trades' vectors are supplied in the sandbox (one P&L per scenario day, priced elsewhere); taking trades out is the scope's own algebra. Pricing through QLRisk is parked until its API is stable.
+- The tables items (each trade's standalone, incremental in order and alone, component VaR and ES) and pnl (DAY, BEFORE, AFTER) come with the answer.

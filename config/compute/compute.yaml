@@ -48,6 +48,21 @@ compute:
       idle-stop: 5m
       timeout: 30s                   # an interactive request's budget
       timeout-batch: 10m
+    var:                             # the Python VaR engine (what-if trades on a scope, the stressed window): docs/contracts/VAR.md section 9.7
+      type: python
+      engines: [drishti_compute.var.whatif:VarWhatIfEngine]
+      environment: system            # standard library only: no package to approve
+      workers:
+        min: 0
+        max: ${DRISHTI_COMPUTE_VAR_WORKERS:4}
+      mode: auto
+      memory: 1GB
+      cpu-seconds: 300
+      recycle-after: 200
+      batch-share: 0.25
+      idle-stop: 5m
+      timeout: 60s
+      timeout-batch: 10m
   # nodes:                           # a node's own worker counts (its Drishti*net id); pools scale out by adding nodes
   #   drishti-big-1:
   #     pools:

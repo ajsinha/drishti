@@ -65,7 +65,7 @@ import org.springframework.test.web.servlet.MockMvc;
         "drishti.sources.connectors.var-positions.plugin=var-positions", "drishti.sources.connectors.var-positions.kinds[0]=position",
         "drishti.sources.routes.pnl-vector=risk-lake", "drishti.sources.routes.position=var-positions",
         "drishti.sources.routes.scenario-set=risk-lake", "drishti.sources.routes.risk-hierarchy=risk-lake",
-        "drishti.sources.routes.portfolio=risk-lake",
+        "drishti.sources.routes.portfolio=risk-lake", "drishti.sources.routes.var-result=var-engine",
         "drishti.var.positions.rules[0].name=securities", "drishti.var.positions.rules[0].groups[0]=Fixed income",
         "drishti.var.positions.rules[0].key[0]=SECURITY_ID",
         "drishti.var.official.on-start=false",
@@ -101,6 +101,8 @@ class VarApiTest {
     @Autowired VarOfficial official;
     @Autowired VarFigures figures;
     @Autowired VarService service;
+    @Autowired com.ash.drishti.packs.ConnectorFiles connectors;
+    @Autowired com.ash.drishti.server.connectors.ConnectorManager manager;
     final ObjectMapper json = new ObjectMapper();
 
     private String as(String user, String role) {
@@ -404,6 +406,57 @@ class VarApiTest {
         assertThat(onDay("DESK:DESK-X").at("/provenance/tier").asText()).isEqualTo("node aggregate (float64)");
         try (var files = Files.walk(service.loader().tier().root())) {
             assertThat(files.map(p -> p.getFileName().toString()).filter(n -> n.startsWith("."))).as("no hidden files").isEmpty();
+        }
+    }
+
+    @Test
+    @Order(10)
+    void varResultIsAnOrdinaryComputedKindReadAsTheViewer() throws Exception {
+        connectors.write("var-engine", """
+                plugin: reactive
+                mode: reactive
+                kinds:
+                  var-result:
+                    compute: var-result
+                    result: { required: [VAR, ES, PNL], types: { VAR: number, ES: number } }
+                engine: { type: java, class: com.ash.drishti.server.var.VarResultEngine, version: "1.0" }
+                triggers:
+                  - { on: data-version, kinds: [pnl-vector], affects: all }
+                limits: { wait: 5s }
+                """);
+        manager.scan();
+        try {
+            String body = "{\"id\": \"DESK:DESK-X - TRD:T1\", \"asOf\": \"" + VarLakeFixture.DAY + "\", \"wait\": 10000}";
+            JsonNode a = json.readTree(mvc.perform(post("/api/v1/compute/var-engine/var-result").header("Authorization", as("rita", "risk"))
+                    .contentType(MediaType.APPLICATION_JSON).content(body)).andExpect(status().isOk()).andReturn().getResponse().getContentAsString());
+            assertThat(a.get("state").asText()).as(a.toString()).isEqualTo("ready");
+            JsonNode r = a.get("result");
+            JsonNode head = onDay("DESK:DESK-X - TRD:T1");
+            assertThat(r.get("VAR").asDouble()).isEqualTo(head.get("var").asDouble());       // the explorer's figure, to the unit
+            assertThat(r.get("ES").asDouble()).isEqualTo(head.get("es").asDouble());
+            assertThat(r.get("SCOPE_KIND").asText()).isEqualTo("adhoc");
+            assertThat(r.get("PNL")).hasSize(20);
+            assertThat(r.get("CHILDREN")).isNotEmpty();
+            assertThat(r.get("WORST")).isNotEmpty();
+            assertThat(r.at("/BACKTEST/LIGHT").isMissingNode()).isFalse();
+            assertThat(r.at("/PROVENANCE/MEMBERSHIP_HASH").asText()).isNotEmpty();
+            // the same kind through a view, as a person who may see one desk only: computed over what they see, never more
+            JsonNode y = json.readTree(mvc.perform(post("/api/v1/compute/var-engine/var-result").header("Authorization", as("yan", "desk-y"))
+                    .contentType(MediaType.APPLICATION_JSON).content("{\"id\": \"BANK\", \"asOf\": \"" + VarLakeFixture.DAY + "\", \"wait\": 10000}"))
+                    .andReturn().getResponse().getContentAsString());
+            assertThat(y.at("/result/PROVENANCE/HIDDEN").asInt()).isPositive();
+            // a role that may not open the kind is refused in words; a scope that does not parse is the engine's refusal
+            var c = mvc.perform(post("/api/v1/compute/var-engine/var-result").header("Authorization", as("cy", "curves"))
+                    .contentType(MediaType.APPLICATION_JSON).content(body)).andReturn().getResponse();
+            assertThat(c.getStatus() + " " + c.getContentAsString()).contains("var-result").doesNotContain("\"VAR\"");
+            JsonNode bad = json.readTree(mvc.perform(post("/api/v1/compute/var-engine/var-result").header("Authorization", as("rita", "risk"))
+                    .contentType(MediaType.APPLICATION_JSON).content("{\"id\": \"DESK:(\", \"wait\": 10000}")).andReturn().getResponse()
+                    .getContentAsString());
+            assertThat(bad.get("state").asText()).isEqualTo("failed");
+            assertThat(bad.get("message").asText()).isNotBlank();
+        } finally {
+            connectors.delete("var-engine");
+            manager.scan();
         }
     }
 

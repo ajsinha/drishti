@@ -16,7 +16,9 @@
 taxonomy's kinds. The engine's inputs (P&L vectors, scenario set, hierarchies, portfolio definitions) are written by
 tools/packgen/var/make_var_data.py into data/testdata/market-risk/ and served by the pack's Delta connector risk-store, the P&L vectors
 as a list<double> column (``vectors:``). Positions are Drishti's: derived from the trades by the pack's rules when a date loads and
-served from the engine by the var-positions connector. No kind stores a VaR figure: the pages show the engine's, computed when opened."""
+served from the engine by the var-positions connector. No kind stores a VaR figure: the pages show the engine's, computed when opened.
+The computed kinds (VAR.md section 9.7) are served by reactive connectors: var-result by the server's Java engine (var-engine), var-whatif
+by the Python engine in the compute pool "var" (var-whatif), each read as the viewer."""
 from __future__ import annotations
 
 #: kind -> (mnemonic, label, id pattern, id field)
@@ -26,11 +28,46 @@ KINDS = {
     "pnl-vector": ("PNLV", "P&L vector (509 scenarios)", "^PV-", "VECTOR_ID"),
     "scenario-set": ("SSET", "Scenario set", "^HS-", "SCENARIO_SET_ID"),
     "risk-hierarchy": ("HIER", "Risk hierarchy node", "^(MGMT|LEGAL)~", "NODE_ID"),
+    # the computed kinds: the id is a scope (DESK:RATES), so no id pattern claims them
+    "var-result": ("VRES", "VaR of a scope (computed)", None, None),
+    "var-whatif": ("VWIF", "VaR what-if (computed, Python)", None, None),
 }
 #: kinds not served by risk-store: the connector each is routed to
-SERVED_BY = {"position": "var-positions"}
-#: the connectors besides risk-store: the positions the server derives, from the VaR engine's memory
-CONNECTORS = {"var-positions": {"plugin": "var-positions", "enabled": "${DRISHTI_VAR_ENABLED:true}", "kinds": ["position"]}}
+SERVED_BY = {"position": "var-positions", "var-result": "var-engine", "var-whatif": "var-whatif"}
+_INPUTS = ["pnl-vector", "risk-hierarchy", "scenario-set", "portfolio"]
+#: the connectors besides risk-store: the positions the server derives, from the VaR engine's memory; the computed kinds
+CONNECTORS = {
+    "var-positions": {"plugin": "var-positions", "enabled": "${DRISHTI_VAR_ENABLED:true}", "kinds": ["position"]},
+    "var-engine": {
+        "plugin": "reactive", "mode": "reactive", "enabled": "${DRISHTI_VAR_ENABLED:true}",
+        "description": "The VaR of any scope, computed when asked by the server's VaR engine (the additive aggregation over the hot store), "
+                       "as the viewer: VRES <scope> <GO>",
+        "kinds": {"var-result": {"compute": "var-result",
+                                 "result": {"required": ["VAR", "ES", "PNL"], "types": {"VAR": "number", "ES": "number"}}}},
+        "engine": {"type": "java", "class": "com.ash.drishti.server.var.VarResultEngine", "version": "1.0"},
+        "triggers": [{"on": "data-version", "kinds": _INPUTS, "affects": "all"}],
+        "coalesce": {"quiet": "250ms", "max-wait": "2s"},
+        "cache": {"results": 2000, "ttl": "1h"},
+        "limits": {"timeout": "60s", "wait": "5s", "max-inflight-per-user": 4},
+    },
+    "var-whatif": {
+        "plugin": "reactive", "mode": "reactive", "enabled": "${DRISHTI_VAR_ENABLED:true}",
+        "description": "A scope's VaR before and after hypothetical trades (a private sandbox) and its stressed window, computed by the "
+                       "Python VaR engine in the compute pool var from the scope's var-result: VWIF <scope> <GO>",
+        "kinds": {"var-whatif": {"compute": "var-whatif",
+                                 "params": {"sandbox": {"type": "sandbox-ref"},
+                                            "stress-window": {"type": "int", "default": 250, "min": 0, "max": 5000},
+                                            "component-window": {"type": "int", "default": 5, "min": 1, "max": 51}},
+                                 "result": {"required": ["BEFORE_VAR", "AFTER_VAR"],
+                                            "types": {"BEFORE_VAR": "number", "AFTER_VAR": "number"}}}},
+        "reads": [{"kind": "var-result", "as": "base", "id": "{id}"}],
+        "engine": {"type": "python", "entry": "drishti_compute.var.whatif:VarWhatIfEngine", "pool": "var", "version": "1.0"},
+        "triggers": [{"on": "data-version", "kinds": _INPUTS, "affects": "all"}],
+        "coalesce": {"quiet": "250ms", "max-wait": "2s"},
+        "cache": {"results": 500, "ttl": "1h"},
+        "limits": {"timeout": "60s", "wait": "250ms", "max-inflight-per-user": 2},
+    },
+}
 #: link fields the kinds carry (field -> (kind, label)); the hierarchy fields (TT_BOOK, LEGAL_ENTITY, COUNTERPARTY) link through the
 #: core and trading packs' own fields
 FIELDS = {"POSITION_ID": ("position", "Position"), "PORTFOLIO_ID": ("portfolio", "Portfolio"), "NODE_ID": ("risk-hierarchy", "Hierarchy node"),
@@ -52,5 +89,8 @@ FORM_COLUMNS = {"position": ["DIRECTION", "DESK", "TT_BOOK", "PRODUCT_TYPE", "CU
                 "scenario-set": ["BUSINESS_DATE"],
                 "risk-hierarchy": ["HIERARCHY", "LEVEL", "NAME", "LIMIT_VAR"]}
 BADGES = {"position": "fmt($.QUANTITY, 'compact')", "portfolio": "$.TYPE"}
+#: the computed kinds' fields (VAR.md section 9.7): read as an ordinary kind, never stored
+COMPUTED = ("var-result", "var-whatif")
 EXAMPLES = [("PORT PF-RATES-DESK", "Portfolio · its positions, longs and shorts, VaR and component VaR (computed as you open it)"),
-            ("PORT PF-ASHA-UNWIND", "A basket of positions and trades · overlaps the rates desk")]
+            ("PORT PF-ASHA-UNWIND", "A basket of positions and trades · overlaps the rates desk"),
+            ("VRES DESK:RATES", "The rates desk's VaR as an ordinary kind (computed when asked, as you; the explorer is VAR DESK:RATES)")]

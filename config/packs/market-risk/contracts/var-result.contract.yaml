@@ -1,0 +1,135 @@
+# Project Drishti · Any data. Any domain. One grammar.
+#
+# Copyright (c) 2026 Ashutosh Sinha <ajsinha@gmail.com>.
+# All rights reserved.
+#
+# PROPRIETARY AND CONFIDENTIAL.
+#
+# This file is the confidential and proprietary property of Ashutosh Sinha.
+# Unauthorised copying, use, modification, distribution or disclosure of this
+# file, via any medium, is strictly prohibited except with the express prior
+# written permission of the copyright holder.
+#
+# See the LICENSE file in the root of this repository for the full terms.
+
+# Data contract of the var-result kind (command VRES): docs/contracts/README.md section 16; the measure's contract is
+# docs/contracts/VAR.md (section 9.7). Drafted by `drishti.py contract bootstrap var-result`, completed by hand (2.8.0).
+kind: var-result
+mnemonic: VRES
+pack: market-risk
+version: '1.0'
+class: computed
+status: active
+title: VaR of a scope (computed)
+description: The VaR, ES, decomposition, worst scenarios and P&L vector of any scope (the scope grammar of VAR.md section 8), computed
+  when asked by the server's VaR engine as the person asking; never stored.
+source: 'computed by Drishti: the reactive connector var-engine (java engine com.ash.drishti.server.var.VarResultEngine)'
+grain: One answer per question (the scope asked for and the business date), computed when asked.
+key: []
+dated-by: on request
+cadence:
+  frequency: on change
+  due: computed on request and again when the date's inputs load (data-version trigger)
+storage:
+  connector: var-engine
+  plugin: reactive
+fields:
+- name: SCOPE
+  type: text
+  presence: required
+  description: The scope as asked (the id; a ~ inside a node id is written %7E).
+  example: DESK:RATES
+- name: CANONICAL
+  type: text
+  presence: required
+  description: The scope's canonical text (VAR.md section 8.2).
+- name: SCOPE_KIND
+  type: text
+  presence: required
+  enum: [node, position, trade, portfolio, basket, capture, rule, counterparty, legal-entity, adhoc]
+- name: LABEL
+  type: text
+  presence: required
+- name: NODE
+  type: id
+  presence: optional
+  description: The hierarchy node when the scope is exactly one node.
+- name: BUSINESS_DATE
+  type: date
+  presence: required
+- name: VAR
+  type: amount
+  presence: required
+  unit: USD
+  description: VaR at CONFIDENCE, positive for a loss (VAR.md section 6.2).
+- name: ES
+  type: amount
+  presence: required
+  unit: USD
+  description: Expected shortfall at ES_CONFIDENCE (VAR.md section 6.3).
+- name: CONFIDENCE
+  type: rate
+  presence: required
+  example: 0.99
+- name: ES_CONFIDENCE
+  type: rate
+  presence: required
+  example: 0.975
+- name: K
+  type: integer
+  presence: required
+  description: The VaR rank (the 6th worst of 509 at 99%).
+- name: ES_COUNT
+  type: integer
+  presence: required
+- name: SCENARIOS
+  type: integer
+  presence: required
+- name: LIMIT
+  type: amount
+  presence: optional
+  unit: USD
+- name: LIMIT_USE
+  type: rate
+  presence: optional
+- name: SUM_STANDALONE
+  type: amount
+  presence: optional
+  unit: USD
+- name: DIVERSIFICATION
+  type: amount
+  presence: optional
+  unit: USD
+- name: BACKTEST
+  type: record
+  presence: required
+  description: DAYS, EXCEPTIONS, LIGHT, KUPIEC_LR, KUPIEC_P_VALUE, CHRISTOFFERSEN_LR, CHRISTOFFERSEN_P_VALUE (VAR.md section 6.5).
+- name: CHILDREN
+  type: record list
+  presence: required
+  description: The default parts (VAR.md section 9.3) with KEY, SCOPE, LABEL, KIND, STANDALONE_VAR, COMPONENT_VAR, COMPONENT_ES,
+    INCREMENTAL_VAR, PCT.
+- name: WORST
+  type: record list
+  presence: required
+  description: The 25 worst scenarios (RANK, INDEX, DATE, PNL).
+- name: PNL
+  type: vector
+  presence: required
+  unit: USD
+  description: The scope's P&L under each scenario day, oldest first (unrounded).
+- name: PROVENANCE
+  type: record
+  presence: required
+  description: The headline's provenance in UPPER_SNAKE (VAR.md section 9.2), with TIER saying where the vector came from.
+links: []
+validation:
+- rule: required
+  fields:
+  - VAR
+  - ES
+  - PNL
+notes:
+- 'No stored key: an answer''s id is the scope asked (the id in the request); VAR <scope> <GO> opens the same answer in the explorer.'
+- Computed as the viewer with the explorer's entitlements (VAR.md section 11); cached per view signature, data version and scope.
+review: []

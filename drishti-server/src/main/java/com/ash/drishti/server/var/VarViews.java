@@ -39,11 +39,17 @@ import java.util.Map;
  */
 final class VarViews {
 
-    private static final String ENGINE = "drishti-compute " + versionOf();
+    /** The engine's version (the drishti-compute module's): stamped on answers and on the computed kinds. */
+    static final String ENGINE_VERSION = versionOf();
+    private static final String ENGINE = "drishti-compute " + ENGINE_VERSION;
     private final VarService svc;
 
     VarViews(VarService svc) {
         this.svc = svc;
+    }
+
+    VarService service() {
+        return svc;
     }
 
     private static String versionOf() {

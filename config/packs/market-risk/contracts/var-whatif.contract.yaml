@@ -1,0 +1,123 @@
+# Project Drishti · Any data. Any domain. One grammar.
+#
+# Copyright (c) 2026 Ashutosh Sinha <ajsinha@gmail.com>.
+# All rights reserved.
+#
+# PROPRIETARY AND CONFIDENTIAL.
+#
+# This file is the confidential and proprietary property of Ashutosh Sinha.
+# Unauthorised copying, use, modification, distribution or disclosure of this
+# file, via any medium, is strictly prohibited except with the express prior
+# written permission of the copyright holder.
+#
+# See the LICENSE file in the root of this repository for the full terms.
+
+# Data contract of the var-whatif kind (command VWIF): docs/contracts/README.md section 16; the measure's contract is
+# docs/contracts/VAR.md (section 9.7). Drafted by `drishti.py contract bootstrap var-whatif`, completed by hand (2.8.0).
+kind: var-whatif
+mnemonic: VWIF
+pack: market-risk
+version: '1.0'
+class: computed
+status: active
+title: VaR what-if (computed, Python)
+description: A scope's VaR and ES before and after hypothetical trades kept in the person's private sandbox, and its stressed window,
+  computed when asked by the Python VaR engine from the scope's var-result; never stored.
+source: 'computed by Drishti: the reactive connector var-whatif (python engine drishti_compute.var.whatif:VarWhatIfEngine, pool var)'
+grain: One answer per question (the scope, the sandbox and the parameters, the business date), computed when asked.
+key: []
+dated-by: on request
+cadence:
+  frequency: on change
+  due: computed on request and again when the date's inputs load (data-version trigger); never for a sandbox by a trigger
+storage:
+  connector: var-whatif
+  plugin: reactive
+fields:
+- name: SCOPE
+  type: text
+  presence: required
+  description: The base scope (the id), e.g. DESK:RATES - TRD:X to take a trade out exactly.
+- name: CANONICAL
+  type: text
+  presence: required
+- name: BUSINESS_DATE
+  type: date
+  presence: required
+- name: ITEMS
+  type: integer
+  presence: required
+  description: The hypothetical trades of the sandbox (0 without one).
+- name: BEFORE_VAR
+  type: amount
+  presence: required
+  unit: USD
+- name: AFTER_VAR
+  type: amount
+  presence: required
+  unit: USD
+- name: CHANGE_VAR
+  type: amount
+  presence: required
+  unit: USD
+- name: BEFORE_ES
+  type: amount
+  presence: required
+  unit: USD
+- name: AFTER_ES
+  type: amount
+  presence: required
+  unit: USD
+- name: CHANGE_ES
+  type: amount
+  presence: required
+  unit: USD
+- name: LIMIT
+  type: amount
+  presence: optional
+  unit: USD
+- name: LIMIT_USE_BEFORE
+  type: rate
+  presence: optional
+- name: LIMIT_USE_AFTER
+  type: rate
+  presence: optional
+- name: CONFIDENCE
+  type: rate
+  presence: required
+- name: ES_CONFIDENCE
+  type: rate
+  presence: required
+- name: STRESS_WINDOW
+  type: integer
+  presence: required
+  description: Scenario days of the stressed window (0 when not asked).
+- name: STRESSED_VAR_BEFORE
+  type: amount
+  presence: optional
+  unit: USD
+  description: The largest VaR over every run of STRESS_WINDOW consecutive scenario days, before the what-if.
+- name: STRESSED_VAR_AFTER
+  type: amount
+  presence: optional
+  unit: USD
+- name: STRESSED_FROM
+  type: integer
+  presence: optional
+  description: The index of the stressed window's first scenario day.
+links:
+- field: SCOPE
+  kind: var-result
+validation:
+- rule: required
+  fields:
+  - BEFORE_VAR
+  - AFTER_VAR
+notes:
+- 'No stored key: an answer''s id is the base scope (the id in the request); the parameters ride on it (sandbox, stress-window,
+  component-window).'
+- The hypothetical trades' vectors are supplied in the sandbox (one P&L per scenario day, priced elsewhere); taking trades out is the
+  scope's own algebra. Pricing through QLRisk is parked until its API is stable.
+- The tables items (each trade's standalone, incremental in order and alone, component VaR and ES) and pnl (DAY, BEFORE, AFTER) come
+  with the answer.
+review: []

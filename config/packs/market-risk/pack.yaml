@@ -33,6 +33,8 @@ kinds:
 - pnl-vector
 - scenario-set
 - risk-hierarchy
+- var-result
+- var-whatif
 sutras: sutras
 formats: config/formats.yaml
 mnemonics:
@@ -66,6 +68,12 @@ mnemonics:
   HIER:
     kind: risk-hierarchy
     label: Risk hierarchy node
+  VRES:
+    kind: var-result
+    label: VaR of a scope (computed)
+  VWIF:
+    kind: var-whatif
+    label: VaR what-if (computed, Python)
 graph:
   id-patterns:
   - pattern: ^SCN-
@@ -203,6 +211,101 @@ connectors:
     enabled: ${DRISHTI_VAR_ENABLED:true}
     kinds:
     - position
+  var-engine:
+    plugin: reactive
+    mode: reactive
+    enabled: ${DRISHTI_VAR_ENABLED:true}
+    description: 'The VaR of any scope, computed when asked by the server''s VaR engine (the additive aggregation over the hot store), as the
+      viewer: VRES <scope> <GO>'
+    kinds:
+      var-result:
+        compute: var-result
+        result:
+          required:
+          - VAR
+          - ES
+          - PNL
+          types:
+            VAR: number
+            ES: number
+    engine:
+      type: java
+      class: com.ash.drishti.server.var.VarResultEngine
+      version: '1.0'
+    triggers:
+    - 'on': data-version
+      kinds:
+      - pnl-vector
+      - risk-hierarchy
+      - scenario-set
+      - portfolio
+      affects: all
+    coalesce:
+      quiet: 250ms
+      max-wait: 2s
+    cache:
+      results: 2000
+      ttl: 1h
+    limits:
+      timeout: 60s
+      wait: 5s
+      max-inflight-per-user: 4
+  var-whatif:
+    plugin: reactive
+    mode: reactive
+    enabled: ${DRISHTI_VAR_ENABLED:true}
+    description: 'A scope''s VaR before and after hypothetical trades (a private sandbox) and its stressed window, computed by the Python VaR
+      engine in the compute pool var from the scope''s var-result: VWIF <scope> <GO>'
+    kinds:
+      var-whatif:
+        compute: var-whatif
+        params:
+          sandbox:
+            type: sandbox-ref
+          stress-window:
+            type: int
+            default: 250
+            min: 0
+            max: 5000
+          component-window:
+            type: int
+            default: 5
+            min: 1
+            max: 51
+        result:
+          required:
+          - BEFORE_VAR
+          - AFTER_VAR
+          types:
+            BEFORE_VAR: number
+            AFTER_VAR: number
+    reads:
+    - kind: var-result
+      as: base
+      id: '{id}'
+    engine:
+      type: python
+      entry: drishti_compute.var.whatif:VarWhatIfEngine
+      pool: var
+      version: '1.0'
+    triggers:
+    - 'on': data-version
+      kinds:
+      - pnl-vector
+      - risk-hierarchy
+      - scenario-set
+      - portfolio
+      affects: all
+    coalesce:
+      quiet: 250ms
+      max-wait: 2s
+    cache:
+      results: 500
+      ttl: 1h
+    limits:
+      timeout: 60s
+      wait: 250ms
+      max-inflight-per-user: 2
 routes:
   stress-scenario: risk-store
   stress-result: risk-store
@@ -214,6 +317,8 @@ routes:
   pnl-vector: risk-store
   scenario-set: risk-store
   risk-hierarchy: risk-store
+  var-result: var-engine
+  var-whatif: var-whatif
 form:
   stress-scenario:
   - path: SCENARIO_ID
@@ -390,6 +495,8 @@ console:
     - Portfolio · its positions, longs and shorts, VaR and component VaR (computed as you open it)
   - - PORT PF-ASHA-UNWIND
     - A basket of positions and trades · overlaps the rates desk
+  - - VRES DESK:RATES
+    - The rates desk's VaR as an ordinary kind (computed when asked, as you; the explorer is VAR DESK:RATES)
   help: config/help.yaml
 python:
   enabled: true

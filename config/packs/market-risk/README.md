@@ -31,6 +31,8 @@ kinds:
 - pnl-vector
 - scenario-set
 - risk-hierarchy
+- var-result
+- var-whatif
 commands:
   SCN: stress-scenario
   STR: stress-result
@@ -42,6 +44,8 @@ commands:
   PNLV: pnl-vector
   SSET: scenario-set
   HIER: risk-hierarchy
+  VRES: var-result
+  VWIF: var-whatif
   MRSK: pack overview
 depends-on:
   packs:
@@ -49,9 +53,12 @@ depends-on:
   - trading
   connectors:
   - risk-store
+  - var-engine
   - var-positions
+  - var-whatif
   plugins:
   - delta
+  - reactive
   - var-positions
   settings:
   - DRISHTI_DELTA_ROOT
@@ -417,6 +424,26 @@ Nested structures:
 
 Links: `NODE_ID` → `risk-hierarchy`.
 
+### `var-result`
+
+**VaR of a scope (computed)** · mnemonic `VRES` · read through connector `var-engine`.
+
+About: VaR of a scope.
+
+**Id:** set by its connector (no samples ship).
+
+No samples ship: documents are read live from its connector `var-engine` (plugin `reactive`).
+
+### `var-whatif`
+
+**VaR what-if (computed, Python)** · mnemonic `VWIF` · read through connector `var-whatif`.
+
+About: VaR what-if.
+
+**Id:** set by its connector (no samples ship).
+
+No samples ship: documents are read live from its connector `var-whatif` (plugin `reactive`).
+
 ## Screens and commands
 
 | Command | Kind | Opens |
@@ -431,6 +458,8 @@ Links: `NODE_ID` → `risk-hierarchy`.
 | `PNLV` | `pnl-vector` | P&L vector (509 scenarios) |
 | `SSET` | `scenario-set` | Scenario set |
 | `HIER` | `risk-hierarchy` | Risk hierarchy node |
+| `VRES` | `var-result` | VaR of a scope (computed) |
+| `VWIF` | `var-whatif` | VaR what-if (computed, Python) |
 | `MRSK` | — | The pack's overview: its kinds, how many each holds, an example of each |
 
 Examples:
@@ -442,6 +471,7 @@ Examples:
 | `FRTB FRTB-RATES-1` | FRTB sensitivities and charges |
 | `PORT PF-RATES-DESK` | Portfolio · its positions, longs and shorts, VaR and component VaR (computed as you open it) |
 | `PORT PF-ASHA-UNWIND` | A basket of positions and trades · overlaps the rates desk |
+| `VRES DESK:RATES` | The rates desk's VaR as an ordinary kind (computed when asked, as you; the explorer is VAR DESK:RATES) |
 
 Screens (Sutras):
 
@@ -471,6 +501,8 @@ The connectors it brings (written once to `config/connectors/<name>.yaml`, then 
 |---|---|---|---|
 | `risk-store` | `delta` | `stress-scenario`, `stress-result`, `frtb-sensitivity`, `pnl-explain`, `trade-valuation`, `portfolio`, `pnl-vector`, `scenario-set`, `risk-hierarchy` | `${DRISHTI_LAKE_ENABLED:true}` |
 | `var-positions` | `var-positions` | `position` | `${DRISHTI_VAR_ENABLED:true}` |
+| `var-engine` | `reactive` | `var-result` | `${DRISHTI_VAR_ENABLED:true}` |
+| `var-whatif` | `reactive` | `var-whatif` | `${DRISHTI_VAR_ENABLED:true}` |
 
 Settings (environment variables) its connectors read: `DRISHTI_DELTA_ROOT`, `DRISHTI_LAKE_ENABLED`, `DRISHTI_VAR_ENABLED`.
 

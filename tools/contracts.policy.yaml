@@ -30,7 +30,7 @@
 classes:
   input: [pnl-vector, scenario-set, risk-hierarchy, portfolio, path-book, path-strip]
   drishti-owned: [position]
-  computed: [path-sum, path-sum-java]
+  computed: [path-sum, path-sum-java, var-result, var-whatif]
 
 retiring: {}
 
