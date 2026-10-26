@@ -72,7 +72,7 @@ final class ExposureTradeLinks implements ViewAugmenter {
                 links.put("EXPOSURE_NOTE", "no exposure paths on " + d.date() + " (run " + d.book().runId() + ")");
             }
         } catch (DrishtiException | IllegalArgumentException e) {
-            links.put("EXPOSURE_NOTE", "no exposure paths: " + e.getMessage());
+            links.put("EXPOSURE_NOTE", "no exposure paths: " + String.valueOf(e.getMessage()).replaceFirst("^DRS-\\d+ ", ""));
         }
         fields.put(FIELD, DataNode.of(links));
         return new EntityDocument(doc.ref(), new DataNode.Obj(fields), doc.provenance(), doc.deleted());

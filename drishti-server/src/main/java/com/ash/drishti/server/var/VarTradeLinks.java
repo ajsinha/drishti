@@ -84,8 +84,9 @@ final class VarTradeLinks implements ViewAugmenter {
                 links.put("VAR_NOTE", note + ", so no VaR");
             }
         } catch (DrishtiException | IllegalArgumentException e) {
-            links.put("PNL_VECTOR_NOTE", "no P&L vector: " + e.getMessage());
-            links.put("VAR_NOTE", "no VaR: " + e.getMessage());
+            String why = String.valueOf(e.getMessage()).replaceFirst("^DRS-\\d+ ", "");
+            links.put("PNL_VECTOR_NOTE", "no P&L vector: " + why);
+            links.put("VAR_NOTE", "no VaR: " + why);
         }
         fields.put(FIELD, DataNode.of(links));
         return new EntityDocument(doc.ref(), new DataNode.Obj(fields), doc.provenance(), doc.deleted());

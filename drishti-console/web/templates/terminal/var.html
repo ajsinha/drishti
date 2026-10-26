@@ -33,44 +33,20 @@
     <a class="vx-help" href="/help/context/var" title="Help: the VaR guide (F1)" aria-label="Help: the VaR guide" data-vx-help><i class="bi bi-question-circle" aria-hidden="true"></i></a>
   </div>
   <p class="vx-notice" data-vx-notice role="status" hidden></p>
+  <ul class="vx-notices" data-vx-notices role="status" hidden></ul>
+  <div class="vx-basket" data-vx-basket hidden></div>
   <div class="vx-layout">
     <aside class="vx-panel vx-tree-panel" aria-label="Scopes">
       <div class="vx-ph"><h2>Scopes</h2>
         <select class="vx-select" data-vx-hierarchy aria-label="Hierarchy"><option value="MGMT">Management</option><option value="LEGAL">Legal entity</option></select>
         <span class="vx-fresh" data-vx-fresh="tree">loading…</span></div>
       <div class="vx-tree" role="tree" data-vx-tree></div>
-      <div class="vx-sec">Ad-hoc scopes <button type="button" class="btn btn-sm vx-btn" data-vx-new-scope>+ New scope</button></div>
+      <div class="vx-sec">Ad-hoc scopes <button type="button" class="btn btn-sm vx-btn" data-vx-basket-open title="Construct your basket (Alt+B)">◫ Construct your basket</button></div>
       <div class="vx-tree vx-adhoc" role="tree" data-vx-adhoc></div>
     </aside>
 
     <section class="vx-main">
       <nav class="vx-crumb" aria-label="Scope path" data-vx-crumb></nav>
-      <div class="vx-builder" data-vx-builder hidden>
-        <div class="vx-ph"><h2>New scope</h2><span class="vx-fresh">unsaved · VaR updates as you change it</span>
-          <button type="button" class="btn btn-sm vx-btn" data-vx-builder-close>Close</button></div>
-        <div class="vx-pb">
-          <label class="vx-lbl" for="vx-scope-text">Scope: positions, trades, rules, nodes and saved scopes, with <span class="mono">+</span> (union), <span class="mono">-</span> (minus) and <span class="mono">&amp;</span> (both)</label>
-          <textarea id="vx-scope-text" class="vx-input mono" rows="2" spellcheck="false" data-vx-scope-text placeholder="POS:POS-BOOK-RATES-1~… + TRD:MX-20000001 - TRD:CLY-3000157"></textarea>
-          <div class="vx-builder-row">
-            <input class="vx-input mono" data-vx-paste placeholder="Paste trade or position ids (comma, space or new line)" aria-label="Paste ids">
-            <button type="button" class="btn btn-sm vx-btn" data-vx-add-ids>Add ids</button>
-            <input class="vx-input mono" data-vx-rule placeholder="Rule: CURRENCY == 'EUR' and DIRECTION == 'SHORT'" aria-label="Rule">
-            <button type="button" class="btn btn-sm vx-btn" data-vx-add-rule>Add rule</button>
-          </div>
-          <div class="vx-builder-row">
-            <select class="vx-select" data-vx-combine aria-label="A scope to combine"></select>
-            <button type="button" class="btn btn-sm vx-btn" data-vx-union>+ union</button>
-            <button type="button" class="btn btn-sm vx-btn" data-vx-minus>− minus</button>
-            <span class="vx-note">or tick rows in the contributions and the tree and <b>Add to basket</b></span>
-          </div>
-          <div class="vx-builder-row">
-            <input class="vx-input" data-vx-name placeholder="Name to save (letters, digits, dashes)" aria-label="Basket name">
-            <input class="vx-input" data-vx-share placeholder="Share read-only with (users or roles, comma)" aria-label="Share with">
-            <button type="button" class="btn btn-sm vx-btn primary" data-vx-save>Save</button>
-            <span class="vx-note" data-vx-builder-msg aria-live="polite"></span>
-          </div>
-        </div>
-      </div>
       <div class="vx-tiles" data-vx-tiles aria-live="polite"></div>
       <div class="vx-panel">
         <div class="vx-tabs" role="tablist" data-vx-tabs>
@@ -106,10 +82,9 @@
               <button type="button" class="vx-segb" data-by="position" aria-pressed="false">By position</button>
               <button type="button" class="vx-segb" data-by="trade" aria-pressed="false">By trade</button>
             </span>
-            <button type="button" class="btn btn-sm vx-btn" data-vx-add-basket disabled>Add to basket</button>
           </div>
-          <div class="vx-scroll"><table class="vx-table" data-vx-ctable><thead><tr><th class="cb"><span class="visually-hidden">Pick</span></th><th>Scope</th><th class="n">Standalone VaR</th><th class="n">Component VaR</th><th class="n">% of total</th><th class="bar"></th><th class="n">Marginal (per 1m)</th><th class="n">Incremental VaR</th></tr></thead><tbody></tbody></table></div>
-          <p class="vx-note" data-vx-ctable-note>Component VaR adds up to the scope's VaR (Euler, on the VaR scenario's neighbourhood). Incremental VaR = the scope's VaR minus its VaR without the row. Click a row to drill in.</p>
+          <div class="vx-scroll"><table class="vx-table" data-vx-ctable><thead><tr><th>Scope</th><th class="n">Standalone VaR</th><th class="n">Component VaR</th><th class="n">% of total</th><th class="bar"></th><th class="n">Marginal (per 1m)</th><th class="n">Incremental VaR</th></tr></thead><tbody></tbody></table></div>
+          <p class="vx-note" data-vx-ctable-note>Component VaR adds up to the scope's VaR (Euler, on the VaR scenario's neighbourhood). Incremental VaR = the scope's VaR minus its VaR without the row. Click a row to drill in; + basket adds it to your basket.</p>
         </div>
         <div class="vx-pb" data-pane="captures" hidden>
           <div class="vx-contrib-bar"><input class="vx-input" data-vx-cap-note placeholder="A note for the capture (optional)" aria-label="Capture note">
@@ -128,7 +103,7 @@
         <p class="vx-note">Every figure on this page is reproducible from the vector batch, the scenario set and the engine above.</p>
         <div class="vx-actions"><a class="btn btn-sm vx-btn" data-vx-csv href="#">Export CSV</a>
           <button type="button" class="btn btn-sm vx-btn" data-vx-capture-side>Capture VaR</button>
-          <button type="button" class="btn btn-sm vx-btn" disabled title="What-if comes with the pricer (2.8.0 wave V4)">What-if…</button></div>
+          <button type="button" class="btn btn-sm vx-btn" data-vx-whatif title="Pre-deal what-if: add a copy of a booked trade, scaled, to this scope's basket">What-if…</button></div>
       </div>
     </aside>
   </div>

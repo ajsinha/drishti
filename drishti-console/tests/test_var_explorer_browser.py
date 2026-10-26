@@ -24,7 +24,13 @@ data built into a scratch lake (lake demo --only market-risk/<the VaR kinds>) an
 - the official end-of-day record of the newest date: every node of both hierarchies, captured at start;
 - the portfolio and position pages: Drishti's derived positions (the var-positions connector) with the engine's figures computed as
   the page opens;
-- an ad-hoc basket: ids pasted into "+ New scope", the VaR live, saved, listed, captured, and the capture reopened with its numbers.
+- "Construct your basket": "+ basket" on a contribution row and on a tree row, hints as you type (arrow keys and Enter), a part taken
+  away, the selection's VaR live with the sum of the parts and the diversification, an id that matches nothing flagged at once and said
+  in words, saved, the explorer moved to it, its parts by term, reopened in a fresh browser with its parts loaded back into the tray,
+  captured, and the capture reopened with its numbers; anywhere else the top bar's ◫ Basket (Alt+B) opens it as a popup;
+- the pre-deal what-if in the tray: a copy of a booked trade, unwound, before and after by the Python VaR engine (compute on);
+- an id that is not a live trade (VAR TRD 10000000) says so, never a VaR of 0 that looks computed;
+- a trade page's Risk group (risk-links@1): its P&L vector and its VaR one click away, and why it has no exposure.
 
 Screenshots go to DRISHTI_VAR_SHOTS when it names a folder. Skipped when Playwright, Chromium, the built server jar or a JDK is missing."""
 import os
@@ -41,7 +47,7 @@ from test_workbench_browser import browser, wait  # noqa: F401 - fixtures and he
 from wb_live import _stack
 
 ROOT = Path(__file__).resolve().parents[2]
-VAR_DATA = ",".join(f"market-risk/{k}" for k in ("pnl-vector", "scenario-set", "risk-hierarchy", "portfolio"))
+VAR_DATA = ",".join([f"market-risk/{k}" for k in ("pnl-vector", "scenario-set", "risk-hierarchy", "portfolio")] + ["trades/murex"])
 SHOTS = os.environ.get("DRISHTI_VAR_SHOTS")
 #: the time from a click on a desk to its painted panels (the product owner's target is 300 ms on the demo data); generous here, as the
 #: suite runs beside builds: the measured time is printed and kept in the docs
@@ -57,7 +63,8 @@ def stack(tmp_path_factory):
                         "--engine", "auto"], capture_output=True, text=True, cwd=ROOT, timeout=600)
     if r.returncode != 0 or not (lake / "risk" / "pnl-vector").is_dir():
         pytest.skip("could not build the VaR demo lake: " + (r.stderr or r.stdout)[-400:])
-    for st in _stack(tmp_path_factory, {"DRISHTI_DELTA_ROOT": str(lake), "DRISHTI_DEMO_ENABLED": "false", "DRISHTI_OFFLINE": "true"}):
+    for st in _stack(tmp_path_factory, {"DRISHTI_DELTA_ROOT": str(lake), "DRISHTI_DEMO_ENABLED": "false", "DRISHTI_OFFLINE": "true",
+                                        "DRISHTI_COMPUTE_ENABLED": "true", "DRISHTI_PYTHON": sys.executable}):    # the what-if's Python engine
         _engine_ready(str(st))
         yield st
 
@@ -177,7 +184,7 @@ def test_the_tabs_path_history_and_contributions(stack, browser):
     shot(pg, "explorer-history")
     pg.locator('.vx-tab[data-tab="contrib"]').click()
     wait(pg, "document.querySelector('[data-var]').dataset.tabPainted === 'contrib'")
-    total = pg.evaluate("Number(document.querySelector('[data-vx-ctable] tr.vx-total td:nth-child(4)').textContent.replace(/,/g, ''))")
+    total = pg.evaluate("Number(document.querySelector('[data-vx-ctable] tr.vx-total td:nth-child(3)').textContent.replace(/,/g, ''))")
     var = pg.evaluate("window.VarExplorer.state.head.var")
     assert abs(total - var) <= len(pg.locator("[data-vx-ctable] tbody tr[data-scope]").all())   # rounded each: within a unit a row
     pg.locator('.vx-segb[data-by="trade"]').click()
@@ -185,30 +192,95 @@ def test_the_tabs_path_history_and_contributions(stack, browser):
     pg.close()
 
 
-def test_an_adhoc_basket_is_built_saved_and_captured(stack, browser):
+def tray_live(pg):
+    """Waits until the tray shows the engine's answer for what it holds now (its scope text)."""
+    wait(pg, "(() => { const l = document.querySelector('[data-vb-live]'); return l && l.dataset.scope === window.VarBasket.compose()"
+             " && !l.classList.contains('computing'); })()", 60)
+
+
+def type_and_pick(pg, text, expect=None):
+    """Types into the tray, waits for the engine's hints, picks the first with Enter (after ArrowDown and ArrowUp: the keys work)."""
+    pg.locator("[data-vb-find]").fill("")
+    pg.locator("[data-vb-find]").type(text, delay=15)
+    wait(pg, "document.querySelector('[data-vb-hints]').dataset.q === %r && document.querySelectorAll('[data-vb-hint]').length > 0" % text, 30)
+    first = pg.locator("[data-vb-hint]").first
+    if expect:
+        assert expect in first.inner_text(), first.inner_text()
+    pg.locator("[data-vb-find]").press("ArrowDown")
+    pg.locator("[data-vb-find]").press("ArrowUp")
+    scope = first.get_attribute("data-vb-hint")
+    pg.locator("[data-vb-find]").press("Enter")
+    wait(pg, "!!document.querySelector('[data-vb-chip=%s]')" % repr(scope).replace("'", '"'))
+    return scope
+
+
+def test_construct_your_basket_hints_live_save_reopen_and_capture(stack, browser):
     pg = open_var(browser, str(stack), "/var?scope=BOOK:BOOK-RATES-1")
+    pg.evaluate("localStorage.removeItem('drishti.varBasket')")
+    pg.reload()
     painted(pg, "BOOK:BOOK-RATES-1")
+    assert pg.locator("[data-vx-basket]").is_hidden()                       # a node, an empty tray: no strip
+    # "+ basket" on a contribution row: the strip opens with the position in it
     pg.locator('.vx-tab[data-tab="contrib"]').click()
     wait(pg, "document.querySelectorAll('[data-vx-ctable] tbody tr[data-scope^=\"POS:\"]').length > 1")
-    rows = pg.locator('[data-vx-ctable] tbody tr[data-scope^="POS:"]')
-    p1, p2 = rows.nth(0).get_attribute("data-scope")[4:], rows.nth(1).get_attribute("data-scope")[4:]
-    rows.nth(0).locator("input[type=checkbox]").check()
-    pg.locator("[data-vx-add-basket]").click()
-    assert not pg.locator("[data-vx-builder]").is_hidden()
-    pg.locator("[data-vx-paste]").fill(p2)
-    pg.locator("[data-vx-add-ids]").click()
-    text = pg.locator("[data-vx-scope-text]").input_value()
-    assert p1 in text and p2 in text
-    wait(pg, "(document.querySelector('[data-var]').dataset.painted || '').indexOf(%r) >= 0" % p2)
-    adhoc_var = pg.evaluate("window.VarExplorer.state.head.var")
-    assert pg.evaluate("window.VarExplorer.state.head.kind") == "adhoc"
-    assert "ad-hoc" in pg.locator(".vx-crumb").inner_text()
-    shot(pg, "explorer-adhoc")
-    pg.locator("[data-vx-name]").fill("two-rates")
-    pg.locator("[data-vx-save]").click()
-    wait(pg, "document.querySelector('[data-var]').dataset.saved && document.querySelector('[data-var]').dataset.painted.indexOf('BASKET:') === 0")
-    assert pg.evaluate("window.VarExplorer.state.head.var") == adhoc_var
-    wait(pg, "document.querySelectorAll('[data-vx-adhoc] .vx-row[data-scope^=\"BASKET:\"]').length > 0")
+    pos = pg.locator('[data-vx-ctable] tbody tr[data-scope^="POS:"]').first.get_attribute("data-scope")
+    pg.locator(f'[data-vx-ctable] tbody tr[data-scope="{pos}"] [data-vx-add]').click()
+    wait(pg, "!document.querySelector('[data-vx-basket]').hidden && !!document.querySelector('[data-vb-chip=\"%s\"]')" % pos)
+    assert pg.evaluate("document.querySelector('[data-var]').dataset.painted") == "BOOK:BOOK-RATES-1"   # the row's click did not drill
+    assert pg.locator("[data-basket-count]").inner_text() == "1"
+    assert "Construct your basket" in pg.locator("[data-var-basket]").inner_text()
+    assert "unsaved basket" in pg.locator("[data-vb-state]").inner_text()
+    # hints: a portfolio by typing, with its type, id, name, trades and standalone VaR
+    port = type_and_pick(pg, "pf-usd", expect="PORT")
+    assert port == "PORT:PF-USD-RATES"
+    hint_text = pg.evaluate("window.VarBasket.state.items[1].trades")
+    assert hint_text and hint_text > 100
+    # "+ basket" on a tree row (a counterparty by typing would do too): the FX desk
+    pg.locator('.vx-tree .vx-row[data-scope="NODE:MGMT~DESK-FX"] [data-vx-add]').click(force=True)
+    wait(pg, "!!document.querySelector('[data-vb-chip=\"NODE:MGMT~DESK-FX\"]')")
+    # a trade taken away: "-" first
+    tray_live(pg)
+    trd = pg.evaluate("fetch('/api/var/scope/contributions?scope=PORT:PF-USD-RATES&by=trade').then(r => r.json()).then(d => d.rows[0].scope)")
+    type_and_pick(pg, "-" + trd[4:], expect="TRD")
+    assert pg.locator(f'[data-vb-chip="{trd}"]').get_attribute("class").find("minus") >= 0
+    tray_live(pg)
+    live = pg.locator("[data-vb-live]").inner_text()
+    assert "VaR 99% 1D of the selection" in live and "sum of the parts" in live and "diversification" in live, live
+    sel_var = float(pg.get_attribute("[data-vb-live]", "data-var"))
+    assert sel_var > 0
+    shot(pg, "basket-tray")
+    # an id that matches nothing is flagged at once and said in words
+    pg.locator("[data-vb-find]").fill("TRD:10000000")
+    wait(pg, "document.querySelector('[data-vb-hints]').dataset.q === 'TRD:10000000' && document.querySelectorAll('[data-vb-hint]').length > 0", 30)
+    assert "not a live trade" in pg.locator("[data-vb-hint]").first.inner_text()
+    pg.locator("[data-vb-find]").press("Enter")
+    wait(pg, "!!document.querySelector('[data-vb-chip=\"TRD:10000000\"][data-flagged]')")
+    tray_live(pg)
+    assert "TRD:10000000 is not a live trade" in pg.locator("[data-vb-notices]").inner_text()
+    pg.locator('[data-vb-chip="TRD:10000000"] [data-vb-del]').click()
+    tray_live(pg)
+    assert abs(float(pg.get_attribute("[data-vb-live]", "data-var")) - sel_var) < 1
+    # open without saving: the explorer on the ad-hoc scope, its parts by term
+    pg.locator("[data-vb-open]").click()
+    wait(pg, "window.VarExplorer.state.head && window.VarExplorer.state.head.kind === 'adhoc'"
+             " && document.querySelector('[data-var]').dataset.painted === window.VarBasket.compose()", 60)
+    assert pg.evaluate("window.VarExplorer.state.head.var") == sel_var
+    assert "unsaved basket" in pg.locator(".vx-crumb").inner_text()
+    assert pg.evaluate("window.VarExplorer.state.head.childKind") == "part"
+    # save: a basket, the explorer moves to it; its contributions are its parts
+    pg.locator("[data-vb-name]").fill("rates-mix")
+    pg.locator("[data-vb-save]").click()
+    wait(pg, "document.querySelector('[data-var]').dataset.saved && (document.querySelector('[data-var]').dataset.painted || '').indexOf('BASKET:') === 0", 60)
+    basket = pg.get_attribute("[data-var]", "data-saved")
+    assert basket.endswith("/rates-mix")
+    assert pg.evaluate("window.VarExplorer.state.head.var") == sel_var
+    assert "saved basket · " + basket in pg.locator("[data-vb-state]").inner_text()
+    wait(pg, "document.querySelectorAll('[data-vx-adhoc] .vx-row[data-scope=\"BASKET:%s\"]').length > 0" % basket)
+    pg.locator('.vx-tab[data-tab="contrib"]').click()
+    wait(pg, "document.querySelector('[data-var]').dataset.tabPainted === 'contrib' && document.querySelectorAll('[data-vx-ctable] tbody tr[data-scope]').length === 3")
+    assert pg.locator(f'[data-vx-ctable] tbody tr[data-scope="{port}"]').count() == 1
+    shot(pg, "basket-saved")
+    # captured, and the capture reopened with its numbers
     pg.locator('.vx-tab[data-tab="captures"]').click()
     pg.locator("[data-vx-cap-note]").fill("before the unwind")
     pg.locator("[data-vx-capture]").click()
@@ -216,13 +288,88 @@ def test_an_adhoc_basket_is_built_saved_and_captured(stack, browser):
     cap = pg.get_attribute("[data-var]", "data-last-capture")
     pg.locator(f'[data-vx-captable] tr[data-capture="{cap}"] button', has_text="Reopen").click()
     wait(pg, "document.querySelector('[data-vx-compare]').dataset.reopened === %r" % cap)
-    assert float(pg.get_attribute("[data-vx-compare]", "data-var")) == adhoc_var
-    pg.locator(f'[data-vx-captable] tr[data-capture="{cap}"] button', has_text="Compare with now").click()
-    wait(pg, "(document.querySelector('[data-vx-compare]').dataset.compared || '').indexOf('now') > 0")
-    shot(pg, "explorer-capture")
-    # VAR CAPTURE <id> reopens it from the command line
-    pg.goto(str(stack) + "/go?q=" + f"VAR CAPTURE {cap} <GO>".replace(" ", "+"))
-    wait(pg, "document.querySelector('[data-vx-compare]') && document.querySelector('[data-vx-compare]').dataset.reopened === %r" % cap)
+    assert float(pg.get_attribute("[data-vx-compare]", "data-var")) == sel_var
+    pg.close()
+
+    # a fresh browser (nothing kept): opening the basket loads its parts back into the tray, for editing
+    ctx = browser.new_context(viewport={"width": 1600, "height": 1000})
+    pg = ctx.new_page()
+    pg.goto(str(stack) + "/go?q=" + f"VAR SCOPE {basket} <GO>".replace(" ", "+"))
+    wait(pg, "window.VarExplorer && window.VarExplorer.state.head && window.VarExplorer.state.head.kind === 'basket'", 60)
+    wait(pg, "document.querySelectorAll('[data-vb-chip]').length === 4 && !document.querySelector('[data-vx-basket]').hidden")
+    assert pg.locator(f'[data-vb-chip="{trd}"]').get_attribute("class").find("minus") >= 0
+    assert "saved basket · " + basket in pg.locator("[data-vb-state]").inner_text()
+    assert pg.locator("[data-vb-name]").input_value() == "rates-mix"
+    # the selection survives a reload
+    pg.reload()
+    wait(pg, "document.querySelectorAll('[data-vb-chip]').length === 4", 60)
+    # anywhere else: the top bar's Basket (Alt+B) opens the tray as a popup; its Save goes to the explorer
+    pg.goto(str(stack) + "/t")
+    wait(pg, "!!document.querySelector('[data-basket-btn]')")
+    assert pg.locator("[data-basket-count]").inner_text() == "4"
+    pg.keyboard.press("Alt+b")
+    wait(pg, "document.querySelector('[data-vb-popup]') && !document.querySelector('[data-vb-popup]').hidden")
+    assert pg.locator("[data-vb-popup] [data-vb-chip]").count() == 4
+    assert pg.locator("[data-vb-save]").inner_text() == "Save basket and open VaR"
+    tray_live(pg)
+    shot(pg, "basket-popup")
+    pg.locator("[data-vb-open]").click()
+    pg.wait_for_url("**/var?scope=**", timeout=30000)
+    wait(pg, "window.VarExplorer && window.VarExplorer.state.head && window.VarExplorer.state.head.kind === 'adhoc'", 60)
+    ctx.close()
+
+
+def test_the_pre_deal_what_if_in_the_tray(stack, browser):
+    """A copy of a booked trade, unwound (factor -1), added to the basket: VaR and ES before and after by the Python VaR engine."""
+    pg = open_var(browser, str(stack), "/var?scope=DESK:DESK-FX")
+    pg.evaluate("localStorage.removeItem('drishti.varBasket')")
+    pg.reload()
+    painted(pg, "DESK:DESK-FX")
+    trd = pg.evaluate("fetch('/api/var/scope/contributions?scope=DESK:DESK-FX&by=trade').then(r => r.json()).then(d => d.rows[0].key)")
+    pg.locator("[data-vx-whatif]").click()                                   # the provenance column's What-if…: the desk into the tray
+    wait(pg, "!document.querySelector('[data-vb-whatif]').hidden && document.querySelectorAll('[data-vb-chip]').length === 1")
+    pg.locator("[data-vb-whatif-trade]").fill(trd)
+    pg.locator("[data-vb-whatif-factor]").fill("-1")
+    pg.locator("[data-vb-whatif-run]").click()
+    wait(pg, "!!document.querySelector('[data-vb-whatif-out]').dataset.done", 180)
+    out = pg.locator("[data-vb-whatif-out]").inner_text()
+    assert pg.get_attribute("[data-vb-whatif-out]", "data-done") == "ready", out
+    assert all(w in out.lower() for w in ("before", "after", "incremental", "var 99%")), out
+    shot(pg, "basket-whatif")
+    pg.close()
+
+
+def test_an_id_that_is_not_a_live_trade_says_so(stack, browser):
+    pg = open_var(browser, str(stack), "/go?q=" + "VAR TRD 10000000 <GO>".replace(" ", "+"))
+    wait(pg, "document.querySelector('[data-var]') && document.querySelector('[data-var]').dataset.empty === 'true'", 60)
+    notes = pg.locator("[data-vx-notices]").inner_text()
+    assert "TRD:10000000 is not a live trade on" in notes and "no P&L vector" in notes, notes
+    assert pg.locator('.vx-tile[data-tile="0"] .v').inner_text() == "—"
+    assert "no trades" in pg.locator('.vx-tile[data-tile="0"] .s').inner_text()
+    shot(pg, "explorer-not-live")
+    pg.close()
+
+
+def test_a_trade_page_has_its_risk_links(stack, browser):
+    """risk-links@1 on every deal Sutra: the P&L vector and the VaR of a live trade one click away; no exposure run here, said so."""
+    trd = urllib.request.urlopen(str(stack) + "/api/var/scope/contributions?scope=DESK:DESK-RATES&by=trade", timeout=60)
+    import json
+    tid = [r["key"] for r in json.loads(trd.read())["rows"] if r["key"].startswith("MX-")][0]
+    pg = open_var(browser, str(stack), "/go?q=" + f"TRD {tid} <GO>".replace(" ", "+"))
+    wait(pg, "!!document.querySelector('#p-risk')", 60)
+    risk = pg.locator("#p-risk")
+    wait(pg, "document.querySelector('#p-risk').innerText.indexOf('HS-509') >= 0 || document.querySelector('#p-risk').innerText.indexOf('not loaded') >= 0", 30)
+    if "not loaded" in risk.inner_text():                                     # the date was still loading: open it again
+        pg.reload()
+        wait(pg, "!!document.querySelector('#p-risk') && document.querySelector('#p-risk').innerText.indexOf('HS-509') >= 0", 60)
+    text = risk.inner_text()
+    assert f"PV-{tid}-HS-509" in text and f"TRD:{tid}" in text, text
+    assert "no exposure" in text, text
+    assert risk.locator(f'a[href*="/v/pnl-vector/PV-{tid}-HS-509"]').count() == 1
+    assert risk.locator('a[href*="/v/var-result/"]').count() == 1
+    shot(pg, "trade-risk-links")
+    pg.locator(f'#p-risk a[href*="/v/pnl-vector/"]').click()
+    wait(pg, "location.pathname.indexOf('/v/pnl-vector/') === 0", 30)
     pg.close()
 
 

@@ -63,3 +63,27 @@ def test_an_unknown_engine_path_is_refused_by_the_console(client):
     assert r.status_code == 404 and r.json()["code"] == "DRS-1001"
     r = client.post("/api/var/reload", json={})
     assert r.status_code == 404
+
+
+def test_the_basket_trays_hints_and_what_if_go_to_the_engine_as_the_user(client, backend, monkeypatch):
+    """Construct your basket (VAR_GUIDE.md section 3.5): the tray's type-ahead (GET /api/var/hints) and its pre-deal what-if
+    (POST /api/var/what-if, with the page's business date) are the engine's; the console passes them on and nothing else."""
+    seen = []
+
+    async def var(method, path, ident, body=None, raw=False, **params):
+        seen.append((method, path, body, params))
+        return [{"type": "PORT", "id": "PF-USD-RATES", "scope": "PORT:PF-USD-RATES", "trades": 918, "var": 28968862}] if path == "/hints" else {"ok": 1}
+    monkeypatch.setattr(backend, "var", var, raising=False)
+    r = client.get("/api/var/hints?q=pf%20usd&limit=8")
+    assert r.status_code == 200 and r.json()[0]["scope"] == "PORT:PF-USD-RATES"
+    assert seen[-1] == ("GET", "/hints", None, {"q": "pf usd", "limit": "8"})
+    r = client.post("/api/var/what-if?asOf=2026-09-30", json={"scope": "BASKET:asha/unwind", "items": [{"copyOf": "MX-30000121", "factor": -1}]})
+    assert r.status_code == 200
+    assert seen[-1][:3] == ("POST", "/what-if", {"scope": "BASKET:asha/unwind", "items": [{"copyOf": "MX-30000121", "factor": -1}]})
+    assert seen[-1][3] == {"asOf": "2026-09-30"}
+
+
+def test_the_top_bar_has_the_basket_button_and_alt_b(client):
+    html = client.get("/t").text
+    assert "data-basket-btn" in html and 'aria-keyshortcuts="Alt+B"' in html and "Basket" in html
+    assert "/static/js/var-basket.js" in html and "/static/css/var-basket.css" in html

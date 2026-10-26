@@ -21,7 +21,8 @@ method runs in the Python exposure engine):
 - EXP BANK <GO> opens the explorer on the bank: the scope tree, the counterparty board; a click on a counterparty moves every panel in
   place (the breadcrumb, the tiles, its Netting sets tab); a netting set's Collateral tab shows its CSA and the signed "Effect of
   collateral"; its Trades tab opens a trade "In its netting set" with its netting benefit; Back returns to the set;
-- By tenor; the q 95/99 and collateralised switches change the figures; the pre-deal what-if by the proxy (addon) and by the exact
+- By tenor; the q 95/99 and collateralised switches change the figures; the pre-deal what-if (on a netting set, and on a counterparty
+  into the netting set picked, its largest first) by the proxy (addon) and by the exact
   method (paths, the Python engine);
 - a netting set the run does not cover says so (no figures); on a phone the explorer does not scroll sideways; F1 opens the guide.
 
@@ -220,6 +221,39 @@ def test_the_pre_deal_what_if_by_the_proxy_and_by_the_paths(stack, browser):
     assert pg.get_attribute("[data-exposure]", "data-whatif") == "paths", pg.locator("[data-xx-whatif-out]").inner_text()[:300]
     out = pg.locator("[data-xx-whatif-out]").text_content()
     assert "Peak PFE after" in out and "exact" in out
+    pg.close()
+
+
+def test_the_pre_deal_what_if_on_a_counterparty(stack, browser):
+    """The counterparty's Pre-deal tab: the netting set the new trade goes into (its largest first), the candidate from that set, the
+    counterparty's figures; another set lists its own trades; the same result layout as a netting set's."""
+    pg = open_exp(browser, str(stack), "/exposure?scope=" + CPTY)
+    painted(pg, CPTY)
+    tab(pg, "predeal")
+    wait(pg, "document.querySelectorAll('[data-xx-predeal-set] option').length > 1 && document.querySelectorAll('[data-xx-candidate] option').length > 0")
+    sets = pg.evaluate("[...document.querySelectorAll('[data-xx-predeal-set] option')].map(o => o.value)")
+    peaks = {r["nettingSet"]: r["peakPfe"] for r in head(pg, "byNettingSet")}
+    assert sets[0] == "NSET:" + max(peaks, key=lambda k: peaks[k] or 0)          # the largest by peak PFE, picked by default
+    assert pg.locator("[data-xx-whatif-scope]").input_value() == CPTY            # the counterparty's figures by default
+    first = pg.evaluate("[...document.querySelectorAll('[data-xx-candidate] option')].map(o => o.value).join(',')")
+    pg.locator("[data-xx-predeal-set]").select_option(sets[1])
+    wait(pg, "!document.querySelector('[data-xx-candidate]').disabled && [...document.querySelectorAll('[data-xx-candidate] option')]"
+             ".map(o => o.value).join(',') !== %r" % first, PAINT_S)
+    assert "pre-deal what-if" in pg.locator("[data-xx-pane]").inner_text().lower()
+    pg.locator("[data-xx-method]").select_option("addon")
+    pg.locator("[data-xx-whatif]").click()
+    wait(pg, "document.querySelector('[data-exposure]').dataset.whatif === 'addon'", PAINT_S)
+    assert pg.get_attribute("[data-exposure]", "data-whatif-scope") == CPTY
+    out = pg.locator("[data-xx-whatif-out]").text_content()
+    assert "Peak PFE after" in out and "proxy" in out
+    pg.evaluate("delete document.querySelector('[data-exposure]').dataset.whatif")
+    pg.locator("[data-xx-method]").select_option("paths")
+    pg.locator("[data-xx-factor]").fill("-1")
+    pg.locator("[data-xx-whatif]").click()
+    wait(pg, "document.querySelector('[data-exposure]').dataset.whatif === 'paths'"
+             " || /failed/.test(document.querySelector('[data-xx-whatif-out]').parentNode.parentNode.innerText)", 300)
+    assert pg.get_attribute("[data-exposure]", "data-whatif") == "paths", pg.locator("[data-xx-whatif-out]").inner_text()[:300]
+    assert "exact" in pg.locator("[data-xx-whatif-out]").text_content()
     pg.close()
 
 

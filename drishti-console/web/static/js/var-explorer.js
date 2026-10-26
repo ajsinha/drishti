@@ -19,9 +19,11 @@
    selected node are fetched ahead while the user reads, so drilling down is instant. The time from a click to the painted panels is
    shown in the status line and kept on the root element (data-paint-ms) for the tests.
 
-   Ad-hoc scopes: "+ New scope" opens the builder: ids pasted, a rule, rows ticked and "Add to basket", unions and differences with
-   any scope; the VaR follows every change; Save keeps it as a basket (private, shared read-only on request). "Capture VaR" stores an
-   immutable snapshot that reopens exactly, compares with another capture or with now, and exports as CSV. */
+   Ad-hoc scopes and baskets are one thing: "Construct your basket" (var-basket.js), a strip at the top of this page whenever it
+   shows an ad-hoc scope or a basket (or the tray holds parts): hints as you type, + / − chips, a rule, "+ basket" on every row of the
+   tree and the contributions, the selection's VaR live, a pre-deal what-if, Save (a basket, private or shared read-only) and Open.
+   Opening a basket loads its parts back into the tray. "Capture VaR" stores an immutable snapshot that reopens exactly, compares with
+   another capture or with now, and exports as CSV. */
 (function () {
   "use strict";
   var root = document.querySelector("[data-var]");
@@ -30,7 +32,8 @@
   var $ = function (sel) { return root.querySelector(sel); };
   var params = new URLSearchParams(location.search);
   var S = { scope: root.dataset.scope || "BANK", hierarchy: root.dataset.hierarchy || "MGMT", tab: "path", by: "child", page: 0,
-            asOf: params.get("asOf") || "", tree: null, expanded: {}, children: {}, picked: {}, head: null, seq: 0, user: root.dataset.user || "" };
+            asOf: params.get("asOf") || "", tree: null, expanded: {}, children: {}, head: null, seq: 0, user: root.dataset.user || "" };
+  var B = window.VarBasket || null;
   var cache = new Map();
   var retired = params.get("from") || "";     // an id of the retired stored VaR (VAR-COMM, VN-<node>): opened at its scope
 
@@ -152,6 +155,8 @@
       S.head = d;
       if (retiredNotice(scope, d)) return;
       renderHeadline(d);
+      renderNotices(d);
+      if (B) B.mirror(d);
       return d;
     }).catch(function (e) { if (seq === S.seq) { errorBox($("[data-vx-tiles]"), e); fresh("main", "failed", "stale"); } });
     var tab = renderTab(seq);
@@ -210,8 +215,8 @@
     $("[data-vx-es-legend]").textContent = "ES " + esc + "% (mean of worst " + d.esCount + ")";
     var bt = d.backtest || {}, u = d.limitUse;
     var tiles = [
-      ["VaR " + conf + "% · 1 day", C.money(d["var"]), d.k + "th worst of " + d.scenarios, null],
-      ["ES " + esc + "%", C.money(d.es), "mean of worst " + d.esCount, null],
+      ["VaR " + conf + "% · 1 day", d.empty ? "—" : C.money(d["var"]), d.empty ? "no trades: nothing to compute" : d.k + "th worst of " + d.scenarios, null],
+      ["ES " + esc + "%", d.empty ? "—" : C.money(d.es), d.empty ? "no trades" : "mean of worst " + d.esCount, null],
       ["Sum of standalone VaR", d.sumStandalone === null ? "—" : C.money(d.sumStandalone), d.childKind ? d.children + " " + d.childKind + (d.children === 1 ? "" : "s") : (d.children ? d.children + " parts" : "no parts"), null],
       ["Diversification", d.diversification === null ? "—" : "−" + C.money(d.diversification),
         d.diversification === null ? "single part" : (d.diversification / d.sumStandalone * 100).toFixed(1) + "% of standalone", null],
@@ -237,6 +242,15 @@
     document.title = "VaR · " + d.label + (document.body.dataset.product ? " · " + document.body.dataset.product : "");
   }
 
+  /** What the scope names but cannot count, in words (an id that matches nothing, a trade not live on the date), and an empty scope. */
+  function renderNotices(d) {
+    var ul = $("[data-vx-notices]"), list = (d.provenance && d.provenance.notices) || [];
+    ul.textContent = "";
+    list.forEach(function (n) { ul.appendChild(h("li", null, n)); });
+    ul.hidden = !list.length;
+    root.dataset.empty = d.empty ? "true" : "false";
+  }
+
   function renderCrumb(d) {
     var c = $("[data-vx-crumb]");
     c.textContent = "";
@@ -253,7 +267,8 @@
         c.appendChild(a);
       } else c.appendChild(h("span", null, p.label));
     });
-    var chipText = { portfolio: "portfolio", basket: "ad-hoc · saved basket", rule: "ad-hoc · rule", adhoc: "ad-hoc · unsaved", capture: "capture's members" }[d.kind];
+    var chipText = { portfolio: "portfolio", basket: "saved basket" + (d.basket ? " · " + d.basket.id : ""), rule: "ad-hoc · rule", adhoc: "unsaved basket",
+                     capture: "capture's members" }[d.kind];
     if (chipText) c.appendChild(h("span", "vx-chip amber", chipText));
   }
 
@@ -282,6 +297,13 @@
     return api("scope/path", { scope: S.scope, page: 0 }).then(function (d) {
       if (seq !== S.seq) return;
       S.path = d;
+      if (!d.series.some(function (v) { return v !== 0; })) {           // no trades (or none with a P&L): nothing to draw, said so
+        ["[data-vx-histo]", "[data-vx-tail]", "[data-vx-series]"].forEach(function (s) { $(s).textContent = "No trades: no P&L path to draw."; });
+        $("[data-vx-pathtable] tbody").textContent = "";
+        $("[data-vx-path-note]").textContent = "No trades in this scope on the date.";
+        $("[data-vx-more]").hidden = true;
+        return;
+      }
       drawPath(d);
       pathRows(d, false);
     }).catch(function (e) { if (seq === S.seq) errorBox($("[data-vx-histo]"), e); });
@@ -398,7 +420,7 @@
   // ---------------------------------------------------------------------------------------------------------------- contributions
   function loadContrib(seq) {
     var tb = $("[data-vx-ctable] tbody");
-    if (!tb.children.length) { tb.textContent = ""; var tr = document.createElement("tr"); cell(tr, "computing…", "vx-note").colSpan = 8; tb.appendChild(tr); }
+    if (!tb.children.length) { tb.textContent = ""; var tr = document.createElement("tr"); cell(tr, "computing…", "vx-note").colSpan = 7; tb.appendChild(tr); }
     return api("scope/contributions", { scope: S.scope, by: S.by === "child" ? "" : S.by }).then(function (d) {
       if (seq !== S.seq) return;
       renderContrib(d);
@@ -406,7 +428,7 @@
       if (seq !== S.seq) return;
       tb.textContent = "";
       var tr = document.createElement("tr");
-      cell(tr, e.message, "vx-err").colSpan = 8;
+      cell(tr, e.message, "vx-err").colSpan = 7;
       tb.appendChild(tr);
     });
   }
@@ -417,7 +439,8 @@
     if (!d.rows.length) {
       var tr = document.createElement("tr");
       cell(tr, S.head && S.head.kind === "trade" ? "A trade has no parts: its P&L path is its own vector." :
-        "No parts you may see below this scope (a position level your role sees in aggregate only, or none).", "vx-note").colSpan = 8;
+        S.head && S.head.empty ? "No trades: nothing to break down." : "No parts you may see below this scope (a position level your role sees in aggregate only, or none).",
+        "vx-note").colSpan = 7;
       tb.appendChild(tr);
       return;
     }
@@ -426,15 +449,11 @@
       var tr = document.createElement("tr");
       tr.dataset.scope = r.scope;
       tr.className = "vx-click";
-      var cb = h("input");
-      cb.type = "checkbox";
-      cb.checked = !!S.picked[r.scope];
-      cb.setAttribute("aria-label", "Pick " + r.label);
-      cb.addEventListener("click", function (ev) { ev.stopPropagation(); if (cb.checked) S.picked[r.scope] = r.label; else delete S.picked[r.scope]; pickState(); });
-      cell(tr, "", "cb").appendChild(cb);
       var name = cell(tr, "", "vx-name");
       if (r.direction) name.appendChild(chip(r.direction));
-      name.appendChild(document.createTextNode(" " + r.label + (r.quantity !== undefined ? " · " + int(r.quantity) : "") + (r.partial ? " (part)" : "")));
+      name.appendChild(document.createTextNode(" " + r.label + (r.quantity !== undefined ? " · " + int(r.quantity) : "") + (r.partial ? " (part)" : "")
+        + (r.kind === "part" ? " · " + int(r.trades) + " trades" : "")));
+      name.appendChild(addButton(r.scope, { type: r.kind === "part" ? r.word : kindWord(r.kind), id: r.key, name: r.label }));
       cell(tr, int(r.standaloneVar), "n mono");
       cell(tr, int(r.componentVar), "n mono");
       cell(tr, pct(r.pct), "n mono");
@@ -451,7 +470,6 @@
     });
     var t = document.createElement("tr");
     t.className = "vx-total";
-    cell(t, "");
     cell(t, "Total");
     cell(t, int(d.sumStandalone), "n mono");
     cell(t, int(d.sumComponent), "n mono");
@@ -459,14 +477,25 @@
     cell(t, "diversification −" + C.money(d.diversification), "vx-note").colSpan = 3;
     tb.appendChild(t);
     $("[data-vx-ctable-note]").textContent = "Component VaR adds up to the scope's VaR (Euler, on the VaR scenario's neighbourhood). Incremental VaR = the scope's VaR minus its VaR without the row."
-      + (d.truncated ? " Only the first parts are shown." : "") + " Click a row to drill in; tick rows and Add to basket.";
+      + (d.truncated ? " Only the first parts are shown." : "") + (d.by === "part" ? " The parts are the basket's, each alone in the standalone "
+      + "column; a trade in two parts counts once, in the first." : "") + " Click a row to drill in; + basket adds it to your basket.";
   }
 
-  function pickState() {
-    var n = Object.keys(S.picked).length;
-    var b = $("[data-vx-add-basket]");
-    b.disabled = n === 0;
-    b.textContent = n ? "Add " + n + " to basket" : "Add to basket";
+  /** The scope word of a part's kind, for the basket's chip. */
+  function kindWord(kind) {
+    return { position: "POS", trade: "TRD", node: "NODE", desk: "NODE", book: "NODE", division: "NODE", "legal-entity": "NODE" }[kind] || "SCOPE";
+  }
+
+  /** "+ basket" on a row: adds its scope to the basket tray (the row's own click still drills in). */
+  function addButton(scope, meta) {
+    var b = h("button", "vx-add", "+ basket");
+    b.type = "button";
+    b.dataset.vxAdd = scope;
+    b.title = "Add " + scope + " to your basket";
+    b.setAttribute("aria-label", "Add " + (meta.name || scope) + " to your basket");
+    b.addEventListener("click", function (ev) { ev.stopPropagation(); if (B) B.add(scope, meta); });
+    b.addEventListener("keydown", function (ev) { ev.stopPropagation(); });
+    return b;
   }
 
   // ---------------------------------------------------------------------------------------------------------------- captures
@@ -607,6 +636,7 @@
     nm.appendChild(tw);
     if (opts.direction) nm.appendChild(chip(opts.direction));
     nm.appendChild(document.createTextNode(" " + label));
+    if (scope) nm.appendChild(addButton(scope, { type: opts.word || scope.split(":")[0], id: scope.replace(/^[A-Z]+:/, ""), name: label }));
     row.appendChild(nm);
     row.appendChild(h("span", "num", v === null || v === undefined ? "" : C.money(v)));
     row.appendChild(h("span", "num muted", es === null || es === undefined ? "" : C.money(es)));
@@ -678,75 +708,33 @@
       bs.forEach(function (b) {
         t.appendChild(treeRow("★ " + b.name + (b.owner !== S.user ? " (" + b.owner + ")" : ""), "BASKET:" + b.id, 0, null, null, null, { adhoc: true }));
       });
-      fillCombine();
       markTree();
-    }).catch(function () { fillCombine(); });
+    }).catch(function () { /* no baskets listed */ });
     markTree();
   }
 
-  // ---------------------------------------------------------------------------------------------------------------- the scope builder
-  var builder = $("[data-vx-builder]"), text = $("[data-vx-scope-text]"), timer = null;
-  function openBuilder(seed) {
-    builder.hidden = false;
-    if (seed !== undefined) text.value = seed;
-    text.focus();
+  // ---------------------------------------------------------------------------------------------------------------- the basket tray
+  /** The basket tray as a strip at the top (var-basket.js): it moves the explorer when saved or opened, and while the explorer shows the
+      tray's own unsaved scope, every change moves it too (the VaR follows as you pick). */
+  var strip = $("[data-vx-basket]"), follow = null;
+  if (B) {
+    B.attach({
+      strip: strip,
+      onOpen: function (scope) { renderAdhoc(); select(scope); },
+      onChange: function (scope, before) {
+        if (!scope || !S.head || S.head.kind !== "adhoc" || (S.scope !== before && S.head.canonical !== before)) return;
+        clearTimeout(follow);
+        follow = setTimeout(function () { select(scope); }, 350);
+      }
+    });
+    if (B.state.items.length) strip.hidden = false;
+    document.addEventListener("vb:saved", function (ev) { root.dataset.saved = ev.detail.id; });
   }
-  function appendTerm(term, op) {
-    var cur = text.value.trim();
-    text.value = cur ? cur + " " + (op || "+") + " " + term : term;
-    live();
-  }
-  function live() {
-    clearTimeout(timer);
-    timer = setTimeout(function () { var s = text.value.trim(); if (s) select(s); }, 350);
-  }
-  function fillCombine() {
-    var sel = $("[data-vx-combine]");
-    sel.textContent = "";
-    var add = function (label, scope) { var o = document.createElement("option"); o.value = scope; o.textContent = label; sel.appendChild(o); };
-    add("— a scope to combine —", "");
-    (S.tree ? S.tree.nodes : []).forEach(function (n) { add(n.name + " (" + n.level + ")", n.scope); });
-    (S.tree ? S.tree.portfolios : []).forEach(function (p) { add(p.name + " (portfolio)", p.scope); });
-    (S.baskets || []).forEach(function (b) { add(b.name + " (basket)", "BASKET:" + b.id); });
-  }
-  text.addEventListener("input", live);
-  $("[data-vx-new-scope]").addEventListener("click", function () { openBuilder(S.head && S.head.kind !== "node" ? S.head.canonical : ""); });
-  $("[data-vx-builder-close]").addEventListener("click", function () { builder.hidden = true; });
-  $("[data-vx-add-ids]").addEventListener("click", function () {
-    var ids = $("[data-vx-paste]").value.split(/[\s,;]+/).filter(Boolean);
-    var pos = ids.filter(function (x) { return /^POS-/i.test(x); }), trd = ids.filter(function (x) { return !/^POS-/i.test(x); });
-    if (pos.length) appendTerm("POS:" + pos.join(","));
-    if (trd.length) appendTerm("TRD:" + trd.join(","));
-    $("[data-vx-paste]").value = "";
-  });
-  $("[data-vx-add-rule]").addEventListener("click", function () {
-    var r = $("[data-vx-rule]").value.trim();
-    if (r) appendTerm("WHERE:" + r);
-  });
-  $("[data-vx-union]").addEventListener("click", function () { var v = $("[data-vx-combine]").value; if (v) appendTerm(v, "+"); });
-  $("[data-vx-minus]").addEventListener("click", function () { var v = $("[data-vx-combine]").value; if (v) appendTerm(v.indexOf(" ") >= 0 ? "(" + v + ")" : v, "-"); });
-  $("[data-vx-add-basket]").addEventListener("click", function () {
-    var scopes = Object.keys(S.picked);
-    if (!scopes.length) return;
-    openBuilder();
-    var pos = [], trd = [], other = [];
-    scopes.forEach(function (s) { if (s.indexOf("POS:") === 0) pos.push(s.slice(4)); else if (s.indexOf("TRD:") === 0) trd.push(s.slice(4)); else other.push(s); });
-    if (pos.length) appendTerm("POS:" + pos.join(","));
-    if (trd.length) appendTerm("TRD:" + trd.join(","));
-    other.forEach(function (s) { appendTerm(s); });
-    S.picked = {};
-    pickState();
-  });
-  $("[data-vx-save]").addEventListener("click", function () {
-    var msg = $("[data-vx-builder-msg]"), name = $("[data-vx-name]").value.trim();
-    if (!name || !text.value.trim()) { msg.textContent = "Give the scope a name and at least one member."; return; }
-    var share = $("[data-vx-share]").value.split(/[\s,]+/).filter(Boolean);
-    send("POST", "baskets", { name: name, title: name, scope: text.value.trim(), sharedWith: share }).then(function (b) {
-      msg.textContent = "Saved as " + b.id + " (" + b.type.toLowerCase() + ", version " + b.version + ").";
-      root.dataset.saved = b.id;
-      renderAdhoc();
-      select("BASKET:" + b.id);
-    }).catch(function (e) { msg.textContent = e.message; });
+  $("[data-vx-basket-open]").addEventListener("click", function () { if (B) { B.show(); var f = root.querySelector("[data-vb-find]"); if (f) f.focus(); } });
+  $("[data-vx-whatif]").addEventListener("click", function () {
+    if (!B) return;
+    if (!B.state.items.length && S.head) B.add(S.head.kind === "basket" ? S.head.canonical : S.scope, { name: S.head.label });
+    B.openWhatIf();
   });
 
   // ---------------------------------------------------------------------------------------------------------------- tabs, toggles, exports
@@ -801,7 +789,7 @@
   var resizeTimer = null;
   window.addEventListener("resize", function () {
     clearTimeout(resizeTimer);
-    resizeTimer = setTimeout(function () { if (S.path && S.tab === "path") drawPath(S.path); }, 150);
+    resizeTimer = setTimeout(function () { if (S.path && S.tab === "path" && S.path.series.some(function (v) { return v !== 0; })) drawPath(S.path); }, 150);
   });
 
   // ---------------------------------------------------------------------------------------------------------------- start

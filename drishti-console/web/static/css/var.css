@@ -170,6 +170,17 @@
 .vx-svg .vx-exc { fill: var(--d-bad); stroke: var(--d-surface); stroke-width: 2; }
 .vx-svg .vx-cross { stroke: var(--d-muted); stroke-width: 1; }
 
+/* "Construct your basket" (var-basket.css draws the tray): the strip's place, the notices, "+ basket" on a row */
+.vx-notices { margin: 4px 0 8px; padding: 5px 10px 5px 26px; border-left: 3px solid var(--d-warn); background: var(--d-surface); color: var(--d-ink);
+  font-size: 12px; }
+.vx-notices li { margin: 1px 0; }
+.vx-add { margin-left: 6px; padding: 0 5px; border: 1px solid var(--d-border); border-radius: 9px; background: var(--d-surface-2); color: var(--d-link);
+  font: 10.5px var(--d-font-sans); cursor: pointer; vertical-align: 1px; }
+.vx-add:hover, .vx-add:focus { border-color: var(--d-link); }
+.vx-row .vx-add { opacity: 0; }
+.vx-row:hover .vx-add, .vx-row:focus-within .vx-add, .vx-row[aria-current="true"] .vx-add { opacity: 1; }
+@media (hover: none) { .vx-row .vx-add { opacity: 1; } }
+
 @media (max-width: 1250px) { .vx-layout { grid-template-columns: 310px minmax(0, 1fr); } .vx-prov { grid-column: 1 / -1; } }
 @media (max-width: 1100px) { .vx-tiles { grid-template-columns: repeat(3, minmax(0, 1fr)); } }
 @media (max-width: 800px) { .vx-layout { grid-template-columns: minmax(0, 1fr); } .vx-charts, .vx-hist2 { grid-template-columns: minmax(0, 1fr); }
