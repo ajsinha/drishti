@@ -93,6 +93,10 @@ ui:
   # same under drishti.branding.
   product: ${DRISHTI_PRODUCT:Drishti}
   tagline: Any data. Any domain. One grammar.
+  # The landing page's headline (blank: the tagline is the headline); its accent is the part drawn in the theme's gradient. When a
+  # headline is set, the tagline sits under it as the subtitle.
+  headline: See what your data hasn't told you yet.
+  headline_accent: hasn't told you yet.
   product_native: दृष्टि             # the name in its own script, beside it on the About page (blank for none)
   product_meaning: Drishti (दृष्टि) means <em>sight</em>.
   copyright: Copyright © 2026 Ashutosh Sinha. All rights reserved. Proprietary and confidential.

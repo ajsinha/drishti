@@ -316,6 +316,8 @@ def create_app(settings: Settings) -> FastAPI:
         PRODUCT_NATIVE=settings.get("ui.product_native", ""),
         NOTICE=settings.get("ui.notice", ""),
         TAGLINE=settings.get("ui.tagline", ""),
+        HEADLINE=settings.get("ui.headline", ""),
+        HEADLINE_ACCENT=settings.get("ui.headline_accent", ""),
         DEFAULT_THEME=settings.get("ui.default_theme", "terminal"),
         DESK=settings.get("ui.desk", "Rates desk"),
         USER=settings.get("ui.user_display", "Ash"),

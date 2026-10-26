@@ -100,6 +100,7 @@ a:hover { text-decoration: underline; }
 @keyframes pulse { 50% { opacity: .35; } }
 .lp-title { font-size: clamp(2.2rem, 5.5vw, 4.2rem); font-weight: 800; letter-spacing: -.02em; line-height: 1.06; margin: 1.1rem auto .9rem; max-width: 22ch; }
 .lp-grad { background: linear-gradient(90deg, var(--d-grad-from), var(--d-grad-to)); -webkit-background-clip: text; background-clip: text; color: transparent; }
+.lp-tagline { color: var(--d-accent); font-family: var(--d-font-mono); font-size: clamp(.9rem, 1.6vw, 1.05rem); letter-spacing: .08em; text-transform: uppercase; margin: -.2rem auto 1.1rem; }
 .lp-sub { color: var(--d-muted); font-size: 1.15rem; max-width: 62ch; margin: 0 auto 1.6rem; }
 .lp-cta { display: flex; gap: .8rem; justify-content: center; flex-wrap: wrap; }
 .lp-stage { position: relative; margin: 2.6rem auto 0; max-width: 1180px; border: 1px solid var(--d-border); border-radius: 16px;

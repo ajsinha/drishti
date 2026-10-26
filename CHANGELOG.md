@@ -17,6 +17,7 @@
 
 ## Unreleased
 
+- **The landing page's headline** (product owner, 2026-10-26): "See what your data hasn't told you yet.", with the tagline "Any data. Any domain. One grammar." under it as the subtitle; both from configuration (`ui.headline`, `ui.headline_accent`, `ui.tagline`; [CONFIGURATION.md](docs/admin/CONFIGURATION.md)).
 - **Docs: VaR in two documents** (product owner, 2026-10-26). [VAR_GUIDE.md](docs/guides/VAR_GUIDE.md) is now the one VaR reference
   (Part I using VaR, the explorer, scopes, captures, what-if, CLI, API, settings; Part II the data contract, still version 1.4; Part III
   how the engine stores a date, sizing, the benchmark and open items), and [tutorial 25](docs/tutorials/25-var-from-the-bank-to-a-trade.md)

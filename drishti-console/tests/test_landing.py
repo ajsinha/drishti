@@ -20,7 +20,8 @@ def test_landing_renders(client):
     assert r.status_code == 200
     html = r.text
     assert 'id="lpHero"' in html
-    assert "One grammar." in html
+    assert "One grammar." in html                                  # the tagline, under the headline
+    assert "See what your data" in html and 'class="lp-grad">hasn&#39;t told you yet.</span>' in html
     assert "Copyright © 2026 Ashutosh Sinha" in html
     for theme in ("terminal", "light", "wallstreet", "blue", "green", "crimson", "crimson-dark", "terminal-green", "terminal-crimson", "terminal-blue"):
         assert f'data-theme-choice="{theme}"' in html
