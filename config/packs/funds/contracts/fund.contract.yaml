@@ -11,7 +11,6 @@
 # written permission of the copyright holder.
 #
 # See the LICENSE file in the root of this repository for the full terms.
-
 # Data contract of the fund kind (command FUND): docs/contracts/README.md section 16.
 # Drafted by `drishti.py contract bootstrap fund`; reviewed by the pack owner (2.9.2): the review points are resolved in notes.
 kind: fund
@@ -223,11 +222,6 @@ fields:
   presence: optional
   description: 'The accountant''s LEI. Source: N-CEN PUBLIC_ACCOUNTANT.PUB_ACCOUNTANT_LEI.'
   example: 5493002GVO7EO8RNNS37
-  enum:
-  - 254900WYZPGQGKV3RF07
-  - 254900Y3CIB1KF938C31
-  - 5493002GVO7EO8RNNS37
-  - N/A
 - name: LENDS_SECURITIES
   type: boolean
   presence: required
@@ -277,13 +271,13 @@ fields:
   presence: required
   unit: USD
   description: 'Total assets. Source: N-PORT FUND_REPORTED_INFO.TOTAL_ASSETS.'
-  example: 492478331786.57
+  example: 492478331787.0
 - name: NET_ASSETS
   type: amount
   presence: required
   unit: USD
   description: 'Net assets: what the 200 are chosen by. Source: N-PORT FUND_REPORTED_INFO.NET_ASSETS.'
-  example: 490103179941.66
+  example: 490103179942.0
 - name: EXPENSE_RATIO
   type: rate
   presence: optional
@@ -440,13 +434,13 @@ fields:
   presence: required
   unit: '% of net assets'
   description: 'The weight of the holdings that are us-equities companies. Source: computed.'
-  example: 88.825
+  example: 91.196
 - name: US_COMPANIES
   type: integer
   presence: required
   unit: companies
   description: 'How many us-equities companies the fund holds. Source: computed.'
-  example: 73
+  example: 79
 - name: BY_ASSET
   type: record list
   presence: required
@@ -526,7 +520,7 @@ fields:
   presence: optional
   unit: '%'
   description: 'Half the sum of the differences between the fund''s and the index''s weights (VS_INDEX). Source: computed.'
-  example: 27.31
+  example: 26.75
 nested:
   CLASSES[]:
   - name: CLASS_ID
@@ -594,12 +588,6 @@ nested:
     presence: required
     description: 'The month (yyyy-mm), the third being the report''s. Source: computed from REPORT_DATE.'
     example: 2026-04
-    enum:
-    - 2026-03
-    - 2026-04
-    - 2026-05
-    - 2026-06
-    - 2026-07
   - name: SALES
     type: amount
     presence: required
@@ -733,19 +721,19 @@ nested:
     presence: required
     unit: '% of net assets'
     description: 'The holdings'' weight added up. Source: computed from N-PORT PERCENTAGE.'
-    example: 55.896
+    example: 58.061
   - name: VALUE
     type: amount
     presence: required
     unit: USD
     description: 'The holdings'' value added up. Source: computed from N-PORT CURRENCY_VALUE.'
-    example: 273949722310.0
+    example: 284557152390.0
   - name: COUNT
     type: integer
     presence: required
     unit: holdings
     description: 'The number of holdings in the group. Source: computed.'
-    example: 37
+    example: 42
   DERIVATIVES[]:
   - name: NAME
     type: text
@@ -1063,13 +1051,6 @@ nested:
     presence: required
     description: 'What the document holds and from which filings. Source: written by tools/packgen/funds/build.py.'
     example: Holdings, flows and returns as the fund filed them on Form …
-    enum:
-    - Holdings, flows and returns as the fund filed them on Form N-PORT for 2026-05-31; census facts from its newest Form N-CEN; fees and calendar-year
-      returns from its newest prospectus risk/return summary. No prices or NAV history.
-    - Holdings, flows and returns as the fund filed them on Form N-PORT for 2026-06-30; census facts from its newest Form N-CEN; fees and calendar-year
-      returns from its newest prospectus risk/return summary. No prices or NAV history.
-    - Holdings, flows and returns as the fund filed them on Form N-PORT for 2026-07-31; census facts from its newest Form N-CEN; fees and calendar-year
-      returns from its newest prospectus risk/return summary. No prices or NAV history.
   ALSO_HELD_BY[]:
   - name: FUND
     type: text
@@ -1119,7 +1100,7 @@ nested:
     presence: required
     unit: USD
     description: 'The fund''s net assets. Source: N-PORT FUND_REPORTED_INFO.NET_ASSETS.'
-    example: 2297839156547.89
+    example: 2297839156548.0
   VS_INDEX:
   - name: INDEX_ID
     type: id
@@ -1155,40 +1136,36 @@ nested:
     presence: required
     unit: companies
     description: 'Members with a market capitalisation the filings support. Source: computed.'
-    example: 67
+    example: 68
   - name: MEMBERS_NOT_WEIGHTED
     type: text
     presence: optional
     description: 'Members left out of the weights, by ticker. Source: computed.'
-    example: BIDU, BKNG, CTAS, EXPE, GOOGL, MSTR, PDD, PLTR, SHOP, TEAM
-    enum:
-    - ACGL, ACN, AOS, BF-B, BIO, BKNG, BRK-B, CME, CTAS, EL, EXPE, FFIV, FOXA, FRT, GOOGL, HRL, LEN, LH, MA, META, MKC, NWSA, PKG, RL, SPG, STZ,
-      TAP, TSN, UAA, UHS, XRX
-    - BIDU, BKNG, CTAS, EXPE, GOOGL, MSTR, PDD, PLTR, SHOP, TEAM
+    example: BIDU, BKNG, EXPE, GOOGL, MSTR, PDD, PLTR, SHOP, TEAM
   - name: MEMBERS_HELD
     type: amount
     presence: required
     unit: companies
     description: 'Listed members the fund holds. Source: computed.'
-    example: 55
+    example: 60
   - name: FUND_IN_INDEX_PCT
     type: rate
     presence: required
     unit: '% of net assets'
     description: 'The fund''s weight in the listed members. Source: computed.'
-    example: 69.44
+    example: 71.57
   - name: NOT_IN_INDEX_PCT
     type: rate
     presence: required
     unit: '% of net assets'
     description: 'The rest: other companies, cash, futures. Source: computed.'
-    example: 30.56
+    example: 28.43
   - name: ACTIVE_SHARE
     type: rate
     presence: required
     unit: '%'
     description: 'Half the sum of the absolute weight differences over the members weighted. Source: computed.'
-    example: 27.31
+    example: 26.75
   - name: LARGEST_DIFF_COMPANY
     type: text
     presence: required
@@ -1204,7 +1181,7 @@ nested:
     presence: required
     unit: '% points'
     description: 'Fund weight less index weight. Source: computed.'
-    example: -7.469
+    example: -7.819
   - name: AS_OF
     type: date
     presence: required
@@ -1240,19 +1217,19 @@ nested:
     presence: required
     unit: '%'
     description: 'The company''s weight in the fund over the members weighted. Source: computed.'
-    example: 11.031
+    example: 10.655
   - name: INDEX_PCT
     type: rate
     presence: required
     unit: '%'
     description: 'Its computed market-cap weight in the index. Source: computed: SEC shares outstanding times the price N-PORT implies.'
-    example: 18.5
+    example: 18.474
   - name: DIFF
     type: amount
     presence: required
     unit: '% points'
     description: 'Fund less index. Source: computed.'
-    example: -7.469
+    example: -7.819
   VS_INDEX.SECTORS[]:
   - name: SECTOR
     type: text
@@ -1264,19 +1241,19 @@ nested:
     presence: required
     unit: '%'
     description: 'The fund''s weight in it. Source: computed.'
-    example: 67.01
+    example: 67.8
   - name: INDEX_PCT
     type: rate
     presence: required
     unit: '%'
     description: 'The index''s weight in it. Source: computed.'
-    example: 61.31
+    example: 61.38
   - name: TILT
     type: amount
     presence: required
     unit: '% points'
     description: 'Fund less index. Source: computed.'
-    example: 5.7
+    example: 6.42
   AUTHORISED_PARTICIPANTS[]:
   - name: NAME
     type: text
@@ -1477,11 +1454,6 @@ validation:
   values:
   - LOOK_THROUGH
   - VS_INDEX
-    returns from its newest prospectus risk/return summary. No prices or NAV history.
-  - Holdings, flows and returns as the fund filed them on Form N-PORT for 2026-06-30; census facts from its newest Form N-CEN; fees and calendar-year
-    returns from its newest prospectus risk/return summary. No prices or NAV history.
-  - Holdings, flows and returns as the fund filed them on Form N-PORT for 2026-07-31; census facts from its newest Form N-CEN; fees and calendar-year
-    returns from its newest prospectus risk/return summary. No prices or NAV history.
 - rule: enum
   field: ALSO_HELD_BY[].TYPE
   values:
@@ -1494,14 +1466,16 @@ validation:
   values:
   - tracks
   - reference
-    TAP, TSN, UAA, UHS, XRX
-  - BIDU, BKNG, CTAS, EXPE, GOOGL, MSTR, PDD, PLTR, SHOP, TEAM
 - rule: link
   field: VS_INDEX.ROWS[].COMPANY
   kind: us-company
 notes:
-- "Reviewed by the pack owner (2.9.2): every figure is as the SEC data sets publish it; amounts are US dollars as N-PORT reports them (CURRENCY_VALUE), weights and ratios are in percent as filed (a weight of 7.1 is 7.1% of net assets)."
-- "A holding's BALANCE is in its UNIT (NS shares, PA principal amount, NC contracts) and a derivative's NOTIONAL in the currency it was filed in; neither is converted."
-- "A snapshot: refreshed when tools/publicdata/funds.py runs (the SEC publishes each data set quarterly); the same documents on every business day of the demo lake."
-- "Optional fields are empty where the fund did not file them: N-CEN facts for a fund whose census is not in the four quarters read, fees and returns for a fund without a risk/return summary (a unit investment trust)."
+- 'Reviewed by the pack owner (2.9.2): every figure is as the SEC data sets publish it; amounts are US dollars as N-PORT reports them (CURRENCY_VALUE),
+  weights and ratios are in percent as filed (a weight of 7.1 is 7.1% of net assets).'
+- A holding's BALANCE is in its UNIT (NS shares, PA principal amount, NC contracts) and a derivative's NOTIONAL in the currency it was filed in;
+  neither is converted.
+- 'A snapshot: refreshed when tools/publicdata/funds.py runs (the SEC publishes each data set quarterly); the same documents on every business
+  day of the demo lake.'
+- 'Optional fields are empty where the fund did not file them: N-CEN facts for a fund whose census is not in the four quarters read, fees and
+  returns for a fund without a risk/return summary (a unit investment trust).'
 review: []

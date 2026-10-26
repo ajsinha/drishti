@@ -11,7 +11,6 @@
 # written permission of the copyright holder.
 #
 # See the LICENSE file in the root of this repository for the full terms.
-
 # Data contract of the index-funds kind (command TRACK): docs/contracts/README.md section 16.
 # Drafted by `drishti.py contract bootstrap index-funds`; reviewed by the pack owner (2.9.2): the review points are resolved in notes.
 kind: index-funds
@@ -112,7 +111,7 @@ nested:
     presence: required
     unit: USD
     description: 'Its net assets. Source: N-PORT NET_ASSETS.'
-    example: 490103179941.66
+    example: 490103179942.0
   - name: EXPENSE_RATIO
     type: rate
     presence: optional
@@ -124,13 +123,13 @@ nested:
     presence: required
     unit: companies
     description: 'Listed members it holds. Source: computed.'
-    example: 55
+    example: 60
   - name: ACTIVE_SHARE
     type: rate
     presence: required
     unit: '%'
     description: 'Against the computed index weights. Source: computed.'
-    example: 27.31
+    example: 26.75
   - name: REPORT_DATE
     type: date
     presence: required
@@ -191,8 +190,12 @@ validation:
   - Mutual fund with an ETF share class
   - ETF (unit investment trust)
 notes:
-- "Reviewed by the pack owner (2.9.2): every figure is as the SEC data sets publish it; amounts are US dollars as N-PORT reports them (CURRENCY_VALUE), weights and ratios are in percent as filed (a weight of 7.1 is 7.1% of net assets)."
-- "A holding's BALANCE is in its UNIT (NS shares, PA principal amount, NC contracts) and a derivative's NOTIONAL in the currency it was filed in; neither is converted."
-- "A snapshot: refreshed when tools/publicdata/funds.py runs (the SEC publishes each data set quarterly); the same documents on every business day of the demo lake."
-- "Optional fields are empty where the fund did not file them: N-CEN facts for a fund whose census is not in the four quarters read, fees and returns for a fund without a risk/return summary (a unit investment trust)."
+- 'Reviewed by the pack owner (2.9.2): every figure is as the SEC data sets publish it; amounts are US dollars as N-PORT reports them (CURRENCY_VALUE),
+  weights and ratios are in percent as filed (a weight of 7.1 is 7.1% of net assets).'
+- A holding's BALANCE is in its UNIT (NS shares, PA principal amount, NC contracts) and a derivative's NOTIONAL in the currency it was filed in;
+  neither is converted.
+- 'A snapshot: refreshed when tools/publicdata/funds.py runs (the SEC publishes each data set quarterly); the same documents on every business
+  day of the demo lake.'
+- 'Optional fields are empty where the fund did not file them: N-CEN facts for a fund whose census is not in the four quarters read, fees and
+  returns for a fund without a risk/return summary (a unit investment trust).'
 review: []

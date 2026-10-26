@@ -11,7 +11,6 @@
 # written permission of the copyright holder.
 #
 # See the LICENSE file in the root of this repository for the full terms.
-
 # Data contract of the fund-holder kind (command HELD): docs/contracts/README.md section 16.
 # Drafted by `drishti.py contract bootstrap fund-holder`; reviewed by the pack owner (2.9.2): the review points are resolved in notes.
 kind: fund-holder
@@ -182,7 +181,7 @@ nested:
     presence: required
     unit: USD
     description: 'The fund''s net assets. Source: N-PORT FUND_REPORTED_INFO.NET_ASSETS.'
-    example: 2297839156547.89
+    example: 2297839156548.0
   TOP_WEIGHTS[]:
   - name: FUND
     type: id
@@ -262,8 +261,12 @@ validation:
   field: TOP_WEIGHTS[].FUND
   kind: fund
 notes:
-- "Reviewed by the pack owner (2.9.2): every figure is as the SEC data sets publish it; amounts are US dollars as N-PORT reports them (CURRENCY_VALUE), weights and ratios are in percent as filed (a weight of 7.1 is 7.1% of net assets)."
-- "A holding's BALANCE is in its UNIT (NS shares, PA principal amount, NC contracts) and a derivative's NOTIONAL in the currency it was filed in; neither is converted."
-- "A snapshot: refreshed when tools/publicdata/funds.py runs (the SEC publishes each data set quarterly); the same documents on every business day of the demo lake."
-- "Optional fields are empty where the fund did not file them: N-CEN facts for a fund whose census is not in the four quarters read, fees and returns for a fund without a risk/return summary (a unit investment trust)."
+- 'Reviewed by the pack owner (2.9.2): every figure is as the SEC data sets publish it; amounts are US dollars as N-PORT reports them (CURRENCY_VALUE),
+  weights and ratios are in percent as filed (a weight of 7.1 is 7.1% of net assets).'
+- A holding's BALANCE is in its UNIT (NS shares, PA principal amount, NC contracts) and a derivative's NOTIONAL in the currency it was filed in;
+  neither is converted.
+- 'A snapshot: refreshed when tools/publicdata/funds.py runs (the SEC publishes each data set quarterly); the same documents on every business
+  day of the demo lake.'
+- 'Optional fields are empty where the fund did not file them: N-CEN facts for a fund whose census is not in the four quarters read, fees and
+  returns for a fund without a risk/return summary (a unit investment trust).'
 review: []

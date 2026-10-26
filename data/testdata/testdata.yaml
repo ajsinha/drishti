@@ -20367,7 +20367,7 @@ datasets:
   captured: '2026-10-26'
   source: SEC Form N-PORT, Form N-CEN and risk/return summary data sets, SEC and Nasdaq Trader ticker files, GLEIF (tools/publicdata/funds.py)
   documents: 200
-  bytes: 4972248
+  bytes: 4980974
   parts:
   - snapshot-2026-10-26.part-01.jsonl.gz
   - snapshot-2026-10-26.part-02.jsonl.gz
@@ -20382,8 +20382,8 @@ datasets:
   snapshot: snapshot-2026-10-26.jsonl.gz
   captured: '2026-10-26'
   source: SEC Form N-PORT, Form N-CEN and risk/return summary data sets, SEC and Nasdaq Trader ticker files, GLEIF (tools/publicdata/funds.py)
-  documents: 501
-  bytes: 543089
+  documents: 503
+  bytes: 589645
 - folder: funds/index-funds
   pack: funds
   kind: index-funds
@@ -20393,4 +20393,4 @@ datasets:
   captured: '2026-10-26'
   source: SEC Form N-PORT, Form N-CEN and risk/return summary data sets, SEC and Nasdaq Trader ticker files, GLEIF (tools/publicdata/funds.py)
   documents: 3
-  bytes: 1130
+  bytes: 1108

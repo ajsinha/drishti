@@ -45,13 +45,13 @@ With `us-equities` on, a company page (`USEQ AAPL`) has the tabs **Held by funds
 | Kind | Documents | What one holds |
 |---|---|---|
 | `fund` | 200 | identity and share classes, census facts, fees and returns, flows, concentration, holdings by asset type, issuer type, country and SIC division, derivatives and counterparties, the 600 largest holdings (with the totals of the rest), the fund against its index |
-| `fund-holder` | 501 | one us-equities company: every fund that holds it, its weight, value and shares in each |
+| `fund-holder` | 503 | one us-equities company: every fund that holds it, its weight, value and shares in each |
 | `index-funds` | 3 | one us-equities index: the funds that track it, with net assets, expense ratio and active share |
 
 Holdings kept: 73,577 of 411,796 (a fund keeps its 600 largest; the reverse look-through counts every one). Funds by type: Mutual fund 117, ETF 50, Mutual fund with an ETF share class 31, ETF (unit investment trust) 2.
 
 **Where the data lives.** The documents are committed as Drishti's standard test data, gzipped JSON Lines under
-`data/testdata/funds/<kind>/` (the fund kind in parts of about 1.2 MB, 5.5 MB in all), listed in `data/testdata/testdata.yaml`.
+`data/testdata/funds/<kind>/` (the fund kind in parts of about 1.2 MB, 5.6 MB in all), listed in `data/testdata/testdata.yaml`.
 `python3 tools/drishti.py lake demo` (or `python3 tools/build_demo_lakes.py`) builds them into the demo lake and the pack's Delta
 connector `funds-store` serves them; nothing is served by the demo connector. `samples/` keeps a few reference documents.
 
@@ -136,7 +136,7 @@ A US mutual fund or ETF from SEC public data: the fact sheet, the look-through h
 | `ADMINISTRATOR` | text |  | optional |  | `THE VANGUARD GROUP, INC.` |  | The fund's administrator (not a sub-administrator). Source: N-CEN ADMIN.ADMIN_NAME. |
 | `TRANSFER_AGENT` | text |  | optional |  | `The Vanguard Group, Inc.` |  | The fund's transfer agent. Source: N-CEN TRANSFER_AGENT.TRANSFERAGENT_NAME. |
 | `AUDITOR` | text |  | optional |  | `PRICEWATERHOUSECOOPERS LLP` |  | The registrant's independent public accountant. Source: N-CEN PUBLIC_ACCOUNTANT.PUB_ACCOUNTANT_NAME. |
-| `AUDITOR_LEI` | text |  | optional |  | `254900WYZPGQGKV3RF07`, `254900Y3CIB1KF938C31`, `5493002GVO7EO8RNNS37`, `N/A` |  | The accountant's LEI. Source: N-CEN PUBLIC_ACCOUNTANT.PUB_ACCOUNTANT_LEI. |
+| `AUDITOR_LEI` | text |  | optional |  | `5493002GVO7EO8RNNS37` |  | The accountant's LEI. Source: N-CEN PUBLIC_ACCOUNTANT.PUB_ACCOUNTANT_LEI. |
 | `LENDS_SECURITIES` | boolean |  | required |  | `False` |  | True when the fund lent securities in the year. Source: N-CEN FUND_REPORTED_INFO.DID_LEND_SECURITIES. |
 | `NCEN_PERIOD` | date |  | optional |  | `2025-12-31` |  | The fiscal year end of the N-CEN report used. Source: N-CEN SUBMISSION.REPORT_ENDING_PERIOD. |
 | `NCEN_ACCESSION` | text |  | optional |  | `0000036405-26-000103` |  | The N-CEN filing used. Source: N-CEN SUBMISSION.ACCESSION_NUMBER. |
@@ -146,8 +146,8 @@ A US mutual fund or ETF from SEC public data: the fact sheet, the look-through h
 | `FILED` | date |  | required |  | `2026-08-28` |  | The date the N-PORT report was filed. Source: N-PORT SUBMISSION.FILING_DATE. |
 | `ACCESSION` | text |  | required |  | `0001067839-26-000030` |  | The N-PORT filing used. Source: N-PORT SUBMISSION.ACCESSION_NUMBER. |
 | `NPORT_URL` | text |  | required |  | `https://www.sec.gov/Archives/edgar/data/1067839/00010678392…` |  | The filing's folder on EDGAR. Source: computed from CIK and ACCESSION. |
-| `TOTAL_ASSETS` | amount |  | required | USD | `492478331786.57` |  | Total assets. Source: N-PORT FUND_REPORTED_INFO.TOTAL_ASSETS. |
-| `NET_ASSETS` | amount |  | required | USD | `490103179941.66` |  | Net assets: what the 200 are chosen by. Source: N-PORT FUND_REPORTED_INFO.NET_ASSETS. |
+| `TOTAL_ASSETS` | amount |  | required | USD | `492478331787.0` |  | Total assets. Source: N-PORT FUND_REPORTED_INFO.TOTAL_ASSETS. |
+| `NET_ASSETS` | amount |  | required | USD | `490103179942.0` |  | Net assets: what the 200 are chosen by. Source: N-PORT FUND_REPORTED_INFO.NET_ASSETS. |
 | `EXPENSE_RATIO` | rate |  | optional | % | `0.18` |  | The net expense ratio of the fund's share class (gross where no net one is filed). Source: risk/return summary NetExpensesOverAssets, ExpensesOverAssets. |
 | `GROSS_EXPENSE_RATIO` | rate |  | optional | % | `0.18` |  | Total annual operating expenses before waivers. Source: risk/return summary ExpensesOverAssets. |
 | `MANAGEMENT_FEE` | amount |  | optional | % | `0.18` |  | The management fee. Source: risk/return summary ManagementFeesOverAssets. |
@@ -174,8 +174,8 @@ A US mutual fund or ETF from SEC public data: the fact sheet, the look-through h
 | `LARGEST_PCT` | rate |  | required | % of net assets | `7.596757` |  | The largest holding's weight. Source: computed. |
 | `WITH_LEI` | integer |  | required | holdings | `101` |  | Holdings whose issuer LEI was filed. Source: computed. |
 | `EQUITY_PCT` | rate |  | required | % of net assets | `99.927` |  | The weight of common equity (asset category EC). Source: computed. |
-| `US_COMPANY_PCT` | rate |  | required | % of net assets | `88.825` |  | The weight of the holdings that are us-equities companies. Source: computed. |
-| `US_COMPANIES` | integer |  | required | companies | `73` |  | How many us-equities companies the fund holds. Source: computed. |
+| `US_COMPANY_PCT` | rate |  | required | % of net assets | `91.196` |  | The weight of the holdings that are us-equities companies. Source: computed. |
+| `US_COMPANIES` | integer |  | required | companies | `79` |  | How many us-equities companies the fund holds. Source: computed. |
 | `BY_ASSET` | record list |  | required |  |  |  | The weight by N-PORT asset category. Source: computed. |
 | `BY_ISSUER_TYPE` | record list |  | required |  |  |  | The weight by issuer type. Source: computed. |
 | `BY_COUNTRY` | record list |  | required |  |  |  | The weight by country, the largest ten. Source: computed. |
@@ -192,7 +192,7 @@ A US mutual fund or ETF from SEC public data: the fact sheet, the look-through h
 | `MOST_HELD_NAME` | text |  | optional |  | `Nvidia` |  | That company's name. Source: us-equities. |
 | `ALSO_HELD_BY` | record list |  | required |  |  |  | The ten other funds holding that company the most, by value. Source: computed from fund-holder. |
 | `VS_INDEX` | record |  | optional |  |  |  | The fund against its tracked index (or the S&P 500 for reference); index weights computed from SEC data. Source: computed. |
-| `ACTIVE_SHARE` | rate |  | optional | % | `27.31` |  | Half the sum of the differences between the fund's and the index's weights (VS_INDEX). Source: computed. |
+| `ACTIVE_SHARE` | rate |  | optional | % | `26.75` |  | Half the sum of the differences between the fund's and the index's weights (VS_INDEX). Source: computed. |
 
 Nested `CLASSES[]`:
 
@@ -223,7 +223,7 @@ Nested `FLOWS[]`:
 
 | Column | Type | Key | Presence | Unit | Example or values | Link | Meaning |
 |---|---|---|---|---|---|---|---|
-| `MONTH` | text |  | required |  | `2026-03`, `2026-04`, `2026-05`, `2026-06`, `2026-07` |  | The month (yyyy-mm), the third being the report's. Source: computed from REPORT_DATE. |
+| `MONTH` | text |  | required |  | `2026-04` |  | The month (yyyy-mm), the third being the report's. Source: computed from REPORT_DATE. |
 | `SALES` | amount |  | required | USD | `56960297589.31` |  | Shares sold (subscriptions), by value. Source: N-PORT FUND_REPORTED_INFO.SALES_FLOW_MONn. |
 | `REINVESTMENT` | amount |  | required | USD | `0.0` |  | Distributions reinvested. Source: N-PORT FUND_REPORTED_INFO.REINVESTMENT_FLOW_MONn. |
 | `REDEMPTIONS` | amount |  | required | USD | `46510905488.86` |  | Shares redeemed, by value. Source: N-PORT FUND_REPORTED_INFO.REDEMPTION_FLOW_MONn. |
@@ -266,9 +266,9 @@ Nested `BY_SECTOR[]`:
 |---|---|---|---|---|---|---|---|
 | `KEY` | text |  | required |  | `Manufacturing` |  | The code grouped by (an asset category, issuer type, country or SIC division). Source: computed. |
 | `LABEL` | text |  | required |  | `Manufacturing` |  | The code in words; Other (n) gathers the smallest. Source: computed. |
-| `PCT` | rate |  | required | % of net assets | `55.896` |  | The holdings' weight added up. Source: computed from N-PORT PERCENTAGE. |
-| `VALUE` | amount |  | required | USD | `273949722310.0` |  | The holdings' value added up. Source: computed from N-PORT CURRENCY_VALUE. |
-| `COUNT` | integer |  | required | holdings | `37` |  | The number of holdings in the group. Source: computed. |
+| `PCT` | rate |  | required | % of net assets | `58.061` |  | The holdings' weight added up. Source: computed from N-PORT PERCENTAGE. |
+| `VALUE` | amount |  | required | USD | `284557152390.0` |  | The holdings' value added up. Source: computed from N-PORT CURRENCY_VALUE. |
+| `COUNT` | integer |  | required | holdings | `42` |  | The number of holdings in the group. Source: computed. |
 
 Nested `DERIVATIVES[]`:
 
@@ -344,7 +344,7 @@ Nested `PROVENANCE`:
 | `SOURCE` | text |  | required |  | `U.S. Securities and Exchange Commission: Form N-PORT, Form …` |  | Where the data comes from. Source: written by tools/packgen/funds/build.py. |
 | `LICENCE` | text |  | required |  | `Public domain (U.S. Government work); SEC fair access polic…` |  | The source's licence (public domain). Source: written by tools/packgen/funds/build.py. |
 | `RETRIEVED_AT` | date |  | required |  | `2026-10-26` |  | The date the data sets were downloaded. Source: the download cache. |
-| `NOTE` | text |  | required |  | `Holdings, flows and returns as the fund filed them on Form N-PORT for 2026-05-31; census facts from its newest Form N-CEN; fees and calendar-year returns from its newest prospectus risk/return summary. No prices or NAV history.`, `Holdings, flows and returns as the fund filed them on Form N-PORT for 2026-06-30; census facts from its newest Form N-CEN; fees and calendar-year returns from its newest prospectus risk/return summary. No prices or NAV history.`, `Holdings, flows and returns as the fund filed them on Form N-PORT for 2026-07-31; census facts from its newest Form N-CEN; fees and calendar-year returns from its newest prospectus risk/return summary. No prices or NAV history.` |  | What the document holds and from which filings. Source: written by tools/packgen/funds/build.py. |
+| `NOTE` | text |  | required |  | `Holdings, flows and returns as the fund filed them on Form …` |  | What the document holds and from which filings. Source: written by tools/packgen/funds/build.py. |
 
 Nested `ALSO_HELD_BY[]`:
 
@@ -357,7 +357,7 @@ Nested `ALSO_HELD_BY[]`:
 | `VALUE` | amount |  | required | USD | `146036467451.0` |  | The value the fund holds. Source: N-PORT FUND_REPORTED_HOLDING.CURRENCY_VALUE. |
 | `SHARES` | amount |  | required | shares | `729853903.0` |  | The shares the fund holds (balances in shares only). Source: N-PORT FUND_REPORTED_HOLDING.BALANCE. |
 | `REPORT_DATE` | date |  | required |  | `2026-06-30` |  | The date the fund's report is as of. Source: N-PORT SUBMISSION.REPORT_DATE. |
-| `NET_ASSETS` | amount |  | required | USD | `2297839156547.89` |  | The fund's net assets. Source: N-PORT FUND_REPORTED_INFO.NET_ASSETS. |
+| `NET_ASSETS` | amount |  | required | USD | `2297839156548.0` |  | The fund's net assets. Source: N-PORT FUND_REPORTED_INFO.NET_ASSETS. |
 
 Nested `VS_INDEX`:
 
@@ -368,15 +368,15 @@ Nested `VS_INDEX`:
 | `BASIS` | text |  | required |  | `tracks`, `reference` |  | tracks (the fund tracks it) or reference (an equity fund compared with the S&P 500). Source: computed. |
 | `WEIGHTING` | text |  | required |  | `market capitalisation computed from SEC data` |  | market capitalisation computed from SEC data, or equal weights. Source: computed. |
 | `MEMBERS` | integer |  | required | companies | `77` |  | The index's members as the us-equities pack lists them. Source: us-equities index-membership (Wikidata). |
-| `MEMBERS_WEIGHTED` | integer |  | required | companies | `67` |  | Members with a market capitalisation the filings support. Source: computed. |
-| `MEMBERS_NOT_WEIGHTED` | text |  | optional |  | `ACGL, ACN, AOS, BF-B, BIO, BKNG, BRK-B, CME, CTAS, EL, EXPE, FFIV, FOXA, FRT, GOOGL, HRL, LEN, LH, MA, META, MKC, NWSA, PKG, RL, SPG, STZ, TAP, TSN, UAA, UHS, XRX`, `BIDU, BKNG, CTAS, EXPE, GOOGL, MSTR, PDD, PLTR, SHOP, TEAM` |  | Members left out of the weights, by ticker. Source: computed. |
-| `MEMBERS_HELD` | amount |  | required | companies | `55` |  | Listed members the fund holds. Source: computed. |
-| `FUND_IN_INDEX_PCT` | rate |  | required | % of net assets | `69.44` |  | The fund's weight in the listed members. Source: computed. |
-| `NOT_IN_INDEX_PCT` | rate |  | required | % of net assets | `30.56` |  | The rest: other companies, cash, futures. Source: computed. |
-| `ACTIVE_SHARE` | rate |  | required | % | `27.31` |  | Half the sum of the absolute weight differences over the members weighted. Source: computed. |
+| `MEMBERS_WEIGHTED` | integer |  | required | companies | `68` |  | Members with a market capitalisation the filings support. Source: computed. |
+| `MEMBERS_NOT_WEIGHTED` | text |  | optional |  | `BIDU, BKNG, EXPE, GOOGL, MSTR, PDD, PLTR, SHOP, TEAM` |  | Members left out of the weights, by ticker. Source: computed. |
+| `MEMBERS_HELD` | amount |  | required | companies | `60` |  | Listed members the fund holds. Source: computed. |
+| `FUND_IN_INDEX_PCT` | rate |  | required | % of net assets | `71.57` |  | The fund's weight in the listed members. Source: computed. |
+| `NOT_IN_INDEX_PCT` | rate |  | required | % of net assets | `28.43` |  | The rest: other companies, cash, futures. Source: computed. |
+| `ACTIVE_SHARE` | rate |  | required | % | `26.75` |  | Half the sum of the absolute weight differences over the members weighted. Source: computed. |
 | `LARGEST_DIFF_COMPANY` | text |  | required |  | `AAPL` |  | The company with the largest difference. Source: computed. |
 | `LARGEST_DIFF_NAME` | text |  | required |  | `Apple Inc.` |  | Its name. Source: us-equities. |
-| `LARGEST_DIFF` | amount |  | required | % points | `-7.469` |  | Fund weight less index weight. Source: computed. |
+| `LARGEST_DIFF` | amount |  | required | % points | `-7.819` |  | Fund weight less index weight. Source: computed. |
 | `AS_OF` | date |  | required |  | `2026-06-30` |  | The fund's report date. Source: N-PORT SUBMISSION.REPORT_DATE. |
 | `ROWS` | record list |  | required |  |  |  | The 25 largest weights in either, side by side. Source: computed. |
 | `SECTORS` | record list |  | required |  |  |  | Fund and index weights by SIC division. Source: computed. |
@@ -388,18 +388,18 @@ Nested `VS_INDEX.ROWS[]`:
 | `COMPANY` | id |  | required |  | `AAPL` | `us-company` | The us-equities company. Source: us-equities. |
 | `NAME` | text |  | required |  | `Apple Inc.` |  | Its name. Source: us-equities. |
 | `SECTOR` | text |  | required |  | `Manufacturing` |  | Its SIC division. Source: us-equities. |
-| `FUND_PCT` | rate |  | required | % | `11.031` |  | The company's weight in the fund over the members weighted. Source: computed. |
-| `INDEX_PCT` | rate |  | required | % | `18.5` |  | Its computed market-cap weight in the index. Source: computed: SEC shares outstanding times the price N-PORT implies. |
-| `DIFF` | amount |  | required | % points | `-7.469` |  | Fund less index. Source: computed. |
+| `FUND_PCT` | rate |  | required | % | `10.655` |  | The company's weight in the fund over the members weighted. Source: computed. |
+| `INDEX_PCT` | rate |  | required | % | `18.474` |  | Its computed market-cap weight in the index. Source: computed: SEC shares outstanding times the price N-PORT implies. |
+| `DIFF` | amount |  | required | % points | `-7.819` |  | Fund less index. Source: computed. |
 
 Nested `VS_INDEX.SECTORS[]`:
 
 | Column | Type | Key | Presence | Unit | Example or values | Link | Meaning |
 |---|---|---|---|---|---|---|---|
 | `SECTOR` | text |  | required |  | `Manufacturing` |  | The division. Source: us-equities. |
-| `FUND_PCT` | rate |  | required | % | `67.01` |  | The fund's weight in it. Source: computed. |
-| `INDEX_PCT` | rate |  | required | % | `61.31` |  | The index's weight in it. Source: computed. |
-| `TILT` | amount |  | required | % points | `5.7` |  | Fund less index. Source: computed. |
+| `FUND_PCT` | rate |  | required | % | `67.8` |  | The fund's weight in it. Source: computed. |
+| `INDEX_PCT` | rate |  | required | % | `61.38` |  | The index's weight in it. Source: computed. |
+| `TILT` | amount |  | required | % points | `6.42` |  | Fund less index. Source: computed. |
 
 Nested `AUTHORISED_PARTICIPANTS[]`:
 
@@ -455,7 +455,7 @@ Nested `HOLDERS[]`:
 | `VALUE` | amount |  | required | USD | `134920536524.0` |  | The value the fund holds. Source: N-PORT FUND_REPORTED_HOLDING.CURRENCY_VALUE. |
 | `SHARES` | amount |  | optional | shares | `466272244.0` |  | The shares the fund holds (balances in shares only). Source: N-PORT FUND_REPORTED_HOLDING.BALANCE. |
 | `REPORT_DATE` | date |  | required |  | `2026-06-30` |  | The date the fund's report is as of. Source: N-PORT SUBMISSION.REPORT_DATE. |
-| `NET_ASSETS` | amount |  | required | USD | `2297839156547.89` |  | The fund's net assets. Source: N-PORT FUND_REPORTED_INFO.NET_ASSETS. |
+| `NET_ASSETS` | amount |  | required | USD | `2297839156548.0` |  | The fund's net assets. Source: N-PORT FUND_REPORTED_INFO.NET_ASSETS. |
 
 Nested `TOP_WEIGHTS[]`:
 
@@ -506,10 +506,10 @@ Nested `ROWS[]`:
 | `FUND` | id |  | required |  | `QQQ` | `fund` | The fund's ticker; opens FUND. Source: computed. |
 | `NAME` | text |  | required |  | `Invesco QQQ Trust, Series 1` |  | Its name. Source: N-PORT SERIES_NAME. |
 | `TYPE` | text |  | required |  | `ETF`, `Mutual fund`, `Mutual fund with an ETF share class`, `ETF (unit investment trust)` |  | Its type. Source: N-CEN IS_ETF. |
-| `NET_ASSETS` | amount |  | required | USD | `490103179941.66` |  | Its net assets. Source: N-PORT NET_ASSETS. |
+| `NET_ASSETS` | amount |  | required | USD | `490103179942.0` |  | Its net assets. Source: N-PORT NET_ASSETS. |
 | `EXPENSE_RATIO` | rate |  | optional | % | `0.18` |  | Its net expense ratio. Source: risk/return summary NetExpensesOverAssets. |
-| `MEMBERS_HELD` | amount |  | required | companies | `55` |  | Listed members it holds. Source: computed. |
-| `ACTIVE_SHARE` | rate |  | required | % | `27.31` |  | Against the computed index weights. Source: computed. |
+| `MEMBERS_HELD` | amount |  | required | companies | `60` |  | Listed members it holds. Source: computed. |
+| `ACTIVE_SHARE` | rate |  | required | % | `26.75` |  | Against the computed index weights. Source: computed. |
 | `REPORT_DATE` | date |  | required |  | `2026-06-30` |  | Its N-PORT report date. Source: N-PORT REPORT_DATE. |
 | `IS_ETF` | boolean |  | required |  | `True` |  | True for an ETF. Source: N-CEN IS_ETF. |
 

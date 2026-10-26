@@ -113,8 +113,8 @@ Fields, from 1 sample document:
 | `FILED` | date | `2026-08-28` | The date the N-PORT report was filed. Source: N-PORT SUBMISSION.FILING_DATE. |
 | `ACCESSION` | string | `0001067839-26-000030` | The N-PORT filing used. Source: N-PORT SUBMISSION.ACCESSION_NUMBER. |
 | `NPORT_URL` | string | `https://www.sec.gov/Archives/edgar/data/…` | The filing's folder on EDGAR. Source: computed from CIK and ACCESSION. |
-| `TOTAL_ASSETS` | number | `492478331786.57` | Total assets. Source: N-PORT FUND_REPORTED_INFO.TOTAL_ASSETS. (USD) |
-| `NET_ASSETS` | number | `490103179941.66` | Net assets: what the 200 are chosen by. Source: N-PORT FUND_REPORTED_INFO.NET_ASSETS. (USD) |
+| `TOTAL_ASSETS` | number | `492478331787.0` | Total assets. Source: N-PORT FUND_REPORTED_INFO.TOTAL_ASSETS. (USD) |
+| `NET_ASSETS` | number | `490103179942.0` | Net assets: what the 200 are chosen by. Source: N-PORT FUND_REPORTED_INFO.NET_ASSETS. (USD) |
 | `EXPENSE_RATIO` | number | `0.18` | The net expense ratio of the fund's share class (gross where no net one is filed). Source: risk/return summary NetExpensesOverAssets, ExpensesOverAssets. (%) |
 | `GROSS_EXPENSE_RATIO` | number | `0.18` | Total annual operating expenses before waivers. Source: risk/return summary ExpensesOverAssets. (%) |
 | `MANAGEMENT_FEE` | number | `0.18` | The management fee. Source: risk/return summary ManagementFeesOverAssets. (%) |
@@ -141,7 +141,7 @@ Fields, from 1 sample document:
 | `LARGEST_PCT` | number | `7.596757` | The largest holding's weight. Source: computed. (% of net assets) |
 | `WITH_LEI` | integer | `101` | Holdings whose issuer LEI was filed. Source: computed. (holdings) |
 | `EQUITY_PCT` | number | `99.927` | The weight of common equity (asset category EC). Source: computed. (% of net assets) |
-| `US_COMPANY_PCT` | number | `88.825` | The weight of the holdings that are us-equities companies. Source: computed. (% of net assets) |
+| `US_COMPANY_PCT` | number | `91.196` | The weight of the holdings that are us-equities companies. Source: computed. (% of net assets) |
 
 …and 18 more fields (see the samples).
 

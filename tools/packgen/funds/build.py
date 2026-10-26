@@ -138,11 +138,43 @@ def _companies(us: dict) -> tuple[dict[str, dict], dict[str, str]]:
     return by_ticker, by_lei
 
 
-def _holding(h: dict, companies: dict, by_lei: dict, fund_of: dict[str, str]) -> dict:
+_SUFFIX = re.compile(r"\b(INC|INCORPORATED|CORP|CORPORATION|CO|COMPANY|PLC|LTD|LIMITED|NV|SA|AG|LLC|LP|HOLDINGS?|GROUP|THE|CLASS [A-Z]|CL [A-Z]|/[A-Z]{2})\b")
+
+
+def _norm(name: str) -> str:
+    """A company name to match on: upper case, no punctuation, no legal suffix (Exxon Mobil Corp and EXXON MOBIL CORPORATION agree)."""
+    n = re.sub(r"[^A-Z0-9/ ]", " ", (name or "").upper().replace("&", " AND "))
+    return " ".join(_SUFFIX.sub(" ", n).split())
+
+
+def _names(us: dict) -> dict[str, str]:
+    """{normalised name: ticker} of the us-equities companies whose name is unique."""
+    seen: dict[str, set] = defaultdict(set)
+    for t, c in us.items():
+        for n in (c.get("NAME"), c.get("SEC_NAME"), c.get("LEI_LEGAL_NAME")):
+            if _norm(n):
+                seen[_norm(n)].add(t)
+    return {n: next(iter(ts)) for n, ts in seen.items() if len(ts) == 1}
+
+
+def _cusips(holdings: dict[str, list[dict]], companies: dict) -> dict[str, str]:
+    """{CUSIP: ticker} of the equities some fund filed with a ticker (iShares and SPDR do, Vanguard does not): the others match by it."""
+    out: dict[str, str] = {}
+    for rows in holdings.values():
+        for h in rows:
+            t, c = _ticker(h.get("TICKER", "")), h["ISSUER_CUSIP"].strip()
+            if t in companies and h["ASSET_CAT"] == "EC" and len(c) == 9 and c != "000000000":
+                out.setdefault(c, t)
+    return out
+
+
+def _holding(h: dict, companies: dict, by: dict, fund_of: dict[str, str]) -> dict:
+    """One holding with its us-equities company: by ticker, else (an equity) by CUSIP, LEI or name, in that order."""
     t = _ticker(h.get("TICKER", ""))
     company = t if t in companies else ""
-    if not company and h["ISSUER_LEI"] in by_lei and h["ASSET_CAT"] in ("EC", "EP"):
-        company = by_lei[h["ISSUER_LEI"]]
+    if not company and h["ASSET_CAT"] in ("EC", "EP"):
+        company = (by["cusip"].get(h["ISSUER_CUSIP"].strip()) if h["ASSET_CAT"] == "EC" else None) \
+            or by["lei"].get(h["ISSUER_LEI"].strip()) or by["name"].get(_norm(h["ISSUER_NAME"])) or ""
     value, pct = R.num(h["CURRENCY_VALUE"]), R.num(h["PERCENTAGE"])
     out = {"NAME": R.clean(h["ISSUER_NAME"]) or R.clean(h["ISSUER_TITLE"]), "TITLE": R.clean(h["ISSUER_TITLE"]), "TICKER": t,
            "CUSIP": h["ISSUER_CUSIP"].strip() if h["ISSUER_CUSIP"].strip() not in ("N/A", "000000000") else "",
@@ -211,6 +243,7 @@ def build(cache: Path, us: dict[str, dict], indexes: dict[str, dict], retrieved:
     leis = {f["SERIES_LEI"] for f in chosen if f["SERIES_LEI"]}
     relations = R.gleif_funds(gleif_rr, leis)
     companies, by_lei = _companies(us)
+    by = {"lei": by_lei, "cusip": _cusips(holdings, companies), "name": _names(us)}
 
     # the funds' tickers first: a holding that is one of these funds links to it
     meta = {}
@@ -228,7 +261,7 @@ def build(cache: Path, us: dict[str, dict], indexes: dict[str, dict], retrieved:
     all_rows: dict[str, list[dict]] = {}
     for rank, f in enumerate(chosen, 1):
         t, cen, classes = meta[f["KEY"]]
-        rows = [_holding(h, companies, by_lei, fund_of) for h in holdings.get(f["ACCESSION"], [])]
+        rows = [_holding(h, companies, by, fund_of) for h in holdings.get(f["ACCESSION"], [])]
         rows = [r for r in rows if r["FUND"] != t]               # never itself
         rows.sort(key=lambda r: -(r["VALUE"] or 0))
         all_rows[t] = rows
@@ -329,7 +362,7 @@ def _fund(f, rank, t, cen, classes, rows, rets, rr, relations, companies, retrie
         "GLEIF_RELATIONSHIPS": rel,
         "RANK": rank, "REPORT_DATE": f["REPORT_DATE"], "FILED": f["FILED"], "ACCESSION": f["ACCESSION"],
         "NPORT_URL": f"https://www.sec.gov/Archives/edgar/data/{int(f['CIK'])}/{f['ACCESSION'].replace('-', '')}/",
-        "TOTAL_ASSETS": _r(f["TOTAL_ASSETS"], 2), "NET_ASSETS": _r(net, 2),
+        "TOTAL_ASSETS": _r(f["TOTAL_ASSETS"], 0), "NET_ASSETS": _r(net, 0),
         "EXPENSE_RATIO": s_cls.get("EXPENSE_RATIO", s_cls.get("GROSS_EXPENSE_RATIO")),
         "GROSS_EXPENSE_RATIO": s_cls.get("GROSS_EXPENSE_RATIO"), "MANAGEMENT_FEE": s_cls.get("MANAGEMENT_FEE"),
         "TURNOVER": s_ser.get("TURNOVER", s_cls.get("TURNOVER")), "PROSPECTUS_FILED": s_cls.get("FILED") or s_ser.get("FILED") or "",
