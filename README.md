@@ -29,8 +29,8 @@ TRD where QUANTITY > 200m order by QUANTITY desc   →  every trade over 200m, l
 amended trades over 5m in BOOK-RATES-3, biggest first   →  plain words: Drishti shows the search it makes
 ```
 
-**Current release: 2.9.0** (exposure computed for any scope down to a trade, with the exposure explorer and an exact pre-deal what-if; the stored exposure profile retired; VaR and exposure in BI; VaR since 2.8.0 with the data contract of every command) ([release notes](RELEASE_NOTES.md) · [changelog](CHANGELOG.md) ·
-[what shipped when](docs/architecture/IMPLEMENTATION_PLAN.md)). **Learn it by doing:** [twenty-six tutorials](docs/tutorials/README.md), from your first 15 minutes to BI, AI, embedding and
+**Current release: 2.9.1** (`FUNC`, the directory of every command; groupings and analytics computed; the External data page and every pack's data contracts and data retrieval; exposure computed for any scope since 2.9.0) ([release notes](RELEASE_NOTES.md) · [changelog](CHANGELOG.md) ·
+[what shipped when](docs/architecture/IMPLEMENTATION_PLAN.md)). **Learn it by doing:** [twenty-seven tutorials](docs/tutorials/README.md), from your first 15 minutes to BI, AI, embedding and
 production, each with real screenshots; the [guides](docs/README.md) are the reference.
 
 ## What you can do
@@ -202,7 +202,7 @@ drishti-console/.venv/bin/python tools/drishti.py lake demo
 # (-Djava.io.tmpdir: native libraries unpack in the server's own folder, not /tmp; docs/admin/CONFIGURATION.md)
 mkdir -p data/tmp/server
 DRISHTI_PACKS=market-risk,counterparty-risk DRISHTI_STUDIO_SAVE=true \
-  java -Djava.io.tmpdir=data/tmp/server -jar drishti-server/target/drishti-server-2.9.0-exec.jar
+  java -Djava.io.tmpdir=data/tmp/server -jar drishti-server/target/drishti-server-2.9.1-exec.jar
 
 # 5. In a second terminal: the console on http://localhost:17480
 drishti-console/.venv/bin/python drishti-console/run_drishti_web.py
@@ -288,7 +288,7 @@ Start with **[Install and run](docs/guides/GETTING_STARTED.md)**, then the **[tu
 
 | Read this when… | Document |
 |---|---|
-| you want to learn by doing | [the twenty-six tutorials](docs/tutorials/README.md) |
+| you want to learn by doing | [the twenty-seven tutorials](docs/tutorials/README.md) |
 | you want it installed and running | [GETTING_STARTED.md](docs/guides/GETTING_STARTED.md) |
 | you run the server in IntelliJ IDEA and the console (UX) in PyCharm | [IDE_GUIDE.md](docs/guides/IDE_GUIDE.md) |
 | you build, check, load and ship packs and Sutras from a terminal or a pipeline (`tools/drishti.py`) | [CLI_GUIDE.md](docs/guides/CLI_GUIDE.md) |
