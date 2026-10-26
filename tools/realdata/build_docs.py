@@ -150,7 +150,7 @@ def economics(d: Data | None = None) -> dict[str, dict[str, dict]]:
             "economyId": f"ECON-{iso}", "name": name, "iso3": iso, "regionName": c["regionName"], "incomeName": c["incomeName"], "currency": fb.get("currency") or None,
             "capital": c["capital"] or fb.get("capital"), "year": str(gy) if gy else None, "gdpUsdBn": gdp, "gdpPerCapita": d.val("gdp_pc", iso),
             "growth": d.val("gdp_growth", iso), "inflation": d.val("inflation", iso), "unemployment": d.val("unemployment", iso),
-            "debtToGdp": d.val("debt", iso), "currentAccount": d.val("current_account", iso), "reservesUsdBn": d.val("reserves", iso),
+            "debtToGdp": d.last("debt", iso, 2025)[1], "currentAccount": d.val("current_account", iso), "reservesUsdBn": d.val("reserves", iso),
             "tradeShare": d.val("trade", iso), "populationM": d.val("population", iso),
             "growthPath": d.path("gdp_growth", iso, "growth"), "gdpPath": d.path("gdp", iso, "gdp"), "sectors": sectors,
             "regionGroup": f"ECG-{c['region']}", "incomeGroup": f"ECG-{c['income']}",
