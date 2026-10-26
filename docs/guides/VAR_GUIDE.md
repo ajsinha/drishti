@@ -534,17 +534,25 @@ Membership of a rule is evaluated per date against that date's positions: the sa
 
 ### 5.6 Examples on the test data
 
+On the default demo lake (`drishti.py lake demo`, which moves the test data's sixty business days to end today), business date
+**2026-10-26**, batch `B-2026-10-26-01` (`drishti.py var show <scope>`):
+
 | Scope | VaR | Trades |
 |---|---|---|
-| `BANK` | 112,035,906 | 9,572 |
-| `LE:NY` | 144,267,105 | 6,008 |
-| `DESK:RATES` | 74,633,680 | 1,487 |
-| `BANK - DESK:CREDIT` | 76,607,919 | 8,629 |
-| `DESK:RATES - TRD:MX-30000121` | 74,720,890 | 1,486 |
-| `PORT:PF-USD-RATES` | 28,968,862 | 918 |
-| `WHERE:CURRENCY == 'EUR' and DIRECTION == 'SHORT'` | 133,970,477 | 700 |
-| `DESK:RATES & WHERE:DIRECTION == 'SHORT'` (saved as `BASKET:rita/rates-short`) | 282,428,035 | 800 |
+| `BANK` | 126,544,583 | 8,566 |
+| `LE:NY` | 135,906,338 | 5,542 |
+| `DESK:RATES` | 64,434,451 | 1,281 |
+| `BANK - DESK:CREDIT` | 60,228,839 | 7,623 |
+| `DESK:RATES - TRD:MX-30000121` | 64,605,209 | 1,280 |
+| `PORT:PF-USD-RATES` | 33,031,967 | 842 |
+| `WHERE:CURRENCY == 'EUR' and DIRECTION == 'SHORT'` | 126,453,445 | 609 |
+| `DESK:RATES & WHERE:DIRECTION == 'SHORT'` (saved as `BASKET:rita/rates-short`) | 253,470,623 | 677 |
 | `POS:POS-BOOK-EQD-2~SEC-WARRANT-USD-01` | 67,209 | 9 |
+
+The rest of this guide reads the lake built on the data's own date (`--as-of data`, 2026-09-30), where the bank's VaR is 112,035,906 on
+9,572 trades. Both are built from the same test data but do not hold the same live trades: moving the business dates does not move the trades'
+maturities, so on 2026-10-26 the trades that mature in between are no longer live (8,566 instead of 9,572), and the bank's worst days
+change with them.
 
 ### 5.7 Stored portfolios
 
