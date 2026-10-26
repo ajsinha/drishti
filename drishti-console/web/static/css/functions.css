@@ -13,7 +13,8 @@
  *
  * See the LICENSE file in the root of this repository for the full terms.
  */
-/* Admin → Commands: the commands × who-may-use-them matrix with its side panel (docs/admin/COMMANDS.md). Colours come from the theme tokens,
+/* Functions, FUNC (docs/admin/COMMANDS.md): the command directory for everyone and, for an administrator, the commands × who-may-use-them
+   matrix with its side panel. Colours come from the theme tokens,
    so light and dark both work; a state always has its word (on, off, turning off), never colour alone. */
 .cmd-h { font-size: 1.05rem; margin: 1.2rem 0 .5rem; }
 .cmd-nodes ul { list-style: none; margin: 0; padding: 0; display: flex; flex-wrap: wrap; gap: .3rem 1.4rem; }
@@ -46,6 +47,7 @@
 .cmd-tbl th, .cmd-tbl td { white-space: normal; vertical-align: top; }
 .cmd-tbl .cmd-col { text-align: center; width: 6rem; }
 .cmd-tbl .cmd-role { color: var(--d-faint); font-weight: 400; }
+.cmd-tbl .func-ex { white-space: nowrap; }
 .cmd-tbl .cmd-check { width: 20px; height: 20px; accent-color: var(--d-ok); }
 .cmd-tbl .cmd-desc { min-width: 16rem; max-width: 34rem; }
 .cmd-tbl .cmd-code { color: var(--d-accent); font-weight: 600; }
@@ -58,6 +60,19 @@
 .cmd-switch input { width: 20px; height: 20px; accent-color: var(--d-ok); }
 .cmd-foot { display: flex; flex-wrap: wrap; gap: .4rem 1.5rem; font-size: .8rem; padding: .6rem 0; }
 .cmd-foot span:last-child { margin-left: auto; }
+.func-word { font-size: .8rem; font-weight: 600; color: var(--d-accent); border: 1px solid var(--d-border); border-radius: 4px; padding: .05rem .4rem;
+  vertical-align: middle; }
+.cmd-tbl .cmd-code a { color: var(--d-accent); text-decoration: none; }
+.cmd-tbl .cmd-code a:hover, .cmd-tbl .cmd-code a:focus-visible { text-decoration: underline; }
+.cmd-tbl a.cmd-pack-name { color: var(--d-ink); text-decoration: underline dotted; text-underline-offset: 3px; }
+.cmd-tbl a.cmd-pack-name:hover, .cmd-tbl a.cmd-pack-name:focus-visible { color: var(--d-accent); text-decoration: underline; }
+.cmd-tbl tr.cmd-is-off > td { color: var(--d-faint); }
+.cmd-tbl .cmd-off-code > span:first-child { text-decoration: line-through; }
+.cmd-tbl .func-form { font-family: inherit; font-style: italic; }
+.func-empty { padding: .6rem 0; }
+.func-empty[hidden] { display: none; }
+.func-cluster { margin-top: 1.2rem; border-top: 1px solid var(--d-border); padding-top: .6rem; }
+.func-cluster > summary { cursor: pointer; color: var(--d-muted); min-height: 32px; display: flex; align-items: center; }
 @media (max-width: 640px) {
   .cmd-side { position: static; }
   .cmd-find input { width: 100%; }

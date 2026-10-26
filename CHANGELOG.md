@@ -15,6 +15,22 @@
 -->
 # Changelog
 
+## Unreleased
+
+- **Functions, `FUNC`: the command directory, under Views, for everyone (2.9.1; product owner, 2026-10-26).** Views → *Functions*
+  (`/func`) or `FUNC <GO>` lists every command you can use, grouped by pack, with what it does and its example; `FUNC <words>` opens it
+  filtered (`FUNC exposure`, `FUNC VAR`, `FUNC trading`: every word must appear in a command's code, title, description or its pack), kept
+  in the address as `?q=`. A command opens with the pack's example (else its kind's search form, `FORM <pack> <kind>`); a pack's name opens
+  its search form (`FORM <pack>`). A user sees only the commands that are on (switched-off commands are shown to administrators only) and no
+  switches; an administrator sees the same page with everything Admin → Commands had: off commands struck through and never a link, the
+  Everyone switch per command and per pack, Undo and Review changes with the reason, Show all/on/off, and a *Cluster* section with each
+  server's version and the history. `/admin/commands` redirects to `/func`; Admin → Commands opens it. New server endpoint
+  `GET /api/v1/functions` (every signed-in user, a token too: only the commands the caller may open now, nothing of the switches); the
+  switches stay administrators-only (`/api/v1/admin/commands`, a non-administrator's `POST` is refused, now tested). `FUNC` is a reserved
+  command word (the pack loader, `drishti.py pack check`, type-ahead). Docs: [COMMANDS.md](docs/admin/COMMANDS.md) is now *Functions
+  (FUNC)* with pictures for a user and an administrator, USER_GUIDE (Views menu, reserved words), API_GUIDE, COMMAND_CATALOG, BI_GUIDE,
+  PACK_DEVELOPER_GUIDE, CLI_GUIDE, TOOLS, TROUBLESHOOTING, NET; F1 on the page opens COMMANDS.md.
+
 ## 2.9.0 — Exposure computed for any scope, the stored exposure profile retired; VaR and exposure in BI; two documents per measure; the landing headline (2026-10-26)
 
 - Exposure fixes from tutorial 26: the explorer's *Collateral effect* tile and the Collateral tab show collateral's effect on EE with its sign ("−65%" lower, "+380%" higher where posted collateral raises it; it read "−-380%"); `drishti.py exposure whatif --like` sends the copied trade's asset class, notional, maturity and MtM, so `--method addon` no longer adds 0.

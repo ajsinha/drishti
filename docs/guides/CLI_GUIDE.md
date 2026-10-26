@@ -2314,7 +2314,7 @@ $ drishti.py bi catalogue publish bi-27def70913 --note x
 drishti: the server said 403 DRS-9002: DRS-9002 cat does not hold the bi-author power (an administrator grants it on a role)
 ```
 
-`drishti.py pack check` also refuses a pack that defines a mnemonic named `RUPAKA` or `FORM` (reserved command words).
+`drishti.py pack check` also refuses a pack that defines a mnemonic named `BI`, `RUPAKA`, `FORM` or `FUNC` (reserved command words).
 
 ### `bi expr`, `bi migrate`, `bi sql`: the BI languages
 

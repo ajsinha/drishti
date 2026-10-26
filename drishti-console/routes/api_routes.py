@@ -18,6 +18,7 @@ from __future__ import annotations
 import asyncio
 import json
 import re
+from urllib.parse import quote
 
 from fastapi import APIRouter, Query, Request
 
@@ -90,6 +91,12 @@ async def suggest(request: Request, q: str = "", limit: int | None = None):
         kw = "BI" if q.strip().lower().startswith("b") else RUPAKA
         keyword = [{"mnemonic": kw, "title": "BI: business intelligence (Rupaka)", "subtitle": f"{kw} <GO> opens the BI home; {kw} CATALOGUE, {kw} WORKSPACE, {kw} <report>",
                     "complete": f"{kw} ", "href": "/bi", "type": "bi"}]
+    func = re.match(r"(?is)^\s*func(?:\s+(.*))?$", q.replace("<GO>", ""))
+    if func:                                                   # the reserved word FUNC: the command directory, filtered by what follows
+        words = (func.group(1) or "").strip()
+        return [{"mnemonic": "FUNC", "title": "Functions: every command you can use" + (f", matching {words}" if words else ""),
+                 "subtitle": "FUNC <GO> opens the list; FUNC <words> opens it filtered (a command, a word of what it does, a pack)",
+                 "complete": f"FUNC {words}".strip(), "href": "/func" + (f"?q={quote(words)}" if words else ""), "type": "func"}]
     typed = re.match(r"(?i)^\s*form(?:\s+(\S*))?(?:\s+(\S*))?\s*$", q.replace("<GO>", ""))
     if typed:                                                  # the reserved word FORM: packs you may open, then their kinds
         return await form_suggestions(request, typed.group(1), typed.group(2), q.endswith(" "))

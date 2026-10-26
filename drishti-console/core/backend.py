@@ -492,6 +492,10 @@ class BackendClient:
     async def packs(self, ident=None) -> list:
         return await self._get("/packs", ident)
 
+    async def functions(self, ident=None) -> dict:
+        """Every command the user can use, by pack (FUNC, /api/v1/functions): only commands that are on, of the user's packs and roles."""
+        return await self._get("/functions", ident)
+
     async def choose_packs(self, active: list, ident) -> dict:
         return await self._send("PUT", "/me/packs", ident, json={"active": active})
 

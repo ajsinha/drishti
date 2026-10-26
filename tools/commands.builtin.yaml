@@ -45,6 +45,9 @@ words:
   - word: FORM
     example: FORM trading trade
     does: The forms home; FORM <pack> opens the pack's search form, FORM <pack> <kind> its form for that kind.
+  - word: FUNC
+    example: FUNC exposure
+    does: "Functions: every command you can use, by pack, with what it does and an example; FUNC <words> opens it filtered (a command, a word of what it does, a pack). Administrators also switch commands on or off there."
   - word: VAR
     example: VAR DESK DESK-RATES
     does: "The VaR explorer. After it: BANK, LE, DIV, DESK, BOOK, NODE, POS, TRD (TRADE), PORT (PORTFOLIO), BASKET, WHERE, SCOPE (a saved basket, a portfolio or scope text) or CAPTURE <id>."

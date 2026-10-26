@@ -321,7 +321,7 @@ A node rebuilds its digest every gossip round from cheap reads (no data is read)
 node is in every node's table within about a second** (1.0 s measured with the default 1 s round, three servers). From all the digests each node
 builds the **capability table**: for each kind, the nodes that render it and the nodes that hold its data.
 
-**Commands and packs switched on or off** (Admin → Commands and Admin → Packs, 2.8.0) are the same on every node, even when each node has a
+**Commands and packs switched on or off** (Functions, `FUNC`, as an administrator, and Admin → Packs; 2.8.0) are the same on every node, even when each node has a
 database of its own: the switches carry a hybrid-logical-clock stamp, their hash rides each member's gossip entry (`switchesHash`), and a
 node whose hash differs from a peer's pulls the peer's switches and keeps the newer of each, written to its own database first. A node that
 was down catches up when it rejoins ([COMMANDS.md](COMMANDS.md#several-servers)).

@@ -149,7 +149,7 @@ class Tools(unittest.TestCase):
         self.assertIn("ingest.trade: needs key", err)
 
     def test_pack_check_refuses_a_reserved_command_word_as_a_mnemonic(self):
-        for word in ("BI", "bi", "RUPAKA", "rupaka", "FORM"):
+        for word in ("BI", "bi", "RUPAKA", "rupaka", "FORM", "FUNC", "func"):
             (self.pack / "pack.yaml").write_text(f"pack: my-pack\nkinds: [trade]\nmnemonics:\n  {word}: {{kind: trade}}\n")
             code, _, err = run("pack", "check", self.pack, *self.jvm(), env=self.env)
             self.assertEqual(1, code, word)
