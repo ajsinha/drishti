@@ -17,6 +17,7 @@
 
 ## Unreleased
 
+- **VaR's official capture at start waits for the lake:** it tried once, before the Delta connector was up, and never again. It now retries every five seconds for up to ten minutes; after that, the next data-load signal captures the date.
 - **Drill:** runs the compute worker SDK's Python tests (`drishti-compute/src/test/python`, the VaR what-if engine among them).
 - **Write-back W1 to W7 (2.8.0): forms save through connectors, with the edit log on the Drishti database.** A form whose Sutra has
   `save:` (`target: overlay | owned | source`, `approval`, `reason`, `command`/`create` for a connector's `writes:`) gets **Submit…**:

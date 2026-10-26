@@ -62,17 +62,38 @@ final class VarOfficial implements AutoCloseable {
         this.publisher = publisher;
     }
 
-    /** Captures a date in the background (the newest one at start); a failure is logged. */
+    /** How long the capture at start waits for the lake's connectors to come up (they start a moment after the server). */
+    static final java.time.Duration START_WAIT = java.time.Duration.ofMinutes(10);
+    private static final long START_RETRY_MS = 5_000;
+
+    /**
+     * Captures a date in the background (the newest one at start). While no date is readable yet (the connectors are still coming up)
+     * or the capture fails, it tries again every few seconds, for {@link #START_WAIT}; then the failure is logged and the next data-load
+     * signal captures the date instead.
+     */
     void later(java.util.function.Supplier<java.time.LocalDate> date) {
         runner.execute(() -> {
-            try {
-                LocalDate d = date.get();
-                if (d != null && svc.official().index(d).isEmpty()) {
-                    LOG.info("official VaR capture of {}: {}", d, capture(d));
+            long until = System.nanoTime() + START_WAIT.toNanos();
+            String last = "no business date with P&L vectors yet";
+            while (System.nanoTime() < until && !Thread.currentThread().isInterrupted()) {
+                try {
+                    LocalDate d = date.get();
+                    if (d != null) {
+                        if (svc.official().index(d).isEmpty()) {
+                            LOG.info("official VaR capture of {}: {}", d, capture(d));
+                        }
+                        return;
+                    }
+                } catch (RuntimeException e) {
+                    last = e.getMessage();
                 }
-            } catch (RuntimeException e) {
-                LOG.warn("the official VaR capture did not run: {}", e.getMessage());
+                try {
+                    Thread.sleep(START_RETRY_MS);
+                } catch (InterruptedException e) {
+                    Thread.currentThread().interrupt();
+                }
             }
+            LOG.warn("the official VaR capture at start did not run: {}", last);
         });
     }
 
