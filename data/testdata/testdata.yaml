@@ -6486,420 +6486,420 @@ datasets:
     total: 24
     files:
     - snapshot-2026-07-08.jsonl.gz
-    bytes: 7143
+    bytes: 6916
   - day: '2026-07-09'
     kind: changes
     documents: 24
     total: 24
     files:
     - changes-2026-07-09.jsonl.gz
-    bytes: 7141
+    bytes: 6923
   - day: '2026-07-10'
     kind: changes
     documents: 24
     total: 24
     files:
     - changes-2026-07-10.jsonl.gz
-    bytes: 7140
+    bytes: 6918
   - day: '2026-07-13'
     kind: changes
     documents: 24
     total: 24
     files:
     - changes-2026-07-13.jsonl.gz
-    bytes: 7148
+    bytes: 6925
   - day: '2026-07-14'
     kind: changes
     documents: 24
     total: 24
     files:
     - changes-2026-07-14.jsonl.gz
-    bytes: 7146
+    bytes: 6920
   - day: '2026-07-15'
     kind: changes
     documents: 24
     total: 24
     files:
     - changes-2026-07-15.jsonl.gz
-    bytes: 7138
+    bytes: 6928
   - day: '2026-07-16'
     kind: changes
     documents: 24
     total: 24
     files:
     - changes-2026-07-16.jsonl.gz
-    bytes: 7139
+    bytes: 6925
   - day: '2026-07-17'
     kind: changes
     documents: 24
     total: 24
     files:
     - changes-2026-07-17.jsonl.gz
-    bytes: 7153
+    bytes: 6923
   - day: '2026-07-20'
     kind: changes
     documents: 24
     total: 24
     files:
     - changes-2026-07-20.jsonl.gz
-    bytes: 7148
+    bytes: 6918
   - day: '2026-07-21'
     kind: changes
     documents: 24
     total: 24
     files:
     - changes-2026-07-21.jsonl.gz
-    bytes: 7136
+    bytes: 6909
   - day: '2026-07-22'
     kind: changes
     documents: 24
     total: 24
     files:
     - changes-2026-07-22.jsonl.gz
-    bytes: 7147
+    bytes: 6917
   - day: '2026-07-23'
     kind: changes
     documents: 24
     total: 24
     files:
     - changes-2026-07-23.jsonl.gz
-    bytes: 7138
+    bytes: 6922
   - day: '2026-07-24'
     kind: changes
     documents: 24
     total: 24
     files:
     - changes-2026-07-24.jsonl.gz
-    bytes: 7138
+    bytes: 6930
   - day: '2026-07-27'
     kind: changes
     documents: 24
     total: 24
     files:
     - changes-2026-07-27.jsonl.gz
-    bytes: 7147
+    bytes: 6920
   - day: '2026-07-28'
     kind: changes
     documents: 24
     total: 24
     files:
     - changes-2026-07-28.jsonl.gz
-    bytes: 7140
+    bytes: 6932
   - day: '2026-07-29'
     kind: changes
     documents: 24
     total: 24
     files:
     - changes-2026-07-29.jsonl.gz
-    bytes: 7127
+    bytes: 6910
   - day: '2026-07-30'
     kind: changes
     documents: 24
     total: 24
     files:
     - changes-2026-07-30.jsonl.gz
-    bytes: 7137
+    bytes: 6920
   - day: '2026-07-31'
     kind: changes
     documents: 24
     total: 24
     files:
     - changes-2026-07-31.jsonl.gz
-    bytes: 7128
+    bytes: 6921
   - day: '2026-08-03'
     kind: changes
     documents: 24
     total: 24
     files:
     - changes-2026-08-03.jsonl.gz
-    bytes: 7139
+    bytes: 6930
   - day: '2026-08-04'
     kind: changes
     documents: 24
     total: 24
     files:
     - changes-2026-08-04.jsonl.gz
-    bytes: 7152
+    bytes: 6932
   - day: '2026-08-05'
     kind: changes
     documents: 24
     total: 24
     files:
     - changes-2026-08-05.jsonl.gz
-    bytes: 7135
+    bytes: 6917
   - day: '2026-08-06'
     kind: changes
     documents: 24
     total: 24
     files:
     - changes-2026-08-06.jsonl.gz
-    bytes: 7154
+    bytes: 6933
   - day: '2026-08-07'
     kind: changes
     documents: 24
     total: 24
     files:
     - changes-2026-08-07.jsonl.gz
-    bytes: 7152
+    bytes: 6929
   - day: '2026-08-10'
     kind: changes
     documents: 24
     total: 24
     files:
     - changes-2026-08-10.jsonl.gz
-    bytes: 7142
+    bytes: 6931
   - day: '2026-08-11'
     kind: changes
     documents: 24
     total: 24
     files:
     - changes-2026-08-11.jsonl.gz
-    bytes: 7149
+    bytes: 6930
   - day: '2026-08-12'
     kind: changes
     documents: 24
     total: 24
     files:
     - changes-2026-08-12.jsonl.gz
-    bytes: 7147
+    bytes: 6921
   - day: '2026-08-13'
     kind: changes
     documents: 24
     total: 24
     files:
     - changes-2026-08-13.jsonl.gz
-    bytes: 7143
+    bytes: 6906
   - day: '2026-08-14'
     kind: changes
     documents: 24
     total: 24
     files:
     - changes-2026-08-14.jsonl.gz
-    bytes: 7131
+    bytes: 6918
   - day: '2026-08-17'
     kind: changes
     documents: 24
     total: 24
     files:
     - changes-2026-08-17.jsonl.gz
-    bytes: 7139
+    bytes: 6929
   - day: '2026-08-18'
     kind: changes
     documents: 24
     total: 24
     files:
     - changes-2026-08-18.jsonl.gz
-    bytes: 7146
+    bytes: 6916
   - day: '2026-08-19'
     kind: changes
     documents: 24
     total: 24
     files:
     - changes-2026-08-19.jsonl.gz
-    bytes: 7142
+    bytes: 6931
   - day: '2026-08-20'
     kind: changes
     documents: 24
     total: 24
     files:
     - changes-2026-08-20.jsonl.gz
-    bytes: 7131
+    bytes: 6922
   - day: '2026-08-21'
     kind: changes
     documents: 24
     total: 24
     files:
     - changes-2026-08-21.jsonl.gz
-    bytes: 7151
+    bytes: 6924
   - day: '2026-08-24'
     kind: changes
     documents: 24
     total: 24
     files:
     - changes-2026-08-24.jsonl.gz
-    bytes: 7144
+    bytes: 6923
   - day: '2026-08-25'
     kind: changes
     documents: 24
     total: 24
     files:
     - changes-2026-08-25.jsonl.gz
-    bytes: 7130
+    bytes: 6924
   - day: '2026-08-26'
     kind: changes
     documents: 24
     total: 24
     files:
     - changes-2026-08-26.jsonl.gz
-    bytes: 7129
+    bytes: 6926
   - day: '2026-08-27'
     kind: changes
     documents: 24
     total: 24
     files:
     - changes-2026-08-27.jsonl.gz
-    bytes: 7137
+    bytes: 6920
   - day: '2026-08-28'
     kind: changes
     documents: 24
     total: 24
     files:
     - changes-2026-08-28.jsonl.gz
-    bytes: 7132
+    bytes: 6919
   - day: '2026-08-31'
     kind: changes
     documents: 24
     total: 24
     files:
     - changes-2026-08-31.jsonl.gz
-    bytes: 7147
+    bytes: 6929
   - day: '2026-09-01'
     kind: changes
     documents: 24
     total: 24
     files:
     - changes-2026-09-01.jsonl.gz
-    bytes: 7161
+    bytes: 6927
   - day: '2026-09-02'
     kind: changes
     documents: 24
     total: 24
     files:
     - changes-2026-09-02.jsonl.gz
-    bytes: 7142
+    bytes: 6915
   - day: '2026-09-03'
     kind: changes
     documents: 24
     total: 24
     files:
     - changes-2026-09-03.jsonl.gz
-    bytes: 7150
+    bytes: 6921
   - day: '2026-09-04'
     kind: changes
     documents: 24
     total: 24
     files:
     - changes-2026-09-04.jsonl.gz
-    bytes: 7157
+    bytes: 6934
   - day: '2026-09-08'
     kind: changes
     documents: 24
     total: 24
     files:
     - changes-2026-09-08.jsonl.gz
-    bytes: 7140
+    bytes: 6916
   - day: '2026-09-09'
     kind: changes
     documents: 24
     total: 24
     files:
     - changes-2026-09-09.jsonl.gz
-    bytes: 7138
+    bytes: 6907
   - day: '2026-09-10'
     kind: changes
     documents: 24
     total: 24
     files:
     - changes-2026-09-10.jsonl.gz
-    bytes: 7150
+    bytes: 6919
   - day: '2026-09-11'
     kind: changes
     documents: 24
     total: 24
     files:
     - changes-2026-09-11.jsonl.gz
-    bytes: 7151
+    bytes: 6917
   - day: '2026-09-14'
     kind: changes
     documents: 24
     total: 24
     files:
     - changes-2026-09-14.jsonl.gz
-    bytes: 7145
+    bytes: 6925
   - day: '2026-09-15'
     kind: changes
     documents: 24
     total: 24
     files:
     - changes-2026-09-15.jsonl.gz
-    bytes: 7145
+    bytes: 6917
   - day: '2026-09-16'
     kind: changes
     documents: 24
     total: 24
     files:
     - changes-2026-09-16.jsonl.gz
-    bytes: 7148
+    bytes: 6919
   - day: '2026-09-17'
     kind: changes
     documents: 24
     total: 24
     files:
     - changes-2026-09-17.jsonl.gz
-    bytes: 7158
+    bytes: 6928
   - day: '2026-09-18'
     kind: changes
     documents: 24
     total: 24
     files:
     - changes-2026-09-18.jsonl.gz
-    bytes: 7136
+    bytes: 6930
   - day: '2026-09-21'
     kind: changes
     documents: 24
     total: 24
     files:
     - changes-2026-09-21.jsonl.gz
-    bytes: 7129
+    bytes: 6913
   - day: '2026-09-22'
     kind: changes
     documents: 24
     total: 24
     files:
     - changes-2026-09-22.jsonl.gz
-    bytes: 7139
+    bytes: 6929
   - day: '2026-09-23'
     kind: changes
     documents: 24
     total: 24
     files:
     - changes-2026-09-23.jsonl.gz
-    bytes: 7145
+    bytes: 6922
   - day: '2026-09-24'
     kind: changes
     documents: 24
     total: 24
     files:
     - changes-2026-09-24.jsonl.gz
-    bytes: 7142
+    bytes: 6922
   - day: '2026-09-25'
     kind: changes
     documents: 24
     total: 24
     files:
     - changes-2026-09-25.jsonl.gz
-    bytes: 7140
+    bytes: 6923
   - day: '2026-09-28'
     kind: changes
     documents: 24
     total: 24
     files:
     - changes-2026-09-28.jsonl.gz
-    bytes: 7149
+    bytes: 6911
   - day: '2026-09-29'
     kind: changes
     documents: 24
     total: 24
     files:
     - changes-2026-09-29.jsonl.gz
-    bytes: 7138
+    bytes: 6921
   - day: '2026-09-30'
     kind: changes
     documents: 24
     total: 24
     files:
     - changes-2026-09-30.jsonl.gz
-    bytes: 6865
+    bytes: 6641
 - folder: core/counterparty-group
   pack: core
   kind: counterparty-group
@@ -11160,432 +11160,6 @@ datasets:
     files:
     - changes-2026-09-30.jsonl.gz
     bytes: 20
-- folder: counterparty-risk/exposure-profile
-  pack: counterparty-risk
-  kind: exposure-profile
-  connector: credit-store
-  key: PROFILE_ID
-  days:
-  - day: '2026-07-08'
-    kind: snapshot
-    documents: 76
-    total: 76
-    files:
-    - snapshot-2026-07-08.jsonl.gz
-    bytes: 20208
-  - day: '2026-07-09'
-    kind: changes
-    documents: 76
-    total: 76
-    files:
-    - changes-2026-07-09.jsonl.gz
-    bytes: 20209
-  - day: '2026-07-10'
-    kind: changes
-    documents: 76
-    total: 76
-    files:
-    - changes-2026-07-10.jsonl.gz
-    bytes: 20209
-  - day: '2026-07-13'
-    kind: changes
-    documents: 76
-    total: 76
-    files:
-    - changes-2026-07-13.jsonl.gz
-    bytes: 20201
-  - day: '2026-07-14'
-    kind: changes
-    documents: 76
-    total: 76
-    files:
-    - changes-2026-07-14.jsonl.gz
-    bytes: 20214
-  - day: '2026-07-15'
-    kind: changes
-    documents: 76
-    total: 76
-    files:
-    - changes-2026-07-15.jsonl.gz
-    bytes: 20217
-  - day: '2026-07-16'
-    kind: changes
-    documents: 76
-    total: 76
-    files:
-    - changes-2026-07-16.jsonl.gz
-    bytes: 20210
-  - day: '2026-07-17'
-    kind: changes
-    documents: 76
-    total: 76
-    files:
-    - changes-2026-07-17.jsonl.gz
-    bytes: 20205
-  - day: '2026-07-20'
-    kind: changes
-    documents: 76
-    total: 76
-    files:
-    - changes-2026-07-20.jsonl.gz
-    bytes: 20208
-  - day: '2026-07-21'
-    kind: changes
-    documents: 76
-    total: 76
-    files:
-    - changes-2026-07-21.jsonl.gz
-    bytes: 20206
-  - day: '2026-07-22'
-    kind: changes
-    documents: 76
-    total: 76
-    files:
-    - changes-2026-07-22.jsonl.gz
-    bytes: 20203
-  - day: '2026-07-23'
-    kind: changes
-    documents: 76
-    total: 76
-    files:
-    - changes-2026-07-23.jsonl.gz
-    bytes: 20207
-  - day: '2026-07-24'
-    kind: changes
-    documents: 76
-    total: 76
-    files:
-    - changes-2026-07-24.jsonl.gz
-    bytes: 20213
-  - day: '2026-07-27'
-    kind: changes
-    documents: 76
-    total: 76
-    files:
-    - changes-2026-07-27.jsonl.gz
-    bytes: 20203
-  - day: '2026-07-28'
-    kind: changes
-    documents: 76
-    total: 76
-    files:
-    - changes-2026-07-28.jsonl.gz
-    bytes: 20205
-  - day: '2026-07-29'
-    kind: changes
-    documents: 76
-    total: 76
-    files:
-    - changes-2026-07-29.jsonl.gz
-    bytes: 20207
-  - day: '2026-07-30'
-    kind: changes
-    documents: 76
-    total: 76
-    files:
-    - changes-2026-07-30.jsonl.gz
-    bytes: 20205
-  - day: '2026-07-31'
-    kind: changes
-    documents: 76
-    total: 76
-    files:
-    - changes-2026-07-31.jsonl.gz
-    bytes: 20209
-  - day: '2026-08-03'
-    kind: changes
-    documents: 76
-    total: 76
-    files:
-    - changes-2026-08-03.jsonl.gz
-    bytes: 20206
-  - day: '2026-08-04'
-    kind: changes
-    documents: 76
-    total: 76
-    files:
-    - changes-2026-08-04.jsonl.gz
-    bytes: 20204
-  - day: '2026-08-05'
-    kind: changes
-    documents: 76
-    total: 76
-    files:
-    - changes-2026-08-05.jsonl.gz
-    bytes: 20206
-  - day: '2026-08-06'
-    kind: changes
-    documents: 76
-    total: 76
-    files:
-    - changes-2026-08-06.jsonl.gz
-    bytes: 20225
-  - day: '2026-08-07'
-    kind: changes
-    documents: 76
-    total: 76
-    files:
-    - changes-2026-08-07.jsonl.gz
-    bytes: 20203
-  - day: '2026-08-10'
-    kind: changes
-    documents: 76
-    total: 76
-    files:
-    - changes-2026-08-10.jsonl.gz
-    bytes: 20201
-  - day: '2026-08-11'
-    kind: changes
-    documents: 76
-    total: 76
-    files:
-    - changes-2026-08-11.jsonl.gz
-    bytes: 20222
-  - day: '2026-08-12'
-    kind: changes
-    documents: 76
-    total: 76
-    files:
-    - changes-2026-08-12.jsonl.gz
-    bytes: 20216
-  - day: '2026-08-13'
-    kind: changes
-    documents: 76
-    total: 76
-    files:
-    - changes-2026-08-13.jsonl.gz
-    bytes: 20208
-  - day: '2026-08-14'
-    kind: changes
-    documents: 76
-    total: 76
-    files:
-    - changes-2026-08-14.jsonl.gz
-    bytes: 20203
-  - day: '2026-08-17'
-    kind: changes
-    documents: 76
-    total: 76
-    files:
-    - changes-2026-08-17.jsonl.gz
-    bytes: 20209
-  - day: '2026-08-18'
-    kind: changes
-    documents: 76
-    total: 76
-    files:
-    - changes-2026-08-18.jsonl.gz
-    bytes: 20206
-  - day: '2026-08-19'
-    kind: changes
-    documents: 76
-    total: 76
-    files:
-    - changes-2026-08-19.jsonl.gz
-    bytes: 20196
-  - day: '2026-08-20'
-    kind: changes
-    documents: 76
-    total: 76
-    files:
-    - changes-2026-08-20.jsonl.gz
-    bytes: 20204
-  - day: '2026-08-21'
-    kind: changes
-    documents: 76
-    total: 76
-    files:
-    - changes-2026-08-21.jsonl.gz
-    bytes: 20218
-  - day: '2026-08-24'
-    kind: changes
-    documents: 76
-    total: 76
-    files:
-    - changes-2026-08-24.jsonl.gz
-    bytes: 20206
-  - day: '2026-08-25'
-    kind: changes
-    documents: 76
-    total: 76
-    files:
-    - changes-2026-08-25.jsonl.gz
-    bytes: 20192
-  - day: '2026-08-26'
-    kind: changes
-    documents: 76
-    total: 76
-    files:
-    - changes-2026-08-26.jsonl.gz
-    bytes: 20196
-  - day: '2026-08-27'
-    kind: changes
-    documents: 76
-    total: 76
-    files:
-    - changes-2026-08-27.jsonl.gz
-    bytes: 20213
-  - day: '2026-08-28'
-    kind: changes
-    documents: 76
-    total: 76
-    files:
-    - changes-2026-08-28.jsonl.gz
-    bytes: 20206
-  - day: '2026-08-31'
-    kind: changes
-    documents: 76
-    total: 76
-    files:
-    - changes-2026-08-31.jsonl.gz
-    bytes: 20215
-  - day: '2026-09-01'
-    kind: changes
-    documents: 76
-    total: 76
-    files:
-    - changes-2026-09-01.jsonl.gz
-    bytes: 20226
-  - day: '2026-09-02'
-    kind: changes
-    documents: 76
-    total: 76
-    files:
-    - changes-2026-09-02.jsonl.gz
-    bytes: 20220
-  - day: '2026-09-03'
-    kind: changes
-    documents: 76
-    total: 76
-    files:
-    - changes-2026-09-03.jsonl.gz
-    bytes: 20218
-  - day: '2026-09-04'
-    kind: changes
-    documents: 76
-    total: 76
-    files:
-    - changes-2026-09-04.jsonl.gz
-    bytes: 20213
-  - day: '2026-09-08'
-    kind: changes
-    documents: 76
-    total: 76
-    files:
-    - changes-2026-09-08.jsonl.gz
-    bytes: 20204
-  - day: '2026-09-09'
-    kind: changes
-    documents: 76
-    total: 76
-    files:
-    - changes-2026-09-09.jsonl.gz
-    bytes: 20206
-  - day: '2026-09-10'
-    kind: changes
-    documents: 76
-    total: 76
-    files:
-    - changes-2026-09-10.jsonl.gz
-    bytes: 20218
-  - day: '2026-09-11'
-    kind: changes
-    documents: 76
-    total: 76
-    files:
-    - changes-2026-09-11.jsonl.gz
-    bytes: 20202
-  - day: '2026-09-14'
-    kind: changes
-    documents: 76
-    total: 76
-    files:
-    - changes-2026-09-14.jsonl.gz
-    bytes: 20215
-  - day: '2026-09-15'
-    kind: changes
-    documents: 76
-    total: 76
-    files:
-    - changes-2026-09-15.jsonl.gz
-    bytes: 20207
-  - day: '2026-09-16'
-    kind: changes
-    documents: 76
-    total: 76
-    files:
-    - changes-2026-09-16.jsonl.gz
-    bytes: 20216
-  - day: '2026-09-17'
-    kind: changes
-    documents: 76
-    total: 76
-    files:
-    - changes-2026-09-17.jsonl.gz
-    bytes: 20227
-  - day: '2026-09-18'
-    kind: changes
-    documents: 76
-    total: 76
-    files:
-    - changes-2026-09-18.jsonl.gz
-    bytes: 20210
-  - day: '2026-09-21'
-    kind: changes
-    documents: 76
-    total: 76
-    files:
-    - changes-2026-09-21.jsonl.gz
-    bytes: 20211
-  - day: '2026-09-22'
-    kind: changes
-    documents: 76
-    total: 76
-    files:
-    - changes-2026-09-22.jsonl.gz
-    bytes: 20217
-  - day: '2026-09-23'
-    kind: changes
-    documents: 76
-    total: 76
-    files:
-    - changes-2026-09-23.jsonl.gz
-    bytes: 20212
-  - day: '2026-09-24'
-    kind: changes
-    documents: 76
-    total: 76
-    files:
-    - changes-2026-09-24.jsonl.gz
-    bytes: 20208
-  - day: '2026-09-25'
-    kind: changes
-    documents: 76
-    total: 76
-    files:
-    - changes-2026-09-25.jsonl.gz
-    bytes: 20208
-  - day: '2026-09-28'
-    kind: changes
-    documents: 76
-    total: 76
-    files:
-    - changes-2026-09-28.jsonl.gz
-    bytes: 20215
-  - day: '2026-09-29'
-    kind: changes
-    documents: 76
-    total: 76
-    files:
-    - changes-2026-09-29.jsonl.gz
-    bytes: 20214
-  - day: '2026-09-30'
-    kind: changes
-    documents: 76
-    total: 76
-    files:
-    - changes-2026-09-30.jsonl.gz
-    bytes: 20050
 - folder: market-risk/frtb-sensitivity
   pack: market-risk
   kind: frtb-sensitivity
@@ -16284,420 +15858,420 @@ datasets:
     total: 76
     files:
     - snapshot-2026-07-08.jsonl.gz
-    bytes: 383312
+    bytes: 367643
   - day: '2026-07-09'
     kind: changes
     documents: 76
     total: 76
     files:
     - changes-2026-07-09.jsonl.gz
-    bytes: 383409
+    bytes: 367529
   - day: '2026-07-10'
     kind: changes
     documents: 76
     total: 76
     files:
     - changes-2026-07-10.jsonl.gz
-    bytes: 383720
+    bytes: 367770
   - day: '2026-07-13'
     kind: changes
     documents: 76
     total: 76
     files:
     - changes-2026-07-13.jsonl.gz
-    bytes: 383643
+    bytes: 367804
   - day: '2026-07-14'
     kind: changes
     documents: 76
     total: 76
     files:
     - changes-2026-07-14.jsonl.gz
-    bytes: 383882
+    bytes: 367868
   - day: '2026-07-15'
     kind: changes
     documents: 76
     total: 76
     files:
     - changes-2026-07-15.jsonl.gz
-    bytes: 383854
+    bytes: 367881
   - day: '2026-07-16'
     kind: changes
     documents: 76
     total: 76
     files:
     - changes-2026-07-16.jsonl.gz
-    bytes: 383664
+    bytes: 367698
   - day: '2026-07-17'
     kind: changes
     documents: 76
     total: 76
     files:
     - changes-2026-07-17.jsonl.gz
-    bytes: 383772
+    bytes: 367764
   - day: '2026-07-20'
     kind: changes
     documents: 76
     total: 76
     files:
     - changes-2026-07-20.jsonl.gz
-    bytes: 383863
+    bytes: 367895
   - day: '2026-07-21'
     kind: changes
     documents: 76
     total: 76
     files:
     - changes-2026-07-21.jsonl.gz
-    bytes: 383850
+    bytes: 368081
   - day: '2026-07-22'
     kind: changes
     documents: 76
     total: 76
     files:
     - changes-2026-07-22.jsonl.gz
-    bytes: 384082
+    bytes: 368119
   - day: '2026-07-23'
     kind: changes
     documents: 76
     total: 76
     files:
     - changes-2026-07-23.jsonl.gz
-    bytes: 383849
+    bytes: 368027
   - day: '2026-07-24'
     kind: changes
     documents: 76
     total: 76
     files:
     - changes-2026-07-24.jsonl.gz
-    bytes: 384493
+    bytes: 368295
   - day: '2026-07-27'
     kind: changes
     documents: 76
     total: 76
     files:
     - changes-2026-07-27.jsonl.gz
-    bytes: 384315
+    bytes: 368282
   - day: '2026-07-28'
     kind: changes
     documents: 76
     total: 76
     files:
     - changes-2026-07-28.jsonl.gz
-    bytes: 384492
+    bytes: 368395
   - day: '2026-07-29'
     kind: changes
     documents: 76
     total: 76
     files:
     - changes-2026-07-29.jsonl.gz
-    bytes: 384604
+    bytes: 368502
   - day: '2026-07-30'
     kind: changes
     documents: 76
     total: 76
     files:
     - changes-2026-07-30.jsonl.gz
-    bytes: 384618
+    bytes: 368479
   - day: '2026-07-31'
     kind: changes
     documents: 76
     total: 76
     files:
     - changes-2026-07-31.jsonl.gz
-    bytes: 385197
+    bytes: 369192
   - day: '2026-08-03'
     kind: changes
     documents: 76
     total: 76
     files:
     - changes-2026-08-03.jsonl.gz
-    bytes: 385303
+    bytes: 369437
   - day: '2026-08-04'
     kind: changes
     documents: 76
     total: 76
     files:
     - changes-2026-08-04.jsonl.gz
-    bytes: 385581
+    bytes: 369442
   - day: '2026-08-05'
     kind: changes
     documents: 76
     total: 76
     files:
     - changes-2026-08-05.jsonl.gz
-    bytes: 385665
+    bytes: 369590
   - day: '2026-08-06'
     kind: changes
     documents: 76
     total: 76
     files:
     - changes-2026-08-06.jsonl.gz
-    bytes: 385908
+    bytes: 369740
   - day: '2026-08-07'
     kind: changes
     documents: 76
     total: 76
     files:
     - changes-2026-08-07.jsonl.gz
-    bytes: 385887
+    bytes: 369916
   - day: '2026-08-10'
     kind: changes
     documents: 76
     total: 76
     files:
     - changes-2026-08-10.jsonl.gz
-    bytes: 386064
+    bytes: 369995
   - day: '2026-08-11'
     kind: changes
     documents: 76
     total: 76
     files:
     - changes-2026-08-11.jsonl.gz
-    bytes: 386290
+    bytes: 370398
   - day: '2026-08-12'
     kind: changes
     documents: 76
     total: 76
     files:
     - changes-2026-08-12.jsonl.gz
-    bytes: 386442
+    bytes: 370538
   - day: '2026-08-13'
     kind: changes
     documents: 76
     total: 76
     files:
     - changes-2026-08-13.jsonl.gz
-    bytes: 386287
+    bytes: 370462
   - day: '2026-08-14'
     kind: changes
     documents: 76
     total: 76
     files:
     - changes-2026-08-14.jsonl.gz
-    bytes: 386917
+    bytes: 370934
   - day: '2026-08-17'
     kind: changes
     documents: 76
     total: 76
     files:
     - changes-2026-08-17.jsonl.gz
-    bytes: 386819
+    bytes: 371053
   - day: '2026-08-18'
     kind: changes
     documents: 76
     total: 76
     files:
     - changes-2026-08-18.jsonl.gz
-    bytes: 386843
+    bytes: 371264
   - day: '2026-08-19'
     kind: changes
     documents: 76
     total: 76
     files:
     - changes-2026-08-19.jsonl.gz
-    bytes: 387273
+    bytes: 371189
   - day: '2026-08-20'
     kind: changes
     documents: 76
     total: 76
     files:
     - changes-2026-08-20.jsonl.gz
-    bytes: 387209
+    bytes: 371666
   - day: '2026-08-21'
     kind: changes
     documents: 76
     total: 76
     files:
     - changes-2026-08-21.jsonl.gz
-    bytes: 387773
+    bytes: 372069
   - day: '2026-08-24'
     kind: changes
     documents: 76
     total: 76
     files:
     - changes-2026-08-24.jsonl.gz
-    bytes: 387977
+    bytes: 372330
   - day: '2026-08-25'
     kind: changes
     documents: 76
     total: 76
     files:
     - changes-2026-08-25.jsonl.gz
-    bytes: 388043
+    bytes: 372260
   - day: '2026-08-26'
     kind: changes
     documents: 76
     total: 76
     files:
     - changes-2026-08-26.jsonl.gz
-    bytes: 388091
+    bytes: 372281
   - day: '2026-08-27'
     kind: changes
     documents: 76
     total: 76
     files:
     - changes-2026-08-27.jsonl.gz
-    bytes: 388009
+    bytes: 372369
   - day: '2026-08-28'
     kind: changes
     documents: 76
     total: 76
     files:
     - changes-2026-08-28.jsonl.gz
-    bytes: 388340
+    bytes: 372770
   - day: '2026-08-31'
     kind: changes
     documents: 76
     total: 76
     files:
     - changes-2026-08-31.jsonl.gz
-    bytes: 388405
+    bytes: 372969
   - day: '2026-09-01'
     kind: changes
     documents: 76
     total: 76
     files:
     - changes-2026-09-01.jsonl.gz
-    bytes: 388578
+    bytes: 373121
   - day: '2026-09-02'
     kind: changes
     documents: 76
     total: 76
     files:
     - changes-2026-09-02.jsonl.gz
-    bytes: 388617
+    bytes: 373191
   - day: '2026-09-03'
     kind: changes
     documents: 76
     total: 76
     files:
     - changes-2026-09-03.jsonl.gz
-    bytes: 388781
+    bytes: 373325
   - day: '2026-09-04'
     kind: changes
     documents: 76
     total: 76
     files:
     - changes-2026-09-04.jsonl.gz
-    bytes: 389181
+    bytes: 373668
   - day: '2026-09-08'
     kind: changes
     documents: 76
     total: 76
     files:
     - changes-2026-09-08.jsonl.gz
-    bytes: 389352
+    bytes: 373892
   - day: '2026-09-09'
     kind: changes
     documents: 76
     total: 76
     files:
     - changes-2026-09-09.jsonl.gz
-    bytes: 389587
+    bytes: 374068
   - day: '2026-09-10'
     kind: changes
     documents: 76
     total: 76
     files:
     - changes-2026-09-10.jsonl.gz
-    bytes: 390114
+    bytes: 374443
   - day: '2026-09-11'
     kind: changes
     documents: 76
     total: 76
     files:
     - changes-2026-09-11.jsonl.gz
-    bytes: 390405
+    bytes: 374748
   - day: '2026-09-14'
     kind: changes
     documents: 76
     total: 76
     files:
     - changes-2026-09-14.jsonl.gz
-    bytes: 390739
+    bytes: 374952
   - day: '2026-09-15'
     kind: changes
     documents: 76
     total: 76
     files:
     - changes-2026-09-15.jsonl.gz
-    bytes: 390669
+    bytes: 375108
   - day: '2026-09-16'
     kind: changes
     documents: 76
     total: 76
     files:
     - changes-2026-09-16.jsonl.gz
-    bytes: 390674
+    bytes: 375158
   - day: '2026-09-17'
     kind: changes
     documents: 76
     total: 76
     files:
     - changes-2026-09-17.jsonl.gz
-    bytes: 390681
+    bytes: 375012
   - day: '2026-09-18'
     kind: changes
     documents: 76
     total: 76
     files:
     - changes-2026-09-18.jsonl.gz
-    bytes: 390908
+    bytes: 375419
   - day: '2026-09-21'
     kind: changes
     documents: 76
     total: 76
     files:
     - changes-2026-09-21.jsonl.gz
-    bytes: 391042
+    bytes: 375265
   - day: '2026-09-22'
     kind: changes
     documents: 76
     total: 76
     files:
     - changes-2026-09-22.jsonl.gz
-    bytes: 391349
+    bytes: 375583
   - day: '2026-09-23'
     kind: changes
     documents: 76
     total: 76
     files:
     - changes-2026-09-23.jsonl.gz
-    bytes: 391352
+    bytes: 375547
   - day: '2026-09-24'
     kind: changes
     documents: 76
     total: 76
     files:
     - changes-2026-09-24.jsonl.gz
-    bytes: 391415
+    bytes: 375680
   - day: '2026-09-25'
     kind: changes
     documents: 76
     total: 76
     files:
     - changes-2026-09-25.jsonl.gz
-    bytes: 391685
+    bytes: 376105
   - day: '2026-09-28'
     kind: changes
     documents: 76
     total: 76
     files:
     - changes-2026-09-28.jsonl.gz
-    bytes: 391592
+    bytes: 375905
   - day: '2026-09-29'
     kind: changes
     documents: 76
     total: 76
     files:
     - changes-2026-09-29.jsonl.gz
-    bytes: 391617
+    bytes: 375929
   - day: '2026-09-30'
     kind: changes
     documents: 76
     total: 76
     files:
     - changes-2026-09-30.jsonl.gz
-    bytes: 367217
+    bytes: 351659
 - folder: market-risk/pnl-explain
   pack: market-risk
   kind: pnl-explain
@@ -18828,35 +18402,6 @@ datasets:
     files:
     - changes-2026-09-30.jsonl.gz
     bytes: 20
-- folder: counterparty-risk/simulation-run
-  pack: counterparty-risk
-  kind: simulation-run
-  connector: exposure-store
-  key: RUN_ID
-  dated-by: BUSINESS_DATE
-  first-date: '2026-09-30'
-  last-date: '2026-09-30'
-  documents: 1
-  files:
-  - cob-2026-09-30.jsonl.gz
-  bytes: 659
-- folder: counterparty-risk/exposure-path
-  pack: counterparty-risk
-  kind: exposure-path
-  connector: exposure-store
-  key: PATH_ROW_ID
-  dated-by: BUSINESS_DATE
-  first-date: '2026-09-30'
-  last-date: '2026-09-30'
-  documents: 9031
-  files:
-  - cob-2026-09-30.part-001.jsonl.gz
-  - cob-2026-09-30.part-002.jsonl.gz
-  - cob-2026-09-30.part-003.jsonl.gz
-  - cob-2026-09-30.part-004.jsonl.gz
-  - cob-2026-09-30.part-005.jsonl.gz
-  - cob-2026-09-30.part-006.jsonl.gz
-  bytes: 7168291
 - folder: market-risk/stress-result
   pack: market-risk
   kind: stress-result
@@ -20620,6 +20165,35 @@ datasets:
   files:
   - cob-2026-09-30.jsonl.gz
   bytes: 1756
+- folder: counterparty-risk/simulation-run
+  pack: counterparty-risk
+  kind: simulation-run
+  connector: exposure-store
+  key: RUN_ID
+  dated-by: BUSINESS_DATE
+  first-date: '2026-09-30'
+  last-date: '2026-09-30'
+  documents: 1
+  files:
+  - cob-2026-09-30.jsonl.gz
+  bytes: 659
+- folder: counterparty-risk/exposure-path
+  pack: counterparty-risk
+  kind: exposure-path
+  connector: exposure-store
+  key: PATH_ROW_ID
+  dated-by: BUSINESS_DATE
+  first-date: '2026-09-30'
+  last-date: '2026-09-30'
+  documents: 9031
+  files:
+  - cob-2026-09-30.part-001.jsonl.gz
+  - cob-2026-09-30.part-002.jsonl.gz
+  - cob-2026-09-30.part-003.jsonl.gz
+  - cob-2026-09-30.part-004.jsonl.gz
+  - cob-2026-09-30.part-005.jsonl.gz
+  - cob-2026-09-30.part-006.jsonl.gz
+  bytes: 7168291
 - samples: config/packs/world-economy/samples
   pack: world-economy
   kind: country-group

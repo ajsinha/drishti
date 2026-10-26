@@ -17,7 +17,6 @@ plugin: iceberg
 kinds:
 - netting-set
 - credit-limit
-- exposure-profile
 - cva
 - sa-ccr
 description: credit-store read from iceberg (the former application-iceberg.yaml profile)

@@ -168,7 +168,7 @@ def _rows_walk(rows: list[dict], rows_key: str) -> dict:
 
 def netting_set(d: dict) -> dict:
     """Each listed trade walks; the asset-class totals and the net MTM are the rows added up (plus whatever of them is not
-    listed, which stays put); the exposure profile scales as one, with the peaks, the utilisation and the CVA following."""
+    listed, which stays put). No exposure figure walks: the exposure engine computes them from the paths (EXP.md section 14)."""
     rows = d["trades"]
     walk: dict = dict(_rows_walk(rows, "trades"))
     derive: list[dict] = []
@@ -180,8 +180,6 @@ def netting_set(d: dict) -> dict:
             derive.append(_derive(f"byAsset.{k}.mtm", " + ".join(terms).replace("+ -", "- ")))
     hidden_net = d["netMtm"] - sum(r["mtm"] for r in rows)
     derive.append(_derive("netMtm", (f"{hidden_net} + " if hidden_net else "") + "sum(trades.*.mtm)"))
-    walk["eePeak"] = {"step": 0.004, "mode": "rel", "with": ["profile.*.ee", "profile.*.pfe"]}
-    derive += [_derive("eePeak", "max(profile.*.ee)"), _derive("pfePeak", "max(profile.*.pfe)"), _derive("utilisation", "pfePeak / limit", 4)]
     walk["derive"] = derive
     return walk
 

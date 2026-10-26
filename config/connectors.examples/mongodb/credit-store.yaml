@@ -17,7 +17,6 @@ plugin: mongodb
 kinds:
 - netting-set
 - credit-limit
-- exposure-profile
 - cva
 - sa-ccr
 description: credit-store read from mongodb (the former application-mongodb.yaml profile)

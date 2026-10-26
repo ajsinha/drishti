@@ -74,6 +74,21 @@ final class ExposureService implements AutoCloseable {
     record Scoped(ExposureDate date, ExposureAccess.View view, ExposureScopes.Resolution res, ExposureCalc.Result result, int hiddenTrades,
             int hiddenSets, String kind, String label, Ask ask, long computeMs, boolean cached) {}
 
+    private static final java.util.regex.Pattern SPACED = java.util.regex.Pattern.compile("(?i)^(NSET|CPTY|GROUP|LE|DESK|BOOK|TRD)\\s+([^:]+)$");
+
+    /**
+     * A scope as people type it, in the scope grammar: an id of the retired stored exposure profile ({@code EXP-ALDERSHOT-FRA}, EXP.md
+     * section 14) is its netting set ({@code NSET:NS-ALDERSHOT-FRA}); a spaced scope ({@code NSET NS-ALDERSHOT-FRA}) takes its colon.
+     */
+    static String scopeText(String typed) {
+        String t = typed == null ? "" : typed.trim();
+        if (t.toUpperCase(Locale.ROOT).startsWith("EXP-") && t.length() > 4 && !t.contains(" ")) {
+            return "NSET:NS-" + t.substring(4).toUpperCase(Locale.ROOT);
+        }
+        java.util.regex.Matcher m = SPACED.matcher(t);
+        return m.matches() ? m.group(1).toUpperCase(Locale.ROOT) + ":" + m.group(2).trim().replaceAll("\\s*,\\s*", ",") : t;
+    }
+
     /** The words of a scope that name trades one by one: only for a viewer who sees those netting sets at trades level. */
     private static final List<String> NAMING = List.of("TRD", "DESK", "BOOK", "WHERE");
     private static final int CACHE = 1000;

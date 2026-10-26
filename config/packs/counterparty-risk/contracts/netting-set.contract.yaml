@@ -64,20 +64,6 @@ fields:
   unit: USD
   description: 'The net collateral against the netting set: what is held less what has been posted.'
   example: -229552
-- name: EE_PEAK
-  type: amount
-  presence: required
-  unit: USD
-  description: The highest point of the expected-exposure profile over the life of the trades, the average positive exposure on the date where
-    it is largest.
-  example: 141750
-- name: PFE_PEAK
-  type: amount
-  presence: required
-  unit: USD
-  description: The highest point of the 95th-percentile exposure profile; on 95 of 100 simulated paths the exposure stays below it. It is the
-    measure credit limits are set against.
-  example: 347288
 - name: LIMIT
   type: amount
   presence: required
@@ -96,10 +82,6 @@ fields:
   unit: USD
   description: The reduction in the value of the trades for the risk that the counterparty defaults before they mature.
   example: -7
-- name: PROFILE
-  type: record list
-  presence: required
-  description: 'Nested: see nested PROFILE[]'
 - name: TRADES
   type: record list
   presence: required
@@ -136,13 +118,6 @@ fields:
   example: LIM-ALDERSHOT
   pattern: ^LIM-
   link: credit-limit
-- name: EXPOSURE_PROFILE
-  type: id
-  presence: required
-  description: 'Exposure profile: the exposure-profile it refers to'
-  example: EXP-ALDERSHOT-FRA
-  pattern: ^EXP-
-  link: exposure-profile
 - name: CVA_RESULT
   type: id
   presence: required
@@ -188,19 +163,6 @@ fields:
   description: 'Trade: the trade it refers to'
   link: trade
 nested:
-  PROFILE[]:
-  - name: TENOR
-    type: text
-    presence: required
-    example: '0'
-  - name: EE
-    type: amount
-    presence: required
-    example: 39314
-  - name: PFE
-    type: amount
-    presence: required
-    example: 121929
   TRADES[]:
   - name: TRADE_ID
     type: id
@@ -287,8 +249,6 @@ links:
   kind: csa
 - field: CREDIT_LIMIT
   kind: credit-limit
-- field: EXPOSURE_PROFILE
-  kind: exposure-profile
 - field: CVA_RESULT
   kind: cva
 - field: SACCR
@@ -312,19 +272,15 @@ validation:
   - TRADE_COUNT
   - NET_MTM
   - COLLATERAL
-  - EE_PEAK
-  - PFE_PEAK
   - LIMIT
   - UTILISATION
   - CVA
-  - PROFILE
   - TRADES
   - BY_ASSET
   - COUNTERPARTY
   - AGREEMENT
   - CSA
   - CREDIT_LIMIT
-  - EXPOSURE_PROFILE
   - CVA_RESULT
   - SACCR
   - SIMM
@@ -353,9 +309,6 @@ validation:
 - rule: link
   field: CREDIT_LIMIT
   kind: credit-limit
-- rule: link
-  field: EXPOSURE_PROFILE
-  kind: exposure-profile
 - rule: link
   field: CVA_RESULT
   kind: cva
@@ -409,18 +362,13 @@ review:
 - 'due time of each business date is not known: state it (for example, by 06:00 New York the next business day).'
 - 'NET_MTM is a column a compute engine produces (docs/contracts/README.md section 14) on a record that keeps it: confirm whether it is computed
   and removed.'
-- 'EE_PEAK is a column a compute engine produces (docs/contracts/README.md section 14) on a record that keeps it: confirm whether it is computed
-  and removed.'
-- 'PFE_PEAK is a column a compute engine produces (docs/contracts/README.md section 14) on a record that keeps it: confirm whether it is computed
-  and removed.'
 - 'UTILISATION is a column a compute engine produces (docs/contracts/README.md section 14) on a record that keeps it: confirm whether it is computed
   and removed.'
 - 'enum values inferred from the data, not from a glossary: TRADES[].CURRENCY, TRADES[].MATURITY_BUCKET: confirm they are closed lists.'
-- 'number types decided by the field''s name: PROFILE[].EE amount, PROFILE[].PFE amount, BY_ASSET[].MTM amount: confirm amount, rate or integer.'
-- 'no unit stated for the amounts PROFILE[].EE, PROFILE[].PFE, BY_ASSET[].MTM (docs/contracts/README.md section 7: USD unless stated): confirm
-  the currency.'
-- 'no description in about.yaml or the Sutras for NETTING_ENFORCEABLE, PROFILE[].TENOR, PROFILE[].EE, PROFILE[].PFE, TRADES[].ASSET_CLASS, TRADES[].CURRENCY,
-  TRADES[].MATURITY_BUCKET, BY_ASSET[].ASSET, BY_ASSET[].MTM: write them in the pack''s config/about.yaml glossary.'
+- 'number types decided by the field''s name: BY_ASSET[].MTM amount: confirm amount, rate or integer.'
+- 'no unit stated for the amounts BY_ASSET[].MTM (docs/contracts/README.md section 7: USD unless stated): confirm the currency.'
+- 'no description in about.yaml or the Sutras for NETTING_ENFORCEABLE, PROFILE[].TENOR, TRADES[].ASSET_CLASS, TRADES[].CURRENCY, TRADES[].MATURITY_BUCKET,
+  BY_ASSET[].ASSET, BY_ASSET[].MTM: write them in the pack''s config/about.yaml glossary.'
 - 'TRADE_COUNT and TRADES[].MTM: confirm TRADE_COUNT is computed from the membership and TRADES[].MTM is read from the trade valuations (an input),
   not stored here.'
 - 'LIMIT is copied from the credit limit: confirm it is read from LIM instead of stored.'

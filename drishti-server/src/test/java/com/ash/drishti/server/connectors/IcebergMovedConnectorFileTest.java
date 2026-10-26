@@ -58,7 +58,7 @@ import org.springframework.test.web.servlet.MockMvc;
 class IcebergMovedConnectorFileTest {
 
     static final String CONNECTORS = "${drishti.test.dir}/iceberg-moved-connectors";
-    private static final List<String> CREDIT = List.of("credit-limit", "cva", "exposure-profile", "netting-set", "sa-ccr");
+    private static final List<String> CREDIT = List.of("credit-limit", "cva", "netting-set", "sa-ccr");
     private static final List<String> MARKET = List.of("bond", "fx-rate");
     private static Path base;
 

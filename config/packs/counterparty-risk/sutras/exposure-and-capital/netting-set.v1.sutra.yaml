@@ -21,10 +21,11 @@ doc:
   summary: "Trades that net on close-out under one agreement and CSA, with exposure and collateral."
   description: >-
     Trades that net on close-out under one agreement and CSA, with exposure and collateral. One page per netting set, its
-    panels: exposure profile; member trades; net MTM by asset class; how the view was built; the entities it links to. The strip
-    gives Trades, Net MTM, Collateral (+ held, − posted), EE peak, PFE 95 peak, Limit, Utilisation and CVA. Linked entities:
-    counterparty (counterparty), agreement (agreement), CSA (csa), credit limit (credit-limit), exposure profile (exposure-
-    profile), CVA (cva), SA-CCR (sa-ccr), SIMM (simm) and collateral (collateral-balance).
+    panels: exposure profile (computed from the paths, USD); how the exposure was computed; member trades; net MTM by asset
+    class; how the view was built; the entities it links to. The strip gives Trades, Net MTM, Collateral (+ held, − posted), EPE
+    (engine), PFE 95 peak (engine), Limit, Utilisation and CVA. Linked entities: counterparty (counterparty), agreement
+    (agreement), CSA (csa), credit limit (credit-limit), CVA (cva), SA-CCR (sa-ccr), SIMM (simm) and collateral (collateral-
+    balance).
   params:
     asset: { type: text, default: '', meaning: "The Asset class control" }
     product: { type: text, default: '', meaning: "The Product control" }
@@ -42,8 +43,8 @@ strip:
   - { label: Trades, bind: $.TRADE_COUNT }
   - { label: Net MTM, bind: $.NET_MTM, fmt: signed0, tone: sign }
   - { label: "Collateral (+ held, − posted)", bind: $.COLLATERAL, fmt: signed0 }
-  - { label: EE peak, bind: $.EE_PEAK, fmt: compact }
-  - { label: PFE 95 peak, bind: $.PFE_PEAK, fmt: compact, emphasis: true }
+  - { label: EPE (engine), bind: $.EXPOSURE_ENGINE.EPE, fmt: compact }
+  - { label: PFE 95 peak (engine), bind: $.EXPOSURE_ENGINE.PEAK_PFE, fmt: compact, emphasis: true }
   - { label: Limit, bind: $.LIMIT, fmt: compact }
   - { label: Utilisation, bind: $.UTILISATION, fmt: pct0 }
   - { label: CVA, bind: $.CVA, fmt: signed0, tone: sign }
@@ -55,15 +56,29 @@ controls:
 panels:
   - id: exposure
     kind: area
-    title: Exposure profile
+    title: "Exposure profile (computed from the paths, USD)"
     code: EXP
     key: F2
-    rows: $.PROFILE
+    rows: $.EXPOSURE_ENGINE.PROFILE
     x: TENOR
     limit: $.LIMIT
     series:
       - { label: Expected exposure, value: EE, tone: link }
       - { label: PFE 95, value: PFE, tone: accent }
+      - { label: PFE 99, value: PFE_99, tone: neg }
+  - id: exposureEngine
+    kind: kv
+    title: How the exposure was computed
+    area: right
+    columns:
+      - { label: Status, bind: $.EXPOSURE_ENGINE.STATUS, tone: status }
+      - { label: Business date, bind: $.EXPOSURE_ENGINE.BUSINESS_DATE, fmt: date }
+      - { label: Run, bind: $.EXPOSURE_ENGINE.RUN_ID }
+      - { label: Paths, bind: $.EXPOSURE_ENGINE.PATHS, fmt: amount0 }
+      - { label: Current exposure, bind: $.EXPOSURE_ENGINE.CE, fmt: compact }
+      - { label: EEPE, bind: $.EXPOSURE_ENGINE.EEPE, fmt: compact }
+      - { label: Peak PFE date, bind: $.EXPOSURE_ENGINE.PEAK_PFE_DATE, fmt: date }
+      - { label: Note, bind: $.EXPOSURE_ENGINE.NOTE }
   - id: trades
     kind: table
     title: "Member trades (${size($.TRADES)} of ${$.TRADE_COUNT})${ctl.asset ? ' · ' + ctl.asset : ''}"

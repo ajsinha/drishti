@@ -400,19 +400,25 @@ class DemoLake:
                 yield state
 
     #: the fields of a dated dataset's documents (``dated-by``) that hold a date of the data, moved with the business dates
-    DATED_FIELDS = ("BUSINESS_DATE", "COMPUTED_AT", "BATCH_ID", "SOURCE_BATCH", "WINDOW_START", "WINDOW_END")
+    DATED_FIELDS = ("BUSINESS_DATE", "COMPUTED_AT", "BATCH_ID", "SOURCE_BATCH", "WINDOW_START", "WINDOW_END",
+                    # an exposure run's and its paths' (docs/contracts/EXP.md section 3): the run id, a row's id and grid date carry dates
+                    "RUN_ID", "PATH_ROW_ID", "GRID_DATE", "MARKET_DATA_DATE")
+    #: the date lists moved the same way: a scenario set's days, an exposure run's grid
+    DATED_LISTS = ("SCENARIO_DATES", "GRID_DATES")
     _ISO = re.compile(r"\d{4}-\d{2}-\d{2}")
 
     def redate_dated(self, doc: dict) -> dict:
         """A dated document's own dates moved by as many business days as the test data's (its BUSINESS_DATE, the batch that wrote it,
-        a scenario set's window and its SCENARIO_DATES), so a 250-day history or a 509-day scenario window stays whole and in order."""
+        a scenario set's window and its SCENARIO_DATES, an exposure run's id and grid), so a 250-day history, a 509-day scenario window
+        or an exposure grid stays whole and in order."""
         if not self.shift:
             return doc
         for f in self.DATED_FIELDS:
             if isinstance(doc.get(f), str):
                 doc[f] = self._ISO.sub(lambda m: self.move_day(m.group(0)), doc[f])
-        if isinstance(doc.get("SCENARIO_DATES"), list):
-            doc["SCENARIO_DATES"] = [self.move_day(d) if isinstance(d, str) else d for d in doc["SCENARIO_DATES"]]
+        for f in self.DATED_LISTS:
+            if isinstance(doc.get(f), list):
+                doc[f] = [self.move_day(d) if isinstance(d, str) else d for d in doc[f]]
         return doc
 
     def dated_dataset(self, ds: dict, path: pathlib.Path, domain: str, table: str) -> int:

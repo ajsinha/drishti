@@ -1,0 +1,163 @@
+# Project Drishti · Any data. Any domain. One grammar.
+#
+# Copyright (c) 2026 Ashutosh Sinha <ajsinha@gmail.com>.
+# All rights reserved.
+#
+# PROPRIETARY AND CONFIDENTIAL.
+#
+# This file is the confidential and proprietary property of Ashutosh Sinha.
+# Unauthorised copying, use, modification, distribution or disclosure of this
+# file, via any medium, is strictly prohibited except with the express prior
+# written permission of the copyright holder.
+#
+# See the LICENSE file in the root of this repository for the full terms.
+
+# Data contract of the exposure-result kind (command EXP): docs/contracts/README.md section 16; the measure's contract is
+# docs/contracts/EXP.md (section 9.1). Drafted by `drishti.py contract bootstrap exposure-result`, completed by hand (2.9.0).
+kind: exposure-result
+mnemonic: EXP
+pack: counterparty-risk
+version: '1.0'
+class: computed
+status: active
+title: Exposure profile of a scope (computed)
+description: The exposure profile (EE, ENE, EEE, PFE at 95% and 99%, EE without collateral) and the figures (CE, EPE, EEPE, peak EE and
+  PFE, EAD under the internal model) of any counterparty scope (the scope grammar of EXP.md section 8), computed when asked by the server's
+  exposure engine from the simulated paths, as the person asking; never stored.
+source: 'computed by Drishti: the reactive connector exposure-engine (java engine com.ash.drishti.server.exposure.ExposureResultEngine)'
+grain: One answer per question (the scope asked for, its parameters q, collateral and run, and the business date), computed when asked.
+key: []
+dated-by: on request
+cadence:
+  frequency: on change
+  due: computed on request and again when the date's inputs load (data-version trigger)
+storage:
+  connector: exposure-engine
+  plugin: reactive
+fields:
+- name: STATUS
+  type: text
+  presence: required
+  enum: [ok, no-paths]
+  description: ok, or no-paths when the date's run covers none of the scope's netting sets (then NOTE says so and no figure is given).
+- name: SCOPE
+  type: text
+  presence: required
+  description: The scope as asked (the id; parameters after ~, as CPTY:CP-ALDERSHOT~q=0.99).
+  example: NSET:NS-ALDERSHOT-FRA
+- name: CANONICAL
+  type: text
+  presence: required
+  description: The scope's canonical text.
+- name: SCOPE_KIND
+  type: text
+  presence: optional
+  enum: [netting-set, counterparty, group, legal-entity, desk, book, bank, trade, trades, adhoc]
+- name: LABEL
+  type: text
+  presence: optional
+- name: BUSINESS_DATE
+  type: date
+  presence: required
+- name: RUN_ID
+  type: id
+  presence: optional
+  description: The simulation run the figures are computed from.
+  link: simulation-run
+- name: PATHS
+  type: integer
+  presence: optional
+- name: CALIBRATION
+  type: text
+  presence: optional
+- name: CONFIDENCE
+  type: rate
+  presence: optional
+  description: q, the confidence of PEAK_PFE and PROFILE[].PFE.
+  example: 0.95
+- name: CE
+  type: amount
+  presence: optional
+  unit: USD
+  description: Current exposure (EXP.md section 6.4).
+- name: EPE
+  type: amount
+  presence: optional
+  unit: USD
+  description: Expected positive exposure over min(1 year, the longest maturity) (EXP.md section 6.4).
+- name: EEPE
+  type: amount
+  presence: optional
+  unit: USD
+  description: Effective EPE (EXP.md section 6.4).
+- name: PEAK_EE
+  type: amount
+  presence: optional
+  unit: USD
+- name: PEAK_PFE
+  type: amount
+  presence: optional
+  unit: USD
+  description: The highest PFE at CONFIDENCE over the primary dates; a scope's from its summed paths, never a sum of PFEs.
+- name: PEAK_PFE_DATE
+  type: date
+  presence: optional
+- name: PEAK_PFE_TENOR
+  type: text
+  presence: optional
+- name: PEAK_PFE_99
+  type: amount
+  presence: optional
+  unit: USD
+- name: EAD_IMM
+  type: amount
+  presence: optional
+  unit: USD
+  description: alpha x EEPE, informational (EXP.md section 6.5).
+- name: HORIZON_YEARS
+  type: rate
+  presence: optional
+  description: T, the horizon EPE and EEPE average over.
+- name: MPOR_DAYS
+  type: integer
+  presence: optional
+  description: The run's look-back in business days (the margin period of risk applied).
+- name: COLLATERAL_MODEL
+  type: text
+  presence: optional
+  enum: [lagged, current, none]
+- name: PROFILE
+  type: record list
+  presence: required
+  description: Per primary date TENOR, DATE, T, EE, ENE, EEE, PFE (at CONFIDENCE), PFE_95, PFE_99, EE_UNCOLL (EXP.md section 9.1).
+- name: BY_NETTING_SET
+  type: record list
+  presence: optional
+  description: For a counterparty or larger scope, each netting set's NETTING_SET, COUNTERPARTY, LABEL, PARTIAL, EPE, PEAK_EE, PEAK_PFE and
+    PFE_CONTRIBUTION (adding up to PEAK_PFE); none for a viewer who sees the scope in aggregate only.
+- name: FLAGS
+  type: text list
+  presence: optional
+  description: partial, standalone, MPOR_MISMATCH, incomplete, stale-run, no-paths.
+- name: NOTE
+  type: text
+  presence: optional
+- name: PROVENANCE
+  type: record
+  presence: optional
+  description: The answer's provenance in UPPER_SNAKE (EXP.md section 9.1), with TIER saying where the matrices came from.
+links:
+- field: RUN_ID
+  kind: simulation-run
+validation:
+- rule: required
+  fields:
+  - SCOPE
+  - STATUS
+  - PROFILE
+notes:
+- 'No stored key: an answer''s id is the scope asked (the id in the request); EXP <scope> <GO> opens it, and EXP EXP-<cp>-<le> (an id of the
+  retired exposure-profile kind) opens EXP NSET:NS-<cp>-<le>.'
+- Computed as the viewer with the exposure engine's entitlements (EXP.md section 11); cached per view signature, data version, scope and
+  parameters.
+review: []

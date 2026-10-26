@@ -303,6 +303,39 @@ def update_manifest(testdata: Path, entries: list[dict]) -> None:
     path.write_text("\n".join(head) + "\n" + yaml.safe_dump(m, sort_keys=False, width=140), encoding="utf-8")
 
 
+SAMPLES = ROOT / "config" / "packs" / PACK / "samples"
+
+
+def samples(docs: dict[str, list[dict]]) -> dict[Path, str]:
+    """The pack's reference samples (its README and contracts read them; never served from there: the lake is): the run, and the first
+    row of the first committed netting set's first trade."""
+    picks = {"simulation-run": docs["simulation-run"][:1], "exposure-path": docs["exposure-path"][:1]}
+    return {SAMPLES / f"{k}.jsonl": "".join(dumps(d) + "\n" for d in v) for k, v in picks.items()}
+
+
+def write_side_files(docs: dict[str, list[dict]], ref: dict) -> None:
+    """The parity reference of drishti-compute's test and the pack's samples, beside the committed test data."""
+    REFERENCE.parent.mkdir(parents=True, exist_ok=True)
+    REFERENCE.write_text(reference_text(ref), encoding="utf-8")
+    for f, t in samples(docs).items():
+        f.parent.mkdir(parents=True, exist_ok=True)
+        f.write_text(t, encoding="utf-8")
+
+
+def write_testdata(out: Path, dates: list[str], side_files: bool) -> list[dict]:
+    """The committed run into a test-data folder whose netting sets were just written (tools/testdata/make_testdata.py); its entries."""
+    inputs = Inputs(out, dates)
+    sets = [ns for ns in COMMITTED if ns in inputs.sets and inputs.members(ns)]     # a small test universe may hold fewer
+    if not sets:
+        return []
+    run = Run(inputs, sets)
+    docs, ref = build(run)
+    entries = write(out, docs)
+    if side_files:
+        write_side_files(docs, ref)
+    return entries
+
+
 # ---------------------------------------------------------------------------------------------------------------------- full, reconcile
 def fitting(inputs: Inputs, limit: int = MAX_TRADES) -> list[str]:
     """The netting sets, smallest first, that fit in the local limit together."""
@@ -377,6 +410,7 @@ def main(argv=None) -> int:
                      if not (td / k / f.name).is_file() or gzip.decompress((td / k / f.name).read_bytes()) != gzip.decompress(f.read_bytes())]
         if not REFERENCE.is_file() or REFERENCE.read_text(encoding="utf-8") != reference_text(ref):
             stale.append(str(REFERENCE.relative_to(ROOT)))
+        stale += [str(f.relative_to(ROOT)) for f, t in samples(docs).items() if not f.is_file() or f.read_text(encoding="utf-8") != t]
         if stale:
             print(f"exposure demo data out of date ({stale[:3]}); run tools/packgen/ccr/make_ccr_data.py")
             return 1
@@ -386,8 +420,7 @@ def main(argv=None) -> int:
     entries = write(out, docs)
     if not a.out:
         update_manifest(td, entries)
-        REFERENCE.parent.mkdir(parents=True, exist_ok=True)
-        REFERENCE.write_text(reference_text(ref), encoding="utf-8")
+        write_side_files(docs, ref)
     print(f"wrote {len(run.sets)} netting sets, {sum(len(v) for v in run.trades.values()):,} trades, {len(docs['exposure-path']):,} rows of "
           f"{run.paths} paths over {len(run.grid['dates'])} grid dates: {sum(e['bytes'] for e in entries) / 1e6:.2f} MB")
     return 0

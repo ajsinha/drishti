@@ -26,12 +26,14 @@ kinds:
 - csa
 - netting-set
 - credit-limit
-- exposure-profile
 - cva
 - sa-ccr
 - collateral-balance
 - margin-call
 - simm
+- simulation-run
+- exposure-path
+- exposure-result
 sutras: sutras
 formats: config/formats.yaml
 mnemonics:
@@ -47,9 +49,6 @@ mnemonics:
   LIM:
     kind: credit-limit
     label: Credit limit
-  EXP:
-    kind: exposure-profile
-    label: Exposure profile
   CVA:
     kind: cva
     label: CVA / XVA
@@ -65,6 +64,15 @@ mnemonics:
   SIMM:
     kind: simm
     label: ISDA SIMM initial margin
+  XRUN:
+    kind: simulation-run
+    label: Exposure simulation run
+  XPATH:
+    kind: exposure-path
+    label: Exposure path (a trade's MtM on every path at a grid date)
+  EXP:
+    kind: exposure-result
+    label: Exposure profile of a scope (computed)
 graph:
   id-patterns:
   - pattern: ^AGR-
@@ -75,8 +83,6 @@ graph:
     kind: netting-set
   - pattern: ^LIM-
     kind: credit-limit
-  - pattern: ^EXP-
-    kind: exposure-profile
   - pattern: ^CVA-
     kind: cva
   - pattern: ^SACCR-
@@ -87,6 +93,10 @@ graph:
     kind: margin-call
   - pattern: ^SIMM-
     kind: simm
+  - pattern: ^XR-[0-9]{4}-[0-9]{2}-[0-9]{2}-[0-9]+$
+    kind: simulation-run
+  - pattern: ^XR-[^~]+~.+~[0-9]+$
+    kind: exposure-path
   fields:
     AGREEMENT:
       kind: agreement
@@ -106,15 +116,15 @@ graph:
     CVA_RESULT:
       kind: cva
       label: CVA
-    EXPOSURE_PROFILE:
-      kind: exposure-profile
-      label: Exposure profile
     NETTING_SET:
       kind: netting-set
       label: Netting set
     NETTING_SETS:
       kind: netting-set
       label: Netting set
+    RUN_ID:
+      kind: simulation-run
+      label: Simulation run
     SACCR:
       kind: sa-ccr
       label: SA-CCR
@@ -123,7 +133,7 @@ graph:
       label: SIMM
   badges:
     csa: '''threshold '' + fmt($.THRESHOLD_THEM, ''compact'')'
-    netting-set: '''PFE '' + fmt($.PFE_PEAK, ''compact'')'
+    netting-set: '''net '' + fmt($.NET_MTM, ''compact'')'
     credit-limit: fmt($.UTILISATION, 'pct0') + ' used'
   impact:
     follow:
@@ -153,7 +163,6 @@ connectors:
     kinds:
     - netting-set
     - credit-limit
-    - exposure-profile
     - cva
     - sa-ccr
     settings:
@@ -169,17 +178,112 @@ connectors:
     settings:
       root: ${DRISHTI_DELTA_ROOT:${drishti.data.dir:./data}/delta}
       domain: collateral
+  exposure-store:
+    plugin: delta
+    enabled: ${DRISHTI_LAKE_ENABLED:true}
+    kinds:
+    - simulation-run
+    - exposure-path
+    settings:
+      root: ${DRISHTI_DELTA_ROOT:${drishti.data.dir:./data}/delta}
+      domain: risk
+      layout:
+        simulation-run:
+          columns:
+          - RUN_ID
+          - CALIBRATION
+          - PATHS
+          - STATUS
+          - BATCH_ID
+        exposure-path:
+          columns:
+          - TRADE_ID
+          - NETTING_SET
+          - COUNTERPARTY
+          - LEGAL_ENTITY
+          - DESK
+          - TT_BOOK
+          - ASSET_CLASS
+          - PRODUCT
+          - SOURCE_SYSTEM
+          - MATURITY_DATE
+          - NOTIONAL
+          - GRID_INDEX
+          - GRID_DATE
+          - RUN_ID
+          - BATCH_ID
+          - STATUS
+          vectors:
+          - MTM
+  exposure-engine:
+    plugin: reactive
+    mode: reactive
+    enabled: ${DRISHTI_EXPOSURE_ENABLED:true}
+    description: 'Exposure profiles (EE, ENE, EEE, PFE 95 and 99, EPE, EEPE) of any counterparty scope, computed when asked by the server''s exposure
+      engine from the exposure paths, as the viewer: EXP <scope> <GO>'
+    kinds:
+      exposure-result:
+        compute: exposure-result
+        params:
+          q:
+            type: decimal
+            default: 0.95
+            min: 0.5
+            max: 0.9999
+          collateral:
+            type: enum
+            options:
+            - lagged
+            - current
+            - none
+            default: lagged
+          run:
+            type: text
+            default: ''
+        result:
+          required:
+          - SCOPE
+          - STATUS
+          - PROFILE
+          types:
+            EPE: number
+            PEAK_PFE: number
+    engine:
+      type: java
+      class: com.ash.drishti.server.exposure.ExposureResultEngine
+      version: '1.0'
+    triggers:
+    - 'on': data-version
+      kinds:
+      - simulation-run
+      - exposure-path
+      - netting-set
+      - csa
+      - collateral-balance
+      affects: all
+    coalesce:
+      quiet: 1s
+      max-wait: 10s
+    cache:
+      results: 1000
+      ttl: 1h
+    limits:
+      timeout: 60s
+      wait: 5s
+      max-inflight-per-user: 4
 routes:
   agreement: legal-store
   csa: legal-store
   netting-set: credit-store
   credit-limit: credit-store
-  exposure-profile: credit-store
   cva: credit-store
   sa-ccr: credit-store
   collateral-balance: collateral-store
   margin-call: collateral-store
   simm: collateral-store
+  simulation-run: exposure-store
+  exposure-path: exposure-store
+  exposure-result: exposure-engine
 form:
   agreement:
   - path: AGREEMENT_ID
@@ -238,18 +342,15 @@ form:
   - path: COLLATERAL
     label: Collateral
     type: text
-  - path: EE_PEAK
-    label: Ee peak
-    type: text
-  - path: PFE_PEAK
-    label: Pfe peak
-    type: text
   - path: LIMIT
     label: Limit
     type: amount
   - path: UTILISATION
     label: Utilisation
     type: number
+  - path: CVA
+    label: Cva
+    type: text
   credit-limit:
   - path: LIMIT_ID
     label: Limit id
@@ -272,25 +373,6 @@ form:
   - path: STATUS
     label: Status
     type: enum
-  exposure-profile:
-  - path: PROFILE_ID
-    label: Profile id
-    type: id
-  - path: EPE
-    label: Epe
-    type: text
-  - path: EEPE
-    label: Eepe
-    type: text
-  - path: PFE_PEAK
-    label: Pfe peak
-    type: text
-  - path: PATHS
-    label: Paths
-    type: text
-  - path: RUN_DATE
-    label: Run date
-    type: date
   cva:
   - path: RESULT_ID
     label: Result id
@@ -383,18 +465,54 @@ form:
   - path: VERSION
     label: Version
     type: text
+  simulation-run:
+  - path: RUN_ID
+    label: Run id
+    type: id
+  - path: CALIBRATION
+    label: Calibration
+    type: number
+  - path: PATHS
+    label: Paths
+    type: text
+  - path: STATUS
+    label: Status
+    type: enum
+  exposure-path:
+  - path: PATH_ROW_ID
+    label: Path row id
+    type: id
+  - path: TRADE_ID
+    label: Trade id
+    type: id
+  - path: NETTING_SET
+    label: Netting set
+    type: text
+  - path: COUNTERPARTY
+    label: Counterparty
+    type: number
+  - path: GRID_DATE
+    label: Grid date
+    type: date
+  - path: RUN_ID
+    label: Run id
+    type: id
 console:
   examples:
   - - AGR AGR-NORTHBRIDGE-ISDA
     - ISDA master agreement · elections
-  - - NSET NS-SUMMIT-NY
-    - Netting set · 108 trades, exposure, CVA
+  - - NSET NS-ALDERSHOT-NY
+    - Netting set · its trades, the exposure computed from the paths, CVA
   - - LIM LIM-SUMMIT
     - Credit limit · utilisation by tenor
   - - CVA CVA-SUMMIT-NY
     - CVA / XVA
   - - SACCR SACCR-SUMMIT-NY
     - SA-CCR exposure at default
+  - - EXP NSET:NS-ALDERSHOT-FRA
+    - Exposure profile of a netting set · EE, PFE 95 and 99, EPE, EEPE computed from the paths
+  - - EXP CPTY:CP-ALDERSHOT
+    - A counterparty's exposure · its four netting sets summed path by path (PFE is not a sum of PFEs)
   help: config/help.yaml
 python:
   enabled: true
@@ -409,7 +527,7 @@ roles:
 # Only the shape: any dated kind has a history without an entry here.
 history:
   netting-set:
-    columns: [NET_MTM, COLLATERAL, EE_PEAK, PFE_PEAK, LIMIT, UTILISATION, CVA, TRADE_COUNT]
+    columns: [NET_MTM, COLLATERAL, LIMIT, UTILISATION, CVA, TRADE_COUNT]
   credit-limit:
     columns: [LIMIT, USED, UTILISATION]
   cva:

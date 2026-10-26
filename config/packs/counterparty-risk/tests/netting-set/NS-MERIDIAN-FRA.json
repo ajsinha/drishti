@@ -3,66 +3,13 @@
  "TRADE_COUNT": 1,
  "NET_MTM": 122689,
  "COLLATERAL": 79025,
- "EE_PEAK": 59940,
- "PFE_PEAK": 139305,
  "LIMIT": 5000000.0,
  "UTILISATION": 0.0279,
  "CVA": -41,
- "PROFILE": [
-  {
-   "TENOR": "0",
-   "EE": 51915,
-   "PFE": 121651
-  },
-  {
-   "TENOR": "1M",
-   "EE": 59940,
-   "PFE": 139305
-  },
-  {
-   "TENOR": "3M",
-   "EE": 41019,
-   "PFE": 90241
-  },
-  {
-   "TENOR": "6M",
-   "EE": 38533,
-   "PFE": 84773
-  },
-  {
-   "TENOR": "1Y",
-   "EE": 34006,
-   "PFE": 74812
-  },
-  {
-   "TENOR": "2Y",
-   "EE": 26484,
-   "PFE": 58264
-  },
-  {
-   "TENOR": "3Y",
-   "EE": 20625,
-   "PFE": 45376
-  },
-  {
-   "TENOR": "5Y",
-   "EE": 12510,
-   "PFE": 27522
-  },
-  {
-   "TENOR": "7Y",
-   "EE": 7588,
-   "PFE": 16693
-  },
-  {
-   "TENOR": "10Y",
-   "EE": 3584,
-   "PFE": 7885
-  }
- ],
  "TRADES": [
   {
-   "TRADE_ID": "BBG-60000080",
+   "TRADE_ID": "CLY-3000266",
+   "STATUS": "LIVE",
    "PRODUCT": "Repurchase agreement",
    "ASSET_CLASS": "Securities financing",
    "CURRENCY": "USD",
@@ -83,7 +30,6 @@
  "AGREEMENT": "AGR-MERIDIAN-ISDA",
  "CSA": "CSA-MERIDIAN",
  "CREDIT_LIMIT": "LIM-MERIDIAN",
- "EXPOSURE_PROFILE": "EXP-MERIDIAN-FRA",
  "CVA_RESULT": "CVA-MERIDIAN-FRA",
  "SACCR": "SACCR-MERIDIAN-FRA",
  "SIMM": "SIMM-MERIDIAN",
@@ -95,7 +41,17 @@
   "generation": 1,
   "live": true,
   "walk": {
-   "NET_MTM": 1000
+   "TRADES.0.MTM": 645,
+   "derive": [
+    {
+     "set": "BY_ASSET.0.MTM",
+     "expr": "TRADES.0.MTM"
+    },
+    {
+     "set": "NET_MTM",
+     "expr": "sum(TRADES.*.MTM)"
+    }
+   ]
   }
  }
 }

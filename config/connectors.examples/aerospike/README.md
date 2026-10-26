@@ -71,7 +71,7 @@ set trading_kinds, key "trade"                        bins kind, dates [20260917
 | `risk-store.yaml` | `risk` | `var`, `stress-scenario`, `stress-result`, `frtb-sensitivity`, `pnl-explain` |
 | `market-store.yaml` | `market` | twenty market-data kinds (curves, FX, vol surfaces, equities, commodities, `rate-fixing`, `bond`, …) |
 | `reference-store.yaml` | `reference` | `counterparty`, `book`, `desk`, `trader`, `csa`, `legal-entity` and six more, effective |
-| `credit-store.yaml` | `credit` | `netting-set`, `credit-limit`, `exposure-profile`, `cva`, `sa-ccr` |
+| `credit-store.yaml` | `credit` | `netting-set`, `credit-limit`, `cva`, `sa-ccr` |
 | `collateral-store.yaml` | `collateral` | `collateral-balance`, `margin-call`, `simm` |
 
 Bin names are at most 15 characters (a longer promoted path is cut and suffixed with a hash); searches need the pack's promoted fields
@@ -94,7 +94,7 @@ seconds. The trading pack routes `trade` to `trade-endur`: save `trading-store.y
 | File | Plugin | Kinds | What it is |
 |---|---|---|---|
 | `collateral-store.yaml` | `aerospike` | `collateral-balance`, `margin-call`, `simm` | collateral-store read from aerospike (the former application-aerospike.yaml profile) |
-| `credit-store.yaml` | `aerospike` | `netting-set`, `credit-limit`, `exposure-profile`, `cva`, `sa-ccr` | credit-store read from aerospike (the former application-aerospike.yaml profile) |
+| `credit-store.yaml` | `aerospike` | `netting-set`, `credit-limit`, `cva`, `sa-ccr` | credit-store read from aerospike (the former application-aerospike.yaml profile) |
 | `market-store.yaml` | `aerospike` | `ir-curve`, `repo-curve`, `fx-spot`, `fx-forward-curve`, `fx-vol-surface`, `ir-vol-cube`, `cap-vol-surface`, `equity`, `equity-index`, `dividend-curve`, `equity-vol-surface`, `credit-curve`, `inflation-index`, `inflation-curve`, `commodity`, `commodity-curve`, `commodity-vol-surface`, `rate-fixing`, `bond`, `correlation-matrix` | market-store read from aerospike (the former application-aerospike.yaml profile) |
 | `reference-store.yaml` | `aerospike` | `counterparty`, `counterparty-group`, `issuer`, `agreement`, `ccp`, `legal-entity`, `book`, `desk`, `trader`, `calendar`, `csa`, `clearing-account` | reference-store read from aerospike (the former application-aerospike.yaml profile) |
 | `risk-store.yaml` | `aerospike` | `var`, `stress-scenario`, `stress-result`, `frtb-sensitivity`, `pnl-explain` | risk-store read from aerospike (the former application-aerospike.yaml profile) |

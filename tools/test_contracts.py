@@ -152,7 +152,7 @@ class TheRetiredStoredVersions(unittest.TestCase):
 
     def test_a_retired_kind_never_returns(self):
         retired = self.pol["retired"]
-        self.assertTrue({"var", "var-node"} <= set(retired))
+        self.assertTrue({"var", "var-node", "exposure-profile"} <= set(retired))
         for kind in retired:
             for pack, m in self.manifests.items():
                 self.assertNotIn(kind, m.get("kinds") or [], f"{pack} declares the retired kind {kind}")
@@ -199,6 +199,23 @@ class TheRetiredStoredVersions(unittest.TestCase):
             self.assertNotIn("risk-results", text, f"{where}: a connector reads risk-results (published results are never an engine's input)")
         self.assertIn("risk-results", (C.ROOT / "drishti-server" / "src" / "main" / "java" / "com" / "ash" / "drishti" / "server" / "var"
                                        / "VarPublisher.java").read_text(encoding="utf-8").replace('"risk-results"', "risk-results"))
+        self.assertIn("risk-results", (C.ROOT / "drishti-server" / "src" / "main" / "java" / "com" / "ash" / "drishti" / "server" / "exposure"
+                                       / "ExposurePublisher.java").read_text(encoding="utf-8").replace('"risk-results"', "risk-results"))
+
+    def test_the_stored_exposure_profile_does_not_return(self):
+        """EXP.md section 14: exposure-profile is retired; no netting set or counterparty (nor any input or fundamental kind) carries an
+        exposure figure; the exposure engine's inputs are inputs and its answer is computed."""
+        self.assertEqual(self.pol["retired"]["exposure-profile"]["release"], "2.9.0")
+        exposure = set(self.pol["engine-columns"]["exposure"])
+        self.assertTrue({"EPE", "EEPE", "PFE_PEAK", "EE_PEAK"} <= exposure)
+        for pack, kind in (("counterparty-risk", "netting-set"), ("core", "counterparty")):
+            for d in self.docs_of(pack, kind):
+                self.assertEqual(self.names(d) & (exposure | {"PROFILE"}), set(), f"{kind} carries an exposure figure")
+        by_kind = {cmd["kind"]: c for cmd, f, c in C.contracts()}
+        self.assertEqual(by_kind["simulation-run"]["class"], "input")
+        self.assertEqual(by_kind["exposure-path"]["class"], "input")
+        self.assertEqual(by_kind["exposure-result"]["class"], "computed")
+        self.assertNotIn("exposure-profile", by_kind)
 
     def test_every_file_starts_with_the_licence(self):
         for f in sorted(C.PACKS.glob("*/contracts/*.contract.yaml")):

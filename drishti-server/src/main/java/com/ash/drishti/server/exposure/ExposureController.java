@@ -86,7 +86,7 @@ public class ExposureController {
             throw new DrishtiException(ErrorCode.EXPOSURE_BAD_PARAMETER, "give a scope: scope=NSET:<netting set>, CPTY:<counterparty>, GROUP:<group>, "
                     + "LE:<legal entity>, TRD:<trade>, BANK ...");
         }
-        return scope.trim();
+        return ExposureService.scopeText(scope);
     }
 
     private ExposureService.Ask ask(String q, String collateral, String run, Boolean strict) {

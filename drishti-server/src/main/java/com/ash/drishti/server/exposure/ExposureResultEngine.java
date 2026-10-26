@@ -68,7 +68,8 @@ public final class ExposureResultEngine implements ComputeEngine {
         if (views == null) {
             throw new EngineException("the exposure engine is not running on this server (drishti.ccr.exposure.enabled)");
         }
-        String scope = req.id().trim();
+        String asked = req.id().trim();
+        String scope = ExposureService.scopeText(asked);             // EXP-ALDERSHOT-FRA (retired) is NSET:NS-ALDERSHOT-FRA
         if (scope.isEmpty()) {
             throw new EngineException("give a scope as the id: NSET:<netting set>, CPTY:<counterparty>, GROUP:<group>, LE:<legal entity>, TRD:<trade>");
         }
@@ -139,6 +140,9 @@ public final class ExposureResultEngine implements ComputeEngine {
         }
         row.put("BY_NETTING_SET", sets);
         row.put("FLAGS", head.get("flags"));
+        if (!scope.equals(asked) && asked.toUpperCase(java.util.Locale.ROOT).startsWith("EXP-")) {
+            row.put("NOTE", asked + " was a stored exposure profile, retired in 2.9.0: this is " + scope + ", computed from the paths");
+        }
         row.put("PROVENANCE", upper(head.get("provenance")));
         Map<String, Object> meta = new LinkedHashMap<>();
         meta.put("engine", "exposure-engine");

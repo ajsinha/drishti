@@ -226,6 +226,9 @@ class ExposureApiTest {
                 .param("run", "XR-OTHER").header("Authorization", as("rita", "risk"))).andExpect(status().isBadRequest());
         mvc.perform(org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get("/api/v1/exposure/scope").param("scope", "NSET:NS-X")
                 .header("Authorization", as("cy", "curves"))).andExpect(status().isForbidden());
+        // an id of the retired stored exposure profile is its netting set; a spaced scope takes its colon
+        assertThat(scope("EXP-X").get("canonical").asText()).isEqualTo("NSET:NS-X");
+        assertThat(scope("NSET NS-X").get("epe").asLong()).isEqualTo(950_000L);
     }
 
     @Test
@@ -359,6 +362,10 @@ class ExposureApiTest {
                     .contentType(MediaType.APPLICATION_JSON).content(body.replace("NS-X", "NS-Z"))).andReturn().getResponse().getContentAsString());
             assertThat(z.at("/result/STATUS").asText()).as(z.toString()).isEqualTo("no-paths");
             assertThat(z.at("/result/NOTE").asText()).contains("no exposure paths for the netting set NS-Z");
+            JsonNode old = json.readTree(mvc.perform(post("/api/v1/compute/exposure-engine/exposure-result").header("Authorization", as("rita", "risk"))
+                    .contentType(MediaType.APPLICATION_JSON).content(body.replace("NSET:NS-X", "EXP-X"))).andReturn().getResponse().getContentAsString());
+            assertThat(old.at("/result/CANONICAL").asText()).as(old.toString()).isEqualTo("NSET:NS-X");
+            assertThat(old.at("/result/NOTE").asText()).contains("retired in 2.9.0");
         } finally {
             connectors.delete("exposure-engine");
             manager.scan();

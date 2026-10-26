@@ -63,7 +63,7 @@ The file holds, per domain, the layout of the [duckdb connector README](../../..
 | `reference` | `counterparty`, `counterparty-group`, `issuer`, `agreement`, `ccp`, `legal-entity`, `book`, `desk`, `trader`, `calendar`, `csa`, `clearing-account` |
 | `market` | 20 kinds: curves (`ir-curve`, `repo-curve`, `fx-forward-curve`, `credit-curve`, …), surfaces, `fx-spot`, `equity`, `bond`, `rate-fixing`, `correlation-matrix` |
 | `risk` | `var`, `stress-scenario`, `stress-result`, `frtb-sensitivity`, `pnl-explain` |
-| `credit` | `netting-set`, `credit-limit`, `exposure-profile`, `cva`, `sa-ccr` |
+| `credit` | `netting-set`, `credit-limit`, `cva`, `sa-ccr` |
 | `collateral` | `collateral-balance`, `margin-call`, `simm` |
 
 ## Examples
@@ -81,7 +81,7 @@ Set `DRISHTI_DUCKDB_PATH` when the file is elsewhere. `trading-store.yaml` is a 
 | File | Plugin | Kinds | What it is |
 |---|---|---|---|
 | `collateral-store.yaml` | `duckdb` | `collateral-balance`, `margin-call`, `simm` | collateral-store read from duckdb (the former application-duckdb.yaml profile) |
-| `credit-store.yaml` | `duckdb` | `netting-set`, `credit-limit`, `exposure-profile`, `cva`, `sa-ccr` | credit-store read from duckdb (the former application-duckdb.yaml profile) |
+| `credit-store.yaml` | `duckdb` | `netting-set`, `credit-limit`, `cva`, `sa-ccr` | credit-store read from duckdb (the former application-duckdb.yaml profile) |
 | `market-store.yaml` | `duckdb` | `ir-curve`, `repo-curve`, `fx-spot`, `fx-forward-curve`, `fx-vol-surface`, `ir-vol-cube`, `cap-vol-surface`, `equity`, `equity-index`, `dividend-curve`, `equity-vol-surface`, `credit-curve`, `inflation-index`, `inflation-curve`, `commodity`, `commodity-curve`, `commodity-vol-surface`, `rate-fixing`, `bond`, `correlation-matrix` | market-store read from duckdb (the former application-duckdb.yaml profile) |
 | `reference-store.yaml` | `duckdb` | `counterparty`, `counterparty-group`, `issuer`, `agreement`, `ccp`, `legal-entity`, `book`, `desk`, `trader`, `calendar`, `csa`, `clearing-account` | reference-store read from duckdb (the former application-duckdb.yaml profile) |
 | `risk-store.yaml` | `duckdb` | `var`, `stress-scenario`, `stress-result`, `frtb-sensitivity`, `pnl-explain` | risk-store read from duckdb (the former application-duckdb.yaml profile) |

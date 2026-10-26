@@ -45,6 +45,7 @@ import data_trades
 import layout
 import taxonomy as T
 import var_kinds as VK  # noqa: E402  (the VaR kinds: their samples are written by tools/packgen/var/make_var_data.py)
+import ccr_kinds as XK  # noqa: E402  (the exposure engine's inputs: their samples are written by tools/packgen/ccr/make_ccr_data.py)
 import convert as TC  # noqa: E402  (tools/packgen/trades: the common trade schema every source system writes)
 import endur as TE  # noqa: E402
 import schema as TSCHEMA  # noqa: E402
@@ -149,7 +150,7 @@ def title(kind: str, d: dict) -> tuple[str, str]:
 # ---- checks ----------------------------------------------------------------------------------------------------
 PATH = re.compile(r"\$\.([A-Za-z_][A-Za-z0-9_]*)")
 #: fields a page reads that the server adds as it opens (the VaR engine's figures on a desk, docs/contracts/VAR.md section 14.3)
-AUGMENTED = {"varEngine", "VAR_ENGINE"}
+AUGMENTED = {"varEngine", "VAR_ENGINE", "exposureEngine", "EXPOSURE_ENGINE"}
 
 
 def check(docs: dict) -> list[str]:
@@ -248,6 +249,7 @@ def main() -> None:
     existing = {f for t in targets if t.exists() for f in t.rglob("*.json*")}    # the JSONL files, and any older <kind>/<id>.json
     # the VaR engine's reference samples are tools/packgen/var/make_var_data.py's (from the committed test data), not this generator's
     existing = {f for f in existing if not (f.parent == PACKS / "market-risk" / "samples" and f.name.split(".")[0] in VK.KINDS)}
+    existing = {f for f in existing if not (f.parent == PACKS / "counterparty-risk" / "samples" and f.name.split(".")[0] in XK.KINDS)}
     if "--check" in sys.argv:
         stale = [str(f) for f, t in files.items() if not f.exists() or f.read_text(encoding="utf-8") != t] + TT.stale(docs["trade"])
         extra = [str(f) for f in existing - set(files)]

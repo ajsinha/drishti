@@ -28,9 +28,9 @@
 #   review       kind -> questions copied into the draft's review list
 
 classes:
-  input: [pnl-vector, scenario-set, risk-hierarchy, portfolio, path-book, path-strip]
+  input: [pnl-vector, scenario-set, risk-hierarchy, portfolio, path-book, path-strip, simulation-run, exposure-path]
   drishti-owned: [position]
-  computed: [path-sum, path-sum-java, var-result, var-whatif]
+  computed: [path-sum, path-sum-java, var-result, var-whatif, exposure-result]
 
 retiring: {}
 
@@ -47,6 +47,11 @@ retired:
     contract: VAR.md
     measure: the VaR engine's official end-of-day captures
     note: "a node's history is its official end-of-day captures; VN-<node> opens the explorer at NODE:<node>"
+  exposure-profile:
+    release: 2.9.0
+    contract: EXP.md
+    measure: the exposure engine (exposure-result)
+    note: "EXP EXP-<cp>-<le> and /v/exposure-profile/EXP-<cp>-<le> open EXP NSET:NS-<cp>-<le> (the computed kind exposure-result)"
 
 removed:
   position:
@@ -62,9 +67,18 @@ removed:
     contract: VAR.md
     figures: [VAR_99, ES_975, LIMIT_USE, POSITION_COUNT, TRADE_COUNT, LONG_COUNT, SHORT_COUNT, GROSS_MV, NET_MV, POSITIONS, BY_PRODUCT,
               BY_CURRENCY, BY_DIRECTION, TOP_CONTRIBUTORS, PNL, ALL_TRADES, SCENARIO_SET_ID]
+  netting-set:
+    release: 2.9.0
+    contract: EXP.md
+    figures: [EE_PEAK, PFE_PEAK, PROFILE, EXPOSURE_PROFILE]
+  counterparty:
+    release: 2.9.0
+    contract: EXP.md
+    figures: [PFE_PEAK]
 
 engine-columns:
   var: [VAR_99, ES_975, COMPONENT_VAR, BOOK_VAR, PCT_OF_BOOK_VAR, PCT_OF_VAR, HYPO_PNL, EXCEPTIONS_250, VAR_RESULT, VAR_ENGINE]
+  exposure: [EPE, EEPE, PFE_PEAK, EE_PEAK, PEAK_PFE, PEAK_EE, EAD_IMM, PFE_95, PFE_99, EXPOSURE_ENGINE, EXPOSURE_PROFILE]
 
 notes:
   trade-valuation:
@@ -77,6 +91,14 @@ notes:
     - "The portfolio definitions are an engine input (IMPLEMENTATION_PLAN.md); the figures of the retired stored record (VaR, ES, positions, contributions, P&L) are computed as the page opens (VAR_ENGINE), never stored."
   desk:
     - "The desk's VaR is the engine's (DESK:<id>), computed as the page opens (VAR_ENGINE); VAR_99 and VAR_RESULT left the record in 2.8.0."
+  netting-set:
+    - "The netting set's exposure is the exposure engine's (NSET:<id>), computed as the page opens (EXPOSURE_ENGINE); EE_PEAK, PFE_PEAK, PROFILE and the EXPOSURE_PROFILE link left the record in 2.9.0 (EXP.md section 14). UTILISATION and CVA stay stored (LIM and CVA are parked)."
+  counterparty:
+    - "The counterparty's peak PFE is the exposure engine's (CPTY:<id>), computed as the page opens (EXPOSURE_ENGINE); PFE_PEAK left the record in 2.9.0 (EXP.md section 14)."
+  simulation-run:
+    - "An upstream exposure simulation's record (EXP.md section 3.2): the grid, the paths, the model; one per run and business date. Drishti reads it; nothing in it is computed by Drishti."
+  exposure-path:
+    - "One trade's MtM on every path of the run at one grid date (EXP.md section 3.3), the vector column MTM; sparse by maturity (no row after maturity plus 10 business days). DESK, TT_BOOK, ASSET_CLASS, PRODUCT, NOTIONAL and MATURITY_DATE are denormalised for the scopes and checks (as built, 2.9.0)."
 
 review:
   netting-set:
@@ -92,8 +114,6 @@ review:
     - "ACTUAL is the day-over-day MtM change: confirm it is computed from trade valuations, not delivered."
   sa-ccr:
     - "ALPHA (1.4) is a regulatory parameter: confirm it becomes a setting of the SA-CCR engine."
-  exposure-profile:
-    - "PATHS, MODEL and CONFIDENCE describe the simulation run: confirm they move to the exposure-path input's run metadata (EXP.md)."
   lei-group: &grouping-release
     - "The release is 2.9.0 or 2.10.0 (Track B, shipped as each is ready): confirm which."
   lei-country: *grouping-release
@@ -105,7 +125,7 @@ review:
   price-history:
     - "PXH analytics (returns, volatility, beta) become computed (GROUPINGS_AND_ANALYTICS.md): confirm which fields are analytics."
   counterparty:
-    - "NET_MTM, PFE_PEAK and NETTING_SETS[].NET_MTM are computed figures on a fundamental master (docs/contracts/README.md section 3): confirm they are removed when NSET's figures are computed (2.10.0)."
+    - "NET_MTM and NETTING_SETS[].NET_MTM are computed figures on a fundamental master (docs/contracts/README.md section 3): confirm they are removed when NSET's figures are computed (2.10.0); PFE_PEAK left in 2.9.0 (the exposure engine's)."
 
 # PARKED (product owner, 2026-10-25: "Just fundamentals and VaR is good for now"). The tool does not read this section: these
 # kinds stay active and fundamental. Each entry is the plan of record for when the product owner brings it back (docs/contracts/
@@ -150,11 +170,6 @@ parked:
       contract: SACCR.md
       measure: SA-CCR
       figures: [REPLACEMENT_COST, ADD_ON, MULTIPLIER, EAD, RWA, ADD_ONS, HEDGING_SETS]
-    exposure-profile:
-      release: 2.10.0
-      contract: EXP.md
-      measure: the exposure engine (EXP)
-      figures: [EPE, EEPE, PFE_PEAK, BUCKETS]
     cva:
       release: 2.10.0
       contract: CVA.md
@@ -199,13 +214,13 @@ parked:
     counterparty:
       release: 2.10.0
       contract: NSET.md
-      measure: the counterparty's figures (CPTY:, net MtM from the trade valuations, PFE from EXP)
-      figures: [NET_MTM, PFE_PEAK, "NETTING_SETS[].NET_MTM"]
+      measure: the counterparty's figures (CPTY:, net MtM from the trade valuations; PFE_PEAK left in 2.9.0, EXP)
+      figures: [NET_MTM, "NETTING_SETS[].NET_MTM"]
     netting-set:
       release: 2.10.0
       contract: NSET.md
-      measure: the netting-set figures (NSET)
-      figures: [NET_MTM, COLLATERAL, EE_PEAK, PFE_PEAK, UTILISATION, CVA, PROFILE, BY_ASSET]
+      measure: the netting-set figures (NSET; EE_PEAK, PFE_PEAK and PROFILE left in 2.9.0, EXP)
+      figures: [NET_MTM, COLLATERAL, UTILISATION, CVA, BY_ASSET]
     credit-limit:
       release: 2.10.0
       contract: LIM.md

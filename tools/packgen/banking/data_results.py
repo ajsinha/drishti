@@ -86,6 +86,9 @@ def netting_sets(trades: dict) -> dict[str, list[dict]]:
 
 
 def profile(members: list[dict], collateral: float) -> list[dict]:
+    """The bucketed profile the retired stored exposure-profile kind carried (EXP.md section 14.2): no longer written to any document
+    (the exposure engine computes profiles from the paths, 2.9.0); kept because the stored CVA and the limits' usage (parked) are
+    built on it."""
     net = amount(t["mtm"] for t in members)
     out = []
     for tn in TENORS:
@@ -99,6 +102,7 @@ def profile(members: list[dict], collateral: float) -> list[dict]:
 
 
 def credit_results(trades: dict, docs: dict) -> None:
+    peaks: dict[str, float] = {}                         # each set's PFE peak by this generator's profile (the limits' usage reads it)
     for ns, members in sorted(netting_sets(trades).items()):
         cp = ns.split("-", 1)[1].rsplit("-", 1)[0]
         name, typ, sector, country, rating, _ = N.COUNTERPARTIES[cp]
@@ -106,7 +110,8 @@ def credit_results(trades: dict, docs: dict) -> None:
         net = amount(t["mtm"] for t in members)
         coll = round(net * r.uniform(0.6, 0.95)) if net > 0 else round(net * r.uniform(0.5, 0.9))
         prof = profile(members, coll)
-        ee_peak, pfe_peak = max(p["ee"] for p in prof), max(p["pfe95"] for p in prof)
+        pfe_peak = max(p["pfe95"] for p in prof)          # this generator's own figure: the limits and CVA (parked) are built on it
+        peaks[ns] = pfe_peak
         limit = max(5e6, round(pfe_peak * r.uniform(1.2, 2.2), -6))
         pd = rating_pd(rating)
         # CVA = -LGD x sum over periods of EE x PD x period length (flat hazard from the one-year PD)
@@ -117,19 +122,17 @@ def credit_results(trades: dict, docs: dict) -> None:
             by_asset[t["assetClass"]] += t["mtm"]
         tag = ns[3:]
         docs["netting-set"][ns] = {
-            "nettingSetId": ns, "tradeCount": len(members), "netMtm": net, "collateral": coll, "eePeak": ee_peak, "pfePeak": pfe_peak,
-            "limit": limit, "utilisation": round(pfe_peak / limit, 4), "cva": cva, "profile": [{"tenor": p["tenor"], "ee": p["ee"], "pfe": p["pfe95"]} for p in prof],
+            # no exposure figure (EE peak, PFE peak, profile): the exposure engine computes them from the paths (docs/contracts/EXP.md
+            # section 14, retired in 2.9.0); the limit's utilisation and the CVA (parked, stored) still read this generator's profile
+            "nettingSetId": ns, "tradeCount": len(members), "netMtm": net, "collateral": coll,
+            "limit": limit, "utilisation": round(pfe_peak / limit, 4), "cva": cva,
             # every member (largest |MTM| first; a set past MEMBER_ROWS lists that many and says so: TRADES of TRADE_COUNT), for the page to page through
             "trades": [trade_row(t) for t in sorted(members, key=lambda t: -abs(t["mtm"]))][:MEMBER_ROWS],
             "byAsset": [{"asset": a, "mtm": round(v)} for a, v in sorted(by_asset.items(), key=lambda x: -abs(x[1]))],
             "counterparty": f"CP-{cp}", "agreement": f"AGR-{cp}-ISDA", "csa": f"CSA-{cp}", "creditLimit": f"LIM-{cp}",
-            "exposureProfile": f"EXP-{tag}", "cvaResult": f"CVA-{tag}", "saccr": f"SACCR-{tag}", "simm": f"SIMM-{cp}",
+            "cvaResult": f"CVA-{tag}", "saccr": f"SACCR-{tag}", "simm": f"SIMM-{cp}",
             "collateralBalance": f"COLL-{tag}", "legalEntity": {"NY": "LE-NY", "LDN": "LE-LDN", "FRA": "LE-FRA", "TKY": "LE-TKY"}[ns.rsplit("-", 1)[1]],
             "nettingEnforceable": True, "_meta": {"source": "xva-engine", "generation": 1, "live": True, "walk": {"netMtm": max(1000, abs(net) // 500)}}}
-        docs["exposure-profile"][f"EXP-{tag}"] = {
-            "profileId": f"EXP-{tag}", "epe": round(sum(p["ee"] for p in prof) / len(prof)), "eepe": round(max(p["ee"] for p in prof[:5])),
-            "pfePeak": pfe_peak, "paths": 5000, "runDate": iso(N.AS_OF), "buckets": prof, "nettingSet": ns,
-            "model": "Hull-White 1F rates, GBM FX and equity, 5,000 paths", "confidence": 0.95, "_meta": {"source": "xva-engine", "generation": 1}}
         dva = round(-cva * 0.35 * rating_pd("A") / pd) if pd else 0
         docs["cva"][f"CVA-{tag}"] = {
             "resultId": f"CVA-{tag}", "cva": cva, "dva": dva, "fva": round(-abs(net) * 0.0012), "kva": round(-pfe_peak * 0.004), "cs01": round(cva * 0.018),
@@ -183,7 +186,7 @@ def credit_results(trades: dict, docs: dict) -> None:
         by_cp[d["counterparty"][3:]].append(d)
     for cp, sets in by_cp.items():
         name, typ, sector, country, rating, _ = N.COUNTERPARTIES[cp]
-        used = sum(s["pfePeak"] for s in sets)
+        used = sum(peaks[s["nettingSetId"]] for s in sets)
         limit = max(10e6, round(used * M.rng("lim" + cp).uniform(1.2, 2.0), -6))
         buckets = [{"bucket": b, "limit": round(limit * f), "used": round(used * u), "utilisation": round(used * u / (limit * f), 4)}
                    for b, f, u in [("0-1Y", 1.0, 0.85), ("1-3Y", 1.0, 1.0), ("3-5Y", 0.8, 0.7), ("5-10Y", 0.6, 0.35), ("10Y+", 0.4, 0.1)]]
@@ -322,7 +325,7 @@ def reference(trades: dict, docs: dict) -> None:
         out = {"counterpartyId": f"CP-{cp}", "name": name, "lei": ids.lei(name), "rating": rating, "sector": sector, "country": country, "type": typ,
                "COUNTRY_OF_RISK": country, "UEN": f"UEN{100000 + n * 37:07d}", "economy": f"ECON-{ISO3[country]}",
                "newsId": "NEWS-" + name.replace(" ", "_"),           # its headlines, when the news-and-markets pack's connector is on
-               "netMtm": amount(s["netMtm"] for s in sets), "pfePeak": max([s["pfePeak"] for s in sets] or [0]),
+               "netMtm": amount(s["netMtm"] for s in sets),       # no PFE peak: the exposure engine's at CPTY:<id> (EXP.md section 14)
                "nettingSets": [{"id": s["nettingSetId"], "agreement": s["agreement"], "trades": s["tradeCount"], "netMtm": s["netMtm"]} for s in sets],
                "kyc": {"status": "Approved", "riskRating": "Standard" if rating[0] == "A" else "Enhanced", "lastReview": "2026-02-11",
                        "emirClassification": "FC" if typ in ("Bank", "Hedge fund", "Insurer", "Asset manager", "Pension fund") else "NFC-",

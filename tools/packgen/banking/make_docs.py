@@ -142,6 +142,17 @@ def overview(name: str, docs: dict) -> str:
                   "The VaR guide (`docs/guides/VAR_GUIDE.md`) explains every number with worked examples, the data flow, the scope grammar, the "
                   "memory tiers and sizing, entitlements, the CLI and the API; tutorial 25 (`docs/tutorials/25-var-from-the-bank-to-a-trade.md`) walks through "
                   "it on the test data; the data contract is `docs/contracts/VAR.md`.", ""]
+    if name == "counterparty-risk":
+        lines += ["### Exposure: the exposure engine", "",
+                  "The pack's exposure profiles are computed, never stored: the server nets every trade's mark to market on every path of the "
+                  "upstream simulation run (`exposure-path`, one row per trade and grid date, the run's grid in `simulation-run`) per netting set, "
+                  "applies each CSA's collateral path by path (thresholds, minimum transfer amounts, independent amount, rounding, lagged by the "
+                  "margin period of risk) and reads EE, ENE, effective EE, PFE at 95% and 99%, EPE and EEPE for any scope: `EXP NSET:NS-ALDERSHOT-FRA "
+                  "<GO>`, `EXP CPTY:CP-ALDERSHOT <GO>` (its netting sets summed path by path), `EXP GROUP:GRP-ALDERSHOT <GO>`, `EXP LE:LE-NY <GO>`, "
+                  "`EXP TRD:<trade> <GO>` (a trade alone). The netting-set and counterparty pages show the engine's figures computed as they "
+                  "open. Each loaded date lives in a memory-mapped hot file under the data folder (`drishti.ccr.exposure`); the official "
+                  "end-of-day figures are published to `risk-results/exposure-official` and `exposure-official-cpty`. The API is "
+                  "`/api/v1/exposure`; the data contract is `docs/contracts/EXP.md`.", ""]
     if name == "market-data":
         lines += ["### Public data feeds", "", "Real market data from public sources, each its own connector and **off by default**. Switch one "
                   "on with its environment variable (or `drishti.sources.connectors.<name>.enabled: true` in the site configuration). "
@@ -234,7 +245,7 @@ def model() -> str:
              "```text",
              "legal entity ─► desk ─► book ─► trade ◄─ trader",
              "                                 │",
-             "counterparty ─► agreement ─► CSA  ├─► netting set ─► exposure profile, CVA, SA-CCR, collateral, margin calls",
+             "counterparty ─► agreement ─► CSA  ├─► netting set ─► exposure (computed), CVA, SA-CCR, collateral, margin calls",
              "      │                          │        └─► credit limit (per counterparty), SIMM",
              "      └─► group, credit curve    └─► market data: curves, surfaces, spots, equities, credit, inflation, commodities",
              "desk ─► VaR ─► stress results ◄─ stress scenario        book ─► FRTB sensitivities, P&L explain",

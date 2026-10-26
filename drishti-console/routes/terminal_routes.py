@@ -30,6 +30,8 @@ from routes import api_routes, designer_routes, history_routes
 from routes.common import ident, packs, render
 from routes.var_routes import redirect_for as var_redirect
 from routes.var_routes import retired_link as var_retired_link
+from routes.exposure_routes import redirect_for as exp_redirect
+from routes.exposure_routes import retired_link as exp_retired_link
 
 router = APIRouter(include_in_schema=False)
 
@@ -109,6 +111,8 @@ async def go(request: Request, q: str = ""):
     me = getattr(request.state, "identity", None)
     if (to_var := var_redirect(typed, (me.user if me else "") or "")) is not None:   # VAR DESK RATES: the VaR explorer (var_routes.py)
         return to_var
+    if (to_exp := exp_redirect(typed)) is not None:            # EXP NSET NS-X, EXP EXP-X (retired): exposure-result (exposure_routes.py)
+        return to_exp
     if _SEARCH.match(q.replace("<GO>", "")):
         return RedirectResponse(f"/s?q={quote(q.replace('<GO>', '').strip())}", status_code=303)
     try:
@@ -476,6 +480,8 @@ async def view_children(request: Request, kind: str, id_: str, panel: str):
 @router.get("/v/{kind}/{id_:path}")
 async def view(request: Request, kind: str, id_: str, embed: int = 0, gen: int = 0, share: str = ""):
     if (retired := var_retired_link(kind, id_)) is not None:   # a retired stored VaR record (VAR-COMM): the explorer at its scope
+        return RedirectResponse(retired, status_code=303)
+    if (retired := exp_retired_link(kind, id_)) is not None:   # a retired stored exposure profile (EXP-X-FRA): NSET:NS-X-FRA, computed
         return RedirectResponse(retired, status_code=303)
     hist = history_routes.history_link(kind, id_, request.query_params)
     if hist:                                        # /v/trade/1000015?days=30, the short form of a history link

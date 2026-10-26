@@ -17,6 +17,13 @@
 about: 1
 vocabulary:
   utilisation: { term: "Utilisation", means: "The share of the limit that is used: used divided by limit. Above 100% is a breach.", unit: "% of limit" }
+  ce: { term: "Current exposure", means: "What the counterparty would owe the bank if it defaulted today: the netting set's value less the collateral held, never below zero.", unit: "USD" }
+  ee: { term: "Expected exposure", means: "The average over the simulated paths of the exposure at a date, after netting and collateral (what the bank would lose).", unit: "USD" }
+  epe: { term: "Expected positive exposure", means: "The time-weighted average of the expected exposure over the first year (or to the last maturity when sooner). CVA and the internal-model capital are built on it.", unit: "USD" }
+  eepe: { term: "Effective expected positive exposure", means: "The average over the first year of the effective expected exposure, which may not fall from one date to the next: the internal-model exposure (Basel CRE53).", unit: "USD" }
+  pfe95: { term: "Potential future exposure, 95%", means: "The exposure exceeded on 5 of 100 simulated paths at a date.", unit: "USD" }
+  pfe99: { term: "Potential future exposure, 99%", means: "The exposure exceeded on 1 of 100 simulated paths at a date.", unit: "USD" }
+  peakPfe: { term: "Peak potential future exposure", means: "The highest potential future exposure over the primary dates; credit limits are set against it. A counterparty's is read from its netting sets' exposures summed path by path, never a sum of their peaks.", unit: "USD" }
 kinds:
   agreement:
     title: Master agreement
@@ -56,8 +63,8 @@ kinds:
     title: Netting set
     about: >-
       ${$.NETTING_SET_ID} groups ${$.TRADE_COUNT} trades that net on close-out under one agreement: they are worth
-      ${fmt($.NET_MTM, 'signed0')} USD together, secured by ${fmt($.COLLATERAL, 'signed0')} of collateral, and its 95% peak
-      exposure is ${fmt($.PFE_PEAK, 'compact')} USD, ${fmt($.UTILISATION, 'pct0')} of its limit.
+      ${fmt($.NET_MTM, 'signed0')} USD together, secured by ${fmt($.COLLATERAL, 'signed0')} of collateral. Its exposure profile is the
+      exposure engine's, computed from the simulated paths as the page opens: ${coalesce($.EXPOSURE_ENGINE.NOTE, 'not computed here')}.
     guide: counterparty-risk
     glossary:
       TRADE_COUNT: { term: "Trades", means: "The number of trades that are netted together under the agreement." }
@@ -71,14 +78,16 @@ kinds:
         means: "The net collateral against the netting set: what is held less what has been posted."
         unit: "USD"
         sign: "Positive is held by the bank, negative is posted to the counterparty."
-      EE_PEAK:
-        term: "Peak expected exposure"
-        means: "The highest point of the expected-exposure profile over the life of the trades, the average positive exposure on the date where it is largest."
-        unit: "USD"
-      PFE_PEAK:
-        term: "Peak potential future exposure, 95%"
-        means: "The highest point of the 95th-percentile exposure profile; on 95 of 100 simulated paths the exposure stays below it. It is the measure credit limits are set against."
-        unit: "USD"
+      EXPOSURE_ENGINE.EPE: { use: "epe" }
+      EXPOSURE_ENGINE.EEPE: { use: "eepe" }
+      EXPOSURE_ENGINE.PEAK_PFE: { use: "peakPfe" }
+      EXPOSURE_ENGINE.CE: { use: "ce" }
+      EXPOSURE_ENGINE.STATUS:
+        term: "Exposure status"
+        means: "Whether the exposure engine computed the figures: ok, no-paths (the day's simulation run does not cover this netting set), or unavailable with the reason."
+      EXPOSURE_ENGINE.PROFILE.EE: { use: "ee" }
+      EXPOSURE_ENGINE.PROFILE.PFE: { use: "pfe95" }
+      EXPOSURE_ENGINE.PROFILE.PFE_99: { use: "pfe99" }
       LIMIT: { term: "Credit limit", means: "The limit on the counterparty's peak potential future exposure approved for this netting set.", unit: "USD" }
       UTILISATION: { use: "utilisation" }
       CVA:
@@ -92,7 +101,7 @@ kinds:
       TRADES.MATURITY: { term: "Maturity", means: "The date the trade ends." }
       TRADES.MTM: { term: "Mark to market", means: "The trade's current value, from the bank's side.", unit: "USD", sign: "Positive is owed to the bank." }
     panels:
-      exposure: { about: "The curve shows how the exposure of ${$.TRADE_COUNT} trades may develop; its peak (${fmt($.PFE_PEAK, 'compact')} USD) is the figure compared with the limit." }
+      exposure: { about: "The curves show how the exposure of the ${$.TRADE_COUNT} trades may develop, computed from the simulated paths; the PFE 95 peak (${fmt($.EXPOSURE_ENGINE.PEAK_PFE, 'compact')} USD) is the figure compared with the limit." }
   credit-limit:
     title: Counterparty credit limit
     about: >-
@@ -109,32 +118,62 @@ kinds:
       BUCKETS.LIMIT: { term: "Bucket limit", means: "The limit that applies to this tenor bucket.", unit: "USD" }
       BUCKETS.USED: { term: "Bucket exposure", means: "The exposure in this tenor bucket.", unit: "USD" }
       BUCKETS.UTILISATION: { use: "utilisation" }
-  exposure-profile:
-    title: Exposure profile
+  exposure-result:
+    title: Exposure profile of a scope
     about: >-
-      ${$.PROFILE_ID} is a Monte Carlo simulation of ${$.PATHS} paths for the netting set run on ${$.RUN_DATE}: expected positive
-      exposure ${fmt($.EPE, 'compact')} USD, effective ${fmt($.EEPE, 'compact')}, peak 95% potential future exposure
-      ${fmt($.PFE_PEAK, 'compact')}.
+      ${$.LABEL} on ${$.BUSINESS_DATE}: expected positive exposure ${fmt($.EPE, 'compact')} USD, effective ${fmt($.EEPE, 'compact')},
+      peak ${fmt($.CONFIDENCE, 'pct0')} potential future exposure ${fmt($.PEAK_PFE, 'compact')} on ${$.PEAK_PFE_DATE}, computed by the
+      exposure engine from the ${$.PATHS} paths of run ${$.RUN_ID} when asked, never stored.
     guide: counterparty-risk
     glossary:
-      EPE:
-        term: "Expected positive exposure"
-        means: "The average of the expected exposure over the life of the trades (or the first year); it is the exposure the CVA and the internal-model capital are built on."
-        unit: "USD"
-      EEPE:
-        term: "Effective expected positive exposure"
-        means: "The average over the first year of the effective expected exposure, which cannot fall from one date to the next. It is the exposure used for the internal-model capital."
-        unit: "USD"
-      PFE_PEAK: { term: "Peak potential future exposure, 95%", means: "The highest value of the 95th-percentile exposure over the life of the trades.", unit: "USD" }
-      PATHS: { term: "Simulation paths", means: "The number of Monte Carlo scenarios of the market that were simulated. More paths means a smoother tail." }
-      RUN_DATE: { term: "Run date", means: "The date of the market data the simulation started from." }
-      BUCKETS.TENOR: { term: "Future date", means: "The point in time, counted from the run date, the exposure is measured at." }
-      BUCKETS.EE: { term: "Expected exposure", means: "The average, over the scenarios, of the netting set's value at this date, counting only positive values (what the bank would lose).", unit: "USD" }
-      BUCKETS.ENE: { term: "Expected negative exposure", means: "The average of the netting set's value at this date counting only negative values, what the bank would owe. It is the basis of the debit valuation adjustment.", unit: "USD", sign: "Negative, an amount owed." }
-      BUCKETS.PFE_95: { term: "Potential future exposure, 95%", means: "The exposure that is exceeded on 5 of 100 scenarios at this date.", unit: "USD" }
-      BUCKETS.PFE_99: { term: "Potential future exposure, 99%", means: "The exposure that is exceeded on 1 of 100 scenarios at this date.", unit: "USD" }
+      SCOPE: { term: "Scope", means: "What the exposure is computed for, in the scope grammar: a netting set (NSET:), a counterparty (CPTY:), a group (GROUP:), a legal entity (LE:), a trade alone (TRD:), or a combination." }
+      STATUS: { term: "Status", means: "ok, or no-paths when the day's simulation run covers none of the scope's netting sets." }
+      CE: { use: "ce" }
+      EPE: { use: "epe" }
+      EEPE: { use: "eepe" }
+      PEAK_EE: { term: "Peak expected exposure", means: "The highest expected exposure over the primary dates.", unit: "USD" }
+      PEAK_PFE: { use: "peakPfe" }
+      PEAK_PFE_DATE: { term: "Peak PFE date", means: "The primary date where the potential future exposure is highest." }
+      EAD_IMM: { term: "Exposure at default (internal model, informational)", means: "1.4 times the effective EPE: the internal-model exposure, meaningful only with the regulator's approval of the bank's model.", unit: "USD" }
+      CONFIDENCE: { term: "Confidence", means: "The percentile of the potential future exposure fields, 95% unless asked otherwise." }
+      PATHS: { term: "Simulation paths", means: "The number of Monte Carlo scenarios of the market the run simulated; every trade is valued on the same paths, so values add path by path." }
+      RUN_ID: { term: "Simulation run", means: "The upstream exposure simulation the figures are computed from." }
+      MPOR_DAYS: { term: "Margin period of risk", means: "The days between the last margin call that is met and the close-out of a defaulted counterparty: the collateral on each path lags its value by this long.", unit: "business days" }
+      COLLATERAL_MODEL: { term: "Collateral model", means: "lagged (the CSA's call at the value a margin period of risk earlier), current (today's collateral held throughout) or none." }
+      PROFILE.TENOR: { term: "Future date", means: "A primary date of the run's grid, labelled by the nearest standard tenor." }
+      PROFILE.EE: { use: "ee" }
+      PROFILE.ENE: { term: "Expected negative exposure", means: "The average over the paths of what the bank would owe the counterparty at this date, after collateral.", unit: "USD", sign: "Negative, an amount owed." }
+      PROFILE.EEE: { term: "Effective expected exposure", means: "The expected exposure never allowed to fall from one date to the next (the Basel rule), from today's exposure on.", unit: "USD" }
+      PROFILE.PFE: { use: "pfe95" }
+      PROFILE.PFE_99: { use: "pfe99" }
+      PROFILE.EE_UNCOLL: { term: "Expected exposure without collateral", means: "The expected exposure before any collateral: what the CSA saves is the difference.", unit: "USD" }
+      BY_NETTING_SET.PFE_CONTRIBUTION: { term: "PFE contribution", means: "The netting set's share of the scope's peak PFE: its mean exposure on the paths around the quantile at the peak date, scaled so the shares add up to the peak.", unit: "USD" }
     panels:
-      profile: { about: "The area is the expected exposure; the PFE curves in the table lie above it and peak at ${fmt($.PFE_PEAK, 'compact')} USD." }
+      profile: { about: "The expected exposure and the 95% and 99% potential future exposure at each primary date, computed from the simulated paths after netting and collateral." }
+  simulation-run:
+    title: Exposure simulation run
+    about: >-
+      ${$.RUN_ID} is the upstream exposure simulation of ${$.BUSINESS_DATE}: ${$.PATHS} market paths over a grid of future dates
+      (${$.CALIBRATION} calibration); every trade was valued on every path and date, and the exposure engine reads them.
+    guide: counterparty-risk
+    glossary:
+      PATHS: { term: "Paths", means: "The number of simulated market scenarios; every trade's values are on the same paths." }
+      CALIBRATION: { term: "Calibration", means: "REAL_WORLD (for PFE and limits) or RISK_NEUTRAL (for CVA and pricing) or STRESSED." }
+      GRID_DATES: { term: "Grid dates", means: "The future dates the trades were valued at: the primary dates where exposure is reported and the look-back dates a margin period of risk before them." }
+      LOOKBACK_DAYS: { term: "Look-back", means: "How many business days before each primary date its look-back date is: the margin period of risk the run assumes.", unit: "business days" }
+      PRECISION: { term: "Precision", means: "float32 or float64: how the path values are stored." }
+  exposure-path:
+    title: Exposure path
+    about: >-
+      ${$.TRADE_ID}'s value on every one of the run's paths at ${$.GRID_DATE} (grid index ${$.GRID_INDEX}), in netting set
+      ${$.NETTING_SET}: the input the exposure engine nets, collateralises and counts.
+    guide: counterparty-risk
+    glossary:
+      MTM: { term: "Path values", means: "The trade's mark to market on each simulated path at the grid date, from the bank's side.", unit: "USD", sign: "Positive is owed to the bank." }
+      GRID_INDEX: { term: "Grid index", means: "The position of the date in the run's grid." }
+      GRID_DATE: { term: "Grid date", means: "The future date the values are for." }
+      NETTING_SET: { term: "Netting set", means: "The netting set the trade belongs to (its membership wins when they differ)." }
+      STATUS: { term: "Status", means: "ok, proxied (an approximate model) or failed (no values)." }
   cva:
     title: Valuation adjustments
     about: >-
