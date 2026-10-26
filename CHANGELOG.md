@@ -17,6 +17,42 @@
 
 ## Unreleased
 
+- **Groupings and analytics computed instead of stored (2.9.2, Track B of the computed-measures roadmap).** Seven pages that were
+  stored copies of figures are computed from the fundamental data when opened, and their stored versions are retired in the same change
+  ([GROUPINGS_ANALYTICS_GUIDE.md](docs/guides/GROUPINGS_ANALYTICS_GUIDE.md), [tutorial 27](docs/tutorials/27-groupings-and-analytics.md)):
+  - **LEIG** (`lei-group`) and **LEIC** (`lei-country`): computed by the gleif pack's derived connector `gleif-groupings` from every
+    legal entity: no 50-member cap on a group (its tree and each member's level from `DIRECT_PARENT`, lapsed registrations new), no
+    400-row cap on a country; `LEIG ALL` and `LEIC ALL` computed too. The `lei-group` and `lei-country` snapshots are gone from
+    `data/testdata/gleif/` (−0.77 MB); an ultimate parent carries `GLEIF_GROUP_SIZE` (its group's size in GLEIF, an input) and every
+    entity its `PROVENANCE`. The type-ahead finds a group by name (`LEIG Ford Motor`); the `lei-group` search form is gone.
+  - **SIC** (`sic-sector`): computed by `us-equities-groupings` from the companies, totals of the USD reporters (the strip says how many
+    are not summed), net margin new; the `sic-sector` snapshot is gone.
+  - **ECG** (`country-group`): computed by `macro-groupings` from the economies (an economy is in its region, its income group and the
+    world): GDP and population summed, GDP per capita their ratio, growth weighted by GDP, inflation the members' median; the income
+    groups have figures for the first time; every member economy listed. `tools/realdata/build_docs.py` builds no country group.
+  - **CORR** (`correlation-matrix`): a set keeps its factors (`EQUITY_IDS`, `FX_IDS`); its correlations are the computed kind
+    `correlation-result` (`CORRC`), worked out by the reactive connector `correlation-engine` (a Java engine in the server, no compute
+    pool needed) from the factors' daily closes: a window (default every return) and an estimator (Pearson by default, or Ledoit-Wolf)
+    picked on the page. `AVERAGE`, `PAIRS`, `WINDOW` and `ESTIMATOR` are removed from the record.
+  - **USEQ ratios**: net margin and revenue growth worked out by the company page from `REVENUE`, `NET_INCOME` and `FINANCIALS[]`;
+    `NET_MARGIN`, `REVENUE_GROWTH` and `FINANCIALS[].NET_MARGIN` removed from `us-company`, `ROWS[].NET_MARGIN` from `index-membership`.
+  - **PXH analytics**: returns over 1, 3 and 6 months and the history, volatility, largest drawdown, beta and correlation against a
+    benchmark (`DRISHTI_US_EQUITIES_BENCHMARK`, default SPY), computed by the `yfinance` plugin as the history is read. Internal use only
+    and off as shipped, like the prices.
+  - **The derived connector** gains `also-group-by` (a member in several groups), `unlisted` (a page over everything keeps only its
+    figures), the `median` aggregate, `then` (fields worked out over the page), `sort`, `tree` (a group's own hierarchy) and
+    `search-fields` (docs/connectors/types/derived/README.md). The world-economy generator (`tools/packgen/common/packbuild.py`) writes a
+    derived connector for a computed kind; the market-data generator writes the correlation engine (`tools/packgen/banking/corr_kinds.py`).
+  - **Reconciliation** on the committed data (guide section 18): LEIC and SIC equal on every page; LEIG equal but for 19 groups' levels
+    (the stored depth depended on the order members were listed) and one group with an entity fetched for two groups (36 members, stored
+    37); ECG within 3% of the World Bank's own aggregates on GDP, 2.1% on population, 0.32 points on growth and 0.5 on inflation, the
+    difference being the World Bank's estimates for members that have not reported; CORR's stored pairs were synthetic (computed now:
+    0.096, −0.012 and 0.092 averages against stored 0.385, 0.512 and 0.406); USEQ growth differs on 3 companies whose previous fiscal
+    year is missing (computed against that year only, empty when it is missing).
+  - **The guard:** `tools/contracts.policy.yaml` `computed-in-place:` (LEIG, LEIC, SIC, ECG) and `removed:` (the ratios, the correlation
+    figures); `tools/test_contracts.py` fails the build when a stored version returns. Contracts redrafted for the four groupings and
+    written for `correlation-result`; `docs/contracts/packs/` and `COMMAND_CATALOG.md` regenerated. Help: two entries (the guide and
+    tutorial 27); twenty-seven tutorials.
 - Exposure fixes from tutorial 26: the explorer's *Collateral effect* tile and the Collateral tab show collateral's effect on EE with its sign ("−65%" lower, "+380%" higher where posted collateral raises it; it read "−-380%"); `drishti.py exposure whatif --like` sends the copied trade's asset class, notional, maturity and MtM, so `--method addon` no longer adds 0.
 - **Docs: exposure in two documents, the guide and tutorial 26 (product owner, 2026-10-26: each measure has exactly two documents and
   two help entries).** [EXPOSURE_GUIDE.md](docs/guides/EXPOSURE_GUIDE.md) is the one exposure reference: Part I using it (EE, ENE,

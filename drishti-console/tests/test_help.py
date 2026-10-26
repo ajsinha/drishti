@@ -199,7 +199,8 @@ def test_the_help_centre_has_six_sections_and_about_forty_pages():
     total = sum(len(c["guides"]) for c in catalogue["categories"])
     # 47: the 45 pages plus VaR's two (the VaR guide and tutorial 25), the product owner's request of 2026-10-26: VaR help is two pages.
     # 49: plus exposure's two (the exposure guide and tutorial 26), the same rule (each measure has exactly two documents and two entries).
-    assert 30 <= total <= 49, total
+    # 51: plus the groupings and analytics' two (the guide and tutorial 27, 2.9.2), the same rule.
+    assert 30 <= total <= 51, total
 
 
 def test_every_old_help_address_still_opens_something(client):
@@ -227,7 +228,7 @@ def test_the_tutorials_page_renders_the_tutorials_index_and_each_tutorial_opens_
     page = client.get("/help/tutorials")
     assert page.status_code == 200 and "Your first 15 minutes" in page.text and "Run it in production" in page.text
     links = sorted(set(re.findall(r'href="(/help/docs-tutorials-[0-9a-z-]+)"', page.text)))
-    assert len(links) == 26, links
+    assert len(links) == 27, links
     shots = 0
     for href in links:
         t = client.get(href)
