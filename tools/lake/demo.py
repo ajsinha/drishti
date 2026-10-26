@@ -32,7 +32,8 @@ The news-and-markets pack's captured market snapshot (data/testdata/news-and-mar
 written by `drishti.py testdata capture-market`) becomes news/quote and news/news, the same snapshot on every day and never re-dated,
 so the pack's quote and headline pages work with no internet (the live connectors off, or DRISHTI_OFFLINE=true). The us-equities
 and gleif packs' public data (data/testdata/us-equities and gleif, one snapshot per kind) is built the same way into us-equities/<kind>
-and gleif/<kind>, which their Delta connectors us-equities-store and gleif-store read: no pack needs the demo connector.
+and gleif/<kind>, which their Delta connectors us-equities-store and gleif-store read, and the funds pack's (data/testdata/funds, a large
+kind in parts listed under `parts:`) into funds/<kind> for funds-store: no pack needs the demo connector.
 
 Connector files: the packs' Delta connectors read ${DRISHTI_DELTA_ROOT:<data>/delta}. With the default lake nothing needs
 changing; a connector file (config/connectors/<name>.yaml) that points elsewhere, or any of them when --lake is another folder, is
@@ -596,7 +597,7 @@ class DemoLake:
         print("\nNext:\n"
               "  1. Start the server on the lakes: IDE run configuration 'Drishti server (demo lakes)' (the samples off, so every page reads\n"
               "     the lakes; offline mode on, so quotes and headlines come from the captured snapshot and nothing reaches the internet), or\n"
-              f"     {env}DRISHTI_DEMO_ENABLED=false DRISHTI_OFFLINE=true DRISHTI_PACKS=core,market-data,trading,counterparty-risk,market-risk,world-economy,news-and-markets,us-equities,gleif "
+              f"     {env}DRISHTI_DEMO_ENABLED=false DRISHTI_OFFLINE=true DRISHTI_PACKS=core,market-data,trading,counterparty-risk,market-risk,world-economy,news-and-markets,us-equities,gleif,funds "
               "java -Djava.io.tmpdir=data/tmp/server -jar drishti-server/target/drishti-server-*-exec.jar\n"
               "  2. Start the console: run configuration 'Drishti console' (sign in as drishti-dev-admin / drishti-dev-admin123), or\n"
               "     drishti-console/.venv/bin/python drishti-console/run_drishti_web.py --server.port=17480 --backend.url=http://127.0.0.1:18480\n"

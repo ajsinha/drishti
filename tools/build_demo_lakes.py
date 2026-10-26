@@ -13,7 +13,7 @@
 # See the LICENSE file in the root of this repository for the full terms.
 """Every demo lake from start to finish, in one command (Windows, Linux, macOS).
 
-1. ``drishti.py lake demo``: every dataset of the seven packs and of the us-equities and gleif packs (their public-data snapshots,
+1. ``drishti.py lake demo``: every dataset of the seven packs and of the us-equities, gleif and funds packs (their public-data snapshots,
    the same documents on every day), every business day of the committed test data (data/testdata), moved to end on ``--as-of``
    (default: the date of your newest ENDUR file when ``--endur-dir`` is given, else today's business date), and the connector files
    pointed at the lake. No pack's data is served by the demo connector: start the server with it off.

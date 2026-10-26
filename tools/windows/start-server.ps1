@@ -31,7 +31,7 @@
 .EXAMPLE
   powershell -ExecutionPolicy Bypass -File tools\windows\start-server.ps1 -DemoLakes
   The offline demo of docs\guides\QA_ON_WINDOWS_WITH_CUSTOM_DATA.md: what the IntelliJ run configuration
-  'Drishti server (demo lakes)' sets (the nine packs of the demo lakes: the seven of the server's default, us-equities and gleif; samples off, offline mode, sign-in on with the
+  'Drishti server (demo lakes)' sets (the ten packs of the demo lakes: the seven of the server's default, us-equities, gleif and funds; samples off, offline mode, sign-in on with the
   drishti-dev-admin account, a 4 GB heap), without IntelliJ.
 #>
 param(
@@ -98,7 +98,7 @@ if (-not $Jar) {
 if (-not (Test-Path (Join-Path $root 'config\packs'))) { Write-Warning "No config\packs\ folder in $root: the server will start without domain packs." }
 
 if ($DemoLakes) {
-    if (-not $Packs) { $Packs = 'core,market-data,trading,counterparty-risk,market-risk,world-economy,news-and-markets,us-equities,gleif' }
+    if (-not $Packs) { $Packs = 'core,market-data,trading,counterparty-risk,market-risk,world-economy,news-and-markets,us-equities,gleif,funds' }
     if (-not $Heap) { $Heap = '4g' }
     $env:DRISHTI_DEMO_ENABLED = 'false'               # the lakes are the only data: no built-in samples
     $env:DRISHTI_OFFLINE = 'true'                     # quotes and news from the committed snapshot; no website is contacted

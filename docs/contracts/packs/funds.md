@@ -217,7 +217,7 @@ A US mutual fund or ETF from SEC public data: the fact sheet, the look-through h
 
 | Field | Type | Presence | Unit | Description | Example or values | Link |
 |---|---|---|---|---|---|---|
-| `NAME` | text | required |  | The issuer's name as the fund filed it. Source: N-PORT FUND_REPORTED_HOLDING.ISSUER_NAME. | `N/A` |  |
+| `NAME` | text | required |  | The issuer's name as the fund filed it. Source: N-PORT FUND_REPORTED_HOLDING.ISSUER_NAME. | `CME E-Mini NASDAQ 100 Index Future` |  |
 | `TITLE` | text | required |  | The title of the security or contract. Source: N-PORT FUND_REPORTED_HOLDING.ISSUER_TITLE. | `CME E-Mini NASDAQ 100 Index Future` |  |
 | `DERIVATIVE` | text | required |  | FWD, FUT, SWP, OPT, SWO, WAR or OTH for a derivative; empty otherwise. Source: N-PORT FUND_REPORTED_HOLDING.DERIVATIVE_CAT. | `FWD`, `FUT`, `SWP`, `OPT`, `SWO`, `WAR`, `OTH` |  |
 | `PAYOFF` | text | optional |  | Long, Short or N/A. Source: N-PORT FUND_REPORTED_HOLDING.PAYOFF_PROFILE. | `Long`, `Short`, `N/A` |  |

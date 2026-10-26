@@ -176,7 +176,8 @@ def _holding(h: dict, companies: dict, by: dict, fund_of: dict[str, str]) -> dic
         company = (by["cusip"].get(h["ISSUER_CUSIP"].strip()) if h["ASSET_CAT"] == "EC" else None) \
             or by["lei"].get(h["ISSUER_LEI"].strip()) or by["name"].get(_norm(h["ISSUER_NAME"])) or ""
     value, pct = R.num(h["CURRENCY_VALUE"]), R.num(h["PERCENTAGE"])
-    out = {"NAME": R.clean(h["ISSUER_NAME"]) or R.clean(h["ISSUER_TITLE"]), "TITLE": R.clean(h["ISSUER_TITLE"]), "TICKER": t,
+    name = R.clean(h["ISSUER_NAME"])
+    out = {"NAME": name if name not in ("", "N/A") else R.clean(h["ISSUER_TITLE"]), "TITLE": R.clean(h["ISSUER_TITLE"]), "TICKER": t,
            "CUSIP": h["ISSUER_CUSIP"].strip() if h["ISSUER_CUSIP"].strip() not in ("N/A", "000000000") else "",
            "ISIN": h.get("ISIN", ""), "LEI": h["ISSUER_LEI"].strip() if h["ISSUER_LEI"].strip() != "N/A" else "",
            "ASSET": h["ASSET_CAT"] or ("OTHER" if h["OTHER_ASSET"] else ""), "ISSUER_TYPE": h["ISSUER_TYPE"],

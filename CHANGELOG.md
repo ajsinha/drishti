@@ -17,6 +17,32 @@
 
 ## Unreleased
 
+- **The funds pack: the 200 largest US mutual funds and ETFs with their holdings, from SEC public data (2.9.2; product owner,
+  2026-10-26).** New pack `funds` (off by default, after `us-equities`): the newest SEC Form N-PORT data set (holdings with CUSIP, ISIN
+  and LEI, derivatives with notional, expiry and counterparties, repos, three months of flows and monthly returns), four quarters of Form
+  N-CEN (ETF facts, adviser, custodian, administrator, transfer agent, auditor, authorised participants) and of the prospectus
+  risk/return summaries (expense ratio, management fee, turnover, calendar-year returns), the SEC ticker files, the Nasdaq Trader ETF flag
+  and GLEIF's fund relationships. Kinds and commands: `fund` (`FUND QQQ`; any share class opens its fund, `FUND VTSAX` → VTI), the
+  fact sheet as on the approved mock-ups, with the tabs **Look-through holdings** (concentration, asset and issuer types, derivatives
+  and counterparties, every holding kept with its identifiers and links, who else holds the largest company) and **vs its index**
+  (members held, active share, weights side by side, the tilt by SIC division, the index weights computed from SEC data: shares
+  outstanding times the price the filings imply, never a provider's); `fund-holder` (`HELD AAPL`: every fund holding a company, and the
+  share of its shares they own); `index-funds` (`TRACK SP500`). `USEQ <ticker>` gains the tabs **Held by funds** and **Fund
+  ownership**, `IDX <index>` the list **ETFs and funds tracking it**. A holding links to its us-equities company by ticker, CUSIP, LEI
+  or name. The committed snapshot is 5.6 MB of gzipped JSON Lines in `data/testdata/funds`, the fund kind in parts of about 1.2 MB
+  (`publicsnap` parts, read by `lake demo`, the contracts and the test lakes; the demo lake has 82 tables); a fund keeps its 600 largest
+  holdings, the reverse look-through counts all 411,796. `tools/publicdata/funds.py` with `funds.sh` and
+  `tools/windows/publicdata-funds.ps1` (`status`, `refresh --dry-run`, `refresh [tickers nasdaq nport ncen rr gleif]`, `--since`,
+  `--scope FUNDS: HOLDINGS:`, `--offline`) downloads about 700 MB into the data folder (never committed) with the us-equities pack's SEC
+  User-Agent setting, then builds with `tools/packgen/funds/make.py` and checks. Contracts for the three kinds, the glossary
+  (`config/about.yaml`), README, pack guide with its data sections, `docs/contracts/packs/funds.md`, the External data page's rows and
+  section, `data_retrieval.yaml`. Documents: [FUNDS_GUIDE.md](docs/guides/FUNDS_GUIDE.md) (using it, the data contract of every kind,
+  where the data comes from) and [tutorial 28](docs/tutorials/28-funds-and-etfs.md) with its pictures (`tools/docs/shots/t28.py`): two
+  help entries (the cap 54), twenty-eight tutorials. The console's `/go` opens the type-ahead's one match when no id starts with what
+  was typed (FUND VTSAX). New test: every committed data file under `data/testdata` is gzipped and under 5 MB. Tests: FundsPackTest,
+  `tools/publicdata/tests/test_funds.py` (a cache cut from the real data sets), `test_funds_browser.py`. The demo stack, the Windows QA
+  guide, `start-server.ps1 -DemoLakes` and the IDE configuration load the pack.
+
 - **External data, one help page; every pack guide complete with its data contracts and data retrieval (2.9.1; product owner,
   2026-10-26).** [PUBLIC_DATA.md](docs/guides/PUBLIC_DATA.md) is now the listed help page **External data** (Help → Data; the old
   address `docs-guides-public-data` redirects): every external source of every pack in one table (World Bank, IMF, UNDP, CIA Factbook,

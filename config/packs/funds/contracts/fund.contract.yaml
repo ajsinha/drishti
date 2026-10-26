@@ -739,7 +739,7 @@ nested:
     type: text
     presence: required
     description: 'The issuer''s name as the fund filed it. Source: N-PORT FUND_REPORTED_HOLDING.ISSUER_NAME.'
-    example: N/A
+    example: CME E-Mini NASDAQ 100 Index Future
   - name: TITLE
     type: text
     presence: required
