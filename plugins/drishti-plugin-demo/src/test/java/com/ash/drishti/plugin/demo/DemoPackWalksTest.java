@@ -366,19 +366,16 @@ class DemoPackWalksTest {
         });
     }
 
+    /** A netting set's net MTM walks with its trades and asset totals. Its exposure is computed by the exposure engine from the lake's
+     *  paths since 2.9.0 (EXPOSURE_GUIDE.md section 22): the record holds no exposure figure for the walker to move. */
     @Test
-    void nettingSetNetMtmAssetTotalsTradesAndExposureProfileMoveTogether() {
+    void nettingSetNetMtmAssetTotalsAndTradesMoveTogether() {
         eachSample("netting-set", (before, after) -> {
             double hidden = num(before, "NET_MTM") - nums(before, "TRADES.*.MTM").stream().mapToDouble(Double::doubleValue).sum();
             closeTo(num(after, "NET_MTM"), hidden + nums(after, "TRADES.*.MTM").stream().mapToDouble(Double::doubleValue).sum(), 1, "net MTM is the trades");
             closeTo(num(after, "NET_MTM"), nums(after, "BY_ASSET.*.MTM").stream().mapToDouble(Double::doubleValue).sum(), values(after, "BY_ASSET.*.MTM").size(), "net MTM is the asset totals");
-            closeTo(num(after, "EE_PEAK"), nums(after, "PROFILE.*.EE").stream().mapToDouble(Double::doubleValue).max().orElseThrow(), 0.5, "EE peak");
-            closeTo(num(after, "PFE_PEAK"), nums(after, "PROFILE.*.PFE").stream().mapToDouble(Double::doubleValue).max().orElseThrow(), 0.5, "PFE peak");
-            closeTo(num(after, "UTILISATION"), num(after, "PFE_PEAK") / num(after, "LIMIT"), 1e-4, "utilisation");
-            assertThat(moved(before, "PFE_PEAK")).as("pfePeak" + " moved").isTrue();
             assertThat(moved(before, "NET_MTM")).as("netMtm" + " moved").isTrue();
-            // the profile moved as one: the ratio of any point to the peak is unchanged
-            closeTo(num(after, "PROFILE.0.EE") / num(after, "EE_PEAK"), num(before, "PROFILE.0.EE") / num(before, "EE_PEAK"), 2e-3, "profile shape");
+            assertThat(after.containsKey("EE_PEAK") || after.containsKey("PFE_PEAK") || after.containsKey("PROFILE")).as("no stored exposure figure").isFalse();
         });
     }
 
