@@ -13,6 +13,34 @@
 
   See the LICENSE file in the root of this repository for the full terms.
 -->
+# Drishti 2.9.0 — release notes
+
+*2026-10-26.* **Exposure is computed for any scope, down to a trade; the stored exposure profile is retired; VaR and exposure reach BI; each measure has one guide and one tutorial.**
+
+- **Exposure (EXP), computed like VaR** ([EXPOSURE_GUIDE.md](docs/guides/EXPOSURE_GUIDE.md), tutorial 26):
+  - EE, ENE, effective EE, PFE 95/99, EPE, EEPE, peak PFE and EAD (information) for any scope: netting set, counterparty, group (GLEIF
+    parents), legal entity, desk, book, a single trade, the bank, joined with `+ - &`; every trade's MtM on every path netted per
+    netting set, each CSA's collateral applied path by path (thresholds, MTA, IA, rounding, margin period of risk);
+  - **the exposure explorer** (`EXP <scope>`): tree, breadcrumb and Back, headline tiles, the profile with the path fan, the counterparty
+    board, netting-set contributions, the Collateral, Trades and Pre-deal tabs, and a trade alone, in its set and its netting benefit;
+  - **pre-deal what-if**: exact by the Python engine on the run's own paths (`XWIF`, compute on), or a conservative add-on marked proxy;
+  - official end-of-day results published to `risk-results/exposure-official` and `-cpty`, captures and compare, CSV, the load signal
+    reloads the date, tiered retention (full trade paths 20 days and month-ends for a year; statistics 7 years), float32 paths read;
+  - `drishti.py exposure`; DRS-5440..5446; the demo lake generates paths for 22 of the 24 counterparties (73 netting sets, 9,000 trades).
+  - **Retired:** the stored `exposure-profile` kind and the netting set's and counterparty's stored peaks. `EXP-…` ids open the computed
+    netting set. **The numbers change:** the stored peaks summed to 92.6bn, computed 7.6bn on the same sets (the generator scaled them
+    with gross notional and ignored the CSAs); the 76-set reconciliation is in the guide.
+- **VaR and exposure in BI:** the published official results are read-only kinds (`VOFF`, `XOFC`); a new Market risk VaR model and
+  report; the Counterparty risk, Trading risk, Desk wall and P&L vs exposure content shows computed exposure (the live model's two exposure
+  cards became Collateral and Max utilisation).
+- **Documentation:** VaR and exposure have exactly two documents each, a complete guide (use, data contract, engine) and a tutorial, and
+  two Help pages; tutorials 10, 12, 14, 18, 25 and 26 have new screenshots; 26 tutorials.
+- **Landing page:** the headline "See what your data hasn't told you yet." with the tagline under it, both from configuration.
+- **Test runs no longer rewrite the committed screenshots** (`DRISHTI_SHOTS` to retake them on purpose).
+- **Known open:** the exposure benchmark and the explorer's browser test (2.9.1); limits read the stored credit limits (LIM parked), which
+  were sized on the old profiles, so utilisation reads low; CP-SUMMIT and CP-NORTHPLAINS have no paths in the demo (10,000-trade limit).
+- **Tested:** the drill passed licence headers, Java 21, Java 25, the tools and the console.
+
 # Drishti 2.8.0 — release notes
 
 *2026-10-26.* **Every command has a data contract; VaR is computed for any scope, never stored; commands can be switched off; forms save.**
