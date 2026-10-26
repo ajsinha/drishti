@@ -21,7 +21,7 @@ One section per command of the pack: the shape of its data, how it is stored and
 
 | Command | Kind | Class | Status | Fields | To review |
 |---|---|---|---|---|---|
-| [CPTY](#cpty-counterparty-counterparty) | `counterparty` | fundamental | active | 20 | 8 |
+| [CPTY](#cpty-counterparty-counterparty) | `counterparty` | fundamental | active | 19 | 8 |
 | [GRP](#grp-counterparty-group-counterparty-group) | `counterparty-group` | fundamental | active | 5 | 6 |
 | [ISS](#iss-issuer-issuer) | `issuer` | fundamental | active | 9 | 5 |
 | [CCP](#ccp-central-counterparty-ccp) | `ccp` | fundamental | active | 6 | 5 |
@@ -66,7 +66,6 @@ A legal entity the bank trades with: identifiers (LEI, UEN), rating, sector, cou
 | `ECONOMY` | id | required |  | Economy: the economy it refers to | `ECON-GBR` (pattern `^ECON-`) | `economy` |
 | `NEWS_ID` | id | required |  | Headlines: the news it refers to | `NEWS-Aldershot_Pension_Trust` (pattern `^NEWS-`) | `news` |
 | `NET_MTM` | amount | required |  | Net MTM | `15036789` |  |
-| `PFE_PEAK` | amount | required |  | — | `145548971` |  |
 | `NETTING_SETS` | record list | required |  | Netting set: the netting-set it refers to |  | `netting-set` |
 | `KYC` | record | required |  | Nested: see nested KYC |  |  |
 | `GROUP` | id | required |  | Group: the counterparty-group it refers to | `GRP-ALDERSHOT` (pattern `^GRP-`) | `counterparty-group` |
@@ -121,7 +120,7 @@ A legal entity the bank trades with: identifiers (LEI, UEN), rating, sector, cou
 
 **Validation**
 
-- required: fields `COUNTERPARTY_ID`, `NAME`, `LEI`, `RATING`, `SECTOR`, `COUNTRY`, `TYPE`, `COUNTRY_OF_RISK`, `UEN`, `ECONOMY`, `NEWS_ID`, `NET_MTM`, `PFE_PEAK`, `NETTING_SETS`, `KYC`, `GROUP`, `CREDIT_LIMIT`, `HIERARCHY`
+- required: fields `COUNTERPARTY_ID`, `NAME`, `LEI`, `RATING`, `SECTOR`, `COUNTRY`, `TYPE`, `COUNTRY_OF_RISK`, `UEN`, `ECONOMY`, `NEWS_ID`, `NET_MTM`, `NETTING_SETS`, `KYC`, `GROUP`, `CREDIT_LIMIT`, `HIERARCHY`
 - unique: key `COUNTERPARTY_ID`; per business_date
 - pattern: field COUNTERPARTY_ID; pattern ^CP-
 - link: field ECONOMY; kind economy
@@ -147,10 +146,10 @@ A legal entity the bank trades with: identifiers (LEI, UEN), rating, sector, cou
 - source 'counterparty-master' is the test data's _meta.source (synthetic): name the production system that delivers it.
 - due time of each business date is not known: state it (for example, by 06:00 New York the next business day).
 - enum values inferred from the data, not from a glossary: KYC.RISK_RATING, KYC.EMIR_CLASSIFICATION, HIERARCHY.NODES[].TYPE, HIERARCHY.EDGES[].LABEL: confirm they are closed lists.
-- number types decided by the field's name: NET_MTM amount, PFE_PEAK amount, NETTING_SETS[].NET_MTM amount, KYC.PD_1Y rate: confirm amount, rate or integer.
-- no unit stated for the amounts NET_MTM, PFE_PEAK, NETTING_SETS[].NET_MTM (docs/contracts/README.md section 7: USD unless stated): confirm the currency.
-- no description in about.yaml or the Sutras for COUNTRY, PFE_PEAK, HIERARCHY.NODES[].ID, HIERARCHY.NODES[].LABEL, HIERARCHY.NODES[].TYPE, HIERARCHY.EDGES[].FROM, HIERARCHY.EDGES[].TO, HIERARCHY.EDGES[].LABEL: write them in the pack's config/about.yaml glossary.
-- NET_MTM, PFE_PEAK and NETTING_SETS[].NET_MTM are computed figures on a fundamental master (docs/contracts/README.md section 3): confirm they are removed when NSET's figures are computed (2.10.0).
+- number types decided by the field's name: NET_MTM amount, NETTING_SETS[].NET_MTM amount, KYC.PD_1Y rate: confirm amount, rate or integer.
+- no unit stated for the amounts NET_MTM, NETTING_SETS[].NET_MTM (docs/contracts/README.md section 7: USD unless stated): confirm the currency.
+- no description in about.yaml or the Sutras for COUNTRY, HIERARCHY.NODES[].ID, HIERARCHY.NODES[].LABEL, HIERARCHY.NODES[].TYPE, HIERARCHY.EDGES[].FROM, HIERARCHY.EDGES[].TO, HIERARCHY.EDGES[].LABEL: write them in the pack's config/about.yaml glossary.
+- NET_MTM and NETTING_SETS[].NET_MTM are computed figures on a fundamental master (docs/contracts/README.md section 3): confirm they are removed when NSET's figures are computed (2.10.0).
 
 ## GRP: Counterparty group (`counterparty-group`)
 

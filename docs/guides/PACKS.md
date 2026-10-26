@@ -617,7 +617,7 @@ From `config/packs/counterparty-risk/pack.yaml`:
 ```yaml
 connectors:                     # a mapping: the names this pack reads through, each with the pack's template
   legal-store: { plugin: delta, kinds: [agreement, csa], settings: { root: "${DRISHTI_DELTA_ROOT:${drishti.data.dir:./data}/delta}", domain: legal } }
-  credit-store: { plugin: delta, kinds: [netting-set, credit-limit, exposure-profile, cva, sa-ccr], settings: { … domain: credit } }
+  credit-store: { plugin: delta, kinds: [netting-set, credit-limit, cva, sa-ccr], settings: { … domain: credit } }
   collateral-store: { plugin: delta, kinds: [collateral-balance, margin-call, simm], settings: { … domain: collateral } }
 routes:                         # which connector answers each kind
   agreement: legal-store

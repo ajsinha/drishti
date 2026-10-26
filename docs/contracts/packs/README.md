@@ -19,7 +19,7 @@
 
 Every command (mnemonic) of every pack has a data contract: a YAML file beside its pack (`config/packs/<pack>/contracts/<kind>.contract.yaml`, checked against `tools/contracts.schema.json`) and a section of its pack's page here. The shared rules are in [the contracts README](../README.md); the computed measures that replace the retiring kinds have their own contracts there.
 
-90 contracts, 502 points still to review. Check them with `drishti.py contract check`; draft a new one with `drishti.py contract bootstrap KIND --write`.
+92 contracts, 502 points still to review. Check them with `drishti.py contract check`; draft a new one with `drishti.py contract bootstrap KIND --write`.
 
 | Command | Kind | Pack | Class | Status | Replaced by | To review |
 |---|---|---|---|---|---|---|
@@ -39,14 +39,16 @@ Every command (mnemonic) of every pack has a data contract: a YAML file beside i
 | `CLR` | `clearing-account` | [core](core.md#clr-clearing-account-clearing-account) | fundamental | active |  | 7 |
 | `AGR` | `agreement` | [counterparty-risk](counterparty-risk.md#agr-master-agreement-agreement) | fundamental | active |  | 4 |
 | `CSA` | `csa` | [counterparty-risk](counterparty-risk.md#csa-credit-support-annex-csa) | fundamental | active |  | 5 |
-| `NSET` | `netting-set` | [counterparty-risk](counterparty-risk.md#nset-netting-set-netting-set) | fundamental | active |  | 13 |
+| `NSET` | `netting-set` | [counterparty-risk](counterparty-risk.md#nset-netting-set-netting-set) | fundamental | active |  | 11 |
 | `LIM` | `credit-limit` | [counterparty-risk](counterparty-risk.md#lim-credit-limit-credit-limit) | fundamental | active |  | 6 |
-| `EXP` | `exposure-profile` | [counterparty-risk](counterparty-risk.md#exp-exposure-profile-exposure-profile) | fundamental | active |  | 9 |
 | `CVA` | `cva` | [counterparty-risk](counterparty-risk.md#cva-cva--xva-cva) | fundamental | active |  | 7 |
 | `SACCR` | `sa-ccr` | [counterparty-risk](counterparty-risk.md#saccr-sa-ccr-exposure-sa-ccr) | fundamental | active |  | 9 |
 | `COLL` | `collateral-balance` | [counterparty-risk](counterparty-risk.md#coll-collateral-balance-collateral-balance) | fundamental | active |  | 5 |
 | `MC` | `margin-call` | [counterparty-risk](counterparty-risk.md#mc-margin-call-margin-call) | fundamental | active |  | 7 |
 | `SIMM` | `simm` | [counterparty-risk](counterparty-risk.md#simm-isda-simm-initial-margin-simm) | fundamental | active |  | 5 |
+| `XRUN` | `simulation-run` | [counterparty-risk](counterparty-risk.md#xrun-exposure-simulation-run-simulation-run) | input | active |  | 4 |
+| `XPATH` | `exposure-path` | [counterparty-risk](counterparty-risk.md#xpath-exposure-path-a-trades-mtm-on-every-path-at-a-grid-date-exposure-path) | input | active |  | 7 |
+| `EXP` | `exposure-result` | [counterparty-risk](counterparty-risk.md#exp-exposure-profile-of-a-scope-computed-exposure-result) | computed | active |  | 0 |
 | `LEI` | `lei-entity` | [gleif](gleif.md#lei-lei-legal-entity-lei-entity) | fundamental | active |  | 4 |
 | `LEIG` | `lei-group` | [gleif](gleif.md#leig-lei-ownership-group-lei-group) | fundamental | active |  | 7 |
 | `LEIR` | `lei-relationship` | [gleif](gleif.md#leir-lei-parent-relationship-lei-relationship) | fundamental | active |  | 4 |

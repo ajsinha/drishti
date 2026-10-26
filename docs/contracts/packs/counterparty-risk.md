@@ -23,14 +23,16 @@ One section per command of the pack: the shape of its data, how it is stored and
 |---|---|---|---|---|---|
 | [AGR](#agr-master-agreement-agreement) | `agreement` | fundamental | active | 9 | 4 |
 | [CSA](#csa-credit-support-annex-csa) | `csa` | fundamental | active | 13 | 5 |
-| [NSET](#nset-netting-set-netting-set) | `netting-set` | fundamental | active | 24 | 13 |
+| [NSET](#nset-netting-set-netting-set) | `netting-set` | fundamental | active | 20 | 11 |
 | [LIM](#lim-credit-limit-credit-limit) | `credit-limit` | fundamental | active | 11 | 6 |
-| [EXP](#exp-exposure-profile-exposure-profile) | `exposure-profile` | fundamental | active | 10 | 9 |
 | [CVA](#cva-cva--xva-cva) | `cva` | fundamental | active | 10 | 7 |
 | [SACCR](#saccr-sa-ccr-exposure-sa-ccr) | `sa-ccr` | fundamental | active | 10 | 9 |
 | [COLL](#coll-collateral-balance-collateral-balance) | `collateral-balance` | fundamental | active | 8 | 5 |
 | [MC](#mc-margin-call-margin-call) | `margin-call` | fundamental | active | 11 | 7 |
 | [SIMM](#simm-isda-simm-initial-margin-simm) | `simm` | fundamental | active | 8 | 5 |
+| [XRUN](#xrun-exposure-simulation-run-simulation-run) | `simulation-run` | input | active | 24 | 4 |
+| [XPATH](#xpath-exposure-path-a-trades-mtm-on-every-path-at-a-grid-date-exposure-path) | `exposure-path` | input | active | 20 | 7 |
+| [EXP](#exp-exposure-profile-of-a-scope-computed-exposure-result) | `exposure-result` | computed | active | 27 | 0 |
 
 ## AGR: Master agreement (`agreement`)
 
@@ -193,19 +195,15 @@ Trades that net on close-out under one agreement and CSA, with exposure and coll
 | `TRADE_COUNT` | integer | required |  | The number of trades that are netted together under the agreement. | `3` |  |
 | `NET_MTM` | amount | required | USD | The sum of the members' mark to market, positive and negative together. Netting lets a loss on one trade cancel a gain on another if the counterparty defaults. | `-339550` |  |
 | `COLLATERAL` | amount | required | USD | The net collateral against the netting set: what is held less what has been posted. | `-229552` |  |
-| `EE_PEAK` | amount | required | USD | The highest point of the expected-exposure profile over the life of the trades, the average positive exposure on the date where it is largest. | `141750` |  |
-| `PFE_PEAK` | amount | required | USD | The highest point of the 95th-percentile exposure profile; on 95 of 100 simulated paths the exposure stays below it. It is the measure credit limits are set against. | `347288` |  |
 | `LIMIT` | amount | required | USD | The limit on the counterparty's peak potential future exposure approved for this netting set. | `5000000.0` |  |
 | `UTILISATION` | rate | required | % of limit | The share of the limit that is used: used divided by limit. Above 100% is a breach. | `0.0695` |  |
 | `CVA` | amount | required | USD | The reduction in the value of the trades for the risk that the counterparty defaults before they mature. | `-7` |  |
-| `PROFILE` | record list | required |  | Nested: see nested PROFILE[] |  |  |
 | `TRADES` | record list | required |  | Nested: see nested TRADES[] |  |  |
 | `BY_ASSET` | record list | required |  | Nested: see nested BY_ASSET[] |  |  |
 | `COUNTERPARTY` | id | required |  | Counterparty: the counterparty it refers to | `CP-ALDERSHOT` (pattern `^CP-`) | `counterparty` |
 | `AGREEMENT` | id | required |  | Agreement: the agreement it refers to | `AGR-ALDERSHOT-ISDA` (pattern `^AGR-`) | `agreement` |
 | `CSA` | id | required |  | CSA: the csa it refers to | `CSA-ALDERSHOT` (pattern `^CSA-`) | `csa` |
 | `CREDIT_LIMIT` | id | required |  | Credit limit: the credit-limit it refers to | `LIM-ALDERSHOT` (pattern `^LIM-`) | `credit-limit` |
-| `EXPOSURE_PROFILE` | id | required |  | Exposure profile: the exposure-profile it refers to | `EXP-ALDERSHOT-FRA` (pattern `^EXP-`) | `exposure-profile` |
 | `CVA_RESULT` | id | required |  | CVA: the cva it refers to | `CVA-ALDERSHOT-FRA` (pattern `^CVA-`) | `cva` |
 | `SACCR` | id | required |  | SA-CCR: the sa-ccr it refers to | `SACCR-ALDERSHOT-FRA` (pattern `^SACCR-`) | `sa-ccr` |
 | `SIMM` | id | required |  | SIMM: the simm it refers to | `SIMM-ALDERSHOT` (pattern `^SIMM-`) | `simm` |
@@ -213,14 +211,6 @@ Trades that net on close-out under one agreement and CSA, with exposure and coll
 | `LEGAL_ENTITY` | id | required |  | Legal entity: the legal-entity it refers to | `LE-FRA` (pattern `^LE-`) | `legal-entity` |
 | `NETTING_ENFORCEABLE` | boolean | required |  | — | `True` |  |
 | `TRADE_IDS` | id list | optional |  | Trade: the trade it refers to |  | `trade` |
-
-**Nested `PROFILE[]`**
-
-| Field | Type | Presence | Unit | Description | Example or values | Link |
-|---|---|---|---|---|---|---|
-| `TENOR` | text | required |  | — | `0` |  |
-| `EE` | amount | required |  | — | `39314` |  |
-| `PFE` | amount | required |  | — | `121929` |  |
 
 **Nested `TRADES[]`**
 
@@ -244,11 +234,11 @@ Trades that net on close-out under one agreement and CSA, with exposure and coll
 | `ASSET` | text | required |  | — | `Securities financing` |  |
 | `MTM` | amount | required |  | — | `-339550` |  |
 
-**Links:** `COUNTERPARTY` → `counterparty`, `AGREEMENT` → `agreement`, `CSA` → `csa`, `CREDIT_LIMIT` → `credit-limit`, `EXPOSURE_PROFILE` → `exposure-profile`, `CVA_RESULT` → `cva`, `SACCR` → `sa-ccr`, `SIMM` → `simm`, `COLLATERAL_BALANCE` → `collateral-balance`, `LEGAL_ENTITY` → `legal-entity`, `TRADE_IDS` → `trade`, `TRADES[].TRADE_ID` → `trade`, `TRADES[].BOOK` → `book`.
+**Links:** `COUNTERPARTY` → `counterparty`, `AGREEMENT` → `agreement`, `CSA` → `csa`, `CREDIT_LIMIT` → `credit-limit`, `CVA_RESULT` → `cva`, `SACCR` → `sa-ccr`, `SIMM` → `simm`, `COLLATERAL_BALANCE` → `collateral-balance`, `LEGAL_ENTITY` → `legal-entity`, `TRADE_IDS` → `trade`, `TRADES[].TRADE_ID` → `trade`, `TRADES[].BOOK` → `book`.
 
 **Validation**
 
-- required: fields `NETTING_SET_ID`, `TRADE_COUNT`, `NET_MTM`, `COLLATERAL`, `EE_PEAK`, `PFE_PEAK`, `LIMIT`, `UTILISATION`, `CVA`, `PROFILE`, `TRADES`, `BY_ASSET`, `COUNTERPARTY`, `AGREEMENT`, `CSA`, `CREDIT_LIMIT`, `EXPOSURE_PROFILE`, `CVA_RESULT`, `SACCR`, `SIMM`, `COLLATERAL_BALANCE`, `LEGAL_ENTITY`, `NETTING_ENFORCEABLE`
+- required: fields `NETTING_SET_ID`, `TRADE_COUNT`, `NET_MTM`, `COLLATERAL`, `LIMIT`, `UTILISATION`, `CVA`, `TRADES`, `BY_ASSET`, `COUNTERPARTY`, `AGREEMENT`, `CSA`, `CREDIT_LIMIT`, `CVA_RESULT`, `SACCR`, `SIMM`, `COLLATERAL_BALANCE`, `LEGAL_ENTITY`, `NETTING_ENFORCEABLE`
 - unique: key `NETTING_SET_ID`; per business_date
 - pattern: field NETTING_SET_ID; pattern ^NS-
 - range: field TRADE_COUNT; min 0
@@ -256,7 +246,6 @@ Trades that net on close-out under one agreement and CSA, with exposure and coll
 - link: field AGREEMENT; kind agreement
 - link: field CSA; kind csa
 - link: field CREDIT_LIMIT; kind credit-limit
-- link: field EXPOSURE_PROFILE; kind exposure-profile
 - link: field CVA_RESULT; kind cva
 - link: field SACCR; kind sa-ccr
 - link: field SIMM; kind simm
@@ -272,19 +261,17 @@ Trades that net on close-out under one agreement and CSA, with exposure and coll
 
 - Dated by the lake's business_date partition: `drishti.py lake build` writes each test-data file's day into it; the documents carry no date field of their own.
 
-**To review (13)**
+**To review (11)**
 
 - required inferred from 100% coverage in 218 documents (66 samples and 152 test-data documents (data/testdata/counterparty-risk/netting-set/snapshot-2026-07-08.jsonl.gz, data/testdata/counterparty-risk/netting-set/changes-2026-09-30.jsonl.gz)): confirm each required field is mandatory upstream, and each optional one may be empty.
 - source 'xva-engine' is the test data's _meta.source (synthetic): name the production system that delivers it.
 - due time of each business date is not known: state it (for example, by 06:00 New York the next business day).
 - NET_MTM is a column a compute engine produces (docs/contracts/README.md section 14) on a record that keeps it: confirm whether it is computed and removed.
-- EE_PEAK is a column a compute engine produces (docs/contracts/README.md section 14) on a record that keeps it: confirm whether it is computed and removed.
-- PFE_PEAK is a column a compute engine produces (docs/contracts/README.md section 14) on a record that keeps it: confirm whether it is computed and removed.
 - UTILISATION is a column a compute engine produces (docs/contracts/README.md section 14) on a record that keeps it: confirm whether it is computed and removed.
 - enum values inferred from the data, not from a glossary: TRADES[].CURRENCY, TRADES[].MATURITY_BUCKET: confirm they are closed lists.
-- number types decided by the field's name: PROFILE[].EE amount, PROFILE[].PFE amount, BY_ASSET[].MTM amount: confirm amount, rate or integer.
-- no unit stated for the amounts PROFILE[].EE, PROFILE[].PFE, BY_ASSET[].MTM (docs/contracts/README.md section 7: USD unless stated): confirm the currency.
-- no description in about.yaml or the Sutras for NETTING_ENFORCEABLE, PROFILE[].TENOR, PROFILE[].EE, PROFILE[].PFE, TRADES[].ASSET_CLASS, TRADES[].CURRENCY, TRADES[].MATURITY_BUCKET, BY_ASSET[].ASSET, BY_ASSET[].MTM: write them in the pack's config/about.yaml glossary.
+- number types decided by the field's name: BY_ASSET[].MTM amount: confirm amount, rate or integer.
+- no unit stated for the amounts BY_ASSET[].MTM (docs/contracts/README.md section 7: USD unless stated): confirm the currency.
+- no description in about.yaml or the Sutras for NETTING_ENFORCEABLE, PROFILE[].TENOR, TRADES[].ASSET_CLASS, TRADES[].CURRENCY, TRADES[].MATURITY_BUCKET, BY_ASSET[].ASSET, BY_ASSET[].MTM: write them in the pack's config/about.yaml glossary.
 - TRADE_COUNT and TRADES[].MTM: confirm TRADE_COUNT is computed from the membership and TRADES[].MTM is read from the trade valuations (an input), not stored here.
 - LIMIT is copied from the credit limit: confirm it is read from LIM instead of stored.
 
@@ -354,74 +341,6 @@ PFE limit by tenor bucket for a counterparty, with utilisation.
 - enum values inferred from the data, not from a glossary: STATUS, BUCKETS[].BUCKET: confirm they are closed lists.
 - no description in about.yaml or the Sutras for APPROVED_BY, REVIEW_DUE: write them in the pack's config/about.yaml glossary.
 - STATUS (Within limit, ...) follows from UTILISATION: confirm it is computed, not set by the limits system.
-
-## EXP: Exposure profile (`exposure-profile`)
-
-Simulated EE, EPE, ENE and PFE by time bucket for a netting set.
-
-|  |  |
-|---|---|
-| Contract | [exposure-profile.contract.yaml](../../../config/packs/counterparty-risk/contracts/exposure-profile.contract.yaml) · version 1.0 |
-| Class | fundamental |
-| Status | active |
-| Source | xva-engine |
-| Grain | One row per exposure profile per business date, keyed by PROFILE_ID. |
-| Key | `PROFILE_ID` |
-| Id pattern | `^EXP-` |
-| Dated by | `business_date` |
-| Cadence | daily (due: to be confirmed) |
-| Storage | connector `credit-store` (plugin `delta`), table `<root>/credit/exposure-profile/` |
-| Test data | data/testdata/counterparty-risk/exposure-profile |
-
-**Fields**
-
-| Field | Type | Presence | Unit | Description | Example or values | Link |
-|---|---|---|---|---|---|---|
-| `PROFILE_ID` | id | required |  | The record's id (the business key) | `EXP-ALDERSHOT-FRA` (pattern `^EXP-`) |  |
-| `EPE` | amount | required | USD | The average of the expected exposure over the life of the trades (or the first year); it is the exposure the CVA and the internal-model capital are built on. | `26290` |  |
-| `EEPE` | amount | required | USD | The average over the first year of the effective expected exposure, which cannot fall from one date to the next. It is the exposure used for the internal-model capital. | `141750` |  |
-| `PFE_PEAK` | amount | required | USD | The highest value of the 95th-percentile exposure over the life of the trades. | `347288` |  |
-| `PATHS` | integer | required |  | The number of Monte Carlo scenarios of the market that were simulated. More paths means a smoother tail. | `5000` |  |
-| `RUN_DATE` | date | required |  | The date of the market data the simulation started from. | `2026-09-30` |  |
-| `BUCKETS` | record list | required |  | Nested: see nested BUCKETS[] |  |  |
-| `NETTING_SET` | id | required |  | Netting set: the netting-set it refers to | `NS-ALDERSHOT-FRA` (pattern `^NS-`) | `netting-set` |
-| `MODEL` | text | required |  | — | `Hull-White 1F rates, GBM FX and equity, 5,000 paths` |  |
-| `CONFIDENCE` | rate | required |  | — | `0.95` |  |
-
-**Nested `BUCKETS[]`**
-
-| Field | Type | Presence | Unit | Description | Example or values | Link |
-|---|---|---|---|---|---|---|
-| `TENOR` | text | required |  | The point in time, counted from the run date, the exposure is measured at. | `0` |  |
-| `EE` | amount | required | USD | The average, over the scenarios, of the netting set's value at this date, counting only positive values (what the bank would lose). | `39314` |  |
-| `ENE` | amount | required | USD | The average of the netting set's value at this date counting only negative values, what the bank would owe. It is the basis of the debit valuation adjustment. | `-139484` |  |
-| `PFE_95` | amount | required | USD | The exposure that is exceeded on 5 of 100 scenarios at this date. | `121929` |  |
-| `PFE_99` | amount | required | USD | The exposure that is exceeded on 1 of 100 scenarios at this date. | `163624` |  |
-
-**Links:** `NETTING_SET` → `netting-set`.
-
-**Validation**
-
-- required: fields `PROFILE_ID`, `EPE`, `EEPE`, `PFE_PEAK`, `PATHS`, `RUN_DATE`, `BUCKETS`, `NETTING_SET`, `MODEL`, `CONFIDENCE`
-- unique: key `PROFILE_ID`; per business_date
-- pattern: field PROFILE_ID; pattern ^EXP-
-- link: field NETTING_SET; kind netting-set
-
-**Notes**
-
-- Dated by the lake's business_date partition: `drishti.py lake build` writes each test-data file's day into it; the documents carry no date field of their own.
-
-**To review (9)**
-
-- required inferred from 100% coverage in 218 documents (66 samples and 152 test-data documents (data/testdata/counterparty-risk/exposure-profile/snapshot-2026-07-08.jsonl.gz, data/testdata/counterparty-risk/exposure-profile/changes-2026-09-30.jsonl.gz)): confirm each required field is mandatory upstream, and each optional one may be empty.
-- source 'xva-engine' is the test data's _meta.source (synthetic): name the production system that delivers it.
-- due time of each business date is not known: state it (for example, by 06:00 New York the next business day).
-- EPE is a column a compute engine produces (docs/contracts/README.md section 14) on a record that keeps it: confirm whether it is computed and removed.
-- EEPE is a column a compute engine produces (docs/contracts/README.md section 14) on a record that keeps it: confirm whether it is computed and removed.
-- PFE_PEAK is a column a compute engine produces (docs/contracts/README.md section 14) on a record that keeps it: confirm whether it is computed and removed.
-- number types decided by the field's name: CONFIDENCE rate: confirm amount, rate or integer.
-- no description in about.yaml or the Sutras for MODEL, CONFIDENCE: write them in the pack's config/about.yaml glossary.
-- PATHS, MODEL and CONFIDENCE describe the simulation run: confirm they move to the exposure-path input's run metadata (EXP.md).
 
 ## CVA: CVA / XVA (`cva`)
 
@@ -772,3 +691,210 @@ Initial margin by risk class and product class.
 - due time of each business date is not known: state it (for example, by 06:00 New York the next business day).
 - enum values inferred from the data, not from a glossary: RISK_CLASSES[].RISK_CLASS: confirm they are closed lists.
 - no description in about.yaml or the Sutras for RISK_CLASSES[].RISK_CLASS: write them in the pack's config/about.yaml glossary.
+
+## XRUN: Exposure simulation run (`simulation-run`)
+
+An upstream exposure simulation of a business date: its paths, its grid of future dates (primary and look-back), its model and seed; the exposure engine reads it beside the paths (EXP.md section 3.2).
+
+|  |  |
+|---|---|
+| Contract | [simulation-run.contract.yaml](../../../config/packs/counterparty-risk/contracts/simulation-run.contract.yaml) · version 1.0 |
+| Class | input |
+| Status | active |
+| Source | the upstream exposure simulator (test data: tools/packgen/ccr/make_ccr_data.py) |
+| Grain | One row per simulation run and business date, keyed by RUN_ID; the newest complete run of a date answers. |
+| Key | `RUN_ID` |
+| Id pattern | `^XR-[0-9]{4}-[0-9]{2}-[0-9]{2}-[0-9]+$` |
+| Dated by | `BUSINESS_DATE` |
+| Cadence | daily (due: to be agreed with the simulator's owner (EXP.md open question 1); before its paths) |
+| Storage | connector `exposure-store` (plugin `delta`), table `<root>/risk/simulation-run/` |
+| Columns | `RUN_ID`, `CALIBRATION`, `PATHS`, `STATUS`, `BATCH_ID` |
+| Test data | data/testdata/counterparty-risk/simulation-run |
+
+**Fields**
+
+| Field | Type | Presence | Unit | Description | Example or values | Link |
+|---|---|---|---|---|---|---|
+| `RUN_ID` | id | required |  | The record's id (the business key) | `XR-2026-09-30-01` (pattern `^XR-[0-9]{4}-[0-9]{2}-[0-9]{2}-[0-9]+$`) | `simulation-run` |
+| `BUSINESS_DATE` | date | required |  | — | `2026-09-30` |  |
+| `MARKET_DATA_DATE` | date | required |  | — | `2026-09-30` |  |
+| `MODEL` | text | required |  | — | `One correlated Brownian factor per asset class (rates, FX, …` |  |
+| `MODEL_VERSION` | text | required |  | — | `drishti-testgen-ccr-1.0` |  |
+| `CALIBRATION` | text | required |  | REAL_WORLD (for PFE and limits) or RISK_NEUTRAL (for CVA and pricing) or STRESSED. | `REAL_WORLD` |  |
+| `PATHS` | integer | required |  | The number of simulated market scenarios; every trade's values are on the same paths. | `200` |  |
+| `SEED` | text | required |  | — | `ccr\|XR-2026-09-30-01` |  |
+| `ANTITHETIC` | boolean | required |  | — | `False` |  |
+| `GRID_DATES` | date list | required |  | The future dates the trades were valued at: the primary dates where exposure is reported and the look-back dates a margin period of risk before them. |  |  |
+| `GRID_ROLE` | text list | required |  | — |  |  |
+| `LOOKBACK_OF` | vector | required |  | — *24 values in the test data* |  |  |
+| `GRID_TENORS` | text list | required |  | — |  |  |
+| `LOOKBACK_DAYS` | integer | required | business days | How many business days before each primary date its look-back date is: the margin period of risk the run assumes. | `10` |  |
+| `VALUE_BASIS` | text | required |  | — | `FUTURE` |  |
+| `CURRENCY` | text | required |  | — | `USD` |  |
+| `PRECISION` | text | required |  | float32 or float64: how the path values are stored. | `float64` |  |
+| `CREDIT_PATHS` | boolean | required |  | — | `False` |  |
+| `NETTING_SETS` | integer | required |  | Netting set: the netting-set it refers to | `8` | `netting-set` |
+| `TRADES` | integer | required |  | — | `627` |  |
+| `ROWS` | integer | required |  | — | `9031` |  |
+| `BATCH_ID` | id | required |  | — | `XB-2026-09-30-01` |  |
+| `COMPUTED_AT` | timestamp | required |  | — | `2026-09-30T23:40:00Z` |  |
+| `STATUS` | text | required |  | — | `complete` |  |
+
+**Links:** `RUN_ID` → `simulation-run`, `NETTING_SETS` → `netting-set`.
+
+**Validation**
+
+- required: fields `RUN_ID`, `BUSINESS_DATE`, `MARKET_DATA_DATE`, `MODEL`, `MODEL_VERSION`, `CALIBRATION`, `PATHS`, `SEED`, `ANTITHETIC`, `GRID_DATES`, `GRID_ROLE`, `LOOKBACK_OF`, `GRID_TENORS`, `LOOKBACK_DAYS`, `VALUE_BASIS`, `CURRENCY`, `PRECISION`, `CREDIT_PATHS`, `NETTING_SETS`, `TRADES`, `ROWS`, `BATCH_ID`, `COMPUTED_AT`, `STATUS`
+- unique: key `RUN_ID`; per BUSINESS_DATE
+- pattern: field RUN_ID; pattern ^XR-[0-9]{4}-[0-9]{2}-[0-9]{2}-[0-9]+$
+- link: field RUN_ID; kind simulation-run
+- vector-length: field LOOKBACK_OF; same every row of one business date
+- link: field NETTING_SETS; kind netting-set
+
+**Notes**
+
+- An upstream exposure simulation's record (EXP.md section 3.2): the grid, the paths, the model; one per run and business date. Drishti reads it; nothing in it is computed by Drishti.
+
+**To review (4)**
+
+- required inferred from 100% coverage in 2 documents (1 samples and 1 test-data documents (data/testdata/counterparty-risk/simulation-run/cob-2026-09-30.jsonl.gz)): confirm each required field is mandatory upstream, and each optional one may be empty.
+- source is the pack's first listed source (its README): confirm.
+- due time of each business date is not known: state it (for example, by 06:00 New York the next business day).
+- no description in about.yaml or the Sutras for BUSINESS_DATE, MARKET_DATA_DATE, MODEL, MODEL_VERSION, SEED, ANTITHETIC, GRID_ROLE, LOOKBACK_OF, GRID_TENORS, VALUE_BASIS, CURRENCY, CREDIT_PATHS and 5 more: write them in the pack's config/about.yaml glossary.
+
+## XPATH: Exposure path (a trade's MtM on every path at a grid date) (`exposure-path`)
+
+One trade's mark to market on every path of a simulation run at one grid date, in USD (the vector column MTM); the grain every exposure is netted, collateralised and counted from (EXP.md section 3.3).
+
+|  |  |
+|---|---|
+| Contract | [exposure-path.contract.yaml](../../../config/packs/counterparty-risk/contracts/exposure-path.contract.yaml) · version 1.0 |
+| Class | input |
+| Status | active |
+| Source | the upstream exposure simulator (test data: tools/packgen/ccr/make_ccr_data.py) |
+| Grain | One row per trade, grid date and run per business date, keyed by PATH_ROW_ID (<run>~<trade>~<grid index>); sparse by maturity. |
+| Key | `PATH_ROW_ID` |
+| Id pattern | `^XR-[^~]+~.+~[0-9]+$` |
+| Dated by | `BUSINESS_DATE` |
+| Cadence | daily (due: to be agreed with the simulator's owner (EXP.md open question 1); a bank's run often lands 04:00-07:00) |
+| Storage | connector `exposure-store` (plugin `delta`), table `<root>/risk/exposure-path/` |
+| Columns | `TRADE_ID`, `NETTING_SET`, `COUNTERPARTY`, `LEGAL_ENTITY`, `DESK`, `TT_BOOK`, `ASSET_CLASS`, `PRODUCT`, `SOURCE_SYSTEM`, `MATURITY_DATE`, `NOTIONAL`, `GRID_INDEX`, `GRID_DATE`, `RUN_ID`, `BATCH_ID`, `STATUS` |
+| Vectors | `MTM` |
+| Test data | data/testdata/counterparty-risk/exposure-path |
+
+**Fields**
+
+| Field | Type | Presence | Unit | Description | Example or values | Link |
+|---|---|---|---|---|---|---|
+| `PATH_ROW_ID` | id | required |  | The record's id (the business key) | `XR-2026-09-30-01~CLY-3000280~0` (pattern `^XR-[^~]+~.+~[0-9]+$`) |  |
+| `BUSINESS_DATE` | date | required |  | — | `2026-09-30` |  |
+| `RUN_ID` | id | required |  | Simulation run: the simulation-run it refers to | `XR-2026-09-30-01` (pattern `^XR-[0-9]{4}-[0-9]{2}-[0-9]{2}-[0-9]+$`) | `simulation-run` |
+| `TRADE_ID` | id | required |  | Trade: the trade it refers to | `CLY-3000280` (pattern `^(MX\|CLY)-\d+$`) | `trade` |
+| `SOURCE_SYSTEM` | text | required |  | — | `CALYPSO`, `MUREX` |  |
+| `NETTING_SET` | id | required |  | The netting set the trade belongs to (its membership wins when they differ). | `NS-ALDERSHOT-FRA` (pattern `^NS-`) | `netting-set` |
+| `COUNTERPARTY` | id | required |  | Counterparty: the counterparty it refers to | `CP-ALDERSHOT` (pattern `^CP-`) | `counterparty` |
+| `LEGAL_ENTITY` | id | required |  | Legal entity: the legal-entity it refers to | `LE-FRA` (pattern `^LE-`) | `legal-entity` |
+| `DESK` | id | required |  | Desk: the desk it refers to | `DESK-SFT` (pattern `^DESK-`) | `desk` |
+| `TT_BOOK` | id | required |  | Book: the book it refers to | `BOOK-SFT-1` (pattern `^BOOK-`) | `book` |
+| `ASSET_CLASS` | text | required |  | — | `Equity`, `FX`, `Inflation`, `Securities financing` |  |
+| `PRODUCT` | text | required |  | — | `Tri-party repo` |  |
+| `NOTIONAL` | amount | required |  | — | `237000000.0` |  |
+| `MATURITY_DATE` | date | required |  | — | `2027-02-15` |  |
+| `GRID_INDEX` | integer | required |  | The position of the date in the run's grid. | `0` |  |
+| `GRID_DATE` | date | required |  | The future date the values are for. | `2026-10-07` |  |
+| `MTM` | vector | required | USD | The trade's mark to market on each simulated path at the grid date, from the bank's side. *200 values in the test data* |  |  |
+| `STATUS` | text | required |  | ok, proxied (an approximate model) or failed (no values). | `ok` |  |
+| `PRICER` | text | required |  | — | `testgen-factor-walk` |  |
+| `BATCH_ID` | id | required |  | — | `XB-2026-09-30-01` |  |
+
+**Links:** `RUN_ID` → `simulation-run`, `TRADE_ID` → `trade`, `NETTING_SET` → `netting-set`, `COUNTERPARTY` → `counterparty`, `LEGAL_ENTITY` → `legal-entity`, `DESK` → `desk`, `TT_BOOK` → `book`.
+
+**Validation**
+
+- required: fields `PATH_ROW_ID`, `BUSINESS_DATE`, `RUN_ID`, `TRADE_ID`, `SOURCE_SYSTEM`, `NETTING_SET`, `COUNTERPARTY`, `LEGAL_ENTITY`, `DESK`, `TT_BOOK`, `ASSET_CLASS`, `PRODUCT`, `NOTIONAL`, `MATURITY_DATE`, `GRID_INDEX`, `GRID_DATE`, `MTM`, `STATUS`, `PRICER`, `BATCH_ID`
+- unique: key `PATH_ROW_ID`; per BUSINESS_DATE
+- pattern: field PATH_ROW_ID; pattern ^XR-[^~]+~.+~[0-9]+$
+- link: field RUN_ID; kind simulation-run
+- link: field TRADE_ID; kind trade
+- enum: field SOURCE_SYSTEM; values `CALYPSO`, `MUREX`
+- link: field NETTING_SET; kind netting-set
+- link: field COUNTERPARTY; kind counterparty
+- link: field LEGAL_ENTITY; kind legal-entity
+- link: field DESK; kind desk
+- link: field TT_BOOK; kind book
+- enum: field ASSET_CLASS; values `Equity`, `FX`, `Inflation`, `Securities financing`
+- vector-length: field MTM; same every row of one business date
+
+**Notes**
+
+- One trade's MtM on every path of the run at one grid date (EXP.md section 3.3), the vector column MTM; sparse by maturity (no row after maturity plus 10 business days). DESK, TT_BOOK, ASSET_CLASS, PRODUCT, NOTIONAL and MATURITY_DATE are denormalised for the scopes and checks (as built, 2.9.0).
+
+**To review (7)**
+
+- required inferred from 100% coverage in 2001 documents (1 samples and 2000 test-data documents (data/testdata/counterparty-risk/exposure-path/cob-2026-09-30.part-001.jsonl.gz, data/testdata/counterparty-risk/exposure-path/cob-2026-09-30.part-002.jsonl.gz)): confirm each required field is mandatory upstream, and each optional one may be empty.
+- source is the pack's first listed source (its README): confirm.
+- due time of each business date is not known: state it (for example, by 06:00 New York the next business day).
+- enum values inferred from the data, not from a glossary: SOURCE_SYSTEM, ASSET_CLASS: confirm they are closed lists.
+- number types decided by the field's name: NOTIONAL amount: confirm amount, rate or integer.
+- no unit stated for the amounts NOTIONAL (docs/contracts/README.md section 7: USD unless stated): confirm the currency.
+- no description in about.yaml or the Sutras for BUSINESS_DATE, SOURCE_SYSTEM, ASSET_CLASS, PRODUCT, NOTIONAL, MATURITY_DATE, PRICER, BATCH_ID: write them in the pack's config/about.yaml glossary.
+
+## EXP: Exposure profile of a scope (computed) (`exposure-result`)
+
+The exposure profile (EE, ENE, EEE, PFE at 95% and 99%, EE without collateral) and the figures (CE, EPE, EEPE, peak EE and PFE, EAD under the internal model) of any counterparty scope (the scope grammar of EXP.md section 8), computed when asked by the server's exposure engine from the simulated paths, as the person asking; never stored.
+
+|  |  |
+|---|---|
+| Contract | [exposure-result.contract.yaml](../../../config/packs/counterparty-risk/contracts/exposure-result.contract.yaml) · version 1.0 |
+| Class | computed |
+| Status | active |
+| Source | computed by Drishti: the reactive connector exposure-engine (java engine com.ash.drishti.server.exposure.ExposureResultEngine) |
+| Grain | One answer per question (the scope asked for, its parameters q, collateral and run, and the business date), computed when asked. |
+| Key | — |
+| Id pattern | — |
+| Dated by | `on request` |
+| Cadence | on change (due: computed on request and again when the date's inputs load (data-version trigger)) |
+| Storage | connector `exposure-engine` (plugin `reactive`) |
+
+**Fields**
+
+| Field | Type | Presence | Unit | Description | Example or values | Link |
+|---|---|---|---|---|---|---|
+| `STATUS` | text | required |  | ok, or no-paths when the date's run covers none of the scope's netting sets (then NOTE says so and no figure is given). | `ok`, `no-paths` |  |
+| `SCOPE` | text | required |  | The scope as asked (the id; parameters after ~, as CPTY:CP-ALDERSHOT~q=0.99). | `NSET:NS-ALDERSHOT-FRA` |  |
+| `CANONICAL` | text | required |  | The scope's canonical text. |  |  |
+| `SCOPE_KIND` | text | optional |  | — | `netting-set`, `counterparty`, `group`, `legal-entity`, `desk`, `book`, `bank`, `trade`, `trades`, `adhoc` |  |
+| `LABEL` | text | optional |  | — |  |  |
+| `BUSINESS_DATE` | date | required |  | — |  |  |
+| `RUN_ID` | id | optional |  | The simulation run the figures are computed from. |  | `simulation-run` |
+| `PATHS` | integer | optional |  | — |  |  |
+| `CALIBRATION` | text | optional |  | — |  |  |
+| `CONFIDENCE` | rate | optional |  | q, the confidence of PEAK_PFE and PROFILE[].PFE. | `0.95` |  |
+| `CE` | amount | optional | USD | Current exposure (EXP.md section 6.4). |  |  |
+| `EPE` | amount | optional | USD | Expected positive exposure over min(1 year, the longest maturity) (EXP.md section 6.4). |  |  |
+| `EEPE` | amount | optional | USD | Effective EPE (EXP.md section 6.4). |  |  |
+| `PEAK_EE` | amount | optional | USD | — |  |  |
+| `PEAK_PFE` | amount | optional | USD | The highest PFE at CONFIDENCE over the primary dates; a scope's from its summed paths, never a sum of PFEs. |  |  |
+| `PEAK_PFE_DATE` | date | optional |  | — |  |  |
+| `PEAK_PFE_TENOR` | text | optional |  | — |  |  |
+| `PEAK_PFE_99` | amount | optional | USD | — |  |  |
+| `EAD_IMM` | amount | optional | USD | alpha x EEPE, informational (EXP.md section 6.5). |  |  |
+| `HORIZON_YEARS` | rate | optional |  | T, the horizon EPE and EEPE average over. |  |  |
+| `MPOR_DAYS` | integer | optional |  | The run's look-back in business days (the margin period of risk applied). |  |  |
+| `COLLATERAL_MODEL` | text | optional |  | — | `lagged`, `current`, `none` |  |
+| `PROFILE` | record list | required |  | Per primary date TENOR, DATE, T, EE, ENE, EEE, PFE (at CONFIDENCE), PFE_95, PFE_99, EE_UNCOLL (EXP.md section 9.1). |  |  |
+| `BY_NETTING_SET` | record list | optional |  | For a counterparty or larger scope, each netting set's NETTING_SET, COUNTERPARTY, LABEL, PARTIAL, EPE, PEAK_EE, PEAK_PFE and PFE_CONTRIBUTION (adding up to PEAK_PFE); none for a viewer who sees the scope in aggregate only. |  |  |
+| `FLAGS` | text list | optional |  | partial, standalone, MPOR_MISMATCH, incomplete, stale-run, no-paths. |  |  |
+| `NOTE` | text | optional |  | — |  |  |
+| `PROVENANCE` | record | optional |  | The answer's provenance in UPPER_SNAKE (EXP.md section 9.1), with TIER saying where the matrices came from. |  |  |
+
+**Links:** `RUN_ID` → `simulation-run`.
+
+**Validation**
+
+- required: fields `SCOPE`, `STATUS`, `PROFILE`
+
+**Notes**
+
+- No stored key: an answer's id is the scope asked (the id in the request); EXP <scope> <GO> opens it, and EXP EXP-<cp>-<le> (an id of the retired exposure-profile kind) opens EXP NSET:NS-<cp>-<le>.
+- Computed as the viewer with the exposure engine's entitlements (EXP.md section 11); cached per view signature, data version, scope and parameters.

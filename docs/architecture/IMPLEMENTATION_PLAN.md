@@ -340,7 +340,17 @@ VaR is good for now."** What is active:
   extrapolated to 1 M × 50), the computed kinds `var-result` and `var-whatif` with the Python VaR engine, `drishti.py var`, the VaR guide
   and tutorial 25. Not built: sharding across Drishti*net (no mechanism yet: VAR.md section 7.4), what-if pricing (QLRisk).
 
-Everything else in this section is **PARKED**: the 2.9.0, 2.10.0 and 2.11.0 measures, the groupings and analytics, the DESK/BOOK/TRDR/CPTY
+**2.9.0: EXP brought forward (product owner, 2026-10-26).** Exposure profiles computed for any scope, exactly as VaR was in 2.8.0
+([EXP.md](../contracts/EXP.md)), with the stored `exposure-profile` retired in the same release. **Part 1 built** (2026-10-26): the
+inputs `simulation-run` and `exposure-path` with their test data (`tools/packgen/ccr`), the Java engine (netting and CSA collateral
+per path with the margin period of risk, EE, ENE, EEE, PFE, EPE, EEPE, contributions, scopes `NSET:`, `CPTY:`, `GROUP:`, `LE:`,
+`DESK:`, `BOOK:`, `TRD:`, `BANK`), the memory-mapped hot file per date, `/api/v1/exposure`, the computed kind `exposure-result`
+(`EXP <scope>`), the `addon` what-if, captures, the official results `exposure-official` and `-cpty`, retention settings, the
+netting-set and counterparty pages' computed figures, and the retirement (the reconciliation of the 76 stored sets in EXP.md section
+14.2). **Part 2 next:** the exposure explorer, the Python what-if engine (`paths`), the CLI, the benchmark, the guide and the
+tutorial. The other counterparty measures (CVA, SA-CCR, LIM, GRP, WWR) stay parked and stored, unchanged.
+
+Everything else in this section is **PARKED**: the 2.9.0, 2.10.0 and 2.11.0 measures (but EXP, above), the groupings and analytics, the DESK/BOOK/TRDR/CPTY
 figures other than VaR, and 2.12.0 (AI and GenUI). Their stored kinds stay active and unchanged, and their contracts are kept as designs
 in docs/contracts. The other 2.8.0 items stay in 2.8.0 (confirmed by the product owner, 2026-10-25): housekeeping (branding from configuration), Admin → Commands and write-back W1–W7. The
 release numbers below are the plan of record for when a parked item is brought back.
@@ -431,7 +441,7 @@ never coexist. For each item:
 | 2 | SACCR (`sa-ccr`) | Nothing: retired | Replacement cost, add-ons per hedging set, multiplier and EAD by netting set, counterparty or legal entity; incremental EAD before dealing |
 | 3 | COLL (`collateral-balance`) | Holdings: asset, quantity, held or posted | Market value and value after haircut, from market data and the CSA's haircuts |
 | 4 | MC (`margin-call`) | Actual calls and their events (workflow) | The expected call (MtM − collateral − threshold, then minimum transfer and rounding), shown beside the actual call |
-| 5 | EXP (`exposure-profile`) | Nothing: retired | EE, EPE, effective EPE and PFE at any tenor after netting and collateral, from per-trade MtM per path and tenor. The heaviest data, on the VaR memory tiering |
+| 5 | EXP (`exposure-profile`) | Nothing: retired | EE, EPE, effective EPE and PFE at any tenor after netting and collateral, from per-trade MtM per path and tenor. The heaviest data, on the VaR memory tiering. **Brought forward to 2.9.0: part 1 built 2026-10-26** (above) |
 | 6 | LIM (`credit-limit`) | Limit amount, measure, tenor buckets, approval | Used, utilisation and status from EXP or SA-CCR at any date; headroom before dealing |
 | 7 | GRP (`counterparty-group`) | Members and the approved limit | Group utilisation over the GLEIF parent links |
 | 8 | CVA (`cva`) | Nothing: retired | CVA and XVA from EXP's exposure profiles and credit curves |

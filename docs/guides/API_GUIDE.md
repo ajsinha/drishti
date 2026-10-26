@@ -1861,6 +1861,13 @@ The complete list (from `ErrorCode` in `drishti-common`). The first digit groups
 | DRS-5202 | 422 | VaR duplicate trade | a trade has two P&L vectors on one business date: the date is not loaded |
 | DRS-5203 | 422 | VaR inputs not one run | a date's vectors come from several batch runs, or another scenario set, or the date has two scenario sets or a bad one: the date is not loaded; the date before it is answered, with a warning |
 | DRS-5204 | 503 | VaR capacity | a date's vectors need more memory than `drishti.var.memory-budget-mb`: try later, raise the budget or the heap, or keep fewer dates loaded |
+| DRS-5440 | 400 | Exposure parameter | a scope word the exposure engine does not answer, or a bad `q`, `collateral`, `date`, `by`, `figure` or `run` |
+| DRS-5441 | 409 | Exposure run inconsistent | the date's simulation run is not one run (its grid, two batch ids, a duplicate row, a trade in two netting sets): the date before answers with a warning; `strict=true` gets this |
+| DRS-5442 | 400 | What-if not on the run | a what-if candidate's paths are of another run than the date's |
+| DRS-5443 | 503 | Exposure batch job | the scope sums more netting sets than an interactive answer may (`drishti.ccr.exposure.max-scope-netting-sets`): the official capture computes it |
+| DRS-5444 | 422 | Exposure row rejected | a row of the date's exposure paths was rejected at load (another vector length, NaN or infinity, a grid index or date outside the run's grid): listed in the provenance, never padded |
+| DRS-5445 | 503 | Exposure capacity | a date's netting-set matrices need more memory than `drishti.ccr.exposure.memory-budget-gb` |
+| DRS-5446 | 501 | What-if method | the what-if's `paths` method runs in the Python exposure engine, not on this server yet: ask `method: addon` |
 | DRS-5031 | 422 | connector invalid | a connector file or body is not valid: bad name, unknown plugin or top-level key, missing required setting, wrong type, a `name:` that is not the file name, or a credential that is not an `${ENV_VAR}` or `file:` reference; `detail` names the setting |
 | DRS-5032 | 409 | connector conflict | the `If-Match` version is stale (someone changed it since you read it), a file of that name exists and no `If-Match` was sent, or the change switches off or deletes a connector packs use and `confirm=true` was not sent; also deleting a connector a pack's template names |
 | DRS-5033 | 404 | no such connector | no connector of that name (a file, a pack template or the server's configuration) |
@@ -2896,6 +2903,57 @@ The official captures are also appended to `${DRISHTI_DELTA_ROOT}/risk-results/v
 result version) for other systems; no engine reads that folder. The positions the engine derives are served as the `position` kind
 (`GET /api/v1/views/position/<id>`, the `var-positions` connector), and the position, portfolio and desk pages carry the engine's
 figures under `VAR_ENGINE`, computed as the page opens.
+
+## Exposure engine: `/api/v1/exposure` (2.9.0)
+
+Exposure profiles computed on demand from an upstream simulation's paths (the data contract: [EXP.md](../contracts/EXP.md)): every
+trade's MtM on every path of the run's grid (`exposure-path`, the run in `simulation-run`), netted per netting set, collateralised per
+path by its CSA (lagged by the margin period of risk), then EE, ENE, effective EE, PFE, EPE, EEPE, the peaks, CE and EAD under the
+internal model (informational). A scope is the scope grammar's text: `NSET:<netting sets>`, `CPTY:<counterparty>`, `GROUP:<group>`,
+`LE:<legal entity>` (the trades booked by it), `DESK:`, `BOOK:`, `TRD:<trades>` (valued alone, uncollateralised), `BANK`, `WHERE:<rule over
+the trades' columns>`, joined with `+`, `-` and `&`; the spaced `NSET NS-ALDERSHOT-FRA` and an id of the retired stored profile
+(`EXP-ALDERSHOT-FRA`, its netting set) are read too. Exposures add per path across netting sets, so a counterparty's PFE is read from its
+sets' summed paths, never added up. Parameters of every `GET`: `asOf`, `q` (the PFE confidence, default `0.95`), `collateral` (`lagged`,
+`current`, `none`); `/scope` also `run` (empty: the date's newest complete run) and `strict` (`true`: a date whose run is not one run is
+refused with `409 DRS-5441` instead of answered from the date before). Every answer is computed as the caller over the netting sets they
+see (`drishti.ccr.exposure.access`); a viewer at `aggregate` gets no netting-set rows below the counterparty and no trades. A netting set
+the run does not cover is `404 DRS-1001` "no exposure paths for the netting set …"; a bad parameter `400 DRS-5440`; a scope over
+`max-scope-netting-sets` `503 DRS-5443`. Rows rejected at load are listed in `provenance.intake.rejections` (`DRS-5444`).
+
+| Method and path | What it does |
+|---|---|
+| `GET /api/v1/exposure/scope?scope=` | the scope's figures (`ce`, `epe`, `eepe`, `peakEe`, `peakPfe`, `peakPfeDate`, `peakPfe99`, `eadImm`, `horizonYears`), its `profile` by primary date (`tenor`, `date`, `t`, `ee`, `ene`, `eee`, `pfe`, `pfe95`, `pfe99`, `eeUncoll`), `byNettingSet` (EPE, peaks and PFE contribution of each set), `flags` (`partial`, `standalone`, `MPOR_MISMATCH`, `incomplete`, `stale-run`) and `provenance` (the run, the inputs' versions, the intake's counts, the method, `tier`) |
+| `GET /api/v1/exposure/scopes/{scope}` | the same for a simple scope in the path |
+| `GET /api/v1/exposure/scope/profile?scope=&dates=&format=` | the profile only (`dates=all`: the look-back dates too, with their uncollateralised EE); `format=csv`: `tenor,date,t,ee,ene,eee,pfe,pfe_99,ee_uncoll` |
+| `GET /api/v1/exposure/scope/distribution?scope=&date=&bins=` | the exposure across the paths at a primary date (a date or a tenor; default the peak's): `histogram {edges, counts}`, `quantiles`, `mean`, `zeroShare` |
+| `GET /api/v1/exposure/scope/contributions?scope=&by=&figure=&date=` | the parts' contributions to `figure` `EE` (at `date`, default the peak EE's), `EPE` or `PFE` (the default: the paths around the quantile at the peak date, scaled to add up to the peak, with each part's `incremental`); `by` `child` (the default: a group's or legal entity's counterparties, a counterparty's netting sets, a netting set's trades), `netting-set`, `counterparty`, `legal-entity`, `trade`, `asset`. Rows `{key, scope, label, kind, value, pct, incremental}` |
+| `GET /api/v1/exposure/tree` | the connected groups, their counterparties and the netting sets with their EPE and peak PFE; sets without paths marked `noPaths` |
+| `POST /api/v1/exposure/what-if` | `{scope, method: addon or paths, q, candidates: [{tradeId, nettingSet, assetClass, notional, maturityDate, mtm, delta}]}`: the scope with and without the candidates (`base`, `with`, `incremental.profile`); `addon` is a conservative proxy (each candidate its own uncollateralised set, SA-CCR's supervisory factor; flagged `proxy`); `paths` (the exact method, the Python engine) is `501 DRS-5446` in 2.9.0; candidate paths of another run `400 DRS-5442`. Stores nothing |
+| `POST /api/v1/exposure/captures` | `{scope, note, q, collateral}`: captures the scope's exposure now (`201`, id `XCAP-<yyyymmdd>-<n>`): figures, profile, netting sets, member trades, provenance; never paths |
+| `GET /api/v1/exposure/captures?scope=`, `GET /api/v1/exposure/captures/{id}` | the caller's captures (of one scope); one capture |
+| `GET /api/v1/exposure/captures/{id}/csv` | a capture as CSV: its fields as `#` lines, then its profile |
+| `GET /api/v1/exposure/compare?a=&b=` | two captures side by side, or a capture and now (`b=now`): the figures' change, the PFE profile's, the members added and removed |
+| `GET /api/v1/exposure/status` | the settings, the hot files (mode, folder, files, bytes, builds, reopenings) and the dates loaded (run, paths, grid, netting sets, trades, tier, hot file, the intake) |
+| `GET /api/v1/exposure/retention` | each date held: whether its trade paths, set matrices, statistics and trade contributions are within their retention ([EXP.md section 12.3](../contracts/EXP.md#123-seven-year-retention-cost-and-the-decision-open-question-2-decided-2026-10-26)), and the dates whose paths are beyond |
+| `POST /api/v1/exposure/reload` | administrators: drops the loaded dates (the next request maps the date's hot file again, or reads the lake after a load) |
+| `GET /api/v1/exposure/official?asOf=` | a date's official end-of-day record: its result version, the inputs' versions, every netting set's, counterparty's, group's and hierarchy node's figures and profile (a viewer who sees every counterparty) |
+| `POST /api/v1/exposure/official?asOf=` | administrators: captures the date officially now (the data-load signal does it by itself): `{status, resultVersion, scopes, nettingSets, nodes, published}` |
+
+**Exposure as a computed kind.** The counterparty-risk pack's reactive connector `exposure-engine` serves `exposure-result` (`EXP <scope>
+<GO>`) through the compute API, computed as the caller: the same figures in UPPER_SNAKE (`EPE`, `PEAK_PFE`, `PROFILE[]` ...), `STATUS`
+`ok` or `no-paths` (with `NOTE`):
+
+```bash
+curl -s -X POST $B/compute/exposure-engine/exposure-result -H 'Content-Type: application/json' \
+     -d '{"id": "CPTY:CP-ALDERSHOT", "params": {"q": 0.99}, "wait": 10000}' | jq -c '{state, epe: .result.EPE, pfe: .result.PEAK_PFE}'
+```
+
+The same answer is `GET /api/v1/views/exposure-result/CPTY:CP-ALDERSHOT`. The official captures are appended to
+`${DRISHTI_DELTA_ROOT}/risk-results/exposure-official/` (hierarchy nodes) and `exposure-official-cpty/` (netting sets, counterparties,
+groups; restricted) for other systems; no engine reads them. The netting-set and counterparty pages carry the engine's figures under
+`EXPOSURE_ENGINE`, computed as the page opens. `POST …/captures` needs the `risk:write` token scope; `POST …/reload` and `POST …/official`
+are never a token's. Answers, captures, what-ifs, exports, reloads and official captures are audited (`ccr-view`, `ccr-capture`,
+`ccr-whatif`, `ccr-export`, `ccr-reload`, `ccr-official`).
 
 ## Embedding views in another web application
 

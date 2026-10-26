@@ -1519,7 +1519,7 @@ curl -s localhost:18480/api/v1/admin/health | python3 -m json.tool | head -40
                 "heapMaxMb": 15640, "threads": 75, "cpus": 24 },
     "sources": [
         { "name": "credit-store", "version": "1.0", "status": "UP", "health": "UP",
-          "kinds": ["credit-limit", "cva", "exposure-profile", "netting-set", "sa-ccr"],
+          "kinds": ["credit-limit", "cva", "netting-set", "sa-ccr"],
           "live": false, "dated": true, "search": true,
           "lastUpdate": "2026-09-30T21:04:11Z", "staleAfter": null, "stale": false,
           "reads": { "reads": 4, "found": 4, "notHeld": 0, "errors": 0, "lastError": null, "lastErrorAt": null,

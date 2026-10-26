@@ -65,7 +65,7 @@ may still change before it ships, and the document records each change.
 | [SACCR.md](SACCR.md) | SACCR (`sa-ccr`) | 2.10.0 | PARKED (design kept) |
 | [COLL.md](COLL.md) | COLL (`collateral-balance`): holdings kept, values computed | 2.10.0 | PARKED (design kept) |
 | [MC.md](MC.md) | MC (`margin-call`): calls kept, expected call computed | 2.10.0 | PARKED (design kept) |
-| [EXP.md](EXP.md) | EXP (`exposure-profile`) | 2.10.0 | PARKED (design kept) |
+| [EXP.md](EXP.md) | EXP (`exposure-result`; the stored `exposure-profile` retired) | 2.9.0 | BUILT, part 1 (engine, API, computed kind, official results; the explorer and the Python what-if follow) |
 | [LIM.md](LIM.md) | LIM (`credit-limit`): limits kept, usage computed | 2.10.0 | PARKED (design kept) |
 | [GRP.md](GRP.md) | GRP (`counterparty-group`): members kept, usage computed | 2.10.0 | PARKED (design kept) |
 | [CVA.md](CVA.md) | CVA (`cva`) | 2.10.0 | PARKED (design kept) |
