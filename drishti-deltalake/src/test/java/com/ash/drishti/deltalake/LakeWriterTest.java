@@ -113,6 +113,22 @@ class LakeWriterTest {
     }
 
     @Test
+    void aNewTableTakesTheManifestsPropertiesAndLongColumns() throws IOException {
+        Path table = tmp.resolve("lake/risk-results/var-official");
+        String json = Files.readString(manifest(table, "append", stage("a.rows", 0, 3, "Swap", 2.0).toString(), "2026-10-01", "Swap"))
+                .replace("{\"name\":\"NOTIONAL\",\"type\":\"double\"}", "{\"name\":\"NOTIONAL\",\"type\":\"long\"}")
+                .replace("\"parts\":", "\"properties\":{\"delta.logRetentionDuration\":\"interval 2557 days\","
+                        + "\"delta.deletedFileRetentionDuration\":\"interval 2557 days\",\"delta.appendOnly\":\"true\"},\"parts\":");
+        Path m = tmp.resolve("props.json");
+        Files.writeString(m, json);
+        run(m, new ByteArrayOutputStream());
+        String log = Files.readString(table.resolve("_delta_log/00000000000000000000.json"));
+        assertTrue(log.contains("delta.logRetentionDuration") && log.contains("interval 2557 days") && log.contains("delta.appendOnly"), log);
+        assertTrue(log.contains("\\\"type\\\":\\\"long\\\""), log);
+        assertEquals(3, read(table).size());
+    }
+
+    @Test
     void refusesAnotherPartitioningAndBadManifests() throws IOException {
         Path table = tmp.resolve("lake/trading/deal");
         run(manifest(table, "append", stage("a.rows", 0, 2, "Swap", 1.0).toString(), "2026-10-01", "Swap"), new ByteArrayOutputStream());

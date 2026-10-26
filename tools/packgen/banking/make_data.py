@@ -148,6 +148,8 @@ def title(kind: str, d: dict) -> tuple[str, str]:
 
 # ---- checks ----------------------------------------------------------------------------------------------------
 PATH = re.compile(r"\$\.([A-Za-z_][A-Za-z0-9_]*)")
+#: fields a page reads that the server adds as it opens (the VaR engine's figures on a desk, docs/contracts/VAR.md section 14.3)
+AUGMENTED = {"varEngine", "VAR_ENGINE"}
 
 
 def check(docs: dict) -> list[str]:
@@ -184,6 +186,7 @@ def check(docs: dict) -> list[str]:
                     problems.append(f"trade/{id_}: leg {leg['leg']} cashflow {f['n']} rate {f['rate']} is outside its fixings {min(rates)}..{max(rates)}")
     for spec in T.KINDS:
         need = {m for s in spec.strip for m in PATH.findall(s[1])} | {m for p in spec.panels for path in p.paths() for m in PATH.findall(path)}
+        need -= AUGMENTED                                              # added when the page opens (an engine's figures), never stored
         for id_, d in docs.get(spec.kind, {}).items():
             missing = [f for f in sorted(need) if f not in d]
             if missing:

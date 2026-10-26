@@ -47,6 +47,7 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.function.BiFunction;
 import java.util.function.Predicate;
 import java.util.function.UnaryOperator;
 
@@ -131,12 +132,22 @@ public final class ScreenWire {
     private final Binder binder;
     private final ElCompiler el;
     private final Duration budget;
+    private final BiFunction<EntityDocument, AsOf, EntityDocument> augment;
 
     public ScreenWire(SourceRouter router, Binder binder, ElCompiler el, Duration budget) {
+        this(router, binder, el, budget, (d, at) -> d);
+    }
+
+    /**
+     * As above; {@code augment} adds to a panel's sourced entity what a view of it shows (the view pipeline's augmenters, such as the
+     * VaR engine's figures on a position): applied to a source naming one entity by id, never to a search or a list of many.
+     */
+    public ScreenWire(SourceRouter router, Binder binder, ElCompiler el, Duration budget, BiFunction<EntityDocument, AsOf, EntityDocument> augment) {
         this.router = router;
         this.binder = binder;
         this.el = el;
         this.budget = budget;
+        this.augment = augment == null ? (d, at) -> d : augment;
     }
 
     /** Whether a screen panel goes through this class: it is wired, or reads an event or {@code $src}. */
@@ -435,7 +446,8 @@ public final class ScreenWire {
             String asked = id;
             return s.cache().computeIfAbsent(src.kind() + "|" + asked + "|" + at, k -> {
                 EntityRef ref = EntityRef.of(src.kind(), asked);
-                EntityDocument d = router.fetchAll(Set.of(ref), budget, at).get(ref);
+                EntityDocument fetched = router.fetchAll(Set.of(ref), budget, at).get(ref);
+                EntityDocument d = fetched == null ? null : augment.apply(fetched, at);
                 return d == null ? new Pair(DataNode.missing(), DataNode.missing(), null) : new Pair(s.redact().apply(d.data()), d.data(), null, d.provenance());
             });
         }

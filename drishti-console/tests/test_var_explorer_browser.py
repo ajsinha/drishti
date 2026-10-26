@@ -18,8 +18,12 @@ data built into a scratch lake (lake demo --only market-risk/<the VaR kinds>) an
 - VAR DESK DESK-RATES <GO> opens the explorer on the desk; the bank, a division, the desk, a book, a position and a trade each move every
   panel in place (no page load), drilled from the tree, the breadcrumb and the contributions; a desk is painted within the target and
   the time is printed (-s shows it);
-- the three tabs: the P&L path's charts and ranked table, the history with its backtest, the contributions adding up to the VaR, by
-  position and by trade;
+- the three tabs: the P&L path's charts and ranked table, the history with its backtest (a replay until a node has two official
+  end-of-day captures: the server captures the newest date when it starts), the contributions adding up to the VaR, by position and
+  by trade;
+- the official end-of-day record of the newest date: every node of both hierarchies, captured at start;
+- the portfolio and position pages: Drishti's derived positions (the var-positions connector) with the engine's figures computed as
+  the page opens;
 - an ad-hoc basket: ids pasted into "+ New scope", the VaR live, saved, listed, captured, and the capture reopened with its numbers.
 
 Screenshots go to DRISHTI_VAR_SHOTS when it names a folder. Skipped when Playwright, Chromium, the built server jar or a JDK is missing."""
@@ -37,7 +41,7 @@ from test_workbench_browser import browser, wait  # noqa: F401 - fixtures and he
 from wb_live import _stack
 
 ROOT = Path(__file__).resolve().parents[2]
-VAR_DATA = ",".join(f"market-risk/{k}" for k in ("position", "pnl-vector", "scenario-set", "risk-hierarchy", "var-node", "portfolio"))
+VAR_DATA = ",".join(f"market-risk/{k}" for k in ("pnl-vector", "scenario-set", "risk-hierarchy", "portfolio"))
 SHOTS = os.environ.get("DRISHTI_VAR_SHOTS")
 #: the time from a click on a desk to its painted panels (the product owner's target is 300 ms on the demo data); generous here, as the
 #: suite runs beside builds: the measured time is printed and kept in the docs
@@ -167,8 +171,8 @@ def test_the_tabs_path_history_and_contributions(stack, browser):
              " && document.querySelectorAll('[data-vx-drill] tbody tr').length > 0")
     pg.locator('.vx-tab[data-tab="hist"]').click()
     wait(pg, "document.querySelector('[data-var]').dataset.tabPainted === 'hist'")
-    assert pg.locator("[data-vx-histtable] tbody tr").count() >= 200                        # the node's official history
-    assert "Official history" in pg.locator("[data-vx-hist-note]").inner_text()
+    assert pg.locator("[data-vx-histtable] tbody tr").count() >= 200                        # today's members over 250 scenario days
+    assert "Replay" in pg.locator("[data-vx-hist-note]").inner_text()                       # one official date so far: no official series
     assert pg.locator("[data-vx-hline] svg path.vx-line").count() == 2
     shot(pg, "explorer-history")
     pg.locator('.vx-tab[data-tab="contrib"]').click()
@@ -236,10 +240,28 @@ def test_a_portfolio_page_lists_its_positions_and_opens_one_beside(stack, browse
     pg.goto(str(stack) + "/go?q=" + f"POS {first} <GO>".replace(" ", "+").replace("~", "%7E"))
     wait(pg, "document.querySelectorAll('#p-trades tbody tr').length > 0 && !!document.querySelector('#p-dist')")
     assert "/v/position/" in pg.url
+    wait(pg, "document.querySelectorAll('#p-trade-var tbody tr').length > 0")               # the engine's figures, computed as it opened
     shot(pg, "position-page")
     pg.goto(str(stack) + "/v/portfolio/PF-ASHA-UNWIND")                   # a basket of positions and trades
     wait(pg, "document.querySelectorAll('#p-positions tbody tr').length > 3")
     pg.close()
+
+
+def test_the_newest_date_is_captured_officially_at_start(stack):
+    """Every node of both hierarchies (MGMT and LEGAL) captured by the server for the newest date (VAR.md section 9.6)."""
+    import json
+    deadline = time.monotonic() + 120
+    record = None
+    while record is None and time.monotonic() < deadline:
+        try:
+            with urllib.request.urlopen(str(stack) + "/api/var/official", timeout=30) as r:
+                record = json.loads(r.read())
+        except urllib.error.HTTPError:
+            time.sleep(1)                                                   # 404 until the capture at start has written it
+    assert record is not None, "no official record within 120 s"
+    assert record["resultVersion"] == 1 and len(record["nodes"]) == 88
+    assert record["nodes"]["MGMT~DESK-FX"]["captureId"].startswith("CAP-")
+    assert {n["hierarchy"] for n in record["nodes"].values()} == {"MGMT", "LEGAL"}
 
 
 def test_on_a_phone_the_explorer_stacks_without_scrolling_sideways(stack, browser):

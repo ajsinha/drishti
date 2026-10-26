@@ -33,7 +33,7 @@ from shotlib import SERVER_PORT, Ctx, register  # noqa: E402
 shot = register("loads")
 PACK = "market-risk"
 CONFIG = {"notify": {"roles": ["admin"], "users": [], "email": False}, "smoke": 2,
-          "expect": {"var": {"by": "00:01", "zone": "America/New_York", "calendar": "USNY"},
+          "expect": {"pnl-vector": {"by": "00:01", "zone": "America/New_York", "calendar": "USNY"},
                      "stress-result": {"by": "23:59", "zone": "America/New_York", "calendar": "USNY"},
                      "pnl-explain": {"by": "07:30", "zone": "Europe/London", "calendar": "GBLO"}}}
 
@@ -48,8 +48,8 @@ def call(method: str, path: str, body: dict | None = None) -> dict:
 def seed() -> None:
     today = call("GET", "/business-date")["current"]
     call("PUT", f"/admin/loads/{PACK}/config", CONFIG)
-    loads = [("var", "2026-10-01", "ready", 1180, 0, "eod-20261001", None), ("var", "2026-10-02", "ready", 1195, 2, "eod-20261002", None),
-             ("var", today, "failed", None, None, "eod-today", "copy stopped: disk full"), ("var", today, "ready", 1200, 3, "eod-today-2", None),
+    loads = [("pnl-vector", "2026-10-01", "ready", 1180, 0, "eod-20261001", None), ("pnl-vector", "2026-10-02", "ready", 1195, 2, "eod-20261002", None),
+             ("pnl-vector", today, "failed", None, None, "eod-today", "copy stopped: disk full"), ("pnl-vector", today, "ready", 1200, 3, "eod-today-2", None),
              ("stress-result", today, "ready", 840, 0, "stress-today", None), ("frtb-sensitivity", "2026-10-02", "ready", 9120, 41, "frtb-1002", None)]
     for kind, date, status, rows, rejected, batch, note in loads:
         body = {"kind": kind, "businessDate": date, "status": status, "source": "nightly-risk-etl", "batchId": batch}

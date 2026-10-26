@@ -18,20 +18,20 @@
 
 Value at risk, stress testing, FRTB sensitivities and P&L explain.
 
-**Extends:** `market-data`, `trading` · **Extended by:** none · **Kinds:** 6
+**Extends:** `market-data`, `trading` · **Extended by:** none · **Kinds:** 5
 
 Enable it with `DRISHTI_PACKS=market-risk` (the packs it extends come with it; where they differ, the more specific wins).
 
 ## Finding things
 
-Every kind has a mnemonic (see *Kinds*). Type it with an identifier, the start of one, or a search, then `<GO>`. Shown here for VaR / expected shortfalls; the same works for every mnemonic.
+Every kind has a mnemonic (see *Kinds*). Type it with an identifier, the start of one, or a search, then `<GO>`. Shown here for stress scenarios; the same works for every mnemonic.
 
 | Command | Does |
 |---|---|
-| `VAR <id> <GO>` | Opens that VaR / expected shortfall. A bare identifier works too: its prefix (`VAR-…`) tells Drishti the kind. |
-| `VAR <start of an id> <GO>` | A pick list: one match opens, several give a table with the kind's key fields. `*` is a wildcard, and case never matters. |
-| `VAR <field>=<value> <GO>` | Lists by field value. Compare with `<` and `>`, combine with `and`, sort with `order by <field> desc`. |
-| `VAR <GO>` | Lists every VaR / expected shortfall. |
+| `SCN <id> <GO>` | Opens that stress scenario. A bare identifier works too: its prefix (`SCN-…`) tells Drishti the kind. |
+| `SCN <start of an id> <GO>` | A pick list: one match opens, several give a table with the kind's key fields. `*` is a wildcard, and case never matters. |
+| `SCN <field>=<value> <GO>` | Lists by field value. Compare with `<` and `>`, combine with `and`, sort with `order by <field> desc`. |
+| `SCN <GO>` | Lists every stress scenario. |
 | `FORM market-risk <GO>` | The pack's search form: boxes for the key fields of each kind instead of a written search. |
 | `MRSK <GO>` | The pack's overview: its kinds, their mnemonics and how many documents each holds. |
 
@@ -41,7 +41,7 @@ Each kind is read from the Delta Lake folder of its **data domain** (`data/delta
 
 | Connector | Folder | Domain | Tables | Kinds |
 |---|---|---|---|---|
-| `risk-store` | `data/delta/risk/` | Market-risk results: VaR, stress, FRTB, P&L explain | snapshot (every business date) | `var`, `stress-scenario`, `stress-result`, `frtb-sensitivity`, `pnl-explain`, `trade-valuation` |
+| `risk-store` | `data/delta/risk/` | Market-risk results: VaR, stress, FRTB, P&L explain | snapshot (every business date) | `stress-scenario`, `stress-result`, `frtb-sensitivity`, `pnl-explain`, `trade-valuation` |
 
 Load real data into each domain's folder, or point a domain at a database instead by overriding its connector in the site configuration. For a demonstration lake built from the generated samples, run `uv run --with deltalake --with pyarrow python tools/packgen/banking/make_data.py --lake data/delta`.
 
@@ -49,20 +49,11 @@ Load real data into each domain's folder, or point a domain at a database instea
 
 | Kind | Name | Mnemonic | Identifiers | Id field | What it is |
 |---|---|---|---|---|---|
-| `var` | VaR / expected shortfall | `VAR` | `VAR-…` | `RESULT_ID` | Historical VaR and ES for a desk or portfolio, with backtesting. |
 | `stress-scenario` | Stress scenario | `SCN` | `SCN-…` | `SCENARIO_ID` | A named historical or hypothetical shock set. |
 | `stress-result` | Stress result | `STR` | `STR-…` | `RESULT_ID` | P&L of a desk under a scenario, by book. |
 | `frtb-sensitivity` | FRTB sensitivities | `FRTB` | `FRTB-…` | `RESULT_ID` | Delta, vega and curvature by risk class and bucket (SBM). |
 | `pnl-explain` | P&L explain | `PNL` | `PNL-…` | `RESULT_ID` | Daily P&L attributed to risk factors, new trades and residual. |
 | `trade-valuation` | Trade valuation | `TVAL` | `TVAL-…` | `VALUATION_ID` | A trade's valuation from the risk engine, for every source system: MTM, one-day P&L and DV01, with what it values (source system, portfolio, desk, product). |
-
-### VaR / expected shortfall (`var`)
-
-Historical VaR and ES for a desk or portfolio, with backtesting.
-
-**Fields its Sutra reads:** `VAR_99`, `ES_975`, `SVAR`, `LIMIT`, `EXCEPTIONS`, `PNL_SERIES`, `CONTRIBUTIONS`, `SCENARIO_PNL`, `MEAN_PNL`.
-
-**Links:** `DESK` → Desk (`desk`).
 
 ### Stress scenario (`stress-scenario`)
 

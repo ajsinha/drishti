@@ -38,7 +38,7 @@ import org.springframework.test.web.servlet.MockMvc;
 @SpringBootTest(properties = {"drishti.rachana.hot-reload=false", "drishti.sources.plugins.demo.settings.ticking=false",
         "drishti.packs.enabled=market-risk,genomics,trading",
         "drishti.security.enabled=true", "drishti.security.secret=test-secret-that-is-at-least-32-bytes-long",
-        "drishti.security.redact=VAR_99,significance",
+        "drishti.security.redact=PNL,significance",
         "drishti.security.roles.masked.kinds[0]=*", "drishti.security.roles.masked.raw=false",
         "drishti.security.roles.full.kinds[0]=*", "drishti.security.roles.full.raw=true",
         "drishti.identity.database-url=jdbc:sqlite:${drishti.test.dir}/explainglossary-${random.uuid}/identity.db"})
@@ -66,23 +66,23 @@ class ExplainGlossaryTest {
     }
 
     @Test
-    void theKeyFiguresOfAVarPageAreExplainedFromThePacksVocabulary() throws Exception {
-        JsonNode e = explain("full", "var/VAR-COMM");
-        JsonNode v = term(e, "VAR_99");
+    void theKeyFiguresOfAStressPageAreExplainedFromThePacksVocabulary() throws Exception {
+        JsonNode e = explain("full", "stress-result/STR-GFC2008-RATES");
+        JsonNode v = term(e, "PNL");
         assertThat(v).isNotNull();
-        assertThat(v.path("term").asText()).isEqualTo("Value at risk, 99%, 1 day");
+        assertThat(v.path("term").asText()).isEqualTo("Profit and loss");
         assertThat(v.path("unit").asText()).isEqualTo("USD");
-        assertThat(v.path("sign").asText()).isEqualTo("A loss, written as a positive number.");
-        assertThat(v.path("origin").asText()).isEqualTo("market-risk:vocabulary.var99");
+        assertThat(v.path("sign").asText()).isEqualTo("Positive is a gain, negative a loss.");
+        assertThat(v.path("origin").asText()).isEqualTo("market-risk:vocabulary.pnl");
         assertThat(v.path("shownIn").toString()).contains("strip");
         assertThat(v.path("label").asText()).isNotBlank();
-        assertThat(term(e, "ES_975").path("term").asText()).isEqualTo("Expected shortfall, 97.5%");
-        assertThat(term(e, "EXCEPTIONS").path("note").asText()).startsWith("0-4 is the Basel green zone");
+        assertThat(term(e, "LIMIT").path("term").asText()).isEqualTo("Stress loss limit");
+        assertThat(term(e, "LIMIT").path("sign").asText()).startsWith("Negative, like the loss it caps");
     }
 
     @Test
     void aFieldTheDocumentHasButNoPanelShowsGetsNoEntry() throws Exception {
-        JsonNode e = explain("full", "var/VAR-COMM");
+        JsonNode e = explain("full", "stress-result/STR-GFC2008-RATES");
         for (JsonNode t : e.path("glossary")) {                        // every entry names where the page shows it
             assertThat(t.path("shownIn")).isNotEmpty();
         }
@@ -119,10 +119,10 @@ class ExplainGlossaryTest {
 
     @Test
     void aMaskedKeyFigureIsFlaggedAndItsValueIsNowhereInTheGlossary() throws Exception {
-        JsonNode e = explain("masked", "var/VAR-COMM");
-        JsonNode v = term(e, "VAR_99");
+        JsonNode e = explain("masked", "stress-result/STR-GFC2008-RATES");
+        JsonNode v = term(e, "PNL");
         assertThat(v.path("masked").asBoolean()).isTrue();
-        assertThat(e.path("glossary").toString()).doesNotContain("10.9m", "10949577");
+        assertThat(e.path("glossary").toString()).doesNotContain("73.6m", "73602586");
     }
 
     @Test
@@ -141,7 +141,7 @@ class ExplainGlossaryTest {
         // pack lint asks by kind alone (no provenance): the derived source's note is found among the sources that serve the kind
         assertThat(router.describeField("portfolio-trades", "NOTIONAL")).get().satisfies(n -> assertThat(n.formula()).startsWith("sum first($.LEGS).NOTIONAL"));
         assertThat(router.describeField("portfolio-trades", "nothing")).isEmpty();
-        assertThat(router.describeField("var", "VAR_99")).isEmpty();
+        assertThat(router.describeField("stress-result", "PNL")).isEmpty();
     }
 
     @Test

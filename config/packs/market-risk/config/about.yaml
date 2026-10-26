@@ -37,40 +37,6 @@ vocabulary:
     unit: "USD"
     sign: "Positive is a gain, negative a loss."
 kinds:
-  var:
-    title: Value-at-risk result
-    about: >-
-      ${$.RESULT_ID} is a 1-day 99% historical VaR for ${coalesce($.DESK_NAME, $.DESK, 'this portfolio')}:
-      ${fmt($.VAR_99, 'compact')} USD, ${fmt($.VAR_99 / $.LIMIT, 'pct0')} of its ${fmt($.LIMIT, 'compact')} limit,
-      with ${$.EXCEPTIONS} exception(s) in 250 days.
-    guide: market-risk
-    glossary:
-      VAR_99: { use: "var99" }
-      ES_975: { use: "es975" }
-      SVAR: { use: "svar" }
-      EXCEPTIONS:
-        term: "Backtesting exceptions"
-        means: "The days in the last 250 on which the day's loss was larger than the 99% VaR. Basel's traffic lights count them to judge the model."
-        unit: "days"
-        note: "0-4 is the Basel green zone, 5-9 amber and 10 or more red."
-      LIMIT:
-        term: "VaR limit"
-        means: "The VaR the desk is approved to run. VaR above it is a limit breach."
-        unit: "USD"
-        sign: "A positive amount; compare it with the VaR above."
-      SCENARIO_PNL:
-        term: "Scenario P&L"
-        means: "The portfolio revalued under each of the 500 historical scenario days; the 1st percentile of this distribution is the VaR."
-        unit: "USD"
-        sign: "Positive is a gain."
-      CONTRIBUTIONS.VAR:
-        term: "Contribution to VaR"
-        means: "The VaR of one book on its own. Books diversify against each other, so the contributions need not add up to the desk's VaR."
-        unit: "USD"
-        sign: "A loss, written as a positive number."
-    panels:
-      scenarios: { about: "The markers are -VaR (${fmt($.VAR_99, 'compact')}) and -ES (${fmt($.ES_975, 'compact')}); scenario days to their left lost more than VaR." }
-      pnl: { about: "The daily hypothetical P&L the backtest compares with VaR; a day below -${fmt($.VAR_99, 'compact')} is an exception." }
   stress-scenario:
     title: Stress scenario
     about: >-
@@ -222,7 +188,7 @@ kinds:
     title: Position
     about: >-
       ${$.POSITION_ID} holds ${fmt($.QUANTITY, 'compact')} of ${$.INSTRUMENT} in ${$.TT_BOOK}: ${$.DIRECTION}, built from ${$.TRADE_COUNT} trade(s).
-      On its own its 1-day 99% VaR is ${fmt($.VAR_99, 'compact')} USD; in its book it contributes ${fmt($.COMPONENT_VAR, 'compact')}.
+      Drishti derives it from the trades by the ${$.POSITION_RULE} rule; its VaR is the engine's, computed as the page opens.
     guide: market-risk
     glossary:
       DIRECTION:
@@ -236,26 +202,19 @@ kinds:
         means: "The sum of the trades' present values (their mark-to-market) on the business date."
         unit: "USD"
         sign: "Positive is an asset."
-      VAR_99: { use: "var99" }
-      ES_975: { use: "es975" }
-      COMPONENT_VAR:
-        term: "Component VaR"
-        means: "The position's share of its book's VaR (Euler allocation): the shares of a book's positions add up to the book's VaR; a hedge has a negative share."
-        unit: "USD"
+      POSITION_RULE:
+        term: "Position rule"
+        means: "How Drishti keyed the position (the market-risk pack's positions: rules): securities by book and security, listed by book and contract, otc one per trade."
+      SECURITY_ID: { term: "Security", means: "The security or exchange contract the position holds; empty for a position of one OTC trade." }
       INSTRUMENT:
         term: "Instrument"
-        means: "What the position holds: the product, its currency, its underlying and its maturity. Trades of the same instrument in one book are one position."
-      TRADE_QUANTITIES.QUANTITY:
+        means: "What the position holds: the security, or for one OTC trade its product, currency and maturity."
+      TRADES.QUANTITY:
         term: "Trade quantity"
         means: "The trade's signed quantity in the position: a buy positive, a sell negative."
-      TRADE_QUANTITIES.VAR_99:
-        term: "Trade's own VaR"
-        means: "The trade's 1-day 99% VaR as if it were alone."
-        unit: "USD"
-      TRADE_QUANTITIES.COMPONENT_VAR:
-        term: "Trade's component VaR"
-        means: "The trade's share of the position's VaR. The shares of a long and a short of one instrument have opposite signs and add up to the position's VaR."
-        unit: "USD"
+      TRADES.PV: { term: "Trade PV", means: "The trade's present value on the business date, as the risk batch priced it.", unit: "USD" }
+      TRADE_COUNT: { term: "Trades", means: "The trades that make the position on the business date." }
+      INSTRUMENT_ID: { term: "Instrument id", means: "The key the position rule took: the security or contract, or for an OTC position the trade itself." }
       TT_BOOK: { term: "Book", means: "The book the position is held in: its trades are all booked there." }
       DESK: { term: "Desk", means: "The desk the book belongs to." }
       LEGAL_ENTITY: { term: "Legal entity", means: "The bank's legal entity that holds the book." }
@@ -263,19 +222,23 @@ kinds:
       CURRENCY: { term: "Currency", means: "The instrument's currency. Every P&L and value is in USD, the reporting currency." }
       COUNTERPARTY: { term: "Counterparty", means: "The counterparty of the position's trades when they all share one; empty otherwise." }
       NOTIONAL: { term: "Gross notional", means: "The sum of the trades' quantities without their signs." }
-      OPENED_ON: { term: "Opened", means: "The trade date of the position's first trade." }
-      BOOK_VAR: { term: "Book VaR", means: "The 1-day 99% VaR of the whole book the position is held in.", unit: "USD" }
-      PCT_OF_BOOK_VAR: { term: "Share of the book's VaR", means: "The component VaR over the book's VaR." }
-      PNL: { term: "P&L vector", means: "The position's P&L under each historical scenario day (509 of them): the sum of its trades' vectors.", unit: "USD", sign: "Positive is a gain." }
+      VAR_ENGINE.VAR: { use: "var99" }
+      VAR_ENGINE.ES: { use: "es975" }
+      VAR_ENGINE.COMPONENT_VAR:
+        term: "Component VaR"
+        means: "The position's share of its book's VaR (Euler allocation), computed by the VaR engine as the page opens: the shares of a book's positions add up to its VaR; a hedge has a negative share."
+        unit: "USD"
+      VAR_ENGINE.PNL: { term: "P&L vector", means: "The position's P&L under each historical scenario day (509 of them): the sum of its trades' vectors, computed as the page opens.", unit: "USD", sign: "Positive is a gain." }
   pnl-vector:
     title: P&L vector of a trade
     about: >-
       ${$.TRADE_ID}'s P&L under each of the ${size($.PNL)} scenario days of ${$.SCENARIO_SET_ID} on ${$.BUSINESS_DATE}, in USD: the grain every
-      VaR is summed from. The trade is ${$.DIRECTION} in position ${$.POSITION_ID} of ${$.TT_BOOK}.
+      VaR is summed from. The trade is ${$.DIRECTION} in ${$.TT_BOOK}; Drishti derives its position from it.
     guide: market-risk
     glossary:
       PNL: { term: "P&L vector", means: "The trade's P&L under each historical scenario day, oldest first: index i is the scenario set's day i.", unit: "USD", sign: "Positive is a gain." }
-      POSITION_ID: { term: "Position", means: "The holding the trade builds or reduces: its vector is the sum of its trades'." }
+      SECURITY_ID: { term: "Security", means: "The security or exchange contract the trade is in (securities and listed products): Drishti keys the trade's position by book and security." }
+      TRADE_STATUS: { term: "Trade status", means: "The trade's status the batch priced: NEW, VALIDATED and AMENDED count on the date; others are left out." }
       QUANTITY: { term: "Signed quantity", means: "The trade's quantity: positive for a buy, negative for a sell." }
       PV: { term: "Present value", means: "The trade's value on the business date.", unit: "USD" }
       STATUS: { term: "Batch status", means: "ok, proxied (priced by a proxy) or failed (no vector: counted, never taken as zero)." }
@@ -301,52 +264,32 @@ kinds:
       LEVEL: { term: "Level", means: "bank, division, legal-entity, desk or book." }
       BOOKS: { term: "Books", means: "Every book beneath the node: its positions are the node's." }
       LIMIT_VAR: { term: "VaR limit", means: "The 1-day 99% VaR the node may take.", unit: "USD" }
-  var-node:
-    title: Official VaR of a node
-    about: >-
-      ${$.NAME} (${$.HIERARCHY} ${$.LEVEL}) on ${$.BUSINESS_DATE}: VaR ${fmt($.VAR_99, 'compact')} USD, ES ${fmt($.ES_975, 'compact')},
-      hypothetical P&L of the day ${fmt($.HYPO_PNL, 'signed0')}.
-    guide: market-risk
-    glossary:
-      VAR_99: { use: "var99" }
-      ES_975: { use: "es975" }
-      HYPO_PNL: { term: "Hypothetical P&L", means: "The node's P&L of the day with its positions of the day before unchanged: what the backtest compares with VaR.", unit: "USD", sign: "Positive is a gain." }
-      EXCEPTION: { term: "Backtest exception", means: "True when the day's loss was larger than the previous day's VaR." }
-      LIMIT: { term: "VaR limit", means: "The node's VaR limit on the day.", unit: "USD" }
   portfolio:
     title: Portfolio
     about: >-
-      ${$.NAME} (${$.TYPE}, owned by ${$.OWNER}) holds ${$.POSITION_COUNT} positions, ${$.LONG_COUNT} long and ${$.SHORT_COUNT} short.
-      Its 1-day 99% VaR is ${fmt($.VAR_99, 'compact')} USD, ${fmt($.LIMIT_USE, 'pct0')} of its ${fmt($.LIMIT_VAR, 'compact')} limit.
+      ${$.NAME} is a ${$.TYPE} portfolio owned by ${$.OWNER}, with a VaR limit of ${fmt($.LIMIT_VAR, 'compact')} USD. Its positions,
+      VaR, ES and contributions are the engine's, computed as the page opens (PORT ${$.PORTFOLIO_ID} in the VaR explorer).
     guide: market-risk
     glossary:
       TYPE:
         term: "Portfolio type"
-        means: "HIERARCHY: a node of the bank's hierarchy (a desk, a book). RULE: every position whose columns meet a condition. BASKET: positions and trades someone picked."
-      POSITION_COUNT: { term: "Positions", means: "The positions in the portfolio on the business date (a basket naming one trade of a position holds that part of it)." }
-      LONG_COUNT: { term: "Long positions", means: "Positions whose net quantity is above zero." }
-      SHORT_COUNT: { term: "Short positions", means: "Positions whose net quantity is below zero." }
-      GROSS_MV: { term: "Gross market value", means: "The sum of the positions' market values without their signs.", unit: "USD" }
-      NET_MV: { term: "Net market value", means: "The sum of the positions' market values: longs and shorts offset.", unit: "USD", sign: "Positive is a net asset." }
-      VAR_99: { use: "var99" }
-      ES_975: { use: "es975" }
-      LIMIT_USE: { term: "Limit use", means: "The VaR over the portfolio's VaR limit." }
+        means: "HIERARCHY: a node of the bank's hierarchy (a desk, a legal entity, a book). RULE: every position whose columns meet a condition. BASKET: positions and trades someone picked."
       LIMIT_VAR: { term: "VaR limit", means: "The VaR the portfolio may take.", unit: "USD" }
-      POSITIONS.COMPONENT_VAR:
+      VAR_ENGINE.VAR: { use: "var99" }
+      VAR_ENGINE.ES: { use: "es975" }
+      VAR_ENGINE.LIMIT_USE: { term: "Limit use", means: "The VaR over the portfolio's VaR limit." }
+      VAR_ENGINE.POSITION_COUNT: { term: "Positions", means: "The positions in the portfolio on the business date (a basket naming one trade of a position holds that part of it)." }
+      VAR_ENGINE.GROSS_MV: { term: "Gross market value", means: "The sum of the positions' market values without their signs.", unit: "USD" }
+      VAR_ENGINE.NET_MV: { term: "Net market value", means: "The sum of the positions' market values: longs and shorts offset.", unit: "USD", sign: "Positive is a net asset." }
+      VAR_ENGINE.POSITIONS.COMPONENT_VAR:
         term: "Component VaR"
         means: "The position's share of the portfolio's VaR (Euler): the shares add up to the portfolio's VaR; a hedge has a negative share."
         unit: "USD"
-      POSITIONS.VAR_99: { term: "VaR on its own", means: "The position's own 1-day 99% VaR, as if it were alone.", unit: "USD" }
-      POSITIONS.PCT_OF_VAR: { term: "Share of VaR", means: "The component VaR over the portfolio's VaR." }
-      POSITIONS.DIRECTION: { term: "Direction", means: "LONG or SHORT: the sign of the position's net quantity." }
-      POSITIONS.QUANTITY: { term: "Net quantity", means: "The signed sum of the position's trades' quantities held in the portfolio." }
-      POSITIONS.MARKET_VALUE: { term: "Market value", means: "The position's present value on the business date.", unit: "USD" }
-      POSITIONS.POSITION_ID: { term: "Position", means: "The position's id: its book and its instrument (one holding nets every trade of that instrument in the book)." }
-      POSITIONS.INSTRUMENT: { term: "Instrument", means: "What the position holds: the product, its currency and its maturity." }
+      VAR_ENGINE.POSITIONS.VAR: { term: "VaR on its own", means: "The position's own 1-day 99% VaR, as if it were alone.", unit: "USD" }
+      VAR_ENGINE.POSITIONS.PCT_OF_VAR: { term: "Share of VaR", means: "The component VaR over the portfolio's VaR." }
       DEFINITION.NODE: { term: "Hierarchy node", means: "For a HIERARCHY portfolio: the node of the bank's hierarchy whose positions it holds (every book under it)." }
       DEFINITION.RULE: { term: "Rule", means: "For a RULE portfolio: the condition a position's columns must meet to be in it, checked on each business date." }
       DEFINITION.MEMBERS: { term: "Members", means: "For a BASKET portfolio: the positions and trades someone picked (a trade brings that part of its position)." }
       ROLLS_UP_TO.ID: { term: "Rolls up to", means: "The desk or book the portfolio reports under." }
       VALID_FROM: { term: "Valid from", means: "The first business date the portfolio's definition applies to; an earlier date uses the definition then in force." }
       OWNER: { term: "Owner", means: "Who keeps the portfolio's definition." }
-      PNL: { term: "P&L vector", means: "The portfolio's P&L under each historical scenario day: the sum of its members' vectors, each trade counted once.", unit: "USD", sign: "Positive is a gain." }

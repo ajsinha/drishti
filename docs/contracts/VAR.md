@@ -6,7 +6,7 @@
 
 # VaR: the data contract
 
-*Version 1.0 · 2026-10-25 · Shared rules: [README.md](README.md) · Design: [VAR_ENGINE.md](../architecture/VAR_ENGINE.md),
+*Version 1.3 · 2026-10-25 · Shared rules: [README.md](README.md) · Design: [VAR_ENGINE.md](../architecture/VAR_ENGINE.md),
 [VAR_DATA_MODEL.md](../architecture/VAR_DATA_MODEL.md) · User guide: [VAR_EXPLORER.md](../guides/VAR_EXPLORER.md)*
 
 This is the data contract of Drishti's VaR engine: what an upstream risk batch delivers, what Drishti builds from it, and what Drishti
@@ -15,12 +15,13 @@ designs say otherwise, the code wins and the difference is noted (**Design diffe
 risk lake, keys, types, dates, signs, vectors, delivery, validation, answers, entitlements, versioning, retirement) are in
 [README.md](README.md); this page states only where VaR differs or adds to them.
 
-**Sources of truth checked:** `tools/packgen/var/make_var_data.py`, `positions.py`, `factors.py`, `varmath.py`, `rules.py`;
+**Sources of truth checked:** `tools/packgen/var/make_var_data.py`, `positions.py`, `portfolios.py`, `factors.py`, `varmath.py`, `rules.py`;
 `config/packs/market-risk/pack.yaml`, `config/packs/market-risk/config/about.yaml`, the pack's `samples/`; the test data in
 `data/testdata/market-risk/` and its entries in `data/testdata/testdata.yaml`; `drishti-compute` (packages
 `com.ash.drishti.compute.vector` and `com.ash.drishti.compute.var`); `drishti-server` (package `com.ash.drishti.server.var`); the Delta
 plugin's vector reader (`DeltaTable.vectors`, `DeltaSourcePlugin.vectorColumns`); `tools/lake/stage.py` and `tools/lake/writers.py`;
-`drishti.var` in `drishti-server/src/main/resources/application.yaml`.
+`drishti.var` in `drishti-server/src/main/resources/application.yaml`; the market-risk pack's `positions:` section. Rechecked for version
+1.3 (the build "VaR complete, part 1", 2026-10-25).
 
 ## Contents
 
@@ -51,28 +52,33 @@ one P&L vector per trade (509 scenario P&Ls), never stored except as a capture.
 **Commands and pages.** `VAR <word> <id> <GO>` opens the VaR explorer at a scope (`VAR DESK RATES <GO>`, `VAR BANK <GO>`,
 `VAR CAPTURE CAP-20260930-1 <GO>`); `POS` and `PORT` open the position and portfolio pages; the API is `/api/v1/var`.
 
-**Release and status.** 2.8.0, unreleased. Waves V0 to V3 are **AS BUILT** and tested. The rest of 2.8.0 is **PLANNED**: the product
-owner approved these decisions on 2026-10-25, and this document states them as the planned contract (names may still change before the
-release; each change will be recorded in [section 16](#16-open-questions-and-the-change-table)).
+**Release and status.** 2.8.0, unreleased. Waves V0 to V3 and the build *VaR complete, part 1* (2026-10-25) are **AS BUILT** and
+tested: the stored `var` and `var-node` kinds are retired, no input or fundamental kind carries a VaR figure, positions are derived by
+Drishti, the test data holds every live trade, official end-of-day captures are taken and published, the data-load signal reloads the
+engine, the risk lake keeps 7 years, and the gaps of section 10 are closed. What is still **PLANNED** is marked so; the product owner
+approved it on 2026-10-25 (names may still change; each change is recorded in [section 16](#16-open-questions-and-the-change-table)).
 
 | Part | Status | Where |
 |---|---|---|
-| Trade-grain P&L vectors in a `list<double>` column (`pnl-vector`) | AS BUILT | §3.2 |
-| Scenario set, risk hierarchies (MGMT, LEGAL), portfolios (HIERARCHY, RULE, BASKET) | AS BUILT | §3.3–3.5 |
-| Positions as an input table, derived by the demo generator (`position`) | AS BUILT, **replaced** (planned) | §3.6 |
+| Trade-grain P&L vectors in a `list<double>` column (`pnl-vector`), every row checked at load | AS BUILT | §3.2, §10 |
+| Scenario set, risk hierarchies (MGMT, LEGAL), portfolio definitions (HIERARCHY, RULE, BASKET) | AS BUILT | §3.3–3.5 |
+| **Positions derived by Drishti** when a date loads, by the market-risk pack's `positions:` rules (securities: book + security; listed: book + contract; OTC: book + trade); signed quantity; live statuses only; served as the `position` kind by the `var-positions` connector | AS BUILT | §3.7 |
 | The in-memory engine: vector store, trade ordinals, node aggregates, planner, parallel sums | AS BUILT | §7.1 |
 | VaR, ES, standalone, component, incremental, marginal, diversification; backtest | AS BUILT | §6 |
-| Scope grammar `BANK LE DIV DESK BOOK NODE POS TRD PORT BASKET CAPTURE WHERE`, `+ - &` | AS BUILT | §8 |
-| API `/api/v1/var`, baskets and captures in the content store, entitlements by node, audit | AS BUILT | §9, §11 |
-| Retire the stored `var` kind: `VAR-*` ids open the explorer at the matching scope | PLANNED | §14 |
-| Retire the stored `var-node` kind: official node history from the engine's **official end-of-day captures** | PLANNED | §9.6, §14 |
-| Remove the computed columns `VAR_99`, `ES_975`, `COMPONENT_VAR` (and the other computed fields, §14.3) from `position` | PLANNED | §3.6, §14 |
-| **Positions derived by Drishti** at date load, from trades, by configured rules per product group (securities and listed: book + security; OTC: book + trade); signed quantity; live statuses only; an optional "risk position" grouping for viewing | PLANNED | §3.7 |
-| The full trade set (about 12,000 live trades, see open question 1) and about 25–30 portfolios in the test data | PLANNED | §13.3 |
+| Scope grammar `BANK LE DIV DESK BOOK NODE POS TRD CPTY PORT BASKET CAPTURE WHERE`, `+ - &`; `LE:` by the trades' legal entity; ids in any case | AS BUILT | §8 |
+| API `/api/v1/var`, baskets and captures in the content store, entitlements by node, field masks, audit | AS BUILT | §9, §11 |
+| Retire the stored `var` kind: `VAR-*` ids and `/v/var/<id>` open the explorer at the matching scope | AS BUILT | §14 |
+| Retire the stored `var-node` kind: a node's history is the engine's **official end-of-day captures** | AS BUILT | §9.6, §14 |
+| No computed column on `position`, `portfolio` or the core pack's `desk`: their pages show the engine's figures, computed as they open (`VAR_ENGINE`) | AS BUILT | §9.8, §14.3 |
+| Official end-of-day captures of every node of MGMT and LEGAL, published to `risk-results/var-official` | AS BUILT | §9.6 |
+| The data-load signal reloads the date and captures it (decided, open question 5) | AS BUILT | §3.9 |
+| 7 years of vectors and their time travel (Delta log and removed files; lake maintenance never goes below) | AS BUILT | §3.1 |
+| The full trade set (9,572 live trades) and 28 portfolios in the test data | AS BUILT | §13 |
+| An optional "risk position" grouping for viewing (book × product × currency × underlying × maturity quarter) | PLANNED | §3.7 |
 | Tiered memory: float32 hot copy in memory-mapped per-date local files sorted by hierarchy, sums in float64, Delta stays float64, history dates opened lazily, trade vectors read only on a drill or a trade basket, sharded across nodes; benchmark 1 M trades × 50 dates | PLANNED | §7.3, §12.2 |
 | The common risk lake (domain `risk`, one connector `risk-store` for every risk pack) | PLANNED (VaR's tables already there) | §3.1 |
 | A Python engine and a reactive connector beside the Java engine (Java keeps the additive aggregation; Python does what-if and heavy work); the computed kinds | PLANNED | §6.6, §9.7 |
-| New scope words `CPTY:`, `GROUP:`, `NSET:`, and `LE:` by the trade's legal entity | PLANNED | §8.5 |
+| Scope words `GROUP:` and `NSET:` | PARKED (product owner, 2026-10-25: fundamentals and VaR only) | §8.5 |
 
 ## 2. The measure in one page
 
@@ -103,17 +109,21 @@ FRTB's liquidity horizons or stressed calibration). Age-weighted and filtered me
 
 All VaR inputs are Delta tables in the **common risk lake**, domain `risk`, one table per kind, served by the market-risk pack's
 connector `risk-store` (`plugin: delta`, `root: ${DRISHTI_DELTA_ROOT:${drishti.data.dir:./data}/delta}`, `domain: risk`). The
-engine reads the kinds named by `drishti.var.kinds` (defaults below), whichever connector the kind is routed to.
+engine reads the kinds named by `drishti.var.kinds` (defaults below), whichever connector the kind is routed to. The official results
+it publishes live beside them, never read back (§9.6).
 
 ```
-${DRISHTI_DELTA_ROOT}/risk/
-├── pnl-vector/       business_date=YYYY-MM-DD/part-*.parquet    one row per trade per date: the P&L vector     (AS BUILT)
-├── scenario-set/     business_date=YYYY-MM-DD/                  one row per scenario set per date              (AS BUILT)
-├── risk-hierarchy/   business_date=YYYY-MM-DD/                  one row per hierarchy node per date            (AS BUILT)
-├── portfolio/        business_date=YYYY-MM-DD/                  one row per stored portfolio per date          (AS BUILT)
-├── position/         business_date=YYYY-MM-DD/                  one row per position per date (input today; derived by Drishti, planned)
-└── var-node/         business_date=YYYY-MM-DD/                  one row per node per date (the stored history; retired, planned)
+${DRISHTI_DELTA_ROOT}/
+├── risk/                                        the inputs (engines read these)
+│   ├── pnl-vector/   business_date=YYYY-MM-DD/part-*.parquet    one row per trade per date: the P&L vector and the trade's terms
+│   ├── scenario-set/ business_date=YYYY-MM-DD/                  one row per scenario set per date
+│   ├── risk-hierarchy/ business_date=YYYY-MM-DD/                one row per hierarchy node per date
+│   └── portfolio/    business_date=YYYY-MM-DD/                  one row per portfolio definition per date
+└── risk-results/
+    └── var-official/ business_date=YYYY-MM-DD/                  the official end-of-day figures, a row per node and result version
 ```
+
+Positions are not a table: Drishti derives them when it loads a date (§3.7). The retired `position` and `var-node` tables are gone.
 
 **The physical table** (every kind, `tools/lake/writers.py`): `id` STRING (the kind's key value), `doc` STRING (the whole document as
 JSON), `business_date` DATE (the partition), the **promoted columns** of the pack's `layout.<kind>.columns` (DOUBLE when every value of
@@ -123,12 +133,11 @@ promoted column's type, or `doc` when the field is only in the document.
 
 | Kind | `drishti.var.kinds` key (default) | Lake key (`id`) | Promoted columns (pack.yaml) | Vector columns |
 |---|---|---|---|---|
-| `pnl-vector` | `vector` (`pnl-vector`) | `VECTOR_ID` | 18 (§3.2) | `PNL` |
+| `pnl-vector` | `vector` (`pnl-vector`) | `VECTOR_ID` | 23 (§3.2) | `PNL` |
 | `scenario-set` | `scenario-set` (`scenario-set`) | `SCENARIO_SET_ID` | none | none |
 | `risk-hierarchy` | `hierarchy` (`risk-hierarchy`) | `NODE_ID` | `NODE_ID`, `HIERARCHY`, `LEVEL`, `PARENT_ID`, `NAME`, `LIMIT_VAR` | none |
-| `portfolio` | `portfolio` (`portfolio`) | `PORTFOLIO_ID` | `PORTFOLIO_ID`, `NAME`, `TYPE`, `OWNER`, `VAR_99`, `ES_975`, `LIMIT_VAR`, `POSITION_COUNT` | `PNL` |
-| `position` | `position` (`position`) | `POSITION_ID` | 19 (§3.6) | `PNL` |
-| `var-node` | `node` (`var-node`) | `VAR_NODE_ID` | `NODE_ID`, `HIERARCHY`, `LEVEL`, `NAME`, `PARENT_ID`, `VAR_99`, `ES_975`, `HYPO_PNL`, `LIMIT`, `POSITION_COUNT`, `TRADE_COUNT` | `PNL` |
+| `portfolio` | `portfolio` (`portfolio`) | `PORTFOLIO_ID` | `PORTFOLIO_ID`, `NAME`, `TYPE`, `OWNER`, `LIMIT_VAR` | none |
+| `position` (served, not stored) | `position` (`position`) | `POSITION_ID` | (the `var-positions` connector) | none |
 
 **Partitioning, sort and files (as built).** Partitioned by `business_date` only. `lake build` sorts rows by `id` within each batch of
 at most 50,000 rows (`--batch-rows`, also bounded by `--batch-mb`, 128) and writes one commit per table with Drishti's Java writer
@@ -139,58 +148,76 @@ defaults (Snappy; no `BYTE_STREAM_SPLIT`).
 entity, desk, book and position, files of about 512 MB, row groups of about 64 MB, `BYTE_STREAM_SPLIT` and ZSTD for `PNL`; none of
 these is built. The sort and the partition by scenario set remain planned; file sizing is open question 7.
 
+**Retention: 7 years (as built; decided, open question 10).** Every table `lake build` creates in the domains `risk` and `risk-results`
+keeps its Delta log and its removed files 7 years (`delta.logRetentionDuration` and `delta.deletedFileRetentionDuration` of `interval
+2557 days`; both writers), so its time travel reaches back that far; the published `var-official` table is created the same way by the
+server (`drishti.var.official.retention-years`, 7). Lake maintenance (`lake maintain`, Admin → Lakes) never vacuums a file nor deletes
+a business date of those domains younger than 7 years, whatever a table's settings say: a lower `vacuum-hours` or `keep-business-days`
+is raised (61,368 hours; 1,827 business days) and the run says so (`retention-floor`); a lake's `retain-years:` changes it per domain
+([LAKE_MAINTENANCE.md](../admin/LAKE_MAINTENANCE.md)). The connector only reads, and never vacuums.
+
 **The common risk lake (planned).** The VaR tables are already in domain `risk` behind `risk-store`. From 2.8.0 every risk pack reads
 the same lake through that one connector ([README.md section 2](README.md#2-the-common-risk-lake)); nothing changes for VaR's tables.
 
 ### 3.2 `pnl-vector`: one P&L vector per trade (AS BUILT)
 
 **Grain:** one row per **trade**, business date and scenario set. **Key:** `VECTOR_ID` (unique per date); the natural key is
-(`BUSINESS_DATE`, `SCENARIO_SET_ID`, `TRADE_ID`). **Row count:** every live trade the batch valued; test data 1,673 on 2026-09-30.
+(`BUSINESS_DATE`, `SCENARIO_SET_ID`, `TRADE_ID`): a trade id twice on a date refuses the date (`DRS-5202`, §10). **Row count:** every
+live trade the batch valued; test data 9,572 on 2026-09-30.
 **Design differs:** VAR_ENGINE.md section 5.2 and VAR_DATA_MODEL.md section 1 propose one row per *position*; the product owner chose
 the trade (2026-10-24, VAR_DATA_MODEL.md section 18.1). A bank whose batch values positions may send one row per position, its
-`TRADE_ID` the position's id.
+`TRADE_ID` the position's id (an OTC rule then makes it a position of its own).
 
-"Engine" says whether the server engine reads the field: **R** (read; the vector read is refused if a read column is not a promoted
-column of the table), **–** (kept for people, links and audit).
+"Engine" says whether the server engine reads the field: **R** (read as a column when the table keeps it promoted; `LEGAL_ENTITY`,
+`DESK` and `TT_BOOK` must be promoted or the load fails), **C** (read for a check of §10 when promoted), **–** (kept for people, links
+and audit).
 
 | Column | JSON | Delta | Req. | Engine | Unit | Meaning | Example |
 |---|---|---|---|---|---|---|---|
-| `VECTOR_ID` | id | `id` STRING | required | – | | `PV-<TRADE_ID>-<SCENARIO_SET_ID>`; the lake key | `PV-MX-20000209-HS-509` |
-| `TRADE_ID` | id | STRING | required | R | | the booking system's trade id (text even when all digits). When null the engine uses the row's `id` | `MX-20000209` |
-| `POSITION_ID` | id | STRING | required (derived, planned) | R | | the position the trade builds or reduces; trades of one position are one run in memory. Null: the engine makes `POS-<TRADE_ID>` | `POS-BOOK-EQD-2~EQ_ASIAN-USD-2029Q2` |
-| `INSTRUMENT_ID` | id | STRING | optional | R | | the instrument of the position | `INS-EQ_ASIAN-USD-2029Q2` |
+| `VECTOR_ID` | id | `id` STRING | required | – | | `PV-<TRADE_ID>-<SCENARIO_SET_ID>`; the lake key | `PV-MX-20000274-HS-509` |
+| `TRADE_ID` | id | STRING | required | R | | the booking system's trade id (text even when all digits). When null the engine uses the row's `id` | `MX-20000274` |
+| `SECURITY_ID` | id | STRING | for securities and listed products | R | | the security or exchange contract the trade is in: a position rule's key (§3.7). The test data's are synthetic | `SEC-WARRANT-USD-01` |
+| `ISIN`, `TICKER`, `CONTRACT` | id | STRING | optional | R (when a rule names them) | | other keys a rule may name, read when promoted | |
+| `INSTRUMENT` | text | STRING | optional | R | | the instrument's name, the position's label | `Equity warrant USD 2027-05` |
 | `BUSINESS_DATE` | date | `business_date` DATE | required | R | | the close of business the vector belongs to | `2026-09-30` |
-| `SCENARIO_SET_ID` | id | STRING | required | – | | the scenario set whose `SCENARIO_DATES` order the vector | `HS-509` |
+| `SCENARIO_SET_ID` | id | STRING | required | C | | the scenario set whose `SCENARIO_DATES` order the vector; another set's id refuses the date (`DRS-5203`) | `HS-509` |
 | `SOURCE_SYSTEM` | text | doc | optional | – | | booking system | `MUREX` |
-| `TRADE_VERSIONS` | text | doc | optional | – | | the trade version the batch priced (`v<TRADE_VERSION>`) | `v5` |
-| `LEGAL_ENTITY` | id | STRING | required | R | | the bank's legal entity (1st sort key in memory) | `LE-LDN` |
+| `TRADE_VERSIONS` | text | doc | optional | – | | the trade version the batch priced (`v<TRADE_VERSION>`) | `v4` |
+| `TRADE_STATUS` | text | STRING | optional | R | | the trade's status the batch priced: only the live statuses count (§3.7); none: it counts | `AMENDED` |
+| `MATURITY_DATE` | date | STRING | optional | R | | a trade matured before the business date does not count | `2027-05-26` |
+| `LEGAL_ENTITY` | id | STRING | required | R | | the bank's legal entity that booked the trade: `LE:` (§8.5), 1st sort key in memory | `LE-LDN` |
 | `DIVISION` | id | STRING | optional | R | | division of the desk | `DIV-MARKETS` |
 | `DESK` | id | STRING | required | R | | desk (2nd sort key) | `DESK-EQD` |
 | `TT_BOOK` | id | STRING | required | R | | book (3rd sort key); a trade without a book is in no node | `BOOK-EQD-2` |
 | `PORTFOLIO` | text | STRING | optional | R | | booking portfolio on the trade | `BOOK-EQD-2` |
-| `STRATEGY` | text | doc | optional | – | | trading strategy | `""` |
-| `PRODUCT_GROUP` | text | STRING | optional | R | | product group | `Equity` |
-| `PRODUCT_TYPE` | text | STRING | optional | R | | product type as booked | `EQ_ASIAN` |
+| `STRATEGY` | text | STRING | optional | R | | trading strategy | `""` |
+| `PRODUCT_GROUP` | text | STRING | optional | R | | product group: picks the position rule | `Equity` |
+| `PRODUCT_TYPE` | text | STRING | optional | R | | product type as booked: picks the position rule | `WARRANT` |
 | `CURRENCY` | ccy | STRING | optional | R | | the trade's currency (not the vector's) | `USD` |
-| `COUNTERPARTY` | id | STRING | optional | R | | counterparty id | `CP-KESTREL` |
+| `COUNTERPARTY` | id | STRING | optional | R | | counterparty id: `CPTY:` (§8.5) | `CP-SUMMIT` |
 | `DIRECTION` | text | STRING | optional | R | | `LONG` (quantity ≥ 0) or `SHORT` | `SHORT` |
-| `QUANTITY` | amount | DOUBLE | optional | R | units or notional | signed quantity: positive bought, negative sold | `-180000000.0` |
-| `REPORTING_CCY` | ccy | doc | required | – | | the vector's currency; must be `USD` | `USD` |
-| `PV` | amount | DOUBLE | optional | R | USD | present value on the business date (the size behind a trade's marginal VaR) | `-83827` |
-| `PNL` | vector | `list<double>` | required | R | USD | the trade's P&L under each scenario, in `SCENARIO_DATES` order, gain positive; length = `SCENARIO_COUNT` | `[6308, -5205, -2228, …]` (509) |
-| `STATUS` | text | STRING | required | – | | `ok`, `proxied` (priced by a proxy) or `failed` (then `PNL` null) | `ok` |
+| `QUANTITY` | amount | DOUBLE | optional | R | units or notional | signed quantity: positive bought, negative sold (the batch applies the sign of `BUY_SELL_CODE`) | `-179000000.0` |
+| `TAGS` | text | STRING | optional | R | | the trade's tags joined by `\|` (`internal`, `option`): a position's are the union | `""` |
+| `REPORTING_CCY` | ccy | STRING | required | C | | the vector's currency; another than `USD` rejects the row (`DRS-5201`) | `USD` |
+| `PV` | amount | DOUBLE | optional | R | USD | present value on the business date (a position's market value; the size behind a trade's marginal VaR) | `3143714` |
+| `PNL` | vector | `list<double>` | required | R | USD | the trade's P&L under each scenario, in `SCENARIO_DATES` order, gain positive; length = `SCENARIO_COUNT` | `[4169, -3347, -1306, …]` (509) |
+| `STATUS` | text | STRING | required | C | | `ok`, `proxied` (priced by a proxy) or `failed` (then `PNL` null; a failed row with a vector is rejected) | `ok` |
 | `PRICER` | text | doc | optional | – | | pricer used | `demo-factor-model` |
-| `MODEL_VERSION` | text | doc | optional | – | | pricer version | `demo-1` |
+| `MODEL_VERSION` | text | doc | optional | – | | pricer version | `demo-2` |
 | `COMPUTED_AT` | timestamp | doc | optional | – | UTC | when the batch valued the trade | `2026-09-30T22:30:00Z` |
-| `BATCH_ID` | id | STRING | required | – | | the run; one per date (check planned) | `B-2026-09-30-01` |
+| `BATCH_ID` | id | STRING | required | C | | the run: one per date (several refuse the date, `DRS-5203`) | `B-2026-09-30-01` |
 | `RESTATEMENT` | integer | doc | optional | – | | 0 for the first run, 1, 2, … for restatements | `0` |
 
+`POSITION_ID` and `INSTRUMENT_ID` are no longer delivered: the engine derives them (§3.7); an upstream value is not read.
+
 **The engine's read.** `VarLoader` asks the connector for the date's rows through `SourceRouter.vectors(kind, "PNL", columns, asOf,
-sink)`: the columns `TRADE_ID` and the 14 of `VarBook.TRADE_TEXTS` and `TRADE_NUMBERS` (`POSITION_ID`, `LEGAL_ENTITY`, `DIVISION`,
-`DESK`, `TT_BOOK`, `PORTFOLIO`, `PRODUCT_GROUP`, `PRODUCT_TYPE`, `CURRENCY`, `COUNTERPARTY`, `DIRECTION`, `INSTRUMENT_ID`;
-`QUANTITY`, `PV`). Each must be a promoted column, else the connector declines and the load fails (`DRS-1003`, §10). The vector is
-streamed into the vector store; no document is parsed. A null `PNL` is a **failed** row: counted (`provenance.failed`), never taken
-as zero. A null element of `PNL` becomes `NaN` (§10.3).
+sink)`: `TRADE_ID`, the engine's columns of `VarBook.TRADE_TEXTS` and `TRADE_NUMBERS`, every key field a position rule names, and the
+check columns (`TRADE_STATUS`, `MATURITY_DATE`, `BATCH_ID`, `SCENARIO_SET_ID`, `REPORTING_CCY`, `STATUS`), each read when the table
+keeps it promoted (`SourceRouter.columnar`); a connector that cannot say is asked for the engine's own columns only. The vector is
+streamed into the vector store; no document is parsed. Each row passes `VarIntake` (§10): not live, it is left out (counted as
+`excluded`); a wrong length, a null or NaN, another currency or a failed row with a vector is rejected (`DRS-5201`, counted and listed in
+the provenance); otherwise it gets its position (§3.7) and joins the store. A null `PNL` is a **failed** row: counted
+(`provenance.failed`), never taken as zero.
 
 **The vector** ([README.md section 8](README.md#8-vectors-and-other-arrays)):
 
@@ -206,8 +233,9 @@ as zero. A null element of `PNL` becomes `NaN` (§10.3).
 
 ### 3.3 `scenario-set`: the scenario days (AS BUILT)
 
-**Grain:** one row per scenario set and business date. **Key:** `SCENARIO_SET_ID` (with `business_date`). **Row count:** 1 per date
-today. The engine reads the **first** scenario-set document of the date; a date with two sets is not supported (open question 6).
+**Grain:** one row per scenario set and business date. **Key:** `SCENARIO_SET_ID` (with `business_date`). **Row count:** 1 per date.
+A date with two scenario sets is not loaded (`DRS-5203`; several sets per date are open question 6), nor one whose `SCENARIO_DATES` are
+not strictly increasing or not all before the business date.
 
 | Column | JSON | Delta | Req. | Engine | Meaning | Example |
 |---|---|---|---|---|---|---|
@@ -247,9 +275,9 @@ planner and the history use it.
 
 ### 3.5 `portfolio`: stored portfolio definitions (AS BUILT)
 
-**Grain:** one row per portfolio and business date. **Key:** `PORTFOLIO_ID` (`PF-…`). **Row count:** 7 in the test data. The engine
-reads only the **definition** fields; the figures in the row are computed by the demo generator for the portfolio page and are
-**retired with the stored figures (planned, §14.3)**.
+**Grain:** one row per portfolio and business date. **Key:** `PORTFOLIO_ID` (`PF-…`). **Row count:** 28 in the test data. A portfolio
+is a **definition**: its positions, VaR, ES and contributions are the engine's, computed when asked (the portfolio page, `PORT:<id>`,
+§9.8). The figures the demo generator used to store on it were removed in 2.8.0 (§14.3).
 
 | Column | JSON | Delta | Req. | Engine | Meaning | Example |
 |---|---|---|---|---|---|---|
@@ -259,111 +287,80 @@ reads only the **definition** fields; the figures in the row are computed by the
 | `TYPE` | text | STRING | required | R | `HIERARCHY`, `RULE` or `BASKET` | `HIERARCHY` |
 | `DEFINITION` | record | doc | required | R | `{NODE: <NODE_ID>}`, `{RULE: <rule text>}` (§8.4) or `{MEMBERS: [{POSITION_ID} or {TRADE_ID}, …]}` | `{"NODE": "MGMT~DESK-RATES"}` |
 | `ROLLS_UP_TO` | record | doc | optional | – | `{KIND, ID}` the portfolio reports under | `{"KIND": "desk", "ID": "DESK-RATES"}` |
-| `LIMIT_VAR` | amount | DOUBLE | optional | R | the portfolio's VaR limit, USD | `4600000` |
+| `LIMIT_VAR` | amount | DOUBLE | optional | R | the portfolio's VaR limit, USD (an input a risk manager sets) | `106000000` |
 | `BUSINESS_DATE`, `VALID_FROM`, `VALID_TO` | date | `business_date` / doc | required / optional | – | | `2026-09-30`, `2026-01-02`, `null` |
-| `SCENARIO_SET_ID`, `POSITION_COUNT`, `TRADE_COUNT`, `LONG_COUNT`, `SHORT_COUNT`, `GROSS_MV`, `NET_MV`, `VAR_99`, `ES_975`, `LIMIT_USE`, `POSITIONS[]`, `BY_PRODUCT[]`, `BY_CURRENCY[]`, `BY_DIRECTION[]`, `TOP_CONTRIBUTORS[]`, `ALL_TRADES`, `VAR_SCOPE`, `PNL` | various | doc (`VAR_99`, `ES_975`, `POSITION_COUNT` promoted; `PNL` vector) | derived | – | the demo's figures as of the date, for the Sutra page; removal planned (§14.3) | `"VAR_99": 3012892` |
+
+A BASKET's `POSITION_ID` members name derived positions (§3.7): `POS-<TT_BOOK>~<security>` or `POS-<TT_BOOK>~<TRADE_ID>`.
 
 **How a definition becomes a scope** (`VarDate.Portfolio.of`): HIERARCHY → `NODE:<NODE>`; RULE → `WHERE:<RULE>`; BASKET → `POS:<ids>`
 and/or `TRD:<ids>` joined by ` + ` (a `TRADE_ID` member is that trade only; an empty basket is `TRD:NONE`).
 
-### 3.6 `position`: the input table as built (AS BUILT; replaced, planned)
+### 3.6 `position`: the input table (RETIRED in 2.8.0)
 
-**Grain:** one row per position and business date. **Key:** `POSITION_ID`. **Row count:** 196 in the test data (181 `fungible`, 15
-`single-trade`; 44 hold both buys and sells). Written today by the demo generator (§13); the engine reads 19 of its fields to evaluate
-`WHERE:` rules and to label positions. **From 2.8.0 positions are derived by Drishti (§3.7) and this input table is removed.**
+Until 2.8.0 the demo generator wrote a `position` table (positions grouped by product type, currency, underlying and maturity quarter,
+with VaR figures on them). It is gone: positions are derived by Drishti (§3.7), and no position carries a stored figure (§14.3).
 
-| Column | JSON | Delta | Engine | Meaning | Example |
-|---|---|---|---|---|---|
-| `POSITION_ID` | id | STRING (also `id`) | R | `POS-<TT_BOOK>~<instrument key>` | `POS-BOOK-EQD-2~EQ_ASIAN-USD-2029Q2` |
-| `BUSINESS_DATE` | date | `business_date` DATE | R | | `2026-09-30` |
-| `INSTRUMENT_ID` | id | STRING | R | demo key: `INS-<PRODUCT_TYPE>-<CURRENCY>[-<underlying>]-<maturity quarter>` | `INS-EQ_ASIAN-USD-2029Q2` |
-| `INSTRUMENT` | text | STRING | R | display name | `Equity Asian option USD 2029-04` |
-| `POSITION_TYPE` | text | doc | – | `fungible` (several trades) or `single-trade` | `fungible` |
-| `DIRECTION` | text | STRING | R | `LONG` (net quantity > 0), `SHORT` (< 0), `FLAT` (0) | `SHORT` |
-| `QUANTITY` | amount | DOUBLE | R | signed sum of the trades' signed quantities | `-810529060.0` |
-| `GROSS_QUANTITY` | amount | doc | – | sum of absolute quantities | `7050772940.0` |
-| `TRADE_IDS` | id list | doc | – | the trades (links to `trade`) | `["MX-20000209", …]` (18) |
-| `TRADE_QUANTITIES` | record list | doc | – | `{TRADE_ID, QUANTITY, DIRECTION, VAR_99, COMPONENT_VAR}` per trade (the last two computed) | |
-| `TRADE_COUNT`, `LONG_TRADES`, `SHORT_TRADES` | integer | DOUBLE / doc | R (`TRADE_COUNT`) | counts | `18`, `9`, `9` |
-| `LEGAL_ENTITY`, `DIVISION`, `DESK`, `TT_BOOK`, `PORTFOLIO` | id | STRING | R | the hierarchy, from the trades' book and desk | `LE-LDN`, `DIV-MARKETS`, `DESK-EQD`, `BOOK-EQD-2`, `BOOK-EQD-2` |
-| `STRATEGY` | text | doc | R | first trade's strategy | `""` |
-| `COUNTERPARTY` | id | STRING | R | the counterparty when all trades share one, else empty | `""` |
-| `COUNTERPARTIES` | id list | doc | – | every counterparty of the trades | `["CP-ALDERSHOT", …]` (13) |
-| `PRODUCT_GROUP`, `PRODUCT_TYPE`, `CURRENCY` | text | STRING | R | from the first trade | `Equity`, `EQ_ASIAN`, `USD` |
-| `MARKET_VALUE` | amount | DOUBLE | R | USD, sum of the trades' MTM (`trade-valuation`) | `83350636` |
-| `NOTIONAL` | amount | doc | R | sum of absolute quantities, rounded | `7050772940` |
-| `LINEAR` | boolean | doc | – | false for options | `true` |
-| `STATUS` | text | doc | R | `open` | `open` |
-| `OPENED_ON` | date | doc | – | first trade date | `2024-10-10` |
-| `TAGS` | text list | doc | R | `internal`, `option`, `hedge` (rates or fixed income, net short) | `[]` |
-| `VAR_99`, `ES_975`, `COMPONENT_VAR` | amount | DOUBLE | – | **computed** (the position's own VaR and ES, its component in its book): removal planned | `52808`, `52234`, `51216` |
-| `BOOK_VAR`, `PCT_OF_BOOK_VAR`, `SCENARIO_SET_ID`, `PNL`, `VAR_SCOPE` | various | doc (`PNL` vector) | – | **computed** or derived for the page: removal planned (§14.3) | `426663`, `0.12` |
+### 3.7 Positions derived by Drishti (AS BUILT)
 
-The engine reads position records whole (as documents, not columns), keeps `POSITION_TEXTS` and `POSITION_NUMBERS` (§7.1), and **does
-not** read `TRADE_IDS`: a trade's position is the `POSITION_ID` of its `pnl-vector` row. A position with no record is made from its
-first trade's columns (quantity summed, market value unknown).
+Drishti derives positions itself, on the server, each time it loads a business date (product owner, 2026-10-25), from the date's
+`pnl-vector` rows (the trades as the batch priced them) and the **position rules**. This replaces the demo grouping of
+`tools/packgen/var/positions.py` before 2.8.0.
 
-### 3.7 Positions derived by Drishti (PLANNED)
-
-From 2.8.0 Drishti derives positions itself, server-side, when it loads a business date (product owner, 2026-10-25). The upstream batch
-delivers trade vectors only; `POSITION_ID` on `pnl-vector` becomes **derived** (an upstream value is ignored). This replaces the demo
-rule of `tools/packgen/var/positions.py` (product type, currency, underlying index and maturity quarter in one book).
-
-| Rule | Contract (planned) |
+| Rule | Contract (as built) |
 |---|---|
-| Live trades | statuses `NEW`, `VALIDATED`, `AMENDED` on the business date (configurable); `CANCELLED` and `MATURED` are out; maturity on or after the date |
-| Signed quantity | `abs(QUANTITY)` when bought, `−abs(QUANTITY)` when sold (`BUY_SELL_CODE` starting with `S`), as the demo does today |
-| Securities | key (`TT_BOOK`, security id): the first of `SECURITY_ID`, `ISIN`, ticker present on the trade; `POSITION_ID = POS-<TT_BOOK>~<security id>` |
-| Listed derivatives | key (`TT_BOOK`, exchange contract); `POSITION_ID = POS-<TT_BOOK>~<contract>` |
-| OTC | key (`TT_BOOK`, `TRADE_ID`): one position per trade; `POSITION_ID = POS-<TT_BOOK>~<TRADE_ID>`, `INSTRUMENT_ID` = the trade id |
-| Which rule | by `PRODUCT_GROUP` (and `PRODUCT_TYPE` where a group mixes), in configuration, never in code |
+| Live trades | `TRADE_STATUS` one of the live statuses (`NEW`, `VALIDATED`, `AMENDED`; configurable); a row with no status counts (the batch valued it); `MATURITY_DATE` before the business date: not live. A row not live is left out of the date (`provenance.excluded`) |
+| Signed quantity | `QUANTITY` as delivered: `abs(QUANTITY)` when bought, `−abs(QUANTITY)` when sold (`BUY_SELL_CODE` starting with `S`): the batch applies it, as the demo generator does |
+| Which rule | the first rule whose `groups` hold the trade's `PRODUCT_GROUP` or whose `types` hold its `PRODUCT_TYPE` (compared ignoring case; a rule naming neither takes every trade); configuration, never code |
+| Securities | (`TT_BOOK`, the first of `SECURITY_ID`, `ISIN`, `TICKER` the trade carries): `POSITION_ID = POS-<TT_BOOK>~<security>` |
+| Listed derivatives | (`TT_BOOK`, the first of `SECURITY_ID`, `CONTRACT`): `POSITION_ID = POS-<TT_BOOK>~<contract>` |
+| OTC | (`TT_BOOK`, `TRADE_ID`): one position per trade; `POSITION_ID = POS-<TT_BOOK>~<TRADE_ID>`, `INSTRUMENT_ID` = the trade id. A securities or listed trade without a key field is OTC too |
 | Direction | `LONG` when the net signed quantity > 0, `SHORT` < 0, `FLAT` = 0 |
-| Risk positions | an optional second grouping **for viewing only** (for example today's book × product × currency × underlying × maturity quarter), offered as a `by` of the contributions and as a column; it never changes the vector grain or the official figures |
-| Kept | in memory with the date, and as a Drishti-owned table of derived positions (where: open question 2) |
+| Position columns | the first trade's instrument, hierarchy, product and currency; the counterparty when every trade shares one (else empty); the union of the trades' tags; `QUANTITY` the signed sum, `NOTIONAL` the gross, `MARKET_VALUE` the trades' PV, `TRADE_COUNT`, `LONG_TRADES`, `SHORT_TRADES`; `POSITION_RULE` (`securities`, `listed`, `otc`), `SECURITY_ID`, `POSITION_TYPE` (`fungible`, `single-trade`), `STATUS` (`open`, `flat`) |
+| Risk positions | an optional second grouping for viewing only (book × product type × currency × underlying × maturity quarter): **PLANNED** |
 
-A sketch of the configuration (planned; names may change):
+**The rules** are the market-risk pack's `positions:` section (in `pack.yaml`, kept in `tools/packgen/banking/kept/market-risk.yaml`);
+when no loaded pack has one, the server's `drishti.var.positions` (§6.1; default: the live statuses, no rule, so one position per
+trade). The demo's:
 
 ```yaml
-drishti:
-  var:
-    positions:                                   # planned 2.8.0: how Drishti derives positions from trades
-      live-statuses: [NEW, VALIDATED, AMENDED]
-      rules:                                     # first match wins
-        - groups: [Equity, Fixed income, Securities financing, Money market]
-          key: [SECURITY_ID, ISIN, TICKER]       # the first present; none: the OTC rule
-        - groups: [Listed derivatives]
-          key: [CONTRACT]
-        - default: otc                           # one position per trade
-      risk-positions: [PRODUCT_TYPE, CURRENCY, UNDERLYING, MATURITY_QUARTER]   # optional viewing grouping
+positions:
+  live-statuses: [NEW, VALIDATED, AMENDED]
+  rules:
+    - name: securities                  # bonds, notes, bills, shares and warrants: by book and security
+      groups: [Fixed income]
+      types: [EQ_CASH, WARRANT, CONVERTIBLE_BOND, INFL_LINKED_BOND, T_BILL, COMMERCIAL_PAPER, CERT_DEPOSIT]
+      key: [SECURITY_ID, ISIN, TICKER]
+    - name: listed                      # exchange-traded futures and options: by book and contract
+      types: [BOND_FUTURE, STIR_FUTURE, STIR_FUT_OPT, EQ_FUTURE_SINGLE, EQ_INDEX_FUTURE, EQ_OPTION_LISTED, EQ_INDEX_OPTION, CMD_FUTURE,
+              CMD_FUT_OPTION, ComFut, EMISSIONS_FUTURE]
+      key: [SECURITY_ID, CONTRACT]
+    - name: otc                         # everything else: one position per trade
 ```
 
-**Note on the test data:** the committed trades carry no `SECURITY_ID`, `ISIN`, ticker or contract field (checked on 2026-10-25), so
-under these rules every demo trade would be its own position until the generator adds security ids (open question 3).
+**Where positions live (decided, open question 2).** In memory, with their date: rebuilt from the date's trades and the rules every time
+the date is loaded, so the same inputs and rules always give the same positions (reproducible). They are not stored in the lake nor in a
+database. Each **official end-of-day capture** records the membership the rules derived (every position with its trades, by book, and
+each node's books) and the rules' text and digest (§9.6), so an official figure can be recomputed from its inputs years later. They are
+served as the `position` kind by the market-risk pack's `var-positions` connector (`plugin: var-positions`, the engine's memory; `POS
+<id>`, `/v/position/<id>`, search), with no figure on them: the position page shows the engine's (§9.8).
 
-### 3.8 `var-node`: the stored node history (AS BUILT; retired, planned)
+The served document: `POSITION_ID`, `BUSINESS_DATE`, `POSITION_RULE`, `SECURITY_ID`, `INSTRUMENT_ID`, `INSTRUMENT`, `POSITION_TYPE`,
+`DIRECTION`, `QUANTITY`, `GROSS_QUANTITY`, `TRADE_COUNT`, `LONG_TRADES`, `SHORT_TRADES`, `TRADE_IDS`, `TRADES` (`TRADE_ID`, `QUANTITY`,
+`DIRECTION`, `PV`, `PRODUCT_TYPE`, `COUNTERPARTY` each), `LEGAL_ENTITY`, `DIVISION`, `DESK`, `TT_BOOK`, `PORTFOLIO`, `STRATEGY`,
+`COUNTERPARTY`, `PRODUCT_GROUP`, `PRODUCT_TYPE`, `CURRENCY`, `COUNTERPARTIES`, `MARKET_VALUE`, `NOTIONAL`, `TAGS`, `STATUS`,
+`SCENARIO_SET_ID`, `VAR_SCOPE` (`POS:<id>`), `DERIVED_BY`.
 
-**Grain:** one row per node and business date, 250 dates. **Key:** `VAR_NODE_ID` = `VN-<NODE_ID>`. **Row count:** 22,000 in the test
-data (88 nodes × 250 days, 2025-10-01 to 2026-09-30). The engine reads `NODE_ID`, `VAR_99`, `ES_975`, `HYPO_PNL`, `LIMIT` as columns
-over the window (§6.5) and each node's `PNL` (read, kept as a cross-check, used by no answer).
+**The test data (decided, open question 3).** The committed trades carry no security id: the demo risk batch
+(`tools/packgen/var/positions.py`) gives every trade of a securities or listed rule keyed by `SECURITY_ID` a deterministic synthetic id,
+a few per product type and currency (about six trades each, chosen by a hash of the trade id): `SEC-<PRODUCT_TYPE>-<CURRENCY>-<nn>` for
+securities, `XCH-…` for listed. On 2026-09-30: 2,159 trades in 358 securities; 7,984 positions (359 securities, 212 listed, 7,413 OTC),
+476 of them fungible and 111 netting buys and sells. A bank's batch copies the trade's own security id.
 
-| Column | JSON | Delta | Engine | Unit | Meaning | Example |
-|---|---|---|---|---|---|---|
-| `VAR_NODE_ID` | id | `id` STRING | – | | `VN-<NODE_ID>` | `VN-MGMT~DESK-RATES` |
-| `NODE_ID`, `HIERARCHY`, `LEVEL`, `NAME`, `PARENT_ID` | id/text | STRING | R (`NODE_ID`) | | the node, as in `risk-hierarchy` | `MGMT~DESK-RATES`, `MGMT`, `desk` |
-| `BUSINESS_DATE` | date | `business_date` DATE | R | | | `2026-09-29` |
-| `SCENARIO_SET_ID` | id | doc | – | | | `HS-509` |
-| `VAR_99`, `ES_975` | amount | DOUBLE | R | USD | the node's official VaR and ES of the day | `2938233`, `3599094` |
-| `HYPO_PNL` | amount | DOUBLE | R | USD | hypothetical P&L of the day (positions of the day before, the day's market) | `388197` |
-| `EXCEPTION` | boolean | doc | – | | `HYPO_PNL < −PREVIOUS_VAR` | `false` |
-| `PREVIOUS_VAR` | amount | doc | – | USD | the previous row's `VAR_99` | `2919754` |
-| `LIMIT`, `LIMIT_USE` | amount, ratio | DOUBLE / doc | R (`LIMIT`, unused by answers) | USD, — | | `4200000`, `0.6996` |
-| `POSITION_COUNT`, `TRADE_COUNT` | integer | DOUBLE | – | | | `24`, `172` |
-| `BATCH_ID`, `OFFICIAL` | id, boolean | doc | – | | | `B-2026-09-29-01`, `true` |
-| `PNL`, `EXCEPTIONS_250` | vector, integer | `list<double>`, doc | R (`PNL`) | USD | on the last date only: the node's vector and the exceptions over 250 days | |
+### 3.8 `var-node`: the stored node history (RETIRED in 2.8.0)
 
-In the test data the figures before the business date are synthetic (today's VaR scaled by each book's random size walk, §13.2); only
-the business date's row is the engine's own number. **Retirement (planned):** the history becomes the engine's **official end-of-day
-captures** (§9.6); the table, its samples, generator and mnemonic go (§14).
+Until 2.8.0 the demo generator stored every node's VaR, ES and hypothetical P&L over 250 days (`var-node`). The table, its samples,
+generator and mnemonic `VNODE` are gone: a node's history is its **official end-of-day captures** (§9.6), and `VN-<NODE_ID>` opens the
+explorer at `NODE:<NODE_ID>` (§14).
 
 ### 3.9 Cadence, due time and the delivery sequence
 
@@ -372,7 +369,7 @@ captures** (§9.6); the table, its samples, generator and mnemonic go (§14).
 | Cadence | once per business date (USNY calendar), after the close |
 | Due time | **to be agreed** (no `loads:` expectation in the market-risk pack today; open question 4) |
 | Complete when | every live trade booked on the date has a `pnl-vector` row (`ok`, `proxied` or `failed`), the scenario set is written, and the hierarchy and portfolios of the date are present |
-| One run | all rows of a date carry one `BATCH_ID` and the scenario set's `SCENARIO_SET_ID` (check planned, §10.4) |
+| One run | all rows of a date carry one `BATCH_ID` and the scenario set's `SCENARIO_SET_ID`; otherwise the date is not loaded (`DRS-5203`) and the date before it is answered, with a warning |
 | Restatement | rewrite the whole date (`lake build` replaces a business date); `RESTATEMENT` + 1; a new `BATCH_ID` |
 
 **Sequence** ([README.md section 9](README.md#9-delivery-writing-a-business-date)):
@@ -383,35 +380,37 @@ captures** (§9.6); the table, its samples, generator and mnemonic go (§14).
  1 write scenario-set row for D ───────────────►  (lake)
  2 write pnl-vector rows for D (one BATCH_ID) ──►  (lake)
  3 write risk-hierarchy / portfolio rows for D ─►  (lake; when changed)
- 4 POST /api/v1/packs/market-risk/loads           drops the connector caches of the kind, verifies the date,
-   {kind, businessDate, status, rows, batchId}    runs alerts, tells people (DATA_LOADS.md)
-   (or drishti.py data landed)
- 5 an administrator: POST /api/v1/var/reload ───►  drops every loaded date and cached answer; the next request loads D again
- 6 the next VaR request for D (or the newest) ──►  loads D: scenario set, vectors, positions, hierarchy, history, portfolios;
-                                                   sorts, sums every node; answers
+ 4 POST /api/v1/packs/market-risk/loads           drops the connector caches of the kind, verifies the date, runs alerts, tells
+   {kind, businessDate, status, rows, batchId}    people (DATA_LOADS.md); for pnl-vector, scenario-set, risk-hierarchy, portfolio
+   (or drishti.py data landed)                    (and trade): the VaR engine drops date D, then captures D officially (§9.6)
+ 5 the next VaR request for D (or the newest) ──►  loads D: scenario set, vectors (checked, positions derived), hierarchy,
+                                                   portfolios; sorts, sums every node; answers
 ```
 
-**As built:** the data-load signal does **not** call the VaR engine's reload (nothing in the server calls `VarService.reload()` but the
-endpoint). A **new** date is picked up without it (each request asks the connector for the newest date with vectors); a **restated**
-date that is already loaded keeps its old vectors until `POST /api/v1/var/reload` (open question 5). **Hot dates:** at most
-`drishti.var.hot-dates` (2) dates stay loaded, the newest first; the date just used always stays; a dropped date's cached answers go too.
-**Planned:** the load signal for `pnl-vector` reloads that date, and the official end-of-day captures (§9.6) run when the date is
-complete.
+**As built (decided, open question 5).** A `ready` load of an input kind (`drishti.var.kinds`: `pnl-vector`, `scenario-set`,
+`risk-hierarchy`, `portfolio`) or of `trade` drops that date from the engine (the same as `POST /api/v1/var/reload` for the date, audited
+`var-reload`), so a restated date is never stale, then captures the date officially in the background (§9.6): a date whose inputs are
+unchanged is not captured again, a restated one gets the next result version. A **new** date is picked up without a signal (each request
+asks the connector for the newest date with vectors); at start the server captures the newest date when it has no official record
+(`drishti.var.official.on-start`). **Hot dates:** at most `drishti.var.hot-dates` (2) dates stay loaded, the newest first; the date just
+used always stays; a dropped date's cached answers go too.
 
 ## 4. Reference and master data read
 
-**As built, the server engine reads no master directly**: everything it needs is denormalised onto the `pnl-vector` rows (hierarchy and
-product columns) and the `risk-hierarchy` rows (books per node). Masters are read by the demo generator and by the pages' links.
+**The server engine reads no master directly** (decided 2026-10-25): everything it needs is denormalised onto the `pnl-vector` rows (the
+trade's terms as the batch priced them: hierarchy, product, security, status, maturity, quantity) and the `risk-hierarchy` rows (books
+per node). Positions are derived from those rows (§3.7), not from the trade master: one read per date, the version the batch priced
+(`TRADE_VERSIONS`), no join across the three booking systems at load. Masters are read by the demo generator and by the pages' links.
 
 | Master (kind) | Key | Read by | What for |
 |---|---|---|---|
-| `trade` (ENDUR, CALYPSO, MUREX connectors; TRD) | `TRADE_ID` | generator (as built); the engine at date load (planned) | live trades, status, maturity, book, signed quantity, product and currency, `LEGS[].INDEX_NAME`, version, trade date; position derivation (§3.7) |
+| `trade` (ENDUR, CALYPSO, MUREX connectors; TRD) | `TRADE_ID` | the generator (the batch's copy of each trade); the pages' links | live trades, status, maturity, book, signed quantity, product and currency, version; the security id a bank's batch copies |
 | `desk` (core pack; DESK) | `DESK_ID`, `BOOKS[].ID` | generator | book → desk, desk → legal entity, desk names; the hierarchies |
 | `book` (BOOK) | `TT_BOOK` | pages (links) | |
-| `legal-entity` (LE) | `LEGAL_ENTITY` | generator (via desks); `LE:` scope (planned) | |
-| `trade-valuation` (TVAL) | `VALUATION_ID` = `TVAL-<TRADE_ID>` | generator | `MTM` → `PV` and `MARKET_VALUE` |
-| `counterparty` (CPTY), `lei-entity` (LEI) | `COUNTERPARTY`, `LEI` | `CPTY:` and `GROUP:` scopes (planned) | a counterparty's trades; a connected group through GLEIF parents |
-| `netting-set` (NSET) | `NETTING_SET` | `NSET:` scope (planned) | a netting set's trades |
+| `legal-entity` (LE) | `LEGAL_ENTITY` | generator (via desks); pages | `LE:` reads the trades' own `LEGAL_ENTITY` (§8.5) |
+| `trade-valuation` (TVAL) | `VALUATION_ID` = `TVAL-<TRADE_ID>` | generator | `MTM` → `PV` |
+| `counterparty` (CPTY) | `COUNTERPARTY` | pages (links) | `CPTY:` reads the trades' own `COUNTERPARTY` (§8.5) |
+| `lei-entity` (LEI), `netting-set` (NSET) | `LEI`, `NETTING_SET` | `GROUP:` and `NSET:` scopes (parked) | |
 
 Positions link to trades (`graph.fields.TRADE_IDS` → `trade`); the explorer links each trade row to `TRD:<id>` and each node to its
 `NODE:` scope.
@@ -430,7 +429,7 @@ Positions link to trades (`graph.fields.TRADE_IDS` → `trade`); the explorer li
 | Ties | scenarios with equal P&L are ordered by index, the older scenario first (the same rule in `VarMath.order` and `varmath.order`) |
 | Horizon | 1 day; no √10 scaling anywhere |
 | Quantity | positive long, negative short; `DIRECTION` says the same in words |
-| Ids | case: the scope parser upper-cases ids (§8.2), so ids must be upper case except basket names and capture ids |
+| Ids | case: the ids of `POS`, `TRD` and `CPTY` are kept as written and matched exactly, else ignoring case (a booking system's ids are text and may be lower case; two ids that differ only in case are ambiguous and match neither); the other words' arguments are upper case, except basket names and capture ids (§8.2) |
 
 ## 6. The computation
 
@@ -448,15 +447,17 @@ Bound by `VarProperties` (`@ConfigurationProperties("drishti.var")`); `GET /api/
 | `drishti.var.component-scale-to-var` | `true` | `true` | scale components to add up to VaR (else to the smoothed VaR) |
 | `drishti.var.threads` | `${DRISHTI_VAR_THREADS:0}` | every core (0 or less) | the sum pool's threads |
 | `drishti.var.parallel-rows` | `4096` | 4096 | fewest rows a sum splits across threads |
-| `drishti.var.memory-budget-mb` | `${DRISHTI_VAR_MEMORY_MB:0}` | a quarter of the JVM's max heap (0 or less) | most bytes of vectors **one date** may hold (§7.2) |
+| `drishti.var.memory-budget-mb` | `${DRISHTI_VAR_MEMORY_MB:0}` | a quarter of the JVM's max heap (0 or less) | most bytes of vectors **one date** may hold (§7.2); over it the date answers `503 DRS-5204` |
 | `drishti.var.rows-per-chunk` | `65536` | 65,536 | rows per `double[]` chunk of the vector store |
 | `drishti.var.hot-dates` | `2` | 2 | business dates kept loaded |
 | `drishti.var.history-days` | `250` | 250 (1 or less) | history and backtest window |
 | `drishti.var.histogram-bins` | `42` | 42 (below 5) | bins of the P&L histogram |
-| `drishti.var.max-parts` | `5000` | 5,000 | most parts a contribution table computes |
+| `drishti.var.max-parts` | `5000` | 5,000 | most parts a contribution table computes; more: the largest by gross size (§9.1) |
 | `drishti.var.path-page` | `60` | 60 | rows per page of the ranked P&L path |
-| `drishti.var.kinds.vector`, `.position`, `.hierarchy`, `.scenario-set`, `.node`, `.portfolio` | the market-risk kinds | `pnl-vector`, `position`, `risk-hierarchy`, `scenario-set`, `var-node`, `portfolio` | the kinds read |
+| `drishti.var.kinds.vector`, `.position`, `.hierarchy`, `.scenario-set`, `.portfolio` | the market-risk kinds | `pnl-vector`, `position`, `risk-hierarchy`, `scenario-set`, `portfolio` | the kinds read (and `position`: the kind the derived positions are served as) |
 | `drishti.var.access` | `{}` | no restriction | per role and node: `positions` or `aggregate` (§11) |
+| `drishti.var.positions.live-statuses`, `.rules` | `[NEW, VALIDATED, AMENDED]`, `[]` | the same | the position rules when no loaded pack has a `positions:` section (§3.7) |
+| `drishti.var.official.enabled`, `.publish`, `.root`, `.retention-years`, `.on-start` | `${DRISHTI_VAR_OFFICIAL:true}`, `true`, `${DRISHTI_DELTA_ROOT:…/delta}`, `7`, `true` | the same | the official end-of-day captures and their published results (§9.6) |
 
 ### 6.2 VaR
 
@@ -509,7 +510,7 @@ positions and PV for trades, per million. VAR_ENGINE.md lists `age-weighted` and
 
 | Mode | When | Rows | Backtest input |
 |---|---|---|---|
-| `official` | the scope is exactly one node, the viewer sees every node at `positions` level, and `var-node` has more than one day for it | the node's `var-node` rows, oldest first, at most `history-days` (250); read from `businessDate − (ceil(250 × 7/5) + 14)` calendar days to the date | `HYPO_PNL` against the previous row's `VAR_99` |
+| `official` | the scope is exactly one node, the viewer sees every node at `positions` level, and the node has official end-of-day records (§9.6) on more than one day up to the date | the node's official figures, oldest first, at most `history-days` (250): each date's latest result version | `HYPO_PNL` against the previous row's `VAR` |
 | `replay` | anything else | the last `min(history-days, N)` scenario days of the scope's **today's** vector | each day's scenario P&L against today's VaR (in-sample, labelled *not a regulatory backtest*) |
 
 **Backtest** (`Backtest.of(pnl[], var[], α)`), both arrays oldest first:
@@ -525,7 +526,11 @@ Christoffersen (independence), transitions over i = 2..n−1 of (exception_{i−
 p-value: P(χ²₁ > LR) = erfc(sqrt(LR/2))   (Numerical Recipes' erfc, |error| < 1.2e−7)
 ```
 
-Note the light's scaling for short histories: with 4 days, `round(4 × 0.016) = 0`, so a single exception is already **red**.
+**Short histories (decided 2026-10-25, open question 13: kept, documented).** The light scales its limits with the days it has: with 4
+days, `round(4 × 0.016) = 0`, so a single exception is already **red**; below 14 days one exception is red, below 32 one is amber. The
+screens show the light with its days, and it is not a regulatory zone before 250 days. **The hypothetical P&L of an official record**
+(`HYPO_PNL`) is the node's P&L under the newest scenario day of its date's set (the move of the business day before, applied to the
+date's members): a bank delivering a hypothetical P&L table of its own replaces it (planned).
 
 ### 6.6 Where it runs, and the Python engine (planned)
 
@@ -546,39 +551,39 @@ historical, stressed sets, ES backtests), and the computed kinds of §9.7. The b
 
 ### 7.1 As built: one business date in memory (`VarBook`)
 
-`VarLoader.load(date)` reads the scenario set, streams the vectors, reads positions, hierarchy nodes, the `var-node` history and
-portfolios, then `VarBook.Builder.build`:
+`VarLoader.load(date)` reads the scenario set (checked), streams the vectors through `VarIntake` (each row checked, left out when not
+live, given its position by the rules: §3.7, §10), reads the hierarchy nodes and the portfolios, checks the date is one run, then
+`VarBook.Builder.build`:
 
 ```
  pnl-vector rows (lake order)                   VarBook (immutable, shared by every request)
  ─────────────────────────────                  ─────────────────────────────────────────────────────────────
- TRADE_ID, 14 columns, PNL[509]  ──stream──►    VectorStore   rows = trades in hierarchy order, row-major double[] chunks
-                                                tradeIds[]    ordinal → TRADE_ID;  tradeOrdinal: TRADE_ID → ordinal
-                     sort by LEGAL_ENTITY,      trades        Columns: 12 text columns (int code + dictionary), 2 number columns
+ TRADE_ID, its columns, PNL[509] ──VarIntake──► VectorStore   rows = trades in hierarchy order, row-major double[] chunks
+   checked; POSITION_ID derived                 tradeIds[]    ordinal → TRADE_ID;  tradeOrdinal: TRADE_ID → ordinal (and in upper case)
+                     sort by LEGAL_ENTITY,      trades        Columns: 17 text columns (int code + dictionary), 2 number columns
                      DESK, TT_BOOK,             positionOf[]  ordinal → position index
                      POSITION_ID, TRADE_ID      posFrom[], posTo[]   each position = one run [from, to) of ordinals
-                     (stable merge sort)        positions     Columns: POSITION_TEXTS (15), POSITION_NUMBERS (4)
+                     (stable merge sort)        positions     Columns: POSITION_TEXTS (18), POSITION_NUMBERS (6), derived from the runs
                                                 bookRange     TT_BOOK → run [from, to)
  risk-hierarchy rows  ─────────────────────►    nodes         id, hierarchy, level, name, parent, children, books, limit,
                                                               members (OrdinalSet: the union of its books' runs)
                                                 aggregates    every book's and every node's vector (double[N]), summed at load
- var-node rows        ─────────────────────►    history       per node: dates[], var[], es[], hypo[], limit[] (≤ 250)
  portfolio rows       ─────────────────────►    portfolios    id → {name, type, owner, scope text, limit}  (in VarDate)
 ```
 
 | Structure | Exact content |
 |---|---|
 | **Trade order** | sorted by `LEGAL_ENTITY`, `DESK`, `TT_BOOK`, `POSITION_ID` (text order of the values; null as empty) then `TRADE_ID`: each position and each book is a contiguous run of ordinals. The sort and the permutation of the vectors happen once per load (both copies held during the permutation) |
-| **Trade columns** (`TRADE_TEXTS`) | `POSITION_ID`, `LEGAL_ENTITY`, `DIVISION`, `DESK`, `TT_BOOK`, `PORTFOLIO`, `PRODUCT_GROUP`, `PRODUCT_TYPE`, `CURRENCY`, `COUNTERPARTY`, `DIRECTION`, `INSTRUMENT_ID` (int code per row, −1 for null, one dictionary per column); `TRADE_NUMBERS`: `QUANTITY`, `PV` (`double`, NaN for none) |
-| **Position columns** | `POSITION_TEXTS`: `INSTRUMENT_ID`, `INSTRUMENT`, `DIRECTION`, `LEGAL_ENTITY`, `DIVISION`, `DESK`, `TT_BOOK`, `PORTFOLIO`, `PRODUCT_GROUP`, `PRODUCT_TYPE`, `CURRENCY`, `COUNTERPARTY`, `STRATEGY`, `TAGS` (stored joined by a vertical bar, read as a list), `STATUS`; `POSITION_NUMBERS`: `QUANTITY`, `MARKET_VALUE`, `NOTIONAL`, `TRADE_COUNT` |
+| **Trade columns** (`TRADE_TEXTS`) | `POSITION_ID` (derived), `LEGAL_ENTITY`, `DIVISION`, `DESK`, `TT_BOOK`, `PORTFOLIO`, `PRODUCT_GROUP`, `PRODUCT_TYPE`, `CURRENCY`, `COUNTERPARTY`, `DIRECTION`, `INSTRUMENT_ID` (derived), `SECURITY_ID`, `INSTRUMENT`, `STRATEGY`, `TAGS`, `POSITION_RULE` (int code per row, −1 for null, one dictionary per column); `TRADE_NUMBERS`: `QUANTITY`, `PV` (`double`, NaN for none) |
+| **Position columns** | derived from each run (§3.7): `POSITION_TEXTS`: `INSTRUMENT_ID`, `INSTRUMENT`, `DIRECTION`, `LEGAL_ENTITY`, `DIVISION`, `DESK`, `TT_BOOK`, `PORTFOLIO`, `PRODUCT_GROUP`, `PRODUCT_TYPE`, `CURRENCY`, `COUNTERPARTY`, `STRATEGY`, `TAGS` (stored joined by a vertical bar, read as a list), `STATUS`, `SECURITY_ID`, `POSITION_RULE`, `POSITION_TYPE`; `POSITION_NUMBERS`: `QUANTITY`, `MARKET_VALUE`, `NOTIONAL`, `TRADE_COUNT`, `LONG_TRADES`, `SHORT_TRADES` |
 | **Nodes** | from `risk-hierarchy`; a node's books are those of its `BOOKS` the date has trades in; children from `PARENT_ID` |
 | **Aggregates** | every book's vector (one parallel pass per book run), then every node's bottom-up from the roots (a leaf node sums its books; others their children). Keyed by book name and by node id |
 | **Position vectors** | summed on first use from the position's run and cached for the date's life (unbounded: at most one `double[N]` per position) |
 | **Failed** | count of rows with a null vector |
 
 **The vector store** (`VectorStore`): `width` = N; rows in `double[]` chunks of `rows-per-chunk` rows (65,536 × 509 doubles = 267 MB a
-chunk; the last chunk cut to its rows); row *r* at `chunks[r / rowsPerChunk][(r % rowsPerChunk) × N ..]`. A row shorter than N is padded
-with NaN, a longer one cut to N (no check: §10). Immutable after build; any number of readers.
+chunk; the last chunk cut to its rows); row *r* at `chunks[r / rowsPerChunk][(r % rowsPerChunk) × N ..]`. Only rows of exactly N finite
+values reach it (the rest are rejected first, §10). Immutable after build; any number of readers.
 
 **Ordinal sets** (`OrdinalSet`): a `java.util.BitSet` over the date's trade ordinals, one bit per trade (2 million trades: 250 KB);
 union, difference and intersection are exact; a run of a node is a run of bits. `digest()` = a 64-bit hash of the words in hex, `:`, the
@@ -611,8 +616,9 @@ partition's file paths and sizes), not the Delta table version. Views are cached
 
 **Load and memory.** A date's load runs once (concurrent requests share it); a failed load is retried by the next request. The budget
 `memory-budget-mb` bounds the rows of **one** date's store (N × 8 bytes a row); a date that would exceed it is refused whole with the
-reason (`400 DRS-5001`, §10). Up to `hot-dates` dates are loaded, so total vector memory is up to `hot-dates` × budget, plus a second copy
-of one date during its permutation.
+reason (`503 DRS-5204`, §10). Up to `hot-dates` dates are loaded, so total vector memory is up to `hot-dates` × budget, plus a second
+copy of one date during its permutation. A date that is not one run (`DRS-5203`) is remembered with its vector table's version and not
+read again until that version changes; the date before it is answered meanwhile, with the reason in `provenance.warnings`.
 
 ### 7.2 Sizes (as built, N = 509)
 
@@ -620,13 +626,13 @@ of one date during its permutation.
 |---|---|---|
 | vectors (float64) | 4,072,000 (3.88 MiB) | 509 × 8 per trade; the budget's measure |
 | vectors during load | + 4,072,000 | the unsorted copy while permuting |
-| trade columns | 64,000 | 12 × 4-byte codes + 2 × 8-byte numbers per trade, plus the dictionaries |
+| trade columns | 84,000 | 17 × 4-byte codes + 2 × 8-byte numbers per trade, plus the dictionaries |
 | trade ids and index | about 150,000 | `String` per id and a `HashMap` entry (JVM-dependent, estimate) |
-| position index | 4 per trade + per position about 92 bytes of columns, 8 of run, an id and a map entry | |
+| position index | 4 per trade + per position about 120 bytes of columns, 8 of run, an id and two map entries | |
 | ordinal set | 125 per set | one bit per trade of the date |
 | aggregates | 4,072 per book and per node | 88 nodes + 30 books in the demo: 0.48 MB |
 | position vector cache | up to 4,072 per position used | |
-| a whole date | about **4.3 MB per 1,000 trades** + 4 KB per node | demo: 1,673 trades, 6.8 MB of vectors |
+| a whole date | about **4.4 MB per 1,000 trades** + 4 KB per node | demo: 9,572 trades in 7,984 positions, 39 MB of vectors |
 
 Measured (VAR_ENGINE.md section 13.2, `VarScaleBenchmark`, one workstation with 24 hardware threads, JDK 25; not re-run for this
 document): 1 M trades = 4.07 GB of vectors; loading a date 3.4 s for 1 M trades after reading, 0.6 s for the demo from the lake.
@@ -695,13 +701,14 @@ A scope is text, parsed by `ScopeExpr.parse`, resolved on one date by `ScopeReso
 | Term | Argument | Resolves to |
 |---|---|---|
 | `BANK` | none (`BANK:x` is accepted and `x` ignored) | node `MGMT~BANK` |
-| `LE:<id>` | a legal entity | node `LEGAL~<id>`, else `LEGAL~LE-<id>` |
+| `LE:<id>` | a legal entity (`LE-NY` or `NY`) | the trades whose booking `LEGAL_ENTITY` is it (§8.5); the node `LEGAL~<id>` (else `LEGAL~LE-<id>`) gives its children, limit and history |
 | `DIV:<id>` | a division | `MGMT~<id>`, else `MGMT~DIV-<id>` |
 | `DESK:<id>` | a desk | `MGMT~<id>`, `MGMT~DESK-<id>`, `LEGAL~<id>`, `LEGAL~DESK-<id>` (first found) |
 | `BOOK:<id>` | a book | `MGMT~<id>`, else `MGMT~BOOK-<id>` |
 | `NODE:<node id>` | a full node id | that node (as written, then upper case) |
 | `POS:<id>[,<id>…]` | position ids | every trade of each position |
-| `TRD:<id>[,<id>…]` | trade ids | those trades |
+| `TRD:<id>[,<id>…]` | trade ids | those trades (an id as written, else the one id equal to it ignoring case) |
+| `CPTY:<id>[,<id>…]` | counterparty ids | every trade whose `COUNTERPARTY` is one of them (compared ignoring case) |
 | `PORT:<id>` | a stored portfolio | its definition's scope (§3.5), resolved recursively |
 | `BASKET:<owner>/<name>` | a saved basket the caller may read | its scope, resolved recursively |
 | `CAPTURE:<id>` | a capture the caller may read | `TRD:` of its members (resolved on the request's date) |
@@ -717,8 +724,8 @@ union    := and ( SP ('+' | '-') SP and )*          left to right; '+' and '-' h
 and      := atom ( SP '&' SP atom )*                '&' binds before '+' and '-'
 atom     := '(' union ')' | ref
 ref      := WORD | WORD ':' arg | 'WHERE' ':' rule
-WORD     := letters only, case-insensitive: BANK LE DIV DESK BOOK NODE POS TRD PORT BASKET CAPTURE WHERE
-arg      := characters up to whitespace, '(' or ')'; for POS and TRD, whitespace next to a comma is allowed ("a, b")
+WORD     := letters only, case-insensitive: BANK LE DIV DESK BOOK NODE POS TRD CPTY PORT BASKET CAPTURE WHERE
+arg      := characters up to whitespace, '(' or ')'; for POS, TRD and CPTY, whitespace next to a comma is allowed ("a, b")
 rule     := characters up to an unmatched ')', or up to whitespace + one of '+', '-', '&' + whitespace, outside quotes and parentheses
 SP       := whitespace (or, before an operator, a closing ')'; after it, an opening '(')
 ```
@@ -727,10 +734,10 @@ SP       := whitespace (or, before an operator, a closing ')'; after it, an open
 |---|---|
 | Operators | `+` union, `-` difference, `&` intersection; an operator must stand between spaces (or after `)` / before `(`): `MX-20000001` is an id, `A -B` is an error |
 | Precedence | `A + B - C` = (A ∪ B) − C; `A - B + C` = (A − B) ∪ C; `A + B & C` = A ∪ (B ∩ C); parentheses group |
-| Case | words are case-insensitive; arguments are **upper-cased**, except `BASKET` and `CAPTURE` arguments (kept as written) |
-| Lists | only `POS` and `TRD` split their argument on commas; for other words a comma is part of the id |
+| Case | words are case-insensitive; arguments are **upper-cased**, except `BASKET` and `CAPTURE` arguments and the ids of `POS`, `TRD` and `CPTY` (kept as written, matched exactly, else ignoring case: decided 2026-10-25) |
+| Lists | only `POS`, `TRD` and `CPTY` split their argument on commas; for other words a comma is part of the id |
 | Quoting | only inside `WHERE` rules: text literals in single quotes, `''` for a quote |
-| Canonical text | words upper case; `POS`/`TRD` ids sorted and unique; the terms of a union sorted; `A - B` written `A - (B)` when B is a combination; `&` operands in parentheses unless a term or another `&` |
+| Canonical text | words upper case; `POS`/`TRD`/`CPTY` ids sorted and unique (as written); the terms of a union sorted; `A - B` written `A - (B)` when B is a combination; `&` operands in parentheses unless a term or another `&` |
 | Depth | `PORT`, `BASKET` and `CAPTURE` may refer to each other at most 8 deep; deeper: *the scope refers to itself* (`400`) |
 | Errors | empty scope, an unknown word, a word without `:` and argument, an empty argument, an unmatched `(`, trailing text, a rule that does not parse: `400 DRS-5001` with the reason |
 
@@ -741,13 +748,14 @@ SP       := whitespace (or, before an operator, a closing ')'; after it, an open
 | Unknown ids | an id, node, portfolio, basket or capture the date or the caller does not have resolves to nothing and is listed in `provenance.unknown`; the answer is still `200` (an empty scope has VaR 0) |
 | Overlap | set algebra on trade ordinals: a trade in two terms of a union counts once |
 | Rules and positions | `WHERE:` and `POS:` take whole positions; `TRD:` takes single trades (a position held in part is a *partial* part) |
-| Entitlements | the resolved set is intersected with the trades the viewer may see; the rest are counted (`hidden`). A scope that names `POS`, `TRD`, `WHERE`, `BASKET` or `CAPTURE` is refused (`403 DRS-5002`) unless every resolved trade is at `positions` level for the viewer |
-| Kind of a scope | `node` (exactly one node term), `position`, `trade` (exactly one id), `portfolio`, `basket`, `capture`, `rule` (one term of that word), else `adhoc` |
+| Entitlements | the resolved set is intersected with the trades the viewer may see; the rest are counted (`hidden`). A scope that names `POS`, `TRD`, `CPTY`, `WHERE`, `BASKET`, `CAPTURE` or a `PORT:` of a BASKET-type portfolio is refused (`403 DRS-5002`) unless every resolved trade is at `positions` level for the viewer; `CPTY:` is refused to a viewer who sees `COUNTERPARTY` masked |
+| Warnings | data-quality findings about what was resolved, in `provenance.warnings`: a legal entity's trades outside its `LEGAL` node, a `LEGAL` node holding another entity's trades (§8.5) |
+| Kind of a scope | `node` (exactly one node term, `LE:` included when its `LEGAL` node exists), `position`, `trade` (exactly one id), `portfolio`, `basket`, `capture`, `rule`, `counterparty`, `legal-entity` (one term of that word), else `adhoc` |
 | Date | resolved on the request's date: a `CAPTURE:` or a basket of trades holds ids; trades the date does not have are `unknown` |
 
-**Aggregate-only access** (§11): a scope that is a node or a portfolio is allowed and computed over the visible trades; parts below the
-node's level are not listed. **Gap:** `PORT:` of a BASKET-type portfolio is not in the refused list, so an aggregate-only viewer can
-compute the VaR of a stored basket of single trades; a check is planned (§10.4).
+**Aggregate-only access** (§11): a scope that is a node or a HIERARCHY or RULE portfolio is allowed and computed over the visible
+trades; parts below the node's level are not listed. `PORT:` of a BASKET-type portfolio is treated like `BASKET:` (as built,
+2026-10-25): an aggregate-only viewer cannot probe a stored basket of single trades.
 
 ### 8.4 The position rule language (`WHERE:` and RULE portfolios)
 
@@ -772,14 +780,14 @@ FIELD := [A-Za-z_][A-Za-z0-9_.]*           keywords and, or, not, in are case-in
 | `'x' in FIELD` | true when the list field holds `x` (`TAGS`) |
 | Examples | `PRODUCT_GROUP == 'Rates' and CURRENCY in ('USD', 'CAD')`; `'hedge' in TAGS or not DIRECTION == 'LONG'`; `MARKET_VALUE > 1000000` |
 
-### 8.5 Planned scope words
+### 8.5 Scope words by a trade's attribute
 
-| Term | Planned meaning | Reads |
+| Term | Meaning (as built) | Reads |
 |---|---|---|
-| `CPTY:<id>` | the trades with that counterparty | `COUNTERPARTY` on the trade vectors |
-| `GROUP:<id>` | the trades with any member of a connected group (GLEIF parents) | `counterparty`, `lei-entity` |
-| `NSET:<id>` | the trades of a netting set | `netting-set` (`TRADE_IDS`) |
-| `LE:<id>` | the trades booked by the legal entity, from the trade's `LEGAL_ENTITY` column (today: the `LEGAL` hierarchy node, which gives the same trades when the hierarchy is consistent) | `pnl-vector` |
+| `LE:<id>` | **the bank's legal entity (decided 2026-10-25, open question 14):** the trades whose booking `LEGAL_ENTITY` is the entity (`LE:NY` is `LE-NY` too). The `LEGAL` hierarchy rolls up by books; when its node `LEGAL~<id>` misses some of the entity's trades or holds another entity's, the answer is still the trades' entity and the difference is a data-quality warning in `provenance.warnings`. The node, when it exists, gives the scope its children, limit and official history | `LEGAL_ENTITY` of the trade vectors |
+| `CPTY:<id>[,<id>…]` | the trades with that counterparty, across books and positions (compared ignoring case); refused to an aggregate-only viewer and to a viewer who sees `COUNTERPARTY` masked | `COUNTERPARTY` of the trade vectors |
+| `GROUP:<id>` | **PARKED** (product owner, 2026-10-25): the trades with any member of a connected group (GLEIF parents) | `counterparty`, `lei-entity` |
+| `NSET:<id>` | **PARKED**: the trades of a netting set | `netting-set` (`TRADE_IDS`) |
 
 ## 9. What Drishti answers
 
@@ -787,7 +795,7 @@ FIELD := [A-Za-z_][A-Za-z0-9_.]*           keywords and, or, not, in are case-in
 
 Base `/api/v1/var`, JSON, as the caller (security on: the token's user; [API_GUIDE.md](../guides/API_GUIDE.md#var-engine-apiv1var-280)).
 Every scope endpoint takes `scope` and the platform's `asOf=YYYY-MM-DD` (default and later than the newest date with vectors: the
-newest). Errors are RFC 7807 problems with `code` (§10).
+newest; a date that is not one run answers the date before it, with a warning). Errors are RFC 7807 problems with `code` (§10).
 
 | Method and path | Parameters | Answer |
 |---|---|---|
@@ -795,10 +803,12 @@ newest). Errors are RFC 7807 problems with `code` (§10).
 | `GET /scopes/{scope}` | `{scope}` in the path (no slash), `asOf` | the same |
 | `GET /scope/path` | `scope`, `page` (0), `size` (0 → `path-page`; at most 509), `asOf` | the P&L path (§9.3) |
 | `GET /scope/history` | `scope`, `asOf` | history and backtest (§9.4) |
-| `GET /scope/contributions` | `scope`, `by` (`child` default, `position`, `trade`, `desk`, `book`), `scenario` (a scenario date), `asOf` | the parts (§9.3) |
+| `GET /scope/contributions` | `scope`, `by` (`child` default, `node`, `position`, `trade`, `desk`, `book`), `scenario` (a scenario date), `asOf` | the parts (§9.3) |
 | `GET /tree` | `hierarchy` (default `MGMT`), `asOf` | the nodes the caller sees with their figures, and the stored portfolios |
-| `GET /status` | | settings and loaded dates |
-| `POST /reload` | | administrators only: `{"reloaded": true}` |
+| `GET /status` | | settings (with the position rules and the official captures) and loaded dates (with any refused) |
+| `POST /reload` | | administrators only: `{"reloaded": true}` (audited `var-reload`) |
+| `GET /official` | `asOf` | a date's official end-of-day record (§9.6), for a viewer who sees every node (`403` otherwise; `404` when the date has none) |
+| `POST /official` | `asOf` | administrators only: captures the date officially now: `{businessDate, status: captured, restated, unchanged or skipped, reason, resultVersion, nodes, published, publishError}` |
 | `GET /baskets`, `POST /baskets` | body `{name, title, description, scope, sharedWith}` | baskets (§9.5) |
 | `GET /baskets/{owner}/{name}`, `DELETE /baskets/{owner}/{name}` | | one basket; delete one's own (`204`) |
 | `POST /captures` | body `{scope, note}`, `asOf` | `201` `{id, capturedAt, var, es, memberCount}` (§9.6) |
@@ -806,10 +816,10 @@ newest). Errors are RFC 7807 problems with `code` (§10).
 | `GET /captures/{id}`, `GET /captures/{id}/csv` | `part` (`components`, else the vector) | one capture; CSV |
 | `GET /compare` | `a` (capture id), `b` (capture id, or `now`/empty) | the comparison (§9.6) |
 
-**Design differs / quirks:** API_GUIDE.md lists `by` as `child`, `node`, `position` or `trade`; the code accepts `child`, `position`,
-`trade`, `desk`, `book`, and `node` only implicitly (an explicit `by=node` on a scope that is not a node fails with a server error,
-open question 9). When more parts than `max-parts` exist, the first `max-parts` in ordinal order are used and `truncated` is true
-(VarProperties' comment says *the largest by gross exposure*: not implemented).
+**`by` and truncation (as built, decided 2026-10-25, open question 9).** `by=node` lists a node's child nodes; on a scope that is not a
+node, or a node without children, it answers `400 DRS-5001` with the reason. When a scope has more positions or trades than
+`max-parts`, the largest `max-parts` by gross size are computed (a position's absolute market value when the scope holds it whole, else
+its trades' absolute PV, else their absolute quantities), kept in their order; the answer says `truncated: true` and `total`.
 
 ### 9.2 The headline (`GET /scope`)
 
@@ -839,11 +849,11 @@ open question 9). When more parts than `max-parts` exist, the first `max-parts` 
 |---|---|---|
 | `scope` | string | canonical text |
 | `resolved` | list of strings | how each term resolved (`node MGMT~DESK-RATES`, `rule matched 16 positions`, `portfolio PF-X = NODE:…`, `basket a/b`, `the members of capture …`) |
-| `trades`, `positions` | integer | members counted (visible) |
+| `trades`, `positions` | integer | members counted (visible; positions as derived, §3.7) |
 | `failed` | integer | the date's rows with no vector (whole date, not the scope) |
 | `hidden` | integer | trades of the scope outside the viewer's entitlement |
 | `unknown` | list of strings | ids and terms the date or caller does not have |
-| `vectors` | string | `pnl-vector · batch of <date> · data version <stamp>` |
+| `vectors` | string | `pnl-vector · batch <BATCH_ID> of <date> · data version <stamp>` |
 | `scenarioSet` | string | `HS-509 · <first scenario date> .. <last>` |
 | `method` | string | `historical, equal weights, 1-day, k = 6th worst of 509` (or *interpolated between the order statistics*) |
 | `es` | string | `97.5%, mean of worst 13` |
@@ -854,8 +864,11 @@ open question 9). When more parts than `max-parts` exist, the first `max-parts` 
 | `computedAt` | string | ISO-8601 instant of this answer |
 | `computeMs`, `cache`, `loadedMs` | integer, `hit`/`miss`, integer | time of this answer, cache use, the date's load time |
 
-**Design differs:** README.md section 11 asks for *the input tables' versions and batch ids* in provenance: today only the vector
-table's per-date stamp is given; batch ids and the other tables' versions are planned.
+| `inputs` | object | every input table's data version on the date (`pnl-vector`, `risk-hierarchy`, `scenario-set`, `portfolio`), `scenarioSet`, `batchIds`, `positionRules` (the rules' digest): README.md section 11's *input tables' versions and batch ids* (as built) |
+| `rejected`, `rejections` | integer, list | rows of the date rejected at load and the first 20 reasons (`DRS-5201 <trade>: <why>`) |
+| `excluded` | integer | rows of the date left out as not live (status, maturity) |
+| `positionRules` | string | the position rules the date was built with (§3.7) |
+| `warnings` | list of strings | the date answered in place of one that could not load (`DRS-5203`), and the scope's data-quality findings (§8.3) |
 
 ### 9.3 Path and contributions
 
@@ -866,7 +879,7 @@ bins from the smallest to the largest value, bin *i* = [edges[i], edges[i+1]), t
 default part that lost most on that scenario); `computeMs`.
 
 **`GET /scope/contributions`:** `canonical`; `by` (the parts' kind); `var`, `es`; `sumStandalone`, `sumComponent`, `diversification`;
-`truncated` (boolean); with `scenario`: `scenario`, `scenarioPnl`, `scenarioRank`; `rows`; `computeMs`. Rows are sorted by
+`truncated` (boolean), `total` (the parts there were); with `scenario`: `scenario`, `scenarioPnl`, `scenarioRank`; `rows`; `computeMs`. Rows are sorted by
 `componentVar` descending, or by `scenarioPnl` ascending when a scenario is given.
 
 | Row field | Type | Meaning |
@@ -876,8 +889,9 @@ default part that lost most on that scenario); `computeMs`.
 | `pct` | number | component VaR ÷ the scope's VaR |
 | `marginalPer1m` | integer or null | §6.4 |
 | `scenarioPnl` | integer | the part's P&L on `scenario` (when given) |
-| position parts | | `instrument`, `direction`, `quantity`, `marketValue`, `currency`, `book`, `productType`, `trades`, `partial` |
+| position parts | | `instrument`, `direction`, `quantity`, `marketValue`, `currency`, `book`, `productType`, `securityId`, `rule`, `trades`, `partial` |
 | trade parts | | `direction`, `quantity`, `productType`, `counterparty`, `position`, `book`, `pv` |
+| masks | | a row attribute the viewer sees masked (`counterparty` when `COUNTERPARTY` is in `drishti.security.redact`) reads `•••` (as built, open question 11) |
 
 Default parts (`by=child`): a node with children → its child nodes the viewer sees; a childless node (a book) → its positions; a position
 → its trades; a trade → none; any other scope → its positions. Positions and trades are listed only to a viewer at `positions` level.
@@ -892,7 +906,8 @@ depth, var, es, limit, limitUse, trades, hidden, expandable}]` in depth-first or
 trades), `portfolios` `[{id, scope, name, type, owner}]`.
 
 **`GET /status`:** `enabled`, `confidence`, `esConfidence`, `rankRule`, `componentWindow`, `threads`, `memoryBudgetMb`, `hotDates`,
-`kinds` (string[6]), `loaded` `[{businessDate, trades, positions, nodes, vectorBytes, loadMs, version}]`.
+`kinds` (string[5]), `positionRules`, `official` `{enabled, publish, retentionYears, dates}`, `loaded` `[{businessDate, trades, positions,
+nodes, vectorBytes, loadMs, version, rejected, excluded, batchIds}]` and `{businessDate, refused}` for a date that could not load.
 
 ### 9.5 Baskets
 
@@ -950,27 +965,52 @@ dataVersion}` where present; `b=now` recomputes the capture's scope on the newes
 | (none) | `scenario_date,pnl` | N rows in scenario order |
 | `components` | `key,label,standalone_var,component_var,component_es,pct_of_var,incremental_var` | one per component row (text with a comma or quote is quoted) |
 
-**Official end-of-day captures (planned).** When a date's inputs are complete, Drishti captures every node of every hierarchy as the
-**official** record: the same capture document with `official: true`, `owner` the system, the input versions and batch ids, read by the
-history (§6.5, mode `official`) in place of `var-node`. Kept 7 years, like the vectors (open question 10, decided). Captures remain the
+**Official end-of-day captures (as built).** When a date's inputs are complete (the date loads as one run, with trades and hierarchy
+nodes), the server captures **every node of every hierarchy** (MGMT and LEGAL) as the **official** record, as the server itself (every
+node at positions level): after the data-load signal of an input kind (§3.9), at start for the newest date without a record
+(`drishti.var.official.on-start`), and by an administrator (`POST /official`). One capture runs at a time, in the background
+(`VarOfficial`); a date captured from the same inputs (the same versions and batch ids) is not captured again (`unchanged`); a restated
+date is captured anew with the next **result version**, the earlier captures kept. Kept 7 years, like the vectors (decided, open
+question 10): the content store keeps every version, and nothing deletes them.
+
+| Record | Key in the content store | Content |
+|---|---|---|
+| A node's official capture | `var/captures/official/<CAP-id>.json` | the capture document of §9.6 with `official: true`, `owner: drishti`, `node`, `resultVersion`, `hypoPnl`, the components (the 50 largest; `componentCount` says how many there were), the worst 25, the vector (whole units), `membership` (the date's membership record), `memberCount`, `membershipHash`, `inputs`, `provenance`. No member list of its own: `CAPTURE:<id>` resolves the node's trades from the membership record |
+| The date's record | `var/official/<YYYY-MM-DD>.json` | `businessDate`, `resultVersion`, `computedAt`, `contractVersion`, `inputs` (versions, batch ids, rules digest), `positionRules`, `membership`, `published` or `publishError`, and `nodes`: per node `captureId`, `hierarchy`, `level`, `name`, `parent`, `var`, `es`, `hypoPnl`, `limit`, `limitUse`, `sumStandalone`, `diversification`, `trades`, `positions`, `exceptions250`, `light`. A restatement writes a new version of it (the store keeps the old) |
+| The date's membership | `var/official/<YYYY-MM-DD>-membership-v<n>.json` | every derived position with its trades, by book; each node's books; the position rules' text and digest; trade and position counts (§3.7) |
+
+The node history (§6.5, mode `official`) reads the dates' records: each date's latest result version. `GET /captures?scope=<a node>`
+lists the node's official captures (a date's latest result version each) beside people's, for a viewer who sees every node. The backtest
+of a record counts exceptions over the official history up to the day before plus the day (`exceptions250`, `light`). Captures remain the
 only stored copy of a computed figure ([README.md section 11](README.md#11-what-drishti-answers-computed-kinds-the-api-captures)).
 
-**Published official results (planned, decided 2026-10-25).** Each official capture is also published to
-`${DRISHTI_DELTA_ROOT}/risk-results/var-official/` for other systems ([README.md section 11](README.md#11-what-drishti-answers-computed-kinds-the-api-captures)):
-one row per node of `MGMT` and `LEGAL` per business date, with the shared columns (`BUSINESS_DATE`, `HIERARCHY`, `NODE_ID`, `NODE_NAME`,
-`PARENT_ID`, `LEVEL`, `CAPTURE_ID`, `RESULT_VERSION`, `INPUT_VERSIONS`, `COMPUTED_AT`, `CONTRACT_VERSION`) and VaR's figures:
+**Published official results (as built; decided 2026-10-25).** Each official capture run is also appended to
+`${DRISHTI_DELTA_ROOT}/risk-results/var-official/` (`drishti.var.official.root`) for other systems ([README.md section
+11](README.md#11-what-drishti-answers-computed-kinds-the-api-captures)), by Drishti's own lake writer, one Delta commit per run: one
+row per node of `MGMT` and `LEGAL` per business date and result version. The table is created **append-only** (`delta.appendOnly`) with
+7 years of log and removed files (`delta.logRetentionDuration`, `delta.deletedFileRetentionDuration`: `interval 2557 days`), so nothing
+is ever overwritten: a restated date adds rows with the next `RESULT_VERSION`, and the latest version of a date is the rows with the
+highest. No engine reads it (a guard test, `tools/test_contracts.py`, fails the build when a connector points at `risk-results`). A
+publish that fails (an `s3://` root, a disk) is recorded in the date's record (`publishError`) and logged; the capture stands.
 
 | Column | Type | Meaning |
 |---|---|---|
+| `business_date` | DATE (partition) | the business date (`BUSINESS_DATE` of README.md section 11: Delta's column names are case-insensitive, so the partition column is it) |
+| `id`, `doc` | STRING | `<NODE_ID>@<date>#v<RESULT_VERSION>`; the row as JSON |
+| `HIERARCHY`, `NODE_ID`, `NODE_NAME`, `PARENT_ID`, `LEVEL` | STRING | the node |
+| `CAPTURE_ID` | STRING | the official capture the row was written from |
+| `RESULT_VERSION` | BIGINT | 1, then 2, 3 … on a restatement |
+| `INPUT_VERSIONS` | STRING | the inputs' versions, batch ids and position rules' digest, as JSON text |
+| `COMPUTED_AT`, `CONTRACT_VERSION` | STRING | UTC instant; this contract's version (`1.3`) |
 | `VAR` | DOUBLE | VaR at `CONFIDENCE`, USD, positive |
 | `ES` | DOUBLE | expected shortfall at `ES_CONFIDENCE`, USD, positive |
 | `CONFIDENCE`, `ES_CONFIDENCE` | DOUBLE | `0.99`, `0.975` (`drishti.var.*`) |
 | `SCENARIO_SET_ID` | STRING | `HS-509` |
-| `STANDALONE_SUM`, `DIVERSIFICATION` | DOUBLE | the sum of the children's VaR, and that sum minus `VAR` |
-| `HYPO_PNL` | DOUBLE | the node's hypothetical P&L for the date, USD (the backtest's input) |
+| `STANDALONE_SUM`, `DIVERSIFICATION` | DOUBLE | the sum of the children's VaR (positions for a book), and that sum minus `VAR` |
+| `HYPO_PNL` | DOUBLE | the node's hypothetical P&L for the date, USD (the backtest's input, §6.5) |
 | `LIMIT`, `LIMIT_USE` | DOUBLE | the node's VaR limit from the hierarchy, and `VAR / LIMIT` |
 | `TRADE_COUNT`, `POSITION_COUNT` | BIGINT | the members counted |
-| `EXCEPTIONS_250`, `TRAFFIC_LIGHT` | BIGINT, STRING | backtest exceptions over 250 days, and the Basel zone |
+| `EXCEPTIONS_250`, `TRAFFIC_LIGHT` | BIGINT, STRING | backtest exceptions over the official history (up to 250 days), and the Basel zone |
 
 No vectors and no trade or position rows are published; the capture itself keeps the node's vector for audit.
 
@@ -994,6 +1034,21 @@ reused (README.md section 14's guard test). **Id:** the canonical scope text. Pr
 | `PNL` | vector | the scope's vector (a vector field, as in the stored kinds) |
 | `PROVENANCE` | record | §9.2 in UPPER_SNAKE |
 
+### 9.8 The pages' figures (as built)
+
+No stored kind carries a VaR figure (§14.3). The position, portfolio and core `desk` pages show the engine's figures, computed as the
+page is opened, as the reader (their entitlements by node, their field masks): the server's view pipeline adds them under `VAR_ENGINE`
+(`VarFigures`, an engine `ViewAugmenter`) to the document the page draws, and to an entity a panel sources by id (the position
+opened beside a portfolio's table); the stored document (`/api/v1/entities/<kind>/<id>/raw`)
+never has them. When the engine cannot answer (off, no vectors, the reader may not see VaR, no signed-in viewer) `VAR_ENGINE` says why:
+`{STATUS: unavailable, NOTE}`, and the page shows the rest.
+
+| Page | `VAR_ENGINE` |
+|---|---|
+| position (`POS:<id>`) | `STATUS`, `SCOPE`, `BUSINESS_DATE`, `VAR`, `ES`, `CONFIDENCE`, `ES_CONFIDENCE`, `NOTE`; `TRADES` (each trade's `TRADE_ID`, `QUANTITY`, `DIRECTION`, own `VAR`, `COMPONENT_VAR` in the position); `BOOK_VAR`, `COMPONENT_VAR` and `PCT_OF_BOOK_VAR` (the position in its book); `PNL` (its 509 P&Ls) |
+| portfolio (`PORT:<id>`) | the same headline with `LIMIT`, `LIMIT_USE`; `POSITIONS` (each position's instrument, direction, quantity, market value, currency, book, product, own `VAR`, `COMPONENT_VAR`, `PCT_OF_VAR`, `PARTIAL`), `POSITION_COUNT`, `LONG_COUNT`, `SHORT_COUNT`, `GROSS_MV`, `NET_MV`, `TOP_CONTRIBUTORS` (10), `BY_PRODUCT`, `BY_CURRENCY`, `BY_DIRECTION` (component VaR and net market value), `PNL` |
+| desk (`DESK:<id>`) | the headline: `VAR`, `ES`, `LIMIT`, `LIMIT_USE` |
+
 ## 10. Validation, errors and data quality
 
 ### 10.1 At `lake build` (as built)
@@ -1008,49 +1063,42 @@ not a list of numbers`). A `null` element inside a vector is accepted and stays 
 |---|---|---|---|
 | 400 | `DRS-5001` | no `scope` | *give a scope: scope=BANK, DESK:RATES, POS:<id>, TRD:<id>, PORT:<id> …* |
 | 400 | `DRS-5001` | the scope does not parse (§8.2) | the parser's reason and position |
-| 400 | `DRS-5001` | a date's vectors exceed `memory-budget-mb` | *<n> vectors of 509 values need <m> MB; the vector store's budget is <b> MB (drishti.var.memory-budget-mb)* |
-| 400 | `DRS-5001` | `by` not one of the accepted values; `scenario` not a scenario date | *by is child, position, trade, desk or book*; *<date> is not a scenario date of HS-509* |
+| 400 | `DRS-5001` | `by` not one of the accepted values; `by=node` on a scope without child nodes; `scenario` not a scenario date | *by is child, node, position, trade, desk or book*; *by=node lists a node's child nodes; … is not a node*; *<date> is not a scenario date of HS-509* |
 | 400 | `DRS-5001` | a basket name or an empty basket scope; a capture id that exists | *a basket's name is 1-64 letters …*; *a basket has a scope …* |
 | 403 | `DRS-5002` | the engine is off | *the VaR engine is switched off on this server (drishti.var.enabled)* |
 | 403 | `DRS-5002` | the caller may not open `pnl-vector` | *your role may not see VaR (the kind pnl-vector)* |
-| 403 | `DRS-5002` | a `POS`/`TRD`/`WHERE`/`BASKET`/`CAPTURE` scope over trades seen only in aggregate; `by=position` or `by=trade` for such a viewer | *… your role sees some of these only in aggregate* |
-| 403 | `DRS-5002` | `POST /reload` by a non-administrator; a token without `risk:write` on a write | |
-| 404 | `DRS-1001` | no P&L vectors in any connector; no scenario set for the date; no such hierarchy; no basket or capture the caller may read | *no P&L vectors in any connector (kind pnl-vector): build the demo lake …*; *no scenario set for <date>* |
-| 502 | `DRS-1003` | the vectors cannot be read; no connector keeps `pnl-vector.PNL` as a vector column (or a read column is not promoted) | *the P&L vectors of <date> could not be read: …*; *no connector keeps pnl-vector.PNL as a vector column (the pack's layout.pnl-vector.vectors)* |
+| 403 | `DRS-5002` | a `POS`/`TRD`/`CPTY`/`WHERE`/`BASKET`/`CAPTURE` scope, or `PORT:` of a BASKET portfolio, over trades seen only in aggregate; `by=position` or `by=trade` for such a viewer | *… your role sees some of these only in aggregate* |
+| 403 | `DRS-5002` | `CPTY:` for a viewer who sees `COUNTERPARTY` masked | *the counterparty is masked for your role …* |
+| 403 | `DRS-5002` | `POST /reload` or `POST /official` by a non-administrator; `GET /official` by a viewer who does not see every node; a token without `risk:write` on a write | |
+| 404 | `DRS-1001` | no P&L vectors in any connector; no scenario set for the date; no such hierarchy; no basket or capture the caller may read; no official record of the date | *no P&L vectors in any connector (kind pnl-vector): build the demo lake …*; *no scenario set for <date>* |
+| 422 | `DRS-5202` | the same `TRADE_ID` twice on the date | *the P&L vectors of <date> are not loaded: the trade <id> has two P&L vectors on one business date …* |
+| 422 | `DRS-5203` | the date is not one run and no earlier date has vectors (else the earlier date is answered, with the warning) | *the VaR inputs of <date> are not loaded: the vectors come from 2 runs (BATCH_ID …)* |
+| 502 | `DRS-1003` | the vectors cannot be read; no connector keeps `pnl-vector.PNL` as a vector column with the columns asked | *the P&L vectors of <date> could not be read: …*; *no connector keeps pnl-vector.PNL as a vector column with the columns …* |
+| 503 | `DRS-5204` | a date's vectors exceed `memory-budget-mb` (capacity: decided, open question 9) | *<n> vectors of 509 values need <m> MB; the vector store's budget is <b> MB …: the engine has no room for this date now; raise …* |
 
-### 10.3 What is not checked today (as built)
+### 10.3 What the load checks (as built)
 
-| Condition | What happens now |
-|---|---|
-| A vector shorter than N | padded with `NaN`: every sum containing it is `NaN`, the order and VaR are undefined, and the API shows `0` |
-| A vector longer than N | cut to N, silently |
-| A `null` or `NaN` element | `NaN`, as above |
-| The same `TRADE_ID` twice on a date | both rows are loaded and summed into the node aggregates (counted twice); `TRD:` finds one of them |
-| Rows with different `BATCH_ID`s, or a `SCENARIO_SET_ID` different from the scenario set's | loaded together |
-| Two scenario sets on a date | the first document read is used |
-| `TT_BOOK` not in any hierarchy node | the trade is in no node; summed only by scopes naming it |
-| A `PORTFOLIO`'s rule naming an unknown field | the field is missing: the rule matches by its `!=` comparisons only |
-| More than 100,000 positions, hierarchy nodes or portfolios on a connector that cannot list a date whole | only the first 100,000 are read |
-
-### 10.4 Checks VaR adds to README.md section 10 (planned)
-
-Codes for the new checks are to be assigned in the release (no new code exists yet; the load reports the reason).
+`VarIntake` checks every row as it streams in, and `VarLoader` the date as a whole. A **rejected row** is not loaded, never padded: it is
+counted (`provenance.rejected`, `GET /status`) and its reason listed (`provenance.rejections`, the first 20: `DRS-5201 <trade>: <why>`).
 
 | Check | Rule | Outcome |
 |---|---|---|
-| Vector length | `len(PNL) = SCENARIO_COUNT` of the date's set | row rejected |
-| Finiteness | no `null`, `NaN` or infinity in `PNL` | row rejected |
-| Failed rows | `STATUS = failed` ⇔ `PNL` null | inconsistent row rejected; failed rows counted per scope (today only per date) |
-| Unique trade | one row per (`BUSINESS_DATE`, `SCENARIO_SET_ID`, `TRADE_ID`) | load fails |
-| One run | one `BATCH_ID` per date across `pnl-vector`, `scenario-set`, `risk-hierarchy`; every `SCENARIO_SET_ID` equals the set's | date not loaded; the engine answers the previous date with a warning |
-| Scenario set | one set per date and id; `SCENARIO_DATES` strictly increasing, unique, all before `BUSINESS_DATE`, `WINDOW_END` the previous business day | date not loaded |
-| Currency | `REPORTING_CCY = USD` | row rejected |
-| Keys resolve | `TRADE_ID` live in the trade master on the date; `TT_BOOK` in exactly one leaf of each hierarchy | row kept, flagged, counted under `unmapped` in provenance |
-| Hierarchy | one root per hierarchy; every `PARENT_ID` exists; a node's `BOOKS` = the union of its children's | date not loaded |
-| Portfolios | a RULE parses and names known fields; a BASKET's members exist on the date | portfolio flagged; unknown members listed |
-| Completeness | live trades booked vs. trades valued, per book | `ready` but *incomplete*, with the count missing (Admin → Data loads) |
-| Aggregate-only probing | `PORT:` of a BASKET portfolio treated like `BASKET:` (§8.3) | `403` |
-| Memory | the budget check returns `503`-class *capacity* rather than `400` (open question 9) | |
+| Live | `TRADE_STATUS` one of the live statuses (none: live); `MATURITY_DATE` on or after the date | not live: left out (`excluded`), not an error |
+| Vector length | `len(PNL) = SCENARIO_COUNT` of the date's set | row rejected (`DRS-5201`) |
+| Finiteness | no `null`, `NaN` or infinity in `PNL` | row rejected (`DRS-5201`) |
+| Failed rows | `STATUS = failed` with a vector | row rejected (`DRS-5201`); a null `PNL` is a failed row, counted (`failed`) |
+| Currency | `REPORTING_CCY = USD` (when promoted) | row rejected (`DRS-5201`) |
+| Unique trade | one row per (`BUSINESS_DATE`, `SCENARIO_SET_ID`, `TRADE_ID`) | the date is not loaded (`422 DRS-5202`) |
+| One run | one `BATCH_ID` across the date's vectors; every `SCENARIO_SET_ID` equals the set's | the date is not loaded (`DRS-5203`); the date before it is answered with the reason in `provenance.warnings`, until the date's vectors change |
+| Scenario set | one set per date; `SCENARIO_DATES` strictly increasing and all before `BUSINESS_DATE` | the date is not loaded (`DRS-5203`), as above |
+| Memory | the date's vectors within `memory-budget-mb` | `503 DRS-5204` (capacity) |
+
+**Still not checked (planned):** a `TRADE_ID` live in the trade master and a `TT_BOOK` in exactly one leaf of each hierarchy (`unmapped`
+in provenance); one root per hierarchy, every `PARENT_ID` existing, a node's `BOOKS` the union of its children's; a RULE portfolio naming
+known fields (a missing field compares unequal: §8.4) and a BASKET's members existing (unknown members are listed in
+`provenance.unknown`); completeness of the batch against the trades booked; a `TT_BOOK` in no hierarchy node (the trade is in no node,
+summed only by scopes naming it); more than 100,000 hierarchy nodes or portfolios on a connector that cannot list a date whole (only the
+first 100,000 are read).
 
 ## 11. Entitlements and audit
 
@@ -1070,22 +1118,24 @@ drishti:
 | No entry for any of the caller's roles | every node at `positions` level (no restriction) |
 | Several roles | their entries are merged; `positions` beats `aggregate` for the same node. A role without entries does **not** widen the others |
 | Visible trades | the union of the members of the listed nodes (either level); the answer is computed over them, the rest counted as `hidden` |
-| Positions level | the union of the members of the `positions` nodes; scopes naming positions, trades, rules, baskets or captures must stay inside it |
+| Positions level | the union of the members of the `positions` nodes; scopes naming positions, trades, counterparties, rules, baskets, BASKET portfolios or captures must stay inside it |
 | Tree | a node is listed when the caller sees at least one of its trades; `expandable` when it has children or the caller sees its positions |
-| History | the official node history only for a viewer at full `positions` level; others get the replay, with a note |
+| History | the official node history only for a viewer at full `positions` level; others get the replay, with a note. The official captures and records likewise |
 | Cache | answers are keyed by the view's signature, so two viewers with different rights never share one |
-| Masks | the engine applies no field masks of its own; a masked `COUNTERPARTY` in trade parts is open question 11 |
-| Tokens | writes (`POST /baskets`, `DELETE /baskets/*/*`, `POST /captures`) need the token scope `risk:write`; `POST /reload` is never open to a token |
+| Masks | as built (open question 11): a contribution row's attribute the viewer sees masked reads `•••` (`drishti.security.redact`, the platform's masks: `COUNTERPARTY` in trade rows); `CPTY:` is refused to a viewer who sees the counterparty masked; the page figures (§9.8) are computed as the viewer |
+| Tokens | writes (`POST /baskets`, `DELETE /baskets/*/*`, `POST /captures`) need the token scope `risk:write`; `POST /reload` and `POST /official` are never open to a token |
 
 **Audit** (`AuditLog.record(user, action, target, detail)`; best effort, a failure never hides an answer):
 
 | Action | Written by | Target | Detail |
 |---|---|---|---|
-| `var-view` | every headline (`GET /scope`, `/scopes/{scope}`; also inside a capture and a compare with now) | the canonical scope | `date=<d> version=<stamp> view=<all or restricted> var=<n> es=<n> trades=<n> hidden=<n> members=<digest> ms=<n>` |
+| `var-view` | every headline (`GET /scope`, `/scopes/{scope}`; also inside a capture, a compare with now, a page's figures and an official capture, as `drishti`) | the canonical scope | `date=<d> version=<stamp> view=<all or restricted> var=<n> es=<n> trades=<n> hidden=<n> members=<digest> ms=<n>` |
 | `var-capture` | `POST /captures` | the canonical scope | the same, then `capture=<id>` |
+| `var-basket-save`, `var-basket-delete` | `POST /baskets`, `DELETE /baskets/{owner}/{name}` | `<owner>/<name>` | `version=<n> scope=<text> sharedWith=[…]`; *deleted by its owner* |
+| `var-reload` | `POST /reload`; the data-load signal (as `drishti`) | `all dates`, or the date | *an administrator's reload*; *the data-load signal of <kind>* |
+| `var-official` | an official capture run (as `drishti`) | the business date | `resultVersion=<n> nodes=<n> trades=<n> inputs={…}` |
 
-**Design differs:** VAR_ENGINE.md section 18.2 says basket changes are audited; the code audits only `var-view` and `var-capture` (not
-baskets, path, history, contributions or reload). Audit of basket changes and reloads is planned.
+Path, history and contributions are not audited (they read what a headline already audited).
 
 ## 12. Performance and sizing
 
@@ -1115,58 +1165,55 @@ the demo data). Not re-run for this document.
 
 ## 13. Test data and generators
 
-### 13.1 What the repository ships (verified 2026-10-25)
+### 13.1 What the repository ships (verified 2026-10-25, version 1.3)
 
 `tools/packgen/var/make_var_data.py` (run by `tools/testdata/make_testdata.py`) writes `data/testdata/market-risk/<kind>/` and the
 pack's reference samples and Sutra tests. Counts from the files and `data/testdata/testdata.yaml`:
 
 | Kind | Folder files | Dated | Documents | Bytes (gzip) |
 |---|---|---|---|---|
-| `pnl-vector` | `cob-2026-09-30.part-001.jsonl.gz`, `…part-002…` | 2026-09-30 | **1,673** trades (CALYPSO 812, MUREX 681, ENDUR 180; LONG 910, SHORT 763; all `ok`), every vector 509 values | 2,204,413 |
-| `position` | `cob-2026-09-30.jsonl.gz` | 2026-09-30 | **196** positions (181 fungible, 15 single-trade; 44 with buys and sells) | 386,141 |
+| `pnl-vector` | `cob-2026-09-30.part-001.jsonl.gz` … `part-012` | 2026-09-30 | **9,572** trades (CALYPSO 4,155, MUREX 4,078, ENDUR 1,339; LONG 4,887, SHORT 4,685; AMENDED 4,781, VALIDATED 4,682, NEW 109; all `ok`), every vector 509 values; 2,159 of them in 358 securities | 15,735,874 |
 | `scenario-set` | `cob-2026-09-30.jsonl.gz` | 2026-09-30 | 1 (`HS-509`, 2024-09-17 to 2026-09-29) | 1,399 |
-| `risk-hierarchy` | `cob-2026-09-30.jsonl.gz` | 2026-09-30 | **88** nodes | 2,135 |
-| `var-node` | `history-2025-10-01-to-2026-09-30.part-00{1,2,3}.jsonl.gz` | 250 days | 22,000 (88 nodes × 250 days) | 829,559 |
-| `portfolio` | `cob-2026-09-30.jsonl.gz` | 2026-09-30 | **7** | 25,741 |
+| `risk-hierarchy` | `cob-2026-09-30.jsonl.gz` | 2026-09-30 | **88** nodes | 2,133 |
+| `portfolio` | `cob-2026-09-30.jsonl.gz` | 2026-09-30 | **28** definitions | 1,756 |
 
-The data's 30 books hold 50 to 60 valued trades each (the budget of 60 per book, whole positions only), over 10 desks and 4 legal
-entities (`LE-FRA`, `LE-LDN`, `LE-NY`, `LE-TKY`). The 7 portfolios: `PF-RATES-DESK`, `PF-COMM-BOOK-1` (HIERARCHY), `PF-USD-RATES`,
-`PF-EUR-ALL`, `PF-SHORT-RISK` (RULE), `PF-ASHA-UNWIND`, `PF-NETTED-FLOW` (BASKET). Engine VaR on 2026-09-30: the bank 9,910,276 (ES
-13,247,092).
+The data's 30 books hold every live trade of the date (9,572; open question 1), over 10 desks and 4 legal entities (`LE-FRA`, `LE-LDN`,
+`LE-NY`, `LE-TKY`). The rules derive 7,984 positions (§3.7). The 28 portfolios: one HIERARCHY portfolio per desk (`PF-<DESK>-DESK`, 10)
+and per legal entity (`PF-LE-<x>`, 4) and `PF-COMM-BOOK-1`; RULE portfolios `PF-USD-RATES`, `PF-EUR-ALL`, `PF-SHORT-RISK`,
+`PF-GOVT-BONDS`, `PF-LISTED`, `PF-OPTIONS`, `PF-FX-CROSSES`, `PF-LARGE-LONGS`; BASKET portfolios `PF-ASHA-UNWIND`, `PF-NETTED-FLOW`,
+`PF-HEDGE-PAIRS`, `PF-TOP-SECURITIES`, `PF-PARTIAL-FILLS` (single trades of fungible positions); they overlap on purpose. Engine VaR on
+2026-09-30: the bank 112,035,906 (ES 160,132,107). No position, `var` or `var-node` folder, and no VaR figure on any document.
+
+**Repository size (as built):** the committed test data and packs grew by 11.96 MB (gzip): the vectors went from 2.20 MB to 15.74 MB;
+the retired `position` (0.39 MB), `var-node` (0.83 MB) and `var` (0.03 MB) folders went; the desks lost two fields (0.02 MB).
 
 ### 13.2 How it is made
 
 | Step | Rule (as built) |
 |---|---|
-| Trades | the committed trades of the 60 business dates (ENDUR, CALYPSO, MUREX), replayed to the last date; live = status `VALIDATED`, `AMENDED`, `NEW`, maturity on or after the date, book known to a desk: **9,572** trades |
-| Positions | (book, `INS-<PRODUCT_TYPE>-<CURRENCY>[-<underlying>]-<maturity quarter>`): 861 positions over the live trades |
-| Sample | per book, positions with both buys and sells first, then the smallest, whole positions, until 60 trades (`--budget`, 0 = every live trade, local only) |
+| Trades | the committed trades of the 60 business dates (ENDUR, CALYPSO, MUREX), replayed to the last date; live = the pack's live statuses (`VALIDATED`, `AMENDED`, `NEW`), maturity on or after the date, book known to a desk: **9,572** trades, every one valued (`--budget 0`, the default) |
+| Security ids | for a trade whose position rule keys by `SECURITY_ID` (securities, listed): a synthetic id, a few per product type and currency (about six trades each, by a hash of the trade id) (§3.7) |
+| Positions | the pack's `positions:` rules, as the server applies them (`positions.Rules`): 7,984 (476 fungible, 111 netting buys and sells); for the market model, the samples and the portfolios' members only: they are not written |
 | Market | about forty correlated factors over 509 + 1 days (`factors.py`): global and group factors, Student-t (4 degrees of freedom) shocks, GARCH(1,1), a 20-day stress episode at 2.5× volatility, four crash days; Python's own `Random`, seeded by text (deterministic everywhere) |
-| A trade's vector | `round(q × per_unit × unit[j] + 0.06 × abs(q) × per_unit × t_j)` for j = 0..509 (`q` signed quantity, `per_unit` = a lognormal risk size by product group ÷ gross quantity, `unit` the instrument's factor path with a short-gamma term for options, `t_j` the trade's own Student-t draws); the first 509 are `PNL`, the 510th is the business date's own move (for the hypothetical P&L) |
-| `var-node` | the business date's row is the engine's exact VaR and ES of the node; earlier days scale today's VaR and ES by each book's size walk (AR(1), 0.92, σ 0.035); `HYPO_PNL` sums the books' P&L under that day's move; limits are today's VaR × a headroom (most green, a few tight) at two significant figures |
-| Files | gzip level 9, `mtime` 0, split into parts of about 1.2 MB compressed; sorted as listed in `documents()` |
+| A trade's vector | `round(q × per_unit × unit[j] + 0.06 × abs(q) × per_unit × t_j)` for j = 0..509 (`q` signed quantity, `per_unit` = a lognormal risk size by product group ÷ the position's gross quantity, `unit` the position's factor path with a short-gamma term for options, `t_j` the trade's own Student-t draws); the first 509 are `PNL` |
+| Limits | a node's and a portfolio's VaR limit (an input a risk manager sets) are its VaR today × a headroom (most green, a few tight) at two significant figures |
+| Portfolios | `tools/packgen/var/portfolios.py`: definitions only |
+| Files | gzip level 9, `mtime` 0, split into parts of about 1.2 MB compressed; the vectors sorted by legal entity, desk, book and trade |
 
 **`make_var_data.py --check`** regenerates into a temporary folder and fails (exit 1) when a committed file's decompressed content or a
-sample differs: *VaR demo data out of date; run tools/packgen/var/make_var_data.py*. `tools/packgen/var/test_var_data.py` checks that
-positions net their trades, every trade is in one position with 509 values, node vectors are the sums of their positions, portfolios hold
-what they define (overlaps once), the rule language, and that the stored measures follow the server's rules.
-
-### 13.3 Planned test data
-
-| Change | Planned |
-|---|---|
-| Full trade set | every live trade valued (no budget): **about 12,000** per the product owner; by today's demo rule there are **9,572** (10,399 by status alone; 12,076 trade valuations): open question 1 |
-| Portfolios | about 25 to 30, of all three types, overlapping |
-| Positions | not written: derived by Drishti at load (§3.7); the generator keeps the trades' security ids consistent |
-| Removed | `var-node`, the stored `var` folder, and every computed column (§14.3) |
-| Size | about 12,000 × 509 values a date: about 15 MB compressed for one date at whole USD (estimate from today's 2.2 MB for 1,673 trades) |
+sample differs, or a retired folder or sample is still there: *VaR demo data out of date; run tools/packgen/var/make_var_data.py*.
+`tools/packgen/var/test_var_data.py` checks every live trade once with 509 finite values from one run, the securities shared and the
+fungible positions the rules derive, no VaR figure on any input and the retired tables gone, the portfolios (25 to 30, all three types,
+resolving and overlapping, the legal entities covering the bank), the samples being the server's derived positions, the rule language,
+the position rules and the measures.
 
 ## 14. Retiring the stored version
 
-### 14.1 The `var` kind: id mapping (planned)
+### 14.1 The `var` kind: id mapping (as built)
 
-The stored `var` kind holds 10 desk records (`RESULT_ID` `VAR-<desk>`, with `VAR_99`, `ES_975`, `SVAR`, `LIMIT`, `EXCEPTIONS`,
-`SCENARIO_PNL` of 500 values, `PNL_SERIES`, `CONTRIBUTIONS`, `DESK`). Every old id and link opens the explorer at the matching scope:
+The stored `var` kind held 10 desk records (`RESULT_ID` `VAR-<desk>`, with `VAR_99`, `ES_975`, `SVAR`, `LIMIT`, `EXCEPTIONS`,
+`SCENARIO_PNL` of 500 values, `PNL_SERIES`, `CONTRIBUTIONS`, `DESK`). It is retired; every old id and link opens the explorer at the
+matching scope (the console: `VAR <id>`, `/v/var/<id>`; `drishti-console/routes/var_routes.py`):
 
 | Old id | New scope | Node |
 |---|---|---|
@@ -1181,27 +1228,27 @@ The stored `var` kind holds 10 desk records (`RESULT_ID` `VAR-<desk>`, with `VAR
 | `VAR-SFT` | `DESK:SFT` | `MGMT~DESK-SFT` |
 | `VAR-STRUCT` | `DESK:STRUCT` | `MGMT~DESK-STRUCT` |
 
-General rule: `VAR-<x>` → `DESK:<x>`; an id with no matching node opens the explorer at `BANK` with a notice. **Note:** README.md
-section 14 gives the example *`VAR-COMM` opens `VAR DIVISION:COMM`*; in the data `VAR-COMM` is the desk `DESK-COMM` (its `DESK` field),
-and the scope word for a division is `DIV:`, so the mapping above is the one to build.
+General rule: `VAR-<x>` → `DESK:<x>`; the explorer says where the old id was opened, and an id with no matching node opens it at `BANK`
+with a notice. `/v/var/<anything else>` opens `BANK` with the notice. The `VAR` mnemonic is the explorer's word only (a reserved word of
+the command line). **Note:** README.md section 14 gives the example *`VAR-COMM` opens `VAR DIVISION:COMM`*; in the data `VAR-COMM` was
+the desk `DESK-COMM` (its `DESK` field), and the scope word for a division is `DIV:`, so the mapping above is the one built.
 
-**`var-node`:** `VN-<NODE_ID>` → `NODE:<NODE_ID>` (the explorer at that node, the History tab), its history from the official
-captures (§9.6).
+**`var-node`:** `VN-<NODE_ID>` → `NODE:<NODE_ID>` (`VAR VN-…`, `/v/var-node/VN-…`), its history from the official captures (§9.6).
 
 ### 14.2 Reconciliation: stored `VAR-COMM` 446.9 m against the engine's 1.97 m
 
-| Desk | Stored `VAR_99` (test data, snapshot 2026-07-08) | Engine VaR (2026-09-30) | Live trades in the desk | Trades valued |
+| Desk | Stored `VAR_99` (test data, snapshot 2026-07-08) | Engine VaR (2026-09-30, 1.0: a sample of 60 trades a book) | Engine VaR (2026-09-30, 1.3: every live trade) | Live trades in the desk (all valued from 1.3) |
 |---|---|---|---|---|
-| COMM | 446,852,430 | 1,969,387 | 2,141 | 180 |
-| CREDIT | 6,053,623,202 | 3,482,878 | 943 | 168 |
-| EQD | 138,121,543 | 2,701,078 | 1,201 | 178 |
-| FI | 2,266,982,845 | 1,086,363 | 1,013 | 165 |
-| FX | 245,660,869 | 3,386,166 | 1,164 | 160 |
-| INFL | 37,530,125 | 1,165,062 | 314 | 168 |
-| MM | 1,301,510 | 1,407,930 | 424 | 163 |
-| RATES | 94,397,741 | 3,012,892 | 1,487 | 172 |
-| SFT | 109,399,249 | 169,638 | 611 | 156 |
-| STRUCT | 2,698,312,800 | 2,625,449 | 274 | 163 |
+| COMM | 446,852,430 | 1,969,387 | 17,523,118 | 2,141 |
+| CREDIT | 6,053,623,202 | 3,482,878 | 130,670,864 | 943 |
+| EQD | 138,121,543 | 2,701,078 | 35,827,767 | 1,201 |
+| FI | 2,266,982,845 | 1,086,363 | 33,274,561 | 1,013 |
+| FX | 245,660,869 | 3,386,166 | 24,060,533 | 1,164 |
+| INFL | 37,530,125 | 1,165,062 | 24,933,130 | 314 |
+| MM | 1,301,510 | 1,407,930 | 15,446,375 | 424 |
+| RATES | 94,397,741 | 3,012,892 | 74,633,680 | 1,487 |
+| SFT | 109,399,249 | 169,638 | 1,536,322 | 611 |
+| STRUCT | 2,698,312,800 | 2,625,449 | 9,987,431 | 274 |
 
 **Why they differ** (from the data and the generators, 2026-10-25):
 
@@ -1217,19 +1264,20 @@ captures (§9.6).
    the samples.
 
 So the two numbers measure different things and no factor relates them; the engine's figure is the one the inputs support. With the
-full trade set (§13.3) the engine's desk figures grow; they will be re-stated in the release notes.
+full trade set (1.3) every live trade is valued and each position has its own risk size, so the engine's desk figures grew (the bank
+from 9.9 m to 112.0 m); the release notes restate them.
 
-### 14.3 What is removed (planned, in the same release)
+### 14.3 What is removed (as built, in the same release)
 
 | Item | Removed |
 |---|---|
-| `var` kind | `pack.yaml` kind, route, form, badge and id pattern `^VAR-` (now: the explorer), `graph.fields.VAR_RESULT`; `samples/var.jsonl`; `data/testdata/market-risk/var/`; `sutras/market-risk/var.v1.sutra.yaml`; the about section; the Calc snippets reading `SCENARIO_PNL` (`var_es.py`, `var_tails.py`, `var_methods.py`, `var_component.py`); the generator's VaR part of `market_results` |
-| `var-node` kind | kind, route, layout, mnemonic `VNODE`, id pattern `^VN-`; samples and test data; `Demo.var_nodes()`; `VarLoader.history` (replaced by official captures); `drishti.var.kinds.node` (planned removal) |
-| Computed columns on `position` | `VAR_99`, `ES_975`, `COMPONENT_VAR` (also from the layout's promoted columns), and the other computed fields `BOOK_VAR`, `PCT_OF_BOOK_VAR`, `TRADE_QUANTITIES[].VAR_99`, `TRADE_QUANTITIES[].COMPONENT_VAR`, `PNL` (a sum of trades): planned removal |
-| Computed fields on `portfolio` | `VAR_99`, `ES_975`, `LIMIT_USE`, `POSITIONS[].VAR_99`, `COMPONENT_VAR`, `PCT_OF_VAR`, `BY_*[].COMPONENT_VAR`, `TOP_CONTRIBUTORS`, `PNL`: the page reads the engine (planned removal) |
-| The `position` input table | positions are derived by Drishti (§3.7) |
-| The core pack's `desk` | `VAR_99` and `VAR_RESULT` on each desk record (a computed figure on a fundamental kind): planned removal, the desk page links to `DESK:<id>` |
-| Guard test | fails the build when `var` or `var-node` returns, or an input or fundamental kind carries `VAR_99`, `ES_975`, `COMPONENT_VAR` (README.md section 14) |
+| `var` kind | `pack.yaml` kind, mnemonic, route, form, badge and id pattern `^VAR-` (now: the explorer), `graph.fields.VAR_RESULT`; `samples/var.jsonl`; `data/testdata/market-risk/var/`; `sutras/market-risk/var.v1.sutra.yaml` and its Sutra tests; the about sections (English and French); the Calc snippets reading it (`var_es.py`, `var_tails.py`, `var_methods.py`, `var_component.py`, `var_backtest.py`, `var_limits.py`, `var_factor_regression.py`, and the core pack's `desk_performance.py`); the generator's VaR part of `market_results`; its contract |
+| `var-node` kind | kind, route, layout, mnemonic `VNODE`, id pattern `^VN-`; samples and test data; `Demo.var_nodes()`; `VarLoader.history` and `VarBook.NodeHistory` (replaced by official captures); `drishti.var.kinds.node`; its contract |
+| Computed fields on `position` | `VAR_99`, `ES_975`, `COMPONENT_VAR` (also from the layout's promoted columns), `BOOK_VAR`, `PCT_OF_BOOK_VAR`, `TRADE_QUANTITIES[].VAR_99`, `TRADE_QUANTITIES[].COMPONENT_VAR`, `PNL`: the page reads the engine's (§9.8) |
+| Computed fields on `portfolio` | `VAR_99`, `ES_975`, `LIMIT_USE`, `POSITION_COUNT`, `TRADE_COUNT`, `LONG_COUNT`, `SHORT_COUNT`, `GROSS_MV`, `NET_MV`, `POSITIONS[]`, `BY_*[]`, `TOP_CONTRIBUTORS`, `ALL_TRADES`, `PNL` (and the promoted `VAR_99`, `ES_975`, `POSITION_COUNT`, the vector `PNL`): the page reads the engine's (§9.8) |
+| The `position` input table | positions are derived by Drishti (§3.7), served by `var-positions` |
+| The core pack's `desk` | `VAR_99` and `VAR_RESULT` on each desk record: the desk page's VaR is the engine's (`DESK:<id>`, §9.8) |
+| Guard test | `tools/test_contracts.py` (`TheRetiredStoredVersions`) fails the build when `var` or `var-node` returns (a pack's kind, route, mnemonic, sample, contract, Sutra, Sutra test, test-data folder or dataset), when a figure removed from `position`, `desk` or `portfolio` returns, when an input, fundamental or Drishti-owned kind's contract or data carries a column the VaR engine produces (`tools/contracts.policy.yaml`, `engine-columns`: `VAR_99`, `ES_975`, `COMPONENT_VAR`, `BOOK_VAR`, `PCT_OF_BOOK_VAR`, `PCT_OF_VAR`, `HYPO_PNL`, `EXCEPTIONS_250`, `VAR_RESULT`, `VAR_ENGINE`), and when a connector reads `risk-results` |
 
 ## 15. A worked example
 
@@ -1285,19 +1333,19 @@ incremental VaR is 0) but raises ES from 6.5 to 8.5: the short trade hedged the 
 
 | # | Question | Context |
 |---|---|---|
-| 1 | **The full trade set:** about 12,000 live trades was agreed; the demo rule gives 9,572 (statuses `NEW`, `VALIDATED`, `AMENDED` and maturity on or after the date), 10,399 by status alone, and there are 12,076 trade valuations. Which definition of *live*? | §13.3 |
-| 2 | Where are derived positions kept: in memory only, the Drishti database, or a Drishti-owned table in the risk lake? Are they versioned per date for audit? | §3.7 |
-| 3 | The committed trades have no `SECURITY_ID`, `ISIN`, ticker or contract: should the generator add synthetic security ids, and which product groups are *securities* and *listed*? | §3.7 |
+| 1 | **Decided (product owner, 2026-10-25): every live trade, no budget.** *Live* = status `NEW`, `VALIDATED` or `AMENDED` (the pack's `live-statuses`) and maturity on or after the date, book known to a desk: 9,572 trades on 2026-09-30 (10,399 by status alone; 12,076 trade valuations, which include matured and cancelled trades). Built in 2.8.0; the vectors are 15.7 MB compressed | §13 |
+| 2 | **Decided (2026-10-25): in memory**, rebuilt from the date's trades and the rules on every load (reproducible); each official capture records the date's membership and the rules (audit). No database or lake table | §3.7 |
+| 3 | **Decided (2026-10-25):** the demo risk batch adds a deterministic synthetic `SECURITY_ID` to securities and listed trades (the trade master is unchanged); *securities* and *listed* are the pack's `positions:` rules (by product group and type), configuration not code | §3.7 |
 | 4 | Due time of the batch (for example 06:00 New York the next business day) and the completeness rule per book | §3.9 |
-| 5 | **Decided (product owner, 2026-10-25): yes.** The data-load signal of `pnl-vector`, `scenario-set`, `risk-hierarchy` and `portfolio` reloads that date in the engine automatically (the same as `POST /api/v1/var/reload` for the date), so a restated date is never stale. Built in 2.8.0 | §3.9 |
+| 5 | **Decided (product owner, 2026-10-25): yes.** The data-load signal of `pnl-vector`, `scenario-set`, `risk-hierarchy`, `portfolio` (and `trade`) reloads that date in the engine automatically (the same as `POST /api/v1/var/reload` for the date), so a restated date is never stale, then captures it officially. Built in 2.8.0 | §3.9 |
 | 6 | Several scenario sets on one date (a stressed set `SVAR-250`): select by `SCENARIO_SET_ID` (a scope or request parameter), and which is the default? | §3.3 |
 | 7 | Lake layout for the vectors at bank scale: sort by hierarchy and partition by scenario set (both designed, not built); file and row-group sizes; `BYTE_STREAM_SPLIT` + ZSTD | §3.1 |
 | 8 | In the hot file, keep a float32 trade matrix (`TMAT`) or always read trades from the lake? | §7.3 |
-| 9 | API details: accept `by=node` explicitly (today a server error off a node); a capacity error rather than `400` for the memory budget; *largest by gross exposure* when parts exceed `max-parts` | §9.1, §10.4 |
-| 10 | **Decided (product owner, 2026-10-25): vectors are kept for 7 years** in the lake (Delta `VACUUM` and log retention set so that 7 years of dates and their time travel stay readable). Official end-of-day captures follow the same 7 years unless the product owner says otherwise | §9.6 |
-| 11 | Field masks in VaR answers: a masked `COUNTERPARTY` appears in trade contribution rows today | §11 |
+| 9 | **Decided and built (2026-10-25):** `by=node` accepted (`400` off a node); the memory budget answers `503 DRS-5204` (capacity); the largest parts by gross size when they exceed `max-parts` | §9.1, §10 |
+| 10 | **Decided (product owner, 2026-10-25): vectors are kept for 7 years** in the lake (Delta `VACUUM` and log retention set so that 7 years of dates and their time travel stay readable). Official end-of-day captures follow the same 7 years. Built in 2.8.0: the lake writers set 7-year log and file retention on `risk` and `risk-results` tables, and `lake maintain` never vacuums them below it (§3.1) | §9.6 |
+| 11 | **Decided and built (2026-10-25):** the platform's field masks apply to contribution rows (`•••`); `CPTY:` is refused to a viewer who sees the counterparty masked | §11 |
 | 12 | Computed kind names (`var-result` …) and field names (`VAR` with `CONFIDENCE`, or `VAR_99`): the guard test forbids `VAR_99` only on input and fundamental kinds | §9.7 |
-| 13 | The Basel light for short histories: the scaled limits make a single exception *red* below 14 days and *amber* below 32; keep, or require a minimum number of days? | §6.5 |
+| 13 | **Decided (2026-10-25): kept and documented**: the light scales with the days it has; screens show its days, and it is not a regulatory zone before 250 days | §6.5 |
 | 14 | **Decided (product owner, 2026-10-25): `LE:` is the bank's legal entity.** The trade's booking `LEGAL_ENTITY` is the source of truth; the `LEGAL` hierarchy rolls up from it, and a trade whose `LEGAL_ENTITY` disagrees with its book's place in the `LEGAL` hierarchy is reported as a data-quality warning in the answer's provenance | §8.5 |
 
 ### 16.2 Where the code and the designs disagree (recorded 2026-10-25)
@@ -1305,18 +1353,18 @@ incremental VaR is 0) but raises ES from 6.5 to 8.5: the short trade hedged the 
 | Topic | Design | Code (wins) |
 |---|---|---|
 | Vector grain | per position (VAR_ENGINE.md 5.2, VAR_DATA_MODEL.md 1) | per trade (decided 2026-10-24) |
-| Position grain | OTC one per trade; fungible book × instrument (VAR_DATA_MODEL.md 3) | demo: book × product type × currency × underlying × maturity quarter for all products; planned: §3.7 |
-| `POSITION_TYPE` values | `otc`, `fungible` | `single-trade`, `fungible` |
+| Position grain | OTC one per trade; fungible book × instrument (VAR_DATA_MODEL.md 3) | as designed, from 2.8.0: derived by Drishti by the pack's rules (§3.7) |
+| `POSITION_TYPE` values | `otc`, `fungible` | `single-trade`, `fungible`; the rule (`otc`, `securities`, `listed`) is `POSITION_RULE` |
 | Lake layout | partitions by date and scenario set, sorted by hierarchy, 512 MB files, `BYTE_STREAM_SPLIT` + ZSTD | partitioned by date only, sorted by `id` per batch, writer defaults |
 | Data version (the pin) | the Delta table version | a SHA-256 stamp of the date partition's files |
 | Bitmaps | Roaring, over positions | `java.util.BitSet`, over trades |
 | Marginal VaR | per unit of notional or PV | per million of market value (positions) or PV (trades) |
-| Audit | basket changes audited | only `var-view` and `var-capture` |
-| `by` values | API_GUIDE.md: `child`, `node`, `position`, `trade` | `child`, `position`, `trade`, `desk`, `book` |
-| Truncated parts | the largest by gross exposure | the first `max-parts` in ordinal order |
-| Provenance | the input tables' versions and batch ids | the vector table's stamp only |
-| Load signal | README.md section 9: the signal reloads the date (confirmed 2026-10-25) | the signal does not reach the engine yet: fixed in 2.8.0 |
-| `VAR-COMM` mapping | README.md section 14: `DIVISION:COMM` | the record is the desk `DESK-COMM`; the division word is `DIV:` |
+| Audit | basket changes audited | as designed, from 2.8.0 (§11) |
+| `by` values | API_GUIDE.md: `child`, `node`, `position`, `trade` | `child`, `node`, `position`, `trade`, `desk`, `book` (2.8.0) |
+| Truncated parts | the largest by gross exposure | as designed, from 2.8.0 (by gross size) |
+| Provenance | the input tables' versions and batch ids | as designed, from 2.8.0 (`provenance.inputs`) |
+| Load signal | README.md section 9: the signal reloads the date (confirmed 2026-10-25) | as designed, from 2.8.0 (and the date is captured officially) |
+| `VAR-COMM` mapping | README.md section 14: `DIVISION:COMM` (corrected in 2.8.0 to `DESK:COMM`) | the record is the desk `DESK-COMM`; the division word is `DIV:` |
 | Scope sections | README.md sections 4 and 8 point to *VAR.md section 9* (scopes) and *section 11* (memory) | the shared section order puts scopes in section 8 and memory in section 7 |
 
 ### 16.3 The change table
@@ -1326,6 +1374,7 @@ incremental VaR is 0) but raises ES from 6.5 to 8.5: the short trade hedged the 
 | 1.0 | 2026-10-25 | First version: waves V0 to V3 as built, checked against the code and the test data; the rest of 2.8.0 as the planned contract |
 | 1.1 | 2026-10-25 | Product owner's decisions: the data-load signal reloads the engine automatically; vectors kept 7 years; `LE:` is the bank's legal entity (the trade's booking `LEGAL_ENTITY`) |
 | 1.2 | 2026-10-25 | Official end-of-day captures published to `risk-results/var-official` for other systems (product owner); official captures kept 7 years |
+| 1.3 | 2026-10-25 | **AS BUILT (2.8.0, VaR complete part 1):** the stored `var` and `var-node` kinds retired (§14); computed figures removed from `position`, `portfolio` and `desk`, the pages show the engine's (§9.8), with a guard test; positions derived by Drishti by configured rules (§3.7); every live trade valued (9,572; open question 1); 28 portfolio definitions; official end-of-day captures of every node, published append-only (§9.6); the data-load signal reloads and captures (§3.9); 7-year retention (§3.1); the load's checks and `DRS-5201` to `DRS-5204` (§10); `by=node`, the largest parts, masks, BASKET portfolios refused to aggregate-only viewers, basket and reload audit, input versions and batch ids in provenance, ids in any case; scope words `LE:` (the trades' legal entity) and `CPTY:` (§8.5) |
 
 ---
 

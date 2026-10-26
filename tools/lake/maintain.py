@@ -319,7 +319,11 @@ def _one(uri, root, lake, base, owned, want, day, dry_run, force_drop, force_for
         res["forced"] = True
         log(event="warning", table=uri, warning="maintaining a table Drishti did not build (--force-foreign): its publisher may rewrite "
                                                  "or vacuum it too, and a run here may break what it expects")
-    conf = {**base, **((lake.get("tables") or {}).get(name) or {})}
+    conf, floor = maintconfig.retention_floor(name, {**base, **((lake.get("tables") or {}).get(name) or {})}, lake.get("retain-years"))
+    if floor:
+        res["retention-floor"] = floor
+        if not quiet:
+            log(event="warning", table=uri, warning="; ".join(floor))
     emit("start", res)
     try:
         res.update(maintain(uri, conf, day, dry_run, force_drop))

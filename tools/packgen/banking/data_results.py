@@ -231,14 +231,10 @@ def market_results(trades: dict, docs: dict) -> None:
         contrib = {b: book_var(books[b]) for b in sorted(bl)}
         var99 = round(math.sqrt(fsum(v * v for v in contrib.values())) * 0.85)
         limit = round(var99 * r.uniform(1.25, 1.8), -4)
-        pnl = [{"date": iso(d), "pnl": round(r.gauss(0, var99 / 2.33))} for d in days]
-        exceptions = sum(1 for p in pnl if p["pnl"] < -var99)
-        scenarios = scenario_pnl(desk, var99)
-        docs["var"][f"VAR-{desk[5:]}"] = {
-            "resultId": f"VAR-{desk[5:]}", "var99": var99, "es975": round(var99 * 1.13), "svar": round(var99 * 1.9), "limit": limit, "exceptions": exceptions,
-            "scenarioPnl": scenarios, "meanPnl": round(sum(scenarios) / len(scenarios)),
-            "pnlSeries": pnl, "contributions": [{"book": b, "var": round(v * 0.85)} for b, v in contrib.items()], "desk": desk,
-            "method": "Historical simulation, 1-day, 99%, 500 scenarios", "_meta": {"source": "var-engine", "generation": 1}}
+        # the retired stored VaR (the var kind, 2.8.0: VaR is the engine's, docs/contracts/VAR.md section 14) drew the desk's P&L
+        # series from this generator: the draws stay so every other result keeps its numbers
+        for _ in days:
+            r.gauss(0, 1)
         for scn, (name, typ, sev, shocks) in SCENARIOS.items():
             by_book = [{"book": b, "pnl": round(-contrib[b] * {"Severe": 4.2, "Moderate": 2.1, "Mild": 0.9}[sev] * r.uniform(0.4, 1.3))} for b in sorted(bl)]
             sid = f"STR-{scn[4:]}-{desk[5:]}"
@@ -269,16 +265,6 @@ def market_results(trades: dict, docs: dict) -> None:
         docs["stress-scenario"][scn] = {"scenarioId": scn, "name": name, "type": typ, "severity": sev,
                                          "shocks": [{"factor": f, "shock": s} for f, s in shocks.items()], "horizon": "10 days",
                                          "_meta": {"source": "stress-engine", "generation": 1}}
-
-
-def scenario_pnl(desk: str, var99: float, n: int = 500) -> list[int]:
-    """The desk's P&L under each of the n historical scenarios the VaR is read from: fat-tailed (a scale mixture of
-    normals), scaled so the fifth worst of 500 (the 1% quantile) is minus the VaR."""
-    r = M.rng("scenarios" + desk)
-    raw = [r.gauss(0, 1) * (1.6 if r.random() < 0.08 else 1.0) for _ in range(n)]
-    q = sorted(raw)[max(0, n // 100 - 1)]
-    k = var99 / -q if q < 0 else var99 / 2.33
-    return [round(x * k) for x in raw]
 
 
 # the risk factors a book's explained P&L comes from, and their usual shares (theta costs)
@@ -314,8 +300,7 @@ def reference(trades: dict, docs: dict) -> None:
         bl = TR.books_of(desk)
         mtm = fsum(t["mtm"] for b in bl for t in books[b])
         docs["desk"][desk] = {"deskId": desk, "name": name, "head": head, "books": [{"id": b, "trades": len(books[b]), "mtm": round(fsum(t["mtm"] for t in books[b]))} for b in bl],
-                              "var99": docs["var"].get(f"VAR-{desk[5:]}", {}).get("var99"), "mtm": round(mtm), "legalEntity": le,
-                              "varResult": f"VAR-{desk[5:]}", "assetClasses": classes,
+                              "mtm": round(mtm), "legalEntity": le, "assetClasses": classes,
                               "positions": [{"tradeId": t["tradeId"], "book": b, "currency": t["currency"], "family": t["family"], "mtm": t["mtm"]}
                                             for b in bl for t in sorted(books[b], key=lambda t: t["tradeId"])],
                               "_meta": {"source": "org-master", "generation": 1}}

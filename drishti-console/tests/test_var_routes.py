@@ -12,9 +12,10 @@
 #
 # See the LICENSE file in the root of this repository for the full terms.
 
-"""The VaR explorer's command words (routes/var_routes.py): VAR <word> <rest> opens /var on the scope it means; VAR <id of the var kind>
-still goes to the server's command (the market-risk pack's var record); the page and its JSON need no server to answer a bad path."""
-from routes.var_routes import var_command
+"""The VaR explorer's command words (routes/var_routes.py): VAR <word> <rest> opens /var on the scope it means; an id of the retired
+stored VaR (VAR VAR-COMM, /v/var/VAR-COMM, /v/var-node/VN-<node>) opens the explorer at the matching scope with a notice; the page and
+its JSON need no server to answer a bad path."""
+from routes.var_routes import retired_link, var_command
 
 
 def test_command_words_open_the_explorer_on_their_scope():
@@ -24,6 +25,7 @@ def test_command_words_open_the_explorer_on_their_scope():
     assert var_command("VAR LE LE-NY".split(), "asha") == "/var?scope=LE%3ALE-NY"
     assert var_command("VAR POS POS-BOOK-RATES-1~CMS".split(), "asha") == "/var?scope=POS%3APOS-BOOK-RATES-1~CMS"
     assert var_command("VAR TRD MX-1,MX-2".split(), "asha") == "/var?scope=TRD%3AMX-1%2CMX-2"
+    assert var_command("VAR CPTY CP-KESTREL".split(), "asha") == "/var?scope=CPTY%3ACP-KESTREL"
     assert var_command("VAR PORT PF-USD-RATES".split(), "asha") == "/var?scope=PORT%3APF-USD-RATES"
     assert var_command("VAR SCOPE unwind".split(), "asha") == "/var?scope=BASKET%3Aasha/unwind"
     assert var_command("VAR SCOPE ola/unwind".split(), "asha") == "/var?scope=BASKET%3Aola/unwind"
@@ -33,9 +35,26 @@ def test_command_words_open_the_explorer_on_their_scope():
     assert var_command(["VAR"], "asha") == "/var"
 
 
+def test_an_id_of_the_retired_stored_var_opens_the_explorer_at_its_scope():
+    assert var_command("VAR VAR-COMM".split(), "asha") == "/var?scope=DESK%3ACOMM&from=VAR-COMM"
+    assert var_command("var var-rates".split(), "asha") == "/var?scope=DESK%3ARATES&from=var-rates"
+    assert var_command("VAR VN-MGMT~DESK-RATES".split(), "asha") == "/var?scope=NODE%3AMGMT~DESK-RATES&from=VN-MGMT~DESK-RATES"
+    assert retired_link("var", "VAR-COMM") == "/var?scope=DESK%3ACOMM&from=VAR-COMM"
+    assert retired_link("var-node", "VN-LEGAL~LE-NY") == "/var?scope=NODE%3ALEGAL~LE-NY&from=VN-LEGAL~LE-NY"
+    assert retired_link("var", "SOMETHING") == "/var?scope=BANK&from=SOMETHING"          # names no scope: the bank, with the notice
+    assert retired_link("trade", "VAR-COMM") is None
+
+
+def test_the_old_links_redirect(client):
+    r = client.get("/v/var/VAR-COMM", follow_redirects=False)
+    assert r.status_code == 303 and r.headers["location"] == "/var?scope=DESK%3ACOMM&from=VAR-COMM"
+    r = client.get("/v/var-node/VN-MGMT~DESK-FX", follow_redirects=False)
+    assert r.status_code == 303 and r.headers["location"].startswith("/var?scope=NODE%3AMGMT~DESK-FX")
+
+
 def test_other_commands_are_left_to_the_server():
-    assert var_command("VAR VAR-RATES".split(), "asha") is None          # the var kind's record
     assert var_command("VAR DESK".split(), "asha") is None               # nothing named
+    assert var_command("VAR SOMETHING ELSE".split(), "asha") is None
     assert var_command("TRD MX-20000001".split(), "asha") is None
 
 

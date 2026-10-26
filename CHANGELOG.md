@@ -42,6 +42,33 @@
   "Product Wordmark" and "Product Tagline" (element sheet rebuilt). Guard tests: `tests/test_branding_guard.py` (console: templates,
   scripts, a rebranded About page) and `BrandingLiteralTest` (drishti-it: string literals of the server's main code). Licence headers,
   header names (`X-Drishti-…`), `DRISHTI_` variables and code identifiers are unchanged. docs/admin/CONFIGURATION.md.
+- **VaR complete, part 1** ([VAR.md](docs/contracts/VAR.md) 1.3, AS BUILT):
+  - **The stored `var` and `var-node` kinds are retired**: kinds, mnemonic `VNODE`, samples, test data, Sutras, about texts, the Calc
+    snippets that read them (seven in market-risk, `desk_performance.py` in core) and their contracts. `VAR VAR-COMM` and `/v/var/VAR-COMM`
+    open the explorer at `DESK:COMM` with a notice; `VN-<node>` opens `NODE:<node>`. `VAR` stays the explorer's word.
+  - **No stored VaR figure anywhere:** `position`, `portfolio` and the core `desk` lost their VaR fields; their pages show the engine's,
+    computed as the page opens and as the reader (`VAR_ENGINE`). A guard test fails the build when a retired kind or figure returns, or an
+    input or fundamental kind carries an engine column.
+  - **Positions derived by Drishti** when a date loads, by the market-risk pack's `positions:` rules: securities by book and security,
+    listed derivatives by book and contract, OTC one per trade; live statuses only; served by the new `var-positions` connector.
+  - **Every live trade valued** in the test data (9,572, budget 0), with synthetic security ids; 28 portfolio definitions. The bank's VaR
+    on 2026-09-30 is now 112.0m (9.9m on the old 1,673-trade sample); test data +12 MB.
+  - **Official end-of-day captures** of every MGMT and LEGAL node, the node history's source, restated with a new result version, kept
+    7 years and published append-only to `risk-results/var-official`. `GET`/`POST /api/v1/var/official`.
+  - **The data-load signal** of `pnl-vector`, `scenario-set`, `risk-hierarchy`, `portfolio` or `trade` reloads the date in the engine
+    and captures it officially.
+  - **7-year retention** of the risk lake: the writers set Delta log and file retention on `risk` and `risk-results` tables, and
+    `lake maintain` never vacuums them below it.
+  - **Load checks:** wrong-length, null or NaN, other-currency rows rejected (`DRS-5201`, listed in the provenance); duplicate trade ids
+    (`DRS-5202`); mixed runs or scenario sets answer the date before with a warning (`DRS-5203`); the memory budget is a capacity error
+    (`503 DRS-5204`).
+  - **Answers:** `by=node`; the largest parts by gross size beyond `max-parts`; field masks in trade rows; `PORT:` of a BASKET portfolio
+    refused to aggregate-only viewers; provenance with every input's version, batch ids and the rules; basket changes, reloads and
+    official runs audited; position, trade and counterparty ids in any case.
+  - **Scope words** `LE:` (the trades' booking legal entity, a warning when the Legal tree disagrees) and `CPTY:`.
+  - Docs: VAR.md, VAR_ENGINE.md and VAR_DATA_MODEL.md section 18, VAR_EXPLORER.md, API_GUIDE.md, CONFIGURATION.md, TOOLS.md,
+    LAKE_MAINTENANCE.md, TROUBLESHOOTING.md, PYTHON_CALC.md (the first session now uses a trade's P&L vector), the contracts, command
+    catalog and pack READMEs regenerated.
 
 - **Scope narrowed (product owner, 2026-10-25): fundamentals and VaR only.**
   - Active: the data contracts of every command, and VaR complete.

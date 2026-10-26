@@ -21,7 +21,6 @@ code: MRSK
 title: Market risk
 summary: Value at risk, stress testing, FRTB sensitivities and P&L explain.
 kinds:
-- var
 - stress-scenario
 - stress-result
 - frtb-sensitivity
@@ -32,9 +31,7 @@ kinds:
 - pnl-vector
 - scenario-set
 - risk-hierarchy
-- var-node
 commands:
-  VAR: var
   SCN: stress-scenario
   STR: stress-result
   FRTB: frtb-sensitivity
@@ -45,7 +42,6 @@ commands:
   PNLV: pnl-vector
   SSET: scenario-set
   HIER: risk-hierarchy
-  VNODE: var-node
   MRSK: pack overview
 depends-on:
   packs:
@@ -53,11 +49,14 @@ depends-on:
   - trading
   connectors:
   - risk-store
+  - var-positions
   plugins:
   - delta
+  - var-positions
   settings:
   - DRISHTI_DELTA_ROOT
   - DRISHTI_LAKE_ENABLED
+  - DRISHTI_VAR_ENABLED
 sources:
 - name: Synthetic sample data (tools/packgen/banking)
   licence: Proprietary (part of Drishti); fictitious names and figures
@@ -72,50 +71,19 @@ generated-by: tools/packgen/banking/make_docs.py
 
 ## What it is
 
-Market-risk results over the trading pack's trades: value at risk and expected shortfall by desk, stress scenarios and their results,
-FRTB standardised sensitivities, P&L explain and trade valuations (mark-to-market, P&L and sensitivities per trade). Since 2.8.0
-(unreleased) also the **VaR engine's data**: positions (holdings netting their trades), portfolios (hierarchy, rule, basket), one P&L
-vector per trade over 509 historical scenario days, the MGMT and LEGAL hierarchies with VaR limits and every node's 250-day history.
-The VaR explorer (`VAR DESK DESK-RATES <GO>`, [VAR_EXPLORER.md](../../../docs/guides/VAR_EXPLORER.md)) computes VaR, ES and
-contributions for any set of these trades; `PORT <id>` and `POS <id>` open a portfolio's and a position's pages.
+Market-risk results over the trading pack's trades: stress scenarios and their results, FRTB standardised sensitivities, P&L explain and
+trade valuations (mark-to-market, P&L and sensitivities per trade), and the **VaR engine's inputs** (2.8.0, unreleased): one P&L vector
+per live trade over 509 historical scenario days, the scenario set, the MGMT and LEGAL hierarchies with VaR limits, and portfolio
+definitions (hierarchy, rule, basket). Value at risk is never stored: the VaR explorer (`VAR DESK DESK-RATES <GO>`,
+[VAR_EXPLORER.md](../../../docs/guides/VAR_EXPLORER.md)) computes VaR, ES and contributions for any set of these trades, the portfolio
+and position pages (`PORT <id>`, `POS <id>`) show the engine's figures computed as they open, and each business date's official figures
+are the engine's end-of-day captures. Positions are Drishti's: derived from the trades by this pack's `positions:` rules (securities by
+book and security, listed by book and contract, OTC one per trade) when a date loads ([VAR.md](../../../docs/contracts/VAR.md)).
+The stored `var` (VAR-<desk>) and `var-node` kinds were retired in 2.8.0: `VAR VAR-COMM` opens the explorer at `DESK:COMM`.
 
 ## Data structures
 
 Every kind the pack owns, read from its manifest, its samples and its Sutras: how its ids look, its fields (type, an example, what it means), its nested lists and the fields that link to other kinds. A path `A[].B` is field `B` of every element of list `A`.
-
-### `var`
-
-**VaR / expected shortfall** · mnemonic `VAR` · read through connector `risk-store`.
-
-About: Value-at-risk result.
-
-**Id:** field `RESULT_ID`; pattern `^VAR-`; for example `VAR-COMM`.
-
-Fields, from 10 sample documents:
-
-| Field | Type | Example | Description |
-|---|---|---|---|
-| `RESULT_ID` | string | `VAR-COMM` | The document's id |
-| `VAR_99` | integer | `10946782` | The loss the portfolio is expected not to exceed on 99 of 100 trading days, read from the 1st percentile of the revalued scenario P&L (historical simulation). (USD) |
-| `ES_975` | integer | `12369864` | The average loss on the worst 2.5% of scenario days. It looks into the tail that VaR ignores, and it is the measure the FRTB internal-models approach uses for capital. (USD) |
-| `SVAR` | integer | `20798886` | VaR calculated with the same model but over a 12-month period of significant stress for the portfolio, instead of the recent past. It feeds the market-risk capital requirement (Basel 2.5). (USD) |
-| `LIMIT` | number | `18920000.0` | The VaR the desk is approved to run. VaR above it is a limit breach. (USD) |
-| `EXCEPTIONS` | integer | `1` | The days in the last 250 on which the day's loss was larger than the 99% VaR. Basel's traffic lights count them to judge the model. (days) |
-| `SCENARIO_PNL` | list of integers |  | The portfolio revalued under each of the 500 historical scenario days; the 1st percentile of this distribution is the VaR. (USD) |
-| `MEAN_PNL` | integer | `-49767` | Mean scenario P&L (USD) |
-| `PNL_SERIES` | list of objects |  | Scenario P&L values |
-| `CONTRIBUTIONS` | list of objects |  | VaR contribution by book |
-| `DESK` | string | `DESK-COMM` | The desk's id (core pack); link to `desk` |
-| `METHOD` | string | `Historical simulation, 1-day, 99%, 500 s…` | Method, e.g. historical simulation, 1-day, 99%, 500 scenarios |
-
-Nested structures:
-
-| Path | Fields |
-|---|---|
-| `PNL_SERIES[]` | `DATE` (date), `PNL` (integer) |
-| `CONTRIBUTIONS[]` | `BOOK` (string), `VAR` (integer): The VaR of one book on its own. Books diversify against each other, so the contributions need not add up to the desk's VaR. (USD) |
-
-Links: `DESK` → `desk`.
 
 ### `stress-scenario`
 
@@ -261,9 +229,9 @@ Links: `COUNTERPARTY` → `counterparty`, `DESK` → `desk`, `PORTFOLIO` → `bo
 
 ### `position`
 
-**Position** · mnemonic `POS` · read through connector `risk-store`.
+**Position** · mnemonic `POS` · read through connector `var-positions`.
 
-A holding of one instrument in one book, netting the trades that build or reduce it (VAR_DATA_MODEL.md section 18). Data: tools/packgen/var/make_var_data.py.
+A position Drishti derives from the trades when it loads a date, by the pack's positions: rules (docs/contracts/VAR.md section 3.7): served from the VaR engine by the var-positions connector, never stored
 
 **Id:** pattern `^POS-`.
 
@@ -271,50 +239,44 @@ Fields, from 2 sample documents:
 
 | Field | Type | Example | Description |
 |---|---|---|---|
-| `POSITION_ID` | string | `POS-BOOK-EQD-2~EQ_ASIAN-USD-2029Q2` | POS-<book>~<instrument>: one position per instrument per book on a business date; link to `position` |
+| `POSITION_ID` | string | `POS-BOOK-EQD-2~SEC-WARRANT-USD-01` | POS-<book>~<security> for securities and listed products (fungible: the trades net), POS-<book>~<trade> for an OTC trade; link to `position` |
 | `BUSINESS_DATE` | date | `2026-09-30` | — |
-| `INSTRUMENT_ID` | string | `INS-EQ_ASIAN-USD-2029Q2` | The instrument: product, currency, underlying and maturity quarter |
-| `INSTRUMENT` | string | `Equity Asian option USD 2029-04` | What the position holds: the product, its currency, its underlying and its maturity. Trades of the same instrument in one book are one position. |
+| `POSITION_RULE` | string | `securities` | securities, listed or otc: the rule that keyed it |
+| `SECURITY_ID` | string | `SEC-WARRANT-USD-01` | The security or exchange contract the position holds; empty for a position of one OTC trade. |
+| `INSTRUMENT_ID` | string | `SEC-WARRANT-USD-01` | The key the position rule took: the security or contract, or for an OTC position the trade itself. |
+| `INSTRUMENT` | string | `Equity warrant USD 2027-05` | What the position holds: the security, or for one OTC trade its product, currency and maturity. |
 | `POSITION_TYPE` | string | `fungible` | — |
 | `DIRECTION` | string | `SHORT` | LONG, SHORT or FLAT: the sign of the net quantity |
-| `QUANTITY` | number | `-810529060.0` | The signed sum of the trades' quantities (a buy adds, a sell takes away) |
-| `GROSS_QUANTITY` | number | `7050772940.0` | — |
+| `QUANTITY` | number | `-1772145212.5` | The signed sum of the trades' quantities (a buy adds, a sell takes away) |
+| `GROSS_QUANTITY` | number | `2816087612.5` | — |
+| `TRADE_COUNT` | integer | `9` | The trades that make the position on the business date. |
+| `LONG_TRADES` | integer | `2` | — |
+| `SHORT_TRADES` | integer | `7` | — |
 | `TRADE_IDS` | list of strings |  | The trades in the position (each links to the trade); link to `trade` |
-| `TRADE_QUANTITIES` | list of objects |  | Each trade's signed quantity, its own VaR and its component of the position's VaR |
-| `TRADE_COUNT` | integer | `18` | Trades |
-| `LONG_TRADES` | integer | `9` | — |
-| `SHORT_TRADES` | integer | `9` | — |
+| `TRADES` | list of objects |  | Each trade's signed quantity, direction, PV, product and counterparty |
 | `LEGAL_ENTITY` | string | `LE-LDN` | The bank's legal entity that holds the book.; link to `legal-entity` |
 | `DIVISION` | string | `DIV-MARKETS` | — |
 | `DESK` | string | `DESK-EQD` | The desk the book belongs to.; link to `desk` |
 | `TT_BOOK` | string | `BOOK-EQD-2` | The book the position is held in: its trades are all booked there.; link to `book` |
 | `PORTFOLIO` | string | `BOOK-EQD-2` | link to `book` |
 | `STRATEGY` | null |  | — |
-| `COUNTERPARTY` | null |  | The counterparty of the position's trades when they all share one; empty otherwise.; link to `counterparty` |
-| `COUNTERPARTIES` | list of strings |  | — |
+| `COUNTERPARTY` | string | `CP-SUMMIT` | The counterparty of the position's trades when they all share one; empty otherwise.; link to `counterparty` |
 | `PRODUCT_GROUP` | string | `Equity` | — |
-| `PRODUCT_TYPE` | string | `EQ_ASIAN` | The product of the instrument, as the booking systems name it. |
+| `PRODUCT_TYPE` | string | `WARRANT` | The product of the instrument, as the booking systems name it. |
 | `CURRENCY` | string | `USD` | The instrument's currency. Every P&L and value is in USD, the reporting currency. |
-| `MARKET_VALUE` | integer | `83350636` | The sum of the trades' present values (their mark-to-market) on the business date. (USD) |
-| `NOTIONAL` | integer | `7050772940` | The sum of the trades' quantities without their signs. |
-| `LINEAR` | boolean | `true` | — |
+| `COUNTERPARTIES` | list of strings |  | — |
+| `MARKET_VALUE` | integer | `41691425` | The sum of the trades' present values (their mark-to-market) on the business date. (USD) |
+| `NOTIONAL` | integer | `2816087612` | The sum of the trades' quantities without their signs. |
+| `TAGS` | list |  | — |
 | `STATUS` | string | `open` | — |
-| `OPENED_ON` | date | `2024-10-10` | The trade date of the position's first trade. |
-| `TAGS` | list or list of strings |  | — |
-| `VAR_99` | integer | `52808` | The loss the portfolio is expected not to exceed on 99 of 100 trading days, read from the 1st percentile of the revalued scenario P&L (historical simulation). (USD) |
-| `ES_975` | integer | `52234` | The average loss on the worst 2.5% of scenario days. It looks into the tail that VaR ignores, and it is the measure the FRTB internal-models approach uses for capital. (USD) |
-| `COMPONENT_VAR` | integer | `51216` | The position's share of its book's VaR (Euler; the shares add up to the book's VaR) |
-| `BOOK_VAR` | integer | `426663` | The 1-day 99% VaR of the whole book the position is held in. (USD) |
-| `PCT_OF_BOOK_VAR` | number | `0.12` | The component VaR over the book's VaR. |
 | `SCENARIO_SET_ID` | string | `HS-509` | — |
-| `PNL` | list of integers |  | The position's P&L under the 509 scenario days: the sum of its trades' vectors (a list<double> column in the lake) |
-| `VAR_SCOPE` | string | `POS:POS-BOOK-EQD-2~EQ_ASIAN-USD-2029Q2` | — |
+| `VAR_SCOPE` | string | `POS:POS-BOOK-EQD-2~SEC-WARRANT-USD-01` | — |
 
 Nested structures:
 
 | Path | Fields |
 |---|---|
-| `TRADE_QUANTITIES[]` | `TRADE_ID` (string), `QUANTITY` (number): The trade's signed quantity in the position: a buy positive, a sell negative., `DIRECTION` (string), `VAR_99` (integer): The trade's 1-day 99% VaR as if it were alone. (USD), `COMPONENT_VAR` (integer): The trade's share of the position's VaR. The shares of a long and a short of one instrument have opposite signs and add up to the position's VaR. (USD) |
+| `TRADES[]` | `TRADE_ID` (string), `QUANTITY` (number): The trade's signed quantity in the position: a buy positive, a sell negative., `DIRECTION` (string), `PV` (number): The trade's present value on the business date, as the risk batch priced it. (USD), `PRODUCT_TYPE` (string), `COUNTERPARTY` (string) |
 
 Links: `COUNTERPARTY` → `counterparty`, `DESK` → `desk`, `LEGAL_ENTITY` → `legal-entity`, `PORTFOLIO` → `book`, `POSITION_ID` → `position`, `TRADE_IDS` → `trade`, `TT_BOOK` → `book`.
 
@@ -322,7 +284,7 @@ Links: `COUNTERPARTY` → `counterparty`, `DESK` → `desk`, `LEGAL_ENTITY` → 
 
 **Portfolio** · mnemonic `PORT` · read through connector `risk-store`.
 
-A set of positions: a hierarchy node, a rule over the positions' columns, or a basket of positions and trades. Portfolios may overlap.
+A portfolio definition: a hierarchy node, a rule over the positions' columns, or a basket of positions and trades. Portfolios may overlap; their VaR is computed when asked
 
 **Id:** pattern `^PF-`.
 
@@ -330,48 +292,24 @@ Fields, from 3 sample documents:
 
 | Field | Type | Example | Description |
 |---|---|---|---|
-| `PORTFOLIO_ID` | string | `PF-RATES-DESK` | link to `portfolio` |
-| `NAME` | string | `Rates desk (New York)` | — |
-| `OWNER` | string | `rates-risk` | Who keeps the portfolio's definition. |
-| `TYPE` | string | `HIERARCHY` | HIERARCHY, RULE or BASKET |
+| `PORTFOLIO_ID` | string | `PF-ASHA-UNWIND` | link to `portfolio` |
+| `NAME` | string | `Unwind candidates (Asha)` | — |
+| `OWNER` | string | `asha` | Who keeps the portfolio's definition. |
+| `TYPE` | string | `BASKET` | HIERARCHY, RULE or BASKET |
 | `DEFINITION` | object |  | NODE (a hierarchy node), RULE (a condition) or MEMBERS (positions and trades) |
 | `ROLLS_UP_TO` | object |  | Nested: see below |
-| `LIMIT_VAR` | integer | `4600000` | The VaR the portfolio may take. (USD) |
+| `LIMIT_VAR` | integer | `1800000` | The portfolio's VaR limit (USD), an input |
 | `BUSINESS_DATE` | date | `2026-09-30` | — |
 | `VALID_FROM` | date | `2026-01-02` | The first business date the portfolio's definition applies to; an earlier date uses the definition then in force. |
 | `VALID_TO` | null |  | — |
-| `SCENARIO_SET_ID` | string | `HS-509` | — |
-| `POSITION_COUNT` | integer | `24` | The positions in the portfolio on the business date (a basket naming one trade of a position holds that part of it). |
-| `TRADE_COUNT` | integer | `172` | — |
-| `LONG_COUNT` | integer | `14` | Positions whose net quantity is above zero. |
-| `SHORT_COUNT` | integer | `10` | Positions whose net quantity is below zero. |
-| `GROSS_MV` | integer | `1065077778` | The sum of the positions' market values without their signs. (USD) |
-| `NET_MV` | integer | `352474636` | The sum of the positions' market values: longs and shorts offset. (USD) |
-| `VAR_99` | integer | `3012892` | The loss the portfolio is expected not to exceed on 99 of 100 trading days, read from the 1st percentile of the revalued scenario P&L (historical simulation). (USD) |
-| `ES_975` | integer | `3690544` | The average loss on the worst 2.5% of scenario days. It looks into the tail that VaR ignores, and it is the measure the FRTB internal-models approach uses for capital. (USD) |
-| `LIMIT_USE` | number | `0.655` | The VaR over the portfolio's VaR limit. |
-| `POSITIONS` | list of objects |  | The positions on the date, each with its VaR and component VaR |
-| `BY_PRODUCT` | list of objects |  | Nested: see below |
-| `BY_CURRENCY` | list of objects |  | Nested: see below |
-| `BY_DIRECTION` | list of objects |  | Nested: see below |
-| `TOP_CONTRIBUTORS` | list of objects |  | Nested: see below |
-| `ALL_TRADES` | object |  | Nested: see below |
-| `VAR_SCOPE` | string | `PORT:PF-RATES-DESK` | — |
-| `PNL` | list of integers |  | The portfolio's P&L under the scenario days, each trade counted once |
 
 Nested structures:
 
 | Path | Fields |
 |---|---|
-| `DEFINITION` | `NODE` (string): For a HIERARCHY portfolio: the node of the bank's hierarchy whose positions it holds (every book under it)., `RULE` (string): For a RULE portfolio: the condition a position's columns must meet to be in it, checked on each business date., `MEMBERS` (list of objects): For a BASKET portfolio: the positions and trades someone picked (a trade brings that part of its position). |
-| `ROLLS_UP_TO` | `KIND` (string), `ID` (string): The desk or book the portfolio reports under. |
-| `POSITIONS[]` | `POSITION_ID` (string): The position's id: its book and its instrument (one holding nets every trade of that instrument in the book)., `INSTRUMENT` (string): What the position holds: the product, its currency and its maturity., `DIRECTION` (string): LONG or SHORT: the sign of the position's net quantity., `QUANTITY` (number): The signed sum of the position's trades' quantities held in the portfolio., `MARKET_VALUE` (integer): The position's present value on the business date. (USD), `CURRENCY` (string), `TT_BOOK` (string), `DESK` (string), `PRODUCT_GROUP` (string), `PRODUCT_TYPE` (string), `TRADES` (integer), `PARTIAL` (boolean), `VAR_99` (integer): The position's own 1-day 99% VaR, as if it were alone. (USD), `COMPONENT_VAR` (integer): The position's share of the portfolio's VaR (Euler): the shares add up to the portfolio's VaR; a hedge has a negative share. (USD), `PCT_OF_VAR` (number): The component VaR over the portfolio's VaR. |
-| `BY_PRODUCT[]` | `KEY` (string), `POSITIONS` (integer), `NET_MV` (integer), `GROSS_MV` (integer), `COMPONENT_VAR` (integer) |
-| `BY_CURRENCY[]` | `KEY` (string), `POSITIONS` (integer), `NET_MV` (integer), `GROSS_MV` (integer), `COMPONENT_VAR` (integer) |
-| `BY_DIRECTION[]` | `KEY` (string), `POSITIONS` (integer), `NET_MV` (integer), `GROSS_MV` (integer), `COMPONENT_VAR` (integer) |
-| `TOP_CONTRIBUTORS[]` | `POSITION_ID` (string), `INSTRUMENT` (string), `DIRECTION` (string), `QUANTITY` (number), `MARKET_VALUE` (integer), `CURRENCY` (string), `TT_BOOK` (string), `DESK` (string), `PRODUCT_GROUP` (string), `PRODUCT_TYPE` (string), `TRADES` (integer), `PARTIAL` (boolean), `VAR_99` (integer), `COMPONENT_VAR` (integer), `PCT_OF_VAR` (number) |
-| `ALL_TRADES` | `KIND` (string), `ID` (string) |
+| `DEFINITION` | `MEMBERS` (list of objects): For a BASKET portfolio: the positions and trades someone picked (a trade brings that part of its position)., `NODE` (string): For a HIERARCHY portfolio: the node of the bank's hierarchy whose positions it holds (every book under it)., `RULE` (string): For a RULE portfolio: the condition a position's columns must meet to be in it, checked on each business date. |
 | `DEFINITION.MEMBERS[]` | `POSITION_ID` (string), `TRADE_ID` (string) |
+| `ROLLS_UP_TO` | `KIND` (string), `ID` (string): The desk or book the portfolio reports under. |
 
 Links: `PORTFOLIO_ID` → `portfolio`.
 
@@ -379,7 +317,7 @@ Links: `PORTFOLIO_ID` → `portfolio`.
 
 **P&L vector (509 scenarios)** · mnemonic `PNLV` · read through connector `risk-store`.
 
-One trade's P&L under each of the 509 scenario days, in USD: the grain every VaR is summed from
+One trade's P&L under each of the 509 scenario days, in USD: the grain every VaR is summed from, with the trade's terms the server derives its position from
 
 **Id:** pattern `^PV-`.
 
@@ -387,14 +325,16 @@ Fields, from 1 sample document:
 
 | Field | Type | Example | Description |
 |---|---|---|---|
-| `VECTOR_ID` | string | `PV-MX-20000209-HS-509` | PV-<trade>-HS-509 |
-| `TRADE_ID` | string | `MX-20000209` | link to `trade` |
-| `POSITION_ID` | string | `POS-BOOK-EQD-2~EQ_ASIAN-USD-2029Q2` | The position the trade belongs to; link to `position` |
-| `INSTRUMENT_ID` | string | `INS-EQ_ASIAN-USD-2029Q2` | — |
+| `VECTOR_ID` | string | `PV-MX-20000274-HS-509` | PV-<trade>-HS-509 |
+| `TRADE_ID` | string | `MX-20000274` | link to `trade` |
+| `SECURITY_ID` | string | `SEC-WARRANT-USD-01` | The security or exchange contract of a securities or listed trade (the demo's are synthetic) |
+| `INSTRUMENT` | string | `Equity warrant USD 2027-05` | — |
 | `BUSINESS_DATE` | date | `2026-09-30` | — |
 | `SCENARIO_SET_ID` | string | `HS-509` | — |
 | `SOURCE_SYSTEM` | string | `MUREX` | — |
-| `TRADE_VERSIONS` | string | `v5` | — |
+| `TRADE_VERSIONS` | string | `v4` | — |
+| `TRADE_STATUS` | string | `AMENDED` | The trade's status: NEW, VALIDATED and AMENDED count on the date |
+| `MATURITY_DATE` | date | `2027-05-26` | — |
 | `LEGAL_ENTITY` | string | `LE-LDN` | link to `legal-entity` |
 | `DIVISION` | string | `DIV-MARKETS` | — |
 | `DESK` | string | `DESK-EQD` | link to `desk` |
@@ -402,22 +342,23 @@ Fields, from 1 sample document:
 | `PORTFOLIO` | string | `BOOK-EQD-2` | link to `book` |
 | `STRATEGY` | null |  | — |
 | `PRODUCT_GROUP` | string | `Equity` | — |
-| `PRODUCT_TYPE` | string | `EQ_ASIAN` | — |
+| `PRODUCT_TYPE` | string | `WARRANT` | — |
 | `CURRENCY` | string | `USD` | — |
-| `COUNTERPARTY` | string | `CP-KESTREL` | link to `counterparty` |
+| `COUNTERPARTY` | string | `CP-SUMMIT` | link to `counterparty` |
 | `DIRECTION` | string | `SHORT` | — |
-| `QUANTITY` | number | `-180000000.0` | The trade's quantity: positive for a buy, negative for a sell. |
+| `QUANTITY` | number | `-179000000.0` | The trade's quantity: positive for a buy, negative for a sell. |
+| `TAGS` | null |  | — |
 | `REPORTING_CCY` | string | `USD` | — |
-| `PV` | integer | `-83827` | The trade's value on the business date. (USD) |
+| `PV` | integer | `3143714` | The trade's value on the business date. (USD) |
 | `PNL` | list of integers |  | 509 values, oldest scenario first, stored as a list<double> column (out of the document) |
 | `STATUS` | string | `ok` | ok, proxied (priced by a proxy) or failed (no vector: counted, never taken as zero). |
 | `PRICER` | string | `demo-factor-model` | — |
-| `MODEL_VERSION` | string | `demo-1` | — |
+| `MODEL_VERSION` | string | `demo-2` | — |
 | `COMPUTED_AT` | timestamp | `2026-09-30T22:30:00Z` | — |
 | `BATCH_ID` | string | `B-2026-09-30-01` | — |
 | `RESTATEMENT` | integer | `0` | — |
 
-Links: `COUNTERPARTY` → `counterparty`, `DESK` → `desk`, `LEGAL_ENTITY` → `legal-entity`, `PORTFOLIO` → `book`, `POSITION_ID` → `position`, `TRADE_ID` → `trade`, `TT_BOOK` → `book`.
+Links: `COUNTERPARTY` → `counterparty`, `DESK` → `desk`, `LEGAL_ENTITY` → `legal-entity`, `PORTFOLIO` → `book`, `TRADE_ID` → `trade`, `TT_BOOK` → `book`.
 
 ### `scenario-set`
 
@@ -463,7 +404,7 @@ Fields, from 2 sample documents:
 | `REF` | object |  | Nested: see below |
 | `CHILDREN` | list of strings |  | — |
 | `BOOKS` | list of strings |  | Every book beneath the node |
-| `LIMIT_VAR` | integer | `8500000` | The node's VaR limit (USD) |
+| `LIMIT_VAR` | integer | `180000000` | The node's VaR limit (USD) |
 | `BUSINESS_DATE` | date | `2026-09-30` | — |
 | `VALID_FROM` | date | `2026-01-02` | — |
 | `VALID_TO` | null |  | — |
@@ -476,47 +417,10 @@ Nested structures:
 
 Links: `NODE_ID` → `risk-hierarchy`.
 
-### `var-node`
-
-**Official VaR of a hierarchy node** · mnemonic `VNODE` · read through connector `risk-store`.
-
-A node's official VaR, ES and hypothetical P&L on one business date (250 days kept: the backtest)
-
-**Id:** pattern `^VN-`.
-
-Fields, from 2 sample documents:
-
-| Field | Type | Example | Description |
-|---|---|---|---|
-| `VAR_NODE_ID` | string | `VN-MGMT~DESK-RATES` | — |
-| `NODE_ID` | string | `MGMT~DESK-RATES` | link to `risk-hierarchy` |
-| `HIERARCHY` | string | `MGMT` | — |
-| `LEVEL` | string | `desk` | — |
-| `NAME` | string | `Rates · Swaps and options` | — |
-| `PARENT_ID` | string | `MGMT~DIV-MARKETS` | — |
-| `BUSINESS_DATE` | date | `2026-09-29` | — |
-| `SCENARIO_SET_ID` | string | `HS-509` | — |
-| `VAR_99` | integer | `2938233` | The loss the portfolio is expected not to exceed on 99 of 100 trading days, read from the 1st percentile of the revalued scenario P&L (historical simulation). (USD) |
-| `ES_975` | integer | `3599094` | The average loss on the worst 2.5% of scenario days. It looks into the tail that VaR ignores, and it is the measure the FRTB internal-models approach uses for capital. (USD) |
-| `HYPO_PNL` | integer | `388197` | The node's P&L of the day with its positions unchanged |
-| `EXCEPTION` | boolean | `false` | True when the day's loss exceeded the previous day's VaR |
-| `PREVIOUS_VAR` | integer | `2919754` | — |
-| `LIMIT` | integer | `4200000` | The node's VaR limit on the day. (USD) |
-| `LIMIT_USE` | number | `0.6996` | — |
-| `POSITION_COUNT` | integer | `24` | — |
-| `TRADE_COUNT` | integer | `172` | — |
-| `BATCH_ID` | string | `B-2026-09-29-01` | — |
-| `OFFICIAL` | boolean | `true` | — |
-| `PNL` | list of integers |  | — (in 50%) |
-| `EXCEPTIONS_250` | integer | `2` | — (in 50%) |
-
-Links: `NODE_ID` → `risk-hierarchy`.
-
 ## Screens and commands
 
 | Command | Kind | Opens |
 |---|---|---|
-| `VAR` | `var` | VaR / expected shortfall |
 | `SCN` | `stress-scenario` | Stress scenario |
 | `STR` | `stress-result` | Stress result |
 | `FRTB` | `frtb-sensitivity` | FRTB sensitivities |
@@ -527,18 +431,16 @@ Links: `NODE_ID` → `risk-hierarchy`.
 | `PNLV` | `pnl-vector` | P&L vector (509 scenarios) |
 | `SSET` | `scenario-set` | Scenario set |
 | `HIER` | `risk-hierarchy` | Risk hierarchy node |
-| `VNODE` | `var-node` | Official VaR of a hierarchy node |
 | `MRSK` | — | The pack's overview: its kinds, how many each holds, an example of each |
 
 Examples:
 
 | Type | Shows |
 |---|---|
-| `VAR VAR-RATES` | Rates desk VaR · P&L series, contributions |
 | `STR STR-GFC2008-RATES` | Stress · 2008 crisis on the rates desk |
 | `PNL PNL-RATES-1` | P&L explain |
 | `FRTB FRTB-RATES-1` | FRTB sensitivities and charges |
-| `PORT PF-RATES-DESK` | Portfolio · its positions, longs and shorts, VaR and component VaR |
+| `PORT PF-RATES-DESK` | Portfolio · its positions, longs and shorts, VaR and component VaR (computed as you open it) |
 | `PORT PF-ASHA-UNWIND` | A basket of positions and trades · overlaps the rates desk |
 
 Screens (Sutras):
@@ -548,11 +450,10 @@ Screens (Sutras):
 | `frtb-sensitivity` | `frtb-sensitivity` | Delta, vega and curvature by risk class and bucket (SBM). |
 | `pnl-explain` | `pnl-explain` | Daily P&L attributed to risk factors, new trades and residual. |
 | `portfolio` | `portfolio` | A portfolio in terms of the positions inside it: longs and shorts, market value, VaR, ES and each position's contribution. |
-| `position` | `position` | A position: one instrument held in one book, the trades that build or reduce it, its VaR and its P&L over the scenario days. |
+| `position` | `position` | A position: one security held in one book (or one OTC trade), the trades that build or reduce it, and its VaR computed as the page opens. |
 | `stress-result` | `stress-result` | P&L of a desk under a scenario, by book. |
 | `stress-scenario` | `stress-scenario` | A named historical or hypothetical shock set. |
 | `trade-valuation` | `trade-valuation` | A trade's valuation from the risk engine, for every source system: MTM, one-day P&L and DV01, with what it values (source system, portfolio, desk, product). |
-| `var` | `var` | Historical VaR and ES for a desk or portfolio, with backtesting. |
 
 ## Data sources and licences
 
@@ -568,9 +469,10 @@ The connectors it brings (written once to `config/connectors/<name>.yaml`, then 
 
 | Connector | Plugin | Kinds | Enabled |
 |---|---|---|---|
-| `risk-store` | `delta` | `var`, `stress-scenario`, `stress-result`, `frtb-sensitivity`, `pnl-explain`, `trade-valuation`, `position`, `portfolio`, `pnl-vector`, `scenario-set`, `risk-hierarchy`, `var-node` | `${DRISHTI_LAKE_ENABLED:true}` |
+| `risk-store` | `delta` | `stress-scenario`, `stress-result`, `frtb-sensitivity`, `pnl-explain`, `trade-valuation`, `portfolio`, `pnl-vector`, `scenario-set`, `risk-hierarchy` | `${DRISHTI_LAKE_ENABLED:true}` |
+| `var-positions` | `var-positions` | `position` | `${DRISHTI_VAR_ENABLED:true}` |
 
-Settings (environment variables) its connectors read: `DRISHTI_DELTA_ROOT`, `DRISHTI_LAKE_ENABLED`.
+Settings (environment variables) its connectors read: `DRISHTI_DELTA_ROOT`, `DRISHTI_LAKE_ENABLED`, `DRISHTI_VAR_ENABLED`.
 
 ## Refreshing the data
 

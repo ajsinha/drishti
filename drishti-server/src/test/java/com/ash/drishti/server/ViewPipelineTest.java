@@ -47,6 +47,37 @@ class ViewPipelineTest {
         return v.panels().stream().filter(p -> p.id().equals(id)).findFirst().orElseThrow();
     }
 
+    /** An augmenter of a kind adds to every view of it (an engine's figures computed as the page opens); the stored document never has it. */
+    @Test
+    void anAugmenterAddsToTheViewNeverToTheStoredDocument() {
+        java.util.List<com.ash.drishti.engine.ViewAugmenter> before = pipeline.augmenters();
+        java.util.concurrent.atomic.AtomicInteger calls = new java.util.concurrent.atomic.AtomicInteger();
+        pipeline.augmenters(java.util.List.of(new com.ash.drishti.engine.ViewAugmenter() {
+            @Override
+            public boolean augments(String kind) {
+                return kind.equals("trade");
+            }
+
+            @Override
+            public com.ash.drishti.api.EntityDocument augment(com.ash.drishti.api.EntityDocument doc, com.ash.drishti.api.AsOf asOf) {
+                calls.incrementAndGet();
+                java.util.Map<String, com.ash.drishti.api.DataNode> f = new java.util.LinkedHashMap<>(((com.ash.drishti.api.DataNode.Obj) doc.data()).fields());
+                f.put("mtm", com.ash.drishti.api.DataNode.of(123456789));
+                return new com.ash.drishti.api.EntityDocument(doc.ref(), new com.ash.drishti.api.DataNode.Obj(f), doc.provenance());
+            }
+        }));
+        try {
+            ViewModel v = pipeline.view(parser.require("TRD IRS-48213 <GO>"));
+            assertThat(calls.get()).isEqualTo(1);
+            assertThat(v.strip().get(5).text()).isEqualTo("+123,456,789");
+            assertThat(pipeline.document(EntityRef.of("trade", "IRS-48213"), com.ash.drishti.api.AsOf.LATEST).data().get("mtm").asDouble())
+                    .isNotEqualTo(123456789.0);
+            assertThat(calls.get()).isEqualTo(1);
+        } finally {
+            pipeline.augmenters(before);
+        }
+    }
+
     @Test
     void interestRateSwapMatchesTheMockup() {
         ViewModel v = pipeline.view(parser.require("TRD IRS-48213 <GO>"));

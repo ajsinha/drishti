@@ -60,8 +60,14 @@ final class VarAccess {
         this.entitlements = entitlements;
     }
 
-    /** The viewer's view of the date (cached per date and role set); refused when the caller may not open the vectors at all. */
+    /**
+     * The viewer's view of the date (cached per date and role set); refused when the caller may not open the vectors at all. The server
+     * itself ({@code p} null: the official end-of-day captures) sees every node at positions level.
+     */
     View view(Principal p, VarDate date) {
+        if (p == null) {
+            return views.computeIfAbsent(date.date() + "@" + date.version() + "|server", s -> build(Map.of(), date.book(), s));
+        }
         if (!entitlements.mayOpen(p, props.kinds().vector())) {
             throw new DrishtiException(ErrorCode.FORBIDDEN, "your role may not see VaR (the kind " + props.kinds().vector() + ")");
         }
@@ -106,6 +112,16 @@ final class VarAccess {
             }
         }
         return new View(visible, positions, false, sig);
+    }
+
+    /** True when the field (any naming convention) is masked for the caller: its value is shown as {@code •••} in every answer. */
+    boolean masked(Principal p, String field) {
+        return p != null && entitlements.masked(p, field);
+    }
+
+    /** True when the caller sees every node at positions level (the official history and the official captures are theirs to read). */
+    boolean seesAll(Principal p) {
+        return p == null || levels(p).isEmpty() && entitlements.mayOpen(p, props.kinds().vector());
     }
 
     /** Whether the viewer sees a node's numbers (some of its trades are visible). */

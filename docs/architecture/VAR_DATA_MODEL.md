@@ -75,7 +75,7 @@ The design adds positions and vectors on top of what the shipped packs already m
 | **portfolio** | `portfolio-trades`, trading pack, a **derived** kind | grouped by `$.PORTFOLIO`, members `TRADE_IDS`, rows `TRADES`, `TRADE_COUNT` | the `trade-pages` derived connector in `config/packs/trading/pack.yaml`; [the derived connector](../connectors/types/derived/README.md) |
 | **counterparty, legal entity portfolios** | `counterparty-trades`, `legal-entity-trades` (derived) | grouped by `$.COUNTERPARTY`, `$.LEGAL_ENTITY` | the same connector |
 | **book** | `book`, core pack | `BOOK_ID` (`BOOK-COMM-1`), `DESK_NAME`, `TRADE_COUNT`, `MTM` | `config/packs/core/pack.yaml` (id pattern `^BOOK-`); `data/testdata/core/book/` |
-| **desk** | `desk`, core pack | `DESK_ID` (`DESK-COMM`), `LEGAL_ENTITY`, `BOOKS[]` (`ID`), `VAR_99`, `VAR_RESULT` (a link to the `var` kind) | id pattern `^DESK-`; `data/testdata/core/desk/` |
+| **desk** | `desk`, core pack | `DESK_ID` (`DESK-COMM`), `LEGAL_ENTITY`, `BOOKS[]` (`ID`), `VAR_99`, `VAR_RESULT` (a link to the stored VaR record; both removed in 2.8.0) | id pattern `^DESK-`; `data/testdata/core/desk/` |
 | **legal entity** | `legal-entity`, core pack | `ENTITY_ID` (`LE-FRA`), `LEI`, `DESKS[]`, `BOOKS[]` | id pattern `^LE-`; `data/testdata/core/legal-entity/` |
 | **counterparty** | `counterparty`, core pack | `COUNTERPARTY_ID` (`CP-ALDERSHOT`) | id pattern `^CP-` |
 | **VaR today** | `var`, market-risk pack | `RESULT_ID` (`VAR-COMM`), `VAR_99`, `ES_975`, `SVAR`, `LIMIT`, `EXCEPTIONS`, `SCENARIO_PNL[]` (one desk-level array) | `config/packs/market-risk/pack.yaml`, connector `risk-store` (Delta, domain `risk`); `data/testdata/market-risk/var/` |
@@ -671,12 +671,12 @@ and so on up. Why the trade, not the position (sections 3 and 13.4 proposed the 
   net in a portfolio the same way.
 - **Baskets of trades and of positions** are both sets of trade ordinals: a basket naming one trade of a ten-trade position holds that
   trade's part, exactly.
-- **The cost:** more rows than positions (1,673 trades in 196 positions in the demo). In memory a position is a run of consecutive
+- **The cost:** more rows than positions (9,572 trades in 7,984 positions in the demo from 2.8.0 part 1; 1,673 in 196 before). In memory a position is a run of consecutive
   trade ordinals, so summing a position or a book is one sequential scan; a bank whose batch values positions can store one row per
   position (one "trade" each) with nothing else changing.
 
-The demo also stores each **position's** and each **portfolio's** vector (`PNL` on `position` and `portfolio`, a vector column too),
-derived as the sums, for their pages' distributions; the engine never reads them.
+Until 2.8.0 part 1 the demo also stored each position's and portfolio's vector and figures; they are gone (section 18.4): the pages
+show the engine's.
 
 ### 18.2 The kinds as built
 
@@ -709,3 +709,16 @@ kind holds the demo's (and a bank's own) definitions.
   loads each folder in one run, every date moved with the business dates) and the pack's reference samples and Sutra tests. One business
   date of vectors and 250 days of node figures: **3.5 MB** (the open question 8 asked 21 MB for 60 dates of vectors).
 - **Precision:** float64 everywhere; the demo's P&Ls are whole USD.
+
+### 18.4 VaR complete, part 1 (2.8.0): what changed in the data
+
+The contract is [VAR.md](../contracts/VAR.md) (version 1.3). Section 18.2's table is the V0 to V3 state; from part 1:
+
+| Kind | Change |
+|---|---|
+| `position` | **no longer stored**: derived by Drishti from the date's `pnl-vector` rows by the market-risk pack's `positions:` rules (securities by book and `SECURITY_ID`, listed by book and contract, OTC one per trade: `POS-<book>~<security or trade>`), in memory, rebuilt with every load, recorded in each official capture's membership; served as `position` by the `var-positions` connector, with no figure |
+| `pnl-vector` | carries the trade's terms the rules and checks need: `SECURITY_ID` (synthetic in the demo), `INSTRUMENT`, `STRATEGY`, `TAGS`, `TRADE_STATUS`, `MATURITY_DATE`, `REPORTING_CCY`, `SCENARIO_SET_ID`, `BATCH_ID`; `POSITION_ID` and `INSTRUMENT_ID` are derived, no longer delivered. Every live trade: 9,572 rows, 12 files, 15.7 MB |
+| `var-node` | **retired**: a node's history is its official end-of-day captures (content store `var/official/`, `var/captures/official/`), published to `risk-results/var-official` |
+| `portfolio` | a definition only (`DEFINITION`, `LIMIT_VAR`, owner, type); 28 in the demo; every figure removed |
+| `risk-hierarchy`, `scenario-set` | unchanged |
+| retention | 7 years of vectors and time travel on the `risk` and `risk-results` tables (Delta table properties; `lake maintain` floor) |

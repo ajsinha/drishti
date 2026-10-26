@@ -212,7 +212,7 @@ measure (open question 6).
 
 `HYPOTHETICAL(S)` = Σ over the trades of S alive at T−1 (continuing, amended, ended) of (ACTUAL_t − AMENDMENT_t − FEES_t): yesterday's
 trades under today's market, no new trades, no amendments, no fees: the input VaR's backtest needs. Proposed: the official end-of-day capture of P&L explain provides each node's hypothetical P&L to VaR's official history
-(replacing the stored `var-node.HYPO_PNL`; [VAR.md section 6.5](VAR.md#65-history-and-backtest)).
+(replacing today's stand-in, the node's P&L on the newest scenario day: the stored `var-node` was retired in 2.8.0; [VAR.md section 6.5](VAR.md#65-history-and-backtest)).
 
 ### 6.6 Settings (`drishti.pnl`, proposed)
 
@@ -453,7 +453,7 @@ max(10,000, 10% × 29,700) = 10,000 ≥ 1,178: **within**. **Hypothetical P&L** 
 | 4 | A trade that moves book between T−1 and T: in which scope does its P&L count (proposed: its T book; its T−1 book for ended trades)? | §4 |
 | 5 | Amendments: are post-amendment T−1 sensitivities available (a more exact explain), or do we accept the pre-amendment approximation? | §6.1 |
 | 6 | The FRTB IMA P&L attribution test (Spearman, KS over 250 days): in scope of a later release? It needs the risk-theoretical P&L per desk per day | §6.4 |
-| 7 | Should P&L explain's hypothetical P&L become VaR's official backtest input (replacing `var-node.HYPO_PNL`)? | §6.5 |
+| 7 | Should P&L explain's hypothetical P&L become VaR's official backtest input (replacing the stand-in `HYPO_PNL` of VaR's official captures)? | §6.5 |
 | 8 | Revaluation-based (step-wise) explain from upstream steps (T−1 market and T time, then each risk class moved), beside the risk-based one? | §2 |
 
 ### 16.2 The change table

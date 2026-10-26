@@ -29,8 +29,8 @@ def live_console(tmp_path_factory):
     """The console in front of a real server with the packs whose about text this tests (the default stack enables others)."""
     yield from _stack(tmp_path_factory, {"DRISHTI_PACKS": "market-risk,genomics", "DRISHTI_PACKS_EXTRA_DIRS": str(ROOT / "examples" / "packs")})
 
-VIEW = "/v/var/VAR-COMM"
-VAR_LABEL = "VaR 99% 1D"
+VIEW = "/v/stress-result/STR-GFC2008-RATES"
+PNL_LABEL = "P&L"
 
 
 def open_view(page, base, view=VIEW):
@@ -45,47 +45,47 @@ def strip_term(page, label):
 
 def test_a_strip_label_with_an_entry_is_underlined_focusable_and_explained_on_focus(live_console, page):
     open_view(page, live_console)
-    dt = strip_term(page, VAR_LABEL)
-    assert dt.get_attribute("tabindex") == "0" and dt.get_attribute("data-gloss") == "VAR_99"
+    dt = strip_term(page, PNL_LABEL)
+    assert dt.get_attribute("tabindex") == "0" and dt.get_attribute("data-gloss") == "PNL"
     assert "dotted" in dt.evaluate("e => getComputedStyle(e).textDecorationLine + ' ' + getComputedStyle(e).textDecorationStyle")
     dt.focus()                                                                    # keyboard: focus alone shows it
     tip = page.locator("#aboutTip")
     tip.wait_for()
     assert tip.get_attribute("role") == "tooltip" and dt.get_attribute("aria-describedby") == "aboutTip"
     text = tip.inner_text()
-    assert "Value at risk, 99%, 1 day" in text and "Unit: USD" in text and "A loss, written as a positive number." in text
-    for value in ("10.95", "10,95", "10.9m"):                                      # a field's meaning never carries the value on the page
+    assert "Profit and loss" in text and "Unit: USD" in text and "Positive is a gain, negative a loss." in text
+    for value in ("73.60", "73,60", "73.6m"):                                      # a field's meaning never carries the value on the page
         assert value not in text, text
     page.keyboard.press("Escape")
-    assert tip.is_hidden() and page.evaluate("document.activeElement.getAttribute('data-gloss')") == "VAR_99"
+    assert tip.is_hidden() and page.evaluate("document.activeElement.getAttribute('data-gloss')") == "PNL"
 
 
 def test_hover_shows_the_tooltip_after_a_short_delay_and_leaving_hides_it(live_console, page):
     open_view(page, live_console)
-    dt = strip_term(page, "ES 97.5%")
+    dt = strip_term(page, "Limit")
     dt.hover()
     tip = page.locator("#aboutTip")
     tip.wait_for()
-    assert "Expected shortfall, 97.5%" in tip.inner_text() and "FRTB" in tip.inner_text()
+    assert "Stress loss limit" in tip.inner_text() and "Negative, like the loss it caps" in tip.inner_text()
     page.mouse.move(5, 400)
     wait(page, "document.getElementById('aboutTip').hidden")
 
 
 def test_enter_on_a_labelled_field_opens_the_drawer_at_its_entry(live_console, page):
     open_view(page, live_console)
-    strip_term(page, VAR_LABEL).focus()
+    strip_term(page, PNL_LABEL).focus()
     page.keyboard.press("Enter")
     page.locator("#aboutDrawer").wait_for()
-    wait(page, "!!document.querySelector('#aboutDrawer [data-term=\"VAR_99\"]')")
-    wait(page, "document.activeElement && document.activeElement.getAttribute('data-term') === 'VAR_99'")
+    wait(page, "!!document.querySelector('#aboutDrawer [data-term=\"PNL\"]')")
+    wait(page, "document.activeElement && document.activeElement.getAttribute('data-term') === 'PNL'")
     layer = page.locator("#aboutDrawer [data-layer=\"glossary\"]")
     assert layer.get_attribute("open") is not None
-    assert "What each number means" in layer.inner_text() and "Value at risk, 99%, 1 day" in layer.inner_text()
+    assert "What each number means" in layer.inner_text() and "Profit and loss" in layer.inner_text()
 
 
 def test_the_panel_question_mark_opens_a_popover_with_its_fields_and_two_links_and_escape_returns_the_focus(live_console, page):
     open_view(page, live_console)
-    help_link = page.locator("section[data-panel='scenarios'] a.pnl-help[data-about-help]")
+    help_link = page.locator("section[data-panel='books'] a.pnl-help[data-about-help]")
     assert help_link.get_attribute("role") == "button" and help_link.get_attribute("aria-expanded") == "false"
     assert help_link.get_attribute("href").startswith("/help/panels#")      # without the script it is still today's link
     help_link.focus()
@@ -95,7 +95,7 @@ def test_the_panel_question_mark_opens_a_popover_with_its_fields_and_two_links_a
     assert help_link.get_attribute("aria-expanded") == "true" and pop.get_attribute("role") == "dialog"
     assert page.evaluate("document.activeElement.classList.contains('about-pop')")
     text = pop.inner_text()
-    assert "The markers are -VaR" in text                                         # the pack's own text for this panel
+    assert "The books add up to the desk's stress P&L" in text                    # the pack's own text for this panel
     assert pop.locator("a", has_text="panel").get_attribute("href").startswith("/help/panels#")
     assert pop.locator("button", has_text="About this page").count() == 1
     page.keyboard.press("Escape")
@@ -106,7 +106,7 @@ def test_the_panel_question_mark_opens_a_popover_with_its_fields_and_two_links_a
 
 def test_the_popover_about_link_opens_the_drawer_at_the_panels_text(live_console, page):
     open_view(page, live_console)
-    page.locator("section[data-panel='scenarios'] a.pnl-help[data-about-help]").click()
+    page.locator("section[data-panel='books'] a.pnl-help[data-about-help]").click()
     page.locator(".about-pop button", has_text="About this page").click()
     page.locator("#aboutDrawer").wait_for()
     wait(page, "document.activeElement && document.activeElement.hasAttribute('data-about-panel')")
@@ -118,7 +118,7 @@ def test_a_phone_tap_pins_the_tooltip_and_the_popover_fits_the_screen(live_conso
     pg = ctx.new_page()
     try:
         open_view(pg, live_console)
-        dt = strip_term(pg, VAR_LABEL)
+        dt = strip_term(pg, PNL_LABEL)
         dt.scroll_into_view_if_needed()
         dt.tap()
         tip = pg.locator("#aboutTip")
@@ -127,9 +127,9 @@ def test_a_phone_tap_pins_the_tooltip_and_the_popover_fits_the_screen(live_conso
         assert tip.is_visible() and "More in About this page" in tip.inner_text()
         box = tip.bounding_box()
         assert box["x"] >= 0 and box["x"] + box["width"] <= 391
-        pg.locator("section[data-panel='scenarios']").tap(position={"x": 4, "y": 4})  # outside the tip, not on the top bar (a tap there opens a menu)
+        pg.locator("section[data-panel='books']").tap(position={"x": 4, "y": 4})  # outside the tip, not on the top bar (a tap there opens a menu)
         assert tip.is_hidden()
-        pg.locator("section[data-panel='scenarios'] a.pnl-help[data-about-help]").tap()
+        pg.locator("section[data-panel='books'] a.pnl-help[data-about-help]").tap()
         pop = pg.locator(".about-pop")
         pop.wait_for()
         box = pop.bounding_box()

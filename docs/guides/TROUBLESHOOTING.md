@@ -1405,6 +1405,10 @@ pauses. A suspected node refutes the suspicion by itself as soon as it hears of 
 | `DRS-5010` | not signed in |
 | `DRS-5011` | a data-load call named a pack that is not loaded (or one the caller may open nothing of): see [DATA_LOADS.md](DATA_LOADS.md#12-troubleshooting) |
 | `DRS-5012` | a data-load call named a kind the pack does not own (the message lists its kinds) |
+| `DRS-5201` | a row of the date's P&L vectors was rejected when the VaR engine loaded the date (wrong length, a null or NaN, not USD): the answer's provenance lists the trade and the reason; fix the row upstream and reload the date |
+| `DRS-5202` | a trade has two P&L vectors on one date: the date is not loaded; write one row per trade, date and scenario set and signal the load again |
+| `DRS-5203` | the date's VaR inputs are not one run (several `BATCH_ID`s, another `SCENARIO_SET_ID`, two scenario sets): the previous date is answered with a warning until the date is rewritten as one run |
+| `DRS-5204` | the date's vectors exceed the VaR engine's memory budget: raise `drishti.var.memory-budget-mb` or the heap, or lower `drishti.var.hot-dates` |
 | `DRS-5031` | a connector file or body is not valid (HTTP 422): bad name, unknown plugin, unknown top-level key, a missing required setting, a wrong type, a `name:` that is not the file name, or a literal credential. Fix: the message names the setting; credentials are `${ENV_VAR}` or `file:/path`; see [CONNECTOR_FILES.md, section 12](../connectors/CONNECTOR_FILES.md#12-health-and-problems) |
 | `DRS-5032` | a connector change conflicts (HTTP 409): the version you read is stale (reload and apply again), a file of that name exists and no `If-Match` was sent, or the change switches off or deletes a connector packs use (repeat with `confirm=true`/`--confirm` once you have read who uses it), or you tried to delete a connector a pack's template names (reset or disable it) |
 | `DRS-5033` | no connector of that name (HTTP 404): check the spelling with `drishti.py connector list`; the file name is the name |

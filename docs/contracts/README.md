@@ -54,7 +54,7 @@ may still change before it ships, and the document records each change.
 
 | Contract (a name in code font is not written yet) | Commands (retired kind) | Release | Status |
 |---|---|---|---|
-| [VAR.md](VAR.md) | VAR (`var`), VNODE (`var-node`); also PORT and POS figures | 2.8.0 | AS BUILT (V0–V3), completion PLANNED |
+| [VAR.md](VAR.md) | VAR (`var`), VNODE (`var-node`): both retired; also PORT, POS and DESK figures | 2.8.0 | AS BUILT (part 1: retirement, derived positions, official captures); memory tiering and the Python engine PLANNED |
 | [TRADING_GROUPINGS.md](TRADING_GROUPINGS.md) | CTRD, PTRD, LTRD, ITRD (`counterparty-trades`, `portfolio-trades`, `legal-entity-trades`, `index-trades`) | 2.9.0 | PARKED (design kept) |
 | [TVAL.md](TVAL.md) | TVAL (`trade-valuation`) | 2.9.0 | PARKED (design kept) |
 | [STR.md](STR.md) | STR (`stress-result`); SCN stays fundamental | 2.9.0 | PARKED (design kept) |
@@ -310,11 +310,11 @@ engine answers.
 Every command that moves to the compute model retires its stored version **in the same release**; the two never coexist
 (product owner, 2026-10-25). For each:
 1. **Links keep working.** The old command, its old ids and every link open the computed page at the matching scope (`VAR-COMM` opens
-   `VAR DESK:DESK-COMM`).
+   `VAR DESK:COMM`, built in 2.8.0).
 2. **The stored kind is removed:** its samples, test data, Sutra, connector routes, about texts and generators.
 3. **The numbers are reconciled first.** The computed figures are compared with the last stored ones on the test data, and the release
-   notes explain every difference (for example, the stored `VAR-COMM` read 446.9m while the engine computes 1.97m).
-4. **A guard test** fails the build when a retired kind returns, or when an input table or a fundamental kind carries a column a compute
+   notes explain every difference (for example, the stored `VAR-COMM` read 446.9m while the engine computed 1.97m on a sample and 17.5m on every live trade: VAR.md section 14.2).
+4. **A guard test** (`tools/test_contracts.py`, `TheRetiredStoredVersions` for VaR) fails the build when a retired kind returns, or when an input table or a fundamental kind carries a column a compute
    engine produces (`VAR_99`, `ES_975`, `COMPONENT_VAR`, `EAD`, `PFE_PEAK`, `UTILISATION` …).
 5. **Docs and CHANGELOG** say what was retired, what replaced it, and how old links behave.
 

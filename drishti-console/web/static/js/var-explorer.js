@@ -32,6 +32,22 @@
   var S = { scope: root.dataset.scope || "BANK", hierarchy: root.dataset.hierarchy || "MGMT", tab: "path", by: "child", page: 0,
             asOf: params.get("asOf") || "", tree: null, expanded: {}, children: {}, picked: {}, head: null, seq: 0, user: root.dataset.user || "" };
   var cache = new Map();
+  var retired = params.get("from") || "";     // an id of the retired stored VaR (VAR-COMM, VN-<node>): opened at its scope
+
+  /** Says where a retired id was opened; when no node matches it (unknown), the bank is shown instead. True when it moved on. */
+  function retiredNotice(scope, d) {
+    if (!retired) return false;
+    var n = $("[data-vx-notice]"), id = retired;
+    retired = "";
+    n.hidden = false;
+    if (scope !== "BANK" && d.provenance && (d.provenance.unknown || []).length) {
+      n.textContent = id + " was a stored VaR record, retired in 2.8.0; no node matches it, so the bank is shown.";
+      select("BANK");
+      return true;
+    }
+    n.textContent = id + " was a stored VaR record, retired in 2.8.0: " + words(scope) + " is computed from the trades now.";
+    return false;
+  }
 
   // ---------------------------------------------------------------------------------------------------------------- data
   function api(path, q, fresh) {
@@ -106,7 +122,7 @@
       return word ? "VAR " + word + " " + m[2] : "VAR SCOPE " + scope;
     }
     if (/^BASKET:/.test(scope)) return "VAR SCOPE " + scope.slice(7).replace(new RegExp("^" + S.user + "/"), "");
-    if (/^(DESK|BOOK|LE|DIV|POS|TRD|PORT):[^ ]+$/.test(scope)) return "VAR " + scope.replace(":", " ");
+    if (/^(DESK|BOOK|LE|DIV|POS|TRD|CPTY|PORT):[^ ]+$/.test(scope)) return "VAR " + scope.replace(":", " ");
     return scope === "BANK" ? "VAR BANK" : "VAR SCOPE " + scope;
   }
 
@@ -134,6 +150,7 @@
     var head = api("scope", { scope: scope }).then(function (d) {
       if (seq !== S.seq) return;
       S.head = d;
+      if (retiredNotice(scope, d)) return;
       renderHeadline(d);
       return d;
     }).catch(function (e) { if (seq === S.seq) { errorBox($("[data-vx-tiles]"), e); fresh("main", "failed", "stale"); } });
@@ -247,7 +264,11 @@
       ["Trades", int(p.trades) + (p.failed ? " · " + p.failed + " without a vector" : "")],
       ["Outside your view", p.hidden ? int(p.hidden) + " trades not included" : "none"],
       ["Unknown ids", (p.unknown || []).length ? p.unknown.join(", ") : "none"],
+      ["Warnings", (p.warnings || []).length ? p.warnings.join("; ") : "none"],
+      ["Rows left out", int(p.rejected || 0) + " rejected" + ((p.rejections || []).length ? " (" + p.rejections.slice(0, 3).join("; ") + ")" : "")
+        + " · " + int(p.excluded || 0) + " not live"],
       ["Vectors", p.vectors], ["Scenario set", p.scenarioSet], ["Method", p.method], ["ES", p.es], ["Components", p.components],
+      ["Positions by", p.positionRules || ""],
       ["Engine", p.engine], ["View", p.view], ["Members", p.membershipHash],
       ["Computed", p.computedAt.replace("T", " ").slice(0, 19) + " · " + p.computeMs + " ms · cache " + p.cache]].forEach(function (r) {
       dl.appendChild(h("dt", null, r[0]));

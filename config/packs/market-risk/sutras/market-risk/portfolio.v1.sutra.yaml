@@ -12,7 +12,8 @@
 #
 # See the LICENSE file in the root of this repository for the full terms.
 
-# Hand-written (VAR_DATA_MODEL.md section 4): the generator writes the taxonomy's kinds only. Data: tools/packgen/var/make_var_data.py.
+# Hand-written (docs/contracts/VAR.md section 3.5): a stored portfolio is a definition; its positions and figures are the VaR engine's,
+# added under VAR_ENGINE as the page opens (VarFigures), never stored. Data: tools/packgen/var/make_var_data.py.
 rachana: 1
 sutra: portfolio
 version: 1
@@ -21,12 +22,13 @@ doc:
   summary: "A portfolio's positions in detail; a click opens the position and its trades beside; VaR, ES and limit use on top"
   description: >-
     A portfolio is a set of positions: a node of a hierarchy (HIERARCHY), a condition over the positions' columns (RULE) or a list
-    of positions and trades someone picked (BASKET); portfolios may overlap. The strip counts the positions, the longs and the shorts,
+    of positions and trades someone picked (BASKET); portfolios may overlap. Only the definition is stored: everything else is the VaR
+    engine's, computed as the page opens and as the reader may see it. The strip counts the positions, the longs and the shorts,
     gives the gross and net market value, the VaR and ES of the portfolio and the use of its limit. The positions table (filterable,
     with a Pivot tab) gives each position's instrument, direction, quantity, market value, currency, book, VaR on its own and
-    component VaR (the components add up to the portfolio's VaR); a click opens the position beside with the trades that make it
-    and their contributions. The right column splits the component VaR by product, currency and direction and lists the top
-    contributors. VAR PORT <id> opens the portfolio in the VaR explorer; the book's own page (portfolio-trades) has all its trades.
+    component VaR (the components add up to the portfolio's VaR); a click opens the position beside with the trades that make it.
+    The right column splits the component VaR by product, currency and direction and lists the top contributors. VAR PORT <id> opens
+    the portfolio in the VaR explorer.
   params: {}
   emits:
     - { name: open, on: row-click, payload: { id: id, ref: id } }
@@ -38,23 +40,23 @@ doc:
 match: { kind: portfolio, priority: 10 }
 title: { pill: "Portfolio · ${$.TYPE}", id: $.PORTFOLIO_ID, with: $.NAME }
 strip:
-  - { label: Positions, bind: $.POSITION_COUNT, emphasis: true }
-  - { label: Long, bind: $.LONG_COUNT }
-  - { label: Short, bind: $.SHORT_COUNT }
-  - { label: Gross market value, bind: $.GROSS_MV, fmt: compact }
-  - { label: Net market value, bind: $.NET_MV, fmt: compact, tone: sign }
-  - { label: VaR 99% 1D, bind: $.VAR_99, fmt: compact, emphasis: true }
-  - { label: ES 97.5%, bind: $.ES_975, fmt: compact }
-  - { label: Limit use, bind: $.LIMIT_USE, fmt: pct0 }
+  - { label: Positions, bind: $.VAR_ENGINE.POSITION_COUNT, emphasis: true }
+  - { label: Long, bind: $.VAR_ENGINE.LONG_COUNT }
+  - { label: Short, bind: $.VAR_ENGINE.SHORT_COUNT }
+  - { label: Gross market value, bind: $.VAR_ENGINE.GROSS_MV, fmt: compact }
+  - { label: Net market value, bind: $.VAR_ENGINE.NET_MV, fmt: compact, tone: sign }
+  - { label: VaR 99% 1D, bind: $.VAR_ENGINE.VAR, fmt: compact, emphasis: true }
+  - { label: ES 97.5%, bind: $.VAR_ENGINE.ES, fmt: compact }
+  - { label: Limit use, bind: $.VAR_ENGINE.LIMIT_USE, fmt: pct0 }
 panels:
   - id: positions
     kind: table
     title: "Positions (a click opens the position and its trades beside)"
     code: POS
     key: F2
-    rows: $.POSITIONS
+    rows: $.VAR_ENGINE.POSITIONS
     pivot: true
-    empty: No positions in this portfolio on this date
+    empty: "No positions: none on this date, or the VaR engine could not answer (the note below says why)"
     columns:
       - { label: Position, bind: "@.POSITION_ID", link: true }
       - { label: Instrument, bind: "@.INSTRUMENT" }
@@ -63,7 +65,7 @@ panels:
       - { label: Market value, bind: "@.MARKET_VALUE", fmt: compact, total: true }
       - { label: Currency, bind: "@.CURRENCY" }
       - { label: Book, bind: "@.TT_BOOK" }
-      - { label: "VaR 99% (own)", bind: "@.VAR_99", fmt: amount0 }
+      - { label: "VaR 99% (own)", bind: "@.VAR", fmt: amount0 }
       - { label: Component VaR, bind: "@.COMPONENT_VAR", fmt: amount0, total: true }
       - { label: "% of VaR", bind: "@.PCT_OF_VAR", fmt: pct0 }
     emits:
@@ -81,23 +83,23 @@ panels:
               - { label: Direction, bind: $src.DIRECTION }
               - { label: Quantity, bind: $src.QUANTITY, fmt: amount0 }
               - { label: Market value, bind: $src.MARKET_VALUE, fmt: compact }
-              - { label: VaR 99% on its own, bind: $src.VAR_99, fmt: compact }
-              - { label: ES 97.5%, bind: $src.ES_975, fmt: compact }
+              - { label: VaR 99% on its own, bind: $src.VAR_ENGINE.VAR, fmt: compact }
+              - { label: ES 97.5%, bind: $src.VAR_ENGINE.ES, fmt: compact }
           - id: position-trades
             kind: table
             title: Its trades and their contributions
-            rows: $src.TRADE_QUANTITIES
+            rows: $src.VAR_ENGINE.TRADES
             columns:
               - { label: Trade, bind: "@.TRADE_ID", link: true }
               - { label: Direction, bind: "@.DIRECTION" }
               - { label: Quantity, bind: "@.QUANTITY", fmt: compact, total: true }
-              - { label: VaR (own), bind: "@.VAR_99", fmt: compact }
+              - { label: VaR (own), bind: "@.VAR", fmt: compact }
               - { label: Component VaR, bind: "@.COMPONENT_VAR", fmt: compact, total: true }
-  - { use: pnl-distribution@1, with: { id: dist, title: "The portfolio's P&L over the scenario days", rows: $.PNL, var: $.VAR_99, es: $.ES_975, key: F3 } }
-  - { use: ranked-bars@1, with: { id: top, title: Top contributors (component VaR), rows: $.TOP_CONTRIBUTORS, label: INSTRUMENT, value: COMPONENT_VAR, fmt: compact, area: right, key: F4 } }
-  - { use: ranked-bars@1, with: { id: by-product, title: Component VaR by product, rows: $.BY_PRODUCT, label: KEY, value: COMPONENT_VAR, fmt: compact, area: right } }
-  - { use: ranked-bars@1, with: { id: by-currency, title: Component VaR by currency, rows: $.BY_CURRENCY, label: KEY, value: COMPONENT_VAR, fmt: compact, area: right } }
-  - { use: ranked-bars@1, with: { id: by-direction, title: "Net market value, long and short", rows: $.BY_DIRECTION, label: KEY, value: NET_MV, fmt: compact, tone: sign, area: right } }
+  - { use: pnl-distribution@1, with: { id: dist, title: "The portfolio's P&L over the scenario days", rows: $.VAR_ENGINE.PNL, var: $.VAR_ENGINE.VAR, es: $.VAR_ENGINE.ES, key: F3 } }
+  - { use: ranked-bars@1, with: { id: top, title: Top contributors (component VaR), rows: $.VAR_ENGINE.TOP_CONTRIBUTORS, label: INSTRUMENT, value: COMPONENT_VAR, fmt: compact, area: right, key: F4 } }
+  - { use: ranked-bars@1, with: { id: by-product, title: Component VaR by product, rows: $.VAR_ENGINE.BY_PRODUCT, label: KEY, value: COMPONENT_VAR, fmt: compact, area: right } }
+  - { use: ranked-bars@1, with: { id: by-currency, title: Component VaR by currency, rows: $.VAR_ENGINE.BY_CURRENCY, label: KEY, value: COMPONENT_VAR, fmt: compact, area: right } }
+  - { use: ranked-bars@1, with: { id: by-direction, title: "Net market value, long and short", rows: $.VAR_ENGINE.BY_DIRECTION, label: KEY, value: NET_MV, fmt: compact, tone: sign, area: right } }
   - id: definition
     kind: kv
     title: Definition
@@ -113,8 +115,8 @@ panels:
       - { label: Valid from, bind: $.VALID_FROM, fmt: date }
   - use: explainer-note@1
     with:
-      title: VaR explorer and all trades
+      title: VaR explorer
       area: right
-      text: "Every scenario, the history and the contributions of this portfolio: VAR PORT ${$.PORTFOLIO_ID} <GO>, or /var?scope=${$.VAR_SCOPE}. A portfolio of one book also has all its trades on the book's page: /v/portfolio-trades/${coalesce($.ALL_TRADES.ID, '')}. Portfolios may overlap; combined in the explorer, a position in two of them counts once."
+      text: "Every scenario, the history and the contributions of this portfolio: VAR PORT ${$.PORTFOLIO_ID} <GO>, or /var?scope=PORT:${$.PORTFOLIO_ID}. Portfolios may overlap; combined in the explorer, a position in two of them counts once. ${coalesce($.VAR_ENGINE.NOTE, '')}"
   - { use: data-provenance@1 }
 keys: { F9: raw }

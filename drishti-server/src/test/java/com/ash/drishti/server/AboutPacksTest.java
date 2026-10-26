@@ -121,8 +121,8 @@ class AboutPacksTest {
             }
         }
         GlossaryResolver resolver = new GlossaryResolver(catalog);
-        GlossaryEntry var99 = resolver.resolve("var", "var99", null).orElseThrow();
-        assertThat(var99.term()).isEqualTo("Value at risk, 99%, 1 day");
+        GlossaryEntry pnl = resolver.resolve("stress-result", "PNL", null).orElseThrow();
+        assertThat(pnl.term()).isEqualTo("Profit and loss");
         assertThat(resolver.resolve("trade", "TRADE_STATUS", null).orElseThrow().term()).isEqualTo("Trade status");
     }
 

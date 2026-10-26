@@ -42,6 +42,7 @@ import io.delta.kernel.types.ArrayType;
 import io.delta.kernel.types.DataType;
 import io.delta.kernel.types.DateType;
 import io.delta.kernel.types.DoubleType;
+import io.delta.kernel.types.LongType;
 import io.delta.kernel.types.StringType;
 import io.delta.kernel.types.StructField;
 import io.delta.kernel.types.StructType;
@@ -120,6 +121,9 @@ public final class LakeWriter {
         if (before == null) {
             tb = table.createTransactionBuilder(engine, ENGINE_INFO, Operation.CREATE_TABLE)
                     .withSchema(engine, wanted).withPartitionColumns(engine, m.partitionColumns());
+            if (!m.properties().isEmpty()) {
+                tb = tb.withTableProperties(engine, m.properties());        // retention (7 years for the risk lake), append-only
+            }
         } else {
             if (!before.getPartitionColumnNames().equals(m.partitionColumns())) {
                 throw new IllegalStateException(m.table() + " is partitioned by " + before.getPartitionColumnNames() + ", this load by "
@@ -191,6 +195,7 @@ public final class LakeWriter {
     static DataType type(String t) {
         return switch (t) {
             case "double" -> DoubleType.DOUBLE;
+            case "long" -> LongType.LONG;
             case "date" -> DateType.DATE;
             case "vector" -> VECTOR;            // a P&L vector: list<double> (VAR_DATA_MODEL.md section 15)
             default -> StringType.STRING;
@@ -347,6 +352,9 @@ public final class LakeWriter {
             if (t instanceof DoubleType) {
                 return v.isNumber() ? v.asDouble() : null;
             }
+            if (t instanceof LongType) {
+                return v.isNumber() ? v.asLong() : null;
+            }
             if (t instanceof ArrayType) {
                 if (!v.isArray()) {
                     return null;
@@ -371,7 +379,7 @@ public final class LakeWriter {
     }
 
     /**
-     * One column of a batch over plain values: String, Double, Integer (days since the epoch) for a date, or double[] for a vector
+     * One column of a batch over plain values: String, Double, Long, Integer (days since the epoch) for a date, or double[] for a vector
      * (NaN elements written as null).
      */
     private record Vector(DataType type, Object[] values) implements ColumnVector {
@@ -406,6 +414,11 @@ public final class LakeWriter {
         @Override
         public int getInt(int rowId) {
             return (Integer) values[rowId];
+        }
+
+        @Override
+        public long getLong(int rowId) {
+            return (Long) values[rowId];
         }
 
         @Override

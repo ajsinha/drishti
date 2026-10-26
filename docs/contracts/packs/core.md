@@ -27,7 +27,7 @@ One section per command of the pack: the shape of its data, how it is stored and
 | [CCP](#ccp-central-counterparty-ccp) | `ccp` | fundamental | active | 6 | 5 |
 | [LE](#le-bank-legal-entity-legal-entity) | `legal-entity` | fundamental | active | 7 | 7 |
 | [BOOK](#book-book-book) | `book` | fundamental | active | 11 | 7 |
-| [DESK](#desk-desk-desk) | `desk` | fundamental | active | 10 | 7 |
+| [DESK](#desk-desk-desk) | `desk` | fundamental | active | 8 | 7 |
 | [TRDR](#trdr-trader-trader) | `trader` | fundamental | active | 6 | 3 |
 | [CAL](#cal-holiday-calendar-calendar) | `calendar` | fundamental | active | 8 | 5 |
 | [CLR](#clr-clearing-account-clearing-account) | `clearing-account` | fundamental | active | 7 | 7 |
@@ -503,10 +503,8 @@ A trading desk: books, limits and risk results.
 | `NAME` | text | required |  | Name | `Commodities` |  |
 | `HEAD` | text | required |  | Head | `T. Brennan` |  |
 | `BOOKS` | record list | required |  | Nested: see nested BOOKS[] |  |  |
-| `VAR_99` | amount | derived (retiring in 2.8.0) |  | VaR *computed by the VaR engine from 2.8.0; removed from the stored record then* | `10946782` |  |
 | `MTM` | amount | required |  | MTM | `14609595` |  |
 | `LEGAL_ENTITY` | id | required |  | Legal entity: the legal-entity it refers to | `LE-NY` (pattern `^LE-`) | `legal-entity` |
-| `VAR_RESULT` | id | derived (retiring in 2.8.0) |  | VaR: the var it refers to *computed by the VaR engine from 2.8.0; removed from the stored record then* | `VAR-COMM` (pattern `^VAR-`) | `var` |
 | `ASSET_CLASSES` | text list | required |  | — |  |  |
 | `POSITIONS` | record list | required |  | Nested: see nested POSITIONS[] |  |  |
 
@@ -528,7 +526,7 @@ A trading desk: books, limits and risk results.
 | `FAMILY` | text | required |  | Family | `future` |  |
 | `MTM` | amount | required |  | MTM | `324697` |  |
 
-**Links:** `LEGAL_ENTITY` → `legal-entity`, `VAR_RESULT` → `var`, `POSITIONS[].TRADE_ID` → `trade`, `POSITIONS[].BOOK` → `book`.
+**Links:** `LEGAL_ENTITY` → `legal-entity`, `POSITIONS[].TRADE_ID` → `trade`, `POSITIONS[].BOOK` → `book`.
 
 **Validation**
 
@@ -536,7 +534,6 @@ A trading desk: books, limits and risk results.
 - unique: key `DESK_ID`; per business_date
 - pattern: field DESK_ID; pattern ^DESK-
 - link: field LEGAL_ENTITY; kind legal-entity
-- link: field VAR_RESULT; kind var
 - link: field POSITIONS[].TRADE_ID; kind trade
 - link: field POSITIONS[].BOOK; kind book
 - enum: field POSITIONS[].CURRENCY; values `AUD`, `CAD`, `CHF`, `EUR`, `GBP`, `JPY`, `USD`
@@ -544,7 +541,7 @@ A trading desk: books, limits and risk results.
 **Notes**
 
 - Dated by the lake's business_date partition: `drishti.py lake build` writes each test-data file's day into it; the documents carry no date field of their own.
-- Terms kept, figures computed from 2.8.0 (docs/contracts/VAR.md): the fields marked derived are computed by the VaR engine and leave the stored record then.
+- The desk's VaR is the engine's (DESK:<id>), computed as the page opens (VAR_ENGINE); VAR_99 and VAR_RESULT left the record in 2.8.0.
 
 **To review (7)**
 
@@ -552,8 +549,8 @@ A trading desk: books, limits and risk results.
 - source 'org-master' is the test data's _meta.source (synthetic): name the production system that delivers it.
 - due time of each business date is not known: state it (for example, by 06:00 New York the next business day).
 - enum values inferred from the data, not from a glossary: POSITIONS[].CURRENCY: confirm they are closed lists.
-- number types decided by the field's name: VAR_99 amount, MTM amount, BOOKS[].MTM amount, POSITIONS[].MTM amount: confirm amount, rate or integer.
-- no unit stated for the amounts VAR_99, MTM, BOOKS[].MTM, POSITIONS[].MTM (docs/contracts/README.md section 7: USD unless stated): confirm the currency.
+- number types decided by the field's name: MTM amount, BOOKS[].MTM amount, POSITIONS[].MTM amount: confirm amount, rate or integer.
+- no unit stated for the amounts MTM, BOOKS[].MTM, POSITIONS[].MTM (docs/contracts/README.md section 7: USD unless stated): confirm the currency.
 - no description in about.yaml or the Sutras for ASSET_CLASSES: write them in the pack's config/about.yaml glossary.
 
 ## TRDR: Trader (`trader`)

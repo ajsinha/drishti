@@ -29,6 +29,7 @@ from core.csrf import BodyError, json_body
 from routes import api_routes, designer_routes, history_routes
 from routes.common import ident, packs, render
 from routes.var_routes import redirect_for as var_redirect
+from routes.var_routes import retired_link as var_retired_link
 
 router = APIRouter(include_in_schema=False)
 
@@ -474,6 +475,8 @@ async def view_children(request: Request, kind: str, id_: str, panel: str):
 
 @router.get("/v/{kind}/{id_:path}")
 async def view(request: Request, kind: str, id_: str, embed: int = 0, gen: int = 0, share: str = ""):
+    if (retired := var_retired_link(kind, id_)) is not None:   # a retired stored VaR record (VAR-COMM): the explorer at its scope
+        return RedirectResponse(retired, status_code=303)
     hist = history_routes.history_link(kind, id_, request.query_params)
     if hist:                                        # /v/trade/1000015?days=30, the short form of a history link
         return RedirectResponse(hist, status_code=303)

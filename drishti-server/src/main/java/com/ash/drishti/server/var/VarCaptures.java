@@ -111,7 +111,19 @@ final class VarCaptures {
                 throw new DrishtiException(ErrorCode.BAD_REQUEST, e.getMessage());
             }
         }
-        return svc.saved().captures(p, canonical);
+        List<Map<String, Object>> out = new ArrayList<>(svc.saved().captures(p, canonical));
+        if (canonical != null && svc.access().seesAll(p)) {               // a node's official end-of-day captures too
+            try {
+                String node = svc.scoped(p, scope, null).res().node();
+                if (node != null) {
+                    out.addAll(svc.official().captures(node));
+                }
+            } catch (DrishtiException e) {
+                // no date loaded: the people's captures only
+            }
+            out.sort((x, y) -> String.valueOf(y.get("capturedAt")).compareTo(String.valueOf(x.get("capturedAt"))));
+        }
+        return out;
     }
 
     /**
@@ -147,8 +159,8 @@ final class VarCaptures {
         out.put("b", summary(cb));
         out.put("varChange", num(cb.get("var")) - num(ca.get("var")));
         out.put("esChange", num(cb.get("es")) - num(ca.get("es")));
-        Set<String> ma = new HashSet<>((List<String>) ca.getOrDefault("members", List.of()));
-        Set<String> mb = new HashSet<>((List<String>) cb.getOrDefault("members", List.of()));
+        Set<String> ma = new HashSet<>(svc.members(ca));
+        Set<String> mb = new HashSet<>(svc.members(cb));
         out.put("membersAdded", mb.stream().filter(x -> !ma.contains(x)).sorted().limit(200).toList());
         out.put("membersRemoved", ma.stream().filter(x -> !mb.contains(x)).sorted().limit(200).toList());
         Map<String, Map<String, Object>> rows = new LinkedHashMap<>();

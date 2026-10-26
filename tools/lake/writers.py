@@ -137,6 +137,19 @@ def choose(engine: str, jar: str | None = None, java: str | None = None) -> tupl
 
 # ------------------------------------------------------------------------------------------------ the table
 
+def retention_properties(uri: str) -> dict[str, str]:
+    """The Delta properties a new table of a kept domain is created with (the risk lake: 7 years, docs/contracts/VAR.md section 16.1
+    question 10): its log and its removed files are kept that long, so its time travel reaches back that far (a vacuum or a log
+    clean-up never takes them sooner). Empty for any other domain: the table keeps Delta's defaults."""
+    import maintconfig
+    domain = uri.rstrip("/").split("/")[-2] if "/" in uri.rstrip("/") else ""
+    years = maintconfig.RETAIN_YEARS.get(domain)
+    if not years:
+        return {}
+    days = maintconfig.retain_days(years)
+    return {"delta.logRetentionDuration": f"interval {days} days", "delta.deletedFileRetentionDuration": f"interval {days} days"}
+
+
 class Table:
     """What one write needs: where, the columns and their types, the partitioning, and how to replace."""
 
@@ -250,7 +263,7 @@ def write_deltalake(t: Table, by_day: dict, progress=None) -> dict:
         nonlocal exists, commits
         kw: dict = {"partition_by": t.partition_by, "writer_properties": WriterProperties(compression="SNAPPY")}
         if not exists:
-            kw["configuration"] = {"delta.dataSkippingStatsColumns": ",".join(t.stats_columns)}
+            kw["configuration"] = {"delta.dataSkippingStatsColumns": ",".join(t.stats_columns), **retention_properties(t.uri)}
         if replace:
             kw.update(mode="overwrite", predicate=replace, schema_mode="merge")
         else:
@@ -324,6 +337,7 @@ def write_drishti(t: Table, by_day: dict, workdir: pathlib.Path, jar: str | None
         "mode": t.mode,
         "batchRows": t.batch_rows,
         "statsColumns": t.stats_columns,
+        "properties": retention_properties(t.uri),
         "parts": [{"file": str(p.file.resolve()), "rows": p.rows,
                    "values": {"business_date": d.isoformat(), **{n: v for n, v in zip(t.partition_names, p.values)}}}
                   for d, parts in by_day.items() for p in parts],

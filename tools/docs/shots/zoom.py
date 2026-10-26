@@ -22,7 +22,7 @@ from __future__ import annotations
 from shotlib import Ctx, register
 
 shot = register("zoom")
-VIEW = "/v/var/VAR-EQD"
+VIEW = "/v/stress-result/STR-GFC2008-RATES"
 TABLE_VIEW = "/v/trade/MX-20000001"           # a trade has tables
 
 

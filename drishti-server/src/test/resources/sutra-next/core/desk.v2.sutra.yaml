@@ -24,7 +24,7 @@ strip:
   - { label: Name, bind: $.NAME }
   - { label: Head, bind: $.HEAD }
   - { label: Books, bind: size($.BOOKS) }
-  - { label: VaR, bind: $.VAR_99, fmt: compact, emphasis: true }
+  - { label: VaR 99% 1D (engine), bind: $.VAR_ENGINE.VAR, fmt: compact, emphasis: true }
   - { label: MTM, bind: $.MTM, fmt: signed0, tone: sign }
 panels:
   - id: books

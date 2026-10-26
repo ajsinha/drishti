@@ -1511,21 +1511,20 @@ The distribution of a list of numbers in equal-width bins from the smallest to t
 ```yaml
   - id: scenarios
     kind: histogram
-    title: "Scenario P&L distribution, 500 days (USD)"
+    title: "Scenario P&L distribution, 509 days (USD)"
     code: DIST
     key: F3
-    rows: $.SCENARIO_PNL
+    rows: $.VAR_ENGINE.PNL
     fmt: compact
     unit: USD
     markers:
-      - { label: VaR 99%, value: "-$.VAR_99", tone: neg }
-      - { label: ES 97.5%, value: "-$.ES_975", tone: bad }
-      - { label: Mean, value: $.MEAN_PNL, tone: link }
+      - { label: VaR 99%, value: "-$.VAR_ENGINE.VAR", tone: neg }
+      - { label: ES 97.5%, value: "-$.VAR_ENGINE.ES", tone: bad }
 ```
 
-You should see (market-risk pack, `VAR VAR-COMM`) 22 bins over 500 values and dashed lines at *VaR 99% −446.9m* and *ES 97.5% −504.9m*,
-and the mean. The data is `{"bins": [{"from": -609701478, "to": -544502487.77, "count": 3, "label": "−609.7m to −544.5m"}, …],
-"markers": [{"label": "VaR 99%", "value": -446852430, "text": "−446.9m", "tone": "neg"}, …], "count": 500, "dropped": 0}`.
+You should see (market-risk pack, `PORT PF-RATES-DESK`: the engine's figures, added to the page as it opens) 22 bins over 509 values
+and dashed lines at the portfolio's −VaR and −ES. The data is `{"bins": [{"from": …, "to": …, "count": 3, "label": "…"}, …],
+"markers": [{"label": "VaR 99%", "value": …, "text": "…", "tone": "neg"}, …], "count": 509, "dropped": 0}`.
 
 #### scatter
 
@@ -2753,7 +2752,7 @@ wrote, comments included; then it reloads. A `name@version` already defined by a
 | `config/packs/core/sutras/counterparty-and-legal/counterparty.v1.sutra.yaml` | `CPTY CP-MERIDIAN-RE` | table with totals, kv, graph |
 | `config/packs/counterparty-risk/sutras/exposure-and-capital/netting-set.v1.sutra.yaml` | `NSET NS-MERIDIAN-RE-NY` | area with a limit, four controls, `on-select`, a Pivot tab, automatic id links |
 | `config/packs/market-data/sutras/market-data/equity-vol-surface.v1.sutra.yaml` | `EQV EQV-CSCA` | surface, table, line |
-| `config/packs/market-risk/sutras/market-risk/var.v1.sutra.yaml` | `VAR VAR-COMM` | histogram with markers, line, hbar |
+| `config/packs/market-risk/sutras/market-risk/portfolio.v1.sutra.yaml` | `PORT PF-RATES-DESK` | the engine's figures on a page, a P&L distribution, ranked bars, a Pivot tab |
 | `config/packs/world-economy/sutras/economics/economy.v1.sutra.yaml` | `ECON ECON-AUS` | map with a shade and a link |
 | `docs/guides/examples/*.sutra.yaml` | Help → Examples | eleven self-contained examples with their own small documents, every kind |
 

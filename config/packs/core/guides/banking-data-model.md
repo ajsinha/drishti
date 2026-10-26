@@ -84,7 +84,6 @@ desk ─► VaR ─► stress results ◄─ stress scenario        book ─► 
 | `UNDERLYING_BOND` | Underlying bond | `bond` | `market-data` | `market` |
 | `UNDERLYING_EQUITY` | Underlying equity | `equity` | `market-data` | `market` |
 | `UNDERLYING_INDEX` | Underlying index | `equity-index` | `market-data` | `market` |
-| `VAR_RESULT` | VaR | `var` | `market-risk` | `risk` |
 
 ## Packs and data domains
 

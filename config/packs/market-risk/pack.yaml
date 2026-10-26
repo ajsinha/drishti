@@ -23,7 +23,6 @@ extends:
 - market-data
 - trading
 kinds:
-- var
 - stress-scenario
 - stress-result
 - frtb-sensitivity
@@ -34,13 +33,9 @@ kinds:
 - pnl-vector
 - scenario-set
 - risk-hierarchy
-- var-node
 sutras: sutras
 formats: config/formats.yaml
 mnemonics:
-  VAR:
-    kind: var
-    label: VaR / expected shortfall
   SCN:
     kind: stress-scenario
     label: Stress scenario
@@ -71,13 +66,8 @@ mnemonics:
   HIER:
     kind: risk-hierarchy
     label: Risk hierarchy node
-  VNODE:
-    kind: var-node
-    label: Official VaR of a hierarchy node
 graph:
   id-patterns:
-  - pattern: ^VAR-
-    kind: var
   - pattern: ^SCN-
     kind: stress-scenario
   - pattern: ^STR-
@@ -98,8 +88,6 @@ graph:
     kind: scenario-set
   - pattern: ^(MGMT|LEGAL)~
     kind: risk-hierarchy
-  - pattern: ^VN-
-    kind: var-node
   fields:
     NODE_ID:
       kind: risk-hierarchy
@@ -116,14 +104,9 @@ graph:
     TRADE_IDS:
       kind: trade
       label: Trade
-    VAR_RESULT:
-      kind: var
-      label: VaR
   badges:
-    var: fmt($.VAR_99, 'compact')
-    position: fmt($.VAR_99, 'compact')
-    portfolio: fmt($.VAR_99, 'compact')
-    var-node: fmt($.VAR_99, 'compact')
+    position: fmt($.QUANTITY, 'compact')
+    portfolio: $.TYPE
   impact:
     measures:
       trade-valuation: $.MTM
@@ -134,18 +117,15 @@ connectors:
     plugin: delta
     enabled: ${DRISHTI_LAKE_ENABLED:true}
     kinds:
-    - var
     - stress-scenario
     - stress-result
     - frtb-sensitivity
     - pnl-explain
     - trade-valuation
-    - position
     - portfolio
     - pnl-vector
     - scenario-set
     - risk-hierarchy
-    - var-node
     settings:
       root: ${DRISHTI_DELTA_ROOT:${drishti.data.dir:./data}/delta}
       domain: risk
@@ -176,39 +156,17 @@ connectors:
           sort-by: id
           file-rows: 250000
           row-group-rows: 1000
-        position:
-          columns:
-          - POSITION_ID
-          - INSTRUMENT_ID
-          - INSTRUMENT
-          - DIRECTION
-          - LEGAL_ENTITY
-          - DIVISION
-          - DESK
-          - TT_BOOK
-          - PORTFOLIO
-          - PRODUCT_GROUP
-          - PRODUCT_TYPE
-          - CURRENCY
-          - COUNTERPARTY
-          - QUANTITY
-          - MARKET_VALUE
-          - TRADE_COUNT
-          - VAR_99
-          - ES_975
-          - COMPONENT_VAR
-          vectors:
-          - PNL
         pnl-vector:
           columns:
           - TRADE_ID
-          - POSITION_ID
-          - INSTRUMENT_ID
+          - SECURITY_ID
+          - INSTRUMENT
           - LEGAL_ENTITY
           - DIVISION
           - DESK
           - TT_BOOK
           - PORTFOLIO
+          - STRATEGY
           - PRODUCT_GROUP
           - PRODUCT_TYPE
           - CURRENCY
@@ -216,24 +174,13 @@ connectors:
           - DIRECTION
           - QUANTITY
           - PV
+          - TAGS
+          - TRADE_STATUS
+          - MATURITY_DATE
           - STATUS
+          - REPORTING_CCY
           - SCENARIO_SET_ID
           - BATCH_ID
-          vectors:
-          - PNL
-        var-node:
-          columns:
-          - NODE_ID
-          - HIERARCHY
-          - LEVEL
-          - NAME
-          - PARENT_ID
-          - VAR_99
-          - ES_975
-          - HYPO_PNL
-          - LIMIT
-          - POSITION_COUNT
-          - TRADE_COUNT
           vectors:
           - PNL
         risk-hierarchy:
@@ -250,45 +197,24 @@ connectors:
           - NAME
           - TYPE
           - OWNER
-          - VAR_99
-          - ES_975
           - LIMIT_VAR
-          - POSITION_COUNT
-          vectors:
-          - PNL
+  var-positions:
+    plugin: var-positions
+    enabled: ${DRISHTI_VAR_ENABLED:true}
+    kinds:
+    - position
 routes:
-  var: risk-store
   stress-scenario: risk-store
   stress-result: risk-store
   frtb-sensitivity: risk-store
   pnl-explain: risk-store
   trade-valuation: risk-store
-  position: risk-store
+  position: var-positions
   portfolio: risk-store
   pnl-vector: risk-store
   scenario-set: risk-store
   risk-hierarchy: risk-store
-  var-node: risk-store
 form:
-  var:
-  - path: RESULT_ID
-    label: Result id
-    type: id
-  - path: VAR_99
-    label: VaR 99
-    type: text
-  - path: ES_975
-    label: ES 975
-    type: text
-  - path: SVAR
-    label: Svar
-    type: text
-  - path: LIMIT
-    label: Limit
-    type: amount
-  - path: EXCEPTIONS
-    label: Exceptions
-    type: text
   stress-scenario:
   - path: SCENARIO_ID
     label: Scenario id
@@ -394,9 +320,9 @@ form:
   - path: CURRENCY
     label: Currency
     type: enum
-  - path: VAR_99
-    label: VaR 99
-    type: text
+  - path: SECURITY_ID
+    label: Security id
+    type: id
   portfolio:
   - path: PORTFOLIO_ID
     label: Portfolio id
@@ -410,9 +336,9 @@ form:
   - path: OWNER
     label: Owner
     type: text
-  - path: VAR_99
-    label: VaR 99
-    type: text
+  - path: LIMIT_VAR
+    label: Limit VaR
+    type: amount
   pnl-vector:
   - path: VECTOR_ID
     label: Vector id
@@ -420,8 +346,8 @@ form:
   - path: TRADE_ID
     label: Trade id
     type: id
-  - path: POSITION_ID
-    label: Position id
+  - path: SECURITY_ID
+    label: Security id
     type: id
   - path: DESK
     label: Desk
@@ -452,26 +378,8 @@ form:
   - path: LIMIT_VAR
     label: Limit VaR
     type: amount
-  var-node:
-  - path: VAR_NODE_ID
-    label: VaR node id
-    type: id
-  - path: NODE_ID
-    label: Node id
-    type: id
-  - path: VAR_99
-    label: VaR 99
-    type: text
-  - path: ES_975
-    label: ES 975
-    type: text
-  - path: HYPO_PNL
-    label: Hypo P&L
-    type: amount
 console:
   examples:
-  - - VAR VAR-RATES
-    - Rates desk VaR · P&L series, contributions
   - - STR STR-GFC2008-RATES
     - Stress · 2008 crisis on the rates desk
   - - PNL PNL-RATES-1
@@ -479,7 +387,7 @@ console:
   - - FRTB FRTB-RATES-1
     - FRTB sensitivities and charges
   - - PORT PF-RATES-DESK
-    - Portfolio · its positions, longs and shorts, VaR and component VaR
+    - Portfolio · its positions, longs and shorts, VaR and component VaR (computed as you open it)
   - - PORT PF-ASHA-UNWIND
     - A basket of positions and trades · overlaps the rates desk
   help: config/help.yaml
@@ -495,16 +403,31 @@ roles:
 # History queries (TRD 1000015 30, docs/architecture/HISTORY_QUERIES.md section 6): how this pack's kinds look over time.
 # Only the shape: any dated kind has a history without an entry here.
 history:
-  var:
-    columns: [VAR_99, ES_975, SVAR, LIMIT, EXCEPTIONS, MEAN_PNL]
   trade-valuation:
     columns: [MTM, PNL_1D, DV01, NOTIONAL]
   pnl-explain:
     columns: [ACTUAL, EXPLAINED, UNEXPLAINED]
-  # the VaR engine's kinds (VAR_ENGINE.md): a node's official VaR over 250 days, a position's and a portfolio's VaR as the batch left them
-  var-node:
-    columns: [VAR_99, ES_975, HYPO_PNL, LIMIT, POSITION_COUNT]
+  # the VaR engine's kinds (VAR_ENGINE.md): a position (derived by Drishti) and a portfolio's definition over time; their VaR history is
+  # the official end-of-day captures (VAR <scope> <GO>, History tab), never a stored column
   position:
-    columns: [QUANTITY, MARKET_VALUE, VAR_99, ES_975, COMPONENT_VAR]
+    columns: [QUANTITY, MARKET_VALUE, TRADE_COUNT]
   portfolio:
-    columns: [VAR_99, ES_975, LIMIT_VAR, POSITION_COUNT, NET_MV]
+    columns: [LIMIT_VAR]
+
+# How Drishti derives positions from the trades of a business date when it loads the date (docs/contracts/VAR.md section 3.7): the
+# VaR engine reads this section (else its drishti.var.positions setting). A trade counts when its TRADE_STATUS is live and it has not
+# matured; the first rule whose groups (PRODUCT_GROUP) or types (PRODUCT_TYPE) hold it keys its position by the first of the rule's key
+# fields the trade carries: POSITION_ID = POS-<TT_BOOK>~<key>, so a security's trades in one book are one fungible position. No key
+# (or no rule): one position per trade, POS-<TT_BOOK>~<TRADE_ID> (OTC). tools/packgen/var/make_var_data.py reads it too.
+positions:
+  live-statuses: [NEW, VALIDATED, AMENDED]
+  rules:
+    - name: securities                  # bonds, notes, bills, shares and warrants: by book and security
+      groups: [Fixed income]
+      types: [EQ_CASH, WARRANT, CONVERTIBLE_BOND, INFL_LINKED_BOND, T_BILL, COMMERCIAL_PAPER, CERT_DEPOSIT]
+      key: [SECURITY_ID, ISIN, TICKER]
+    - name: listed                      # exchange-traded futures and options: by book and contract
+      types: [BOND_FUTURE, STIR_FUTURE, STIR_FUT_OPT, EQ_FUTURE_SINGLE, EQ_INDEX_FUTURE, EQ_OPTION_LISTED, EQ_INDEX_OPTION, CMD_FUTURE,
+              CMD_FUT_OPTION, ComFut, EMISSIONS_FUTURE]
+      key: [SECURITY_ID, CONTRACT]
+    - name: otc                         # everything else: one position per trade
