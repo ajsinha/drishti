@@ -17,7 +17,6 @@ plugin: redis
 kinds:
 - netting-set
 - credit-limit
-- exposure-profile
 - cva
 - sa-ccr
 description: credit-store read from redis (the former application-redis.yaml profile)

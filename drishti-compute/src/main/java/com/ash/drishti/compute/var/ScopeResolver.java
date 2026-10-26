@@ -198,7 +198,7 @@ public final class ScopeResolver {
                 notes.add("the members of capture " + r.arg());
                 return eval(ScopeExpr.parse(def.get()), unknown, notes, warnings, depth + 1);
             }
-            default -> throw new IllegalArgumentException("not a scope word: " + r.word());
+            default -> throw new IllegalArgumentException(r.word() + ": is not a scope of VaR (NSET and GROUP are the exposure engine's)");
         }
     }
 

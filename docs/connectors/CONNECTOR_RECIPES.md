@@ -407,7 +407,7 @@ Run one connector per data domain. A server with the banking packs runs, for exa
   {"name":"demo","kinds":[],"live":true,"search":true,"reverseLookup":true,"health":"UP"},
   {"name":"file","kinds":[],"live":false,"search":true,"reverseLookup":false,"health":"UP"},
   {"name":"trade-endur","kinds":["trade"],"live":false,"search":true,"reverseLookup":true,"health":"UP"},
-  {"name":"credit-store","kinds":["credit-limit","netting-set","sa-ccr","cva","exposure-profile"],"live":false,"search":true,"reverseLookup":true,"health":"UP"},
+  {"name":"credit-store","kinds":["credit-limit","netting-set","sa-ccr","cva"],"live":false,"search":true,"reverseLookup":true,"health":"UP"},
   {"name":"reference-store","kinds":["book","agreement","counterparty", "…"],"live":false,"search":true,"reverseLookup":true,"health":"UP"},
   {"name":"nyfed-sofr-feed","kinds":["rate-fixing"],"live":false,"search":true,"reverseLookup":false,"health":"UP"}],
  "failures":{}}

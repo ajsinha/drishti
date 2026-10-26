@@ -21,7 +21,7 @@ How the five banking packs' entities refer to each other. Every arrow is a refer
 ```text
 legal entity ─► desk ─► book ─► trade ◄─ trader
                                  │
-counterparty ─► agreement ─► CSA  ├─► netting set ─► exposure profile, CVA, SA-CCR, collateral, margin calls
+counterparty ─► agreement ─► CSA  ├─► netting set ─► exposure (computed), CVA, SA-CCR, collateral, margin calls
       │                          │        └─► credit limit (per counterparty), SIMM
       └─► group, credit curve    └─► market data: curves, surfaces, spots, equities, credit, inflation, commodities
 desk ─► VaR ─► stress results ◄─ stress scenario        book ─► FRTB sensitivities, P&L explain
@@ -56,7 +56,6 @@ desk ─► VaR ─► stress results ◄─ stress scenario        book ─► 
 | `EQUITY` | Equity | `equity` | `market-data` | `market` |
 | `EQUITY_INDEX` | Index | `equity-index` | `market-data` | `market` |
 | `EQUITY_VOL_SURFACE` | Equity vol surface | `equity-vol-surface` | `market-data` | `market` |
-| `EXPOSURE_PROFILE` | Exposure profile | `exposure-profile` | `counterparty-risk` | `credit` |
 | `FIXING_INDEX` | Fixing index | `rate-fixing` | `market-data` | `market` |
 | `FORWARD_CURVE` | Forward curve | `ir-curve` | `market-data` | `market` |
 | `FX_FORWARD_CURVE` | Fx forward curve | `fx-forward-curve` | `market-data` | `market` |

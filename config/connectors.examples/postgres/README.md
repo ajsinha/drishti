@@ -64,7 +64,7 @@ The database holds, per domain, the table mode layout (see the [jdbc connector R
 | `reference` | `counterparty`, `counterparty-group`, `issuer`, `agreement`, `ccp`, `legal-entity`, `book`, `desk`, `trader`, `calendar`, `csa`, `clearing-account` |
 | `market` | 20 kinds: curves (`ir-curve`, `repo-curve`, `fx-forward-curve`, `credit-curve`, …), surfaces, `fx-spot`, `equity`, `bond`, `rate-fixing`, `correlation-matrix` |
 | `risk` | `var`, `stress-scenario`, `stress-result`, `frtb-sensitivity`, `pnl-explain` |
-| `credit` | `netting-set`, `credit-limit`, `exposure-profile`, `cva`, `sa-ccr` |
+| `credit` | `netting-set`, `credit-limit`, `cva`, `sa-ccr` |
 | `collateral` | `collateral-balance`, `margin-call`, `simm` |
 
 ## Examples
@@ -83,7 +83,7 @@ The server starts the copied connector within seconds. `trading-store.yaml` is a
 | File | Plugin | Kinds | What it is |
 |---|---|---|---|
 | `collateral-store.yaml` | `jdbc` | `collateral-balance`, `margin-call`, `simm` | collateral-store read from postgres (the former application-postgres.yaml profile) |
-| `credit-store.yaml` | `jdbc` | `netting-set`, `credit-limit`, `exposure-profile`, `cva`, `sa-ccr` | credit-store read from postgres (the former application-postgres.yaml profile) |
+| `credit-store.yaml` | `jdbc` | `netting-set`, `credit-limit`, `cva`, `sa-ccr` | credit-store read from postgres (the former application-postgres.yaml profile) |
 | `market-store.yaml` | `jdbc` | `ir-curve`, `repo-curve`, `fx-spot`, `fx-forward-curve`, `fx-vol-surface`, `ir-vol-cube`, `cap-vol-surface`, `equity`, `equity-index`, `dividend-curve`, `equity-vol-surface`, `credit-curve`, `inflation-index`, `inflation-curve`, `commodity`, `commodity-curve`, `commodity-vol-surface`, `rate-fixing`, `bond`, `correlation-matrix` | market-store read from postgres (the former application-postgres.yaml profile) |
 | `reference-store.yaml` | `jdbc` | `counterparty`, `counterparty-group`, `issuer`, `agreement`, `ccp`, `legal-entity`, `book`, `desk`, `trader`, `calendar`, `csa`, `clearing-account` | reference-store read from postgres (the former application-postgres.yaml profile) |
 | `risk-store.yaml` | `jdbc` | `var`, `stress-scenario`, `stress-result`, `frtb-sensitivity`, `pnl-explain` | risk-store read from postgres (the former application-postgres.yaml profile) |

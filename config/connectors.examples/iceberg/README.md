@@ -65,7 +65,7 @@ fields, partitioned by `identity(business_date)`, sorted by `id`.
 | `reference` | `counterparty`, `counterparty-group`, `issuer`, `agreement`, `ccp`, `legal-entity`, `book`, `desk`, `trader`, `calendar`, `csa`, `clearing-account` |
 | `market` | 20 kinds: curves (`ir-curve`, `repo-curve`, `fx-forward-curve`, `credit-curve`, …), surfaces, `fx-spot`, `equity`, `bond`, `rate-fixing`, `correlation-matrix` |
 | `risk` | `var`, `stress-scenario`, `stress-result`, `frtb-sensitivity`, `pnl-explain` |
-| `credit` | `netting-set`, `credit-limit`, `exposure-profile`, `cva`, `sa-ccr` |
+| `credit` | `netting-set`, `credit-limit`, `cva`, `sa-ccr` |
 | `collateral` | `collateral-balance`, `margin-call`, `simm` |
 
 ## Examples
@@ -83,7 +83,7 @@ For a REST catalog set `DRISHTI_ICEBERG_CATALOG=rest`, `DRISHTI_ICEBERG_URI`, `D
 | File | Plugin | Kinds | What it is |
 |---|---|---|---|
 | `collateral-store.yaml` | `iceberg` | `collateral-balance`, `margin-call`, `simm` | collateral-store read from iceberg (the former application-iceberg.yaml profile) |
-| `credit-store.yaml` | `iceberg` | `netting-set`, `credit-limit`, `exposure-profile`, `cva`, `sa-ccr` | credit-store read from iceberg (the former application-iceberg.yaml profile) |
+| `credit-store.yaml` | `iceberg` | `netting-set`, `credit-limit`, `cva`, `sa-ccr` | credit-store read from iceberg (the former application-iceberg.yaml profile) |
 | `market-store.yaml` | `iceberg` | `ir-curve`, `repo-curve`, `fx-spot`, `fx-forward-curve`, `fx-vol-surface`, `ir-vol-cube`, `cap-vol-surface`, `equity`, `equity-index`, `dividend-curve`, `equity-vol-surface`, `credit-curve`, `inflation-index`, `inflation-curve`, `commodity`, `commodity-curve`, `commodity-vol-surface`, `rate-fixing`, `bond`, `correlation-matrix` | market-store read from iceberg (the former application-iceberg.yaml profile) |
 | `reference-store.yaml` | `iceberg` | `counterparty`, `counterparty-group`, `issuer`, `agreement`, `ccp`, `legal-entity`, `book`, `desk`, `trader`, `calendar`, `csa`, `clearing-account` | reference-store read from iceberg (the former application-iceberg.yaml profile) |
 | `risk-store.yaml` | `iceberg` | `var`, `stress-scenario`, `stress-result`, `frtb-sensitivity`, `pnl-explain` | risk-store read from iceberg (the former application-iceberg.yaml profile) |

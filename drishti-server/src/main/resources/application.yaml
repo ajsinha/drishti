@@ -253,6 +253,7 @@ drishti:
       - /api/v1/export/*                # Rupaka phase 7: a report, visual or view rendered as PDF, PNG, Excel or CSV for the caller (masked), stores nothing
       - /api/v1/subscriptions/preview   # renders what a subscription would send, for the caller, stores nothing
       - /api/v1/compute/*/*             # a reactive connector's answer for the caller (REACTIVE_CONNECTORS.md): computed and cached, changes no data
+      - /api/v1/exposure/what-if        # incremental exposure before dealing (EXP.md section 6.7) for the caller: computed, stores nothing
     # WRITE SCOPES (TOKEN_SCOPES in docs/guides/API_GUIDE.md): a token is made with `read` (the default: all of the above) or with
     # scopes from this list (keys in [brackets] keep the colon); each opens the METHOD path patterns under `allow` (* = any method). A scope is only a door: the
     # controller behind it still checks the roles of the token's user at the time of the call, so a token never does more than
@@ -260,11 +261,12 @@ drishti:
     # token-read-posts, a scope or token-never (TokenScopeGuardTest fails the build otherwise).
     token-scopes:
       "[risk:write]":
-        description: "Save, share and delete your VaR baskets, capture VaR results, keep your what-if sandboxes and cancel your own computations (VAR_GUIDE.md, REACTIVE_CONNECTORS.md). Your own items only; the bank's data is never changed."
+        description: "Save, share and delete your VaR baskets, capture VaR and exposure results, keep your what-if sandboxes and cancel your own computations (VAR_GUIDE.md, EXP.md, REACTIVE_CONNECTORS.md). Your own items only; the bank's data is never changed."
         allow:
           - POST /api/v1/var/baskets
           - DELETE /api/v1/var/baskets/*/*
           - POST /api/v1/var/captures
+          - POST /api/v1/exposure/captures
           - POST /api/v1/compute/sandboxes
           - PUT /api/v1/compute/sandboxes/*
           - DELETE /api/v1/compute/sandboxes/*
@@ -390,6 +392,8 @@ drishti:
       - "POST /api/v1/compute/events"          # trigger events (the write-back hook): the server and administrators, never a token
       - "POST /api/v1/var/reload"              # reloading the VaR vectors: an administrator in the console
       - "POST /api/v1/var/official"            # running the official end-of-day VaR capture: an administrator in the console
+      - "POST /api/v1/exposure/reload"         # reloading the exposure paths: an administrator in the console
+      - "POST /api/v1/exposure/official"       # running the official end-of-day exposure capture: an administrator in the console
       - "* /api/v1/embed/**"
       - "* /api/v1/admin/embed/**"
       - "* /api/v1/admin/users/**"
@@ -639,6 +643,50 @@ drishti:
       root: ${DRISHTI_DELTA_ROOT:${drishti.data.dir:./data}/delta}   # the risk lake's root; an s3:// root is not published by this writer
       retention-years: 7             # the published table keeps its log and removed files (time travel) this long
       on-start: true                 # at start, capture the newest date when it has no official record yet
+  ccr:
+    exposure:                        # the exposure engine (docs/contracts/EXP.md): EE, ENE, EEE, PFE, EPE, EEPE of any counterparty scope from the exposure paths
+      enabled: ${DRISHTI_EXPOSURE_ENABLED:true}
+      confidence: [0.95, 0.99]       # PFE confidences computed for every answer (any q in (0.5, 1) may be asked)
+      limit-confidence: 0.95         # the PFE credit limits are set on; the default q of an answer
+      rank-rule: kth                 # kth (the ceil(P q)-th smallest exposure) or interpolated
+      collateral-model: lagged       # lagged (called at the look-back point), current (today's collateral on every path) or none
+      im-model: current              # current (the initial margin held today on every path) or none
+      alpha: 1.4                     # EAD_IMM = alpha x EEPE (informational)
+      contribution-window: 21        # paths around the PFE quantile a PFE contribution averages over
+      hot-dates: 2                   # business dates kept open (the newest)
+      memory-budget-gb: ${DRISHTI_EXPOSURE_MEMORY_GB:0}   # most memory one date's netting-set matrices take while it loads (0: a quarter of the heap); over it: 503 DRS-5445
+      hot-folder: ${DRISHTI_EXPOSURE_HOT_DIR:${drishti.data.dir:./data}/ccr/hot}   # the hot files, one folder per business date; never under the repository
+      tier: ${DRISHTI_EXPOSURE_TIER:mapped}   # mapped: each date a float32 hot file, memory-mapped; heap: float64 on the heap
+      disk-dates: 60                 # hot files kept on disk (least recently used beyond are deleted, unless the retention keeps them)
+      keep-on-shutdown: false        # false: the hot files are deleted at shutdown (and any left over at start)
+      close-grace-seconds: 60        # an evicted date stays mapped this long for the requests still reading it
+      max-scope-netting-sets: 20000  # the most whole netting sets an interactive answer sums (more: 503 DRS-5443; the official capture computes it)
+      max-parts: 5000                # most parts a contribution table computes at once
+      histogram-bins: 42             # bins of an exposure distribution
+      t0-tolerance: 0.10             # a trade's paths' mean at the first grid date is listed when it departs from its MtM today by more (or 5% of notional)
+      kinds:                         # the kinds the engine reads (the counterparty-risk pack's, the core pack's and the market-risk pack's hierarchies)
+        run: simulation-run
+        paths: exposure-path
+        netting-set: netting-set
+        csa: csa
+        collateral: collateral-balance
+        counterparty: counterparty
+        group: counterparty-group
+        hierarchy: risk-hierarchy
+      access: {}                     # per role, per counterparty, group or legal entity: trades | aggregate | none (drishti.ccr.exposure.access.<role>[CP-ALDERSHOT]=aggregate)
+      official:                      # the official end-of-day captures (docs/contracts/EXP.md section 9.6)
+        enabled: ${DRISHTI_EXPOSURE_OFFICIAL:true}   # capture every netting set, counterparty, group and hierarchy node when a date's run is complete
+        publish: true                # also append them to <root>/risk-results/exposure-official and exposure-official-cpty (Delta, append-only)
+        root: ${DRISHTI_DELTA_ROOT:${drishti.data.dir:./data}/delta}   # the risk lake's root; an s3:// root is not published by this writer
+        retention-years: 7           # the published tables keep their log and removed files (time travel) this long
+        on-start: true               # at start, capture the newest date when it has no official record yet
+      retention:                     # what is kept how long (EXP.md section 12.3, decided 2026-10-26)
+        trade-paths-days: 20         # full trade paths: the last 20 business dates ...
+        trade-paths-month-end-years: 1   # ... and each month-end for a year (the lake's owner applies it; GET /api/v1/exposure/retention lists the dates beyond)
+        set-matrices-years: 1        # netting-set matrices (the hot files): every date for a year ...
+        set-matrices-month-end-years: 7  # ... and each month-end for seven
+        statistics-years: 7          # the official records (statistics per set, counterparty, group and node): every date, seven years
+        trade-contributions-years: 7 # every trade's EE contributions per primary date: every date, seven years
   calc:                              # Calc: Python in the browser (docs/guides/PYTHON_CALC.md); the server never runs the code
     enabled: ${DRISHTI_CALC_ENABLED:true}   # also needs a role with calc, and a pack that enables it for the view's kind
     max-column-rows: 250000          # drishti.columns() returns at most this many entities (the browser holds them all)

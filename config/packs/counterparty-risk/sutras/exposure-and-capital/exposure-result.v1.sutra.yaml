@@ -1,0 +1,100 @@
+# Project Drishti · Any data. Any domain. One grammar.
+#
+# Copyright (c) 2026 Ashutosh Sinha <ajsinha@gmail.com>.
+# All rights reserved.
+#
+# PROPRIETARY AND CONFIDENTIAL.
+#
+# This file is the confidential and proprietary property of Ashutosh Sinha.
+# Unauthorised copying, use, modification, distribution or disclosure of this
+# file, via any medium, is strictly prohibited except with the express prior
+# written permission of the copyright holder.
+#
+# See the LICENSE file in the root of this repository for the full terms.
+
+# Hand-written (docs/contracts/EXP.md section 9.1): the computed kind exposure-result, a scope's exposure answered by the server's
+# exposure engine (the reactive connector exposure-engine) when the page opens, never stored. A plain page in 2.9.0; the exposure
+# explorer replaces it as the main screen in a later part.
+rachana: 1
+sutra: exposure-result
+version: 1
+description: "The exposure profile of any counterparty scope (a netting set, a counterparty, a group, a legal entity, a trade alone), computed from the simulated paths."
+doc:
+  summary: "The exposure profile of a scope, computed from the simulated paths when asked."
+  description: >-
+    One page per scope: the strip gives EPE, EEPE, the peak PFE and its date, the current exposure and the run; the profile of
+    expected exposure and potential future exposure at 95% and 99% by primary date, with and without collateral; the netting sets of
+    a counterparty or larger scope with their share of the peak PFE; how the figures were made. A netting set the day's simulation run
+    does not cover says so (STATUS no-paths) instead of showing figures.
+  params: {}
+  emits: []
+  expects: []
+  examples:
+    - "/v/exposure-result/NSET:NS-ALDERSHOT-FRA"
+    - "EXP NSET:NS-ALDERSHOT-FRA"
+    - "EXP CPTY:CP-ALDERSHOT"
+  since: "2.9.0"
+match: { kind: exposure-result, priority: 10 }
+title: { pill: Exposure and capital · Exposure profile (computed), id: $.CANONICAL }
+strip:
+  - { label: EPE, bind: $.EPE, fmt: compact }
+  - { label: EEPE, bind: $.EEPE, fmt: compact }
+  - { label: Peak PFE, bind: $.PEAK_PFE, fmt: compact, emphasis: true }
+  - { label: Peak PFE date, bind: $.PEAK_PFE_DATE, fmt: date }
+  - { label: Current exposure, bind: $.CE, fmt: compact }
+  - { label: Run, bind: $.RUN_ID }
+  - { label: Status, bind: $.STATUS, tone: status }
+panels:
+  - id: profile
+    kind: area
+    title: "Exposure profile (USD)"
+    key: F2
+    rows: $.PROFILE
+    x: TENOR
+    series:
+      - { label: Expected exposure, value: EE, tone: link }
+      - { label: PFE, value: PFE, tone: accent }
+      - { label: PFE 99, value: PFE_99, tone: neg }
+      - { label: EE without collateral, value: EE_UNCOLL }
+  - id: dates
+    kind: table
+    title: By primary date
+    key: F3
+    rows: $.PROFILE
+    columns:
+      - { label: Tenor, bind: "@.TENOR" }
+      - { label: Date, bind: "@.DATE", fmt: date }
+      - { label: EE, bind: "@.EE", fmt: compact }
+      - { label: ENE, bind: "@.ENE", fmt: compact }
+      - { label: Effective EE, bind: "@.EEE", fmt: compact }
+      - { label: PFE, bind: "@.PFE", fmt: compact }
+      - { label: PFE 99, bind: "@.PFE_99", fmt: compact }
+      - { label: EE without collateral, bind: "@.EE_UNCOLL", fmt: compact }
+  - id: sets
+    kind: table
+    title: Netting sets
+    key: F4
+    rows: $.BY_NETTING_SET
+    columns:
+      - { label: Netting set, bind: "@.NETTING_SET", link: true }
+      - { label: Counterparty, bind: "@.LABEL" }
+      - { label: EPE, bind: "@.EPE", fmt: compact }
+      - { label: Peak PFE, bind: "@.PEAK_PFE", fmt: compact }
+      - { label: Share of the peak PFE, bind: "@.PFE_CONTRIBUTION", fmt: compact, total: true }
+  - id: how
+    kind: kv
+    title: How it was computed
+    area: right
+    columns:
+      - { label: Scope, bind: $.CANONICAL }
+      - { label: Kind, bind: $.SCOPE_KIND }
+      - { label: Business date, bind: $.BUSINESS_DATE, fmt: date }
+      - { label: Paths, bind: $.PATHS, fmt: amount0 }
+      - { label: Confidence, bind: $.CONFIDENCE, fmt: pct0 }
+      - { label: Collateral model, bind: $.COLLATERAL_MODEL }
+      - { label: "Margin period of risk (days)", bind: $.MPOR_DAYS }
+      - { label: "EAD (internal model, informational)", bind: $.EAD_IMM, fmt: compact }
+      - { label: Flags, bind: $.FLAGS }
+      - { label: Note, bind: $.NOTE }
+  - { use: data-provenance@1 }
+keys: { F9: raw }

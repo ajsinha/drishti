@@ -759,7 +759,7 @@ $ drishti.py connector list
   ----------------  ------  --------  -----------------------------------------------------------  --------  -----------------  --------
   civic-store       file    delta     jurisdiction,party,office-holder +3                          running   world-economy
   collateral-store  file    delta     collateral-balance,margin-call,simm                          running   counterparty-risk
-  credit-store      file    delta     netting-set,credit-limit,exposure-profile +2                 running   counterparty-risk
+  credit-store      file    delta     netting-set,credit-limit,cva +1                            running   counterparty-risk
   ecb-estr-feed     file    feed      rate-fixing                                                  disabled  market-data
   ecb-fx-feed       file    feed      fx-spot                                                      disabled  market-data
   fred-feed         file    feed      rate-fixing                                                  disabled  market-data

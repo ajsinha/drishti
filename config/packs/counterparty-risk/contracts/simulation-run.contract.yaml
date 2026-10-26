@@ -1,0 +1,212 @@
+# Project Drishti · Any data. Any domain. One grammar.
+#
+# Copyright (c) 2026 Ashutosh Sinha <ajsinha@gmail.com>.
+# All rights reserved.
+#
+# PROPRIETARY AND CONFIDENTIAL.
+#
+# This file is the confidential and proprietary property of Ashutosh Sinha.
+# Unauthorised copying, use, modification, distribution or disclosure of this
+# file, via any medium, is strictly prohibited except with the express prior
+# written permission of the copyright holder.
+#
+# See the LICENSE file in the root of this repository for the full terms.
+
+# Data contract of the simulation-run kind (command XRUN): docs/contracts/README.md section 16.
+# Drafted by `drishti.py contract bootstrap simulation-run`; completed by hand (2.9.0); the measure's contract is docs/contracts/EXP.md (section 3).
+kind: simulation-run
+mnemonic: XRUN
+pack: counterparty-risk
+version: '1.0'
+class: input
+status: active
+title: Exposure simulation run
+description: 'An upstream exposure simulation of a business date: its paths, its grid of future dates (primary and look-back), its model and seed;
+  the exposure engine reads it beside the paths (EXP.md section 3.2).'
+source: 'the upstream exposure simulator (test data: tools/packgen/ccr/make_ccr_data.py)'
+grain: One row per simulation run and business date, keyed by RUN_ID; the newest complete run of a date answers.
+key:
+- RUN_ID
+id-pattern:
+- ^XR-[0-9]{4}-[0-9]{2}-[0-9]{2}-[0-9]+$
+dated-by: BUSINESS_DATE
+cadence:
+  frequency: daily
+  due: to be agreed with the simulator's owner (EXP.md open question 1); before its paths
+storage:
+  connector: exposure-store
+  plugin: delta
+  domain: risk
+  table: <root>/risk/simulation-run/
+  columns:
+  - RUN_ID
+  - CALIBRATION
+  - PATHS
+  - STATUS
+  - BATCH_ID
+  test-data:
+  - data/testdata/counterparty-risk/simulation-run
+fields:
+- name: RUN_ID
+  type: id
+  presence: required
+  description: The record's id (the business key)
+  example: XR-2026-09-30-01
+  pattern: ^XR-[0-9]{4}-[0-9]{2}-[0-9]{2}-[0-9]+$
+  link: simulation-run
+- name: BUSINESS_DATE
+  type: date
+  presence: required
+  example: '2026-09-30'
+- name: MARKET_DATA_DATE
+  type: date
+  presence: required
+  example: '2026-09-30'
+- name: MODEL
+  type: text
+  presence: required
+  example: One correlated Brownian factor per asset class (rates, FX, …
+- name: MODEL_VERSION
+  type: text
+  presence: required
+  example: drishti-testgen-ccr-1.0
+- name: CALIBRATION
+  type: text
+  presence: required
+  description: REAL_WORLD (for PFE and limits) or RISK_NEUTRAL (for CVA and pricing) or STRESSED.
+  example: REAL_WORLD
+- name: PATHS
+  type: integer
+  presence: required
+  description: The number of simulated market scenarios; every trade's values are on the same paths.
+  example: 200
+- name: SEED
+  type: text
+  presence: required
+  example: ccr|XR-2026-09-30-01
+- name: ANTITHETIC
+  type: boolean
+  presence: required
+  example: false
+- name: GRID_DATES
+  type: date list
+  presence: required
+  description: 'The future dates the trades were valued at: the primary dates where exposure is reported and the look-back dates a margin period
+    of risk before them.'
+- name: GRID_ROLE
+  type: text list
+  presence: required
+- name: LOOKBACK_OF
+  type: vector
+  presence: required
+  note: 24 values in the test data
+- name: GRID_TENORS
+  type: text list
+  presence: required
+- name: LOOKBACK_DAYS
+  type: integer
+  presence: required
+  unit: business days
+  description: 'How many business days before each primary date its look-back date is: the margin period of risk the run assumes.'
+  example: 10
+- name: VALUE_BASIS
+  type: text
+  presence: required
+  example: FUTURE
+- name: CURRENCY
+  type: text
+  presence: required
+  example: USD
+- name: PRECISION
+  type: text
+  presence: required
+  description: 'float32 or float64: how the path values are stored.'
+  example: float64
+- name: CREDIT_PATHS
+  type: boolean
+  presence: required
+  example: false
+- name: NETTING_SETS
+  type: integer
+  presence: required
+  description: 'Netting set: the netting-set it refers to'
+  example: 8
+  link: netting-set
+- name: TRADES
+  type: integer
+  presence: required
+  example: 627
+- name: ROWS
+  type: integer
+  presence: required
+  example: 9031
+- name: BATCH_ID
+  type: id
+  presence: required
+  example: XB-2026-09-30-01
+- name: COMPUTED_AT
+  type: timestamp
+  presence: required
+  example: '2026-09-30T23:40:00Z'
+- name: STATUS
+  type: text
+  presence: required
+  example: complete
+links:
+- field: RUN_ID
+  kind: simulation-run
+- field: NETTING_SETS
+  kind: netting-set
+validation:
+- rule: required
+  fields:
+  - RUN_ID
+  - BUSINESS_DATE
+  - MARKET_DATA_DATE
+  - MODEL
+  - MODEL_VERSION
+  - CALIBRATION
+  - PATHS
+  - SEED
+  - ANTITHETIC
+  - GRID_DATES
+  - GRID_ROLE
+  - LOOKBACK_OF
+  - GRID_TENORS
+  - LOOKBACK_DAYS
+  - VALUE_BASIS
+  - CURRENCY
+  - PRECISION
+  - CREDIT_PATHS
+  - NETTING_SETS
+  - TRADES
+  - ROWS
+  - BATCH_ID
+  - COMPUTED_AT
+  - STATUS
+- rule: unique
+  key:
+  - RUN_ID
+  per: BUSINESS_DATE
+- rule: pattern
+  field: RUN_ID
+  pattern: ^XR-[0-9]{4}-[0-9]{2}-[0-9]{2}-[0-9]+$
+- rule: link
+  field: RUN_ID
+  kind: simulation-run
+- rule: vector-length
+  field: LOOKBACK_OF
+  same: every row of one business date
+- rule: link
+  field: NETTING_SETS
+  kind: netting-set
+notes:
+- 'An upstream exposure simulation''s record (EXP.md section 3.2): the grid, the paths, the model; one per run and business date. Drishti reads
+  it; nothing in it is computed by Drishti.'
+review:
+- 'required inferred from 100% coverage in 2 documents (1 samples and 1 test-data documents (data/testdata/counterparty-risk/simulation-run/cob-2026-09-30.jsonl.gz)):
+  confirm each required field is mandatory upstream, and each optional one may be empty.'
+- 'source is the pack''s first listed source (its README): confirm.'
+- 'due time of each business date is not known: state it (for example, by 06:00 New York the next business day).'
+- 'no description in about.yaml or the Sutras for BUSINESS_DATE, MARKET_DATA_DATE, MODEL, MODEL_VERSION, SEED, ANTITHETIC, GRID_ROLE, LOOKBACK_OF,
+  GRID_TENORS, VALUE_BASIS, CURRENCY, CREDIT_PATHS and 5 more: write them in the pack''s config/about.yaml glossary.'

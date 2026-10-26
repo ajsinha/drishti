@@ -3,66 +3,13 @@
  "TRADE_COUNT": 3,
  "NET_MTM": -339550,
  "COLLATERAL": -229552,
- "EE_PEAK": 141750,
- "PFE_PEAK": 347288,
  "LIMIT": 5000000.0,
  "UTILISATION": 0.0695,
  "CVA": -7,
- "PROFILE": [
-  {
-   "TENOR": "0",
-   "EE": 39314,
-   "PFE": 121929
-  },
-  {
-   "TENOR": "1M",
-   "EE": 81839,
-   "PFE": 215484
-  },
-  {
-   "TENOR": "3M",
-   "EE": 141750,
-   "PFE": 347288
-  },
-  {
-   "TENOR": "6M",
-   "EE": 0,
-   "PFE": 0
-  },
-  {
-   "TENOR": "1Y",
-   "EE": 0,
-   "PFE": 0
-  },
-  {
-   "TENOR": "2Y",
-   "EE": 0,
-   "PFE": 0
-  },
-  {
-   "TENOR": "3Y",
-   "EE": 0,
-   "PFE": 0
-  },
-  {
-   "TENOR": "5Y",
-   "EE": 0,
-   "PFE": 0
-  },
-  {
-   "TENOR": "7Y",
-   "EE": 0,
-   "PFE": 0
-  },
-  {
-   "TENOR": "10Y",
-   "EE": 0,
-   "PFE": 0
-  }
- ],
  "TRADES": [
   {
-   "TRADE_ID": "BBG-60000094",
+   "TRADE_ID": "CLY-3000280",
+   "STATUS": "LIVE",
    "PRODUCT": "Tri-party repo",
    "ASSET_CLASS": "Securities financing",
    "CURRENCY": "JPY",
@@ -73,7 +20,8 @@
    "MTM": -708216
   },
   {
-   "TRADE_ID": "BBG-60000103",
+   "TRADE_ID": "CLY-3000289",
+   "STATUS": "LIVE",
    "PRODUCT": "Securities lending",
    "ASSET_CLASS": "Securities financing",
    "CURRENCY": "EUR",
@@ -84,7 +32,8 @@
    "MTM": 516127
   },
   {
-   "TRADE_ID": "BBG-60000100",
+   "TRADE_ID": "CLY-3000286",
+   "STATUS": "LIVE",
    "PRODUCT": "Buy / sell-back",
    "ASSET_CLASS": "Securities financing",
    "CURRENCY": "USD",
@@ -105,7 +54,6 @@
  "AGREEMENT": "AGR-ALDERSHOT-ISDA",
  "CSA": "CSA-ALDERSHOT",
  "CREDIT_LIMIT": "LIM-ALDERSHOT",
- "EXPOSURE_PROFILE": "EXP-ALDERSHOT-FRA",
  "CVA_RESULT": "CVA-ALDERSHOT-FRA",
  "SACCR": "SACCR-ALDERSHOT-FRA",
  "SIMM": "SIMM-ALDERSHOT",
@@ -117,7 +65,19 @@
   "generation": 1,
   "live": true,
   "walk": {
-   "NET_MTM": 1000
+   "TRADES.0.MTM": 1816,
+   "TRADES.1.MTM": 1432,
+   "TRADES.2.MTM": 695,
+   "derive": [
+    {
+     "set": "BY_ASSET.0.MTM",
+     "expr": "TRADES.0.MTM + TRADES.1.MTM + TRADES.2.MTM"
+    },
+    {
+     "set": "NET_MTM",
+     "expr": "sum(TRADES.*.MTM)"
+    }
+   ]
   }
  }
 }

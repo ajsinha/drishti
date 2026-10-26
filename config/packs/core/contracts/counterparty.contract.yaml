@@ -104,10 +104,6 @@ fields:
   presence: required
   description: Net MTM
   example: 15036789
-- name: PFE_PEAK
-  type: amount
-  presence: required
-  example: 145548971
 - name: NETTING_SETS
   type: record list
   presence: required
@@ -283,7 +279,6 @@ validation:
   - ECONOMY
   - NEWS_ID
   - NET_MTM
-  - PFE_PEAK
   - NETTING_SETS
   - KYC
   - GROUP
@@ -356,11 +351,9 @@ review:
 - 'due time of each business date is not known: state it (for example, by 06:00 New York the next business day).'
 - 'enum values inferred from the data, not from a glossary: KYC.RISK_RATING, KYC.EMIR_CLASSIFICATION, HIERARCHY.NODES[].TYPE, HIERARCHY.EDGES[].LABEL:
   confirm they are closed lists.'
-- 'number types decided by the field''s name: NET_MTM amount, PFE_PEAK amount, NETTING_SETS[].NET_MTM amount, KYC.PD_1Y rate: confirm amount,
-  rate or integer.'
-- 'no unit stated for the amounts NET_MTM, PFE_PEAK, NETTING_SETS[].NET_MTM (docs/contracts/README.md section 7: USD unless stated): confirm the
-  currency.'
-- 'no description in about.yaml or the Sutras for COUNTRY, PFE_PEAK, HIERARCHY.NODES[].ID, HIERARCHY.NODES[].LABEL, HIERARCHY.NODES[].TYPE, HIERARCHY.EDGES[].FROM,
+- 'number types decided by the field''s name: NET_MTM amount, NETTING_SETS[].NET_MTM amount, KYC.PD_1Y rate: confirm amount, rate or integer.'
+- 'no unit stated for the amounts NET_MTM, NETTING_SETS[].NET_MTM (docs/contracts/README.md section 7: USD unless stated): confirm the currency.'
+- 'no description in about.yaml or the Sutras for COUNTRY, HIERARCHY.NODES[].ID, HIERARCHY.NODES[].LABEL, HIERARCHY.NODES[].TYPE, HIERARCHY.EDGES[].FROM,
   HIERARCHY.EDGES[].TO, HIERARCHY.EDGES[].LABEL: write them in the pack''s config/about.yaml glossary.'
-- 'NET_MTM, PFE_PEAK and NETTING_SETS[].NET_MTM are computed figures on a fundamental master (docs/contracts/README.md section 3): confirm they
-  are removed when NSET''s figures are computed (2.10.0).'
+- 'NET_MTM and NETTING_SETS[].NET_MTM are computed figures on a fundamental master (docs/contracts/README.md section 3): confirm they are removed
+  when NSET''s figures are computed (2.10.0).'

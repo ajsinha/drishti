@@ -34,6 +34,7 @@ import calc_snippets
 import layout
 import taxonomy as T
 import var_kinds as VK  # the VaR engine's kinds in the market-risk pack (positions, portfolios, P&L vectors, hierarchies)
+import ccr_kinds as XK  # the exposure engine's kinds in the counterparty-risk pack (the simulation run, the paths, exposure-result)
 
 ROOT = Path(__file__).resolve().parents[3]
 PACKS = ROOT / "config" / "packs"
@@ -74,7 +75,7 @@ EXAMPLES = {  # command, what it shows (ids from make_data.py's deterministic da
                 ("CTRD CP-ALDERSHOT", "A counterparty's trades in every system · payments, notional by product")],
     "market-risk": [("STR STR-GFC2008-RATES", "Stress · 2008 crisis on the rates desk"),
                     ("PNL PNL-RATES-1", "P&L explain"), ("FRTB FRTB-RATES-1", "FRTB sensitivities and charges")],
-    "counterparty-risk": [("AGR AGR-NORTHBRIDGE-ISDA", "ISDA master agreement · elections"), ("NSET NS-SUMMIT-NY", "Netting set · 108 trades, exposure, CVA"), ("LIM LIM-SUMMIT", "Credit limit · utilisation by tenor"),
+    "counterparty-risk": [("AGR AGR-NORTHBRIDGE-ISDA", "ISDA master agreement · elections"), ("NSET NS-ALDERSHOT-NY", "Netting set · its trades, the exposure computed from the paths, CVA"), ("LIM LIM-SUMMIT", "Credit limit · utilisation by tenor"),
                           ("CVA CVA-SUMMIT-NY", "CVA / XVA"), ("SACCR SACCR-SUMMIT-NY", "SA-CCR exposure at default")],
 }
 TRADER_KINDS = ["trade", *layout.PACKS["market-data"]["kinds"]["market"], "counterparty", "counterparty-group", "issuer", "book", "desk",
@@ -158,10 +159,13 @@ STRIP_PATH = re.compile(r"\$\.([A-Za-z_][A-Za-z0-9_]*)")
 def forms(name: str, kinds: list[str], specs: dict) -> dict:
     out = {}
     for k in kinds:
-        if k in VK.COMPUTED:                          # a computed kind (its id is a scope): no search form
+        if k in VK.COMPUTED or k in XK.COMPUTED:      # a computed kind (its id is a scope): no search form
             continue
         if k in VK.KINDS:                             # the VaR engine's kinds: their key columns
             out[k] = PF.form_from_columns(VK.FORM_COLUMNS[k], VK.KINDS[k][3])
+            continue
+        if k in XK.KINDS:                             # the exposure engine's inputs: their key columns
+            out[k] = PF.form_from_columns(XK.FORM_COLUMNS[k], XK.KINDS[k][3])
             continue
         if k in TS.DERIVED:                           # a derived kind: its fields are the connector's aggregates
             out[k] = [_f(TS.DERIVED[k][3], "id", TS.DERIVED[k][1]), _f("TRADE_COUNT", "number", "Trades"), _f("NOTIONAL", "amount", "Notional"),
@@ -173,7 +177,8 @@ def forms(name: str, kinds: list[str], specs: dict) -> dict:
         elif k in COLUMNS.get(name, {}):
             out[k] = PF.form_from_columns(COLUMNS[name][k], spec.id_field)
         else:
-            paths = list(dict.fromkeys(STRIP_PATH.findall(" ".join(str(s[1]) for s in spec.strip))))[:7]
+            # the exposure engine's figures (exposureEngine.*, added as the page opens) are not stored: never a search field
+            paths = [p for p in dict.fromkeys(STRIP_PATH.findall(" ".join(str(s[1]) for s in spec.strip))) if p not in ("exposureEngine", "EXPOSURE_ENGINE")][:7]
             out[k] = PF.form_from_columns([p for p in paths if p != spec.id_field], spec.id_field)
     return out
 
@@ -226,12 +231,15 @@ def manifest(name: str) -> dict:
                                                             "refresh-minutes": 60, **extra}}
     if name == "market-risk":
         add_var_kinds(m)
+    if name == "counterparty-risk":
+        add_ccr_kinds(m)
     if name in COLUMNS:
         m["columns"] = COLUMNS[name]
     if name in PIVOTS:
         m["pivot"] = PIVOTS[name]
     m["form"] = forms(name, m["kinds"], specs)
-    m["console"] = {"examples": [list(e) for e in EXAMPLES[name] + (VK.EXAMPLES if name == "market-risk" else [])], "help": "config/help.yaml"}
+    extra = VK.EXAMPLES if name == "market-risk" else XK.EXAMPLES if name == "counterparty-risk" else []
+    m["console"] = {"examples": [list(e) for e in EXAMPLES[name] + extra], "help": "config/help.yaml"}
     if calc_snippets.SNIPPETS.get(name):    # Calc on the pack's kinds, with its snippets under python/ (calc_snippets.py)
         m["python"] = {"enabled": True}
     if name in IMPACT:
@@ -262,6 +270,20 @@ def add_var_kinds(m: dict) -> None:
             m["graph"]["badges"][k] = VK.BADGES[k]
     m["connectors"].update(VK.CONNECTORS)
     m["graph"]["fields"] = dict(sorted({**m["graph"]["fields"], **{f: {"kind": k, "label": lab} for f, (k, lab) in VK.FIELDS.items()}}.items()))
+
+
+def add_ccr_kinds(m: dict) -> None:
+    """The exposure engine's kinds (ccr_kinds.py) in the counterparty-risk manifest: kinds, mnemonics (EXP is the computed kind
+    exposure-result), ids, links, the exposure-store connector (the risk lake's domain, the paths as a vector column) and the reactive
+    exposure-engine, routes, and two examples."""
+    for k, (mnem, label, pattern, _id) in XK.KINDS.items():
+        m["kinds"].append(k)
+        m["mnemonics"][mnem] = {"kind": k, "label": label}
+        if pattern:
+            m["graph"]["id-patterns"].append({"pattern": pattern, "kind": k})
+        m["routes"][k] = XK.SERVED_BY[k]
+    m["connectors"].update(XK.CONNECTORS)
+    m["graph"]["fields"] = dict(sorted({**m["graph"]["fields"], **{f: {"kind": k, "label": lab} for f, (k, lab) in XK.FIELDS.items()}}.items()))
 
 
 def body_of(src: Path) -> str:

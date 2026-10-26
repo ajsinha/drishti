@@ -23,6 +23,31 @@
   the one walk-through, each step linking to the guide's sections. `VAR_EXPLORER.md`, `contracts/VAR.md`, `VAR_ENGINE.md` and
   `VAR_DATA_MODEL.md` moved to `docs/archive/` as history; every reference (docs, contracts, pack guides, `tools/contracts.policy.yaml`,
   source comments) points at the guide's sections. The help centre lists the VaR guide and tutorial 25 (cap 47 pages).
+- **Exposure computed for any scope (2.9.0, EXP part 1; [EXP.md](docs/contracts/EXP.md) 1.1 as built).** An upstream simulation's
+  paths are two new inputs of the counterparty-risk pack: `simulation-run` (`XRUN`: the grid of primary and look-back dates, the paths,
+  the model) and `exposure-path` (`XPATH`: every trade's MtM on every path at a grid date, the vector column `MTM`), served by the
+  Delta connector `exposure-store` from the risk lake. The exposure engine (`com.ash.drishti.compute.ccr`,
+  `com.ash.drishti.server.exposure`) nets them per netting set, applies each CSA's collateral path by path (thresholds, MTA, IA,
+  rounding, lagged by the margin period of risk; today's collateral before it), and reads EE, ENE, effective EE, PFE at any confidence,
+  EPE, EEPE, the peaks, CE and EAD under the internal model for any scope (`NSET:`, `CPTY:`, `GROUP:`, `LE:`, `DESK:`, `BOOK:`, `TRD:`,
+  `BANK`, `WHERE:`, with `+ - &`; a counterparty's PFE from its sets' summed paths), as the caller (access by counterparty, group or
+  legal entity), with contributions by netting set, counterparty, legal entity, trade and asset class, the distribution at a date,
+  captures and compare, CSV, a conservative `addon` what-if (the exact `paths` method follows with the Python engine) and a
+  memory-mapped float32 hot file per date (`DRSHEXP1`). `EXP <scope> <GO>` opens the computed kind `exposure-result` (the reactive
+  connector `exposure-engine`); the API is `/api/v1/exposure`; settings `drishti.ccr.exposure.*` (with the retention tiers decided on
+  2026-10-26); codes `DRS-5440` to `DRS-5446`. Official end-of-day figures of every netting set, counterparty, group and hierarchy
+  node are published to `risk-results/exposure-official` and `exposure-official-cpty`; the data-load signal reloads and captures.
+- **The stored exposure profile is retired (2.9.0).** The `exposure-profile` kind (`EXP-<cp>-<le>`) is gone with its samples, test
+  data, Sutra, contract and form; `EXP EXP-ALDERSHOT-FRA` and `/v/exposure-profile/EXP-ALDERSHOT-FRA` open `NSET:NS-ALDERSHOT-FRA`,
+  computed. `netting-set` lost `EE_PEAK`, `PFE_PEAK` and `PROFILE`, `counterparty` lost `PFE_PEAK`: their pages show the engine's
+  figures computed as they open (`EXPOSURE_ENGINE`), or "no exposure paths for the netting set … on <date>" for a set the run does not
+  cover. The Calc snippets that read the stored profile read `exposure-result`. A guard test keeps exposure figures off every input.
+  Stored against computed for all 76 sets: EXP.md section 14.2 (the stored peaks, 92.6 bn in all, scaled with gross notional and
+  ignored the CSAs; the computed ones total 7.6 bn).
+- **Exposure test data:** `tools/packgen/ccr/make_ccr_data.py` (`--check`, `--full`, `--reconcile`; run by `make_testdata.py`) writes
+  run `XR-2026-09-30-01`: 200 paths, 24 grid dates, eight netting sets (CP-ALDERSHOT's four among them), 627 trades, 9,031 rows,
+  7.2 MB; `ccrmath.py` is the reference the Java engine is checked against (`ExposureParityTest`). `lake demo` moves the run's dates.
+- Not changed (follow-up): the shipped BI samples still declare the netting set's `EE_PEAK` and `PFE_PEAK`, now empty in the demo lake.
 
 ## 2.8.0 — Data contracts for every command; VaR computed for any scope; Admin → Commands; write-back; branding from configuration (2026-10-26)
 

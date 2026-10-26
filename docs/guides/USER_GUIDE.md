@@ -2206,7 +2206,7 @@ Worked example: a role for credit analysts.
 2. **Name** `credit-analyst` (lower case, digits and hyphens); **Description** `Reads counterparties and
    credit exposure`.
 3. Under *Add every kind of a pack*, click **Counterparty credit risk**: its kinds (`netting-set`,
-   `credit-limit`, `exposure-profile`, …) fill the *Kinds it opens* box, one per line. Add `counterparty`
+   `credit-limit`, `cva`, …) fill the *Kinds it opens* box, one per line. Add `counterparty`
    on a line of its own.
 4. Leave every power unticked, and click **Save**. The role appears in the table with `0` users.
 5. Open *Admin → Users*, edit a user, tick `credit-analyst` and save. At that user's next click, netting sets

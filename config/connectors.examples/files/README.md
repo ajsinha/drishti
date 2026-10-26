@@ -59,7 +59,7 @@ loaders' row (`domain`, `kind`, `id`, `date`, `doc`, `columns`) or a plain docum
 | `reference/<date>/` | `counterparty`, `counterparty-group`, `issuer`, `agreement`, `ccp`, `legal-entity`, `book`, `desk`, `trader`, `calendar`, `csa`, `clearing-account` |
 | `market/<date>/` | 20 kinds: curves (`ir-curve`, `repo-curve`, `fx-forward-curve`, `credit-curve`, …), surfaces, `fx-spot`, `equity`, `bond`, `rate-fixing`, `correlation-matrix` |
 | `risk/<date>/` | `var`, `stress-scenario`, `stress-result`, `frtb-sensitivity`, `pnl-explain` |
-| `credit/<date>/` | `netting-set`, `credit-limit`, `exposure-profile`, `cva`, `sa-ccr` |
+| `credit/<date>/` | `netting-set`, `credit-limit`, `cva`, `sa-ccr` |
 | `collateral/<date>/` | `collateral-balance`, `margin-call`, `simm` |
 
 ## Examples
@@ -77,7 +77,7 @@ Set `DRISHTI_FILES_ROOT` when the folders are elsewhere. `trading-store.yaml` is
 | File | Plugin | Kinds | What it is |
 |---|---|---|---|
 | `collateral-store.yaml` | `file` | `collateral-balance`, `margin-call`, `simm` | collateral-store read from files (the former application-files.yaml profile) |
-| `credit-store.yaml` | `file` | `netting-set`, `credit-limit`, `exposure-profile`, `cva`, `sa-ccr` | credit-store read from files (the former application-files.yaml profile) |
+| `credit-store.yaml` | `file` | `netting-set`, `credit-limit`, `cva`, `sa-ccr` | credit-store read from files (the former application-files.yaml profile) |
 | `market-store.yaml` | `file` | `ir-curve`, `repo-curve`, `fx-spot`, `fx-forward-curve`, `fx-vol-surface`, `ir-vol-cube`, `cap-vol-surface`, `equity`, `equity-index`, `dividend-curve`, `equity-vol-surface`, `credit-curve`, `inflation-index`, `inflation-curve`, `commodity`, `commodity-curve`, `commodity-vol-surface`, `rate-fixing`, `bond`, `correlation-matrix` | market-store read from files (the former application-files.yaml profile) |
 | `reference-store.yaml` | `file` | `counterparty`, `counterparty-group`, `issuer`, `agreement`, `ccp`, `legal-entity`, `book`, `desk`, `trader`, `calendar`, `csa`, `clearing-account` | reference-store read from files (the former application-files.yaml profile) |
 | `risk-store.yaml` | `file` | `var`, `stress-scenario`, `stress-result`, `frtb-sensitivity`, `pnl-explain` | risk-store read from files (the former application-files.yaml profile) |

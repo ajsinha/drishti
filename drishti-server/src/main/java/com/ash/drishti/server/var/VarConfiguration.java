@@ -95,7 +95,9 @@ public class VarConfiguration {
         VarFigures f = new VarFigures(svc, views);
         ViewPipeline p = pipeline.getIfAvailable();
         if (p != null) {
-            p.augmenters(java.util.List.of(f));
+            java.util.List<com.ash.drishti.engine.ViewAugmenter> all = new java.util.ArrayList<>(p.augmenters());
+            all.add(f);                                                // beside the others (the exposure engine's on netting sets)
+            p.augmenters(all);
         }
         return f;
     }

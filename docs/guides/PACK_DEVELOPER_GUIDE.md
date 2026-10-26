@@ -1182,7 +1182,7 @@ From `config/packs/counterparty-risk/pack.yaml` (abridged; the file is generated
 pack: counterparty-risk
 extends: [trading]              # the packs this one inherits from, in order (the older name "requires" works too);
                                 # trading brings core and market-data with it
-kinds: [agreement, csa, netting-set, credit-limit, exposure-profile, cva, sa-ccr, collateral-balance, margin-call, simm]
+kinds: [agreement, csa, netting-set, credit-limit, cva, sa-ccr, collateral-balance, margin-call, simm, simulation-run, exposure-path, exposure-result]
 
 connectors:                     # the connectors this pack reads through. Here a mapping NAME: { plugin, enabled?, kinds, settings }:
                                 # the names are what the pack needs, the definitions are the pack's TEMPLATES (the site's file wins)
@@ -1196,7 +1196,7 @@ connectors:                     # the connectors this pack reads through. Here a
   credit-store:
     plugin: delta
     enabled: ${DRISHTI_LAKE_ENABLED:true}
-    kinds: [netting-set, credit-limit, exposure-profile, cva, sa-ccr]
+    kinds: [netting-set, credit-limit, cva, sa-ccr]
     settings: { root: "${DRISHTI_DELTA_ROOT:${drishti.data.dir:./data}/delta}", domain: credit }
   collateral-store:
     plugin: delta

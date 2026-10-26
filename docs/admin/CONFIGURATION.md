@@ -331,6 +331,11 @@ files (`application-files.yaml`, `application-postgres.yaml`, …) and packs hav
 | `DRISHTI_COMPUTE_VAR_WORKERS` | `compute.pools.var.workers.max` (`config/compute/compute.yaml`) | `4` | Python workers of the compute pool `var` (the Python VaR engine: what-if and the stressed window) on this node. |
 | `DRISHTI_VAR_OFFICIAL` | `drishti.var.official.enabled` | `true` | Capture every node officially at the end of each loaded date, and publish it to `risk-results/var-official`. |
 | `DRISHTI_DELTA_ROOT` | `drishti.var.official.root` | `./data/delta` | The Delta root the official VaR results are published under (`risk-results/var-official`); the packs' Delta connectors use the same variable. |
+| `DRISHTI_EXPOSURE_ENABLED` | `drishti.ccr.exposure.enabled` | `true` | Run the exposure engine (`/api/v1/exposure`, `EXP <scope>`, the counterparty-risk pack's `exposure-engine` connector). |
+| `DRISHTI_EXPOSURE_MEMORY_GB` | `drishti.ccr.exposure.memory-budget-gb` | `0` | Most memory one date's netting-set value matrices take while it loads (`0`: a quarter of the heap). |
+| `DRISHTI_EXPOSURE_HOT_DIR` | `drishti.ccr.exposure.hot-folder` | `./data/ccr/hot` | The exposure hot files' folder (one folder per business date); under the data folder unless set. |
+| `DRISHTI_EXPOSURE_TIER` | `drishti.ccr.exposure.tier` | `mapped` | Where a loaded date's matrices live: `mapped` (a memory-mapped float32 hot file per date) or `heap` (float64 on the heap). |
+| `DRISHTI_EXPOSURE_OFFICIAL` | `drishti.ccr.exposure.official.enabled` | `true` | Capture every netting set, counterparty, group and hierarchy node officially at the end of each loaded date, and publish to `risk-results/exposure-official` and `exposure-official-cpty`. |
 | `DRISHTI_LAYOUTS_ENABLED` | `drishti.layouts.enabled` | `true` | Allow personal layouts. |
 | `DRISHTI_PIVOT_ENABLED` | `drishti.pivot.enabled` | `true` | Allow the Pivot tab. |
 | `DRISHTI_ASK_ENABLED` | `drishti.explain.ask.enabled` | `false` | Turn on Ask about this page (also list packs in `drishti.explain.ask.packs`). |
@@ -1421,6 +1426,51 @@ else by `drishti.var.positions`.
 | `official.root` | `${DRISHTI_DELTA_ROOT:${drishti.data.dir:./data}/delta}` | The Delta root the results are published under (a local or shared folder; an `s3://` root is not published by this writer). |
 | `official.retention-years` | `7` | The published table keeps its log and its removed files this long (`delta.logRetentionDuration`, `delta.deletedFileRetentionDuration`): its time travel reaches back that far. |
 | `official.on-start` | `true` | At start, capture the newest date when it has no official record yet (a lake built while the server was down). |
+
+### `drishti.ccr.exposure` — the exposure engine
+
+The exposure engine (the data contract [EXP.md](../contracts/EXP.md)) computes exposure profiles (EE, ENE, effective EE, PFE at any
+confidence, EPE, EEPE, the peaks, CE, EAD under the internal model) of any counterparty scope (`NSET:`, `CPTY:`, `GROUP:`, `LE:`,
+`DESK:`, `BOOK:`, `TRD:`, `BANK`, combined with `+ - &`) from an upstream simulation's paths (`simulation-run`, `exposure-path`): netting
+per path, each CSA's collateral per path with the margin period of risk, as the caller, when asked. Nothing it answers is stored except
+captures: the ones people make, and the official end-of-day captures of every netting set, counterparty, group and hierarchy node, which
+it also publishes to `risk-results/exposure-official` and `exposure-official-cpty`. The netting-set and counterparty pages show its
+figures as they open.
+
+| Key | Default | Meaning |
+|---|---|---|
+| `enabled` | `true` (`DRISHTI_EXPOSURE_ENABLED`) | The engine at all. Off: `/api/v1/exposure` answers 403 and the pages show no exposure. |
+| `confidence` | `[0.95, 0.99]` | The PFE confidences every answer computes (any `q` in (0.5, 1) may be asked per request). |
+| `limit-confidence` | `0.95` | The PFE a credit limit is set on: the default `q` of an answer and of the official capture. |
+| `rank-rule` | `kth` | `kth` (the ceil(P q)-th smallest exposure) or `interpolated`. |
+| `collateral-model` | `lagged` | `lagged` (what the CSA calls at the look-back point a margin period of risk earlier; today's collateral where there is none), `current` (today's collateral on every path) or `none`. The hot file's exposure matrices are built with it; another model per request is computed from the value matrices. |
+| `im-model` | `current` | `current` (the initial margin held today, the collateral holding's `IM_HELD`, on every path) or `none`. |
+| `alpha` | `1.4` | EAD under the internal model = alpha × EEPE (informational). |
+| `contribution-window` | `21` | Paths ranked around the PFE quantile a PFE contribution averages over. |
+| `hot-dates` | `2` | Business dates kept open (mapped, or on the heap), the newest first; the date just used stays. |
+| `memory-budget-gb` | `0` (`DRISHTI_EXPOSURE_MEMORY_GB`) | Most memory one date's netting-set value matrices take while it loads (float64, G × P per set); `0` is a quarter of the heap. A date over it is refused whole (`503 DRS-5445`). |
+| `hot-folder` | `${DRISHTI_EXPOSURE_HOT_DIR:${drishti.data.dir:./data}/ccr/hot}` | The hot files, one folder per business date (`run-<digest>.xhot`, format `DRSHEXP1`: each set's value, exposure and negative exposure in float32, one row of P paths per grid date). Local disk: sets × P × (G + 2 × primary dates) × 4 bytes a date. |
+| `tier` | `mapped` (`DRISHTI_EXPOSURE_TIER`) | `mapped`: each loaded date written once to its hot file and memory-mapped (reopened without the lake while its inputs are unchanged); `heap`: float64 matrices on the heap. |
+| `disk-dates` | `60` | Hot files kept on disk; the least recently used beyond are deleted, never an open date's nor one the retention keeps (`retention.set-matrices-*`). |
+| `keep-on-shutdown` | `false` | `false`: the hot files are deleted when the server stops, and any a stopped server left at start; `true`: kept and reused while their digest matches. |
+| `close-grace-seconds` | `60` | How long an evicted date stays mapped for the requests still reading it. |
+| `max-scope-netting-sets` | `20000` | The most whole netting sets an interactive answer sums; more: `503 DRS-5443` (the official capture computes the bank). |
+| `max-parts` | `5000` | Most parts a contribution table returns. |
+| `histogram-bins` | `42` | Bins of an exposure distribution (`/scope/distribution`). |
+| `t0-tolerance` | `0.10` | The load lists a trade whose paths' mean at the first grid date departs from its MtM today by more than this share of it (or 5% of its notional, the larger). |
+| `kinds.run`, `kinds.paths`, `kinds.netting-set`, `kinds.csa`, `kinds.collateral`, `kinds.counterparty`, `kinds.group`, `kinds.hierarchy` | `simulation-run`, `exposure-path`, `netting-set`, `csa`, `collateral-balance`, `counterparty`, `counterparty-group`, `risk-hierarchy` | The kinds the engine reads. The data-load signal of the first five reloads that date and captures it officially. |
+| `access` | `{}` | Per role and counterparty, group or legal entity: `trades`, `aggregate` (figures, no netting set or trade below it) or `none` (`drishti.ccr.exposure.access.<role>[CP-ALDERSHOT]=aggregate`); a role with entries sees nothing else, a role without sees all at `trades` when it may open `exposure-path`. |
+| `official.enabled` | `true` (`DRISHTI_EXPOSURE_OFFICIAL`) | Capture every netting set, counterparty, group and hierarchy node officially when a date's run is complete (after the data-load signal, and once at start). |
+| `official.publish` | `true` | Also append the official figures to `<root>/risk-results/exposure-official` (hierarchy nodes) and `exposure-official-cpty` (netting sets, counterparties, groups: restricted). Append-only; no engine reads them. |
+| `official.root` | `${DRISHTI_DELTA_ROOT:${drishti.data.dir:./data}/delta}` | The Delta root the results are published under. |
+| `official.retention-years` | `7` | The published tables keep their log and removed files this long (time travel). |
+| `official.on-start` | `true` | At start, capture the newest date when it has no official record yet. |
+| `retention.trade-paths-days` | `20` | Full trade paths are kept for the last 20 business dates ... |
+| `retention.trade-paths-month-end-years` | `1` | ... and each month-end for a year. The lake's owner applies it; `GET /api/v1/exposure/retention` lists each date and whether its paths are beyond their window (EXP.md section 12.3, decided 2026-10-26). |
+| `retention.set-matrices-years` | `1` | The netting-set matrices (the hot files) of every date within a year are kept on disk ... |
+| `retention.set-matrices-month-end-years` | `7` | ... and each month-end's for seven years. |
+| `retention.statistics-years` | `7` | The official records (every scope's figures and profile) are kept seven years; older ones are removed after each capture. |
+| `retention.trade-contributions-years` | `7` | Every trade's EE contributions per primary date, kept beside each official record, seven years. |
 
 ### `drishti.bi` — Rupaka (business intelligence), phase 1: the shell and the catalogue
 

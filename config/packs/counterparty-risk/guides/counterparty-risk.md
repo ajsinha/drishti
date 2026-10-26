@@ -18,7 +18,7 @@
 
 ISDA master agreements and CSAs, netting sets, exposure and PFE, CVA/XVA, SA-CCR, credit limits, collateral, margin calls and SIMM.
 
-**Extends:** `trading` · **Extended by:** none · **Kinds:** 10
+**Extends:** `trading` · **Extended by:** none · **Kinds:** 9
 
 Enable it with `DRISHTI_PACKS=counterparty-risk` (the packs it extends come with it; where they differ, the more specific wins).
 
@@ -42,8 +42,12 @@ Each kind is read from the Delta Lake folder of its **data domain** (`data/delta
 | Connector | Folder | Domain | Tables | Kinds |
 |---|---|---|---|---|
 | `legal-store` | `data/delta/legal/` | Legal agreements: ISDA masters and credit support annexes | effective (a row when an entity changes) | `agreement`, `csa` |
-| `credit-store` | `data/delta/credit/` | Counterparty-credit results: exposure, CVA, SA-CCR, limits | snapshot (every business date) | `netting-set`, `credit-limit`, `exposure-profile`, `cva`, `sa-ccr` |
+| `credit-store` | `data/delta/credit/` | Counterparty-credit results: exposure, CVA, SA-CCR, limits | snapshot (every business date) | `netting-set`, `credit-limit`, `cva`, `sa-ccr` |
 | `collateral-store` | `data/delta/collateral/` | Collateral and margin: balances, calls, SIMM | snapshot (every business date) | `collateral-balance`, `margin-call`, `simm` |
+
+### Exposure: the exposure engine
+
+The pack's exposure profiles are computed, never stored: the server nets every trade's mark to market on every path of the upstream simulation run (`exposure-path`, one row per trade and grid date, the run's grid in `simulation-run`) per netting set, applies each CSA's collateral path by path (thresholds, minimum transfer amounts, independent amount, rounding, lagged by the margin period of risk) and reads EE, ENE, effective EE, PFE at 95% and 99%, EPE and EEPE for any scope: `EXP NSET:NS-ALDERSHOT-FRA <GO>`, `EXP CPTY:CP-ALDERSHOT <GO>` (its netting sets summed path by path), `EXP GROUP:GRP-ALDERSHOT <GO>`, `EXP LE:LE-NY <GO>`, `EXP TRD:<trade> <GO>` (a trade alone). The netting-set and counterparty pages show the engine's figures computed as they open. Each loaded date lives in a memory-mapped hot file under the data folder (`drishti.ccr.exposure`); the official end-of-day figures are published to `risk-results/exposure-official` and `exposure-official-cpty`. The API is `/api/v1/exposure`; the data contract is `docs/contracts/EXP.md`.
 
 Load real data into each domain's folder, or point a domain at a database instead by overriding its connector in the site configuration. For a demonstration lake built from the generated samples, run `uv run --with deltalake --with pyarrow python tools/packgen/banking/make_data.py --lake data/delta`.
 
@@ -55,7 +59,6 @@ Load real data into each domain's folder, or point a domain at a database instea
 | `csa` | Credit support annex | `CSA` | `CSA-…` | `CSA_ID` | Collateral terms: thresholds, minimum transfer, eligible collateral and haircuts. |
 | `netting-set` | Netting set | `NSET` | `NS-…` | `NETTING_SET_ID` | Trades that net on close-out under one agreement and CSA, with exposure and collateral. |
 | `credit-limit` | Credit limit | `LIM` | `LIM-…` | `LIMIT_ID` | PFE limit by tenor bucket for a counterparty, with utilisation. |
-| `exposure-profile` | Exposure profile | `EXP` | `EXP-…` | `PROFILE_ID` | Simulated EE, EPE, ENE and PFE by time bucket for a netting set. |
 | `cva` | CVA / XVA | `CVA` | `CVA-…` | `RESULT_ID` | Credit, debit and funding valuation adjustments with sensitivities. |
 | `sa-ccr` | SA-CCR exposure | `SACCR` | `SACCR-…` | `CALC_ID` | Regulatory EAD: replacement cost, PFE add-ons by asset class, multiplier. |
 | `collateral-balance` | Collateral balance | `COLL` | `COLL-…` | `BALANCE_ID` | Collateral held and posted under a CSA, by asset, after haircuts. |
@@ -82,9 +85,9 @@ Collateral terms: thresholds, minimum transfer, eligible collateral and haircuts
 
 Trades that net on close-out under one agreement and CSA, with exposure and collateral.
 
-**Fields its Sutra reads:** `TRADE_COUNT`, `NET_MTM`, `COLLATERAL`, `EE_PEAK`, `PFE_PEAK`, `LIMIT`, `UTILISATION`, `CVA`, `PROFILE`, `TRADES`, `BY_ASSET`.
+**Fields its Sutra reads:** `TRADE_COUNT`, `NET_MTM`, `COLLATERAL`, `EXPOSURE_ENGINE`, `LIMIT`, `UTILISATION`, `CVA`, `TRADES`, `BY_ASSET`.
 
-**Links:** `COUNTERPARTY` → Counterparty (`counterparty`), `AGREEMENT` → Agreement (`agreement`), `CSA` → CSA (`csa`), `CREDIT_LIMIT` → Credit limit (`credit-limit`), `EXPOSURE_PROFILE` → Exposure profile (`exposure-profile`), `CVA_RESULT` → CVA (`cva`), `SACCR` → SA-CCR (`sa-ccr`), `SIMM` → SIMM (`simm`), `COLLATERAL_BALANCE` → Collateral (`collateral-balance`).
+**Links:** `COUNTERPARTY` → Counterparty (`counterparty`), `AGREEMENT` → Agreement (`agreement`), `CSA` → CSA (`csa`), `CREDIT_LIMIT` → Credit limit (`credit-limit`), `CVA_RESULT` → CVA (`cva`), `SACCR` → SA-CCR (`sa-ccr`), `SIMM` → SIMM (`simm`), `COLLATERAL_BALANCE` → Collateral (`collateral-balance`).
 
 ### Credit limit (`credit-limit`)
 
@@ -93,14 +96,6 @@ PFE limit by tenor bucket for a counterparty, with utilisation.
 **Fields its Sutra reads:** `COUNTERPARTY_NAME`, `MEASURE`, `LIMIT`, `USED`, `UTILISATION`, `STATUS`, `BUCKETS`.
 
 **Links:** `COUNTERPARTY` → Counterparty (`counterparty`).
-
-### Exposure profile (`exposure-profile`)
-
-Simulated EE, EPE, ENE and PFE by time bucket for a netting set.
-
-**Fields its Sutra reads:** `EPE`, `EEPE`, `PFE_PEAK`, `PATHS`, `RUN_DATE`, `BUCKETS`.
-
-**Links:** `NETTING_SET` → Netting set (`netting-set`).
 
 ### CVA / XVA (`cva`)
 

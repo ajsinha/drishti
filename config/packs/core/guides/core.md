@@ -64,7 +64,7 @@ Load real data into each domain's folder, or point a domain at a database instea
 
 A legal entity the bank trades with: identifiers (LEI, UEN), rating, sector, country of risk and parent group.
 
-**Fields its Sutra reads:** `NAME`, `LEI`, `RATING`, `SECTOR`, `COUNTRY_OF_RISK`, `UEN`, `TYPE`, `NET_MTM`, `PFE_PEAK`, `NETTING_SETS`, `HIERARCHY`.
+**Fields its Sutra reads:** `NAME`, `LEI`, `RATING`, `SECTOR`, `COUNTRY_OF_RISK`, `UEN`, `TYPE`, `NET_MTM`, `EXPOSURE_ENGINE`, `NETTING_SETS`, `HIERARCHY`.
 
 **Links:** `GROUP` → Group (`counterparty-group`), `CREDIT_LIMIT` → Credit limit (`credit-limit`), `CREDIT_CURVE` → Credit curve (`credit-curve`).
 

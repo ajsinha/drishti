@@ -17,7 +17,6 @@ plugin: duckdb
 kinds:
 - netting-set
 - credit-limit
-- exposure-profile
 - cva
 - sa-ccr
 description: credit-store read from duckdb (the former application-duckdb.yaml profile)

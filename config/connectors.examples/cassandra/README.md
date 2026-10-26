@@ -74,7 +74,7 @@ CREATE TABLE "trading"."kind_days"   (… "generation" int, "buckets" int, "rows
 | `risk-store.yaml` | `risk` | `var`, `stress-scenario`, `stress-result`, `frtb-sensitivity`, `pnl-explain` |
 | `market-store.yaml` | `market` | twenty market-data kinds |
 | `reference-store.yaml` | `reference` | `counterparty`, `book`, `desk`, `trader`, `csa`, `legal-entity` and six more, effective |
-| `credit-store.yaml` | `credit` | `netting-set`, `credit-limit`, `exposure-profile`, `cva`, `sa-ccr` |
+| `credit-store.yaml` | `credit` | `netting-set`, `credit-limit`, `cva`, `sa-ccr` |
 | `collateral-store.yaml` | `collateral` | `collateral-balance`, `margin-call`, `simm` |
 
 The id rule (bucket = Murmur3 of the id), generations and promoted columns are in
@@ -96,7 +96,7 @@ not merged) and is applied within seconds; with `trade-endur.yaml` on Cassandra,
 | File | Plugin | Kinds | What it is |
 |---|---|---|---|
 | `collateral-store.yaml` | `cassandra` | `collateral-balance`, `margin-call`, `simm` | collateral-store read from Apache Cassandra (loaded by tools/load-cassandra.sh) |
-| `credit-store.yaml` | `cassandra` | `netting-set`, `credit-limit`, `exposure-profile`, `cva`, `sa-ccr` | credit-store read from Apache Cassandra (loaded by tools/load-cassandra.sh) |
+| `credit-store.yaml` | `cassandra` | `netting-set`, `credit-limit`, `cva`, `sa-ccr` | credit-store read from Apache Cassandra (loaded by tools/load-cassandra.sh) |
 | `market-store.yaml` | `cassandra` | `ir-curve`, `repo-curve`, `fx-spot`, `fx-forward-curve`, `fx-vol-surface`, `ir-vol-cube`, `cap-vol-surface`, `equity`, `equity-index`, `dividend-curve`, `equity-vol-surface`, `credit-curve`, `inflation-index`, `inflation-curve`, `commodity`, `commodity-curve`, `commodity-vol-surface`, `rate-fixing`, `bond`, `correlation-matrix` | market-store read from Apache Cassandra (loaded by tools/load-cassandra.sh) |
 | `reference-store.yaml` | `cassandra` | `counterparty`, `counterparty-group`, `issuer`, `agreement`, `ccp`, `legal-entity`, `book`, `desk`, `trader`, `calendar`, `csa`, `clearing-account` | reference-store read from Apache Cassandra (loaded by tools/load-cassandra.sh) |
 | `risk-store.yaml` | `cassandra` | `var`, `stress-scenario`, `stress-result`, `frtb-sensitivity`, `pnl-explain` | risk-store read from Apache Cassandra (loaded by tools/load-cassandra.sh) |

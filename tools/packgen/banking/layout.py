@@ -57,7 +57,7 @@ PACKS = {
         "description": "ISDA master agreements and CSAs, netting sets, exposure and PFE, CVA/XVA, SA-CCR, credit limits, collateral, "
                        "margin calls and SIMM.",
         "kinds": {"legal": ["agreement", "csa"],
-                  "credit": ["netting-set", "credit-limit", "exposure-profile", "cva", "sa-ccr"],
+                  "credit": ["netting-set", "credit-limit", "cva", "sa-ccr"],
                   "collateral": ["collateral-balance", "margin-call", "simm"]}},
 }
 

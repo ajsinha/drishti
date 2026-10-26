@@ -63,7 +63,7 @@ column hash `{<domain>:<kind>:<yyyyMMdd>}:cols:<g>`, the zstd dictionaries `<dom
 | `reference:` | `counterparty`, `counterparty-group`, `issuer`, `agreement`, `ccp`, `legal-entity`, `book`, `desk`, `trader`, `calendar`, `csa`, `clearing-account` |
 | `market:` | 20 kinds: curves (`ir-curve`, `repo-curve`, `fx-forward-curve`, `credit-curve`, …), surfaces, `fx-spot`, `equity`, `bond`, `rate-fixing`, `correlation-matrix` |
 | `risk:` | `var`, `stress-scenario`, `stress-result`, `frtb-sensitivity`, `pnl-explain` |
-| `credit:` | `netting-set`, `credit-limit`, `exposure-profile`, `cva`, `sa-ccr` |
+| `credit:` | `netting-set`, `credit-limit`, `cva`, `sa-ccr` |
 | `collateral:` | `collateral-balance`, `margin-call`, `simm` |
 
 ## Examples
@@ -82,7 +82,7 @@ other two off. Over TLS, see `config/connectors.examples/other/redis-tls.yaml`.
 | File | Plugin | Kinds | What it is |
 |---|---|---|---|
 | `collateral-store.yaml` | `redis` | `collateral-balance`, `margin-call`, `simm` | collateral-store read from redis (the former application-redis.yaml profile) |
-| `credit-store.yaml` | `redis` | `netting-set`, `credit-limit`, `exposure-profile`, `cva`, `sa-ccr` | credit-store read from redis (the former application-redis.yaml profile) |
+| `credit-store.yaml` | `redis` | `netting-set`, `credit-limit`, `cva`, `sa-ccr` | credit-store read from redis (the former application-redis.yaml profile) |
 | `market-store.yaml` | `redis` | `ir-curve`, `repo-curve`, `fx-spot`, `fx-forward-curve`, `fx-vol-surface`, `ir-vol-cube`, `cap-vol-surface`, `equity`, `equity-index`, `dividend-curve`, `equity-vol-surface`, `credit-curve`, `inflation-index`, `inflation-curve`, `commodity`, `commodity-curve`, `commodity-vol-surface`, `rate-fixing`, `bond`, `correlation-matrix` | market-store read from redis (the former application-redis.yaml profile) |
 | `reference-store.yaml` | `redis` | `counterparty`, `counterparty-group`, `issuer`, `agreement`, `ccp`, `legal-entity`, `book`, `desk`, `trader`, `calendar`, `csa`, `clearing-account` | reference-store read from redis (the former application-redis.yaml profile) |
 | `risk-store.yaml` | `redis` | `var`, `stress-scenario`, `stress-result`, `frtb-sensitivity`, `pnl-explain` | risk-store read from redis (the former application-redis.yaml profile) |

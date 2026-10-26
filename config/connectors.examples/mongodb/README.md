@@ -60,7 +60,7 @@ The database holds, per domain, the collections of the [mongodb connector README
 | `reference`, `reference_columns` | `counterparty`, `counterparty-group`, `issuer`, `agreement`, `ccp`, `legal-entity`, `book`, `desk`, `trader`, `calendar`, `csa`, `clearing-account` |
 | `market`, `market_columns` | 20 kinds: curves (`ir-curve`, `repo-curve`, `fx-forward-curve`, `credit-curve`, …), surfaces, `fx-spot`, `equity`, `bond`, `rate-fixing`, `correlation-matrix` |
 | `risk`, `risk_columns` | `var`, `stress-scenario`, `stress-result`, `frtb-sensitivity`, `pnl-explain` |
-| `credit`, `credit_columns` | `netting-set`, `credit-limit`, `exposure-profile`, `cva`, `sa-ccr` |
+| `credit`, `credit_columns` | `netting-set`, `credit-limit`, `cva`, `sa-ccr` |
 | `collateral`, `collateral_columns` | `collateral-balance`, `margin-call`, `simm` |
 
 ## Examples
@@ -79,7 +79,7 @@ other two off. Over TLS, see `config/connectors.examples/other/positions-mongo.y
 | File | Plugin | Kinds | What it is |
 |---|---|---|---|
 | `collateral-store.yaml` | `mongodb` | `collateral-balance`, `margin-call`, `simm` | collateral-store read from mongodb (the former application-mongodb.yaml profile) |
-| `credit-store.yaml` | `mongodb` | `netting-set`, `credit-limit`, `exposure-profile`, `cva`, `sa-ccr` | credit-store read from mongodb (the former application-mongodb.yaml profile) |
+| `credit-store.yaml` | `mongodb` | `netting-set`, `credit-limit`, `cva`, `sa-ccr` | credit-store read from mongodb (the former application-mongodb.yaml profile) |
 | `market-store.yaml` | `mongodb` | `ir-curve`, `repo-curve`, `fx-spot`, `fx-forward-curve`, `fx-vol-surface`, `ir-vol-cube`, `cap-vol-surface`, `equity`, `equity-index`, `dividend-curve`, `equity-vol-surface`, `credit-curve`, `inflation-index`, `inflation-curve`, `commodity`, `commodity-curve`, `commodity-vol-surface`, `rate-fixing`, `bond`, `correlation-matrix` | market-store read from mongodb (the former application-mongodb.yaml profile) |
 | `reference-store.yaml` | `mongodb` | `counterparty`, `counterparty-group`, `issuer`, `agreement`, `ccp`, `legal-entity`, `book`, `desk`, `trader`, `calendar`, `csa`, `clearing-account` | reference-store read from mongodb (the former application-mongodb.yaml profile) |
 | `risk-store.yaml` | `mongodb` | `var`, `stress-scenario`, `stress-result`, `frtb-sensitivity`, `pnl-explain` | risk-store read from mongodb (the former application-mongodb.yaml profile) |

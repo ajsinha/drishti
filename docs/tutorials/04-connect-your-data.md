@@ -263,7 +263,7 @@ $ drishti-console/.venv/bin/python tools/drishti.py connector list --origin file
   ----------------  ------  --------  -----------------------------------------------------------  --------  -----------------  --------
   civic-store       file    delta     jurisdiction,party,office-holder +3                          running   world-economy
   collateral-store  file    delta     collateral-balance,margin-call,simm                          running   counterparty-risk
-  credit-store      file    delta     netting-set,credit-limit,exposure-profile +2                 running   counterparty-risk
+  credit-store      file    delta     netting-set,credit-limit,cva +1                            running   counterparty-risk
   desk-ledger       file    jdbc      ledger-entry                                                 down
   desk-quotes       file    file      desk-quote                                                   running
   ecb-estr-feed     file    feed      rate-fixing                                                  disabled  market-data

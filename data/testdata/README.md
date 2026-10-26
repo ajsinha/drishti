@@ -27,7 +27,7 @@ data/testdata/
   trades/murex/                 5,000 MUREX trades
   core/<kind>/                  counterparties, groups, legal entities, books, desks, traders, calendars, issuers, CCPs, clearing accounts
   market-data/<kind>/           curves, vol surfaces and cubes, FX, fixings, indices, equities, commodities, bonds, correlations
-  counterparty-risk/<kind>/     agreements, CSAs, netting sets, collateral balances, margin calls, credit limits, exposure, CVA, SA-CCR, SIMM
+  counterparty-risk/<kind>/     agreements, CSAs, netting sets, collateral balances, margin calls, credit limits, CVA, SA-CCR, SIMM, exposure paths
   market-risk/<kind>/           trade valuations, FRTB sensitivities, VaR, stress scenarios and results, P&L explain
   news-and-markets/quote/       a REAL snapshot of the twenty companies' quotes (a year of daily bars), Yahoo Finance
   news-and-markets/news/        a REAL snapshot of the companies' and topics' headlines, Google News
@@ -136,7 +136,6 @@ on the last day, and the folder's compressed size (MB).
 | `market-data/equity` | market-data · `equity` | `TICKER` | `market-store` → `market/equity` | business_date | 10 | 10–10 | 10 | 0.93 |
 | `market-data/equity-index` | market-data · `equity-index` | `INDEX_ID` | `market-store` → `market/equity-index` | business_date | 5 | 5–5 | 5 | 0.09 |
 | `market-data/equity-vol-surface` | market-data · `equity-vol-surface` | `SURFACE_ID` | `market-store` → `market/equity-vol-surface` | business_date | 15 | 0–0 | 15 | 0.00 |
-| `counterparty-risk/exposure-profile` | counterparty-risk · `exposure-profile` | `PROFILE_ID` | `credit-store` → `credit/exposure-profile` | business_date | 76 | 76–76 | 76 | 1.21 |
 | `market-risk/frtb-sensitivity` | market-risk · `frtb-sensitivity` | `RESULT_ID` | `risk-store` → `risk/frtb-sensitivity` | business_date | 30 | 0–0 | 30 | 0.00 |
 | `market-data/fx-forward-curve` | market-data · `fx-forward-curve` | `CURVE_ID` | `market-store` → `market/fx-forward-curve` | business_date | 12 | 11–12 | 12 | 0.09 |
 | `market-data/fx-spot` | market-data · `fx-spot` | `PAIR` | `market-store` → `market/fx-spot` | business_date | 12 | 12–12 | 12 | 0.18 |
@@ -226,6 +225,23 @@ There is no `position` folder: the server derives positions from the vectors by 
 a date (7,984 on the last day). The stored `var` and `var-node` folders were retired in 2.8.0, and no document carries a VaR figure:
 the engine computes them. `python3 tools/packgen/var/make_var_data.py --check` says whether the folders match the trades;
 `--budget <n> --out <a folder outside the repository>` values a sample of `n` trades a book (a smaller set for a quick local run).
+
+## The exposure engine's data (counterparty-risk, dated by its documents)
+
+Two counterparty-risk folders feed the exposure engine ([EXP.md](../../docs/contracts/EXP.md)). They are written by
+`tools/packgen/ccr/make_ccr_data.py` (which `make_testdata.py` runs) from the netting sets above, and are **dated by their documents**,
+as the VaR folders are: `lake demo` loads each in one run into the risk lake's domain (`risk/`), moving the run id, the grid dates and the
+rows' ids with the business dates. 7.2 MB in all (2.9.0).
+
+| Folder | Kind · key | Dates | Documents |
+|---|---|---|---|
+| `counterparty-risk/simulation-run` | `simulation-run` · `RUN_ID` | the last day | XR-<date>-01: 200 paths, a grid of 24 dates (13 primary dates 1W .. 10Y and their 10-business-day look-back dates), the model |
+| `counterparty-risk/exposure-path` | `exposure-path` · `PATH_ROW_ID` | the last day | 9,031 rows: every live member trade (627) of eight netting sets (CP-ALDERSHOT's four, NS-HARBOURLINE-LDN-NY, NS-KESTREL-FRA, NS-AURORA-TKY, NS-CASCADIA-TKY) and grid date up to its maturity, 200 path values each (the vector column `MTM`, whole USD) |
+
+The other netting sets have no paths in the demo: their pages say so. The stored `exposure-profile` folder was retired in 2.9.0, and no
+netting set or counterparty carries an exposure figure: the engine computes them. `python3 tools/packgen/ccr/make_ccr_data.py --check`
+says whether the folders match the netting sets; `--full --out <a folder outside the repository>` writes every netting set that fits in
+10,000 trades with 500 paths (a larger local set).
 
 ## The market snapshot (news-and-markets, offline)
 
