@@ -117,6 +117,26 @@ public enum ErrorCode {
     VAR_INCONSISTENT_DATE("DRS-5203", 422),
     /** VaR: a date's vectors need more memory than the engine's budget (drishti.var.memory-budget-mb): capacity, try later or raise it. */
     VAR_CAPACITY("DRS-5204", 503),
+    /** Exposure: a bad scope word or parameter ({@code q}, {@code collateral}, {@code date} not a grid date, {@code by}, {@code run}). */
+    EXPOSURE_BAD_PARAMETER("DRS-5440", 400),
+    /**
+     * Exposure: a date's run is inconsistent (its grid, two batch ids, a duplicate row, a trade in two netting sets): the date is not
+     * loaded and the date before answers with a warning; asked with {@code strict=true}, the answer is this refusal.
+     */
+    EXPOSURE_INCONSISTENT_RUN("DRS-5441", 409),
+    /** Exposure: a what-if's candidate paths are not of the date's run (another run id, another number of paths or grid dates). */
+    EXPOSURE_WHATIF_RUN("DRS-5442", 400),
+    /** Exposure: the scope sums more netting sets than an interactive answer may (a bank-wide PFE): the official capture computes it. */
+    EXPOSURE_BATCH_JOB("DRS-5443", 503),
+    /**
+     * Exposure: a row of a date's exposure paths rejected when the date loads (a vector of another length, NaN or infinity, a grid index
+     * out of the run's grid); counted and listed in the answer's provenance, never padded.
+     */
+    EXPOSURE_ROW_REJECTED("DRS-5444", 422),
+    /** Exposure: a date's netting-set matrices need more memory than the budget (drishti.ccr.exposure.memory-budget-gb). */
+    EXPOSURE_CAPACITY("DRS-5445", 503),
+    /** Exposure: a what-if method this server does not run (the exact {@code paths} method runs in the Python engine, exposure-whatif). */
+    EXPOSURE_METHOD_UNAVAILABLE("DRS-5446", 501),
     /** A connector file or draft that fails validation. */
     CONNECTOR_INVALID("DRS-5031", 422),
     /** A connector changed since it was read (ETag mismatch), already exists, or is in use and the change was not confirmed. */
