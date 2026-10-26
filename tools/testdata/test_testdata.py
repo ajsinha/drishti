@@ -128,7 +128,7 @@ class TestData(unittest.TestCase):
                 self.assertTrue(list(folder.glob(f"changes-{day}*.jsonl.gz")), f"{ds['folder']} {day}")
         self.assertEqual({ds["pack"] for ds in self.m["datasets"]},
                          {"core", "market-data", "trading", "counterparty-risk", "market-risk", "world-economy", "news-and-markets",
-                          "us-equities", "gleif"})
+                          "us-equities", "gleif", "compute-demo"})
 
     def test_three_source_systems_of_5000_production_shaped_trades_amended_over_the_days(self):
         ids: list[str] = []
