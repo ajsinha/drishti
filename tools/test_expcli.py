@@ -129,6 +129,8 @@ class ExposureCli(unittest.TestCase):
         self.assertEqual(body["method"], "paths")
         self.assertEqual(body["candidates"][0]["paths"], {"copyOf": "CLY-4000879", "factor": -1.0})
         self.assertEqual(body["candidates"][0]["nettingSet"], "NS-ALDERSHOT-FRA")
+        self.assertEqual(FakeApi.calls[-2][1].split("?")[0], "/api/v1/exposure/scope/contributions")    # the trade's terms, for the addon proxy
+        self.assertIn("delta", body["candidates"][0])
         with tempfile.TemporaryDirectory() as d:
             f = Path(d) / "c.json"
             f.write_text(json.dumps([{"tradeId": "NEW-1", "assetClass": "FX", "notional": 1e7, "maturityDate": "2027-09-30", "mtm": 0}]),

@@ -214,7 +214,7 @@
           useClass(d.limit.use)]);
       } else {
         var r = peakTenorRow(d), ben = r.eeUncoll > 0 ? 1 - r.ee / r.eeUncoll : 0;
-        tiles.push(["Collateral benefit", S.collateral === "none" ? "—" : "−" + pct(ben, 0), S.collateral === "none" ? "the uncollateralised view"
+        tiles.push(["Collateral effect", S.collateral === "none" ? "—" : change(ben), S.collateral === "none" ? "the uncollateralised view"
           : "EE at " + (r.tenor || "") + " vs uncollateralised"]);
       }
     }
@@ -503,6 +503,12 @@
     return dl;
   }
 
+  /** Collateral's effect on EE as a signed change: a benefit of 0.65 is "−65%" (lower), a negative one (posted collateral raising the
+   *  exposure) "+380%" (higher). */
+  function change(benefit) {
+    return benefit >= 0 ? "−" + pct(benefit, 0) : "+" + pct(-benefit, 0);
+  }
+
   function coll(pane, d) {
     pane.textContent = "";
     var c = d.collateral || {}, a = c.atPeak || {}, two = h("div", "xx-two");
@@ -511,7 +517,7 @@
       ["Independent amount", m(c.independentAmount)], ["Rounding", c.rounding ? m(c.rounding) : "none"],
       ["Margin period (MPOR)", c.mporDays ? c.mporDays + " business days" + (c.frequencyDays > 1 ? ", remargined every " + c.frequencyDays : "") : "—"],
       ["EE at " + a.tenor + " without collateral", m(a.eeUncoll)], ["Collateral on the paths at " + a.tenor + ", mean", m(a.collateralMean)],
-      ["EE at " + a.tenor + " with collateral", m(a.ee)], ["Benefit", "−" + pct(a.benefit, 0)]]));
+      ["EE at " + a.tenor + " with collateral", m(a.ee)], ["Effect of collateral", change(a.benefit)]]));
     two.appendChild(kv([["Net MtM today", m(c.netMtm)], ["Collateral held today (net)", m(c.heldToday)], ["Initial margin held", m(c.imHeld)],
       ["Trades", int(c.trades)], ["Collateral model", c.model], ["Look-back used", c.lookbackUsed],
       ["Run-look-back flag", c.mporMismatch ? "MPOR_MISMATCH" : "none", c.mporMismatch ? "warn" : null],

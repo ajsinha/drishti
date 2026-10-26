@@ -249,8 +249,9 @@ From top to bottom:
   marked and opens the no-paths state ([section 13](#13-troubleshooting)).
 - **The tiles** (the headline): **Peak PFE** at the chosen q (with its tenor and date), **EPE** (first year, time-weighted), **EEPE**
   (running max of EE), **EAD (IMM, info)** (α 1.4 × EEPE), and either **Limit used** (a counterparty with a stored credit limit: peak PFE
-  at the limit's confidence over the limit, coloured by use) or **Collateral benefit** (EE at the peak tenor against the
-  uncollateralised EE). A trade's tiles are different: **Peak PFE alone** (the trade as if it had no netting set), **EE contribution**
+  at the limit's confidence over the limit, coloured by use) or **Collateral effect** (EE at the peak tenor against the
+  uncollateralised EE: "−65%" when collateral lowers it by 65%, "+380%" when posted collateral raises it, as on NS-ALDERSHOT-LDN, where
+  the bank has posted 98.8m). A trade's tiles are different: **Peak PFE alone** (the trade as if it had no netting set), **EE contribution**
   (its share of its netting set's EE at the set's peak date), **Netting benefit** (alone minus contribution) and **Desk**.
 - **The profile chart**: EE, PFE at q and EE uncollateralised over the primary dates, the peak marked; at a netting set the **path fan**
   (the 5–95% and 25–75% bands of the paths' exposures at every primary date, from `distribution?bands=true`).
@@ -588,8 +589,6 @@ system environment, `DRISHTI_COMPUTE_EXPOSURE_WORKERS` workers (4), 2 GB, 300 CP
 | `422 DRS-5444` counted in the provenance | rows rejected at load (vector length, NaN, grid index) | fix the rows upstream; never padded |
 | `403` on a `TRD:`, `DESK:`, `BOOK:`, `WHERE:` scope | your role sees a touched set only in aggregate | ask for `trades` access ([section 9](#9-who-sees-what-entitlements-and-audit)) |
 | the board's *used* is tiny (0.1% to 5%) | the stored credit limits were sized on the retired stored profiles | known, [section 28](#28-open-items) |
-| `drishti.py exposure whatif --like <trade> --method addon` adds 0 | `--like` sends no asset class, notional or maturity, which the addon needs (a known defect, [section 28](#28-open-items)) | use `--candidates FILE.json` with `assetClass`, `notional`, `maturityDate`, `mtm`, `delta`, or the explorer's Pre-deal tab |
-| the tile *Collateral benefit* shows "−65%" for a 65% reduction, or "−-380%" when collateral raises EE | a display defect of the sign ([section 28](#28-open-items)) | read the Collateral tab's EE with and without collateral |
 | the first answer of a date is slow | the date's rows are read from the lake and the hot file written | the next answers map the hot file; `status` shows it |
 | the flag `MPOR_MISMATCH` | a CSA's MPOR (+ frequency − 1) differs from the run's look-back | the run's look-back is used (decided) |
 | a trade listed in the load's t₀ check | its paths' mean at the first grid date departs from today's MtM | expected for short trades on the test data's amortising model; in production an upstream trade-version or market-data mismatch |
@@ -1560,7 +1559,7 @@ trade paths are the lake owner's: `GET /api/v1/exposure/retention` lists each da
 | `upstreamRef` candidates (an upstream what-if service) | not built (§24.1, question 8) |
 | Pruning trade-path reads by `NETTING_SET` statistics | planned (§26.2) |
 | Limits (LIM) and CVA | parked; still built on the stored profile's figures |
-| Known defects found writing tutorial 26 | `whatif --like` sends no asset class, notional or maturity (the addon then adds 0); the *Collateral benefit* tile and the Collateral tab's benefit put a "−" before the percentage (a 65% reduction reads "−65%", a rise "−-380%"); compare on another user's capture answers 404, not 403 |
+| Capture privacy | comparing with, or opening, another user's capture answers 404 "no exposure capture … you may read", not 403: as VaR's captures, Drishti does not say whether a capture it will not show you exists |
 
 ---
 

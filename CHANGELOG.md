@@ -17,6 +17,7 @@
 
 ## Unreleased
 
+- Exposure fixes from tutorial 26: the explorer's *Collateral effect* tile and the Collateral tab show collateral's effect on EE with its sign ("−65%" lower, "+380%" higher where posted collateral raises it; it read "−-380%"); `drishti.py exposure whatif --like` sends the copied trade's asset class, notional, maturity and MtM, so `--method addon` no longer adds 0.
 - **Docs: exposure in two documents, the guide and tutorial 26 (product owner, 2026-10-26: each measure has exactly two documents and
   two help entries).** [EXPOSURE_GUIDE.md](docs/guides/EXPOSURE_GUIDE.md) is the one exposure reference: Part I using it (EE, ENE,
   EEE, PFE, EPE, EEPE and EAD with worked numbers, the explorer screen by screen, scopes, collateral and netting, captures and compare,

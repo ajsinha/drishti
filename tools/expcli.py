@@ -110,6 +110,18 @@ def render_whatif(w: dict, say) -> None:
         say("  " + w["note"])
 
 
+def like_candidate(api, trade: str, factor: float, nset: str | None) -> dict:
+    """A candidate copying a booked trade, scaled by ``factor``: its paths (the ``paths`` method) and, as the explorer's pre-deal form
+    sends them, its asset class, notional, maturity and MtM scaled the same way (the ``addon`` proxy needs them)."""
+    scope = f"NSET:{nset}" if nset else f"TRD:{trade}"
+    rows = api.json("GET", "/api/v1/exposure/scope/contributions?" + urllib.parse.urlencode({"scope": scope, "by": "trade", "figure": "EE"})).get("rows") or []
+    r = next((x for x in rows if x.get("key") == trade), {})
+    return {"tradeId": "CANDIDATE-1", "label": f"{factor:g} x {trade}", "nettingSet": nset or r.get("nettingSet") or "",
+            "paths": {"copyOf": trade, "factor": factor}, "assetClass": r.get("assetClass"),
+            "notional": abs((r.get("notional") or 0) * factor), "maturityDate": r.get("maturity"), "mtm": (r.get("mtm") or 0) * factor,
+            "delta": -1 if factor < 0 else 1}
+
+
 def candidates_of(path: str, err) -> list[dict]:
     """The candidates of a JSON file: a list of {tradeId, nettingSet, paths: {...}, assetClass, notional, maturityDate, mtm}, or {"candidates": [...]}."""
     try:
@@ -197,8 +209,7 @@ def register(groups, srv, ctx: dict) -> None:
             if a.candidates:
                 cands = candidates_of(a.candidates, CliError)
             elif a.like:
-                cands = [{"tradeId": "CANDIDATE-1", "label": f"{a.factor:g} x {a.like}", "nettingSet": a.set or "",
-                          "paths": {"copyOf": a.like, "factor": a.factor}}]
+                cands = [like_candidate(api, a.like, a.factor, a.set)]
             else:
                 raise CliError("give the candidates: --like TRADE [--factor F] [--set NETTING_SET], or --candidates FILE.json", 2)
             body = {"scope": a.scope, "method": a.method, "candidates": cands}
