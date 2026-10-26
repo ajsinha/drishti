@@ -156,10 +156,6 @@ def _nasdaq(cache: Path) -> dict[str, dict]:
     return out
 
 
-def _usd_sum(rows: list[dict], key: str):
-    """A total of the rows that report in USD (a total over CAD and GBP figures would mean nothing)."""
-    return sum(r[key] or 0 for r in rows if r.get("CURRENCY", "USD") == "USD")
-
 
 def build(cache: Path) -> dict[str, dict[str, dict]]:
     wd = _load_json(cache / "wikidata.json")
@@ -241,14 +237,14 @@ def build(cache: Path) -> dict[str, dict[str, dict]]:
             fact_ids.append({"FACT": fid, "LABEL": label})
             hist = []
             for i, r in enumerate(rows):
-                chg = (r["value"] - rows[i - 1]["value"]) / abs(rows[i - 1]["value"]) * 100 if i and rows[i - 1]["value"] else None
-                hist.append({"YEAR": r["year"], "PERIOD_END": r["end"], "VALUE": r["value"], "CHANGE_PCT": _r(chg, 2), "FILED": r.get("filed", ""),
+                # the change on the year is not written: the page computes it from the values (since 2.9.2)
+                hist.append({"YEAR": r["year"], "PERIOD_END": r["end"], "VALUE": r["value"], "FILED": r.get("filed", ""),
                              "ACCESSION": r.get("accn", "")})
             lv = rows[-1]
             unit_used = lv.get("unit", unit.replace("/share", "/shares")).replace("/shares", "/share")
             facts[fid] = {"FACT_ID": fid, "COMPANY": ticker, "COMPANY_NAME": name, "CIK": c10, "CONCEPT": concept, "LABEL": label, "UNIT": unit_used,
                           "XBRL_TAG": ", ".join(sorted({r.get("tag", "") for r in rows})), "LATEST": lv["value"], "LATEST_YEAR": lv["year"],
-                          "CHANGE_PCT": hist[-1]["CHANGE_PCT"], "YEARS": len(hist), "HISTORY": hist,
+                          "YEARS": len(hist), "HISTORY": hist,
                           "_meta": _meta(f"XBRL companyfacts ({(lv.get('form') or '10-K').removesuffix('/A')})", retrieved)}
         flist = []
         for fl in sub.get("filings", []):
@@ -308,12 +304,8 @@ def build(cache: Path) -> dict[str, dict[str, dict]]:
                 rows.append({"TICKER": t, "NAME": c["NAME"], "SECTOR": c["SECTOR"], "SIC": c["SIC"], "SIC_DESCRIPTION": c["SIC_DESCRIPTION"],
                              "EXCHANGE": c["EXCHANGE"], "REVENUE": c["REVENUE"], "NET_INCOME": c["NET_INCOME"],
                              "CURRENCY": c["CURRENCY"], "FISCAL_YEAR": c["FISCAL_YEAR"], "SINCE": hit["SINCE"]})
-        by_sector: dict[str, int] = {}
-        for r in rows:
-            by_sector[r["SECTOR"]] = by_sector.get(r["SECTOR"], 0) + 1
-        indexes[code] = {"INDEX": code, "NAME": label, "MEMBERS": len(rows), "SECTORS": len(by_sector),
-                         "REVENUE": _usd_sum(rows, "REVENUE"), "NET_INCOME": _usd_sum(rows, "NET_INCOME"),
-                         "BY_SECTOR": [{"LABEL": k, "VALUE": v} for k, v in sorted(by_sector.items(), key=lambda kv: (-kv[1], kv[0]))],
+        # the members' totals (revenue, net income, SIC divisions) are not written: the page computes them from the rows (since 2.9.2)
+        indexes[code] = {"INDEX": code, "NAME": label, "MEMBERS": len(rows),
                          "ROWS": rows, "PROVENANCE": {**(PROV_LIST if code in F.LISTS else PROV_INDEX), "RETRIEVED_AT": retrieved},
                          "_meta": {"source": "drishti list" if code in F.LISTS else "wikidata",
                                    "dataset": "a curated list of SEC filers" if code in F.LISTS else "index membership (Wikidata P361)",

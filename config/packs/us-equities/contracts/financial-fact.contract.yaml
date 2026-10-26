@@ -111,11 +111,6 @@ fields:
   presence: required
   description: Fiscal year
   example: 2025
-- name: CHANGE_PCT
-  type: rate
-  presence: optional
-  description: Change on the year
-  example: 5.67
 - name: YEARS
   type: integer
   presence: required
@@ -142,11 +137,6 @@ nested:
     presence: required
     description: Value
     example: 20853000000
-  - name: CHANGE_PCT
-    type: rate
-    presence: optional
-    description: Change
-    example: 31.35
   - name: FILED
     type: date
     presence: required
@@ -202,12 +192,13 @@ validation:
   - Stockholders' equity
   - Total assets
   - Total liabilities
-notes: []
+notes:
+- 'CHANGE_PCT and HISTORY[].CHANGE_PCT left the record in 2.9.2: the page computes each year''s change from the values (docs/guides/GROUPINGS_ANALYTICS_GUIDE.md
+  section 16).'
 review:
 - 'required inferred from 100% coverage in 2002 documents (2 samples and 2000 test-data documents (data/testdata/us-equities/financial-fact/snapshot-2026-10-24.jsonl.gz)):
   confirm each required field is mandatory upstream, and each optional one may be empty.'
 - 'a snapshot refreshed when tools/publicdata/us_equities.py runs: confirm the refresh cadence.'
 - 'enum values inferred from the data, not from a glossary: CONCEPT, LABEL: confirm they are closed lists.'
-- 'number types decided by the field''s name: CHANGE_PCT rate, HISTORY[].VALUE amount, HISTORY[].CHANGE_PCT rate: confirm amount, rate or integer.'
 - 'no unit stated for the amounts LATEST, HISTORY[].VALUE (docs/contracts/README.md section 7: USD unless stated): confirm the currency.'
 - 'no description in about.yaml or the Sutras for COMPANY_NAME, CIK: write them in the pack''s config/about.yaml glossary.'

@@ -181,18 +181,13 @@ Fields, from 1 sample document:
 | `INDEX` | string | `DJIA` | Index code (DJIA |
 | `NAME` | string | `Dow Jones Industrial Average` | Index |
 | `MEMBERS` | integer | `34` | Members |
-| `SECTORS` | integer | `5` | SIC divisions |
-| `REVENUE` | integer | `4829280300000` | Members' revenue |
-| `NET_INCOME` | integer | `804912500000` | Members' net income |
-| `BY_SECTOR` | list of objects |  | Members by SIC division |
-| `ROWS` | list of objects |  | The members |
+| `ROWS` | list of objects |  | The members (the totals and divisions are computed on the page) |
 | `PROVENANCE` | object |  | Source |
 
 Nested structures:
 
 | Path | Fields |
 |---|---|
-| `BY_SECTOR[]` | `LABEL` (string), `VALUE` (integer) |
 | `ROWS[]` | `TICKER` (string), `NAME` (string), `SECTOR` (string), `SIC` (string), `SIC_DESCRIPTION` (string), `EXCHANGE` (string), `REVENUE` (integer), `NET_INCOME` (integer), `CURRENCY` (string), `FISCAL_YEAR` (integer), `SINCE` (null) |
 | `PROVENANCE` | `SOURCE` (string), `LICENCE` (string), `NOTE` (string), `RETRIEVED_AT` (date) |
 
@@ -297,7 +292,6 @@ Fields, from 2 sample documents:
 | `XBRL_TAG` | string | `RevenueFromContractWithCustomerExcluding…` | XBRL tags read |
 | `LATEST` | integer | `44328000000` | Latest |
 | `LATEST_YEAR` | integer | `2025` | Fiscal year |
-| `CHANGE_PCT` | number | `5.67` | Change on the year |
 | `YEARS` | integer | `10` | Years |
 | `HISTORY` | list of objects |  | Values by fiscal year |
 
@@ -305,7 +299,7 @@ Nested structures:
 
 | Path | Fields |
 |---|---|
-| `HISTORY[]` | `YEAR` (integer), `PERIOD_END` (date), `VALUE` (integer), `CHANGE_PCT` (number), `FILED` (date), `ACCESSION` (string) |
+| `HISTORY[]` | `YEAR` (integer), `PERIOD_END` (date), `VALUE` (integer), `FILED` (date), `ACCESSION` (string) |
 
 Links: `COMPANY` → `us-company`.
 
