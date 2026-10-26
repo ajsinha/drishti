@@ -66,14 +66,20 @@ public final class InboxHub implements AutoCloseable {
     /** Streams of {@code user} receive each new row until the subscription is closed. */
     public Subscription listen(String user, Consumer<Notice> listener) {
         if (open.getAndIncrement() == 0) {
+            // rows written while nothing was listening are in the inbox, not in a stream: the poll re-reads a window below its high-water
+            // mark for rows committed late, so the rows already in that window count as delivered (else the first stream opened after a
+            // quiet spell would replay up to WINDOW old notices as new ones)
+            long top = store.maxSeq();
+            List<Notice> written = store.after(Math.max(0, top - WINDOW), WINDOW);
             state.lock();
             try {
                 delivered.clear();
                 order.clear();
-                highWater = store.maxSeq();      // rows written while nothing was listening are in the inbox, not in a stream
+                highWater = top;
             } finally {
                 state.unlock();
             }
+            written.stream().filter(n -> n.seq() <= top).forEach(n -> firstDelivery(n.seq()));
         }
         listeners.computeIfAbsent(user, u -> new CopyOnWriteArrayList<>()).add(listener);
         return () -> {

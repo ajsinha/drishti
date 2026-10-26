@@ -17,6 +17,12 @@
 
 ## Unreleased
 
+- **Fixed: a flurry of old notices on opening the console.** When the first live stream opened on a server after a quiet spell (a
+  restart, or the only tab reopened), InboxHub re-read its window of the last 100 inbox rows for late commits and pushed them all as
+  new, so days-old "Run finished" notices toasted at once. Rows already in the inbox when the stream opens now count as delivered
+  (InboxHubTest). The console shows at most three toasts at once and folds a burst into "+N more on the bell", and a run's toast no
+  longer reads "Run Run finished".
+
 - **Scope narrowed (product owner, 2026-10-25): fundamentals and VaR only.**
   - Active: the data contracts of every command, and VaR complete.
   - Parked, designs kept: every other computed measure and its retirement.

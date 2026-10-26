@@ -1786,6 +1786,8 @@ An alert rule watches **one entity** and tells you when a condition becomes true
   message shows a masked value as `•••`.
 - New alerts show as a **toast** and a count on the **bell** among the round tools of the top bar, on every
   page. Click the bell to see them all, and to allow browser notifications. *Views → Alerts* opens the same page.
+  At most three toasts show at once; a burst adds one more toast, *+N more on the bell*, which opens the inbox. Only notices
+  written after the page opened toast: older ones wait in the inbox and on the bell's count.
 
 Worked example:
 

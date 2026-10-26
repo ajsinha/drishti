@@ -33,10 +33,22 @@
     .then(function (j) { count += (j && j.unread) || 0; show(); })
     .catch(function () { /* the count is a convenience */ });
   document.addEventListener('drishti:unread', function (e) { count = e.detail; });
+  var MAX_TOASTS = 3, more = null, moreCount = 0;                      // a burst shows three toasts and one "N more on the bell"
   function toast(cls, href, html) {
+    if (tray.querySelectorAll('.toast-a:not(.toast-more)').length >= MAX_TOASTS) {
+      moreCount++;
+      if (!more) {
+        more = document.createElement('a');
+        more.className = 'toast-a sev-info notice toast-more'; more.href = '/inbox';
+        tray.appendChild(more);
+        setTimeout(function () { if (more) { more.remove(); more = null; moreCount = 0; } }, 9000);
+      }
+      more.innerHTML = '<b>+' + moreCount + '</b> more on the bell';
+      return;
+    }
     var t = document.createElement('a');
     t.className = cls; t.href = href; t.innerHTML = html;
-    tray.appendChild(t);
+    tray.insertBefore(t, more);
     setTimeout(function () { t.remove(); }, 9000);
   }
   function onNotice(n) {
@@ -44,7 +56,8 @@
     var alertPath = n.type === 'alert' && typeof n.id === 'string' && n.id.charAt(0) === '/' && n.id.charAt(1) !== '/' ? n.id : '';       // an alert on a number: the path it opens
     var run = n.type === 'bi-run' ? String(n.entityId || n.id || '') : '';                 // a BI run finished (BI_RUNS.md 3.5): it opens where its result is drawn
     var href = run ? '/bi/run/' + encodeURIComponent(run) : alertPath ? alertPath : n.shareId ? '/share/' + encodeURIComponent(n.shareId) : (n.access && n.kind && n.id ? '/v/' + encodeURIComponent(n.kind) + '/' + encodeURIComponent(n.id) : '/inbox');
-    toast('toast-a sev-info notice', href, '<b>' + esc(run ? 'Run' : n.type || 'notice') + '</b> ' + esc(n.title) + (n.excerpt ? ' <span class="toast-x">\u201c' + esc(n.excerpt) + '\u201d</span>' : ''));
+    var label = run ? (/^Run\b/.test(n.title || '') ? '' : 'Run') : n.type || 'notice';       // "Run finished: …" needs no second "Run"
+    toast('toast-a sev-info notice', href, (label ? '<b>' + esc(label) + '</b> ' : '') + esc(n.title) + (n.excerpt ? ' <span class="toast-x">\u201c' + esc(n.excerpt) + '\u201d</span>' : ''));
     if (window.Notification && Notification.permission === 'granted') {
       try { new Notification((document.body.getAttribute('data-product') || document.title) + ' \u00b7 ' + (n.type || 'notice'), { body: n.title }); } catch (err) { /* not available */ }
     }
