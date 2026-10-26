@@ -1429,6 +1429,12 @@ pauses. A suspected node refutes the suspicion by itself as soon as it hears of 
 | `DRS-9204` | a computation passed its time budget and was stopped (HTTP 504): the pool's `timeout` (or `timeout-batch`), waiting for a worker included |
 | `DRS-9205` | a computation failed (HTTP 502): it crashed, passed its CPU or memory limit, the sandbox refused something (a socket, a process, a write outside its scratch folder), or the engine refused in words; for any other failure the traceback is in the server's log under the request id |
 | `DRS-9206` | no such compute approval request, or no such computation waiting or running on this node (HTTP 404) |
+| `DRS-9301` | write-back is off on this server: an administrator sets `edit.enabled: true` in `config/edit/edit.yaml` (or `DRISHTI_EDIT_ENABLED=true`) and restarts (HTTP 403) |
+| `DRS-9302` | a change was refused; the message says why: no Sutra's form with `save:` names the field, it is masked or read-only for you, a role is missing (the edit power, the field's roles, `restate` for a past date, `override` for Apply mine anyway), a reason is required, you tried to approve your own change, or a source command is not usable (its connector's writes are off or refused at load: Admin → Edits) (HTTP 403) |
+| `DRS-9303` | the change is no longer awaiting approval (someone decided first), or the fields moved since you opened the record: reopen it and edit again (HTTP 409) |
+| `DRS-9304` | the record's lane holds more changes than `lanes.max-lane-depth`: try again in a moment; the draft is kept (HTTP 503) |
+| `DRS-9305` | no such change id (HTTP 404) |
+| `DRS-9306` | edits are paused: the edit primary named by `edit.primary` is not reachable, or the cluster has no shared edit log (use PostgreSQL for the server's database, or name an edit primary); reading is not affected (HTTP 503) |
 | `DRS-6001`–`DRS-6010` | user management (see [USER_MANAGEMENT.md](../admin/USER_MANAGEMENT.md)); `DRS-6005` is a locked account |
 | `DRS-6011` | a start-up warning in the server log, not an answer: a `drishti.security.redact` entry names no field of the loaded packs' samples, so it masks nothing. Write the field as the data spells it (masks match in any case and convention) or remove the entry; Admin → Health lists such entries under `masksMatchingNothing` |
 | `DRS-7001` | a share link that is not yours, or does not exist (HTTP 404; the two look the same on purpose). Ask the sender to share it with you again |

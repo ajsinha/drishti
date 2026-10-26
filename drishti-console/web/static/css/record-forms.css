@@ -126,12 +126,15 @@ td .fm-adorn .fm-in { width: auto; flex: 1; }
 /* Write-back (WRITE_BACK.md 18.2): Submit, the review and confirm sheet, and what happened to a submitted draft. */
 .fm-submit { margin-left: .25rem; }
 .wb-sheet { width: min(46rem, calc(100vw - 2rem)); max-height: 86vh; overflow: auto; padding: 1rem 1.25rem; border-radius: var(--d-radius, 6px);
-  border: 1px solid var(--d-border, #888); background: var(--d-surface, #fff); color: var(--d-text, #111); }
+  border: 1px solid var(--d-border); background: var(--d-surface); color: var(--d-ink); }
+.wb-sheet h2, .wb-sheet h3, .wb-sheet p, .wb-sheet label { color: var(--d-ink); }
 .wb-sheet::backdrop { background: color-mix(in srgb, var(--d-bg, #000) 55%, transparent); }
 .wb-h { font-size: 1.05rem; margin: 0 0 .75rem; }
-.wb-change { border-top: 1px solid var(--d-border, #888); padding: .5rem 0; }
+.wb-change { border-top: 1px solid var(--d-border); padding: .5rem 0; }
 .wb-rec { font-size: .95rem; margin: 0 0 .35rem; font-family: var(--d-mono, monospace); }
-.wb-diff { width: 100%; font-size: .85rem; }
+.wb-diff { width: 100%; font-size: .85rem; border-collapse: collapse; margin: .25rem 0 .5rem; }
+.wb-diff th, .wb-diff td { padding: .3rem .5rem; border-bottom: 1px solid var(--d-border); text-align: left; }
+.wb-diff th { font-weight: 600; opacity: .8; }
 .wb-diff .wb-new { font-weight: 600; }
 .wb-moved td { background: color-mix(in srgb, var(--d-warn, #c80) 14%, transparent); }
 .wb-flag { color: var(--d-warn, #a60); font-family: inherit; font-size: .8rem; }

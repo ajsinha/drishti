@@ -119,7 +119,7 @@ public class StreamController {
         ViewModel shown = com.ash.drishti.server.net.NetServedBy.annotate(com.ash.drishti.server.edit.EditNotes.annotate(er, initial, ref, asOf), served);
         SseEmitter emitter = new SseEmitter(0L);
         // write-back on: a view of the current date stays open even when no source streams the record, so an applied change reaches it
-        boolean edited = er != null && er.layer().active() && (asOf == null || asOf.businessDate() == null);
+        boolean edited = er != null && er.layer().active() && (asOf == null || asOf.isLatest());
         if (!initial.provenance().live() && !edited) {
             // a past business date, or a static source: one view, no ticks, no slot held
             slot.release();

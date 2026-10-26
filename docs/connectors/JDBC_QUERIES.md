@@ -373,6 +373,35 @@ The connector's tests (`QueryModeTest`) run this shape against an in-memory data
 
 ---
 
+## 16. Writes: commands that change a record (2.8.0)
+
+A connector of the JDBC plugin may declare `writes:` ([CONNECTOR_FILES.md](CONNECTOR_FILES.md#writes-saving-to-the-source-280)): the
+statements write-back sends through its outbox for a form whose `save.target` is `source`. One command is one transaction in the
+database: the `already-applied` query first (it finds this change id: a resend writes nothing and is confirmed), then `sql`, committed
+only when it touched exactly `expect-rows` rows; 0 rows means the record moved (the change ends *refused at the source: conflicted*) and
+the overlay shown while it was pending is withdrawn.
+
+```yaml
+writes:
+  amend-notional:
+    kind: trade
+    params: [leg]                  # read from the row being edited
+    jdbc:
+      sql: >
+        UPDATE MX_TRADE_LEG SET NOTIONAL = :value, VERSION = VERSION + 1, DRISHTI_CHANGE_ID = :changeId
+         WHERE TRADE_ID = :entity AND LEG_NO = :leg AND VERSION = :basedOn
+      expect-rows: 1
+      already-applied: SELECT 1 FROM MX_TRADE_LEG WHERE TRADE_ID = :entity AND LEG_NO = :leg AND DRISHTI_CHANGE_ID = :changeId
+    confirm: reply
+    timeout: 30s
+```
+
+Parameters (`:name`) are bound as prepared-statement parameters, never pasted into the text; `::` casts and quoted text are left alone.
+The ones the server supplies: `:entity`, `:kind`, `:businessDate`, `:value` (the new value), `:from` (what the person saw), `:basedOn`
+(the record's version), `:changeId`, `:by`, `:reason`, `:at`, `:field`; any other must be declared in `params:`. A change of several
+fields sends one command per field, each with its own change id (`<id>#1`, `#2`). The connector's pool is used, a connection borrowed
+for the command only.
+
 ## Appendix: walk-through and worked examples
 
 Moved here from the former connector guides, so that everything about this connector is in one document.

@@ -66,17 +66,33 @@
         approved: 'was approved', confirmed: 'was confirmed by the source', 'refused-at-source': 'was refused by the source' }[d.type];
       toast('sev-' + (d.type === 'applied' || d.type === 'approved' || d.type === 'confirmed' ? 'info' : 'warn') + ' notice', href,
         '<b>Your change to ' + esc(d.kind) + ' ' + esc(d.entity) + ' ' + what + '</b>' + (d.reason ? '<br>' + esc(d.reason) : ''));
-    } else if (!d.mine && here && (d.type === 'applied' || d.type === 'withdrawn-overlay' || d.type === 'refused-at-source')) {
-      var mark = document.querySelector('[data-edit-mark]');
-      if (!mark) {
-        mark = document.createElement('p'); mark.className = 'asof-banner'; mark.setAttribute('data-edit-mark', ''); mark.setAttribute('role', 'status');
-        page.prepend(mark);
+    }
+    if (here && (d.type === 'applied' || d.type === 'withdrawn-overlay' || d.type === 'refused-at-source')) {
+      var editing = document.querySelector('section.pnl[data-editing], [data-wb-sheet][open]');
+      var words = (d.type === 'applied' ? 'Changed' : 'A correction was withdrawn') + (d.mine ? ' by you' : d.by ? ' by ' + d.by : '') + ' just now';
+      // a page whose source streams gets the new values in its live frames; any other page of the current date is drawn again (its
+      // values read with your masks), unless you are editing on it: then it says so and leaves your work alone
+      if (!editing && !page.hasAttribute('data-live') && !page.hasAttribute('data-static')) {
+        try { sessionStorage.setItem('drishti-edit-mark', JSON.stringify({ kind: page.getAttribute('data-kind'), id: page.getAttribute('data-id'), text: words })); } catch (e) { /* a convenience */ }
+        window.location.reload();
+        return;
       }
-      var editing = document.querySelector('section.pnl[data-editing]');
-      mark.textContent = (d.type === 'applied' ? 'Changed' : 'A correction was withdrawn') + (d.by ? ' by ' + d.by : '') + ' just now'
-        + (editing ? ': it changed while you edited; check your values before you save' : '');
+      editMark(page, words + (editing ? ': it changed while you edited; check your values before you save' : ''));
     }
   }
+  function editMark(page, text) {
+    var mark = document.querySelector('[data-edit-mark]');
+    if (!mark) {
+      mark = document.createElement('p'); mark.className = 'asof-banner'; mark.setAttribute('data-edit-mark', ''); mark.setAttribute('role', 'status');
+      page.prepend(mark);
+    }
+    mark.textContent = text;
+  }
+  (function () {                                       // the mark of a change that drew this page again
+    var page = document.querySelector('[data-view][data-kind]'), m = null;
+    try { m = JSON.parse(sessionStorage.getItem('drishti-edit-mark') || 'null'); sessionStorage.removeItem('drishti-edit-mark'); } catch (e) { m = null; }
+    if (page && m && m.kind === page.getAttribute('data-kind') && m.id === page.getAttribute('data-id')) { editMark(page, m.text); }
+  }());
   function toast(cls, href, html) {
     if (tray.querySelectorAll('.toast-a:not(.toast-more)').length >= MAX_TOASTS) {
       moreCount++;

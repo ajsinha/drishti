@@ -1,3 +1,17 @@
+# Project Drishti · Any data. Any domain. One grammar.
+#
+# Copyright (c) 2026 Ashutosh Sinha <ajsinha@gmail.com>.
+# All rights reserved.
+#
+# PROPRIETARY AND CONFIDENTIAL.
+#
+# This file is the confidential and proprietary property of Ashutosh Sinha.
+# Unauthorised copying, use, modification, distribution or disclosure of this
+# file, via any medium, is strictly prohibited except with the express prior
+# written permission of the copyright holder.
+#
+# See the LICENSE file in the root of this repository for the full terms.
+
 """`drishti.py change ...` and `drishti.py edits`: write-back from the command line (docs/architecture/WRITE_BACK.md section 13; the guide:
 docs/guides/SUTRA_FORMS_GUIDE.md, "Submitting"), for the caller's token (it needs the edit scope): propose a change to a record's fields
 (the same request as a form's Submit: the field must be editable by a Sutra's form with save:, the server checks everything again),

@@ -28,7 +28,7 @@
 
   function el(tag, cls, text) { var n = document.createElement(tag); if (cls) { n.className = cls; } if (text !== undefined) { n.textContent = text; } return n; }
   function btn(cls, text, on) { var b = el('button', cls, text); b.type = 'button'; if (on) { b.addEventListener('click', on); } return b; }
-  function show(v) { return v === null || v === undefined || v === '' ? '—' : String(v); }
+  function show(v) { return v === null || v === undefined || v === '' ? '—' : typeof v === 'number' ? v.toLocaleString('en-US', { maximumFractionDigits: 6 }) : String(v); }
   function call(method, path, body) {
     return fetch('/api/changes' + (path || ''), { method: method, credentials: 'same-origin',
       headers: body ? { 'Content-Type': 'application/json', Accept: 'application/json' } : { Accept: 'application/json' }, body: body ? JSON.stringify(body) : undefined })
@@ -66,7 +66,8 @@
   function sheetLine(c) {
     var box = el('section', 'wb-change'); box.setAttribute('data-wb-change', '');
     box.appendChild(el('h3', 'wb-rec', c.kind + ' ' + c.entity));
-    var t = el('table', 'tbl wb-diff'), head = el('tr');
+    var t = el('table', 'wb-diff'), head = el('tr');
+    t.setAttribute('data-plain', '');                         // a small table of its own: no paging, filter or sort
     ['Field', 'You saw', 'Now', 'Your change'].forEach(function (h) { var th = el('th', '', h); th.scope = 'col'; head.appendChild(th); });
     var thead = el('thead'); thead.appendChild(head); t.appendChild(thead);
     var tb = el('tbody');

@@ -952,6 +952,31 @@ drishti-console/.venv/bin/python tools/drishti.py compute event write-back chg-7
 ```
 
 
+### 5.10a change and edits
+
+Write-back from the terminal (2.8.0; `tools/changecli.py`, [WRITE_BACK.md](../architecture/WRITE_BACK.md),
+[SUTRA_FORMS_GUIDE.md section 4a](SUTRA_FORMS_GUIDE.md#4a-submitting-a-change-280-write-back)), as the caller's token (it needs the `edit` scope):
+- `change propose --kind KIND --id ID --set FIELD=VALUE [...] [--from FIELD=VALUE ...] [--reason TEXT] [--sutra S --panel P] [--date YYYY-MM-DD] [--override]`
+  proposes a change to a record's fields: the same request as a form's Submit. A field must be editable by a Sutra's form with `save:`;
+  `--from` is the value you saw (a field that moved since is conflicted, never written over).
+- `change submit DRAFT [--reason TEXT]` submits one of your form drafts (`d-...`): one change per record.
+- `change list [--state awaiting|queued|applied|refused|conflicted|rejected|withdrawn] [--kind] [--entity] [--mine]` lists changes, newest first.
+- `change show CHANGE` shows one change (exit `1` when it was refused, conflicted or rejected).
+- `change approve CHANGE [--note TEXT]`, `change reject CHANGE --reason TEXT`, `change withdraw CHANGE`: decide (an approver, never your own
+  change) or withdraw your own while it awaits approval.
+- `change history KIND ID` lists a record's changes from the edit log and its version.
+- `edits status` shows Admin → Edits: where the edit log lives and why, the lanes, warnings, unconfirmed source commands and each
+  connector's `writes:` (administrators).
+
+Exit codes are `0`, `1` (refused, conflicted, or the server said no) and `2` (usage).
+
+```bash
+drishti-console/.venv/bin/python tools/drishti.py change propose --kind trade --id MX-20000012 --set NOTIONAL=28001250 --from NOTIONAL=28000000 --reason "booking typo"
+drishti-console/.venv/bin/python tools/drishti.py change list --state awaiting
+drishti-console/.venv/bin/python tools/drishti.py change approve chg-01M5V6GM7NCKSR506RQ86M7YVV --note "ticket 4411"
+drishti-console/.venv/bin/python tools/drishti.py edits status
+```
+
 ### 5.11 contract
 
 The data contract of every command (`tools/contracts.py`, also run on its own as `python3 tools/contracts.py ...`;

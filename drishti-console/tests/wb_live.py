@@ -59,11 +59,12 @@ TOKEN_SECRET = "browser-test-token-secret-0123456789abcdef"
 
 
 class Stack(str):
-    """The console's URL (a string) that also knows the server's scratch directory, ``.work``."""
+    """The console's URL (a string) that also knows the server's scratch directory, ``.work``, and the server's own URL, ``.server``."""
 
-    def __new__(cls, url, work):
+    def __new__(cls, url, work, server=None):
         s = super().__new__(cls, url)
         s.work = Path(work)
+        s.server = server
         return s
 
 
@@ -159,7 +160,7 @@ def _stack(tmp_path_factory, extra_env, work=None, auth=False):
         while not server.started and time.monotonic() < deadline:
             time.sleep(0.05)
         assert server.started, "the console did not start"
-        yield Stack(f"http://127.0.0.1:{cport}", work)
+        yield Stack(f"http://127.0.0.1:{cport}", work, f"http://127.0.0.1:{port}")
         server.should_exit = True
         thread.join(10)
     finally:
