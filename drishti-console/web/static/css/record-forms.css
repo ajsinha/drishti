@@ -122,3 +122,26 @@ td .fm-adorn .fm-in { width: auto; flex: 1; }
   .fm-drawer { width: 100vw; }
   .fm-note { margin-left: 0; flex-basis: 100%; }
 }
+
+/* Write-back (WRITE_BACK.md 18.2): Submit, the review and confirm sheet, and what happened to a submitted draft. */
+.fm-submit { margin-left: .25rem; }
+.wb-sheet { width: min(46rem, calc(100vw - 2rem)); max-height: 86vh; overflow: auto; padding: 1rem 1.25rem; border-radius: var(--d-radius, 6px);
+  border: 1px solid var(--d-border, #888); background: var(--d-surface, #fff); color: var(--d-text, #111); }
+.wb-sheet::backdrop { background: color-mix(in srgb, var(--d-bg, #000) 55%, transparent); }
+.wb-h { font-size: 1.05rem; margin: 0 0 .75rem; }
+.wb-change { border-top: 1px solid var(--d-border, #888); padding: .5rem 0; }
+.wb-rec { font-size: .95rem; margin: 0 0 .35rem; font-family: var(--d-mono, monospace); }
+.wb-diff { width: 100%; font-size: .85rem; }
+.wb-diff .wb-new { font-weight: 600; }
+.wb-moved td { background: color-mix(in srgb, var(--d-warn, #c80) 14%, transparent); }
+.wb-flag { color: var(--d-warn, #a60); font-family: inherit; font-size: .8rem; }
+.wb-where, .wb-who, .wb-recompute, .wb-recompute-done { margin: .25rem 0; font-size: .85rem; }
+.wb-state { margin: .35rem 0 0; font-weight: 600; font-size: .85rem; }
+.wb-why { margin: .75rem 0 .25rem; display: grid; gap: .25rem; }
+.wb-msg { color: var(--d-danger, #c33); min-height: 1em; margin: .25rem 0; }
+.wb-problem { color: var(--d-danger, #c33); }
+.fm-draft-change { margin: 0 .5rem; color: var(--d-warn, #a60); font-size: .8rem; }
+@media (max-width: 576px) {
+  .wb-sheet { width: 100vw; max-width: 100vw; max-height: 100vh; margin: 0; border-radius: 0; }
+  .wb-diff { font-size: .8rem; }
+}

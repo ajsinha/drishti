@@ -22,8 +22,9 @@
                     the row; "N changes not saved", Undo all, Review N changes (then Save draft); a masked cell says Hidden for you;
    * new: drawer    New opens a drawer over the dimmed page, in steps (Who ✓ → What → Check), with Back, Next and Save as draft, and the
                     hints computed as people type (a limit's headroom from the chosen counterparty).
-   Saving keeps a draft per person on the server (/api/drafts, checked again there with the same rules); 2.8.0 sends it through the
-   connector. "You have N drafts on this page" lets a person resume or discard one; leaving with changes not saved asks first.
+   Saving keeps a draft per person on the server (/api/drafts, checked again there with the same rules). A form whose Sutra says where it
+   goes (save:) also has Submit (2.8.0 write-back, write-back.js): the draft is saved, then the review and confirm sheet sends it as change
+   requests; a draft the server refused or found conflicted says so in the drafts bar. "You have N drafts on this page" lets a person resume or discard one; leaving with changes not saved asks first.
    Field types beyond text, numbers, dates and choices: money (an amount typed as 1.5m, 250k or 1,000,000, shown grouped, with its
    currency beside it: fixed, or the one another field holds), datetime (a date and a time, the time zone shown beside it) and entity (a
    linked record picked by search: its id kept, its name shown, Open beside it). A field's default starts a new record: a value, or
@@ -307,6 +308,36 @@
     });
   }
 
+  // ---- Submit (2.8.0 write-back, write-back.js) -----------------------------------------------------------------------------------
+  var WB = window.drishtiWriteBack, wb = { mayEdit: false };
+  if (WB) { WB.settings().then(function (s) { wb = s || wb; }); }
+  /* A new record cannot be a correction laid over a source record: a form whose save: is an overlay submits edits only. */
+  function canSubmit(st, isNew) { return !!(WB && wb.mayEdit && st.form.save && !(isNew && st.form.save.target === 'overlay')); }
+  function sendNote(st, isNew) {
+    var sv = st.form.save;
+    var t = !sv ? 'Drafts only: this form sends nothing'
+      : canSubmit(st, isNew) ? (sv.target === 'source' ? 'Submit amends the source' : sv.target === 'owned' ? 'Submit saves the record' : 'Submit keeps a correction over the source')
+        + (sv.approval > 0 ? ' after ' + (sv.approval === 1 ? 'one approver' : sv.approval + ' approvers') : '')
+      : isNew && sv.target === 'overlay' ? 'A new record is kept as a draft: this form submits corrections only'
+      : wb.enabled === false ? 'Editing is off on this server: drafts only' : 'Drafts only for you: submitting needs the edit power';
+    var n = el('span', 'fm-note', t); n.setAttribute('data-fm-send-note', '');
+    return n;
+  }
+  /* Submit: the draft saved first (saveFirst returns a promise of it, or null when the form shows what to fix), then the sheet. */
+  function submitButton(st, isNew, saveFirst, foot, after) {
+    if (!canSubmit(st, isNew)) { return; }
+    var b = btn('fm-btn fm-primary fm-submit', 'Submit…', function () {
+      var p = saveFirst();
+      if (!p) { return; }
+      p.then(function (d) {
+        if (!d || !d.draft) { return; }
+        WB.submit({ draft: d.draft, title: st.form.title || st.title, onDone: function () { if (after) { after(); } } });
+      });
+    });
+    b.setAttribute('data-fm-submit', '');
+    foot.appendChild(b);
+  }
+
   // ---- "You have N drafts on this page" --------------------------------------------------------------------------------------
   function bar(st) {
     var mine = drafts.filter(function (d) { return d.panel === st.id; });
@@ -320,6 +351,11 @@
       var it = el('span', 'fm-draft-item');
       var what = d.mode === 'new' ? 'New' : d.mode === 'cells' ? (d.changes + ' cell change' + (d.changes === 1 ? '' : 's')) : 'Edit ' + ((d.records[0] || {}).record || '');
       it.appendChild(el('span', 'fm-draft-what', what));
+      if (d.change && d.change.state) {                // submitted, then refused, conflicted or rejected: kept to edit again
+        var ch = el('span', 'fm-draft-change', (WB ? WB.words(d.change.state) : d.change.state) + (d.change.reason ? ': ' + d.change.reason : ''));
+        ch.setAttribute('data-fm-draft-change', d.change.state);
+        it.appendChild(ch);
+      }
       it.appendChild(btn('fm-link', 'Resume', function () { resume(st, d); }));
       it.appendChild(btn('fm-link fm-link-quiet', 'Discard', function () {
         api('DELETE', '/' + encodeURIComponent(d.draft)).then(function () {
@@ -385,20 +421,23 @@
     });
     aside.appendChild(body); aside.appendChild(general);
     var foot = el('footer', 'fm-foot');
-    var saveB = btn('fm-btn fm-primary fm-save', 'Save draft', function () {
+    function saveDraft() {
       var issues = issuesOf();
-      if (issues.some(function (i) { return i.severity !== 'warn'; })) { showIssues(aside, issues, general); focusBad(aside); say('Fix the marked fields first'); return; }
+      if (issues.some(function (i) { return i.severity !== 'warn'; })) { showIssues(aside, issues, general); focusBad(aside); say('Fix the marked fields first'); return null; }
       var changed = {};
       st.form.fields.forEach(function (f) { if (editable(f, false) && (base.masked || []).indexOf(f.id) < 0 && !same(f, values[f.id], was[f.id])) { changed[f.id] = typed(f, values[f.id]); } });
-      save(st, 'row:' + key, payload(st, 'edit', [{ record: key, values: changed, was: was }])).then(function (d) {
+      return save(st, 'row:' + key, payload(st, 'edit', [{ record: key, values: changed, was: was }])).then(function (d) {
         s.dirty = false; s.saved = true; s.at = clock(); paint(d.warnings || []); say('Draft saved');
-      }).catch(function (e) { showIssues(aside, (e.issues || []).length ? e.issues : [{ field: null, message: e.message, severity: 'error' }], general); });
-    });
+        return d;
+      }).catch(function (e) { showIssues(aside, (e.issues || []).length ? e.issues : [{ field: null, message: e.message, severity: 'error' }], general); return null; });
+    }
+    var saveB = btn('fm-btn fm-primary fm-save', 'Save draft', function () { saveDraft(); });
     foot.appendChild(saveB);
+    submitButton(st, false, saveDraft, foot, function () { closeBeside(st); });
     foot.appendChild(btn('fm-btn fm-discard', 'Discard', function () {
       discard(st, 'row:' + key).then(function () { s.dirty = false; closeBeside(st); say('Changes discarded'); });
     }));
-    foot.appendChild(el('span', 'fm-note', 'Sending to the source arrives in 2.8.0'));
+    foot.appendChild(sendNote(st, false));
     aside.appendChild(foot);
     st.sec.querySelector('.pnl-b').appendChild(aside);
     function typed(f, v) { var t = X.typed(f, v); return f.type === 'number' && !isNaN(t) ? t : t; }
@@ -567,8 +606,14 @@
     });
     go.disabled = !!c.bad;
     foot.appendChild(go);
+    if (!c.bad) {
+      submitButton(st, false, function () {
+        return save(st, 'cells', payload(st, 'cells', records)).then(function (d) { c.saved = true; close(); paintCells(st); return d; })
+          .catch(function (e) { msg.textContent = e.message; return null; });
+      }, foot, function () { c.changes = {}; paintCells(st); });
+    }
     foot.appendChild(btn('fm-btn', 'Keep editing', function () { close(); }));
-    foot.appendChild(el('span', 'fm-note', 'Sending to the source arrives in 2.8.0'));
+    foot.appendChild(sendNote(st, false));
     box.appendChild(msg); box.appendChild(foot);
     dlg.appendChild(box);
     document.body.appendChild(dlg);
@@ -658,16 +703,19 @@
           d.done[d.at] = true; d.at++; render();
         }));
       }
-      foot.appendChild(btn('fm-btn' + (lastStep() ? ' fm-primary' : '') + ' fm-save', 'Save as draft', function () {
+      function saveNew() {
         var is = issues(d.at);
-        if (is.some(function (x) { return x.severity !== 'warn'; })) { showIssues(body, is, d.general); focusBad(body); say('Fix the marked fields first'); return; }
+        if (is.some(function (x) { return x.severity !== 'warn'; })) { showIssues(body, is, d.general); focusBad(body); say('Fix the marked fields first'); return null; }
         var vals = {};
         fields.forEach(function (f) { if (!X.empty(values[f.id])) { vals[f.id] = X.typed(f, values[f.id]); } });
-        save(st, 'new', payload(st, 'new', [{ record: null, values: vals }], { step: steps[d.at].id === '_all' ? '' : steps[d.at].id })).then(function () {
+        return save(st, 'new', payload(st, 'new', [{ record: null, values: vals }], { step: steps[d.at].id === '_all' ? '' : steps[d.at].id })).then(function (r) {
           d.dirty = false; d.at2 = clock(); live(); say('Draft saved');
-        }).catch(function (e) { showIssues(body, (e.issues || []).length ? e.issues : [{ field: null, message: e.message, severity: 'error' }], d.general); });
-      }));
-      foot.appendChild(el('span', 'fm-note', 'Sending to the source arrives in 2.8.0'));
+          return r;
+        }).catch(function (e) { showIssues(body, (e.issues || []).length ? e.issues : [{ field: null, message: e.message, severity: 'error' }], d.general); return null; });
+      }
+      foot.appendChild(btn('fm-btn' + (lastStep() ? ' fm-primary' : '') + ' fm-save', 'Save as draft', function () { saveNew(); }));
+      if (lastStep()) { submitButton(st, true, saveNew, foot, function () { closeDrawer(st); }); }
+      foot.appendChild(sendNote(st, true));
       live();
       var first = body.querySelector('.fm-in, .fm-check');
       if (first) { first.focus(); }
