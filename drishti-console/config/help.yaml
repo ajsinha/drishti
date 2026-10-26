@@ -42,6 +42,9 @@ categories:
       # explorer's F1 (contextual var below) and the tutorials page's links open the same pages.
       - { slug: docs-guides-var-guide, doc: guides/VAR_GUIDE.md, title: "VaR guide", icon: graph-down-arrow, summary: "Value at risk for any set of trades: every measure with worked numbers, the explorer screen by screen, positions, scopes, portfolios and baskets, captures, history and backtesting, what-if and VaR as a kind, who sees what, the CLI, the API and settings; the data contract (every column, formula, answer and error code, official results, retention); how the engine keeps a date in memory and on disk, sizing and the benchmark." }
       - { slug: docs-tutorials-25-var-from-the-bank-to-a-trade, doc: tutorials/25-var-from-the-bank-to-a-trade.md, title: "VaR tutorial: from the bank to a trade", icon: mortarboard, kind: tutorial, summary: "Twelve hands-on steps on the test data, each in the UI, on the command line and in YAML: open the bank's VaR, drill to a trade, the P&L path and contributions, your own scopes, derived positions, a basket captured and compared, the backtest, the hot file, VRES and a what-if by the Python engine, entitlements." }
+      # Exposure is two pages too (the same rule, 2.9.0): the guide and tutorial 26; F1 on the exposure explorer (contextual exposure below).
+      - { slug: docs-guides-exposure-guide, doc: guides/EXPOSURE_GUIDE.md, title: "Exposure guide", icon: shield-exclamation, summary: "Counterparty exposure for any scope (EE, ENE, EEE, PFE, EPE, EEPE, EAD): every measure with worked numbers, the explorer screen by screen, scopes, collateral and netting, captures and compare, the pre-deal what-if (exact paths or the proxy), exposure as a kind, who sees what, the CLI, the API and settings; the data contract (every column, formula, answer and error code, official results, retention, the 76 stored sets reconciled); how the engine keeps a date in memory and on disk, and the open items." }
+      - { slug: docs-tutorials-26-exposure-from-the-bank-to-a-trade, doc: tutorials/26-exposure-from-the-bank-to-a-trade.md, title: "Exposure tutorial: from the bank to a trade", icon: mortarboard, kind: tutorial, summary: "Hands-on steps on the test data, each in the UI, on the command line and in YAML: the bank, a legal entity's counterparty board, CP-ALDERSHOT and its netting sets, collateral and trades of NS-ALDERSHOT-LDN, a trade alone and in its set, a capture compared, a pre-deal what-if (exact and proxy), the official results." }
       - { slug: clients, doc: guides/CLIENTS.md, title: Scripts, notebooks and Excel, icon: filetype-py, summary: "Personal API tokens, the Python client, and Excel through Power Query: read anything you may open, from code." }
   - id: bi
     name: BI
@@ -219,6 +222,7 @@ contextual:
   compare: user-guide
   history: user-guide#history-an-entity-over-time
   var: docs-guides-var-guide        # the VaR explorer (F1 and its ?): the VaR guide, listed under Use
+  exposure: docs-guides-exposure-guide   # the exposure explorer (F1 and its ?): the exposure guide, listed under Use
   bi-designer: bi-guide#26-bi-studio-authoring-as-one-product-wave-c-240
   bi-theme-designer: reports#52-themes
   bi-transform: python-bi#17-data-prep-the-transform-editor-240
