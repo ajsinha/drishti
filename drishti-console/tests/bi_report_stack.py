@@ -61,7 +61,12 @@ def make_lake(target: Path, days: int = 3) -> str | None:
         return None
     done = subprocess.run([uv, "run", "--offline", "--with", "deltalake", "--with", "pyarrow", "--with", "pyyaml", "python", str(ROOT / "tools/packgen/banking/make_data.py"), "--lake",
                            str(target), "--days", str(days)], capture_output=True, text=True, timeout=600, cwd=ROOT)
-    return str(target) if done.returncode == 0 and (target / "trading").exists() else None
+    if done.returncode != 0 or not (target / "trading").exists():
+        return None
+    # the published official exposure the BI samples read since 2.9.0 (the lake has netting sets but no exposure paths): tests/bi_exposure_fixture.py
+    pub = subprocess.run([uv, "run", "--offline", "--with", "deltalake", "--with", "pyarrow", "python", str(CONSOLE / "tests" / "bi_exposure_fixture.py"), str(target)],
+                         capture_output=True, text=True, timeout=300, cwd=ROOT)
+    return str(target) if pub.returncode == 0 else None
 
 
 def api(method: str, path: str, user: str, roles: list, body=None):

@@ -42,10 +42,18 @@ def copy_samples(bi_dir: Path, names) -> list[str]:
         copied.append(rel)
         return src.read_text()
 
+    def dataset(name: str) -> str:
+        """A dataset and, when it extends another (``extends: <name>@<version>``), its base, which the server needs published first."""
+        body = put(f"datasets/{name}.dataset.yaml")
+        base = re.search(r"^extends:\s*([A-Za-z0-9_.-]+)@", body, flags=re.M)
+        if base and f"datasets/{base.group(1)}.dataset.yaml" not in copied and (SHIPPED / "datasets" / f"{base.group(1)}.dataset.yaml").exists():
+            dataset(base.group(1))
+        return body
+
     def model(name: str) -> None:
         text = put(f"models/{name}.model.yaml")
         for ds in _datasets_of(text):
-            body = put(f"datasets/{ds}.dataset.yaml")
+            body = dataset(ds)
             py = re.search(r"^\s*python:\s*([A-Za-z0-9_.-]+)", body, flags=re.M)
             if py and (SHIPPED / "python" / f"{py.group(1)}.python.yaml").exists():
                 put(f"python/{py.group(1)}.python.yaml")
