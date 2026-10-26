@@ -19,7 +19,7 @@
 
 Every command (mnemonic) of every pack has a data contract: a YAML file beside its pack (`config/packs/<pack>/contracts/<kind>.contract.yaml`, checked against `tools/contracts.schema.json`) and a section of its pack's page here. The shared rules are in [the contracts README](../README.md); the computed measures that replace the retiring kinds have their own contracts there.
 
-90 contracts, 519 points still to review. Check them with `drishti.py contract check`; draft a new one with `drishti.py contract bootstrap KIND --write`.
+90 contracts, 528 points still to review. Check them with `drishti.py contract check`; draft a new one with `drishti.py contract bootstrap KIND --write`.
 
 | Command | Kind | Pack | Class | Status | Replaced by | To review |
 |---|---|---|---|---|---|---|
@@ -28,7 +28,7 @@ Every command (mnemonic) of every pack has a data contract: a YAML file beside i
 | `PSUM` | `path-sum` | [compute-demo](compute-demo.md#psum-book-path-python-path-sum) | computed | active |  | 1 |
 | `PSUMJ` | `path-sum-java` | [compute-demo](compute-demo.md#psumj-book-path-java-path-sum-java) | computed | active |  | 1 |
 | `CPTY` | `counterparty` | [core](core.md#cpty-counterparty-counterparty) | fundamental | active |  | 8 |
-| `GRP` | `counterparty-group` | [core](core.md#grp-counterparty-group-counterparty-group) | fundamental | active |  | 5 |
+| `GRP` | `counterparty-group` | [core](core.md#grp-counterparty-group-counterparty-group) | fundamental | active |  | 6 |
 | `ISS` | `issuer` | [core](core.md#iss-issuer-issuer) | fundamental | active |  | 5 |
 | `CCP` | `ccp` | [core](core.md#ccp-central-counterparty-ccp) | fundamental | active |  | 5 |
 | `LE` | `legal-entity` | [core](core.md#le-bank-legal-entity-legal-entity) | fundamental | active |  | 7 |
@@ -39,18 +39,18 @@ Every command (mnemonic) of every pack has a data contract: a YAML file beside i
 | `CLR` | `clearing-account` | [core](core.md#clr-clearing-account-clearing-account) | fundamental | active |  | 7 |
 | `AGR` | `agreement` | [counterparty-risk](counterparty-risk.md#agr-master-agreement-agreement) | fundamental | active |  | 4 |
 | `CSA` | `csa` | [counterparty-risk](counterparty-risk.md#csa-credit-support-annex-csa) | fundamental | active |  | 5 |
-| `NSET` | `netting-set` | [counterparty-risk](counterparty-risk.md#nset-netting-set-netting-set) | fundamental | active |  | 9 |
+| `NSET` | `netting-set` | [counterparty-risk](counterparty-risk.md#nset-netting-set-netting-set) | fundamental | active |  | 13 |
 | `LIM` | `credit-limit` | [counterparty-risk](counterparty-risk.md#lim-credit-limit-credit-limit) | fundamental | active |  | 6 |
-| `EXP` | `exposure-profile` | [counterparty-risk](counterparty-risk.md#exp-exposure-profile-exposure-profile) | computed | retiring in 2.10.0 | EXP.md | 6 |
-| `CVA` | `cva` | [counterparty-risk](counterparty-risk.md#cva-cva--xva-cva) | computed | retiring in 2.10.0 | CVA.md | 7 |
-| `SACCR` | `sa-ccr` | [counterparty-risk](counterparty-risk.md#saccr-sa-ccr-exposure-sa-ccr) | computed | retiring in 2.10.0 | SACCR.md | 8 |
+| `EXP` | `exposure-profile` | [counterparty-risk](counterparty-risk.md#exp-exposure-profile-exposure-profile) | fundamental | active |  | 9 |
+| `CVA` | `cva` | [counterparty-risk](counterparty-risk.md#cva-cva--xva-cva) | fundamental | active |  | 7 |
+| `SACCR` | `sa-ccr` | [counterparty-risk](counterparty-risk.md#saccr-sa-ccr-exposure-sa-ccr) | fundamental | active |  | 9 |
 | `COLL` | `collateral-balance` | [counterparty-risk](counterparty-risk.md#coll-collateral-balance-collateral-balance) | fundamental | active |  | 5 |
 | `MC` | `margin-call` | [counterparty-risk](counterparty-risk.md#mc-margin-call-margin-call) | fundamental | active |  | 7 |
-| `SIMM` | `simm` | [counterparty-risk](counterparty-risk.md#simm-isda-simm-initial-margin-simm) | computed | retiring in 2.9.0 | SIMM.md | 5 |
+| `SIMM` | `simm` | [counterparty-risk](counterparty-risk.md#simm-isda-simm-initial-margin-simm) | fundamental | active |  | 5 |
 | `LEI` | `lei-entity` | [gleif](gleif.md#lei-lei-legal-entity-lei-entity) | fundamental | active |  | 4 |
-| `LEIG` | `lei-group` | [gleif](gleif.md#leig-lei-ownership-group-lei-group) | computed | retiring in 2.9.0 or 2.10.0 | GROUPINGS_AND_ANALYTICS.md | 7 |
+| `LEIG` | `lei-group` | [gleif](gleif.md#leig-lei-ownership-group-lei-group) | fundamental | active |  | 7 |
 | `LEIR` | `lei-relationship` | [gleif](gleif.md#leir-lei-parent-relationship-lei-relationship) | fundamental | active |  | 4 |
-| `LEIC` | `lei-country` | [gleif](gleif.md#leic-lei-country-lei-country) | computed | retiring in 2.9.0 or 2.10.0 | GROUPINGS_AND_ANALYTICS.md | 6 |
+| `LEIC` | `lei-country` | [gleif](gleif.md#leic-lei-country-lei-country) | fundamental | active |  | 6 |
 | `LEIM` | `lei-mapping` | [gleif](gleif.md#leim-isin-or-bic-to-lei-lei-mapping) | fundamental | active |  | 4 |
 | `CRV` | `ir-curve` | [market-data](market-data.md#crv-interest-rate-curve-ir-curve) | fundamental | active |  | 8 |
 | `REPO` | `repo-curve` | [market-data](market-data.md#repo-repo-curve-repo-curve) | fundamental | active |  | 6 |
@@ -71,13 +71,13 @@ Every command (mnemonic) of every pack has a data contract: a YAML file beside i
 | `CMDV` | `commodity-vol-surface` | [market-data](market-data.md#cmdv-commodity-volatility-surface-commodity-vol-surface) | fundamental | active |  | 5 |
 | `FIX` | `rate-fixing` | [market-data](market-data.md#fix-rate-index-fixings-rate-fixing) | fundamental | active |  | 8 |
 | `BND` | `bond` | [market-data](market-data.md#bnd-bond-security-master-bond) | fundamental | active |  | 7 |
-| `CORR` | `correlation-matrix` | [market-data](market-data.md#corr-correlation-matrix-correlation-matrix) | computed | retiring in 2.9.0 or 2.10.0 | GROUPINGS_AND_ANALYTICS.md | 6 |
+| `CORR` | `correlation-matrix` | [market-data](market-data.md#corr-correlation-matrix-correlation-matrix) | fundamental | active |  | 6 |
 | `VAR` | `var` | [market-risk](market-risk.md#var-var--expected-shortfall-var) | computed | retiring in 2.8.0 | VAR.md | 7 |
 | `SCN` | `stress-scenario` | [market-risk](market-risk.md#scn-stress-scenario-stress-scenario) | fundamental | active |  | 5 |
-| `STR` | `stress-result` | [market-risk](market-risk.md#str-stress-result-stress-result) | computed | retiring in 2.9.0 | STR.md | 4 |
-| `FRTB` | `frtb-sensitivity` | [market-risk](market-risk.md#frtb-frtb-sensitivities-frtb-sensitivity) | computed | retiring in 2.9.0 | FRTB.md | 6 |
-| `PNL` | `pnl-explain` | [market-risk](market-risk.md#pnl-pl-explain-pnl-explain) | computed | retiring in 2.9.0 | PNL.md | 6 |
-| `TVAL` | `trade-valuation` | [market-risk](market-risk.md#tval-trade-valuation-trade-valuation) | computed | retiring in 2.9.0 | TVAL.md | 7 |
+| `STR` | `stress-result` | [market-risk](market-risk.md#str-stress-result-stress-result) | fundamental | active |  | 4 |
+| `FRTB` | `frtb-sensitivity` | [market-risk](market-risk.md#frtb-frtb-sensitivities-frtb-sensitivity) | fundamental | active |  | 6 |
+| `PNL` | `pnl-explain` | [market-risk](market-risk.md#pnl-pl-explain-pnl-explain) | fundamental | active |  | 6 |
+| `TVAL` | `trade-valuation` | [market-risk](market-risk.md#tval-trade-valuation-trade-valuation) | fundamental | active |  | 7 |
 | `POS` | `position` | [market-risk](market-risk.md#pos-position-position) | drishti-owned | active |  | 9 |
 | `PORT` | `portfolio` | [market-risk](market-risk.md#port-portfolio-portfolio) | input | active |  | 13 |
 | `PNLV` | `pnl-vector` | [market-risk](market-risk.md#pnlv-pl-vector-509-scenarios-pnl-vector) | input | active |  | 6 |
@@ -89,13 +89,13 @@ Every command (mnemonic) of every pack has a data contract: a YAML file beside i
 | `CO` | `listed-company` | [news-and-markets](news-and-markets.md#co-listed-company-listed-company) | fundamental | active |  | 7 |
 | `QUOTE` | `quote` | [news-and-markets](news-and-markets.md#quote-quote-and-price-history-quote) | fundamental | active |  | 6 |
 | `TRD` | `trade` | [trading](trading.md#trd-trade-trade) | fundamental | active |  | 12 |
-| `CTRD` | `counterparty-trades` | [trading](trading.md#ctrd-counterparty-trades-derived-from-trades-counterparty-trades) | computed | retiring in 2.9.0 | TRADING_GROUPINGS.md | 1 |
-| `PTRD` | `portfolio-trades` | [trading](trading.md#ptrd-portfolio-trades-derived-from-trades-portfolio-trades) | computed | retiring in 2.9.0 | TRADING_GROUPINGS.md | 1 |
-| `LTRD` | `legal-entity-trades` | [trading](trading.md#ltrd-legal-entity-trades-derived-from-trades-legal-entity-trades) | computed | retiring in 2.9.0 | TRADING_GROUPINGS.md | 1 |
-| `ITRD` | `index-trades` | [trading](trading.md#itrd-index-trades-derived-from-trades-index-trades) | computed | retiring in 2.9.0 | TRADING_GROUPINGS.md | 1 |
+| `CTRD` | `counterparty-trades` | [trading](trading.md#ctrd-counterparty-trades-derived-from-trades-counterparty-trades) | computed | active |  | 1 |
+| `PTRD` | `portfolio-trades` | [trading](trading.md#ptrd-portfolio-trades-derived-from-trades-portfolio-trades) | computed | active |  | 1 |
+| `LTRD` | `legal-entity-trades` | [trading](trading.md#ltrd-legal-entity-trades-derived-from-trades-legal-entity-trades) | computed | active |  | 1 |
+| `ITRD` | `index-trades` | [trading](trading.md#itrd-index-trades-derived-from-trades-index-trades) | computed | active |  | 1 |
 | `USEQ` | `us-company` | [us-equities](us-equities.md#useq-us-company-us-company) | fundamental | active |  | 7 |
 | `IDX` | `index-membership` | [us-equities](us-equities.md#idx-index-members-index-membership) | fundamental | active |  | 6 |
-| `SIC` | `sic-sector` | [us-equities](us-equities.md#sic-sic-sector-sic-sector) | computed | retiring in 2.9.0 or 2.10.0 | GROUPINGS_AND_ANALYTICS.md | 7 |
+| `SIC` | `sic-sector` | [us-equities](us-equities.md#sic-sic-sector-sic-sector) | fundamental | active |  | 7 |
 | `EDGAR` | `filing-feed` | [us-equities](us-equities.md#edgar-edgar-filings-browser-filing-feed) | fundamental | active |  | 6 |
 | `FILING` | `filing` | [us-equities](us-equities.md#filing-sec-filing-filing) | fundamental | active |  | 3 |
 | `FACT` | `financial-fact` | [us-equities](us-equities.md#fact-financial-fact-financial-fact) | fundamental | active |  | 6 |
@@ -105,7 +105,7 @@ Every command (mnemonic) of every pack has a data contract: a YAML file beside i
 | `FCST` | `economic-forecast` | [world-economy](world-economy.md#fcst-economic-forecast-economic-forecast) | fundamental | active |  | 4 |
 | `LABR` | `labour-market` | [world-economy](world-economy.md#labr-labour-market-labour-market) | fundamental | active |  | 6 |
 | `FISC` | `fiscal-position` | [world-economy](world-economy.md#fisc-fiscal-position-fiscal-position) | fundamental | active |  | 5 |
-| `ECG` | `country-group` | [world-economy](world-economy.md#ecg-country-group-country-group) | computed | retiring in 2.9.0 or 2.10.0 | GROUPINGS_AND_ANALYTICS.md | 6 |
+| `ECG` | `country-group` | [world-economy](world-economy.md#ecg-country-group-country-group) | fundamental | active |  | 6 |
 | `REGE` | `region-economy` | [world-economy](world-economy.md#rege-region-economy-region-economy) | fundamental | active |  | 5 |
 | `JUR` | `jurisdiction` | [world-economy](world-economy.md#jur-jurisdiction-jurisdiction) | fundamental | active |  | 7 |
 | `PARTY` | `party` | [world-economy](world-economy.md#party-party-party) | fundamental | active |  | 6 |

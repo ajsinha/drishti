@@ -40,7 +40,7 @@ One section per command of the pack: the shape of its data, how it is stored and
 | [CMDV](#cmdv-commodity-volatility-surface-commodity-vol-surface) | `commodity-vol-surface` | fundamental | active | 4 | 5 |
 | [FIX](#fix-rate-index-fixings-rate-fixing) | `rate-fixing` | fundamental | active | 7 | 8 |
 | [BND](#bnd-bond-security-master-bond) | `bond` | fundamental | active | 15 | 7 |
-| [CORR](#corr-correlation-matrix-correlation-matrix) | `correlation-matrix` | computed | retiring in 2.9.0 or 2.10.0 | 7 | 6 |
+| [CORR](#corr-correlation-matrix-correlation-matrix) | `correlation-matrix` | fundamental | active | 7 | 6 |
 
 ## CRV: Interest rate curve (`ir-curve`)
 
@@ -1361,8 +1361,8 @@ Pairwise correlations used by basket, quanto and spread products.
 |  |  |
 |---|---|
 | Contract | [correlation-matrix.contract.yaml](../../../config/packs/market-data/contracts/correlation-matrix.contract.yaml) · version 1.0 |
-| Class | computed |
-| Status | retiring in 2.9.0 or 2.10.0, replaced by docs/contracts/GROUPINGS_AND_ANALYTICS.md |
+| Class | fundamental |
+| Status | active |
 | Source | md-hub |
 | Grain | One row per correlation matrix per business date, keyed by MATRIX_ID. |
 | Key | `MATRIX_ID` |
@@ -1379,8 +1379,8 @@ Pairwise correlations used by basket, quanto and spread products.
 | `MATRIX_ID` | id | required |  | The record's id (the business key) | `CORR-EU-EQ` (pattern `^CORR-`) |  |
 | `NAME` | text | required |  | Name | `European equities` |  |
 | `FACTORS` | text list | required |  | — |  |  |
-| `AVERAGE` | rate | derived |  | Average *computed by correlations from price history (CORR); removed when retired* | `0.385` |  |
-| `PAIRS` | record list | derived |  | Nested: see nested PAIRS[] *computed by correlations from price history (CORR); removed when retired* |  |  |
+| `AVERAGE` | rate | required |  | Average | `0.385` |  |
+| `PAIRS` | record list | required |  | Nested: see nested PAIRS[] |  |  |
 | `WINDOW` | text | required |  | — | `2 years, daily log returns` |  |
 | `ESTIMATOR` | text | required |  | — | `Ledoit-Wolf shrinkage` |  |
 
@@ -1394,14 +1394,13 @@ Pairwise correlations used by basket, quanto and spread products.
 
 **Validation**
 
-- required: fields `MATRIX_ID`, `NAME`, `FACTORS`, `WINDOW`, `ESTIMATOR`
+- required: fields `MATRIX_ID`, `NAME`, `FACTORS`, `AVERAGE`, `PAIRS`, `WINDOW`, `ESTIMATOR`
 - unique: key `MATRIX_ID`; per business_date
 - pattern: field MATRIX_ID; pattern ^CORR-
 
 **Notes**
 
 - Dated by the lake's business_date partition: `drishti.py lake build` writes each test-data file's day into it; the documents carry no date field of their own.
-- Retiring in 2.9.0 or 2.10.0: the stored kind is removed and computed instead by correlations from price history (CORR) (docs/contracts/GROUPINGS_AND_ANALYTICS.md); old ids and links open the computed page.
 
 **To review (6)**
 

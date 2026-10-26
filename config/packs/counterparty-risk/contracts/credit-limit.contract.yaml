@@ -64,30 +64,24 @@ fields:
   example: 337000000.0
 - name: USED
   type: amount
-  presence: derived
+  presence: required
   unit: USD
   description: The exposure measured today against the limit.
   example: 224800213
-  retiring-in: 2.10.0
-  note: computed by limit usage (LIM) from 2.10.0; removed from the stored record then
 - name: UTILISATION
   type: rate
-  presence: derived
+  presence: required
   unit: '% of limit'
   description: 'The share of the limit that is used: used divided by limit. Above 100% is a breach.'
   example: 0.6671
-  retiring-in: 2.10.0
-  note: computed by limit usage (LIM) from 2.10.0; removed from the stored record then
 - name: STATUS
   type: text
-  presence: derived
+  presence: required
   description: Status
   example: Within limit
   enum:
   - Early warning
   - Within limit
-  retiring-in: 2.10.0
-  note: computed by limit usage (LIM) from 2.10.0; removed from the stored record then
 - name: BUCKETS
   type: record list
   presence: required
@@ -128,20 +122,16 @@ nested:
     example: 337000000
   - name: USED
     type: amount
-    presence: derived
+    presence: required
     unit: USD
     description: The exposure in this tenor bucket.
     example: 191080181
-    retiring-in: 2.10.0
-    note: computed by limit usage (LIM) from 2.10.0; removed from the stored record then
   - name: UTILISATION
     type: rate
-    presence: derived
+    presence: required
     unit: '% of limit'
     description: 'The share of the limit that is used: used divided by limit. Above 100% is a breach.'
     example: 0.567
-    retiring-in: 2.10.0
-    note: computed by limit usage (LIM) from 2.10.0; removed from the stored record then
 links:
 - field: COUNTERPARTY
   kind: counterparty
@@ -152,6 +142,9 @@ validation:
   - COUNTERPARTY_NAME
   - MEASURE
   - LIMIT
+  - USED
+  - UTILISATION
+  - STATUS
   - BUCKETS
   - COUNTERPARTY
   - APPROVED_BY
@@ -182,8 +175,6 @@ validation:
 notes:
 - 'Dated by the lake''s business_date partition: `drishti.py lake build` writes each test-data file''s day into it; the documents carry no date
   field of their own.'
-- 'Terms kept, figures computed from 2.10.0 (docs/contracts/LIM.md): the fields marked derived are computed by limit usage (LIM) and leave the
-  stored record then.'
 review:
 - 'required inferred from 100% coverage in 66 documents (18 samples and 48 test-data documents (data/testdata/counterparty-risk/credit-limit/snapshot-2026-07-08.jsonl.gz,
   data/testdata/counterparty-risk/credit-limit/changes-2026-09-30.jsonl.gz)): confirm each required field is mandatory upstream, and each optional

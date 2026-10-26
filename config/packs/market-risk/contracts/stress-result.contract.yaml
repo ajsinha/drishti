@@ -18,10 +18,8 @@ kind: stress-result
 mnemonic: STR
 pack: market-risk
 version: '1.0'
-class: computed
-status: retiring
-retiring-in: 2.9.0
-replaced-by: docs/contracts/STR.md
+class: fundamental
+status: active
 title: Stress result
 description: P&L of a desk under a scenario, by book.
 source: stress-engine
@@ -64,11 +62,10 @@ fields:
   - USD +15% vs all
 - name: PNL
   type: amount
-  presence: derived
+  presence: required
   unit: USD
   description: The change in value over the period of the result. In a stress result, the revaluation of the portfolio under the scenario.
   example: -79098347
-  note: computed by stress P&L (STR); removed when retired
 - name: LIMIT
   type: amount
   presence: required
@@ -77,9 +74,8 @@ fields:
   example: -75700000.0
 - name: BY_BOOK
   type: record list
-  presence: derived
+  presence: required
   description: 'Nested: see nested BY_BOOK[]'
-  note: computed by stress P&L (STR); removed when retired
 - name: SCENARIO
   type: id
   presence: required
@@ -121,7 +117,9 @@ validation:
   fields:
   - RESULT_ID
   - SCENARIO_NAME
+  - PNL
   - LIMIT
+  - BY_BOOK
   - SCENARIO
   - DESK
 - rule: unique
@@ -154,8 +152,6 @@ validation:
 notes:
 - 'Dated by the lake''s business_date partition: `drishti.py lake build` writes each test-data file''s day into it; the documents carry no date
   field of their own.'
-- 'Retiring in 2.9.0: the stored kind is removed and computed instead by stress P&L (STR) (docs/contracts/STR.md); old ids and links open the
-  computed page.'
 review:
 - 'required inferred from 100% coverage in 160 documents (80 samples and 80 test-data documents (data/testdata/market-risk/stress-result/snapshot-2026-07-08.jsonl.gz,
   data/testdata/market-risk/stress-result/changes-2026-09-30.jsonl.gz)): confirm each required field is mandatory upstream, and each optional

@@ -18,10 +18,8 @@ kind: exposure-profile
 mnemonic: EXP
 pack: counterparty-risk
 version: '1.0'
-class: computed
-status: retiring
-retiring-in: 2.10.0
-replaced-by: docs/contracts/EXP.md
+class: fundamental
+status: active
 title: Exposure profile
 description: Simulated EE, EPE, ENE and PFE by time bucket for a netting set.
 source: xva-engine
@@ -50,27 +48,24 @@ fields:
   pattern: ^EXP-
 - name: EPE
   type: amount
-  presence: derived
+  presence: required
   unit: USD
   description: The average of the expected exposure over the life of the trades (or the first year); it is the exposure the CVA and the internal-model
     capital are built on.
   example: 26290
-  note: computed by the exposure engine (EXP); removed when retired
 - name: EEPE
   type: amount
-  presence: derived
+  presence: required
   unit: USD
   description: The average over the first year of the effective expected exposure, which cannot fall from one date to the next. It is the exposure
     used for the internal-model capital.
   example: 141750
-  note: computed by the exposure engine (EXP); removed when retired
 - name: PFE_PEAK
   type: amount
-  presence: derived
+  presence: required
   unit: USD
   description: The highest value of the 95th-percentile exposure over the life of the trades.
   example: 347288
-  note: computed by the exposure engine (EXP); removed when retired
 - name: PATHS
   type: integer
   presence: required
@@ -83,9 +78,8 @@ fields:
   example: '2026-09-30'
 - name: BUCKETS
   type: record list
-  presence: derived
+  presence: required
   description: 'Nested: see nested BUCKETS[]'
-  note: computed by the exposure engine (EXP); removed when retired
 - name: NETTING_SET
   type: id
   presence: required
@@ -141,8 +135,12 @@ validation:
 - rule: required
   fields:
   - PROFILE_ID
+  - EPE
+  - EEPE
+  - PFE_PEAK
   - PATHS
   - RUN_DATE
+  - BUCKETS
   - NETTING_SET
   - MODEL
   - CONFIDENCE
@@ -159,14 +157,18 @@ validation:
 notes:
 - 'Dated by the lake''s business_date partition: `drishti.py lake build` writes each test-data file''s day into it; the documents carry no date
   field of their own.'
-- 'Retiring in 2.10.0: the stored kind is removed and computed instead by the exposure engine (EXP) (docs/contracts/EXP.md); old ids and links
-  open the computed page.'
 review:
 - 'required inferred from 100% coverage in 218 documents (66 samples and 152 test-data documents (data/testdata/counterparty-risk/exposure-profile/snapshot-2026-07-08.jsonl.gz,
   data/testdata/counterparty-risk/exposure-profile/changes-2026-09-30.jsonl.gz)): confirm each required field is mandatory upstream, and each
   optional one may be empty.'
 - 'source ''xva-engine'' is the test data''s _meta.source (synthetic): name the production system that delivers it.'
 - 'due time of each business date is not known: state it (for example, by 06:00 New York the next business day).'
+- 'EPE is a column a compute engine produces (docs/contracts/README.md section 14) on a record that keeps it: confirm whether it is computed and
+  removed.'
+- 'EEPE is a column a compute engine produces (docs/contracts/README.md section 14) on a record that keeps it: confirm whether it is computed
+  and removed.'
+- 'PFE_PEAK is a column a compute engine produces (docs/contracts/README.md section 14) on a record that keeps it: confirm whether it is computed
+  and removed.'
 - 'number types decided by the field''s name: CONFIDENCE rate: confirm amount, rate or integer.'
 - 'no description in about.yaml or the Sutras for MODEL, CONFIDENCE: write them in the pack''s config/about.yaml glossary.'
 - 'PATHS, MODEL and CONFIDENCE describe the simulation run: confirm they move to the exposure-path input''s run metadata (EXP.md).'

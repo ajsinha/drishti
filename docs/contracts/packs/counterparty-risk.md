@@ -23,14 +23,14 @@ One section per command of the pack: the shape of its data, how it is stored and
 |---|---|---|---|---|---|
 | [AGR](#agr-master-agreement-agreement) | `agreement` | fundamental | active | 9 | 4 |
 | [CSA](#csa-credit-support-annex-csa) | `csa` | fundamental | active | 13 | 5 |
-| [NSET](#nset-netting-set-netting-set) | `netting-set` | fundamental | active | 24 | 9 |
+| [NSET](#nset-netting-set-netting-set) | `netting-set` | fundamental | active | 24 | 13 |
 | [LIM](#lim-credit-limit-credit-limit) | `credit-limit` | fundamental | active | 11 | 6 |
-| [EXP](#exp-exposure-profile-exposure-profile) | `exposure-profile` | computed | retiring in 2.10.0 | 10 | 6 |
-| [CVA](#cva-cva--xva-cva) | `cva` | computed | retiring in 2.10.0 | 10 | 7 |
-| [SACCR](#saccr-sa-ccr-exposure-sa-ccr) | `sa-ccr` | computed | retiring in 2.10.0 | 10 | 8 |
+| [EXP](#exp-exposure-profile-exposure-profile) | `exposure-profile` | fundamental | active | 10 | 9 |
+| [CVA](#cva-cva--xva-cva) | `cva` | fundamental | active | 10 | 7 |
+| [SACCR](#saccr-sa-ccr-exposure-sa-ccr) | `sa-ccr` | fundamental | active | 10 | 9 |
 | [COLL](#coll-collateral-balance-collateral-balance) | `collateral-balance` | fundamental | active | 8 | 5 |
 | [MC](#mc-margin-call-margin-call) | `margin-call` | fundamental | active | 11 | 7 |
-| [SIMM](#simm-isda-simm-initial-margin-simm) | `simm` | computed | retiring in 2.9.0 | 8 | 5 |
+| [SIMM](#simm-isda-simm-initial-margin-simm) | `simm` | fundamental | active | 8 | 5 |
 
 ## AGR: Master agreement (`agreement`)
 
@@ -191,16 +191,16 @@ Trades that net on close-out under one agreement and CSA, with exposure and coll
 |---|---|---|---|---|---|---|
 | `NETTING_SET_ID` | id | required |  | The record's id (the business key) | `NS-ALDERSHOT-FRA` (pattern `^NS-`) |  |
 | `TRADE_COUNT` | integer | required |  | The number of trades that are netted together under the agreement. | `3` |  |
-| `NET_MTM` | amount | derived (retiring in 2.10.0) | USD | The sum of the members' mark to market, positive and negative together. Netting lets a loss on one trade cancel a gain on another if the counterparty defaults. *computed by the netting-set figures (NSET) from 2.10.0; removed from the stored record then* | `-339550` |  |
-| `COLLATERAL` | amount | derived (retiring in 2.10.0) | USD | The net collateral against the netting set: what is held less what has been posted. *computed by the netting-set figures (NSET) from 2.10.0; removed from the stored record then* | `-229552` |  |
-| `EE_PEAK` | amount | derived (retiring in 2.10.0) | USD | The highest point of the expected-exposure profile over the life of the trades, the average positive exposure on the date where it is largest. *computed by the netting-set figures (NSET) from 2.10.0; removed from the stored record then* | `141750` |  |
-| `PFE_PEAK` | amount | derived (retiring in 2.10.0) | USD | The highest point of the 95th-percentile exposure profile; on 95 of 100 simulated paths the exposure stays below it. It is the measure credit limits are set against. *computed by the netting-set figures (NSET) from 2.10.0; removed from the stored record then* | `347288` |  |
+| `NET_MTM` | amount | required | USD | The sum of the members' mark to market, positive and negative together. Netting lets a loss on one trade cancel a gain on another if the counterparty defaults. | `-339550` |  |
+| `COLLATERAL` | amount | required | USD | The net collateral against the netting set: what is held less what has been posted. | `-229552` |  |
+| `EE_PEAK` | amount | required | USD | The highest point of the expected-exposure profile over the life of the trades, the average positive exposure on the date where it is largest. | `141750` |  |
+| `PFE_PEAK` | amount | required | USD | The highest point of the 95th-percentile exposure profile; on 95 of 100 simulated paths the exposure stays below it. It is the measure credit limits are set against. | `347288` |  |
 | `LIMIT` | amount | required | USD | The limit on the counterparty's peak potential future exposure approved for this netting set. | `5000000.0` |  |
-| `UTILISATION` | rate | derived (retiring in 2.10.0) | % of limit | The share of the limit that is used: used divided by limit. Above 100% is a breach. *computed by the netting-set figures (NSET) from 2.10.0; removed from the stored record then* | `0.0695` |  |
-| `CVA` | amount | derived (retiring in 2.10.0) | USD | The reduction in the value of the trades for the risk that the counterparty defaults before they mature. *computed by the netting-set figures (NSET) from 2.10.0; removed from the stored record then* | `-7` |  |
-| `PROFILE` | record list | derived (retiring in 2.10.0) |  | Nested: see nested PROFILE[] *computed by the netting-set figures (NSET) from 2.10.0; removed from the stored record then* |  |  |
+| `UTILISATION` | rate | required | % of limit | The share of the limit that is used: used divided by limit. Above 100% is a breach. | `0.0695` |  |
+| `CVA` | amount | required | USD | The reduction in the value of the trades for the risk that the counterparty defaults before they mature. | `-7` |  |
+| `PROFILE` | record list | required |  | Nested: see nested PROFILE[] |  |  |
 | `TRADES` | record list | required |  | Nested: see nested TRADES[] |  |  |
-| `BY_ASSET` | record list | derived (retiring in 2.10.0) |  | Nested: see nested BY_ASSET[] *computed by the netting-set figures (NSET) from 2.10.0; removed from the stored record then* |  |  |
+| `BY_ASSET` | record list | required |  | Nested: see nested BY_ASSET[] |  |  |
 | `COUNTERPARTY` | id | required |  | Counterparty: the counterparty it refers to | `CP-ALDERSHOT` (pattern `^CP-`) | `counterparty` |
 | `AGREEMENT` | id | required |  | Agreement: the agreement it refers to | `AGR-ALDERSHOT-ISDA` (pattern `^AGR-`) | `agreement` |
 | `CSA` | id | required |  | CSA: the csa it refers to | `CSA-ALDERSHOT` (pattern `^CSA-`) | `csa` |
@@ -248,7 +248,7 @@ Trades that net on close-out under one agreement and CSA, with exposure and coll
 
 **Validation**
 
-- required: fields `NETTING_SET_ID`, `TRADE_COUNT`, `LIMIT`, `TRADES`, `COUNTERPARTY`, `AGREEMENT`, `CSA`, `CREDIT_LIMIT`, `EXPOSURE_PROFILE`, `CVA_RESULT`, `SACCR`, `SIMM`, `COLLATERAL_BALANCE`, `LEGAL_ENTITY`, `NETTING_ENFORCEABLE`
+- required: fields `NETTING_SET_ID`, `TRADE_COUNT`, `NET_MTM`, `COLLATERAL`, `EE_PEAK`, `PFE_PEAK`, `LIMIT`, `UTILISATION`, `CVA`, `PROFILE`, `TRADES`, `BY_ASSET`, `COUNTERPARTY`, `AGREEMENT`, `CSA`, `CREDIT_LIMIT`, `EXPOSURE_PROFILE`, `CVA_RESULT`, `SACCR`, `SIMM`, `COLLATERAL_BALANCE`, `LEGAL_ENTITY`, `NETTING_ENFORCEABLE`
 - unique: key `NETTING_SET_ID`; per business_date
 - pattern: field NETTING_SET_ID; pattern ^NS-
 - range: field TRADE_COUNT; min 0
@@ -271,13 +271,16 @@ Trades that net on close-out under one agreement and CSA, with exposure and coll
 **Notes**
 
 - Dated by the lake's business_date partition: `drishti.py lake build` writes each test-data file's day into it; the documents carry no date field of their own.
-- Terms kept, figures computed from 2.10.0 (docs/contracts/NSET.md): the fields marked derived are computed by the netting-set figures (NSET) and leave the stored record then.
 
-**To review (9)**
+**To review (13)**
 
 - required inferred from 100% coverage in 218 documents (66 samples and 152 test-data documents (data/testdata/counterparty-risk/netting-set/snapshot-2026-07-08.jsonl.gz, data/testdata/counterparty-risk/netting-set/changes-2026-09-30.jsonl.gz)): confirm each required field is mandatory upstream, and each optional one may be empty.
 - source 'xva-engine' is the test data's _meta.source (synthetic): name the production system that delivers it.
 - due time of each business date is not known: state it (for example, by 06:00 New York the next business day).
+- NET_MTM is a column a compute engine produces (docs/contracts/README.md section 14) on a record that keeps it: confirm whether it is computed and removed.
+- EE_PEAK is a column a compute engine produces (docs/contracts/README.md section 14) on a record that keeps it: confirm whether it is computed and removed.
+- PFE_PEAK is a column a compute engine produces (docs/contracts/README.md section 14) on a record that keeps it: confirm whether it is computed and removed.
+- UTILISATION is a column a compute engine produces (docs/contracts/README.md section 14) on a record that keeps it: confirm whether it is computed and removed.
 - enum values inferred from the data, not from a glossary: TRADES[].CURRENCY, TRADES[].MATURITY_BUCKET: confirm they are closed lists.
 - number types decided by the field's name: PROFILE[].EE amount, PROFILE[].PFE amount, BY_ASSET[].MTM amount: confirm amount, rate or integer.
 - no unit stated for the amounts PROFILE[].EE, PROFILE[].PFE, BY_ASSET[].MTM (docs/contracts/README.md section 7: USD unless stated): confirm the currency.
@@ -311,9 +314,9 @@ PFE limit by tenor bucket for a counterparty, with utilisation.
 | `COUNTERPARTY_NAME` | text | required |  | The legal entity the limit applies to. | `Aldershot Pension Trust` |  |
 | `MEASURE` | text | required |  | The exposure measure the limit is set on, for example the peak of the 95th-percentile potential future exposure. | `PFE 95 peak` |  |
 | `LIMIT` | amount | required | USD | The most exposure the bank accepts to the counterparty on this measure. | `337000000.0` |  |
-| `USED` | amount | derived (retiring in 2.10.0) | USD | The exposure measured today against the limit. *computed by limit usage (LIM) from 2.10.0; removed from the stored record then* | `224800213` |  |
-| `UTILISATION` | rate | derived (retiring in 2.10.0) | % of limit | The share of the limit that is used: used divided by limit. Above 100% is a breach. *computed by limit usage (LIM) from 2.10.0; removed from the stored record then* | `0.6671` |  |
-| `STATUS` | text | derived (retiring in 2.10.0) |  | Status *computed by limit usage (LIM) from 2.10.0; removed from the stored record then* | `Early warning`, `Within limit` |  |
+| `USED` | amount | required | USD | The exposure measured today against the limit. | `224800213` |  |
+| `UTILISATION` | rate | required | % of limit | The share of the limit that is used: used divided by limit. Above 100% is a breach. | `0.6671` |  |
+| `STATUS` | text | required |  | Status | `Early warning`, `Within limit` |  |
 | `BUCKETS` | record list | required |  | Nested: see nested BUCKETS[] |  |  |
 | `COUNTERPARTY` | id | required |  | Counterparty: the counterparty it refers to | `CP-ALDERSHOT` (pattern `^CP-`) | `counterparty` |
 | `APPROVED_BY` | text | required |  | — | `Credit Risk Committee` |  |
@@ -325,14 +328,14 @@ PFE limit by tenor bucket for a counterparty, with utilisation.
 |---|---|---|---|---|---|---|
 | `BUCKET` | text | required |  | The range of years to maturity the limit is split into; exposure on trades that mature within it is counted against it. | `0-1Y`, `1-3Y`, `10Y+`, `3-5Y`, `5-10Y` |  |
 | `LIMIT` | amount | required | USD | The limit that applies to this tenor bucket. | `337000000` |  |
-| `USED` | amount | derived (retiring in 2.10.0) | USD | The exposure in this tenor bucket. *computed by limit usage (LIM) from 2.10.0; removed from the stored record then* | `191080181` |  |
-| `UTILISATION` | rate | derived (retiring in 2.10.0) | % of limit | The share of the limit that is used: used divided by limit. Above 100% is a breach. *computed by limit usage (LIM) from 2.10.0; removed from the stored record then* | `0.567` |  |
+| `USED` | amount | required | USD | The exposure in this tenor bucket. | `191080181` |  |
+| `UTILISATION` | rate | required | % of limit | The share of the limit that is used: used divided by limit. Above 100% is a breach. | `0.567` |  |
 
 **Links:** `COUNTERPARTY` → `counterparty`.
 
 **Validation**
 
-- required: fields `LIMIT_ID`, `COUNTERPARTY_NAME`, `MEASURE`, `LIMIT`, `BUCKETS`, `COUNTERPARTY`, `APPROVED_BY`, `REVIEW_DUE`
+- required: fields `LIMIT_ID`, `COUNTERPARTY_NAME`, `MEASURE`, `LIMIT`, `USED`, `UTILISATION`, `STATUS`, `BUCKETS`, `COUNTERPARTY`, `APPROVED_BY`, `REVIEW_DUE`
 - unique: key `LIMIT_ID`; per business_date
 - pattern: field LIMIT_ID; pattern ^LIM-
 - enum: field STATUS; values `Early warning`, `Within limit`
@@ -342,7 +345,6 @@ PFE limit by tenor bucket for a counterparty, with utilisation.
 **Notes**
 
 - Dated by the lake's business_date partition: `drishti.py lake build` writes each test-data file's day into it; the documents carry no date field of their own.
-- Terms kept, figures computed from 2.10.0 (docs/contracts/LIM.md): the fields marked derived are computed by limit usage (LIM) and leave the stored record then.
 
 **To review (6)**
 
@@ -360,8 +362,8 @@ Simulated EE, EPE, ENE and PFE by time bucket for a netting set.
 |  |  |
 |---|---|
 | Contract | [exposure-profile.contract.yaml](../../../config/packs/counterparty-risk/contracts/exposure-profile.contract.yaml) · version 1.0 |
-| Class | computed |
-| Status | retiring in 2.10.0, replaced by docs/contracts/EXP.md |
+| Class | fundamental |
+| Status | active |
 | Source | xva-engine |
 | Grain | One row per exposure profile per business date, keyed by PROFILE_ID. |
 | Key | `PROFILE_ID` |
@@ -376,12 +378,12 @@ Simulated EE, EPE, ENE and PFE by time bucket for a netting set.
 | Field | Type | Presence | Unit | Description | Example or values | Link |
 |---|---|---|---|---|---|---|
 | `PROFILE_ID` | id | required |  | The record's id (the business key) | `EXP-ALDERSHOT-FRA` (pattern `^EXP-`) |  |
-| `EPE` | amount | derived | USD | The average of the expected exposure over the life of the trades (or the first year); it is the exposure the CVA and the internal-model capital are built on. *computed by the exposure engine (EXP); removed when retired* | `26290` |  |
-| `EEPE` | amount | derived | USD | The average over the first year of the effective expected exposure, which cannot fall from one date to the next. It is the exposure used for the internal-model capital. *computed by the exposure engine (EXP); removed when retired* | `141750` |  |
-| `PFE_PEAK` | amount | derived | USD | The highest value of the 95th-percentile exposure over the life of the trades. *computed by the exposure engine (EXP); removed when retired* | `347288` |  |
+| `EPE` | amount | required | USD | The average of the expected exposure over the life of the trades (or the first year); it is the exposure the CVA and the internal-model capital are built on. | `26290` |  |
+| `EEPE` | amount | required | USD | The average over the first year of the effective expected exposure, which cannot fall from one date to the next. It is the exposure used for the internal-model capital. | `141750` |  |
+| `PFE_PEAK` | amount | required | USD | The highest value of the 95th-percentile exposure over the life of the trades. | `347288` |  |
 | `PATHS` | integer | required |  | The number of Monte Carlo scenarios of the market that were simulated. More paths means a smoother tail. | `5000` |  |
 | `RUN_DATE` | date | required |  | The date of the market data the simulation started from. | `2026-09-30` |  |
-| `BUCKETS` | record list | derived |  | Nested: see nested BUCKETS[] *computed by the exposure engine (EXP); removed when retired* |  |  |
+| `BUCKETS` | record list | required |  | Nested: see nested BUCKETS[] |  |  |
 | `NETTING_SET` | id | required |  | Netting set: the netting-set it refers to | `NS-ALDERSHOT-FRA` (pattern `^NS-`) | `netting-set` |
 | `MODEL` | text | required |  | — | `Hull-White 1F rates, GBM FX and equity, 5,000 paths` |  |
 | `CONFIDENCE` | rate | required |  | — | `0.95` |  |
@@ -400,7 +402,7 @@ Simulated EE, EPE, ENE and PFE by time bucket for a netting set.
 
 **Validation**
 
-- required: fields `PROFILE_ID`, `PATHS`, `RUN_DATE`, `NETTING_SET`, `MODEL`, `CONFIDENCE`
+- required: fields `PROFILE_ID`, `EPE`, `EEPE`, `PFE_PEAK`, `PATHS`, `RUN_DATE`, `BUCKETS`, `NETTING_SET`, `MODEL`, `CONFIDENCE`
 - unique: key `PROFILE_ID`; per business_date
 - pattern: field PROFILE_ID; pattern ^EXP-
 - link: field NETTING_SET; kind netting-set
@@ -408,13 +410,15 @@ Simulated EE, EPE, ENE and PFE by time bucket for a netting set.
 **Notes**
 
 - Dated by the lake's business_date partition: `drishti.py lake build` writes each test-data file's day into it; the documents carry no date field of their own.
-- Retiring in 2.10.0: the stored kind is removed and computed instead by the exposure engine (EXP) (docs/contracts/EXP.md); old ids and links open the computed page.
 
-**To review (6)**
+**To review (9)**
 
 - required inferred from 100% coverage in 218 documents (66 samples and 152 test-data documents (data/testdata/counterparty-risk/exposure-profile/snapshot-2026-07-08.jsonl.gz, data/testdata/counterparty-risk/exposure-profile/changes-2026-09-30.jsonl.gz)): confirm each required field is mandatory upstream, and each optional one may be empty.
 - source 'xva-engine' is the test data's _meta.source (synthetic): name the production system that delivers it.
 - due time of each business date is not known: state it (for example, by 06:00 New York the next business day).
+- EPE is a column a compute engine produces (docs/contracts/README.md section 14) on a record that keeps it: confirm whether it is computed and removed.
+- EEPE is a column a compute engine produces (docs/contracts/README.md section 14) on a record that keeps it: confirm whether it is computed and removed.
+- PFE_PEAK is a column a compute engine produces (docs/contracts/README.md section 14) on a record that keeps it: confirm whether it is computed and removed.
 - number types decided by the field's name: CONFIDENCE rate: confirm amount, rate or integer.
 - no description in about.yaml or the Sutras for MODEL, CONFIDENCE: write them in the pack's config/about.yaml glossary.
 - PATHS, MODEL and CONFIDENCE describe the simulation run: confirm they move to the exposure-path input's run metadata (EXP.md).
@@ -426,8 +430,8 @@ Credit, debit and funding valuation adjustments with sensitivities.
 |  |  |
 |---|---|
 | Contract | [cva.contract.yaml](../../../config/packs/counterparty-risk/contracts/cva.contract.yaml) · version 1.0 |
-| Class | computed |
-| Status | retiring in 2.10.0, replaced by docs/contracts/CVA.md |
+| Class | fundamental |
+| Status | active |
 | Source | xva-engine |
 | Grain | One row per cva / xva per business date, keyed by RESULT_ID. |
 | Key | `RESULT_ID` |
@@ -442,13 +446,13 @@ Credit, debit and funding valuation adjustments with sensitivities.
 | Field | Type | Presence | Unit | Description | Example or values | Link |
 |---|---|---|---|---|---|---|
 | `RESULT_ID` | id | required |  | The record's id (the business key) | `CVA-ALDERSHOT-FRA` (pattern `^CVA-`) |  |
-| `CVA` | amount | derived | USD | The expected loss from the counterparty defaulting, valued at market spreads and taken off the value of the trades. *computed by CVA / XVA; removed when retired* | `-7` |  |
-| `DVA` | amount | derived | USD | The mirror image of CVA: the gain from the bank's own possible default, which reduces what it would owe. *computed by CVA / XVA; removed when retired* | `4` |  |
-| `FVA` | amount | derived | USD | The cost, or benefit, of funding the collateral and the hedges of uncollateralised trades. *computed by CVA / XVA; removed when retired* | `-407` |  |
-| `KVA` | amount | derived | USD | The cost of holding regulatory capital against the trades over their life. *computed by CVA / XVA; removed when retired* | `-1389` |  |
-| `CS01` | amount | derived | USD per bp | The change in the CVA for a one basis point rise in the counterparty's credit spread. *computed by CVA / XVA; removed when retired* | `0` |  |
-| `COMPONENTS` | record list | derived |  | Nested: see nested COMPONENTS[] *computed by CVA / XVA; removed when retired* |  |  |
-| `SENSITIVITIES` | record list | derived |  | Nested: see nested SENSITIVITIES[] *computed by CVA / XVA; removed when retired* |  |  |
+| `CVA` | amount | required | USD | The expected loss from the counterparty defaulting, valued at market spreads and taken off the value of the trades. | `-7` |  |
+| `DVA` | amount | required | USD | The mirror image of CVA: the gain from the bank's own possible default, which reduces what it would owe. | `4` |  |
+| `FVA` | amount | required | USD | The cost, or benefit, of funding the collateral and the hedges of uncollateralised trades. | `-407` |  |
+| `KVA` | amount | required | USD | The cost of holding regulatory capital against the trades over their life. | `-1389` |  |
+| `CS01` | amount | required | USD per bp | The change in the CVA for a one basis point rise in the counterparty's credit spread. | `0` |  |
+| `COMPONENTS` | record list | required |  | Nested: see nested COMPONENTS[] |  |  |
+| `SENSITIVITIES` | record list | required |  | Nested: see nested SENSITIVITIES[] |  |  |
 | `NETTING_SET` | id | required |  | Netting set: the netting-set it refers to | `NS-ALDERSHOT-FRA` (pattern `^NS-`) | `netting-set` |
 | `CREDIT_CURVE` | id | optional |  | Credit curve: the credit-curve it refers to | `CDS-CASCADIA` (pattern `^CDS-`) | `credit-curve` |
 
@@ -471,7 +475,7 @@ Credit, debit and funding valuation adjustments with sensitivities.
 
 **Validation**
 
-- required: fields `RESULT_ID`, `NETTING_SET`
+- required: fields `RESULT_ID`, `CVA`, `DVA`, `FVA`, `KVA`, `CS01`, `COMPONENTS`, `SENSITIVITIES`, `NETTING_SET`
 - unique: key `RESULT_ID`; per business_date
 - pattern: field RESULT_ID; pattern ^CVA-
 - link: field NETTING_SET; kind netting-set
@@ -483,7 +487,6 @@ Credit, debit and funding valuation adjustments with sensitivities.
 **Notes**
 
 - Dated by the lake's business_date partition: `drishti.py lake build` writes each test-data file's day into it; the documents carry no date field of their own.
-- Retiring in 2.10.0: the stored kind is removed and computed instead by CVA / XVA (docs/contracts/CVA.md); old ids and links open the computed page.
 
 **To review (7)**
 
@@ -502,8 +505,8 @@ Regulatory EAD: replacement cost, PFE add-ons by asset class, multiplier.
 |  |  |
 |---|---|
 | Contract | [sa-ccr.contract.yaml](../../../config/packs/counterparty-risk/contracts/sa-ccr.contract.yaml) · version 1.0 |
-| Class | computed |
-| Status | retiring in 2.10.0, replaced by docs/contracts/SACCR.md |
+| Class | fundamental |
+| Status | active |
 | Source | capital-engine |
 | Grain | One row per sa-ccr exposure per business date, keyed by CALC_ID. |
 | Key | `CALC_ID` |
@@ -518,13 +521,13 @@ Regulatory EAD: replacement cost, PFE add-ons by asset class, multiplier.
 | Field | Type | Presence | Unit | Description | Example or values | Link |
 |---|---|---|---|---|---|---|
 | `CALC_ID` | id | required |  | The record's id (the business key) | `SACCR-ALDERSHOT-FRA` (pattern `^SACCR-`) |  |
-| `REPLACEMENT_COST` | amount | derived | USD | The loss if the counterparty defaulted today and the trades were replaced at current market value, less collateral; never below zero. *computed by SA-CCR; removed when retired* | `0` |  |
-| `ADD_ON` | amount | derived | USD | The potential increase in exposure over the next year, built from the add-ons of each asset class with supervisory factors and correlations. *computed by SA-CCR; removed when retired* | `791562` |  |
-| `MULTIPLIER` | rate | derived | factor | A factor between 5% and 1 that reduces the add-on when the netting set is over-collateralised or its value is negative. *computed by SA-CCR; removed when retired* | `0.933` |  |
-| `EAD` | amount | derived | USD | The SA-CCR exposure: 1.4 times the replacement cost plus the potential future exposure, where the potential future exposure is the multiplier times the add-on. *computed by SA-CCR; removed when retired* | `1033938` |  |
-| `RWA` | amount | derived | USD | The exposure at default multiplied by the risk weight of the counterparty. Capital is a percentage of it. *computed by SA-CCR; removed when retired* | `206788` |  |
-| `ADD_ONS` | record list | derived |  | Nested: see nested ADD_ONS[] *computed by SA-CCR; removed when retired* |  |  |
-| `HEDGING_SETS` | record list | derived |  | Nested: see nested HEDGING_SETS[] *computed by SA-CCR; removed when retired* |  |  |
+| `REPLACEMENT_COST` | amount | required | USD | The loss if the counterparty defaulted today and the trades were replaced at current market value, less collateral; never below zero. | `0` |  |
+| `ADD_ON` | amount | required | USD | The potential increase in exposure over the next year, built from the add-ons of each asset class with supervisory factors and correlations. | `791562` |  |
+| `MULTIPLIER` | rate | required | factor | A factor between 5% and 1 that reduces the add-on when the netting set is over-collateralised or its value is negative. | `0.933` |  |
+| `EAD` | amount | required | USD | The SA-CCR exposure: 1.4 times the replacement cost plus the potential future exposure, where the potential future exposure is the multiplier times the add-on. | `1033938` |  |
+| `RWA` | amount | required | USD | The exposure at default multiplied by the risk weight of the counterparty. Capital is a percentage of it. | `206788` |  |
+| `ADD_ONS` | record list | required |  | Nested: see nested ADD_ONS[] |  |  |
+| `HEDGING_SETS` | record list | required |  | Nested: see nested HEDGING_SETS[] |  |  |
 | `NETTING_SET` | id | required |  | Netting set: the netting-set it refers to | `NS-ALDERSHOT-FRA` (pattern `^NS-`) | `netting-set` |
 | `ALPHA` | rate | required |  | — | `1.4` |  |
 
@@ -548,7 +551,7 @@ Regulatory EAD: replacement cost, PFE add-ons by asset class, multiplier.
 
 **Validation**
 
-- required: fields `CALC_ID`, `NETTING_SET`, `ALPHA`
+- required: fields `CALC_ID`, `REPLACEMENT_COST`, `ADD_ON`, `MULTIPLIER`, `EAD`, `RWA`, `ADD_ONS`, `HEDGING_SETS`, `NETTING_SET`, `ALPHA`
 - unique: key `CALC_ID`; per business_date
 - pattern: field CALC_ID; pattern ^SACCR-
 - link: field NETTING_SET; kind netting-set
@@ -559,13 +562,13 @@ Regulatory EAD: replacement cost, PFE add-ons by asset class, multiplier.
 **Notes**
 
 - Dated by the lake's business_date partition: `drishti.py lake build` writes each test-data file's day into it; the documents carry no date field of their own.
-- Retiring in 2.10.0: the stored kind is removed and computed instead by SA-CCR (docs/contracts/SACCR.md); old ids and links open the computed page.
 
-**To review (8)**
+**To review (9)**
 
 - required inferred from 100% coverage in 142 documents (66 samples and 76 test-data documents (data/testdata/counterparty-risk/sa-ccr/snapshot-2026-07-08.jsonl.gz, data/testdata/counterparty-risk/sa-ccr/changes-2026-09-30.jsonl.gz)): confirm each required field is mandatory upstream, and each optional one may be empty.
 - source 'capital-engine' is the test data's _meta.source (synthetic): name the production system that delivers it.
 - due time of each business date is not known: state it (for example, by 06:00 New York the next business day).
+- EAD is a column a compute engine produces (docs/contracts/README.md section 14) on a record that keeps it: confirm whether it is computed and removed.
 - enum values inferred from the data, not from a glossary: ADD_ONS[].ASSET_CLASS, HEDGING_SETS[].ASSET_CLASS, HEDGING_SETS[].HEDGING_SET: confirm they are closed lists.
 - number types decided by the field's name: ALPHA rate, ADD_ONS[].ADD_ON amount: confirm amount, rate or integer.
 - no unit stated for the amounts ADD_ONS[].ADD_ON (docs/contracts/README.md section 7: USD unless stated): confirm the currency.
@@ -595,9 +598,9 @@ Collateral held and posted under a CSA, by asset, after haircuts.
 | Field | Type | Presence | Unit | Description | Example or values | Link |
 |---|---|---|---|---|---|---|
 | `BALANCE_ID` | id | required |  | The record's id (the business key) | `COLL-ALDERSHOT-FRA` (pattern `^COLL-`) |  |
-| `HELD` | amount | derived (retiring in 2.10.0) | USD | The collateral the bank has received from the counterparty. *computed by collateral valuation (COLL) from 2.10.0; removed from the stored record then* | `0` |  |
-| `POSTED` | amount | derived (retiring in 2.10.0) | USD | The collateral the bank has delivered to the counterparty. *computed by collateral valuation (COLL) from 2.10.0; removed from the stored record then* | `229552` |  |
-| `NET` | amount | derived (retiring in 2.10.0) | USD | Held minus posted. *computed by collateral valuation (COLL) from 2.10.0; removed from the stored record then* | `-229552` |  |
+| `HELD` | amount | required | USD | The collateral the bank has received from the counterparty. | `0` |  |
+| `POSTED` | amount | required | USD | The collateral the bank has delivered to the counterparty. | `229552` |  |
+| `NET` | amount | required | USD | Held minus posted. | `-229552` |  |
 | `AS_OF` | date | required |  | As of | `2026-09-30` |  |
 | `POSITIONS` | record list | required |  | Nested: see nested POSITIONS[] |  |  |
 | `CSA` | id | required |  | CSA: the csa it refers to | `CSA-ALDERSHOT` (pattern `^CSA-`) | `csa` |
@@ -609,15 +612,15 @@ Collateral held and posted under a CSA, by asset, after haircuts.
 |---|---|---|---|---|---|---|
 | `ASSET` | text | required |  | The cash or security that is held or posted. | `Solaris Energy Corp. 2031` |  |
 | `DIRECTION` | text | required |  | Whether the bank posted the asset or received it. | `Posted`, `Received`, `Held` |  |
-| `MARKET_VALUE` | amount | derived (retiring in 2.10.0) | USD | The current market value of the asset before the haircut. *computed by collateral valuation (COLL) from 2.10.0; removed from the stored record then* | `76517` |  |
+| `MARKET_VALUE` | amount | required | USD | The current market value of the asset before the haircut. | `76517` |  |
 | `HAIRCUT` | rate | required | % of market value | The percentage taken off the market value to allow for the price moving before the asset can be sold. The CSA sets it by asset type and maturity. | `0.005` |  |
-| `VALUE` | amount | derived (retiring in 2.10.0) | USD | The market value after the haircut, the amount that counts as collateral. *computed by collateral valuation (COLL) from 2.10.0; removed from the stored record then* | `76134` |  |
+| `VALUE` | amount | required | USD | The market value after the haircut, the amount that counts as collateral. | `76134` |  |
 
 **Links:** `CSA` → `csa`, `NETTING_SET` → `netting-set`.
 
 **Validation**
 
-- required: fields `BALANCE_ID`, `AS_OF`, `POSITIONS`, `CSA`, `NETTING_SET`
+- required: fields `BALANCE_ID`, `HELD`, `POSTED`, `NET`, `AS_OF`, `POSITIONS`, `CSA`, `NETTING_SET`
 - unique: key `BALANCE_ID`; per business_date
 - pattern: field BALANCE_ID; pattern ^COLL-
 - link: field CSA; kind csa
@@ -627,7 +630,6 @@ Collateral held and posted under a CSA, by asset, after haircuts.
 **Notes**
 
 - Dated by the lake's business_date partition: `drishti.py lake build` writes each test-data file's day into it; the documents carry no date field of their own.
-- Terms kept, figures computed from 2.10.0 (docs/contracts/COLL.md): the fields marked derived are computed by collateral valuation (COLL) and leave the stored record then.
 
 **To review (5)**
 
@@ -699,7 +701,6 @@ A variation or initial margin call and its settlement status.
 
 - Dated by the lake's business_date partition: `drishti.py lake build` writes each test-data file's day into it; the documents carry no date field of their own.
 - Actual calls and their events are kept (workflow); the expected call (MtM minus collateral minus threshold, then minimum transfer and rounding) is computed and shown beside the call. No stored field is the expected call today.
-- Terms kept, figures computed from 2.10.0 (docs/contracts/MC.md): the fields marked derived are computed by the expected margin call (MC) and leave the stored record then.
 
 **To review (7)**
 
@@ -718,8 +719,8 @@ Initial margin by risk class and product class.
 |  |  |
 |---|---|
 | Contract | [simm.contract.yaml](../../../config/packs/counterparty-risk/contracts/simm.contract.yaml) · version 1.0 |
-| Class | computed |
-| Status | retiring in 2.9.0, replaced by docs/contracts/SIMM.md |
+| Class | fundamental |
+| Status | active |
 | Source | margin-engine |
 | Grain | One row per isda simm initial margin per business date, keyed by CALC_ID. |
 | Key | `CALC_ID` |
@@ -734,11 +735,11 @@ Initial margin by risk class and product class.
 | Field | Type | Presence | Unit | Description | Example or values | Link |
 |---|---|---|---|---|---|---|
 | `CALC_ID` | id | required |  | The record's id (the business key) | `SIMM-ALDERSHOT` (pattern `^SIMM-`) |  |
-| `TOTAL` | amount | derived | USD | The margin the ISDA SIMM model requires, built from the sensitivities of the trades by risk class and product class. *computed by ISDA SIMM; removed when retired* | `7068571` |  |
-| `POSTED` | amount | derived | USD | The initial margin the bank has delivered to the counterparty or a custodian. *computed by ISDA SIMM; removed when retired* | `6856514` |  |
-| `RECEIVED` | amount | derived | USD | The initial margin the counterparty has delivered to the bank. *computed by ISDA SIMM; removed when retired* | `7209942` |  |
+| `TOTAL` | amount | required | USD | The margin the ISDA SIMM model requires, built from the sensitivities of the trades by risk class and product class. | `7068571` |  |
+| `POSTED` | amount | required | USD | The initial margin the bank has delivered to the counterparty or a custodian. | `6856514` |  |
+| `RECEIVED` | amount | required | USD | The initial margin the counterparty has delivered to the bank. | `7209942` |  |
 | `VERSION` | text | required |  | The version of the ISDA Standard Initial Margin Model the calculation used; the model is recalibrated each year. | `ISDA SIMM 2.7` |  |
-| `RISK_CLASSES` | record list | derived |  | Nested: see nested RISK_CLASSES[] *computed by ISDA SIMM; removed when retired* |  |  |
+| `RISK_CLASSES` | record list | required |  | Nested: see nested RISK_CLASSES[] |  |  |
 | `NETTING_SET` | id | required |  | Netting set: the netting-set it refers to | `NS-ALDERSHOT-FRA` (pattern `^NS-`) | `netting-set` |
 | `COUNTERPARTY` | id | required |  | Counterparty: the counterparty it refers to | `CP-ALDERSHOT` (pattern `^CP-`) | `counterparty` |
 
@@ -753,7 +754,7 @@ Initial margin by risk class and product class.
 
 **Validation**
 
-- required: fields `CALC_ID`, `VERSION`, `NETTING_SET`, `COUNTERPARTY`
+- required: fields `CALC_ID`, `TOTAL`, `POSTED`, `RECEIVED`, `VERSION`, `RISK_CLASSES`, `NETTING_SET`, `COUNTERPARTY`
 - unique: key `CALC_ID`; per business_date
 - pattern: field CALC_ID; pattern ^SIMM-
 - link: field NETTING_SET; kind netting-set
@@ -763,7 +764,6 @@ Initial margin by risk class and product class.
 **Notes**
 
 - Dated by the lake's business_date partition: `drishti.py lake build` writes each test-data file's day into it; the documents carry no date field of their own.
-- Retiring in 2.9.0: the stored kind is removed and computed instead by ISDA SIMM (docs/contracts/SIMM.md); old ids and links open the computed page.
 
 **To review (5)**
 

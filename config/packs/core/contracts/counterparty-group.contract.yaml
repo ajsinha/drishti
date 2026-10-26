@@ -58,11 +58,9 @@ fields:
   example: 337000000.0
 - name: UTILISATION
   type: rate
-  presence: derived
+  presence: required
   description: Utilisation
   example: 0.6671
-  retiring-in: 2.10.0
-  note: computed by group utilisation (GRP) from 2.10.0; removed from the stored record then
 - name: MEMBERS
   type: record list
   presence: required
@@ -91,6 +89,7 @@ validation:
   - GROUP_ID
   - NAME
   - LIMIT
+  - UTILISATION
   - MEMBERS
 - rule: unique
   key:
@@ -102,13 +101,13 @@ validation:
 notes:
 - 'Dated by the lake''s business_date partition: `drishti.py lake build` writes each test-data file''s day into it; the documents carry no date
   field of their own.'
-- 'Terms kept, figures computed from 2.10.0 (docs/contracts/GRP.md): the fields marked derived are computed by group utilisation (GRP) and leave
-  the stored record then.'
 review:
 - 'required inferred from 100% coverage in 62 documents (17 samples and 45 test-data documents (data/testdata/core/counterparty-group/snapshot-2026-07-08.jsonl.gz,
   data/testdata/core/counterparty-group/changes-2026-09-30.jsonl.gz)): confirm each required field is mandatory upstream, and each optional one
   may be empty.'
 - 'source ''counterparty-master'' is the test data''s _meta.source (synthetic): name the production system that delivers it.'
 - 'due time of each business date is not known: state it (for example, by 06:00 New York the next business day).'
+- 'UTILISATION is a column a compute engine produces (docs/contracts/README.md section 14) on a record that keeps it: confirm whether it is computed
+  and removed.'
 - 'number types decided by the field''s name: LIMIT amount, UTILISATION rate: confirm amount, rate or integer.'
 - 'no unit stated for the amounts LIMIT (docs/contracts/README.md section 7: USD unless stated): confirm the currency.'

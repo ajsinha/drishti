@@ -44,32 +44,37 @@ This page holds the rules every contract shares. A contract states only where it
 
 ## 1. Status of each contract
 
+**Scope (product owner, 2026-10-25): "Just fundamentals and VaR is good for now."** The active work is the contracts of every
+command (the fundamental data, [section 16](#16-contracts-of-every-command)) and VaR ([VAR.md](VAR.md)). Every other computed measure is
+**PARKED**: its contract stays here as a design, the stored kind it would replace stays active and unchanged, and nothing of it is built
+until the product owner brings it back. Release numbers in the parked contracts are provisional.
+
 **AS BUILT** describes code that exists and is tested. **PLANNED** is the contract the release will implement: column names and rules
 may still change before it ships, and the document records each change.
 
 | Contract (a name in code font is not written yet) | Commands (retired kind) | Release | Status |
 |---|---|---|---|
 | [VAR.md](VAR.md) | VAR (`var`), VNODE (`var-node`); also PORT and POS figures | 2.8.0 | AS BUILT (V0–V3), completion PLANNED |
-| [TRADING_GROUPINGS.md](TRADING_GROUPINGS.md) | CTRD, PTRD, LTRD, ITRD (`counterparty-trades`, `portfolio-trades`, `legal-entity-trades`, `index-trades`) | 2.9.0 | PLANNED |
-| [TVAL.md](TVAL.md) | TVAL (`trade-valuation`) | 2.9.0 | PLANNED |
-| [STR.md](STR.md) | STR (`stress-result`); SCN stays fundamental | 2.9.0 | PLANNED |
-| [FRTB.md](FRTB.md) | FRTB (`frtb-sensitivity`) | 2.9.0 | PLANNED |
-| [SIMM.md](SIMM.md) | SIMM (`simm`) | 2.9.0 | PLANNED |
-| [PNL.md](PNL.md) | PNL (`pnl-explain`) | 2.9.0 | PLANNED |
-| [NSET.md](NSET.md) | NSET (`netting-set`): terms kept, figures computed | 2.10.0 | PLANNED |
-| [SACCR.md](SACCR.md) | SACCR (`sa-ccr`) | 2.10.0 | PLANNED |
-| [COLL.md](COLL.md) | COLL (`collateral-balance`): holdings kept, values computed | 2.10.0 | PLANNED |
-| [MC.md](MC.md) | MC (`margin-call`): calls kept, expected call computed | 2.10.0 | PLANNED |
-| [EXP.md](EXP.md) | EXP (`exposure-profile`) | 2.10.0 | PLANNED |
-| [LIM.md](LIM.md) | LIM (`credit-limit`): limits kept, usage computed | 2.10.0 | PLANNED |
-| [GRP.md](GRP.md) | GRP (`counterparty-group`): members kept, usage computed | 2.10.0 | PLANNED |
-| [CVA.md](CVA.md) | CVA (`cva`) | 2.10.0 | PLANNED |
-| [WWR.md](WWR.md) | wrong-way risk (new) | 2.10.0 | PLANNED |
-| `GROUPINGS_AND_ANALYTICS.md` | LEIG, LEIC, SIC, ECG, CORR, USEQ ratios, PXH analytics | 2.9.0 / 2.10.0 | PLANNED |
-| `CONCENTRATION.md` | large exposures (new); the OSFI report once its template is supplied | 2.11.0 | PLANNED |
-| `LIQUIDITY.md` | LCR, NSFR, NCCF, cash-flow gaps (new) | 2.11.0 | PLANNED |
-| `IRRBB.md` | ΔEVE, ΔNII (new) | 2.11.0 | PLANNED |
-| `CREDIT.md` | expected credit loss, credit VaR (new) | 2.11.0 | PLANNED |
+| [TRADING_GROUPINGS.md](TRADING_GROUPINGS.md) | CTRD, PTRD, LTRD, ITRD (`counterparty-trades`, `portfolio-trades`, `legal-entity-trades`, `index-trades`) | 2.9.0 | PARKED (design kept) |
+| [TVAL.md](TVAL.md) | TVAL (`trade-valuation`) | 2.9.0 | PARKED (design kept) |
+| [STR.md](STR.md) | STR (`stress-result`); SCN stays fundamental | 2.9.0 | PARKED (design kept) |
+| [FRTB.md](FRTB.md) | FRTB (`frtb-sensitivity`) | 2.9.0 | PARKED (design kept) |
+| [SIMM.md](SIMM.md) | SIMM (`simm`) | 2.9.0 | PARKED (design kept) |
+| [PNL.md](PNL.md) | PNL (`pnl-explain`) | 2.9.0 | PARKED (design kept) |
+| [NSET.md](NSET.md) | NSET (`netting-set`): terms kept, figures computed | 2.10.0 | PARKED (design kept) |
+| [SACCR.md](SACCR.md) | SACCR (`sa-ccr`) | 2.10.0 | PARKED (design kept) |
+| [COLL.md](COLL.md) | COLL (`collateral-balance`): holdings kept, values computed | 2.10.0 | PARKED (design kept) |
+| [MC.md](MC.md) | MC (`margin-call`): calls kept, expected call computed | 2.10.0 | PARKED (design kept) |
+| [EXP.md](EXP.md) | EXP (`exposure-profile`) | 2.10.0 | PARKED (design kept) |
+| [LIM.md](LIM.md) | LIM (`credit-limit`): limits kept, usage computed | 2.10.0 | PARKED (design kept) |
+| [GRP.md](GRP.md) | GRP (`counterparty-group`): members kept, usage computed | 2.10.0 | PARKED (design kept) |
+| [CVA.md](CVA.md) | CVA (`cva`) | 2.10.0 | PARKED (design kept) |
+| [WWR.md](WWR.md) | wrong-way risk (new) | 2.10.0 | PARKED (design kept) |
+| `GROUPINGS_AND_ANALYTICS.md` | LEIG, LEIC, SIC, ECG, CORR, USEQ ratios, PXH analytics | 2.9.0 / 2.10.0 | PARKED (not written) |
+| `CONCENTRATION.md` | large exposures (new); the OSFI report once its template is supplied | 2.11.0 | PARKED (not written) |
+| `LIQUIDITY.md` | LCR, NSFR, NCCF, cash-flow gaps (new) | 2.11.0 | PARKED (not written) |
+| `IRRBB.md` | ΔEVE, ΔNII (new) | 2.11.0 | PARKED (not written) |
+| `CREDIT.md` | expected credit loss, credit VaR (new) | 2.11.0 | PARKED (not written) |
 
 The table lists the contracts of the computed measures. Every command that exists today, stored or computed, also has a
 machine-readable contract of its own data ([section 16](#16-contracts-of-every-command)); a retiring kind's contract names the

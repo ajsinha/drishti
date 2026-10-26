@@ -21,7 +21,7 @@ Every command of the command line: its own words and forms, the 10 packs' codes,
 
 **Data** says what kind of data a command shows ([the data contracts](../contracts/README.md#3-four-kinds-of-data)): *fundamental* (masters, terms, market and public data, kept as delivered), *engine input* (what upstream engines deliver for the computed measures), *Drishti's own* (made by Drishti) and *computed* (worked out when asked). **Change** says when a command moves to the compute model, or when the figures on a record start to be computed instead of stored ([the roadmap](../architecture/IMPLEMENTATION_PLAN.md#the-computed-measures-roadmap-280-to-2120-product-owner-2026-10-25)). Each mnemonic's fields are in its data contract ([every command's contract](../contracts/packs/README.md)).
 
-In numbers: 62 fundamental, 6 engine input, 1 Drishti's own and 21 computed; 19 move to the compute model and 9 keep their record while its figures become computed.
+In numbers: 75 fundamental, 6 engine input, 1 Drishti's own and 8 computed; 2 move to the compute model and 3 keep their record while its figures become computed.
 
 ## Contents
 
@@ -95,14 +95,14 @@ The parties and organisation every pack builds on: counterparties (with country 
 
 | Command | Opens | What it does | Example | Data | Change |
 |---|---|---|---|---|---|
-| `CPTY` | Counterparty | A legal entity the bank trades with: identifiers (LEI, UEN), rating, sector, country of risk and parent group. | `CPTY CP-NORTHBRIDGE` | fundamental | Figures computed from 2.10.0: `NET_MTM`, `PFE_PEAK` |
-| `GRP` | Counterparty group | Economic group of related counterparties (obligor group). | `GRP GRP-ALDERSHOT` | fundamental | Figures computed from 2.10.0: `UTILISATION` |
+| `CPTY` | Counterparty | A legal entity the bank trades with: identifiers (LEI, UEN), rating, sector, country of risk and parent group. | `CPTY CP-NORTHBRIDGE` | fundamental |  |
+| `GRP` | Counterparty group | Economic group of related counterparties (obligor group). | `GRP GRP-ALDERSHOT` | fundamental |  |
 | `ISS` | Issuer | Issuer of bonds and reference entity for CDS. | `ISS ISS-BUND` | fundamental |  |
 | `CCP` | Central counterparty | A clearing house with its default fund and margin model. | `CCP CCP-CME` | fundamental |  |
 | `LE` | Bank legal entity | The bank's own booking entity. | `LE LE-NY` | fundamental |  |
-| `BOOK` | Book | A trading book: owner desk, trades and risk. | `BOOK BOOK-RATES-1` | fundamental | Figures computed from 2.8.0: `TRADE_COUNT`, `MTM`, `DV01`, `TOP_TRADES` |
-| `DESK` | Desk | A trading desk: books, limits and risk results. | `DESK DESK-RATES` | fundamental | Figures computed from 2.8.0: `VAR_99`, `MTM`, `VAR_RESULT`, `POSITIONS` |
-| `TRDR` | Trader | A trader and their books. | `TRDR TRDR-ASHAH` | fundamental | Figures computed from 2.8.0: `TRADE_COUNT` |
+| `BOOK` | Book | A trading book: owner desk, trades and risk. | `BOOK BOOK-RATES-1` | fundamental |  |
+| `DESK` | Desk | A trading desk: books, limits and risk results. | `DESK DESK-RATES` | fundamental | Figures computed from 2.8.0: `VAR_99`, `VAR_RESULT` |
+| `TRDR` | Trader | A trader and their books. | `TRDR TRDR-ASHAH` | fundamental |  |
 | `CAL` | Holiday calendar | Business-day calendar (USNY, TARGET, GBLO, JPTO…). | `CAL CAL-EUTA` | fundamental |  |
 | `CLR` | Clearing account | An account at a CCP holding cleared trades and margin. | `CLR CLR-CME-1` | fundamental |  |
 
@@ -114,14 +114,14 @@ ISDA master agreements and CSAs, netting sets, exposure and PFE, CVA/XVA, SA-CCR
 |---|---|---|---|---|---|
 | `AGR` | Master agreement | ISDA, GMRA or GMSLA master agreement with its key elections. | `AGR AGR-NORTHBRIDGE-ISDA` | fundamental |  |
 | `CSA` | Credit support annex | Collateral terms: thresholds, minimum transfer, eligible collateral and haircuts. | `CSA CSA-ALDERSHOT` | fundamental |  |
-| `NSET` | Netting set | Trades that net on close-out under one agreement and CSA, with exposure and collateral. | `NSET NS-SUMMIT-NY` | fundamental | Figures computed from 2.10.0: `NET_MTM`, `COLLATERAL`, `EE_PEAK`, `PFE_PEAK`, `UTILISATION`, `CVA`, `PROFILE`, `BY_ASSET` |
-| `LIM` | Credit limit | PFE limit by tenor bucket for a counterparty, with utilisation. | `LIM LIM-SUMMIT` | fundamental | Figures computed from 2.10.0: `USED`, `UTILISATION`, `STATUS` |
-| `EXP` | Exposure profile | Simulated EE, EPE, ENE and PFE by time bucket for a netting set. | `EXP EXP-ALDERSHOT-FRA` | computed | Moves to compute in 2.10.0: [EXP.md](../contracts/EXP.md) |
-| `CVA` | CVA / XVA | Credit, debit and funding valuation adjustments with sensitivities. | `CVA CVA-SUMMIT-NY` | computed | Moves to compute in 2.10.0: [CVA.md](../contracts/CVA.md) |
-| `SACCR` | SA-CCR exposure | Regulatory EAD: replacement cost, PFE add-ons by asset class, multiplier. | `SACCR SACCR-SUMMIT-NY` | computed | Moves to compute in 2.10.0: [SACCR.md](../contracts/SACCR.md) |
-| `COLL` | Collateral balance | Collateral held and posted under a CSA, by asset, after haircuts. | `COLL COLL-ALDERSHOT-FRA` | fundamental | Figures computed from 2.10.0: `HELD`, `POSTED`, `NET` |
+| `NSET` | Netting set | Trades that net on close-out under one agreement and CSA, with exposure and collateral. | `NSET NS-SUMMIT-NY` | fundamental |  |
+| `LIM` | Credit limit | PFE limit by tenor bucket for a counterparty, with utilisation. | `LIM LIM-SUMMIT` | fundamental |  |
+| `EXP` | Exposure profile | Simulated EE, EPE, ENE and PFE by time bucket for a netting set. | `EXP EXP-ALDERSHOT-FRA` | fundamental |  |
+| `CVA` | CVA / XVA | Credit, debit and funding valuation adjustments with sensitivities. | `CVA CVA-SUMMIT-NY` | fundamental |  |
+| `SACCR` | SA-CCR exposure | Regulatory EAD: replacement cost, PFE add-ons by asset class, multiplier. | `SACCR SACCR-SUMMIT-NY` | fundamental |  |
+| `COLL` | Collateral balance | Collateral held and posted under a CSA, by asset, after haircuts. | `COLL COLL-ALDERSHOT-FRA` | fundamental |  |
 | `MC` | Margin call | A variation or initial margin call and its settlement status. | `MC MC-ALDERSHOT-FRA-1` | fundamental |  |
-| `SIMM` | ISDA SIMM initial margin | Initial margin by risk class and product class. | `SIMM SIMM-ALDERSHOT` | computed | Moves to compute in 2.9.0: [SIMM.md](../contracts/SIMM.md) |
+| `SIMM` | ISDA SIMM initial margin | Initial margin by risk class and product class. | `SIMM SIMM-ALDERSHOT` | fundamental |  |
 
 ## GLEIF legal entities (`gleif`)
 
@@ -130,9 +130,9 @@ Legal Entity Identifiers from GLEIF (CC0): the legal entities of the us-equities
 | Command | Opens | What it does | Example | Data | Change |
 |---|---|---|---|---|---|
 | `LEI` | LEI legal entity | A legal entity from its LEI record: key facts, addresses, registration and renewal, parents, children and identifiers. | `LEI 8I5DZWZKVSZI1NUHU748` | fundamental |  |
-| `LEIG` | LEI ownership group | An ownership group: the ultimate parent with its whole tree, every member, and counts by country and legal form. | `LEIG 8I5DZWZKVSZI1NUHU748` | computed | Moves to compute in 2.9.0 or 2.10.0: `GROUPINGS_AND_ANALYTICS.md` |
+| `LEIG` | LEI ownership group | An ownership group: the ultimate parent with its whole tree, every member, and counts by country and legal form. | `LEIG 8I5DZWZKVSZI1NUHU748` | fundamental |  |
 | `LEIR` | LEI parent relationship | One consolidation relationship from GLEIF's level 2 data: the child, its direct or ultimate parent, status and periods. | `LEIR LEIREL-010PWNH4K3BLIC3I7R03-DIRECT` | fundamental |  |
-| `LEIC` | LEI country | A country's legal entities in the pack: the entities, the groups present, legal forms and cities. | `LEIC GB` | computed | Moves to compute in 2.9.0 or 2.10.0: `GROUPINGS_AND_ANALYTICS.md` |
+| `LEIC` | LEI country | A country's legal entities in the pack: the entities, the groups present, legal forms and cities. | `LEIC GB` | fundamental |  |
 | `LEIM` | ISIN or BIC to LEI | An ISIN, BIC or MIC and the legal entity GLEIF's mapping files give it. | `LEIM WABTUS3WXXX` | fundamental |  |
 
 ## Market data (`market-data`)
@@ -160,7 +160,7 @@ Curves, volatility surfaces, FX, equities, credit, inflation, commodities, fixin
 | `CMDV` | Commodity volatility surface | Implied vols by delivery month and moneyness. | `CMDV CMDV-BRENT` | fundamental |  |
 | `FIX` | Rate index fixings | Published overnight and term rate fixings (SOFR, €STR, SONIA…). | `FIX FIX-AONIA` | fundamental |  |
 | `BND` | Bond (security master) | A listed bond: terms, price, yield, spreads and analytics. | `BND BND-BRVERD054608` | fundamental |  |
-| `CORR` | Correlation matrix | Pairwise correlations used by basket, quanto and spread products. | `CORR CORR-EU-EQ` | computed | Moves to compute in 2.9.0 or 2.10.0: `GROUPINGS_AND_ANALYTICS.md` |
+| `CORR` | Correlation matrix | Pairwise correlations used by basket, quanto and spread products. | `CORR CORR-EU-EQ` | fundamental |  |
 
 ## Market risk (`market-risk`)
 
@@ -170,12 +170,12 @@ Value at risk, stress testing, FRTB sensitivities and P&L explain.
 |---|---|---|---|---|---|
 | `VAR` | VaR / expected shortfall | Historical VaR and ES for a desk or portfolio, with backtesting. | `VAR VAR-RATES` | computed | Moves to compute in 2.8.0: [VAR.md](../contracts/VAR.md) |
 | `SCN` | Stress scenario | A named historical or hypothetical shock set. | `SCN SCN-COVID2020` | fundamental |  |
-| `STR` | Stress result | P&L of a desk under a scenario, by book. | `STR STR-GFC2008-RATES` | computed | Moves to compute in 2.9.0: [STR.md](../contracts/STR.md) |
-| `FRTB` | FRTB sensitivities | Delta, vega and curvature by risk class and bucket (SBM). | `FRTB FRTB-RATES-1` | computed | Moves to compute in 2.9.0: [FRTB.md](../contracts/FRTB.md) |
-| `PNL` | P&L explain | Daily P&L attributed to risk factors, new trades and residual. | `PNL PNL-RATES-1` | computed | Moves to compute in 2.9.0: [PNL.md](../contracts/PNL.md) |
-| `TVAL` | Trade valuation | A trade's valuation from the risk engine, for every source system: MTM, one-day P&L and DV01, with what it values (source system, portfolio, desk, product). | `TVAL TVAL-1000001` | computed | Moves to compute in 2.9.0: [TVAL.md](../contracts/TVAL.md) |
+| `STR` | Stress result | P&L of a desk under a scenario, by book. | `STR STR-GFC2008-RATES` | fundamental |  |
+| `FRTB` | FRTB sensitivities | Delta, vega and curvature by risk class and bucket (SBM). | `FRTB FRTB-RATES-1` | fundamental |  |
+| `PNL` | P&L explain | Daily P&L attributed to risk factors, new trades and residual. | `PNL PNL-RATES-1` | fundamental |  |
+| `TVAL` | Trade valuation | A trade's valuation from the risk engine, for every source system: MTM, one-day P&L and DV01, with what it values (source system, portfolio, desk, product). | `TVAL TVAL-1000001` | fundamental |  |
 | `POS` | Position | A position: one instrument held in one book, the trades that build or reduce it, its VaR and its P&L over the scenario days. | `POS POS-BOOK-EQD-2~EQ_ASIAN-USD-2029Q2` | Drishti's own | Figures computed from 2.8.0: `VAR_99`, `ES_975`, `COMPONENT_VAR` |
-| `PORT` | Portfolio | A portfolio in terms of the positions inside it: longs and shorts, market value, VaR, ES and each position's contribution. | `PORT PF-RATES-DESK` | engine input |  |
+| `PORT` | Portfolio | A portfolio in terms of the positions inside it: longs and shorts, market value, VaR, ES and each position's contribution. | `PORT PF-RATES-DESK` | engine input | Figures computed from 2.8.0: `VAR_99`, `ES_975`, `PNL` |
 | `PNLV` | P&L vector (509 scenarios) | P&L vector of a trade | `PNLV PV-MX-20000209-HS-509` | engine input |  |
 | `SSET` | Scenario set | Scenario set | `SSET HS-509` | engine input |  |
 | `HIER` | Risk hierarchy node | Risk hierarchy node | `HIER LEGAL~LE-NY` | engine input |  |
@@ -199,10 +199,10 @@ Trades in 125 products across rates, FX, credit, equity, commodities, inflation,
 | Command | Opens | What it does | Example | Data | Change |
 |---|---|---|---|---|---|
 | `TRD` | Trade | Trade | `TRD MX-20000001` | fundamental |  |
-| `CTRD` | Counterparty trades (derived from trades) | Every trade with a counterparty, from every source system: its trades (every status, a status filter), upcoming payments, notional by product type and index, maturities, payments by month. | `CTRD CP-ALDERSHOT` | computed | Moves to compute in 2.9.0: [TRADING_GROUPINGS.md](../contracts/TRADING_GROUPINGS.md) |
-| `PTRD` | Portfolio trades (derived from trades) | Every trade of a portfolio (book), from every source system: its trades (every status, a status filter), upcoming payments, notional by product type and index, maturities, payments by month. |  | computed | Moves to compute in 2.9.0: [TRADING_GROUPINGS.md](../contracts/TRADING_GROUPINGS.md) |
-| `LTRD` | Legal entity trades (derived from trades) | Every trade a legal entity of the bank booked, from every source system: its trades (every status, a status filter), upcoming payments, notional by product type and index, maturities, payments by month. |  | computed | Moves to compute in 2.9.0: [TRADING_GROUPINGS.md](../contracts/TRADING_GROUPINGS.md) |
-| `ITRD` | Index trades (derived from trades) | Every trade with a leg on an index (the first leg that names one): its trades (every status, a status filter), upcoming payments, notional by product type and index, maturities, payments by month. |  | computed | Moves to compute in 2.9.0: [TRADING_GROUPINGS.md](../contracts/TRADING_GROUPINGS.md) |
+| `CTRD` | Counterparty trades (derived from trades) | Every trade with a counterparty, from every source system: its trades (every status, a status filter), upcoming payments, notional by product type and index, maturities, payments by month. | `CTRD CP-ALDERSHOT` | computed |  |
+| `PTRD` | Portfolio trades (derived from trades) | Every trade of a portfolio (book), from every source system: its trades (every status, a status filter), upcoming payments, notional by product type and index, maturities, payments by month. |  | computed |  |
+| `LTRD` | Legal entity trades (derived from trades) | Every trade a legal entity of the bank booked, from every source system: its trades (every status, a status filter), upcoming payments, notional by product type and index, maturities, payments by month. |  | computed |  |
+| `ITRD` | Index trades (derived from trades) | Every trade with a leg on an index (the first leg that names one): its trades (every status, a status filter), upcoming payments, notional by product type and index, maturities, payments by month. |  | computed |  |
 
 ## US equities (`us-equities`)
 
@@ -212,7 +212,7 @@ Public data on the companies of the Dow 30, the Nasdaq-100 and the S&P 500, and 
 |---|---|---|---|---|---|
 | `USEQ` | US company | A US listed company: key facts, ten years of annual financials, recent SEC filings and index memberships, from public data. | `USEQ AAPL` | fundamental |  |
 | `IDX` | Index members | An equity index's members (Dow 30, Nasdaq-100, S&P 500) as Wikidata records them; a click opens the member's summary beside. | `IDX SP500` | fundamental |  |
-| `SIC` | SIC sector | A sector by its SIC code: its companies ranked by revenue; a click opens a company's summary beside. | `SIC 3674` | computed | Moves to compute in 2.9.0 or 2.10.0: `GROUPINGS_AND_ANALYTICS.md` |
+| `SIC` | SIC sector | A sector by its SIC code: its companies ranked by revenue; a click opens a company's summary beside. | `SIC 3674` | fundamental |  |
 | `EDGAR` | EDGAR filings browser | The filings browser: the latest SEC filings of the covered companies, of every form or one; a click opens a filing beside. | `EDGAR 8-K` | fundamental |  |
 | `FILING` | SEC filing | One SEC filing: its company, form, dates, 8-K items and its links on EDGAR (metadata only; the document stays on sec.gov). | `FILING 0001104659-26-117587` | fundamental |  |
 | `FACT` | Financial fact | One financial concept of one company (revenue, net income, assets...) over up to ten fiscal years, from its 10-K XBRL filings. | `FACT AAPL-REVENUE` | fundamental |  |
@@ -229,7 +229,7 @@ Real public economic data for about 200 economies: output, growth, prices, jobs,
 | `FCST` | Economic forecast | The IMF World Economic Outlook: growth, inflation, unemployment, external balance and debt, outturn and projections to 2031. | `FCST FCST-JPN-WEO` | fundamental |  |
 | `LABR` | Labour market | Unemployment, participation, youth and female labour, and employment and output by sector. | `LABR LABR-NGA` | fundamental |  |
 | `FISC` | Fiscal position | Government debt and net lending (IMF) with revenue, expense and military spending (World Bank), as shares of GDP. | `FISC FISC-USA` | fundamental |  |
-| `ECG` | Country group | A World Bank region or income group (or the world): output, population, growth and its largest economies. | `ECG ECG-SAS` | computed | Moves to compute in 2.9.0 or 2.10.0: `GROUPINGS_AND_ANALYTICS.md` |
+| `ECG` | Country group | A World Bank region or income group (or the world): output, population, growth and its largest economies. | `ECG ECG-SAS` | fundamental |  |
 | `REGE` | Region economy | A state or territory (ISO 3166-2): population, GDP and GDP per head. | `REGE REGE-AU-NSW` | fundamental |  |
 | `JUR` | Jurisdiction | A country: government type, capital, legislature and seats by party, office holders, elections and governance indicators, from the CIA World Factbook, World Bank and UNDP. | `JUR JUR-IND` | fundamental |  |
 | `PARTY` | Party | A political party that won seats in the lower chamber at the most recent election, with the chamber's full result. | `PARTY PARTY-IND-01` | fundamental |  |

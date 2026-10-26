@@ -136,18 +136,22 @@ fields:
   example: 352474636
 - name: VAR_99
   type: amount
-  presence: required
+  presence: derived
   unit: USD
   description: The loss the portfolio is expected not to exceed on 99 of 100 trading days, read from the 1st percentile of the revalued scenario
     P&L (historical simulation).
   example: 3012892
+  retiring-in: 2.8.0
+  note: computed by the VaR engine from 2.8.0; removed from the stored record then
 - name: ES_975
   type: amount
-  presence: required
+  presence: derived
   unit: USD
   description: The average loss on the worst 2.5% of scenario days. It looks into the tail that VaR ignores, and it is the measure the FRTB internal-models
     approach uses for capital.
   example: 3690544
+  retiring-in: 2.8.0
+  note: computed by the VaR engine from 2.8.0; removed from the stored record then
 - name: LIMIT_USE
   type: rate
   presence: required
@@ -183,10 +187,11 @@ fields:
   example: PORT:PF-RATES-DESK
 - name: PNL
   type: vector
-  presence: required
+  presence: derived
   unit: USD
   description: 'The portfolio''s P&L under each historical scenario day: the sum of its members'' vectors, each trade counted once.'
-  note: 509 values in the test data
+  retiring-in: 2.8.0
+  note: computed by the VaR engine from 2.8.0; removed from the stored record then; 509 values in the test data
 nested:
   DEFINITION:
   - name: NODE
@@ -516,8 +521,6 @@ validation:
   - SHORT_COUNT
   - GROSS_MV
   - NET_MV
-  - VAR_99
-  - ES_975
   - LIMIT_USE
   - POSITIONS
   - BY_PRODUCT
@@ -525,7 +528,6 @@ validation:
   - BY_DIRECTION
   - TOP_CONTRIBUTORS
   - VAR_SCOPE
-  - PNL
 - rule: unique
   key:
   - PORTFOLIO_ID
@@ -613,6 +615,8 @@ validation:
 notes:
 - The portfolio definitions are an engine input (IMPLEMENTATION_PLAN.md, kept as fundamental data); the figures on a stored portfolio are VaR
   answers.
+- 'Terms kept, figures computed from 2.8.0 (docs/contracts/VAR.md): the fields marked derived are computed by the VaR engine and leave the stored
+  record then.'
 review:
 - 'required inferred from 100% coverage in 10 documents (3 samples and 7 test-data documents (data/testdata/market-risk/portfolio/cob-2026-09-30.jsonl.gz)):
   confirm each required field is mandatory upstream, and each optional one may be empty.'

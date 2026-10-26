@@ -18,10 +18,8 @@ kind: sa-ccr
 mnemonic: SACCR
 pack: counterparty-risk
 version: '1.0'
-class: computed
-status: retiring
-retiring-in: 2.10.0
-replaced-by: docs/contracts/SACCR.md
+class: fundamental
+status: active
 title: SA-CCR exposure
 description: 'Regulatory EAD: replacement cost, PFE add-ons by asset class, multiplier.'
 source: capital-engine
@@ -50,52 +48,45 @@ fields:
   pattern: ^SACCR-
 - name: REPLACEMENT_COST
   type: amount
-  presence: derived
+  presence: required
   unit: USD
   description: The loss if the counterparty defaulted today and the trades were replaced at current market value, less collateral; never below
     zero.
   example: 0
-  note: computed by SA-CCR; removed when retired
 - name: ADD_ON
   type: amount
-  presence: derived
+  presence: required
   unit: USD
   description: The potential increase in exposure over the next year, built from the add-ons of each asset class with supervisory factors and
     correlations.
   example: 791562
-  note: computed by SA-CCR; removed when retired
 - name: MULTIPLIER
   type: rate
-  presence: derived
+  presence: required
   unit: factor
   description: A factor between 5% and 1 that reduces the add-on when the netting set is over-collateralised or its value is negative.
   example: 0.933
-  note: computed by SA-CCR; removed when retired
 - name: EAD
   type: amount
-  presence: derived
+  presence: required
   unit: USD
   description: 'The SA-CCR exposure: 1.4 times the replacement cost plus the potential future exposure, where the potential future exposure is
     the multiplier times the add-on.'
   example: 1033938
-  note: computed by SA-CCR; removed when retired
 - name: RWA
   type: amount
-  presence: derived
+  presence: required
   unit: USD
   description: The exposure at default multiplied by the risk weight of the counterparty. Capital is a percentage of it.
   example: 206788
-  note: computed by SA-CCR; removed when retired
 - name: ADD_ONS
   type: record list
-  presence: derived
+  presence: required
   description: 'Nested: see nested ADD_ONS[]'
-  note: computed by SA-CCR; removed when retired
 - name: HEDGING_SETS
   type: record list
-  presence: derived
+  presence: required
   description: 'Nested: see nested HEDGING_SETS[]'
-  note: computed by SA-CCR; removed when retired
 - name: NETTING_SET
   type: id
   presence: required
@@ -167,6 +158,13 @@ validation:
 - rule: required
   fields:
   - CALC_ID
+  - REPLACEMENT_COST
+  - ADD_ON
+  - MULTIPLIER
+  - EAD
+  - RWA
+  - ADD_ONS
+  - HEDGING_SETS
   - NETTING_SET
   - ALPHA
 - rule: unique
@@ -208,14 +206,14 @@ validation:
 notes:
 - 'Dated by the lake''s business_date partition: `drishti.py lake build` writes each test-data file''s day into it; the documents carry no date
   field of their own.'
-- 'Retiring in 2.10.0: the stored kind is removed and computed instead by SA-CCR (docs/contracts/SACCR.md); old ids and links open the computed
-  page.'
 review:
 - 'required inferred from 100% coverage in 142 documents (66 samples and 76 test-data documents (data/testdata/counterparty-risk/sa-ccr/snapshot-2026-07-08.jsonl.gz,
   data/testdata/counterparty-risk/sa-ccr/changes-2026-09-30.jsonl.gz)): confirm each required field is mandatory upstream, and each optional one
   may be empty.'
 - 'source ''capital-engine'' is the test data''s _meta.source (synthetic): name the production system that delivers it.'
 - 'due time of each business date is not known: state it (for example, by 06:00 New York the next business day).'
+- 'EAD is a column a compute engine produces (docs/contracts/README.md section 14) on a record that keeps it: confirm whether it is computed and
+  removed.'
 - 'enum values inferred from the data, not from a glossary: ADD_ONS[].ASSET_CLASS, HEDGING_SETS[].ASSET_CLASS, HEDGING_SETS[].HEDGING_SET: confirm
   they are closed lists.'
 - 'number types decided by the field''s name: ALPHA rate, ADD_ONS[].ADD_ON amount: confirm amount, rate or integer.'

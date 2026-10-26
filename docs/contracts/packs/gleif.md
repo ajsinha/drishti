@@ -22,9 +22,9 @@ One section per command of the pack: the shape of its data, how it is stored and
 | Command | Kind | Class | Status | Fields | To review |
 |---|---|---|---|---|---|
 | [LEI](#lei-lei-legal-entity-lei-entity) | `lei-entity` | fundamental | active | 41 | 4 |
-| [LEIG](#leig-lei-ownership-group-lei-group) | `lei-group` | computed | retiring in 2.9.0 or 2.10.0 | 26 | 7 |
+| [LEIG](#leig-lei-ownership-group-lei-group) | `lei-group` | fundamental | active | 26 | 7 |
 | [LEIR](#leir-lei-parent-relationship-lei-relationship) | `lei-relationship` | fundamental | active | 13 | 4 |
-| [LEIC](#leic-lei-country-lei-country) | `lei-country` | computed | retiring in 2.9.0 or 2.10.0 | 15 | 6 |
+| [LEIC](#leic-lei-country-lei-country) | `lei-country` | fundamental | active | 15 | 6 |
 | [LEIM](#leim-isin-or-bic-to-lei-lei-mapping) | `lei-mapping` | fundamental | active | 8 | 4 |
 
 ## LEI: LEI legal entity (`lei-entity`)
@@ -161,8 +161,8 @@ An ownership group: the ultimate parent with its whole tree, every member, and c
 |  |  |
 |---|---|
 | Contract | [lei-group.contract.yaml](../../../config/packs/gleif/contracts/lei-group.contract.yaml) · version 1.0 |
-| Class | computed |
-| Status | retiring in 2.9.0 or 2.10.0, replaced by docs/contracts/GROUPINGS_AND_ANALYTICS.md |
+| Class | fundamental |
+| Status | active |
 | Source | public data: GLEIF LEI records, relationship records and mapping files (tools/publicdata/gleif.py) |
 | Grain | One row per lei ownership group, keyed by GROUP_ID. |
 | Key | `GROUP_ID` |
@@ -185,19 +185,19 @@ An ownership group: the ultimate parent with its whole tree, every member, and c
 | `LEI_COUNTRY` | id | optional |  | Country | `US` | `lei-country` |
 | `LEGAL_FORM` | text | optional |  | Legal form | `Corporation` |  |
 | `SEGMENT` | text | optional |  | Segment | `G-SIB, US equities` |  |
-| `MEMBERS` | integer | derived |  | Members (pack) *computed by the GLEIF ownership grouping; removed when retired* | `50` |  |
-| `MEMBERS_IN_GLEIF` | integer | derived |  | Members (GLEIF) *computed by the GLEIF ownership grouping; removed when retired* | `173` |  |
-| `CAPPED` | boolean | derived |  | — *computed by the GLEIF ownership grouping; removed when retired* | `True` |  |
-| `CAP_NOTE` | text | derived |  | — *computed by the GLEIF ownership grouping; removed when retired* | `The group has 173 entities in GLEIF; the pack keeps 50 (at …` |  |
-| `LEVELS` | integer | derived |  | Levels *computed by the GLEIF ownership grouping; removed when retired* | `2` |  |
-| `COUNTRIES` | integer | derived |  | Countries *computed by the GLEIF ownership grouping; removed when retired* | `13` |  |
-| `LATE_RENEWALS` | integer | derived |  | — *computed by the GLEIF ownership grouping; removed when retired* | `5` |  |
+| `MEMBERS` | integer | optional |  | Members (pack) | `50` |  |
+| `MEMBERS_IN_GLEIF` | integer | optional |  | Members (GLEIF) | `173` |  |
+| `CAPPED` | boolean | optional |  | — | `True` |  |
+| `CAP_NOTE` | text | optional |  | — | `The group has 173 entities in GLEIF; the pack keeps 50 (at …` |  |
+| `LEVELS` | integer | optional |  | Levels | `2` |  |
+| `COUNTRIES` | integer | required |  | Countries | `13` |  |
+| `LATE_RENEWALS` | integer | required |  | — | `5` |  |
 | `SEEDS` | record list | optional |  | Nested: see nested SEEDS[] |  |  |
 | `US_COMPANY` | id | optional |  | US listed company: the us-company it refers to | `JPM` | `us-company` |
-| `TREE` | record list | derived |  | Nested: see nested TREE[] *computed by the GLEIF ownership grouping; removed when retired* |  |  |
-| `ROWS` | record list | derived |  | Nested: see nested ROWS[] *computed by the GLEIF ownership grouping; removed when retired* |  |  |
-| `BY_COUNTRY` | record list | derived |  | Nested: see nested BY_COUNTRY[] *computed by the GLEIF ownership grouping; removed when retired* |  |  |
-| `BY_LEGAL_FORM` | record list | derived |  | Nested: see nested BY_LEGAL_FORM[] *computed by the GLEIF ownership grouping; removed when retired* |  |  |
+| `TREE` | record list | optional |  | Nested: see nested TREE[] |  |  |
+| `ROWS` | record list | required |  | Nested: see nested ROWS[] |  |  |
+| `BY_COUNTRY` | record list | required |  | Nested: see nested BY_COUNTRY[] |  |  |
+| `BY_LEGAL_FORM` | record list | optional |  | Nested: see nested BY_LEGAL_FORM[] |  |  |
 | `PROVENANCE` | record | required |  | Nested: see nested PROVENANCE |  |  |
 | `GROUPS` | integer | optional |  | Groups | `590` |  |
 | `ENTITIES` | integer | optional |  | Entities | `9937` |  |
@@ -288,16 +288,12 @@ An ownership group: the ultimate parent with its whole tree, every member, and c
 
 **Validation**
 
-- required: fields `GROUP_ID`, `NAME`, `PROVENANCE`
+- required: fields `GROUP_ID`, `NAME`, `COUNTRIES`, `LATE_RENEWALS`, `ROWS`, `BY_COUNTRY`, `PROVENANCE`
 - unique: key `GROUP_ID`; per snapshot
 - link: field ENTITY_LEI; kind lei-entity
 - link: field LEI_COUNTRY; kind lei-country
 - link: field US_COMPANY; kind us-company
 - enum: field SEEDS[].SEGMENT; values `Asset manager`, `Bank`, `G-SIB`, `Insurer`, `Market infrastructure`, `US equities`
-
-**Notes**
-
-- Retiring in 2.9.0 or 2.10.0: the stored kind is removed and computed instead by the GLEIF ownership grouping (docs/contracts/GROUPINGS_AND_ANALYTICS.md); old ids and links open the computed page.
 
 **To review (7)**
 
@@ -383,8 +379,8 @@ A country's legal entities in the pack: the entities, the groups present, legal 
 |  |  |
 |---|---|
 | Contract | [lei-country.contract.yaml](../../../config/packs/gleif/contracts/lei-country.contract.yaml) · version 1.0 |
-| Class | computed |
-| Status | retiring in 2.9.0 or 2.10.0, replaced by docs/contracts/GROUPINGS_AND_ANALYTICS.md |
+| Class | fundamental |
+| Status | active |
 | Source | public data: GLEIF LEI records, relationship records and mapping files (tools/publicdata/gleif.py) |
 | Grain | One row per lei country, keyed by COUNTRY. |
 | Key | `COUNTRY` |
@@ -401,16 +397,16 @@ A country's legal entities in the pack: the entities, the groups present, legal 
 |---|---|---|---|---|---|---|
 | `COUNTRY` | id | required |  | The record's id (the business key) | `US` |  |
 | `NAME` | text | required |  | — | `United States of America (the)` |  |
-| `ENTITIES` | integer | derived |  | Entities *computed by the GLEIF country grouping; removed when retired* | `2704` |  |
-| `GROUPS_PRESENT` | integer | derived |  | Groups present *computed by the GLEIF country grouping; removed when retired* | `521` |  |
-| `GROUPS_HEADQUARTERED` | integer | derived |  | — *computed by the GLEIF country grouping; removed when retired* | `451` |  |
-| `LAPSED` | integer | derived |  | — *computed by the GLEIF country grouping; removed when retired* | `713` |  |
-| `LATE_RENEWALS` | integer | derived |  | — *computed by the GLEIF country grouping; removed when retired* | `724` |  |
-| `ROWS` | record list | derived |  | Nested: see nested ROWS[] *computed by the GLEIF country grouping; removed when retired* |  |  |
-| `ROWS_NOTE` | text | derived |  | — *computed by the GLEIF country grouping; removed when retired* | `The first 400 of 2,704 entities, by name` |  |
-| `GROUP_ROWS` | record list | derived |  | Nested: see nested GROUP_ROWS[] *computed by the GLEIF country grouping; removed when retired* |  |  |
-| `BY_LEGAL_FORM` | record list | derived |  | Nested: see nested BY_LEGAL_FORM[] *computed by the GLEIF country grouping; removed when retired* |  |  |
-| `BY_CITY` | record list | derived |  | Nested: see nested BY_CITY[] *computed by the GLEIF country grouping; removed when retired* |  |  |
+| `ENTITIES` | integer | required |  | Entities | `2704` |  |
+| `GROUPS_PRESENT` | integer | optional |  | Groups present | `521` |  |
+| `GROUPS_HEADQUARTERED` | integer | optional |  | — | `451` |  |
+| `LAPSED` | integer | optional |  | — | `713` |  |
+| `LATE_RENEWALS` | integer | optional |  | — | `724` |  |
+| `ROWS` | record list | required |  | Nested: see nested ROWS[] |  |  |
+| `ROWS_NOTE` | text | optional |  | — | `The first 400 of 2,704 entities, by name` |  |
+| `GROUP_ROWS` | record list | optional |  | Nested: see nested GROUP_ROWS[] |  |  |
+| `BY_LEGAL_FORM` | record list | optional |  | Nested: see nested BY_LEGAL_FORM[] |  |  |
+| `BY_CITY` | record list | optional |  | Nested: see nested BY_CITY[] |  |  |
 | `PROVENANCE` | record | required |  | Nested: see nested PROVENANCE |  |  |
 | `COUNTRIES` | integer | optional |  | Countries | `133` |  |
 | `BY_COUNTRY` | record list | optional |  | Nested: see nested BY_COUNTRY[] |  |  |
@@ -472,13 +468,9 @@ A country's legal entities in the pack: the entities, the groups present, legal 
 
 **Validation**
 
-- required: fields `COUNTRY`, `NAME`, `PROVENANCE`
+- required: fields `COUNTRY`, `NAME`, `ENTITIES`, `ROWS`, `PROVENANCE`
 - unique: key `COUNTRY`; per snapshot
 - link: field ROWS[].GROUP; kind counterparty-group
-
-**Notes**
-
-- Retiring in 2.9.0 or 2.10.0: the stored kind is removed and computed instead by the GLEIF country grouping (docs/contracts/GROUPINGS_AND_ANALYTICS.md); old ids and links open the computed page.
 
 **To review (6)**
 

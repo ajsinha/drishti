@@ -17,6 +17,13 @@
 
 ## Unreleased
 
+- **Scope narrowed (product owner, 2026-10-25): fundamentals and VaR only.**
+  - Active: the data contracts of every command, and VaR complete.
+  - Parked, designs kept: every other computed measure and its retirement.
+  - The contracts of those stored kinds are active and fundamental again; only VaR's figures (on positions, portfolios and desks) are
+    marked computed.
+  - The contracts index, the implementation plan, the policy (a `parked:` section) and the command catalog say so.
+
 - **Contracts of the 2.10.0 computed counterparty-risk measures (planned):** docs/contracts/NSET.md, SACCR.md, COLL.md, MC.md, EXP.md,
   LIM.md, GRP.md, CVA.md and WWR.md. New inputs in the common risk lake: `netting-set-member` (membership as its own table), `csa`
   (structured eligibility and haircuts), `simulation-run` and `exposure-path` (MtM per trade per grid date over the paths), `saccr-trade`,

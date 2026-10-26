@@ -19,9 +19,7 @@ mnemonic: ITRD
 pack: trading
 version: '1.0'
 class: computed
-status: retiring
-retiring-in: 2.9.0
-replaced-by: docs/contracts/TRADING_GROUPINGS.md
+status: active
 title: Index trades (derived from trades)
 description: 'Every trade with a leg on an index (the first leg that names one): its trades (every status, a status filter), upcoming payments,
   notional by product type and index, maturities, payments by month.'
@@ -45,78 +43,64 @@ fields:
   type: id list
   presence: derived
   description: The ids of the grouped trade records (at most 1000)
-  note: computed by the scope engine; removed when retired
 - name: TRADE_COUNT
   type: integer
-  presence: derived
+  presence: optional
   description: The number of records in the group
-  note: computed by the scope engine; removed when retired
 - name: NOTIONAL
   type: amount
-  presence: derived
+  presence: optional
   description: 'sum over the group of: first($.LEGS).NOTIONAL'
-  note: computed by the scope engine; removed when retired
 - name: SOURCE_SYSTEMS
   type: text list
-  presence: derived
+  presence: optional
   description: 'distinct over the group of: $.SOURCE_SYSTEM'
-  note: computed by the scope engine; removed when retired
 - name: PRODUCT_TYPES
   type: text list
-  presence: derived
+  presence: optional
   description: 'distinct over the group of: $.PRODUCT_TYPE'
-  note: computed by the scope engine; removed when retired
 - name: CURRENCIES
   type: text list
-  presence: derived
+  presence: optional
   description: 'distinct over the group of: $.CURRENCY'
-  note: computed by the scope engine; removed when retired
 - name: LAST_MATURITY
   type: date
-  presence: derived
+  presence: optional
   description: 'max over the group of: $.MATURITY_DATE'
-  note: computed by the scope engine; removed when retired
 - name: PAY_7D
   type: amount
-  presence: derived
+  presence: optional
   description: 'sum over the group of: sum(flatten($.EVENTS)[?nonblank(@.AMOUNT) && nonblank(@.EVENT_DATE)][?days(today(), @.EVENT_DATE) >= 0
     && days(today(), @.EVENT_DATE) <= 7], ''AMOUNT'')'
-  note: computed by the scope engine; removed when retired
 - name: PAY_7D_EVENTS
   type: amount
-  presence: derived
+  presence: optional
   description: 'sum over the group of: size(flatten($.EVENTS)[?nonblank(@.AMOUNT) && nonblank(@.EVENT_DATE)][?days(today(), @.EVENT_DATE) >= 0
     && days(today(), @.EVENT_DATE) <= 7])'
-  note: computed by the scope engine; removed when retired
 - name: PAY_30D
   type: amount
-  presence: derived
+  presence: optional
   description: 'sum over the group of: sum(flatten($.EVENTS)[?nonblank(@.AMOUNT) && nonblank(@.EVENT_DATE)][?days(today(), @.EVENT_DATE) >= 0
     && days(today(), @.EVENT_DATE) <= 30], ''AMOUNT'')'
-  note: computed by the scope engine; removed when retired
 - name: PAY_30D_EVENTS
   type: amount
-  presence: derived
+  presence: optional
   description: 'sum over the group of: size(flatten($.EVENTS)[?nonblank(@.AMOUNT) && nonblank(@.EVENT_DATE)][?days(today(), @.EVENT_DATE) >= 0
     && days(today(), @.EVENT_DATE) <= 30])'
-  note: computed by the scope engine; removed when retired
 - name: PAY_90D
   type: amount
-  presence: derived
+  presence: optional
   description: 'sum over the group of: sum(flatten($.EVENTS)[?nonblank(@.AMOUNT) && nonblank(@.EVENT_DATE)][?days(today(), @.EVENT_DATE) >= 0
     && days(today(), @.EVENT_DATE) <= 90], ''AMOUNT'')'
-  note: computed by the scope engine; removed when retired
 - name: PAY_90D_EVENTS
   type: amount
-  presence: derived
+  presence: optional
   description: 'sum over the group of: size(flatten($.EVENTS)[?nonblank(@.AMOUNT) && nonblank(@.EVENT_DATE)][?days(today(), @.EVENT_DATE) >= 0
     && days(today(), @.EVENT_DATE) <= 90])'
-  note: computed by the scope engine; removed when retired
 - name: TRADES
   type: record list
   presence: derived
   description: One row per grouped trade record
-  note: computed by the scope engine; removed when retired
 nested:
   TRADES[]:
   - name: TRADE_ID
@@ -207,9 +191,7 @@ validation:
 - rule: link
   field: TRADES[].LEGAL_ENTITY
   kind: legal-entity
-notes:
-- 'Retiring in 2.9.0: the stored kind is removed and computed instead by the scope engine (docs/contracts/TRADING_GROUPINGS.md); old ids and links
-  open the computed page.'
+notes: []
 review:
 - 'field types of a derived kind are read from its connector''s expressions (count, sum, distinct): confirm; rows copy the trade record''s fields,
   whose contract states their types.'

@@ -26,7 +26,7 @@ One section per command of the pack: the shape of its data, how it is stored and
 | [FCST](#fcst-economic-forecast-economic-forecast) | `economic-forecast` | fundamental | active | 10 | 4 |
 | [LABR](#labr-labour-market-labour-market) | `labour-market` | fundamental | active | 13 | 6 |
 | [FISC](#fisc-fiscal-position-fiscal-position) | `fiscal-position` | fundamental | active | 13 | 5 |
-| [ECG](#ecg-country-group-country-group) | `country-group` | computed | retiring in 2.9.0 or 2.10.0 | 15 | 6 |
+| [ECG](#ecg-country-group-country-group) | `country-group` | fundamental | active | 15 | 6 |
 | [REGE](#rege-region-economy-region-economy) | `region-economy` | fundamental | active | 14 | 5 |
 | [JUR](#jur-jurisdiction-jurisdiction) | `jurisdiction` | fundamental | active | 25 | 7 |
 | [PARTY](#party-party-party) | `party` | fundamental | active | 13 | 6 |
@@ -491,8 +491,8 @@ A World Bank region or income group (or the world): output, population, growth a
 |  |  |
 |---|---|
 | Contract | [country-group.contract.yaml](../../../config/packs/world-economy/contracts/country-group.contract.yaml) · version 1.0 |
-| Class | computed |
-| Status | retiring in 2.9.0 or 2.10.0, replaced by docs/contracts/GROUPINGS_AND_ANALYTICS.md |
+| Class | fundamental |
+| Status | active |
 | Source | public data: World Bank, World Development Indicators |
 | Grain | One row per country group, keyed by GROUP_ID. |
 | Key | `GROUP_ID` |
@@ -509,16 +509,16 @@ A World Bank region or income group (or the world): output, population, growth a
 | `GROUP_ID` | id | required |  | The record's id (the business key) | `ECG-EAS` (pattern `^ECG-`) |  |
 | `NAME` | text | required |  | The World Bank region, income group or the world. | `East Asia & Pacific` |  |
 | `GROUP_TYPE` | text | required |  | Whether the group is a region, an income group or the world. | `World Bank region` |  |
-| `ECONOMIES` | integer | derived |  | The number of economies in the group that the pack covers. *computed by the country-group aggregation; removed when retired* | `36` |  |
+| `ECONOMIES` | integer | required |  | The number of economies in the group that the pack covers. | `36` |  |
 | `YEAR` | text | optional |  | — | `2025` |  |
-| `GDP_USD_BN` | amount | derived | USD billions | The group's GDP in current US dollars (World Bank aggregate). *computed by the country-group aggregation; removed when retired* | `33657` |  |
-| `GDP_PER_CAPITA` | amount | derived | USD | The group's GDP per head, in current US dollars. *computed by the country-group aggregation; removed when retired* | `14077.3` |  |
-| `POPULATION_M` | amount | derived | millions | The group's total population. *computed by the country-group aggregation; removed when retired* | `2390.87` |  |
-| `GROWTH` | rate | derived | % a year | The group's yearly real GDP growth (World Bank aggregate). *computed by the country-group aggregation; removed when retired* | `3.99734` |  |
-| `INFLATION` | rate | derived |  | — *computed by the country-group aggregation; removed when retired* | `2.01821` |  |
-| `GROWTH_PATH` | record list | derived |  | Nested: see nested GROWTH_PATH[] *computed by the country-group aggregation; removed when retired* |  |  |
-| `GDP_PATH` | record list | derived |  | Nested: see nested GDP_PATH[] *computed by the country-group aggregation; removed when retired* |  |  |
-| `TOP_ECONOMIES` | record list | derived |  | Nested: see nested TOP_ECONOMIES[] *computed by the country-group aggregation; removed when retired* |  |  |
+| `GDP_USD_BN` | amount | optional | USD billions | The group's GDP in current US dollars (World Bank aggregate). | `33657` |  |
+| `GDP_PER_CAPITA` | amount | optional | USD | The group's GDP per head, in current US dollars. | `14077.3` |  |
+| `POPULATION_M` | amount | optional | millions | The group's total population. | `2390.87` |  |
+| `GROWTH` | rate | optional | % a year | The group's yearly real GDP growth (World Bank aggregate). | `3.99734` |  |
+| `INFLATION` | rate | optional |  | — | `2.01821` |  |
+| `GROWTH_PATH` | record list | required |  | Nested: see nested GROWTH_PATH[] |  |  |
+| `GDP_PATH` | record list | required |  | Nested: see nested GDP_PATH[] |  |  |
+| `TOP_ECONOMIES` | record list | required |  | Nested: see nested TOP_ECONOMIES[] |  |  |
 | `MEMBER_ECONOMIES` | id list | required |  | Economies: the economy it refers to |  | `economy` |
 | `PROVENANCE` | record | required |  | Nested: see nested PROVENANCE |  |  |
 
@@ -559,15 +559,11 @@ A World Bank region or income group (or the world): output, population, growth a
 
 **Validation**
 
-- required: fields `GROUP_ID`, `NAME`, `GROUP_TYPE`, `MEMBER_ECONOMIES`, `PROVENANCE`
+- required: fields `GROUP_ID`, `NAME`, `GROUP_TYPE`, `ECONOMIES`, `GROWTH_PATH`, `GDP_PATH`, `TOP_ECONOMIES`, `MEMBER_ECONOMIES`, `PROVENANCE`
 - unique: key `GROUP_ID`; per snapshot
 - pattern: field GROUP_ID; pattern ^ECG-
 - link: field MEMBER_ECONOMIES; kind economy
 - link: field TOP_ECONOMIES[].ECONOMY; kind economy
-
-**Notes**
-
-- Retiring in 2.9.0 or 2.10.0: the stored kind is removed and computed instead by the country-group aggregation (docs/contracts/GROUPINGS_AND_ANALYTICS.md); old ids and links open the computed page.
 
 **To review (6)**
 

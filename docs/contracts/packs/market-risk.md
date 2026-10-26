@@ -23,10 +23,10 @@ One section per command of the pack: the shape of its data, how it is stored and
 |---|---|---|---|---|---|
 | [VAR](#var-var--expected-shortfall-var) | `var` | computed | retiring in 2.8.0 | 12 | 7 |
 | [SCN](#scn-stress-scenario-stress-scenario) | `stress-scenario` | fundamental | active | 6 | 5 |
-| [STR](#str-stress-result-stress-result) | `stress-result` | computed | retiring in 2.9.0 | 7 | 4 |
-| [FRTB](#frtb-frtb-sensitivities-frtb-sensitivity) | `frtb-sensitivity` | computed | retiring in 2.9.0 | 9 | 6 |
-| [PNL](#pnl-pl-explain-pnl-explain) | `pnl-explain` | computed | retiring in 2.9.0 | 8 | 6 |
-| [TVAL](#tval-trade-valuation-trade-valuation) | `trade-valuation` | computed | retiring in 2.9.0 | 21 | 7 |
+| [STR](#str-stress-result-stress-result) | `stress-result` | fundamental | active | 7 | 4 |
+| [FRTB](#frtb-frtb-sensitivities-frtb-sensitivity) | `frtb-sensitivity` | fundamental | active | 9 | 6 |
+| [PNL](#pnl-pl-explain-pnl-explain) | `pnl-explain` | fundamental | active | 8 | 6 |
+| [TVAL](#tval-trade-valuation-trade-valuation) | `trade-valuation` | fundamental | active | 21 | 7 |
 | [POS](#pos-position-position) | `position` | drishti-owned | active | 38 | 9 |
 | [PORT](#port-portfolio-portfolio) | `portfolio` | input | active | 28 | 13 |
 | [PNLV](#pnlv-pl-vector-509-scenarios-pnl-vector) | `pnl-vector` | input | active | 29 | 6 |
@@ -172,8 +172,8 @@ P&L of a desk under a scenario, by book.
 |  |  |
 |---|---|
 | Contract | [stress-result.contract.yaml](../../../config/packs/market-risk/contracts/stress-result.contract.yaml) · version 1.0 |
-| Class | computed |
-| Status | retiring in 2.9.0, replaced by docs/contracts/STR.md |
+| Class | fundamental |
+| Status | active |
 | Source | stress-engine |
 | Grain | One row per stress result per business date, keyed by RESULT_ID. |
 | Key | `RESULT_ID` |
@@ -189,9 +189,9 @@ P&L of a desk under a scenario, by book.
 |---|---|---|---|---|---|---|
 | `RESULT_ID` | id | required |  | The record's id (the business key) | `STR-COVID2020-COMM` (pattern `^STR-`) |  |
 | `SCENARIO_NAME` | text | required |  | The stress scenario the portfolio was revalued under. | `Bear steepener 2s10s +75 bp`, `COVID-19 March 2020`, `Emerging-market crisis`, `Global financial crisis 2008`, `Inflation surprise`, `Oil supply shock`, `Parallel rates +200 bp`, `USD +15% vs all` |  |
-| `PNL` | amount | derived | USD | The change in value over the period of the result. In a stress result, the revaluation of the portfolio under the scenario. *computed by stress P&L (STR); removed when retired* | `-79098347` |  |
+| `PNL` | amount | required | USD | The change in value over the period of the result. In a stress result, the revaluation of the portfolio under the scenario. | `-79098347` |  |
 | `LIMIT` | amount | required | USD | The largest loss the desk accepts under this scenario. A P&L below the limit is a breach. | `-75700000.0` |  |
-| `BY_BOOK` | record list | derived |  | Nested: see nested BY_BOOK[] *computed by stress P&L (STR); removed when retired* |  |  |
+| `BY_BOOK` | record list | required |  | Nested: see nested BY_BOOK[] |  |  |
 | `SCENARIO` | id | required |  | Scenario: the stress-scenario it refers to | `SCN-COVID2020` (pattern `^SCN-`) | `stress-scenario` |
 | `DESK` | id | required |  | Desk: the desk it refers to | `DESK-COMM` (pattern `^DESK-`) | `desk` |
 
@@ -206,7 +206,7 @@ P&L of a desk under a scenario, by book.
 
 **Validation**
 
-- required: fields `RESULT_ID`, `SCENARIO_NAME`, `LIMIT`, `SCENARIO`, `DESK`
+- required: fields `RESULT_ID`, `SCENARIO_NAME`, `PNL`, `LIMIT`, `BY_BOOK`, `SCENARIO`, `DESK`
 - unique: key `RESULT_ID`; per business_date
 - pattern: field RESULT_ID; pattern ^STR-
 - enum: field SCENARIO_NAME; values `Bear steepener 2s10s +75 bp`, `COVID-19 March 2020`, `Emerging-market crisis`, `Global financial crisis 2008`, `Inflation surprise`, `Oil supply shock`, `Parallel rates +200 bp`, `USD +15% vs all`
@@ -217,7 +217,6 @@ P&L of a desk under a scenario, by book.
 **Notes**
 
 - Dated by the lake's business_date partition: `drishti.py lake build` writes each test-data file's day into it; the documents carry no date field of their own.
-- Retiring in 2.9.0: the stored kind is removed and computed instead by stress P&L (STR) (docs/contracts/STR.md); old ids and links open the computed page.
 
 **To review (4)**
 
@@ -233,8 +232,8 @@ Delta, vega and curvature by risk class and bucket (SBM).
 |  |  |
 |---|---|
 | Contract | [frtb-sensitivity.contract.yaml](../../../config/packs/market-risk/contracts/frtb-sensitivity.contract.yaml) · version 1.0 |
-| Class | computed |
-| Status | retiring in 2.9.0, replaced by docs/contracts/FRTB.md |
+| Class | fundamental |
+| Status | active |
 | Source | frtb-engine |
 | Grain | One row per frtb sensitivities per business date, keyed by RESULT_ID. |
 | Key | `RESULT_ID` |
@@ -250,12 +249,12 @@ Delta, vega and curvature by risk class and bucket (SBM).
 |---|---|---|---|---|---|---|
 | `RESULT_ID` | id | required |  | The record's id (the business key) | `FRTB-COMM-1` (pattern `^FRTB-`) |  |
 | `BOOK` | id | required |  | The trading book the charge is computed for. | `BOOK-COMM-1` (pattern `^BOOK-`) | `book` |
-| `DELTA_CHARGE` | amount | derived | USD | Capital for the first-order sensitivity of the book to its risk factors, after the regulatory risk weights and the correlations within and between buckets. *computed by the FRTB standardised charge; removed when retired* | `11613331` |  |
-| `VEGA_CHARGE` | amount | derived | USD | Capital for the sensitivity of option values to implied volatility, aggregated like delta. *computed by the FRTB standardised charge; removed when retired* | `3173321` |  |
-| `CURVATURE_CHARGE` | amount | derived | USD | Capital for the loss that delta alone does not capture when an option's value is not linear in the underlying move (the gamma risk). *computed by the FRTB standardised charge; removed when retired* | `1378886` |  |
-| `TOTAL` | amount | derived | USD | The sum of the delta, vega and curvature charges of the book. The full standardised charge adds the default-risk and residual-risk add-ons. *computed by the FRTB standardised charge; removed when retired* | `16165538` |  |
+| `DELTA_CHARGE` | amount | required | USD | Capital for the first-order sensitivity of the book to its risk factors, after the regulatory risk weights and the correlations within and between buckets. | `11613331` |  |
+| `VEGA_CHARGE` | amount | required | USD | Capital for the sensitivity of option values to implied volatility, aggregated like delta. | `3173321` |  |
+| `CURVATURE_CHARGE` | amount | required | USD | Capital for the loss that delta alone does not capture when an option's value is not linear in the underlying move (the gamma risk). | `1378886` |  |
+| `TOTAL` | amount | required | USD | The sum of the delta, vega and curvature charges of the book. The full standardised charge adds the default-risk and residual-risk add-ons. | `16165538` |  |
 | `SENSITIVITIES` | record list | required |  | Nested: see nested SENSITIVITIES[] |  |  |
-| `BY_CLASS` | record list | derived |  | Nested: see nested BY_CLASS[] *computed by the FRTB standardised charge; removed when retired* |  |  |
+| `BY_CLASS` | record list | required |  | Nested: see nested BY_CLASS[] |  |  |
 | `APPROACH` | text | required |  | — | `FRTB standardised (SBM)` |  |
 
 **Nested `SENSITIVITIES[]`**
@@ -278,7 +277,7 @@ Delta, vega and curvature by risk class and bucket (SBM).
 
 **Validation**
 
-- required: fields `RESULT_ID`, `BOOK`, `SENSITIVITIES`, `APPROACH`
+- required: fields `RESULT_ID`, `BOOK`, `DELTA_CHARGE`, `VEGA_CHARGE`, `CURVATURE_CHARGE`, `TOTAL`, `SENSITIVITIES`, `BY_CLASS`, `APPROACH`
 - unique: key `RESULT_ID`; per business_date
 - pattern: field RESULT_ID; pattern ^FRTB-
 - link: field BOOK; kind book
@@ -290,7 +289,6 @@ Delta, vega and curvature by risk class and bucket (SBM).
 **Notes**
 
 - Dated by the lake's business_date partition: `drishti.py lake build` writes each test-data file's day into it; the documents carry no date field of their own.
-- Retiring in 2.9.0: the stored kind is removed and computed instead by the FRTB standardised charge (docs/contracts/FRTB.md); old ids and links open the computed page.
 
 **To review (6)**
 
@@ -308,8 +306,8 @@ Daily P&L attributed to risk factors, new trades and residual.
 |  |  |
 |---|---|
 | Contract | [pnl-explain.contract.yaml](../../../config/packs/market-risk/contracts/pnl-explain.contract.yaml) · version 1.0 |
-| Class | computed |
-| Status | retiring in 2.9.0, replaced by docs/contracts/PNL.md |
+| Class | fundamental |
+| Status | active |
 | Source | pnl-explain |
 | Grain | One row per p&l explain per business date, keyed by RESULT_ID. |
 | Key | `RESULT_ID` |
@@ -325,11 +323,11 @@ Daily P&L attributed to risk factors, new trades and residual.
 |---|---|---|---|---|---|---|
 | `RESULT_ID` | id | required |  | The record's id (the business key) | `PNL-COMM-1` (pattern `^PNL-`) |  |
 | `DATE` | date | required |  | The trading day the P&L belongs to. | `2026-09-30` |  |
-| `ACTUAL` | integer | derived | USD | The change in the book's value over the day as booked, including new trades, fees and carry. *computed by P&L explain; removed when retired* | `-79231` |  |
-| `EXPLAINED` | integer | derived | USD | The part of the actual P&L that the risk factors account for: each sensitivity multiplied by that day's move in its factor, plus carry and roll-down. *computed by P&L explain; removed when retired* | `-81630` |  |
-| `UNEXPLAINED` | integer | derived | USD | Actual minus explained. A large or persistent residual points to a missing risk factor, a stale parameter or a pricing difference between the front office and risk. *computed by P&L explain; removed when retired* | `2399` |  |
-| `ATTRIBUTION` | record list | derived |  | Nested: see nested ATTRIBUTION[] *computed by P&L explain; removed when retired* |  |  |
-| `EXPLAIN_STEPS` | record list | derived |  | Nested: see nested EXPLAIN_STEPS[] *computed by P&L explain; removed when retired* |  |  |
+| `ACTUAL` | integer | required | USD | The change in the book's value over the day as booked, including new trades, fees and carry. | `-79231` |  |
+| `EXPLAINED` | integer | required | USD | The part of the actual P&L that the risk factors account for: each sensitivity multiplied by that day's move in its factor, plus carry and roll-down. | `-81630` |  |
+| `UNEXPLAINED` | integer | required | USD | Actual minus explained. A large or persistent residual points to a missing risk factor, a stale parameter or a pricing difference between the front office and risk. | `2399` |  |
+| `ATTRIBUTION` | record list | required |  | Nested: see nested ATTRIBUTION[] |  |  |
+| `EXPLAIN_STEPS` | record list | required |  | Nested: see nested EXPLAIN_STEPS[] |  |  |
 | `BOOK` | id | required |  | Book: the book it refers to | `BOOK-COMM-1` (pattern `^BOOK-`) | `book` |
 
 **Nested `ATTRIBUTION[]`**
@@ -350,7 +348,7 @@ Daily P&L attributed to risk factors, new trades and residual.
 
 **Validation**
 
-- required: fields `RESULT_ID`, `DATE`, `BOOK`
+- required: fields `RESULT_ID`, `DATE`, `ACTUAL`, `EXPLAINED`, `UNEXPLAINED`, `ATTRIBUTION`, `EXPLAIN_STEPS`, `BOOK`
 - unique: key `RESULT_ID`; per business_date
 - pattern: field RESULT_ID; pattern ^PNL-
 - link: field BOOK; kind book
@@ -359,7 +357,6 @@ Daily P&L attributed to risk factors, new trades and residual.
 **Notes**
 
 - Dated by the lake's business_date partition: `drishti.py lake build` writes each test-data file's day into it; the documents carry no date field of their own.
-- Retiring in 2.9.0: the stored kind is removed and computed instead by P&L explain (docs/contracts/PNL.md); old ids and links open the computed page.
 
 **To review (6)**
 
@@ -377,8 +374,8 @@ A trade's valuation from the risk engine, for every source system: MTM, one-day 
 |  |  |
 |---|---|
 | Contract | [trade-valuation.contract.yaml](../../../config/packs/market-risk/contracts/trade-valuation.contract.yaml) · version 1.0 |
-| Class | computed |
-| Status | retiring in 2.9.0, replaced by docs/contracts/TVAL.md |
+| Class | fundamental |
+| Status | active |
 | Source | risk-engine |
 | Grain | One row per trade valuation per business date, keyed by VALUATION_ID. |
 | Key | `VALUATION_ID` |
@@ -437,7 +434,6 @@ A trade's valuation from the risk engine, for every source system: MTM, one-day 
 
 - Dated by the lake's business_date partition: `drishti.py lake build` writes each test-data file's day into it; the documents carry no date field of their own.
 - The boundary (IMPLEMENTATION_PLAN.md): a trade's MtM stays an input from the upstream engines; what TVAL computes is the valuation totals over any scope, so no field of this per-trade record is marked derived.
-- Retiring in 2.9.0: the stored kind is removed and computed instead by valuation totals (TVAL) (docs/contracts/TVAL.md); old ids and links open the computed page.
 
 **To review (7)**
 
@@ -601,8 +597,8 @@ A portfolio in terms of the positions inside it: longs and shorts, market value,
 | `SHORT_COUNT` | integer | required |  | Positions whose net quantity is below zero. | `10` |  |
 | `GROSS_MV` | integer | required | USD | The sum of the positions' market values without their signs. | `1065077778` |  |
 | `NET_MV` | amount | required | USD | The sum of the positions' market values: longs and shorts offset. | `352474636` |  |
-| `VAR_99` | amount | required | USD | The loss the portfolio is expected not to exceed on 99 of 100 trading days, read from the 1st percentile of the revalued scenario P&L (historical simulation). | `3012892` |  |
-| `ES_975` | amount | required | USD | The average loss on the worst 2.5% of scenario days. It looks into the tail that VaR ignores, and it is the measure the FRTB internal-models approach uses for capital. | `3690544` |  |
+| `VAR_99` | amount | derived (retiring in 2.8.0) | USD | The loss the portfolio is expected not to exceed on 99 of 100 trading days, read from the 1st percentile of the revalued scenario P&L (historical simulation). *computed by the VaR engine from 2.8.0; removed from the stored record then* | `3012892` |  |
+| `ES_975` | amount | derived (retiring in 2.8.0) | USD | The average loss on the worst 2.5% of scenario days. It looks into the tail that VaR ignores, and it is the measure the FRTB internal-models approach uses for capital. *computed by the VaR engine from 2.8.0; removed from the stored record then* | `3690544` |  |
 | `LIMIT_USE` | rate | required |  | The VaR over the portfolio's VaR limit. | `0.655` |  |
 | `POSITIONS` | record list | required |  | Nested: see nested POSITIONS[] |  |  |
 | `BY_PRODUCT` | record list | required |  | Nested: see nested BY_PRODUCT[] |  |  |
@@ -611,7 +607,7 @@ A portfolio in terms of the positions inside it: longs and shorts, market value,
 | `TOP_CONTRIBUTORS` | record list | required |  | Nested: see nested TOP_CONTRIBUTORS[] |  |  |
 | `ALL_TRADES` | record | optional |  | Nested: see nested ALL_TRADES |  |  |
 | `VAR_SCOPE` | text | required |  | — | `PORT:PF-RATES-DESK` |  |
-| `PNL` | vector | required | USD | The portfolio's P&L under each historical scenario day: the sum of its members' vectors, each trade counted once. *509 values in the test data* |  |  |
+| `PNL` | vector | derived (retiring in 2.8.0) | USD | The portfolio's P&L under each historical scenario day: the sum of its members' vectors, each trade counted once. *computed by the VaR engine from 2.8.0; removed from the stored record then; 509 values in the test data* |  |  |
 
 **Nested `DEFINITION`**
 
@@ -716,7 +712,7 @@ A portfolio in terms of the positions inside it: longs and shorts, market value,
 
 **Validation**
 
-- required: fields `PORTFOLIO_ID`, `NAME`, `OWNER`, `TYPE`, `DEFINITION`, `ROLLS_UP_TO`, `LIMIT_VAR`, `BUSINESS_DATE`, `VALID_FROM`, `SCENARIO_SET_ID`, `POSITION_COUNT`, `TRADE_COUNT`, `LONG_COUNT`, `SHORT_COUNT`, `GROSS_MV`, `NET_MV`, `VAR_99`, `ES_975`, `LIMIT_USE`, `POSITIONS`, `BY_PRODUCT`, `BY_CURRENCY`, `BY_DIRECTION`, `TOP_CONTRIBUTORS`, `VAR_SCOPE`, `PNL`
+- required: fields `PORTFOLIO_ID`, `NAME`, `OWNER`, `TYPE`, `DEFINITION`, `ROLLS_UP_TO`, `LIMIT_VAR`, `BUSINESS_DATE`, `VALID_FROM`, `SCENARIO_SET_ID`, `POSITION_COUNT`, `TRADE_COUNT`, `LONG_COUNT`, `SHORT_COUNT`, `GROSS_MV`, `NET_MV`, `LIMIT_USE`, `POSITIONS`, `BY_PRODUCT`, `BY_CURRENCY`, `BY_DIRECTION`, `TOP_CONTRIBUTORS`, `VAR_SCOPE`
 - unique: key `PORTFOLIO_ID`; per BUSINESS_DATE
 - pattern: field PORTFOLIO_ID; pattern ^PF-
 - link: field PORTFOLIO_ID; kind portfolio
@@ -741,6 +737,7 @@ A portfolio in terms of the positions inside it: longs and shorts, market value,
 **Notes**
 
 - The portfolio definitions are an engine input (IMPLEMENTATION_PLAN.md, kept as fundamental data); the figures on a stored portfolio are VaR answers.
+- Terms kept, figures computed from 2.8.0 (docs/contracts/VAR.md): the fields marked derived are computed by the VaR engine and leave the stored record then.
 
 **To review (13)**
 

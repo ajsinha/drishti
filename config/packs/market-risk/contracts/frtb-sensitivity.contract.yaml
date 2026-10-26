@@ -18,10 +18,8 @@ kind: frtb-sensitivity
 mnemonic: FRTB
 pack: market-risk
 version: '1.0'
-class: computed
-status: retiring
-retiring-in: 2.9.0
-replaced-by: docs/contracts/FRTB.md
+class: fundamental
+status: active
 title: FRTB sensitivities
 description: Delta, vega and curvature by risk class and bucket (SBM).
 source: frtb-engine
@@ -57,43 +55,38 @@ fields:
   link: book
 - name: DELTA_CHARGE
   type: amount
-  presence: derived
+  presence: required
   unit: USD
   description: Capital for the first-order sensitivity of the book to its risk factors, after the regulatory risk weights and the correlations
     within and between buckets.
   example: 11613331
-  note: computed by the FRTB standardised charge; removed when retired
 - name: VEGA_CHARGE
   type: amount
-  presence: derived
+  presence: required
   unit: USD
   description: Capital for the sensitivity of option values to implied volatility, aggregated like delta.
   example: 3173321
-  note: computed by the FRTB standardised charge; removed when retired
 - name: CURVATURE_CHARGE
   type: amount
-  presence: derived
+  presence: required
   unit: USD
   description: Capital for the loss that delta alone does not capture when an option's value is not linear in the underlying move (the gamma risk).
   example: 1378886
-  note: computed by the FRTB standardised charge; removed when retired
 - name: TOTAL
   type: amount
-  presence: derived
+  presence: required
   unit: USD
   description: The sum of the delta, vega and curvature charges of the book. The full standardised charge adds the default-risk and residual-risk
     add-ons.
   example: 16165538
-  note: computed by the FRTB standardised charge; removed when retired
 - name: SENSITIVITIES
   type: record list
   presence: required
   description: 'Nested: see nested SENSITIVITIES[]'
 - name: BY_CLASS
   type: record list
-  presence: derived
+  presence: required
   description: 'Nested: see nested BY_CLASS[]'
-  note: computed by the FRTB standardised charge; removed when retired
 - name: APPROACH
   type: text
   presence: required
@@ -162,7 +155,12 @@ validation:
   fields:
   - RESULT_ID
   - BOOK
+  - DELTA_CHARGE
+  - VEGA_CHARGE
+  - CURVATURE_CHARGE
+  - TOTAL
   - SENSITIVITIES
+  - BY_CLASS
   - APPROACH
 - rule: unique
   key:
@@ -205,8 +203,6 @@ validation:
 notes:
 - 'Dated by the lake''s business_date partition: `drishti.py lake build` writes each test-data file''s day into it; the documents carry no date
   field of their own.'
-- 'Retiring in 2.9.0: the stored kind is removed and computed instead by the FRTB standardised charge (docs/contracts/FRTB.md); old ids and links
-  open the computed page.'
 review:
 - 'required inferred from 100% coverage in 60 documents (30 samples and 30 test-data documents (data/testdata/market-risk/frtb-sensitivity/snapshot-2026-07-08.jsonl.gz,
   data/testdata/market-risk/frtb-sensitivity/changes-2026-09-30.jsonl.gz)): confirm each required field is mandatory upstream, and each optional

@@ -48,28 +48,22 @@ fields:
   pattern: ^COLL-
 - name: HELD
   type: amount
-  presence: derived
+  presence: required
   unit: USD
   description: The collateral the bank has received from the counterparty.
   example: 0
-  retiring-in: 2.10.0
-  note: computed by collateral valuation (COLL) from 2.10.0; removed from the stored record then
 - name: POSTED
   type: amount
-  presence: derived
+  presence: required
   unit: USD
   description: The collateral the bank has delivered to the counterparty.
   example: 229552
-  retiring-in: 2.10.0
-  note: computed by collateral valuation (COLL) from 2.10.0; removed from the stored record then
 - name: NET
   type: amount
-  presence: derived
+  presence: required
   unit: USD
   description: Held minus posted.
   example: -229552
-  retiring-in: 2.10.0
-  note: computed by collateral valuation (COLL) from 2.10.0; removed from the stored record then
 - name: AS_OF
   type: date
   presence: required
@@ -111,12 +105,10 @@ nested:
     - Held
   - name: MARKET_VALUE
     type: amount
-    presence: derived
+    presence: required
     unit: USD
     description: The current market value of the asset before the haircut.
     example: 76517
-    retiring-in: 2.10.0
-    note: computed by collateral valuation (COLL) from 2.10.0; removed from the stored record then
   - name: HAIRCUT
     type: rate
     presence: required
@@ -126,12 +118,10 @@ nested:
     example: 0.005
   - name: VALUE
     type: amount
-    presence: derived
+    presence: required
     unit: USD
     description: The market value after the haircut, the amount that counts as collateral.
     example: 76134
-    retiring-in: 2.10.0
-    note: computed by collateral valuation (COLL) from 2.10.0; removed from the stored record then
 links:
 - field: CSA
   kind: csa
@@ -141,6 +131,9 @@ validation:
 - rule: required
   fields:
   - BALANCE_ID
+  - HELD
+  - POSTED
+  - NET
   - AS_OF
   - POSITIONS
   - CSA
@@ -167,8 +160,6 @@ validation:
 notes:
 - 'Dated by the lake''s business_date partition: `drishti.py lake build` writes each test-data file''s day into it; the documents carry no date
   field of their own.'
-- 'Terms kept, figures computed from 2.10.0 (docs/contracts/COLL.md): the fields marked derived are computed by collateral valuation (COLL) and
-  leave the stored record then.'
 review:
 - 'required inferred from 100% coverage in 218 documents (66 samples and 152 test-data documents (data/testdata/counterparty-risk/collateral-balance/snapshot-2026-07-08.jsonl.gz,
   data/testdata/counterparty-risk/collateral-balance/changes-2026-09-30.jsonl.gz)): confirm each required field is mandatory upstream, and each

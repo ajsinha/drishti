@@ -53,39 +53,31 @@ fields:
   example: 3
 - name: NET_MTM
   type: amount
-  presence: derived
+  presence: required
   unit: USD
   description: The sum of the members' mark to market, positive and negative together. Netting lets a loss on one trade cancel a gain on another
     if the counterparty defaults.
   example: -339550
-  retiring-in: 2.10.0
-  note: computed by the netting-set figures (NSET) from 2.10.0; removed from the stored record then
 - name: COLLATERAL
   type: amount
-  presence: derived
+  presence: required
   unit: USD
   description: 'The net collateral against the netting set: what is held less what has been posted.'
   example: -229552
-  retiring-in: 2.10.0
-  note: computed by the netting-set figures (NSET) from 2.10.0; removed from the stored record then
 - name: EE_PEAK
   type: amount
-  presence: derived
+  presence: required
   unit: USD
   description: The highest point of the expected-exposure profile over the life of the trades, the average positive exposure on the date where
     it is largest.
   example: 141750
-  retiring-in: 2.10.0
-  note: computed by the netting-set figures (NSET) from 2.10.0; removed from the stored record then
 - name: PFE_PEAK
   type: amount
-  presence: derived
+  presence: required
   unit: USD
   description: The highest point of the 95th-percentile exposure profile; on 95 of 100 simulated paths the exposure stays below it. It is the
     measure credit limits are set against.
   example: 347288
-  retiring-in: 2.10.0
-  note: computed by the netting-set figures (NSET) from 2.10.0; removed from the stored record then
 - name: LIMIT
   type: amount
   presence: required
@@ -94,36 +86,28 @@ fields:
   example: 5000000.0
 - name: UTILISATION
   type: rate
-  presence: derived
+  presence: required
   unit: '% of limit'
   description: 'The share of the limit that is used: used divided by limit. Above 100% is a breach.'
   example: 0.0695
-  retiring-in: 2.10.0
-  note: computed by the netting-set figures (NSET) from 2.10.0; removed from the stored record then
 - name: CVA
   type: amount
-  presence: derived
+  presence: required
   unit: USD
   description: The reduction in the value of the trades for the risk that the counterparty defaults before they mature.
   example: -7
-  retiring-in: 2.10.0
-  note: computed by the netting-set figures (NSET) from 2.10.0; removed from the stored record then
 - name: PROFILE
   type: record list
-  presence: derived
+  presence: required
   description: 'Nested: see nested PROFILE[]'
-  retiring-in: 2.10.0
-  note: computed by the netting-set figures (NSET) from 2.10.0; removed from the stored record then
 - name: TRADES
   type: record list
   presence: required
   description: 'Nested: see nested TRADES[]'
 - name: BY_ASSET
   type: record list
-  presence: derived
+  presence: required
   description: 'Nested: see nested BY_ASSET[]'
-  retiring-in: 2.10.0
-  note: computed by the netting-set figures (NSET) from 2.10.0; removed from the stored record then
 - name: COUNTERPARTY
   type: id
   presence: required
@@ -326,8 +310,16 @@ validation:
   fields:
   - NETTING_SET_ID
   - TRADE_COUNT
+  - NET_MTM
+  - COLLATERAL
+  - EE_PEAK
+  - PFE_PEAK
   - LIMIT
+  - UTILISATION
+  - CVA
+  - PROFILE
   - TRADES
+  - BY_ASSET
   - COUNTERPARTY
   - AGREEMENT
   - CSA
@@ -409,14 +401,20 @@ validation:
 notes:
 - 'Dated by the lake''s business_date partition: `drishti.py lake build` writes each test-data file''s day into it; the documents carry no date
   field of their own.'
-- 'Terms kept, figures computed from 2.10.0 (docs/contracts/NSET.md): the fields marked derived are computed by the netting-set figures (NSET)
-  and leave the stored record then.'
 review:
 - 'required inferred from 100% coverage in 218 documents (66 samples and 152 test-data documents (data/testdata/counterparty-risk/netting-set/snapshot-2026-07-08.jsonl.gz,
   data/testdata/counterparty-risk/netting-set/changes-2026-09-30.jsonl.gz)): confirm each required field is mandatory upstream, and each optional
   one may be empty.'
 - 'source ''xva-engine'' is the test data''s _meta.source (synthetic): name the production system that delivers it.'
 - 'due time of each business date is not known: state it (for example, by 06:00 New York the next business day).'
+- 'NET_MTM is a column a compute engine produces (docs/contracts/README.md section 14) on a record that keeps it: confirm whether it is computed
+  and removed.'
+- 'EE_PEAK is a column a compute engine produces (docs/contracts/README.md section 14) on a record that keeps it: confirm whether it is computed
+  and removed.'
+- 'PFE_PEAK is a column a compute engine produces (docs/contracts/README.md section 14) on a record that keeps it: confirm whether it is computed
+  and removed.'
+- 'UTILISATION is a column a compute engine produces (docs/contracts/README.md section 14) on a record that keeps it: confirm whether it is computed
+  and removed.'
 - 'enum values inferred from the data, not from a glossary: TRADES[].CURRENCY, TRADES[].MATURITY_BUCKET: confirm they are closed lists.'
 - 'number types decided by the field''s name: PROFILE[].EE amount, PROFILE[].PFE amount, BY_ASSET[].MTM amount: confirm amount, rate or integer.'
 - 'no unit stated for the amounts PROFILE[].EE, PROFILE[].PFE, BY_ASSET[].MTM (docs/contracts/README.md section 7: USD unless stated): confirm

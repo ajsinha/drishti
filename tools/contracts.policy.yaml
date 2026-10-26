@@ -39,79 +39,6 @@ retiring:
     contract: VAR.md
     measure: the VaR engine
     figures: [VAR_99, ES_975, HYPO_PNL, EXCEPTION, PREVIOUS_VAR, LIMIT_USE, POSITION_COUNT, TRADE_COUNT, PNL, EXCEPTIONS_250]
-  counterparty-trades: &groupings
-    release: 2.9.0
-    contract: TRADING_GROUPINGS.md
-    measure: the scope engine
-    figures: from-derived-connector
-  portfolio-trades: *groupings
-  legal-entity-trades: *groupings
-  index-trades: *groupings
-  trade-valuation:
-    release: 2.9.0
-    contract: TVAL.md
-    measure: valuation totals (TVAL)
-    figures: []
-  stress-result:
-    release: 2.9.0
-    contract: STR.md
-    measure: stress P&L (STR)
-    figures: [PNL, BY_BOOK]
-  frtb-sensitivity:
-    release: 2.9.0
-    contract: FRTB.md
-    measure: the FRTB standardised charge
-    figures: [DELTA_CHARGE, VEGA_CHARGE, CURVATURE_CHARGE, TOTAL, BY_CLASS]
-  simm:
-    release: 2.9.0
-    contract: SIMM.md
-    measure: ISDA SIMM
-    figures: [TOTAL, POSTED, RECEIVED, RISK_CLASSES]
-  pnl-explain:
-    release: 2.9.0
-    contract: PNL.md
-    measure: P&L explain
-    figures: [ACTUAL, EXPLAINED, UNEXPLAINED, ATTRIBUTION, EXPLAIN_STEPS]
-  sa-ccr:
-    release: 2.10.0
-    contract: SACCR.md
-    measure: SA-CCR
-    figures: [REPLACEMENT_COST, ADD_ON, MULTIPLIER, EAD, RWA, ADD_ONS, HEDGING_SETS]
-  exposure-profile:
-    release: 2.10.0
-    contract: EXP.md
-    measure: the exposure engine (EXP)
-    figures: [EPE, EEPE, PFE_PEAK, BUCKETS]
-  cva:
-    release: 2.10.0
-    contract: CVA.md
-    measure: CVA / XVA
-    figures: [CVA, DVA, FVA, KVA, CS01, COMPONENTS, SENSITIVITIES]
-  lei-group:
-    release: 2.9.0 or 2.10.0
-    contract: GROUPINGS_AND_ANALYTICS.md
-    measure: the GLEIF ownership grouping
-    figures: [MEMBERS, MEMBERS_IN_GLEIF, CAPPED, CAP_NOTE, LEVELS, COUNTRIES, LATE_RENEWALS, TREE, ROWS, BY_COUNTRY, BY_LEGAL_FORM]
-  lei-country:
-    release: 2.9.0 or 2.10.0
-    contract: GROUPINGS_AND_ANALYTICS.md
-    measure: the GLEIF country grouping
-    figures: [ENTITIES, GROUPS_PRESENT, GROUPS_HEADQUARTERED, LAPSED, LATE_RENEWALS, ROWS, ROWS_NOTE, GROUP_ROWS, BY_LEGAL_FORM, BY_CITY]
-  sic-sector:
-    release: 2.9.0 or 2.10.0
-    contract: GROUPINGS_AND_ANALYTICS.md
-    measure: the SIC sector grouping
-    figures: [COMPANIES, REVENUE, NET_INCOME, ROWS, BY_REVENUE]
-  country-group:
-    release: 2.9.0 or 2.10.0
-    contract: GROUPINGS_AND_ANALYTICS.md
-    measure: the country-group aggregation
-    figures: [ECONOMIES, GDP_USD_BN, GDP_PER_CAPITA, POPULATION_M, GROWTH, INFLATION, GROWTH_PATH, GDP_PATH, TOP_ECONOMIES]
-  correlation-matrix:
-    release: 2.9.0 or 2.10.0
-    contract: GROUPINGS_AND_ANALYTICS.md
-    measure: correlations from price history (CORR)
-    figures: [AVERAGE, PAIRS]
 
 split:
   position:
@@ -122,48 +49,13 @@ split:
   desk:
     release: 2.8.0
     contract: VAR.md
-    measure: the VaR engine and the scope engine (MtM summed from the trade valuations)
-    figures: [VAR_99, VAR_RESULT, MTM, POSITIONS]
-  book:
+    measure: the VaR engine
+    figures: [VAR_99, VAR_RESULT]
+  portfolio:
     release: 2.8.0
     contract: VAR.md
-    measure: the scope engine (counts, MtM and DV01 summed from the trades and their valuations)
-    figures: [TRADE_COUNT, MTM, DV01, TOP_TRADES]
-  trader:
-    release: 2.8.0
-    contract: VAR.md
-    measure: the scope engine (TRDR:, counted from the trades)
-    figures: [TRADE_COUNT]
-  counterparty:
-    release: 2.10.0
-    contract: NSET.md
-    measure: the counterparty's figures (CPTY:, net MtM from the trade valuations, PFE from EXP)
-    figures: [NET_MTM, PFE_PEAK, "NETTING_SETS[].NET_MTM"]
-  netting-set:
-    release: 2.10.0
-    contract: NSET.md
-    measure: the netting-set figures (NSET)
-    figures: [NET_MTM, COLLATERAL, EE_PEAK, PFE_PEAK, UTILISATION, CVA, PROFILE, BY_ASSET]
-  credit-limit:
-    release: 2.10.0
-    contract: LIM.md
-    measure: limit usage (LIM)
-    figures: [USED, UTILISATION, STATUS, "BUCKETS[].USED", "BUCKETS[].UTILISATION"]
-  counterparty-group:
-    release: 2.10.0
-    contract: GRP.md
-    measure: group utilisation (GRP)
-    figures: [UTILISATION]
-  collateral-balance:
-    release: 2.10.0
-    contract: COLL.md
-    measure: collateral valuation (COLL)
-    figures: [HELD, POSTED, NET, "POSITIONS[].MARKET_VALUE", "POSITIONS[].VALUE"]
-  margin-call:
-    release: 2.10.0
-    contract: MC.md
-    measure: the expected margin call (MC)
-    figures: []
+    measure: the VaR engine
+    figures: [VAR_99, ES_975, PNL]
 
 notes:
   trade-valuation:
@@ -212,3 +104,123 @@ review:
     - "PXH analytics (returns, volatility, beta) become computed (GROUPINGS_AND_ANALYTICS.md): confirm which fields are analytics."
   counterparty:
     - "NET_MTM, PFE_PEAK and NETTING_SETS[].NET_MTM are computed figures on a fundamental master (docs/contracts/README.md section 3): confirm they are removed when NSET's figures are computed (2.10.0)."
+
+# PARKED (product owner, 2026-10-25: "Just fundamentals and VaR is good for now"). The tool does not read this section: these
+# kinds stay active and fundamental. Each entry is the plan of record for when the product owner brings it back (docs/contracts/
+# README.md section 1; the parked contracts are kept as designs).
+parked:
+  retiring:
+    counterparty-trades: &groupings
+      release: 2.9.0
+      contract: TRADING_GROUPINGS.md
+      measure: the scope engine
+      figures: from-derived-connector
+    portfolio-trades: *groupings
+    legal-entity-trades: *groupings
+    index-trades: *groupings
+    trade-valuation:
+      release: 2.9.0
+      contract: TVAL.md
+      measure: valuation totals (TVAL)
+      figures: []
+    stress-result:
+      release: 2.9.0
+      contract: STR.md
+      measure: stress P&L (STR)
+      figures: [PNL, BY_BOOK]
+    frtb-sensitivity:
+      release: 2.9.0
+      contract: FRTB.md
+      measure: the FRTB standardised charge
+      figures: [DELTA_CHARGE, VEGA_CHARGE, CURVATURE_CHARGE, TOTAL, BY_CLASS]
+    simm:
+      release: 2.9.0
+      contract: SIMM.md
+      measure: ISDA SIMM
+      figures: [TOTAL, POSTED, RECEIVED, RISK_CLASSES]
+    pnl-explain:
+      release: 2.9.0
+      contract: PNL.md
+      measure: P&L explain
+      figures: [ACTUAL, EXPLAINED, UNEXPLAINED, ATTRIBUTION, EXPLAIN_STEPS]
+    sa-ccr:
+      release: 2.10.0
+      contract: SACCR.md
+      measure: SA-CCR
+      figures: [REPLACEMENT_COST, ADD_ON, MULTIPLIER, EAD, RWA, ADD_ONS, HEDGING_SETS]
+    exposure-profile:
+      release: 2.10.0
+      contract: EXP.md
+      measure: the exposure engine (EXP)
+      figures: [EPE, EEPE, PFE_PEAK, BUCKETS]
+    cva:
+      release: 2.10.0
+      contract: CVA.md
+      measure: CVA / XVA
+      figures: [CVA, DVA, FVA, KVA, CS01, COMPONENTS, SENSITIVITIES]
+    lei-group:
+      release: 2.9.0 or 2.10.0
+      contract: GROUPINGS_AND_ANALYTICS.md
+      measure: the GLEIF ownership grouping
+      figures: [MEMBERS, MEMBERS_IN_GLEIF, CAPPED, CAP_NOTE, LEVELS, COUNTRIES, LATE_RENEWALS, TREE, ROWS, BY_COUNTRY, BY_LEGAL_FORM]
+    lei-country:
+      release: 2.9.0 or 2.10.0
+      contract: GROUPINGS_AND_ANALYTICS.md
+      measure: the GLEIF country grouping
+      figures: [ENTITIES, GROUPS_PRESENT, GROUPS_HEADQUARTERED, LAPSED, LATE_RENEWALS, ROWS, ROWS_NOTE, GROUP_ROWS, BY_LEGAL_FORM, BY_CITY]
+    sic-sector:
+      release: 2.9.0 or 2.10.0
+      contract: GROUPINGS_AND_ANALYTICS.md
+      measure: the SIC sector grouping
+      figures: [COMPANIES, REVENUE, NET_INCOME, ROWS, BY_REVENUE]
+    country-group:
+      release: 2.9.0 or 2.10.0
+      contract: GROUPINGS_AND_ANALYTICS.md
+      measure: the country-group aggregation
+      figures: [ECONOMIES, GDP_USD_BN, GDP_PER_CAPITA, POPULATION_M, GROWTH, INFLATION, GROWTH_PATH, GDP_PATH, TOP_ECONOMIES]
+    correlation-matrix:
+      release: 2.9.0 or 2.10.0
+      contract: GROUPINGS_AND_ANALYTICS.md
+      measure: correlations from price history (CORR)
+      figures: [AVERAGE, PAIRS]
+  split:
+    book:
+      release: 2.8.0
+      contract: VAR.md
+      measure: the scope engine (counts, MtM and DV01 summed from the trades and their valuations)
+      figures: [TRADE_COUNT, MTM, DV01, TOP_TRADES]
+    trader:
+      release: 2.8.0
+      contract: VAR.md
+      measure: the scope engine (TRDR:, counted from the trades)
+      figures: [TRADE_COUNT]
+    counterparty:
+      release: 2.10.0
+      contract: NSET.md
+      measure: the counterparty's figures (CPTY:, net MtM from the trade valuations, PFE from EXP)
+      figures: [NET_MTM, PFE_PEAK, "NETTING_SETS[].NET_MTM"]
+    netting-set:
+      release: 2.10.0
+      contract: NSET.md
+      measure: the netting-set figures (NSET)
+      figures: [NET_MTM, COLLATERAL, EE_PEAK, PFE_PEAK, UTILISATION, CVA, PROFILE, BY_ASSET]
+    credit-limit:
+      release: 2.10.0
+      contract: LIM.md
+      measure: limit usage (LIM)
+      figures: [USED, UTILISATION, STATUS, "BUCKETS[].USED", "BUCKETS[].UTILISATION"]
+    counterparty-group:
+      release: 2.10.0
+      contract: GRP.md
+      measure: group utilisation (GRP)
+      figures: [UTILISATION]
+    collateral-balance:
+      release: 2.10.0
+      contract: COLL.md
+      measure: collateral valuation (COLL)
+      figures: [HELD, POSTED, NET, "POSITIONS[].MARKET_VALUE", "POSITIONS[].VALUE"]
+    margin-call:
+      release: 2.10.0
+      contract: MC.md
+      measure: the expected margin call (MC)
+      figures: []

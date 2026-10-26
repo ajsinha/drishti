@@ -18,10 +18,8 @@ kind: lei-group
 mnemonic: LEIG
 pack: gleif
 version: '1.0'
-class: computed
-status: retiring
-retiring-in: 2.9.0 or 2.10.0
-replaced-by: docs/contracts/GROUPINGS_AND_ANALYTICS.md
+class: fundamental
+status: active
 title: LEI ownership group
 description: 'An ownership group: the ultimate parent with its whole tree, every member, and counts by country and legal form.'
 source: 'public data: GLEIF LEI records, relationship records and mapping files (tools/publicdata/gleif.py)'
@@ -88,43 +86,36 @@ fields:
   example: G-SIB, US equities
 - name: MEMBERS
   type: integer
-  presence: derived
+  presence: optional
   description: Members (pack)
   example: 50
-  note: computed by the GLEIF ownership grouping; removed when retired
 - name: MEMBERS_IN_GLEIF
   type: integer
-  presence: derived
+  presence: optional
   description: Members (GLEIF)
   example: 173
-  note: computed by the GLEIF ownership grouping; removed when retired
 - name: CAPPED
   type: boolean
-  presence: derived
+  presence: optional
   example: true
-  note: computed by the GLEIF ownership grouping; removed when retired
 - name: CAP_NOTE
   type: text
-  presence: derived
+  presence: optional
   example: The group has 173 entities in GLEIF; the pack keeps 50 (at …
-  note: computed by the GLEIF ownership grouping; removed when retired
 - name: LEVELS
   type: integer
-  presence: derived
+  presence: optional
   description: Levels
   example: 2
-  note: computed by the GLEIF ownership grouping; removed when retired
 - name: COUNTRIES
   type: integer
-  presence: derived
+  presence: required
   description: Countries
   example: 13
-  note: computed by the GLEIF ownership grouping; removed when retired
 - name: LATE_RENEWALS
   type: integer
-  presence: derived
+  presence: required
   example: 5
-  note: computed by the GLEIF ownership grouping; removed when retired
 - name: SEEDS
   type: record list
   presence: optional
@@ -137,24 +128,20 @@ fields:
   link: us-company
 - name: TREE
   type: record list
-  presence: derived
+  presence: optional
   description: 'Nested: see nested TREE[]'
-  note: computed by the GLEIF ownership grouping; removed when retired
 - name: ROWS
   type: record list
-  presence: derived
+  presence: required
   description: 'Nested: see nested ROWS[]'
-  note: computed by the GLEIF ownership grouping; removed when retired
 - name: BY_COUNTRY
   type: record list
-  presence: derived
+  presence: required
   description: 'Nested: see nested BY_COUNTRY[]'
-  note: computed by the GLEIF ownership grouping; removed when retired
 - name: BY_LEGAL_FORM
   type: record list
-  presence: derived
+  presence: optional
   description: 'Nested: see nested BY_LEGAL_FORM[]'
-  note: computed by the GLEIF ownership grouping; removed when retired
 - name: PROVENANCE
   type: record
   presence: required
@@ -356,6 +343,10 @@ validation:
   fields:
   - GROUP_ID
   - NAME
+  - COUNTRIES
+  - LATE_RENEWALS
+  - ROWS
+  - BY_COUNTRY
   - PROVENANCE
 - rule: unique
   key:
@@ -379,9 +370,7 @@ validation:
   - Insurer
   - Market infrastructure
   - US equities
-notes:
-- 'Retiring in 2.9.0 or 2.10.0: the stored kind is removed and computed instead by the GLEIF ownership grouping (docs/contracts/GROUPINGS_AND_ANALYTICS.md);
-  old ids and links open the computed page.'
+notes: []
 review:
 - 'required inferred from 100% coverage in 592 documents (1 samples and 591 test-data documents (data/testdata/gleif/lei-group/snapshot-2026-10-25.jsonl.gz)):
   confirm each required field is mandatory upstream, and each optional one may be empty.'

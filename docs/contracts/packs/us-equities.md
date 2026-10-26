@@ -23,7 +23,7 @@ One section per command of the pack: the shape of its data, how it is stored and
 |---|---|---|---|---|---|
 | [USEQ](#useq-us-company-us-company) | `us-company` | fundamental | active | 48 | 7 |
 | [IDX](#idx-index-members-index-membership) | `index-membership` | fundamental | active | 9 | 6 |
-| [SIC](#sic-sic-sector-sic-sector) | `sic-sector` | computed | retiring in 2.9.0 or 2.10.0 | 13 | 7 |
+| [SIC](#sic-sic-sector-sic-sector) | `sic-sector` | fundamental | active | 13 | 7 |
 | [EDGAR](#edgar-edgar-filings-browser-filing-feed) | `filing-feed` | fundamental | active | 11 | 6 |
 | [FILING](#filing-sec-filing-filing) | `filing` | fundamental | active | 13 | 3 |
 | [FACT](#fact-financial-fact-financial-fact) | `financial-fact` | fundamental | active | 13 | 6 |
@@ -268,8 +268,8 @@ A sector by its SIC code: its companies ranked by revenue; a click opens a compa
 |  |  |
 |---|---|
 | Contract | [sic-sector.contract.yaml](../../../config/packs/us-equities/contracts/sic-sector.contract.yaml) · version 1.0 |
-| Class | computed |
-| Status | retiring in 2.9.0 or 2.10.0, replaced by docs/contracts/GROUPINGS_AND_ANALYTICS.md |
+| Class | fundamental |
+| Status | active |
 | Source | public data: SEC EDGAR, Nasdaq Trader, GLEIF and Wikidata (tools/publicdata/us_equities.py) |
 | Grain | One row per sic sector, keyed by SIC. |
 | Key | `SIC` |
@@ -288,11 +288,11 @@ A sector by its SIC code: its companies ranked by revenue; a click opens a compa
 | `DESCRIPTION` | text | required |  | Industry | `Motor Vehicles & Passenger Car Bodies` |  |
 | `DIVISION` | text | optional |  | — | `D` |  |
 | `SECTOR` | text | required |  | Division | `Manufacturing` |  |
-| `COMPANIES` | integer | derived |  | Companies *computed by the SIC sector grouping; removed when retired* | `4` |  |
-| `REVENUE` | amount | derived |  | Revenue *computed by the SIC sector grouping; removed when retired* | `495557800000` |  |
-| `NET_INCOME` | amount | derived |  | Net income *computed by the SIC sector grouping; removed when retired* | `704800000` |  |
-| `ROWS` | record list | derived |  | Nested: see nested ROWS[] *computed by the SIC sector grouping; removed when retired* |  |  |
-| `BY_REVENUE` | record list | derived |  | Nested: see nested BY_REVENUE[] *computed by the SIC sector grouping; removed when retired* |  |  |
+| `COMPANIES` | integer | required |  | Companies | `4` |  |
+| `REVENUE` | amount | required |  | Revenue | `495557800000` |  |
+| `NET_INCOME` | amount | required |  | Net income | `704800000` |  |
+| `ROWS` | record list | optional |  | Nested: see nested ROWS[] |  |  |
+| `BY_REVENUE` | record list | optional |  | Nested: see nested BY_REVENUE[] |  |  |
 | `PROVENANCE` | record | required |  | Nested: see nested PROVENANCE |  |  |
 | `CODES` | integer | optional |  | SIC codes | `181` |  |
 | `CODES_LIST` | record list | optional |  | Nested: see nested CODES_LIST[] |  |  |
@@ -346,13 +346,9 @@ A sector by its SIC code: its companies ranked by revenue; a click opens a compa
 
 **Validation**
 
-- required: fields `SIC`, `DESCRIPTION`, `SECTOR`, `PROVENANCE`
+- required: fields `SIC`, `DESCRIPTION`, `SECTOR`, `COMPANIES`, `REVENUE`, `NET_INCOME`, `PROVENANCE`
 - unique: key `SIC`; per snapshot
 - enum: field ROWS[].CURRENCY; values `CAD`, `EUR`, `GBP`, `USD`
-
-**Notes**
-
-- Retiring in 2.9.0 or 2.10.0: the stored kind is removed and computed instead by the SIC sector grouping (docs/contracts/GROUPINGS_AND_ANALYTICS.md); old ids and links open the computed page.
 
 **To review (7)**
 

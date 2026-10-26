@@ -18,10 +18,8 @@ kind: country-group
 mnemonic: ECG
 pack: world-economy
 version: '1.0'
-class: computed
-status: retiring
-retiring-in: 2.9.0 or 2.10.0
-replaced-by: docs/contracts/GROUPINGS_AND_ANALYTICS.md
+class: fundamental
+status: active
 title: Country group
 description: 'A World Bank region or income group (or the world): output, population, growth and its largest economies.'
 source: 'public data: World Bank, World Development Indicators'
@@ -60,62 +58,53 @@ fields:
   example: World Bank region
 - name: ECONOMIES
   type: integer
-  presence: derived
+  presence: required
   description: The number of economies in the group that the pack covers.
   example: 36
-  note: computed by the country-group aggregation; removed when retired
 - name: YEAR
   type: text
   presence: optional
   example: '2025'
 - name: GDP_USD_BN
   type: amount
-  presence: derived
+  presence: optional
   unit: USD billions
   description: The group's GDP in current US dollars (World Bank aggregate).
   example: 33657
-  note: computed by the country-group aggregation; removed when retired
 - name: GDP_PER_CAPITA
   type: amount
-  presence: derived
+  presence: optional
   unit: USD
   description: The group's GDP per head, in current US dollars.
   example: 14077.3
-  note: computed by the country-group aggregation; removed when retired
 - name: POPULATION_M
   type: amount
-  presence: derived
+  presence: optional
   unit: millions
   description: The group's total population.
   example: 2390.87
-  note: computed by the country-group aggregation; removed when retired
 - name: GROWTH
   type: rate
-  presence: derived
+  presence: optional
   unit: '% a year'
   description: The group's yearly real GDP growth (World Bank aggregate).
   example: 3.99734
-  note: computed by the country-group aggregation; removed when retired
 - name: INFLATION
   type: rate
-  presence: derived
+  presence: optional
   example: 2.01821
-  note: computed by the country-group aggregation; removed when retired
 - name: GROWTH_PATH
   type: record list
-  presence: derived
+  presence: required
   description: 'Nested: see nested GROWTH_PATH[]'
-  note: computed by the country-group aggregation; removed when retired
 - name: GDP_PATH
   type: record list
-  presence: derived
+  presence: required
   description: 'Nested: see nested GDP_PATH[]'
-  note: computed by the country-group aggregation; removed when retired
 - name: TOP_ECONOMIES
   type: record list
-  presence: derived
+  presence: required
   description: 'Nested: see nested TOP_ECONOMIES[]'
-  note: computed by the country-group aggregation; removed when retired
 - name: MEMBER_ECONOMIES
   type: id list
   presence: required
@@ -211,6 +200,10 @@ validation:
   - GROUP_ID
   - NAME
   - GROUP_TYPE
+  - ECONOMIES
+  - GROWTH_PATH
+  - GDP_PATH
+  - TOP_ECONOMIES
   - MEMBER_ECONOMIES
   - PROVENANCE
 - rule: unique
@@ -226,9 +219,7 @@ validation:
 - rule: link
   field: TOP_ECONOMIES[].ECONOMY
   kind: economy
-notes:
-- 'Retiring in 2.9.0 or 2.10.0: the stored kind is removed and computed instead by the country-group aggregation (docs/contracts/GROUPINGS_AND_ANALYTICS.md);
-  old ids and links open the computed page.'
+notes: []
 review:
 - 'required inferred from 100% coverage in 12 documents (12 samples): confirm each required field is mandatory upstream, and each optional one
   may be empty.'

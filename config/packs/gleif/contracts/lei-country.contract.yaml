@@ -18,10 +18,8 @@ kind: lei-country
 mnemonic: LEIC
 pack: gleif
 version: '1.0'
-class: computed
-status: retiring
-retiring-in: 2.9.0 or 2.10.0
-replaced-by: docs/contracts/GROUPINGS_AND_ANALYTICS.md
+class: fundamental
+status: active
 title: LEI country
 description: 'A country''s legal entities in the pack: the entities, the groups present, legal forms and cities.'
 source: 'public data: GLEIF LEI records, relationship records and mapping files (tools/publicdata/gleif.py)'
@@ -55,56 +53,46 @@ fields:
   example: United States of America (the)
 - name: ENTITIES
   type: integer
-  presence: derived
+  presence: required
   description: Entities
   example: 2704
-  note: computed by the GLEIF country grouping; removed when retired
 - name: GROUPS_PRESENT
   type: integer
-  presence: derived
+  presence: optional
   description: Groups present
   example: 521
-  note: computed by the GLEIF country grouping; removed when retired
 - name: GROUPS_HEADQUARTERED
   type: integer
-  presence: derived
+  presence: optional
   example: 451
-  note: computed by the GLEIF country grouping; removed when retired
 - name: LAPSED
   type: integer
-  presence: derived
+  presence: optional
   example: 713
-  note: computed by the GLEIF country grouping; removed when retired
 - name: LATE_RENEWALS
   type: integer
-  presence: derived
+  presence: optional
   example: 724
-  note: computed by the GLEIF country grouping; removed when retired
 - name: ROWS
   type: record list
-  presence: derived
+  presence: required
   description: 'Nested: see nested ROWS[]'
-  note: computed by the GLEIF country grouping; removed when retired
 - name: ROWS_NOTE
   type: text
-  presence: derived
+  presence: optional
   example: The first 400 of 2,704 entities, by name
-  note: computed by the GLEIF country grouping; removed when retired
 - name: GROUP_ROWS
   type: record list
-  presence: derived
+  presence: optional
   description: 'Nested: see nested GROUP_ROWS[]'
-  note: computed by the GLEIF country grouping; removed when retired
 - name: BY_LEGAL_FORM
   type: record list
-  presence: derived
+  presence: optional
   description: 'Nested: see nested BY_LEGAL_FORM[]'
-  note: computed by the GLEIF country grouping; removed when retired
 - name: BY_CITY
   type: record list
-  presence: derived
+  presence: optional
   description: 'Nested: see nested BY_CITY[]'
-  note: computed by the GLEIF country grouping; removed when retired
 - name: PROVENANCE
   type: record
   presence: required
@@ -232,6 +220,8 @@ validation:
   fields:
   - COUNTRY
   - NAME
+  - ENTITIES
+  - ROWS
   - PROVENANCE
 - rule: unique
   key:
@@ -240,9 +230,7 @@ validation:
 - rule: link
   field: ROWS[].GROUP
   kind: counterparty-group
-notes:
-- 'Retiring in 2.9.0 or 2.10.0: the stored kind is removed and computed instead by the GLEIF country grouping (docs/contracts/GROUPINGS_AND_ANALYTICS.md);
-  old ids and links open the computed page.'
+notes: []
 review:
 - 'required inferred from 100% coverage in 135 documents (1 samples and 134 test-data documents (data/testdata/gleif/lei-country/snapshot-2026-10-25.jsonl.gz)):
   confirm each required field is mandatory upstream, and each optional one may be empty.'

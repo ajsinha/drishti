@@ -18,10 +18,8 @@ kind: cva
 mnemonic: CVA
 pack: counterparty-risk
 version: '1.0'
-class: computed
-status: retiring
-retiring-in: 2.10.0
-replaced-by: docs/contracts/CVA.md
+class: fundamental
+status: active
 title: CVA / XVA
 description: Credit, debit and funding valuation adjustments with sensitivities.
 source: xva-engine
@@ -50,49 +48,42 @@ fields:
   pattern: ^CVA-
 - name: CVA
   type: amount
-  presence: derived
+  presence: required
   unit: USD
   description: The expected loss from the counterparty defaulting, valued at market spreads and taken off the value of the trades.
   example: -7
-  note: computed by CVA / XVA; removed when retired
 - name: DVA
   type: amount
-  presence: derived
+  presence: required
   unit: USD
   description: 'The mirror image of CVA: the gain from the bank''s own possible default, which reduces what it would owe.'
   example: 4
-  note: computed by CVA / XVA; removed when retired
 - name: FVA
   type: amount
-  presence: derived
+  presence: required
   unit: USD
   description: The cost, or benefit, of funding the collateral and the hedges of uncollateralised trades.
   example: -407
-  note: computed by CVA / XVA; removed when retired
 - name: KVA
   type: amount
-  presence: derived
+  presence: required
   unit: USD
   description: The cost of holding regulatory capital against the trades over their life.
   example: -1389
-  note: computed by CVA / XVA; removed when retired
 - name: CS01
   type: amount
-  presence: derived
+  presence: required
   unit: USD per bp
   description: The change in the CVA for a one basis point rise in the counterparty's credit spread.
   example: 0
-  note: computed by CVA / XVA; removed when retired
 - name: COMPONENTS
   type: record list
-  presence: derived
+  presence: required
   description: 'Nested: see nested COMPONENTS[]'
-  note: computed by CVA / XVA; removed when retired
 - name: SENSITIVITIES
   type: record list
-  presence: derived
+  presence: required
   description: 'Nested: see nested SENSITIVITIES[]'
-  note: computed by CVA / XVA; removed when retired
 - name: NETTING_SET
   type: id
   presence: required
@@ -158,6 +149,13 @@ validation:
 - rule: required
   fields:
   - RESULT_ID
+  - CVA
+  - DVA
+  - FVA
+  - KVA
+  - CS01
+  - COMPONENTS
+  - SENSITIVITIES
   - NETTING_SET
 - rule: unique
   key:
@@ -196,8 +194,6 @@ validation:
 notes:
 - 'Dated by the lake''s business_date partition: `drishti.py lake build` writes each test-data file''s day into it; the documents carry no date
   field of their own.'
-- 'Retiring in 2.10.0: the stored kind is removed and computed instead by CVA / XVA (docs/contracts/CVA.md); old ids and links open the computed
-  page.'
 review:
 - 'required inferred from 100% coverage in 215 documents (66 samples and 149 test-data documents (data/testdata/counterparty-risk/cva/snapshot-2026-07-08.jsonl.gz,
   data/testdata/counterparty-risk/cva/changes-2026-09-30.jsonl.gz)): confirm each required field is mandatory upstream, and each optional one

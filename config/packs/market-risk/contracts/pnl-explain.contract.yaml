@@ -18,10 +18,8 @@ kind: pnl-explain
 mnemonic: PNL
 pack: market-risk
 version: '1.0'
-class: computed
-status: retiring
-retiring-in: 2.9.0
-replaced-by: docs/contracts/PNL.md
+class: fundamental
+status: active
 title: P&L explain
 description: Daily P&L attributed to risk factors, new trades and residual.
 source: pnl-explain
@@ -55,37 +53,32 @@ fields:
   example: '2026-09-30'
 - name: ACTUAL
   type: integer
-  presence: derived
+  presence: required
   unit: USD
   description: The change in the book's value over the day as booked, including new trades, fees and carry.
   example: -79231
-  note: computed by P&L explain; removed when retired
 - name: EXPLAINED
   type: integer
-  presence: derived
+  presence: required
   unit: USD
   description: 'The part of the actual P&L that the risk factors account for: each sensitivity multiplied by that day''s move in its factor, plus
     carry and roll-down.'
   example: -81630
-  note: computed by P&L explain; removed when retired
 - name: UNEXPLAINED
   type: integer
-  presence: derived
+  presence: required
   unit: USD
   description: Actual minus explained. A large or persistent residual points to a missing risk factor, a stale parameter or a pricing difference
     between the front office and risk.
   example: 2399
-  note: computed by P&L explain; removed when retired
 - name: ATTRIBUTION
   type: record list
-  presence: derived
+  presence: required
   description: 'Nested: see nested ATTRIBUTION[]'
-  note: computed by P&L explain; removed when retired
 - name: EXPLAIN_STEPS
   type: record list
-  presence: derived
+  presence: required
   description: 'Nested: see nested EXPLAIN_STEPS[]'
-  note: computed by P&L explain; removed when retired
 - name: BOOK
   type: id
   presence: required
@@ -131,6 +124,11 @@ validation:
   fields:
   - RESULT_ID
   - DATE
+  - ACTUAL
+  - EXPLAINED
+  - UNEXPLAINED
+  - ATTRIBUTION
+  - EXPLAIN_STEPS
   - BOOK
 - rule: unique
   key:
@@ -154,8 +152,6 @@ validation:
 notes:
 - 'Dated by the lake''s business_date partition: `drishti.py lake build` writes each test-data file''s day into it; the documents carry no date
   field of their own.'
-- 'Retiring in 2.9.0: the stored kind is removed and computed instead by P&L explain (docs/contracts/PNL.md); old ids and links open the computed
-  page.'
 review:
 - 'required inferred from 100% coverage in 60 documents (30 samples and 30 test-data documents (data/testdata/market-risk/pnl-explain/snapshot-2026-07-08.jsonl.gz,
   data/testdata/market-risk/pnl-explain/changes-2026-09-30.jsonl.gz)): confirm each required field is mandatory upstream, and each optional one

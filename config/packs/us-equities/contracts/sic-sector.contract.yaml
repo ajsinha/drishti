@@ -18,10 +18,8 @@ kind: sic-sector
 mnemonic: SIC
 pack: us-equities
 version: '1.0'
-class: computed
-status: retiring
-retiring-in: 2.9.0 or 2.10.0
-replaced-by: docs/contracts/GROUPINGS_AND_ANALYTICS.md
+class: fundamental
+status: active
 title: SIC sector
 description: 'A sector by its SIC code: its companies ranked by revenue; a click opens a company''s summary beside.'
 source: 'public data: SEC EDGAR, Nasdaq Trader, GLEIF and Wikidata (tools/publicdata/us_equities.py)'
@@ -66,32 +64,27 @@ fields:
   example: Manufacturing
 - name: COMPANIES
   type: integer
-  presence: derived
+  presence: required
   description: Companies
   example: 4
-  note: computed by the SIC sector grouping; removed when retired
 - name: REVENUE
   type: amount
-  presence: derived
+  presence: required
   description: Revenue
   example: 495557800000
-  note: computed by the SIC sector grouping; removed when retired
 - name: NET_INCOME
   type: amount
-  presence: derived
+  presence: required
   description: Net income
   example: 704800000
-  note: computed by the SIC sector grouping; removed when retired
 - name: ROWS
   type: record list
-  presence: derived
+  presence: optional
   description: 'Nested: see nested ROWS[]'
-  note: computed by the SIC sector grouping; removed when retired
 - name: BY_REVENUE
   type: record list
-  presence: derived
+  presence: optional
   description: 'Nested: see nested BY_REVENUE[]'
-  note: computed by the SIC sector grouping; removed when retired
 - name: PROVENANCE
   type: record
   presence: required
@@ -216,6 +209,9 @@ validation:
   - SIC
   - DESCRIPTION
   - SECTOR
+  - COMPANIES
+  - REVENUE
+  - NET_INCOME
   - PROVENANCE
 - rule: unique
   key:
@@ -228,9 +224,7 @@ validation:
   - EUR
   - GBP
   - USD
-notes:
-- 'Retiring in 2.9.0 or 2.10.0: the stored kind is removed and computed instead by the SIC sector grouping (docs/contracts/GROUPINGS_AND_ANALYTICS.md);
-  old ids and links open the computed page.'
+notes: []
 review:
 - 'required inferred from 100% coverage in 183 documents (1 samples and 182 test-data documents (data/testdata/us-equities/sic-sector/snapshot-2026-10-24.jsonl.gz)):
   confirm each required field is mandatory upstream, and each optional one may be empty.'

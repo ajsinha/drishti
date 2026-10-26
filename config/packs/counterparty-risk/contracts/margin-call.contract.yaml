@@ -212,8 +212,6 @@ notes:
   field of their own.'
 - Actual calls and their events are kept (workflow); the expected call (MtM minus collateral minus threshold, then minimum transfer and rounding)
   is computed and shown beside the call. No stored field is the expected call today.
-- 'Terms kept, figures computed from 2.10.0 (docs/contracts/MC.md): the fields marked derived are computed by the expected margin call (MC) and
-  leave the stored record then.'
 review:
 - 'required inferred from 100% coverage in 284 documents (132 samples and 152 test-data documents (data/testdata/counterparty-risk/margin-call/snapshot-2026-07-08.jsonl.gz,
   data/testdata/counterparty-risk/margin-call/changes-2026-09-30.jsonl.gz)): confirm each required field is mandatory upstream, and each optional

@@ -22,10 +22,10 @@ One section per command of the pack: the shape of its data, how it is stored and
 | Command | Kind | Class | Status | Fields | To review |
 |---|---|---|---|---|---|
 | [TRD](#trd-trade-trade) | `trade` | fundamental | active | 47 | 12 |
-| [CTRD](#ctrd-counterparty-trades-derived-from-trades-counterparty-trades) | `counterparty-trades` | computed | retiring in 2.9.0 | 15 | 1 |
-| [PTRD](#ptrd-portfolio-trades-derived-from-trades-portfolio-trades) | `portfolio-trades` | computed | retiring in 2.9.0 | 15 | 1 |
-| [LTRD](#ltrd-legal-entity-trades-derived-from-trades-legal-entity-trades) | `legal-entity-trades` | computed | retiring in 2.9.0 | 15 | 1 |
-| [ITRD](#itrd-index-trades-derived-from-trades-index-trades) | `index-trades` | computed | retiring in 2.9.0 | 15 | 1 |
+| [CTRD](#ctrd-counterparty-trades-derived-from-trades-counterparty-trades) | `counterparty-trades` | computed | active | 15 | 1 |
+| [PTRD](#ptrd-portfolio-trades-derived-from-trades-portfolio-trades) | `portfolio-trades` | computed | active | 15 | 1 |
+| [LTRD](#ltrd-legal-entity-trades-derived-from-trades-legal-entity-trades) | `legal-entity-trades` | computed | active | 15 | 1 |
+| [ITRD](#itrd-index-trades-derived-from-trades-index-trades) | `index-trades` | computed | active | 15 | 1 |
 
 ## TRD: Trade (`trade`)
 
@@ -248,7 +248,7 @@ Every trade with a counterparty, from every source system: its trades (every sta
 |---|---|
 | Contract | [counterparty-trades.contract.yaml](../../../config/packs/trading/contracts/counterparty-trades.contract.yaml) · version 1.0 |
 | Class | computed |
-| Status | retiring in 2.9.0, replaced by docs/contracts/TRADING_GROUPINGS.md |
+| Status | active |
 | Source | computed by Drishti: the derived connector trade-pages over the kind trade |
 | Grain | One record per COUNTERPARTY of the trade records, computed when asked. |
 | Key | `COUNTERPARTY` |
@@ -262,20 +262,20 @@ Every trade with a counterparty, from every source system: its trades (every sta
 | Field | Type | Presence | Unit | Description | Example or values | Link |
 |---|---|---|---|---|---|---|
 | `COUNTERPARTY` | id | required |  | The value the trade records are grouped by ($.COUNTERPARTY) |  | `counterparty` |
-| `TRADE_IDS` | id list | derived |  | The ids of the grouped trade records (at most 1000) *computed by the scope engine; removed when retired* |  |  |
-| `TRADE_COUNT` | integer | derived |  | The number of records in the group *computed by the scope engine; removed when retired* |  |  |
-| `NOTIONAL` | amount | derived |  | sum over the group of: first($.LEGS).NOTIONAL *computed by the scope engine; removed when retired* |  |  |
-| `SOURCE_SYSTEMS` | text list | derived |  | distinct over the group of: $.SOURCE_SYSTEM *computed by the scope engine; removed when retired* |  |  |
-| `PRODUCT_TYPES` | text list | derived |  | distinct over the group of: $.PRODUCT_TYPE *computed by the scope engine; removed when retired* |  |  |
-| `CURRENCIES` | text list | derived |  | distinct over the group of: $.CURRENCY *computed by the scope engine; removed when retired* |  |  |
-| `LAST_MATURITY` | date | derived |  | max over the group of: $.MATURITY_DATE *computed by the scope engine; removed when retired* |  |  |
-| `PAY_7D` | amount | derived |  | sum over the group of: sum(flatten($.EVENTS)[?nonblank(@.AMOUNT) && nonblank(@.EVENT_DATE)][?days(today(), @.EVENT_DATE) >= 0 && days(today(), @.EVENT_DATE) <= 7], 'AMOUNT') *computed by the scope engine; removed when retired* |  |  |
-| `PAY_7D_EVENTS` | amount | derived |  | sum over the group of: size(flatten($.EVENTS)[?nonblank(@.AMOUNT) && nonblank(@.EVENT_DATE)][?days(today(), @.EVENT_DATE) >= 0 && days(today(), @.EVENT_DATE) <= 7]) *computed by the scope engine; removed when retired* |  |  |
-| `PAY_30D` | amount | derived |  | sum over the group of: sum(flatten($.EVENTS)[?nonblank(@.AMOUNT) && nonblank(@.EVENT_DATE)][?days(today(), @.EVENT_DATE) >= 0 && days(today(), @.EVENT_DATE) <= 30], 'AMOUNT') *computed by the scope engine; removed when retired* |  |  |
-| `PAY_30D_EVENTS` | amount | derived |  | sum over the group of: size(flatten($.EVENTS)[?nonblank(@.AMOUNT) && nonblank(@.EVENT_DATE)][?days(today(), @.EVENT_DATE) >= 0 && days(today(), @.EVENT_DATE) <= 30]) *computed by the scope engine; removed when retired* |  |  |
-| `PAY_90D` | amount | derived |  | sum over the group of: sum(flatten($.EVENTS)[?nonblank(@.AMOUNT) && nonblank(@.EVENT_DATE)][?days(today(), @.EVENT_DATE) >= 0 && days(today(), @.EVENT_DATE) <= 90], 'AMOUNT') *computed by the scope engine; removed when retired* |  |  |
-| `PAY_90D_EVENTS` | amount | derived |  | sum over the group of: size(flatten($.EVENTS)[?nonblank(@.AMOUNT) && nonblank(@.EVENT_DATE)][?days(today(), @.EVENT_DATE) >= 0 && days(today(), @.EVENT_DATE) <= 90]) *computed by the scope engine; removed when retired* |  |  |
-| `TRADES` | record list | derived |  | One row per grouped trade record *computed by the scope engine; removed when retired* |  |  |
+| `TRADE_IDS` | id list | derived |  | The ids of the grouped trade records (at most 1000) |  |  |
+| `TRADE_COUNT` | integer | optional |  | The number of records in the group |  |  |
+| `NOTIONAL` | amount | optional |  | sum over the group of: first($.LEGS).NOTIONAL |  |  |
+| `SOURCE_SYSTEMS` | text list | optional |  | distinct over the group of: $.SOURCE_SYSTEM |  |  |
+| `PRODUCT_TYPES` | text list | optional |  | distinct over the group of: $.PRODUCT_TYPE |  |  |
+| `CURRENCIES` | text list | optional |  | distinct over the group of: $.CURRENCY |  |  |
+| `LAST_MATURITY` | date | optional |  | max over the group of: $.MATURITY_DATE |  |  |
+| `PAY_7D` | amount | optional |  | sum over the group of: sum(flatten($.EVENTS)[?nonblank(@.AMOUNT) && nonblank(@.EVENT_DATE)][?days(today(), @.EVENT_DATE) >= 0 && days(today(), @.EVENT_DATE) <= 7], 'AMOUNT') |  |  |
+| `PAY_7D_EVENTS` | amount | optional |  | sum over the group of: size(flatten($.EVENTS)[?nonblank(@.AMOUNT) && nonblank(@.EVENT_DATE)][?days(today(), @.EVENT_DATE) >= 0 && days(today(), @.EVENT_DATE) <= 7]) |  |  |
+| `PAY_30D` | amount | optional |  | sum over the group of: sum(flatten($.EVENTS)[?nonblank(@.AMOUNT) && nonblank(@.EVENT_DATE)][?days(today(), @.EVENT_DATE) >= 0 && days(today(), @.EVENT_DATE) <= 30], 'AMOUNT') |  |  |
+| `PAY_30D_EVENTS` | amount | optional |  | sum over the group of: size(flatten($.EVENTS)[?nonblank(@.AMOUNT) && nonblank(@.EVENT_DATE)][?days(today(), @.EVENT_DATE) >= 0 && days(today(), @.EVENT_DATE) <= 30]) |  |  |
+| `PAY_90D` | amount | optional |  | sum over the group of: sum(flatten($.EVENTS)[?nonblank(@.AMOUNT) && nonblank(@.EVENT_DATE)][?days(today(), @.EVENT_DATE) >= 0 && days(today(), @.EVENT_DATE) <= 90], 'AMOUNT') |  |  |
+| `PAY_90D_EVENTS` | amount | optional |  | sum over the group of: size(flatten($.EVENTS)[?nonblank(@.AMOUNT) && nonblank(@.EVENT_DATE)][?days(today(), @.EVENT_DATE) >= 0 && days(today(), @.EVENT_DATE) <= 90]) |  |  |
+| `TRADES` | record list | derived |  | One row per grouped trade record |  |  |
 
 **Nested `TRADES[]`**
 
@@ -308,10 +308,6 @@ Every trade with a counterparty, from every source system: its trades (every sta
 - link: field TRADES[].PORTFOLIO; kind book
 - link: field TRADES[].LEGAL_ENTITY; kind legal-entity
 
-**Notes**
-
-- Retiring in 2.9.0: the stored kind is removed and computed instead by the scope engine (docs/contracts/TRADING_GROUPINGS.md); old ids and links open the computed page.
-
 **To review (1)**
 
 - field types of a derived kind are read from its connector's expressions (count, sum, distinct): confirm; rows copy the trade record's fields, whose contract states their types.
@@ -324,7 +320,7 @@ Every trade of a portfolio (book), from every source system: its trades (every s
 |---|---|
 | Contract | [portfolio-trades.contract.yaml](../../../config/packs/trading/contracts/portfolio-trades.contract.yaml) · version 1.0 |
 | Class | computed |
-| Status | retiring in 2.9.0, replaced by docs/contracts/TRADING_GROUPINGS.md |
+| Status | active |
 | Source | computed by Drishti: the derived connector trade-pages over the kind trade |
 | Grain | One record per PORTFOLIO of the trade records, computed when asked. |
 | Key | `PORTFOLIO` |
@@ -338,20 +334,20 @@ Every trade of a portfolio (book), from every source system: its trades (every s
 | Field | Type | Presence | Unit | Description | Example or values | Link |
 |---|---|---|---|---|---|---|
 | `PORTFOLIO` | id | required |  | The value the trade records are grouped by ($.PORTFOLIO) |  | `book` |
-| `TRADE_IDS` | id list | derived |  | The ids of the grouped trade records (at most 1000) *computed by the scope engine; removed when retired* |  |  |
-| `TRADE_COUNT` | integer | derived |  | The number of records in the group *computed by the scope engine; removed when retired* |  |  |
-| `NOTIONAL` | amount | derived |  | sum over the group of: first($.LEGS).NOTIONAL *computed by the scope engine; removed when retired* |  |  |
-| `SOURCE_SYSTEMS` | text list | derived |  | distinct over the group of: $.SOURCE_SYSTEM *computed by the scope engine; removed when retired* |  |  |
-| `PRODUCT_TYPES` | text list | derived |  | distinct over the group of: $.PRODUCT_TYPE *computed by the scope engine; removed when retired* |  |  |
-| `CURRENCIES` | text list | derived |  | distinct over the group of: $.CURRENCY *computed by the scope engine; removed when retired* |  |  |
-| `LAST_MATURITY` | date | derived |  | max over the group of: $.MATURITY_DATE *computed by the scope engine; removed when retired* |  |  |
-| `PAY_7D` | amount | derived |  | sum over the group of: sum(flatten($.EVENTS)[?nonblank(@.AMOUNT) && nonblank(@.EVENT_DATE)][?days(today(), @.EVENT_DATE) >= 0 && days(today(), @.EVENT_DATE) <= 7], 'AMOUNT') *computed by the scope engine; removed when retired* |  |  |
-| `PAY_7D_EVENTS` | amount | derived |  | sum over the group of: size(flatten($.EVENTS)[?nonblank(@.AMOUNT) && nonblank(@.EVENT_DATE)][?days(today(), @.EVENT_DATE) >= 0 && days(today(), @.EVENT_DATE) <= 7]) *computed by the scope engine; removed when retired* |  |  |
-| `PAY_30D` | amount | derived |  | sum over the group of: sum(flatten($.EVENTS)[?nonblank(@.AMOUNT) && nonblank(@.EVENT_DATE)][?days(today(), @.EVENT_DATE) >= 0 && days(today(), @.EVENT_DATE) <= 30], 'AMOUNT') *computed by the scope engine; removed when retired* |  |  |
-| `PAY_30D_EVENTS` | amount | derived |  | sum over the group of: size(flatten($.EVENTS)[?nonblank(@.AMOUNT) && nonblank(@.EVENT_DATE)][?days(today(), @.EVENT_DATE) >= 0 && days(today(), @.EVENT_DATE) <= 30]) *computed by the scope engine; removed when retired* |  |  |
-| `PAY_90D` | amount | derived |  | sum over the group of: sum(flatten($.EVENTS)[?nonblank(@.AMOUNT) && nonblank(@.EVENT_DATE)][?days(today(), @.EVENT_DATE) >= 0 && days(today(), @.EVENT_DATE) <= 90], 'AMOUNT') *computed by the scope engine; removed when retired* |  |  |
-| `PAY_90D_EVENTS` | amount | derived |  | sum over the group of: size(flatten($.EVENTS)[?nonblank(@.AMOUNT) && nonblank(@.EVENT_DATE)][?days(today(), @.EVENT_DATE) >= 0 && days(today(), @.EVENT_DATE) <= 90]) *computed by the scope engine; removed when retired* |  |  |
-| `TRADES` | record list | derived |  | One row per grouped trade record *computed by the scope engine; removed when retired* |  |  |
+| `TRADE_IDS` | id list | derived |  | The ids of the grouped trade records (at most 1000) |  |  |
+| `TRADE_COUNT` | integer | optional |  | The number of records in the group |  |  |
+| `NOTIONAL` | amount | optional |  | sum over the group of: first($.LEGS).NOTIONAL |  |  |
+| `SOURCE_SYSTEMS` | text list | optional |  | distinct over the group of: $.SOURCE_SYSTEM |  |  |
+| `PRODUCT_TYPES` | text list | optional |  | distinct over the group of: $.PRODUCT_TYPE |  |  |
+| `CURRENCIES` | text list | optional |  | distinct over the group of: $.CURRENCY |  |  |
+| `LAST_MATURITY` | date | optional |  | max over the group of: $.MATURITY_DATE |  |  |
+| `PAY_7D` | amount | optional |  | sum over the group of: sum(flatten($.EVENTS)[?nonblank(@.AMOUNT) && nonblank(@.EVENT_DATE)][?days(today(), @.EVENT_DATE) >= 0 && days(today(), @.EVENT_DATE) <= 7], 'AMOUNT') |  |  |
+| `PAY_7D_EVENTS` | amount | optional |  | sum over the group of: size(flatten($.EVENTS)[?nonblank(@.AMOUNT) && nonblank(@.EVENT_DATE)][?days(today(), @.EVENT_DATE) >= 0 && days(today(), @.EVENT_DATE) <= 7]) |  |  |
+| `PAY_30D` | amount | optional |  | sum over the group of: sum(flatten($.EVENTS)[?nonblank(@.AMOUNT) && nonblank(@.EVENT_DATE)][?days(today(), @.EVENT_DATE) >= 0 && days(today(), @.EVENT_DATE) <= 30], 'AMOUNT') |  |  |
+| `PAY_30D_EVENTS` | amount | optional |  | sum over the group of: size(flatten($.EVENTS)[?nonblank(@.AMOUNT) && nonblank(@.EVENT_DATE)][?days(today(), @.EVENT_DATE) >= 0 && days(today(), @.EVENT_DATE) <= 30]) |  |  |
+| `PAY_90D` | amount | optional |  | sum over the group of: sum(flatten($.EVENTS)[?nonblank(@.AMOUNT) && nonblank(@.EVENT_DATE)][?days(today(), @.EVENT_DATE) >= 0 && days(today(), @.EVENT_DATE) <= 90], 'AMOUNT') |  |  |
+| `PAY_90D_EVENTS` | amount | optional |  | sum over the group of: size(flatten($.EVENTS)[?nonblank(@.AMOUNT) && nonblank(@.EVENT_DATE)][?days(today(), @.EVENT_DATE) >= 0 && days(today(), @.EVENT_DATE) <= 90]) |  |  |
+| `TRADES` | record list | derived |  | One row per grouped trade record |  |  |
 
 **Nested `TRADES[]`**
 
@@ -384,10 +380,6 @@ Every trade of a portfolio (book), from every source system: its trades (every s
 - link: field TRADES[].PORTFOLIO; kind book
 - link: field TRADES[].LEGAL_ENTITY; kind legal-entity
 
-**Notes**
-
-- Retiring in 2.9.0: the stored kind is removed and computed instead by the scope engine (docs/contracts/TRADING_GROUPINGS.md); old ids and links open the computed page.
-
 **To review (1)**
 
 - field types of a derived kind are read from its connector's expressions (count, sum, distinct): confirm; rows copy the trade record's fields, whose contract states their types.
@@ -400,7 +392,7 @@ Every trade a legal entity of the bank booked, from every source system: its tra
 |---|---|
 | Contract | [legal-entity-trades.contract.yaml](../../../config/packs/trading/contracts/legal-entity-trades.contract.yaml) · version 1.0 |
 | Class | computed |
-| Status | retiring in 2.9.0, replaced by docs/contracts/TRADING_GROUPINGS.md |
+| Status | active |
 | Source | computed by Drishti: the derived connector trade-pages over the kind trade |
 | Grain | One record per LEGAL_ENTITY of the trade records, computed when asked. |
 | Key | `LEGAL_ENTITY` |
@@ -414,20 +406,20 @@ Every trade a legal entity of the bank booked, from every source system: its tra
 | Field | Type | Presence | Unit | Description | Example or values | Link |
 |---|---|---|---|---|---|---|
 | `LEGAL_ENTITY` | id | required |  | The value the trade records are grouped by ($.LEGAL_ENTITY) |  | `legal-entity` |
-| `TRADE_IDS` | id list | derived |  | The ids of the grouped trade records (at most 1000) *computed by the scope engine; removed when retired* |  |  |
-| `TRADE_COUNT` | integer | derived |  | The number of records in the group *computed by the scope engine; removed when retired* |  |  |
-| `NOTIONAL` | amount | derived |  | sum over the group of: first($.LEGS).NOTIONAL *computed by the scope engine; removed when retired* |  |  |
-| `SOURCE_SYSTEMS` | text list | derived |  | distinct over the group of: $.SOURCE_SYSTEM *computed by the scope engine; removed when retired* |  |  |
-| `PRODUCT_TYPES` | text list | derived |  | distinct over the group of: $.PRODUCT_TYPE *computed by the scope engine; removed when retired* |  |  |
-| `CURRENCIES` | text list | derived |  | distinct over the group of: $.CURRENCY *computed by the scope engine; removed when retired* |  |  |
-| `LAST_MATURITY` | date | derived |  | max over the group of: $.MATURITY_DATE *computed by the scope engine; removed when retired* |  |  |
-| `PAY_7D` | amount | derived |  | sum over the group of: sum(flatten($.EVENTS)[?nonblank(@.AMOUNT) && nonblank(@.EVENT_DATE)][?days(today(), @.EVENT_DATE) >= 0 && days(today(), @.EVENT_DATE) <= 7], 'AMOUNT') *computed by the scope engine; removed when retired* |  |  |
-| `PAY_7D_EVENTS` | amount | derived |  | sum over the group of: size(flatten($.EVENTS)[?nonblank(@.AMOUNT) && nonblank(@.EVENT_DATE)][?days(today(), @.EVENT_DATE) >= 0 && days(today(), @.EVENT_DATE) <= 7]) *computed by the scope engine; removed when retired* |  |  |
-| `PAY_30D` | amount | derived |  | sum over the group of: sum(flatten($.EVENTS)[?nonblank(@.AMOUNT) && nonblank(@.EVENT_DATE)][?days(today(), @.EVENT_DATE) >= 0 && days(today(), @.EVENT_DATE) <= 30], 'AMOUNT') *computed by the scope engine; removed when retired* |  |  |
-| `PAY_30D_EVENTS` | amount | derived |  | sum over the group of: size(flatten($.EVENTS)[?nonblank(@.AMOUNT) && nonblank(@.EVENT_DATE)][?days(today(), @.EVENT_DATE) >= 0 && days(today(), @.EVENT_DATE) <= 30]) *computed by the scope engine; removed when retired* |  |  |
-| `PAY_90D` | amount | derived |  | sum over the group of: sum(flatten($.EVENTS)[?nonblank(@.AMOUNT) && nonblank(@.EVENT_DATE)][?days(today(), @.EVENT_DATE) >= 0 && days(today(), @.EVENT_DATE) <= 90], 'AMOUNT') *computed by the scope engine; removed when retired* |  |  |
-| `PAY_90D_EVENTS` | amount | derived |  | sum over the group of: size(flatten($.EVENTS)[?nonblank(@.AMOUNT) && nonblank(@.EVENT_DATE)][?days(today(), @.EVENT_DATE) >= 0 && days(today(), @.EVENT_DATE) <= 90]) *computed by the scope engine; removed when retired* |  |  |
-| `TRADES` | record list | derived |  | One row per grouped trade record *computed by the scope engine; removed when retired* |  |  |
+| `TRADE_IDS` | id list | derived |  | The ids of the grouped trade records (at most 1000) |  |  |
+| `TRADE_COUNT` | integer | optional |  | The number of records in the group |  |  |
+| `NOTIONAL` | amount | optional |  | sum over the group of: first($.LEGS).NOTIONAL |  |  |
+| `SOURCE_SYSTEMS` | text list | optional |  | distinct over the group of: $.SOURCE_SYSTEM |  |  |
+| `PRODUCT_TYPES` | text list | optional |  | distinct over the group of: $.PRODUCT_TYPE |  |  |
+| `CURRENCIES` | text list | optional |  | distinct over the group of: $.CURRENCY |  |  |
+| `LAST_MATURITY` | date | optional |  | max over the group of: $.MATURITY_DATE |  |  |
+| `PAY_7D` | amount | optional |  | sum over the group of: sum(flatten($.EVENTS)[?nonblank(@.AMOUNT) && nonblank(@.EVENT_DATE)][?days(today(), @.EVENT_DATE) >= 0 && days(today(), @.EVENT_DATE) <= 7], 'AMOUNT') |  |  |
+| `PAY_7D_EVENTS` | amount | optional |  | sum over the group of: size(flatten($.EVENTS)[?nonblank(@.AMOUNT) && nonblank(@.EVENT_DATE)][?days(today(), @.EVENT_DATE) >= 0 && days(today(), @.EVENT_DATE) <= 7]) |  |  |
+| `PAY_30D` | amount | optional |  | sum over the group of: sum(flatten($.EVENTS)[?nonblank(@.AMOUNT) && nonblank(@.EVENT_DATE)][?days(today(), @.EVENT_DATE) >= 0 && days(today(), @.EVENT_DATE) <= 30], 'AMOUNT') |  |  |
+| `PAY_30D_EVENTS` | amount | optional |  | sum over the group of: size(flatten($.EVENTS)[?nonblank(@.AMOUNT) && nonblank(@.EVENT_DATE)][?days(today(), @.EVENT_DATE) >= 0 && days(today(), @.EVENT_DATE) <= 30]) |  |  |
+| `PAY_90D` | amount | optional |  | sum over the group of: sum(flatten($.EVENTS)[?nonblank(@.AMOUNT) && nonblank(@.EVENT_DATE)][?days(today(), @.EVENT_DATE) >= 0 && days(today(), @.EVENT_DATE) <= 90], 'AMOUNT') |  |  |
+| `PAY_90D_EVENTS` | amount | optional |  | sum over the group of: size(flatten($.EVENTS)[?nonblank(@.AMOUNT) && nonblank(@.EVENT_DATE)][?days(today(), @.EVENT_DATE) >= 0 && days(today(), @.EVENT_DATE) <= 90]) |  |  |
+| `TRADES` | record list | derived |  | One row per grouped trade record |  |  |
 
 **Nested `TRADES[]`**
 
@@ -460,10 +452,6 @@ Every trade a legal entity of the bank booked, from every source system: its tra
 - link: field TRADES[].PORTFOLIO; kind book
 - link: field TRADES[].LEGAL_ENTITY; kind legal-entity
 
-**Notes**
-
-- Retiring in 2.9.0: the stored kind is removed and computed instead by the scope engine (docs/contracts/TRADING_GROUPINGS.md); old ids and links open the computed page.
-
 **To review (1)**
 
 - field types of a derived kind are read from its connector's expressions (count, sum, distinct): confirm; rows copy the trade record's fields, whose contract states their types.
@@ -476,7 +464,7 @@ Every trade with a leg on an index (the first leg that names one): its trades (e
 |---|---|
 | Contract | [index-trades.contract.yaml](../../../config/packs/trading/contracts/index-trades.contract.yaml) · version 1.0 |
 | Class | computed |
-| Status | retiring in 2.9.0, replaced by docs/contracts/TRADING_GROUPINGS.md |
+| Status | active |
 | Source | computed by Drishti: the derived connector trade-pages over the kind trade |
 | Grain | One record per INDEX_NAME of the trade records, computed when asked. |
 | Key | `INDEX_NAME` |
@@ -490,20 +478,20 @@ Every trade with a leg on an index (the first leg that names one): its trades (e
 | Field | Type | Presence | Unit | Description | Example or values | Link |
 |---|---|---|---|---|---|---|
 | `INDEX_NAME` | id | required |  | The value the trade records are grouped by (nonblank($.LEGS[0].INDEX.NAME, $.LEGS[1].INDEX.NAME)) |  |  |
-| `TRADE_IDS` | id list | derived |  | The ids of the grouped trade records (at most 1000) *computed by the scope engine; removed when retired* |  |  |
-| `TRADE_COUNT` | integer | derived |  | The number of records in the group *computed by the scope engine; removed when retired* |  |  |
-| `NOTIONAL` | amount | derived |  | sum over the group of: first($.LEGS).NOTIONAL *computed by the scope engine; removed when retired* |  |  |
-| `SOURCE_SYSTEMS` | text list | derived |  | distinct over the group of: $.SOURCE_SYSTEM *computed by the scope engine; removed when retired* |  |  |
-| `PRODUCT_TYPES` | text list | derived |  | distinct over the group of: $.PRODUCT_TYPE *computed by the scope engine; removed when retired* |  |  |
-| `CURRENCIES` | text list | derived |  | distinct over the group of: $.CURRENCY *computed by the scope engine; removed when retired* |  |  |
-| `LAST_MATURITY` | date | derived |  | max over the group of: $.MATURITY_DATE *computed by the scope engine; removed when retired* |  |  |
-| `PAY_7D` | amount | derived |  | sum over the group of: sum(flatten($.EVENTS)[?nonblank(@.AMOUNT) && nonblank(@.EVENT_DATE)][?days(today(), @.EVENT_DATE) >= 0 && days(today(), @.EVENT_DATE) <= 7], 'AMOUNT') *computed by the scope engine; removed when retired* |  |  |
-| `PAY_7D_EVENTS` | amount | derived |  | sum over the group of: size(flatten($.EVENTS)[?nonblank(@.AMOUNT) && nonblank(@.EVENT_DATE)][?days(today(), @.EVENT_DATE) >= 0 && days(today(), @.EVENT_DATE) <= 7]) *computed by the scope engine; removed when retired* |  |  |
-| `PAY_30D` | amount | derived |  | sum over the group of: sum(flatten($.EVENTS)[?nonblank(@.AMOUNT) && nonblank(@.EVENT_DATE)][?days(today(), @.EVENT_DATE) >= 0 && days(today(), @.EVENT_DATE) <= 30], 'AMOUNT') *computed by the scope engine; removed when retired* |  |  |
-| `PAY_30D_EVENTS` | amount | derived |  | sum over the group of: size(flatten($.EVENTS)[?nonblank(@.AMOUNT) && nonblank(@.EVENT_DATE)][?days(today(), @.EVENT_DATE) >= 0 && days(today(), @.EVENT_DATE) <= 30]) *computed by the scope engine; removed when retired* |  |  |
-| `PAY_90D` | amount | derived |  | sum over the group of: sum(flatten($.EVENTS)[?nonblank(@.AMOUNT) && nonblank(@.EVENT_DATE)][?days(today(), @.EVENT_DATE) >= 0 && days(today(), @.EVENT_DATE) <= 90], 'AMOUNT') *computed by the scope engine; removed when retired* |  |  |
-| `PAY_90D_EVENTS` | amount | derived |  | sum over the group of: size(flatten($.EVENTS)[?nonblank(@.AMOUNT) && nonblank(@.EVENT_DATE)][?days(today(), @.EVENT_DATE) >= 0 && days(today(), @.EVENT_DATE) <= 90]) *computed by the scope engine; removed when retired* |  |  |
-| `TRADES` | record list | derived |  | One row per grouped trade record *computed by the scope engine; removed when retired* |  |  |
+| `TRADE_IDS` | id list | derived |  | The ids of the grouped trade records (at most 1000) |  |  |
+| `TRADE_COUNT` | integer | optional |  | The number of records in the group |  |  |
+| `NOTIONAL` | amount | optional |  | sum over the group of: first($.LEGS).NOTIONAL |  |  |
+| `SOURCE_SYSTEMS` | text list | optional |  | distinct over the group of: $.SOURCE_SYSTEM |  |  |
+| `PRODUCT_TYPES` | text list | optional |  | distinct over the group of: $.PRODUCT_TYPE |  |  |
+| `CURRENCIES` | text list | optional |  | distinct over the group of: $.CURRENCY |  |  |
+| `LAST_MATURITY` | date | optional |  | max over the group of: $.MATURITY_DATE |  |  |
+| `PAY_7D` | amount | optional |  | sum over the group of: sum(flatten($.EVENTS)[?nonblank(@.AMOUNT) && nonblank(@.EVENT_DATE)][?days(today(), @.EVENT_DATE) >= 0 && days(today(), @.EVENT_DATE) <= 7], 'AMOUNT') |  |  |
+| `PAY_7D_EVENTS` | amount | optional |  | sum over the group of: size(flatten($.EVENTS)[?nonblank(@.AMOUNT) && nonblank(@.EVENT_DATE)][?days(today(), @.EVENT_DATE) >= 0 && days(today(), @.EVENT_DATE) <= 7]) |  |  |
+| `PAY_30D` | amount | optional |  | sum over the group of: sum(flatten($.EVENTS)[?nonblank(@.AMOUNT) && nonblank(@.EVENT_DATE)][?days(today(), @.EVENT_DATE) >= 0 && days(today(), @.EVENT_DATE) <= 30], 'AMOUNT') |  |  |
+| `PAY_30D_EVENTS` | amount | optional |  | sum over the group of: size(flatten($.EVENTS)[?nonblank(@.AMOUNT) && nonblank(@.EVENT_DATE)][?days(today(), @.EVENT_DATE) >= 0 && days(today(), @.EVENT_DATE) <= 30]) |  |  |
+| `PAY_90D` | amount | optional |  | sum over the group of: sum(flatten($.EVENTS)[?nonblank(@.AMOUNT) && nonblank(@.EVENT_DATE)][?days(today(), @.EVENT_DATE) >= 0 && days(today(), @.EVENT_DATE) <= 90], 'AMOUNT') |  |  |
+| `PAY_90D_EVENTS` | amount | optional |  | sum over the group of: size(flatten($.EVENTS)[?nonblank(@.AMOUNT) && nonblank(@.EVENT_DATE)][?days(today(), @.EVENT_DATE) >= 0 && days(today(), @.EVENT_DATE) <= 90]) |  |  |
+| `TRADES` | record list | derived |  | One row per grouped trade record |  |  |
 
 **Nested `TRADES[]`**
 
@@ -534,10 +522,6 @@ Every trade with a leg on an index (the first leg that names one): its trades (e
 - link: field TRADES[].COUNTERPARTY; kind counterparty
 - link: field TRADES[].PORTFOLIO; kind book
 - link: field TRADES[].LEGAL_ENTITY; kind legal-entity
-
-**Notes**
-
-- Retiring in 2.9.0: the stored kind is removed and computed instead by the scope engine (docs/contracts/TRADING_GROUPINGS.md); old ids and links open the computed page.
 
 **To review (1)**
 

@@ -18,10 +18,8 @@ kind: trade-valuation
 mnemonic: TVAL
 pack: market-risk
 version: '1.0'
-class: computed
-status: retiring
-retiring-in: 2.9.0
-replaced-by: docs/contracts/TVAL.md
+class: fundamental
+status: active
 title: Trade valuation
 description: 'A trade''s valuation from the risk engine, for every source system: MTM, one-day P&L and DV01, with what it values (source system,
   portfolio, desk, product).'
@@ -295,8 +293,6 @@ notes:
   field of their own.'
 - 'The boundary (IMPLEMENTATION_PLAN.md): a trade''s MtM stays an input from the upstream engines; what TVAL computes is the valuation totals
   over any scope, so no field of this per-trade record is marked derived.'
-- 'Retiring in 2.9.0: the stored kind is removed and computed instead by valuation totals (TVAL) (docs/contracts/TVAL.md); old ids and links open
-  the computed page.'
 review:
 - 'required inferred from 100% coverage in 2765 documents (765 samples and 2000 test-data documents (data/testdata/market-risk/trade-valuation/snapshot-2026-07-08.jsonl.gz)):
   confirm each required field is mandatory upstream, and each optional one may be empty.'
