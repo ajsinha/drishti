@@ -117,6 +117,10 @@ class TestData(unittest.TestCase):
                 continue
             if "snapshot" in ds:
                 self.assertTrue((TD / ds["folder"] / ds["snapshot"]).is_file(), ds)
+                for part in ds.get("parts") or []:          # a large snapshot in parts: every part there, the first one named
+                    self.assertTrue((TD / ds["folder"] / part).is_file(), part)
+                if ds.get("parts"):
+                    self.assertEqual(ds["parts"][0], ds["snapshot"], ds["folder"])
                 continue
             if ds.get("dated-by"):                          # the VaR data: dated by its documents, within the test data's days or before
                 self.assertEqual(sorted(f.name for f in (TD / ds["folder"]).glob("*.jsonl.gz")), sorted(ds["files"]), ds["folder"])
@@ -158,6 +162,20 @@ class TestData(unittest.TestCase):
             for i in range(1, 5):
                 today, before = days[i][some], days[i - 1][some]
                 self.assertAlmostEqual(today["CHANGE_1D"], today[price] / before[price] - 1, places=4, msg=f"{folder} {some} day {i}")
+
+    def test_every_committed_data_file_is_gzipped_and_small(self):
+        """Git hosts and a Windows checkout stay comfortable: every data file under data/testdata is gzipped (only the manifest and
+        the README are not) and none is over 5 MB; a large kind is cut into parts (tools/testdata/publicsnap.py PART_BYTES)."""
+        plain, big = [], []
+        for f in sorted(TD.rglob("*")):
+            if not f.is_file() or f.parent == TD and f.name in ("README.md", "testdata.yaml"):
+                continue
+            if not f.name.endswith(".gz"):
+                plain.append(str(f.relative_to(TD)))
+            elif f.stat().st_size > 5 * 1024 * 1024:
+                big.append(f"{f.relative_to(TD)} ({f.stat().st_size / 1e6:.1f} MB)")
+        self.assertEqual(plain, [], "data files not gzipped")
+        self.assertEqual(big, [], "data files over 5 MB: cut them into parts")
 
     def test_every_attribute_is_upper_snake(self):
         for ds in self.m["datasets"]:

@@ -368,10 +368,11 @@ class DemoLake:
     def states(self, ds: dict):
         if "snapshot" in ds:                                  # a captured snapshot (real, dated): the same documents every day
             state = {}
-            with gzip.open(self.testdata / ds["folder"] / ds["snapshot"], "rt", encoding="utf-8") as fh:
-                for line in fh:
-                    if line.strip():
-                        state[_key(json.loads(line), ds["key"])] = line.rstrip("\n")
+            for part in ds.get("parts") or [ds["snapshot"]]:       # a large snapshot comes in parts (the funds pack's holdings)
+                with gzip.open(self.testdata / ds["folder"] / part, "rt", encoding="utf-8") as fh:
+                    for line in fh:
+                        if line.strip():
+                            state[_key(json.loads(line), ds["key"])] = line.rstrip("\n")
             for _ in self.manifest.dates:
                 yield state
             return
