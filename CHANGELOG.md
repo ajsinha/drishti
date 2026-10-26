@@ -17,6 +17,19 @@
 
 ## Unreleased
 
+- **Admin → Commands (2.8.0, product owner's option C with option A's side panel).** Every command of the packs, grouped by pack, with
+  what it does (the data contract's description), its example, an Everyone switch and greyed role columns for grants per role later;
+  a pack switch per pack; changes batched with Undo and "Review N changes", a side panel listing everything each change blocks and a
+  reason kept in the audit log; the history; the version of the switches each server holds. A command turned off is **not active**
+  everywhere: `403 DRS-1016` (new) for its page, API, typed command, search, exports, BI reads and the compute ask, a "not active" page in
+  the console, left out of type-ahead, pick lists and the packs' menus, links to it struck through, panels reading it "not active (turned
+  off by an administrator)", open pages told on the live channel. The switches (commands and packs) are kept in the Drishti database
+  (`drishti_switch`, `drishti_switch_log`, both schema files) with a hybrid-logical-clock stamp; last writer wins by (stamp, node); their
+  hash rides the gossip member entry and a node pulls a peer's switches when it differs (`GET /api/v1/net/switches`), so separate SQLite
+  nodes agree, and a node that was down catches up on rejoining. Pack switches moved into the same ledger. Admin API
+  `/api/v1/admin/commands` (never a token), `drishti.py server commands list|off|on|history`. docs/admin/COMMANDS.md (new), API_GUIDE,
+  TROUBLESHOOTING, USER_GUIDE, TOOLS, NET, DATABASE, CONFIGURATION, help centre.
+
 - **Branding from configuration only (product owner, 2026-10-25).** No console template or script, and no server message, writes the
   product's name: it comes from `ui.product` (templates `{{ PRODUCT }}`, scripts `<body data-product>`) and `drishti.branding.product`
   (`Branding.sqlName()`, `Branding.netName()`, `Branding.name(..)`), and features follow it: `<product> SQL`, `<product> Elements`,

@@ -1,0 +1,67 @@
+/*
+ * Project Drishti · Any data. Any domain. One grammar.
+ *
+ * Copyright (c) 2026 Ashutosh Sinha <ajsinha@gmail.com>.
+ * All rights reserved.
+ *
+ * PROPRIETARY AND CONFIDENTIAL.
+ *
+ * This file is the confidential and proprietary property of Ashutosh Sinha.
+ * Unauthorised copying, use, modification, distribution or disclosure of this
+ * file, via any medium, is strictly prohibited except with the express prior
+ * written permission of the copyright holder.
+ *
+ * See the LICENSE file in the root of this repository for the full terms.
+ */
+/* Admin → Commands: the commands × who-may-use-them matrix with its side panel (docs/admin/COMMANDS.md). Colours come from the theme tokens,
+   so light and dark both work; a state always has its word (on, off, turning off), never colour alone. */
+.cmd-h { font-size: 1.05rem; margin: 1.2rem 0 .5rem; }
+.cmd-nodes ul { list-style: none; margin: 0; padding: 0; display: flex; flex-wrap: wrap; gap: .3rem 1.4rem; }
+.cmd-nodes li { padding: .15rem 0; }
+.cmd-layout { display: flex; flex-wrap: wrap; gap: 1rem; align-items: flex-start; }
+.cmd-main { flex: 999 1 40rem; min-width: 0; }
+.cmd-side { flex: 1 1 22rem; min-width: 0; border: 1px solid var(--d-bad); border-radius: var(--d-radius); background: var(--d-surface);
+  padding: .8rem 1rem 1rem; position: sticky; top: 4.5rem; display: flex; flex-direction: column; gap: .6rem; }
+.cmd-side[hidden] { display: none; }
+.cmd-side-h h2 { font-size: 1.05rem; margin: 0; }
+.cmd-side-h p { margin: .2rem 0 0; }
+.cmd-side-k { font-size: .75rem; letter-spacing: .06em; text-transform: uppercase; color: var(--d-muted); }
+.cmd-changes, .cmd-blocks { margin: 0; padding-left: 1.1rem; display: flex; flex-direction: column; gap: .3rem; }
+.cmd-blocks ul { padding-left: 1.1rem; margin: .2rem 0 .4rem; }
+.cmd-reason { display: flex; flex-direction: column; gap: .3rem; color: var(--d-muted); font-size: .85rem; }
+.cmd-reason textarea { width: 100%; min-height: 4.5rem; color: var(--d-ink); background: var(--d-bg); border: 1px solid var(--d-border); border-radius: 4px;
+  padding: .4rem .6rem; font: inherit; }
+.cmd-side-acts { display: flex; flex-wrap: wrap; gap: .6rem; }
+.cmd-side-acts .btn-pill { min-height: 44px; }
+.cmd-danger { background: var(--d-bad); border-color: var(--d-bad); color: #fff; }
+.cmd-bar { display: flex; flex-wrap: wrap; align-items: center; gap: .5rem 1rem; }
+.cmd-bar .cmd-h { margin: .4rem 0; }
+.cmd-find { display: flex; align-items: center; gap: .4rem; color: var(--d-muted); font-size: .85rem; }
+.cmd-find input, .cmd-find select { min-height: 36px; min-width: 0; width: 14rem; max-width: 60vw; }
+.cmd-find select { width: auto; }
+.cmd-bar .btn-pill { min-height: 36px; }
+.cmd-pending { padding: .1rem .6rem; border-radius: 1rem; background: var(--d-emph-bg); color: var(--d-warn); font-size: .8rem; }
+.cmd-pending[hidden] { display: none; }
+.cmd-roles-note { margin: .3rem 0 .6rem; font-size: .85rem; }
+.cmd-tbl th, .cmd-tbl td { white-space: normal; vertical-align: top; }
+.cmd-tbl .cmd-col { text-align: center; width: 6rem; }
+.cmd-tbl .cmd-role { color: var(--d-faint); font-weight: 400; }
+.cmd-tbl .cmd-check { width: 20px; height: 20px; accent-color: var(--d-ok); }
+.cmd-tbl .cmd-desc { min-width: 16rem; max-width: 34rem; }
+.cmd-tbl .cmd-code { color: var(--d-accent); font-weight: 600; }
+.cmd-tbl .cmd-off-code { color: var(--d-faint); }
+.cmd-tbl tr.cmd-pack > * { background: var(--d-surface); color: var(--d-ink); border-top: 2px solid var(--d-border); }
+.cmd-tbl .cmd-pack-name { font-weight: 600; }
+.cmd-tbl tr.cmd-changing > * { background: var(--d-emph-bg); }
+.cmd-note { color: var(--d-warn); }
+.cmd-switch { display: inline-flex; align-items: center; gap: .3rem; font-size: .8rem; color: var(--d-muted); min-height: 32px; }
+.cmd-switch input { width: 20px; height: 20px; accent-color: var(--d-ok); }
+.cmd-foot { display: flex; flex-wrap: wrap; gap: .4rem 1.5rem; font-size: .8rem; padding: .6rem 0; }
+.cmd-foot span:last-child { margin-left: auto; }
+@media (max-width: 640px) {
+  .cmd-side { position: static; }
+  .cmd-find input { width: 100%; }
+  .cmd-find { flex: 1 1 100%; }
+  .cmd-bar .btn-pill { flex: 1 1 40%; min-height: 44px; }
+  .cmd-tbl .cmd-check, .cmd-switch input { width: 28px; height: 28px; }
+}

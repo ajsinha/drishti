@@ -82,6 +82,7 @@ ui:
     DRS-1002: "No source serves the kind '{kind}'. Check the kind (the command line completes the kinds that exist), or ask an administrator to connect a source for it."
     DRS-1003: The source behind it failed. Try again in a moment; if it keeps failing an administrator can read the server log.
     DRS-1004: The source took too long to answer. Try again in a moment; a first read of an earlier date can be slow.
+    DRS-1016: An administrator turned this command off (Admin -> Commands). Ask an administrator if you need it.
     DRS-1007: That source keeps no earlier versions. Clear the 'as known at' time to read what it holds now.
     DRS-4003: Pick another business date (Reset in the date menu returns to live).
     DRS-4004: The search could not be read. Check its fields and syntax.
