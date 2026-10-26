@@ -418,7 +418,19 @@ public enum ErrorCode {
     /** Compute: the computation failed, crashed, passed a limit or was refused by its engine; the message says which. */
     COMPUTE_FAILED("DRS-9205", 502),
     /** Compute: no such approval request or running computation. */
-    COMPUTE_NOT_FOUND("DRS-9206", 404);
+    COMPUTE_NOT_FOUND("DRS-9206", 404),
+    /** Write-back (docs/architecture/WRITE_BACK.md): editing is off on this server ({@code edit.enabled: false} in config/edit/edit.yaml). */
+    EDIT_OFF("DRS-9301", 403),
+    /** Write-back: the change is refused: the field is not editable for you (no Sutra says so, a mask, a role, a read-only field, a restatement without the role), or the target is not usable. */
+    EDIT_REFUSED("DRS-9302", 403),
+    /** Write-back: the fields you changed have moved since you opened the record; the answer carries the three-way difference. */
+    EDIT_CONFLICT("DRS-9303", 409),
+    /** Write-back: the change's lane is full ({@code lanes.max-lane-depth}): busy, try again in a moment; your draft is kept. */
+    EDIT_BUSY("DRS-9304", 503),
+    /** Write-back: no such change. */
+    EDIT_NOT_FOUND("DRS-9305", 404),
+    /** Write-back: edits are paused (the edit primary is not reachable, or this cluster has no shared edit log); reading is not affected. */
+    EDIT_PAUSED("DRS-9306", 503);
 
     private final String code;
     private final int httpStatus;

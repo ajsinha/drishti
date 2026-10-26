@@ -164,9 +164,16 @@ public final class RachanaSchema {
         props.put("fields", Map.of("type", "array", "minItems", 1, "maxItems", com.ash.drishti.rachana.model.Form.MAX_FIELDS, "items", field));
         props.put("rules", Map.of("type", "array", "items", rule));
         props.put("hints", Map.of("type", "array", "items", hint));
+        props.put("save", Map.of("type", "object", "additionalProperties", false, "required", List.of("target"),
+                "description", "Where a submitted form goes (2.8.0 write-back): an overlay, an owned record, or a connector's writes: command",
+                "properties", Map.of("kind", text("The kind of the records the form edits (the page's kind when absent)"),
+                        "target", Map.of("enum", com.ash.drishti.rachana.model.Form.Save.TARGETS),
+                        "connector", text("The connector whose writes: commands a source target uses (the kind's connector when absent)"),
+                        "command", text("The writes: command that amends a record"), "create", text("The writes: command that creates a record"),
+                        "approval", Map.of("enum", List.of("none", "one", "two", "four-eyes")), "reason", Map.of("enum", List.of("required", "optional")))));
         Map<String, Object> f = new LinkedHashMap<>();
         f.put("type", "object");
-        f.put("description", "How people edit this panel's records or start new ones (drafts until 2.8.0's write-back)");
+        f.put("description", "How people edit this panel's records or start new ones: drafts, and with save: changes submitted through write-back");
         f.put("properties", props);
         f.put("required", List.of("fields"));
         f.put("additionalProperties", false);

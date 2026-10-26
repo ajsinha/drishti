@@ -353,4 +353,27 @@ public interface SourcePlugin extends AutoCloseable {
     default List<SettingSpec> settingSpecs() {
         return List.of();
     }
+
+    /**
+     * The key of a {@code writes:} command's block this plugin performs ({@code jdbc}, {@code rest}), or empty when it is read-only
+     * (WRITE_BACK.md section 5.4: {@code write} is implemented once per plugin, never per source system). A connector whose plugin has
+     * none cannot have {@code writes:}.
+     */
+    default java.util.Optional<String> writeKey() {
+        return java.util.Optional.empty();
+    }
+
+    /**
+     * What is wrong with one command's block, in words (empty when it is usable): the plugin checks its template, its required
+     * concurrency guard and idempotency clause, and that every parameter it names is one of {@code known}. A command with a problem is
+     * refused when the connector loads, which then writes nothing.
+     */
+    default List<String> checkWrite(String command, java.util.Map<String, Object> block, java.util.Set<String> known) {
+        return List.of("plugin " + manifest().name() + " cannot write");
+    }
+
+    /** Performs one command in the source's own transaction, guarded and idempotent by the change id (WRITE_BACK.md section 5.3). */
+    default com.ash.drishti.api.write.WriteResult write(com.ash.drishti.api.write.WriteCommand command) throws Exception {
+        throw new UnsupportedOperationException("plugin " + manifest().name() + " cannot write");
+    }
 }

@@ -96,6 +96,22 @@ public final class JdbcSourcePlugin implements SourcePlugin {
                 new SourceCapabilities(false, queryMode.reverses(), queryMode.searches(), queryMode.dated()));
     }
 
+    @Override
+    public Optional<String> writeKey() {
+        return Optional.of(JdbcWrites.KEY);
+    }
+
+    @Override
+    public java.util.List<String> checkWrite(String command, Map<String, Object> block, java.util.Set<String> known) {
+        return JdbcWrites.check(command, block, known);
+    }
+
+    /** One {@code writes:} command (WRITE_BACK.md section 5.4) on a pooled connection, in its own transaction ({@link JdbcWrites}). */
+    @Override
+    public com.ash.drishti.api.write.WriteResult write(com.ash.drishti.api.write.WriteCommand command) throws Exception {
+        return withConnection(c -> JdbcWrites.run(c, command));
+    }
+
     /**
      * Runs {@code work} on a pooled connection: borrowed for this call only and returned at once, whatever happens. A failure to
      * connect fails this call only; the next call tries again.

@@ -204,7 +204,7 @@ public final class TemplateUpdates implements AutoCloseable {
         }
         Object enabled = d.enabled() == null ? null : "true".equals(d.enabled().trim()) ? Boolean.TRUE
                 : "false".equals(d.enabled().trim()) ? Boolean.FALSE : d.enabled();
-        return files.render(header.toString(), d.plugin(), enabled, kinds, d.description(), settings, d.requires(), d.compute());
+        return files.render(header.toString(), d.plugin(), enabled, kinds, d.description(), settings, d.requires(), d.compute(), d.writes());
     }
 
     private ConnectorManager.Change write(String name, String ifMatch, boolean additive, boolean dropObsolete, String user, String what) {

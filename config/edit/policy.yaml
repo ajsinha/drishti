@@ -1,0 +1,26 @@
+# Project Drishti · Any data. Any domain. One grammar.
+#
+# Copyright (c) 2026 Ashutosh Sinha <ajsinha@gmail.com>.
+# All rights reserved.
+#
+# PROPRIETARY AND CONFIDENTIAL.
+#
+# This file is the confidential and proprietary property of Ashutosh Sinha.
+# Unauthorised copying, use, modification, distribution or disclosure of this
+# file, via any medium, is strictly prohibited except with the express prior
+# written permission of the copyright holder.
+#
+# See the LICENSE file in the root of this repository for the full terms.
+
+# Write-back's approval policy (docs/architecture/WRITE_BACK.md sections 9 and 12). A form's save: may ask for more approvals, never fewer.
+policy:
+  approval:
+    overlay: none        # none | one | two: a correction kept in Drishti
+    owned: none          # Drishti's own records
+    source: one          # an amendment sent to a source system through a connector's writes:
+  approver-roles: []     # who approves; empty: holders of the approve power and administrators
+  self-approval: false   # four eyes: nobody approves their own change
+  restate-role: restate  # a change to a past business date (a restatement) needs this role
+  override-role: override   # "Apply mine anyway" on a conflict needs this role
+  # kinds:               # per kind, stricter only
+  #   trade: { approval: { overlay: one } }

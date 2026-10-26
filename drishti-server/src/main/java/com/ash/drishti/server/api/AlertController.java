@@ -128,6 +128,14 @@ public class AlertController {
         this.switches = s;
     }
 
+    private com.ash.drishti.server.edit.EditFeed edits;
+
+    /** Write-back: a change's steps to its submitter and approvers, and to every reader of the kind that it was applied ({@code edit}). */
+    @org.springframework.beans.factory.annotation.Autowired(required = false)
+    void edits(com.ash.drishti.server.edit.EditFeed e) {
+        this.edits = e;
+    }
+
     @GetMapping(path = "/stream", produces = MediaType.TEXT_EVENT_STREAM_VALUE)
     public SseEmitter stream(@RequestAttribute(Principal.ATTRIBUTE) Principal p) {
         SseEmitter emitter = new SseEmitter(0L);
@@ -143,6 +151,8 @@ public class AlertController {
         Subscription notices = hub.listen(p.user(), put::accept);
         com.ash.drishti.server.switches.SwitchEvents sw = switches;
         AutoCloseable switched = sw == null ? () -> { } : sw.listen(put::accept);
+        com.ash.drishti.server.edit.EditFeed ed = edits;
+        AutoCloseable edited = ed == null ? () -> { } : ed.listen(put::accept);
         executor.execute(() -> {
             try {
                 emitter.send(SseEmitter.event().name("hello").data(Map.of("user", p.user())));
@@ -158,6 +168,11 @@ public class AlertController {
                         emitter.send(SseEmitter.event().name("notice").id(Long.toString(n.seq())).data(row, MediaType.APPLICATION_JSON));
                     } else if (e instanceof com.ash.drishti.server.switches.SwitchEvents.Changed c) {
                         emitter.send(SseEmitter.event().name("switches").data(c, MediaType.APPLICATION_JSON));
+                    } else if (e instanceof com.ash.drishti.server.edit.EditFeed.Event ev && ed != null) {
+                        Map<String, Object> mine = ed.forReader(ev, p);    // shaped for this reader: no values, names only for who may see them
+                        if (mine != null) {
+                            emitter.send(SseEmitter.event().name("edit").data(mine, MediaType.APPLICATION_JSON));
+                        }
                     }
                 }
             } catch (IOException | IllegalStateException e) {
@@ -169,6 +184,7 @@ public class AlertController {
                 notices.close();
                 try {
                     switched.close();
+                    edited.close();
                 } catch (Exception ignored) {
                     // a listener removed from a list: nothing to fail
                 }
