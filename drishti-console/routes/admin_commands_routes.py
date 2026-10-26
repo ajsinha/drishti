@@ -12,21 +12,20 @@
 #
 # See the LICENSE file in the root of this repository for the full terms.
 
-"""Admin → Commands (/admin/commands, docs/admin/COMMANDS.md): every command of the packs, grouped by pack, with what it does, and who may use
-it: today the "Everyone" column (on or off for everyone), with greyed role columns for grants per role later. Changes are batched on the page
-(Undo, "Review N changes") and sent with one reason, kept in the audit log; the side panel says what turning a command off stops. The page
-carries the administrator's changes to the server as same-origin JSON; the server decides, writes its database and spreads the change to
-every server of the cluster."""
+"""The command switches' same-origin JSON (docs/admin/COMMANDS.md), used by the Functions page (``/func``, routes/functions_routes.py) when an
+administrator signs in: the listing, a batch of changes sent with one reason (kept in the audit log), the history, and what turning a command
+off stops. The server decides who may change anything (administrators only), writes its database and spreads the change to every server of
+the cluster. ``/admin/commands``, the page this used to be, redirects to ``/func``."""
 from __future__ import annotations
 
 from urllib.parse import quote
 
 from fastapi import APIRouter, Request
-from fastapi.responses import JSONResponse
+from fastapi.responses import JSONResponse, RedirectResponse
 
 from core.backend import BackendError
 from core.csrf import json_body
-from routes.common import ident, render
+from routes.common import ident
 
 router = APIRouter(prefix="/admin", include_in_schema=False)
 
@@ -37,16 +36,8 @@ def _problem(e: BackendError) -> JSONResponse:
 
 @router.get("/commands")
 async def page(request: Request):
-    me = ident(request)
-    if not me.is_admin:
-        return render(request, "admin/forbidden.html", status_code=403)
-    backend = request.app.state.backend
-    try:
-        data = await backend.admin("GET", "/commands", me)
-        status = await backend.admin("GET", "/status", me)
-    except BackendError as e:
-        return render(request, "admin/forbidden.html", status_code=e.page_status, error=e)
-    return render(request, "admin/commands.html", c=data, status=status)
+    """Admin → Commands is the Functions page now: an administrator sees the switches there (FUNC)."""
+    return RedirectResponse("/func" + (f"?{request.url.query}" if request.url.query else ""), status_code=303)
 
 
 @router.get("/api/commands")

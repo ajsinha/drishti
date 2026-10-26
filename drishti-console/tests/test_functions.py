@@ -12,9 +12,13 @@
 #
 # See the LICENSE file in the root of this repository for the full terms.
 
-"""Admin → Commands in the console (docs/admin/COMMANDS.md): the matrix (commands × Everyone, greyed role columns), the batch sent with its
-reason, the history and impact passed through, and the "not active" page a command an administrator turned off answers with, by its page or
-the typed command; links and panels that read it say so."""
+"""Functions, FUNC (docs/admin/COMMANDS.md): the command directory for everyone (a user sees only the commands that are on, no switches; an
+administrator sees the matrix: commands × Everyone, greyed role columns, off commands, the batch sent with its reason, the history and impact
+passed through); the reserved word FUNC; /admin/commands redirecting; and the "not active" page a command an administrator turned off
+answers with, by its page or the typed command; links and panels that read it say so."""
+import pytest
+
+from core.auth import Identity
 from core.backend import BackendError
 
 LISTING = {"node": "n-a", "hash": "abcdef0123456789", "newest": "2026-10-24T09:00:00Z", "total": 3, "off": 1, "roles": ["auditor", "trader"],
@@ -44,16 +48,75 @@ def with_admin(backend, monkeypatch, calls):
     monkeypatch.setattr(backend, "admin", admin)
 
 
-def test_the_page_is_the_matrix_with_descriptions_role_columns_and_each_servers_version(client, backend, monkeypatch):
+@pytest.fixture
+def as_user(monkeypatch):
+    """Signed in as someone who is not an administrator (the same rule the page uses: Identity.is_admin)."""
+    monkeypatch.setattr(Identity, "is_admin", property(lambda self: False))
+
+
+def test_an_administrator_sees_the_matrix_with_off_commands_switches_role_columns_and_each_servers_version(client, backend, monkeypatch):
     with_admin(backend, monkeypatch, [])
-    page = client.get("/admin/commands").text
-    for text in ("data-commands", 'data-matrix', "Everyone", ">auditor<", ">trader<", "The role columns arrive with role-based access",
+    page = client.get("/func").text
+    for text in ("data-functions", "data-commands", 'data-matrix', "Everyone", ">auditor<", ">trader<", "The role columns arrive with role-based access",
                  'data-command="FRTB"', 'data-on="false"', "FRTB SA sensitivities.", "FRTB FRTB-RATES-1", 'data-switch="pack" data-name="market-risk"',
-                 'data-needed-by="counterparty-risk"', "Review changes", "data-undo", "Reason (kept in the audit log)",
+                 'data-needed-by="counterparty-risk"', "Review changes", "data-undo", "Reason (kept in the audit log)", "data-show",
                  "Applies on every server of the cluster within seconds", "Version on each server", "n-b", "catching up", "in step",
-                 "admin-commands.js", "admin-commands.css", 'aria-current="page"><i class="bi bi-toggles"'):
+                 "1 of 2 in step", "data-cluster", "History", "functions.js", "functions.css"):
         assert text in page, text
     assert "1 off" in page and "3 commands" in page
+    assert '<span>FRTB</span> <span class="st st-bad">off</span>' in page, "an off command is struck through and not a link"
+    assert 'href="/go?q=FRTB' not in page
+    assert '<a href="/go?q=TRD%201000015" data-go="TRD 1000015"' in page
+    assert '<a href="/form/market-risk?kind=var" data-go="FORM market-risk var"' in page, "no example: the kind's search form"
+    assert '<a class="cmd-pack-name" href="/form/trading"' in page
+
+
+def test_a_user_sees_only_the_commands_they_can_use_and_nothing_of_the_switches(client, backend, monkeypatch, as_user):
+    calls = []
+    with_admin(backend, monkeypatch, calls)
+    page = client.get("/func").text
+    for text in ("data-functions", 'data-command="TRD"', "One trade.", "TRD T-1", "1 command you can use", '<a href="/go?q=TRD%20T-1"',
+                 '<a class="cmd-pack-name" href="/form/finance" title="Its search form: FORM finance">Finance</a>', "functions.js"):
+        assert text in page, text
+    for text in ("data-commands", "data-switch", "Everyone", "Review changes", "data-undo", "Reason (kept in the audit log)", "data-show",
+                 "Version on each server", "data-history", "data-cluster", " off<"):
+        assert text not in page, text
+    assert calls == [], "a user's page never asks the administrators' listing"
+
+
+def test_func_filters_by_code_words_and_pack(client, backend, monkeypatch):
+    with_admin(backend, monkeypatch, [])
+    page = client.get("/func", params={"q": "trading"}).text
+    assert '<tr data-command="TRD" data-kind="trade" data-on="true" data-text=' in page and 'data-command="VAR"' in page
+    assert 'data-pack="market-risk" data-pack-text="market-risk market risk" data-pack-on="true" data-needed-by="counterparty-risk" hidden' in page
+    page = client.get("/func", params={"q": "value at"}).text
+    assert 'data-pack="trading" data-pack-text="trading trading" data-pack-on="true" hidden' in page
+    assert 'value="value at"' in page and 'value="FUNC value at"' in page, "the filter and the command line say what was typed"
+    page = client.get("/func", params={"q": "nothing-like-it"}).text
+    assert "No command matches" in page and "data-empty hidden" not in page
+
+
+def test_admin_commands_redirects_to_functions(client):
+    r = client.get("/admin/commands", follow_redirects=False)
+    assert r.status_code == 303 and r.headers["location"] == "/func"
+
+
+@pytest.mark.parametrize("typed,where", [("FUNC <GO>", "/func"), ("func", "/func"), ("FUNC exposure <GO>", "/func?q=exposure"),
+                                         ("FUNC VAR", "/func?q=VAR"), ("Func market risk", "/func?q=market%20risk")])
+def test_the_reserved_word_func_opens_the_page_filtered(client, typed, where):
+    r = client.get("/go", params={"q": typed}, follow_redirects=False)
+    assert r.status_code == 303 and r.headers["location"] == where
+
+
+def test_func_in_the_type_ahead_offers_the_page(client):
+    s = client.get("/api/suggest", params={"q": "FUNC expo"}).json()
+    assert s[0]["mnemonic"] == "FUNC" and s[0]["href"] == "/func?q=expo" and s[0]["complete"] == "FUNC expo"
+
+
+def test_functions_is_in_the_views_menu_for_everyone(client, backend, monkeypatch, as_user):
+    with_admin(backend, monkeypatch, [])
+    page = client.get("/t").text
+    assert 'href="/func"' in page and "Every command you can use, what it does · also FUNC &lt;GO&gt;" in page
 
 
 def test_a_batch_goes_to_the_server_with_its_reason_and_the_packs_are_read_again(client, backend, monkeypatch):

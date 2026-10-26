@@ -1,0 +1,124 @@
+{#
+  Project Drishti · Any data. Any domain. One grammar.
+
+  Copyright (c) 2026 Ashutosh Sinha <ajsinha@gmail.com>.
+  All rights reserved.
+
+  PROPRIETARY AND CONFIDENTIAL.
+
+  This file is the confidential and proprietary property of Ashutosh Sinha.
+  Unauthorised copying, use, modification, distribution or disclosure of this
+  file, via any medium, is strictly prohibited except with the express prior
+  written permission of the copyright holder.
+
+  See the LICENSE file in the root of this repository for the full terms.
+#}
+{% extends "base.html" %}
+{% block title %}Functions · {{ PRODUCT }}{% endblock %}
+{% block head %}<link rel="stylesheet" href="/static/css/admin-packs.css?v={{ ASSET_V }}"><link rel="stylesheet" href="/static/css/functions.css?v={{ ASSET_V }}">{% endblock %}
+{% block screen %}func{% endblock %}
+{% block body_class %}terminal{% endblock %}
+{% block nav %}{% include "terminal/_topbar.html" %}{% endblock %}
+{% block content %}
+{# Functions, FUNC <GO> (docs/admin/COMMANDS.md): the command directory under Views, for everyone. A user sees the commands they can use
+   (only those that are on), by pack, with what each does and its example: the command opens with the example (else its kind's search form),
+   the pack opens its search form. An administrator also sees the commands that are off and switches them: the Everyone column per command
+   and per pack, batched (Undo, Review N changes) and sent with one reason; the history and each server's version sit in "Cluster". #}
+<div class="adm func" data-functions{% if admin %} data-commands data-hash="{{ c.hash }}"{% endif %}>
+  <h1 class="ws-h">Functions <span class="func-word mono" title="Type FUNC, or FUNC and words to filter, then &lt;GO&gt;">FUNC</span>
+    <a class="emb-help" href="/help/docs-admin-commands" aria-label="Help: Functions" title="Help: Functions">?</a></h1>
+  {% if admin %}
+  <p class="text-muted-d">Every command of the packs, what it does, and whether it is on. As an administrator you also see the commands that
+    are <b>off</b>, and switch them: a command that is off is <b>not active</b> everywhere (typed, by its page, its API, the command line tool,
+    exports, AI tools, search and type-ahead; links to it are struck through and panels that read it say so) and other users do not see it
+    here. Nothing is deleted: turn it back on at any time. A pack's switch turns its pack on or off, as on Admin → Packs.</p>
+  {% else %}
+  <p class="text-muted-d">Every command you can use, by pack, with what it does. Click a command to open it with its example, or a pack to open
+    its search form. <span class="mono">FUNC exposure</span> on the command line opens this list filtered.</p>
+  {% endif %}
+
+  <div class="cmd-layout">
+    <section class="cmd-main" aria-labelledby="cmdTableTitle">
+      <div class="cmd-bar">
+        <h2 class="cmd-h" id="cmdTableTitle">Commands</h2>
+        <span class="text-muted-d" data-counts data-total="{{ c.total }}">{% if admin %}{{ c.total }} commands · {{ c.total - c.off }} on · {{ c.off }} off{% elif q %}{{ c.shown }} of {{ c.total }} commands you can use{% else %}{{ c.total }} command{{ '' if c.total == 1 else 's' }} you can use{% endif %}</span>
+        {% if admin %}<span class="cmd-pending" data-pending hidden></span>{% endif %}
+        <label class="cmd-find">Find <input type="search" data-find value="{{ q }}" placeholder="exposure, VAR, trading…" autocomplete="off" aria-label="Filter commands"></label>
+        <label class="cmd-find">Pack <select data-pack-filter><option value="">All packs</option>{% for p in c.packs %}<option value="{{ p.name }}">{{ p.title or p.name }}</option>{% endfor %}</select></label>
+        {% if admin %}
+        <label class="cmd-find">Show <select data-show><option value="all">All</option><option value="off">Off only</option><option value="on">On only</option></select></label>
+        <button type="button" class="btn-pill btn-ghost" data-undo disabled>Undo</button>
+        <button type="button" class="btn-pill btn-accent" data-review disabled>Review changes</button>
+        {% endif %}
+      </div>
+      {% if admin %}<p class="text-muted-d cmd-roles-note">Today only the <b>Everyone</b> column is used. The role columns arrive with role-based access.</p>{% endif %}
+      <p class="adm-msg" data-msg role="status" aria-live="polite"></p>
+      <div class="tbl-wrap"><table class="tbl adm-tbl cmd-tbl" data-matrix data-plain>
+        <caption class="visually-hidden">{% if admin %}Commands by pack, what each does, and who may use it{% else %}The commands you can use, by pack, and what each does{% endif %}</caption>
+        <thead><tr><th scope="col">Command</th><th scope="col">Opens</th><th scope="col">What it does</th><th scope="col">Example</th>
+          {% if admin %}<th scope="col" class="cmd-col">Everyone</th>
+          {% for r in c.roles %}<th scope="col" class="cmd-col cmd-role" title="Role-based access to commands is not built yet">{{ r }}</th>{% endfor %}{% endif %}</tr></thead>
+        {% for p in c.packs %}
+        <tbody data-pack="{{ p.name }}" data-pack-text="{{ (p.name ~ ' ' ~ (p.title or '')) | lower }}"{% if admin %} data-pack-on="{{ 'true' if p.on else 'false' }}"{% if p.neededBy %} data-needed-by="{{ p.neededBy | join(', ') }}"{% endif %}{% endif %}{% if not p.shown %} hidden{% endif %}>
+          <tr class="cmd-pack"><th scope="rowgroup" colspan="4"><a class="cmd-pack-name" href="{{ p.form }}" title="Its search form: FORM {{ p.name }}">{{ p.title or p.name }}</a> <span class="mono text-muted-d">{{ p.name }}</span>
+            <span class="text-muted-d" data-pack-counts>· {{ p.commands | length }} command{{ '' if p.commands | length == 1 else 's' }}</span>
+            {% if admin and not p.on %}<span class="st st-bad">pack off</span>{% endif %}</th>
+            {% if admin %}<td class="cmd-col"><label class="cmd-switch"><input type="checkbox" data-switch="pack" data-name="{{ p.name }}"{% if p.on %} checked{% endif %}
+              aria-label="Pack {{ p.name }} on for everyone"> <span>Pack</span></label></td>
+            {% for r in c.roles %}<td class="cmd-col cmd-role" aria-hidden="true">—</td>{% endfor %}{% endif %}</tr>
+          {% for m in p.commands %}
+          <tr data-command="{{ m.code }}" data-kind="{{ m.kind }}" data-on="{{ 'true' if m.on else 'false' }}" data-text="{{ m.text }}"{% if not m.on %} class="cmd-is-off"{% endif %}{% if m.hidden %} hidden{% endif %}{% if m.since %} data-since="{{ m.since[:10] }}"{% endif %}{% if m.reason %} data-reason="{{ m.reason }}"{% endif %}>
+            <th scope="row" class="mono cmd-code{% if not m.on %} cmd-off-code{% endif %}">{% if m.href %}<a href="{{ m.href }}" data-go="{{ m.go }}" title="Open {{ m.go }}">{{ m.code }}</a>{% else %}<span>{{ m.code }}</span>{% endif %}{% if not m.on %} <span class="st st-bad">off</span>{% endif %}</th>
+            <td>{{ m.label }}</td>
+            <td class="cmd-desc">{{ m.description or '' }}</td>
+            <td class="mono text-muted-d">{% if m.example %}{{ m.example }}{% else %}<span class="func-form">search form</span>{% endif %}</td>
+            {% if admin %}<td class="cmd-col"><input type="checkbox" class="cmd-check" data-switch="command" data-name="{{ m.code }}"{% if m.on %} checked{% endif %}
+              aria-label="{{ m.code }} for everyone"></td>
+            {% for r in c.roles %}<td class="cmd-col cmd-role" aria-hidden="true">—</td>{% endfor %}{% endif %}
+          </tr>{% endfor %}
+        </tbody>{% endfor %}
+      </table></div>
+      <p class="text-muted-d func-empty" data-empty{% if c.shown %} hidden{% endif %}>{% if c.packs %}No command matches <span class="mono" data-empty-q>{{ q }}</span>. Clear the filter to see them all.{% else %}No command is available to you yet: ask an administrator for a pack.{% endif %}</p>
+      {% if admin %}
+      <div class="cmd-foot text-muted-d"><span>Review lists everything each change blocks before it is saved</span><span>Every change is audited with who, when and why</span>
+        <span>Applies on every server of the cluster</span></div>
+      {% endif %}
+    </section>
+
+    {% if admin %}
+    <aside class="cmd-side" data-side hidden aria-labelledby="cmdSideTitle">
+      <div class="cmd-side-h"><h2 id="cmdSideTitle" data-side-title>Review changes</h2>
+        <p class="text-muted-d">Nothing is deleted. Turn it back on any time.</p></div>
+      <ul class="cmd-changes" data-side-changes></ul>
+      <strong class="cmd-side-k">Everywhere it is blocked</strong>
+      <ul class="cmd-blocks" data-side-blocks></ul>
+      <label class="cmd-reason">Reason (kept in the audit log)<textarea rows="3" data-reason-input maxlength="500" placeholder="Why it is turned off or on"></textarea></label>
+      <div class="cmd-side-acts"><button type="button" class="btn-pill btn-accent" data-apply>Apply</button><button type="button" class="btn-pill btn-ghost" data-cancel>Cancel</button></div>
+      <p class="text-muted-d">Applies on every server of the cluster within seconds.</p>
+      <p class="adm-msg" data-side-msg role="status" aria-live="polite"></p>
+    </aside>
+    {% endif %}
+  </div>
+
+  {% if admin %}
+  {% set in_step = c.nodes | selectattr('inStep') | list | length %}
+  <details class="func-cluster" data-cluster>
+    <summary>Cluster: the switches on each server ({{ in_step }} of {{ c.nodes | length }} in step) · History of changes</summary>
+    <section class="cmd-nodes" aria-label="Version on each server" data-nodes>
+      <h2 class="cmd-h">Version on each server</h2>
+      <ul>{% for n in c.nodes %}<li data-node="{{ n.node }}"><span class="mono">{{ n.node }}</span>{% if n.self %} <span class="text-muted-d">(this server)</span>{% endif %}
+        · <span class="mono" title="The switches' hash this server holds">{{ (n.hash or 'none')[:8] }}</span>
+        · {% if n.inStep %}<span class="st st-ok">in step</span>{% else %}<span class="st st-warn" title="It is catching up: gossip brings the changes within seconds">catching up</span>{% endif %}</li>{% endfor %}</ul>
+      <p class="text-muted-d">Changes apply on every server of the cluster within seconds{% if c.newest %}; the newest is from <span class="mono">{{ c.newest[:19] | replace('T', ' ') }}</span> UTC{% endif %}.</p>
+    </section>
+    <h2 class="cmd-h">History</h2>
+    <div class="tbl-wrap"><table class="tbl adm-tbl" data-history>
+      <caption class="visually-hidden">Changes of the switches, newest first</caption>
+      <thead><tr><th scope="col">When (UTC)</th><th scope="col">What</th><th scope="col">State</th><th scope="col">Who</th><th scope="col">Why</th><th scope="col">Server</th></tr></thead>
+      <tbody><tr><td colspan="6" class="text-muted-d">Loading…</td></tr></tbody>
+    </table></div>
+  </details>
+  {% endif %}
+</div>
+{% endblock %}
+{% block scripts %}<script src="/static/js/command.js?v={{ ASSET_V }}"></script><script src="/static/js/functions.js?v={{ ASSET_V }}"></script>{% endblock %}

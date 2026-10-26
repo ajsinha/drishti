@@ -13,19 +13,62 @@
  *
  * See the LICENSE file in the root of this repository for the full terms.
  */
-/* Admin → Commands (docs/admin/COMMANDS.md). The matrix is server-rendered: a row per command (grouped by pack, with a pack switch), the
-   Everyone column, and greyed role columns for later. Ticking a box only records a change: changes are batched (Undo takes back the last
+/* Functions, FUNC <GO> (docs/admin/COMMANDS.md): the command directory, server-rendered. For everyone: Find (every word must appear in a
+   command's code, title, description, kind or its pack's name and title; FUNC <words> arrives with them typed) and the Pack picker, kept in
+   the address as ?q= so a reload or a shared link shows the same list. For an administrator (the page carries the switches): a row per
+   command with the Everyone column and a pack switch; ticking a box only records a change: changes are batched (Undo takes back the last
    one), and "Review N changes" opens the side panel, which says everywhere each change blocks, asks for a reason (kept in the audit log) and
    applies them in one call to /admin/api/commands. The page reloads after that, so it always shows what the server holds; a change made
    elsewhere (another administrator, another server) reaches it on the live channel. */
 (function () {
   'use strict';
-  var root = document.querySelector('[data-commands]');
+  var root = document.querySelector('[data-functions]');
   if (!root) { return; }
+  var admin = root.hasAttribute('data-commands');
   function $(sel, el) { return (el || root).querySelector(sel); }
   function $$(sel, el) { return Array.prototype.slice.call((el || root).querySelectorAll(sel)); }
   function say(el, text, bad) { el.textContent = text; el.classList.toggle('t-bad', !!bad); el.classList.toggle('t-ok', !bad && !!text); }
   function esc(s) { return String(s == null ? '' : s).replace(/[&<>"]/g, function (c) { return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]; }); }
+  // ---- find, pack and show (everyone) ---------------------------------------------------------------------------------------
+  var find = $('[data-find]'), packPick = $('[data-pack-filter]'), show = $('[data-show]'), counts = $('[data-counts]'), empty = $('[data-empty]');
+  var total = Number(counts.getAttribute('data-total')) || 0, adminCounts = counts.textContent;
+  function on(tr) { var box = $('[data-switch]', tr); return box ? box.checked : tr.getAttribute('data-on') === 'true'; }
+  function filter() {
+    var words = find.value.trim().toLowerCase().split(/\s+/).filter(Boolean), pack = packPick.value, mode = show ? show.value : 'all', shown = 0;
+    $$('tbody[data-pack]').forEach(function (body) {
+      var any = false, packText = body.getAttribute('data-pack-text') || '';
+      $$('tr[data-command]', body).forEach(function (tr) {
+        var text = tr.getAttribute('data-text') + ' ' + packText;
+        var hit = (!pack || body.getAttribute('data-pack') === pack) && words.every(function (w) { return text.indexOf(w) >= 0; })
+          && (mode === 'all' || (mode === 'on') === on(tr));
+        tr.hidden = !hit;
+        any = any || hit;
+        shown += hit ? 1 : 0;
+      });
+      body.hidden = !any;
+    });
+    if (admin) { counts.textContent = adminCounts + (shown < total ? ' · ' + shown + ' shown' : ''); }
+    else { counts.textContent = (shown < total ? shown + ' of ' + total : String(total)) + (total === 1 ? ' command' : ' commands') + ' you can use'; }
+    if (empty) {
+      empty.hidden = shown > 0 || total === 0;
+      var eq = $('[data-empty-q]', empty);
+      if (eq) { eq.textContent = find.value.trim() || (pack ? packPick.options[packPick.selectedIndex].text : ''); }
+    }
+    try {
+      var url = new URL(window.location.href);
+      if (find.value.trim()) { url.searchParams.set('q', find.value.trim()); } else { url.searchParams.delete('q'); }
+      window.history.replaceState(window.history.state, '', url.pathname + url.search + url.hash);
+    } catch (e) { /* an old browser keeps the address as it is */ }
+  }
+  find.addEventListener('input', filter);
+  packPick.addEventListener('change', filter);
+  if (show) { show.addEventListener('change', filter); }
+  document.addEventListener('keydown', function (e) {
+    if (e.key === '/' && document.activeElement && !/INPUT|TEXTAREA|SELECT/.test(document.activeElement.tagName)) { e.preventDefault(); find.focus(); }
+  });
+  filter();
+  if (!admin) { return; }
+
   var msg = $('[data-msg]'), side = $('[data-side]'), undo = $('[data-undo]'), review = $('[data-review]'), pending = $('[data-pending]');
   var reason = $('[data-reason-input]'), apply = $('[data-apply]'), smsg = $('[data-side-msg]');
   var changes = [];                                   // [{scope, name, on}] in the order made; the newest change of a switch counts
@@ -74,27 +117,6 @@
     var before = changes.filter(function (x) { return key(x) === key(c); }).pop();
     box.checked = before ? before.on : original(box);
     paint();
-  });
-
-  // ---- find and show ------------------------------------------------------------------------------------------------------
-  var find = $('[data-find]'), show = $('[data-show]');
-  function filter() {
-    var q = find.value.trim().toLowerCase(), mode = show.value;
-    $$('tbody[data-pack]').forEach(function (body) {
-      var any = false, packHit = body.getAttribute('data-pack').indexOf(q) >= 0;
-      $$('tr[data-command]', body).forEach(function (tr) {
-        var on = $('[data-switch]', tr).checked;
-        var hit = (!q || packHit || tr.getAttribute('data-text').indexOf(q) >= 0) && (mode === 'all' || (mode === 'on') === on);
-        tr.hidden = !hit;
-        any = any || hit;
-      });
-      body.hidden = !any;
-    });
-  }
-  find.addEventListener('input', filter);
-  show.addEventListener('change', filter);
-  document.addEventListener('keydown', function (e) {
-    if (e.key === '/' && document.activeElement && !/INPUT|TEXTAREA|SELECT/.test(document.activeElement.tagName)) { e.preventDefault(); find.focus(); }
   });
 
   // ---- the side panel: what each change blocks, the reason, apply ---------------------------------------------------------

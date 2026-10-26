@@ -223,6 +223,7 @@ contextual:
   history: user-guide#history-an-entity-over-time
   var: docs-guides-var-guide        # the VaR explorer (F1 and its ?): the VaR guide, listed under Use
   exposure: docs-guides-exposure-guide   # the exposure explorer (F1 and its ?): the exposure guide, listed under Use
+  func: docs-admin-commands       # Functions, FUNC (F1 and its ?): the command directory and, for administrators, the switches
   bi-designer: bi-guide#26-bi-studio-authoring-as-one-product-wave-c-240
   bi-theme-designer: reports#52-themes
   bi-transform: python-bi#17-data-prep-the-transform-editor-240

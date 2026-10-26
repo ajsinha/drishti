@@ -605,6 +605,11 @@ class FakeBackend:
 
     python = {}                     # pack -> what it offers Calc ({"enabled": True, "snippets": [...]}), as the server says
 
+    async def functions(self, ident=None):
+        """FUNC for a user (/api/v1/functions): only the commands that are on, of the user's packs; nothing of the switches."""
+        return {"total": 1, "packs": [{"name": "finance", "code": "FIN", "title": "Finance", "commands": [
+            {"code": "TRD", "kind": "trade", "label": "Trade", "description": "One trade.", "example": "TRD T-1"}]}]}
+
     async def packs(self, ident=None):
         return [{"name": n, "version": "1.0.0", "title": n.title(), "description": "", "console": {}, "assigned": True,
                  "active": n in self.enabled_packs, **({"python": self.python[n]} if n in self.python else {})}

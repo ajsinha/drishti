@@ -17,7 +17,7 @@
   <a href="/admin/users"{% if tab == 'users' %} aria-current="page"{% endif %}><i class="bi bi-people" aria-hidden="true"></i> Users</a>
   <a href="/admin/roles"{% if tab == 'roles' %} aria-current="page"{% endif %}><i class="bi bi-shield-lock" aria-hidden="true"></i> Roles</a>
   <a href="/admin/packs"{% if tab == 'packs' %} aria-current="page"{% endif %}><i class="bi bi-box-seam" aria-hidden="true"></i> Packs</a>
-  <a href="/admin/commands"{% if tab == 'commands' %} aria-current="page"{% endif %}><i class="bi bi-toggles" aria-hidden="true"></i> Commands</a>
+  <a href="/func" title="On the Functions page (FUNC)"><i class="bi bi-toggles" aria-hidden="true"></i> Commands</a>
   <a href="/admin/tokens"{% if tab == 'tokens' %} aria-current="page"{% endif %}><i class="bi bi-key" aria-hidden="true"></i> Tokens</a>
   <a href="/admin/access"{% if tab == 'access' %} aria-current="page"{% endif %}><i class="bi bi-eye" aria-hidden="true"></i> Access</a>
   <a href="/admin/connectors"{% if tab == 'connectors' %} aria-current="page"{% endif %}><i class="bi bi-plug" aria-hidden="true"></i> Connectors{% if status and status.connectorTemplateDrift %} <span class="adm-badge" data-drift-badge title="{{ status.connectorTemplateDrift }} connector(s) differ from their pack's template: see Template updates">{{ status.connectorTemplateDrift }}<span class="visually-hidden"> connectors differ from their pack's template</span></span>{% endif %}</a>
