@@ -43,6 +43,7 @@ kinds:
 - bond
 - correlation-matrix
 - correlation-result
+- equity-beta
 sutras: sutras
 formats: config/formats.yaml
 mnemonics:
@@ -109,6 +110,9 @@ mnemonics:
   CORRC:
     kind: correlation-result
     label: Correlations of a factor set (computed from price history)
+  EQB:
+    kind: equity-beta
+    label: An equity's beta against its index (computed from price history)
 graph:
   id-patterns:
   - pattern: ^CRV-
@@ -391,6 +395,58 @@ connectors:
       timeout: 30s
       wait: 5s
       max-inflight-per-user: 4
+  equity-analytics:
+    plugin: reactive
+    mode: reactive
+    enabled: ${DRISHTI_LAKE_ENABLED:true}
+    description: 'An equity''s beta against its index computed when asked from both price histories (the regression of the daily log returns),
+      by the server''s Java engine, as the viewer: EQB EQ-NVTK <GO>'
+    kinds:
+      equity-beta:
+        compute: beta
+        params:
+          window:
+            type: int
+            default: 0
+            min: 0
+            max: 5000
+        result:
+          required:
+          - BETA
+          - INDEX
+          - WINDOW
+          types:
+            BETA: number
+            INDEX: text
+            WINDOW: number
+    reads:
+    - kind: equity
+      as: equity
+      id: '{id}'
+    - kind: equity-index
+      as: index
+      ids: '{inputs.equity.EQUITY_INDEX}'
+      limit: 1
+    engine:
+      type: java
+      class: com.ash.drishti.compute.reactive.analytics.BetaEngine
+      version: '1.0'
+    triggers:
+    - 'on': data-version
+      kinds:
+      - equity
+      - equity-index
+      affects: all
+    coalesce:
+      quiet: 250ms
+      max-wait: 2s
+    cache:
+      results: 500
+      ttl: 1h
+    limits:
+      timeout: 30s
+      wait: 5s
+      max-inflight-per-user: 4
 routes:
   ir-curve: market-store
   repo-curve: market-store
@@ -413,6 +469,7 @@ routes:
   bond: market-store
   correlation-matrix: market-store
   correlation-result: correlation-engine
+  equity-beta: equity-analytics
 form:
   ir-curve:
   - path: CURVE_ID
@@ -765,6 +822,8 @@ console:
     - European equities · correlations computed from the factors' price history (window and estimator on the page)
   - - CORRC CORR-G10FX~estimator=ledoit-wolf
     - 'The computed kind itself: G10 FX correlations, Ledoit-Wolf shrinkage'
+  - - EQB EQ-NVTK
+    - Novatek's beta against the Nasdaq-100, computed from both price histories
   help: config/help.yaml
 python:
   enabled: true
@@ -774,7 +833,7 @@ python:
 history:
   equity:
     chart: [{path: PRICE, format: price2}]
-    columns: [PRICE, {path: CHANGE_1D, format: pct2}, {path: MARKET_CAP, format: compact}, BETA, NAME, EXCHANGE, CURRENCY]
+    columns: [PRICE, {path: CHANGE_1D, format: pct2}, {path: MARKET_CAP, format: compact}, NAME, EXCHANGE, CURRENCY]
     exclude: [OHLC]
     series: {path: HISTORY, date: DATE, value: CLOSE}       # when no source keeps daily documents
   equity-index:

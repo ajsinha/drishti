@@ -1,0 +1,94 @@
+# Project Drishti · Any data. Any domain. One grammar.
+#
+# Copyright (c) 2026 Ashutosh Sinha <ajsinha@gmail.com>.
+# All rights reserved.
+#
+# PROPRIETARY AND CONFIDENTIAL.
+#
+# This file is the confidential and proprietary property of Ashutosh Sinha.
+# Unauthorised copying, use, modification, distribution or disclosure of this
+# file, via any medium, is strictly prohibited except with the express prior
+# written permission of the copyright holder.
+#
+# See the LICENSE file in the root of this repository for the full terms.
+
+# Data contract of the equity-beta kind (command EQB): docs/contracts/README.md section 16; the measure is documented in
+# docs/guides/GROUPINGS_ANALYTICS_GUIDE.md (section 17). Written by hand (2.9.2).
+kind: equity-beta
+mnemonic: EQB
+pack: market-data
+version: '1.0'
+class: computed
+status: active
+title: An equity's beta against its index (computed from price history)
+description: An equity's beta, alpha, correlation and R squared against its index (EQUITY_INDEX), the regression of their daily log returns
+  over a window, computed when asked from both price histories by the server's Java engine, as the person asking; never stored. It replaces
+  the security master's stored BETA (retired in 2.9.2).
+source: 'computed by Drishti: the reactive connector equity-analytics (java engine com.ash.drishti.compute.reactive.analytics.BetaEngine)'
+grain: One answer per question (the equity asked for, its window and the business date), computed when asked.
+key: []
+dated-by: on request
+cadence:
+  frequency: on change
+  due: computed on request and again when the equities or indices load (data-version trigger)
+storage:
+  connector: equity-analytics
+  plugin: reactive
+fields:
+- name: EQUITY
+  type: id
+  presence: required
+  description: The equity asked for (the id; the window rides on it as EQ-NVTK~window=20)
+  example: EQ-NVTK
+- name: INDEX
+  type: id
+  presence: required
+  description: The index it is measured against (the equity's EQUITY_INDEX)
+- name: WINDOW
+  type: integer
+  presence: required
+  description: The daily returns used (parameter window; 0, the default, or a window longer than the history uses every return)
+- name: AVAILABLE
+  type: integer
+  presence: required
+  description: The returns the two histories' common dates allow
+- name: FROM
+  type: date
+  presence: required
+- name: TO
+  type: date
+  presence: required
+- name: BETA
+  type: rate
+  presence: required
+  description: cov(r, r_index) / var(r_index) of the daily log returns
+- name: ALPHA
+  type: rate
+  presence: required
+  description: The regression's intercept, a daily log return
+- name: CORRELATION
+  type: rate
+  presence: required
+- name: R_SQUARED
+  type: rate
+  presence: required
+- name: VOLATILITY
+  type: rate
+  presence: required
+  description: The equity's sample standard deviation of the daily log returns x sqrt(252), a fraction
+- name: INDEX_VOLATILITY
+  type: rate
+  presence: required
+  description: The index's, the same way
+links: []
+validation:
+- rule: required
+  fields:
+  - BETA
+  - INDEX
+  - WINDOW
+notes:
+- 'No stored key: an answer''s id is the question asked, the id of the equity it reads.'
+- 'Errors are said in words (an engine refusal): no such equity, an equity that names no index, an index without price history, fewer than three
+  common dates, an index that did not move over the window.'
+review: []

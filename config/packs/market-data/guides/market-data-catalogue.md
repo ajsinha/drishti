@@ -80,7 +80,7 @@ A listed stock: price, dividends, sector and identifiers.
 
 **Mnemonic:** `EQ` · **Identifiers:** `EQ-…` · **Id field:** `TICKER`
 
-**Fields its Sutra reads:** `NAME`, `PRICE`, `CHANGE_1D`, `MARKET_CAP`, `SECTOR`, `EXCHANGE`, `CURRENCY`, `BETA`, `HISTORY`, `IDENTIFIERS`, `OHLC`.
+**Fields its Sutra reads:** `NAME`, `PRICE`, `CHANGE_1D`, `MARKET_CAP`, `SECTOR`, `EXCHANGE`, `CURRENCY`, `HISTORY`, `IDENTIFIERS`, `OHLC`.
 
 ## Equity index (`equity-index`)
 

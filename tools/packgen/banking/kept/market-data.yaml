@@ -19,7 +19,7 @@
 history:
   equity:
     chart: [{path: PRICE, format: price2}]
-    columns: [PRICE, {path: CHANGE_1D, format: pct2}, {path: MARKET_CAP, format: compact}, BETA, NAME, EXCHANGE, CURRENCY]
+    columns: [PRICE, {path: CHANGE_1D, format: pct2}, {path: MARKET_CAP, format: compact}, NAME, EXCHANGE, CURRENCY]
     exclude: [OHLC]
     series: {path: HISTORY, date: DATE, value: CLOSE}       # when no source keeps daily documents
   equity-index:

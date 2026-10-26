@@ -42,6 +42,7 @@ kinds:
 - bond
 - correlation-matrix
 - correlation-result
+- equity-beta
 commands:
   CRV: ir-curve
   REPO: repo-curve
@@ -64,6 +65,7 @@ commands:
   BND: bond
   CORR: correlation-matrix
   CORRC: correlation-result
+  EQB: equity-beta
   MKT: pack overview
 depends-on:
   packs:
@@ -72,6 +74,7 @@ depends-on:
   - correlation-engine
   - ecb-estr-feed
   - ecb-fx-feed
+  - equity-analytics
   - fred-feed
   - market-store
   - nyfed-sofr-feed
@@ -321,7 +324,6 @@ Fields, from 10 sample documents:
 | `SECTOR` | string | `Airlines` | Sector |
 | `EXCHANGE` | string | `TSX` | Exchange |
 | `CURRENCY` | string | `CAD` | Currency |
-| `BETA` | number | `1.46` | Beta |
 | `HISTORY` | list of objects |  | Daily closes |
 | `OHLC` | list of objects |  | Open, high, low and close bars |
 | `IDENTIFIERS` | object |  | Other identifiers (ISIN, exchange codes) |
@@ -666,6 +668,14 @@ Links: `EQUITY_IDS` → `equity`, `FX_IDS` → `fx-spot`.
 
 No samples ship: documents are read live from its connector `correlation-engine` (plugin `reactive`).
 
+### `equity-beta`
+
+**An equity's beta against its index (computed from price history)** · mnemonic `EQB` · read through connector `equity-analytics`.
+
+**Id:** set by its connector (no samples ship).
+
+No samples ship: documents are read live from its connector `equity-analytics` (plugin `reactive`).
+
 ## Screens and commands
 
 | Command | Kind | Opens |
@@ -691,6 +701,7 @@ No samples ship: documents are read live from its connector `correlation-engine`
 | `BND` | `bond` | Bond (security master) |
 | `CORR` | `correlation-matrix` | Correlation matrix |
 | `CORRC` | `correlation-result` | Correlations of a factor set (computed from price history) |
+| `EQB` | `equity-beta` | An equity's beta against its index (computed from price history) |
 | `MKT` | — | The pack's overview: its kinds, how many each holds, an example of each |
 
 Examples:
@@ -704,6 +715,7 @@ Examples:
 | `CMDC CMDC-WTI` | WTI futures curve · backwardation |
 | `CORR CORR-EU-EQ` | European equities · correlations computed from the factors' price history (window and estimator on the page) |
 | `CORRC CORR-G10FX~estimator=ledoit-wolf` | The computed kind itself: G10 FX correlations, Ledoit-Wolf shrinkage |
+| `EQB EQ-NVTK` | Novatek's beta against the Nasdaq-100, computed from both price histories |
 
 Screens (Sutras):
 
@@ -755,6 +767,7 @@ The connectors it brings (written once to `config/connectors/<name>.yaml`, then 
 | `us-treasury-feed` | `feed` | `ir-curve` | `${DRISHTI_FEED_US_TREASURY:false}` |
 | `fred-feed` | `feed` | `rate-fixing` | `${DRISHTI_FEED_FRED:false}` |
 | `correlation-engine` | `reactive` | `correlation-result` | `${DRISHTI_LAKE_ENABLED:true}` |
+| `equity-analytics` | `reactive` | `equity-beta` | `${DRISHTI_LAKE_ENABLED:true}` |
 
 Settings (environment variables) its connectors read: `DRISHTI_DELTA_ROOT`, `DRISHTI_FEED_ECB_ESTR`, `DRISHTI_FEED_ECB_FX`, `DRISHTI_FEED_FRED`, `DRISHTI_FEED_NYFED_SOFR`, `DRISHTI_FEED_US_TREASURY`, `DRISHTI_FRED_SERIES`, `DRISHTI_LAKE_ENABLED`, `FRED_API_KEY`.
 
