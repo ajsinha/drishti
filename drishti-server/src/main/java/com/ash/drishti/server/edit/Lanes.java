@@ -142,19 +142,26 @@ public final class Lanes implements AutoCloseable {
                 lose(w, "its lease was taken by another node");
             }
         }
+        int gained = 0;
         for (int lane : suggested.get()) {
             if (lane < 0 || lane >= settings.lanes() || owned.containsKey(lane)) {
                 continue;
             }
             Optional<Long> epoch = log.claim(lane, node, lease);
-            epoch.ifPresent(e -> gain(lane, e));
+            if (epoch.isPresent()) {
+                gain(lane, epoch.get());
+                gained++;
+            }
+        }
+        if (gained > 0) {
+            LOG.info("edit lanes: {} took {} lane(s); it owns {} of {}", node, gained, owned.size(), settings.lanes());
         }
     }
 
     private void gain(int lane, long epoch) {
         Worker w = new Worker(lane, epoch);
         if (owned.putIfAbsent(lane, w) == null) {
-            LOG.info("edit lanes: {} owns lane {} at epoch {}", node, lane, epoch);
+            LOG.debug("edit lanes: {} owns lane {} at epoch {}", node, lane, epoch);
             w.start();
             listeners.forEach(l -> l.gained(lane, epoch));
         }

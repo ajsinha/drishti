@@ -65,6 +65,7 @@ public final class ConnectorWrites {
     private final Function<String, ConnectorFiles.Definition> definitions;
     private final Function<String, Optional<SourcePlugin>> plugins;
     private final SwitchLedger switches;
+    private volatile java.util.function.Predicate<String> switchedOn;
 
     public ConnectorWrites(Function<String, ConnectorFiles.Definition> definitions, Function<String, Optional<SourcePlugin>> plugins, SwitchLedger switches) {
         this.definitions = definitions;
@@ -135,7 +136,17 @@ public final class ConnectorWrites {
 
     /** True when an administrator switched this connector's writes on. */
     public boolean on(String connector) {
+        java.util.function.Predicate<String> o = switchedOn;
+        if (o != null) {
+            return o.test(connector);
+        }
         return switches != null && switches.find(SwitchLedger.WRITES, connector).map(SwitchLedger.Entry::on).orElse(false);
+    }
+
+    /** Decides the switch by {@code on} instead of the ledger (a server without identity, and tests). */
+    public ConnectorWrites switchedBy(java.util.function.Predicate<String> on) {
+        this.switchedOn = on;
+        return this;
     }
 
     /** Switches a connector's writes on or off (administrators; audited by the caller). */
