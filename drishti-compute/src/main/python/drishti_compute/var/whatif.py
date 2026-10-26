@@ -59,7 +59,7 @@ class VarWhatIfEngine(Engine):
     def compute(self, req: Request, inputs: Inputs, progress: Progress) -> Result:
         base = _rows(inputs, "base")
         if not base or base[0].get("PNL") is None:
-            raise ComputeError(f"the scope {req.id or '(none)'} has no VaR answer to start from (its var-result has no P&L vector: "
+            raise ComputeError("the scope has no VaR answer to start from (its var-result has no P&L vector: "
                                "is the scope right, and may you see it?)")
         b = base[0]
         before = [float(x) for x in b["PNL"]]
@@ -97,7 +97,7 @@ class VarWhatIfEngine(Engine):
             r["COMPONENT_VAR"] = M.component(vec, ma)
             r["COMPONENT_ES"] = M.component_es(vec, ma)
         limit = _number(b.get("LIMIT"))
-        row = {"SCOPE": req.id, "CANONICAL": b.get("CANONICAL"), "BUSINESS_DATE": b.get("BUSINESS_DATE"), "ITEMS": len(prepared),
+        row = {"SCOPE": b.get("SCOPE") or b.get("CANONICAL"), "CANONICAL": b.get("CANONICAL"), "BUSINESS_DATE": b.get("BUSINESS_DATE"), "ITEMS": len(prepared),
                "BEFORE_VAR": mb.var, "AFTER_VAR": ma.var, "CHANGE_VAR": ma.var - mb.var, "BEFORE_ES": mb.es, "AFTER_ES": ma.es,
                "CHANGE_ES": ma.es - mb.es, "LIMIT": limit, "LIMIT_USE_BEFORE": mb.var / limit if limit else None,
                "LIMIT_USE_AFTER": ma.var / limit if limit else None, "CONFIDENCE": conf, "ES_CONFIDENCE": es_conf, "STRESS_WINDOW": stress}

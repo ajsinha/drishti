@@ -54,13 +54,13 @@ def test_the_stressed_window_is_the_worst_run_of_days():
 
 
 def _req(scratch, **params):
-    return Request(id="BOOK:BOOK-X - TRD:T2", kind="var-whatif", params=params, user="asha", roles=(), view_signature="",
+    return Request(id="req-1", kind="var-whatif", params=params, user="asha", roles=(), view_signature="",
                    cls="interactive", seed=0, scratch=str(scratch))
 
 
 def _inputs(tmp_path, base_pnl, items=None):
     os.makedirs(tmp_path / "in", exist_ok=True)
-    A.write_file(A.Table([A.utf8("CANONICAL", ["BOOK:BOOK-X - TRD:T2"]), A.utf8("BUSINESS_DATE", ["2026-09-30"]),
+    A.write_file(A.Table([A.utf8("SCOPE", ["BOOK:BOOK-X - TRD:T2"]), A.utf8("CANONICAL", ["BOOK:BOOK-X - TRD:T2"]), A.utf8("BUSINESS_DATE", ["2026-09-30"]),
                           A.float64("CONFIDENCE", [0.8]), A.float64("ES_CONFIDENCE", [0.8]), A.float64("LIMIT", [10.0]),
                           A.vectors("PNL", len(base_pnl), base_pnl)]), tmp_path / "in" / "base.arrows")
     files = {"base": "in/base.arrows"}
@@ -80,6 +80,7 @@ def test_putting_the_hedge_back_gives_the_book_again(tmp_path):
     row = r.rows[0]
     assert (row["BEFORE_VAR"], row["BEFORE_ES"]) == (6, 8.5)                 # the worked example's book minus T2
     assert row["ITEMS"] == 2 and row["LIMIT_USE_BEFORE"] == 0.6
+    assert row["SCOPE"] == "BOOK:BOOK-X - TRD:T2"                      # the base's scope, never the request id
     items = r.tables["items"].to_rows()
     assert items[0]["LABEL"] == "T2 again"
     assert items[0]["INCREMENTAL_VAR"] == 0 and items[0]["INCREMENTAL_ALONE"] == 0     # back to the book: VaR 6 again
