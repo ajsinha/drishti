@@ -554,7 +554,7 @@ terms:
   - term: FX spot
     synonyms: [fx, exchange rate, spot rate]
     domain: market-data
-    meaning: "The price of one currency in another for delivery in two days, with bid and ask."
+    meaning: "The price of one currency in another for delivery on the spot date (usually two business days ahead), with bid and ask."
     command: FX FX-EURUSD
   - term: FX forward curve
     synonyms: [fxf, forward points, fx forward]

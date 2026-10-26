@@ -55,7 +55,7 @@ factors and an equity's **beta** against its index.
 | <a id="term-interest-rate-curve"></a>**Interest rate curve** | Rates by maturity for one currency and purpose: OIS for discounting, projection for a floating index, government or cross-currency basis. | `CRV CRV-USD-OIS <GO>` |
 | <a id="term-rate-fixing"></a>**Rate fixing** | The published value of a rate index on a day (SOFR, SONIA, €STR ...): what floating legs pay. | `FIX FIX-SOFR <GO>` |
 | <a id="term-repo-curve"></a>**Repo curve** | The rate for borrowing cash against securities, by maturity. | `REPO REPO-USD <GO>` |
-| <a id="term-fx-spot"></a>**FX spot** | The price of one currency in another for delivery in two days, with bid and ask. | `FX FX-EURUSD <GO>` |
+| <a id="term-fx-spot"></a>**FX spot** | The price of one currency in another for delivery on the spot date (usually two business days ahead), with bid and ask. | `FX FX-EURUSD <GO>` |
 | <a id="term-fx-forward-curve"></a>**FX forward curve** | The exchange rate agreed today for later dates; the gap to spot comes from the two currencies' interest rates. | `FXF FXF-EURUSD <GO>` |
 | <a id="term-volatility-surface"></a>**Volatility surface** | Implied volatility by expiry and strike (or delta), read from option prices. ATM is at the money; risk reversals and butterflies describe the smile. | `FXV FXV-EURUSD <GO>` |
 | <a id="term-swaption-cube"></a>**Swaption cube** | Interest-rate option volatilities by expiry, swap tenor and strike; cap and floor volatilities are a surface beside it. | `IRV IRV-USD <GO>` |
