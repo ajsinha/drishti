@@ -193,16 +193,19 @@ developer-guide api how-it-fits elements-guide elements ai-providers mcp-client 
 decisions plan release-notes changelog notices sutra-guide rachana-guide plugins build-a-pack sutra-studio""".split()
 
 
-def test_the_help_centre_has_six_sections_and_about_forty_pages():
+def test_the_help_centre_has_seven_sections_and_about_sixty_pages():
     catalogue = yaml.safe_load((CONSOLE / "config" / "help.yaml").read_text())
-    assert [c["id"] for c in catalogue["categories"]] == ["start", "use", "bi", "data", "build", "operate"]
+    assert [c["id"] for c in catalogue["categories"]] == ["knowledge", "start", "use", "bi", "data", "build", "operate"]
     total = sum(len(c["guides"]) for c in catalogue["categories"])
     # 47: the 45 pages plus VaR's two (the VaR guide and tutorial 25), the product owner's request of 2026-10-26: VaR help is two pages.
     # 49: plus exposure's two (the exposure guide and tutorial 26), the same rule (each measure has exactly two documents and two entries).
     # 51: plus the groupings and analytics' two (the guide and tutorial 27, 2.9.2), the same rule.
     # 52: plus External data (docs/guides/PUBLIC_DATA.md, 2.9.1), the product owner's request of 2026-10-26: a separate help page for
     # external data extraction, with examples.
-    assert 30 <= total <= 52, total
+    # 54: plus the funds pack's two pages (2.9.2).
+    # 62: plus Knowledge (the product owner's request of 2026-10-26), a section of its own at the top: the home with the glossary and
+    # the seven domain pages (docs/knowledge/, WHAT <GO>).
+    assert 30 <= total <= 62, total
 
 
 def test_every_old_help_address_still_opens_something(client):

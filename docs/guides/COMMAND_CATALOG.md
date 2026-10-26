@@ -60,6 +60,7 @@ No pack may define a mnemonic with these names; they work in any case.
 | `RUPAKA` | `RUPAKA` | The older name of BI; everything that works after BI works after it. |
 | `FORM` | `FORM trading trade` | The forms home; FORM <pack> opens the pack's search form, FORM <pack> <kind> its form for that kind. |
 | `FUNC` | `FUNC exposure` | Functions: every command you can use, by pack, with what it does and an example; FUNC <words> opens it filtered (a command, a word of what it does, a pack). Administrators also switch commands on or off there. |
+| `WHAT` | `WHAT netting set` | Knowledge: what the words of your data mean. WHAT alone opens the Knowledge home; WHAT <term> opens the term's glossary entry (its long name or a synonym works too, any case: WHAT PFE, WHAT value at risk); other words search the Knowledge pages. |
 | `VAR` | `VAR DESK DESK-RATES` | The VaR explorer. After it: BANK, LE, DIV, DESK, BOOK, NODE, POS, TRD (TRADE), PORT (PORTFOLIO), BASKET, WHERE, SCOPE (a saved basket, a portfolio or scope text) or CAPTURE <id>. |
 
 ## Pack codes

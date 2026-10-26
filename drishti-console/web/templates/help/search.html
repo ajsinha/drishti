@@ -19,11 +19,12 @@
 {% block nav %}{% include "help/_nav.html" %}{% endblock %}
 {% block content %}
 <div class="help-wrap">
-  <nav class="crumbs help-crumbs" aria-label="Breadcrumb"><a href="/help">Help</a><span class="sep">/</span><span>Search</span></nav>
+  <nav class="crumbs help-crumbs" aria-label="Breadcrumb"><a href="/help">Help</a><span class="sep">/</span>{% if knowledge %}<a href="/help/{{ knowledge }}">Knowledge</a><span class="sep">/</span>{% endif %}<span>Search</span></nav>
   {% if missing %}<p class="pnl-err" role="status">There is no guide called “{{ missing }}”. Here is what matches instead.</p>{% endif %}
-  <form class="help-search" action="/help/search" method="get" role="search"><i class="bi bi-search" aria-hidden="true"></i>
+  <form class="help-search" action="{{ '/what' if knowledge else '/help/search' }}" method="get" role="search"><i class="bi bi-search" aria-hidden="true"></i>
     <label class="visually-hidden" for="sq">Search help</label><input id="sq" name="q" type="search" value="{{ q }}" autofocus></form>
-  <p class="text-muted-d">{{ hits | length }} guide{{ '' if hits | length == 1 else 's' }} mention “{{ q }}”.</p>
+  {% if knowledge %}<p class="text-muted-d" data-what-search>“{{ q }}” is not a term of the glossary. {{ hits | length }} Knowledge page{{ '' if hits | length == 1 else 's' }} mention{{ 's' if hits | length == 1 else '' }} it; <a href="/help/search?q={{ q | urlencode }}">search all of help</a>.</p>
+  {% else %}<p class="text-muted-d">{{ hits | length }} guide{{ '' if hits | length == 1 else 's' }} mention “{{ q }}”.</p>{% endif %}
   <ol class="help-results">
     {% for h in hits %}<li><a href="/help/{{ h.guide.slug }}"><b>{{ h.guide.title }}</b> <span class="badge-kind">{{ h.guide.kind }}</span></a>
       <p>…{{ h.snippet }}…</p></li>{% endfor %}

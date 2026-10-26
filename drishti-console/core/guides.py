@@ -50,7 +50,7 @@ _LINK = re.compile(r'<a href="([^"]*)"([^>]*)>(.*?)</a>', re.S)
 _EXTERNAL = re.compile(r"^(?:[a-z][a-z0-9+.-]*:|/|#)", re.I)
 _FRONT = re.compile(r"\A(?:\s*<!--.*?-->)*\s*(---\n.*?\n---\n)", re.S)
 # Where an unlisted repository document sits in the help centre, by its top folder.
-_DOC_CATEGORY = {"connectors": "data", "admin": "operate", "guides": "use", "architecture": "build", "tutorials": "start",
+_DOC_CATEGORY = {"connectors": "data", "admin": "operate", "guides": "use", "architecture": "build", "tutorials": "start", "knowledge": "knowledge",
                  "qa": "build", "archive": "build", "": "operate"}
 
 

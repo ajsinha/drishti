@@ -37,6 +37,28 @@ def _problem(e: BackendError) -> JSONResponse:
     return JSONResponse({"code": e.code, "detail": e.detail}, status_code=e.status)
 
 
+async def what_suggestions(request: Request, words: str) -> list:
+    """``WHAT``'s dropdown: the Knowledge home, then the glossary's terms that start with the words (each opens its entry), and for
+    words that are no term a search of the Knowledge pages."""
+    from core.knowledge import HOME
+    from routes.common import library
+
+    lib = await library(request)
+    folder = (request.app.state.docs_dir / "knowledge").resolve()
+    out = [] if words else [{"mnemonic": "WHAT", "title": "Knowledge: what the words of your data mean",
+                             "subtitle": "WHAT <GO> opens the Knowledge home; WHAT <term> its glossary entry (WHAT PFE, WHAT netting set)",
+                             "complete": "WHAT ", "href": f"/help/{lib.by_file.get(folder / HOME, '')}", "type": "what"}]
+    for e in request.app.state.glossary.starting(words):
+        slug = lib.by_file.get(folder / e.page)
+        if slug:
+            out.append({"mnemonic": "WHAT", "title": e.term + (f" ({e.name})" if e.name else ""), "subtitle": f"{e.title} · {e.meaning}",
+                        "complete": f"WHAT {e.term}", "href": f"/help/{slug}#{e.anchor}", "type": "what"})
+    if words and not out:
+        out.append({"mnemonic": "WHAT", "title": f"Search the Knowledge pages for {words}", "subtitle": "No term of the glossary is called that",
+                    "complete": f"WHAT {words}", "href": f"/what?q={quote(words)}", "type": "what"})
+    return out
+
+
 async def form_suggestions(request: Request, pack: str | None, kind: str | None, spaced: bool) -> list:
     """Type-ahead for ``FORM <pack> <kind>``: only packs the person may open, and only kinds they may open in that pack."""
     from routes.common import packs
@@ -97,6 +119,9 @@ async def suggest(request: Request, q: str = "", limit: int | None = None):
         return [{"mnemonic": "FUNC", "title": "Functions: every command you can use" + (f", matching {words}" if words else ""),
                  "subtitle": "FUNC <GO> opens the list; FUNC <words> opens it filtered (a command, a word of what it does, a pack)",
                  "complete": f"FUNC {words}".strip(), "href": "/func" + (f"?q={quote(words)}" if words else ""), "type": "func"}]
+    what = re.match(r"(?is)^\s*what(?:\s+(.*))?$", q.replace("<GO>", ""))
+    if what:                                                   # the reserved word WHAT: the Knowledge pages, then the glossary's terms
+        return await what_suggestions(request, (what.group(1) or "").strip())
     typed = re.match(r"(?i)^\s*form(?:\s+(\S*))?(?:\s+(\S*))?\s*$", q.replace("<GO>", ""))
     if typed:                                                  # the reserved word FORM: packs you may open, then their kinds
         return await form_suggestions(request, typed.group(1), typed.group(2), q.endswith(" "))

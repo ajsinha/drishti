@@ -110,15 +110,15 @@ you are on is highlighted.
 | **BI** (people with the `bi` power) | Rupaka: business intelligence | *BI home* (`/bi`), *My workspace* (`/bi/w/me`), *Catalogue* (`/bi/catalogue`), then *Recent*: the three items you opened last. Administrators with `bi-admin` also see *BI settings* ([BI_GUIDE.md](BI_GUIDE.md)) |
 | **Build** | Create | *New screen* (`/build/new`), *New pack* (`/build/pack/new`: schema files and/or JSON Lines in, a pack to download or deploy out; [Schema to pack](SCHEMA_TO_PACK.md)), *My designs* (`/build`), *Examples* |
 | | Govern | *Reviews* (`/build/reviews`, with the number waiting) |
-| | Learn | *Tutorials*, *Schema to pack*, *Screen designer guide*, *Sutra developer guide*, *Panel kinds*, *Rachana reference*, *Pack developer guide* |
+| | Learn | *Knowledge* (`/what`, also `WHAT <GO>`: [Knowledge](#knowledge-what-the-words-mean)), *Tutorials*, *Schema to pack*, *Screen designer guide*, *Sutra developer guide*, *Panel kinds*, *Rachana reference*, *Pack developer guide* |
 | **Admin** (admins only) | People & access | *Users*, *Roles*, *Audit log* |
 | | Operations | *Packs*, *Connectors*, *Artifacts*, *Commands* (opens Functions with the switches), *Data loads*, *Lakes*, *Collaboration*, *Embedding*, *Net* (Drishti\*net: [NET.md](../admin/NET.md)), *Health*, *Caches* |
-| **Help** | Learn | *Help centre* (`/help`, also `F1`), *Install and run*, *About* |
+| **Help** | Learn | *Help centre* (`/help`, also `F1`), *Knowledge* (`WHAT <GO>`), *Install and run*, *About* |
 
 **BI and the `BI` keyword (alias `RUPAKA`).** Where your roles hold the `bi` power, a **BI** menu sits between **Views** and **Forms**, and the reserved command
 word `BI` goes there from the command line, in any case: `BI <GO>` the BI home, `BI WORKSPACE <GO>` your personal workspace, `BI CATALOGUE <GO>` the
 catalogue, `BI SETTINGS <GO>` the BI settings (administrators with `bi-admin`), `BI <report-or-board> <GO>` a published item by id or title (a **report opens drawn**, with its slicers, drill-down and drill-through; type-ahead completes after `BI `; `RUPAKA` still works as an alias). Without the power the menu is not there and `BI <GO>`
-says what is missing. No pack can define a mnemonic named `BI`, `RUPAKA`, `FORM` or `FUNC`. The BI page, its keys (`/`, `g h`, `g c`, `g w`, `?`) and what it can and cannot do yet:
+says what is missing. No pack can define a mnemonic named `BI`, `RUPAKA`, `FORM`, `FUNC` or `WHAT`. The BI page, its keys (`/`, `g h`, `g c`, `g w`, `?`) and what it can and cannot do yet:
 [BI_GUIDE.md](BI_GUIDE.md). **Using a report:** click a bar and the page filters to it, the buttons in a visual's header drill down, drill through to another page, show the rows behind it or open a trade in the terminal, and a slicer filters
 what it can reach ([BI_GUIDE.md](BI_GUIDE.md) section 14); **building one:** *Designer* in the BI rail, drag fields onto the canvas in BI Studio, with its Explorer, tabs and Problems and Query dock ([BI_GUIDE.md](BI_GUIDE.md) sections 15 and 26, [tutorial 10](../tutorials/10-first-bi-report.md)); the YAML reference is [REPORTS.md](REPORTS.md). The BI rail also opens *Analyse*, *Transforms* (Python data prep step by step) and the *Python console*.
 
@@ -217,11 +217,12 @@ Mnemonics come from the packs that are switched on. Every command, with what it 
 
 ### Reserved words
 
-Four words are keywords of the console itself, not mnemonics of a pack, and no pack may define a mnemonic with
+Five words are keywords of the console itself, not mnemonics of a pack, and no pack may define a mnemonic with
 their name. They work in any case, and each has type-ahead.
 
 | Type | You get | More |
 |---|---|---|
+| `WHAT <GO>` | Knowledge, the home of the [Knowledge pages](#knowledge-what-the-words-mean): what the words of your data mean and how the data connects | `WHAT PFE <GO>`, `WHAT netting set <GO>`, `WHAT value at risk <GO>` open the term's glossary entry (its long name or a synonym works too, any case); other words (`WHAT collateral posted <GO>`) search the Knowledge pages. The type-ahead lists the terms as you type |
 | `FUNC <GO>` | Functions, `/func`: every command you can use, by pack, with what it does and an example ([COMMANDS.md](../admin/COMMANDS.md)) | `FUNC exposure <GO>` opens it filtered (every word must appear in a command's code, title, description or its pack); `FUNC trading` lists one pack's commands. Click a command to open it with its example, a pack to open its search form |
 | `FORM <GO>` | the forms home, `/forms` | `FORM trading <GO>` opens the trading pack's search form, `FORM trading trade <GO>` its form for trades ([Search with a form](#search-with-a-form-form-pack)) |
 | `BI <GO>` | the BI home, `/bi` (only with the `bi` power; otherwise the terminal says what is missing) | `BI WORKSPACE`, `BI CATALOGUE`, `BI SETTINGS`, `BI <report-or-board>` ([BI_GUIDE.md](BI_GUIDE.md)) |
@@ -230,6 +231,21 @@ their name. They work in any case, and each has type-ahead.
 A pack's code typed alone (`MKT <GO>`) opens that pack's overview ([A pack at a glance](#a-pack-at-a-glance)). Anything else
 that is not a command but reads as words (`live trades over 5m`) is offered as a question
 ([Asking in plain words](#asking-in-plain-words)).
+
+### Knowledge: what the words mean
+
+*See what your data hasn't told you yet.* The **Knowledge** section at the top of the help centre has one page per domain:
+[Market risk](../knowledge/market-risk.md), [Counterparty credit risk](../knowledge/counterparty-credit-risk.md),
+[Trades and products](../knowledge/trades-and-products.md), [Entities and ownership](../knowledge/entities-and-ownership.md),
+[Market data](../knowledge/market-data.md), [Data and contracts](../knowledge/data-and-contracts.md) and
+[Economies](../knowledge/economies.md). Each says what the domain is in plain words, gives a glossary with the command that shows each
+term, draws how the kinds connect (with their id conventions), works an example through on the demo data, lists ready-made questions to
+ask your data, and clears up the common confusions (VaR against ES, why PFE does not add up, why posted collateral raises exposure).
+The [Knowledge home](../knowledge/README.md) lists every term A to Z.
+
+Reach it three ways: `WHAT <GO>` (or `WHAT <term> <GO>` for one entry), **Build → Learn → Knowledge** or **Help → Knowledge**, and
+the **What does this mean?** link on a data page: the VaR explorer, `VRES` and `DESK` open Market risk; `CPTY`, `NSET`, `CSA` and the
+exposure explorer open Counterparty credit risk. F1 and **?** still open the page's help as before.
 
 ### Suggestions as you type
 
