@@ -742,7 +742,7 @@ total rows: 300
 `server health` (exit `1` unless OK), `server caches` (what the engine and each connector hold; `server caches purge NAME|all`
 drops a cache, and grouped pages kept on disk are rebuilt from the lake at once: Admin → Caches from the terminal),
 `server packs list|load|unload|on|off|deploy|history|rollback|datasource` (Admin → Packs from the terminal), `server commands list|off|on|history`
-(Admin → Commands from the terminal: commands, or with `--pack` packs, on or off for everyone with `--reason`; an administrator, and as the
+(the administrator's switches of Functions, `FUNC`, from the terminal: commands, or with `--pack` packs, on or off for everyone with `--reason`; an administrator, and as the
 admin endpoints are never for a personal token, it runs where sign-in is off (`--user`); [COMMANDS.md](../admin/COMMANDS.md))
 and `server smoke` (opens sample views of every kind on two dates; exit `1` on any failure, the check after a deploy).
 `doctor` checks this machine without changing anything (paths shortened):

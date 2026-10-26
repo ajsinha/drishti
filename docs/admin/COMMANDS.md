@@ -13,33 +13,61 @@
 
   See the LICENSE file in the root of this repository for the full terms.
 -->
-# Commands: turning a command on or off (Admin → Commands)
+# Functions (FUNC): every command, and turning one on or off
 
-An administrator can turn any command of the packs off for everyone: `FRTB`, `EQV`, `TRD` and every other mnemonic. The code stays; a
-command that is off is **not active** everywhere, and nothing about it leaks. Turn it back on at any time. Packs are switched on the same
-page and in the same record, so a cluster of servers always agrees on both.
+**Functions** is the command directory, for everyone: Views → **Functions**, or type `FUNC <GO>`. It lists every command you can use,
+grouped by pack, with what each does and an example; click one to open it. An administrator sees the same page with the switches: any
+command of the packs can be turned off for everyone (`FRTB`, `EQV`, `TRD` and every other mnemonic). The code stays; a command that is off
+is **not active** everywhere, and nothing about it leaks. Turn it back on at any time. Packs are switched on the same page and in the same
+record, so a cluster of servers always agrees on both. (Admin → Commands, the page this was until 2.9.1, opens Functions:
+`/admin/commands` redirects to `/func`.)
 
-- [The page](#the-page)
+- [The page, for everyone](#the-page-for-everyone)
+- [The administrator's view](#the-administrators-view)
 - [What "not active" means](#what-not-active-means)
 - [Review, reason and history](#review-reason-and-history)
 - [Several servers](#several-servers)
 - [Where it is kept](#where-it-is-kept)
 - [From a script](#from-a-script)
 
-## The page
+## The page, for everyone
 
-Admin → **Commands** (`/admin/commands`, administrators only) lists every command of the loaded packs, grouped by pack. Each row says
-what the command opens, **what it does** (the one-line description of its data contract, the same text as the
-[command catalog](../guides/COMMAND_CATALOG.md)) and an example. The **Everyone** column turns a command on or off for everyone; a pack's
-row has a **Pack** switch that turns the whole pack on or off, as Admin → Packs does. The greyed role columns are where commands will
-be granted per role later; today only Everyone is used.
+Views → **Functions** (`/func`), or `FUNC <GO>` on the command line, lists every command **you can use**: the commands that are on, of the
+packs switched on for you, of the kinds your roles open. They are grouped by pack; each row says what the command opens, **what it does**
+(the one-line description of its data contract, the same text as the [command catalog](../guides/COMMAND_CATALOG.md)) and an example. A
+command an administrator turned off is not listed at all. The count reads *N commands you can use*.
 
-![Admin → Commands: the commands by pack, the Everyone column and greyed role columns; VAR is being turned off, and the side panel says
-everywhere it will be blocked](img/admin-commands-review.png)
+![Functions as a user: the commands that are on, by pack, with what each does and its example; no switches](img/functions/functions-user.png)
 
-**Find** (or `/`) narrows the rows to a command, kind, pack or word of the description; **Show** keeps only the commands that are on or
-off. **Version on each server** says which version of the switches each server of the cluster holds: *in step*, or *catching up* for
-a few seconds after a change.
+- **The command** (`TRD`) opens it with the pack's example (`TRD 1000015 <GO>`): the pack's own example command for it, else the mnemonic
+  with the example id its contract records. A command with no example opens its kind's search form instead (`FORM <pack> <kind>`), and the
+  Example column says *search form*.
+- **The pack's name** opens the pack's search form, exactly what `FORM <pack>` opens.
+- **Find** (or `/`) narrows the list: every word you type must appear in the command's code, title, description, kind, or its pack's name
+  or title. `FUNC <words>` opens the page with them typed: `FUNC exposure` (every command about exposure), `FUNC VAR`, `FUNC trading` (one
+  pack's commands). The filter is kept in the address (`/func?q=exposure`), so a reload or a shared link shows the same list. **Pack**
+  keeps one pack's commands.
+
+`FUNC` is a reserved command word, like `BI`, `RUPAKA` and `FORM`: no pack may define a mnemonic named `FUNC`, in any case. F1 or the `?`
+beside the title opens this page of help.
+
+## The administrator's view
+
+An administrator (someone with the `admin` role, the same rule that shows the Admin menu) sees everything above and more:
+
+- The commands that are **off** too, greyed, struck through, with an *off* chip, and never a link. **Show** keeps only the commands that are
+  on or off. The count reads *N commands · X on · Y off*.
+- The **Everyone** column turns a command on or off for everyone; a pack's row has a **Pack** switch that turns the whole pack on or off, as
+  Admin → Packs does. The greyed role columns are where commands will be granted per role later; today only Everyone is used.
+- **Undo** and **Review changes**, with the side panel and its reason (below).
+- **Cluster** (a section that opens): the version of the switches each server of the cluster holds (*in step*, or *catching up* for a few
+  seconds after a change) and the **History** of changes.
+
+![Functions as an administrator, filtered to one pack (FUNC market-risk): FRTB is off, struck through and not a link; the Everyone and
+Pack switches, the greyed role columns, Undo and Review changes](img/functions/functions-admin.png)
+
+The server alone decides who may change a switch: the switches' API refuses anyone who is not an administrator (`403`), whatever page or
+script asks. Admin → Commands in the Admin menu opens this page.
 
 ## What "not active" means
 
@@ -54,12 +82,14 @@ A command that is off answers the same way whatever asks for it:
 | A panel of another page that reads it | *Not active (turned off by an administrator)*, with nothing of its data |
 | BI datasets and models that read its kind, BI SQL, AI answers about a page | Refused, or the tables of the kind left out, exactly as for a kind the person may not open |
 
-![The not active page of a command that is off](img/command-not-active.png)
+![The not active page of a command that is off](img/functions/command-not-active.png)
 
 An open page follows a change at once: the server tells every console on its live channel, a page of a command just turned off is drawn
 again (as the not active page), and links to it stop being links.
 
 ## Review, reason and history
+
+![Functions as an administrator: PNL is being turned off, and the side panel says everywhere it will be blocked](img/functions/functions-review.png)
 
 Ticking a box only records a change: the page counts the changes not saved, **Undo** takes back the last one, and **Review N changes**
 (or **Turn FRTB off** for a single one) opens the side panel. It lists everything each change blocks: the typed command, its page and
@@ -68,7 +98,7 @@ kind (BI datasets and what is built on them, saved searches, monitors, alerts, s
 **reason**: it is kept with the change. **Apply** sends the whole batch; a pack another switched-on pack builds on cannot be switched off
 (switch that one off first).
 
-**History** lists every change, newest first: when, what, on or off, who, why and the server it was made on. Each change is also in the
+**History** (in **Cluster**) lists every change, newest first: when, what, on or off, who, why and the server it was made on. Each change is also in the
 audit log (`command-disabled`, `command-enabled`, `pack-disabled`, `pack-enabled`).
 
 ## Several servers
@@ -99,6 +129,9 @@ A server that kept pack states before (Admin → Packs, `drishti_pack_state` or 
 into the switches once, stamped with the time they were set.
 
 ## From a script
+
+What a user sees on Functions is `GET /api/v1/functions` ([API_GUIDE.md](../guides/API_GUIDE.md)): the commands the caller can use, by
+pack, with nothing of the switches; a personal API token reads it too.
 
 The admin API is `/api/v1/admin/commands` ([API_GUIDE.md](../guides/API_GUIDE.md)): `GET` the list, `POST` a batch
 `{"reason": "...", "changes": [{"scope": "command", "name": "FRTB", "on": false}]}`, `GET /history`, `GET /{code}/impact`. Like every

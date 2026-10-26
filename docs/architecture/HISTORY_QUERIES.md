@@ -124,7 +124,7 @@ The rule: **a range is the last one to four words, never the first word after th
 | `MYPICK 30` (alias for `TRD desk=rates`) | search | the same | an alias that expands to a search stays a search |
 | `MX-20000001 30` (bare id) | not read (two words), plain words | history | allowed only when `ReferenceCatalog.kindOf(id)` names the kind (the pack's `graph.id-patterns`), as for a bare id today |
 | `1000015 30` (bare, no id pattern) | plain words | plain words, which now understand it (section 15.5): an id that names one entity of one kind, then a range or a time phrase | no id pattern for `1000015` |
-| `MKT`, `RUPAKA …`, `FORM …` | pack overview, BI, form | the same | single words and reserved first words are handled before the command in `/go` |
+| `MKT`, `RUPAKA …`, `FORM …`, `FUNC …` | pack overview, BI, form, functions | the same | single words and reserved first words are handled before the command in `/go` |
 | `TRD 1000015 FROM 2026-09-01` | pick list | history from that date to the date box | `FROM` and `TO` are keywords only in the last four words and only followed by a date |
 | `TRD YTD` | opens trade `YTD` | the same | first word after the mnemonic |
 

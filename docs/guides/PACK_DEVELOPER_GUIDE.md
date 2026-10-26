@@ -1077,8 +1077,8 @@ in `tools/packgen/banking/risk_data.py` (netting sets, books, clearing accounts,
 
 ### Reserved command words
 
-The console owns three command words: `BI`, `RUPAKA` (its alias) and `FORM`. A pack may not define a mnemonic with any of those names, in any case: the pack loader
-refuses it (`pack 'x' defines the mnemonic 'BI', which is a reserved command word (BI, FORM, RUPAKA): choose another`) and `drishti.py pack check` fails the same way. No shipped pack uses them.
+The console owns four command words: `BI`, `RUPAKA` (its alias), `FORM` and `FUNC`. A pack may not define a mnemonic with any of those names, in any case: the pack loader
+refuses it (`pack 'x' defines the mnemonic 'BI', which is a reserved command word (BI, FORM, FUNC, RUPAKA): choose another`) and `drishti.py pack check` fails the same way. No shipped pack uses them.
 
 ### `form`: the search form of a kind
 
