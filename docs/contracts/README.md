@@ -254,6 +254,32 @@ engine answers.
   compared with another capture or with now.
 - **Official end-of-day captures:** after a date's inputs are complete, Drishti captures each hierarchy node's figures as the official
   record (from 2.8.0). That is the only stored copy of a computed figure, and it is a capture, not an input.
+- **Published official results (product owner, 2026-10-25).** So that other systems (reporting, regulatory feeds, a data warehouse) can
+  read yesterday's official numbers as a table, every measure also **publishes its official end-of-day captures** to a separate,
+  read-only results area of the lake, never mixed with the inputs:
+
+  ```
+  ${DRISHTI_DELTA_ROOT}
+  ├── risk/                                   inputs (section 2): engines read these
+  └── risk-results/                           published official results: engines never read these
+      ├── var-official/                       one Delta table per measure
+      ├── frtb-official/
+      └── ...
+  ```
+
+  - **One table per measure** (`<measure>-official`), one row per hierarchy node (both hierarchies) per business date: `BUSINESS_DATE`,
+    `HIERARCHY`, `NODE_ID`, `NODE_NAME`, `PARENT_ID`, `LEVEL`, the measure's headline figures (each contract's section 9 lists them),
+    `CAPTURE_ID` (the official capture it was written from), `RESULT_VERSION` (1, then 2, 3 … on a restatement), `INPUT_VERSIONS` (the
+    input tables' versions and batch ids, as JSON text), `COMPUTED_AT` (UTC), `CONTRACT_VERSION`.
+  - **Written by Drishti only**, right after the official capture of the date, as a Delta commit per date. A restated input date
+    produces a new official capture and appends its rows with the next `RESULT_VERSION`. Nothing is overwritten; the latest version of
+    a date is the row set with the highest `RESULT_VERSION`.
+  - **Never read back by an engine.** Engines compute from `risk/` only; a guard test fails the build when an engine's connector points
+    at `risk-results/`. This keeps a published result from ever becoming an input.
+  - **Kept 7 years**, like the inputs.
+  - **Readers:** any Delta reader with read access to that folder, or Drishti itself through a read-only connector for the published
+    history. Access is granted per folder by the storage, and the folder holds aggregate figures by node only (no trade or position rows),
+    so publishing does not widen who sees trades.
 
 ## 12. Entitlements, masking and audit
 

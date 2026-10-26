@@ -101,13 +101,19 @@ fields:
   link: news
 - name: NET_MTM
   type: amount
-  presence: required
+  presence: derived
   description: Net MTM
   example: 15036789
+  retiring-in: 2.10.0
+  note: computed by the counterparty's figures (CPTY:, net MtM from the trade valuations, PFE from EXP) from 2.10.0; removed from the stored record
+    then
 - name: PFE_PEAK
   type: amount
-  presence: required
+  presence: derived
   example: 145548971
+  retiring-in: 2.10.0
+  note: computed by the counterparty's figures (CPTY:, net MtM from the trade valuations, PFE from EXP) from 2.10.0; removed from the stored record
+    then
 - name: NETTING_SETS
   type: record list
   presence: required
@@ -282,8 +288,6 @@ validation:
   - UEN
   - ECONOMY
   - NEWS_ID
-  - NET_MTM
-  - PFE_PEAK
   - NETTING_SETS
   - KYC
   - GROUP
@@ -348,6 +352,8 @@ validation:
 notes:
 - 'Dated by the lake''s business_date partition: `drishti.py lake build` writes each test-data file''s day into it; the documents carry no date
   field of their own.'
+- 'Terms kept, figures computed from 2.10.0 (docs/contracts/NSET.md): the fields marked derived are computed by the counterparty''s figures (CPTY:,
+  net MtM from the trade valuations, PFE from EXP) and leave the stored record then.'
 review:
 - 'required inferred from 100% coverage in 66 documents (18 samples and 48 test-data documents (data/testdata/core/counterparty/snapshot-2026-07-08.jsonl.gz,
   data/testdata/core/counterparty/changes-2026-09-30.jsonl.gz)): confirm each required field is mandatory upstream, and each optional one may

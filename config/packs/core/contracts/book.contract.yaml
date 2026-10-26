@@ -59,23 +59,35 @@ fields:
   example: Commodities
 - name: TRADE_COUNT
   type: integer
-  presence: required
+  presence: derived
   description: Trades
   example: 28
+  retiring-in: 2.8.0
+  note: computed by the scope engine (counts, MtM and DV01 summed from the trades and their valuations) from 2.8.0; removed from the stored record
+    then
 - name: MTM
   type: amount
-  presence: required
+  presence: derived
   description: MTM
   example: 7760837
+  retiring-in: 2.8.0
+  note: computed by the scope engine (counts, MtM and DV01 summed from the trades and their valuations) from 2.8.0; removed from the stored record
+    then
 - name: DV01
   type: amount
-  presence: required
+  presence: derived
   description: DV01
   example: 0
+  retiring-in: 2.8.0
+  note: computed by the scope engine (counts, MtM and DV01 summed from the trades and their valuations) from 2.8.0; removed from the stored record
+    then
 - name: TOP_TRADES
   type: record list
-  presence: required
+  presence: derived
   description: 'Nested: see nested TOP_TRADES[]'
+  retiring-in: 2.8.0
+  note: computed by the scope engine (counts, MtM and DV01 summed from the trades and their valuations) from 2.8.0; removed from the stored record
+    then
 - name: DESK
   type: id
   presence: required
@@ -176,10 +188,6 @@ validation:
   - BOOK_ID
   - NAME
   - DESK_NAME
-  - TRADE_COUNT
-  - MTM
-  - DV01
-  - TOP_TRADES
   - DESK
   - ACCOUNTING_TREATMENT
   - REGULATORY_BOOK
@@ -231,6 +239,8 @@ validation:
 notes:
 - 'Dated by the lake''s business_date partition: `drishti.py lake build` writes each test-data file''s day into it; the documents carry no date
   field of their own.'
+- 'Terms kept, figures computed from 2.8.0 (docs/contracts/VAR.md): the fields marked derived are computed by the scope engine (counts, MtM and
+  DV01 summed from the trades and their valuations) and leave the stored record then.'
 review:
 - 'required inferred from 100% coverage in 90 documents (30 samples and 60 test-data documents (data/testdata/core/book/snapshot-2026-07-08.jsonl.gz,
   data/testdata/core/book/changes-2026-09-30.jsonl.gz)): confirm each required field is mandatory upstream, and each optional one may be empty.'

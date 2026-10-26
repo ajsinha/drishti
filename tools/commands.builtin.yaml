@@ -1,0 +1,50 @@
+# Project Drishti · Any data. Any domain. One grammar.
+#
+# Copyright (c) 2026 Ashutosh Sinha <ajsinha@gmail.com>.
+# All rights reserved.
+#
+# PROPRIETARY AND CONFIDENTIAL.
+#
+# This file is the confidential and proprietary property of Ashutosh Sinha.
+# Unauthorised copying, use, modification, distribution or disclosure of this
+# file, via any medium, is strictly prohibited except with the express prior
+# written permission of the copyright holder.
+#
+# See the LICENSE file in the root of this repository for the full terms.
+
+# The command line's own words and forms, which no pack defines (docs/guides/USER_GUIDE.md, "The command line"). Read by
+# tools/command_catalog.py for docs/guides/COMMAND_CATALOG.md; the pack mnemonics come from the packs and their contracts.
+
+forms:
+  - form: "<MNEMONIC> <id>"
+    example: TRD 1000015
+    does: Opens one entity, the kind the mnemonic names, as its page.
+  - form: "<MNEMONIC> <id> <range>"
+    example: TRD 1000015 30
+    does: "The entity over time: the last N business days (30), a span (3M, 2W, 1Y, YTD, MTD, QTD) or FROM date TO date; DIFF shows only what changed."
+  - form: "<MNEMONIC> <field>=<value> …"
+    example: TRD desk=rates
+    does: Searches the kind; a prefix (TRD MX-2*) gives a pick list.
+  - form: "<PACK CODE>"
+    example: MKT
+    does: Opens the pack's overview, what it holds and its commands.
+  - form: "<alias>"
+    example: MYBOOK
+    does: A word a user saved on My account → Aliases for a longer command; words after it are kept (MYBOOK 30).
+  - form: "<plain words>"
+    example: live trades over 5m
+    does: Anything that is not a command but reads as words is offered as a question.
+
+words:
+  - word: BI
+    example: BI CATALOGUE
+    does: "The BI home. After it: WORKSPACE(S), CATALOGUE (CATALOG), RUNS (RUN), SETTINGS, or a report or board by name."
+  - word: RUPAKA
+    example: RUPAKA
+    does: The older name of BI; everything that works after BI works after it.
+  - word: FORM
+    example: FORM trading trade
+    does: The forms home; FORM <pack> opens the pack's search form, FORM <pack> <kind> its form for that kind.
+  - word: VAR
+    example: VAR DESK DESK-RATES
+    does: "The VaR explorer. After it: BANK, LE, DIV, DESK, BOOK, NODE, POS, TRD (TRADE), PORT (PORTFOLIO), BASKET, WHERE, SCOPE (a saved basket, a portfolio or scope text) or CAPTURE <id>."

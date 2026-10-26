@@ -952,8 +952,27 @@ dataVersion}` where present; `b=now` recomputes the capture's scope on the newes
 
 **Official end-of-day captures (planned).** When a date's inputs are complete, Drishti captures every node of every hierarchy as the
 **official** record: the same capture document with `official: true`, `owner` the system, the input versions and batch ids, read by the
-history (§6.5, mode `official`) in place of `var-node`. Kept as long as the date's data (open question 10). Captures remain the only
-stored copy of a computed figure ([README.md section 11](README.md#11-what-drishti-answers-computed-kinds-the-api-captures)).
+history (§6.5, mode `official`) in place of `var-node`. Kept 7 years, like the vectors (open question 10, decided). Captures remain the
+only stored copy of a computed figure ([README.md section 11](README.md#11-what-drishti-answers-computed-kinds-the-api-captures)).
+
+**Published official results (planned, decided 2026-10-25).** Each official capture is also published to
+`${DRISHTI_DELTA_ROOT}/risk-results/var-official/` for other systems ([README.md section 11](README.md#11-what-drishti-answers-computed-kinds-the-api-captures)):
+one row per node of `MGMT` and `LEGAL` per business date, with the shared columns (`BUSINESS_DATE`, `HIERARCHY`, `NODE_ID`, `NODE_NAME`,
+`PARENT_ID`, `LEVEL`, `CAPTURE_ID`, `RESULT_VERSION`, `INPUT_VERSIONS`, `COMPUTED_AT`, `CONTRACT_VERSION`) and VaR's figures:
+
+| Column | Type | Meaning |
+|---|---|---|
+| `VAR` | DOUBLE | VaR at `CONFIDENCE`, USD, positive |
+| `ES` | DOUBLE | expected shortfall at `ES_CONFIDENCE`, USD, positive |
+| `CONFIDENCE`, `ES_CONFIDENCE` | DOUBLE | `0.99`, `0.975` (`drishti.var.*`) |
+| `SCENARIO_SET_ID` | STRING | `HS-509` |
+| `STANDALONE_SUM`, `DIVERSIFICATION` | DOUBLE | the sum of the children's VaR, and that sum minus `VAR` |
+| `HYPO_PNL` | DOUBLE | the node's hypothetical P&L for the date, USD (the backtest's input) |
+| `LIMIT`, `LIMIT_USE` | DOUBLE | the node's VaR limit from the hierarchy, and `VAR / LIMIT` |
+| `TRADE_COUNT`, `POSITION_COUNT` | BIGINT | the members counted |
+| `EXCEPTIONS_250`, `TRAFFIC_LIGHT` | BIGINT, STRING | backtest exceptions over 250 days, and the Basel zone |
+
+No vectors and no trade or position rows are published; the capture itself keeps the node's vector for audit.
 
 ### 9.7 The computed kinds (planned)
 
@@ -1306,6 +1325,7 @@ incremental VaR is 0) but raises ES from 6.5 to 8.5: the short trade hedged the 
 |---|---|---|
 | 1.0 | 2026-10-25 | First version: waves V0 to V3 as built, checked against the code and the test data; the rest of 2.8.0 as the planned contract |
 | 1.1 | 2026-10-25 | Product owner's decisions: the data-load signal reloads the engine automatically; vectors kept 7 years; `LE:` is the bank's legal entity (the trade's booking `LEGAL_ENTITY`) |
+| 1.2 | 2026-10-25 | Official end-of-day captures published to `risk-results/var-official` for other systems (product owner); official captures kept 7 years |
 
 ---
 
