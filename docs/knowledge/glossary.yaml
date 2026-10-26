@@ -62,6 +62,16 @@ terms:
     domain: market-risk
     meaning: "One trade's P&L under each of the 509 scenario days, priced upstream by the risk batch. Drishti adds vectors element by element; every VaR figure is read from the sum."
     command: PNLV PV-MX-20000274-HS-509
+  - term: Full revaluation
+    synonyms: [revaluation, sensitivities based pnl, taylor expansion, sensitivity-based revaluation]
+    domain: market-risk
+    meaning: "Repricing each trade under each scenario to get its P&L, rather than approximating the P&L from sensitivities (delta, gamma, vega). The scenario set says which the batch used."
+    command: SSET HS-509
+  - term: Scenario shift
+    synonyms: [absolute shift, relative shift, shift]
+    domain: market-risk
+    meaning: "How a past day's move is applied to today's market: absolute (add the 12 bp the rate moved) or relative (take off the 3% the price fell). Scenario FX is shifted too."
+    command: SSET HS-509
   - term: Confidence level
     synonyms: [confidence, alpha, quantile]
     domain: market-risk
