@@ -18,11 +18,14 @@
 The data contract: [docs/contracts/VAR.md](../contracts/VAR.md) (every input column, structure and answer, checked against the code).
 
 Status: **partly built (2.8.0, unreleased).** Waves **V0 to V3 are built** (the data, the engine, the VaR explorer, history and
-backtesting, baskets, captures, entitlements and audit): what was built, how it differs from this design and the decisions taken on
-its open questions are in [section 18](#18-as-built-in-280-waves-v0-to-v3); the user guide is [VAR_EXPLORER.md](../guides/VAR_EXPLORER.md).
-Waves V4 to V6 (what-if pricing, intraday recomputes, the sharded store across Drishti\*net) are **planned**: what-if pricing through
-QLRisk only if its API is declared stable in time (otherwise 2.8.x). Elsewhere in this design, a part section 18 does not list as
-built (reactive connector, compute workers, Python package) is **planned (2.8.0)**. Related: [REACTIVE_CONNECTORS.md](REACTIVE_CONNECTORS.md) (the connector type
+backtesting, baskets, captures, entitlements and audit), and so are *VaR complete* parts 1 and 2 (retired stored kinds, derived positions,
+official captures; the tiered memory with memory-mapped hot files, the benchmark, the computed kinds through reactive connectors with a
+Python VaR engine for what-if and the stressed window, `drishti.py var`): what was built, how it differs from this design and the
+decisions taken on its open questions are in [section 18](#18-as-built-in-280-waves-v0-to-v3); the user guide is
+[VAR_GUIDE.md](../guides/VAR_GUIDE.md) (the screen: [VAR_EXPLORER.md](../guides/VAR_EXPLORER.md)). Still **planned**: what-if *pricing*
+through QLRisk (only when its API is declared stable), intraday recomputes (V5) and the sharded store across Drishti\*net (V6: the
+mechanism is not built, [VAR.md section 7.4](../contracts/VAR.md#74-sharding-across-drishtinet-planned-not-built)). Elsewhere in this
+design, a part section 18 does not list as built is **planned**. Related: [REACTIVE_CONNECTORS.md](REACTIVE_CONNECTORS.md) (the connector type
 the engine is), [PYTHON_COMPUTE.md](PYTHON_COMPUTE.md) (where its code runs and how its libraries are approved),
 [WRITE_BACK.md](WRITE_BACK.md) (a booked or amended trade recomputes the VaR it affects), [DEMO_DATA.md](../connectors/DEMO_DATA.md)
 (the data pattern every pack follows). **The data model is in a companion document, [VAR_DATA_MODEL.md](VAR_DATA_MODEL.md):** positions
@@ -453,6 +456,30 @@ held in memory** (4.07 GB of vectors, never written to disk; `-Ddrishti.var.scal
 extrapolation to 2 to 5 million positions assumes summing stays memory-bound (it scales with the rows read) and four servers share the
 rows, as section 13.3 and VAR_DATA_MODEL.md section 14.2 plan.
 
+**The tiered store (2.8.0, *VaR complete* part 2).** Each loaded date is a memory-mapped float32 hot file
+([VAR.md section 7.3](../contracts/VAR.md#73-the-tiered-memory-and-the-hot-file-as-built-280)). The opt-in benchmark
+`drishti-compute/src/test/java/com/ash/drishti/compute/var/VarTierBenchmark.java` was **measured at 100,000 trades × 5 dates** on this
+workstation (a million-trade run once took it down) and extrapolated to the planned **1 M trades × 50 dates**:
+
+| Measure | 100,000 trades × 5 dates (measured) | 1 M trades × 50 dates (extrapolated) |
+|---|---|---|
+| hot file per date | 237.7 MB | about 2.25 GB a date, about 113 GB for 50 dates (lake: 4.07 GB of float64 a date) |
+| first load of a date (spill, sort, aggregates, hot file) | 0.8 to 1.2 s | about 9 to 12 s a date after reading the lake; 8 to 10 min for 50 |
+| reopening a history date (map its file) | 23 ms | about 0.25 s |
+| a node's VaR and ES | 0.48 ms | 0.5 ms |
+| the bank minus one desk | 1.1 ms | about 2 ms |
+| the whole bank from its float32 rows | 3.4 ms (about 60 GB/s) | about 35 ms resident; 0.7 s on a first touch from NVMe |
+| a basket of 50,000 scattered positions (sum and measures) | 2.6 ms | about 3 ms (+ about 45 ms to resolve the ids) |
+| a drill to one position's trades | 0.02 to 0.03 ms | the same |
+| heap of 2 open dates | 161 MB | about 1.6 GB (the heap tier would hold 8.1 GB of vectors more) |
+
+The full run, on a server with about 130 GB of free local disk: `./mvnw -o test -pl drishti-compute -Dtest=VarTierBenchmark
+-Ddrishti.var.tier.trades=1000000 -Ddrishti.var.tier.dates=50 -Ddrishti.var.tier.dir=/local/var-bench -DargLine=-Xmx16g`. Precision of the
+float32 copy: a node's figures are the lake's to the bit; any other scope within 2⁻²⁴ × the date's gross P&L (the test data: exact; scaled
+to a bank of billions: 5.86 × 10⁻⁸ of the VaR; VAR.md section 7.3).
+
+**The heap tier** (V1 to V3, `drishti.var.tier.mode: heap`):
+
 | Operation | Target (p95, warm) | Measured (2.8.0, one workstation) | Extrapolated |
 |---|---|---|---|
 | VaR, ES and headline of a precomputed node | 100 ms | under 1 ms from the node's aggregate; 2.6 ms for *the bank minus one desk* (the planner's aggregates) | independent of the bank's size |
@@ -486,8 +513,10 @@ Moving gigabytes of vectors from the lake into a Python worker for every query w
   positions it must show) and computes measures, contributions and tests.
 - **Pricing** (what-if, intraday) runs in compute workers and returns vectors to the intraday layer.
 
-Memory for the hot cache: 8.1 GB per day for the reference bank; keeping today and yesterday hot (most queries) is about 16 GB across
-the cluster; older dates are read from the lake when asked.
+Memory for the hot cache: 8.1 GB per day for the reference bank in float64; keeping today and yesterday hot (most queries) is about 16
+GB across the cluster; older dates are read from the lake when asked. **As built (2.8.0):** the hot cache is a memory-mapped float32 file
+per date (half the bytes, none of them on the heap; a history date opens from its file in a fraction of a second), and the server holds
+whole dates: the sharding by node is not built (VAR.md section 7.4).
 
 ### 13.4 The overnight precomputation
 
@@ -670,10 +699,34 @@ The contract as built is [VAR.md](../contracts/VAR.md) (version 1.3); this secti
 | Retention | the lake writers set 7-year log and deleted-file retention on `risk` and `risk-results` tables; `lake maintain` never vacuums them below it |
 | Test data | every live trade valued (9,572; 7,984 derived positions), synthetic security ids, 28 portfolio definitions (`tools/packgen/var/portfolios.py`) |
 
-Not in part 1: memory tiering and the hot file (VAR.md section 7.3), the 1 M-trade × 50-date benchmark, the Python engine and
-reactive connector, the VaR guide's rewrite.
+Not in part 1 (built in part 2, section 18.7): memory tiering and the hot file (VAR.md section 7.3), the 1 M-trade × 50-date
+benchmark, the Python engine and reactive connector, the VaR guide (VAR_GUIDE.md).
 
 **Tests added:** `ScopeAndRuleTest` and `VarBookTest` (derived positions, ids in any case, `LE:`, `CPTY:`, duplicates), `VarApiTest`
 (official captures, publishing and restatement, the load signal, page figures, a date that is not one run, duplicates), `ViewPipelineTest`
 (augmenters), `LakeWriterTest` (table properties), `tools/lake/test_retention.py`, `tools/test_contracts.py` (`TheRetiredStoredVersions`),
 `tools/packgen/var/test_var_data.py`, `drishti-console/tests/test_var_routes.py` (old ids).
+
+### 18.7 VaR complete, part 2 (2.8.0)
+
+The contract as built is [VAR.md](../contracts/VAR.md) version 1.4.
+
+| Change | As built |
+|---|---|
+| Tiered memory | `drishti.var.tier.mode: mapped` (default): the load streams the lake's rows to a spill file (`RowSpill`, float64, lake order), sorts the trades, sums the book and node aggregates in float64 through a permuted view, writes the date's hot file (`VarHotFile`, format 1: float32 position rows in hierarchy order, the trades of fungible positions, float64 aggregates, columns, ids, runs, nodes, the load's record, a CRC32C per section) and maps it (`MappedMatrix`, read through `GroupedVectors`); the heap keeps aggregates, columns and links. `mode: heap` keeps the V1 store |
+| Disk tier | `VarTier`: one file per date named by the digest of its inputs under `<data folder>/var/hot/<date>/`; a date not open is mapped again from its file (no lake read); `hot-dates` open, `disk-dates` (60) on disk, stale files deleted, evicted dates unmapped after `close-grace-seconds`, everything cleaned at shutdown and start (`keep-on-shutdown`) |
+| Safe unmapping | a reader guard per matrix: unmapped only when no reader is inside; a late reader is told *ask again*, never a crash (shared `Arena` on Java 22+, the cleaner on 21) |
+| Budget | `memory-budget-mb` measures the float32 copy when mapped (4 bytes a value) |
+| Answers | `provenance.tier`; `GET /status` has `tier` (mode, mapping method, files, open dates, disk bytes, builds and reopenings) and per loaded date its tier, hot file and bytes |
+| Benchmark | `VarTierBenchmark` (opt-in): measured at 100,000 trades × 5 dates, extrapolated to 1 M × 50 (section 13.2) |
+| Computed kinds | `var-result` (`VRES`, connector `var-engine`, Java engine `VarResultEngine` over the service, as the viewer) and `var-whatif` (`VWIF`, connector `var-whatif`, Python engine `drishti_compute.var.whatif` in the compute pool `var`: hypothetical trades from a private sandbox, incremental and component VaR, the stressed window); contracts of class `computed`; the market-risk pack's generator (`tools/packgen/banking/var_kinds.py`) |
+| Command line | `drishti.py var show|parts|path|history|tree|status|capture|captures|compare|basket|baskets|official|reload|whatif` (`tools/varcli.py`) |
+| Not built | the sharded store (VAR.md section 7.4: no mechanism assigns a date's ranges to Drishti\*net members); pricing a what-if trade (QLRisk) |
+
+**Tests added:** `MappedVectorsTest` (float32 and float64 matrices across mappings, parallel sums equal to the heap, grouped rows against
+brute force, the permuted view, the spill and its budget, readers racing a close), `VarHotFileTest` (heap and mapped dates: the same
+trades, positions, nodes and float64 aggregates to the bit; every scope within the float32 bound; a reopened file answers the same; a
+damaged section refused; closing unmaps and deletes), `VarTestDataPrecisionTest` (the committed test data: exact; scaled × 1,000.37: within
+5.86 × 10⁻⁸ of the VaR), `VarApiTest` (the date's hot file under the data folder, reopened after a reload, `provenance.tier`, no hidden
+files; `var-result` read as two viewers, refusals), `drishti-compute/src/test/python/test_var_engine.py` (the worked example's numbers,
+the what-if, the stressed window, refusals), `tools/test_varcli.py`.

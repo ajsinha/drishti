@@ -326,6 +326,9 @@ files (`application-files.yaml`, `application-postgres.yaml`, …) and packs hav
 | `DRISHTI_VAR_ENABLED` | `drishti.var.enabled` | `true` | Run the VaR engine (`/api/v1/var`, the VaR explorer). |
 | `DRISHTI_VAR_THREADS` | `drishti.var.threads` | `0` | Cores the VaR engine's vector sums use (`0`: every core). |
 | `DRISHTI_VAR_MEMORY_MB` | `drishti.var.memory-budget-mb` | `0` | Most memory one date's P&L vectors take (`0`: a quarter of the heap). |
+| `DRISHTI_VAR_TIER` | `drishti.var.tier.mode` | `mapped` | Where a loaded date's vectors live: `mapped` (a memory-mapped float32 hot file per date) or `heap` (float64 on the heap). |
+| `DRISHTI_VAR_HOT_DIR` | `drishti.var.tier.dir` | `./data/var/hot` | The VaR hot files' folder (one folder per business date); under the data folder unless set. |
+| `DRISHTI_COMPUTE_VAR_WORKERS` | `compute.pools.var.workers.max` (`config/compute/compute.yaml`) | `4` | Python workers of the compute pool `var` (the Python VaR engine: what-if and the stressed window) on this node. |
 | `DRISHTI_VAR_OFFICIAL` | `drishti.var.official.enabled` | `true` | Capture every node officially at the end of each loaded date, and publish it to `risk-results/var-official`. |
 | `DRISHTI_DELTA_ROOT` | `drishti.var.official.root` | `./data/delta` | The Delta root the official VaR results are published under (`risk-results/var-official`); the packs' Delta connectors use the same variable. |
 | `DRISHTI_LAYOUTS_ENABLED` | `drishti.layouts.enabled` | `true` | Allow personal layouts. |
@@ -1348,8 +1351,8 @@ Which views offer Calc is a pack's choice (`python: { enabled: true }` in `pack.
 
 ### `drishti.var` — the VaR engine
 
-The VaR engine (the data contract [VAR.md](../contracts/VAR.md), [VAR_ENGINE.md](../architecture/VAR_ENGINE.md), the explorer
-[VAR_EXPLORER.md](../guides/VAR_EXPLORER.md)) computes VaR, expected shortfall, contributions, history and backtests for any scope from
+The VaR engine (the data contract [VAR.md](../contracts/VAR.md), [VAR_ENGINE.md](../architecture/VAR_ENGINE.md), the user guide
+[VAR_GUIDE.md](../guides/VAR_GUIDE.md), the explorer [VAR_EXPLORER.md](../guides/VAR_EXPLORER.md)) computes VaR, expected shortfall, contributions, history and backtests for any scope from
 the trades' stored 509-day P&L vectors, as the caller, when asked. Nothing it answers is stored except captures: the ones people make,
 and the official end-of-day captures of every node, which it also publishes to `risk-results/var-official` for other systems.
 Positions are derived from the trades when a date loads, by the rules of a loaded pack's `positions:` section (the market-risk pack's),
@@ -1363,8 +1366,13 @@ else by `drishti.var.positions`.
 | `rank-rule` | `kth-worst` | `kth-worst` (k = ceil(N (1 − confidence)): the 6th worst of 509) or `interpolated`. |
 | `component-window` | `5` | Component VaR averages this many scenarios ranked around the VaR scenario (k−2 to k+2). |
 | `threads` | `0` (`DRISHTI_VAR_THREADS`) | Cores the vector sums use; `0` is every core. |
-| `memory-budget-mb` | `0` (`DRISHTI_VAR_MEMORY_MB`) | Most memory one date's vectors take; `0` is a quarter of the heap. A date over it is refused whole (`503 DRS-5204`). |
-| `hot-dates` | `2` | Business dates kept loaded (the newest). |
+| `memory-budget-mb` | `0` (`DRISHTI_VAR_MEMORY_MB`) | Most memory one date's vectors take; `0` is a quarter of the heap. Measured on the heap tier at 8 bytes a value, on the mapped tier at 4 (the float32 hot copy). A date over it is refused whole (`503 DRS-5204`). |
+| `hot-dates` | `2` | Business dates kept loaded (open: mapped, or on the heap), the newest first; the date just used stays. |
+| `tier.mode` | `mapped` (`DRISHTI_VAR_TIER`) | `mapped`: each loaded date is written once to a local **hot file** (float32 position rows in hierarchy order, the trades of fungible positions, the aggregates in float64, columns and links) and memory-mapped; the heap keeps only the aggregates, columns and links, and a history date opens again from its file without reading the lake ([VAR.md section 7.3](../contracts/VAR.md#73-the-tiered-memory-and-the-hot-file-as-built-280)). `heap`: every trade's vector in float64 on the heap. |
+| `tier.dir` | `${DRISHTI_VAR_HOT_DIR:${drishti.data.dir:./data}/var/hot}` | The hot files, one folder per business date (`inputs-<digest>.vhot`; the load's `spill-*.f64` and `build-*.part` while it runs). Local disk: about 2.3 GB a date per million trades. |
+| `tier.disk-dates` | `60` | Hot files kept on disk; the least recently used beyond are deleted (never an open date's). |
+| `tier.keep-on-shutdown` | `false` | `false`: the hot files are deleted when the server stops, and any a stopped server left are deleted at start; `true`: kept, and reused while their inputs' digest matches. |
+| `tier.close-grace-seconds` | `60` | How long an evicted date stays mapped for the requests still reading it before it is unmapped. |
 | `history-days` | `250` | The history and backtest window, in business days. |
 | `component-scale-to-var` | `true` | Components are scaled to add up to the VaR exactly (`false`: to the smoothed VaR). |
 | `parallel-rows` | `4096` | The fewest rows a sum splits across threads. |

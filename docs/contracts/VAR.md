@@ -6,8 +6,9 @@
 
 # VaR: the data contract
 
-*Version 1.3 · 2026-10-25 · Shared rules: [README.md](README.md) · Design: [VAR_ENGINE.md](../architecture/VAR_ENGINE.md),
-[VAR_DATA_MODEL.md](../architecture/VAR_DATA_MODEL.md) · User guide: [VAR_EXPLORER.md](../guides/VAR_EXPLORER.md)*
+*Version 1.4 · 2026-10-26 · Shared rules: [README.md](README.md) · Design: [VAR_ENGINE.md](../architecture/VAR_ENGINE.md),
+[VAR_DATA_MODEL.md](../architecture/VAR_DATA_MODEL.md) · User guide: [VAR_GUIDE.md](../guides/VAR_GUIDE.md) (the screen:
+[VAR_EXPLORER.md](../guides/VAR_EXPLORER.md))*
 
 This is the data contract of Drishti's VaR engine: what an upstream risk batch delivers, what Drishti builds from it, and what Drishti
 answers. Every column, type, key and formula below was checked against the code and the committed test data on 2026-10-25. Where the
@@ -21,7 +22,9 @@ risk lake, keys, types, dates, signs, vectors, delivery, validation, answers, en
 `com.ash.drishti.compute.vector` and `com.ash.drishti.compute.var`); `drishti-server` (package `com.ash.drishti.server.var`); the Delta
 plugin's vector reader (`DeltaTable.vectors`, `DeltaSourcePlugin.vectorColumns`); `tools/lake/stage.py` and `tools/lake/writers.py`;
 `drishti.var` in `drishti-server/src/main/resources/application.yaml`; the market-risk pack's `positions:` section. Rechecked for version
-1.3 (the build "VaR complete, part 1", 2026-10-25).
+1.3 (the build "VaR complete, part 1", 2026-10-25) and for version 1.4 (the build "VaR complete, part 2", 2026-10-26: the tiered memory,
+`VarHotFile`, `MappedMatrix`, `VarTier`, the benchmark `VarTierBenchmark`, the computed kinds `var-result` and `var-whatif`,
+`drishti_compute.var`, `drishti.py var`).
 
 ## Contents
 
@@ -52,11 +55,14 @@ one P&L vector per trade (509 scenario P&Ls), never stored except as a capture.
 **Commands and pages.** `VAR <word> <id> <GO>` opens the VaR explorer at a scope (`VAR DESK RATES <GO>`, `VAR BANK <GO>`,
 `VAR CAPTURE CAP-20260930-1 <GO>`); `POS` and `PORT` open the position and portfolio pages; the API is `/api/v1/var`.
 
-**Release and status.** 2.8.0, unreleased. Waves V0 to V3 and the build *VaR complete, part 1* (2026-10-25) are **AS BUILT** and
-tested: the stored `var` and `var-node` kinds are retired, no input or fundamental kind carries a VaR figure, positions are derived by
-Drishti, the test data holds every live trade, official end-of-day captures are taken and published, the data-load signal reloads the
-engine, the risk lake keeps 7 years, and the gaps of section 10 are closed. What is still **PLANNED** is marked so; the product owner
-approved it on 2026-10-25 (names may still change; each change is recorded in [section 16](#16-open-questions-and-the-change-table)).
+**Release and status.** 2.8.0, unreleased. Waves V0 to V3 and the builds *VaR complete, part 1* (2026-10-25) and *part 2*
+(2026-10-26) are **AS BUILT** and tested: the stored `var` and `var-node` kinds are retired, no input or fundamental kind carries a VaR
+figure, positions are derived by Drishti, the test data holds every live trade, official end-of-day captures are taken and published,
+the data-load signal reloads the engine, the risk lake keeps 7 years, the gaps of section 10 are closed (part 1); each loaded date is a
+memory-mapped float32 hot file with the aggregates in float64, history dates open from their file, the benchmark is measured and
+extrapolated, and VaR is also served as the computed kinds `var-result` (Java) and `var-whatif` (Python) through reactive connectors
+(part 2). What is still **PLANNED** is marked so; the product owner approved it on 2026-10-25 (names may still change; each change is
+recorded in [section 16](#16-open-questions-and-the-change-table)).
 
 | Part | Status | Where |
 |---|---|---|
@@ -75,9 +81,13 @@ approved it on 2026-10-25 (names may still change; each change is recorded in [s
 | 7 years of vectors and their time travel (Delta log and removed files; lake maintenance never goes below) | AS BUILT | §3.1 |
 | The full trade set (9,572 live trades) and 28 portfolios in the test data | AS BUILT | §13 |
 | An optional "risk position" grouping for viewing (book × product × currency × underlying × maturity quarter) | PLANNED | §3.7 |
-| Tiered memory: float32 hot copy in memory-mapped per-date local files sorted by hierarchy, sums in float64, Delta stays float64, history dates opened lazily, trade vectors read only on a drill or a trade basket, sharded across nodes; benchmark 1 M trades × 50 dates | PLANNED | §7.3, §12.2 |
+| Tiered memory: each loaded date a memory-mapped local hot file (float32 position rows in hierarchy order, the trades of fungible positions, float64 aggregates; Delta stays float64), the heap holding aggregates, columns and links; history dates opened lazily from their file; rebuilt when the inputs change; cleaned on eviction and shutdown | AS BUILT | §7.3 |
+| The benchmark 1 M trades × 50 dates (`VarTierBenchmark`, opt-in): measured at 100,000 trades × 5 dates, extrapolated | AS BUILT (measured locally; the full run is for a server) | §12.2 |
+| Sharding the hot store across Drishti*net nodes | PLANNED (the mechanism is not built: §7.4) | §7.4 |
 | The common risk lake (domain `risk`, one connector `risk-store` for every risk pack) | PLANNED (VaR's tables already there) | §3.1 |
-| A Python engine and a reactive connector beside the Java engine (Java keeps the additive aggregation; Python does what-if and heavy work); the computed kinds | PLANNED | §6.6, §9.7 |
+| The computed kinds `var-result` (`VRES`, the Java engine through the reactive connector `var-engine`) and `var-whatif` (`VWIF`, the Python VaR engine in the compute pool `var` through `var-whatif`: hypothetical trades from a private sandbox, the stressed window) | AS BUILT | §6.6, §9.7 |
+| The command line `drishti.py var` (show, parts, path, history, tree, status, captures, baskets, official, reload, whatif) | AS BUILT | §9.1 |
+| What-if pricing of amended or new trades over the scenarios (QLRisk) | PLANNED (parked until QLRisk's API is stable; a what-if trade's vector is supplied) | §6.6 |
 | Scope words `GROUP:` and `NSET:` | PARKED (product owner, 2026-10-25: fundamentals and VaR only) | §8.5 |
 
 ## 2. The measure in one page
@@ -447,7 +457,7 @@ Bound by `VarProperties` (`@ConfigurationProperties("drishti.var")`); `GET /api/
 | `drishti.var.component-scale-to-var` | `true` | `true` | scale components to add up to VaR (else to the smoothed VaR) |
 | `drishti.var.threads` | `${DRISHTI_VAR_THREADS:0}` | every core (0 or less) | the sum pool's threads |
 | `drishti.var.parallel-rows` | `4096` | 4096 | fewest rows a sum splits across threads |
-| `drishti.var.memory-budget-mb` | `${DRISHTI_VAR_MEMORY_MB:0}` | a quarter of the JVM's max heap (0 or less) | most bytes of vectors **one date** may hold (§7.2); over it the date answers `503 DRS-5204` |
+| `drishti.var.memory-budget-mb` | `${DRISHTI_VAR_MEMORY_MB:0}` | a quarter of the JVM's max heap (0 or less) | most bytes of vectors **one date** may hold (§7.2): float64 rows on the heap (8 bytes a value), or the float32 hot copy when mapped (4 bytes a value); over it the date answers `503 DRS-5204` |
 | `drishti.var.rows-per-chunk` | `65536` | 65,536 | rows per `double[]` chunk of the vector store |
 | `drishti.var.hot-dates` | `2` | 2 | business dates kept loaded |
 | `drishti.var.history-days` | `250` | 250 (1 or less) | history and backtest window |
@@ -458,6 +468,11 @@ Bound by `VarProperties` (`@ConfigurationProperties("drishti.var")`); `GET /api/
 | `drishti.var.access` | `{}` | no restriction | per role and node: `positions` or `aggregate` (§11) |
 | `drishti.var.positions.live-statuses`, `.rules` | `[NEW, VALIDATED, AMENDED]`, `[]` | the same | the position rules when no loaded pack has a `positions:` section (§3.7) |
 | `drishti.var.official.enabled`, `.publish`, `.root`, `.retention-years`, `.on-start` | `${DRISHTI_VAR_OFFICIAL:true}`, `true`, `${DRISHTI_DELTA_ROOT:…/delta}`, `7`, `true` | the same | the official end-of-day captures and their published results (§9.6) |
+| `drishti.var.tier.mode` | `${DRISHTI_VAR_TIER:mapped}` | `mapped` (anything but `heap`) | `mapped`: each loaded date a memory-mapped hot file (§7.3); `heap`: float64 rows on the heap (as before 2.8.0) |
+| `drishti.var.tier.dir` | `${DRISHTI_VAR_HOT_DIR:${drishti.data.dir:./data}/var/hot}` | `<data folder>/var/hot` | the hot files, one folder per business date |
+| `drishti.var.tier.disk-dates` | `60` | 60 (below 1) | hot files kept on disk; the least recently used beyond it are deleted |
+| `drishti.var.tier.keep-on-shutdown` | `false` | `false` | keep the hot files when the server stops (else they are deleted then, and any left over at start) |
+| `drishti.var.tier.close-grace-seconds` | `60` | 60 (below 0) | how long an evicted date stays mapped for the requests still reading it |
 
 ### 6.2 VaR
 
@@ -532,24 +547,36 @@ screens show the light with its days, and it is not a regulatory zone before 250
 (`HYPO_PNL`) is the node's P&L under the newest scenario day of its date's set (the move of the business day before, applied to the
 date's members): a bank delivering a hypothetical P&L table of its own replaces it (planned).
 
-### 6.6 Where it runs, and the Python engine (planned)
+### 6.6 Where it runs: the Java engine and the Python engine (AS BUILT, 2.8.0)
 
-**As built:** in the server's JVM (`drishti-compute`, `drishti-server`): additions of stored vectors and a sort of N numbers per answer,
-on a bounded pool. No Python on the path.
+**The Java engine** (the server's JVM: `drishti-compute`, `drishti-server`) keeps everything that adds: resolving a scope, summing
+vectors over the hot store, the node aggregates, the explorer's answers, the API, captures and the official records. Additions of stored
+vectors and a sort of N numbers per answer, on a bounded pool; no Python on that path.
 
-**Planned (2.8.0):** a **Python VaR engine** and a **reactive connector** beside the Java engine. Java keeps the additive aggregation
-(resolving a scope, summing vectors, the node aggregates, the hot store); Python does what does not add: what-if pricing of trades over
-the scenarios (through the compute workers and, when its API is stable, QLRisk), heavy analytics (methods beyond equal-weight
-historical, stressed sets, ES backtests), and the computed kinds of §9.7. The boundary contract:
+**The Python VaR engine** (`drishti-compute/src/main/python/drishti_compute/var`: `measures.py` with the same rules as `VarMath` and
+`VarCalc`, and the engine `whatif.py`) runs in the compute workers, pool `var` of `config/compute/compute.yaml` (standard library only,
+so no environment to approve), behind the reactive connector `var-whatif` (§9.7). It receives only the few vectors it needs and does
+what does not add: a scope's VaR **before and after hypothetical trades** (each with its vector, priced elsewhere, scaled by a factor),
+each trade's incremental VaR in the order listed and alone, their component VaR and ES in the scope after, and the **stressed window**
+(the largest VaR over every run of `stress-window` consecutive scenario days, a stressed period chosen from the scenario set the batch
+delivered). The boundary contract as built:
 
 | From Java to Python | From Python to Java |
 |---|---|
-| the scope's canonical text, business date, scenario set id and dates, data version, the scope's vector and up to `max-parts` part vectors as Arrow (`List<float64>`, length N), the settings of §6.1 | measures and decompositions with the same field names as §9 |
-| for what-if: the trades to price (ids or terms), the scenario set | one vector of N float64 per trade, joining the intraday layer as a trade vector |
+| the scope's `var-result` read as the viewer (an Arrow table: `PNL` as a fixed-size `float64` vector of N, `VAR`, `ES`, `CONFIDENCE`, `ES_CONFIDENCE`, `LIMIT`, `CANONICAL`, `BUSINESS_DATE`; nested records are left out) | one row with the measures (§9.7, `var-whatif`), and the tables `items` and `pnl` |
+| the person's sandbox: one item per hypothetical trade, `PNL` (N numbers), `FACTOR`, `LABEL` | |
+
+**Not built (parked):** pricing an amended or new trade over the scenarios (QLRisk, when its API is stable): a what-if trade's vector is
+supplied in the sandbox today; methods beyond equal-weight historical (age-weighted, filtered), a stressed scenario set (`SVAR-250`,
+open question 6), ES backtests.
 
 ## 7. What Drishti builds
 
-### 7.1 As built: one business date in memory (`VarBook`)
+### 7.1 As built: one business date (`VarBook`)
+
+The structures below are those of every loaded date. Where its **vectors** live is the tier (§7.3): in the server as shipped
+(`drishti.var.tier.mode: mapped`) the trade rows are not on the heap but in the date's memory-mapped hot file, served position by
+position; with `mode: heap` they are the `VectorStore` described here.
 
 `VarLoader.load(date)` reads the scenario set (checked), streams the vectors through `VarIntake` (each row checked, left out when not
 live, given its position by the rules: §3.7, §10), reads the hierarchy nodes and the portfolios, checks the date is one run, then
@@ -615,9 +642,11 @@ viewSignature | canonical scope | membershipHash`. The data version is the Delta
 partition's file paths and sizes), not the Delta table version. Views are cached per date, version and role levels (`VarAccess`).
 
 **Load and memory.** A date's load runs once (concurrent requests share it); a failed load is retried by the next request. The budget
-`memory-budget-mb` bounds the rows of **one** date's store (N × 8 bytes a row); a date that would exceed it is refused whole with the
-reason (`503 DRS-5204`, §10). Up to `hot-dates` dates are loaded, so total vector memory is up to `hot-dates` × budget, plus a second
-copy of one date during its permutation. A date that is not one run (`DRS-5203`) is remembered with its vector table's version and not
+`memory-budget-mb` bounds the rows of **one** date (N × 8 bytes a row on the heap; N × 4 bytes a row of the float32 hot copy when
+mapped, §7.3); a date that would exceed it is refused whole with the reason (`503 DRS-5204`, §10). Up to `hot-dates` dates are open at
+once. On the heap, total vector memory is up to `hot-dates` × budget, plus a second copy of one date during its permutation; mapped,
+the heap holds no vector at all (the load streams the rows to a spill file, §7.3) and the vectors take the operating system's page
+cache, only the pages in use. A date that is not one run (`DRS-5203`) is remembered with its vector table's version and not
 read again until that version changes; the date before it is answered meanwhile, with the reason in `provenance.warnings`.
 
 ### 7.2 Sizes (as built, N = 509)
@@ -634,62 +663,125 @@ read again until that version changes; the date before it is answered meanwhile,
 | position vector cache | up to 4,072 per position used | |
 | a whole date | about **4.4 MB per 1,000 trades** + 4 KB per node | demo: 9,572 trades in 7,984 positions, 39 MB of vectors |
 
-Measured (VAR_ENGINE.md section 13.2, `VarScaleBenchmark`, one workstation with 24 hardware threads, JDK 25; not re-run for this
-document): 1 M trades = 4.07 GB of vectors; loading a date 3.4 s for 1 M trades after reading, 0.6 s for the demo from the lake.
+**Mapped (the default, §7.3).** Per 1,000 trades: no vector on the heap; the columns, ids and links about 0.8 MB on the heap (measured:
+80 MB per open date of 100,000 trades, `VarTierBenchmark`); the hot file about 2.1 MB (float32 position rows, 2,036,000 bytes when every
+trade is its own position, plus the trades of fungible positions and the small sections), resident only while used. The test data:
+20,457,728 bytes of float32 matrices (7,984 positions and the 2,064 trades of fungible ones) against 38,977,184 bytes of float64 rows.
 
-### 7.3 Planned: tiered memory and the hot file (proposed on-disk contract)
+Measured (VAR_ENGINE.md section 13.2, `VarScaleBenchmark` on the heap tier, one workstation with 24 hardware threads, JDK 25): 1 M trades
+= 4.07 GB of vectors; loading a date 3.4 s for 1 M trades after reading, 0.6 s for the demo from the lake. The mapped tier: §12.2.
 
-Approved by the product owner (2026-10-25); the format below is **proposed** and will be fixed by the 2.8.0 build.
+### 7.3 The tiered memory and the hot file (AS BUILT, 2.8.0)
+
+Approved by the product owner (2026-10-25), built in *VaR complete, part 2* (2026-10-26). The format below is **fixed** (format 1).
 
 | Tier | Holds | Precision | When read |
 |---|---|---|---|
-| Lake (Delta) | every trade vector, every date | **float64** (unchanged) | at first load of a date; a trade's vector on a drill to trades or a scope naming trades |
-| Hot file, one per date | **position** vectors sorted by hierarchy, node aggregates, columns | matrix **float32**, aggregates float64 | memory-mapped; written after the first load; **history dates opened lazily** (mapped when first asked, never at start) |
-| Memory | the mapped pages in use, answers, node aggregates | sums always in **float64** accumulators | on demand |
-| Cluster | each node maps the shards it owns: contiguous ranges aligned to legal entities and desks, two replicas | | the coordinator adds the partial sums (N doubles each) |
+| Lake (Delta) | every trade vector, every date | **float64** (unchanged) | once per date and set of inputs: the first load streams the date's rows to the load's spill file |
+| Hot file, one per date | the **position** rows in hierarchy order, the rows of the trades of fungible positions, the node and book aggregates, the columns, ids, runs, nodes and the load's record | matrices **float32**, aggregates **float64** | memory-mapped; written by the first load; a date not open is **mapped again from its file** when asked (no lake read); never at start |
+| Heap | the open dates' aggregates, columns, ids and links, answers (cache of 512) | sums always in **float64** accumulators | on demand |
+| Page cache | the mapped pages a sum touches | float32 | resident while used; the operating system keeps or drops them |
 
-**Trade vectors** are read only when a scope needs a trade on its own (a drill below a position, `TRD:`, a basket naming trades, a
-position held in part); everything at position level and above is served from the hot file.
+**The life of a date** (`VarLoader`, `VarTier`, `VarBook.Builder`, `VarHotFile`):
 
-**The hot file** (proposed): `<data folder>/var/hot/<YYYY-MM-DD>/<SCENARIO_SET_ID>.vhot`, little-endian, written once, never changed
-(a restated date writes a new file named with its data version and the old one is removed when no request uses it).
+```
+ request for date D
+   │  the inputs' digest = SHA-256(format | D | data versions of pnl-vector, risk-hierarchy, scenario-set | position rules' digest)
+   ├─ <data folder>/var/hot/D/inputs-<16 hex of the digest>.vhot exists and its header has that digest
+   │     → map it (the small sections onto the heap, checked; the matrices mapped) and read the portfolios: the date is open
+   └─ else read the lake: scenario set (checked) → every vector row through VarIntake → appended to D/spill-*.f64 (float64, lake order;
+         the heap holds no vector) → sort the trades into hierarchy order (the columns, on the heap) → book and node aggregates summed in
+         float64 from the spill through a permuted view → every position's row = float64 sum of its trades' rows, written once as float32
+         (a batch of 1,024 positions at a time, summed on the pool) → the rows of trades of positions of several trades, float32 → the
+         file written as D/build-*.part, forced to disk and moved to its name → the spill deleted → the file mapped
+```
+
+**Eviction and cleaning.** At most `hot-dates` dates are open (the newest first; the date just used stays). An evicted date is **unmapped
+after `close-grace-seconds`** (60) so the requests still reading it finish; its file stays on disk, so the date opens again by mapping.
+At most `disk-dates` (60) files are kept: the least recently used beyond are deleted (never one that is open); a file built from inputs
+that have since changed (a restatement, new position rules) is deleted when the date's new file opens. At shutdown every date is
+unmapped and, unless `keep-on-shutdown`, every file deleted; at start the files a stopped server left are deleted (the `.part` and
+`.f64` temporary files always; the hot files unless kept, in which case they are reused when their digest still matches). No hidden
+files: visible names, everything under `drishti.var.tier.dir` (`<data folder>/var/hot`); the spill and the part file are made by the
+server's temporary-file service (`TempFiles`) in the date's folder.
+
+**Unmapping safely.** Reading an unmapped page would crash the JVM, so every read of a matrix enters a guard (`MappedMatrix`): closing
+marks the matrix and unmaps it only when no reader is inside; a reader arriving after that gets *the vectors of … were unloaded while
+this answer was computed; ask again*, never a crash. On Java 22 and later the mapping is a shared `Arena`'s (closing it unmaps; a stray
+read fails with an exception); on Java 21 a `MappedByteBuffer` released through the JDK's cleaner; `GET /status` names the method.
+
+**The hot file** (`VarHotFile`, format 1): `<tier dir>/<YYYY-MM-DD>/inputs-<16 hex>.vhot`, little-endian, written once, never changed.
 
 ```
 offset  bytes  field
 0       8      magic "DRSHVAR1"
 8       4      format version (1)
-12      4      flags: bit 0 float32 matrix, bit 1 trade matrix present
+12      4      flags: bit 0 float32 matrices, bit 1 trade matrix present
 16      4      business date as yyyymmdd (int32)
 20      4      N, the vector width (509)
-24      4      P, positions (rows of the matrix)
+24      4      P, positions (rows of PMAT)
 28      4      T, trades
-32      4      M, nodes (with aggregates)
+32      4      M, aggregates (books and nodes)
 36      4      S, sections
 40      32     SCENARIO_SET_ID (UTF-8, zero padded)
-72      64     data version of the date's pnl-vector files (UTF-8, zero padded)
+72      64     the inputs' digest (SHA-256, hex): the file's name holds its first 16
 136     32     BATCH_ID (UTF-8, zero padded)
 168     8      written at (epoch milliseconds)
 176     8      failed rows (no vector)
-184     72     reserved (zero)
-256     S×32   section table: {id int32, reserved int32, offset int64, length int64, crc32c int32, pad int32}
+184     4      Q, rows of TMAT
+188     68     reserved (zero)
+256     S×32   section table: {id int32 (four ASCII letters), reserved int32, offset int64, length int64, crc32c int32, pad int32}
 ```
 
 | Section | Content |
 |---|---|
-| `STRS` | the dictionaries of every text column: per column a count, then (length int32, UTF-8 bytes) per value |
-| `PCOL` | position columns (`POSITION_TEXTS` as int32 codes, `POSITION_NUMBERS` as float64), P rows each, in matrix order |
-| `PIDS` | position ids (length-prefixed UTF-8), P entries |
-| `PRUN` | per position its trades: int32 `tradeFrom`, `tradeTo` into the trade order |
-| `TCOL`, `TIDS` | trade columns (`TRADE_TEXTS` codes, `TRADE_NUMBERS`) and ids, T rows, sorted as today (§7.1) |
-| `NODE` | per node: id, hierarchy, level, parent, name (codes), limit float64, its member runs over position rows (count, then from/to pairs) |
-| `PMAT` | **float32 P × N, row-major**, rows in hierarchy order (legal entity, desk, book, position), 64-byte aligned |
-| `AGGS` | **float64 M × N** node aggregates, summed in float64 from the lake's float64 trade vectors (exact, independent of the float32 copy) |
-| `TMAT` | optional float32 T × N trade matrix (open question 8) |
+| `META` | the server's record of the load (JSON): what the intake counted (`rejected`, `rejections`, `excluded`, `batchIds`, `scenarioSets`, the rules and their digest) and the inputs' data versions |
+| `SCEN` | the scenario days: count, then each as an epoch day (int32) |
+| `TIDS` | trade ids in the trade order (count, then per id: length int32 and UTF-8; a null is length −1) |
+| `TCOL` | the trade columns: rows; per text column its name, dictionary and an int32 code per row (−1 none); per number column its name and a float64 per row |
+| `PIDS`, `PRUN`, `PCOL` | position ids; per position its run of trades (`from`, `to`, int32); the position columns (as `TCOL`) |
+| `BOOK` | per book its run of trades |
+| `NODE` | per node id, hierarchy, level, name, parent, limit (float64) and its books |
+| `AKEY`, `AGGS` | the aggregates' keys (books and nodes), then **float64 M × N**, summed from the lake's float64 rows (exact, independent of the float32 copy) |
+| `TMAP` | per trade its row in `TMAT`, −1 when its position has one trade (its row is the position's) |
+| `PMAT` | **float32 P × N, row-major**, positions in hierarchy order (legal entity, desk, book, position), 64-byte aligned |
+| `TMAT` | **float32 Q × N**: the trades of positions of more than one trade (decided, open question 8), 64-byte aligned; absent when every position is one trade |
 
-**Precision.** float32 keeps about 7 significant digits per value (a P&L of 50 million carries an error of about ±3 USD); every sum is
-float64 and node figures come from the float64 aggregates, so a node's VaR is the same as from the lake; a scope summed from position
-rows may differ from the lake by rounding (VAR_DATA_MODEL.md section 10 estimates ±4,000 USD on a bank-level P&L of 10⁹ over 2 million
-positions). Answers state the tier used (`provenance.tier`, planned).
+Every section has a CRC32C: the small sections are checked when the file is opened (a damaged one is refused: *the hot file's … section is
+damaged (checksum)*, and the date is read from the lake again); the matrices by `VarHotFile.verify`.
+
+**How a sum reads it** (`GroupedVectors`): a run of trade ordinals that covers whole positions is summed from their `PMAT` rows (one row
+per position, however many trades it has); only the edges of a position held in part read `TMAT` rows. A node is its float64 aggregate;
+the planner of §7.1 is unchanged. **Trade vectors** are read only when a scope needs a trade on its own (a drill below a position, `TRD:`,
+a basket naming trades, a position held in part); everything at position level and above reads position rows.
+
+**Precision.** Each stored value is rounded once to float32 (relative error at most 2⁻²⁴ ≈ 6 × 10⁻⁸); every sum is float64; VaR and ES
+are order statistics, so moving every scenario's P&L by at most *E* moves them by at most *E*. Hence **for any scope, |VaR(hot) − VaR(lake)|
+≤ 2⁻²⁴ × the date's gross P&L of its worst scenario** (Σ over trades of \|P&L\|), and a **node's figures are the lake's to the bit** (its
+float64 aggregate). Measured (`VarTestDataPrecisionTest`, `VarHotFileTest`):
+
+| Data | Scopes checked | Largest VaR difference | Bound |
+|---|---|---|---|
+| the committed test data (9,572 trades, 2026-09-30) | 88 nodes, 12 ad-hoc scopes, all 7,984 positions | **0 USD**: the vectors are whole dollars and every position's P&L is below 2²⁴, so float32 holds them exactly | 919.5 USD |
+| the same trades × 1,000.37 (bank VaR 112,077,359,285 USD) | 5 ad-hoc scopes, all positions | **340.93 USD, 5.86 × 10⁻⁸ of the VaR** | 919,868 USD |
+| the synthetic bank of the engine's tests (1,800 trades) | 9 scopes, 30 random sets, every position and trade | 0 USD | 1.4 USD |
+
+The tests state the tolerance: within the bound on every scenario, and VaR within 1 USD and 10⁻⁷ of itself on the test data (10⁻⁶ scaled).
+Answers say the tier used: `provenance.tier` is `node aggregate (float64)`, `hot file (float32 rows, summed in float64)` or `memory
+(float64 rows)`.
+
+### 7.4 Sharding across Drishti*net (PLANNED, not built)
+
+The design shards the hot store by node of the hierarchy across Drishti*net (VAR_ENGINE.md section 13.3, VAR_DATA_MODEL.md section 14):
+each member maps the shards it owns, contiguous ranges of positions aligned to legal entities and desks, two replicas each, and a sum
+over the bank is a scatter-gather of partial sums (N doubles each). **The mechanism is not in place**: Drishti*net routes entities and
+compute requests to members (`NetComputePeers` fans a reactive computation's chunks out to the peers of a pool), but nothing assigns
+ranges of a VaR date to members, replicates hot files, or gathers partial vectors. So it is **not built in 2.8.0**; each server holds whole
+dates. The plan, unchanged: (1) a shard map per date (ranges of `PMAT` rows by legal entity and desk, two owners each) published with the
+date's digest; (2) each owner builds and maps only its ranges (the same file format, a `RANGE` header field); (3) `VarBook.vector` sends
+the set's ranges to their owners (`POST /api/v1/var/partial` with the ordinal set's runs) and adds the partial float64 vectors in a fixed
+order; (4) a node's aggregate stays on every member (M × N doubles: 20 MB for 5,000 nodes). The hot file's format already keeps rows
+contiguous by legal entity and desk, so a shard is a byte range of `PMAT`.
 
 ## 8. Scopes
 
@@ -816,6 +908,11 @@ newest; a date that is not one run answers the date before it, with a warning). 
 | `GET /captures/{id}`, `GET /captures/{id}/csv` | `part` (`components`, else the vector) | one capture; CSV |
 | `GET /compare` | `a` (capture id), `b` (capture id, or `now`/empty) | the comparison (§9.6) |
 
+**The command line** (as built, 2.8.0): `drishti.py var show|parts|path|history|tree|status|capture|captures|compare|basket|baskets|
+official|reload|whatif` calls these endpoints as the token's user (`tools/varcli.py`; [TOOLS.md](../guides/TOOLS.md)), for example
+`drishti.py var show 'BANK - DESK:CREDIT' --date 2026-09-30` or `drishti.py var parts DESK:RATES --by position --top 10`. The computed
+kinds of §9.7 are read like any kind (`/api/v1/compute/var-engine/var-result`, `/api/v1/views/var-result/<scope>`, `VRES <scope> <GO>`).
+
 **`by` and truncation (as built, decided 2026-10-25, open question 9).** `by=node` lists a node's child nodes; on a scope that is not a
 node, or a node without children, it answers `400 DRS-5001` with the reason. When a scope has more positions or trades than
 `max-parts`, the largest `max-parts` by gross size are computed (a position's absolute market value when the scope holds it whole, else
@@ -860,6 +957,7 @@ its trades' absolute PV, else their absolute quantities), kept in their order; t
 | `components` | string | `Euler on the 5 scenarios around the VaR rank, scaled to add up to the VaR` |
 | `engine` | string | `VaR engine in the server · drishti-compute <version> · <threads> threads` |
 | `view` | string | `every node at positions level`, or `restricted by node (<hidden> trades outside your entitlement)` |
+| `tier` | string | where the vector came from (§7.3): `node aggregate (float64)`, `hot file (float32 rows, summed in float64)` or `memory (float64 rows)` (as built, 1.4) |
 | `membershipHash` | string | the set's digest (§7.1) |
 | `computedAt` | string | ISO-8601 instant of this answer |
 | `computeMs`, `cache`, `loadedMs` | integer, `hit`/`miss`, integer | time of this answer, cache use, the date's load time |
@@ -906,8 +1004,10 @@ depth, var, es, limit, limitUse, trades, hidden, expandable}]` in depth-first or
 trades), `portfolios` `[{id, scope, name, type, owner}]`.
 
 **`GET /status`:** `enabled`, `confidence`, `esConfidence`, `rankRule`, `componentWindow`, `threads`, `memoryBudgetMb`, `hotDates`,
-`kinds` (string[5]), `positionRules`, `official` `{enabled, publish, retentionYears, dates}`, `loaded` `[{businessDate, trades, positions,
-nodes, vectorBytes, loadMs, version, rejected, excluded, batchIds}]` and `{businessDate, refused}` for a date that could not load.
+`tier` `{mode, diskDates, keepOnShutdown, closeGraceSeconds, mapping, built, reopened, files, open, diskBytes}` (1.4), `kinds` (string[5]),
+`positionRules`, `official` `{enabled, publish, retentionYears, dates}`, `loaded` `[{businessDate, trades, positions, nodes, vectorBytes,
+tier, aggregateBytes, hotFile, loadMs, version, rejected, excluded, batchIds}]` (`vectorBytes`: float64 rows on the heap, or the hot
+file's float32 matrices; `hotFile`: the file under the tier folder) and `{businessDate, refused}` for a date that could not load.
 
 ### 9.5 Baskets
 
@@ -1014,25 +1114,59 @@ publish that fails (an `s3://` root, a disk) is recorded in the date's record (`
 
 No vectors and no trade or position rows are published; the capture itself keeps the node's vector for audit.
 
-### 9.7 The computed kinds (planned)
+### 9.7 The computed kinds (AS BUILT, 2.8.0)
 
-Served by a reactive connector (`plugin: reactive`, [REACTIVE_CONNECTOR.md](../connectors/REACTIVE_CONNECTOR.md)) as ordinary kinds, so
-VaR opens by command, link (`/v/<kind>/<scope>`), API, CLI, search and AI tools with the same entitlements. The kind names follow
-VAR_ENGINE.md section 5.3 (`var-result`, `var-contribution`, `var-path`, `var-history`; planned); the retired kind name `var` is not
-reused (README.md section 14's guard test). **Id:** the canonical scope text. Proposed record of `var-result`:
+Served by reactive connectors of the market-risk pack (`plugin: reactive`, [REACTIVE_CONNECTOR.md](../connectors/REACTIVE_CONNECTOR.md)),
+so VaR opens as an ordinary kind: by command (`VRES DESK:RATES <GO>`), link (`/v/var-result/DESK:RATES`), the entities and compute APIs,
+the CLI (`drishti.py compute run var-engine var-result DESK:RATES`, `drishti.py var whatif`), search and the AI tools, with the explorer's
+entitlements (each is computed as the person asking: their nodes, masks and audit entry; cached per view signature). Names decided (open
+question 12): `var-result` and `var-whatif`, fields `VAR` with `CONFIDENCE` (never `VAR_99`); the retired kind name `var` is not reused.
+The designs' `var-contribution`, `var-path` and `var-history` are not separate kinds: a `var-result` carries the parts (`CHILDREN`), the
+worst scenarios and the vector, and the explorer and the API serve paths and histories. Contracts:
+`config/packs/market-risk/contracts/var-result.contract.yaml` and `var-whatif.contract.yaml` (class `computed`).
+
+**Ids.** The id is the scope text. Like every computed id ([ComputeRef](../connectors/REACTIVE_CONNECTOR.md#reading-a-computed-kind)), a
+`~` inside it is written `%7E` (`NODE:MGMT%7EDESK-RATES`; `DESK:RATES` needs none), `=` `%3D` (a `WHERE:` rule's `==`), and parameters
+ride after a `~` (`DESK:RATES~stress-window=120`). A scope with a `/` (a basket) is read through the compute API's body, not a link.
+
+**`var-result`** (`VRES`): connector `var-engine`, Java engine `com.ash.drishti.server.var.VarResultEngine` (in the server, over
+`VarService`); triggers: the data versions of the four inputs (`affects: all`); answers wait up to 5 s.
 
 | Field | Type | Meaning |
 |---|---|---|
-| `SCOPE`, `CANONICAL`, `SCOPE_KIND`, `LABEL`, `NODE` | text | as the headline's `scope`, `canonical`, `kind`, `label`, `node` |
-| `BUSINESS_DATE` | date | |
-| `VAR`, `ES` | amount (USD) | at `CONFIDENCE`, `ES_CONFIDENCE` |
+| `SCOPE`, `CANONICAL`, `SCOPE_KIND`, `LABEL`, `NODE` | text | as the headline's `scope`, `canonical`, `kind`, `label`, `node` (§9.2) |
+| `BUSINESS_DATE` | date | the date answered |
+| `VAR`, `ES` | amount (USD, whole units) | at `CONFIDENCE`, `ES_CONFIDENCE` |
 | `CONFIDENCE`, `ES_CONFIDENCE`, `K`, `ES_COUNT`, `SCENARIOS` | number | |
-| `LIMIT`, `LIMIT_USE`, `SUM_STANDALONE`, `DIVERSIFICATION` | amount, ratio | |
-| `BACKTEST` | record | `DAYS`, `EXCEPTIONS`, `LIGHT`, `KUPIEC_LR`, `KUPIEC_P`, `CHRISTOFFERSEN_LR`, `CHRISTOFFERSEN_P` |
+| `LIMIT`, `LIMIT_USE`, `SUM_STANDALONE`, `DIVERSIFICATION` | amount, ratio | null when none |
+| `BACKTEST` | record | `DAYS`, `EXCEPTIONS`, `LIGHT`, `KUPIEC_LR`, `KUPIEC_P_VALUE`, `CHRISTOFFERSEN_LR`, `CHRISTOFFERSEN_P_VALUE` |
 | `CHILDREN` | record list | per default part: `KEY`, `SCOPE`, `LABEL`, `KIND`, `STANDALONE_VAR`, `COMPONENT_VAR`, `COMPONENT_ES`, `INCREMENTAL_VAR`, `PCT` |
 | `WORST` | record list | 25 × `RANK`, `INDEX`, `DATE`, `PNL` |
-| `PNL` | vector | the scope's vector (a vector field, as in the stored kinds) |
-| `PROVENANCE` | record | §9.2 in UPPER_SNAKE |
+| `PNL` | vector | the scope's vector, unrounded |
+| `PROVENANCE` | record | §9.2 in UPPER_SNAKE (`TIER` included) |
+
+Tables with the answer: `children` and `worst` (for panels). A scope that does not parse, or a role that may not see VaR, is the
+engine's refusal in words (`failed` with the reason); a role that may not open the kind is `refused`.
+
+**`var-whatif`** (`VWIF`): connector `var-whatif`, Python engine `drishti_compute.var.whatif:VarWhatIfEngine`, pool `var`; reads the
+scope's `var-result` as the viewer (input `base`) and, with the parameter `sandbox` (type `sandbox-ref`, the person's private
+sandbox: `POST /api/v1/compute/sandboxes {connector: var-whatif, items: [{LABEL, PNL: [N numbers], FACTOR}]}`), the hypothetical trades
+(input `sandbox`). Taking trades out is the scope's own algebra (`DESK:RATES - TRD:X`), so it is exact. Parameters: `stress-window`
+(int, 250; 0 none), `component-window` (int, 5). A trigger never recomputes a sandbox.
+
+| Field | Type | Meaning |
+|---|---|---|
+| `SCOPE`, `CANONICAL`, `BUSINESS_DATE` | text, text, date | the base scope |
+| `ITEMS` | integer | hypothetical trades (0 without a sandbox) |
+| `BEFORE_VAR`, `AFTER_VAR`, `CHANGE_VAR`, `BEFORE_ES`, `AFTER_ES`, `CHANGE_ES` | amount (USD) | the scope's VaR and ES before and after the trades, and the change |
+| `LIMIT`, `LIMIT_USE_BEFORE`, `LIMIT_USE_AFTER` | amount, ratio | |
+| `CONFIDENCE`, `ES_CONFIDENCE` | number | the base's |
+| `STRESS_WINDOW`, `STRESSED_VAR_BEFORE`, `STRESSED_VAR_AFTER`, `STRESSED_FROM` | integer, amount, amount, integer | the largest VaR over every run of `STRESS_WINDOW` consecutive scenario days, before and after, and the run's first day (index) |
+
+Tables: `items` (`LABEL`, `FACTOR`, `STANDALONE_VAR`, `STANDALONE_ES`, `INCREMENTAL_VAR` in the order listed, `INCREMENTAL_ALONE` added
+alone to the base, `COMPONENT_VAR`, `COMPONENT_ES` in the scope after) and `pnl` (`DAY`, `BEFORE`, `AFTER`). A trade whose vector has
+another length is refused in words (*what-if item … has 3 scenario P&Ls; the scope has 509*). The compute workers are off as shipped
+(`compute.enabled`); with them off the kind answers `refused` with the reason.
 
 ### 9.8 The pages' figures (as built)
 
@@ -1155,13 +1289,41 @@ the demo data). Not re-run for this document.
 | explorer, click to painted (a desk) | 300 ms | 9–14 ms with answers fetched ahead, 30–35 ms without |
 | loading a date | | 3.4 s for 1 M trades after reading; the demo's 1,673 trades 0.6 s from the lake |
 
-### 12.2 Planned benchmark and targets
+### 12.2 The tiered store: measured and extrapolated (AS BUILT, 2.8.0)
 
-| Item | Planned |
-|---|---|
-| Benchmark | **1 M trades × 50 business dates**: the tiered store of §7.3; hot file per date about 2.04 GB of float32 position vectors when every trade is its own position (1 M × 509 × 4 bytes), about 102 GB for 50 dates on local disk, only the pages in use resident; the lake keeps float64 (4.07 GB of raw vectors a date) |
-| What is measured | first load of a date (lake → hot file), reopening a history date (map only), a node, a desk minus trades, a 50,000-position basket, a drill to trades (lake read of one position's trades), whole-bank sum, sharded on several nodes |
-| Targets | those of VAR_ENGINE.md section 13.2, unchanged; history of an ad-hoc scope over 250 dates as a visible job |
+**The benchmark** (`drishti-compute/src/test/java/com/ash/drishti/compute/var/VarTierBenchmark.java`, opt-in: never part of the
+default test run): T synthetic trades over D business dates, each date built through its spill into a float32 hot file and mapped, as
+the server does (synthetic vectors: 40 correlated factors, longs and shorts; 100 desks, 1,000 books). A million-trade run once took this
+workstation down, so it was **measured at 100,000 trades × 5 dates** (one workstation: 24 hardware threads, 61 GB, JDK 25, NVMe; the
+files in the page cache) and **extrapolated** to 1 M × 50; the full run is for a server:
+
+```bash
+# measured here
+./mvnw -o test -pl drishti-compute -Dtest=VarTierBenchmark -Ddrishti.var.tier.trades=100000 -Ddrishti.var.tier.dates=5 -DargLine=-Xmx4g
+# the full benchmark, on a server with about 130 GB of free local disk and 16 GB of heap
+./mvnw -o test -pl drishti-compute -Dtest=VarTierBenchmark -Ddrishti.var.tier.trades=1000000 -Ddrishti.var.tier.dates=50 \
+    -Ddrishti.var.tier.dir=/local/var-bench -DargLine=-Xmx16g
+```
+
+| Measure | 100,000 trades × 5 dates (measured) | 1 M trades × 50 dates (extrapolated) | Basis of the extrapolation |
+|---|---|---|---|
+| hot file per date | 237.7 MB (203.6 MB of float32 position rows; the rest aggregates of 2,100 books and nodes, columns, ids) | about 2.25 GB; **about 113 GB for 50 dates** (the lake: 4.07 GB of float64 a date) | linear in trades; aggregates fixed |
+| first load of a date (generate and spill, sort, aggregates, hot file) | 0.8 to 1.2 s (the first 1.2 s, then 0.75 to 0.85 s) | about 9 to 12 s a date after reading the lake (sort n log n: a little more than linear); about 8 to 10 min for 50 dates; the spill takes 4.07 GB of local disk while a date loads | linear, the sort slightly more |
+| reopening a history date (map its file, its small sections onto the heap) | 23 ms; the bank's first answer then 1.45 ms | about 0.25 s (the ids and columns of a million trades) | linear in trades |
+| a node's VaR and ES (its float64 aggregate) | 0.48 ms | 0.5 ms | independent of the bank |
+| the bank minus one desk (aggregates minus a desk) | 1.1 ms | about 2 ms | the desk's aggregate, not its rows |
+| the whole bank from its rows | 3.4 ms (203.6 MB of float32: about 60 GB/s on 24 threads) | about 35 ms with the pages resident; about 0.7 s the first time from NVMe (2.04 GB at 3 GB/s) | memory or disk bandwidth |
+| an ad-hoc basket of 50,000 scattered positions (sum and measures) | 2.6 ms (resolving the 50,000 ids: about 45 ms more, as in VAR_ENGINE.md 13.2) | about 3 ms + the ids | the basket's rows, not the bank's |
+| a drill to a position's trades (their vectors and VaR) | 0.02 to 0.03 ms | the same | one or a few rows |
+| heap held by the open dates (`hot-dates` 2) | 161 MB (about 80 MB a date: columns, ids, links, aggregates of 8.6 MB) | about 1.6 GB for 2 open dates (heap tier: 8.1 GB of vectors + 1.6 GB) | linear in trades |
+| the same bank on the heap tier (`VarScaleBenchmark`, 100,000 trades) | whole bank 6.6 ms (0.41 GB of float64, 62 GB/s); basket 52.5 ms with resolving | | |
+
+With two trades per position (100,000 trades in 50,000 positions) the file is 331.8 MB (the trades of fungible positions in `TMAT`), the
+whole bank reads only the 50,000 position rows (3.2 ms), and a drill to a position's two trades 0.03 ms.
+
+**Targets** (VAR_ENGINE.md section 13.2, unchanged) are met at the measured size and, by the extrapolation, at 1 M trades on one server:
+a node under 1 ms, a scope of nodes plus or minus positions in a few ms, the whole bank in tens of ms once resident. **Still to measure on a
+real server:** the full 1 M × 50 run above, a cold first touch of a history date from its file, and (when built, §7.4) the sharded store.
 
 ## 13. Test data and generators
 
@@ -1340,11 +1502,11 @@ incremental VaR is 0) but raises ES from 6.5 to 8.5: the short trade hedged the 
 | 5 | **Decided (product owner, 2026-10-25): yes.** The data-load signal of `pnl-vector`, `scenario-set`, `risk-hierarchy`, `portfolio` (and `trade`) reloads that date in the engine automatically (the same as `POST /api/v1/var/reload` for the date), so a restated date is never stale, then captures it officially. Built in 2.8.0 | §3.9 |
 | 6 | Several scenario sets on one date (a stressed set `SVAR-250`): select by `SCENARIO_SET_ID` (a scope or request parameter), and which is the default? | §3.3 |
 | 7 | Lake layout for the vectors at bank scale: sort by hierarchy and partition by scenario set (both designed, not built); file and row-group sizes; `BYTE_STREAM_SPLIT` + ZSTD | §3.1 |
-| 8 | In the hot file, keep a float32 trade matrix (`TMAT`) or always read trades from the lake? | §7.3 |
+| 8 | **Decided and built (2.8.0, 2026-10-26): keep `TMAT`, for the trades of positions of more than one trade only.** A trade alone in its position is its position's row; the others' rows are in the file, read only on a drill or a trade scope (a lake read per drill would scan a whole date) | §7.3 |
 | 9 | **Decided and built (2026-10-25):** `by=node` accepted (`400` off a node); the memory budget answers `503 DRS-5204` (capacity); the largest parts by gross size when they exceed `max-parts` | §9.1, §10 |
 | 10 | **Decided (product owner, 2026-10-25): vectors are kept for 7 years** in the lake (Delta `VACUUM` and log retention set so that 7 years of dates and their time travel stay readable). Official end-of-day captures follow the same 7 years. Built in 2.8.0: the lake writers set 7-year log and file retention on `risk` and `risk-results` tables, and `lake maintain` never vacuums them below it (§3.1) | §9.6 |
 | 11 | **Decided and built (2026-10-25):** the platform's field masks apply to contribution rows (`•••`); `CPTY:` is refused to a viewer who sees the counterparty masked | §11 |
-| 12 | Computed kind names (`var-result` …) and field names (`VAR` with `CONFIDENCE`, or `VAR_99`): the guard test forbids `VAR_99` only on input and fundamental kinds | §9.7 |
+| 12 | **Decided and built (2.8.0, 2026-10-26):** `var-result` (`VRES`) and `var-whatif` (`VWIF`); fields `VAR` and `ES` with `CONFIDENCE` and `ES_CONFIDENCE`, never `VAR_99`; paths and histories are not separate kinds | §9.7 |
 | 13 | **Decided (2026-10-25): kept and documented**: the light scales with the days it has; screens show its days, and it is not a regulatory zone before 250 days | §6.5 |
 | 14 | **Decided (product owner, 2026-10-25): `LE:` is the bank's legal entity.** The trade's booking `LEGAL_ENTITY` is the source of truth; the `LEGAL` hierarchy rolls up from it, and a trade whose `LEGAL_ENTITY` disagrees with its book's place in the `LEGAL` hierarchy is reported as a data-quality warning in the answer's provenance | §8.5 |
 
@@ -1366,6 +1528,9 @@ incremental VaR is 0) but raises ES from 6.5 to 8.5: the short trade hedged the 
 | Load signal | README.md section 9: the signal reloads the date (confirmed 2026-10-25) | as designed, from 2.8.0 (and the date is captured officially) |
 | `VAR-COMM` mapping | README.md section 14: `DIVISION:COMM` (corrected in 2.8.0 to `DESK:COMM`) | the record is the desk `DESK-COMM`; the division word is `DIV:` |
 | Scope sections | README.md sections 4 and 8 point to *VAR.md section 9* (scopes) and *section 11* (memory) | the shared section order puts scopes in section 8 and memory in section 7 |
+| Hot file (proposed in 1.3) | `<data folder>/var/hot/<date>/<SCENARIO_SET_ID>.vhot`, a `STRS` section of every dictionary, `NODE` with member runs over position rows, `TMAT` of every trade | `<date>/inputs-<16 hex of the inputs' digest>.vhot` (the set id is in the header); each column section carries its dictionaries; `NODE` holds books (runs come from `BOOK`); `META`, `SCEN`, `AKEY`, `TMAP` added; `TMAT` holds only the trades of fungible positions |
+| Sharding | each node maps the shards it owns (VAR_ENGINE.md 13.3) | not built: each server holds whole dates (§7.4) |
+| Computed kinds | `var-result`, `var-contribution`, `var-path`, `var-history`, `what-if` (VAR_ENGINE.md 5.3) | `var-result` and `var-whatif`; parts and worst scenarios inside `var-result` |
 
 ### 16.3 The change table
 
@@ -1374,6 +1539,7 @@ incremental VaR is 0) but raises ES from 6.5 to 8.5: the short trade hedged the 
 | 1.0 | 2026-10-25 | First version: waves V0 to V3 as built, checked against the code and the test data; the rest of 2.8.0 as the planned contract |
 | 1.1 | 2026-10-25 | Product owner's decisions: the data-load signal reloads the engine automatically; vectors kept 7 years; `LE:` is the bank's legal entity (the trade's booking `LEGAL_ENTITY`) |
 | 1.2 | 2026-10-25 | Official end-of-day captures published to `risk-results/var-official` for other systems (product owner); official captures kept 7 years |
+| 1.4 | 2026-10-26 | **AS BUILT (2.8.0, VaR complete part 2):** the tiered memory (§7.3: each date a memory-mapped float32 hot file, aggregates float64, history dates mapped again from their file, eviction, cleaning, safe unmapping; the hot file's format 1 fixed; precision bound and measurements); `drishti.var.tier.*` (§6.1); the budget measured on the float32 copy; `provenance.tier`, the status's `tier` (§9.2, §9.4); the benchmark measured at 100,000 × 5 and extrapolated to 1 M × 50, with the full command (§12.2); the computed kinds `var-result` and `var-whatif` through reactive connectors, the Python VaR engine in the pool `var` (§6.6, §9.7); `drishti.py var` (§9.1); open questions 8 and 12 decided; sharding documented as planned, not built (§7.4) |
 | 1.3 | 2026-10-25 | **AS BUILT (2.8.0, VaR complete part 1):** the stored `var` and `var-node` kinds retired (§14); computed figures removed from `position`, `portfolio` and `desk`, the pages show the engine's (§9.8), with a guard test; positions derived by Drishti by configured rules (§3.7); every live trade valued (9,572; open question 1); 28 portfolio definitions; official end-of-day captures of every node, published append-only (§9.6); the data-load signal reloads and captures (§3.9); 7-year retention (§3.1); the load's checks and `DRS-5201` to `DRS-5204` (§10); `by=node`, the largest parts, masks, BASKET portfolios refused to aggregate-only viewers, basket and reload audit, input versions and batch ids in provenance, ids in any case; scope words `LE:` (the trades' legal entity) and `CPTY:` (§8.5) |
 
 ---

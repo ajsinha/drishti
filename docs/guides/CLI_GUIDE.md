@@ -1893,6 +1893,28 @@ path-sum-java BOOK-FX~delay-ms=900  REFUSED  (req-mvncbpgc-b05a980336d9)
 Exit codes: 0 (`ready`, `computing` or `stale`); 1 when the answer is `failed` or `refused`, or the server said no; 2 for usage.
 [Tutorial 23](../tutorials/23-computed-panels.md) walks through them.
 
+### `var`: the VaR engine (2.8.0)
+
+VaR of any scope as you see it, from the terminal (the API `/api/v1/var`; the user guide [VAR_GUIDE.md](VAR_GUIDE.md), the reference
+[TOOLS.md section 5.12](TOOLS.md#512-var)). Quote a scope for the shell; `--date` picks the business date, `--json` prints the answer:
+
+```text
+drishti.py var show 'DESK:RATES'                                   the headline: VaR, ES, limit use, parts, backtest, provenance and tier
+drishti.py var show 'BANK - DESK:CREDIT' --date 2026-09-30         any scope of the grammar (+ - & and parentheses)
+drishti.py var parts 'DESK:RATES' --by position --top 10           standalone, component, incremental VaR and component ES per part
+drishti.py var path 'DESK:RATES' --size 10                         the scenario days worst first, and what lost most on each
+drishti.py var history 'DESK:RATES'                                VaR history, exceptions, traffic light, Kupiec and Christoffersen
+drishti.py var tree --hierarchy LEGAL                              every node with its VaR, ES and limit use
+drishti.py var status                                              settings, the tiered memory (hot files, open dates) and loaded dates
+drishti.py var basket hedges "WHERE:'hedge' in TAGS" --share role:market-risk
+drishti.py var capture 'BASKET:asha/hedges' --note 'before the unwind'
+drishti.py var compare CAP-20260930-7 now
+drishti.py var whatif 'DESK:RATES' --trades new-swap.json --stress-window 250   the Python engine: before and after hypothetical trades
+```
+
+Exit codes: 0; 1 when the server said no (the code and its message on standard error) or a what-if was refused or failed; 2 for usage.
+[Tutorial 24](../tutorials/24-var-from-the-bank-to-a-trade.md) walks through them with the demo data.
+
 ### `server packs deploy`, `history`, `rollback` and `datasource`
 
 Admin → Packs from the terminal ([the whole story with pictures: OPERATIONALISING.md, section 17](OPERATIONALISING.md#17-deploy-from-admin--packs-connectors-history-and-roll-back)).

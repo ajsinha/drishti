@@ -42,6 +42,26 @@
   "Product Wordmark" and "Product Tagline" (element sheet rebuilt). Guard tests: `tests/test_branding_guard.py` (console: templates,
   scripts, a rebranded About page) and `BrandingLiteralTest` (drishti-it: string literals of the server's main code). Licence headers,
   header names (`X-Drishti-…`), `DRISHTI_` variables and code identifiers are unchanged. docs/admin/CONFIGURATION.md.
+- **VaR complete, part 2** ([VAR.md](docs/contracts/VAR.md) 1.4, AS BUILT):
+  - **Tiered memory** (`drishti.var.tier`, default `mapped`): each loaded date is written once to a local **hot file** under
+    `<data folder>/var/hot/<date>/` (format 1: float32 position rows in hierarchy order, the trades of fungible positions, float64 node
+    and book aggregates, columns, ids, runs, nodes, a CRC32C per section) and memory-mapped; the heap keeps the aggregates, columns and
+    links only (about 80 MB a 100,000-trade date instead of 407 MB of vectors more). The load streams the lake's rows to a spill file, never
+    to the heap. A date not open is mapped again from its file (no lake read); the file is rebuilt when the date's inputs change, evicted
+    dates are unmapped after a grace, at most `disk-dates` files are kept, and the files are deleted at shutdown and start unless
+    `keep-on-shutdown`. Unmapping is safe: a reader guard per matrix (a shared Arena on Java 22+, the cleaner on 21). Node figures are the
+    lake's to the bit; any scope within 2⁻²⁴ × the date's gross P&L (the test data: exact; scaled to billions: 5.86 × 10⁻⁸ of the VaR).
+    `provenance.tier`, the status's `tier`; `heap` keeps the V1 store. Sharding across Drishti*net is documented as planned (not built).
+  - **Benchmark** `VarTierBenchmark` (opt-in): measured at 100,000 trades × 5 dates (first load about 1 s a date, reopening 23 ms, a node
+    0.5 ms, the whole bank from float32 rows 3.4 ms, a 50,000-position basket 2.6 ms), extrapolated to 1 M × 50 (about 2.25 GB a date,
+    113 GB for 50, the bank in about 35 ms resident) with the command for a server (VAR.md section 12.2, VAR_ENGINE.md section 13.2).
+  - **VaR as computed kinds** through reactive connectors: `var-result` (`VRES`, the Java engine, connector `var-engine`) and
+    `var-whatif` (`VWIF`, the Python VaR engine `drishti_compute.var` in the new compute pool `var`: hypothetical trades from a private
+    sandbox, incremental VaR in order and alone, component VaR and ES after, the stressed window); contracts, about texts, the pack README.
+  - **`drishti.py var`**: show, parts, path, history, tree, status, capture, captures, compare, basket, baskets, official, reload, whatif.
+  - Docs: VAR.md 1.4, VAR_ENGINE.md (13.2, 18.7), VAR_DATA_MODEL.md (12, 14, 18.5), the new VAR_GUIDE.md and tutorial 24, VAR_EXPLORER,
+    CONFIGURATION, API_GUIDE, TOOLS, CLI_GUIDE, the help centre. Tests: MappedVectorsTest, VarHotFileTest, VarTestDataPrecisionTest,
+    VarApiTest, test_var_engine.py, test_varcli.py.
 - **VaR complete, part 1** ([VAR.md](docs/contracts/VAR.md) 1.3, AS BUILT):
   - **The stored `var` and `var-node` kinds are retired**: kinds, mnemonic `VNODE`, samples, test data, Sutras, about texts, the Calc
     snippets that read them (seven in market-risk, `desk_performance.py` in core) and their contracts. `VAR VAR-COMM` and `/v/var/VAR-COMM`

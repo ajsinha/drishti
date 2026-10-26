@@ -2783,7 +2783,7 @@ workers, busy, queued), `POST /api/v1/compute/peer/run` (a fan-out chunk, run he
 ## VaR engine: `/api/v1/var` (2.8.0)
 
 VaR computed on demand from the trades' 509-day P&L vectors (the data contract: [VAR.md](../contracts/VAR.md);
-[VAR_ENGINE.md](../architecture/VAR_ENGINE.md), [VAR_EXPLORER.md](VAR_EXPLORER.md)). A scope is the scope grammar's text: `BANK`,
+[VAR_ENGINE.md](../architecture/VAR_ENGINE.md); the user guide [VAR_GUIDE.md](VAR_GUIDE.md), the screen [VAR_EXPLORER.md](VAR_EXPLORER.md)). A scope is the scope grammar's text: `BANK`,
 `LE:<entity>` (the trades booked by it), `DIV:`, `DESK:RATES`, `BOOK:…`, `NODE:<node>`, `POS:<id>`, `TRD:<id>`, `CPTY:<counterparty>`,
 `PORT:<id>`, `BASKET:<owner>/<name>`, `CAPTURE:<id>`, `WHERE:<rule>`, joined with `+`, `-` and `&` (`DESK:RATES - TRD:MX-20000001`);
 ids of `POS`, `TRD` and `CPTY` are kept as written and matched ignoring case. Every answer is computed as the caller, over the trades
@@ -2793,7 +2793,8 @@ trades, a counterparty, a rule or a BASKET portfolio an aggregate-only viewer ma
 sees the counterparty masked. A date's vectors over the memory budget answer `503 DRS-5204`; a trade with two vectors on one date
 `422 DRS-5202`. Every headline's `provenance` carries the input tables' versions and batch ids (`inputs`), the rows rejected
 (`rejected`, `rejections`: `DRS-5201` with the reason) and left out as not live (`excluded`), the position rules and any `warnings`
-(a legal entity's trades outside its `LEGAL` node). Saving a basket or a capture needs the `risk:write` token scope; saving and deleting
+(a legal entity's trades outside its `LEGAL` node), and `tier`: where the vector came from (`node aggregate (float64)`, `hot file
+(float32 rows, summed in float64)` or `memory (float64 rows)`; [VAR.md section 7.3](../contracts/VAR.md#73-the-tiered-memory-and-the-hot-file-as-built-280)). Saving a basket or a capture needs the `risk:write` token scope; saving and deleting
 a basket and a reload are audited (`var-basket-save`, `var-basket-delete`, `var-reload`).
 
 | Method and path | What it does |
@@ -2804,8 +2805,8 @@ a basket and a reload are audited (`var-basket-save`, `var-basket-delete`, `var-
 | `GET /api/v1/var/scope/history?scope=` | VaR, ES and hypothetical P&L over 250 days, the exceptions and the Basel traffic light |
 | `GET /api/v1/var/scope/contributions?scope=&by=&scenario=` | standalone, component, incremental and marginal VaR of the parts; `by` is `child` (the default: child nodes, else positions, else trades), `node` (a node's child nodes; `400` on a scope without any), `position`, `trade`, `desk` or `book` (an aggregate-only viewer gets no position or trade level). Over `drishti.var.max-parts` the largest by gross size are kept (`truncated`, `total`); a masked field reads `•••` in the rows |
 | `GET /api/v1/var/tree?hierarchy=` | every node of the hierarchy (default `MGMT`) with its figures, and the stored portfolios |
-| `GET /api/v1/var/status` | the settings (confidence, rank rule, memory budget, hot dates, kinds, the position rules, the official captures) and the dates loaded (with their rejected and left-out rows and batch ids, and any date refused) |
-| `POST /api/v1/var/reload` | administrators: drops the loaded dates so the next request reads the lake again (after a load) |
+| `GET /api/v1/var/status` | the settings (confidence, rank rule, memory budget, hot dates, kinds, the position rules, the official captures), the tiered memory (`tier`: mode, how this JVM maps and unmaps, the hot files on disk and their bytes, the dates open, builds and reopenings) and the dates loaded (each with its tier, hot file, vector and aggregate bytes, rejected and left-out rows and batch ids, and any date refused) |
+| `POST /api/v1/var/reload` | administrators: drops the loaded dates so the next request maps the date's hot file again (the same inputs) or reads the lake (after a load) |
 | `GET /api/v1/var/baskets`, `POST /api/v1/var/baskets` | the caller's baskets and those shared with them; save one `{name, title, scope, sharedWith}` |
 | `GET /api/v1/var/baskets/{owner}/{name}`, `DELETE …/{owner}/{name}` | one basket; delete one of the caller's own (`204`) |
 | `POST /api/v1/var/captures` | `{scope, note}`: captures the scope's VaR now as an immutable record (`201`) |
@@ -2814,6 +2815,24 @@ a basket and a reload are audited (`var-basket-save`, `var-basket-delete`, `var-
 | `GET /api/v1/var/compare?a=&b=` | two captures side by side, or a capture and now (`b=now`) |
 | `GET /api/v1/var/official?asOf=` | a date's official end-of-day record: its result version, the inputs' versions and batch ids, and every node of every hierarchy with its VaR, ES, hypothetical P&L, limit, counts, backtest and capture id (a viewer who sees every node; [VAR.md section 9.6](../contracts/VAR.md#96-captures)) |
 | `POST /api/v1/var/official?asOf=` | administrators: captures the date officially now (the data-load signal of an input does it by itself): `{status: captured, restated, unchanged or skipped, resultVersion, nodes, published}` |
+
+**VaR as a computed kind** (2.8.0; [VAR.md section 9.7](../contracts/VAR.md#97-the-computed-kinds-as-built-280)). The market-risk pack's
+reactive connectors serve `var-result` (the Java engine; `VRES <scope>`) and `var-whatif` (the Python VaR engine; `VWIF <scope>`)
+through the compute API, computed as the caller with the explorer's entitlements:
+
+```bash
+curl -s -X POST $B/compute/var-engine/var-result -H 'Content-Type: application/json' \
+     -d '{"id": "BANK - DESK:CREDIT", "asOf": "2026-09-30", "wait": 10000}' | jq -c '{state, v: .result.VAR, es: .result.ES, tier: .result.PROVENANCE.TIER}'
+# a what-if: a private sandbox of hypothetical trades (each with its 509 P&Ls), then the Python engine
+curl -s -X POST $B/compute/sandboxes -H 'Content-Type: application/json' \
+     -d '{"connector": "var-whatif", "title": "new swap", "items": [{"LABEL": "new swap", "PNL": [/* 509 numbers */], "FACTOR": 1}]}'
+curl -s -X POST $B/compute/var-whatif/var-whatif -H 'Content-Type: application/json' \
+     -d '{"id": "DESK:RATES", "params": {"sandbox": "sbx-…", "stress-window": 250}, "wait": 10000}'
+```
+
+The same answers are `GET /api/v1/views/var-result/DESK:RATES` (a `~` inside a node id is written `%7E`), and on the command line
+`drishti.py var show|parts|path|history|tree|status|capture|captures|compare|basket|baskets|official|reload|whatif`
+([TOOLS.md](TOOLS.md)).
 
 The official captures are also appended to `${DRISHTI_DELTA_ROOT}/risk-results/var-official/` (Delta, append-only, a row per node and
 result version) for other systems; no engine reads that folder. The positions the engine derives are served as the `position` kind

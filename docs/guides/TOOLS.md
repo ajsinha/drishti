@@ -111,6 +111,7 @@ server take `--server` (default `DRISHTI_SERVER`, then `http://localhost:18480`)
 | `view` | `view get`, `view explain` | [5.8](#58-view-and-completion) |
 | `history` | `drishti.py history KIND ID` (`--days`, `--range`, `--from`/`--to`, `--diff`, `--changes-only`, `--csv`, `--json`): one entity over business days, as the console's history page shows it | [CLI_GUIDE.md](CLI_GUIDE.md) |
 | `contract` | `contract list`, `contract show`, `contract check`, `contract docs`, `contract bootstrap` | [5.11](#511-contract) |
+| `var` | `var show`, `var parts`, `var path`, `var history`, `var tree`, `var status`, `var capture`, `var captures`, `var compare`, `var basket`, `var baskets`, `var official`, `var reload`, `var whatif` | [5.12](#512-var) |
 | `completion` | `drishti.py completion bash` (also `zsh`, `powershell`) | [5.8](#58-view-and-completion) |
 
 The group modules live beside it and are not run on their own: `tools/authoring.py` (`data profile`, `pack regenerate|diff|catalogue|i18n`),
@@ -118,7 +119,7 @@ The group modules live beside it and are not run on their own: `tools/authoring.
 `tools/packform.py` (the `form:` section a pack check reads), `tools/schemapack.py` (`--schema`), `tools/sutragen.py` (`sutra gen`),
 `tools/ingest_jsonl.py` and `tools/ingest_watch.py` (`data ingest`), `tools/packbundle.py` (`pack bundle|verify|deploy|rollback`),
 `tools/serverpacks.py`, `tools/serverconnectors.py`, `tools/servernet.py` (`net`), `tools/hostaddr.py` (this machine's real address for Drishti*net members), `tools/build_demo_lakes.py` (every demo lake start to finish: `lake demo` over all sixty days, then your own ENDUR files one per date, `--store calypso=iceberg` for a source system in Iceberg, `--dry-run` to look first; the Windows QA guide's step 3.0), `tools/smoke.py`, `tools/doctor.py`, `tools/viewcmd.py`, `tools/completion.py`,
-`tools/bilang.py`, `tools/bimodel.py`, `tools/biitem.py`, `tools/bistatement.py` (`bi statement preview|file`), `tools/historycmd.py` (`history`), and `tools/lake/cli.py` with `tools/lake/build.py`, `tools/lake/scan.py`,
+`tools/bilang.py`, `tools/bimodel.py`, `tools/biitem.py`, `tools/bistatement.py` (`bi statement preview|file`), `tools/historycmd.py` (`history`), `tools/varcli.py` (`var`), and `tools/lake/cli.py` with `tools/lake/build.py`, `tools/lake/scan.py`,
 `tools/lake/jsonstream.py`, `tools/lake/stage.py`, `tools/lake/writers.py`, `tools/lake/demo.py` (`lake demo`), `tools/lake/stores.py` (a source system's trades copied into Iceberg, its connector file switched; `build_demo_lakes.py --store`) and `tools/lake/laketables.py` (the tables `lake status` lists).
 
 ## 4. lake build: a large JSON export into a Delta lake
@@ -979,6 +980,36 @@ python3 tools/drishti.py contract bootstrap my-kind --write && python3 tools/dri
 **The command catalog.** `python3 tools/command_catalog.py` writes [COMMAND_CATALOG.md](COMMAND_CATALOG.md): every command of the command
 line with what it does and an example, from the packs, their contracts and `tools/commands.builtin.yaml` (the command line's own words and
 forms). `--check` fails when it is stale; a console test runs the same check.
+
+### 5.12 var
+
+The VaR engine from the terminal (2.8.0; `tools/varcli.py`; [VAR_GUIDE.md](VAR_GUIDE.md), the API `/api/v1/var`), as the token's user sees
+it (their nodes, their masks). A scope is the scope grammar's text: quote it in the shell (`'BANK - DESK:CREDIT'`). `--date YYYY-MM-DD`
+picks the business date (default the newest with vectors); `--json` prints the server's answer.
+- `var show SCOPE` prints the headline: VaR and ES with their ranks, the limit and its use, the parts and diversification, the backtest,
+  the trades counted and hidden, the vectors' batch and where the vector came from (`node aggregate (float64)`, `hot file …`).
+- `var parts SCOPE [--by child|node|position|trade|desk|book] [--scenario DATE] [--top N]` prints the contributions: standalone,
+  component (and its share of the VaR), incremental VaR and component ES per part.
+- `var path SCOPE [--page N] [--size N]` prints the scenario days worst first, and the part that lost most on each.
+- `var history SCOPE` prints the history and backtest (the official record for a node, else the replay of today's vector) with the
+  traffic light, Kupiec and Christoffersen.
+- `var tree [--hierarchy MGMT|LEGAL]` prints every node with its VaR, ES and limit use, indented.
+- `var status` prints the engine's settings, its tiered memory (hot files on disk, dates open, how this JVM maps) and the dates loaded.
+- `var capture SCOPE [--note TEXT]`, `var captures [--scope SCOPE]`, `var compare A [B|now]`: captures (writing needs `risk:write`).
+- `var basket NAME SCOPE [--title] [--description] [--share USER|role:NAME ...]`, `var baskets`: saved baskets.
+- `var official [--date] [--capture]`: a date's official end-of-day record; `--capture` takes it now (administrators).
+- `var reload`: drops the loaded dates (administrators).
+- `var whatif SCOPE [--trades FILE.json] [--stress-window DAYS]`: the scope's VaR before and after hypothetical trades (a JSON list of
+  `{LABEL, PNL: [one number per scenario day], FACTOR}`, put in a private sandbox) and its stressed window, by the Python VaR engine
+  (the `var-whatif` connector; the compute workers must be on).
+
+Exit codes are `0`, `1` (the server said no, or a what-if refused or failed) and `2` (usage).
+
+```bash
+drishti-console/.venv/bin/python tools/drishti.py var show 'DESK:RATES'
+drishti-console/.venv/bin/python tools/drishti.py var parts 'BANK - DESK:CREDIT' --by desk --date 2026-09-30
+drishti-console/.venv/bin/python tools/drishti.py var whatif 'DESK:RATES' --trades new-swap.json --stress-window 250
+```
 
 ## 6. Store loaders: `tools/load-*.sh`
 

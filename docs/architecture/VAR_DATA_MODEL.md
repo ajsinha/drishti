@@ -413,6 +413,12 @@ plan is used (tested, [section 16.4](#164-the-planners-choice-is-invisible)).
 
 ## 12. Serving from memory
 
+**As built (2.8.0):** the design below is the heap tier (`drishti.var.tier.mode: heap`); the server's default is the **tiered memory**
+of [VAR.md section 7.3](../contracts/VAR.md#73-the-tiered-memory-and-the-hot-file-as-built-280): each loaded date a memory-mapped hot
+file under `<data folder>/var/hot/<date>/` (float32 **position** rows in hierarchy order, the trades of fungible positions, float64
+aggregates, the columns and links), the heap holding the aggregates, columns and links only, a history date opened by mapping its file.
+Where the build differs from 12.1 to 12.4 is in section 18.5.
+
 ### 12.1 The vector store
 
 A component of `drishti-compute` (planned), in the server's JVM, generic (it knows *vectors keyed by ordinal*, not VaR):
@@ -513,6 +519,12 @@ A basket may name a trade that is only part of a fungible position (one of twent
 way: the basket includes the whole position and says so.
 
 ## 14. Sizing for a large bank
+
+**As built (2.8.0):** the hot copy is float32 in a memory-mapped file (the *float32 in memory* column below, on local disk and in the
+page cache, none of it on the heap); measured at 100,000 trades × 5 dates and extrapolated to 1 M × 50 in
+[VAR.md section 12.2](../contracts/VAR.md#122-the-tiered-store-measured-and-extrapolated-as-built-280): 237.7 MB a date measured, about
+2.25 GB a date and 113 GB for 50 dates extrapolated; the whole bank from resident rows 3.4 ms at 100,000 trades (about 60 GB/s), about
+35 ms at a million; reopening a history date 23 ms (about 0.25 s at a million).
 
 ### 14.1 Size of one COB
 
@@ -722,3 +734,16 @@ The contract is [VAR.md](../contracts/VAR.md) (version 1.3). Section 18.2's tabl
 | `portfolio` | a definition only (`DEFINITION`, `LIMIT_VAR`, owner, type); 28 in the demo; every figure removed |
 | `risk-hierarchy`, `scenario-set` | unchanged |
 | retention | 7 years of vectors and time travel on the `risk` and `risk-results` tables (Delta table properties; `lake maintain` floor) |
+
+### 18.5 VaR complete, part 2 (2.8.0): the tiered memory
+
+The contract is [VAR.md](../contracts/VAR.md) version 1.4 (section 7.3 has the hot file's format and the precision measured).
+
+| Design (sections 10, 12, 14) | As built |
+|---|---|
+| a local copy after the first load under `<data dir>/compute/vectors/<COB>/` (raw little-endian doubles plus an index) | the **hot file** `<data folder>/var/hot/<date>/inputs-<digest>.vhot` (`drishti.var.tier.dir`): float32 matrices, float64 aggregates, columns, ids, runs, nodes and the load's record, a CRC32C per section; rebuilt when the inputs' digest changes; not the restart cache by default (`keep-on-shutdown: false` deletes the files at shutdown) |
+| vectors on the heap in `double[]` chunks; an off-heap variant optional | the rows are never on the heap when mapped: the load streams them to a spill file and writes the hot file from it; the heap holds about 0.8 KB a trade (columns, ids, links) |
+| position vectors in the store | the hot file holds **one float32 row per position** (the float64 sum of its trades, rounded once) and the rows of the trades of positions of more than one trade; a single-trade position's trade is its position's row |
+| float32 precision estimated (section 10: ±4,000 USD on 10⁹ over 2 million positions) | the bound proven and measured: \|ΔVaR\| ≤ 2⁻²⁴ × the date's gross P&L of its worst scenario; the test data exact; scaled to a bank of billions 5.86 × 10⁻⁸ of the VaR; nodes from float64 aggregates are the lake's to the bit |
+| no FFM (Java 21 without preview) | the mapping is compiled for Java 21; on Java 22 and later it uses a shared `Arena` looked up at run time (deterministic unmapping), on Java 21 a `MappedByteBuffer` and the JDK's cleaner; a reader guard keeps any read away from an unmapped page |
+| sharding by legal entity and desk, two replicas (section 12.4) | **not built**: no mechanism assigns a date's ranges to Drishti\*net members yet; the file keeps rows contiguous by legal entity and desk so a shard can be a byte range of the position matrix (VAR.md section 7.4) |
