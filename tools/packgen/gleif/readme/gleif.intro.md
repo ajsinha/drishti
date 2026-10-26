@@ -76,16 +76,15 @@ fields:
     US_COMPANY: The us-equities company's ticker, a link to it
     US_COMPANY_NAME: The us-equities company's name
   lei-group:
-    GROUP_ID: The ultimate parent's LEI (ALL for the browse document)
+    GROUP_ID: The ultimate parent's LEI (ALL for the browse page); computed from the entities when asked
     ENTITY_LEI: The ultimate parent's entity
-    MEMBERS: Members the pack keeps
-    MEMBERS_IN_GLEIF: Members GLEIF has
-    CAPPED: True when GLEIF has more members than the pack keeps
-    CAP_NOTE: The cap in words
+    MEMBERS: Members in the lake (no cap)
+    MEMBERS_IN_GLEIF: Members GLEIF has (the ultimate parent's GLEIF_GROUP_SIZE)
+    CAPPED: True when GLEIF has more members than the lake holds
+    LAPSED: Members whose registration lapsed
     LEVELS: Depth of the tree
     TREE: The tree from the ultimate parent (CHILDREN nested)
     ROWS: Every member with its country and level
-    SEEDS: The seeds that brought the group in
     BY_COUNTRY: Members by country
     BY_LEGAL_FORM: Members by legal form
     PROVENANCE: Source, retrieval date, licence and URL
@@ -103,7 +102,7 @@ fields:
   lei-country:
     COUNTRY: ISO 3166 alpha-2 code (ALL for the directory)
     ENTITIES: Entities with a legal address there
-    ROWS: The entities (the first 400 by name)
+    ROWS: Every entity, by name (computed from the entities when asked)
     GROUP_ROWS: Groups present, with their entities there
     BY_LEGAL_FORM: Entities by legal form
     BY_CITY: Entities by city

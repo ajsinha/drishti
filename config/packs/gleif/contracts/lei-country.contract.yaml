@@ -13,205 +13,143 @@
 # See the LICENSE file in the root of this repository for the full terms.
 
 # Data contract of the lei-country kind (command LEIC): docs/contracts/README.md section 16.
-# Drafted by `drishti.py contract bootstrap lei-country`; owned by people from then on: confirm the review points, then remove them.
+# Drafted by `drishti.py contract bootstrap lei-country`; completed by hand (2.9.2).
 kind: lei-country
 mnemonic: LEIC
 pack: gleif
 version: '1.0'
-class: fundamental
+class: computed
 status: active
 title: LEI country
-description: 'A country''s legal entities in the pack: the entities, the groups present, legal forms and cities.'
-source: 'public data: GLEIF LEI records, relationship records and mapping files (tools/publicdata/gleif.py)'
-grain: One row per lei country, keyed by COUNTRY.
+description: 'A country''s legal entities in the pack, computed from the entities when asked: the entities, the groups present, legal forms and
+  cities.'
+source: 'computed by Drishti: the derived connector gleif-groupings over the kind lei-entity'
+grain: One record per COUNTRY of the lei-entity records, computed when asked.
 key:
 - COUNTRY
-dated-by: snapshot
+dated-by: on request
 cadence:
-  frequency: static
-  due: to be confirmed
+  frequency: on change
+  due: recomputed from its source kind (connector refresh 60s)
 storage:
-  connector: gleif-store
-  plugin: delta
-  domain: gleif
-  table: <root>/gleif/lei-country/
-  columns:
-  - COUNTRY
-  - NAME
-  - ENTITIES
-  test-data:
-  - data/testdata/gleif/lei-country
+  connector: gleif-groupings
+  plugin: derived
 fields:
 - name: COUNTRY
   type: id
   presence: required
-  description: The record's id (the business key)
-  example: US
-- name: NAME
-  type: text
-  presence: required
-  example: United States of America (the)
+  description: The value the lei-entity records are grouped by ($.LEI_COUNTRY; each also joins 'ALL')
+- name: MEMBER_LEIS
+  type: id list
+  presence: derived
+  description: The ids of the grouped lei-entity records (at most 100000)
 - name: ENTITIES
   type: integer
-  presence: required
-  description: Entities
-  example: 2704
-- name: GROUPS_PRESENT
-  type: integer
-  presence: optional
-  description: Groups present
-  example: 521
+  presence: derived
+  description: 'The entities with a legal address in the country: every lei-entity whose LEI_COUNTRY is the key (no row cap)'
+- name: NAMES
+  type: text list
+  presence: derived
+  description: 'A helper of the page fields: distinct over the group of: $.COUNTRY_NAME'
+- name: COUNTRY_LIST
+  type: text list
+  presence: derived
+  description: 'A helper of the page fields: distinct over the group of: $.LEI_COUNTRY'
+- name: GROUP_LIST
+  type: text list
+  presence: derived
+  description: 'A helper of the page fields: distinct over the group of: $.LEI_GROUP'
 - name: GROUPS_HEADQUARTERED
   type: integer
-  presence: optional
-  example: 451
+  presence: derived
+  description: Members that are their own ultimate parent (LEI equals LEI_GROUP)
 - name: LAPSED
   type: integer
-  presence: optional
-  example: 713
+  presence: derived
+  description: Members whose registration is LAPSED
 - name: LATE_RENEWALS
   type: integer
-  presence: optional
-  example: 724
-- name: ROWS
-  type: record list
-  presence: required
-  description: 'Nested: see nested ROWS[]'
-- name: ROWS_NOTE
-  type: text
-  presence: optional
-  example: The first 400 of 2,704 entities, by name
-- name: GROUP_ROWS
-  type: record list
-  presence: optional
-  description: 'Nested: see nested GROUP_ROWS[]'
-- name: BY_LEGAL_FORM
-  type: record list
-  presence: optional
-  description: 'Nested: see nested BY_LEGAL_FORM[]'
-- name: BY_CITY
-  type: record list
-  presence: optional
-  description: 'Nested: see nested BY_CITY[]'
+  presence: derived
+  description: Members whose LEI renewal is late
 - name: PROVENANCE
   type: record
-  presence: required
-  description: 'Nested: see nested PROVENANCE'
+  presence: derived
+  description: The first member's source and licence
+- name: ROWS
+  type: record list
+  presence: derived
+  description: One row per grouped lei-entity record
+- name: NAME
+  type: text
+  presence: derived
+  description: The country's name ('Every country of the entities in the pack' for ALL)
 - name: COUNTRIES
   type: integer
-  presence: optional
-  description: Countries
-  example: 133
+  presence: derived
+  description: The number of countries among the members (1, or every country on ALL)
+- name: GROUPS_PRESENT
+  type: integer
+  presence: derived
+  description: The number of ownership groups with a member here
+- name: BY_LEGAL_FORM
+  type: record list
+  presence: derived
+  description: 'Members by legal form: label, value, count; the top 15'
+- name: BY_CITY
+  type: record list
+  presence: derived
+  description: Members by legal-address city; the top 15
+- name: GROUP_ROWS
+  type: record list
+  presence: derived
+  description: 'Members by ownership group: label (the group key, an LEI), value (members here), largest first'
 - name: BY_COUNTRY
   type: record list
-  presence: optional
-  description: 'Nested: see nested BY_COUNTRY[]'
+  presence: derived
+  description: Members by country name; the top 20 (ALL)
+- name: COUNTRY_ROWS
+  type: record list
+  presence: derived
+  description: 'ALL only: every country code with its members, largest first'
 nested:
   ROWS[]:
   - name: LEI
-    type: text
+    type: unknown
     presence: optional
-    example: 5493003P89EPGALWYN87
+    description: 'From the lei-entity record: $.LEI'
   - name: NAME
-    type: text
-    presence: required
-    example: 100 FEDERAL STREET LIMITED PARTNERSHIP
-  - name: CITY
-    type: text
+    type: unknown
     presence: optional
-    example: BOSTON
-  - name: GROUP
-    type: id
-    presence: optional
-    description: 'Group: the counterparty-group it refers to'
-    example: 9DJT3UXIJIZJI4WXO774
-    link: counterparty-group
-  - name: LATE
-    type: text
-    presence: optional
-    example: late
+    description: 'From the lei-entity record: $.NAME'
   - name: COUNTRY
-    type: id
+    type: unknown
     presence: optional
-    description: Code
-    example: US
-  - name: ENTITIES
-    type: integer
+    description: 'From the lei-entity record: $.LEI_COUNTRY'
+  - name: COUNTRY_NAME
+    type: unknown
     presence: optional
-    description: Entities
-    example: 2704
-  - name: GROUPS_HEADQUARTERED
-    type: integer
+    description: 'From the lei-entity record: $.COUNTRY_NAME'
+  - name: CITY
+    type: unknown
     presence: optional
-    description: Groups headquartered
-    example: 451
-  - name: LAPSED
-    type: integer
+    description: 'From the lei-entity record: nonblank($.LEGAL_CITY, ''Not given'')'
+  - name: LEGAL_FORM
+    type: unknown
     presence: optional
-    description: Lapsed
-    example: 713
-  GROUP_ROWS[]:
-  - name: GROUP_ID
-    type: id
-    presence: required
-    example: 549300EJG376EN5NQE29
-  - name: NAME
-    type: text
-    presence: required
-    example: CVS HEALTH CORPORATION
-  - name: HOME
-    type: text
-    presence: required
-    example: US
-  - name: HERE
-    type: integer
-    presence: required
-    description: Entities here
-    example: 48
-  BY_LEGAL_FORM[]:
-  - name: LABEL
-    type: text
-    presence: required
-    example: Limited Liability Company
-  - name: VALUE
-    type: amount
-    presence: required
-    example: 944
-  BY_CITY[]:
-  - name: LABEL
-    type: text
-    presence: required
-    example: WILMINGTON
-  - name: VALUE
-    type: amount
-    presence: required
-    example: 1413
-  PROVENANCE:
-  - name: SOURCE
-    type: text
-    presence: required
-    example: GLEIF, the Global Legal Entity Identifier Foundation (LEI r…
-  - name: RETRIEVED_AT
-    type: date
-    presence: required
-    example: '2026-10-25'
-  - name: LICENCE
-    type: text
-    presence: required
-    example: 'CC0 1.0 (GLEIF''s terms: free of charge, no restriction; att…'
-  - name: URL
-    type: text
-    presence: required
-    example: https://search.gleif.org/#/search/simpleSearch=US
-  BY_COUNTRY[]:
-  - name: LABEL
-    type: text
-    presence: required
-    example: United States of America (the)
-  - name: VALUE
-    type: amount
-    presence: required
-    example: 2704
+    description: 'From the lei-entity record: nonblank($.LEGAL_FORM, ''Not given'')'
+  - name: GROUP
+    type: unknown
+    presence: optional
+    description: 'From the lei-entity record: $.LEI_GROUP'
+    link: counterparty-group
+  - name: STATUS
+    type: unknown
+    presence: optional
+    description: 'From the lei-entity record: $.REGISTRATION_STATUS'
+  - name: LATE
+    type: unknown
+    presence: optional
+    description: 'From the lei-entity record: $.RENEWAL_LATE ? ''late'' : null'
 links:
 - field: ROWS[].GROUP
   kind: counterparty-group
@@ -219,10 +157,6 @@ validation:
 - rule: required
   fields:
   - COUNTRY
-  - NAME
-  - ENTITIES
-  - ROWS
-  - PROVENANCE
 - rule: unique
   key:
   - COUNTRY
@@ -230,15 +164,7 @@ validation:
 - rule: link
   field: ROWS[].GROUP
   kind: counterparty-group
-notes: []
-review:
-- 'required inferred from 100% coverage in 135 documents (1 samples and 134 test-data documents (data/testdata/gleif/lei-country/snapshot-2026-10-25.jsonl.gz)):
-  confirm each required field is mandatory upstream, and each optional one may be empty.'
-- 'a snapshot refreshed when tools/publicdata/gleif.py runs: confirm the refresh cadence.'
-- 'number types decided by the field''s name: BY_LEGAL_FORM[].VALUE amount, BY_CITY[].VALUE amount, BY_COUNTRY[].VALUE amount: confirm amount,
-  rate or integer.'
-- 'no unit stated for the amounts BY_LEGAL_FORM[].VALUE, BY_CITY[].VALUE, BY_COUNTRY[].VALUE (docs/contracts/README.md section 7: USD unless stated):
-  confirm the currency.'
-- 'no description in about.yaml or the Sutras for NAME, GROUPS_HEADQUARTERED, LAPSED, LATE_RENEWALS, ROWS_NOTE, ROWS[].LEI, ROWS[].NAME, ROWS[].CITY,
-  ROWS[].LATE, GROUP_ROWS[].GROUP_ID, GROUP_ROWS[].NAME, GROUP_ROWS[].HOME and 10 more: write them in the pack''s config/about.yaml glossary.'
-- 'The release is 2.9.0 or 2.10.0 (Track B, shipped as each is ready): confirm which.'
+notes:
+- 'Computed when asked by the derived connector gleif-groupings from every lei-entity (since 2.9.2, which retired the stored page and its 400-row
+  cap): docs/guides/GROUPINGS_ANALYTICS_GUIDE.md (Part II).'
+review: []

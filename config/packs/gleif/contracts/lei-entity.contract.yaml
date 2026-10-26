@@ -179,6 +179,12 @@ fields:
   type: integer
   presence: optional
   example: 20
+- name: GLEIF_GROUP_SIZE
+  type: integer
+  presence: optional
+  description: 'On an ultimate parent: its ownership group''s size in GLEIF''s golden copy, itself included (an input from GLEIF; the computed
+    LEIG reads it as MEMBERS_IN_GLEIF)'
+  example: 173
 - name: MAPPING_IDS
   type: id list
   presence: optional
@@ -239,6 +245,10 @@ fields:
   type: text
   presence: optional
   example: 724500ZSA7ZOZHUXBS53
+- name: PROVENANCE
+  type: record
+  presence: required
+  description: 'Nested: see nested PROVENANCE'
 nested:
   OTHER_NAMES[]:
   - name: NAME
@@ -332,6 +342,23 @@ nested:
     - Higher parent
     - Ultimate parent
     - Ultimate parent (chain not reported)
+  PROVENANCE:
+  - name: SOURCE
+    type: text
+    presence: required
+    example: GLEIF, the Global Legal Entity Identifier Foundation (LEI records, golden copy level 2, mapping files)
+  - name: RETRIEVED_AT
+    type: date
+    presence: required
+    example: '2026-10-25'
+  - name: LICENCE
+    type: text
+    presence: required
+    example: 'CC0 1.0 (GLEIF''s terms: free of charge, no restriction; attribution appreciated)'
+  - name: URL
+    type: text
+    presence: required
+    example: https://search.gleif.org/#/record/HWUPKR0MPOU8FGXBT394
 links:
 - field: JURISDICTION
   kind: jurisdiction

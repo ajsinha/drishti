@@ -20,9 +20,9 @@ description: "Every country of the pack's legal entities, by the number of entit
 doc:
   summary: "Every country of the entities' legal addresses with its entity count, groups headquartered and lapsed registrations."
   description: >-
-    The directory of countries (LEIC ALL): one row a country of the entities' legal addresses, with the number of entities, the
-    groups headquartered there and the lapsed registrations, largest first; the country opens its page. The right column charts
-    the twenty largest.
+    The directory of countries (LEIC ALL), computed from the entities when it is opened (since 2.9.2): one row a country of the
+    entities' legal addresses with its number of entities, largest first; the code opens the country's page, where the groups
+    headquartered and the lapsed registrations are. The right column charts the twenty largest by name.
   params: {}
   emits: []
   expects: []
@@ -35,20 +35,19 @@ title: { pill: GLEIF · Countries, id: $.COUNTRY, with: $.NAME }
 strip:
   - { label: Countries, bind: $.COUNTRIES, emphasis: true }
   - { label: Entities, bind: $.ENTITIES, fmt: entities0 }
+  - { label: Groups headquartered, bind: $.GROUPS_HEADQUARTERED }
+  - { label: Lapsed, bind: $.LAPSED }
 panels:
   - id: countries
     kind: table
     title: Countries by entities
     key: F2
-    rows: $.ROWS
+    rows: $.COUNTRY_ROWS
     limit: 300
     columns:
-      - { label: Country, bind: "link(@.COUNTRY, 'lei-country', @.NAME)" }
-      - { label: Code, bind: "@.COUNTRY" }
-      - { label: Entities, bind: "@.ENTITIES", fmt: entities0, total: true }
-      - { label: Groups headquartered, bind: "@.GROUPS_HEADQUARTERED", total: true }
-      - { label: Lapsed, bind: "@.LAPSED", total: true }
-  - { use: ranked-bars@1, with: { id: by-country, title: Entities by country (top 20), rows: $.BY_COUNTRY, fmt: entities0, area: right, key: F3 } }
+      - { label: Country, bind: "link(@.label, 'lei-country')" }
+      - { label: Entities, bind: "@.value", fmt: entities0, total: true }
+  - { use: ranked-bars@1, with: { id: by-country, title: Entities by country (top 20), rows: $.BY_COUNTRY, label: label, value: value, fmt: entities0, area: right, key: F3 } }
   - { use: field-list@1, with: { id: source, title: Data source and licence, rows: $.PROVENANCE, area: right } }
   - { use: data-provenance@1 }
 keys: { F5: "link('ALL', 'lei-group', 'Every group')", F9: raw }

@@ -57,7 +57,6 @@ EXCEPTION = {"NATURAL_PERSONS": "Controlled by natural persons, not by an entity
              "LEGAL_OBSTACLES": "Legal obstacles prevent disclosure", "DISCLOSURE_DETRIMENTAL": "Disclosure would be detrimental",
              "DETRIMENT_NOT_EXCLUDED": "Detriment not excluded", "CONSENT_NOT_OBTAINED": "The parent's consent was not obtained"}
 LATE_SOON_DAYS = 30
-COUNTRY_ROWS = 400       # entities listed on a country page (by name); the counts are of all of them
 
 
 def _load(p: Path, default=None):
@@ -224,10 +223,12 @@ def build(cache: Path, extra: list[str] | None = None, cap: int | None = None) -
             "LEI_GROUP": root,
             "PARENTS": chain, "PARENT_EXCEPTIONS": exc, "CHILDREN": children, "CHILD_COUNT": len(children) or None,
             "DIRECT_CHILDREN_GLEIF": len(g.kids.get(lei, [])) or None, "ULTIMATE_CHILDREN_GLEIF": len(g.ukids.get(lei, [])) or None,
+            "GLEIF_GROUP_SIZE": groups[lei]["total"] if lei in groups else None,
             "MAPPING_IDS": mapping_ids,
             "SEGMENT": seed["segment"] if seed else "", "US_COMPANY": u["ticker"] if u else None,
             "US_COMPANY_NAME": u["name"] if u else "",
             "LEGAL_ENTITY": core_le.get(lei), "COUNTERPARTY": core_cp.get(lei),
+            "PROVENANCE": prov(lei),
         }
         entities[lei] = _clean(doc)
         entities[lei]["RENEWAL_LATE"] = late               # a boolean is kept whatever its value
@@ -246,110 +247,9 @@ def build(cache: Path, extra: list[str] | None = None, cap: int | None = None) -
                 "REGISTRATION_STATUS": r[4], "INITIAL_REGISTRATION": r[9], "LAST_UPDATE": r[10], "NEXT_RENEWAL": r[11],
                 "LEI_GROUP": root})
 
-    # ---- groups
-    grp_docs: dict[str, dict] = {}
-    for root, grp in sorted(groups.items()):
-        if root not in entities:
-            continue
-        members = [m for m in grp["members"] if m in entities]
-        mset = set(members)
-        depth: dict[str, int] = {root: 0}
-        for m in members:                                   # breadth first order: a parent's depth is known first
-            p = g.direct.get(m)
-            if m != root:
-                depth[m] = depth.get(p, 0) + 1 if p in mset else 1
-
-        def node(x: str, seen: set) -> dict:
-            ent = entities[x]
-            kids = [k for k in kids_in.get(x, []) if k in mset and k not in seen and k != root]
-            seen.update(kids)
-            return _clean({"LEI": x, "NAME": ent["NAME"], "COUNTRY": ent.get("LEI_COUNTRY"), "CHILDREN": [node(k, seen) for k in kids]})
-        seen = {root}
-        tree = node(root, seen)
-        loose = [m for m in members if m not in seen]           # ultimate children whose direct parent is not in the pack
-        if loose:
-            tree.setdefault("CHILDREN", []).extend(_clean({"LEI": m, "NAME": entities[m]["NAME"] + " (direct parent not reported)",
-                                                           "COUNTRY": entities[m].get("LEI_COUNTRY")}) for m in loose)
-        by_c: dict[str, int] = {}
-        by_f: dict[str, int] = {}
-        for m in members:
-            c = entities[m].get("COUNTRY_NAME", "")
-            by_c[c] = by_c.get(c, 0) + 1
-            f = entities[m].get("LEGAL_FORM", "") or "Not given"
-            by_f[f] = by_f.get(f, 0) + 1
-        rows = [_clean({"LEI": m, "NAME": entities[m]["NAME"], "COUNTRY": entities[m].get("LEI_COUNTRY"), "LEVEL": depth.get(m, 1),
-                        "LATE": "late" if entities[m]["RENEWAL_LATE"] else None})
-                for m in members]
-        r = entities[root]
-        segs = sorted({s["segment"] for s in grp["seeds"]})
-        capped = grp["total"] > len(members)
-        grp_docs[root] = _clean({
-            "GROUP_ID": root, "NAME": r["NAME"], "ENTITY_LEI": root, "COUNTRY": r.get("LEI_COUNTRY"), "COUNTRY_NAME": r.get("COUNTRY_NAME"),
-            "LEI_COUNTRY": r.get("LEI_COUNTRY"), "LEGAL_FORM": r.get("LEGAL_FORM"), "SEGMENT": ", ".join(segs),
-            "MEMBERS": len(members), "MEMBERS_IN_GLEIF": grp["total"], "CAPPED": capped,
-            "CAP_NOTE": (f"The group has {grp['total']:,} entities in GLEIF; the pack keeps {len(members):,} (at most {F.GROUP_CAP} a group, "
-                         "the nearest levels first). A wider build: tools/publicdata/gleif.py refresh --scope GROUP:" + root) if capped else "",
-            "LEVELS": max(depth.values()), "COUNTRIES": len(by_c), "LATE_RENEWALS": sum(1 for m in members if entities[m]["RENEWAL_LATE"]),
-            "SEEDS": [_clean({"LEI": s["lei"], "LABEL": s["label"], "SEGMENT": s["segment"], "TICKER": s.get("ticker")})
-                      for s in sorted(grp["seeds"], key=lambda s: s["lei"])],
-            "US_COMPANY": next((s["ticker"] for s in grp["seeds"] if s.get("ticker") and s["lei"] == root), None),
-            "TREE": [tree], "ROWS": rows,
-            "BY_COUNTRY": [{"LABEL": k, "VALUE": v} for k, v in sorted(by_c.items(), key=lambda kv: (-kv[1], kv[0]))][:20],
-            "BY_LEGAL_FORM": [{"LABEL": k, "VALUE": v} for k, v in sorted(by_f.items(), key=lambda kv: (-kv[1], kv[0]))][:15],
-            "PROVENANCE": prov(root), "_meta": meta})
-    seg_count: dict[str, int] = {}
-    for d in grp_docs.values():
-        for s in d.get("SEGMENT", "").split(", "):
-            seg_count[s] = seg_count.get(s, 0) + 1
-    all_c: dict[str, int] = {}
-    for ent in entities.values():
-        all_c[ent.get("COUNTRY_NAME", "")] = all_c.get(ent.get("COUNTRY_NAME", ""), 0) + 1
-    grp_docs["ALL"] = {
-        "GROUP_ID": "ALL", "NAME": "Every ownership group of the pack", "GROUPS": len(grp_docs), "ENTITIES": len(entities),
-        "COUNTRIES": len(all_c), "CAPPED_GROUPS": sum(1 for d in grp_docs.values() if d.get("CAPPED")),
-        "LATE_RENEWALS": sum(1 for ent in entities.values() if ent["RENEWAL_LATE"]),
-        "ROWS": [{"GROUP_ID": k, "NAME": d["NAME"], "COUNTRY": d.get("COUNTRY", ""), "SEGMENT": d.get("SEGMENT", ""), "MEMBERS": d["MEMBERS"],
-                  "MEMBERS_IN_GLEIF": d["MEMBERS_IN_GLEIF"]} for k, d in sorted(grp_docs.items(), key=lambda kv: (-kv[1]["MEMBERS"], kv[1]["NAME"]))],
-        "BY_SEGMENT": [{"LABEL": k, "VALUE": v} for k, v in sorted(seg_count.items(), key=lambda kv: (-kv[1], kv[0]))],
-        "BY_COUNTRY": [{"LABEL": k, "VALUE": v} for k, v in sorted(all_c.items(), key=lambda kv: (-kv[1], kv[0]))][:20],
-        "PROVENANCE": {"SOURCE": SOURCE, "RETRIEVED_AT": retrieved, "LICENCE": LICENCE, "URL": "https://search.gleif.org"}, "_meta": meta}
-
-    # ---- countries
-    by_country: dict[str, list[str]] = {}
-    for lei, ent in entities.items():
-        if ent.get("LEI_COUNTRY"):
-            by_country.setdefault(ent["LEI_COUNTRY"], []).append(lei)
-    countries: dict[str, dict] = {}
-    for cc, ms in sorted(by_country.items()):
-        ms = sorted(ms, key=lambda m: entities[m]["NAME"])
-        forms: dict[str, int] = {}
-        cities: dict[str, int] = {}
-        grps: dict[str, int] = {}
-        for m in ms:
-            ent = entities[m]
-            forms[ent.get("LEGAL_FORM", "") or "Not given"] = forms.get(ent.get("LEGAL_FORM", "") or "Not given", 0) + 1
-            cities[ent.get("LEGAL_CITY", "") or "Not given"] = cities.get(ent.get("LEGAL_CITY", "") or "Not given", 0) + 1
-            grps[ent["LEI_GROUP"]] = grps.get(ent["LEI_GROUP"], 0) + 1
-        countries[cc] = _clean({
-            "COUNTRY": cc, "NAME": ref.cname(cc), "ENTITIES": len(ms), "GROUPS_PRESENT": len(grps),
-            "GROUPS_HEADQUARTERED": sum(1 for r in grp_docs if r != "ALL" and grp_docs[r].get("COUNTRY") == cc),
-            "LAPSED": sum(1 for m in ms if entities[m].get("REGISTRATION_STATUS") == "LAPSED"),
-            "LATE_RENEWALS": sum(1 for m in ms if entities[m]["RENEWAL_LATE"]),
-            "ROWS": [_clean({"LEI": m, "NAME": entities[m]["NAME"], "CITY": entities[m].get("LEGAL_CITY"), "GROUP": entities[m]["LEI_GROUP"],
-                             "LATE": "late" if entities[m]["RENEWAL_LATE"] else None}) for m in ms[:COUNTRY_ROWS]],
-            "ROWS_NOTE": f"The first {COUNTRY_ROWS} of {len(ms):,} entities, by name" if len(ms) > COUNTRY_ROWS else None,
-            "GROUP_ROWS": [{"GROUP_ID": k, "NAME": entities[k]["NAME"], "HOME": entities[k].get("LEI_COUNTRY", ""), "HERE": v}
-                           for k, v in sorted(grps.items(), key=lambda kv: (-kv[1], entities[kv[0]]["NAME"]))],
-            "BY_LEGAL_FORM": [{"LABEL": k, "VALUE": v} for k, v in sorted(forms.items(), key=lambda kv: (-kv[1], kv[0]))][:15],
-            "BY_CITY": [{"LABEL": k, "VALUE": v} for k, v in sorted(cities.items(), key=lambda kv: (-kv[1], kv[0]))][:15],
-            "PROVENANCE": {"SOURCE": SOURCE, "RETRIEVED_AT": retrieved, "LICENCE": LICENCE, "URL": f"https://search.gleif.org/#/search/simpleSearch={cc}"},
-            "_meta": meta})
-    countries["ALL"] = {
-        "COUNTRY": "ALL", "NAME": "Every country of the pack's entities", "ENTITIES": len(entities), "COUNTRIES": len(by_country),
-        "ROWS": [{"COUNTRY": cc, "NAME": d["NAME"], "ENTITIES": d["ENTITIES"], "GROUPS_HEADQUARTERED": d.get("GROUPS_HEADQUARTERED", 0),
-                  "LAPSED": d.get("LAPSED", 0)} for cc, d in sorted(countries.items(), key=lambda kv: (-kv[1]["ENTITIES"], kv[0]))],
-        "BY_COUNTRY": [{"LABEL": d["NAME"], "VALUE": d["ENTITIES"]} for cc, d in sorted(countries.items(), key=lambda kv: (-kv[1]["ENTITIES"], kv[0]))][:20],
-        "PROVENANCE": {"SOURCE": SOURCE, "RETRIEVED_AT": retrieved, "LICENCE": LICENCE, "URL": "https://search.gleif.org"}, "_meta": meta}
+    # The ownership groups (LEIG) and the countries (LEIC) are not written: the gleif-groupings connector computes them from the
+    # entities when asked (since 2.9.2; docs/guides/GROUPINGS_ANALYTICS_GUIDE.md). An ultimate parent carries GLEIF_GROUP_SIZE,
+    # its group's size in GLEIF's golden copy (the pack keeps at most F.GROUP_CAP entities a group).
 
     # ---- mappings: every BIC and MIC of the entities, the ISIN sample of the seed entities
     mdocs: dict[str, dict] = {}
@@ -361,15 +261,13 @@ def build(cache: Path, extra: list[str] | None = None, cap: int | None = None) -
                 "IDENTIFIER": ident, "TYPE": typ, "ENTITY_LEI": lei, "ENTITY_NAME": ent["NAME"], "COUNTRY": ent.get("LEI_COUNTRY"),
                 "LEI_GROUP": ent["LEI_GROUP"], "ISIN_COUNT": ent.get("ISIN_COUNT") if typ == "ISIN" else None,
                 "MAPPING_FILE": maps[src].get("file", "")}))
-    return {"lei-entity": entities, "lei-relationship": rels, "lei-group": grp_docs, "lei-country": countries, "lei-mapping": mdocs}
+    return {"lei-entity": entities, "lei-relationship": rels, "lei-mapping": mdocs}
 
 
 def catalog(docs: dict[str, dict[str, dict]]) -> list[dict]:
-    """Every document's kind and id (the loader's index); the groups, countries and entities with their name as the title and the
-    entities' country and city as the subtitle (what the search box and the suggestions find them by)."""
+    """Every document's kind and id (the loader's index); the entities with their name as the title and their country and city as the
+    subtitle (what the search box and the suggestions find them by). The groups and countries are computed, not documents."""
     out = []
-    for kind in ("lei-group", "lei-country"):
-        out += [{"kind": kind, "id": i, "title": d["NAME"]} for i, d in docs.get(kind, {}).items()]
     out += [{"kind": "lei-entity", "id": i, "title": d["NAME"], "subtitle": f"{d.get('LEI_COUNTRY', '')} {d.get('LEGAL_CITY', '')}".strip()}
             for i, d in docs.get("lei-entity", {}).items()]
     for kind in ("lei-relationship", "lei-mapping"):
@@ -411,8 +309,8 @@ The pack is **off by default**: add it to the packs a server loads, `DRISHTI_PAC
 | Type | Opens | Examples |
 |---|---|---|
 | `LEI <code>` | an entity: key facts, addresses, registration and renewal (late renewal flagged), its parents chain, its children (a click opens the child's summary beside), BICs and ISINs, the us-equities company | `LEI 8I5DZWZKVSZI1NUHU748`, `LEI HWUPKR0MPOU8FGXBT394` |
-| `LEIG <code>` | a group: the ultimate parent with its whole tree, counts by country and legal form; a click on a member opens it beside | `LEIG 8I5DZWZKVSZI1NUHU748`; `LEIG ALL` lists every group and searches the entities |
-| `LEIC <country>` | a country: the pack's entities there, the groups present, legal forms and cities | `LEIC US`, `LEIC GB`; `LEIC ALL` lists every country |
+| `LEIG <code>` | a group, computed from the entities when asked: the ultimate parent with its whole tree, counts by country and legal form, no member cap; a click on a member opens it beside | `LEIG 8I5DZWZKVSZI1NUHU748`; `LEIG ALL` lists every group and searches the entities |
+| `LEIC <country>` | a country, computed from the entities when asked: every entity of the pack there, the groups present, legal forms and cities | `LEIC US`, `LEIC GB`; `LEIC ALL` lists every country |
 | `LEIR <id>` | one relationship: child, parent, direct or ultimate, status, periods, accounting standard | `LEIR LEIREL-<child LEI>-DIRECT`, from an entity |
 | `LEIM <identifier>` | an ISIN, BIC or MIC and the LEI it maps to | a BIC or ISIN from an entity page |
 
@@ -424,12 +322,14 @@ A bare LEI (twenty characters) opens its entity.
 |---|---|---|
 | `lei-entity` | {entities} | legal name and other names, legal form (ELF), category, jurisdiction, legal and headquarters addresses, entity and registration status, created, first registered, last updated, next renewal (late renewals flagged), the managing LOU, BICs, the ISIN count, OpenCorporates id, the direct and ultimate parent, the parents chain, the direct children, reporting exceptions |
 | `lei-relationship` | {rels} | one consolidation relationship of an entity to its direct parent (or, when none is in the pack, its ultimate parent): status, relationship and accounting periods, accounting standard, the record's registration and renewal |
-| `lei-group` | {groups_docs} | an ultimate parent with its tree (a tree table), every member, counts by country and legal form; `ALL` lists the groups |
-| `lei-country` | {country_docs} | the entities of one legal-address country, the groups present, legal forms and cities; `ALL` lists the countries |
+| `lei-group` | computed ({groups} and `ALL`) | an ultimate parent with its tree (a tree table), every member, counts by country and legal form; `ALL` lists the groups. Computed from the entities when asked by the derived connector `gleif-groupings` (since 2.9.2): nothing is stored |
+| `lei-country` | computed ({countries} and `ALL`) | the entities of one legal-address country, the groups present, legal forms and cities; `ALL` lists the countries. Computed like the groups |
 | `lei-mapping` | {mappings} | an identifier and its LEI: every BIC and MIC of the entities, and up to {isin_sample} ISINs of each seed entity |
 
-**The cap.** A group keeps at most {cap} entities, the nearest levels first; {capped} groups are larger in GLEIF and their page says so
-(`MEMBERS_IN_GLEIF`). A wider build of any group goes to the data folder (*Refreshing the data*). The groups are built from the
+**The cap.** The committed data keeps at most {cap} entities a group, the nearest levels first (the size of the snapshot); {capped} groups are
+larger in GLEIF and their page says so (`MEMBERS_IN_GLEIF`, from the ultimate parent's `GLEIF_GROUP_SIZE`). The computation itself has no
+cap: a group page counts and lists every entity of the group the lake holds. The formulas are in
+[GROUPINGS_ANALYTICS_GUIDE.md](../../../../docs/guides/GROUPINGS_ANALYTICS_GUIDE.md). A wider build of any group goes to the data folder (*Refreshing the data*). The groups are built from the
 consolidation relationships only (`IS_DIRECTLY_CONSOLIDATED_BY`, `IS_ULTIMATELY_CONSOLIDATED_BY`); fund management, sub-fund, feeder
 and branch relationships are not ownership and are left out. A member whose direct parent is not reported hangs under the ultimate
 parent in the tree. An entity with no reported parent may carry a reporting exception (controlled by natural persons, not
@@ -496,20 +396,23 @@ The picture above is made by `tools/packgen/gleif/shot.py` (its own scratch serv
 
 
 def guide(docs: dict[str, dict[str, dict]]) -> str:
-    ents, grps = docs.get("lei-entity", {}), docs.get("lei-group", {})
-    allg = grps.get("ALL", {})
-    real = {k: v for k, v in grps.items() if k != "ALL"}
-    segs = {}
-    for d in real.values():
-        for s in d.get("SEGMENT", "").split(", "):
-            if s:
-                segs[s] = segs.get(s, 0) + 1
-    return GUIDE.format(entities=f"{len(ents):,}", groups=f"{len(real):,}", countries=len([c for c in docs.get("lei-country", {}) if c != "ALL"]),
-                        retrieved=allg.get("PROVENANCE", {}).get("RETRIEVED_AT", ""),
-                        fi_groups=sum(1 for d in real.values() if any(s.get("SEGMENT") != "US equities" for s in d.get("SEEDS", []))),
-                        rels=f"{len(docs.get('lei-relationship', {})):,}", groups_docs=f"{len(grps):,}", country_docs=len(docs.get("lei-country", {})),
+    ents = docs.get("lei-entity", {})
+    members: dict[str, int] = {}
+    for e in ents.values():
+        members[e["LEI_GROUP"]] = members.get(e["LEI_GROUP"], 0) + 1
+    roots = {k: ents[k] for k in members if k in ents}
+    segs: dict[str, int] = {}
+    for g, e in roots.items():                              # a group's segments: those of its seeded entities
+        for s in sorted({m.get("SEGMENT") for m in ents.values() if m["LEI_GROUP"] == g and m.get("SEGMENT")}):
+            segs[s] = segs.get(s, 0) + 1
+    fi = {m["LEI_GROUP"] for m in ents.values() if m.get("SEGMENT") and m["SEGMENT"] != "US equities"}
+    retrieved = next((e.get("PROVENANCE", {}).get("RETRIEVED_AT", "") for e in ents.values() if e.get("PROVENANCE")), "")
+    return GUIDE.format(entities=f"{len(ents):,}", groups=f"{len(members):,}", countries=len({e.get("LEI_COUNTRY") for e in ents.values() if e.get("LEI_COUNTRY")}),
+                        retrieved=retrieved, fi_groups=len(fi),
+                        rels=f"{len(docs.get('lei-relationship', {})):,}",
                         mappings=f"{len(docs.get('lei-mapping', {})):,}", isin_sample=F.ISIN_SAMPLE, cap=F.GROUP_CAP,
-                        capped=allg.get("CAPPED_GROUPS", 0), late=f"{sum(1 for e in ents.values() if e.get('RENEWAL_LATE')):,}",
+                        capped=sum(1 for g, e in roots.items() if (e.get("GLEIF_GROUP_SIZE") or 0) > members[g]),
+                        late=f"{sum(1 for e in ents.values() if e.get('RENEWAL_LATE')):,}",
                         segments=", ".join(f"{k} {v}" for k, v in sorted(segs.items(), key=lambda kv: (-kv[1], kv[0]))),
                         useq=sum(1 for e in ents.values() if e.get("US_COMPANY")),
                         core_matches=sum(1 for e in ents.values() if e.get("LEGAL_ENTITY") or e.get("COUNTERPARTY")))

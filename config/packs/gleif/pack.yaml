@@ -17,6 +17,8 @@
 # of the us-equities companies and of the large banks, insurers, asset managers and market infrastructures. Hand-written;
 # tools/packgen/gleif/make.py writes the data (data/testdata/gleif/<kind>/, built into the lake by tools/build_demo_lakes.py and
 # served by the Delta connector gleif-store below), a few reference samples and guides/gleif.md from the cache tools/packgen/gleif/fetch.py fills.
+# The ownership groups (LEIG) and the countries (LEIC) are computed from the entities when asked, by the derived connector
+# gleif-groupings (since 2.9.2; docs/guides/GROUPINGS_ANALYTICS_GUIDE.md): nothing of them is stored.
 pack: gleif
 version: 1.0.0
 code: GLEIF            # typed alone, opens this pack's overview
@@ -65,19 +67,14 @@ form:                          # FORM gleif: the search form of each kind
     - { path: REGISTRATION_STATUS, type: enum, group: Registration }
     - { path: RENEWAL_LATE, label: Late renewal, type: enum, group: Registration }
     - { path: SEGMENT, type: enum, group: Registration }
-  lei-group:
-    - { path: GROUP_ID, label: Ultimate parent LEI, type: id, group: Group }
-    - { path: NAME, type: text, group: Group }
-    - { path: SEGMENT, type: enum, group: Group }
-    - { path: MEMBERS, type: number, group: Group }
 console:
   examples:
     - ["LEI 8I5DZWZKVSZI1NUHU748", "JPMorgan Chase & Co. · parents, children (a click opens one beside), identifiers, the listed company"]
     - ["LEI HWUPKR0MPOU8FGXBT394", "Apple Inc. · its LEI record and the us-equities company"]
-    - ["LEIG 8I5DZWZKVSZI1NUHU748", "JPMorgan Chase & Co.'s ownership group · the tree, counts by country and legal form"]
+    - ["LEIG 8I5DZWZKVSZI1NUHU748", "JPMorgan Chase & Co.'s ownership group, computed from the entities · the tree, counts by country and legal form"]
     - ["LEIG MLU0ZO3ML4LN2LL2TL39", "HSBC Holdings · a global bank's group"]
     - ["LEIG ALL", "Every ownership group, and a search of the entities"]
-    - ["LEIC GB", "United Kingdom · the entities with a British legal address"]
+    - ["LEIC GB", "United Kingdom, computed from the entities · every entity with a British legal address"]
     - ["LEIC ALL", "Every country of the entities"]
   help: config/help.yaml
 columns:
@@ -87,13 +84,13 @@ columns:
   lei-country: [COUNTRY, NAME, ENTITIES]
   lei-mapping: [IDENTIFIER, TYPE, ENTITY_LEI, ENTITY_NAME]
 # The pack's data: the committed snapshot data/testdata/gleif/<kind>/ built into <lake>/gleif/<kind>/ by tools/build_demo_lakes.py
-# (drishti.py lake demo), one Delta table per kind keyed by its id field (LEI, GROUP_ID, RELATIONSHIP_ID, COUNTRY, IDENTIFIER). The
-# promoted columns answer the search form; the type-ahead also matches an entity's legal name (layout.<kind>.type-ahead).
+# (drishti.py lake demo), one Delta table per kind keyed by its id field (LEI, RELATIONSHIP_ID, IDENTIFIER). The promoted columns
+# answer the search form; the type-ahead also matches an entity's legal name (layout.<kind>.type-ahead).
 connectors:
   gleif-store:
     plugin: delta
     enabled: ${DRISHTI_LAKE_ENABLED:true}
-    kinds: [lei-entity, lei-group, lei-relationship, lei-country, lei-mapping]
+    kinds: [lei-entity, lei-relationship, lei-mapping]
     settings:
       root: ${DRISHTI_DELTA_ROOT:${drishti.data.dir:./data}/delta}
       domain: gleif
@@ -101,20 +98,128 @@ connectors:
         lei-entity:
           columns: [LEI, NAME, LEI_COUNTRY, LEGAL_CITY, LEGAL_FORM, REGISTRATION_STATUS, RENEWAL_LATE, SEGMENT, NEXT_RENEWAL, US_COMPANY]
           type-ahead: [NAME, US_COMPANY]
-        lei-group:
-          columns: [GROUP_ID, NAME, LEI_COUNTRY, SEGMENT, MEMBERS]
-          type-ahead: [NAME]
         lei-relationship:
           columns: [RELATIONSHIP_ID, LEVEL, CHILD_ENTITY, PARENT_ENTITY, RELATIONSHIP_STATUS]
-        lei-country:
-          columns: [COUNTRY, NAME, ENTITIES]
-          type-ahead: [NAME]
         lei-mapping:
           columns: [IDENTIFIER, TYPE, ENTITY_LEI, ENTITY_NAME]
           type-ahead: [ENTITY_NAME]
+  # LEIG and LEIC: computed from every entity when asked (a business date at a time, rebuilt when the lake loads), no member cap. An
+  # entity is in its ownership group (LEI_GROUP: its ultimate parent, from GLEIF's level 2 relationships), in its legal-address country,
+  # and in ALL (the pack-wide page, which keeps its aggregates only). The group's tree is built from each member's DIRECT_PARENT.
+  gleif-groupings:
+    plugin: derived
+    enabled: ${DRISHTI_LAKE_ENABLED:true}
+    kinds: [lei-group, lei-country]
+    settings:
+      refresh: 60s
+      source-name: gleif-groupings
+      lei-group:
+        from: lei-entity
+        group-by: $.LEI_GROUP
+        also-group-by: { all: "'ALL'" }
+        unlisted: ALL
+        id-field: GROUP_ID
+        search-fields: NAME                 # LEIG Ford Motor: the type-ahead finds a group by its ultimate parent's name
+        members: MEMBER_LEIS
+        max-members: 100000
+        rows-field: ROWS
+        fields:
+          MEMBERS: count
+          LATE_RENEWALS: "sum $.RENEWAL_LATE ? 1 : 0"
+          LAPSED: "sum $.REGISTRATION_STATUS == 'LAPSED' ? 1 : 0"
+          COUNTRY_LIST: distinct $.LEI_COUNTRY
+          GROUP_LIST: distinct $.LEI_GROUP
+          ROOT_NAME: "distinct $.LEI == $.LEI_GROUP ? $.NAME : null"
+          ROOT_COUNTRY: "distinct $.LEI == $.LEI_GROUP ? $.LEI_COUNTRY : null"
+          ROOT_COUNTRY_NAME: "distinct $.LEI == $.LEI_GROUP ? $.COUNTRY_NAME : null"
+          ROOT_LEGAL_FORM: "distinct $.LEI == $.LEI_GROUP ? $.LEGAL_FORM : null"
+          ROOT_SEGMENT: "distinct $.LEI == $.LEI_GROUP ? $.SEGMENT : null"
+          ROOT_US_COMPANY: "distinct $.LEI == $.LEI_GROUP ? $.US_COMPANY : null"
+          GLEIF_GROUP_SIZE: "max $.LEI == $.LEI_GROUP ? $.GLEIF_GROUP_SIZE : null"
+          PROVENANCE: first $.PROVENANCE
+        rows:
+          LEI: $.LEI
+          NAME: $.NAME
+          COUNTRY: $.LEI_COUNTRY
+          CITY: $.LEGAL_CITY
+          LEGAL_FORM: nonblank($.LEGAL_FORM, 'Not given')
+          PARENT: $.DIRECT_PARENT
+          STATUS: $.REGISTRATION_STATUS
+          LATE: "$.RENEWAL_LATE ? 'late' : null"
+          SEGMENT: $.SEGMENT
+          GROUP: $.LEI_GROUP
+          GLEIF_GROUP_SIZE: $.GLEIF_GROUP_SIZE
+          US_COMPANY: $.US_COMPANY
+        tree: { id: LEI, parent: PARENT }
+        then:
+          NAME: "$.GROUP_ID == 'ALL' ? 'Every ownership group of the pack' : first($.ROOT_NAME)"
+          ENTITY_LEI: "$.GROUP_ID == 'ALL' ? null : $.GROUP_ID"
+          LEI_COUNTRY: first($.ROOT_COUNTRY)
+          COUNTRY_NAME: first($.ROOT_COUNTRY_NAME)
+          LEGAL_FORM: first($.ROOT_LEGAL_FORM)
+          SEGMENT: first($.ROOT_SEGMENT)
+          US_COMPANY: first($.ROOT_US_COMPANY)
+          COUNTRIES: size($.COUNTRY_LIST)
+          GROUPS: size($.GROUP_LIST)
+          MEMBERS_IN_GLEIF: "$.GLEIF_GROUP_SIZE == null ? $.MEMBERS : max($.GLEIF_GROUP_SIZE, $.MEMBERS)"
+          CAPPED: "$.GLEIF_GROUP_SIZE != null && $.GLEIF_GROUP_SIZE > $.MEMBERS"
+          BY_COUNTRY: group($.ROWS, 'COUNTRY')
+          BY_LEGAL_FORM: group($.ROWS, 'LEGAL_FORM')
+          GROUP_ROWS: "$.GROUP_ID == 'ALL' ? $.ROWS[?@.LEI == @.GROUP] : null"
+          BY_SEGMENT: "group($.ROWS[?nonblank(@.SEGMENT)], 'SEGMENT')"
+        sort:
+          BY_COUNTRY: value desc 20
+          BY_LEGAL_FORM: value desc 15
+          BY_SEGMENT: value desc
+          GROUP_ROWS: GLEIF_GROUP_SIZE desc
+      lei-country:
+        from: lei-entity
+        group-by: $.LEI_COUNTRY
+        also-group-by: { all: "'ALL'" }
+        unlisted: ALL
+        id-field: COUNTRY
+        search-fields: NAME
+        members: MEMBER_LEIS
+        max-members: 100000
+        rows-field: ROWS
+        fields:
+          ENTITIES: count
+          NAMES: distinct $.COUNTRY_NAME
+          COUNTRY_LIST: distinct $.LEI_COUNTRY
+          GROUP_LIST: distinct $.LEI_GROUP
+          GROUPS_HEADQUARTERED: "sum $.LEI == $.LEI_GROUP ? 1 : 0"
+          LAPSED: "sum $.REGISTRATION_STATUS == 'LAPSED' ? 1 : 0"
+          LATE_RENEWALS: "sum $.RENEWAL_LATE ? 1 : 0"
+          PROVENANCE: first $.PROVENANCE
+        rows:
+          LEI: $.LEI
+          NAME: $.NAME
+          COUNTRY: $.LEI_COUNTRY
+          COUNTRY_NAME: $.COUNTRY_NAME
+          CITY: nonblank($.LEGAL_CITY, 'Not given')
+          LEGAL_FORM: nonblank($.LEGAL_FORM, 'Not given')
+          GROUP: $.LEI_GROUP
+          STATUS: $.REGISTRATION_STATUS
+          LATE: "$.RENEWAL_LATE ? 'late' : null"
+        then:
+          NAME: "$.COUNTRY == 'ALL' ? 'Every country of the entities in the pack' : first($.NAMES)"
+          COUNTRIES: size($.COUNTRY_LIST)
+          GROUPS_PRESENT: size($.GROUP_LIST)
+          BY_LEGAL_FORM: group($.ROWS, 'LEGAL_FORM')
+          BY_CITY: group($.ROWS, 'CITY')
+          GROUP_ROWS: group($.ROWS, 'GROUP')
+          BY_COUNTRY: group($.ROWS, 'COUNTRY_NAME')
+          COUNTRY_ROWS: "$.COUNTRY == 'ALL' ? group($.ROWS, 'COUNTRY') : null"
+        sort:
+          ROWS: NAME asc
+          BY_LEGAL_FORM: value desc 15
+          BY_CITY: value desc 15
+          GROUP_ROWS: value desc
+          BY_COUNTRY: value desc 20
+          COUNTRY_ROWS: value desc
 routes:
   lei-entity: gleif-store
-  lei-group: gleif-store
+  lei-group: gleif-groupings
   lei-relationship: gleif-store
-  lei-country: gleif-store
+  lei-country: gleif-groupings
   lei-mapping: gleif-store
