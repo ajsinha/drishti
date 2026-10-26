@@ -17,11 +17,11 @@
 
 # The command catalog
 
-Every command of the command line: its own words and forms, the 10 packs' codes, and the 96 mnemonics the packs define, each with what it does and an example. A pack's mnemonics work when the pack is switched on ([PACKS.md](PACKS.md)); how to type them is in [USER_GUIDE.md](USER_GUIDE.md).
+Every command of the command line: its own words and forms, the 10 packs' codes, and the 97 mnemonics the packs define, each with what it does and an example. A pack's mnemonics work when the pack is switched on ([PACKS.md](PACKS.md)); how to type them is in [USER_GUIDE.md](USER_GUIDE.md).
 
 **Data** says what kind of data a command shows ([the data contracts](../contracts/README.md#3-four-kinds-of-data)): *fundamental* (masters, terms, market and public data, kept as delivered), *engine input* (what upstream engines deliver for the computed measures), *Drishti's own* (made by Drishti) and *computed* (worked out when asked). **Change** says when a command moves to the compute model, or when the figures on a record start to be computed instead of stored ([the roadmap](../architecture/IMPLEMENTATION_PLAN.md#the-computed-measures-roadmap-280-to-2120-product-owner-2026-10-25)). Each mnemonic's fields are in its data contract ([every command's contract](../contracts/packs/README.md)).
 
-In numbers: 70 fundamental, 8 engine input, 1 Drishti's own and 17 computed; 0 move to the compute model and 0 keep their record while its figures become computed.
+In numbers: 70 fundamental, 8 engine input, 1 Drishti's own and 18 computed; 0 move to the compute model and 0 keep their record while its figures become computed.
 
 ## Contents
 
@@ -166,6 +166,7 @@ Curves, volatility surfaces, FX, equities, credit, inflation, commodities, fixin
 | `BND` | Bond (security master) | A listed bond: terms, price, yield, spreads and analytics. | `BND BND-BRVERD054608` | fundamental |  |
 | `CORR` | Correlation matrix | A correlation set: the factors whose pairwise correlations basket, quanto and spread products use. Since 2.9.2 the set keeps its definition only; the correlations are the computed kind correlation-result (CORRC), worked out from the factors' price history when asked. | `CORR CORR-EU-EQ` | fundamental |  |
 | `CORRC` | Correlations of a factor set (computed from price history) | The pairwise correlations of a correlation set's factors, computed when asked from their daily closes in the lake (log returns over a window, Pearson or Ledoit-Wolf) by the server's Java engine, as the person asking; never stored. | `CORRC CORR-G10FX~estimator=ledoit-wolf` | computed |  |
+| `EQB` | An equity's beta against its index (computed from price history) | An equity's beta, alpha, correlation and R squared against its index (EQUITY_INDEX), the regression of their daily log returns over a window, computed when asked from both price histories by the server's Java engine, as the person asking; never stored. It replaces the security master's stored BETA (retired in 2.9.2). | `EQB EQ-NVTK` | computed |  |
 
 ## Market risk (`market-risk`)
 

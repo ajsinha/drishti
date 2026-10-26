@@ -19,7 +19,7 @@
 
 Every command (mnemonic) of every pack has a data contract: a YAML file beside its pack (`config/packs/<pack>/contracts/<kind>.contract.yaml`, checked against `tools/contracts.schema.json`) and a section of its pack's page here. The shared rules are in [the contracts README](../README.md); the computed measures that replace the retiring kinds have their own contracts there.
 
-96 contracts, 473 points still to review. Check them with `drishti.py contract check`; draft a new one with `drishti.py contract bootstrap KIND --write`.
+97 contracts, 468 points still to review. Check them with `drishti.py contract check`; draft a new one with `drishti.py contract bootstrap KIND --write`.
 
 | Command | Kind | Pack | Class | Status | Replaced by | To review |
 |---|---|---|---|---|---|---|
@@ -63,7 +63,7 @@ Every command (mnemonic) of every pack has a data contract: a YAML file beside i
 | `FXV` | `fx-vol-surface` | [market-data](market-data.md#fxv-fx-volatility-surface-fx-vol-surface) | fundamental | active |  | 6 |
 | `IRV` | `ir-vol-cube` | [market-data](market-data.md#irv-swaption-volatility-cube-ir-vol-cube) | fundamental | active |  | 5 |
 | `CPV` | `cap-vol-surface` | [market-data](market-data.md#cpv-capfloor-volatility-surface-cap-vol-surface) | fundamental | active |  | 6 |
-| `EQ` | `equity` | [market-data](market-data.md#eq-equity-equity) | fundamental | active |  | 7 |
+| `EQ` | `equity` | [market-data](market-data.md#eq-equity-equity) | fundamental | active |  | 6 |
 | `EQX` | `equity-index` | [market-data](market-data.md#eqx-equity-index-equity-index) | fundamental | active |  | 7 |
 | `DIV` | `dividend-curve` | [market-data](market-data.md#div-dividend-curve-dividend-curve) | fundamental | active |  | 7 |
 | `EQV` | `equity-vol-surface` | [market-data](market-data.md#eqv-equity-volatility-surface-equity-vol-surface) | fundamental | active |  | 6 |
@@ -77,6 +77,7 @@ Every command (mnemonic) of every pack has a data contract: a YAML file beside i
 | `BND` | `bond` | [market-data](market-data.md#bnd-bond-security-master-bond) | fundamental | active |  | 7 |
 | `CORR` | `correlation-matrix` | [market-data](market-data.md#corr-correlation-matrix-correlation-matrix) | fundamental | active |  | 6 |
 | `CORRC` | `correlation-result` | [market-data](market-data.md#corrc-correlations-of-a-factor-set-computed-from-price-history-correlation-result) | computed | active |  | 0 |
+| `EQB` | `equity-beta` | [market-data](market-data.md#eqb-an-equitys-beta-against-its-index-computed-from-price-history-equity-beta) | computed | active |  | 0 |
 | `SCN` | `stress-scenario` | [market-risk](market-risk.md#scn-stress-scenario-stress-scenario) | fundamental | active |  | 5 |
 | `STR` | `stress-result` | [market-risk](market-risk.md#str-stress-result-stress-result) | fundamental | active |  | 4 |
 | `FRTB` | `frtb-sensitivity` | [market-risk](market-risk.md#frtb-frtb-sensitivities-frtb-sensitivity) | fundamental | active |  | 6 |
@@ -100,11 +101,11 @@ Every command (mnemonic) of every pack has a data contract: a YAML file beside i
 | `LTRD` | `legal-entity-trades` | [trading](trading.md#ltrd-legal-entity-trades-derived-from-trades-legal-entity-trades) | computed | active |  | 1 |
 | `ITRD` | `index-trades` | [trading](trading.md#itrd-index-trades-derived-from-trades-index-trades) | computed | active |  | 1 |
 | `USEQ` | `us-company` | [us-equities](us-equities.md#useq-us-company-us-company) | fundamental | active |  | 5 |
-| `IDX` | `index-membership` | [us-equities](us-equities.md#idx-index-members-index-membership) | fundamental | active |  | 6 |
+| `IDX` | `index-membership` | [us-equities](us-equities.md#idx-index-members-index-membership) | fundamental | active |  | 3 |
 | `SIC` | `sic-sector` | [us-equities](us-equities.md#sic-sic-sector-sic-sector) | computed | active |  | 0 |
 | `EDGAR` | `filing-feed` | [us-equities](us-equities.md#edgar-edgar-filings-browser-filing-feed) | fundamental | active |  | 6 |
 | `FILING` | `filing` | [us-equities](us-equities.md#filing-sec-filing-filing) | fundamental | active |  | 3 |
-| `FACT` | `financial-fact` | [us-equities](us-equities.md#fact-financial-fact-financial-fact) | fundamental | active |  | 6 |
+| `FACT` | `financial-fact` | [us-equities](us-equities.md#fact-financial-fact-financial-fact) | fundamental | active |  | 5 |
 | `PXH` | `price-history` | [us-equities](us-equities.md#pxh-price-history-live-internal-use-only-price-history) | fundamental | active |  | 3 |
 | `ECON` | `economy` | [world-economy](world-economy.md#econ-economy-economy) | fundamental | active |  | 7 |
 | `MACRO` | `macro-indicator` | [world-economy](world-economy.md#macro-macro-indicator-macro-indicator) | fundamental | active |  | 7 |

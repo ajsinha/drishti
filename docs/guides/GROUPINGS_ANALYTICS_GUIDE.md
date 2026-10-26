@@ -27,8 +27,9 @@ Seven pages that used to be **stored copies** of figures are **computed from the
 | `SIC` (`sic-sector`) | a SIC sector: its companies, revenue, net income | every us-equities company | `us-equities-groupings` |
 | `ECG` (`country-group`) | a World Bank region, income group or the world | every economy | `macro-groupings` |
 | `CORR` (`correlation-matrix`, `correlation-result`) | a factor set's correlations | the factors' daily closes | the reactive `correlation-engine` (Java) |
-| `USEQ` ratios (`us-company`) | net margin and revenue growth | the company's financial facts | the page itself |
+| `USEQ` ratios (`us-company`), `FACT` changes, `IDX` totals | net margin, revenue growth, a fact's change on the year, an index's members' revenue and divisions | the company's financial facts, the index's members | the page itself |
 | `PXH` analytics (`price-history`) | returns, volatility, drawdown, beta | the price history just read | the price connector (`yfinance`) |
+| `EQB` (`equity-beta`; the `EQ` page's beta) | an equity's beta against its index | the equity's and the index's daily closes | the reactive `equity-analytics` (Java) |
 
 The rule is the one the [implementation plan](../architecture/IMPLEMENTATION_PLAN.md#groupings-and-analytics-track-b-shipped-in-290-or-2100-as-each-is-ready)
 sets for every computed measure: **fundamental data is kept as it is; whatever can be derived from it is computed when asked and never
@@ -49,7 +50,7 @@ its inputs come from.
   - [4. SIC: a sector](#4-sic-a-sector)
   - [5. ECG: a country group](#5-ecg-a-country-group)
   - [6. CORR: correlations from price history](#6-corr-correlations-from-price-history)
-  - [7. USEQ: margin and growth](#7-useq-margin-and-growth)
+  - [7. USEQ, FACT and IDX: margins, changes and totals](#7-useq-fact-and-idx-margins-changes-and-totals)
   - [8. PXH: returns, volatility and beta](#8-pxh-returns-volatility-and-beta)
   - [9. Old ids, links and commands](#9-old-ids-links-and-commands)
 - **Part II · The data contract**
@@ -171,7 +172,7 @@ South Asia, a World Bank region, computed from its six member economies:
 | GDP per capita (USD) | 2,705 | that GDP over the members' population (1,692.26m) |
 | Real growth | 7.07% | weighted by GDP: India 3,956bn at 7.57%, Bangladesh 456bn at 3.49%, ... |
 | Inflation (median) | 3.10% | the median of the members, as the World Bank aggregates prices |
-| Latest year | 2025 | the latest year among the members' figures |
+| Latest year (members table) | 2025 | the latest year among the members' figures (each member's own in its row) |
 
 Below: the largest economies, every member economy (a click opens it), and the GDP path, the members' GDP summed by year. `ECG ECG-WLD`
 (the world): 213 economies, 117,327bn USD, 8,161.8m people, 14,375 USD a head, growth 2.80%, median inflation 3.11%. `ECG ECG-HIC` (high
@@ -189,8 +190,8 @@ computed kind `correlation-result` for the window and estimator picked at the to
 
 | Window | Estimator | Returns used | Average ρ | Lowest | Highest |
 |---|---|---|---|---|---|
-| All (0, the default) | Pearson (the default) | 29, 2026-08-19 to 2026-09-30 | 0.096 | −0.156 (RHNB, GRNT) | 0.382 (RHNB, LUMN) |
-| 20 | Pearson | 20, 2026-09-01 to 2026-09-30 | 0.142 | −0.165 | 0.407 |
+| All (0, the default) | Pearson (the default) | 29 (the test data's 2026-08-19 to 2026-09-30) | 0.096 | −0.156 (RHNB, GRNT) | 0.382 (RHNB, LUMN) |
+| 20 | Pearson | 20 (from 2026-09-01) | 0.142 | −0.165 | 0.407 |
 | All | Ledoit-Wolf | 29 | 0.000 | 0.000 | 0.000 (shrinkage 1.00) |
 
 Ledoit-Wolf shrinks the sample correlations toward none by the intensity that minimises the expected error; on 29 returns of four
@@ -201,7 +202,7 @@ last close, its return over the window and its annualised volatility (EQ-ORBT 22
 The computed kind opens on its own too: `CORRC CORR-G10FX` (G10 FX, Pearson over 29 returns: average −0.012, EURUSD and GBPUSD 0.222),
 with parameters riding on the id: `CORRC CORR-G10FX~estimator=ledoit-wolf~window=20`.
 
-## 7. USEQ: margin and growth
+## 7. USEQ, FACT and IDX: margins, changes and totals
 
 ```text
 USEQ AAPL <GO>
@@ -211,6 +212,10 @@ The strip's **Net margin** (26.9%) and **Revenue growth** (+6.4%) are worked out
 revenue 416.16bn and net income 112.01bn; growth against fiscal 2024's revenue in the financials table. The financials table's net
 margin column is computed per year the same way. `USEQ JPM`: 31.3% and +2.8%; `USEQ F`: −4.4% and +1.2%. The index pages (`IDX SP500`)
 and the sector pages compute a member's margin the same way.
+
+`FACT AAPL-REVENUE` works out each year's change against the year above it in the table, and the strip's *Change on the year* from the
+last two values (+6.4%). `IDX SP500` adds up its 459 members' rows as it opens: revenue 17.20 trillion and net income 2.17 trillion USD
+(the USD reporters), 9 SIC divisions, members by division on the right.
 
 ## 8. PXH: returns, volatility and beta
 
@@ -224,6 +229,19 @@ the connector has just read: the 1, 3 and 6 month returns and the return over th
 log returns, the largest drawdown, and beta and correlation against the benchmark (`SPY` unless the site sets `DRISHTI_US_EQUITIES_BENCHMARK`).
 Nothing is stored: the analytics are as fresh, and as internal, as the prices. With the connector off the page has no data.
 
+### 8.1 EQB: an equity's beta from price history
+
+```text
+EQ EQ-NVTK <GO>          the equity page: its Beta panel
+EQB EQ-NVTK <GO>         the computed kind itself
+```
+
+The security master's stored `BETA` (1.28 for Novatek) is gone. The equity page's **Beta** panel asks the computed kind `equity-beta`
+for the equity's beta against its index (`EQUITY_INDEX`: EQX-NDX), the regression of the two daily log return series on the dates both
+have: over the 29 returns to 2026-09-30, **−0.07** with a correlation of −0.03. The demo's prices are independent synthetic walks, so
+their measured betas are near zero; the stored ones were set by hand. An equity whose record names no index (EQ-CSCA, EQ-LUMN) gets a
+refusal in words instead of a number. `EQB EQ-NVTK~window=20` takes the last 20 returns.
+
 ## 9. Old ids, links and commands
 
 | Old | Now |
@@ -235,6 +253,9 @@ Nothing is stored: the analytics are as fresh, and as internal, as the prices. W
 | `CORR CORR-<set>`, `/v/correlation-matrix/CORR-<set>` | the same ids: the set's definition, its correlations computed (`CORRC CORR-<set>`) |
 | `us-company` fields `NET_MARGIN`, `REVENUE_GROWTH`, `FINANCIALS[].NET_MARGIN`; `index-membership` `ROWS[].NET_MARGIN` | removed from the records; the pages compute them (a saved search on `NET_MARGIN` no longer finds anything) |
 | `correlation-matrix` fields `AVERAGE`, `PAIRS`, `WINDOW`, `ESTIMATOR` | removed; `correlation-result` answers them |
+| `financial-fact` `CHANGE_PCT`, `HISTORY[].CHANGE_PCT` | removed; the page computes the change |
+| `index-membership` `SECTORS`, `REVENUE`, `NET_INCOME`, `BY_SECTOR` | removed; the page sums the members' rows (the membership and `MEMBERS` stay) |
+| `equity` `BETA` | removed; `EQB <ticker>` and the equity page's Beta panel compute it |
 | the search form of `lei-group` (`FORM gleif`) | gone: the type-ahead finds a group by its name, and the `LEIG ALL` search finds entities |
 
 ---
@@ -256,6 +277,8 @@ its inputs. The machine-readable contracts are `config/packs/<pack>/contracts/<k
 | `correlation-result` | CORRC | `correlation-engine` (reactive, Java) | the set's id, `~window=`, `~estimator=` | `correlation-matrix`, `equity`, `fx-spot` | the request |
 | USEQ ratios | USEQ | none: the `us-company` page | `TICKER` | `us-company` | the company record's |
 | PXH analytics | PXH | `us-equities-prices` (yfinance) | `PX-<ticker>` | the price history read live | the request (live only) |
+| `equity-beta` | EQB | `equity-analytics` (reactive, Java) | the equity's id, `~window=` | `equity`, `equity-index` | the request |
+| FACT changes, IDX totals | FACT, IDX | none: the pages | `FACT_ID`, `INDEX` | `financial-fact`, `index-membership` | the record's |
 
 Every derived page also carries `id` (the key), `derivedFrom` (the kind it groups), `memberCount` and the member ids (`MEMBER_LEIS`,
 `TICKERS`, `MEMBER_ECONOMIES`). A pane `ALL` keeps its aggregates and the lists its `then` fields make, but **not** its member ids, rows or
@@ -391,7 +414,9 @@ and one estimator.
 | `FACTOR_STATS[]` | record list | `FACTOR`, `LAST` (the window's last close), `RETURN` (simple, a fraction), `VOLATILITY` (`σ√252`, a fraction) |
 | `STAMP` | record | how the answer was computed (pin, inputs, engine, where it ran), as every reactive answer |
 
-**Errors** (refusals in words: `DRS-9205`, the engine's message saying which; a missing set is `DRS-1001` when the page itself is opened): no such set; fewer than two factors; a factor without price history;
+**Errors** (the answer's state is *failed* and its message says which, as `drishti.py compute run` prints it; a parameter outside its
+options is *refused* before any work: `estimator kendall is not allowed for correlation-result; allowed: pearson, ledoit-wolf`; a set
+that does not exist opened as a page is `DRS-1001`): no such set; fewer than two factors; a factor without price history;
 fewer than three common dates; a price of zero or less; a factor that did not move over the window (its correlation is undefined); an
 estimator other than the two.
 
@@ -406,7 +431,14 @@ Computed by the `us-company` page (and by the index, sector and company-card pan
 | Net margin per year (financials table) | `NET_INCOME / REVENUE × 100` of the row | as above |
 
 `REVENUE`, `NET_INCOME`, `FISCAL_YEAR` and `FINANCIALS[]` are the facts as filed with the SEC (XBRL company facts, `financial-fact`); the
-ratios are not on the record any more.
+ratios are not on the record any more. The same way:
+
+| Page | Figure | Formula |
+|---|---|---|
+| `FACT` (financial-fact) | change on the year (strip) | `(LATEST − V₋₁) / abs(V₋₁) × 100`, `V₋₁` the `HISTORY[]` value before the last; empty with one value or a zero |
+| `FACT` | change (each row) | the row's value against the row above it (the previous reported year) |
+| `IDX` (index-membership) | members' revenue, net income | `sum(ROWS[CURRENCY = USD], REVENUE)`, the same for `NET_INCOME` |
+| `IDX` | SIC divisions; members by division | `size(group(ROWS, 'SECTOR'))`; `group(ROWS, 'SECTOR')` |
 
 ## 17. The PXH analytics
 
@@ -426,6 +458,26 @@ Computed by the price connector (the `yfinance` plugin, `PriceAnalytics`) from t
 All are fractions (0.123 is 12.3%). The benchmark's history is read through the same connector and cache; when it cannot be read, beta
 and correlation are empty and the rest is shown.
 
+### 17.1 equity-beta
+
+`EQB` (and the equity page's Beta panel): the regression of the equity's daily log returns on its index's (`EQUITY_INDEX`), on the
+dates both histories have, over the last `window` returns (parameter `window`, default 0: every return). Engine
+`com.ash.drishti.compute.reactive.analytics.BetaEngine`, connector `equity-analytics` (reads `equity` `{id}` and `equity-index`
+`{inputs.equity.EQUITY_INDEX}`).
+
+| Field | Type | Formula |
+|---|---|---|
+| `EQUITY`, `INDEX` | id | the equity asked for, its index |
+| `WINDOW`, `AVAILABLE`, `FROM`, `TO` | integer, date | as in `correlation-result` |
+| `BETA` | rate | `cov(r, r_i) / var(r_i)` |
+| `ALPHA` | rate | `mean(r) − BETA × mean(r_i)`, a daily log return |
+| `CORRELATION`, `R_SQUARED` | rate | `ρ(r, r_i)` and its square |
+| `VOLATILITY`, `INDEX_VOLATILITY` | rate | the sample standard deviations × √252 (fractions) |
+
+**Errors** (the answer's state *failed*, its message in words: `EQ-CSCA names no index (EQUITY_INDEX): its beta has nothing to be measured
+against`): no such equity; an equity that names no index; an index without price history; fewer than three
+common dates; an index that did not move over the window.
+
 ## 18. Reconciliation: stored against computed
 
 On the committed data (gleif 2026-10-25, us-equities 2026-10-24, world-economy's World Bank and IMF data of 2026-10-10, market data on
@@ -440,6 +492,9 @@ On the committed data (gleif 2026-10-25, us-equities 2026-10-24, world-economy's
 | `correlation-matrix` | 3 sets | the factors | the stored pairs were **synthetic**: drawn at random between 0.15 and 0.78 and labelled *2 years, Ledoit-Wolf*, with no price history behind them. Computed from the lake's 29 daily returns to 2026-09-30, Pearson: CORR-EU-EQ average 0.096 (stored 0.385), CORR-G10FX −0.012 (0.512), CORR-US-EQ 0.092 (0.406) |
 | USEQ ratios | 503 companies | net margin on all 503 and every year of the financials; revenue growth on 500 | **3 companies** whose previous fiscal year is missing from the financials (SNA: 2023, 2024, 2026): the stored growth compared with the last year reported (two years earlier); the computed growth is against the previous fiscal year only, and empty when it is missing |
 | PXH analytics | live only | nothing was stored | new |
+| FACT changes | 3,480 facts, 34,160 yearly rows | every change, on every row and every strip | none |
+| IDX totals | 6 indices and lists | revenue, net income and divisions on all 6 (USD reporters, as stored) | the divisions are listed alphabetically, not largest first |
+| `equity` `BETA` | 10 equities | none | the stored betas were **set by hand** (`tools/packgen/banking/data_names.py`), with no price series behind them; the demo's price walks are independent, so the computed betas over the 29 returns to 2026-09-30 are near zero (EQ-NVTK −0.07 against NDX, stored 1.28; EQ-GRNT 0.73 against UKX, stored 1.05; EQ-SLRS 0.32, stored 0.52). EQ-CSCA and EQ-LUMN name no index: no beta (stored 1.46 and 1.19) |
 
 ---
 
@@ -540,6 +595,8 @@ ticker opened to Yahoo Finance, and the prices and everything computed from them
 | ECG | `economy`: `REGION_GROUP`, `INCOME_GROUP`, `GDP_USD_BN`, `POPULATION_M`, `GROWTH`, `INFLATION`, `YEAR`, `GDP_PATH` | World Bank WDI (CC BY 4.0), IMF WEO (internal demonstrations only), CIA Factbook | `tools/publicdata/world_economy.py` (`world-economy.sh`) → `tools/realdata/realdata.py` → `tools/packgen/world/make.py` |
 | CORR | `correlation-matrix` (the factors), `equity` and `fx-spot` `HISTORY[]` | none: the market-data pack's synthetic data | `tools/packgen/banking/make_data.py`, `tools/testdata/make_testdata.py` |
 | PXH analytics | the price history read live | Yahoo Finance's public chart endpoint (internal use only) | none: live, off as shipped |
+| FACT changes, IDX totals | `financial-fact` `HISTORY[]`, `index-membership` `ROWS[]` | SEC EDGAR, Wikidata | `tools/publicdata/us_equities.py` |
+| EQB | `equity` and `equity-index` `HISTORY[]` | none: synthetic | `tools/packgen/banking/make_data.py`, `tools/testdata/make_testdata.py` |
 
 The refresh scripts **no longer write any computed figure**: the gleif generator writes no `lei-group` or `lei-country` snapshot and an
 ultimate parent carries `GLEIF_GROUP_SIZE` (its group's size in GLEIF, an input the page reads); the us-equities generator writes no
@@ -553,10 +610,11 @@ correlation sets' factors only. `tools/testdata/publicsnap.py` lists the kinds i
 - `computed-in-place:` `lei-group`, `lei-country`, `sic-sector`, `country-group` (2.9.2): each is routed to a derived connector, no Delta
   connector serves or lays it out, no sample, test data or test-data folder holds it, no public-data generator writes it, and its contract
   is class `computed` over plugin `derived`;
-- `removed:` `us-company` `NET_MARGIN`, `REVENUE_GROWTH`, `FINANCIALS[].NET_MARGIN`; `index-membership` `ROWS[].NET_MARGIN`;
-  `correlation-matrix` `AVERAGE`, `PAIRS`, `WINDOW`, `ESTIMATOR`: no record or contract carries them again;
+- `removed:` `us-company` `NET_MARGIN`, `REVENUE_GROWTH`, `FINANCIALS[].NET_MARGIN`; `index-membership` `ROWS[].NET_MARGIN`,
+  `SECTORS`, `REVENUE`, `NET_INCOME`, `BY_SECTOR`; `financial-fact` `CHANGE_PCT`, `HISTORY[].CHANGE_PCT`; `correlation-matrix` `AVERAGE`,
+  `PAIRS`, `WINDOW`, `ESTIMATOR`; `equity` `BETA`: no record or contract carries them again;
 - `engine-columns: correlation` (`RHO`, `SHRINKAGE`, `MIN_RHO`, `MAX_RHO`, `FACTOR_STATS`): no fundamental or input kind carries one;
-- `classes: computed` lists the five computed kinds; the CORR test checks the engine class exists and every set names its factors.
+- `classes: computed` lists the six computed kinds; the CORR and EQB tests check the engine classes exist and every set names its factors.
 
 ## 24. Settings and limits
 

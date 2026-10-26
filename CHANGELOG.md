@@ -36,6 +36,12 @@
     picked on the page. `AVERAGE`, `PAIRS`, `WINDOW` and `ESTIMATOR` are removed from the record.
   - **USEQ ratios**: net margin and revenue growth worked out by the company page from `REVENUE`, `NET_INCOME` and `FINANCIALS[]`;
     `NET_MARGIN`, `REVENUE_GROWTH` and `FINANCIALS[].NET_MARGIN` removed from `us-company`, `ROWS[].NET_MARGIN` from `index-membership`.
+  - **FACT changes and IDX totals**: a financial fact's change on the year and an index's members' revenue, net income and SIC
+    divisions are worked out by the pages; `CHANGE_PCT` and `HISTORY[].CHANGE_PCT` removed from `financial-fact`, `SECTORS`, `REVENUE`,
+    `NET_INCOME` and `BY_SECTOR` from `index-membership` (equal on every record).
+  - **EQ beta**: the security master's hand-set `BETA` is removed from `equity`; the computed kind `equity-beta` (`EQB`, the reactive
+    `equity-analytics`, a Java engine) regresses the equity's daily log returns on its index's, and the equity page's Beta panel shows it
+    (the demo's independent price walks give betas near zero; two equities name no index and get a refusal in words).
   - **PXH analytics**: returns over 1, 3 and 6 months and the history, volatility, largest drawdown, beta and correlation against a
     benchmark (`DRISHTI_US_EQUITIES_BENCHMARK`, default SPY), computed by the `yfinance` plugin as the history is read. Internal use only
     and off as shipped, like the prices.

@@ -22,11 +22,11 @@ One section per command of the pack: the shape of its data, how it is stored and
 | Command | Kind | Class | Status | Fields | To review |
 |---|---|---|---|---|---|
 | [USEQ](#useq-us-company-us-company) | `us-company` | fundamental | active | 46 | 5 |
-| [IDX](#idx-index-members-index-membership) | `index-membership` | fundamental | active | 9 | 6 |
+| [IDX](#idx-index-members-index-membership) | `index-membership` | fundamental | active | 5 | 3 |
 | [SIC](#sic-sic-sector-sic-sector) | `sic-sector` | computed | active | 19 | 0 |
 | [EDGAR](#edgar-edgar-filings-browser-filing-feed) | `filing-feed` | fundamental | active | 11 | 6 |
 | [FILING](#filing-sec-filing-filing) | `filing` | fundamental | active | 13 | 3 |
-| [FACT](#fact-financial-fact-financial-fact) | `financial-fact` | fundamental | active | 13 | 6 |
+| [FACT](#fact-financial-fact-financial-fact) | `financial-fact` | fundamental | active | 12 | 5 |
 | [PXH](#pxh-price-history-live-internal-use-only-price-history) | `price-history` | fundamental | active | 13 | 3 |
 
 ## USEQ: US company (`us-company`)
@@ -205,19 +205,8 @@ An equity index's members (Dow 30, Nasdaq-100, S&P 500) as Wikidata records them
 | `INDEX` | id | required |  | The record's id (the business key) | `DJIA` |  |
 | `NAME` | text | required |  | Index | `Dow Jones Industrial Average` |  |
 | `MEMBERS` | integer | required |  | Members | `34` |  |
-| `SECTORS` | integer | required |  | SIC divisions | `5` |  |
-| `REVENUE` | amount | required |  | Members' revenue | `4829280300000` |  |
-| `NET_INCOME` | amount | required |  | Members' net income | `804912500000` |  |
-| `BY_SECTOR` | record list | required |  | Nested: see nested BY_SECTOR[] |  |  |
 | `ROWS` | record list | required |  | Nested: see nested ROWS[] |  |  |
 | `PROVENANCE` | record | required |  | Nested: see nested PROVENANCE |  |  |
-
-**Nested `BY_SECTOR[]`**
-
-| Field | Type | Presence | Unit | Description | Example or values | Link |
-|---|---|---|---|---|---|---|
-| `LABEL` | text | required |  | — | `Manufacturing` |  |
-| `VALUE` | amount | required |  | — | `19` |  |
 
 **Nested `ROWS[]`**
 
@@ -246,22 +235,20 @@ An equity index's members (Dow 30, Nasdaq-100, S&P 500) as Wikidata records them
 
 **Validation**
 
-- required: fields `INDEX`, `NAME`, `MEMBERS`, `SECTORS`, `REVENUE`, `NET_INCOME`, `BY_SECTOR`, `ROWS`, `PROVENANCE`
+- required: fields `INDEX`, `NAME`, `MEMBERS`, `ROWS`, `PROVENANCE`
 - unique: key `INDEX`; per snapshot
 - enum: field ROWS[].SECTOR; values `Finance, Insurance and Real Estate`, `Manufacturing`, `Retail Trade`, `Services`, `Transportation, Communications, Electric, Gas and Sanitary Services`
 
 **Notes**
 
 - ROWS[].NET_MARGIN left the record in 2.9.2: a member's net margin is computed from its revenue and net income (docs/guides/GROUPINGS_ANALYTICS_GUIDE.md section 16).
+- SECTORS, REVENUE, NET_INCOME and BY_SECTOR left the record in 2.9.2: the page sums the members' rows (USD reporters) and counts their SIC divisions (docs/guides/GROUPINGS_ANALYTICS_GUIDE.md section 16). The membership (ROWS) and MEMBERS stay.
 
-**To review (6)**
+**To review (3)**
 
 - required inferred from 100% coverage in 7 documents (1 samples and 6 test-data documents (data/testdata/us-equities/index-membership/snapshot-2026-10-24.jsonl.gz)): confirm each required field is mandatory upstream, and each optional one may be empty.
 - a snapshot refreshed when tools/publicdata/us_equities.py runs: confirm the refresh cadence.
 - enum values inferred from the data, not from a glossary: ROWS[].SECTOR: confirm they are closed lists.
-- number types decided by the field's name: REVENUE amount, NET_INCOME amount, BY_SECTOR[].VALUE amount, ROWS[].REVENUE amount, ROWS[].NET_INCOME amount, : confirm amount, rate or integer.
-- no unit stated for the amounts REVENUE, NET_INCOME, BY_SECTOR[].VALUE, ROWS[].REVENUE, ROWS[].NET_INCOME (docs/contracts/README.md section 7: USD unless stated): confirm the currency.
-- no description in about.yaml or the Sutras for BY_SECTOR[].LABEL, BY_SECTOR[].VALUE, ROWS[].TICKER, ROWS[].NAME, ROWS[].SECTOR, ROWS[].SIC, ROWS[].SIC_DESCRIPTION, ROWS[].EXCHANGE, ROWS[].REVENUE, ROWS[].NET_INCOME, ROWS[].CURRENCY and 6 more: write them in the pack's config/about.yaml glossary.
 
 ## SIC: SIC sector (`sic-sector`)
 
@@ -500,7 +487,6 @@ One financial concept of one company (revenue, net income, assets...) over up to
 | `XBRL_TAG` | text | required |  | XBRL tags read | `RevenueFromContractWithCustomerExcludingAssessedTax` |  |
 | `LATEST` | amount | required |  | Latest | `44328000000` |  |
 | `LATEST_YEAR` | integer | required |  | Fiscal year | `2025` |  |
-| `CHANGE_PCT` | rate | optional |  | Change on the year | `5.67` |  |
 | `YEARS` | integer | required |  | Years | `10` |  |
 | `HISTORY` | record list | required |  | Nested: see nested HISTORY[] |  |  |
 
@@ -511,7 +497,6 @@ One financial concept of one company (revenue, net income, assets...) over up to
 | `YEAR` | integer | required |  | Fiscal year | `2016` |  |
 | `PERIOD_END` | date | required |  | Period end | `2016-12-31` |  |
 | `VALUE` | amount | required |  | Value | `20853000000` |  |
-| `CHANGE_PCT` | rate | optional |  | Change | `31.35` |  |
 | `FILED` | date | required |  | Filed | `2019-02-22` |  |
 | `ACCESSION` | text | required |  | Accession | `0001047469-19-000624` |  |
 
@@ -525,12 +510,15 @@ One financial concept of one company (revenue, net income, assets...) over up to
 - enum: field CONCEPT; values `ASSETS`, `EPS_DILUTED`, `EQUITY`, `LIABILITIES`, `NET_INCOME`, `REVENUE`, `SHARES_OUTSTANDING`
 - enum: field LABEL; values `Diluted EPS`, `Net income`, `Revenue`, `Shares outstanding`, `Stockholders' equity`, `Total assets`, `Total liabilities`
 
-**To review (6)**
+**Notes**
+
+- CHANGE_PCT and HISTORY[].CHANGE_PCT left the record in 2.9.2: the page computes each year's change from the values (docs/guides/GROUPINGS_ANALYTICS_GUIDE.md section 16).
+
+**To review (5)**
 
 - required inferred from 100% coverage in 2002 documents (2 samples and 2000 test-data documents (data/testdata/us-equities/financial-fact/snapshot-2026-10-24.jsonl.gz)): confirm each required field is mandatory upstream, and each optional one may be empty.
 - a snapshot refreshed when tools/publicdata/us_equities.py runs: confirm the refresh cadence.
 - enum values inferred from the data, not from a glossary: CONCEPT, LABEL: confirm they are closed lists.
-- number types decided by the field's name: CHANGE_PCT rate, HISTORY[].VALUE amount, HISTORY[].CHANGE_PCT rate: confirm amount, rate or integer.
 - no unit stated for the amounts LATEST, HISTORY[].VALUE (docs/contracts/README.md section 7: USD unless stated): confirm the currency.
 - no description in about.yaml or the Sutras for COMPANY_NAME, CIK: write them in the pack's config/about.yaml glossary.
 

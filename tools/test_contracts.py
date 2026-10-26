@@ -171,7 +171,9 @@ class TheRetiredStoredVersions(unittest.TestCase):
             pack = next(p for p, m in self.manifests.items() if kind in (m.get("kinds") or []))
             want = {f.replace("[]", "") for f in entry["figures"]}
             for d in self.docs_of(pack, kind):
-                self.assertEqual(self.names(d) & want, set(), f"{kind} {d.get(next(iter(d)))} carries a removed figure")
+                # top-level: true, the plain names are the record's own fields (index-membership's members keep their REVENUE rows)
+                have = (set(d) | {n for n in self.names(d) if "." in n}) if entry.get("top-level") else self.names(d)
+                self.assertEqual(have & want, set(), f"{kind} {d.get(next(iter(d)))} carries a removed figure")
             c = yaml.safe_load(C.contract_file(C.PACKS, pack, kind).read_text(encoding="utf-8"))
             fields = {f["name"] for f in c.get("fields") or []} | {f"{p.replace('[]', '')}.{f['name']}" for p, fs in (c.get("nested") or {}).items()
                                                                    for f in fs}
@@ -278,6 +280,13 @@ class TheRetiredStoredVersions(unittest.TestCase):
         analytics = {f["name"] for f in (by_kind["price-history"].get("nested") or {}).get("ANALYTICS") or []}
         self.assertTrue({"RETURN_1M", "VOLATILITY", "BETA", "MAX_DRAWDOWN"} <= analytics)
         self.assertFalse((C.TESTDATA / "us-equities" / "price-history").exists())       # the prices stay live only, never stored
+        # the facts' yearly change, the index pages' totals and the equities' beta: computed too (2.9.2)
+        self.assertIn("HISTORY[].CHANGE_PCT", self.pol["removed"]["financial-fact"]["figures"])
+        self.assertTrue({"REVENUE", "NET_INCOME", "SECTORS", "BY_SECTOR"} <= set(self.pol["removed"]["index-membership"]["figures"]))
+        self.assertEqual(self.pol["removed"]["equity"]["figures"], ["BETA"])
+        self.assertEqual((by_kind["equity-beta"]["class"], by_kind["equity-beta"]["storage"]["plugin"]), ("computed", "reactive"))
+        beta = md["connectors"]["equity-analytics"]["engine"]["class"]
+        self.assertTrue((C.ROOT / "drishti-compute" / "src" / "main" / "java" / Path(*beta.split("."))).with_suffix(".java").is_file(), beta)
 
     def test_every_file_starts_with_the_licence(self):
         for f in sorted(C.PACKS.glob("*/contracts/*.contract.yaml")):

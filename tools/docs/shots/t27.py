@@ -22,11 +22,15 @@ The pictures, in the tutorial's order: an ownership group computed from its enti
 computed margin and growth, a World Bank region, a factor set's correlations (Pearson over every return, then Ledoit-Wolf)."""
 from __future__ import annotations
 
+import os
+
 from _tut import OUT, go
-from shotlib import Ctx, register
+from shotlib import ROOT, Ctx, register
 
 shot = register("t27", OUT / "t27")
-SERVER_ENV = {"DRISHTI_SECURITY_ENABLED": "false",
+# the lake `drishti.py lake demo` built (DRISHTI_SHOTS_DELTA_ROOT names another), read with the demo connector off
+SERVER_ENV = {"DRISHTI_SECURITY_ENABLED": "false", "DRISHTI_DEMO_ENABLED": "false",
+              "DRISHTI_DELTA_ROOT": os.environ.get("DRISHTI_SHOTS_DELTA_ROOT", str(ROOT / "data" / "delta")),
               "DRISHTI_PACKS": "core,market-data,trading,counterparty-risk,market-risk,world-economy,news-and-markets,us-equities,gleif"}
 
 
@@ -75,9 +79,16 @@ def corr(c: Ctx):
     view(c, "correlation-matrix", "CORR-EU-EQ", "08-corr-pearson.jpg")
 
 
+@shot("10-equity-beta.jpg")
+def equity_beta(c: Ctx):
+    go(c, "/v/equity/EQ-NVTK", settle=2000)
+    c.page.wait_for_timeout(3000)                                  # the Beta panel fills when the engine answers
+    c.save("10-equity-beta.jpg")
+
+
 @shot("09-corr-ledoit-wolf.jpg")
 def corr_lw(c: Ctx):
-    go(c, "/v/correlation-matrix/CORR-EU-EQ", settle=2000)
-    c.page.locator("[data-control='estimator'] button", has_text="ledoit-wolf").first.click()
-    c.page.wait_for_timeout(2500)
+    go(c, "/v/correlation-matrix/CORR-EU-EQ?ctl.estimator=ledoit-wolf", settle=2000)   # the control set, as a click leaves it in the address
+    c.until("document.body.innerText.indexOf('ledoit-wolf, 29 daily returns') >= 0", 60)   # the panels asked again and answered
+    c.page.wait_for_timeout(800)
     c.save("09-corr-ledoit-wolf.jpg")

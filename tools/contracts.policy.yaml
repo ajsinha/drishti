@@ -35,7 +35,7 @@ classes:
   input: [pnl-vector, scenario-set, risk-hierarchy, portfolio, path-book, path-strip, simulation-run, exposure-path]
   drishti-owned: [position]
   computed: [path-sum, path-sum-java, var-result, var-whatif, exposure-result, var-official, exposure-official-cpty,   # var-official, exposure-official-cpty: the published official VaR and exposure (read only)
-             lei-group, lei-country, sic-sector, country-group, correlation-result]   # the groupings and analytics (2.9.2)
+             lei-group, lei-country, sic-sector, country-group, correlation-result, equity-beta]   # the groupings and analytics (2.9.2)
 
 retiring: {}
 
@@ -90,7 +90,16 @@ removed:
   index-membership:
     release: 2.9.2
     contract: ../guides/GROUPINGS_ANALYTICS_GUIDE.md
-    figures: ["ROWS[].NET_MARGIN"]
+    figures: ["ROWS[].NET_MARGIN", SECTORS, REVENUE, NET_INCOME, BY_SECTOR]
+    top-level: true          # the totals left the record; each member's row keeps its own REVENUE and NET_INCOME (facts)
+  financial-fact:
+    release: 2.9.2
+    contract: ../guides/GROUPINGS_ANALYTICS_GUIDE.md
+    figures: [CHANGE_PCT, "HISTORY[].CHANGE_PCT"]
+  equity:
+    release: 2.9.2
+    contract: ../guides/GROUPINGS_ANALYTICS_GUIDE.md
+    figures: [BETA]
   correlation-matrix:
     release: 2.9.2
     contract: ../guides/GROUPINGS_ANALYTICS_GUIDE.md
