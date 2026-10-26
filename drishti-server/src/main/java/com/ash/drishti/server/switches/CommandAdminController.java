@@ -42,8 +42,9 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 /**
- * Admin → Commands (docs/admin/COMMANDS.md): every command of the loaded packs, grouped by pack, with what it does and whether it is on;
- * a batch of changes with one reason (kept in the audit log); the history of changes; and what turning one off stops. An administrator only.
+ * The switches of Functions, FUNC, for administrators (docs/admin/COMMANDS.md): every command of the loaded packs, grouped by pack, with
+ * what it does and whether it is on; a batch of changes with one reason (kept in the audit log); the history of changes; and what turning
+ * one off stops. An administrator only (what every user reads is {@link FunctionsController}).
  * A change is written to this node's database and spread to every node of the cluster by gossip ({@link SwitchSync}); the answer says
  * which version of the switches each node holds.
  */
