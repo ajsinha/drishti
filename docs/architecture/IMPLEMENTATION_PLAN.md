@@ -524,6 +524,23 @@ Once the banking and finance measures are done, the same pattern of fundamental 
 served by Python engines and reactive connectors is carried to other industries. Each gets its own packs, connectors and compute
 engines. Which industries, and in what order, is for the product owner to decide then.
 
+## 2.9.3 (planned): VaR from scenario PVs, in any reporting currency (product owner, 2026-10-26)
+
+Decided after 2.9.1: the upstream engine gives **scenario PVs** (each live trade revalued under each historical scenario) and the
+**base PV**, and FX rates are available; Drishti computes the P&L vectors itself and reports VaR and ES **in a chosen currency**.
+The P&L-vector input of 2.8.0 stays supported (a bank sends either).
+
+| Part | What |
+|---|---|
+| Input | per trade and scenario: `PV` in the trade's currency (or one stated currency), the base PV of the same run, the scenario set's order; FX: today's rates and each scenario's (or derived from the FX history of the scenario dates) |
+| P&L at load | `P&L(s) = PV(s) × FX(s) − PV(base) × FX(base)` into the reporting currency; same valuation date for both PVs; same scenario order for every trade; a scenario that failed to price flagged, never zero-filled (a new DRS code) |
+| Reporting currency | VaR, ES, components, captures, official results and the basket tray in USD, EUR, CAD or any currency with FX; the currency move is part of the risk, so the same trades give different VaR per currency |
+| Engine | vectors per reporting currency built at load (USD always; others on first ask, cached per date), on the existing memory tiering |
+| Docs and screens | mock-ups for the currency picker first; VAR_GUIDE Part II (the contract) for PV input; tutorial 25; the Market risk Knowledge page ("From scenario PV to the P&L vector"); test data regenerated as scenario PVs and FX |
+
+Open questions for the product owner: (1) PVs in each trade's currency or one currency; (2) scenario FX supplied or derived from the
+scenario dates' FX history; (3) cross rates via USD or direct pairs; (4) the holding period (1-day moves, as today).
+
 ## Known gaps
 
 What is open today. None blocks normal use; each is a candidate for a future wave.
