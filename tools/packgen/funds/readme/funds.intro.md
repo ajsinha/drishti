@@ -66,7 +66,7 @@ fields:
     BY_SECTOR: Weight by SIC division of the us-equities companies held
     DERIVATIVES: The largest derivative positions with their counterparties
     COUNTERPARTIES: The counterparties of derivatives and repos, by notional
-    VS_INDEX: The fund against its index (or the S&P 500 for reference): coverage, active share, weights, tilt
+    VS_INDEX: "The fund against its index (or the S&P 500 for reference): coverage, active share, weights, tilt"
     ALSO_HELD_BY: The other funds holding the fund's largest us-equities company
     GLEIF_RELATIONSHIPS: GLEIF's fund relationships (managed by, sub-fund of, feeder to)
     PROVENANCE: Source, licence and retrieval date

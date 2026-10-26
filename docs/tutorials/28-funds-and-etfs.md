@@ -245,7 +245,7 @@ The fund  (kv, the-fund)
   Authorised participants  34
 ```
 
-**In YAML.** The comparison is built with the document (`tools/packgen/funds/build.py`, `_vs_index`) and drawn by the tab's panels:
+**In YAML.** The comparison is built with the document (`tools/packgen/funds/fundsbuild.py`, `_vs_index`) and drawn by the tab's panels:
 
 ```yaml
       - id: coverage

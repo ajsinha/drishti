@@ -12,7 +12,7 @@
 #
 # See the LICENSE file in the root of this repository for the full terms.
 
-"""The funds pack's documents from the downloads (read.py) and the committed us-equities snapshot (no network).
+"""The funds pack's documents from the downloads (fundsread.py) and the committed us-equities snapshot (no network).
 
     choose(...)      the FUNDS largest funds and ETFs by net assets that have a ticker (N-PORT's newest report of each)
     build(cache)     {kind: {id: document}}: fund (one per fund, keyed by its ticker), fund-holder (per us-equities company: the
@@ -29,7 +29,7 @@ import re
 from collections import defaultdict
 from pathlib import Path
 
-import read as R
+import fundsread as R
 
 FUNDS = 200          # the largest funds and ETFs by net assets
 TOP_N = 600          # holdings kept a fund (every S&P 500 fund is whole); the rest as totals

@@ -229,7 +229,7 @@ Funds tracking the S&P 500, by net assets (a fund opens its page)  (table, track
 
 The contracts are `config/packs/funds/contracts/<kind>.contract.yaml` (checked by `python3 tools/contracts.py check`, published as
 [docs/contracts/packs/funds.md](../contracts/packs/funds.md)); each column's meaning is the pack's glossary,
-`config/packs/funds/config/about.yaml`, written by `tools/packgen/funds/make.py` from `tools/packgen/funds/glossary.py`. The tables
+`config/packs/funds/config/about.yaml`, written by `tools/packgen/funds/make.py` from `tools/packgen/funds/fundsglossary.py`. The tables
 below list every column with its type, whether it is the key, its meaning (with its unit), its source and an example from the
 snapshot. Source names are the SEC data sets' tables and columns: **N-PORT** `FUND_REPORTED_INFO`, `FUND_REPORTED_HOLDING`,
 `IDENTIFIERS`, `MONTHLY_TOTAL_RETURN`, the derivative tables of part C.11; **N-CEN** `FUND_REPORTED_INFO`, `ETF`, `ADVISER`,
@@ -387,10 +387,10 @@ lei-entity), `INDEX_ID` to `IDX` (index-membership).
 | `VS_INDEX.SECTORS.FUND_PCT` | rate |  | The fund's weight in it. (%) | computed |  | 67.8 |
 | `VS_INDEX.SECTORS.INDEX_PCT` | rate |  | The index's weight in it. (%) | computed |  | 61.38 |
 | `VS_INDEX.SECTORS.TILT` | amount |  | Fund less index. (% points) | computed |  | 6.42 |
-| `PROVENANCE.SOURCE` | text |  | Where the data comes from. | written by tools/packgen/funds/build.py |  | U.S. Securities and Exchange Commissi... |
-| `PROVENANCE.LICENCE` | text |  | The source's licence (public domain). | written by tools/packgen/funds/build.py |  | Public domain (U.S. Government work);... |
+| `PROVENANCE.SOURCE` | text |  | Where the data comes from. | written by tools/packgen/funds/fundsbuild.py |  | U.S. Securities and Exchange Commissi... |
+| `PROVENANCE.LICENCE` | text |  | The source's licence (public domain). | written by tools/packgen/funds/fundsbuild.py |  | Public domain (U.S. Government work);... |
 | `PROVENANCE.RETRIEVED_AT` | date |  | The date the data sets were downloaded. | the download cache |  | 2026-10-26 |
-| `PROVENANCE.NOTE` | text |  | What the document holds and from which filings. | written by tools/packgen/funds/build.py |  | Holdings, flows and returns as the fu... |
+| `PROVENANCE.NOTE` | text |  | What the document holds and from which filings. | written by tools/packgen/funds/fundsbuild.py |  | Holdings, flows and returns as the fu... |
 | `HOLDINGS.NAME` | text |  | The issuer's name as the fund filed it. | N-PORT FUND_REPORTED_HOLDING.ISSUER_NAME |  | NVIDIA Corp. |
 | `HOLDINGS.TITLE` | text |  | The title of the security or contract. | N-PORT FUND_REPORTED_HOLDING.ISSUER_TITLE |  | NVIDIA Corp. |
 | `HOLDINGS.TICKER` | id |  | The security's ticker where the fund gave one, written as us-equities writes it (BRK/B is BRK-B). | N-PORT IDENTIFIERS.IDENTIFIER_TICKER |  | NVDA |
@@ -494,10 +494,10 @@ company's (legal suffixes and punctuation aside).
 | `HOLDERS.SHARES` | amount |  | The shares the fund holds (balances in shares only). (shares) | N-PORT FUND_REPORTED_HOLDING.BALANCE |  | 466272244.0 |
 | `HOLDERS.REPORT_DATE` | date |  | The date the fund's report is as of. | N-PORT SUBMISSION.REPORT_DATE |  | 2026-06-30 |
 | `HOLDERS.NET_ASSETS` | amount |  | The fund's net assets. (USD) | N-PORT FUND_REPORTED_INFO.NET_ASSETS |  | 2297839156548.0 |
-| `PROVENANCE.SOURCE` | text |  | Where the data comes from. | written by tools/packgen/funds/build.py |  | U.S. Securities and Exchange Commissi... |
-| `PROVENANCE.LICENCE` | text |  | The source's licence (public domain). | written by tools/packgen/funds/build.py |  | Public domain (U.S. Government work);... |
+| `PROVENANCE.SOURCE` | text |  | Where the data comes from. | written by tools/packgen/funds/fundsbuild.py |  | U.S. Securities and Exchange Commissi... |
+| `PROVENANCE.LICENCE` | text |  | The source's licence (public domain). | written by tools/packgen/funds/fundsbuild.py |  | Public domain (U.S. Government work);... |
 | `PROVENANCE.RETRIEVED_AT` | date |  | The date the data sets were downloaded. | the download cache |  | 2026-10-26 |
-| `PROVENANCE.NOTE` | text |  | What the document holds and from which filings. | written by tools/packgen/funds/build.py |  | Every holding of the pack's funds in ... |
+| `PROVENANCE.NOTE` | text |  | What the document holds and from which filings. | written by tools/packgen/funds/fundsbuild.py |  | Every holding of the pack's funds in ... |
 
 ## 10. index-funds
 
@@ -521,10 +521,10 @@ One document per us-equities index that at least one fund tracks, keyed by `INDE
 | `ROWS.MEMBERS_HELD` | amount |  | Listed members it holds. (companies) | computed |  | 60 |
 | `ROWS.ACTIVE_SHARE` | rate |  | Against the computed index weights. (%) | computed |  | 26.75 |
 | `ROWS.REPORT_DATE` | date |  | Its N-PORT report date. | N-PORT REPORT_DATE |  | 2026-06-30 |
-| `PROVENANCE.SOURCE` | text |  | Where the data comes from. | written by tools/packgen/funds/build.py |  | U.S. Securities and Exchange Commissi... |
-| `PROVENANCE.LICENCE` | text |  | The source's licence (public domain). | written by tools/packgen/funds/build.py |  | Public domain (U.S. Government work);... |
+| `PROVENANCE.SOURCE` | text |  | Where the data comes from. | written by tools/packgen/funds/fundsbuild.py |  | U.S. Securities and Exchange Commissi... |
+| `PROVENANCE.LICENCE` | text |  | The source's licence (public domain). | written by tools/packgen/funds/fundsbuild.py |  | Public domain (U.S. Government work);... |
 | `PROVENANCE.RETRIEVED_AT` | date |  | The date the data sets were downloaded. | the download cache |  | 2026-10-26 |
-| `PROVENANCE.NOTE` | text |  | What the document holds and from which filings. | written by tools/packgen/funds/build.py |  | The pack's funds whose name names thi... |
+| `PROVENANCE.NOTE` | text |  | What the document holds and from which filings. | written by tools/packgen/funds/fundsbuild.py |  | The pack's funds whose name names thi... |
 
 ## 11. Validation and conventions
 
@@ -574,7 +574,7 @@ private-credit funds without a ticker are skipped. `--scope FUNDS:<n>` takes mor
 
 ## 14. How the documents are built
 
-`tools/packgen/funds/make.py` builds every document offline from the downloads (`read.py` streams the tables, `build.py` builds):
+`tools/packgen/funds/make.py` builds every document offline from the downloads (`fundsread.py` streams the tables, `fundsbuild.py` builds):
 
 1. The N-PORT tables are read once, in order: `SUBMISSION`, `REGISTRANT` and `FUND_REPORTED_INFO` choose the 200; then only their rows
    of `FUND_REPORTED_HOLDING` (411,796 of 5.6 million), `IDENTIFIERS` (ticker, ISIN), the derivative tables and `MONTHLY_TOTAL_RETURN`.

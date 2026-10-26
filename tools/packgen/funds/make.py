@@ -40,9 +40,9 @@ import packsamples as PS  # noqa: E402
 import readme as README  # noqa: E402  (the pack README standard)
 import guide_data as GD  # noqa: E402  (the guide's Data contracts and Data retrieval sections)
 sys.path.insert(0, str(HERE))
-import build as BUILD  # noqa: E402
-import glossary as GLOSSARY  # noqa: E402
-import read as R  # noqa: E402
+import fundsbuild as BUILD  # noqa: E402
+import fundsglossary as GLOSSARY  # noqa: E402
+import fundsread as R  # noqa: E402
 sys.path.insert(0, str(ROOT / "tools" / "testdata"))
 import publicsnap as SNAP  # noqa: E402  (the standard data pattern: data/testdata/<pack>/<kind>/)
 
