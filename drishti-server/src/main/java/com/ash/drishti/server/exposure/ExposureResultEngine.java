@@ -33,7 +33,7 @@ import java.util.Map;
 import java.util.concurrent.atomic.AtomicReference;
 
 /**
- * The computed kind {@code exposure-result} (EXP.md section 9.1, as built in 2.9.0): a scope's exposure answered by the server's
+ * The computed kind {@code exposure-result} (EXPOSURE_GUIDE.md section 19.1, as built in 2.9.0): a scope's exposure answered by the server's
  * exposure engine through the counterparty-risk pack's reactive connector {@code exposure-engine} ({@code plugin: reactive},
  * {@code engine.type: java}), so exposure opens as an ordinary kind: {@code EXP NSET:NS-ALDERSHOT-FRA <GO>},
  * {@code /v/exposure-result/CPTY:CP-ALDERSHOT}, the entities API, the CLI, search and the AI tools, with the explorer's entitlements

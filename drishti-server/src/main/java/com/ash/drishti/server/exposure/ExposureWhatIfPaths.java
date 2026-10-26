@@ -42,7 +42,7 @@ import java.util.Map;
 import java.util.Set;
 
 /**
- * The exact what-if (EXP.md section 6.7, method {@code paths}): each candidate's MtM on every path of the date's run at every grid date
+ * The exact what-if (EXPOSURE_GUIDE.md section 18.7, method {@code paths}): each candidate's MtM on every path of the date's run at every grid date
  * is added to its netting set's value, the set's collateral and exposure computed again, then the scope's figures; incremental = with
  * - without, per figure and per primary date. Asked here, answered by the Python exposure engine: the candidates go into a private
  * sandbox of the asker, the reactive connector {@code exposure-whatif} is asked as them (it reads the scope's and the touched sets'

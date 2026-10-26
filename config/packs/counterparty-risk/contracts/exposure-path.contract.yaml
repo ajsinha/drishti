@@ -13,7 +13,7 @@
 # See the LICENSE file in the root of this repository for the full terms.
 
 # Data contract of the exposure-path kind (command XPATH): docs/contracts/README.md section 16.
-# Drafted by `drishti.py contract bootstrap exposure-path`; completed by hand (2.9.0); the measure's contract is docs/contracts/EXP.md (section 3).
+# Drafted by `drishti.py contract bootstrap exposure-path`; completed by hand (2.9.0); the measure's contract is docs/guides/EXPOSURE_GUIDE.md (section 3).
 kind: exposure-path
 mnemonic: XPATH
 pack: counterparty-risk
@@ -22,7 +22,7 @@ class: input
 status: active
 title: Exposure path (a trade's MtM on every path at a grid date)
 description: One trade's mark to market on every path of a simulation run at one grid date, in USD (the vector column MTM); the grain every exposure
-  is netted, collateralised and counted from (EXP.md section 3.3).
+  is netted, collateralised and counted from (EXPOSURE_GUIDE.md section 15.3).
 source: 'the upstream exposure simulator (test data: tools/packgen/ccr/make_ccr_data.py)'
 grain: One row per trade, grid date and run per business date, keyed by PATH_ROW_ID (<run>~<trade>~<grid index>); sparse by maturity.
 key:
@@ -32,7 +32,7 @@ id-pattern:
 dated-by: BUSINESS_DATE
 cadence:
   frequency: daily
-  due: to be agreed with the simulator's owner (EXP.md open question 1); a bank's run often lands 04:00-07:00
+  due: to be agreed with the simulator's owner (EXPOSURE_GUIDE.md open question 1); a bank's run often lands 04:00-07:00
 storage:
   connector: exposure-store
   plugin: delta
@@ -258,7 +258,7 @@ validation:
   field: MTM
   same: every row of one business date
 notes:
-- One trade's MtM on every path of the run at one grid date (EXP.md section 3.3), the vector column MTM; sparse by maturity (no row after maturity
+- One trade's MtM on every path of the run at one grid date (EXPOSURE_GUIDE.md section 15.3), the vector column MTM; sparse by maturity (no row after maturity
   plus 10 business days). DESK, TT_BOOK, ASSET_CLASS, PRODUCT, NOTIONAL and MATURITY_DATE are denormalised for the scopes and checks (as built,
   2.9.0).
 review:

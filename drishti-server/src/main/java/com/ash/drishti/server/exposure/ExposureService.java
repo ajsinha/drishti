@@ -35,7 +35,7 @@ import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ConcurrentHashMap;
 
 /**
- * The exposure engine in the server (EXP.md): the loaded business dates, scope resolution as the viewer, the scope's exposure matrices
+ * The exposure engine in the server (EXPOSURE_GUIDE.md): the loaded business dates, scope resolution as the viewer, the scope's exposure matrices
  * summed per path across its netting sets and its statistics, cached per date, data version, viewer, scope and parameters. The answers
  * are built from what this returns ({@link ExposureViews}); captures are kept by {@link ExposureCaptures}, the official end-of-day
  * records by {@link ExposureOfficialStore}.
@@ -77,8 +77,8 @@ final class ExposureService implements AutoCloseable {
     private static final java.util.regex.Pattern SPACED = java.util.regex.Pattern.compile("(?i)^(NSET|CPTY|GROUP|LE|DESK|BOOK|TRD)\\s+([^:]+)$");
 
     /**
-     * A scope as people type it, in the scope grammar: an id of the retired stored exposure profile ({@code EXP-ALDERSHOT-FRA}, EXP.md
-     * section 14) is its netting set ({@code NSET:NS-ALDERSHOT-FRA}); a spaced scope ({@code NSET NS-ALDERSHOT-FRA}) takes its colon.
+     * A scope as people type it, in the scope grammar: an id of the retired stored exposure profile ({@code EXP-ALDERSHOT-FRA}, EXPOSURE_GUIDE.md
+     * section 22) is its netting set ({@code NSET:NS-ALDERSHOT-FRA}); a spaced scope ({@code NSET NS-ALDERSHOT-FRA}) takes its colon.
      */
     static String scopeText(String typed) {
         String t = typed == null ? "" : typed.trim();

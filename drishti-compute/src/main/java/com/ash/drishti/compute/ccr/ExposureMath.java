@@ -18,7 +18,7 @@ package com.ash.drishti.compute.ccr;
 import java.util.Arrays;
 
 /**
- * The exposure measures (EXP.md sections 5 and 6) over plain arrays, the same rules as tools/packgen/ccr/ccrmath.py (the parity test
+ * The exposure measures (EXPOSURE_GUIDE.md sections 17 and 18) over plain arrays, the same rules as tools/packgen/ccr/ccrmath.py (the parity test
  * compares them on the committed test data). A matrix is one row of P path values per date, row-major: {@code m[i * P + p]}; the
  * exposure matrices hold the primary dates only (row i is the grid's i-th primary point). Every sum and mean is in double.
  *

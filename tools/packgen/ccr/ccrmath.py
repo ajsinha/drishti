@@ -13,7 +13,7 @@
 # See the LICENSE file in the root of this repository for the full terms.
 
 """The exposure measures by exactly the rules of the server's exposure engine (com.ash.drishti.compute.ccr.ExposureMath;
-docs/contracts/EXP.md sections 5 and 6), in plain Python over lists, so the test data's reference figures and the engine's answers are
+docs/guides/EXPOSURE_GUIDE.md sections 17 and 18), in plain Python over lists, so the test data's reference figures and the engine's answers are
 the same numbers (the parity test in drishti-compute reads them):
 
 - a netting set's value on a path is the sum of its trades' MtM there (V);
@@ -72,7 +72,7 @@ def window(values: list[float], q: float, size: int) -> list[int]:
 
 @dataclass
 class Csa:
-    """A netting set's collateral terms in USD (EXP.md section 6.3); ``margined`` False: the set holds its IA only."""
+    """A netting set's collateral terms in USD (EXPOSURE_GUIDE.md section 18.3); ``margined`` False: the set holds its IA only."""
     th_them: float = 0.0
     th_us: float = 0.0
     mta_them: float = 0.0
@@ -162,7 +162,7 @@ def mean(xs: list[float]) -> float:
 
 def statistics(e: dict[int, list[float]], n: dict[int, list[float]], v_rows: list[list[float]], grid: Grid, horizon: float, qs: list[float],
                ce: float = 0.0, rule: str = "kth") -> dict:
-    """The profile and the figures of a scope from its summed E and N matrices (EXP.md section 6.4); ``horizon`` is T in years."""
+    """The profile and the figures of a scope from its summed E and N matrices (EXPOSURE_GUIDE.md section 18.4); ``horizon`` is T in years."""
     profile = []
     eee = ce
     for k in grid.primaries:
@@ -229,7 +229,7 @@ def pfe_contributions(total: list[float], parts: dict[str, list[float]], q: floa
 
 
 def worked_example() -> dict:
-    """EXP.md section 15: one netting set of two trades, 4 paths, 3 primary dates, thresholds 1, look-back values given."""
+    """EXPOSURE_GUIDE.md section 2.1: one netting set of two trades, 4 paths, 3 primary dates, thresholds 1, look-back values given."""
     a = [[3, -2, 3, 0], [5, -1, 4, -2], [2, -3, 6, -1]]
     b = [[-1, 1, -2, 1], [-1, 2, 0, 0], [1, 1, -1, -2]]
     look = [[1, -1, 0, 1], [2, 0, 3, -1], [3, -1, 4, -3]]

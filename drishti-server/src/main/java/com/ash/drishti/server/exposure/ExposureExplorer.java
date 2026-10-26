@@ -128,7 +128,7 @@ final class ExposureExplorer {
         return m;
     }
 
-    /** A netting set's CSA terms, holdings and the collateral's effect at the peak PFE date (EXP.md section 6.3). */
+    /** A netting set's CSA terms, holdings and the collateral's effect at the peak PFE date (EXPOSURE_GUIDE.md section 18.3). */
     Map<String, Object> collateral(ExposureService.Scoped s, int set) {
         ExposureBook b = s.date().book();
         ExposureGrid g = b.grid();

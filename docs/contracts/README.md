@@ -45,7 +45,7 @@ This page holds the rules every contract shares. A contract states only where it
 ## 1. Status of each contract
 
 **Scope (product owner, 2026-10-25): "Just fundamentals and VaR is good for now."** The active work is the contracts of every
-command (the fundamental data, [section 16](#16-contracts-of-every-command)) and VaR ([VAR_GUIDE.md Part II](../guides/VAR_GUIDE.md#14-the-contract-at-a-glance)). Every other computed measure is
+command (the fundamental data, [section 16](#16-contracts-of-every-command)), VaR ([VAR_GUIDE.md Part II](../guides/VAR_GUIDE.md#14-the-contract-at-a-glance)) and exposure ([EXPOSURE_GUIDE.md Part II](../guides/EXPOSURE_GUIDE.md#14-the-contract-at-a-glance)). Every other computed measure is
 **PARKED**: its contract stays here as a design, the stored kind it would replace stays active and unchanged, and nothing of it is built
 until the product owner brings it back. Release numbers in the parked contracts are provisional.
 
@@ -65,7 +65,7 @@ may still change before it ships, and the document records each change.
 | [SACCR.md](SACCR.md) | SACCR (`sa-ccr`) | 2.10.0 | PARKED (design kept) |
 | [COLL.md](COLL.md) | COLL (`collateral-balance`): holdings kept, values computed | 2.10.0 | PARKED (design kept) |
 | [MC.md](MC.md) | MC (`margin-call`): calls kept, expected call computed | 2.10.0 | PARKED (design kept) |
-| [EXP.md](EXP.md) | EXP (`exposure-result`; the stored `exposure-profile` retired) | 2.9.0 | BUILT, part 1 (engine, API, computed kind, official results; the explorer and the Python what-if follow) |
+| [EXPOSURE_GUIDE.md Part II](../guides/EXPOSURE_GUIDE.md#14-the-contract-at-a-glance) | EXP (`exposure-result`, `exposure-whatif`; the stored `exposure-profile` retired) | 2.9.0 | AS BUILT (part 1: engine, API, computed kind, official results; part 2: the explorer, the Python what-if and its exact `paths` method, the CLI); Part II of the exposure guide since 2026-10-26 |
 | [LIM.md](LIM.md) | LIM (`credit-limit`): limits kept, usage computed | 2.10.0 | PARKED (design kept) |
 | [GRP.md](GRP.md) | GRP (`counterparty-group`): members kept, usage computed | 2.10.0 | PARKED (design kept) |
 | [CVA.md](CVA.md) | CVA (`cva`) | 2.10.0 | PARKED (design kept) |

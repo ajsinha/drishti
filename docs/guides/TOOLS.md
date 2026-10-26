@@ -112,6 +112,7 @@ server take `--server` (default `DRISHTI_SERVER`, then `http://localhost:18480`)
 | `history` | `drishti.py history KIND ID` (`--days`, `--range`, `--from`/`--to`, `--diff`, `--changes-only`, `--csv`, `--json`): one entity over business days, as the console's history page shows it | [CLI_GUIDE.md](CLI_GUIDE.md) |
 | `contract` | `contract list`, `contract show`, `contract check`, `contract docs`, `contract bootstrap` | [5.11](#511-contract) |
 | `var` | `var show`, `var parts`, `var path`, `var history`, `var tree`, `var status`, `var capture`, `var captures`, `var compare`, `var basket`, `var baskets`, `var official`, `var reload`, `var whatif` | [5.12](#512-var) |
+| `exposure` | `exposure show`, `exposure parts`, `exposure tree`, `exposure profile`, `exposure distribution`, `exposure status`, `exposure capture`, `exposure captures`, `exposure compare`, `exposure official`, `exposure retention`, `exposure reload`, `exposure whatif` | [5.13](#513-exposure) |
 | `completion` | `drishti.py completion bash` (also `zsh`, `powershell`) | [5.8](#58-view-and-completion) |
 
 The group modules live beside it and are not run on their own: `tools/authoring.py` (`data profile`, `pack regenerate|diff|catalogue|i18n`),
@@ -119,7 +120,7 @@ The group modules live beside it and are not run on their own: `tools/authoring.
 `tools/packform.py` (the `form:` section a pack check reads), `tools/schemapack.py` (`--schema`), `tools/sutragen.py` (`sutra gen`),
 `tools/ingest_jsonl.py` and `tools/ingest_watch.py` (`data ingest`), `tools/packbundle.py` (`pack bundle|verify|deploy|rollback`),
 `tools/serverpacks.py`, `tools/serverconnectors.py`, `tools/servernet.py` (`net`), `tools/hostaddr.py` (this machine's real address for Drishti*net members), `tools/build_demo_lakes.py` (every demo lake start to finish: `lake demo` over all sixty days, then your own ENDUR files one per date, `--store calypso=iceberg` for a source system in Iceberg, `--dry-run` to look first; the Windows QA guide's step 3.0), `tools/smoke.py`, `tools/doctor.py`, `tools/viewcmd.py`, `tools/completion.py`,
-`tools/bilang.py`, `tools/bimodel.py`, `tools/biitem.py`, `tools/bistatement.py` (`bi statement preview|file`), `tools/historycmd.py` (`history`), `tools/varcli.py` (`var`), and `tools/lake/cli.py` with `tools/lake/build.py`, `tools/lake/scan.py`,
+`tools/bilang.py`, `tools/bimodel.py`, `tools/biitem.py`, `tools/bistatement.py` (`bi statement preview|file`), `tools/historycmd.py` (`history`), `tools/varcli.py` (`var`), `tools/expcli.py` (`exposure`), and `tools/lake/cli.py` with `tools/lake/build.py`, `tools/lake/scan.py`,
 `tools/lake/jsonstream.py`, `tools/lake/stage.py`, `tools/lake/writers.py`, `tools/lake/demo.py` (`lake demo`), `tools/lake/stores.py` (a source system's trades copied into Iceberg, its connector file switched; `build_demo_lakes.py --store`) and `tools/lake/laketables.py` (the tables `lake status` lists).
 
 ## 4. lake build: a large JSON export into a Delta lake
@@ -483,6 +484,14 @@ each table and date (what `tools/build_demo_lakes.py --server URL` uses; a runni
 summary says how many signals the server took, how many it **refused** (an HTTP error; the token hint only for 401 and 403) and how
 many it **did not answer** within 30 s (busy, not a refusal), and how long the signals took beside the build (`built in 193 s, the
 server told in 12 s`). `tools/build_demo_lakes.py` tells no server unless `--server` names one (QA3A-05). Its closing line says what came of the signals: *was told once per table it reads* only when every signal was taken; *was not told: nothing answered there* (with the stamp left for its next start), *was not told: it refused the signals* (a token with `loads:write`), *did not answer the signals in time* (busy) or *was told of only some tables* otherwise, and *would be told* in a dry run (QA4-06). Everything about the data and the five-step quick start is in [data/testdata/README.md](../../data/testdata/README.md).
+
+**The exposure run (2.9.0).** `--exposure demo` (the default) does not load the committed exposure run of eight netting sets: it
+generates the run `XR-2026-09-30-01` for every netting set of the counterparties that fit in 9,500 trades, smallest first and always
+whole (22 of the 24 counterparties, 73 netting sets, about 9,000 trades, 200 paths, about a minute and 100 MB in the staging folder,
+nothing downloaded, never committed) with `tools/packgen/ccr/make_ccr_data.py --demo` from the committed netting sets and CSAs. Each
+trade's paths are seeded by its id, so the eight committed sets keep exactly their committed figures; CP-SUMMIT and CP-NORTHPLAINS stay
+without paths (the 10,000-trade local limit). `--exposure committed` loads the committed run alone. See
+[EXPOSURE_GUIDE.md section 23](EXPOSURE_GUIDE.md#23-test-data-and-generators).
 
 **Each source system in Delta or Iceberg (2.6.7).** `tools/build_demo_lakes.py --store <system>=delta|iceberg` (repeatable; `all=`
 first, then each system over it) chooses where each source system's trades are stored:
@@ -1036,6 +1045,43 @@ drishti-console/.venv/bin/python tools/drishti.py var parts 'BANK - DESK:CREDIT'
 drishti-console/.venv/bin/python tools/drishti.py var whatif 'DESK:RATES' --trades new-swap.json --stress-window 250
 ```
 
+### 5.13 exposure
+
+The exposure engine from the terminal (2.9.0; `tools/expcli.py`; [EXPOSURE_GUIDE.md](EXPOSURE_GUIDE.md), the API `/api/v1/exposure`),
+as the token's user sees it (their counterparties, groups and legal entities; trades, aggregate or none). A scope is the scope grammar's
+text (`BANK`, `LE:LE-NY`, `GROUP:GRP-ALDERSHOT`, `CPTY:CP-ALDERSHOT`, `NSET:NS-ALDERSHOT-LDN`, `TRD:<id>`, `DESK:`, `BOOK:`,
+`WHERE:<rule>`, with `+ - &`): quote it in the shell. The scoped subcommands take `--date YYYY-MM-DD` (default the newest date with
+paths), `--q Q` (the PFE confidence, default 0.95) and `--collateral lagged|current|none` (default `lagged`); every subcommand takes
+`--json` (the server's answer).
+- `exposure show SCOPE` prints the figures (peak PFE and its date, EPE, EEPE, CE, EAD under the internal model, informational), the
+  stored credit limit's use where one applies, and the profile (EE, ENE, EEE, PFE, PFE 99%, EE without collateral per primary date).
+- `exposure parts SCOPE [--by child|netting-set|counterparty|legal-entity|trade|asset] [--figure PFE|EE|EPE] [--at TENOR|DATE]
+  [--top N]` prints the contributions (to the peak PFE they add up; EE at a date; EPE) with the incremental PFE of each part.
+- `exposure tree [--date] [--q]` prints the bank, legal entities, counterparties and netting sets with peak PFE, EPE and limit use.
+- `exposure profile SCOPE [--csv]` prints the profile at every primary date (`--csv`: `tenor,date,t,ee,ene,eee,pfe,pfe_99,ee_uncoll`).
+- `exposure distribution SCOPE [--at TENOR|DATE]` prints the exposure distribution at a primary date (the peak by default) and the
+  path fan at every date.
+- `exposure status` prints the engine's settings, its hot files and the dates loaded.
+- `exposure capture SCOPE [--note TEXT]`, `exposure captures [--scope SCOPE]`, `exposure compare A [B|now]`: captures, immutable
+  (writing needs `risk:write`).
+- `exposure official [--date] [--capture]`: a date's official end-of-day record; `--capture` takes it now (administrators).
+- `exposure retention`: what the retention keeps of each date held, and the dates whose trade paths are beyond their window.
+- `exposure reload`: drops the loaded dates (administrators); the next request maps the hot file again or reads the lake.
+- `exposure whatif SCOPE [--like TRADE] [--factor F] [--set NETTING_SET] [--candidates FILE.json] [--method paths|addon]`: the
+  scope's exposure before and after candidate trades. `--like` copies a booked trade's paths on the run (`--factor -1` is its unwind),
+  `--set` the netting set it joins (default a set of its own); `--candidates` is a JSON list of `{tradeId, nettingSet, paths:
+  {copyOf, factor} or {runId, mtm}, assetClass, notional, maturityDate, mtm}`. `paths` (the default) is exact, by the Python exposure
+  engine (`exposure-whatif`; the compute workers must be on, `DRISHTI_COMPUTE_ENABLED=true`, else `DRS-5446`); `addon` is the
+  conservative proxy computed by the server.
+
+Exit codes are `0`, `1` (the server said no) and `2` (usage).
+
+```bash
+drishti-console/.venv/bin/python tools/drishti.py exposure show CPTY:CP-ALDERSHOT
+drishti-console/.venv/bin/python tools/drishti.py exposure parts NSET:NS-ALDERSHOT-NY --by trade --figure EE --top 10
+drishti-console/.venv/bin/python tools/drishti.py exposure whatif CPTY:CP-ALDERSHOT --like CLY-4000879 --factor -1 --set NS-ALDERSHOT-FRA
+```
+
 ## 6. Store loaders: `tools/load-*.sh`
 
 Each loader writes the banking packs' demo data (1,791 sample documents x 10 business days, and with `--trades N --days D` a
@@ -1142,7 +1188,7 @@ ExecStart=/opt/drishti/drishti-console/.venv/bin/python tools/drishti.py lake ma
 | `tools/packgen/world/make.py` (the halves `economics/make.py`, `politics/make.py`) with `tools/realdata/realdata.py` | the world-economy pack from real public data (World Bank, IMF; internal demos only) |
 | `tools/packgen/trades/make_trades.py` | **The trading pack's trades of three source systems** in the common schema (upper-snake, `LEGS` → `CASH_FLOWS` → `RESETS`, `EVENTS`): `--trades N` per system (ENDUR, CALYPSO, MUREX), `--days D` business days with about 6% amended each day, one `<out>/<system>/trades-<date>.jsonl.gz` a day; with `--lake <root>` each goes through `lake build --connector trade-<system>` into that system's table (`trade_endur`, `trade_calypso`, `trade_murex`). Deterministic; 10,000 trades or fewer on a laptop. `drishti-console/.venv/bin/python tools/packgen/trades/make_trades.py --trades 50 --days 2 --out data/build/trades` prints `ENDUR: 50 trades x 2 days -> data/build/trades/endur` and the same for CALYPSO and MUREX. |
 | `tools/packgen/var/make_var_data.py` | **The VaR engine's inputs** ([VAR_GUIDE.md Part II](VAR_GUIDE.md#14-the-contract-at-a-glance)) from the committed trades and desks, as an upstream risk batch delivers them: one 509-scenario P&L vector per live trade (every one: statuses NEW, VALIDATED, AMENDED, not matured; 9,572 trades) with the terms the server derives positions from (a synthetic `SECURITY_ID` shared by several trades for securities and listed products, by the market-risk pack's `positions:` rules), the scenario set, the MGMT and LEGAL hierarchies with limits, and 28 portfolio definitions (a desk's, a legal entity's, rules and baskets, overlapping), written to `data/testdata/market-risk/<kind>/` with their `testdata.yaml` entries, and the pack's samples and Sutra tests. No position, VaR or node history is written: the server derives and computes them. `--budget N` values at most N trades per book (default 0: every live trade), `--out` writes elsewhere, and `--check` fails when the committed files differ. Deterministic; `tools/packgen/var/test_var_data.py` checks the data. |
-| `tools/packgen/ccr/make_ccr_data.py` | **The exposure engine's inputs** ([EXP.md](../contracts/EXP.md)) from the committed netting sets, as an upstream exposure simulator delivers them: a simulation run (`simulation-run`: 200 paths, 13 primary dates 1W .. 10Y and their 10-business-day look-back dates) and every live member trade's MtM on every path at every grid date up to its maturity (`exposure-path`) for eight netting sets, written to `data/testdata/counterparty-risk/<kind>/` with their `testdata.yaml` entries, the pack's samples and `drishti-compute`'s parity reference (`ccrmath.py`'s figures). No exposure figure is written. `--check` fails when the committed files differ, `--full --out DIR` writes every netting set that fits in 10,000 trades with 500 paths (local benchmarks), `--reconcile I/N --stored DIR` compares the retired stored profiles with the computed ones. Deterministic; `tools/packgen/ccr/test_ccr_data.py` checks the data. |
+| `tools/packgen/ccr/make_ccr_data.py` | **The exposure engine's inputs** ([EXPOSURE_GUIDE.md](EXPOSURE_GUIDE.md)) from the committed netting sets, as an upstream exposure simulator delivers them: a simulation run (`simulation-run`: 200 paths, 13 primary dates 1W .. 10Y and their 10-business-day look-back dates) and every live member trade's MtM on every path at every grid date up to its maturity (`exposure-path`) for eight netting sets, written to `data/testdata/counterparty-risk/<kind>/` with their `testdata.yaml` entries, the pack's samples and `drishti-compute`'s parity reference (`ccrmath.py`'s figures). No exposure figure is written. `--check` fails when the committed files differ, `--full --out DIR` writes every netting set that fits in 10,000 trades with 500 paths (local benchmarks), `--demo --out DIR` writes the demo lake's run (whole counterparties within 9,500 trades, 200 paths: 73 netting sets, about 9,000 trades; what `lake demo --exposure demo` loads), `--reconcile I/N --stored DIR` compares the retired stored profiles with the computed ones. Deterministic; `tools/packgen/ccr/test_ccr_data.py` checks the data. |
 | `tools/samplegen/bulk_trades.py` | a large trade book for scale tests, N trades over D business days, as a Delta lake (`load-delta.sh --trades`) |
 
 The examples on this page read the committed test data (`data/testdata`, written by `tools/testdata/make_testdata.py`). It writes the

@@ -29,7 +29,7 @@ import java.util.List;
 import java.util.Map;
 
 /**
- * A tiny exposure lake written with Drishti's lake writer, whose answers are known by hand: EXP.md section 15's worked example in USD
+ * A tiny exposure lake written with Drishti's lake writer, whose answers are known by hand: EXPOSURE_GUIDE.md section 2.1's worked example in USD
  * millions. Netting set NS-X (counterparty CP-1, legal entity LE-A, a CSA with thresholds of 1m) holds trades A and B on 4 paths; its
  * look-back values are the contract's L. Primary dates 73, 146 and 365 days after the business date (t = 0.2, 0.4, 1.0); EE 1.0m, 1.5m,
  * 0.75m; PFE 75% 1m, 2m, 1m; EPE 0.95m, EEPE 1.4m. NS-Y (CP-1 too, no CSA) holds trade C. NS-Z (CP-2) is known to the netting-set
@@ -40,7 +40,7 @@ final class ExposureLakeFixture {
     static final LocalDate DAY = LocalDate.of(2026, 9, 30);
     static final int P = 4;
     static final double M = 1_000_000;
-    // per trade, per primary date (t1, t2, t3), the 4 paths (EXP.md section 15)
+    // per trade, per primary date (t1, t2, t3), the 4 paths (EXPOSURE_GUIDE.md section 2.1)
     static final double[][] A = {{3, -2, 3, 0}, {5, -1, 4, -2}, {2, -3, 6, -1}};
     static final double[][] B = {{-1, 1, -2, 1}, {-1, 2, 0, 0}, {1, 1, -1, -2}};
     static final double[][] C = {{1, 0, 0, 0}, {0, 2, 0, 0}, {0, 0, 1, 0}};

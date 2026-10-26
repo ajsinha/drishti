@@ -23,7 +23,8 @@ from whichever system holds it. Nobody codes a screen per product:
 
 ```
 TRD MX-20000001 <GO>                          →  the trade: terms, legs, cashflows, curve, DV01 ladder, links
-NSET NS-SUMMIT-NY <GO>                    →  exposure profile, member trades, CSA, collateral
+NSET NS-SUMMIT-NY <GO>                    →  the netting set: member trades, CSA, collateral
+EXP CPTY:CP-ALDERSHOT <GO>                    →  exposure computed from the paths: EE, PFE, EPE, EEPE, from the bank to a trade
 TRD where QUANTITY > 200m order by QUANTITY desc   →  every trade over 200m, largest first
 amended trades over 5m in BOOK-RATES-3, biggest first   →  plain words: Drishti shows the search it makes
 ```

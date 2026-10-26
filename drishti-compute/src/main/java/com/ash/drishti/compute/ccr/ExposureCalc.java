@@ -25,7 +25,7 @@ import java.util.Map;
 import java.util.Set;
 
 /**
- * A scope's exposure on one date (EXP.md sections 6.4, 6.6 and 8): the trades it resolved to are grouped by netting set; a set the scope
+ * A scope's exposure on one date (EXPOSURE_GUIDE.md sections 18.4, 18.6 and 4): the trades it resolved to are grouped by netting set; a set the scope
  * covers whole adds its exposure matrices (precomputed at load under the default collateral model); a set it cuts (a desk's share) is
  * recomputed from the scope's trades, read from the lake, with collateral as if those trades were the set ({@code partial}); a scope of
  * trades only values them alone, uncollateralised ({@code standalone}). Exposures add per path across sets; the statistics are read from

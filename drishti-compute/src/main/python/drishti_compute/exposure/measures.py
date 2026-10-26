@@ -13,7 +13,7 @@
 # See the LICENSE file in the root of this repository for the full terms.
 
 """The exposure measures over flat lists, exactly as ``com.ash.drishti.compute.ccr.ExposureMath`` (and tools/packgen/ccr/ccrmath.py)
-compute them (docs/guides/EXPOSURE_GUIDE.md sections 5 and 6). A matrix is one row of P path values per date, row-major:
+compute them (docs/guides/EXPOSURE_GUIDE.md sections 2 and 18). A matrix is one row of P path values per date, row-major:
 ``m[i * P + p]``. A netting set's value matrix ``V`` covers every grid date (``G x P``); exposure matrices cover the primary dates only
 (``G_primary x P``, row i the grid's i-th primary point).
 
@@ -53,7 +53,7 @@ def quantile_sorted(s: list[float], q: float, rule: str = "kth") -> float:
 
 @dataclass
 class Csa:
-    """A netting set's collateral terms in USD (EXP.md section 6.3, CsaTerms in Java)."""
+    """A netting set's collateral terms in USD (EXPOSURE_GUIDE.md section 18.3, CsaTerms in Java)."""
     present: bool = False
     margined: bool = False
     th_them: float = 0.0

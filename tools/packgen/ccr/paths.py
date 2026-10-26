@@ -12,7 +12,7 @@
 #
 # See the LICENSE file in the root of this repository for the full terms.
 
-"""The exposure simulator of the test data (docs/contracts/EXP.md section 13): what an upstream engine would deliver, small and
+"""The exposure simulator of the test data (docs/guides/EXPOSURE_GUIDE.md section 23): what an upstream engine would deliver, small and
 deterministic. It does not price anything: a trade's value on a path is its MtM today moved by a factor walk of its asset class and an
 idiosyncratic walk of its own, amortising to zero at maturity:
 

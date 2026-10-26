@@ -151,8 +151,14 @@ def overview(name: str, docs: dict) -> str:
                   "<GO>`, `EXP CPTY:CP-ALDERSHOT <GO>` (its netting sets summed path by path), `EXP GROUP:GRP-ALDERSHOT <GO>`, `EXP LE:LE-NY <GO>`, "
                   "`EXP TRD:<trade> <GO>` (a trade alone). The netting-set and counterparty pages show the engine's figures computed as they "
                   "open. Each loaded date lives in a memory-mapped hot file under the data folder (`drishti.ccr.exposure`); the official "
-                  "end-of-day figures are published to `risk-results/exposure-official` and `exposure-official-cpty`. The API is "
-                  "`/api/v1/exposure`; the data contract is `docs/contracts/EXP.md`.", ""]
+                  "end-of-day figures are published to `risk-results/exposure-official` and `exposure-official-cpty`. The explorer opens with "
+                  "`EXP <scope> <GO>` (the bank, a legal entity's counterparty board, a counterparty's netting sets, a set's collateral and "
+                  "trades, a trade alone and in its set, captures and compare, the pre-deal what-if); a what-if by the exact `paths` method is "
+                  "`XWIF` (`exposure-whatif`, the Python engine, compute on). The API is `/api/v1/exposure`; from the command line: "
+                  "`drishti.py exposure show CPTY:CP-ALDERSHOT`.", "",
+                  "The exposure guide (`docs/guides/EXPOSURE_GUIDE.md`) explains every number with worked examples, the explorer, scopes, "
+                  "collateral, captures, the what-if, entitlements, the CLI, the API and the settings; tutorial 26 "
+                  "(`docs/tutorials/26-exposure-from-the-bank-to-a-trade.md`) walks through it on the test data; the data contract is its Part II.", ""]
     if name == "market-data":
         lines += ["### Public data feeds", "", "Real market data from public sources, each its own connector and **off by default**. Switch one "
                   "on with its environment variable (or `drishti.sources.connectors.<name>.enabled: true` in the site configuration). "

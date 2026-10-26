@@ -6,7 +6,7 @@
 
 # WWR: wrong-way risk, the data contract
 
-*Version 1.0 · 2026-10-25 · Shared rules: [README.md](README.md) · Model contract: [VAR_GUIDE.md Part II](../guides/VAR_GUIDE.md#14-the-contract-at-a-glance) · Exposure paths: [EXP.md](EXP.md) ·
+*Version 1.0 · 2026-10-25 · Shared rules: [README.md](README.md) · Model contract: [VAR_GUIDE.md Part II](../guides/VAR_GUIDE.md#14-the-contract-at-a-glance) · Exposure paths: [EXPOSURE_GUIDE.md](../guides/EXPOSURE_GUIDE.md) ·
 CVA: [CVA.md](CVA.md) · Groups: [GRP.md](GRP.md)*
 
 **Status:** proposed. PLANNED for 2.10.0, not built. Every table, column, setting, kind, endpoint and code below is a proposal; names
@@ -79,7 +79,7 @@ and monitor specific and general wrong-way risk).
 ```
 ${DRISHTI_DELTA_ROOT}/risk/
 ├── credit-path/      business_date=YYYY-MM-DD/run_id=<RUN_ID>/   optional: one row per credit name × grid date: hazard over the P paths
-└── exposure-path/, simulation-run/                               EXP.md section 3 (the same run, the same path order)
+└── exposure-path/, simulation-run/                               EXPOSURE_GUIDE.md section 15 (the same run, the same path order)
 ```
 
 ### 3.2 `credit-path`: counterparty credit on the exposure paths (optional, shared)
@@ -101,15 +101,15 @@ the same market path as in `exposure-path`: the simulator must draw credit and m
 | `SPREAD` | vector | `list<float>` | optional | – | bp | the simulated 5-year CDS spread (for display and for flags) | `[118.0, 151.5, …]` |
 | `STATUS`, `BATCH_ID` | text, id | STRING | required | – | | | `ok`, `B-2026-09-30-01` |
 
-Vectors follow EXP.md section 3.3 (float32 allowed). Cadence, due time, load signal (reloads the engine automatically) and retention follow
-EXP; at 40 GB a date the 7-year question is the same (EXP open question 2), proposed: credit paths kept with the exposure paths' windows,
+Vectors follow EXPOSURE_GUIDE.md section 15.3 (float32 allowed). Cadence, due time, load signal (reloads the engine automatically) and retention follow
+EXP; at 40 GB a date the 7-year question is the same (EXPOSURE_GUIDE.md open question 2), proposed: credit paths kept with the exposure paths' windows,
 WWR statistics every date for 7 years.
 
 ## 4. Reference and master data read
 
 | Kind | Read for |
 |---|---|
-| `exposure-result` and the netting sets' path matrices (EXP.md) | E(p, k), EE |
+| `exposure-result` and the netting sets' path matrices (EXPOSURE_GUIDE.md) | E(p, k), EE |
 | `counterparty` (core) | `LEI`, `SECTOR`, `COUNTRY`, `TYPE`, `CREDIT_CURVE`, `GROUP` |
 | `group-usage` resolver (GRP.md) | the connected group's members and LEIs |
 | `saccr-trade` (SACCR.md) | `REFERENCE`, `ASSET_CLASS`, `TRANSACTION_TYPE`, `BOUGHT_SOLD`, `DIRECTION`, notional, option terms (the specific checks and jump-to-default) |
@@ -342,7 +342,7 @@ become the **general flag without a model** (`GENERAL_HEURISTIC`, shown only whe
 
 ## 15. A worked example
 
-EXP.md section 15's netting set (USD millions; E at t = 0.25, 0.5, 1.0; LGD 60%; no discounting). The run also carries the counterparty's
+EXPOSURE_GUIDE.md section 2.1's netting set (USD millions; E at t = 0.25, 0.5, 1.0; LGD 60%; no discounting). The run also carries the counterparty's
 hazard, constant over time on each path: path 1 **4%**, path 2 **1%**, path 3 **3%**, path 4 **0%** (mean 2%, the market curve's flat
 hazard). The paths with high exposure (1 and 3) are the paths where the counterparty is weak: wrong way.
 

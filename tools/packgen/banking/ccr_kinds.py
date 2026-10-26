@@ -12,7 +12,7 @@
 #
 # See the LICENSE file in the root of this repository for the full terms.
 
-"""The exposure engine's kinds in the counterparty-risk pack (docs/contracts/EXP.md): what make_packs.py adds to the pack's manifest
+"""The exposure engine's kinds in the counterparty-risk pack (docs/guides/EXPOSURE_GUIDE.md): what make_packs.py adds to the pack's manifest
 beside the taxonomy's kinds, as var_kinds.py does for VaR. The engine's inputs (the simulation run and every trade's MtM on every path,
 ``simulation-run`` and ``exposure-path``) are written by tools/packgen/ccr/make_ccr_data.py into data/testdata/counterparty-risk/ and
 served by the pack's Delta connector exposure-store from the risk lake's domain (``risk/``), the paths as a list<double> column
@@ -20,7 +20,7 @@ served by the pack's Delta connector exposure-store from the risk lake's domain 
 server's Java engine through the reactive connector exposure-engine, read as the viewer; exposure-whatif (XWIF <scope> <GO>) by the Python
 exposure engine in the compute pool exposure (the exact pre-deal what-if: candidates' paths added to their netting sets, from a private
 sandbox), through the reactive connector exposure-whatif; the netting-set and counterparty pages show
-the engine's figures computed as they open (EXPOSURE_ENGINE). The stored exposure-profile kind was retired in 2.9.0 (EXP.md section 14)."""
+the engine's figures computed as they open (EXPOSURE_ENGINE). The stored exposure-profile kind was retired in 2.9.0 (EXPOSURE_GUIDE.md section 22)."""
 from __future__ import annotations
 
 #: kind -> (mnemonic, label, id pattern, id field)

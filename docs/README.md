@@ -14,7 +14,7 @@ before the consolidation (for example `/help/quickstart` or `/help/connector-kaf
 ## New here? Read these, in order
 
 1. **[GETTING_STARTED.md](guides/GETTING_STARTED.md)** (*Install and run*): prerequisites, build, start the server and the console, sign-in, Docker, other ways to build, and Windows.
-2. **[tutorials/](tutorials/README.md)**: twenty-five hands-on tutorials on the shipped demo data, with the exact commands, real output and real screenshots. Start with [your first 15 minutes](tutorials/01-first-15-minutes.md).
+2. **[tutorials/](tutorials/README.md)**: twenty-six hands-on tutorials on the shipped demo data, with the exact commands, real output and real screenshots. Start with [your first 15 minutes](tutorials/01-first-15-minutes.md).
 3. **[USER_GUIDE.md](guides/USER_GUIDE.md)**: every feature of the console, as a reference. **[PACKS.md](guides/PACKS.md)**: which industries are available and how to load them; building your own is [PACK_DEVELOPER_GUIDE.md](guides/PACK_DEVELOPER_GUIDE.md).
 
 If you will change the code, continue with [DEVELOPER_GUIDE.md](guides/DEVELOPER_GUIDE.md).
@@ -35,7 +35,7 @@ If you will change the code, continue with [DEVELOPER_GUIDE.md](guides/DEVELOPER
 
 | Folder | What is in it |
 |---|---|
-| [tutorials/](tutorials/README.md) | the twenty-five hands-on tutorials: a worked example each, on the demo data, with commands, real output and screenshots |
+| [tutorials/](tutorials/README.md) | the twenty-six hands-on tutorials: a worked example each, on the demo data, with commands, real output and screenshots |
 | [guides/](guides/) | install and run, the user guide, business intelligence (Rūpaka), packs and the command line, the Sutra and Rachana guides, panels, clients, API and troubleshooting; `examples/` holds working Sutras |
 | [connectors/](connectors/) | connecting your data: the Connectors reference, the connector files, TLS and proxy, the developer guide, a design document per store (Delta Lake, PostgreSQL, Aerospike, Cassandra, files …) and demo data |
 | [contracts/](contracts/README.md) | the data contracts: the shared rules (keys, types, dates, signs, vectors, validation), the computed measures' contracts, and [the contract of every command](contracts/packs/README.md) (one YAML file per mnemonic beside its pack) |
@@ -179,6 +179,7 @@ If you will change the code, continue with [DEVELOPER_GUIDE.md](guides/DEVELOPER
 | Write a connector that computes its data on demand, and see two (news headlines for a name, a quote for a ticker) | [NEWS.md](connectors/NEWS.md), [YFINANCE.md](connectors/YFINANCE.md), [CONNECTOR_DEVELOPER_GUIDE.md](connectors/CONNECTOR_DEVELOPER_GUIDE.md#connectors-that-compute-data-on-demand) |
 | Compute a kind when a screen asks for it (typed parameters, a Python or Java engine, progress on the panel, recomputed on events) | [REACTIVE_CONNECTOR.md](connectors/REACTIVE_CONNECTOR.md), [tutorial 23](tutorials/23-computed-panels.md) |
 | Measure VaR and ES for any set of trades, drill from the bank to a trade, capture and backtest, size the memory | [VAR_GUIDE.md](guides/VAR_GUIDE.md) (Part II is the data contract), [tutorial 25](tutorials/25-var-from-the-bank-to-a-trade.md) |
+| Measure counterparty exposure (EE, PFE, EPE, EEPE) for any scope, drill from the bank to a trade, collateral and netting, pre-deal what-if, official results | [EXPOSURE_GUIDE.md](guides/EXPOSURE_GUIDE.md) (Part II is the data contract), [tutorial 26](tutorials/26-exposure-from-the-bank-to-a-trade.md) |
 | Switch on the Yahoo Finance quote connector | [YFINANCE.md](connectors/YFINANCE.md) |
 | See what the sample connector serves and how to switch it off | [DEMO_CONNECTOR.md](connectors/DEMO_CONNECTOR.md) |
 | Connect your data in the short version (a connector file) | [CONNECTORS.md](connectors/CONNECTORS.md) |

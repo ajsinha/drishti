@@ -13,15 +13,15 @@
 # See the LICENSE file in the root of this repository for the full terms.
 
 """The committed exposure inputs (data/testdata/counterparty-risk/{simulation-run,exposure-path}, tools/packgen/ccr/make_ccr_data.py)
-are what an upstream exposure simulator delivers and nothing more (docs/contracts/EXP.md sections 3 and 13):
+are what an upstream exposure simulator delivers and nothing more (docs/guides/EXPOSURE_GUIDE.md sections 15 and 23):
 
 - one run of the business date: its grid strictly increasing after the date, every look-back point mapped to a later primary point,
   13 primary dates (1W .. 10Y);
 - one row per live member trade of the eight committed netting sets and grid date up to its maturity plus 10 business days (sparse by
   maturity: no row missing before, none after), every MTM vector of the run's length and finite, whole USD, unique row ids;
 - the denormalised netting set, counterparty and legal entity equal the netting set's;
-- path values at the first grid date near the trade's MtM today as the model amortises it (the t0 check of EXP.md section 10);
-- no figure an engine computes (EE, PFE, EPE ...) on any input; the reference math reproduces EXP.md section 15's worked example.
+- path values at the first grid date near the trade's MtM today as the model amortises it (the t0 check of EXPOSURE_GUIDE.md section 21);
+- no figure an engine computes (EE, PFE, EPE ...) on any input; the reference math reproduces EXPOSURE_GUIDE.md section 2.1's worked example.
 
     python3 -m pytest tools/packgen/ccr/test_ccr_data.py -q          (pyyaml and pytest)
 """

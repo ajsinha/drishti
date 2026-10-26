@@ -33,7 +33,7 @@ import java.util.TreeMap;
 import java.util.concurrent.ConcurrentHashMap;
 
 /**
- * One business date of the exposure engine in memory (EXP.md section 7.1): the run's grid, every netting set with its CSA terms and its
+ * One business date of the exposure engine in memory (EXPOSURE_GUIDE.md section 26.1): the run's grid, every netting set with its CSA terms and its
  * value, exposure and negative exposure matrices (float32 rows of the date's memory-mapped hot file, or float64 rows on the heap), and
  * the index of the trades (ordered by netting set, then trade id, so a set's trades are one run of ordinals). Trade paths are not kept:
  * they are read from the lake when a scope needs them ({@link TradePaths}). Built by {@link Builder} from the date's rows as the lake

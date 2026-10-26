@@ -24,7 +24,7 @@ import java.util.List;
 import org.junit.jupiter.api.Test;
 
 /**
- * The exposure measures by hand: EXP.md section 15's worked example exactly (EE 1.0, 1.5, 0.75; EPE 1.0; EEPE 1.375; PFE 75% 1, 2, 1
+ * The exposure measures by hand: EXPOSURE_GUIDE.md section 2.1's worked example exactly (EE 1.0, 1.5, 0.75; EPE 1.0; EEPE 1.375; PFE 75% 1, 2, 1
  * and its peak 2 at t2, 4 without collateral; EAD 1.925; the uncollateralised EE contributions 2.0 and 0.25), the collateral rules
  * (thresholds, minimum transfer, independent amount, rounding, today's collateral where there is no look-back point, the unmargined and
  * current models), the quantile rules, the horizon cut inside an interval, and a set's trade shares adding up to its exposure.

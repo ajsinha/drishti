@@ -6,7 +6,7 @@
 
 # CVA: credit and other valuation adjustments, the data contract
 
-*Version 1.0 · 2026-10-25 · Shared rules: [README.md](README.md) · Model contract: [VAR_GUIDE.md Part II](../guides/VAR_GUIDE.md#14-the-contract-at-a-glance) · Exposure: [EXP.md](EXP.md) ·
+*Version 1.0 · 2026-10-25 · Shared rules: [README.md](README.md) · Model contract: [VAR_GUIDE.md Part II](../guides/VAR_GUIDE.md#14-the-contract-at-a-glance) · Exposure: [EXPOSURE_GUIDE.md](../guides/EXPOSURE_GUIDE.md) ·
 SA-CCR (for BA-CVA): [SACCR.md](SACCR.md) · Wrong-way risk: [WWR.md](WWR.md)*
 
 **Status:** proposed. PLANNED for 2.10.0, not built. Every table, column, setting, kind, endpoint and code below is a proposal; names
@@ -72,7 +72,7 @@ CVA has **no input table of its own**. It reads:
 
 | Input | Contract | What |
 |---|---|---|
-| `exposure-path`, `simulation-run` | [EXP.md](EXP.md) section 3 | EE, ENE per netting set and primary date (through `exposure-result`); the run should be `RISK_NEUTRAL` (EXP open question 4) |
+| `exposure-path`, `simulation-run` | [EXPOSURE_GUIDE.md](../guides/EXPOSURE_GUIDE.md) section 15 | EE, ENE per netting set and primary date (through `exposure-result`); the run should be `RISK_NEUTRAL` (EXPOSURE_GUIDE.md open question 4) |
 | `saccr-trade` and its result | [SACCR.md](SACCR.md) | EAD and effective maturity per netting set for BA-CVA |
 | `credit-curve` (market-data pack) | the pack's contract | `POINTS[]` (`TENOR`, `SPREAD` in bp, `HAZARD`, `SURVIVAL`), `RECOVERY`, `CURRENCY` |
 | `ir-curve` (market-data pack) | the pack's contract | the USD OIS discount curve (`POINTS[]`) |
@@ -189,7 +189,7 @@ it is not the sum of its parts' BA-CVA. The full BA-CVA (with eligible hedges) a
 
 CVA, DVA, FCA, FBA, CS01 are **linear in EE and ENE**, and EE adds across netting sets, so **every xVA figure adds over netting sets and
 counterparties**: Drishti computes them per netting set at date load and a scope is a sum (VaR-style node aggregates, microseconds per
-answer). A partial scope (a desk's share of a set) is computed from the partial EE profile (EXP.md section 8). BA-CVA is not additive
+answer). A partial scope (a desk's share of a set) is computed from the partial EE profile (EXPOSURE_GUIDE.md section 4). BA-CVA is not additive
 (§6.6). WWR-adjusted CVA (path-wise) is WWR.md's.
 
 ### 6.8 Where it runs
@@ -212,7 +212,7 @@ No disk structure beyond EXP's; the answers are cached as NSET's.
 ## 8. Scopes
 
 All of NSET.md section 8. Default parts: the bank → legal entities → counterparties → netting sets; a netting set → its EE contributions
-by trade (EXP.md section 6.6, giving each trade's CVA contribution: CVA is linear in EE).
+by trade (EXPOSURE_GUIDE.md section 18.6, giving each trade's CVA contribution: CVA is linear in EE).
 
 ## 9. What Drishti answers
 
@@ -359,7 +359,7 @@ from the daily walk of separate files; the computed CVA is one number. The relea
 
 ## 15. A worked example
 
-EXP.md section 15's netting set (USD millions): EE = 1.0, 1.5, 0.75 and ENE = −0.25, −0.5, −0.75 at t = 0.25, 0.5, 1.0. Counterparty: flat
+EXPOSURE_GUIDE.md section 2.1's netting set (USD millions): EE = 1.0, 1.5, 0.75 and ENE = −0.25, −0.5, −0.75 at t = 0.25, 0.5, 1.0. Counterparty: flat
 hazard λ_C = 2%, LGD_C = 60%; the bank: λ_B = 1%, LGD_B = 60%; **no discounting** (DF = 1, to keep it checkable by hand).
 
 | k | t_k | ΔPD_C = e^(−0.02 t_{k−1}) − e^(−0.02 t_k) | EE × ΔPD_C | ΔPD_B (1%) | \|ENE\| × ΔPD_B |

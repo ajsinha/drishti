@@ -35,7 +35,7 @@ import java.util.Optional;
 
 /**
  * Reads one business date of the exposure engine's inputs through the connectors the kinds are routed to (the counterparty-risk pack's
- * {@code exposure-store} in the demo; the bank's risk lake in production) and builds the {@link ExposureBook} (EXP.md section 7.3): the
+ * {@code exposure-store} in the demo; the bank's risk lake in production) and builds the {@link ExposureBook} (EXPOSURE_GUIDE.md section 26.3): the
  * run of the date (the newest complete {@code simulation-run}), checked; its {@code exposure-path} rows streamed from the vector column
  * {@code MTM} straight into the netting sets' value matrices ({@link ExposureIntake}); each set's CSA terms (thresholds, minimum transfer
  * amounts, independent amount, rounding, margin period of risk) and what it holds today ({@code collateral-balance}); then collateral,

@@ -16,7 +16,7 @@
 package com.ash.drishti.compute.ccr;
 
 /**
- * A netting set's collateral terms in USD (EXP.md section 6.3, NSET.md section 3.5) and what it holds today.
+ * A netting set's collateral terms in USD (EXPOSURE_GUIDE.md section 18.3, NSET.md section 3.5) and what it holds today.
  *
  * @param csaId the CSA, null when the set has none (unmargined: no collateral at all)
  * @param thThem the exposure we may have to the counterparty before they post

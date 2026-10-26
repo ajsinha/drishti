@@ -22,7 +22,7 @@ import java.util.Map;
 import org.springframework.boot.context.properties.ConfigurationProperties;
 
 /**
- * The exposure engine (docs/contracts/EXP.md section 6.1): exposure profiles (EE, ENE, EEE, PFE, EPE, EEPE) for any counterparty scope
+ * The exposure engine (docs/guides/EXPOSURE_GUIDE.md section 18.1): exposure profiles (EE, ENE, EEE, PFE, EPE, EEPE) for any counterparty scope
  * from the upstream exposure paths, in the server.
  *
  * @param enabled the engine and its API are on
@@ -50,7 +50,7 @@ import org.springframework.boot.context.properties.ConfigurationProperties;
  * @param access per role, per counterparty, group or legal entity: {@code trades} (figures, netting sets and trades), {@code aggregate}
  *     (figures only) or {@code none}; a role without an entry sees everything at {@code trades} when it may open the paths
  * @param official the official end-of-day captures and their published results
- * @param retention what is kept how long (EXP.md section 12.3, decided 2026-10-26)
+ * @param retention what is kept how long (EXPOSURE_GUIDE.md section 27.3, decided 2026-10-26)
  */
 @ConfigurationProperties("drishti.ccr.exposure")
 public record ExposureProperties(Boolean enabled, List<Double> confidence, Double limitConfidence, String rankRule, String collateralModel,
@@ -84,7 +84,7 @@ public record ExposureProperties(Boolean enabled, List<Double> confidence, Doubl
     }
 
     /**
-     * The official end-of-day captures (EXP.md section 9.6).
+     * The official end-of-day captures (EXPOSURE_GUIDE.md section 20).
      *
      * @param enabled capture every netting set, counterparty, group and hierarchy node when a date's inputs are complete
      * @param publish also append them to {@code <root>/risk-results/exposure-official} and {@code exposure-official-cpty}
@@ -103,7 +103,7 @@ public record ExposureProperties(Boolean enabled, List<Double> confidence, Doubl
     }
 
     /**
-     * Retention of exposure data (EXP.md section 12.3, the product owner's decision of 2026-10-26): full trade paths for
+     * Retention of exposure data (EXPOSURE_GUIDE.md section 27.3, the product owner's decision of 2026-10-26): full trade paths for
      * {@code tradePathsDays} business days and each month-end for {@code tradePathsMonthEndYears}; netting-set matrices (the hot files)
      * every date for {@code setMatricesYears} and each month-end for {@code setMatricesMonthEndYears}; statistics (the official records)
      * and trade contributions every date for {@code statisticsYears} and {@code tradeContributionsYears}.

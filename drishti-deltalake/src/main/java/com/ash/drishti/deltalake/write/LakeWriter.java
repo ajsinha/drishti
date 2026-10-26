@@ -191,7 +191,7 @@ public final class LakeWriter {
 
     /** A vector column's type: Parquet LIST of DOUBLE, elements nullable (a missing scenario value is null, never zero). */
     static final ArrayType VECTOR = new ArrayType(DoubleType.DOUBLE, true);
-    /** A float32 vector column (exposure paths may be stored so, EXPOSURE_GUIDE.md section 15): Parquet LIST of FLOAT. */
+    /** A float32 vector column (exposure paths may be stored so, EXPOSURE_GUIDE.md section 15.3): Parquet LIST of FLOAT. */
     static final ArrayType VECTOR32 = new ArrayType(io.delta.kernel.types.FloatType.FLOAT, true);
 
     static DataType type(String t) {

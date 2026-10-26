@@ -168,7 +168,7 @@ All of these are additive or distinct-counts over trades: computed per answer fr
 |---|---|---|
 | `MTM`, `MTM_GROSS`, `DV01` | TVAL ([TVAL.md section 6](TVAL.md#6-the-computation)) | the live trades of *S* |
 | `VAR`, `ES` | VaR ([VAR_GUIDE.md section 18](../guides/VAR_GUIDE.md#18-the-computation)) | the same set; a scope VaR cannot answer (a trade without a vector) is counted `missing` |
-| Exposure, limits | `EXP.md`, `LIM.md` (2.10.0) | the counterparty's netting sets |
+| Exposure, limits | `EXPOSURE_GUIDE.md`, `LIM.md` (2.10.0) | the counterparty's netting sets |
 
 The page asks each engine with the same canonical scope text and date; each figure carries its own provenance. A figure an engine is
 switched off for (Admin → Commands) is shown *not active*, never 0.

@@ -12,7 +12,7 @@
 #
 # See the LICENSE file in the root of this repository for the full terms.
 
-"""The Python exposure engine (docs/guides/EXPOSURE_GUIDE.md sections 9 and 15): its measures give the worked example's numbers as the
+"""The Python exposure engine (docs/guides/EXPOSURE_GUIDE.md sections 2 and 19): its measures give the worked example's numbers as the
 Java engine does (4 paths, 3 primary dates, thresholds of 1); the what-if engine of ``exposure-whatif`` adds a candidate's paths to its
 netting set: trade A's set plus trade B as a candidate is the worked example's set again (EE 1.0, 1.5, 0.75; PFE 75% 1, 2, 1; EPE 1.0;
 EEPE 1.375), the incremental figures are with minus without, a candidate of its own is uncollateralised, nothing added changes nothing,

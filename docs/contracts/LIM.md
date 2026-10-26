@@ -7,7 +7,7 @@
 # LIM: credit limits and their usage, the data contract
 
 *Version 1.0 · 2026-10-25 · Shared rules: [README.md](README.md) · Model contract: [VAR_GUIDE.md Part II](../guides/VAR_GUIDE.md#14-the-contract-at-a-glance) · Netting: [NSET.md](NSET.md) ·
-Usage measures: [EXP.md](EXP.md), [SACCR.md](SACCR.md) · Groups: [GRP.md](GRP.md)*
+Usage measures: [EXPOSURE_GUIDE.md](../guides/EXPOSURE_GUIDE.md), [SACCR.md](SACCR.md) · Groups: [GRP.md](GRP.md)*
 
 **Status:** proposed. PLANNED for 2.10.0, not built. Every table, column, setting, kind, endpoint and code below is a proposal; names
 may change before the release, and each change will be recorded in [section 16](#16-open-questions-and-the-change-table).
@@ -57,7 +57,7 @@ share of a counterparty) and a structured measure.
 officers, the front office (pre-deal), and limit monitoring (breaches and early warnings every morning).
 
 **In words:** each limit names a **scope** and a **measure**. Usage is the measure computed for the scope: for a PFE limit, the peak of
-the scope's PFE profile in each tenor bucket (from [EXP.md](EXP.md), where exposures of several netting sets add per path before the
+the scope's PFE profile in each tenor bucket (from [EXPOSURE_GUIDE.md](../guides/EXPOSURE_GUIDE.md), where exposures of several netting sets add per path before the
 quantile is taken); for an EAD limit, the SA-CCR EAD ([SACCR.md](SACCR.md)); for a settlement limit, the largest amount due from the
 counterparty on one settlement day. **Utilisation** = usage / limit, per bucket; the limit's status is that of its worst bucket:
 `OK` below the warning level (80%), `WARNING` from it, `BREACH` above 100%, `EXCESS_APPROVED` within an approved temporary excess.
@@ -107,7 +107,7 @@ counterparty measure. If the product owner prefers two tables (open question 6),
 
 | Kind | Read for |
 |---|---|
-| `exposure-result` (EXP.md) | PFE, EE, EEPE profiles of the limit's scope; incremental figures for pre-deal |
+| `exposure-result` (EXPOSURE_GUIDE.md) | PFE, EE, EEPE profiles of the limit's scope; incremental figures for pre-deal |
 | `saccr-result` (SACCR.md) | EAD of the scope; incremental EAD |
 | `nset-figures` (NSET.md) | net MtM, current exposure, notional |
 | `trade` (`EVENTS[]`, `LEGS[].CASH_FLOWS[]`) or a cash-flow table (`LIQUIDITY.md`, planned) | settlement amounts due per day |
@@ -168,7 +168,7 @@ children's usages (PFEs do not add).
 ### 6.4 Pre-deal check
 
 Request: the counterparty (or netting set), the candidate trade(s) with their `saccr-trade` rows and estimated MtM, and their exposure
-paths on the day's run when available (EXP.md section 6.7). For every limit whose scope contains the candidate's netting set:
+paths on the day's run when available (EXPOSURE_GUIDE.md section 18.7). For every limit whose scope contains the candidate's netting set:
 
 ```
 USAGE_AFTER_b = usage of the measure with the candidate (EXP what-if for PFE/EE/EEPE, SACCR what-if for EAD, sums for the rest)
@@ -341,7 +341,7 @@ walk the buckets separately). The computed usage reads EXP at `CPTY:CP-ALDERSHOT
 
 ## 15. A worked example
 
-Use EXP.md section 15's netting set as the whole counterparty (PFE at q = 75%, USD millions): PFE(t₀) = 0, PFE(0.25) = 1, PFE(0.5) = 2,
+Use EXPOSURE_GUIDE.md section 2.1's netting set as the whole counterparty (PFE at q = 75%, USD millions): PFE(t₀) = 0, PFE(0.25) = 1, PFE(0.5) = 2,
 PFE(1.0) = 1. A `PFE` limit with two buckets, `HARD`, warning level 0.8:
 
 | Bucket | Grid dates in it | Limit | Usage = max PFE | Utilisation | Status | Headroom |
@@ -364,7 +364,7 @@ bucket breaches: headroom 0.5 / (0.674 × 0.04 × √0.5) = **26.2**.
 |---|---|---|
 | 1 | Due time of the limits feed; is the limits system also the place pre-deal decisions are recorded (write-back), or Drishti's audit only? | §3.1, §11 |
 | 2 | Settlement limits: read cash flows from the trades' `EVENTS[]` (demo) or from the cash-flow table of `LIQUIDITY.md` (2.11.0)? Which products settle DvP/PvP? | §6.2 |
-| 3 | Which PFE does a limit use: real-world calibration (EXP open question 4) or the CVA run? | §3.2 |
+| 3 | Which PFE does a limit use: real-world calibration (EXPOSURE_GUIDE.md open question 4) or the CVA run? | §3.2 |
 | 4 | Pre-deal detail by role (decision only for sales) | §11 |
 | 5 | Bucket membership of a grid date: (FROM, TO] (proposed) or [FROM, TO)? | §3.2 |
 | 6 | Credit limits as rows of the one `risk-limit` table (STR.md section 3.5, proposed here) or a `credit-limit` table of their own? | §3.2 |

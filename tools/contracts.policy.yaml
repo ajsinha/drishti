@@ -18,7 +18,8 @@
 #
 #   classes      kind -> class when it is not "fundamental" (a kind listed under retiring is "computed")
 #   retiring     kinds whose stored version is retired: release, the contract that replaces it (a path under docs/contracts/; VaR's
-#                is ../guides/VAR_GUIDE.md, Part II, since the VaR documents were consolidated on 2026-10-26), the measure that computes it, and
+#                is ../guides/VAR_GUIDE.md and exposure's ../guides/EXPOSURE_GUIDE.md, Part II of each, since their documents were
+#                consolidated on 2026-10-26), the measure that computes it, and
 #                the fields that are computed figures (path A[].B for a field of every element of list A)
 #   split        kinds whose terms are kept and whose figures are computed: status stays active, the figures are derived and retiring
 #   retired      kinds retired in a release: removed with their contracts, samples, test data and Sutras; a guard test fails the build
@@ -50,7 +51,7 @@ retired:
     note: "a node's history is its official end-of-day captures; VN-<node> opens the explorer at NODE:<node>"
   exposure-profile:
     release: 2.9.0
-    contract: EXP.md
+    contract: ../guides/EXPOSURE_GUIDE.md
     measure: the exposure engine (exposure-result)
     note: "EXP EXP-<cp>-<le> and /v/exposure-profile/EXP-<cp>-<le> open EXP NSET:NS-<cp>-<le> (the computed kind exposure-result)"
 
@@ -70,11 +71,11 @@ removed:
               BY_CURRENCY, BY_DIRECTION, TOP_CONTRIBUTORS, PNL, ALL_TRADES, SCENARIO_SET_ID]
   netting-set:
     release: 2.9.0
-    contract: EXP.md
+    contract: ../guides/EXPOSURE_GUIDE.md
     figures: [EE_PEAK, PFE_PEAK, PROFILE, EXPOSURE_PROFILE]
   counterparty:
     release: 2.9.0
-    contract: EXP.md
+    contract: ../guides/EXPOSURE_GUIDE.md
     figures: [PFE_PEAK]
 
 engine-columns:
@@ -93,13 +94,13 @@ notes:
   desk:
     - "The desk's VaR is the engine's (DESK:<id>), computed as the page opens (VAR_ENGINE); VAR_99 and VAR_RESULT left the record in 2.8.0."
   netting-set:
-    - "The netting set's exposure is the exposure engine's (NSET:<id>), computed as the page opens (EXPOSURE_ENGINE); EE_PEAK, PFE_PEAK, PROFILE and the EXPOSURE_PROFILE link left the record in 2.9.0 (EXP.md section 14). UTILISATION and CVA stay stored (LIM and CVA are parked)."
+    - "The netting set's exposure is the exposure engine's (NSET:<id>), computed as the page opens (EXPOSURE_ENGINE); EE_PEAK, PFE_PEAK, PROFILE and the EXPOSURE_PROFILE link left the record in 2.9.0 (EXPOSURE_GUIDE.md section 22). UTILISATION and CVA stay stored (LIM and CVA are parked)."
   counterparty:
-    - "The counterparty's peak PFE is the exposure engine's (CPTY:<id>), computed as the page opens (EXPOSURE_ENGINE); PFE_PEAK left the record in 2.9.0 (EXP.md section 14)."
+    - "The counterparty's peak PFE is the exposure engine's (CPTY:<id>), computed as the page opens (EXPOSURE_ENGINE); PFE_PEAK left the record in 2.9.0 (EXPOSURE_GUIDE.md section 22)."
   simulation-run:
-    - "An upstream exposure simulation's record (EXP.md section 3.2): the grid, the paths, the model; one per run and business date. Drishti reads it; nothing in it is computed by Drishti."
+    - "An upstream exposure simulation's record (EXPOSURE_GUIDE.md section 15.2): the grid, the paths, the model; one per run and business date. Drishti reads it; nothing in it is computed by Drishti."
   exposure-path:
-    - "One trade's MtM on every path of the run at one grid date (EXP.md section 3.3), the vector column MTM; sparse by maturity (no row after maturity plus 10 business days). DESK, TT_BOOK, ASSET_CLASS, PRODUCT, NOTIONAL and MATURITY_DATE are denormalised for the scopes and checks (as built, 2.9.0)."
+    - "One trade's MtM on every path of the run at one grid date (EXPOSURE_GUIDE.md section 15.3), the vector column MTM; sparse by maturity (no row after maturity plus 10 business days). DESK, TT_BOOK, ASSET_CLASS, PRODUCT, NOTIONAL and MATURITY_DATE are denormalised for the scopes and checks (as built, 2.9.0)."
 
 review:
   netting-set:

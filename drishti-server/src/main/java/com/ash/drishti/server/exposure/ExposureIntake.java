@@ -27,7 +27,7 @@ import java.util.Map;
 import java.util.TreeSet;
 
 /**
- * One date's exposure-path rows on their way into the {@link ExposureBook} (EXP.md section 10), row by row as the connector streams
+ * One date's exposure-path rows on their way into the {@link ExposureBook} (EXPOSURE_GUIDE.md section 21), row by row as the connector streams
  * them: a row of another run is left out (counted: several runs may share a date, the newest complete one answers); a vector of another
  * length, with NaN or infinity, or a grid index outside the run's grid is rejected ({@code DRS-5444}: counted and listed, never padded);
  * a failed row ({@code STATUS: failed}, no vector) keeps its trade in its set and counts; every other row is added into its netting set's

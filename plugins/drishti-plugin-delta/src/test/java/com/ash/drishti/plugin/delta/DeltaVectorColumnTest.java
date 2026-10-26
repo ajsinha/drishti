@@ -133,7 +133,7 @@ class DeltaVectorColumnTest {
         }
     }
 
-    /** Float32 vectors ({@code list<float>}, exposure paths: EXPOSURE_GUIDE.md section 15) are read too, each value widened exactly. */
+    /** Float32 vectors ({@code list<float>}, exposure paths: EXPOSURE_GUIDE.md section 15.3) are read too, each value widened exactly. */
     @Test
     void float32VectorsAreReadWidenedToDoubles() throws Exception {
         Path root = tmp.resolve("lake32");
