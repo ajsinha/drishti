@@ -1738,7 +1738,8 @@ each can be recomputed from its inputs (the same vectors, the same engine versio
 created **append-only** (`delta.appendOnly`) with 7 years of log and removed files (`delta.logRetentionDuration`,
 `delta.deletedFileRetentionDuration`: `interval 2557 days`), so nothing is ever overwritten: a restated date adds rows with the next
 `RESULT_VERSION`, and the latest version of a date is the rows with the highest. No engine reads it (a guard test,
-`tools/test_contracts.py`, fails the build when a connector points at `risk-results`). A publish that fails (an `s3://` root, a disk)
+`tools/test_contracts.py`, fails the build when a connector other than a read-only Delta connector of computed kinds, such as BI's
+`var-results`, points at `risk-results`, or when a reactive connector reads or triggers on those kinds). A publish that fails (an `s3://` root, a disk)
 is recorded in the date's record (`publishError`) and logged; the capture stands.
 
 | Column | Type | Meaning |
@@ -1893,7 +1894,7 @@ from 9.9 m to 112.0 m); the release notes restate them.
 | Computed fields on `portfolio` | `VAR_99`, `ES_975`, `LIMIT_USE`, `POSITION_COUNT`, `TRADE_COUNT`, `LONG_COUNT`, `SHORT_COUNT`, `GROSS_MV`, `NET_MV`, `POSITIONS[]`, `BY_*[]`, `TOP_CONTRIBUTORS`, `ALL_TRADES`, `PNL` (and the promoted `VAR_99`, `ES_975`, `POSITION_COUNT`, the vector `PNL`): the page reads the engine's |
 | The `position` input table | positions are derived by Drishti ([section 15.6](#156-positions-derived-by-drishti-as-built)), served by `var-positions` |
 | The core pack's `desk` | `VAR_99` and `VAR_RESULT` on each desk record: the desk page's VaR is the engine's (`DESK:<id>`) |
-| Guard test | `tools/test_contracts.py` (`TheRetiredStoredVersions`) fails the build when `var` or `var-node` returns (a pack's kind, route, mnemonic, sample, contract, Sutra, Sutra test, test-data folder or dataset), when a figure removed from `position`, `desk` or `portfolio` returns, when an input, fundamental or Drishti-owned kind's contract or data carries a column the VaR engine produces (`tools/contracts.policy.yaml`, `engine-columns`: `VAR_99`, `ES_975`, `COMPONENT_VAR`, `BOOK_VAR`, `PCT_OF_BOOK_VAR`, `PCT_OF_VAR`, `HYPO_PNL`, `EXCEPTIONS_250`, `VAR_RESULT`, `VAR_ENGINE`), and when a connector reads `risk-results` |
+| Guard test | `tools/test_contracts.py` (`TheRetiredStoredVersions`) fails the build when `var` or `var-node` returns (a pack's kind, route, mnemonic, sample, contract, Sutra, Sutra test, test-data folder or dataset), when a figure removed from `position`, `desk` or `portfolio` returns, when an input, fundamental or Drishti-owned kind's contract or data carries a column the VaR engine produces (`tools/contracts.policy.yaml`, `engine-columns`: `VAR_99`, `ES_975`, `COMPONENT_VAR`, `BOOK_VAR`, `PCT_OF_BOOK_VAR`, `PCT_OF_VAR`, `HYPO_PNL`, `EXCEPTIONS_250`, `VAR_RESULT`, `VAR_ENGINE`), and when an engine's connector reads `risk-results` (only a read-only Delta connector of computed kinds, BI's `var-results`, may) |
 
 ## 22. Test data and generators
 
