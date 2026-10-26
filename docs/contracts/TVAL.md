@@ -429,7 +429,7 @@ Measured numbers will be recorded in this section after the build (a `TvalScaleB
 |---|---|
 | Folder | `data/testdata/market-risk/valuation/cob-<date>.jsonl.gz`, one file per business date, listed in `data/testdata/testdata.yaml` |
 | Dates | the last **5** business dates (2026-09-24 to 2026-09-30) for the day-over-day change and P&L explain; open question 7 |
-| Trades | the full live set the VaR generator uses (about 9,572 on 2026-09-30; at most 10,000 trades in any local test data, as [VAR.md section 13.3](VAR.md#133-planned-test-data)) |
+| Trades | the full live set the VaR generator uses (about 9,572 on 2026-09-30; at most 10,000 trades in any local test data, as [VAR.md section 13.1](VAR.md#131-what-the-repository-ships-verified-2026-10-25-version-13)) |
 | Generator | a new `tools/packgen/risk/valuations.py` (proposed), run by `tools/testdata/make_testdata.py`; deterministic (Python `Random` seeded by text, as `tools/packgen/var/factors.py`) |
 | Consistency | **MtM moves with the VaR factor model:** MTM_{t,D} = MTM_{t,D−1} + the trade's P&L under the day's own factor move (the 510th element of its VaR path, `make_var_data.py`), so `PNL_1D` = the day's MtM change for continuing trades and P&L explain reconciles (PNL.md §13) |
 | `--check` | regenerates into a temporary folder and fails when a committed file differs |

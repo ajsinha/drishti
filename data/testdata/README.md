@@ -158,7 +158,6 @@ on the last day, and the folder's compressed size (MB).
 | `market-risk/stress-scenario` | market-risk · `stress-scenario` | `SCENARIO_ID` | `risk-store` → `risk/stress-scenario` | business_date | 8 | 0–0 | 8 | 0.00 |
 | `market-risk/trade-valuation` | market-risk · `trade-valuation` | `VALUATION_ID` | `risk-store` → `risk/trade-valuation` | business_date | 12,076 | 12,096–15,000 | 15,000 | 34.60 |
 | `core/trader` | core · `trader` | `TRADER_ID` | `reference-store` → `reference/trader` | business_date | 20 | 0–0 | 20 | 0.00 |
-| `market-risk/var` | market-risk · `var` | `RESULT_ID` | `risk-store` → `risk/var` | business_date | 10 | 0–0 | 10 | 0.03 |
 
 Built from the packs' samples (static reference data already in the repository, the same on every day):
 
@@ -210,23 +209,23 @@ up together, no headline that is not its own series' point, no curve apart from 
 
 ## The VaR engine's data (market-risk, dated by its documents)
 
-Six more market-risk folders feed the VaR engine ([VAR_DATA_MODEL.md section 18](../../docs/architecture/VAR_DATA_MODEL.md#18-as-built-in-280),
+Four more market-risk folders feed the VaR engine ([VAR.md](../../docs/contracts/VAR.md),
 [VAR_EXPLORER.md](../../docs/guides/VAR_EXPLORER.md)). They are written by `tools/packgen/var/make_var_data.py` (which
 `make_testdata.py` runs) from the trades and desks above, and are **dated by their documents** (`dated-by: BUSINESS_DATE` in
 `testdata.yaml`): no snapshot and changes, `lake demo` loads each folder in one run, every document on its own `BUSINESS_DATE`, moved
-with the other business dates. 3.5 MB in all.
+with the other business dates. 15.7 MB in all (2.8.0).
 
 | Folder | Kind · key | Dates | Documents |
 |---|---|---|---|
-| `market-risk/position` | `position` · `POSITION_ID` | the last day | 196 positions netting 1,673 trades (44 hold buys and sells), with their VaR, ES, component VaR and vector |
-| `market-risk/pnl-vector` | `pnl-vector` · `VECTOR_ID` | the last day | one 509-scenario P&L vector per trade (`PNL`, a `list<double>` column in the lake), in two files |
+| `market-risk/pnl-vector` | `pnl-vector` · `VECTOR_ID` | the last day | one 509-scenario P&L vector per live trade, every live trade (9,572), with the trade's terms as the batch priced them and a synthetic `SECURITY_ID` on securities and listed trades (`PNL`, a `list<double>` column in the lake), in 12 files |
 | `market-risk/scenario-set` | `scenario-set` · `SCENARIO_SET_ID` | the last day | HS-509: the 509 scenario days |
 | `market-risk/risk-hierarchy` | `risk-hierarchy` · `NODE_ID` | the last day | 88 nodes: MGMT (bank, 2 divisions, 10 desks, 30 books) and LEGAL (bank, 4 legal entities, desks, books), with VaR limits |
-| `market-risk/var-node` | `var-node` · `VAR_NODE_ID` | 250 business days | each node's official VaR, ES and hypothetical P&L; its vector on the last day |
-| `market-risk/portfolio` | `portfolio` · `PORTFOLIO_ID` | the last day | 7 portfolios: HIERARCHY, RULE and BASKET, overlapping |
+| `market-risk/portfolio` | `portfolio` · `PORTFOLIO_ID` | the last day | 28 portfolio definitions: HIERARCHY (one per desk and legal entity, and a book), RULE and BASKET, overlapping; no figures |
 
-`python3 tools/packgen/var/make_var_data.py --check` says whether they match the trades; `--budget 0 --out <a folder outside the
-repository>` values every live trade (a sizing set, never committed).
+There is no `position` folder: the server derives positions from the vectors by the market-risk pack's `positions:` rules when it loads
+a date (7,984 on the last day). The stored `var` and `var-node` folders were retired in 2.8.0, and no document carries a VaR figure:
+the engine computes them. `python3 tools/packgen/var/make_var_data.py --check` says whether the folders match the trades;
+`--budget <n> --out <a folder outside the repository>` values a sample of `n` trades a book (a smaller set for a quick local run).
 
 ## The market snapshot (news-and-markets, offline)
 

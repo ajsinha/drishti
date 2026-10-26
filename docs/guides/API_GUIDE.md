@@ -1799,6 +1799,10 @@ The complete list (from `ErrorCode` in `drishti-common`). The first digit groups
 | DRS-5010 | 401 | unauthenticated | missing, bad or expired bearer token |
 | DRS-5011 | 404 | load pack not found | a data-load call names a pack that is not loaded, or one none of whose kinds the caller may open |
 | DRS-5012 | 422 | load kind unknown | a data-load call names a kind the pack does not own |
+| DRS-5201 | 422 | VaR row rejected | a row of a date's P&L vectors was not loaded: a vector of the wrong length, a null, NaN or infinity in it, not in USD, or a failed row with a vector (listed in the answer's `provenance.rejections`, never an error of the request) |
+| DRS-5202 | 422 | VaR duplicate trade | a trade has two P&L vectors on one business date: the date is not loaded |
+| DRS-5203 | 422 | VaR inputs not one run | a date's vectors come from several batch runs, or another scenario set, or the date has two scenario sets or a bad one: the date is not loaded; the date before it is answered, with a warning |
+| DRS-5204 | 503 | VaR capacity | a date's vectors need more memory than `drishti.var.memory-budget-mb`: try later, raise the budget or the heap, or keep fewer dates loaded |
 | DRS-5031 | 422 | connector invalid | a connector file or body is not valid: bad name, unknown plugin or top-level key, missing required setting, wrong type, a `name:` that is not the file name, or a credential that is not an `${ENV_VAR}` or `file:` reference; `detail` names the setting |
 | DRS-5032 | 409 | connector conflict | the `If-Match` version is stale (someone changed it since you read it), a file of that name exists and no `If-Match` was sent, or the change switches off or deletes a connector packs use and `confirm=true` was not sent; also deleting a connector a pack's template names |
 | DRS-5033 | 404 | no such connector | no connector of that name (a file, a pack template or the server's configuration) |
@@ -2772,12 +2776,19 @@ workers, busy, queued), `POST /api/v1/compute/peer/run` (a fan-out chunk, run he
 
 ## VaR engine: `/api/v1/var` (2.8.0)
 
-VaR computed on demand from the trades' 509-day P&L vectors ([VAR_ENGINE.md](../architecture/VAR_ENGINE.md),
-[VAR_EXPLORER.md](VAR_EXPLORER.md)). A scope is the scope grammar's text: `BANK`, `DESK:RATES`, `BOOK:…`, `POS:<id>`, `TRD:<id>`,
-`PORT:<id>`, `BASKET:<owner>/<name>`, `CAPTURE:<id>`, `WHERE …`, joined with `+`, `-` and `&` (`DESK:RATES - TRD:MX-20000001`).
-Every answer is computed as the caller, over the trades they may see, on the request's business date (`asOf`; the newest date with
-vectors when it is later). A scope that does not parse is `400`; one naming positions an aggregate-only viewer may not see is `403`.
-Saving a basket or a capture needs the `risk:write` token scope.
+VaR computed on demand from the trades' 509-day P&L vectors (the data contract: [VAR.md](../contracts/VAR.md);
+[VAR_ENGINE.md](../architecture/VAR_ENGINE.md), [VAR_EXPLORER.md](VAR_EXPLORER.md)). A scope is the scope grammar's text: `BANK`,
+`LE:<entity>` (the trades booked by it), `DIV:`, `DESK:RATES`, `BOOK:…`, `NODE:<node>`, `POS:<id>`, `TRD:<id>`, `CPTY:<counterparty>`,
+`PORT:<id>`, `BASKET:<owner>/<name>`, `CAPTURE:<id>`, `WHERE:<rule>`, joined with `+`, `-` and `&` (`DESK:RATES - TRD:MX-20000001`);
+ids of `POS`, `TRD` and `CPTY` are kept as written and matched ignoring case. Every answer is computed as the caller, over the trades
+they may see, on the request's business date (`asOf`; the newest date with vectors when it is later; a date whose inputs are not one
+run answers the date before it, with a warning in `provenance.warnings`). A scope that does not parse is `400`; one naming positions,
+trades, a counterparty, a rule or a BASKET portfolio an aggregate-only viewer may not see is `403`, and so is `CPTY:` for a role that
+sees the counterparty masked. A date's vectors over the memory budget answer `503 DRS-5204`; a trade with two vectors on one date
+`422 DRS-5202`. Every headline's `provenance` carries the input tables' versions and batch ids (`inputs`), the rows rejected
+(`rejected`, `rejections`: `DRS-5201` with the reason) and left out as not live (`excluded`), the position rules and any `warnings`
+(a legal entity's trades outside its `LEGAL` node). Saving a basket or a capture needs the `risk:write` token scope; saving and deleting
+a basket and a reload are audited (`var-basket-save`, `var-basket-delete`, `var-reload`).
 
 | Method and path | What it does |
 |---|---|
@@ -2785,9 +2796,9 @@ Saving a basket or a capture needs the `risk:write` token scope.
 | `GET /api/v1/var/scopes/{scope}` | the same for a simple scope in the path (`/var/scopes/DESK:RATES`); a scope with a slash uses `?scope=` |
 | `GET /api/v1/var/scope/path?scope=&page=&size=` | the P&L vector: histogram, worst 25, series and a page of the ranked scenarios |
 | `GET /api/v1/var/scope/history?scope=` | VaR, ES and hypothetical P&L over 250 days, the exceptions and the Basel traffic light |
-| `GET /api/v1/var/scope/contributions?scope=&by=&scenario=` | standalone, component, incremental and marginal VaR of the parts; `by` is `child` (the default: child nodes, else positions, else trades), `node`, `position` or `trade` (an aggregate-only viewer gets no position or trade level) |
+| `GET /api/v1/var/scope/contributions?scope=&by=&scenario=` | standalone, component, incremental and marginal VaR of the parts; `by` is `child` (the default: child nodes, else positions, else trades), `node` (a node's child nodes; `400` on a scope without any), `position`, `trade`, `desk` or `book` (an aggregate-only viewer gets no position or trade level). Over `drishti.var.max-parts` the largest by gross size are kept (`truncated`, `total`); a masked field reads `•••` in the rows |
 | `GET /api/v1/var/tree?hierarchy=` | every node of the hierarchy (default `MGMT`) with its figures, and the stored portfolios |
-| `GET /api/v1/var/status` | the settings (confidence, rank rule, memory budget, hot dates, kinds) and the dates loaded |
+| `GET /api/v1/var/status` | the settings (confidence, rank rule, memory budget, hot dates, kinds, the position rules, the official captures) and the dates loaded (with their rejected and left-out rows and batch ids, and any date refused) |
 | `POST /api/v1/var/reload` | administrators: drops the loaded dates so the next request reads the lake again (after a load) |
 | `GET /api/v1/var/baskets`, `POST /api/v1/var/baskets` | the caller's baskets and those shared with them; save one `{name, title, scope, sharedWith}` |
 | `GET /api/v1/var/baskets/{owner}/{name}`, `DELETE …/{owner}/{name}` | one basket; delete one of the caller's own (`204`) |
@@ -2795,6 +2806,13 @@ Saving a basket or a capture needs the `risk:write` token scope.
 | `GET /api/v1/var/captures?scope=`, `GET /api/v1/var/captures/{id}` | the captures (of one scope); one capture with its figures |
 | `GET /api/v1/var/captures/{id}/csv?part=` | a capture as CSV: its provenance as `#` lines, then the vector by scenario date, or its components with `part=components` |
 | `GET /api/v1/var/compare?a=&b=` | two captures side by side, or a capture and now (`b=now`) |
+| `GET /api/v1/var/official?asOf=` | a date's official end-of-day record: its result version, the inputs' versions and batch ids, and every node of every hierarchy with its VaR, ES, hypothetical P&L, limit, counts, backtest and capture id (a viewer who sees every node; [VAR.md section 9.6](../contracts/VAR.md#96-captures)) |
+| `POST /api/v1/var/official?asOf=` | administrators: captures the date officially now (the data-load signal of an input does it by itself): `{status: captured, restated, unchanged or skipped, resultVersion, nodes, published}` |
+
+The official captures are also appended to `${DRISHTI_DELTA_ROOT}/risk-results/var-official/` (Delta, append-only, a row per node and
+result version) for other systems; no engine reads that folder. The positions the engine derives are served as the `position` kind
+(`GET /api/v1/views/position/<id>`, the `var-positions` connector), and the position, portfolio and desk pages carry the engine's
+figures under `VAR_ENGINE`, computed as the page opens.
 
 ## Embedding views in another web application
 

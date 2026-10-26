@@ -90,15 +90,15 @@ panes have no Calc; open the view on its own.
 ## 3. The panel and its keys
 
 ```text
-| Calc  Python · VAR-RATES   Done · 1.9 s · packages 373 ms · Python 1.5 s · memory 79 MB          ?  × |
-| [▶ Run] [■ Stop] [VaR and expected shortfall … ▾] Save  Delete  Clear        Ctrl+Enter run · Esc close |
+| Calc  Python · PV-MX-20000274-HS-509   Done · 1.9 s · packages 373 ms · Python 1.5 s · memory 79 MB   ?  × |
+| [▶ Run] [■ Stop] [Snippets ▾] Save  Delete  Clear                           Ctrl+Enter run · Esc close |
 |  1 import numpy as np                                                                                 |
-|  2 pnl = np.asarray(view.doc["scenarioPnl"], dtype=float)                                             |
+|  2 pnl = np.asarray(view.doc["PNL"], dtype=float)                                                     |
 |  …                                                                                                    |
 | Output | History                                                                                       |
-| VAR-RATES: 500 scenarios        [Filter rows] « ‹ 1–4 of 4 › » ▲ ▼ [25 rows]                           |
-| measure     recomputed      engine                                                                    |
-| VaR 99%      9,611,219   9,611,219                                                                    |
+| 2 rows                          [Filter rows] « ‹ 1–2 of 2 › » ▲ ▼ [25 rows]                           |
+| measure       USD                                                                                     |
+| VaR 99%     7,102                                                                                     |
 | …                                                                                                     |
 ```
 
@@ -129,26 +129,30 @@ run, how long it took, split into **packages** (loading libraries the code impor
 
 ## 4. A first session: VaR from the scenarios
 
-1. Open `VAR VAR-RATES <GO>` and press `Alt+C`. Wait for *Python ready*.
-2. Pick **VaR and expected shortfall from the scenario P&L** in **Snippets ▾**. The editor fills with:
+1. Open a trade's P&L vector, `PNLV PV-MX-20000274-HS-509 <GO>` (a short warrant position's trade: its P&L under the 509 scenario
+   days the VaR engine uses), and press `Alt+C`. Wait for *Python ready*.
+2. Type in the editor:
 
    ```python
    import numpy as np
    import pandas as pd
 
-   pnl = np.asarray(view.doc["scenarioPnl"], dtype=float)
+   pnl = np.asarray(view.doc["PNL"], dtype=float)
    worst = np.sort(pnl)
    n = len(pnl)
-   var99 = -worst[n // 100 - 1]                  # the 1% quantile: the 5th worst of 500 scenarios
-   es975 = -worst[: int(np.ceil(n * 0.025))].mean()   # the mean of the worst 2.5%
-   …
+   k = int(np.ceil(n * 0.01))                     # the engine's rank: the 6th worst of 509
+   var99 = -worst[k - 1]
+   es975 = -worst[: int(np.ceil(n * 0.025))].mean()   # the mean of the 13 worst
+   show(pd.DataFrame({"measure": ["VaR 99%", "ES 97.5%"], "USD": [var99, es975]}))
    chart(pd.DataFrame({"pnl": pnl}), kind="hist", y="pnl", bins=40, title="Scenario P&L")
    ```
 
-3. Press `Ctrl+Enter`. The first run loads numpy and pandas (about 2 s); you should see a table with
-   **VaR 99% 9,611,219** recomputed beside the engine's **9,611,219**, ES 97.5% **9,802,031** (the engine's sample
-   figure is **10,860,677**), a histogram of the 500 scenarios, and *VaR uses 57% of the limit 16,740,000*.
-4. Change `n // 100 - 1` to `int(n * 0.025) - 1` and run again: the 97.5% VaR, in 6 ms this time.
+3. Press `Ctrl+Enter`. The first run loads numpy and pandas (about 2 s); you should see **VaR 99% 7,102** and **ES 97.5% 7,094** (the
+   same rule as the engine's, so `VAR TRD MX-20000274 <GO>` shows the same figures) and a histogram of the 509 scenarios.
+4. Change `0.01` to `0.025` and run again: the 97.5% VaR, in a few milliseconds this time.
+
+The VaR of a position, a portfolio, a desk or any set of trades is the engine's ([VAR_EXPLORER.md](VAR_EXPLORER.md)); the stored desk
+VaR records (`VAR VAR-RATES`) and the snippets that read them were retired in 2.8.0.
 
 ## 5. The `drishti` module
 
@@ -162,7 +166,7 @@ VaR, CVA, FRTB aggregation, …) is a submodule: `from drishti import quant as q
 
 | Attribute | Type | What it is |
 |---|---|---|
-| `view.kind`, `view.id` | str | The entity: `'var'`, `'VAR-RATES'` |
+| `view.kind`, `view.id` | str | The entity: `'pnl-vector'`, `'PV-MX-20000274-HS-509'` |
 | `view.title` | str | The title the view shows |
 | `view.business_date` | str or None | The business date of the data (`'2026-09-30'`), or None for undated data |
 | `view.provenance` | dict | Source, generation, business date, last update (as in the footer of the view) |
@@ -327,9 +331,9 @@ Snippets can also be files, `config/packs/<pack>/python/*.py`, read in name orde
 with comment lines naming it; what comes after them is the code (the copyright header above them is not):
 
 ```python
-# title: VaR and expected shortfall from the scenario P&L
-# description: Historical-simulation VaR (99%) and ES (97.5%) recomputed with numpy from the scenario P&Ls.
-# kinds: var
+# title: Stress results: scenarios by desk, limits and the worst case
+# description: Every stress result in one search, pivoted scenario by desk with totals; …
+# kinds: stress-result, stress-scenario
 
 import numpy as np
 ...
@@ -347,9 +351,9 @@ Rules:
 
 ### The shipped packs' snippets
 
-Five of the eight shipped packs ship **71 snippets** (core 10, counterparty-risk 12, market-data 27, market-risk 13, trading 9; world-economy,
+Five of the eight shipped packs ship **63 snippets** (core 9, counterparty-risk 12, market-data 27, market-risk 6, trading 9; world-economy,
 news-and-markets and us-equities none), and the retired example pack `finance` **10** (two inline in its `pack.yaml`, eight files): curves,
-FX, vol surfaces, options, bonds, credit, VaR and its backtest, stress, FRTB, exposure, CVA, collateral, SA-CCR,
+FX, vol surfaces, options, bonds, credit, stress, FRTB, exposure, CVA, collateral, SA-CCR,
 desks, books and counterparties, each written the way a trader or a quant would use it on that screen. The
 [Snippet catalogue](#18-snippet-catalogue) lists every one, with the sample entity it was checked on and what it
 computes.
@@ -570,7 +574,7 @@ DRS-5002`), and the runtime under `/pyodide/<version>/`.
 | *Python could not start: Failed to fetch* | The runtime was upgraded while the page was open | Reload the page |
 | *No module named 'sklearn' (Calc has numpy, pandas, …)* | Only the packages of [section 7](#7-packages) exist | Use what is there, or a script with a token |
 | *drishti.get() needs JavaScript Promise Integration … write `await drishti.get_async('trade', 'MX-20000001')` instead* | No JavaScript Promise Integration (Safari, or a browser with it switched off) | Write the call as the message says: `await drishti.get_async(...)` (and `search_async`, `columns_async`, `history_async`) |
-| `DrishtiError: DRS-5002: tina may not open var entities` | Your roles do not open that kind | As on the screen: ask for a role that opens it |
+| `DrishtiError: DRS-5002: tina may not open pnl-vector entities` | Your roles do not open that kind | As on the screen: ask for a role that opens it |
 | `DrishtiError: DRS-5001: no source of trade keeps its fields as columns here` | `drishti.columns()` needs a laid-out source (a lake) | Use `drishti.search()`, or load the lake (`tools/load-delta.sh`) |
 | `DrishtiError: DRS-5001: not kept as columns for trade: [notional]` | That field is not promoted | `drishti.columns("TRD", [])` lists those that are |
 | A column of `•••` | Your role sees that field masked | As on the screen: `raw` access shows it |
@@ -594,7 +598,7 @@ q.swap_pv(curve.shifted(+1), par, 100e6, 10)                 # -84,732: receivin
 q.black_scholes(100, 100, 1, 0.05, 0.2)                      # 10.4506
 q.bs_greeks(100, 110, 0.75, 0.04, 0.3, q=0.01)["vega"]       # 33.91 per 1.00 of vol: 0.339 a vol point
 q.implied_vol(12.3, lambda s: q.black_scholes(100, 105, 1, 0.03, s))   # 0.3299
-q.historical_var(view.doc["scenarioPnl"], 0.99)              # VAR VAR-RATES: 9,611,219, the engine's figure
+q.historical_var(view.doc["PNL"], 0.99)   # PNLV PV-MX-20000274-HS-509: 7,705 (the 5th worst of 509; the engine takes the 6th, 7,102)
 ```
 
 Conventions: times in years (ACT/365F); rates, vols and yields as decimals (`0.035`, not `3.5`); zero rates
@@ -660,7 +664,7 @@ differences, Hull's Black-76 put (1.12) and Garman-Kohlhagen call (0.0430), Bach
 implied vol round trips, a 25-delta strike's delta, curves reproducing their pillars (the natural spline against
 scipy's), flat-curve par rates, annuities and swap PVs, a bootstrap of flat par rates, a par bond at 100 and the
 5-year 8% bond's Macaulay duration 4.3121 and modified 3.9927, convexity and DV01 against finite differences,
-Z-spread round trips, the three vol estimators on a simulated path, the sample VaR (9,611,219, the engine's), Kupiec
+Z-spread round trips, the three vol estimators on a simulated path, VaR and ES of the sample trade vector by the engine's rule, Kupiec
 against the chi-squared distribution, survival, CVA and the FRTB formulas. The console's own tests skip it (the
 console needs no numpy); run it with numpy and scipy installed:
 
@@ -680,14 +684,13 @@ packs with snippets together, then the retired `finance` on its own), each opene
 which loads numpy and pandas (and scipy, statsmodels or matplotlib where used), took 1.9 to 6.1 s (median 2.1 s); a
 warm run 6 to 830 ms (median 39 ms; 64 of 87 runs under 100 ms; the slowest read every trade of a book).
 
-### `core` (10)
+### `core` (9)
 
 | Snippet · file | On | Computes | Method |
 |---|---|---|---|
 | **Book DV01 by currency and tenor, and the par-swap hedge** · `book_dv01_hedge.py` | `book` (`BOOK BOOK-RATES-2`) | Every trade of the book read for its bucketed DV01, summed by currency and tenor; then the hedge: for each bucket, the notional of a par swap at that tenor (on the currency's OIS curve, annual fixed, its DV01 from the annuity) that offsets the bucket's DV01, receive or pay. Each hedge is sized on its own bucket; the spill of a hedge's own risk into shorter buckets is ignored, a simplification. | quant: `ZeroCurve`, `annuity`, `par_swap_rate`, `tenor_years`; reads: search, get |
 | **Counterparty capital: Basel IRB risk weight from PD** · `counterparty_irb.py` | `counterparty` (`CPTY CP-HALCYON`) | The counterparty's exposure at default from its netting sets' SA-CCR results, its one-year PD from KYC (floored at 0.03%), LGD 45% (foundation IRB, senior unsecured) and an effective maturity of 2.5 years: the Basel IRB corporate formula for capital (asset correlation, maturity adjustment, 99.9% conditional PD), risk-weighted assets, expected loss, and how capital moves with PD. The corporate curve for every counterparty, a simplification (banks and sovereigns have their own treatment). | quant: `norm_cdf`, `norm_ppf`; reads: get |
 | **Currency exposure and maturity ladder** · `currency_exposure.py` | `desk`, `book`, `legal-entity` (`BOOK BOOK-RATES-1`) | The desk's or book's trades from one search, pivoted by currency and product family: MTM and notional; notional by currency and maturity bucket (a maturity ladder, 0-1Y to 30Y+), the notional-weighted average maturity per currency, and DV01 by currency where the trades carry it. | reads: search |
-| **Desk performance: Sharpe, hit rate and return on VaR** · `desk_performance.py` | `desk` (`DESK DESK-RATES`) | The desk's daily P&L series (from its VaR result): cumulative P&L, annualised Sharpe ratio (no risk-free deduction), hit rate, average win against average loss, the worst day, maximum drawdown and the days to recover, and return on VaR (cumulative P&L over today's VaR); a rolling 20-day Sharpe and the cumulative P&L drawn. | quant: `max_drawdown`, `sharpe`; reads: get |
 | **P&L by book: a pandas pivot** · `desk_pnl_by_book.py` | `desk` (`DESK DESK-RATES`) | The desk's positions pivoted by book and product family (MTM), and today's P&L by book and currency from the trades themselves (drishti.search_async()). | reads: search |
 | **Top movers and P&L contribution** · `desk_top_movers.py` | `desk`, `book` (`DESK DESK-EQD`) | The desk's trades from one search: the ten best and worst by today's P&L, P&L by product with each product's share of the absolute move, and a Pareto view (how few trades make most of the day's P&L), with the desk's total against its derived P&L. | reads: search |
 | **Counterparty group: members, exposure, expected loss** · `group_exposure.py` | `counterparty-group` (`GRP GRP-SUMMIT`) | The group's members read in full: rating, sector, net MTM, peak PFE and one-year PD; the group's exposure against its limit, each member's share, expected loss as PD x LGD 60% x peak PFE, a rating-weighted PD for the group, and the netting sets behind each member. | reads: get |
@@ -744,7 +747,7 @@ warm run 6 to 830 ms (median 39 ms; 64 of 87 runs under 100 ms; the slowest read
 | **Drawdown, worst days and the return histogram** · `price_drawdown.py` | `equity`, `equity-index`, `commodity`, `bond`, `fx-spot` (`EQX EQX-SPX`) | From the closes the view holds (daily bars, or the price history): cumulative return, the running drawdown from the high, the largest peak-to-trough fall and whether it has recovered, the five worst and best days, and a histogram of daily returns with the normal density of the same mean and volatility (matplotlib). | quant: `max_drawdown`, `norm_pdf`; matplotlib |
 | **Swaption premiums from the normal-vol grid** · `swaption_cube.py` | `ir-vol-cube` (`IRV IRV-EUR`) | ATM payer swaptions for every expiry and swap tenor of the cube: the forward swap rate and its annuity from the currency's OIS curve (single-curve, annual fixed leg), the Bachelier premium at the grid's normal vol, in bp of notional and per 100m, and vega per bp of vol; the vol grid as a heatmap. | quant: `ZeroCurve`, `annuity`, `bachelier`, `norm_pdf`, `par_swap_rate`, `tenor_years`; matplotlib; reads: get |
 
-### `market-risk` (13)
+### `market-risk` (6)
 
 | Snippet · file | On | Computes | Method |
 |---|---|---|---|
@@ -754,13 +757,6 @@ warm run 6 to 830 ms (median 39 ms; 64 of 87 runs under 100 ms; the slowest read
 | **P&L explain quality across books** · `pnl_explain_quality.py` | `pnl-explain` (`PNL PNL-RATES-1`) | This book's explain as steps (carry, roll-down, deltas, vega, theta, new trades, unexplained) and every book's explain from one search: the unexplained P&L as a share of actual, books over a 10% threshold flagged, and actual against explained P&L as a scatter. A day's snapshot; FRTB's P&L attribution test runs on a year of daily figures. | reads: search |
 | **Stress scenario P&L rebuilt from trade sensitivities** · `stress_from_sensitivities.py` | `stress-scenario` (`SCN SCN-GFC2008`) | The scenario's rate shocks applied to every trade's DV01 from the risk engine's trade valuations (one search over TVAL, every source system): a currency's rate move times the DV01 of the trades in that currency, and a 2Y/10Y twist interpolated by MATURITY_DATE; by desk and by source system, beside the engine's stress results. A trade valuation carries MTM, PNL_1D and DV01 only, so the scenario's other factors (spreads, equities, commodities, FX, vol) are listed as not rebuilt; first order, no convexity, cross effects or basis. | reads: search |
 | **Stress results: scenarios by desk, limits and the worst case** · `stress_heatmap.py` | `stress-result`, `stress-scenario` (`STR STR-GFC2008-RATES`) | Every stress result in one search, pivoted scenario by desk with totals; each desk's worst scenario and its use of the stress limit (results read in full for their limits), the scenarios ranked by firm-wide loss, and a heatmap of the matrix (matplotlib). | matplotlib; reads: search, get |
-| **VaR backtest: exceptions, Kupiec and the traffic light** · `var_backtest.py` | `var` (`VAR VAR-FX`) | The desk's daily P&L series against today's 99% VaR: the days the loss exceeded VaR, Kupiec's proportion-of-failures test (likelihood ratio and p-value), the Basel traffic light scaled to 250 days, and the P&L drawn against the VaR line. Uses one VaR figure for every day, a simplification: a real backtest compares each day with that day's VaR. | quant: `kupiec_pof` |
-| **Firm-wide VaR, diversification and component VaR by desk** · `var_component.py` | `var` (`VAR VAR-RATES`) | Every desk's scenario P&L vector (one search, then each VaR result), summed scenario by scenario into a firm-wide historical VaR (the scenarios are read as the same dates for every desk, an assumption); stand-alone VaRs and the diversification benefit; component VaR by the Euler allocation (each desk's average loss in the scenarios around the firm's VaR scenario, which adds up to the firm VaR), and incremental VaR (the firm without the desk). | quant: `historical_var`; reads: search, get |
-| **VaR and expected shortfall from the scenario P&L** · `var_es.py` | `var` (`VAR VAR-RATES`) | Historical-simulation VaR (99%) and ES (97.5%) recomputed with numpy from the scenario P&Ls, set beside the engine's figures, and the P&L histogram. | pandas |
-| **Desk P&L regressed on market factors (statsmodels)** · `var_factor_regression.py` | `var` (`VAR VAR-COMM`) | The desk's daily P&L series regressed with statsmodels OLS on daily returns of market factors taken from the daily bars Drishti holds (oil, gold, copper and two equities as proxies; edit FACTORS), aligned by date: the summary, the factor betas in P&L per 1% move with confidence intervals, R squared and the residual volatility, and the factor that explains most. | statsmodels; reads: get |
-| **VaR, ES and stressed VaR against limits, every desk** · `var_limits.py` | `var` (`VAR VAR-CREDIT`) | Every desk's VaR result in one table (drishti.search_async): VaR 99%, ES 97.5%, stressed VaR and the limit; limit use, ES over VaR and stressed over current VaR as tail and regime indicators, and a simplified Basel 2.5-style capital figure (3 x (VaR + sVaR) x the square root of 10, using today's figures for the 60-day averages). | reads: search |
-| **VaR four ways, with a bootstrap interval** · `var_methods.py` | `var` (`VAR VAR-RATES`) | The scenario P&Ls turned into VaR and ES four ways: historical simulation, normal (parametric), Cornish-Fisher (normal adjusted for skew and kurtosis) and age-weighted historical simulation (Boudoukh-Richardson-Whitelaw, lambda 0.99, reading the scenarios as oldest first, an assumption); and a 90% bootstrap interval for the historical VaR (1,000 resamples, a fixed seed). | quant: `expected_shortfall`, `historical_var`, `norm_ppf`, `parametric_var`; scipy |
-| **Scenario P&L tails: QQ plot, fat tails and the Hill estimator** · `var_tails.py` | `var` (`VAR VAR-EQD`) | How far the scenario P&L is from normal: skew, excess kurtosis and the Jarque-Bera test (scipy), the ratio of each tail quantile to the normal one, a Hill estimate of the loss tail index (the 25 largest losses; a lower index is a fatter tail), and a normal QQ plot (matplotlib). | quant: `norm_ppf`; scipy, matplotlib |
 
 ### `trading` (9)
 

@@ -85,7 +85,7 @@ nonEmpty: [legs, ticket]  # these panels must render with data on every sample
 help: { about: true }     # the About this page text renders for every sample
 ```
 
-The keys: `noErrors`, `nonEmpty` (panel ids), `samples` (per sample file: `VAR-COMM.json: { nonEmpty: [backtest] }`) and `help` (`coverage`: the share, 0 to 1, of the fields the Sutra shows that must
+The keys: `noErrors`, `nonEmpty` (panel ids), `samples` (per sample file: `PF-RATES-DESK.json: { nonEmpty: [definition] }`) and `help` (`coverage`: the share, 0 to 1, of the fields the Sutra shows that must
 have a glossary entry; `about: true`: the page text renders). Any other key is a usage error (exit 2), so a typo cannot silently pass. The workbench's *pack fragment export* writes this layout, so an
 exported fragment passes `sutra test` unchanged. Choose samples like a tester: a rich document, a thin one that lacks the optional parts, and one with an empty list; `nonEmpty` then names the panels
 that must never silently vanish. For a trading product, take the samples from the demo lakes (`curl … /entities/trade/<id>/raw`, the `data`), one per sub type.

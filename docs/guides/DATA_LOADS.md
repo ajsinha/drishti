@@ -115,12 +115,12 @@ The walk-through, with real output and pictures, is [tutorial 7 · Load data dai
 batch (step 3), the same through the API (step 4), the history and what is due (step 5) and an alert for a missing day (step 6). In short: **announce** a batch when your ETL has written it,
 
 ```
-$ drishti-console/.venv/bin/python tools/drishti.py data landed --pack market-risk --kind var --date 2026-10-16 --rows 10 --batch eod-20261016-1
-var for 2026-10-16 loaded: 10 rows; 0 alerts fired
+$ drishti-console/.venv/bin/python tools/drishti.py data landed --pack market-risk --kind stress-scenario --date 2026-10-16 --rows 8 --batch eod-20261016-1
+stress-scenario for 2026-10-16 loaded: 8 rows; 0 alerts fired
   load mvczs759-1  status ready  verified verified  attempt 1
   record  ok      recorded
   refresh ok      caches dropped: file, risk-store
-  verify  ok      10 var entities on 2026-10-16
+  verify  ok      8 stress-scenario entities on 2026-10-16
   alerts  ok      0 alerts fired
   smoke   skipped not asked for (loads.smoke is 0)
   notices ok      1 person told
@@ -196,18 +196,18 @@ different `rows` and it is a reload.
 | 401 | `DRS-5010` | no or an unknown bearer token | `{"title":"unauthenticated","status":401,"code":"DRS-5010","detail":"DRS-5010 missing bearer token"}` |
 | 403 | `DRS-5002` | not an administrator and no `loads:write` token; a token without the scope; the token's user may not open the kind | `{"title":"forbidden","status":403,"code":"DRS-5002","detail":"this token lacks the scope loads:write"}` |
 | 404 | `DRS-5011` | no loaded pack with that name (also for a pack none of whose kinds the caller may open: the two look the same) | `{"type":"about:blank","title":"load pack not found","status":404,"detail":"DRS-5011 no loaded pack named 'nope'","instance":"/api/v1/packs/nope/loads","code":"DRS-5011"}` |
-| 422 | `DRS-5012` | the pack has no such kind | `{"type":"about:blank","title":"load kind unknown","status":422,"detail":"DRS-5012 pack 'market-risk' has no kind 'nope'; its kinds are [var, stress-scenario, stress-result, frtb-sensitivity, pnl-explain, trade-valuation]","instance":"/api/v1/packs/market-risk/loads","code":"DRS-5012"}` |
+| 422 | `DRS-5012` | the pack has no such kind | `{"type":"about:blank","title":"load kind unknown","status":422,"detail":"DRS-5012 pack 'market-risk' has no kind 'nope'; its kinds are [stress-scenario, stress-result, frtb-sensitivity, pnl-explain, trade-valuation, position, portfolio, pnl-vector, scenario-set, risk-hierarchy]","instance":"/api/v1/packs/market-risk/loads","code":"DRS-5012"}` |
 
 A `ready` load that was recorded but could not be verified is **not** an error: it is `201` with `"verified": "not-found"` and a `warn`
 `verify` step, so your job can decide (the CLI exits 1). For example (the shape; a dated connector with no data for the date). On the
 demo lakes this does not happen for a date before the first business day: the check counts the kind's ids from the connectors' listing,
-which is the newest one, so `2026-10-05` (before the lakes begin) also reads `10 var entities on 2026-10-05`, a known limit of 2.3.0:
+which is the newest one, so `2026-10-05` (before the lakes begin) also reads `8 stress-scenario entities on 2026-10-05`, a known limit of 2.3.0:
 
 ```json
 {"status":"ready","verified":"not-found","entities":0,"alerts":0,"notices":1,
  "steps":[{"name":"record","status":"ok","detail":"recorded","ms":0},
           {"name":"refresh","status":"ok","detail":"caches dropped: risk-store","ms":2},
-          {"name":"verify","status":"warn","detail":"no var entities found on 2026-10-05; check the connector's root, dates and caches","ms":4},
+          {"name":"verify","status":"warn","detail":"no stress-scenario entities found on 2026-10-05; check the connector's root, dates and caches","ms":4},
           {"name":"alerts","status":"skipped","detail":"the data is not readable for 2026-10-05, so no rule was evaluated","ms":0},
           {"name":"smoke","status":"skipped","detail":"not asked for (loads.smoke is 0)","ms":0},
           {"name":"notices","status":"ok","detail":"1 person told","ms":0}],
@@ -441,7 +441,7 @@ A scope is a door, not a right: the call is checked against the roles the token'
 ```
 # 1. a role that opens only the kinds the job loads
 curl -X PUT $S/api/v1/admin/role-definitions/risk-etl -H "Authorization: Bearer $ADMIN" -H 'Content-Type: application/json' \
-     -d '{"description":"risk ETL: announces loads","kinds":["var","stress-result"]}'
+     -d '{"description":"risk ETL: announces loads","kinds":["stress-scenario","stress-result"]}'
 # 2. a user that holds it (a service account; no human uses its password)
 curl -X POST $S/api/v1/admin/users -H "Authorization: Bearer $ADMIN" -H 'Content-Type: application/json' \
      -d '{"username":"risk-etl","roles":["risk-etl"],"password":"a-long-random-password"}'
@@ -451,7 +451,7 @@ curl -X POST $S/api/v1/me/tokens -H "Authorization: Bearer $RISK_ETL_SESSION" -H
 # -> {"secret":"drk_...", ...}   shown once: put it in your scheduler's secret store, as DRISHTI_TOKEN
 ```
 
-The same token announces `var` and `stress-result` and nothing else: a call for another kind is `403`, for a pack it cannot reach `404 DRS-5011`,
+The same token announces `stress-scenario` and `stress-result` and nothing else: a call for another kind is `403`, for a pack it cannot reach `404 DRS-5011`,
 and it cannot change expectations, users, tokens or packs.
 
 ## 11. Recipes

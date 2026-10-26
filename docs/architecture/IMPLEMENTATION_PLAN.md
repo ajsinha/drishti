@@ -332,7 +332,8 @@ VaR is good for now."** What is active:
   contract per kind, the `contract` tool, the generated pages and the command catalog), kept current by tests.
 - **VaR, complete** (the 2.8.0 VaR row below; [VAR.md](../contracts/VAR.md)): the stored `var` and `var-node` kinds retired, and the VaR
   figures on positions, portfolios and desks computed; positions derived on the server; the full trade set and portfolios; memory
-  tiering; the load signal reloading the engine; vectors kept 7 years; the published `var-official` results; the VaR guide.
+  tiering; the load signal reloading the engine; vectors kept 7 years; the published `var-official` results; the VaR guide. **Part 1
+  built** (2026-10-25): everything but memory tiering, the 1 M-trade benchmark, the Python engine and the VaR guide.
 
 Everything else in this section is **PARKED**: the 2.9.0, 2.10.0 and 2.11.0 measures, the groupings and analytics, the DESK/BOOK/TRDR/CPTY
 figures other than VaR, and 2.12.0 (AI and GenUI). Their stored kinds stay active and unchanged, and their contracts are kept as designs

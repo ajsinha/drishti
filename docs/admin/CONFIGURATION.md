@@ -325,7 +325,9 @@ files (`application-files.yaml`, `application-postgres.yaml`, …) and packs hav
 | `DRISHTI_CALC_ENABLED` | `drishti.calc.enabled` | `true` | Allow Calc (Python in the browser). |
 | `DRISHTI_VAR_ENABLED` | `drishti.var.enabled` | `true` | Run the VaR engine (`/api/v1/var`, the VaR explorer). |
 | `DRISHTI_VAR_THREADS` | `drishti.var.threads` | `0` | Cores the VaR engine's vector sums use (`0`: every core). |
-| `DRISHTI_VAR_MEMORY_MB` | `drishti.var.memory-budget-mb` | `0` | Most memory the loaded dates' P&L vectors take (`0`: a quarter of the heap). |
+| `DRISHTI_VAR_MEMORY_MB` | `drishti.var.memory-budget-mb` | `0` | Most memory one date's P&L vectors take (`0`: a quarter of the heap). |
+| `DRISHTI_VAR_OFFICIAL` | `drishti.var.official.enabled` | `true` | Capture every node officially at the end of each loaded date, and publish it to `risk-results/var-official`. |
+| `DRISHTI_DELTA_ROOT` | `drishti.var.official.root` | `./data/delta` | The Delta root the official VaR results are published under (`risk-results/var-official`); the packs' Delta connectors use the same variable. |
 | `DRISHTI_LAYOUTS_ENABLED` | `drishti.layouts.enabled` | `true` | Allow personal layouts. |
 | `DRISHTI_PIVOT_ENABLED` | `drishti.pivot.enabled` | `true` | Allow the Pivot tab. |
 | `DRISHTI_ASK_ENABLED` | `drishti.explain.ask.enabled` | `false` | Turn on Ask about this page (also list packs in `drishti.explain.ask.packs`). |
@@ -1343,9 +1345,12 @@ Which views offer Calc is a pack's choice (`python: { enabled: true }` in `pack.
 
 ### `drishti.var` — the VaR engine
 
-The VaR engine ([VAR_ENGINE.md](../architecture/VAR_ENGINE.md), the explorer [VAR_EXPLORER.md](../guides/VAR_EXPLORER.md)) computes VaR,
-expected shortfall, contributions, history and backtests for any scope from the trades' stored 509-day P&L vectors, as the caller, when
-asked. Nothing it answers is stored except captures.
+The VaR engine (the data contract [VAR.md](../contracts/VAR.md), [VAR_ENGINE.md](../architecture/VAR_ENGINE.md), the explorer
+[VAR_EXPLORER.md](../guides/VAR_EXPLORER.md)) computes VaR, expected shortfall, contributions, history and backtests for any scope from
+the trades' stored 509-day P&L vectors, as the caller, when asked. Nothing it answers is stored except captures: the ones people make,
+and the official end-of-day captures of every node, which it also publishes to `risk-results/var-official` for other systems.
+Positions are derived from the trades when a date loads, by the rules of a loaded pack's `positions:` section (the market-risk pack's),
+else by `drishti.var.positions`.
 
 | Key | Default | Meaning |
 |---|---|---|
@@ -1355,17 +1360,24 @@ asked. Nothing it answers is stored except captures.
 | `rank-rule` | `kth-worst` | `kth-worst` (k = ceil(N (1 − confidence)): the 6th worst of 509) or `interpolated`. |
 | `component-window` | `5` | Component VaR averages this many scenarios ranked around the VaR scenario (k−2 to k+2). |
 | `threads` | `0` (`DRISHTI_VAR_THREADS`) | Cores the vector sums use; `0` is every core. |
-| `memory-budget-mb` | `0` (`DRISHTI_VAR_MEMORY_MB`) | Most memory the loaded dates' vectors take; `0` is a quarter of the heap. |
+| `memory-budget-mb` | `0` (`DRISHTI_VAR_MEMORY_MB`) | Most memory one date's vectors take; `0` is a quarter of the heap. A date over it is refused whole (`503 DRS-5204`). |
 | `hot-dates` | `2` | Business dates kept loaded (the newest). |
 | `history-days` | `250` | The history and backtest window, in business days. |
 | `component-scale-to-var` | `true` | Components are scaled to add up to the VaR exactly (`false`: to the smoothed VaR). |
 | `parallel-rows` | `4096` | The fewest rows a sum splits across threads. |
 | `rows-per-chunk` | `65536` | Rows per chunk of the in-memory vector store. |
 | `histogram-bins` | `42` | Bins of the P&L distribution sent to the screen. |
-| `max-parts` | `5000` | Most parts a contribution table computes at once. |
+| `max-parts` | `5000` | Most parts a contribution table computes at once; more: the largest by gross size (market value, PV, quantity), and the answer says so. |
 | `path-page` | `60` | Rows of the ranked P&L path per page. |
-| `kinds.vector`, `kinds.position`, `kinds.hierarchy`, `kinds.scenario-set`, `kinds.node`, `kinds.portfolio` | `pnl-vector`, `position`, `risk-hierarchy`, `scenario-set`, `var-node`, `portfolio` | The kinds the engine reads (the market-risk pack's). |
+| `kinds.vector`, `kinds.position`, `kinds.hierarchy`, `kinds.scenario-set`, `kinds.portfolio` | `pnl-vector`, `position`, `risk-hierarchy`, `scenario-set`, `portfolio` | The kinds the engine reads (the market-risk pack's), and `position`, the kind its derived positions are served as (the `var-positions` connector). The data-load signal of an input kind (and of `trade`) reloads that date and captures it officially. |
 | `access` | `{}` | Per role and hierarchy node, `positions` or `aggregate`: an aggregate-only role sees figures but no positions or trades below that node (`drishti.var.access.<role>[MGMT~DESK-RATES]=aggregate`). |
+| `positions.live-statuses` | `[NEW, VALIDATED, AMENDED]` | Trade statuses (the vector rows' `TRADE_STATUS`) that count on their date; a row with no status counts; a matured trade (`MATURITY_DATE` before the date) never does. Used when no loaded pack has a `positions:` section. |
+| `positions.rules` | `[]` | First match wins: `{name, groups: [PRODUCT_GROUP…], types: [PRODUCT_TYPE…], key: [SECURITY_ID, ISIN…]}`; a trade's position is `POS-<TT_BOOK>~<the first key field it carries>`, else (no rule, no key) one position per trade, `POS-<TT_BOOK>~<TRADE_ID>` ([VAR.md section 3.7](../contracts/VAR.md#37-positions-derived-by-drishti-as-built)). A loaded pack's `positions:` section wins. |
+| `official.enabled` | `true` (`DRISHTI_VAR_OFFICIAL`) | Capture every node of every hierarchy officially when a date's inputs are complete (after the data-load signal of an input, and once at start for the newest date without a record). The node history reads these captures. |
+| `official.publish` | `true` | Also append the official figures to `<root>/risk-results/var-official` (Delta, append-only: a restated date adds rows with the next `RESULT_VERSION`). No engine reads that folder. |
+| `official.root` | `${DRISHTI_DELTA_ROOT:${drishti.data.dir:./data}/delta}` | The Delta root the results are published under (a local or shared folder; an `s3://` root is not published by this writer). |
+| `official.retention-years` | `7` | The published table keeps its log and its removed files this long (`delta.logRetentionDuration`, `delta.deletedFileRetentionDuration`): its time travel reaches back that far. |
+| `official.on-start` | `true` | At start, capture the newest date when it has no official record yet (a lake built while the server was down). |
 
 ### `drishti.bi` — Rupaka (business intelligence), phase 1: the shell and the catalogue
 

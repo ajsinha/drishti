@@ -48,15 +48,17 @@ Type a command and press Enter (or `<GO>`):
 | `VAR BANK <GO>` | the whole bank |
 | `VAR DESK DESK-RATES <GO>` | a desk (`VAR DESK RATES` works too) |
 | `VAR LE LE-NY <GO>`, `VAR DIV MARKETS <GO>`, `VAR BOOK BOOK-RATES-1 <GO>` | a legal entity, a division, a book |
-| `VAR POS POS-BOOK-RATES-1~CMS_SPREAD_OPT-AUD-2028Q2 <GO>` | a position |
+| `VAR POS POS-BOOK-EQD-2~SEC-WARRANT-USD-01 <GO>` | a position (a security held in a book; an OTC trade's is `POS-<book>~<trade>`) |
 | `VAR TRD MX-30000121 <GO>` | one trade |
+| `VAR CPTY CP-SUMMIT <GO>` | every trade with a counterparty |
 | `VAR PORT PF-USD-RATES <GO>` | a stored portfolio |
 | `VAR SCOPE unwind <GO>` | your saved basket `unwind` (`VAR SCOPE asha/unwind` for one shared with you) |
 | `VAR SCOPE DESK:DESK-RATES - TRD:MX-30000121 <GO>` | any scope written in the [grammar](#8-the-scope-grammar) |
 | `VAR CAPTURE CAP-20260930-12 <GO>` | a capture, reopened exactly as it was taken |
 
-`VAR VAR-RATES <GO>` still opens the market-risk pack's `var` record (the desk-level VaR sample kept beside the engine). The page is
-`/var?scope=<scope>`; every scope you move to is a browser history entry, so Back works.
+`VAR VAR-RATES <GO>` (the retired stored record's id) opens the explorer at `DESK:RATES` and says so; `VAR VN-MGMT~DESK-FX` opens
+`NODE:MGMT~DESK-FX`, and old links (`/v/var/VAR-RATES`) do the same. The page is `/var?scope=<scope>`; every scope you move to is a
+browser history entry, so Back works.
 
 ## 2. The screen
 
@@ -93,7 +95,7 @@ the worst 25 scenarios sorted (the VaR scenario highlighted); the P&L by scenari
 a page (**Next page**), with the part that lost most on each scenario. A click on a bar or a row opens the **contributors on that date**:
 which children lost most that day.
 
-**VaR / ES history**: for a node of the hierarchy, its official figures (the `var-node` kind) over the last 250 business days: −VaR and
+**VaR / ES history**: for a node of the hierarchy, its official end-of-day figures (section 6) over the last 250 business days: −VaR and
 −ES lines over the day's hypothetical P&L, an exception (a loss beyond the previous day's VaR) as a red dot and a row chip, and the
 backtest: the count, the Basel zone (green 0–4, amber 5–9, red 10+), Kupiec's and Christoffersen's p-values. Any other scope (a
 position, a trade, a basket) replays today's members over the last 250 scenario days against today's VaR: in-sample, and said so.
@@ -134,29 +136,47 @@ A capture never changes: restate the batch, change the basket, and the capture s
 the components that moved most; two captures of a scope compare the same way. **CSV** downloads it (the vector by scenario date, or
 `?part=components`). Captures are listed per scope, newest first; `VAR CAPTURE <id> <GO>` reopens one. Each capture is an audit entry.
 
+**Official end-of-day captures.** When a business date's data has landed (the load signal of the vectors, scenario set, hierarchy,
+portfolios or trades), the server reloads the date and captures **every node** of both hierarchies itself, marked *official*: they
+are the node history of the History tab, they are listed (*official*) under a node's Captured results for a viewer who sees every node,
+and they are kept seven years. A restated date is captured again with the next result version; the earlier ones stay. Each run is
+also published for other systems to the risk lake (`risk-results/var-official`, append-only). An administrator can run it for a date:
+`POST /api/v1/var/official?asOf=2026-09-30`; `GET /api/v1/var/official?asOf=…` shows the date's record.
+
 ## 7. Portfolios and positions as pages
 
-The market-risk pack's `portfolio` and `position` kinds have pages of their own (Sutras), read from the lake like every page:
+**Positions are Drishti's.** Nobody sends positions: when the server loads a business date it builds them from the date's trades by
+the market-risk pack's `positions:` rules (configuration, `pack.yaml`): bonds, bills, shares and warrants by book and security,
+exchange-traded futures and options by book and contract, everything else (swaps, FX forwards, OTC options) one position per trade.
+Only live trades count (`NEW`, `VALIDATED`, `AMENDED`, not matured). The same trades and rules always give the same positions, and each
+official capture records them. The demo date has 7,984 positions over 9,572 trades.
+
+The `portfolio` and `position` kinds have pages of their own (Sutras). They store no figure: the VaR, ES and contributions on them are
+the engine's, computed as the page opens, as you (your view of the nodes):
 
 - `PORT PF-RATES-DESK <GO>`: the strip (positions, longs, shorts, gross and net market value, VaR, ES, limit use); the positions table
   (filter any column, **Pivot** tab), a click on a position opens it and its trades beside; the portfolio's P&L distribution; the
-  component VaR by product, by currency and long against short; the top contributors; the definition. Seven demo portfolios: two
-  HIERARCHY (`PF-RATES-DESK`, `PF-COMM-BOOK-1`), three RULE (`PF-USD-RATES`, `PF-EUR-ALL`, `PF-SHORT-RISK`), two BASKET
-  (`PF-ASHA-UNWIND`, `PF-NETTED-FLOW`), overlapping on purpose.
-- `POS <position> <GO>`: the instrument, direction, quantity, market value, VaR, ES and component VaR in its book; its trades with
-  their own VaR and their component of the position's (a long and a short of one instrument have components of opposite signs); its
-  P&L distribution (the UI kit fragment `pnl-distribution@1`).
+  component VaR by product, by currency and long against short; the top contributors; the definition. 28 demo portfolios: one
+  HIERARCHY portfolio per desk and per legal entity and `PF-COMM-BOOK-1`; eight RULE portfolios (`PF-USD-RATES`, `PF-GOVT-BONDS`,
+  `PF-LISTED`, `PF-OPTIONS` …); five BASKET portfolios (`PF-ASHA-UNWIND`, `PF-NETTED-FLOW`, `PF-PARTIAL-FILLS` …), overlapping on purpose.
+- `POS POS-BOOK-EQD-2~SEC-WARRANT-USD-01 <GO>`: the instrument, direction, quantity, market value, the rule that made it, VaR, ES and
+  component VaR in its book; its trades with their own VaR and their component of the position's (a long and a short of one instrument
+  have components of opposite signs); its P&L distribution (the UI kit fragment `pnl-distribution@1`).
+- `DESK DESK-RATES <GO>`: the desk's VaR and limit use in its strip, from the engine.
 
-The book's own page (`portfolio-trades`, *all trades*) is unchanged.
+When the engine cannot answer (off, no vectors, your role may not see VaR) the pages show everything else and say why. The book's own
+page (`portfolio-trades`, *all trades*) is unchanged.
 
 ## 8. The scope grammar
 
 | Write | Means |
 |---|---|
 | `BANK` | the bank (the Management tree's root) |
-| `LE:LE-NY`, `DIV:MARKETS`, `DESK:RATES`, `BOOK:BOOK-RATES-1`, `NODE:MGMT~DESK-RATES` | a node of a hierarchy |
+| `DIV:MARKETS`, `DESK:RATES`, `BOOK:BOOK-RATES-1`, `NODE:MGMT~DESK-RATES` | a node of a hierarchy |
+| `LE:LE-NY` (or `LE:NY`) | the trades booked by the legal entity (their `LEGAL_ENTITY`); when the Legal tree disagrees, a warning in the provenance |
 | `POS:<id>,<id>` | positions (every trade of each) |
 | `TRD:<id>,<id>` | trades |
+| `CPTY:<id>,<id>` | every trade with those counterparties |
 | `PORT:<id>` | a stored portfolio, by its definition |
 | `BASKET:<owner>/<name>` | a saved basket |
 | `CAPTURE:<id>` | a capture's member trades, on the date you look at |
@@ -164,7 +184,7 @@ The book's own page (`portfolio-trades`, *all trades*) is unchanged.
 | `A + B`, `A - B`, `A & B`, `( … )` | union, difference, intersection; `&` binds first; operators stand between spaces |
 
 A hyphen inside an id is part of the id (`DESK:RATES - TRD:MX-30000121`). Ids the date does not hold are listed under *Unknown ids*,
-never silently dropped.
+never silently dropped. Position, trade and counterparty ids may be typed in any case (`trd:mx-30000121`).
 
 ## 9. The API
 
@@ -175,7 +195,7 @@ Every answer is computed as the caller (a bearer token or the console's session)
 GET  /api/v1/var/scope?scope=DESK:DESK-RATES               headline, ancestors, backtest summary, provenance
 GET  /api/v1/var/scope/path?scope=…&page=0&size=60          histogram, worst 25, the 509 values, a page of the ranked table
 GET  /api/v1/var/scope/history?scope=…                      250 days of VaR, ES, hypothetical P&L, exceptions, backtest
-GET  /api/v1/var/scope/contributions?scope=…&by=child|position|trade|desk|book&scenario=2025-01-31
+GET  /api/v1/var/scope/contributions?scope=…&by=child|node|position|trade|desk|book&scenario=2025-01-31
 GET  /api/v1/var/tree?hierarchy=MGMT                        every node you see with its figures, and the stored portfolios
 GET  /api/v1/var/status                                     the settings and the loaded dates
 POST /api/v1/var/reload                                     drop the loaded dates (administrators; after a new load)
@@ -203,11 +223,12 @@ The engine reads as the server and answers as you:
 - `drishti.var.access.<role>[<node>]: positions | aggregate` restricts a role to some nodes. **aggregate**: the node's numbers and
   every node beneath it, never a position or a trade (the tree stops at books, *By position* is refused). A scope is computed over the
   trades you may see; the rest are excluded and counted (*Outside your view: 4 trades not included*).
-- A scope naming positions, trades or a rule may only name trades you see at positions level (otherwise a rule could probe single
-  trades through aggregates): refused with 403.
+- A scope naming positions, trades, counterparties, a rule or a BASKET portfolio may only name trades you see at positions level
+  (otherwise a rule could probe single trades through aggregates): refused with 403. A masked counterparty reads `•••` in the trade
+  rows, and `CPTY:` is refused to a role that sees it masked.
 - Cached answers are keyed by the date, the data version, your view and the scope: two viewers with different rights never share one.
-- Every headline answer, every capture and every basket change is an audit entry (Admin → Audit): who, the scope, the date, the view,
-  the VaR and ES, the members' hash, the time taken.
+- Every headline answer, every capture, every basket saved or deleted, every reload and every official capture run is an audit entry
+  (Admin → Audit): who, the scope, the date, the view, the VaR and ES, the members' hash, the time taken.
 
 ```yaml
 # config/application.yaml (or -D on the command line)
@@ -232,15 +253,18 @@ drishti:
 | `drishti.var.memory-budget-mb` | 0: a quarter of the heap (`DRISHTI_VAR_MEMORY_MB`) | the most memory the loaded dates' vectors take; a date that would exceed it is refused, never loaded in part |
 | `drishti.var.hot-dates` | 2 | business dates kept loaded |
 | `drishti.var.history-days` | 250 | the history and backtest window |
-| `drishti.var.kinds` | the market-risk pack's | the kinds the engine reads (vectors, positions, hierarchy, scenario set, node history, portfolios) |
+| `drishti.var.kinds` | the market-risk pack's | the kinds the engine reads (vectors, hierarchy, scenario set, portfolios; positions are served as `position`) |
+| `drishti.var.positions` | the live statuses, no rule | the position rules when no pack has a `positions:` section |
+| `drishti.var.official.*` | on (`DRISHTI_VAR_OFFICIAL`), published, 7 years | the official end-of-day captures |
 
 ## 12. The demo data
 
 `drishti.py lake demo` builds the market-risk pack's VaR tables with every other table (or alone:
-`drishti.py lake demo --only market-risk/position,market-risk/pnl-vector,market-risk/scenario-set,market-risk/risk-hierarchy,market-risk/var-node,market-risk/portfolio`).
-They come from `data/testdata/market-risk/<kind>/`, written by `tools/packgen/var/make_var_data.py` from the committed trades: 196
-positions netting 1,673 trades (44 holding buys and sells), their vectors on the last business date, 88 nodes of two hierarchies with
-250 days of history, seven portfolios; 3.5 MB in all. The vectors are synthetic (a correlated, fat-tailed factor market), not prices.
+`drishti.py lake demo --only market-risk/pnl-vector,market-risk/scenario-set,market-risk/risk-hierarchy,market-risk/portfolio`).
+They come from `data/testdata/market-risk/<kind>/`, written by `tools/packgen/var/make_var_data.py` from the committed trades: a vector
+for every live trade on the last business date (9,572), 88 nodes of two hierarchies, 28 portfolio definitions; 15.7 MB in all. The
+vectors are synthetic (a correlated, fat-tailed factor market), not prices; the security ids on securities and listed trades are
+synthetic too. The node history starts with the first official capture.
 
 ## 13. Troubleshooting
 
@@ -248,7 +272,10 @@ positions netting 1,673 trades (44 holding buys and sells), their vectors on the
 |---|---|---|
 | *no P&L vectors in any connector* | the lake has no `pnl-vector` table, or the market-risk pack is off | build the demo lake; enable the pack |
 | *no connector keeps pnl-vector.PNL as a vector column* | the connector's layout lacks `vectors: [PNL]` | regenerate the pack (`tools/packgen/banking/make_packs.py`) or add it to your connector file |
-| *… need N MB; the vector store's budget is M MB* | the date is larger than `drishti.var.memory-budget-mb` | raise the budget or the heap |
+| *… need N MB; the vector store's budget is M MB* (503, DRS-5204) | the date is larger than `drishti.var.memory-budget-mb` | raise the budget or the heap |
+| *Rows left out* in the provenance (DRS-5201) | vectors of the wrong length, with a null or NaN, in another currency, or failed with a vector | fix the batch's rows and restate the date |
+| *two P&L vectors on one business date* (422, DRS-5202) | a trade id twice in the date's batch | restate the date with one row per trade |
+| a warning that the date before was answered (DRS-5203) | the date's rows come from two runs or scenario sets | restate the date as one run; the signal reloads it |
 | *Not for your role* | your role may not open the vectors, or sees the scope in aggregate only | ask for the level you need |
 | *Unknown ids* in the provenance | the ids are not in the date's batch (matured, cancelled, typed wrong) | check them; nothing else changes |
 | the history says *Replay* | the scope is not a node, or you see the node in part | as designed: replay is in-sample |

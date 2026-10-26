@@ -191,7 +191,7 @@ connector rebuilds it; an intraday trade change through the stream or a write-ba
 
 | Term | Meaning | Reads |
 |---|---|---|
-| `CPTY:<id>` | the trades with that counterparty (planned in 2.8.0, [VAR.md section 8.5](VAR.md#85-planned-scope-words)) | `COUNTERPARTY` |
+| `CPTY:<id>` | the trades with that counterparty (built in 2.8.0, [VAR.md section 8.5](VAR.md#85-scope-words-by-a-trades-attribute)) | `COUNTERPARTY` |
 | `LE:<id>` | the trades booked by the bank's legal entity: the trade's **booking `LEGAL_ENTITY`** is the source of truth (product owner, 2026-10-25) | `LEGAL_ENTITY` |
 | `INDEX:<name>` | **new**: the trades with any leg on the index (`LEGS[].INDEX.NAME`) | the trade's legs |
 | `TRDR:<id>` | **new**: the trades of a trader | `TRADER_ID` |

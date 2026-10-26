@@ -276,7 +276,7 @@ $ drishti-console/.venv/bin/python tools/drishti.py connector list --origin file
   news-store        file    delta     news-topic,listed-company                                    running   news-and-markets
   nyfed-sofr-feed   file    feed      rate-fixing                                                  disabled  market-data
   reference-store   file    delta     counterparty,counterparty-group,issuer +7                    running   core
-  risk-store        file    delta     var,stress-scenario,stress-result +3                         running   market-risk
+  risk-store        file    delta     stress-scenario,stress-result,frtb-sensitivity +6            running   market-risk
   trade-calypso     file    delta     trade                                                        running   trading
   trade-endur       file    delta     trade                                                        running   trading
   trade-murex       file    delta     trade                                                        running   trading

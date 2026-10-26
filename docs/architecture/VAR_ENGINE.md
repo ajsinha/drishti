@@ -101,7 +101,7 @@ The product owner (2026-10-24) wants an **enterprise-grade, fully generic VaR en
 
 | Part | What | Where (all planned, 2.8.0) |
 |---|---|---|
-| **The pack** | kinds (`position`, `risk-hierarchy`, `pnl-vector`, `scenario-set`, `var-node`, `pnl-hypothetical`, `var-result`, `var-contribution`, `var-path`, `var-history`, `what-if`), routes, Sutras (the VaR explorer, the what-if panel) | the existing **market-risk** pack (`config/packs/market-risk`), which already has the `var` kind, the `risk-store` Delta connector and the risk domain (open question 1: a separate `var` pack instead) |
+| **The pack** | kinds (`position`, `risk-hierarchy`, `pnl-vector`, `scenario-set`, `var-node`, `pnl-hypothetical`, `var-result`, `var-contribution`, `var-path`, `var-history`, `what-if`), routes, Sutras (the VaR explorer, the what-if panel) | the existing **market-risk** pack (`config/packs/market-risk`), which then had the stored VaR kind (retired in 2.8.0), the `risk-store` Delta connector and the risk domain (open question 1: a separate `var` pack instead) |
 | **Stored data** | positions, hierarchies, position vectors, scenario sets, precomputed node vectors, hypothetical P&L | the static connector **`risk-store`** (Delta), from `data/testdata/market-risk/<kind>/` in the demo and the bank's batch in production ([section 5.4](#54-storage-layout-and-the-data-pattern)) |
 | **The computation** | scope algebra, measures, contributions, history, backtests, what-if | the reactive connector **`var-engine`** ([REACTIVE_CONNECTORS.md section 5](REACTIVE_CONNECTORS.md#5-the-connector-file)) |
 | **The maths** | quantiles, ES, Euler allocation, backtests | a versioned Python package, `compute/drishti-var`, with its own tests; installed into the var-engine's locked environment ([PYTHON_COMPUTE.md](PYTHON_COMPUTE.md)) |
@@ -573,7 +573,7 @@ What was built (2.8.0, unreleased), where it differs from the sections above, an
 
 | Part | As built |
 |---|---|
-| the pack | the **market-risk** pack (open question 1): the kinds `position`, `portfolio`, `pnl-vector`, `scenario-set`, `risk-hierarchy`, `var-node` (`tools/packgen/banking/var_kinds.py`, written into `pack.yaml` by `make_packs.py`), routed to `risk-store`; mnemonics `POS`, `PORT`, `PNLV`, `SSET`, `HIER`, `VNODE`; Sutras for `portfolio` and `position` |
+| the pack | the **market-risk** pack (open question 1): the kinds `position`, `portfolio`, `pnl-vector`, `scenario-set`, `risk-hierarchy` (`tools/packgen/banking/var_kinds.py`, written into `pack.yaml` by `make_packs.py`), routed to `risk-store`, and `position` to the `var-positions` connector (the engine's derived positions, section 18.6); mnemonics `POS`, `PORT`, `PNLV`, `SSET`, `HIER` (`VNODE` and the `var-node` kind retired in 2.8.0); Sutras for `portfolio` and `position` |
 | the stored data | `risk-store` (Delta), the vectors in a `list<double>` column (`layout.<kind>.vectors: [PNL]`); demo data from `tools/packgen/var/make_var_data.py` |
 | the engine | **in the server, in Java**: the generic vector store, ordinal sets, parallel sums and the VaR maths in the module `drishti-compute` beside the compute workers (`com.ash.drishti.compute.vector`, `com.ash.drishti.compute.var`); loading, entitlements, baskets, captures and the API in `drishti-server` (`com.ash.drishti.server.var`). Not yet a reactive connector (waves R1 to R4) and no Python package: base VaR is additions and sorts, which Java does next to the data without moving vectors to a worker |
 | the explorer | a console page (`/var`, `drishti-console/routes/var_routes.py`, `web/static/js/var-explorer.js`, `var-charts.js`, `web/static/css/var.css`) over `/api/v1/var`, not a Sutra: a Sutra's `source:` reads a kind, and the parametrised sources a VaR panel needs come with reactive connectors (R2). The portfolio and position pages are Sutras, with the new UI kit fragment `pnl-distribution@1` |
@@ -595,7 +595,7 @@ as a vector. Nothing in the engine assumes one worker or calls one in its reques
   ES (the mean of the 13 worst at 97.5%), standalone, component (Euler on the five scenarios around rank k, **scaled to add up to the
   VaR exactly**; component ES adds up to ES), incremental (VaR without the part, recomputed), marginal (per million of market value) and
   diversification. Historical method, equal weights, 1-day; `age-weighted` and `filtered`, 10-day and stressed sets are not built.
-- **History and backtesting** (section 11): a node's official figures from `var-node` (250 days), exceptions against the previous
+- **History and backtesting** (section 11): a node's official figures (from 2.8.0 part 1: its official end-of-day captures, section 18.6; before: the stored `var-node`), exceptions against the previous
   day's VaR, the Basel light (limits scaled for a shorter history), Kupiec's and Christoffersen's statistics; any other scope replays
   today's members over the last 250 scenario days (in-sample, labelled). Acerbi–Székely and the overnight precomputation job are not built
   (the demo data carries the nodes' history; the engine sums every node when a date loads).
@@ -618,15 +618,15 @@ as a vector. Nothing in the engine assumes one worker or calls one in its reques
 | Question | Decision |
 |---|---|
 | 1. Which pack | the **market-risk** pack |
-| 2. The existing `var` kind | **kept** as sample data beside the engine; `VAR VAR-RATES` still opens it, `VAR <word> …` opens the explorer |
+| 2. The existing `var` kind | kept beside the engine in V0 to V3; **retired** in part 1 (section 18.6): `VAR VAR-RATES` opens the explorer at `DESK:RATES` |
 | 3. Rank rule | **the 6th worst of 509** (k = ceil(N (1 − a))), configurable (`drishti.var.rank-rule: interpolated`) |
 | 4. Precision | **float64** in the lake, in memory and in sums; no float32 cache |
 | 5. Risk-class split | **not in 2.8.0** (no `PNL_BY_RISK_CLASS`) |
-| 6. Retention | not decided by the engine: the demo keeps the last business date's vectors and 250 days of node figures |
+| 6. Retention | **7 years** of vectors and their time travel (product owner, 2026-10-25; section 18.6) |
 | 7. 10-day VaR | not built; the screens say *1 day* |
 | 8. Who produces vectors | **the bank's batch**; Drishti loads them (the demo's come from a synthetic factor model) |
 | 9. Entitlement source | **in Drishti** (`drishti.var.access`) |
-| 10. Demo data size | **about 3.5 MB**: one business date of vectors (1,673 trades), 250 days of node figures; not 21 MB |
+| 10. Demo data size | **15.7 MB** from part 1: one business date of vectors for every live trade (9,572); 3.5 MB before (1,673 trades and 250 days of node figures) |
 | VAR_DATA_MODEL.md 1. Position grain | **vectors at trade grain**; a position is a holding of one instrument in one book netting its trades (VAR_DATA_MODEL.md section 18) |
 | VAR_DATA_MODEL.md 9. Roaring bitmaps | **not added**: a plain bitmap of the date's rows (java.util.BitSet) is small enough |
 
@@ -652,3 +652,28 @@ node vectors, portfolio membership by type). `drishti-server`: `VarApiTest` (a h
 overlaps, contributions, history, entitlements, baskets, a capture read back after the data changes). `drishti-console`:
 `test_var_explorer_browser.py` (the command, a drill from bank to trade in place with the paint time, the tabs, an ad-hoc basket saved
 and captured, the portfolio and position pages, a phone), with the demo connector off.
+
+### 18.6 VaR complete, part 1 (2.8.0)
+
+The contract as built is [VAR.md](../contracts/VAR.md) (version 1.3); this section lists what changed in the engine.
+
+| Change | As built |
+|---|---|
+| Stored kinds retired | `var` and `var-node` are gone (kinds, mnemonics, samples, test data, Sutras, about texts, Calc snippets, generators, contracts). `VAR <old VAR-* id>` and `/v/var/<id>` open the explorer at the matching desk (`VAR-COMM` → `DESK:COMM`), `VN-<node>` at `NODE:<node>` (console, `var_routes.py`) |
+| No stored figures | `position`, `portfolio` and `desk` carry no VaR figure; their pages show the engine's, added as the page opens, as the reader (`VarFigures`, an engine `ViewAugmenter` in the view pipeline; `VAR_ENGINE` in the document drawn). A guard test (`tools/test_contracts.py`) fails the build when a retired kind or figure returns |
+| Derived positions | `PositionRules` (`drishti-compute`): the pack's `positions:` section (securities by book and security, listed by book and contract, OTC one per trade; the live statuses); applied by `VarIntake` as each vector row streams in, rebuilt with every load; served as `position` by the `var-positions` source plugin |
+| Load checks | `VarIntake` rejects wrong-length, null/NaN, other-currency and failed-with-vector rows (`DRS-5201`), leaves out rows not live; `VarLoader` refuses duplicate trade ids (`DRS-5202`) and mixed runs or scenario sets (`DRS-5203`: the date before is answered, with a warning); the memory budget answers `503 DRS-5204` |
+| Official captures | `VarOfficial` (one capture at a time, its own thread): every MGMT and LEGAL node of a date as an official capture (`var/captures/official/`), the date's record and membership (`var/official/`), restatements as new result versions; `VarOfficialStore` serves the node history from them; `VarPublisher` appends each run to `risk-results/var-official` (Delta, append-only, 7-year retention) |
+| Load signal | `LoadService.onReady`: a ready load of `pnl-vector`, `scenario-set`, `risk-hierarchy`, `portfolio` or `trade` drops the date and captures it officially; at start the newest date without a record is captured |
+| Scopes | `LE:` resolves by the trades' `LEGAL_ENTITY` (mismatch with the `LEGAL` tree: a provenance warning); `CPTY:` by `COUNTERPARTY`; `POS`/`TRD`/`CPTY` ids kept as written and matched in any case; `PORT:` of a BASKET portfolio refused to aggregate-only viewers |
+| Answers | `by=node`; the largest `max-parts` parts by gross size; field masks in contribution rows; provenance with every input's version, the batch ids, the rules' digest, rejections and warnings; audit of basket changes, reloads and official runs |
+| Retention | the lake writers set 7-year log and deleted-file retention on `risk` and `risk-results` tables; `lake maintain` never vacuums them below it |
+| Test data | every live trade valued (9,572; 7,984 derived positions), synthetic security ids, 28 portfolio definitions (`tools/packgen/var/portfolios.py`) |
+
+Not in part 1: memory tiering and the hot file (VAR.md section 7.3), the 1 M-trade × 50-date benchmark, the Python engine and
+reactive connector, the VaR guide's rewrite.
+
+**Tests added:** `ScopeAndRuleTest` and `VarBookTest` (derived positions, ids in any case, `LE:`, `CPTY:`, duplicates), `VarApiTest`
+(official captures, publishing and restatement, the load signal, page figures, a date that is not one run, duplicates), `ViewPipelineTest`
+(augmenters), `LakeWriterTest` (table properties), `tools/lake/test_retention.py`, `tools/test_contracts.py` (`TheRetiredStoredVersions`),
+`tools/packgen/var/test_var_data.py`, `drishti-console/tests/test_var_routes.py` (old ids).

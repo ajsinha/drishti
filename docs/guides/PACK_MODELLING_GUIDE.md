@@ -693,18 +693,16 @@ python:
 
 Longer snippets read better as files: `config/packs/<pack>/python/<name>.py`, in name order after the inline ones, each
 starting with three comment lines (after the copyright header, which is not shown to the user). From
-`config/packs/market-risk/python/var_es.py`:
+`config/packs/market-risk/python/stress_heatmap.py`:
 
 ```python
-# title: VaR and expected shortfall from the scenario P&L
-# description: Historical-simulation VaR (99%) and ES (97.5%) recomputed with numpy from the scenario P&Ls, set beside the engine's figures, and the P&L histogram.
-# kinds: var
+# title: Stress results: scenarios by desk, limits and the worst case
+# description: Every stress result in one search, pivoted scenario by desk with totals; each desk's worst scenario and its use of the stress limit (results read in full for their limits), the scenarios ranked by firm-wide loss, and a heatmap of the matrix (matplotlib).
+# kinds: stress-result, stress-scenario
 
 import numpy as np
 import pandas as pd
-
-pnl = np.asarray(view.doc["SCENARIO_PNL"], dtype=float)
-worst = np.sort(pnl)
+import matplotlib.pyplot as plt
 ...
 ```
 
