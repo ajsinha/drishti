@@ -18828,6 +18828,35 @@ datasets:
     files:
     - changes-2026-09-30.jsonl.gz
     bytes: 20
+- folder: counterparty-risk/simulation-run
+  pack: counterparty-risk
+  kind: simulation-run
+  connector: exposure-store
+  key: RUN_ID
+  dated-by: BUSINESS_DATE
+  first-date: '2026-09-30'
+  last-date: '2026-09-30'
+  documents: 1
+  files:
+  - cob-2026-09-30.jsonl.gz
+  bytes: 659
+- folder: counterparty-risk/exposure-path
+  pack: counterparty-risk
+  kind: exposure-path
+  connector: exposure-store
+  key: PATH_ROW_ID
+  dated-by: BUSINESS_DATE
+  first-date: '2026-09-30'
+  last-date: '2026-09-30'
+  documents: 9031
+  files:
+  - cob-2026-09-30.part-001.jsonl.gz
+  - cob-2026-09-30.part-002.jsonl.gz
+  - cob-2026-09-30.part-003.jsonl.gz
+  - cob-2026-09-30.part-004.jsonl.gz
+  - cob-2026-09-30.part-005.jsonl.gz
+  - cob-2026-09-30.part-006.jsonl.gz
+  bytes: 7168291
 - folder: market-risk/stress-result
   pack: market-risk
   kind: stress-result

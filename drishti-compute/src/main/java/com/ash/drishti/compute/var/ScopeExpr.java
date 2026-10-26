@@ -32,13 +32,14 @@ import java.util.TreeSet;
  *   POS:POS-BOOK-FI-1~SEC-GOVT_BOND-USD-03,...               positions (every trade of each)
  *   TRD:MX-20000001,CLY-3000157                               trades
  *   CPTY:CP-KESTREL                                           every trade with that counterparty
+ *   NSET:NS-KESTREL-NY,...   GROUP:GRP-KESTREL               netting sets, a connected group (the exposure engine's words, EXP.md 8)
  *   PORT:PF-USD-RATES                       a portfolio (its definition: a node, a rule or a basket)
  *   BASKET:asha/unwind                      a basket a person saved
  *   WHERE:PRODUCT_GROUP == 'Rates' and CURRENCY == 'USD'      a rule over the positions' columns (PositionRule)
  *   A + B   A - B   A &amp; B   ( ... )            union, difference, intersection; &amp; binds before + and -
  * </pre>
  *
- * The ids of {@code POS}, {@code TRD} and {@code CPTY} are kept as written (a booking system's ids are text and may be lower case;
+ * The ids of {@code POS}, {@code TRD}, {@code CPTY} and {@code NSET} are kept as written (a booking system's ids are text and may be lower case;
  * they are matched ignoring case when the date has no exact id); every other argument but a basket's or a capture's is upper case.
  *
  * An operator stands between spaces ({@code DESK:RATES - POS:X}); a hyphen inside an id ({@code MX-20000001}) is part of the id.
@@ -48,10 +49,11 @@ import java.util.TreeSet;
 public sealed interface ScopeExpr {
 
     /** The words a reference may start with. */
-    Set<String> WORDS = Set.of("BANK", "LE", "DIV", "DESK", "BOOK", "NODE", "POS", "TRD", "CPTY", "PORT", "BASKET", "WHERE", "CAPTURE");
+    Set<String> WORDS = Set.of("BANK", "LE", "DIV", "DESK", "BOOK", "NODE", "POS", "TRD", "CPTY", "PORT", "BASKET", "WHERE", "CAPTURE", "NSET",
+            "GROUP");
 
     /** The words whose argument is a list of ids ({@code a,b}), kept as written. */
-    Set<String> LISTS = Set.of("POS", "TRD", "CPTY");
+    Set<String> LISTS = Set.of("POS", "TRD", "CPTY", "NSET");
 
     /** One reference: a word and its argument (empty for BANK). */
     record Ref(String word, String arg) implements ScopeExpr {
