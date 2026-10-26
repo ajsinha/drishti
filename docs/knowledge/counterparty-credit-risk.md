@@ -79,7 +79,7 @@ the expected loss from EE; **regulatory capital** under the internal model metho
 | <a id="term-collateral-balance"></a>**Collateral balance** | The collateral held from, and posted to, a counterparty under a CSA for one netting set, after haircuts. Net = held minus posted. | `COLL COLL-ALDERSHOT-LDN <GO>` |
 | <a id="term-margin-call"></a>**Margin call** | A demand for collateral under a CSA, its amount, who calls whom, its status and any disputed part. | `MC MC-ALDERSHOT-FRA-1 <GO>` |
 | <a id="term-credit-limit"></a>**Credit limit** | The most exposure the bank accepts to a counterparty on a measure (usually peak PFE at 95%), with its use. Above 100% is a breach. | `LIM LIM-ALDERSHOT <GO>` |
-| <a id="term-simulation-run"></a>**Simulation run** | The upstream exposure simulation of a business date: how many market paths (200 in the demo), the grid of future dates and the look-back. | `XRUN XR-2026-09-30-01 <GO>` |
+| <a id="term-simulation-run"></a>**Simulation run** | The upstream exposure simulation of a business date: how many market paths (200 in the demo), the grid of future dates and the look-back. | `XRUN XR-2026-10-26-01 <GO>` |
 | <a id="term-exposure-path"></a>**Exposure path** | One trade's mark to market on every simulated path at one grid date. Every trade uses the same paths, so values add path by path. | `drishti.py exposure status` |
 | <a id="term-exposure"></a>**Exposure** | What a counterparty would owe the bank on a path and date after netting and collateral, never below zero: max(value - collateral, 0). | `EXP BANK <GO>` |
 | <a id="term-ce"></a>**CE** (current exposure) | Today's exposure: the netting set's mark to market less the collateral held, floored at zero. It adds up across netting sets. | `EXP NS-ALDERSHOT-NY <GO>` |
@@ -152,8 +152,54 @@ accepts an id with or without its prefix (`CPTY:ALDERSHOT` is `CPTY:CP-ALDERSHOT
 
 ## 4. A worked example on the demo data
 
-<!-- example:start -->
-<!-- example:end -->
+From a scratch server over the default demo lake (`drishti.py lake demo`): business date **2026-10-26**, simulation run
+`XR-2026-10-26-01` (200 paths, 13 reported dates from 1W to 10Y, collateral lagged by a 10-day margin period, PFE at 95%).
+
+**A counterparty and its four netting sets.** `EXP CP-ALDERSHOT <GO>` (or `drishti.py exposure show CPTY:CP-ALDERSHOT`): Aldershot
+Pension Trust trades with all four of the bank's legal entities under one ISDA (`AGR-ALDERSHOT-ISDA`, English law, close-out netting
+enforceable) and one CSA (`CSA-ALDERSHOT`: thresholds 10 million each way, MTA 500,000, daily calls, MPOR 10 business days):
+
+| Scope | Trades | CE | EPE | Peak PFE 95% | at |
+|---|---|---|---|---|---|
+| `NSET:NS-ALDERSHOT-NY` | 305 | 188.5 m | 39.8 m | 353.3 m | 2W |
+| `NSET:NS-ALDERSHOT-LDN` | 194 | 0 | 15.3 m | 78.7 m | 2M |
+| `NSET:NS-ALDERSHOT-TKY` | 22 | 4.3 m | 11.7 m | 56.9 m | 2M |
+| `NSET:NS-ALDERSHOT-FRA` | 43 | 1.7 m | 2.8 m | 29.4 m | 2W |
+| **`CPTY:CP-ALDERSHOT`** | 564 | **194.4 m** | 67.9 m | **395.3 m** | 2W |
+
+- **CE adds up**: 188.5 + 0 + 4.3 + 1.7 = 194.4 million.
+- **PFE does not**: the four peaks sum to 518.4 million; the counterparty's peak is 395.3 million. The sets' bad paths and dates differ.
+- **Where the peak comes from** (`drishti.py exposure parts CPTY:CP-ALDERSHOT --by netting-set`): NY 346.4 m (87.6%), FRA 20.3 m,
+  TKY 16.1 m, LDN 12.5 m. LDN's own peak is 78.7 million, but it peaks at 2M; at the counterparty's peak (2W) it adds little.
+- Its limit `LIM-ALDERSHOT` is 8,843 million on peak PFE: 4.5% used.
+
+**Collateral that raises exposure.** `EXP NS-ALDERSHOT-LDN <GO>`, the Collateral tab. The set's trades are worth −122.4 million to the
+bank today (the bank owes Aldershot) and the bank has *posted* 98.8 million of collateral (`COLL COLL-ALDERSHOT-LDN <GO>`). At the peak (2M) EE is **19.0 million with collateral
+against 4.0 million without: +380%**. On paths where the trades swing in the bank's favour, the bank is owed the trades' value *and*
+its posted collateral back until the next call settles. After a year the effect turns: at 5Y EE is 6.9 million with collateral against
+80.8 million without.
+
+**Netting at work.** `drishti.py exposure parts NSET:NS-ALDERSHOT-LDN --by trade --figure EE`: at 2M a convertible bond adds 37.5
+million to the set's EE of 19.0 million and an equity total return swap takes away 39.0 million. Alone, each would be a large exposure;
+together they largely cancel.
+
+**A group.** `drishti.py exposure show GROUP:GRP-MERIDIAN`: Meridian Life Assurance (peak PFE 148.5 m) and Meridian Reinsurance (200.6 m)
+together peak at **271.2 million**, less than the 349.1 million their peaks add to.
+
+**The bank and a legal entity.** `EXP BANK <GO>`: peak PFE 2,810.5 million at 2W, EPE 922.3 million, CE 1,538.7 million.
+`EXP LE:LE-LDN <GO>` and its counterparty board: peak PFE 558.4 million at 2M; the largest contributors are Tokai Mutual Trust Bank
+(69.2 m), Aurora Sovereign Wealth Fund (50.2 m) and Pinnacle Credit Partners (48.3 m).
+
+**What the data hasn't told you.** `NSET NS-ALDERSHOT-FRA <GO>` lists 43 member trades, all *LIVE*, and the largest contributor to
+the set's EE is `CLY-4000879`, a repo that makes **48%** of it. Open the trade itself (`TRD CLY-4000879 <GO>`): the booking system says
+**CANCELLED** (version 4). The same list shows trades maturing on 2026-10-07 and 2026-10-12 as live on 2026-10-26. The exposure run
+and the netting set describe a book the booking system no longer holds; the explorer's numbers are right for its inputs, and the
+inputs are stale. (In the demo this comes from moving the test data's dates to today; in a bank it is exactly the reconciliation break
+a credit officer needs to see.)
+
+The netting-set record itself carries a stored `UTILISATION` of **66%** of a 4.2 billion limit for `NS-ALDERSHOT-LDN`, from the
+upstream engine; the engine's own peak PFE of 78.7 million is under 2% of that limit. A stored figure and a computed one side by side
+on one page: the computed one is made from the paths you can see, the stored one from whatever the upstream system had.
 
 ## 5. Questions to ask your data
 

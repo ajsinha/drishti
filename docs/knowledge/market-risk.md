@@ -167,8 +167,52 @@ build the vectors as above.
 
 ## 4. A worked example on the demo data
 
-<!-- example:start -->
-<!-- example:end -->
+From a scratch server over the default demo lake (`drishti.py lake demo`, which moves the test data's sixty business days to end
+today): business date **2026-10-26**, batch `B-2026-10-26-01`, scenario set `HS-509`.
+
+**The bank.** `VAR BANK <GO>` (or `drishti.py var show BANK`):
+
+```text
+VAR BANK  ·  Drishti Bank  ·  node  ·  2026-10-26
+  VaR 99%   126,544,583 USD   (the 6th worst of 509)
+  ES 97.5%   172,580,660 USD   (mean of the 13 worst)
+  limit      150,000,000 USD   use 84.4%
+  parts      2 division   standalone sum 138,788,322   diversification 12,243,739
+  backtest   green  3 exceptions in 249 days   Kupiec p 0.753   Christoffersen p 0.786
+  8566 trades in 7115 positions
+```
+
+Read it as: on the 6th worst of the 509 days the bank would lose 126.5 million; the 13 worst days lose 172.6 million on average, so
+the tail beyond VaR is fat; the VaR uses 84.4% of the 150 million limit; the model had 3 exceptions in the last 249 days (green).
+
+**Diversification depends on how you cut the bank.** The same 126.5 million against different parts:
+
+| Cut by | Sum of the parts' standalone VaRs | Diversification |
+|---|---|---|
+| 2 divisions | 138.8 m | 12.2 m |
+| 4 legal entities (`drishti.py var tree --hierarchy LEGAL`): LE-NY 135.9 m, LE-LDN 29.7 m, LE-TKY 10.0 m, LE-FRA 1.8 m | 177.4 m | **50.9 m** |
+| 10 desks (`drishti.py var parts BANK --by desk`) | 327.8 m | 201.2 m |
+
+The finer the cut, the more the parts offset each other. LE-NY alone (135.9 m) has a larger VaR than the bank.
+
+**Who drives it and who hedges.** `drishti.py var parts BANK --by desk`: the credit desk's component is 91.6 million (72.4% of the
+bank's VaR), rates 29.6 million (23.4%). Four desks have negative components: inflation (−6.9 m), money markets (−2.4 m), structured
+(−1.9 m) and FX (−0.05 m); they gain on the bank's worst days. Commodities has a positive component (3.0 m) but an incremental VaR of
+**−10.7 million**: take the whole desk out and the bank's VaR rises.
+
+**A desk by book.** `drishti.py var parts DESK:RATES`: VaR 64.4 million; `BOOK-RATES-3` alone 56.3 m and 83.4% of the desk;
+`BOOK-RATES-1` alone 28.6 m but a component of 0.09 m and an incremental VaR of −6.9 m: it hedges the other two.
+
+**One trade.** `VAR SCOPE DESK:RATES - TRD:MX-30000121 <GO>`: 64,605,209, so this swap's incremental VaR in its desk is −170,758.
+
+**From the credit side.** `drishti.py var show CPTY:CP-ALDERSHOT`: the 425 live trades with Aldershot Pension Trust, across desks, have
+a VaR of 22.2 million (ES 34.5 m). The same counterparty's peak PFE is 395.3 million ([Counterparty credit risk](counterparty-credit-risk.md#4-a-worked-example-on-the-demo-data)):
+two different questions about the same trades.
+
+**What the data hasn't told you.** The two hierarchies disagree about the bank's limit. `VAR BANK` (the Management tree's root) uses
+84.4% of 150 million; the Legal tree's root (`drishti.py var tree --hierarchy LEGAL`) shows the same VaR at 60.3% of its limit, about
+210 million. In the same tree, `BOOK-COMM-1` is at **223%** of its limit and `BOOK-EQD-1` at 133%, while their desks are within
+theirs: a breach a desk-level report would never show.
 
 ## 5. Questions to ask your data
 

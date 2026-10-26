@@ -102,7 +102,7 @@ relationship is `LEIREL-<child>-DIRECT` or `-ULTIMATE`. On the bank's side: `LE-
 ## 4. A worked example on the demo data
 
 Two sides, two sources: the GLEIF snapshot the gleif pack commits (retrieved 2026-10-25: 9,937 legal entities in 590 ownership groups
-across 133 countries) and the bank's own core records (business date 2026-10-26).
+across 133 countries) and the bank's own core records, read on a scratch server over the default demo lake (business date 2026-10-26).
 
 **Who owns whom, from GLEIF.** `LEI 010PWNH4K3BLIC3I7R03 <GO>` is *Gestion Placements Desjardins Inc.*, Montreal. Its record names its
 parents:
@@ -127,7 +127,9 @@ BaFin; it books the repo and securities lending desk. The bank has four such ent
 
 `CPTY CP-MERIDIAN <GO>` (Meridian Life Assurance, a US insurer rated A+) and `CPTY CP-MERIDIAN-RE <GO>` (Meridian Reinsurance Ltd,
 Bermuda, rated A) are two counterparties in one obligor group, `GRP GRP-MERIDIAN <GO>`, with one group limit of 15.1 billion USD.
-`drishti.py exposure show GROUP:GRP-MERIDIAN` adds their netting sets' exposures path by path: «GRP_MERIDIAN»
+`drishti.py exposure show GROUP:GRP-MERIDIAN` adds their netting sets' exposures path by path: peak PFE **271.2 million** at 1M, against 148.5
+million for Meridian Life and 200.6 million for Meridian Re alone (349.1 million added up). The group record's own stored
+`UTILISATION` says 62% of the 15.1 billion group limit; the computed peak is under 2% of it. The stored figure came from elsewhere.
 
 **Country of risk at work.** `CPTY CP-KESTREL <GO>` (Kestrel Global Macro Fund, a hedge fund, BBB-) is registered in the Cayman
 Islands, and its country of risk and economy link are the Cayman Islands too (`ECON-CYM`). Every one of the 24 counterparties' records

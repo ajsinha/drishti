@@ -107,8 +107,35 @@ Books are `BOOK-<desk>-<n>`, desks `DESK-<name>`, traders `TRDR-<initial><surnam
 
 ## 4. A worked example on the demo data
 
-<!-- example:start -->
-<!-- example:end -->
+From a scratch server over the default demo lake (`drishti.py lake demo`): business date **2026-10-26**. The demo holds 15,000 trades,
+5,000 from each of ENDUR, MUREX and CALYPSO, every status included.
+
+**One trade.** `TRD 1000001 <GO>`: an ENDUR commodity swap (`ComSwap`, sub type `ENGY-SWAP`), the bank sells 72,000 tonnes against
+Harbor Point Bank (`CP-HARBORPT`, country of risk US), notional USD 209,962,179, traded 2025-06-20, maturing 2028-07-31, booked by
+`LE-NY` in `BOOK-COMM-2` by F. Rossi, status **AMENDED, version 7** (last updated 2026-10-22). Its links open the counterparty, the
+book, the desk and the trader; its legs and cash-flow events are tabs of the same page.
+
+**Its valuation.** `TVAL TVAL-1000001 <GO>`: MTM +4,121,280 USD, the day's P&L −277,804, DV01 0 (the engine reports no rate
+sensitivity for it), valued 2026-10-26.
+
+**Every trade with one counterparty.** `CTRD CP-ALDERSHOT <GO>`, grouped when you open it: **641** trades from all 3 systems, 107
+product types in 7 currencies, notional 184.4 billion across currencies; payments due −42.3 million in the next 7 days (13 events),
+−170.2 million in 30 days (82 events), −507.2 million in 90 days (226 events).
+
+**Three populations of "Aldershot's trades".** The same counterparty counts differently depending on the question:
+
+| Question | Command | Trades |
+|---|---|---|
+| Every trade booked with it, any status | `CTRD CP-ALDERSHOT <GO>` | 641 |
+| Its trades in the exposure run (four netting sets) | `drishti.py exposure show CPTY:CP-ALDERSHOT` | 564 |
+| Its live trades with a P&L vector (VaR) | `drishti.py var show CPTY:CP-ALDERSHOT` | 425 |
+
+None is wrong: matured and cancelled trades are in the first, only priced live trades in the last. A report that mixes them
+mixes questions.
+
+**What the data hasn't told you.** The valuation is not of the trade you see. `TVAL TVAL-1000001` says the trade is *VALIDATED* with a
+notional of 167,969,743; the trade itself is *AMENDED*, version 7, notional 209,962,179. The risk engine valued an earlier version. Its
+MTM, and everything built on it, lags the last amendment until the next batch.
 
 ## 5. Questions to ask your data
 

@@ -67,7 +67,7 @@ factors and an equity's **beta** against its index.
 | <a id="term-equity-index"></a>**Equity index** | A basket of shares published as one level (S&P 500, Nasdaq-100, Euro Stoxx 50 ...). | `EQX EQX-SPX <GO>` |
 | <a id="term-bond"></a>**Bond** | A debt security with its issuer, coupon, maturity and benchmark curve. | `BND BND-DEBUND064772 <GO>` |
 | <a id="term-correlation"></a>**Correlation** | How closely two factors' daily returns move together, from -1 to 1. Drishti computes a set's correlations from price history when asked. | `CORR CORR-EU-EQ <GO>` |
-| <a id="term-beta"></a>**Beta** | How much an equity moves for a 1% move in its index, from the regression of daily returns. Computed from the closes when asked. | `EQB EQ-NVTK <GO>` |
+| <a id="term-beta"></a>**Beta** | How much an equity moves for a 1% move in its index, from the regression of daily returns. Computed from the closes when asked. | `EQ EQ-NVTK <GO>` |
 | <a id="term-holiday-calendar"></a>**Holiday calendar** | The days a market or currency is closed (TARGET2, USNY ...), which decide payment and fixing dates. | `CAL CAL-EUTA <GO>` |
 
 <!-- glossary:end -->
@@ -109,8 +109,30 @@ surface is kept per business date, so `CRV CRV-USD-OIS <GO>` on yesterday's date
 
 ## 4. A worked example on the demo data
 
-<!-- example:start -->
-<!-- example:end -->
+From a scratch server over the default demo lake (`drishti.py lake demo`): business date **2026-10-26**. The demo's market data is
+synthetic but shaped like the real thing.
+
+| Ask | What it shows on 2026-10-26 |
+|---|---|
+| `CRV CRV-USD-OIS <GO>` | the USD discount curve (OIS on SOFR): 12 points, 10-year rate 3.80%, 2s10s slope +22.6 bp |
+| `FIX FIX-SOFR <GO>` | SOFR, administered by the New York Fed: 3.9060% on 2026-10-26 on 1,696 billion of volume; 3.9074% on 2026-10-23 |
+| `FX FX-EURUSD <GO>` | EUR/USD mid 1.17400 (bid 1.17395, ask 1.17405), up 0.92% on the day; 30-day range 1.14318 to 1.17661 |
+| `CDS CDS-BUND <GO>` | the Federal Republic of Germany: 5-year spread 9.0 bp, recovery 25%, a one-year default probability of 0.07% |
+| `CORR CORR-EU-EQ <GO>` | four European equities, computed from their closes: average correlation 0.10 (Pearson, 29 daily returns from 2026-09-14), lowest −0.16, highest 0.38 |
+| `EQ EQ-NVTK <GO>`, its Beta panel | Novatek against its index EQX-NDX: beta −0.07, correlation −0.03, R² 0.00 over 29 daily returns |
+
+**Reading them together.** SOFR fixed at 3.906% while the OIS curve's 10-year point is 3.80% and the 2s10s slope is positive: the
+curve prices overnight rates a little lower over the next years (2-year below 10-year below today's fixing). The Bund's 9 bp spread is what the market charges to
+insure against Germany's default: 0.07% a year.
+
+**What the data hasn't told you.** Two things a quick look misses:
+
+- **Beta near zero is not a hedge signal here.** The demo's prices are independent synthetic walks, so measured betas and correlations
+  are near zero; the old stored beta for Novatek (1.28) was set by hand and had no prices behind it. Computing from the prices exposed
+  that the stored figure never described the data.
+- **Dates that did not move.** `FX FX-EURUSD` shows a value date of **2026-10-02** on business date 2026-10-26: the spot date was not
+  moved with the rest of the record when the demo's dates were moved to today. A stale field inside a fresh record is the kind of
+  defect a field-by-field compare (`Compare` on the page) finds and a summary report does not.
 
 ## 5. Questions to ask your data
 
@@ -122,7 +144,7 @@ surface is kept per business date, so `CRV CRV-USD-OIS <GO>` on yesterday's date
 | How expensive is EUR/USD optionality? | `FXV FXV-EURUSD <GO>` | at-the-money vols by expiry, risk reversals and butterflies |
 | How risky does the market think this issuer is? | `CDS CDS-BUND <GO>` | spreads by tenor, recovery, implied default probability |
 | Do these factors move together? | `CORR CORR-EU-EQ <GO>` | every pair's correlation from the closes, with the window and estimator |
-| How much does this share move with its index? | `EQB EQ-NVTK <GO>` | beta, alpha, correlation and R² from daily returns |
+| How much does this share move with its index? | `EQ EQ-NVTK <GO>`, its Beta panel | beta, correlation and R² from daily returns (`EQB EQ-NVTK <GO>` is the computed kind itself) |
 | What curve does this bond price off? | `BND BND-DEBUND064772 <GO>` | its issuer, coupon, maturity and benchmark curve |
 
 ## 6. Common confusions

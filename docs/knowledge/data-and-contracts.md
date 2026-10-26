@@ -64,7 +64,7 @@ one (`config/packs/<pack>/contracts/<kind>.contract.yaml`), and the docs are gen
 | <a id="term-mnemonic"></a>**Mnemonic** | The short word that opens a kind (TRD, CPTY, NSET): type it with an id and press Enter. | `FUNC <GO>` |
 | <a id="term-fundamental-data"></a>**Fundamental data** | Data as its owner delivers it (trades, counterparties, curves, GLEIF records). Drishti keeps it as it is and computes everything else from it. | `TRD 1000001 <GO>` |
 | <a id="term-computed-data"></a>**Computed data** | Figures Drishti works out from fundamental data when asked (VaR, exposure, ownership groups, correlations), never stored, so they never drift from their inputs. | `VRES BANK <GO>` |
-| <a id="term-input-data"></a>**Input data** | Large data an upstream engine delivers for Drishti to compute with: P&L vectors, exposure paths, scenario sets, hierarchies. | `XRUN XR-2026-09-30-01 <GO>` |
+| <a id="term-input-data"></a>**Input data** | Large data an upstream engine delivers for Drishti to compute with: P&L vectors, exposure paths, scenario sets, hierarchies. | `XRUN XR-2026-10-26-01 <GO>` |
 | <a id="term-data-contract"></a>**Data contract** | The written agreement for one kind: its grain, key, every field with type and meaning, links, where it is stored and how often it comes. | `drishti.py contract show netting-set` |
 | <a id="term-business-date"></a>**Business date** | The day the data describes. Every fundamental row is kept per business date; the top bar's date picks which one you read. |  |
 | <a id="term-grain"></a>**Grain** | What one row means: one netting set per business date, one trade's path values at one grid date. | `drishti.py contract show netting-set` |
@@ -125,8 +125,8 @@ links:  COUNTERPARTY → counterparty, AGREEMENT → agreement, CSA → csa, CRE
 **One trade, walked along the links.** Each step is a click on a link field, or the command beside it:
 
 ```text
-TRD CLY-4000879           a CALYPSO repurchase agreement, EUR, book BOOK-SFT-3, booked by LE-FRA, counterparty CP-ALDERSHOT
- └─ NSET NS-ALDERSHOT-FRA  its netting set: Aldershot's trades booked in Frankfurt (43 trades on 2026-07-08)
+TRD CLY-4000879           a CALYPSO repurchase agreement, EUR 880,079,000, book BOOK-SFT-3, booked by LE-FRA, counterparty CP-ALDERSHOT
+ └─ NSET NS-ALDERSHOT-FRA  its netting set: Aldershot's trades booked in Frankfurt (43 trades)
      ├─ CSA CSA-ALDERSHOT  the collateral terms: thresholds 10m each way, MTA 500,000, MPOR 10 business days
      │   └─ AGR AGR-ALDERSHOT-ISDA   the ISDA 2002 Master, English law, close-out netting enforceable
      ├─ COLL COLL-ALDERSHOT-FRA     the collateral held and posted for this set
@@ -137,7 +137,10 @@ TRD CLY-4000879           a CALYPSO repurchase agreement, EUR, book BOOK-SFT-3, 
 Five packs (trading, counterparty-risk, core, world-economy, and market-data for the credit curve) answer that one path, each from its
 own source, joined only by ids that the contracts declare as links.
 
-«WALK_CHECK»
+Read on the demo lake on business date **2026-10-26**. The walk also shows why the links matter: the trade page says
+`CLY-4000879` is **CANCELLED** (version 4), while its netting set still lists it as live and the exposure run still carries it (48% of
+the set's expected exposure, [Counterparty credit risk](counterparty-credit-risk.md#4-a-worked-example-on-the-demo-data)). Each record is
+right for its own source; only following the link shows that the sources disagree.
 
 ## 5. Questions to ask your data
 

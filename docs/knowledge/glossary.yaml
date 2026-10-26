@@ -271,7 +271,7 @@ terms:
     synonyms: [xrun, run, paths, monte carlo, grid]
     domain: counterparty-credit-risk
     meaning: "The upstream exposure simulation of a business date: how many market paths (200 in the demo), the grid of future dates and the look-back."
-    command: XRUN XR-2026-09-30-01
+    command: XRUN XR-2026-10-26-01
   - term: Exposure path
     synonyms: [xpath, path, mtm path]
     domain: counterparty-credit-risk
@@ -625,7 +625,7 @@ terms:
     synonyms: [eqb, equity beta]
     domain: market-data
     meaning: "How much an equity moves for a 1% move in its index, from the regression of daily returns. Computed from the closes when asked."
-    command: EQB EQ-NVTK
+    command: EQ EQ-NVTK
   - term: Holiday calendar
     synonyms: [cal, calendar, business day calendar]
     domain: market-data
@@ -662,7 +662,7 @@ terms:
     synonyms: [upstream input, engine input]
     domain: data-and-contracts
     meaning: "Large data an upstream engine delivers for Drishti to compute with: P&L vectors, exposure paths, scenario sets, hierarchies."
-    command: XRUN XR-2026-09-30-01
+    command: XRUN XR-2026-10-26-01
   - term: Data contract
     synonyms: [contract, contracts]
     domain: data-and-contracts
