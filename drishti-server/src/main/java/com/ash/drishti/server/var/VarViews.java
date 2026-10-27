@@ -75,11 +75,17 @@ final class VarViews {
     // ------------------------------------------------------------------------------------------------------------------- headline
 
     Map<String, Object> headline(Principal p, String scope, LocalDate date) {
-        VarService.Scoped s = svc.scoped(p, scope, date);
+        return headline(p, scope, date, VarDate.USD);
+    }
+
+    /** The headline in a reporting currency ({@code ccy}; every amount of the answer is in it, and {@code currency} says which). */
+    Map<String, Object> headline(Principal p, String scope, LocalDate date, String ccy) {
+        VarService.Scoped s = svc.scoped(p, scope, date, ccy);
         VarBook b = s.date().book();
         List<Part> parts = parts(s, "child", p);
         Map<String, Object> out = new LinkedHashMap<>();
         out.put("scope", scope);
+        out.put("currency", s.date().currency());
         out.put("canonical", s.res().canonical());
         out.put("kind", s.kind());
         out.put("label", s.label());
@@ -189,6 +195,8 @@ final class VarViews {
         positions = count[0];
         Map<String, Object> m = new LinkedHashMap<>();
         m.put("scope", s.res().canonical());
+        m.put("currency", s.date().currency());
+        m.put("fx", fxNote(s.date()));
         m.put("resolved", s.res().notes());
         m.put("trades", s.set().size());
         m.put("positions", positions);
@@ -196,11 +204,14 @@ final class VarViews {
         m.put("hidden", s.hidden());
         m.put("unknown", s.res().unknown());
         m.put("notices", selection.notices(s));
-        m.put("vectors", svc.props().kinds().vector() + " · batch " + String.join(", ", s.date().intake().batchIds()) + " of " + s.date().date()
+        int fromPv = s.date().intake().scenarioPv();
+        m.put("vectors", svc.props().kinds().vector() + (fromPv == 0 ? "" : " and " + svc.props().kinds().scenarioPv() + " (" + fromPv
+                + " trades from scenario PVs)") + " · batch " + String.join(", ", s.date().intake().batchIds()) + " of " + s.date().date()
                 + " · data version " + s.date().version());
         m.put("inputs", s.date().inputs());
         m.put("rejected", s.date().intake().rejected());
         m.put("rejections", s.date().intake().rejections());
+        m.put("scenarioPvTrades", s.date().intake().scenarioPv());
         m.put("excluded", s.date().intake().excluded());
         m.put("positionRules", s.date().intake().rules());
         List<String> warnings = new ArrayList<>(s.date().warnings());
@@ -220,6 +231,19 @@ final class VarViews {
         m.put("computeMs", s.computeMs());
         m.put("cache", s.cached() ? "hit" : "miss");
         m.put("loadedMs", s.date().loadMs());
+        return m;
+    }
+
+    /**
+     * How the date's vectors met FX (VAR_GUIDE.md sections 15.9 and 15.10): the reporting currency, and per currency converted the
+     * source of its scenario rates (supplied by the batch, or derived from the FX history) and today's rate in USD per unit; every
+     * cross goes through USD.
+     */
+    static Map<String, Object> fxNote(VarDate d) {
+        Map<String, Object> m = new LinkedHashMap<>();
+        m.put("reporting", d.currency());
+        m.put("crosses", "through USD");
+        m.put("rates", d.fx());
         return m;
     }
 
@@ -448,7 +472,11 @@ final class VarViews {
     // ------------------------------------------------------------------------------------------------------------------- contributions
 
     Map<String, Object> contributions(Principal p, String scope, LocalDate date, String by, String scenario) {
-        VarService.Scoped s = svc.scoped(p, scope, date);
+        return contributions(p, scope, date, by, scenario, VarDate.USD);
+    }
+
+    Map<String, Object> contributions(Principal p, String scope, LocalDate date, String by, String scenario, String ccy) {
+        VarService.Scoped s = svc.scoped(p, scope, date, ccy);
         VarBook b = s.date().book();
         Parts ps = partsOf(s, by, p);
         List<Part> parts = ps.list();
@@ -494,6 +522,7 @@ final class VarViews {
         }
         Map<String, Object> out = new LinkedHashMap<>();
         out.put("canonical", s.res().canonical());
+        out.put("currency", s.date().currency());
         out.put("by", parts.isEmpty() ? null : parts.get(0).kind());
         out.put("var", round(s.measures().var()));
         out.put("es", round(s.measures().es()));
@@ -524,12 +553,17 @@ final class VarViews {
     // ------------------------------------------------------------------------------------------------------------------- path
 
     Map<String, Object> path(Principal p, String scope, LocalDate date, int page, int size) {
-        VarService.Scoped s = svc.scoped(p, scope, date);
+        return path(p, scope, date, page, size, VarDate.USD);
+    }
+
+    Map<String, Object> path(Principal p, String scope, LocalDate date, int page, int size, String ccy) {
+        VarService.Scoped s = svc.scoped(p, scope, date, ccy);
         VarBook b = s.date().book();
         double[] v = s.vector();
         int[] order = s.measures().order();
         Map<String, Object> out = new LinkedHashMap<>();
         out.put("canonical", s.res().canonical());
+        out.put("currency", s.date().currency());
         out.put("var", round(s.measures().var()));
         out.put("es", round(s.measures().es()));
         out.put("k", s.measures().k());
@@ -595,6 +629,10 @@ final class VarViews {
         return history(svc.scoped(p, scope, date));
     }
 
+    Map<String, Object> history(Principal p, String scope, LocalDate date, String ccy) {
+        return history(svc.scoped(p, scope, date, ccy));
+    }
+
     /**
      * A node's official history (its official end-of-day captures: VaR, ES and the day's hypothetical P&amp;L over the window) and its
      * backtest; any other scope replays today's members over the window's scenario days against today's VaR (in-sample: it says so; not
@@ -607,7 +645,8 @@ final class VarViews {
         Map<String, Object> out = new LinkedHashMap<>();
         List<Map<String, Object>> rows = new ArrayList<>();
         VarOfficialStore.NodeHistory h = s.res().node() != null && s.view().full()
-                ? svc.official().history(s.res().node(), s.date().date(), svc.props().historyDays()) : null;
+                ? svc.official().history(s.res().node(), s.date().date(), svc.props().historyDays(), s.date().currency()) : null;
+        out.put("currency", s.date().currency());
         Backtest bt;
         if (h != null && h.dates().length > 1) {
             bt = Backtest.of(h.hypo(), h.var(), conf);
@@ -659,7 +698,11 @@ final class VarViews {
 
     /** Every node of a hierarchy the viewer sees, with its VaR, ES, limit and counts (the explorer's left pane). */
     Map<String, Object> tree(Principal p, String hierarchy, LocalDate date) {
-        VarDate d = svc.date(date);
+        return tree(p, hierarchy, date, VarDate.USD);
+    }
+
+    Map<String, Object> tree(Principal p, String hierarchy, LocalDate date, String ccy) {
+        VarDate d = svc.date(date, ccy);
         VarBook b = d.book();
         String h = hierarchy == null || hierarchy.isBlank() ? "MGMT" : hierarchy.toUpperCase(java.util.Locale.ROOT);
         VarBook.Node root = b.root(h);
@@ -667,9 +710,10 @@ final class VarViews {
             throw new DrishtiException(ErrorCode.ENTITY_NOT_FOUND, "no hierarchy " + h + " on " + d.date());
         }
         List<Map<String, Object>> rows = new ArrayList<>();
-        walk(p, b, root, 0, rows, date);
+        walk(p, b, root, 0, rows, date, d.currency());
         Map<String, Object> out = new LinkedHashMap<>();
         out.put("hierarchy", h);
+        out.put("currency", d.currency());
         out.put("hierarchies", b.nodes().values().stream().filter(n -> n.parent() == null).map(VarBook.Node::hierarchy).sorted().toList());
         out.put("businessDate", d.date().toString());
         out.put("nodes", rows);
@@ -687,10 +731,10 @@ final class VarViews {
         return out;
     }
 
-    private void walk(Principal p, VarBook b, VarBook.Node n, int depth, List<Map<String, Object>> rows, LocalDate date) {
+    private void walk(Principal p, VarBook b, VarBook.Node n, int depth, List<Map<String, Object>> rows, LocalDate date, String ccy) {
         VarService.Scoped s;
         try {
-            s = svc.scoped(p, "NODE:" + n.id(), date);
+            s = svc.scoped(p, "NODE:" + n.id(), date, ccy);
         } catch (DrishtiException e) {
             return;
         }
@@ -715,7 +759,7 @@ final class VarViews {
         for (String c : n.children()) {
             VarBook.Node cn = b.node(c);
             if (cn != null) {
-                walk(p, b, cn, depth + 1, rows, date);
+                walk(p, b, cn, depth + 1, rows, date, ccy);
             }
         }
     }

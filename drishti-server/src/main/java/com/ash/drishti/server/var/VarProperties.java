@@ -56,23 +56,35 @@ public record VarProperties(Boolean enabled, Double confidence, Double esConfide
         Integer historyDays, Integer histogramBins, Integer maxParts, Kinds kinds, Map<String, Map<String, String>> access, Integer pathPage,
         Positions positions, Official official, Tier tier) {
 
-    /** The kinds the engine reads, as the market-risk pack names them; {@code position} is the kind its derived positions are served as. */
-    public record Kinds(String vector, String position, String hierarchy, String scenarioSet, String portfolio) {
+    /**
+     * The kinds the engine reads, as the market-risk pack names them; {@code position} is the kind its derived positions are served as.
+     * A bank sends its trades' scenario P&amp;L as P&amp;L vectors ({@code vector}, USD) or as scenario PVs in each trade's currency
+     * ({@code scenarioPv}, 2.9.4), or both for different trades; the FX of the scenarios is {@code fxScenario} when the batch supplies
+     * it, else derived from the FX history of {@code fxSpot} (the market-data pack's).
+     */
+    public record Kinds(String vector, String position, String hierarchy, String scenarioSet, String portfolio, String scenarioPv,
+            String fxScenario, String fxSpot) {
         public Kinds {
             vector = vector == null ? "pnl-vector" : vector;
             position = position == null ? "position" : position;
             hierarchy = hierarchy == null ? "risk-hierarchy" : hierarchy;
             scenarioSet = scenarioSet == null ? "scenario-set" : scenarioSet;
             portfolio = portfolio == null ? "portfolio" : portfolio;
+            scenarioPv = scenarioPv == null ? "scenario-pv" : scenarioPv;
+            fxScenario = fxScenario == null ? "fx-scenario" : fxScenario;
+            fxSpot = fxSpot == null ? "fx-spot" : fxSpot;
         }
 
         public List<String> all() {
-            return List.of(vector, position, hierarchy, scenarioSet, portfolio);
+            return List.of(vector, position, hierarchy, scenarioSet, portfolio, scenarioPv, fxScenario, fxSpot);
         }
 
-        /** The kinds whose load changes a date's answers (the data-load signal reloads the date): the inputs. */
+        /**
+         * The kinds whose load changes a date's answers (the data-load signal reloads the date): the inputs. The FX history
+         * ({@code fxSpot}) is not one: a market-data load does not reload VaR; a date reads the history it finds when it loads.
+         */
         public List<String> inputs() {
-            return List.of(vector, hierarchy, scenarioSet, portfolio);
+            return List.of(vector, hierarchy, scenarioSet, portfolio, scenarioPv, fxScenario);
         }
     }
 
@@ -110,14 +122,24 @@ public record VarProperties(Boolean enabled, Double confidence, Double esConfide
      * @param root the Delta root the results are published under (the risk lake's root)
      * @param retentionYears the years the published table keeps its log and removed files (time travel), 7 by default
      * @param onStart at start, capture the newest date when it has no official record yet (a lake built while the server was down)
+     * @param currencies the reporting currencies captured officially (USD always, first and published; others kept in the content
+     *     store beside it, VAR_GUIDE.md section 19)
      */
-    public record Official(Boolean enabled, Boolean publish, String root, Integer retentionYears, Boolean onStart) {
+    public record Official(Boolean enabled, Boolean publish, String root, Integer retentionYears, Boolean onStart, List<String> currencies) {
         public Official {
             enabled = enabled == null || enabled;
             publish = publish == null || publish;
             root = root == null || root.isBlank() ? null : root;
             retentionYears = retentionYears == null || retentionYears < 1 ? 7 : retentionYears;
             onStart = onStart == null || onStart;
+            List<String> c = new ArrayList<>(List.of("USD"));
+            for (String x : currencies == null ? List.<String>of() : currencies) {
+                String u = x == null ? "" : x.trim().toUpperCase(Locale.ROOT);
+                if (u.matches("[A-Z]{3}") && !c.contains(u)) {
+                    c.add(u);
+                }
+            }
+            currencies = List.copyOf(c);
         }
     }
 
@@ -163,11 +185,11 @@ public record VarProperties(Boolean enabled, Double confidence, Double esConfide
         historyDays = historyDays == null || historyDays <= 1 ? 250 : historyDays;
         histogramBins = histogramBins == null || histogramBins < 5 ? 42 : histogramBins;
         maxParts = maxParts == null || maxParts <= 0 ? 5000 : maxParts;
-        kinds = kinds == null ? new Kinds(null, null, null, null, null) : kinds;
+        kinds = kinds == null ? new Kinds(null, null, null, null, null, null, null, null) : kinds;
         access = access == null ? Map.of() : access;
         pathPage = pathPage == null || pathPage <= 0 ? 60 : pathPage;
         positions = positions == null ? new Positions(null, null) : positions;
-        official = official == null ? new Official(null, null, null, null, null) : official;
+        official = official == null ? new Official(null, null, null, null, null, null) : official;
         tier = tier == null ? new Tier(null, null, null, null, null) : tier;
     }
 

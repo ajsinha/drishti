@@ -36,6 +36,9 @@ import java.util.concurrent.locks.ReentrantLock;
  * (recorded once per date). The node history of the explorer reads these records; the same figures are published to
  * {@code risk-results/var-official} for other systems ({@link VarPublisher}).
  *
+ * <p>In every reporting currency of {@code drishti.var.official.currencies} (2.9.4): USD always, first, and the only one published; each
+ * other currency is captured the same way from the date's book in that currency, kept in the content store under its own records.
+ *
  * <p>Idempotent: a date already captured from the same inputs is not captured again; a restated date (an input's version or batch
  * changed) is captured anew with the next result version, the earlier captures kept. One capture runs at a time (a lock, never
  * {@code synchronized}: it reads the lake and writes the content store and the published table).
@@ -79,7 +82,7 @@ final class VarOfficial implements AutoCloseable {
                 try {
                     LocalDate d = date.get();
                     if (d != null) {
-                        if (svc.official().index(d).isEmpty()) {
+                        if (svc.props().official().currencies().stream().anyMatch(c -> svc.official().index(d, c).isEmpty())) {
                             LOG.info("official VaR capture of {}: {}", d, capture(d));
                         }
                         return;
@@ -136,11 +139,31 @@ final class VarOfficial implements AutoCloseable {
     }
 
     private Map<String, Object> captureNow(LocalDate date) {
+        Map<String, Object> out = captureIn(date, VarDate.USD);
+        List<String> others = svc.props().official().currencies().stream().filter(c -> !c.equals(VarDate.USD)).toList();
+        if (!others.isEmpty() && !"skipped".equals(out.get("status"))) {
+            Map<String, Object> more = new LinkedHashMap<>();
+            for (String c : others) {
+                try {
+                    more.put(c, captureIn(date, c));
+                } catch (RuntimeException e) {
+                    more.put(c, Map.of("status", "skipped", "reason", String.valueOf(e.getMessage())));
+                    LOG.warn("the official VaR capture of {} in {} failed: {}", date, c, e.getMessage());
+                }
+            }
+            out.put("currencies", more);
+        }
+        return out;
+    }
+
+    /** One currency's official capture of the date (USD: the record of section 19, published; another: kept beside it). */
+    private Map<String, Object> captureIn(LocalDate date, String ccy) {
         Map<String, Object> out = new LinkedHashMap<>();
         out.put("businessDate", date.toString());
+        out.put("currency", ccy);
         VarDate d;
         try {
-            d = svc.date(date);
+            d = svc.date(date, ccy);
         } catch (DrishtiException e) {
             out.put("status", "skipped");
             out.put("reason", e.getMessage());
@@ -159,7 +182,7 @@ final class VarOfficial implements AutoCloseable {
         }
         VarOfficialStore store = svc.official();
         Map<String, Object> inputs = d.inputs();
-        Map<String, Object> prev = store.index(date).orElse(null);
+        Map<String, Object> prev = store.index(date, ccy).orElse(null);
         if (prev != null && inputs.equals(prev.get("inputs"))) {
             out.put("status", "unchanged");
             out.put("resultVersion", prev.get("resultVersion"));
@@ -167,8 +190,8 @@ final class VarOfficial implements AutoCloseable {
         }
         long version = prev == null ? 1 : ((Number) prev.get("resultVersion")).longValue() + 1;
         String computedAt = Instant.now().toString();
-        String membership = VarOfficialStore.membershipKey(date, version);
-        store.putMembership(date, version, membership(d, version));
+        String membership = VarOfficialStore.membershipKey(date, version, ccy);
+        store.putMembership(date, version, membership(d, version), ccy);
         Map<String, Object> nodes = new LinkedHashMap<>();
         List<Map<String, Object>> rows = new ArrayList<>();
         for (VarBook.Node n : ordered(b)) {
@@ -178,6 +201,8 @@ final class VarOfficial implements AutoCloseable {
         }
         Map<String, Object> index = new LinkedHashMap<>();
         index.put("businessDate", date.toString());
+        index.put("currency", ccy);
+        index.put("fx", VarViews.fxNote(d));
         index.put("resultVersion", version);
         index.put("computedAt", computedAt);
         index.put("contractVersion", VarPublisher.CONTRACT_VERSION);
@@ -185,7 +210,9 @@ final class VarOfficial implements AutoCloseable {
         index.put("positionRules", d.intake().rules());
         index.put("membership", membership);
         index.put("nodes", nodes);
-        if (svc.props().official().publish() && publisher.table() != null) {
+        if (!VarDate.USD.equals(ccy)) {
+            index.put("published", "not published: the published table holds the USD record (the content store keeps " + ccy + ")");
+        } else if (svc.props().official().publish() && publisher.table() != null) {
             try {
                 long v = publisher.publish(date, rows);
                 index.put("published", "risk-results/var-official (Delta version " + v + ")");   // never the server's own folder
@@ -194,13 +221,13 @@ final class VarOfficial implements AutoCloseable {
                 LOG.warn("the official VaR results of {} could not be published to {}: {}", date, publisher.table(), e.getMessage());
             }
         }
-        store.putIndex(date, index);
-        svc.audit(VarOfficialStore.OWNER, "var-official", date.toString(), "resultVersion=" + version + " nodes=" + nodes.size()
+        store.putIndex(date, index, ccy);
+        svc.audit(VarOfficialStore.OWNER, "var-official", date.toString(), "currency=" + ccy + " resultVersion=" + version + " nodes=" + nodes.size()
                 + " trades=" + b.tradeCount() + " inputs=" + inputs);
         out.put("status", version == 1 ? "captured" : "restated");
         out.put("resultVersion", version);
         out.put("nodes", nodes.size());
-        out.put("published", index.containsKey("published"));
+        out.put("published", VarDate.USD.equals(ccy) && index.containsKey("published"));
         if (index.containsKey("publishError")) {
             out.put("publishError", index.get("publishError"));
         }
@@ -228,14 +255,15 @@ final class VarOfficial implements AutoCloseable {
     /** One node's official capture written, and its figures for the date's record. */
     private Map<String, Object> node(VarDate d, VarBook.Node n, long version, String membership, String computedAt, Map<String, Object> inputs) {
         LocalDate date = d.date();
+        String ccy = d.currency();
         String scope = "NODE:" + n.id();
-        VarService.Scoped s = svc.scoped(null, scope, date);
-        Map<String, Object> head = views.headline(null, scope, date);
-        Map<String, Object> contrib = views.contributions(null, scope, date, "child", null);
-        Map<String, Object> path = views.path(null, scope, date, 0, 25);
+        VarService.Scoped s = svc.scoped(null, scope, date, ccy);
+        Map<String, Object> head = views.headline(null, scope, date, ccy);
+        Map<String, Object> contrib = views.contributions(null, scope, date, "child", null, ccy);
+        Map<String, Object> path = views.path(null, scope, date, 0, 25, ccy);
         double hypo = s.vector().length == 0 ? 0 : s.vector()[s.vector().length - 1];
         // the backtest over the official history up to the day before, and today
-        VarOfficialStore.NodeHistory h = svc.official().history(n.id(), date.minusDays(1), svc.props().historyDays() - 1);
+        VarOfficialStore.NodeHistory h = svc.official().history(n.id(), date.minusDays(1), svc.props().historyDays() - 1, ccy);
         int k = h.dates().length;
         double[] var = java.util.Arrays.copyOf(h.var(), k + 1);
         double[] pnl = java.util.Arrays.copyOf(h.hypo(), k + 1);
@@ -255,6 +283,7 @@ final class VarOfficial implements AutoCloseable {
         c.put("label", n.name());
         c.put("kind", "node");
         c.put("businessDate", date.toString());
+        c.put("currency", ccy);
         c.put("capturedAt", computedAt);
         c.put("owner", VarOfficialStore.OWNER);
         c.put("sharedWith", List.of());
@@ -284,6 +313,7 @@ final class VarOfficial implements AutoCloseable {
         }
         Map<String, Object> f = new LinkedHashMap<>();
         f.put("captureId", id);
+        f.put("currency", ccy);
         f.put("hierarchy", n.hierarchy());
         f.put("level", n.level());
         f.put("name", n.name());

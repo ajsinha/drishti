@@ -634,6 +634,9 @@ drishti:
       hierarchy: risk-hierarchy
       scenario-set: scenario-set
       portfolio: portfolio
+      scenario-pv: scenario-pv       # 2.9.4: trades sent as scenario PVs in their own currency, converted to USD P&L at load (beside or instead of vectors)
+      fx-scenario: fx-scenario       # 2.9.4: each currency's rate under each scenario, when the batch supplies it (USD per unit)
+      fx-spot: fx-spot               # 2.9.4: the FX history scenario rates are derived from when not supplied (the market-data pack's)
     access: {}                       # per role, per node: positions | aggregate (drishti.var.access.<role>[MGMT~DESK-RATES]=aggregate)
     positions:                       # how positions are derived from the trades when no loaded pack has a positions: section (the market-risk pack's wins)
       live-statuses: [NEW, VALIDATED, AMENDED]   # trade statuses that count on their date (a row with no status counts)
@@ -644,6 +647,7 @@ drishti:
       root: ${DRISHTI_DELTA_ROOT:${drishti.data.dir:./data}/delta}   # the risk lake's root; an s3:// root is not published by this writer
       retention-years: 7             # the published table keeps its log and removed files (time travel) this long
       on-start: true                 # at start, capture the newest date when it has no official record yet
+      currencies: [USD]              # reporting currencies captured officially (USD always, and the only one published); e.g. [USD, EUR]
   ccr:
     exposure:                        # the exposure engine (docs/guides/EXPOSURE_GUIDE.md): EE, ENE, EEE, PFE, EPE, EEPE of any counterparty scope from the exposure paths
       enabled: ${DRISHTI_EXPOSURE_ENABLED:true}

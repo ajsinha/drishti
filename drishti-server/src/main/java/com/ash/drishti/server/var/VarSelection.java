@@ -252,6 +252,11 @@ final class VarSelection {
 
     /** Up to {@code limit} things a typed text names, each with its trade count and standalone VaR as the viewer. */
     List<Map<String, Object>> hints(Principal p, String q, int limit, java.time.LocalDate asked) {
+        return hints(p, q, limit, asked, VarDate.USD);
+    }
+
+    /** The same with each standalone VaR in a reporting currency ({@code currency} on every hint). */
+    List<Map<String, Object>> hints(Principal p, String q, int limit, java.time.LocalDate asked, String ccy) {
         String text = q == null ? "" : q.trim();
         if (text.isEmpty()) {
             return List.of();
@@ -305,8 +310,9 @@ final class VarSelection {
             m.put("id", e.id());
             m.put("name", e.name());
             m.put("scope", e.scope());
+            m.put("currency", VarCurrencies.normalise(ccy));
             try {
-                VarService.Scoped s = svc.scoped(p, e.scope(), asked);
+                VarService.Scoped s = svc.scoped(p, e.scope(), asked, ccy);
                 if (s.set().isEmpty() && !"as typed".equals(e.name())) {
                     continue;                                          // nothing of it the viewer sees
                 }

@@ -66,6 +66,9 @@ public final class VarService implements AutoCloseable {
     private final ParallelSums sums;
     private final VarCalc calc;
     private final Map<LocalDate, CompletableFuture<VarDate>> dates = new ConcurrentHashMap<>();
+    /** The dates in other reporting currencies, built from the USD date when first asked: {@code <date>|<CCY>|<version>}. */
+    private final Map<String, CompletableFuture<VarDate>> inCurrency = new ConcurrentHashMap<>();
+    private final VarCurrencies currencies;
     /** Dates that could not be loaded, with the vector version they were refused at and why. */
     private final Map<LocalDate, String[]> refused = new ConcurrentHashMap<>();
     private final com.github.benmanes.caffeine.cache.Cache<String, Scoped> cache =
@@ -80,6 +83,7 @@ public final class VarService implements AutoCloseable {
         this.audit = audit;
         this.sums = sums;
         this.calc = props.calc();
+        this.currencies = new VarCurrencies(loader, props, sums);
     }
 
     VarProperties props() {
@@ -123,6 +127,34 @@ public final class VarService implements AutoCloseable {
                     + "): build the demo lake (drishti.py lake demo) or point the market-risk pack's risk-store at your lake");
         }
         return load(asked == null || asked.isAfter(latest) ? latest : asked, 0);
+    }
+
+    /**
+     * The date a request reads in a reporting currency (VAR_GUIDE.md section 15.10): USD is the date as loaded; another currency is built
+     * from it the first time it is asked and kept with it (dropped when the date is). The answered date's warnings come with it.
+     */
+    VarDate date(LocalDate asked, String ccy) {
+        String c = VarCurrencies.normalise(ccy);
+        VarDate usd = date(asked);
+        if (c.equals(VarDate.USD)) {
+            return usd;
+        }
+        String key = usd.date() + "|" + c + "|" + usd.version();
+        CompletableFuture<VarDate> f = inCurrency.computeIfAbsent(key, k -> CompletableFuture.supplyAsync(() -> currencies.convert(usd, c)));
+        VarDate vd;
+        try {
+            vd = f.join();
+        } catch (java.util.concurrent.CompletionException e) {
+            inCurrency.remove(key, f);                                  // asked again, tried again
+            if (e.getCause() instanceof DrishtiException de) {
+                throw de;
+            }
+            throw new DrishtiException(ErrorCode.SOURCE_FAILED, "the VaR data of " + usd.date() + " in " + c + " could not be built: " + e.getCause());
+        }
+        for (String w : usd.warnings()) {
+            vd = vd.warned(w);
+        }
+        return vd;
     }
 
     /**
@@ -194,6 +226,7 @@ public final class VarService implements AutoCloseable {
         for (LocalDate d : ds.subList(Math.min(ds.size(), props.hotDates()), ds.size())) {
             if (!d.equals(keep)) {
                 retire(dates.remove(d), false);
+                retireCurrencies(d);
                 cache.asMap().keySet().removeIf(k -> k.startsWith(d + "|"));
             }
         }
@@ -209,9 +242,19 @@ public final class VarService implements AutoCloseable {
         }
     }
 
+    /** The date's books in other currencies leave memory with it (or with a new version of its inputs). */
+    private void retireCurrencies(LocalDate d) {
+        for (String k : new ArrayList<>(inCurrency.keySet())) {
+            if (d == null || k.startsWith(d + "|")) {
+                retire(inCurrency.remove(k), false);
+            }
+        }
+    }
+
     /** Drops every loaded date (an administrator's reload). */
     void reload() {
         new ArrayList<>(dates.keySet()).forEach(d -> retire(dates.remove(d), false));
+        retireCurrencies(null);
         refused.clear();
         cache.invalidateAll();
     }
@@ -222,6 +265,7 @@ public final class VarService implements AutoCloseable {
      */
     void reload(LocalDate d) {
         retire(dates.remove(d), false);
+        retireCurrencies(d);
         refused.remove(d);
         cache.asMap().keySet().removeIf(k -> k.startsWith(d + "|"));
     }
@@ -248,6 +292,22 @@ public final class VarService implements AutoCloseable {
                 m.put("rejected", vd.intake().rejected());
                 m.put("excluded", vd.intake().excluded());
                 m.put("batchIds", vd.intake().batchIds());
+                out.add(m);
+            }
+        });
+        inCurrency.forEach((k, f) -> {
+            if (f.isDone() && !f.isCompletedExceptionally()) {
+                VarDate vd = f.join();
+                Map<String, Object> m = new LinkedHashMap<>();
+                m.put("businessDate", vd.date().toString());
+                m.put("currency", vd.currency());
+                m.put("trades", vd.book().tradeCount());
+                m.put("tier", vd.book().tier());
+                if (vd.book().hot() != null) {
+                    m.put("hotFile", loader.tier().root().relativize(vd.book().hot().file()).toString().replace('\\', '/'));
+                }
+                m.put("loadMs", vd.loadMs());
+                m.put("fx", vd.fx());
                 out.add(m);
             }
         });
@@ -311,10 +371,15 @@ public final class VarService implements AutoCloseable {
         }).orElse(List.of());
     }
 
-    /** Resolves and computes a scope as the viewer (cached); a null viewer is the server (every node at positions level). */
+    /** Resolves and computes a scope as the viewer (cached); a null viewer is the server (every node at positions level). In USD. */
     Scoped scoped(Principal p, String scope, LocalDate asked) {
+        return scoped(p, scope, asked, VarDate.USD);
+    }
+
+    /** The same in a reporting currency ({@code ccy}: null or blank is USD). */
+    Scoped scoped(Principal p, String scope, LocalDate asked, String ccy) {
         long t0 = System.nanoTime();
-        VarDate d = date(asked);
+        VarDate d = date(asked, ccy);
         VarAccess.View view = access.view(p, d);
         ScopeResolver.Resolution res;
         ScopeExpr parsed;
@@ -332,7 +397,7 @@ public final class VarService implements AutoCloseable {
             throw new DrishtiException(ErrorCode.FORBIDDEN, "a scope of positions, trades, a counterparty, a rule or a basket portfolio may only "
                     + "name what you see position by position; your role sees some of these only in aggregate");
         }
-        String key = d.date() + "|" + d.version() + "|" + view.signature() + "|" + res.canonical() + "|" + res.set().digest();
+        String key = d.date() + "|" + d.currency() + "|" + d.version() + "|" + view.signature() + "|" + res.canonical() + "|" + res.set().digest();
         Scoped hit = cache.getIfPresent(key);
         if (hit != null) {
             return new Scoped(d, hit.view(), hit.res(), hit.set(), hit.hidden(), hit.vector(), hit.measures(), hit.kind(), hit.label(),

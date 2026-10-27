@@ -40,7 +40,8 @@ import java.util.concurrent.atomic.AtomicReference;
  * the additive aggregation here; the Python engine ({@code var-whatif}) reads this kind for what it adds on top.
  *
  * <p>The id is the scope text ({@code DESK:RATES}, {@code BANK - DESK:CREDIT}); a {@code ~} inside a node id is written {@code %7E}
- * ({@code NODE:MGMT%7EDESK-RATES}), as every computed id writes it. The record: the headline in UPPER_SNAKE ({@code SCOPE},
+ * ({@code NODE:MGMT%7EDESK-RATES}), as every computed id writes it. The parameter {@code ccy} (2.9.4; default USD) asks it in a reporting
+ * currency ({@code VRES DESK:RATES~ccy=EUR}); {@code CURRENCY} says which. The record: the headline in UPPER_SNAKE ({@code SCOPE},
  * {@code CANONICAL}, {@code SCOPE_KIND}, {@code LABEL}, {@code NODE}, {@code BUSINESS_DATE}, {@code VAR}, {@code ES}, {@code CONFIDENCE},
  * {@code ES_CONFIDENCE}, {@code K}, {@code ES_COUNT}, {@code SCENARIOS}, {@code LIMIT}, {@code LIMIT_USE}, {@code SUM_STANDALONE},
  * {@code DIVERSIFICATION}, {@code BACKTEST}), the default parts ({@code CHILDREN}), the 25 worst scenarios ({@code WORST}), the scope's
@@ -75,21 +76,23 @@ public final class VarResultEngine implements ComputeEngine {
         }
         Principal p = new Principal(req.viewer().user(), req.viewer().roles());
         LocalDate date = req.asOf() == null ? null : req.asOf().businessDate();
+        Object asked = req.params().get("ccy");
+        String ccy = asked == null || String.valueOf(asked).isBlank() ? null : String.valueOf(asked);
         Map<String, Object> head;
         Map<String, Object> parts;
         Map<String, Object> path;
         VarService.Scoped s;
         try {
-            head = views.headline(p, scope, date);
-            parts = views.contributions(p, scope, date, "child", null);
-            path = views.path(p, scope, date, 0, 1);
-            s = views.service().scoped(p, scope, date);
+            head = views.headline(p, scope, date, ccy);
+            parts = views.contributions(p, scope, date, "child", null, ccy);
+            path = views.path(p, scope, date, 0, 1, ccy);
+            s = views.service().scoped(p, scope, date, ccy);
         } catch (DrishtiException e) {
             throw new EngineException(e.getMessage());
         }
         progress.fraction(1, 1);
         Map<String, Object> row = new LinkedHashMap<>();
-        for (String f : List.of("scope", "canonical", "kind", "label", "node", "businessDate", "var", "es", "confidence", "esConfidence", "k",
+        for (String f : List.of("scope", "canonical", "kind", "label", "node", "businessDate", "currency", "var", "es", "confidence", "esConfidence", "k",
                 "esCount", "scenarios", "limit", "limitUse", "sumStandalone", "diversification", "backtest")) {
             row.put(f.equals("kind") ? "SCOPE_KIND" : snake(f), upper(head.get(f)));
         }

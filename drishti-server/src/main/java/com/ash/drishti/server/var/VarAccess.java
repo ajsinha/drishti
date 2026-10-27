@@ -66,13 +66,13 @@ final class VarAccess {
      */
     View view(Principal p, VarDate date) {
         if (p == null) {
-            return views.computeIfAbsent(date.date() + "@" + date.version() + "|server", s -> build(Map.of(), date.book(), s));
+            return views.computeIfAbsent(date.date() + "@" + date.version() + "@" + date.currency() + "|server", s -> build(Map.of(), date.book(), s));
         }
         if (!entitlements.mayOpen(p, props.kinds().vector())) {
             throw new DrishtiException(ErrorCode.FORBIDDEN, "your role may not see VaR (the kind " + props.kinds().vector() + ")");
         }
         Map<String, String> levels = levels(p);
-        String sig = date.date() + "@" + date.version() + "|" + new java.util.TreeMap<>(levels);
+        String sig = date.date() + "@" + date.version() + "@" + date.currency() + "|" + new java.util.TreeMap<>(levels);
         return views.computeIfAbsent(sig, s -> build(levels, date.book(), s));
     }
 

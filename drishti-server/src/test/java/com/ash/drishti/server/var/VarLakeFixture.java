@@ -175,7 +175,7 @@ final class VarLakeFixture {
     }
 
     /** One table: staged rows {@code [id, doc, {promoted}]} by business date, written with {@code lake write}. */
-    private static void table(Path root, Path work, String kind, String key, List<Map<String, Object>> docs, List<String> promoted, String vector)
+    static void table(Path root, Path work, String kind, String key, List<Map<String, Object>> docs, List<String> promoted, String vector)
             throws Exception {
         Map<String, List<String>> byDay = new LinkedHashMap<>();
         for (Map<String, Object> d : docs) {

@@ -27,9 +27,9 @@ doc:
   summary: "A trade's risk, one click away: its P&L vector, its VaR and its exposure, or why it has none."
   description: >-
     Three links of a trade page: its P&L vector over the scenario days (the market-risk pack's pnl-vector, PNLV
-    PV-<trade>-HS-509), its VaR (the computed kind var-result, VRES TRD:<trade>; VAR TRD <trade> opens it in the VaR explorer)
+    PV-<trade>-HS-509; a trade the batch sent as scenario PVs links them instead, the scenario-pv kind, SPV SPV-<trade>-HS-509), its VaR (the computed kind var-result, VRES TRD:<trade>; VAR TRD <trade> opens it in the VaR explorer)
     and its exposure (the computed kind exposure-result, EXP TRD:<trade>). The engines set the links on the view of the trade
-    when the day's vectors and the exposure run hold it (PNL_VECTOR_ID, VAR_RESULT_ID, EXPOSURE_RESULT_ID: real links, also listed
+    when the day's vectors and the exposure run hold it (PNL_VECTOR_ID or SCENARIO_PV_ID, VAR_RESULT_ID, EXPOSURE_RESULT_ID: real links, also listed
     with the linked entities); when they do not, the row says why (not live on the date: its status or its maturity, no P&L
     vector; no exposure paths).
   params:
@@ -51,6 +51,6 @@ panels:
     key: %{key}
     area: %{area}
     columns:
-      - { label: P&L vector, bind: "nonblank($.PNL_VECTOR_ID) ? link($.PNL_VECTOR_ID, 'pnl-vector') : nonblank($.RISK_LINKS.PNL_VECTOR_NOTE, 'no P&L vector')" }
+      - { label: P&L vector, bind: "nonblank($.PNL_VECTOR_ID) ? link($.PNL_VECTOR_ID, 'pnl-vector') : (nonblank($.SCENARIO_PV_ID) ? link($.SCENARIO_PV_ID, 'scenario-pv') : nonblank($.RISK_LINKS.PNL_VECTOR_NOTE, 'no P&L vector'))" }
       - { label: VaR of this trade, bind: "nonblank($.VAR_RESULT_ID) ? link($.VAR_RESULT_ID, 'var-result') : nonblank($.RISK_LINKS.VAR_NOTE, 'no VaR')" }
       - { label: Exposure of this trade, bind: "nonblank($.EXPOSURE_RESULT_ID) ? link($.EXPOSURE_RESULT_ID, 'exposure-result') : nonblank($.RISK_LINKS.EXPOSURE_NOTE, 'no exposure paths')" }

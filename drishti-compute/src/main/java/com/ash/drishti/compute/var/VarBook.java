@@ -618,6 +618,17 @@ public final class VarBook {
             }
         }
 
+        /** Trades the batch had no vector for, counted as failed (a book built from another date's book carries its count over). */
+        public Builder failedRows(int n) {
+            lock.lock();
+            try {
+                failed += Math.max(0, n);
+            } finally {
+                lock.unlock();
+            }
+            return this;
+        }
+
         /** A node of a hierarchy, with the books beneath it. */
         public void node(String id, String hierarchy, String level, String name, String parent, List<String> books, double limit) {
             nodeRows.add(new String[] {id, hierarchy, level, name, parent});

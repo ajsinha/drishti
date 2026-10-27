@@ -122,6 +122,16 @@ public enum ErrorCode {
      * {@code var-whatif} (compute pool {@code var}); it is not running on this server (the compute workers are off) or did not answer in time.
      */
     VAR_WHATIF_UNAVAILABLE("DRS-5205", 503),
+    /**
+     * VaR: a trade's scenario PVs (the {@code scenario-pv} kind) hold a scenario that failed to price (a null or NaN PV): the trade is not
+     * loaded, never filled with zero. Counted and listed in the answer's provenance with the scenarios, not thrown.
+     */
+    VAR_SCENARIO_FAILED("DRS-5206", 422),
+    /**
+     * VaR: no FX for a currency on the date's scenarios (none supplied, and the FX history does not cover the scenario days): a trade
+     * priced in it is not loaded (listed in the provenance), and a reporting currency without rates is refused.
+     */
+    VAR_NO_FX("DRS-5207", 422),
     /** Exposure: a bad scope word or parameter ({@code q}, {@code collateral}, {@code date} not a grid date, {@code by}, {@code run}). */
     EXPOSURE_BAD_PARAMETER("DRS-5440", 400),
     /**

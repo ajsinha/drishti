@@ -1864,6 +1864,8 @@ The complete list (from `ErrorCode` in `drishti-common`). The first digit groups
 | DRS-5203 | 422 | VaR inputs not one run | a date's vectors come from several batch runs, or another scenario set, or the date has two scenario sets or a bad one: the date is not loaded; the date before it is answered, with a warning |
 | DRS-5204 | 503 | VaR capacity | a date's vectors need more memory than `drishti.var.memory-budget-mb`: try later, raise the budget or the heap, or keep fewer dates loaded |
 | DRS-5205 | 503 | VaR what-if unavailable | `POST /api/v1/var/what-if` needs the Python VaR engine (`var-whatif`, the compute workers on: `DRISHTI_COMPUTE_ENABLED=true`); it is not running or did not answer in time |
+| DRS-5206 | 422 | VaR scenario failed | a trade's scenario PVs (`scenario-pv`) hold a scenario that failed to price (a null or NaN PV): the trade is not loaded, never filled with zero (listed with the scenarios in `provenance.rejections`, never an error of the request) |
+| DRS-5207 | 422 | VaR: no FX | no FX for a currency on the date's scenarios (none supplied in `fx-scenario`, and the FX history of `fx-spot` does not cover the scenario days): a reporting currency asked with `ccy=` is refused; a trade priced in that currency is not loaded (listed in `provenance.rejections`) |
 | DRS-5440 | 400 | Exposure parameter | a scope word the exposure engine does not answer, or a bad `q`, `collateral`, `date`, `by`, `figure` or `run` |
 | DRS-5441 | 409 | Exposure run inconsistent | the date's simulation run is not one run (its grid, two batch ids, a duplicate row, a trade in two netting sets): the date before answers with a warning; `strict=true` gets this |
 | DRS-5442 | 400 | What-if not on the run | a what-if candidate's paths are of another run than the date's |
@@ -2864,6 +2866,13 @@ sees the counterparty masked. A date's vectors over the memory budget answer `50
 (a legal entity's trades outside its `LEGAL` node), and `tier`: where the vector came from (`node aggregate (float64)`, `hot file
 (float32 rows, summed in float64)` or `memory (float64 rows)`; [VAR_GUIDE.md section 26](VAR_GUIDE.md#26-the-tiered-memory-and-the-hot-file)). Saving a basket or a capture needs the `risk:write` token scope; saving and deleting
 a basket and a reload are audited (`var-basket-save`, `var-basket-delete`, `var-reload`).
+
+**Reporting currency (2.9.4).** Every scope endpoint, `/tree`, `/hints`, `POST /what-if` (`"ccy"` in the body or the query),
+`POST /captures` and `GET /official` take `ccy=EUR` (none: USD) and say it in `currency`; the vectors are converted through USD with
+each scenario's FX, so the same scope has a different VaR in each currency ([VAR_GUIDE.md section 15.10](VAR_GUIDE.md#1510-reporting-currency-as-built-294)).
+A currency with no scenario FX on the date answers `422 DRS-5207`; a `ccy` that is not three letters, `400`. Trades a batch sends as
+scenario PVs are converted to USD when the date loads; a failed scenario rejects its trade (`DRS-5206` in `provenance.rejections`), and
+`provenance.fx` says where each currency's rates came from ([section 15.9](VAR_GUIDE.md#159-scenario-pv-scenario-pvs-per-trade-in-the-trades-currency-as-built-294)).
 
 | Method and path | What it does |
 |---|---|

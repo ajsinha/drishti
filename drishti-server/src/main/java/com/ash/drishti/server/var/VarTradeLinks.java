@@ -27,7 +27,8 @@ import java.util.Map;
 /**
  * The market-risk half of a trade page's Risk links (the UI kit fragment {@code risk-links@1}, VAR_GUIDE.md section 3.7): when the VaR
  * engine's date holds the trade's P&amp;L vector, the view of the trade carries {@code PNL_VECTOR_ID} ({@code PV-<trade>-<scenario set>},
- * the market-risk pack's {@code pnl-vector}) and {@code VAR_RESULT_ID} ({@code TRD:<trade>}, the computed kind {@code var-result}), links
+ * the market-risk pack's {@code pnl-vector}; a trade sent as scenario PVs carries {@code SCENARIO_PV_ID}, {@code SPV-<trade>-<set>} of the
+ * {@code scenario-pv} kind, instead) and {@code VAR_RESULT_ID} ({@code TRD:<trade>}, the computed kind {@code var-result}), links
  * the pack's graph names, so they are real links of the page (its linked entities, its keys); when it does not, {@code RISK_LINKS} says
  * why ("not live on 2026-10-26: its status is CANCELLED; no P&amp;L vector"). The stored trade never changes; nothing is computed here but
  * a lookup of the trade in the loaded date.
@@ -72,10 +73,16 @@ final class VarTradeLinks implements ViewAugmenter {
             links.put("BUSINESS_DATE", day.toString());
             if (o2 >= 0) {
                 String tid = d.book().tradeId(o2);
-                String pv = "PV-" + tid + "-" + d.book().scenarioSet();
-                fields.put("PNL_VECTOR_ID", DataNode.of(pv));
+                if (d.intake().fromScenarioPv(tid)) {                   // sent as scenario PVs (2.9.4): their row, not a P&L vector
+                    String spv = "SPV-" + tid + "-" + d.book().scenarioSet();
+                    fields.put("SCENARIO_PV_ID", DataNode.of(spv));
+                    links.put("SCENARIO_PV", spv);
+                } else {
+                    String pv = "PV-" + tid + "-" + d.book().scenarioSet();
+                    fields.put("PNL_VECTOR_ID", DataNode.of(pv));
+                    links.put("PNL_VECTOR", pv);
+                }
                 fields.put("VAR_RESULT_ID", DataNode.of("TRD:" + tid));
-                links.put("PNL_VECTOR", pv);
                 links.put("VAR", "TRD:" + tid);
             } else {
                 String why = d.intake().notLiveWhy(id);

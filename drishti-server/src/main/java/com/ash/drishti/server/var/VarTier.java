@@ -133,35 +133,57 @@ final class VarTier implements AutoCloseable {
     }
 
     Path folder(LocalDate date) {
-        return root.resolve(date.toString());
+        return folder(date, VarDate.USD);
+    }
+
+    /**
+     * A date's folder: {@code <date>} for its USD book, {@code <date>-<CCY>} for a reporting currency's (VAR_GUIDE.md section 26: each its
+     * own folder, so the date's other currency is never taken for an older build of it).
+     */
+    Path folder(LocalDate date, String currency) {
+        return root.resolve(VarDate.USD.equals(currency) ? date.toString() : date + "-" + currency);
     }
 
     Path file(LocalDate date, String digest) {
-        return folder(date).resolve(PREFIX + digest.substring(0, 16) + VarHotFile.SUFFIX);
+        return file(date, VarDate.USD, digest);
+    }
+
+    Path file(LocalDate date, String currency, String digest) {
+        return folder(date, currency).resolve(PREFIX + digest.substring(0, 16) + VarHotFile.SUFFIX);
     }
 
     /** The hot file built from exactly these inputs, if one is on disk and whole. */
     Optional<Path> existing(LocalDate date, String digest) {
+        return existing(date, VarDate.USD, digest);
+    }
+
+    /** The hot file of a date's book in a currency built from exactly these inputs, if one is on disk and whole. */
+    Optional<Path> existing(LocalDate date, String currency, String digest) {
         if (digest.isEmpty()) {
             return Optional.empty();
         }
-        Path f = file(date, digest);
+        Path f = file(date, currency, digest);
         VarHotFile.Header h = Files.isRegularFile(f) ? VarHotFile.header(f) : null;
         return h != null && h.digest().equals(digest) && h.businessDate().equals(date) ? Optional.of(f) : Optional.empty();
     }
 
     /** Where a new load of the date writes: its spill and its part file made in the date's folder, and the final name. */
     VarBook.HotTarget target(LocalDate date, String digest) {
+        return target(date, VarDate.USD, digest);
+    }
+
+    /** Where a date's book in a currency writes (its own folder). */
+    VarBook.HotTarget target(LocalDate date, String currency, String digest) {
         built.incrementAndGet();
         try {
-            Path dir = Files.createDirectories(folder(date));
+            Path dir = Files.createDirectories(folder(date, currency));
             String d = digest.isEmpty() ? "unversioned-" + System.nanoTime() : digest;
             Path spill = TempFiles.createFile(dir, "spill-", ".f64");
             Path part = TempFiles.createFile(dir, "build-", ".part");
-            Path file = digest.isEmpty() ? dir.resolve(PREFIX + "unversioned-" + System.nanoTime() + VarHotFile.SUFFIX) : file(date, digest);
+            Path file = digest.isEmpty() ? dir.resolve(PREFIX + "unversioned-" + System.nanoTime() + VarHotFile.SUFFIX) : file(date, currency, digest);
             return new VarBook.HotTarget(spill, part, file, d);
         } catch (IOException e) {
-            throw new UncheckedIOException("the VaR hot folder " + folder(date) + " cannot be written: " + e.getMessage(), e);
+            throw new UncheckedIOException("the VaR hot folder " + folder(date, currency) + " cannot be written: " + e.getMessage(), e);
         }
     }
 
