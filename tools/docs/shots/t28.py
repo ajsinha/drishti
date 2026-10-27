@@ -34,8 +34,11 @@ SERVER_ENV = {"DRISHTI_SECURITY_ENABLED": "false", "DRISHTI_DEMO_ENABLED": "fals
 GUIDE_IMAGE = ROOT / "config" / "packs" / "funds" / "guides" / "images" / "funds-fund.jpg"
 
 
-def view(c: Ctx, path: str, name: str, height: int = 900):
-    go(c, path, height=height, settle=2500)
+WIDE_TABLE = 2000
+
+
+def view(c: Ctx, path: str, name: str, height: int = 900, width: int = 1280):
+    go(c, path, width=width, height=height, settle=2500)
     c.save(name)
 
 
@@ -102,7 +105,8 @@ def useq_tab(c: Ctx):
 
 @shot("08-track-index.jpg")
 def track(c: Ctx):
-    view(c, "/v/index-funds/SP500", "08-track-index.jpg")
+    # a wide window: the table has eight columns, and at 1280 px it stopped at Net assets, before the active share the tutorial reads
+    view(c, "/v/index-funds/SP500", "08-track-index.jpg", width=WIDE_TABLE)
 
 
 @shot("09-phone.jpg")
