@@ -87,3 +87,44 @@ def test_the_top_bar_has_the_basket_button_and_alt_b(client):
     html = client.get("/t").text
     assert "data-basket-btn" in html and 'aria-keyshortcuts="Alt+B"' in html and "Basket" in html
     assert "/static/js/var-basket.js" in html and "/static/css/var-basket.css" in html
+
+
+def test_in_a_currency_the_command_opens_the_page_in_it():
+    """``VAR ... IN EUR`` (docs/guides/VAR_GUIDE.md section 15.11): the page in that reporting currency, its link carrying ccy=EUR."""
+    assert var_command("VAR DESK DESK-RATES IN EUR".split(), "asha") == "/var?scope=DESK%3ADESK-RATES&ccy=EUR"
+    assert var_command("var bank in gbp".split(), "asha") == "/var?scope=BANK&ccy=GBP"
+    assert var_command("VAR TRD MX-1 IN CAD <GO>".split(), "asha") == "/var?scope=TRD%3AMX-1&ccy=CAD"
+    assert var_command("VAR CAPTURE CAP-1 IN JPY".split(), "asha") == "/var?capture=CAP-1&ccy=JPY"
+    assert var_command("VAR IN EUR".split(), "asha") == "/var?ccy=EUR"
+    assert var_command("VAR SCOPE DESK:DESK-FX - TRD:MX-1 IN EUR".split(), "asha") == "/var?scope=DESK%3ADESK-FX%20-%20TRD%3AMX-1&ccy=EUR"
+    assert var_command("VAR DESK IN EUR".split(), "asha") is None          # nothing named before IN
+    assert var_command("VAR DESK DESK-RATES IN EURO".split(), "asha") == "/var?scope=DESK%3ADESK-RATES-IN-EURO"   # not a currency: words of the id
+
+
+def test_the_page_has_the_reporting_currency_picker_and_the_tab(client):
+    html = client.get("/var?scope=DESK:DESK-RATES&ccy=eur").text
+    assert 'data-ccy="EUR"' in html
+    assert 'aria-label="Reporting currency"' in html and "data-vx-ccy" in html
+    assert 'data-tab="ccy"' in html and "In other currencies" in html and "data-vx-ccytable" in html
+    assert "<th>Trade currency</th>" in html                               # the contributions and the worst scenarios list it
+    assert 'data-ccy=""' in client.get("/var?scope=BANK&ccy=12").text       # not a currency: the session's, else USD
+
+
+def test_every_answer_passes_the_reporting_currency_to_the_engine(client, backend, monkeypatch):
+    seen = []
+
+    async def var(method, path, ident, body=None, raw=False, **params):
+        seen.append((method, path, body, params))
+        return {"ok": 1}
+    monkeypatch.setattr(backend, "var", var, raising=False)
+    for url in ("/api/var/scope?scope=BANK&ccy=EUR", "/api/var/scope/path?scope=BANK&page=0&ccy=EUR", "/api/var/tree?hierarchy=MGMT&ccy=EUR",
+                "/api/var/scope/contributions?scope=BANK&by=trade&ccy=EUR", "/api/var/hints?q=x&ccy=EUR"):
+        assert client.get(url).status_code == 200
+        assert seen[-1][3]["ccy"] == "EUR", url
+    # the tab "In other currencies" and the picker's list are the engine's too
+    assert client.get("/api/var/scope/currencies?scope=DESK%3ADESK-RATES&ccy=CAD").status_code == 200
+    assert seen[-1][1] == "/scope/currencies" and seen[-1][3] == {"scope": "DESK:DESK-RATES", "ccy": "CAD"}
+    assert client.get("/api/var/currencies").status_code == 200 and seen[-1][1] == "/currencies"
+    # a capture in the page's currency
+    assert client.post("/api/var/captures?ccy=EUR", json={"scope": "BANK"}).status_code == 200
+    assert seen[-1][3] == {"asOf": "", "ccy": "EUR"}

@@ -23,7 +23,7 @@ doc:
     Bilateral option on a stock. One deal screen per MUREX OTC equity option trade (matched on SOURCE_SYSTEM and PRODUCT_TYPE):
     the deal ticket (DES), the legs side by side, every cash flow in one schedule, the events by leg and as a table filtered by
     the Legs and Between controls, the netted payment ladder and payments by month, how the view was built and the linked
-    entities (F7 opens the counterparty's trades). The strip gives the source, side, notional, quantity, trade date, maturity,
+    entities (F7 opens the counterparty's trades). The strip gives the trade currency, side, notional, quantity, trade date, maturity,
     status and portfolio.
   params:
     legs: { type: text, default: all, meaning: "The Legs control: the legs whose events the table lists" }
@@ -37,7 +37,7 @@ doc:
 match: { kind: trade, where: "$.SOURCE_SYSTEM == 'MUREX' && $.PRODUCT_TYPE == 'EQ_OPTION_OTC'", priority: 10 }
 title: { pill: "Equity · OTC equity option", id: $.TRADE_ID, with: "link($.COUNTERPARTY, 'counterparty')" }
 strip:
-  - { label: Source, bind: $.SOURCE_SYSTEM }
+  - { label: Trade currency, bind: "nonblank($.RISK_LINKS.TRADE_CURRENCY) ? $.RISK_LINKS.TRADE_CURRENCY + ($.RISK_LINKS.TRADE_CURRENCY_FROM == 'its scenario PVs' ? ' · as priced' : ' · as booked') : nonblank($.CURRENCY, '–') + ' · as booked'" }
   - { label: Side, bind: "$.BUY_SELL_CODE == 'B' ? 'Buy' : ($.BUY_SELL_CODE == 'S' ? 'Sell' : nonblank($.BUY_SELL_CODE, '–'))" }
   - { label: Notional, bind: "$.CURRENCY + ' ' + fmt(first($.LEGS).NOTIONAL, 'amount0')", emphasis: true }
   - { label: Quantity, bind: "fmt($.QUANTITY, 'amount0') + (nonblank(first($.LEGS).PRICE_UNIT) ? ' ' + first($.LEGS).PRICE_UNIT : '')" }

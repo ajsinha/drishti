@@ -150,3 +150,19 @@ def var_result(c: Ctx):
     c.until("document.body.innerText.indexOf('DESK:DESK-RATES') >= 0", 90)
     c.page.wait_for_timeout(2500)
     c.save("11-var-result.jpg")
+
+
+@shot("12-reporting-currency.jpg")
+def reporting_currency(c: Ctx):
+    """Step 1's picker: the bank in EUR, then the tab In other currencies (VAR_GUIDE.md section 15.11)."""
+    open_var(c, "/var?scope=BANK")
+    painted(c, "BANK")
+    c.until("document.querySelector('[data-var]').dataset.ccyReady === 'true'", 60)
+    c.page.select_option("[data-vx-ccy]", "EUR")
+    c.until("document.querySelector('.vx-tile[data-tile=\"0\"] .l').innerText.indexOf('EUR') >= 0", 90)
+    painted(c, "BANK")
+    tab(c, "ccy")
+    c.until("document.querySelectorAll('[data-vx-ccytable] tbody tr[data-ccy]').length >= 5", 60)
+    c.page.wait_for_timeout(600)
+    c.save("12-reporting-currency.jpg")
+    c.page.evaluate("sessionStorage.removeItem('drishti.var.ccy')")

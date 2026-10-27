@@ -18,10 +18,12 @@ asks the server's VaR engine (/api/v1/var) with the user's own identity, so enti
 
 Command words after VAR (``VAR BANK``, ``VAR LE LE-NY``, ``VAR DIV MARKETS``, ``VAR DESK RATES``, ``VAR BOOK BOOK-RATES-1``,
 ``VAR POS <position>``, ``VAR TRD <trade>``, ``VAR CPTY <counterparty>``, ``VAR PORT <portfolio>``, ``VAR SCOPE <basket or portfolio>``,
-``VAR CAPTURE <id>``) are read here. The stored ``var`` and ``var-node`` kinds were retired in 2.8.0 (docs/guides/VAR_GUIDE.md section 21):
+``VAR CAPTURE <id>``) are read here, each optionally followed by ``IN <currency>`` (``VAR DESK DESK-RATES IN EUR``: the page in that
+reporting currency, docs/guides/VAR_GUIDE.md section 15.11; the page's link carries it as ``ccy=EUR``). The stored ``var`` and ``var-node`` kinds were retired in 2.8.0 (docs/guides/VAR_GUIDE.md section 21):
 an old id (``VAR VAR-COMM``, ``/v/var/VAR-COMM``, ``/v/var-node/VN-MGMT~DESK-RATES``) opens the explorer at the matching scope."""
 from __future__ import annotations
 
+import re
 from urllib.parse import quote
 
 from fastapi import APIRouter, Request
@@ -60,8 +62,31 @@ def retired_link(kind: str, old_id: str) -> str | None:
     return f"/var?scope={quote(scope)}&from={quote(old_id)}"
 
 
+#: a reporting currency's ISO code, as ``IN <currency>`` at the end of a VAR command names it
+CCY = re.compile(r"^[A-Za-z]{3}$")
+
+
+def split_currency(words: list[str]) -> tuple[list[str], str]:
+    """``[VAR, DESK, DESK-RATES, IN, EUR]`` -> (``[VAR, DESK, DESK-RATES]``, ``EUR``): a trailing ``IN <currency>`` taken off the words;
+    none -> (the words, "")."""
+    if len(words) >= 3 and words[-2].upper() == "IN" and CCY.match(words[-1]):
+        return words[:-2], words[-1].upper()
+    return words, ""
+
+
 def var_command(words: list[str], user: str) -> str | None:
-    """Where ``VAR <word> <rest>`` goes (``VAR VAR-COMM``: a retired id, its desk), or None when it is not an explorer command."""
+    """Where ``VAR <word> <rest> [IN <currency>]`` goes (``VAR VAR-COMM``: a retired id, its desk), or None when it is not an explorer
+    command. ``IN EUR`` adds ``ccy=EUR`` to the page's link."""
+    if words and words[-1].upper() == "<GO>":
+        words = words[:-1]
+    words, ccy = split_currency(words)
+    where = _var_where(words, user)
+    if where and ccy:
+        where += ("&" if "?" in where else "?") + "ccy=" + ccy
+    return where
+
+
+def _var_where(words: list[str], user: str) -> str | None:
     if not words or words[0].upper() != "VAR":
         return None
     if len(words) == 1:
@@ -97,17 +122,18 @@ def _problem(e: BackendError) -> JSONResponse:
 
 
 @router.get("/var")
-async def page(request: Request, scope: str = "", capture: str = "", hierarchy: str = "MGMT"):
-    """The explorer's shell; its panels load in place (no full-page reload when drilling)."""
+async def page(request: Request, scope: str = "", capture: str = "", hierarchy: str = "MGMT", ccy: str = ""):
+    """The explorer's shell; its panels load in place (no full-page reload when drilling). ``ccy`` is the page's reporting currency
+    (none: the one chosen earlier in the session, else USD)."""
     me = getattr(request.state, "identity", None)
     return render(request, "terminal/var.html", scope=scope or "BANK", capture=capture, hierarchy=hierarchy.upper() or "MGMT",
-                  user=(me.user if me else "") or "", screen="var")
+                  user=(me.user if me else "") or "", screen="var", ccy=ccy.upper() if CCY.match(ccy or "") else "")
 
 
 #: GET endpoints of the engine the page may ask for, and the parameters each passes on
 _GETS = {"scope": ("scope",), "hints": ("q", "limit"), "scope/path": ("scope", "page", "size"), "scope/history": ("scope",),
          "scope/contributions": ("scope", "by", "scenario"), "tree": ("hierarchy",), "baskets": (), "captures": ("scope",),
-         "compare": ("a", "b"), "status": (), "official": ()}
+         "compare": ("a", "b"), "status": (), "official": (), "scope/currencies": ("scope",), "currencies": ()}
 
 
 @router.get("/api/var/{path:path}")
@@ -123,8 +149,9 @@ async def api_get(request: Request, path: str):
         if path not in _GETS:
             return JSONResponse({"code": "DRS-1001", "detail": f"no VaR endpoint {path}"}, status_code=404)
         params = {k: q.get(k, "") for k in _GETS[path]}
-        if q.get("asOf"):
-            params["asOf"] = q.get("asOf")
+        for k in ("asOf", "ccy"):                         # the business date and the reporting currency, on every answer
+            if q.get(k):
+                params[k] = q.get(k)
         return await request.app.state.backend.var("GET", "/" + path, ident(request), **params)
     except BackendError as e:
         return _problem(e)
@@ -135,8 +162,9 @@ async def api_post(request: Request, path: str):
     if path not in ("baskets", "captures", "what-if"):
         return JSONResponse({"code": "DRS-1001", "detail": f"no VaR endpoint {path}"}, status_code=404)
     try:
+        extra = {"ccy": request.query_params["ccy"]} if request.query_params.get("ccy") else {}    # a capture or a what-if in that currency
         return await request.app.state.backend.var("POST", "/" + path, ident(request), body=await json_body(request),
-                                                   asOf=request.query_params.get("asOf", ""))
+                                                   asOf=request.query_params.get("asOf", ""), **extra)
     except BackendError as e:
         return _problem(e)
 

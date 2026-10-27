@@ -21,7 +21,7 @@ description: "Coupon resets over an RFR or term rate."
 match: { kind: trade, where: "$.SOURCE_SYSTEM == 'CALYPSO' && $.PRODUCT_TYPE == 'FRN'", priority: 10 }
 title: { pill: "Fixed income · Floating rate note", id: $.TRADE_ID, with: "link($.COUNTERPARTY, 'counterparty')" }
 strip:
-  - { label: Source, bind: $.SOURCE_SYSTEM }
+  - { label: Trade currency, bind: "nonblank($.RISK_LINKS.TRADE_CURRENCY) ? $.RISK_LINKS.TRADE_CURRENCY + ($.RISK_LINKS.TRADE_CURRENCY_FROM == 'its scenario PVs' ? ' · as priced' : ' · as booked') : nonblank($.CURRENCY, '–') + ' · as booked'" }
   - { label: Side, bind: "$.BUY_SELL_CODE == 'B' ? 'Buy' : ($.BUY_SELL_CODE == 'S' ? 'Sell' : nonblank($.BUY_SELL_CODE, '–'))" }
   - { label: Notional, bind: "$.CURRENCY + ' ' + fmt(first($.LEGS).NOTIONAL, 'amount0')", emphasis: true }
   - { label: Quantity, bind: "fmt($.QUANTITY, 'amount0') + (nonblank(first($.LEGS).PRICE_UNIT) ? ' ' + first($.LEGS).PRICE_UNIT : '')" }

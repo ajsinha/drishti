@@ -30,6 +30,15 @@
 .vx-help { color: var(--d-muted); text-decoration: none; font-size: 1.05em; }
 .vx-help:hover, .vx-help:focus { color: var(--d-text, inherit); }
 .vx-what { font-size: .85em; white-space: nowrap; }
+/* the reporting currency (mock-up A, 2.9.4): one select in the header strip; the whole page follows it */
+.vx-ccy { display: inline-flex; align-items: center; gap: 6px; white-space: nowrap; color: var(--d-muted); }
+.vx-ccy-select { border-color: var(--d-accent); color: var(--d-ink); font-weight: 600; font-size: 12.5px; min-height: 26px; padding: 2px 8px;
+  min-width: 96px; }
+.vx-ccy-select:focus-visible { outline: 2px solid var(--d-accent); outline-offset: 1px; }
+.vx-ccytable tr.shown td { background: var(--d-accent-tint); }
+.vx-ccytable tr.shown td:first-child { box-shadow: inset 2px 0 0 var(--d-accent); color: var(--d-accent); font-weight: 600; }
+.vx-ccytable td .vx-link { font-weight: 600; text-decoration: none; }
+.vx-ccytable td .vx-link:hover, .vx-ccytable td .vx-link:focus-visible { text-decoration: underline; }
 .vx-layout { display: grid; grid-template-columns: 330px minmax(0, 1fr) 270px; gap: 10px; align-items: start; }
 .vx-panel { background: var(--d-surface); border: 1px solid var(--d-border); border-radius: 4px; min-width: 0; display: flex; flex-direction: column; }
 .vx-ph { display: flex; align-items: center; gap: 10px; padding: 7px 10px; border-bottom: 1px solid var(--d-border); background: var(--d-surface-2);
@@ -187,4 +196,5 @@
 @media (max-width: 1100px) { .vx-tiles { grid-template-columns: repeat(3, minmax(0, 1fr)); } }
 @media (max-width: 800px) { .vx-layout { grid-template-columns: minmax(0, 1fr); } .vx-charts, .vx-hist2 { grid-template-columns: minmax(0, 1fr); }
   .vx-tree-panel .vx-tree { max-height: 280px; overflow: auto; } }
-@media (max-width: 560px) { .vx-tiles { grid-template-columns: repeat(2, minmax(0, 1fr)); } .vx-tile .v { font-size: 17px; } .vx { padding: 10px; } }
+@media (max-width: 560px) { .vx-tiles { grid-template-columns: repeat(2, minmax(0, 1fr)); } .vx-tile .v { font-size: 17px; } .vx { padding: 10px; }
+  .vx-ccy { flex: 1 1 100%; justify-content: space-between; } .vx-ccy-select { min-height: 40px; flex: 1 1 auto; max-width: 60%; font-size: 14px; } }

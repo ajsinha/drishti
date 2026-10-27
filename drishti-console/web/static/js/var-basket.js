@@ -51,7 +51,11 @@
     if (a >= 1e3) return s + (a / 1e3).toFixed(a >= 1e5 ? 0 : 1) + "k";
     return s + Math.round(a);
   }
-  function asOf() { var p = new URLSearchParams(location.search).get("asOf"); return p ? "&asOf=" + encodeURIComponent(p) : ""; }
+  /** The page's business date and reporting currency (the explorer keeps ccy in its link, 2.9.4): every answer of the tray in it. */
+  function asOf() {
+    var q = new URLSearchParams(location.search), p = q.get("asOf"), c = q.get("ccy");
+    return (p ? "&asOf=" + encodeURIComponent(p) : "") + (c && /^[A-Za-z]{3}$/.test(c) ? "&ccy=" + encodeURIComponent(c.toUpperCase()) : "");
+  }
   function get(path) {
     return fetch("/api/var/" + path + asOf(), { headers: { Accept: "application/json" }, credentials: "same-origin" }).then(answer);
   }
@@ -435,7 +439,8 @@
         el.live.appendChild(h("span", null, " · this selection holds no live trade with a P&L vector on " + d.businessDate + ": no VaR to show"));
       } else {
         el.live.appendChild(h("span", null, "VaR " + Math.round(d.confidence * 1000) / 10 + "% 1D of the selection "));
-        el.live.appendChild(h("b", "mono", money(d["var"])));
+        el.live.appendChild(h("b", "mono", money(d["var"]) + (d.currency && d.currency !== "USD" ? " " + d.currency : "")));
+        el.live.dataset.ccy = d.currency || "USD";
         var parts = c.rows || [];
         var rest = " · ES " + money(d.es) + " · " + d.trades.toLocaleString("en-US") + " trade" + (d.trades === 1 ? "" : "s");
         if (parts.length) rest += " · sum of the parts " + money(c.sumStandalone);
@@ -607,6 +612,8 @@
         toggle();
       }
     });
+    // the explorer moved to another reporting currency: the selection's figures follow it
+    document.addEventListener("var:currency", function () { if (T.items.length && el.live) live(); });
   }
   if (document.readyState === "loading") document.addEventListener("DOMContentLoaded", start); else start();
 

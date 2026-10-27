@@ -253,6 +253,21 @@ Mnemonics come from the packs that are switched on. Every command, with what it 
 | `TVAL` | trade valuation (MTM, P&L, DV01) | `TVAL TVAL-MX-20000001` |
 | `ECON` | economy | `ECON ECON-USA` |
 
+**VaR in another currency (2.9.4).** The VaR explorer (`VAR BANK`, `VAR DESK DESK-RATES`) has a **Reporting currency** select at the
+right end of its status line: the configured currencies (USD, EUR, CAD, JPY, GBP by default) and **More…** for any other currency with
+scenario FX on the date. Every figure of the page follows it (the tiles say `VaR 99% · 1 day · EUR`), the choice stays while you work in
+that browser tab, and it goes into the page's link (`&ccy=EUR`), so a link you send opens in the same currency. Type it too: any VAR
+command ends with `IN <currency>`, `VAR DESK DESK-RATES IN EUR <GO>`. The tab **In other currencies** (loaded when you open it) shows the
+scope's VaR and ES in each configured currency side by side, with each one's VaR in the page's currency at today's rate; click a row to
+move the page to it. A currency's VaR is never the USD VaR at a rate: the currency move on each scenario day is part of its risk
+([VAR_GUIDE.md section 15.11](VAR_GUIDE.md#1511-reporting-currencies-built-ahead-per-trade-currency-totals-and-the-picker-as-built-294)).
+
+**Trade currency.** Every trade page's strip says **Trade currency**: the currency the trade's PVs come in (`EUR · as priced`) when the
+VaR engine holds it as scenario PVs, else the trade's own currency (`USD · as booked`). Its **Risk** group adds where it comes from and
+the trade's **Base PV** in it. (The strip holds eight figures: the source system moved from the strip to the deal ticket, F2 DES.) The
+VaR explorer's contributions and worst scenarios, a position's trades and the trade tables of the counterparty, portfolio, legal
+entity and index pages list it too.
+
 ### Reserved words
 
 Six words are keywords of the console itself, not mnemonics of a pack, and no pack may define a mnemonic with

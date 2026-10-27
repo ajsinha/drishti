@@ -178,6 +178,14 @@ euro-based owner also carries the bank's 3.65 billion USD of value moving agains
 question, not the model's. The guide's [section 15.9](../guides/VAR_GUIDE.md#159-scenario-pv-scenario-pvs-per-trade-in-the-trades-currency-as-built-294)
 has the contract, [section 15.10](../guides/VAR_GUIDE.md#1510-reporting-currency-as-built-294) the reporting currencies.
 
+The currencies a bank reports in are **built ahead** (USD, EUR, CAD, JPY and GBP unless configured otherwise), and every node of the
+hierarchy keeps its trades' PVs **summed per trade currency**: its P&L in any currency `X` is then
+`Σ_c [PVsum_c(s) × FX_c→X(s) − PVbase_c × FX_c→X(base)]`, the same, to the cent, as converting every trade on its own. The VaR page's
+**Reporting currency** picker (or `VAR BANK IN EUR`) moves every figure to that currency, and its tab **In other currencies** puts them
+side by side: on the demo lake the bank's 126.5 million USD is 110.4 million EUR. A trade page says its **Trade currency**: the currency
+its PVs come in. The guide's [section 15.11](../guides/VAR_GUIDE.md#1511-reporting-currencies-built-ahead-per-trade-currency-totals-and-the-picker-as-built-294)
+has the details.
+
 ## 4. A worked example on the demo data
 
 From a scratch server over the default demo lake (`drishti.py lake demo`, which moves the test data's sixty business days to end

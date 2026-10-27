@@ -258,7 +258,8 @@ class Batch:
             q = signed_qty(t)
             pv = float((self.valuations.get(f"TVAL-{t['TRADE_ID']}") or {}).get("MTM") or 0.0)
             rows.append({"TRADE_ID": str(t["TRADE_ID"]), "QUANTITY": q, "DIRECTION": "LONG" if q > 0 else "SHORT" if q < 0 else "FLAT",
-                         "PV": float(round(pv)), "PRODUCT_TYPE": t.get("PRODUCT_TYPE"), "COUNTERPARTY": t.get("COUNTERPARTY") or ""})
+                         "PV": float(round(pv)), "PRODUCT_TYPE": t.get("PRODUCT_TYPE"), "COUNTERPARTY": t.get("COUNTERPARTY") or "",
+                         "TRADE_CURRENCY": t.get("CURRENCY") or "USD"})   # the currency its PVs come in (VAR_GUIDE.md section 15.11)
         cps = sorted({r["COUNTERPARTY"] for r in rows} - {""})
         mv = sum(r["PV"] for r in rows)
         tags = sorted({x for t in ts for x in self._tags(t)})

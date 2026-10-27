@@ -437,6 +437,7 @@ A position: one security held in one book (or one OTC trade), the trades that bu
 | `PV` | amount | required |  | PV | `3143714.0` |  |
 | `PRODUCT_TYPE` | text | required |  | — | `WARRANT` |  |
 | `COUNTERPARTY` | id | required |  | Counterparty | `CP-SUMMIT` (pattern `^CP-`) | `counterparty` |
+| `TRADE_CURRENCY` | text | optional |  | The trade's currency (2.9.4): the currency its scenario PVs come in, else its own CURRENCY (a P&L vector, sent in USD). | `EUR` |  |
 
 **Links:** `TRADE_IDS` → `trade`, `LEGAL_ENTITY` → `legal-entity`, `DESK` → `desk`, `TT_BOOK` → `book`, `PORTFOLIO` → `book`, `COUNTERPARTY` → `counterparty`, `TRADES[].TRADE_ID` → `trade`, `TRADES[].COUNTERPARTY` → `counterparty`.
 

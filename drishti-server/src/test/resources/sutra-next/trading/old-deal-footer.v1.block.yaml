@@ -30,4 +30,6 @@ panels:
       - { label: P&L vector, bind: "nonblank($.PNL_VECTOR_ID) ? link($.PNL_VECTOR_ID, 'pnl-vector') : nonblank($.RISK_LINKS.PNL_VECTOR_NOTE, 'no P&L vector')" }
       - { label: VaR of this trade, bind: "nonblank($.VAR_RESULT_ID) ? link($.VAR_RESULT_ID, 'var-result') : nonblank($.RISK_LINKS.VAR_NOTE, 'no VaR')" }
       - { label: Exposure of this trade, bind: "nonblank($.EXPOSURE_RESULT_ID) ? link($.EXPOSURE_RESULT_ID, 'exposure-result') : nonblank($.RISK_LINKS.EXPOSURE_NOTE, 'no exposure paths')" }
+      - { label: Trade currency, bind: "nonblank($.RISK_LINKS.TRADE_CURRENCY) ? $.RISK_LINKS.TRADE_CURRENCY + ', from ' + $.RISK_LINKS.TRADE_CURRENCY_FROM : nonblank($.CURRENCY, '–') + ', from its CURRENCY'" }
+      - { label: Base PV, bind: "nonblank($.RISK_LINKS.BASE_PV, '–')" }
   - { id: refs, kind: links, title: Linked entities, code: REFS, area: right }

@@ -173,7 +173,7 @@ def test_the_tabs_path_history_and_contributions(stack, browser):
     assert pg.locator("[data-vx-pathtable] tbody tr.hl td").first.inner_text() == "6"       # the VaR scenario
     pg.locator("[data-vx-more]").click()
     wait(pg, "document.querySelectorAll('[data-vx-pathtable] tbody tr').length === 120")
-    pg.locator("[data-vx-pathtable] tbody tr").first.click()                                # the worst scenario's contributors
+    pg.locator("[data-vx-pathtable] tbody tr td").first.click()                             # the worst scenario's contributors
     wait(pg, "document.querySelector('[data-vx-drill]') && !document.querySelector('[data-vx-drill]').hidden"
              " && document.querySelectorAll('[data-vx-drill] tbody tr').length > 0")
     pg.locator('.vx-tab[data-tab="hist"]').click()

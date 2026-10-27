@@ -17,6 +17,40 @@
 
 ## 2.9.4 (unreleased)
 
+- **Reporting currencies built ahead, per-trade-currency totals, the currency picker and Trade currency (2026-10-27; local branch, for
+  the product owner's review: not pushed).** The product owner's decisions on the VaR currencies: (1) PVs stay as received, in each
+  trade's own currency; (2) **`drishti.var.currencies`** (default `USD, EUR, CAD, JPY, GBP`, env `DRISHTI_VAR_CURRENCIES`) lists the
+  reporting currencies **built ahead**: once a date's USD book has loaded, one low-priority background thread builds each listed
+  currency's book into its own hot file, so a VaR in it never waits on its first ask (a request meanwhile joins the build, or builds it,
+  as before); mapped tier only; **`drishti.var.currency-retention-dates`** (default 5, env `DRISHTI_VAR_CURRENCY_RETENTION_DATES`) keeps
+  them for the newest five dates, older ones' files deleted after each build. Measured on the demo lake (8,566 trades): 21.4 MB and 58 to
+  148 ms a currency a date (four currencies: 86 MB, 0.37 s, in the background; the USD load 0.58 s); per 100k trades about 250 MB a
+  currency a date and 4.3 s for four. `GET /status` says what was built (`currencies.builtAhead`, `tier.currencies`). (3) Every node
+  keeps its PVs **summed per trade currency** (`CurrencyTotals`, the hot file's new `CTOT` section, format 2): a node's P&L in any
+  currency is `Σ_c [PVsum_c(s) × FX_c→X(s) − PVbase_c × FX_c→X(base)]`, the same to the cent as converting each trade; the headline VaR
+  and ES in any currency other than USD come from it, and the new **`GET /api/v1/var/scope/currencies`** (the scope in every listed
+  currency, that VaR in the page's currency at today's rate, the difference) and **`GET /api/v1/var/currencies`** (listed, available,
+  ready). (4) The VaR page has a **Reporting currency** select in its status line (mock-up A: the listed currencies and More…); every
+  panel, the tree, captures and the basket tray follow it; it stays for the tab's session and goes into the link (`ccy=EUR`); the
+  command line takes **`VAR … IN EUR`**; the provenance says the reporting currency, the input form, the scenario FX and the cross
+  rates via USD; a new tab **In other currencies** (mock-up C's table, loaded only when opened; a click switches the page). (5) Every
+  trade page's strip says **Trade currency** (`EUR · as priced` from its scenario PVs, else `USD · as booked`; it takes the place of
+  Source, which stays in the deal ticket: the strip holds eight), its Risk group the trade currency and its **Base PV** in it
+  (`RISK_LINKS.TRADE_CURRENCY`, `TRADE_CURRENCY_FROM`, `BASE_PV`); the VaR contributions and worst scenarios list it, a position's trades
+  too (`TRADES[].TRADE_CURRENCY`, contract), and the derived trade pages label their column Trade currency. The demo lake now moves the
+  scenario PVs' valuation dates with the business date (`lake demo --as-of today` rejected them all as valued on another day).
+  On the demo lake (2026-10-27) the bank is 126,537,611 / 172,532,570 USD and **110,448,804 / 144,379,703 EUR**; the test data's figures
+  are unchanged.
+  **Docs:** VAR_GUIDE 1.6 (section 15.11, settings, API, sections 3.1, 3.2, 3.4, 26's format 2 and `CTOT`), USER_GUIDE (the picker,
+  `IN <currency>`, Trade currency), CONFIGURATION (the two settings and their placeholders), tutorial 25 (step 1: the picker and the
+  tab), the Market risk Knowledge page, the position contract; the VaR guide's and tutorial 25's pictures retaken, two new.
+  **Tests:** `CurrencyTotalsTest` (every node's totals equal the trade-level result to the cent in five currencies, heap and mapped;
+  equal the book converted trade by trade; the native sums; the hot file; any scope), `VarTestDataPrecisionTest` (the test data's nodes in
+  six currencies), `VarCurrencyAheadTest` (built ahead, the status, the currencies list, totals against the converted book, the tab, a
+  trade's currency), `VarCurrencyRetentionTest`, `test_var_routes.py` (`IN EUR`, the picker and the tab on the page, `ccy` passed on),
+  `test_var_currency_browser.py` (the picker moves every panel, the tab loads only when opened, a row switches, the session, More…,
+  `IN EUR`, phone width, a trade page's Trade currency).
+
 - **VaR from scenario PVs, in any reporting currency (2026-10-27; local branch, for the product owner's review: not pushed).** A bank's
   batch may now send a trade's scenario P&L as **scenario PVs** in the trade's own currency (the new kind `scenario-pv`, `SPV`: its PV
   under each of the 509 scenarios and its base PV of the same run) beside or instead of the P&L vector; the VaR engine turns them into
@@ -30,7 +64,7 @@
   built at load, another currency's on its first ask, from the USD book (`CurrencyBook`, `ScenarioFx`), kept per date on the tiered
   memory (its own hot file under `<hot>/<date>-<CCY>/`); `drishti.var.official.currencies` (default `[USD]`) captures other currencies
   officially beside USD (only USD is published). The provenance says how the vectors met FX (`fx`: per currency `supplied` or
-  `derived` and today's rate; `scenarioPvTrades`). No console picker yet: its mock-ups come first.
+  `derived` and today's rate; `scenarioPvTrades`). The console's picker: the entry above.
   **Test data:** the Endur trades (1,339: 1,089 USD, 246 EUR, 4 CAD) now come as scenario PVs (`tools/packgen/var/scenario_fx.py`), with
   supplied FX for AUD, CAD, CHF, EUR, GBP and JPY; the other 8,233 trades stay P&L vectors; `lake demo` builds 84 tables (was 82). A USD
   trade's P&L from its scenario PVs is its 2.9.3 vector exactly; the EUR and CAD trades now also carry their currency's move on their

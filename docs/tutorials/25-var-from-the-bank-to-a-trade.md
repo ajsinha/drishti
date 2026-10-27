@@ -109,8 +109,11 @@ PVs. On the 6th worst of the 509 days the bank loses 112 million; the two divisi
 together saves 18 million. (Until 2.9.3 every trade was a P&L vector and the bank's VaR was 112,035,906: the 250 Endur trades in EUR and
 CAD now also carry the move of their currency on their value.)
 
-**In another currency.** Every `drishti.py var` command takes `--ccy` (the API: `ccy=EUR`); the console's currency picker is not built
-yet:
+**In another currency.** In the console, pick **EUR** in the **Reporting currency** select at the right end of the status line (or type
+`VAR BANK IN EUR <GO>`): every tile, the tree, the path and the provenance move to euros, the link gains `&ccy=EUR`, and the choice stays
+while you move around this tab. Open the tab **In other currencies**: one row per configured currency (USD, EUR, CAD, JPY, GBP), each
+with its own VaR and ES, that VaR in euros at today's rate, and the difference; click **CAD** to move the page to it. On the command
+line every `drishti.py var` command takes `--ccy` (the API: `ccy=EUR`):
 
 ```text
 $ drishti.py var show BANK --ccy EUR
@@ -125,11 +128,17 @@ the server said 422 DRS-5207: DRS-5207 no INR FX for the scenarios of 2026-09-30
 (fx-spot); the currencies with FX on the date: AUD, CAD, CHF, EUR, GBP, JPY, USD
 ```
 
-**You should see** 111.8 million EUR, not the 95.4 million that 112.0 million USD makes at today's 1.174: in euros the bank's whole value
-(3.65 billion USD) moves with the euro on every scenario day, and that move is part of a euro-based owner's risk. The first `--ccy EUR`
-of the date builds the euro book from the USD one (once; `drishti.py var status` lists it with `"currency": "EUR"`).
+![VAR BANK IN EUR: the picker in the status line, the tiles in EUR, and the tab In other currencies with each currency's own VaR](img/t25/12-reporting-currency.jpg)
 
-**Further in the guide:** [section 15.1](../guides/VAR_GUIDE.md#151-where-they-live) (the inputs), [section 2.2](../guides/VAR_GUIDE.md#22-on-the-test-data) (the bank's numbers read), [section 15.9](../guides/VAR_GUIDE.md#159-scenario-pv-scenario-pvs-per-trade-in-the-trades-currency-as-built-294) (scenario PVs and their FX), [section 15.10](../guides/VAR_GUIDE.md#1510-reporting-currency-as-built-294) (reporting currencies).
+**You should see** 111.8 million EUR, not the 95.4 million that 112.0 million USD makes at today's 1.174: in euros the bank's whole value
+(3.65 billion USD) moves with the euro on every scenario day, and that move is part of a euro-based owner's risk. The configured
+currencies (`drishti.var.currencies`: USD, EUR, CAD, JPY, GBP) are built ahead in the background once the USD book has loaded, so the
+picker never waits; `drishti.py var status` says it under `currencies.builtAhead` (`built ahead in 148 ms, 21399944 bytes`). Any other
+currency (**More…**, or `--ccy CHF`) is built the first time it is asked. The headline in any currency comes from every node's PVs
+summed per trade currency, exact to the cent. A trade page's strip now says its **Trade currency** (`EUR · as priced` for an Endur trade
+sent as scenario PVs, `USD · as booked` for one sent as a P&L vector).
+
+**Further in the guide:** [section 15.1](../guides/VAR_GUIDE.md#151-where-they-live) (the inputs), [section 2.2](../guides/VAR_GUIDE.md#22-on-the-test-data) (the bank's numbers read), [section 15.9](../guides/VAR_GUIDE.md#159-scenario-pv-scenario-pvs-per-trade-in-the-trades-currency-as-built-294) (scenario PVs and their FX), [section 15.10](../guides/VAR_GUIDE.md#1510-reporting-currency-as-built-294) (reporting currencies), [section 15.11](../guides/VAR_GUIDE.md#1511-reporting-currencies-built-ahead-per-trade-currency-totals-and-the-picker-as-built-294) (built ahead, the totals, the picker).
 
 ## Step 2 · Drill down from the bank to a trade
 

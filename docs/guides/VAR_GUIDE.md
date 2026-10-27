@@ -251,6 +251,7 @@ Type a command and press Enter (or `<GO>`):
 | `VAR SCOPE unwind <GO>` | your saved basket `unwind` (`VAR SCOPE asha/unwind` for one shared with you) |
 | `VAR SCOPE DESK:DESK-RATES - TRD:MX-30000121 <GO>` | any scope written in the [grammar](#52-the-grammar) |
 | `VAR CAPTURE CAP-20260930-12 <GO>` | a capture, reopened exactly as it was taken |
+| `VAR DESK DESK-RATES IN EUR <GO>` | any of these in a reporting currency (2.9.4): the page in EUR, its link `&ccy=EUR` ([section 15.11](#1511-reporting-currencies-built-ahead-per-trade-currency-totals-and-the-picker-as-built-294)) |
 
 `VAR VAR-RATES <GO>` (the retired stored record's id, [section 21](#21-retiring-the-stored-version)) opens the explorer at `DESK:RATES`
 and says so; `VAR VN-MGMT~DESK-FX` opens `NODE:MGMT~DESK-FX`, and old links (`/v/var/VAR-RATES`) do the same. The page is
@@ -271,6 +272,11 @@ Three columns, as the approved mock-up:
   diversification, the limit use, the backtest exceptions over 250 days with the Basel light), and the tabs.
 - **How this number was built** (right, [section 3.6](#36-how-this-number-was-built)), **Export CSV** (the scope's path) and **Capture
   VaR**. The **?** in the status line opens this guide.
+- **Reporting currency** (the status line's right end, 2.9.4): USD, EUR, CAD, JPY, GBP (the configured ones) and **More…** (every
+  other currency with scenario FX on the date). Every panel follows it, the tiles say it (`VaR 99% · 1 day · EUR`), the choice stays
+  for the session and goes into the link; [section 15.11](#1511-reporting-currencies-built-ahead-per-trade-currency-totals-and-the-picker-as-built-294).
+
+![The rates desk in EUR: the picker in the status line, the tiles and the tree in EUR, the provenance naming the currency, the input form and the scenario FX](img/var/15-reporting-currency.jpg)
 
 ![The explorer on the rates desk: the hierarchy with each node's VaR and limit bar, the six tiles, the P&L path, and how the number was built](img/var/01-explorer-desk.jpg)
 
@@ -330,6 +336,13 @@ component. **+ basket** on a row adds it to your basket ([section 3.5](#35-const
 ![The rates desk's contributions: three books, their components adding up to the desk's VaR](img/var/04-contributions.jpg)
 
 **Captured results**: the captures of this scope ([section 6](#6-captures-and-compare)).
+
+**In other currencies** (2.9.4, loaded only when you open it): the scope's VaR 99% and ES 97.5% in each configured currency, each
+computed from its PVs summed per trade currency with that currency's scenario FX, that VaR in the page's currency at today's rate, and
+the difference from the page's VaR. The shown currency is marked; click another to move the page to it. The Contributions and the
+ranked path also list each trade's or position's **Trade currency**.
+
+![The rates desk in other currencies: USD shown, EUR, CAD, JPY and GBP each with its own VaR and ES, and the difference at today's rate](img/var/16-other-currencies.jpg)
 
 ### 3.5 Construct your basket
 
@@ -1069,6 +1082,8 @@ the date before it, with a warning). Errors are RFC 7807 problems with a `code` 
 | `GET /hints` | `q` (typed text), `limit` (8, at most 25), `asOf` | the basket tray's type-ahead: `[{type, id, name, scope, trades, var, notice}]` (portfolios, your baskets, desks, books, legal entities, divisions, counterparties, positions, trades; a typed `WORD:id` as written, with its notice when it matches nothing), as you |
 | `POST /what-if` | body `{scope, items: [{copyOf, factor, label}]}`, `asOf` | the pre-deal what-if ([section 8.5](#85-the-pre-deal-what-if-in-the-basket-tray)): `before`, `after`, `change`, `items`; `503 DRS-5205` without the Python engine |
 | `GET /tree` | `hierarchy` (default `MGMT`), `asOf` | the nodes the caller sees with their figures, and the stored portfolios |
+| `GET /scope/currencies` | `scope`, `asOf`, `ccy` | 2.9.4, the explorer's tab *In other currencies*: per listed currency `var`, `es`, `varInPage` (that VaR in `ccy` at today's rate), `difference`, `differencePct`, `shown`; `tradeCurrencies`; from the per-trade-currency totals ([section 15.11](#1511-reporting-currencies-built-ahead-per-trade-currency-totals-and-the-picker-as-built-294)) |
+| `GET /currencies` | `asOf` | 2.9.4, the picker's list: `listed` (`drishti.var.currencies`), `available` (every currency with scenario FX on the date), `ready` (built already) |
 | `GET /status` | | settings (with the position rules and the official captures), the tiers (hot files open and on disk) and loaded dates (with any refused) |
 | `POST /reload` | | administrators only: drops the loaded dates (after a new load): `{"reloaded": true}` (audited `var-reload`) |
 | `GET /official` | `asOf` | a date's official end-of-day record ([section 19](#19-official-end-of-day-results)), for a viewer who sees every node (`403` otherwise; `404` when the date has none) |
@@ -1242,6 +1257,8 @@ by `VarProperties` (`@ConfigurationProperties("drishti.var")`); `GET /api/v1/var
 | `drishti.var.path-page` | `60` | 60 | rows per page of the ranked P&L path |
 | `drishti.var.kinds.vector`, `.position`, `.hierarchy`, `.scenario-set`, `.portfolio` | the market-risk kinds | `pnl-vector`, `position`, `risk-hierarchy`, `scenario-set`, `portfolio` | the kinds read (and `position`: the kind the derived positions are served as) |
 | `drishti.var.kinds.scenario-pv`, `.fx-scenario`, `.fx-spot` | `scenario-pv`, `fx-scenario`, `fx-spot` | the same | 2.9.4: scenario PVs, supplied scenario FX, the FX history derived FX comes from ([section 15.9](#159-scenario-pv-scenario-pvs-per-trade-in-the-trades-currency-as-built-294)) |
+| `drishti.var.currencies` | `${DRISHTI_VAR_CURRENCIES:USD,EUR,CAD,JPY,GBP}` | `[USD, EUR, CAD, JPY, GBP]` (USD always first) | 2.9.4: the reporting currencies **built ahead**: after a date's USD book loads, each listed currency's book is built in the background into its own hot file, so a VaR in it never waits on its first ask; the console's picker lists them ([section 15.11](#1511-reporting-currencies-built-ahead-per-trade-currency-totals-and-the-picker-as-built-294)) |
+| `drishti.var.currency-retention-dates` | `${DRISHTI_VAR_CURRENCY_RETENTION_DATES:5}` | 5 (below 1) | 2.9.4: the newest business dates whose listed currencies are built ahead and kept on disk; older dates' listed-currency hot files are deleted (built again on first ask) |
 | `drishti.var.official.currencies` | `[USD]` | `[USD]` (USD always first) | 2.9.4: the reporting currencies captured officially; only USD is published ([section 15.10](#1510-reporting-currency-as-built-294)) |
 | `drishti.var.access` | `{}` | no restriction | per role and node: `positions` or `aggregate` ([section 9](#9-who-sees-what-entitlements-and-audit)) |
 | `drishti.var.positions.live-statuses`, `.rules` | `[NEW, VALIDATED, AMENDED]`, `[]` | the same | the position rules when no loaded pack has a `positions:` section ([section 15.6](#156-positions-derived-by-drishti-as-built)) |
@@ -1757,10 +1774,11 @@ Markets, the bank). On the default demo lake (2026-10-26, 8,566 live trades) the
 Every answer of the engine takes a **reporting currency**, `ccy=EUR` (none: USD), and says it in `currency`: the headline and its
 provenance, the path, the contributions, the history, the tree, the hints, captures and compare, the pre-deal what-if, `var-result` and
 `var-whatif` (the parameter `ccy`: `VRES DESK:RATES~ccy=EUR`), and the official record (`GET /official?ccy=EUR`). The command line takes
-`--ccy` ([section 10](#10-the-command-line)). The console's currency picker is not built yet (its mock-ups are with the product owner).
+`--ccy` ([section 10](#10-the-command-line)); the console's **Reporting currency** picker and `VAR … IN EUR`, the currencies built ahead and
+the per-trade-currency totals are [section 15.11](#1511-reporting-currencies-built-ahead-per-trade-currency-totals-and-the-picker-as-built-294).
 
-**The conversion.** The USD book is built when the date loads; a book in another currency `r` is built from it **the first time it is
-asked**, every trade converted with its USD value today `p` (its `PV`) and the scenario FX of `r` (`CurrencyBook`, `ScenarioFx.convert`):
+**The conversion.** The USD book is built when the date loads; a book in another currency `r` is built from it after the USD book for
+the listed currencies (`drishti.var.currencies`, section 15.11), and **the first time it is asked** for any other, every trade converted with its USD value today `p` (its `PV`) and the scenario FX of `r` (`CurrencyBook`, `ScenarioFx.convert`):
 
 ```
 P&L_r(s) = (p + P&L_USD(s)) / FX_r(s) − p / FX_r(base)
@@ -1796,6 +1814,77 @@ currency. A node's history in a currency without official records replays today'
 
 At today's rates the USD VaR would be 95.4 million EUR or 155.6 million CAD: the difference is the bank's net value (3.65 billion USD)
 moving against each currency on the scenario days, a risk a euro-based owner carries and a dollar-based one does not.
+
+### 15.11 Reporting currencies built ahead, per-trade-currency totals and the picker (AS BUILT, 2.9.4)
+
+The product owner's decisions of 2026-10-27: pricing systems always send PVs in the trade's own currency, kept as received; the
+reporting currencies a bank uses are **built ahead**; every node keeps its P&L **summed per trade currency**; the console's page has a
+**Reporting currency** picker (mock-up A) and a tab **In other currencies** (mock-up C's table).
+
+**Built ahead.** `drishti.var.currencies` (default `USD, EUR, CAD, JPY, GBP`; USD always) lists them. When a date's USD book has
+loaded, a background thread (one, low priority, so a USD answer never waits for it) builds each listed currency's book from it, one
+after the other, into its own hot file (`<hot>/<date>-<CCY>/`, section 26), exactly as the first ask of section 15.10 builds it. A request
+in a currency not built yet joins the build in progress, or builds it itself (the first-ask path). Only with the tiered memory
+(`tier.mode: mapped`): on the heap tier every currency's vectors would sit on the heap, so there they stay first-ask. A listed currency
+without scenario FX on the date is said in the status (`not built: no JPY FX …`), never an error of the date. `GET /status` →
+`currencies.builtAhead` says, per date and currency, `built ahead in 148 ms, 21399944 bytes`, `built on first ask` or why not, and
+`tier.currencies` the files and bytes on disk.
+
+**Retention.** `drishti.var.currency-retention-dates` (default **5**): the newest five business dates with trades are built ahead; after
+each build the listed currencies' hot files of older dates are deleted (unless a request has them open; a currency asked on an older
+date is built again on first ask). The USD books keep following `tier.disk-dates`. Why five: the explorer is used on today and the days
+before it (day-over-day, the week's comparisons in the captures), the hot dates are two, and a week of business dates costs about 21 MB a
+currency a date on the demo (four currencies: 0.43 GB on disk), 5.0 GB at 100k trades, far below the 60 dates the disk tier keeps. The
+native inputs (`scenario-pv`, `fx-scenario`) stay in the lake as before.
+
+**Measured on the demo lake** (2026-10-27, 8,566 live trades, 1,199 of them scenario PVs; a 24-core workstation, mapped tier):
+
+| | per currency | four listed currencies (EUR, CAD, JPY, GBP) | per 100k trades (extrapolated, linear) |
+|---|---|---|---|
+| disk, one date | 21.4 MB (the USD hot file: 21.9 MB) | 85.6 MB | 250 MB a currency, 1.0 GB for four |
+| disk, the 5 retained dates | 107 MB | 428 MB | 5.0 GB |
+| build time, one date | 58 to 148 ms | 0.37 s (the USD load: 0.58 s) | about 4.3 s, in the background |
+
+**Per-trade-currency totals.** Every node keeps, for each currency its trades are priced in (`c`: a scenario-PV row's `CURRENCY`; a
+P&L vector counts as USD), the sum of their **native** PVs under each scenario and today, `PVsum_c(s)` and `PVbase_c` (`CurrencyTotals`,
+built with the USD book from the rows as read, float64; kept in the hot file's `CTOT` section). A node's P&L in any reporting
+currency `X` is then exact and cheap:
+
+```
+P&L_X(s) = Σ_c [ PVsum_c(s) × FX_c→X(s) − PVbase_c × FX_c→X(base) ]        FX_c→X = FX_c / FX_X (USD per unit: the cross through USD)
+```
+
+The conversion is linear in the PVs, so this is the sum of the trades each converted on its own, to the cent (`CurrencyTotalsTest`:
+every node of a synthetic bank in USD, EUR, CAD, JPY and GBP, heap and mapped; `VarTestDataPrecisionTest`: every node of the test data
+in six currencies, against the book converted trade by trade; `VarCurrencyAheadTest`: the server's answers). **The headline VaR and
+ES in any currency other than USD, and the tab below, come from these totals**; any other scope sums its trades per currency first
+(`CurrencyTotals.of`). The rest of the page (contributions by part, the P&L path's worst part) reads the book in that currency.
+The provenance's `tier` says `per-trade-currency totals of the USD book (float64), converted with the scenario FX of EUR`.
+
+**On the demo lake** (2026-10-27): the bank 126,537,611 / 172,532,570 USD is **110,448,804 / 144,379,703 EUR**. On the test data
+(2026-09-30) the figures of section 15.10 are unchanged (the totals equal the converted book).
+
+**The picker (the console, mock-up A).** The VaR page's header strip has **Reporting currency**: the listed currencies, then
+**More…**, which adds every other currency with scenario FX on the date (`GET /api/v1/var/currencies`: `listed`, `available`,
+`ready`). The whole page follows it: the tiles (`VaR 99% · 1 day · EUR`), the limit (`set in USD, at today's rate`), the P&L path,
+the history, the contributions, the scope tree (`VaR EUR`), captures and the basket tray. The choice stays for the browser tab's session
+and goes into the link (`/var?scope=DESK:DESK-RATES&ccy=EUR`); the command line says the same, **`VAR DESK DESK-RATES IN EUR`** (any
+VAR command ends with `IN <currency>`). The provenance says the reporting currency, the input form (`P&L vectors (USD) and scenario PVs
+in each trade's currency (1199 of 8566 trades)`), the scenario FX (`supplied`, `derived`) and `Cross rates: via USD`.
+
+**The tab In other currencies** (mock-up C's table, loaded **only when opened**): `GET /api/v1/var/scope/currencies?scope=&ccy=`, one
+row per listed currency (and the page's own when it is not listed): its VaR 99% and ES 97.5% from the totals, that VaR in the page's
+currency at today's rate, and the difference from the page's VaR (`+3.2%`). The shown currency is marked; a click on another switches
+the page to it. The difference is the currency move on the scenario days: a euro-based owner carries a risk a dollar-based one does not.
+
+**Trade currency.** Every trade page's strip says **Trade currency**: the currency its PVs come in (`EUR · as priced`, from the engine's
+scenario-PV row) or, for a trade sent as a P&L vector or one the engine has not loaded, its own `CURRENCY` (`USD · as booked`). The
+strip holds eight figures at most (`DRS-2026`): Trade currency takes the place of Source, which stays in the deal ticket (DES). The
+trade's **Risk** group (`risk-links@1`) adds **Trade currency** (and where it comes from) and **Base PV** in that currency
+(`RISK_LINKS.TRADE_CURRENCY`, `TRADE_CURRENCY_FROM`, `BASE_PV`, set by `VarTradeLinks`). The VaR page's contributions and the
+worst-scenario rows list it (`tradeCurrency`, `fromCurrency`); a position's trades (`TRADES[].TRADE_CURRENCY`, the position page) too;
+the counterparty, portfolio, legal-entity and index pages' trade tables label their currency column **Trade currency**. Position and
+portfolio figures stay in USD.
 
 ## 16. Reference and master data read
 
@@ -2249,6 +2338,7 @@ recommended defaults unless the product owner said otherwise):
 | 1.2 | 2026-10-25 | Official end-of-day captures published to `risk-results/var-official` for other systems (product owner); official captures kept 7 years |
 | 1.3 | 2026-10-25 | **AS BUILT (2.8.0, VaR complete part 1):** the stored `var` and `var-node` kinds retired (§21); computed figures removed from `position`, `portfolio` and `desk`, the pages show the engine's (§3.7), with a guard test; positions derived by Drishti by configured rules (§15.6); every live trade valued (9,572; open question 1); 28 portfolio definitions; official end-of-day captures of every node, published append-only (§19); the data-load signal reloads and captures (§15.8); 7-year retention (§15.1); the load's checks and `DRS-5201` to `DRS-5204` (§20); `by=node`, the largest parts, masks, BASKET portfolios refused to aggregate-only viewers, basket and reload audit, input versions and batch ids in provenance, ids in any case; scope words `LE:` (the trades' legal entity) and `CPTY:` (§5.5) |
 | 1.5 | 2026-10-27 | **AS BUILT (2.9.4, local branch for the product owner's review):** scenario PVs in each trade's currency (`scenario-pv`) beside or instead of P&L vectors, converted to USD P&L at load; scenario FX supplied (`fx-scenario`) or derived from the FX history (`fx-spot`), crosses through USD, 1-day; `DRS-5206` (a scenario that failed to price) and `DRS-5207` (no FX) (§15.9, §20); a reporting currency on every answer (`ccy`, `--ccy`), books per currency built on first ask on the tiered memory, official records per `drishti.var.official.currencies` (§15.10); the demo's Endur trades as scenario PVs (§22.1) |
+| 1.6 | 2026-10-27 | **AS BUILT (2.9.4, local):** the listed reporting currencies built ahead in the background and kept for the newest 5 dates (`drishti.var.currencies`, `drishti.var.currency-retention-dates`); every node's PVs summed per trade currency (`CTOT`, hot file format 2) for the headline in any currency and the tab *In other currencies* (`GET /scope/currencies`, `GET /currencies`); the console's Reporting currency picker, `VAR … IN EUR`, Trade currency on the trade pages and the VaR tables (§15.11) |
 | 1.4 | 2026-10-26 | **AS BUILT (2.8.0, VaR complete part 2):** the tiered memory (§26: each date a memory-mapped float32 hot file, aggregates float64, history dates mapped again from their file, eviction, cleaning, safe unmapping; the hot file's format 1 fixed; precision bound and measurements); `drishti.var.tier.*` (§12); the budget measured on the float32 copy; `provenance.tier`, the status's `tier` (§11.2, §11.4); the benchmark measured at 100,000 × 5 and extrapolated to 1 M × 50, with the full command (§27.3); the computed kinds `var-result` and `var-whatif` through reactive connectors, the Python VaR engine in the pool `var` (§8); `drishti.py var` (§10); open questions 8 and 12 decided; sharding documented as planned, not built (§28) |
 
 **2026-10-26, no change to the contract:** the contract (formerly the contracts folder's VAR.md, now [archived](../archive/VAR.md) as history) was merged with the user guide, the
@@ -2372,7 +2462,8 @@ changes; the date before it is answered meanwhile, with the reason in `provenanc
 
 A bank's vectors are large: 509 values per trade, 4,072 bytes in float64, **4.07 GB a day for a million trades**. Approved by the product
 owner (2026-10-25), built in *VaR complete, part 2* (2026-10-26) by `VarLoader`, `VarTier`, `VarBook.Builder`, `VarHotFile`,
-`RowSpill`, `MappedMatrix`, `GroupedVectors` and `FileMaps`. The format below is **fixed** (format 1).
+`RowSpill`, `MappedMatrix`, `GroupedVectors` and `FileMaps`. The format below is **fixed** (format 1; format 2, 2.9.4, adds the
+optional `CTOT` section: a format-1 file is not read, the date is built again from the lake).
 
 ### 26.1 The tiers
 
@@ -2426,12 +2517,13 @@ JDK's cleaner; `GET /status` names the method. On Windows the file itself is rel
 
 ### 26.3 The hot file
 
-`VarHotFile`, format 1: `<tier dir>/<YYYY-MM-DD>/inputs-<16 hex>.vhot`, little-endian, written once, never changed.
+`VarHotFile`, format 2 (2.9.4): `<tier dir>/<YYYY-MM-DD>/inputs-<16 hex>.vhot` (a reporting currency's book: `<YYYY-MM-DD>-<CCY>/`),
+little-endian, written once, never changed.
 
 ```
 offset  bytes  field
 0       8      magic "DRSHVAR1"
-8       4      format version (1)
+8       4      format version (2)
 12      4      flags: bit 0 float32 matrices, bit 1 trade matrix present
 16      4      business date as yyyymmdd (int32)
 20      4      N, the vector width (509)
@@ -2460,6 +2552,7 @@ offset  bytes  field
 | `NODE` | per node id, hierarchy, level, name, parent, limit (float64) and its books |
 | `AKEY`, `AGGS` | the aggregates' keys (books and nodes), then **float64 M × N**, summed from the lake's float64 rows (exact, independent of the float32 copy) |
 | `TMAP` | per trade its row in `TMAT`, −1 when its position has one trade (its row is the position's) |
+| `CTOT` | 2.9.4, a USD book only: every node's per-trade-currency totals (section 15.11): count; per node its id and currencies, each with its trade count (int32), today's native PV sum and the N scenarios' (float64) |
 | `PMAT` | **float32 P × N, row-major**, positions in hierarchy order (legal entity, desk, book, position), 64-byte aligned |
 | `TMAT` | **float32 Q × N**: the trades of positions of more than one trade (decided, open question 8), 64-byte aligned; absent when every position is one trade |
 
