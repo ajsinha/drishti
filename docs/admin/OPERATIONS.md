@@ -1033,7 +1033,7 @@ lives in `<drishti.collab.dir>/exports` and a restart forgets a job that was not
 thread's hashes proves history was rewritten (the chain is evidence of tampering, not prevention: someone with the database could rewrite all of it).
 
 **Verify.** `GET /admin/collab/verify?thread=th_…` recomputes one chain, checks the live comment rows against their revisions (text, author, state, revision number), and compares the thread's head (revision count and last hash) with the seal kept beside it, so a changed row or a removed newest revision is found (`{ok, steps, firstHash, lastHash, problem}`); with no `thread` (or with
-`kind` and `id`) it checks every thread and share, in bounded memory, and reports the failures (`problems`, capped by `maxProblems`), and also checks the legal holds and the audit trail, each sealed in `drishti_collab_seal` (or `seals.log` with the file store); rows that cannot be read are reported, never a 500. Seals are evidence, not prevention. A failure
+`kind` and `id`) it checks every thread and share, in bounded memory, and reports the failures (`problems`, capped by `maxProblems`), and also checks the legal holds and the audit trail, each sealed in `drishti_collab_seal` (or `seals.jsonl` with the file store; `seals.log` before 2.9.4, still read); rows that cannot be read are reported, never a 500. Seals are evidence, not prevention. A failure
 names the revision that was changed or no longer follows the one before it.
 
 **Backups.** With `drishti.collab.store: content` (the default) the whole record (threads with their revision chains, shares, inbox,

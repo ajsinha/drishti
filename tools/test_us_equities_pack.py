@@ -55,7 +55,7 @@ def test_the_pack_commits_no_prices_weights_or_gics():
     assert {p.name for p in snap.iterdir()} == {"us-company", "index-membership", "filing-feed", "filing", "financial-fact"}
     names = {p.name for p in (PACK / "samples").iterdir()}
     assert not any(n.startswith("price-history") for n in names)
-    catalog = json.loads((PACK / "samples" / "catalog.json").read_text(encoding="utf-8"))
+    catalog = [json.loads(x) for x in (PACK / "samples" / "catalog.jsonl").read_text(encoding="utf-8").splitlines()]   # one entry a line
     assert {e["kind"] for e in catalog} <= {"us-company", "index-membership", "sic-sector", "filing-feed", "filing", "financial-fact"}
     cos = SNAP.kind_docs("us-equities", "us-company")
     assert len(cos) > 400

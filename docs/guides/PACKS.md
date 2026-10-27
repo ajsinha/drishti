@@ -61,7 +61,7 @@ helpdesk/
 ├── python/
 │   └── queue-by-status.py       a Calc snippet
 └── samples/
-    ├── catalog.json             the list of sample entities (kind, id, title, subtitle)
+    ├── catalog.jsonl             the list of sample entities (kind, id, title, subtitle)
     ├── ticket.jsonl             the sample tickets, one JSON document a line
     ├── agent.jsonl
     └── client.jsonl
@@ -608,7 +608,7 @@ users** (sets `developers`), *Show samples to everyone* and *Hide samples from e
 and `visible` brings them back, with no restart) and is audited (`pack-samples`). The API: `GET` and `PUT /api/v1/admin/packs/samples` with
 `{"mode": "visible" | "developers" | "hidden" | "default"}`.
 
-**Sample documents are not sample packs.** Every pack has `samples/` (one `samples/<kind>.jsonl` per kind, listed in `samples/catalog.json`),
+**Sample documents are not sample packs.** Every pack has `samples/` (one `samples/<kind>.jsonl` per kind, listed in `samples/catalog.jsonl`),
 served by the built-in demo source when `DRISHTI_DEMO_ENABLED` is `true` (the default). The run configuration **Drishti server (demo lakes)**
 turns the demo source off, so every page reads the lakes; with it on, a sample answers before the lake for an id both hold.
 

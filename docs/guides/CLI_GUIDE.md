@@ -970,7 +970,7 @@ pack regenerate --dry-run: data/build/mb
   add         ... and 267 more
   refresh     README.md
   refresh     pack.yaml
-  refresh     samples/catalog.json
+  refresh     samples/catalog.jsonl
   refresh     samples/trade.jsonl
   merge       config/about.yaml   (your edit and the new text merged cleanly)
   keep        sutras/trade/trade-comswap.v1.sutra.yaml   (your edit kept; the generated text did not change)

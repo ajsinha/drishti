@@ -24,7 +24,7 @@ import java.util.Optional;
  */
 public record Seal(long count, String hash) {
 
-    /** Where seals are kept: the identity database ({@link JpaSealStore}) or {@code seals.log} ({@link FileSealStore}). */
+    /** Where seals are kept: the identity database ({@link JpaSealStore}) or {@code seals.jsonl} ({@link FileSealStore}; {@code seals.log} before 2.9.4). */
     public interface Store {
         Optional<Seal> get(String key);
 

@@ -258,7 +258,8 @@ public final class HistoryBench {
                     }
                     price[i] = Math.round(price[i] * (1 + rnd.nextGaussian() * 0.004) * 10_000) / 10_000.0;
                     Map<String, Object> doc = trade(i, d, qty[i], price[i], version[i], status[i]);
-                    w.write(json.writeValueAsString(List.of(id(i), doc, Map.of("QUANTITY", qty[i], "TRADE_STATUS", status[i]))));
+                    w.write(json.writeValueAsString(Map.of("id", id(i), "doc", doc,                 // one {id, doc, columns} a line
+                            "columns", Map.of("QUANTITY", qty[i], "TRADE_STATUS", status[i]))));
                     w.write('\n');
                 }
             }

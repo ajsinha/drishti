@@ -202,7 +202,7 @@ def check(docs: dict) -> list[str]:
 
 
 def sample_files(docs: dict) -> dict[Path, str]:
-    """Each pack's samples/: catalog.json and one JSON Lines file per kind (tools/packgen/common/samples.py)."""
+    """Each pack's samples/: catalog.jsonl and one JSON Lines file per kind (tools/packgen/common/samples.py)."""
     out: dict[Path, str] = {}
     by_pack: dict[str, dict[str, dict]] = {}
     catalogs: dict[str, list] = {}

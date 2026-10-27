@@ -252,7 +252,7 @@ class Stager:
         text = json.dumps(doc, ensure_ascii=False, separators=(",", ":"))
         st.doc_bytes += len(text)
         if self.folder:
-            self._handle(part).write(json.dumps([ident, text, promoted], ensure_ascii=False, separators=(",", ":")) + "\n")
+            self._handle(part).write(row_line(ident, text, promoted))
 
     def _handle(self, part: Part):
         k = (part.day, part.values)
@@ -286,12 +286,20 @@ class Stager:
         return {d: sorted(out[d], key=lambda p: tuple("" if v is None else v for v in p.values)) for d in sorted(out)}
 
 
+def row_line(ident, text: str, promoted: dict) -> str:
+    """One staged row: one JSON object a line, {"id", "doc" (the document as JSON text), "columns" (the promoted values)} (2.9.4,
+    docs/guides/DATA_FORMATS.md); the Java writer (LakeWriter) reads the same form."""
+    return json.dumps({"id": ident, "doc": text, "columns": promoted}, ensure_ascii=False, separators=(",", ":")) + "\n"
+
+
 def read_rows(file: pathlib.Path, batch: int):
-    """The staged rows of a file, ``batch`` at a time: lists of (id, document JSON, promoted)."""
+    """The staged rows of a file, ``batch`` at a time: lists of (id, document JSON, promoted). A staged file of the earlier form, one
+    array [id, doc, promoted] a line, is read too."""
     chunk = []
     with open(file, encoding="utf-8") as fh:
         for line in fh:
-            chunk.append(json.loads(line))
+            r = json.loads(line)
+            chunk.append((r["id"], r["doc"], r.get("columns") or {}) if isinstance(r, dict) else tuple(r))
             if len(chunk) >= batch:
                 yield chunk
                 chunk = []

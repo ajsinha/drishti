@@ -417,7 +417,7 @@ ticket-view/sutras/studio/ticket.v1.sutra.yaml
 ticket-view/tests/ticket/cases.jsonl
 ticket-view/tests/ticket/expect.yaml
 ticket-view/samples/ticket.jsonl
-ticket-view/samples/catalog.json
+ticket-view/samples/catalog.jsonl
 ticket-view/README.md
 ```
 

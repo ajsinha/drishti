@@ -132,7 +132,11 @@ final class ExposurePublisher {
                     String id = r.get("HIERARCHY") + ":" + r.get("NODE_ID") + "@" + date + "#v" + r.get("RESULT_VERSION");
                     Map<String, Object> doc = new LinkedHashMap<>(promoted);
                     doc.put("BUSINESS_DATE", date.toString());
-                    w.write(JSON.writeValueAsString(List.of(id, JSON.writeValueAsString(doc), promoted)));
+                    Map<String, Object> line = new LinkedHashMap<>();      // one {id, doc, columns} a line (LakeWriter)
+                    line.put("id", id);
+                    line.put("doc", JSON.writeValueAsString(doc));
+                    line.put("columns", promoted);
+                    w.write(JSON.writeValueAsString(line));
                     w.newLine();
                 }
             }

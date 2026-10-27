@@ -277,7 +277,7 @@ drishti-console/.venv/bin/python tools/drishti.py data ingest --from your-folder
 ## The samples
 
 The packs' samples in `config/packs/<pack>/samples/` are what the `demo` source serves live: one JSON Lines file per kind
-(`<kind>.jsonl`, one document a line, split into `<kind>.part-001.jsonl` … only above about 50 MB) and a `catalog.json` listing every
+(`<kind>.jsonl`, one document a line, split into `<kind>.part-001.jsonl` … only above about 50 MB) and a `catalog.jsonl` listing every
 sample's kind, id, title and subtitle (the type-ahead's text). The five banking packs' samples are written by
 
 ```bash

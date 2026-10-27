@@ -387,7 +387,8 @@ def render_pack(pack_dir: Path, generator: str | None = None, files: dict | None
     patterns: dict[str, list[str]] = {}
     for p in graph.get("id-patterns") or []:
         patterns.setdefault(p.get("kind"), []).append(p.get("pattern"))
-    catalog = json.loads(F.text("samples/catalog.json") or "[]")
+    cat_lines = F.text("samples/catalog.jsonl")                 # one entry a line (2.9.4); else the older catalog.json array
+    catalog = [json.loads(t) for t in cat_lines.splitlines() if t.strip()] if cat_lines else json.loads(F.text("samples/catalog.json") or "[]")
     example_id: dict[str, str] = {}
     for e in catalog:
         example_id.setdefault(e.get("kind"), str(e.get("id")))

@@ -78,7 +78,7 @@ helpdesk/
 ├── python/
 │   └── queue-by-status.py       a Calc snippet
 └── samples/
-    ├── catalog.json             the list of sample entities (kind, id, title, subtitle)
+    ├── catalog.jsonl             the list of sample entities (kind, id, title, subtitle)
     ├── ticket.jsonl             the sample tickets, one JSON document a line
     ├── agent.jsonl
     └── client.jsonl
@@ -94,7 +94,7 @@ trading/
 ├── config/                      about.yaml, formats.yaml, help.yaml
 ├── guides/                      trading.md, trading-products.md
 ├── python/                      9 Calc snippets
-└── samples/                     catalog.json and trade.jsonl (765 trades of the three source systems)
+└── samples/                     catalog.jsonl and trade.jsonl (765 trades of the three source systems)
 ```
 
 **Attribute names are UPPER_SNAKE.** Every shipped pack names every attribute the way production systems write them (`TRADE_ID`,
@@ -135,7 +135,7 @@ The finished pack is in the repository. Open it beside this guide:
 | Sutra and its tests | [ticket.v1.sutra.yaml](examples/pack/helpdesk/sutras/ticket.v1.sutra.yaml), [tests/ticket/](examples/pack/helpdesk/tests/ticket/expect.yaml) |
 | vocabulary | [semantics.yaml](examples/pack/helpdesk/config/semantics.yaml), [formats.yaml](examples/pack/helpdesk/config/formats.yaml) |
 | About this page | [about.yaml](examples/pack/helpdesk/config/about.yaml) |
-| samples | [catalog.json](examples/pack/helpdesk/samples/catalog.json) and `samples/ticket.jsonl`, `agent.jsonl`, `client.jsonl` |
+| samples | [catalog.jsonl](examples/pack/helpdesk/samples/catalog.jsonl) and `samples/ticket.jsonl`, `agent.jsonl`, `client.jsonl` |
 | guide and starters | [helpdesk.md](examples/pack/helpdesk/guides/helpdesk.md), [help.yaml](examples/pack/helpdesk/config/help.yaml), [workspaces.yaml](examples/pack/helpdesk/config/workspaces.yaml) |
 
 It is not in `config/packs/`, so no server loads it by accident. To follow along, build it yourself in `config/packs/helpdesk/`
@@ -217,7 +217,7 @@ file has more keys than this one, which later steps add. Choose kinds and mnemon
 ### Step 3. Sample data
 
 The built-in `demo` source serves every loaded pack's `samples/` folder, so the pack works before there is a real data
-store. `samples/catalog.json` lists every sample (`kind` and `id` are required; `title` and `subtitle` are what the
+store. `samples/catalog.jsonl` lists every sample (`kind` and `id` are required; `title` and `subtitle` are what the
 type-ahead shows):
 
 ```json
@@ -820,7 +820,7 @@ this guide.
 | Step | Key or file | What the user gets |
 |---|---|---|
 | 2 | `pack`, `version`, `code`, `title`, `description`, `kinds`, `mnemonics`, `graph.id-patterns`, `console.examples` | `TKT TKT-1001`, `TKT-1001` alone, suggestions, `HELP` for the pack's overview |
-| 3 | `samples/catalog.json`, `samples/<kind>.jsonl` | data with no database, a live ticking age |
+| 3 | `samples/catalog.jsonl`, `samples/<kind>.jsonl` | data with no database, a live ticking age |
 | 6 | `graph.fields`, `graph.badges` | links between tickets, agents and clients, with badges |
 | 7 | `graph.impact` | F8 on an agent: tickets, then clients |
 | 8 | `columns`, `pivot` | useful pick lists and a Pivot tab |
@@ -961,7 +961,7 @@ is used when the key is absent. A folder or file that does not exist is simply s
 | `sutras` | `sutras` | Sutras (`*.sutra.yaml`) and shared blocks (`*.block.yaml`), scanned recursively; any other `.yaml`, `.yml` or `.sutra.md` file there is reported (`DRS-2004`) |
 | `formats` | `config/formats.yaml` | extra named formats (`formats: { age0: { type: number, decimals: 0, suffix: " h" } }`) |
 | `semantics` | `config/semantics.yaml` | inference hints: `roles:` (a field-name regex → format, tone, strip weight), `labels:`, `acronyms:` and `idFields:` |
-| `samples` | `samples` | sample documents for the built-in `demo` source (`catalog.json`, `<kind>.jsonl`) |
+| `samples` | `samples` | sample documents for the built-in `demo` source (`catalog.jsonl`, `<kind>.jsonl`) |
 | `about` | `config/about.yaml` | the words of the *About this page* drawer: a sentence per kind, a glossary of fields ([About text and glossary](#about-text-and-glossary)); read when the file exists |
 
 ### `columns`: the key fields of a pick list

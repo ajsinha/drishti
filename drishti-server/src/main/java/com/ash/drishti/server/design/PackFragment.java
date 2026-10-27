@@ -46,7 +46,7 @@ import org.springframework.stereotype.Component;
  * A Design as a pack fragment and back. The export is a zip with one folder: {@code pack.yaml} (a stub: the kind, a mnemonic
  * suggestion, an id pattern and the id field), the Sutra under {@code sutras/}, the samples as tests in
  * {@code tests/<sutra>/cases.jsonl} with an {@code expect.yaml} (what {@code sutra test} checks), three samples in
- * {@code samples/<kind>.jsonl} (one a line, with {@code samples/catalog.json}) and a README. The import reads a zip of the same layout (or any pack folder zipped) into Designs,
+ * {@code samples/<kind>.jsonl} (one a line, with {@code samples/catalog.jsonl}) and a README. The import reads a zip of the same layout (or any pack folder zipped) into Designs,
  * one per Sutra, with the samples found beside it. Nothing is written to disk; entries are read in memory with limits.
  */
 @Component
@@ -166,7 +166,11 @@ public class PackFragment {
             }
             if (!lines.isEmpty()) {
                 put(zip, pack + "/samples/" + kind + ".jsonl", lines.toString());
-                put(zip, pack + "/samples/catalog.json", JSON.writerWithDefaultPrettyPrinter().writeValueAsString(catalog));
+                StringBuilder entries = new StringBuilder();             // samples/catalog.jsonl: one entry a line (2.9.4)
+                for (JsonNode e : catalog) {
+                    entries.append(JSON.writeValueAsString(e)).append('\n');
+                }
+                put(zip, pack + "/samples/" + com.ash.drishti.common.PackSamples.CATALOG, entries.toString());
             }
             if (hasAbout(d)) {
                 put(zip, pack + "/" + ABOUT_FILE, d.about);
@@ -263,7 +267,7 @@ public class PackFragment {
                 + "- `sutras/`: the Sutra `" + sutra + "`.\n"
                 + "- `tests/" + sutra + "/`: " + tests + " test case(s) in `cases.jsonl` (one `{case, document}` a line) and `expect.yaml`; run them with\n"
                 + "  `java -jar drishti-server-*-exec.jar sutra test " + pack + "`.\n"
-                + "- `samples/" + kind + ".jsonl`: up to three documents to try the view on, one a line (`samples/catalog.json` lists them).\n"
+                + "- `samples/" + kind + ".jsonl`: up to three documents to try the view on, one a line (`samples/catalog.jsonl` lists them, one a line).\n"
                 + (hasAbout(d) ? "- `" + ABOUT_FILE + "`: the About text (page text, panel text, glossary) written in the workbench's About tab.\n" : "")
                 + "\n"
                 + "To use it: put this folder under the server's `config/packs/` directory and load it from Admin -> Packs (or list it in `DRISHTI_PACKS`).\n"

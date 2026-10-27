@@ -489,7 +489,7 @@ pack/desk-pack/
 ├── pack.yaml                 kinds, mnemonics, columns, graph.fields (the links); connectors (the names), connector-templates (their suggested settings), routes and ingest when real dated data was given
 ├── sutras/<kind>/<sutra>.v1.sutra.yaml
 ├── tests/<sutra>/            sample-N.json / sample-example-N.json / sample-synthetic-N.json and expect.yaml
-├── samples/                  documents per kind and catalog.json, so the pack opens before any data source
+├── samples/                  documents per kind and catalog.jsonl, so the pack opens before any data source
 ├── config/about.yaml         About this page: a sentence per kind, a glossary entry per shown field
 └── README.md                 what was generated, which Sutras are synthetic, next steps
 ```

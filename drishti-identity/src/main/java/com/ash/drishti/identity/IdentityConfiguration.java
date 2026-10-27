@@ -170,7 +170,7 @@ public class IdentityConfiguration {
         java.nio.file.Path dir = java.nio.file.Path.of(props.dir());
         if (java.nio.file.Files.isDirectory(dir.resolve("threads")) || java.nio.file.Files.isDirectory(dir.resolve("shares"))
                 || java.nio.file.Files.isDirectory(dir.resolve("inbox")) || java.nio.file.Files.isDirectory(dir.resolve("outbox"))
-                || java.nio.file.Files.isRegularFile(dir.resolve("seals.log"))) {
+                || java.nio.file.Files.isRegularFile(dir.resolve("seals.log")) || java.nio.file.Files.isRegularFile(dir.resolve("seals.jsonl"))) {
             com.ash.drishti.identity.collab.CollabImport.run(new com.ash.drishti.identity.collab.CollabImport.Source("file", new com.ash.drishti.identity.collab.FileThreadStore(dir), new com.ash.drishti.identity.collab.FileShareStore(dir),
                     new com.ash.drishti.identity.collab.FileInboxStore(dir, Integer.MAX_VALUE), new com.ash.drishti.identity.collab.FileOutboxStore(dir), new com.ash.drishti.identity.collab.FileHoldStore(dir), new com.ash.drishti.identity.collab.FileSealStore(dir)),
                     target);

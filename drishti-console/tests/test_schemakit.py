@@ -418,7 +418,7 @@ def test_assemble_writes_a_pack(tmp_path, plan):
     assert sorted(p.name for p in tdir.iterdir()) == ["cases.jsonl", "expect.yaml"]                     # a case a line (2.9.4)
     assert [json.loads(x)["case"] for x in (tdir / "cases.jsonl").read_text().splitlines()] == ["sample-synthetic-1", "sample-synthetic-2", "sample-synthetic-3"]
     assert "noErrors: true" in (tdir / "expect.yaml").read_text() and "nonEmpty: [details]" in (tdir / "expect.yaml").read_text()
-    cat = json.loads((root / "samples/catalog.json").read_text())
+    cat = [json.loads(x) for x in (root / "samples/catalog.jsonl").read_text().splitlines()]          # one entry a line (2.9.4)
     assert any(c["kind"] == "trade" and c["subtitle"].endswith("(synthetic sample)") for c in cat)
     assert len(built.synthetic) == 9 and built.todo > 0
     assert "sample-synthetic-N" in (root / "README.md").read_text()

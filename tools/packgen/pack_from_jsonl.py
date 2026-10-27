@@ -19,7 +19,7 @@
         --key trade=tradeId,counterparty=counterpartyId --match trade=productType --date trade=businessDate
 
 Writes config/packs/<name>/ (or --out): pack.yaml (kinds, mnemonics, columns, and with --lake a Delta connector and routes),
-samples/ (catalog.json and samples/<kind>.jsonl, one document a line, up to --catalog-samples per kind), one Sutra per kind or per
+samples/ (catalog.jsonl and samples/<kind>.jsonl, one document a line, up to --catalog-samples per kind), one Sutra per kind or per
 --match group (tools/sutragen.py), tests/<sutra>/ with cases.jsonl (sample-1 ..., one case a line) and expect.yaml, config/about.yaml (kind
 titles and glossary entries with TODO text for every field the Sutras show) and a README.md. Then it runs
 `sutra lint` and `sutra test` on the new pack and prints the result.
@@ -183,7 +183,7 @@ def run(opts) -> int:
             by_kind.setdefault(k, {})[str(kv)] = d
             cat.append({"kind": k, "id": str(kv), "title": str(kv), "subtitle": k})
     (out / "samples").mkdir(parents=True, exist_ok=True)
-    for name, text in packsamples.files(by_kind, cat, getattr(opts, "sample_part_mb", packsamples.PART_MB)).items():   # catalog.json and samples/<kind>.jsonl
+    for name, text in packsamples.files(by_kind, cat, getattr(opts, "sample_part_mb", packsamples.PART_MB)).items():   # catalog.jsonl and samples/<kind>.jsonl
         (out / "samples" / name).write_text(text, encoding="utf-8")
 
     # tests expectations

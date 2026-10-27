@@ -35,7 +35,7 @@ import subprocess
 import sys
 import zipfile
 
-from stage import Part, read_rows
+from stage import Part, read_rows, row_line
 
 LAKE_CLASS = "com/ash/drishti/deltalake/write/LakeWriter.class"
 ROOT = pathlib.Path(__file__).resolve().parents[2]
@@ -326,7 +326,7 @@ def write_drishti(t: Table, by_day: dict, workdir: pathlib.Path, jar: str | None
                     rows = next(_chunks(t, part), [])
                     with open(part.file, "w", encoding="utf-8") as fh:
                         for r in rows:
-                            fh.write(json.dumps(r, ensure_ascii=False, separators=(",", ":")) + "\n")
+                            fh.write(row_line(*r))
     manifest = {
         "table": str(pathlib.Path(t.uri).resolve()),
         "partitionColumns": t.partition_by,

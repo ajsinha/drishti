@@ -35,7 +35,7 @@ import java.util.stream.Stream;
 /**
  * A pack's sample documents ({@code <pack>/samples/}), in either layout: one JSON Lines file per kind ({@code <kind>.jsonl}, one
  * document a line, split into {@code <kind>.part-001.jsonl} ... only when large), as the shipped and new packs are written, or one
- * file per document ({@code <kind>/<id>.json}), as older packs and the retired example packs are. {@code catalog.json} lists every
+ * file per document ({@code <kind>/<id>.json}), as older packs and the retired example packs are. {@code catalog.jsonl} (one entry a line; the {@code catalog.json} array of earlier releases is still read) lists every
  * sample's kind and id either way; a JSON Lines document's id is the catalogue entry at its position when the document holds it (the
  * writers keep the catalogue's order), else the first top-level value the catalogue lists as an id of its kind.
  * The writers are tools/packgen/common/packsamples.py and the pack wizard's.
@@ -208,15 +208,41 @@ public final class PackSamples {
         return positional != null && !taken.containsKey(positional) ? positional : null;
     }
 
-    /** The ids {@code catalog.json} lists for a kind, in its order (empty with no catalogue). */
-    static List<String> catalogue(Path samples, String kind) throws IOException {
-        Path f = samples.resolve("catalog.json");
-        List<String> out = new ArrayList<>();
-        if (Files.isRegularFile(f)) {
-            for (JsonNode e : JSON.readTree(f.toFile())) {
-                if (kind.equals(e.path("kind").asText())) {
-                    out.add(e.path("id").asText());
+    /** The catalogue's file: one entry a line, {@code {kind, id, title, subtitle}} (2.9.4, docs/guides/DATA_FORMATS.md). */
+    public static final String CATALOG = "catalog.jsonl";
+    /** The catalogue of earlier releases, one JSON array: still read when there is no {@link #CATALOG}. */
+    public static final String OLD_CATALOG = "catalog.json";
+
+    /** True for a samples folder's catalogue file (either form): never a kind's samples. */
+    public static boolean isCatalog(String fileName) {
+        return CATALOG.equals(fileName) || OLD_CATALOG.equals(fileName);
+    }
+
+    /** The catalogue's entries in order: {@code catalog.jsonl}, else the {@code catalog.json} array of earlier releases; empty with neither. */
+    public static List<JsonNode> catalogEntries(Path samples) throws IOException {
+        List<JsonNode> out = new ArrayList<>();
+        Path lines = samples.resolve(CATALOG);
+        if (Files.isRegularFile(lines)) {
+            for (String line : Files.readAllLines(lines, StandardCharsets.UTF_8)) {
+                if (!line.isBlank()) {
+                    out.add(JSON.readTree(line));
                 }
+            }
+            return out;
+        }
+        Path f = samples.resolve(OLD_CATALOG);
+        if (Files.isRegularFile(f)) {
+            JSON.readTree(f.toFile()).forEach(out::add);
+        }
+        return out;
+    }
+
+    /** The ids the catalogue lists for a kind, in its order (empty with no catalogue). */
+    static List<String> catalogue(Path samples, String kind) throws IOException {
+        List<String> out = new ArrayList<>();
+        for (JsonNode e : catalogEntries(samples)) {
+            if (kind.equals(e.path("kind").asText())) {
+                out.add(e.path("id").asText());
             }
         }
         return out;
@@ -231,7 +257,7 @@ public final class PackSamples {
         try (Stream<Path> s = Files.list(samples)) {
             for (Path f : s.sorted().toList()) {
                 String n = f.getFileName().toString();
-                String kind = Files.isDirectory(f) ? n : n.endsWith(".jsonl") ? PART.matcher(n).replaceFirst("").replaceFirst("\\.jsonl$", "") : null;
+                String kind = Files.isDirectory(f) ? n : n.endsWith(".jsonl") && !isCatalog(n) ? PART.matcher(n).replaceFirst("").replaceFirst("\\.jsonl$", "") : null;
                 if (kind != null && !out.contains(kind)) {
                     out.add(kind);
                 }

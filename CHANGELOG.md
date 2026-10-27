@@ -17,6 +17,16 @@
 
 ## 2.9.4 (unreleased)
 
+- **JSON Lines in three smaller places (2026-10-27; product owner).** A pack's sample catalogue is `samples/catalog.jsonl`, one
+  `{kind, id, title, subtitle}` a line (19 committed catalogues converted; every generator writes it; `PackSamples.catalogEntries`,
+  `packsamples.catalog` and every reader take it, never as a kind, and still read the `catalog.json` array; the demo connector still
+  refuses a folder with neither). `lake build`'s staged rows (and the official publishers' and `HistoryBench`'s) are one
+  `{id, doc, columns}` object a line; Drishti's Java lake writer reads that and the earlier `[id, doc, columns]` array. The
+  collaboration file store's seals are `seals.jsonl`, one `{key, count, hash}` a line; the tab-separated `seals.log` is still read,
+  never rewritten. Manifests, state files, GeoJSON, run reports and storage internals stay as they are. Tests: `FileSealStoreTest`,
+  `LakeWriterTest` (both row forms), the pack, contract and README tests. Docs: the demo connector, packs, pack developer, generators,
+  lifecycle and modelling guides, DATA_FORMATS, OPERATIONS, COLLABORATION.
+
 - **Official results as JSON Lines too (2026-10-27; product owner).** VaR and exposure still publish to Delta and also write each
   published date as JSON Lines beside the tables, `<root>/risk-results/jsonl/<table>/<date>/<table>-v<table version>.jsonl` (one row a
   line, one file per commit; new settings `drishti.var.official.jsonl` and `drishti.ccr.exposure.official.jsonl`, on by default,

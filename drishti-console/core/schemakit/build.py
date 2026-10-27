@@ -360,7 +360,9 @@ def assemble(plan: Plan, items: list[Item], drafts: dict, pack_dir: pathlib.Path
         if lines:                                   # samples/<kind>.jsonl: one document a line, in the catalogue's order
             write_jsonl(pack_dir / "samples", kp.kind, lines)
     (pack_dir / "samples").mkdir(exist_ok=True)
-    (pack_dir / "samples" / "catalog.json").write_text(json.dumps(cat, indent=1) + "\n", encoding="utf-8")
+    # the catalogue: samples/catalog.jsonl, one entry a line (2.9.4, docs/guides/DATA_FORMATS.md)
+    (pack_dir / "samples" / "catalog.jsonl").write_text("".join(json.dumps(e, ensure_ascii=False, separators=(",", ":")) + "\n" for e in cat),
+                                                         encoding="utf-8")
     # pack.yaml and About
     man = pack_manifest(plan)
     note = HEADER_NOTE + "".join(f"# {k.kind}: key $.{k.key}" + (f", business date $.{k.date}" if k.date else "") + "\n" for k in plan.kinds)
@@ -386,7 +388,7 @@ def assemble(plan: Plan, items: list[Item], drafts: dict, pack_dir: pathlib.Path
     return built
 
 
-ANON = ("\n- **Anonymised**: every sample document (in `tests/`, `samples/` and `catalog.json`) was anonymised before it was kept: names, ids "
+ANON = ("\n- **Anonymised**: every sample document (in `tests/`, `samples/` and `catalog.jsonl`) was anonymised before it was kept: names, ids "
         "and amounts are replaced consistently (the same value, the same token), dates and short vocabulary (statuses, sides, currencies) are kept. "
         "No value of the source data is in this pack.")
 def plain_yaml(doc) -> str:

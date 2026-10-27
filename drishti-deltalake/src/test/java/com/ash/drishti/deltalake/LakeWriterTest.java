@@ -42,10 +42,16 @@ class LakeWriterTest {
     Path tmp;
 
     private Path stage(String name, int from, int count, String product, double notional) throws IOException {
+        return stage(name, from, count, product, notional, false);
+    }
+
+    /** Staged rows: one {id, doc, columns} object a line (2.9.4), or with legacy the earlier array a line ([id, doc, columns]). */
+    private Path stage(String name, int from, int count, String product, double notional, boolean legacy) throws IOException {
         List<String> lines = new ArrayList<>();
         for (int i = from; i < from + count; i++) {
             String doc = "{\\\"TRADE_ID\\\":" + i + ",\\\"PRODUCT_TYPE\\\":\\\"" + product + "\\\",\\\"LEGS\\\":[{\\\"LEG_ID\\\":1}]}";
-            lines.add("[\"" + i + "\",\"" + doc + "\",{\"NOTIONAL\":" + notional + "}]");
+            lines.add(legacy ? "[\"" + i + "\",\"" + doc + "\",{\"NOTIONAL\":" + notional + "}]"
+                    : "{\"id\":\"" + i + "\",\"doc\":\"" + doc + "\",\"columns\":{\"NOTIONAL\":" + notional + "}}");
         }
         Path f = tmp.resolve(name);
         Files.write(f, lines, StandardCharsets.UTF_8);
@@ -107,9 +113,10 @@ class LakeWriterTest {
                 new ByteArrayOutputStream());
         assertEquals(4 + 3 + 15, read(table).size());
 
-        // append adds
-        run(manifest(table, "append", stage("f.rows", 300, 2, "Swap", 1.0).toString(), "2026-10-02", "Swap"), new ByteArrayOutputStream());
+        // append adds (staged in the earlier form, one array a line: still read)
+        run(manifest(table, "append", stage("f.rows", 300, 2, "Swap", 1.0, true).toString(), "2026-10-02", "Swap"), new ByteArrayOutputStream());
         assertEquals(24, read(table).size());
+        assertTrue(read(table).get("2026-10-02|300").contains("\"TRADE_ID\":300"));
     }
 
     @Test

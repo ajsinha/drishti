@@ -345,7 +345,7 @@ It runs as itself and serves every kind; it ticks live (`_meta.walk` random-walk
 drishti: { sources: { plugins: { demo: { enabled: false } } } }    # or DRISHTI_DEMO_ENABLED=false
 ```
 
-**Layout.** `samples/catalog.json` per pack lists the documents. **Loader:** each pack's `tools/` generate the samples.
+**Layout.** `samples/catalog.jsonl` per pack lists the documents. **Loader:** each pack's `tools/` generate the samples.
 **Limits:** it is the `default-route`: switch it off in production so a live view cannot tick from samples. → full
 reference: [DEMO_CONNECTOR.md](DEMO_CONNECTOR.md) (the sample data itself: [DEMO_DATA.md](DEMO_DATA.md))
 
