@@ -227,6 +227,7 @@ help:
   docs_dir: ../docs          # the repository docs rendered as the help centre's reference section
 packs:
   dir: ${DRISHTI_PACKS_DIR:../config/packs}   # the same packs directory the server uses (one variable sets both)
+  installed_dir: ${DRISHTI_PACKS_INSTALLED:}   # packs installed from the registry or by Deploy archive (the server's drishti.packs.installed-dir); blank: <data dir>/packs/installed
   extra_dirs: ${DRISHTI_PACKS_EXTRA_DIRS:}   # further pack folders, comma-separated (examples/packs: the retired example packs), as on the server
   enabled: ${DRISHTI_PACKS:core,market-data,trading,counterparty-risk,market-risk,world-economy,news-and-markets}   # used only when the server cannot be asked which packs are enabled
   deploy_max_mb: 50          # largest pack archive Admin → Packs → Deploy archive takes (the server's drishti.packs.deploy.max-archive-mb refuses the same way, 413)

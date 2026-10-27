@@ -54,3 +54,24 @@ def test_pack_switcher_chooses_active_packs(client, backend):
     finally:
         backend.enabled_packs = saved
         client.app.state.packs._cache = {}
+
+
+def test_a_pack_installed_by_the_server_brings_its_guide_examples_and_workspaces(tmp_path):
+    """Packs installed from the registry or by Deploy archive land in the server's installed-dir; the console reads it first, as the
+    server does, so the help centre finds the pack's guide (the screenshot run: 'There is no guide called helpdesk-pack', 2026-10-27)."""
+    import shutil
+    from pathlib import Path
+    from core.packs import Packs
+    console = Path(__file__).resolve().parent.parent
+    example = console.parent / "docs" / "guides" / "examples" / "pack" / "helpdesk"
+    installed = tmp_path / "packs" / "installed"
+    settings = {"packs.dir": str(console.parent / "config" / "packs"), "packs.installed_dir": str(installed)}
+    packs = Packs(settings, console)
+    assert packs._load("helpdesk") is None                          # nothing installed yet: the folder need not exist
+    shutil.copytree(example, installed / "helpdesk")
+    p = packs._load("helpdesk")
+    assert p is not None and p["dir"] == (installed / "helpdesk").resolve()
+    assert [g["slug"] for g in p["guides"]] == ["helpdesk-pack"] and p["guides"][0]["path"].exists()
+    assert p["contextual"] == {"terminal": "helpdesk-pack"} and p["examples"]
+    default = Packs({"packs.dir": settings["packs.dir"], "lakes.data_dir": str(tmp_path)}, console)
+    assert default.installed == installed.resolve() and default._load("helpdesk")["dir"] == (installed / "helpdesk").resolve()

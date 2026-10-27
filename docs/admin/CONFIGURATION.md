@@ -467,6 +467,7 @@ From `drishti-console/config/application.yaml`, resolved from environment variab
 | `DRISHTI_LAYOUTS_ENABLED` | `layouts.enabled` | `true` | Offer layout mode. |
 | `DRISHTI_PACKS_DIR` | `packs.dir` | `../config/packs` | The packs directory (a relative path resolves from `drishti-console/`). |
 | `DRISHTI_PACKS_EXTRA_DIRS` | `packs.extra_dirs` | empty | Further pack folders, comma-separated, as on the server (relative paths resolve from `drishti-console/`, so `../examples/packs`). |
+| `DRISHTI_PACKS_INSTALLED` | `packs.installed_dir` | empty | The server's installed packs (registry and Deploy archive); empty: `<data dir>/packs/installed`. Read first as the server does, so an installed pack's guides, examples and workspaces reach the console. |
 | `DRISHTI_PACKS` | `packs.enabled` | `core,market-data,trading,counterparty-risk,market-risk,world-economy,news-and-markets` | Only used when the server cannot be asked which packs are on. |
 | `DRISHTI_LAKE_ROOTS` | `lakes.roots` | empty | Admin → Data loads → Lakes ([TOOLS.md](../guides/TOOLS.md#4-lake-build-a-large-json-export-into-a-delta-lake)): the lake roots this console may write, comma-separated (relative paths resolve from `drishti-console/`); empty: `<data dir>/delta`, the server's own root. The page offers no other folder. |
 | `DRISHTI_JAR` | `lakes.jar` | empty | The drishti-server exec jar whose Java writer the page's builds use (`lakes.engine: auto`); empty: the newest `drishti-server/target/drishti-server-*-exec.jar`, else the Python `deltalake` package. |
@@ -2882,6 +2883,7 @@ read by both programs, so one set of variables configures both halves.
 |---|---|---|
 | `packs.dir` | `../config/packs` (`DRISHTI_PACKS_DIR`), relative to `drishti-console/` | Where pack content (examples, guides) is read. |
 | `packs.extra_dirs` | empty (`DRISHTI_PACKS_EXTRA_DIRS`) | Further pack folders, comma-separated, read after `packs.dir` (the retired example packs: `../examples/packs`). |
+| `packs.installed_dir` | `<data dir>/packs/installed` (`DRISHTI_PACKS_INSTALLED`) | The server's `drishti.packs.installed-dir`: packs installed from the registry or by Deploy archive, read before `packs.dir` (they win a name, as on the server). Point it at the same folder as the server's. |
 | `packs.enabled` | the seven shipped packs (`DRISHTI_PACKS`) | Used only when the server cannot be asked which packs are enabled. |
 | `help.docs_dir` | `../docs` | The documents rendered in the help centre's reference section. |
 | `studio.examples_dir` | `../docs/guides/examples` | The Rachana examples (`<name>.sutra.yaml`, `<name>.json`, `<name>.md`) that the Build workbench (**Build → New screen → Examples**, the File menu) and **Help → Examples** offer. Only names of complete example sets present there are served. |
@@ -2949,6 +2951,7 @@ Server (S), console (C), or both.
 | `DRISHTI_PACKS` | S, C | `drishti.packs.enabled`, `packs.enabled` |
 | `DRISHTI_PACKS_DIR` | S, C | `drishti.packs.dir`, `packs.dir` |
 | `DRISHTI_PACKS_EXTRA_DIRS` | S, C | `drishti.packs.extra-dirs`, `packs.extra_dirs` |
+| `DRISHTI_PACKS_INSTALLED` | S, C | `drishti.packs.installed-dir`, `packs.installed_dir` |
 | `DRISHTI_DEFAULT_PACKS` | S | `drishti.packs.default-for-users` |
 | `DRISHTI_PLUGIN_DIR` | S | `drishti.sources.plugin-dir` |
 | `DRISHTI_DEMO_ENABLED` | S | `drishti.sources.plugins.demo.enabled` |
