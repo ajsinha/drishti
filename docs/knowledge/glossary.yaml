@@ -356,7 +356,7 @@ terms:
     synonyms: [xwif, pre-deal, pre deal, pre-deal check, incremental exposure]
     domain: counterparty-credit-risk
     meaning: "What a new trade (or an unwind) would do to a counterparty's PFE before it is dealt: exactly on the paths, or by a conservative add-on proxy."
-    cli: drishti.py exposure whatif CPTY:CP-ALDERSHOT --like CLY-4000879 --factor -1 --set NS-ALDERSHOT-FRA
+    cli: drishti.py exposure whatif CPTY:CP-ALDERSHOT --like CLY-4003028 --factor -1 --set NS-ALDERSHOT-FRA
   - term: Official exposure
     synonyms: [xofc, official exposure results]
     domain: counterparty-credit-risk
@@ -625,7 +625,7 @@ terms:
     synonyms: [eqb, equity beta]
     domain: market-data
     meaning: "How much an equity moves for a 1% move in its index, from the regression of daily returns. Computed from the closes when asked."
-    command: EQ EQ-NVTK
+    command: EQB EQ-NVTK
   - term: Holiday calendar
     synonyms: [cal, calendar, business day calendar]
     domain: market-data

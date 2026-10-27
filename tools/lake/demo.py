@@ -25,7 +25,7 @@ trade_murex, partitioned by business date (and PRODUCT_TYPE for trades). Each ta
 tools/packgen/var/make_var_data.py: the trades' P&L vectors of the last business date, the nodes' 250-day VaR history) is loaded in one
 run, each document on its own date, its dates moved with the business dates like every other dataset's.
 The exposure engine's paths are the exception: by default (`--exposure demo`) they are generated from the committed netting sets
-and CSAs for every netting set of 22 of the 24 counterparties (about 9,000 trades, about a minute; the committed run of eight sets
+and CSAs for every netting set of 23 of the 24 counterparties (8,022 live trades on the data's date, about a minute; the committed run of eight sets
 is a subset with the same figures), `--exposure committed` loads the committed run alone.
 Datasets of static reference data (world-economy, news-and-markets) are built from their packs' samples, the same on every day.
 The news-and-markets pack's captured market snapshot (data/testdata/news-and-markets/quote and news: real quotes and headlines,
@@ -241,7 +241,8 @@ class DemoLake:
 
     def redate(self, line: str) -> str:
         """A document's own dates of the day (AS_OF, VALUATION_DATE, RUN_DATE, SOURCE_UPDATE_TIME, a curve's BUILT_AT) moved with the business dates, and
-        the DATE of each point of its embedded series (HISTORY, OHLC, FIXINGS, PNL_SERIES) by the same number of business days."""
+        the DATE of each point of its embedded series (HISTORY, OHLC, FIXINGS, PNL_SERIES), an FX spot's SPOT_DATE and an IR curve's pillar
+        maturities (TENOR_DATES, TENOR_POINTS) by the same number of business days."""
         if not self.shift:
             return line
         line = REDATE.sub(lambda m: m.group(1) + self.shift.get(m.group(2), m.group(2)), line)
@@ -445,7 +446,7 @@ class DemoLake:
 
     def dated_source(self, ds: dict) -> pathlib.Path:
         """Where a dated dataset's files are read: the committed folder, except the exposure run with ``--exposure demo``: the demo run
-        (tools/packgen/ccr/make_ccr_data.py ``write_demo``: every netting set of 22 of the 24 counterparties, about 9,000 trades, the
+        (tools/packgen/ccr/make_ccr_data.py ``write_demo``: every netting set of 23 of the 24 counterparties, 8,022 live trades, the
         committed run's paths and grid, so the committed sets' figures are the same), written once into the staging folder from the
         committed netting sets and CSAs: about a minute and 100 MB, never committed, nothing downloaded."""
         if self.a.exposure != "demo" or ds["folder"] not in self.EXPOSURE_FOLDERS:
@@ -647,7 +648,7 @@ def add_arguments(p: argparse.ArgumentParser) -> argparse.ArgumentParser:
     p.add_argument("--signal-once", action="store_true", help="tell each table once, for its newest date, not each table and date "
                    "(a running server reads the older dates again by itself)")
     p.add_argument("--exposure", choices=("demo", "committed"), default="demo", help="the exposure paths: demo (default) generates every "
-                   "netting set of 22 of the 24 counterparties (about 9,000 trades, a minute, nothing downloaded), committed loads the "
+                   "netting set of 23 of the 24 counterparties (about 8,000 live trades, a minute, nothing downloaded), committed loads the "
                    "committed run of eight sets")
     p.add_argument("-q", "--quiet", action="store_true", help="only the summary")
     return p

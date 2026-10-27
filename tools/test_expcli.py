@@ -124,10 +124,10 @@ class ExposureCli(unittest.TestCase):
         self.assertIn("NS-ALDERSHOT-NY", rows[3])
 
     def test_a_whatif_copies_a_trade_or_reads_candidates(self):
-        self.assertEqual(run("whatif", "CPTY:CP-ALDERSHOT", "--like", "CLY-4000879", "--factor", "-1", "--set", "NS-ALDERSHOT-FRA"), 0)
+        self.assertEqual(run("whatif", "CPTY:CP-ALDERSHOT", "--like", "CLY-4003028", "--factor", "-1", "--set", "NS-ALDERSHOT-FRA"), 0)
         body = FakeApi.calls[-1][2]
         self.assertEqual(body["method"], "paths")
-        self.assertEqual(body["candidates"][0]["paths"], {"copyOf": "CLY-4000879", "factor": -1.0})
+        self.assertEqual(body["candidates"][0]["paths"], {"copyOf": "CLY-4003028", "factor": -1.0})
         self.assertEqual(body["candidates"][0]["nettingSet"], "NS-ALDERSHOT-FRA")
         self.assertEqual(FakeApi.calls[-2][1].split("?")[0], "/api/v1/exposure/scope/contributions")    # the trade's terms, for the addon proxy
         self.assertIn("delta", body["candidates"][0])

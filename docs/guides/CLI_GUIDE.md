@@ -1937,7 +1937,7 @@ drishti.py exposure compare XCAP-20260930-1 now
 drishti.py exposure official --date 2026-09-30                       the official end-of-day record (--capture: administrators)
 drishti.py exposure retention                                        what is kept of each date held
 drishti.py exposure reload                                           drop the loaded dates (administrators)
-drishti.py exposure whatif CPTY:CP-ALDERSHOT --like CLY-4000879 --factor -1 --set NS-ALDERSHOT-FRA   exact, the Python engine
+drishti.py exposure whatif CPTY:CP-ALDERSHOT --like CLY-4003028 --factor -1 --set NS-ALDERSHOT-FRA   exact, the Python engine
 drishti.py exposure whatif CPTY:CP-ALDERSHOT --candidates new-swap.json --method addon               the conservative proxy
 ```
 

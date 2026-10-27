@@ -20,8 +20,9 @@
                   across two days shows real changes
     everything    the last day is the universe as built (it reconciles: a netting set's NET_MTM is the sum of its trades'); earlier days
                   move the market-sensitive numbers back by a deterministic walk (tools/samplegen/lake.py) and carry their own date in
-                  AS_OF, VALUATION_DATE and RUN_DATE; a valuation exists from its trade's booking day; a netting set lists the trades
-                  booked by that day
+                  AS_OF, VALUATION_DATE and RUN_DATE; a valuation exists from its trade's booking day and values the trade's version
+                  of the day (valuation_versions); a netting set lists its trades booked by that day (the universe holds only the
+                  trades live on the last day: universe.py); SPOT_DATE and an IR curve's pillar maturities move with the day
     market data   equities, indices, FX, bonds, fixings, commodities and the IR, repo, commodity and FX forward curves are built per day
                   by marketdays.py instead of the walk: the day's price is the close of the document's own series on that day, and the
                   fields quoted next to it move with it (BID/ASK around MID, a bond's YIELD, Z_SPREAD and MOD_DURATION against its PRICE,

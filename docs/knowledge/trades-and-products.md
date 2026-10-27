@@ -115,8 +115,8 @@ Harbor Point Bank (`CP-HARBORPT`, country of risk US), notional USD 209,962,179,
 `LE-NY` in `BOOK-COMM-2` by F. Rossi, status **AMENDED, version 7** (last updated 2026-10-22). Its links open the counterparty, the
 book, the desk and the trader; its legs and cash-flow events are tabs of the same page.
 
-**Its valuation.** `TVAL TVAL-1000001 <GO>`: MTM +4,121,280 USD, the day's P&L −277,804, DV01 0 (the engine reports no rate
-sensitivity for it), valued 2026-10-26.
+**Its valuation.** `TVAL TVAL-1000001 <GO>`: status AMENDED, notional 209,962,179 (the trade's latest version), MTM +5,151,600 USD,
+the day's P&L −347,255, DV01 0 (the engine reports no rate sensitivity for it), valued 2026-10-26.
 
 **Every trade with one counterparty.** `CTRD CP-ALDERSHOT <GO>`, grouped when you open it: **641** trades from all 3 systems, 107
 product types in 7 currencies, notional 184.4 billion across currencies; payments due −42.3 million in the next 7 days (13 events),
@@ -127,15 +127,17 @@ product types in 7 currencies, notional 184.4 billion across currencies; payment
 | Question | Command | Trades |
 |---|---|---|
 | Every trade booked with it, any status | `CTRD CP-ALDERSHOT <GO>` | 641 |
-| Its trades in the exposure run (four netting sets) | `drishti.py exposure show CPTY:CP-ALDERSHOT` | 564 |
+| Its trades in the exposure run (four netting sets) | `drishti.py exposure show CPTY:CP-ALDERSHOT` | 417 |
 | Its live trades with a P&L vector (VaR) | `drishti.py var show CPTY:CP-ALDERSHOT` | 425 |
 
 None is wrong: matured and cancelled trades are in the first, only priced live trades in the last. A report that mixes them
 mixes questions.
 
-**What the data hasn't told you.** The valuation is not of the trade you see. `TVAL TVAL-1000001` says the trade is *VALIDATED* with a
-notional of 167,969,743; the trade itself is *AMENDED*, version 7, notional 209,962,179. The risk engine valued an earlier version. Its
-MTM, and everything built on it, lags the last amendment until the next batch.
+**What the data hasn't told you.** The three populations above differ for a reason that is easy to miss: maturity. The exposure run
+counts the live trades that have not matured by 2026-10-26, while the netting-set records still list trades that matured between the
+test data's own date (2026-09-30) and the demo's (the demo moves the dates, not the trades' maturities). And a valuation must be of the
+version you see: until 2.9.2 `TVAL TVAL-1000001` valued an earlier version of this trade (*VALIDATED*, notional 167,969,743), so its MTM
+lagged the last amendment; the valuation now carries the trade's status and notional of its day.
 
 ## 5. Questions to ask your data
 
