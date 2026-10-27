@@ -15,6 +15,10 @@
 -->
 # Changelog
 
+## 2.9.4 (unreleased)
+
+- **Documentation pictures retaken on the current UI (2026-10-27).** 351 pictures under `docs/` that predated the 2.9 UI (themes, the top bar, the Views menu) were retaken with `tools/docs/screenshots.py`, guide by guide (artifacts, About, BI, BI Studio, collaboration, connector files, connectors, controls, deep JSON, deploy, query by form, data loads, packs, panels, real data, schema to pack, screen designer, Sutras, zoom, column filters) and tutorials 1-6, 8, 9, 11-17 and 19 over the demo lakes; tutorial 28's TRACK SP500 picture is taken in a wider window so the Active share column shows. Shot scripts fixed where the UI or the data changed: the production-shaped trade fields (form, designer, collaboration), the swap's controls on its Events panel (controls, column filters), BI workspace tabs, the schema wizard's restored state, the pack row under the sticky top bar, scratch folders hidden on the connector health picture. Text moved with the pictures: USER_GUIDE (About drawer on a stress result, controls, column filters, deep JSON, Share and Discussion), HOW_IT_FITS, QUERY_BY_FORM, SCREEN_DESIGNER, tutorials 1, 15 and 19.
+
 ## 2.9.3 — DATAMAP; the fact of the day on Home; Companies, funds and ETFs Knowledge; index membership from the tracking ETFs; one firm-wide VaR limit (2026-10-27)
 
 - **Windows QA guide for 2.9.3 (2026-10-27).** `docs/guides/QA_ON_WINDOWS_WITH_CUSTOM_DATA.md` gains section 6f (what to rebuild after the pull: `--only us-equities,gleif,funds,market-risk/risk-hierarchy`, then eleven checks: DATAMAP, the fact of the day, one 150m bank limit on both trees, the index members from the tracking ETFs, active share, the Knowledge page) and a checklist line; the jar it names is `drishti-server-2.9.3-exec.jar` (it still said 2.9.2).
