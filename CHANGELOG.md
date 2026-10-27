@@ -47,6 +47,23 @@
   `fx-spot.CONVENTIONS.CALENDAR` holds `GBLO+USNY`, not `CAL-` ids; `simulation-run.NETTING_SETS` is a count (76); the counterparty's
   `NEWS_ID` opens no story offline; `legal-entity.BOOKS[].DESK`, `lei-entity.SUCCESSOR` (4 of 7), `portfolio.DEFINITION.MEMBERS[].POSITION_ID`
   (28 of 31) and `us-company.FINANCIALS[].EQUITY`.
+- **Home: Did you know, the fact of the day (2026-10-27; product owner, mock-up D3).** Signed in, Home keeps its headline *See what your
+  data hasn't told you yet.* on the left and shows a tile on the right: the domain and business date, one surprising sentence, a small
+  picture, a collapsible *Why does that happen?* with a link to the Knowledge section, a button opening the command, a WHAT link and
+  *Another fact*; under them quick cards (`VAR BANK`, `EXP BANK`, `FUND SPY`, `DATAMAP`; `ui.home_cards`, a pack's card only while the
+  pack is on). Nothing is hard-coded: each pack declares its facts in `config/packs/<pack>/config/facts.yaml` (fetch steps over the VaR
+  and exposure APIs, structured search and raw records; a pick, a condition, sentence templates, the picture, the command, the WHAT term
+  and the Knowledge anchor), computed by `drishti-console/core/facts.py` in a small safe expression language
+  (`core/facts_expr.py`) as the user, on the user's business date, for the packs the user has on; only facts whose condition holds are
+  shown, the day's first is chosen by the business date and *Another fact* cycles. Seven facts ship (market-risk 2, counterparty-risk
+  2, funds 3); on the demo data of 2026-10-27: BOOK-COMM-1 at 259% of its VaR limit under a desk at 76%; the Commodities desk's
+  incremental VaR −10.7m against a component of 3.0m; collateral raising NS-NORTHPLAINS-NY's EE at 2M from 55.6m to 129.7m (+133%);
+  CP-NORTHPLAINS's VaR 37.4m against a peak PFE of 508.1m; 87 funds owning 21.19% of Nvidia; VOO and IVV 92.4% the same portfolio;
+  PONAX's weights adding up to 150.01%. The page draws a skeleton and fills it from `GET /api/home/facts` (kept per server, user, date
+  and packs for `ui.facts.cache_seconds`; concurrent asks share one computation); none holds, or no answer: the tile is left out. Light
+  and dark through the theme tokens, one column on a phone, 44px targets. Docs: USER_GUIDE *Home: the fact of the day*,
+  PACK_DEVELOPER_GUIDE *Facts for Home*, CONFIGURATION (`ui.facts.*`, `ui.home_cards`); Help: F1 on Home and `/help/fact-of-the-day`
+  open the user guide's section. Tests: `drishti-console/tests/test_home_facts.py`.
 
 - **Knowledge: Companies, funds and ETFs (2026-10-27).** An eighth Knowledge page, `docs/knowledge/companies-funds-and-etfs.md`, in
   the same seven parts as the others: what a company's ticker, CIK, SIC code and division, share classes (GOOG and GOOGL), EDGAR filings

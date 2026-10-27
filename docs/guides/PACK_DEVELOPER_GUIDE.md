@@ -1314,6 +1314,64 @@ This section moved to [PACK_MODELLING_GUIDE.md](PACK_MODELLING_GUIDE.md#about-te
 
 This section moved to [PACK_MODELLING_GUIDE.md](PACK_MODELLING_GUIDE.md#guides-and-help).
 
+## Facts for Home
+
+A pack can give the console's Home page **Did you know** facts ([USER_GUIDE.md](USER_GUIDE.md#home-the-fact-of-the-day)): surprising
+things its data says on the business date. They live in the pack, in `config/facts.yaml` (no `pack.yaml` key: the console reads the
+file when it is there), and carry no numbers: each fact fetches what it needs from the server's APIs as the user, picks the row that
+makes the point, and says when the point holds. The shipped examples are `config/packs/market-risk/config/facts.yaml`,
+`counterparty-risk/config/facts.yaml` and `funds/config/facts.yaml`; `drishti-console/core/facts.py` reads and computes them.
+
+```yaml
+facts: 1
+items:
+  - id: book-over-limit-desk-within        # letters, digits, hyphens; unique in the file
+    domain: Market risk                    # the tile's label
+    needs: [counterparty-risk]             # other packs it needs (its own pack always); one off for the user: not shown
+    steps:                                 # run in order; each binds its result to the name in `as`
+      - { as: tree, var: /tree, params: { hierarchy: LEGAL } }      # GET /api/v1/var/tree?hierarchy=LEGAL&asOf=<date>
+      - as: book                                                    # the best row: where filters, order ranks (largest first)
+        pick: tree.nodes
+        where: "book.limitUse > 1 and find(tree.nodes, 'id', book.parent).limitUse <= 1"
+        order: book.limitUse
+      - { as: parent, let: "find(tree.nodes, 'id', book.parent)" }  # a value
+    when: "book.limitUse > 1"              # what makes it surprising; false: not shown today
+    text: "{book.name} is at **{book.limitUse|pct}** of its VaR limit."       # **…** is drawn highlighted
+    why: "Its VaR is {book.var|money} against {book.limit|money}; …"
+    picture: { type: bars, caption: "Share of the limit used, {asOf}",
+               bars: [ { label: "{book.name}", value: book.limitUse, format: pct, tone: alert },
+                       { label: "{parent.name}", value: parent.limitUse, format: pct } ] }
+    open: "VAR NODE {book.id}"             # the command the primary button opens (/go?q=…)
+    what: VaR limit                        # the WHAT term (docs/knowledge/glossary.yaml)
+    knowledge: market-risk.md#4-a-worked-example-on-the-demo-data     # "Read more": a Knowledge page and anchor
+```
+
+| Step | Fetches or computes |
+|---|---|
+| `var: <path>`, `exposure: <path>` with `params` | `GET /api/v1/var<path>`, `/api/v1/exposure<path>` (VAR_GUIDE.md and EXPOSURE_GUIDE.md section 11), dated by the user's business date |
+| `search: "<query>"` | a structured search (`HELD where PCT_OF_SHARES > 0 order by TOTAL_VALUE desc limit 1`): `{rows: [{ref, values: {"$.FIELD": …}}]}` |
+| `raw: {kind, id}` | one record as stored: `{data: {…}}` |
+| `each: <list>` on a fetch | once per element (`it` in its templates; at most `limit`, 100 by default, 500 at most): a list of `{it, ans}` |
+| `let: <expression>` | a value |
+| `pick: <list>`, `where`, `order` | the first row by `order` (largest first; `desc: false` for smallest) among those `where` keeps; none: the fact is not shown |
+
+**Expressions** are Python's expression syntax cut down to reading data: names bound by earlier steps (and `asOf`), `a.b` and
+`a['$.X']` (a missing key is `None`), `a[0]`, arithmetic, comparisons, `and or not`, `x if c else y`, lists and one-`for`
+comprehensions, and the functions `len sum min max abs round first find pluck flat top ratio overlap common pairs index upper`. `None`
+is forgiving: arithmetic with it is `None`, a comparison false, a division by zero `None`, so missing data hides the fact instead of
+failing. Nothing else parses (no Python attributes, imports, lambdas, dictionaries, `**`). **Templates** fill `{expression}` or
+`{expression|format}`: `money` (3.5m, 1,043.7bn), `int`, `num1`, `num2`, `pct`/`pct1`/`pct2` (a ratio: 2.23 is 223%),
+`pctv`/`pctv1`/`pctv2` (a value already in percent), `signpct` (+452%), `times` (13.6×); a field that is empty hides the sentence.
+**Pictures:** `bars` (2 to 6 bars, each `label`, `value`, `format`, `tone`: `base`, `alert` or `muted`), `share` (`value` of `of`,
+drawn as a filled bar, marked at 100% when over; `label`, `format`) and `line` (`values`, optional `labels` and `mark`).
+
+Check a file before you ship it: from `drishti-console/`,
+`python3 -c "from pathlib import Path; from core.facts import check; print(check(Path('../config/packs')))"` prints each pack's
+problems (an unknown key, a name no earlier step sets, a function or format that does not exist); `tests/test_home_facts.py` runs the
+same check on every shipped pack, and fails when a sentence carries a figure of its own. A fact with a problem is left out and logged;
+the others stand. Results are kept per server, user, business date and set of packs for `ui.facts.cache_seconds` (six hours); a fact
+slower than `ui.facts.timeout_seconds` (90) is left out.
+
 ## Roles and field masks
 
 This section moved to [PACK_MODELLING_GUIDE.md](PACK_MODELLING_GUIDE.md#roles-and-field-masks).

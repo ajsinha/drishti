@@ -121,6 +121,20 @@ ui:
     - { slug: fx-swap, title: FX swap, cmd: TRD FXS-20931, sutra: fx-swap v2 }
     - { slug: commodity-future, title: Commodity future, cmd: TRD CFT-77120, sutra: listed-future v1 }
     - { slug: netting-set, title: Netting set, cmd: NSET NS-NORTH-01, sutra: netting-set v1 }
+  # Home, signed in: "Did you know", the fact of the day, beside the headline. Each pack declares its facts in
+  # config/packs/<pack>/config/facts.yaml (docs/guides/PACK_DEVELOPER_GUIDE.md, "Facts for Home"); they are computed from the server's
+  # answers on the business date, as the user, and kept cache_seconds per user, date and set of packs. A fact taking longer than
+  # timeout_seconds is left out. enabled false: no tile.
+  facts:
+    enabled: ${DRISHTI_HOME_FACTS:true}
+    cache_seconds: 21600
+    timeout_seconds: 90
+  # The quick cards under the Home headline, signed in: each opens its command; one naming a pack shows only while that pack is on.
+  home_cards:
+    - { title: Market risk, cmd: VAR BANK, pack: market-risk, icon: graph-down-arrow }
+    - { title: Exposure, cmd: EXP BANK, pack: counterparty-risk, icon: shield-shaded }
+    - { title: Funds and ETFs, cmd: FUND SPY, pack: funds, icon: pie-chart }
+    - { title: Data map, cmd: DATAMAP, icon: diagram-3 }
 # Embedded views for other web applications (docs/architecture/ELEMENTS.md). OFF by default: with enabled false nothing under
 # /embed/ is served and no middleware behaves differently. Host applications are registered at the SERVER (Admin API
 # /api/v1/admin/embed/apps; drishti.embed.* there), which makes the tokens and checks every call; the console only serves the

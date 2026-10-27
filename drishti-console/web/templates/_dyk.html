@@ -1,0 +1,35 @@
+{#
+  Project Drishti · Any data. Any domain. One grammar.
+
+  Copyright (c) 2026 Ashutosh Sinha <ajsinha@gmail.com>.
+  All rights reserved.
+
+  PROPRIETARY AND CONFIDENTIAL.
+
+  This file is the confidential and proprietary property of Ashutosh Sinha.
+  Unauthorised copying, use, modification, distribution or disclosure of this
+  file, via any medium, is strictly prohibited except with the express prior
+  written permission of the copyright holder.
+
+  See the LICENSE file in the root of this repository for the full terms.
+#}
+{# Did you know: the fact of the day on Home (core/facts.py). Drawn as a skeleton; static/js/dyk.js fills it from /api/home/facts after the
+   page has drawn, or removes it when no fact holds today. Every word and number in it comes from the facts the packs declare. #}
+<aside class="dyk" data-dyk aria-busy="true" aria-labelledby="dykKicker">
+  <div class="dyk-top">
+    <span class="dyk-kicker" id="dykKicker"><span data-dyk-kicker>Fact of the day</span><span data-dyk-domain></span></span>
+    <span class="dyk-date" data-dyk-date></span>
+  </div>
+  <p class="dyk-text" data-dyk-text aria-live="polite"><span class="dyk-skel" aria-hidden="true"></span><span class="dyk-skel dyk-skel-short" aria-hidden="true"></span><span class="visually-hidden">Working out today's fact</span></p>
+  <div class="dyk-pic" data-dyk-pic role="img" hidden></div>
+  <details class="dyk-why" data-dyk-why hidden>
+    <summary>Why does that happen?</summary>
+    <p data-dyk-why-text></p>
+    <a class="lnk dyk-more" data-dyk-more href="#" hidden>Read more in Knowledge</a>
+  </details>
+  <div class="dyk-actions" data-dyk-actions hidden>
+    <a class="btn-pill btn-accent dyk-open" data-dyk-open href="#"></a>
+    <a class="lnk dyk-what" data-dyk-what href="#" hidden></a>
+    <button type="button" class="btn-pill btn-ghost dyk-next" data-dyk-next hidden>Another fact</button>
+  </div>
+</aside>

@@ -408,6 +408,9 @@ def create_app(settings: Settings) -> FastAPI:
     from core.asof import BusinessDates
 
     app.state.business_dates = BusinessDates()
+    from core.facts import FactsService
+
+    app.state.facts = FactsService(settings)                  # Home's fact of the day (config/packs/<pack>/config/facts.yaml)
     app.state.templates = templates
     from starlette.requests import ClientDisconnect
 

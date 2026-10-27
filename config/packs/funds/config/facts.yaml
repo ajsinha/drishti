@@ -1,0 +1,101 @@
+# Project Drishti · Any data. Any domain. One grammar.
+#
+# Copyright (c) 2026 Ashutosh Sinha <ajsinha@gmail.com>.
+# All rights reserved.
+#
+# PROPRIETARY AND CONFIDENTIAL.
+#
+# This file is the confidential and proprietary property of Ashutosh Sinha.
+# Unauthorised copying, use, modification, distribution or disclosure of this
+# file, via any medium, is strictly prohibited except with the express prior
+# written permission of the copyright holder.
+#
+# See the LICENSE file in the root of this repository for the full terms.
+
+# Did you know: this pack's facts for Home (drishti-console/core/facts.py; docs/guides/PACK_DEVELOPER_GUIDE.md, "Facts for Home").
+# Every number is computed from the funds pack's records (structured search and raw records) as the user who opens Home; a fact
+# whose condition does not hold is not shown. The records are not dated by business date: every date reads the same snapshot.
+facts: 1
+items:
+  - id: most-held-company
+    domain: Funds and companies
+    title: How much of a company the largest funds own
+    steps:
+      - { as: found, search: "HELD where PCT_OF_SHARES > 0 order by TOTAL_VALUE desc limit 1" }
+      - { as: co, let: "first(found.rows).values" }
+    when: "co['$.PCT_OF_SHARES'] >= 10"
+    text: "{co['$.FUNDS']|int} of the largest US funds hold {co['$.NAME']}, and together they own **{co['$.PCT_OF_SHARES']|pctv2}** of its shares."
+    why: >-
+      Index funds buy every company of their index in proportion to its size, so the largest company sits in nearly every fund at
+      once: {co['$.TOTAL_VALUE']|money} USD of it here. The figure adds up the funds' own N-PORT holdings of the company and sets them
+      against the shares outstanding on its 10-K.
+    picture:
+      type: share
+      label: "of {co['$.NAME']}'s shares"
+      value: "co['$.PCT_OF_SHARES']"
+      of: "100"
+      format: pct2
+      caption: Held by the pack's funds, as filed
+    open: "HELD {co['$.TICKER']}"
+    what: Held by funds
+    knowledge: companies-funds-and-etfs.md#4-a-worked-example-on-the-demo-data
+
+  - id: index-twins
+    domain: Funds and companies
+    title: Two managers, nearly one portfolio
+    steps:
+      - { as: found, search: "TRACK where FUNDS > 1 order by TOTAL_NET_ASSETS desc limit 1" }
+      - { as: index, raw: { kind: index-funds, id: "{first(found.rows).ref.id}" } }
+      - { as: funds, each: index.data.ROWS, raw: { kind: fund, id: "{it.FUND}" }, limit: 20 }
+      - as: pair
+        pick: pairs(funds)
+        where: "pair[0].ans.data.ADVISER and pair[1].ans.data.ADVISER and pair[0].ans.data.ADVISER != pair[1].ans.data.ADVISER"
+        order: "pair[0].ans.data.NET_ASSETS + pair[1].ans.data.NET_ASSETS"
+      - { as: a, let: "pair[0].ans.data" }
+      - { as: b, let: "pair[1].ans.data" }
+      - { as: same, let: "overlap(a.HOLDINGS, b.HOLDINGS, 'COMPANY', 'PCT')" }
+    when: "same >= 80"
+    text: "{a.TICKER} and {b.TICKER}, run by two different managers, are **{same|pctv1}** the same portfolio."
+    why: >-
+      Both track the {index.data.NAME}. Overlap adds up, for each of the {common(a.HOLDINGS, b.HOLDINGS, 'COMPANY')} companies both
+      hold, the smaller of its two weights. It stays under 100% because weights are of net assets and each fund also holds cash,
+      futures and companies outside the us-equities pack. Owning both is less diversified than it looks.
+    picture:
+      type: share
+      label: "{a.TICKER} and {b.TICKER} in common"
+      value: same
+      of: "100"
+      format: pct1
+      caption: "{a.ADVISER} · {b.ADVISER}"
+    open: "FUND {a.TICKER}"
+    what: Fund overlap
+    knowledge: companies-funds-and-etfs.md#4-a-worked-example-on-the-demo-data
+
+  - id: weights-over-net-assets
+    domain: Funds and companies
+    title: Holdings that weigh more than the fund
+    steps:
+      - { as: found, search: "FUND where TOTAL_ASSETS > 0 order by TOTAL_ASSETS desc limit 1000" }
+      - as: lev
+        pick: found.rows
+        where: "lev.values['$.NET_ASSETS'] > 0"
+        order: "lev.values['$.TOTAL_ASSETS'] / lev.values['$.NET_ASSETS']"
+      - { as: fund, raw: { kind: fund, id: "{lev.ref.id}" } }
+      - { as: f, let: fund.data }
+      - { as: weights, let: "sum(pluck(f.BY_ASSET, 'PCT'))" }
+    when: "weights > 120"
+    text: "{f.NAME} ({f.TICKER}) holds investments weighing **{weights|pctv2}** of its net assets."
+    why: >-
+      A weight is a holding's value over the fund's net assets: what it owns less what it owes. {f.TICKER} owns
+      {f.TOTAL_ASSETS|money} but its net assets are {f.NET_ASSETS|money}: it has bought securities it has yet to pay for, and
+      borrowed, so its weights add up to more than 100%.
+    picture:
+      type: share
+      label: weights added up
+      value: weights
+      of: "100"
+      format: pct2
+      caption: "Total assets {f.TOTAL_ASSETS|money}, net assets {f.NET_ASSETS|money}"
+    open: "FUND {f.TICKER}"
+    what: NAV
+    knowledge: companies-funds-and-etfs.md#6-common-confusions

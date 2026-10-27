@@ -60,7 +60,7 @@ centre → Domain packs*) has a *Finding things* section with the same commands 
 
 | Page | Address | What it is for |
 |---|---|---|
-| Landing | `/` | The start page, with a button to open the terminal |
+| Landing (Home) | `/` | The start page, with a button to open the terminal; signed in, the fact of the day and quick cards ([Home: the fact of the day](#home-the-fact-of-the-day)) |
 | Terminal | `/t` | The command line, your pinned entities and example commands |
 | View | `/v/<kind>/<id>` | One entity, laid out in full (for example `/v/trade/MX-20000001`) |
 | Pick list and search results | `/s?q=…` | Entities a command names (`TRD MX-200000`) or a `where` search finds |
@@ -81,6 +81,43 @@ centre → Domain packs*) has a *Finding things* section with the same commands 
 | Admin | `/admin/users`, `/admin/roles`, `/admin/audit`, `/admin/packs`, `/admin/connectors`, `/admin/artifacts`, `/admin/loads`, `/admin/lakes`, `/admin/collab`, `/admin/embedding`, `/admin/net`, `/admin/health`, `/admin/caches` (and `/admin/ai`, `/admin/bi`, `/admin/tokens`, `/admin/access` where those features are on) | Users, roles, audit log, packs, connectors, installed artifacts, data loads, Delta lakes, collaboration moderation, embedding, Drishti\*net, health and caches (admins only) |
 | Help | `/help` | Tutorials, guides and every reference |
 | About | `/about` | The product page: features, measured performance, competitive analysis, technology, licence (system details for admins: `/admin/health`) |
+
+## Home: the fact of the day
+
+Signed in, the landing page (Home) puts **Did you know** beside the headline *See what your data hasn't told you yet.*: one
+surprising fact about your data on the business date you are on, worked out from the data itself. The tile shows:
+
+- the domain and the date (**Fact of the day · Counterparty credit**, 2026-10-27);
+- one sentence, its key figure highlighted, and a small picture (bars, or a filled bar for a share of a whole);
+- **Why does that happen?**: opens a short explanation, with **Read more in Knowledge** (the Knowledge page section that explains it);
+- **Open …**: the command that shows it (`EXP NS-NORTHPLAINS-NY`, `VAR NODE MGMT~BOOK-COMM-1`, `FUND PONAX`), and **WHAT …**, the
+  term's glossary entry;
+- **Another fact**: the next fact that holds today (it wraps round).
+
+Every figure is computed from the server's answers as you, so you see only facts about data you may see, and only for packs you have
+switched on. Nothing is written into a fact: a fact is shown only on a date its condition holds (a book over its VaR limit inside a
+desk within its own; collateral that more than doubles a netting set's expected exposure; a counterparty whose peak PFE is over five
+times its trades' VaR; the largest US funds owning a tenth or more of the company they hold most of; two funds of different managers
+tracking one index and 80% or more the same; a fund whose holdings weigh over 120% of its net assets; a desk that adds VaR on paper but
+whose removal would raise the bank's). The first fact changes with the business date; everyone on the same date sees the same one first.
+On the demo data of 2026-10-27 the facts read:
+
+| Domain | The fact | Opens |
+|---|---|---|
+| Market risk | BOOK-COMM-1 is at **259%** of its VaR limit, while its desk, Commodities, is within its own | `VAR NODE MGMT~BOOK-COMM-1` |
+| Market risk | Take the **Commodities** desk out and the bank's VaR would rise by 10.7m, though the desk adds 3.0m to it on paper | `VAR DESK DESK-COMM` |
+| Counterparty credit | Collateral made **NS-NORTHPLAINS-NY** more risky: EE at 2M is 129.7m with it and 55.6m without (+133%) | `EXP NS-NORTHPLAINS-NY` |
+| Counterparty credit | Northern Plains Energy Canada's trades have a VaR of 37.4m but a peak PFE of **508.1m** (13.6× as large) | `EXP CP-NORTHPLAINS` |
+| Funds and companies | 87 of the largest US funds hold Nvidia and own **21.19%** of its shares | `HELD NVDA` |
+| Funds and companies | VOO and IVV, run by two different managers, are **92.4%** the same portfolio | `FUND VOO` |
+| Funds and companies | PIMCO Income Fund (PONAX) holds investments weighing **150.01%** of its net assets | `FUND PONAX` |
+
+The tile draws at once as a placeholder and fills when the facts are ready (the first visit of a business date computes them, a few
+seconds at most on the demo data; later visits that day read them back). When no fact holds, or the server cannot be reached, the tile
+is left out and the headline stands alone. Under the headline, **quick cards** open *Market risk* (`VAR BANK`), *Exposure* (`EXP BANK`),
+*Funds and ETFs* (`FUND SPY`) and *Data map* (`DATAMAP`); a card whose pack is off is not shown. An administrator turns the tile off
+with `ui.facts.enabled: false` (`DRISHTI_HOME_FACTS=false`) and sets the cards under `ui.home_cards` in the console's
+`application.yaml`; a pack author adds facts as the [pack developer guide](PACK_DEVELOPER_GUIDE.md#facts-for-home) describes.
 
 ## The top bar
 
