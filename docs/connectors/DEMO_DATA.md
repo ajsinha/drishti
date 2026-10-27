@@ -274,6 +274,43 @@ drishti-console/.venv/bin/python tools/drishti.py data ingest --from your-folder
 [Generating a pack from JSON Lines](../guides/PACK_GENERATORS_GUIDE.md#generating-a-pack-from-json-lines) and
 [CLI_GUIDE.md](../guides/CLI_GUIDE.md).
 
+## Your bank's names
+
+The demo bank is *Drishti Bank*, and its legal entities are *Drishti Bank plc* (`LE-LDN`), *Drishti Bank Securities Inc.* (`LE-NY`),
+*Drishti Bank Europe AG* (`LE-FRA`) and *Drishti Securities Japan K.K.* (`LE-TKY`), with branch forms such as *Drishti Bank plc,
+Singapore Branch*. To demonstrate with other names, edit `config/demo/names.yaml` (2.9.4):
+
+```yaml
+bank: Example Bank                       # the bank as a whole (the top of the risk hierarchy)
+short-name: EXAMPLE
+legal-entities:
+  LE-NY: Example Securities Inc.
+  LE-LDN: Example Bank plc
+  LE-FRA: Example Bank Europe AG
+  LE-TKY: Example Securities Japan K.K.
+# branches:                              # optional: a branch's own full name
+#   "Drishti Bank plc, Singapore Branch": Example Bank plc, Singapore Branch
+```
+
+The defaults are the names above, so the file changes nothing until you edit it. The names are applied **as the demo lakes are
+built**: `drishti.py lake demo` and `tools/build_demo_lakes.py` (both take `--names FILE`, default `config/demo/names.yaml`; with
+`--dry-run` they print the mapping and build nothing) rename, in every kind as it is loaded, each value that **is** an old name, and
+each value that **starts with** an old name followed by a comma (a branch keeps its suffix). The committed test data
+(`data/testdata`) is never rewritten. **LEIs and BICs stay as they are**: they are identifiers. In the committed data the names are in:
+
+| Where | Field | Names |
+|---|---|---|
+| `core/legal-entity` (test data, lake `reference/legal-entity`) | `NAME` | the four legal entities |
+| `market-risk/risk-hierarchy` (test data, lake `risk/risk-hierarchy`) | `NAME` | the bank, at the top of both trees |
+| `config/packs/core/samples` | `legal-entity.jsonl` `NAME`, `catalog.jsonl` subtitles | the four legal entities |
+| the retired example packs (`examples/packs/climate-risk`, `liquidity-risk`, `operational-risk`; `finance`) | `legalEntityName`, `legalEntity.name` | the legal entities |
+
+So after an edit rebuild those two datasets (`--only core/legal-entity,market-risk/risk-hierarchy`, or a full `lake demo`). The
+packs' samples, served without a lake, follow the file when their generators are run again: `python3 tools/packgen/banking/make_data.py`
+(the core samples; the catalogue's subtitles too) and an example pack's `make.py`. The VaR tree's top node is named by a server setting
+of its own, the VaR root name (the PV-VaR work of 2.9.4, listed in [CONFIGURATION.md](../admin/CONFIGURATION.md) under the VaR
+engine): the VaR tree's top name is set there.
+
 ## The samples
 
 The packs' samples in `config/packs/<pack>/samples/` are what the `demo` source serves live: one JSON Lines file per kind

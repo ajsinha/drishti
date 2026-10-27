@@ -208,6 +208,20 @@ beside yours). Always try `--dry-run` first: it prints every step.
 Then start the server and the console (section 4). The manual steps below do the same thing in parts.
 
 
+### 3.0a Your bank's names (optional, 5 minutes)
+
+To show your bank's names instead of *Drishti Bank* and its legal entities, edit `config\demo\names.yaml` (the bank, and the names of
+`LE-NY`, `LE-LDN`, `LE-FRA` and `LE-TKY`; a branch such as *… plc, Singapore Branch* follows its entity). Then rebuild the datasets that
+carry the names, with the same `build_demo_lakes.py` as step 3.0 plus:
+
+```
+--only core/legal-entity,market-risk/risk-hierarchy --as-of <the lakes' last date>
+```
+
+Add `--dry-run` first to see the mapping it will apply (`Drishti Bank plc -> …`). LEIs and BICs stay as they are. The committed data
+in `data\testdata` is not changed, so `git status` stays clean. The VaR tree's top name is a server setting of its own
+(the VaR root name, under the VaR engine in CONFIGURATION.md); see [DEMO_DATA.md](../connectors/DEMO_DATA.md#your-banks-names).
+
 ### 3.1 By hand: all synthetic data, aligned to your ENDUR dates (PyCharm)
 
 The synthetic data has sixty business days. Make them **end on the date of your newest ENDUR file**, so the date picker

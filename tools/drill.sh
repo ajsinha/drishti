@@ -112,6 +112,7 @@ python_tool_tests() {
     timeout --kill-after=30 600 uv run -q --with deltalake --with pyarrow --with pyyaml python -m unittest -q tools/samplegen/test_layout.py
     timeout --kill-after=30 600 uv run -q --with deltalake --with pyarrow --with pyyaml python -m unittest -q tools/lake/test_maintain.py tools/lake/test_maintain_admin.py 2>&1 | grep -v '^{"at"'
     timeout --kill-after=30 600 uv run -q --with deltalake --with pyarrow --with pyyaml python -m unittest -q tools/lake/test_demo.py
+    timeout --kill-after=30 600 uv run -q --with deltalake --with pyarrow --with pyyaml python -m unittest -q tools/lake/test_names.py   # the bank's names
     timeout --kill-after=30 600 uv run -q --with deltalake --with pyarrow --with pyyaml python -m unittest -q tools/lake/test_publish.py
     # the lake tools on S3 simulators (Delta on S3, lake publish's conditional-PUT commit): moto, and the MinIO server binary
     # on Linux (DRISHTI_MINIO_BIN or tools/cache/minio; it skips, printing why, when no binary can be had). Each prints which

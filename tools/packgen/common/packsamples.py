@@ -48,6 +48,16 @@ def line(doc: dict) -> str:
     return json.dumps(doc, ensure_ascii=False, separators=(",", ":"))
 
 
+def _names():
+    """The bank's own names (config/demo/names.yaml, tools/demonames.py); the defaults rename nothing."""
+    import sys
+    tools = str(Path(__file__).resolve().parents[2])
+    if tools not in sys.path:
+        sys.path.insert(0, tools)
+    import demonames
+    return demonames.DemoNames.load()
+
+
 def catalog_text(catalog: list[dict]) -> str:
     """catalog.jsonl: one entry a line."""
     return "".join(line(e) + "\n" for e in catalog)
@@ -67,6 +77,11 @@ def files(docs: dict[str, dict[str, dict]], catalog: list[dict], part_mb: float 
     """docs {kind: {id: document}}; catalog [{kind, id, title, subtitle}] (its order is the lines' order). Returns
     {"catalog.jsonl": text, "<kind>.jsonl" or "<kind>.part-NNN.jsonl": text}. catalog_indent is kept for callers; the catalogue
     is one entry a line since 2.9.4."""
+    names = _names()
+    if names:                                       # the bank's own names (config/demo/names.yaml): the samples follow the file
+        docs = {k: {i: names.rewrite(json.loads(line(d))) for i, d in ds.items()} for k, ds in docs.items()}
+        catalog = [{**e, **{f: " · ".join(names.value(p) for p in str(e[f]).split(" · ")) for f in ("title", "subtitle") if f in e}}
+                   for e in catalog]
     out: dict[str, str] = {CATALOG: catalog_text(catalog)}
     limit = int(part_mb * 1024 * 1024)
     order: dict[str, list[str]] = {}

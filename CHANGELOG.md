@@ -17,6 +17,16 @@
 
 ## 2.9.4 (unreleased)
 
+- **Your bank's names in the demo (2026-10-27; product owner).** New `config/demo/names.yaml`: the bank, its short name, the legal
+  entities `LE-NY`, `LE-LDN`, `LE-FRA`, `LE-TKY` and optional branches; the defaults are today's names, so nothing changes until it is
+  edited. `drishti.py lake demo` and `tools/build_demo_lakes.py` take `--names FILE` (default that file; `--dry-run` prints the mapping)
+  and rename as they load, in every kind: a value that is an old name, or an old name followed by a comma (a branch keeps its suffix);
+  the committed test data is never rewritten, LEIs and BICs stay (new `tools/demonames.py`). In the committed data the names are in
+  `core/legal-entity` (`NAME`) and `market-risk/risk-hierarchy` (the bank, `NAME`), and in the core pack's and the example packs'
+  samples, which follow the file when their generators run again (`packsamples.files` applies it, the catalogue's subtitles too).
+  Test: `tools/lake/test_names.py` (in the drill). Docs: DEMO_DATA "Your bank's names", the Windows QA guide's step 3.0a; the VaR
+  tree's top name is a separate server setting (the VaR root name, from the PV-VaR work).
+
 - **The guard of the data standard (2026-10-27).** Two tests in the drill: `tools/test_generators_write_jsonl.py` runs the cheap
   generators into a temporary folder (comswap and note synth, `make_trades`, `bulk_trades --no-lake`, `make_data --lake --no-load` and
   its feed, `samplegen/lake.py --no-load`, a retired pack's `make.py`, the sample and Sutra-case writers) and checks every data file

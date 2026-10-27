@@ -237,7 +237,9 @@ def main(argv: list[str] | None = None) -> int:
                     help="where a source system's trades are stored: endur=delta, calypso=iceberg, all=iceberg (repeatable; all first, then "
                          "each system over it). Default: every system in Delta on a full build; a partial build (--only, --files-only) keeps "
                          "the store each system it does not name has. The connector file trade-<system>.yaml is switched to match")
-    ap.add_argument("--dry-run", action="store_true", help="say every step, change nothing")
+    ap.add_argument("--dry-run", action="store_true", help="say every step, change nothing (and print the names mapping)")
+    ap.add_argument("--names", type=Path, default=ROOT / "config" / "demo" / "names.yaml",
+                    help="the bank's own names (default config/demo/names.yaml): passed to lake demo, which renames them as it loads")
     a = ap.parse_args(argv)
 
     py = sys.executable
@@ -298,6 +300,11 @@ def main(argv: list[str] | None = None) -> int:
             cmd += ["--only", a.only]
         if a.connectors_dir:
             cmd += ["--connectors-dir", str(a.connectors_dir.expanduser().resolve())]
+        cmd += ["--names", str(a.names.expanduser().resolve())]
+        if a.dry_run:                                     # the mapping the step would apply
+            sys.path.insert(0, str(ROOT / "tools"))
+            import demonames
+            print("\n".join("  " + x for x in demonames.DemoNames.load(a.names.expanduser()).lines()))
         said = server_said(run(cmd, a.dry_run, "1/3 lake demo", lake, capture=bool(a.server)))
         if a.server:
             outcomes.append(outcome(said) or ("dry" if a.dry_run else ""))
