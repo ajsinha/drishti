@@ -165,3 +165,19 @@ def test_schedules_created_paused_deleted_and_the_scheduler_starts_them(client, 
     assert hist[0]["schedule"] == "nightly" and hist[0]["note"].startswith("catch-up")
     assert client.post("/admin/api/lakes/maintain/schedules/delete", json={"root": str(root), "name": "nightly"}).json()["deleted"]
     assert [s["name"] for s in client.get("/admin/api/lakes/maintain").json()["schedules"]] == ["after"]
+
+
+def test_an_iceberg_table_is_listed_with_its_format(client, lake):
+    """2.9.5: an Iceberg table under a lake root (lake build --format iceberg) shows Format Iceberg; Delta stays the default."""
+    root, _, _ = lake
+    t = root / "risk" / "pnl-vector"
+    (t / "metadata").mkdir(parents=True)
+    (t / "metadata" / "v1.metadata.json").write_text(json.dumps({"format-version": 2, "table-uuid": "u", "current-snapshot-id": 1,
+                                                                 "snapshots": [{"snapshot-id": 1, "timestamp-ms": 1, "summary": {"total-records": "3"}}]}))
+    (t / "metadata" / "version-hint.text").write_text("1")
+    o = client.get("/admin/api/lakes/maintain").json()
+    by = {x["table"]: x for x in o["tables"]}
+    assert by["risk/pnl-vector"]["format"] == "iceberg" and by["trading/trade"]["format"] == "delta"
+    page = client.get("/admin/lakes").text
+    assert 'data-mt-format="iceberg"' in page and 'data-mt-format="delta"' in page and ">Format</th>" in page
+

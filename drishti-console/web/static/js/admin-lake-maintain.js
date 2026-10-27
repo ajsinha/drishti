@@ -150,10 +150,19 @@
     tr.appendChild(el('td', { 'class': 'mono' }, t.error && !t.before ? '–' : fmt(b.files) + ' → ' + fmt(a.files) + est));
     tr.appendChild(el('td', { 'class': 'mono' }, t.error && !t.before ? '–' : mb(b.mb) + ' → ' + mb(a.mb) + est));
     var ret = t.retention;
-    tr.appendChild(el('td', {}, !ret ? 'keeps every date' : (ret.dates && ret.dates.length ? (t.dryRun ? 'would drop ' : 'dropped ') + ret.dates.length + ' date(s): ' +
-      ret.dates.slice(0, 3).join(', ') + (ret.dates.length > 3 ? ' …' : '') : 'nothing before ' + ret.cutoff)));
-    var v = t.vacuum;
-    tr.appendChild(el('td', {}, !v ? 'no vacuum' : (v.dry_run ? 'would delete ' : 'deleted ') + fmt(v.files) + ' file(s)' + (v.mb ? ', ' + mb(v.mb) : '') + ' unused for ' + v.hours + ' h'));
+    tr.appendChild(el('td', {}, !ret ? 'keeps every date' : ret.removed !== undefined ? 'dropped ' + fmt(ret.removed) + ' date(s)' :
+      (ret.dates && ret.dates.length ? (t.dryRun ? 'would drop ' : 'dropped ') + ret.dates.length + ' date(s): ' +
+      ret.dates.slice(0, 3).join(', ') + (ret.dates.length > 3 ? ' …' : '') : ret.cutoff ? 'nothing before ' + ret.cutoff : 'nothing to drop')));
+    var v = t.vacuum, o = t.orphans;
+    var vac = !v ? 'no vacuum' : t.format === 'iceberg' ? (v.dry_run ? 'would expire' : 'expired') + ' snapshots older than ' + v.hours + ' h'
+      : (v.dry_run ? 'would delete ' : 'deleted ') + fmt(v.files) + ' file(s)' + (v.mb ? ', ' + mb(v.mb) : '') + ' unused for ' + v.hours + ' h';
+    if (o) {
+      vac += '; ' + (t.dryRun ? 'would remove ' + fmt(o.wouldRemove) : 'removed ' + fmt(o.removed)) + ' orphan file(s) older than ' + o.olderThanHours + ' h';
+    }
+    if (t.floor) {
+      vac += '; floor kept from ' + t.floor.keepsDatesFrom;
+    }
+    tr.appendChild(el('td', {}, vac));
     var sig = (t.signal || [])[0];
     tr.appendChild(el('td', { 'class': t.error ? 't-bad' : '' }, t.error ? t.error : (t.dryRun ? 'would run (nothing changed)' : t.forced ? 'done (forced)' : 'done') +
       (sig ? (sig.ok ? '; readers told (' + sig.date + ')' : '; signal failed: ' + sig.error) : '')));

@@ -18,6 +18,7 @@
     history: data/lakes/maintenance-history.jsonl         # optional; default <data>/lakes/maintenance-history.jsonl
     lakes:
       - root: data/delta
+        format: delta                 # delta (the default) or iceberg; auto finds Iceberg tables under a local root too
         domains: ["*"]
         keep-business-days: null      # lake defaults; null keeps every business date
         target-file-mb: 128
@@ -44,8 +45,10 @@ from datetime import datetime
 
 import yaml
 
-SETTINGS = ("keep-business-days", "target-file-mb", "checkpoint", "vacuum-hours")
-TABLE_DEFAULTS = {"keep-business-days": None, "target-file-mb": 128, "checkpoint": True, "vacuum-hours": 168}
+SETTINGS = ("keep-business-days", "target-file-mb", "checkpoint", "vacuum-hours", "orphan-hours")
+#: orphan-hours is read for Iceberg tables only (files no snapshot references, older than that, are removed: 72 at least)
+TABLE_DEFAULTS = {"keep-business-days": None, "target-file-mb": 128, "checkpoint": True, "vacuum-hours": 168, "orphan-hours": 72}
+ORPHAN_MIN_HOURS = 72
 VACUUM_SAFE_HOURS = 168
 HISTORY_KEEP = 2000
 #: the domains whose dates and time travel are kept at least this many years, whatever a table's settings say (the risk lake's inputs
@@ -76,6 +79,13 @@ def retention_floor(name: str, conf: dict, retain: dict | None = None) -> tuple[
         out["keep-business-days"] = days
         notes.append(f"keep-business-days {conf['keep-business-days']} raised to {days}: the {name.split('/')[0]} domain keeps {years} years of dates")
     return out, notes
+
+
+def floor_days(name: str, retain: dict | None = None) -> int:
+    """The calendar days the table's domain keeps whatever its settings say (risk, risk-results: 2,557), or 0: what an Iceberg table's
+    maintenance is given as --floor-days, so the Java side never drops a date or expires a snapshot inside it either."""
+    years = {**RETAIN_YEARS, **(retain or {})}.get(name.split("/")[0])
+    return retain_days(int(years)) if years else 0
 
 
 def data_dir() -> pathlib.Path:
@@ -173,6 +183,12 @@ def clean_settings(s: dict) -> tuple[dict, list[str]]:
             out["vacuum-hours"] = n
             if n < VACUUM_SAFE_HOURS:
                 warn.append(f"vacuum below {VACUUM_SAFE_HOURS} hours (7 days) removes files a reader or a 'known at' view may still need")
+    if "orphan-hours" in s:
+        n = int(s["orphan-hours"] or ORPHAN_MIN_HOURS)
+        if n < ORPHAN_MIN_HOURS:
+            raise ValueError(f"orphan files are removed when at least {ORPHAN_MIN_HOURS} hours old: a younger file may belong to a load "
+                             "still committing")
+        out["orphan-hours"] = n
     return out, warn
 
 

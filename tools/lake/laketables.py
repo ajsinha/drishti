@@ -16,6 +16,8 @@
 """lake tables: what a lake holds, table by table: rows, files, size, partitions, business dates (how many, the latest) and when it was last
 built (its last commit). Read from each table's Delta log alone (no data file is opened): with deltalake when it is installed (a log that
 starts at a checkpoint needs it), else by replaying the log's JSON commits. Used by ``drishti.py lake status`` and the console's Lakes screen.
+An Iceberg table under the same root (``metadata/*.metadata.json``: ``lake build --format iceberg``) is listed too, its figures from its
+metadata (tools/lake/maintain_iceberg.py); every table says its ``format``, delta (the default) or iceberg.
 
     python3 tools/drishti.py lake status --lake data/delta"""
 from __future__ import annotations
@@ -75,7 +77,9 @@ def _with_deltalake(t: pathlib.Path) -> dict | None:
 
 def summary(t: pathlib.Path) -> dict:
     """One table's figures; an unreadable table says why in ``error``."""
-    out = {"table": t.parent.name + "/" + t.name, "domain": t.parent.name, "kind": t.name, "path": str(t)}
+    if not (t / "_delta_log").is_dir() and _iceberg().is_table(t):
+        return _iceberg().summary(t)
+    out = {"table": t.parent.name + "/" + t.name, "domain": t.parent.name, "kind": t.name, "path": str(t), "format": "delta"}
     try:
         got = _replay(t) or _with_deltalake(t)                         # the JSON log first (no dependency), deltalake for a checkpoint
     except Exception as e:  # noqa: BLE001 - one broken table never hides the others
@@ -101,12 +105,22 @@ def summary(t: pathlib.Path) -> dict:
     return out
 
 
+def _iceberg():
+    import sys
+    here = str(pathlib.Path(__file__).resolve().parent)
+    if here not in sys.path:
+        sys.path.insert(0, here)
+    import maintain_iceberg
+    return maintain_iceberg
+
+
 def tables(lake: pathlib.Path) -> list[dict]:
-    """Every table under a lake root (<root>/<domain>/<kind> with a _delta_log), sorted by domain and kind."""
+    """Every table under a lake root (<root>/<domain>/<kind> with a _delta_log, or an Iceberg table's metadata), sorted by domain and kind."""
     lake = pathlib.Path(lake)
     if not lake.is_dir():
         return []
-    return [summary(log.parent) for log in sorted(lake.glob("*/*/_delta_log"))]
+    found = {log.parent for log in lake.glob("*/*/_delta_log")} | {m.parent for m in lake.glob("*/*/metadata") if _iceberg().is_table(m.parent)}
+    return [summary(t) for t in sorted(found)]
 
 
 def _log_meta(t: pathlib.Path, history: int) -> dict:
@@ -154,8 +168,8 @@ def detail(t: pathlib.Path, history: int = 30) -> dict:
     its columns and types, partition columns, properties, protocol, and its newest commits."""
     t = pathlib.Path(t)
     out = summary(t)
-    if out.get("error"):
-        return out
+    if out.get("error") or out.get("format") == "iceberg":
+        return out                                               # an Iceberg table: its figures (the Delta log's detail has no counterpart)
     got = _replay(t) or _with_deltalake(t)
     by_date: dict[str, dict] = {}
     for rows, size, parts in got["files"].values():

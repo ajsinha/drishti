@@ -116,7 +116,7 @@ class LakeMaintenance:
         for t in figures:
             name, root = t.get("table"), t.get("root")
             rec = (built.get(root) or {}).get(name)
-            rows.append({"root": root, "table": name, "domain": t.get("domain"), "owned": rec is not None, "owner": rec,
+            rows.append({"root": root, "table": name, "domain": t.get("domain"), "format": t.get("format") or "delta", "owned": rec is not None, "owner": rec,
                          "reason": None if rec else own.FOREIGN, "settings": mc.table_settings(config, root, name),
                          "files": t.get("files"), "size": t.get("size"), "bytes": t.get("bytes"), "error": t.get("error")})
         zone = self.zone(config)
