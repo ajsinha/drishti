@@ -289,7 +289,7 @@ def test_a_save_on_a_published_model_makes_a_draft_and_publish_follows(browser):
     expect(page.locator("[data-state]")).to_have_text("Saved draft", timeout=15000)
     expect(page.locator("[data-publish]")).to_be_enabled(timeout=15000)
     page.click("[data-publish]")
-    expect(page.locator("[data-state]")).to_have_text("Published", timeout=60000)      # publishing runs the model's Check and safeguard: seconds on a loaded machine
+    expect(page.locator("[data-state]")).to_have_text("Published", timeout=120000)     # publishing runs the model's Check and safeguard: over a minute while the drill's Java stages run beside it
     # change what the measure computes: the save makes a draft beside the published version; Publish is offered again
     expr = page.locator('[data-m-expr="Sum of MTM"]')
     expr.fill("sum(trade.PNL_1D)")
