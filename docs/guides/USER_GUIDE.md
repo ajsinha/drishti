@@ -741,10 +741,10 @@ page never scrolls sideways.
 Some screens offer **controls**: a dropdown, a list of boxes to tick, a pair of dates, a search box. They are the Sutra's own (its author put
 them where they help), and they are different from the funnels of [Filter a table like Excel](#filter-a-table-like-excel): a funnel filters
 what a table already holds; a control changes what the *panel shows*, and it can change a title, a total, a chart and the rows together. Two
-screens that ship with them: an interest-rate swap (`TRD MX-20000001 <GO>`: its **Cashflows** by leg and by date range) and a netting set
+screens that ship with them: an interest-rate swap (`TRD MX-20000001 <GO>`: its **Events** by leg and by date range) and a netting set
 (`NS-MERIDIAN-RE-NY`: its **Member trades** by asset class, product and how many to show).
 
-![The cashflows of a swap with the controls Legs (open: All, None, a box per leg) and Paid between (two dates and a presets list) in the panel's header](img/controls/01-header.jpg)
+![The events of a swap with the controls Legs (open: a filter box, Select all, Clear, a box per leg) and Between (two dates and a presets list) in the panel's header](img/controls/01-header.jpg)
 
 **Using them.** A control sits under the strip, in a panel's header or in a bar at the side of the screen, with its label. Change one and
 **only the panels that read it** are rebuilt, in place (you keep your place, your zoom and your other filters); the rest of the screen does not
@@ -754,16 +754,16 @@ fill both dates for you; either date may be left empty (*from the start*, *to th
 | Control | How |
 |---|---|
 | a **dropdown** (also *cascading*: the second one's choices follow the first) | Pick a value; *(all)* clears it |
-| a **list of boxes** (multi-select) | `Enter` or `Space` on its button opens the list; tick boxes, or *All* / *None*; `Esc` closes it. Nothing ticked means everything |
+| a **list of boxes** (multi-select) | `Enter` or `Space` on its button opens the list; type to filter it, tick boxes, or *Select all* / *Clear*; `Esc` closes it. Nothing ticked means everything |
 | a **switch** or **buttons** | Click, or `Space`; with buttons the arrow keys move and choose |
 | **dates**, a **number range** | Type or pick; the panel follows when you leave the box (numbers: when you pause) |
 | a **slider** | Drag the round handle (or press on the track), or focus it and use `←` `→` for one step, `PageUp` / `PageDown` for ten, `Home` / `End` for the ends; a slider with two handles sets a range, and the handles cannot cross. The number beside it says where it is; on a phone the handles are 44 pixels |
 | **Show 10 / 25 / 50** (top-n) | Pick how many rows |
 | **Find** (search) | Type; the panel follows when you pause |
 
-![The same swap with leg 2 only and the next 90 days: the panel's title says what it shows, and the address carries both choices](img/controls/02-filtered.jpg)
+![The same swap with leg 1 only and the next 90 days: the panel's title says the dates it shows, and the address carries both choices](img/controls/02-filtered.jpg)
 
-**The address remembers.** What you set is written to the address: `.../v/trade/MX-20000001?ctl.legs=2&ctl.when=2026-10-09..2027-01-06`
+**The address remembers.** What you set is written to the address: `.../v/trade/MX-20000001?ctl.legs=1&ctl.when=2026-10-27..2027-01-24`
 (a relative choice such as *Next 90 days* is written as the dates it meant). Send the link, bookmark it or press **Share**: whoever opens it sees
 the same panels with the same controls. A control you have not touched is not in the address, so it starts at the author's default. A control
 the author marked *remember* (Legs on the swap) also comes back as you last left it **in this browser** the next time you open the screen
@@ -779,7 +779,7 @@ works on rows of a table where the author set it up. Everything a click does, th
 
 **On a phone.** Controls stack one to a row, each at least 44 pixels high, and the page does not scroll sideways; the list of boxes opens under its button.
 
-![The swap's cashflows on a phone: Legs open, Paid between with two date boxes, the table below](img/controls/04-phone.jpg)
+![The swap's events on a phone: Legs open, Between with two date boxes, the table below](img/controls/04-phone.jpg)
 
 **What you may see.** A control offers only values you may see: for a field your role does not show (`•••`), a dropdown lists nothing, and a
 search over it never finds anything. Controls only choose; they never change data.
@@ -800,7 +800,7 @@ commodity swaps are all held that way (`LEGS` → `CASH_FLOWS` → `RESETS`, wit
 `TRD 1000001`, an ENDUR commodity swap (`ComSwap`, sub-type `ENGY-SWAP`): a fixed price leg against a floating aluminium index leg (`IDX-ALU-3M`),
 36 monthly cash flows each.
 
-![A commodity swap: the legs side by side; the index leg's terms, then its monthly cash flows with the first one opened to its resets](img/deep/01-commodity.jpg)
+![A commodity swap: the legs side by side, each with its terms, its notional profile and its cash flows; the index leg also charts its fixings](img/deep/01-commodity.jpg)
 
 - **Fixed against floating** sums the trade up: fixed price `2,332.9131`, floating index `IDX-ALU-3M`, averaging *Monthly*, price unit `MT`, 36 periods.
 - **Legs (F3), side by side.** `Leg 1 · Fixed price FIXED` and `Leg 2 · Floating price FLOAT · IDX-ALU-3M`: one column per leg on a wide screen, tabs
@@ -819,7 +819,7 @@ commodity swaps are all held that way (`LEGS` → `CASH_FLOWS` → `RESETS`, wit
 A MUREX interest-rate swap, `TRD MX-20000001`, reads the same way with two legs, `Leg 1 · Receive FIXED` and `Leg 2 · Pay FLOAT · AONIA`; the
 floating leg's cash flows open to their resets:
 
-![A swap: Leg 2, the floating leg, with its first cash flow opened to its resets](img/deep/02-swap.jpg)
+![A swap: the two legs side by side; the fixed leg's cash flows, and the floating leg's AONIA fixings](img/deep/02-swap.jpg)
 
 On a phone the legs become tabs that scroll along one line, the terms stack, and the table scrolls sideways inside its own box; the ▸ buttons are
 44 px targets.

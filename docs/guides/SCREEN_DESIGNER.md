@@ -93,7 +93,7 @@ Everything you do is an **operation** on the design (add a panel, move it, set a
 
 ## 3. The Data pane: samples, shape, palette
 
-![The Data pane: samples, the shape tree with a field opened](img/designer/03-data-pane.jpg)
+![The Data pane, scrolled to the shape tree: a field opened, with its path and role](img/designer/03-data-pane.jpg)
 
 **Samples.** Click a sample's name to preview the design with it (the status bar's ◀ ▶ do the same). *Add files* adds more; *Remove* takes one out. A sample marked *stored entity* is a reference; *synthetic* was generated from a schema. *shape.json* and *JSON Schema* download what Drishti inferred.
 
@@ -167,7 +167,7 @@ A field of the shape is dragged onto the canvas:
 
 - **Onto the rim of a panel, between panels, or onto empty space in a column**: Drishti ranks the panel kinds that suit the field (a `series` becomes a line, a `measure` a gauge or a bar, a list of rows a table…), each with its options already filled and **a reason**. Pick one with the mouse or Up/Down and Enter; it is added at the place you dropped, with its inspector open.
 
-  ![Dropping a field between panels: ranked panel kinds, each with a reason](img/designer/07-drop-field.jpg)
+  ![Dropping a field between panels: the panel kinds that suit it (for a name, one: kv), each with a reason](img/designer/07-drop-field.jpg)
 
 - **Onto the middle of a panel**: the field is **bound** to it, into the option the kind accepts next (a column of a table, a field of a key/value panel, a series of a line chart…). The panel outlines in green while you hover.
 
