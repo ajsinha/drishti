@@ -154,7 +154,7 @@ def alerts(c: Ctx):
     c.page.wait_for_url("**/alerts/new**")
     c.page.fill('input[name="name"]', "MTM floor")
     c.page.select_option('select[name="op"]', "below")
-    c.page.fill('input[name="value"]', "3000000000")
+    c.page.fill('input[name="value"]', "3500000000")
     c.page.fill('input[name="hysteresis"]', "10000000")
     c.page.select_option('select[name="trigger_mode"]', "after-load")
     c.page.click("[data-check-now]")

@@ -23,8 +23,9 @@ the Model view. Everything else that used to be in the BI tutorial is now a tuto
 
 Every answer below was captured on a fresh clone over the **demo lakes** (`drishti.py lake demo`: sixty business days of the seven packs, 5,000 trades for
 each of ENDUR, CALYPSO and MUREX, 15,000 trade valuations a day). The demo lakes end on **today's** business date, so your dates differ from the ones
-here. The answers were captured on the seven-day lakes of 2.5.0 (2026-10-07 to 2026-10-16); the lakes hold sixty business days since 2.6.5, and a
-figure may differ on yours. Some pictures are from the 2.2 demo data and show its lower-case column names; the
+here. The answers of `trades-basic` and `trading-risk` (with its two users) were rerun on the default lake of 2.9.2, ending 2026-10-26, with the
+official exposure the server publishes at start; the others were captured on the seven-day lakes of 2.5.0 (2026-10-07 to 2026-10-16), and a figure
+there may differ on yours. Some pictures are from the 2.2 demo data and show its lower-case column names; the
 steps are the same.
 
 | Sample model | What it teaches | Tables (aliases) |
@@ -102,20 +103,20 @@ pyarrow), captured:
 POST /api/v1/bi/mq
 {"mq": 1, "model": "trades-basic@1", "select": {"fields": ["trade.DESK"], "measures": ["Notional", "MTM", "Trades", "Average MTM per trade"]}}
 
-DESK-COMM     888,803,742,773.65   -429,967,635.39   5990     -71,780.91
-DESK-CREDIT   344,825,753,000.00    360,552,941.89   1172     307,639.03
-DESK-EQD      428,542,341,000.00    -79,395,510.75   1452     -54,680.10
-DESK-FI       401,083,619,000.00    -42,949,081.83   1248     -34,414.33
-DESK-FX       366,591,303,000.00   -669,248,939.51   1428    -468,661.72
+DESK-COMM     885,017,001,985.25   -395,383,250.53   5990     -66,007.22
+DESK-CREDIT   348,350,245,514.15    386,059,702.75   1172     329,402.48
+DESK-EQD      430,529,717,922.53    -85,763,784.34   1452     -59,065.97
+DESK-FI       403,150,156,232.97    -30,588,339.35   1248     -24,509.89
+DESK-FX       372,842,213,118.35   -681,989,221.57   1428    -477,583.49
 ...                                                                       (10 rows)
-meta: asOf=2026-10-16, layer=columns, 10.6 ms, cached=false
+meta: asOf=2026-10-26, layer=columns, 10.6 ms, cached=false
 ```
 
 From a terminal: `drishti.py bi mq --model trades-basic@1 --select trade.DESK --measures Notional,MTM,Trades` (or the same in SQL,
 `drishti.py bi sql "SELECT trade.DESK, MEASURE('MTM') FROM trade GROUP BY trade.DESK" --model trades-basic@1`, [SQL.md](SQL.md)).
 
 What happened: the first query **built the columns layer** for the table: the connector scanned the declared columns and the engine wrote
-`<data>/bi-store/columns/file_model_trades-basic/trade/date=2026-10-16/part-<id>.parquet`. Run it again and the answer comes from the **result cache**
+`<data>/bi-store/columns/file_model_trades-basic/trade/date=2026-10-26/part-<id>.parquet`. Run it again and the answer comes from the **result cache**
 (`cached: true`, in microseconds). The date is the newest the lake holds; give `time: {as-of: "2026-10-15"}` (a report's date picker) for another day.
 If the lake is built again (`lake demo` once more), the server reads it again: `lake demo` tells it, and a changed Delta date is noticed by itself
 ([TOOLS.md section 4.7](TOOLS.md#47-a-pack-a-connector-and-the-data-load-signal)).
@@ -133,11 +134,11 @@ Open **Trading and counterparty risk**. Its five tables read three connectors in
 Group by `desks.NAME` (a column of another pack's table) and ask for *MTM*, *Notional*, *Trades*, *Counterparties* (a distinct count), captured:
 
 ```
-Bonds and securitised          -42,949,081.83     401,083,619,000.00   1248   18
-Commodities                   -429,967,635.39     888,803,742,773.65   5990   24
-Credit trading                 360,552,941.89     344,825,753,000.00   1172   17
-Equity derivatives             -79,395,510.75     428,542,341,000.00   1452   18
-G10 and EM FX                 -669,248,939.51     366,591,303,000.00   1428   17
+Bonds and securitised          -30,588,339.35     403,150,156,232.97   1248   18
+Commodities                   -395,383,250.53     885,017,001,985.25   5990   24
+Credit trading                 386,059,702.75     348,350,245,514.15   1172   17
+Equity derivatives             -85,763,784.34     430,529,717,922.53   1452   18
+G10 and EM FX                 -681,989,221.57     372,842,213,118.35   1428   17
 ...                                                                              (10 rows)
 ```
 
@@ -147,11 +148,11 @@ column of the counterparties, the five largest:
 ```
 {"mq": 1, "model": "trading-risk@1", "select": {"fields": ["counterparties.NAME"], "measures": ["Exposure (EE peak)", "Netting sets"]},
  "sort": [{"by": "Exposure (EE peak)", "desc": true}], "limit": 5}
-Northern Plains Energy Canada   2,846,661,899   1
-Summit Clearing LLC             2,638,994,501   2
-Aldershot Pension Trust         2,599,390,291   4
-Harbor Point Bank               2,552,263,980   4
-Tokai Mutual Trust Bank         2,309,006,435   4
+Verdant Agri Holdings           303,824,105   4
+Aldershot Pension Trust         278,109,475   4
+Tokai Mutual Trust Bank         226,721,872   4
+Aurora Sovereign Wealth Fund    202,918,363   4
+Cascadia Airlines Inc.          153,151,356   4
 ```
 
 The reference kinds promote no columns, so the server read their documents once (a warning in `meta.warnings` says so: *connector 'reference-store'
@@ -162,9 +163,9 @@ asks for rollup measures is answered from it:
 
 ```
 {"mq": 1, "model": "trading-risk@1", "select": {"fields": ["trades.DESK", "trades.CURRENCY"], "measures": ["MTM", "Notional", "Trades"]}, "limit": 3}
-DESK-COMM   CAD         931,256.00          99,000,000.00     12
-DESK-COMM   EUR      -2,548,307.00       1,454,306,015.60    923
-DESK-COMM   USD    -428,350,584.39     887,250,436,758.05   5055
+DESK-COMM   CAD         875,931.00          99,595,000.00     12
+DESK-COMM   EUR      -2,472,465.00       1,465,274,740.12    923
+DESK-COMM   USD    -393,786,716.53     883,452,132,245.13   5055
 meta: layer=rollup, rollup=by_desk_currency, 13.7 ms
 ```
 
@@ -177,7 +178,7 @@ The model says (`security:`): `desk-head` sees `DESK in user.desks` (and every n
 `analyst` and `admin` see every row; the counterparties' names and the traders are masked for readers without the raw power. Run the **same** query,
 group by `desks.NAME`, measures *MTM*, *Trades*, *Counterparties*, as three people.
 
-**rita (`risk`, raw)**: all ten desks, as above (captured as rita: `G10 and EM FX  -669,248,939.51  1428  17` among them).
+**rita (`risk`, raw)**: all ten desks, as above (captured as rita: `G10 and EM FX  -681,989,221.57  1428  17` among them).
 
 ![risk](img/bi-datasets/preview-risk-risk.png)
 
@@ -187,7 +188,7 @@ group by `desks.NAME`, measures *MTM*, *Trades*, *Counterparties*, as three peop
 ![desk head](img/bi-datasets/preview-risk-deskhead.png)
 
 ```
-G10 and EM FX   -669,248,939.51   1428   null        meta: masked=[Counterparties], warnings=["measure Counterparties is masked"]
+G10 and EM FX   -681,989,221.57   1428   null        meta: masked=[Counterparties], warnings=["measure Counterparties is masked"]
 ```
 
 **ann (`analyst`, no raw)**: every desk, but *Counterparties* reads null and the badge says why. Group by `counterparties.NAME` and the names do not

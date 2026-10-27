@@ -32,7 +32,7 @@ About 45 minutes.
 
 - The quick-start environment of [tutorial 10](10-first-bi-report.md#before-you-start): the demo lakes, the server **Drishti server (demo lakes)** with
   sign-in on, signed in as `drishti-dev-admin`. The figures below are from that lake (15,000 trade valuations over ten desks, business date
-  2026-10-16).
+  2026-10-26, the default `lake demo` built with 2.9.2).
 - [Tutorial 10](10-first-bi-report.md) done (it made the workspace `Economics desk`), and [tutorial 8](08-share-and-collaborate.md) for the colleague `vera`
   (a user with the `viewer` role and the address `vera@example.com`); [tutorial 9](09-reports.md) for how the **Reports** page lists subscriptions.
 - The personal API token of [tutorial 1, step 9](01-first-15-minutes.md#step-9--make-a-token-for-the-command-line) in `DRISHTI_TOKEN` (with `bi:write`),
@@ -171,11 +171,11 @@ time and any note. The history and the state are kept in the BI store, so they a
 $ python3 tools/drishti.py bi mq --model trades-daily@1 --select trade.DESK --measures "Trades,Notional,MTM" --limit 4
 trade.DESK   Trades  Notional            MTM
 -----------  ------  ------------------  ---------------
-DESK-COMM    5990    888,803,742,773.65  -429,967,635.39
-DESK-CREDIT  1172    344,825,753,000.00  360,552,941.89
-DESK-EQD     1452    428,542,341,000.00  -79,395,510.75
-DESK-FI      1248    401,083,619,000.00  -42,949,081.83
-4 row(s)  as of 2026-10-16  plan p_73884682a2e01af8
+DESK-COMM    5990    885,017,001,985.25  -395,383,250.53
+DESK-CREDIT  1172    348,350,245,514.15  386,059,702.75
+DESK-EQD     1452    430,529,717,922.53  -85,763,784.34
+DESK-FI      1248    403,150,156,232.97  -30,588,339.35
+4 row(s)  as of 2026-10-26  plan p_084c3aa583453ccc
 ```
 
 The Delta connector scans the promoted columns of the table, so 15,000 rows take a few tens of milliseconds. A refresh that fails is **retried** with the shared retry policy (5 s, doubling, up to 5 minutes; after four tries it is
@@ -335,20 +335,20 @@ overview**. Each card has a **bell** in its corner: *Alert me*.
 
 ![The Mark to market card with its bell](img/t11/07-alert-me.jpg)
 
-You should see the card (`Mark to market`, `+2,796,077,089` on the demo lake) and the bell. Press the bell: the form opens already filled in with the report, the page and the visual.
+You should see the card (`Mark to market`, `+3,210,381,877` on the demo lake) and the bell. Press the bell: the form opens already filled in with the report, the page and the visual.
 
-![The Alert me form: name MTM floor, a visual of a BI report, below 3,000,000,000, hysteresis 10,000,000, after a data load](img/t11/08-alert-form.jpg)
+![The Alert me form: name MTM floor, a visual of a BI report, below 3,500,000,000, hysteresis 10,000,000, after a data load](img/t11/08-alert-form.jpg)
 
 Name it `MTM floor`. **Watch** says what (this visual, with the filters you had set; a card answers one cell, so it is watched as it is). **Tell me
-when**: *crosses a limit*, *below* `3000000000` (a limit above today's number so you see it fire; a real floor would be a loss limit), **Hysteresis**
+when**: *crosses a limit*, *below* `3500000000` (a limit above today's number so you see it fire; a real floor would be a loss limit), **Hysteresis**
 `10000000`: after it fires it stays quiet until the number has come back **inside** the limit by at least this much, so a number that wobbles around the
 limit does not ring every minute. **Look**: *after a data load* (the others are *on a schedule* such as `hourly`, and *live*, when the source pushes
 changes). Press **Check now** (it says what the alert would do right now) and **Save**.
 
-![The alerts page: MTM floor, watching the visual, below 3,000,000,000, active, fired, and a recent alert](img/t11/09-alerts-list.jpg)
+![The alerts page: MTM floor, watching the visual, below 3,500,000,000, active, fired, and a recent alert](img/t11/09-alerts-list.jpg)
 
 You should see the alert under **Alerts on numbers** with the state `active` (it fired when saved: a new alert whose condition already holds fires at
-once) and the message `MTM floor — now 2,796,077,089 (below 3,000,000,000)`. The states: **armed** (watching), **active** (fired, will not fire again until it
+once) and the message `MTM floor — now 3,210,381,876.57 (below 3,500,000,000)`. The states: **armed** (watching), **active** (fired, will not fire again until it
 re-arms), **paused** (you switched it off). Open **Edit and history**.
 
 ![The alert's history: fired, the message, and what each channel did: inbox ok](img/t11/10-alert-history.jpg)
@@ -356,7 +356,7 @@ re-arms), **paused** (you switched it off). Open **Edit and history**.
 You should see one entry per firing, clearing or skipped look with the time, what triggered it, the number and the channel result (`inbox: ok`). The alert
 reads the number **as you**: a number masked for you is never judged and never shown. The message also lands in the **inbox**, under **Alerts**:
 
-![The inbox, Alerts tab: MTM floor - now 2,796,077,089 (below 3,000,000,000)](img/t11/13-inbox-alert.jpg)
+![The inbox, Alerts tab: MTM floor - now 3,210,381,876.57 (below 3,500,000,000)](img/t11/13-inbox-alert.jpg)
 
 You should see the row (and one more for every firing); it opens what the alert is about. With the mail server of step 4 and an address on your account,
 tick **Email** in the form and the same message arrives as `Drishti alert: MTM floor`. A mail that fails is tried again by the shared retry policy (the
@@ -369,7 +369,7 @@ history shows `retrying: attempt 1 of 4 …`, then `sent (attempt 3 of 4)`).
 ![Alert me on a measure of a model: model Trades daily, measure MTM, the filter trade.DESK is DESK-FX, below -10,000,000](img/t11/21-alert-model.jpg)
 
 You should see the model and its measures in the two lists (only the models and measures you may read), the filter row, and *The number is the model's
-measure read as you, with your row rules and masks*. Press **Save**: the FX desk's MTM is `-669,248,940`, below the limit, so it fires at once.
+measure read as you, with your row rules and masks*. Press **Save**: the FX desk's MTM is `-681,989,222`, below the limit, so it fires at once.
 
 **From the command line** you can read the number it watches, and list your alerts (a read); saving and **Check now** are the console's calls
 (`PUT /api/v1/me/measure-alerts/<name>` and `POST .../check`), which a personal token may not make (`403 DRS-5002`):
@@ -378,10 +378,10 @@ measure read as you, with your row rules and masks*. Press **Save**: the FX desk
 $ python3 tools/drishti.py bi mq --model trades-daily@1 --select trade.DESK --measures "Trades,MTM" --where trade.DESK=DESK-FX
 trade.DESK  Trades  MTM
 ----------  ------  ---------------
-DESK-FX     1428    -669,248,939.51
-1 row(s)  as of 2026-10-16  plan p_437edbd8a00760b8
+DESK-FX     1428    -681,989,221.57
+1 row(s)  as of 2026-10-26  plan p_e316a98e618b4b4c
 $ curl -s -H "Authorization: Bearer $DRISHTI_TOKEN" "$DRISHTI_SERVER/api/v1/me/measure-alerts" | jq -c '.[] | {name, describe, label, history: [.history[0] | {action, trigger, message, delivered}]}'
-{"name":"FX desk MTM floor","describe":"below -10,000,000","label":"trades-daily@1 · MTM","history":[{"action":"fired","trigger":"saved","message":"FX desk MTM floor — now -669,248,939.51 (below -10,000,000)","delivered":{"inbox":"ok","email":"off","bridge":"off","sms":"off"}}]}
+{"name":"FX desk MTM floor","describe":"below -10,000,000","label":"trades-daily@1 · MTM","history":[{"action":"fired","trigger":"saved","message":"FX desk MTM floor — now -681,989,221.57 (below -10,000,000)","delivered":{"inbox":"ok","email":"off","bridge":"off","sms":"off"}}]}
 ```
 
 **The YAML** of that alert (the body of `fx-floor.json`; the server keeps the query as one model query, `mq: 1`, and fills in what you left out):
@@ -419,10 +419,10 @@ Excel, PDF and PNG, as the person who sees everything (captured from the console
 ```text
 $ for f in xlsx pdf png; do curl -s -X POST -H "Authorization: Bearer $DRISHTI_TOKEN" -H 'Content-Type: application/json' \
     -d '{"type":"report","id":"file:report:trades-overview","page":"overview"}' -o "Trades overview.$f" $DRISHTI_SERVER/api/v1/export/$f; done
-Trades overview.xlsx   29,181 bytes   sheets:  About | Trades | Notional | Mark to market | Average MTM per trade |
+Trades overview.xlsx   29,481 bytes   sheets:  About | Trades | Notional | Mark to market | Average MTM per trade |
                                                 MTM by desk (click a bar to fil | Notional by trade date | Trades by desk and currency   (2 native charts)
-Trades overview.pdf    10,050 bytes   4 pages
-Trades overview.png   219,335 bytes
+Trades overview.pdf    10,274 bytes   4 pages
+Trades overview.png   221,770 bytes
 ```
 
 An Excel file has an `About` sheet (the title, the date, the filters) and **one sheet per visual**, with numbers as numbers; sheet names are cut at Excel's
@@ -432,20 +432,20 @@ An Excel file has an `About` sheet (the title, the date, the filters) and **one 
 $ curl -s -X POST -H "Authorization: Bearer $DRISHTI_TOKEN" -H 'Content-Type: application/json' \
     -d '{"type":"report","id":"file:report:trades-overview","page":"overview","visual":"by-desk"}' $DRISHTI_SERVER/api/v1/export/csv
 DESK,MTM
-DESK-RATES,4.108728089500002E9
-DESK-MM,3.938052168699998E8
-DESK-STRUCT,3.826084649599996E8
-DESK-CREDIT,3.605529418899995E8
-DESK-SFT,5.137524869000003E7
-DESK-FI,-4.294908182999991E7
-DESK-EQD,-7.939551074999997E7
-DESK-COMM,-4.299676353900004E8
-DESK-FX,-6.692489395099996E8
-DESK-INFL,-1.2794317058800008E9
+DESK-RATES,4.4844818514400015E9
+DESK-MM,4.015030940599998E8
+DESK-STRUCT,3.9424480623999995E8
+DESK-CREDIT,3.860597027500004E8
+DESK-SFT,2.6994665810000002E7
+DESK-FI,-3.058833934999999E7
+DESK-EQD,-8.576378433999994E7
+DESK-COMM,-3.953832505300001E8
+DESK-FX,-6.819892215699991E8
+DESK-INFL,-1.28917764794E9
 ```
 
 (The console's CSV button asks the same of `GET /dist/bi/file%3Areport%3Atrades-overview.csv?page=overview&visual=by-desk`.) You should see a header row
-and one line per desk, the largest MTM first. Large amounts are written in exponent form (`4.108728089500002E9` is 4,108,728,089.50): spreadsheets read
+and one line per desk, the largest MTM first. Large amounts are written in exponent form (`4.4844818514400015E9` is 4,484,481,851.44): spreadsheets read
 them as numbers. Every export carries your **business date and slicer choices**, is built as you (masked fields stay
 masked), and is audited; limits (rows per sheet, file size, time) are settings of `drishti.distribution.export.*`. There is no YAML: an export is a
 request, and a **subscription** (step 2) is the export written down. [DISTRIBUTION.md](../guides/DISTRIBUTION.md) has them.
