@@ -17,6 +17,8 @@
 
 ## 2.9.3 — DATAMAP; the fact of the day on Home; Companies, funds and ETFs Knowledge; index membership from the tracking ETFs; one firm-wide VaR limit (2026-10-27)
 
+- **Windows QA guide for 2.9.3 (2026-10-27).** `docs/guides/QA_ON_WINDOWS_WITH_CUSTOM_DATA.md` gains section 6f (what to rebuild after the pull: `--only us-equities,gleif,funds,market-risk/risk-hierarchy`, then eleven checks: DATAMAP, the fact of the day, one 150m bank limit on both trees, the index members from the tracking ETFs, active share, the Knowledge page) and a checklist line; the jar it names is `drishti-server-2.9.3-exec.jar` (it still said 2.9.2).
+
 - **Index membership from the tracking ETFs (2026-10-27).** The S&P 500, Nasdaq-100 and Dow members are now the stocks SPY, QQQ and
   DIA report holding in their newest Form N-PORT (SEC, public domain; new `tools/packgen/us_equities/trackers.py`, a `trackers`
   source in `tools/publicdata/us_equities.py`, read from the funds pack's cache), not Wikidata's lists, which were out of date: its

@@ -145,7 +145,7 @@ You should see: the drop-down at the top right lists **Build demo lakes**, **Loa
    first, see section 4.1.) (This is Maven `package -DskipTests -pl drishti-server -am`
    on the project's `pom.xml`.)
 
-You should see: in the Run window `BUILD SUCCESS`, and the file `drishti-server\target\drishti-server-2.9.2-exec.jar`
+You should see: in the Run window `BUILD SUCCESS`, and the file `drishti-server\target\drishti-server-2.9.3-exec.jar`
 exists.
 
 ---
@@ -285,7 +285,7 @@ Good to know:
 The same lakes can keep **one source system's trades in Apache Iceberg** and the others in Delta Lake (for example your ENDUR
 trades in Delta and the synthetic CALYPSO trades in Iceberg); every page, history, search and BI report must answer exactly as with
 everything in Delta. Iceberg is written by Drishti's own engine from the server jar, so **build the jar first** (step 2.3: the file
-`drishti-server\target\drishti-server-2.9.2-exec.jar` must exist). Stop the server first, as for 3.0.
+`drishti-server\target\drishti-server-2.9.3-exec.jar` must exist). Stop the server first, as for 3.0.
 
 1. **Look first** (changes nothing, prints every step):
 
@@ -546,7 +546,7 @@ says the address is a loopback address, use `<your IPv4>` from `ipconfig` instea
 
 ## 6b. What is new in 2.6.0: check these (30 minutes)
 
-Do this after `git pull` on **main** and a fresh jar (step 2.3: the file is `drishti-server-2.9.2-exec.jar`), with the server and the
+Do this after `git pull` on **main** and a fresh jar (step 2.3: the file is `drishti-server-2.9.3-exec.jar`), with the server and the
 console started as in section 4.
 
 | # | Check | How | You should see |
@@ -564,7 +564,7 @@ Not to check on Windows: the **Cassandra** connector needs a Cassandra or Scylla
 
 ## 6c. History of a trade or an equity (2.6.5)
 
-Needs **2.6.7**: `git pull` on **main**, step 2.3 again (the jar is `drishti-server-2.9.2-exec.jar`), and **restart both** the server and
+Needs **2.6.7**: `git pull` on **main**, step 2.3 again (the jar is `drishti-server-2.9.3-exec.jar`), and **restart both** the server and
 the console. The demo lakes of step 3.0 hold **sixty business days**, enough to show it; your own ENDUR history shows as soon as **two or
 more** of your files are loaded (step 3.2, one per date). Any kind of data has a history, not only trades: a counterparty, a curve, an
 economy.
@@ -624,6 +624,44 @@ update-if-match covered, delete-if-match covered, racing writers NOT atomic (ski
 same kind of line for moto. The MinIO tests are **skipped on Windows** (they run the MinIO server binary, on Linux only), with the line
 `MinIO (server binary): skipped: MinIO tests run on Linux only`. Skipped is expected, not a failure.
 
+## 6f. What is new in 2.9.3: check these (20 minutes)
+
+**Before you start:**
+- `git pull` on **main**.
+- Build the jar again (step 2.3; the file is `drishti-server-2.9.3-exec.jar`).
+- Rebuild the data that changed in 2.9.3: the companies, GLEIF and funds snapshots, and the VaR limits.
+
+  Stop the server first, then run the same `python.exe …\tools\build_demo_lakes.py` as in step 3.0, with:
+
+  ```
+  --only us-equities,gleif,funds,market-risk/risk-hierarchy --as-of <the lakes' last date>
+  ```
+
+  The last date is the date of your newest ENDUR file. This takes a few minutes. A full step 3.0 does the same and more.
+- Start the server and the console again.
+
+The figures below are from the 2.9.3 data on 2026-10-27. On your lakes the fact of the day and the counts depend on the last date, so
+they may differ a little. The index figures do not, because they come from the committed snapshot.
+
+| # | Do | You should see |
+|---|---|---|
+| 1 | **Views → Data map**, or type `DATAMAP` in the top bar → Enter | *Counting and checking the data* on the first visit of the day, then a map: one box per domain, its kinds inside, lines for the joins. About 96 kinds and 226 joins with every pack on. Dashed kinds (VaR, EE/PFE) are computed, so they have no count |
+| 2 | Click **Trade** on the map | its joins light up (`COUNTERPARTY` → counterparty, `PORTFOLIO` → book, `TRADER_ID` → trader), and the side panel shows each join's coverage (*n of n ids match*) and the commands that open it. Esc clears it |
+| 3 | The **Map \| Cards** switch → **Cards** → open a domain | a table of its kinds with counts, joins, *Comes from* and *Crosses into*; the selection is the same as on the map |
+| 4 | **Find** box: `LEI`, then `PORTFOLIO` | the kinds holding that field are picked out |
+| 5 | The list of findings above the map | joins under 95% coverage: links the contracts promise but the data does not keep (for example, jurisdiction codes in an id field). They are known and listed for 2.9.4, not errors of your setup |
+| 6 | **Home** (signed in) | a **Fact of the day** card with its domain and date, a picture, *Why does that happen?* and a link that opens the data. **Another fact** shows the next one (seven held on 2026-10-27, for example *BOOK-COMM-1 is at 259% of its VaR limit while its desk, Commodities, is within its own*, *VOO and IVV are 99.3% the same portfolio*) |
+| 7 | `HIER MGMT~BANK`, then `HIER LEGAL~BANK` | the same bank VaR in both trees (126.5m on 2026-10-27), and now the **same limit, 150m**, on both roots (2.9.2 showed 210m on the legal tree) |
+| 8 | `IDX SP500`, `IDX NDX`, `IDX DJIA` | 495, 99 and 30 members, as SPY, QQQ and DIA hold them in their newest SEC filing; Exxon Mobil and NVIDIA are members. The page's note names the few holdings the SEC no longer lists |
+| 9 | `FUND QQQ`, then `FUND DIA` | active share against the index about **11.2%** (QQQ) and **1.8%** (DIA), down from 26.75% and 57.6% |
+| 10 | `TRACK SP500` | the S&P 500 funds, each at an active share of about 5.3% to 5.8% |
+| 11 | **Help → Knowledge** (or `WHAT`) → **Companies, funds and ETFs** | the new Knowledge page, with its overlap table (SPY/VOO 99.4%, VOO/IVV 99.3%, QQQ/QQQM 91.2%) |
+
+An official end-of-day VaR record captured before you rebuilt keeps the 210m limit it was captured with. Official
+records are history and never rewritten. The live pages show 150m.
+
+To switch the fact of the day off: set `DRISHTI_HOME_FACTS=false` for the console (`ui.facts.enabled`) and restart it.
+
 ---
 
 ## 7. If something goes wrong
@@ -671,6 +709,7 @@ same kind of line for moto. The MinIO tests are **skipped on Windows** (they run
 - [ ] Step 6b: the 2.6.0 checks (themes, statement, field parameters, Iceberg in a separate copy).
 - [ ] Step 6c (2.6.5): `TRD 1000279 60`, `TRD <your id> 60` and `EQ EQ-CSCA 3M` show their history.
 - [ ] Step 6d (2.6.7): **Chart** (or K) on a table, a masked field never plotted, an export.
+- [ ] Step 6f (2.9.3): the changed data rebuilt; `DATAMAP` draws and lists its findings; Home shows a fact of the day; `HIER LEGAL~BANK` shows 150m; `IDX SP500` has 495 members.
 
 **After the demo:**
 
