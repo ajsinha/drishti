@@ -29,13 +29,14 @@ categories:
     icon: lightbulb
     blurb: "See what your data hasn't told you yet: what each term means, and how the data connects them."
     guides:
-      - { slug: knowledge, doc: knowledge/README.md, title: "Knowledge home and glossary", icon: lightbulb, kind: knowledge, summary: "The seven Knowledge pages and every term of the glossary A to Z, each with its meaning and the page that explains it; WHAT <term> opens any of them from the command line." }
+      - { slug: knowledge, doc: knowledge/README.md, title: "Knowledge home and glossary", icon: lightbulb, kind: knowledge, summary: "The eight Knowledge pages and every term of the glossary A to Z, each with its meaning and the page that explains it; WHAT <term> opens any of them from the command line." }
       - { slug: knowledge-market-risk, doc: knowledge/market-risk.md, title: "Market risk", icon: graph-down-arrow, kind: knowledge, summary: "VaR and expected shortfall in plain words, P&L vectors and historical simulation, positions, portfolios and hierarchies, contributions and diversification, backtesting; how the data connects, the bank's VaR worked through on the demo data, questions to ask and common confusions." }
       - { slug: knowledge-counterparty-credit-risk, doc: knowledge/counterparty-credit-risk.md, title: "Counterparty credit risk", icon: shield-exclamation, kind: knowledge, summary: "Counterparties, agreements, CSAs, netting sets and collateral; EE, PFE, EPE, EEPE and why PFE does not add up; limits, CVA, SA-CCR and SIMM in brief; CP-ALDERSHOT worked through on the demo data, questions to ask and common confusions." }
       - { slug: knowledge-trades-and-products, doc: knowledge/trades-and-products.md, title: "Trades and products", icon: receipt, kind: knowledge, summary: "A trade and its three booking systems, statuses, products, notional and MTM, legs and events, books, desks and traders, valuations; what links to a trade, on the demo data." }
       - { slug: knowledge-entities-and-ownership, doc: knowledge/entities-and-ownership.md, title: "Entities and ownership", icon: diagram-3, kind: knowledge, summary: "The LEI and GLEIF, direct and ultimate parents, ownership groups and countries, the bank's legal entities, counterparties and their groups, issuers; who owns whom, on the demo data." }
       - { slug: knowledge-market-data, doc: knowledge/market-data.md, title: "Market data", icon: graph-up, kind: knowledge, summary: "Curves, fixings, FX spot and forwards, volatility surfaces and cubes, credit curves, equities, indices and commodities, correlations and beta; how they link to what uses them." }
       - { slug: knowledge-data-and-contracts, doc: knowledge/data-and-contracts.md, title: "Data and contracts", icon: file-earmark-ruled, kind: knowledge, summary: "Packs, kinds and commands; fundamental, engine input, Drishti's own and computed data; data contracts, business dates, links and ids; where the data comes from (with External data)." }
+      - { slug: knowledge-companies-funds-and-etfs, doc: knowledge/companies-funds-and-etfs.md, title: "Companies, funds and ETFs", icon: briefcase, kind: knowledge, summary: "Tickers, CIK, SIC codes and divisions, share classes (GOOG and GOOGL), EDGAR filings and XBRL facts; mutual funds, ETFs and unit investment trusts, NAV and net assets, look-through holdings, expense ratios, index funds, computed index weights and active share, fund overlap; how the us-equities, funds and gleif packs connect, on the demo data." }
       - { slug: knowledge-economies, doc: knowledge/economies.md, title: "Economies", icon: globe, kind: knowledge, summary: "GDP, growth, inflation, unemployment, debt and the current account; IMF forecasts, country groups and governments; how a counterparty links to its economy, on the demo data." }
   - id: start
     name: Start
@@ -233,6 +234,10 @@ knowledge:
   counterparty: knowledge-counterparty-credit-risk#term-counterparty    # CPTY
   netting-set: knowledge-counterparty-credit-risk#term-netting-set      # NSET
   csa: knowledge-counterparty-credit-risk#term-csa                      # CSA
+  us-company: knowledge-companies-funds-and-etfs#term-us-company        # USEQ
+  fund: knowledge-companies-funds-and-etfs#term-look-through            # FUND (the fact sheet and its Look-through tab)
+  fund-holder: knowledge-companies-funds-and-etfs#term-held-by-funds    # HELD
+  index-funds: knowledge-companies-funds-and-etfs#term-index-fund       # TRACK
 
 # F1 opens the guide for the current screen.
 contextual:
