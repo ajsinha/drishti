@@ -53,13 +53,37 @@ import org.springframework.boot.context.properties.ConfigurationProperties;
  *     currency's book is built in the background from it and kept as its own hot file, so a VaR in a listed currency never waits on its
  *     first ask; USD always first; default USD, EUR, CAD, JPY, GBP; any other currency with FX is still built on first ask
  * @param currencyRetentionDates the newest business dates whose listed currencies are built ahead and kept on disk (5, one business
- *     week); an older date's listed-currency files are deleted when the next date is built ahead (on first ask they are built again)
+     *     week); an older date's listed-currency files are deleted when the next date is built ahead (on first ask they are built again)
+ * @param rootName the name of every hierarchy's root node (the top of the VaR tree, "Drishti Bank" in the demo data); blank keeps the
+ *     hierarchy data's own {@code NAME}
+ * @param rootNames the name of one hierarchy's root (hierarchy id to name, e.g. MGMT, LEGAL); wins over {@code rootName} for it
  */
 @ConfigurationProperties("drishti.var")
 public record VarProperties(Boolean enabled, Double confidence, Double esConfidence, String rankRule, Integer componentWindow,
         Boolean componentScaleToVar, Integer threads, Integer parallelRows, Long memoryBudgetMb, Integer rowsPerChunk, Integer hotDates,
         Integer historyDays, Integer histogramBins, Integer maxParts, Kinds kinds, Map<String, Map<String, String>> access, Integer pathPage,
-        Positions positions, Official official, Tier tier, List<String> currencies, Integer currencyRetentionDates) {
+        Positions positions, Official official, Tier tier, List<String> currencies, Integer currencyRetentionDates, String rootName,
+        Map<String, String> rootNames) {
+
+    /**
+     * The name a hierarchy's root node shows: {@code root-names} for the hierarchy, else {@code root-name}, else the data's (VAR_GUIDE.md
+     * section 20, settings). Null for a node that is not a root.
+     */
+    public String rootName(String hierarchy, String parentId, String dataName) {
+        if (parentId != null && !parentId.isBlank()) {
+            return dataName;
+        }
+        String own = hierarchy == null ? null : rootNames.get(hierarchy.strip().toUpperCase(Locale.ROOT));
+        if (own != null && !own.isBlank()) {
+            return own.strip();
+        }
+        return rootName.isBlank() ? dataName : rootName.strip();
+    }
+
+    /** What the configured root names add to a hot file's digest (empty when none is set: the files of earlier releases stay valid). */
+    public String rootNamesKey() {
+        return rootName.isBlank() && rootNames.isEmpty() ? "" : "|root=" + rootName.strip() + new java.util.TreeMap<>(rootNames);
+    }
 
     /**
      * The kinds the engine reads, as the market-risk pack names them; {@code position} is the kind its derived positions are served as.
@@ -191,6 +215,16 @@ public record VarProperties(Boolean enabled, Double confidence, Double esConfide
         tier = tier == null ? new Tier(null, null, null, null, null) : tier;
         currencies = currencyList(currencies == null ? List.of("USD", "EUR", "CAD", "JPY", "GBP") : currencies);
         currencyRetentionDates = currencyRetentionDates == null || currencyRetentionDates < 1 ? 5 : currencyRetentionDates;
+        rootName = rootName == null ? "" : rootName;
+        Map<String, String> rn = new java.util.LinkedHashMap<>();
+        if (rootNames != null) {
+            rootNames.forEach((h, n) -> {
+                if (h != null && n != null && !n.isBlank()) {
+                    rn.put(h.strip().toUpperCase(Locale.ROOT), n.strip());
+                }
+            });
+        }
+        rootNames = Map.copyOf(rn);
     }
 
     /** ISO codes in upper case, USD first and once, the rest in the order given (duplicates and blanks dropped). */

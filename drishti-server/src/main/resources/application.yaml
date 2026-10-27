@@ -624,6 +624,8 @@ drishti:
     path-page: 60                    # rows of the ranked P&L path per page
     currencies: ${DRISHTI_VAR_CURRENCIES:USD,EUR,CAD,JPY,GBP}   # reporting currencies built ahead after the USD book (background, own hot files; USD always); others on first ask
     currency-retention-dates: ${DRISHTI_VAR_CURRENCY_RETENTION_DATES:5}   # newest business dates whose listed currencies are built ahead and kept on disk
+    root-name: ${DRISHTI_VAR_ROOT_NAME:}   # the top of the VaR tree (every hierarchy's root node); blank keeps the hierarchy data's NAME
+    # root-names: {MGMT: "Group", LEGAL: "Group legal"}   # one hierarchy's root name; wins over root-name for it
     tier:                            # the tiered memory (docs/guides/VAR_GUIDE.md section 26): where a loaded date's vectors live
       mode: ${DRISHTI_VAR_TIER:mapped}                 # mapped: each date a float32 hot file, memory-mapped (heap: aggregates, columns, links); heap: float64 rows on the heap
       dir: ${DRISHTI_VAR_HOT_DIR:${drishti.data.dir:./data}/var/hot}   # one folder per business date; never under the repository

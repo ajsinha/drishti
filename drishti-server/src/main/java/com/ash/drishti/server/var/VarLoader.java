@@ -115,7 +115,8 @@ final class VarLoader {
         // a date with scenario PVs converts them with the date's FX: its hot file is built from those versions too
         String inputsKey = trades.isBlank() || !versions.containsKey(k.scenarioPv()) ? trades
                 : trades + "|fx=" + versions.get(k.fxScenario()) + "/" + router.dataVersion(k.fxSpot(), asOf).orElse("");
-        String digest = tier.mapped() ? VarTier.digest(date, inputsKey, versions.get(k.hierarchy()), versions.get(k.scenarioSet()), pr.digest()) : "";
+        String digest = tier.mapped() ? VarTier.digest(date, inputsKey, versions.get(k.hierarchy()) + props.rootNamesKey(), versions.get(k.scenarioSet()),
+                pr.digest()) : "";
         java.util.Optional<java.nio.file.Path> hot = tier.mapped() ? tier.existing(date, digest) : java.util.Optional.empty();
         if (hot.isPresent()) {
             VarDate reopened = reopen(date, hot.get(), versions, t0);
@@ -149,7 +150,9 @@ final class VarLoader {
                 for (int i = 0; bs != null && i < bs.size(); i++) {
                     books.add(bs.get(i).asText());
                 }
-                b.node(text(n, "NODE_ID"), text(n, "HIERARCHY"), text(n, "LEVEL"), text(n, "NAME"), text(n, "PARENT_ID"), books,
+                // a root's name from drishti.var.root-name(s) when set (the top of the VaR tree), else the data's
+                String name = props.rootName(text(n, "HIERARCHY"), text(n, "PARENT_ID"), text(n, "NAME"));
+                b.node(text(n, "NODE_ID"), text(n, "HIERARCHY"), text(n, "LEVEL"), name, text(n, "PARENT_ID"), books,
                         number(text(n, "LIMIT_VAR")));
             }
             Map<String, VarDate.Portfolio> portfolios = new LinkedHashMap<>();

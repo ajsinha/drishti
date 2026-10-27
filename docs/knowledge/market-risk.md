@@ -208,6 +208,8 @@ VAR BANK  ·  Drishti Bank  ·  node  ·  2026-10-26
   8566 trades in 7115 positions
 ```
 
+(*Drishti Bank* is the root node's name in the demo's hierarchy data; `drishti.var.root-name` sets another, 2.9.4.)
+
 Read it as: on the 6th worst of the 509 days the bank would lose 126.5 million; the 13 worst days lose 172.5 million on average, so
 the tail beyond VaR is fat; the VaR uses 84.4% of the 150 million limit; the model had 3 exceptions in the last 249 days (green).
 

@@ -17,6 +17,16 @@
 
 ## 2.9.4 (unreleased)
 
+- **The top of the VaR tree named by a setting (2026-10-27; local branch, for the product owner's review: not pushed).**
+  **`drishti.var.root-name`** (env `DRISHTI_VAR_ROOT_NAME`, blank by default: the hierarchy data's `NAME`, *Drishti Bank* in the demo)
+  names the root node of every hierarchy when a date loads; **`drishti.var.root-names`** (`{MGMT: "…", LEGAL: "…"}`) names one
+  hierarchy's root over it. The tree, breadcrumbs, headline, command line, `var-result`, captures and new official records show it;
+  records captured before keep their name (append-only). The name is part of the hot file's digest, so a change is not masked by a file
+  built before; a running server shows it after a restart (or a reload of the dates). No console text named the root: the page reads the
+  node's name. **Tests:** `VarRootNameTest` (both trees renamed, `root-names` winning, nodes below unchanged, blank keeps the data's
+  name, the digest). **Docs:** VAR_GUIDE settings, CONFIGURATION (server table and placeholders), USER_GUIDE, the Market risk Knowledge
+  page.
+
 - **Intraday updates from files (2026-10-27; local branch, for the product owner's review: not pushed).** A second `BATCH_ID` on a date no
   longer turns today's VaR into yesterday's: a pricing system sends **only the changed trades** during the day (amended, new or
   cancelled), priced over the morning run's scenario set, marked **`RUN_KIND: INTRADAY`** (the contracts of `scenario-pv` and
