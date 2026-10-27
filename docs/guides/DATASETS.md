@@ -969,9 +969,9 @@ The same statement from the command line, as you (captured on the demo lakes, fi
 $ drishti.py bi sql "SELECT desk.NAME AS desk, MEASURE('Sum of MTM') AS mtm FROM trade_valuation JOIN desk GROUP BY desk.NAME" --model dataset:pack.market-risk.trade-valuation
 desk                         mtm
 ---------------------------  -----------------
-Bonds and securitised        -42,949,081.83
-Commodities                  -429,967,635.39
-Credit trading               360,552,941.89
+Bonds and securitised        -30,588,339.35
+Commodities                  -395,383,250.53
+Credit trading               386,059,702.75
 ...
 ```
 
