@@ -58,7 +58,7 @@
   shown, the day's first is chosen by the business date and *Another fact* cycles. Seven facts ship (market-risk 2, counterparty-risk
   2, funds 3); on the demo data of 2026-10-27: BOOK-COMM-1 at 259% of its VaR limit under a desk at 76%; the Commodities desk's
   incremental VaR −10.7m against a component of 3.0m; collateral raising NS-NORTHPLAINS-NY's EE at 2M from 55.6m to 129.7m (+133%);
-  CP-NORTHPLAINS's VaR 37.4m against a peak PFE of 508.1m; 87 funds owning 21.19% of Nvidia; VOO and IVV 92.4% the same portfolio;
+  CP-NORTHPLAINS's VaR 37.4m against a peak PFE of 508.1m; 87 funds owning 21.19% of Nvidia; VOO and IVV 99.3% the same portfolio;
   PONAX's weights adding up to 150.01%. The page draws a skeleton and fills it from `GET /api/home/facts` (kept per server, user, date
   and packs for `ui.facts.cache_seconds`; concurrent asks share one computation); none holds, or no answer: the tile is left out. Light
   and dark through the theme tokens, one column on a phone, 44px targets. Docs: USER_GUIDE *Home: the fact of the day*,

@@ -109,7 +109,7 @@ On the demo data of 2026-10-27 the facts read:
 | Counterparty credit | Collateral made **NS-NORTHPLAINS-NY** more risky: EE at 2M is 129.7m with it and 55.6m without (+133%) | `EXP NS-NORTHPLAINS-NY` |
 | Counterparty credit | Northern Plains Energy Canada's trades have a VaR of 37.4m but a peak PFE of **508.1m** (13.6× as large) | `EXP CP-NORTHPLAINS` |
 | Funds and companies | 87 of the largest US funds hold Nvidia and own **21.19%** of its shares | `HELD NVDA` |
-| Funds and companies | VOO and IVV, run by two different managers, are **92.4%** the same portfolio | `FUND VOO` |
+| Funds and companies | VOO and IVV, run by two different managers, are **99.3%** the same portfolio | `FUND VOO` |
 | Funds and companies | PIMCO Income Fund (PONAX) holds investments weighing **150.01%** of its net assets | `FUND PONAX` |
 
 The tile draws at once as a placeholder and fills when the facts are ready (the first visit of a business date computes them, a few
