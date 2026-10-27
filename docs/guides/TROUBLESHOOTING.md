@@ -1409,6 +1409,7 @@ pauses. A suspected node refutes the suspicion by itself as soon as it hears of 
 | `DRS-5202` | a trade has two P&L vectors on one date: the date is not loaded; write one row per trade, date and scenario set and signal the load again |
 | `DRS-5203` | the date's VaR inputs are not one run (several `BATCH_ID`s, another `SCENARIO_SET_ID`, two scenario sets): the previous date is answered with a warning until the date is rewritten as one run |
 | `DRS-5204` | the date's vectors exceed the VaR engine's memory budget: raise `drishti.var.memory-budget-mb` or the heap, or lower `drishti.var.hot-dates` |
+| `DRS-5205` | the pre-deal what-if of the VaR basket tray (`POST /api/v1/var/what-if`) runs in the Python VaR engine (`var-whatif`, compute pool `var`): it is not running (`DRISHTI_COMPUTE_ENABLED=true` starts the compute workers) or did not answer in 30 s |
 | `DRS-5440` | the exposure engine does not answer this scope or parameter: scopes are `NSET:`, `CPTY:`, `GROUP:`, `LE:`, `DESK:`, `BOOK:`, `TRD:`, `BANK`, `WHERE:`; `q` in (0.5, 0.9999]; `collateral` lagged, current or none; `date` a primary grid date or tenor |
 | `DRS-5441` | the date's exposure run is not one run (its grid, two batch ids, a duplicate row, a trade in two netting sets): the date before answers with a warning until the run is rewritten whole and its load signalled again |
 | `DRS-5442` | a what-if's candidate paths are of another simulation run: send paths of the date's run (its `RUN_ID`, its number of paths) |

@@ -17,6 +17,34 @@
 
 ## Unreleased
 
+- **Construct your basket: the VaR of any mix of portfolios, trades and counterparties (2.9.2; product owner, 2026-10-26, mock-up
+  approved).** One basket tray replaces the VaR explorer's "+ New scope" builder: a strip at the top of the explorer (always shown on an
+  ad-hoc scope or a basket), and on every other page a popup from the top bar's **◫ Basket** (the count of its parts) or `Alt+B`, whose
+  **Save basket and open VaR** goes to the explorer. Typing shows the engine's hints (portfolios, saved baskets, desks, books, legal
+  entities, divisions, counterparties, positions, trades: type, id, name, trade count and standalone VaR; arrow keys and Enter; a
+  leading `-` takes away); **+ Rule** adds a `WHERE:` condition; **+ / −** on each chip; **+ basket** on every tree row, contribution row
+  and trade row. Live as you pick: the selection's VaR and ES, its trades, the sum of the parts' standalone VaRs and the diversification,
+  computed by the engine (a trade in two parts counts once). States *unsaved basket* / *saved basket · owner/name*; **Save basket and
+  open VaR** (private, or shared read-only), **Open without saving**, **Clear**; opening a saved basket loads its parts back into the
+  tray; the tray survives a reload. A basket of two parts or more is broken down by part (`by=part`). New API: `GET /api/v1/var/hints`,
+  the headline's `terms`, `basket`, `trades` and `empty`, `provenance.notices`. VAR_GUIDE.md sections 3.2, 3.5, 5.3, 5.8, 11;
+  tutorial 25 steps 5 and 7; USER_GUIDE.md (the top bar).
+- **Ids that match nothing, and trades that are not live, are said in words (2.9.2; product owner hit `VAR TRD 10000000` → zeros).**
+  The explorer and the tray show *TRD:10000000 is not a live trade on 2026-10-26 (no P&L vector)*; a trade the day's load left out names
+  why (*not live on …: its status is CANCELLED*, *it matured on …*); a chip that matches nothing is flagged at once; an empty scope says
+  **No trades**, never a VaR of 0 that looks computed (VAR_GUIDE.md sections 3.5, 5.3, 11.2, 13).
+- **The pre-deal what-if, prominent (2.9.2; product owner).** In the basket tray, **+ What-if trade**: a copy of a booked trade scaled
+  by a factor (−1 its unwind) added to the basket, VaR and ES before → after and the incremental, by the Python VaR engine
+  (`POST /api/v1/var/what-if`; `503 DRS-5205` in words when the compute workers are off); the explorer's **What-if…** opens it. The
+  exposure explorer's **Pre-deal** tab is on the counterparty too: the netting set the new trade goes into (the largest first), the
+  candidate, the method, the counterparty's figures. Both explorers say "pre-deal what-if" (VAR_GUIDE.md section 8.5, EXPOSURE_GUIDE.md
+  sections 3.3 and 7, tutorial 26 step 7).
+- **Trade pages: Risk links (2.9.2; product owner).** Every Endur, Calypso and Murex trade page has a **Risk** group (the UI kit's new
+  fragment `risk-links@1`, from the trading Sutra generator): its **P&L vector** (`PNLV PV-<trade>-HS-509`), **VaR of this trade**
+  (`VRES TRD:<trade>`) and **Exposure of this trade** (`EXP TRD:<trade>`), real links (the view of the trade carries `PNL_VECTOR_ID`,
+  `VAR_RESULT_ID`, `EXPOSURE_RESULT_ID`, named by the market-risk and counterparty-risk graphs, so the linked entities list them), each
+  with why it does not apply (*not live on …; no P&L vector*, *no exposure paths*) (VAR_GUIDE.md section 3.7, the trading pack's guide).
+
 - **The funds pack: the 200 largest US mutual funds and ETFs with their holdings, from SEC public data (2.9.2; product owner,
   2026-10-26).** New pack `funds` (off by default, after `us-equities`): the newest SEC Form N-PORT data set (holdings with CUSIP, ISIN
   and LEI, derivatives with notional, expiry and counterparties, repos, three months of flows and monthly returns), four quarters of Form

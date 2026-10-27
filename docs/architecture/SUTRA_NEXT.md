@@ -117,6 +117,7 @@ browser can show "since 2.7.0, v1".
 | `event-timeline` | timeline | dated events with a label, a detail line and a status |
 | `key-figure` | metric | one headline number with its label and a caption |
 | `linked-entities` | links | what the record refers to and what refers to it |
+| `risk-links` | kv | a trade's P&L vector, VaR and exposure as links, or why each does not apply (2.9.2; every deal Sutra) |
 | `data-provenance` | provenance | how the view was built: source, freshness, layout, masks |
 | `explainer-note` | markdown | a short note telling the reader how to read the figures |
 | `measure-table` | table | a name column and two measures, the first totalled |

@@ -27,7 +27,7 @@ import urllib.request
 from shotlib import CONSOLE_PORT, ROOT, SERVER_PORT, Ctx
 from shotlib import start_servers as _start
 
-VAR_DATA = ",".join(f"market-risk/{k}" for k in ("pnl-vector", "scenario-set", "risk-hierarchy", "portfolio"))
+VAR_DATA = ",".join([f"market-risk/{k}" for k in ("pnl-vector", "scenario-set", "risk-hierarchy", "portfolio")] + ["trades/murex"])   # trades: the Risk links
 WIDE, HIGH = 1600, 1000
 
 

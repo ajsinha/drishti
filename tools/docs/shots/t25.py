@@ -78,15 +78,30 @@ def contributions(c: Ctx):
     c.save("05-contributions.jpg", locator=".vx-main")
 
 
-@shot("06-adhoc.jpg")
-def adhoc(c: Ctx):
+@shot("06-basket.jpg")
+def basket(c: Ctx):
     open_var(c, "/var?scope=DESK:DESK-RATES")
+    c.page.evaluate("localStorage.removeItem('drishti.varBasket')")
+    c.page.reload()
     painted(c, "DESK:DESK-RATES")
-    c.page.locator("[data-vx-new-scope]").click()
-    c.page.locator("[data-vx-scope-text]").fill("DESK:DESK-RATES - BOOK:BOOK-RATES-1 + PORT:PF-USD-RATES")
-    c.until("(document.querySelector('[data-var]').dataset.painted || '').indexOf('PORT:') >= 0", 60)
+    c.until("document.querySelectorAll('.vx-tree .vx-row[data-scope]').length > 5")
+    c.page.locator('.vx-tree .vx-row[data-scope="NODE:MGMT~DESK-RATES"] [data-vx-add]').click(force=True)
+    for text in ("pf usd", "-book-rates-1"):
+        c.page.locator("[data-vb-find]").fill("")
+        c.page.locator("[data-vb-find]").type(text, delay=20)
+        c.until("document.querySelector('[data-vb-hints]').dataset.q === %r && document.querySelectorAll('[data-vb-hint]').length > 0" % text, 30)
+        c.page.locator("[data-vb-find]").press("Enter")
+        c.page.wait_for_timeout(300)
+    c.until("document.querySelectorAll('[data-vb-chip]').length === 3")
+    c.until("(() => { const l = document.querySelector('[data-vb-live]'); return l && l.dataset.scope === window.VarBasket.compose()"
+            " && !l.classList.contains('computing'); })()", 60)
+    c.page.locator("[data-vb-open]").click()
+    c.until("window.VarExplorer.state.head && window.VarExplorer.state.head.kind === 'adhoc'"
+            " && document.querySelector('[data-var]').dataset.painted === window.VarBasket.compose()", 60)
+    tab(c, "contrib")
     c.page.wait_for_timeout(800)
-    c.save("06-adhoc.jpg")
+    c.save("06-basket.jpg")
+    c.page.evaluate("localStorage.removeItem('drishti.varBasket')")
 
 
 @shot("07-capture.jpg")

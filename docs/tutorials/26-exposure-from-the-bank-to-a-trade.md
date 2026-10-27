@@ -389,6 +389,10 @@ The same with the method `addon`: the chip says *proxy*:
 
 ![Pre-deal by the addon: the same unwind as a netting set of its own, uncollateralised](img/t26/09-predeal-addon.jpg)
 
+The same pre-deal what-if is on the counterparty too: on `CPTY:CP-ALDERSHOT` open **Pre-deal**, pick *Into the netting set* (its
+largest by peak PFE comes first), the candidate and the factor, and read the counterparty's figures before and after
+([EXPOSURE_GUIDE.md section 7](../guides/EXPOSURE_GUIDE.md#7-pre-deal-what-if)).
+
 **From the command line**, the exact method:
 
 ```text

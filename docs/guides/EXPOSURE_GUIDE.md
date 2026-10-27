@@ -261,7 +261,8 @@ From top to bottom:
 |---|---|
 | Bank | **Counterparties** (the board), **Legal entities**, By tenor, Captures |
 | Legal entity, group | **Counterparties** (the board), By tenor, Captures |
-| Counterparty, ad-hoc scope | **Netting sets**, By tenor, Captures |
+| Counterparty | **Netting sets**, **Pre-deal**, By tenor, Captures |
+| Ad-hoc scope | **Netting sets**, By tenor, Captures |
 | Netting set | **Collateral**, **Trades**, **Pre-deal**, By tenor, Captures |
 | Trade | **In its netting set**, By tenor (alone), Captures |
 
@@ -293,7 +294,7 @@ On a phone the panels stack: the command line, the tree, then the tiles and the 
   the dates that keep today's collateral (no look-back point after today).
 - **Trades** (netting set): every trade, 25 a page, by EE contribution at the set's peak date (read from the lake on request): product,
   desk, EE contribution, share, **peak PFE alone**; a row opens the trade's exposure, its id opens `TRD`.
-- **Pre-deal** (netting set): the what-if form, [section 7](#7-pre-deal-what-if).
+- **Pre-deal** (netting set and counterparty): the pre-deal what-if form, [section 7](#7-pre-deal-what-if); on a counterparty it first asks which of its netting sets the new trade goes into.
 - **By tenor**: the profile as a table (EE, ENE, EEE, PFE at q, PFE 99%, EE uncollateralised per tenor), with the CSV link and the CLI and
   API equivalents.
 - **Captures**: capture now with a note, the scope's captures (id, date, captured, by, peak PFE, EPE, note), **Compare with now**,
@@ -430,6 +431,13 @@ collateral with it); without, it is a netting set of its own, uncollateralised. 
 netting set), **Run what-if**. The chip says **exact** or **proxy** and the time; the answer: peak PFE before and after, the incremental
 (red when it adds), EPE before and after, the limit headroom after (when q is the limit's confidence) and a per-tenor table of EE and
 PFE before and after with the incremental PFE.
+
+**On a counterparty** (its **Pre-deal** tab, 2.9.2): the same pre-deal what-if, with one field more, *Into the netting set*: the
+counterparty's netting sets, the largest by peak PFE first (picked by default); the candidates are that set's trades, and changing the
+set lists its trades. *Figures of* is **this counterparty** (the credit limit's scope, the default) or the netting set picked. The
+answer has the same layout as the netting set's tab: before, after, the incremental, the limit headroom and the table by tenor.
+
+![Pre-deal on CP-ALDERSHOT: the netting set picked, a booked trade's unwind by the exact paths method, the counterparty's figures before and after](img/exp/09-predeal-counterparty.jpg)
 
 **On the command line**: `drishti.py exposure whatif CPTY:CP-ALDERSHOT --like CLY-4000879 --factor -1 --set NS-ALDERSHOT-FRA` (exact),
 `--method addon`, or `--candidates new-swap.json`. **API**: `POST /api/v1/exposure/what-if`, [section 11](#11-the-api).

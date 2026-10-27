@@ -18,8 +18,8 @@ Run it on its own (it builds its own lake and starts its own scratch server and 
     drishti-console/.venv/bin/python tools/docs/screenshots.py --guide var
 
 The pictures, in the guide's order: the explorer on a desk (the three columns), a scenario's contributors, the history with its
-backtest, a desk's contributions, a book's positions, the new-scope builder with a rule, a capture compared with now, the provenance
-column, the portfolio and position pages, the explorer on a phone, and var-result read as an ordinary kind."""
+backtest, a desk's contributions, a book's positions, Construct your basket, a capture compared with now, the provenance
+column, the portfolio and position pages, the explorer on a phone, var-result read as an ordinary kind, and an id that is not a live trade."""
 from __future__ import annotations
 
 from _var import WIDE, open_var, painted, start_servers, tab  # noqa: F401 - start_servers is the driver's hook
@@ -73,16 +73,69 @@ def book_positions(c: Ctx):
     c.save("05-book-positions.jpg", locator=".vx-main")
 
 
-@shot("06-builder-rule.jpg")
-def builder(c: Ctx):
+def basket_pick(c: Ctx, text: str) -> None:
+    """Types into the basket tray and picks the engine's first hint."""
+    c.page.locator("[data-vb-find]").fill("")
+    c.page.locator("[data-vb-find]").type(text, delay=20)
+    c.until("document.querySelector('[data-vb-hints]').dataset.q === %r && document.querySelectorAll('[data-vb-hint]').length > 0" % text, 30)
+    scope = c.page.locator("[data-vb-hint]").first.get_attribute("data-vb-hint")
+    c.page.locator("[data-vb-find]").press("Enter")
+    c.until("!!document.querySelector('[data-vb-chip=%s]')" % repr(scope).replace("'", '"'))
+
+
+def basket_live(c: Ctx) -> None:
+    c.until("(() => { const l = document.querySelector('[data-vb-live]'); return l && l.dataset.scope === window.VarBasket.compose()"
+            " && !l.classList.contains('computing'); })()", 60)
+
+
+@shot("06-basket.jpg")
+def basket(c: Ctx):
+    open_var(c, "/var?scope=BOOK:BOOK-RATES-1")
+    c.page.evaluate("localStorage.removeItem('drishti.varBasket')")
+    c.page.reload()
+    painted(c, "BOOK:BOOK-RATES-1")
+    tab(c, "contrib")
+    c.until("document.querySelectorAll('[data-vx-ctable] tbody tr[data-scope^=\"POS:\"]').length > 1")
+    c.page.locator('[data-vx-ctable] tbody tr[data-scope^="POS:"]').first.locator("[data-vx-add]").click()
+    basket_pick(c, "pf-usd")
+    c.page.locator('.vx-tree .vx-row[data-scope="NODE:MGMT~DESK-FX"] [data-vx-add]').click(force=True)
+    basket_pick(c, "-MX-30000121")
+    basket_live(c)
+    c.page.locator("[data-vb-open]").click()
+    c.until("window.VarExplorer.state.head && window.VarExplorer.state.head.kind === 'adhoc'"
+            " && document.querySelector('[data-var]').dataset.painted === window.VarBasket.compose()", 60)
+    tab(c, "contrib")
+    basket_live(c)
+    c.page.locator("[data-vb-find]").fill("aldersh")
+    c.until("document.querySelector('[data-vb-hints]').dataset.q === 'aldersh' && document.querySelectorAll('[data-vb-hint]').length > 0", 30)
+    c.page.wait_for_timeout(600)
+    c.save("06-basket.jpg")
+    c.page.locator("[data-vb-find]").fill("")
+    c.page.evaluate("localStorage.removeItem('drishti.varBasket')")
+
+
+@shot("13-not-live.jpg")
+def not_live(c: Ctx):
+    open_var(c, "/go?q=" + "VAR TRD 10000000 <GO>".replace(" ", "+"))
+    c.until("document.querySelector('[data-var]') && document.querySelector('[data-var]').dataset.empty === 'true'", 90)
+    c.page.wait_for_timeout(600)
+    c.save("13-not-live.jpg")
+
+
+@shot("14-trade-risk.jpg")
+def trade_risk(c: Ctx):
     open_var(c, "/var?scope=DESK:DESK-RATES")
-    painted(c, "DESK:DESK-RATES")
-    c.page.locator("[data-vx-new-scope]").click()
-    c.page.locator("[data-vx-scope-text]").fill("DESK:DESK-RATES & WHERE:CURRENCY == 'USD' and DIRECTION == 'SHORT'")
-    c.page.locator("[data-vx-scope-text]").press("End")
-    c.until("(document.querySelector('[data-var]').dataset.painted || '').indexOf('WHERE:') >= 0", 60)
+    painted(c, "DESK:DESK-RATES")                                       # the day's vectors loaded: the trade page's links are set
+    tid = c.page.evaluate("fetch('/api/var/scope/contributions?scope=DESK:DESK-RATES&by=trade').then(r => r.json())"
+                          ".then(d => d.rows.map(r => r.key).filter(k => k.indexOf('MX-') === 0)[0])")
+    open_var(c, f"/asof?d=2026-09-30&next=/v/trade/{tid}")               # the test data's own date, as the portfolio page's picture
+    c.until("!!document.querySelector('#p-risk')", 90)
+    if "HS-509" not in c.page.locator("#p-risk").inner_text():          # the engine's date was still loading: open it again
+        c.page.wait_for_timeout(3000)
+        c.page.reload()
+        c.until("!!document.querySelector('#p-risk')", 90)
     c.page.wait_for_timeout(800)
-    c.save("06-builder-rule.jpg", locator=".vx-main")
+    c.save("14-trade-risk.jpg")
 
 
 @shot("07-capture-compare.jpg")
