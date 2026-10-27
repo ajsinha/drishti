@@ -24,7 +24,8 @@ strip:
   - { label: Name, bind: $.NAME }
   - { label: LEI, bind: $.LEI }
   - { label: Jurisdiction, bind: $.JURISDICTION }
-  - { label: Regulator, bind: $.REGULATOR, emphasis: true }
+  - { label: Regulator, bind: $.REGULATOR }
+  - { label: VaR 99% 1D (engine), bind: $.VAR_ENGINE.VAR, fmt: compact, emphasis: true }   # 2.9.2: the engine's VaR, as the new layout
 panels:
   - id: desks
     kind: table
@@ -39,7 +40,7 @@ panels:
     title: "Risk and return (books: VaR against today's P&L, USD)"
     code: RR
     key: F3
-    rows: $.BOOKS
+    rows: $.VAR_ENGINE.BOOKS
     x: VAR
     y: PNL
     label: BOOK

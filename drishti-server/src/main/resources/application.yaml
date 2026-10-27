@@ -254,6 +254,7 @@ drishti:
       - /api/v1/subscriptions/preview   # renders what a subscription would send, for the caller, stores nothing
       - /api/v1/compute/*/*             # a reactive connector's answer for the caller (REACTIVE_CONNECTORS.md): computed and cached, changes no data
       - /api/v1/exposure/what-if        # incremental exposure before dealing (EXPOSURE_GUIDE.md section 18.7) for the caller: computed, stores nothing
+      - /api/v1/var/what-if             # VaR before and after hypothetical trades (VAR_GUIDE.md section 8.5) for the caller: computed by the Python engine, stores nothing
     # WRITE SCOPES (TOKEN_SCOPES in docs/guides/API_GUIDE.md): a token is made with `read` (the default: all of the above) or with
     # scopes from this list (keys in [brackets] keep the colon); each opens the METHOD path patterns under `allow` (* = any method). A scope is only a door: the
     # controller behind it still checks the roles of the token's user at the time of the call, so a token never does more than

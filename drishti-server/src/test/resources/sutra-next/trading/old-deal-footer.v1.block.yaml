@@ -20,4 +20,14 @@ version: 1
 description: "How the view was built and the entities the deal refers to."
 panels:
   - { id: built, kind: provenance, title: How this view was built }
+  # 2.9.2: a trade's Risk links (risk-links@1 in the new layouts), the same panel inline so the comparison stays exact
+  - id: risk
+    kind: kv
+    title: "Risk"
+    code: RISK
+    area: right
+    columns:
+      - { label: P&L vector, bind: "nonblank($.PNL_VECTOR_ID) ? link($.PNL_VECTOR_ID, 'pnl-vector') : nonblank($.RISK_LINKS.PNL_VECTOR_NOTE, 'no P&L vector')" }
+      - { label: VaR of this trade, bind: "nonblank($.VAR_RESULT_ID) ? link($.VAR_RESULT_ID, 'var-result') : nonblank($.RISK_LINKS.VAR_NOTE, 'no VaR')" }
+      - { label: Exposure of this trade, bind: "nonblank($.EXPOSURE_RESULT_ID) ? link($.EXPOSURE_RESULT_ID, 'exposure-result') : nonblank($.RISK_LINKS.EXPOSURE_NOTE, 'no exposure paths')" }
   - { id: refs, kind: links, title: Linked entities, code: REFS, area: right }
