@@ -387,6 +387,15 @@ def create_app(settings: Settings) -> FastAPI:
     templates.env.globals["designer_on"] = lambda: bool(settings.get("ui.designer", False))   # the Sutra designer: Build -> New screen offers Describe
     templates.env.globals["TUTORIALS_WORD"] = tutorial_count_word(app.state.docs_dir)       # "Eighteen": the Tutorials card counts the written tutorials, it is never typed
     app.state.libraries = {}
+    from core.knowledge import Glossary
+
+    app.state.glossary = Glossary(app.state.docs_dir)          # WHAT <term>: docs/knowledge/glossary.yaml (routes/help_routes.py)
+    import yaml
+
+    try:                                                       # "What does this mean?" on a data page: config/help.yaml knowledge:
+        templates.env.globals["KNOWLEDGE"] = dict(yaml.safe_load((console_dir / "config" / "help.yaml").read_text(encoding="utf-8")).get("knowledge") or {})
+    except (OSError, yaml.YAMLError):
+        templates.env.globals["KNOWLEDGE"] = {}
     from core.examples import Examples
 
     examples_dir = Path(settings.get("studio.examples_dir", "../docs/guides/examples"))

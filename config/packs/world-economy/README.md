@@ -118,7 +118,7 @@ Fields, from 213 sample documents:
 | `GROWTH` | number | `6.81078` | The yearly change of GDP after removing inflation, so it measures the growth of output rather than of prices. (% a year) |
 | `INFLATION` | number | `4.25746` | The yearly change of consumer prices (the consumer price index). (% a year) |
 | `UNEMPLOYMENT` | number | `13.351` | The share of the labour force without work but available for and seeking employment (ILO modelled estimate). (% of labour force) |
-| `DEBT_TO_GDP` | number | `48` | General government gross debt as a share of a year's GDP (IMF), the usual measure of how heavy public debt is. (% of GDP) |
+| `DEBT_TO_GDP` | number | `63.6` | General government gross debt as a share of a year's GDP (IMF), the usual measure of how heavy public debt is. (% of GDP) |
 | `CURRENT_ACCOUNT` | number | `5.19137` | Net exports of goods and services plus net income and transfers, as a share of GDP. (% of GDP) |
 | `RESERVES_USD_BN` | number | `2.23143` | Total reserves including gold (USD bn) |
 | `TRADE_SHARE` | number | `164.139` | Trade as a share of GDP (%) |

@@ -169,10 +169,10 @@ data 12,556; a large bank about 1,000,000).
 
 | Column | JSON | Delta | Req. | Engine | Meaning | Example |
 |---|---|---|---|---|---|---|
-| `MEMBER_ID` | id | `id` STRING | required | – | `<NETTING_SET_ID>~<TRADE_ID>` | `NS-ALDERSHOT-FRA~CLY-4000879` |
+| `MEMBER_ID` | id | `id` STRING | required | – | `<NETTING_SET_ID>~<TRADE_ID>` | `NS-ALDERSHOT-FRA~CLY-4003028` |
 | `BUSINESS_DATE` | date | `business_date` DATE | required | R | | `2026-09-30` |
 | `NETTING_SET` | id | STRING | required | R | link `netting-set` | `NS-ALDERSHOT-FRA` |
-| `TRADE_ID` | id | STRING | required | R | link `trade` (text, even when all digits) | `CLY-4000879` |
+| `TRADE_ID` | id | STRING | required | R | link `trade` (text, even when all digits) | `CLY-4003028` |
 | `SOURCE_SYSTEM` | text | STRING | required | R | the booking system (`TRADE_ID`s are unique per system) | `CALYPSO` |
 | `COUNTERPARTY` | id | STRING | required | R | must equal the netting set's | `CP-ALDERSHOT` |
 | `LEGAL_ENTITY` | id | STRING | required | R | the trade's booking legal entity; must equal the netting set's | `LE-FRA` |

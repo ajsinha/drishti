@@ -353,6 +353,20 @@ class VarApiTest {
         assertThat(pf.get("VAR").asDouble()).isEqualTo(1080);
         assertThat(pf.get("POSITIONS")).hasSize(3);
         assertThat(pf.get("BY_CURRENCY")).isNotEmpty();
+        // a legal entity stores no VaR (2.9.2): its own and each of its books' are the engine's, beside the record's book rows
+        com.ash.drishti.api.EntityDocument le = new com.ash.drishti.api.EntityDocument(com.ash.drishti.api.EntityRef.of("legal-entity", "LE-A"),
+                com.ash.drishti.api.DataNode.of(java.util.Map.of("ENTITY_ID", "LE-A", "BOOKS", List.of(
+                        java.util.Map.of("BOOK", "BOOK-1", "PNL", 7, "TRADES", 3), java.util.Map.of("BOOK", "BOOK-2", "PNL", -2, "TRADES", 4)))),
+                stored.provenance());
+        com.ash.drishti.server.net.NetCaller.with(new com.ash.drishti.server.net.NetCaller.Caller(
+                new com.ash.drishti.server.security.Principal("rita", List.of("risk")), null, "t"),
+                () -> seen[0] = figures.augment(le, com.ash.drishti.api.AsOf.of(VarLakeFixture.DAY)));
+        JsonNode lf = json.readTree(json.writeValueAsString(seen[0].data().unwrap())).get(VarFigures.FIELD);
+        assertThat(figures.augments("legal-entity")).isTrue();
+        assertThat(lf.get("VAR").asDouble()).isEqualTo(var("LE:LE-A"));
+        assertThat(lf.get("BOOKS")).hasSize(2);
+        assertThat(lf.get("BOOKS").get(0).get("VAR").asDouble()).isEqualTo(var("BOOK:BOOK-1"));
+        assertThat(lf.get("BOOKS").get(1).get("PNL").asInt()).isEqualTo(-2);
     }
 
     @Test

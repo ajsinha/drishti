@@ -113,8 +113,8 @@ Everything the page does, the server decides: the page is a shell that asks the 
 
 Type-ahead offers the keyword after the first letters (`b`, `ru`), the three pages (`WORKSPACE`, `CATALOGUE`, home) after `BI `, and the items you may open
 that match what you type next. Someone without the `bi` power gets no suggestions and, on `<GO>`, a message that says what is
-missing. **A pack may not define a mnemonic named `BI` or `RUPAKA`** (or `FORM` or `FUNC`, the other reserved words): the pack loader refuses it with
-`pack 'x' defines the mnemonic 'BI', which is a reserved command word (BI, FORM, FUNC, RUPAKA): choose another`, so `pack check` fails
+missing. **A pack may not define a mnemonic named `BI` or `RUPAKA`** (or `FORM`, `FUNC` or `WHAT`, the other reserved words): the pack loader refuses it with
+`pack 'x' defines the mnemonic 'BI', which is a reserved command word (BI, FORM, FUNC, RUPAKA, WHAT): choose another`, so `pack check` fails
 the same way.
 
 URLs: `/bi` (home), `/bi/catalogue`, `/bi/workspaces`, `/bi/w/<workspace>` (`me` is your personal one), `/bi/i/<item>`, `/bi/datasets` and `/bi/d/<dataset>` (phase 2),

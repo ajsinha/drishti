@@ -180,15 +180,17 @@ class TheRetiredStoredVersions(unittest.TestCase):
             self.assertEqual(fields & want, set(), f"the {kind} contract lists a removed figure")
 
     def test_no_input_or_fundamental_kind_carries_an_engine_column(self):
-        engine = {c for cols in self.pol["engine-columns"].values() for c in cols}
+        engine = {c for cols in self.pol["engine-columns"].values() for c in cols if "[]" not in c}
+        paths = {c.replace("[]", "") for cols in self.pol["engine-columns"].values() for c in cols if "[]" in c}   # A[].B: B of A's elements
         checked = 0
         for cmd, f, c in C.contracts():
             if c is None or c.get("class") not in ("input", "fundamental", "drishti-owned"):
                 continue
             fields = {x["name"] for x in c.get("fields") or []} | {x["name"] for fs in (c.get("nested") or {}).values() for x in fs}
-            self.assertEqual(fields & engine, set(), f"the {cmd['kind']} contract ({c['class']}) lists an engine's column")
+            nested = {f"{p.replace('[]', '')}.{x['name']}" for p, fs in (c.get("nested") or {}).items() for x in fs}
+            self.assertEqual((fields & engine) | (nested & paths), set(), f"the {cmd['kind']} contract ({c['class']}) lists an engine's column")
             for d in self.docs_of(cmd["pack"], cmd["kind"]):
-                self.assertEqual(self.names(d) & engine, set(), f"{cmd['kind']} data carries an engine's column")
+                self.assertEqual(self.names(d) & (engine | paths), set(), f"{cmd['kind']} data carries an engine's column")
             checked += 1
         self.assertGreater(checked, 50)
 
@@ -284,6 +286,8 @@ class TheRetiredStoredVersions(unittest.TestCase):
         self.assertIn("HISTORY[].CHANGE_PCT", self.pol["removed"]["financial-fact"]["figures"])
         self.assertTrue({"REVENUE", "NET_INCOME", "SECTORS", "BY_SECTOR"} <= set(self.pol["removed"]["index-membership"]["figures"]))
         self.assertEqual(self.pol["removed"]["equity"]["figures"], ["BETA"])
+        self.assertEqual(self.pol["removed"]["legal-entity"]["figures"], ["BOOKS[].VAR"])     # the books' VaR is the engine's (2.9.2)
+        self.assertIn("BOOKS[].VAR", self.pol["engine-columns"]["var"])
         self.assertEqual((by_kind["equity-beta"]["class"], by_kind["equity-beta"]["storage"]["plugin"]), ("computed", "reactive"))
         beta = md["connectors"]["equity-analytics"]["engine"]["class"]
         self.assertTrue((C.ROOT / "drishti-compute" / "src" / "main" / "java" / Path(*beta.split("."))).with_suffix(".java").is_file(), beta)

@@ -48,7 +48,7 @@ command an administrator turned off is not listed at all. The count reads *N com
   pack's commands). The filter is kept in the address (`/func?q=exposure`), so a reload or a shared link shows the same list. **Pack**
   keeps one pack's commands.
 
-`FUNC` is a reserved command word, like `BI`, `RUPAKA` and `FORM`: no pack may define a mnemonic named `FUNC`, in any case. F1 or the `?`
+`FUNC` is a reserved command word, like `BI`, `RUPAKA`, `FORM` and `WHAT`: no pack may define a mnemonic named `FUNC`, in any case. F1 or the `?`
 beside the title opens this page of help.
 
 ## The administrator's view

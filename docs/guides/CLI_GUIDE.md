@@ -1937,7 +1937,7 @@ drishti.py exposure compare XCAP-20260930-1 now
 drishti.py exposure official --date 2026-09-30                       the official end-of-day record (--capture: administrators)
 drishti.py exposure retention                                        what is kept of each date held
 drishti.py exposure reload                                           drop the loaded dates (administrators)
-drishti.py exposure whatif CPTY:CP-ALDERSHOT --like CLY-4000879 --factor -1 --set NS-ALDERSHOT-FRA   exact, the Python engine
+drishti.py exposure whatif CPTY:CP-ALDERSHOT --like CLY-4003028 --factor -1 --set NS-ALDERSHOT-FRA   exact, the Python engine
 drishti.py exposure whatif CPTY:CP-ALDERSHOT --candidates new-swap.json --method addon               the conservative proxy
 ```
 
@@ -2314,7 +2314,7 @@ $ drishti.py bi catalogue publish bi-27def70913 --note x
 drishti: the server said 403 DRS-9002: DRS-9002 cat does not hold the bi-author power (an administrator grants it on a role)
 ```
 
-`drishti.py pack check` also refuses a pack that defines a mnemonic named `BI`, `RUPAKA`, `FORM` or `FUNC` (reserved command words).
+`drishti.py pack check` also refuses a pack that defines a mnemonic named `BI`, `RUPAKA`, `FORM`, `FUNC` or `WHAT` (reserved command words).
 
 ### `bi expr`, `bi migrate`, `bi sql`: the BI languages
 

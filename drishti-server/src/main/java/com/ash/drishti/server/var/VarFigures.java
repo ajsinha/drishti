@@ -37,12 +37,13 @@ import java.util.Set;
  * more, so when the page is opened the engine computes them as the caller (their entitlements by node, their field masks) and the view
  * reads them under {@code VAR_ENGINE}: a position's VaR and ES, its component in its book and its trades' own VaR and components; a
  * portfolio's VaR, ES, limit use, positions with their components, the split by product, currency and direction, and its P&amp;L over
- * the scenario days; a desk's VaR, ES and limit use. When the engine cannot answer (off, no vectors, the caller may not see VaR) it
+ * the scenario days; a desk's VaR, ES and limit use; a legal entity's, with each of its books' VaR beside the record's book rows. When the engine cannot answer (off, no vectors, the caller may not see VaR) it
  * says why in {@code VAR_ENGINE.NOTE} and the page shows the rest.
  */
 final class VarFigures implements ViewAugmenter {
 
     static final String FIELD = "VAR_ENGINE";
+    private static final String LEGAL_ENTITY = "legal-entity";
     private static final int TOP = 10;
     private final VarService svc;
     private final VarViews views;
@@ -58,7 +59,7 @@ final class VarFigures implements ViewAugmenter {
 
     @Override
     public boolean augments(String kind) {
-        return Set.of(svc.props().kinds().position(), svc.props().kinds().portfolio(), "desk").contains(kind);
+        return Set.of(svc.props().kinds().position(), svc.props().kinds().portfolio(), "desk", LEGAL_ENTITY).contains(kind);
     }
 
     @Override
@@ -79,6 +80,7 @@ final class VarFigures implements ViewAugmenter {
                 String kind = doc.ref().kind();
                 figures = kind.equals(svc.props().kinds().position()) ? position(who.get(), doc.ref().id(), date)
                         : kind.equals(svc.props().kinds().portfolio()) ? portfolio(who.get(), doc.ref().id(), date)
+                        : kind.equals(LEGAL_ENTITY) ? legalEntity(who.get(), doc.ref().id(), o, date)
                         : desk(who.get(), doc.ref().id(), date);
             } catch (DrishtiException | IllegalArgumentException e) {
                 figures = Map.of("STATUS", "unavailable", "NOTE", String.valueOf(e.getMessage()));
@@ -191,6 +193,31 @@ final class VarFigures implements ViewAugmenter {
 
     private Map<String, Object> desk(Principal p, String id, LocalDate date) {
         return head(p, "DESK:" + id, date);
+    }
+
+    /**
+     * A legal entity's VaR (LE:&lt;id&gt;) and each of its books' (BOOK:&lt;id&gt;) beside the record's own book rows (BOOK, DESK,
+     * PNL, MTM, TRADES): the record stores no VaR since 2.9.2. A book the engine cannot answer for keeps its row with no VAR.
+     */
+    private Map<String, Object> legalEntity(Principal p, String id, DataNode.Obj doc, LocalDate date) {
+        Map<String, Object> m = head(p, "LE:" + id, date);
+        List<Map<String, Object>> books = new ArrayList<>();
+        DataNode rows = doc.get("BOOKS");
+        for (int i = 0; i < rows.size(); i++) {
+            if (!(rows.get(i).unwrap() instanceof Map<?, ?> r)) {
+                continue;
+            }
+            Map<String, Object> b = new LinkedHashMap<>();
+            r.forEach((k, v) -> b.put(String.valueOf(k), v));
+            try {
+                b.put("VAR", views.headline(p, "BOOK:" + r.get("BOOK"), date).get("var"));
+            } catch (DrishtiException | IllegalArgumentException e) {
+                b.put("VAR", null);
+            }
+            books.add(b);
+        }
+        m.put("BOOKS", books);
+        return m;
     }
 
     private static Map<String, Object> row(String key, Map<String, Object> r, String own, String component) {

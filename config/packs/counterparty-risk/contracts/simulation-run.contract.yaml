@@ -135,11 +135,11 @@ fields:
 - name: TRADES
   type: integer
   presence: required
-  example: 627
+  example: 523
 - name: ROWS
   type: integer
   presence: required
-  example: 9031
+  example: 7540
 - name: BATCH_ID
   type: id
   presence: required

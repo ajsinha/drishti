@@ -1542,12 +1542,13 @@ One point per row with two numbers; rows without both are left out.
 
 ```yaml
   - { id: riskReturn, kind: scatter, title: "Risk and return (books: VaR against today's P&L, USD)", code: RR, key: F3,
-      rows: $.BOOKS, x: VAR, y: PNL, label: BOOK, fmt: signed0, size: TRADES, group: DESK, xFmt: compact,
+      rows: $.VAR_ENGINE.BOOKS, x: VAR, y: PNL, label: BOOK, fmt: signed0, size: TRADES, group: DESK, xFmt: compact,
       xLabel: VaR 99% 1D (USD), yLabel: "P&L 1D (USD)" }
 ```
 
-You should see (core pack, `LE LE-NY`) fifteen points in five colours (the desks); each opens its book, the first `BOOK-RATES-1` at
-VaR `58.2m`, P&L `−88,858,230`.
+You should see (core pack, `LE LE-NY`, demo lake of 2026-10-26) fifteen points in five colours (the desks); each opens its book, the
+first `BOOK-RATES-1` at VaR `28.6m`, P&L `−86,448,745`. The rows are the VaR engine's (`VAR_ENGINE.BOOKS`: each book's VaR computed as
+the page opens, beside the record's P&L, MTM and trades); the legal-entity record stores no VaR since 2.9.2.
 
 #### candlestick
 

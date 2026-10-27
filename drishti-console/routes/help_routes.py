@@ -38,6 +38,26 @@ async def help_search(request: Request, q: str = ""):
     return render(request, "help/search.html", q=q, hits=(await library(request)).search(q), screen="help")
 
 
+@router.get("/what")
+async def what(request: Request, q: str = ""):
+    """``WHAT`` (routes/terminal_routes.py): alone the Knowledge home; with a term (its long name or a synonym, any case) the term's
+    glossary entry on its Knowledge page; with other words a search of the Knowledge pages (docs/knowledge/README.md)."""
+    from core.knowledge import CATEGORY, HOME
+
+    lib = await library(request)
+    folder = (request.app.state.docs_dir / "knowledge").resolve()
+    home = lib.by_file.get(folder / HOME)
+    words = " ".join(q.split())
+    if not words:
+        return RedirectResponse(f"/help/{home}" if home else "/help", status_code=303)
+    entry = request.app.state.glossary.find(words)
+    slug = lib.by_file.get(folder / entry.page) if entry else None
+    if entry and slug:
+        return RedirectResponse(f"/help/{slug}#{entry.anchor}", status_code=303)
+    hits = [h for h in lib.search(words) if h["guide"].category == CATEGORY]
+    return render(request, "help/search.html", q=words, hits=hits, knowledge=home or "", screen="help")
+
+
 @router.get("/help/context/{screen}")
 async def help_context(request: Request, screen: str):
     lib = await library(request)

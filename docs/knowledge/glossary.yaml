@@ -1,0 +1,769 @@
+# Project Drishti · Any data. Any domain. One grammar.
+#
+# Copyright (c) 2026 Ashutosh Sinha <ajsinha@gmail.com>.
+# All rights reserved.
+#
+# PROPRIETARY AND CONFIDENTIAL.
+#
+# This file is the confidential and proprietary property of Ashutosh Sinha.
+# Unauthorised copying, use, modification, distribution or disclosure of this
+# file, via any medium, is strictly prohibited except with the express prior
+# written permission of the copyright holder.
+#
+# See the LICENSE file in the root of this repository for the full terms.
+
+# The Knowledge glossary: one entry per term, the one source of the Glossary section of every Knowledge page (docs/knowledge/*.md)
+# and of the console's WHAT <term> (routes/what_routes.py). After a change run `python3 tools/knowledge.py` (it writes the pages'
+# Glossary sections); `python3 tools/knowledge.py --check` fails when a page differs from this file.
+#
+# An entry: term (as it is written), name (the words it abbreviates, optional), synonyms (other ways a reader types it; WHAT matches
+# the term, the name and these, ignoring case), domain (a key of domains:), meaning (one or two plain sentences), command (a console
+# command that shows it on the demo data, without <GO>; optional) and cli (a drishti.py command, optional). The anchor of an entry is
+# term-<the term in lower case, each run of other characters a hyphen>.
+
+domains:
+  market-risk: { page: market-risk.md, title: Market risk }
+  counterparty-credit-risk: { page: counterparty-credit-risk.md, title: Counterparty credit risk }
+  trades-and-products: { page: trades-and-products.md, title: Trades and products }
+  entities-and-ownership: { page: entities-and-ownership.md, title: Entities and ownership }
+  market-data: { page: market-data.md, title: Market data }
+  data-and-contracts: { page: data-and-contracts.md, title: Data and contracts }
+  economies: { page: economies.md, title: Economies }
+
+terms:
+  # ---- market risk ---------------------------------------------------------------------------------------------------------------
+  - term: VaR
+    name: value at risk
+    synonyms: [var, value-at-risk]
+    domain: market-risk
+    meaning: "The loss a set of trades should not exceed on 99 days out of 100, over one day. Drishti reads it from the set's P&L under 509 historical days: minus the 6th worst."
+    command: VAR BANK
+    cli: drishti.py var show BANK
+  - term: ES
+    name: expected shortfall
+    synonyms: [expected shortfall, cvar, conditional var]
+    domain: market-risk
+    meaning: "The average loss on the worst days beyond a confidence level: in Drishti the mean of the 13 worst of 509 days (97.5%). It sees how bad the tail is, which VaR does not."
+    command: VAR BANK
+    cli: drishti.py var show BANK
+  - term: Historical simulation
+    synonyms: [hs, historical var, historical simulation var]
+    domain: market-risk
+    meaning: "VaR from real past market moves: each of the last 509 business days' moves is applied to today's trades, and the losses are ranked. Equal weights, one-day horizon."
+    command: SSET HS-509
+  - term: Scenario set
+    synonyms: [scenario days, scenarios, sset]
+    domain: market-risk
+    meaning: "The list of historical days whose moves make the scenarios (HS-509: 509 days ending the day before the business date). Position i of every P&L vector is day i."
+    command: SSET HS-509
+  - term: P&L vector
+    name: profit and loss vector
+    synonyms: [pnl vector, pnl-vector, p and l vector, pnlv, vector]
+    domain: market-risk
+    meaning: "One trade's P&L under each of the 509 scenario days, priced upstream by the risk batch. Drishti adds vectors element by element; every VaR figure is read from the sum."
+    command: PNLV PV-MX-20000274-HS-509
+  - term: Full revaluation
+    synonyms: [revaluation, sensitivities based pnl, taylor expansion, sensitivity-based revaluation]
+    domain: market-risk
+    meaning: "Repricing each trade under each scenario to get its P&L, rather than approximating the P&L from sensitivities (delta, gamma, vega). The scenario set says which the batch used."
+    command: SSET HS-509
+  - term: Scenario shift
+    synonyms: [absolute shift, relative shift, shift]
+    domain: market-risk
+    meaning: "How a past day's move is applied to today's market: absolute (add the 12 bp the rate moved) or relative (take off the 3% the price fell). Scenario FX is shifted too."
+    command: SSET HS-509
+  - term: Confidence level
+    synonyms: [confidence, alpha, quantile]
+    domain: market-risk
+    meaning: "How far into the tail a figure looks: 99% for VaR (the 6th worst of 509), 97.5% for ES. Exposure uses 95% and 99% for PFE."
+    command: VAR BANK
+  - term: Standalone VaR
+    synonyms: [standalone]
+    domain: market-risk
+    meaning: "The VaR of a part (a desk, a book, a position) measured alone, with its own worst days. Standalone VaRs do not add up to the whole."
+    command: VAR DESK RATES
+    cli: drishti.py var parts DESK:RATES
+  - term: Component VaR
+    synonyms: [component, euler allocation, contribution to var]
+    domain: market-risk
+    meaning: "A part's share of the whole's VaR, measured on the whole's worst days. Components add up to the VaR exactly; a hedge has a negative component."
+    command: VAR DESK RATES
+    cli: drishti.py var parts DESK:RATES
+  - term: Incremental VaR
+    synonyms: [incremental]
+    domain: market-risk
+    meaning: "The whole's VaR minus its VaR without the part: what this trade or book does to my VaR. Below zero means removing it would raise the VaR."
+    cli: drishti.py var parts DESK:RATES
+  - term: Marginal VaR
+    synonyms: [marginal]
+    domain: market-risk
+    meaning: "Component VaR per million of the part's size (a position's market value, a trade's PV): which positions cost the most risk per dollar."
+    cli: drishti.py var parts DESK:RATES --by position
+  - term: Diversification
+    synonyms: [diversification benefit]
+    domain: market-risk
+    meaning: "The sum of the parts' standalone VaRs minus the whole's VaR: what holding them together saves, because they do not lose on the same days."
+    command: VAR BANK
+  - term: Scope
+    synonyms: [var scope, exposure scope, any set of trades]
+    domain: market-risk
+    meaning: "Any set of trades written as text: BANK, LE:LE-NY, DESK:RATES, CPTY:CP-ALDERSHOT, a portfolio, a rule, joined with + (union), - (difference) and & (intersection). VaR and exposure use the same grammar."
+    command: VAR SCOPE BANK - DESK:CREDIT
+  - term: Position
+    synonyms: [pos, positions]
+    domain: market-risk
+    meaning: "One security held in one book (or one OTC trade): the trades that build or reduce it, netted. Drishti derives positions from trades; nobody delivers them."
+    command: POS POS-BOOK-EQD-2~SEC-WARRANT-USD-01
+  - term: Portfolio
+    synonyms: [port, stored portfolio]
+    domain: market-risk
+    meaning: "A named, stored set of positions: a hierarchy node, a rule (every short EUR position) or a basket of chosen positions, with its own VaR limit."
+    command: PORT PF-USD-RATES
+  - term: Basket
+    synonyms: [saved basket]
+    domain: market-risk
+    meaning: "A scope you saved under a name in the VaR explorer (`BASKET:<owner>/<name>`), so you can open it again or compare it over time."
+    cli: drishti.py var baskets
+  - term: Risk hierarchy
+    synonyms: [hierarchy, hier, mgmt, legal hierarchy, management hierarchy, node]
+    domain: market-risk
+    meaning: "The two trees VaR rolls up: MGMT (bank, division, desk, book) and LEGAL (bank, legal entity, desk, book). Each node has a VaR limit."
+    command: HIER LEGAL~LE-NY
+    cli: drishti.py var tree --hierarchy LEGAL
+  - term: VaR limit
+    synonyms: [limit use, var limit use, limit utilisation]
+    domain: market-risk
+    meaning: "The most VaR a node or portfolio may take. Limit use is VaR divided by the limit; above 100% is a breach."
+    cli: drishti.py var tree
+  - term: Backtesting
+    synonyms: [backtest, exceptions, traffic light, kupiec, christoffersen]
+    domain: market-risk
+    meaning: "Checking VaR against what happened: a day whose loss exceeds the day's VaR is an exception. Basel's traffic light counts them over 250 days (green up to 4, amber 5 to 9, red 10 or more)."
+    cli: drishti.py var history BANK
+  - term: Hypothetical P&L
+    synonyms: [hypo pnl, hypothetical pnl, hypo p&l]
+    domain: market-risk
+    meaning: "The P&L the day's positions would have made had they been held unchanged through the next day's market move. The backtest compares it with VaR."
+    cli: drishti.py var history BANK
+  - term: Capture
+    synonyms: [var capture, snapshot]
+    domain: market-risk
+    meaning: "A frozen copy of a scope's answer (figures, members, vector, provenance), kept so you can compare it with now or with another capture."
+    cli: drishti.py var captures
+  - term: Official VaR
+    synonyms: [voff, official results, end of day var]
+    domain: market-risk
+    meaning: "The end-of-day VaR and ES of every hierarchy node, captured and published once a day as the record of the date (kind var-official)."
+    command: VOFF MGMT~DESK-RATES
+    cli: drishti.py var official
+  - term: VaR what-if
+    synonyms: [vwif, var whatif, what if]
+    domain: market-risk
+    meaning: "The VaR of a scope with trades added or removed before they are dealt, computed by the Python engine (kind var-whatif)."
+    cli: drishti.py var whatif
+  - term: Stress test
+    synonyms: [stress scenario, stress, scn, stress result, str]
+    domain: market-risk
+    meaning: "The P&L of a desk under a named shock, historical (COVID-19 March 2020) or hypothetical, against a stress limit. Stored results from the upstream risk engine."
+    command: STR STR-COVID2020-COMM
+  - term: FRTB
+    name: Fundamental Review of the Trading Book
+    synonyms: [frtb sa, sbm, sensitivities based method]
+    domain: market-risk
+    meaning: "Basel's market-risk capital rules. Drishti stores the standardised approach's delta, vega and curvature charges per book from an upstream engine; it does not compute them."
+    command: FRTB FRTB-COMM-1
+  - term: Sensitivity
+    synonyms: [delta, vega, curvature, greeks, sensitivities]
+    domain: market-risk
+    meaning: "How much a value changes for a small move in one risk factor: delta for the price or rate, vega for volatility, curvature for what delta misses."
+    command: FRTB FRTB-COMM-1
+  - term: P&L explain
+    synonyms: [pnl explain, attribution, unexplained pnl, pnl attribution]
+    domain: market-risk
+    meaning: "A book's daily P&L split into what each risk factor's move explains and the unexplained rest. A large residual points to a missing factor or a pricing difference."
+    command: PNL PNL-COMM-1
+
+  # ---- counterparty credit risk --------------------------------------------------------------------------------------------------
+  - term: Counterparty
+    synonyms: [cpty, client, obligor]
+    domain: counterparty-credit-risk
+    meaning: "A firm the bank trades with: its rating, sector, country of risk, group, credit limit and netting sets."
+    command: CPTY CP-ALDERSHOT
+  - term: Counterparty credit risk
+    synonyms: [ccr, credit exposure risk]
+    domain: counterparty-credit-risk
+    meaning: "The risk that a counterparty defaults while it owes the bank money on its trades. Unlike a loan, the amount owed moves with markets, so it is simulated."
+    command: EXP BANK
+  - term: Counterparty group
+    synonyms: [grp, obligor group, economic group, connected group]
+    domain: counterparty-credit-risk
+    meaning: "Counterparties that belong together for credit (a parent and its subsidiaries), with one group limit. The scope `GROUP:<id>` adds their exposures."
+    command: GRP GRP-ALDERSHOT
+  - term: Master agreement
+    synonyms: [agr, isda, isda master agreement, gmra, gmsla, agreement]
+    domain: counterparty-credit-risk
+    meaning: "The legal contract (ISDA for derivatives, GMRA for repo, GMSLA for securities lending) under which all trades with a counterparty sit, including close-out netting."
+    command: AGR AGR-ALDERSHOT-ISDA
+  - term: Close-out netting
+    synonyms: [close out netting, netting enforceability]
+    domain: counterparty-credit-risk
+    meaning: "The right, on default, to end every trade under an agreement and settle one net amount. Exposure may be netted only where a legal opinion says it is enforceable."
+    command: AGR AGR-ALDERSHOT-ISDA
+  - term: Netting set
+    synonyms: [nset, ns]
+    domain: counterparty-credit-risk
+    meaning: "The trades that net on close-out under one agreement and CSA. In Drishti one per counterparty and bank legal entity: `NS-<counterparty>-<legal entity>`."
+    command: NSET NS-ALDERSHOT-LDN
+  - term: CSA
+    name: credit support annex
+    synonyms: [credit support annex, collateral agreement]
+    domain: counterparty-credit-risk
+    meaning: "The part of the agreement that sets the collateral terms: thresholds, minimum transfer amount, independent amount, eligible assets, margin frequency and the margin period of risk."
+    command: CSA CSA-ALDERSHOT
+  - term: Threshold
+    synonyms: [csa threshold, threshold us, threshold them]
+    domain: counterparty-credit-risk
+    meaning: "The exposure one side may run before the other may call collateral. Exposure up to the threshold stays uncollateralised."
+    command: CSA CSA-ALDERSHOT
+  - term: MTA
+    name: minimum transfer amount
+    synonyms: [minimum transfer amount]
+    domain: counterparty-credit-risk
+    meaning: "The smallest collateral movement either side may call; smaller changes wait."
+    command: CSA CSA-ALDERSHOT
+  - term: Independent amount
+    synonyms: [ia]
+    domain: counterparty-credit-risk
+    meaning: "Collateral posted up front whatever the exposure, a cushion on top of variation margin."
+    command: CSA CSA-ALDERSHOT
+  - term: Variation margin
+    synonyms: [vm]
+    domain: counterparty-credit-risk
+    meaning: "Collateral that follows today's value of the trades, called as it changes (daily under most CSAs)."
+    command: MC MC-ALDERSHOT-FRA-1
+  - term: Initial margin
+    synonyms: [im]
+    domain: counterparty-credit-risk
+    meaning: "Collateral held against how much the value could move before a defaulted counterparty is closed out. Usually segregated; the bank keeps what it receives on every path."
+    command: SIMM SIMM-ALDERSHOT
+  - term: MPOR
+    name: margin period of risk
+    synonyms: [margin period of risk, look-back, lookback]
+    domain: counterparty-credit-risk
+    meaning: "The time between the last collateral received and closing out a defaulted counterparty (10 business days in the demo). Exposure is measured over it."
+    command: CSA CSA-ALDERSHOT
+  - term: Collateral balance
+    synonyms: [coll, collateral, held, posted]
+    domain: counterparty-credit-risk
+    meaning: "The collateral held from, and posted to, a counterparty under a CSA for one netting set, after haircuts. Net = held minus posted."
+    command: COLL COLL-ALDERSHOT-LDN
+  - term: Margin call
+    synonyms: [mc, call]
+    domain: counterparty-credit-risk
+    meaning: "A demand for collateral under a CSA, its amount, who calls whom, its status and any disputed part."
+    command: MC MC-ALDERSHOT-FRA-1
+  - term: Credit limit
+    synonyms: [lim, limit, pfe limit, utilisation]
+    domain: counterparty-credit-risk
+    meaning: "The most exposure the bank accepts to a counterparty on a measure (usually peak PFE at 95%), with its use. Above 100% is a breach."
+    command: LIM LIM-ALDERSHOT
+  - term: Simulation run
+    synonyms: [xrun, run, paths, monte carlo, grid]
+    domain: counterparty-credit-risk
+    meaning: "The upstream exposure simulation of a business date: how many market paths (200 in the demo), the grid of future dates and the look-back."
+    command: XRUN XR-2026-10-26-01
+  - term: Exposure path
+    synonyms: [xpath, path, mtm path]
+    domain: counterparty-credit-risk
+    meaning: "One trade's mark to market on every simulated path at one grid date. Every trade uses the same paths, so values add path by path."
+    cli: drishti.py exposure status
+  - term: Exposure
+    synonyms: [e, credit exposure, exposure on a path]
+    domain: counterparty-credit-risk
+    meaning: "What a counterparty would owe the bank on a path and date after netting and collateral, never below zero: max(value - collateral, 0)."
+    command: EXP BANK
+  - term: CE
+    name: current exposure
+    synonyms: [current exposure, replacement cost today]
+    domain: counterparty-credit-risk
+    meaning: "Today's exposure: the netting set's mark to market less the collateral held, floored at zero. It adds up across netting sets."
+    command: EXP NS-ALDERSHOT-NY
+  - term: EE
+    name: expected exposure
+    synonyms: [expected exposure]
+    domain: counterparty-credit-risk
+    meaning: "The average exposure over all paths at a future date: the input to CVA. It adds up across netting sets."
+    command: EXP NS-ALDERSHOT-LDN
+  - term: ENE
+    name: expected negative exposure
+    synonyms: [expected negative exposure]
+    domain: counterparty-credit-risk
+    meaning: "The average of what the bank would owe the counterparty at a future date, reported negative: the input to DVA."
+    command: EXP NS-ALDERSHOT-LDN
+  - term: EEE
+    name: effective expected exposure
+    synonyms: [effective ee, effective expected exposure]
+    domain: counterparty-credit-risk
+    meaning: "EE that never falls: the running maximum of EE over the dates. Regulators use it so a trade maturing soon does not hide a later roll-over."
+    command: EXP NS-ALDERSHOT-LDN
+  - term: PFE
+    name: potential future exposure
+    synonyms: [potential future exposure, pfe95, pfe 95, pfe99, pfe 99]
+    domain: counterparty-credit-risk
+    meaning: "The bad case: the exposure at a future date that only 5% (or 1%) of paths exceed. Credit limits are set on it. It does not add up."
+    command: EXP CP-ALDERSHOT
+    cli: drishti.py exposure show CPTY:CP-ALDERSHOT
+  - term: Peak PFE
+    synonyms: [mpfe, maximum pfe, peak]
+    domain: counterparty-credit-risk
+    meaning: "The largest PFE over the future dates, and when it happens: the single number most credit limits use."
+    command: EXP CP-ALDERSHOT
+  - term: EPE
+    name: expected positive exposure
+    synonyms: [expected positive exposure]
+    domain: counterparty-credit-risk
+    meaning: "EE averaged over the first year (or to the last maturity if sooner): one average figure for the counterparty."
+    command: EXP CP-ALDERSHOT
+  - term: EEPE
+    name: effective expected positive exposure
+    synonyms: [effective epe, effective expected positive exposure]
+    domain: counterparty-credit-risk
+    meaning: "EEE averaged over the first year: the regulatory figure under the internal model method. EEPE is never below EPE."
+    command: EXP CP-ALDERSHOT
+  - term: EAD
+    name: exposure at default
+    synonyms: [exposure at default, ead imm]
+    domain: counterparty-credit-risk
+    meaning: "The exposure capital is held against. Under the internal model method alpha (1.4) times EEPE; Drishti shows it for information, it is not a capital figure."
+    command: EXP BANK
+  - term: Exposure profile
+    synonyms: [profile, exposure result]
+    domain: counterparty-credit-risk
+    meaning: "EE, ENE, EEE and PFE of a scope at each future date (1W to 10Y): the shape of the exposure over time. Computed when asked (kind exposure-result)."
+    command: EXP NS-ALDERSHOT-LDN
+    cli: drishti.py exposure profile NSET:NS-ALDERSHOT-LDN
+  - term: Netting benefit
+    synonyms: [netting, netting effect]
+    domain: counterparty-credit-risk
+    meaning: "How much lower a netting set's exposure is than the sum of its trades' exposures alone, because gains and losses on its trades offset."
+    cli: drishti.py exposure parts NSET:NS-ALDERSHOT-LDN --by trade
+  - term: Collateral effect
+    synonyms: [effect of collateral, uncollateralised, uncollateralized]
+    domain: counterparty-credit-risk
+    meaning: "The change in EE that collateral makes at the peak date. Collateral held lowers exposure; collateral the bank has posted can raise it."
+    command: EXP NS-ALDERSHOT-LDN
+  - term: Exposure what-if
+    synonyms: [xwif, pre-deal, pre deal, pre-deal check, incremental exposure]
+    domain: counterparty-credit-risk
+    meaning: "What a new trade (or an unwind) would do to a counterparty's PFE before it is dealt: exactly on the paths, or by a conservative add-on proxy."
+    cli: drishti.py exposure whatif CPTY:CP-ALDERSHOT --like CLY-4003028 --factor -1 --set NS-ALDERSHOT-FRA
+  - term: Official exposure
+    synonyms: [xofc, official exposure results]
+    domain: counterparty-credit-risk
+    meaning: "The end-of-day exposure figures of every netting set and counterparty, captured and published once a day as the record of the date."
+    cli: drishti.py exposure official
+  - term: CVA
+    name: credit valuation adjustment
+    synonyms: [credit valuation adjustment, xva]
+    domain: counterparty-credit-risk
+    meaning: "The market price of the counterparty's possible default, taken off the trades' value: roughly loss given default times EE weighted by default probability. Stored from an upstream XVA engine; Drishti does not compute it yet."
+    command: CVA CVA-ALDERSHOT-FRA
+  - term: DVA
+    name: debit valuation adjustment
+    synonyms: [debit valuation adjustment, fva, kva]
+    domain: counterparty-credit-risk
+    meaning: "CVA's mirror: the value of the bank's own possible default. FVA prices funding and KVA the cost of capital. All stored on the CVA record; not computed by Drishti."
+    command: CVA CVA-ALDERSHOT-FRA
+  - term: SA-CCR
+    name: standardised approach for counterparty credit risk
+    synonyms: [saccr, sa ccr, standardised approach]
+    domain: counterparty-credit-risk
+    meaning: "Basel's formula for EAD without a model: 1.4 times (replacement cost plus multiplier times add-ons by asset class). Stored from an upstream engine; Drishti does not compute it."
+    command: SACCR SACCR-ALDERSHOT-FRA
+  - term: SIMM
+    name: ISDA Standard Initial Margin Model
+    synonyms: [isda simm]
+    domain: counterparty-credit-risk
+    meaning: "The industry model for initial margin on uncleared derivatives, from sensitivities by risk class. Stored, with IM posted and received."
+    command: SIMM SIMM-ALDERSHOT
+  - term: CCP
+    name: central counterparty
+    synonyms: [central counterparty, clearing house, ccp]
+    domain: counterparty-credit-risk
+    meaning: "A clearing house that steps between the two sides of a cleared trade, with its own margin model and default fund."
+    command: CCP CCP-CME
+  - term: Wrong-way risk
+    synonyms: [wwr, wrong way risk]
+    domain: counterparty-credit-risk
+    meaning: "When exposure to a counterparty rises as its credit worsens (it sold you protection on itself, or on its own country). Designed in the contracts; not computed by Drishti yet."
+
+  # ---- trades and products -------------------------------------------------------------------------------------------------------
+  - term: Trade
+    synonyms: [trd, deal, transaction]
+    domain: trades-and-products
+    meaning: "One deal as the booking system holds it: who, what, how much, when, in which book and legal entity, with its legs and cash-flow events."
+    command: TRD 1000001
+  - term: Source system
+    synonyms: [booking system, endur, murex, calypso]
+    domain: trades-and-products
+    meaning: "The system that booked the trade: ENDUR (numeric ids), MUREX (MX-), CALYPSO (CLY-) in the demo. Drishti reads all three as one trade kind."
+    command: TRD 1000001
+  - term: Trade status
+    synonyms: [status, trade action, trade version]
+    domain: trades-and-products
+    meaning: "Where the trade is in its life (NEW, VALIDATED, AMENDED, CANCELLED, MATURED). Risk counts NEW, VALIDATED and AMENDED."
+    command: TRD 1000001
+  - term: Product type
+    synonyms: [product, product group, product sub type, asset class]
+    domain: trades-and-products
+    meaning: "What the trade is: a product type as the system names it (ComSwap, IRS, FXFwd) in a product group (Rates, FX, Credit, Equity, Commodity)."
+    command: TRD 1000001
+  - term: Notional
+    synonyms: [quantity, face value]
+    domain: trades-and-products
+    meaning: "The size the trade's payments are computed on. It is not what can be lost: a 100m swap may be worth 2m."
+    command: TRD 1000001
+  - term: MTM
+    name: mark to market
+    synonyms: [mark to market, pv, present value, market value, mtm]
+    domain: trades-and-products
+    meaning: "The trade's value today at market prices, positive when the counterparty owes the bank. The risk engine's figure is on the trade valuation."
+    command: TVAL TVAL-1000001
+  - term: DV01
+    synonyms: [pv01, bpv, basis point value]
+    domain: trades-and-products
+    meaning: "The change in value for a one basis point (0.01%) rise in rates."
+    command: TVAL TVAL-1000001
+  - term: Leg
+    synonyms: [legs, swap leg]
+    domain: trades-and-products
+    meaning: "One side of a trade's payments: a swap has a pay leg and a receive leg, each with its notional, rate or index and schedule."
+    command: TRD 1000001
+  - term: Cash-flow event
+    synonyms: [event, events, payment, cashflow, cash flow]
+    domain: trades-and-products
+    meaning: "A dated payment or fixing of a trade. Counterparty trades sums the next 7, 30 and 90 days' payments."
+    command: CTRD CP-ALDERSHOT
+  - term: Book
+    synonyms: [trading book, tt_book, portfolio book]
+    domain: trades-and-products
+    meaning: "The account a trade is booked in, owned by one desk. Books are the leaves of both risk hierarchies."
+    command: BOOK BOOK-RATES-1
+  - term: Desk
+    synonyms: [trading desk, tt_group]
+    domain: trades-and-products
+    meaning: "A trading team and its books (Rates, FX, Credit, Commodities ...), with a head, a legal entity and limits."
+    command: DESK DESK-RATES
+  - term: Trader
+    synonyms: [trdr]
+    domain: trades-and-products
+    meaning: "The person who booked the trade, with their desk and books."
+    command: TRDR TRDR-ASHAH
+  - term: Counterparty trades
+    synonyms: [ctrd, trades of a counterparty]
+    domain: trades-and-products
+    meaning: "Every trade with one counterparty from every source system, grouped when asked: counts, notional by product, coming payments."
+    command: CTRD CP-ALDERSHOT
+  - term: Legal entity trades
+    synonyms: [ltrd]
+    domain: trades-and-products
+    meaning: "Every trade booked by one of the bank's legal entities, grouped when asked."
+    command: LTRD LE-LDN
+  - term: Trade valuation
+    synonyms: [tval, valuation]
+    domain: trades-and-products
+    meaning: "The risk engine's daily figures for a trade: MTM, one-day P&L and DV01, with its netting set."
+    command: TVAL TVAL-1000001
+  - term: Maturity
+    synonyms: [maturity date, tenor, expiry]
+    domain: trades-and-products
+    meaning: "The date the trade ends. Exposure profiles fall as trades mature; a netting set's EPE horizon stops at its last maturity when that is under a year."
+    command: TRD 1000001
+
+  # ---- entities and ownership ----------------------------------------------------------------------------------------------------
+  - term: LEI
+    name: legal entity identifier
+    synonyms: [legal entity identifier, lei code]
+    domain: entities-and-ownership
+    meaning: "The 20-character global id of a legal entity (ISO 17442), issued and renewed every year through GLEIF's network."
+    command: LEI HWUPKR0MPOU8FGXBT394
+  - term: GLEIF
+    name: Global Legal Entity Identifier Foundation
+    synonyms: [global legal entity identifier foundation, golden copy]
+    domain: entities-and-ownership
+    meaning: "The foundation that publishes every LEI, its reference data and who owns whom (level 2 data), free to use. The gleif pack reads it."
+    command: LEIG ALL
+  - term: LOU
+    name: local operating unit
+    synonyms: [managing lou, local operating unit]
+    domain: entities-and-ownership
+    meaning: "The organisation that issued an LEI and keeps it up to date (Bloomberg, the London Stock Exchange ...)."
+    command: LEI HWUPKR0MPOU8FGXBT394
+  - term: Direct parent
+    synonyms: [parent, immediate parent]
+    domain: entities-and-ownership
+    meaning: "The entity that consolidates this one directly in its accounts, as reported to GLEIF."
+    command: LEIR LEIREL-010PWNH4K3BLIC3I7R03-DIRECT
+  - term: Ultimate parent
+    synonyms: [top parent, ultimate accounting consolidating parent]
+    domain: entities-and-ownership
+    meaning: "The top of the ownership chain: the entity no one else consolidates. Its LEI names the ownership group."
+    command: LEIG HWUPKR0MPOU8FGXBT394
+  - term: Ownership group
+    synonyms: [leig, lei group, corporate group, group tree]
+    domain: entities-and-ownership
+    meaning: "An ultimate parent and every entity under it, as a tree, computed from the LEI records when opened."
+    command: LEIG 8I5DZWZKVSZI1NUHU748
+  - term: LEI country
+    synonyms: [leic]
+    domain: entities-and-ownership
+    meaning: "A country's legal entities and groups in the GLEIF data, with lapsed and late renewals, computed when opened."
+    command: LEIC GB
+  - term: Identifier mapping
+    synonyms: [leim, bic, isin, mic, lei mapping]
+    domain: entities-and-ownership
+    meaning: "GLEIF's files that give an ISIN (a security), BIC (a bank) or MIC (an exchange) its LEI, so a bond or a payment finds its issuer."
+    command: LEIM WABTUS3WXXX
+  - term: Lapsed LEI
+    synonyms: [lapsed, late renewal, renewal]
+    domain: entities-and-ownership
+    meaning: "An LEI whose yearly renewal is overdue: its reference data may be stale. Many regulators expect counterparties to keep theirs current."
+    command: LEIC GB
+  - term: Bank legal entity
+    synonyms: [le, booking entity, legal entity]
+    domain: entities-and-ownership
+    meaning: "One of the bank's own companies that books trades (LE-NY, LE-LDN, LE-FRA, LE-TKY), with its regulator and desks."
+    command: LE LE-LDN
+  - term: Issuer
+    synonyms: [iss, reference entity]
+    domain: entities-and-ownership
+    meaning: "The entity behind a bond or the reference entity of a CDS, with its rating and credit curve."
+    command: ISS ISS-BUND
+  - term: Country of risk
+    synonyms: [country risk]
+    domain: entities-and-ownership
+    meaning: "The country whose events would most affect the counterparty's ability to pay, which may differ from where it is registered."
+    command: CPTY CP-ALDERSHOT
+
+  # ---- market data ---------------------------------------------------------------------------------------------------------------
+  - term: Interest rate curve
+    synonyms: [crv, yield curve, curve, discount curve, ois curve, projection curve]
+    domain: market-data
+    meaning: "Rates by maturity for one currency and purpose: OIS for discounting, projection for a floating index, government or cross-currency basis."
+    command: CRV CRV-USD-OIS
+  - term: Rate fixing
+    synonyms: [fix, fixing, sofr, sonia, estr, overnight rate]
+    domain: market-data
+    meaning: "The published value of a rate index on a day (SOFR, SONIA, €STR ...): what floating legs pay."
+    command: FIX FIX-SOFR
+  - term: Repo curve
+    synonyms: [repo]
+    domain: market-data
+    meaning: "The rate for borrowing cash against securities, by maturity."
+    command: REPO REPO-USD
+  - term: FX spot
+    synonyms: [fx, exchange rate, spot rate]
+    domain: market-data
+    meaning: "The price of one currency in another for delivery on the spot date (usually two business days ahead), with bid and ask."
+    command: FX FX-EURUSD
+  - term: FX forward curve
+    synonyms: [fxf, forward points, fx forward]
+    domain: market-data
+    meaning: "The exchange rate agreed today for later dates; the gap to spot comes from the two currencies' interest rates."
+    command: FXF FXF-EURUSD
+  - term: Volatility surface
+    synonyms: [vol surface, implied volatility, fxv, eqv, cmdv, atm, risk reversal, butterfly]
+    domain: market-data
+    meaning: "Implied volatility by expiry and strike (or delta), read from option prices. ATM is at the money; risk reversals and butterflies describe the smile."
+    command: FXV FXV-EURUSD
+  - term: Swaption cube
+    synonyms: [irv, swaption vol, cap vol, cpv]
+    domain: market-data
+    meaning: "Interest-rate option volatilities by expiry, swap tenor and strike; cap and floor volatilities are a surface beside it."
+    command: IRV IRV-USD
+  - term: Credit curve
+    synonyms: [cds, cds spread, credit spread, default probability, pd, recovery]
+    domain: market-data
+    meaning: "CDS spreads by maturity for one reference entity, with the recovery rate and the default probabilities they imply. CVA reads it."
+    command: CDS CDS-BUND
+  - term: Dividend curve
+    synonyms: [div]
+    domain: market-data
+    meaning: "The dividends expected from an equity or index over time, used to price equity forwards and options."
+    command: DIV DIV-CSCA
+  - term: Inflation index
+    synonyms: [inf, infc, inflation curve, hicp, cpi index]
+    domain: market-data
+    meaning: "A published price index (HICP ex tobacco, US CPI) and the curve of its expected values, for inflation swaps and linkers."
+    command: INF INF-HICPX
+  - term: Commodity curve
+    synonyms: [cmdc, forward curve, commodity]
+    domain: market-data
+    meaning: "Forward prices of a commodity by delivery month (Brent, WTI, gold, corn ...)."
+    command: CMDC CMDC-BRENT
+  - term: Equity
+    synonyms: [eq, stock, share]
+    domain: market-data
+    meaning: "A share with its price, issuer, index, volatility surface and dividend curve."
+    command: EQ EQ-CSCA
+  - term: Equity index
+    synonyms: [eqx, index]
+    domain: market-data
+    meaning: "A basket of shares published as one level (S&P 500, Nasdaq-100, Euro Stoxx 50 ...)."
+    command: EQX EQX-SPX
+  - term: Bond
+    synonyms: [bnd, security master]
+    domain: market-data
+    meaning: "A debt security with its issuer, coupon, maturity and benchmark curve."
+    command: BND BND-DEBUND064772
+  - term: Correlation
+    synonyms: [corr, correlation matrix, rho, corrc]
+    domain: market-data
+    meaning: "How closely two factors' daily returns move together, from -1 to 1. Drishti computes a set's correlations from price history when asked."
+    command: CORR CORR-EU-EQ
+  - term: Beta
+    synonyms: [eqb, equity beta]
+    domain: market-data
+    meaning: "How much an equity moves for a 1% move in its index, from the regression of daily returns. Computed from the closes when asked."
+    command: EQB EQ-NVTK
+  - term: Holiday calendar
+    synonyms: [cal, calendar, business day calendar]
+    domain: market-data
+    meaning: "The days a market or currency is closed (TARGET2, USNY ...), which decide payment and fixing dates."
+    command: CAL CAL-EUTA
+
+  # ---- data and contracts --------------------------------------------------------------------------------------------------------
+  - term: Pack
+    synonyms: [domain pack]
+    domain: data-and-contracts
+    meaning: "A folder that teaches Drishti one domain: its kinds, commands, links, screens, connectors and contracts (trading, counterparty-risk, market-risk ...)."
+    command: FUNC
+  - term: Kind
+    synonyms: [entity kind, data kind]
+    domain: data-and-contracts
+    meaning: "One type of record (trade, netting-set, economy) with its key and fields. Every command opens a kind."
+    command: FUNC
+  - term: Mnemonic
+    synonyms: [command, command word, function]
+    domain: data-and-contracts
+    meaning: "The short word that opens a kind (TRD, CPTY, NSET): type it with an id and press Enter."
+    command: FUNC
+  - term: Fundamental data
+    synonyms: [fundamental, stored data, source data]
+    domain: data-and-contracts
+    meaning: "Data as its owner delivers it (trades, counterparties, curves, GLEIF records). Drishti keeps it as it is and computes everything else from it."
+    command: TRD 1000001
+  - term: Computed data
+    synonyms: [computed, derived, computed kind, on demand]
+    domain: data-and-contracts
+    meaning: "Figures Drishti works out from fundamental data when asked (VaR, exposure, ownership groups, correlations), never stored, so they never drift from their inputs."
+    command: VRES BANK
+  - term: Input data
+    synonyms: [upstream input, engine input]
+    domain: data-and-contracts
+    meaning: "Large data an upstream engine delivers for Drishti to compute with: P&L vectors, exposure paths, scenario sets, hierarchies."
+    command: XRUN XR-2026-10-26-01
+  - term: Data contract
+    synonyms: [contract, contracts]
+    domain: data-and-contracts
+    meaning: "The written agreement for one kind: its grain, key, every field with type and meaning, links, where it is stored and how often it comes."
+    cli: drishti.py contract show netting-set
+  - term: Business date
+    synonyms: [as of, as-of, date, cob, close of business]
+    domain: data-and-contracts
+    meaning: "The day the data describes. Every fundamental row is kept per business date; the top bar's date picks which one you read."
+  - term: Grain
+    synonyms: [row grain]
+    domain: data-and-contracts
+    meaning: "What one row means: one netting set per business date, one trade's path values at one grid date."
+    cli: drishti.py contract show netting-set
+  - term: Link
+    synonyms: [links, foreign key, relationship]
+    domain: data-and-contracts
+    meaning: "A field that holds another kind's id (a trade's COUNTERPARTY): click it to open that record. Links make the data a graph."
+    command: CPTY CP-ALDERSHOT
+  - term: Lake
+    synonyms: [delta lake, demo lake, lakes]
+    domain: data-and-contracts
+    meaning: "The Delta tables a pack's connector reads, partitioned by business date. drishti.py lake demo builds them from the committed test data."
+    cli: drishti.py lake demo
+  - term: Connector
+    synonyms: [source, plugin]
+    domain: data-and-contracts
+    meaning: "What reads a kind from where it lives (Delta, Postgres, a REST API, a feed). Several connectors may serve one kind."
+  - term: Provenance
+    synonyms: [data version, lineage, batch id]
+    domain: data-and-contracts
+    meaning: "What an answer was made from: the data version, the batch, the run, the rules. Every computed answer names its inputs."
+    cli: drishti.py var show BANK
+  - term: Entitlement
+    synonyms: [mask, masks, row rule, permissions, who sees what]
+    domain: data-and-contracts
+    meaning: "What a user may see: whole kinds, rows (a desk's trades) or fields (a masked counterparty). Computed answers are over the trades you may see."
+  - term: External data
+    synonyms: [public data, open data]
+    domain: data-and-contracts
+    meaning: "Data from outside the bank (World Bank, IMF, GLEIF, SEC EDGAR, Yahoo Finance ...), each with its licence and refresh script. IMF and Yahoo data are for internal use only."
+
+  # ---- economies -----------------------------------------------------------------------------------------------------------------
+  - term: Economy
+    synonyms: [econ, country economy]
+    domain: economies
+    meaning: "A country's output, growth, prices, jobs, debt and external balance, from World Bank, IMF and CIA data. A counterparty links to its economy."
+    command: ECON ECON-GBR
+  - term: GDP
+    name: gross domestic product
+    synonyms: [gross domestic product, output]
+    domain: economies
+    meaning: "The value of all goods and services an economy produces in a year, in current US dollars."
+    command: ECON ECON-GBR
+  - term: GDP per capita
+    synonyms: [income per head]
+    domain: economies
+    meaning: "GDP divided by the population: a rough measure of how rich residents are."
+    command: ECON ECON-GBR
+  - term: Real growth
+    synonyms: [growth, gdp growth, real gdp growth]
+    domain: economies
+    meaning: "The yearly change of GDP after removing inflation: growth of output, not of prices."
+    command: ECON ECON-GBR
+  - term: Inflation
+    synonyms: [cpi, consumer prices, consumer price inflation]
+    domain: economies
+    meaning: "The yearly change of consumer prices. Groups of countries use the median."
+    command: ECON ECON-GBR
+  - term: Unemployment
+    synonyms: [unemployment rate, labr, labour market]
+    domain: economies
+    meaning: "The share of the labour force without work but looking for it (ILO estimate)."
+    command: ECON ECON-GBR
+  - term: Debt to GDP
+    synonyms: [debt-to-gdp, government debt, fisc, fiscal position]
+    domain: economies
+    meaning: "General government gross debt as a share of a year's GDP (IMF): how heavy public debt is."
+    command: FISC FISC-GBR
+  - term: Current account
+    synonyms: [current account balance, external balance]
+    domain: economies
+    meaning: "Net exports plus net income and transfers from abroad, as a share of GDP. A large deficit must be financed from abroad."
+    command: ECON ECON-GBR
+  - term: Economic forecast
+    synonyms: [fcst, forecast, weo, world economic outlook, projection, vintage]
+    domain: economies
+    meaning: "The IMF World Economic Outlook's projections of growth, inflation and debt to 2031, by edition (the vintage). Internal use only."
+    command: FCST FCST-GBR-WEO
+  - term: Country group
+    synonyms: [ecg, region group, income group, world bank region]
+    domain: economies
+    meaning: "A World Bank region, an income group or the world, computed from its member economies when opened."
+    command: ECG ECG-WLD
+  - term: Macro indicator
+    synonyms: [macro, indicator]
+    domain: economies
+    meaning: "One headline statistic of one economy: its series, latest value, change and rank among economies."
+    command: ECON ECON-GBR
+  - term: Jurisdiction
+    synonyms: [jur, country, government]
+    domain: economies
+    meaning: "A country's government, office holders, elections and parties (CIA World Factbook). The bank's legal entities link to theirs."
+    command: JUR JUR-GBR

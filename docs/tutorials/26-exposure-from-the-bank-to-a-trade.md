@@ -56,7 +56,7 @@ The exposure paths are **synthetic** (one correlated factor per asset class and 
 ## Step 1 · Build the exposure data and open the bank
 
 **From the command line.** `lake demo` generates the exposure run of the demo (`--exposure demo`, the default: one run
-`XR-2026-09-30-01` of 200 paths on a 24-date grid for 73 netting sets of 22 counterparties, 9,000 trades). Build it with the reference
+`XR-2026-09-30-01` of 200 paths on a 24-date grid for 74 netting sets of 23 counterparties, 8,022 live trades). Build it with the reference
 tables beside it, on the data's own date (2026-09-30), so your numbers are the ones below:
 
 ```bash
@@ -70,23 +70,24 @@ and console (tutorial 1), then ask for the bank:
 ```text
 $ drishti.py exposure show BANK
 EXP BANK  ·  Bank  ·  bank  ·  2026-09-30
-  peak PFE 95%   2,810,548,173 USD at 2W (2026-10-14)   PFE 99% 3,206,146,568
-  EPE 932,040,446   EEPE 2,273,100,403   peak EE 2,277,693,394   CE 1,538,664,088   EAD (IMM, info) 3,182,340,564
+  peak PFE 95%   2,858,060,180 USD at 2W (2026-10-14)   PFE 99% 3,105,286,752
+  EPE 945,577,981   EEPE 2,229,170,152   peak EE 2,234,312,582   CE 1,532,007,701   EAD (IMM, info) 3,120,838,213
   run XR-2026-09-30-01, 200 paths, collateral lagged, horizon 1.0 years
 Tenor  Date        EE             ENE             EEE            PFE            PFE 99         EE uncoll
 -----  ----------  -------------  --------------  -------------  -------------  -------------  -------------
-1W     2026-10-07  2,038,201,704  -1,115,236,177  2,038,201,704  2,423,429,675  2,624,072,678  6,424,716,159
-2W     2026-10-14  2,277,693,394  -1,261,811,836  2,277,693,394  2,810,548,173  3,206,146,568  6,544,324,499
-1M     2026-10-30  1,168,281,326  -1,120,030,821  2,277,693,394  1,640,723,237  1,857,247,481  6,586,814,481
+1W     2026-10-07  1,966,171,598    -965,906,000  1,966,171,598  2,317,815,855  2,579,172,691  6,202,152,090
+2W     2026-10-14  2,234,312,582  -1,133,138,016  2,234,312,582  2,858,060,180  3,105,286,752  6,304,130,477
+1M     2026-10-30  1,220,520,495  -1,121,964,327  2,234,312,582  1,834,387,323  2,032,204,828  6,376,828,794
 ...
-5Y     2031-09-30    284,991,439    -242,003,577  2,277,693,394    385,001,643    422,909,190  3,404,847,296
-10Y    2036-09-30     98,754,110     -77,045,071  2,277,693,394    126,984,655    131,898,317    262,419,438
-  73 netting sets, 9000 trades · hot file (float32 netting-set matrices, summed in float64) · 1 ms (hit)
+5Y     2031-09-30    285,855,833    -223,718,415  2,234,312,582    389,782,505    426,362,686  3,412,206,681
+10Y    2036-09-30     88,977,137     -73,442,989  2,234,312,582    112,596,428    118,076,387    241,278,675
+  74 netting sets, 8022 trades · hot file (float32 netting-set matrices, summed in float64) · 7 ms (miss)
 ```
 
-(Thirteen primary dates are printed; a few rows are shown.) `drishti.py exposure status` shows how the date was loaded: 129,570 rows of
-9,000 trades, 73 netting sets, none rejected, a 2.9 MB matrix in a 5.6 MB hot file, loaded in about 1.5 s; and the three netting sets the
-run does not cover (`NS-NORTHPLAINS-NY`, `NS-SUMMIT-LDN`, `NS-SUMMIT-NY`).
+(Thirteen primary dates are printed; a few rows are shown.) `drishti.py exposure status` shows how the date was loaded: 112,381 rows of
+8,022 trades, 74 netting sets, none rejected, a 3.0 MB matrix in a 5.3 MB hot file, loaded in about 1.3 s; and the two netting sets the
+run does not cover (`NS-SUMMIT-LDN`, `NS-SUMMIT-NY`). The trades are the live ones: since 2.9.2 a netting set holds no cancelled or
+matured trade, so fewer trades fit than before and only CP-SUMMIT stays without paths under the 9,500-trade demo limit.
 
 **In the UI.** Type `EXP BANK` and press Enter (or open `/exposure`):
 
@@ -114,8 +115,8 @@ connectors:
           vectors: [MTM]
 ```
 
-**You should see** a peak PFE 95% of 2,810,548,173 at two weeks and an EPE of 932,040,446. The bank's EE uncollateralised (6.5 billion at
-2W) is almost three times its collateralised EE (2.3 billion): collateral removes most of the bank's exposure.
+**You should see** a peak PFE 95% of 2,858,060,180 at two weeks and an EPE of 945,577,981. The bank's EE uncollateralised (6.3 billion at
+2W) is almost three times its collateralised EE (2.2 billion): collateral removes most of the bank's exposure.
 
 **Further in the guide:** [section 1](../guides/EXPOSURE_GUIDE.md#1-the-question-exposure-answers) (the question),
 [section 2](../guides/EXPOSURE_GUIDE.md#2-the-measures-with-worked-numbers) (the measures with worked numbers),
@@ -133,40 +134,40 @@ bank there is also **Legal entities**.
 
 ```text
 $ drishti.py exposure tree
-2026-09-30  run XR-2026-09-30-01  q 0.95  netting sets with paths 73 of 76
+2026-09-30  run XR-2026-09-30-01  q 0.95  netting sets with paths 74 of 76
 Node                                Peak PFE       EPE          Limit used
 ----------------------------------  -------------  -----------  ----------
-Bank                                2,810,548,173  932,040,446
-  LE-FRA                              110,169,381   18,824,186
-  LE-LDN                              558,444,526  287,724,306
-  LE-NY                             2,099,522,960  446,296,174
-  LE-TKY                              413,651,335  189,819,841
-    Aldershot Pension Trust           395,309,044   69,278,939        4.5%
-      NS-ALDERSHOT-FRA                 29,390,280    2,510,953
-      NS-ALDERSHOT-LDN                 78,724,064   15,254,804
-      NS-ALDERSHOT-NY                 353,333,440   41,226,608
-      NS-ALDERSHOT-TKY                 56,918,292   11,703,715
+Bank                                2,858,060,180  945,577,981
+  LE-FRA                              126,325,566   20,316,140
+  LE-LDN                              558,766,819  275,306,484
+  LE-NY                             2,147,576,084  487,884,025
+  LE-TKY                              342,353,840  173,537,427
+    Aldershot Pension Trust           399,970,560   64,894,762        5.0%
+      NS-ALDERSHOT-FRA                 30,610,762    1,837,009
+      NS-ALDERSHOT-LDN                 85,063,192   14,738,051
+      NS-ALDERSHOT-NY                 355,255,456   37,365,431
+      NS-ALDERSHOT-TKY                 61,396,880   11,991,049
 ...
     Summit Clearing LLC                  no paths            —
       NS-SUMMIT-LDN                      no paths            —
       NS-SUMMIT-NY                       no paths            —
 $ drishti.py exposure parts LE:LE-LDN --by counterparty --top 4
-LE:LE-LDN  by counterparty  PFE 558,444,526 at 2026-11-30
-Part                          Contribution  % of total  Incremental
-----------------------------  ------------  ----------  -----------
-Tokai Mutual Trust Bank         69,160,770        12.4   40,925,866
-Aurora Sovereign Wealth Fund    50,179,359         9.0   31,198,324
-Pinnacle Credit Partners        48,347,295         8.7   31,198,324
-Rheintal Landesbank             41,123,026         7.4   16,564,342
+LE:LE-LDN  by counterparty  PFE 558,766,819 at 2026-11-30
+Part                       Contribution  % of total  Incremental
+-------------------------  ------------  ----------  -----------
+Bramble Asset Management     63,698,479        11.4   45,048,531
+Kestrel Global Macro Fund    58,241,106        10.4   23,247,331
+Meridian Reinsurance Ltd     49,829,212         8.9   13,073,419
+Solaris Energy Corp.         41,436,951         7.4   29,674,485
 ```
 
-**What it means.** London's peak PFE (558.4 million at 2M) is far below the sum of its counterparties' own peaks: their bad paths are
+**What it means.** London's peak PFE (558.8 million at 2M) is far below the sum of its counterparties' own peaks: their bad paths are
 not the same paths and their peaks fall on different dates. The contributions are the paths around London's 95% quantile at its peak
 date, scaled to add up to it. The limit column reads the pack's stored `credit-limit` rows as stored: they were sized on the retired
-stored profiles, so the use is low (4.5% for Aldershot).
+stored profiles, so the use is low (5.0% for Aldershot).
 
-**You should see** LE-LDN at 558,444,526 with 17 netting sets and 2,946 trades (`drishti.py exposure show LE:LE-LDN`), Tokai the
-largest contributor, and two counterparties without paths marked *no paths*.
+**You should see** LE-LDN at 558,766,819 with 17 netting sets and 2,403 trades (`drishti.py exposure show LE:LE-LDN`), Bramble the
+largest contributor, and one counterparty without paths (Summit Clearing) marked *no paths*.
 
 **Further in the guide:** [section 3](../guides/EXPOSURE_GUIDE.md#3-the-explorer-screen-by-screen) (the explorer, the board),
 [section 18](../guides/EXPOSURE_GUIDE.md#18-the-computation) (contributions), [section 13](../guides/EXPOSURE_GUIDE.md#13-troubleshooting) (*no paths*).
@@ -184,20 +185,20 @@ EPE, peak PFE alone and PFE contribution:
 ```text
 $ drishti.py exposure show CPTY:CP-ALDERSHOT
 EXP CPTY:CP-ALDERSHOT  ·  Aldershot Pension Trust  ·  counterparty  ·  2026-09-30
-  peak PFE 95%   395,309,044 USD at 2W (2026-10-14)   PFE 99% 463,462,640
-  EPE 69,278,939   EEPE 251,356,423   peak EE 251,660,238   CE 194,424,607   EAD (IMM, info) 351,898,992
-  limit 8,843,000,000 USD (LIM-ALDERSHOT, PFE 95 peak)   used 4.5%
+  peak PFE 95%   399,970,560 USD at 2W (2026-10-14)   PFE 99% 423,220,711
+  EPE 64,894,762   EEPE 261,628,419   peak EE 262,023,876   CE 217,565,006   EAD (IMM, info) 366,279,786
+  limit 7,980,000,000 USD (LIM-ALDERSHOT, PFE 95 peak)   used 5.0%
   run XR-2026-09-30-01, 200 paths, collateral lagged, horizon 1.0 years
 ...
-  4 netting sets, 564 trades · hot file (float32 netting-set matrices, summed in float64) · 0 ms (hit)
+  4 netting sets, 469 trades · hot file (float32 netting-set matrices, summed in float64) · 0 ms (hit)
 $ drishti.py exposure parts CPTY:CP-ALDERSHOT
-CPTY:CP-ALDERSHOT  by netting-set  PFE 395,309,044 at 2026-10-14
+CPTY:CP-ALDERSHOT  by netting-set  PFE 399,970,560 at 2026-10-14
 Part                             Contribution  % of total  Incremental
 -------------------------------  ------------  ----------  -----------
-NS-ALDERSHOT-NY · CP-ALDERSHOT    346,434,588        87.6  292,460,760
-NS-ALDERSHOT-FRA · CP-ALDERSHOT    20,319,972         5.1   20,663,206
-NS-ALDERSHOT-TKY · CP-ALDERSHOT    16,102,106         4.1   15,798,320
-NS-ALDERSHOT-LDN · CP-ALDERSHOT    12,452,378         3.2    7,291,042
+NS-ALDERSHOT-NY · CP-ALDERSHOT    348,369,072        87.1  281,218,491
+NS-ALDERSHOT-TKY · CP-ALDERSHOT    22,470,544         5.6   25,812,612
+NS-ALDERSHOT-FRA · CP-ALDERSHOT    20,344,010         5.1   28,916,405
+NS-ALDERSHOT-LDN · CP-ALDERSHOT     8,786,935         2.2   13,004,376
 ```
 
 A counterparty's netting sets never net against each other: its paths are the **sum of each set's exposure**, path by path. Scopes
@@ -206,20 +207,20 @@ combine with `+`, `-` and `&`:
 ```text
 $ drishti.py exposure show 'CPTY:CP-ALDERSHOT - NSET:NS-ALDERSHOT-NY'
 EXP CPTY:CP-ALDERSHOT - NSET:NS-ALDERSHOT-NY  ·  CPTY:CP-ALDERSHOT - NSET:NS-ALDERSHOT-NY  ·  adhoc  ·  2026-09-30
-  peak PFE 95%   102,848,284 USD at 2M (2026-11-30)   PFE 99% 156,829,328
+  peak PFE 95%   118,752,069 USD at 2M (2026-11-30)   PFE 99% 131,150,464
   ...
-  3 netting sets, 259 trades · hot file (float32 netting-set matrices, summed in float64) · 1 ms (miss)
+  3 netting sets, 215 trades · hot file (float32 netting-set matrices, summed in float64) · 1 ms (miss)
 $ drishti.py exposure show 'LE:LE-LDN & CPTY:CP-ALDERSHOT'
 EXP LE:LE-LDN & CPTY:CP-ALDERSHOT  ·  LE:LE-LDN & CPTY:CP-ALDERSHOT  ·  adhoc  ·  2026-09-30
-  peak PFE 95%   78,724,064 USD at 2M (2026-11-30)   PFE 99% 122,426,136
+  peak PFE 95%   85,063,192 USD at 2M (2026-11-30)   PFE 99% 125,420,944
   ...
-  1 netting sets, 194 trades · hot file (float32 netting-set matrices, summed in float64) · 2 ms (miss)
+  1 netting sets, 159 trades · hot file (float32 netting-set matrices, summed in float64) · 1 ms (miss)
 ```
 
 The group `GROUP:GRP-ALDERSHOT` has one counterparty, so its figures are Aldershot's.
 
-**You should see** a peak PFE of 395,309,044 at 2W, EEPE 251,356,423, EAD (α 1.4 × EEPE, informational) 351,898,992, and New York
-making 87.6% of the peak. Without New York the peak falls to 102.8 million and moves to 2M; London and Aldershot intersect in one set,
+**You should see** a peak PFE of 399,970,560 at 2W, EEPE 261,628,419, EAD (α 1.4 × EEPE, informational) 366,279,786, and New York
+making 87.1% of the peak. Without New York the peak falls to 118.8 million and moves to 2M; London and Aldershot intersect in one set,
 NS-ALDERSHOT-LDN.
 
 **Further in the guide:** [section 4](../guides/EXPOSURE_GUIDE.md#4-scopes) (scopes and the grammar),
@@ -234,7 +235,7 @@ held today and its effect at the peak date:
 
 ![NS-ALDERSHOT-LDN: the profile with the path fan and the Collateral tab](img/t26/04-collateral.jpg)
 
-The **Trades** tab lists the set's 194 trades, paged, each with its EE contribution, share and peak PFE alone; click a trade to open it:
+The **Trades** tab lists the set's 159 trades, paged, each with its EE contribution, share and peak PFE alone; click a trade to open it:
 
 ![NS-ALDERSHOT-LDN's trades with their EE contribution and peak PFE alone](img/t26/05-trades.jpg)
 
@@ -243,46 +244,46 @@ The **Trades** tab lists the set's 194 trades, paged, each with its EE contribut
 ```text
 $ drishti.py exposure show NSET:NS-ALDERSHOT-LDN
 EXP NSET:NS-ALDERSHOT-LDN  ·  NS-ALDERSHOT-LDN · Aldershot Pension Trust  ·  netting-set  ·  2026-09-30
-  peak PFE 95%   78,724,064 USD at 2M (2026-11-30)   PFE 99% 122,426,136
-  EPE 15,254,804   EEPE 18,223,800   peak EE 18,989,108   CE 0   EAD (IMM, info) 25,513,319
+  peak PFE 95%   85,063,192 USD at 2M (2026-11-30)   PFE 99% 125,420,944
+  EPE 14,738,051   EEPE 18,764,913   peak EE 19,520,460   CE 0   EAD (IMM, info) 26,270,878
   run XR-2026-09-30-01, 200 paths, collateral lagged, horizon 1.0 years
 Tenor  Date        EE          ENE          EEE         PFE         PFE 99       EE uncoll
 -----  ----------  ----------  -----------  ----------  ----------  -----------  ----------
-1W     2026-10-07   1,422,914  -46,422,204   1,422,914   7,813,274   33,596,964           0
-2W     2026-10-14   4,223,823  -47,554,528   4,223,823  28,407,740   62,576,744           0
-1M     2026-10-30  15,675,532  -20,674,115  15,675,532  62,468,440   84,182,712     449,039
-2M     2026-11-30  18,989,108  -23,186,271  18,989,108  78,724,064  122,426,136   3,952,491
+1W     2026-10-07   2,197,414  -37,553,650   2,197,414  15,797,605   35,497,520           0
+2W     2026-10-14   6,077,650  -40,979,113   6,077,650  36,143,744   69,178,704           0
+1M     2026-10-30  15,744,605  -22,167,433  15,744,605  63,596,712   91,457,504     343,409
+2M     2026-11-30  19,520,460  -23,735,800  19,520,460  85,063,192  125,420,944   3,535,713
 ...
-  1 netting sets, 194 trades · hot file (float32 netting-set matrices, summed in float64) · 0 ms (hit)
+  1 netting sets, 159 trades · hot file (float32 netting-set matrices, summed in float64) · 0 ms (hit)
 $ drishti.py exposure show NSET:NS-ALDERSHOT-LDN --collateral none
 EXP NSET:NS-ALDERSHOT-LDN  ·  NS-ALDERSHOT-LDN · Aldershot Pension Trust  ·  netting-set  ·  2026-09-30
-  peak PFE 95%   371,719,168 USD at 3Y (2029-09-28)   PFE 99% 580,062,912
-  EPE 34,962,577   EEPE 34,962,577   peak EE 85,601,986   CE 0   EAD (IMM, info) 48,947,608
+  peak PFE 95%   478,546,912 USD at 3Y (2029-09-28)   PFE 99% 648,609,088
+  EPE 32,022,633   EEPE 32,022,633   peak EE 101,189,118   CE 0   EAD (IMM, info) 44,831,686
   run XR-2026-09-30-01, 200 paths, collateral none, horizon 1.0 years
 ...
 $ drishti.py exposure distribution NSET:NS-ALDERSHOT-LDN --at 1Y
-NSET:NS-ALDERSHOT-LDN at 1Y (2027-09-30): mean 18,726,064, 44.5% of 200 paths without exposure
-  quantiles  50% 5,828,450   90% 56,594,296   95% 71,093,920   97.5% 81,409,872   99% 96,513,528
+NSET:NS-ALDERSHOT-LDN at 1Y (2027-09-30): mean 16,654,426, 46.0% of 200 paths without exposure
+  quantiles  50% 2,448,596   90% 50,876,264   95% 58,929,324   97.5% 73,162,384   99% 90,130,992
 ...
 $ drishti.py exposure parts NSET:NS-ALDERSHOT-LDN --by trade --top 3
-NSET:NS-ALDERSHOT-LDN  by trade  PFE 78,724,064 at 2026-11-30
-Part                                       Contribution  % of total  Incremental
------------------------------------------  ------------  ----------  -----------
-MX-30003316 · Equity Asian option          -125,310,135      -159.2  -13,628,673
-MX-30001537 · Equity Asian option            93,661,718       119.0  -10,331,092
-MX-30002052 · Convertible bond               85,294,748       108.3  -37,442,241
+NSET:NS-ALDERSHOT-LDN  by trade  PFE 85,063,192 at 2026-11-30
+Part                                    Contribution  % of total  Incremental
+--------------------------------------  ------------  ----------  -----------
+MX-30004272 · Convertible bond           289,693,262       340.6  -21,010,330
+MX-30001587 · Equity total return swap   151,896,279       178.6  -34,428,116
+MX-30002479 · Portfolio (basket) swap   -149,124,302      -175.3   -9,886,077
 ```
 
 `drishti.py exposure profile NSET:NS-ALDERSHOT-LDN --csv` writes the profile as CSV (the UI's *Download the profile (CSV)*).
 
-**What it means.** The set's net MtM today is −122.4 million (the bank owes Aldershot) and the bank has **posted** 98.8 million of
+**What it means.** The set's net MtM today is −139.1 million (the bank owes Aldershot) and the bank has **posted** 112.2 million of
 collateral. Early on, the uncollateralised EE is zero (the set is far out of the money) but the collateralised EE is not: on the paths
 where the MtM recovers within the margin period, the posted collateral is owed back. That is why the Collateral tab's *Effect of collateral* at 2M
-is **+380%** (EE 19.0 million with collateral against 4.0 million without; the bank's *Collateral effect* tile, by contrast, reads **−65%**:
-collateral cuts the bank's EE at 2W by 65%). Later, collateral works for the bank: without it the peak PFE is 371.7 million at 3Y, with it 78.7 million at 2M. Trades'
+is **+452%** (EE 19.5 million with collateral against 3.5 million without; the bank's *Collateral effect* tile, by contrast, reads **−65%**:
+collateral cuts the bank's EE at 2W by 65%). Later, collateral works for the bank: without it the peak PFE is 478.5 million at 3Y, with it 85.1 million at 2M. Trades'
 contributions inside a set can be large and of either sign; they add up to the set's figure.
 
-**You should see** EE 18,989,108 with collateral and 3,952,491 without at 2M, the peak PFE 78,724,064 at 2M, and at 1Y 44.5% of the paths
+**You should see** EE 19,520,460 with collateral and 3,535,713 without at 2M, the peak PFE 85,063,192 at 2M, and at 1Y 46.0% of the paths
 without exposure.
 
 **Further in the guide:** [section 5](../guides/EXPOSURE_GUIDE.md#5-collateral-and-netting) (collateral and netting),
@@ -307,20 +308,21 @@ EXP TRD:MX-30001587  ·  MX-30001587 · Equity total return swap  ·  trade  · 
 ...
   1 netting sets, 1 trades · hot file (float32 netting-set matrices, summed in float64); trade paths from the lake · 4 ms (hit)
 $ drishti.py exposure parts NSET:NS-ALDERSHOT-LDN --by trade --figure EE --at 2M --top 3
-NSET:NS-ALDERSHOT-LDN  by trade  EE 18,989,108 at 2026-11-30
-Part                                    Contribution  % of total  Incremental
---------------------------------------  ------------  ----------  -----------
-MX-30001587 · Equity total return swap   -39,014,839      -205.5            —
-MX-30002052 · Convertible bond            37,500,200       197.5            —
-MX-30001544 · Equity digital option       24,895,426       131.1            —
+NSET:NS-ALDERSHOT-LDN  by trade  EE 19,520,460 at 2026-11-30
+Part                                   Contribution  % of total  Incremental
+-------------------------------------  ------------  ----------  -----------
+MX-30004272 · Convertible bond           31,748,304       162.6            —
+CLY-4002222 · Quanto option             -14,211,431       -72.8            —
+MX-30002479 · Portfolio (basket) swap   -12,990,168       -66.5            —
 ```
 
 A trade's figures alone are flagged `standalone`: the trade's paths are read from the lake (the hot file holds netting-set matrices),
 which is why the first ask takes longer.
 
-**You should see** the swap's peak PFE alone 126,221,133 at 2Y, and its EE contribution in the set **−39,014,839** at 2M (−205.5% of the
-set's EE): alone it would carry 126 million of potential exposure, inside its netting set it reduces the set's exposure. The netting
-benefit tile shows 126.2 million.
+**You should see** the swap's peak PFE alone 126,221,133 at 2Y, and its EE contribution in the set **12,901,854** at 2M (66.1% of the
+set's EE, the 7th largest; `--top 10` lists it): alone it would carry 126 million of potential exposure, inside its netting set the
+other trades offset most of it. The largest contributions at 2M are a convertible bond's +31.7 million and two offsets, a quanto option
+(−14.2 million) and a basket swap (−13.0 million).
 
 **Further in the guide:** [section 5](../guides/EXPOSURE_GUIDE.md#5-collateral-and-netting) (netting, the benefit),
 [section 18](../guides/EXPOSURE_GUIDE.md#18-the-computation) (Euler contributions).
@@ -339,9 +341,9 @@ $ drishti.py exposure capture CPTY:CP-ALDERSHOT --note 'before the unwind'
 {
   "id": "XCAP-20260930-1",
   "capturedAt": "2026-10-26T13:06:48.857460484Z",
-  "epe": 69278939,
-  "peakPfe": 395309044,
-  "memberCount": 564
+  "epe": 64894762,
+  "peakPfe": 399970560,
+  "memberCount": 469
 }
 $ drishti.py exposure captures
 [
@@ -353,22 +355,22 @@ $ drishti.py exposure captures
     "owner": "rita",
     "note": "before the unwind",
     "confidence": 0.95,
-    "epe": 69278939,
-    "peakPfe": 395309044,
+    "epe": 64894762,
+    "peakPfe": 399970560,
     ...
   }
 ]
 $ drishti.py exposure compare XCAP-20260930-1 now        (abridged)
 {
-  "a": {"id": "XCAP-20260930-1", "peakPfe": 395309044, "epe": 69278939, "memberCount": 564, "dataVersion": "exposure-store=16888440e052bf4f", ...},
-  "b": {"id": "now", "peakPfe": 395309044, "epe": 69278939, ...},
+  "a": {"id": "XCAP-20260930-1", "peakPfe": 399970560, "epe": 64894762, "memberCount": 469, "dataVersion": "exposure-store=16888440e052bf4f", ...},
+  "b": {"id": "now", "peakPfe": 399970560, "epe": 64894762, ...},
   "change": {"ce": 0.0, "epe": 0.0, "eepe": 0.0, "peakEe": 0.0, "peakPfe": 0.0, "eadImm": 0.0},
   "membersAdded": [], "membersRemoved": [],
-  "pfeProfile": [{"tenor": "1W", "a": 338010344, "b": 338010344, "change": 0.0}, ...]
+  "pfeProfile": [{"tenor": "1W", "a": 331903640, "b": 331903640, "change": 0.0}, ...]
 }
 ```
 
-A capture keeps the scope's members (564 trades), the figures and the data version; compare lists trades added and removed. Captures are
+A capture keeps the scope's members (469 trades), the figures and the data version; compare lists trades added and removed. Captures are
 yours: another user's capture answers `404 DRS-1001 no exposure capture … you may read`.
 
 **You should see** no change against now (the run has not changed); after tomorrow's run, or another lake, the change column fills in.
@@ -400,9 +402,9 @@ $ drishti.py exposure whatif CPTY:CP-ALDERSHOT --like MX-30001587 --factor -1 --
 what-if on CPTY:CP-ALDERSHOT  method paths  exact  run XR-2026-09-30-01
 Figure    Before       After        Incremental
 --------  -----------  -----------  -----------
-Peak PFE  395,309,044  394,339,356     -969,688
-EPE        69,278,939   69,973,948      695,009
-Peak EE   251,660,238  250,032,684   -1,627,554
+Peak PFE  399,970,560  396,308,156   -3,662,404
+EPE        64,894,762   64,275,804     -618,958
+Peak EE   262,023,876  259,078,022   -2,945,854
   exact: each candidate's paths on the run XR-2026-09-30-01 added to its netting set path by path, collateral and exposure computed again by the Python exposure engine (exposure-whatif)
 ```
 
@@ -414,9 +416,9 @@ $ drishti.py exposure whatif CPTY:CP-ALDERSHOT --like MX-30001587 --factor -1 --
 what-if on CPTY:CP-ALDERSHOT  method addon  proxy  run XR-2026-09-30-01
 Figure    Before       After        Incremental
 --------  -----------  -----------  -----------
-Peak PFE  395,309,044  954,803,774  559,494,730
-EPE        69,278,939  141,723,078   72,444,139
-Peak EE   251,660,238  270,874,278            —
+Peak PFE  399,970,560  957,232,427  557,261,867
+EPE        64,894,762  137,338,901   72,444,139
+Peak EE   262,023,876  281,237,915            —
   a conservative proxy: each candidate a netting set of its own, uncollateralised, with SA-CCR's supervisory factor; the exact method (paths) runs in the Python exposure engine
 ```
 
@@ -433,9 +435,9 @@ $ drishti.py exposure whatif CPTY:CP-ALDERSHOT --candidates unwind.json --method
 what-if on CPTY:CP-ALDERSHOT  method addon  proxy  run XR-2026-09-30-01
 Figure    Before       After        Incremental
 --------  -----------  -----------  -----------
-Peak PFE  395,309,044  954,803,774  559,494,730
-EPE        69,278,939  141,723,078   72,444,139
-Peak EE   251,660,238  270,874,278            —
+Peak PFE  399,970,560  957,232,427  557,261,867
+EPE        64,894,762  137,338,901   72,444,139
+Peak EE   262,023,876  281,237,915            —
   a conservative proxy: each candidate a netting set of its own, uncollateralised, with SA-CCR's supervisory factor; the exact method (paths) runs in the Python exposure engine
 ```
 
@@ -453,12 +455,12 @@ compute:
       memory: 2GB
 ```
 
-**What it means.** Unwinding the swap barely moves Aldershot's peak (−969,688) and raises its EPE slightly: inside its netting set it
-was an offset, so taking it out removes protection as well as risk. The proxy cannot see that: it puts the candidate in a netting set of
-its own, uncollateralised, sized by SA-CCR's supervisory factor on its notional, so an unwind *adds* 559.5 million. Use `addon` as a
+**What it means.** Unwinding the swap barely moves Aldershot's peak (−3,662,404) and its EPE (−618,958): inside its netting set the
+other trades already offset most of its exposure, so taking it out removes little. The proxy cannot see that: it puts the candidate in a
+netting set of its own, uncollateralised, sized by SA-CCR's supervisory factor on its notional, so an unwind *adds* 557.3 million. Use `addon` as a
 conservative first answer when the compute workers are off; `paths` is the answer.
 
-**You should see** `exact` with −969,688 by paths, `proxy` with +559,494,730 by the addon. With the compute workers off, `paths` answers
+**You should see** `exact` with −3,662,404 by paths, `proxy` with +557,261,867 by the addon. With the compute workers off, `paths` answers
 `503 DRS-5446` (the Python exposure engine is not running).
 
 **Further in the guide:** [section 7](../guides/EXPOSURE_GUIDE.md#7-pre-deal-what-if) (pre-deal, the two methods),
@@ -485,10 +487,10 @@ $ drishti.py exposure official
   "collateralModel": "lagged",
   "trades": "exposure/official/2026-09-30-trades-v1.json",
   "scopes": {
-    "NSET:NS-ALDERSHOT-FRA": {"ce": 1679379, "epe": 2510953, "eepe": 19136592, "peakEe": 19830592, "peakPfe95": 29390280, ...},
+    "NSET:NS-ALDERSHOT-FRA": {"ce": 0, "epe": 1837009, "eepe": 18431387, "peakEe": 19151377, "peakPfe95": 30610762, ...},
     ...
-    "CPTY:CP-ALDERSHOT": {"ce": 194424607, "epe": 69278939, "eepe": 251356423, "peakPfe95": 395309044, "peakPfe99": 463462640,
-                          "peakPfeDate": "2026-10-14", "eadImm": 351898992, "pfe95At1Y": 140057056, "pfe95At5Y": 50067016, ...},
+    "CPTY:CP-ALDERSHOT": {"ce": 217565006, "epe": 64894762, "eepe": 261628419, "peakPfe95": 399970560, "peakPfe99": 423220711,
+                          "peakPfeDate": "2026-10-14", "eadImm": 366279786, "pfe95At1Y": 130105296, "pfe95At5Y": 52495669, ...},
     ...
   }
 }
@@ -507,7 +509,7 @@ $ drishti.py exposure retention        (abridged)
 }
 ```
 
-The record holds 121 scopes (73 netting sets, 22 counterparties, 21 groups, the four legal entities and the bank's management node),
+The record holds 124 scopes (74 netting sets, 23 counterparties, 22 groups, the four legal entities and the bank's management node),
 and is also appended to the Delta tables `risk-results/exposure-official` and `risk-results/exposure-official-cpty` of the lake. A
 second capture of the same run is `unchanged`; a new run of the date makes `resultVersion` 2. `--capture` is for administrators.
 
@@ -524,7 +526,7 @@ drishti:
         on-start: true
 ```
 
-**You should see** `resultVersion` 1 for 2026-09-30, CP-ALDERSHOT's official peak PFE 395,309,044 equal to step 3's, and the two
+**You should see** `resultVersion` 1 for 2026-09-30, CP-ALDERSHOT's official peak PFE 399,970,560 equal to step 3's, and the two
 published tables in the lake.
 
 **Further in the guide:** [section 20](../guides/EXPOSURE_GUIDE.md#20-official-end-of-day-results) (the official results),

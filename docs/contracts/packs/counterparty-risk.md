@@ -736,8 +736,8 @@ An upstream exposure simulation of a business date: its paths, its grid of futur
 | `PRECISION` | text | required |  | float32 or float64: how the path values are stored. | `float64` |  |
 | `CREDIT_PATHS` | boolean | required |  | — | `False` |  |
 | `NETTING_SETS` | integer | required |  | Netting set: the netting-set it refers to | `8` | `netting-set` |
-| `TRADES` | integer | required |  | — | `627` |  |
-| `ROWS` | integer | required |  | — | `9031` |  |
+| `TRADES` | integer | required |  | — | `523` |  |
+| `ROWS` | integer | required |  | — | `7540` |  |
 | `BATCH_ID` | id | required |  | — | `XB-2026-09-30-01` |  |
 | `COMPUTED_AT` | timestamp | required |  | — | `2026-09-30T23:40:00Z` |  |
 | `STATUS` | text | required |  | — | `complete` |  |

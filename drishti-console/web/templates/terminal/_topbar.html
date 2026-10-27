@@ -41,6 +41,7 @@
       ('/build/reviews', 'patch-check', 'Reviews', 'Proposed Sutras waiting for approval', '/build/reviews'),
       ('/review/changes', 'pencil-square', 'Changes', 'Edits submitted from forms waiting for approval, and your own', '/review/changes')]),
     ('Learn', [
+      ('/what', 'lightbulb', 'Knowledge', 'What the words of your data mean and how it connects · also WHAT <GO>', '/help/knowledge'),
       ('/help/tutorials', 'mortarboard', 'Tutorials', TUTORIALS_WORD ~ ' hands-on tutorials, a picture of every step', None),
       ('/help/schema-to-pack', 'diagram-3', 'Schema to pack', 'Every rule that turns a JSON Schema into a pack, with examples', None),
       ('/help/screen-designer', 'bounding-box', 'Screen designer guide', 'From JSON files to a screen: the canvas, step by step', None),
@@ -81,6 +82,7 @@
   ('Help', 'question-circle', [
     ('Learn', [
       ('/help', 'question-circle', 'Help centre', 'Guides, concepts and reference (F1)', '/help'),
+      ('/what', 'lightbulb', 'Knowledge', 'Market risk, counterparty risk and more, in plain words · WHAT <term>', None),
       ('/help/install-and-run', 'flag', 'Install and run', 'From nothing to your first view', None),
       ('/about', 'info-circle', 'About ' ~ PRODUCT, 'Version, licence and credits', '/about')])])] %}
 {% macro _on(href, match) -%}{{ 'yes' if (path == href) or (match and path.startswith(match)) else '' }}{%- endmacro %}

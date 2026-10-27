@@ -61,7 +61,8 @@ LOOKALIKES = {
 ROLE_OF = {"CallNot": ("VAULTGUARD", "HARBOURLINE-LDN"), "Cash": ("HOUSE",), "ComFut": ("METROEX",), "NGX-COMM-PHYS": ("PRAIRIEGAS",),
            "COMM-WARRANTS-INV": ("HOUSE", "VAULTGUARD"), "ComSwap": ("NORTHPLAINS",)}
 ROLE_SHARE = 0.6
-DEAD = {"MATURED", "CANCELLED"}                         # trade statuses no netting set holds (they neither net nor expose)
+LIVE = ("NEW", "VALIDATED", "AMENDED")                  # the trade statuses a netting set holds (the market-risk pack's live-statuses,
+                                                        # as VaR): a MATURED or CANCELLED trade neither nets nor exposes
 SCALE = {"notional", "mtm", "pnl1d", "pv", "amount", "dv01", "cs01", "ie01", "delta", "gamma", "vega", "fxDelta", "jtd", "theta", "pnl",
          "quantity", "faceAmount", "premium", "principal", "interest", "npv", "marketValue"}
 SLIM = ("tradeId", "sourceSystem", "productType", "productName", "assetClass", "family", "currency", "book", "notional", "maturityDate", "mtm",
@@ -73,6 +74,16 @@ def _scale(v, f: float):
         return {k: (round(x * f, 2) if k in SCALE and isinstance(x, (int, float)) and not isinstance(x, bool) else _scale(x, f)) for k, x in v.items()}
     if isinstance(v, list):
         return [_scale(x, f) for x in v]
+    return v
+
+
+def _rescale(v, f: float):
+    """_scale keeping each amount's type: a whole number stays whole (a trade's MTM and P&L), a decimal keeps two places."""
+    if isinstance(v, dict):
+        return {k: ((round(x * f) if isinstance(x, int) else round(x * f, 2)) if k in SCALE and isinstance(x, (int, float))
+                    and not isinstance(x, bool) else _rescale(x, f)) for k, x in v.items()}
+    if isinstance(v, list):
+        return [_rescale(x, f) for x in v]
     return v
 
 
@@ -92,9 +103,13 @@ class Universe:
         self.rich: dict[str, dict] = {}            # slim internal trades (data_results reads these), every system
         self.docs: dict[str, dict[str, dict]] = {}
         self.lookalike_uen: dict[str, str] = {}
+        self.timeline: dict[str, list[tuple[int, dict]]] = {}   # trade id -> its versions over the days (history.timelines)
 
     # ---- the book ---------------------------------------------------------------------------------------------------------------------
-    def build(self) -> "Universe":
+    def build(self, days=None) -> "Universe":
+        """``days`` (history.Days): the business days the trades are amended over (history.trade_states); the documents then follow each
+        trade's version on the last day (its status and terms), so a cancelled trade is in no netting set and a valuation values the
+        latest version. Without it, the trades as booked."""
         import data_trades
         samples = data_trades.build()                # the pack's 750 rich sample trades, before the look-alikes join the universe
         self._join_lookalikes()
@@ -107,8 +122,32 @@ class Universe:
                 i += 1
             self.trades[system] = book[: self.per_system]
         self.trades["ENDUR"] = self._endur()
+        if days is not None:
+            import history as H
+            for book in self.trades.values():
+                self.timeline.update(H.timelines(book, days))
         self._risk()
         return self
+
+    def latest(self) -> dict[str, dict]:
+        """Every trade on the last day: its latest version (the trades as booked without the amendment days)."""
+        every = {str(t["TRADE_ID"]): t for book in self.trades.values() for t in book}
+        return {tid: (self.timeline[tid][-1][1] if tid in self.timeline else t) for tid, t in every.items()}
+
+    def _latest_rich(self, latest: dict[str, dict]) -> dict[str, dict]:
+        """The slim trades the risk results are computed from, at each trade's latest version: its status, and its amounts scaled
+        by the change of its first leg's notional since booking."""
+        import history as H
+        booked = {str(t["TRADE_ID"]): t for book in self.trades.values() for t in book}
+        out = {}
+        for tid, r in self.rich.items():
+            t, b = latest.get(tid), booked.get(tid)
+            if t is None or t is b:
+                out[tid] = r
+                continue
+            now, then = H.leg_notional(t), H.leg_notional(b)
+            out[tid] = {**(_rescale(r, now / then) if now and then and now != then else r), "status": t.get("TRADE_STATUS")}
+        return out
 
     def _join_lookalikes(self) -> None:
         start = len(N.COUNTERPARTIES)
@@ -190,9 +229,12 @@ class Universe:
         import walks
         import make_data as MD
         docs = {k: dict(v) for k, v in data_market.build().items()}
-        # a netting set nets the trades that are still alive: a MATURED or CANCELLED trade is neither a member nor in its MTM, EE or CVA
-        status = {str(t["TRADE_ID"]): str(t.get("TRADE_STATUS") or "").upper() for book in self.trades.values() for t in book}
-        live = {tid: r for tid, r in self.rich.items() if status.get(tid) not in DEAD}
+        # a netting set nets the trades that are still alive on the last day (their latest version): a MATURED or CANCELLED trade is
+        # neither a member nor in its MTM, EE or CVA
+        latest = self.latest()
+        rich = self._latest_rich(latest)
+        status = {tid: str(t.get("TRADE_STATUS") or "").upper() for tid, t in latest.items()}
+        live = {tid: r for tid, r in rich.items() if not status.get(tid) or status[tid] in LIVE}
         for kind, ds in data_results.build(live).items():
             docs.setdefault(kind, {}).update(ds)
         for ds in docs.values():
@@ -210,9 +252,8 @@ class Universe:
             sets = [docs["netting-set"][s["ID"]] for s in d.get("NETTING_SETS") or [] if s["ID"] in docs["netting-set"]]
             biggest = max(sets, key=lambda s: s["TRADE_COUNT"], default=None)
             d["LEGAL_ENTITY"] = biggest["LEGAL_ENTITY"] if biggest else "LE-NY"
-        every = {str(t["TRADE_ID"]): t for book in self.trades.values() for t in book}
-        rich_like = {tid: {**r, "risk": r.get("risk") or {}} for tid, r in self.rich.items()}
-        docs["trade-valuation"] = MD.valuations(rich_like, every)
+        rich_like = {tid: {**r, "risk": r.get("risk") or {}} for tid, r in rich.items()}
+        docs["trade-valuation"] = MD.valuations(rich_like, latest)        # each trade's latest version: its status and terms
         for ds in docs.values():
             for d in ds.values():
                 d.pop("_meta", None)

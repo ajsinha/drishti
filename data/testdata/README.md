@@ -61,7 +61,8 @@ On Windows, offline, with your own ENDUR files: [How to QA in Windows Environmen
    **today's business date** (the server's current date, so every page opens on data; `--as-of data` keeps the test data's own
    2026-07-08 to 2026-09-30, `--as-of 2026-10-30` any other end); the documents' own dates of the day (`AS_OF`, `VALUATION_DATE`,
    `RUN_DATE`, `SOURCE_UPDATE_TIME`) move with them, and so does each point of a document's embedded market series (`HISTORY`, `OHLC`,
-   `FIXINGS`, `PNL_SERIES`: its `DATE`, by the same number of business days), so a price history has no missing days between the series
+   `FIXINGS`, `PNL_SERIES`: its `DATE`, by the same number of business days), and so do the dates a market document holds a fixed
+   number of business days from its date (an FX spot's value date `SPOT_DATE`, T+2; an IR curve's pillar `POINTS[].MATURITY`), so a price history has no missing days between the series
    and the stored days. A market document's `CHANGE_1D` is the day's move of its own price (`PRICE`, `LEVEL`, `MID`), and the fields quoted next to the price move with it ([below](#the-datasets)). Measured for sixty days on a fast machine: **943 s (about 15 minutes; up to half an hour on a laptop)**,
    82 tables, about 2.7 GB on disk (14 tables are static reference data built from the world-economy and
    news-and-markets packs' samples, 2 the captured quotes and headlines, 8 the us-equities and gleif public data; since 2.9.2 the
@@ -185,11 +186,14 @@ systems: ENDUR plain numbers (1000001 …), CALYPSO `CLY-…`, MUREX `MX-…`.
   each later day about 6% of each book is amended (a fixed rate or spread, a leg's notional, the status, an added fee or settlement)
   with `TRADE_VERSION`, `TRADE_ACTION` (`AMEND`), `TRANSACTION_ID` and `SOURCE_UPDATE_TIME` moved on.
 
-**Everything else** reconciles on the last day: a netting set's `NET_MTM` is the sum of its trades' valuations, exposure profiles follow
-their maturities, CVA uses that exposure and the counterparty's credit curve, limits use the PFE, books and desks add up their trades,
-a counterparty lists its netting sets. Earlier days move the market-sensitive numbers (MTM, DV01, rates, prices, exposure, CVA …) back
-by a deterministic walk and carry their own date in `AS_OF`, `VALUATION_DATE` and `RUN_DATE`; a valuation exists from its trade's
-booking day; a netting set's `TRADE_IDS` lists the trades booked by that day.
+**Everything else** reconciles on the last day, with each trade's **latest version** (its status and terms after the amendments):
+a netting set holds only live trades (status `NEW`, `VALIDATED` or `AMENDED`, the market-risk pack's `live-statuses`, as VaR: a
+cancelled or matured trade neither nets nor exposes) and its `NET_MTM` is the sum of their valuations; a valuation (`TVAL-<id>`) values
+the trade's version of its day (`TRADE_STATUS`, and `NOTIONAL`, `MTM`, `PNL_1D`, `DV01` scaled with the first leg's notional); CVA,
+limits, books and desks add up the live trades, a counterparty lists its netting sets. Earlier days move the market-sensitive numbers
+(MTM, DV01, rates, prices, CVA …) back by a deterministic walk and carry their own date in `AS_OF`, `VALUATION_DATE` and `RUN_DATE`; a
+valuation exists from its trade's booking day; a netting set's `TRADE_IDS` and `TRADES` rows list its trades booked by that day.
+`tools/testdata/test_testdata.py` checks both rules (2.9.2).
 
 **Market data is one picture each day** (`tools/testdata/marketdays.py`, QA2-201). An equity's `PRICE` and a commodity's `FRONT` are
 the close of the document's own `OHLC` bar of that day, an index `LEVEL`, an FX `MID` and a bond `PRICE` the day's point of its own
@@ -232,12 +236,12 @@ the engine computes them. `python3 tools/packgen/var/make_var_data.py --check` s
 Two counterparty-risk folders feed the exposure engine ([EXPOSURE_GUIDE.md](../../docs/guides/EXPOSURE_GUIDE.md)). They are written by
 `tools/packgen/ccr/make_ccr_data.py` (which `make_testdata.py` runs) from the netting sets above, and are **dated by their documents**,
 as the VaR folders are: `lake demo` loads each in one run into the risk lake's domain (`risk/`), moving the run id, the grid dates and the
-rows' ids with the business dates. 7.2 MB in all (2.9.0).
+rows' ids with the business dates. 6.0 MB in all (2.9.2).
 
 | Folder | Kind · key | Dates | Documents |
 |---|---|---|---|
 | `counterparty-risk/simulation-run` | `simulation-run` · `RUN_ID` | the last day | XR-<date>-01: 200 paths, a grid of 24 dates (13 primary dates 1W .. 10Y and their 10-business-day look-back dates), the model |
-| `counterparty-risk/exposure-path` | `exposure-path` · `PATH_ROW_ID` | the last day | 9,031 rows: every live member trade (627) of eight netting sets (CP-ALDERSHOT's four, NS-HARBOURLINE-LDN-NY, NS-KESTREL-FRA, NS-AURORA-TKY, NS-CASCADIA-TKY) and grid date up to its maturity, 200 path values each (the vector column `MTM`, whole USD) |
+| `counterparty-risk/exposure-path` | `exposure-path` · `PATH_ROW_ID` | the last day | 7,540 rows: every live member trade (523; status NEW, VALIDATED or AMENDED, not matured) of eight netting sets (CP-ALDERSHOT's four, NS-HARBOURLINE-LDN-NY, NS-KESTREL-FRA, NS-AURORA-TKY, NS-CASCADIA-TKY) and grid date up to its maturity, 200 path values each (the vector column `MTM`, whole USD) |
 
 The other netting sets have no paths in the demo: their pages say so. The stored `exposure-profile` folder was retired in 2.9.0, and no
 netting set or counterparty carries an exposure figure: the engine computes them. `python3 tools/packgen/ccr/make_ccr_data.py --check`

@@ -45,6 +45,30 @@
   `VAR_RESULT_ID`, `EXPOSURE_RESULT_ID`, named by the market-risk and counterparty-risk graphs, so the linked entities list them), each
   with why it does not apply (*not live on …; no P&L vector*, *no exposure paths*) (VAR_GUIDE.md section 3.7, the trading pack's guide).
 
+- **Knowledge: what the words of your data mean, and how the data connects them (2.9.2; product owner, 2026-10-26).** A new section at
+  the top of the help centre, [docs/knowledge/](docs/knowledge/README.md): a home with every term A to Z, and one page per domain,
+  [Market risk](docs/knowledge/market-risk.md), [Counterparty credit risk](docs/knowledge/counterparty-credit-risk.md),
+  [Trades and products](docs/knowledge/trades-and-products.md), [Entities and ownership](docs/knowledge/entities-and-ownership.md),
+  [Market data](docs/knowledge/market-data.md), [Data and contracts](docs/knowledge/data-and-contracts.md) and
+  [Economies](docs/knowledge/economies.md). Each has the same seven parts: the idea in plain words, a glossary (each term with the
+  command that shows it on the demo data), how the data connects (the kinds, their link columns from the packs' contracts and the id
+  conventions), a worked example with real numbers and their business date, questions to ask your data, common confusions, and where
+  to go deeper. Market risk also explains how a P&L vector is made from scenario PVs (same valuation date, absolute and relative
+  shifts, scenario FX, one scenario order, failed never zero, full revaluation or sensitivities; VaR from scenario PVs in any reporting
+  currency is planned for 2.9.3) and why VaR adds the trades' P&L, not quantity times the move. The worked examples are read from a
+  scratch server over the default demo lake on 2026-10-26, and each ends with what the data hasn't told you (a cancelled trade still in
+  its netting set's exposure, a valuation of an older trade version, stored utilisations far from the computed ones, ECON's debt being
+  the IMF's 2031 projection, an FX value date left behind; all fixed in 2.9.2, below). The glossary is one data file, `docs/knowledge/glossary.yaml` (139 terms), written into the pages by
+  `tools/knowledge.py` (`--check` fails when a page differs; `tools/test_knowledge.py`). **`WHAT`** is a new reserved word (the pack
+  loader, `drishti.py pack check`, the command catalog): `WHAT <GO>` opens the Knowledge home, `WHAT <term> <GO>` the term's glossary
+  entry (its long name or a synonym, any case: `WHAT PFE`, `WHAT netting set`, `WHAT value at risk`), other words a search of the
+  Knowledge pages; the type-ahead lists the terms. A **What does this mean?** link beside the help on the VaR and exposure explorers
+  and on the `VRES`, `DESK`, `CPTY`, `NSET`, `CSA` and `EXP` views opens the page or entry (`knowledge:` in `config/help.yaml`);
+  Knowledge is in Build → Learn and Help. USER_GUIDE (reserved words, a Knowledge section), PACK_DEVELOPER_GUIDE, BI_GUIDE, CLI_GUIDE,
+  COMMANDS.md and HISTORY_QUERIES name `WHAT` among the reserved words. Tests: `drishti-console/tests/test_knowledge.py`, `test_help.py`
+  (seven sections, at most 62 listed pages), `ReservedMnemonicTest`, `test_drishti_cli.py`.
+  [VAR_GUIDE.md section 5.6](docs/guides/VAR_GUIDE.md#56-examples-on-the-test-data) rerun on the default demo lake (2026-10-26:
+  the bank 126.5m on 8,566 live trades) with why it differs from the `--as-of data` date (112.0m).
 - **The funds pack: the 200 largest US mutual funds and ETFs with their holdings, from SEC public data (2.9.2; product owner,
   2026-10-26).** New pack `funds` (off by default, after `us-equities`): the newest SEC Form N-PORT data set (holdings with CUSIP, ISIN
   and LEI, derivatives with notional, expiry and counterparties, repos, three months of flows and monthly returns), four quarters of Form
@@ -70,6 +94,33 @@
   was typed (FUND VTSAX). New test: every committed data file under `data/testdata` is gzipped and under 5 MB. Tests: FundsPackTest,
   `tools/publicdata/tests/test_funds.py` (a cache cut from the real data sets), `test_funds_browser.py`. The demo stack, the Windows QA
   guide, `start-server.ps1 -DemoLakes` and the IDE configuration load the pack.
+
+- **Data quality: six findings of the Knowledge writer fixed at their source (2.9.2; product owner, 2026-10-26).** Holistic: data,
+  generators, contracts, documents, tests. (1) **ECON's debt is the latest actual year**: `DEBT_TO_GDP` took the IMF WEO's last
+  (2031 projection) year for 181 of 189 economies; `tools/realdata/build_docs.py` now takes the series' latest year up to 2025, as
+  `FISC` does (UK 102.6 → 102.3, US 142.1 → 123.9); the world-economy samples, Sutra tests and README regenerated from the committed
+  dataset; test `test_economy_debt_is_the_fiscal_records_latest_actual_year`. (2) **A netting set holds live trades only**: the
+  test-data universe (`tools/testdata/universe.py`) builds the netting sets, their MTM, CVA, limits, books and desks from each trade's
+  *latest* version after the sixty days of amendments (`history.timelines`), keeping the statuses `NEW`, `VALIDATED` and `AMENDED` (the
+  market-risk pack's `live-statuses`, VaR's rule); `make_ccr_data.py` also reads the booking status of every member, and `lake demo`
+  passes its own business date so a trade matured between the data's date and today has no paths. `CLY-4000879` (CANCELLED v4) left
+  `NS-ALDERSHOT-FRA` (43 → 35 members); the committed exposure run is 523 trades, 7,540 rows (was 627, 9,031); the demo run 74 netting sets
+  of 23 counterparties, 8,022 live trades on the data's date (76 sets, 8,302 trades on 2026-10-26). New figures: CP-ALDERSHOT's peak PFE
+  399,970,549 on 2026-09-30 (was 395,309,055), 395,266,101 on 2026-10-26; NS-ALDERSHOT-LDN 85.1m with a collateral effect of +452% (was
+  78.7m, +380%); the bank 2,858,060,180 (was 2,810,548,173). (3) **A valuation values the trade's version of its day**: status, and
+  notional, MTM, P&L and DV01 scaled with the first leg's notional (`TVAL-1000001`: VALIDATED 167,969,743 → AMENDED 209,962,179, as the
+  trade). The VaR vectors' PV follows; their P&L, and so every VaR figure, is unchanged. (4) **`EQB` has its own page**
+  (`equity-beta.v1.sutra.yaml`): beta, alpha, correlation and R² to 2–4 decimals (they read "0" on the inferred layout); the Knowledge
+  glossary's *Beta* points at `EQB EQ-NVTK` again. (5) **An FX spot's value date and an IR curve's pillar maturities move with the
+  business date**, in the test data (`history.TENOR_DATES`, each day's own T+2) and in `lake demo` (`FX-EURUSD` settles 2026-10-28 on
+  2026-10-26, was 2026-10-02). (6) **No stored book VaR on the legal entity**: `BOOKS[].VAR` (BOOK-SFT-1 read 70.8m against LE-FRA's
+  computed 1.8m) left the generator, data, samples and contract; the LE page shows the engine's `LE:<id>` VaR and each book's under
+  `VAR_ENGINE` (`VarFigures`), which the risk-return scatter and the Calc snippet read; `tools/contracts.policy.yaml` lists it under
+  `removed:` and `engine-columns` (a path rule, guarded by `tools/test_contracts.py`). Documents: EXPOSURE_GUIDE (section 2 worked
+  numbers, sections 3 and 23), tutorial 26 (every output rerun on `--as-of data`), the Knowledge pages (worked examples rerun on
+  2026-10-26), VAR_GUIDE section 21.3, RACHANA_REFERENCE (scatter example), `docs/contracts/TVAL.md`, `NSET.md`, `data/testdata/README.md`,
+  TOOLS, CLI_GUIDE (the what-if example trade is `CLY-4003028`). Tests: `tools/testdata/test_testdata.py` (live members, valuations of
+  the day's version, moving spot dates), `tools/lake/test_demo.py`, `VarApiTest` (the legal entity's figures).
 
 - **About and Competitive rewritten (product owner, 2026-10-26).** About: the headline and tagline from configuration, what Drishti is now (risk computed for any scope, data contracts, Knowledge), twenty feature cards (VaR for any scope, counterparty exposure, data contracts, Knowledge, Functions, write-back, external data, the eleven packs …), measured VaR and exposure figures with their sources, the areas Measure risk and Understand, new use cases. Competitive: as of October 2026, a third paragraph on risk computed when asked, and five new rows: risk for any set of trades, a data contract for every command, external data with sources and scripts, forms that save, and explaining the data from the data.
 

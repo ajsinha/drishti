@@ -39,6 +39,7 @@
     <span class="xx-meta mono" data-xx-meta>run … · … paths · … tenors · …</span>
     <span class="xx-timing mono" data-xx-timing></span>
     <a class="xx-help" href="/help/context/exposure" title="Help: the exposure guide (F1)" aria-label="Help: the exposure guide" data-xx-help><i class="bi bi-question-circle" aria-hidden="true"></i></a>
+    {% if KNOWLEDGE.exposure %}<a class="xx-help xx-what" href="/help/{{ KNOWLEDGE.exposure }}" title="What does this mean? Counterparty credit risk explained: EE, PFE, EPE, netting and collateral" data-what-link><i class="bi bi-lightbulb" aria-hidden="true"></i> What does this mean?</a>{% endif %}
   </div>
   <p class="xx-notice" data-xx-notice role="status" hidden></p>
   <nav class="xx-crumb" aria-label="Scope path" data-xx-crumb></nav>

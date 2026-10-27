@@ -28,7 +28,7 @@ EPILOG = ("examples:\n  drishti.py exposure show NSET:NS-ALDERSHOT-NY\n  drishti
           "  drishti.py exposure tree\n  drishti.py exposure profile NSET:NS-ALDERSHOT-NY --csv > ns-ny.csv\n"
           "  drishti.py exposure distribution NSET:NS-ALDERSHOT-NY --at 1Y\n  drishti.py exposure status\n"
           "  drishti.py exposure capture CPTY:CP-ALDERSHOT --note 'before the unwind'\n  drishti.py exposure compare XCAP-20260930-1 now\n"
-          "  drishti.py exposure whatif CPTY:CP-ALDERSHOT --like CLY-4000879 --factor -1 --set NS-ALDERSHOT-FRA\n"
+          "  drishti.py exposure whatif CPTY:CP-ALDERSHOT --like CLY-4003028 --factor -1 --set NS-ALDERSHOT-FRA\n"
           "  drishti.py exposure whatif CPTY:CP-ALDERSHOT --candidates new-swap.json --method addon")
 
 

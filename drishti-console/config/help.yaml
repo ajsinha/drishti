@@ -14,13 +14,29 @@
 
 # The help centre catalogue. A guide is a console guide (web/guides/<slug>.md) or, with `doc:`, a repository
 # document rendered as-is (so the in-app reference is the repository's docs). Order here is display order.
-# Six sections, one page per subject: the tutorials teach (docs/tutorials), the guides are reference.
+# Seven sections, one page per subject: Knowledge explains (docs/knowledge), the tutorials teach (docs/tutorials), the guides are reference.
 # Every other document under docs/ (and the top-level *.md) is reachable unlisted at a slug made from its path
 # (docs/architecture/adr/016-one-console-many-servers.md -> /help/docs-architecture-adr-016-one-console-many-servers),
 # so a link between documents always opens in the help centre (DOC-18; tests/test_help_links.py crawls them all).
 # The architecture documents, the per-plugin connector documents and the runbooks live there: in the repository,
 # linked from docs/README.md and from the pages that need them, not in this list.
 categories:
+  # Knowledge (product owner, 2026-10-26): what the words of a bank's data mean and how Drishti's data connects them, one page per
+  # domain with its glossary (docs/knowledge/glossary.yaml, rendered by tools/knowledge.py). First, above Start. WHAT <GO> opens the
+  # home, WHAT <term> a glossary entry (routes/help_routes.py).
+  - id: knowledge
+    name: Knowledge
+    icon: lightbulb
+    blurb: "See what your data hasn't told you yet: what each term means, and how the data connects them."
+    guides:
+      - { slug: knowledge, doc: knowledge/README.md, title: "Knowledge home and glossary", icon: lightbulb, kind: knowledge, summary: "The seven Knowledge pages and every term of the glossary A to Z, each with its meaning and the page that explains it; WHAT <term> opens any of them from the command line." }
+      - { slug: knowledge-market-risk, doc: knowledge/market-risk.md, title: "Market risk", icon: graph-down-arrow, kind: knowledge, summary: "VaR and expected shortfall in plain words, P&L vectors and historical simulation, positions, portfolios and hierarchies, contributions and diversification, backtesting; how the data connects, the bank's VaR worked through on the demo data, questions to ask and common confusions." }
+      - { slug: knowledge-counterparty-credit-risk, doc: knowledge/counterparty-credit-risk.md, title: "Counterparty credit risk", icon: shield-exclamation, kind: knowledge, summary: "Counterparties, agreements, CSAs, netting sets and collateral; EE, PFE, EPE, EEPE and why PFE does not add up; limits, CVA, SA-CCR and SIMM in brief; CP-ALDERSHOT worked through on the demo data, questions to ask and common confusions." }
+      - { slug: knowledge-trades-and-products, doc: knowledge/trades-and-products.md, title: "Trades and products", icon: receipt, kind: knowledge, summary: "A trade and its three booking systems, statuses, products, notional and MTM, legs and events, books, desks and traders, valuations; what links to a trade, on the demo data." }
+      - { slug: knowledge-entities-and-ownership, doc: knowledge/entities-and-ownership.md, title: "Entities and ownership", icon: diagram-3, kind: knowledge, summary: "The LEI and GLEIF, direct and ultimate parents, ownership groups and countries, the bank's legal entities, counterparties and their groups, issuers; who owns whom, on the demo data." }
+      - { slug: knowledge-market-data, doc: knowledge/market-data.md, title: "Market data", icon: graph-up, kind: knowledge, summary: "Curves, fixings, FX spot and forwards, volatility surfaces and cubes, credit curves, equities, indices and commodities, correlations and beta; how they link to what uses them." }
+      - { slug: knowledge-data-and-contracts, doc: knowledge/data-and-contracts.md, title: "Data and contracts", icon: file-earmark-ruled, kind: knowledge, summary: "Packs, kinds and commands; fundamental, engine input, Drishti's own and computed data; data contracts, business dates, links and ids; where the data comes from (with External data)." }
+      - { slug: knowledge-economies, doc: knowledge/economies.md, title: "Economies", icon: globe, kind: knowledge, summary: "GDP, growth, inflation, unemployment, debt and the current account; IMF forecasts, country groups and governments; how a counterparty links to its economy, on the demo data." }
   - id: start
     name: Start
     icon: flag
@@ -205,6 +221,18 @@ moved:
   plugins: connector-developer-guide
   build-a-pack: pack-developer-guide
   sutra-studio: screen-designer
+
+# "What does this mean?" beside a data page's help (the explorers' ?, a view's About): the Knowledge page, or glossary entry, that
+# explains the screen (var, exposure) or the kind of the record (core/app.py reads it at start; tests/test_help.py checks each target).
+knowledge:
+  var: knowledge-market-risk                                            # the VaR explorer
+  var-result: knowledge-market-risk#term-var                            # VRES
+  desk: knowledge-market-risk#term-risk-hierarchy                       # DESK (a node of the risk hierarchies: its VaR and limits)
+  exposure: knowledge-counterparty-credit-risk                          # the exposure explorer
+  exposure-result: knowledge-counterparty-credit-risk#term-exposure-profile   # EXP as a kind
+  counterparty: knowledge-counterparty-credit-risk#term-counterparty    # CPTY
+  netting-set: knowledge-counterparty-credit-risk#term-netting-set      # NSET
+  csa: knowledge-counterparty-credit-risk#term-csa                      # CSA
 
 # F1 opens the guide for the current screen.
 contextual:

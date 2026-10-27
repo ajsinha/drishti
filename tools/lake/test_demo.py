@@ -176,6 +176,19 @@ class SeriesMoved(unittest.TestCase):
         self.assertEqual(out["COUPONS"][0]["DATE"], "2027-03-15", "a coupon schedule is real dates")
         self.assertEqual(out["HOLIDAYS"][0]["DATE"], "2026-12-25")
 
+    def test_an_fx_spot_value_date_and_a_curve_pillar_maturity_move_with_the_days(self):
+        # the data's 2026-09-30 spot settles 2026-10-02 (T+2): moved to 2026-10-26 it settles 2026-10-28, never the data's date
+        old = ["2026-09-28", "2026-09-29", "2026-09-30"]
+        new = ["2026-10-22", "2026-10-23", "2026-10-26"]
+        d = self.lake(old, new)
+        fx = {"PAIR": "FX-EURUSD", "MID": 1.174, "SPOT_DATE": "2026-10-02", "HISTORY": [{"DATE": "2026-09-30", "MID": 1.174}]}
+        out = json.loads(d.redate(json.dumps(fx, separators=(",", ":"))))
+        self.assertEqual(out["SPOT_DATE"], "2026-10-28")
+        crv = {"CURVE_ID": "CRV-USD-OIS", "AS_OF": "2026-09-30", "POINTS": [{"TENOR": "1M", "MATURITY": "2026-10-30", "ZERO_RATE": 3.9}]}
+        out = json.loads(d.redate(json.dumps(crv, separators=(",", ":"))))
+        self.assertEqual(out["AS_OF"], "2026-10-26")
+        self.assertGreater(out["POINTS"][0]["MATURITY"], "2026-11-20")
+
     def test_nothing_moves_when_the_dates_are_the_data_own(self):
         d = self.lake(["2026-09-30"], ["2026-09-30"])
         line = '{"HISTORY":[{"DATE":"2026-09-29","CLOSE":1}]}'
