@@ -104,7 +104,7 @@ DQ Q-EURUSD <GO>
 
 ![The view of a desk quote: bid, ask and mid with four decimals, and the details](img/t05/09-quote.jpg)
 
-You should see the quote's view: `Q-EURUSD` with the title pill `Desk quote · USD`, the strip (bid, ask, mid, venue, as of), the panel of details (instrument, currency, venue,
+You should see the quote's view: `Q-EURUSD` with the title pill `Desk quote · Q-EURUSD`, the strip (mid, bid, ask), the panel of details (id, instrument, currency, bid, ask, mid, venue,
 when it was struck). The panel *How this view was built* names the layout (`Sutra desk-quote-default v1`) and the source that served the view: `desk-quotes`, the connector of
 tutorial 4. The figures are the ones of the desk's quotes of tutorial 4. Type `DQP` alone to see the pack at a glance.
 
