@@ -180,7 +180,7 @@ Fields, from 1 sample document:
 |---|---|---|---|
 | `INDEX` | string | `DJIA` | Index code (DJIA |
 | `NAME` | string | `Dow Jones Industrial Average` | Index |
-| `MEMBERS` | integer | `34` | Members |
+| `MEMBERS` | integer | `30` | Members |
 | `ROWS` | list of objects |  | The members (the totals and divisions are computed on the page) |
 | `PROVENANCE` | object |  | Source |
 
@@ -224,9 +224,9 @@ Fields, from 1 sample document:
 | `NAME` | string | `Current reports` | Forms |
 | `FORM` | string | `8-K` | The form type |
 | `FILINGS` | integer | `300` | Filings |
-| `COMPANIES` | integer | `222` | Companies |
-| `LATEST` | date | `2026-10-23` | Latest |
-| `EARLIEST` | date | `2026-10-02` | Earliest shown |
+| `COMPANIES` | integer | `226` | Companies |
+| `LATEST` | date | `2026-10-26` | Latest |
+| `EARLIEST` | date | `2026-10-07` | Earliest shown |
 | `ROWS` | list of objects |  | The filings |
 | `BY` | list of objects |  | Filings by form |
 | `BY_TITLE` | string | `Filings by company` | Filings by company |
@@ -368,7 +368,7 @@ Screens (Sutras):
 | `filing-feed` | `filing-feed` | The filings browser: the latest SEC filings of the covered companies, of every form or one; a click opens a filing beside. |
 | `filing` | `filing` | One SEC filing: its company, form, dates, 8-K items and its links on EDGAR (metadata only; the document stays on sec.gov). |
 | `financial-fact` | `financial-fact` | One financial concept of one company (revenue, net income, assets...) over up to ten fiscal years, from its 10-K XBRL filings. |
-| `index-membership` | `index-membership` | An equity index's members (Dow 30, Nasdaq-100, S&P 500) as Wikidata records them; a click opens the member's summary beside. |
+| `index-membership` | `index-membership` | An equity index's members (Dow 30, Nasdaq-100, S&P 500) as its tracking ETF reports holding them; a click opens the member's summary beside. |
 | `price-history` | `price-history` | A company's quote, a year of daily prices and their analytics (returns, volatility, beta), read live by the us-equities-prices connector: off as shipped, internal use only. |
 | `sic-directory` | `sic-sector` | Every SIC code of the covered companies, by revenue, and revenue by SIC division. |
 | `sic-sector` | `sic-sector` | A sector by its SIC code, computed from the companies when asked: its companies ranked by revenue; a click opens a company's summary beside. |

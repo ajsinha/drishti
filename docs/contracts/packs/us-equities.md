@@ -76,14 +76,14 @@ A US listed company: key facts, ten years of annual financials, recent SEC filin
 | `LEI_STATUS` | text | optional |  | — | `DUPLICATE`, `ISSUED`, `LAPSED`, `RETIRED` |  |
 | `LEI_SOURCE` | text | optional |  | — | `GLEIF, LEI from Wikidata`, `GLEIF, matched by legal name`, `Wikidata` |  |
 | `INDEXES` | record list | required |  | Nested: see nested INDEXES[] |  |  |
-| `INDEX_TEXT` | text | required |  | — | `Dow Jones Industrial Average, Nasdaq-100, S&P 500` |  |
+| `INDEX_TEXT` | text | optional |  | — | `Dow Jones Industrial Average, Nasdaq-100, S&P 500` |  |
 | `CURRENCY` | text | required |  | — | `CAD`, `EUR`, `GBP`, `USD` |  |
-| `FISCAL_YEAR` | integer | required |  | Fiscal year | `2025` |  |
+| `FISCAL_YEAR` | integer | optional |  | Fiscal year | `2025` |  |
 | `REVENUE` | amount | optional |  | Revenue | `416161000000` |  |
-| `NET_INCOME` | amount | required |  | Net income | `112010000000` |  |
-| `ASSETS` | integer | required |  | — | `359241000000` |  |
-| `LIABILITIES` | integer | required |  | — | `285508000000` |  |
-| `EQUITY` | integer | required |  | Equity: the equity it refers to | `73733000000` | `equity` |
+| `NET_INCOME` | amount | optional |  | Net income | `112010000000` |  |
+| `ASSETS` | integer | optional |  | — | `359241000000` |  |
+| `LIABILITIES` | integer | optional |  | — | `285508000000` |  |
+| `EQUITY` | integer | optional |  | Equity: the equity it refers to | `73733000000` | `equity` |
 | `EPS_DILUTED` | amount | optional |  | Diluted EPS | `7.46` |  |
 | `SHARES_OUTSTANDING` | integer | optional |  | — | `14776353000` |  |
 | `FINANCIALS` | record list | required |  | Nested: see nested FINANCIALS[] |  |  |
@@ -181,14 +181,14 @@ A US listed company: key facts, ten years of annual financials, recent SEC filin
 
 ## IDX: Index members (`index-membership`)
 
-An equity index's members (Dow 30, Nasdaq-100, S&P 500) as Wikidata records them; a click opens the member's summary beside.
+An equity index's members (Dow 30, Nasdaq-100, S&P 500) as their tracking ETF reports holding them; a click opens the member's summary beside.
 
 |  |  |
 |---|---|
 | Contract | [index-membership.contract.yaml](../../../config/packs/us-equities/contracts/index-membership.contract.yaml) · version 1.0 |
 | Class | fundamental |
 | Status | active |
-| Source | public data: SEC EDGAR, Nasdaq Trader, GLEIF and Wikidata (tools/publicdata/us_equities.py) |
+| Source | public data: SEC EDGAR (with the tracking ETFs' Form N-PORT), Nasdaq Trader, GLEIF and Wikidata (tools/publicdata/us_equities.py) |
 | Grain | One row per index members, keyed by INDEX. |
 | Key | `INDEX` |
 | Id pattern | — |
@@ -214,22 +214,22 @@ An equity index's members (Dow 30, Nasdaq-100, S&P 500) as Wikidata records them
 |---|---|---|---|---|---|---|
 | `TICKER` | text | required |  | — | `AAPL` |  |
 | `NAME` | text | required |  | — | `Apple Inc.` |  |
-| `SECTOR` | text | required |  | — | `Finance, Insurance and Real Estate`, `Manufacturing`, `Retail Trade`, `Services`, `Transportation, Communications, Electric, Gas and Sanitary Services` |  |
+| `SECTOR` | text | required |  | — | `Construction`, `Finance, Insurance and Real Estate`, `Manufacturing`, `Mining`, `Retail Trade`, `Services`, `Transportation, Communications, Electric, Gas and Sanitary Services` |  |
 | `SIC` | text | required |  | — | `3571` |  |
 | `SIC_DESCRIPTION` | text | required |  | — | `Electronic Computers` |  |
 | `EXCHANGE` | text | required |  | — | `Nasdaq` |  |
 | `REVENUE` | amount | optional |  | — | `416161000000` |  |
-| `NET_INCOME` | amount | required |  | — | `112010000000` |  |
+| `NET_INCOME` | amount | optional |  | — | `112010000000` |  |
 | `CURRENCY` | text | required |  | — | `USD` |  |
-| `FISCAL_YEAR` | integer | required |  | — | `2025` |  |
+| `FISCAL_YEAR` | integer | optional |  | — | `2025` |  |
 | `SINCE` | date | optional |  | — | `2000-06-05` |  |
 
 **Nested `PROVENANCE`**
 
 | Field | Type | Presence | Unit | Description | Example or values | Link |
 |---|---|---|---|---|---|---|
-| `SOURCE` | text | required |  | — | `Wikidata (index membership as Wikidata records it); SEC EDG…` |  |
-| `LICENCE` | text | required |  | — | `CC0 1.0 (Wikidata); public domain (SEC EDGAR)` |  |
+| `SOURCE` | text | required |  | — | `SEC Form N-PORT of DIA (SPDR DOW JONES INDUSTRIAL AVERAGE ETF TRUST), the…` |  |
+| `LICENCE` | text | required |  | — | `Public domain (SEC EDGAR); CC0 1.0 (Wikidata)` |  |
 | `NOTE` | text | required |  | — | `Membership only. Index weights and levels are proprietary t…` |  |
 | `RETRIEVED_AT` | date | required |  | — | `2026-10-24` |  |
 
@@ -358,8 +358,8 @@ The filings browser: the latest SEC filings of the covered companies, of every f
 | `FILED` | date | required |  | — | `2026-10-23` |  |
 | `COMPANY` | id | required |  | Company: the us-company it refers to | `PNC` | `us-company` |
 | `COMPANY_NAME` | text | required |  | — | `PNC Financial Services` |  |
-| `FORM` | text | required |  | — | `10-K`, `10-Q`, `144`, `4`, `424B2`, `8-K`, `DEF 14A`, `FWP` |  |
-| `DESCRIPTION` | text | required |  | — | `Annual report`, `Change in beneficial ownership (insider)`, `Current report`, `Definitive proxy statement`, `Free writing prospectus`, `Notice of proposed sale of securities`, `Prospectus`, `Quarterly report` |  |
+| `FORM` | text | required |  | — | `8-K` |  |
+| `DESCRIPTION` | text | required |  | — | `Current report` |  |
 
 **Nested `BY[]`**
 

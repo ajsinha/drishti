@@ -45,7 +45,8 @@ kind (*Data contracts*); this page is the one place for the external sources the
 | market-data | `us-treasury` | US Treasury daily par yield curve, `https://home.treasury.gov/resource-center/data-chart-center/interest-rates` | public domain (US Government work) | committable |
 | market-data | `sofr` | SOFR, Federal Reserve Bank of New York, `https://markets.newyorkfed.org/api/rates/secured/sofr` | NY Fed terms of use: reuse with attribution | committable, with attribution |
 | market-data | `estr` | Euro short-term rate, ECB, `https://data-api.ecb.europa.eu/service/data/EST` | ECB: free reuse with the source acknowledged | committable, with attribution |
-| us-equities | `wikidata` | Wikidata: index membership and company facts, `https://query.wikidata.org/sparql` | CC0 1.0 | committable |
+| us-equities | `wikidata` | Wikidata: company facts (headquarters, founded, website, LEI) and the date a member joined its index, `https://query.wikidata.org/sparql` | CC0 1.0 | committable |
+| us-equities | `trackers` | SEC Form N-PORT of SPY, QQQ and DIA: the S&P 500, Nasdaq-100 and Dow members (read from the funds cache, no download) | public domain (US Government work) | committable |
 | us-equities | `nasdaq` | Nasdaq Trader symbol directory, `https://www.nasdaqtrader.com/dynamic/SymDir/` | public symbol directory files | committable |
 | us-equities | `sec` | SEC EDGAR: tickers, submissions, XBRL company facts, `https://data.sec.gov` | public domain (US Government work); EDGAR fair access policy | committable |
 | us-equities | `gleif` | GLEIF LEI records, `https://api.gleif.org/api/v1` | CC0 1.0 | committable |
@@ -162,9 +163,10 @@ manifest ~/drishti/data/publicdata/market-data/manifest.json
 
 ```console
 $ python3 tools/publicdata/us_equities.py status
-committed pack: 503 companies, data retrieved 2026-10-24
+committed pack: 586 companies, data retrieved 2026-10-24
 SOURCE    LICENCE                                           USE            LAST REFRESHED  CACHED
 wikidata  CC0 1.0                                           committable    never           -
+trackers  Public domain (U.S. Government work)              committable    never           -
 nasdaq    Public symbol directory files (Nasdaq Trader)     committable    never           -
 sec       Public domain (U.S. Government work); EDGAR fair  committable    never           -
 gleif     CC0 1.0                                           committable    never           -
@@ -439,9 +441,17 @@ uv run --with deltalake --with pyarrow --with pyyaml python tools/ingest_jsonl.p
 
 ## us-equities
 
-**Sources:** `wikidata` (index membership, CC0), `nasdaq` (the listing market), `sec` (companies, SIC codes, filings, financial
-facts; public domain), `gleif` (each company's LEI, CC0), and `prices` (Yahoo Finance daily prices, **internal only**, never part of
-a default refresh).
+**Sources:** `trackers` (the index members: the stocks the tracking ETFs SPY, QQQ and DIA report in their newest Form N-PORT, read
+from the funds pack's download cache, so refresh `funds` first; public domain), `wikidata` (headquarters, founded, website, LEI and
+the date a member joined its index, CC0), `nasdaq` (the listing market), `sec` (companies, SIC codes, filings, financial facts; public
+domain), `gleif` (each company's LEI, CC0), and `prices` (Yahoo Finance daily prices, **internal only**, never part of a default
+refresh).
+
+**Why the tracking ETFs.** Index providers' constituent lists are proprietary. A fund that tracks an index must report every holding
+to the SEC, so its equity holdings are the index's members on its report date (each index page names the fund, the date and the
+filing). Until 2.9.3 the members came from Wikidata, whose lists were out of date: its S&P 500 lacked Exxon Mobil, BlackRock and
+about 80 others and still listed 44 former members. A company Wikidata still lists but no tracking ETF holds stays in the pack, in no
+index; a holding the SEC no longer lists (taken private or merged since the report) is named in the index page's note.
 
 `tools/publicdata/us_equities.py` wraps the pack's generator, `tools/packgen/us_equities/fetch.py` (the network) and `make.py`
 (the build, offline): a refresh of the committed pack writes exactly what `make.py` writes, then runs `make.py --check`. The four

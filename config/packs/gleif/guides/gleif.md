@@ -18,7 +18,7 @@
 
 Legal Entity Identifiers (LEI) and **who owns whom**, from GLEIF: 9,937 legal entities in 590 ownership groups across
 133 countries, retrieved from GLEIF's golden copy of 2026-10-25. The groups are those of the us-equities companies (their
-ultimate parent with every entity it consolidates) and of 111 large financial institutions: the FSB's global systemically
+ultimate parent with every entity it consolidates) and of 107 large financial institutions: the FSB's global systemically
 important banks, other large banks, insurers, asset managers and market infrastructures. Everything is published data under
 **CC0**, not samples.
 
@@ -61,7 +61,7 @@ consolidated, no known person) which its page shows.
 **Late renewal.** An LEI must be renewed every year. A registration whose next renewal date has passed, or which GLEIF lists as
 `LAPSED`, is flagged *Late* on its page, in its group and in its country; 2,288 of the pack's entities are late today.
 
-Segments of the groups: US equities 481, Bank 66, G-SIB 17, Insurer 16, Asset manager 11, Market infrastructure 4.
+Segments of the groups: US equities 485, Bank 66, G-SIB 17, Insurer 16, Asset manager 7, Market infrastructure 4.
 
 **Where the data lives.** The documents are committed as Drishti's standard test data: one gzipped JSON Lines snapshot per
 kind, `data/testdata/gleif/<kind>/snapshot-<date>.jsonl.gz`, listed in `data/testdata/testdata.yaml`. `python3 tools/drishti.py lake demo`
@@ -74,7 +74,7 @@ README.
 
 An entity links to its direct and ultimate parent, its group, its country, its parent relationship (F7) and its identifiers; a relationship to
 its child, parent and group; a group to its ultimate parent's entity and its country; an identifier to its entity. With the
-`us-equities` pack on, an entity whose LEI is a us-equities company's links to the company (`481` do), and the company's page links
+`us-equities` pack on, an entity whose LEI is a us-equities company's links to the company (`486` do), and the company's page links
 back to the LEI record (its LEI in the key facts, and F5). A `core` legal entity or counterparty whose LEI matches links too
 (0 today: core's entities are a fictional bank's).
 

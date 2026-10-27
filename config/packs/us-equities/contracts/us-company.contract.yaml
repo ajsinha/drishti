@@ -160,7 +160,7 @@ fields:
   description: 'Nested: see nested INDEXES[]'
 - name: INDEX_TEXT
   type: text
-  presence: required
+  presence: optional
   example: Dow Jones Industrial Average, Nasdaq-100, S&P 500
 - name: CURRENCY
   type: text
@@ -173,7 +173,7 @@ fields:
   - USD
 - name: FISCAL_YEAR
   type: integer
-  presence: required
+  presence: optional
   description: Fiscal year
   example: 2025
 - name: REVENUE
@@ -183,20 +183,20 @@ fields:
   example: 416161000000
 - name: NET_INCOME
   type: amount
-  presence: required
+  presence: optional
   description: Net income
   example: 112010000000
 - name: ASSETS
   type: integer
-  presence: required
+  presence: optional
   example: 359241000000
 - name: LIABILITIES
   type: integer
-  presence: required
+  presence: optional
   example: 285508000000
 - name: EQUITY
   type: integer
-  presence: required
+  presence: optional
   description: 'Equity: the equity it refers to'
   example: 73733000000
   link: equity

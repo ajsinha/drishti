@@ -149,13 +149,13 @@ each country with its entities, largest first.
 SIC 3674 <GO>
 ```
 
-Semiconductors & Related Devices: 15 companies; revenue 588.8bn and net income 251.0bn USD over their latest fiscal years; **net margin
-42.6%**; none reporting in another currency. The companies are ranked by revenue (NVDA 215.9bn at a 55.6% margin, MU 133.2bn, AVGO 63.9bn,
+Semiconductors & Related Devices: 20 companies; revenue 613.8bn and net income 256.2bn USD over their latest fiscal years; **net margin
+41.7%**; none reporting in another currency. The companies are ranked by revenue (NVDA 215.9bn at a 55.6% margin, MU 133.2bn, AVGO 63.9bn,
 INTC 52.9bn at −0.5%, AMD 34.6bn); a click opens a company's key facts and ten years of financials beside the table.
 
 `SIC 6022` (State Commercial Banks) shows the currency rule: 15 companies, revenue 70.0bn and net income 25.5bn USD over **14**: the
-fifteenth, BNS, reports in CAD, so it is counted and listed but **not summed** (the strip says *1 not summed*). `SIC ALL` lists the 181
-codes and totals revenue by SIC division: 503 companies, 17.45 trillion USD of revenue (the 492 USD reporters), 2.24 trillion of net income.
+fifteenth, BNS, reports in CAD, so it is counted and listed but **not summed** (the strip says *1 not summed*). `SIC ALL` lists the 194
+codes and totals revenue by SIC division: 586 companies, 18.43 trillion USD of revenue (the 573 USD reporters), 2.34 trillion of net income.
 
 ## 5. ECG: a country group
 
@@ -214,7 +214,7 @@ margin column is computed per year the same way. `USEQ JPM`: 31.3% and +2.8%; `U
 and the sector pages compute a member's margin the same way.
 
 `FACT AAPL-REVENUE` works out each year's change against the year above it in the table, and the strip's *Change on the year* from the
-last two values (+6.4%). `IDX SP500` adds up its 459 members' rows as it opens: revenue 17.20 trillion and net income 2.17 trillion USD
+last two values (+6.4%). `IDX SP500` adds up its 495 members' rows as it opens: revenue 17.85 trillion and net income 2.28 trillion USD
 (the USD reporters), 9 SIC divisions, members by division on the right.
 
 ## 8. PXH: returns, volatility and beta
@@ -490,12 +490,12 @@ On the committed data (gleif 2026-10-25, us-equities 2026-10-24, world-economy's
 |---|---|---|---|
 | `lei-group` | 590 groups + ALL | members 589, countries 590, late renewals 589, levels 571; ALL: groups 590, entities 9,937, countries 133, late 2,288 | **Levels, 19 groups:** the stored depth was set in the order members were listed, so a member listed before its parent got its parent's depth as 0 (`VGRQXHF3J8VDLUA7XE92`: stored 2, computed 3); the computed depth walks the parent chain. **Members and late, 1 group:** BorgWarner Propulsion Systems (`254900XW4597ZTRCMN82`) was in two groups' fetch lists; its record names one group, so `549300DSFX2IE88NSX47` counts 36 members (stored 37) and 3 late (stored 4). **Members in GLEIF:** equal on every group (`GLEIF_GROUP_SIZE` is the figure the stored page held); 86 groups capped (stored 85: the group above now holds 36 of the 37 GLEIF lists) |
 | `lei-country` | 133 countries + ALL | every count on every country | the stored page listed the first 400 entities of the six largest countries; the computed one lists all |
-| `sic-sector` | 181 codes + ALL | companies, revenue and net income on every code (USD reporters); ALL 503 companies, 17,453,625,180,000 revenue, 2,239,293,329,000 net income | none |
+| `sic-sector` | 194 codes + ALL | companies, revenue and net income on every code (USD reporters); ALL 586 companies, 18,430,213,107,000 revenue, 2,340,128,705,000 net income | none |
 | `country-group` | 12 groups | members on every group | the stored figures were the **World Bank's own aggregates** for 2025, which estimate members that have not reported; the computed ones add up the members, each at its latest year. GDP within 3% (ECG-EAS 32,711 against 33,657: three members' latest GDP is from 2022), population within 2.1%, growth within 0.32 points (ECG-MEA 3.06 against 2.75), inflation as the median within 0.5 points (ECG-LCN 2.58 against 2.08). The four income groups had no stored figures; they have computed ones now |
 | `correlation-matrix` | 3 sets | the factors | the stored pairs were **synthetic**: drawn at random between 0.15 and 0.78 and labelled *2 years, Ledoit-Wolf*, with no price history behind them. Computed from the lake's 29 daily returns to 2026-09-30, Pearson: CORR-EU-EQ average 0.096 (stored 0.385), CORR-G10FX −0.012 (0.512), CORR-US-EQ 0.092 (0.406) |
-| USEQ ratios | 503 companies | net margin on all 503 and every year of the financials; revenue growth on 500 | **3 companies** whose previous fiscal year is missing from the financials (SNA: 2023, 2024, 2026): the stored growth compared with the last year reported (two years earlier); the computed growth is against the previous fiscal year only, and empty when it is missing |
+| USEQ ratios | 586 companies | net margin on the 563 that report revenue and net income, and every year of the financials; revenue growth on 560 | **3 companies** whose previous fiscal year is missing from the financials (SNA, SWK and TXT: 2023, 2024, 2026): the stored growth compared with the last year reported (two years earlier); the computed growth is against the previous fiscal year only, and empty when it is missing |
 | PXH analytics | live only | nothing was stored | new |
-| FACT changes | 3,480 facts, 34,160 yearly rows | every change, on every row and every strip | none |
+| FACT changes | 4,026 facts, 38,632 yearly rows | every change, on every row and every strip | none |
 | IDX totals | 6 indices and lists | revenue, net income and divisions on all 6 (USD reporters, as stored) | the divisions are listed alphabetically, not largest first |
 | `equity` `BETA` | 10 equities | none | the stored betas were **set by hand** (`tools/packgen/banking/data_names.py`), with no price series behind them; the demo's price walks are independent, so the computed betas over the 29 returns to 2026-09-30 are near zero (EQ-NVTK −0.07 against NDX, stored 1.28; EQ-GRNT 0.73 against UKX, stored 1.05; EQ-SLRS 0.32, stored 0.52). EQ-CSCA and EQ-LUMN name no index: no beta (stored 1.46 and 1.19) |
 
@@ -625,7 +625,7 @@ correlation sets' factors only. `tools/testdata/publicsnap.py` lists the kinds i
 |---|---|---|
 | `DRISHTI_LAKE_ENABLED` | `true` | switches the derived connectors and the correlation engine with the lake they read |
 | a derived connector's `refresh` | `60s` | how often a date's pages are rebuilt when the data's version cannot be asked |
-| `max-scan` | `50000` | the most documents a derived connector reads of a kind (9,937 entities, 503 companies, 213 economies) |
+| `max-scan` | `50000` | the most documents a derived connector reads of a kind (9,937 entities, 586 companies, 213 economies) |
 | `DRISHTI_US_EQUITIES_PRICES_ENABLED` | `false` | PXH and its analytics |
 | `DRISHTI_US_EQUITIES_BENCHMARK` | `SPY` | the symbol PXH's beta is measured against |
 | `correlation-engine` `limits` | timeout 30 s, wait 5 s, 4 in flight a user | as every reactive connector ([REACTIVE_CONNECTORS.md](../architecture/REACTIVE_CONNECTORS.md)) |

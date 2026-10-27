@@ -20285,8 +20285,8 @@ datasets:
   snapshot: snapshot-2026-10-24.jsonl.gz
   captured: '2026-10-24'
   source: SEC EDGAR, Nasdaq Trader, GLEIF and Wikidata (tools/publicdata/us_equities.py)
-  documents: 503
-  bytes: 427385
+  documents: 586
+  bytes: 491135
 - folder: us-equities/index-membership
   pack: us-equities
   kind: index-membership
@@ -20296,7 +20296,7 @@ datasets:
   captured: '2026-10-24'
   source: SEC EDGAR, Nasdaq Trader, GLEIF and Wikidata (tools/publicdata/us_equities.py)
   documents: 6
-  bytes: 23656
+  bytes: 25976
 - folder: us-equities/filing-feed
   pack: us-equities
   kind: filing-feed
@@ -20306,7 +20306,7 @@ datasets:
   captured: '2026-10-24'
   source: SEC EDGAR, Nasdaq Trader, GLEIF and Wikidata (tools/publicdata/us_equities.py)
   documents: 6
-  bytes: 21512
+  bytes: 22503
 - folder: us-equities/filing
   pack: us-equities
   kind: filing
@@ -20315,8 +20315,8 @@ datasets:
   snapshot: snapshot-2026-10-24.jsonl.gz
   captured: '2026-10-24'
   source: SEC EDGAR, Nasdaq Trader, GLEIF and Wikidata (tools/publicdata/us_equities.py)
-  documents: 10040
-  bytes: 275012
+  documents: 11691
+  bytes: 320445
 - folder: us-equities/financial-fact
   pack: us-equities
   kind: financial-fact
@@ -20325,8 +20325,8 @@ datasets:
   snapshot: snapshot-2026-10-24.jsonl.gz
   captured: '2026-10-24'
   source: SEC EDGAR, Nasdaq Trader, GLEIF and Wikidata (tools/publicdata/us_equities.py)
-  documents: 3480
-  bytes: 367647
+  documents: 4026
+  bytes: 418308
 - folder: gleif/lei-entity
   pack: gleif
   kind: lei-entity
@@ -20336,7 +20336,7 @@ datasets:
   captured: '2026-10-25'
   source: GLEIF LEI records, relationship records and mapping files (tools/publicdata/gleif.py)
   documents: 9937
-  bytes: 2081762
+  bytes: 2081825
 - folder: gleif/lei-relationship
   pack: gleif
   kind: lei-relationship
@@ -20366,7 +20366,7 @@ datasets:
   captured: '2026-10-26'
   source: SEC Form N-PORT, Form N-CEN and risk/return summary data sets, SEC and Nasdaq Trader ticker files, GLEIF (tools/publicdata/funds.py)
   documents: 200
-  bytes: 4983888
+  bytes: 5015216
   parts:
   - snapshot-2026-10-26.part-01.jsonl.gz
   - snapshot-2026-10-26.part-02.jsonl.gz
@@ -20381,8 +20381,8 @@ datasets:
   snapshot: snapshot-2026-10-26.jsonl.gz
   captured: '2026-10-26'
   source: SEC Form N-PORT, Form N-CEN and risk/return summary data sets, SEC and Nasdaq Trader ticker files, GLEIF (tools/publicdata/funds.py)
-  documents: 503
-  bytes: 589645
+  documents: 586
+  bytes: 682851
 - folder: funds/index-funds
   pack: funds
   kind: index-funds
@@ -20392,4 +20392,4 @@ datasets:
   captured: '2026-10-26'
   source: SEC Form N-PORT, Form N-CEN and risk/return summary data sets, SEC and Nasdaq Trader ticker files, GLEIF (tools/publicdata/funds.py)
   documents: 3
-  bytes: 1108
+  bytes: 1096

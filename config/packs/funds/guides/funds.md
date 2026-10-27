@@ -45,13 +45,13 @@ With `us-equities` on, a company page (`USEQ AAPL`) has the tabs **Held by funds
 | Kind | Documents | What one holds |
 |---|---|---|
 | `fund` | 200 | identity and share classes, census facts, fees and returns, flows, concentration, holdings by asset type, issuer type, country and SIC division, derivatives and counterparties, the 600 largest holdings (with the totals of the rest), the fund against its index |
-| `fund-holder` | 503 | one us-equities company: every fund that holds it, its weight, value and shares in each |
+| `fund-holder` | 586 | one us-equities company: every fund that holds it, its weight, value and shares in each |
 | `index-funds` | 3 | one us-equities index: the funds that track it, with net assets, expense ratio and active share |
 
 Holdings kept: 73,577 of 411,796 (a fund keeps its 600 largest; the reverse look-through counts every one). Funds by type: Mutual fund 117, ETF 50, Mutual fund with an ETF share class 31, ETF (unit investment trust) 2.
 
 **Where the data lives.** The documents are committed as Drishti's standard test data, gzipped JSON Lines under
-`data/testdata/funds/<kind>/` (the fund kind in parts of about 1.2 MB, 5.6 MB in all), listed in `data/testdata/testdata.yaml`.
+`data/testdata/funds/<kind>/` (the fund kind in parts of about 1.2 MB, 5.7 MB in all), listed in `data/testdata/testdata.yaml`.
 `python3 tools/drishti.py lake demo` (or `python3 tools/build_demo_lakes.py`) builds them into the demo lake and the pack's Delta
 connector `funds-store` serves them; nothing is served by the demo connector. `samples/` keeps a few reference documents.
 
@@ -192,7 +192,7 @@ A US mutual fund or ETF from SEC public data: the fact sheet, the look-through h
 | `MOST_HELD_NAME` | text |  | optional |  | `Nvidia` |  | That company's name. Source: us-equities. |
 | `ALSO_HELD_BY` | record list |  | required |  |  |  | The ten other funds holding that company the most, by value. Source: computed from fund-holder. |
 | `VS_INDEX` | record |  | optional |  |  |  | The fund against its tracked index (or the S&P 500 for reference); index weights computed from SEC data. Source: computed. |
-| `ACTIVE_SHARE` | rate |  | optional | % | `26.75` |  | Half the sum of the differences between the fund's and the index's weights (VS_INDEX). Source: computed. |
+| `ACTIVE_SHARE` | rate |  | optional | % | `11.21` |  | Half the sum of the differences between the fund's and the index's weights (VS_INDEX). Source: computed. |
 
 Nested `CLASSES[]`:
 
@@ -366,17 +366,17 @@ Nested `VS_INDEX`:
 | `INDEX_ID` | id |  | required |  | `NDX` |  | The us-equities index. Source: us-equities index-membership. |
 | `INDEX_NAME` | text |  | required |  | `Nasdaq-100` |  | Its name. Source: us-equities index-membership. |
 | `BASIS` | text |  | required |  | `tracks`, `reference` |  | tracks (the fund tracks it) or reference (an equity fund compared with the S&P 500). Source: computed. |
-| `WEIGHTING` | text |  | required |  | `market capitalisation computed from SEC data` |  | market capitalisation computed from SEC data, or equal weights. Source: computed. |
-| `MEMBERS` | integer |  | required | companies | `77` |  | The index's members as the us-equities pack lists them. Source: us-equities index-membership (Wikidata). |
-| `MEMBERS_WEIGHTED` | integer |  | required | companies | `68` |  | Members with a market capitalisation the filings support. Source: computed. |
-| `MEMBERS_NOT_WEIGHTED` | text |  | optional |  | `BIDU, BKNG, EXPE, GOOGL, MSTR, PDD, PLTR, SHOP, TEAM` |  | Members left out of the weights, by ticker. Source: computed. |
-| `MEMBERS_HELD` | amount |  | required | companies | `60` |  | Listed members the fund holds. Source: computed. |
-| `FUND_IN_INDEX_PCT` | rate |  | required | % of net assets | `71.57` |  | The fund's weight in the listed members. Source: computed. |
-| `NOT_IN_INDEX_PCT` | rate |  | required | % of net assets | `28.43` |  | The rest: other companies, cash, futures. Source: computed. |
-| `ACTIVE_SHARE` | rate |  | required | % | `26.75` |  | Half the sum of the absolute weight differences over the members weighted. Source: computed. |
-| `LARGEST_DIFF_COMPANY` | text |  | required |  | `AAPL` |  | The company with the largest difference. Source: computed. |
-| `LARGEST_DIFF_NAME` | text |  | required |  | `Apple Inc.` |  | Its name. Source: us-equities. |
-| `LARGEST_DIFF` | amount |  | required | % points | `-7.819` |  | Fund weight less index weight. Source: computed. |
+| `WEIGHTING` | text |  | required |  | `market capitalisation computed from SEC data` |  | market capitalisation computed from SEC data (capped as the Nasdaq-100 caps it), share price for the Dow, or equal weights. Source: computed. |
+| `MEMBERS` | integer |  | required | companies | `99` |  | The index's members as the us-equities pack lists them. Source: us-equities index-membership (the holdings of SPY, QQQ and DIA). |
+| `MEMBERS_WEIGHTED` | integer |  | required | companies | `84` |  | Members with a market capitalisation the filings support. Source: computed. |
+| `MEMBERS_NOT_WEIGHTED` | text |  | optional |  | `ABNB, APP, BKNG, CRWD, CRWV, DASH, DDOG, GOOGL, HONA, META, MSTR, NBIS, PDD, PLTR, SHOP` |  | Members left out of the weights, by ticker. Source: computed. |
+| `MEMBERS_HELD` | amount |  | required | companies | `98` |  | Listed members the fund holds. Source: computed. |
+| `FUND_IN_INDEX_PCT` | rate |  | required | % of net assets | `99.2` |  | The fund's weight in the listed members. Source: computed. |
+| `NOT_IN_INDEX_PCT` | rate |  | required | % of net assets | `0.8` |  | The rest: other companies, cash, futures. Source: computed. |
+| `ACTIVE_SHARE` | rate |  | required | % | `11.21` |  | Half the sum of the absolute weight differences over the members weighted. Source: computed. |
+| `LARGEST_DIFF_COMPANY` | text |  | required |  | `ASML` |  | The company with the largest difference. Source: computed. |
+| `LARGEST_DIFF_NAME` | text |  | required |  | `ASML Holding` |  | Its name. Source: us-equities. |
+| `LARGEST_DIFF` | amount |  | required | % points | `-1.915` |  | Fund weight less index weight. Source: computed. |
 | `AS_OF` | date |  | required |  | `2026-06-30` |  | The fund's report date. Source: N-PORT SUBMISSION.REPORT_DATE. |
 | `ROWS` | record list |  | required |  |  |  | The 25 largest weights in either, side by side. Source: computed. |
 | `SECTORS` | record list |  | required |  |  |  | Fund and index weights by SIC division. Source: computed. |
@@ -508,8 +508,8 @@ Nested `ROWS[]`:
 | `TYPE` | text |  | required |  | `ETF`, `Mutual fund`, `Mutual fund with an ETF share class`, `ETF (unit investment trust)` |  | Its type. Source: N-CEN IS_ETF. |
 | `NET_ASSETS` | amount |  | required | USD | `490103179942.0` |  | Its net assets. Source: N-PORT NET_ASSETS. |
 | `EXPENSE_RATIO` | rate |  | optional | % | `0.18` |  | Its net expense ratio. Source: risk/return summary NetExpensesOverAssets. |
-| `MEMBERS_HELD` | amount |  | required | companies | `60` |  | Listed members it holds. Source: computed. |
-| `ACTIVE_SHARE` | rate |  | required | % | `26.75` |  | Against the computed index weights. Source: computed. |
+| `MEMBERS_HELD` | amount |  | required | companies | `98` |  | Listed members it holds. Source: computed. |
+| `ACTIVE_SHARE` | rate |  | required | % | `11.21` |  | Against the computed index weights. Source: computed. |
 | `REPORT_DATE` | date |  | required |  | `2026-06-30` |  | Its N-PORT report date. Source: N-PORT REPORT_DATE. |
 | `IS_ETF` | boolean |  | required |  | `True` |  | True for an ETF. Source: N-CEN IS_ETF. |
 

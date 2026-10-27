@@ -21,8 +21,8 @@ version: '1.0'
 class: fundamental
 status: active
 title: Index members
-description: An equity index's members (Dow 30, Nasdaq-100, S&P 500) as Wikidata records them; a click opens the member's summary beside.
-source: 'public data: SEC EDGAR, Nasdaq Trader, GLEIF and Wikidata (tools/publicdata/us_equities.py)'
+description: An equity index's members (Dow 30, Nasdaq-100, S&P 500) as their tracking ETF reports holding them; a click opens the member's summary beside.
+source: 'public data: SEC EDGAR (with the tracking ETFs'' Form N-PORT), Nasdaq Trader, GLEIF and Wikidata (tools/publicdata/us_equities.py)'
 grain: One row per index members, keyed by INDEX.
 key:
 - INDEX
@@ -80,8 +80,10 @@ nested:
     presence: required
     example: Manufacturing
     enum:
+    - Construction
     - Finance, Insurance and Real Estate
     - Manufacturing
+    - Mining
     - Retail Trade
     - Services
     - Transportation, Communications, Electric, Gas and Sanitary Services
@@ -103,7 +105,7 @@ nested:
     example: 416161000000
   - name: NET_INCOME
     type: amount
-    presence: required
+    presence: optional
     example: 112010000000
   - name: CURRENCY
     type: text
@@ -111,7 +113,7 @@ nested:
     example: USD
   - name: FISCAL_YEAR
     type: integer
-    presence: required
+    presence: optional
     example: 2025
   - name: SINCE
     type: date
@@ -121,11 +123,11 @@ nested:
   - name: SOURCE
     type: text
     presence: required
-    example: Wikidata (index membership as Wikidata records it); SEC EDG…
+    example: SEC Form N-PORT of DIA (SPDR DOW JONES INDUSTRIAL AVERAGE ETF TRUST), the…
   - name: LICENCE
     type: text
     presence: required
-    example: CC0 1.0 (Wikidata); public domain (SEC EDGAR)
+    example: Public domain (SEC EDGAR); CC0 1.0 (Wikidata)
   - name: NOTE
     type: text
     presence: required

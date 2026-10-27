@@ -443,10 +443,11 @@ kinds:
           reference: The S&P 500 as a reference
       VS_INDEX.WEIGHTING:
         term: Index weights
-        means: 'market capitalisation computed from SEC data, or equal weights. Source: computed.'
+        means: 'market capitalisation computed from SEC data (capped as the Nasdaq-100 caps it), share price for the Dow, or equal weights. Source:
+          computed.'
       VS_INDEX.MEMBERS:
         term: Listed members
-        means: 'The index''s members as the us-equities pack lists them. Source: us-equities index-membership (Wikidata).'
+        means: 'The index''s members as the us-equities pack lists them. Source: us-equities index-membership (the holdings of SPY, QQQ and DIA).'
         unit: companies
       VS_INDEX.MEMBERS_WEIGHTED:
         term: Members weighted

@@ -93,7 +93,7 @@ connectors:
           type-ahead: [NAME, TICKERS]     # a fund is found by its name and by every share class ticker
 ```
 
-You should see the pack's overview: **FUND** 200 funds, **HELD** 503 companies, **TRACK** 3 indexes, each with an example and its key
+You should see the pack's overview: **FUND** 200 funds, **HELD** 586 companies, **TRACK** 3 indexes, each with an example and its key
 fields, and what the pack holds.
 
 ![FUNDS: the pack's overview, its three commands and their counts](img/t28/01-pack-overview.jpg)
@@ -256,11 +256,12 @@ The fund  (kv, the-fund)
           - { label: Index weights, bind: "$.VS_INDEX.WEIGHTING + ' (' + fmt($.VS_INDEX.MEMBERS_WEIGHTED, 'amount0') + ' members)'" }
 ```
 
-You should see, for QQQ, **Members held** 60 of 77 listed members, **Active share** 26.75%, the index weights *market capitalisation
-computed from SEC data (68 members)* and the members not weighted (their filed share count cannot be compared: GOOGL, BKNG ...); the 25
-largest weights side by side (Apple 10.7% in the fund against 18.5% in the computed index) and the tilt by SIC division. For VOO the
-active share is 5.51% over 416 of 459 listed members; for AGTHX 43.39%. The note at the bottom says why the index weights are computed:
-providers' weights are proprietary.
+You should see, for QQQ, **Members held** 98 of 99 listed members, **Active share** 11.21%, the index weights *market capitalisation
+computed from SEC data, capped as the Nasdaq-100 methodology caps it (84 members)* and the members not weighted (their filed share
+count cannot be compared: ABNB, APP, BKNG ...); the 25 largest weights side by side (Apple 7.9% in the fund against 9.6% in the
+computed index) and the tilt by SIC division. For VOO the active share is 5.29% over 493 of 495 members; for AGTHX 44.41%; for DIA,
+weighted by share price as the Dow is, 1.8%. The note at the bottom says why the index weights are computed: providers' weights are
+proprietary. The members are what each index's tracking ETF (SPY, QQQ, DIA) reported holding.
 
 ![QQQ against the Nasdaq-100](img/t28/04-versus-index.jpg)
 
@@ -394,7 +395,7 @@ Funds · Funds tracking an index  SP500  with S&P 500   [TRACK]
 ```
 
 You should see **7 funds** (4 ETFs) with **4,821.3bn** together, VOO the largest; every one at an expense ratio of 0.03% or less (SPY,
-a trust, files no prospectus summary) and an active share between 5.27% and 5.89% against the computed weights.
+a trust, files no prospectus summary) and an active share between 5.29% and 5.77% against the computed weights.
 
 ![TRACK SP500](img/t28/08-track-index.jpg)
 

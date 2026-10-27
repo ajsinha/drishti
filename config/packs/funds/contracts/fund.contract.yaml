@@ -520,7 +520,7 @@ fields:
   presence: optional
   unit: '%'
   description: 'Half the sum of the differences between the fund''s and the index''s weights (VS_INDEX). Source: computed.'
-  example: 26.75
+  example: 11.21
 nested:
   CLASSES[]:
   - name: CLASS_ID
@@ -1123,65 +1123,65 @@ nested:
   - name: WEIGHTING
     type: text
     presence: required
-    description: 'market capitalisation computed from SEC data, or equal weights. Source: computed.'
+    description: 'market capitalisation computed from SEC data (capped as the Nasdaq-100 caps it), share price for the Dow, or equal weights. Source: computed.'
     example: market capitalisation computed from SEC data
   - name: MEMBERS
     type: integer
     presence: required
     unit: companies
-    description: 'The index''s members as the us-equities pack lists them. Source: us-equities index-membership (Wikidata).'
-    example: 77
+    description: 'The index''s members as the us-equities pack lists them. Source: us-equities index-membership (the holdings of SPY, QQQ and DIA).'
+    example: 99
   - name: MEMBERS_WEIGHTED
     type: integer
     presence: required
     unit: companies
     description: 'Members with a market capitalisation the filings support. Source: computed.'
-    example: 68
+    example: 84
   - name: MEMBERS_NOT_WEIGHTED
     type: text
     presence: optional
     description: 'Members left out of the weights, by ticker. Source: computed.'
-    example: BIDU, BKNG, EXPE, GOOGL, MSTR, PDD, PLTR, SHOP, TEAM
+    example: ABNB, APP, BKNG, CRWD, CRWV, DASH, DDOG, GOOGL, HONA, META, MSTR, NBIS, PDD, PLTR, SHOP
   - name: MEMBERS_HELD
     type: amount
     presence: required
     unit: companies
     description: 'Listed members the fund holds. Source: computed.'
-    example: 60
+    example: 98
   - name: FUND_IN_INDEX_PCT
     type: rate
     presence: required
     unit: '% of net assets'
     description: 'The fund''s weight in the listed members. Source: computed.'
-    example: 71.57
+    example: 99.2
   - name: NOT_IN_INDEX_PCT
     type: rate
     presence: required
     unit: '% of net assets'
     description: 'The rest: other companies, cash, futures. Source: computed.'
-    example: 28.43
+    example: 0.8
   - name: ACTIVE_SHARE
     type: rate
     presence: required
     unit: '%'
     description: 'Half the sum of the absolute weight differences over the members weighted. Source: computed.'
-    example: 26.75
+    example: 11.21
   - name: LARGEST_DIFF_COMPANY
     type: text
     presence: required
     description: 'The company with the largest difference. Source: computed.'
-    example: AAPL
+    example: ASML
   - name: LARGEST_DIFF_NAME
     type: text
     presence: required
     description: 'Its name. Source: us-equities.'
-    example: Apple Inc.
+    example: ASML Holding
   - name: LARGEST_DIFF
     type: amount
     presence: required
     unit: '% points'
     description: 'Fund weight less index weight. Source: computed.'
-    example: -7.819
+    example: -1.915
   - name: AS_OF
     type: date
     presence: required

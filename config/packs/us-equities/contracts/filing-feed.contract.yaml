@@ -116,28 +116,10 @@ nested:
     type: text
     presence: required
     example: 8-K
-    enum:
-    - 10-K
-    - 10-Q
-    - '144'
-    - '4'
-    - 424B2
-    - 8-K
-    - DEF 14A
-    - FWP
   - name: DESCRIPTION
     type: text
     presence: required
     example: Current report
-    enum:
-    - Annual report
-    - Change in beneficial ownership (insider)
-    - Current report
-    - Definitive proxy statement
-    - Free writing prospectus
-    - Notice of proposed sale of securities
-    - Prospectus
-    - Quarterly report
   BY[]:
   - name: LABEL
     type: text

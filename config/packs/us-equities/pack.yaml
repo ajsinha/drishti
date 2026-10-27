@@ -15,7 +15,8 @@
 
 # US equities · real public data on the companies of the Dow 30, the Nasdaq-100 and the S&P 500, and on major US, Canadian and UK
 # banks that file with the SEC (the pack's bank lists): SEC EDGAR (public domain) for the
-# companies, their SIC sectors, filings and annual XBRL financials; Wikidata (CC0) for index membership, headquarters and founding;
+# companies, their SIC sectors, filings and annual XBRL financials; the index members from the tracking ETFs' Form N-PORT (SPY, QQQ, DIA);
+# Wikidata (CC0) for headquarters and founding;
 # GLEIF (CC0) for the LEI; the Nasdaq Trader symbol directory for the listing market. Hand-written; tools/packgen/us_equities/make.py
 # writes the data (data/testdata/us-equities/<kind>/, built into the lake by tools/build_demo_lakes.py and served by the Delta
 # connector us-equities-store below), a few reference samples and guides/us-equities.md from the cache tools/packgen/us_equities/fetch.py
@@ -27,7 +28,7 @@ title: US equities
 description: >-
   Public data on the companies of the Dow 30, the Nasdaq-100 and the S&P 500, and on major US, Canadian and UK banks that file with
   the SEC: SEC EDGAR companies, SIC sectors, filings and ten years of annual XBRL financials, LEIs from GLEIF and index membership
-  from Wikidata. Prices are not shipped: the price-history kind is read
+  from the tracking ETFs' SEC filings (SPY, QQQ, DIA). Prices are not shipped: the price-history kind is read
   live by a connector that is off by default and for internal use only.
 kinds: [us-company, index-membership, sic-sector, filing-feed, filing, financial-fact, price-history]
 formats: config/formats.yaml

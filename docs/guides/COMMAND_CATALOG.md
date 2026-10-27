@@ -79,7 +79,7 @@ A pack's code typed alone opens the pack's overview.
 | `MRSK` | `market-risk` | Value at risk, stress testing, FRTB sensitivities and P&L explain. |
 | `NWMK` | `news-and-markets` | Sample pack: fifteen news topics (central banks, countries, companies, themes) and twenty listed companies, with headlines (Google News) and quotes and price history (Yahoo Finance) fetched on demand. Internal demonstration only: Yahoo's endpoint is unofficial and its terms restrict use; names leave the network when the connectors are on. Off until the connectors are enabled; offline (DRISHTI_OFFLINE=true, or the connectors off) the demo lake serves a captured snapshot of the same quotes and headlines. |
 | `TRDS` | `trading` | Trades in 125 products across rates, FX, credit, equity, commodities, inflation, fixed income, securities financing, money markets and structured products. |
-| `USEQS` | `us-equities` | Public data on the companies of the Dow 30, the Nasdaq-100 and the S&P 500, and on major US, Canadian and UK banks that file with the SEC: SEC EDGAR companies, SIC sectors, filings and ten years of annual XBRL financials, LEIs from GLEIF and index membership from Wikidata. Prices are not shipped: the price-history kind is read live by a connector that is off by default and for internal use only. |
+| `USEQS` | `us-equities` | Public data on the companies of the Dow 30, the Nasdaq-100 and the S&P 500, and on major US, Canadian and UK banks that file with the SEC: SEC EDGAR companies, SIC sectors, filings and ten years of annual XBRL financials, LEIs from GLEIF and index membership from the tracking ETFs' SEC filings (SPY, QQQ, DIA). Prices are not shipped: the price-history kind is read live by a connector that is off by default and for internal use only. |
 | `WRLD` | `world-economy` | Real public economic data for about 200 economies: output, growth, prices, jobs, debt and external balance (World Bank, IMF, CIA World Factbook), IMF forecasts, and World Bank regions and income groups; and governments and societies: government type, office holders, elections, parties with seats, and social and governance indicators (CIA World Factbook, World Bank, UNDP). |
 
 ## Compute demo (`compute-demo`)
@@ -227,12 +227,12 @@ Trades in 125 products across rates, FX, credit, equity, commodities, inflation,
 
 ## US equities (`us-equities`)
 
-Public data on the companies of the Dow 30, the Nasdaq-100 and the S&P 500, and on major US, Canadian and UK banks that file with the SEC: SEC EDGAR companies, SIC sectors, filings and ten years of annual XBRL financials, LEIs from GLEIF and index membership from Wikidata. Prices are not shipped: the price-history kind is read live by a connector that is off by default and for internal use only.
+Public data on the companies of the Dow 30, the Nasdaq-100 and the S&P 500, and on major US, Canadian and UK banks that file with the SEC: SEC EDGAR companies, SIC sectors, filings and ten years of annual XBRL financials, LEIs from GLEIF and index membership from the tracking ETFs' SEC filings (SPY, QQQ, DIA). Prices are not shipped: the price-history kind is read live by a connector that is off by default and for internal use only.
 
 | Command | Opens | What it does | Example | Data | Change |
 |---|---|---|---|---|---|
 | `USEQ` | US company | A US listed company: key facts, ten years of annual financials, recent SEC filings and index memberships, from public data. | `USEQ AAPL` | fundamental |  |
-| `IDX` | Index members | An equity index's members (Dow 30, Nasdaq-100, S&P 500) as Wikidata records them; a click opens the member's summary beside. | `IDX SP500` | fundamental |  |
+| `IDX` | Index members | An equity index's members (Dow 30, Nasdaq-100, S&P 500) as their tracking ETF reports holding them; a click opens the member's summary beside. | `IDX SP500` | fundamental |  |
 | `SIC` | SIC sector | A sector by its SIC code, computed from the companies when asked: its companies ranked by revenue; a click opens a company's summary beside. | `SIC 3674` | computed |  |
 | `EDGAR` | EDGAR filings browser | The filings browser: the latest SEC filings of the covered companies, of every form or one; a click opens a filing beside. | `EDGAR 8-K` | fundamental |  |
 | `FILING` | SEC filing | One SEC filing: its company, form, dates, 8-K items and its links on EDGAR (metadata only; the document stays on sec.gov). | `FILING 0001104659-26-117587` | fundamental |  |

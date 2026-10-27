@@ -182,6 +182,15 @@ def build(cache: Path) -> dict[str, dict[str, dict]]:
             continue
         member.setdefault(cik, {})[m["index"]] = {"since": m.get("since", ""), "label": m.get("label", "")}
         wfacts.setdefault(cik, {"label": m.get("label", ""), **f})
+    # an index its tracking ETF reports (trackers.json): the ETF's holdings are the members, Wikidata's list only gives the date a member
+    # joined; a company Wikidata still lists but the ETF does not hold stays in the pack, in no index
+    tracked = F.tracked(cache)
+    for code, ix in tracked.items():
+        since = {cik: v[code]["since"] for cik, v in member.items() if code in v}
+        for v in member.values():
+            v.pop(code, None)
+        for m in ix["MEMBERS"]:
+            member.setdefault(m["CIK"], {})[code] = {"since": since.get(m["CIK"], ""), "label": m["NAME"]}
 
     companies: dict[str, dict] = {}
     filings: dict[str, dict] = {}
@@ -306,11 +315,12 @@ def build(cache: Path) -> dict[str, dict[str, dict]]:
                              "EXCHANGE": c["EXCHANGE"], "REVENUE": c["REVENUE"], "NET_INCOME": c["NET_INCOME"],
                              "CURRENCY": c["CURRENCY"], "FISCAL_YEAR": c["FISCAL_YEAR"], "SINCE": hit["SINCE"]})
         # the members' totals (revenue, net income, SIC divisions) are not written: the page computes them from the rows (since 2.9.2)
+        prov, meta = (PROV_LIST, {"source": "drishti list", "dataset": "a curated list of SEC filers", "licence": "public domain"}) \
+            if code in F.LISTS else _tracker_prov(tracked.get(code)) if code in tracked else \
+            (PROV_INDEX, {"source": "wikidata", "dataset": "index membership (Wikidata P361)", "licence": "CC0"})
         indexes[code] = {"INDEX": code, "NAME": label, "MEMBERS": len(rows),
-                         "ROWS": rows, "PROVENANCE": {**(PROV_LIST if code in F.LISTS else PROV_INDEX), "RETRIEVED_AT": retrieved},
-                         "_meta": {"source": "drishti list" if code in F.LISTS else "wikidata",
-                                   "dataset": "a curated list of SEC filers" if code in F.LISTS else "index membership (Wikidata P361)",
-                                   "retrievedAt": retrieved, "licence": "public domain" if code in F.LISTS else "CC0", "generation": 1}}
+                         "ROWS": rows, "PROVENANCE": {**prov, "RETRIEVED_AT": retrieved},
+                         "_meta": {**meta, "retrievedAt": retrieved, "generation": 1}}
 
     # The SIC sectors (SIC) are not written: the us-equities-groupings connector computes them from the companies when asked
     # (since 2.9.2; docs/guides/GROUPINGS_ANALYTICS_GUIDE.md).
@@ -335,6 +345,17 @@ def build(cache: Path) -> dict[str, dict[str, dict]]:
                       "_meta": {"source": "sec-edgar", "dataset": "submissions (recent filings)", "retrievedAt": retrieved, "licence": "public domain", "generation": 1}}
 
     return {"us-company": companies, "index-membership": indexes, "filing-feed": feeds, "filing": filings, "financial-fact": facts}
+
+
+def _tracker_prov(ix: dict) -> tuple[dict, dict]:
+    """An index's provenance when its tracking ETF's N-PORT gives the members (trackers.py)."""
+    gone = ", ".join(m["NAME"] for m in ix["NOT_LISTED"])
+    prov = {"SOURCE": f"SEC Form N-PORT of {ix['FUND']} ({ix['FUND_NAME']}), the stocks it reported holding on {ix['REPORT_DATE']} "
+                      f"(filed {ix['FILED']}, accession {ix['ACCESSION']}); SEC EDGAR (company data); Wikidata (the date a member joined)",
+            "LICENCE": "Public domain (SEC EDGAR); CC0 1.0 (Wikidata)",
+            "NOTE": "Membership as the tracking fund holds it on its report date. Index weights and levels are proprietary to their index "
+                    "providers and are not included." + (f" Held then, no longer listed by the SEC: {gone}." if gone else "")}
+    return prov, {"source": "sec-nport", "dataset": f"holdings of {ix['FUND']} (Form N-PORT)", "licence": "public domain"}
 
 
 def _meta(dataset: str, retrieved: str) -> dict:
@@ -409,7 +430,7 @@ The concepts are `REVENUE`, `NET-INCOME`, `ASSETS`, `LIABILITIES`, `EQUITY`, `EP
 | Kind | Documents | What one holds |
 |---|---|---|
 | `us-company` | {companies} | CIK, ticker, exchange and listing market, SIC with its description and division, state of incorporation, fiscal year end, LEI, headquarters, founded, website, index memberships, the latest year's figures, ten years of financials, the latest {filings_per} filings |
-| `index-membership` | {indexes} | the members as Wikidata records them, with their sector and latest revenue; members by sector |
+| `index-membership` | {indexes} | the members of the S&P 500, Nasdaq-100 and Dow as their tracking ETF (SPY, QQQ, DIA) reports holding them, and the bank lists, with their sector and latest revenue; members by sector |
 | `sic-sector` | computed ({sectors} codes and `ALL`) | the companies of one SIC code ranked by revenue; `ALL` lists every code. Computed from the companies when asked by the derived connector `us-equities-groupings` (since 2.9.2): nothing is stored |
 | `filing-feed` | {feeds} | the latest {feed_rows} filings of the companies, all forms or one |
 | `filing` | {filing_count} | one filing: form, filing and report dates, document, 8-K items, links to the document and its EDGAR index |
@@ -446,11 +467,15 @@ opens its LEI record, and the record links back to the company.
 | SEC EDGAR: `company_tickers_exchange.json`, `submissions/CIK##########.json`, `api/xbrl/companyfacts` | tickers, CIK, names, SIC, addresses, filings (metadata and links only), annual XBRL facts | Public domain (U.S. Government work). Fetched under the SEC's fair access policy: a descriptive User-Agent with a contact, under 10 requests a second |
 | Nasdaq Trader symbol directory (`nasdaqlisted.txt`, `otherlisted.txt`) | the listing market | Public directory file |
 | GLEIF LEI records | the LEI, legal name and registration status | CC0 1.0 |
-| Wikidata | index membership, headquarters, founded, website, LEI | CC0 1.0 |
+| SEC Form N-PORT of SPY, QQQ and DIA (read from the funds pack's download cache) | index membership: the stocks each tracking ETF holds on its report date | Public domain (U.S. Government work) |
+| Wikidata | headquarters, founded, website, LEI, the date a member joined its index | CC0 1.0 |
 
 **Not included:** index weights and index levels (proprietary to S&P Dow Jones Indices and Nasdaq), GICS sectors (proprietary to MSCI and
-S&P; the pack uses SIC, which the SEC publishes) and prices. Index membership is as Wikidata records it and can lag a change by days
-or weeks; it is not an authoritative constituent list.
+S&P; the pack uses SIC, which the SEC publishes) and prices. Index membership is what the index's tracking ETF reported holding on
+its N-PORT report date (each index page names the fund, the date and the filing), so it lags a change by up to a quarter; a company
+since taken private or merged is listed in the index page's note, not as a member. Until 2.9.3 membership came from Wikidata, whose
+lists were out of date (the S&P 500 lacked Exxon Mobil, BlackRock and about 80 others); the companies Wikidata still lists but no
+tracking ETF holds stay in the pack, in no index.
 
 ## Prices: internal use only
 

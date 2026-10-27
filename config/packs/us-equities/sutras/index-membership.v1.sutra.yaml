@@ -16,12 +16,12 @@
 rachana: 1
 sutra: index-membership
 version: 1
-description: "An equity index's members (Dow 30, Nasdaq-100, S&P 500) as Wikidata records them; a click opens the member's summary beside."
+description: "An equity index's members (Dow 30, Nasdaq-100, S&P 500) as its tracking ETF reports holding them; a click opens the member's summary beside."
 doc:
   summary: "An index's members, filterable; a click opens the member's key facts and financials beside the table."
   description: >-
     The members of one index, one row a company: ticker, name, SIC division, latest revenue and the date Wikidata gives for its
-    entry. Every column filters (type in the heading). Clicking a member fires open with its ticker; its key facts and its
+    entry (where it has one). Every column filters (type in the heading). Clicking a member fires open with its ticker; its key facts and its
     revenue and net income over the years open beside the table. The right column counts the members by SIC division. Membership
     only: index weights and levels are proprietary and not included.
   params: {}
@@ -72,7 +72,7 @@ panels:
     with:
       title: About this list
       area: right
-      text: "Index membership as Wikidata (CC0) records it: a statement that the company is part of the index, with no end date. It can lag a change by days or weeks and is not an authoritative constituent list. Index weights and levels are proprietary to the index providers and are not included. The bank lists (BANKS-US, BANKS-CA, BANKS-UK) are kept by Drishti and hold the banks that file with the SEC; a Canadian or UK bank reports in its own currency, and the totals add USD reporters only. Company figures: SEC EDGAR (public domain)."
+      text: "Index membership as the index's tracking ETF (SPY for the S&P 500, QQQ for the Nasdaq-100, DIA for the Dow) reported holding it in its newest Form N-PORT (SEC, public domain); the source below names the filing and its date. A change to the index shows up to a quarter late. Index weights and levels are proprietary to the index providers and are not included. The bank lists (BANKS-US, BANKS-CA, BANKS-UK) are kept by Drishti and hold the banks that file with the SEC; a Canadian or UK bank reports in its own currency, and the totals add USD reporters only. Company figures: SEC EDGAR (public domain)."
   - { use: field-list@1, with: { id: source, title: Data source and licence, rows: $.PROVENANCE, area: right } }
   - { use: data-provenance@1 }
 keys: { F9: raw }

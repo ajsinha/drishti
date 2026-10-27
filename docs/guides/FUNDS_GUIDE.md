@@ -72,7 +72,7 @@ python3 tools/drishti.py lake demo                    # every table; or: python3
 
 On Windows, `.\tools\windows\start-server.ps1 -DemoLakes` loads the public-data packs including `funds`, and
 `python tools\build_demo_lakes.py --only funds` builds its three tables. The demo cluster (`drishti-stack/stack.yaml`) loads it on
-every node. Type `FUNDS` and press Enter: the pack's overview lists its three commands with their counts (200 funds, 503 companies
+every node. Type `FUNDS` and press Enter: the pack's overview lists its three commands with their counts (200 funds, 586 companies
 held, 3 indexes tracked).
 
 The pack's data is served by its Delta connector `funds-store` from the lake, never by the demo connector: a server with
@@ -128,7 +128,7 @@ The first tab is the look-through: what the fund holds, all of it, and who it is
 ## 4. The fund against its index
 
 The second tab compares the fund with the index it tracks; an equity fund that tracks none of the pack's indexes is compared with the
-S&P 500 for reference (`FUND AGTHX`, the Growth Fund of America: active share 43%), and the tab's title says so.
+S&P 500 for reference (`FUND AGTHX`, the Growth Fund of America: active share 44%), and the tab's title says so.
 
 ![QQQ against the Nasdaq-100: coverage, active share, weights side by side, the tilt by SIC division](../tutorials/img/t28/04-versus-index.jpg)
 
@@ -141,11 +141,14 @@ S&P 500 for reference (`FUND AGTHX`, the Growth Fund of America: active share 43
 market capitalisation is its shares outstanding on its latest 10-K cover (us-equities `SHARES_OUTSTANDING`) times the price the funds'
 N-PORT filings imply (value over shares, the median across the funds). A member whose filed share count the holdings cannot support
 (none filed, a scale error, one class of several: the funds would own under 0.2% or over 80% of it) is left out and named, and both
-sides are compared over the members weighted; with fewer than 70% weighted, equal weights are used and the tab says so. The members
-are the us-equities pack's (from Wikidata, which can lag an index change). So an S&P 500 fund shows an active share of about 5.5%
-rather than 0: `FUND VOO` holds 416 of the 459 listed members, the other 43 having left the index since Wikidata last recorded it. The
-Dow Jones Industrial Average is price-weighted by its provider, so against it computed market-cap weights differ by design (`FUND DIA`,
-57.6%).
+sides are compared over the members weighted; with fewer than 70% weighted, equal weights are used and the tab says so. The
+Nasdaq-100 caps its largest members (its published method: a member over 24% is cut to 20%, and members over 4.5% that weigh more than
+48% together are cut to 40%), and the tab applies the same caps; the Dow Jones Industrial Average weighs its members by share price,
+and so does the tab (`FUND DIA`: active share 1.8%). The members are the us-equities pack's: what the index's tracking ETF (SPY, QQQ,
+DIA) reported holding in its newest N-PORT. An S&P 500 fund still shows an active share of about 5.3% rather than 0 (`FUND VOO`
+holds 493 of the 495 members) because 41 members have no share count the filings support (Alphabet, Meta, Berkshire Hathaway among
+them) and are left out of the weights; `FUND QQQ` shows 11.2% for the same reason (15 of its 99 members). Until 2.9.3 the members came
+from Wikidata, whose lists were out of date (QQQ then showed 26.75%).
 
 ## 5. Held by funds: HELD and the company page
 
@@ -216,9 +219,9 @@ Key figures
 
 Funds tracking the S&P 500, by net assets (a fund opens its page)  (table, trackers, F2)
   Fund                                     Ticker  Type                                 Net assets  Expense ratio  Members held  Active share*
-  Vanguard 500 Index Fund                  VOO     Mutual fund with an ETF share class   1,671.2bn         0.03 %           416         5.51 %
-  iShares Core S&P 500 ETF                 IVV     ETF                                     888.1bn         0.03 %           415         5.53 %
-  Fidelity 500 Index Fund                  FXAIX   Mutual fund                             832.2bn         0.01 %           416         5.27 %
+  Vanguard 500 Index Fund                  VOO     Mutual fund with an ETF share class   1,671.2bn         0.03 %           493         5.29 %
+  iShares Core S&P 500 ETF                 IVV     ETF                                     888.1bn         0.03 %           493         5.29 %
+  Fidelity 500 Index Fund                  FXAIX   Mutual fund                             832.2bn         0.01 %           487         5.41 %
   ...
 ```
 
@@ -356,7 +359,7 @@ lei-entity), `INDEX_ID` to `IDX` (index-membership).
 | `MOST_HELD_COMPANY` | id |  | The largest us-equities company the fund holds. | computed | USEQ | NVDA |
 | `MOST_HELD_NAME` | text |  | That company's name. | us-equities |  | Nvidia |
 | `ALSO_HELD_BY` | record list |  | The ten other funds holding that company the most, by value. | computed from fund-holder |  |  |
-| `ACTIVE_SHARE` | rate |  | Half the sum of the differences between the fund's and the index's weights (VS_INDEX). (%) | computed |  | 26.75 |
+| `ACTIVE_SHARE` | rate |  | Half the sum of the differences between the fund's and the index's weights (VS_INDEX). (%) | computed |  | 11.21 |
 | `VIEWS` | record list |  | The page's tabs: Look-through holdings, and the fund against its index when there is one. | computed |  |  |
 | `VIEWS.VIEW` | text |  | LOOK_THROUGH or VS_INDEX. | computed |  | LOOK_THROUGH |
 | `VIEWS.TITLE` | text |  | The tab's title. | computed |  | Look-through holdings |
@@ -364,17 +367,17 @@ lei-entity), `INDEX_ID` to `IDX` (index-membership).
 | `VS_INDEX.INDEX_ID` | id |  | The us-equities index. | us-equities index-membership | IDX (index-membership) | NDX |
 | `VS_INDEX.INDEX_NAME` | text |  | Its name. | us-equities index-membership |  | Nasdaq-100 |
 | `VS_INDEX.BASIS` | text |  | tracks (the fund tracks it) or reference (an equity fund compared with the S&P 500). | computed |  | tracks |
-| `VS_INDEX.WEIGHTING` | text |  | market capitalisation computed from SEC data, or equal weights. | computed |  | market capitalisation computed from S... |
-| `VS_INDEX.MEMBERS` | integer |  | The index's members as the us-equities pack lists them. (companies) | us-equities index-membership (Wikidata) |  | 77 |
-| `VS_INDEX.MEMBERS_WEIGHTED` | integer |  | Members with a market capitalisation the filings support. (companies) | computed |  | 68 |
-| `VS_INDEX.MEMBERS_NOT_WEIGHTED` | text |  | Members left out of the weights, by ticker. | computed |  | BIDU, BKNG, EXPE, GOOGL, MSTR, PDD, P... |
-| `VS_INDEX.MEMBERS_HELD` | amount |  | Listed members the fund holds. (companies) | computed |  | 60 |
-| `VS_INDEX.FUND_IN_INDEX_PCT` | rate |  | The fund's weight in the listed members. (% of net assets) | computed |  | 71.57 |
-| `VS_INDEX.NOT_IN_INDEX_PCT` | rate |  | The rest: other companies, cash, futures. (% of net assets) | computed |  | 28.43 |
-| `VS_INDEX.ACTIVE_SHARE` | rate |  | Half the sum of the absolute weight differences over the members weighted. (%) | computed |  | 26.75 |
-| `VS_INDEX.LARGEST_DIFF_COMPANY` | text |  | The company with the largest difference. | computed |  | AAPL |
-| `VS_INDEX.LARGEST_DIFF_NAME` | text |  | Its name. | us-equities |  | Apple Inc. |
-| `VS_INDEX.LARGEST_DIFF` | amount |  | Fund weight less index weight. (% points) | computed |  | -7.819 |
+| `VS_INDEX.WEIGHTING` | text |  | market capitalisation computed from SEC data (capped as the Nasdaq-100 caps it), share price for the Dow, or equal weights. | computed |  | market capitalisation computed from S... |
+| `VS_INDEX.MEMBERS` | integer |  | The index's members as the us-equities pack lists them. (companies) | us-equities index-membership (the holdings of SPY, QQQ and DIA) |  | 99 |
+| `VS_INDEX.MEMBERS_WEIGHTED` | integer |  | Members with a market capitalisation the filings support. (companies) | computed |  | 84 |
+| `VS_INDEX.MEMBERS_NOT_WEIGHTED` | text |  | Members left out of the weights, by ticker. | computed |  | ABNB, APP, BKNG, CRWD, CRWV, DASH, DD... |
+| `VS_INDEX.MEMBERS_HELD` | amount |  | Listed members the fund holds. (companies) | computed |  | 98 |
+| `VS_INDEX.FUND_IN_INDEX_PCT` | rate |  | The fund's weight in the listed members. (% of net assets) | computed |  | 99.2 |
+| `VS_INDEX.NOT_IN_INDEX_PCT` | rate |  | The rest: other companies, cash, futures. (% of net assets) | computed |  | 0.8 |
+| `VS_INDEX.ACTIVE_SHARE` | rate |  | Half the sum of the absolute weight differences over the members weighted. (%) | computed |  | 11.21 |
+| `VS_INDEX.LARGEST_DIFF_COMPANY` | text |  | The company with the largest difference. | computed |  | ASML |
+| `VS_INDEX.LARGEST_DIFF_NAME` | text |  | Its name. | us-equities |  | ASML Holding |
+| `VS_INDEX.LARGEST_DIFF` | amount |  | Fund weight less index weight. (% points) | computed |  | -1.915 |
 | `VS_INDEX.AS_OF` | date |  | The fund's report date. | N-PORT SUBMISSION.REPORT_DATE |  | 2026-06-30 |
 | `VS_INDEX.ROWS` | record list |  | The 25 largest weights in either, side by side. | computed |  |  |
 | `VS_INDEX.ROWS.COMPANY` | id |  | The us-equities company. | us-equities | USEQ (us-company) | AAPL |
@@ -463,7 +466,7 @@ lei-entity), `INDEX_ID` to `IDX` (index-membership).
 
 ## 9. fund-holder
 
-One document per us-equities company held by at least one fund, keyed by the company's `TICKER` (command `HELD`), 503 documents. Built
+One document per us-equities company held by at least one fund, keyed by the company's `TICKER` (command `HELD`), 586 documents. Built
 from every holding of every fund (not only those a fund page keeps): a holding is the company when its ticker is the company's, else
 (an equity) when its CUSIP is one some fund filed with the company's ticker, its issuer LEI is the company's, or its issuer name is the
 company's (legal suffixes and punctuation aside).
@@ -519,8 +522,8 @@ One document per us-equities index that at least one fund tracks, keyed by `INDE
 | `ROWS.IS_ETF` | boolean |  | True for an ETF. | N-CEN IS_ETF |  | True |
 | `ROWS.NET_ASSETS` | amount |  | Its net assets. (USD) | N-PORT NET_ASSETS |  | 490103179942.0 |
 | `ROWS.EXPENSE_RATIO` | rate |  | Its net expense ratio. (%) | risk/return summary NetExpensesOverAssets |  | 0.18 |
-| `ROWS.MEMBERS_HELD` | amount |  | Listed members it holds. (companies) | computed |  | 60 |
-| `ROWS.ACTIVE_SHARE` | rate |  | Against the computed index weights. (%) | computed |  | 26.75 |
+| `ROWS.MEMBERS_HELD` | amount |  | Listed members it holds. (companies) | computed |  | 98 |
+| `ROWS.ACTIVE_SHARE` | rate |  | Against the computed index weights. (%) | computed |  | 11.21 |
 | `ROWS.REPORT_DATE` | date |  | Its N-PORT report date. | N-PORT REPORT_DATE |  | 2026-06-30 |
 | `PROVENANCE.SOURCE` | text |  | Where the data comes from. | written by tools/packgen/funds/fundsbuild.py |  | U.S. Securities and Exchange Commissi... |
 | `PROVENANCE.LICENCE` | text |  | The source's licence (public domain). | written by tools/packgen/funds/fundsbuild.py |  | Public domain (U.S. Government work);... |

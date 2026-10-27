@@ -12,7 +12,8 @@
 #
 # See the LICENSE file in the root of this repository for the full terms.
 
-"""Refresh the us-equities pack from its public sources: SEC EDGAR, the Nasdaq Trader symbol directory, GLEIF and Wikidata.
+"""Refresh the us-equities pack from its public sources: SEC EDGAR (with the index members from SPY's, QQQ's and DIA's Form N-PORT,
+read from the funds pack's cache: refresh funds first), the Nasdaq Trader symbol directory, GLEIF and Wikidata.
 
     python3 tools/publicdata/us_equities.py status
     python3 tools/publicdata/us_equities.py refresh --dry-run
@@ -125,7 +126,8 @@ class _Company(B.Source):
             {"wikidata": lambda: F.wikidata(run.http_us, run.work),
              "nasdaq": lambda: F.nasdaq(run.http_us, run.work),
              "sec": lambda: F.sec(run.http_us, run.work, None),
-             "gleif": lambda: F.gleif(run.http_us, run.work)}[step]()
+             "gleif": lambda: F.gleif(run.http_us, run.work),
+             "trackers": lambda: _trackers().extract(run.work.parent / "funds", run.work, run.log)}[step]()
 
     def count(self, run: B.Run) -> int:
         return sum(1 for p in self.cache_prefixes for f in run.work.glob(p + "*") for _ in (f.rglob("*.*") if f.is_dir() else [f]))
@@ -143,6 +145,27 @@ class Wikidata(_Company):
     def plan(self, run: B.Run) -> list[str]:
         return [f"https://query.wikidata.org/sparql (current members of {code}, {qid})" for code, qid in F.INDEXES.items()] + \
                ["https://query.wikidata.org/sparql (company facts, 150 a query)"]
+
+
+class Trackers(_Company):
+    name, title, steps = "trackers", "SEC Form N-PORT of SPY, QQQ and DIA: the index members (from the funds cache; no download)", ("trackers",)
+    url, licence = "https://www.sec.gov/data-research/sec-markets-data/form-n-port-data-sets", "Public domain (U.S. Government work)"
+    licence_url = "https://www.sec.gov/privacy#security"
+    cache_prefixes = ("trackers.json",)
+
+    def plan(self, run: B.Run) -> list[str]:
+        return [f"{run.work.parent / 'funds' / 'nport'} (the newest N-PORT data set; tools/publicdata/funds.py refresh downloads it)"]
+
+
+def _trackers():
+    """trackers.py, loaded beside fetch.py (it imports `fetch`, which points at ours while it loads)."""
+    other = sys.modules.get("fetch")
+    sys.modules["fetch"] = F
+    try:
+        return _load("us_equities_trackers", GEN / "trackers.py")
+    finally:
+        if other is not None:
+            sys.modules["fetch"] = other
 
 
 class Nasdaq(_Company):
@@ -244,7 +267,7 @@ class Prices(B.Source):
         return [f]
 
 
-COMPANY_SOURCES = [Wikidata(), Nasdaq(), Sec(), Gleif()]
+COMPANY_SOURCES = [Wikidata(), Trackers(), Nasdaq(), Sec(), Gleif()]
 SOURCES = COMPANY_SOURCES + [Prices()]
 
 

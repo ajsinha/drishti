@@ -110,7 +110,7 @@ def test_offline_build_from_the_recorded_cache(tmp_path, cache, data_dir):
     assert UE.refresh(ns(cache, offline=True, out=str(out)), log=lambda *_: None) == 0
     assert first == built(pack)          # deterministic
     man = json.loads((data_dir / "publicdata" / "us-equities" / "manifest.json").read_text())
-    assert set(man["sources"]) == {"wikidata", "nasdaq", "sec", "gleif"} and man["runs"][-1]["ok"]
+    assert set(man["sources"]) == {"wikidata", "trackers", "nasdaq", "sec", "gleif"} and man["runs"][-1]["ok"]
     assert (out / "manifest.json").is_file()
 
 

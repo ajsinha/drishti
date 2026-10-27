@@ -816,7 +816,7 @@ terms:
   - term: Index membership
     synonyms: [idx, index members, constituents, index constituents]
     domain: companies-funds-and-etfs
-    meaning: "The companies of an index or list: the S&P 500, Nasdaq-100 and Dow 30 from Wikidata, the bank lists kept by Drishti. No weights or levels."
+    meaning: "The companies of an index or list: the S&P 500, Nasdaq-100 and Dow 30 as their tracking ETFs (SPY, QQQ, DIA) report holding them, the bank lists kept by Drishti. No weights or levels."
     command: IDX SP500
   - term: Mutual fund
     synonyms: [fund, open-end fund, mutual funds, open-ended fund]

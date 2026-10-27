@@ -74,7 +74,9 @@ def test_the_build_chooses_by_net_assets_and_links_holdings_to_companies(cache):
     assert both, "a company two of the funds hold lists both"
     assert qqq["VIEWS"][0]["VIEW"] == "LOOK_THROUGH"
     # 30 holdings are under 40% of a fund in us-equities companies: too few to set it against its index (the full build does)
-    assert all("VS_INDEX" not in d or d["VS_INDEX"]["WEIGHTING"] in ("market capitalisation computed from SEC data", "equal weights")
+    assert all("VS_INDEX" not in d or d["VS_INDEX"]["WEIGHTING"] in ("market capitalisation computed from SEC data", "equal weights",
+                                                                       "share price (the index's own method)")
+               or d["VS_INDEX"]["WEIGHTING"].startswith("market capitalisation computed from SEC data, capped")
                for d in funds.values())
 
 

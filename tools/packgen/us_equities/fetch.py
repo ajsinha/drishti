@@ -15,8 +15,10 @@
 """Download the us-equities pack's public data into a cache folder (the network; make.py then builds the pack offline).
 
 Sources, all openly licensed (docs/guides/packs/US_EQUITIES.md, Data sources and licences):
-  Wikidata (CC0)          current members of the Dow Jones Industrial Average, the Nasdaq-100 and the S&P 500 as Wikidata
-                          records them (membership only: no weights, no levels), CIK, ticker, LEI, headquarters, founded, website
+  SEC Form N-PORT        the index members: the stocks the tracking ETFs SPY (S&P 500), QQQ (Nasdaq-100) and DIA (Dow) report
+  (US public domain)      holding (trackers.py, from the funds pack's cache; no download here)
+  Wikidata (CC0)          CIK, ticker, LEI, headquarters, founded, website; its index members too (often out of date), whose
+                          companies stay in the pack when an index has dropped them
   SEC EDGAR (US public    company_tickers_exchange.json; submissions/CIK##########.json (names, SIC, addresses, the latest
   domain)                 filings, metadata only); companyfacts (XBRL: revenue, net income, assets, liabilities, equity, EPS,
                           shares outstanding) reduced here to the annual values of those concepts
@@ -25,7 +27,7 @@ Sources, all openly licensed (docs/guides/packs/US_EQUITIES.md, Data sources and
 
 No price data is fetched or kept: the price-history kind is read live by an off-by-default connector (internal use only).
 
-    python3 tools/packgen/us_equities/fetch.py [--cache DIR] [--only wikidata,sec,nasdaq,gleif] [--limit N]
+    python3 tools/packgen/us_equities/fetch.py [--cache DIR] [--only wikidata,trackers,sec,nasdaq,gleif] [--limit N]
 
 The default cache is data/cache/us-equities (git-ignored). Files already in the cache are kept: delete one to fetch it again.
 SEC asks for a descriptive User-Agent with a contact and at most 10 requests a second; this stays under 8.
@@ -311,11 +313,19 @@ def sec_maps(cache: Path) -> tuple[dict[str, str], dict[str, str]]:
 
 
 def universe(cache: Path) -> list[str]:
-    """The CIKs of the current index members (member_cik)."""
+    """The CIKs of the pack's companies: the index members its tracking ETFs report (trackers.json), and every company Wikidata
+    lists as a member (member_cik), kept when an index has since dropped it."""
     wd = json.loads((cache / "wikidata.json").read_text(encoding="utf-8"))
     by_ticker, by_name = sec_maps(cache)
     out = {member_cik(m, wd["facts"].get(m["qid"], {}), by_ticker, by_name) for m in wd["members"]}
+    out |= {m["CIK"] for ix in tracked(cache).values() for m in ix["MEMBERS"]}
     return sorted((c for c in out if c), key=int)
+
+
+def tracked(cache: Path) -> dict[str, dict]:
+    """{index code: its tracking ETF's members} from trackers.json (trackers.py writes it), or {} before it has run."""
+    p = cache / "trackers.json"
+    return json.loads(p.read_text(encoding="utf-8"))["indexes"] if p.is_file() else {}
 
 
 def gleif(http: Http, cache: Path) -> None:
@@ -367,7 +377,9 @@ def gleif(http: Http, cache: Path) -> None:
 def main(argv: list[str]) -> int:
     p = argparse.ArgumentParser(description=__doc__.split("\n")[0])
     p.add_argument("--cache", type=Path, default=DEFAULT_CACHE)
-    p.add_argument("--only", default="wikidata,nasdaq,sec,gleif")
+    p.add_argument("--only", default="wikidata,trackers,nasdaq,sec,gleif")
+    p.add_argument("--funds-cache", type=Path, default=ROOT / "data" / "publicdata" / "cache" / "funds",
+                   help="the funds pack's download cache, whose N-PORT data sets give the index members (trackers)")
     p.add_argument("--limit", type=int, help="the first N companies only (a quick try)")
     a = p.parse_args(argv)
     a.cache.mkdir(parents=True, exist_ok=True)
@@ -375,6 +387,9 @@ def main(argv: list[str]) -> int:
     steps = a.only.split(",")
     if "wikidata" in steps:
         wikidata(http, a.cache)
+    if "trackers" in steps:
+        import trackers
+        trackers.extract(a.funds_cache, a.cache)
     if "nasdaq" in steps:
         nasdaq(http, a.cache)
     if "sec" in steps:

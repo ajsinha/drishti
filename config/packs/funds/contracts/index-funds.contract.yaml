@@ -123,13 +123,13 @@ nested:
     presence: required
     unit: companies
     description: 'Listed members it holds. Source: computed.'
-    example: 60
+    example: 98
   - name: ACTIVE_SHARE
     type: rate
     presence: required
     unit: '%'
     description: 'Against the computed index weights. Source: computed.'
-    example: 26.75
+    example: 11.21
   - name: REPORT_DATE
     type: date
     presence: required

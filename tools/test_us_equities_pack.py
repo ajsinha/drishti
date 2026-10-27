@@ -86,3 +86,26 @@ def test_the_bank_lists_are_in_the_pack_with_their_currencies():
     cos = {d["TICKER"]: d for d in SNAP.kind_docs("us-equities", "us-company")}
     assert cos["RY"]["CURRENCY"] == "CAD" and cos["RY"]["ECONOMY"] == "ECON-CAN" and cos["RY"]["ASSETS"]
     assert cos["JPM"]["CURRENCY"] == "USD"
+
+
+def test_the_index_members_are_what_the_tracking_etfs_hold(tmp_path):
+    """S&P 500, Nasdaq-100 and Dow membership comes from SPY's, QQQ's and DIA's Form N-PORT (trackers.py), not Wikidata's out-of-date
+    lists: Exxon Mobil and BlackRock are S&P 500 members, NVIDIA and Meta Nasdaq-100 members, and each index page names its filing."""
+    docs = SNAP.read(ROOT / "data" / "testdata", "us-equities")
+    idx = docs["index-membership"]
+    members = {code: {r["TICKER"] for r in idx[code]["ROWS"]} for code in ("SP500", "NDX", "DJIA")}
+    assert {"XOM", "BLK", "NVDA"} <= members["SP500"] and {"NVDA", "META", "CRWD"} <= members["NDX"] and len(members["DJIA"]) == 30
+    for code, fund in (("SP500", "SPY"), ("NDX", "QQQ"), ("DJIA", "DIA")):
+        assert f"SEC Form N-PORT of {fund}" in idx[code]["PROVENANCE"]["SOURCE"], code
+    import importlib.util
+    spec = importlib.util.spec_from_file_location("us_equities_trackers", GEN / "trackers.py")
+    T = importlib.util.module_from_spec(spec)
+    sys.modules["fetch"], old = F, sys.modules.get("fetch")
+    try:
+        spec.loader.exec_module(T)
+    finally:
+        if old is not None:
+            sys.modules["fetch"] = old
+    assert T._norm("LyondellBasell Industries NV") == T._norm("LyondellBasell Industries N.V.")
+    assert T._norm("Travelers Cos Inc/The") == T._norm("TRAVELERS COS INC")
+    assert T.extract(tmp_path / "no-funds", tmp_path, log=lambda *_: None) == {}, "no funds cache: keep what there is"

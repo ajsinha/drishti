@@ -74,7 +74,7 @@ Why a bank cares:
 | <a id="term-share-class"></a>**Share class** | One of several kinds of share in the same company or fund, each with its own ticker: Alphabet's GOOGL (votes) and GOOG (no vote); VOO, VFIAX and VFINX of one Vanguard fund, at different fees. | `FUND VOO <GO>` |
 | <a id="term-edgar"></a>**EDGAR** (the SEC's filing system) | Where every SEC filing is published: annual 10-K, quarterly 10-Q, 8-K events, insiders' Form 4. EDGAR lists the latest by form; FILING opens one. | `EDGAR 8-K <GO>` |
 | <a id="term-financial-fact"></a>**Financial fact** | One line of a company's annual accounts (revenue, net income, assets ...) over ten fiscal years, as tagged in its XBRL filings. | `FACT NVDA-REVENUE <GO>` |
-| <a id="term-index-membership"></a>**Index membership** | The companies of an index or list: the S&P 500, Nasdaq-100 and Dow 30 from Wikidata, the bank lists kept by Drishti. No weights or levels. | `IDX SP500 <GO>` |
+| <a id="term-index-membership"></a>**Index membership** | The companies of an index or list: the S&P 500, Nasdaq-100 and Dow 30 as their tracking ETFs (SPY, QQQ, DIA) report holding them, the bank lists kept by Drishti. No weights or levels. | `IDX SP500 <GO>` |
 | <a id="term-mutual-fund"></a>**Mutual fund** | A pooled fund you buy from and sell back to the fund itself, once a day at its NAV. Most have several share classes. | `FUND FXAIX <GO>` · `drishti.py view get fund/FXAIX` |
 | <a id="term-etf"></a>**ETF** (exchange-traded fund) | A fund whose shares trade on an exchange all day; authorised participants create and redeem shares in large blocks (creation units), which keeps the price near the NAV. | `FUND QQQ <GO>` · `drishti.py view get fund/QQQ` |
 | <a id="term-unit-investment-trust"></a>**Unit investment trust** | A fund with a fixed trust deed and no board or adviser; SPY and DIA are ETFs built this way. They file no prospectus risk/return summary, so no expense ratio in the data. | `FUND SPY <GO>` |
@@ -95,10 +95,10 @@ Why a bank cares:
 ## 3. How the data connects
 
 ```text
-The companies (us-equities pack: SEC EDGAR, Wikidata, GLEIF, Nasdaq Trader; public)
+The companies (us-equities pack: SEC EDGAR and N-PORT, Wikidata, GLEIF, Nasdaq Trader; public)
 us-company       USEQ <ticker>          CIK, SIC code and division, LEI, other tickers, shares outstanding, ten years of financials
    │  SIC_SECTOR ─► sic-sector  SIC <code>              computed: the code's companies by revenue (SIC ALL: every code)
-   │  INDEX_IDS ─► index-membership  IDX <index>        SP500, NDX, DJIA (Wikidata); BANKS-US, BANKS-CA, BANKS-UK (Drishti's lists)
+   │  INDEX_IDS ─► index-membership  IDX <index>        SP500, NDX, DJIA (SPY, QQQ, DIA holdings); BANKS-US, BANKS-CA, BANKS-UK (Drishti's lists)
    │  FILING_IDS ─► filing  FILING <accession>          FACT_IDS ─► financial-fact  FACT <ticker>-<line>
    │  ECONOMY ─► economy  ECON ECON-<ISO3>              MARKET_WATCH ─► listed-company
    │  LEI (a field) ═ lei-entity  LEI <code>            (gleif pack: its US_COMPANY links back; LEIG its ownership group)
@@ -131,7 +131,7 @@ where it has one, else its oldest class; any class's ticker opens it (`FUND VFIA
 
 ## 4. A worked example on the demo data
 
-The committed public snapshots: us-equities retrieved 2026-10-24 (**503 companies**, 181 SIC codes in 9 divisions, 481 with an LEI);
+The committed public snapshots: us-equities retrieved 2026-10-24 (**586 companies**, 194 SIC codes in 9 divisions, 531 with an LEI; the index members as SPY, QQQ and DIA reported holding them);
 funds retrieved 2026-10-26 (the **200 largest US mutual funds and ETFs**, 24,593bn USD of net assets: 117 mutual funds, 50 ETFs, 31
 mutual funds with an ETF share class, 2 unit investment trusts; N-PORT reports dated 2026-05-31 to 2026-07-31); GLEIF retrieved
 2026-10-25 (9,937 legal entities). These records are not dated by business date: every date reads the same snapshot.
@@ -139,9 +139,9 @@ mutual funds with an ETF share class, 2 unit investment trusts; N-PORT reports d
 **One company, five identifiers.** `USEQ AAPL <GO>` is *Apple Inc.*: ticker AAPL, CIK `0000320193`, SIC 3571 (Electronic Computers),
 division D (Manufacturing), LEI `HWUPKR0MPOU8FGXBT394`, member of the Dow, the Nasdaq-100 and the S&P 500, 14,776,353,000 shares
 outstanding, revenue 416.2bn USD in fiscal 2025. Its LEI opens the GLEIF record and its ownership group (`LEIG HWUPKR0MPOU8FGXBT394`,
-21 entities). Its industry: `SIC 3674 <GO>` has the 15 semiconductor companies, NVIDIA first by revenue (215.9bn), then Micron
-(133.2bn) and Broadcom (63.9bn). By division the 503 companies are D Manufacturing 196, H Finance, Insurance and Real Estate 118, I
-Services 70, E Transportation, Communications and Utilities 61, G Retail Trade 30, F Wholesale 11, B Mining 10, C Construction 6 and A
+21 entities). Its industry: `SIC 3674 <GO>` has the 20 semiconductor companies, NVIDIA first by revenue (215.9bn), then Micron
+(133.2bn) and Broadcom (63.9bn). By division the 586 companies are D Manufacturing 234, H Finance, Insurance and Real Estate 132, I
+Services 87, E Transportation, Communications and Utilities 66, G Retail Trade 33, B Mining 13, F Wholesale 11, C Construction 9 and A
 Agriculture 1.
 
 **Share classes, twice.** `USEQ GOOGL <GO>` is *Alphabet Inc.*, CIK `0001652044`, SIC 7370 (division I, Services), with other tickers
@@ -164,8 +164,9 @@ purchase (*UMBS, TBA*, 11.34% of net assets) it has yet to pay for, beside 1,730
 
 **Index funds and their fees.** `TRACK SP500 <GO>`: seven funds track the S&P 500, four of them ETFs, 4,821.3bn together. Their
 expense ratios: FXAIX 0.01%, SPYM 0.02%, SWPPX 0.02%, VOO 0.03%, IVV 0.03%, VINIX 0.03%; SPY, a unit investment trust, files none.
-Each shows an **active share** of 5.3% to 5.9% against the computed index weights, not 0 (the reason is under *What the data hasn't
-told you*). An active fund for comparison: `FUND AGTHX` has an active share of 43.4% against the S&P 500.
+Each shows an **active share** of 5.3% to 5.8% against the computed index weights, not 0 (the reason is under *What the data hasn't
+told you*). An active fund for comparison: `FUND AGTHX` has an active share of 44.4% against the S&P 500. `TRACK DJIA`: DIA, 1.8%,
+because the Dow weighs its members by share price and Drishti weighs them the same way.
 
 **Concentration.** `FUND VGT <GO>` (Vanguard Information Technology): NVIDIA 16.82%, Apple 14.57%, Microsoft 9.46%; top 10 59.36%,
 Herfindahl index 0.066. `FUND VTI` (Vanguard Total Stock Market, the largest fund at 2,297.8bn): 3,546 holdings, top 10 32.03%,
@@ -180,28 +181,34 @@ hold, the smaller of its two weights, added up (computed from the committed `fun
 
 | Funds | Companies in common | Overlap | Read it as |
 |---|---|---|---|
-| SPY and VOO | 420 | 92.5% | the same index, the same month: nearly one portfolio |
-| VOO and IVV | 420 | 92.4% | the same |
-| QQQ and QQQM | 78 | 85.5% | the same index, but reports a month apart (2026-06-30, 2026-05-31) |
-| VOO and VTI | 385 | 81.3% | at least: VTI's page keeps 600 of its 3,546 holdings |
-| QQQ and VOO | 72 | 52.0% | half of QQQ is already in an S&P 500 fund |
-| VOO and AGTHX | 142 | 49.9% | an active growth fund, half of it the index |
-| QQQ and VGT | 31 | 46.6% | different names, the same few technology companies |
+| SPY and VOO | 494 | 99.4% | the same index, the same month: one portfolio |
+| VOO and IVV | 494 | 99.3% | the same |
+| QQQ and QQQM | 92 | 91.2% | the same index, but reports a month apart (2026-06-30, 2026-05-31) |
+| VOO and VTI | 448 | 87.2% | at least: VTI's page keeps 600 of its 3,546 holdings |
+| QQQ and VOO | 85 | 54.3% | half of QQQ is already in an S&P 500 fund |
+| VOO and AGTHX | 166 | 51.9% | an active growth fund, half of it the index |
+| QQQ and VGT | 39 | 50.6% | different names, the same few technology companies |
 
 None reaches 100% because a weight is of net assets, and every fund also holds cash, futures and companies outside the us-equities
-pack (VOO's us-equities companies weigh 92.5% of it).
+pack.
 
 **From fund to GLEIF.** `FUND VOO`'s GLEIF relationships: *managed by* The Vanguard Group, Inc. (`LEI 5493002789CX3L0CJP65 <GO>`, in
 the snapshot) and *sub-fund of* its umbrella (`549300G6KNDK44WUN559`). The advisers' LEIs of 77 of the 193 funds that report one are in the GLEIF snapshot,
-and every one of the 481 companies' LEIs; none of the 200 funds' own LEIs is (the snapshot was chosen by ownership group, not by fund).
+and 486 of the 531 companies' LEIs (the 2.9.3 additions are not yet in it); none of the 200 funds' own LEIs is (the snapshot was
+chosen by ownership group, not by fund).
 
-**What the data hasn't told you.** `FUND QQQ` tracks the Nasdaq-100, yet its *vs Nasdaq-100* tab shows an active share of **26.75%**
-and only 71.57% of its assets in the index's members. QQQ is not straying: the members come from Wikidata, whose Nasdaq-100 list has
-77 names and misses NVIDIA and Meta. QQQ's largest holding (NVIDIA, 7.60%) and Meta (2.62%) count as *outside the index*. The same
-lag explains the S&P 500 funds' 5.5% (`IDX SP500` lists 459 members; VOO holds 416 of them) and the Dow's 34 listed members against
-DIA's 30 holdings. A second gap: 28 companies have no share count in the data, Alphabet and Meta among them (a company with several
-classes may report one count per class); `HELD GOOGL` therefore shows 85 funds and 801.9bn but no share of shares outstanding, and Alphabet is left
-out of the computed index weights. Read an index fund's active share in Drishti as a check on the member list as much as on the fund.
+**What the data hasn't told you.** An index fund should show an active share near 0, yet the S&P 500 funds show 5.3% to 5.8%
+and `FUND QQQ` 11.2% against the Nasdaq-100, though both hold almost only members (QQQ 99.2% of its assets). The members are right:
+they are what the tracking funds report holding. The *weights* are the gap: Drishti computes an index weight as shares outstanding
+times price, and 55 companies have no usable share count in the SEC data, Alphabet, Meta, Berkshire Hathaway and Palantir among them
+(a company with several share classes may report one count per class). They are left out of the computed weights (each *vs index* tab
+lists them), so the fund's weight in them shows as a difference. `HELD GOOGL` therefore shows 85 funds and 801.9bn but no share of
+shares outstanding. The Dow, weighted by price, needs no share count: DIA's 1.8% is the honest figure. Read an index fund's active
+share in Drishti as a check on the share counts as much as on the fund.
+
+Until 2.9.3 the members came from Wikidata, whose lists were out of date: its Nasdaq-100 had 77 names without NVIDIA and Meta, its
+S&P 500 459 names without Exxon Mobil or BlackRock, and its Dow 34. QQQ then showed an active share of 26.75%. The fix was to take the
+members from the funds that must hold them.
 
 ## 5. Questions to ask your data
 
@@ -237,9 +244,10 @@ of **net** assets, so a fund's weights can add up to more than 100% (PONAX's: 15
 
 **An expense ratio of 0.03 is 0.03%, not 3%.** Weights, ratios and returns are in percent as filed.
 
-**Index fund does not mean active share 0.** Index weights are proprietary; Drishti computes market-cap weights from SEC share counts and
-the prices the filings imply, over the members Wikidata lists. A lagging member list, a company with several share classes, or a
-price-weighted index (the Dow: DIA shows 57.6%) all raise the figure without the fund changing anything.
+**Index fund does not mean active share 0.** Index weights are proprietary; Drishti computes them from SEC data over the members the
+tracking ETF holds: market capitalisation (share count times the price the filings imply), capped as the Nasdaq-100's methodology caps
+it, or by share price for the Dow. A company with no usable share count, or several share classes, raises the figure without the fund
+changing anything; the members are as of the tracking ETF's report date, so a change to the index shows up to a quarter late.
 
 **Reports a month apart.** Funds file for their own fiscal quarter, so `REPORT_DATE` differs (90 funds at 2026-06-30, 58 at 2026-07-31,
 52 at 2026-05-31). Comparing two funds compares two dates: QQQ and QQQM, one index, overlap 85.5%.

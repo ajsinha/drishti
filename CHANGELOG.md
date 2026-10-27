@@ -17,6 +17,16 @@
 
 ## 2.9.3 — in progress
 
+- **Index membership from the tracking ETFs (2026-10-27).** The S&P 500, Nasdaq-100 and Dow members are now the stocks SPY, QQQ and
+  DIA report holding in their newest Form N-PORT (SEC, public domain; new `tools/packgen/us_equities/trackers.py`, a `trackers`
+  source in `tools/publicdata/us_equities.py`, read from the funds pack's cache), not Wikidata's lists, which were out of date: its
+  S&P 500 had 459 names without Exxon Mobil, BlackRock and about 80 others and still listed 44 former members; its Nasdaq-100 77 names
+  without NVIDIA or Meta; its Dow 34. Members: S&P 500 495, Nasdaq-100 99, Dow 30; holdings the SEC no longer lists (EA, Warner Bros
+  Discovery, Paramount Skydance, AvalonBay, Equity Residential) are named in the index page's note. The companies pack grows from 503
+  to **586** companies (SEC data fetched for the new ones; companies Wikidata still lists stay, in no index); GLEIF and funds rebuilt.
+  The *vs index* weights follow each index's method: the Dow by share price (DIA's active share 1.8%, was 57.6%), the Nasdaq-100
+  capped as its methodology caps it (QQQ 11.2%, was 26.75%). Contracts loosened where the new companies lack a value; Knowledge page,
+  Funds, Groupings and External data guides, tutorial 28 and the pack guides rerun. Screenshots t28 04 and 08 to retake.
 - **Knowledge: Companies, funds and ETFs (2026-10-27).** An eighth Knowledge page, `docs/knowledge/companies-funds-and-etfs.md`, in
   the same seven parts as the others: what a company's ticker, CIK, SIC code and division, share classes (GOOG and GOOGL), EDGAR filings
   and XBRL facts are; mutual funds, ETFs and unit investment trusts, NAV and net assets, look-through holdings, expense ratios, index

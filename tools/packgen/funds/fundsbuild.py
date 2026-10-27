@@ -454,10 +454,36 @@ def _prices(all_rows: dict) -> dict[str, float]:
     return out
 
 
+PRICE_WEIGHTED = {"DJIA"}       # an index weighted by share price, not market capitalisation
+CAPPED = {"NDX"}                # a modified market capitalisation: the largest members' weights capped (_capped)
+
+
+def _capped(w: dict[str, float]) -> dict[str, float]:
+    """The Nasdaq-100's quarterly rebalance (its published methodology): no member over 24% (cut to 20%), and when the members over
+    4.5% weigh more than 48% together, they are scaled down to 40%; what is cut goes to the others pro rata."""
+    w = dict(w)
+    for _ in range(20):
+        over = {m: v for m, v in w.items() if v > 24}
+        big = {m: v for m, v in w.items() if v > 4.5}
+        if over:
+            fix = {m: 20.0 for m in over}
+        elif sum(big.values()) > 48:
+            k = 40 / sum(big.values())
+            fix = {m: v * k for m, v in big.items()}
+        else:
+            return w
+        rest = {m: v for m, v in w.items() if m not in fix}
+        spare = 100 - sum(fix.values())
+        total = sum(rest.values()) or 1
+        w = {**fix, **{m: v / total * spare for m, v in rest.items()}}
+    return w
+
+
 def _vs_index(docs: dict, all_rows: dict, companies: dict, indexes: dict, holders: dict) -> None:
     """Each fund against its tracked index (or, for a US equity fund that tracks none of them, the S&P 500 for reference): the index
     weights are computed from SEC data, market capitalisation as shares outstanding (10-K cover, dei) times the price the filings imply
-    (value over shares across the funds), or equal weights where too few members can be priced."""
+    (value over shares across the funds), or equal weights where too few members can be priced; the Dow by share price, its own method.
+    The Nasdaq-100 caps its largest members' weights (a modified market capitalisation), which plain capitalisation does not."""
     prices = _prices(all_rows)
     weights: dict[str, tuple[dict[str, float], str, list[str], list[str]]] = {}
     for code, ix in indexes.items():
@@ -472,9 +498,17 @@ def _vs_index(docs: dict, all_rows: dict, companies: dict, indexes: dict, holder
                 caps[m] = cap
             else:
                 left_out.append(m)
-        if members and len(caps) >= 0.7 * len(members):
+        priced = {m: prices[m] for m in members if prices.get(m)}
+        if code in PRICE_WEIGHTED and members and len(priced) == len(members):
+            total = sum(priced.values())               # the Dow weighs its members by share price (its divisor cancels out)
+            weights[code] = ({m: p / total * 100 for m, p in priced.items()}, "share price (the index's own method)", members, [])
+        elif members and len(caps) >= 0.7 * len(members):
             total = sum(caps.values())
-            weights[code] = ({m: c / total * 100 for m, c in caps.items()}, "market capitalisation computed from SEC data", members, left_out)
+            w = {m: c / total * 100 for m, c in caps.items()}
+            how = "market capitalisation computed from SEC data"
+            if code in CAPPED:
+                w, how = _capped(w), how + ", capped as the Nasdaq-100 methodology caps it"
+            weights[code] = (w, how, members, left_out)
         elif members:
             weights[code] = ({m: 100 / len(members) for m in members}, "equal weights", members, [])
     for t, d in docs.items():

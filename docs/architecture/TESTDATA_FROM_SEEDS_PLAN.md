@@ -16,7 +16,7 @@
 # Changelog
 # Plan: test data from seeds
 
-**Status: plan for review (2026-10-27). Nothing is built.** Goal: stop committing the synthetic part of `data/testdata` and regenerate
+**Status: proposed, design not built (plan for review, 2026-10-27).** Goal: stop committing the synthetic part of `data/testdata` and regenerate
 it, identically, on any machine (the offline Windows laptop included: Python only, no `.exe`, no internet), without git LFS. Public
 snapshots (funds, us-equities, gleif, news-and-markets) stay committed.
 
