@@ -59,8 +59,15 @@ def make_lake(target: Path, days: int = 3) -> str | None:
     uv = shutil.which("uv")
     if not uv:
         return None
-    done = subprocess.run([uv, "run", "--offline", "--with", "deltalake", "--with", "pyarrow", "--with", "pyyaml", "python", str(ROOT / "tools/packgen/banking/make_data.py"), "--lake",
-                           str(target), "--days", str(days)], capture_output=True, text=True, timeout=600, cwd=ROOT)
+    # generate, then load (docs/guides/DATA_FORMATS.md): the history as JSONL rows beside the lake, then those rows into Delta
+    rows = target.parent / "build" / "lake-rows"
+    done = subprocess.run([uv, "run", "--offline", "--with", "pyyaml", "python", str(ROOT / "tools/packgen/banking/make_data.py"), "--lake", str(target),
+                           "--days", str(days), "--rows", str(rows), "--no-load", "--data-dir", str(target.parent)],
+                          capture_output=True, text=True, timeout=600, cwd=ROOT)
+    if done.returncode == 0:
+        done = subprocess.run([uv, "run", "--offline", "--with", "deltalake", "--with", "pyarrow", "--with", "pyyaml", "python", str(ROOT / "tools/samplegen/load_rows.py"),
+                               "--root", str(target), "--rows", str(rows / "banking-history.jsonl"), "--restated", str(rows / "banking-restated.jsonl")],
+                              capture_output=True, text=True, timeout=600, cwd=ROOT)
     if done.returncode != 0 or not (target / "trading").exists():
         return None
     # the published official exposure the BI samples read since 2.9.0 (the lake has netting sets but no exposure paths): tests/bi_exposure_fixture.py

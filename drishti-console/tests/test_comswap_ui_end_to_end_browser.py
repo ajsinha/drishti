@@ -50,7 +50,7 @@ def stack(tmp_path_factory):
 def book(tmp_path_factory):
     """The large file, as an export writes it (a pretty-printed JSON array), and the deals in it."""
     d = tmp_path_factory.mktemp("comswap") / "deals.json"
-    comswap_synth.write(d, DEALS, 7, "mixed", False, 2, mix=True)
+    comswap_synth.write(d, DEALS, 7, "mixed", jsonl=False, indent=2, mix=True)          # --array: the export's own shape
     return d, json.loads(d.read_text())
 
 

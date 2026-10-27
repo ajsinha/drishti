@@ -74,6 +74,27 @@ def files(docs: dict[str, dict[str, dict]], catalog: list[dict], part_mb: float 
     return out
 
 
+def write(samples_dir: Path, docs: dict[str, dict[str, dict]], catalog: list[dict], part_mb: float = PART_MB,
+          catalog_indent: int | None = 1) -> int:
+    """Writes a samples folder (files()) and removes what it no longer holds: the older layout's <kind>/<id>.json files and
+    their folders, and any other .json/.jsonl file. Returns the number of files written."""
+    samples_dir = Path(samples_dir)
+    want = files(docs, catalog, part_mb, catalog_indent)
+    if samples_dir.is_dir():
+        for f in sorted(samples_dir.rglob("*.json*"), reverse=True):
+            if f.relative_to(samples_dir).as_posix() not in want:
+                f.unlink()
+        for d in sorted((p for p in samples_dir.rglob("*") if p.is_dir()), reverse=True):
+            if not any(d.iterdir()):
+                d.rmdir()
+    samples_dir.mkdir(parents=True, exist_ok=True)
+    for name, text in want.items():
+        f = samples_dir / name
+        if not f.is_file() or f.read_text(encoding="utf-8") != text:
+            f.write_text(text, encoding="utf-8")
+    return len(want)
+
+
 def kind_files(samples_dir: Path, kind: str) -> list[Path]:
     one = samples_dir / f"{kind}.jsonl"
     if one.is_file():

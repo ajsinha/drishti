@@ -38,8 +38,11 @@ classpath() { JAVA_HOME=$JDK25 ./mvnw -q -o dependency:build-classpath -pl "$1" 
 
 cmd_data() {
   [[ -d "$D/lake" ]] || {
-    uv run -q "${WITH[@]}" python tools/packgen/banking/make_data.py --lake "$D/lake"
-    uv run -q "${WITH[@]}" python tools/samplegen/bulk_trades.py --root "$D/lake" --trades "$TRADES" --days 3
+    # generate JSONL rows, then load them (docs/guides/DATA_FORMATS.md)
+    uv run -q --with pyyaml python tools/packgen/banking/make_data.py --lake "$D/lake" --rows "$D/build/lake-rows" --no-load
+    uv run -q "${WITH[@]}" python tools/samplegen/load_rows.py --root "$D/lake" \
+      --rows "$D/build/lake-rows/banking-history.jsonl" --restated "$D/build/lake-rows/banking-restated.jsonl"
+    uv run -q "${WITH[@]}" python tools/samplegen/bulk_trades.py --root "$D/lake" --out "$D/build/bulk" --trades "$TRADES" --days 3
   }
   uv run -q --with pyyaml python tools/packgen/banking/make_data.py --jsonl "$D/banking.jsonl"
   local fcp dcp

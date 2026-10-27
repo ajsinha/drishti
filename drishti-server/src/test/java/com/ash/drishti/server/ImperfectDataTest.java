@@ -92,7 +92,8 @@ class ImperfectDataTest {
     void everySutraSurvivesImperfectDocuments() throws Exception {
         List<Sutra> sutras = allSutras();
         assertThat(sutras).hasSizeGreaterThan(150);
-        Object sample = mapper.readValue(Files.readString(Path.of("../examples/packs/finance/samples/trade/IRS-48213.json")), Object.class);
+        Object sample = mapper.readValue(com.ash.drishti.common.PackSamples.document(Path.of("../examples/packs/finance/samples"), "trade", "IRS-48213")
+                .orElseThrow(), Object.class);
         int empties = 0;
         for (Sutra s : sutras) {
             List<Object> docs = List.of(Map.of("id", "X-1"), mangle(sample, 1, new Random(1)), mangle(sample, 2, new Random(2)),

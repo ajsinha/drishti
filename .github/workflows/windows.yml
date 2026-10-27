@@ -44,8 +44,9 @@ jobs:
       - name: A small lake (the banking packs' samples, ten business days)
         run: |
           python -m pip install --quiet deltalake pyarrow pyyaml
-          python tools/packgen/banking/make_data.py --lake data/delta
-          if (-not (Test-Path data/delta/trading/trade/_delta_log)) { throw 'no trade table was written' }
+          python tools/packgen/banking/make_data.py --lake data/delta --rows data/build/lake-rows --no-load
+          python tools/samplegen/load_rows.py --root data/delta --rows data/build/lake-rows/banking-history.jsonl --restated data/build/lake-rows/banking-restated.jsonl
+          if (-not (Test-Path data/delta/trading/trade_endur/_delta_log)) { throw 'no trade table was written' }
       - name: The server on the lake, asked for a view, a search and a past date
         env:
           DRISHTI_PACKS: market-risk

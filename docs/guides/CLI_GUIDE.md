@@ -1531,7 +1531,7 @@ data folder (`DRISHTI_DATA_DIR`, else the repository's `data/`, which is not tra
 
 ```text
 wrote 1791 documents into 5 packs' samples
-feeds: data/feeds/fixing/SOFR-HISTORY.csv
+feeds: data/feeds/fixing.jsonl
 jsonl: 17910 rows in data/banking.jsonl (tools/load-postgres.sh and tools/load-aerospike.sh load them)
 files: wrote 17,910 rows into 460 files under data/demo-files in 0 s
 

@@ -1,0 +1,4 @@
+{"portId":"PORT-SGSIN","name":"Singapore","country":"SG","congestionIndex":1.6,"berthWaitHours":5,"vesselsAtAnchor":10,"_meta":{"source":"port-ops","generation":512,"live":true,"walk":{"berthWaitHours":1,"congestionIndex":0.1}}}
+{"portId":"PORT-LKCMB","name":"Colombo","country":"LK","congestionIndex":2.1,"berthWaitHours":9,"vesselsAtAnchor":18,"_meta":{"source":"port-ops","generation":512,"live":true,"walk":{"berthWaitHours":1,"congestionIndex":0.1}}}
+{"portId":"PORT-EGPSD","name":"Port Said","country":"EG","congestionIndex":3.4,"berthWaitHours":14,"vesselsAtAnchor":28,"_meta":{"source":"port-ops","generation":512,"live":true,"walk":{"berthWaitHours":1,"congestionIndex":0.1}}}
+{"portId":"PORT-NLRTM","name":"Rotterdam","country":"NL","congestionIndex":2.8,"berthWaitHours":11,"vesselsAtAnchor":22,"_meta":{"source":"port-ops","generation":512,"live":true,"walk":{"berthWaitHours":1,"congestionIndex":0.1}}}

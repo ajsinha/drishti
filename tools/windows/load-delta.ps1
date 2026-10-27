@@ -19,6 +19,8 @@
 .DESCRIPTION
   Writes the sample documents as ten business days of history under -Root (default data\delta), in the layout each
   pack declares; with -Trades it then replaces the trade table with a book of that many trades over -Days days.
+  Generating and loading are separate steps (docs/guides/DATA_FORMATS.md): the generators write JSON Lines under the
+  build folder beside the lake (lake-rows\, bulk\), then a loader puts them into the lake.
   Uses uv when it is installed (it fetches deltalake, pyarrow and pyyaml itself); otherwise the given Python, which
   must have them (python -m pip install deltalake pyarrow pyyaml). The server reads a new load within a minute.
 
@@ -52,8 +54,14 @@ function Invoke-Tool([string[]]$toolArgs) {
     }
 }
 
-Invoke-Tool @('tools/packgen/banking/make_data.py', '--lake', $Root)
+$build = Join-Path (Split-Path -Parent $Root) 'build'
+$rows = Join-Path $build 'lake-rows'
+# 1. generate: the history as JSONL rows; 2. load them (the restatement as a second commit)
+Invoke-Tool @('tools/packgen/banking/make_data.py', '--lake', $Root, '--rows', $rows, '--no-load')
+Invoke-Tool @('tools/samplegen/load_rows.py', '--root', $Root, '--rows', (Join-Path $rows 'banking-history.jsonl'),
+              '--restated', (Join-Path $rows 'banking-restated.jsonl'))
 if ($Trades -gt 0) {
-    Invoke-Tool @('tools/samplegen/bulk_trades.py', '--root', $Root, '--trades', "$Trades", '--days', "$Days")
+    # the book: one JSONL file a day, then each through lake build
+    Invoke-Tool @('tools/samplegen/bulk_trades.py', '--root', $Root, '--out', (Join-Path $build 'bulk'), '--trades', "$Trades", '--days', "$Days")
 }
 Write-Host "Lake ready under $Root"

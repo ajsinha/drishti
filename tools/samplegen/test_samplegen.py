@@ -14,8 +14,6 @@
 
 """Checks the sample generator against known values and the finance samples against themselves.
 Run: python3 -m unittest tools/samplegen/test_samplegen.py"""
-import glob
-import json
 import pathlib
 import sys
 import unittest
@@ -26,6 +24,8 @@ sys.path.insert(0, str(ROOT / "tools"))
 from samplegen import ids, legs  # noqa: E402
 from samplegen.curves import Curve  # noqa: E402
 from samplegen.dates import Calendar, holiday_lines, schedule, year_fraction  # noqa: E402
+sys.path.insert(0, str(ROOT / "tools" / "packgen" / "common"))
+import packsamples  # noqa: E402  (samples/<kind>.jsonl)
 
 
 class Identifiers(unittest.TestCase):
@@ -73,15 +73,15 @@ class Conventions(unittest.TestCase):
 
 class FinanceSamples(unittest.TestCase):
     def test_swaps_reprice_to_their_mtm(self):
-        for f in glob.glob(str(ROOT / "examples/packs/finance/samples/trade/IRS-4*.json")):
-            d = json.loads(pathlib.Path(f).read_text())
-            if "legs" in d:
+        for id_, d in packsamples.read(ROOT / "examples/packs/finance/samples")["trade"].items():
+            if id_.startswith("IRS-4") and "legs" in d:
                 pv = sum(leg["pv"] for leg in d["legs"])
                 self.assertLess(abs(pv - d["mtm"]), max(100, abs(d["mtm"]) * 0.01), d["tradeId"])
 
     def test_every_trade_is_fully_booked(self):
-        for f in glob.glob(str(ROOT / "examples/packs/finance/samples/trade/*.json")):
-            d = json.loads(pathlib.Path(f).read_text())
+        trades = packsamples.read(ROOT / "examples/packs/finance/samples")["trade"]
+        self.assertEqual(len(trades), 16)
+        for d in trades.values():
             for block in ("execution", "lifecycle", "regulatory", "settlementInstructions", "valuation", "legalEntity"):
                 self.assertIn(block, d, f"{d['tradeId']} lacks {block}")
             self.assertTrue(ids.lei_valid(d["counterparty"]["lei"]))

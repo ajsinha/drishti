@@ -292,7 +292,7 @@ def refresh(a, log=print) -> int:
         man.record(s, s.plan(run), counts, out)
         log(f"normalise {s.name}: {counts.get('rows', 0)} rows")
     rc = write_committed(run, a) if committed else write_build(run, a, cfg, no_imf)
-    files = sorted((N.DATASET if committed else out / "dataset").glob("*.json"))
+    files = sorted((N.DATASET if committed else out / "dataset").glob("*.json*"))   # the .jsonl records and meta.json
     man.finish(out, files, sys.argv[1:], rc == 0 and not run.http.failed)
     log(f"downloads: {run.http.downloaded} new, {run.http.reused} reused" + (f", {len(run.http.failed)} failed" if run.http.failed else ""))
     return rc or (2 if run.http.failed else 0)

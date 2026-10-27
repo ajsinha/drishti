@@ -18,7 +18,7 @@ synthetic.
 
     python3 tools/packgen/genomics/make.py            write examples/packs/genomics (a retired example pack)
     python3 tools/packgen/genomics/make.py --check    fail if the pack differs from what would be written
-    uv run --with deltalake --with pyarrow --with pyyaml python tools/packgen/genomics/make.py --lake data/delta
+    uv run --with deltalake --with pyarrow --with pyyaml python tools/packgen/genomics/make.py --lake data/delta   (JSONL rows under data/build/lake-rows, then loaded)
 """
 from __future__ import annotations
 

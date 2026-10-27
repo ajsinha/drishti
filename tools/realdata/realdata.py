@@ -15,7 +15,7 @@
 """Real public data for the world-economy pack (economics, politics and society).
 
     python3 tools/realdata/realdata.py fetch     [--cache DIR] [--refresh] [--pause S]   download the raw data (network)
-    python3 tools/realdata/realdata.py normalise [--cache DIR]                           raw cache -> tools/realdata/dataset/*.json
+    python3 tools/realdata/realdata.py normalise [--cache DIR]                           raw cache -> tools/realdata/dataset/*.jsonl
     python3 tools/realdata/realdata.py about                                              sources.yaml + about/*.kinds.yaml -> tools/packgen/*/about.yaml
     python3 tools/realdata/realdata.py write                                              dataset -> the two packs, their glossary and their Sutra tests
     python3 tools/realdata/realdata.py tests                                              the packs' Sutra tests only (config/packs/*/tests)

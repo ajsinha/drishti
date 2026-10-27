@@ -240,9 +240,10 @@ Drishti only reads the lake. Whatever writes it must follow the layout. The repo
 | Writer | What it writes |
 |---|---|
 | `drishti.py lake build --from <file> --pack <pack> --connector <name>` | a day of a source system's documents into its table, in the pack's layout ([TOOLS.md](../guides/TOOLS.md)): rows sorted by id, row groups of 256 KB and pages of 64 KB (`DRISHTI_LAKE_ROW_GROUP_KB`, `DRISHTI_LAKE_PAGE_KB`), the pack's `ingest.<kind>.flatten` fields added as plain fields and promoted columns |
-| `tools/packgen/banking/make_data.py --lake data/delta` | the banking packs' 1,791 sample documents, 10 business days, every domain; the trade table in its layout |
-| `tools/samplegen/lake.py --samples <dir> --root data/delta --domain <d> --days 10` | one pack's samples into one domain; it prints `<table>: <n> entities x 10 business days` per table and writes the newest date twice (the second commit restates one document per kind), so *known at* before that commit shows the original; local disk only |
-| `tools/samplegen/bulk_trades.py --trades N --days D` | a large trade book in the layout, replacing the trade table (scale tests) |
+| `tools/packgen/banking/make_data.py --lake data/delta` | the banking packs' sample documents, 10 business days, every domain, the trade tables in their layout: written as JSON Lines rows (`data/build/lake-rows/banking-history.jsonl`, `banking-restated.jsonl`), then loaded by `load_rows.py` (`--no-load` stops after the JSONL) |
+| `tools/samplegen/lake.py --samples <dir> --root data/delta --domain <d> --days 10` | one pack's samples into one domain, the same two steps; it prints `<table>: <n> entities x 10 business days` per table and writes the newest date twice (the restated file is a second commit, restating one document per kind), so *known at* before that commit shows the original; local disk only |
+| `tools/samplegen/load_rows.py --rows <history.jsonl> --restated <restated.jsonl> --root data/delta` | the loader of those rows: one JSON object a line, `{"domain", "kind", "table", "id", "date", "doc"}` ([DATA_FORMATS.md](../guides/DATA_FORMATS.md)) |
+| `tools/samplegen/bulk_trades.py --trades N --days D` | a large trade book for scale tests: one JSONL file a day (`data/build/bulk/<system>/`), then each through `lake build` into the system's trade table, replacing it |
 | `tools/lake/maintain.py relayout` | rewrites an existing table into its layout, one business day at a time |
 | `tools/samplegen/layout.py` | the shared code: reads a pack's layout, promotes fields, sorts, cuts files and row groups, sets the statistics columns |
 
@@ -256,9 +257,10 @@ uv run --with deltalake --with pyarrow --with pyyaml python tools/samplegen/bulk
 data/delta/trading/trade: 1,000,000 trades x 3 business days (2026-09-28 to 2026-09-30), 4 files a day, 4.85 GB, 82 s
 ```
 
-It lists and sorts every id first, cuts the list into files, and builds each file's documents on all cores; the main
-process writes one file at a time, so memory stays at about two files' rows (under 10 GB) whatever the size of the book.
-It takes about 28 seconds per million trade-days on 24 cores.
+It lists and sorts every id first and builds the documents on all cores in slices of 5,000; the main process appends each slice
+to the day's JSONL file in id order, and `lake build` then loads each file in batches, so memory stays flat whatever the size of
+the book. (Until 2.9.4 it wrote the table directly, about 28 seconds per million trade-days on 24 cores; the output above is from
+then. Writing JSONL first and loading it is slower, by the time `lake build` takes.)
 
 **Your own loader** (Spark, Databricks, a Python job) writes the same thing. In Spark, for one business day:
 
@@ -945,7 +947,7 @@ years of business dates. This is Drishti's default store: every banking pack rea
 
 1. **Know the data.** One table per kind under `<root>/<domain>/<kind>/`, partitioned by `business_date`, with the
    columns `id`, `doc` and the promoted fields ([section 3](#3-what-is-on-disk)). Writing a day from Python (the same
-   calls `tools/samplegen/lake.py` uses): append a new date, or replace one date that was restated:
+   calls `tools/samplegen/load_rows.py` makes): append a new date, or replace one date that was restated:
 
 ```python
 import json, datetime, pyarrow as pa
@@ -970,7 +972,7 @@ write_deltalake("data/delta/trading/trade", table, mode="overwrite",
 ```bash
 # the seven packs' lakes from the committed test data: sixty business days ending today (data/testdata/README.md)
 drishti-console/.venv/bin/python tools/drishti.py lake demo
-# or one pack's samples into one domain (tools/samplegen/lake.py, section 5)
+# or one pack's samples into one domain (tools/samplegen/lake.py: JSONL rows, then loaded; section 5)
 drishti-console/.venv/bin/python tools/samplegen/lake.py --samples config/packs/market-data/samples --root data/delta --domain market --days 10
 java -jar drishti-server/target/drishti-server-*-exec.jar          # DRISHTI_PACKS unset: the seven packs
 ```

@@ -17,6 +17,24 @@
 
 ## 2.9.4 (unreleased)
 
+- **JSON Lines is the data standard: the generators (2026-10-27; product owner).** Every generator under `tools/` writes JSONL (one
+  JSON object a line, UTF-8; `.jsonl.gz` where the repository gzips), and generating and loading are separate steps
+  ([DATA_FORMATS.md](docs/guides/DATA_FORMATS.md), new). `make_data.py --lake`, `samplegen/lake.py` and the pack generators' `--lake`
+  write dated lake rows (`<name>-history.jsonl`, and the restatement as a second file, `<name>-restated.jsonl`) and then load them
+  with the new `tools/samplegen/load_rows.py` (`--no-load` stops after the JSONL); the lake is byte-for-byte the same data as before
+  (every table's rows and Delta versions compared). `bulk_trades.py` writes one JSONL file a day
+  (`<data>/build/bulk/<system>/trades-<date>.jsonl.gz`, in id order, memory still low) and loads each with `lake build`
+  (`--no-lake`; `--file-rows` is gone). `comswap_synth.py` and `note_synth.py` write JSONL by default (`--array` keeps the export's
+  own shape for the upload demo); the committed comswap samples are `.jsonl`. The retired example packs and the finance and logistics
+  examples keep their samples as `samples/<kind>.jsonl` (no more `<kind>/<id>.json`; the tests that read them go through
+  `PackSamples.document`). `realdata/normalise.py` writes `dataset/*.jsonl` (a country, group, series or Factbook profile a line;
+  `meta.json` stays the manifest; older keyed `.json` still read). The sample feed is `<data>/feeds/fixing.jsonl` (one series a
+  line, `FIX SOFR-HISTORY` unchanged), replacing `fixing/SOFR-HISTORY.csv`. `make_data.py --jsonl` and `--lake` no longer rewrite
+  the packs' samples, the Sutra tests or the feed (they create the feed only when the data folder has none). `load-delta.sh`/`.ps1`,
+  `bench/pinning.sh`, the Windows workflow and the console's BI lake fixture run generate, then load. `tools/iceberg/fixtures.py`
+  stays (it tests the Iceberg reader itself; said in its docstring). Docs: DEMO_DATA, DELTA_CONNECTOR, FILE_CONNECTOR, SCHEMA_TO_PACK,
+  TOOLS, REAL_DATA, OPERATIONS, the pack guides (`make_docs.py`) and the feed path in Getting started, Packs, CLI guide and tutorial 1.
+
 - **Documentation pictures retaken on the current UI (2026-10-27).** 351 pictures under `docs/` that predated the 2.9 UI (themes, the top bar, the Views menu) were retaken with `tools/docs/screenshots.py`, guide by guide (artifacts, About, BI, BI Studio, collaboration, connector files, connectors, controls, deep JSON, deploy, query by form, data loads, packs, panels, real data, schema to pack, screen designer, Sutras, zoom, column filters) and tutorials 1-6, 8, 9, 11-17 and 19 over the demo lakes; tutorial 28's TRACK SP500 picture is taken in a wider window so the Active share column shows. Shot scripts fixed where the UI or the data changed: the production-shaped trade fields (form, designer, collaboration), the swap's controls on its Events panel (controls, column filters), BI workspace tabs, the schema wizard's restored state, the pack row under the sticky top bar, scratch folders hidden on the connector health picture. Text moved with the pictures: USER_GUIDE (About drawer on a stress result, controls, column filters, deep JSON, Share and Discussion), HOW_IT_FITS, QUERY_BY_FORM, SCREEN_DESIGNER, tutorials 1, 15 and 19.
 
 ## 2.9.3 — DATAMAP; the fact of the day on Home; Companies, funds and ETFs Knowledge; index membership from the tracking ETFs; one firm-wide VaR limit (2026-10-27)

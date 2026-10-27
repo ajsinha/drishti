@@ -424,7 +424,8 @@ It writes `data/delta/<domain>/<kind>/business_date=…/` for every dataset (the
 `trade_calypso` and `trade_murex`, also partitioned by `PRODUCT_TYPE`), and tells a running server (or leaves a stamp for its next start)
 so its BI store reads the new data: [data/testdata/README.md](../../data/testdata/README.md). Your own data goes in with your ETL, or
 `drishti.py lake build` for a large JSON export ([TOOLS.md](../guides/TOOLS.md)). The retired example packs keep their generators under
-`tools/packgen/` (for instance `tools/packgen/banking/make_data.py --lake data/delta`).
+`tools/packgen/` (for instance `tools/packgen/banking/make_data.py --lake data/delta`, which writes JSON Lines rows under
+`data/build/lake-rows` and then loads them; generating and loading are separate steps, [DATA_FORMATS.md](../guides/DATA_FORMATS.md)).
 
 ### 5.2 PostgreSQL, Aerospike and Kafka in Docker
 

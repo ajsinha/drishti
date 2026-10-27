@@ -614,10 +614,13 @@ Every value here is **synthetic** (`tools/packgen/comswap_synth.py`: counterpart
 
 ```bash
 # a whole book in one file: 5,000 deals of five types (ComSwap, ComFut, Cash, Commodity and a rare CallNot), about 66 MB
-python3 tools/packgen/comswap_synth.py --mix --deals 5000 --out deals.json
-# small ones are committed: docs/guides/examples/comswap/book-sample.json (40 mixed) and comswap-sample.json (40 swaps)
-# another deep shape, four levels, camelCase: a structured note (coupon periods, observations, fixings)
-python3 tools/packgen/note_synth.py --notes 30 --out notes.json
+# --array writes the export's own shape, one pretty-printed JSON array, as a booking system does (the steps below upload it as it comes)
+python3 tools/packgen/comswap_synth.py --mix --deals 5000 --array --out deals.json
+# without --array: JSON Lines, one deal a line (every generator's output, DATA_FORMATS.md)
+python3 tools/packgen/comswap_synth.py --mix --deals 5000 --out deals.jsonl
+# small ones are committed: docs/guides/examples/comswap/book-sample.jsonl (40 mixed) and comswap-sample.jsonl (40 swaps)
+# another deep shape, four levels, camelCase: a structured note (coupon periods, observations, fixings), one a line
+python3 tools/packgen/note_synth.py --notes 30 --out notes.jsonl
 ```
 
 One deal, shortened:
@@ -746,7 +749,7 @@ The same from a script, or offline:
 # over REST, with a token that has packs:admin (a JSON array or JSON Lines)
 curl -sS -X POST "http://HOST:18480/api/v1/admin/packs/book/data?kind=deals&date=2026-10-16" \
      -H "Authorization: Bearer $DRISHTI_TOKEN" -H "Content-Type: application/json" --data-binary @deals.json
-# offline, into the File connector's folder (JSON Lines: comswap_synth.py --jsonl writes them)
+# offline, into the File connector's folder (JSON Lines: what comswap_synth.py writes without --array)
 python3 tools/drishti.py data ingest --from deals.jsonl --pack data/build/book-1.0.0/pack/book --store files --root /path/to/files --as-of 2026-10-16
 ```
 
