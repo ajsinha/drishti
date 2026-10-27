@@ -350,7 +350,7 @@ final class VarSelection {
                 case "division" -> "DIV";
                 default -> null;
             };
-            if (type != null && !(type.equals("DESK") && n.hierarchy().equals("LEGAL"))) {
+            if (type != null && n.hierarchy().equals("LEGAL") == type.equals("LE")) {      // desks, books, divisions of MGMT; legal entities of LEGAL
                 String id = n.id().substring(n.id().indexOf('~') + 1);
                 out.add(entry(type, type.equals("LE") ? "LE:" + id : "NODE:" + n.id(), id, n.name()));
             }

@@ -177,7 +177,8 @@
 .vx-add { margin-left: 6px; padding: 0 5px; border: 1px solid var(--d-border); border-radius: 9px; background: var(--d-surface-2); color: var(--d-link);
   font: 10.5px var(--d-font-sans); cursor: pointer; vertical-align: 1px; }
 .vx-add:hover, .vx-add:focus { border-color: var(--d-link); }
-.vx-row .vx-add { opacity: 0; }
+.vx-row .nm { position: relative; }
+.vx-row .vx-add { opacity: 0; position: absolute; right: 0; top: 50%; transform: translateY(-50%); }
 .vx-row:hover .vx-add, .vx-row:focus-within .vx-add, .vx-row[aria-current="true"] .vx-add { opacity: 1; }
 @media (hover: none) { .vx-row .vx-add { opacity: 1; } }
 
