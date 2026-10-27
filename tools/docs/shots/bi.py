@@ -175,10 +175,7 @@ def review(c: Ctx):
     c.page.fill(".bi-note", "Checked against the trades pack")
     c.save("09-approve.jpg", clip=head_clip(c))
     c.page.click('[data-actions] button:has-text("Approve")')
-    try:                                                            # the sample dataset's body fails today's check, so the approval may be refused
-        c.page.locator("[data-meta]:has-text('published v')").wait_for(timeout=10000)
-    except Exception:  # noqa: BLE001 - the pictures are made; only the workspace setting below matters
-        pass
+    c.page.locator("[data-meta]:has-text('published v')").wait_for(timeout=30000)   # the approval publishes the sample dataset
     c.page.request.put(c.base + "/bi/api/workspaces/rates-desk", data='{"reviewRequired": false}', headers={"Content-Type": "application/json"})
 
 
