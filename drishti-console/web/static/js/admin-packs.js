@@ -94,7 +94,7 @@
     });
 
     // Hand-off from Build → New pack (?bundle=<job>): that job's bundle goes through the same upload, checks and preview as a chosen file.
-    var handed = /[?&]bundle=([A-Za-z0-9_-]+)/.exec(window.location.search);
+    var handed = /[?&]bundle=([A-Za-z0-9_.-]+)/.exec(window.location.search);
     if (handed) {
       say(msg, 'Fetching the bundle from New pack…');
       fetch('/build/pack/api/jobs/' + handed[1] + '/bundle', { credentials: 'same-origin' }).then(function (r) {
