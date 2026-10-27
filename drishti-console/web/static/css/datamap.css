@@ -1,0 +1,114 @@
+/*
+ * Project Drishti · Any data. Any domain. One grammar.
+ *
+ * Copyright (c) 2026 Ashutosh Sinha <ajsinha@gmail.com>.
+ * All rights reserved.
+ *
+ * PROPRIETARY AND CONFIDENTIAL.
+ *
+ * This file is the confidential and proprietary property of Ashutosh Sinha.
+ * Unauthorised copying, use, modification, distribution or disclosure of this
+ * file, via any medium, is strictly prohibited except with the express prior
+ * written permission of the copyright holder.
+ *
+ * See the LICENSE file in the root of this repository for the full terms.
+ */
+/* The data map, DATAMAP (docs/guides/USER_GUIDE.md "The data map"): Map (SVG regions, nodes and join lines) and Cards, with one side
+   panel. Every colour is a theme token, so light and dark both work; a state always has its words (computed, a finding, n of m match),
+   never colour alone. On a phone the page keeps a 16px gutter and never scrolls sideways: only the map canvas scrolls, inside its box. */
+.dmap { min-width: 0; }
+.dmap-lede { max-width: 60rem; }
+.dmap-bar { display: flex; flex-wrap: wrap; align-items: center; gap: .5rem .8rem; margin: .4rem 0 .6rem; }
+.dmap-views { display: inline-flex; border: 1px solid var(--d-border); border-radius: 18px; overflow: hidden; }
+.dmap-view { min-height: 36px; padding: 0 1rem; display: inline-flex; align-items: center; color: var(--d-ink); text-decoration: none;
+  background: var(--d-surface); }
+.dmap-view.on { background: var(--d-accent-tint); color: var(--d-accent-strong); font-weight: 600; }
+.dmap-view:focus-visible, .dmap-chip:focus-visible, .dm-card:focus-visible { outline: 2px solid var(--d-link); outline-offset: 2px; }
+.dmap-chips { display: flex; flex-wrap: wrap; gap: .4rem; flex: 1 1 30rem; min-width: 0; }
+.dmap-chip { min-height: 36px; padding: 0 .85rem; display: inline-flex; align-items: center; border-radius: 18px; border: 1px solid var(--d-border);
+  background: var(--d-surface); color: var(--d-ink); text-decoration: none; font-size: .88rem; }
+.dmap-chip.on { border-color: var(--d-accent); background: var(--d-accent-tint); color: var(--d-accent-strong); }
+.dmap-find { margin-left: auto; }
+.dmap-state:empty { display: none; }
+.dmap-findings { margin: 0 0 .6rem; }
+.dmap-findings > summary { cursor: pointer; min-height: 32px; display: flex; align-items: center; gap: .5rem; flex-wrap: wrap; }
+.dmap-findings ul { margin: .3rem 0 .4rem; padding-left: 1.2rem; }
+.dmap-body { display: flex; flex-wrap: wrap; gap: 1.2rem; align-items: flex-start; }
+.dmap-map { flex: 999 1 36rem; min-width: 0; }
+.dmap-cards { flex: 1 1 22rem; min-width: 0; }
+.dmap-map[hidden], .dmap-cards[hidden] { display: none; }
+.dmap-canvas { overflow: auto; max-height: 78vh; border: 1px solid var(--d-border); border-radius: var(--d-radius); background: var(--d-bg-2); }
+.dmap-svg { display: block; font-family: var(--d-font-sans); }
+.dm-region rect { fill: var(--d-surface); stroke: var(--d-border); }
+.dm-region.dm-dim { opacity: .35; }
+.dm-region-t { fill: var(--d-faint); font-size: 12px; letter-spacing: .08em; }
+.dm-j { stroke: var(--d-border); stroke-width: 1.5; }
+.dm-j-cross { stroke-dasharray: 4 6; }
+.dm-j-low { stroke: var(--d-warn); }
+.dm-j.dm-on { stroke: var(--d-accent); stroke-width: 2.5; stroke-dasharray: none; }
+.dm-j.dm-dim { opacity: .15; }
+.dm-n { cursor: pointer; }
+.dm-n rect { fill: var(--d-surface-2); stroke: var(--d-border); stroke-width: 1; }
+.dm-n-l { fill: var(--d-ink); font-size: 13px; text-anchor: middle; }
+.dm-n-c { fill: var(--d-muted); font-size: 12px; text-anchor: middle; }
+.dm-n.dm-computed rect { fill: var(--d-bg-2); stroke: var(--d-link); stroke-dasharray: 4 3; }
+.dm-n.dm-computed .dm-n-l { fill: var(--d-link); }
+.dm-n.dm-near rect { stroke: var(--d-accent); stroke-width: 1.5; }
+.dm-n.dm-sel rect { fill: var(--d-accent); stroke: var(--d-accent); stroke-width: 2; }
+.dm-n.dm-sel .dm-n-l { fill: var(--d-on-accent); font-weight: 650; }
+.dm-n.dm-sel .dm-n-c { fill: var(--d-on-accent); }
+.dm-n.dm-dim { opacity: .25; }
+.dm-n.dm-hidden, .dm-region.dm-hidden, .dm-j.dm-hidden { display: none; }
+.dm-n:hover rect, .dm-n:focus-visible rect { stroke: var(--d-accent-strong); stroke-width: 2; }
+.dm-n:focus { outline: none; }
+.dmap-cards { display: grid; grid-template-columns: repeat(auto-fill, minmax(min(15rem, 100%), 1fr)); gap: .75rem; }
+.dm-card { display: flex; flex-direction: column; gap: .35rem; padding: 1rem; border-radius: var(--d-radius); border: 1px solid var(--d-border);
+  background: var(--d-surface); color: var(--d-ink); text-decoration: none; min-height: 44px; }
+.dm-card.on { border: 2px solid var(--d-accent); background: var(--d-accent-tint); }
+.dm-card[hidden] { display: none; }
+.dm-card-t { font-weight: 650; }
+.dm-card-s { font-size: .85rem; }
+.dmap-side { flex: 1 1 24rem; max-width: 100%; min-width: 0; display: flex; flex-direction: column; gap: 1rem; border: 1px solid var(--d-border);
+  border-radius: var(--d-radius); background: var(--d-surface); padding: 1.1rem; position: sticky; top: 4.5rem; max-height: calc(100vh - 6rem);
+  overflow: auto; }
+.dmap-map:not([hidden]) ~ .dmap-side { flex: 0 1 26rem; }
+.dmap-cards:not([hidden]) ~ .dmap-side { flex: 3 1 36rem; }
+.dm-joins { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; border: 1px solid var(--d-border); border-radius: 8px; }
+.dm-joins li { padding: .5rem .7rem; border-bottom: 1px solid var(--d-surface-2); line-height: 1.5; overflow-wrap: anywhere; }
+.dm-joins li:last-child { border-bottom: 0; }
+.dm-eyebrow { font-size: .75rem; letter-spacing: .08em; text-transform: uppercase; color: var(--d-faint); }
+.dmap-side h2 { font-size: 1.3rem; margin: .1rem 0 .2rem; }
+.dmap-side h3 { font-size: .9rem; margin: 0 0 .4rem; font-weight: 600; }
+.dm-desc { color: var(--d-muted); margin: 0; line-height: 1.5; }
+.dm-tbl-wrap { overflow-x: auto; border: 1px solid var(--d-border); border-radius: 8px; }
+.dm-tbl { width: 100%; border-collapse: collapse; font-size: .88rem; }
+.dm-tbl th { text-align: left; color: var(--d-faint); font-size: .72rem; letter-spacing: .06em; text-transform: uppercase; font-weight: 600;
+  padding: .55rem .7rem; border-bottom: 1px solid var(--d-border); white-space: nowrap; }
+.dm-tbl td { padding: .55rem .7rem; border-bottom: 1px solid var(--d-surface-2); vertical-align: top; }
+.dm-tbl tr:last-child td { border-bottom: 0; }
+.dm-tbl .mono, .dm-field { font-family: var(--d-font-mono); }
+.dm-field { color: var(--d-ink); font-size: .82rem; }
+.dm-cov { color: var(--d-muted); font-size: .82rem; }
+.dm-cov.dm-low { color: var(--d-warn); }
+.dm-tbl a.dm-pick { color: var(--d-link); }
+.dm-cmds { display: flex; flex-direction: column; gap: .4rem; }
+.dm-cmd { font-family: var(--d-font-mono); font-size: .85rem; background: var(--d-bg); border: 1px solid var(--d-border); border-radius: 6px;
+  padding: .5rem .65rem; color: var(--d-accent-strong); text-decoration: none; min-height: 36px; display: flex; align-items: center; }
+.dm-cmd:hover, .dm-cmd:focus-visible { border-color: var(--d-accent); }
+.dm-links { display: flex; flex-wrap: wrap; gap: .4rem 1rem; font-size: .9rem; }
+.dm-pair { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(14rem, 100%), 1fr)); gap: .75rem; }
+.dm-box { padding: .85rem; border-radius: 8px; background: var(--d-bg-2); border: 1px solid var(--d-border); display: flex; flex-direction: column; gap: .35rem; }
+.dm-box p { margin: 0; line-height: 1.5; }
+.dm-legend { display: flex; flex-direction: column; gap: .35rem; border-top: 1px solid var(--d-border); padding-top: .8rem; font-size: .78rem; }
+.dm-key { display: inline-block; width: 14px; height: 10px; vertical-align: middle; margin-right: .3rem; }
+.dm-key-stored { border: 1px solid var(--d-border); background: var(--d-surface-2); }
+.dm-key-computed { border: 1px dashed var(--d-link); }
+.dm-key-sel { height: 3px; background: var(--d-accent); }
+.dm-key-low { height: 3px; background: var(--d-warn); }
+@media (max-width: 640px) {
+  .dmap-find { margin-left: 0; flex: 1 1 100%; }
+  .dmap-find input { width: 100%; }
+  .dmap-canvas { max-height: 60vh; }
+  .dmap-chips { flex-basis: 100%; }
+  .dmap-side { position: static; max-height: none; }
+}

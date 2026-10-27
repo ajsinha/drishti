@@ -1000,6 +1000,11 @@ drishti:
     suggest-limit: ${DRISHTI_SUGGEST_LIMIT:25}   # entries in the command line's dropdown (the list scrolls)
     suggest-budget: 30ms            # type-ahead answers with what the sources returned by then
     recent-size: 20
+  datamap:                           # the data map, DATAMAP (docs/admin/CONFIGURATION.md "drishti.datamap"): counts and joins checked in the background
+    max-rows: 20000                  # rows of one kind read to count it and check its joins
+    ttl: PT15M                       # a built map is read again after this
+    read-budget: PT30S               # one listing or column read
+    threads: 4                       # kinds read at once
   live:
     frame: 50ms                     # ticks within one frame coalesce (latest wins)
     heartbeat: 15s                  # SSE keep-alive comment

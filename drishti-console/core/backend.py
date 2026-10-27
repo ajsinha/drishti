@@ -496,6 +496,11 @@ class BackendClient:
         """Every command the user can use, by pack (FUNC, /api/v1/functions): only commands that are on, of the user's packs and roles."""
         return await self._get("/functions", ident)
 
+    async def datamap(self, ident=None) -> dict:
+        """The data map (DATAMAP, /api/v1/datamap): the user's packs, kinds with counts from the lake, contract joins with their coverage;
+        ``state`` says whether the server is still counting or checking."""
+        return await self._get("/datamap", ident)
+
     async def choose_packs(self, active: list, ident) -> dict:
         return await self._send("PUT", "/me/packs", ident, json={"active": active})
 

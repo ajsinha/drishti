@@ -610,6 +610,28 @@ class FakeBackend:
         return {"total": 1, "packs": [{"name": "finance", "code": "FIN", "title": "Finance", "commands": [
             {"code": "TRD", "kind": "trade", "label": "Trade", "description": "One trade.", "example": "TRD T-1"}]}]}
 
+    datamap_state = "ready"
+
+    async def datamap(self, ident=None):
+        """DATAMAP (/api/v1/datamap): the server's inferred map, a trade joining a counterparty (every id found) and a book (one in
+        four found: a finding), a computed exposure joined to the trade."""
+        def kind(k, pack, code, label, count, computed=False):
+            return {"kind": k, "pack": pack, "code": code, "label": label, "title": label, "description": f"One {label.lower()}.", "grain": "",
+                    "class": "computed" if computed else "fundamental", "computed": computed, "count": None if computed else count,
+                    "more": False, "example": None, "failed": None}
+
+        def join(a, field, b, values, matched, state="checked"):
+            return {"from": a, "field": field, "to": b, "declaredBy": "contract links", "state": state, "why": None, "rows": values,
+                    "filled": values, "values": values, "matched": matched, "coverage": matched / values if values else None, "partial": False}
+        return {"businessDate": "2026-10-27", "state": self.datamap_state, "built": None,
+                "packs": [{"name": "trading", "code": "TRDS", "title": "Trading", "description": "", "extends": ["core"]},
+                          {"name": "core", "code": "CORE", "title": "Core", "description": "", "extends": []},
+                          {"name": "counterparty-risk", "code": "CCR", "title": "Counterparty credit risk", "description": "", "extends": []}],
+                "kinds": [kind("trade", "trading", "TRD", "Trade", 15000), kind("counterparty", "core", "CPTY", "Counterparty", 24),
+                          kind("book", "core", "BOOK", "Book", 30), kind("exposure-result", "counterparty-risk", "EXP", "Exposure", 0, True)],
+                "joins": [join("trade", "COUNTERPARTY", "counterparty", 15000, 15000), join("trade", "PORTFOLIO", "book", 4, 1),
+                          {**join("exposure-result", "TRADE_ID", "trade", 0, 0, "computed"), "why": "exposure-result is computed on demand, never stored"}]}
+
     async def packs(self, ident=None):
         return [{"name": n, "version": "1.0.0", "title": n.title(), "description": "", "console": {}, "assigned": True,
                  "active": n in self.enabled_packs, **({"python": self.python[n]} if n in self.python else {})}
