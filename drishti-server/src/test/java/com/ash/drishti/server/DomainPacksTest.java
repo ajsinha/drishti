@@ -86,11 +86,7 @@ class DomainPacksTest {
 
     /** The pack's samples catalogue lists the kind, so this test's demo connector serves it (the VaR kinds keep reference samples only). */
     private static boolean demoServes(String pack, String kind) throws java.io.IOException {
-        Path catalog = Path.of("../config/packs", pack, "samples", "catalog.json");
-        if (!Files.isRegularFile(catalog)) {
-            return false;
-        }
-        for (JsonNode e : new ObjectMapper().readTree(catalog.toFile())) {
+        for (JsonNode e : com.ash.drishti.common.PackSamples.catalogEntries(Path.of("../config/packs", pack, "samples"))) {   // catalog.jsonl
             if (kind.equals(e.path("kind").asText())) {
                 return true;
             }

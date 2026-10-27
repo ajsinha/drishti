@@ -28,7 +28,6 @@ import com.ash.drishti.api.SourcePlugin;
 import com.ash.drishti.api.Subscription;
 import com.ash.drishti.common.PackSamples;
 import java.io.IOException;
-import java.io.InputStream;
 import java.time.Instant;
 import java.util.ArrayList;
 import java.util.LinkedHashMap;
@@ -44,7 +43,7 @@ import java.util.function.Consumer;
 
 /**
  * Serves sample entities from pack sample directories ({@code dirs}: comma-separated, each holding
- * {@code catalog.json} and {@code <kind>.jsonl}, one document a line, or {@code <kind>/<id>.json}: {@link PackSamples}). The enabled
+ * {@code catalog.jsonl} (or the older {@code catalog.json}) and {@code <kind>.jsonl}, one document a line, or {@code <kind>/<id>.json}: {@link PackSamples}). The enabled
  * packs supply the directories. Each fixture's
  * {@code _meta} block becomes the provenance, so views show the source systems of the samples
  * ({@code aero-risk}, {@code port-ops}, ...).
@@ -76,10 +75,13 @@ public final class DemoSourcePlugin implements SourcePlugin {
                 continue;
             }
             java.nio.file.Path root = java.nio.file.Path.of(dir.trim()).toAbsolutePath().normalize();
-            DataNode catalog = read(context, root.resolve("catalog.json"));
+            // the catalogue: catalog.jsonl, one entry a line (2.9.4), else the catalog.json array of earlier releases
+            if (!java.nio.file.Files.isRegularFile(root.resolve(PackSamples.CATALOG)) && !java.nio.file.Files.isRegularFile(root.resolve(PackSamples.OLD_CATALOG))) {
+                throw new java.nio.file.NoSuchFileException(root.resolve(PackSamples.CATALOG).toString(), null, "a samples folder needs its catalogue");
+            }
             Map<String, Map<String, DataNode>> byKind = new LinkedHashMap<>();       // kind -> id -> catalogue entry
-            for (int i = 0; i < catalog.size(); i++) {
-                DataNode e = catalog.get(i);
+            for (com.fasterxml.jackson.databind.JsonNode j : PackSamples.catalogEntries(root)) {
+                DataNode e = context.parseJson(new java.io.ByteArrayInputStream(j.toString().getBytes(java.nio.charset.StandardCharsets.UTF_8)));
                 byKind.computeIfAbsent(e.get("kind").asText(), k -> new LinkedHashMap<>()).put(e.get("id").asText(), e);
             }
             for (Map.Entry<String, Map<String, DataNode>> k : byKind.entrySet()) {
@@ -163,12 +165,6 @@ public final class DemoSourcePlugin implements SourcePlugin {
     public void close() {
         if (tickTask != null) {
             tickTask.cancel(false);
-        }
-    }
-
-    private static DataNode read(SourceContext context, java.nio.file.Path file) throws IOException {
-        try (InputStream in = java.nio.file.Files.newInputStream(file)) {
-            return context.parseJson(in);
         }
     }
 

@@ -36,6 +36,10 @@ import java.util.Map;
  * by Drishti's own lake writer. The table is append-only ({@code delta.appendOnly}): a restated date adds rows with the next
  * {@code RESULT_VERSION}, nothing is overwritten. Its log and removed files are kept for the retention years (7 by default), so its
  * time travel reaches back that far. No engine reads it back (a guard test fails the build when a connector points there).
+ *
+ * <p>Beside it (2.9.4, {@code drishti.var.official.jsonl}, on by default), each published date is also written as JSON Lines, one row a
+ * line (the Delta row's document): {@code <root>/risk-results/jsonl/var-official/<yyyy-MM-dd>/var-official-v<table version>.jsonl}, one
+ * file per commit, so a restatement is a new file and nothing is overwritten.
  */
 final class VarPublisher {
 
@@ -51,7 +55,14 @@ final class VarPublisher {
     private final Path table;
     private final int retentionDays;
 
+    private final boolean jsonl;
+
     VarPublisher(Path root, int retentionYears) {
+        this(root, retentionYears, true);
+    }
+
+    VarPublisher(Path root, int retentionYears, boolean jsonl) {
+        this.jsonl = jsonl;
         this.table = root == null ? null : root.resolve(FOLDER).resolve(TABLE);
         this.retentionDays = retentionYears * 365 + (retentionYears + 3) / 4;           // whole years with their leap days
     }
@@ -90,6 +101,22 @@ final class VarPublisher {
                 "delta.deletedFileRetentionDuration", "interval " + retentionDays + " days", "delta.appendOnly", "true");
     }
 
+    /** Where a commit's JSON Lines go: {@code <root>/risk-results/jsonl/var-official/<date>/var-official-v<version>.jsonl}. */
+    Path jsonlFile(LocalDate date, long version) {
+        return table.getParent().resolve("jsonl").resolve(TABLE).resolve(date.toString()).resolve(TABLE + "-v" + version + ".jsonl");
+    }
+
+    private static List<Map<String, Object>> docs(LocalDate date, List<Map<String, Object>> rows) {
+        List<Map<String, Object>> out = new ArrayList<>();
+        for (Map<String, Object> r : rows) {
+            Map<String, Object> doc = new LinkedHashMap<>();
+            COLUMNS.keySet().forEach(c -> doc.put(c, r.get(c)));
+            doc.put("BUSINESS_DATE", date.toString());
+            out.add(doc);
+        }
+        return out;
+    }
+
     /** Appends one date's rows (each a map of {@link #COLUMNS}) in one commit; returns the table version written. */
     long publish(LocalDate date, List<Map<String, Object>> rows) throws IOException {
         if (table == null) {
@@ -104,7 +131,11 @@ final class VarPublisher {
                     String id = r.get("NODE_ID") + "@" + date + "#v" + r.get("RESULT_VERSION");
                     Map<String, Object> doc = new LinkedHashMap<>(promoted);
                     doc.put("BUSINESS_DATE", date.toString());
-                    w.write(JSON.writeValueAsString(List.of(id, JSON.writeValueAsString(doc), promoted)));
+                    Map<String, Object> line = new LinkedHashMap<>();      // one {id, doc, columns} a line (LakeWriter)
+                    line.put("id", id);
+                    line.put("doc", JSON.writeValueAsString(doc));
+                    line.put("columns", promoted);
+                    w.write(JSON.writeValueAsString(line));
                     w.newLine();
                 }
             }
@@ -114,7 +145,11 @@ final class VarPublisher {
             LakeManifest m = new LakeManifest(table.toString(), List.of("business_date"), cols, List.copyOf(COLUMNS.keySet()), "append", 10_000,
                     List.of("id", "business_date", "NODE_ID", "RESULT_VERSION"),
                     List.of(new LakeManifest.Part(staged, rows.size(), Map.of("business_date", date.toString()))), properties());
-            return new LakeWriter().write(m, x -> { }).version();
+            long version = new LakeWriter().write(m, x -> { }).version();
+            if (jsonl) {                                            // the same rows as JSON Lines beside the table (2.9.4)
+                com.ash.drishti.server.dist.JsonlWriter.writeFile(jsonlFile(date, version), docs(date, rows));
+            }
+            return version;
         } finally {
             Files.deleteIfExists(staged);
         }

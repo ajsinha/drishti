@@ -76,9 +76,9 @@ import org.slf4j.LoggerFactory;
 
 /**
  * The compliance (eDiscovery) export: an asynchronous job that streams the collaboration record into one zip under
- * {@code <drishti.collab.dir>/exports}: {@code shares.ndjson}, {@code threads.ndjson} (every comment with every revision,
- * unscrubbed: this is the record), {@code chains.ndjson} (each thread's first and last hash and the verification result),
- * {@code holds.ndjson}, {@code README.txt} and, last, {@code manifest.json} with the filters, who and when, the counts and the SHA-256
+ * {@code <drishti.collab.dir>/exports}: {@code shares.jsonl}, {@code threads.jsonl} (every comment with every revision,
+ * unscrubbed: this is the record), {@code chains.jsonl} (each thread's first and last hash and the verification result),
+ * {@code holds.jsonl}, {@code README.txt} and, last, {@code manifest.json} with the filters, who and when, the counts and the SHA-256
  * and size of every other file. Entries are written line by line through a digest, so memory is bounded whatever the size; one export
  * runs at a time per server. The requester downloads it once; it is deleted then or after {@code export-keep}. Starting, finishing and
  * downloading are audited. Needs the {@code compliance} power.
@@ -265,13 +265,13 @@ public final class ExportService implements AutoCloseable {
             try (OutputStream raw = Files.newOutputStream(part); ZipOutputStream out = new ZipOutputStream(raw, StandardCharsets.UTF_8)) {
                 readme(out);
                 Function<String, String> names = nameCache();
-                Sink sh = new Sink(out, "shares.ndjson");
+                Sink sh = new Sink(out, "shares.jsonl");
                 if (f.shares()) {
                     exportShares(sh, f, names);
                 }
                 files.add(sh.close());
-                Sink th = new Sink(out, "threads.ndjson");
-                Sink ch = new Sink(out, "chains.ndjson");
+                Sink th = new Sink(out, "threads.jsonl");
+                Sink ch = new Sink(out, "chains.jsonl");
                 // two entries cannot be open at once in a zip: threads and chains are written one after the other
                 long[] tallies = new long[3];
                 Path chainTmp = dir.resolve(job.id + ".chains.tmp");
@@ -289,17 +289,17 @@ public final class ExportService implements AutoCloseable {
                     Files.deleteIfExists(chainTmp);
                 }
                 files.add(ch.close());
-                Sink hs = new Sink(out, "holds.ndjson");
+                Sink hs = new Sink(out, "holds.jsonl");
                 int holdCount = 0;
                 for (Hold h : holds.all()) {
                     hs.line(json.writeValueAsString(holdNode(h)));
                     holdCount++;
                 }
                 files.add(hs.close());
-                Sink ib = new Sink(out, "inbox.ndjson");
+                Sink ib = new Sink(out, "inbox.jsonl");
                 exportInbox(ib, f, names);
                 files.add(ib.close());
-                Sink ob = new Sink(out, "outbox.ndjson");
+                Sink ob = new Sink(out, "outbox.jsonl");
                 exportOutbox(ob, f, names);
                 files.add(ob.close());
                 counts.put("shares", sh.lines);
@@ -668,7 +668,7 @@ public final class ExportService implements AutoCloseable {
         m.put("filters", job.filters);
         m.put("counts", counts);
         m.put("files", files);
-        m.put("note", "chains.ndjson lists each thread's first and last hash: a later export that disagrees shows history was rewritten");
+        m.put("note", "chains.jsonl lists each thread's first and last hash: a later export that disagrees shows history was rewritten");
         out.putNextEntry(new ZipEntry("manifest.json"));
         out.write(json.writerWithDefaultPrettyPrinter().writeValueAsBytes(m));
         out.closeEntry();
@@ -681,17 +681,17 @@ public final class ExportService implements AutoCloseable {
                 One JSON object per line, UTF-8, times in ISO-8601 UTC, ids stable. Every person appears as a user name and, beside it,
                 the display name at the time of export (field + "Name").
 
-                shares.ndjson   each share: sender, pin (business date, knownAt, generation), the note as written, masked spans, channels,
+                shares.jsonl    each share: sender, pin (business date, knownAt, generation), the note as written, masked spans, channels,
                                 every recipient with the state (notified, no-access, no-pack, disabled, over-limit) and the time it was
                                 first opened, the share's own SHA-256 and whether it still matches (hashOk).
-                threads.ndjson  each thread with every comment and every revision (created, edited, retracted, hidden, unhidden):
+                threads.jsonl   each thread with every comment and every revision (created, edited, retracted, hidden, unhidden):
                                 author or actor, pin, text, reason, mentions, prevHash and hash. Text is the record, unscrubbed.
                                 "chain" holds the genesis hash (SHA-256 of the thread id), the first and last hash and whether the chain verified.
-                chains.ndjson   one line per thread: first and last hash and the verification result, for the archive to compare with
+                chains.jsonl    one line per thread: first and last hash and the verification result, for the archive to compare with
                                 a later export.
-                holds.ndjson    every legal hold, active or released.
-                inbox.ndjson    each inbox notice in scope: recipient, type, entity, actor, when and when it was read (pointers, no text).
-                outbox.ndjson   each email or bridge delivery row in scope: channel, state, attempts, times (never a message body).
+                holds.jsonl     every legal hold, active or released.
+                inbox.jsonl     each inbox notice in scope: recipient, type, entity, actor, when and when it was read (pointers, no text).
+                outbox.jsonl    each email or bridge delivery row in scope: channel, state, attempts, times (never a message body).
                 manifest.json   the filters, who and when, counts, the software version, and the SHA-256, size and line count of
                                 every file above (written last).
 

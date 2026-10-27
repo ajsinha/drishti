@@ -76,6 +76,7 @@
           <div class="dropdown-menu">
             <a class="dropdown-item" data-hx-export="csv" href="/export/history/{{ kind | urlencode }}/{{ id | urlencode }}.csv?{{ q }}"><i class="bi bi-file-earmark-spreadsheet" aria-hidden="true"></i> CSV</a>
             <a class="dropdown-item" data-hx-export="xlsx" href="/export/history/{{ kind | urlencode }}/{{ id | urlencode }}.xlsx?{{ q }}"><i class="bi bi-file-earmark-excel" aria-hidden="true"></i> Excel</a>
+            <a class="dropdown-item" data-hx-export="jsonl" href="/export/history/{{ kind | urlencode }}/{{ id | urlencode }}.jsonl?{{ q }}"><i class="bi bi-braces" aria-hidden="true"></i> JSON Lines (a day a line)</a>
             <a class="dropdown-item" data-hx-export="json" href="/export/history/{{ kind | urlencode }}/{{ id | urlencode }}.json?{{ q }}"><i class="bi bi-braces" aria-hidden="true"></i> JSON (as served)</a>
           </div>
         </span>

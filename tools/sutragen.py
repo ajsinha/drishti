@@ -50,6 +50,8 @@ ROOT = pathlib.Path(__file__).resolve().parents[1]
 if str(ROOT / "tools") not in sys.path:
     sys.path.append(str(ROOT / "tools"))
 from javacmd import java_cmd  # noqa: E402
+sys.path.insert(0, str(ROOT / "tools" / "packgen" / "common"))
+import sutracases as SC  # noqa: E402  (tests/<sutra>/cases.jsonl)
 MISSING = object()
 
 
@@ -415,8 +417,7 @@ def generate(kinds: dict[str, list[dict]], opts, out: pathlib.Path, tests: pathl
             d = t / "in" / f"g{i:04d}"
             d.mkdir(parents=True)
             (d / "kind").write_text(g.kind + "\n")
-            for j, doc in enumerate(g.samples, 1):
-                (d / f"s{j}.json").write_text(json.dumps(doc))
+            (d / "samples.jsonl").write_text("".join(json.dumps(doc) + "\n" for doc in g.samples))     # one sample a line
         say(f"drafting {len(groups)} Sutra(s) with one `sutra design --each` run ...")
         r = sutra_cli(opts, "design", "--each", str(t / "in"), "--out", str(t / "out"))
         if r.returncode != 0:
@@ -429,8 +430,7 @@ def generate(kinds: dict[str, list[dict]], opts, out: pathlib.Path, tests: pathl
             g.path.write_text(edit_yaml(text, g), encoding="utf-8")
             sd = tests / g.name
             sd.mkdir(parents=True, exist_ok=True)
-            for j, doc in enumerate(g.samples, 1):
-                (sd / f"sample-{j}.json").write_text(json.dumps(doc, indent=1, ensure_ascii=False) + "\n", encoding="utf-8")
+            (sd / SC.FILE).write_text(SC.text([(f"sample-{j}", doc) for j, doc in enumerate(g.samples, 1)]), encoding="utf-8")   # one case a line
     return groups
 
 

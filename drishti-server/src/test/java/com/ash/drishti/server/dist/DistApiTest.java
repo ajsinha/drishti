@@ -278,6 +278,10 @@ class DistApiTest {
         assertThat(usd).as("the USD slicer changes the numbers").isNotEqualTo(whole);
         assertThat(whole.lines().filter(l -> l.startsWith("DESK-")).count()).isEqualTo(3);
         assertThat(whole).doesNotContain("Trades with MTM");                                                            // one visual only
+        String jsonl = new String(file("jsonl", as("rita", "bi-risk"), target("\"page\":\"main\",\"visual\":\"by-desk\",\"state\":{" + DATES + "}")),
+                StandardCharsets.UTF_8);
+        assertThat(jsonl.lines().filter(l -> l.contains("\"DESK-")).count()).as("the same rows as the CSV, one a line").isEqualTo(3);
+        assertThat(jsonl).contains("\"desk\":").contains("\"Notional\":");
     }
 
     @Test @Order(3)

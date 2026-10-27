@@ -204,7 +204,7 @@ routes:
 The built-in `demo` source serves every enabled pack's `samples/` folder (when `DRISHTI_DEMO_ENABLED` is `true`, the default), so a pack
 works with no database. The format:
 
-`samples/catalog.json` lists every sample. The demo source needs only `kind` and `id`; give `title` and
+`samples/catalog.jsonl` lists every sample. The demo source needs only `kind` and `id`; give `title` and
 `subtitle` too, since they are what type-ahead shows. From the trading pack:
 
 ```json

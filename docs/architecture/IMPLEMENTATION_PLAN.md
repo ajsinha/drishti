@@ -546,6 +546,27 @@ The P&L-vector input of 2.8.0 stays supported (a bank sends either).
 Open questions for the product owner: (1) PVs in each trade's currency or one currency; (2) scenario FX supplied or derived from the
 scenario dates' FX history; (3) cross rates via USD or direct pairs; (4) the holding period (1-day moves, as today).
 
+### 2.9.4 also: JSON Lines is the data standard (product owner, 2026-10-27; built)
+
+The decisions, final: **generators write JSONL only** (one JSON object a line, UTF-8; generating and loading are separate steps, as
+`make_trades.py` already did); **readers keep CSV, JSON and JSONL, CSV deprecated** (logged and named in Admin → Health; `drishti.py
+convert`); **every export and download gains a JSONL option** (CSV, Excel, PDF and PNG stay); **Sutra test cases are one
+`tests/<sutra>/cases.jsonl`** (the per-file folders read with a warning during 2.9.4); **official results also as JSONL** beside their
+Delta tables, the content store's row lists `.jsonl`; `lake build`'s staging rows, `seals.log` and `catalog.json` become JSONL; a
+guard test in the drill. The page: [DATA_FORMATS.md](../guides/DATA_FORMATS.md).
+
+| Part | Built |
+|---|---|
+| Generators | `make_data.py --lake`, `samplegen/lake.py`, `packbuild --lake`: dated lake rows, then `samplegen/load_rows.py` (the same lake, byte for byte); `bulk_trades.py`: JSONL then `lake build`; `comswap_synth`/`note_synth` JSONL (`--array` for the export shape); retired, finance and logistics samples `<kind>.jsonl`; `realdata` dataset `*.jsonl`; the feed `fixing.jsonl`; loaders no longer rewrite samples, tests or feeds |
+| Readers | the file connector's CSV deprecated (one warning a file, named in Health); `drishti.py convert` |
+| Exports | server (search, SQL, BI runs, `/export/jsonl`, statements, subscriptions, scheduled reports, exposure and VaR captures, the cluster allow-list), console routes and `to_jsonl`, every UI menu, the CLI; the compliance export's `.ndjson` renamed `.jsonl` |
+| Sutra tests | `cases.jsonl` (197 folders converted; every writer; `SutraCli`, `ExpectFile`, the pack fragment export) |
+| Official results | `risk-results/jsonl/<table>/<date>/` beside the Delta tables (`official.jsonl`, on by default); `-membership-v<n>.jsonl`, `-trades-v<n>.jsonl` |
+| Smaller | `samples/catalog.jsonl`, staged lake rows as objects, `seals.jsonl` (the older forms still read) |
+| Guard | `tools/test_generators_write_jsonl.py`, `tools/test_exports_offer_jsonl.py` in the drill |
+
+Removing CSV input is for a later release (not yet planned); the per-file Sutra test folders stop being read after 2.9.4.
+
 ## Known gaps
 
 What is open today. None blocks normal use; each is a candidate for a future wave.

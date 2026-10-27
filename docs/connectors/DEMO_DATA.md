@@ -143,10 +143,12 @@ tools/load-delta.sh --trades 10000               # and 10,000 trades a day for 3
 tools/load-delta.sh /tmp/lake --trades 20000     # somewhere else
 ```
 
-It runs `make_data.py --lake` (which rewrites the whole lake the packs read, in the layout each declares) and then
-`tools/samplegen/bulk_trades.py`, which replaces **one source system's** trade table (`trade_murex`, or `--system CALYPSO`) with the
-book and leaves every other table as it is. `bulk_trades.py` on its own: about 1.7 KB per trade per day on disk (a million trades × 3
-days is about 5.1 GB), about 30 seconds per million trade-days on 24 cores. The server reads `data/delta` (or `DRISHTI_DELTA_ROOT`) and
+It generates, then loads, in separate steps ([DATA_FORMATS.md](../guides/DATA_FORMATS.md)): `make_data.py --lake --no-load` writes the
+history as JSON Lines rows (`<data>/build/lake-rows/banking-history.jsonl` and `banking-restated.jsonl`), `tools/samplegen/load_rows.py`
+loads them (rewriting the whole lake the packs read, in the layout each declares; the restatement as a second commit); then
+`tools/samplegen/bulk_trades.py` writes the book as one JSONL file a day (`<data>/build/bulk/murex/trades-<date>.jsonl.gz`) and loads each
+with `lake build`, replacing **one source system's** trade table (`trade_murex`, or `--system CALYPSO`) and leaving every other table as
+it is (`--no-lake` stops after the JSONL). Neither step rewrites the packs' samples, the Sutra tests or the feed. The server reads `data/delta` (or `DRISHTI_DELTA_ROOT`) and
 picks a new load up within a minute; no restart is needed. The layout: [DELTA_CONNECTOR.md](DELTA_CONNECTOR.md).
 
 For your own export (a large JSON array or JSON Lines of real trades), `drishti.py lake build` streams it into a Delta table with flat
@@ -272,10 +274,47 @@ drishti-console/.venv/bin/python tools/drishti.py data ingest --from your-folder
 [Generating a pack from JSON Lines](../guides/PACK_GENERATORS_GUIDE.md#generating-a-pack-from-json-lines) and
 [CLI_GUIDE.md](../guides/CLI_GUIDE.md).
 
+## Your bank's names
+
+The demo bank is *Drishti Bank*, and its legal entities are *Drishti Bank plc* (`LE-LDN`), *Drishti Bank Securities Inc.* (`LE-NY`),
+*Drishti Bank Europe AG* (`LE-FRA`) and *Drishti Securities Japan K.K.* (`LE-TKY`), with branch forms such as *Drishti Bank plc,
+Singapore Branch*. To demonstrate with other names, edit `config/demo/names.yaml` (2.9.4):
+
+```yaml
+bank: Example Bank                       # the bank as a whole (the top of the risk hierarchy)
+short-name: EXAMPLE
+legal-entities:
+  LE-NY: Example Securities Inc.
+  LE-LDN: Example Bank plc
+  LE-FRA: Example Bank Europe AG
+  LE-TKY: Example Securities Japan K.K.
+# branches:                              # optional: a branch's own full name
+#   "Drishti Bank plc, Singapore Branch": Example Bank plc, Singapore Branch
+```
+
+The defaults are the names above, so the file changes nothing until you edit it. The names are applied **as the demo lakes are
+built**: `drishti.py lake demo` and `tools/build_demo_lakes.py` (both take `--names FILE`, default `config/demo/names.yaml`; with
+`--dry-run` they print the mapping and build nothing) rename, in every kind as it is loaded, each value that **is** an old name, and
+each value that **starts with** an old name followed by a comma (a branch keeps its suffix). The committed test data
+(`data/testdata`) is never rewritten. **LEIs and BICs stay as they are**: they are identifiers. In the committed data the names are in:
+
+| Where | Field | Names |
+|---|---|---|
+| `core/legal-entity` (test data, lake `reference/legal-entity`) | `NAME` | the four legal entities |
+| `market-risk/risk-hierarchy` (test data, lake `risk/risk-hierarchy`) | `NAME` | the bank, at the top of both trees |
+| `config/packs/core/samples` | `legal-entity.jsonl` `NAME`, `catalog.jsonl` subtitles | the four legal entities |
+| the retired example packs (`examples/packs/climate-risk`, `liquidity-risk`, `operational-risk`; `finance`) | `legalEntityName`, `legalEntity.name` | the legal entities |
+
+So after an edit rebuild those two datasets (`--only core/legal-entity,market-risk/risk-hierarchy`, or a full `lake demo`). The
+packs' samples, served without a lake, follow the file when their generators are run again: `python3 tools/packgen/banking/make_data.py`
+(the core samples; the catalogue's subtitles too) and an example pack's `make.py`. The VaR tree's top node is named by a server setting
+of its own, the VaR root name (the PV-VaR work of 2.9.4, listed in [CONFIGURATION.md](../admin/CONFIGURATION.md) under the VaR
+engine): the VaR tree's top name is set there.
+
 ## The samples
 
 The packs' samples in `config/packs/<pack>/samples/` are what the `demo` source serves live: one JSON Lines file per kind
-(`<kind>.jsonl`, one document a line, split into `<kind>.part-001.jsonl` … only above about 50 MB) and a `catalog.json` listing every
+(`<kind>.jsonl`, one document a line, split into `<kind>.part-001.jsonl` … only above about 50 MB) and a `catalog.jsonl` listing every
 sample's kind, id, title and subtitle (the type-ahead's text). The five banking packs' samples are written by
 
 ```bash
@@ -286,11 +325,12 @@ which prints (real output on a fresh clone):
 
 ```text
 wrote 2571 documents into 5 packs' samples; 271 trading test files
-feeds: …/data/feeds/fixing/SOFR-HISTORY.csv
+feeds: …/data/feeds/fixing.jsonl
 ```
 
-(world-economy and news-and-markets have their own generators under `tools/packgen/`.) Every `load-*.sh` script runs it first, along
-with the sample feed file `data/feeds/fixing/SOFR-HISTORY.csv` (which `lake demo` writes too). The samples per pack:
+(world-economy and news-and-markets have their own generators under `tools/packgen/`.) The plain run also writes the sample feed file
+`data/feeds/fixing.jsonl` (one fixing series a line, `FIX SOFR-HISTORY`; `lake demo` writes it too). Every `load-*.sh` script runs
+`make_data.py --jsonl` or `--lake`, which write rows only: they never rewrite the samples, the Sutra tests or an existing feed. The samples per pack:
 
 | Pack | Samples | Kinds | Live | On disk |
 |---|---|---|---|---|
@@ -361,7 +401,7 @@ trades.) So any store a new connector adds can be loaded with the same demo data
 | `tools/drishti.py lake build --from FILE --pack DIR --kind K …` | one Delta table from a large JSON export, streamed (`tools/lake/build.py`) |
 | `tools/testdata/make_testdata.py [--check]` | writes `data/testdata` |
 | `tools/load-files.sh [root] [--trades N] [--days D]` | `make_data.py --jsonl`, then `JsonlLoader` into `<root>/<domain>/<date>/<kind>.jsonl` |
-| `tools/load-delta.sh [root] [--trades N] [--days D]` | `make_data.py --lake`, then `bulk_trades.py` |
+| `tools/load-delta.sh [root] [--trades N] [--days D]` | `make_data.py --lake --no-load` (JSONL rows), `samplegen/load_rows.py` (into Delta), then `bulk_trades.py` (JSONL, then `lake build`) |
 | `tools/load-postgres.sh [jdbc-url] [--trades N] [--days D] [--keep-months N] [--user U] [--password P] [--writers N]` | `make_data.py --jsonl`, then `PostgresLoader` (samples with `--recreate`), then the bulk book streamed |
 | `tools/load-iceberg.sh [root] [--trades N] [--days D] [--keep-days N] [--catalog rest --uri U --warehouse W]` | `make_data.py --jsonl`, then `IcebergLoader` (each day sorted by id), then the bulk book streamed |
 | `tools/load-duckdb.sh [database] [--trades N] [--days D] [--keep-days N] [--memory-limit M] [--parsers N] [--threads N]` | `make_data.py --jsonl`, then `DuckDbLoader` (samples with `--recreate`), then the bulk book streamed; each load builds `<database>.loading` and renames it over the database |
@@ -369,8 +409,9 @@ trades.) So any store a new connector adds can be loaded with the same demo data
 | `tools/load-redis.sh [uri] [--trades N] [--days D] [--ttl-days N] [--merge] [--publish] [--cluster]` | `make_data.py --jsonl`, then `RedisLoader`, then the bulk book streamed |
 | `tools/load-aerospike.sh [hosts] [namespace] [--trades N] [--days D] [--ttl-days N]` | `make_data.py --jsonl`, then `AerospikeLoader`, then the bulk book streamed |
 | `tools/load-cassandra.sh [contact-points] [datacenter] [--create] [--create-keyspace RF] [--trades N] [--days D] [--ttl-days N] [--keep-days N]` | `make_data.py --jsonl` and the bulk book as one stream into `CassandraLoader` |
-| `tools/packgen/banking/make_data.py` | the samples, `--lake`, `--jsonl`, `--check` |
-| `tools/samplegen/bulk_trades.py` | a large trade book for one source system, into the lake or as JSON lines |
+| `tools/packgen/banking/make_data.py` | the samples, `--lake` (JSONL rows, then loaded; `--no-load`), `--jsonl`, `--check` |
+| `tools/samplegen/load_rows.py --rows F --restated F --root R` | loads dated loader rows (JSONL) into the lake |
+| `tools/samplegen/bulk_trades.py` | a large trade book for one source system: JSONL a day, then `lake build` (`--no-lake`), or loader rows (`--jsonl`) |
 
 `lake demo` and `lake build` need only the console's Python (`drishti-console/.venv`, with PyYAML, deltalake and pyarrow). The
 `load-*.sh` scripts need `uv` (Python), Java 21 or newer (`JAVA_HOME`; the scripts default to Java 21), and Maven's offline cache for the

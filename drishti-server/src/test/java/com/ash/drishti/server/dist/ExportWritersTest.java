@@ -93,6 +93,21 @@ class ExportWritersTest {
     }
 
     @Test
+    void jsonLinesIsARowALineKeyedAsTheCsvHeaderWithEachRowsSection() throws IOException {
+        String jsonl = new String(JsonlWriter.write(doc(1)), StandardCharsets.UTF_8);
+        com.fasterxml.jackson.databind.ObjectMapper m = new com.fasterxml.jackson.databind.ObjectMapper();
+        List<com.fasterxml.jackson.databind.JsonNode> lines = new java.util.ArrayList<>();
+        for (String l : jsonl.split("\n")) {
+            lines.add(m.readTree(l));
+        }
+        com.fasterxml.jackson.databind.JsonNode first = lines.get(0);
+        assertThat(first.get("section").asText()).isEqualTo("Trades: by desk / 1");    // several sections: each row says which
+        assertThat(first.has("Desk") && first.has("Notional") && first.has("Note")).isTrue();
+        assertThat(jsonl).doesNotContain("'=HYPERLINK");                              // no spreadsheet escaping: it is data, not a sheet
+        assertThat(jsonl).endsWith("\n").doesNotContain("\r");
+    }
+
+    @Test
     void pdfIsPagedWithTheRunningHeaderAndKeepsRowsInsideThePages() throws IOException {
         PdfWriter.Geometry g = PdfWriter.Geometry.of(true, 1000);
         SnapshotModel model = new DocLayout(g.width(), g.slice(), 500, 0).build(doc(160));

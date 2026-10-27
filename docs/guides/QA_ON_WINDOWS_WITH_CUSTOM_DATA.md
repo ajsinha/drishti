@@ -208,6 +208,20 @@ beside yours). Always try `--dry-run` first: it prints every step.
 Then start the server and the console (section 4). The manual steps below do the same thing in parts.
 
 
+### 3.0a Your bank's names (optional, 5 minutes)
+
+To show your bank's names instead of *Drishti Bank* and its legal entities, edit `config\demo\names.yaml` (the bank, and the names of
+`LE-NY`, `LE-LDN`, `LE-FRA` and `LE-TKY`; a branch such as *… plc, Singapore Branch* follows its entity). Then rebuild the datasets that
+carry the names, with the same `build_demo_lakes.py` as step 3.0 plus:
+
+```
+--only core/legal-entity,market-risk/risk-hierarchy --as-of <the lakes' last date>
+```
+
+Add `--dry-run` first to see the mapping it will apply (`Drishti Bank plc -> …`). LEIs and BICs stay as they are. The committed data
+in `data\testdata` is not changed, so `git status` stays clean. The VaR tree's top name is a server setting of its own
+(the VaR root name, under the VaR engine in CONFIGURATION.md); see [DEMO_DATA.md](../connectors/DEMO_DATA.md#your-banks-names).
+
 ### 3.1 By hand: all synthetic data, aligned to your ENDUR dates (PyCharm)
 
 The synthetic data has sixty business days. Make them **end on the date of your newest ENDUR file**, so the date picker
@@ -662,6 +676,21 @@ records are history and never rewritten. The live pages show 150m.
 
 To switch the fact of the day off: set `DRISHTI_HOME_FACTS=false` for the console (`ui.facts.enabled`) and restart it.
 
+## 6g. What is new in 2.9.4: JSON Lines (10 minutes)
+
+JSON Lines (one JSON object a line, `.jsonl`) is the data format from 2.9.4 ([DATA_FORMATS.md](DATA_FORMATS.md)). Nothing in steps 3.0
+to 3.3 changes: `build_demo_lakes.py` and `load-delta.ps1` are run as before (the generators now write JSONL under `data\build` and the
+loaders read it). After `git pull`, build the jar again and run step 3.0 once, so the sample feed becomes `data\feeds\fixing.jsonl`.
+
+| # | Do | You should see |
+|---|---|---|
+| 1 | **Admin → Health** | the `file` connector `UP`, with no *CSV input is deprecated* note. The old `data\feeds\fixing\SOFR-HISTORY.csv` is gone (step 3.0 replaced it); a CSV file you put in `data\feeds\<kind>\` would be named there |
+| 2 | `FIX SOFR-HISTORY` (with the finance example pack loaded) | the same SOFR fixings as before, now read from `fixing.jsonl` |
+| 3 | `TRD where QUANTITY > 1000000` → **JSONL** beside **CSV** on the results | a `.jsonl` file: one trade a line, the CSV's column names as keys |
+| 4 | Open a trade → **Export** → **JSON Lines**; on its history page `E` → **JSON Lines** | a `.jsonl` file of the view's rows, and one business day a line |
+| 5 | A BI report → **Export** → **JSONL** | the page's rows as JSON Lines |
+| 6 | In PowerShell: `…\.venv\Scripts\python.exe tools\drishti.py convert C:\temp\some.csv` | `C:\temp\some.jsonl: N lines from C:\temp\some.csv` |
+
 ---
 
 ## 7. If something goes wrong
@@ -710,6 +739,7 @@ To switch the fact of the day off: set `DRISHTI_HOME_FACTS=false` for the consol
 - [ ] Step 6c (2.6.5): `TRD 1000279 60`, `TRD <your id> 60` and `EQ EQ-CSCA 3M` show their history.
 - [ ] Step 6d (2.6.7): **Chart** (or K) on a table, a masked field never plotted, an export.
 - [ ] Step 6f (2.9.3): the changed data rebuilt; `DATAMAP` draws and lists its findings; Home shows a fact of the day; `HIER LEGAL~BANK` shows 150m; `IDX SP500` has 495 members.
+- [ ] Step 6g (2.9.4): step 3.0 run again; the feed is `fixing.jsonl`, Health has no CSV note; JSONL downloads from a search, a view, a history page and a BI report; `drishti.py convert` on a CSV.
 
 **After the demo:**
 

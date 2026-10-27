@@ -677,7 +677,7 @@ they are API calls, there is no console page for them yet, and the runbooks are 
 |---|---|---|
 | 1 | Retention is set per kind, then per pack, then globally (`retention.kinds.<kind>`, `packs.<pack>.retention-days`, `retention.keep-days`). A daily `CollabPurge` removes **whole threads** by last activity and shares by creation, writes an audit event per thread with its final hash, and **skips anything a hold covers** | `CollabPurge`, `HoldMatcher`, `CollabProperties` |
 | 2 | A **legal hold** (power `compliance`; an administrator is not enough) has a scope (`entity`, `kind`, `user`, `thread`, `all`), an optional date range and a reason. A hold on `trade MX-20000001` for September keeps its threads and shares past any retention; an administrator's permanent removal of such a thread is `423 DRS-7010` | `HoldService`, `Hold`, `HoldStore`, `ComplianceController` |
-| 3 | An **export** is a job: ask, poll, download once. The zip holds `shares.ndjson`, `threads.ndjson` (every revision, **unscrubbed**: this is the record, and only `compliance` may take it), `chains.ndjson`, `holds.ndjson`, `README.txt` and a `manifest.json` with the SHA-256 of every file. Starting, finishing and downloading are audited (`collab.export.*`) | `ExportService`, `ComplianceController` |
+| 3 | An **export** is a job: ask, poll, download once. The zip holds `shares.jsonl`, `threads.jsonl` (every revision, **unscrubbed**: this is the record, and only `compliance` may take it), `chains.jsonl`, `holds.jsonl`, `README.txt` and a `manifest.json` with the SHA-256 of every file. Starting, finishing and downloading are audited (`collab.export.*`) | `ExportService`, `ComplianceController` |
 | 4 | **Verify** recomputes one thread's chain, or every thread and share, and names the revision that no longer follows the one before it | `ChainVerifier`, `GET /admin/collab/verify` |
 
 Inbox rows are capped by `inbox.keep` and removed with their user; `inbox.keep-days` is configured but not enforced yet (COLLABORATION.md, step 7).
@@ -723,7 +723,7 @@ routes:
 
 This pack states the route for every kind (`routes:` becomes `drishti.sources.routes.variant`, read by
 `SourceRouter.candidates()`). The lake data is `data/delta/genomics/variant/business_date=2026-09-17` and later. As in
-example A, today's read is answered from the pack's samples (`examples/packs/genomics/samples/variant/`) by the demo plugin, and
+example A, today's read is answered from the pack's samples (`examples/packs/genomics/samples/variant.jsonl`) by the demo plugin, and
 `?asOf=2026-09-30` is answered by `genomics-store` (`"source":"genomics-store","businessDate":"2026-09-30"`).
 
 **Document** (`GET /api/v1/entities/variant/VRNT-BRAF-V600E/raw`, trimmed): `variantId`, `geneSymbol: BRAF`,

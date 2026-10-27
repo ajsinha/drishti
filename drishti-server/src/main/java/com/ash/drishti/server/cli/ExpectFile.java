@@ -25,12 +25,12 @@ import java.util.Map;
 import org.yaml.snakeyaml.Yaml;
 
 /**
- * The {@code expect.yaml} beside a Sutra's test samples ({@code config/packs/<p>/tests/<sutra>/expect.yaml}):
+ * The {@code expect.yaml} beside a Sutra's test cases ({@code config/packs/<p>/tests/<sutra>/expect.yaml}, beside {@code cases.jsonl}):
  * <pre>
  * noErrors: true                 # no panel in an error state on any sample (default true)
  * nonEmpty: [pnl, limits]        # these panels render with data on every sample
- * samples:                       # optional, per sample file
- *   VAR-COMM.json: { nonEmpty: [pnl] }
+ * samples:                       # optional, per case of cases.jsonl (or per sample file of the older layout)
+ *   VAR-COMM: { nonEmpty: [pnl] }
  * help: { coverage: 0.9, about: true }   # share of shown fields with a glossary entry; the page text renders
  * </pre>
  * Unknown keys are refused so a typo cannot silently pass.
@@ -42,7 +42,7 @@ record ExpectFile(boolean noErrors, List<String> nonEmpty, Map<String, List<Stri
     /** The non-empty panels expected of one sample file (the whole-folder list plus its own). */
     List<String> nonEmptyFor(String sampleFile) {
         List<String> all = new ArrayList<>(nonEmpty);
-        all.addAll(perSample.getOrDefault(sampleFile, List.of()));
+        all.addAll(perSample.getOrDefault(sampleFile, perSample.getOrDefault(sampleFile + ".json", List.of())));      // a case, or its old file name
         return all;
     }
 

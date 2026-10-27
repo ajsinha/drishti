@@ -27,6 +27,10 @@ double, decimal precision, drop, reorder); a file without field ids added with a
 travel); the external-table shapes of DRISHTI_ICEBERG.md section 15.5 (a Spark-style table partitioned by day of a
 timestamp, a Snowflake-style table with identifier fields, nested structs, decimals and timestamptz, a current-only
 reference table). Delete files are written by the Java library in the tests themselves (pyiceberg does not write them).
+
+Exempt from the JSONL rule (docs/guides/DATA_FORMATS.md; tools/test_generators_write_jsonl.py): every other generator writes JSON
+Lines and a loader builds the tables, but these fixtures test the Iceberg reader itself, so they must be real Iceberg tables (and a
+plain Parquet file) written by an independent library, not rows Drishti's own loaders turned into tables.
 """
 import base64
 import datetime as dt

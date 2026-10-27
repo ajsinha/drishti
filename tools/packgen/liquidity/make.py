@@ -17,7 +17,7 @@ liquidity, per legal entity, generated from the banking packs' data so entities,
 
     python3 tools/packgen/liquidity/make.py            write examples/packs/liquidity-risk (a retired example pack)
     python3 tools/packgen/liquidity/make.py --check    fail if the pack differs from what would be written
-    uv run --with deltalake --with pyarrow --with pyyaml python tools/packgen/liquidity/make.py --lake data/delta
+    uv run --with deltalake --with pyarrow --with pyyaml python tools/packgen/liquidity/make.py --lake data/delta   (JSONL rows under data/build/lake-rows, then loaded)
 """
 from __future__ import annotations
 

@@ -424,7 +424,8 @@ It writes `data/delta/<domain>/<kind>/business_date=…/` for every dataset (the
 `trade_calypso` and `trade_murex`, also partitioned by `PRODUCT_TYPE`), and tells a running server (or leaves a stamp for its next start)
 so its BI store reads the new data: [data/testdata/README.md](../../data/testdata/README.md). Your own data goes in with your ETL, or
 `drishti.py lake build` for a large JSON export ([TOOLS.md](../guides/TOOLS.md)). The retired example packs keep their generators under
-`tools/packgen/` (for instance `tools/packgen/banking/make_data.py --lake data/delta`).
+`tools/packgen/` (for instance `tools/packgen/banking/make_data.py --lake data/delta`, which writes JSON Lines rows under
+`data/build/lake-rows` and then loads them; generating and loading are separate steps, [DATA_FORMATS.md](../guides/DATA_FORMATS.md)).
 
 ### 5.2 PostgreSQL, Aerospike and Kafka in Docker
 
@@ -1021,18 +1022,18 @@ curl -s -H "Authorization: Bearer $COMPLIANCE" -o export.zip http://localhost:18
 ```
 
 Filters (all optional): `from`/`to` (a day, or an instant), `kind`, `id`, `user` (a thread they wrote in; a share they sent or received),
-`includeShares`, `includeThreads`. The zip holds `shares.ndjson`, `threads.ndjson` (every comment with every revision, **unscrubbed**: this is the
-record), `chains.ndjson` (each thread's first and last hash and whether its chain verified), `holds.ndjson`, `inbox.ndjson` (the in-scope inbox notices: who, type, entity, actor, when, read) and `outbox.ndjson` (the in-scope email and bridge
+`includeShares`, `includeThreads`. The zip holds `shares.jsonl`, `threads.jsonl` (every comment with every revision, **unscrubbed**: this is the
+record), `chains.jsonl` (each thread's first and last hash and whether its chain verified), `holds.jsonl`, `inbox.jsonl` (the in-scope inbox notices: who, type, entity, actor, when, read) and `outbox.jsonl` (the in-scope email and bridge
 delivery rows: channel, state, attempts, times, never a message body), `README.txt` (field meanings and
 how to recompute a hash) and `manifest.json` (filters, who and when, counts, software version, and the SHA-256, size and line count of every
 other file). It is written line by line, so memory stays bounded; one export runs at a time per server (a queue of 8). Only the person who asked
 may download it, once; it is deleted then, or after `export-keep`. Starting, finishing and downloading are audited (`collab.export.*`); the file
 lives in `<drishti.collab.dir>/exports` and a restart forgets a job that was not finished. Check a file against the manifest with
-`sha256sum -c`-style comparison of each entry; **keep the manifest and `chains.ndjson` in the firm's archive**: a later export that disagrees on a
+`sha256sum -c`-style comparison of each entry; **keep the manifest and `chains.jsonl` in the firm's archive**: a later export that disagrees on a
 thread's hashes proves history was rewritten (the chain is evidence of tampering, not prevention: someone with the database could rewrite all of it).
 
 **Verify.** `GET /admin/collab/verify?thread=th_…` recomputes one chain, checks the live comment rows against their revisions (text, author, state, revision number), and compares the thread's head (revision count and last hash) with the seal kept beside it, so a changed row or a removed newest revision is found (`{ok, steps, firstHash, lastHash, problem}`); with no `thread` (or with
-`kind` and `id`) it checks every thread and share, in bounded memory, and reports the failures (`problems`, capped by `maxProblems`), and also checks the legal holds and the audit trail, each sealed in `drishti_collab_seal` (or `seals.log` with the file store); rows that cannot be read are reported, never a 500. Seals are evidence, not prevention. A failure
+`kind` and `id`) it checks every thread and share, in bounded memory, and reports the failures (`problems`, capped by `maxProblems`), and also checks the legal holds and the audit trail, each sealed in `drishti_collab_seal` (or `seals.jsonl` with the file store; `seals.log` before 2.9.4, still read); rows that cannot be read are reported, never a 500. Seals are evidence, not prevention. A failure
 names the revision that was changed or no longer follows the one before it.
 
 **Backups.** With `drishti.collab.store: content` (the default) the whole record (threads with their revision chains, shares, inbox,

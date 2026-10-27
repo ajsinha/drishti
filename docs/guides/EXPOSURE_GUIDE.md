@@ -396,7 +396,7 @@ them) and the provenance; never paths. Ids are `XCAP-<yyyymmdd>-<n>`, kept per o
 |---|---|
 | Explorer | the **Captures** tab: a note, **Capture exposure**; or **Capture exposure** under *How this number was built* |
 | CLI | `drishti.py exposure capture CPTY:CP-ALDERSHOT --note 'before the unwind'`; `captures [--scope]`; `compare XCAP-20260930-1 now` |
-| API | `POST /api/v1/exposure/captures {scope, note, q, collateral}` (a token needs `risk:write`); `GET /captures?scope=`, `GET /captures/{id}`, `GET /captures/{id}/csv` |
+| API | `POST /api/v1/exposure/captures {scope, note, q, collateral}` (a token needs `risk:write`); `GET /captures?scope=`, `GET /captures/{id}`, `GET /captures/{id}/csv`, `GET /captures/{id}/jsonl` |
 
 **Compare** two captures, or a capture with **now** (the scope computed again): peak PFE, EPE, EEPE, peak EE and CE side by side with
 the change, PFE per tenor, and the trades added and removed. `GET /api/v1/exposure/compare?a=<id>&b=<id|now>`. A capture's CSV is the `#
@@ -522,13 +522,13 @@ All under `/api/v1/exposure`. Every `GET` takes `asOf` (the business date; defau
 |---|---|---|
 | `GET /scope` | `scope`, `q`, `collateral`, `run` (the newest complete run), `strict` (`true`: a date whose run is not one run is refused instead of answered from the date before) | the figures, profile, netting sets, ancestors, limit, collateral, flags, provenance ([section 19](#19-what-drishti-answers)) |
 | `GET /scopes/{scope}` | as above | the path form for a simple scope (`/scopes/NSET:NS-ALDERSHOT-FRA`) |
-| `GET /scope/profile` | `scope`, `dates` (`primary` or `all`), `format=csv` | the profile only, for charts; CSV `tenor,date,t,ee,ene,eee,pfe,pfe_99,ee_uncoll` |
+| `GET /scope/profile` | `scope`, `dates` (`primary` or `all`), `format=csv` or `format=jsonl` | the profile only, for charts; CSV `tenor,date,t,ee,ene,eee,pfe,pfe_99,ee_uncoll` |
 | `GET /scope/distribution` | `scope`, `date` (a primary date or tenor; default the peak), `bins` (`histogram-bins`, 42), **`bands`** (`true`: also the path fan, the 5, 25, 50, 75 and 95% quantiles of the paths' exposure at every primary date) | `histogram {edges, counts}`, `quantiles`, `mean`, `zeroShare`, `bands` |
 | `GET /scope/contributions` | `scope`, `by` (`child`, `netting-set`, `counterparty`, `legal-entity`, `trade`, `asset`), `figure` (`EE`, `EPE`, `PFE`), `date` (EE), **`alone`** (`true`, by trade: each trade's peak PFE alone, uncollateralised, too), **`profile`** (`true`, by trade: each trade's EE contribution at every primary date) | rows `{key, scope, label, kind, value, pct, incremental}` (with `alone`: `peakPfeAlone`; with `profile`: `profile[]`), `total`, `date`, `parts`, `truncated` |
 | `GET /tree` | `q` | the bank, legal entities, groups, counterparties (with their stored limit and use) and netting sets with EPE and peak PFE; sets without paths `noPaths` |
 | `POST /what-if` | body `{scope, method: paths|addon, q, collateral, candidates: [{tradeId, label, nettingSet, paths: {copyOf, factor} | {runId, mtm} | {runId, arrow}, assetClass, notional, maturityDate, mtm, delta}]}` | `{base, with, incremental: {epe, peakPfe, profile[]}, method, flags, items, note}` ([section 7](#7-pre-deal-what-if)) |
 | `POST /captures` | `{scope, note, q, collateral}` | the capture |
-| `GET /captures`, `GET /captures/{id}`, `GET /captures/{id}/csv` | `scope` | your captures, one, its CSV |
+| `GET /captures`, `GET /captures/{id}`, `GET /captures/{id}/csv`, `/jsonl` | `scope` | your captures, one, its CSV or JSON Lines (a grid date a line) |
 | `GET /compare` | `a`, `b` (an id or `now`) | both, the change, PFE per tenor, trades added and removed |
 | `GET /status` | | the settings, runs loaded, hot files, sizes |
 | `GET /retention` | | each date held: what the retention keeps, the dates whose trade paths are beyond their window |
@@ -574,6 +574,7 @@ Every setting is under `drishti.ccr.exposure` in `application.yaml` (and [CONFIG
 | `official.root` | `${DRISHTI_DELTA_ROOT}` | the risk lake's root (an `s3://` root is not published by this writer) |
 | `official.retention-years` | `7` | the published tables keep their log and removed files this long |
 | `official.on-start` | `true` | at start, capture the newest date when it has no official record |
+| `official.jsonl` | `true` | also write each published date as JSON Lines beside the tables (`<root>/risk-results/jsonl/<table>/<date>/<table>-v<n>.jsonl`) |
 | `retention.trade-paths-days`, `.trade-paths-month-end-years`, `.set-matrices-years`, `.set-matrices-month-end-years`, `.statistics-years`, `.trade-contributions-years` | `20`, `1`, `1`, `7`, `7`, `7` | [section 27](#27-sizes-performance-and-retention), 27.3 |
 
 Also: the compute pool **`exposure`** in `config/compute/compute.yaml` (Python, `drishti_compute.exposure.whatif:ExposureWhatIfEngine`,
@@ -1169,7 +1170,10 @@ hierarchy kind, the bank and each legal entity) into `exposure-official`, at `li
 `PARTIAL_SETS` and `TRADES` besides the columns above, contract version `1.1`. Idempotent per inputs; a restated date is captured again
 with the next `RESULT_VERSION`; append-only, logs kept `official.retention-years`. The record (`exposure/official/<date>.json`) keeps
 every scope's figures and profile; every trade's EE contribution per primary date is kept beside it
-(`exposure/official/<date>-trades-v<n>.json`). Captured after the data-load signal and once at start for the newest date.
+(`exposure/official/<date>-trades-v<n>.jsonl`: a header line, then one `{"row": "trade", trade, nettingSet, ee}` a trade; records written
+before 2.9.4 are `.json` and are read as they are). Each published date is also written as JSON Lines beside the tables
+(`<root>/risk-results/jsonl/<table>/<date>/<table>-v<n>.jsonl`, one row a line, one file per commit; `official.jsonl`, on by default).
+Captured after the data-load signal and once at start for the newest date.
 
 ## 21. Validation, errors and data quality
 

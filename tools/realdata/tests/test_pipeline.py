@@ -52,9 +52,12 @@ def test_normalise_is_deterministic_and_no_imf_leaves_the_imf_out(tmp_path):
     N.run(cache, cfg, tmp_path / "c", no_imf=True)
     for f in (tmp_path / "a").iterdir():
         assert f.read_bytes() == (tmp_path / "b" / f.name).read_bytes(), f.name
-    assert json.loads((tmp_path / "a" / "forecast.json").read_text())["f_gdp_growth"]["IND"]
-    assert json.loads((tmp_path / "c" / "forecast.json").read_text()) == {}
-    assert json.loads((tmp_path / "c" / "series.json").read_text())["gdp"]["IND"]            # World Bank series stay
+    assert {f.name for f in (tmp_path / "a").iterdir()} == {"meta.json", "countries.jsonl", "groups.jsonl", "series.jsonl", "forecast.jsonl",
+                                                            "factbook.jsonl"}                    # JSON Lines records; the manifest
+    assert N.read("forecast", tmp_path / "a")["f_gdp_growth"]["IND"]
+    assert N.read("forecast", tmp_path / "c") == {}
+    assert (tmp_path / "c" / "forecast.jsonl").read_text() == ""
+    assert N.read("series", tmp_path / "c")["gdp"]["IND"]                                       # World Bank series stay
     assert json.loads((tmp_path / "c" / "meta.json").read_text())["vintage"]["imf"] == " edition"        # nothing read from the IMF
 
 

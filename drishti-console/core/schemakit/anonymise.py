@@ -12,7 +12,7 @@
 #
 # See the LICENSE file in the root of this repository for the full terms.
 
-"""Anonymised samples: the documents a generated pack keeps (``samples/``, ``tests/``, ``catalog.json``, the examples the synthetic samples
+"""Anonymised samples: the documents a generated pack keeps (``samples/``, ``tests/``, ``catalog.jsonl``, the examples the synthetic samples
 draw from, the drafts' previews) are rewritten so that no real name, id or amount of the source data travels with the pack.
 
 The rewrite is deterministic and consistent: the same real value becomes the same token everywhere (in every field, every kind and every

@@ -23,9 +23,13 @@ built and shown without any real data:
 * 1 to 4 legs (fixed/float, float/float basis, fee, location differential), 1 to 36 monthly flows, one reset per flow or one per pricing
   day (averaging swaps), a few packages of several deals, novations (an original counterparty).
 
-    python3 tools/packgen/comswap_synth.py --deals 40 --out docs/guides/examples/comswap/comswap-sample.json
-    python3 tools/packgen/comswap_synth.py --deals 5000 --out /tmp/comswap-5000.json            # a scale check (JSON array)
-    python3 tools/packgen/comswap_synth.py --deals 5000 --jsonl --out /tmp/comswap-5000.jsonl   # one deal per line
+    python3 tools/packgen/comswap_synth.py --deals 40 --out docs/guides/examples/comswap/comswap-sample.jsonl   # one deal per line
+    python3 tools/packgen/comswap_synth.py --deals 5000 --out /tmp/comswap-5000.jsonl                          # a scale check
+    python3 tools/packgen/comswap_synth.py --deals 5000 --array --out /tmp/comswap-5000.json   # the export's own shape: one JSON array
+
+JSON Lines (one deal per line, UTF-8) is the output, as every Drishti generator's (docs/guides/DATA_FORMATS.md). --array writes the
+shape a booking system's export has, a pretty-printed JSON array, only to show that such a file is read too (SCHEMA_TO_PACK.md
+appendix A, and the browser test that uploads the export as it comes).
 
 Deterministic: the same ``--seed`` and ``--deals`` give the same file. ``--profile sparse`` blanks what such extracts often leave blank
 (rates, labels and event details empty); ``rich`` fills them; ``mixed`` (the default) does both, deal by deal.
@@ -321,7 +325,8 @@ class Generator:
             yield self.mixed(n) if mix else self.deal(n)
 
 
-def write(out, count: int, seed: int, profile: str, jsonl: bool, indent: int | None, mix: bool = False) -> int:
+def write(out, count: int, seed: int, profile: str, jsonl: bool = True, indent: int | None = 2, mix: bool = False) -> int:
+    """Writes the deals as JSON Lines (jsonl, the default) or, jsonl=False, as the export's JSON array (indent spaces)."""
     g = Generator(seed, profile)
     stream = sys.stdout if str(out) == "-" else open(out, "w", encoding="utf-8")
     try:
@@ -345,14 +350,15 @@ def main(argv=None) -> int:
     p.add_argument("--deals", type=int, default=40, help="number of deals (default 40; at most 10,000)")
     p.add_argument("--seed", type=int, default=7, help="random seed (default 7): the same seed gives the same file")
     p.add_argument("--profile", choices=("mixed", "rich", "sparse"), default="mixed", help="how much is filled in (default mixed)")
-    p.add_argument("--jsonl", action="store_true", help="one deal per line (JSON Lines) instead of one JSON array")
-    p.add_argument("--indent", type=int, default=2, help="JSON array: indentation (default 2, as such exports are; 0 for one line per file)")
+    p.add_argument("--array", action="store_true", help="one JSON array, the shape of the export itself, instead of JSON Lines (the default)")
+    p.add_argument("--jsonl", action="store_true", help=argparse.SUPPRESS)     # the default since 2.9.4; still accepted
+    p.add_argument("--indent", type=int, default=2, help="--array: indentation (default 2, as such exports are; 0 for one line per file)")
     p.add_argument("--mix", action="store_true", help="a whole book in one file: ComSwap, ComFut, Cash, Commodity and a rare CallNot (PRODUCT_TYPE tells them apart)")
     p.add_argument("--out", default="-", help="the file to write (default: standard output)")
     a = p.parse_args(argv)
     if not 1 <= a.deals <= 10_000:
         p.error("--deals is 1 to 10,000 (a laptop's limit for a scale check)")
-    n = write(a.out if a.out == "-" else pathlib.Path(a.out), a.deals, a.seed, a.profile, a.jsonl, a.indent or None, a.mix)
+    n = write(a.out if a.out == "-" else pathlib.Path(a.out), a.deals, a.seed, a.profile, not a.array, a.indent or None, a.mix)
     if a.out != "-":
         print(f"wrote {n} synthetic deals to {a.out}", file=sys.stderr)
     return 0

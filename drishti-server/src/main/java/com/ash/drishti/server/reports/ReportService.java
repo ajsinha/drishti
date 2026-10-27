@@ -103,7 +103,9 @@ public final class ReportService implements AutoCloseable {
 
     /**
      * Saves a report: {@code {"query": "TRD where mtm < -1000000", "schedule": "business-days 18:30", "deliver": "folder",
-     * "webhook": "https://…", "date": "today" | "previous", "enabled": true}}. Its run history is kept.
+     * "webhook": "https://…", "date": "today" | "previous", "format": "csv" | "jsonl", "enabled": true}}. Its run history is kept. The format of
+     * the delivery: {@code csv} (the default) or {@code jsonl} (one entity a line, docs/guides/DATA_FORMATS.md; a webhook gets {@code application/jsonl},
+     * a folder a {@code .jsonl} file).
      */
     public JsonNode save(String owner, String name, JsonNode body) {
         if (!name.matches("[A-Za-z0-9][A-Za-z0-9 ._-]{0,63}")) {
@@ -133,12 +135,16 @@ public final class ReportService implements AutoCloseable {
         if (!date.equals("today") && !date.equals("previous")) {
             throw bad("date is today or previous (the business day before)");
         }
+        String format = body.path("format").asText("csv").trim().toLowerCase(java.util.Locale.ROOT);
+        if (!format.equals("csv") && !format.equals("jsonl")) {
+            throw bad("format is csv or jsonl (one entity a line)");
+        }
         Optional<JsonNode> old = store.get(owner, NS, name);
         if (old.isEmpty() && store.keys(owner, NS).size() >= props.perUser()) {
             throw bad("at most " + props.perUser() + " reports per person");
         }
         ObjectNode r = json.createObjectNode().put("name", name).put("owner", owner).put("query", query).put("schedule", schedule.trim())
-                .put("deliver", deliver).put("webhook", deliver.equals("webhook") ? webhook : "").put("date", date)
+                .put("deliver", deliver).put("webhook", deliver.equals("webhook") ? webhook : "").put("date", date).put("format", format)
                 .put("enabled", body.path("enabled").asBoolean(true));
         r.put("nextRun", nextRun(r, Instant.now()));
         r.set("runs", old.<JsonNode>map(o -> o.path("runs").deepCopy()).orElse(json.createArrayNode()));
@@ -166,10 +172,11 @@ public final class ReportService implements AutoCloseable {
         try {
             Principal who = principal(owner);
             LocalDate day = r.path("date").asText().equals("previous") ? dates.calendar().previous(dates.current()) : dates.current();
-            String csv = search.csv(r.path("query").asText(), AsOf.of(day), who);
-            int rows = Math.max(0, csv.split("\r\n", -1).length - 2);
-            run.put("businessDate", day.toString()).put("rows", rows).put("bytes", csv.getBytes(StandardCharsets.UTF_8).length);
-            run.put("target", deliver(r, owner, name, day, csv)).put("status", "ok");
+            boolean jsonl = "jsonl".equals(r.path("format").asText("csv"));
+            String body = jsonl ? search.jsonl(r.path("query").asText(), AsOf.of(day), who) : search.csv(r.path("query").asText(), AsOf.of(day), who);
+            int rows = jsonl ? (int) body.chars().filter(c -> c == '\n').count() : Math.max(0, body.split("\r\n", -1).length - 2);
+            run.put("businessDate", day.toString()).put("rows", rows).put("bytes", body.getBytes(StandardCharsets.UTF_8).length);
+            run.put("target", deliver(r, owner, name, day, body, jsonl)).put("status", "ok");
         } catch (RuntimeException | IOException | InterruptedException e) {
             if (e instanceof InterruptedException) {
                 Thread.currentThread().interrupt();
@@ -199,15 +206,16 @@ public final class ReportService implements AutoCloseable {
         });
     }
 
-    private String deliver(JsonNode r, String owner, String name, LocalDate day, String csv) throws IOException, InterruptedException {
+    private String deliver(JsonNode r, String owner, String name, LocalDate day, String body, boolean jsonl) throws IOException, InterruptedException {
         if (r.path("deliver").asText().equals("webhook")) {
             String url = r.path("webhook").asText();
             if (!props.webhookAllowed(url)) {                  // the allow-list may have changed since it was saved
                 throw new IllegalStateException("the webhook is no longer allowed");
             }
             HttpRequest req = HttpRequest.newBuilder(URI.create(url)).timeout(Duration.ofSeconds(30))
-                    .header("Content-Type", "text/csv; charset=utf-8").header("X-Drishti-Report", name).header("X-Drishti-Owner", owner)
-                    .header("X-Drishti-Business-Date", day.toString()).POST(HttpRequest.BodyPublishers.ofString(csv, StandardCharsets.UTF_8)).build();
+                    .header("Content-Type", (jsonl ? com.ash.drishti.server.dist.JsonlWriter.MEDIA_TYPE : "text/csv") + "; charset=utf-8")
+                    .header("X-Drishti-Report", name).header("X-Drishti-Owner", owner)
+                    .header("X-Drishti-Business-Date", day.toString()).POST(HttpRequest.BodyPublishers.ofString(body, StandardCharsets.UTF_8)).build();
             HttpResponse<Void> res = http.send(req, HttpResponse.BodyHandlers.discarding());
             if (res.statusCode() / 100 != 2) {
                 throw new IllegalStateException("the webhook answered " + res.statusCode());
@@ -217,9 +225,9 @@ public final class ReportService implements AutoCloseable {
         String safe = name.replaceAll("[^A-Za-z0-9._-]", "_");
         Path dir = Path.of(props.folder()).toAbsolutePath().normalize().resolve(owner).resolve(safe);
         Files.createDirectories(dir);
-        Path file = dir.resolve(safe + "-" + day + "-" + ZonedDateTime.now(dates.zone()).format(STAMP) + ".csv");
+        Path file = dir.resolve(safe + "-" + day + "-" + ZonedDateTime.now(dates.zone()).format(STAMP) + (jsonl ? ".jsonl" : ".csv"));
         Path tmp = com.ash.drishti.common.TempFiles.createFile(dir, "report-", ".part");
-        Files.writeString(tmp, csv, StandardCharsets.UTF_8);
+        Files.writeString(tmp, body, StandardCharsets.UTF_8);
         Files.move(tmp, file, StandardCopyOption.REPLACE_EXISTING, StandardCopyOption.ATOMIC_MOVE);
         return file.toString();
     }

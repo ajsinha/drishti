@@ -766,7 +766,7 @@ class FakeBackend:
         self.exports_made.append((fmt, target, ident.user))
         if target.get("id") == "forbidden":
             raise BackendError(403, "DRS-9002", "you may not open this report")
-        types = {"pdf": "application/pdf", "png": "image/png", "csv": "text/csv; charset=utf-8",
+        types = {"pdf": "application/pdf", "png": "image/png", "csv": "text/csv; charset=utf-8", "jsonl": "application/jsonl; charset=utf-8",
                  "xlsx": "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"}
         return (f"file:{fmt}:{target.get('id')}".encode(), {"content-type": types[fmt], "content-disposition": f"attachment; filename=\"Daily risk.{fmt}\""})
 

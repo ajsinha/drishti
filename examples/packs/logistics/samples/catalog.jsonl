@@ -1,0 +1,8 @@
+{"kind":"port","id":"PORT-SGSIN","title":"PORT-SGSIN","subtitle":"Port · Singapore, SG"}
+{"kind":"port","id":"PORT-LKCMB","title":"PORT-LKCMB","subtitle":"Port · Colombo, LK"}
+{"kind":"port","id":"PORT-EGPSD","title":"PORT-EGPSD","subtitle":"Port · Port Said, EG"}
+{"kind":"port","id":"PORT-NLRTM","title":"PORT-NLRTM","subtitle":"Port · Rotterdam, NL"}
+{"kind":"vessel","id":"VSL-9811000","title":"VSL-9811000","subtitle":"Vessel · MSC Aurora · 14,000 TEU"}
+{"kind":"container","id":"CTR-MSKU1234567","title":"CTR-MSKU1234567","subtitle":"Container · 40' reefer · set 5.0 °C"}
+{"kind":"shipment","id":"SHP-10042","title":"SHP-10042","subtitle":"Shipment · Singapore → Rotterdam · reefer · Acme Pharma"}
+{"kind":"shipment","id":"SHP-10077","title":"SHP-10077","subtitle":"Shipment · Colombo → Singapore · delivered (no Sutra match: inferred)"}

@@ -39,7 +39,7 @@ kind's own route. **Switch it off in production** (`DRISHTI_DEMO_ENABLED=false`)
 
 ## What it reads
 
-At start it reads, for each folder in `dirs` (filled by the packs, most general first), `catalog.json` and each kind's JSON Lines file,
+At start it reads, for each folder in `dirs` (filled by the packs, most general first), `catalog.jsonl` and each kind's JSON Lines file,
 once, into memory: the documents, each document's `walk` and a type-ahead index of every catalogue entry. It never reads the folders
 again (an edited sample needs a restart). Reads are map lookups; type-ahead searches ids, titles and subtitles; reverse lookups scan
 every document held at every depth for a value equal to the target id. Live samples move a little every `tick-ms` (400) while someone
@@ -64,7 +64,7 @@ The samples folder of a pack:
 
 ```
 config/packs/<pack>/samples/
-├── catalog.json      [{"kind": "bond", "id": "BND-BRVERD054608", "title": "BND-BRVERD054608", "subtitle": "Bond (security master) · …"}, …]
+├── catalog.jsonl     {"kind": "bond", "id": "BND-BRVERD054608", "title": "BND-BRVERD054608", "subtitle": "Bond (security master) · …"}, one a line
 ├── <kind>.jsonl      one document a line, in the catalogue's order (above about 50 MB: <kind>.part-001.jsonl, …)
 └── …                 the older layout, <kind>/<id>.json, is still read
 ```
@@ -111,7 +111,7 @@ a kind no other connector serves then answers `DRS-1002`. Each pack's generators
 
 ## Troubleshooting
 
-- `demo` missing from `/sources`, `failedToStart` names it: a `dirs` folder without `catalog.json`, or a sample that is not a JSON object.
+- `demo` missing from `/sources`, `failedToStart` names it: a `dirs` folder without `catalog.jsonl`, or a sample that is not a JSON object.
 - `demo` missing, no failure: it is off (`DRISHTI_DEMO_ENABLED=false`).
 - A pack's samples are not served: the pack is not in `DRISHTI_PACKS`, or its `samples` folder does not exist.
 - A live view does not tick: the sample's `_meta.live` is false (trades are not live; watch `trade-valuation`), `ticking: false`, or

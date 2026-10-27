@@ -12,7 +12,7 @@
 #
 # See the LICENSE file in the root of this repository for the full terms.
 
-"""Scheduled reports: a search run as you on a schedule and delivered as CSV to a folder or a webhook."""
+"""Scheduled reports: a search run as you on a schedule and delivered as CSV or JSON Lines to a folder or a webhook."""
 from __future__ import annotations
 
 from urllib.parse import parse_qs, quote
@@ -63,7 +63,7 @@ async def _page(request: Request, q: str = "", msg: str = "", error: str = "", s
     except BackendError:
         subs = []                                          # an older server has no subscriptions: the scheduled reports still list
     return render(request, "reports.html", status_code=status_code, reports=mine, rows=_rows(mine, subs), n_subs=len(subs),
-                  form=form or {"query": q, "schedule": "business-days 18:30", "deliver": "folder", "date": "today"},
+                  form=form or {"query": q, "schedule": "business-days 18:30", "deliver": "folder", "date": "today", "format": "csv"},
                   msg=msg, error=error, screen="reports", when=SUGGESTED_WHEN)
 
 
@@ -77,7 +77,7 @@ async def save(request: Request):
     f = {k: v[0] for k, v in parse_qs((await request.body()).decode(), keep_blank_values=True).items()}
     name = f.get("name", "").strip()
     body = {"query": f.get("query", ""), "schedule": f.get("schedule", ""), "deliver": f.get("deliver", "folder"),
-            "webhook": f.get("webhook", ""), "date": f.get("date", "today"), "enabled": f.get("enabled", "on") == "on"}
+            "webhook": f.get("webhook", ""), "date": f.get("date", "today"), "format": f.get("format", "csv"), "enabled": f.get("enabled", "on") == "on"}
     try:
         await request.app.state.backend.save_report(name, body, ident(request))
     except BackendError as e:

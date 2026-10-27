@@ -1,0 +1,35 @@
+# Project Drishti · Any data. Any domain. One grammar.
+#
+# Copyright (c) 2026 Ashutosh Sinha <ajsinha@gmail.com>.
+# All rights reserved.
+#
+# PROPRIETARY AND CONFIDENTIAL.
+#
+# This file is the confidential and proprietary property of Ashutosh Sinha.
+# Unauthorised copying, use, modification, distribution or disclosure of this
+# file, via any medium, is strictly prohibited except with the express prior
+# written permission of the copyright holder.
+#
+# See the LICENSE file in the root of this repository for the full terms.
+
+# The bank's own names in the demo data (2.9.4; docs/connectors/DEMO_DATA.md, "Your bank's names").
+#
+# The committed test data (data/testdata) and the packs' samples carry the defaults below. Change a name here, and the demo lakes built
+# from that data use your names: `drishti.py lake demo` and `tools/build_demo_lakes.py` (both take --names FILE, default this file)
+# rewrite every value of every kind that is exactly an old name, and every value that starts with an old name followed by a comma
+# (a branch: "Drishti Bank plc, Singapore Branch"), keeping the suffix. The committed data is never rewritten. LEIs and BICs stay as
+# they are (they are identifiers, derived from the default names). The packs' samples follow the file when their generators are run
+# again (tools/packgen/banking/make_data.py, and the example packs' make.py). The VaR tree's top node is named by a server setting of
+# its own (the VaR root name, under the VaR engine in docs/admin/CONFIGURATION.md).
+#
+# Leave a name as it is to keep it; the defaults change nothing.
+
+bank: Drishti Bank                       # the bank as a whole (the top of the risk hierarchy)
+short-name: DRISHTI                      # the short form some documents carry
+legal-entities:                          # the bank's legal entities, by id (the documents' LEGAL_ENTITY)
+  LE-NY: Drishti Bank Securities Inc.
+  LE-LDN: Drishti Bank plc
+  LE-FRA: Drishti Bank Europe AG
+  LE-TKY: Drishti Securities Japan K.K.
+# branches:                              # optional: a branch's full name, when it is not "<legal entity>, <city> Branch"
+#   "Drishti Bank plc, Singapore Branch": Example Bank plc, Singapore Branch

@@ -48,7 +48,8 @@
       <label>Send as<select name="format" class="studio-select">
         <option value="html"{% if form.format == 'html' %} selected{% endif %}>the email itself (tables in the body)</option>
         <option value="pdf"{% if form.format == 'pdf' %} selected{% endif %}>a PDF attached</option>
-        <option value="xlsx"{% if form.format == 'xlsx' %} selected{% endif %}>an Excel workbook attached</option></select></label>
+        <option value="xlsx"{% if form.format == 'xlsx' %} selected{% endif %}>an Excel workbook attached</option>
+        <option value="jsonl"{% if form.format == 'jsonl' %} selected{% endif %}>a JSON Lines file attached (one row a line)</option></select></label>
       {% if form.statement %}<p class="text-muted-d wide" data-statement-hint><b>This is a statement page: each recipient gets one statement of their own</b>, made as them
         (their rows and masks), as a page-exact PDF or an Excel workbook that prints on the statement's paper. A role sends one statement to each person in it.</p>
       {% elif form.target and form.target.type == 'report' %}<p class="text-muted-d wide" data-statement-hint>A statement page (<code>layout: statement</code>) is sent as

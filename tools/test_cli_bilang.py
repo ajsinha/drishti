@@ -161,6 +161,13 @@ class BiLang(unittest.TestCase):
         self.assertIn("2 row(s)", out)
         self.assertEqual("m@1", json.loads(FakeServer.requests[0][5])["model"])
 
+    def test_sql_as_jsonl_prints_the_servers_lines(self):
+        FakeServer.routes[("POST", "/api/v1/bi/sql")] = (200, b'{"desk":"RATES","mtm":1234.5}\n')
+        code, out, _ = self.go("bi", "sql", "SELECT 1", "--model", "m@1", "--format", "jsonl")
+        self.assertEqual(0, code)
+        self.assertEqual('{"desk":"RATES","mtm":1234.5}\n', out)
+        self.assertEqual("jsonl", json.loads(FakeServer.requests[0][5])["format"])
+
 
 if __name__ == "__main__":
     unittest.main()

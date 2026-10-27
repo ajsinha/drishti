@@ -417,8 +417,8 @@ abstract class ComplianceApiContract {
         Map<String, byte[]>[] z = new Map[1];
         JsonNode status = runExport("carol", "auditor", filters, z);
         Map<String, byte[]> zip = z[0];
-        assertThat(zip.keySet()).containsExactlyInAnyOrder("README.txt", "shares.ndjson", "threads.ndjson", "chains.ndjson", "holds.ndjson",
-                "manifest.json", "inbox.ndjson", "outbox.ndjson");
+        assertThat(zip.keySet()).containsExactlyInAnyOrder("README.txt", "shares.jsonl", "threads.jsonl", "chains.jsonl", "holds.jsonl",
+                "manifest.json", "inbox.jsonl", "outbox.jsonl");
         assertThat(status.get("counts").get("threads").asLong()).isGreaterThanOrEqualTo(1);
 
         JsonNode manifest = json.readTree(zip.get("manifest.json"));
@@ -433,7 +433,7 @@ abstract class ComplianceApiContract {
             assertThat(f.get("lines").asLong()).isEqualTo(lines(content).size());
         }
 
-        JsonNode thread = lines(zip.get("threads.ndjson")).stream().filter(n -> n.get("id").asText().equals(t)).findFirst().orElseThrow();
+        JsonNode thread = lines(zip.get("threads.jsonl")).stream().filter(n -> n.get("id").asText().equals(t)).findFirst().orElseThrow();
         assertThat(thread.get("comments")).hasSize(2);
         JsonNode first = thread.get("comments").get(0);
         assertThat(first.get("body").asText()).as("the record is unscrubbed").isEqualTo(secret);
@@ -456,17 +456,17 @@ abstract class ComplianceApiContract {
         assertThat(thread.get("chain").get("verified").asBoolean()).isTrue();
         assertThat(thread.get("chain").get("genesis").asText()).isEqualTo(HashChain.genesis(t));
         assertThat(thread.get("chain").get("lastHash").asText()).isEqualTo(chain.get(chain.size() - 1).hash());
-        JsonNode chainLine = lines(zip.get("chains.ndjson")).stream().filter(n -> n.get("thread").asText().equals(t)).findFirst().orElseThrow();
+        JsonNode chainLine = lines(zip.get("chains.jsonl")).stream().filter(n -> n.get("thread").asText().equals(t)).findFirst().orElseThrow();
         assertThat(chainLine.get("lastHash").asText()).isEqualTo(thread.get("chain").get("lastHash").asText());
 
-        JsonNode share = lines(zip.get("shares.ndjson")).stream().filter(n -> n.get("id").asText().equals(s)).findFirst().orElseThrow();
+        JsonNode share = lines(zip.get("shares.jsonl")).stream().filter(n -> n.get("id").asText().equals(s)).findFirst().orElseThrow();
         assertThat(share.get("body").asText()).contains(secret);
         assertThat(share.get("hashOk").asBoolean()).isTrue();
         assertThat(share.get("recipients").get(0).get("user").asText()).isEqualTo("ravi");
-        assertThat(lines(zip.get("inbox.ndjson")).stream().map(n -> n.path("shareId").asText())).as("the share's inbox notices are in the export").contains(s);
-        assertThat(new String(zip.get("inbox.ndjson"), java.nio.charset.StandardCharsets.UTF_8)).doesNotContain(secret);
-        assertThat(new String(zip.get("outbox.ndjson"), java.nio.charset.StandardCharsets.UTF_8)).doesNotContain(secret);
-        assertThat(lines(zip.get("holds.ndjson")).stream().map(n -> n.get("id").asLong())).contains(hold);
+        assertThat(lines(zip.get("inbox.jsonl")).stream().map(n -> n.path("shareId").asText())).as("the share's inbox notices are in the export").contains(s);
+        assertThat(new String(zip.get("inbox.jsonl"), java.nio.charset.StandardCharsets.UTF_8)).doesNotContain(secret);
+        assertThat(new String(zip.get("outbox.jsonl"), java.nio.charset.StandardCharsets.UTF_8)).doesNotContain(secret);
+        assertThat(lines(zip.get("holds.jsonl")).stream().map(n -> n.get("id").asLong())).contains(hold);
 
         assertThat(audited("collab.export.start", "kind=trade")).isTrue();
         assertThat(audited("collab.export.download", ".zip")).isTrue();
@@ -489,8 +489,8 @@ abstract class ComplianceApiContract {
         byte[] zip = mvc.perform(get("/api/v1/admin/collab/exports/" + id + "/download").header("Authorization", as("carol", "auditor")))
                 .andExpect(status().isOk()).andReturn().getResponse().getContentAsByteArray();
         Map<String, byte[]> files = unzip(zip);
-        assertThat(lines(files.get("threads.ndjson"))).as("no thread involves that user").isEmpty();
-        assertThat(lines(files.get("shares.ndjson"))).isEmpty();
+        assertThat(lines(files.get("threads.jsonl"))).as("no thread involves that user").isEmpty();
+        assertThat(lines(files.get("shares.jsonl"))).isEmpty();
         mvc.perform(get("/api/v1/admin/collab/exports/" + id + "/download").header("Authorization", as("carol", "auditor")))
                 .andExpect(status().isBadRequest());
         mvc.perform(get("/api/v1/admin/collab/exports/nope").header("Authorization", as("carol", "auditor"))).andExpect(status().isBadRequest());
@@ -534,7 +534,7 @@ abstract class ComplianceApiContract {
             Map<String, byte[]>[] z = new Map[1];
             JsonNode st = runExport("carol", "auditor", Map.of("kind", "trade", "id", TRADE), z);
             assertThat(st.get("counts").get("chainsBroken").asLong()).isEqualTo(1);
-            JsonNode line = lines(z[0].get("chains.ndjson")).stream().filter(n -> n.get("thread").asText().equals(t)).findFirst().orElseThrow();
+            JsonNode line = lines(z[0].get("chains.jsonl")).stream().filter(n -> n.get("thread").asText().equals(t)).findFirst().orElseThrow();
             assertThat(line.get("verified").asBoolean()).isFalse();
             assertThat(c2).isNotBlank();
         } finally {

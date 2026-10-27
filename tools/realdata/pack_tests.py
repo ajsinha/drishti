@@ -21,13 +21,15 @@ pack_tests.yaml; the documents come from build_docs, so a data refresh updates t
 """
 from __future__ import annotations
 
-import json
 from pathlib import Path
 
 import yaml
 
 HERE = Path(__file__).resolve().parent
 ROOT = HERE.parent.parent
+import sys  # noqa: E402
+sys.path.insert(0, str(ROOT / "tools" / "packgen" / "common"))
+import sutracases as SC  # noqa: E402  (tests/<sutra>/cases.jsonl)
 PACKS = ROOT / "config" / "packs"
 COVERAGE_NOTE = "# Lowest share of shown fields with a glossary entry, per Sutra (a ratchet: raise it when about.yaml grows, never lower it).\n"
 
@@ -47,8 +49,7 @@ def files(pack: str, docs: dict, base: Path | None = None) -> dict[Path, str]:
     for kind, t in cfg["kinds"].items():
         if not docs.get(kind):
             continue
-        for sid in t["samples"]:
-            out[tests / kind / f"{sid}.json"] = json.dumps(docs[kind][sid], ensure_ascii=False, separators=(",", ":")) + "\n"
+        out[tests / kind / SC.FILE] = SC.text([(sid, docs[kind][sid]) for sid in t["samples"]])            # one case a line
         out[tests / kind / "expect.yaml"] = f"{header()}\n\n\nnoErrors: true\nnonEmpty: [{', '.join(t['nonEmpty'])}]\nhelp: {{ about: true }}\n"
     out[tests / "help-coverage.txt"] = COVERAGE_NOTE + "".join(f"{k}={v}\n" for k, v in sorted(cfg["helpCoverage"].items()) if docs.get(k))
     return out

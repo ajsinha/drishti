@@ -109,7 +109,8 @@ class WithJar(unittest.TestCase):
             self.assertEqual(code, 0, err + out)
             names = sorted(p.name for p in (pathlib.Path(t) / "instrument").iterdir())
             self.assertEqual(names, ["instrument-bond.v1.sutra.yaml", "instrument-default.v1.sutra.yaml", "instrument-equity.v1.sutra.yaml"])
-            self.assertTrue((pathlib.Path(t) / "tests" / "instrument-bond" / "sample-synthetic-1.json").is_file())
+            cases = (pathlib.Path(t) / "tests" / "instrument-bond" / "cases.jsonl").read_text(encoding="utf-8").splitlines()   # a case a line
+            self.assertEqual(json.loads(cases[0])["case"], "sample-synthetic-1")
             self.assertIn("match: { kind: instrument, where: \"$.type == 'BOND'\"", (pathlib.Path(t) / "instrument" / "instrument-bond.v1.sutra.yaml").read_text())
 
     def test_pack_make_from_schemas_alone(self):
@@ -143,8 +144,9 @@ class WithJar(unittest.TestCase):
             days = sorted(p.name for p in (out / "data" / "files" / "sg-real").iterdir())
             self.assertEqual(days, ["2026-03-01", "2026-03-02"])
             tests = out / "pack" / "sg-real" / "tests" / "trade-irs"
-            self.assertTrue((tests / "sample-1.json").is_file())
-            self.assertFalse(any("synthetic" in p.name for p in tests.iterdir()))
+            names = [json.loads(x)["case"] for x in (tests / "cases.jsonl").read_text(encoding="utf-8").splitlines()]
+            self.assertIn("sample-1", names)
+            self.assertFalse(any("synthetic" in n for n in names))
             self.assertIn("extraField", (out / "pack" / "sg-real" / "config" / "about.yaml").read_text())     # shown, not in the schema: a TODO entry
             pack = (out / "pack" / "sg-real" / "pack.yaml").read_text()
             self.assertIn("graph:", pack)

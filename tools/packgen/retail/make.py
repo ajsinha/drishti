@@ -17,7 +17,7 @@ collections cases and IFRS 9 portfolio segments, booked in the core legal entiti
 
     python3 tools/packgen/retail/make.py            write examples/packs/retail-banking (a retired example pack)
     python3 tools/packgen/retail/make.py --check    fail if the pack differs from what would be written
-    uv run --with deltalake --with pyarrow --with pyyaml python tools/packgen/retail/make.py --lake data/delta
+    uv run --with deltalake --with pyarrow --with pyyaml python tools/packgen/retail/make.py --lake data/delta   (JSONL rows under data/build/lake-rows, then loaded)
 """
 from __future__ import annotations
 

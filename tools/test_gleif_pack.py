@@ -48,7 +48,7 @@ def test_make_check_passes_with_a_cache(tmp_path):
                             "--testdata", str(tmp_path / "testdata")], capture_output=True, text=True)
         assert r.returncode == 0, r.stdout + r.stderr
     assert "matches its generator" in r.stdout
-    assert {f.name for f in (pack / "samples").iterdir()} >= {"catalog.json", "lei-entity.jsonl"}            # groups and countries are computed since 2.9.2
+    assert {f.name for f in (pack / "samples").iterdir()} >= {"catalog.jsonl", "lei-entity.jsonl"}            # groups and countries are computed since 2.9.2
 
 
 def test_the_committed_pack_keeps_its_scope():
@@ -62,7 +62,7 @@ def test_the_committed_pack_keeps_its_scope():
     useq = SNAP.kind_docs("us-equities", "us-company")
     with_lei = [c for c in useq if c.get("LEI") in ents]
     assert len(with_lei) > 400 and all(ents[c["LEI"]].get("US_COMPANY") == c["TICKER"] for c in with_lei)
-    catalog = json.loads((PACK / "samples" / "catalog.json").read_text(encoding="utf-8"))
+    catalog = [json.loads(x) for x in (PACK / "samples" / "catalog.jsonl").read_text(encoding="utf-8").splitlines()]   # one entry a line
     assert {e["kind"] for e in catalog} <= {"lei-entity", "lei-group", "lei-relationship", "lei-country", "lei-mapping"}
     size = sum(p.stat().st_size for p in (SNAP.TESTDATA / "gleif").rglob("*.jsonl.gz"))      # compressed
     assert size < 6_000_000, size

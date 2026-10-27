@@ -44,6 +44,17 @@ class RunExportTest {
     }
 
     @Test
+    void jsonLinesCarriesARowALineWithTheCsvsColumnNamesAndTheMask() throws Exception {
+        ExportDoc doc = exporter(1000).ofAnswer("MTM by desk", "Run r-1", ANSWER);
+        String[] lines = new String(JsonlWriter.write(doc), StandardCharsets.UTF_8).split("\n");
+        assertThat(lines).hasSize(2);
+        com.fasterxml.jackson.databind.JsonNode first = new com.fasterxml.jackson.databind.ObjectMapper().readTree(lines[0]);
+        assertThat(first.get("desk").asText()).isEqualTo("DESK-A");
+        assertThat(first.get("cpty").asText()).isEqualTo("•••");
+        assertThat(first.get("MTM").asDouble()).isEqualTo(10.5);                       // numbers stay numbers
+    }
+
+    @Test
     void excelIsAWorkbookAndALongResultIsCutWithANote() {
         ExportDoc doc = exporter(1).ofAnswer("MTM by desk", "Run r-1", ANSWER);
         assertThat(doc.sections().get(0).rows()).hasSize(1);

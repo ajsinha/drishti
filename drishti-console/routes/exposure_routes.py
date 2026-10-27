@@ -109,7 +109,9 @@ _GETS = {"scope": ("scope", "q", "collateral"), "scope/profile": ("scope", "q", 
 async def api_get(request: Request, path: str):
     q = request.query_params
     try:
-        csv = path.startswith("captures/") and path.endswith("/csv") or path == "scope/profile" and q.get("format") == "csv"
+        # a download: a capture's CSV or JSON Lines, or the profile as either (format=csv|jsonl), passed through as the server made it
+        fmt = path.rsplit("/", 1)[-1] if path.startswith("captures/") and path.endswith(("/csv", "/jsonl")) else q.get("format") if path == "scope/profile" else None
+        csv = fmt in ("csv", "jsonl")
         if path.startswith("captures/") and not csv:
             return await request.app.state.backend.exposure("GET", "/" + path, ident(request))
         if path not in _GETS and not csv:
@@ -119,7 +121,7 @@ async def api_get(request: Request, path: str):
             params["asOf"] = q.get("asOf")
         if csv:
             body, headers = await request.app.state.backend.exposure("GET", "/" + path, ident(request), raw=True, **params)
-            return Response(body, media_type="text/csv",
+            return Response(body, media_type="text/csv" if fmt == "csv" else "application/jsonl",
                             headers={"Content-Disposition": headers.get("content-disposition", "attachment")})
         return await request.app.state.backend.exposure("GET", "/" + path, ident(request), **params)
     except BackendError as e:

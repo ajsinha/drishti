@@ -71,7 +71,9 @@ import java.util.function.IntConsumer;
  * none of it. Local tables only; no Hadoop file system is used (see {@link LocalWriteFileIO}).
  *
  * <p>Rows are read from the staged files a batch at a time and handed to the Parquet writer as they are read, so memory holds
- * one batch, the open Parquet row group and the commit's file list, whatever the size of the load.
+ * one batch, the open Parquet row group and the commit's file list, whatever the size of the load. A staged row is one JSON object a line,
+ * {@code {"id": ..., "doc": "<the document as JSON text>", "columns": {<promoted column>: value}}} (2.9.4, docs/guides/DATA_FORMATS.md);
+ * the earlier form, one JSON array a line ({@code [id, doc, {columns}]}), is still read.
  *
  * <p>The table is created with the manifest's schema and partitioning on the first write. An existing table keeps its own: a
  * column the table does not have is left out (and reported), a column the load does not have is written as null.
@@ -339,15 +341,16 @@ public final class LakeWriter {
             String name = f.getName();
             DataType t = f.getDataType();
             JsonNode v;
+            boolean object = row.isObject();                   // {id, doc, columns}; an array [id, doc, columns] before 2.9.4
             if (name.equals("id")) {
-                v = row.get(0);
+                v = object ? row.get("id") : row.get(0);
             } else if (name.equals("doc")) {
-                v = row.get(1);
+                v = object ? row.get("doc") : row.get(1);
             } else if (part.values().containsKey(name)) {
                 String pv = part.values().get(name);
                 return pv == null ? null : t instanceof DateType ? (int) LocalDate.parse(pv).toEpochDay() : pv;
             } else {
-                v = row.path(2).get(name);
+                v = (object ? row.path("columns") : row.path(2)).get(name);
             }
             if (v == null || v.isNull()) {
                 return null;

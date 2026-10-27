@@ -74,6 +74,9 @@ public final class SutraCli {
     /** One sample document; {@code error} is set (and {@code document} null) when the file could not be read as JSON. */
     private record Doc(String file, JsonNode document, String error, String source) {}
 
+    /** The test folders already warned about in this run (the older one-file-a-case layout). */
+    private final java.util.Set<Path> warnedFolders = new java.util.HashSet<>();
+
     private static final String USAGE_TEXT = """
             usage: sutra <command> <path>... [options]
               lint    <pack-dir | sutra-file>      parse and check every Sutra
@@ -81,7 +84,7 @@ public final class SutraCli {
               preview <pack-dir | sutra-file>      render samples; --out writes HTML snapshots
               shape   <samples.json | dir>         infer the shape (JSON Schema) of the samples
               design  <samples.json | dir>         draft a Sutra from the samples (--kind names it)
-              design --each <dir>                  one Sutra per subfolder of .json samples, in one run: <out>/<subfolder>.sutra.yaml;
+              design --each <dir>                  one Sutra per subfolder of .json or .jsonl samples, in one run: <out>/<subfolder>.sutra.yaml;
                                                    the kind is --kind, else the subfolder's one-line 'kind' file, else the folder name
             options: --junit file   JUnit XML report     --out dir   write results here
                      --strict       lint: help warnings (DRS-2045 to 2047) fail the run
@@ -305,7 +308,7 @@ public final class SutraCli {
             Path expectDir = sampleDir(u, sutra);
             List<Doc> docs = samplesOf(u, sutra, a.samples());
             if (docs.isEmpty()) {
-                cases.add(Case.skip(u.stem(), "samples", "no samples: add config/packs/<pack>/tests/" + sutra.name() + "/*.json"));
+                cases.add(Case.skip(u.stem(), "samples", "no samples: add config/packs/<pack>/tests/" + sutra.name() + "/" + SutraCases.FILE));
                 out.println("skip " + u.file() + " (no samples)");
                 continue;
             }
@@ -313,7 +316,7 @@ public final class SutraCli {
                     ? ExpectFile.load(expectDir.resolve("expect.yaml")) : ExpectFile.DEFAULT;
             int failed = 0;
             for (String named : expect.perSample().keySet()) {
-                if (docs.stream().noneMatch(d -> named.equals(d.source()) || named.equals(d.file()))) {
+                if (docs.stream().noneMatch(d -> named.equals(d.source()) || named.equals(d.file()) || named.equals(d.source() + ".json"))) {
                     failed++;
                     String missing = "expect.yaml names " + named + ", which is not a sample file of this Sutra";
                     cases.add(Case.fail(u.stem(), "expect.yaml", missing));
@@ -487,7 +490,7 @@ public final class SutraCli {
         return emit(a, kind + ".sutra.yaml", draft(samples, kind));
     }
 
-    /** {@code design --each <dir>}: every immediate subfolder holding .json samples gets its own draft, in this one JVM. */
+    /** {@code design --each <dir>}: every immediate subfolder holding .json or .jsonl samples gets its own draft, in this one JVM. */
     private int designEach(CliArgs a) throws IOException {
         int drafted = 0;
         for (Path root : a.paths()) {
@@ -499,7 +502,7 @@ public final class SutraCli {
                 subs = list.filter(Files::isDirectory).sorted().toList();
             }
             for (Path sub : subs) {
-                if (jsonFiles(List.of(sub), false).isEmpty()) {
+                if (jsonFiles(List.of(sub), true).isEmpty()) {
                     continue;
                 }
                 String name = sub.getFileName().toString();
@@ -513,7 +516,7 @@ public final class SutraCli {
             }
         }
         if (drafted == 0) {
-            throw new CliArgs.UsageException("no subfolder with .json samples under " + a.paths());
+            throw new CliArgs.UsageException("no subfolder with .json or .jsonl samples under " + a.paths());
         }
         return OK;
     }
@@ -729,7 +732,12 @@ public final class SutraCli {
         if (!given.isEmpty()) {
             files.addAll(jsonFiles(given, true));
         } else if (sampleDir(u, sutra) != null) {
-            files.addAll(jsonFiles(List.of(sampleDir(u, sutra)), true));
+            Path dir = sampleDir(u, sutra);
+            files.addAll(jsonFiles(List.of(dir), true));
+            if (files.stream().anyMatch(f -> f.getFileName().toString().endsWith(".json")) && warnedFolders.add(dir)) {
+                err.println("warning: " + dir + ": one .json file per case is deprecated (2.9.4) and will not be read in a later release: put the cases in "
+                        + SutraCases.FILE + ", one {\"case\": name, \"document\": {...}} a line (docs/guides/DATA_FORMATS.md)");
+            }
         } else {
             Path sibling = u.file().resolveSibling(u.stem() + ".json");
             if (Files.isRegularFile(sibling)) {
@@ -753,6 +761,13 @@ public final class SutraCli {
             return List.of(new Doc(name, null, name + " cannot be read as text: " + e.getMessage(), name));
         }
         text = stripBom(text);
+        if (name.equals(SutraCases.FILE)) {                // a Sutra's cases: one {case, document} a line, each case named
+            List<Doc> cases = new ArrayList<>();
+            for (SutraCases.Case c : SutraCases.parse(text, name)) {
+                cases.add(new Doc(c.name(), c.document(), c.error(), c.name()));
+            }
+            return cases.isEmpty() ? List.of(new Doc(name, null, name + " is empty: a case is one line {case, document}", name)) : cases;
+        }
         boolean lines = name.toLowerCase(java.util.Locale.ROOT).endsWith(".jsonl");
         List<Doc> out = new ArrayList<>();
         if (!lines) {

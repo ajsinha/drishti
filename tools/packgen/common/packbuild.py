@@ -22,7 +22,6 @@ packs it requires), every path a Sutra's header reads is present.
 """
 from __future__ import annotations
 
-import json
 import os
 import re
 import sys
@@ -205,10 +204,6 @@ def check(spec: PackSpec, docs: dict) -> list[str]:
     return problems
 
 
-def _json(spec: PackSpec, obj) -> str:
-    return json.dumps(obj, ensure_ascii=False, separators=(",", ":")) if spec.compact_json else json.dumps(obj, indent=1, ensure_ascii=False)
-
-
 def files(spec: PackSpec, docs: dict, known_fields: dict) -> dict[Path, str]:
     base = pack_dir(spec)
     out: dict[Path, str] = {}
@@ -222,16 +217,10 @@ def files(spec: PackSpec, docs: dict, known_fields: dict) -> dict[Path, str]:
         for id_, d in sorted(docs.get(k.kind, {}).items()):
             sub = next((d[f] for f in ("NAME", "LEGAL_ENTITY_NAME", "SCENARIO_NAME", "COUNTERPARTY_NAME", "SECURITY", "name", "legalEntityName", "scenarioName", "counterpartyName", "security") if isinstance(d.get(f), str)), "")
             catalog.append({"kind": k.kind, "id": id_, "title": id_, "subtitle": f"{k.label}" + (f" · {sub}" if sub else "")})
-    # samples/: catalog.json and one JSON Lines file per kind (packsamples.py); the retired example packs keep <kind>/<id>.json
-    if spec.retired:
-        for k in spec.kinds:
-            for id_, d in sorted(docs.get(k.kind, {}).items()):
-                out[base / "samples" / k.kind / f"{id_}.json"] = _json(spec, d) + "\n"
-        out[base / "samples" / "catalog.json"] = _json(spec, catalog) + "\n"
-    else:
-        for name, text in SAMPLES.files({k.kind: docs.get(k.kind, {}) for k in spec.kinds if k.kind not in spec.computed_kinds}, catalog, SAMPLES.part_mb(sys.argv),
-                                        None if spec.compact_json else 1).items():
-            out[base / "samples" / name] = text
+    # samples/: the catalogue and one JSON Lines file per kind (packsamples.py), the retired example packs too (JSONL is the data standard)
+    for name, text in SAMPLES.files({k.kind: docs.get(k.kind, {}) for k in spec.kinds if k.kind not in spec.computed_kinds}, catalog, SAMPLES.part_mb(sys.argv),
+                                    None if spec.compact_json else 1).items():
+        out[base / "samples" / name] = text
     out[base / "guides" / f"{spec.name}.md"] = overview(spec, docs)
     help_yaml = yaml.safe_dump({"guides": [{"slug": spec.name, "category": "packs", "title": f"{spec.title} pack", "icon": "box-seam",
                                             "file": f"guides/{spec.name}.md", "summary": spec.description}]}, sort_keys=False, allow_unicode=True)
@@ -275,13 +264,17 @@ def main(spec: PackSpec, docs: dict, known_fields: dict, lake_kinds_by_domain=No
         if not f.exists() or f.read_text(encoding="utf-8") != t:
             f.write_text(t, encoding="utf-8")
     print(f"{spec.name}: wrote {len(want)} files ({sum(len(v) for v in docs.values())} documents, {len(spec.kinds)} kinds)")
-    if "--lake" in sys.argv:
+    if "--lake" in sys.argv:                            # generate the history as JSONL rows, then load them (two steps)
+        from datetime import date
+
+        from samplegen import load_rows
         from samplegen.dates import Calendar
-        from samplegen.lake import write_tables
-        from samplegen.layout import layouts_for_domain
+        from samplegen.lake import rows_dir, write_rows
 
         root = Path(sys.argv[sys.argv.index("--lake") + 1])
-        from datetime import date
-        end = date(2026, 9, 30)
-        for d, ks in spec.domains.items():
-            write_tables(root / d, {k.kind: docs.get(k.kind, {}) for k in ks}, end, 10, Calendar.of("USNY"), layouts_for_domain(d))
+        rows = Path(sys.argv[sys.argv.index("--rows") + 1]) if "--rows" in sys.argv else rows_dir(root)
+        tables = [(d, k.kind, k.kind, docs.get(k.kind, {})) for d, ks in spec.domains.items() for k in sorted(ks, key=lambda k: k.kind)]
+        history, restated, n = write_rows(rows, spec.name, tables, date(2026, 9, 30), 10, Calendar.of("USNY"))
+        print(f"rows: {n} in {history} (restatements in {restated.name})")
+        if "--no-load" not in sys.argv:
+            load_rows.load([history], root, [restated])

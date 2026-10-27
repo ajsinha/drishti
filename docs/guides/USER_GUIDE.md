@@ -49,7 +49,7 @@ centre → Domain packs*) has a *Finding things* section with the same commands 
 | [Live updates](#live-updates), [Business dates](#business-dates-live-or-a-day-in-the-past), [Compare](#compare-what-changed) | Ticking values, past dates, what changed |
 | [Search by value](#search-by-value) | `where` searches, sorting and limits |
 | [Calc: Python on a view](#altc--calc-python-on-a-view) | `Alt+C`: Python in your browser on what you are looking at |
-| [Export, print and share](#export-print-and-share) | CSV, JSON, PDF and links |
+| [Export, print and share](#export-print-and-share) | CSV, JSON Lines, JSON, PDF and links |
 | [Share a view with a note](#share-a-view-with-a-note), [Your inbox](#your-inbox) | Send a view to colleagues; what they sent you |
 | [Monitors](#monitors), [Alerts](#alerts), [Workspaces](#workspaces) | Watching many entities at once |
 | [Your settings](#your-settings), [Themes](#themes), [Domain packs](#domain-packs-choosing-what-you-see) | Making the console yours |
@@ -709,8 +709,8 @@ chart or the absolute values; a table with only identifiers or only hidden colum
 −290.1k, trend down; 40 rows.* **View as table** (`T`) shows the chart's data as a table. Focus the chart and use `←` `→` to
 step through the points (each one is read out), `↑` `↓` to change series, `Home` / `End` for the first and last.
 
-**Export.** **PNG** and **SVG** save the picture in the theme's colours (no round trip to the server); **CSV** and **Excel**
-save the chart's data as drawn: X, then one column per series, *Others* as a row. `E` moves to the export buttons.
+**Export.** **PNG** and **SVG** save the picture in the theme's colours (no round trip to the server); **CSV**, **Excel** and **JSONL**
+(JSON Lines, a row a line) save the chart's data as drawn: X, then one column per series, *Others* as a row. `E` moves to the export buttons.
 **Defaults** puts back the chart the table opens with. Your settings are kept per table until you close the browser tab
 (saving them for next time is planned).
 
@@ -875,7 +875,7 @@ header with:
 
 - its **title** and, if it has one, its **function key** (`DES · F2` means press `F2` to jump here);
 - an **inferred** tag when Drishti laid the panel out by itself (hover over it to read why);
-- a **↓** icon to download the panel as CSV;
+- a **↓** icon to download the panel as CSV, and a **{}** icon for JSON Lines;
 - a **?** that explains this kind of panel.
 
 `MX-20000001` shows *Deal ticket* (F2), *Legs* (F3, the legs side by side), *Cash-flow schedule, every leg* (F4), *Events by leg* (F5),
@@ -1287,7 +1287,7 @@ first*).
 - **Chart.** Choose **Bar chart**, **Line chart** or **Heatmap** in the toolbar (and which value, when there are
   several): a chart of the grid as it is now, in the theme's colours, redrawn when you change anything.
   To chart the table itself, with more types and two axes, use its chart button or `K` ([Chart any table](#chart-any-table)).
-- **CSV** and **Excel** download the grid as shown: one column per row field, then one per column group and value, the
+- **CSV**, **Excel** and **JSONL** (JSON Lines, a row a line keyed as the CSV's header) download the grid as shown: one column per row field, then one per column group and value, the
   subtotal and total rows labelled, numbers as numbers. The Excel file has a bold, frozen header row.
 - **Print** prints the pivot and its chart alone, in the print palette.
 
@@ -1568,7 +1568,7 @@ and the one before) and *Open the day*.
 | `←` `→` | previous, next column (read aloud with its header) | `Enter`, double click | open the day's view, as it was that day |
 | `C` | changes only: hide the days on which nothing moved (*7 of 30 days*) | `D` | diff, on and off |
 | `R` | type a new range (`30`, `3M`, `YTD`, `FROM 2026-09-01`) | `1` `3` `6` `Y` `T` | 1M, 3M, 6M, 1Y, YTD |
-| `E` | export: CSV, Excel, JSON | `Alt+S` | copy a link to these rows |
+| `E` | export: CSV, Excel, JSON Lines, JSON | `Alt+S` | copy a link to these rows |
 | `Shift`+`K` | chart these days: any column by date ([Chart any table](#chart-any-table)) | | |
 | `?` | the keys | `Esc` | back to today's view |
 
@@ -1581,8 +1581,8 @@ the embedded series (a day before the stored documents), the parts' columns read
 label stays inside the chart and follows the selected row when the window is resized or zoomed; the crosshair's date is in the label and the
 `⌖` line, not on the axis.
 
-**Export** (`E`) downloads the table as shown, newest first: CSV (numbers as numbers, the formula guard, UTF-8 with BOM), Excel, or the
-server's JSON as served (its rows oldest first). Excel's dates are date cells (`yyyy-mm-dd`), so they sort and filter as dates. With
+**Export** (`E`) downloads the table as shown, newest first: CSV (numbers as numbers, the formula guard, UTF-8 with BOM), Excel, JSON
+Lines (a day a line, keyed as the CSV's header), or the server's JSON as served (its rows oldest first). Excel's dates are date cells (`yyyy-mm-dd`), so they sort and filter as dates. With
 *changes only* on, only the changed days, in all three. Files are named `1000015-history-2026-09-07-2026-10-19.csv`.
 Every export reads through the server, so it carries your masks.
 
@@ -1763,10 +1763,15 @@ The buttons in a view's title line, and the **↓** in each panel header.
 
 | Action | Where | What you get |
 |---|---|---|
-| Panel as CSV | **↓** in a panel header | Tables and ladders as they are; key/value panels as field and value; charts as one column per series; surfaces as a grid; bars as label and value |
-| Search as CSV | **CSV** on the results page | One row per result |
-| Pivot as CSV or Excel | **CSV**, **Excel** in a [Pivot tab](#the-pivot-tab-slice-a-table-your-way) | The grid as shown: row fields, one column per column group and value, totals labelled; Excel with a bold frozen header |
-| Comparison as CSV | **CSV** on the Compare page | One row per change |
+| Panel as CSV or JSON Lines | **↓** (CSV) or **{}** (JSON Lines) in a panel header | Tables and ladders as they are; key/value panels as field and value; charts as one column per series; surfaces as a grid; bars as label and value |
+| Search as CSV or JSON Lines | **CSV**, **JSONL** on the results page (and on a form's results) | One row per result |
+| Pivot as CSV, Excel or JSON Lines | **CSV**, **Excel**, **JSONL** in a [Pivot tab](#the-pivot-tab-slice-a-table-your-way) | The grid as shown: row fields, one column per column group and value, totals labelled; Excel with a bold frozen header |
+| Comparison as CSV or JSON Lines | **CSV** on the Compare page; the same address ending `.jsonl` | One row per change |
+| View as PDF, PNG, Excel, CSV or JSON Lines | **Export** in the title line | The view as you see it, with the controls and filters you set |
+
+**JSON Lines** (`.jsonl`, [DATA_FORMATS.md](DATA_FORMATS.md)) is one JSON object a line, keyed by the CSV's column names, numbers as
+numbers and no spreadsheet escaping: the form for scripts and other systems. It sits beside every CSV download; CSV, Excel, PDF and
+PNG all stay.
 | Document as JSON | **JSON** in the title line | The whole document, as your role may see it |
 | Print or PDF | **Print** | A clean light page without the top bar and buttons; choose *Save as PDF* in the print dialog |
 | Share | **Share** (`Alt+S`), or a panel's **send** icon | A [dialog](#share-a-view-with-a-note): send the view, or one panel, to people with a note; **Copy link** is in it |
@@ -1874,7 +1879,7 @@ one live connection.
 
 ## Scheduled reports
 
-A report is a search that runs on its own, on a schedule, and delivers its result as a CSV file; **Reports** in the Views menu lists them with your subscriptions. Export and subscriptions are in the same place. The reference is [SCHEDULED_REPORTS.md](SCHEDULED_REPORTS.md); the walk-through is [tutorial 9](../tutorials/09-reports.md).
+A report is a search that runs on its own, on a schedule, and delivers its result as a CSV or JSON Lines file (**Format**); **Reports** in the Views menu lists them with your subscriptions. Export and subscriptions are in the same place. The reference is [SCHEDULED_REPORTS.md](SCHEDULED_REPORTS.md); the walk-through is [tutorial 9](../tutorials/09-reports.md).
 
 ## Alerts
 

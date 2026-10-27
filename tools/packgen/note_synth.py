@@ -16,7 +16,9 @@
 that the pack generator is generic: note -> couponPeriods[] -> observations[] -> fixings[] (one fixing per underlying per observation day),
 beside a flat callSchedule[] and an underlyings[] basket. Every value is invented.
 
-    python3 tools/packgen/note_synth.py --notes 30 --out /tmp/notes.json
+    python3 tools/packgen/note_synth.py --notes 30 --out /tmp/notes.jsonl
+
+The output is JSON Lines, one note per line (docs/guides/DATA_FORMATS.md).
 """
 from __future__ import annotations
 
@@ -62,13 +64,12 @@ def main(argv=None) -> int:
     p.add_argument("--out", default="-")
     a = p.parse_args(argv)
     rng = random.Random(a.seed)
-    docs = [note(i, rng) for i in range(a.notes)]
-    text = json.dumps(docs, indent=2)
+    text = "".join(json.dumps(note(i, rng), ensure_ascii=False, separators=(",", ":")) + "\n" for i in range(a.notes))
     if a.out == "-":
-        print(text)
+        sys.stdout.write(text)
     else:
         with open(a.out, "w", encoding="utf-8") as f:
-            f.write(text + "\n")
+            f.write(text)
     return 0
 
 

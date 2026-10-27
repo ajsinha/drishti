@@ -43,7 +43,7 @@ The card says:
 * **Progress**, as a bar with its percentage and what is happening ("building 12 of 41 dates"). Progress is measured, never guessed. When the
   server cannot measure it, the card says "progress is not measured for this one" and shows no bar.
 * **Cancel** stops the run and frees everything it holds at once. **Open in Runs** opens the run in the [Runs tab](#the-runs-tab).
-* **Export CSV** and **Export Excel**, once the run is done (see [Export](#export)).
+* **Export CSV**, **Export Excel** and **Export JSONL** (JSON Lines, a row a line), once the run is done (see [Export](#export)).
 
 When the run finishes while the page is open, the card turns into the chart without a reload. If you have left the page, the bell counts
 the run (see [the bell](#the-bell-and-the-inbox)).
@@ -116,7 +116,7 @@ server decides what each person may do with a run, and the drawer shows only tho
 | **Open** | A report's run opens the report with `?run=<id>`: the visual is drawn from the stored result and a line says so. Any other run opens its result. |
 | **Run again** (choose how in **Run again as**, then press the button) | *Same as before (as of D)*: the same question on the same dates and data versions; when the result is still stored it is **reused** at once and the drawer says *Done at once: reused the answer from <time>* with **Open result**. *With the latest data*: relative dates (this year, latest) worked out again. Changing the choice does nothing on its own. While the new run goes the button says *Running…* with a spinner (a still dot with reduced motion); the new run is highlighted at the top of the list, the drawer switches to it and follows it to Done or Failed, and the old run's row says *superseded by* the new run, with a link. |
 | **Cancel** | Stops a queued or running run. Its row says *Cancelled: cancelled by you*. |
-| **Export CSV** · **Export Excel** | The stored result as a file, your own version of it: nothing is computed again, masked cells stay masked (see [Export](#export)). |
+| **Export CSV** · **Export Excel** · **Export JSONL** | The stored result as a file (JSONL: a row a line, the CSV's column names), your own version of it: nothing is computed again, masked cells stay masked (see [Export](#export)). |
 | **Promote…** | A model query's or SQL run's result to a dataset snapshot or a report on it, as a draft for review (see [Promote a run](#promote-a-run)). Offered only when the server says you may (`can.promote`). |
 | **Keep longer** | 90 days, 180 days or a year, instead of the 30 days after the last open. |
 | **Delete result** | Removes the stored result now. The run stays listed, as expired. |
@@ -184,7 +184,7 @@ schedule (the runs it made stay listed). Each firing is a visible background run
 
 ## Export
 
-**Export CSV** and **Export Excel** download a finished run's result as a file. They are in the drawer, on the run card while a finished
+**Export CSV**, **Export Excel** and **Export JSONL** download a finished run's result as a file. They are in the drawer, on the run card while a finished
 run's result is drawn, and on the line above a report drawn from a run (`?run=<id>`, "Drawn from the run of…"). The file is made by the
 server from the stored result, so nothing is computed again, and it is **your** version: a recipient of a share gets their re-masked or
 recomputed answer, and masked cells stay masked (the file's note names the masked columns). A very large result is cut at the export row
@@ -223,7 +223,7 @@ $ python3 tools/drishti.py bi runs submit --sql "SELECT desk, MEASURE('MTM') FRO
 r-java-2-01JAC4Q8Z6T3M4R9B0X1Y2Z3W5  queued  (expected 3 to 6 min)
   follow it:  drishti.py bi runs wait r-java-2-01JAC4Q8Z6T3M4R9B0X1Y2Z3W5
 $ python3 tools/drishti.py bi runs wait r-java-2-01JAC4Q8Z6T3M4R9B0X1Y2Z3W5 --timeout 30m      # exit 0 done, 3 failed, 4 cancelled, 5 still running
-$ python3 tools/drishti.py bi runs result r-java-2-01JAC4Q8Z6T3M4R9B0X1Y2Z3W5 --format csv --out pnl.csv
+$ python3 tools/drishti.py bi runs result r-java-2-01JAC4Q8Z6T3M4R9B0X1Y2Z3W5 --format csv --out pnl.csv     # or --format jsonl: a row a line
 $ python3 tools/drishti.py bi runs share r-java-2-01JAC4Q8Z6T3M4R9B0X1Y2Z3W5 --to bob --to carol --to eve
 bob: re-masked (your result with their extra masks)
 carol: recomputed as them (their rights differ: a run of their own) (run r-java-2-01JAC4Q8Z6T3M4R9B0X1Y2Z3W6)

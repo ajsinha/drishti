@@ -21,7 +21,6 @@ consistently from them (the thin trades' fixed rates are solved so their cashflo
 
 Run from the repository root:  python3 examples/packs/finance/tools/make_fixtures.py
 """
-import json
 import math
 import pathlib
 import sys
@@ -32,6 +31,8 @@ sys.path.insert(0, str(ROOT / "tools"))
 from samplegen import blocks as B, ids, legs as L  # noqa: E402
 from samplegen.curves import Curve  # noqa: E402
 from samplegen.dates import Calendar, add_tenor, iso  # noqa: E402
+sys.path.insert(0, str(ROOT / "tools" / "packgen" / "common"))
+import packsamples  # noqa: E402
 
 OUT = pathlib.Path(__file__).resolve().parent.parent / "samples"
 AS_OF = date(2026, 9, 30)
@@ -39,11 +40,13 @@ USNY, TARGET, LDN_NY = Calendar.of("USNY"), Calendar.of("EUTA"), Calendar.of("GB
 catalog = []
 
 
+docs: dict = {}
+
+
 def put(kind, id_, doc, source, gen, title, subtitle, live=False):
+    """Keeps a document for samples/<kind>.jsonl (one document a line, written at the end) and its catalogue entry."""
     doc["_meta"] = {"source": source, "generation": gen, "live": live}
-    d = OUT / kind
-    d.mkdir(parents=True, exist_ok=True)
-    (d / f"{id_}.json").write_text(json.dumps(doc, indent=1, ensure_ascii=False) + "\n")
+    docs.setdefault(kind, {})[id_] = doc
     catalog.append({"kind": kind, "id": id_, "title": title, "subtitle": subtitle})
 
 
@@ -467,7 +470,7 @@ def main():
     put("trade", "CFT-77120", fut, "eod-futures", 20260930, "CFT-77120", "Commodity future · NYMEX CL Z6 · Long 150")
     members = netting_sets()
     reference(members)
-    (OUT / "catalog.json").write_text(json.dumps(catalog, indent=1, ensure_ascii=False) + "\n")
+    packsamples.write(OUT, docs, catalog)              # the catalogue and samples/<kind>.jsonl (JSONL is the data standard)
     print(len(catalog), "entities")
 
 

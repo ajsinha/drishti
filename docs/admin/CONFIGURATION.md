@@ -1445,6 +1445,7 @@ else by `drishti.var.positions`.
 | `official.root` | `${DRISHTI_DELTA_ROOT:${drishti.data.dir:./data}/delta}` | The Delta root the results are published under (a local or shared folder; an `s3://` root is not published by this writer). |
 | `official.retention-years` | `7` | The published table keeps its log and its removed files this long (`delta.logRetentionDuration`, `delta.deletedFileRetentionDuration`): its time travel reaches back that far. |
 | `official.on-start` | `true` | At start, capture the newest date when it has no official record yet (a lake built while the server was down). |
+| `official.jsonl` | `true` | Also write each published date as JSON Lines beside the table, one row a line: `<root>/risk-results/jsonl/var-official/<date>/var-official-v<table version>.jsonl`, one file per commit (2.9.4, [DATA_FORMATS.md](../guides/DATA_FORMATS.md)). |
 
 ### `drishti.ccr.exposure` — the exposure engine
 
@@ -1488,6 +1489,7 @@ compute workers on (`DRISHTI_COMPUTE_ENABLED=true`), otherwise that method answe
 | `official.root` | `${DRISHTI_DELTA_ROOT:${drishti.data.dir:./data}/delta}` | The Delta root the results are published under. |
 | `official.retention-years` | `7` | The published tables keep their log and removed files this long (time travel). |
 | `official.on-start` | `true` | At start, capture the newest date when it has no official record yet. |
+| `official.jsonl` | `true` | Also write each published date as JSON Lines beside the tables: `<root>/risk-results/jsonl/<exposure-official or exposure-official-cpty>/<date>/<table>-v<table version>.jsonl`, one file per commit (2.9.4). |
 | `retention.trade-paths-days` | `20` | Full trade paths are kept for the last 20 business dates ... |
 | `retention.trade-paths-month-end-years` | `1` | ... and each month-end for a year. The lake's owner applies it; `GET /api/v1/exposure/retention` lists each date and whether its paths are beyond their window (EXPOSURE_GUIDE.md section 27.3, decided 2026-10-26). |
 | `retention.set-matrices-years` | `1` | The netting-set matrices (the hot files) of every date within a year are kept on disk ... |
@@ -2261,7 +2263,7 @@ TLS for `jdbc:postgresql://`: the shared [`tls.*`](#tls--tls-for-connectors) set
 
 ### `file` — JSON or CSV files on disk
 
-Layout: `<root>/<kind>/<id>.json` (or `.csv`), and dated `<root>/<yyyy-MM-dd>/<kind>/<id>.json`.
+Layout: `<root>/<kind>.jsonl` (JSON Lines, one entity a line), `<root>/<kind>/<id>.json` (or `.csv`, deprecated), and dated `<root>/<yyyy-MM-dd>/<kind>/<id>.json`.
 
 | Setting | Default | Meaning |
 |---|---|---|

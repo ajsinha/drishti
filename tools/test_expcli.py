@@ -101,6 +101,8 @@ class ExposureCli(unittest.TestCase):
         self.assertEqual(self.query()[1], "/api/v1/exposure/tree")
         run("profile", "NSET:NS-X", "--csv")
         self.assertEqual(self.query()[2], {"scope": "NSET:NS-X", "format": "csv"})
+        run("profile", "NSET:NS-X", "--jsonl")                                  # 2.9.4: the server's JSON Lines
+        self.assertEqual(self.query()[2], {"scope": "NSET:NS-X", "format": "jsonl"})
         run("distribution", "NSET:NS-X", "--at", "2Y", "--json")
         self.assertEqual(self.query()[2], {"scope": "NSET:NS-X", "bands": "true", "date": "2Y"})
         run("capture", "CPTY:CP-ALDERSHOT", "--note", "before")

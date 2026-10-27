@@ -15,12 +15,14 @@
 """`drishti.py history KIND ID`: one entity over business days, as the console's history page shows it (HISTORY_QUERIES.md
 section 15.3). The server's own answer (GET /api/v1/history/{kind}/{id}) for the caller's token, so masks apply as in the browser.
 
-Text is a table, newest first, a changed cell marked `*`; --json prints the answer; --csv writes the table as CSV (UTF-8 with a BOM,
+Text is a table, newest first, a changed cell marked `*`; --json prints the answer; --jsonl writes the table as JSON Lines (a day a
+line, keyed as the CSV header); --csv writes the table as CSV (UTF-8 with a BOM,
 CRLF, text a spreadsheet would run as a formula kept as text). Exit codes: 0, 1 (the server refused or some days could not be read),
 2 (usage)."""
 from __future__ import annotations
 
 import csv
+import json
 import io
 import sys
 import urllib.parse
@@ -112,13 +114,12 @@ def render(res: dict, say, changes_only: bool = False) -> None:
         say("only the newest rows are shown: narrow the range with --from/--to")
 
 
-def to_csv(res: dict, changes_only: bool = False) -> str:
+def table(res: dict, changes_only: bool = False) -> tuple[list, list]:
+    """The export table, newest first: (header, rows), numbers as numbers unless masked (then as shown)."""
     cols = res.get("columns") or []
     parts = res.get("parts") or []
     header = ["Date"] + [c.get("label") or c["path"] for c in cols] + [p.get("label") or p["path"] for p in parts] + ["Changed"]
-    buf = io.StringIO()
-    w = csv.writer(buf, lineterminator="\r\n")
-    w.writerow(header)
+    rows = []
     for r in reversed(res.get("rows") or []):
         if changes_only and not r.get("changed"):
             continue
@@ -129,8 +130,24 @@ def to_csv(res: dict, changes_only: bool = False) -> str:
             line.append(v if isinstance(v, (int, float)) and not isinstance(v, bool) and not c.get("masked") else disp.get(c["path"], "" if v is None else v))
         line += [(r.get("parts") or {}).get(p["path"]) for p in parts]
         line.append(" ".join(r.get("changed") or []))
+        rows.append(line)
+    return header, rows
+
+
+def to_csv(res: dict, changes_only: bool = False) -> str:
+    header, rows = table(res, changes_only)
+    buf = io.StringIO()
+    w = csv.writer(buf, lineterminator="\r\n")
+    w.writerow(header)
+    for line in rows:
         w.writerow([("'" + x) if isinstance(x, str) and x[:1] in ("=", "+", "-", "@") else x for x in line])
     return "﻿" + buf.getvalue()
+
+
+def to_jsonl(res: dict, changes_only: bool = False) -> str:
+    """The same table as JSON Lines (docs/guides/DATA_FORMATS.md): a business day a line, newest first, keyed as the CSV's header."""
+    header, rows = table(res, changes_only)
+    return "".join(json.dumps(dict(zip(header, line)), ensure_ascii=False) + "\n" for line in rows)
 
 
 def register(groups, srv, ctx: dict) -> None:
@@ -138,8 +155,8 @@ def register(groups, srv, ctx: dict) -> None:
     import argparse
 
     def cmd_history(a, extra) -> int:
-        if a.csv and a.json:
-            raise ctx["CliError"]("--csv and --json cannot be used together", 2)
+        if sum(bool(x) for x in (a.csv, a.json, a.jsonl)) > 1:
+            raise ctx["CliError"]("--csv, --json and --jsonl cannot be used together", 2)
         if a.days is not None and not 1 <= a.days <= 9999:
             raise ctx["CliError"]("--days must be 1 to 9999", 2)
         res = ctx["Api"].from_args(a).json("GET", path_for(a.kind, a.id, a))
@@ -149,6 +166,8 @@ def register(groups, srv, ctx: dict) -> None:
             ctx["say_json"](res)
         elif a.csv:
             sys.stdout.write(to_csv(res, a.changes_only))
+        elif a.jsonl:
+            sys.stdout.write(to_jsonl(res, a.changes_only))
         else:
             render(res, print, a.changes_only)
         return 1 if res.get("partial") else 0
@@ -168,3 +187,4 @@ def register(groups, srv, ctx: dict) -> None:
     p.add_argument("--diff", action="store_true", help="each day's changes against the day before")
     p.add_argument("--changes-only", dest="changes_only", action="store_true", help="only the days on which something changed")
     p.add_argument("--csv", action="store_true", help="write the table as CSV to standard output")
+    p.add_argument("--jsonl", action="store_true", help="write the table as JSON Lines to standard output: a day a line, keyed as the CSV's header")

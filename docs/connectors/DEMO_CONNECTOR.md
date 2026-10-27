@@ -69,7 +69,7 @@ layout of every shipped pack):
 
 ```
 config/packs/market-data/samples/
-├── catalog.json            the list of samples: kind, id, title, subtitle
+├── catalog.jsonl            the list of samples: kind, id, title, subtitle
 ├── ir-curve.jsonl          one document a line, in the catalogue's order
 ├── fx-spot.jsonl
 ├── rate-fixing.jsonl
@@ -79,7 +79,7 @@ config/packs/market-data/samples/
 The older layout, one file per document (`<kind>/<id>.json`), is still read, as the retired example packs in `examples/packs/` are
 written (`PackSamples` in `drishti-common` reads both).
 
-`catalog.json` is an array. Only the entries it lists are loaded. Each entry gives the entity's `kind` and `id`, and the `title` and
+`catalog.jsonl` holds one entry a line (2.9.4; the `catalog.json` array of earlier releases is still read). Only the entries it lists are loaded. Each entry gives the entity's `kind` and `id`, and the `title` and
 `subtitle` that the type-ahead dropdown shows; a JSON Lines document is matched to its entry by position (the writers keep the
 catalogue's order), else by its id value:
 
@@ -202,11 +202,11 @@ nothing else needs changing. A kind that no other connector serves then answers 
 `file` plugin, which serves every kind, is on; it is, reading `<data>/feeds`).
 
 Setting `dirs` by hand replaces what the packs put there (the site sits above the packs), which is how a site can serve a folder of its
-own samples; the folder needs a `catalog.json` and either `<kind>.jsonl` files or `<kind>/<id>.json`.
+own samples; the folder needs a `catalog.jsonl` and either `<kind>.jsonl` files or `<kind>/<id>.json`.
 
 ## 6. How the connector reads
 
-At start the connector reads, for each folder in `dirs`, `catalog.json` and then each kind's documents, once. It keeps three things in
+At start the connector reads, for each folder in `dirs`, `catalog.jsonl` and then each kind's documents, once. It keeps three things in
 memory: the documents (a concurrent map from kind and id to document), each document's `walk`, and a type-ahead index (`HitIndex`) of
 every catalogue entry. It never reads the folders again; a changed or added sample is seen only after a restart.
 
@@ -429,7 +429,7 @@ There is no store to lose: after start the connector reads nothing from disk or 
 
 | Event | What happens |
 |---|---|
-| a folder in `dirs` has no `catalog.json` | `start` fails: the log says `source plugin demo failed to start` with the exception, and `GET /api/v1/admin/health` lists it under `failedToStart` as `"demo": "<message>"`. No sample from any folder is served; the server runs on |
+| a folder in `dirs` has no `catalog.jsonl` | `start` fails: the log says `source plugin demo failed to start` with the exception, and `GET /api/v1/admin/health` lists it under `failedToStart` as `"demo": "<message>"`. No sample from any folder is served; the server runs on |
 | the catalogue names an entry the kind's file does not hold | that entry is skipped; the others load |
 | a sample is not valid JSON, or not an object | the whole connector fails to start, as above |
 | a catalogue entry has no `title` or `subtitle` | it loads; the dropdown shows empty text |
@@ -481,7 +481,7 @@ On the demo-lakes server (`DRISHTI_DEMO_ENABLED=false`) `demo` is not in `/sourc
 
 | Symptom | Likely cause | What to do |
 |---|---|---|
-| `demo` missing from `/sources`, `failedToStart` has `demo` | a `dirs` folder without `catalog.json`, a document that is not a JSON object | fix the sample named in the message (regenerate with the pack's generator); restart |
+| `demo` missing from `/sources`, `failedToStart` has `demo` | a `dirs` folder without `catalog.jsonl`, a document that is not a JSON object | fix the sample named in the message (regenerate with the pack's generator); restart |
 | `demo` missing from `/sources`, no failure | it is off (`DRISHTI_DEMO_ENABLED=false`, the demo-lakes run configuration) | turn it on if you want samples and ticks |
 | a pack's samples are not served | the pack is not in `DRISHTI_PACKS`, or its `samples` folder does not exist | enable the pack; check `samples:` in its `pack.yaml` |
 | an edited sample shows the old content | samples are read once at start | restart the server |
@@ -509,7 +509,7 @@ Under `drishti.sources.plugins.demo`:
 | Setting | Default | Meaning |
 |---|---|---|
 | `enabled` | `${DRISHTI_DEMO_ENABLED:true}` (shipped) | whether the connector starts |
-| `settings.dirs` | filled by the packs: every enabled pack's samples folder, most general first | comma-separated folders, each with `catalog.json` and `<kind>.jsonl` (or `<kind>/<id>.json`); blank entries are skipped; empty means no samples |
+| `settings.dirs` | filled by the packs: every enabled pack's samples folder, most general first | comma-separated folders, each with `catalog.jsonl` and `<kind>.jsonl` (or `<kind>/<id>.json`); blank entries are skipped; empty means no samples |
 | `settings.ticking` | `true` | `false`: no tick task; documents never move |
 | `settings.tick-ms` | `400` | milliseconds between ticks (fixed rate) |
 | `settings.stale-after` | none | the engine's staleness warning; see [CONFIGURATION.md](../admin/CONFIGURATION.md#connector-settings-plugin-by-plugin) |

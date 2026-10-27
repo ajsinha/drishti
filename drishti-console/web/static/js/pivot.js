@@ -202,11 +202,13 @@
     collapse.addEventListener('click', function () { self.collapseAll(); });
     bar.appendChild(expand); bar.appendChild(collapse);
     var csv = button('CSV', 'Download the pivot as CSV'), xlsx = button('Excel', 'Download the pivot as an Excel workbook'), print = button('Print', 'Print this pivot');
-    csv.setAttribute('data-pv-export', 'csv'); xlsx.setAttribute('data-pv-export', 'xlsx'); print.setAttribute('data-pv-print', '');
+    var jsonl = button('JSONL', 'Download the pivot as JSON Lines: one row a line, the CSV\'s column names');
+    csv.setAttribute('data-pv-export', 'csv'); xlsx.setAttribute('data-pv-export', 'xlsx'); jsonl.setAttribute('data-pv-export', 'jsonl'); print.setAttribute('data-pv-print', '');
     csv.addEventListener('click', function () { self.exportAs('csv'); });
     xlsx.addEventListener('click', function () { self.exportAs('xlsx'); });
+    jsonl.addEventListener('click', function () { self.exportAs('jsonl'); });
     print.addEventListener('click', function () { self.print(); });
-    if (canExport) { [csv, xlsx, print].forEach(function (b) { bar.appendChild(b); }); }
+    if (canExport) { [csv, xlsx, jsonl, print].forEach(function (b) { bar.appendChild(b); }); }
     if (this.mayKeep()) {
       var save = button('Save', 'Keep this arrangement for yourself: it opens like this next time', 'btn-accent'), reset = button('Reset', 'Back to the default arrangement (forgets yours)');
       save.setAttribute('data-pv-save', ''); reset.setAttribute('data-pv-reset', '');
@@ -842,7 +844,7 @@
     if (!this.cube) { return; }
     var flat = G.flatten(this.cube, this.st.grid, this.fields);
     var name = (this.search ? this.search + '-search' : (view ? view.getAttribute('data-id') : 'view') + '-' + this.panelId) + '-pivot';
-    this.say('Preparing the ' + (ext === 'xlsx' ? 'Excel workbook' : 'CSV file'));
+    this.say('Preparing the ' + (ext === 'xlsx' ? 'Excel workbook' : ext === 'jsonl' ? 'JSON Lines file' : 'CSV file'));
     fetch('/export/grid.' + ext, { method: 'POST', headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ name: name, header: flat.header, rows: flat.rows }) }).then(function (r) {
       if (!r.ok) { return r.text().then(function (t) { self.note('Export failed: ' + t, true); }); }

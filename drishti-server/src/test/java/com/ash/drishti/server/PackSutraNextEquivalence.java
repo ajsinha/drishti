@@ -42,7 +42,7 @@ import org.springframework.test.web.servlet.MockMvc;
  * Sutra Next, generated screens: a pack whose generator now writes its Sutras as Drishti UI kit fragment uses (with a generated
  * doc:) draws exactly what the inline layouts drew. Every old layout kept under {@code src/test/resources/sutra-next/<pack>/}
  * ({@code <kind>.v2.sutra.yaml}, the generated file before the change, as version 2) is set beside the pack's Sutras and the view of
- * the kind's first committed sample (the pack's {@code samples/catalog.json}) compared, for a reader who sees everything and for
+ * the kind's first committed sample (the pack's {@code samples/catalog.jsonl}) compared, for a reader who sees everything and for
  * one whose role masks fields, leaving out only what names the layout (its version and fingerprint) and the timings. A subclass
  * names the pack and enables it alone, with the fields its masked role redacts; written the way {@link
  * EconomicsSutraNextEquivalenceTest} proves the economics screens.
@@ -135,7 +135,7 @@ abstract class PackSutraNextEquivalence {
     /** Each Sutra with an old layout and the record it draws ({@code kind/id}): by default the first committed sample of the kind it is named after. */
     Map<String, String> screens() throws Exception {
         Map<String, String> first = new LinkedHashMap<>();
-        for (JsonNode e : json.readTree(Path.of("..", "config", "packs", pack(), "samples", "catalog.json").toFile())) {
+        for (JsonNode e : com.ash.drishti.common.PackSamples.catalogEntries(Path.of("..", "config", "packs", pack(), "samples"))) {
             first.putIfAbsent(e.path("kind").asText(), e.path("id").asText());
         }
         Map<String, String> out = new LinkedHashMap<>();

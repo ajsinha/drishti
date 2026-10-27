@@ -197,6 +197,14 @@ final class ExposureViews {
         return sb.toString();
     }
 
+    /** The profile as JSON Lines (one grid date a line, the CSV's column names; docs/guides/DATA_FORMATS.md). */
+    String profileJsonl(Principal p, String scope, LocalDate date, ExposureService.Ask ask) {
+        ExposureService.Scoped s = svc.scoped(p, scope, date, ask);
+        String out = ExposureCaptures.profileJsonl(profileRows(s, false));
+        svc.audit(p, "ccr-export", s, "profile.jsonl");
+        return out;
+    }
+
     /** The primary point a {@code date} parameter names: a grid date, a tenor ({@code 1Y}), or none (-1: the default of the figure). */
     static int primary(ExposureGrid g, String date) {
         if (date == null || date.isBlank()) {

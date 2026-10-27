@@ -15,19 +15,22 @@
 """Generates the logistics pack's sample entities. Run from the repository root:
 python3 examples/packs/logistics/tools/make_samples.py
 """
-import json
 import math
 import pathlib
+import sys
+
+sys.path.insert(0, str(pathlib.Path(__file__).resolve().parents[4] / "tools" / "packgen" / "common"))
+import packsamples  # noqa: E402
 
 OUT = pathlib.Path(__file__).resolve().parent.parent / "samples"
 catalog = []
+docs: dict = {}
 
 
 def put(kind, id_, doc, title, subtitle, walk=None, live=True, source="port-ops", gen=512):
+    """Keeps a document for samples/<kind>.jsonl (one document a line, written at the end) and its catalogue entry."""
     doc["_meta"] = {"source": source, "generation": gen, "live": live, **({"walk": walk} if walk else {})}
-    d = OUT / kind
-    d.mkdir(parents=True, exist_ok=True)
-    (d / f"{id_}.json").write_text(json.dumps(doc, indent=1) + "\n")
+    docs.setdefault(kind, {})[id_] = doc
     catalog.append({"kind": kind, "id": id_, "title": title, "subtitle": subtitle})
 
 
@@ -74,5 +77,5 @@ put("shipment", "SHP-10077", {"shipmentId": "SHP-10077", "status": "Delivered", 
                               "declaredValue": 310000, "currency": "USD", "incoterm": "CIF", "commodity": "Tea"},
     "SHP-10077", "Shipment · Colombo → Singapore · delivered (no Sutra match: inferred)", live=False)
 
-(OUT / "catalog.json").write_text(json.dumps(catalog, indent=1) + "\n")
+packsamples.write(OUT, docs, catalog)              # the catalogue and samples/<kind>.jsonl (JSONL is the data standard)
 print(len(catalog), "entities")

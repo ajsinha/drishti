@@ -210,6 +210,15 @@ def _empty(v) -> bool:
     return v is None or v == ""
 
 
+
+def _catalog(samples: Path) -> list:
+    """A samples folder's catalogue: catalog.jsonl (one entry a line, 2.9.4), else the catalog.json array of earlier releases."""
+    lines = samples / "catalog.jsonl"
+    if lines.is_file():
+        return [json.loads(t) for t in lines.read_text(encoding="utf-8").splitlines() if t.strip()]
+    old = samples / "catalog.json"
+    return json.loads(old.read_text(encoding="utf-8")) if old.is_file() else []
+
 class Stat:
     """What one field held over the documents read: how often it was non-empty, its JSON types, a few values."""
 
@@ -435,8 +444,7 @@ class Draft:
         spec = self.derived_spec()
         if spec and spec.get("id-field"):
             return [spec["id-field"]]
-        catalog = json.loads((self.pack_dir / "samples" / "catalog.json").read_text(encoding="utf-8")) \
-            if (self.pack_dir / "samples" / "catalog.json").is_file() else []
+        catalog = _catalog(self.pack_dir / "samples")
         eid = next((str(e.get("id")) for e in catalog if e.get("kind") == self.kind), None)
         first = (self.samples or [{}])[0]
         hit = next((k for k, v in first.items() if eid is not None and str(v) == eid), None)

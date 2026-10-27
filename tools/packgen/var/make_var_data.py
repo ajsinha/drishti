@@ -49,6 +49,8 @@ import factors as F  # noqa: E402
 import portfolios as PF  # noqa: E402
 import positions as P  # noqa: E402
 import varmath as VM  # noqa: E402
+sys.path.insert(0, str(ROOT / "tools" / "packgen" / "common"))
+import sutracases as SC  # noqa: E402  (tests/<sutra>/cases.jsonl)
 
 PACK, CONNECTOR, SET = "market-risk", "risk-store", "HS-509"
 #: kind -> its id field (the lake key)
@@ -235,7 +237,7 @@ def retired_samples(want: dict[Path, str] | None = None) -> list[Path]:
     """Samples and Sutra tests on disk that are no longer written: the retired stored kinds', and earlier picks' tests."""
     out = [SAMPLES / "var-node.jsonl"] + sorted(TESTS.glob("var-node/*"))
     if want is not None:
-        out += [f for kind in ("position", "portfolio") for f in sorted((TESTS / kind).glob("*.json")) if f not in want]
+        out += [f for kind in ("position", "portfolio") for f in sorted((TESTS / kind).glob("*.json*")) if f not in want]   # the older <id>.json too
     return [p for p in out if p.is_file()]
 
 
@@ -252,13 +254,12 @@ def samples(demo: Demo, docs: dict[str, list[dict]]) -> dict[Path, str]:
              "risk-hierarchy": [n for n in docs["risk-hierarchy"] if n["NODE_ID"] in ("MGMT~DESK-RATES", "LEGAL~LE-NY")],
              "portfolio": [r for r in docs["portfolio"] if r["PORTFOLIO_ID"] in ("PF-RATES-DESK", "PF-USD-RATES", "PF-ASHA-UNWIND")]}
     out = {SAMPLES / f"{k}.jsonl": "".join(json.dumps(d, ensure_ascii=False, separators=(",", ":")) + "\n" for d in v) for k, v in picks.items()}
-    # the pack's Sutra tests (tests/<kind>/<id>.json and expect.yaml: java -jar <server> sutra test config/packs/market-risk). The VaR
+    # the pack's Sutra tests (tests/<kind>/cases.jsonl and expect.yaml: java -jar <server> sutra test config/packs/market-risk). The VaR
     # figures of these pages are the engine's, added when the page is opened: a test of the stored document checks the rest.
     head = "".join(f"# {ln}".rstrip() + "\n" for ln in (ROOT / "config" / "license-header.txt").read_text(encoding="utf-8").strip().splitlines())
     expect = {"position": "noErrors: true\nnonEmpty: [trades, where]\n", "portfolio": "noErrors: true\nnonEmpty: [definition]\n"}
     for kind, key in (("position", "POSITION_ID"), ("portfolio", "PORTFOLIO_ID")):
-        for d in picks[kind]:
-            out[TESTS / kind / f"{d[key]}.json"] = json.dumps(d, ensure_ascii=False, indent=1) + "\n"
+        out[TESTS / kind / SC.FILE] = SC.text(sorted((str(d[key]), d) for d in picks[kind]))
         out[TESTS / kind / "expect.yaml"] = head + "\n" + expect[kind]
     return out
 

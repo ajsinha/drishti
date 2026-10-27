@@ -259,7 +259,7 @@ class StatementRowsTest {
         for (String format : List.of("docx", "png", "csv", "DOCX")) {                    // QA2-11: docx once got "pdf, png, xlsx or csv"
             MvcResult r = call("/api/v1/bi/reports/statement/file", Map.of("report", "file:report:rows-statement", "date", DAY, "format", format));
             assertThat(r.getResponse().getStatus()).as(format).isGreaterThanOrEqualTo(400);
-            assertThat(r.getResponse().getContentAsString()).as(format).contains("DRS-9038").contains("a statement is made as pdf or xlsx");
+            assertThat(r.getResponse().getContentAsString()).as(format).contains("DRS-9038").contains("a statement is made as pdf, xlsx or jsonl");
         }
     }
 

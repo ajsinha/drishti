@@ -21,7 +21,7 @@
 {% block content %}
 <div class="adm">
   <h1>Reports and subscriptions</h1>
-  <p class="text-muted-d">Everything that runs for you on a schedule, in one list. A <b>scheduled report</b> is a search, run as you and delivered as a CSV file: to the
+  <p class="text-muted-d">Everything that runs for you on a schedule, in one list. A <b>scheduled report</b> is a search, run as you and delivered as a CSV or JSON Lines file: to the
     server's reports folder, or posted to a webhook your administrator allows. A <b>subscription</b> is a BI report, page or visual, or a view, sent by email on a schedule
     (or after the day's data lands), <b>rendered for each recipient</b> with their own masks and row rules. Press <b>Subscribe</b> on a report or a view to make one.</p>
   <nav class="rep-links" aria-label="Reports">
@@ -76,6 +76,8 @@
         <option value="previous"{% if form.date == 'previous' %} selected{% endif %}>the business day before</option></select></label>
       <label>Deliver to<select name="deliver" class="studio-select"><option value="folder">the reports folder</option>
         <option value="webhook"{% if form.deliver == 'webhook' %} selected{% endif %}>a webhook</option></select></label>
+      <label>Format<select name="format" class="studio-select"><option value="csv">CSV</option>
+        <option value="jsonl"{% if form.format == 'jsonl' %} selected{% endif %}>JSON Lines (one entity a line)</option></select></label>
       <label class="wide">Webhook URL (if a webhook)<input name="webhook" class="studio-in mono" value="{{ form.webhook or '' }}" placeholder="https://hooks.example.com/drishti"></label>
       <label><input type="checkbox" name="enabled" {% if form.enabled is not defined or form.enabled %}checked{% endif %}> Active</label>
       <button type="submit" class="btn-pill btn-accent">Save report</button>

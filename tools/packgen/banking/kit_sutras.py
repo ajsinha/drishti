@@ -195,9 +195,12 @@ def controls_of(lines: list[str]) -> list[tuple[str, str]]:
 
 @lru_cache(maxsize=None)
 def first_ids(catalog: Path) -> dict[str, str]:
-    """The first committed sample id of each kind, from a pack's samples/catalog.json."""
+    """The first committed sample id of each kind, from a pack's samples catalogue (catalog.jsonl, one entry a line; or catalog.json)."""
     out: dict[str, str] = {}
-    if catalog.exists():
-        for e in json.loads(catalog.read_text(encoding="utf-8")):
-            out.setdefault(e["kind"], e["id"])
+    lines = catalog.with_name("catalog.jsonl")
+    old = catalog.with_name("catalog.json")
+    entries = [json.loads(t) for t in lines.read_text(encoding="utf-8").splitlines() if t.strip()] if lines.exists() else \
+        json.loads(old.read_text(encoding="utf-8")) if old.exists() else []
+    for e in entries:
+        out.setdefault(e["kind"], e["id"])
     return out

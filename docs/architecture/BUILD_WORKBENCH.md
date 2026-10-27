@@ -225,7 +225,7 @@ keeps the Design's status in step: `proposed(P-n)` when proposed, `live(vN)` on 
 if the Design is still at the proposed revision (any later edit already made it `draft`). With governance off the Sutra is saved and the
 Design is `live(vN)` at once. *Pack fragments:* `PackFragment` builds and reads the zip (`GET /{id}/export`, `POST /import` with a zip or
 the console's folder as JSON; zip entries are read in memory with count and size limits, nothing touches the disk); the layout is
-`pack.yaml` stub, `sutras/<domain>/`, `tests/<sutra>/*.json` + `expect.yaml` (`noErrors`, `nonEmpty` from the matrix), `samples/<kind>/`,
+`pack.yaml` stub, `sutras/<domain>/`, `tests/<sutra>/cases.jsonl` (since 2.9.4; `*.json` before) + `expect.yaml` (`noErrors`, `nonEmpty` from the matrix), `samples/<kind>/`,
 README. *CLI:* `com.ash.drishti.server.cli` (`DrishtiApplication.main` hands `sutra ...` to `CliLauncher`, a non-web Spring context with
 temporary identity, governance and design folders); `SutraCliTest` runs `sutra test` over every shipped pack's `tests/` folder and the ten
 examples; the format is in `docs/guides/SUTRA_DEVELOPER_GUIDE.md#15-testing-expectyaml-sutra-linttestpreview-ci`. *File binding:* `drishti.builder.file-binding` (default false) in `drishti.builder.dev-dir/<user>/` (never a directory the registry loads,

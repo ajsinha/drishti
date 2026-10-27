@@ -116,7 +116,7 @@ class SutraCliHelpTest {
         Files.createDirectories(dir.resolve("sutras"));
         Files.writeString(dir.resolve("sutras/widget.v1.sutra.yaml"), sutra);
         Path tests = Files.createDirectories(dir.resolve("tests/widget"));
-        Files.writeString(tests.resolve("a.json"), "{\"id\":\"A\",\"size\":3,\"colour\":\"red\"}");
+        Files.writeString(tests.resolve("cases.jsonl"), "{\"case\":\"A\",\"document\":{\"id\":\"A\",\"size\":3,\"colour\":\"red\"}}\n");   // a case a line
         if (expect != null) {
             Files.writeString(tests.resolve("expect.yaml"), expect);
         }
@@ -143,7 +143,7 @@ class SutraCliHelpTest {
                 List.of("widget"), List.of("p"))), null, null), el);
         com.ash.drishti.rachana.about.GlossaryResolver resolver = new com.ash.drishti.rachana.about.GlossaryResolver(c);
         Path dir = pack(sutra, null);
-        Files.writeString(dir.resolve("tests/widget/a.json"), "{\"id\":\"A\",\"size\":3,\"colour\":\"red\",\"items\":[{\"qty\":2}]}");
+        Files.writeString(dir.resolve("tests/widget/cases.jsonl"), "{\"case\":\"A\",\"document\":{\"id\":\"A\",\"size\":3,\"colour\":\"red\",\"items\":[{\"qty\":2}]}}\n");
         Run r = run(c, (kind, field) -> resolver.resolve(kind, field, null).isPresent(), "lint", dir.toString());
         assertThat(r.err()).doesNotContain("DRS-2047");
     }

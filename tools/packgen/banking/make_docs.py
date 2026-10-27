@@ -178,7 +178,9 @@ def overview(name: str, docs: dict) -> str:
                                                                  for f, (sw, ks, _, what) in make_packs.FEEDS.items()])
     lines += ["Load real data into each domain's folder, or point a domain at a database instead by overriding its connector in the "
               "site configuration. For a demonstration lake built from the generated samples, run "
-              "`uv run --with deltalake --with pyarrow python tools/packgen/banking/make_data.py --lake data/delta`.", ""]
+              "`uv run --with deltalake --with pyarrow --with pyyaml python tools/packgen/banking/make_data.py --lake data/delta`: it writes "
+              "the history as JSON Lines rows (`data/build/lake-rows`), then loads them (generating and loading are separate steps, "
+              "[Data formats](../../../../docs/guides/DATA_FORMATS.md)).", ""]
     lines += ["## Kinds", ""]
     rows = []
     for k in kinds:

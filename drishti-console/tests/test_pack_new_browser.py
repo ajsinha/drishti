@@ -180,8 +180,8 @@ def test_the_whole_flow_three_schemas_and_a_folder_to_a_downloaded_bundle(browse
     assert hashlib.sha256(archive.read_bytes()).hexdigest() == sha
     with tarfile.open(archive) as t:
         names = t.getnames()
-    assert "sg-browser/pack.yaml" in names and "sg-browser/tests/trade-irs/sample-1.json" in names
-    assert "sg-browser/tests/book-default/sample-synthetic-1.json" in names
+    assert "sg-browser/pack.yaml" in names and "sg-browser/tests/trade-irs/cases.jsonl" in names              # a case a line (2.9.4)
+    assert "sg-browser/tests/book-default/cases.jsonl" in names
     assert not problems, problems
     page.close()
 

@@ -110,7 +110,7 @@ public final class MaskCoverage {
 
     private static void read(Path f, Set<String> paths) {
         String name = f.getFileName().toString();
-        if (name.equals("catalog.json") || !(name.endsWith(".json") || name.endsWith(".jsonl"))) {
+        if (com.ash.drishti.common.PackSamples.isCatalog(name) || !(name.endsWith(".json") || name.endsWith(".jsonl"))) {
             return;
         }
         try (BufferedReader r = Files.newBufferedReader(f, StandardCharsets.UTF_8)) {

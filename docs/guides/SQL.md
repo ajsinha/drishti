@@ -265,7 +265,7 @@ DESK-STRUCT  382,608,464.96
 10 row(s)  shape mq  plan p_f6760cccf51a3ad5
 ```
 
-`POST /api/v1/bi/sql {model, sql, format: json|csv|arrow}` and `POST /api/v1/bi/sql/validate {model, sql}`
+`POST /api/v1/bi/sql {model, sql, format: json|csv|jsonl|arrow}` and `POST /api/v1/bi/sql/validate {model, sql}`
 ([API_GUIDE.md](API_GUIDE.md#drishti-sql-apiv1bisql)); validate types each output column without reading data (`COUNT(*)`, a model measure that is a `count()` or
 `distinct()`: `integer`; another measure: `decimal`; a field: its column's type), which a SQL view dataset's wizard proposes as the column types. Every statement is audited (`bi-sql`, with its text). Settings: `drishti.bi.sql.*`
 ([CONFIGURATION.md](../admin/CONFIGURATION.md#drishtibisql--drishti-sql)).

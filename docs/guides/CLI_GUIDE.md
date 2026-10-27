@@ -470,7 +470,7 @@ options:
                         java)
   -r, --recursive       read *.jsonl in subfolders too
   --out OUT             writes <out>/<kind>/<kind>-<slug>.v1.sutra.yaml and
-                        <out>/tests/<sutra>/sample-*.json
+                        <out>/tests/<sutra>/cases.jsonl (one case a line)
   --tests-dir TESTS_DIR
                         put the samples here instead of <out>/tests
   --no-lint             do not run `sutra lint` on the result
@@ -504,7 +504,7 @@ ok      data/build/sutras/trade/trade-zero-bond.v1.sutra.yaml
 ```
 
 19,523 documents are the 15,000 trades and their amended versions of the later days (a trade counts once per file it is in). Each
-Sutra is `data/build/sutras/<kind>/<kind>-<group>.v1.sutra.yaml` with its `where` clause, and `data/build/sutras/tests/<sutra>/sample-*.json`
+Sutra is `data/build/sutras/<kind>/<kind>-<group>.v1.sutra.yaml` with its `where` clause, and `data/build/sutras/tests/<sutra>/cases.jsonl`
 holds samples drawn across the dates (with `--date FIELD`; the test data's trades carry no business-date field, their business date is the
 file's day). The `--out` folder is created when missing; it must not hold files of yours. A per-kind form names the field for each kind when
 one run reads several kinds: `--key trade=TRADE_ID,counterparty=COUNTERPARTY_ID`. The generator is described in
@@ -538,7 +538,7 @@ What comes out, for the 130 product types of the three sources:
 | Output | Where |
 |---|---|
 | 130 Sutras, each with `match: { kind: trade, where: "$.PRODUCT_TYPE == 'IRS_FIXFLOAT'", priority: 10 }` and the title id `$.TRADE_ID` | `data/build/sutras/trade/trade-<product>.v1.sutra.yaml` |
-| up to 5 sample trades per Sutra (`--samples N`; chosen deterministically, across dates with `--date`) | `data/build/sutras/tests/<sutra>/sample-*.json` |
+| up to 5 sample trades per Sutra (`--samples N`; chosen deterministically, across dates with `--date`) | `data/build/sutras/tests/<sutra>/cases.jsonl` (cases `sample-1` ...) |
 | a lint of everything written | exit code 1 if any Sutra has a problem |
 
 Options that help here: `--fallback` adds a low-priority `trade-default` Sutra so a product type that appears later still
@@ -970,7 +970,7 @@ pack regenerate --dry-run: data/build/mb
   add         ... and 267 more
   refresh     README.md
   refresh     pack.yaml
-  refresh     samples/catalog.json
+  refresh     samples/catalog.jsonl
   refresh     samples/trade.jsonl
   merge       config/about.yaml   (your edit and the new text merged cleanly)
   keep        sutras/trade/trade-comswap.v1.sutra.yaml   (your edit kept; the generated text did not change)
@@ -1531,7 +1531,7 @@ data folder (`DRISHTI_DATA_DIR`, else the repository's `data/`, which is not tra
 
 ```text
 wrote 1791 documents into 5 packs' samples
-feeds: data/feeds/fixing/SOFR-HISTORY.csv
+feeds: data/feeds/fixing.jsonl
 jsonl: 17910 rows in data/banking.jsonl (tools/load-postgres.sh and tools/load-aerospike.sh load them)
 files: wrote 17,910 rows into 460 files under data/demo-files in 0 s
 
@@ -1826,6 +1826,33 @@ Why this layout: Sutra counterparty v1 + inference (a Sutra plus inference for w
 Next: F2 Netting sets; F3 Group hierarchy; F7 Counterparty group; F8 Impact; F9 Raw JSON
 ```
 
+### `convert`: CSV, a JSON array or a folder of `.json` files into JSON Lines
+
+JSON Lines is Drishti's data format ([DATA_FORMATS.md](DATA_FORMATS.md)), and **CSV input is deprecated**, to be removed in a later
+release. `drishti.py convert FILE` (`tools/convertcmd.py`) turns what you have into JSON Lines, one object a line, streaming (a large
+JSON array is never read whole):
+
+```text
+drishti.py convert trades.csv                          trades.jsonl: one line per CSV row, cells typed (numbers, true/false; empty: null)
+drishti.py convert book.json --out book.jsonl.gz       a JSON array: one line per element (one object: one line); .gz gzips
+drishti.py convert data/feeds/settlement               settlement.jsonl beside the folder: one line per <id>.json, the file name as "id"
+drishti.py convert data/feeds/fixing/SOFR-HISTORY.csv --rows-document --out data/feeds/fixing.jsonl
+                                                       one line {"id": "SOFR-HISTORY", "rows": [...]}: the file connector's reading of a
+                                                       CSV feed file, so FIX SOFR-HISTORY opens the same document
+drishti.py convert big.json --out -                    to standard output
+```
+
+| Option | Does |
+|---|---|
+| `--out FILE` | where to write (default: the input's name with `.jsonl`; a folder: `<folder>.jsonl` beside it; `-`: standard output) |
+| `--rows-document` | a CSV file becomes one line, `{"id": <file name>, "rows": [...]}`, as the file connector serves a CSV feed file |
+| `--force` | replace an existing output file |
+
+`drishti.py convert data/feeds/fixing/SOFR-HISTORY.csv --rows-document --out data/feeds/fixing.jsonl` prints
+`data/feeds/fixing.jsonl: 1 lines from data/feeds/fixing/SOFR-HISTORY.csv`. A line that cannot be read stops the run and names it
+(`bad.ndjson:2: ...`); nothing is written then. Exit codes: 0 converted; 1 a file could not be read or the output exists (without
+`--force`); 2 usage or no such file.
+
 ### `history`: an entity over time
 
 `drishti.py history KIND ID` prints one row per business day the entity has data, newest first, a changed cell marked `*`: the same
@@ -1838,6 +1865,7 @@ drishti.py history equity EQ-CSCA --range 3M --fields PRICE,CHANGE_1D
 drishti.py history trade 1000015 --from 2026-09-01 --to 2026-09-30 --diff
 drishti.py history trade 1000015 --days 30 --changes-only --json
 drishti.py history trade 1000015 --days 30 --csv > trade-1000015.csv
+drishti.py history trade 1000015 --days 30 --jsonl > trade-1000015.jsonl  # a day a line, keyed as the CSV's header
 ```
 
 | Option | Does |
@@ -1849,7 +1877,7 @@ drishti.py history trade 1000015 --days 30 --csv > trade-1000015.csv
 | `--known-at T` | the history as it was known at an instant (stores with time travel: Delta, Iceberg) |
 | `--diff` | each day's changes against the day before, listed after the table |
 | `--changes-only` | only the days on which something changed |
-| `--json`, `--csv` | the server's answer as JSON; the table as CSV (UTF-8 with a BOM, CRLF, formulas kept as text) |
+| `--json`, `--csv`, `--jsonl` | the server's answer as JSON; the table as CSV (UTF-8 with a BOM, CRLF, formulas kept as text); the table as JSON Lines (a day a line, the CSV's column names, numbers as numbers) |
 
 `drishti.py history trade 1000015 --days 30 --changes-only` (the contract's fixture trade):
 
@@ -1929,6 +1957,7 @@ drishti.py exposure parts CPTY:CP-ALDERSHOT                          contributio
 drishti.py exposure parts NSET:NS-ALDERSHOT-NY --by trade --figure EE --top 10
 drishti.py exposure tree                                             bank, legal entities, counterparties, netting sets
 drishti.py exposure profile NSET:NS-ALDERSHOT-NY --csv > ns-ny.csv   the profile as CSV
+drishti.py exposure profile NSET:NS-ALDERSHOT-NY --jsonl > ns-ny.jsonl   the profile as JSON Lines (a grid date a line)
 drishti.py exposure distribution NSET:NS-ALDERSHOT-NY --at 1Y        the distribution at a date and the path fan
 drishti.py exposure status                                           settings, hot files and loaded dates
 drishti.py exposure capture CPTY:CP-ALDERSHOT --note 'before the unwind'
@@ -2331,7 +2360,7 @@ drishti.py bi migrate --models DIR [--dry-run] [--out D] [--keep-old] [--report 
 drishti.py bi migrate --models [--dry-run] [--report F]                  the same for the server's stored items (bi-admin)
 drishti.py bi migrate --boards FILE|DIR... [--write] [--keep-old]          2.3 boards to reports with board pages (2.4.0): writes reports/<name>.report.yaml, removes the board file
 drishti.py bi migrate --boards [--dry-run]                              the same for the server's stored boards (bi-admin; the server does it at start too)
-drishti.py bi sql "SELECT ..." --model M [--explain] [--format table|json|csv] [--file F]   Drishti SQL over a model
+drishti.py bi sql "SELECT ..." --model M [--explain] [--format table|json|csv|jsonl] [--file F]   Drishti SQL over a model
 ```
 
 `bi migrate` reads `*.dataset|model|report|board|notebook.yaml` under a folder; without `--write` it prints what would change; `--check` changes nothing and
@@ -2458,7 +2487,7 @@ tab previews and a subscription mails.
 
 ```
 drishti.py bi statement preview REPORT|--file F [--page P] [--date D] [--param NAME=VALUE ...]   the pages: count, paper, period, each page's header and footer
-drishti.py bi statement file REPORT|--file F [--format pdf|xlsx] [-o OUT] [--page P] [--date D] [--param NAME=VALUE ...]   the PDF (page-exact) or the Excel workbook
+drishti.py bi statement file REPORT|--file F [--format pdf|xlsx|jsonl] [-o OUT] [--page P] [--date D] [--param NAME=VALUE ...]   the PDF (page-exact), the Excel workbook or the rows as JSON Lines
 ```
 
 `REPORT` is the report's id (`file:report:<name>` for a shipped file); `--file` sends a draft's YAML (a BI author). `--date` is the statement's date: its

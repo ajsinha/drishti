@@ -64,13 +64,13 @@ public class DistController {
 
     /**
      * Body {@code {type: report|view, id, page?, visual?, state?, date?, view?}}: the file, made for the caller (their masks and row rules).
-     * {@code format} is {@code pdf}, {@code png}, {@code xlsx} or {@code csv}.
+     * {@code format} is {@code pdf}, {@code png}, {@code xlsx}, {@code csv} or {@code jsonl} (one row a line, docs/guides/DATA_FORMATS.md).
      */
     @PostMapping("/api/v1/export/{format}")
     public ResponseEntity<byte[]> export(@PathVariable String format, @RequestBody JsonNode body, @RequestAttribute(Principal.ATTRIBUTE) Principal p) {
         ContentExporter.Format f = ContentExporter.Format.of(format);
         if (f == ContentExporter.Format.HTML) {
-            throw new DrishtiException(ErrorCode.EXPORT_FAILED, "format is pdf, png, xlsx or csv");
+            throw new DrishtiException(ErrorCode.EXPORT_FAILED, "format is pdf, png, xlsx, csv or jsonl");
         }
         ContentExporter.Target t = new ContentExporter.Target(body.path("type").asText("report"), body.path("id").asText(""), body.path("page").asText(""),
                 body.path("visual").asText(""), body.path("state").isObject() ? body.get("state") : null, body.path("date").asText(""), body.path("view").asText(""));

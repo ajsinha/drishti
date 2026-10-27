@@ -12,16 +12,19 @@
 #
 # See the LICENSE file in the root of this repository for the full terms.
 
-"""Turns the raw downloads into one small, deterministic dataset (tools/realdata/dataset/*.json): the pure parsing
-functions here take raw text or parsed JSON and return plain dicts, so they are tested offline against recorded fixtures.
+"""Turns the raw downloads into one small, deterministic dataset (tools/realdata/dataset/*.jsonl, one record a line, and its
+meta.json manifest): the pure parsing functions here take raw text or parsed JSON and return plain dicts, so they are tested offline
+against recorded fixtures.
 
 Dataset files:
-  meta.json       sources (name, url, licence, attribution), retrieval dates, vintages
-  countries.json  ISO3 -> {name, iso2, region, income, capital, lon, lat, factbook ... joined key facts}
-  groups.json     region and income-group aggregates (World Bank aggregate codes) and the world
-  series.json     indicator key -> code -> {year: value} (scaled; countries and groups)
-  forecast.json   IMF WEO key -> code -> {year: value} (actuals and projections)
-  factbook.json   ISO3 -> parsed Factbook facts (government, executive, legislature, parties, area, languages ...)
+  meta.json        sources (name, url, licence, attribution), retrieval dates, vintages (the manifest: one document)
+  countries.jsonl  a country a line: {iso3, name, iso2, region, income, capital, lon, lat ...}
+  groups.jsonl     a group a line: region and income-group aggregates (World Bank aggregate codes) and the world, {id, name, type}
+  series.jsonl     a series a line: {key (the indicator), code (country or group), values: {year: value}} (scaled)
+  forecast.jsonl   IMF WEO, the same form as series (actuals and projections)
+  factbook.jsonl   a profile a line: {iso3, parsed Factbook facts (government, executive, legislature, parties, area, languages ...)}
+load() returns them keyed as before (ISO3 -> record, key -> code -> {year: value}); a dataset folder of the older keyed .json files
+is still read.
 """
 from __future__ import annotations
 
@@ -292,9 +295,53 @@ def run(cache: Path, cfg: dict, dataset: Path | None = None, no_imf: bool = Fals
                         "undp": "2025 report", "factbook": "mirror commit " + ref.get("commit", "")[:10]},
             "retrieved": _retrieved(fetched), "factbookUnmatched": sorted(unmatched)}
     series = {k: {c: v for c, v in s.items()} for k, s in series.items()}
-    for name, obj in (("meta", meta), ("countries", countries), ("groups", groups), ("series", series), ("forecast", forecast), ("factbook", factbook)):
-        (out / f"{name}.json").write_text(json.dumps(obj, ensure_ascii=False, sort_keys=True, separators=(",", ":")) + "\n", encoding="utf-8")
+    (out / "meta.json").write_text(_text(meta) + "\n", encoding="utf-8")       # the dataset's manifest (sources, vintages): one document
+    for name, obj in (("countries", countries), ("groups", groups), ("series", series), ("forecast", forecast), ("factbook", factbook)):
+        (out / f"{name}.jsonl").write_text("".join(_text(r) + "\n" for r in to_lines(name, obj)), encoding="utf-8")
+        old = out / f"{name}.json"                                              # the keyed JSON of earlier releases
+        if old.exists():
+            old.unlink()
     return {"countries": len(countries), "series": sum(len(s) for s in series.values()), "factbook": len(factbook)}
+
+
+def _text(obj) -> str:
+    return json.dumps(obj, ensure_ascii=False, sort_keys=True, separators=(",", ":"))
+
+
+#: the dataset files written as JSON Lines, one record a line (docs/guides/DATA_FORMATS.md), and the field each line's key goes in
+LINES = {"countries": "iso3", "groups": "id", "factbook": "iso3", "series": None, "forecast": None}
+
+
+def to_lines(name: str, obj: dict) -> list[dict]:
+    """A dataset file's records, one per line, in key order: a country or group as it is (its key is its iso3 or id), a Factbook
+    profile with its iso3, a series as {"key", "code", "values": {year: value}}."""
+    key = LINES[name]
+    if key is None:
+        return [{"key": k, "code": c, "values": obj[k][c]} for k in sorted(obj) for c in sorted(obj[k])]
+    return [{key: k, **obj[k]} for k in sorted(obj)]
+
+
+def from_lines(name: str, rows) -> dict:
+    """The keyed object to_lines() came from."""
+    key, out = LINES[name], {}
+    for r in rows:
+        if key is None:
+            out.setdefault(r["key"], {})[r["code"]] = r["values"]
+        elif name == "factbook":
+            r = dict(r)
+            out[r.pop(key)] = r
+        else:
+            out[r[key]] = r
+    return out
+
+
+def read(name: str, folder: Path | None = None) -> dict:
+    """One dataset file: <name>.jsonl, else the <name>.json of a dataset written before 2.9.4."""
+    folder = folder or dataset_dir()
+    lines = folder / f"{name}.jsonl"
+    if name in LINES and lines.exists():
+        return from_lines(name, (json.loads(t) for t in lines.read_text(encoding="utf-8").splitlines() if t.strip()))
+    return json.loads((folder / f"{name}.json").read_text(encoding="utf-8"))
 
 
 def _retrieved(fetched: dict) -> dict:
@@ -309,4 +356,4 @@ def _retrieved(fetched: dict) -> dict:
 
 def load() -> dict:
     """The committed dataset, for the pack generators."""
-    return {n: json.loads((dataset_dir() / f"{n}.json").read_text(encoding="utf-8")) for n in ("meta", "countries", "groups", "series", "forecast", "factbook")}
+    return {n: read(n) for n in ("meta", "countries", "groups", "series", "forecast", "factbook")}

@@ -153,24 +153,24 @@ class Lake(unittest.TestCase):
 
 
 class BulkTrades(unittest.TestCase):
-    def test_a_small_book_in_sorted_disjoint_files(self):
-        import pyarrow.parquet as pq
-        with tempfile.TemporaryDirectory() as tmp, contextlib.redirect_stdout(io.StringIO()):
+    def test_a_small_book_as_jsonl_then_loaded_by_lake_build(self):
+        import gzip
+        with tempfile.TemporaryDirectory() as tmp, contextlib.redirect_stdout(io.StringIO()), contextlib.redirect_stderr(io.StringIO()):
             (pathlib.Path(tmp) / "reference").mkdir()
-            self.assertEqual(bulk_trades.main(["--trades", "3000", "--days", "2", "--root", tmp, "--file-rows", "1000", "--workers", "2"]), 0)
+            out = pathlib.Path(tmp) / "build"
+            self.assertEqual(bulk_trades.main(["--trades", "3000", "--days", "2", "--root", tmp, "--out", str(out), "--workers", "2",
+                                               "--engine", "deltalake"]), 0)
+            files = sorted((out / "murex").glob("trades-*.jsonl.gz"))         # the generator's output: one JSONL file a day
+            self.assertEqual([f.name for f in files], ["trades-2026-09-29.jsonl.gz", "trades-2026-09-30.jsonl.gz"])
+            with gzip.open(files[-1], "rt", encoding="utf-8") as f:
+                docs = [json.loads(line) for line in f]
+            self.assertEqual(len(docs), 3000)
+            ids = [d["TRADE_ID"] for d in docs]
+            self.assertEqual(ids, sorted(ids))                                 # in id order
             uri = str(pathlib.Path(tmp) / "trading" / "trade_murex")          # one source system's table; the others are left alone
-            acts = actions(uri)
-            self.assertEqual(len(acts), 6)
-            for day in {a["partition.business_date"] for a in acts}:
-                files = sorted((a for a in acts if a["partition.business_date"] == day), key=lambda a: a["min.id"])
-                self.assertEqual([a["num_records"] for a in files], [1000, 1000, 1000])
-                self.assertTrue(all(files[k]["max.id"] < files[k + 1]["min.id"] for k in range(2)))
-                for a in files:
-                    ids = pq.read_table(str(pathlib.Path(uri) / a["path"]), columns=["id"]).column("id").to_pylist()
-                    self.assertEqual(ids, sorted(ids))
-                    self.assertTrue(all(n <= 10_000 for n in row_groups(uri, a)))
             got = {r["id"]: r for r in rows_of(uri) if r["business_date"] == date(2026, 9, 30)}
             self.assertEqual(len(got), 3000)
+            self.assertEqual(len([r for r in rows_of(uri) if r["business_date"] == date(2026, 9, 29)]), 3000)
             self.assertIn("MX-20000001", got)
             self.assertEqual(got["MX-20000001"]["SOURCE_SYSTEM"], "MUREX")                        # samples carry their system too
             self.assertEqual({r["SOURCE_SYSTEM"] for r in got.values()}, {"MUREX"})                    # a clone stays in its template's system
@@ -178,6 +178,16 @@ class BulkTrades(unittest.TestCase):
             self.assertEqual(clone["TRADE_ID"], "MX-30000000")
             self.assertEqual(got["MX-30000000"]["QUANTITY"], float(clone["QUANTITY"]))
             self.assertEqual(got["MX-30000000"]["PRODUCT_TYPE"], clone["PRODUCT_TYPE"])
+            loaded = json.loads(got["MX-30000000"]["doc"])                      # the trading pack's ingest flatten adds fields
+            self.assertEqual({k: loaded[k] for k in docs[ids.index("MX-30000000")]}, docs[ids.index("MX-30000000")])
+
+    def test_no_lake_writes_the_jsonl_only(self):
+        with tempfile.TemporaryDirectory() as tmp, contextlib.redirect_stdout(io.StringIO()), contextlib.redirect_stderr(io.StringIO()):
+            out = pathlib.Path(tmp) / "build"
+            self.assertEqual(bulk_trades.main(["--trades", "100", "--days", "1", "--root", str(pathlib.Path(tmp) / "lake"), "--out", str(out),
+                                               "--workers", "1", "--no-lake"]), 0)
+            self.assertEqual([f.name for f in (out / "murex").iterdir()], ["trades-2026-09-30.jsonl.gz"])
+            self.assertFalse((pathlib.Path(tmp) / "lake").exists())
 
     def test_workers_are_spawned_not_forked_from_a_threaded_process(self):
         # deltalake and pyarrow start thread pools; os.fork() then copies their locks held by threads that do not exist in
@@ -193,7 +203,8 @@ class BulkTrades(unittest.TestCase):
                     contextlib.redirect_stderr(io.StringIO()), warnings.catch_warnings(record=True) as seen:
                 warnings.simplefilter("always")
                 (pathlib.Path(tmp) / "reference").mkdir()
-                self.assertEqual(bulk_trades.main(["--trades", "200", "--days", "1", "--root", tmp, "--file-rows", "100", "--workers", "2"]), 0)
+                self.assertEqual(bulk_trades.main(["--trades", "200", "--days", "1", "--root", tmp, "--out", str(pathlib.Path(tmp) / "build"),
+                                                   "--workers", "2", "--engine", "deltalake"]), 0)
                 self.assertEqual(bulk_trades.main(["--trades", "50", "--days", "1", "--jsonl", str(pathlib.Path(tmp) / "t.jsonl"), "--workers", "2"]), 0)
         finally:
             stop.set()
