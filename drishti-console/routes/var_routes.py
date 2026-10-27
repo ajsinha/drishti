@@ -133,7 +133,10 @@ async def page(request: Request, scope: str = "", capture: str = "", hierarchy: 
 #: GET endpoints of the engine the page may ask for, and the parameters each passes on
 _GETS = {"scope": ("scope",), "hints": ("q", "limit"), "scope/path": ("scope", "page", "size"), "scope/history": ("scope",),
          "scope/contributions": ("scope", "by", "scenario"), "tree": ("hierarchy",), "baskets": (), "captures": ("scope",),
-         "compare": ("a", "b"), "status": (), "official": (), "scope/currencies": ("scope",), "currencies": ()}
+         "compare": ("a", "b"), "status": (), "official": (), "scope/currencies": ("scope",), "currencies": (),
+         "intraday/streams": ()}
+#: an administrator's "apply now" of a PV topic's waiting window (the var-pv-stream connector, VAR_GUIDE.md section 8.4)
+APPLY_NOW = re.compile(r"^intraday/streams/[A-Za-z0-9_.-]{1,80}/apply$")
 
 
 @router.get("/api/var/{path:path}")
@@ -159,6 +162,11 @@ async def api_get(request: Request, path: str):
 
 @router.post("/api/var/{path:path}")
 async def api_post(request: Request, path: str):
+    if APPLY_NOW.match(path):
+        try:
+            return await request.app.state.backend.var("POST", "/" + path, ident(request))
+        except BackendError as e:
+            return _problem(e)
     if path not in ("baskets", "captures", "what-if"):
         return JSONResponse({"code": "DRS-1001", "detail": f"no VaR endpoint {path}"}, status_code=404)
     try:

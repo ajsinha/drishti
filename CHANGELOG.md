@@ -43,6 +43,22 @@
   badge, the check; picture 13), TOOLS, QA_ON_WINDOWS_WITH_CUSTOM_DATA (2.9.4, PowerShell with the venv's python.exe; Kafka optional),
   the contracts and pack guide pages.
 
+- **Intraday updates from Kafka, micro-batched (2026-10-27; local branch, for the product owner's review: not pushed).** The
+  market-risk pack's connector **`pv-updates`** (plugin `var-pv-stream`, off by default: `DRISHTI_VAR_PV_STREAM`, `DRISHTI_VAR_PV_TOPIC`,
+  `DRISHTI_VAR_PV_WINDOW` default `5m`, `DRISHTI_VAR_PV_MAX_TRADES` default 500) reads a pricing system's PV topic (compacted, keyed by
+  `TRADE_ID`, the value one JSONL row of `scenario-pv` or `pnl-vector`, a tombstone a cancel) like the Kafka connector (`KafkaClients`,
+  now public, gives it the same consumer settings and security), keeps the latest message per trade over a window (`COMPUTED_AT`, the
+  offset breaking a tie), flushes early at `max-trades` or on an administrator's **Apply now** (`POST
+  /api/v1/var/intraday/streams/{connector}/apply`, a button on the connector's Admin page; `GET /api/v1/var/intraday/streams`), and
+  writes the window to the lake as **one** intraday batch (`K-<date>-<time>-<n>`, Drishti's lake writer, the pack's layout), then raises
+  the data-load signal once: the intraday layer applies it as a file. Guards: another business date, before the morning run, or not later
+  than what the date holds (a redelivery, a replay after a restart) ignored and counted; another scenario set (`DRS-5203`), a failed
+  scenario (`DRS-5206`) or a malformed row (`DRS-5201`) rejected, never filled with zero, listed in the stream's status and the
+  provenance's `intradayRejections`. **Tests:** `VarPvStreamTest` (in-process Kafka, no Docker: a window of several trades, latest
+  wins, a file batch between windows, an early flush with a tombstone, the guards, files and windows mixed equal to one run to the cent
+  in USD, EUR and CAD, a replay writing nothing), `test_var_routes.py`. **Docs:** VAR_GUIDE section 8.4 (Kafka: flow, rules, settings,
+  sizing 4–8 KB a message), KAFKA_CONNECTOR section 17, CONFIGURATION, API_GUIDE, USER_GUIDE.
+
 - **The top of the VaR tree named by a setting (2026-10-27; local branch, for the product owner's review: not pushed).**
   **`drishti.var.root-name`** (env `DRISHTI_VAR_ROOT_NAME`, blank by default: the hierarchy data's `NAME`, *Drishti Bank* in the demo)
   names the root node of every hierarchy when a date loads; **`drishti.var.root-names`** (`{MGMT: "…", LEGAL: "…"}`) names one

@@ -58,6 +58,7 @@ depends-on:
   - market-data
   - trading
   connectors:
+  - pv-updates
   - risk-store
   - var-engine
   - var-positions
@@ -67,10 +68,14 @@ depends-on:
   - delta
   - reactive
   - var-positions
+  - var-pv-stream
   settings:
   - DRISHTI_DELTA_ROOT
+  - DRISHTI_KAFKA_BOOTSTRAP
   - DRISHTI_LAKE_ENABLED
   - DRISHTI_VAR_ENABLED
+  - DRISHTI_VAR_PV_STREAM
+  - DRISHTI_VAR_PV_TOPIC
 sources:
 - name: Synthetic sample data (tools/packgen/banking)
   licence: Proprietary (part of Drishti); fictitious names and figures
@@ -596,10 +601,11 @@ The connectors it brings (written once to `config/connectors/<name>.yaml`, then 
 | `risk-store` | `delta` | `stress-scenario`, `stress-result`, `frtb-sensitivity`, `pnl-explain`, `trade-valuation`, `portfolio`, `pnl-vector`, `scenario-pv`, `fx-scenario`, `scenario-set`, `risk-hierarchy` | `${DRISHTI_LAKE_ENABLED:true}` |
 | `var-results` | `delta` | `var-official` | `${DRISHTI_VAR_ENABLED:true}` |
 | `var-positions` | `var-positions` | `position` | `${DRISHTI_VAR_ENABLED:true}` |
+| `pv-updates` | `var-pv-stream` | `pv-update` | `${DRISHTI_VAR_PV_STREAM:false}` |
 | `var-engine` | `reactive` | `var-result` | `${DRISHTI_VAR_ENABLED:true}` |
 | `var-whatif` | `reactive` | `var-whatif` | `${DRISHTI_VAR_ENABLED:true}` |
 
-Settings (environment variables) its connectors read: `DRISHTI_DELTA_ROOT`, `DRISHTI_LAKE_ENABLED`, `DRISHTI_VAR_ENABLED`.
+Settings (environment variables) its connectors read: `DRISHTI_DELTA_ROOT`, `DRISHTI_KAFKA_BOOTSTRAP`, `DRISHTI_LAKE_ENABLED`, `DRISHTI_VAR_ENABLED`, `DRISHTI_VAR_PV_STREAM`, `DRISHTI_VAR_PV_TOPIC`.
 
 ## Refreshing the data
 

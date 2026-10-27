@@ -57,13 +57,43 @@ import org.springframework.boot.context.properties.ConfigurationProperties;
  * @param rootName the name of every hierarchy's root node (the top of the VaR tree, "Drishti Bank" in the demo data); blank keeps the
  *     hierarchy data's own {@code NAME}
  * @param rootNames the name of one hierarchy's root (hierarchy id to name, e.g. MGMT, LEGAL); wins over {@code rootName} for it
+ * @param intraday the intraday updates' settings: the PV topic's window (VAR_GUIDE.md section 8.4, Kafka)
  */
 @ConfigurationProperties("drishti.var")
 public record VarProperties(Boolean enabled, Double confidence, Double esConfidence, String rankRule, Integer componentWindow,
         Boolean componentScaleToVar, Integer threads, Integer parallelRows, Long memoryBudgetMb, Integer rowsPerChunk, Integer hotDates,
         Integer historyDays, Integer histogramBins, Integer maxParts, Kinds kinds, Map<String, Map<String, String>> access, Integer pathPage,
         Positions positions, Official official, Tier tier, List<String> currencies, Integer currencyRetentionDates, String rootName,
-        Map<String, String> rootNames) {
+        Map<String, String> rootNames, Intraday intraday) {
+
+    /**
+     * The intraday updates (VAR_GUIDE.md section 8.4).
+     *
+     * @param kafka the PV topic's micro-batches (the {@code var-pv-stream} connector)
+     */
+    public record Intraday(Kafka kafka) {
+        public Intraday {
+            kafka = kafka == null ? new Kafka(null, null) : kafka;
+        }
+    }
+
+    /**
+     * The PV topic's micro-batches: everything received in a window is appended to the lake as one intraday batch and applied.
+     *
+     * @param window how long a window collects ({@code 5m}: every five minutes; {@code 30s}, {@code 1h})
+     * @param maxTrades a window is applied earlier once this many trades wait (500)
+     */
+    public record Kafka(String window, Integer maxTrades) {
+        public Kafka {
+            window = window == null || window.isBlank() ? "5m" : window.strip();
+            maxTrades = maxTrades == null || maxTrades < 1 ? 500 : maxTrades;
+        }
+
+        /** The window as a duration. */
+        public java.time.Duration windowDuration() {
+            return java.time.Duration.ofMillis((long) (VarPvStreamPlugin.seconds(window) * 1000));
+        }
+    }
 
     /**
      * The name a hierarchy's root node shows: {@code root-names} for the hierarchy, else {@code root-name}, else the data's (VAR_GUIDE.md
@@ -216,6 +246,7 @@ public record VarProperties(Boolean enabled, Double confidence, Double esConfide
         currencies = currencyList(currencies == null ? List.of("USD", "EUR", "CAD", "JPY", "GBP") : currencies);
         currencyRetentionDates = currencyRetentionDates == null || currencyRetentionDates < 1 ? 5 : currencyRetentionDates;
         rootName = rootName == null ? "" : rootName;
+        intraday = intraday == null ? new Intraday(null) : intraday;
         Map<String, String> rn = new java.util.LinkedHashMap<>();
         if (rootNames != null) {
             rootNames.forEach((h, n) -> {

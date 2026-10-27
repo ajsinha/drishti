@@ -279,7 +279,7 @@ final class VarLoader {
             state.offer(r);
         }
         if (state.isEmpty()) {
-            return state.batches().isEmpty() ? vd : vd.withBook(vd.book(), state);
+            return vd.withBook(vd.book(), state);                      // the morning run's COMPUTED_AT kept: the PV topic's guard
         }
         VarBook b = apply(vd.date(), vd.book(), state.rows(), days, vd.intake());
         return vd.withBook(b, state);

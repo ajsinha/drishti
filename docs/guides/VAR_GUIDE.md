@@ -996,6 +996,70 @@ the server logs *VaR: the connector does not promote RUN_KIND and COMPUTED_AT �
 signal: the engine tracks each kind of a batch apart (`<kind>|<BATCH_ID>`), so the second load applies too and is not taken for a full
 run.
 
+#### Intraday updates from Kafka, as built (2.9.4)
+
+A pricing system may publish the same updates to a **PV topic** instead of writing files; the two channels mix on one date, the latest
+`COMPUTED_AT` per trade winning across both. The market-risk pack's connector **`pv-updates`** (plugin `var-pv-stream`, **off by
+default**: `DRISHTI_VAR_PV_STREAM=true`) reads it like the Kafka connector (every partition from the beginning, no consumer group, its
+`bootstrap-servers`, security and `client.*` settings; [KAFKA_CONNECTOR.md section 17](../connectors/KAFKA_CONNECTOR.md#17-the-var-pv-topic-var-pv-stream-294)).
+
+```text
+pricing system ──► PV topic (each message's value JSONL text: one or more records; the key not read)
+                     │  var-pv-stream: a window of drishti.var.intraday.kafka.window (5m), the latest record per trade
+                     │  (COMPUTED_AT, then partition, offset and line)
+                     │  flushed early at `max-trades` (500) or by an administrator's "apply now"
+                     ▼
+               the guards (date, morning run, held update, scenario set, a finite vector of the set's length)
+                     ▼
+               ONE intraday batch in the lake (RUN_KIND INTRADAY, BATCH_ID K-<date>-<time>-<n>), Drishti's lake writer
+                     ▼
+               the data-load signal: the intraday layer applies it as it applies a file
+```
+
+| Case | What the stream does |
+|---|---|
+| a message of another business date than the newest loaded | ignored, counted (`otherDate`) |
+| `COMPUTED_AT` before the morning run, or not later than the update the date holds for the trade (a redelivery; the topic replayed after a restart) | ignored, counted (`beforeMorning`, `notNewer`): nothing is applied twice |
+| a cancel line (`TRADE_STATUS: CANCELLED`, its vector null), as in the files | the trade cancelled; a tombstone (a null value) carries no record: ignored, counted |
+| a blank line | skipped |
+| a line that is not a JSON object with a `TRADE_ID` | rejected, `DRS-5201`, with its partition, offset and line number (`p0:12 line 2`); the message's other lines are applied |
+| another `SCENARIO_SET_ID` | rejected, `DRS-5203`; listed in the stream's status and the date's `intraday.rejections` (the provenance's `intradayRejections`) |
+| a null, non-numeric or infinite value, the wrong length, no `BASE_PV` | rejected, `DRS-5206` or `DRS-5201`, with its place; never filled with zero |
+
+The window's rows are written with the trades' table layout of the loaded pack and announced as a data load of the kind (one signal a
+window). The lake is the record: a restart rebuilds the layer from the lake, and the stream reading the topic again writes nothing it
+already holds.
+
+**The message.** A message's value is **JSONL text**, UTF-8: one or more PV records, one JSON object a line, each exactly a row of the
+`scenario-pv` or `pnl-vector` contract (the same rows as the files); one message may carry one trade or many, both forms and cancels.
+The key is not read: it may be absent or name a batch. An example message of three lines (cut: a record carries every field and all
+509 values):
+
+```text
+{"SCENARIO_PV_ID":"SPV-1002344-HS-509-K","TRADE_ID":"1002344","BUSINESS_DATE":"2026-09-30","SCENARIO_SET_ID":"HS-509","SOURCE_SYSTEM":"ENDUR","TRADE_STATUS":"AMENDED","CURRENCY":"USD","BASE_PV":-302670.0,"SCENARIO_PV":[-208989.8,-396009.18,-356724.62],"COMPUTED_AT":"2026-09-30T11:00:00Z","RUN_KIND":"INTRADAY",…}
+{"VECTOR_ID":"PV-MX-20000300-HS-509-K","TRADE_ID":"MX-20000300","BUSINESS_DATE":"2026-09-30","SCENARIO_SET_ID":"HS-509","SOURCE_SYSTEM":"MUREX","TRADE_STATUS":"AMENDED","CURRENCY":"USD","PV":1250.5,"PNL":[-133.9,155.06,-78.11],"COMPUTED_AT":"2026-09-30T11:00:01Z","RUN_KIND":"INTRADAY",…}
+{"SCENARIO_PV_ID":"SPV-1000414-HS-509-K","TRADE_ID":"1000414","BUSINESS_DATE":"2026-09-30","SCENARIO_SET_ID":"HS-509","SOURCE_SYSTEM":"ENDUR","TRADE_STATUS":"CANCELLED","CURRENCY":"USD","SCENARIO_PV":null,"COMPUTED_AT":"2026-09-30T11:00:02Z","RUN_KIND":"INTRADAY",…}
+```
+
+| Setting | Default | |
+|---|---|---|
+| `drishti.var.intraday.kafka.window` | `${DRISHTI_VAR_INTRADAY_KAFKA_WINDOW:5m}` | the window: everything received in it becomes one intraday batch, every five minutes |
+| `drishti.var.intraday.kafka.max-trades` | `${DRISHTI_VAR_INTRADAY_KAFKA_MAX_TRADES:500}` | an earlier flush once this many trades wait |
+| connector `pv-updates` `enabled` | `${DRISHTI_VAR_PV_STREAM:false}` | the stream on |
+| its `bootstrap-servers` | `${DRISHTI_KAFKA_BOOTSTRAP:localhost:9092}` | the brokers |
+| its `topic` | `${DRISHTI_VAR_PV_TOPIC:drishti.risk.pv-updates}` | the PV topic |
+| its `lake` | `${DRISHTI_DELTA_ROOT:./data/delta}` | the risk lake's root |
+
+**Admin.** `GET /api/v1/var/intraday/streams` (the topic, state, waiting trades, offsets, counts, the last ten windows and the newest 20
+rejections) and `POST /api/v1/var/intraday/streams/{connector}/apply` (administrators: the waiting window now); the connector's page
+in Admin has an **Apply now** button.
+
+**Sizing.** A record is 4–8 KB (509 numbers as JSON text): 10,000 updates a day are 40–80 MB on the topic, whatever the records per
+message; a window of a few hundred trades is written and applied in about a second. **Tested** (`VarPvStreamTest`, in-process Kafka): a
+message of several records with the latest of a trade winning, a message mixing trades, a cancel line and a malformed line (rejected
+with its place, the others applied), a tombstone ignored, an early flush, the guards, files and windows mixed equal to the same final
+data loaded as one run to the cent in USD, EUR and CAD, and the topic replayed after a restart writing nothing.
+
 ### 8.5 The pre-deal what-if in the basket tray
 
 The what-if is the tray's ([section 3.5](#35-construct-your-basket)): **+ What-if trade** (or **What-if…** in the explorer's right

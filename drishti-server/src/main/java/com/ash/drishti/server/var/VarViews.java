@@ -200,6 +200,7 @@ final class VarViews {
         m.put("scope", s.res().canonical());
         m.put("currency", s.date().currency());
         m.put("intraday", intradayNote(s.date()));
+        m.put("intradayRejections", s.date().intraday() == null ? List.of() : s.date().intraday().rejections());
         m.put("fx", fxNote(s.date()));
         m.put("resolved", s.res().notes());
         m.put("trades", s.set().size());

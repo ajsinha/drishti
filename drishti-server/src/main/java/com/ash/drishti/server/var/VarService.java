@@ -367,6 +367,20 @@ public final class VarService implements AutoCloseable {
 
     private final Map<LocalDate, Object> intradayLocks = new ConcurrentHashMap<>();
 
+    /** Intraday updates refused before they reached the lake (the PV topic's guards): listed with the date's layer. */
+    void intradayRejected(LocalDate d, List<String> why) {
+        CompletableFuture<VarDate> f = dates.get(d);
+        if (f == null || !f.isDone() || f.isCompletedExceptionally() || why.isEmpty()) {
+            return;
+        }
+        synchronized (intradayLocks.computeIfAbsent(d, x -> new Object())) {
+            VarDate vd = dates.get(d).join();
+            VarIntradayRows rows = vd.intraday() == null ? new VarIntradayRows().morning(null, vd.intake().batchIds()) : vd.intraday().copy();
+            rows.rejected(why);
+            dates.put(d, CompletableFuture.completedFuture(vd.withBook(vd.book(), rows)));
+        }
+    }
+
     /** True when a loaded date has intraday batches (applied or met). */
     boolean hasIntraday(LocalDate d) {
         CompletableFuture<VarDate> f = dates.get(d);

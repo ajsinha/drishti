@@ -303,6 +303,16 @@ connectors:
     enabled: ${DRISHTI_VAR_ENABLED:true}
     kinds:
     - position
+  pv-updates:
+    plugin: var-pv-stream
+    enabled: ${DRISHTI_VAR_PV_STREAM:false}
+    kinds:
+    - pv-update
+    settings:
+      bootstrap-servers: ${DRISHTI_KAFKA_BOOTSTRAP:localhost:9092}
+      topic: ${DRISHTI_VAR_PV_TOPIC:drishti.risk.pv-updates}
+      lake: ${DRISHTI_DELTA_ROOT:${drishti.data.dir:./data}/delta}
+      pack: market-risk
   var-engine:
     plugin: reactive
     mode: reactive

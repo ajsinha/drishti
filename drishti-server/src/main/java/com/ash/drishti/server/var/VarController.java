@@ -204,6 +204,27 @@ public class VarController {
         return m;
     }
 
+    /** The PV topics' streams (the {@code var-pv-stream} connectors, VAR_GUIDE.md section 8.4): their windows and what they applied. */
+    @GetMapping("/intraday/streams")
+    public List<Map<String, Object>> streams(@RequestAttribute(Principal.ATTRIBUTE) Principal p) {
+        entitlements.requireOpen(p, svc.props().kinds().vector());
+        return VarPvStreamPlugin.RUNNING.values().stream().map(VarPvStreamPlugin::describe).toList();
+    }
+
+    /** An administrator's "apply now": the stream's waiting window applied at once, as one intraday batch. */
+    @PostMapping("/intraday/streams/{name}/apply")
+    public Map<String, Object> applyNow(@PathVariable String name, @RequestAttribute(Principal.ATTRIBUTE) Principal p) {
+        entitlements.requireAdmin(p);
+        VarPvStreamPlugin s = VarPvStreamPlugin.RUNNING.get(name);
+        if (s == null) {
+            throw new DrishtiException(ErrorCode.ENTITY_NOT_FOUND, "no PV stream " + name + " running (a var-pv-stream connector, enabled)");
+        }
+        s.applyNow();
+        Map<String, Object> r = s.flushIfDue();
+        svc.audit(p.user(), "var-intraday-apply-now", name, String.valueOf(r));
+        return r == null ? Map.of("status", "nothing waiting") : r;
+    }
+
     /** Drops the loaded dates, so the next request reads the lake again (after a new load). Administrators only. */
     @PostMapping("/reload")
     public Map<String, Object> reload(@RequestAttribute(Principal.ATTRIBUTE) Principal p) {

@@ -613,6 +613,17 @@
       else if (act === 'test') { openExisting(me, b).then(function () { $('[data-test]').click(); }); }
       else if (act === 'enable' || act === 'disable') { toggle(me, act === 'enable', b); }
       else if (act === 'reset') { reset(me); }
+      else if (act === 'var-apply-now') {               // a var-pv-stream connector: its waiting window applied now (VAR_GUIDE.md 8.4)
+        b.disabled = true;
+        fetch('/api/var/intraday/streams/' + q(me) + '/apply', { method: 'POST' }).then(function (r) {
+          return r.json().catch(function () { return {}; }).then(function (x) { return { ok: r.ok, status: r.status, body: x }; });
+        }).then(function (r) {
+          b.disabled = false;
+          if (!r.ok) { say(msg, why(r), true); return; }
+          say(msg, r.body.status === 'applied' ? 'Applied ' + r.body.rows + ' intraday update' + (r.body.rows === 1 ? '' : 's') + ' as batch ' + r.body.batchId
+            : 'Nothing to apply: ' + (r.body.status || 'no window waiting'), false);
+        });
+      }
     });
   }
 })();
