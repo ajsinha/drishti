@@ -275,7 +275,7 @@ Fields, from 2 sample documents:
 | `PRODUCT_TYPE` | string | `WARRANT` | The product of the instrument, as the booking systems name it. |
 | `CURRENCY` | string | `USD` | The instrument's currency. Every P&L and value is in USD, the reporting currency. |
 | `COUNTERPARTIES` | list of strings |  | — |
-| `MARKET_VALUE` | integer | `41691425` | The sum of the trades' present values (their mark-to-market) on the business date. (USD) |
+| `MARKET_VALUE` | integer | `41018452` | The sum of the trades' present values (their mark-to-market) on the business date. (USD) |
 | `NOTIONAL` | integer | `2816087612` | The sum of the trades' quantities without their signs. |
 | `TAGS` | list |  | — |
 | `STATUS` | string | `open` | — |

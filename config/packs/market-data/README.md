@@ -674,7 +674,24 @@ No samples ship: documents are read live from its connector `correlation-engine`
 
 **Id:** set by its connector (no samples ship).
 
-No samples ship: documents are read live from its connector `equity-analytics` (plugin `reactive`).
+No samples ship: documents are read live from its connector `equity-analytics` (plugin `reactive`). The fields its screens show:
+
+| Field | Shown as |
+|---|---|
+| `ALPHA` | Alpha (a daily log return) |
+| `AVAILABLE` | Returns |
+| `BETA` | Beta |
+| `CORRELATION` | Correlation |
+| `EQUITY` | Equity |
+| `FROM` | From |
+| `INDEX` | Index |
+| `INDEX_VOLATILITY` | Index volatility (annualised) |
+| `R_SQUARED` | R squared |
+| `TO` | To |
+| `VOLATILITY` | Volatility (annualised) |
+| `WINDOW` | Window (0: every return) |
+
+Links: `CORRELATION` → `correlation-matrix`, `EQUITY` → `equity`.
 
 ## Screens and commands
 
@@ -729,6 +746,7 @@ Screens (Sutras):
 | `correlation-matrix` | `correlation-matrix` | A factor set's pairwise correlations, computed when the page opens from the factors' price history, for a window and an estimator. |
 | `credit-curve` | `credit-curve` | CDS par spreads by tenor, recovery and implied default probabilities. |
 | `dividend-curve` | `dividend-curve` | Expected dividends by year (implied from dividend futures and forwards). |
+| `equity-beta` | `equity-beta` | An equity's beta, alpha, correlation and R squared against its index, computed from both price histories when asked. |
 | `equity-index` | `equity-index` | Index level with its largest constituents. |
 | `equity-vol-surface` | `equity-vol-surface` | Implied vols by expiry and moneyness. |
 | `equity` | `equity` | A listed stock: price, dividends, sector and identifiers. |

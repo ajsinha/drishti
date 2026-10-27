@@ -407,8 +407,8 @@ Fields, from 1 sample document:
 | `PRECISION` | string | `float64` | float32 or float64: how the paths' values are stored |
 | `CREDIT_PATHS` | boolean | `false` | — |
 | `NETTING_SETS` | integer | `8` | link to `netting-set` |
-| `TRADES` | integer | `627` | — |
-| `ROWS` | integer | `9031` | — |
+| `TRADES` | integer | `523` | — |
+| `ROWS` | integer | `7540` | — |
 | `BATCH_ID` | string | `XB-2026-09-30-01` | — |
 | `COMPUTED_AT` | timestamp | `2026-09-30T23:40:00Z` | — |
 | `STATUS` | string | `complete` | — |
@@ -439,7 +439,7 @@ Fields, from 1 sample document:
 | `TT_BOOK` | string | `BOOK-SFT-1` | link to `book` |
 | `ASSET_CLASS` | string | `Securities financing` | — |
 | `PRODUCT` | string | `Tri-party repo` | — |
-| `NOTIONAL` | number | `237000000.0` | — |
+| `NOTIONAL` | number | `260700000.0` | — |
 | `MATURITY_DATE` | date | `2027-02-15` | — |
 | `GRID_INDEX` | integer | `0` | Index into the run's GRID_DATES |
 | `GRID_DATE` | date | `2026-10-07` | The future date the values are for. |

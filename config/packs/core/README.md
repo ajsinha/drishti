@@ -210,7 +210,7 @@ Nested structures:
 | Path | Fields |
 |---|---|
 | `DESKS[]` | `ID` (string), `NAME` (string) |
-| `BOOKS[]` | `BOOK` (string), `DESK` (string), `VAR` (integer), `PNL` (integer), `MTM` (integer), `TRADES` (integer) |
+| `BOOKS[]` | `BOOK` (string), `DESK` (string), `PNL` (integer), `MTM` (integer), `TRADES` (integer) |
 
 ### `book`
 
