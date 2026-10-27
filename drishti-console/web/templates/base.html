@@ -46,6 +46,7 @@
   <link rel="stylesheet" href="/static/css/controls.css?v={{ ASSET_V }}">
   <link rel="stylesheet" href="/static/css/touch.css?v={{ ASSET_V }}">
   <link rel="stylesheet" href="/static/css/server-watch.css?v={{ ASSET_V }}">
+  <link rel="stylesheet" href="/static/css/var-basket.css?v={{ ASSET_V }}">
   {% block head %}{% endblock %}
 </head>
 <body{% if (error is defined and error and ((error.code is defined and error.code == 'DRS-5003') or (error is string and 'unreachable' in error))) %} data-server-down="1"{% endif %} class="{% block body_class %}{% endblock %}{% if (settings or {}).density == 'compact' %} density-compact{% endif %}{% if (settings or {}).flash == false %} no-flash{% endif %}" data-product="{{ PRODUCT }}" data-screen="{% block screen %}{{ screen | default('landing') }}{% endblock %}">
@@ -61,6 +62,7 @@
   <script src="/static/js/colfilter.js?v={{ ASSET_V }}"></script>
   <script src="/static/js/tables.js?v={{ ASSET_V }}"></script>
   {% if me %}<script src="/static/js/alerts.js?v={{ ASSET_V }}"></script>{% endif %}
+  <script src="/static/js/var-basket.js?v={{ ASSET_V }}"></script>
   {% block scripts %}{% endblock %}
 </body>
 </html>

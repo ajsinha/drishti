@@ -17,7 +17,7 @@
    tree, the breadcrumb, a row of the counterparty board, a netting set in the contributions or a trade in the Trades tab moves every
    panel to the new scope in place (no page load); Back returns to the scope before. The headline tiles and the profile are always
    shown; the tabs below change with the scope's level: the counterparty board and the legal entities at the bank, the board at a legal
-   entity or a group, the netting sets' contributions at a counterparty, the netting-set workbench (collateral, trades, pre-deal) at a
+   entity or a group, the netting sets' contributions and the pre-deal what-if (into a netting set it picks) at a counterparty, the netting-set workbench (collateral, trades, pre-deal) at a
    netting set, the trade in its netting set at a trade; By tenor and Captures everywhere. Every view is a command (EXP <scope>) and a
    URL (/exposure?scope=...), so links, the command line and F1 work. The time from a click to the painted headline is kept on the root
    element (data-paint-ms) for the tests. */
@@ -37,7 +37,7 @@
     bank: [["board", "Counterparties"], ["les", "Legal entities"], ["tenor", "By tenor"]],
     "legal-entity": [["board", "Counterparties"], ["tenor", "By tenor"]],
     group: [["board", "Counterparties"], ["tenor", "By tenor"]],
-    counterparty: [["sets", "Netting sets"], ["tenor", "By tenor"]],
+    counterparty: [["sets", "Netting sets"], ["predeal", "Pre-deal"], ["tenor", "By tenor"]],
     "netting-set": [["coll", "Collateral"], ["trades", "Trades"], ["predeal", "Pre-deal"], ["tenor", "By tenor"]],
     trade: [["inset", "In its netting set"], ["tenor", "By tenor (alone)"]],
     adhoc: [["sets", "Netting sets"], ["tenor", "By tenor"]]
@@ -576,14 +576,31 @@
     });
   }
 
+  /**
+   * The pre-deal what-if, on a netting set and on a counterparty: the candidate is a copy of a booked trade (its paths, scaled by a
+   * factor; −1 its unwind). On a counterparty the person picks the netting set the new trade goes into (the largest by peak PFE first) and
+   * sees the counterparty's figures (its credit limit's) or the set's.
+   */
   function predeal(pane, d) {
-    return Promise.all([setTrades(d.canonical), treeReady()]).then(function (x) {
-      var c = x[0], rows = c.rows || [];
+    var onCp = d.kind === "counterparty";
+    var sets0 = onCp ? (d.byNettingSet || []).slice().sort(function (a, b) { return (b.peakPfe || 0) - (a.peakPfe || 0); }) : [];
+    var set = onCp ? (sets0.length ? "NSET:" + sets0[0].nettingSet : null) : d.canonical;
+    if (!set) {
+      pane.textContent = "";
+      pane.appendChild(h("p", "xx-note", "No netting set of this counterparty you may see: nothing to deal into."));
+      return Promise.resolve();
+    }
+    return Promise.all([setTrades(set), treeReady()]).then(function (x) {
+      var rows = x[0].rows || [];
       pane.textContent = "";
       var two = h("div", "xx-two"), form = h("div", "xx-form");
       var sel = h("select", "xx-select");
       sel.dataset.xxCandidate = "1";
-      rows.forEach(function (r) { var o = h("option", null, r.key + " · " + (r.product || "") + " · " + m(r.notional)); o.value = r.key; sel.appendChild(o); });
+      var fill = function () {
+        sel.textContent = "";
+        rows.forEach(function (r) { var o = h("option", null, r.key + " · " + (r.product || "") + " · " + m(r.notional)); o.value = r.key; sel.appendChild(o); });
+      };
+      fill();
       var factor = h("input", "xx-input");
       factor.value = "1";
       factor.dataset.xxFactor = "1";
@@ -593,13 +610,32 @@
       [["paths", "paths (exact, the same run)"], ["addon", "addon (conservative proxy)"]].forEach(function (o) { var e = h("option", null, o[1]); e.value = o[0]; method.appendChild(e); });
       var sc = h("select", "xx-select");
       sc.dataset.xxWhatifScope = "1";
-      var cp = (d.ancestors || []).filter(function (a) { return a.kind === "counterparty"; })[0];
-      [[cp ? cp.scope : d.canonical, "its counterparty (the credit limit's)"], [d.canonical, "this netting set"]].forEach(function (o) {
-        var e = h("option", null, o[1]); e.value = o[0]; sc.appendChild(e);
-      });
-      [["Candidate: like trade", sel], ["Factor (−1: its unwind)", factor], ["Method", method], ["Figures of", sc]].forEach(function (r) {
-        form.appendChild(h("label", null, r[0])); form.appendChild(r[1]);
-      });
+      var cp = onCp ? { scope: d.canonical } : (d.ancestors || []).filter(function (a) { return a.kind === "counterparty"; })[0];
+      var scopes = function () {
+        sc.textContent = "";
+        [[cp ? cp.scope : set, onCp ? "this counterparty (the credit limit's)" : "its counterparty (the credit limit's)"],
+          [set, onCp ? "the netting set " + set.slice(5) : "this netting set"]].forEach(function (o) {
+          var e = h("option", null, o[1]); e.value = o[0]; sc.appendChild(e);
+        });
+      };
+      scopes();
+      var fields = [["Candidate: like trade", sel], ["Factor (−1: its unwind)", factor], ["Method", method], ["Figures of", sc]];
+      if (onCp) {
+        var into = h("select", "xx-select");
+        into.dataset.xxPredealSet = "1";
+        sets0.forEach(function (s) {
+          var o = h("option", null, s.nettingSet + " · peak PFE " + m(s.peakPfe));
+          o.value = "NSET:" + s.nettingSet;
+          into.appendChild(o);
+        });
+        into.addEventListener("change", function () {
+          set = into.value;
+          sel.disabled = true;
+          setTrades(set).then(function (c) { rows = c.rows || []; fill(); scopes(); sel.disabled = false; });
+        });
+        fields.unshift(["Into the netting set", into]);
+      }
+      fields.forEach(function (r) { form.appendChild(h("label", null, r[0])); form.appendChild(r[1]); });
       var left = h("div");
       left.appendChild(form);
       var run = h("button", "btn btn-sm xx-btn primary", "Run what-if");
@@ -610,9 +646,10 @@
       acts.appendChild(run);
       acts.appendChild(chip);
       left.appendChild(acts);
-      left.appendChild(h("p", "xx-note after", "The candidate is a copy of a booked trade's paths on the day's run, scaled by the factor, added to "
-        + "this netting set. paths: its values netted and collateralised with the set, path by path, by the Python exposure engine; addon: a "
-        + "netting set of its own, uncollateralised, SA-CCR's supervisory factor (flagged proxy)."));
+      left.appendChild(h("p", "xx-note after", "Pre-deal what-if: the candidate is a copy of a booked trade's paths on the day's run, scaled by the "
+        + "factor, added to " + (onCp ? "the netting set picked above (the counterparty's largest first)" : "this netting set") + ". paths: its values "
+        + "netted and collateralised with the set, path by path, by the Python exposure engine; addon: a netting set of its own, uncollateralised, "
+        + "SA-CCR's supervisory factor (flagged proxy)."));
       var out = h("div");
       out.dataset.xxWhatifOut = "1";
       two.appendChild(left);
@@ -623,7 +660,7 @@
         chip.className = "xx-chip";
         chip.textContent = "computing…";
         var t0 = performance.now();
-        var setId = d.canonical.slice(5);
+        var setId = set.slice(5);
         send("what-if", { scope: sc.value, method: method.value, q: S.q, collateral: S.collateral,
           candidates: [{ tradeId: "CANDIDATE-1", label: f + " × " + r.key, nettingSet: setId, paths: { copyOf: r.key, factor: f },
             assetClass: r.assetClass, notional: Math.abs((r.notional || 0) * f), maturityDate: r.maturity, mtm: (r.mtm || 0) * f, delta: f < 0 ? -1 : 1 }] })
@@ -631,6 +668,7 @@
             chip.className = "xx-chip " + (w.method === "addon" ? "proxy" : "ok");
             chip.textContent = (w.method === "addon" ? "proxy" : "exact") + " · done in " + ((performance.now() - t0) / 1000).toFixed(1) + " s";
             root.dataset.whatif = w.method;
+            root.dataset.whatifScope = w.canonical;
             whatIfResult(out, w, d);
           }).catch(function (e) { chip.className = "xx-chip crit"; chip.textContent = "failed"; errorBox(out, e); });
       });

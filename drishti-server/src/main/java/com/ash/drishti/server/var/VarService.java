@@ -125,6 +125,32 @@ public final class VarService implements AutoCloseable {
         return load(asked == null || asked.isAfter(latest) ? latest : asked, 0);
     }
 
+    /**
+     * The date a page's link would read, only when it is loaded already (a trade page never waits for a date to load); when it is not,
+     * its load starts in the background and the answer is empty.
+     */
+    Optional<VarDate> loadedDate(LocalDate asked) {
+        LocalDate latest = props.enabled() ? loader.latest() : null;
+        if (latest == null) {
+            return Optional.empty();
+        }
+        LocalDate d = asked == null || asked.isAfter(latest) ? latest : asked;
+        CompletableFuture<VarDate> f = dates.get(d);
+        if (f != null && f.isDone() && !f.isCompletedExceptionally()) {
+            return Optional.of(f.join());
+        }
+        if (f == null) {
+            CompletableFuture.runAsync(() -> {
+                try {
+                    date(d);
+                } catch (RuntimeException e) {
+                    // the page says the date is not loaded; the explorer says why
+                }
+            });
+        }
+        return Optional.empty();
+    }
+
     private VarDate load(LocalDate d, int depth) {
         String[] r = refused.get(d);
         if (r != null && r[0].equals(loader.version(d))) {

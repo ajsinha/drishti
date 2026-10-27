@@ -196,10 +196,18 @@ least: its worst days are not the desk's.
 
 ## Step 5 · Your own scope: nodes, portfolios, rules
 
-**In the UI.** **+ New scope** and type `DESK:DESK-RATES - BOOK:BOOK-RATES-1 + PORT:PF-USD-RATES`: the VaR follows as you type. Until you
-save it, it is *ad-hoc · unsaved*.
+**In the UI: Construct your basket.** On the rates desk, click **+ basket** on its row in the tree (point at the row to see it): the
+basket tray opens as a strip at the top. Type `pf usd` in it: the engine's hints list *PORT · PF-USD-RATES · USD rates exposure*, its
+trades and its VaR alone; **Enter** adds it. Type `-book-rates-1` and **Enter**: the book is taken away (a dashed **−** chip; the **+ / −**
+on any chip switches it). As you pick, the tray shows the selection's VaR and ES, its trades, the sum of the parts' VaRs and the
+diversification, computed by the engine. **Open without saving** moves the explorer to it: *unsaved basket*, its contributions are its
+parts. Anywhere else in the console the top bar's **◫ Basket** (or **Alt+B**) opens the same tray as a popup.
 
-![An ad-hoc scope: the rates desk without a book, plus the USD rates portfolio](img/t25/06-adhoc.jpg)
+![Construct your basket: the rates desk from its row in the tree, the USD rates portfolio from the hints, a book taken away; the selection's VaR live and the explorer on it, its contributions by part](img/t25/06-basket.jpg)
+
+The tray writes `NODE:MGMT~DESK-RATES + PORT:PF-USD-RATES - NODE:MGMT~BOOK-RATES-1`: the parts to add, then those to take away. A part
+that matches nothing on the date (try `TRD:10000000`) turns red at once and the tray says why (*not a live trade on 2026-09-30 (no P&L
+vector)*), never a VaR of 0.
 
 **From the command line**, a desk without another desk, and the desk without one trade:
 
@@ -282,9 +290,17 @@ its own (`POS-<book>~<trade>`, the *otc* rule).
 
 ## Step 7 · Save a basket, capture it, compare
 
-**In the UI.** Open a scope, the **Captured results** tab, a note, **Capture VaR**, then **Compare with now**:
+**In the UI.** In the basket tray of step 5, name it (`rates-mix`) and **Save basket and open VaR** (tick nothing more: it is private;
+name users or roles in *Share read-only with* to share it). The explorer opens `VAR SCOPE BASKET:<you>/rates-mix`, the tray reads
+*saved basket · \<you>/rates-mix*, and the basket is listed under *Ad-hoc scopes* as ★ rates-mix. Opening it later (from the list, a
+link, `VAR SCOPE rates-mix <GO>`) loads its parts back into the tray to edit and save again. Then the **Captured results** tab, a note,
+**Capture VaR**, and **Compare with now**:
 
 ![A capture of the FX desk compared with now](img/t25/07-capture.jpg)
+
+**What-if, before you deal.** **+ What-if trade** in the tray: a booked trade (say one of the desk's swaps) and a factor (−1 its unwind):
+the basket's VaR and ES before → after and the incremental, by the Python VaR engine. It needs the compute workers
+(`DRISHTI_COMPUTE_ENABLED=true`); without them the tray says so ([VAR_GUIDE.md section 8.5](../guides/VAR_GUIDE.md#85-the-pre-deal-what-if-in-the-basket-tray)).
 
 **From the command line**, a basket of the rates desk's shorts, saved, captured and compared:
 

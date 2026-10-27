@@ -474,6 +474,68 @@ class VarApiTest {
         }
     }
 
+    @Test
+    @Order(11)
+    void theBasketTraysHintsPartsNoticesAndWhatIf() throws Exception {
+        String rita = as("rita", "risk");
+        String prev = PREV.toString();                                  // the date of factor 1 (DAY was restated twice in order 6)
+        JsonNode t1 = hints("T1", prev, rita);
+        assertThat(t1.get(0).get("type").asText()).isEqualTo("TRD");
+        assertThat(t1.get(0).get("scope").asText()).isEqualTo("TRD:T1");
+        assertThat(t1.get(0).get("trades").asInt()).isEqualTo(1);
+        assertThat(t1.get(0).get("var").asDouble()).isEqualTo(1000);
+        JsonNode cp = hints("cp-2", prev, rita);
+        assertThat(cp.get(0).get("scope").asText()).isEqualTo("CPTY:CP-2");
+        assertThat(cp.get(0).get("var").asDouble()).isEqualTo(450);
+        assertThat(hints("pf-", prev, rita).get(0).get("type").asText()).isEqualTo("PORT");
+        assertThat(hints("desk-x", prev, rita).get(0).get("scope").asText()).isEqualTo("NODE:MGMT~DESK-X");
+        JsonNode typed = hints("TRD:10000000", prev, rita);                // as typed, flagged at once: it matches nothing
+        assertThat(typed.get(0).get("name").asText()).isEqualTo("as typed");
+        assertThat(typed.get(0).get("trades").asInt()).isZero();
+        assertThat(typed.get(0).get("notice").asText()).contains("TRD:10000000 is not a live trade on " + prev);
+
+        // the tray's parts: the scope's terms with their sign; components add up, standalones are each term alone
+        String scope = "PORT:PF-EUR + CPTY:CP-2 - TRD:T4";
+        JsonNode head = json.readTree(mvc.perform(get("/api/v1/var/scope").param("scope", scope).param("asOf", prev).header("Authorization", rita))
+                .andExpect(status().isOk()).andReturn().getResponse().getContentAsString());
+        assertThat(head.get("childKind").asText()).isEqualTo("part");
+        assertThat(head.get("terms").toString()).contains("{\"op\":\"+\",\"scope\":\"PORT:PF-EUR\",\"word\":\"PORT\"}")
+                .contains("{\"op\":\"-\",\"scope\":\"TRD:T4\",\"word\":\"TRD\"}");
+        assertThat(head.get("empty").asBoolean()).isFalse();
+        JsonNode parts = json.readTree(mvc.perform(get("/api/v1/var/scope/contributions").param("scope", scope).param("asOf", prev)
+                .header("Authorization", rita)).andExpect(status().isOk()).andReturn().getResponse().getContentAsString());
+        assertThat(parts.get("by").asText()).isEqualTo("part");
+        assertThat(parts.get("rows")).hasSize(2);
+        double comp = 0;
+        double alone = 0;
+        for (JsonNode r : parts.get("rows")) {
+            comp += r.get("componentVar").asDouble();
+            alone += r.get("standaloneVar").asDouble();
+        }
+        assertThat(comp).isCloseTo(parts.get("var").asDouble(), within(2.0));
+        assertThat(parts.get("sumStandalone").asDouble()).isCloseTo(alone, within(2.0));
+        assertThat(head.get("sumStandalone").asDouble()).isCloseTo(alone, within(2.0));
+        assertThat(parts.get("diversification").asDouble()).isCloseTo(alone - parts.get("var").asDouble(), within(2.0));
+
+        // what matches nothing is said in words, and an empty scope says so instead of a VaR of 0 that looks computed
+        JsonNode none = json.readTree(mvc.perform(get("/api/v1/var/scope").param("scope", "TRD:T6 + TRD:NOPE").param("asOf", prev)
+                .header("Authorization", rita)).andExpect(status().isOk()).andReturn().getResponse().getContentAsString());
+        assertThat(none.get("empty").asBoolean()).isTrue();
+        assertThat(none.at("/provenance/notices").toString()).contains("TRD:T6 is not live on " + prev + ": its status is CANCELLED (no P&L vector)")
+                .contains("TRD:NOPE is not a live trade on " + prev).contains("no trades");
+
+        // the pre-deal what-if runs in the Python VaR engine: off here, said plainly
+        mvc.perform(post("/api/v1/var/what-if").param("asOf", prev).header("Authorization", rita).contentType(MediaType.APPLICATION_JSON)
+                .content("{\"scope\": \"DESK:DESK-X\", \"items\": [{\"copyOf\": \"T1\", \"factor\": -1}]}"))
+                .andExpect(status().is(503)).andExpect(jsonPath("$.code").value("DRS-5205"))
+                .andExpect(jsonPath("$.detail").value(containsString("Python VaR engine")));
+    }
+
+    private JsonNode hints(String q, String asOf, String auth) throws Exception {
+        return json.readTree(mvc.perform(get("/api/v1/var/hints").param("q", q).param("asOf", asOf).header("Authorization", auth))
+                .andExpect(status().isOk()).andReturn().getResponse().getContentAsString());
+    }
+
     private JsonNode onDay(String scope) throws Exception {
         return json.readTree(mvc.perform(get("/api/v1/var/scope").param("scope", scope).param("asOf", VarLakeFixture.DAY.toString())
                 .header("Authorization", as("rita", "risk"))).andExpect(status().isOk()).andReturn().getResponse().getContentAsString());

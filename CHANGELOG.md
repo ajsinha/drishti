@@ -19,6 +19,34 @@
 
 - **Tutorial 11 and BI_RECIPES rerun on the 2.9.2 data (2026-10-26).** Tutorial 11's *MTM floor* alert is set below 3,500,000,000 (the bank's MTM is now 3,210,381,877, above the old 3,000,000,000, so the alert no longer fired as the tutorial says); its desk figures, DESK-FX MTM (-681,989,222), CSV and export sizes rerun and its alert, refresh and export pictures retaken (`tools/docs/shots/t11.py`). BI_RECIPES.md's `trades-basic` and `trading-risk` answers (desks, exposure by counterparty, the rollup, rita and hana) rerun on the same lake.
 - **Tutorials 10 and 18 rerun on the 2.9.2 data (2026-10-26).** Every BI figure and command output rerun on a scratch stack over the default `lake demo` with the official exposure published at start (all 76 netting sets now carry exposure: EE peak 2,663,018,256, was 2,613,297,860; ΣMTM 3,210,381,877, was 2,796,077,089; DESK-FX MTM -681,989,222; hana's Python table 2,407,959,011), the "a figure may differ" hedges dropped, and the pictures retaken (`tools/docs/shots/t10.py` hides the Studio Explorer before placing visuals; the relative-date example uses *Last 3 months*, as *Last 4 weeks* now holds no trades); DATASETS.md section 15's desk MTMs too.
+- **Construct your basket: the VaR of any mix of portfolios, trades and counterparties (2.9.2; product owner, 2026-10-26, mock-up
+  approved).** One basket tray replaces the VaR explorer's "+ New scope" builder: a strip at the top of the explorer (always shown on an
+  ad-hoc scope or a basket), and on every other page a popup from the top bar's **◫ Basket** (the count of its parts) or `Alt+B`, whose
+  **Save basket and open VaR** goes to the explorer. Typing shows the engine's hints (portfolios, saved baskets, desks, books, legal
+  entities, divisions, counterparties, positions, trades: type, id, name, trade count and standalone VaR; arrow keys and Enter; a
+  leading `-` takes away); **+ Rule** adds a `WHERE:` condition; **+ / −** on each chip; **+ basket** on every tree row, contribution row
+  and trade row. Live as you pick: the selection's VaR and ES, its trades, the sum of the parts' standalone VaRs and the diversification,
+  computed by the engine (a trade in two parts counts once). States *unsaved basket* / *saved basket · owner/name*; **Save basket and
+  open VaR** (private, or shared read-only), **Open without saving**, **Clear**; opening a saved basket loads its parts back into the
+  tray; the tray survives a reload. A basket of two parts or more is broken down by part (`by=part`). New API: `GET /api/v1/var/hints`,
+  the headline's `terms`, `basket`, `trades` and `empty`, `provenance.notices`. VAR_GUIDE.md sections 3.2, 3.5, 5.3, 5.8, 11;
+  tutorial 25 steps 5 and 7; USER_GUIDE.md (the top bar).
+- **Ids that match nothing, and trades that are not live, are said in words (2.9.2; product owner hit `VAR TRD 10000000` → zeros).**
+  The explorer and the tray show *TRD:10000000 is not a live trade on 2026-10-26 (no P&L vector)*; a trade the day's load left out names
+  why (*not live on …: its status is CANCELLED*, *it matured on …*); a chip that matches nothing is flagged at once; an empty scope says
+  **No trades**, never a VaR of 0 that looks computed (VAR_GUIDE.md sections 3.5, 5.3, 11.2, 13).
+- **The pre-deal what-if, prominent (2.9.2; product owner).** In the basket tray, **+ What-if trade**: a copy of a booked trade scaled
+  by a factor (−1 its unwind) added to the basket, VaR and ES before → after and the incremental, by the Python VaR engine
+  (`POST /api/v1/var/what-if`; `503 DRS-5205` in words when the compute workers are off); the explorer's **What-if…** opens it. The
+  exposure explorer's **Pre-deal** tab is on the counterparty too: the netting set the new trade goes into (the largest first), the
+  candidate, the method, the counterparty's figures. Both explorers say "pre-deal what-if" (VAR_GUIDE.md section 8.5, EXPOSURE_GUIDE.md
+  sections 3.3 and 7, tutorial 26 step 7).
+- **Trade pages: Risk links (2.9.2; product owner).** Every Endur, Calypso and Murex trade page has a **Risk** group (the UI kit's new
+  fragment `risk-links@1`, from the trading Sutra generator): its **P&L vector** (`PNLV PV-<trade>-HS-509`), **VaR of this trade**
+  (`VRES TRD:<trade>`) and **Exposure of this trade** (`EXP TRD:<trade>`), real links (the view of the trade carries `PNL_VECTOR_ID`,
+  `VAR_RESULT_ID`, `EXPOSURE_RESULT_ID`, named by the market-risk and counterparty-risk graphs, so the linked entities list them), each
+  with why it does not apply (*not live on …; no P&L vector*, *no exposure paths*) (VAR_GUIDE.md section 3.7, the trading pack's guide).
+
 - **Knowledge: what the words of your data mean, and how the data connects them (2.9.2; product owner, 2026-10-26).** A new section at
   the top of the help centre, [docs/knowledge/](docs/knowledge/README.md): a home with every term A to Z, and one page per domain,
   [Market risk](docs/knowledge/market-risk.md), [Counterparty credit risk](docs/knowledge/counterparty-credit-risk.md),

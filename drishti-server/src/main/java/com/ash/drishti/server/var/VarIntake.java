@@ -40,10 +40,29 @@ final class VarIntake {
     /** The engine's columns the vector table must keep (the rest of the trade columns are read when kept). */
     static final List<String> REQUIRED = List.of("LEGAL_ENTITY", "DESK", "TT_BOOK");
     private static final int LISTED = 20;
+    /** The trades left out that are remembered with their reason, for the explorer's notice (beyond it: counted only). */
+    private static final int NOT_LIVE_KEPT = 200_000;
 
     /** What the intake did, for the provenance of every answer of the date. */
     record Summary(int rejected, List<String> rejections, int excluded, List<String> batchIds, List<String> scenarioSets, String rules,
-            String rulesDigest) {}
+            String rulesDigest, Map<String, String> notLive) {
+
+        /** Why a trade the date's vectors carry was left out (its status, its maturity), or null: the explorer's notice. */
+        String notLiveWhy(String trade) {
+            if (notLive == null || trade == null) {
+                return null;
+            }
+            String why = notLive.get(trade);
+            if (why == null) {
+                for (Map.Entry<String, String> e : notLive.entrySet()) {
+                    if (e.getKey().equalsIgnoreCase(trade)) {
+                        return e.getValue();
+                    }
+                }
+            }
+            return why;
+        }
+    }
 
     private final VarBook.Builder book;
     private final PositionRules rules;
@@ -55,6 +74,7 @@ final class VarIntake {
     private final List<String> rejections = new ArrayList<>();
     private final TreeSet<String> batches = new TreeSet<>();
     private final TreeSet<String> sets = new TreeSet<>();
+    private final Map<String, String> notLive = new HashMap<>();
     private int rejected;
     private int excluded;
 
@@ -107,8 +127,13 @@ final class VarIntake {
         if (set != null) {
             sets.add(set);
         }
-        if (!rules.live(text(row, "TRADE_STATUS")) || matured(text(row, "MATURITY_DATE"))) {
+        String status = text(row, "TRADE_STATUS");
+        String maturity = text(row, "MATURITY_DATE");
+        if (!rules.live(status) || matured(maturity)) {
             excluded++;
+            if (notLive.size() < NOT_LIVE_KEPT && trade != null) {
+                notLive.put(trade, !rules.live(status) ? "its status is " + status : "it matured on " + maturity.substring(0, 10));
+            }
             return;
         }
         String why = check(values, length, text(row, "STATUS"), text(row, "REPORTING_CCY"));
@@ -172,6 +197,7 @@ final class VarIntake {
     }
 
     Summary summary() {
-        return new Summary(rejected, List.copyOf(rejections), excluded, List.copyOf(batches), List.copyOf(sets), rules.toString(), rules.digest());
+        return new Summary(rejected, List.copyOf(rejections), excluded, List.copyOf(batches), List.copyOf(sets), rules.toString(), rules.digest(),
+                Map.copyOf(notLive));
     }
 }

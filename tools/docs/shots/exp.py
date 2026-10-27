@@ -111,3 +111,16 @@ def phone(c: Ctx):
     painted(c, "BANK")
     c.save("08-phone.jpg")
     c.page.set_viewport_size({"width": 1600, "height": 1000})
+
+
+@shot("09-predeal-counterparty.jpg")
+def predeal_counterparty(c: Ctx):
+    open_exp(c, "/exposure?scope=CPTY:CP-ALDERSHOT")
+    painted(c, "CPTY:CP-ALDERSHOT")
+    tab(c, "predeal")
+    c.until("document.querySelectorAll('[data-xx-predeal-set] option').length > 0 && document.querySelectorAll('[data-xx-candidate] option').length > 0")
+    c.page.locator("[data-xx-factor]").fill("-1")
+    c.page.locator("[data-xx-whatif]").click()
+    c.until("document.querySelector('[data-exposure]').dataset.whatif !== undefined", 120)
+    c.page.wait_for_timeout(600)
+    c.save("09-predeal-counterparty.jpg", locator=".xx-main")

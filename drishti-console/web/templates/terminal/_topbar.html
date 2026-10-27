@@ -171,6 +171,8 @@
       </div>
     </div>
     {% endif %}
+    <button type="button" class="tool basket" data-basket-btn title="Construct your basket: the VaR of any mix of portfolios, trades and counterparties (Alt+B)"
+            aria-label="Construct your basket" aria-keyshortcuts="Alt+B"><span aria-hidden="true">◫</span><span class="tbar-menu-l">Basket</span><span class="tool-count" data-basket-count hidden>0</span></button>
     <a class="tool bell" href="/inbox" title="Inbox and alerts (Alt+I)" aria-label="Inbox and alerts" aria-keyshortcuts="Alt+I" data-bell><i class="bi bi-bell" aria-hidden="true"></i><span class="bell-count" data-bell-count hidden>0</span></a>
     {% if pack_switcher | length > 1 %}
     {% set on = pack_switcher | selectattr('active') | map(attribute='name') | list %}

@@ -57,6 +57,10 @@ Each booking system lands in a table of its own and is read by its own connector
 
 Every screen of the pack is built from fragments: the Drishti UI kit's (`config/ui-kit/`, such as `row-picker@1`, `cashflow-ladder@1`, `data-provenance@1`) and the pack's own, named `trading/<name>@<version>` (`trading/deal-ticket@1`, `trading/trade-table@1`, `trading/payments-metrics@1`); `sutra lint config/packs` checks them all. The **book desk** (`/v/portfolio-trades/BOOK-RATES-2?sutra=book-desk`) is a master-detail screen across three packs: click a trade and its cash flows open under the row, its counterparty (core) and credit limit (counterparty-risk) fill the right column, and the trades can be edited beside the table or started in a New trade drawer (kept as drafts). See the Sutra developer guide, section 11a, and the forms guide.
 
+### Risk on every trade page
+
+Every deal screen (Endur, Calypso and Murex) has a **Risk** group, the UI kit's `risk-links@1` (panel code `RISK`): the trade's **P&L vector** (`PNLV PV-<trade>-HS-509`, the market-risk pack's `pnl-vector`), its **VaR** (`VRES TRD:<trade>`; `VAR TRD <trade>` opens it in the VaR explorer) and its **exposure** (`EXP TRD:<trade>`). They are real links: the VaR and exposure engines set `PNL_VECTOR_ID`, `VAR_RESULT_ID` and `EXPOSURE_RESULT_ID` on the view of the trade when the day's vectors and the exposure run hold it, so the linked entities list them too; when they do not, the row says why (*not live on <date>: its status is CANCELLED; no P&L vector*, *no exposure paths on <date>*). The Sutras get it from the generator (`tools/packgen/trades/sutras.py`); a picture is in the [VaR guide, section 3.7](../../../../docs/guides/VAR_GUIDE.md#37-the-portfolio-and-position-pages).
+
 Load real data into each domain's folder, or point a domain at a database instead by overriding its connector in the site configuration. For a demonstration lake built from the generated samples, run `uv run --with deltalake --with pyarrow python tools/packgen/banking/make_data.py --lake data/delta`.
 
 ## Kinds

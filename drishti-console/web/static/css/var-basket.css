@@ -1,0 +1,96 @@
+/*
+ * Project Drishti · Any data. Any domain. One grammar.
+ *
+ * Copyright (c) 2026 Ashutosh Sinha <ajsinha@gmail.com>.
+ * All rights reserved.
+ *
+ * PROPRIETARY AND CONFIDENTIAL.
+ *
+ * This file is the confidential and proprietary property of Ashutosh Sinha.
+ * Unauthorised copying, use, modification, distribution or disclosure of this
+ * file, via any medium, is strictly prohibited except with the express prior
+ * written permission of the copyright holder.
+ *
+ * See the LICENSE file in the root of this repository for the full terms.
+ */
+/* "Construct your basket" (var-basket.js): a strip at the top of the VaR explorer, a popup from the top bar's "◫ Basket" anywhere
+   else. The theme's tokens for every colour (tokens.css), so every theme reads. */
+.vb { background: var(--d-surface); border: 1px solid var(--d-accent); border-radius: 4px; padding: 8px 10px; display: grid; gap: 7px;
+  color: var(--d-ink); font-size: 12.5px; margin-bottom: 10px; }
+.vb .mono { font-family: var(--d-font-mono); font-variant-numeric: tabular-nums; }
+.vb-head { display: flex; flex-wrap: wrap; gap: 4px 10px; align-items: baseline; }
+.vb-title { margin: 0; font-size: 13px; font-weight: 600; color: var(--d-ink); }
+.vb-sub { color: var(--d-muted); font-size: 12px; font-style: italic; }
+.vb-state { font: 500 10.5px var(--d-font-mono); padding: 1px 6px; border-radius: 2px; border: 1px solid var(--d-warn); color: var(--d-warn); }
+.vb-state.saved { border-color: var(--d-ok); color: var(--d-ok); }
+.vb-scope { margin-left: auto; color: var(--d-muted); font-size: 11.5px; max-width: 48%; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.vb-row { display: flex; flex-wrap: wrap; gap: 6px; align-items: center; }
+.vb-find { position: relative; flex: 1 1 320px; min-width: 0; }
+.vb-input { background: var(--d-bg); color: var(--d-ink); border: 1px solid var(--d-border); border-radius: 3px; padding: 4px 7px; font-size: 12px;
+  width: 100%; min-width: 0; }
+.vb-input:focus { outline: 2px solid var(--d-accent); outline-offset: -1px; }
+.vb-row > .vb-input { flex: 1 1 200px; width: auto; }
+.vb-narrow { flex: 0 1 220px !important; }
+.vb-tiny { flex: 0 0 64px !important; }
+.vb-name { flex: 1 1 180px !important; }
+.vb-share { flex: 1 1 220px !important; }
+.vb-lbl { color: var(--d-muted); font-size: 12px; }
+.vb-btn { background: var(--d-surface-2); color: var(--d-ink); border: 1px solid var(--d-border); padding: 3px 9px; font-size: 11.5px; white-space: nowrap; }
+.vb-btn:hover { border-color: var(--d-muted); color: var(--d-ink); }
+.vb-btn.primary { background: var(--d-fill); color: var(--d-on-fill); border-color: var(--d-fill); font-weight: 600; }
+.vb-btn:disabled { opacity: .45; cursor: default; }
+.vb-hints { position: absolute; left: 0; right: 0; top: calc(100% + 2px); z-index: 1060; background: var(--d-surface); border: 1px solid var(--d-border);
+  border-radius: 4px; box-shadow: 0 8px 24px rgba(0, 0, 0, .25); max-height: 320px; overflow: auto; }
+.vb-hint { display: flex; gap: 8px; align-items: baseline; padding: 5px 9px; cursor: pointer; border-bottom: 1px solid var(--d-border); }
+.vb-hint:last-child { border-bottom: 0; }
+.vb-hint.on, .vb-hint:hover { background: var(--d-highlight); }
+.vb-hint .k { font: 600 10px var(--d-font-mono); color: var(--d-accent); min-width: 52px; text-transform: uppercase; }
+.vb-hint .t { font-weight: 600; white-space: nowrap; }
+.vb-hint .n { color: var(--d-muted); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; min-width: 0; }
+.vb-hint .d { margin-left: auto; color: var(--d-muted); font-size: 11.5px; white-space: nowrap; }
+.vb-hint.flagged .d { color: var(--d-bad); white-space: normal; }
+.vb-hint.none { color: var(--d-muted); cursor: default; }
+.vb-chips { display: flex; flex-wrap: wrap; gap: 5px; }
+.vb-chip { display: inline-flex; gap: 5px; align-items: center; background: var(--d-surface-2); border: 1px solid var(--d-border); border-radius: 12px;
+  padding: 1px 4px 1px 4px; font-size: 12px; max-width: 100%; }
+.vb-chip .k { font: 10px var(--d-font-mono); color: var(--d-muted); }
+.vb-chip .mono { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; max-width: 340px; }
+.vb-chip .t { font: 10.5px var(--d-font-mono); color: var(--d-muted); }
+.vb-chip.minus { background: transparent; border-style: dashed; border-color: var(--d-neg); }
+.vb-chip.flagged { border-color: var(--d-bad); box-shadow: inset 0 0 0 1px var(--d-bad); }
+.vb-chip.flagged .t { color: var(--d-bad); }
+.vb-chip.whatif { border-style: dashed; border-color: var(--d-accent); background: transparent; }
+.vb-op { border: 0; background: transparent; color: var(--d-accent); font: 600 12px var(--d-font-mono); cursor: pointer; padding: 0 2px; }
+.vb-x { border: 0; background: none; color: var(--d-muted); cursor: pointer; font-size: 14px; line-height: 1; padding: 0 3px; }
+.vb-x:hover { color: var(--d-bad); }
+.vb-live { display: flex; flex-wrap: wrap; gap: 4px; align-items: baseline; color: var(--d-muted); min-height: 20px; }
+.vb-live b { font: 600 17px var(--d-font-mono); color: var(--d-ink); }
+.vb-live b.vb-empty { font-size: 14px; color: var(--d-warn); }
+.vb-live.computing { color: var(--d-link); }
+.vb-div { color: var(--d-pos); }
+.vb-ms { font-size: 11px; }
+.vb-notes { margin: 0; padding: 0 0 0 16px; color: var(--d-warn); font-size: 12px; }
+.vb-notes:empty { display: none; }
+.vb-note { color: var(--d-muted); font-size: 12px; margin: 2px 0; }
+.vb-err { color: var(--d-bad); margin: 4px 0; font-size: 12px; }
+.vb-msg { color: var(--d-muted); font-size: 12px; }
+.vb-whatif { border-top: 1px dashed var(--d-border); padding-top: 6px; display: grid; gap: 6px; }
+.vb-table { border-collapse: collapse; font-size: 12px; min-width: 320px; }
+.vb-table th, .vb-table td { padding: 3px 8px; border-bottom: 1px solid var(--d-border); text-align: left; white-space: nowrap; }
+.vb-table th { color: var(--d-muted); font-size: 10.5px; text-transform: uppercase; letter-spacing: .04em; font-weight: 600; }
+.vb-table .n { text-align: right; }
+.vb-table td.up { color: var(--d-neg); }
+.vb-table td.down { color: var(--d-pos); }
+.vb-table tr.vb-sub td { color: var(--d-muted); font-size: 11.5px; }
+.vb-shade { position: fixed; inset: 0; z-index: 1055; background: rgba(5, 10, 15, .5); display: flex; align-items: flex-start; justify-content: center;
+  padding: 70px 16px 16px; overflow-y: auto; }
+.vb-shade[hidden] { display: none; }
+.vb.popup { width: min(860px, 100%); box-shadow: 0 10px 40px rgba(0, 0, 0, .35); margin: 0; }
+.tool.basket { font-size: 13px; gap: 4px; }
+.tool.basket .tool-count[hidden] { display: none; }
+@media (max-width: 640px) {
+  .vb-scope { max-width: 100%; margin-left: 0; }
+  .vb-hint { flex-wrap: wrap; }
+  .vb-hint .d { margin-left: 0; white-space: normal; }
+  .vb-table { min-width: 0; width: 100%; }
+}

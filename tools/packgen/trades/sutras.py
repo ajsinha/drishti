@@ -289,7 +289,7 @@ FRAGMENT_DOCS = {
     "payments": ("The netted payment ladder (cash events by date, paid below the line, received above) and the same payments by "
                  "month, both on the right. Use it on any deal screen whose trade carries EVENTS with amounts and dates.", ""),
 }
-FOOTER = ["  - { use: data-provenance@1 }", "  - { use: linked-entities@1 }"]   # the deal-footer of before: the kit's two panels
+FOOTER = ["  - { use: data-provenance@1 }", "  - { use: risk-links@1 }", "  - { use: linked-entities@1 }"]   # the deal-footer: the kit's provenance, the Risk links (P&L vector, VaR, exposure), the linked entities
 
 
 def _wrap(text: str, width: int = 124) -> list[str]:

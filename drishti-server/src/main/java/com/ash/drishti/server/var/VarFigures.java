@@ -53,6 +53,10 @@ final class VarFigures implements ViewAugmenter {
         this.views = views;
     }
 
+    VarService service() {
+        return svc;
+    }
+
     @Override
     public boolean augments(String kind) {
         return Set.of(svc.props().kinds().position(), svc.props().kinds().portfolio(), "desk", LEGAL_ENTITY).contains(kind);
