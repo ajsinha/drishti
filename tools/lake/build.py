@@ -35,7 +35,9 @@ replaces that day only; overwrite-partitions replaces only the (date, partition 
 Formats (--format): delta (the default, as every connector file of the packs reads) or iceberg: the same staged rows written into an
 Apache Iceberg table <lake>/<domain>/<table> by Drishti's Iceberg loader in the server's exec jar (only overwrite-dates; partition columns
 are kept as columns, the table is partitioned by business date; tools/lake/icebergwrite.py). Iceberg is chosen by this flag, never by
-default.
+default. An Iceberg lake may be in object storage (--lake s3://bucket/prefix, or a REST catalog such as AWS Glue's through
+--iceberg-set catalog=rest --iceberg-set uri=...): the loader commits there itself (an Iceberg commit is atomic), the rows are staged in a
+local scratch folder (TMPDIR) and no run record is kept in the lake (deploy/aws/iceberg/load-day.sh keeps its own).
 
 Engines (--engine, Delta only): auto (default) uses Drishti's own Java writer in the server's exec jar when one is found (--jar, DRISHTI_JAR,
 drishti-server/target), else the Python deltalake package; the run says which ran and why.
@@ -263,23 +265,30 @@ class Progress:
 def run(a, say=print) -> tuple[int, dict]:
     """The whole build; returns (exit code, summary). Never raises for a data problem: it is in the summary."""
     started = time.monotonic()
-    lake = pathlib.Path(a.lake) if a.lake else None
+    remote = bool(a.lake) and "://" in str(a.lake) and not str(a.lake).startswith("file:")
+    lake = pathlib.Path(a.lake) if a.lake and not remote else None
     run_id = datetime.now().strftime("%Y%m%dT%H%M%S") + f"-{os.getpid()}"
     summary: dict = {"run": run_id, "startedAt": now_iso(), "status": "failed", "dryRun": bool(a.dry_run), "mode": a.mode}
     prog = Progress(a.progress, a.verbose)
     try:
         if not a.src:
             raise BuildError("give --from (a file or a folder)")
-        if not lake and not a.dry_run:
+        if remote and getattr(a, "format", "delta") != "iceberg":
+            raise BuildError("--lake s3://... is for --format iceberg: a Delta table in object storage is built locally and published with lake publish")
+        if not lake and not remote and not a.dry_run:
             raise BuildError("give --lake DIR (the Delta root the connector reads)")
         p = plan(a)
         as_of = date.fromisoformat(a.as_of) if a.as_of else None
         summary.update({k: p[k] for k in ("pack", "domain", "kind", "key", "promote")}, partitionBy=p["partition_by"],
                        date=None if as_of else p["date"], asOf=as_of.isoformat() if as_of else None)
         table = str(lake / p["domain"] / (p["table"] or p["kind"])) if lake else None
+        if remote:
+            table = str(a.lake).rstrip("/") + "/" + p["domain"] + "/" + (p["table"] or p["kind"])
         summary["table"] = table
         if a.dry_run:
             return _go(a, p, as_of, None, table, summary, prog, started, say)
+        if remote:                                         # the caller holds the table's lock (load-day.sh: a flock on EFS)
+            return _go(a, p, as_of, None, table, summary, prog, started, say, remote_root=str(a.lake).rstrip("/"))
         with LakeLock(lake, table=f"{p['domain']}/{p['table'] or p['kind']}"):
             return _go(a, p, as_of, lake, table, summary, prog, started, say)
     except Locked as e:
@@ -290,9 +299,12 @@ def run(a, say=print) -> tuple[int, dict]:
         return _finish(a, lake, summary, EXIT_FAILED, started, say)
 
 
-def _go(a, p, as_of, lake, table, summary, prog, started, say) -> tuple[int, dict]:
+def _go(a, p, as_of, lake, table, summary, prog, started, say, remote_root: str | None = None) -> tuple[int, dict]:
     staging = None
-    if lake:
+    if remote_root:
+        import tempfile
+        staging = pathlib.Path(tempfile.mkdtemp(prefix="drishti-build-")) / summary["run"]
+    elif lake:
         table_path = pathlib.Path(summary["table"])
         old = lake / STATE / "staging" / f"{table_path.parent.name}--{table_path.name}"
         if old.is_dir():                                   # left by a run of this table that died: we hold its lock
@@ -355,7 +367,8 @@ def _go(a, p, as_of, lake, table, summary, prog, started, say) -> tuple[int, dic
             prog.update(phase="writing", partsDone=done, partsTotal=total)
         if iceberg:
             import icebergwrite
-            res = icebergwrite.write(lake, p["domain"], pathlib.Path(table).name, by_day, names, staging, a.jar, a.java, progress=tick)
+            res = icebergwrite.write(remote_root or lake, p["domain"], table.rstrip("/").rsplit("/", 1)[-1], by_day, names, staging, a.jar, a.java,
+                                     progress=tick, settings=getattr(a, "iceberg_set", None))
         elif engine == "drishti":
             res = writers.write_drishti(t, by_day, staging, a.jar, a.java, progress=tick)
         else:
@@ -383,6 +396,8 @@ def _go(a, p, as_of, lake, table, summary, prog, started, say) -> tuple[int, dic
                 staging.parent.rmdir()                     # the staging folder only while a run uses it
             except OSError:
                 pass
+        if remote_root and staging and not a.keep_staging:
+            shutil.rmtree(staging.parent, ignore_errors=True)   # the scratch folder of an object-storage build
 
 
 # ------------------------------------------------------------------------------------------------ the data-load signal
@@ -547,6 +562,9 @@ def add_arguments(p: argparse.ArgumentParser) -> argparse.ArgumentParser:
     g = p.add_argument_group("how")
     g.add_argument("--format", choices=("delta", "iceberg"), default="delta",
                    help="delta (default) or iceberg: the table format written (Iceberg by Drishti's Iceberg loader in the server's exec jar)")
+    g.add_argument("--iceberg-set", action="append", metavar="KEY=VALUE",
+                   help="--format iceberg: a setting for the Iceberg loader (s3.region=eu-west-2, catalog=rest, uri=..., warehouse=..., "
+                        "catalog.rest.signing-name=glue); repeatable")
     g.add_argument("--engine", choices=("auto", "drishti", "deltalake"), default="auto", help="Delta only. auto (default): Drishti's Java writer when the server jar is found, else deltalake")
     g.add_argument("--mode", choices=MODES, default="overwrite-dates", help="overwrite-dates (default), overwrite-partitions or append")
     g.add_argument("--batch-rows", type=int, default=50_000, help="most rows per batch written (default 50,000; also the most rows sorted at once)")

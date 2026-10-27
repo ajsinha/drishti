@@ -125,6 +125,13 @@ class IcebergFormatTest(unittest.TestCase):
         self.assertEqual(code, build.EXIT_FAILED)
         self.assertIn("--format iceberg replaces each business date", summary["error"])
 
+    def test_an_object_storage_lake_is_for_iceberg_only(self):
+        a = build.build_parser().parse_args(["--from", str(self.src), "--lake", "s3://bucket/lake", "--domain", "risk", "--kind", "pnl-vector",
+                                             "--key", "VECTOR_ID", "--date", "BUSINESS_DATE", "-q"])
+        code, summary = build.run(a, say=lambda *x, **k: None)
+        self.assertEqual(code, build.EXIT_FAILED)
+        self.assertIn("is for --format iceberg", summary["error"])
+
     def test_delta_is_the_default(self):
         a = build.build_parser().parse_args(["--from", str(self.src)])
         self.assertEqual(a.format, "delta")

@@ -49,14 +49,18 @@ def lines(domain: str, table: str, by_day: dict, partition_names: list[str]):
                                      ensure_ascii=False, separators=(",", ":")) + "\n"
 
 
-def write(lake: pathlib.Path, domain: str, table: str, by_day: dict, partition_names: list[str], workdir: pathlib.Path,
-          jar: str | None = None, java: str | None = None, progress=None) -> dict:
+def write(lake, domain: str, table: str, by_day: dict, partition_names: list[str], workdir: pathlib.Path,
+          jar: str | None = None, java: str | None = None, progress=None, settings: list[str] | None = None) -> dict:
     """Streams the staged rows into ``<lake>/<domain>/<table>``; {format, table, rows, dates, engine}. Raises writers.WriteError with the
     loader's own last line when it fails (nothing of a day that did not commit is visible)."""
     spill = workdir / "spill"
     spill.mkdir(parents=True, exist_ok=True)
     try:
         cmd = stores.loader_command(workdir, jar, java) + ["-", str(lake), "--engine", "native", "--spill-dir", str(spill), "--buffer-mb", "512"]
+        for kv in settings or []:
+            if "=" not in kv:
+                raise writers.WriteError(f"--iceberg-set {kv}: give KEY=VALUE")
+            cmd += ["--set", kv]
     except SystemExit as e:
         raise writers.WriteError(str(e)) from None
     said: list[str] = []
@@ -80,5 +84,5 @@ def write(lake: pathlib.Path, domain: str, table: str, by_day: dict, partition_n
     words = [s.rstrip() for s in said if s.strip() and not s.startswith("SLF4J")]
     if proc.returncode:
         raise writers.WriteError("the Iceberg load did not finish: " + (words[-1] if words else f"exit {proc.returncode}"))
-    return {"format": "iceberg", "engine": "native", "table": str(lake / domain / table), "rows": n,
+    return {"format": "iceberg", "engine": "native", "table": str(lake).rstrip("/") + "/" + domain + "/" + table, "rows": n,
             "dates": sorted(d.isoformat() for d in by_day), "loader": [w for w in words if w.startswith("iceberg:")][-3:]}
