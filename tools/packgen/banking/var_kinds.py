@@ -86,7 +86,9 @@ CONNECTORS = {
 #: link fields the kinds carry (field -> (kind, label)); the hierarchy fields (TT_BOOK, LEGAL_ENTITY, COUNTERPARTY) link through the
 #: core and trading packs' own fields
 FIELDS = {"POSITION_ID": ("position", "Position"), "PORTFOLIO_ID": ("portfolio", "Portfolio"), "NODE_ID": ("risk-hierarchy", "Hierarchy node"),
-          "TRADE_IDS": ("trade", "Trade")}
+          "TRADE_IDS": ("trade", "Trade"),
+          # a trade page's Risk links (risk-links@1): set on the view by the VaR engine when the trade is live
+          "PNL_VECTOR_ID": ("pnl-vector", "P&L vector"), "VAR_RESULT_ID": ("var-result", "VaR of this trade")}
 _HIER = ["LEGAL_ENTITY", "DIVISION", "DESK", "TT_BOOK", "PORTFOLIO"]
 #: the risk-store layout of each kind: promoted columns, and the vector columns (list<double>, out of the document)
 LAYOUT = {

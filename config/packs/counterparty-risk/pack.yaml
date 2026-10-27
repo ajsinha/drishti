@@ -124,7 +124,7 @@ graph:
     CVA_RESULT:
       kind: cva
       label: CVA
-    EXPOSURE_RESULT_ID:               # a trade page's Risk links (risk-links@1): set on the view by the exposure engine when the run has the trade
+    EXPOSURE_RESULT_ID:
       kind: exposure-result
       label: Exposure of this trade
     NETTING_SET:

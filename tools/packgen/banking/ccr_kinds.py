@@ -103,7 +103,9 @@ CONNECTORS = {
     },
 }
 #: link fields the kinds carry (field -> (kind, label)); NETTING_SET, COUNTERPARTY and LEGAL_ENTITY link through the packs' own fields
-FIELDS = {"RUN_ID": ("simulation-run", "Simulation run")}
+FIELDS = {"RUN_ID": ("simulation-run", "Simulation run"),
+          # a trade page's Risk links (risk-links@1): set on the view by the exposure engine when the run has the trade
+          "EXPOSURE_RESULT_ID": ("exposure-result", "Exposure of this trade")}
 #: the search form of each stored kind: its key columns
 FORM_COLUMNS = {"simulation-run": ["CALIBRATION", "PATHS", "STATUS"],
                 "exposure-path": ["TRADE_ID", "NETTING_SET", "COUNTERPARTY", "GRID_DATE", "RUN_ID"],

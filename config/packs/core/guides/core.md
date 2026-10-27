@@ -92,7 +92,7 @@ A clearing house with its default fund and margin model.
 
 The bank's own booking entity.
 
-**Fields its Sutra reads:** `NAME`, `LEI`, `JURISDICTION`, `REGULATOR`, `DESKS`, `BOOKS`.
+**Fields its Sutra reads:** `NAME`, `LEI`, `JURISDICTION`, `REGULATOR`, `VAR_ENGINE`, `DESKS`.
 
 ### Book (`book`)
 
@@ -146,7 +146,7 @@ Every kind of the pack has a data contract: a YAML file beside the pack (`config
 | `GRP` | `counterparty-group` | fundamental | `GROUP_ID` | One row per counterparty group per business date, keyed by GROUP_ID. | 8 |
 | `ISS` | `issuer` | fundamental | `ISSUER_ID` | One row per issuer per business date, keyed by ISSUER_ID. | 12 |
 | `CCP` | `ccp` | fundamental | `CCP_ID` | One row per central counterparty per business date, keyed by CCP_ID. | 8 |
-| `LE` | `legal-entity` | fundamental | `ENTITY_ID` | One row per bank legal entity per business date, keyed by ENTITY_ID. | 15 |
+| `LE` | `legal-entity` | fundamental | `ENTITY_ID` | One row per bank legal entity per business date, keyed by ENTITY_ID. | 14 |
 | `BOOK` | `book` | fundamental | `BOOK_ID` | One row per book per business date, keyed by BOOK_ID. | 21 |
 | `DESK` | `desk` | fundamental | `DESK_ID` | One row per desk per business date, keyed by DESK_ID. | 16 |
 | `TRDR` | `trader` | fundamental | `TRADER_ID` | One row per trader per business date, keyed by TRADER_ID. | 7 |
@@ -346,13 +346,13 @@ Nested `BOOKS[]`:
 |---|---|---|---|---|---|---|---|
 | `BOOK` | id |  | required |  | `BOOK-SFT-1` (pattern `^BOOK-`) | `book` | Book: the book it refers to |
 | `DESK` | id |  | required |  | `Repo and securities lending` | `desk` | Desk: the desk it refers to |
-| `VAR` | amount |  | required |  | `14855706` |  | — |
 | `PNL` | amount |  | required |  | `-327989` |  | — |
 | `MTM` | amount |  | required |  | `8879873` |  | — |
 | `TRADES` | integer |  | required |  | `17` |  | — |
 
 **Links:** `JURISDICTION` → `jurisdiction`, `BOOKS[].BOOK` → `book`, `BOOKS[].DESK` → `desk`.
 
+- The legal entity's VaR and its books' are the VaR engine's (LE:<id>, BOOK:<id>), computed as the page opens (VAR_ENGINE); BOOKS[].VAR left the record in 2.9.2 (a stored figure, never the engine's).
 - Dated by the lake's business_date partition: `drishti.py lake build` writes each test-data file's day into it; the documents carry no date field of their own.
 
 ### BOOK: Book (`book`)
