@@ -23,8 +23,9 @@ from __future__ import annotations
 from shotlib import Ctx, register, showcase
 
 shot = register("form")
-RESULTS = ("/form/trading?kind=trade&run=1&op.currency=in&v.currency=EUR&v.currency=USD&op.notional=%3E%3D&v.notional=100m&op.mtm=%3E&v.mtm=0"
-           "&order=mtm&desc=1&limit=25")
+RESULTS = "/form/trading?kind=trade&run=1&v.CURRENCY=EUR&v.CURRENCY=USD&op.QUANTITY=%3E%3D&v.QUANTITY=100m&limit=100"
+# the trades' fields are lists, amounts, dates and ids (production-shaped, 2.3.0): a text field with *matches regex* is a counterparty's name
+REGEX = "/form/core?kind=counterparty&run=1&op.NAME=regex&v.NAME=%28a%29%5C1"
 
 
 def open_form(c: Ctx, path: str, width: int = 1440, height: int = 1500, touch: bool = False):
@@ -36,18 +37,21 @@ def open_form(c: Ctx, path: str, width: int = 1440, height: int = 1500, touch: b
 
 @shot("01-form.jpg")
 def form(c: Ctx):
-    open_form(c, "/form/trading?kind=trade", height=1100)
-    c.page.locator('[name="op.notional"]').select_option(">=")
-    c.page.fill('[name="v.notional"]', "100m")
-    cur = c.page.locator("details.ms-box", has=c.page.locator('[name="v.currency"]'))
+    open_form(c, "/form/trading?kind=trade", height=1150)
+    c.page.fill('[name="v.TRADE_ID"]', "MX-2*")
+    c.page.locator('[name="v.SOURCE_SYSTEM"][value="MUREX"]').check()
+    cur = c.page.locator("details.ms-box", has=c.page.locator('[name="v.CURRENCY"]'))
     cur.locator("summary").click()                       # a long list of values is one dropdown: search, Select all, Clear, a box per value
-    cur.locator('[name="v.currency"][value="EUR"]').check()
-    cur.locator('[name="v.currency"][value="USD"]').check()
-    c.page.fill('[name="v.counterparty.name"]', "bank")
-    c.page.locator('[name="op.counterparty.name"]').select_option("contains")
-    c.page.locator('[name="op.maturityDate"]').select_option("relative")
-    c.page.fill('[name="v.maturityDate"]', "next 10 business days")
-    c.save("01-form.jpg", clip={"x": 0, "y": 56, "width": 1440, "height": 1000})
+    cur.locator('[name="v.CURRENCY"][value="EUR"]').check()
+    cur.locator('[name="v.CURRENCY"][value="USD"]').check()
+    cur.locator("summary").click()
+    c.page.locator('[name="op.QUANTITY"]').select_option(">=")
+    c.page.fill('[name="v.QUANTITY"]', "100m")
+    c.page.locator('[name="op.MATURITY_DATE"]').select_option("relative")
+    c.page.fill('[name="v.MATURITY_DATE"]', "next 10 business days")
+    c.page.mouse.move(1430, 1100)
+    c.page.wait_for_timeout(300)
+    c.save("01-form.jpg", clip={"x": 0, "y": 56, "width": 1440, "height": 1060})
 
 
 @shot("02-results.jpg")
@@ -70,16 +74,18 @@ def folded(c: Ctx):
 @shot("03-phone.jpg")
 def phone(c: Ctx):
     open_form(c, "/form/trading?kind=trade", width=390, height=900)
-    c.page.locator('[name="v.notional"]').scroll_into_view_if_needed()
+    c.page.locator('[name="v.QUANTITY"]').scroll_into_view_if_needed()
     c.save("03-phone.jpg", clip={"x": 0, "y": 0, "width": 390, "height": 900})
 
 
 @shot("04-regex-refused.jpg")
 def refused(c: Ctx):
-    open_form(c, "/form/trading?kind=trade&run=1&op.counterparty.name=regex&v.counterparty.name=%28a%29%5C1", height=1500)
+    open_form(c, REGEX, height=1500)
     c.page.locator("[data-qf-error]").wait_for(timeout=30000)
-    box = c.page.locator(".qf-group").first.bounding_box()
-    c.save("04-regex-refused.jpg", clip={"x": 0, "y": max(0, box["y"] - 8), "width": 1440, "height": 420})
+    group = c.page.locator('.qf-group:has([name="v.NAME"])').first.bounding_box()
+    err = c.page.locator("[data-qf-error]").bounding_box()
+    y = max(0, group["y"] - 44)                       # with the note above the fields
+    c.save("04-regex-refused.jpg", clip={"x": 0, "y": y, "width": 1440, "height": min(err["y"] + err["height"] + 16 - y, 900)})
 
 
 @shot("05-designer-form-tab.jpg")
