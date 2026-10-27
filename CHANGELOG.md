@@ -17,6 +17,15 @@
 
 ## 2.9.4 (unreleased)
 
+- **The guard of the data standard (2026-10-27).** Two tests in the drill: `tools/test_generators_write_jsonl.py` runs the cheap
+  generators into a temporary folder (comswap and note synth, `make_trades`, `bulk_trades --no-lake`, `make_data --lake --no-load` and
+  its feed, `samplegen/lake.py --no-load`, a retired pack's `make.py`, the sample and Sutra-case writers) and checks every data file
+  is JSON Lines, and reads every generator's source for a Delta, Parquet or CSV writer or a `.json`/`.csv`/`.tsv`/`.parquet`/`.ndjson`
+  data file outside its allow-list (manifests, state, download caches, test oracles, the loaders, the Iceberg fixtures, human-facing
+  exports); `tools/test_exports_offer_jsonl.py` checks that every export entry point offers JSON Lines (server, console routes, UI
+  menus, CLI). Docs: DATA_FORMATS section 5, the Windows QA guide's section 6g and checklist, SCALE_BENCHMARK, the plan's 2.9.4
+  section.
+
 - **JSON Lines in three smaller places (2026-10-27; product owner).** A pack's sample catalogue is `samples/catalog.jsonl`, one
   `{kind, id, title, subtitle}` a line (19 committed catalogues converted; every generator writes it; `PackSamples.catalogEntries`,
   `packsamples.catalog` and every reader take it, never as a kind, and still read the `catalog.json` array; the demo connector still

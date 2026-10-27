@@ -89,6 +89,7 @@ python_tool_tests() {
   python3 -m unittest -q tools/test_sutragen.py
   python3 -m unittest -q tools/test_ingest_jsonl.py
   python3 -m unittest -q tools/test_convert.py         # drishti.py convert: CSV, JSON arrays and .json folders into JSON Lines
+  python3 -m unittest -q tools/test_generators_write_jsonl.py tools/test_exports_offer_jsonl.py   # the data standard: generators write JSONL, exports offer it
   python3 -m unittest -q tools/test_drishti_cli.py
   python3 -m unittest -q tools/test_pack_bundle.py tools/test_no_hidden_names.py
   python3 -m unittest -q tools/test_packmake.py
