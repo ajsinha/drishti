@@ -152,5 +152,41 @@ class VarCli(unittest.TestCase):
                 run("whatif", "DESK:RATES", "--trades", str(f))
 
 
+class IntradayTest(unittest.TestCase):
+    """`drishti.py var intraday` (docs/guides/VAR_GUIDE.md section 8.4): a file's kind from its rows, its dates moved to another business
+    date, a dry run that writes nothing, and the headline's intraday line."""
+
+    ROWS = [{"SCENARIO_PV_ID": "SPV-1000003-HS-509-I-2026-09-30-001", "TRADE_ID": "1000003", "BUSINESS_DATE": "2026-09-30",
+             "VALUATION_DATE": "2026-09-30", "BASE_VALUATION_DATE": "2026-09-30", "COMPUTED_AT": "2026-09-30T23:05:00Z",
+             "BATCH_ID": "I-2026-09-30-001", "RUN_KIND": "INTRADAY", "BASE_PV": 1.0, "SCENARIO_PV": [1.0, 2.0]}]
+
+    def test_the_kind_and_the_moved_dates(self):
+        self.assertEqual(V.intraday_kind(self.ROWS), "scenario-pv")
+        self.assertEqual(V.intraday_kind([{"PNL": [1.0], "VECTOR_ID": "PV-1"}]), "pnl-vector")
+        with self.assertRaises(ValueError):
+            V.intraday_kind(self.ROWS + [{"PNL": [1.0]}])
+        moved = V.move_dates(self.ROWS, "2026-10-27")[0]
+        self.assertEqual(moved["BUSINESS_DATE"], "2026-10-27")
+        self.assertEqual(moved["COMPUTED_AT"], "2026-10-27T23:05:00Z")
+        self.assertEqual(moved["BATCH_ID"], "I-2026-10-27-001")
+        self.assertEqual(moved["SCENARIO_PV"], [1.0, 2.0])
+        self.assertEqual(self.ROWS[0]["BUSINESS_DATE"], "2026-09-30")              # the file's own rows untouched
+
+    def test_a_dry_run_writes_nothing(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            f = Path(tmp) / "batch.jsonl"
+            f.write_text("".join(json.dumps(r) + "\n" for r in self.ROWS), encoding="utf-8")
+            said = []
+            self.assertEqual(V.load_intraday(str(f), str(Path(tmp) / "lake"), "2026-10-27", None, None, True, said.append), 0)
+            self.assertIn("1 scenario-pv rows (1 marked RUN_KIND INTRADAY), business date 2026-10-27", said[0])
+            self.assertFalse((Path(tmp) / "lake").exists())
+
+    def test_the_headline_says_intraday(self):
+        said = []
+        V.render_headline({**HEAD, "intraday": {"trades": 5, "amended": 3, "added": 1, "cancelled": 1, "batchCount": 2,
+                                                  "lastAt": "2026-09-30T23:10:00Z"}}, said.append)
+        self.assertTrue(any("intraday   5 trades updated" in s for s in said), said)
+
+
 if __name__ == "__main__":
     unittest.main()

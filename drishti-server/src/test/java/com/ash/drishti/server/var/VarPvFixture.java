@@ -100,7 +100,7 @@ final class VarPvFixture {
         VarLakeFixture.table(root, work, "fx-spot", "PAIR", List.of(spot, cross), List.of("MID"), null);
     }
 
-    private static double[] plus(double base, double[] unit, double f) {
+    static double[] plus(double base, double[] unit, double f) {
         double[] out = new double[unit.length];
         for (int i = 0; i < unit.length; i++) {
             out[i] = base + f * unit[i];
@@ -108,7 +108,7 @@ final class VarPvFixture {
         return out;
     }
 
-    private static Map<String, Object> row(LocalDate day, String id, String ccy, double basePv, Object pvs, LocalDate valued) {
+    static Map<String, Object> row(LocalDate day, String id, String ccy, double basePv, Object pvs, LocalDate valued) {
         Map<String, Object> d = new LinkedHashMap<>();
         d.put("SCENARIO_PV_ID", "SPV-" + id + "-HS-20");
         d.put("TRADE_ID", id);

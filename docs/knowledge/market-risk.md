@@ -186,6 +186,11 @@ side by side: on the demo lake the bank's 126.5 million USD is 110.4 million EUR
 its PVs come in. The guide's [section 15.11](../guides/VAR_GUIDE.md#1511-reporting-currencies-built-ahead-per-trade-currency-totals-and-the-picker-as-built-294)
 has the details.
 
+**During the day (2.9.4).** A pricing system re-sends only the trades that changed: amended, new or cancelled, priced over the same
+scenario days as the morning run (`RUN_KIND: INTRADAY`, a later `COMPUTED_AT`). Drishti replaces each such trade's P&L and adds the
+difference to its book and every node above it, so the desk's VaR moves within seconds without reloading the day; the latest price of a
+trade wins, and the figures say *intraday*. The official end-of-day numbers stay those of the morning run.
+
 ## 4. A worked example on the demo data
 
 From a scratch server over the default demo lake (`drishti.py lake demo`, which moves the test data's sixty business days to end

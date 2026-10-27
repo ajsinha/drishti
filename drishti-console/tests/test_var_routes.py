@@ -108,6 +108,7 @@ def test_the_page_has_the_reporting_currency_picker_and_the_tab(client):
     assert 'data-tab="ccy"' in html and "In other currencies" in html and "data-vx-ccytable" in html
     assert "<th>Trade currency</th>" in html                               # the contributions and the worst scenarios list it
     assert 'data-ccy=""' in client.get("/var?scope=BANK&ccy=12").text       # not a currency: the session's, else USD
+    assert "data-vx-intraday" in html                                       # the intraday badge (filled when the figures include updates)
 
 
 def test_every_answer_passes_the_reporting_currency_to_the_engine(client, backend, monkeypatch):

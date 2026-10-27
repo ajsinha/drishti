@@ -255,8 +255,21 @@
       t.appendChild(tile);
     });
     renderCrumb(d);
+    renderIntraday(d.intraday);
     renderProv(d.provenance, d);
     document.title = "VaR · " + d.label + (document.body.dataset.product ? " · " + document.body.dataset.product : "");
+  }
+
+  /** The intraday badge (VAR_GUIDE.md section 8.4): the figures include trades re-sent since the morning run; none, hidden. */
+  function renderIntraday(i) {
+    var b = $("[data-vx-intraday]");
+    if (!i) { b.hidden = true; b.textContent = ""; delete root.dataset.intraday; return; }
+    var at = String(i.lastAt || "").replace("T", " ").slice(0, 16);
+    b.textContent = "intraday · " + int(i.trades) + " trade" + (i.trades === 1 ? "" : "s") + (at ? " · " + at : "");
+    b.title = i.note + ". " + int(i.updates) + " updates in " + int(i.batchCount) + " batches" + ((i.batches || []).length ? " (latest: "
+      + i.batches.slice(-3).join(", ") + ")" : "") + "; " + int(i.amended) + " amended, " + int(i.added) + " new, " + int(i.cancelled) + " cancelled.";
+    b.hidden = false;
+    root.dataset.intraday = String(i.updates);
   }
 
   /** What the scope names but cannot count, in words (an id that matches nothing, a trade not live on the date), and an empty scope. */
@@ -294,7 +307,9 @@
     dl.textContent = "";
     var fx = p.fx || {};
     [["Scope", d.kind + " " + d.label], ["Reporting currency", (p.currency || "USD") + ", chosen in the header"],
-      ["Input", p.input || "P&L vectors (USD)"], ["Scenario FX", fx.scenarioFx || "none needed"], ["Cross rates", "via USD"],
+      ["Input", p.input || "P&L vectors (USD)"],
+      ["Intraday", p.intraday ? int(p.intraday.updates) + " updates of " + int(p.intraday.trades) + " trades in " + int(p.intraday.batchCount)
+        + " batches, latest " + p.intraday.lastAt + "; the official records are the morning run's" : "none: the morning run"], ["Scenario FX", fx.scenarioFx || "none needed"], ["Cross rates", "via USD"],
       ["Resolved", (p.resolved || []).join("; ") || p.scope], ["Positions", int(p.positions)],
       ["Trades", int(p.trades) + (p.failed ? " · " + p.failed + " without a vector" : "")],
       ["Outside your view", p.hidden ? int(p.hidden) + " trades not included" : "none"],

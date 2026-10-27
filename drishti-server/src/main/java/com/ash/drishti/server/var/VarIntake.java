@@ -50,7 +50,8 @@ import java.util.function.Supplier;
 final class VarIntake {
 
     /** The trade columns read besides the engine's own when the table keeps them (VAR_GUIDE.md section 15.2). */
-    static final List<String> OPTIONAL = List.of("TRADE_STATUS", "MATURITY_DATE", "BATCH_ID", "SCENARIO_SET_ID", "REPORTING_CCY", "STATUS");
+    static final List<String> OPTIONAL = List.of("TRADE_STATUS", "MATURITY_DATE", "BATCH_ID", "SCENARIO_SET_ID", "REPORTING_CCY", "STATUS",
+            "RUN_KIND", "COMPUTED_AT");
     /** The scenario-PV form's own columns (VAR_GUIDE.md section 15.9), read when the table keeps them. */
     static final List<String> PV_COLUMNS = List.of("BASE_PV", "VALUATION_DATE", "BASE_VALUATION_DATE");
     /** The engine's columns the vector table must keep (the rest of the trade columns are read when kept). */
@@ -184,16 +185,40 @@ final class VarIntake {
     void row(String id, double[] values, int length, String[] row) {
         String trade = row[0] == null ? id : row[0];
         String batch = text(row, "BATCH_ID");
-        if (batch != null) {
-            batches.add(batch);
-        }
         String set = text(row, "SCENARIO_SET_ID");
-        if (set != null) {
-            sets.add(set);
+        String at = text(row, "COMPUTED_AT");
+        boolean intra = INTRADAY.equalsIgnoreCase(text(row, "RUN_KIND"));
+        currentIntra = intra;
+        if (intra) {
+            if (batch != null) {
+                intradayBatches.add(batch);
+            }
+            if (batch != null && applied.contains(batch)) {
+                return;                                                 // applied already (a redelivery, or a date opened again)
+            }
+            if (setId != null && set != null && !set.equals(setId)) {
+                reject(new String[] {ErrorCode.VAR_INCONSISTENT_DATE.code(), "an intraday update of the scenario set " + set + " (batch " + batch
+                        + "); the date's set is " + setId + ": not applied"}, trade);
+                return;
+            }
+        } else {
+            if (batch != null) {
+                batches.add(batch);
+            }
+            if (set != null) {
+                sets.add(set);
+            }
+            if (at != null && (morningAt == null || at.compareTo(morningAt) > 0)) {
+                morningAt = at;
+            }
+            if (intradayOnly) {
+                return;                                                 // reading only the intraday rows of a loaded date
+            }
         }
         String status = text(row, "TRADE_STATUS");
         String maturity = text(row, "MATURITY_DATE");
-        if (!rules.live(status) || matured(maturity)) {
+        boolean live = rules.live(status) && !matured(maturity);
+        if (!live && !intra) {
             excluded++;
             if (notLive.size() < NOT_LIVE_KEPT && trade != null) {
                 notLive.put(trade, !rules.live(status) ? "its status is " + status : "it matured on " + maturity.substring(0, 10));
@@ -202,26 +227,25 @@ final class VarIntake {
         }
         double[] vector = values;
         double pvUsd = Double.NaN;
-        String[] why;
-        if (fx == null) {
-            String w = check(values, length, text(row, "STATUS"), text(row, "REPORTING_CCY"));
-            why = w == null ? null : new String[] {ErrorCode.VAR_ROW_REJECTED.code(), w};
-        } else {
-            why = checkPv(values, length, row);
-            if (why == null && length >= 0) {
-                ScenarioFx.Rates r = fx.get().rates(currency(row)).orElseThrow();
-                double base = VarLoader.number(text(row, "BASE_PV"));
-                ScenarioFx.pnlFromPv(base, values, length, r, usd);
-                vector = usd;
-                pvUsd = base * r.base();
-                fxUsed.putIfAbsent(r.currency(), Map.of("source", r.source(), "base", r.base()));
+        String[] why = null;
+        if (live) {
+            if (fx == null) {
+                String w = check(values, length, text(row, "STATUS"), text(row, "REPORTING_CCY"));
+                why = w == null ? null : new String[] {ErrorCode.VAR_ROW_REJECTED.code(), w};
+            } else {
+                why = checkPv(values, length, row);
+                if (why == null && length >= 0) {
+                    ScenarioFx.Rates r = fx.get().rates(currency(row)).orElseThrow();
+                    double base = VarLoader.number(text(row, "BASE_PV"));
+                    ScenarioFx.pnlFromPv(base, values, length, r, usd);
+                    vector = usd;
+                    pvUsd = base * r.base();
+                    fxUsed.putIfAbsent(r.currency(), Map.of("source", r.source(), "base", r.base()));
+                }
             }
         }
         if (why != null) {
-            rejected++;
-            if (rejections.size() < LISTED) {
-                rejections.add(why[0] + " " + trade + ": " + why[1]);
-            }
+            reject(why, trade);
             return;
         }
         for (int c = 0; c < texts.length; c++) {
@@ -232,9 +256,11 @@ final class VarIntake {
         }
         if (fx != null) {
             numbers[VarBook.TRADE_NUMBERS.indexOf("PV")] = pvUsd;           // the trade's USD value today, as a P&L vector's PV
-            scenarioPv++;
-            if (pvTrades.size() < NOT_LIVE_KEPT && trade != null) {
-                pvTrades.add(trade);
+            if (!intra) {
+                scenarioPv++;
+                if (pvTrades.size() < NOT_LIVE_KEPT && trade != null) {
+                    pvTrades.add(trade);
+                }
             }
         }
         PositionRules.Derived d = rules.derive(trade, text(row, "TT_BOOK"), text(row, "PRODUCT_GROUP"), text(row, "PRODUCT_TYPE"),
@@ -249,7 +275,74 @@ final class VarIntake {
             texts[VarBook.TRADE_TEXTS.indexOf("INSTRUMENT")] = d.securityId() != null ? d.securityId()
                     : text(row, "PRODUCT_TYPE") == null ? trade : text(row, "PRODUCT_TYPE") + " " + trade;
         }
+        if (intra) {                                                    // an intraday update: the latest per trade kept, applied on the book
+            if (live && length < 0) {
+                return;                                                 // no PVs and not cancelled: nothing to apply
+            }
+            double pvAt = numbers[VarBook.TRADE_NUMBERS.indexOf("PV")];
+            double[] pnl = live ? java.util.Arrays.copyOf(vector, width) : null;
+            intraday.offer(new VarIntradayRows.Row(trade, at, batch == null ? "" : batch, new com.ash.drishti.compute.var.VarIntraday.Update(trade,
+                    pnl, pvAt, texts.clone(), numbers.clone(), pvAt, pnl == null ? null : pnl.clone())));
+            return;
+        }
         book.trade(trade, vector, length, texts, numbers);
+    }
+
+    private void reject(String[] why, String trade) {
+        rejected++;
+        if (rejections.size() < LISTED) {
+            rejections.add(why[0] + " " + trade + ": " + why[1]);
+        }
+        if (currentIntra && intradayRejections.size() < LISTED) {
+            intradayRejections.add(why[0] + " " + trade + ": " + why[1]);
+        }
+    }
+
+    private boolean currentIntra;
+    private final List<String> intradayRejections = new ArrayList<>();
+
+    /** The intraday rows rejected, in words (the first 20). */
+    List<String> intradayRejections() {
+        return List.copyOf(intradayRejections);
+    }
+
+    // ---------------------------------------------------------------------------------------------------------- intraday
+
+    /** The marker of an intraday update (VAR_GUIDE.md section 8.4): {@code RUN_KIND: INTRADAY}. A full run has none, or {@code FULL}. */
+    static final String INTRADAY = "INTRADAY";
+    private final VarIntradayRows intraday = new VarIntradayRows();
+    private final TreeSet<String> intradayBatches = new TreeSet<>();
+    private java.util.Set<String> applied = java.util.Set.of();
+    private boolean intradayOnly;
+    private String setId;
+    private String morningAt;
+
+    /** The date's scenario set: an intraday row of another is rejected ({@code DRS-5203}), never applied. */
+    VarIntake scenarioSet(String id) {
+        this.setId = id;
+        return this;
+    }
+
+    /** Reads only the intraday rows of a loaded date, skipping the batches {@code applied} already. */
+    VarIntake intradayOnly(java.util.Set<String> applied) {
+        this.intradayOnly = true;
+        this.applied = applied == null ? java.util.Set.of() : applied;
+        return this;
+    }
+
+    /** The intraday updates read (the latest per trade). */
+    VarIntradayRows intraday() {
+        return intraday;
+    }
+
+    /** The intraday batches met (applied before or not). */
+    java.util.Set<String> intradayBatches() {
+        return java.util.Set.copyOf(intradayBatches);
+    }
+
+    /** The newest {@code COMPUTED_AT} of the morning run's rows (an intraday update before it is older than the run, and ignored). */
+    String morningAt() {
+        return morningAt;
     }
 
     private String currency(String[] row) {

@@ -248,6 +248,37 @@ public final class CurrencyTotals {
         return sums(acc, n, w);
     }
 
+    /**
+     * These totals with changes added (an intraday layer, VAR_GUIDE.md section 8.4): per node and trade currency, the change of its native
+     * PVs ({@code N} scenarios, then today). The nodes without a change share their sums.
+     */
+    public CurrencyTotals withChanges(Map<String, Map<String, double[]>> changes) {
+        if (changes.isEmpty()) {
+            return this;
+        }
+        Map<String, Sums> out = new LinkedHashMap<>(byKey);
+        changes.forEach((node, byCcy) -> {
+            Map<String, double[]> acc = new TreeMap<>();
+            Map<String, int[]> n = new TreeMap<>();
+            Sums s = byKey.get(node);
+            if (s != null) {
+                for (int i = 0; i < s.currencies().length; i++) {
+                    double[] v = java.util.Arrays.copyOf(s.pv()[i], width + 1);
+                    v[width] = s.base()[i];
+                    acc.put(s.currencies()[i], v);
+                    n.put(s.currencies()[i], new int[] {s.trades()[i]});
+                }
+            }
+            byCcy.forEach((c, d) -> {
+                double[] v = acc.computeIfAbsent(c, k -> new double[width + 1]);
+                VarMath.addInto(v, d);
+                n.computeIfAbsent(c, k -> new int[1]);
+            });
+            out.put(node, sums(acc, n, width));
+        });
+        return new CurrencyTotals(width, out);
+    }
+
     // ------------------------------------------------------------------------------------------------------------- the hot file
 
     /** The {@code CTOT} section: keys, then per key its currencies, each with its trades, today's sum and the scenarios' sums. */

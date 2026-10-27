@@ -104,7 +104,7 @@ final class VarPositions {
         List<String> ids = new ArrayList<>();
         List<Map<String, Object>> trades = new ArrayList<>();
         java.util.TreeSet<String> cps = new java.util.TreeSet<>();
-        for (int o = b.positionFrom(p); o < b.positionTo(p); o++) {
+        for (int o : members(b, p)) {
             String t = b.tradeId(o);
             ids.add(t);
             double q = tc.number("QUANTITY", o);
@@ -139,5 +139,14 @@ final class VarPositions {
         m.put("VAR_SCOPE", "POS:" + id);
         m.put("DERIVED_BY", "the server's position rules " + d.intake().rulesDigest() + " (VAR_GUIDE.md section 15.6)");
         return m;
+    }
+
+    /** A position's member trades in order: its run, and any trade an intraday batch added (VAR_GUIDE.md section 8.4). */
+    private static int[] members(com.ash.drishti.compute.var.VarBook b, int p) {
+        com.ash.drishti.compute.vector.OrdinalSet m = b.positionMembers(p);
+        int[] out = new int[m.size()];
+        int[] i = {0};
+        m.forEach(o -> out[i[0]++] = o);
+        return out;
     }
 }

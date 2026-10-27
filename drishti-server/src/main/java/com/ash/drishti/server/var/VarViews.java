@@ -88,6 +88,7 @@ final class VarViews {
         Map<String, Object> out = new LinkedHashMap<>();
         out.put("scope", scope);
         out.put("currency", s.date().currency());
+        out.put("intraday", intradayNote(s.date()));
         out.put("canonical", s.res().canonical());
         out.put("kind", s.kind());
         out.put("label", s.label());
@@ -198,6 +199,7 @@ final class VarViews {
         Map<String, Object> m = new LinkedHashMap<>();
         m.put("scope", s.res().canonical());
         m.put("currency", s.date().currency());
+        m.put("intraday", intradayNote(s.date()));
         m.put("fx", fxNote(s.date()));
         m.put("resolved", s.res().notes());
         m.put("trades", s.set().size());
@@ -237,6 +239,37 @@ final class VarViews {
         m.put("computeMs", s.computeMs());
         m.put("cache", s.cached() ? "hit" : "miss");
         m.put("loadedMs", s.date().loadMs());
+        return m;
+    }
+
+    /**
+     * The intraday label (VAR_GUIDE.md section 8.4): what the figures include beyond the morning run, or null when nothing: the updates
+     * applied, the trades changed (amended, added, cancelled), the newest {@code COMPUTED_AT}, the batches; the official records never
+     * include them.
+     */
+    static Map<String, Object> intradayNote(VarDate d) {
+        com.ash.drishti.compute.var.VarIntraday l = d.book().intraday();
+        if (l == null) {
+            return null;
+        }
+        com.ash.drishti.compute.var.VarIntraday.Info i = l.info();
+        Map<String, Object> m = new LinkedHashMap<>();
+        m.put("updates", i.updates());
+        m.put("trades", i.trades());
+        m.put("amended", i.amended());
+        m.put("added", i.added());
+        m.put("cancelled", i.cancelled());
+        m.put("lastAt", i.lastAt());
+        m.put("batches", i.batches());
+        m.put("batchCount", i.batchCount());
+        if (d.intraday() != null) {
+            m.put("olderIgnored", d.intraday().older());
+            m.put("beforeMorningIgnored", d.intraday().beforeMorning());
+            m.put("morningAt", d.intraday().morningAt());
+            m.put("rejections", d.intraday().rejections());
+        }
+        m.put("note", "intraday: the morning run with " + i.trades() + " trade" + (i.trades() == 1 ? "" : "s") + " updated since (latest "
+                + i.lastAt() + "); the official end-of-day records are the morning run's");
         return m;
     }
 
@@ -412,16 +445,13 @@ final class VarViews {
     /** A position's gross size: its market value, else its trades' PV, else their quantities (absolute values). */
     private static double positionSize(VarBook b, OrdinalSet set, int pi) {
         double mv = b.positions().number("MARKET_VALUE", pi);
-        if (!Double.isNaN(mv) && set.coversRange(b.positionFrom(pi), b.positionTo(pi))) {
+        OrdinalSet members = b.positionMembers(pi);                  // its run, and any trade added during the day
+        if (!Double.isNaN(mv) && set.containsAll(members)) {
             return Math.abs(mv);
         }
-        double s = 0;
-        for (int o = b.positionFrom(pi); o < b.positionTo(pi); o++) {
-            if (set.contains(o)) {
-                s += tradeSize(b, o);
-            }
-        }
-        return s;
+        double[] s = {0};
+        members.and(set).forEach(o -> s[0] += tradeSize(b, o));
+        return s[0];
     }
 
     private static double tradeSize(VarBook b, int o) {
@@ -430,9 +460,8 @@ final class VarViews {
     }
 
     private Part position(VarBook b, OrdinalSet set, int pi) {
-        int from = b.positionFrom(pi);
-        int to = b.positionTo(pi);
-        boolean whole = set.coversRange(from, to);
+        OrdinalSet members = b.positionMembers(pi);
+        boolean whole = set.containsAll(members);
         double[] v;
         double qty;
         Columns pc = b.positions();
@@ -440,15 +469,14 @@ final class VarViews {
             v = b.positionVector(pi);
             qty = pc.number("QUANTITY", pi);
         } else {                                                     // part of a position: the trades of it the scope holds
-            v = new double[b.width()];
-            double q = 0;
-            for (int o = from; o < to; o++) {
-                if (set.contains(o)) {
-                    b.store().addInto(v, o);
-                    q += nz(b.trades().number("QUANTITY", o));
-                }
-            }
-            qty = q;
+            double[] acc = new double[b.width()];
+            double[] q = {0};
+            members.and(set).forEach(o -> {
+                b.store().addInto(acc, o);
+                q[0] += nz(b.trades().number("QUANTITY", o));
+            });
+            v = acc;
+            qty = q[0];
         }
         Map<String, Object> a = new LinkedHashMap<>();
         a.put("instrument", pc.text("INSTRUMENT", pi));
@@ -461,7 +489,7 @@ final class VarViews {
         a.put("productType", pc.text("PRODUCT_TYPE", pi));
         a.put("securityId", pc.text("SECURITY_ID", pi));
         a.put("rule", pc.text("POSITION_RULE", pi));
-        a.put("trades", whole ? to - from : set.countIn(from, to));
+        a.put("trades", whole ? members.size() : members.and(set).size());
         a.put("partial", !whole);
         String id = b.positionId(pi);
         return new Part(id, "POS:" + id, pc.text("INSTRUMENT", pi) == null ? id : pc.text("INSTRUMENT", pi), "position", v,
@@ -483,18 +511,14 @@ final class VarViews {
 
     /** A position's trade currency: its trades' when they agree, else {@code mixed}. */
     private static String positionCurrency(VarBook b, OrdinalSet set, int pi) {
-        String c = null;
-        for (int o = b.positionFrom(pi); o < b.positionTo(pi); o++) {
-            if (set.contains(o)) {
-                String t = tradeCurrency(b.trades(), o)[0];
-                if (c == null) {
-                    c = t;
-                } else if (t != null && !t.equals(c)) {
-                    return "mixed";
-                }
+        java.util.Set<String> seen = new java.util.TreeSet<>();
+        b.positionMembers(pi).and(set).forEach(o -> {
+            String t = tradeCurrency(b.trades(), o)[0];
+            if (t != null) {
+                seen.add(t);
             }
-        }
-        return c;
+        });
+        return seen.isEmpty() ? null : seen.size() > 1 ? "mixed" : seen.iterator().next();
     }
 
     private static Part trade(VarBook b, int o) {
@@ -569,6 +593,7 @@ final class VarViews {
         Map<String, Object> out = new LinkedHashMap<>();
         out.put("canonical", s.res().canonical());
         out.put("currency", s.date().currency());
+        out.put("intraday", intradayNote(s.date()));
         out.put("by", parts.isEmpty() ? null : parts.get(0).kind());
         out.put("var", round(s.measures().var()));
         out.put("es", round(s.measures().es()));
@@ -676,6 +701,7 @@ final class VarViews {
         Map<String, Object> out = new LinkedHashMap<>();
         out.put("canonical", s.res().canonical());
         out.put("currency", s.date().currency());
+        out.put("intraday", intradayNote(s.date()));
         out.put("var", round(s.measures().var()));
         out.put("es", round(s.measures().es()));
         out.put("k", s.measures().k());
@@ -829,6 +855,7 @@ final class VarViews {
         Map<String, Object> out = new LinkedHashMap<>();
         out.put("hierarchy", h);
         out.put("currency", d.currency());
+        out.put("intraday", intradayNote(d));
         out.put("hierarchies", b.nodes().values().stream().filter(n -> n.parent() == null).map(VarBook.Node::hierarchy).sorted().toList());
         out.put("businessDate", d.date().toString());
         out.put("nodes", rows);

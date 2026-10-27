@@ -17,6 +17,31 @@
 
 ## 2.9.4 (unreleased)
 
+- **Intraday updates from files (2026-10-27; local branch, for the product owner's review: not pushed).** A second `BATCH_ID` on a date no
+  longer turns today's VaR into yesterday's: a pricing system sends **only the changed trades** during the day (amended, new or
+  cancelled), priced over the morning run's scenario set, marked **`RUN_KIND: INTRADAY`** (the contracts of `scenario-pv` and
+  `pnl-vector`, with `COMPUTED_AT`; the risk-store layout promotes both), each batch its own `BATCH_ID`, appended to the lake. The
+  data-load signal of such a batch applies it **without a reload** (`VarIntraday`, `OverlayVectors`): each updated trade's difference
+  goes into its book and every node above it in both hierarchies, the per-trade-currency totals and every reporting currency already
+  built (only that trade reconverted); the morning hot file is never changed; the latest `COMPUTED_AT` per trade wins across every batch
+  (an update older than the morning run, or than the one held, is ignored and counted); a cancel (`TRADE_STATUS` not live) removes the
+  trade; a new trade gets its book and its position by the rules; a trade moved to another book moves; another scenario set is refused
+  (`DRS-5203` in `intraday.rejections`); a full run of the date (or a signal with no new intraday batch) reloads as before and drops the
+  layer; a restart rebuilds the same from the lake. Only the current P&L per trade is kept, so the work of a batch does not grow with
+  the batches before it. Every answer that includes updates says **`intraday`** (`updates`, `trades`, `amended`, `added`, `cancelled`,
+  `lastAt`, `batches`, `batchCount`, `rejections`), the VaR page shows an **intraday** badge, and the provenance a row; the official
+  records and publishing read the morning run alone (an intraday batch never restates them). `drishti.py var intraday` lists each date's
+  layer and `--load FILE.jsonl` appends a batch (`lake build --mode append`) and signals it; `var show` and `var status` say it. The
+  demo's morning rows now say `RUN_KIND: FULL` (regenerated; figures unchanged); `lake demo` moves the scenario PVs' valuation dates.
+  **Tests:** `VarIntradayTest` (amended, new, cancelled, moved, updated twice, a new trade in an existing position, a cancel and a revival:
+  equal to the cent to the final data built as one run, every node in both hierarchies, any scope, every position, the totals in four
+  currencies, heap and mapped), `VarIntradayApiTest` (files and signals: a P&L vector amended, a cancel, a new trade, a scenario-PV
+  trade updated twice, an older update ignored, another scenario set refused; equal to the cent to the same final data loaded as one run
+  in USD, EUR and CAD; the official record the morning run's; a full run drops the layer; 200 batches on one date, the time per batch flat,
+  equal to one run and to a restart), `test_varcli.py`, `test_var_routes.py`.
+  **Docs:** VAR_GUIDE 1.7 (section 8.4 as built, 15.8, 15.9, 20.2, the CLI), USER_GUIDE (the badge), the Market risk Knowledge page,
+  API_GUIDE, the two contracts.
+
 - **Reporting currencies built ahead, per-trade-currency totals, the currency picker and Trade currency (2026-10-27; local branch, for
   the product owner's review: not pushed).** The product owner's decisions on the VaR currencies: (1) PVs stay as received, in each
   trade's own currency; (2) **`drishti.var.currencies`** (default `USD, EUR, CAD, JPY, GBP`, env `DRISHTI_VAR_CURRENCIES`) lists the

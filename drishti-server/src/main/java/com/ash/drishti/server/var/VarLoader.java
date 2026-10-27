@@ -140,6 +140,7 @@ final class VarLoader {
         b.currencyRates(c -> fx(date, scenarioDates).rates(c).orElse(null));
         try {
             VarIntake intake = intake(date, asOf, b, pr, setId, scenarioDates);
+            List<LocalDate> days = scenarioDates;
             VarIntake.Summary sum = intake.summary();
             long tVectors = System.nanoTime();
             for (DataNode n : documents(k.hierarchy(), asOf).values()) {
@@ -158,8 +159,9 @@ final class VarLoader {
             VarBook book = b.build(sums);
             tier.opened(book);
             long ms = (System.nanoTime() - t0) / 1_000_000;
-            return new VarDate(date, book, portfolios, trades, java.time.Instant.now(), ms, (tVectors - t0) / 1_000_000, sum,
+            VarDate vd = new VarDate(date, book, portfolios, trades, java.time.Instant.now(), ms, (tVectors - t0) / 1_000_000, sum,
                     versions, List.of(), VarDate.USD, intake.fx());
+            return withIntraday(vd, intake, days);
         } catch (RuntimeException e) {
             b.discard();
             throw e;
@@ -174,7 +176,7 @@ final class VarLoader {
         VarProperties.Kinds k = props.kinds();
         List<String> columns = VarIntake.columns(router.columnar(k.vector()), pr);
         List<String> pvColumns = VarIntake.columns(router.columnar(k.scenarioPv()), pr, VarIntake.PV_COLUMNS);
-        VarIntake intake = new VarIntake(b, pr, date, columns.subList(1, columns.size()));
+        VarIntake intake = new VarIntake(b, pr, date, columns.subList(1, columns.size())).scenarioSet(setId);
         boolean read;
         boolean readPv;
         try {
@@ -248,7 +250,126 @@ final class VarLoader {
         documents(props.kinds().portfolio(), AsOf.of(date)).forEach((id, p) -> portfolios.put(id, VarDate.Portfolio.of(id, p)));
         tier.opened(book);
         long ms = (System.nanoTime() - t0) / 1_000_000;
-        return new VarDate(date, book, portfolios, version(date), java.time.Instant.now(), ms, 0, sum, v, List.of(), VarDate.USD, fx);
+        VarDate vd = new VarDate(date, book, portfolios, version(date), java.time.Instant.now(), ms, 0, sum, v, List.of(), VarDate.USD, fx);
+        try {                                                          // the hot file holds the morning run: the day's updates read again
+            return withIntraday(vd, readIntraday(date, book, java.util.Set.of()), book.scenarioDates());
+        } catch (RuntimeException e) {
+            org.slf4j.LoggerFactory.getLogger(VarLoader.class).warn("VaR: the intraday updates of {} could not be read: {}", date, e.getMessage());
+            return vd;
+        }
+    }
+
+    // ---------------------------------------------------------------------------------------------------------------- intraday
+
+    /**
+     * The date's intraday updates (VAR_GUIDE.md section 8.4) applied on its morning book: the latest per trade, those computed before the
+     * morning run left out; the date as loaded when there are none.
+     */
+    VarDate withIntraday(VarDate vd, VarIntake intake, List<LocalDate> days) {
+        VarIntradayRows state = new VarIntradayRows().morning(intake.morningAt(), intake.summary().batchIds());
+        state.met(intake.intradayBatches());
+        state.rejected(intake.intradayRejections());
+        for (VarIntradayRows.Row r : intake.intraday().rows()) {
+            state.offer(r);
+        }
+        if (state.isEmpty()) {
+            return state.batches().isEmpty() ? vd : vd.withBook(vd.book(), state);
+        }
+        VarBook b = apply(vd.date(), vd.book(), state.rows(), days, vd.intake());
+        return vd.withBook(b, state);
+    }
+
+    /** Applies updates (USD) on a USD book: each trade's difference into its book, its nodes and the per-trade-currency totals. */
+    VarBook apply(LocalDate date, VarBook book, List<VarIntradayRows.Row> rows, List<LocalDate> days, VarIntake.Summary sum) {
+        java.util.Set<String> batches = new java.util.LinkedHashSet<>();
+        String last = null;
+        List<com.ash.drishti.compute.var.VarIntraday.Update> ups = new ArrayList<>();
+        for (VarIntradayRows.Row r : rows) {
+            batches.add(r.batchId());
+            last = VarIntradayRows.compare(r.computedAt(), last) > 0 ? r.computedAt() : last;
+            ups.add(r.usd());
+        }
+        com.ash.drishti.compute.var.ScenarioFx fx = fx(date, days);
+        return com.ash.drishti.compute.var.VarIntraday.apply(book, ups, exact(date, book.morning(), sum, days), c -> fx.rates(c).orElse(null),
+                List.copyOf(batches), last);
+    }
+
+    /**
+     * A morning trade's USD P&amp;L exactly as its node aggregates were summed from it (float64): on the heap, its row; with the tiered
+     * memory (float32 rows), its morning row read back from the lake by its id ({@code PV-<trade>-<set>} or {@code SPV-<trade>-<set>}),
+     * its float32 row when that cannot be read.
+     */
+    com.ash.drishti.compute.var.VarIntraday.Morning exact(LocalDate date, VarBook morning, VarIntake.Summary sum, List<LocalDate> days) {
+        if (morning.hot() == null) {
+            return morning::tradeVector;
+        }
+        return o -> {
+            String tid = morning.tradeId(o);
+            try {
+                double[] v = morningRow(date, tid, morning.scenarioSet(), sum != null && sum.fromScenarioPv(tid), days, morning.width());
+                if (v != null) {
+                    return v;
+                }
+            } catch (RuntimeException e) {
+                org.slf4j.LoggerFactory.getLogger(VarLoader.class).debug("VaR: the morning row of {} not read back: {}", tid, e.getMessage());
+            }
+            return morning.tradeVector(o);
+        };
+    }
+
+    private double[] morningRow(LocalDate date, String trade, String set, boolean fromPv, List<LocalDate> days, int width) {
+        VarProperties.Kinds k = props.kinds();
+        com.ash.drishti.api.EntityRef ref = new com.ash.drishti.api.EntityRef(fromPv ? k.scenarioPv() : k.vector(), (fromPv ? "SPV-" : "PV-") + trade
+                + "-" + set);
+        EntityDocument d = router.fetchAll(List.of(ref), java.time.Duration.ofSeconds(30), AsOf.of(date)).get(ref);
+        if (d == null || d.data() == null) {
+            return null;
+        }
+        DataNode arr = d.data().get(fromPv ? SCENARIO_PV : "PNL");
+        if (arr == null || arr.isMissing() || arr.isNull() || arr.size() != width) {
+            return null;
+        }
+        double[] v = new double[width];
+        for (int j = 0; j < width; j++) {
+            v[j] = arr.get(j).asDouble();
+        }
+        if (!fromPv) {
+            return v;
+        }
+        com.ash.drishti.compute.var.ScenarioFx.Rates r = fx(date, days).rates(text(d.data(), "CURRENCY") == null ? "USD" : text(d.data(), "CURRENCY"))
+                .orElse(null);
+        double base = number(text(d.data(), "BASE_PV"));
+        if (r == null || Double.isNaN(base)) {
+            return null;
+        }
+        double[] out = new double[width];
+        com.ash.drishti.compute.var.ScenarioFx.pnlFromPv(base, v, width, r, out);
+        return out;
+    }
+
+    /**
+     * The intraday rows of a loaded date (both forms), the batches in {@code applied} skipped: what a data-load signal of an intraday
+     * batch brings (VAR_GUIDE.md section 8.4). Reads the date's rows once; keeps only the latest update per trade.
+     */
+    VarIntake readIntraday(LocalDate date, VarBook morning, java.util.Set<String> applied) {
+        VarProperties.Kinds k = props.kinds();
+        AsOf asOf = AsOf.of(date);
+        PositionRules pr = rules.get();
+        List<LocalDate> days = morning.scenarioDates();
+        VarBook.Builder none = new VarBook.Builder(date, morning.scenarioSet(), days, 1, Long.MAX_VALUE);   // never given a row
+        List<String> columns = VarIntake.columns(router.columnar(k.vector()), pr);
+        List<String> pvColumns = VarIntake.columns(router.columnar(k.scenarioPv()), pr, VarIntake.PV_COLUMNS);
+        VarIntake intake = new VarIntake(none, pr, date, columns.subList(1, columns.size())).scenarioSet(morning.scenarioSet()).intradayOnly(applied);
+        try {
+            router.vectors(k.vector(), "PNL", columns, asOf, (id, values, len, row) -> intake.row(id, values, len, row));
+            intake.scenarioPvs(pvColumns.subList(1, pvColumns.size()), () -> fx(date, days), days);
+            router.vectors(k.scenarioPv(), SCENARIO_PV, pvColumns, asOf, (id, values, len, row) -> intake.row(id, values, len, row));
+        } catch (DrishtiException e) {
+            throw e;
+        } catch (Exception e) {
+            throw new DrishtiException(ErrorCode.SOURCE_FAILED, "the intraday updates of " + date + " could not be read: " + e.getMessage());
+        }
+        return intake;
     }
 
     // ---------------------------------------------------------------------------------------------------------------------- FX

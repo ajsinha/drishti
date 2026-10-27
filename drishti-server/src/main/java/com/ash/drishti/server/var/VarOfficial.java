@@ -115,8 +115,26 @@ final class VarOfficial implements AutoCloseable {
         if (!p.enabled() || date == null || !(p.kinds().inputs().contains(kind) || "trade".equals(kind))) {
             return;
         }
+        if (kind.equals(p.kinds().vector()) || kind.equals(p.kinds().scenarioPv())) {
+            // a trades' input on a loaded date: its new intraday batches applied in place, no reload, no official capture (the
+            // official records are the morning run's, VAR_GUIDE.md section 8.4); a full run reloads and captures as before
+            VarService.IntradayResult r = svc.intraday(date);
+            if (!r.status().equals("reload") && !r.status().equals("not loaded")) {
+                LOG.info("VaR: the data-load signal of {} on {}: intraday {} ({} updates, batches {})", kind, date, r.status(), r.updates(), r.batches());
+                return;
+            }
+            if (r.status().equals("reload")) {
+                svc.audit(VarOfficialStore.OWNER, "var-reload", date.toString(), "the data-load signal of " + kind + ": a full run");
+                runCapture(date, p);
+                return;
+            }
+        }
         svc.reload(date);
         svc.audit(VarOfficialStore.OWNER, "var-reload", date.toString(), "the data-load signal of " + kind);
+        runCapture(date, p);
+    }
+
+    private void runCapture(LocalDate date, VarProperties p) {
         if (p.official().enabled()) {
             runner.execute(() -> {                                     // after the reload: the date is read again from the lake
                 try {
@@ -132,7 +150,7 @@ final class VarOfficial implements AutoCloseable {
     Map<String, Object> capture(LocalDate date) {
         lock.lock();
         try {
-            return captureNow(date);
+            return svc.morningOnly(() -> captureNow(date));            // the morning run alone: never the intraday layer
         } finally {
             lock.unlock();
         }
@@ -183,7 +201,7 @@ final class VarOfficial implements AutoCloseable {
         VarOfficialStore store = svc.official();
         Map<String, Object> inputs = d.inputs();
         Map<String, Object> prev = store.index(date, ccy).orElse(null);
-        if (prev != null && inputs.equals(prev.get("inputs"))) {
+        if (prev != null && (inputs.equals(prev.get("inputs")) || svc.hasIntraday(date) && sameRun(inputs, prev.get("inputs")))) {
             out.put("status", "unchanged");
             out.put("resultVersion", prev.get("resultVersion"));
             return out;
@@ -232,6 +250,23 @@ final class VarOfficial implements AutoCloseable {
             out.put("publishError", index.get("publishError"));
         }
         return out;
+    }
+
+    /**
+     * The same morning run: the inputs alike but for the trades' tables' data versions, which an intraday batch appended to (the batch
+     * ids, the scenario set, the hierarchy and the rules the same). An intraday batch never restates an official record.
+     */
+    private boolean sameRun(Map<String, Object> now, Object before) {
+        if (!(before instanceof Map<?, ?> b)) {
+            return false;
+        }
+        Map<Object, Object> x = new LinkedHashMap<>(now);
+        Map<Object, Object> y = new LinkedHashMap<>(b);
+        for (String k : List.of(svc.props().kinds().vector(), svc.props().kinds().scenarioPv())) {
+            x.remove(k);
+            y.remove(k);
+        }
+        return x.equals(y);
     }
 
     /** Every node, hierarchy by hierarchy, parents before children. */

@@ -33,9 +33,12 @@ import java.util.Map;
  * @param warnings what the answers of this date say about it (the date asked could not be loaded, this one is answered instead)
  * @param currency the reporting currency of the book's vectors (USD, built at load; another, built from the USD book when first asked)
  * @param fx how the vectors met FX: per currency used, the source of its scenario rates and today's rate (empty: no FX was needed)
+ * @param intraday the date's intraday updates applied on its book (VAR_GUIDE.md section 8.4): the latest per trade, the batches met, the
+ *     morning run's {@code COMPUTED_AT}; null when the date has none
  */
 record VarDate(LocalDate date, VarBook book, Map<String, Portfolio> portfolios, String version, Instant loadedAt, long loadMs, long vectorMs,
-        VarIntake.Summary intake, Map<String, String> versions, List<String> warnings, String currency, Map<String, Object> fx) {
+        VarIntake.Summary intake, Map<String, String> versions, List<String> warnings, String currency, Map<String, Object> fx,
+        VarIntradayRows intraday) {
 
     static final String USD = com.ash.drishti.compute.var.ScenarioFx.USD;
 
@@ -46,11 +49,32 @@ record VarDate(LocalDate date, VarBook book, Map<String, Portfolio> portfolios, 
         fx = fx == null ? Map.of() : java.util.Collections.unmodifiableMap(new java.util.LinkedHashMap<>(fx));
     }
 
+    VarDate(LocalDate date, VarBook book, Map<String, Portfolio> portfolios, String version, Instant loadedAt, long loadMs, long vectorMs,
+            VarIntake.Summary intake, Map<String, String> versions, List<String> warnings, String currency, Map<String, Object> fx) {
+        this(date, book, portfolios, version, loadedAt, loadMs, vectorMs, intake, versions, warnings, currency, fx, null);
+    }
+
+    /** The same date over another book (an intraday batch applied), with its intraday updates. */
+    VarDate withBook(VarBook b, VarIntradayRows rows) {
+        return new VarDate(date, b, portfolios, version, loadedAt, loadMs, vectorMs, intake, versions, warnings, currency, fx, rows);
+    }
+
+    /** The date without its intraday layer: the morning run alone (the official captures, VAR_GUIDE.md section 8.4). */
+    VarDate morning() {
+        return book.intraday() == null ? this : new VarDate(date, book.morning(), portfolios, version, loadedAt, loadMs, vectorMs, intake, versions,
+                warnings, currency, fx, null);
+    }
+
+    /** A stamp of the intraday layer (0: none), for the answers' cache. */
+    long intradayStamp() {
+        return book.intraday() == null ? 0 : book.intraday().info().updates();
+    }
+
     /** The same date with a warning more (answered in place of a date that could not be loaded). */
     VarDate warned(String warning) {
         List<String> w = new ArrayList<>(warnings);
         w.add(warning);
-        return new VarDate(date, book, portfolios, version, loadedAt, loadMs, vectorMs, intake, versions, w, currency, fx);
+        return new VarDate(date, book, portfolios, version, loadedAt, loadMs, vectorMs, intake, versions, w, currency, fx, intraday);
     }
 
     /** The input tables' versions and batch ids, as an official capture and the provenance record them (and the currency, not USD). */

@@ -350,7 +350,7 @@ class Pricer(Protocol):                                  # planned, 2.8.0, in dr
 - **Its own thread pool:** QLRisk has a multi-threaded engine (`engine.max_workers`); inside a worker it is limited to the worker's
   CPU share (default 1 thread per worker, so the pool, not the library, decides parallelism).
 - **When QLRisk is not stable in time:** what-if in 2.8.0 is limited to what needs no pricing (removing or scaling a linear position,
-  [VAR_GUIDE.md section 8.4](../guides/VAR_GUIDE.md#84-what-if-pricing-and-intraday-recomputes-planned)) and the stand-in pricer for tests; full
+  [VAR_GUIDE.md section 8.4](../guides/VAR_GUIDE.md#84-what-if-pricing-and-intraday-recomputes-what-if-planned-intraday-updates-as-built-in-294)) and the stand-in pricer for tests; full
   what-if pricing moves to 2.8.x.
 
 ### 9.3 QuantLib-SWIG Java (decided)

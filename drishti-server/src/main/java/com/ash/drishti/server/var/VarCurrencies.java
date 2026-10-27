@@ -64,7 +64,7 @@ final class VarCurrencies {
     VarDate convert(VarDate usd, String ccy) {
         long t0 = System.nanoTime();
         LocalDate date = usd.date();
-        VarBook ub = usd.book();
+        VarBook ub = usd.book().morning();                           // the morning run: the day's updates are applied after
         ScenarioFx fx = loader.fx(date, ub.scenarioDates());
         ScenarioFx.Rates rep = fx.rates(ccy).orElseThrow(() -> new DrishtiException(ErrorCode.VAR_NO_FX, "no " + ccy + " FX for the scenarios of "
                 + date + ": " + fx.notes().stream().filter(n -> n.startsWith(ccy + ":")).findFirst().orElse(ccy + ": neither supplied ("
@@ -119,6 +119,53 @@ final class VarCurrencies {
         Map<String, String> versions = new LinkedHashMap<>(usd.versions());
         versions.put("fx", fxVersions);
         long ms = (System.nanoTime() - t0) / 1_000_000;
-        return new VarDate(date, book, portfolios, usd.version(), java.time.Instant.now(), ms, 0, usd.intake(), versions, List.of(), ccy, fxUsed);
+        VarDate out = new VarDate(date, book, portfolios, usd.version(), java.time.Instant.now(), ms, 0, usd.intake(), versions, List.of(), ccy, fxUsed);
+        return usd.intraday() == null || usd.intraday().isEmpty() ? out : apply(out, usd, usd.intraday().rows());
+    }
+
+    /**
+     * Intraday updates (USD) applied on a book in this currency (VAR_GUIDE.md section 8.4): each trade reconverted alone, its difference
+     * into its book and nodes; the morning P&amp;L it replaces is the one this book's aggregates were summed from (the USD morning row as
+     * the conversion read it).
+     */
+    VarDate apply(VarDate cur, VarDate usd, List<VarIntradayRows.Row> rows) {
+        ScenarioFx fx = loader.fx(usd.date(), usd.book().scenarioDates());
+        ScenarioFx.Rates rep = fx.rates(cur.currency()).orElse(null);
+        if (rep == null || rows.isEmpty()) {
+            return cur.withBook(cur.book(), usd.intraday());
+        }
+        int w = cur.book().width();
+        VarBook um = usd.book().morning();
+        List<com.ash.drishti.compute.var.VarIntraday.Update> ups = new java.util.ArrayList<>();
+        java.util.Set<String> batches = new java.util.LinkedHashSet<>();
+        String last = null;
+        int pvAt = VarBook.TRADE_NUMBERS.indexOf("PV");
+        for (VarIntradayRows.Row r : rows) {
+            com.ash.drishti.compute.var.VarIntraday.Update u = r.usd();
+            batches.add(r.batchId());
+            last = VarIntradayRows.compare(r.computedAt(), last) > 0 ? r.computedAt() : last;
+            double[] pnl = null;
+            double pvUsd = u.pvUsd();
+            if (u.pnl() != null) {
+                pnl = new double[w];
+                ScenarioFx.convert(Double.isNaN(pvUsd) ? 0 : pvUsd, u.pnl(), w, rep, pnl);
+            }
+            double pv = Double.isNaN(pvUsd) ? Double.NaN : pvUsd / rep.base();
+            double[] nums = u.numbers() == null ? null : u.numbers().clone();
+            if (nums != null) {
+                nums[pvAt] = pv;
+            }
+            ups.add(new com.ash.drishti.compute.var.VarIntraday.Update(u.tradeId(), pnl, pv, u.texts(), nums, pvUsd, u.pnlUsd()));
+        }
+        com.ash.drishti.compute.var.VarIntraday.Morning exact = o -> {
+            double[] row = new double[w];
+            um.store().copy(o, row);
+            double p = um.trades().number("PV", o);
+            double[] out = new double[w];
+            ScenarioFx.convert(Double.isNaN(p) ? 0 : p, row, w, rep, out);
+            return out;
+        };
+        VarBook b = com.ash.drishti.compute.var.VarIntraday.apply(cur.book(), ups, exact, c -> fx.rates(c).orElse(null), List.copyOf(batches), last);
+        return cur.withBook(b, usd.intraday());
     }
 }

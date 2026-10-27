@@ -28,8 +28,8 @@ One section per command of the pack: the shape of its data, how it is stored and
 | [TVAL](#tval-trade-valuation-trade-valuation) | `trade-valuation` | fundamental | active | 21 | 7 |
 | [POS](#pos-position-position) | `position` | drishti-owned | active | 32 | 6 |
 | [PORT](#port-portfolio-portfolio) | `portfolio` | input | active | 10 | 5 |
-| [PNLV](#pnlv-pl-vector-509-scenarios-pnl-vector) | `pnl-vector` | input | active | 32 | 6 |
-| [SPV](#spv-scenario-pvs-of-a-trade-509-scenarios-its-currency-scenario-pv) | `scenario-pv` | input | active | 33 | 6 |
+| [PNLV](#pnlv-pl-vector-509-scenarios-pnl-vector) | `pnl-vector` | input | active | 33 | 6 |
+| [SPV](#spv-scenario-pvs-of-a-trade-509-scenarios-its-currency-scenario-pv) | `scenario-pv` | input | active | 34 | 6 |
 | [FXS](#fxs-scenario-fx-of-a-currency-509-scenarios-fx-scenario) | `fx-scenario` | input | active | 9 | 4 |
 | [SSET](#sset-scenario-set-scenario-set) | `scenario-set` | input | active | 11 | 4 |
 | [HIER](#hier-risk-hierarchy-node-risk-hierarchy) | `risk-hierarchy` | input | active | 12 | 5 |
@@ -603,6 +603,7 @@ P&L vector of a trade
 | `COMPUTED_AT` | timestamp | required |  | — | `2026-09-30T22:30:00Z` |  |
 | `BATCH_ID` | id | required |  | — | `B-2026-09-30-01` |  |
 | `RESTATEMENT` | integer | required |  | — | `0` |  |
+| `RUN_KIND` | text | optional |  | Which run the row belongs to (2.9.4, VAR_GUIDE.md section 8.4): FULL (or none) for the day's full run; INTRADAY for an update a pricing system sends during the day: only the changed trades, amended, new or cancelled, priced over the same scenario set; each intraday batch has its own BATCH_ID and a later COMPUTED_AT, and the latest COMPUTED_AT per trade wins. A cancel is an INTRADAY row whose TRADE_STATUS is not live (CANCELLED), its PVs empty. | `FULL`, `INTRADAY` |  |
 
 **Links:** `TRADE_ID` → `trade`, `LEGAL_ENTITY` → `legal-entity`, `DESK` → `desk`, `TT_BOOK` → `book`, `PORTFOLIO` → `book`, `COUNTERPARTY` → `counterparty`.
 
@@ -690,6 +691,7 @@ A trade's present value under each historical scenario and its base PV of the sa
 | `COMPUTED_AT` | timestamp | required |  | — | `2026-09-30T22:30:00Z` |  |
 | `BATCH_ID` | id | required |  | — | `B-2026-09-30-01` |  |
 | `RESTATEMENT` | integer | required |  | — | `0` |  |
+| `RUN_KIND` | text | optional |  | Which run the row belongs to (2.9.4, VAR_GUIDE.md section 8.4): FULL (or none) for the day's full run; INTRADAY for an update a pricing system sends during the day: only the changed trades, amended, new or cancelled, priced over the same scenario set; each intraday batch has its own BATCH_ID and a later COMPUTED_AT, and the latest COMPUTED_AT per trade wins. A cancel is an INTRADAY row whose TRADE_STATUS is not live (CANCELLED), its PVs empty. | `FULL`, `INTRADAY` |  |
 
 **Links:** `SCENARIO_PV_ID` → `scenario-pv`, `TRADE_ID` → `trade`, `LEGAL_ENTITY` → `legal-entity`, `DESK` → `desk`, `TT_BOOK` → `book`, `PORTFOLIO` → `book`, `COUNTERPARTY` → `counterparty`.
 

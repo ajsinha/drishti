@@ -36,6 +36,10 @@
   min-width: 96px; }
 .vx-ccy-select:focus-visible { outline: 2px solid var(--d-accent); outline-offset: 1px; }
 .vx-ccytable tr.shown td { background: var(--d-accent-tint); }
+/* intraday (2.9.4): the figures include the trades re-sent since the morning run */
+.vx-intraday { display: inline-flex; align-items: center; gap: 4px; padding: 0 7px; border: 1px solid var(--d-warn); border-radius: 9px;
+  color: var(--d-warn); font: 600 10.5px var(--d-font-sans); letter-spacing: .04em; text-transform: uppercase; white-space: nowrap; }
+.vx-intraday[hidden] { display: none; }
 .vx-ccytable tr.shown td:first-child { box-shadow: inset 2px 0 0 var(--d-accent); color: var(--d-accent); font-weight: 600; }
 .vx-ccytable td .vx-link { font-weight: 600; text-decoration: none; }
 .vx-ccytable td .vx-link:hover, .vx-ccytable td .vx-link:focus-visible { text-decoration: underline; }

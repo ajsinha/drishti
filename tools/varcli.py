@@ -71,6 +71,10 @@ def render_headline(h: dict, say) -> None:
         rates = "; ".join(f"{c} {r.get('source')} ({r.get('base'):.6g} USD)" for c, r in sorted((fx.get("rates") or {}).items())
                           if isinstance(r, dict) and isinstance(r.get("base"), (int, float)))
         say(f"  in {cur}, crosses {fx.get('crosses') or 'through USD'}" + (f"; FX {rates}" if rates else ""))
+    i = h.get("intraday")
+    if i:
+        say(f"  intraday   {i.get('trades')} trades updated since the morning run ({i.get('amended')} amended, {i.get('added')} new, "
+            f"{i.get('cancelled')} cancelled) in {i.get('batchCount')} batches, latest {i.get('lastAt')}; the official records are the morning run's")
     say(f"  {p.get('tier')} · {p.get('method')} · {p.get('computeMs')} ms ({p.get('cache')})")
     for w in p.get("warnings") or []:
         say(f"  warning: {w}")
@@ -119,6 +123,66 @@ def trades_of(path: str, err) -> list[dict]:
     return items
 
 
+#: the fields of an intraday row that carry its business date (moved with --date)
+DATED = ("BUSINESS_DATE", "VALUATION_DATE", "BASE_VALUATION_DATE", "COMPUTED_AT", "BATCH_ID", "SCENARIO_PV_ID", "VECTOR_ID")
+
+
+def intraday_kind(rows: list[dict]) -> str:
+    """The kind of an intraday file's rows: scenario PVs (SCENARIO_PV or BASE_PV) or P&L vectors (PNL); one kind a file."""
+    kinds = {"scenario-pv" if ("SCENARIO_PV" in r or "BASE_PV" in r) else "pnl-vector" for r in rows}
+    if len(kinds) != 1:
+        raise ValueError("an intraday file holds one kind: scenario PVs or P&L vectors, not both")
+    return kinds.pop()
+
+
+def move_dates(rows: list[dict], day: str) -> list[dict]:
+    """The rows with their business date moved to ``day`` (every date written as the rows' own BUSINESS_DATE)."""
+    out = []
+    for r in rows:
+        old = str(r.get("BUSINESS_DATE") or "")[:10]
+        r = dict(r)
+        for f in DATED:
+            if old and isinstance(r.get(f), str):
+                r[f] = r[f].replace(old, day).replace(old.replace("-", ""), day.replace("-", ""))
+        out.append(r)
+    return out
+
+
+def load_intraday(path: str, lake: str, day: str | None, signal: str | None, token: str | None, dry_run: bool, say) -> int:
+    """Appends an intraday file (JSONL, one kind) to the lake with lake build --mode append, then raises its data-load signal."""
+    import os
+    import subprocess
+    import sys
+    import tempfile
+    from pathlib import Path
+    src = Path(path)
+    opener = __import__("gzip").open if src.name.endswith(".gz") else open
+    with opener(src, "rt", encoding="utf-8") as fh:
+        rows = [json.loads(x) for x in fh if x.strip()]
+    if not rows:
+        raise ValueError(f"{path}: no rows")
+    kind = intraday_kind(rows)
+    if day:
+        rows = move_dates(rows, day)
+    marked = sum(1 for r in rows if str(r.get("RUN_KIND") or "").upper() == "INTRADAY")
+    say(f"{path}: {len(rows)} {kind} rows ({marked} marked RUN_KIND INTRADAY), business date {rows[0].get('BUSINESS_DATE')}, "
+        f"batches {sorted({str(r.get('BATCH_ID')) for r in rows})}")
+    if dry_run:
+        say("dry run: nothing written")
+        return 0
+    root = Path(__file__).resolve().parents[1]
+    key = "SCENARIO_PV_ID" if kind == "scenario-pv" else "VECTOR_ID"
+    with tempfile.TemporaryDirectory(prefix="drishti-intraday-") as tmp:
+        f = Path(tmp) / "rows.jsonl"
+        f.write_text("".join(json.dumps(r) + "\n" for r in rows), encoding="utf-8")
+        cmd = [sys.executable, str(root / "tools" / "drishti.py"), "lake", "build", "--from", str(f), "--pack", str(root / "config" / "packs" / "market-risk"),
+               "--connector", "risk-store", "--kind", kind, "--key", key, "--date", "BUSINESS_DATE", "--mode", "append", "--lake", lake, "-q"]
+        if signal:
+            cmd += ["--signal", signal]
+        env = dict(os.environ, **({"DRISHTI_TOKEN": token} if token else {}))
+        return subprocess.run(cmd, env=env, cwd=root).returncode
+
+
 def register(groups, srv, ctx: dict) -> None:
     """Adds ``var show|parts|path|history|tree|status|capture|captures|compare|basket|baskets|official|reload|whatif``."""
     import argparse
@@ -161,7 +225,33 @@ def register(groups, srv, ctx: dict) -> None:
                                  "" if n.get("limitUse") is None else f"{100 * n['limitUse']:.1f}%", str(n.get("trades"))])
                 table(rows, print)
         elif c == "status":
-            say_json(api.json("GET", "/api/v1/var/status"))
+            st = api.json("GET", "/api/v1/var/status")
+            if a.json:
+                say_json(st)
+            else:
+                say_json(st)
+                for d in st.get("loaded") or []:
+                    i = d.get("intraday")
+                    print(f"{d.get('businessDate')} {d.get('currency') or 'USD'}: " + (f"intraday, {i.get('trades')} trades updated in "
+                          f"{i.get('batchCount')} batches, latest {i.get('lastAt')}" if i else "the morning run, no intraday update"))
+        elif c == "intraday":
+            if a.load:
+                return load_intraday(a.load, a.lake, a.date, None if a.no_signal else api.base, api.token, a.dry_run, print)
+            st = api.json("GET", "/api/v1/var/status")
+            rows = [d for d in st.get("loaded") or [] if not d.get("currency") and (not a.date or d.get("businessDate") == a.date)]
+            if a.json:
+                say_json([{"businessDate": d.get("businessDate"), "intraday": d.get("intraday")} for d in rows])
+            for d in rows if not a.json else []:
+                i = d.get("intraday")
+                if not i:
+                    print(f"{d.get('businessDate')}: the morning run, no intraday update")
+                    continue
+                print(f"{d.get('businessDate')}: intraday, {i.get('updates')} updates of {i.get('trades')} trades ({i.get('amended')} amended, "
+                      f"{i.get('added')} new, {i.get('cancelled')} cancelled) in {i.get('batchCount')} batches, latest {i.get('lastAt')}")
+                print(f"  batches {', '.join(i.get('batches') or [])}; ignored as older {i.get('olderIgnored')}, before the morning run "
+                      f"{i.get('beforeMorningIgnored')}")
+                for r in i.get("rejections") or []:
+                    print(f"  rejected: {r}")
         elif c == "capture":
             say_json(api.json("POST", "/api/v1/var/captures?" + enc(dated(a, {})), {"scope": a.scope, "note": a.note or ""}))
         elif c == "captures":
@@ -246,6 +336,13 @@ def register(groups, srv, ctx: dict) -> None:
     of.add_argument("--date", metavar="YYYY-MM-DD")
     of.add_argument("--capture", action="store_true")
     of.add_argument("--ccy", metavar="CCY", help="the record in another currency of drishti.var.official.currencies (USD by default)")
+    it = sub.add_parser("intraday", help="the intraday updates applied on each loaded date; --load FILE appends an intraday batch (JSONL) "
+                        "to the lake and signals it", parents=[srv])
+    it.add_argument("--date", metavar="YYYY-MM-DD", help="one date; with --load, the business date the file's rows are moved to")
+    it.add_argument("--load", metavar="FILE.jsonl", help="an intraday batch file (scenario PVs or P&L vectors, RUN_KIND INTRADAY)")
+    it.add_argument("--lake", default="data/delta", help="the Delta root to append to (default data/delta, the demo lake)")
+    it.add_argument("--no-signal", action="store_true", help="append only; no data-load signal")
+    it.add_argument("--dry-run", action="store_true", help="read and say what would be appended; write nothing")
     sub.add_parser("reload", help="drop the loaded dates (administrators): the next request maps the hot file again or reads the lake",
                    parents=[srv])
     w = scoped("whatif", "a scope's VaR before and after hypothetical trades (the Python engine, var-whatif), and its stressed window")

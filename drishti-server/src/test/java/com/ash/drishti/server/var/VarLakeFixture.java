@@ -177,6 +177,12 @@ final class VarLakeFixture {
     /** One table: staged rows {@code [id, doc, {promoted}]} by business date, written with {@code lake write}. */
     static void table(Path root, Path work, String kind, String key, List<Map<String, Object>> docs, List<String> promoted, String vector)
             throws Exception {
+        table(root, work, kind, key, docs, promoted, vector, "overwrite-dates");
+    }
+
+    /** The same, in a write mode of the lake writer ({@code append}: an intraday batch beside the morning run). */
+    static void table(Path root, Path work, String kind, String key, List<Map<String, Object>> docs, List<String> promoted, String vector,
+            String mode) throws Exception {
         Map<String, List<String>> byDay = new LinkedHashMap<>();
         for (Map<String, Object> d : docs) {
             Map<String, Object> doc = new LinkedHashMap<>(d);
@@ -193,7 +199,7 @@ final class VarLakeFixture {
         }
         List<Map<String, Object>> parts = new ArrayList<>();
         for (Map.Entry<String, List<String>> e : byDay.entrySet()) {
-            Path f = work.resolve(kind + "-" + e.getKey() + ".rows");
+            Path f = work.resolve(kind + "-" + e.getKey() + "-" + System.nanoTime() + ".rows");
             Files.write(f, e.getValue(), StandardCharsets.UTF_8);
             parts.add(Map.of("file", f.toString(), "values", Map.of("business_date", e.getKey())));
         }
@@ -211,11 +217,11 @@ final class VarLakeFixture {
         m.put("partitionColumns", List.of("business_date"));
         m.put("columns", columns);
         m.put("promoted", promoted);
-        m.put("mode", "overwrite-dates");
+        m.put("mode", mode);
         m.put("batchRows", 1000);
         m.put("statsColumns", List.of("id", "business_date"));
         m.put("parts", parts);
-        Path mf = work.resolve(kind + ".manifest.json");
+        Path mf = work.resolve(kind + "-" + System.nanoTime() + ".manifest.json");
         Files.writeString(mf, JSON.writeValueAsString(m));
         ByteArrayOutputStream err = new ByteArrayOutputStream();
         int code = LakeCli.run(new String[] {"lake", "write", "--manifest", mf.toString()}, new PrintStream(new ByteArrayOutputStream()),

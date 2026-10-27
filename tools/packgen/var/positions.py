@@ -235,7 +235,7 @@ class Batch:
                          "PRODUCT_TYPE": t.get("PRODUCT_TYPE"), "CURRENCY": ccy, "COUNTERPARTY": t.get("COUNTERPARTY") or "",
                          "DIRECTION": "LONG" if q >= 0 else "SHORT", "QUANTITY": q, "TAGS": "|".join(self._tags(t))}
                 run = {"STATUS": "ok", "PRICER": "demo-factor-model", "MODEL_VERSION": "demo-2", "COMPUTED_AT": f"{self.cob}T22:30:00Z",
-                       "BATCH_ID": f"B-{self.cob}-01", "RESTATEMENT": 0}
+                       "BATCH_ID": f"B-{self.cob}-01", "RESTATEMENT": 0, "RUN_KIND": "FULL"}   # a full run (VAR_GUIDE.md section 8.4)
                 if self.fx is not None and t.get("SOURCE_SYSTEM") in SFX.PV_SYSTEMS and self.fx.has(ccy):
                     base, pvs = SFX.scenario_pvs(self.fx, ccy, float(round(pv)), vec)
                     self.engine_vectors[tid] = SFX.engine_pnl(self.fx, ccy, base, pvs)

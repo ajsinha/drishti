@@ -104,11 +104,11 @@ _HIER = ["LEGAL_ENTITY", "DIVISION", "DESK", "TT_BOOK", "PORTFOLIO"]
 LAYOUT = {
     "pnl-vector": {"columns": ["TRADE_ID", "SECURITY_ID", "INSTRUMENT", *_HIER, "STRATEGY", "PRODUCT_GROUP", "PRODUCT_TYPE", "CURRENCY",
                                "COUNTERPARTY", "DIRECTION", "QUANTITY", "PV", "TAGS", "TRADE_STATUS", "MATURITY_DATE", "STATUS",
-                               "REPORTING_CCY", "SCENARIO_SET_ID", "BATCH_ID"],
+                               "REPORTING_CCY", "SCENARIO_SET_ID", "BATCH_ID", "RUN_KIND", "COMPUTED_AT"],
                    "vectors": ["PNL"]},
     "scenario-pv": {"columns": ["TRADE_ID", "SECURITY_ID", "INSTRUMENT", *_HIER, "STRATEGY", "PRODUCT_GROUP", "PRODUCT_TYPE", "CURRENCY",
                                 "COUNTERPARTY", "DIRECTION", "QUANTITY", "BASE_PV", "VALUATION_DATE", "BASE_VALUATION_DATE", "TAGS",
-                                "TRADE_STATUS", "MATURITY_DATE", "STATUS", "SCENARIO_SET_ID", "BATCH_ID"],
+                                "TRADE_STATUS", "MATURITY_DATE", "STATUS", "SCENARIO_SET_ID", "BATCH_ID", "RUN_KIND", "COMPUTED_AT"],
                     "vectors": ["SCENARIO_PV"]},
     "fx-scenario": {"columns": ["CURRENCY", "RATE", "SCENARIO_SET_ID"]},
     "risk-hierarchy": {"columns": ["NODE_ID", "HIERARCHY", "LEVEL", "PARENT_ID", "NAME", "LIMIT_VAR"]},

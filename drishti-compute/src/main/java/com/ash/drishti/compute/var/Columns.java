@@ -130,6 +130,88 @@ public final class Columns {
         return out;
     }
 
+    /**
+     * These columns with some rows replaced and rows appended (an intraday batch, VAR_GUIDE.md section 8.4): each row given as its texts
+     * in {@link #textColumns()} order and its numbers in {@link #numberColumns()} order (a null array: that part unchanged; a null text:
+     * none). Every array is copied once, the dictionaries extended where a text is new.
+     */
+    public Columns edited(Map<Integer, String[]> texts, Map<Integer, double[]> nums, List<String[]> addTexts, List<double[]> addNums) {
+        int n = rows + addTexts.size();
+        Columns out = new Columns(n);
+        List<String> tcols = textColumns();
+        for (int i = 0; i < tcols.size(); i++) {
+            String col = tcols.get(i);
+            int[] c = java.util.Arrays.copyOf(codes.get(col), n);
+            List<String> dict = new ArrayList<>(java.util.Arrays.asList(dicts.get(col)));
+            Map<String, Integer> pool = null;
+            int ci = i;
+            java.util.function.Function<String, Integer> codeOf = null;
+            for (int r = rows; r < n; r++) {
+                c[r] = -1;
+            }
+            if (!texts.isEmpty() || !addTexts.isEmpty()) {
+                pool = new HashMap<>();
+                for (int k = 0; k < dict.size(); k++) {
+                    pool.putIfAbsent(dict.get(k), k);
+                }
+                Map<String, Integer> p = pool;
+                codeOf = t -> t == null ? -1 : p.computeIfAbsent(t, x -> {
+                    dict.add(x);
+                    return dict.size() - 1;
+                });
+            }
+            if (codeOf != null) {
+                for (Map.Entry<Integer, String[]> e : texts.entrySet()) {
+                    if (e.getValue() != null) {
+                        c[e.getKey()] = codeOf.apply(ci < e.getValue().length ? e.getValue()[ci] : null);
+                    }
+                }
+                for (int a = 0; a < addTexts.size(); a++) {
+                    String[] t = addTexts.get(a);
+                    c[rows + a] = codeOf.apply(t != null && ci < t.length ? t[ci] : null);
+                }
+            }
+            out.codes.put(col, c);
+            out.dicts.put(col, dict.toArray(new String[0]));
+        }
+        List<String> ncols = numberColumns();
+        for (int i = 0; i < ncols.size(); i++) {
+            String col = ncols.get(i);
+            double[] v = java.util.Arrays.copyOf(numbers.get(col), n);
+            for (int r = rows; r < n; r++) {
+                double[] a = addNums.get(r - rows);
+                v[r] = a != null && i < a.length ? a[i] : Double.NaN;
+            }
+            for (Map.Entry<Integer, double[]> e : nums.entrySet()) {
+                if (e.getValue() != null) {
+                    v[e.getKey()] = i < e.getValue().length ? e.getValue()[i] : Double.NaN;
+                }
+            }
+            out.numbers.put(col, v);
+        }
+        return out;
+    }
+
+    /** Row {@code row}'s texts in {@link #textColumns()} order. */
+    public String[] textsOf(int row) {
+        List<String> t = textColumns();
+        String[] out = new String[t.size()];
+        for (int i = 0; i < out.length; i++) {
+            out[i] = text(t.get(i), row);
+        }
+        return out;
+    }
+
+    /** Row {@code row}'s numbers in {@link #numberColumns()} order. */
+    public double[] numbersOf(int row) {
+        List<String> t = numberColumns();
+        double[] out = new double[t.size()];
+        for (int i = 0; i < out.length; i++) {
+            out[i] = number(t.get(i), row);
+        }
+        return out;
+    }
+
     /** Builds columns row by row. */
     public static final class Builder {
         private final List<String> textCols;

@@ -141,7 +141,22 @@ public final class VarService implements AutoCloseable {
             throw new DrishtiException(ErrorCode.ENTITY_NOT_FOUND, "no P&L vectors in any connector (kind " + props.kinds().vector()
                     + "): build the demo lake (drishti.py lake demo) or point the market-risk pack's risk-store at your lake");
         }
-        return load(asked == null || asked.isAfter(latest) ? latest : asked, 0);
+        VarDate vd = load(asked == null || asked.isAfter(latest) ? latest : asked, 0);
+        return MORNING.get() ? vd.morning() : vd;
+    }
+
+    /** True on a thread computing the official records: every date read without its intraday layer (VAR_GUIDE.md section 8.4). */
+    private static final ThreadLocal<Boolean> MORNING = ThreadLocal.withInitial(() -> false);
+
+    /** Runs {@code work} on the morning runs alone (the official captures: never the intraday layer). */
+    <T> T morningOnly(java.util.function.Supplier<T> work) {
+        boolean was = MORNING.get();
+        MORNING.set(true);
+        try {
+            return work.get();
+        } finally {
+            MORNING.set(was);
+        }
     }
 
     /**
@@ -169,7 +184,7 @@ public final class VarService implements AutoCloseable {
         for (String w : usd.warnings()) {
             vd = vd.warned(w);
         }
-        return vd;
+        return MORNING.get() ? vd.morning() : vd;
     }
 
     /**
@@ -340,11 +355,88 @@ public final class VarService implements AutoCloseable {
      */
     private double[] inCurrencyVector(VarDate d, OrdinalSet set, ScopeResolver.Resolution res) {
         VarDate usd = load(d.date(), 0);
+        usd = MORNING.get() ? usd.morning() : usd;
         if (!usd.date().equals(d.date())) {
             return vector(d, set, res);
         }
         double[] v = totals(usd, set, res.node()).in(fx(usd), d.currency());
         return v != null ? v : vector(d, set, res);
+    }
+
+    // ---------------------------------------------------------------------------------------------------------------- intraday
+
+    private final Map<LocalDate, Object> intradayLocks = new ConcurrentHashMap<>();
+
+    /** True when a loaded date has intraday batches (applied or met). */
+    boolean hasIntraday(LocalDate d) {
+        CompletableFuture<VarDate> f = dates.get(d);
+        return f != null && f.isDone() && !f.isCompletedExceptionally() && f.join().intraday() != null && !f.join().intraday().batches().isEmpty();
+    }
+
+    /** What an intraday signal did: {@code applied}, {@code none} (nothing new), {@code reload} (a full run: the date reloaded), {@code not loaded}. */
+    record IntradayResult(String status, int updates, int trades, java.util.List<String> batches, String note) {}
+
+    /**
+     * The data-load signal of a trades' input (VAR_GUIDE.md section 8.4): on a loaded date, its new intraday batches are applied on the
+     * book in place (each updated trade's difference into its book and nodes, its reporting currencies, the totals; nothing else
+     * recomputed); a full run (no new intraday batch, another morning batch, another morning {@code COMPUTED_AT}, an intraday batch
+     * gone) reloads the date as before. A date not loaded is left to load with its updates.
+     */
+    IntradayResult intraday(LocalDate d) {
+        CompletableFuture<VarDate> f = dates.get(d);
+        if (f == null || !f.isDone() || f.isCompletedExceptionally()) {
+            return new IntradayResult("not loaded", 0, 0, java.util.List.of(), "the date loads with its updates when first asked");
+        }
+        synchronized (intradayLocks.computeIfAbsent(d, x -> new Object())) {
+            VarDate usd = dates.get(d).join();
+            VarIntradayRows state = usd.intraday() == null ? new VarIntradayRows().morning(null, usd.intake().batchIds()) : usd.intraday();
+            VarIntake read = loader.readIntraday(d, usd.book().morning(), state.batches());
+            java.util.Set<String> morning = new java.util.TreeSet<>(read.summary().batchIds());
+            java.util.Set<String> fresh0 = new java.util.TreeSet<>(read.intradayBatches());
+            fresh0.removeAll(state.batches());
+            // no new intraday batch: the signal is a full run (a restatement with the same batch id included), as before 2.9.4
+            boolean restated = fresh0.isEmpty() || !morning.equals(new java.util.TreeSet<>(usd.intake().batchIds()))
+                    || state.morningAt() != null && read.morningAt() != null && !state.morningAt().equals(read.morningAt())
+                    || !read.intradayBatches().containsAll(state.batches());
+            if (restated) {
+                reload(d);
+                return new IntradayResult("reload", 0, 0, java.util.List.of(), "a full run of the date: reloaded, its intraday layer dropped");
+            }
+            VarIntradayRows next = state.copy();
+            if (next.morningAt() == null) {
+                next.morning(read.morningAt(), usd.intake().batchIds());
+            }
+            next.met(read.intradayBatches());
+            next.rejected(read.intradayRejections());
+            java.util.List<VarIntradayRows.Row> fresh = new java.util.ArrayList<>();
+            for (VarIntradayRows.Row r : read.intraday().rows()) {
+                if (next.offer(r)) {
+                    fresh.add(r);
+                }
+            }
+            java.util.List<String> batches = fresh.stream().map(VarIntradayRows.Row::batchId).distinct().toList();
+            if (fresh.isEmpty()) {
+                if (!next.batches().equals(state.batches())) {
+                    dates.put(d, CompletableFuture.completedFuture(usd.withBook(usd.book(), next)));
+                }
+                return new IntradayResult("none", 0, 0, batches, "no update newer than what is applied");
+            }
+            VarBook nb = loader.apply(d, usd.book(), fresh, usd.book().scenarioDates(), usd.intake());
+            VarDate nvd = usd.withBook(nb, next);
+            dates.put(d, CompletableFuture.completedFuture(nvd));
+            for (String k : new ArrayList<>(inCurrency.keySet())) {          // the reporting currencies follow: only those trades reconverted
+                if (k.startsWith(d + "|")) {
+                    CompletableFuture<VarDate> cf = inCurrency.get(k);
+                    if (cf != null && cf.isDone() && !cf.isCompletedExceptionally()) {
+                        VarDate cur = cf.join();
+                        inCurrency.put(k, CompletableFuture.completedFuture(currencies.apply(cur, nvd, fresh)));
+                    }
+                }
+            }
+            cache.asMap().keySet().removeIf(k -> k.startsWith(d + "|"));
+            audit(VarOfficialStore.OWNER, "var-intraday", d.toString(), "batches=" + batches + " updates=" + fresh.size());
+            return new IntradayResult("applied", fresh.size(), nb.intraday().info().trades(), batches, null);
+        }
     }
 
     /** The newest date before a refused one, with the reason as a warning; the refusal itself when there is none. */
@@ -378,7 +470,7 @@ public final class VarService implements AutoCloseable {
      */
     private void retire(CompletableFuture<VarDate> f, boolean stale) {
         if (f != null) {
-            f.thenAccept(vd -> loader.tier().retire(vd.book(), stale));
+            f.thenAccept(vd -> loader.tier().retire(vd.book().morning(), stale));      // the book the tier opened (a layer shares its file)
         }
     }
 
@@ -434,6 +526,7 @@ public final class VarService implements AutoCloseable {
                 m.put("rejected", vd.intake().rejected());
                 m.put("excluded", vd.intake().excluded());
                 m.put("batchIds", vd.intake().batchIds());
+                m.put("intraday", VarViews.intradayNote(vd));
                 out.add(m);
             }
         });
@@ -539,7 +632,7 @@ public final class VarService implements AutoCloseable {
             throw new DrishtiException(ErrorCode.FORBIDDEN, "a scope of positions, trades, a counterparty, a rule or a basket portfolio may only "
                     + "name what you see position by position; your role sees some of these only in aggregate");
         }
-        String key = d.date() + "|" + d.currency() + "|" + d.version() + "|" + view.signature() + "|" + res.canonical() + "|" + res.set().digest();
+        String key = d.date() + "|" + d.currency() + "|" + d.version() + "|i" + d.intradayStamp() + "|" + view.signature() + "|" + res.canonical() + "|" + res.set().digest();
         Scoped hit = cache.getIfPresent(key);
         if (hit != null) {
             return new Scoped(d, hit.view(), hit.res(), hit.set(), hit.hidden(), hit.vector(), hit.measures(), hit.kind(), hit.label(),

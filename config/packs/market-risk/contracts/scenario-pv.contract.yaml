@@ -247,6 +247,15 @@ fields:
   type: integer
   presence: required
   example: 0
+- name: RUN_KIND
+  type: text
+  presence: optional
+  description: 'Which run the row belongs to (2.9.4, VAR_GUIDE.md section 8.4): FULL (or none) for the day''s full run; INTRADAY for an
+    update a pricing system sends during the day: only the changed trades, amended, new or cancelled, priced over the same scenario
+    set; each intraday batch has its own BATCH_ID and a later COMPUTED_AT, and the latest COMPUTED_AT per trade wins. A cancel is an
+    INTRADAY row whose TRADE_STATUS is not live (CANCELLED), its PVs empty.'
+  example: FULL
+  enum: [FULL, INTRADAY]
 links:
 - field: SCENARIO_PV_ID
   kind: scenario-pv
