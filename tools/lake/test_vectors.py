@@ -13,7 +13,9 @@
 # See the LICENSE file in the root of this repository for the full terms.
 
 """lake build with a vector column (VAR_GUIDE.md section 29.3): a P&L vector of numbers becomes a list<double> column, out of the
-document (which keeps a {"$vector": "PNL"} marker), read back equal to the bit; a vector that is not a list of numbers is a reject.
+document (which keeps a {"$vector": "PNL"} marker), read back equal to the bit; a vector that is not a list of numbers is a reject. The
+same in both formats: Delta (the default) and Iceberg (--format iceberg, written by the server's exec jar or DRISHTI_ICEBERG_CLASSPATH;
+skipped without one).
 
     uv run --with deltalake --with pyarrow --with pyyaml --with pytest python -m pytest tools/lake/test_vectors.py -q
 """
@@ -29,6 +31,16 @@ sys.path.insert(0, str(Path(__file__).resolve().parent))
 import build  # noqa: E402
 import stage  # noqa: E402
 import writers  # noqa: E402
+
+
+def iceberg_loader() -> bool:
+    """Whether the Iceberg loader can run here: Java and the server's exec jar (or DRISHTI_ICEBERG_CLASSPATH)."""
+    import stores
+    try:
+        stores.loader_command(Path(tempfile.gettempdir()))
+        return True
+    except SystemExit:
+        return False
 
 N = 509
 
@@ -85,6 +97,56 @@ class VectorBuildTest(unittest.TestCase):
             self.assertEqual(doc["PNL"], {"$vector": "PNL"})                   # not stored twice
             self.assertEqual(doc["TT_BOOK"], d["TT_BOOK"])
         self.assertEqual(writers.existing_layout(str(self.root / "lake" / "risk" / "pnl-vector"))[1]["PNL"], "vector")
+
+
+class IcebergFormatTest(unittest.TestCase):
+    """--format iceberg: the same rows into an Iceberg table, the vector a list<double> column with its missing elements null."""
+
+    def setUp(self):
+        self.tmp = tempfile.TemporaryDirectory()
+        self.root = Path(self.tmp.name)
+        os.environ["DRISHTI_BI_STORE"] = str(self.root / "bi-store")
+        self.src = self.root / "v.jsonl"
+        self.docs = [vector_doc(i) for i in range(12)]
+        self.docs[3]["PNL"][7] = None                                      # a missing value stays missing
+        self.src.write_text("\n".join(json.dumps(d) for d in self.docs) + "\n", encoding="utf-8")
+
+    def tearDown(self):
+        os.environ.pop("DRISHTI_BI_STORE", None)
+        self.tmp.cleanup()
+
+    def args(self, *extra):
+        return build.build_parser().parse_args(["--from", str(self.src), "--lake", str(self.root / "ice"), "--domain", "risk", "--kind",
+                                                "pnl-vector", "--key", "VECTOR_ID", "--date", "BUSINESS_DATE", "--promote", "DESK,TT_BOOK",
+                                                "--vector", "PNL", "--format", "iceberg", "-q", "--no-stamp", *extra])
+
+    def test_only_overwrite_dates(self):
+        code, summary = build.run(self.args("--mode", "append"), say=lambda *x, **k: None)
+        self.assertEqual(code, build.EXIT_FAILED)
+        self.assertIn("--format iceberg replaces each business date", summary["error"])
+
+    def test_delta_is_the_default(self):
+        a = build.build_parser().parse_args(["--from", str(self.src)])
+        self.assertEqual(a.format, "delta")
+
+    @unittest.skipUnless(iceberg_loader(), "needs Java and the server's exec jar (or DRISHTI_ICEBERG_CLASSPATH)")
+    def test_round_trip_to_the_bit(self):
+        import pyarrow.parquet as pq
+        code, summary = build.run(self.args("--partition-by", "DESK"), say=lambda *x, **k: None)
+        self.assertEqual(code, 0, summary)
+        self.assertEqual(summary["format"], "iceberg")
+        table = self.root / "ice" / "risk" / "pnl-vector"
+        self.assertTrue((table / "metadata").is_dir())
+        t = pq.ParquetDataset(sorted(str(f) for f in (table / "data").rglob("*.parquet"))).read()
+        self.assertIn("DESK", t.schema.names)                              # a partition column kept as a column
+        rows = {r["id"]: r for r in t.to_pylist()}
+        self.assertEqual(len(rows), len(self.docs))
+        for d in self.docs:
+            row = rows[d["VECTOR_ID"]]
+            self.assertEqual(row["PNL"], [None if x is None else float(x) for x in d["PNL"]])
+            self.assertEqual(json.loads(row["doc"])["PNL"], {"$vector": "PNL"})
+        import ownership
+        self.assertIn("risk/pnl-vector", ownership.built(self.root / "ice"))   # Drishti's to maintain (Admin -> Lakes)
 
 
 if __name__ == "__main__":

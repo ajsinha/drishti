@@ -21,7 +21,9 @@ native``: no Hadoop, so it works on Windows), and its Delta table is removed. It
 
     python tools/lake/stores.py --from data/delta/trading/trade_calypso --root data/iceberg --table trade_calypso --replace
 
-copies one Delta table into Iceberg (what ``build_demo_lakes.py`` runs, with a heartbeat).
+copies one Delta table into Iceberg (what ``build_demo_lakes.py`` runs, with a heartbeat); ``--domain risk`` copies a table of another
+domain (``build_demo_lakes.py --store risk=iceberg`` moves every table of the risk domain, P&L vectors included, and switches the
+``risk-store`` connector file; Delta stays the default).
 """
 from __future__ import annotations
 
@@ -94,31 +96,32 @@ def table(store: str, system: str, lake: pathlib.Path, ice: pathlib.Path) -> pat
 
 # ---- the loader --------------------------------------------------------------------------------------------------------------------------
 
-def loader_command(data: pathlib.Path) -> list[str]:
-    """How to start IcebergLoader: DRISHTI_ICEBERG_CLASSPATH (development: ``-cp CP``), else the server's exec jar (DRISHTI_JAR, else the
-    newest drishti-server/target/drishti-server-*-exec.jar), whose launcher starts the loader instead of the server (``-Dloader.main``)."""
+def loader_command(data: pathlib.Path, jar: str | None = None, java: str | None = None, main: str = LOADER) -> list[str]:
+    """How to start IcebergLoader (or another class of the plugin, ``main``: IcebergMaintenance): DRISHTI_ICEBERG_CLASSPATH (development:
+    ``-cp CP``), else the server's exec jar (``jar``, DRISHTI_JAR, else the newest drishti-server/target/drishti-server-*-exec.jar), whose
+    launcher starts the loader instead of the server (``-Dloader.main``)."""
     for p in (str(HERE), str(ROOT / "tools")):
         if p not in sys.path:
             sys.path.insert(0, p)
     import writers
     from javacmd import java_cmd
-    java = writers.find_java()
+    java = writers.find_java(java)
     if not java:
         raise SystemExit("stores: no java (Java 21 or newer: JAVA_HOME or java on the PATH)")
     heap = "-Xmx" + os.environ.get("DRISHTI_LOADER_HEAP", "2g")
     cp = os.environ.get("DRISHTI_ICEBERG_CLASSPATH")
     if cp:
-        args = [heap, "-cp", cp, LOADER]
+        args = [heap, "-cp", cp, main]
     else:
-        jar = writers.find_jar()
+        jar = writers.find_jar(jar)
         if not jar:
             raise SystemExit("stores: Iceberg is written by the server's exec jar: build it first (./mvnw -q package -DskipTests; Windows: "
                              ".\\mvnw.cmd -q package -DskipTests) or name it with DRISHTI_JAR")
-        args = [heap, f"-Dloader.main={LOADER}", "-jar", jar]
+        args = [heap, f"-Dloader.main={main}", "-jar", jar]
     return java_cmd(java, args, tmp=data / "tmp" / "server")
 
 
-def rows(delta: pathlib.Path, table_name: str, newest: list):
+def rows(delta: pathlib.Path, table_name: str, newest: list, domain: str = DOMAIN):
     """The Delta table's rows as the loader's lines: {domain, kind (the table), id, date, doc, columns (every promoted and partition
     column)}; ``newest`` gets the newest business date."""
     from deltalake import DeltaTable
@@ -131,12 +134,12 @@ def rows(delta: pathlib.Path, table_name: str, newest: list):
             day = day.isoformat() if hasattr(day, "isoformat") else str(day)
             if not newest or day > newest[0]:
                 newest[:] = [day]
-            yield json.dumps({"domain": DOMAIN, "kind": table_name, "id": rid, "date": day, "doc": cols["doc"][i],
+            yield json.dumps({"domain": domain, "kind": table_name, "id": rid, "date": day, "doc": cols["doc"][i],
                               "columns": {n: cols[n][i] for n in names if cols[n][i] is not None}}, ensure_ascii=False,
                              separators=(",", ":")) + "\n"
 
 
-def copy(delta: pathlib.Path, root: pathlib.Path, table_name: str, data: pathlib.Path, say=print) -> dict:
+def copy(delta: pathlib.Path, root: pathlib.Path, table_name: str, data: pathlib.Path, say=print, domain: str = DOMAIN) -> dict:
     """Copies one Delta table into ``<root>/trading/<table_name>`` with IcebergLoader (each business day committed as one overwrite of
     that day); {rows, newest}."""
     spill = data / "tmp" / "iceberg"
@@ -155,11 +158,11 @@ def copy(delta: pathlib.Path, root: pathlib.Path, table_name: str, data: pathlib
         reader = threading.Thread(target=echo, daemon=True)
         reader.start()
         try:
-            for line in rows(delta, table_name, newest):
+            for line in rows(delta, table_name, newest, domain):
                 proc.stdin.write(line)
                 n += 1
                 if n % 100_000 == 0:
-                    say(f"    {DOMAIN}/{table_name}: {n:,} rows sent to Iceberg", flush=True)
+                    say(f"    {domain}/{table_name}: {n:,} rows sent to Iceberg", flush=True)
             proc.stdin.close()
         except BrokenPipeError:
             pass
@@ -224,21 +227,97 @@ def switch(folder: pathlib.Path, system: str, store: str, lake: pathlib.Path, ic
     return f"trade-{system}: now reads {store}, was {now} ({f}; a running server restarts this connector by itself)"
 
 
+# ---- a whole domain in Iceberg (--store risk=iceberg) ------------------------------------------------------------------------------------
+
+#: the domains whose every table may be stored in Iceberg instead of Delta: domain -> (pack, connector)
+DOMAIN_STORES = {"risk": ("market-risk", "risk-store")}
+
+
+def split_domains(values: list[str] | None) -> tuple[list[str], dict[str, str]]:
+    """``--store`` values split into the source systems' (for :func:`parse`) and the domains' ({risk: iceberg}). Raises ValueError."""
+    systems, domains = [], {}
+    for v in values or []:
+        name, sep, store = v.strip().lower().partition("=")
+        if name in DOMAIN_STORES:
+            if not sep or store not in STORES:
+                raise ValueError(f"--store {v}: give {name}=delta or {name}=iceberg")
+            domains[name] = store
+        else:
+            systems.append(v)
+    return systems, domains
+
+
+def domain_file(folder: pathlib.Path, domain: str) -> pathlib.Path:
+    return folder / f"{DOMAIN_STORES[domain][1]}.yaml"
+
+
+def current_domain(folder: pathlib.Path, domain: str) -> str:
+    """The store the domain's connector file reads now (no file: delta, the pack's template)."""
+    f = domain_file(folder, domain)
+    if not f.is_file():
+        return "delta"
+    m = re.search(r"(?m)^plugin:\s*['\"]?([A-Za-z0-9_-]+)", f.read_text(encoding="utf-8"))
+    return "iceberg" if m and m.group(1) == "iceberg" else "delta"
+
+
+def domain_connector_text(domain: str, store: str, lake: pathlib.Path, ice: pathlib.Path, data: pathlib.Path) -> str:
+    """The domain's connector file for its store: the pack's template (kinds, layouts with their vector columns) with plugin and root
+    set; ``engine: native`` for Iceberg."""
+    import yaml
+    pack_name, name = DOMAIN_STORES[domain]
+    pack = yaml.safe_load((ROOT / "config" / "packs" / pack_name / "pack.yaml").read_text(encoding="utf-8"))
+    tpl = pack["connectors"][name]
+    settings = dict(tpl.get("settings") or {})
+    if store == "iceberg":
+        root = ICEBERG_DEFAULT if ice.resolve() == _resolve(ICEBERG_DEFAULT, data, "DRISHTI_ICEBERG_ROOT") else str(ice)
+        settings = {"root": root, "engine": "native", **{k: v for k, v in settings.items() if k != "root"}}
+        where = f"every {domain} table in Iceberg ({ice / domain})"
+    else:
+        settings["root"] = DELTA_DEFAULT if lake.resolve() == _resolve(DELTA_DEFAULT, data, "DRISHTI_DELTA_ROOT") else str(lake)
+        where = f"every {domain} table in Delta ({lake / domain})"
+    body = {**tpl, "plugin": store, "settings": settings}
+    return (f"{WRITTEN_BY} {domain}={store}: {where}, from the connector template of pack '{pack_name}'.\n"
+            "# Building the lakes with another --store switches it; the text it replaces is kept in <data>/connectors/history/.\n"
+            + yaml.safe_dump(body, sort_keys=False))
+
+
+def switch_domain(folder: pathlib.Path, domain: str, store: str, lake: pathlib.Path, ice: pathlib.Path, data: pathlib.Path, dry: bool) -> str:
+    """Writes the domain's connector file for the store (the earlier text kept in <data>/connectors/history/); back to Delta, the file
+    goes and the pack's own template serves again. The line that says what was done."""
+    f = domain_file(folder, domain)
+    now = current_domain(folder, domain)
+    if now == store:
+        return f"{f.stem}: reads {store} already ({f})"
+    if dry:
+        return f"{f.stem}: would be written to read {store} ({f})"
+    if f.is_file():
+        hist = data / "connectors" / "history"
+        hist.mkdir(parents=True, exist_ok=True)
+        (hist / f"{f.stem}.{datetime.now().strftime('%Y%m%dT%H%M%S%f')[:-3]}.yaml").write_text(f.read_text(encoding="utf-8"), encoding="utf-8")
+    if store == "delta":
+        f.unlink()
+        return f"{f.stem}: now reads delta, was {now} (the pack's own connector; a running server restarts it by itself)"
+    folder.mkdir(parents=True, exist_ok=True)
+    f.write_text(domain_connector_text(domain, store, lake, ice, data), encoding="utf-8")
+    return f"{f.stem}: now reads {store}, was {now} ({f}; a running server restarts this connector by itself)"
+
+
 def main(argv: list[str] | None = None) -> int:
     ap = argparse.ArgumentParser(description="Copies one Delta table of the trading domain into Iceberg (IcebergLoader, engine native).")
     ap.add_argument("--from", dest="src", type=pathlib.Path, required=True, help="the Delta table (…/delta/trading/trade_calypso)")
     ap.add_argument("--root", type=pathlib.Path, required=True, help="the Iceberg root (…/iceberg); the table goes to <root>/trading/<table>")
     ap.add_argument("--table", required=True, help="the Iceberg table's name (trade_calypso)")
+    ap.add_argument("--domain", default=DOMAIN, help="the table's domain (default trading; risk for the risk lake)")
     ap.add_argument("--data-dir", type=pathlib.Path, help="the data folder for the loader's temporary files (default: the folder holding --root)")
     ap.add_argument("--replace", action="store_true", help="remove the Iceberg table first (else each copied business day replaces that day)")
     a = ap.parse_args(argv)
     src, root = a.src.expanduser().resolve(), a.root.expanduser().resolve()
     data = (a.data_dir or root.parent).expanduser().resolve()
-    target = root / DOMAIN / a.table
+    target = root / a.domain / a.table
     if a.replace and target.exists():
         shutil.rmtree(target)
-    got = copy(src, root, a.table, data)
-    print(f"  {DOMAIN}/{a.table}: {got['rows']:,} rows in Iceberg, newest business date {got['newest']} ({target})", flush=True)
+    got = copy(src, root, a.table, data, domain=a.domain)
+    print(f"  {a.domain}/{a.table}: {got['rows']:,} rows in Iceberg, newest business date {got['newest']} ({target})", flush=True)
     return 0
 
 

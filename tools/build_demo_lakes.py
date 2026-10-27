@@ -41,6 +41,15 @@ Each source system's trades in Delta Lake (the default) or Apache Iceberg, chose
     python tools/build_demo_lakes.py --store all=iceberg                              # every system in Iceberg
     python tools/build_demo_lakes.py --only trades/calypso --store calypso=iceberg --as-of 2026-10-16   # one system moved
 
+The risk domain (the market-risk pack's P&L vectors, scenario PVs, hierarchy and the rest of risk-store) in Iceberg instead of Delta::
+
+    python tools/build_demo_lakes.py --store risk=iceberg                             # every risk table copied into <data>/iceberg/risk
+    python tools/build_demo_lakes.py --only market-risk --store risk=delta            # back to Delta (the default)
+
+Delta is the default for every table; Iceberg is only ever chosen this way (or by a connector file). The risk tables are built as Delta
+by lake demo, copied by Drishti's Iceberg loader (vector columns as list<double>), their Delta copies removed, and the connector file
+risk-store.yaml is written to read Iceberg (back to Delta: the file goes and the pack's own connector serves again).
+
 An Iceberg system's table is <data>/iceberg/trading/trade_<system> (DRISHTI_ICEBERG_ROOT moves it), written by Drishti's own Iceberg
 engine from the server's exec jar; its connector file trade-<system>.yaml is switched to plugin iceberg (and back to delta), so one
 connector serves each system. A full build without --store puts every system in Delta, as before; a partial one (--only, --files-only)
@@ -235,8 +244,9 @@ def main(argv: list[str] | None = None) -> int:
     ap.add_argument("--token-file", type=Path, help="with --server: the API token (loads:write) for the signals (default: DRISHTI_TOKEN)")
     ap.add_argument("--store", action="append", metavar="SYSTEM=delta|iceberg",
                     help="where a source system's trades are stored: endur=delta, calypso=iceberg, all=iceberg (repeatable; all first, then "
-                         "each system over it). Default: every system in Delta on a full build; a partial build (--only, --files-only) keeps "
-                         "the store each system it does not name has. The connector file trade-<system>.yaml is switched to match")
+                         "each system over it); risk=iceberg puts every table of the risk domain in Iceberg ("
+                         "risk-store.yaml switched; risk=delta back). Default: Delta everywhere on a full build; a partial build (--only, "
+                         "--files-only) keeps the store each system it does not name has. The connector file trade-<system>.yaml is switched to match")
     ap.add_argument("--dry-run", action="store_true", help="say every step, change nothing (and print the names mapping)")
     ap.add_argument("--names", type=Path, default=ROOT / "config" / "demo" / "names.yaml",
                     help="the bank's own names (default config/demo/names.yaml): passed to lake demo, which renames them as it loads")
@@ -273,9 +283,14 @@ def main(argv: list[str] | None = None) -> int:
     as_of = a.as_of or (files[-1][0] if files else "today")
     lake = a.lake.expanduser().resolve()
     try:
-        named = stores.parse(a.store)
+        systems, domains = stores.split_domains(a.store)
+        named = stores.parse(systems)
     except ValueError as e:
         ap.error(str(e))
+    if not a.files_only and not a.only:                     # a full build: every domain in Delta unless named (as the systems)
+        for d in stores.DOMAIN_STORES:
+            if d not in domains and stores.current_domain(stores.connectors_dir(a.connectors_dir), d) == "iceberg":
+                domains[d] = "delta"
     plan = StorePlan(a, named, lake, system if files else None)
     if plan.problem:
         ap.error(plan.problem)
@@ -336,6 +351,7 @@ def main(argv: list[str] | None = None) -> int:
     else:
         print("2/3 no --endur-dir or --source-dir: the synthetic trades stay")
     plan.finish()
+    domain_lines = [move_domain(d, store, a, plan) for d, store in sorted(domains.items())]
 
     told = None
     if a.server and (files or plan.copied):              # your files, or trades copied into Iceberg: one signal, the trades' newest date
@@ -343,9 +359,31 @@ def main(argv: list[str] | None = None) -> int:
         print(f"  the server: {told}")
         outcomes.append(outcome(told))
     print(f"3/3 done in {time.time() - t0:.0f} s{' (dry run: nothing changed)' if a.dry_run else ''}.")
-    for line in plan.lines() + closing(a, system, files, outcomes):
+    for line in plan.lines() + domain_lines + closing(a, system, files, outcomes):
         print(line)
     return 0
+
+
+def move_domain(domain: str, store: str, a, plan: "StorePlan") -> str:
+    """Every table of the domain into the store (``--store risk=iceberg``): each Delta table copied into Iceberg and removed, or, back to
+    Delta, the Iceberg copies removed once the Delta tables are there; then the domain's connector file switched. The closing line."""
+    lake, ice = plan.lake, plan.ice
+    delta_tables = sorted(p for p in (lake / domain).iterdir() if (p / "_delta_log").is_dir()) if (lake / domain).is_dir() else []
+    if store == "iceberg":
+        if not delta_tables:
+            print(f"  every {domain} table of {lake / domain} into Iceberg ({ice / domain})" + ("" if a.dry_run else ": none in Delta now"))
+        for t in delta_tables:
+            print(f"  {domain}/{t.name} into Iceberg: {t} -> {ice / domain / t.name}", flush=True)
+            run([sys.executable, str(STORES_PY), "--from", str(t), "--root", str(ice), "--table", t.name, "--domain", domain,
+                 "--data-dir", str(plan.data), "--replace"], a.dry_run, f"{domain}/{t.name} into Iceberg", None, capture=True)
+            if not a.dry_run:
+                shutil.rmtree(t, ignore_errors=True)               # one store per domain: the Delta copy goes
+    elif delta_tables and (ice / domain).is_dir():
+        print(f"  the {domain} domain is in Delta now: its Iceberg tables are removed ({ice / domain})")
+        if not a.dry_run:
+            shutil.rmtree(ice / domain)
+    said = stores.switch_domain(plan.folder, domain, store, lake, ice, plan.data, a.dry_run)
+    return f"  {domain.capitalize()} domain: {store} {(ice if store == 'iceberg' else lake) / domain}; {said}"
 
 
 class StorePlan:

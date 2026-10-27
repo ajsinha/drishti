@@ -208,3 +208,25 @@ def test_a_partial_build_keeps_the_store_each_system_has(tmp_path):
     assert "CALYPSO  iceberg" in out and "trade-calypso: reads iceberg already" in out
     full = run("--as-of", "2026-10-16", "--lake", str(tmp_path / "data" / "delta"), "--connectors-dir", str(conn)).stdout
     assert "CALYPSO  delta" in full and "trade-calypso: would be written to read delta" in full    # a full build: Delta unless named
+
+
+def test_store_risk_iceberg_moves_the_risk_domain_and_switches_risk_store(tmp_path):
+    """2.9.5: the risk domain (P&L vectors and the rest of risk-store) in Iceberg by --store risk=iceberg; Delta stays the default."""
+    lake = tmp_path / "data" / "delta"
+    (lake / "risk" / "pnl-vector" / "_delta_log").mkdir(parents=True)
+    out = run("--store", "risk=iceberg", "--as-of", "2026-10-16", "--lake", str(lake), "--connectors-dir", str(tmp_path / "connectors")).stdout
+    assert "risk/pnl-vector into Iceberg" in out and "--domain risk" in out and str(tmp_path / "data" / "iceberg") in out
+    assert "risk-store: would be written to read iceberg" in out
+    assert "CALYPSO  delta" in out                                       # the trading systems stay where they were
+    assert not (tmp_path / "connectors").exists()                        # a dry run writes nothing
+    assert "risk=delta or risk=iceberg" in run("--store", "risk=parquet").stderr
+
+
+def test_a_full_build_puts_the_risk_domain_back_in_delta_unless_named(tmp_path):
+    conn = tmp_path / "connectors"
+    conn.mkdir()
+    (conn / "risk-store.yaml").write_text("plugin: iceberg\nkinds: [pnl-vector]\n")
+    full = run("--as-of", "2026-10-16", "--lake", str(tmp_path / "data" / "delta"), "--connectors-dir", str(conn)).stdout
+    assert "risk-store: would be written to read delta" in full
+    partial = run("--only", "trades/endur", "--as-of", "2026-10-16", "--lake", str(tmp_path / "data" / "delta"), "--connectors-dir", str(conn)).stdout
+    assert "risk-store" not in partial
