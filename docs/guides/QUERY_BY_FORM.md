@@ -71,8 +71,7 @@ ticked and **Quantity** `>= 100m`, on the quick-start server (the demo lakes):
 TRD where (CURRENCY = 'EUR' or CURRENCY = 'USD') and QUANTITY >= 100m limit 100
 ```
 
-It matches 3,415 of the 15,000 trades of the three source systems; the table shows the first 100 (**Show** below the fields). (The
-picture was made on the smaller demo data set, without the lakes: 201 of 765 trades.)
+It matches 3,398 of the 15,000 trades of the three source systems; the table shows the first 100 (**Show** below the fields).
 
 On a business date the sources hold no data for (a date not loaded yet, or before the first), the page does not just say "Nothing
 matches": it says no trade data is loaded for that date, names the newest date that has data, and **Search on** that date runs the
