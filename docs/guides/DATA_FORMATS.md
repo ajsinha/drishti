@@ -84,6 +84,14 @@ as the CSV's header**, values typed (numbers stay numbers, an empty cell is `nul
 
 The compliance export's files are `.jsonl` (they were JSON Lines named `.ndjson`).
 
+**Official results.** VaR and exposure keep publishing their official end-of-day results to Delta (`risk-results/var-official`,
+`exposure-official`, `exposure-official-cpty`), and each published date is also written as JSON Lines beside them:
+`<root>/risk-results/jsonl/<table>/<date>/<table>-v<table version>.jsonl`, one row a line, one file per commit (a restatement is a new
+file). The setting is `drishti.var.official.jsonl` and `drishti.ccr.exposure.official.jsonl`, on by default
+([CONFIGURATION.md](../admin/CONFIGURATION.md)). In the content store the row lists are JSON Lines too: `var/official/<date>-membership-v<n>.jsonl`
+and `exposure/official/<date>-trades-v<n>.jsonl` (a header line, then a row a line). Records written before 2.9.4 keep their `.json`
+and are read as they are: the store is append-only, nothing is rewritten. A single record or capture stays one JSON document.
+
 ## 5. What stays as it is
 
 Not data, so not JSONL, and they stay as they are: manifests (`testdata.yaml`, `MANIFEST.json`, `meta.json`), application state files,

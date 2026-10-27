@@ -111,8 +111,9 @@ public record VarProperties(Boolean enabled, Double confidence, Double esConfide
      * @param retentionYears the years the published table keeps its log and removed files (time travel), 7 by default
      * @param onStart at start, capture the newest date when it has no official record yet (a lake built while the server was down)
      */
-    public record Official(Boolean enabled, Boolean publish, String root, Integer retentionYears, Boolean onStart) {
+    public record Official(Boolean enabled, Boolean publish, String root, Integer retentionYears, Boolean onStart, Boolean jsonl) {
         public Official {
+            jsonl = jsonl == null || jsonl;                 // 2.9.4: each published date also as JSON Lines beside the table
             enabled = enabled == null || enabled;
             publish = publish == null || publish;
             root = root == null || root.isBlank() ? null : root;
@@ -167,7 +168,7 @@ public record VarProperties(Boolean enabled, Double confidence, Double esConfide
         access = access == null ? Map.of() : access;
         pathPage = pathPage == null || pathPage <= 0 ? 60 : pathPage;
         positions = positions == null ? new Positions(null, null) : positions;
-        official = official == null ? new Official(null, null, null, null, null) : official;
+        official = official == null ? new Official(null, null, null, null, null, null) : official;
         tier = tier == null ? new Tier(null, null, null, null, null) : tier;
     }
 

@@ -574,6 +574,7 @@ Every setting is under `drishti.ccr.exposure` in `application.yaml` (and [CONFIG
 | `official.root` | `${DRISHTI_DELTA_ROOT}` | the risk lake's root (an `s3://` root is not published by this writer) |
 | `official.retention-years` | `7` | the published tables keep their log and removed files this long |
 | `official.on-start` | `true` | at start, capture the newest date when it has no official record |
+| `official.jsonl` | `true` | also write each published date as JSON Lines beside the tables (`<root>/risk-results/jsonl/<table>/<date>/<table>-v<n>.jsonl`) |
 | `retention.trade-paths-days`, `.trade-paths-month-end-years`, `.set-matrices-years`, `.set-matrices-month-end-years`, `.statistics-years`, `.trade-contributions-years` | `20`, `1`, `1`, `7`, `7`, `7` | [section 27](#27-sizes-performance-and-retention), 27.3 |
 
 Also: the compute pool **`exposure`** in `config/compute/compute.yaml` (Python, `drishti_compute.exposure.whatif:ExposureWhatIfEngine`,
@@ -1169,7 +1170,10 @@ hierarchy kind, the bank and each legal entity) into `exposure-official`, at `li
 `PARTIAL_SETS` and `TRADES` besides the columns above, contract version `1.1`. Idempotent per inputs; a restated date is captured again
 with the next `RESULT_VERSION`; append-only, logs kept `official.retention-years`. The record (`exposure/official/<date>.json`) keeps
 every scope's figures and profile; every trade's EE contribution per primary date is kept beside it
-(`exposure/official/<date>-trades-v<n>.json`). Captured after the data-load signal and once at start for the newest date.
+(`exposure/official/<date>-trades-v<n>.jsonl`: a header line, then one `{"row": "trade", trade, nettingSet, ee}` a trade; records written
+before 2.9.4 are `.json` and are read as they are). Each published date is also written as JSON Lines beside the tables
+(`<root>/risk-results/jsonl/<table>/<date>/<table>-v<n>.jsonl`, one row a line, one file per commit; `official.jsonl`, on by default).
+Captured after the data-load signal and once at start for the newest date.
 
 ## 21. Validation, errors and data quality
 

@@ -17,6 +17,16 @@
 
 ## 2.9.4 (unreleased)
 
+- **Official results as JSON Lines too (2026-10-27; product owner).** VaR and exposure still publish to Delta and also write each
+  published date as JSON Lines beside the tables, `<root>/risk-results/jsonl/<table>/<date>/<table>-v<table version>.jsonl` (one row a
+  line, one file per commit; new settings `drishti.var.official.jsonl` and `drishti.ccr.exposure.official.jsonl`, on by default,
+  `JsonlWriter.writeFile`). In the content store the row lists are JSONL: `var/official/<date>-membership-v<n>.jsonl` (new
+  `MembershipLines`: a header line, then a position or a node a line) and `exposure/official/<date>-trades-v<n>.jsonl` (a header,
+  then a trade a line); the `.json` records written before stay and are read as they are (append-only). The VaR change is self-contained
+  (`VarPublisher`, `VarOfficialStore`, the new `MembershipLines`, the `Official` record's `jsonl` flag) so it merges beside the PV-VaR
+  branch. Tests: `VarOfficialJsonlTest`, `ExposureOfficialJsonlTest`; the official BI and API tests. Docs: VAR_GUIDE, EXPOSURE_GUIDE,
+  CONFIGURATION, DATA_FORMATS.
+
 - **Sutra test cases are one `cases.jsonl` per Sutra (2026-10-27; product owner).** `tests/<sutra>/cases.jsonl`, one case a line,
   `{"case": "<name>", "document": {...}}`, beside `expect.yaml` (new `SutraCases`; `sutra test` names each case; `expect.yaml`'s
   `samples:` takes the case name, the old `<name>.json` key still matching). The older one-`.json`-a-case folders are still read in

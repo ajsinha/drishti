@@ -37,6 +37,10 @@ import java.util.Map;
  * counterparty and connected group (restricted: it names counterparties). Each is appended as one Delta commit per capture by Drishti's
  * own lake writer, append-only: a restated date adds rows with the next {@code RESULT_VERSION}. Their logs and removed files are kept for
  * the retention years. No paths are published, and no engine reads these tables back.
+ *
+ * <p>Beside them (2.9.4, {@code drishti.ccr.exposure.official.jsonl}, on by default), each published date is also written as JSON Lines,
+ * one row a line (the Delta row's document): {@code <root>/risk-results/jsonl/<table>/<yyyy-MM-dd>/<table>-v<table version>.jsonl}, one
+ * file per commit.
  */
 final class ExposurePublisher {
 
@@ -55,7 +59,14 @@ final class ExposurePublisher {
     private final Path root;
     private final int retentionDays;
 
+    private final boolean jsonl;
+
     ExposurePublisher(Path root, int retentionYears) {
+        this(root, retentionYears, true);
+    }
+
+    ExposurePublisher(Path root, int retentionYears, boolean jsonl) {
+        this.jsonl = jsonl;
         this.root = root == null ? null : root.resolve(FOLDER);
         this.retentionDays = retentionYears * 365 + (retentionYears + 3) / 4;
     }
@@ -101,6 +112,11 @@ final class ExposurePublisher {
                 "delta.deletedFileRetentionDuration", "interval " + retentionDays + " days", "delta.appendOnly", "true");
     }
 
+    /** Where a commit's JSON Lines go: {@code <root>/risk-results/jsonl/<table>/<date>/<table>-v<version>.jsonl}. */
+    Path jsonlFile(String table, LocalDate date, long version) {
+        return root.resolve("jsonl").resolve(table).resolve(date.toString()).resolve(table + "-v" + version + ".jsonl");
+    }
+
     /** Appends a date's rows to one table ({@link #NODES} or {@link #CPTY}) in one commit; returns the table version written. */
     long publish(String table, LocalDate date, List<Map<String, Object>> rows) throws IOException {
         if (root == null) {
@@ -126,7 +142,18 @@ final class ExposurePublisher {
             LakeManifest m = new LakeManifest(root.resolve(table).toString(), List.of("business_date"), cols, List.copyOf(columns.keySet()), "append",
                     10_000, List.of("id", "business_date", "NODE_ID", "RESULT_VERSION"),
                     List.of(new LakeManifest.Part(staged, rows.size(), Map.of("business_date", date.toString()))), properties());
-            return new LakeWriter().write(m, x -> { }).version();
+            long version = new LakeWriter().write(m, x -> { }).version();
+            if (jsonl) {                                            // the same rows as JSON Lines beside the table (2.9.4)
+                List<Map<String, Object>> docs = new ArrayList<>();
+                for (Map<String, Object> r : rows) {
+                    Map<String, Object> doc = new LinkedHashMap<>();
+                    columns.keySet().forEach(c -> doc.put(c, r.get(c)));
+                    doc.put("BUSINESS_DATE", date.toString());
+                    docs.add(doc);
+                }
+                com.ash.drishti.server.dist.JsonlWriter.writeFile(jsonlFile(table, date, version), docs);
+            }
+            return version;
         } finally {
             Files.deleteIfExists(staged);
         }

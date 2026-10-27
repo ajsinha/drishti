@@ -70,6 +70,21 @@ public final class JsonlWriter {
         return b.toString().getBytes(StandardCharsets.UTF_8);
     }
 
+    /**
+     * Writes rows as a JSON Lines file, one object a line, atomically (a temporary file beside it, then a move): the official results'
+     * JSONL beside their Delta tables. The folder is made when missing.
+     */
+    public static void writeFile(java.nio.file.Path file, List<? extends Map<String, ?>> rows) throws java.io.IOException {
+        java.nio.file.Files.createDirectories(file.getParent());
+        java.nio.file.Path tmp = file.resolveSibling(file.getFileName() + ".part");
+        try (java.io.BufferedWriter w = java.nio.file.Files.newBufferedWriter(tmp, StandardCharsets.UTF_8)) {
+            for (Map<String, ?> r : rows) {
+                w.write(line(r));
+            }
+        }
+        java.nio.file.Files.move(tmp, file, java.nio.file.StandardCopyOption.REPLACE_EXISTING, java.nio.file.StandardCopyOption.ATOMIC_MOVE);
+    }
+
     /** One object as one line, newline included. */
     public static String line(Object row) {
         try {
