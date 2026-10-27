@@ -77,6 +77,16 @@ def _scale(v, f: float):
     return v
 
 
+def _rescale(v, f: float):
+    """_scale keeping each amount's type: a whole number stays whole (a trade's MTM and P&L), a decimal keeps two places."""
+    if isinstance(v, dict):
+        return {k: ((round(x * f) if isinstance(x, int) else round(x * f, 2)) if k in SCALE and isinstance(x, (int, float))
+                    and not isinstance(x, bool) else _rescale(x, f)) for k, x in v.items()}
+    if isinstance(v, list):
+        return [_rescale(x, f) for x in v]
+    return v
+
+
 def _num(v) -> float:
     try:
         return float(v)
@@ -136,7 +146,7 @@ class Universe:
                 out[tid] = r
                 continue
             now, then = H.leg_notional(t), H.leg_notional(b)
-            out[tid] = {**(_scale(r, now / then) if now and then and now != then else r), "status": t.get("TRADE_STATUS")}
+            out[tid] = {**(_rescale(r, now / then) if now and then and now != then else r), "status": t.get("TRADE_STATUS")}
         return out
 
     def _join_lookalikes(self) -> None:
