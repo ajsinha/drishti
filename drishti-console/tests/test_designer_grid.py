@@ -27,6 +27,9 @@ from test_designer import SUTRA, on  # noqa: F401 - the designer routes' fixture
 
 ROOT = Path(__file__).resolve().parents[2]
 PACK_SUTRAS = sorted((ROOT / "config").glob("**/*.sutra.yaml"))
+#: the shipped Sutras that place their panels with `layout: areas` (the fund page, the company page since 2.9.2): a spreadsheet of areas, not one column
+AREA_SUTRAS = [p for p in PACK_SUTRAS if "\nlayout:" in p.read_text()]
+FLOW_SUTRAS = [p for p in PACK_SUTRAS if p not in AREA_SUTRAS]
 AREAS = """rachana: 1
 sutra: qa-book-grid
 version: 1
@@ -58,7 +61,7 @@ def roundtrip(doc):
     return designer.dump(dg.rebuild(doc, dg.grid(doc)))
 
 
-@pytest.mark.parametrize("path", PACK_SUTRAS, ids=lambda p: p.name)
+@pytest.mark.parametrize("path", FLOW_SUTRAS, ids=lambda p: p.name)
 def test_every_pack_sutra_round_trips_as_a_one_column_grid(path):
     doc = designer.load(path.read_text())
     g = dg.grid(doc)
@@ -76,6 +79,14 @@ def test_every_pack_sutra_round_trips_as_a_one_column_grid(path):
             again = copy.deepcopy(doc)
             dg.set_formula(again, k["ref"], k["formula"])
             assert designer.dump(again) == designer.dump(doc), k["ref"]
+
+
+@pytest.mark.parametrize("path", AREA_SUTRAS, ids=lambda p: p.name)
+def test_every_pack_sutra_with_areas_round_trips_as_its_grid(path):
+    doc = designer.load(path.read_text())
+    g = dg.grid(doc)
+    assert g["mode"] == "areas" and g["cells"]
+    assert roundtrip(doc) == designer.dump(doc)
 
 
 def test_the_pack_sutras_have_panels_a_click_opens():

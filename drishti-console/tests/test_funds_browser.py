@@ -33,10 +33,10 @@ from playwright.sync_api import expect, sync_playwright  # noqa: E402
 
 import news_stack as NS  # noqa: E402  (listening, wait)
 from java_launch import java_cmd  # noqa: E402
+from scratch_ports import worker_ports  # noqa: E402
 
 ROOT = Path(__file__).resolve().parents[2]
-SERVER_PORT = int(os.environ.get("DRISHTI_FUNDS_SERVER_PORT", 18994))
-CONSOLE_PORT = int(os.environ.get("DRISHTI_FUNDS_CONSOLE_PORT", 17994))
+SERVER_PORT, CONSOLE_PORT = worker_ports(os.environ.get("DRISHTI_FUNDS_SERVER_PORT", 18994), os.environ.get("DRISHTI_FUNDS_CONSOLE_PORT", 17994))
 SERVER, CONSOLE = f"http://127.0.0.1:{SERVER_PORT}", f"http://127.0.0.1:{CONSOLE_PORT}"
 
 
