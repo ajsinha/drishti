@@ -29,7 +29,7 @@ TRD where QUANTITY > 200m order by QUANTITY desc   →  every trade over 200m, l
 amended trades over 5m in BOOK-RATES-3, biggest first   →  plain words: Drishti shows the search it makes
 ```
 
-**Current release: 2.9.2** (US funds and ETFs; Knowledge pages and `WHAT`; Construct your basket and the pre-deal what-if; risk one click from every trade; `FUNC`, computed groupings and complete pack guides since 2.9.1) ([release notes](RELEASE_NOTES.md) · [changelog](CHANGELOG.md) ·
+**Current release: 2.9.3** (`DATAMAP`, a map of all your data that draws itself; a fact of the day from your data on Home; index membership from the tracking ETFs; US funds and ETFs, Knowledge and `WHAT`, Construct your basket since 2.9.2) ([release notes](RELEASE_NOTES.md) · [changelog](CHANGELOG.md) ·
 [what shipped when](docs/architecture/IMPLEMENTATION_PLAN.md)). **Learn it by doing:** [twenty-eight tutorials](docs/tutorials/README.md), from your first 15 minutes to BI, AI, embedding and
 production, each with real screenshots; the [guides](docs/README.md) are the reference.
 
@@ -202,7 +202,7 @@ drishti-console/.venv/bin/python tools/drishti.py lake demo
 # (-Djava.io.tmpdir: native libraries unpack in the server's own folder, not /tmp; docs/admin/CONFIGURATION.md)
 mkdir -p data/tmp/server
 DRISHTI_PACKS=market-risk,counterparty-risk DRISHTI_STUDIO_SAVE=true \
-  java -Djava.io.tmpdir=data/tmp/server -jar drishti-server/target/drishti-server-2.9.2-exec.jar
+  java -Djava.io.tmpdir=data/tmp/server -jar drishti-server/target/drishti-server-2.9.3-exec.jar
 
 # 5. In a second terminal: the console on http://localhost:17480
 drishti-console/.venv/bin/python drishti-console/run_drishti_web.py

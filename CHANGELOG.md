@@ -15,7 +15,7 @@
 -->
 # Changelog
 
-## 2.9.3 — in progress
+## 2.9.3 — DATAMAP; the fact of the day on Home; Companies, funds and ETFs Knowledge; index membership from the tracking ETFs; one firm-wide VaR limit (2026-10-27)
 
 - **Index membership from the tracking ETFs (2026-10-27).** The S&P 500, Nasdaq-100 and Dow members are now the stocks SPY, QQQ and
   DIA report holding in their newest Form N-PORT (SEC, public domain; new `tools/packgen/us_equities/trackers.py`, a `trackers`

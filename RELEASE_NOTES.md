@@ -13,6 +13,38 @@
 
   See the LICENSE file in the root of this repository for the full terms.
 -->
+# Drishti 2.9.3 — release notes
+
+*2026-10-27.* **A map of all your data that draws itself; a surprising fact from your own data on Home; index membership that is
+finally right.**
+
+- **DATAMAP** (Views → Data map, or `DATAMAP [domain|kind]`; [USER_GUIDE "The data map"](docs/guides/USER_GUIDE.md)): every kind of
+  data on the server, how it joins and how much there is, as a **Map** (domains as clusters, joins as lines) or as **Cards** (one per
+  domain, with each kind's joins and commands). Nothing is hand-drawn: kinds come from the enabled packs, joins from the data
+  contracts, each **checked against the data** (how many ids match), counts from the lake on the business date; a new pack appears
+  with no setup. It found 11 joins that do not hold (e.g. a jurisdiction code where an id is expected), listed in the CHANGELOG.
+- **The fact of the day on Home** ([USER_GUIDE "Home: the fact of the day"](docs/guides/USER_GUIDE.md)): one surprising, true
+  sentence from your data, with a small picture, "Why does that happen?", the command that shows it and "Another fact". Each pack
+  declares its facts ([PACK_DEVELOPER_GUIDE "Facts for Home"](docs/guides/PACK_DEVELOPER_GUIDE.md)); they are computed as you, on
+  your business date, and only those that hold today are shown. Seven ship: a book over its VaR limit while its desk is within, a
+  desk that lowers VaR, posted collateral raising exposure, VaR against peak PFE, the most-held company, two managers holding one
+  portfolio, a fund's weights above its net assets. Quick cards below: VAR BANK, EXP BANK, FUND SPY, DATAMAP.
+- **Knowledge: Companies, funds and ETFs** ([docs/knowledge](docs/knowledge/companies-funds-and-etfs.md)): share classes, NAV,
+  look-through, expense ratios, active share and overlap on the demo data; 23 new `WHAT` terms (162 in all); "What does this mean?"
+  on USEQ, FUND, HELD and TRACK.
+- **Index membership from the tracking ETFs** ([External data](docs/guides/PUBLIC_DATA.md)): the S&P 500, Nasdaq-100 and Dow members
+  are now what SPY, QQQ and DIA report holding to the SEC, not Wikidata's out-of-date lists (which lacked Exxon Mobil, BlackRock,
+  NVIDIA in the Nasdaq-100 and about 100 more). **The companies pack grows from 503 to 586.** The *vs index* tab weighs the Dow by
+  price and caps the Nasdaq-100 as their methods do: DIA's active share 1.8% (was 57.6%), QQQ's 11.2% (was 26.75%).
+- **One firm-wide VaR limit:** the legal-entity tree's root now carries the bank's 150m limit, as the management tree does (it read
+  210m); every VaR is unchanged.
+- **Planned:** [test data from seeds](docs/architecture/TESTDATA_FROM_SEEDS_PLAN.md), a design for review (nothing built).
+- **Known open:** the about 600 older screenshots not touched by this release's changes move to 2.9.4 (the pictures of what changed
+  here are retaken); limits still read the stored credit limits (LIM parked); the data map's 11 findings; 55 companies have no usable
+  share count, so index-fund active shares are not 0.
+- **Next, 2.9.4:** VaR from scenario PVs in any reporting currency.
+- **Tested:** the drill passed licence headers, Java 21, Java 25, the tools and the console.
+
 # Drishti 2.9.2 — release notes
 
 *2026-10-26.* **US funds and ETFs with their holdings; Knowledge pages and `WHAT` that explain the data; construct your own basket and see its VaR; a pre-deal what-if for VaR and exposure; risk one click from every trade.**
