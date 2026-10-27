@@ -17,6 +17,7 @@
 
 ## Unreleased
 
+- **Tutorials 10 and 18 rerun on the 2.9.2 data (2026-10-26).** Every BI figure and command output rerun on a scratch stack over the default `lake demo` with the official exposure published at start (all 76 netting sets now carry exposure: EE peak 2,663,018,256, was 2,613,297,860; ΣMTM 3,210,381,877, was 2,796,077,089; DESK-FX MTM -681,989,222; hana's Python table 2,407,959,011), the "a figure may differ" hedges dropped, and the pictures retaken (`tools/docs/shots/t10.py` hides the Studio Explorer before placing visuals; the relative-date example uses *Last 3 months*, as *Last 4 weeks* now holds no trades); DATASETS.md section 15's desk MTMs too.
 - **Knowledge: what the words of your data mean, and how the data connects them (2.9.2; product owner, 2026-10-26).** A new section at
   the top of the help centre, [docs/knowledge/](docs/knowledge/README.md): a home with every term A to Z, and one page per domain,
   [Market risk](docs/knowledge/market-risk.md), [Counterparty credit risk](docs/knowledge/counterparty-credit-risk.md),

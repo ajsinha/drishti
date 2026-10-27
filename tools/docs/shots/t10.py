@@ -53,6 +53,11 @@ def design(c: Ctx):
     c.save("03-new-report.jpg", clip={"x": 0, "y": 56, "width": 1280, "height": 560})
     submit_design(c)
     p = c.page
+    # the Studio's Explorer (2.4.0) takes the left of the window: hidden, so the canvas has the width the tutorial's places need
+    rail = p.locator('[data-studio-collapse][aria-expanded="true"]')
+    if rail.count():
+        rail.first.click()
+        p.wait_for_timeout(400)
     p.drag_and_drop('[data-field="GDP (USD bn)"]', "[data-canvas-grid]", target_position=grid_cell(p, 0, 0))
     p.wait_for_selector(".bi-card-value")
     p.drag_and_drop('[data-field="Population (m)"]', "[data-canvas-grid]", target_position=grid_cell(p, 3, 0))
@@ -288,7 +293,7 @@ pages:
   - id: main
     title: Main
     visuals:
-      - { id: when, type: slicer, title: When, at: { x: 0, y: 0, w: 4, h: 3 }, wells: { field: [trade.TRADE_DATE] }, format: { mode: relative-date, default: last-30-days } }
+      - { id: when, type: slicer, title: When, at: { x: 0, y: 0, w: 4, h: 3 }, wells: { field: [trade.TRADE_DATE] }, format: { mode: relative-date, default: last-90-days } }
       - { id: count, type: card, title: Trades, at: { x: 4, y: 0, w: 4, h: 3 }, wells: { values: [Trades] } }
       - { id: mtm, type: card, title: Mark to market, at: { x: 8, y: 0, w: 4, h: 3 }, wells: { values: [MTM] } }
       - { id: desk, type: bar, title: MTM by desk, at: { x: 0, y: 3, w: 12, h: 6 }, wells: { axis: [trade.DESK], values: [MTM] } }
@@ -297,13 +302,13 @@ pages:
 
 @shot("31-relative-date.jpg")
 def relative_date(c: Ctx):
-    """A relative-date slicer: its default applies until a name is chosen; the server works the dates out (four weeks ending on the business date)."""
+    """A relative-date slicer: its default applies until a name is chosen; the server works the dates out (three months ending on the business date)."""
     login(c, height=900)
     clean_items(c, "Relative dates")
     made = bi(c, "POST", "/workspaces/me/items", {"kind": "report", "title": "Relative dates", "body": RELATIVE})
     print("relative-date report:", made.get("id"), made.get("problems"))
     open_report(c, made["id"], height=620)
-    c.page.select_option("[data-relative]", "last-4-weeks")
+    c.page.select_option("[data-relative]", "last-3-months")
     c.page.wait_for_timeout(600)
     settled(c.page)
     c.page.wait_for_timeout(800)

@@ -25,7 +25,7 @@ About 60 minutes.
 
 ## Before you start
 
-- **The quick-start environment** ([data/testdata/README.md](../../data/testdata/README.md)): the demo lakes built (`drishti-console/.venv/bin/python tools/drishti.py lake demo`, or the run configuration **Build demo lakes**), the server started on them (run configuration **Drishti server (demo lakes)**: sign-in on, the seven packs, the samples off) and the console (**Drishti console**). The figures below are from the lake `lake demo` built on 17 October 2026, the seven-day lakes of 2.5.0 ending **2026-10-16**, 5,000 trades in each of ENDUR, CALYPSO and MUREX. Since 2.6.5 the lakes hold sixty business days, so a figure may differ on yours; `lake demo` moves the days to end on *your* business date, so your dates differ. The exposure figures (step 9 and the two facts of step 11) are from the 2.9.0 lake built on 26 October 2026, ending 2026-10-26, with the exposure run `lake demo` generates (73 of the 76 netting sets): exposure is computed by the exposure engine, and the server publishes its official end-of-day results when it starts.
+- **The quick-start environment** ([data/testdata/README.md](../../data/testdata/README.md)): the demo lakes built (`drishti-console/.venv/bin/python tools/drishti.py lake demo`, or the run configuration **Build demo lakes**), the server started on them (run configuration **Drishti server (demo lakes)**: sign-in on, the seven packs, the samples off) and the console (**Drishti console**). The figures below are from the default lake `lake demo` built on 26 October 2026 with 2.9.2: sixty business days ending **2026-10-26**, 5,000 trades in each of ENDUR, CALYPSO and MUREX, and the exposure run `lake demo` generates (all 76 netting sets): exposure is computed by the exposure engine, and the server publishes its official end-of-day results when it starts. `lake demo` moves the days to end on *your* business date, so your dates differ.
 - Signed in as the development administrator (`drishti-dev-admin`, password `drishti-dev-admin123`, the run configuration's seed), and, for the command line, a **personal API token** in `DRISHTI_TOKEN` (click your name → **My account** → **API tokens**, tick `bi:write` among the scopes, **Create token**; [tutorial 1, step 9](01-first-15-minutes.md#step-9--make-a-token-for-the-command-line)). Every command line below is run from the repository folder with the console's Python, `drishti-console/.venv/bin/python tools/drishti.py ...` (written `python3 tools/drishti.py` for short), against `DRISHTI_SERVER` (default `http://localhost:18480`).
 - Nothing else to install. The sample models, datasets and reports are files in `config/bi/` that every server reads. The data of **World economics** is real and public: about 200 economies from the World Bank (CC BY 4.0), through the `world-economy` pack. The dataset uses only the World Bank
   fields on purpose; the pack's IMF fields stay out of it ([REAL_DATA.md](../guides/REAL_DATA.md)). Every column of every shipped model is in **UPPER_SNAKE** (`REGION_NAME`, `GDP_USD_BN`, `TRADE_DATE`), the names the data has in production.
@@ -36,7 +36,7 @@ About 60 minutes.
 
 - the parts of a **model**: the datasets it reads (one table each, with its columns), the measures it owns; and how to ask it a question before drawing anything;
 - how to make a report in the designer: cards, a **map**, a bar with a **top 10** filter, a slicer; where each visual sits on the 12-column grid;
-- (at the end) a **relative-date slicer**, a **tablet layout** and an **entity view**: *last 4 weeks*, two columns on an 820 px screen, and a counterparty's own view beside a bar;
+- (at the end) a **relative-date slicer**, a **tablet layout** and an **entity view**: *last 3 months*, two columns on an 820 px screen, and a counterparty's own view beside a bar;
 - how the map drills **world, country, region** with a breadcrumb, and how a click on a map or a bar **cross-filters** the rest of the page;
 - how to publish: your own workspace, a shared workspace, the catalogue;
 - **filter like Power BI**: list, dropdown and range slicers, page and report scope, a top-N filter that tames a busy donut, bookmarks, and when to use a slicer instead of a click;
@@ -82,7 +82,7 @@ Latin America & Caribbean                          7,327.57      666.55         
 Middle East, North Africa, Afghanistan & Pakistan  5,136.27      828.03          6,203.03
 South Asia                                         4,578.02      1,692.26        2,705.28
 Sub-Saharan Africa                                 2,213.29      1,318.05        1,679.22
-7 row(s)  as of 2026-10-16  plan p_1050f114e2f1aee5
+7 row(s)  as of 2026-10-26  plan p_6020bb1a1c70beae
 ```
 
 **As YAML**, the same question is a file you can keep and run with `python3 tools/drishti.py bi mq gdp-by-region.yaml`:
@@ -134,7 +134,7 @@ $ python3 tools/drishti.py bi mq --model world-economics@1 --measures "GDP (USD 
 GDP (USD bn)  Population (m)
 ------------  --------------
 117,326.82    8,161.83
-1 row(s)  as of 2026-10-16  plan p_bb1fc09a9657bad8
+1 row(s)  as of 2026-10-26  plan p_1a5eabbd64657b9f
 ```
 
 ## Step 4 · A map
@@ -200,7 +200,7 @@ $ python3 tools/drishti.py bi mq --model world-economics@1 --select economies.IS
 economies.ISO3  economies.NAME  GDP (USD bn)  Population (m)
 --------------  --------------  ------------  --------------
 AUS             Australia       1,798.52      27.61
-1 row(s)  as of 2026-10-16  plan p_8ed71c662895f1ed
+1 row(s)  as of 2026-10-26  plan p_097e0dff24160bf0
 ```
 
 ![The map one level down: World then Australia, the states and territories](img/t10/10-regions.jpg)
@@ -242,7 +242,7 @@ bi-7f8269ba14                                       report   none      published
 ...
 file:report:world-economics                         report   promoted  published v1   World economics  (Shipped content, shipped)
 file:dataset:world-economics-economies              dataset  promoted  published v1   World economics: economies  (Shipped content, shipped)
-45 item(s)
+54 item(s), showing 50
 ```
 
 ```text
@@ -250,10 +250,10 @@ $ python3 tools/drishti.py bi workspace list
 id                            role          items  name
 u-drishti-dev-admin-eb6f      admin             0  My workspace  [personal]
 economics-desk                admin             1  Economics desk
-shipped                       viewer           44  Shipped content
+shipped                       viewer           53  Shipped content
 ```
 
-You should see the report with `published v1` among the 44 shipped items (nine models, their datasets, nine reports, two boards, a notebook and four Python items), and the workspace with one item. (Ids and dates differ on your machine.)
+You should see the report with `published v1` among the 53 shipped items (ten models, their datasets, ten reports, two boards, two themes, a notebook and four Python items), and the workspace with one item. (Ids and dates differ on your machine.)
 
 ## Step 8 · Filter like Power BI
 
@@ -300,7 +300,7 @@ DESK-RATES  CAD             12
 DESK-RATES  EUR             12
 DESK-RATES  GBP             24
 DESK-RATES  USD             24
-4 row(s)  as of 2026-10-16  plan p_d924968cb041d34d
+4 row(s)  as of 2026-10-26  plan p_841e66dd1d28602d
 ```
 
 The slicer's two choices together, as a file (`python3 tools/drishti.py bi mq both-swaps.yaml`):
@@ -319,7 +319,7 @@ DESK-RATES  CAD             12
 DESK-RATES  EUR             36
 DESK-RATES  GBP             60
 DESK-RATES  USD             36
-4 row(s)  as of 2026-10-16  plan p_a58f9885efd49c3b
+4 row(s)  as of 2026-10-26  plan p_1b9ffa4705022ec3
 ```
 
 **Taming a busy donut.** The donut on this page could have about forty product types. It does not draw forty slices: it carries a **top filter**. **In the UI** that is the **Filters** pane: *On this visual*, **Add a filter**, filter type **Top N**, how many, highest or lowest, and the measure to rank by:
@@ -335,7 +335,7 @@ DESK-RATES  USD             36
 
 ![The donut with its twelve largest product types, labels and a paged legend](img/t10/18-donut-top.jpg)
 
-You should see twelve slices and the title `(top 12)`, ENDUR's `ComSwap` the largest (`500,779,109,245` of notional), then `FRA` and `Commodity`. The server ranks the product types **in the context of the slicers**, so the top twelve of the swaps you chose is a different twelve from the top twelve overall. `n` is how many, `by` the measure to rank by.
+You should see twelve slices and the title `(top 12)`, ENDUR's `ComSwap` the largest (`498,190,803,406` of notional), then `FRA` and `FX_BARRIER`. The server ranks the product types **in the context of the slicers**, so the top twelve of the swaps you chose is a different twelve from the top twelve overall. `n` is how many, `by` the measure to rank by.
 
 **Bookmarks** save a state. **In the UI**, in the designer, select nothing (click the empty canvas) and open **Format**: under **Bookmarks** type a name, set the slicer choices you want kept (a relative-date slicer offers its windows), and press **Save this page as a bookmark**; it keeps the page, the filters of the Filters pane and those slicer choices. Each saved bookmark can be renamed in place, updated from the page's filters again, or removed:
 
@@ -345,7 +345,7 @@ You should see twelve slices and the title `(top 12)`, ENDUR's `ComSwap` the lar
 
 ![The Overview page after choosing the bookmark: a chip trade.DESK: DESK-FX, all visuals answering for that desk](img/t10/19-bookmark.jpg)
 
-You should see the page filtered to `DESK-FX` (`1,428` trades, notional `366,591,303,000`, MTM `-669,248,940`) with a chip, as if you had made the choice yourself. **From the command line**: `python3 tools/drishti.py bi mq --model trades-basic@1 --select trade.DESK --measures Trades,Notional,MTM --where trade.DESK=DESK-FX` prints the same three numbers. **In the YAML** the bookmark is `- { name: FX desk only, page: overview, slicers: {}, filters: [{ field: trade.DESK, op: in, values: [DESK-FX] }] }` (`config/bi/reports/trades-overview.report.yaml`). A bookmark is written in the designer, not captured from what a reader has chosen on screen in the viewer.
+You should see the page filtered to `DESK-FX` (`1,428` trades, notional `372,842,213,118`, MTM `-681,989,222`) with a chip, as if you had made the choice yourself. **From the command line**: `python3 tools/drishti.py bi mq --model trades-basic@1 --select trade.DESK --measures Trades,Notional,MTM --where trade.DESK=DESK-FX` prints the same three numbers. **In the YAML** the bookmark is `- { name: FX desk only, page: overview, slicers: {}, filters: [{ field: trade.DESK, op: in, values: [DESK-FX] }] }` (`config/bi/reports/trades-overview.report.yaml`). A bookmark is written in the designer, not captured from what a reader has chosen on screen in the viewer.
 
 **Slicer or click?** Both filter. A **slicer** is a choice you make on purpose from a list, it stays visible, and it can be page or report wide. A **click on a mark** (a bar, a slice, a country) is exploring: it filters the **other** visuals of the page, it highlights what you picked, and it is gone when you click again.
 Click the `DESK-FX` bar on the Overview page:
@@ -360,34 +360,34 @@ Open the shipped report **Counterparty risk**. It reads the model **Trading and 
 
 ![Counterparty risk: cards for exposure, slicers for sector and country, the ten counterparties with the highest exposure](img/t10/21-counterparty.jpg)
 
-You should see exposure cards (`2,613,297,860` EE peak, `4,823,023,222` PFE peak, `76` netting sets), the two dropdown slicers and a bar of the ten counterparties with the highest expected exposure (a **top 10** filter again), Verdant Agri Holdings first. The exposure is the exposure engine's: its official end-of-day results for the date (since 2.9.0 a netting set no longer stores it). EE peak adds up the netting sets' computed peaks; PFE peak is each counterparty's own peak 95% PFE (its sets netted path by path), never a sum of its sets' PFEs. The demo's run covers 73 of the 76 netting sets (22 of the 24 counterparties), so three sets count as netting sets but carry no exposure. Click the bar of **Verdant Agri Holdings**.
+You should see exposure cards (`2,663,018,256` EE peak, `5,217,565,098` PFE peak, `76` netting sets), the two dropdown slicers and a bar of the ten counterparties with the highest expected exposure (a **top 10** filter again), Verdant Agri Holdings first. The exposure is the exposure engine's: its official end-of-day results for the date (since 2.9.0 a netting set no longer stores it). EE peak adds up the netting sets' computed peaks; PFE peak is each counterparty's own peak 95% PFE (its sets netted path by path), never a sum of its sets' PFEs. The demo's run covers all 76 netting sets of the 24 counterparties, so every set carries exposure. Click the bar of **Verdant Agri Holdings**.
 
 ![Verdant Agri Holdings selected: a chip, the cards answering for it, its bar highlighted, and an arrow icon in the visual's header: drill through](img/t10/22-counterparty-select.jpg)
 
-You should see a chip, the cards narrowed to that counterparty (`357,967,560` expected exposure, `579,773,568` PFE, `4` netting sets) and, in the bar's header, a **drill-through** button. Press it.
+You should see a chip, the cards narrowed to that counterparty (`303,824,105` expected exposure, `498,606,456` PFE, `4` netting sets) and, in the bar's header, a **drill-through** button. Press it.
 
 ![The counterparty's own page: the name carried as a chip, four cards, and its trades with ids that open the terminal](img/t10/23-drill-through.jpg)
 
-You should see a second page, **Counterparty**, with the name carried in as a chip **and in the address** (so the link can be shared), a **Back** button, four cards (`576` trades, notional `157,075,666,627`) and a table of its trades, highest MTM first, whose ids are links: `MX-30000477` (a MUREX zero-coupon swap of DESK-RATES) opens that trade's view in the terminal.
+You should see a second page, **Counterparty**, with the name carried in as a chip **and in the address** (so the link can be shared), a **Back** button, four cards (exposure `303,824,105`, `576` trades, MTM `+647,788,759`, notional `157,685,840,489`) and a table of its trades, highest MTM first, whose ids are links: `MX-30000477` (a MUREX zero-coupon swap of DESK-RATES) opens that trade's view in the terminal.
 
 **From the command line**, the bar and the drill-through page are two model queries:
 
 ```text
 $ python3 tools/drishti.py bi mq --model trading-risk@1 --select counterparties.NAME \
     --measures "Exposure (EE peak),Exposure (PFE peak)" --sort="-Exposure (EE peak)" --limit 3
-counterparties.NAME            Exposure (EE peak)  Exposure (PFE peak)
------------------------------  ------------------  -------------------
-Verdant Agri Holdings          357,967,560.00      579,773,568.00
-Aldershot Pension Trust        276,416,536.00      395,309,044.00
-Lumen Semiconductor AG         246,199,964.00      378,348,501.00
+counterparties.NAME      Exposure (EE peak)  Exposure (PFE peak)
+-----------------------  ------------------  -------------------
+Verdant Agri Holdings    303,824,105.00      498,606,456.00
+Aldershot Pension Trust  278,109,475.00      395,266,101.00
+Tokai Mutual Trust Bank  226,721,872.00      382,755,529.00
 3 row(s)  as of 2026-10-26
 $ python3 tools/drishti.py bi mq --model trading-risk@1 --select trades.TRADE_ID,trades.DESK,trades.PRODUCT_TYPE --measures MTM \
     --where "counterparties.NAME=Verdant Agri Holdings" --sort=-MTM --limit 3
 trades.TRADE_ID  trades.DESK  trades.PRODUCT_TYPE  MTM
 ---------------  -----------  -------------------  --------------
-MX-30000477      DESK-RATES   ZC_SWAP              180,296,948.16
-MX-30000098      DESK-RATES   SWAPTION_EUR         109,975,217.40
-MX-30000487      DESK-RATES   ACCRETING_SWAP       86,607,994.99
+MX-30000477      DESK-RATES   ZC_SWAP              198,326,642.98
+MX-30000098      DESK-RATES   SWAPTION_EUR         137,469,021.75
+MX-30001342      DESK-RATES   OIS                  91,875,065.38
 3 row(s)  as of 2026-10-26
 ```
 
@@ -430,13 +430,13 @@ counterparty exposure** from the catalogue.
 
 ![The report: three cards, a Sector slicer, bars of P&L and exposure for the ten counterparties with the most exposure, a donut of exposure by sector, and a table](img/t10/29-two-datasets-report.jpg)
 
-You should see `Desk P&L` `91,932,705`, `Exposure (EE peak)` `2,613,297,860` and the ratio `0.04`, the ten counterparties with the most exposure
+You should see `Desk P&L` `90,804,863`, `Exposure (EE peak)` `2,663,018,256` and the ratio `0.03`, the ten counterparties with the most exposure
 as pairs of bars, a donut of exposure by sector and the table of every counterparty. In the Sector slicer choose **Banking**.
 
-![Banking chosen: the cards read 51,389,455 and 430,980,479, the bars keep only banks, the donut is Banking 100%](img/t10/30-sector-chosen.jpg)
+![Banking chosen: the cards read 52,050,305 and 441,334,249, the bars keep only banks, the donut is Banking 100%](img/t10/30-sector-chosen.jpg)
 
-You should see a chip `Sector: Banking`, the cards narrowed to the banks (`Desk P&L` `51,389,455`, exposure `430,980,479`), four banks in the
-bar chart (Rheintal Landesbank, Tokai Mutual Trust Bank, Harbor Point Bank, and Harbourline Bank London Branch, whose exposure, `67,280`, is too small
+You should see a chip `Sector: Banking`, the cards narrowed to the banks (`Desk P&L` `52,050,305`, exposure `441,334,249`), four banks in the
+bar chart (Rheintal Landesbank, Tokai Mutual Trust Bank, Harbor Point Bank, and Harbourline Bank London Branch, whose exposure, `56,174`, is too small
 to see as a bar) and the donut a single slice: one
 slicer on the dimension filters **both** facts. Click a slice of the donut instead and the same happens. Open the report as a desk head and the P&L
 shrinks to the trades of your desks (the exposure does not: the model says `may-see-all` for the netting sets and their exposure); open it as an analyst and the
@@ -448,10 +448,10 @@ joined):
 ```text
 $ python3 tools/drishti.py bi mq --model trading-risk@1 --select counterparties.NAME,counterparties.SECTOR \
     --measures "P&L 1d,Exposure (EE peak),P&L per exposure" --sort="-Exposure (EE peak)" --limit 4 --json | jq -c '.rows[], .meta.warnings'
-["Verdant Agri Holdings","Agriculture",-1922002.510000001,357967560.0,-0.005369208623261843]
-["Aldershot Pension Trust","Pensions",9940482.839999989,276416536.0,0.03596196878756917]
-["Lumen Semiconductor AG","Technology",4904332.2199999895,246199964.0,0.019920117535029327]
-["Tokai Mutual Trust Bank","Banking",17466808.070000015,215361523.0,0.08110459021038784]
+["Verdant Agri Holdings","Agriculture",-1441625.5600000015,303824105.0,-0.004744934770728615]
+["Aldershot Pension Trust","Pensions",11885402.729999984,278109475.0,0.04273641784408814]
+["Tokai Mutual Trust Bank","Banking",17583780.69000001,226721872.0,0.077556613902694]
+["Aurora Sovereign Wealth Fund","Government",-4988548.660000008,202918363.0,-0.024584017859438416]
 ["2 fact tables, each aggregated alone at the query's fields and then joined: [trades, counterparties, set_exposure]","a measure that combines measures of different grains is worked out over the joined results: P&L per exposure"]
 ```
 
@@ -503,14 +503,14 @@ pages:
   - id: main
     title: Main
     visuals:
-      - { id: when, type: slicer, title: When, at: { x: 0, y: 0, w: 4, h: 3 }, wells: { field: [trade.TRADE_DATE] }, format: { mode: relative-date, default: last-30-days } }
+      - { id: when, type: slicer, title: When, at: { x: 0, y: 0, w: 4, h: 3 }, wells: { field: [trade.TRADE_DATE] }, format: { mode: relative-date, default: last-90-days } }
       - { id: count, type: card, title: Trades, at: { x: 4, y: 0, w: 4, h: 3 }, wells: { values: [Trades] } }
       - { id: mtm, type: card, title: Mark to market, at: { x: 8, y: 0, w: 4, h: 3 }, wells: { values: [MTM] } }
       - { id: desk, type: bar, title: MTM by desk, at: { x: 0, y: 3, w: 12, h: 6 }, wells: { axis: [trade.DESK], values: [MTM] } }
 ```
 
-**From the command line**, check it before saving (`Check`, nothing stored) and ask what the window holds: *last 4 weeks* is the 28 days
-ending on the report's date, 2026-09-19 to 2026-10-16 here, of `TRADE_DATE`:
+**From the command line**, check it before saving (`Check`, nothing stored) and ask what the window holds: *last 3 months* runs from the day after the same date
+three months earlier to the report's date, 2026-07-27 to 2026-10-26 here, of `TRADE_DATE`:
 
 ```text
 $ jq -Rs '{yaml: .}' relative-dates.report.yaml | curl -s -X POST -H "Authorization: Bearer $DRISHTI_TOKEN" \
@@ -518,9 +518,9 @@ $ jq -Rs '{yaml: .}' relative-dates.report.yaml | curl -s -X POST -H "Authorizat
 {"valid":true,"problems":[]}
 $ python3 tools/drishti.py bi mq relative-window.yaml
 Trades  MTM
-------  -------------
-227     73,422,045.85
-1 row(s)  as of 2026-10-16  plan p_d7fa7cdebfaae903
+------  ----------------
+2619    1,125,679,037.48
+1 row(s)  as of 2026-10-26  plan p_eaea0217f95f331d
 ```
 
 ```yaml
@@ -528,12 +528,12 @@ Trades  MTM
 mq: 1
 model: trades-basic@1
 select: { measures: [Trades, MTM] }
-where: [{ field: trade.TRADE_DATE, op: between, values: [2026-09-19, 2026-10-16] }]
+where: [{ field: trade.TRADE_DATE, op: between, values: [2026-07-27, 2026-10-26] }]
 ```
 
-![The relative-date slicer set to Last 4 weeks: a chip names it, the cards read 74 trades and +66,886,850](img/t10/31-relative-date.jpg)
+![The relative-date slicer set to Last 3 months: a chip names it, the cards read 2,619 trades and +1,125,679,037](img/t10/31-relative-date.jpg)
 
-You should see the slicer's dropdown (the report's `default: last-30-days` is chosen until you pick another) and, after choosing **Last 4 weeks**, a chip `When: Last 4 weeks` and cards narrowed to the `227` trades booked in the four weeks ending on the report's date (MTM `+73,422,046`; the whole book is `15,000` trades). Your count depends on the day you built the lake: the trade dates stay, the business dates move. The names are `last-N-days`, `last-N-business-days`, `last-N-weeks`, `last-N-months`, `this-week|month|quarter|year` (to date), `previous-...` and `all`: [REPORTS.md section 6.1](../guides/REPORTS.md#61-the-relative-date-slicer).
+You should see the slicer's dropdown (the report's `default: last-90-days` is chosen until you pick another) and, after choosing **Last 3 months**, a chip `When: Last 3 months` and cards narrowed to the `2,619` trades booked in the three months ending on the report's date (MTM `+1,125,679,037`; the whole book is `15,000` trades). Your count depends on the day you built the lake: the trade dates stay (the newest is 2026-09-25), the business dates move, so a short window such as *Last 4 weeks* can hold no trades at all. The names are `last-N-days`, `last-N-business-days`, `last-N-weeks`, `last-N-months`, `this-week|month|quarter|year` (to date), `previous-...` and `all`: [REPORTS.md section 6.1](../guides/REPORTS.md#61-the-relative-date-slicer).
 
 **A tablet layout.** A phone gets one column ([step 10](#step-10--on-a-phone)); a tablet (up to 1024 px) can get two, with some visuals across:
 
@@ -683,7 +683,7 @@ large_economies.REGION_NAME                        Count of large_economies
 Europe & Central Asia                              29
 Middle East, North Africa, Afghanistan & Pakistan  12
 Latin America & Caribbean                          12
-3 row(s)  as of 2026-10-16  plan p_45f9cfca00d22d04
+3 row(s)  as of 2026-10-26  plan p_1a5faeead616790e
 ```
 
 A draft model answers its owner (and is listed as `draft` by `bi model list`); a report on it is published once the model is. The reference for the
@@ -734,24 +734,24 @@ watched. The numbers are from the demo lake (15,000 trade valuations over ten de
 9. **Alert on it.** **Alerts → New**, *Watch: measure of a model*: choose the model, then the measure `Sum of MTM`, a filter (`trade.DESK is one of
    DESK-FX`), *Tell me when* it is above a limit, **Check now** (it reads your own number; a masked one cannot be saved) and **Save alert**.
 
-You should see, in step 2, the bar of MTM by desk name led by `Rates · Swaps and options` (`4,108,728,089.50` over 1,832 valuations), then
+You should see, in step 2, the bar of MTM by desk name led by `Rates · Swaps and options` (`4,484,481,851.44` over 1,832 valuations), then
 `Money markets` and `Structured products`: the same three rows the command line below prints.
 
-**From the command line.** The same through the CLI and the REST API, with your token. The pack datasets (66 of them for the seven packs), then a
+**From the command line.** The same through the CLI and the REST API, with your token. The pack datasets (79 of them for the seven packs), then a
 question to the implicit model of Trade valuation:
 
 ```text
 $ curl -s -H "Authorization: Bearer $DRISHTI_TOKEN" $DRISHTI_SERVER/api/v1/bi/pack-datasets | jq -c '.datasets | length, .[0]'
-66
+79
 {"name":"pack.core.book","id":"ds_pack_core_book","title":"Book","description":"Book: one row per book per business date, from the Core pack.","pack":"core","kind":"book","version":"1.0.0","mode":"snapshot","endorsement":"certified","columns":10,"query":"dataset:pack.core.book"}
 $ python3 tools/drishti.py bi mq --model dataset:pack.market-risk.trade-valuation --select desk.NAME \
     --measures "Sum of MTM,Count of trade_valuation" --sort="-Sum of MTM" --limit 3
 desk.NAME                  Sum of MTM        Count of trade_valuation
 -------------------------  ----------------  ------------------------
-Rates · Swaps and options  4,108,728,089.50  1832
-Money markets              393,805,216.87    480
-Structured products        382,608,464.96    330
-3 row(s)  as of 2026-10-16  plan p_e12a982e03ccdf81
+Rates · Swaps and options  4,484,481,851.44  1832
+Money markets              401,503,094.06    480
+Structured products        394,244,806.24    330
+3 row(s)  as of 2026-10-26  plan p_b9a516b4619eb2dc
 ```
 
 Check of the model's YAML without storing it: `python3 tools/drishti.py bi model check trades-and-desks.model.yaml`, or
@@ -798,10 +798,10 @@ published Trades and desks as version 1
 $ python3 tools/drishti.py bi mq --model trades-and-desks@1 --select desk.NAME --measures "Sum of MTM" --sort="-Sum of MTM" --limit 3
 desk.NAME                  Sum of MTM
 -------------------------  ----------------
-Rates · Swaps and options  4,108,728,089.50
-Money markets              393,805,216.87
-Structured products        382,608,464.96
-3 row(s)  as of 2026-10-16  plan p_0bc0e41f625fe579
+Rates · Swaps and options  4,484,481,851.44
+Money markets              401,503,094.06
+Structured products        394,244,806.24
+3 row(s)  as of 2026-10-26  plan p_bd58306ba8d6bb50
 warning: connector 'reference-store' cannot scan desk as columns for table desk: reading documents one by one (slow for a large table; promote the columns in the connector's layout, or fewer columns)
 ```
 
@@ -817,7 +817,7 @@ source:
 condition: {type: threshold, op: above, value: 1000000}
 ```
 
-`Sum of MTM` for `DESK-FX` is `-669,248,940` today, so this alert stays quiet; [tutorial 11](11-bi-that-runs-itself.md) makes one that fires.
+`Sum of MTM` for `DESK-FX` is `-681,989,222` today, so this alert stays quiet; [tutorial 11](11-bi-that-runs-itself.md) makes one that fires.
 
 ## Next steps
 
