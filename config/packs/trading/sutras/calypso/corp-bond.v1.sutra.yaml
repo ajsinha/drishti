@@ -23,8 +23,8 @@ doc:
     Fixed-coupon bond of a corporate issuer. One deal screen per CALYPSO Corporate bond trade (matched on SOURCE_SYSTEM and
     PRODUCT_TYPE): the deal ticket (DES), the legs side by side, every cash flow in one schedule, the events by leg and as a
     table filtered by the Legs and Between controls, the netted payment ladder and payments by month, how the view was built and
-    the linked entities (F7 opens the counterparty's trades). The strip gives the trade currency, side, notional, quantity, trade date,
-    maturity, status and portfolio.
+    the linked entities (F7 opens the counterparty's trades). The strip gives the trade currency, side, notional, quantity,
+    trade date, maturity, status and portfolio.
   params:
     legs: { type: text, default: all, meaning: "The Legs control: the legs whose events the table lists" }
     when: { type: text, default: '', meaning: "The Between control: the dates whose events the table lists" }
