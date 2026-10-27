@@ -2892,6 +2892,8 @@ scenario PVs are converted to USD when the date loads; a failed scenario rejects
 | `GET /api/v1/var/captures?scope=`, `GET /api/v1/var/captures/{id}` | the captures (of one scope); one capture with its figures |
 | `GET /api/v1/var/captures/{id}/csv?part=` | a capture as CSV: its provenance as `#` lines, then the vector by scenario date, or its components with `part=components` |
 | `GET /api/v1/var/compare?a=&b=` | two captures side by side, or a capture and now (`b=now`) |
+| `GET /api/v1/var/scope/currencies?scope=&ccy=` | 2.9.4: the scope in every listed reporting currency (`drishti.var.currencies`), each VaR and ES from its PVs summed per trade currency, that VaR in `ccy` at today's rate and the difference ([VAR_GUIDE.md section 15.11](VAR_GUIDE.md#1511-reporting-currencies-built-ahead-per-trade-currency-totals-and-the-picker-as-built-294)) |
+| `GET /api/v1/var/currencies?asOf=` | 2.9.4: the reporting currencies a page offers: `listed`, `available` (every currency with scenario FX on the date), `ready` (built already) |
 | `GET /api/v1/var/official?asOf=` | a date's official end-of-day record: its result version, the inputs' versions and batch ids, and every node of every hierarchy with its VaR, ES, hypothetical P&L, limit, counts, backtest and capture id (a viewer who sees every node; [VAR_GUIDE.md section 19](VAR_GUIDE.md#19-official-end-of-day-results)) |
 | `POST /api/v1/var/official?asOf=` | administrators: captures the date officially now (the data-load signal of an input does it by itself): `{status: captured, restated, unchanged or skipped, resultVersion, nodes, published}` |
 

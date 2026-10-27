@@ -125,6 +125,31 @@ public class VarController {
         return views.contributions(p, scope(scope), date(asOf), by, scenario, ccy);
     }
 
+    /**
+     * The same scope in every listed reporting currency (the explorer's "In other currencies" tab, VAR_GUIDE.md section 15.11): each
+     * currency's VaR and ES from the scope's per-trade-currency totals, that VaR in {@code ccy} at today's rate and the difference.
+     */
+    @GetMapping("/scope/currencies")
+    public Map<String, Object> inCurrencies(@RequestParam String scope, @RequestParam(required = false) String ccy, AsOf asOf,
+            @RequestAttribute(Principal.ATTRIBUTE) Principal p) {
+        return views.inCurrencies(p, scope(scope), date(asOf), ccy);
+    }
+
+    /** The reporting currencies a page offers: the listed ones, and every currency with scenario FX on the date ("More…"). */
+    @GetMapping("/currencies")
+    public Map<String, Object> currencies(AsOf asOf, @RequestAttribute(Principal.ATTRIBUTE) Principal p) {
+        entitlements.requireOpen(p, svc.props().kinds().vector());
+        VarDate d = svc.date(date(asOf));
+        Map<String, Object> m = new LinkedHashMap<>();
+        m.put("businessDate", d.date().toString());
+        m.put("listed", svc.props().currencies());
+        m.put("available", List.copyOf(svc.fx(d).currencies()));
+        Map<String, Object> ready = new LinkedHashMap<>();
+        svc.props().currencies().forEach(c -> ready.put(c, svc.ready(d, c)));
+        m.put("ready", ready);
+        return m;
+    }
+
     /** The basket tray's type-ahead: what {@code q} may name, each with its type, id, name, trade count and standalone VaR as the caller. */
     @GetMapping("/hints")
     public List<Map<String, Object>> hints(@RequestParam(required = false) String q, @RequestParam(defaultValue = "8") int limit,
@@ -168,7 +193,13 @@ public class VarController {
         m.put("positionRules", svc.loader().rules().toString());
         m.put("official", Map.of("enabled", pr.official().enabled(), "publish", pr.official().publish(), "retentionYears",
                 pr.official().retentionYears(), "dates", svc.official().dates().size(), "currencies", pr.official().currencies()));
-        m.put("currencies", "USD at load; any currency with scenario FX on first ask (ccy=EUR), cached per date");
+        Map<String, Object> cur = new LinkedHashMap<>();
+        cur.put("listed", pr.currencies());
+        cur.put("retentionDates", pr.currencyRetentionDates());
+        cur.put("note", "USD at load; the listed currencies built ahead in the background after it (tiered memory), kept for the newest "
+                + pr.currencyRetentionDates() + " dates; any other currency with scenario FX on first ask (ccy=CHF), cached per date");
+        cur.put("builtAhead", svc.builtAhead());
+        m.put("currencies", cur);
         m.put("loaded", svc.loaded());
         return m;
     }

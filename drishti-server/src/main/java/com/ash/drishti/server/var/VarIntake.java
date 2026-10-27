@@ -154,7 +154,8 @@ final class VarIntake {
     static List<String> columns(java.util.Set<String> kept, PositionRules rules, List<String> own) {
         List<String> want = new ArrayList<>(List.of("TRADE_ID"));
         LinkedHashMap<String, Boolean> all = new LinkedHashMap<>();
-        VarBook.TRADE_TEXTS.stream().filter(c -> !c.equals("POSITION_ID") && !c.equals("POSITION_RULE")).forEach(c -> all.put(c, true));
+        VarBook.TRADE_TEXTS.stream().filter(c -> !c.equals("POSITION_ID") && !c.equals("POSITION_RULE") && !c.equals("PV_CURRENCY"))
+                .forEach(c -> all.put(c, true));
         VarBook.TRADE_NUMBERS.forEach(c -> all.put(c, true));
         rules.keyFields().forEach(c -> all.put(c, true));
         OPTIONAL.forEach(c -> all.put(c, true));
@@ -240,6 +241,8 @@ final class VarIntake {
                 k -> text(row, k));
         texts[VarBook.TRADE_TEXTS.indexOf("POSITION_ID")] = d.positionId();
         texts[VarBook.TRADE_TEXTS.indexOf("POSITION_RULE")] = d.rule();
+        // the currency the trade's PVs came in (VAR_GUIDE.md section 15.11): a scenario-PV row's CURRENCY; none for a P&L vector (USD)
+        texts[VarBook.TRADE_TEXTS.indexOf("PV_CURRENCY")] = fx != null ? currency(row) : null;
         texts[VarBook.TRADE_TEXTS.indexOf("INSTRUMENT_ID")] = d.instrumentId();
         texts[VarBook.TRADE_TEXTS.indexOf("SECURITY_ID")] = d.securityId();
         if (texts[VarBook.TRADE_TEXTS.indexOf("INSTRUMENT")] == null) {

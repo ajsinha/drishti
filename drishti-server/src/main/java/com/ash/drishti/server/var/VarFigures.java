@@ -227,6 +227,9 @@ final class VarFigures implements ViewAugmenter {
         x.put("DIRECTION", r.get("direction"));
         x.put("VAR", r.get(own));
         x.put("COMPONENT_VAR", r.get(component));
+        if (r.get("tradeCurrency") != null) {
+            x.put("TRADE_CURRENCY", r.get("tradeCurrency"));        // the currency its PVs came in, else its own (VAR_GUIDE.md section 15.11)
+        }
         return x;
     }
 

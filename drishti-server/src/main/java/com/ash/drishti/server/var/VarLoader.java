@@ -136,6 +136,8 @@ final class VarLoader {
         long budget = props.memoryBudgetMb() * 1024 * 1024;
         VarBook.Builder b = tier.mapped() ? new VarBook.Builder(date, setId, scenarioDates, budget, tier.target(date, digest))
                 : new VarBook.Builder(date, setId, scenarioDates, props.rowsPerChunk(), budget);
+        // the build sums every node's PVs per trade currency too (VAR_GUIDE.md section 15.11): the date's FX, read only when a trade needs it
+        b.currencyRates(c -> fx(date, scenarioDates).rates(c).orElse(null));
         try {
             VarIntake intake = intake(date, asOf, b, pr, setId, scenarioDates);
             VarIntake.Summary sum = intake.summary();

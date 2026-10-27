@@ -19,6 +19,8 @@ import com.ash.drishti.common.DrishtiException;
 import com.ash.drishti.common.ErrorCode;
 import com.ash.drishti.compute.var.Backtest;
 import com.ash.drishti.compute.var.Columns;
+import com.ash.drishti.compute.var.CurrencyTotals;
+import com.ash.drishti.compute.var.ScenarioFx;
 import com.ash.drishti.compute.var.VarBook;
 import com.ash.drishti.compute.var.VarCalc;
 import com.ash.drishti.compute.var.VarMath;
@@ -225,7 +227,11 @@ final class VarViews {
                 ? ", scaled to add up to the VaR" : ""));
         m.put("engine", "VaR engine in the server · " + ENGINE + " · " + svc.sums().threads() + " threads");
         m.put("view", s.view().full() ? "every node at positions level" : "restricted by node (" + s.hidden() + " trades outside your entitlement)");
-        m.put("tier", tier(s));
+        m.put("tier", VarDate.USD.equals(s.date().currency()) ? tier(s)
+                : "per-trade-currency totals of the USD book (float64), converted with the scenario FX of " + s.date().currency());
+        int all = s.date().book().tradeCount();
+        m.put("input", fromPv == 0 ? "P&L vectors (USD)" : fromPv >= all ? "scenario PVs in each trade's currency"
+                : "P&L vectors (USD) and scenario PVs in each trade's currency (" + fromPv + " of " + all + " trades)");
         m.put("membershipHash", s.set().digest());
         m.put("computedAt", Instant.now().toString());
         m.put("computeMs", s.computeMs());
@@ -244,6 +250,13 @@ final class VarViews {
         m.put("reporting", d.currency());
         m.put("crosses", "through USD");
         m.put("rates", d.fx());
+        java.util.TreeSet<String> sources = new java.util.TreeSet<>();
+        d.fx().values().forEach(v -> {
+            if (v instanceof Map<?, ?> r && r.get("source") != null && !"base".equals(r.get("source"))) {   // USD itself: no rates
+                sources.add(String.valueOf(r.get("source")));
+            }
+        });
+        m.put("scenarioFx", sources.isEmpty() ? "none needed (every trade in USD)" : String.join(" and ", sources));
         return m;
     }
 
@@ -443,6 +456,7 @@ final class VarViews {
         a.put("quantity", qty);
         a.put("marketValue", nan(pc.number("MARKET_VALUE", pi)));
         a.put("currency", pc.text("CURRENCY", pi));
+        a.put("tradeCurrency", positionCurrency(b, set, pi));
         a.put("book", pc.text("TT_BOOK", pi));
         a.put("productType", pc.text("PRODUCT_TYPE", pi));
         a.put("securityId", pc.text("SECURITY_ID", pi));
@@ -454,10 +468,42 @@ final class VarViews {
                 Double.isNaN(pc.number("MARKET_VALUE", pi)) ? Double.NaN : pc.number("MARKET_VALUE", pi), a);
     }
 
+    /**
+     * A trade's currency (VAR_GUIDE.md section 15.11): the currency its PVs came in (a scenario-PV row's {@code CURRENCY}), else the
+     * trade's own {@code CURRENCY} (a P&amp;L vector, sent in USD); {@code [currency, where from]}.
+     */
+    static String[] tradeCurrency(Columns tc, int o) {
+        String pv = tc.has(CurrencyTotals.COLUMN) ? tc.text(CurrencyTotals.COLUMN, o) : null;
+        if (pv != null) {
+            return new String[] {pv, "scenario PVs"};
+        }
+        String own = tc.text("CURRENCY", o);
+        return new String[] {own, own == null ? null : "trade"};
+    }
+
+    /** A position's trade currency: its trades' when they agree, else {@code mixed}. */
+    private static String positionCurrency(VarBook b, OrdinalSet set, int pi) {
+        String c = null;
+        for (int o = b.positionFrom(pi); o < b.positionTo(pi); o++) {
+            if (set.contains(o)) {
+                String t = tradeCurrency(b.trades(), o)[0];
+                if (c == null) {
+                    c = t;
+                } else if (t != null && !t.equals(c)) {
+                    return "mixed";
+                }
+            }
+        }
+        return c;
+    }
+
     private static Part trade(VarBook b, int o) {
         Columns tc = b.trades();
         double q = nz(tc.number("QUANTITY", o));
         Map<String, Object> a = new LinkedHashMap<>();
+        String[] ccy = tradeCurrency(tc, o);
+        a.put("tradeCurrency", ccy[0]);
+        a.put("tradeCurrencyFrom", ccy[1]);
         a.put("direction", q > 0 ? "LONG" : q < 0 ? "SHORT" : "FLAT");
         a.put("quantity", q);
         a.put("productType", tc.text("PRODUCT_TYPE", o));
@@ -550,6 +596,72 @@ final class VarViews {
         return -1;
     }
 
+    // ------------------------------------------------------------------------------------------------------------------- currencies
+
+    /**
+     * The scope in every listed reporting currency (VAR_GUIDE.md section 15.11, the explorer's "In other currencies" tab): each currency's
+     * VaR and ES computed from the scope's per-trade-currency totals with that currency's scenario FX (never the page's VaR at a rate),
+     * that VaR in the page's currency {@code ccy} at today's rate, and the difference from the page's VaR. As the viewer.
+     */
+    Map<String, Object> inCurrencies(Principal p, String scope, LocalDate date, String ccy) {
+        long t0 = System.nanoTime();
+        String page = VarCurrencies.normalise(ccy);
+        VarService.Scoped s = svc.scoped(p, scope, date);
+        VarDate usd = s.date();
+        ScenarioFx fx = svc.fx(usd);
+        if (fx.rates(page).isEmpty()) {
+            throw new DrishtiException(ErrorCode.VAR_NO_FX, "no " + page + " FX for the scenarios of " + usd.date() + "; the currencies with FX on "
+                    + "the date: " + String.join(", ", fx.currencies()));
+        }
+        CurrencyTotals.Sums totals = svc.totals(usd, s.set(), s.res().node());
+        List<String> list = new ArrayList<>(svc.props().currencies());
+        if (!list.contains(page)) {
+            list.add(page);
+        }
+        Map<String, VarCalc.Measures> measures = new LinkedHashMap<>();
+        for (String c : list) {
+            double[] v = c.equals(VarDate.USD) ? s.vector() : totals.in(fx, c);
+            measures.put(c, v == null ? null : svc.calc().measures(v));
+        }
+        double pageVar = measures.get(page) == null ? Double.NaN : measures.get(page).var();
+        List<Map<String, Object>> rows = new ArrayList<>();
+        for (String c : list) {
+            VarCalc.Measures m = measures.get(c);
+            Map<String, Object> r = new LinkedHashMap<>();
+            r.put("currency", c);
+            r.put("shown", c.equals(page));
+            r.put("listed", svc.props().currencies().contains(c));
+            if (m == null) {
+                r.put("note", "no " + c + " scenario FX on " + usd.date());
+                rows.add(r);
+                continue;
+            }
+            double rate = fx.cross(c, page, -1);
+            double inPage = m.var() * rate;
+            r.put("var", round(m.var()));
+            r.put("es", round(m.es()));
+            r.put("rate", rate);
+            r.put("varInPage", round(inPage));
+            r.put("difference", c.equals(page) ? null : round(inPage - pageVar));
+            r.put("differencePct", c.equals(page) || pageVar == 0 ? null : (inPage - pageVar) / pageVar);
+            rows.add(r);
+        }
+        Map<String, Object> out = new LinkedHashMap<>();
+        out.put("canonical", s.res().canonical());
+        out.put("label", s.label());
+        out.put("businessDate", usd.date().toString());
+        out.put("currency", page);
+        out.put("var", round(pageVar));
+        out.put("rows", rows);
+        out.put("tradeCurrencies", java.util.Arrays.asList(totals.currencies()));
+        out.put("note", "each currency's VaR is computed from the scope's PVs summed per trade currency, converted with that currency's "
+                + "scenario FX (crosses through USD): the currency move on the scenario days is part of its risk, so it is not the " + page
+                + " VaR at today's rate");
+        out.put("computeMs", (System.nanoTime() - t0) / 1_000_000);
+        svc.audit(p, "var-currencies", s, "page=" + page);
+        return out;
+    }
+
     // ------------------------------------------------------------------------------------------------------------------- path
 
     Map<String, Object> path(Principal p, String scope, LocalDate date, int page, int size) {
@@ -600,6 +712,9 @@ final class VarViews {
                 }
             }
             if (worstPart != null) {
+                if (worstPart.attrs().get("tradeCurrency") != null) {
+                    row.put("fromCurrency", worstPart.attrs().get("tradeCurrency"));
+                }
                 row.put("from", worstPart.label());
                 row.put("fromScope", worstPart.scope());
                 row.put("fromPnl", round(worstPart.vector()[j]));

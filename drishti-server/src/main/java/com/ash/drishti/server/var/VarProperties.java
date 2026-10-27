@@ -49,12 +49,17 @@ import org.springframework.boot.context.properties.ConfigurationProperties;
  * @param positions how positions are derived from the trades when no loaded pack says (a pack's {@code positions:} section wins)
  * @param official the official end-of-day captures and their published results
  * @param tier where a loaded date's vectors are kept: the memory-mapped hot file (default) or the heap (VAR_GUIDE.md section 26)
+ * @param currencies the reporting currencies built ahead (VAR_GUIDE.md section 15.11): after a date's USD book loads, each listed
+ *     currency's book is built in the background from it and kept as its own hot file, so a VaR in a listed currency never waits on its
+ *     first ask; USD always first; default USD, EUR, CAD, JPY, GBP; any other currency with FX is still built on first ask
+ * @param currencyRetentionDates the newest business dates whose listed currencies are built ahead and kept on disk (5, one business
+ *     week); an older date's listed-currency files are deleted when the next date is built ahead (on first ask they are built again)
  */
 @ConfigurationProperties("drishti.var")
 public record VarProperties(Boolean enabled, Double confidence, Double esConfidence, String rankRule, Integer componentWindow,
         Boolean componentScaleToVar, Integer threads, Integer parallelRows, Long memoryBudgetMb, Integer rowsPerChunk, Integer hotDates,
         Integer historyDays, Integer histogramBins, Integer maxParts, Kinds kinds, Map<String, Map<String, String>> access, Integer pathPage,
-        Positions positions, Official official, Tier tier) {
+        Positions positions, Official official, Tier tier, List<String> currencies, Integer currencyRetentionDates) {
 
     /**
      * The kinds the engine reads, as the market-risk pack names them; {@code position} is the kind its derived positions are served as.
@@ -132,14 +137,7 @@ public record VarProperties(Boolean enabled, Double confidence, Double esConfide
             root = root == null || root.isBlank() ? null : root;
             retentionYears = retentionYears == null || retentionYears < 1 ? 7 : retentionYears;
             onStart = onStart == null || onStart;
-            List<String> c = new ArrayList<>(List.of("USD"));
-            for (String x : currencies == null ? List.<String>of() : currencies) {
-                String u = x == null ? "" : x.trim().toUpperCase(Locale.ROOT);
-                if (u.matches("[A-Z]{3}") && !c.contains(u)) {
-                    c.add(u);
-                }
-            }
-            currencies = List.copyOf(c);
+            currencies = currencyList(currencies == null ? List.of() : currencies);
         }
     }
 
@@ -191,6 +189,20 @@ public record VarProperties(Boolean enabled, Double confidence, Double esConfide
         positions = positions == null ? new Positions(null, null) : positions;
         official = official == null ? new Official(null, null, null, null, null, null) : official;
         tier = tier == null ? new Tier(null, null, null, null, null) : tier;
+        currencies = currencyList(currencies == null ? List.of("USD", "EUR", "CAD", "JPY", "GBP") : currencies);
+        currencyRetentionDates = currencyRetentionDates == null || currencyRetentionDates < 1 ? 5 : currencyRetentionDates;
+    }
+
+    /** ISO codes in upper case, USD first and once, the rest in the order given (duplicates and blanks dropped). */
+    static List<String> currencyList(List<String> given) {
+        List<String> c = new ArrayList<>(List.of("USD"));
+        for (String x : given) {
+            String u = x == null ? "" : x.trim().toUpperCase(Locale.ROOT);
+            if (u.matches("[A-Z]{3}") && !c.contains(u)) {
+                c.add(u);
+            }
+        }
+        return List.copyOf(c);
     }
 
     public com.ash.drishti.compute.var.VarMath.RankRule rule() {

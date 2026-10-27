@@ -31,7 +31,8 @@ import java.util.Map;
  * {@code scenario-pv} kind, instead) and {@code VAR_RESULT_ID} ({@code TRD:<trade>}, the computed kind {@code var-result}), links
  * the pack's graph names, so they are real links of the page (its linked entities, its keys); when it does not, {@code RISK_LINKS} says
  * why ("not live on 2026-10-26: its status is CANCELLED; no P&amp;L vector"). The stored trade never changes; nothing is computed here but
- * a lookup of the trade in the loaded date.
+ * a lookup of the trade in the loaded date. With them (2.9.4) {@code RISK_LINKS} says the trade's currency and its base PV in it
+ * ({@link #currency}), which the trade pages' strip shows as Trade currency.
  */
 final class VarTradeLinks implements ViewAugmenter {
 
@@ -84,6 +85,7 @@ final class VarTradeLinks implements ViewAugmenter {
                 }
                 fields.put("VAR_RESULT_ID", DataNode.of("TRD:" + tid));
                 links.put("VAR", "TRD:" + tid);
+                currency(d, o2, links);
             } else {
                 String why = d.intake().notLiveWhy(id);
                 String note = "not live on " + day + (why == null ? "" : ": " + why) + "; no P&L vector";
@@ -97,5 +99,31 @@ final class VarTradeLinks implements ViewAugmenter {
         }
         fields.put(FIELD, DataNode.of(links));
         return new EntityDocument(doc.ref(), new DataNode.Obj(fields), doc.provenance(), doc.deleted());
+    }
+
+    /**
+     * The trade's currency and its base PV in it (VAR_GUIDE.md section 15.11): a trade sent as scenario PVs is in their currency, its base
+     * PV its USD value today at today's rate (the received {@code BASE_PV}, to rounding); a P&amp;L vector's trade is in its own
+     * {@code CURRENCY}, its base PV the vector's {@code PV} (USD). {@code TRADE_CURRENCY}, {@code TRADE_CURRENCY_FROM}, {@code BASE_PV}.
+     */
+    static void currency(VarDate d, int o, Map<String, Object> links) {
+        com.ash.drishti.compute.var.Columns tc = d.book().trades();
+        String[] ccy = VarViews.tradeCurrency(tc, o);
+        if (ccy[0] == null) {
+            return;
+        }
+        links.put("TRADE_CURRENCY", ccy[0]);
+        boolean fromPv = "scenario PVs".equals(ccy[1]);
+        links.put("TRADE_CURRENCY_FROM", fromPv ? "its scenario PVs" : "the trade's CURRENCY (its P&L vector is in USD)");
+        double pv = tc.has("PV") ? tc.number("PV", o) : Double.NaN;
+        if (Double.isNaN(pv)) {
+            return;
+        }
+        double rate = 1;
+        if (fromPv && d.fx().get(ccy[0]) instanceof Map<?, ?> r && r.get("base") instanceof Number n && n.doubleValue() > 0) {
+            rate = n.doubleValue();
+        }
+        String in = fromPv ? ccy[0] : VarDate.USD;
+        links.put("BASE_PV", in + " " + String.format(java.util.Locale.ROOT, "%,.2f", pv / rate));
     }
 }

@@ -107,6 +107,7 @@ class VarTestDataPrecisionTest {
     @SuppressWarnings("unchecked")
     static void fill(VarBook.Builder b, Path data, PositionRules rules, double scale) throws IOException {
         ScenarioFx fx = fx(data, b.width());
+        b.currencyRates(c -> fx.rates(c).orElse(null));                // the per-trade-currency totals (VAR_GUIDE.md section 15.11)
         lines(data.resolve("scenario-pv"), n -> {
             if (!rules.live(text(n, "TRADE_STATUS"))) {
                 return;
@@ -122,7 +123,7 @@ class VarTestDataPrecisionTest {
             for (int j = 0; j < v.length; j++) {
                 v[j] *= scale;
             }
-            add(b, n, rules, v, n.path("BASE_PV").asDouble() * r.base());
+            add(b, n, rules, v, n.path("BASE_PV").asDouble() * r.base(), text(n, "CURRENCY"));
         });
         lines(data.resolve("pnl-vector"), n -> {
             if (!rules.live(text(n, "TRADE_STATUS"))) {
@@ -133,7 +134,7 @@ class VarTestDataPrecisionTest {
             for (int j = 0; j < v.length; j++) {
                 v[j] = pnl.get(j).asDouble() * scale;
             }
-            add(b, n, rules, v, n.path("PV").asDouble(Double.NaN));
+            add(b, n, rules, v, n.path("PV").asDouble(Double.NaN), null);
         });
         lines(data.resolve("risk-hierarchy"), n -> {
             List<String> books = new ArrayList<>();
@@ -143,7 +144,7 @@ class VarTestDataPrecisionTest {
         });
     }
 
-    private static void add(VarBook.Builder b, JsonNode n, PositionRules rules, double[] v, double pvUsd) {
+    private static void add(VarBook.Builder b, JsonNode n, PositionRules rules, double[] v, double pvUsd, String pvCurrency) {
         String[] texts = new String[VarBook.TRADE_TEXTS.size()];
         for (int c = 0; c < texts.length; c++) {
             texts[c] = text(n, VarBook.TRADE_TEXTS.get(c));
@@ -154,6 +155,7 @@ class VarTestDataPrecisionTest {
         texts[VarBook.TRADE_TEXTS.indexOf("POSITION_RULE")] = d.rule();
         texts[VarBook.TRADE_TEXTS.indexOf("INSTRUMENT_ID")] = d.instrumentId();
         texts[VarBook.TRADE_TEXTS.indexOf("SECURITY_ID")] = d.securityId();
+        texts[VarBook.TRADE_TEXTS.indexOf(CurrencyTotals.COLUMN)] = pvCurrency;
         double[] nums = {n.path("QUANTITY").asDouble(Double.NaN), pvUsd};
         b.trade(trade, v, v.length, texts, nums);
     }
@@ -263,6 +265,16 @@ class VarTestDataPrecisionTest {
             CurrencyBook.Converted conv = CurrencyBook.convert(heap, fx.rates(c).orElseThrow(), new VarBook.Builder(heap.businessDate(),
                     heap.scenarioSet(), heap.scenarioDates(), 65_536, Long.MAX_VALUE), sums);
             VarCalc.Measures m = calc.measures(conv.book().aggregate("MGMT~BANK"));
+            // every node from its per-trade-currency totals equals the book converted trade by trade, to the cent (section 15.11)
+            for (String node : heap.nodes().keySet()) {
+                double[] a = heap.currencyTotals().get(node).in(fx, c);
+                double[] e = conv.book().aggregate(node);
+                for (int j = 0; j < a.length; j++) {
+                    assertThat(a[j]).as(node + " " + c + " " + j).isCloseTo(e[j], org.assertj.core.api.Assertions.within(0.005));
+                }
+                assertThat(mapped.currencyTotals().get(node).in(fx, c)[0]).as(node).isCloseTo(a[0], org.assertj.core.api.Assertions.within(0.005));
+            }
+            assertThat(Math.round(calc.measures(heap.currencyTotals().get("MGMT~BANK").in(fx, c)).var())).isEqualTo(Math.round(m.var()));
             say.append("; ").append(c).append(' ').append(Math.round(m.var())).append(" / ").append(Math.round(m.es()));
             assertThat(conv.book().tradeCount()).isEqualTo(heap.tradeCount());
             assertThat(m.var()).isPositive();

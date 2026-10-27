@@ -274,6 +274,72 @@ final class VarTier implements AutoCloseable {
         }
     }
 
+    /**
+     * The retention of the currencies built ahead (VAR_GUIDE.md section 15.11): the hot files of {@code currencies} (not USD) of every date
+     * not in {@code keep} are deleted, unless a request has them open (then they go when retired, or at the next pass). Returns the files
+     * deleted.
+     */
+    int pruneCurrencies(java.util.Set<LocalDate> keep, java.util.Collection<String> currencies) {
+        if (!Files.isDirectory(root)) {
+            return 0;
+        }
+        List<Path> gone = new ArrayList<>();
+        lock.lock();
+        try (Stream<Path> s = Files.list(root)) {
+            for (Path dir : s.filter(Files::isDirectory).toList()) {
+                String n = dir.getFileName().toString();
+                if (n.length() != 14 || n.charAt(10) != '-' || !currencies.contains(n.substring(11)) || VarDate.USD.equals(n.substring(11))) {
+                    continue;
+                }
+                LocalDate d;
+                try {
+                    d = LocalDate.parse(n.substring(0, 10));
+                } catch (java.time.format.DateTimeParseException e) {
+                    continue;
+                }
+                if (keep.contains(d)) {
+                    continue;
+                }
+                try (Stream<Path> in = Files.list(dir)) {
+                    in.filter(p -> p.getFileName().toString().endsWith(VarHotFile.SUFFIX) && !open.containsKey(p)).forEach(gone::add);
+                }
+            }
+            gone.forEach(used::remove);
+        } catch (IOException e) {
+            LOG.debug("VaR hot files: currency retention not applied now: {}", e.toString());
+        } finally {
+            lock.unlock();
+        }
+        gone.forEach(this::delete);
+        if (!gone.isEmpty()) {
+            removeEmptyFolders();
+        }
+        return gone.size();
+    }
+
+    /** The bytes and files a date's books in other currencies take on disk ({@code <date>-<CCY>} folders), for the status answer. */
+    Map<String, Object> currencyFiles() {
+        long bytes = 0;
+        int files = 0;
+        if (Files.isDirectory(root)) {
+            try (Stream<Path> s = Files.walk(root, 2)) {
+                for (Path p : s.filter(Files::isRegularFile).toList()) {
+                    String dir = p.getParent().getFileName().toString();
+                    if (dir.length() == 14 && dir.charAt(10) == '-' && p.getFileName().toString().endsWith(VarHotFile.SUFFIX)) {
+                        bytes += Files.size(p);
+                        files++;
+                    }
+                }
+            } catch (IOException e) {
+                // gone meanwhile
+            }
+        }
+        Map<String, Object> m = new LinkedHashMap<>();
+        m.put("files", files);
+        m.put("bytes", bytes);
+        return m;
+    }
+
     /** The files on disk and the dates open, for the status answer. */
     Map<String, Object> describe() {
         lock.lock();
@@ -297,6 +363,7 @@ final class VarTier implements AutoCloseable {
                 }
             }
             m.put("diskBytes", bytes);
+            m.put("currencies", currencyFiles());
             return m;
         } finally {
             lock.unlock();

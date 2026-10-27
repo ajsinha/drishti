@@ -116,6 +116,7 @@ final class VarPositions {
             r.put("PV", Double.isNaN(pv) ? null : pv);
             r.put("PRODUCT_TYPE", tc.text("PRODUCT_TYPE", o));
             r.put("COUNTERPARTY", tc.text("COUNTERPARTY", o));
+            r.put("TRADE_CURRENCY", VarViews.tradeCurrency(tc, o)[0]);
             if (tc.text("COUNTERPARTY", o) != null) {
                 cps.add(tc.text("COUNTERPARTY", o));
             }

@@ -17,6 +17,8 @@ package com.ash.drishti.server.var;
 
 import com.ash.drishti.common.DrishtiException;
 import com.ash.drishti.common.ErrorCode;
+import com.ash.drishti.compute.var.CurrencyTotals;
+import com.ash.drishti.compute.var.ScenarioFx;
 import com.ash.drishti.compute.var.ScopeExpr;
 import com.ash.drishti.compute.var.ScopeResolver;
 import com.ash.drishti.compute.var.VarBook;
@@ -69,6 +71,19 @@ public final class VarService implements AutoCloseable {
     /** The dates in other reporting currencies, built from the USD date when first asked: {@code <date>|<CCY>|<version>}. */
     private final Map<String, CompletableFuture<VarDate>> inCurrency = new ConcurrentHashMap<>();
     private final VarCurrencies currencies;
+    /**
+     * The listed currencies built ahead after a date's USD book loads (VAR_GUIDE.md section 15.11): one at a time, on one low-priority
+     * thread, so a USD answer never waits for them; a request in a currency not built yet builds it on first ask, as before.
+     */
+    private final java.util.concurrent.ExecutorService ahead = java.util.concurrent.Executors.newSingleThreadExecutor(r -> {
+        Thread t = new Thread(r, "drishti-var-currencies");
+        t.setDaemon(true);
+        t.setPriority(Thread.MIN_PRIORITY);
+        return t;
+    });
+    /** The dates (and versions) whose listed currencies were queued, and what building each did ({@code <date>|<CCY>}: a sentence). */
+    private final java.util.Set<String> aheadQueued = ConcurrentHashMap.newKeySet();
+    private final Map<String, String> aheadState = new java.util.concurrent.ConcurrentSkipListMap<>();
     /** Dates that could not be loaded, with the vector version they were refused at and why. */
     private final Map<LocalDate, String[]> refused = new ConcurrentHashMap<>();
     private final com.github.benmanes.caffeine.cache.Cache<String, Scoped> cache =
@@ -193,6 +208,7 @@ public final class VarService implements AutoCloseable {
         try {
             VarDate vd = f.join();
             evictOld(d);
+            buildAhead(vd);
             return vd;
         } catch (java.util.concurrent.CompletionException e) {
             dates.remove(d, f);                                        // a failed load is tried again by the next request
@@ -205,6 +221,130 @@ public final class VarService implements AutoCloseable {
             }
             throw new DrishtiException(ErrorCode.SOURCE_FAILED, "the VaR data of " + d + " could not be loaded: " + e.getCause());
         }
+    }
+
+    // ---------------------------------------------------------------------------------------------------------------- currencies
+
+    /**
+     * Queues the listed currencies of a date just loaded (once per date and version), when the date is among the newest
+     * {@code currency-retention-dates} and the tiered memory is on (a heap date would hold every currency's vectors on the heap: there
+     * they stay on first ask). Then the retention: listed-currency files of older dates are deleted.
+     */
+    private void buildAhead(VarDate usd) {
+        if (!loader.tier().mapped() || props.currencies().size() <= 1 || !aheadQueued.add(usd.date() + "|" + usd.version())) {
+            return;
+        }
+        java.util.Set<LocalDate> keep = newest(props.currencyRetentionDates());
+        if (!keep.contains(usd.date())) {
+            return;
+        }
+        for (String c : props.currencies()) {
+            if (!c.equals(VarDate.USD)) {
+                aheadState.putIfAbsent(usd.date() + "|" + c, "queued");
+            }
+        }
+        ahead.submit(() -> {
+            for (String c : props.currencies()) {
+                if (!c.equals(VarDate.USD) && dates.containsKey(usd.date())) {
+                    buildOne(usd, c);
+                }
+            }
+            int pruned = loader.tier().pruneCurrencies(keep, props.currencies());
+            if (pruned > 0) {
+                org.slf4j.LoggerFactory.getLogger(VarService.class).info("VaR: {} hot files of listed currencies outside the newest {} dates deleted",
+                        pruned, keep.size());
+            }
+        });
+    }
+
+    /** One listed currency of a date, built unless a request built (or is building) it; a failure is said in the status, never thrown. */
+    private void buildOne(VarDate usd, String c) {
+        String key = usd.date() + "|" + c + "|" + usd.version();
+        String state = usd.date() + "|" + c;
+        CompletableFuture<VarDate> mine = new CompletableFuture<>();
+        CompletableFuture<VarDate> there = inCurrency.putIfAbsent(key, mine);
+        if (there != null) {
+            aheadState.put(state, "built on first ask");
+            return;
+        }
+        long t0 = System.nanoTime();
+        aheadState.put(state, "building");
+        try {
+            VarDate vd = currencies.convert(usd, c);
+            mine.complete(vd);
+            long ms = (System.nanoTime() - t0) / 1_000_000;
+            long bytes = vd.book().hot() == null ? 0 : sizeOf(vd.book().hot().file());
+            aheadState.put(state, "built ahead in " + ms + " ms, " + bytes + " bytes");
+            org.slf4j.LoggerFactory.getLogger(VarService.class).info("VaR: {} in {} built ahead in {} ms ({} bytes on disk)", usd.date(), c, ms, bytes);
+        } catch (RuntimeException e) {
+            mine.completeExceptionally(e);
+            inCurrency.remove(key, mine);                               // a request tries again on first ask
+            aheadState.put(state, "not built: " + e.getMessage());
+        }
+    }
+
+    private static long sizeOf(java.nio.file.Path f) {
+        try {
+            return java.nio.file.Files.size(f);
+        } catch (java.io.IOException e) {
+            return 0;
+        }
+    }
+
+    /** The newest {@code n} business dates with trades' scenario P&amp;L. */
+    private java.util.Set<LocalDate> newest(int n) {
+        java.util.Set<LocalDate> out = new java.util.TreeSet<>();
+        LocalDate d = loader.latest();
+        while (d != null && out.size() < n) {
+            out.add(d);
+            d = loader.previous(d);
+        }
+        return out;
+    }
+
+    /** What building the listed currencies ahead did, per date and currency, for the status answer. */
+    Map<String, String> builtAhead() {
+        return Map.copyOf(aheadState);
+    }
+
+    /** True when a date's book in a currency is ready (built ahead or on an earlier ask): a request in it does not wait. */
+    boolean ready(VarDate usd, String ccy) {
+        if (VarDate.USD.equals(ccy)) {
+            return true;
+        }
+        CompletableFuture<VarDate> f = inCurrency.get(usd.date() + "|" + ccy + "|" + usd.version());
+        return f != null && f.isDone() && !f.isCompletedExceptionally();
+    }
+
+    /** The date's FX against USD for its scenarios (supplied or derived, VAR_GUIDE.md section 15.9). */
+    ScenarioFx fx(VarDate usd) {
+        return loader.fx(usd.date(), usd.book().scenarioDates());
+    }
+
+    /**
+     * A set's per-trade-currency totals (VAR_GUIDE.md section 15.11) on a USD date: a node's stored with the date when the set is the node
+     * whole, else summed from the set's trades.
+     */
+    CurrencyTotals.Sums totals(VarDate usd, OrdinalSet set, String node) {
+        CurrencyTotals t = usd.book().currencyTotals();
+        VarBook.Node n = node == null ? null : usd.book().node(node);
+        if (t != null && n != null && set.equals(n.members()) && t.get(node) != null) {
+            return t.get(node);
+        }
+        return CurrencyTotals.of(usd.book(), set, fx(usd), sums);
+    }
+
+    /**
+     * The vector of a set in a reporting currency other than USD, from the per-trade-currency totals of the USD book (exact, and cheap for a
+     * node); the converted book's own sum when the date's FX lacks a currency the totals need.
+     */
+    private double[] inCurrencyVector(VarDate d, OrdinalSet set, ScopeResolver.Resolution res) {
+        VarDate usd = load(d.date(), 0);
+        if (!usd.date().equals(d.date())) {
+            return vector(d, set, res);
+        }
+        double[] v = totals(usd, set, res.node()).in(fx(usd), d.currency());
+        return v != null ? v : vector(d, set, res);
     }
 
     /** The newest date before a refused one, with the reason as a warning; the refusal itself when there is none. */
@@ -253,6 +393,7 @@ public final class VarService implements AutoCloseable {
 
     /** Drops every loaded date (an administrator's reload). */
     void reload() {
+        aheadQueued.clear();
         new ArrayList<>(dates.keySet()).forEach(d -> retire(dates.remove(d), false));
         retireCurrencies(null);
         refused.clear();
@@ -264,6 +405,7 @@ public final class VarService implements AutoCloseable {
      * unused when the inputs changed (a restatement); unchanged inputs open the same file again.
      */
     void reload(LocalDate d) {
+        aheadQueued.removeIf(k -> k.startsWith(d + "|"));
         retire(dates.remove(d), false);
         retireCurrencies(d);
         refused.remove(d);
@@ -405,7 +547,7 @@ public final class VarService implements AutoCloseable {
         }
         OrdinalSet set = view.full() ? res.set() : res.set().and(view.visible());
         int hidden = res.set().size() - set.size();
-        double[] v = vector(d, set, res);
+        double[] v = VarDate.USD.equals(d.currency()) ? vector(d, set, res) : inCurrencyVector(d, set, res);
         VarCalc.Measures m = calc.measures(v);
         String kind = kindOf(res, parsed);
         Scoped s = new Scoped(d, view, res, set, hidden, v, m, kind, label(d, res, parsed, kind, p), (System.nanoTime() - t0) / 1_000_000, false);
@@ -504,6 +646,7 @@ public final class VarService implements AutoCloseable {
 
     @Override
     public void close() {
+        ahead.shutdownNow();
         loader.tier().close();
         sums.close();
     }

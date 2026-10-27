@@ -57,7 +57,7 @@ public final class VarBook {
     /** The trades' text columns the engine keeps (from the pnl-vector rows), in this order. */
     public static final List<String> TRADE_TEXTS = List.of("POSITION_ID", "LEGAL_ENTITY", "DIVISION", "DESK", "TT_BOOK", "PORTFOLIO",
             "PRODUCT_GROUP", "PRODUCT_TYPE", "CURRENCY", "COUNTERPARTY", "DIRECTION", "INSTRUMENT_ID", "SECURITY_ID", "INSTRUMENT", "STRATEGY",
-            "TAGS", "POSITION_RULE");
+            "TAGS", "POSITION_RULE", "PV_CURRENCY");
     public static final List<String> TRADE_NUMBERS = List.of("QUANTITY", "PV");
     /**
      * The positions' columns, derived from their trades when the date is built (VAR_GUIDE.md section 15.6): the first trade's instrument,
@@ -122,10 +122,12 @@ public final class VarBook {
     private final int failed;
     private final long loadMillis;
     private final Map<Integer, double[]> positionCache = new ConcurrentHashMap<>();
+    private final CurrencyTotals totals;
 
     VarBook(LocalDate businessDate, String scenarioSet, List<LocalDate> scenarioDates, Vectors store, String[] tradeIds, Columns trades,
             int[] positionOf, String[] positionIds, int[] posFrom, int[] posTo, Columns positions, Map<String, Node> nodes,
-            Map<String, int[]> bookRange, Map<String, double[]> aggregates, int failed, long loadMillis, Hot hot) {
+            Map<String, int[]> bookRange, Map<String, double[]> aggregates, int failed, long loadMillis, Hot hot, CurrencyTotals totals) {
+        this.totals = totals;
         this.businessDate = businessDate;
         this.scenarioSet = scenarioSet;
         this.scenarioDates = List.copyOf(scenarioDates);
@@ -157,6 +159,14 @@ public final class VarBook {
 
     public LocalDate businessDate() {
         return businessDate;
+    }
+
+    /**
+     * Every node's per-trade-currency totals (VAR_GUIDE.md section 15.11): built with a USD book whose builder was given the date's FX
+     * ({@link Builder#currencyRates}); null for a book built without (one in another reporting currency).
+     */
+    public CurrencyTotals currencyTotals() {
+        return totals;
     }
 
     public String scenarioSet() {
@@ -551,6 +561,7 @@ public final class VarBook {
         private int failed;
         private String batchId = "";
         private String meta = "";
+        private java.util.function.Function<String, ScenarioFx.Rates> currencyRates;
 
         /** A date held on the heap, in float64 chunks of {@code rowsPerChunk} rows, within {@code budgetBytes} (8 bytes a value). */
         public Builder(LocalDate businessDate, String scenarioSet, List<LocalDate> scenarioDates, int rowsPerChunk, long budgetBytes) {
@@ -582,6 +593,15 @@ public final class VarBook {
         /** The run the vectors come from (written in the hot file's header). */
         public Builder batchId(String id) {
             this.batchId = id == null ? "" : id;
+            return this;
+        }
+
+        /**
+         * The date's FX by currency (null: none), so the build also sums every node's PVs per trade currency ({@link CurrencyTotals});
+         * a book built without has no totals.
+         */
+        public Builder currencyRates(java.util.function.Function<String, ScenarioFx.Rates> rates) {
+            this.currencyRates = rates;
             return this;
         }
 
@@ -703,16 +723,18 @@ public final class VarBook {
             if (spill == null) {
                 VectorStore store = sorted ? vectors.build() : vectors.permuted(order);
                 Map<String, double[]> agg = aggregates(store, books, nodes, sums);
+                CurrencyTotals ct = currencyRates == null ? null : CurrencyTotals.build(store, tcols, books, nodes, currencyRates);
                 long ms = (System.nanoTime() - t0) / 1_000_000;
                 return new VarBook(businessDate, scenarioSet, scenarioDates, store, tids, tcols, posOf, positionIds, from, to, pcols, nodes, books,
-                        agg, failed, ms, null);
+                        agg, failed, ms, null, ct);
             }
             try {
                 MappedMatrix lake = spill.finish();
                 Vectors rows = sorted ? lake : new PermutedVectors(lake, order);
                 Map<String, double[]> agg = aggregates(rows, books, nodes, sums);
+                CurrencyTotals ct = currencyRates == null ? null : CurrencyTotals.build(rows, tcols, books, nodes, currencyRates);
                 VarHotFile.write(target.part(), new VarHotFile.Content(businessDate, scenarioSet, scenarioDates, tids, tcols, positionIds, from,
-                        to, pcols, books, nodes, agg, failed, batchId, target.digest(), meta), rows, sums);
+                        to, pcols, books, nodes, agg, failed, batchId, target.digest(), meta, ct), rows, sums);
                 Files.move(target.part(), target.file(), StandardCopyOption.REPLACE_EXISTING, StandardCopyOption.ATOMIC_MOVE);
             } catch (IOException e) {
                 throw new UncheckedIOException("the hot file of " + businessDate + " could not be written: " + e.getMessage(), e);
