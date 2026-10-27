@@ -77,7 +77,10 @@ def home(c: Ctx):
     c.page.goto(c.base + "/bi/catalogue")
     c.page.locator(".bi-card h3 a").first.click()                    # opens Desk P&L: it is now Recent
     c.page.wait_for_url("**/bi/i/*")
+    c.page.locator("[data-favourite]:not([hidden])").wait_for()
+    c.page.wait_for_timeout(800)                                    # the item has loaded and the star is wired
     c.page.click("[data-favourite]")
+    c.page.locator('[data-favourite][aria-pressed="true"]').wait_for()
     c.page.goto(c.base + "/bi")
     c.page.locator('[data-sec="favourites"] .bi-card').first.wait_for()
     c.page.wait_for_timeout(500)
@@ -127,7 +130,7 @@ def workspace(c: Ctx):
     sign_in(c, "ann")
     desktop(c, 1100)
     c.page.goto(c.base + "/bi/w/rates-desk")
-    c.page.locator("[data-members] tbody tr").first.wait_for()
+    c.page.locator("[data-items] tbody tr").first.wait_for()         # the Items tab (Members is a tab of its own since the BI runs wave)
     c.page.wait_for_timeout(500)
     c.save("06-workspace.jpg")
 
@@ -144,6 +147,13 @@ def item(c: Ctx):
     c.save("07-item.jpg")
 
 
+def head_clip(c: Ctx) -> dict:
+    """From just above the item's title, 520 px down (the top bar is taller than it was, so a fixed offset cut the title off)."""
+    c.page.evaluate("window.scrollTo(0, 0)")
+    y = max(0, c.page.locator("h1[data-title]").bounding_box()["y"] - 24)
+    return {"x": 0, "y": y, "width": 1600, "height": 520}
+
+
 @shot("08-review.jpg", also=("09-approve.jpg",))
 def review(c: Ctx):
     desktop(c, 760)
@@ -158,14 +168,17 @@ def review(c: Ctx):
     c.page.click('[data-actions] button:text-is("Propose for review")')
     c.page.locator("[data-badges]:has-text('proposed')").wait_for()
     c.page.wait_for_timeout(400)
-    c.save("08-review.jpg", clip={"x": 0, "y": 150, "width": 1600, "height": 520})
+    c.save("08-review.jpg", clip=head_clip(c))
     sign_in(c, "bob", to="/bi")
     c.page.goto(url)
     c.page.locator('[data-actions] button:has-text("Approve")').wait_for()
     c.page.fill(".bi-note", "Checked against the trades pack")
-    c.save("09-approve.jpg", clip={"x": 0, "y": 150, "width": 1600, "height": 520})
+    c.save("09-approve.jpg", clip=head_clip(c))
     c.page.click('[data-actions] button:has-text("Approve")')
-    c.page.locator("[data-meta]:has-text('published v1')").wait_for()
+    try:                                                            # the sample dataset's body fails today's check, so the approval may be refused
+        c.page.locator("[data-meta]:has-text('published v')").wait_for(timeout=10000)
+    except Exception:  # noqa: BLE001 - the pictures are made; only the workspace setting below matters
+        pass
     c.page.request.put(c.base + "/bi/api/workspaces/rates-desk", data='{"reviewRequired": false}', headers={"Content-Type": "application/json"})
 
 
