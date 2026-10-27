@@ -209,9 +209,8 @@ bank's VaR), rates 29.6 million (23.4%). Four desks have negative components: in
 a VaR of 22.2 million (ES 34.5 m). The same counterparty's peak PFE is 395.3 million ([Counterparty credit risk](counterparty-credit-risk.md#4-a-worked-example-on-the-demo-data)):
 two different questions about the same trades.
 
-**What the data hasn't told you.** The two hierarchies disagree about the bank's limit. `VAR BANK` (the Management tree's root) uses
-84.4% of 150 million; the Legal tree's root (`drishti.py var tree --hierarchy LEGAL`) shows the same VaR at 60.3% of its limit, about
-210 million. In the same tree, `BOOK-COMM-1` is at **223%** of its limit and `BOOK-EQD-1` at 133%, while their desks are within
+**What the data hasn't told you.** The bank uses 84.4% of its 150 million limit, in the Management tree (`VAR BANK`) and in the
+Legal tree (`drishti.py var tree --hierarchy LEGAL`) alike: one firm-wide limit, two ways of splitting it. In the Legal tree, `BOOK-COMM-1` is at **223%** of its limit and `BOOK-EQD-1` at 133%, while their desks are within
 theirs: a breach a desk-level report would never show.
 
 ## 5. Questions to ask your data

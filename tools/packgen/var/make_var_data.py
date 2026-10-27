@@ -147,6 +147,10 @@ class Demo:
             r = F.seeded("limit", nid)
             head = (1.04 + 0.06 * r.random()) if nid.split("~")[1] in tight else (1.2 + 0.7 * r.random())
             n["LIMIT_VAR"] = nice(v * head)
+        # one board-approved firm-wide limit: both hierarchies split the same bank, so their roots carry the management root's limit
+        for n in self.nodes.values():
+            if n["LEVEL"] == "bank":
+                n["LIMIT_VAR"] = self.nodes["MGMT~BANK"]["LIMIT_VAR"]
 
     def hierarchy_rows(self) -> list[dict]:
         return [{**{k: v for k, v in n.items()}, "BUSINESS_DATE": self.cob, "VALID_FROM": "2026-01-02", "VALID_TO": None}

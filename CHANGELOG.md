@@ -15,6 +15,13 @@
 -->
 # Changelog
 
+## 2.9.3 — in progress
+
+- **One firm-wide VaR limit (2026-10-27).** The test data gave the bank two VaR limits, 150,000,000 at the management tree's root and
+  210,000,000 at the legal-entity tree's root, because the generator drew each node's headroom at random and the two roots are separate
+  nodes. Both roots now carry the management root's 150,000,000 (`tools/packgen/var/make_var_data.py`, `limits()`); every other limit,
+  and every VaR, is unchanged. The legal tree's root now shows 84.4% use instead of 60.3%; the Knowledge page's worked example says so.
+
 ## 2.9.2 — Funds and ETFs; Knowledge and WHAT; Construct your basket and the pre-deal what-if; trade pages' Risk links; data-quality fixes; About rewritten (2026-10-26)
 
 - **Tutorial 11 and BI_RECIPES rerun on the 2.9.2 data (2026-10-26).** Tutorial 11's *MTM floor* alert is set below 3,500,000,000 (the bank's MTM is now 3,210,381,877, above the old 3,000,000,000, so the alert no longer fired as the tutorial says); its desk figures, DESK-FX MTM (-681,989,222), CSV and export sizes rerun and its alert, refresh and export pictures retaken (`tools/docs/shots/t11.py`). BI_RECIPES.md's `trades-basic` and `trading-risk` answers (desks, exposure by counterparty, the rollup, rita and hana) rerun on the same lake.

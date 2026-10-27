@@ -40,7 +40,7 @@
   carry stored VaR. **Exposure figures change** (e.g. NS-ALDERSHOT-LDN peak PFE 85.1m on the data's date); VaR does not.
 - **About and Competitive** rewritten for what Drishti now is.
 - **Known open:** limits still read the stored credit limits (LIM parked); the bank's VaR limit differs between the management and
-  legal-entity hierarchies (150m and about 210m) in the data; about 600 older screenshots are refreshed in 2.9.3.
+  legal-entity hierarchies (150m and about 210m) in the data (one 150m limit from 2.9.3); about 600 older screenshots are refreshed in 2.9.3.
 - **Tested:** the drill passed licence headers, Java 21, Java 25, the tools and the console.
 
 # Drishti 2.9.1 — release notes
