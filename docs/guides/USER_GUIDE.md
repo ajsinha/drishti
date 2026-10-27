@@ -581,13 +581,13 @@ and press `Enter` or `Space`. The menu has, from the top:
 The list of a column shows only the values that the **other** columns' filters leave, so it answers "what is left?". A list
 longer than 500 values shows the first 500 and says so; search to reach the rest.
 
-![The same table filtered on two columns: a filled funnel on each, "7 of 35 rows (filtered)" and Clear filters](img/colfilter/03-filtered.jpg)
+![The same table filtered on two columns (Type and Date): a filled funnel on each, "33 of 42 rows (filtered)" and Clear filters](img/colfilter/03-filtered.jpg)
 
 **What you see when a filter is on**
 
 - the column's funnel is **filled and amber**; its tooltip says what it does (*Filtered: Greater than 1m*, *Filtered: 2 values:
   Equity, FX*, *Between 2026-01-01 and 2026-03-31*, *Top 10*);
-- the pager reads `7 of 35 rows (filtered)` (the total is the rows the table holds, before any filter) and a **Clear filters**
+- the pager reads `33 of 42 rows (filtered)` (the total is the rows the table holds, before any filter) and a **Clear filters**
   button appears next to the *Filter rows* box. A screen reader is told the same, politely, whenever the count changes;
 - filters across columns **combine** (a row must pass all of them); paging, the sort and the zoomed table's *Fit* page size work on
   the rows that remain;

@@ -22,8 +22,8 @@ from __future__ import annotations
 from shotlib import Ctx, register
 
 shot = register("colfilter")
-TABLE_VIEW = "/v/trade/MX-20000001"           # a trade's schedule has dates, a leg, a type, a rate and amounts
-PANEL = "section.pnl[data-panel]:is([data-kind=table], [data-kind=ladder])"
+TABLE_VIEW = "/v/trade/MX-20000001"           # a swap's Events: a leg, an event, a type, a date and amounts
+PANEL = "section.pnl#p-event-list"
 
 
 def open_view(c: Ctx, width: int, height: int):          # a tall window: the panel shows whole, with nothing under the top bar
@@ -35,8 +35,9 @@ def open_view(c: Ctx, width: int, height: int):          # a tall window: the pa
 
 def panel(c: Ctx):
     p = c.page.locator(PANEL).first
-    if c.page.viewport_size["width"] < 700:
-        p.scroll_into_view_if_needed()
+    # the Events panel sits below the cash flows: bring its top just under the top bar (about 70 px; 160 on a phone)
+    c.page.evaluate("(top) => window.scrollBy(0, document.querySelector('#p-event-list').getBoundingClientRect().top - top)",
+                    160 if c.page.viewport_size["width"] < 700 else 70)
     return p
 
 
@@ -76,10 +77,10 @@ def filtered(c: Ctx):
     column(c, "Type").click()
     m = c.page.locator(".cf-menu")
     m.locator(".cf-all input").uncheck()
-    m.locator(".cf-item", has_text="Fixed").locator("input").check()
+    m.locator(".cf-item", has_text="CASH_SETTLEMENT").locator("input").check()
     m.get_by_role("button", name="OK").click()
     c.page.wait_for_selector(".cf-menu", state="detached")
-    column(c, "Pay date").click()
+    column(c, "Date").click()
     m = c.page.locator(".cf-menu")
     m.locator(".cf-op").select_option(label="After")
     m.locator(".cf-a").fill("2026-01-01")
