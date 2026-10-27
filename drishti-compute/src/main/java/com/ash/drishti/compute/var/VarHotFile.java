@@ -65,13 +65,19 @@ import java.util.zip.CRC32C;
  *
  * Sections: {@code META} (the server's JSON: intake, versions, rules), {@code SCEN} (scenario days), {@code TIDS}, {@code TCOL},
  * {@code PIDS}, {@code PRUN}, {@code PCOL}, {@code BOOK}, {@code NODE}, {@code AKEY}, {@code AGGS} (float64 M x N), {@code TMAP} (trade to
- * TMAT row), {@code CTOT} (a USD book's per-trade-currency totals of every node, float64, {@link CurrencyTotals}; optional),
+ * TMAT row), {@code CTOT} (a USD book's per-trade-currency totals of every node, float64, {@link CurrencyTotals}; optional), {@code CELL} (format 3:
+ * the split positions' count and the cell columns, {@link Cells}),
  * {@code PMAT} (float32 P x N, 64-byte aligned), {@code TMAT} (float32 Q x N, 64-byte aligned). Every section carries a CRC32C; the
  * small ones are checked on open, the matrices by {@link #verify}.
  */
 public final class VarHotFile {
 
     public static final int VERSION = 2;
+    /**
+     * The format of a date with cells (2.9.5, {@link Cells}): format 2 with the {@code CELL} section (the cell columns and the positions
+     * split at a cell's edge); its {@code BOOK} section holds the cells' runs beside the books'. A date without cells is still written as 2.
+     */
+    public static final int VERSION_CELLS = 3;
     public static final String SUFFIX = ".vhot";
     static final byte[] MAGIC = "DRSHVAR1".getBytes(StandardCharsets.US_ASCII);
     static final int HEADER = 256;
@@ -85,7 +91,8 @@ public final class VarHotFile {
     /** The date's content for {@link #write}: everything the book holds, in hierarchy order. */
     record Content(LocalDate businessDate, String scenarioSet, List<LocalDate> scenarioDates, String[] tradeIds, Columns trades,
             String[] positionIds, int[] posFrom, int[] posTo, Columns positions, Map<String, int[]> bookRange, Map<String, VarBook.Node> nodes,
-            Map<String, double[]> aggregates, int failed, String batchId, String digest, String meta, CurrencyTotals totals) {}
+            Map<String, double[]> aggregates, int failed, String batchId, String digest, String meta, CurrencyTotals totals,
+            List<String> cellColumns, int splitPositions) {}
 
     private VarHotFile() {}
 
@@ -124,6 +131,12 @@ public final class VarHotFile {
         small.put("TMAP", ints(memberRow));
         if (c.totals() != null) {
             small.put("CTOT", c.totals().write());
+        }
+        if (!c.cellColumns().isEmpty()) {
+            Out cell = new Out();
+            cell.putInt(c.splitPositions()).putInt(c.cellColumns().size());
+            c.cellColumns().forEach(cell::putString);
+            small.put("CELL", cell.bytes());
         }
         int sections = small.size() + 1 + (q > 0 ? 1 : 0);
         long at = HEADER + (long) sections * ENTRY;
@@ -217,7 +230,7 @@ public final class VarHotFile {
 
     private static ByteBuffer header(Content c, int n, int p, int t, int m, int q, int sections) {
         ByteBuffer h = ByteBuffer.allocate(HEADER).order(ByteOrder.LITTLE_ENDIAN);
-        h.put(MAGIC).putInt(VERSION).putInt(1 | (q > 0 ? 2 : 0));
+        h.put(MAGIC).putInt(c.cellColumns().isEmpty() ? VERSION : VERSION_CELLS).putInt(1 | (q > 0 ? 2 : 0));
         LocalDate d = c.businessDate();
         h.putInt(d.getYear() * 10_000 + d.getMonthValue() * 100 + d.getDayOfMonth());
         h.putInt(n).putInt(p).putInt(t).putInt(m).putInt(sections);
@@ -376,8 +389,8 @@ public final class VarHotFile {
             throw new IllegalArgumentException("not a VaR hot file");
         }
         int version = h.getInt();
-        if (version != VERSION) {
-            throw new IllegalArgumentException("hot file format " + version + ", this server reads " + VERSION);
+        if (version != VERSION && version != VERSION_CELLS) {
+            throw new IllegalArgumentException("hot file format " + version + ", this server reads " + VERSION + " and " + VERSION_CELLS);
         }
         h.getInt();
         int ymd = h.getInt();
@@ -473,6 +486,8 @@ public final class VarHotFile {
         Map<String, double[]> agg = new java.util.concurrent.ConcurrentHashMap<>();
         int[] memberRow;
         CurrencyTotals totals;
+        List<String> cellColumns = new ArrayList<>();
+        int split = 0;
         try (FileChannel ch = FileChannel.open(file, StandardOpenOption.READ)) {
             h = header(read(ch, 0, HEADER));
             table = table(ch);
@@ -513,6 +528,13 @@ public final class VarHotFile {
                 memberRow[i] = tm.getInt();
             }
             totals = table.containsKey("CTOT") ? CurrencyTotals.read(section(ch, table, "CTOT"), h.width()) : null;
+            if (table.containsKey("CELL")) {
+                In cs = section(ch, table, "CELL");
+                split = cs.getInt();
+                for (int i = cs.getInt(); i > 0; i--) {
+                    cellColumns.add(cs.getString());
+                }
+            }
         }
         int[] posOf = new int[tids.length];
         for (int k = 0; k < pids.length; k++) {
@@ -533,7 +555,7 @@ public final class VarHotFile {
         Vectors store = new GroupedVectors(positions, trades, posOf, from, to, memberRow);
         VarBook.Hot hot = new VarBook.Hot(file, positions, trades, h.digest(), meta, h.writtenAt());
         return new VarBook(h.businessDate(), h.scenarioSet(), scen, store, tids, tcols, posOf, pids, from, to, pcols, nodes, bookRange, agg,
-                (int) h.failed(), loadMillis, hot, totals);
+                (int) h.failed(), loadMillis, hot, totals, cellColumns, split);
     }
 
     private static Map<String, VarBook.Node> readNodes(In in, Map<String, int[]> bookRange) {

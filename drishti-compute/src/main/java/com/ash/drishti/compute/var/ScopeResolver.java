@@ -61,14 +61,27 @@ public final class ScopeResolver {
     private static final int MAX_DEPTH = 8;
     private final VarBook book;
     private final Definitions defs;
+    /** The configured hierarchies' scope words (2.9.5): word to hierarchy id ({@code LL -> LL}). */
+    private final java.util.Map<String, String> words;
 
     public ScopeResolver(VarBook book, Definitions defs) {
+        this(book, defs, java.util.Map.of());
+    }
+
+    /** A resolver that also knows the configured hierarchies' words ({@code words}: word to hierarchy id). */
+    public ScopeResolver(VarBook book, Definitions defs, java.util.Map<String, String> words) {
         this.book = book;
         this.defs = defs;
+        this.words = words == null ? java.util.Map.of() : java.util.Map.copyOf(words);
+    }
+
+    /** The configured hierarchies' words this resolver knows. */
+    public java.util.Set<String> words() {
+        return words.keySet();
     }
 
     public Resolution resolve(String text) {
-        ScopeExpr e = ScopeExpr.parse(text);
+        ScopeExpr e = ScopeExpr.parse(text, words.keySet());
         List<String> unknown = new ArrayList<>();
         List<String> notes = new ArrayList<>();
         List<String> warnings = new ArrayList<>();
@@ -79,7 +92,7 @@ public final class ScopeResolver {
         if (e instanceof ScopeExpr.Ref r) {
             node = switch (r.word()) {
                 case "BANK", "LE", "DIV", "DESK", "BOOK", "NODE" -> nodeId(r);
-                default -> null;
+                default -> words.containsKey(r.word()) ? nodeId(r) : null;
             };
             if (r.word().equals("POS") && r.ids().size() == 1) {
                 position = book.positionIndexAnyCase(r.ids().get(0));
@@ -183,7 +196,7 @@ public final class ScopeResolver {
                     return OrdinalSet.empty();
                 }
                 notes.add("portfolio " + r.arg() + " = " + def.get());
-                return eval(ScopeExpr.parse(def.get()), unknown, notes, warnings, depth + 1);
+                return eval(ScopeExpr.parse(def.get(), words.keySet()), unknown, notes, warnings, depth + 1);
             }
             case "BASKET" -> {
                 Optional<String> def = defs.basket(r.arg());
@@ -192,7 +205,7 @@ public final class ScopeResolver {
                     return OrdinalSet.empty();
                 }
                 notes.add("basket " + r.arg());
-                return eval(ScopeExpr.parse(def.get()), unknown, notes, warnings, depth + 1);
+                return eval(ScopeExpr.parse(def.get(), words.keySet()), unknown, notes, warnings, depth + 1);
             }
             case "CAPTURE" -> {
                 Optional<String> def = defs.capture(r.arg());
@@ -201,9 +214,20 @@ public final class ScopeResolver {
                     return OrdinalSet.empty();
                 }
                 notes.add("the members of capture " + r.arg());
-                return eval(ScopeExpr.parse(def.get()), unknown, notes, warnings, depth + 1);
+                return eval(ScopeExpr.parse(def.get(), words.keySet()), unknown, notes, warnings, depth + 1);
             }
-            default -> throw new IllegalArgumentException(r.word() + ": is not a scope of VaR (NSET and GROUP are the exposure engine's)");
+            default -> {
+                if (words.containsKey(r.word())) {                           // a configured hierarchy's node (2.9.5)
+                    String id = nodeId(r);
+                    if (id == null) {
+                        unknown.add(r.toString());
+                        return OrdinalSet.empty();
+                    }
+                    notes.add("node " + id);
+                    return book.node(id).members();
+                }
+                throw new IllegalArgumentException(r.word() + ": is not a scope of VaR (NSET and GROUP are the exposure engine's)");
+            }
         }
     }
 
@@ -246,12 +270,23 @@ public final class ScopeResolver {
 
     /**
      * The node a reference names: {@code DESK:RATES}, {@code DESK:DESK-RATES} and {@code NODE:MGMT~DESK-RATES} are the same node; a
-     * legal entity is in the LEGAL hierarchy, everything else in MGMT.
+     * legal entity is in the LEGAL hierarchy, everything else in MGMT; a configured hierarchy's word names a node of it ({@code LL:LL-0042}
+     * is {@code LL~LL-0042}, {@code LL:0042} too, as {@code DESK:RATES} is {@code DESK-RATES}).
      */
     public String nodeId(ScopeExpr.Ref r) {
         String a = r.arg().toUpperCase(Locale.ROOT);
+        String h = words.get(r.word());
+        if (h != null) {
+            for (String t : List.of(h + "~" + a, h + "~" + r.word() + "-" + a)) {
+                if (book.node(t) != null) {
+                    return t;
+                }
+            }
+            return null;
+        }
         List<String> tries = switch (r.word()) {
-            case "BANK" -> List.of("MGMT~BANK");
+            case "BANK" -> book.node("MGMT~BANK") != null || book.hierarchies().isEmpty() ? List.of("MGMT~BANK")
+                    : List.of(book.root(book.hierarchies().get(0)).id());
             case "NODE" -> List.of(r.arg(), a);
             case "LE" -> List.of("LEGAL~" + a, "LEGAL~LE-" + a);
             case "DIV" -> List.of("MGMT~" + a, "MGMT~DIV-" + a);

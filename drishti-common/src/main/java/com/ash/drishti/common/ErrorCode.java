@@ -146,6 +146,21 @@ public enum ErrorCode {
      * in another form or grain than the morning run's is refused and listed).
      */
     VAR_INPUT_MIXED("DRS-5210", 422),
+    /**
+     * VaR and exposure (2.9.5): a hierarchy built from columns ({@code drishti.var.hierarchies}, a pack's {@code hierarchies:}) names a
+     * level column a source does not keep (the date is refused, naming the source kind and the column), or a row leaves it empty (the
+     * row is refused and listed, never placed under a guessed node).
+     */
+    VAR_HIERARCHY_COLUMN("DRS-5211", 422),
+    /** VaR (2.9.5): a {@code var-limit} row names a node no hierarchy of the date has: a warning in the provenance, the row unused. */
+    VAR_LIMIT_UNKNOWN_NODE("DRS-5212", 422),
+    /**
+     * VaR (2.9.5): the hierarchies' configuration is not valid (a duplicate id, a reserved or duplicate scope word, no levels, a column
+     * hierarchy with {@code ids: leaf} whose value has two parents on the date): refused at start, or the date is refused, saying why.
+     */
+    VAR_HIERARCHY_INVALID("DRS-5213", 422),
+    /** VaR (2.9.5): a scope names a hierarchy or a node of one that the date does not have ({@code LL:<letter>}, {@code NODE:LL~...}). */
+    VAR_HIERARCHY_UNKNOWN("DRS-5214", 404),
     /** Exposure: a bad scope word or parameter ({@code q}, {@code collateral}, {@code date} not a grid date, {@code by}, {@code run}). */
     EXPOSURE_BAD_PARAMETER("DRS-5440", 400),
     /**

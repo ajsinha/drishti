@@ -192,6 +192,31 @@ public final class Columns {
         return out;
     }
 
+    /** These columns with some rows of one text column replaced ({@code values[row]}, null: the row unchanged). */
+    Columns withTexts(String column, String[] values) {
+        Columns out = new Columns(rows);
+        out.codes.putAll(codes);
+        out.dicts.putAll(dicts);
+        out.numbers.putAll(numbers);
+        int[] c = java.util.Arrays.copyOf(codes.get(column), rows);
+        List<String> dict = new ArrayList<>(java.util.Arrays.asList(dicts.get(column)));
+        Map<String, Integer> pool = new HashMap<>();
+        for (int k = 0; k < dict.size(); k++) {
+            pool.putIfAbsent(dict.get(k), k);
+        }
+        for (int r = 0; r < rows; r++) {
+            if (values[r] != null) {
+                c[r] = pool.computeIfAbsent(values[r], x -> {
+                    dict.add(x);
+                    return dict.size() - 1;
+                });
+            }
+        }
+        out.codes.put(column, c);
+        out.dicts.put(column, dict.toArray(new String[0]));
+        return out;
+    }
+
     /** Row {@code row}'s texts in {@link #textColumns()} order. */
     public String[] textsOf(int row) {
         List<String> t = textColumns();

@@ -137,19 +137,26 @@ public final class VarBook {
     private final VarBook morning;
     /** The intraday layer, or null (a morning book). */
     private final VarIntraday layer;
+    /** The cell columns (VAR_GUIDE.md section 25, {@link Cells}): empty when the date has no column hierarchy (the book is the unit). */
+    private final List<String> cellColumns;
+    /** Positions split at a cell's edge (decision D4), counted. */
+    private final int splitPositions;
 
     VarBook(LocalDate businessDate, String scenarioSet, List<LocalDate> scenarioDates, Vectors store, String[] tradeIds, Columns trades,
             int[] positionOf, String[] positionIds, int[] posFrom, int[] posTo, Columns positions, Map<String, Node> nodes,
-            Map<String, int[]> bookRange, Map<String, double[]> aggregates, int failed, long loadMillis, Hot hot, CurrencyTotals totals) {
+            Map<String, int[]> bookRange, Map<String, double[]> aggregates, int failed, long loadMillis, Hot hot, CurrencyTotals totals,
+            List<String> cellColumns, int splitPositions) {
         this(businessDate, scenarioSet, scenarioDates, store, tradeIds, trades, positionOf, positionIds, posFrom, posTo, positions, nodes, bookRange,
-                aggregates, failed, loadMillis, hot, totals, null, null);
+                aggregates, failed, loadMillis, hot, totals, null, null, cellColumns, splitPositions);
     }
 
     /** A book with an intraday layer over {@code morning} ({@link VarIntraday}): its cancelled trades are in no index. */
     VarBook(LocalDate businessDate, String scenarioSet, List<LocalDate> scenarioDates, Vectors store, String[] tradeIds, Columns trades,
             int[] positionOf, String[] positionIds, int[] posFrom, int[] posTo, Columns positions, Map<String, Node> nodes,
             Map<String, int[]> bookRange, Map<String, double[]> aggregates, int failed, long loadMillis, Hot hot, CurrencyTotals totals,
-            VarBook morning, VarIntraday layer) {
+            VarBook morning, VarIntraday layer, List<String> cellColumns, int splitPositions) {
+        this.cellColumns = cellColumns == null ? List.of() : List.copyOf(cellColumns);
+        this.splitPositions = splitPositions;
         this.totals = totals;
         this.morning = morning == null ? this : morning;
         this.layer = layer;
@@ -186,6 +193,57 @@ public final class VarBook {
 
     public LocalDate businessDate() {
         return businessDate;
+    }
+
+    /** The cell columns ({@link Cells}): every level column of the column hierarchies but the book; empty when there are none. */
+    public List<String> cellColumns() {
+        return cellColumns;
+    }
+
+    /** The positions whose trades sat in two cells and were split, one part per cell ({@code <position>@<values>}). */
+    public int splitPositions() {
+        return splitPositions;
+    }
+
+    /**
+     * The cell a trade with these texts (in {@link #trades()}' text column order) is in, or its book when the date has no cells; null
+     * without a book.
+     */
+    public String cellOf(String[] texts) {
+        String book = texts[TRADE_TEXTS.indexOf("TT_BOOK")];
+        if (book == null || cellColumns.isEmpty()) {
+            return book;
+        }
+        List<String> cols = trades.textColumns();
+        List<String> values = new ArrayList<>(cellColumns.size());
+        for (String c : cellColumns) {
+            int i = cols.indexOf(c);
+            values.add(i < 0 || i >= texts.length ? null : texts[i]);
+        }
+        return Cells.name(book, values);
+    }
+
+    /**
+     * The id of the position a trade with these texts belongs to: its {@code POSITION_ID}, or the part of it in the trade's cell when the
+     * position was split (decision D4).
+     */
+    public String positionIdFor(String pid, String[] texts) {
+        if (cellColumns.isEmpty() || pid == null || positionIndex(pid) >= 0) {
+            return pid;
+        }
+        List<String> cols = trades.textColumns();
+        List<String> values = new ArrayList<>(cellColumns.size());
+        for (String c : cellColumns) {
+            int i = cols.indexOf(c);
+            values.add(i < 0 || i >= texts.length ? null : texts[i]);
+        }
+        String part = pid + "@" + Cells.suffix(cellColumns, values);
+        return positionIndex(part) >= 0 ? part : pid;
+    }
+
+    /** The hierarchies the date has (their roots' hierarchy ids, in order). */
+    public List<String> hierarchies() {
+        return nodes.values().stream().filter(n -> n.parent() == null).map(Node::hierarchy).distinct().toList();
     }
 
     /**
@@ -497,6 +555,15 @@ public final class VarBook {
         return layer == null || a == null ? a : layer.withAdded(nodeOrBook, a);
     }
 
+    /** The root the planner walks: MGMT's (book-based, the widest aggregates), else the first hierarchy's. */
+    private Node primaryRoot() {
+        Node r = root("MGMT");
+        if (r != null) {
+            return r;
+        }
+        return nodes.values().stream().filter(n -> n.parent() == null).findFirst().orElse(null);
+    }
+
     /** The root of a hierarchy ({@code MGMT~BANK}), or null. */
     public Node root(String hierarchy) {
         return nodes.values().stream().filter(n -> n.hierarchy().equals(hierarchy) && n.parent() == null).findFirst().orElse(null);
@@ -526,7 +593,7 @@ public final class VarBook {
 
     private double[] plannedVector(OrdinalSet set, ParallelSums sums) {
         double[] acc = new double[store.width()];
-        Node root = root("MGMT");
+        Node root = primaryRoot();
         if (root == null || set.isEmpty()) {
             return set.isEmpty() ? acc : sums.sum(store, set);
         }
@@ -654,7 +721,10 @@ public final class VarBook {
         private final HotTarget target;
         private final java.util.concurrent.locks.ReentrantLock lock = new java.util.concurrent.locks.ReentrantLock();
         private final List<String> ids = new ArrayList<>();
-        private final Columns.Builder tradeCols = new Columns.Builder(TRADE_TEXTS, TRADE_NUMBERS);
+        private Columns.Builder tradeCols = new Columns.Builder(TRADE_TEXTS, TRADE_NUMBERS);
+        private List<String> cellColumns = List.of();
+        private List<HierarchySpec> columnSpecs = List.of();
+        private Map<String, Double> columnLimits = Map.of();
         private final java.util.Set<String> seen = new java.util.HashSet<>();
         private final List<String[]> nodeRows = new ArrayList<>();
         private final Map<String, List<String>> nodeBooks = new HashMap<>();
@@ -689,6 +759,34 @@ public final class VarBook {
 
         public int width() {
             return scenarioDates.size();
+        }
+
+        /**
+         * The cell columns ({@link Cells}): the trades carry them as text columns after {@link #TRADE_TEXTS}, sort by them inside a book,
+         * and are summed per cell. Set before the first row (a converted book takes its USD book's).
+         */
+        public Builder cells(List<String> columns) {
+            if (!ids.isEmpty()) {
+                throw new IllegalStateException("the cell columns are set before the first trade");
+            }
+            this.cellColumns = List.copyOf(columns);
+            this.tradeCols = new Columns.Builder(Cells.textColumns(cellColumns), TRADE_NUMBERS);
+            return this;
+        }
+
+        /**
+         * The hierarchies built from the trades' columns ({@link HierarchySpec#columns()}): their nodes are derived when the date is built,
+         * with the VaR limits of {@code limits} (node id to USD; a node without one has none). Sets the cell columns too.
+         */
+        public Builder columnHierarchies(List<HierarchySpec> specs, Map<String, Double> limits) {
+            this.columnSpecs = specs.stream().filter(HierarchySpec::columns).toList();
+            this.columnLimits = limits == null ? Map.of() : Map.copyOf(limits);
+            return cells(Cells.columns(columnSpecs));
+        }
+
+        /** The trades' text columns, in the order {@link #trade} takes them: {@link #TRADE_TEXTS}, then the cell columns. */
+        public List<String> textColumns() {
+            return tradeCols.textColumns();
         }
 
         /** The run the vectors come from (written in the hot file's header). */
@@ -783,33 +881,16 @@ public final class VarBook {
             for (int i = 0; i < n; i++) {
                 tids[i] = ids.get(order[i]);
             }
-            // positions: runs of POSITION_ID in the sorted trades (a trade without one is a position of its own)
-            List<String> pids = new ArrayList<>();
-            List<int[]> runs = new ArrayList<>();
-            int[] posOf = new int[n];
-            Map<String, int[]> books = new LinkedHashMap<>();
-            String prevPos = null;
-            String prevBook = null;
-            for (int i = 0; i < n; i++) {
-                String p = tcols.text("POSITION_ID", i);
-                String pid = p == null ? "POS-" + tids[i] : p;
-                if (!pid.equals(prevPos)) {
-                    pids.add(pid);
-                    runs.add(new int[] {i, i + 1});
-                    prevPos = pid;
-                } else {
-                    runs.get(runs.size() - 1)[1] = i + 1;
-                }
-                posOf[i] = pids.size() - 1;
-                String book = tcols.text("TT_BOOK", i);
-                if (book != null) {
-                    if (!book.equals(prevBook)) {
-                        books.putIfAbsent(book, new int[] {i, i + 1});
-                        prevBook = book;
-                    }
-                    books.get(book)[1] = i + 1;
-                }
+            // positions: runs of POSITION_ID in the sorted trades (a trade without one is a position of its own), never across a cell
+            Cells.Layout lay = Cells.layout(tcols, tids, cellColumns);
+            if (lay.renamed() != null) {
+                tcols = tcols.withTexts("POSITION_ID", lay.renamed());
             }
+            List<String> pids = lay.positionIds();
+            List<int[]> runs = lay.runs();
+            int[] posOf = lay.positionOf();
+            Map<String, int[]> books = new LinkedHashMap<>(lay.books());
+            books.putAll(lay.cells());                                   // a cell is summed as a book is (its own aggregate)
             Columns.Builder pc = new Columns.Builder(POSITION_TEXTS, POSITION_NUMBERS);
             int[] from = new int[pids.size()];
             int[] to = new int[pids.size()];
@@ -818,7 +899,13 @@ public final class VarBook {
                 to[k] = runs.get(k)[1];
                 derivePosition(pc, tcols, from[k], to[k]);
             }
-            Map<String, Node> nodes = nodes(nodeRows, nodeBooks, nodeLimits, books);
+            List<String[]> rows = new ArrayList<>(nodeRows);
+            Map<String, List<String>> units = new HashMap<>(nodeBooks);
+            Map<String, Double> limits = new HashMap<>(nodeLimits);
+            for (HierarchySpec s : columnSpecs) {
+                Cells.derive(s, tcols, cellColumns.isEmpty() ? lay.books() : lay.cells(), columnLimits, rows, units, limits);
+            }
+            Map<String, Node> nodes = nodes(rows, units, limits, books);
             String[] positionIds = pids.toArray(new String[0]);
             Columns pcols = pc.build();
             if (spill == null) {
@@ -827,15 +914,15 @@ public final class VarBook {
                 CurrencyTotals ct = currencyRates == null ? null : CurrencyTotals.build(store, tcols, books, nodes, currencyRates);
                 long ms = (System.nanoTime() - t0) / 1_000_000;
                 return new VarBook(businessDate, scenarioSet, scenarioDates, store, tids, tcols, posOf, positionIds, from, to, pcols, nodes, books,
-                        agg, failed, ms, null, ct);
+                        agg, failed, ms, null, ct, cellColumns, lay.split());
             }
             try {
                 MappedMatrix lake = spill.finish();
-                Vectors rows = sorted ? lake : new PermutedVectors(lake, order);
-                Map<String, double[]> agg = aggregates(rows, books, nodes, sums);
-                CurrencyTotals ct = currencyRates == null ? null : CurrencyTotals.build(rows, tcols, books, nodes, currencyRates);
+                Vectors vrows = sorted ? lake : new PermutedVectors(lake, order);
+                Map<String, double[]> agg = aggregates(vrows, books, nodes, sums);
+                CurrencyTotals ct = currencyRates == null ? null : CurrencyTotals.build(vrows, tcols, books, nodes, currencyRates);
                 VarHotFile.write(target.part(), new VarHotFile.Content(businessDate, scenarioSet, scenarioDates, tids, tcols, positionIds, from,
-                        to, pcols, books, nodes, agg, failed, batchId, target.digest(), meta, ct), rows, sums);
+                        to, pcols, books, nodes, agg, failed, batchId, target.digest(), meta, ct, cellColumns, lay.split()), vrows, sums);
                 Files.move(target.part(), target.file(), StandardCopyOption.REPLACE_EXISTING, StandardCopyOption.ATOMIC_MOVE);
             } catch (IOException e) {
                 throw new UncheckedIOException("the hot file of " + businessDate + " could not be written: " + e.getMessage(), e);
@@ -955,9 +1042,12 @@ public final class VarBook {
             return acc;
         }
 
-        /** Rows ordered by legal entity, desk, book, position and trade id. */
+        /** Rows ordered by legal entity, desk, book, the cell columns, position and trade id. */
         private int[] sortOrder(Columns c, int n) {
-            String[] keys = {"LEGAL_ENTITY", "DESK", "TT_BOOK", "POSITION_ID"};
+            List<String> sortKeys = new ArrayList<>(Cells.SORTED);
+            sortKeys.addAll(Cells.sortExtras(cellColumns));
+            sortKeys.add("POSITION_ID");
+            String[] keys = sortKeys.toArray(new String[0]);
             int[] idx = new int[n];
             for (int i = 0; i < n; i++) {
                 idx[i] = i;

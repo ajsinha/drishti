@@ -16,6 +16,7 @@
 package com.ash.drishti.compute.var;
 
 import com.ash.drishti.compute.vector.ParallelSums;
+import java.util.List;
 
 /**
  * A business date's book in another reporting currency (VAR_GUIDE.md section 15.10), built from the date's USD book: every trade's
@@ -40,7 +41,9 @@ public final class CurrencyBook {
             throw new IllegalArgumentException(rep.currency() + " has " + rep.scenarios().length + " scenario rates; the date has " + w + " scenarios");
         }
         Columns tc = usd.trades();
-        String[] texts = new String[VarBook.TRADE_TEXTS.size()];
+        target.cells(usd.cellColumns());                                  // the same cells, so the same order and nodes' members
+        List<String> textCols = target.textColumns();
+        String[] texts = new String[textCols.size()];
         double[] numbers = new double[VarBook.TRADE_NUMBERS.size()];
         int pvAt = VarBook.TRADE_NUMBERS.indexOf("PV");
         double[] v = new double[w];
@@ -48,7 +51,7 @@ public final class CurrencyBook {
         int withoutPv = 0;
         for (int o = 0; o < usd.tradeCount(); o++) {
             for (int c = 0; c < texts.length; c++) {
-                String col = VarBook.TRADE_TEXTS.get(c);
+                String col = textCols.get(c);
                 texts[c] = tc.has(col) ? tc.text(col, o) : null;
             }
             for (int c = 0; c < numbers.length; c++) {
