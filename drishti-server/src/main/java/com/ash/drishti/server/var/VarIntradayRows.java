@@ -39,6 +39,7 @@ final class VarIntradayRows {
 
     private final Map<String, Row> latest = new LinkedHashMap<>();
     private final Set<String> batches = new LinkedHashSet<>();
+    private final Set<String> parts = new LinkedHashSet<>();
     private int older;
     private int beforeMorning;
     private final List<String> rejections = new ArrayList<>();
@@ -82,6 +83,15 @@ final class VarIntradayRows {
         batches.addAll(ids);
     }
 
+    /** Batch parts met ({@code <kind>|<BATCH_ID>}): what the next signal's read skips. */
+    synchronized void metParts(java.util.Collection<String> ids) {
+        parts.addAll(ids);
+    }
+
+    synchronized Set<String> parts() {
+        return new LinkedHashSet<>(parts);
+    }
+
     /** Offers a row: kept when it is newer than the trade's held one (by {@code COMPUTED_AT}). True when kept. */
     synchronized boolean offer(Row r) {
         batches.add(r.batchId());
@@ -112,6 +122,7 @@ final class VarIntradayRows {
         VarIntradayRows c = new VarIntradayRows();
         c.latest.putAll(latest);
         c.batches.addAll(batches);
+        c.parts.addAll(parts);
         c.older = older;
         c.rejections.addAll(rejections);
         c.beforeMorning = beforeMorning;

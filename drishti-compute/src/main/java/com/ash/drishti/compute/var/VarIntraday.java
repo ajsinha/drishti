@@ -236,7 +236,7 @@ public final class VarIntraday {
             boolean live = o >= 0 && !l.cancelled.get(o);
             if (u.pnl() == null) {                                     // a cancel: the trade's P&L removed
                 if (live) {
-                    l.change(o, null, Double.NaN, Double.NaN, null, exact, keysOfBook, fx, w);
+                    l.change(o, null, Double.NaN, Double.NaN, null, null, exact, keysOfBook, fx, w);
                     l.cancelled.set(o);
                     l.ordinalOf.put(u.tradeId(), o);
                 }
@@ -246,14 +246,14 @@ public final class VarIntraday {
             boolean moved = o >= 0 && (!eq(oldTexts[idxBook], u.texts()[idxBook]) || !eq(oldTexts[idxPos], u.texts()[idxPos]));
             if (o >= 0 && !moved) {                                    // amended in place (or revived after a cancel)
                 l.cancelled.clear(o);
-                l.change(o, u.pnl(), u.pv(), u.pvUsd(), u.pnlUsd(), exact, keysOfBook, fx, w);
+                l.change(o, u.pnl(), u.pv(), u.pvUsd(), u.pnlUsd(), u.texts(), exact, keysOfBook, fx, w);
                 l.setTexts(o, u.texts(), numbers(u, idxPv));
                 l.ordinalOf.put(u.tradeId(), o);
                 amended++;
                 continue;
             }
             if (live) {                                                 // moved to another book or position: the old one cancelled
-                l.change(o, null, Double.NaN, Double.NaN, null, exact, keysOfBook, fx, w);
+                l.change(o, null, Double.NaN, Double.NaN, null, null, exact, keysOfBook, fx, w);
                 l.cancelled.set(o);
             }
             int n = t0(l) + l.addedIds.size();                          // a new ordinal, after the morning's
@@ -273,7 +273,7 @@ public final class VarIntraday {
             l.addedPosition.add(p);
             l.extras.computeIfAbsent(p, x -> new ArrayList<>()).add(n);
             l.ordinalOf.put(u.tradeId(), n);
-            l.change(n, u.pnl(), u.pv(), u.pvUsd(), u.pnlUsd(), exact, keysOfBook, fx, w);
+            l.change(n, u.pnl(), u.pv(), u.pvUsd(), u.pnlUsd(), u.texts(), exact, keysOfBook, fx, w);
         }
         List<String> bs = new ArrayList<>(l.info.batches());
         for (String b : batches) {
@@ -337,8 +337,8 @@ public final class VarIntraday {
      * Trade {@code o}'s P&amp;L becomes {@code pnl} (null: zero, cancelled): the difference goes into its book's and nodes' aggregates,
      * its row, and (a USD book) the per-trade-currency totals.
      */
-    private void change(int o, double[] pnl, double pv, double pvUsd, double[] pnlUsd, Morning exact, Map<String, List<String>> keysOfBook,
-            Function<String, ScenarioFx.Rates> fx, int w) {
+    private void change(int o, double[] pnl, double pv, double pvUsd, double[] pnlUsd, String[] newTexts, Morning exact,
+            Map<String, List<String>> keysOfBook, Function<String, ScenarioFx.Rates> fx, int w) {
         boolean base = o < t0;
         double[] old = current.containsKey(o) ? current.get(o) : base ? exact.row(o) : new double[w];
         double[] now = pnl == null ? new double[w] : pnl.clone();
@@ -375,7 +375,7 @@ public final class VarIntraday {
             double oldPv = pvs.containsKey(o) ? pvs.get(o)[1] : base ? morning.trades().number("PV", o) : Double.NaN;
             String oldCcy = currencyOf(textsOf(o), fx);
             double[] nowUsd = pnlUsd == null ? (pnl == null ? null : now) : pnlUsd;
-            String newCcy = oldCcy;
+            String newCcy = newTexts == null ? oldCcy : currencyOf(newTexts, fx);   // a trade may change form (scenario PVs, a P&L vector)
             for (String k : keys) {
                 if (morning.nodes().containsKey(k)) {
                     addNative(k, oldCcy, oldUsd, oldPv, fx, -1, w);

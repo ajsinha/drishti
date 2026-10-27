@@ -23,7 +23,11 @@ column with its tier, and the computed kind var-result."""
 from __future__ import annotations
 
 from _tut import OUT
-from _var import open_var, painted, start_servers, tab  # noqa: F401 - start_servers is the driver's hook
+import subprocess
+import sys
+
+from _var import LAKE, open_var, painted, server, start_servers, tab  # noqa: F401 - start_servers is the driver's hook
+from shotlib import ROOT
 from shotlib import Ctx, register
 
 shot = register("t25", OUT / "t25")
@@ -166,3 +170,21 @@ def reporting_currency(c: Ctx):
     c.page.wait_for_timeout(600)
     c.save("12-reporting-currency.jpg")
     c.page.evaluate("sessionStorage.removeItem('drishti.var.ccy')")
+
+
+@shot("13-intraday.jpg")
+def intraday(c: Ctx):
+    """Step 13: the stand-in pricing system's intraday batches (tools/pvgen/intraday.py) appended to the shot lake and signalled; the
+    bank's badge. Last: it changes the lake the other pictures read."""
+    r = subprocess.run([sys.executable, str(ROOT / "tools" / "pvgen" / "intraday.py"), "--batches", "3", "--trades-per-batch", "10",
+                        "--out", str(LAKE[0].parent / "pvgen"), "--lake", str(LAKE[0]), "--server", server()],
+                       capture_output=True, text=True, cwd=ROOT, timeout=600)
+    if r.returncode:
+        raise RuntimeError("intraday.py failed: " + (r.stderr or r.stdout)[-600:])
+    open_var(c, "/var?scope=BANK")
+    painted(c, "BANK")
+    c.until("(document.querySelector('[data-vx-intraday]') || {}).textContent && "
+            "document.querySelector('[data-vx-intraday]').textContent.indexOf('intraday') >= 0", 60)
+    c.page.locator("[data-vx-intraday]").hover()
+    c.page.wait_for_timeout(800)
+    c.save("13-intraday.jpg")

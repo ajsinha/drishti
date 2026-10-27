@@ -179,6 +179,7 @@ final class VarLoader {
         VarProperties.Kinds k = props.kinds();
         List<String> columns = VarIntake.columns(router.columnar(k.vector()), pr);
         List<String> pvColumns = VarIntake.columns(router.columnar(k.scenarioPv()), pr, VarIntake.PV_COLUMNS);
+        String unmarked = unmarked(columns, pvColumns);
         VarIntake intake = new VarIntake(b, pr, date, columns.subList(1, columns.size())).scenarioSet(setId);
         boolean read;
         boolean readPv;
@@ -190,7 +191,8 @@ final class VarLoader {
             throw new DrishtiException(ErrorCode.VAR_CAPACITY, e.getMessage() + ": the engine has no room for this date now; raise "
                     + "drishti.var.memory-budget-mb or the server's heap, or keep fewer dates loaded (drishti.var.hot-dates)");
         } catch (VarBook.DuplicateTrade e) {
-            throw new DrishtiException(ErrorCode.VAR_DUPLICATE_TRADE, "the P&L vectors of " + date + " are not loaded: " + e.getMessage());
+            throw new DrishtiException(ErrorCode.VAR_DUPLICATE_TRADE, "the P&L vectors of " + date + " are not loaded: " + e.getMessage()
+                    + (unmarked == null ? "" : "; " + unmarked));
         } catch (DrishtiException e) {
             throw e;
         } catch (Exception e) {
@@ -271,6 +273,7 @@ final class VarLoader {
     VarDate withIntraday(VarDate vd, VarIntake intake, List<LocalDate> days) {
         VarIntradayRows state = new VarIntradayRows().morning(intake.morningAt(), intake.summary().batchIds());
         state.met(intake.intradayBatches());
+        state.metParts(intake.intradayParts());
         state.rejected(intake.intradayRejections());
         for (VarIntradayRows.Row r : intake.intraday().rows()) {
             state.offer(r);
@@ -354,6 +357,35 @@ final class VarLoader {
      * The intraday rows of a loaded date (both forms), the batches in {@code applied} skipped: what a data-load signal of an intraday
      * batch brings (VAR_GUIDE.md section 8.4). Reads the date's rows once; keeps only the latest update per trade.
      */
+    /**
+     * Why intraday rows cannot be told from the morning run's, or null: the connector reads its promoted columns only, and one generated
+     * from the pack's template before 2.9.4 ({@code config/connectors/risk-store.yaml}, never overwritten) does not promote
+     * {@code RUN_KIND} and {@code COMPUTED_AT}. Logged once; added to a duplicate trade's error (an intraday row read as a second
+     * morning row).
+     */
+    private String unmarked(List<String> columns, List<String> pvColumns) {
+        VarProperties.Kinds k = props.kinds();
+        List<String> missing = new ArrayList<>();
+        if (!router.columnar(k.vector()).isEmpty() && !columns.containsAll(List.of("RUN_KIND", "COMPUTED_AT"))) {
+            missing.add("layout." + k.vector() + ".columns");
+        }
+        if (!router.columnar(k.scenarioPv()).isEmpty() && !pvColumns.containsAll(List.of("RUN_KIND", "COMPUTED_AT"))) {
+            missing.add("layout." + k.scenarioPv() + ".columns");
+        }
+        if (missing.isEmpty()) {
+            return null;
+        }
+        String why = "the connector does not promote RUN_KIND and COMPUTED_AT (" + String.join(", ", missing) + "), so intraday updates "
+                + "(VAR_GUIDE.md section 8.4) cannot be told from the morning run: a connector file written from the pack's template before "
+                + "2.9.4 (config/connectors/<connector>.yaml is never overwritten) needs both added to those settings";
+        if (UNMARKED_SAID.compareAndSet(false, true)) {
+            org.slf4j.LoggerFactory.getLogger(VarLoader.class).warn("VaR: {}", why);
+        }
+        return why;
+    }
+
+    private static final java.util.concurrent.atomic.AtomicBoolean UNMARKED_SAID = new java.util.concurrent.atomic.AtomicBoolean();
+
     VarIntake readIntraday(LocalDate date, VarBook morning, java.util.Set<String> applied) {
         VarProperties.Kinds k = props.kinds();
         AsOf asOf = AsOf.of(date);
@@ -362,6 +394,7 @@ final class VarLoader {
         VarBook.Builder none = new VarBook.Builder(date, morning.scenarioSet(), days, 1, Long.MAX_VALUE);   // never given a row
         List<String> columns = VarIntake.columns(router.columnar(k.vector()), pr);
         List<String> pvColumns = VarIntake.columns(router.columnar(k.scenarioPv()), pr, VarIntake.PV_COLUMNS);
+        unmarked(columns, pvColumns);
         VarIntake intake = new VarIntake(none, pr, date, columns.subList(1, columns.size())).scenarioSet(morning.scenarioSet()).intradayOnly(applied);
         try {
             router.vectors(k.vector(), "PNL", columns, asOf, (id, values, len, row) -> intake.row(id, values, len, row));

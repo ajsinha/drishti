@@ -61,6 +61,8 @@ storage:
   - REPORTING_CCY
   - SCENARIO_SET_ID
   - BATCH_ID
+  - RUN_KIND
+  - COMPUTED_AT
   vectors:
   - PNL
   test-data:
@@ -77,7 +79,7 @@ fields:
   presence: required
   description: 'Trade: the trade it refers to'
   example: MX-20000274
-  pattern: ^(MX|CLY)-\d+$
+  pattern: ^((MX|CLY)-)?\d+$
   link: trade
 - name: SECURITY_ID
   type: id
@@ -233,7 +235,7 @@ fields:
 - name: COMPUTED_AT
   type: timestamp
   presence: required
-  example: '2026-09-30T22:30:00Z'
+  example: '2026-09-30T06:00:00Z'
 - name: BATCH_ID
   type: id
   presence: required
@@ -355,6 +357,9 @@ validation:
   field: PNL
   same: every row of one business date
 notes: []
+notes:
+- 'Delivery format (product owner, 2026-10-27): JSONL: one JSON object per line, UTF-8, one row of this contract a line, exactly its fields (no other); a file is .jsonl, or .jsonl.gz. This is the contract a pricing system sends; tools/pvgen writes it (docs/guides/VAR_GUIDE.md section 15.12). The vector of the examples below is cut to its first 3 values: a row carries all 509.'
+- 'Example line, a full run''s row: {"VECTOR_ID":"PV-MX-20000300-HS-509","TRADE_ID":"MX-20000300","SECURITY_ID":null,"INSTRUMENT":"Commodity forward USD 2026-10","BUSINESS_DATE":"2026-09-30","SCENARIO_SET_ID":"HS-509","SOURCE_SYSTEM":"MUREX","TRADE_VERSIONS":"v1","TRADE_STATUS":"VALIDATED","MATURITY_DATE":"2026-10-07","LEGAL_ENTITY":"LE-NY","DIVISION":"DIV-MARKETS","DESK":"DESK-COMM","TT_BOOK":"BOOK-COMM-1","PORTFOLIO":"BOOK-COMM-1","STRATEGY":"","PRODUCT_GROUP":"Commodity","PRODUCT_TYPE":"CMD_FORWARD","CURRENCY":"USD","COUNTERPARTY":"CP-NORTHBRIDGE","DIRECTION":"LONG","QUANTITY":345225.0,"TAGS":"","REPORTING_CCY":"USD","PV":1033434,"PNL":[-268529,278946,184056],"STATUS":"ok","PRICER":"demo-factor-model","MODEL_VERSION":"demo-2","COMPUTED_AT":"2026-09-30T06:00:00Z","BATCH_ID":"B-2026-09-30-01","RESTATEMENT":0,"RUN_KIND":"FULL"}'
 review:
 - 'required inferred from 100% coverage in 2001 documents (1 samples and 2000 test-data documents (data/testdata/market-risk/pnl-vector/cob-2026-09-30.part-001.jsonl.gz,
   data/testdata/market-risk/pnl-vector/cob-2026-09-30.part-002.jsonl.gz, data/testdata/market-risk/pnl-vector/cob-2026-09-30.part-003.jsonl.gz)):

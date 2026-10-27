@@ -155,8 +155,10 @@ class Batch:
     """The demo risk batch of one business date: every live trade valued, each with its vector; the positions the rules derive."""
 
     def __init__(self, trades: dict[str, dict], desks: dict[str, dict], valuations: dict[str, dict], cob: str, rules: Rules, budget: int = 0,
-                 market: F.Market | None = None, fx: SFX.Fx | None = None):
+                 market: F.Market | None = None, fx: SFX.Fx | None = None, pv_systems=None):
         self.cob, self.market, self.rules, self.fx = cob, market or F.Market(), rules, fx
+        # the systems whose trades come as scenario PVs (the rest as P&L vectors); () makes every trade a P&L vector, as before 2.9.4
+        self.pv_systems = tuple(SFX.PV_SYSTEMS if pv_systems is None else pv_systems)
         self.desk_of_book: dict[str, str] = {}
         self.le_of_desk: dict[str, str] = {}
         for d in desks.values():
@@ -234,9 +236,9 @@ class Batch:
                          "TT_BOOK": book, "PORTFOLIO": t.get("PORTFOLIO") or book, "STRATEGY": t.get("STRATEGY") or "", "PRODUCT_GROUP": grp,
                          "PRODUCT_TYPE": t.get("PRODUCT_TYPE"), "CURRENCY": ccy, "COUNTERPARTY": t.get("COUNTERPARTY") or "",
                          "DIRECTION": "LONG" if q >= 0 else "SHORT", "QUANTITY": q, "TAGS": "|".join(self._tags(t))}
-                run = {"STATUS": "ok", "PRICER": "demo-factor-model", "MODEL_VERSION": "demo-2", "COMPUTED_AT": f"{self.cob}T22:30:00Z",
+                run = {"STATUS": "ok", "PRICER": "demo-factor-model", "MODEL_VERSION": "demo-2", "COMPUTED_AT": f"{self.cob}T06:00:00Z",   # the morning run; intraday updates come after it
                        "BATCH_ID": f"B-{self.cob}-01", "RESTATEMENT": 0, "RUN_KIND": "FULL"}   # a full run (VAR_GUIDE.md section 8.4)
-                if self.fx is not None and t.get("SOURCE_SYSTEM") in SFX.PV_SYSTEMS and self.fx.has(ccy):
+                if self.fx is not None and t.get("SOURCE_SYSTEM") in self.pv_systems and self.fx.has(ccy):
                     base, pvs = SFX.scenario_pvs(self.fx, ccy, float(round(pv)), vec)
                     self.engine_vectors[tid] = SFX.engine_pnl(self.fx, ccy, base, pvs)
                     self.pv_rows.append({"SCENARIO_PV_ID": f"SPV-{tid}-HS-509", **terms, "BASE_PV": base, "VALUATION_DATE": self.cob,

@@ -563,7 +563,7 @@ P&L vector of a trade
 | Dated by | `BUSINESS_DATE` |
 | Cadence | daily (due: to be confirmed) |
 | Storage | connector `risk-store` (plugin `delta`), table `<root>/risk/pnl-vector/` |
-| Columns | `TRADE_ID`, `SECURITY_ID`, `INSTRUMENT`, `LEGAL_ENTITY`, `DIVISION`, `DESK`, `TT_BOOK`, `PORTFOLIO`, `STRATEGY`, `PRODUCT_GROUP`, `PRODUCT_TYPE`, `CURRENCY`, `COUNTERPARTY`, `DIRECTION`, `QUANTITY`, `PV`, `TAGS`, `TRADE_STATUS`, `MATURITY_DATE`, `STATUS`, `REPORTING_CCY`, `SCENARIO_SET_ID`, `BATCH_ID` |
+| Columns | `TRADE_ID`, `SECURITY_ID`, `INSTRUMENT`, `LEGAL_ENTITY`, `DIVISION`, `DESK`, `TT_BOOK`, `PORTFOLIO`, `STRATEGY`, `PRODUCT_GROUP`, `PRODUCT_TYPE`, `CURRENCY`, `COUNTERPARTY`, `DIRECTION`, `QUANTITY`, `PV`, `TAGS`, `TRADE_STATUS`, `MATURITY_DATE`, `STATUS`, `REPORTING_CCY`, `SCENARIO_SET_ID`, `BATCH_ID`, `RUN_KIND`, `COMPUTED_AT` |
 | Vectors | `PNL` |
 | Test data | data/testdata/market-risk/pnl-vector |
 
@@ -572,7 +572,7 @@ P&L vector of a trade
 | Field | Type | Presence | Unit | Description | Example or values | Link |
 |---|---|---|---|---|---|---|
 | `VECTOR_ID` | id | required |  | The record's id (the business key) | `PV-MX-20000274-HS-509` (pattern `^PV-`) |  |
-| `TRADE_ID` | id | required |  | Trade: the trade it refers to | `MX-20000274` (pattern `^(MX\|CLY)-\d+$`) | `trade` |
+| `TRADE_ID` | id | required |  | Trade: the trade it refers to | `MX-20000274` (pattern `^((MX\|CLY)-)?\d+$`) | `trade` |
 | `SECURITY_ID` | id | optional |  | The security or exchange contract the trade is in (securities and listed products): Drishti keys the trade's position by book and security. | `SEC-WARRANT-USD-01` |  |
 | `INSTRUMENT` | text | required |  | — | `Equity warrant USD 2027-05` |  |
 | `BUSINESS_DATE` | date | required |  | — | `2026-09-30` |  |
@@ -600,7 +600,7 @@ P&L vector of a trade
 | `STATUS` | text | required |  | ok, proxied (priced by a proxy) or failed (no vector: counted, never taken as zero). | `ok` |  |
 | `PRICER` | text | required |  | — | `demo-factor-model` |  |
 | `MODEL_VERSION` | text | required |  | — | `demo-2` |  |
-| `COMPUTED_AT` | timestamp | required |  | — | `2026-09-30T22:30:00Z` |  |
+| `COMPUTED_AT` | timestamp | required |  | — | `2026-09-30T06:00:00Z` |  |
 | `BATCH_ID` | id | required |  | — | `B-2026-09-30-01` |  |
 | `RESTATEMENT` | integer | required |  | — | `0` |  |
 | `RUN_KIND` | text | optional |  | Which run the row belongs to (2.9.4, VAR_GUIDE.md section 8.4): FULL (or none) for the day's full run; INTRADAY for an update a pricing system sends during the day: only the changed trades, amended, new or cancelled, priced over the same scenario set; each intraday batch has its own BATCH_ID and a later COMPUTED_AT, and the latest COMPUTED_AT per trade wins. A cancel is an INTRADAY row whose TRADE_STATUS is not live (CANCELLED), its PVs empty. | `FULL`, `INTRADAY` |  |
@@ -624,6 +624,11 @@ P&L vector of a trade
 - link: field COUNTERPARTY; kind counterparty
 - enum: field DIRECTION; values `LONG`, `SHORT`
 - vector-length: field PNL; same every row of one business date
+
+**Notes**
+
+- Delivery format (product owner, 2026-10-27): JSONL: one JSON object per line, UTF-8, one row of this contract a line, exactly its fields (no other); a file is .jsonl, or .jsonl.gz. This is the contract a pricing system sends; tools/pvgen writes it (docs/guides/VAR_GUIDE.md section 15.12). The vector of the examples below is cut to its first 3 values: a row carries all 509.
+- Example line, a full run's row: {"VECTOR_ID":"PV-MX-20000300-HS-509","TRADE_ID":"MX-20000300","SECURITY_ID":null,"INSTRUMENT":"Commodity forward USD 2026-10","BUSINESS_DATE":"2026-09-30","SCENARIO_SET_ID":"HS-509","SOURCE_SYSTEM":"MUREX","TRADE_VERSIONS":"v1","TRADE_STATUS":"VALIDATED","MATURITY_DATE":"2026-10-07","LEGAL_ENTITY":"LE-NY","DIVISION":"DIV-MARKETS","DESK":"DESK-COMM","TT_BOOK":"BOOK-COMM-1","PORTFOLIO":"BOOK-COMM-1","STRATEGY":"","PRODUCT_GROUP":"Commodity","PRODUCT_TYPE":"CMD_FORWARD","CURRENCY":"USD","COUNTERPARTY":"CP-NORTHBRIDGE","DIRECTION":"LONG","QUANTITY":345225.0,"TAGS":"","REPORTING_CCY":"USD","PV":1033434,"PNL":[-268529,278946,184056],"STATUS":"ok","PRICER":"demo-factor-model","MODEL_VERSION":"demo-2","COMPUTED_AT":"2026-09-30T06:00:00Z","BATCH_ID":"B-2026-09-30-01","RESTATEMENT":0,"RUN_KIND":"FULL"}
 
 **To review (6)**
 
@@ -650,7 +655,7 @@ A trade's present value under each historical scenario and its base PV of the sa
 | Dated by | `BUSINESS_DATE` |
 | Cadence | daily (due: to be confirmed) |
 | Storage | connector `risk-store` (plugin `delta`), table `<root>/risk/scenario-pv/` |
-| Columns | `TRADE_ID`, `SECURITY_ID`, `INSTRUMENT`, `LEGAL_ENTITY`, `DIVISION`, `DESK`, `TT_BOOK`, `PORTFOLIO`, `STRATEGY`, `PRODUCT_GROUP`, `PRODUCT_TYPE`, `CURRENCY`, `COUNTERPARTY`, `DIRECTION`, `QUANTITY`, `BASE_PV`, `VALUATION_DATE`, `BASE_VALUATION_DATE`, `TAGS`, `TRADE_STATUS`, `MATURITY_DATE`, `STATUS`, `SCENARIO_SET_ID`, `BATCH_ID` |
+| Columns | `TRADE_ID`, `SECURITY_ID`, `INSTRUMENT`, `LEGAL_ENTITY`, `DIVISION`, `DESK`, `TT_BOOK`, `PORTFOLIO`, `STRATEGY`, `PRODUCT_GROUP`, `PRODUCT_TYPE`, `CURRENCY`, `COUNTERPARTY`, `DIRECTION`, `QUANTITY`, `BASE_PV`, `VALUATION_DATE`, `BASE_VALUATION_DATE`, `TAGS`, `TRADE_STATUS`, `MATURITY_DATE`, `STATUS`, `SCENARIO_SET_ID`, `BATCH_ID`, `RUN_KIND`, `COMPUTED_AT` |
 | Vectors | `SCENARIO_PV` |
 | Test data | data/testdata/market-risk/scenario-pv |
 
@@ -688,7 +693,7 @@ A trade's present value under each historical scenario and its base PV of the sa
 | `STATUS` | text | required |  | ok, proxied (priced by a proxy) or failed (no scenario PVs: counted, never taken as zero). | `ok` |  |
 | `PRICER` | text | required |  | — | `demo-factor-model` |  |
 | `MODEL_VERSION` | text | required |  | — | `demo-2` |  |
-| `COMPUTED_AT` | timestamp | required |  | — | `2026-09-30T22:30:00Z` |  |
+| `COMPUTED_AT` | timestamp | required |  | — | `2026-09-30T06:00:00Z` |  |
 | `BATCH_ID` | id | required |  | — | `B-2026-09-30-01` |  |
 | `RESTATEMENT` | integer | required |  | — | `0` |  |
 | `RUN_KIND` | text | optional |  | Which run the row belongs to (2.9.4, VAR_GUIDE.md section 8.4): FULL (or none) for the day's full run; INTRADAY for an update a pricing system sends during the day: only the changed trades, amended, new or cancelled, priced over the same scenario set; each intraday batch has its own BATCH_ID and a later COMPUTED_AT, and the latest COMPUTED_AT per trade wins. A cancel is an INTRADAY row whose TRADE_STATUS is not live (CANCELLED), its PVs empty. | `FULL`, `INTRADAY` |  |
@@ -715,6 +720,10 @@ A trade's present value under each historical scenario and its base PV of the sa
 
 **Notes**
 
+- Delivery format (product owner, 2026-10-27): JSONL: one JSON object per line, UTF-8, one row of this contract a line, exactly its fields (no other); a file is .jsonl, or .jsonl.gz. This is the contract a pricing system sends; tools/pvgen writes it (docs/guides/VAR_GUIDE.md section 15.12). The vector of the examples below is cut to its first 3 values: a row carries all 509.
+- Example line, a full run's row: {"SCENARIO_PV_ID":"SPV-1000003-HS-509","TRADE_ID":"1000003","SECURITY_ID":null,"INSTRUMENT":"ENGY-B-SWAP USD 2027-02","BUSINESS_DATE":"2026-09-30","SCENARIO_SET_ID":"HS-509","SOURCE_SYSTEM":"ENDUR","TRADE_VERSIONS":"v7","TRADE_STATUS":"AMENDED","MATURITY_DATE":"2027-02-28","LEGAL_ENTITY":"LE-NY","DIVISION":"DIV-MARKETS","DESK":"DESK-COMM","TT_BOOK":"BOOK-COMM-1","PORTFOLIO":"BOOK-COMM-1","STRATEGY":"","PRODUCT_GROUP":"Commodity","PRODUCT_TYPE":"ComSwap","CURRENCY":"USD","COUNTERPARTY":"CP-CASCADIA","DIRECTION":"SHORT","QUANTITY":-4687500.0,"TAGS":"","BASE_PV":-5176568.0,"VALUATION_DATE":"2026-09-30","BASE_VALUATION_DATE":"2026-09-30","SCENARIO_PV":[-4754754.0,-5608689.0,-5444664.0],"STATUS":"ok","PRICER":"demo-factor-model","MODEL_VERSION":"demo-2","COMPUTED_AT":"2026-09-30T06:00:00Z","BATCH_ID":"B-2026-09-30-01","RESTATEMENT":0,"RUN_KIND":"FULL"}
+- Example line, an intraday amendment: {"SCENARIO_PV_ID":"SPV-1002344-HS-509-I-2026-09-30-001","TRADE_ID":"1002344","SECURITY_ID":"XCH-ComFut-USD-03","INSTRUMENT":"ENGY-EXCH-FUT USD 2026-09","BUSINESS_DATE":"2026-09-30","SCENARIO_SET_ID":"HS-509","SOURCE_SYSTEM":"ENDUR","TRADE_VERSIONS":"v6","TRADE_STATUS":"AMENDED","MATURITY_DATE":"2026-09-30","LEGAL_ENTITY":"LE-NY","DIVISION":"DIV-MARKETS","DESK":"DESK-COMM","TT_BOOK":"BOOK-COMM-3","PORTFOLIO":"BOOK-COMM-3","STRATEGY":"","PRODUCT_GROUP":"Commodity","PRODUCT_TYPE":"ComFut","CURRENCY":"USD","COUNTERPARTY":"CP-METROEX","DIRECTION":"SHORT","QUANTITY":-5900.0,"TAGS":"","BASE_PV":-302670.0,"VALUATION_DATE":"2026-09-30","BASE_VALUATION_DATE":"2026-09-30","SCENARIO_PV":[-208989.8,-396009.18,-356724.62],"STATUS":"ok","PRICER":"demo-factor-model","MODEL_VERSION":"demo-2","COMPUTED_AT":"2026-09-30T06:05:00Z","BATCH_ID":"I-2026-09-30-001","RESTATEMENT":0,"RUN_KIND":"INTRADAY"}
+- Example line, an intraday cancel: {"SCENARIO_PV_ID":"SPV-1000414-HS-509-I-2026-09-30-001","TRADE_ID":"1000414","SECURITY_ID":null,"INSTRUMENT":"ENGY-SWAP USD 2026-11","BUSINESS_DATE":"2026-09-30","SCENARIO_SET_ID":"HS-509","SOURCE_SYSTEM":"ENDUR","TRADE_VERSIONS":"v8","TRADE_STATUS":"CANCELLED","MATURITY_DATE":"2026-11-30","LEGAL_ENTITY":"LE-NY","DIVISION":"DIV-MARKETS","DESK":"DESK-COMM","TT_BOOK":"BOOK-COMM-1","PORTFOLIO":"BOOK-COMM-1","STRATEGY":"","PRODUCT_GROUP":"Commodity","PRODUCT_TYPE":"ComSwap","CURRENCY":"USD","COUNTERPARTY":"CP-NORTHPLAINS","DIRECTION":"LONG","QUANTITY":96000.0,"TAGS":"","BASE_PV":581788.0,"VALUATION_DATE":"2026-09-30","BASE_VALUATION_DATE":"2026-09-30","SCENARIO_PV":null,"STATUS":"ok","PRICER":"demo-factor-model","MODEL_VERSION":"demo-2","COMPUTED_AT":"2026-09-30T06:05:04Z","BATCH_ID":"I-2026-09-30-001","RESTATEMENT":0,"RUN_KIND":"INTRADAY"}
 - The engine (VarIntake) rejects a row, counted and listed in every answer's provenance, never padded: a null or NaN in SCENARIO_PV (DRS-5206, the scenarios named: a scenario that failed to price is never filled with zero), a currency with no scenario FX on the date (DRS-5207), a length other than the scenario set's, no BASE_PV, or a VALUATION_DATE or BASE_VALUATION_DATE that differs from the other or from the business date (DRS-5201).
 - FX: each currency's scenario rates from fx-scenario when the batch supplies them, else derived from the FX history of fx-spot (today's rate moved by each scenario day's 1-day move); every cross goes through USD.
 - The same one-run checks as pnl-vector: one BATCH_ID and the date's SCENARIO_SET_ID across both kinds; a TRADE_ID in both refuses the date (DRS-5202).
@@ -770,6 +779,8 @@ A currency's rate against USD today and under each historical scenario, as the r
 
 **Notes**
 
+- Delivery format (product owner, 2026-10-27): JSONL: one JSON object per line, UTF-8, one row of this contract a line, exactly its fields (no other); a file is .jsonl, or .jsonl.gz. This is the contract a pricing system sends; tools/pvgen writes it (docs/guides/VAR_GUIDE.md section 15.12). The vector of the examples below is cut to its first 3 values: a row carries all 509.
+- Example line, one currency's rates: {"FX_SCENARIO_ID":"FXS-AUD-HS-509","BUSINESS_DATE":"2026-09-30","SCENARIO_SET_ID":"HS-509","CURRENCY":"AUD","QUOTE":"USD per 1 AUD","RATE":0.661,"RATES":[0.6636463229,0.6635844635,0.6613830351],"SOURCE":"demo-factor-model","BATCH_ID":"B-2026-09-30-01"}
 - Always USD per one unit of CURRENCY (RATE today, RATES under each scenario, in the scenario set's order); USD itself is never sent. Every cross rate goes through USD: units of B per unit of A are rate(A) / rate(B).
 - A rate that is not a positive number, or RATES of another length than the scenario set's, leaves the currency out of the date (the engine says so: a trade priced in it is rejected, DRS-5207; the currency cannot be asked as a reporting currency).
 

@@ -985,6 +985,17 @@ publishing read the date without its layer, and an intraday batch never restates
 run, to the cent, on every node, and a restart (the morning run and the 200 batches at once) equals it too; the time a batch takes does
 not grow with the batches before it (the first 50 and the last 50 the same, the lake's 1-second refresh dominating).
 
+**An installation from before 2.9.4.** The engine tells an intraday row by its `RUN_KIND` and `COMPUTED_AT`, read as promoted
+columns of the risk lake's connector. A connector file written from the pack's template at an earlier first start
+(`config/connectors/risk-store.yaml`, never overwritten) does not promote them: add `RUN_KIND,COMPUTED_AT` to its
+`layout.pnl-vector.columns` and `layout.scenario-pv.columns` (or delete the file to have it written again from the pack). Until then
+the server logs *VaR: the connector does not promote RUN_KIND and COMPUTED_AT …* once, and a date with intraday batches answers
+`DRS-5202` (a trade read twice) with the same words, never a mix of the two runs.
+
+**A batch in both kinds.** A batch may carry scenario PVs and P&L vectors under one `BATCH_ID`, each kind loaded on its own with its own
+signal: the engine tracks each kind of a batch apart (`<kind>|<BATCH_ID>`), so the second load applies too and is not taken for a full
+run.
+
 ### 8.5 The pre-deal what-if in the basket tray
 
 The what-if is the tray's ([section 3.5](#35-construct-your-basket)): **+ What-if trade** (or **What-if…** in the explorer's right
@@ -1544,7 +1555,7 @@ links and audit).
 | `STATUS` | text | STRING | required | C | | `ok`, `proxied` (priced by a proxy) or `failed` (then `PNL` null; a failed row with a vector is rejected, never silently zero) | `ok` |
 | `PRICER` | text | doc | optional | – | | pricer used | `demo-factor-model` |
 | `MODEL_VERSION` | text | doc | optional | – | | pricer version | `demo-2` |
-| `COMPUTED_AT` | timestamp | doc | optional | – | UTC | when the batch valued the trade | `2026-09-30T22:30:00Z` |
+| `COMPUTED_AT` | timestamp | doc | optional | – | UTC | when the batch valued the trade | `2026-09-30T06:00:00Z` |
 | `BATCH_ID` | id | STRING | required | C | | the run: one per date (several refuse the date, `DRS-5203`) | `B-2026-09-30-01` |
 | `RESTATEMENT` | integer | doc | optional | – | | 0 for the first run, 1, 2, … for restatements | `0` |
 
@@ -1939,6 +1950,47 @@ trade's **Risk** group (`risk-links@1`) adds **Trade currency** (and where it co
 worst-scenario rows list it (`tradeCurrency`, `fromCurrency`); a position's trades (`TRADES[].TRADE_CURRENCY`, the position page) too;
 the counterparty, portfolio, legal-entity and index pages' trade tables label their currency column **Trade currency**. Position and
 portfolio figures stay in USD.
+
+### 15.12 Producing P&L vectors and scenario PVs (AS BUILT, 2.9.4)
+
+A pricing system sends a business day's trades in either form, side by side: **P&L vectors** in USD (`pnl-vector`, section 15.2) or
+**scenario PVs** in each trade's own currency with its base PV (`scenario-pv`, section 15.9), with the **scenario FX** (`fx-scenario`)
+when it has it; during the day, only the changed trades (section 8.4). **This is the contract a pricing system sends:** JSONL, one
+JSON object per line, UTF-8, a file `.jsonl` (or `.jsonl.gz`), each line exactly the fields of its kind's contract
+(`config/packs/market-risk/contracts/{scenario-pv,pnl-vector,fx-scenario}.contract.yaml`, which say the same), no other. Sample lines
+(the vector cut to its first 3 values here: a row carries all 509):
+
+```text
+# scenario-pv, the morning run (RUN_KIND FULL)
+{"SCENARIO_PV_ID":"SPV-1000003-HS-509","TRADE_ID":"1000003","SECURITY_ID":null,"INSTRUMENT":"ENGY-B-SWAP USD 2027-02","BUSINESS_DATE":"2026-09-30","SCENARIO_SET_ID":"HS-509","SOURCE_SYSTEM":"ENDUR","TRADE_VERSIONS":"v7","TRADE_STATUS":"AMENDED","MATURITY_DATE":"2027-02-28","LEGAL_ENTITY":"LE-NY","DIVISION":"DIV-MARKETS","DESK":"DESK-COMM","TT_BOOK":"BOOK-COMM-1","PORTFOLIO":"BOOK-COMM-1","STRATEGY":"","PRODUCT_GROUP":"Commodity","PRODUCT_TYPE":"ComSwap","CURRENCY":"USD","COUNTERPARTY":"CP-CASCADIA","DIRECTION":"SHORT","QUANTITY":-4687500.0,"TAGS":"","BASE_PV":-5176568.0,"VALUATION_DATE":"2026-09-30","BASE_VALUATION_DATE":"2026-09-30","SCENARIO_PV":[-4754754.0,-5608689.0,-5444664.0],"STATUS":"ok","PRICER":"demo-factor-model","MODEL_VERSION":"demo-2","COMPUTED_AT":"2026-09-30T06:00:00Z","BATCH_ID":"B-2026-09-30-01","RESTATEMENT":0,"RUN_KIND":"FULL"}
+# pnl-vector, the morning run
+{"VECTOR_ID":"PV-MX-20000300-HS-509","TRADE_ID":"MX-20000300","SECURITY_ID":null,"INSTRUMENT":"Commodity forward USD 2026-10","BUSINESS_DATE":"2026-09-30","SCENARIO_SET_ID":"HS-509","SOURCE_SYSTEM":"MUREX","TRADE_VERSIONS":"v1","TRADE_STATUS":"VALIDATED","MATURITY_DATE":"2026-10-07","LEGAL_ENTITY":"LE-NY","DIVISION":"DIV-MARKETS","DESK":"DESK-COMM","TT_BOOK":"BOOK-COMM-1","PORTFOLIO":"BOOK-COMM-1","STRATEGY":"","PRODUCT_GROUP":"Commodity","PRODUCT_TYPE":"CMD_FORWARD","CURRENCY":"USD","COUNTERPARTY":"CP-NORTHBRIDGE","DIRECTION":"LONG","QUANTITY":345225.0,"TAGS":"","REPORTING_CCY":"USD","PV":1033434,"PNL":[-268529,278946,184056],"STATUS":"ok","PRICER":"demo-factor-model","MODEL_VERSION":"demo-2","COMPUTED_AT":"2026-09-30T06:00:00Z","BATCH_ID":"B-2026-09-30-01","RESTATEMENT":0,"RUN_KIND":"FULL"}
+# scenario-pv, an intraday amendment (RUN_KIND INTRADAY, its own BATCH_ID, a later COMPUTED_AT)
+{"SCENARIO_PV_ID":"SPV-1002344-HS-509-I-2026-09-30-001","TRADE_ID":"1002344","SECURITY_ID":"XCH-ComFut-USD-03","INSTRUMENT":"ENGY-EXCH-FUT USD 2026-09","BUSINESS_DATE":"2026-09-30","SCENARIO_SET_ID":"HS-509","SOURCE_SYSTEM":"ENDUR","TRADE_VERSIONS":"v6","TRADE_STATUS":"AMENDED","MATURITY_DATE":"2026-09-30","LEGAL_ENTITY":"LE-NY","DIVISION":"DIV-MARKETS","DESK":"DESK-COMM","TT_BOOK":"BOOK-COMM-3","PORTFOLIO":"BOOK-COMM-3","STRATEGY":"","PRODUCT_GROUP":"Commodity","PRODUCT_TYPE":"ComFut","CURRENCY":"USD","COUNTERPARTY":"CP-METROEX","DIRECTION":"SHORT","QUANTITY":-5900.0,"TAGS":"","BASE_PV":-302670.0,"VALUATION_DATE":"2026-09-30","BASE_VALUATION_DATE":"2026-09-30","SCENARIO_PV":[-208989.8,-396009.18,-356724.62],"STATUS":"ok","PRICER":"demo-factor-model","MODEL_VERSION":"demo-2","COMPUTED_AT":"2026-09-30T06:05:00Z","BATCH_ID":"I-2026-09-30-001","RESTATEMENT":0,"RUN_KIND":"INTRADAY"}
+# pnl-vector, an intraday amendment
+{"VECTOR_ID":"PV-CLY-4001039-HS-509-I-2026-09-30-001","TRADE_ID":"CLY-4001039","SECURITY_ID":null,"INSTRUMENT":"Total return swap on a loan index GBP 2032-08","BUSINESS_DATE":"2026-09-30","SCENARIO_SET_ID":"HS-509","SOURCE_SYSTEM":"CALYPSO","TRADE_VERSIONS":"v1","TRADE_STATUS":"AMENDED","MATURITY_DATE":"2032-08-31","LEGAL_ENTITY":"LE-NY","DIVISION":"DIV-MARKETS","DESK":"DESK-CREDIT","TT_BOOK":"BOOK-CREDIT-2","PORTFOLIO":"BOOK-CREDIT-2","STRATEGY":"","PRODUCT_GROUP":"Credit","PRODUCT_TYPE":"TRS_LOAN_INDEX","CURRENCY":"GBP","COUNTERPARTY":"CP-MERIDIAN-RE","DIRECTION":"LONG","QUANTITY":94737600.0,"TAGS":"","REPORTING_CCY":"USD","PV":-1791656.64,"PNL":[-133904.64,155064.96,-78112.32],"STATUS":"ok","PRICER":"demo-factor-model","MODEL_VERSION":"demo-2","COMPUTED_AT":"2026-09-30T06:05:00Z","BATCH_ID":"I-2026-09-30-001","RESTATEMENT":0,"RUN_KIND":"INTRADAY"}
+# an intraday cancel: TRADE_STATUS CANCELLED, the vector null
+{"SCENARIO_PV_ID":"SPV-1000414-HS-509-I-2026-09-30-001","TRADE_ID":"1000414","SECURITY_ID":null,"INSTRUMENT":"ENGY-SWAP USD 2026-11","BUSINESS_DATE":"2026-09-30","SCENARIO_SET_ID":"HS-509","SOURCE_SYSTEM":"ENDUR","TRADE_VERSIONS":"v8","TRADE_STATUS":"CANCELLED","MATURITY_DATE":"2026-11-30","LEGAL_ENTITY":"LE-NY","DIVISION":"DIV-MARKETS","DESK":"DESK-COMM","TT_BOOK":"BOOK-COMM-1","PORTFOLIO":"BOOK-COMM-1","STRATEGY":"","PRODUCT_GROUP":"Commodity","PRODUCT_TYPE":"ComSwap","CURRENCY":"USD","COUNTERPARTY":"CP-NORTHPLAINS","DIRECTION":"LONG","QUANTITY":96000.0,"TAGS":"","BASE_PV":581788.0,"VALUATION_DATE":"2026-09-30","BASE_VALUATION_DATE":"2026-09-30","SCENARIO_PV":null,"STATUS":"ok","PRICER":"demo-factor-model","MODEL_VERSION":"demo-2","COMPUTED_AT":"2026-09-30T06:05:04Z","BATCH_ID":"I-2026-09-30-001","RESTATEMENT":0,"RUN_KIND":"INTRADAY"}
+# fx-scenario: a currency's rate today and under each scenario, USD per one unit
+{"FX_SCENARIO_ID":"FXS-AUD-HS-509","BUSINESS_DATE":"2026-09-30","SCENARIO_SET_ID":"HS-509","CURRENCY":"AUD","QUOTE":"USD per 1 AUD","RATE":0.661,"RATES":[0.6636463229,0.6635844635,0.6613830351],"SOURCE":"demo-factor-model","BATCH_ID":"B-2026-09-30-01"}
+```
+
+**The stand-in pricing system** (`tools/pvgen`, each a standalone script with `--help`, `--dry-run`, a `.sh` beside it and a `.ps1` in
+`tools/windows`; pure Python with the console's environment, kafka-python for Kafka): the demo's factor model
+(`tools/packgen/var/make_var_data.py`, `scenario_fx.py`) valuing every live trade of the test data, never a copy of the committed files.
+
+| Script | Does | Example |
+|---|---|---|
+| `tools/pvgen/morning.py` (`morning.sh`, `tools\windows\pvgen-morning.ps1`) | a full day: `scenario-pv` for `--pv-systems` (default ENDUR), `pnl-vector` for the others (`--pnl-systems`; `--all-vectors`: every trade a P&L vector, as in 2.9.3), `fx-scenario`; `--date` moves it to another business date; `--lake` writes it into the lake (replacing the date), `--server` signals | `tools/pvgen/morning.sh --date 2026-10-27 --lake data/delta --server http://127.0.0.1:18480` |
+| `tools/pvgen/intraday.py` (`intraday.sh`, `pvgen-intraday.ps1`) | N small batches (`--batches 20 --trades-per-batch 15`) of amended, new and cancelled trades (`--mix amend=70,new=15,cancel=15`, or `--plan amend,new,cancel`), each its own `BATCH_ID` (`I-<date>-001`; a second run on the same date goes on with `--first 21` and a later `--start`), `RUN_KIND: INTRADAY`, a `COMPUTED_AT` a minute after the batch before; each update as scenario PVs or a P&L vector by its system; `--seed` makes the same batches; `--lake` appends each batch, `--server` signals it, `--every 30s` drips them | `tools/pvgen/intraday.sh --date 2026-10-27 --batches 5 --lake data/delta --server http://127.0.0.1:18480 --every 30s` |
+| `tools/pvgen/publish_kafka.py` (`publish-kafka.sh`, `pvgen-publish-kafka.ps1`) | the same updates to the PV topic, each message's value JSONL text of `--per-message` records (default 10), one row of the contract a line; a cancel a cancel line; the key names the message, never a trade; `--rate`, `--seconds`, `--seed` as `tools/samplegen/stream.py`; `--save` keeps every record sent as JSONL | `tools/pvgen/publish-kafka.sh --bootstrap localhost:9092 --rate 5 --seconds 60 --save data/pvgen/sent.jsonl` |
+| `tools/pvgen/check.py` (`check.sh`, `pvgen-check.ps1`) | recomputes from the files what the engine should show (each trade's USD P&L, scenario PVs through the engine's own formula `engine_pnl`, the latest `COMPUTED_AT` per trade, cancels removed) and compares the bank's and every desk's VaR and ES with `GET /api/v1/var/scope`; exit 1 on a difference | `tools/pvgen/check.sh --morning data/pvgen/morning-2026-10-27 --intraday data/pvgen/intraday-2026-10-27 --server http://127.0.0.1:18480` |
+
+The files go under `<data folder>/pvgen/` by default (`morning-<date>/`, `intraday-<date>/`). The morning run of the test data's date is
+the engine's to the unit (`check.py` on it: VaR 112,041,646, ES 160,143,809; with `--all-vectors` 2.9.3's 112,035,906 and 160,132,107).
+The committed intraday sample (`config/packs/market-risk/samples/intraday/I-2026-09-30-001.scenario-pv.jsonl`: three amended Endur trades,
+one new, one cancelled) loads with `drishti.py var intraday --load <file> --date <the lake's date>`. `make_var_data.py` takes the same
+`--pv-systems`, `--pnl-systems` and `--all-vectors`: the P&L-vector generation is whole, for any system.
 
 ## 16. Reference and master data read
 
@@ -2393,6 +2445,7 @@ recommended defaults unless the product owner said otherwise):
 | 1.2 | 2026-10-25 | Official end-of-day captures published to `risk-results/var-official` for other systems (product owner); official captures kept 7 years |
 | 1.3 | 2026-10-25 | **AS BUILT (2.8.0, VaR complete part 1):** the stored `var` and `var-node` kinds retired (§21); computed figures removed from `position`, `portfolio` and `desk`, the pages show the engine's (§3.7), with a guard test; positions derived by Drishti by configured rules (§15.6); every live trade valued (9,572; open question 1); 28 portfolio definitions; official end-of-day captures of every node, published append-only (§19); the data-load signal reloads and captures (§15.8); 7-year retention (§15.1); the load's checks and `DRS-5201` to `DRS-5204` (§20); `by=node`, the largest parts, masks, BASKET portfolios refused to aggregate-only viewers, basket and reload audit, input versions and batch ids in provenance, ids in any case; scope words `LE:` (the trades' legal entity) and `CPTY:` (§5.5) |
 | 1.5 | 2026-10-27 | **AS BUILT (2.9.4, local branch for the product owner's review):** scenario PVs in each trade's currency (`scenario-pv`) beside or instead of P&L vectors, converted to USD P&L at load; scenario FX supplied (`fx-scenario`) or derived from the FX history (`fx-spot`), crosses through USD, 1-day; `DRS-5206` (a scenario that failed to price) and `DRS-5207` (no FX) (§15.9, §20); a reporting currency on every answer (`ccy`, `--ccy`), books per currency built on first ask on the tiered memory, official records per `drishti.var.official.currencies` (§15.10); the demo's Endur trades as scenario PVs (§22.1) |
+| 1.8 | 2026-10-27 | **AS BUILT (2.9.4, local):** the delivery format JSONL, one row of the contract a line (the three contracts), and the stand-in pricing system `tools/pvgen` (morning run, intraday files, Kafka publisher, checker) with both forms side by side (§15.12); `make_var_data.py --pv-systems/--pnl-systems/--all-vectors` |
 | 1.7 | 2026-10-27 | **AS BUILT (2.9.4, local):** intraday updates (§8.4): `RUN_KIND: INTRADAY` rows appended to `scenario-pv` and `pnl-vector` (§15.8, §15.9), applied on the loaded date without a reload (each trade's difference into its book and nodes, the totals, the currencies), the latest `COMPUTED_AT` per trade winning, cancels, new trades, another scenario set refused; `intraday` on every answer, the badge, `drishti.py var intraday`; the official records the morning run's |
 | 1.6 | 2026-10-27 | **AS BUILT (2.9.4, local):** the listed reporting currencies built ahead in the background and kept for the newest 5 dates (`drishti.var.currencies`, `drishti.var.currency-retention-dates`); every node's PVs summed per trade currency (`CTOT`, hot file format 2) for the headline in any currency and the tab *In other currencies* (`GET /scope/currencies`, `GET /currencies`); the console's Reporting currency picker, `VAR … IN EUR`, Trade currency on the trade pages and the VaR tables (§15.11) |
 | 1.4 | 2026-10-26 | **AS BUILT (2.8.0, VaR complete part 2):** the tiered memory (§26: each date a memory-mapped float32 hot file, aggregates float64, history dates mapped again from their file, eviction, cleaning, safe unmapping; the hot file's format 1 fixed; precision bound and measurements); `drishti.var.tier.*` (§12); the budget measured on the float32 copy; `provenance.tier`, the status's `tier` (§11.2, §11.4); the benchmark measured at 100,000 × 5 and extrapolated to 1 M × 50, with the full command (§27.3); the computed kinds `var-result` and `var-whatif` through reactive connectors, the Python VaR engine in the pool `var` (§8); `drishti.py var` (§10); open questions 8 and 12 decided; sharding documented as planned, not built (§28) |

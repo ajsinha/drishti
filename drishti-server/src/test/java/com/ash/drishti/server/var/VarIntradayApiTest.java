@@ -178,9 +178,13 @@ class VarIntradayApiTest {
         JsonNode one = ask("/api/v1/var/scope", "BANK", DAY, null);
         assertThat(one.at("/intraday/updates").asInt()).isEqualTo(3);
         assertThat(one.at("/intraday/batches").toString()).contains("B-I1");
+        // the same batch's scenario PVs as a second load with its own signal (a batch sent in both kinds): applied too, not a full run
         batch("scenario-pv", List.of(
-                VarIntradayLake.pv(DAY, "P1", "EUR", 1100, VarPvFixture.plus(1100, VarLakeFixture.U, 20), "INTRADAY", "B-I2", at + "1:00:00Z", "HS-20"),
-                VarIntradayLake.pv(DAY, "NP", "CAD", 500, VarPvFixture.plus(500, VarLakeFixture.V, 3), "INTRADAY", "B-I2", at + "1:00:00Z", "HS-20")));
+                VarIntradayLake.pv(DAY, "NP", "CAD", 500, VarPvFixture.plus(500, VarLakeFixture.V, 3), "INTRADAY", "B-I1", at + "1:00:00Z", "HS-20")));
+        assertThat(svc.date(DAY).book().morning()).isSameAs(before.book().morning());
+        assertThat(ask("/api/v1/var/scope", "BANK", DAY, null).at("/intraday/updates").asInt()).isEqualTo(4);
+        batch("scenario-pv", List.of(
+                VarIntradayLake.pv(DAY, "P1", "EUR", 1100, VarPvFixture.plus(1100, VarLakeFixture.U, 20), "INTRADAY", "B-I2", at + "1:00:00Z", "HS-20")));
         batch("scenario-pv", List.of(
                 VarIntradayLake.pv(DAY, "P1", "EUR", 1200, VarPvFixture.plus(1200, VarLakeFixture.U, 30), "INTRADAY", "B-I3", at + "2:00:00Z", "HS-20")));
         batch("scenario-pv", List.of(                                            // computed before the update already applied: ignored

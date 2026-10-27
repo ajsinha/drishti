@@ -662,6 +662,41 @@ records are history and never rewritten. The live pages show 150m.
 
 To switch the fact of the day off: set `DRISHTI_HOME_FACTS=false` for the console (`ui.facts.enabled`) and restart it.
 
+## 6g. What is new in 2.9.4: check these (25 minutes)
+
+**Before you start:** `git pull`, build the jar (`drishti-server-2.9.4-exec.jar` once released), and rebuild the VaR data: the trades'
+tables gained two columns (`RUN_KIND`, `COMPUTED_AT`). Stop the server, run the `build_demo_lakes.py` of step 3.0 with
+`--only market-risk --as-of <the lakes' last date>`, and start the server and the console again.
+
+**The VaR page in another currency.**
+
+| # | Do | You should see |
+|---|---|---|
+| 1 | `VAR DESK DESK-RATES` → the **Reporting currency** select at the right of the status line → **EUR** | every tile says EUR, the tree's header *VaR EUR*, the link ends `&ccy=EUR`, the provenance says *EUR, chosen in the header*, the input form, the scenario FX and *via USD* |
+| 2 | The tab **In other currencies** | one row per currency (USD, EUR, CAD, JPY, GBP) with its own VaR and ES and that VaR in EUR at today's rate; click **CAD**: the page moves to CAD |
+| 3 | `VAR BANK IN GBP` in the top bar | the bank in GBP |
+| 4 | `TRD 1000003` (an Endur trade) | the strip's **Trade currency** (*EUR · as priced* or *USD · as priced*), and in the Risk group its base PV in that currency |
+
+**Intraday updates with the stand-in pricing system** (pure Python with the console's `python.exe`; no `.exe` of its own). In PowerShell,
+in the project folder, with the server running (sign-in on: put a token with `loads:write` in a file and add `--token-file <file>`):
+
+```
+.\drishti-console\.venv\Scripts\python.exe tools\pvgen\intraday.py --date <the lakes' last date> --batches 3 --trades-per-batch 10 --lake data\delta --server http://127.0.0.1:18480 --every 30s
+```
+
+or the same through `.\tools\windows\pvgen-intraday.ps1 <the same arguments>`. Every 30 seconds a batch lands.
+
+| # | Do | You should see |
+|---|---|---|
+| 5 | `VAR BANK`, after the first batch | an **intraday** badge in the status line (*intraday · 10 trades · …*); point at it for the batch; the provenance's *Intraday* row |
+| 6 | After the third batch, `.\drishti-console\.venv\Scripts\python.exe tools\pvgen\morning.py --date <the date> --dry-run` | the morning run's counts (nothing written) |
+| 7 | `.\drishti-console\.venv\Scripts\python.exe tools\pvgen\morning.py --date <the date>` then `tools\pvgen\check.py --morning data\pvgen\morning-<the date> --intraday data\pvgen\intraday-<the date> --server http://127.0.0.1:18480` | every scope *ok*: the engine's VaR and ES equal the script's own recomputation from the files |
+| 8 | `drishti.py var intraday` (or `python.exe tools\drishti.py var intraday`) | the date's layer: updates, trades, batches |
+
+Kafka is optional here: no broker runs on this machine, so `tools\pvgen\publish_kafka.py` is checked with `--dry-run` only (it prints
+the messages it would send, each a JSONL text of `--per-message` records, a cancel a cancel line). The files are the main path. Every file the scripts write is
+JSONL: one JSON object per line, the contract a pricing system sends.
+
 ---
 
 ## 7. If something goes wrong
@@ -710,6 +745,7 @@ To switch the fact of the day off: set `DRISHTI_HOME_FACTS=false` for the consol
 - [ ] Step 6c (2.6.5): `TRD 1000279 60`, `TRD <your id> 60` and `EQ EQ-CSCA 3M` show their history.
 - [ ] Step 6d (2.6.7): **Chart** (or K) on a table, a masked field never plotted, an export.
 - [ ] Step 6f (2.9.3): the changed data rebuilt; `DATAMAP` draws and lists its findings; Home shows a fact of the day; `HIER LEGAL~BANK` shows 150m; `IDX SP500` has 495 members.
+- [ ] Step 6g (2.9.4): the VaR data rebuilt; the Reporting currency select and **In other currencies**; `VAR BANK IN GBP`; a trade's Trade currency; `tools\pvgen\intraday.py` with `--lake` and `--server` shows the intraday badge; `check.py` says every scope is *ok*.
 
 **After the demo:**
 

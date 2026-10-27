@@ -252,5 +252,37 @@ class VarDataTest(unittest.TestCase):
         self.assertEqual(VM.rank_k(509, 0.975), 13)
 
 
+class FormsPerSystemTest(unittest.TestCase):
+    """The P&L-vector generation stays whole (product owner, 2026-10-27): with --all-vectors every system regenerates as P&L vectors
+    exactly as in 2.9.3 (the bank 112,035,906 / 160,132,107 on the test data's date, every trade a vector, no scenario PV); the form is a
+    choice per system (--pv-systems, --pnl-systems), today's split the default."""
+
+    @classmethod
+    def setUpClass(cls):
+        import yaml
+        import make_var_data as M
+        cls.M = M
+        dates = yaml.safe_load((ROOT / "data" / "testdata" / "testdata.yaml").read_text(encoding="utf-8"))["business-dates"]
+        cls.vectors = M.Demo(ROOT / "data" / "testdata", dates, pv_systems=M.pv_systems("ENDUR", all_vectors=True))
+        cls.both = M.Demo(ROOT / "data" / "testdata", dates, pv_systems=M.pv_systems("ENDUR,CALYPSO"))
+
+    def test_every_system_as_p_and_l_vectors_is_2_9_3(self):
+        b = self.vectors.batch
+        self.assertEqual(b.pv_rows, [])
+        self.assertEqual(len(b.vector_rows), 9572)
+        self.assertEqual(self.M.bank_figures(self.vectors),
+                         "VaR 112,035,906 ES 160,132,107 (all as P&L vectors: VaR 112,035,906 ES 160,132,107)")
+        self.assertIn("ENDUR", {r["SOURCE_SYSTEM"] for r in b.vector_rows})
+
+    def test_the_form_is_a_choice_per_system(self):
+        self.assertEqual(self.M.pv_systems("ENDUR"), ("ENDUR",))
+        self.assertEqual(self.M.pv_systems("ENDUR,CALYPSO", "endur"), ("CALYPSO",))
+        self.assertEqual(self.M.pv_systems("ENDUR", all_vectors=True), ())
+        b = self.both.batch
+        self.assertEqual({r["SOURCE_SYSTEM"] for r in b.pv_rows}, {"ENDUR", "CALYPSO"})
+        self.assertEqual({r["SOURCE_SYSTEM"] for r in b.vector_rows}, {"MUREX"})
+        self.assertEqual(len(b.pv_rows) + len(b.vector_rows), 9572)
+
+
 if __name__ == "__main__":
     unittest.main()

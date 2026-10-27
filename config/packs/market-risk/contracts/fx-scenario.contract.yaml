@@ -114,6 +114,8 @@ validation:
   field: RATES
   same: every row of one business date
 notes:
+- 'Delivery format (product owner, 2026-10-27): JSONL: one JSON object per line, UTF-8, one row of this contract a line, exactly its fields (no other); a file is .jsonl, or .jsonl.gz. This is the contract a pricing system sends; tools/pvgen writes it (docs/guides/VAR_GUIDE.md section 15.12). The vector of the examples below is cut to its first 3 values: a row carries all 509.'
+- 'Example line, one currency''s rates: {"FX_SCENARIO_ID":"FXS-AUD-HS-509","BUSINESS_DATE":"2026-09-30","SCENARIO_SET_ID":"HS-509","CURRENCY":"AUD","QUOTE":"USD per 1 AUD","RATE":0.661,"RATES":[0.6636463229,0.6635844635,0.6613830351],"SOURCE":"demo-factor-model","BATCH_ID":"B-2026-09-30-01"}'
 - 'Always USD per one unit of CURRENCY (RATE today, RATES under each scenario, in the scenario set''s order); USD itself is never sent.
   Every cross rate goes through USD: units of B per unit of A are rate(A) / rate(B).'
 - 'A rate that is not a positive number, or RATES of another length than the scenario set''s, leaves the currency out of the date (the

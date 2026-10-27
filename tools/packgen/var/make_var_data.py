@@ -80,7 +80,7 @@ nice = PF.nice
 class Demo:
     """Everything the VaR demo data holds for one business date."""
 
-    def __init__(self, testdata: Path, dates: list[str], budget: int = 0, rules: P.Rules | None = None):
+    def __init__(self, testdata: Path, dates: list[str], budget: int = 0, rules: P.Rules | None = None, pv_systems=None):
         self.cob = dates[-1]
         trades: dict[str, dict] = {}
         for system in ("endur", "calypso", "murex"):
@@ -91,7 +91,7 @@ class Demo:
         self.rules = rules or P.Rules.of_pack(PACK_YAML)
         market = F.Market()
         self.fx = SFX.Fx(market, SFX.today_rates(P.replay(testdata / "market-data" / "fx-spot", "PAIR", dates)))
-        self.batch = P.Batch(trades, desks, vals, self.cob, self.rules, budget, market=market, fx=self.fx)
+        self.batch = P.Batch(trades, desks, vals, self.cob, self.rules, budget, market=market, fx=self.fx, pv_systems=pv_systems)
         self.scenario_dates = business_days(previous_day(self.cob), F.N_SCENARIOS)
         self.n = F.N_SCENARIOS
         self.nodes = self._hierarchy()
@@ -299,11 +299,15 @@ def main(argv=None) -> int:
     p.add_argument("--out", help="where to write (default: --testdata, with its testdata.yaml entries)")
     p.add_argument("--budget", type=int, default=0, help="most trades valued per book, whole positions only (default 0: every live trade)")
     p.add_argument("--check", action="store_true", help="fail if the committed files differ from what would be written")
+    p.add_argument("--pv-systems", default=",".join(SFX.PV_SYSTEMS), metavar="SYS,SYS",
+                   help=f"the source systems whose trades come as scenario PVs in their own currency (default {','.join(SFX.PV_SYSTEMS)})")
+    p.add_argument("--pnl-systems", default="", metavar="SYS,SYS", help="systems whose trades come as P&L vectors (USD) even if listed above")
+    p.add_argument("--all-vectors", action="store_true", help="every system as P&L vectors, exactly as in 2.9.3 (no scenario PVs)")
     a = p.parse_args(argv)
     import yaml
     td = Path(a.testdata)
     dates = yaml.safe_load((td / "testdata.yaml").read_text(encoding="utf-8"))["business-dates"]
-    demo = Demo(td, dates, a.budget)
+    demo = Demo(td, dates, a.budget, pv_systems=pv_systems(a.pv_systems, a.pnl_systems, a.all_vectors))
     if a.check:
         import tempfile
         with tempfile.TemporaryDirectory(prefix="drishti-var-check-") as tmp:
@@ -329,10 +333,19 @@ def main(argv=None) -> int:
     print(f"wrote {len(b.trade_vectors):,} trades in {len(b.positions):,} positions ({fungible:,} fungible, "
           f"{sum(1 for x in b.positions if x['LONG_TRADES'] and x['SHORT_TRADES'])} with buys and sells), {len(demo.nodes)} hierarchy nodes, "
           f"{len(entries)} folders, {total / 1e6:.2f} MB")
-    print(f"  {len(b.vector_rows):,} trades as P&L vectors, {len(b.pv_rows):,} as scenario PVs ({', '.join(SFX.PV_SYSTEMS)}), "
+    print(f"  {len(b.vector_rows):,} trades as P&L vectors, {len(b.pv_rows):,} as scenario PVs ({', '.join(b.pv_systems) or 'none'}), "
           f"scenario FX supplied for {', '.join(SFX.CURRENCIES)}")
     print("  the bank as the engine computes it: " + bank_figures(demo))
     return 0
+
+
+def pv_systems(pv: str, pnl: str = "", all_vectors: bool = False) -> tuple[str, ...]:
+    """The systems sent as scenario PVs: ``--pv-systems`` less ``--pnl-systems``; none with ``--all-vectors`` (every trade a P&L vector)."""
+    if all_vectors:
+        return ()
+    keep = [s.strip().upper() for s in (pv or "").split(",") if s.strip()]
+    drop = {s.strip().upper() for s in (pnl or "").split(",") if s.strip()}
+    return tuple(s for s in keep if s not in drop)
 
 
 def bank_figures(demo: Demo) -> str:

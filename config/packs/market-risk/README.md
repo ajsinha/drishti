@@ -290,7 +290,7 @@ Nested structures:
 
 | Path | Fields |
 |---|---|
-| `TRADES[]` | `TRADE_ID` (string), `QUANTITY` (number): The trade's signed quantity in the position: a buy positive, a sell negative., `DIRECTION` (string), `PV` (number): The trade's present value on the business date, as the risk batch priced it. (USD), `PRODUCT_TYPE` (string), `COUNTERPARTY` (string) |
+| `TRADES[]` | `TRADE_ID` (string), `QUANTITY` (number): The trade's signed quantity in the position: a buy positive, a sell negative., `DIRECTION` (string), `PV` (number): The trade's present value on the business date, as the risk batch priced it. (USD), `PRODUCT_TYPE` (string), `COUNTERPARTY` (string), `TRADE_CURRENCY` (string) |
 
 Links: `COUNTERPARTY` → `counterparty`, `DESK` → `desk`, `LEGAL_ENTITY` → `legal-entity`, `PORTFOLIO` → `book`, `POSITION_ID` → `position`, `TRADE_IDS` → `trade`, `TT_BOOK` → `book`.
 
@@ -368,9 +368,10 @@ Fields, from 1 sample document:
 | `STATUS` | string | `ok` | ok, proxied (priced by a proxy) or failed (no vector: counted, never taken as zero). |
 | `PRICER` | string | `demo-factor-model` | — |
 | `MODEL_VERSION` | string | `demo-2` | — |
-| `COMPUTED_AT` | timestamp | `2026-09-30T22:30:00Z` | — |
+| `COMPUTED_AT` | timestamp | `2026-09-30T06:00:00Z` | — |
 | `BATCH_ID` | string | `B-2026-09-30-01` | — |
 | `RESTATEMENT` | integer | `0` | — |
+| `RUN_KIND` | string | `FULL` | — |
 
 Links: `COUNTERPARTY` → `counterparty`, `DESK` → `desk`, `LEGAL_ENTITY` → `legal-entity`, `PORTFOLIO` → `book`, `TRADE_ID` → `trade`, `TT_BOOK` → `book`.
 
@@ -416,9 +417,10 @@ Fields, from 1 sample document:
 | `STATUS` | string | `ok` | ok, proxied (priced by a proxy) or failed (no scenario PVs: counted, never taken as zero). |
 | `PRICER` | string | `demo-factor-model` | — |
 | `MODEL_VERSION` | string | `demo-2` | — |
-| `COMPUTED_AT` | timestamp | `2026-09-30T22:30:00Z` | — |
+| `COMPUTED_AT` | timestamp | `2026-09-30T06:00:00Z` | — |
 | `BATCH_ID` | string | `B-2026-09-30-01` | — |
 | `RESTATEMENT` | integer | `0` | — |
+| `RUN_KIND` | string | `FULL` | — |
 
 Links: `COUNTERPARTY` → `counterparty`, `DESK` → `desk`, `LEGAL_ENTITY` → `legal-entity`, `PORTFOLIO` → `book`, `SCENARIO_PV_ID` → `scenario-pv`, `TRADE_ID` → `trade`, `TT_BOOK` → `book`.
 

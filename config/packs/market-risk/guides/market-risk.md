@@ -444,7 +444,7 @@ P&L vector of a trade
 | `STATUS` | text |  | required |  | `ok` |  | ok, proxied (priced by a proxy) or failed (no vector: counted, never taken as zero). |
 | `PRICER` | text |  | required |  | `demo-factor-model` |  | — |
 | `MODEL_VERSION` | text |  | required |  | `demo-2` |  | — |
-| `COMPUTED_AT` | timestamp |  | required |  | `2026-09-30T22:30:00Z` |  | — |
+| `COMPUTED_AT` | timestamp |  | required |  | `2026-09-30T06:00:00Z` |  | — |
 | `BATCH_ID` | id |  | required |  | `B-2026-09-30-01` |  | — |
 | `RESTATEMENT` | integer |  | required |  | `0` |  | — |
 
@@ -490,7 +490,7 @@ A trade's present value under each historical scenario and its base PV of the sa
 | `STATUS` | text |  | required |  | `ok` |  | ok, proxied (priced by a proxy) or failed (no scenario PVs: counted, never taken as zero). |
 | `PRICER` | text |  | required |  | `demo-factor-model` |  | — |
 | `MODEL_VERSION` | text |  | required |  | `demo-2` |  | — |
-| `COMPUTED_AT` | timestamp |  | required |  | `2026-09-30T22:30:00Z` |  | — |
+| `COMPUTED_AT` | timestamp |  | required |  | `2026-09-30T06:00:00Z` |  | — |
 | `BATCH_ID` | id |  | required |  | `B-2026-09-30-01` |  | — |
 | `RESTATEMENT` | integer |  | required |  | `0` |  | — |
 

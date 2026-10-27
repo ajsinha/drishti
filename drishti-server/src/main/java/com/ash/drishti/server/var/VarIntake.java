@@ -190,10 +190,12 @@ final class VarIntake {
         boolean intra = INTRADAY.equalsIgnoreCase(text(row, "RUN_KIND"));
         currentIntra = intra;
         if (intra) {
+            String part = (fx != null ? "scenario-pv|" : "pnl-vector|") + batch;    // a batch may come in both kinds, as two loads
             if (batch != null) {
                 intradayBatches.add(batch);
+                intradayParts.add(part);
             }
-            if (batch != null && applied.contains(batch)) {
+            if (batch != null && applied.contains(part)) {
                 return;                                                 // applied already (a redelivery, or a date opened again)
             }
             if (setId != null && set != null && !set.equals(setId)) {
@@ -312,6 +314,7 @@ final class VarIntake {
     static final String INTRADAY = "INTRADAY";
     private final VarIntradayRows intraday = new VarIntradayRows();
     private final TreeSet<String> intradayBatches = new TreeSet<>();
+    private final TreeSet<String> intradayParts = new TreeSet<>();
     private java.util.Set<String> applied = java.util.Set.of();
     private boolean intradayOnly;
     private String setId;
@@ -323,7 +326,7 @@ final class VarIntake {
         return this;
     }
 
-    /** Reads only the intraday rows of a loaded date, skipping the batches {@code applied} already. */
+    /** Reads only the intraday rows of a loaded date, skipping the batch parts ({@code <kind>|<BATCH_ID>}) {@code applied} already. */
     VarIntake intradayOnly(java.util.Set<String> applied) {
         this.intradayOnly = true;
         this.applied = applied == null ? java.util.Set.of() : applied;
@@ -333,6 +336,11 @@ final class VarIntake {
     /** The intraday updates read (the latest per trade). */
     VarIntradayRows intraday() {
         return intraday;
+    }
+
+    /** The intraday batch parts met, {@code <kind>|<BATCH_ID>}: a batch sent in both kinds is two parts, each loaded on its own. */
+    java.util.Set<String> intradayParts() {
+        return java.util.Set.copyOf(intradayParts);
     }
 
     /** The intraday batches met (applied before or not). */

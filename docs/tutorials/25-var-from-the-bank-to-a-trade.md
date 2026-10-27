@@ -545,6 +545,60 @@ entitlement)* for the bank: the bank's 9,572 trades less the rates desk's 1,487,
 
 **Further in the guide:** [section 9](../guides/VAR_GUIDE.md#9-who-sees-what-entitlements-and-audit) (entitlements and audit).
 
+## Step 13 · Intraday: a pricing system re-sends trades
+
+During the day a pricing system sends only the trades that changed. `tools/pvgen` is a stand-in for one (pure Python, JSONL only, every
+line one row of the contract; [VAR_GUIDE.md section 15.12](../guides/VAR_GUIDE.md#1512-producing-pl-vectors-and-scenario-pvs-as-built-294)).
+
+**From the command line**, with the server of step 1 running (Windows: `tools\windows\pvgen-intraday.ps1` with the same options):
+
+```text
+$ tools/pvgen/intraday.sh --batches 3 --trades-per-batch 10 --lake data/delta --server http://<host>:<port>
+lake-build ok exit=0 ... kind=pnl-vector engine=drishti mode=append rows=8 rejected=0 dates=1 partitions=1 seconds=1.75
+lake-build ok exit=0 ... kind=scenario-pv engine=drishti mode=append rows=2 rejected=0 dates=1 partitions=1 seconds=1.742
+...
+I-2026-09-30-001: 10 trades (7 amended, 3 new, 0 cancelled), 8 pnl-vector, 2 scenario-pv
+I-2026-09-30-002: 10 trades (6 amended, 4 new, 0 cancelled), 9 pnl-vector, 1 scenario-pv
+I-2026-09-30-003: 10 trades (6 amended, 1 new, 3 cancelled), 7 pnl-vector, 3 scenario-pv
+wrote 3 batches to data/pvgen/intraday-2026-09-30
+```
+
+Each batch is a small JSONL file per kind (`data/pvgen/intraday-2026-09-30/I-2026-09-30-001.pnl-vector.jsonl`, `….scenario-pv.jsonl`),
+marked `RUN_KIND: INTRADAY` with its own `BATCH_ID` and a later `COMPUTED_AT`, appended to the lake and signalled: the engine applies it
+without a reload.
+
+**In the UI**, the VaR page's status line shows the **intraday** badge; point at it for the batches:
+
+![The bank after three intraday batches: the intraday badge in the status line, its tooltip listing the batches](img/t25/13-intraday.jpg)
+
+```text
+$ drishti.py var intraday
+2026-09-30: intraday, 30 updates of 30 trades (19 amended, 8 new, 3 cancelled) in 3 batches, latest 2026-09-30T06:07:09Z
+  batches I-2026-09-30-001, I-2026-09-30-002, I-2026-09-30-003; ignored as older 0, before the morning run 0
+```
+
+**Check it.** `tools/pvgen/check.sh` recomputes the bank's and every desk's VaR and ES from the files themselves (the morning run of
+`tools/pvgen/morning.sh --out data/pvgen`, then the batches) and compares them with the server:
+
+```text
+$ tools/pvgen/check.sh --morning data/pvgen/morning-2026-09-30 --intraday data/pvgen/intraday-2026-09-30 --server http://<host>:<port>
+2026-09-30: the morning run (9,572 trades) and 30 intraday rows
+  BANK                     VaR      111,939,005  ES      159,035,721   server VaR      111,939,005  ES      159,035,721  ok  (intraday updates 30)
+  DESK:DESK-COMM           VaR       16,590,438  ES       17,486,765   server VaR       16,590,438  ES       17,486,765  ok  (intraday updates 30)
+  ...
+  DESK:DESK-RATES          VaR       75,756,517  ES       75,852,800   server VaR       75,756,517  ES       75,852,800  ok  (intraday updates 30)
+  DESK:DESK-STRUCT         VaR        9,987,431  ES       11,163,708   server VaR        9,987,431  ES       11,163,708  ok  (intraday updates 30)
+every figure agrees
+```
+
+**You should see** the bank move from 112,041,646 to **111,939,005** (ES 160,143,809 to 159,035,721), the badge, *intraday* in *How this number was built*, and every line of the check `ok`. The official end-of-day
+record is still the morning run's. The same updates can come from Kafka (the `pv-updates` connector, off by default; the publisher
+`tools/pvgen/publish-kafka.sh`): [VAR_GUIDE.md section 8.4](../guides/VAR_GUIDE.md#84-what-if-pricing-and-intraday-recomputes-what-if-planned-intraday-updates-as-built-in-294).
+
+**Further in the guide:** [section 8.4](../guides/VAR_GUIDE.md#84-what-if-pricing-and-intraday-recomputes-what-if-planned-intraday-updates-as-built-in-294)
+(the rules: latest `COMPUTED_AT` wins, cancels, new trades), [section 15.12](../guides/VAR_GUIDE.md#1512-producing-pl-vectors-and-scenario-pvs-as-built-294)
+(the scripts, both forms side by side).
+
 ## Next steps
 
 - Read [VAR_GUIDE.md](../guides/VAR_GUIDE.md): the measures by hand on ten scenarios, the data flow and restatements, the scope grammar in full, the

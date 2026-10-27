@@ -390,14 +390,15 @@ public final class VarService implements AutoCloseable {
         synchronized (intradayLocks.computeIfAbsent(d, x -> new Object())) {
             VarDate usd = dates.get(d).join();
             VarIntradayRows state = usd.intraday() == null ? new VarIntradayRows().morning(null, usd.intake().batchIds()) : usd.intraday();
-            VarIntake read = loader.readIntraday(d, usd.book().morning(), state.batches());
+            VarIntake read = loader.readIntraday(d, usd.book().morning(), state.parts());
             java.util.Set<String> morning = new java.util.TreeSet<>(read.summary().batchIds());
-            java.util.Set<String> fresh0 = new java.util.TreeSet<>(read.intradayBatches());
-            fresh0.removeAll(state.batches());
+            // new batch parts (a batch's scenario PVs and P&L vectors may land as two loads, each its own signal)
+            java.util.Set<String> fresh0 = new java.util.TreeSet<>(read.intradayParts());
+            fresh0.removeAll(state.parts());
             // no new intraday batch: the signal is a full run (a restatement with the same batch id included), as before 2.9.4
             boolean restated = fresh0.isEmpty() || !morning.equals(new java.util.TreeSet<>(usd.intake().batchIds()))
                     || state.morningAt() != null && read.morningAt() != null && !state.morningAt().equals(read.morningAt())
-                    || !read.intradayBatches().containsAll(state.batches());
+                    || !read.intradayParts().containsAll(state.parts());
             if (restated) {
                 reload(d);
                 return new IntradayResult("reload", 0, 0, java.util.List.of(), "a full run of the date: reloaded, its intraday layer dropped");
@@ -407,6 +408,7 @@ public final class VarService implements AutoCloseable {
                 next.morning(read.morningAt(), usd.intake().batchIds());
             }
             next.met(read.intradayBatches());
+            next.metParts(read.intradayParts());
             next.rejected(read.intradayRejections());
             java.util.List<VarIntradayRows.Row> fresh = new java.util.ArrayList<>();
             for (VarIntradayRows.Row r : read.intraday().rows()) {
@@ -416,7 +418,7 @@ public final class VarService implements AutoCloseable {
             }
             java.util.List<String> batches = fresh.stream().map(VarIntradayRows.Row::batchId).distinct().toList();
             if (fresh.isEmpty()) {
-                if (!next.batches().equals(state.batches())) {
+                if (!next.parts().equals(state.parts())) {
                     dates.put(d, CompletableFuture.completedFuture(usd.withBook(usd.book(), next)));
                 }
                 return new IntradayResult("none", 0, 0, batches, "no update newer than what is applied");

@@ -153,6 +153,8 @@ class VarIntradayTest {
         T m = MORNING.get("T-22");
         b2.add(new T(m.id(), "BOOK-5", null, m.ccy(), m.pv(), m.pnl(), true));                                  // moved to another book
         b2.add(trade("N-3", "BOOK-0", null, null, r));                                                          // new P&L vector
+        T cad = MORNING.get("T-2");                                                                              // scenario PVs in CAD,
+        b2.add(new T(cad.id(), cad.book(), cad.pos(), null, cad.pv(), trade(cad.id(), cad.book(), cad.pos(), null, r).pnl(), true)); // now a vector
         out.add(b2);
         List<T> b3 = new ArrayList<>();
         b3.add(new T(c.id(), c.book(), c.pos(), c.ccy(), c.pv() * 2, trade(c.id(), c.book(), c.pos(), c.ccy(), r).pnl(), true)); // revived
@@ -251,7 +253,7 @@ class VarIntradayTest {
         VarIntraday.Info i = got.intraday().info();
         assertThat(i.batches()).containsExactly("B-1", "B-2", "B-3");
         assertThat(i.lastAt()).isEqualTo("2026-09-30T13:00:00Z");
-        assertThat(i.updates()).isEqualTo(10);
+        assertThat(i.updates()).isEqualTo(11);
         assertThat(got.tradeOrdinal("T-9")).isGreaterThanOrEqualTo(0);                 // revived
         assertThat(got.tradeOrdinal("T-31")).isEqualTo(-1);                            // cancelled: in no scope
         assertThat(got.tradeOrdinal("N-1")).isEqualTo(-1);

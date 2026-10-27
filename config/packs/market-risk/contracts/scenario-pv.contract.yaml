@@ -65,6 +65,8 @@ storage:
   - STATUS
   - SCENARIO_SET_ID
   - BATCH_ID
+  - RUN_KIND
+  - COMPUTED_AT
   vectors:
   - SCENARIO_PV
   test-data:
@@ -238,7 +240,7 @@ fields:
 - name: COMPUTED_AT
   type: timestamp
   presence: required
-  example: '2026-09-30T22:30:00Z'
+  example: '2026-09-30T06:00:00Z'
 - name: BATCH_ID
   type: id
   presence: required
@@ -361,6 +363,10 @@ validation:
   field: SCENARIO_PV
   same: every row of one business date
 notes:
+- 'Delivery format (product owner, 2026-10-27): JSONL: one JSON object per line, UTF-8, one row of this contract a line, exactly its fields (no other); a file is .jsonl, or .jsonl.gz. This is the contract a pricing system sends; tools/pvgen writes it (docs/guides/VAR_GUIDE.md section 15.12). The vector of the examples below is cut to its first 3 values: a row carries all 509.'
+- 'Example line, a full run''s row: {"SCENARIO_PV_ID":"SPV-1000003-HS-509","TRADE_ID":"1000003","SECURITY_ID":null,"INSTRUMENT":"ENGY-B-SWAP USD 2027-02","BUSINESS_DATE":"2026-09-30","SCENARIO_SET_ID":"HS-509","SOURCE_SYSTEM":"ENDUR","TRADE_VERSIONS":"v7","TRADE_STATUS":"AMENDED","MATURITY_DATE":"2027-02-28","LEGAL_ENTITY":"LE-NY","DIVISION":"DIV-MARKETS","DESK":"DESK-COMM","TT_BOOK":"BOOK-COMM-1","PORTFOLIO":"BOOK-COMM-1","STRATEGY":"","PRODUCT_GROUP":"Commodity","PRODUCT_TYPE":"ComSwap","CURRENCY":"USD","COUNTERPARTY":"CP-CASCADIA","DIRECTION":"SHORT","QUANTITY":-4687500.0,"TAGS":"","BASE_PV":-5176568.0,"VALUATION_DATE":"2026-09-30","BASE_VALUATION_DATE":"2026-09-30","SCENARIO_PV":[-4754754.0,-5608689.0,-5444664.0],"STATUS":"ok","PRICER":"demo-factor-model","MODEL_VERSION":"demo-2","COMPUTED_AT":"2026-09-30T06:00:00Z","BATCH_ID":"B-2026-09-30-01","RESTATEMENT":0,"RUN_KIND":"FULL"}'
+- 'Example line, an intraday amendment: {"SCENARIO_PV_ID":"SPV-1002344-HS-509-I-2026-09-30-001","TRADE_ID":"1002344","SECURITY_ID":"XCH-ComFut-USD-03","INSTRUMENT":"ENGY-EXCH-FUT USD 2026-09","BUSINESS_DATE":"2026-09-30","SCENARIO_SET_ID":"HS-509","SOURCE_SYSTEM":"ENDUR","TRADE_VERSIONS":"v6","TRADE_STATUS":"AMENDED","MATURITY_DATE":"2026-09-30","LEGAL_ENTITY":"LE-NY","DIVISION":"DIV-MARKETS","DESK":"DESK-COMM","TT_BOOK":"BOOK-COMM-3","PORTFOLIO":"BOOK-COMM-3","STRATEGY":"","PRODUCT_GROUP":"Commodity","PRODUCT_TYPE":"ComFut","CURRENCY":"USD","COUNTERPARTY":"CP-METROEX","DIRECTION":"SHORT","QUANTITY":-5900.0,"TAGS":"","BASE_PV":-302670.0,"VALUATION_DATE":"2026-09-30","BASE_VALUATION_DATE":"2026-09-30","SCENARIO_PV":[-208989.8,-396009.18,-356724.62],"STATUS":"ok","PRICER":"demo-factor-model","MODEL_VERSION":"demo-2","COMPUTED_AT":"2026-09-30T06:05:00Z","BATCH_ID":"I-2026-09-30-001","RESTATEMENT":0,"RUN_KIND":"INTRADAY"}'
+- 'Example line, an intraday cancel: {"SCENARIO_PV_ID":"SPV-1000414-HS-509-I-2026-09-30-001","TRADE_ID":"1000414","SECURITY_ID":null,"INSTRUMENT":"ENGY-SWAP USD 2026-11","BUSINESS_DATE":"2026-09-30","SCENARIO_SET_ID":"HS-509","SOURCE_SYSTEM":"ENDUR","TRADE_VERSIONS":"v8","TRADE_STATUS":"CANCELLED","MATURITY_DATE":"2026-11-30","LEGAL_ENTITY":"LE-NY","DIVISION":"DIV-MARKETS","DESK":"DESK-COMM","TT_BOOK":"BOOK-COMM-1","PORTFOLIO":"BOOK-COMM-1","STRATEGY":"","PRODUCT_GROUP":"Commodity","PRODUCT_TYPE":"ComSwap","CURRENCY":"USD","COUNTERPARTY":"CP-NORTHPLAINS","DIRECTION":"LONG","QUANTITY":96000.0,"TAGS":"","BASE_PV":581788.0,"VALUATION_DATE":"2026-09-30","BASE_VALUATION_DATE":"2026-09-30","SCENARIO_PV":null,"STATUS":"ok","PRICER":"demo-factor-model","MODEL_VERSION":"demo-2","COMPUTED_AT":"2026-09-30T06:05:04Z","BATCH_ID":"I-2026-09-30-001","RESTATEMENT":0,"RUN_KIND":"INTRADAY"}'
 - 'The engine (VarIntake) rejects a row, counted and listed in every answer''s provenance, never padded: a null or NaN in SCENARIO_PV (DRS-5206,
   the scenarios named: a scenario that failed to price is never filled with zero), a currency with no scenario FX on the date (DRS-5207),
   a length other than the scenario set''s, no BASE_PV, or a VALUATION_DATE or BASE_VALUATION_DATE that differs from the other or from
