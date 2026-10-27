@@ -26,7 +26,11 @@
   to **586** companies (SEC data fetched for the new ones; companies Wikidata still lists stay, in no index); GLEIF and funds rebuilt.
   The *vs index* weights follow each index's method: the Dow by share price (DIA's active share 1.8%, was 57.6%), the Nasdaq-100
   capped as its methodology caps it (QQQ 11.2%, was 26.75%). Contracts loosened where the new companies lack a value; Knowledge page,
-  Funds, Groupings and External data guides, tutorial 28 and the pack guides rerun. Screenshots t28 04 and 08 to retake.
+  Funds, Groupings and External data guides, tutorial 28 and the pack guides rerun. Tutorial 28's nine pictures and the funds guide's fact-sheet picture retaken on the new data (the
+  tutorial's SIC division share and its TRACK SP500 output corrected to match); its two tall tab pictures no longer show the function-key bar
+  across their middle.
+- **Tutorial 11's Excel chart picture shows the chart (2026-10-27).** `tools/docs/shots/t11.py` took the second page of the export's PDF,
+  which is the About sheet's notes; it now takes the page with the chart (the most colourful one), at a readable resolution.
 - **The data map, `DATAMAP` (2026-10-27; product owner, mock-ups A and C approved as one page).** **Views → Data map** (`/datamap`,
   `DATAMAP <GO>`, `DATAMAP trade`, `DATAMAP counterparty`) shows every kind of data the user's packs hold, how much there is on the
   business date and how the kinds join, in two views sharing one selection, domain chips and Find, kept in the address: **Map** (domain

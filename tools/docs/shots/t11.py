@@ -80,8 +80,14 @@ def excel_chart(c: Ctx):
         xlsx = work / "chart.xlsx"
         d.value.save_as(xlsx)
         subprocess.run(["soffice", "--headless", f"-env:UserInstallation=file://{work / 'profile'}", "--convert-to", "pdf", "--outdir", str(work), str(xlsx)], check=True, capture_output=True, timeout=180)
-        subprocess.run(["pdftoppm", "-r", "70", "-png", "-f", "2", "-l", "2", str(work / "chart.pdf"), str(work / "page")], check=True, timeout=60)
-        page = sorted(work.glob("page-*.png"))[0]
+        # the About sheet (and its notes) comes first and may take more than one page: the chart's page is the most colourful one
+        subprocess.run(["pdftoppm", "-r", "110", "-png", str(work / "chart.pdf"), str(work / "page")], check=True, timeout=60)
+
+        def colour(png: Path) -> float:
+            r = subprocess.run(["convert", str(png), "-colorspace", "HSL", "-channel", "G", "-separate", "+channel", "-format", "%[fx:mean]", "info:"],
+                               check=True, capture_output=True, text=True, timeout=60)
+            return float(r.stdout.strip() or 0)
+        page = max(sorted(work.glob("page-*.png")), key=colour)
         out = OUT / "t11"
         out.mkdir(parents=True, exist_ok=True)
         subprocess.run(["convert", str(page), "-trim", "-bordercolor", "white", "-border", "14", "-quality", "84", str(out / "18-excel-chart.jpg")], check=True, timeout=60)

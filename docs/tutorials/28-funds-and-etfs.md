@@ -19,7 +19,7 @@ What does the largest Nasdaq ETF hold, who are its derivative counterparties, ho
 Apple? The `funds` pack answers from SEC public data for the 200 largest US mutual funds and ETFs. In this tutorial you turn the pack
 on, read a fund's fact sheet, look through its holdings, set it against its index, find funds by share class and by index, see who
 holds a company, and refresh the data. Each step shows the UI, the command line and the YAML behind it; the outputs were captured with
-sign-in off, on a lake built on 2026-10-26. Every column, source and option is in the one reference,
+sign-in off, on a lake built on 2026-10-27. Every column, source and option is in the one reference,
 [FUNDS_GUIDE.md](../guides/FUNDS_GUIDE.md); each step ends with its sections.
 
 ## Time to complete
@@ -161,7 +161,7 @@ panels:
 
 You should see the tiles **Net assets 490.1bn USD**, **Expense ratio 0.18 %**, **Holdings 105**, **Top 10 45.00 %**, **Last calendar
 year +25.58 %** (2024) and **Turnover 7.98 %**; the ten largest holdings from NVIDIA (7.60%) down, each a link to its company; the fund
-(index Nasdaq-100, exchange Nasdaq, rank 7 by net assets) and its holdings by SIC division (Manufacturing 55.90%); its calendar-year
+(index Nasdaq-100, exchange Nasdaq, rank 7 by net assets) and its holdings by SIC division (Manufacturing 62.74%); its calendar-year
 returns from 2015 (2022 −32.51%, 2023 +54.73%); three months of flows (net +10.4bn, +7.2bn, −6.8bn); the tabs at the bottom. Click
 **NVIDIA Corp.**: `USEQ NVDA` opens.
 
@@ -376,10 +376,10 @@ Funds · Funds tracking an index  SP500  with S&P 500   [TRACK]
   Largest              VOO
 
   Fund                                     Ticker  Type                                 Net assets  Expense ratio  Members held  Active share*
-  Vanguard 500 Index Fund                  VOO     Mutual fund with an ETF share class   1,671.2bn         0.03 %           416         5.51 %
-  iShares Core S&P 500 ETF                 IVV     ETF                                     888.1bn         0.03 %           415         5.53 %
-  Fidelity 500 Index Fund                  FXAIX   Mutual fund                             832.2bn         0.01 %           416         5.27 %
-  State Street SPDR S&P 500 ETF Trust      SPY     ETF (unit investment trust)             781.2bn                          415         5.53 %
+  Vanguard 500 Index Fund                  VOO     Mutual fund with an ETF share class   1,671.2bn         0.03 %           493         5.29 %
+  iShares Core S&P 500 ETF                 IVV     ETF                                     888.1bn         0.03 %           493         5.29 %
+  Fidelity 500 Index Fund                  FXAIX   Mutual fund                             832.2bn         0.01 %           487         5.41 %
+  State Street SPDR S&P 500 ETF Trust      SPY     ETF (unit investment trust)             781.2bn                          493         5.29 %
   ...
 ```
 
