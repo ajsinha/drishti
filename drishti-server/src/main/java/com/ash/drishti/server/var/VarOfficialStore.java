@@ -36,8 +36,9 @@ import java.util.regex.Pattern;
  *   <li>{@code var/official/<date>.json}: the date's index, the record the history reads: the result version, the inputs' versions and
  *       batch ids, and per node of every hierarchy its figures (VaR, ES, hypothetical P&amp;L, limit, counts, backtest) and its capture id.
  *       A restated date writes a new version of it (the store keeps the old one); the captures it names are never changed.</li>
- *   <li>{@code var/official/<date>-membership-v<n>.json}: the date's positions and their trades and each node's books as the rules
- *       derived them, so every official figure can be recomputed from its inputs.</li>
+ *   <li>{@code var/official/<date>-membership-v<n>.jsonl}: the date's positions and their trades and each node's books as the rules
+ *       derived them, so every official figure can be recomputed from its inputs; JSON Lines since 2.9.4 (a header line, then a position
+ *       or a node a line). Records written before are {@code -membership-v<n>.json}, one document, read as they are.</li>
  *   <li>{@code var/captures/official/<CAP-id>.json}: one capture per node, {@code official: true}, owner {@code drishti}.</li>
  *   <li>{@code var/official/<CCY>/<date>.json} and {@code var/official/<CCY>/<date>-membership-v<n>.json}: the same in another reporting
  *       currency of {@code drishti.var.official.currencies} (2.9.4); USD keeps the paths above.</li>
@@ -81,8 +82,9 @@ final class VarOfficialStore {
         return membershipKey(d, version, VarDate.USD);
     }
 
+    /** A date's membership in a reporting currency's folder: JSON Lines from 2.9.4 on (MembershipLines). */
     static String membershipKey(LocalDate d, long version, String currency) {
-        return folder(currency) + d + "-membership-v" + version + ".json";
+        return folder(currency) + d + "-membership-v" + version + ".jsonl";
     }
 
     /** The dates that have an official record, oldest first. */
@@ -139,11 +141,15 @@ final class VarOfficialStore {
     }
 
     void putMembership(LocalDate date, long version, Map<String, Object> membership, String currency) {
-        docs.putLatest(membershipKey(date, version, currency), membership);
+        docs.store().putLatest(membershipKey(date, version, currency), MembershipLines.write(membership));
     }
 
+    /** A membership record: the JSON Lines of 2.9.4 on, or the one JSON document written before (never rewritten). */
     @SuppressWarnings("unchecked")
     Optional<Map<String, Object>> membership(String key) {
+        if (key.endsWith(".jsonl")) {
+            return docs.store().get(key).map(item -> MembershipLines.read(item.text()));
+        }
         return docs.value(key, Map.class).map(x -> (Map<String, Object>) x);
     }
 

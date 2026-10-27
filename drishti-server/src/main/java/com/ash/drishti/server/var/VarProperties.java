@@ -257,9 +257,12 @@ public record VarProperties(Boolean enabled, Double confidence, Double esConfide
      * @param onStart at start, capture the newest date when it has no official record yet (a lake built while the server was down)
      * @param currencies the reporting currencies captured officially (USD always, first and published; others kept in the content
      *     store beside it, VAR_GUIDE.md section 19)
+     * @param jsonl also write each published date as JSON Lines beside the table (2.9.4, true by default)
      */
-    public record Official(Boolean enabled, Boolean publish, String root, Integer retentionYears, Boolean onStart, List<String> currencies) {
+    public record Official(Boolean enabled, Boolean publish, String root, Integer retentionYears, Boolean onStart, List<String> currencies,
+            Boolean jsonl) {
         public Official {
+            jsonl = jsonl == null || jsonl;                 // 2.9.4: each published date also as JSON Lines beside the table
             enabled = enabled == null || enabled;
             publish = publish == null || publish;
             root = root == null || root.isBlank() ? null : root;
@@ -317,7 +320,7 @@ public record VarProperties(Boolean enabled, Double confidence, Double esConfide
         access = access == null ? Map.of() : access;
         pathPage = pathPage == null || pathPage <= 0 ? 60 : pathPage;
         positions = positions == null ? new Positions(null, null) : positions;
-        official = official == null ? new Official(null, null, null, null, null, null) : official;
+        official = official == null ? new Official(null, null, null, null, null, null, null) : official;
         tier = tier == null ? new Tier(null, null, null, null, null) : tier;
         currencies = currencyList(currencies == null ? List.of("USD", "EUR", "CAD", "JPY", "GBP") : currencies);
         currencyRetentionDates = currencyRetentionDates == null || currencyRetentionDates < 1 ? 5 : currencyRetentionDates;

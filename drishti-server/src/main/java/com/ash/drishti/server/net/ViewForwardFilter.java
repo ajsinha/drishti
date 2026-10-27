@@ -101,7 +101,7 @@ public final class ViewForwardFilter extends OncePerRequestFilter {
         String[] seg = path.substring("/api/v1/".length()).split("/");
         String area = seg[0];
         if ("search".equals(area)) {
-            if (seg.length > 2 || (seg.length == 2 && !Set.of("csv", "compare").contains(seg[1]))) {
+            if (seg.length > 2 || (seg.length == 2 && !Set.of("csv", "jsonl", "compare").contains(seg[1]))) {
                 return Optional.empty();                 // a search's pivot and columns run where its rows are: not forwarded
             }
             String q = req.getParameter("q");

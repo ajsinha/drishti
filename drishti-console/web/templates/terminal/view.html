@@ -84,6 +84,7 @@
             <a class="dropdown-item" data-export-fmt="png" href="/dist/view/{{ vm.ref.kind | urlencode }}/{{ vm.ref.id | urlencode }}.png{{ vq }}"><i class="bi bi-file-image" aria-hidden="true"></i> Image (PNG)</a>
             <a class="dropdown-item" data-export-fmt="xlsx" href="/dist/view/{{ vm.ref.kind | urlencode }}/{{ vm.ref.id | urlencode }}.xlsx{{ vq }}"><i class="bi bi-filetype-xlsx" aria-hidden="true"></i> Excel</a>
             <a class="dropdown-item" data-export-fmt="csv" href="/dist/view/{{ vm.ref.kind | urlencode }}/{{ vm.ref.id | urlencode }}.csv{{ vq }}"><i class="bi bi-filetype-csv" aria-hidden="true"></i> CSV</a>
+            <a class="dropdown-item" data-export-fmt="jsonl" href="/dist/view/{{ vm.ref.kind | urlencode }}/{{ vm.ref.id | urlencode }}.jsonl{{ vq }}" title="One row a line, the CSV's column names"><i class="bi bi-braces" aria-hidden="true"></i> JSON Lines</a>
           </div></span>
         <a class="tbar-link vhead-alert" data-subscribe href="/reports/subscribe?type=view&id={{ (vm.ref.kind ~ '/' ~ vm.ref.id) | urlencode }}{% if vstate %}&view={{ (vstate | join('&')) | urlencode }}{% endif %}&title={{ vm.title.id | urlencode }}" title="Send this view by email on a schedule, rendered for each recipient"><i class="bi bi-envelope-paper" aria-hidden="true"></i> Subscribe</a>
         <button type="button" class="tbar-link vhead-alert" data-print title="Print, or save as PDF"><i class="bi bi-printer" aria-hidden="true"></i> Print</button>

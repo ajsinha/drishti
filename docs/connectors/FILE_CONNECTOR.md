@@ -420,8 +420,8 @@ it.
 
 ## 13. The older layout: a file per entity
 
-The connector still reads one file per entity, `<root>/<kind>/<id>.json` (or `.csv`) and dated
-`<root>/<yyyy-MM-dd>/<kind>/<id>.json`, as the public-data feeds use (`data/feeds/fixing/SOFR-HISTORY.csv`). It suits
+The connector still reads one file per entity, `<root>/<kind>/<id>.json` (or `.csv`, deprecated) and dated
+`<root>/<yyyy-MM-dd>/<kind>/<id>.json`, as some public-data feeds use. It suits
 a handful of documents; for more than a few thousand entities a day use JSON lines, since a file per entity means a
 file system entry per entity per day. When a kind has JSON-lines files they are read first.
 
@@ -474,16 +474,20 @@ The kind is the folder name, the id is the file name without `.json` (or `.csv`)
 }
 ```
 
-A CSV file needs a header row and becomes `{"rows": [...]}`, numbers and booleans typed. `make_data.py` writes one
-(nothing under `data/` is in git): `data/feeds/fixing/SOFR-HISTORY.csv` starts
+A CSV file needs a header row and becomes `{"rows": [...]}`, numbers and booleans typed. **CSV input is deprecated** (it will be
+removed in a later release; [DATA_FORMATS.md](../guides/DATA_FORMATS.md)): each CSV file found or read logs one warning,
+`feed-file: fixing/X.csv: CSV input is deprecated ...`, and Admin → Health names it, `UP (CSV input is deprecated: fixing/X.csv
+(convert to JSON Lines: drishti.py convert))`, until it is gone. `drishti.py convert fixing/X.csv --rows-document --out fixing.jsonl`
+turns it into the JSON Lines line that serves the same document ([CLI_GUIDE.md](../guides/CLI_GUIDE.md#convert-csv-a-json-array-or-a-folder-of-json-files-into-json-lines)).
+The sample feed `make_data.py` and `lake demo` write
+(nothing under `data/` is in git) is JSON Lines already, `data/feeds/fixing.jsonl`, one fixing series a line:
 
 ```text
-date,rate,volume_bn
-2026-09-01,3.95,1910
-2026-09-02,3.95,1879
+{"id":"SOFR-HISTORY","rows":[{"date":"2026-09-01","rate":3.95,"volume_bn":1910},{"date":"2026-09-02","rate":3.95,"volume_bn":1879}, …]}
 ```
 
-and is served as `{"rows": [{"date": "2026-09-01", "rate": 3.95, "volume_bn": 1910}, …]}`.
+served as kind `fixing`, id `SOFR-HISTORY`: `{"id": "SOFR-HISTORY", "rows": [{"date": "2026-09-01", "rate": 3.95, "volume_bn": 1910}, …]}`
+(until 2.9.4 it was `data/feeds/fixing/SOFR-HISTORY.csv`, removed when the JSONL file replaces it).
 
 #### Configure it
 
@@ -610,8 +614,7 @@ Every setting is in [section 12](#12-settings).
 
 ```text
 data/feeds/
-├── fixing/
-│   └── SOFR-HISTORY.csv            undated: kind "fixing", id "SOFR-HISTORY"
+├── fixing.jsonl                    undated JSON Lines: kind "fixing", one entity a line (id "SOFR-HISTORY")
 ├── settlement/
 │   └── CL-DEC26.json               undated: kind "settlement", id "CL-DEC26"
 ├── 2026-09-29/
@@ -627,7 +630,7 @@ the file, then the undated folder; Live takes the newest dated folder that has i
 document's business date is its folder's date (none for the undated folder). Generation is the file's modification
 time. An id containing `..` or a path separator that would leave the root is refused.
 
-**Try it.** `data/feeds/fixing/SOFR-HISTORY.csv` ships with the repository; add your own files and wait for the
+**Try it.** `data/feeds/fixing.jsonl` is written by `make_data.py` and `lake demo`; add your own files and wait for the
 next rescan (search only; reads find new files at once).
 
 **What the user sees.** `FIX SOFR-HISTORY <GO>` with the retired example pack `finance` loaded (its `FIX` mnemonic is kind `fixing`); laid

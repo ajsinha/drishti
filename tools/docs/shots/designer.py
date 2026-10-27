@@ -50,7 +50,7 @@ def workbench(c: Ctx):
 
 @shot("03-data-pane.jpg")
 def data_pane(c: Ctx):
-    c.page.locator(".wb-field-row", has_text="productName").first.click()
+    c.page.locator(".wb-field-row", has_text="PRODUCT_NAME").first.click()
     c.page.wait_for_timeout(300)
     c.save("03-data-pane.jpg", ".wb-left")
 
@@ -118,7 +118,7 @@ def notes_tab(c: Ctx):
 
 @shot("07-drop-field.jpg")
 def drop_field(c: Ctx):
-    f = c.page.locator(".wb-field-row", has_text="productName").first
+    f = c.page.locator(".wb-field-row", has_text="PRODUCT_NAME").first
     f.scroll_into_view_if_needed()
     s = c.box(f)
     t = c.box(c.panel("terms"))

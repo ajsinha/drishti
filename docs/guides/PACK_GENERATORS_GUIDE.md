@@ -301,7 +301,7 @@ config/packs/library/
   sutras/library/author.v1.sutra.yaml
   samples/book-title.jsonl             the documents, one a line, for the built-in demo source
   samples/author.jsonl
-  samples/catalog.json                 the list the demo source and suggestions read
+  samples/catalog.jsonl                 the list the demo source and suggestions read
   guides/library.md                    an overview guide: kinds, fields, links and "Try it" commands
   config/help.yaml                     the guide's card under Help → Domain packs
 ```
@@ -487,7 +487,7 @@ packs/my-bank/
   sutras/trade/             trade-callnot, trade-cash, trade-comfut, trade-commodity, trade-comswap, trade-default (.v1.sutra.yaml)
   sutras/counterparty/      counterparty-default.v1.sutra.yaml
   tests/<sutra>/            three samples each and expect.yaml
-  samples/                  catalog.json, trade.jsonl, counterparty.jsonl (--catalog-samples, 25 a kind by default)
+  samples/                  catalog.jsonl, trade.jsonl, counterparty.jsonl (--catalog-samples, 25 a kind by default)
   config/about.yaml         TODO glossary entries for every field the Sutras show
   generated/                what pack new generated: the base `pack regenerate` merges your edits against (keep it with the pack)
   README.md

@@ -662,7 +662,7 @@ chart(by_book, kind="bar", x="PORTFOLIO", y="NOTIONAL")
 
 ![The Python console: the cell, 12751 live trades of 15000, the top eight books by live notional as a table and a bar chart, run in the browser](img/t14/28-pyconsole.jpg)
 
-You should see `12751 live trades of 15000`, then eight books, `BOOK-COMM-1 262,249,672,445.02` first, and the bars. The status says `Done in your browser`.
+You should see `12751 live trades of 15000`, then eight books, `BOOK-COMM-1 258,926,542,975.48` first, and the bars. The status says `Done in your browser`.
 Now give it the title `Live notional by book` and press **Promote to the server**:
 
 ![Promoted: the same code run on the console backend over the 15,000 rows rebuilt for you: the same answer as in your browser, saved as a notebook draft](img/t14/29-pyconsole-promoted.jpg)

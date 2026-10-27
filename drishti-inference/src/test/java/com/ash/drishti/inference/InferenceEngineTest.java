@@ -27,7 +27,6 @@ import com.ash.drishti.rachana.format.Formats;
 import com.ash.drishti.rachana.model.Panel;
 import com.ash.drishti.rachana.model.PanelKind;
 import com.ash.drishti.rachana.model.StripItem;
-import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.List;
 import java.util.Optional;
@@ -43,7 +42,7 @@ class InferenceEngineTest {
     static final JsonCodec JSON = new JsonCodec();
 
     static DataNode fixture(String kind, String id) throws Exception {
-        return JSON.read(Files.readString(FIXTURES.resolve(kind).resolve(id + ".json")));
+        return JSON.read(com.ash.drishti.common.PackSamples.document(FIXTURES, kind, id).orElseThrow());   // samples/<kind>.jsonl
     }
 
     static Panel panel(List<Panel> ps, String id) {

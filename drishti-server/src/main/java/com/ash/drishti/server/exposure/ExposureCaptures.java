@@ -161,6 +161,29 @@ final class ExposureCaptures {
 
     /** A capture as CSV: its fields as {@code # field: value} lines, then its profile (EXPOSURE_GUIDE.md section 19.3). */
     @SuppressWarnings("unchecked")
+    /** A capture's profile as JSON Lines: one grid date a line, keyed as the CSV's header (the capture itself is GET /captures/{id}). */
+    String jsonl(Principal p, String id) {
+        Map<String, Object> c = get(p, id);
+        return profileJsonl(c.get("profile") instanceof List<?> l ? l : List.of());
+    }
+
+    /** The profile's CSV columns and the fields of a profile row they are read from: a JSON Lines download uses the CSV's names. */
+    static final List<String[]> PROFILE_COLUMNS = List.of(new String[] {"tenor", "tenor"}, new String[] {"date", "date"}, new String[] {"t", "t"},
+            new String[] {"ee", "ee"}, new String[] {"ene", "ene"}, new String[] {"eee", "eee"}, new String[] {"pfe", "pfe"}, new String[] {"pfe_99", "pfe99"},
+            new String[] {"ee_uncoll", "eeUncoll"});
+
+    /** Profile rows as JSON Lines: one grid date a line, keyed as the CSV's header. */
+    static String profileJsonl(List<?> rows) {
+        StringBuilder sb = new StringBuilder();
+        for (Object o : rows) {
+            Map<?, ?> r = (Map<?, ?>) o;
+            Map<String, Object> line = new java.util.LinkedHashMap<>();
+            PROFILE_COLUMNS.forEach(c -> line.put(c[0], r.get(c[1])));
+            sb.append(com.ash.drishti.server.dist.JsonlWriter.line(line));
+        }
+        return sb.toString();
+    }
+
     String csv(Principal p, String id) {
         Map<String, Object> c = get(p, id);
         StringBuilder sb = new StringBuilder();

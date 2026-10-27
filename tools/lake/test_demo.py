@@ -134,7 +134,7 @@ class LakeDemo(unittest.TestCase):
             self.assertEqual(len(list((data / "connectors" / "history").glob("trade-endur.*.yaml"))), 1)
             self.assertTrue((conn / "trade-calypso.yaml").is_file())          # a lake elsewhere: the missing files are written
             self.assertFalse((data / "build" / "lake-demo").exists())        # staging removed
-            self.assertTrue((data / "feeds" / "fixing" / "SOFR-HISTORY.csv").is_file())
+            self.assertTrue((data / "feeds" / "fixing.jsonl").is_file())                # the sample feed, JSON Lines
             self.assertIn("Demo lake ready", out.getvalue())
             # the server told: each table written, each of the seven dates
             told = {(path.split("/")[4], body["kind"], body["businessDate"]) for path, body in server.got}
@@ -227,7 +227,7 @@ class DataFolder(unittest.TestCase):
             r = subprocess.run([sys.executable, "-c", code, "--data-dir", tmp], cwd=ROOT, env=env, capture_output=True, text=True, timeout=120)
             self.assertEqual(r.returncode, 0, r.stderr)
             self.assertEqual(r.stdout.split("\n")[0], tmp)
-            self.assertTrue((Path(tmp) / "feeds" / "fixing" / "SOFR-HISTORY.csv").is_file())
+            self.assertTrue((Path(tmp) / "feeds" / "fixing.jsonl").is_file())
 
 class TellServer(unittest.TestCase):
     """QA3A-07: a signal the server did not answer in time is not "refused", and the token hint is only for 401/403; --signal-once tells

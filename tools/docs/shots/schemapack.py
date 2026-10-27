@@ -33,6 +33,8 @@ def sources(c: Ctx, width: int = 1200, height: int = 900):
     p = c.page
     p.set_viewport_size({"width": width, "height": height})
     p.goto(c.base + "/build/pack/new")
+    p.evaluate("sessionStorage.clear()")             # the page restores the last picture's wizard from this tab's storage: start each one afresh
+    p.reload()
     p.set_input_files("[data-files]", FILES)
     p.locator("[data-total]:has-text('4 schemas')").wait_for(timeout=30000)
     p.set_input_files("[data-folder]", str(SCHEMAS / "data"))
@@ -47,7 +49,7 @@ def kinds(c: Ctx, rename: bool = True, width: int = 1200):
     if rename:
         for old, new in RENAMES.items():
             p.fill(f"input[data-focus=name-{old}]", new)
-            p.locator(f"input[data-focus=name-{old}]").dispatch_event("change")
+            p.locator(f"input[data-focus=name-{old}]").press("Tab")           # as a person leaves the box (a dispatched change lost every second rename)
             p.locator(f"input[data-focus=name-{old}][value={new}]").wait_for(timeout=30000)
             c.until("!document.querySelector('[data-next]').disabled")
 

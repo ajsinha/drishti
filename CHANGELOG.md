@@ -195,6 +195,107 @@
   `VarCurrencyApiTest` (both forms side by side, a failed scenario, no FX, a valuation date, every answer in a currency, captures,
   the official record in EUR, `var-result` with `ccy`), `VarTestDataPrecisionTest` (the committed data in every supplied currency),
   `test_var_data.py`, `test_varcli.py`, `test_var_engine.py`.
+- **Fixes found by the screenshot run (2026-10-27).** New pack: a job reached through another console worker answered `DRS-5006 no such job` (the console serves from several workers; a job lives in the one that started it): job ids now name their worker and the call is relayed to it, as live channels are, and the hand-off to Admin → Packs reads such ids. The console reads the server's installed packs (registry and Deploy archive: `packs.installed_dir`, `DRISHTI_PACKS_INSTALLED`, default `<data dir>/packs/installed`) first, as the server does, so an installed pack's help guide, examples and workspaces reach the console (the help centre said *There is no guide called helpdesk-pack*). The About drawer no longer lists the chosen Sutra under *Not chosen*. A Sutra control's open multi-select list floats over the panel instead of pushing the header's controls apart. The BI test stack's sample dataset is in today's grammar (approving it failed the check, DRS-9010). The screenshot stacks share the installed-packs folder, tutorial 5's shots recreate tutorial 4's connector, and the pictures the run could not make are retaken: tutorial 5 whole, tutorials 14 (Calc, the Python console) and 16 (the React sample; both need their git-ignored runtimes), the pack developer guide, schema to pack 09-10, controls, the BI guide and the Screen designer's rebase. A deal's own events stay listed whatever the Legs filter, as documented (RACHANA_REFERENCE, Controls).
+
+- **Your bank's names in the demo (2026-10-27; product owner).** New `config/demo/names.yaml`: the bank, its short name, the legal
+  entities `LE-NY`, `LE-LDN`, `LE-FRA`, `LE-TKY` and optional branches; the defaults are today's names, so nothing changes until it is
+  edited. `drishti.py lake demo` and `tools/build_demo_lakes.py` take `--names FILE` (default that file; `--dry-run` prints the mapping)
+  and rename as they load, in every kind: a value that is an old name, or an old name followed by a comma (a branch keeps its suffix);
+  the committed test data is never rewritten, LEIs and BICs stay (new `tools/demonames.py`). In the committed data the names are in
+  `core/legal-entity` (`NAME`) and `market-risk/risk-hierarchy` (the bank, `NAME`), and in the core pack's and the example packs'
+  samples, which follow the file when their generators run again (`packsamples.files` applies it, the catalogue's subtitles too).
+  Test: `tools/lake/test_names.py` (in the drill). Docs: DEMO_DATA "Your bank's names", the Windows QA guide's step 3.0a; the VaR
+  tree's top name is a separate server setting (the VaR root name, from the PV-VaR work).
+
+- **The guard of the data standard (2026-10-27).** Two tests in the drill: `tools/test_generators_write_jsonl.py` runs the cheap
+  generators into a temporary folder (comswap and note synth, `make_trades`, `bulk_trades --no-lake`, `make_data --lake --no-load` and
+  its feed, `samplegen/lake.py --no-load`, a retired pack's `make.py`, the sample and Sutra-case writers) and checks every data file
+  is JSON Lines, and reads every generator's source for a Delta, Parquet or CSV writer or a `.json`/`.csv`/`.tsv`/`.parquet`/`.ndjson`
+  data file outside its allow-list (manifests, state, download caches, test oracles, the loaders, the Iceberg fixtures, human-facing
+  exports); `tools/test_exports_offer_jsonl.py` checks that every export entry point offers JSON Lines (server, console routes, UI
+  menus, CLI). Docs: DATA_FORMATS section 5, the Windows QA guide's section 6g and checklist, SCALE_BENCHMARK, the plan's 2.9.4
+  section.
+
+- **JSON Lines in three smaller places (2026-10-27; product owner).** A pack's sample catalogue is `samples/catalog.jsonl`, one
+  `{kind, id, title, subtitle}` a line (19 committed catalogues converted; every generator writes it; `PackSamples.catalogEntries`,
+  `packsamples.catalog` and every reader take it, never as a kind, and still read the `catalog.json` array; the demo connector still
+  refuses a folder with neither). `lake build`'s staged rows (and the official publishers' and `HistoryBench`'s) are one
+  `{id, doc, columns}` object a line; Drishti's Java lake writer reads that and the earlier `[id, doc, columns]` array. The
+  collaboration file store's seals are `seals.jsonl`, one `{key, count, hash}` a line; the tab-separated `seals.log` is still read,
+  never rewritten. Manifests, state files, GeoJSON, run reports and storage internals stay as they are. Tests: `FileSealStoreTest`,
+  `LakeWriterTest` (both row forms), the pack, contract and README tests. Docs: the demo connector, packs, pack developer, generators,
+  lifecycle and modelling guides, DATA_FORMATS, OPERATIONS, COLLABORATION.
+
+- **Official results as JSON Lines too (2026-10-27; product owner).** VaR and exposure still publish to Delta and also write each
+  published date as JSON Lines beside the tables, `<root>/risk-results/jsonl/<table>/<date>/<table>-v<table version>.jsonl` (one row a
+  line, one file per commit; new settings `drishti.var.official.jsonl` and `drishti.ccr.exposure.official.jsonl`, on by default,
+  `JsonlWriter.writeFile`). In the content store the row lists are JSONL: `var/official/<date>-membership-v<n>.jsonl` (new
+  `MembershipLines`: a header line, then a position or a node a line) and `exposure/official/<date>-trades-v<n>.jsonl` (a header,
+  then a trade a line); the `.json` records written before stay and are read as they are (append-only). The VaR change is self-contained
+  (`VarPublisher`, `VarOfficialStore`, the new `MembershipLines`, the `Official` record's `jsonl` flag) so it merges beside the PV-VaR
+  branch. Tests: `VarOfficialJsonlTest`, `ExposureOfficialJsonlTest`; the official BI and API tests. Docs: VAR_GUIDE, EXPOSURE_GUIDE,
+  CONFIGURATION, DATA_FORMATS.
+
+- **Sutra test cases are one `cases.jsonl` per Sutra (2026-10-27; product owner).** `tests/<sutra>/cases.jsonl`, one case a line,
+  `{"case": "<name>", "document": {...}}`, beside `expect.yaml` (new `SutraCases`; `sutra test` names each case; `expect.yaml`'s
+  `samples:` takes the case name, the old `<name>.json` key still matching). The older one-`.json`-a-case folders are still read in
+  2.9.4 with a deprecation warning. All 197 committed test folders converted (the shipped packs, the retired examples and the
+  help-desk example; every generator's `--check` and `sutra test` over every pack green). Writers changed: `packgen/trades/tests.py`,
+  `var/make_var_data.py`, `realdata/pack_tests.py`, `sutragen.py` (and so `pack_from_jsonl.py`), `schemapack.py`, the console's
+  `schemakit/build.py`, and the workbench's pack fragment export and import (`PackFragment`, not in the audit's list); `sutra design
+  --each` reads `.jsonl` samples, so the drafters hand it one `samples.jsonl` per group. Shared Python helper
+  `tools/packgen/common/sutracases.py`. Docs: Sutra testing, pack developer and lifecycle guides, Screen designer, API and CLI guides,
+  BUILD_WORKBENCH, DATA_FORMATS.
+
+- **JSON Lines in every console download and CLI export (2026-10-27; product owner).** A shared `to_jsonl` in `core/export.py`
+  (a row a line keyed as the CSV's header, no BOM, numbers as numbers) and a `.jsonl` twin of every CSV route: `/export/search`,
+  `/export/grid`, `/export/compare/...`, a panel's `/export/<kind>/<id>/<panel>`, `/export/history/...` (a day a line); `/dist/bi` and
+  `/dist/view` pass `jsonl` to the server; the exposure and VaR pass-throughs take `jsonl`. UI: JSONL in a table chart's export
+  (`E`), the Pivot tab, BI runs (**Export JSONL**), a BI report's Export bar, the statement editor, a view's Export menu, a panel's
+  `{}` icon, the history `E` menu, search and form results, the exposure explorer (profile, captures), the VaR explorer (the path,
+  built in the browser, and captures: two small additions beside the CSV ones), the Subscribe form's *Send as* and the scheduled
+  report's *Format*. CLI: `history --jsonl`, `exposure profile --jsonl`, `bi runs result|export --format jsonl`, `bi sql --format
+  jsonl`, `bi statement file --format jsonl`. CSV, Excel, PDF and PNG stay. Element sheet regenerated (the `braces` icon). Tests:
+  console exports, history, dist routes, and the five CLI test files. Docs: DATA_FORMATS section 4, USER_GUIDE, CLI guide, BI runs.
+
+- **JSON Lines on every server export (2026-10-27; product owner).** Beside the formats each has (CSV, Excel, PDF and PNG all stay): `GET
+  /api/v1/search/jsonl` (forwarded across a cluster like `/search/csv`: `ViewForwardFilter`'s allow-list); `POST /api/v1/bi/sql`
+  `format: jsonl`; `GET /bi/runs/{id}/result?format=jsonl` and `POST /bi/runs/{id}/export {format: jsonl}`; `POST /api/v1/export/jsonl`
+  (reports, visuals, views: new `JsonlWriter`, beside `CsvWriter`); statements `format: jsonl`; subscriptions `format: jsonl` (the rows
+  attached); scheduled reports `format: csv | jsonl` (a webhook gets `application/jsonl`, a folder a `.jsonl` file); exposure
+  `scope/profile?format=jsonl` and `captures/{id}/jsonl`; VaR `captures/{id}/jsonl` (a self-contained addition: one endpoint in
+  `VarController` and one method in `VarCaptures`). A JSONL download is one row a line, keyed as the CSV's header, values typed. The
+  compliance export's `.ndjson` files are renamed `.jsonl` (same content). Tests: search, SQL, runs, dist, statements, reports,
+  exposure, VaR and compliance. Docs: API guide, SQL, statements, distribution, scheduled reports, exposure and VaR guides,
+  OPERATIONS, COLLABORATION, HOW_IT_FITS, TROUBLESHOOTING.
+
+- **CSV input deprecated; `drishti.py convert` (2026-10-27; product owner).** The readers keep what they accept (JSON Lines, JSON
+  arrays, per-entity `.json`), and CSV is deprecated, to be removed in a later release. The only CSV reader, the file connector's
+  feed files (`<kind>/<id>.csv`), still serves them, logs one warning per file and names them in Admin → Health
+  (`UP (CSV input is deprecated: fixing/X.csv (convert to JSON Lines: drishti.py convert))`) until they are gone. New
+  `drishti.py convert FILE [--out X.jsonl] [--rows-document] [--force]` (`tools/convertcmd.py`, `tools/test_convert.py` in the
+  drill) turns CSV, a JSON array (streamed), one object, gzip or a folder of `<id>.json` files into JSON Lines. Docs: DATA_FORMATS
+  section 3, CLI guide (`convert`), FILE_CONNECTOR, CONFIGURATION, CONNECTOR_RECIPES, TOOLS, the file plugin README.
+
+- **JSON Lines is the data standard: the generators (2026-10-27; product owner).** Every generator under `tools/` writes JSONL (one
+  JSON object a line, UTF-8; `.jsonl.gz` where the repository gzips), and generating and loading are separate steps
+  ([DATA_FORMATS.md](docs/guides/DATA_FORMATS.md), new). `make_data.py --lake`, `samplegen/lake.py` and the pack generators' `--lake`
+  write dated lake rows (`<name>-history.jsonl`, and the restatement as a second file, `<name>-restated.jsonl`) and then load them
+  with the new `tools/samplegen/load_rows.py` (`--no-load` stops after the JSONL); the lake is byte-for-byte the same data as before
+  (every table's rows and Delta versions compared). `bulk_trades.py` writes one JSONL file a day
+  (`<data>/build/bulk/<system>/trades-<date>.jsonl.gz`, in id order, memory still low) and loads each with `lake build`
+  (`--no-lake`; `--file-rows` is gone). `comswap_synth.py` and `note_synth.py` write JSONL by default (`--array` keeps the export's
+  own shape for the upload demo); the committed comswap samples are `.jsonl`. The retired example packs and the finance and logistics
+  examples keep their samples as `samples/<kind>.jsonl` (no more `<kind>/<id>.json`; the tests that read them go through
+  `PackSamples.document`). `realdata/normalise.py` writes `dataset/*.jsonl` (a country, group, series or Factbook profile a line;
+  `meta.json` stays the manifest; older keyed `.json` still read). The sample feed is `<data>/feeds/fixing.jsonl` (one series a
+  line, `FIX SOFR-HISTORY` unchanged), replacing `fixing/SOFR-HISTORY.csv`. `make_data.py --jsonl` and `--lake` no longer rewrite
+  the packs' samples, the Sutra tests or the feed (they create the feed only when the data folder has none). `load-delta.sh`/`.ps1`,
+  `bench/pinning.sh`, the Windows workflow and the console's BI lake fixture run generate, then load. `tools/iceberg/fixtures.py`
+  stays (it tests the Iceberg reader itself; said in its docstring). Docs: DEMO_DATA, DELTA_CONNECTOR, FILE_CONNECTOR, SCHEMA_TO_PACK,
+  TOOLS, REAL_DATA, OPERATIONS, the pack guides (`make_docs.py`) and the feed path in Getting started, Packs, CLI guide and tutorial 1.
+
+- **Documentation pictures retaken on the current UI (2026-10-27).** 351 pictures under `docs/` that predated the 2.9 UI (themes, the top bar, the Views menu) were retaken with `tools/docs/screenshots.py`, guide by guide (artifacts, About, BI, BI Studio, collaboration, connector files, connectors, controls, deep JSON, deploy, query by form, data loads, packs, panels, real data, schema to pack, screen designer, Sutras, zoom, column filters) and tutorials 1-6, 8, 9, 11-17 and 19 over the demo lakes; tutorial 28's TRACK SP500 picture is taken in a wider window so the Active share column shows. Shot scripts fixed where the UI or the data changed: the production-shaped trade fields (form, designer, collaboration), the swap's controls on its Events panel (controls, column filters), BI workspace tabs, the schema wizard's restored state, the pack row under the sticky top bar, scratch folders hidden on the connector health picture. Text moved with the pictures: USER_GUIDE (About drawer on a stress result, controls, column filters, deep JSON, Share and Discussion), HOW_IT_FITS, QUERY_BY_FORM, SCREEN_DESIGNER, tutorials 1, 15 and 19.
 
 ## 2.9.3 — DATAMAP; the fact of the day on Home; Companies, funds and ETFs Knowledge; index membership from the tracking ETFs; one firm-wide VaR limit (2026-10-27)
 

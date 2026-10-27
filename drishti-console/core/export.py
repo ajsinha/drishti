@@ -21,6 +21,7 @@ from __future__ import annotations
 import csv
 import datetime
 import io
+import json
 import re
 import zipfile
 
@@ -164,6 +165,26 @@ def to_csv(header: list, rows: list[list]) -> bytes:
         w.writerow(header)
     w.writerows(rows)
     return ("﻿" + buf.getvalue()).encode("utf-8")
+
+
+JSONL_MEDIA = "application/jsonl; charset=utf-8"
+
+
+def _jsonable(v):
+    if isinstance(v, (datetime.date, datetime.datetime)):
+        return v.isoformat()
+    return str(v)
+
+
+def to_jsonl(header: list, rows: list[list]) -> bytes:
+    """JSON Lines (docs/guides/DATA_FORMATS.md): one object per row, keyed by the header (the CSV's column names), values as they
+    are (numbers stay numbers, an empty cell is null). No byte-order mark, LF line ends. Without a header the keys are col1, col2 ..."""
+    keys = [str(h) for h in header] if header else []
+    out = []
+    for r in rows:
+        names = keys if len(keys) >= len(r) else keys + [f"col{i + 1}" for i in range(len(keys), len(r))]
+        out.append(json.dumps({names[i]: (None if v == "" else v) for i, v in enumerate(r)}, ensure_ascii=False, default=_jsonable))
+    return "".join(line + "\n" for line in out).encode("utf-8")
 
 
 def filename(*parts: str) -> str:

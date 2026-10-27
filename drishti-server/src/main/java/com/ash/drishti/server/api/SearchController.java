@@ -160,6 +160,31 @@ public class SearchController {
         return out.toString();
     }
 
+    /**
+     * The same search as JSON Lines ({@code GET /api/v1/search/jsonl?q=...}, docs/guides/DATA_FORMATS.md): one entity a line, its keys the CSV's
+     * header (kind, id, title, then the columns' labels), values typed (numbers stay numbers).
+     */
+    @GetMapping(path = "/jsonl", produces = com.ash.drishti.server.dist.JsonlWriter.MEDIA_TYPE)
+    public String jsonl(@RequestParam String q, AsOf asOf, @RequestAttribute(Principal.ATTRIBUTE) Principal principal) {
+        Map<String, Object> r = search(q, asOf, principal);
+        @SuppressWarnings("unchecked")
+        java.util.List<String> columns = (java.util.List<String>) r.get("columns");
+        @SuppressWarnings("unchecked")
+        Map<String, String> labels = (Map<String, String>) r.get("labels");
+        @SuppressWarnings("unchecked")
+        java.util.List<StructuredSearch.Row> rows = (java.util.List<StructuredSearch.Row>) r.get("rows");
+        StringBuilder out = new StringBuilder();
+        for (StructuredSearch.Row row : rows) {
+            Map<String, Object> line = new java.util.LinkedHashMap<>();
+            line.put("kind", row.ref().kind());
+            line.put("id", row.ref().id());
+            line.put("title", row.title());
+            columns.forEach(c -> line.put(labels.getOrDefault(c, c), row.values().get(c)));
+            out.append(com.ash.drishti.server.dist.JsonlWriter.line(line));
+        }
+        return out.toString();
+    }
+
     /** RFC 4180 quoting; a value that a spreadsheet would run as a formula is prefixed so it stays text. */
     private static String cell(Object v) {
         if (v == null) {

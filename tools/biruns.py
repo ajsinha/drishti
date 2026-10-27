@@ -20,7 +20,7 @@ token's user. Loaded by drishti.py; the server decides who may see and do what (
   bi runs submit (--mq FILE | --sql TEXT --model M | --report ID --page P --visual V [--state FILE]) [--wait 2s] [--yes] [--title T]
   bi runs estimate (the same source options)                                         tier, engine and estimate; runs nothing
   bi runs wait RUN [--timeout 30m]                                                   until it ends: exit 0 done, 3 failed, 4 cancelled
-  bi runs result RUN [--format csv|json|arrow|parquet] [--out FILE]
+  bi runs result RUN [--format csv|json|jsonl|arrow|parquet] [--out FILE]
   bi runs cancel|rerun|export|share|unshare|promote|keep|schedule RUN ...
   bi runs schedules [list|edit ID WHEN|disable ID|enable ID|delete ID]
   bi runs storage                                                                    bi-admin: the result store, the queue, what runs
@@ -161,18 +161,18 @@ def register(bi, srv, ctx) -> None:
     w.add_argument("--timeout", type=seconds, default=1800.0, help="give up waiting for the run after this long (default 30m; exit 5); each call to the server waits 60 s at most")
     rr = sub("result", "a finished run's rows", "  drishti.py bi runs result r-java-2-01JA... --format csv --out pnl.csv", cmd_result)
     rr.add_argument("run")
-    rr.add_argument("--format", choices=("csv", "json", "arrow", "parquet"), default="csv")
-    rr.add_argument("--out", metavar="FILE", help="write it to this file (default: print CSV or JSON)")
+    rr.add_argument("--format", choices=("csv", "json", "jsonl", "arrow", "parquet"), default="csv")
+    rr.add_argument("--out", metavar="FILE", help="write it to this file (default: print CSV, JSON or JSON Lines)")
     c = sub("cancel", "cancel a run: everything it holds is freed at once", "  drishti.py bi runs cancel r-java-2-01JA...", cmd_cancel)
     c.add_argument("run")
     re_ = sub("rerun", "the same question again, on the same data (reuses the result) or the newest", "  drishti.py bi runs rerun r-java-2-01JA... --data latest", cmd_rerun)
     re_.add_argument("run")
     re_.add_argument("--data", choices=("same", "latest"), default="same")
     re_.add_argument("--wait", type=seconds, default=2.0)
-    xp = sub("export", "the stored result as a CSV or Excel file, your own version of it (masked cells stay masked)",
+    xp = sub("export", "the stored result as a CSV, Excel or JSON Lines file, your own version of it (masked cells stay masked)",
              "  drishti.py bi runs export r-java-2-01JA... --format xlsx --out pnl.xlsx", cmd_export)
     xp.add_argument("run")
-    xp.add_argument("--format", choices=("csv", "xlsx"), default="csv")
+    xp.add_argument("--format", choices=("csv", "xlsx", "jsonl"), default="csv")
     xp.add_argument("--out", metavar="FILE", required=True)
     sh = sub("share", "share a run: each recipient sees it with their own rights", "  drishti.py bi runs share r-java-2-01JA... --to bob --to role:risk-team", cmd_share)
     sh.add_argument("run")
@@ -392,6 +392,14 @@ def cmd_wait(a, ctx) -> int:
 def cmd_result(a, ctx) -> int:
     api = _api(a, ctx)
     path = "/api/v1/bi/runs/" + _rid(a) + "/result"
+    if a.format == "jsonl":                          # the server's JSON Lines: a row a line, the export's column names
+        text = api.request("GET", path + "?format=jsonl&limit=50000")[1].decode("utf-8")
+        if a.out:
+            pathlib.Path(a.out).write_text(text, encoding="utf-8")
+            print(f"wrote {a.out}")
+        else:
+            sys.stdout.write(text)
+        return 0
     if a.format in ("json", "csv"):
         ans = api.json("GET", path + "?format=json")
         if a.format == "json":

@@ -23,7 +23,6 @@ import com.ash.drishti.rachana.el.ElCompiler;
 import com.ash.drishti.rachana.el.EvalContext;
 import com.ash.drishti.rachana.format.Formats;
 import com.ash.drishti.rachana.model.Sutra;
-import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.List;
 import org.junit.jupiter.api.AfterAll;
@@ -51,7 +50,7 @@ class ReferenceSutrasTest {
     }
 
     static DataNode fixture(String kind, String id) throws Exception {
-        return new JsonCodec().read(Files.readString(FIXTURES.resolve(kind).resolve(id + ".json")));
+        return new JsonCodec().read(com.ash.drishti.common.PackSamples.document(FIXTURES, kind, id).orElseThrow());   // samples/<kind>.jsonl
     }
 
     static List<String> strip(Sutra s, DataNode doc) {

@@ -16,7 +16,7 @@
 
   samples/path-book.jsonl     three books, each listing its strips (MEMBERS)
   samples/path-strip.jsonl    120 strips, each a P&L path of 250 scenario days (PNL), drawn from a fixed seed
-  samples/catalog.json        their ids, titles and subtitles
+  samples/catalog.jsonl       their ids, titles and subtitles, one a line
 
 The numbers are made up (a seeded random walk per strip): no market data, nothing real. Run:
 python3 config/packs/compute-demo/tools/make_samples.py. Attribute names are UPPER_SNAKE."""
@@ -54,6 +54,7 @@ def main():
         catalog.insert(0, {"kind": "path-book", "id": book_id, "title": book_id, "subtitle": f"{name} · {n} strips of {DAYS} scenario days"})
     out = HERE / "samples"
     out.mkdir(exist_ok=True)
+    (out / packsamples.OLD_CATALOG).unlink(missing_ok=True)   # catalog.json became catalog.jsonl (2.9.4)
     for name, text in packsamples.files(docs, catalog, packsamples.part_mb(sys.argv)).items():
         (out / name).write_text(text, encoding="utf-8")
 

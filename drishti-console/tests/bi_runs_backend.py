@@ -288,8 +288,10 @@ class RunsBackend(BiBackend):
         rid = path.split("/")[2]
         fmt = (body or {}).get("format", "csv")
         self.bi_calls.append((method, path, body, {}))
-        if fmt not in ("csv", "xlsx"):
-            raise BackendError(400, "DRS-9060", f"a run exports as csv or xlsx, not {fmt}")
+        if fmt not in ("csv", "xlsx", "jsonl"):
+            raise BackendError(400, "DRS-9060", f"a run exports as csv, xlsx or jsonl, not {fmt}")
+        if fmt == "jsonl":
+            return b'{"DESK":"DESK-FX","MTM":1250000}\n', {"content-type": "application/jsonl", "content-disposition": f'attachment; filename="{rid}.jsonl"'}
         if fmt == "xlsx":
             return b"PK\x03\x04 stand-in workbook", {"content-type": "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
                                                     "content-disposition": f'attachment; filename="{rid}.xlsx"'}

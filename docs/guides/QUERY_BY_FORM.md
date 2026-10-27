@@ -38,7 +38,7 @@ what you may open is listed: the server leaves out kinds your roles cannot open 
 last eight forms you opened in this browser (kept in browser storage, per person); **Your saved searches** are the searches you saved from forms.
 In the top bar the **Forms** icon is lit on `/forms` and on any form. The old address `/form` leads here.
 
-![The trading pack's form for trades: a text field with its operator, an amount, a relative date, choices, a pasted list of ids and the Search button](img/form/01-form.jpg)
+![The trading pack's form for trades: a pasted id pattern, tick boxes, a dropdown of many values with two ticked, an amount, a relative date and the Search button](img/form/01-form.jpg)
 
 ## The inputs
 
@@ -71,7 +71,7 @@ ticked and **Quantity** `>= 100m`, on the quick-start server (the demo lakes):
 TRD where (CURRENCY = 'EUR' or CURRENCY = 'USD') and QUANTITY >= 100m limit 100
 ```
 
-It matches 3,415 of the 15,000 trades of the three source systems; the table shows the first 100 (**Show** below the fields).
+It matches 3,398 of the 15,000 trades of the three source systems; the table shows the first 100 (**Show** below the fields).
 
 On a business date the sources hold no data for (a date not loaded yet, or before the first), the page does not just say "Nothing
 matches": it says no trade data is loaded for that date, names the newest date that has data, and **Search on** that date runs the
@@ -113,7 +113,7 @@ opens the same form with the same criteria for whoever has the right to see the 
 patterns over 200 characters, and anything too large once expanded, with a message that says which and the code `DRS-4010`; a pattern that takes over 50 ms on one value
 stops with `DRS-4011`.
 
-![A regular expression the search refused: the message names the back-reference and the code DRS-4010](img/form/04-regex-refused.jpg)
+![A regular expression the search refused (the core pack's counterparty form, Name): the message names the back-reference and the code DRS-4010](img/form/04-regex-refused.jpg)
 
 ## Keyboard and phone
 

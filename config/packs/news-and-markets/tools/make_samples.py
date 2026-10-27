@@ -17,7 +17,7 @@
 
   samples/news-topic.jsonl              the topics (companies, countries, central banks, themes), one a line
   samples/listed-company.jsonl          about twenty well-known listed companies
-  samples/catalog.json                  their ids, titles and subtitles
+  samples/catalog.jsonl                 their ids, titles and subtitles, one a line
 
 and the aliases block of the news connector template in pack.yaml (between the BEGIN and END markers), so the connector
 knows every other name of every entity it is asked about. Run: python3 config/packs/news-and-markets/tools/make_samples.py
@@ -106,9 +106,8 @@ def main():
                "NEWS_ALL_ID": news_name(query) + "~all"},
               catalog, f"CO-{ticker}", f"{sector} · {name} ({exchange}: {ticker}) · {', '.join(aliases)}", "listed-company")
     out = HERE / "samples"
-    for old in sorted(out.rglob("*.json"), reverse=True):     # the older one-file-a-document layout
-        if old.name != "catalog.json":
-            old.unlink()
+    for old in sorted(out.rglob("*.json"), reverse=True):     # the older one-file-a-document layout, and catalog.json (now .jsonl)
+        old.unlink()
     for d in (x for x in out.iterdir() if x.is_dir()):
         if not any(d.iterdir()):
             d.rmdir()

@@ -22,6 +22,7 @@ from __future__ import annotations
 
 import asyncio
 import base64
+import dataclasses
 import gzip
 import json
 import logging
@@ -29,7 +30,8 @@ import logging
 from fastapi import APIRouter, Request
 from fastapi.responses import JSONResponse, Response
 
-from core import packwizard as W
+from core import channel_relay, packwizard as W
+from core.auth import Identity
 from core.backend import BackendError
 from core.csrf import BodyError, json_body
 from routes.common import ident, packs as user_packs, render
@@ -67,11 +69,7 @@ async def _body(request: Request) -> dict:
 
 
 async def _may_author(request: Request) -> bool:
-    try:
-        s = await request.app.state.backend.studio_settings(ident(request))
-    except BackendError:
-        return False
-    return bool(s.get("author", s.get("save")))
+    return await _may_author_of(request.app, ident(request))
 
 
 @router.get("/new")
@@ -124,109 +122,147 @@ async def start_job(request: Request):
     return JSONResponse({"id": job.id, "total": job.total}, status_code=202)
 
 
-@router.get("/api/jobs/{job_id}")
-async def job_status(request: Request, job_id: str):
-    _, jobs = _wiz(request)
+# A job lives in the worker process that started it. The console serves its port from several workers (server.workers), so a later
+# call on the job may reach another worker: the job's id ends with its worker's relay port (core/channel_relay.py), and a worker that
+# does not hold the job runs the call on the one that does and answers with its answer.
+
+RELAY_OP = "pack-job"
+RELAY_REPLY_LIMIT = 256 << 20              # a bundle (base64) comes back in the reply line
+RELAY_TIMEOUT = 120.0                      # building a bundle takes seconds
+
+
+async def _may_author_of(app, me) -> bool:
     try:
-        return jobs.get(job_id, ident(request).user).view()
-    except W.WizardError as e:
-        return _problem(e.status, e.detail, e.code)
+        s = await app.state.backend.studio_settings(me)
+    except BackendError:
+        return False
+    return bool(s.get("author", s.get("save")))
 
 
-@router.delete("/api/jobs/{job_id}")
-async def job_cancel(request: Request, job_id: str):
-    _, jobs = _wiz(request)
-    try:
-        job = jobs.get(job_id, ident(request).user)
-    except W.WizardError as e:
-        return _problem(e.status, e.detail, e.code)
-    jobs.cancel(job)
-    return job.view()
+def _out(r: Response) -> dict:
+    return {"status": r.status_code, "media": r.media_type, "headers": {k: v for k, v in r.headers.items() if k.lower().startswith(("content-disposition", "x-drishti", "cache-control"))},
+            "body": base64.b64encode(r.body).decode("ascii")}
 
 
-@router.get("/api/jobs/{job_id}/preview")
-async def job_preview(request: Request, job_id: str, sutra: str, sample: str = ""):
-    """One Sutra rendered on one of its samples (the first by default), as the workbench draws it."""
+def _back(got: dict) -> Response:
+    return Response(base64.b64decode(got.get("body") or ""), status_code=int(got.get("status") or 500), media_type=got.get("media"),
+                    headers=got.get("headers") or {})
+
+
+async def _job_call(request: Request, job_id: str, op: str, args: dict | None = None) -> Response:
+    """Runs ``op`` on the job here when this worker holds it (or the console has one worker), else on the worker that does."""
     _, jobs = _wiz(request)
     me = ident(request)
+    if job_id not in jobs.jobs and channel_relay.owner_port(job_id) is not None:
+        got = await channel_relay.forward(job_id, RELAY_OP, {"op": op, "args": args or {}, "me": dataclasses.asdict(me)},
+                                          limit=RELAY_REPLY_LIMIT, timeout=RELAY_TIMEOUT)
+        if got and "status" in got:
+            return _back(got)
+    return await _job_op(request.app, op, job_id, me, args or {})
+
+
+async def _relayed_job(app, job_id: str, payload: dict) -> dict:
+    """A job call another worker of this console received (core/channel_relay.py); that worker signed the caller in."""
+    me = Identity(**{**payload.get("me", {}), "roles": tuple(payload.get("me", {}).get("roles") or ())})
+    jobs = getattr(app.state, "pack_jobs", None)
+    if jobs is None or job_id not in jobs.jobs:
+        return {}
+    return _out(await _job_op(app, str(payload.get("op", "")), job_id, me, payload.get("args") or {}))
+
+
+channel_relay.HANDLERS[RELAY_OP] = _relayed_job
+
+
+def _json(data, status: int = 200) -> Response:
+    return JSONResponse(data, status_code=status)
+
+
+async def _job_op(app, op: str, job_id: str, me, args: dict) -> Response:
+    jobs = app.state.pack_jobs
     try:
         job = jobs.get(job_id, me.user)
     except W.WizardError as e:
         return _problem(e.status, e.detail, e.code)
-    item = next((i for i in job.items if i.name == sutra), None)
-    res = job.results.get(sutra)
-    if item is None or not res or not res.get("yaml"):
-        return _problem(404, "no such Sutra in this job", "DRS-5006")
-    s = next((x for x in item.samples if x.name == sample), item.samples[0])
-    try:
-        vm = await request.app.state.backend.preview(res["yaml"], item.kp.kind, "SAMPLE", me, document=s.doc)
-    except BackendError as e:
-        return _problem(e.status, e.detail, e.code, problems=getattr(e, "problems", []))
-    html = request.app.state.templates.get_template("studio/_preview.html").render(vm=vm) if vm else ""
-    return {"previewHtml": html, "sample": s.name, "source": s.source}
-
-
-@router.post("/api/jobs/{job_id}/open")
-async def job_open(request: Request, job_id: str):
-    """Opens one Sutra of the job in the workbench: a Design with the Sutra and its samples; answers ``{id, url}``."""
-    _, jobs = _wiz(request)
-    body = await _body(request)
-    me = ident(request)
-    try:
-        job = jobs.get(job_id, me.user)
-    except W.WizardError as e:
-        return _problem(e.status, e.detail, e.code)
-    item = next((i for i in job.items if i.name == body.get("sutra")), None)
-    res = job.results.get(item.name) if item else None
-    if item is None or not res or not res.get("yaml"):
-        return _problem(404, "no such Sutra in this job", "DRS-5006")
-    backend = request.app.state.backend
-    try:
-        d = await backend.designs("POST", "", me, {"name": f"{job.name}: {item.name}"[:120], "kind": item.kp.kind, "sutra": res["yaml"],
-                                                   "notes": f"From Build -> New pack ({job.name}). Samples named sample-synthetic-N were generated from the schema."})
-        await backend.designs("POST", f"/{d['id']}/samples", me, {"samples": [{"name": s.name, "document": s.doc} for s in item.samples]})
-    except BackendError as e:
-        return _problem(e.status, e.detail, e.code)
-    return {"id": d["id"], "url": f"/build/d/{d['id']}"}
-
-
-@router.get("/api/jobs/{job_id}/bundle")
-async def job_bundle(request: Request, job_id: str, part: str = "tar"):
-    """The bundle of a finished job: ``part=tar`` (the .tar.gz, default), ``sha256`` or ``manifest``. Needs the author power."""
-    _, jobs = _wiz(request)
-    me = ident(request)
-    if not await _may_author(request):
+    if op == "status":
+        return _json(job.view())
+    if op == "cancel":
+        jobs.cancel(job)
+        return _json(job.view())
+    if op in ("preview", "open"):
+        item = next((i for i in job.items if i.name == args.get("sutra")), None)
+        res = job.results.get(item.name) if item else None
+        if item is None or not res or not res.get("yaml"):
+            return _problem(404, "no such Sutra in this job", "DRS-5006")
+        backend = app.state.backend
+        if op == "preview":
+            s = next((x for x in item.samples if x.name == args.get("sample")), item.samples[0])
+            try:
+                vm = await backend.preview(res["yaml"], item.kp.kind, "SAMPLE", me, document=s.doc)
+            except BackendError as e:
+                return _problem(e.status, e.detail, e.code, problems=getattr(e, "problems", []))
+            html = app.state.templates.get_template("studio/_preview.html").render(vm=vm) if vm else ""
+            return _json({"previewHtml": html, "sample": s.name, "source": s.source})
+        try:
+            d = await backend.designs("POST", "", me, {"name": f"{job.name}: {item.name}"[:120], "kind": item.kp.kind, "sutra": res["yaml"],
+                                                       "notes": f"From Build -> New pack ({job.name}). Samples named sample-synthetic-N were generated from the schema."})
+            await backend.designs("POST", f"/{d['id']}/samples", me, {"samples": [{"name": s.name, "document": s.doc} for s in item.samples]})
+        except BackendError as e:
+            return _problem(e.status, e.detail, e.code)
+        return _json({"id": d["id"], "url": f"/build/d/{d['id']}"})
+    if op == "bundle" and not await _may_author_of(app, me):
         return _problem(403, "downloading a pack needs a role with the author power", "DRS-5002")
     try:
-        job = jobs.get(job_id, me.user)
-        bundle = await asyncio.to_thread(jobs.build_bundle, job)
+        b = await asyncio.to_thread(jobs.build_bundle, job)
     except W.WizardError as e:
         return _problem(e.status, e.detail, e.code)
     except Exception as e:           # noqa: BLE001 - a bundling failure is shown, with the reason
         LOG.warning("new-pack bundle failed: %s", e)
         return _problem(500, f"the bundle could not be built: {e}")
+    if op == "summary":
+        return _json({"file": b["name"], "bytes": len(b["tar"]), "sha256": b["sha256"], "files": b["files"], "pack": b["pack"], "version": b["version"],
+                      "synthetic": b["synthetic"], "todo": b["todo"], "canAuthor": await _may_author_of(app, me), "canDeploy": bool(me.is_admin)})
+    part = args.get("part", "tar")
     if part == "sha256":
-        return Response(f"{bundle['sha256']}  {bundle['name']}\n", media_type="text/plain", headers={"Content-Disposition": f'attachment; filename="{bundle["name"]}.sha256"'})
+        return Response(f"{b['sha256']}  {b['name']}\n", media_type="text/plain", headers={"Content-Disposition": f'attachment; filename="{b["name"]}.sha256"'})
     if part == "manifest":
-        return Response(bundle["manifest"], media_type="application/json", headers={"Content-Disposition": f'attachment; filename="{bundle["pack"]}-{bundle["version"]}.manifest.json"'})
-    return Response(bundle["tar"], media_type="application/gzip", headers={"Content-Disposition": f'attachment; filename="{bundle["name"]}"',
-                                                                         "X-Drishti-Sha256": bundle["sha256"], "Cache-Control": "no-store"})
+        return Response(b["manifest"], media_type="application/json", headers={"Content-Disposition": f'attachment; filename="{b["pack"]}-{b["version"]}.manifest.json"'})
+    return Response(b["tar"], media_type="application/gzip", headers={"Content-Disposition": f'attachment; filename="{b["name"]}"',
+                                                                     "X-Drishti-Sha256": b["sha256"], "Cache-Control": "no-store"})
+
+
+@router.get("/api/jobs/{job_id}")
+async def job_status(request: Request, job_id: str):
+    return await _job_call(request, job_id, "status")
+
+
+@router.delete("/api/jobs/{job_id}")
+async def job_cancel(request: Request, job_id: str):
+    return await _job_call(request, job_id, "cancel")
+
+
+@router.get("/api/jobs/{job_id}/preview")
+async def job_preview(request: Request, job_id: str, sutra: str, sample: str = ""):
+    """One Sutra rendered on one of its samples (the first by default), as the workbench draws it."""
+    return await _job_call(request, job_id, "preview", {"sutra": sutra, "sample": sample})
+
+
+@router.post("/api/jobs/{job_id}/open")
+async def job_open(request: Request, job_id: str):
+    """Opens one Sutra of the job in the workbench: a Design with the Sutra and its samples; answers ``{id, url}``."""
+    body = await _body(request)
+    return await _job_call(request, job_id, "open", {"sutra": body.get("sutra")})
+
+
+@router.get("/api/jobs/{job_id}/bundle")
+async def job_bundle(request: Request, job_id: str, part: str = "tar"):
+    """The bundle of a finished job: ``part=tar`` (the .tar.gz, default), ``sha256`` or ``manifest``. Needs the author power."""
+    return await _job_call(request, job_id, "bundle", {"part": part})
 
 
 @router.get("/api/jobs/{job_id}/summary")
 async def job_summary(request: Request, job_id: str):
     """What the output step shows: the bundle's name, size, checksum and what is synthetic; builds the bundle."""
-    _, jobs = _wiz(request)
-    me = ident(request)
-    try:
-        job = jobs.get(job_id, me.user)
-        b = await asyncio.to_thread(jobs.build_bundle, job)
-    except W.WizardError as e:
-        return _problem(e.status, e.detail, e.code)
-    except Exception as e:           # noqa: BLE001
-        return _problem(500, f"the bundle could not be built: {e}")
-    return {"file": b["name"], "bytes": len(b["tar"]), "sha256": b["sha256"], "files": b["files"], "pack": b["pack"], "version": b["version"],
-            "synthetic": b["synthetic"], "todo": b["todo"], "canAuthor": await _may_author(request), "canDeploy": bool(me.is_admin)}
+    return await _job_call(request, job_id, "summary")
 
 
 # ---- drafts: the wizard's state, kept as a Design ---------------------------------------------------------------------------------

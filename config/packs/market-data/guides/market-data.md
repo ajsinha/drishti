@@ -55,7 +55,7 @@ Real market data from public sources, each its own connector and **off by defaul
 | `us-treasury-feed` | `DRISHTI_FEED_US_TREASURY=true` | `ir-curve` | US Treasury daily par yield curve: CRV-USD-UST |
 | `fred-feed` | `DRISHTI_FEED_FRED=true` | `rate-fixing` | FRED series (needs FRED_API_KEY): FIX-FRED-DGS10, FIX-FRED-DFF |
 
-Load real data into each domain's folder, or point a domain at a database instead by overriding its connector in the site configuration. For a demonstration lake built from the generated samples, run `uv run --with deltalake --with pyarrow python tools/packgen/banking/make_data.py --lake data/delta`.
+Load real data into each domain's folder, or point a domain at a database instead by overriding its connector in the site configuration. For a demonstration lake built from the generated samples, run `uv run --with deltalake --with pyarrow --with pyyaml python tools/packgen/banking/make_data.py --lake data/delta`: it writes the history as JSON Lines rows (`data/build/lake-rows`), then loads them (generating and loading are separate steps, [Data formats](../../../../docs/guides/DATA_FORMATS.md)).
 
 ## Kinds
 

@@ -25,6 +25,7 @@ import com.ash.drishti.rachana.format.Formats;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.List;
+import java.util.Map;
 import java.util.stream.Stream;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
@@ -93,15 +94,17 @@ class MatchTraceTest {
     void matchIsUnchangedOverEveryShippedFinanceFixture() throws Exception {
         Path fixtures = ReferenceSutrasTest.FIXTURES;
         try (SutraRegistry r = new SutraRegistry(new RachanaProperties(List.of("../examples/packs/finance/sutras"), false, null, null, null, null, null, null, null, null), EL);
-                Stream<Path> files = Files.walk(fixtures)) {
+                Stream<Path> files = Files.list(fixtures)) {
             SutraMatcher m = new SutraMatcher(r, EL, F);
             int n = 0;
-            for (Path f : files.filter(p -> p.toString().endsWith(".json")).toList()) {
-                String kind = f.getParent().getFileName().toString();
-                DataNode d = new JsonCodec().read(Files.readString(f));
-                assertThat(m.explain(kind, d).chosen()).as(f.toString()).isEqualTo(m.match(kind, d));
-                n++;
+            for (String kind : com.ash.drishti.common.PackSamples.kinds(fixtures)) {          // samples/<kind>.jsonl, one document a line
+                for (Map.Entry<String, String> e : com.ash.drishti.common.PackSamples.documents(fixtures, kind, java.util.Set.of(), 0).entrySet()) {
+                    DataNode d = new JsonCodec().read(e.getValue());
+                    assertThat(m.explain(kind, d).chosen()).as(kind + "/" + e.getKey()).isEqualTo(m.match(kind, d));
+                    n++;
+                }
             }
+            assertThat(files.count()).isPositive();
             assertThat(n).isPositive();
         }
     }

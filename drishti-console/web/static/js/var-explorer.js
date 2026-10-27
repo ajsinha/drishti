@@ -574,6 +574,10 @@
         var csv = h("a", "vx-link", "CSV");
         csv.href = "/api/var/captures/" + encodeURIComponent(c.id) + "/csv";
         act.appendChild(csv);
+        var jl = h("a", "vx-link", "JSONL");                                  // 2.9.4: the same rows, one a line
+        jl.href = "/api/var/captures/" + encodeURIComponent(c.id) + "/jsonl";
+        act.appendChild(document.createTextNode(" "));
+        act.appendChild(jl);
         tb.appendChild(tr);
       });
       if (list.length >= 2) {
@@ -941,6 +945,23 @@
   }
   $("[data-vx-csv-path]").addEventListener("click", csvOfPath);
   $("[data-vx-csv]").addEventListener("click", csvOfPath);
+
+  /** The path as JSON Lines (2.9.4): a scenario a line, ranked, keyed as the CSV's header (rank, scenario_date, pnl). */
+  function jsonlOfPath(ev) {
+    ev.preventDefault();
+    if (!S.path) return;
+    var order = S.path.series.map(function (v, i) { return [v, i]; }).sort(function (a, b) { return a[0] - b[0] || a[1] - b[1]; });
+    var dates = scenarioDates(S.path), text = "";
+    order.forEach(function (o, r) { text += JSON.stringify({ rank: r + 1, scenario_date: dates[o[1]] || "#" + o[1], pnl: o[0] }) + "\n"; });
+    var a = document.createElement("a");
+    a.href = URL.createObjectURL(new Blob([text], { type: "application/jsonl" }));
+    a.download = "var-path-" + S.scope.replace(/[^A-Za-z0-9_-]+/g, "_").slice(0, 60) + ".jsonl";
+    document.body.appendChild(a);
+    a.click();
+    setTimeout(function () { URL.revokeObjectURL(a.href); a.remove(); }, 1000);
+  }
+  var jsonlPath = $("[data-vx-jsonl-path]");
+  if (jsonlPath) jsonlPath.addEventListener("click", jsonlOfPath);
 
   window.addEventListener("popstate", function (ev) {
     if (!ev.state || !ev.state.scope) return;

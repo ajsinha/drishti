@@ -153,6 +153,19 @@ class BiRuns(unittest.TestCase):
         self.assertEqual("desk,MTM\nFX,•••\n", out_file.read_text(encoding="utf-8").replace("\r\n", "\n"))
         self.assertIn("format=json", FakeServer.requests[-1][1])
 
+    def test_result_and_export_as_jsonl_take_the_servers_lines(self):
+        lines = b'{"desk":"FX","MTM":"\xe2\x80\xa2\xe2\x80\xa2\xe2\x80\xa2"}\n'
+        FakeServer.routes[("GET", f"/api/v1/bi/runs/{RID}/result")] = (200, lines)
+        out_file = self.tmp / "r.jsonl"
+        code, out, _ = self.go("bi", "runs", "result", RID, "--format", "jsonl", "--out", str(out_file))
+        self.assertEqual(0, code)
+        self.assertEqual(lines.decode("utf-8"), out_file.read_text(encoding="utf-8"))
+        self.assertIn("format=jsonl", FakeServer.requests[-1][1])
+        FakeServer.routes[("POST", f"/api/v1/bi/runs/{RID}/export")] = (200, lines)
+        code, out, _ = self.go("bi", "runs", "export", RID, "--format", "jsonl", "--out", str(self.tmp / "x.jsonl"))
+        self.assertEqual(0, code)
+        self.assertEqual("jsonl", json.loads(FakeServer.requests[-1][5])["format"])
+
     def test_cancel_rerun_share_promote_keep_and_schedule_send_the_contract(self):
         base = f"/api/v1/bi/runs/{RID}"
         FakeServer.routes.update({

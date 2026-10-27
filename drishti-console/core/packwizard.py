@@ -30,7 +30,7 @@ import importlib.util
 import pathlib
 import re
 import secrets
-from core import tmpdir
+from core import channel_relay, tmpdir
 import time
 from dataclasses import dataclass, field
 
@@ -336,7 +336,7 @@ class Jobs:
         for old in sorted((j for j in mine if j.state not in ("queued", "running")), key=lambda j: j.started)[: max(0, len(mine) - self.lim.jobs_per_user + 1)]:
             self.jobs.pop(old.id, None)
         items = build.prepare(plan)
-        job = Job(secrets.token_urlsafe(9), owner, plan, items, plan.pack["name"], total=len(items))
+        job = Job(secrets.token_urlsafe(9) + channel_relay.suffix(), owner, plan, items, plan.pack["name"], total=len(items))
         self.jobs[job.id] = job
         job.task = asyncio.create_task(self._run(job, backend, ident))
         return job

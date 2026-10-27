@@ -155,7 +155,7 @@ console:                        # read by the console
     - ["NSET NS-NORTH-01", "Netting set · exposure profile, member trades, CSA"]
     - ["TRD IRS-47102", "A trade with no Sutra · laid out by inference alone"]
     - ["CRV USD-SOFR", "A curve · inferred"]
-    - ["FIX SOFR-HISTORY", "A feed file (CSV) · inferred"]
+    - ["FIX SOFR-HISTORY", "A feed file (JSON Lines) · inferred"]
     - ["BPNL RATES-NY-3", "A derived kind · a book's P&L summed from its trades"]
   workspaces: config/workspaces.yaml
   help: config/help.yaml

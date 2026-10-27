@@ -12,41 +12,40 @@
 #
 # See the LICENSE file in the root of this repository for the full terms.
 
-"""A large trading book for scale tests: N trades over D business days, as a Delta Lake the server reads.
+"""A large trading book for scale tests: N trades over D business days, written as JSON Lines, then loaded into the Delta Lake the server reads.
 
     uv run --with deltalake --with pyarrow --with pyyaml python tools/samplegen/bulk_trades.py      # 500,000 trades, 3 days
     uv run --with deltalake --with pyarrow --with pyyaml python tools/samplegen/bulk_trades.py --trades 1000000 --days 5
+    python3 tools/samplegen/bulk_trades.py --trades 10000 --no-lake                                    # the JSONL only
 
-It replaces one source system's trade table of the lake the server reads (data/delta/trading/trade_murex, or with
---system CALYPSO trade_calypso) and leaves every other table as it is; a running server picks the new trades up within a
-minute (its search index is rebuilt every minute). For a book of all three systems at a laptop's size, with the day's
-amendments, use tools/packgen/trades/make_trades.py --lake instead. To go back to the sample trades over 10 days:
-python3 tools/packgen/banking/make_data.py --lake data/delta (with uv run --with deltalake --with pyarrow --with pyyaml),
-which rewrites the whole lake as it was.
+Generating and loading are separate steps (docs/guides/DATA_FORMATS.md). The generator writes one file per business day,
+<out>/<system>/trades-<date>.jsonl.gz (--out, default <data>/build/bulk): one trade document a line, in id order. The loader is
+`drishti.py lake build` (tools/lake/build.py), run here on each file unless --no-lake: it replaces one source system's trade table
+of the lake (--root, default data/delta: trading/trade_murex, or with --system CALYPSO trade_calypso), partitioned by business date
+and PRODUCT_TYPE with the columns the trading pack promotes, as tools/packgen/trades/make_trades.py --lake does, and leaves every
+other table as it is; a running server picks the new trades up within a minute. For a book of all three systems at a laptop's size,
+with the day's amendments, use make_trades.py instead. To go back to the sample trades over 10 days:
+python3 tools/packgen/banking/make_data.py --lake data/delta (with uv run --with deltalake --with pyarrow --with pyyaml).
 
-The table follows the layout the trading pack declares for trades (config/packs/trading/pack.yaml, settings.layout.trade;
-see samplegen/layout.py): the promoted columns beside id and doc, each business date sorted by id and cut into
-files of file-rows trades (--file-rows overrides it), row groups of row-group-rows. All trade ids are listed and
-sorted first; the workers build each file's documents in slices, and the main process writes one file at a time
-(one append each), so memory holds about two files' rows whatever the size of the book.
+--jsonl FILE|- writes loader rows instead ({"domain", "kind", "id", "date", "doc", "columns"}: the document and the fields the trading
+pack promotes, by path), for tools/load-aerospike.sh and the other stores' loaders.
 
-The trades are the system's sample trades (config/packs/trading/samples/trade, written by make_data.py, in the common
+The trades are the system's sample trades (config/packs/trading/samples/trade.jsonl, written by make_data.py, in the common
 schema of tools/packgen/trades/schema.py), kept as they are, and clones of them. A clone continues the system's numbering
-from a higher range than the samples (MX-30000000 …, CLY-4000000 …, tools/packgen/banking/booking.py), so ids never
+from a higher range than the samples (MX-30000000 ..., CLY-4000000 ..., tools/packgen/banking/booking.py), so ids never
 collide, keeps its template's product, portfolio, counterparty and legal entity (so every link still opens) and scales its
 amounts (NOTIONAL, QUANTITY, AMOUNT at every level) by a factor of its own between 0.2 and 5. Everything is deterministic:
-the same arguments give the same lake.
+the same arguments give the same files and the same lake.
 
-The rest of the lake (market data, reference data, risk …) must already be there (make_data.py --lake): a scale test,
+Memory stays low: all trade ids are listed and sorted first; the workers build the documents in slices of 5,000 and the main
+process appends each slice to the day's file as it comes, in order; lake build then reads each file in batches (memory flat).
+The rest of the lake (market data, reference data, risk ...) must already be there (make_data.py --lake): a scale test,
 not a consistent book.
-
-Rough size: about 1.7 KB per trade per day on disk (1,000,000 trades x 3 days is about 5.1 GB: four files of
-250,000 trades a day, 25 row groups each) and about 30 seconds per million trade-days on 24 cores; the main
-process peaks at about 9.5 GB with 250,000-trade files, whatever the number of trades.
 """
 from __future__ import annotations
 
 import argparse
+import gzip
 import hashlib
 import json
 import multiprocessing
@@ -56,8 +55,6 @@ import re
 import shutil
 import sys
 import time
-from collections import deque
-from dataclasses import replace
 from datetime import date
 from pathlib import Path
 
@@ -70,7 +67,7 @@ import booking as BK  # noqa: E402
 import packsamples  # noqa: E402  (the pack's samples/trade.jsonl)
 from samplegen.dates import Calendar  # noqa: E402
 from samplegen.lake import business_days, walk  # noqa: E402
-from samplegen.layout import Layout, arrow_table, infer_types, layouts_for_domain, promote, write_file  # noqa: E402
+from samplegen.layout import Layout, infer_types, layouts_for_domain, promote  # noqa: E402
 
 TEMPLATES = ROOT / "config" / "packs" / "trading" / "samples"            # trade.jsonl
 AS_OF = date(2026, 9, 30)                      # the banking lake's newest business date (data_names.AS_OF)
@@ -171,17 +168,10 @@ def _init(templates, lay, types):
     _templates, _layout, _types = templates, lay, types
 
 
-def _piece(job):
-    """Rows of one file's slice, in the order given (sorted by id), as Arrow: id, doc, business_date, promoted columns."""
+def _docs(job):
+    """The trade documents of a slice, one JSON line each, in the order given (sorted by id)."""
     indices, day, steps = job
-    ids, texts, cols = [], [], {n: [] for n in _layout.names}
-    for i in indices:
-        new_id, doc = document(i, day, steps)
-        ids.append(new_id)
-        texts.append(json.dumps(doc, ensure_ascii=False))
-        for n, v in promote(doc, _layout).items():
-            cols[n].append(v)
-    return arrow_table(day, ids, texts, cols, _types)
+    return [json.dumps(document(i, day, steps)[1], ensure_ascii=False, separators=(",", ":")) for i in indices]
 
 
 def _lines(job):
@@ -208,23 +198,22 @@ def main(argv: list[str]) -> int:
     ap = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
     ap.add_argument("--trades", type=int, default=500_000, help="how many trades (default 500000; the first 750 are the samples)")
     ap.add_argument("--days", type=int, default=3, help="business days of history, ending at --as-of (default 3)")
-    ap.add_argument("--root", default=__import__("os").environ.get("DRISHTI_DATA_DIR", "data") + "/delta", help="the lake whose trade table is replaced (default data/delta)")
+    ap.add_argument("--root", default=os.environ.get("DRISHTI_DATA_DIR", "data") + "/delta", help="the lake whose trade table is replaced (default data/delta)")
     ap.add_argument("--as-of", default=AS_OF.isoformat(), help=f"the newest business date (default {AS_OF})")
     ap.add_argument("--workers", type=int, default=max(1, (os.cpu_count() or 2) - 1))
-    ap.add_argument("--file-rows", type=int, default=None, help="trades per Parquet file (default: the trading pack's layout, file-rows)")
     ap.add_argument("--system", default="MUREX", choices=("MUREX", "CALYPSO"), help="the source system whose trades are cloned and whose table "
                                                                                         "(trading/trade_<system>) is replaced (default MUREX)")
-    ap.add_argument("--jsonl", default=None, help="write JSON lines to this file (- for standard output) instead of the lake, for "
-                                                  "tools/load-aerospike.sh: the documents with the fields the trading pack promotes")
+    ap.add_argument("--jsonl", default=None, help="write loader rows to this file (- for standard output) instead, for tools/load-aerospike.sh "
+                                                  "and the other stores' loaders: the documents with the fields the trading pack promotes")
+    ap.add_argument("--out", default=os.environ.get("DRISHTI_DATA_DIR", "data") + "/build/bulk",
+                    help="where the JSONL files go: <out>/<system>/trades-<date>.jsonl.gz (default <data>/build/bulk)")
+    ap.add_argument("--no-lake", action="store_true", help="write the JSONL files only; load them later with drishti.py lake build")
+    ap.add_argument("--engine", default="auto", choices=("auto", "drishti", "deltalake"), help="the lake writer lake build uses (default auto)")
     a = ap.parse_args(argv)
     if a.trades < 1 or a.days < 1:
         raise SystemExit("--trades and --days must be at least 1")
 
-    import pyarrow as pa
-
     lay = layouts_for_domain("trading").get("trade") or Layout()
-    if a.file_rows:
-        lay = replace(lay, file_rows=a.file_rows)
     templates = load_templates(a.system)
     _init(templates, lay, {})
     sample = [document(i, AS_OF, 0)[1] for i in range(min(a.trades, len(templates) + 6))]
@@ -246,40 +235,48 @@ def main(argv: list[str]) -> int:
         print(f"\n{written:,} trade-days as JSON lines in {time.time() - t0:,.0f} s", file=sys.stderr)
         return 0
 
+    folder = Path(a.out) / a.system.lower()
+    folder.mkdir(parents=True, exist_ok=True)
+    order = [i for f in plan(a.trades, templates, a.trades) for i in f]          # every trade number in id order
+    files, written = [], 0
+    with POOL_CONTEXT.Pool(a.workers, initializer=_init, initargs=(templates, lay, types)) as pool:
+        for n, d in enumerate(days):
+            f = folder / f"trades-{d.isoformat()}.jsonl.gz"
+            jobs = [(order[s:s + 5_000], d, len(days) - 1 - n) for s in range(0, a.trades, 5_000)]
+            with gzip.open(f, "wt", encoding="utf-8", compresslevel=1) as out:
+                for lines in pool.imap(_docs, jobs):                              # in order: the file stays sorted by id
+                    out.write("\n".join(lines) + "\n")
+                    written += len(lines)
+                    print(f"\r{written:,} of {a.trades * len(days):,} trade-days written ({time.time() - t0:,.0f} s)", end="", flush=True)
+            files.append(f)
+    print(f"\n{folder}: {a.trades:,} trades x {len(days)} business days ({days[0]} to {days[-1]}) as JSON Lines, {time.time() - t0:,.0f} s")
+    if a.no_lake:
+        return 0
+    return load(files, days, root, a.system, a.engine)
+
+
+def load(files: list[Path], days: list[date], root: Path, system: str, engine: str = "auto") -> int:
+    """The loading step: each day's file through lake build into trading/trade_<system> (the table its connector reads), written
+    afresh, partitioned by business date and PRODUCT_TYPE. Returns the worst exit code."""
+    sys.path.insert(0, str(ROOT / "tools" / "lake"))
+    import build as LB
+
     if not (root / "reference").is_dir():
         print(f"warning: {root} has no reference data; build the lake first: make_data.py --lake {root}")
-    table = root / "trading" / f"trade_{a.system.lower()}"     # the table its connector reads (trade-murex, trade-calypso)
+    table = root / "trading" / f"trade_{system.lower()}"
     if table.exists():
         shutil.rmtree(table)
-    table.parent.mkdir(parents=True, exist_ok=True)
-    files = plan(a.trades, templates, lay.file_rows)
-    piece = max(1, min(5_000, -(-lay.file_rows // (2 * a.workers))))
-    # one job per slice of a file; the main process writes each file once its slices are in, while the workers
-    # build the next one (about two files in memory)
-    jobs = [[(chunk[s:s + piece], d, len(days) - 1 - n) for s in range(0, len(chunk), piece)] for n, d in enumerate(days) for chunk in files]
-    written, window = 0, -(-lay.file_rows // piece)
-    with POOL_CONTEXT.Pool(a.workers, initializer=_init, initargs=(templates, lay, types)) as pool:
-        pending: deque = deque()
-        queue = deque((k, len(slices), job) for slices in jobs for k, job in enumerate(slices))
-        current: list = []
-        while queue or pending:
-            while queue and len(pending) < window:
-                k, count, job = queue.popleft()
-                pending.append((k, count, pool.apply_async(_piece, (job,))))
-            k, count, result = pending.popleft()
-            current.append(result.get())
-            if k == count - 1:
-                rows = pa.concat_tables(current).combine_chunks()
-                current = []
-                write_file(str(table), rows, lay, "append")
-                written += rows.num_rows
-                del rows
-                print(f"\r{written:,} of {a.trades * len(days):,} trade-days written ({time.time() - t0:,.0f} s)", end="", flush=True)
-    size = sum(f.stat().st_size for f in table.rglob("*") if f.is_file())
-    print(f"\n{table}: {a.trades:,} trades x {len(days)} business days ({days[0]} to {days[-1]}), {len(files)} files a day, "
-          f"{size / 1e9:,.2f} GB, {time.time() - t0:,.0f} s")
-    print("a running server reading this lake picks the trades up within a minute")
-    return 0
+    worst, t0 = 0, time.time()
+    for f, d in zip(files, days):
+        args = LB.build_parser().parse_args(["--from", str(f), "--pack", str(ROOT / "config" / "packs" / "trading"), "--kind", "trade",
+                                             "--connector", f"trade-{system.lower()}", "--key", "TRADE_ID", "--as-of", d.isoformat(),
+                                             "--partition-by", "PRODUCT_TYPE", "--lake", str(root), "--engine", engine, "-q"])
+        code, summary = LB.run(args, say=lambda *x, **k: None)
+        print(f"  {system} {d}: {summary.get('status')} {summary.get('rows', summary.get('documents', ''))} -> {summary.get('table')}"
+              + (f" ({summary.get('error')})" if summary.get("error") else ""))
+        worst = max(worst, code)
+    print(f"{table}: loaded in {time.time() - t0:,.0f} s; a running server reading this lake picks the trades up within a minute")
+    return worst
 
 
 if __name__ == "__main__":

@@ -24,7 +24,7 @@ over REST, as the token's user. Loaded by drishti.py; every command talks to the
   bi migrate --models [--dry-run]                      the same for the server's stored items (bi-admin)
   bi migrate --boards FILE... [--write] [--keep-old]   2.3 boards to reports with board pages (2.4.0, R7); --write writes <name>.report.yaml beside reports/
   bi migrate --boards [--dry-run]                      the same for the server's stored boards (bi-admin; the server also does it at start)
-  bi sql "SELECT ..." --model M [--explain] [--format json|csv]   run Drishti SQL over a model (wave A)
+  bi sql "SELECT ..." --model M [--explain] [--format json|csv|jsonl]   run Drishti SQL over a model (wave A)
 """
 import argparse
 import json
@@ -94,7 +94,7 @@ def register(bi, srv, ctx) -> None:
     s.add_argument("--file", help="read the statement from this file")
     s.add_argument("--model", required=True, help="the model (name@major) or dataset:<name>")
     s.add_argument("--explain", action="store_true", help="the plan instead of the answer")
-    s.add_argument("--format", choices=["table", "json", "csv"], default="table")
+    s.add_argument("--format", choices=["table", "json", "csv", "jsonl"], default="table")
     s.add_argument("--async", dest="as_run", action="store_true", help="ask it as a run (BI_RUNS.md): the answer if done within --wait, else the run's id")
     s.add_argument("--wait", default="2s", help="with --async: how long to wait inline (default 2s; 0 returns the run at once)")
     s.add_argument("--yes", action="store_true", help="with --async: accept the confirmation of a large run in advance (DRS-9082)")
@@ -354,8 +354,8 @@ def sql(a, ctx) -> int:
     if getattr(a, "as_run", False):                                       # bi sql --async: Prefer: respond-async (tools/biruns.py says the outcome)
         return ctx["runs"].asked(a, ctx, "/api/v1/bi/sql", {"model": a.model, "sql": text, "format": "json"})
     api = ctx["Api"].from_args(a)
-    if fmt == "csv":
-        _, raw = api.request("POST", "/api/v1/bi/sql", {"model": a.model, "sql": text, "format": "csv"})
+    if fmt in ("csv", "jsonl"):                                            # the server's own file: CSV, or JSON Lines (a row a line)
+        _, raw = api.request("POST", "/api/v1/bi/sql", {"model": a.model, "sql": text, "format": fmt})
         sys.stdout.write(raw.decode("utf-8"))
         return 0
     r = api.json("POST", "/api/v1/bi/sql", {"model": a.model, "sql": text, "format": "json"})

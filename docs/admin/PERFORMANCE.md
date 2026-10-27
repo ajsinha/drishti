@@ -334,7 +334,7 @@ costs a little more per keystroke for every user; a program may ask for up to 50
 ### 7. Micro-benchmarks (JMH)
 
 `HotPathBenchmark` (`drishti-benchmarks/src/main/java/com/ash/drishti/benchmarks/HotPathBenchmark.java`) times the innermost hot paths against the IRS-48213 reference document
-(`examples/packs/finance/samples/trade/IRS-48213.json`). Run it from the repository root, because it reads that file
+(a line of `examples/packs/finance/samples/trade.jsonl`). Run it from the repository root, because it reads that file
 by a relative path:
 
 ```bash

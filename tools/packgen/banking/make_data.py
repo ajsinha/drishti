@@ -12,19 +12,24 @@
 #
 # See the LICENSE file in the root of this repository for the full terms.
 
-"""Writes the banking packs' sample data and, optionally, the Delta Lake the server's connectors read.
+"""Writes the banking packs' sample data and, as separate steps, the dated rows the loaders put into the lake and the other stores.
 
-    python3 tools/packgen/banking/make_data.py                 write config/packs/<pack>/samples (the latest business date): catalog.json
+    python3 tools/packgen/banking/make_data.py                 write config/packs/<pack>/samples (the latest business date): catalog.jsonl
                                                                 and samples/<kind>.jsonl, one document a line (--sample-part-mb N splits
-                                                                a kind above N MB into <kind>.part-001.jsonl ..., default 50)
+                                                                a kind above N MB into <kind>.part-001.jsonl ..., default 50), the trading
+                                                                pack's Sutra tests and the file connector's sample feed (<data>/feeds/fixing.jsonl)
     python3 tools/packgen/banking/make_data.py --check         verify the data is consistent and the files are current
-    uv run --with deltalake --with pyarrow --with pyyaml python tools/packgen/banking/make_data.py --lake data/delta [--days 10]
-                                                                also write data/delta/<domain>/<kind>/ with business-day history,
-                                                                each kind in the layout its pack declares (the trade table's)
+    uv run --with deltalake --with pyarrow --with pyyaml python tools/packgen/banking/make_data.py --lake data/delta [--days 10] [--rows DIR] [--no-load]
+                                                                write the business-day history as JSONL rows (DIR, default <lake>/../build/lake-rows:
+                                                                banking-history.jsonl and banking-restated.jsonl), then load them with
+                                                                tools/samplegen/load_rows.py into data/delta/<domain>/<kind>/, each kind in the
+                                                                layout its pack declares (the trade table's); --no-load stops after the JSONL
     python3 tools/packgen/banking/make_data.py --jsonl data/banking.jsonl   rows for tools/load-postgres.sh and load-aerospike.sh
 
-The samples are what the demo source serves live; the lake is the history (a table per kind, partitioned by
-business date, in the data domain that owns the kind, see layout.py). Everything is deterministic.
+Generation and loading are separate steps (docs/guides/DATA_FORMATS.md): every output is JSON Lines. --lake and --jsonl write rows
+only: they never rewrite the packs' samples, the Sutra tests or the feed (the feed is written when the data folder has none, so the
+file connector starts up). The samples are what the demo source serves live; the lake is the history (a table per kind, partitioned
+by business date, in the data domain that owns the kind, see layout.py). Everything is deterministic.
 
 Checks: every reference field points at an entity that exists; every netting set's net MTM is the sum of its
 trades; every path a Sutra's header reads is present in each document of its kind.
@@ -197,7 +202,7 @@ def check(docs: dict) -> list[str]:
 
 
 def sample_files(docs: dict) -> dict[Path, str]:
-    """Each pack's samples/: catalog.json and one JSON Lines file per kind (tools/packgen/common/samples.py)."""
+    """Each pack's samples/: catalog.jsonl and one JSON Lines file per kind (tools/packgen/common/samples.py)."""
     out: dict[Path, str] = {}
     by_pack: dict[str, dict[str, dict]] = {}
     catalogs: dict[str, list] = {}
@@ -229,14 +234,45 @@ def data_dir() -> Path:
     return Path(os.environ.get("DRISHTI_DATA_DIR") or (ROOT / "data"))
 
 
-def write_feeds(root: Path) -> Path:
-    """<data>/feeds (not in git, like everything under data/): the feed folder the shipped configuration serves."""
-    f = root / "fixing" / "SOFR-HISTORY.csv"
-    text = "date,rate,volume_bn\n" + "".join(f"{d},{r},{v}\n" for d, r, v in SOFR_HISTORY)
+#: the CSV feed file earlier releases wrote (CSV input is deprecated): removed when the JSONL feed replaces it, if it is unchanged
+OLD_FEED_CSV = "date,rate,volume_bn\n" + "".join(f"{d},{r},{v}\n" for d, r, v in SOFR_HISTORY)
+
+
+def feed_text() -> str:
+    """fixing.jsonl: one fixing series a line (id SOFR-HISTORY and its rows), what `FIX SOFR-HISTORY` opens."""
+    rows = [{"date": d, "rate": r, "volume_bn": v} for d, r, v in SOFR_HISTORY]
+    return json.dumps({"id": "SOFR-HISTORY", "rows": rows}, ensure_ascii=False, separators=(",", ":")) + "\n"
+
+
+def write_feeds(root: Path, rewrite: bool = True) -> Path:
+    """<data>/feeds (not in git, like everything under data/): the feed folder the shipped configuration serves, as JSON Lines
+    (fixing.jsonl). rewrite=False writes it only when missing (a loader's run never rewrites it). The CSV of earlier releases goes."""
+    f = root / "fixing.jsonl"
+    text = feed_text()
     f.parent.mkdir(parents=True, exist_ok=True)
-    if not f.exists() or f.read_text(encoding="utf-8") != text:
+    if not f.exists() or rewrite and f.read_text(encoding="utf-8") != text:
         f.write_text(text, encoding="utf-8")
+    old = root / "fixing" / "SOFR-HISTORY.csv"
+    if old.is_file() and old.read_text(encoding="utf-8") == OLD_FEED_CSV:
+        old.unlink()
+        if not any(old.parent.iterdir()):
+            old.parent.rmdir()
     return f
+
+
+def lake_tables(docs: dict) -> list[tuple[str, str, str, dict]]:
+    """(domain, table, kind, docs) of every lake table, in load order: the trades one table per source system (trade_endur ...),
+    each its own connector's."""
+    out = []
+    for domain in layout.DOMAINS:
+        kinds = {k: docs.get(k, {}) for k in (x for p in layout.PACKS.values() for d, ks in p["kinds"].items() if d == domain for x in ks)}
+        tables = {k: (k, v) for k, v in kinds.items()}
+        if "trade" in tables:
+            trades = tables.pop("trade")[1]
+            for system in TSCHEMA.SYSTEMS:
+                tables[f"trade_{system.lower()}"] = ("trade", {i: t for i, t in trades.items() if t["SOURCE_SYSTEM"] == system})
+        out += [(domain, table, kind, ds) for table, (kind, ds) in sorted(tables.items())]
+    return out
 
 
 def main() -> None:
@@ -259,18 +295,20 @@ def main() -> None:
             raise SystemExit(f"banking samples out of date; run make_data.py. stale={stale[:3]} extra={extra[:3]}")
         print(f"{sum(len(v) for v in docs.values())} banking documents consistent and up to date")
         return
-    for f in existing - set(files):
-        f.unlink()
-    for t in targets:                                   # the folders the older one-file-a-document layout left empty
-        for d in sorted((x for x in t.glob("*") if x.is_dir()), reverse=True) if t.exists() else ():
-            if not any(d.iterdir()):
-                d.rmdir()
-    for f, t in files.items():
-        f.parent.mkdir(parents=True, exist_ok=True)
-        if not f.exists() or f.read_text(encoding="utf-8") != t:
-            f.write_text(t, encoding="utf-8")
-    print(f"wrote {sum(len(v) for v in docs.values())} documents into {len(layout.PACKS)} packs' samples; {TT.write(docs['trade'])} trading test files")
-    print(f"feeds: {write_feeds(data_dir() / 'feeds')}")
+    rows_only = "--jsonl" in sys.argv or "--lake" in sys.argv
+    if not rows_only:                                   # the generator's own outputs: a loader's run never rewrites them
+        for f in existing - set(files):
+            f.unlink()
+        for t in targets:                               # the folders the older one-file-a-document layout left empty
+            for d in sorted((x for x in t.glob("*") if x.is_dir()), reverse=True) if t.exists() else ():
+                if not any(d.iterdir()):
+                    d.rmdir()
+        for f, t in files.items():
+            f.parent.mkdir(parents=True, exist_ok=True)
+            if not f.exists() or f.read_text(encoding="utf-8") != t:
+                f.write_text(t, encoding="utf-8")
+        print(f"wrote {sum(len(v) for v in docs.values())} documents into {len(layout.PACKS)} packs' samples; {TT.write(docs['trade'])} trading test files")
+    print(f"feeds: {write_feeds(data_dir() / 'feeds', rewrite=not rows_only)}")
     if "--jsonl" in sys.argv:
         from samplegen.dates import Calendar
         from samplegen.lake import final_rows
@@ -295,23 +333,17 @@ def main() -> None:
         print(f"jsonl: {n} rows in {out} (tools/load-postgres.sh and tools/load-aerospike.sh load them)")
     if "--lake" in sys.argv:
         from samplegen.dates import Calendar
-        from samplegen.lake import write_tables
-        from samplegen.layout import layouts_for_domain
+        from samplegen.lake import rows_dir, write_rows
 
         root = Path(sys.argv[sys.argv.index("--lake") + 1])
         days = int(sys.argv[sys.argv.index("--days") + 1]) if "--days" in sys.argv else 10
-        rows = 0
-        for domain in layout.DOMAINS:
-            kinds = {k: docs.get(k, {}) for k in (x for p in layout.PACKS.values() for d, ks in p["kinds"].items() if d == domain for x in ks)}
-            lays = layouts_for_domain(domain)
-            if "trade" in kinds:                    # one table per source system (trade_endur ...), each its own connector's
-                trades = kinds.pop("trade")
-                for system in TSCHEMA.SYSTEMS:
-                    kinds[f"trade_{system.lower()}"] = {i: t for i, t in trades.items() if t["SOURCE_SYSTEM"] == system}
-                    if "trade" in lays:
-                        lays[f"trade_{system.lower()}"] = lays["trade"]
-            rows += write_tables(root / domain, kinds, N.AS_OF, days, Calendar.of("USNY"), lays)
-        print(f"lake: {rows} rows under {root} ({', '.join(layout.DOMAINS)})")
+        rows = Path(sys.argv[sys.argv.index("--rows") + 1]) if "--rows" in sys.argv else rows_dir(root)
+        history, restated, n = write_rows(rows, "banking", lake_tables(docs), N.AS_OF, days, Calendar.of("USNY"))
+        print(f"rows: {n} in {history} (restatements in {restated.name})")
+        if "--no-load" not in sys.argv:                 # the loading step: JSONL rows into Delta (tools/samplegen/load_rows.py)
+            from samplegen import load_rows
+            total = load_rows.load([history], root, [restated])
+            print(f"lake: {total} rows under {root} ({', '.join(layout.DOMAINS)})")
 
 
 if __name__ == "__main__":

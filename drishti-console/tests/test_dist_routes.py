@@ -37,7 +37,7 @@ def test_a_bi_download_passes_the_state_and_keeps_the_servers_file_name(client, 
     fmt, target, _ = backend.exports_made[-1]
     assert fmt == "xlsx" and target["type"] == "report" and target["id"] == "file:report:daily"
     assert target["page"] == "main" and target["visual"] == "by-desk" and target["state"]["slicers"] == {"ccy": ["USD"]}
-    for f, kind in (("pdf", "application/pdf"), ("png", "image/png"), ("csv", "text/csv")):
+    for f, kind in (("pdf", "application/pdf"), ("png", "image/png"), ("csv", "text/csv"), ("jsonl", "application/jsonl")):
         assert client.get(f"/dist/bi/file:report:daily.{f}").headers["content-type"].startswith(kind)
     assert "state" not in backend.exports_made[-1][1]                          # no state in the address: none sent
 

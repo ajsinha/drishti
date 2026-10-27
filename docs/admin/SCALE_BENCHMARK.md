@@ -46,7 +46,8 @@ Contents:
 
 ## 1. What is measured
 
-The book is the trading pack's generated book (`tools/samplegen/bulk_trades.py`): **N trades a day for three business
+The book is the trading pack's generated book (`tools/samplegen/bulk_trades.py`; since 2.9.4 it writes one JSON Lines file a day and
+loads each with `lake build`, so a run takes longer than the generation times below, which were measured when it wrote Delta directly): **N trades a day for three business
 days** (2026-09-28 to 2026-09-30), plus the samples of the packs then shipped (the banking packs, since replaced by the seven packs above) (17,910 documents of reference, market, risk, credit
 and collateral data). The first 750 trades are the samples; the rest are clones in each booking system's own number
 range (`MX-30000000 …`, `CLY-4000000 …`, `END-1100000 …`). Every store is loaded with the project's own loader

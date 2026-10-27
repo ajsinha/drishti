@@ -169,8 +169,8 @@ class DesignShipApiTest {
             }
         }
         assertThat(names).contains("ship-d/pack.yaml", "ship-d/README.md", "ship-d/sutras/" + domainOf(names) + "/ship-d.v1.sutra.yaml",
-                "ship-d/tests/ship-d/first.json", "ship-d/tests/ship-d/second.json", "ship-d/tests/ship-d/expect.yaml",
-                "ship-d/samples/ship-thing.jsonl", "ship-d/samples/catalog.json");                         // one document a line
+                "ship-d/tests/ship-d/cases.jsonl", "ship-d/tests/ship-d/expect.yaml",                           // a case a line (2.9.4)
+                "ship-d/samples/ship-thing.jsonl", "ship-d/samples/catalog.jsonl");                         // one document a line
         assertThat(expect).contains("noErrors: true").contains("- \"terms\"");
 
         JsonNode imported = ok(mvc.perform(post("/api/v1/builder/designs/import").header("Authorization", as("bea", "designer"))

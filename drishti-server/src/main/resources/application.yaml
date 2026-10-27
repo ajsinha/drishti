@@ -657,6 +657,7 @@ drishti:
       retention-years: 7             # the published table keeps its log and removed files (time travel) this long
       on-start: true                 # at start, capture the newest date when it has no official record yet
       currencies: [USD]              # reporting currencies captured officially (USD always, and the only one published); e.g. [USD, EUR]
+      jsonl: true                    # also write each published date as JSON Lines: <root>/risk-results/jsonl/var-official/<date>/ (2.9.4)
   ccr:
     exposure:                        # the exposure engine (docs/guides/EXPOSURE_GUIDE.md): EE, ENE, EEE, PFE, EPE, EEPE of any counterparty scope from the exposure paths
       enabled: ${DRISHTI_EXPOSURE_ENABLED:true}
@@ -695,6 +696,7 @@ drishti:
         root: ${DRISHTI_DELTA_ROOT:${drishti.data.dir:./data}/delta}   # the risk lake's root; an s3:// root is not published by this writer
         retention-years: 7           # the published tables keep their log and removed files (time travel) this long
         on-start: true               # at start, capture the newest date when it has no official record yet
+        jsonl: true                  # also write each published date as JSON Lines: <root>/risk-results/jsonl/<table>/<date>/ (2.9.4)
       retention:                     # what is kept how long (EXPOSURE_GUIDE.md section 27.3, decided 2026-10-26)
         trade-paths-days: 20         # full trade paths: the last 20 business dates ...
         trade-paths-month-end-years: 1   # ... and each month-end for a year (the lake's owner applies it; GET /api/v1/exposure/retention lists the dates beyond)

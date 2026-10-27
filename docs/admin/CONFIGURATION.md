@@ -475,6 +475,7 @@ From `drishti-console/config/application.yaml`, resolved from environment variab
 | `DRISHTI_LAYOUTS_ENABLED` | `layouts.enabled` | `true` | Offer layout mode. |
 | `DRISHTI_PACKS_DIR` | `packs.dir` | `../config/packs` | The packs directory (a relative path resolves from `drishti-console/`). |
 | `DRISHTI_PACKS_EXTRA_DIRS` | `packs.extra_dirs` | empty | Further pack folders, comma-separated, as on the server (relative paths resolve from `drishti-console/`, so `../examples/packs`). |
+| `DRISHTI_PACKS_INSTALLED` | `packs.installed_dir` | empty | The server's installed packs (registry and Deploy archive); empty: `<data dir>/packs/installed`. Read first as the server does, so an installed pack's guides, examples and workspaces reach the console. |
 | `DRISHTI_PACKS` | `packs.enabled` | `core,market-data,trading,counterparty-risk,market-risk,world-economy,news-and-markets` | Only used when the server cannot be asked which packs are on. |
 | `DRISHTI_LAKE_ROOTS` | `lakes.roots` | empty | Admin → Data loads → Lakes ([TOOLS.md](../guides/TOOLS.md#4-lake-build-a-large-json-export-into-a-delta-lake)): the lake roots this console may write, comma-separated (relative paths resolve from `drishti-console/`); empty: `<data dir>/delta`, the server's own root. The page offers no other folder. |
 | `DRISHTI_JAR` | `lakes.jar` | empty | The drishti-server exec jar whose Java writer the page's builds use (`lakes.engine: auto`); empty: the newest `drishti-server/target/drishti-server-*-exec.jar`, else the Python `deltalake` package. |
@@ -1462,6 +1463,7 @@ else by `drishti.var.positions`.
 | `root-names` | none | 2.9.4. One hierarchy's root name, over `root-name`: `root-names: {MGMT: "Group", LEGAL: "Group legal entities"}` (hierarchy ids in any case). |
 | `currency-retention-dates` | `5` (`DRISHTI_VAR_CURRENCY_RETENTION_DATES`) | 2.9.4. The newest business dates whose listed currencies are built ahead and kept; older dates' listed-currency hot files are deleted after each build (asked again, they are built on first ask). |
 | `official.currencies` | `[USD]` | 2.9.4. The reporting currencies captured officially: USD always (first, and the only one published to `risk-results/var-official`); each other one (`[USD, EUR]`) is captured from the date's book in that currency and kept in the content store (`var/official/<CCY>/<date>.json`), read by `GET /api/v1/var/official?ccy=EUR` and by a node's history in that currency. |
+| `official.jsonl` | `true` | Also write each published date as JSON Lines beside the table, one row a line: `<root>/risk-results/jsonl/var-official/<date>/var-official-v<table version>.jsonl`, one file per commit (2.9.4, [DATA_FORMATS.md](../guides/DATA_FORMATS.md)). |
 
 ### `drishti.ccr.exposure` — the exposure engine
 
@@ -1505,6 +1507,7 @@ compute workers on (`DRISHTI_COMPUTE_ENABLED=true`), otherwise that method answe
 | `official.root` | `${DRISHTI_DELTA_ROOT:${drishti.data.dir:./data}/delta}` | The Delta root the results are published under. |
 | `official.retention-years` | `7` | The published tables keep their log and removed files this long (time travel). |
 | `official.on-start` | `true` | At start, capture the newest date when it has no official record yet. |
+| `official.jsonl` | `true` | Also write each published date as JSON Lines beside the tables: `<root>/risk-results/jsonl/<exposure-official or exposure-official-cpty>/<date>/<table>-v<table version>.jsonl`, one file per commit (2.9.4). |
 | `retention.trade-paths-days` | `20` | Full trade paths are kept for the last 20 business dates ... |
 | `retention.trade-paths-month-end-years` | `1` | ... and each month-end for a year. The lake's owner applies it; `GET /api/v1/exposure/retention` lists each date and whether its paths are beyond their window (EXPOSURE_GUIDE.md section 27.3, decided 2026-10-26). |
 | `retention.set-matrices-years` | `1` | The netting-set matrices (the hot files) of every date within a year are kept on disk ... |
@@ -2278,7 +2281,7 @@ TLS for `jdbc:postgresql://`: the shared [`tls.*`](#tls--tls-for-connectors) set
 
 ### `file` — JSON or CSV files on disk
 
-Layout: `<root>/<kind>/<id>.json` (or `.csv`), and dated `<root>/<yyyy-MM-dd>/<kind>/<id>.json`.
+Layout: `<root>/<kind>.jsonl` (JSON Lines, one entity a line), `<root>/<kind>/<id>.json` (or `.csv`, deprecated), and dated `<root>/<yyyy-MM-dd>/<kind>/<id>.json`.
 
 | Setting | Default | Meaning |
 |---|---|---|
@@ -2902,6 +2905,7 @@ read by both programs, so one set of variables configures both halves.
 |---|---|---|
 | `packs.dir` | `../config/packs` (`DRISHTI_PACKS_DIR`), relative to `drishti-console/` | Where pack content (examples, guides) is read. |
 | `packs.extra_dirs` | empty (`DRISHTI_PACKS_EXTRA_DIRS`) | Further pack folders, comma-separated, read after `packs.dir` (the retired example packs: `../examples/packs`). |
+| `packs.installed_dir` | `<data dir>/packs/installed` (`DRISHTI_PACKS_INSTALLED`) | The server's `drishti.packs.installed-dir`: packs installed from the registry or by Deploy archive, read before `packs.dir` (they win a name, as on the server). Point it at the same folder as the server's. |
 | `packs.enabled` | the seven shipped packs (`DRISHTI_PACKS`) | Used only when the server cannot be asked which packs are enabled. |
 | `help.docs_dir` | `../docs` | The documents rendered in the help centre's reference section. |
 | `studio.examples_dir` | `../docs/guides/examples` | The Rachana examples (`<name>.sutra.yaml`, `<name>.json`, `<name>.md`) that the Build workbench (**Build → New screen → Examples**, the File menu) and **Help → Examples** offer. Only names of complete example sets present there are served. |
@@ -2969,6 +2973,7 @@ Server (S), console (C), or both.
 | `DRISHTI_PACKS` | S, C | `drishti.packs.enabled`, `packs.enabled` |
 | `DRISHTI_PACKS_DIR` | S, C | `drishti.packs.dir`, `packs.dir` |
 | `DRISHTI_PACKS_EXTRA_DIRS` | S, C | `drishti.packs.extra-dirs`, `packs.extra_dirs` |
+| `DRISHTI_PACKS_INSTALLED` | S, C | `drishti.packs.installed-dir`, `packs.installed_dir` |
 | `DRISHTI_DEFAULT_PACKS` | S | `drishti.packs.default-for-users` |
 | `DRISHTI_PLUGIN_DIR` | S | `drishti.sources.plugin-dir` |
 | `DRISHTI_DEMO_ENABLED` | S | `drishti.sources.plugins.demo.enabled` |

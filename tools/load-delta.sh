@@ -20,6 +20,8 @@
 #   tools/load-delta.sh --trades 1000000 --days 3    a million trades a day (the scale test; about 1.6 GB a day)
 # The samples rebuild every domain's tables; --trades replaces the trade table with a book of that size (its first 750
 # trades are the samples), --days sets how many business days that book covers (default 3).
+# Generating and loading are separate steps (docs/guides/DATA_FORMATS.md): each generator writes JSON Lines under
+# <data>/build (lake-rows/, bulk/), then a loader puts them into the lake (samplegen/load_rows.py; lake build for the book).
 set -euo pipefail
 cd "$(dirname "$0")/.."
 ROOT="${DRISHTI_DATA_DIR:-data}/delta"; TRADES=""; DAYS="3"
@@ -32,7 +34,12 @@ while [[ $# -gt 0 ]]; do
   esac
 done
 WITH=(--with deltalake --with pyarrow --with pyyaml)
-uv run -q "${WITH[@]}" python tools/packgen/banking/make_data.py --lake "$ROOT"
+BUILD="$(dirname "$ROOT")/build"
+# 1. generate: the history as JSONL rows; 2. load them (the restatement as a second commit)
+uv run -q --with pyyaml python tools/packgen/banking/make_data.py --lake "$ROOT" --rows "$BUILD/lake-rows" --no-load
+uv run -q "${WITH[@]}" python tools/samplegen/load_rows.py --root "$ROOT" \
+  --rows "$BUILD/lake-rows/banking-history.jsonl" --restated "$BUILD/lake-rows/banking-restated.jsonl"
 if [[ -n "$TRADES" ]]; then
-  uv run -q "${WITH[@]}" python tools/samplegen/bulk_trades.py --root "$ROOT" --trades "$TRADES" --days "$DAYS"
+  # the book: one JSONL file a day under $BUILD/bulk, then each through lake build
+  uv run -q "${WITH[@]}" python tools/samplegen/bulk_trades.py --root "$ROOT" --out "$BUILD/bulk" --trades "$TRADES" --days "$DAYS"
 fi

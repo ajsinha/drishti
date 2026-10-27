@@ -36,7 +36,7 @@ drishti: { sources: { plugins: { file: { enabled: true, settings: { root: ./data
 or as a connector file (`config/connectors/eod-files.yaml`): `plugin: file`, `settings: { root: ./data/files }`.
 
 **Layout.** JSON lines, one file per kind per business day: `<root>/<domain>/<yyyy-MM-dd>/<kind>.jsonl` (an undated
-`<kind>.jsonl` also works); or a file per entity, `<root>/<kind>/<id>.json` or `.csv`, and dated
+`<kind>.jsonl` also works); or a file per entity, `<root>/<kind>/<id>.json` or `.csv` (CSV deprecated: `drishti.py convert`), and dated
 `<root>/<yyyy-MM-dd>/<kind>/<id>.json`. **Loader:** `tools/load-files.sh [root] [--trades N --days D]`.
 **Limits:** no live updates; new files reach search after `rescan-seconds`; a kind or id that would leave its folder is
 refused. → full reference: [FILE_CONNECTOR.md](FILE_CONNECTOR.md)
@@ -345,7 +345,7 @@ It runs as itself and serves every kind; it ticks live (`_meta.walk` random-walk
 drishti: { sources: { plugins: { demo: { enabled: false } } } }    # or DRISHTI_DEMO_ENABLED=false
 ```
 
-**Layout.** `samples/catalog.json` per pack lists the documents. **Loader:** each pack's `tools/` generate the samples.
+**Layout.** `samples/catalog.jsonl` per pack lists the documents. **Loader:** each pack's `tools/` generate the samples.
 **Limits:** it is the `default-route`: switch it off in production so a live view cannot tick from samples. → full
 reference: [DEMO_CONNECTOR.md](DEMO_CONNECTOR.md) (the sample data itself: [DEMO_DATA.md](DEMO_DATA.md))
 

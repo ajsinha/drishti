@@ -17,7 +17,7 @@
    native <dialog> (full screen on a phone): the chart already drawn with the smart defaults, its caption (the text summary, also
    the chart's aria-label), the status line (what is charted, what was left out) and, beside it, the settings: type, X (and its
    date bucket), up to six series (column, aggregation, axis, type in a combo), split, sort, Top N with Others, labels, stacking.
-   Every change redraws at once. Actions: View as table, PNG, SVG, CSV, Excel, Defaults; Chart all N where the source can.
+   Every change redraws at once. Actions: View as table, PNG, SVG, CSV, Excel, JSONL (one row a line), Defaults; Chart all N where the source can.
    The rows come from a source adapter (table-chart-sources.js); the numbers from the engine (table-chart-engine.js over
    pivot-engine.js); the colours from the theme tokens (charts.js), redrawn on a theme change. Masked columns are offered greyed
    and never charted. Keys: Esc closes (focus back on the opener), 1-6 the type, T table, A chart all, E export, ? help; on the
@@ -102,7 +102,8 @@
     this.tableBtn = act('View as table', 'table', function () { self.toggleTable(); }, 'table', { 'aria-pressed': 'false', 'aria-keyshortcuts': 'T' });
     this.exportBox = el('span', { cls: 'tc-exports', role: 'group', 'aria-label': 'Export the chart' }, [
       act('PNG', 'png', function () { self.png(); }, 'image'), act('SVG', 'svg', function () { self.svg(); }, 'filetype-svg'),
-      act('CSV', 'csv', function () { self.grid('csv'); }, 'filetype-csv'), act('Excel', 'xlsx', function () { self.grid('xlsx'); }, 'file-earmark-excel')]);
+      act('CSV', 'csv', function () { self.grid('csv'); }, 'filetype-csv'), act('Excel', 'xlsx', function () { self.grid('xlsx'); }, 'file-earmark-excel'),
+      act('JSONL', 'jsonl', function () { self.grid('jsonl'); }, 'braces', { title: 'JSON Lines: one row a line, the CSV\'s column names' })]);
     if (this.opts.exports === false) { this.exportBox.hidden = true; }
     var actions = el('footer', { cls: 'tc-actions' }, [this.tableBtn, this.exportBox,
       act('Defaults', 'reset', function () { self.reset(); }, 'arrow-counterclockwise', { title: 'Back to the chart this table opens with' })]);
@@ -501,7 +502,7 @@
     switch (k) {
       case 't': case 'T': e.preventDefault(); this.toggleTable(); break;
       case 'a': case 'A': if (!this.allBtn.hidden && !this.allBtn.disabled) { e.preventDefault(); this.toggleAll(); } break;
-      case 'e': case 'E': if (!this.exportBox.hidden) { e.preventDefault(); this.exportBox.querySelector('button').focus(); this.say('Export: PNG, SVG, CSV or Excel.'); } break;
+      case 'e': case 'E': if (!this.exportBox.hidden) { e.preventDefault(); this.exportBox.querySelector('button').focus(); this.say('Export: PNG, SVG, CSV, Excel or JSON Lines.'); } break;
       case '?': e.preventDefault(); window.open(HELP, '_blank', 'noopener'); break;
       default:
     }
@@ -537,7 +538,7 @@
     var self = this;
     if (!this.last) { return; }
     var g = this.gridData();
-    this.say('Preparing the ' + (ext === 'xlsx' ? 'Excel workbook' : 'CSV file'));
+    this.say('Preparing the ' + (ext === 'xlsx' ? 'Excel workbook' : ext === 'jsonl' ? 'JSON Lines file' : 'CSV file'));
     fetch('/export/grid.' + ext, { method: 'POST', headers: { 'Content-Type': 'application/json' }, credentials: 'same-origin', body: JSON.stringify(g) }).then(function (r) {
       if (!r.ok) { return r.text().then(function (x) { self.status.textContent += ' · Export failed: ' + x; }); }
       var cd = r.headers.get('Content-Disposition') || '', mm = /filename="?([^";]+)"?/.exec(cd);

@@ -93,7 +93,7 @@ Everything you do is an **operation** on the design (add a panel, move it, set a
 
 ## 3. The Data pane: samples, shape, palette
 
-![The Data pane: samples, the shape tree with a field opened](img/designer/03-data-pane.jpg)
+![The Data pane, scrolled to the shape tree: a field opened, with its path and role](img/designer/03-data-pane.jpg)
 
 **Samples.** Click a sample's name to preview the design with it (the status bar's ◀ ▶ do the same). *Add files* adds more; *Remove* takes one out. A sample marked *stored entity* is a reference; *synthetic* was generated from a schema. *shape.json* and *JSON Schema* download what Drishti inferred.
 
@@ -167,7 +167,7 @@ A field of the shape is dragged onto the canvas:
 
 - **Onto the rim of a panel, between panels, or onto empty space in a column**: Drishti ranks the panel kinds that suit the field (a `series` becomes a line, a `measure` a gauge or a bar, a list of rows a table…), each with its options already filled and **a reason**. Pick one with the mouse or Up/Down and Enter; it is added at the place you dropped, with its inspector open.
 
-  ![Dropping a field between panels: ranked panel kinds, each with a reason](img/designer/07-drop-field.jpg)
+  ![Dropping a field between panels: the panel kinds that suit it (for a name, one: kv), each with a reason](img/designer/07-drop-field.jpg)
 
 - **Onto the middle of a panel**: the field is **bound** to it, into the option the kind accepts next (a column of a table, a field of a key/value panel, a series of a line chart…). The panel outlines in green while you hover.
 
@@ -582,7 +582,7 @@ A design can leave the workbench as a **pack fragment**, a zip you can put in a 
 my-view/
   pack.yaml                         a stub: the kind, a mnemonic suggestion, an id pattern, the id field of your samples
   sutras/<domain>/my-view.v1.sutra.yaml
-  tests/my-view/<sample>.json       every kept sample (up to 20) ...
+  tests/my-view/cases.jsonl         every kept sample (up to 20), one case a line ...
   tests/my-view/expect.yaml         ... and what `sutra test` checks: noErrors, and the panels that were fine on every sample
   samples/<kind>/<sample>.json      three samples to try the view on
   config/about.yaml                 the About text (only when the design has one), named by `about:` in pack.yaml
@@ -620,7 +620,7 @@ java -jar drishti-server-<version>-exec.jar sutra design samples/*.json --kind d
 java -jar drishti-server-<version>-exec.jar sutra design --each samples-by-kind --out target/drafts   # one draft per subfolder
 ```
 
-`test` uses the **same checker as the Tests tab**, with the `config/packs/<pack>/tests/<sutra>/*.json` + `expect.yaml` convention that the pack fragment export writes. Exit codes: `0` ok, `1` problems, `2` usage. `--junit` writes JUnit XML for your CI's report step; `--out` writes HTML snapshots. The Maven build of this repository runs `sutra test` over every shipped pack that has tests and over the ten documented examples. All the details and a CI example are in [the Sutra command guide](SUTRA_DEVELOPER_GUIDE.md#15-testing-expectyaml-sutra-linttestpreview-ci).
+`test` uses the **same checker as the Tests tab**, with the `config/packs/<pack>/tests/<sutra>/cases.jsonl` + `expect.yaml` convention that the pack fragment export writes. Exit codes: `0` ok, `1` problems, `2` usage. `--junit` writes JUnit XML for your CI's report step; `--out` writes HTML snapshots. The Maven build of this repository runs `sutra test` over every shipped pack that has tests and over the ten documented examples. All the details and a CI example are in [the Sutra command guide](SUTRA_DEVELOPER_GUIDE.md#15-testing-expectyaml-sutra-linttestpreview-ci).
 
 ## 27. Binding a design to a file (development servers)
 

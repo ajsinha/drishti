@@ -13,7 +13,8 @@
 # See the LICENSE file in the root of this repository for the full terms.
 
 
-"""Export (W18): CSV downloads of a panel, a search and a comparison, and the entity's JSON. Each export reads through
+"""Export (W18): CSV and JSON Lines downloads of a panel, a search, a grid and a comparison (2.9.4: every CSV download has a
+.jsonl twin, one row a line keyed as the CSV's header), Excel of a grid, and the entity's JSON. Each export reads through
 the server like the screen does, so it carries the same business date, "known at" time, entitlements and redaction."""
 from __future__ import annotations
 
@@ -25,7 +26,7 @@ from fastapi.responses import Response
 from core.csrf import BodyError, json_body
 from core import asof
 from core.backend import BackendError, drs_message
-from core.export import filename, grid, panel_rows, plain, to_csv, to_xlsx
+from core.export import JSONL_MEDIA, filename, grid, panel_rows, plain, to_csv, to_jsonl, to_xlsx
 from routes.common import ident
 
 router = APIRouter(include_in_schema=False)
@@ -33,6 +34,16 @@ router = APIRouter(include_in_schema=False)
 
 def _csv(body: bytes, name: str) -> Response:
     return Response(body, media_type="text/csv; charset=utf-8", headers={"Content-Disposition": f'attachment; filename="{name}"'})
+
+
+def _jsonl(header: list, rows: list, name: str) -> Response:
+    """The JSON Lines twin of a CSV download: the same rows, one a line, keyed as the CSV's header, the name ending .jsonl."""
+    return Response(to_jsonl(header, rows), media_type=JSONL_MEDIA,
+                    headers={"Content-Disposition": f'attachment; filename="{name[:-4]}.jsonl"'})
+
+
+def _download(fmt: str, header: list, rows: list, name: str) -> Response:
+    return _jsonl(header, rows, name) if fmt == "jsonl" else _csv(to_csv(header, rows), name)
 
 
 def _problem(e: BackendError) -> Response:
@@ -44,8 +55,10 @@ def _date() -> str:
 
 
 # the specific routes first: /export/compare/... would otherwise match the panel route's pattern
-@router.get("/export/search.csv")
-async def search_csv(request: Request, q: str = ""):
+@router.get("/export/search.{fmt}")
+async def search_csv(request: Request, fmt: str, q: str = ""):
+    if fmt not in ("csv", "jsonl"):
+        return Response("a search downloads as .csv or .jsonl\n", status_code=404, media_type="text/plain; charset=utf-8")
     try:
         data = await request.app.state.backend.search(q, ident(request))
     except BackendError as e:
@@ -54,7 +67,7 @@ async def search_csv(request: Request, q: str = ""):
     labels = data.get("labels", {})
     header = [data.get("mnemonic") or data.get("kind"), "Title"] + [labels.get(c, c) for c in cols]
     rows = [[r["ref"]["id"], r.get("title") or ""] + [r["values"].get(c) for c in cols] for r in data.get("rows", [])]
-    return _csv(to_csv(header, rows), filename(data.get("kind", "search"), "search", _date()))
+    return _download(fmt, header, rows, filename(data.get("kind", "search"), "search", _date()))
 
 
 async def _grid(request: Request):
@@ -74,6 +87,13 @@ async def grid_csv(request: Request):
     return _csv(to_csv(header, safe), filename(name, _date()))
 
 
+@router.post("/export/grid.jsonl")
+async def grid_jsonl(request: Request):
+    """The same grid as JSON Lines: a row a line keyed as the CSV's header, values as computed (no spreadsheet escaping)."""
+    name, header, rows = await _grid(request)
+    return _jsonl(header, rows, filename(name, _date()))
+
+
 @router.post("/export/grid.xlsx")
 async def grid_xlsx(request: Request):
     """The same grid as an Excel workbook: one sheet, a bold frozen header row, numbers as numbers."""
@@ -85,6 +105,15 @@ async def grid_xlsx(request: Request):
 
 @router.get("/export/compare/{kind}/{id_:path}.csv")
 async def compare_csv(request: Request, kind: str, id_: str):
+    return await _compare(request, kind, id_, "csv")
+
+
+@router.get("/export/compare/{kind}/{id_:path}.jsonl")
+async def compare_jsonl(request: Request, kind: str, id_: str):
+    return await _compare(request, kind, id_, "jsonl")
+
+
+async def _compare(request: Request, kind: str, id_: str, fmt: str):
     params = {k: v for k, v in request.query_params.items() if k in ("from", "to", "fromKnownAt", "toKnownAt") and v}
     if params.get("fromKnownAt"):
         info = request.state.business_date or {}
@@ -95,11 +124,20 @@ async def compare_csv(request: Request, kind: str, id_: str):
         return _problem(e)
     f, t = (d.get("from") or {}).get("businessDate", ""), (d.get("to") or {}).get("businessDate", "")
     rows = [[c.get("label"), c.get("path"), c.get("kind"), c.get("before"), c.get("after"), c.get("delta")] for c in d.get("changes", [])]
-    return _csv(to_csv(["Field", "Path", "Change", f, t, "Difference"], rows), filename(id_, "changes", f, t))
+    return _download(fmt, ["Field", "Path", "Change", f, t, "Difference"], rows, filename(id_, "changes", f, t))
 
 
 @router.get("/export/{kind}/{id_:path}/{panel}.csv")
 async def panel_csv(request: Request, kind: str, id_: str, panel: str):
+    return await _panel(request, kind, id_, panel, "csv")
+
+
+@router.get("/export/{kind}/{id_:path}/{panel}.jsonl")
+async def panel_jsonl(request: Request, kind: str, id_: str, panel: str):
+    return await _panel(request, kind, id_, panel, "jsonl")
+
+
+async def _panel(request: Request, kind: str, id_: str, panel: str, fmt: str):
     try:
         vm = await request.app.state.backend.view(kind, id_, ident(request))
     except BackendError as e:
@@ -110,7 +148,7 @@ async def panel_csv(request: Request, kind: str, id_: str, panel: str):
     header, rows = panel_rows(p)
     if not header and not rows:
         return Response("this panel has nothing to export\n", status_code=404, media_type="text/plain; charset=utf-8")
-    return _csv(to_csv(header, rows), filename(id_, panel, _date()))
+    return _download(fmt, header, rows, filename(id_, panel, _date()))
 
 
 @router.get("/export/{kind}/{id_:path}.json")

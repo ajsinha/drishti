@@ -184,7 +184,7 @@ Two things to notice:
 ## A real example: NGFS-DELAYED
 
 Inference also helps when you start a Sutra. With the climate-risk pack enabled, this read-only call asks the
-server what inference makes of the NGFS *Delayed transition* scenario (`examples/packs/climate-risk/samples/climate-scenario/NGFS-DELAYED.json`),
+server what inference makes of the NGFS *Delayed transition* scenario (`NGFS-DELAYED`, a line of `examples/packs/climate-risk/samples/climate-scenario.jsonl`),
 ignoring the pack's own Sutra:
 
 ```bash

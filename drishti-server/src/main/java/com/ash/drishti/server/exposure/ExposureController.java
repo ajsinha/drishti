@@ -116,6 +116,10 @@ public class ExposureController {
             return ResponseEntity.ok().contentType(new MediaType("text", "csv"))
                     .header("Content-Disposition", "attachment; filename=\"exposure-profile.csv\"").body(views.profileCsv(p, scope(scope), date(asOf), a));
         }
+        if ("jsonl".equalsIgnoreCase(format)) {                           // one grid date a line, the CSV's column names
+            return ResponseEntity.ok().contentType(MediaType.parseMediaType(com.ash.drishti.server.dist.JsonlWriter.MEDIA_TYPE))
+                    .header("Content-Disposition", "attachment; filename=\"exposure-profile.jsonl\"").body(views.profileJsonl(p, scope(scope), date(asOf), a));
+        }
         return ResponseEntity.ok(views.profile(p, scope(scope), date(asOf), a, dates));
     }
 
@@ -231,6 +235,13 @@ public class ExposureController {
         entitlements.requireOpen(p, svc.props().kinds().paths());
         return ResponseEntity.ok().contentType(new MediaType("text", "csv")).header("Content-Disposition", "attachment; filename=\"" + id + ".csv\"")
                 .body(captures.csv(p, id));
+    }
+
+    @GetMapping("/captures/{id}/jsonl")
+    public ResponseEntity<String> captureJsonl(@PathVariable String id, @RequestAttribute(Principal.ATTRIBUTE) Principal p) {
+        entitlements.requireOpen(p, svc.props().kinds().paths());
+        return ResponseEntity.ok().contentType(MediaType.parseMediaType(com.ash.drishti.server.dist.JsonlWriter.MEDIA_TYPE))
+                .header("Content-Disposition", "attachment; filename=\"" + id + ".jsonl\"").body(captures.jsonl(p, id));
     }
 
     @GetMapping("/compare")

@@ -248,6 +248,39 @@ final class VarCaptures {
         return sb.toString();
     }
 
+    /**
+     * A capture as JSON Lines (2.9.4, docs/guides/DATA_FORMATS.md): the rows of its CSV, one a line, keyed as the CSV's header ({@code scenario_date, pnl};
+     * {@code part=components}: the component rows). The capture's own fields are its JSON (GET /captures/{id}).
+     */
+    @SuppressWarnings("unchecked")
+    String jsonl(Principal p, String id, String part) {
+        Map<String, Object> c = get(p, id);
+        StringBuilder sb = new StringBuilder();
+        if ("components".equals(part)) {
+            for (Map<String, Object> r : (List<Map<String, Object>>) c.getOrDefault("components", List.of())) {
+                Map<String, Object> line = new java.util.LinkedHashMap<>();
+                line.put("key", r.get("key"));
+                line.put("label", r.get("label"));
+                line.put("standalone_var", r.get("standaloneVar"));
+                line.put("component_var", r.get("componentVar"));
+                line.put("component_es", r.get("componentEs"));
+                line.put("pct_of_var", r.get("pct"));
+                line.put("incremental_var", r.get("incrementalVar"));
+                sb.append(com.ash.drishti.server.dist.JsonlWriter.line(line));
+            }
+            return sb.toString();
+        }
+        List<Object> dates = (List<Object>) c.getOrDefault("scenarioDates", List.of());
+        List<Object> v = (List<Object>) c.getOrDefault("vector", List.of());
+        for (int i = 0; i < dates.size(); i++) {
+            Map<String, Object> line = new java.util.LinkedHashMap<>();
+            line.put("scenario_date", dates.get(i));
+            line.put("pnl", i < v.size() ? v.get(i) : null);
+            sb.append(com.ash.drishti.server.dist.JsonlWriter.line(line));
+        }
+        return sb.toString();
+    }
+
     private static String cell(Object o) {
         String s = String.valueOf(o);
         return s.contains(",") || s.contains("\"") ? "\"" + s.replace("\"", "\"\"") + "\"" : s;

@@ -82,7 +82,9 @@ def registry_install(c: Ctx):
     c.page.wait_for_timeout(800)
     registry_section(c, "02-registry-installed.jpg")
     row = c.page.locator('tr[data-pack="helpdesk"]').first
-    row.scroll_into_view_if_needed()
+    # the row well below the sticky top bar, which would otherwise sit over it in the picture
+    c.page.evaluate("() => { const r = document.querySelector('tr[data-pack=\"helpdesk\"]'); window.scrollBy(0, r.getBoundingClientRect().top - 240); }")
+    c.page.wait_for_timeout(300)
     row.screenshot(path=str(out_dir("packs") / "02b-helpdesk-pack-row.jpg"), type="jpeg", quality=84)
     print("  wrote", (out_dir("packs") / "02b-helpdesk-pack-row.jpg").relative_to(ROOT))
 
@@ -115,7 +117,11 @@ def workbench_export(c: Ctx):
     c.page.set_viewport_size({"width": 1700, "height": 900})     # the Ship menu opens at the right edge
     sutra = (PACK / "sutras" / "ticket.v1.sutra.yaml").read_text(encoding="utf-8")
     d = c.api("/build/designs", {"name": "Ticket view", "kind": "ticket", "sutra": sutra})
-    files = [{"name": p.name, "text": p.read_text(encoding="utf-8")} for p in sorted((PACK / "tests" / "ticket").glob("*.json"))]
+    import json
+    import sys
+    sys.path.insert(0, str(Path(__file__).resolve().parents[2] / "packgen" / "common"))
+    import sutracases                                         # tests/ticket/cases.jsonl: a case a line
+    files = [{"name": n + ".json", "text": json.dumps(d, indent=1)} for n, d in sutracases.read(PACK / "tests" / "ticket")]
     c.api(f"/build/designs/{d['id']}/files", {"files": files})
     c.page.goto(f"{c.base}/build/d/{d['id']}")
     c.page.locator("[data-preview] [data-panel]").first.wait_for(timeout=30000)
@@ -153,10 +159,11 @@ def serve(work: Path) -> list:
     (work / "application.yaml").write_text(f"drishti:\n  packs:\n    registry:\n      trusted-keys:\n        acme: {public}\n", encoding="utf-8")
     java = os.environ.get("JAVA_HOME", "/usr/lib/jvm/java-25-openjdk-amd64") + "/bin/java"
     env = dict(os.environ, DRISHTI_PORT=str(SERVER_PORT), DRISHTI_PACKS=LISTED, DRISHTI_PACKS_DIR=str(packs), DRISHTI_PACK_REGISTRY=str(reg),
-               DRISHTI_STUDIO_SAVE="true", DRISHTI_SUTRAS=str(work / "sutras"))
+               DRISHTI_STUDIO_SAVE="true", DRISHTI_SUTRAS=str(work / "sutras"), DRISHTI_PACKS_INSTALLED=str(work / "data" / "packs" / "installed"))
     (work / "sutras").mkdir()
     server = subprocess.Popen(java_cmd(java, ["-jar", str(jars[-1])], cwd=work, env=env), cwd=work, env=env, stdout=(work / "server.log").open("w"), stderr=subprocess.STDOUT)
-    cenv = dict(os.environ, DRISHTI_BACKEND_URL=f"http://127.0.0.1:{SERVER_PORT}", DRISHTI_CONSOLE_PORT=str(CONSOLE_PORT), DRISHTI_PACKS_DIR=str(packs))
+    cenv = dict(os.environ, DRISHTI_BACKEND_URL=f"http://127.0.0.1:{SERVER_PORT}", DRISHTI_CONSOLE_PORT=str(CONSOLE_PORT), DRISHTI_PACKS_DIR=str(packs),
+                DRISHTI_PACKS_INSTALLED=env["DRISHTI_PACKS_INSTALLED"])          # the server's installed packs, read by the console too
     console = subprocess.Popen([str(py), str(ROOT / "drishti-console" / "run_drishti_web.py")], cwd=ROOT / "drishti-console", env=cenv,
                                stdout=(work / "console.log").open("w"), stderr=subprocess.STDOUT)
     for _ in range(240):

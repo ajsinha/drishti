@@ -440,7 +440,10 @@ public class RunsController {
         return noStore(200, json(visible(id, p), p));
     }
 
-    /** The stored answer, for the runner only (a result is never served across signatures; an administrator sees state, never values). */
+    /**
+     * The stored answer, for the runner only (a result is never served across signatures; an administrator sees state, never values). {@code format=json}
+     * (the default) pages the answer as JSON; {@code format=jsonl} sends the same page as JSON Lines, one row a line, the export's column names as keys.
+     */
     @GetMapping("/runs/{id}/result")
     public ResponseEntity<?> result(@PathVariable String id, @RequestParam(defaultValue = "json") String format, @RequestParam(defaultValue = "0") long offset,
             @RequestParam(defaultValue = "5000") int limit, @RequestAttribute(Principal.ATTRIBUTE) Principal p) {
@@ -450,12 +453,29 @@ public class RunsController {
         if (!own && !recipient(r, p)) {
             throw notFound(id);
         }
-        if (!"json".equalsIgnoreCase(format)) {
-            throw new DrishtiException(ErrorCode.BAD_REQUEST, "a stored run result is served as json (format=json); arrow is not built yet");
+        boolean lines = "jsonl".equalsIgnoreCase(format);
+        if (!"json".equalsIgnoreCase(format) && !lines) {
+            throw new DrishtiException(ErrorCode.BAD_REQUEST, "a stored run result is served as json or jsonl (format=json, format=jsonl); arrow is not built yet");
         }
         Map<String, Object> full = own ? runs().result(r, r.signature()) : sharing.read(r, p);      // a recipient reads their own version (9.3)
         Map<String, Object> answer = RunStore.page(full, offset, Math.max(1, Math.min(limit, 50_000)));
+        if (lines) {
+            return ResponseEntity.ok().header(HttpHeaders.CACHE_CONTROL, "no-store").header("X-Bi-Run", r.id())
+                    .contentType(MediaType.parseMediaType(com.ash.drishti.server.dist.JsonlWriter.MEDIA_TYPE + "; charset=utf-8")).body(jsonl(answer));
+        }
         return ResponseEntity.ok().header(HttpHeaders.CACHE_CONTROL, "no-store").header("X-Bi-Run", r.id()).body(answer);
+    }
+
+    /** A page of an answer as JSON Lines: the export's table (column names shortened as the CSV has them, masks as the screen), else the stored names. */
+    @SuppressWarnings("unchecked")
+    private byte[] jsonl(Map<String, Object> answer) {
+        com.ash.drishti.server.dist.BiExporter x = exporter.getIfAvailable();
+        if (x != null) {
+            return com.ash.drishti.server.dist.JsonlWriter.write(x.ofAnswer("", "", answer));
+        }
+        List<String> names = answer.get("columns") instanceof List<?> l ? l.stream().map(c -> c instanceof Map<?, ?> m ? String.valueOf(m.get("name")) : String.valueOf(c)).toList()
+                : List.of();
+        return com.ash.drishti.server.dist.JsonlWriter.rows(names, answer.get("rows") instanceof List<?> rows ? (List<List<Object>>) rows : List.of());
     }
 
     @DeleteMapping("/runs/{id}/result")
@@ -533,8 +553,8 @@ public class RunsController {
             throw notFound(id);
         }
         String format = body != null && body.path("format").isTextual() ? body.path("format").asText().toLowerCase(java.util.Locale.ROOT) : "csv";
-        if (!format.equals("csv") && !format.equals("xlsx")) {
-            throw new DrishtiException(ErrorCode.BAD_REQUEST, "a run's result exports as csv or xlsx, not '" + format + "'");
+        if (!format.equals("csv") && !format.equals("xlsx") && !format.equals("jsonl")) {
+            throw new DrishtiException(ErrorCode.BAD_REQUEST, "a run's result exports as csv, xlsx or jsonl, not '" + format + "'");
         }
         com.ash.drishti.server.dist.BiExporter x = exporter.getIfAvailable();
         if (x == null) {
@@ -543,12 +563,19 @@ public class RunsController {
         Map<String, Object> answer = own ? runs().result(r, r.signature()) : sharing.read(r, p);       // the reader's own version, masks applied
         String title = RunService.title(r);
         com.ash.drishti.server.dist.ExportDoc doc = x.ofAnswer(title, "Run " + r.id() + (r.asOf() == null ? "" : " · as of " + r.asOf()), answer);
-        byte[] bytes = format.equals("csv") ? com.ash.drishti.server.dist.CsvWriter.write(doc) : com.ash.drishti.server.dist.XlsxWriter.write(doc);
+        byte[] bytes = switch (format) {
+            case "csv" -> com.ash.drishti.server.dist.CsvWriter.write(doc);
+            case "jsonl" -> com.ash.drishti.server.dist.JsonlWriter.write(doc);                // one row a line, the CSV's column names
+            default -> com.ash.drishti.server.dist.XlsxWriter.write(doc);
+        };
         String file = title.replaceAll("[^A-Za-z0-9._-]+", "-").replaceAll("^-+|-+$", "") + "." + format;
         return ResponseEntity.ok().header(HttpHeaders.CACHE_CONTROL, "no-store").header("X-Bi-Run", r.id())
                 .header(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=\"" + (file.startsWith(".") ? "run" + file : file) + "\"")
-                .contentType(format.equals("csv") ? MediaType.parseMediaType("text/csv; charset=utf-8")
-                        : MediaType.parseMediaType("application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"))
+                .contentType(MediaType.parseMediaType(switch (format) {
+                    case "csv" -> "text/csv; charset=utf-8";
+                    case "jsonl" -> com.ash.drishti.server.dist.JsonlWriter.MEDIA_TYPE + "; charset=utf-8";
+                    default -> "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet";
+                }))
                 .body(bytes);
     }
 

@@ -14,6 +14,7 @@
 
 """History queries in the console (HISTORY_QUERIES.md sections 4.3, 5 and 15): the /go redirect, the short link, the pick list with a
 range, both shapes drawn from the contract's fixtures, DIFF, and the errors."""
+import json
 import re
 
 from core.backend import BackendError
@@ -141,6 +142,10 @@ def test_exports(client):
     assert len(only) == 1 + 7
     j = client.get("/export/history/trade/1000015.json?days=30")
     assert j.json()["ref"] == {"kind": "trade", "id": "1000015"} and j.headers["content-disposition"].endswith('.json"')
+    jl = client.get("/export/history/trade/1000015.jsonl?days=30")             # 2.9.4: a day a line, keyed as the CSV's header
+    assert jl.status_code == 200 and jl.headers["content-type"].startswith("application/jsonl") and jl.headers["content-disposition"].endswith('.jsonl"')
+    days = [json.loads(x) for x in jl.text.splitlines()]
+    assert len(days) == 30 and list(days[0])[:2] == ["Date", "Trade status"] and days[0]["Date"] == "2026-10-19"
     x = client.get("/export/history/equity/EQ-CSCA.xlsx?range=3M")
     assert x.status_code == 200 and x.content[:2] == b"PK"
     # QA1-17: with changes only on, the JSON holds the changed days too; in Excel the dates are dates (yyyy-mm-dd), not text

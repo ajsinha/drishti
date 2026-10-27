@@ -842,7 +842,7 @@ def read_json_files(paths) -> list[dict]:
             raise CliError(f"{p}: no such file or folder")
     out = []
     for f in files:
-        if f.name == "catalog.json":
+        if f.name in ("catalog.json", "catalog.jsonl"):           # a pack's catalogue, never a sample
             continue
         try:
             if f.suffix == ".jsonl":
@@ -1072,7 +1072,7 @@ def build_parser() -> argparse.ArgumentParser:
             "example:\n  drishti.py sutra gen data/testdata/trades/endur --kind trade --key TRADE_ID --match PRODUCT_TYPE --out data/build/sutras")
     g.add_argument("inputs", type=pathlib.Path, nargs="+", help="folders of *.jsonl and/or single .jsonl files")
     SG.add_arguments(g)
-    g.add_argument("--out", type=pathlib.Path, required=True, help="writes <out>/<kind>/<kind>-<slug>.v1.sutra.yaml and <out>/tests/<sutra>/sample-*.json")
+    g.add_argument("--out", type=pathlib.Path, required=True, help="writes <out>/<kind>/<kind>-<slug>.v1.sutra.yaml and <out>/tests/<sutra>/cases.jsonl (one case a line)")
     g.add_argument("--tests-dir", type=pathlib.Path, help="put the samples here instead of <out>/tests")
     g.add_argument("--no-lint", action="store_true", help="do not run `sutra lint` on the result")
 
@@ -1323,6 +1323,7 @@ def build_parser() -> argparse.ArgumentParser:
     load_module("bistatement", "bistatement.py").register(bi, srv_b, {"Api": Api, "CliError": CliError, "say_json": say_json})   # bi statement (2.6.0)
 
     load_module("historycmd", "historycmd.py").register(groups, srv, {"Api": Api, "CliError": CliError, "say_json": say_json})   # history KIND ID (2.6.5)
+    load_module("convertcmd", "convertcmd.py").register(groups, {})          # convert FILE: CSV, JSON array, .json folder -> JSONL (2.9.4)
     load_module("computecli", "computecli.py").register(groups, srv, {"Api": Api, "CliError": CliError, "say_json": say_json})   # compute run|cancel|event (2.8.0)
     load_module("changecli", "changecli.py").register(groups, srv, {"Api": Api, "CliError": CliError, "say_json": say_json})     # change propose|submit|approve..., edits status (2.8.0)
     load_module("varcli", "varcli.py").register(groups, srv, {"Api": Api, "CliError": CliError, "say_json": say_json})   # var show|parts|path|whatif (2.8.0)

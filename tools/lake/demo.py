@@ -224,6 +224,10 @@ class DemoLake:
         self.shift = {o: n for o, n in zip(self.manifest.dates, self.dates) if o != n}
         self.run_id = datetime.now().strftime("%Y%m%dT%H%M%S")
         self.server_note = ""
+        sys.path.insert(0, str(ROOT / "tools"))
+        import demonames
+        # the bank's own names (config/demo/names.yaml, --names): rewritten as the documents are staged, never in data/testdata
+        self.names = demonames.DemoNames.load(getattr(a, "names", None))
 
     def target_dates(self, as_of: str) -> list[str]:
         """The business dates the lake is written for: the test data's own (``data``), or the same number of USNY business days
@@ -288,6 +292,12 @@ class DemoLake:
             return day
 
     def run(self) -> int:
+        if getattr(self.a, "dry_run", False):              # say the names it would apply, build nothing
+            print("\n".join(self.names.lines()))
+            print("dry run: no lake written")
+            return 0
+        if self.names and not self.a.quiet:
+            print("\n".join(self.names.lines()))
         started = time.monotonic()
         sys.path.insert(0, str(HERE))
         import build as LB
@@ -474,7 +484,8 @@ class DemoLake:
                 with gzip.open(f, "rt", encoding="utf-8") as src:
                     for line in src:
                         if line.strip():
-                            fh.write(json.dumps(self.redate_dated(json.loads(line)), separators=(",", ":"), ensure_ascii=False) + "\n")
+                            doc = self.names.rewrite(self.redate_dated(json.loads(line)))
+                            fh.write(json.dumps(doc, separators=(",", ":"), ensure_ascii=False) + "\n")
                             rows += 1
         argv = ["--from", str(stage), "--pack", str(self.packs.dir / ds["pack"]), "--kind", ds["kind"], "--connector", ds["connector"],
                 "--key", ds["key"], "--date", ds["dated-by"], "--lake", str(self.lake), "--engine", self.a.engine, "-q", "--no-stamp"]
@@ -507,7 +518,7 @@ class DemoLake:
                 key = next((k for k in json.loads(next(iter(state.values()))) if k.endswith("_ID")), "id") if state else "id"
             with stage.open("w", encoding="utf-8") as fh:
                 for line in state.values():
-                    fh.write((line if "snapshot" in ds else self.redate(line)) + "\n")
+                    fh.write(self.names.rewrite_line(line if "snapshot" in ds else self.redate(line)) + "\n")   # the configured names
             argv = ["--from", str(stage), "--pack", str(self.packs.dir / pack), "--kind", kind, "--connector", connector, "--key", key,
                     "--as-of", day, "--lake", str(self.lake), "--engine", self.a.engine, "-q", "--no-stamp"]
             for p in ds.get("partition-by") or []:
@@ -652,6 +663,9 @@ def add_arguments(p: argparse.ArgumentParser) -> argparse.ArgumentParser:
     p.add_argument("--exposure", choices=("demo", "committed"), default="demo", help="the exposure paths: demo (default) generates every "
                    "netting set of 23 of the 24 counterparties (about 8,000 live trades, a minute, nothing downloaded), committed loads the "
                    "committed run of eight sets")
+    p.add_argument("--names", metavar="FILE", help="the bank's own names (default config/demo/names.yaml): every value that is a default name, "
+                   "or a default name and a comma (a branch), is renamed as it is loaded; LEIs and BICs stay")
+    p.add_argument("--dry-run", action="store_true", help="print the names mapping it would apply and build nothing")
     p.add_argument("-q", "--quiet", action="store_true", help="only the summary")
     return p
 

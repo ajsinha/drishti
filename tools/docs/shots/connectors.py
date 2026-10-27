@@ -101,6 +101,8 @@ def sources_health(c: Ctx):
     c.page.reload()
     c.page.wait_for_selector("[data-health] table")
     c.page.wait_for_timeout(1500)
+    # the external-library and temp-folder lines name the scratch folders of this run: not for a guide
+    c.page.evaluate("document.querySelectorAll('[data-external-lib], [data-tmp-folders]').forEach(e => e.style.display = 'none')")
     c.save("sources-health.jpg", "[data-health]")
 
 

@@ -21,11 +21,13 @@ script runs in a copy of its folder with stand-ins for mvnw, uv and java that re
 """
 from __future__ import annotations
 
+import json
 import os
 import re
 import shutil
 import stat
 import subprocess
+import sys
 import tempfile
 import unittest
 from pathlib import Path
@@ -143,9 +145,43 @@ class LoadScripts(unittest.TestCase):
                                capture_output=True, text=True, timeout=120)
             self.assertEqual(r.returncode, 0, r.stderr)
             self.assertEqual(r.stdout.split("\n")[0], tmp)
-            self.assertTrue((Path(tmp) / "feeds" / "fixing" / "SOFR-HISTORY.csv").is_file())
+            self.assertTrue((Path(tmp) / "feeds" / "fixing.jsonl").is_file())
         text = (ROOT / "tools" / "packgen" / "banking" / "make_data.py").read_text()
         self.assertNotIn("ROOT / 'data' / 'feeds'", text)
+
+    def test_the_feed_is_jsonl_and_replaces_the_old_csv(self):
+        """2.9.4: the sample feed is fixing.jsonl (one series a line, FIX SOFR-HISTORY); the unchanged CSV of earlier releases goes, and
+        a loader's run (rewrite=False) leaves an existing feed alone."""
+        sys.path.insert(0, str(ROOT / "tools" / "packgen" / "banking"))
+        import make_data as m
+        with tempfile.TemporaryDirectory() as tmp:
+            old = Path(tmp) / "fixing" / "SOFR-HISTORY.csv"
+            old.parent.mkdir()
+            old.write_text(m.OLD_FEED_CSV, encoding="utf-8")
+            f = m.write_feeds(Path(tmp))
+            line = json.loads(f.read_text(encoding="utf-8"))
+            self.assertEqual((line["id"], len(line["rows"]), line["rows"][0]), ("SOFR-HISTORY", 22, {"date": "2026-09-01", "rate": 3.95, "volume_bn": 1910}))
+            self.assertFalse(old.parent.exists())
+            f.write_text("{}\n", encoding="utf-8")
+            m.write_feeds(Path(tmp), rewrite=False)
+            self.assertEqual(f.read_text(encoding="utf-8"), "{}\n")
+
+    def test_rows_runs_never_rewrite_the_samples_tests_or_feed(self):
+        """make_data.py --jsonl/--lake only write rows: the generator's own outputs come from a plain run (generation and loading split)."""
+        samples = sorted((ROOT / "config" / "packs").glob("*/samples/*.jsonl")) + sorted((ROOT / "config" / "packs" / "trading" / "tests").rglob("*.json*"))
+        before = {f: f.stat().st_mtime_ns for f in samples}
+        with tempfile.TemporaryDirectory() as tmp:
+            r = subprocess.run([sys.executable, "tools/packgen/banking/make_data.py", "--lake", str(Path(tmp) / "delta"), "--no-load", "--days", "2"],
+                               cwd=ROOT, env={**os.environ, "DRISHTI_DATA_DIR": tmp}, capture_output=True, text=True, timeout=300)
+            self.assertEqual(r.returncode, 0, r.stderr)
+            rows = Path(tmp) / "build" / "lake-rows"
+            self.assertEqual(sorted(f.name for f in rows.iterdir()), ["banking-history.jsonl", "banking-restated.jsonl"])
+            with rows.joinpath("banking-history.jsonl").open(encoding="utf-8") as f:
+                first = json.loads(f.readline())
+            self.assertEqual(sorted(first), ["date", "doc", "domain", "id", "kind", "table"])
+            self.assertTrue((Path(tmp) / "feeds" / "fixing.jsonl").is_file())       # created, as the data folder had none
+            self.assertFalse((Path(tmp) / "delta").exists())                         # --no-load: nothing loaded
+        self.assertEqual({f: f.stat().st_mtime_ns for f in samples}, before)
 
 
 if __name__ == "__main__":

@@ -12,19 +12,24 @@
 #
 # See the LICENSE file in the root of this repository for the full terms.
 
-"""Writes a pack's sample documents into Delta Lake tables for the server's Delta connector: one table per kind,
-partitioned by business date, with a history of business days. Past dates vary the documents' market-sensitive
-numbers with a deterministic random walk, so moving the date in the console changes what you see.
+"""Writes a pack's sample history as dated loader rows (JSON Lines), then loads them into Delta Lake tables for the server's Delta
+connector: one table per kind, partitioned by business date, with a history of business days. Past dates vary the documents'
+market-sensitive numbers with a deterministic random walk, so moving the date in the console changes what you see. Generating and
+loading are separate steps (docs/guides/DATA_FORMATS.md): this writes JSONL; tools/samplegen/load_rows.py loads it.
 
     uv run --with deltalake --with pyarrow --with pyyaml python tools/samplegen/lake.py \\
-        --samples examples/packs/finance/samples --root data/delta --domain finance --days 10 [--as-of 2026-09-30]
+        --samples examples/packs/finance/samples --root data/delta --domain finance --days 10 [--as-of 2026-09-30] [--rows DIR] [--no-load]
+
+Rows (--rows DIR, default <root>/../build/lake-rows): <name>-history.jsonl, every business date of every kind, and
+<name>-restated.jsonl, the newest date's correction of one document per kind, which the loader writes as a second commit so time
+travel ("as known at") has something to show. --no-load stops after the JSONL. A row:
+{"domain", "kind", "table", "id", "date", "doc"} (doc: the document as JSON text, with its businessDate).
 
 Layout (what the connector reads):  <root>/<domain>/<kind>/_delta_log/…
                                     <root>/<domain>/<kind>/business_date=YYYY-MM-DD/part-….parquet
-Rows: id STRING, doc STRING (the JSON document), business_date DATE (the partition), plus the columns of the kind's
+Delta rows: id STRING, doc STRING (the JSON document), business_date DATE (the partition), plus the columns of the kind's
 layout when a pack declares one for the domain (samplegen/layout.py: promoted paths, sorted by id, large files).
-The newest date is written twice: the original, then a restatement of one document, so time travel
-("as known at") has something to show. Build-time tooling only: the console never reads the lake.
+Build-time tooling only: the console never reads the lake.
 """
 from __future__ import annotations
 
@@ -40,7 +45,8 @@ from datetime import date, timedelta
 
 sys.path.insert(0, str(pathlib.Path(__file__).resolve().parent.parent))
 from samplegen.dates import Calendar  # noqa: E402
-from samplegen.layout import Layout, layouts_for_domain, write_days, write_partition  # noqa: E402
+from samplegen.layout import Layout  # noqa: E402
+from samplegen import load_rows  # noqa: E402  (the loader: JSONL rows into Delta)
 sys.path.insert(0, str(pathlib.Path(__file__).resolve().parent.parent / "packgen" / "common"))
 import packsamples  # noqa: E402  (samples/<kind>.jsonl or samples/<kind>/<id>.json)
 
@@ -118,27 +124,42 @@ def final_rows(kinds: dict[str, dict[str, dict]], end: date, days: int, cal: Cal
         yield kind, id_, d, fix[1] if fix and d == end and id_ == fix[0] else body
 
 
+def write_rows(out: pathlib.Path, name: str, tables, end: date, days: int, cal: Calendar) -> tuple[pathlib.Path, pathlib.Path, int]:
+    """Writes out/<name>-history.jsonl (history_rows of every table) and out/<name>-restated.jsonl (each table's restatement
+    of its newest date). tables: (domain, table, kind, {id: document}) in load order; the table name seeds the walk, so a kind
+    split into tables (trade_endur ...) walks as its tables. Returns (history file, restated file, history rows)."""
+    out.mkdir(parents=True, exist_ok=True)
+    history, restated, n = out / f"{name}-history.jsonl", out / f"{name}-restated.jsonl", 0
+    with history.open("w", encoding="utf-8") as h, restated.open("w", encoding="utf-8") as r:
+        for domain, table, kind, docs in tables:
+            if not docs:
+                continue
+            for _, id_, d, body in history_rows({table: docs}, end, days, cal):
+                h.write(json.dumps({"domain": domain, "kind": kind, "table": table, "id": id_, "date": d.isoformat(), "doc": body},
+                                   ensure_ascii=False) + "\n")
+                n += 1
+            first, fixed = restatement(docs, end)
+            r.write(json.dumps({"domain": domain, "kind": kind, "table": table, "id": first, "date": end.isoformat(), "doc": fixed},
+                               ensure_ascii=False) + "\n")
+    return history, restated, n
+
+
+def rows_dir(root: pathlib.Path) -> pathlib.Path:
+    """Where the lake's loader rows go by default: <root>/../build/lake-rows (data/delta -> data/build/lake-rows)."""
+    return root.resolve().parent / "build" / "lake-rows"
+
+
 def write_tables(out: pathlib.Path, kinds: dict[str, dict[str, dict]], end: date, days: int, cal: Calendar,
-                 layouts: dict[str, Layout] | None = None) -> int:
-    """Writes one Delta table per kind under `out` (see history_rows), plus a restatement of the newest date's first
-    document, so time travel has something to show. A kind with a layout in `layouts` (layout.layouts_for_domain)
-    is written in it: promoted columns, sorted by id, files of file-rows. Returns the number of rows written."""
-    total = 0
-    for kind, docs in sorted(kinds.items()):
-        if not docs:
-            continue
-        lay = (layouts or {}).get(kind)
-        by_day: dict[date, list] = {}
-        for _, id_, d, body in history_rows({kind: docs}, end, days, cal):
-            by_day.setdefault(d, []).append((id_, body, json.loads(body) if lay else None))
-        path = out / kind
-        write_days(str(path), by_day, lay, "overwrite")
-        first, fixed = restatement(docs, end)
-        keep = [r for r in by_day[end] if r[0] != first] + [(first, fixed, json.loads(fixed) if lay else None)]
-        write_partition(str(path), end, keep, lay, "overwrite-partition")
-        total += sum(len(r) for r in by_day.values())
-        print(f"{path}: {len(docs)} entities x {days} business days" + (f", {len(lay.columns)} promoted columns" if lay else ""))
-    return total
+                 layouts: dict[str, Layout] | None = None, rows: pathlib.Path | None = None) -> int:
+    """One Delta table per kind under `out` (out is <root>/<domain>): the kinds' history written as JSONL rows (write_rows, in
+    `rows` or a temporary folder), then loaded (load_rows.load), the newest date's restatement as a second commit. A kind with a
+    layout in `layouts` is written in it (none: every kind plain). Returns the number of rows written."""
+    import tempfile
+
+    tables = [(out.name, kind, kind, docs) for kind, docs in sorted(kinds.items())]
+    with tempfile.TemporaryDirectory() as tmp:
+        history, restated, _ = write_rows(rows or pathlib.Path(tmp), out.name, tables, end, days, cal)
+        return load_rows.load([history], out.parent, [restated], layouts or {})
 
 
 def main():
@@ -149,15 +170,21 @@ def main():
     ap.add_argument("--days", type=int, default=10)
     ap.add_argument("--as-of", default=None)
     ap.add_argument("--calendar", default="USNY")
+    ap.add_argument("--rows", default=None, help="where the JSONL rows go (default <root>/../build/lake-rows)")
+    ap.add_argument("--no-load", action="store_true", help="write the JSONL rows only")
     a = ap.parse_args()
     cal = Calendar.of(*a.calendar.split("+"))
     end = date.fromisoformat(a.as_of) if a.as_of else date.today()
     while not cal.is_business_day(end):
         end -= timedelta(days=1)
-    samples = pathlib.Path(a.samples)
-    kinds = packsamples.read(samples)
-    total = write_tables(pathlib.Path(a.root) / a.domain, kinds, end, a.days, cal, layouts_for_domain(a.domain))
-    print(f"{total} rows ({a.calendar})")
+    root = pathlib.Path(a.root)
+    kinds = packsamples.read(pathlib.Path(a.samples))
+    tables = [(a.domain, kind, kind, docs) for kind, docs in sorted(kinds.items())]
+    history, restated, n = write_rows(pathlib.Path(a.rows) if a.rows else rows_dir(root), a.domain, tables, end, a.days, cal)
+    print(f"rows: {n} in {history} (restatements in {restated.name})")
+    if not a.no_load:
+        total = load_rows.load([history], root, [restated])
+        print(f"{total} rows ({a.calendar})")
 
 
 if __name__ == "__main__":

@@ -30,7 +30,7 @@ from routes.common import ident, render
 
 router = APIRouter(include_in_schema=False)
 
-FORMATS = ("pdf", "png", "xlsx", "csv")
+FORMATS = ("pdf", "png", "xlsx", "csv", "jsonl")
 STATE_LIMIT = 20_000                      # characters of view state a link or a form may carry
 SUGGESTED_WHEN = ("business-days 07:30", "weekdays 07:00", "daily 06:00", "weekly mon 07:30 business", "monthly 1 07:30 business",
                   "monthly last 18:00 business", "after-load", "hourly")
@@ -79,7 +79,7 @@ async def status(request: Request):
 
 @router.get("/dist/bi/{rest:path}")
 async def bi_download(request: Request, rest: str, page: str = "", visual: str = "", state: str = "", date: str = ""):
-    """``/dist/bi/<report id>.<pdf|png|xlsx|csv>?page=&visual=&state=<the view state as JSON>&date=``."""
+    """``/dist/bi/<report id>.<pdf|png|xlsx|csv|jsonl>?page=&visual=&state=<the view state as JSON>&date=``."""
     item, _, fmt = rest.rpartition(".")
     target = {"type": "report", "id": item, "page": page, "visual": visual, "date": date}
     st = _state(state)
@@ -90,7 +90,7 @@ async def bi_download(request: Request, rest: str, page: str = "", visual: str =
 
 @router.get("/dist/view/{rest:path}")
 async def view_download(request: Request, rest: str):
-    """``/dist/view/<kind>/<id>.<pdf|png|xlsx|csv>`` with the page's own query (``ctl.*`` control values, ``f.*`` column filters)."""
+    """``/dist/view/<kind>/<id>.<pdf|png|xlsx|csv|jsonl>`` with the page's own query (``ctl.*`` control values, ``f.*`` column filters)."""
     item, _, fmt = rest.rpartition(".")
     kept = [(k, v) for k, v in request.query_params.multi_items() if k.startswith(("ctl.", "f."))]
     return await _file(request, {"type": "view", "id": item, "date": _date(), "view": urlencode(kept)}, fmt.lower())

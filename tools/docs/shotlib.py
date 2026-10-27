@@ -183,11 +183,13 @@ def start_servers(work: Path, extra_env: dict | None = None) -> list:
     (work / "sutras").mkdir(exist_ok=True)
     # a guide's SERVER_ENV wins over these (tutorial 27 loads the public-data packs too)
     env = {**os.environ, "DRISHTI_PORT": str(SERVER_PORT), "DRISHTI_PACKS": PACKS, "DRISHTI_STUDIO_SAVE": "true", "DRISHTI_BUILDER_FILE_BINDING": "true",
-           "DRISHTI_SUTRAS": str(work / "sutras"), **(extra_env or {})}
+           "DRISHTI_SUTRAS": str(work / "sutras"), "DRISHTI_PACKS_INSTALLED": str(work / "data" / "packs" / "installed"), **(extra_env or {})}
     server = subprocess.Popen(java_cmd(java, ["-jar", str(jars[-1])], cwd=work, env=env), cwd=work, env=env, stdout=(work / "server.log").open("w"), stderr=subprocess.STDOUT)
     py = ROOT / "drishti-console" / ".venv" / "bin" / "python"
     py = py if py.exists() else Path(sys.executable)
-    cenv = dict(os.environ, DRISHTI_BACKEND_URL=f"http://127.0.0.1:{SERVER_PORT}", DRISHTI_CONSOLE_PORT=str(CONSOLE_PORT), **(extra_env or {}))
+    # the console reads the server's installed packs (Deploy archive, the registry) from the same folder: the server runs in `work`
+    cenv = dict(os.environ, DRISHTI_BACKEND_URL=f"http://127.0.0.1:{SERVER_PORT}", DRISHTI_CONSOLE_PORT=str(CONSOLE_PORT),
+                DRISHTI_PACKS_INSTALLED=env["DRISHTI_PACKS_INSTALLED"], **{k: v for k, v in (extra_env or {}).items() if k != "DRISHTI_PACKS_INSTALLED"})
     console = subprocess.Popen([str(py), str(ROOT / "drishti-console" / "run_drishti_web.py")], cwd=ROOT, env=cenv, stdout=(work / "console.log").open("w"), stderr=subprocess.STDOUT)
     for _ in range(240):
         if listening(SERVER_PORT) and listening(CONSOLE_PORT):

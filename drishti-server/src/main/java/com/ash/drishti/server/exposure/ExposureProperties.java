@@ -92,8 +92,9 @@ public record ExposureProperties(Boolean enabled, List<Double> confidence, Doubl
      * @param retentionYears the years the published tables keep their log and removed files (time travel)
      * @param onStart at start, capture the newest date when it has no official record yet
      */
-    public record Official(Boolean enabled, Boolean publish, String root, Integer retentionYears, Boolean onStart) {
+    public record Official(Boolean enabled, Boolean publish, String root, Integer retentionYears, Boolean onStart, Boolean jsonl) {
         public Official {
+            jsonl = jsonl == null || jsonl;                 // 2.9.4: each published date also as JSON Lines beside the tables
             enabled = enabled == null || enabled;
             publish = publish == null || publish;
             root = root == null || root.isBlank() ? null : root;
@@ -144,7 +145,7 @@ public record ExposureProperties(Boolean enabled, List<Double> confidence, Doubl
         t0Tolerance = t0Tolerance == null || t0Tolerance <= 0 ? 0.10 : t0Tolerance;
         kinds = kinds == null ? new Kinds(null, null, null, null, null, null, null, null, null) : kinds;
         access = access == null ? Map.of() : access;
-        official = official == null ? new Official(null, null, null, null, null) : official;
+        official = official == null ? new Official(null, null, null, null, null, null) : official;
         retention = retention == null ? new Retention(null, null, null, null, null, null) : retention;
     }
 

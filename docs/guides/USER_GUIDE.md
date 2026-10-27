@@ -49,7 +49,7 @@ centre → Domain packs*) has a *Finding things* section with the same commands 
 | [Live updates](#live-updates), [Business dates](#business-dates-live-or-a-day-in-the-past), [Compare](#compare-what-changed) | Ticking values, past dates, what changed |
 | [Search by value](#search-by-value) | `where` searches, sorting and limits |
 | [Calc: Python on a view](#altc--calc-python-on-a-view) | `Alt+C`: Python in your browser on what you are looking at |
-| [Export, print and share](#export-print-and-share) | CSV, JSON, PDF and links |
+| [Export, print and share](#export-print-and-share) | CSV, JSON Lines, JSON, PDF and links |
 | [Share a view with a note](#share-a-view-with-a-note), [Your inbox](#your-inbox) | Send a view to colleagues; what they sent you |
 | [Monitors](#monitors), [Alerts](#alerts), [Workspaces](#workspaces) | Watching many entities at once |
 | [Your settings](#your-settings), [Themes](#themes), [Domain packs](#domain-packs-choosing-what-you-see) | Making the console yours |
@@ -614,13 +614,13 @@ and press `Enter` or `Space`. The menu has, from the top:
 The list of a column shows only the values that the **other** columns' filters leave, so it answers "what is left?". A list
 longer than 500 values shows the first 500 and says so; search to reach the rest.
 
-![The same table filtered on two columns: a filled funnel on each, "7 of 35 rows (filtered)" and Clear filters](img/colfilter/03-filtered.jpg)
+![The same table filtered on two columns (Type and Date): a filled funnel on each, "33 of 42 rows (filtered)" and Clear filters](img/colfilter/03-filtered.jpg)
 
 **What you see when a filter is on**
 
 - the column's funnel is **filled and amber**; its tooltip says what it does (*Filtered: Greater than 1m*, *Filtered: 2 values:
   Equity, FX*, *Between 2026-01-01 and 2026-03-31*, *Top 10*);
-- the pager reads `7 of 35 rows (filtered)` (the total is the rows the table holds, before any filter) and a **Clear filters**
+- the pager reads `33 of 42 rows (filtered)` (the total is the rows the table holds, before any filter) and a **Clear filters**
   button appears next to the *Filter rows* box. A screen reader is told the same, politely, whenever the count changes;
 - filters across columns **combine** (a row must pass all of them); paging, the sort and the zoomed table's *Fit* page size work on
   the rows that remain;
@@ -742,8 +742,8 @@ chart or the absolute values; a table with only identifiers or only hidden colum
 −290.1k, trend down; 40 rows.* **View as table** (`T`) shows the chart's data as a table. Focus the chart and use `←` `→` to
 step through the points (each one is read out), `↑` `↓` to change series, `Home` / `End` for the first and last.
 
-**Export.** **PNG** and **SVG** save the picture in the theme's colours (no round trip to the server); **CSV** and **Excel**
-save the chart's data as drawn: X, then one column per series, *Others* as a row. `E` moves to the export buttons.
+**Export.** **PNG** and **SVG** save the picture in the theme's colours (no round trip to the server); **CSV**, **Excel** and **JSONL**
+(JSON Lines, a row a line) save the chart's data as drawn: X, then one column per series, *Others* as a row. `E` moves to the export buttons.
 **Defaults** puts back the chart the table opens with. Your settings are kept per table until you close the browser tab
 (saving them for next time is planned).
 
@@ -774,10 +774,10 @@ page never scrolls sideways.
 Some screens offer **controls**: a dropdown, a list of boxes to tick, a pair of dates, a search box. They are the Sutra's own (its author put
 them where they help), and they are different from the funnels of [Filter a table like Excel](#filter-a-table-like-excel): a funnel filters
 what a table already holds; a control changes what the *panel shows*, and it can change a title, a total, a chart and the rows together. Two
-screens that ship with them: an interest-rate swap (`TRD MX-20000001 <GO>`: its **Cashflows** by leg and by date range) and a netting set
+screens that ship with them: an interest-rate swap (`TRD MX-20000001 <GO>`: its **Events** by leg and by date range) and a netting set
 (`NS-MERIDIAN-RE-NY`: its **Member trades** by asset class, product and how many to show).
 
-![The cashflows of a swap with the controls Legs (open: All, None, a box per leg) and Paid between (two dates and a presets list) in the panel's header](img/controls/01-header.jpg)
+![The events of a swap with the controls Legs (open: a filter box, Select all, Clear, a box per leg) and Between (two dates and a presets list) in the panel's header](img/controls/01-header.jpg)
 
 **Using them.** A control sits under the strip, in a panel's header or in a bar at the side of the screen, with its label. Change one and
 **only the panels that read it** are rebuilt, in place (you keep your place, your zoom and your other filters); the rest of the screen does not
@@ -787,16 +787,16 @@ fill both dates for you; either date may be left empty (*from the start*, *to th
 | Control | How |
 |---|---|
 | a **dropdown** (also *cascading*: the second one's choices follow the first) | Pick a value; *(all)* clears it |
-| a **list of boxes** (multi-select) | `Enter` or `Space` on its button opens the list; tick boxes, or *All* / *None*; `Esc` closes it. Nothing ticked means everything |
+| a **list of boxes** (multi-select) | `Enter` or `Space` on its button opens the list; type to filter it, tick boxes, or *Select all* / *Clear*; `Esc` closes it. Nothing ticked means everything |
 | a **switch** or **buttons** | Click, or `Space`; with buttons the arrow keys move and choose |
 | **dates**, a **number range** | Type or pick; the panel follows when you leave the box (numbers: when you pause) |
 | a **slider** | Drag the round handle (or press on the track), or focus it and use `←` `→` for one step, `PageUp` / `PageDown` for ten, `Home` / `End` for the ends; a slider with two handles sets a range, and the handles cannot cross. The number beside it says where it is; on a phone the handles are 44 pixels |
 | **Show 10 / 25 / 50** (top-n) | Pick how many rows |
 | **Find** (search) | Type; the panel follows when you pause |
 
-![The same swap with leg 2 only and the next 90 days: the panel's title says what it shows, and the address carries both choices](img/controls/02-filtered.jpg)
+![The same swap with leg 1 only and the next 90 days: the panel's title says the dates it shows, and the address carries both choices](img/controls/02-filtered.jpg)
 
-**The address remembers.** What you set is written to the address: `.../v/trade/MX-20000001?ctl.legs=2&ctl.when=2026-10-09..2027-01-06`
+**The address remembers.** What you set is written to the address: `.../v/trade/MX-20000001?ctl.legs=1&ctl.when=2026-10-27..2027-01-24`
 (a relative choice such as *Next 90 days* is written as the dates it meant). Send the link, bookmark it or press **Share**: whoever opens it sees
 the same panels with the same controls. A control you have not touched is not in the address, so it starts at the author's default. A control
 the author marked *remember* (Legs on the swap) also comes back as you last left it **in this browser** the next time you open the screen
@@ -812,7 +812,7 @@ works on rows of a table where the author set it up. Everything a click does, th
 
 **On a phone.** Controls stack one to a row, each at least 44 pixels high, and the page does not scroll sideways; the list of boxes opens under its button.
 
-![The swap's cashflows on a phone: Legs open, Paid between with two date boxes, the table below](img/controls/04-phone.jpg)
+![The swap's events on a phone: Legs open, Between with two date boxes, the table below](img/controls/04-phone.jpg)
 
 **What you may see.** A control offers only values you may see: for a field your role does not show (`•••`), a dropdown lists nothing, and a
 search over it never finds anything. Controls only choose; they never change data.
@@ -833,7 +833,7 @@ commodity swaps are all held that way (`LEGS` → `CASH_FLOWS` → `RESETS`, wit
 `TRD 1000001`, an ENDUR commodity swap (`ComSwap`, sub-type `ENGY-SWAP`): a fixed price leg against a floating aluminium index leg (`IDX-ALU-3M`),
 36 monthly cash flows each.
 
-![A commodity swap: the legs side by side; the index leg's terms, then its monthly cash flows with the first one opened to its resets](img/deep/01-commodity.jpg)
+![A commodity swap: the legs side by side, each with its terms, its notional profile and its cash flows; the index leg also charts its fixings](img/deep/01-commodity.jpg)
 
 - **Fixed against floating** sums the trade up: fixed price `2,332.9131`, floating index `IDX-ALU-3M`, averaging *Monthly*, price unit `MT`, 36 periods.
 - **Legs (F3), side by side.** `Leg 1 · Fixed price FIXED` and `Leg 2 · Floating price FLOAT · IDX-ALU-3M`: one column per leg on a wide screen, tabs
@@ -852,7 +852,7 @@ commodity swaps are all held that way (`LEGS` → `CASH_FLOWS` → `RESETS`, wit
 A MUREX interest-rate swap, `TRD MX-20000001`, reads the same way with two legs, `Leg 1 · Receive FIXED` and `Leg 2 · Pay FLOAT · AONIA`; the
 floating leg's cash flows open to their resets:
 
-![A swap: Leg 2, the floating leg, with its first cash flow opened to its resets](img/deep/02-swap.jpg)
+![A swap: the two legs side by side; the fixed leg's cash flows, and the floating leg's AONIA fixings](img/deep/02-swap.jpg)
 
 On a phone the legs become tabs that scroll along one line, the terms stack, and the table scrolls sideways inside its own box; the ▸ buttons are
 44 px targets.
@@ -908,7 +908,7 @@ header with:
 
 - its **title** and, if it has one, its **function key** (`DES · F2` means press `F2` to jump here);
 - an **inferred** tag when Drishti laid the panel out by itself (hover over it to read why);
-- a **↓** icon to download the panel as CSV;
+- a **↓** icon to download the panel as CSV, and a **{}** icon for JSON Lines;
 - a **?** that explains this kind of panel.
 
 `MX-20000001` shows *Deal ticket* (F2), *Legs* (F3, the legs side by side), *Cash-flow schedule, every leg* (F4), *Events by leg* (F5),
@@ -976,16 +976,16 @@ The footer repeats the source and generation, and the business date when one is 
 button beside the title). A drawer opens on the right; the page stays usable beside it. It is written for you: what it
 says is worked out from the page **you** have, so a field hidden from your role is never explained with its value.
 
-![The About drawer on a VaR view](img/about/01-var-drawer.jpg)
+![The About drawer on a stress result view](img/about/01-var-drawer.jpg)
 
 Each layer is a section you can fold; the first ones are open, and Drishti remembers which you folded (in this
 browser only).
 
 | Layer | What it tells you | Example |
 |---|---|---|
-| **What you are looking at** | One sentence about this entity, written by the domain pack and filled with its own numbers; the screen's description; notes on single panels; which pack wrote it | "VAR-EQD is a 1-day 99% historical VaR for DESK-EQD: 14.7m USD, 70% of its 20.9m limit, with 0 exception(s) in 250 days." |
-| **Where the data came from** | The source, its health (`up`, `degraded`, `down`), the generation, when it was fetched and updated, whether it is fresh or stale, a snapshot or a live feed, and how many linked entities were fetched | "Source var-engine · health up · fresh · a snapshot" |
-| **Why the page looks like this** | Which Sutra (layout) was chosen and why; panels that were added by inference; panels with no data and the reason (missing, null, empty list, masked); fields hidden for your role; panels you may not open | "Layout: Sutra var v1, the one that applies to this kind, priority 10." · "1 field hidden for your role: Limit (in strip)." |
+| **What you are looking at** | One sentence about this entity, written by the domain pack and filled with its own numbers; the screen's description; notes on single panels; which pack wrote it | "STR-GFC2008-RATES: under \"Global financial crisis 2008\" the portfolio changes in value by −73.6m USD against a limit of −67.5m." |
+| **Where the data came from** | The source, its health (`up`, `degraded`, `down`), the generation, when it was fetched and updated, whether it is fresh or stale, a snapshot or a live feed, and how many linked entities were fetched | "Source stress-engine · health up · fresh · a snapshot" |
+| **Why the page looks like this** | Which Sutra (layout) was chosen and why; panels that were added by inference; panels with no data and the reason (missing, null, empty list, masked); fields hidden for your role; panels you may not open | "Layout: Sutra stress-result v1, the one that applies to this kind, priority 10." · "1 field hidden for your role: Limit (in strip)." |
 | **Where next** | The keys on this page (F7 and F8), and one link per kind of panel on it, to the guide that explains how to read it | "The histogram panel: what it shows and how to read it" |
 
 A layer with nothing to say is not shown. If you see **What each number means** (a layer that explains the figures one
@@ -1026,8 +1026,8 @@ All the layers open, on the same view:
 ### Someone else sees less
 
 Ask the same page as a user whose role hides a field and the drawer hides it too. In this picture the administrator
-chose to mask `limit` for the *viewer* role (a **demo**: no standard setup masks it). The sentence reads "••• of its •••
-limit" and layer 3 says "1 field hidden for your role: Limit":
+chose to mask `limit` for the *viewer* role (a **demo**: no standard setup masks it). The sentence reads "against a limit of
+•••" and the glossary marks Limit *hidden for your role*:
 
 ![The drawer for a viewer: the limit is masked](img/about/05-viewer-masked.jpg)
 
@@ -1320,7 +1320,7 @@ first*).
 - **Chart.** Choose **Bar chart**, **Line chart** or **Heatmap** in the toolbar (and which value, when there are
   several): a chart of the grid as it is now, in the theme's colours, redrawn when you change anything.
   To chart the table itself, with more types and two axes, use its chart button or `K` ([Chart any table](#chart-any-table)).
-- **CSV** and **Excel** download the grid as shown: one column per row field, then one per column group and value, the
+- **CSV**, **Excel** and **JSONL** (JSON Lines, a row a line keyed as the CSV's header) download the grid as shown: one column per row field, then one per column group and value, the
   subtotal and total rows labelled, numbers as numbers. The Excel file has a bold, frozen header row.
 - **Print** prints the pivot and its chart alone, in the print palette.
 
@@ -1601,7 +1601,7 @@ and the one before) and *Open the day*.
 | `←` `→` | previous, next column (read aloud with its header) | `Enter`, double click | open the day's view, as it was that day |
 | `C` | changes only: hide the days on which nothing moved (*7 of 30 days*) | `D` | diff, on and off |
 | `R` | type a new range (`30`, `3M`, `YTD`, `FROM 2026-09-01`) | `1` `3` `6` `Y` `T` | 1M, 3M, 6M, 1Y, YTD |
-| `E` | export: CSV, Excel, JSON | `Alt+S` | copy a link to these rows |
+| `E` | export: CSV, Excel, JSON Lines, JSON | `Alt+S` | copy a link to these rows |
 | `Shift`+`K` | chart these days: any column by date ([Chart any table](#chart-any-table)) | | |
 | `?` | the keys | `Esc` | back to today's view |
 
@@ -1614,8 +1614,8 @@ the embedded series (a day before the stored documents), the parts' columns read
 label stays inside the chart and follows the selected row when the window is resized or zoomed; the crosshair's date is in the label and the
 `⌖` line, not on the axis.
 
-**Export** (`E`) downloads the table as shown, newest first: CSV (numbers as numbers, the formula guard, UTF-8 with BOM), Excel, or the
-server's JSON as served (its rows oldest first). Excel's dates are date cells (`yyyy-mm-dd`), so they sort and filter as dates. With
+**Export** (`E`) downloads the table as shown, newest first: CSV (numbers as numbers, the formula guard, UTF-8 with BOM), Excel, JSON
+Lines (a day a line, keyed as the CSV's header), or the server's JSON as served (its rows oldest first). Excel's dates are date cells (`yyyy-mm-dd`), so they sort and filter as dates. With
 *changes only* on, only the changed days, in all three. Files are named `1000015-history-2026-09-07-2026-10-19.csv`.
 Every export reads through the server, so it carries your masks.
 
@@ -1796,10 +1796,15 @@ The buttons in a view's title line, and the **↓** in each panel header.
 
 | Action | Where | What you get |
 |---|---|---|
-| Panel as CSV | **↓** in a panel header | Tables and ladders as they are; key/value panels as field and value; charts as one column per series; surfaces as a grid; bars as label and value |
-| Search as CSV | **CSV** on the results page | One row per result |
-| Pivot as CSV or Excel | **CSV**, **Excel** in a [Pivot tab](#the-pivot-tab-slice-a-table-your-way) | The grid as shown: row fields, one column per column group and value, totals labelled; Excel with a bold frozen header |
-| Comparison as CSV | **CSV** on the Compare page | One row per change |
+| Panel as CSV or JSON Lines | **↓** (CSV) or **{}** (JSON Lines) in a panel header | Tables and ladders as they are; key/value panels as field and value; charts as one column per series; surfaces as a grid; bars as label and value |
+| Search as CSV or JSON Lines | **CSV**, **JSONL** on the results page (and on a form's results) | One row per result |
+| Pivot as CSV, Excel or JSON Lines | **CSV**, **Excel**, **JSONL** in a [Pivot tab](#the-pivot-tab-slice-a-table-your-way) | The grid as shown: row fields, one column per column group and value, totals labelled; Excel with a bold frozen header |
+| Comparison as CSV or JSON Lines | **CSV** on the Compare page; the same address ending `.jsonl` | One row per change |
+| View as PDF, PNG, Excel, CSV or JSON Lines | **Export** in the title line | The view as you see it, with the controls and filters you set |
+
+**JSON Lines** (`.jsonl`, [DATA_FORMATS.md](DATA_FORMATS.md)) is one JSON object a line, keyed by the CSV's column names, numbers as
+numbers and no spreadsheet escaping: the form for scripts and other systems. It sits beside every CSV download; CSV, Excel, PDF and
+PNG all stay.
 | Document as JSON | **JSON** in the title line | The whole document, as your role may see it |
 | Print or PDF | **Print** | A clean light page without the top bar and buttons; choose *Save as PDF* in the print dialog |
 | Share | **Share** (`Alt+S`), or a panel's **send** icon | A [dialog](#share-a-view-with-a-note): send the view, or one panel, to people with a note; **Copy link** is in it |
@@ -1854,9 +1859,9 @@ click plus `Enter`; the rest sends the view to people inside Drishti.
    cannot open trade views"). `Esc` closes the dialog and puts the focus back where it was. On a phone the dialog is a full
    screen sheet.
 
-![The Share dialog on MX-20000001: the view as of 2026-09-30, Vera Lim chosen, a note, and the warning that the note holds the value of a hidden field](img/collab/01-share-dialog.jpg)
+![The Share dialog on MX-20000001: the view as of 2026-09-30, Vera Lim chosen and a note that names the trader](img/collab/01-share-dialog.jpg)
 
-![After Send: "Sent to 1 person", with Copy link still in the dialog](img/collab/02-share-sent.jpg)
+![After Send: the warning that the note holds the value of a hidden field, "Sent to 1 person", and Copy link still in the dialog](img/collab/02-share-sent.jpg)
 
 What the recipient gets: a notice on the **bell** within a second (a number on the bell, and a toast) and a row in
 their [inbox](#your-inbox). Opening it goes to the view **as you sent it**: your date and *known at* moment, with a
@@ -1907,7 +1912,7 @@ one live connection.
 
 ## Scheduled reports
 
-A report is a search that runs on its own, on a schedule, and delivers its result as a CSV file; **Reports** in the Views menu lists them with your subscriptions. Export and subscriptions are in the same place. The reference is [SCHEDULED_REPORTS.md](SCHEDULED_REPORTS.md); the walk-through is [tutorial 9](../tutorials/09-reports.md).
+A report is a search that runs on its own, on a schedule, and delivers its result as a CSV or JSON Lines file (**Format**); **Reports** in the Views menu lists them with your subscriptions. Export and subscriptions are in the same place. The reference is [SCHEDULED_REPORTS.md](SCHEDULED_REPORTS.md); the walk-through is [tutorial 9](../tutorials/09-reports.md).
 
 ## Alerts
 
@@ -2070,9 +2075,9 @@ On a phone the drawer is a sheet from the bottom edge.
   (no new comments). Hidden comments are kept in the record. The whole set of moderation and compliance tools is on one page, **Admin > Collaboration**
   (see [USER_MANAGEMENT](../admin/USER_MANAGEMENT.md)).
 
-![Asha's Discussion tab: a comment that mentions @vera, with the trader's name typed and quoted, and the quoted MTM](img/collab/07-discussion-author.jpg)
+![Asha's Discussion tab: a comment that mentions @vera, with the trader's id typed and the trader quoted, and the quoted quantity](img/collab/07-discussion-author.jpg)
 
-The same comment for a reader without access to the field: the typed name and the quoted field both read ••• and the quoted MTM stays,
+The same comment for a reader without access to the field: the typed id and the quoted field both read ••• and the quoted quantity stays,
 because the reader may see it. *Open as it was* is offered because this page now shows other data.
 
 ![Vera's Discussion tab: the same comment with ••• where the trader's name was](img/collab/08-discussion-viewer.jpg)

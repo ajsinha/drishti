@@ -319,6 +319,9 @@ class VarApiTest {
         String csv = mvc.perform(get("/api/v1/var/captures/" + id + "/csv").header("Authorization", rita)).andExpect(status().isOk())
                 .andReturn().getResponse().getContentAsString();
         assertThat(csv).contains("scenario_date,pnl").contains("# note: before");
+        String jsonl = mvc.perform(get("/api/v1/var/captures/" + id + "/jsonl").header("Authorization", rita)).andExpect(status().isOk())
+                .andReturn().getResponse().getContentAsString();
+        assertThat(json.readTree(jsonl.split("\n")[0]).has("scenario_date")).isTrue();      // 2.9.4: a scenario a line, the CSV's names
     }
 
     @Test

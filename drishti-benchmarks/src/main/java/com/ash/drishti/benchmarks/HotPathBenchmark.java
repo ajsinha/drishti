@@ -26,8 +26,6 @@ import com.ash.drishti.rachana.el.EvalContext;
 import com.ash.drishti.rachana.el.Expr;
 import com.ash.drishti.rachana.format.Formats;
 import java.io.IOException;
-import java.io.InputStream;
-import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.concurrent.TimeUnit;
 import org.openjdk.jmh.annotations.Benchmark;
@@ -64,10 +62,8 @@ public class HotPathBenchmark {
 
     @Setup
     public void setup() throws IOException {
-        Path p = Path.of("examples/packs/finance/samples/trade/IRS-48213.json");
-        try (InputStream in = Files.newInputStream(p)) {
-            irs = new JsonCodec().read(in);
-        }
+        irs = new JsonCodec().read(com.ash.drishti.common.PackSamples.document(Path.of("examples/packs/finance/samples"), "trade", "IRS-48213")
+                .orElseThrow());                                    // samples/trade.jsonl, one document a line
         fingerprinter = new ShapeFingerprinter();
         ElCompiler el = new ElCompiler();
         direction = el.compile("$.direction == 'PAY_FIXED' ? 'Pay fixed' : 'Receive fixed'");

@@ -136,7 +136,7 @@ class UsEquitiesPackTest extends PublicPacksOnLakes {
         try (var files = Files.list(PACK.resolve("samples"))) {
             assertThat(files.map(p -> p.getFileName().toString())).noneMatch(n -> n.startsWith("price-history"));
         }
-        assertThat(Files.readString(PACK.resolve("samples/catalog.json"))).doesNotContain("\"price-history\"");
+        assertThat(Files.readString(PACK.resolve("samples/catalog.jsonl"))).doesNotContain("\"price-history\"");
     }
 
     @Test

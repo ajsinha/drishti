@@ -1,0 +1,12 @@
+{"id":"EAS","name":"East Asia & Pacific","type":"region"}
+{"id":"ECS","name":"Europe & Central Asia","type":"region"}
+{"id":"HIC","name":"High income","type":"income"}
+{"id":"LCN","name":"Latin America & Caribbean","type":"region"}
+{"id":"LIC","name":"Low income","type":"income"}
+{"id":"LMC","name":"Lower middle income","type":"income"}
+{"id":"MEA","name":"Middle East, North Africa, Afghanistan & Pakistan","type":"region"}
+{"id":"NAC","name":"North America","type":"region"}
+{"id":"SAS","name":"South Asia","type":"region"}
+{"id":"SSF","name":"Sub-Saharan Africa","type":"region"}
+{"id":"UMC","name":"Upper middle income","type":"income"}
+{"id":"WLD","name":"World","type":"world"}

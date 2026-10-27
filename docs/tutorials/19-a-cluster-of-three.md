@@ -174,7 +174,7 @@ measured and when it last heard of it; the page refreshes by itself. Beside the 
 it is alive (amber suspect, red dead, grey left), sized by the kinds whose data it holds; this node is outlined, the console's server has a
 dashed band, and the centre counts the members alive. Hover an arc for the kinds it holds; click it to select its row.
 
-![Admin → Net → Members (here the ready-made cluster of drishti-stack/: drishti-main, drishti-b and drishti-c): the table with each node's state, address, version and packs, and beside it the hash ring, three green arcs sized by the kinds each holds, drishti-main outlined as this node and banded as the console's server, 3 / 3 alive](img/t19/01-members.jpg)
+![Admin → Net → Members on the tutorial's cluster (drishti-a, drishti-b and drishti-c): the table with each node's state, address, version, tags and packs, and beside it the hash ring, three green arcs sized by the kinds each holds, drishti-a outlined as this node and banded as the console's server, 3 / 3 alive](img/t19/01-members.jpg)
 
 **From the command line** (an administrator's token in `DRISHTI_TOKEN`, or sign-in off):
 

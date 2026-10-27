@@ -12,7 +12,7 @@
 #
 # See the LICENSE file in the root of this repository for the full terms.
 
-"""The pictures of "Controls on a screen" (docs/guides/USER_GUIDE.md), written to docs/guides/img/controls/: an interest-rate swap's cashflows with
+"""The pictures of "Controls on a screen" (docs/guides/USER_GUIDE.md), written to docs/guides/img/controls/: an interest-rate swap's events with
 their controls (legs, paid between) in the panel header, the same screen filtered with its address, a netting set where a click on a bar of
 "Net MTM by asset class" filters the member trades, the same screen on a phone (390 px, touch), and the workbench's Controls tab. A view of the
 QUICKSTART packs, the real console:
@@ -43,16 +43,18 @@ def done(c: Ctx, action):
 
 
 def schedule_box(c: Ctx, height: int):
-    p = c.page.locator("#p-schedule").first
-    b = p.bounding_box()
-    top = c.page.locator(".vhead").first.bounding_box()
-    return {"x": 0, "y": top["y"], "width": min(b["x"] + b["width"] + 30, 1440), "height": min(b["y"] - top["y"] + height, 1700)}
+    """The Events panel from its top (it sits below the cash flows, deeper than the window: it is scrolled to the top first)."""
+    c.page.evaluate("() => { const p = document.querySelector('#p-event-list'); window.scrollBy(0, p.getBoundingClientRect().top - 70); }")
+    c.page.wait_for_timeout(300)
+    b = c.page.locator("#p-event-list").first.bounding_box()
+    y = max(0, b["y"] - 12)
+    return {"x": 0, "y": y, "width": min(b["x"] + b["width"] + 30, 1440), "height": min(height, 1700 - y)}
 
 
 @shot("01-header.jpg")
 def header(c: Ctx):
     open_view(c, IRS, 1440, 1700)
-    c.page.locator("#p-schedule [data-ctl='legs'] summary").click()
+    c.page.locator("#p-event-list [data-ctl='legs'] summary").click()
     c.page.wait_for_timeout(300)
     c.save("01-header.jpg", clip=schedule_box(c, 470))
 
@@ -60,9 +62,9 @@ def header(c: Ctx):
 @shot("02-filtered.jpg")
 def filtered(c: Ctx):
     open_view(c, IRS, 1440, 1700)
-    done(c, lambda: c.page.locator("#p-schedule [data-ctl='when'] .ctl-preset").select_option(label="Next 90 days"))
-    c.page.locator("#p-schedule [data-ctl='legs'] summary").click()
-    done(c, lambda: c.page.locator("#p-schedule [data-ctl='legs'] input[value='2']").uncheck())
+    done(c, lambda: c.page.locator("#p-event-list [data-ctl='when'] .ctl-preset").select_option(label="Next 90 days"))
+    c.page.locator("#p-event-list [data-ctl='legs'] summary").click()
+    done(c, lambda: c.page.locator("#p-event-list [data-ctl='legs'] input[value='2']").uncheck())
     c.page.keyboard.press("Escape")
     c.page.mouse.move(1430, 1650)
     c.page.wait_for_timeout(300)
@@ -83,9 +85,12 @@ def cross(c: Ctx):
 @shot("04-phone.jpg")
 def phone(c: Ctx):
     open_view(c, IRS, 390, 844)
-    c.page.locator("#p-schedule").scroll_into_view_if_needed()
-    c.page.locator("#p-schedule [data-ctl='legs'] summary").click()
+    c.page.locator("#p-event-list").scroll_into_view_if_needed()
+    c.page.locator("#p-event-list [data-ctl='legs'] summary").click()
     c.page.wait_for_timeout(400)
+    # the Legs control just under the top bar (on a phone the bar is three rows, about 160 px), so its open list shows whole
+    c.page.evaluate("() => window.scrollBy(0, document.querySelector(\"#p-event-list [data-ctl='legs']\").getBoundingClientRect().top - 170)")
+    c.page.wait_for_timeout(300)
     c.save("04-phone.jpg")
 
 

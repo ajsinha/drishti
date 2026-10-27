@@ -164,6 +164,23 @@ class StructuredSearchTest {
     }
 
     @Test
+    void searchesComeAsJsonLinesWithTheCsvsColumnNames() throws Exception {
+        var res = mvc.perform(get("/api/v1/search/jsonl").param("q", "TRD PRODUCT_TYPE=Revolver").header("Authorization", as("searcher")))
+                .andExpect(status().isOk()).andReturn().getResponse();
+        org.assertj.core.api.Assertions.assertThat(res.getContentType()).startsWith("application/jsonl");
+        String[] lines = res.getContentAsString().split("\n");
+        org.assertj.core.api.Assertions.assertThat(lines).hasSize(6);                              // one revolver a line, no header
+        var first = new com.fasterxml.jackson.databind.ObjectMapper().readTree(lines[0]);
+        org.assertj.core.api.Assertions.assertThat(first.get("kind").asText()).isEqualTo("trade");
+        org.assertj.core.api.Assertions.assertThat(first.get("id").asText()).startsWith("CLY-");
+        String header = mvc.perform(get("/api/v1/search/csv").param("q", "TRD PRODUCT_TYPE=Revolver").header("Authorization", as("searcher")))
+                .andReturn().getResponse().getContentAsString().split("\r\n")[0];
+        java.util.List<String> keys = new java.util.ArrayList<>();
+        first.fieldNames().forEachRemaining(keys::add);
+        org.assertj.core.api.Assertions.assertThat(String.join(",", keys)).isEqualTo(header.replace("\"", ""));
+    }
+
+    @Test
     void aPhraseBecomesASearchThatRuns() throws Exception {
         String body = mvc.perform(get("/api/v1/phrase").param("text", "trades over 1m in USD, biggest first").header("Authorization", as("searcher")))
                 .andExpect(status().isOk())

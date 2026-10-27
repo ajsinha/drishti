@@ -117,9 +117,18 @@ def s5(c: Ctx):
     page_shot(c, "07-deploy-checks.jpg", {"x": 0, "y": box["y"] - 36, "width": 1280, "height": 800}, pad=0)
 
 
+def tutorial_4_connector(c: Ctx):
+    """What tutorial 4 left behind: the site's desk-quotes connector on the tutorial's quotes folder. Without it the deployed pack's
+    connector template is written instead (on the server's empty files root) and the quote cannot be opened."""
+    text = (ROOT / "docs" / "tutorials" / "data" / "connectors" / "desk-quotes.yaml").read_text(encoding="utf-8")
+    call(c, "PUT", "/admin/connectors/api/desk-quotes",
+         {"text": text.replace("./docs/tutorials/data/desk-quotes", str(ROOT / "docs" / "tutorials" / "data" / "desk-quotes"))})
+
+
 def deploy_through_the_wizard(c: Ctx, version: str):
     """The wizard to its last step, a version, then the hand-off to Admin -> Packs, where Deploy is confirmed."""
     pack(c)
+    tutorial_4_connector(c)
     if version != "1.0.0":
         c.page.fill("#pkp-version", version)
         c.page.locator("#pkp-version").dispatch_event("change")

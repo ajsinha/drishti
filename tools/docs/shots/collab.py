@@ -58,8 +58,8 @@ def people(c: Ctx):
 
 
 def trader(c: Ctx) -> str:
-    """The trade's trader, a masked field for anyone who is not raw (read as asha, who sees it)."""
-    return c.page.evaluate("async () => (await (await fetch('/export/trade/%s.json')).json()).trader || 'A. Shah'" % TRADE)
+    """The trade's trader id, a masked field for anyone who is not raw (read as asha, who sees it)."""
+    return c.page.evaluate("async () => { const d = await (await fetch('/export/trade/%s.json')).json(); return (d.data || d).TRADER_ID || 'TRDR-ASHAH'; }" % TRADE)
 
 
 def open_view(c: Ctx, path: str, width: int = 1440, height: int = 900):
@@ -136,9 +136,9 @@ def discussion(c: Ctx):
     c.page.keyboard.type("@ver")
     c.page.locator("#discOpts [role=option]").first.wait_for()
     c.page.keyboard.press("Enter")
-    c.page.keyboard.type(f"is {secret} the right trader? He is {{$.trader}} here, and the MTM is {{")
+    c.page.keyboard.type(f"is {secret} the right trader? He is {{$.TRADER_ID}} here, and the quantity is {{")
     c.page.locator("#discOpts [role=option]").first.wait_for()
-    c.page.keyboard.type("mtm")
+    c.page.keyboard.type("QUANTITY")
     c.page.locator("#discOpts [role=option]").first.wait_for()
     c.page.keyboard.press("Enter")
     c.page.keyboard.press("Control+Enter")
