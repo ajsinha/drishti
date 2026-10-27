@@ -17,6 +17,17 @@
 
 ## 2.9.4 (unreleased)
 
+- **Upgrading to 2.9.4: connector files get the new columns by themselves (2026-10-27).** A connector file written from a pack's
+  template at an earlier first start (`config/connectors/risk-store.yaml`) lacked the columns the VaR inputs gained (`RUN_KIND`,
+  `COMPUTED_AT`, `VALUE_TYPE`, `GRAIN`, `SOURCE_SYSTEM`, `POSITION_ID`, `TRADE_IDS`), so a plain upgrade could not read intraday updates
+  or the record fields. Connector template updates now treat a layout list that lacks the template's new columns
+  (`layout.<kind>.columns`, `.vectors`) as additive: with `template-updates: additive` (the default) the server appends them at start,
+  keeps the connector's own columns and order, keeps the file as it was beside it (`<name>.yaml.before-<time>.bak`), logs one line and
+  lists it under Admin → Connectors → Template updates; a list that differs only by an administrator's edit stays a conflict. **Upgrade
+  notes:** pull, build, rebuild the risk lake (`build_demo_lakes.py --only market-risk`), start: nothing to edit by hand (with
+  `template-updates: notify` or `off`, press **Add missing kinds** once). **Tests:** `TemplateUpdatesTest`. **Docs:** CONNECTOR_FILES,
+  VAR_GUIDE section 8.4, the Windows QA guide's 2.9.4 section.
+
 - **A configurable scenario window and confidences (2026-10-27; local branch, for the product owner's review: not pushed).**
   **`drishti.var.scenario-window`** (`DRISHTI_VAR_SCENARIO_WINDOW`, default `all`: the whole set, 509 in the demo) or N: the newest N
   scenarios of each date's set, every row (P&L vectors, scenario PVs, scenario FX) cut to them at load; k = ceil(N (1 − α)) (the 3rd

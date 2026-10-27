@@ -694,8 +694,12 @@ loaders read it). After `git pull`, build the jar again and run step 3.0 once, s
 ## 6h. What is new in 2.9.4: VaR (25 minutes)
 
 **Before you start:** `git pull`, build the jar (`drishti-server-2.9.4-exec.jar` once released), and rebuild the VaR data: the trades'
-tables gained two columns (`RUN_KIND`, `COMPUTED_AT`). Stop the server, run the `build_demo_lakes.py` of step 3.0 with
-`--only market-risk --as-of <the lakes' last date>`, and start the server and the console again.
+tables gained columns (`RUN_KIND`, `COMPUTED_AT`, and every record now says what it is: `VALUE_TYPE`, `GRAIN`, `SOURCE_SYSTEM`,
+`POSITION_ID`). Stop the server, run the `build_demo_lakes.py` of step 3.0 with `--only market-risk --as-of <the lakes' last date>`,
+and start the server and the console again. **Nothing to edit by hand:** at start the server adds the new columns to your
+`config\connectors\risk-store.yaml` (written at an earlier first start) and keeps the old file beside it as
+`risk-store.yaml.before-<time>.bak`; **Admin → Connectors → Template updates** lists it under *Recent automatic updates*. If your
+`config\connectors-settings.yaml` says `template-updates: notify` (or `off`), press **Add missing kinds** there once.
 
 **The VaR page in another currency.**
 

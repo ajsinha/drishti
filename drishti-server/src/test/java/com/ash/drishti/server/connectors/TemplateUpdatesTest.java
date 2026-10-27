@@ -66,10 +66,14 @@ class TemplateUpdatesTest {
     }
 
     private Node node(Path dir, ContentStore store, TemplateUpdates.Mode mode) throws Exception {
+        return node(dir, store, mode, PACK, STALE);
+    }
+
+    private Node node(Path dir, ContentStore store, TemplateUpdates.Mode mode, String packText, String staleText) throws Exception {
         Path conf = Files.createDirectories(dir.resolve("connectors"));
         Path pack = Files.createDirectories(dir.resolve("packs/risk"));
-        Files.writeString(pack.resolve("pack.yaml"), PACK);
-        Files.writeString(conf.resolve("risk-store.yaml"), STALE);
+        Files.writeString(pack.resolve("pack.yaml"), packText);
+        Files.writeString(conf.resolve("risk-store.yaml"), staleText);
         ConnectorFiles files = new ConnectorFiles(conf, dir.resolve("state"));
         ContentConnectorOverlay overlay = store == null ? null : new ContentConnectorOverlay(store);
         if (overlay != null) {
@@ -121,6 +125,35 @@ class TemplateUpdatesTest {
         assertThat(d.conflicting()).containsOnlyKeys("url");
         assertThat(d.obsoleteKinds()).containsExactly("price-basket");
         assertThat(n.updates().drifts()).hasSize(1);
+    }
+
+    /** A pack whose layout gained columns (the VaR inputs in 2.9.4: RUN_KIND, COMPUTED_AT, VALUE_TYPE ...). */
+    private static final String GROWN = "pack: risk\nkinds: [trade]\nroutes:\n  trade: risk-store\nconnectors:\n  risk-store:\n    plugin: fake\n"
+            + "    kinds: [trade]\n    settings:\n      url: db://pack-default\n      layout:\n        trade:\n          columns: [TRADE_ID, DESK, RUN_KIND, GRAIN]\n"
+            + "          vectors: [PNL]\n";
+
+    /** Generated from the older template: its columns lack the new ones, and an administrator added one of their own. */
+    private static final String OLD_LAYOUT = "# Generated at first start from the connector template of pack 'risk'.\nplugin: fake\nkinds: [trade]\n"
+            + "settings:\n  url: db://pack-default\n  layout:\n    trade:\n      columns: [TRADE_ID, DESK, MY_COLUMN]\n      vectors: [PNL]\n";
+
+    @Test
+    void columnsTheTemplateGainedAreAddedAtStartTheFileKeptBeside(@TempDir Path dir) throws Exception {
+        Node n = node(dir, null, TemplateUpdates.Mode.ADDITIVE, GROWN, OLD_LAYOUT);
+        TemplateUpdates.Drift d = n.updates().drift("risk-store").orElseThrow();
+        assertThat(d.extendedLists()).containsEntry("layout.trade.columns", "TRADE_ID,DESK,MY_COLUMN,RUN_KIND,GRAIN");
+        assertThat(d.conflicting()).isEmpty();
+        assertThat(n.updates().check()).containsExactly("risk-store");
+        assertThat(n.files().read("risk-store").settings()).containsEntry("layout.trade.columns", "TRADE_ID,DESK,MY_COLUMN,RUN_KIND,GRAIN")
+                .containsEntry("layout.trade.vectors", "PNL");
+        try (var s = Files.list(dir.resolve("connectors"))) {
+            List<Path> kept = s.filter(f -> f.getFileName().toString().startsWith("risk-store.yaml.before-")).toList();
+            assertThat(kept).hasSize(1);
+            assertThat(Files.readString(kept.get(0))).isEqualTo(OLD_LAYOUT);
+        }
+        assertThat(n.updates().notices().get(0).what()).contains("the template's new columns in [layout.trade.columns]");
+        assertThat(n.updates().check()).isEmpty();                                                       // once: nothing more to add
+        assertThat(TemplateUpdates.grown("A,B", "A,B")).isNull();                                       // an edit only: never automatic
+        assertThat(TemplateUpdates.grown("A,X", "A")).isNull();
     }
 
     @Test

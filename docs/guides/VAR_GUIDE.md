@@ -985,12 +985,15 @@ publishing read the date without its layer, and an intraday batch never restates
 run, to the cent, on every node, and a restart (the morning run and the 200 batches at once) equals it too; the time a batch takes does
 not grow with the batches before it (the first 50 and the last 50 the same, the lake's 1-second refresh dominating).
 
-**An installation from before 2.9.4.** The engine tells an intraday row by its `RUN_KIND` and `COMPUTED_AT`, read as promoted
-columns of the risk lake's connector. A connector file written from the pack's template at an earlier first start
-(`config/connectors/risk-store.yaml`, never overwritten) does not promote them: add `RUN_KIND,COMPUTED_AT` to its
-`layout.pnl-vector.columns` and `layout.scenario-pv.columns` (or delete the file to have it written again from the pack). Until then
-the server logs *VaR: the connector does not promote RUN_KIND and COMPUTED_AT …* once, and a date with intraday batches answers
-`DRS-5202` (a trade read twice) with the same words, never a mix of the two runs.
+**An installation from before 2.9.4.** The engine reads a record's `RUN_KIND`, `COMPUTED_AT`, `VALUE_TYPE`, `GRAIN`,
+`SOURCE_SYSTEM` and `POSITION_ID` as promoted columns of the risk lake's connector. A connector file written from the pack's template
+at an earlier first start (`config/connectors/risk-store.yaml`) lacks them: **at start the server adds the template's new columns to
+its `layout.pnl-vector.columns` and `layout.scenario-pv.columns` by itself** (connector template updates, `template-updates:
+additive`, the default; CONNECTOR_FILES.md, *Template updates*): the connector's own columns are kept, the file as it was is kept beside
+it as `risk-store.yaml.before-<time>.bak`, one line is logged and the change is listed under Admin → Connectors → Template updates.
+With `template-updates: notify` or `off` it is listed only: press **Add missing kinds** there. Until the columns are promoted the server
+logs *VaR: the connector does not promote …* once, and the records cannot say what they are (`DRS-5208`, or `DRS-5202` for an
+intraday row read twice), never a mix of runs.
 
 **A batch in both kinds.** A batch may carry scenario PVs and P&L vectors under one `BATCH_ID`, each kind loaded on its own with its own
 signal: the engine tracks each kind of a batch apart (`<kind>|<BATCH_ID>`), so the second load applies too and is not taken for a full
