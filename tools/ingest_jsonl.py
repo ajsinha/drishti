@@ -53,6 +53,19 @@ import sutragen as SG  # noqa: E402  (reading, dotted paths, scalar option parsi
 MODES = ("overwrite-dates", "append", "replace")
 
 
+def _layout():
+    """tools/samplegen/layout.py by its path, under a name of its own: another layout.py (tools/packgen/banking) may already be
+    imported as "layout" in the same process (the tools tests in one pytest run)."""
+    name = "drishti_samplegen_layout"
+    if name not in sys.modules:
+        import importlib.util
+        spec = importlib.util.spec_from_file_location(name, HERE / "samplegen" / "layout.py")
+        mod = importlib.util.module_from_spec(spec)
+        sys.modules[name] = mod
+        spec.loader.exec_module(mod)
+    return sys.modules[name]
+
+
 class Report:
     def __init__(self):
         self.rows: dict[tuple[str, str], int] = {}     # (kind, date) -> rows
@@ -71,7 +84,7 @@ def read_lines(inputs, recursive: bool, kind: str | None, report: Report):
 def pack_settings(pack: pathlib.Path) -> tuple[str, dict, dict, dict]:
     """(domain, {kind: Layout}, {kind: key}, {kind: date}) from a pack folder's pack.yaml."""
     import yaml
-    import layout as L  # delta only
+    L = _layout()  # delta only
     m = yaml.safe_load((pack / "pack.yaml").read_text(encoding="utf-8")) or {}
     defs = m.get("connectors") if isinstance(m.get("connectors"), dict) else (m.get("connector-templates") or {})   # a pack names its connectors and suggests them as templates
     conns = [c for c in defs.values() if c.get("plugin") in ("delta", "file")]
@@ -122,7 +135,7 @@ def collect(args, keys, dates, report: Report) -> dict[str, dict[date, list]]:
 
 def write(lake: pathlib.Path, domain: str, data: dict[str, dict[date, list]], layouts: dict, mode: str, batch: int,
           report: Report, say=print) -> None:
-    import layout as L
+    L = _layout()
     for kind in sorted(data):
         table = str(lake / domain / kind)
         lay = layouts.get(kind) or None
@@ -195,7 +208,7 @@ def ingest(args, say=print) -> Report:
     if args.pack:
         domain, layouts, keys, dates = pack_settings(args.pack)
     else:
-        import layout as L
+        L = _layout()
         if not args.domain:
             raise SystemExit("ingest_jsonl: give --pack, or --domain with --date")
         domain = args.domain
