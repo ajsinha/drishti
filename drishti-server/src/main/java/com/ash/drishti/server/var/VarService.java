@@ -365,7 +365,7 @@ public final class VarService implements AutoCloseable {
 
     // ---------------------------------------------------------------------------------------------------------------- intraday
 
-    private final Map<LocalDate, Object> intradayLocks = new ConcurrentHashMap<>();
+    private final Map<LocalDate, java.util.concurrent.locks.ReentrantLock> intradayLocks = new ConcurrentHashMap<>();
 
     /** Intraday updates refused before they reached the lake (the PV topic's guards): listed with the date's layer. */
     void intradayRejected(LocalDate d, List<String> why) {
@@ -373,11 +373,15 @@ public final class VarService implements AutoCloseable {
         if (f == null || !f.isDone() || f.isCompletedExceptionally() || why.isEmpty()) {
             return;
         }
-        synchronized (intradayLocks.computeIfAbsent(d, x -> new Object())) {
+        java.util.concurrent.locks.ReentrantLock lock = intradayLocks.computeIfAbsent(d, x -> new java.util.concurrent.locks.ReentrantLock());
+        lock.lock();                                                     // no blocking under synchronized (virtual threads)
+        try {
             VarDate vd = dates.get(d).join();
             VarIntradayRows rows = vd.intraday() == null ? new VarIntradayRows().morning(null, vd.intake().batchIds()) : vd.intraday().copy();
             rows.rejected(why);
             dates.put(d, CompletableFuture.completedFuture(vd.withBook(vd.book(), rows)));
+        } finally {
+            lock.unlock();
         }
     }
 
@@ -401,7 +405,9 @@ public final class VarService implements AutoCloseable {
         if (f == null || !f.isDone() || f.isCompletedExceptionally()) {
             return new IntradayResult("not loaded", 0, 0, java.util.List.of(), "the date loads with its updates when first asked");
         }
-        synchronized (intradayLocks.computeIfAbsent(d, x -> new Object())) {
+        java.util.concurrent.locks.ReentrantLock lock = intradayLocks.computeIfAbsent(d, x -> new java.util.concurrent.locks.ReentrantLock());
+        lock.lock();                                                     // no blocking under synchronized (virtual threads)
+        try {
             VarDate usd = dates.get(d).join();
             VarIntradayRows state = usd.intraday() == null ? new VarIntradayRows().morning(null, usd.intake().batchIds()) : usd.intraday();
             VarIntake read = loader.readIntraday(d, usd.book().morning(), state.parts(), usd.intake());
@@ -452,6 +458,8 @@ public final class VarService implements AutoCloseable {
             cache.asMap().keySet().removeIf(k -> k.startsWith(d + "|"));
             audit(VarOfficialStore.OWNER, "var-intraday", d.toString(), "batches=" + batches + " updates=" + fresh.size());
             return new IntradayResult("applied", fresh.size(), nb.intraday().info().trades(), batches, null);
+        } finally {
+            lock.unlock();
         }
     }
 
