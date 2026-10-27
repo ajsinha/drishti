@@ -567,6 +567,26 @@ guard test in the drill. The page: [DATA_FORMATS.md](../guides/DATA_FORMATS.md).
 
 Removing CSV input is for a later release (not yet planned); the per-file Sutra test folders stop being read after 2.9.4.
 
+## 2.9.5 (planned): Iceberg as a full production alternative to Delta (product owner, 2026-10-27)
+
+Production may run on Delta Lake or Iceberg. Above the storage plugins Drishti is already identical for both (packs, data contracts,
+connector names, engines, BI, UI, Drishti*net); the review behind `docs/publications/Drishti-AWS-Iceberg.pptx` found what the Iceberg
+side still lacks. 2.9.5 closes it, so every capability the Delta side has is built for Iceberg too. Started only after 2.9.4 is on main.
+
+| Group | Part | What |
+|---|---|---|
+| 1. Production VaR on Iceberg | Iceberg plugin parity | `SourcePlugin.vectors()` (VaR scenario PVs and P&L vectors, exposure paths), `documents()`, `tableIdentity()`, `inventory()`, `refreshVersions()` on the Iceberg plugin, so VaR and exposure load from Iceberg exactly as from Delta; the same tests run on both formats |
+| | Official results anywhere | official VaR and exposure results published to Iceberg as well as Delta, and to `s3://` roots in either format (today: a local or EFS Delta root; an `s3://` root fails with `publishError`); JSONL beside them as now |
+| 2. Running on AWS | AWS scripts | Iceberg versions of the `deploy/aws/` scripts: load, backfill, maintain, lifecycle, alarms, report (dry-run tested, as the Delta ones) |
+| | Catalogs | the AWS Glue catalog run for real (the SigV4 REST client exists, never run against Glue), Glue IAM and endpoint documented; S3 Tables through its Iceberg REST endpoint if it works with the same client |
+| | Admin and maintenance | Iceberg in Admin -> Lakes: the maintenance page, schedules, the ownership rule, the 7-year risk retention floor, orphan-file removal |
+| 3. Speed and convenience | Disk caches | Iceberg id maps and document caches across restarts, as Delta has |
+| | Lake build | `lake build --format iceberg` (and `build_demo_lakes.py`), JSONL in as everywhere |
+
+Deferred (decided later): converting tables between Delta and Iceberg; S3 Tables if the REST route does not work.
+Docs: ICEBERG_CONNECTOR, DRISHTI_ICEBERG, VAR_GUIDE (section 29.3), EXPOSURE_GUIDE, LAKE_MAINTENANCE, AWS_DEPLOYMENT, the Windows QA guide
+where it changes, and both AWS decks (`Drishti-AWS-Iceberg.pptx` labels move from proposed to built).
+
 ## Known gaps
 
 What is open today. None blocks normal use; each is a candidate for a future wave.
