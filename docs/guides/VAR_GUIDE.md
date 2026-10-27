@@ -385,6 +385,8 @@ the engine's, computed as the page opens, as you (your view of the nodes):
   component VaR in its book; its trades with their own VaR and their component of the position's (a long and a short of one instrument
   have components of opposite signs); its P&L distribution (the UI kit fragment `pnl-distribution@1`).
 - `DESK DESK-RATES <GO>`: the desk's VaR and limit use in its strip, from the engine.
+- `LE LE-NY <GO>` (2.9.2): the legal entity's VaR (`LE:LE-NY`, the trades it books) and each of its books' VaR beside the record's book rows, from
+  the engine; the record stores none.
 
 ![PORT PF-RATES-DESK: the positions, a position's trades beside, the figures computed as the page opened](img/var/09-portfolio-page.jpg)
 
@@ -412,6 +414,7 @@ Opening a trade page never waits for the engines to load a date: until they have
 | position (`POS:<id>`) | `STATUS`, `SCOPE`, `BUSINESS_DATE`, `VAR`, `ES`, `CONFIDENCE`, `ES_CONFIDENCE`, `NOTE`; `TRADES` (each trade's `TRADE_ID`, `QUANTITY`, `DIRECTION`, own `VAR`, `COMPONENT_VAR` in the position); `BOOK_VAR`, `COMPONENT_VAR` and `PCT_OF_BOOK_VAR` (the position in its book); `PNL` (its 509 P&Ls) |
 | portfolio (`PORT:<id>`) | the same headline with `LIMIT`, `LIMIT_USE`; `POSITIONS` (each position's instrument, direction, quantity, market value, currency, book, product, own `VAR`, `COMPONENT_VAR`, `PCT_OF_VAR`, `PARTIAL`), `POSITION_COUNT`, `LONG_COUNT`, `SHORT_COUNT`, `GROSS_MV`, `NET_MV`, `TOP_CONTRIBUTORS` (10), `BY_PRODUCT`, `BY_CURRENCY`, `BY_DIRECTION` (component VaR and net market value), `PNL` |
 | desk (`DESK:<id>`) | the headline: `VAR`, `ES`, `LIMIT`, `LIMIT_USE` |
+| legal entity (`LE:<id>`, 2.9.2) | the headline of `LE:<id>` (`VAR`, `ES`, `LIMIT`, `LIMIT_USE` …: the trades the entity books) and `BOOKS`: the record's own book rows (`BOOK`, `DESK`, `PNL`, `MTM`, `TRADES`) each with the engine's `VAR` of `BOOK:<id>` (null when it cannot answer); the stored record keeps no VaR |
 
 ### 3.8 On a phone
 
