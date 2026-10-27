@@ -553,7 +553,7 @@ later, and nothing to update when someone's role changes.
 ![The Share dialog on MX-20000001](../guides/img/collab/01-share-dialog.jpg)
 
 Asha presses `Alt+S` (`share.js`), picks `Vera Lim` from the people picker and writes the note: *"Please check the fixed leg before the 16:00 sign-off.
-The trader on this one is A. Shah."* The yellow warning is the server's answer to the second sentence, explained in step 6.
+The trader on this one is TRDR-ASHAH."* The yellow warning is the server's answer to the second sentence, explained in step 6.
 
 | # | What happens | Where | Code |
 |---|---|---|---|
@@ -562,7 +562,7 @@ The trader on this one is A. Shah."* The yellow warning is the server's answer t
 | 3 | Asha must hold the `collaborate` power, the kind's pack must allow sharing (`drishti.collab.packs.<pack>.share-enabled`, else `403 DRS-7004`), and she must herself be able to open `trade` | server | `ShareService.share`, `requireCollaborate`, `requirePackSharing`, `Entitlements.requireOpen` |
 | 4 | **Recipients are resolved.** Names and roles become people: a role expands to its members (at most `max-group-size`; `admin` and `service` are never addressable); each person must be in Asha's directory scope. Each is then checked **at delivery**: their role opens `trade` *and* the pack that owns `trade` is assigned to them (`Entitlements.mayReach`; a pack they switched off still delivers, and the page offers *Switch on*). The result per person is a state: `notified`, `no-access`, `no-pack`, `disabled` or `over-limit` | server | `ShareService.resolve`, `DirectoryService`, `Principals` (a principal for any user, cached a minute), `Entitlements.mayReach`, `reachState`, `Recipient` |
 | 5 | The document is read **as Asha saw it** (`asOf`, `knownAt`), only to pin the share: its generation must not exceed what the server holds (`422 DRS-7011`) | server | `SourceRouter.fetch`, `Pin` |
-| 6 | **The note is scanned for masked values.** `Entitlements.maskedValues(doc)` lists the values of every field in `drishti.security.redact` (here the trader, `A. Shah`); `NoteText.spans` records where they occur in the note. The stored text is untouched: the *spans* are stored, and every reader without `raw` is shown `•••` there. Asha gets the warning (`text.on-masked-copy: warn`; `reject` refuses with `DRS-7011`) | server | `NoteText.spans`, `NoteText.render`, `Share.Span`, `drishti.collab.text.*` |
+| 6 | **The note is scanned for masked values.** `Entitlements.maskedValues(doc)` lists the values of every field in `drishti.security.redact` (here the trader, `TRDR-ASHAH`); `NoteText.spans` records where they occur in the note. The stored text is untouched: the *spans* are stored, and every reader without `raw` is shown `•••` there. Asha gets the warning (`text.on-masked-copy: warn`; `reject` refuses with `DRS-7011`) | server | `NoteText.spans`, `NoteText.render`, `Share.Span`, `drishti.collab.text.*` |
 | 7 | Rate limits (shares a minute, a day) are applied last, so a refused share costs nothing | server | `RateLimits`, `ShareStore.countSentSince` |
 | 8 | **One transaction** writes the share (with a SHA-256 of its fields, `Share.signed()`), one row per recipient, the in-app notices (inbox rows), the email rows if email is on, and the access-log row `share` (written synchronously, never queued) | server, identity | `CollabTx`, `ShareStore`, `InboxStore`, `OutboxStore`, `Notifier` beans (`InAppNotifier`, `EmailNotifier`), `AccessLog.recordNow` |
 | 9 | After the commit each notice is pushed: `InboxHub` sends it to the recipient's open stream as a `notice` event, and polls the shared table every `inbox.poll` while a stream is open, so a notice written on another server arrives too | server | `InboxHub.publish`, `listen`; the event rides `GET /api/v1/me/alerts/stream` (`AlertController`) |
@@ -580,7 +580,7 @@ comes from `GET /api/v1/me/inbox/count`). The bell is the inbox's door:
 ![Vera's inbox: one unread Share row](../guides/img/collab/04-inbox.jpg)
 
 The row is not stored as text. `InboxStore` keeps who, what kind, which share; `InboxService.render` builds the **title and the excerpt for the
-reader each time the inbox is read**: Vera sees *"Asha Rao shared trade MX-20000001"* and the note with `A. Shah` replaced by `•••`. Had her role lost
+reader each time the inbox is read**: Vera sees *"Asha Rao shared trade MX-20000001"* and the note with `TRDR-ASHAH` replaced by `•••`. Had her role lost
 `trade` since, she would see *"(no access) Asha Rao shared a trade view"* and no excerpt. A notice carries no data value.
 
 If email is on (`drishti.collab.email.enabled`, `spring.mail.host`, `console-url`, sign-in on) and Vera has an address and has not switched share mail
@@ -606,7 +606,7 @@ Vera clicks the row (or the link in the mail). The link is the console's, never 
 | 3 | Otherwise the console redirects (`303`) to the view with the pin as **request parameters**: `/v/trade/MX-20000001?asOf=2026-09-30&knownAt=…Z&gen=1&share=sh_…`. Her own saved date and her other tabs are untouched | console | `core/collab.py` `link_for` |
 | 4 | The view is built for Vera: the console sends the as-of headers taken from the parameters and `X-Drishti-Share: sh_…` on every call of that page; the server applies **Vera's** roles and masks exactly as for any view | server | `ViewController`, `Entitlements.redactor`, `AccessRecorder` (`SHARE_HEADER`) |
 | 5 | The access log gets the `view` row with `detail = share:sh_…`, and Vera's `opened_at` on the share is set: that is how "who opened which share" is answered | server | `AccessRecorder`, `ShareService.opened` |
-| 6 | The page shows the banner *Shared by Asha Rao*, the note **rendered for Vera** (`A. Shah` is `•••`) and the usual *Pinned* banner: *"You are seeing 2026-09-30 as known at …, as it was shared"* with **Go live** | console | `terminal/view.html` (`share-banner`, `pin-banner`) |
+| 6 | The page shows the banner *Shared by Asha Rao*, the note **rendered for Vera** (`TRDR-ASHAH` is `•••`) and the usual *Pinned* banner: *"You are seeing 2026-09-30 as known at …, as it was shared"* with **Go live** | console | `terminal/view.html` (`share-banner`, `pin-banner`) |
 
 ![Vera's view: the share banner, the note with the trader masked, and the pin banner](../guides/img/collab/05-shared-view.jpg)
 
@@ -624,16 +624,16 @@ conversation continues in the Discussion tab, below.
 #### Part 4: a comment in the discussion, an @mention
 
 Asha writes in the open. She presses `Alt+N`: the side drawer of *About this page* has a second tab, **Discussion** (`about.js` hosts it,
-`discussion.js` is the controller). Her comment mentions `@vera`, repeats the trader's name by hand (`A. Shah`) and quotes two fields, `{$.trader}`
-and `{$.mtm}`:
+`discussion.js` is the controller). Her comment mentions `@vera`, repeats the trader's id by hand (`TRDR-ASHAH`) and quotes two fields, `{$.TRADER_ID}`
+(shown as the trader's name) and `{$.QUANTITY}`:
 
-![Asha's Discussion tab: @vera, A. Shah, the quoted trader and MTM](../guides/img/collab/07-discussion-author.jpg)
+![Asha's Discussion tab: @vera, TRDR-ASHAH, the quoted trader and quantity](../guides/img/collab/07-discussion-author.jpg)
 
 | # | What happens | Code |
 |---|---|---|
 | 1 | The `@` and `{` pickers (`discussion-compose.js`, one ARIA combobox) fill the box. The browser posts the text, the anchor (whole view, a panel or a field), the generation and the page's `asOf` and `knownAt` to the console, which sends them as the as-of headers. The comment is pinned to the date Asha was looking at | `thread_routes.py`, `core/threads.py`, `ThreadController` `POST /threads/{kind}/{id}` |
 | 2 | Asha must hold `collaborate` and be able to open the kind (and a panel's gate kind). The text is cleaned (plain text, length, `text.deny-patterns`) | `ThreadService.start`, `Entitlements.requireOpen` |
-| 3 | **The typed `A. Shah` is found in the stored document at the pin**, as in Part 1 step 6, and its span stored. A quote `{$.trader}` is stored as a *path*, not a value | `ThreadService.draft`, `PinnedDocs`, `NoteText.spans` |
+| 3 | **The typed `TRDR-ASHAH` is found in the stored document at the pin**, as in Part 1 step 6, and its span stored. A quote `{$.TRADER_ID}` is stored as a *path*, not a value | `ThreadService.draft`, `PinnedDocs`, `NoteText.spans` |
 | 4 | **The @mention is resolved.** `@vera` and `@risk` become users and roles; roles expand (`mentionable-roles`, `max-group-size`); each person is checked with `mayReach` like a share recipient, so a mention never reaches someone who may not open this kind of view: they get **nothing**, not even "someone mentioned you". The author learns who was left out (`undeliverable: tell`) | `Audience.resolve`, `Audience.Mentioned` (`reached`, `skipped`) |
 | 5 | One transaction: the thread, the comment, **revision 1**, the mention rows, the author's follow and the notices (`InAppNotifier`: a `mention` row for Vera, `reply` rows for the followers of later replies; `EmailNotifier`: several notices to one person within `inbox.coalesce` become one mail); then the push after the commit | `ThreadService.write`, `CollabTx`, `Notifier.onComment`, `ThreadStore` |
 | 6 | The drawer says *"1 person notified"* and, by name, anyone skipped, plus the warning about the typed value | `ThreadService.Posted`, `discussion-view.js` |
@@ -646,9 +646,9 @@ resolved is a *mention* part and one that did not is plain text; a `{$.path}` to
 pin** (`PinnedDocs.at`, cached a minute) **as the reader**: the value, `•••` if the reader's mask hides that field, `—` if the path is gone. The server
 returns structured parts, the browser sets them with `textContent`, and the unscrubbed document is never sent. What Vera sees:
 
-![Vera's Discussion tab: A. Shah and the quoted trader are •••, the quoted MTM shows its value](../guides/img/collab/08-discussion-viewer.jpg)
+![Vera's Discussion tab: TRDR-ASHAH and the quoted trader are •••, the quoted quantity shows its value](../guides/img/collab/08-discussion-viewer.jpg)
 
-The typed name and the quoted trader are `•••`; the quoted MTM stays because Vera may see the MTM. Her bell showed the mention without a reload, and
+The typed id and the quoted trader are `•••`; the quoted quantity stays because Vera may see the quantity. Her bell showed the mention without a reload, and
 **Open as it was** is offered because her (live) page differs from the comment's date; it opens `/v/trade/MX-20000001?asOf=2026-09-30…` through the same
 pin mechanism as a share. The author may edit within `threads.edit-window` (15 minutes), which re-scans the text and adds revision 2; **Retract**, and an
 administrator's **Hide**, change what readers see but never the record.

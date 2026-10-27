@@ -1821,9 +1821,9 @@ click plus `Enter`; the rest sends the view to people inside Drishti.
    cannot open trade views"). `Esc` closes the dialog and puts the focus back where it was. On a phone the dialog is a full
    screen sheet.
 
-![The Share dialog on MX-20000001: the view as of 2026-09-30, Vera Lim chosen, a note, and the warning that the note holds the value of a hidden field](img/collab/01-share-dialog.jpg)
+![The Share dialog on MX-20000001: the view as of 2026-09-30, Vera Lim chosen and a note that names the trader](img/collab/01-share-dialog.jpg)
 
-![After Send: "Sent to 1 person", with Copy link still in the dialog](img/collab/02-share-sent.jpg)
+![After Send: the warning that the note holds the value of a hidden field, "Sent to 1 person", and Copy link still in the dialog](img/collab/02-share-sent.jpg)
 
 What the recipient gets: a notice on the **bell** within a second (a number on the bell, and a toast) and a row in
 their [inbox](#your-inbox). Opening it goes to the view **as you sent it**: your date and *known at* moment, with a
@@ -2037,9 +2037,9 @@ On a phone the drawer is a sheet from the bottom edge.
   (no new comments). Hidden comments are kept in the record. The whole set of moderation and compliance tools is on one page, **Admin > Collaboration**
   (see [USER_MANAGEMENT](../admin/USER_MANAGEMENT.md)).
 
-![Asha's Discussion tab: a comment that mentions @vera, with the trader's name typed and quoted, and the quoted MTM](img/collab/07-discussion-author.jpg)
+![Asha's Discussion tab: a comment that mentions @vera, with the trader's id typed and the trader quoted, and the quoted quantity](img/collab/07-discussion-author.jpg)
 
-The same comment for a reader without access to the field: the typed name and the quoted field both read ••• and the quoted MTM stays,
+The same comment for a reader without access to the field: the typed id and the quoted field both read ••• and the quoted quantity stays,
 because the reader may see it. *Open as it was* is offered because this page now shows other data.
 
 ![Vera's Discussion tab: the same comment with ••• where the trader's name was](img/collab/08-discussion-viewer.jpg)
