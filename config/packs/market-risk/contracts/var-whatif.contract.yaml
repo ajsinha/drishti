@@ -44,6 +44,11 @@ fields:
 - name: BUSINESS_DATE
   type: date
   presence: required
+- name: CURRENCY
+  type: text
+  presence: required
+  description: 'The reporting currency of every amount (2.9.4): the parameter ccy, USD by default; the scope''s var-result is read in it.'
+  example: USD
 - name: ITEMS
   type: integer
   presence: required
@@ -51,31 +56,31 @@ fields:
 - name: BEFORE_VAR
   type: amount
   presence: required
-  unit: USD
+  unit: CURRENCY
 - name: AFTER_VAR
   type: amount
   presence: required
-  unit: USD
+  unit: CURRENCY
 - name: CHANGE_VAR
   type: amount
   presence: required
-  unit: USD
+  unit: CURRENCY
 - name: BEFORE_ES
   type: amount
   presence: required
-  unit: USD
+  unit: CURRENCY
 - name: AFTER_ES
   type: amount
   presence: required
-  unit: USD
+  unit: CURRENCY
 - name: CHANGE_ES
   type: amount
   presence: required
-  unit: USD
+  unit: CURRENCY
 - name: LIMIT
   type: amount
   presence: optional
-  unit: USD
+  unit: CURRENCY
 - name: LIMIT_USE_BEFORE
   type: rate
   presence: optional
@@ -95,12 +100,12 @@ fields:
 - name: STRESSED_VAR_BEFORE
   type: amount
   presence: optional
-  unit: USD
+  unit: CURRENCY
   description: The largest VaR over every run of STRESS_WINDOW consecutive scenario days, before the what-if.
 - name: STRESSED_VAR_AFTER
   type: amount
   presence: optional
-  unit: USD
+  unit: CURRENCY
 - name: STRESSED_FROM
   type: integer
   presence: optional

@@ -16,7 +16,9 @@
 and nothing more (docs/guides/VAR_GUIDE.md):
 
 - one P&L vector per live trade (every one: statuses NEW, VALIDATED, AMENDED, not matured), 509 finite values each, one batch run,
-  unique trade ids;
+  unique trade ids; since 2.9.4 the Endur trades come as scenario PVs in their own currency instead (scenario-pv), with the supplied
+  scenario FX of every currency they are in (fx-scenario): a trade in exactly one of the two forms, and a USD trade's P&L from its
+  scenario PVs is whole USD, as its vector was;
 - securities and listed trades carry a SECURITY_ID several trades share, so the positions the pack's rules derive (as the server does)
   include fungible ones netting buys and sells; OTC trades carry none (a position each);
 - no position, no var or var-node table, and no figure the VaR engine computes on any input (portfolios are definitions);
@@ -37,6 +39,7 @@ ROOT = HERE.parents[2]
 sys.path.insert(0, str(HERE))
 import positions as P  # noqa: E402
 import rules as R  # noqa: E402
+import scenario_fx as SFX  # noqa: E402
 import varmath as VM  # noqa: E402
 
 TD = ROOT / "data" / "testdata" / "market-risk"
@@ -70,7 +73,11 @@ class VarDataTest(unittest.TestCase):
     @classmethod
     def setUpClass(cls):
         cls.rules = P.Rules.of_pack(ROOT / "config" / "packs" / "market-risk" / "pack.yaml")
-        cls.rows = docs("pnl-vector")
+        cls.vector_rows = docs("pnl-vector")
+        cls.pv_rows = docs("scenario-pv")
+        cls.fx = {r["CURRENCY"]: r for r in docs("fx-scenario")}
+        # every trade with the columns a position reads; a scenario-PV trade's PV is its USD value today, as the server takes it
+        cls.rows = cls.vector_rows + [{**r, "PV": r["BASE_PV"] * cls.rate(r["CURRENCY"])} for r in cls.pv_rows]
         cls.vectors = {v["TRADE_ID"]: v for v in cls.rows}
         cls.nodes = {n["NODE_ID"]: n for n in docs("risk-hierarchy")}
         cls.portfolios = {p["PORTFOLIO_ID"]: p for p in docs("portfolio")}
@@ -79,11 +86,17 @@ class VarDataTest(unittest.TestCase):
             d = cls.rules.derive(v["TRADE_ID"], v["TT_BOOK"], v["PRODUCT_GROUP"], v["PRODUCT_TYPE"], v.get)
             cls.positions[d["POSITION_ID"]].append(v)
 
+    @classmethod
+    def rate(cls, ccy: str, j: int = -1) -> float:
+        if ccy == "USD":
+            return 1.0
+        return cls.fx[ccy]["RATE"] if j < 0 else cls.fx[ccy]["RATES"][j]
+
     def test_every_live_trade_once_with_509_finite_values_from_one_run(self):
-        self.assertEqual(len(self.vectors), len(self.rows), "a trade id twice")
+        self.assertEqual(len(self.vectors), len(self.rows), "a trade id twice (or in both forms)")
         self.assertGreater(len(self.rows), 9000)
         cob = self.rows[0]["BUSINESS_DATE"]
-        for v in self.rows:
+        for v in self.vector_rows:
             self.assertEqual(len(v["PNL"]), 509, v["TRADE_ID"])
             self.assertTrue(all(isinstance(x, (int, float)) for x in v["PNL"]), v["TRADE_ID"])
             self.assertIn(v["TRADE_STATUS"], P.LIVE, v["TRADE_ID"])
@@ -91,6 +104,47 @@ class VarDataTest(unittest.TestCase):
             self.assertEqual((v["REPORTING_CCY"], v["STATUS"], v["SCENARIO_SET_ID"]), ("USD", "ok", "HS-509"))
             self.assertNotIn("POSITION_ID", v)                               # Drishti derives it
         self.assertEqual({v["BATCH_ID"] for v in self.rows}, {f"B-{cob}-01"})
+        self.assertEqual({v["SCENARIO_SET_ID"] for v in self.rows}, {"HS-509"})
+
+    def test_scenario_pvs_in_the_trades_currency_with_the_supplied_fx(self):
+        self.assertGreater(len(self.pv_rows), 1000)
+        self.assertEqual({r["SOURCE_SYSTEM"] for r in self.pv_rows}, set(SFX.PV_SYSTEMS))
+        self.assertFalse({r["SOURCE_SYSTEM"] for r in self.vector_rows} & set(SFX.PV_SYSTEMS))
+        self.assertGreater(sum(1 for r in self.pv_rows if r["CURRENCY"] != "USD"), 100, "scenario PVs in other currencies")
+        cob = self.rows[0]["BUSINESS_DATE"]
+        for c, f in self.fx.items():
+            self.assertEqual(len(f["RATES"]), 509, c)
+            self.assertTrue(f["RATE"] > 0 and all(x > 0 for x in f["RATES"]), c)
+            self.assertEqual((f["SCENARIO_SET_ID"], f["BUSINESS_DATE"]), ("HS-509", cob))
+        for r in self.pv_rows:
+            t = r["TRADE_ID"]
+            self.assertEqual(len(r["SCENARIO_PV"]), 509, t)
+            self.assertTrue(all(isinstance(x, (int, float)) for x in r["SCENARIO_PV"]), t)       # no scenario failed to price
+            self.assertEqual((r["VALUATION_DATE"], r["BASE_VALUATION_DATE"], r["STATUS"]), (cob, cob, "ok"), t)
+            self.assertTrue(r["CURRENCY"] == "USD" or r["CURRENCY"] in self.fx, f"{t}: no scenario FX for {r['CURRENCY']}")
+            self.assertNotIn("PNL", r)
+            if r["CURRENCY"] == "USD":                                      # a USD trade's P&L is whole USD, as its vector was
+                pnl = [x - r["BASE_PV"] for x in r["SCENARIO_PV"]]
+                self.assertTrue(all(abs(x - round(x)) < 1e-6 for x in pnl), t)
+
+    def test_a_usd_trade_sent_as_scenario_pvs_reproduces_its_vector(self):
+        """The generator itself, on a sample of every book: the engine's P&L from a USD trade's files is its factor-model vector exactly,
+        and another currency's adds the move of its rate on the trade's value."""
+        import yaml
+        sys.path.insert(0, str(HERE))
+        import make_var_data as M
+        td = ROOT / "data" / "testdata"
+        demo = M.Demo(td, yaml.safe_load((td / "testdata.yaml").read_text(encoding="utf-8"))["business-dates"], budget=3)
+        b = demo.batch
+        usd = [r for r in b.pv_rows if r["CURRENCY"] == "USD"]
+        other = [r for r in b.pv_rows if r["CURRENCY"] != "USD"]
+        self.assertTrue(usd and other)
+        for r in usd:
+            self.assertEqual(b.engine_vectors[r["TRADE_ID"]][:demo.n], [float(x) for x in b.trade_vectors[r["TRADE_ID"]][:demo.n]])
+        r = other[0]
+        e = SFX.engine_pnl(demo.fx, r["CURRENCY"], r["BASE_PV"], r["SCENARIO_PV"])
+        self.assertEqual(e, b.engine_vectors[r["TRADE_ID"]][:demo.n])
+        self.assertNotEqual([round(x) for x in e], b.trade_vectors[r["TRADE_ID"]][:demo.n])
 
     def test_securities_share_ids_and_the_rules_derive_fungible_positions(self):
         for v in self.rows:
@@ -105,14 +159,14 @@ class VarDataTest(unittest.TestCase):
         self.assertGreater(len(both), 20, "positions netting buys and sells")
         self.assertTrue(all(p.split("~", 1)[1] == ts[0]["TRADE_ID"] for p, ts in self.positions.items() if not ts[0].get("SECURITY_ID")))
         # a position's trades are of one book and one security; its vector is their sum and nets long and short
-        pid = both[0]
+        pid = next(p for p in both if all("PNL" in t for t in self.positions[p]))     # a position of P&L vectors
         ts = self.positions[pid]
         self.assertEqual(len({t["TT_BOOK"] for t in ts}), 1)
         self.assertEqual(len({t["SECURITY_ID"] for t in ts}), 1)
         self.assertLess(VM.var(VM.add(t["PNL"] for t in ts)), sum(VM.var(t["PNL"]) for t in ts))
 
     def test_no_input_carries_a_figure_and_the_retired_tables_are_gone(self):
-        for kind in ("pnl-vector", "portfolio", "risk-hierarchy", "scenario-set"):
+        for kind in ("pnl-vector", "scenario-pv", "fx-scenario", "portfolio", "risk-hierarchy", "scenario-set"):
             found = set().union(*(keys(d) for d in docs(kind))) & ENGINE_FIGURES
             self.assertEqual(found, set(), kind)
         for kind in ("position", "var-node", "var"):

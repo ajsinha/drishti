@@ -1,0 +1,372 @@
+# Project Drishti · Any data. Any domain. One grammar.
+#
+# Copyright (c) 2026 Ashutosh Sinha <ajsinha@gmail.com>.
+# All rights reserved.
+#
+# PROPRIETARY AND CONFIDENTIAL.
+#
+# This file is the confidential and proprietary property of Ashutosh Sinha.
+# Unauthorised copying, use, modification, distribution or disclosure of this
+# file, via any medium, is strictly prohibited except with the express prior
+# written permission of the copyright holder.
+#
+# See the LICENSE file in the root of this repository for the full terms.
+
+# Data contract of the scenario-pv kind (command SPV): docs/contracts/README.md section 16.
+# Drafted by `drishti.py contract bootstrap scenario-pv`; owned by people from then on: confirm the review points, then remove them.
+kind: scenario-pv
+mnemonic: SPV
+pack: market-risk
+version: '1.0'
+class: input
+status: active
+title: Scenario PVs of a trade (509 scenarios, its currency)
+description: 'A trade''s present value under each historical scenario and its base PV of the same run, in the trade''s own currency: the
+  form of a trade''s scenario P&L a bank may send instead of a P&L vector (2.9.4; VAR_GUIDE.md section 15.9). The VaR engine turns it
+  into the trade''s USD P&L when it loads the date: P&L(s) = PV(s) x FX(s) - PV(base) x FX(base).'
+source: Synthetic sample data (tools/packgen/var/make_var_data.py, scenario_fx.py)
+grain: One row per trade, business date and scenario set (BUSINESS_DATE), keyed by SCENARIO_PV_ID; a trade is in this kind or in pnl-vector,
+  never both on one date.
+key:
+- SCENARIO_PV_ID
+id-pattern:
+- ^SPV-
+dated-by: BUSINESS_DATE
+cadence:
+  frequency: daily
+  due: to be confirmed
+storage:
+  connector: risk-store
+  plugin: delta
+  domain: risk
+  table: <root>/risk/scenario-pv/
+  columns:
+  - TRADE_ID
+  - SECURITY_ID
+  - INSTRUMENT
+  - LEGAL_ENTITY
+  - DIVISION
+  - DESK
+  - TT_BOOK
+  - PORTFOLIO
+  - STRATEGY
+  - PRODUCT_GROUP
+  - PRODUCT_TYPE
+  - CURRENCY
+  - COUNTERPARTY
+  - DIRECTION
+  - QUANTITY
+  - BASE_PV
+  - VALUATION_DATE
+  - BASE_VALUATION_DATE
+  - TAGS
+  - TRADE_STATUS
+  - MATURITY_DATE
+  - STATUS
+  - SCENARIO_SET_ID
+  - BATCH_ID
+  vectors:
+  - SCENARIO_PV
+  test-data:
+  - data/testdata/market-risk/scenario-pv
+fields:
+- name: SCENARIO_PV_ID
+  type: id
+  presence: required
+  description: The record's id (the business key)
+  example: SPV-1000054-HS-509
+  pattern: ^SPV-
+  link: scenario-pv
+- name: TRADE_ID
+  type: id
+  presence: required
+  description: 'Trade: the trade it refers to'
+  example: '1000054'
+  link: trade
+- name: SECURITY_ID
+  type: id
+  presence: optional
+  example: XCH-ComFut-USD-08
+- name: INSTRUMENT
+  type: text
+  presence: required
+  example: ENGY-SWAP EUR 2026-09
+- name: BUSINESS_DATE
+  type: date
+  presence: required
+  example: '2026-09-30'
+- name: SCENARIO_SET_ID
+  type: id
+  presence: required
+  example: HS-509
+- name: SOURCE_SYSTEM
+  type: text
+  presence: required
+  example: ENDUR
+- name: TRADE_VERSIONS
+  type: text
+  presence: required
+  example: v2
+- name: TRADE_STATUS
+  type: text
+  presence: required
+  example: VALIDATED
+  enum:
+  - AMENDED
+  - NEW
+  - VALIDATED
+- name: MATURITY_DATE
+  type: date
+  presence: required
+  example: '2026-09-30'
+- name: LEGAL_ENTITY
+  type: id
+  presence: required
+  description: 'Legal entity: the legal-entity it refers to'
+  example: LE-NY
+  pattern: ^LE-
+  link: legal-entity
+- name: DIVISION
+  type: id
+  presence: required
+  example: DIV-MARKETS
+- name: DESK
+  type: id
+  presence: required
+  description: 'Desk: the desk it refers to'
+  example: DESK-COMM
+  pattern: ^DESK-
+  link: desk
+- name: TT_BOOK
+  type: id
+  presence: required
+  description: 'Book: the book it refers to'
+  example: BOOK-COMM-1
+  pattern: ^BOOK-
+  link: book
+- name: PORTFOLIO
+  type: id
+  presence: required
+  description: 'Portfolio: the book it refers to'
+  example: BOOK-COMM-1
+  pattern: ^BOOK-
+  link: book
+- name: STRATEGY
+  type: unknown
+  presence: optional
+- name: PRODUCT_GROUP
+  type: text
+  presence: required
+  example: Commodity
+- name: PRODUCT_TYPE
+  type: text
+  presence: required
+  example: ComSwap
+  enum:
+  - CallNot
+  - Cash
+  - ComFut
+  - ComSwap
+  - Commodity
+- name: CURRENCY
+  type: text
+  presence: required
+  description: 'The currency both PVs are in: the trade''s own currency (one stated currency for a whole file is the same thing).'
+  example: EUR
+  enum:
+  - CAD
+  - EUR
+  - USD
+- name: COUNTERPARTY
+  type: id
+  presence: required
+  description: 'Counterparty: the counterparty it refers to'
+  example: CP-NORTHPLAINS
+  pattern: ^CP-
+  link: counterparty
+- name: DIRECTION
+  type: text
+  presence: required
+  example: SHORT
+  enum:
+  - LONG
+  - SHORT
+- name: QUANTITY
+  type: amount
+  presence: required
+  example: -18000.0
+- name: TAGS
+  type: text
+  presence: optional
+  example: option
+- name: BASE_PV
+  type: amount
+  presence: required
+  unit: the trade's currency (CURRENCY)
+  description: The trade's present value on the business date, from the same run as the scenario PVs.
+  example: 14997.44
+- name: VALUATION_DATE
+  type: date
+  presence: required
+  description: 'The date the scenario PVs are valued on: the business date.'
+  example: '2026-09-30'
+- name: BASE_VALUATION_DATE
+  type: date
+  presence: required
+  description: 'The date the base PV is valued on: the same as the scenario PVs'', the business date.'
+  example: '2026-09-30'
+- name: SCENARIO_PV
+  type: vector
+  presence: required
+  unit: the trade's currency (CURRENCY)
+  description: 'The trade''s present value under each historical scenario day, oldest first: index i is the scenario set''s day i. A scenario
+    that failed to price is null: the trade is then not loaded (DRS-5206), never filled with zero.'
+  note: 509 values in the test data
+- name: STATUS
+  type: text
+  presence: required
+  description: 'ok, proxied (priced by a proxy) or failed (no scenario PVs: counted, never taken as zero).'
+  example: ok
+- name: PRICER
+  type: text
+  presence: required
+  example: demo-factor-model
+- name: MODEL_VERSION
+  type: text
+  presence: required
+  example: demo-2
+- name: COMPUTED_AT
+  type: timestamp
+  presence: required
+  example: '2026-09-30T22:30:00Z'
+- name: BATCH_ID
+  type: id
+  presence: required
+  example: B-2026-09-30-01
+- name: RESTATEMENT
+  type: integer
+  presence: required
+  example: 0
+links:
+- field: SCENARIO_PV_ID
+  kind: scenario-pv
+- field: TRADE_ID
+  kind: trade
+- field: LEGAL_ENTITY
+  kind: legal-entity
+- field: DESK
+  kind: desk
+- field: TT_BOOK
+  kind: book
+- field: PORTFOLIO
+  kind: book
+- field: COUNTERPARTY
+  kind: counterparty
+validation:
+- rule: required
+  fields:
+  - SCENARIO_PV_ID
+  - TRADE_ID
+  - INSTRUMENT
+  - BUSINESS_DATE
+  - SCENARIO_SET_ID
+  - SOURCE_SYSTEM
+  - TRADE_VERSIONS
+  - TRADE_STATUS
+  - MATURITY_DATE
+  - LEGAL_ENTITY
+  - DIVISION
+  - DESK
+  - TT_BOOK
+  - PORTFOLIO
+  - PRODUCT_GROUP
+  - PRODUCT_TYPE
+  - CURRENCY
+  - COUNTERPARTY
+  - DIRECTION
+  - QUANTITY
+  - BASE_PV
+  - VALUATION_DATE
+  - BASE_VALUATION_DATE
+  - SCENARIO_PV
+  - STATUS
+  - PRICER
+  - MODEL_VERSION
+  - COMPUTED_AT
+  - BATCH_ID
+  - RESTATEMENT
+- rule: unique
+  key:
+  - SCENARIO_PV_ID
+  per: BUSINESS_DATE
+- rule: pattern
+  field: SCENARIO_PV_ID
+  pattern: ^SPV-
+- rule: link
+  field: SCENARIO_PV_ID
+  kind: scenario-pv
+- rule: link
+  field: TRADE_ID
+  kind: trade
+- rule: enum
+  field: TRADE_STATUS
+  values:
+  - AMENDED
+  - NEW
+  - VALIDATED
+- rule: link
+  field: LEGAL_ENTITY
+  kind: legal-entity
+- rule: link
+  field: DESK
+  kind: desk
+- rule: link
+  field: TT_BOOK
+  kind: book
+- rule: link
+  field: PORTFOLIO
+  kind: book
+- rule: enum
+  field: PRODUCT_TYPE
+  values:
+  - CallNot
+  - Cash
+  - ComFut
+  - ComSwap
+  - Commodity
+- rule: enum
+  field: CURRENCY
+  values:
+  - CAD
+  - EUR
+  - USD
+- rule: link
+  field: COUNTERPARTY
+  kind: counterparty
+- rule: enum
+  field: DIRECTION
+  values:
+  - LONG
+  - SHORT
+- rule: vector-length
+  field: SCENARIO_PV
+  same: every row of one business date
+notes:
+- 'The engine (VarIntake) rejects a row, counted and listed in every answer''s provenance, never padded: a null or NaN in SCENARIO_PV (DRS-5206,
+  the scenarios named: a scenario that failed to price is never filled with zero), a currency with no scenario FX on the date (DRS-5207),
+  a length other than the scenario set''s, no BASE_PV, or a VALUATION_DATE or BASE_VALUATION_DATE that differs from the other or from
+  the business date (DRS-5201).'
+- 'FX: each currency''s scenario rates from fx-scenario when the batch supplies them, else derived from the FX history of fx-spot (today''s
+  rate moved by each scenario day''s 1-day move); every cross goes through USD.'
+- 'The same one-run checks as pnl-vector: one BATCH_ID and the date''s SCENARIO_SET_ID across both kinds; a TRADE_ID in both refuses the
+  date (DRS-5202).'
+review:
+- 'required inferred from 100% coverage in 1340 documents (1 samples and 1339 test-data documents (data/testdata/market-risk/scenario-pv/cob-2026-09-30.part-001.jsonl.gz,
+  data/testdata/market-risk/scenario-pv/cob-2026-09-30.part-002.jsonl.gz, data/testdata/market-risk/scenario-pv/cob-2026-09-30.part-003.jsonl.gz)):
+  confirm each required field is mandatory upstream, and each optional one may be empty.'
+- 'source is the pack''s first listed source (its README): confirm.'
+- 'due time of each business date is not known: state it (for example, by 06:00 New York the next business day).'
+- 'enum values inferred from the data, not from a glossary: TRADE_STATUS, PRODUCT_TYPE, CURRENCY, DIRECTION: confirm they are closed lists.'
+- 'no unit stated for the amounts QUANTITY (docs/contracts/README.md section 7: USD unless stated): confirm the currency.'
+- 'no description in about.yaml or the Sutras for SECURITY_ID, INSTRUMENT, BUSINESS_DATE, SCENARIO_SET_ID, SOURCE_SYSTEM, TRADE_VERSIONS, TRADE_STATUS,
+  MATURITY_DATE, DIVISION, STRATEGY, PRODUCT_GROUP, PRODUCT_TYPE and 8 more: write them in the pack''s config/about.yaml glossary.'

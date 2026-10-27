@@ -64,7 +64,7 @@ On Windows, offline, with your own ENDUR files: [How to QA in Windows Environmen
    `FIXINGS`, `PNL_SERIES`: its `DATE`, by the same number of business days), and so do the dates a market document holds a fixed
    number of business days from its date (an FX spot's value date `SPOT_DATE`, T+2; an IR curve's pillar `POINTS[].MATURITY`), so a price history has no missing days between the series
    and the stored days. A market document's `CHANGE_1D` is the day's move of its own price (`PRICE`, `LEVEL`, `MID`), and the fields quoted next to the price move with it ([below](#the-datasets)). Measured for sixty days on a fast machine: **943 s (about 15 minutes; up to half an hour on a laptop)**,
-   82 tables, about 2.7 GB on disk (14 tables are static reference data built from the world-economy and
+   84 tables, about 2.7 GB on disk (14 tables are static reference data built from the world-economy and
    news-and-markets packs' samples, 2 the captured quotes and headlines, 8 the us-equities and gleif public data; since 2.9.2 the
    country groups, SIC sectors, ownership groups and LEI countries are computed from them, not stored).
 4. **Start** the server and the console: the run configurations **Drishti server (demo lakes)** (the samples off,
@@ -213,15 +213,17 @@ up together, no headline that is not its own series' point, no curve apart from 
 
 ## The VaR engine's data (market-risk, dated by its documents)
 
-Four more market-risk folders feed the VaR engine ([VAR.md](../../docs/contracts/VAR.md),
+Six more market-risk folders feed the VaR engine ([VAR.md](../../docs/contracts/VAR.md),
 [VAR_EXPLORER.md](../../docs/guides/VAR_EXPLORER.md)). They are written by `tools/packgen/var/make_var_data.py` (which
 `make_testdata.py` runs) from the trades and desks above, and are **dated by their documents** (`dated-by: BUSINESS_DATE` in
 `testdata.yaml`): no snapshot and changes, `lake demo` loads each folder in one run, every document on its own `BUSINESS_DATE`, moved
-with the other business dates. 15.7 MB in all (2.8.0).
+with the other business dates. 16.2 MB in all (2.9.4).
 
 | Folder | Kind · key | Dates | Documents |
 |---|---|---|---|
-| `market-risk/pnl-vector` | `pnl-vector` · `VECTOR_ID` | the last day | one 509-scenario P&L vector per live trade, every live trade (9,572), with the trade's terms as the batch priced them and a synthetic `SECURITY_ID` on securities and listed trades (`PNL`, a `list<double>` column in the lake), in 12 files |
+| `market-risk/pnl-vector` | `pnl-vector` · `VECTOR_ID` | the last day | one 509-scenario P&L vector in USD per live trade (8,233: every live trade but Endur's), with the trade's terms as the batch priced them and a synthetic `SECURITY_ID` on securities and listed trades (`PNL`, a `list<double>` column in the lake), in 10 files |
+| `market-risk/scenario-pv` | `scenario-pv` · `SCENARIO_PV_ID` | the last day | 2.9.4: the Endur trades (1,339; 1,089 USD, 246 EUR, 4 CAD) sent as scenario PVs instead: each trade's PV under the 509 scenarios and its base PV, in its own currency (`SCENARIO_PV`, a `list<double>` column), in 3 files; the server converts them to USD P&L when it loads the date |
+| `market-risk/fx-scenario` | `fx-scenario` · `FX_SCENARIO_ID` | the last day | 2.9.4: the scenario FX the batch supplies for AUD, CAD, CHF, EUR, GBP and JPY: USD per unit today (the `fx-spot` mid) and under each of the 509 scenarios (moved by the factor model's FX factors) |
 | `market-risk/scenario-set` | `scenario-set` · `SCENARIO_SET_ID` | the last day | HS-509: the 509 scenario days |
 | `market-risk/risk-hierarchy` | `risk-hierarchy` · `NODE_ID` | the last day | 88 nodes: MGMT (bank, 2 divisions, 10 desks, 30 books) and LEGAL (bank, 4 legal entities, desks, books), with VaR limits |
 | `market-risk/portfolio` | `portfolio` · `PORTFOLIO_ID` | the last day | 28 portfolio definitions: HIERARCHY (one per desk and legal entity, and a book), RULE and BASKET, overlapping; no figures |

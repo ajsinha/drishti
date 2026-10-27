@@ -31,6 +31,8 @@ kinds:
 - position
 - portfolio
 - pnl-vector
+- scenario-pv
+- fx-scenario
 - scenario-set
 - risk-hierarchy
 - var-result
@@ -63,6 +65,12 @@ mnemonics:
   PNLV:
     kind: pnl-vector
     label: P&L vector (509 scenarios)
+  SPV:
+    kind: scenario-pv
+    label: Scenario PVs of a trade (509 scenarios, its currency)
+  FXS:
+    kind: fx-scenario
+    label: Scenario FX of a currency (509 scenarios)
   SSET:
     kind: scenario-set
     label: Scenario set
@@ -96,6 +104,10 @@ graph:
     kind: portfolio
   - pattern: ^PV-
     kind: pnl-vector
+  - pattern: ^SPV-
+    kind: scenario-pv
+  - pattern: ^FXS-
+    kind: fx-scenario
   - pattern: ^HS-
     kind: scenario-set
   - pattern: ^(MGMT|LEGAL)~
@@ -116,6 +128,9 @@ graph:
     SCENARIO:
       kind: stress-scenario
       label: Scenario
+    SCENARIO_PV_ID:
+      kind: scenario-pv
+      label: Scenario PVs
     TRADE_IDS:
       kind: trade
       label: Trade
@@ -142,6 +157,8 @@ connectors:
     - trade-valuation
     - portfolio
     - pnl-vector
+    - scenario-pv
+    - fx-scenario
     - scenario-set
     - risk-hierarchy
     settings:
@@ -201,6 +218,39 @@ connectors:
           - BATCH_ID
           vectors:
           - PNL
+        scenario-pv:
+          columns:
+          - TRADE_ID
+          - SECURITY_ID
+          - INSTRUMENT
+          - LEGAL_ENTITY
+          - DIVISION
+          - DESK
+          - TT_BOOK
+          - PORTFOLIO
+          - STRATEGY
+          - PRODUCT_GROUP
+          - PRODUCT_TYPE
+          - CURRENCY
+          - COUNTERPARTY
+          - DIRECTION
+          - QUANTITY
+          - BASE_PV
+          - VALUATION_DATE
+          - BASE_VALUATION_DATE
+          - TAGS
+          - TRADE_STATUS
+          - MATURITY_DATE
+          - STATUS
+          - SCENARIO_SET_ID
+          - BATCH_ID
+          vectors:
+          - SCENARIO_PV
+        fx-scenario:
+          columns:
+          - CURRENCY
+          - RATE
+          - SCENARIO_SET_ID
         risk-hierarchy:
           columns:
           - NODE_ID
@@ -258,6 +308,10 @@ connectors:
     kinds:
       var-result:
         compute: var-result
+        params:
+          ccy:
+            type: text
+            default: USD
         result:
           required:
           - VAR
@@ -274,6 +328,8 @@ connectors:
     - 'on': data-version
       kinds:
       - pnl-vector
+      - scenario-pv
+      - fx-scenario
       - risk-hierarchy
       - scenario-set
       - portfolio
@@ -298,6 +354,9 @@ connectors:
       var-whatif:
         compute: var-whatif
         params:
+          ccy:
+            type: text
+            default: USD
           sandbox:
             type: sandbox-ref
           stress-window:
@@ -320,7 +379,7 @@ connectors:
     reads:
     - kind: var-result
       as: base
-      id: '{id}'
+      id: '{id}~ccy={params.ccy}'
     engine:
       type: python
       entry: drishti_compute.var.whatif:VarWhatIfEngine
@@ -330,6 +389,8 @@ connectors:
     - 'on': data-version
       kinds:
       - pnl-vector
+      - scenario-pv
+      - fx-scenario
       - risk-hierarchy
       - scenario-set
       - portfolio
@@ -353,6 +414,8 @@ routes:
   position: var-positions
   portfolio: risk-store
   pnl-vector: risk-store
+  scenario-pv: risk-store
+  fx-scenario: risk-store
   scenario-set: risk-store
   risk-hierarchy: risk-store
   var-result: var-engine
@@ -499,6 +562,32 @@ form:
   - path: TT_BOOK
     label: TT book
     type: text
+  scenario-pv:
+  - path: SCENARIO_PV_ID
+    label: Scenario PV id
+    type: id
+  - path: TRADE_ID
+    label: Trade id
+    type: id
+  - path: CURRENCY
+    label: Currency
+    type: enum
+  - path: DESK
+    label: Desk
+    type: enum
+  - path: TT_BOOK
+    label: TT book
+    type: text
+  fx-scenario:
+  - path: FX_SCENARIO_ID
+    label: FX scenario id
+    type: id
+  - path: CURRENCY
+    label: Currency
+    type: enum
+  - path: BUSINESS_DATE
+    label: Business date
+    type: date
   scenario-set:
   - path: SCENARIO_SET_ID
     label: Scenario set id

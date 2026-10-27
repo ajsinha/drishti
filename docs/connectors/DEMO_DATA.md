@@ -37,7 +37,7 @@ days) and, for scale tests, a generated trade book: the scripts in [the other st
 drishti-console/.venv/bin/python tools/drishti.py lake demo
 ```
 
-(the IDE run configuration **Build demo lakes**). Measured for sixty days: **943 s (about 15 minutes), 82 tables, about 2.7 GB**, sixty business days
+(the IDE run configuration **Build demo lakes**). Measured for sixty days: **943 s (about 15 minutes), 84 tables, about 2.7 GB**, sixty business days
 ending on today's business date (the test data's 2026-07-08 to 2026-09-30, moved; `--as-of data` keeps them). The trades go to one
 table per source system, `data/delta/trading/trade_endur`, `trade_calypso` and `trade_murex`, partitioned by business date and
 `PRODUCT_TYPE`, each read by its own connector (`trade-endur`, `trade-calypso`, `trade-murex`) and served together as one kind,

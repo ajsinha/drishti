@@ -1,0 +1,127 @@
+# Project Drishti · Any data. Any domain. One grammar.
+#
+# Copyright (c) 2026 Ashutosh Sinha <ajsinha@gmail.com>.
+# All rights reserved.
+#
+# PROPRIETARY AND CONFIDENTIAL.
+#
+# This file is the confidential and proprietary property of Ashutosh Sinha.
+# Unauthorised copying, use, modification, distribution or disclosure of this
+# file, via any medium, is strictly prohibited except with the express prior
+# written permission of the copyright holder.
+#
+# See the LICENSE file in the root of this repository for the full terms.
+
+# Data contract of the fx-scenario kind (command FXS): docs/contracts/README.md section 16.
+# Drafted by `drishti.py contract bootstrap fx-scenario`; owned by people from then on: confirm the review points, then remove them.
+kind: fx-scenario
+mnemonic: FXS
+pack: market-risk
+version: '1.0'
+class: input
+status: active
+title: Scenario FX of a currency (509 scenarios)
+description: 'A currency''s rate against USD today and under each historical scenario, as the risk batch supplies it (2.9.4; VAR_GUIDE.md
+  section 15.9): the VaR engine converts scenario PVs and reporting currencies with it. A currency the batch does not supply is derived
+  from the FX history (fx-spot).'
+source: Synthetic sample data (tools/packgen/var/scenario_fx.py)
+grain: One row per currency, business date and scenario set (BUSINESS_DATE), keyed by FX_SCENARIO_ID (FXS-<CURRENCY>-<SCENARIO_SET_ID>).
+key:
+- FX_SCENARIO_ID
+id-pattern:
+- ^FXS-
+dated-by: BUSINESS_DATE
+cadence:
+  frequency: daily
+  due: to be confirmed
+storage:
+  connector: risk-store
+  plugin: delta
+  domain: risk
+  table: <root>/risk/fx-scenario/
+  columns:
+  - CURRENCY
+  - RATE
+  - SCENARIO_SET_ID
+  test-data:
+  - data/testdata/market-risk/fx-scenario
+fields:
+- name: FX_SCENARIO_ID
+  type: id
+  presence: required
+  description: The record's id (the business key)
+  example: FXS-EUR-HS-509
+  pattern: ^FXS-
+- name: BUSINESS_DATE
+  type: date
+  presence: required
+  example: '2026-09-30'
+- name: SCENARIO_SET_ID
+  type: id
+  presence: required
+  example: HS-509
+- name: CURRENCY
+  type: text
+  presence: required
+  description: The currency the rates are for (ISO code).
+  example: EUR
+- name: QUOTE
+  type: text
+  presence: required
+  example: USD per 1 EUR
+- name: RATE
+  type: rate
+  presence: required
+  unit: USD per unit
+  description: USD per one unit of the currency on the business date.
+  example: 1.174
+- name: RATES
+  type: vector
+  presence: required
+  unit: USD per unit
+  description: 'USD per one unit of the currency under each scenario, oldest first: index i is the scenario set''s day i. Every cross rate goes
+    through USD.'
+  note: 509 values in the test data
+- name: SOURCE
+  type: text
+  presence: required
+  example: demo-factor-model
+- name: BATCH_ID
+  type: id
+  presence: required
+  example: B-2026-09-30-01
+links: []
+validation:
+- rule: required
+  fields:
+  - FX_SCENARIO_ID
+  - BUSINESS_DATE
+  - SCENARIO_SET_ID
+  - CURRENCY
+  - QUOTE
+  - RATE
+  - RATES
+  - SOURCE
+  - BATCH_ID
+- rule: unique
+  key:
+  - FX_SCENARIO_ID
+  per: BUSINESS_DATE
+- rule: pattern
+  field: FX_SCENARIO_ID
+  pattern: ^FXS-
+- rule: vector-length
+  field: RATES
+  same: every row of one business date
+notes:
+- 'Always USD per one unit of CURRENCY (RATE today, RATES under each scenario, in the scenario set''s order); USD itself is never sent.
+  Every cross rate goes through USD: units of B per unit of A are rate(A) / rate(B).'
+- 'A rate that is not a positive number, or RATES of another length than the scenario set''s, leaves the currency out of the date (the
+  engine says so: a trade priced in it is rejected, DRS-5207; the currency cannot be asked as a reporting currency).'
+review:
+- 'required inferred from 100% coverage in 7 documents (1 samples and 6 test-data documents (data/testdata/market-risk/fx-scenario/cob-2026-09-30.jsonl.gz)):
+  confirm each required field is mandatory upstream, and each optional one may be empty.'
+- 'source is the pack''s first listed source (its README): confirm.'
+- 'due time of each business date is not known: state it (for example, by 06:00 New York the next business day).'
+- 'no description in about.yaml or the Sutras for BUSINESS_DATE, SCENARIO_SET_ID, QUOTE, SOURCE, BATCH_ID: write them in the pack''s config/about.yaml
+  glossary.'

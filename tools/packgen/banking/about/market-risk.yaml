@@ -240,6 +240,31 @@ kinds:
       QUANTITY: { term: "Signed quantity", means: "The trade's quantity: positive for a buy, negative for a sell." }
       PV: { term: "Present value", means: "The trade's value on the business date.", unit: "USD" }
       STATUS: { term: "Batch status", means: "ok, proxied (priced by a proxy) or failed (no vector: counted, never taken as zero)." }
+  scenario-pv:
+    title: Scenario PVs of a trade
+    about: >-
+      ${$.TRADE_ID}'s value under each of the ${size($.SCENARIO_PV)} scenario days of ${$.SCENARIO_SET_ID} on ${$.BUSINESS_DATE}, in its own
+      currency ${$.CURRENCY}, beside its base PV of the same run: Drishti turns them into the trade's USD P&L when it loads the date
+      (P&L = PV under the scenario x the scenario's FX - base PV x today's FX), and into any reporting currency when asked.
+    guide: market-risk
+    glossary:
+      SCENARIO_PV: { term: "Scenario PVs", means: "The trade's present value under each historical scenario day, oldest first: index i is the scenario set's day i. A scenario that failed to price is null: the trade is then not loaded (DRS-5206), never filled with zero.", unit: "the trade's currency (CURRENCY)" }
+      BASE_PV: { term: "Base PV", means: "The trade's present value on the business date, from the same run as the scenario PVs.", unit: "the trade's currency (CURRENCY)" }
+      CURRENCY: { term: "Currency", means: "The currency both PVs are in: the trade's own currency (one stated currency for a whole file is the same thing)." }
+      VALUATION_DATE: { term: "Valuation date", means: "The date the scenario PVs are valued on: the business date." }
+      BASE_VALUATION_DATE: { term: "Base valuation date", means: "The date the base PV is valued on: the same as the scenario PVs', the business date." }
+      STATUS: { term: "Batch status", means: "ok, proxied (priced by a proxy) or failed (no scenario PVs: counted, never taken as zero)." }
+  fx-scenario:
+    title: Scenario FX of a currency
+    about: >-
+      ${$.CURRENCY} against USD under each of the ${size($.RATES)} scenario days of ${$.SCENARIO_SET_ID} on ${$.BUSINESS_DATE}, and today's
+      rate ${$.RATE} (USD per 1 ${$.CURRENCY}): the rates the VaR engine converts scenario PVs and reporting currencies with. Without them
+      Drishti derives the rates from the FX history (today's rate moved by each scenario day's 1-day move).
+    guide: market-risk
+    glossary:
+      RATE: { term: "Rate today", means: "USD per one unit of the currency on the business date.", unit: "USD per unit" }
+      RATES: { term: "Scenario rates", means: "USD per one unit of the currency under each scenario, oldest first: index i is the scenario set's day i. Every cross rate goes through USD.", unit: "USD per unit" }
+      CURRENCY: { term: "Currency", means: "The currency the rates are for (ISO code)." }
   scenario-set:
     title: Scenario set
     about: >-

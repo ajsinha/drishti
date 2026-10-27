@@ -29,6 +29,8 @@ kinds:
 - position
 - portfolio
 - pnl-vector
+- scenario-pv
+- fx-scenario
 - scenario-set
 - risk-hierarchy
 - var-result
@@ -43,6 +45,8 @@ commands:
   POS: position
   PORT: portfolio
   PNLV: pnl-vector
+  SPV: scenario-pv
+  FXS: fx-scenario
   SSET: scenario-set
   HIER: risk-hierarchy
   VRES: var-result
@@ -370,6 +374,76 @@ Fields, from 1 sample document:
 
 Links: `COUNTERPARTY` → `counterparty`, `DESK` → `desk`, `LEGAL_ENTITY` → `legal-entity`, `PORTFOLIO` → `book`, `TRADE_ID` → `trade`, `TT_BOOK` → `book`.
 
+### `scenario-pv`
+
+**Scenario PVs of a trade (509 scenarios, its currency)** · mnemonic `SPV` · read through connector `risk-store`.
+
+About: Scenario PVs of a trade.
+
+**Id:** pattern `^SPV-`.
+
+Fields, from 1 sample document:
+
+| Field | Type | Example | Description |
+|---|---|---|---|
+| `SCENARIO_PV_ID` | string | `SPV-1000054-HS-509` | link to `scenario-pv` |
+| `TRADE_ID` | string | `1000054` | link to `trade` |
+| `SECURITY_ID` | null |  | — |
+| `INSTRUMENT` | string | `ENGY-SWAP EUR 2026-09` | — |
+| `BUSINESS_DATE` | date | `2026-09-30` | — |
+| `SCENARIO_SET_ID` | string | `HS-509` | — |
+| `SOURCE_SYSTEM` | string | `ENDUR` | — |
+| `TRADE_VERSIONS` | string | `v2` | — |
+| `TRADE_STATUS` | string | `VALIDATED` | — |
+| `MATURITY_DATE` | date | `2026-09-30` | — |
+| `LEGAL_ENTITY` | string | `LE-NY` | link to `legal-entity` |
+| `DIVISION` | string | `DIV-MARKETS` | — |
+| `DESK` | string | `DESK-COMM` | link to `desk` |
+| `TT_BOOK` | string | `BOOK-COMM-1` | link to `book` |
+| `PORTFOLIO` | string | `BOOK-COMM-1` | link to `book` |
+| `STRATEGY` | null |  | — |
+| `PRODUCT_GROUP` | string | `Commodity` | — |
+| `PRODUCT_TYPE` | string | `ComSwap` | — |
+| `CURRENCY` | string | `EUR` | The currency both PVs are in: the trade's own currency (one stated currency for a whole file is the same thing). |
+| `COUNTERPARTY` | string | `CP-NORTHPLAINS` | link to `counterparty` |
+| `DIRECTION` | string | `SHORT` | — |
+| `QUANTITY` | number | `-18000.0` | — |
+| `TAGS` | null |  | — |
+| `BASE_PV` | number | `14997.44` | The trade's present value on the business date, from the same run as the scenario PVs. (the trade's currency (CURRENCY)) |
+| `VALUATION_DATE` | date | `2026-09-30` | The date the scenario PVs are valued on: the business date. |
+| `BASE_VALUATION_DATE` | date | `2026-09-30` | The date the base PV is valued on: the same as the scenario PVs', the business date. |
+| `SCENARIO_PV` | list of numbers |  | The trade's present value under each historical scenario day, oldest first: index i is the scenario set's day i. A scenario that failed to price is null: the trade is then not loaded (DRS-5206), never filled with zero. (the trade's currency (CURRENCY)) |
+| `STATUS` | string | `ok` | ok, proxied (priced by a proxy) or failed (no scenario PVs: counted, never taken as zero). |
+| `PRICER` | string | `demo-factor-model` | — |
+| `MODEL_VERSION` | string | `demo-2` | — |
+| `COMPUTED_AT` | timestamp | `2026-09-30T22:30:00Z` | — |
+| `BATCH_ID` | string | `B-2026-09-30-01` | — |
+| `RESTATEMENT` | integer | `0` | — |
+
+Links: `COUNTERPARTY` → `counterparty`, `DESK` → `desk`, `LEGAL_ENTITY` → `legal-entity`, `PORTFOLIO` → `book`, `SCENARIO_PV_ID` → `scenario-pv`, `TRADE_ID` → `trade`, `TT_BOOK` → `book`.
+
+### `fx-scenario`
+
+**Scenario FX of a currency (509 scenarios)** · mnemonic `FXS` · read through connector `risk-store`.
+
+About: Scenario FX of a currency.
+
+**Id:** pattern `^FXS-`.
+
+Fields, from 1 sample document:
+
+| Field | Type | Example | Description |
+|---|---|---|---|
+| `FX_SCENARIO_ID` | string | `FXS-EUR-HS-509` | — |
+| `BUSINESS_DATE` | date | `2026-09-30` | — |
+| `SCENARIO_SET_ID` | string | `HS-509` | — |
+| `CURRENCY` | string | `EUR` | The currency the rates are for (ISO code). |
+| `QUOTE` | string | `USD per 1 EUR` | — |
+| `RATE` | number | `1.174` | USD per one unit of the currency on the business date. (USD per unit) |
+| `RATES` | list of numbers |  | USD per one unit of the currency under each scenario, oldest first: index i is the scenario set's day i. Every cross rate goes through USD. (USD per unit) |
+| `SOURCE` | string | `demo-factor-model` | — |
+| `BATCH_ID` | string | `B-2026-09-30-01` | — |
+
 ### `scenario-set`
 
 **Scenario set** · mnemonic `SSET` · read through connector `risk-store`.
@@ -469,6 +543,8 @@ No samples ship: documents are read live from its connector `var-results` (plugi
 | `POS` | `position` | Position |
 | `PORT` | `portfolio` | Portfolio |
 | `PNLV` | `pnl-vector` | P&L vector (509 scenarios) |
+| `SPV` | `scenario-pv` | Scenario PVs of a trade (509 scenarios, its currency) |
+| `FXS` | `fx-scenario` | Scenario FX of a currency (509 scenarios) |
 | `SSET` | `scenario-set` | Scenario set |
 | `HIER` | `risk-hierarchy` | Risk hierarchy node |
 | `VRES` | `var-result` | VaR of a scope (computed) |
@@ -515,7 +591,7 @@ The connectors it brings (written once to `config/connectors/<name>.yaml`, then 
 
 | Connector | Plugin | Kinds | Enabled |
 |---|---|---|---|
-| `risk-store` | `delta` | `stress-scenario`, `stress-result`, `frtb-sensitivity`, `pnl-explain`, `trade-valuation`, `portfolio`, `pnl-vector`, `scenario-set`, `risk-hierarchy` | `${DRISHTI_LAKE_ENABLED:true}` |
+| `risk-store` | `delta` | `stress-scenario`, `stress-result`, `frtb-sensitivity`, `pnl-explain`, `trade-valuation`, `portfolio`, `pnl-vector`, `scenario-pv`, `fx-scenario`, `scenario-set`, `risk-hierarchy` | `${DRISHTI_LAKE_ENABLED:true}` |
 | `var-results` | `delta` | `var-official` | `${DRISHTI_VAR_ENABLED:true}` |
 | `var-positions` | `var-positions` | `position` | `${DRISHTI_VAR_ENABLED:true}` |
 | `var-engine` | `reactive` | `var-result` | `${DRISHTI_VAR_ENABLED:true}` |

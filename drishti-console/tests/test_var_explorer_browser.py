@@ -47,7 +47,7 @@ from test_workbench_browser import browser, wait  # noqa: F401 - fixtures and he
 from wb_live import _stack
 
 ROOT = Path(__file__).resolve().parents[2]
-VAR_DATA = ",".join([f"market-risk/{k}" for k in ("pnl-vector", "scenario-set", "risk-hierarchy", "portfolio")] + ["trades/murex"])
+VAR_DATA = ",".join([f"market-risk/{k}" for k in ("pnl-vector", "scenario-pv", "fx-scenario", "scenario-set", "risk-hierarchy", "portfolio")] + ["trades/murex"])
 SHOTS = os.environ.get("DRISHTI_VAR_SHOTS")
 #: the time from a click on a desk to its painted panels (the product owner's target is 300 ms on the demo data); generous here, as the
 #: suite runs beside builds: the measured time is printed and kept in the docs

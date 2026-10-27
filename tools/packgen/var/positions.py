@@ -26,7 +26,12 @@ trades share one and fungible positions (long and short trades netting) exist; a
 
 The **vector grain is the trade**: each live trade gets its own 509 scenario P&Ls (``pnl-vector``), and a position's vector is the sum
 of its trades' (P&L adds). A trade's P&L is its signed quantity times its position's P&L per unit (factors.unit_path) plus a little of
-its own (different dates, strikes, counterparties), rounded to whole USD."""
+its own (different dates, strikes, counterparties), rounded to whole USD.
+
+Since 2.9.4 the trades of the systems in scenario_fx.PV_SYSTEMS (Endur) come as **scenario PVs** in their own currency
+(``scenario-pv``) instead of a P&L vector, with the supplied scenario FX (``fx-scenario``): the same factor-model move, valued in the
+trade's currency (scenario_fx.py). ``trade_vectors`` keeps every trade's factor-model USD P&L (the limits and portfolios are set from it,
+as before); ``engine_vectors`` holds, for the scenario-PV trades, the USD P&L the server computes from their files."""
 from __future__ import annotations
 
 import gzip
@@ -36,6 +41,7 @@ from collections import defaultdict
 from pathlib import Path
 
 import factors as F
+import scenario_fx as SFX
 
 LIVE = ("NEW", "VALIDATED", "AMENDED")
 DIVISIONS = {"DESK-MM": "DIV-TREASURY", "DESK-SFT": "DIV-TREASURY"}       # every other desk is in DIV-MARKETS
@@ -149,8 +155,8 @@ class Batch:
     """The demo risk batch of one business date: every live trade valued, each with its vector; the positions the rules derive."""
 
     def __init__(self, trades: dict[str, dict], desks: dict[str, dict], valuations: dict[str, dict], cob: str, rules: Rules, budget: int = 0,
-                 market: F.Market | None = None):
-        self.cob, self.market, self.rules = cob, market or F.Market(), rules
+                 market: F.Market | None = None, fx: SFX.Fx | None = None):
+        self.cob, self.market, self.rules, self.fx = cob, market or F.Market(), rules, fx
         self.desk_of_book: dict[str, str] = {}
         self.le_of_desk: dict[str, str] = {}
         for d in desks.values():
@@ -173,6 +179,8 @@ class Batch:
         self.trade_vectors: dict[str, list[int]] = {}       # trade id -> scenario P&Ls, then the business date's own move last
         self.positions: list[dict] = []
         self.vector_rows: list[dict] = []
+        self.pv_rows: list[dict] = []                       # the trades sent as scenario PVs (scenario-pv)
+        self.engine_vectors: dict[str, list[float]] = {}    # their USD P&L as the server computes it from the files
         self._value()
 
     @staticmethod
@@ -218,16 +226,24 @@ class Batch:
                 vec = [round(q * per_unit * unit[j] + own * F.student_t(tr)) for j in range(m.n + 1)]
                 self.trade_vectors[tid] = vec
                 pv = float((self.valuations.get(f"TVAL-{tid}") or {}).get("MTM") or 0.0)
-                self.vector_rows.append({
-                    "VECTOR_ID": f"PV-{tid}-HS-509", "TRADE_ID": tid, "SECURITY_ID": self.security.get(tid), "INSTRUMENT": instrument_name(t),
-                    "BUSINESS_DATE": self.cob, "SCENARIO_SET_ID": "HS-509", "SOURCE_SYSTEM": t.get("SOURCE_SYSTEM"),
-                    "TRADE_VERSIONS": f"v{t.get('TRADE_VERSION') or 1}", "TRADE_STATUS": t.get("TRADE_STATUS"),
-                    "MATURITY_DATE": t.get("MATURITY_DATE"), "LEGAL_ENTITY": le, "DIVISION": DIVISIONS.get(desk, "DIV-MARKETS"), "DESK": desk,
-                    "TT_BOOK": book, "PORTFOLIO": t.get("PORTFOLIO") or book, "STRATEGY": t.get("STRATEGY") or "", "PRODUCT_GROUP": grp,
-                    "PRODUCT_TYPE": t.get("PRODUCT_TYPE"), "CURRENCY": t.get("CURRENCY") or "USD", "COUNTERPARTY": t.get("COUNTERPARTY") or "",
-                    "DIRECTION": "LONG" if q >= 0 else "SHORT", "QUANTITY": q, "TAGS": "|".join(self._tags(t)), "REPORTING_CCY": "USD",
-                    "PV": round(pv), "PNL": vec[:m.n], "STATUS": "ok", "PRICER": "demo-factor-model", "MODEL_VERSION": "demo-2",
-                    "COMPUTED_AT": f"{self.cob}T22:30:00Z", "BATCH_ID": f"B-{self.cob}-01", "RESTATEMENT": 0})
+                ccy = t.get("CURRENCY") or "USD"
+                terms = {"TRADE_ID": tid, "SECURITY_ID": self.security.get(tid), "INSTRUMENT": instrument_name(t),
+                         "BUSINESS_DATE": self.cob, "SCENARIO_SET_ID": "HS-509", "SOURCE_SYSTEM": t.get("SOURCE_SYSTEM"),
+                         "TRADE_VERSIONS": f"v{t.get('TRADE_VERSION') or 1}", "TRADE_STATUS": t.get("TRADE_STATUS"),
+                         "MATURITY_DATE": t.get("MATURITY_DATE"), "LEGAL_ENTITY": le, "DIVISION": DIVISIONS.get(desk, "DIV-MARKETS"), "DESK": desk,
+                         "TT_BOOK": book, "PORTFOLIO": t.get("PORTFOLIO") or book, "STRATEGY": t.get("STRATEGY") or "", "PRODUCT_GROUP": grp,
+                         "PRODUCT_TYPE": t.get("PRODUCT_TYPE"), "CURRENCY": ccy, "COUNTERPARTY": t.get("COUNTERPARTY") or "",
+                         "DIRECTION": "LONG" if q >= 0 else "SHORT", "QUANTITY": q, "TAGS": "|".join(self._tags(t))}
+                run = {"STATUS": "ok", "PRICER": "demo-factor-model", "MODEL_VERSION": "demo-2", "COMPUTED_AT": f"{self.cob}T22:30:00Z",
+                       "BATCH_ID": f"B-{self.cob}-01", "RESTATEMENT": 0}
+                if self.fx is not None and t.get("SOURCE_SYSTEM") in SFX.PV_SYSTEMS and self.fx.has(ccy):
+                    base, pvs = SFX.scenario_pvs(self.fx, ccy, float(round(pv)), vec)
+                    self.engine_vectors[tid] = SFX.engine_pnl(self.fx, ccy, base, pvs)
+                    self.pv_rows.append({"SCENARIO_PV_ID": f"SPV-{tid}-HS-509", **terms, "BASE_PV": base, "VALUATION_DATE": self.cob,
+                                         "BASE_VALUATION_DATE": self.cob, "SCENARIO_PV": pvs[:m.n], **run})
+                else:
+                    self.vector_rows.append({"VECTOR_ID": f"PV-{tid}-HS-509", **terms, "REPORTING_CCY": "USD", "PV": round(pv),
+                                             "PNL": vec[:m.n], **run})
             self.positions.append(self.position(pid, ts))
 
     def position(self, pid: str, ts: list[dict]) -> dict:

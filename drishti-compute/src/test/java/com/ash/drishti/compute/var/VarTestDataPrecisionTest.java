@@ -41,7 +41,9 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
 
 /**
- * The float32 hot copy on the committed test data (VAR_GUIDE.md sections 26 and 22: 9,572 live trades of 2026-09-30 in 7,984 positions, the
+ * The float32 hot copy on the committed test data (VAR_GUIDE.md sections 26 and 22: 9,572 live trades of 2026-09-30 in 7,984 positions,
+ * 8,233 sent as P&amp;L vectors and 1,339 as scenario PVs in their own currency, converted to USD here as the server's intake does
+ * (ScenarioFx.pnlFromPv with the supplied scenario FX); the
  * market-risk pack's position rules, the 88 hierarchy nodes), read straight from {@code data/testdata/market-risk/}: the same date built
  * on the heap (float64, as the lake holds it) and through its hot file. Every node's VaR and ES are the same to the cent (float64
  * aggregates); every position's, every book's minus a trade, every counterparty's and a set of baskets are within the stated
@@ -89,8 +91,39 @@ class VarTestDataPrecisionTest {
         return v == null || v.isNull() || v.asText().isEmpty() ? null : v.asText();
     }
 
+    /** The supplied scenario FX of the test data (fx-scenario), every currency against USD. */
+    static ScenarioFx fx(Path data, int width) throws IOException {
+        List<ScenarioFx.Rates> rates = new ArrayList<>();
+        lines(data.resolve("fx-scenario"), n -> {
+            double[] r = new double[n.path("RATES").size()];
+            for (int j = 0; j < r.length; j++) {
+                r[j] = n.path("RATES").get(j).asDouble();
+            }
+            rates.add(new ScenarioFx.Rates(text(n, "CURRENCY"), n.path("RATE").asDouble(), r, "supplied"));
+        });
+        return new ScenarioFx(width, rates);
+    }
+
     @SuppressWarnings("unchecked")
     static void fill(VarBook.Builder b, Path data, PositionRules rules, double scale) throws IOException {
+        ScenarioFx fx = fx(data, b.width());
+        lines(data.resolve("scenario-pv"), n -> {
+            if (!rules.live(text(n, "TRADE_STATUS"))) {
+                return;
+            }
+            JsonNode pvs = n.get("SCENARIO_PV");
+            double[] p = new double[pvs.size()];
+            for (int j = 0; j < p.length; j++) {
+                p[j] = pvs.get(j).asDouble();
+            }
+            ScenarioFx.Rates r = fx.rates(text(n, "CURRENCY")).orElseThrow();
+            double[] v = new double[p.length];
+            ScenarioFx.pnlFromPv(n.path("BASE_PV").asDouble(), p, p.length, r, v);
+            for (int j = 0; j < v.length; j++) {
+                v[j] *= scale;
+            }
+            add(b, n, rules, v, n.path("BASE_PV").asDouble() * r.base());
+        });
         lines(data.resolve("pnl-vector"), n -> {
             if (!rules.live(text(n, "TRADE_STATUS"))) {
                 return;
@@ -100,18 +133,7 @@ class VarTestDataPrecisionTest {
             for (int j = 0; j < v.length; j++) {
                 v[j] = pnl.get(j).asDouble() * scale;
             }
-            String[] texts = new String[VarBook.TRADE_TEXTS.size()];
-            for (int c = 0; c < texts.length; c++) {
-                texts[c] = text(n, VarBook.TRADE_TEXTS.get(c));
-            }
-            String trade = text(n, "TRADE_ID");
-            PositionRules.Derived d = rules.derive(trade, text(n, "TT_BOOK"), text(n, "PRODUCT_GROUP"), text(n, "PRODUCT_TYPE"), k -> text(n, k));
-            texts[VarBook.TRADE_TEXTS.indexOf("POSITION_ID")] = d.positionId();
-            texts[VarBook.TRADE_TEXTS.indexOf("POSITION_RULE")] = d.rule();
-            texts[VarBook.TRADE_TEXTS.indexOf("INSTRUMENT_ID")] = d.instrumentId();
-            texts[VarBook.TRADE_TEXTS.indexOf("SECURITY_ID")] = d.securityId();
-            double[] nums = {n.path("QUANTITY").asDouble(Double.NaN), n.path("PV").asDouble(Double.NaN)};
-            b.trade(trade, v, v.length, texts, nums);
+            add(b, n, rules, v, n.path("PV").asDouble(Double.NaN));
         });
         lines(data.resolve("risk-hierarchy"), n -> {
             List<String> books = new ArrayList<>();
@@ -119,6 +141,21 @@ class VarTestDataPrecisionTest {
             b.node(text(n, "NODE_ID"), text(n, "HIERARCHY"), text(n, "LEVEL"), text(n, "NAME"), text(n, "PARENT_ID"), books,
                     n.path("LIMIT_VAR").asDouble(Double.NaN));
         });
+    }
+
+    private static void add(VarBook.Builder b, JsonNode n, PositionRules rules, double[] v, double pvUsd) {
+        String[] texts = new String[VarBook.TRADE_TEXTS.size()];
+        for (int c = 0; c < texts.length; c++) {
+            texts[c] = text(n, VarBook.TRADE_TEXTS.get(c));
+        }
+        String trade = text(n, "TRADE_ID");
+        PositionRules.Derived d = rules.derive(trade, text(n, "TT_BOOK"), text(n, "PRODUCT_GROUP"), text(n, "PRODUCT_TYPE"), k -> text(n, k));
+        texts[VarBook.TRADE_TEXTS.indexOf("POSITION_ID")] = d.positionId();
+        texts[VarBook.TRADE_TEXTS.indexOf("POSITION_RULE")] = d.rule();
+        texts[VarBook.TRADE_TEXTS.indexOf("INSTRUMENT_ID")] = d.instrumentId();
+        texts[VarBook.TRADE_TEXTS.indexOf("SECURITY_ID")] = d.securityId();
+        double[] nums = {n.path("QUANTITY").asDouble(Double.NaN), pvUsd};
+        b.trade(trade, v, v.length, texts, nums);
     }
 
     @BeforeAll
@@ -209,6 +246,30 @@ class VarTestDataPrecisionTest {
      * trades scaled by 1,000.37 (positions of billions, with cents) do round: every scope stays within the bound, and VaR within 1e-6 of
      * itself.
      */
+    /**
+     * The bank from both forms of input (VAR_GUIDE.md section 15.9), and in each currency the batch supplies FX for (section 15.10): the
+     * figures the guides quote. The USD figures differ from the 2.8.0 data's (112,035,906 and 160,132,107) only by the FX translation of
+     * the 250 Endur trades in EUR and CAD that came as scenario PVs; their USD trades reproduce their vectors exactly.
+     */
+    @Test
+    void theBankFromScenarioPvsAndVectorsInEveryReportingCurrency() throws IOException {
+        VarCalc calc = new VarCalc(0.99, 0.975, VarMath.RankRule.KTH_WORST, 5, true);
+        VarCalc.Measures usd = calc.measures(heap.aggregate("MGMT~BANK"));
+        assertThat(Math.round(usd.var())).isEqualTo(112_041_646L);
+        assertThat(Math.round(usd.es())).isEqualTo(160_143_809L);
+        ScenarioFx fx = fx(DATA, heap.width());
+        StringBuilder say = new StringBuilder("bank VaR / ES: USD " + Math.round(usd.var()) + " / " + Math.round(usd.es()));
+        for (String c : List.of("EUR", "GBP", "JPY", "CAD", "CHF", "AUD")) {
+            CurrencyBook.Converted conv = CurrencyBook.convert(heap, fx.rates(c).orElseThrow(), new VarBook.Builder(heap.businessDate(),
+                    heap.scenarioSet(), heap.scenarioDates(), 65_536, Long.MAX_VALUE), sums);
+            VarCalc.Measures m = calc.measures(conv.book().aggregate("MGMT~BANK"));
+            say.append("; ").append(c).append(' ').append(Math.round(m.var())).append(" / ").append(Math.round(m.es()));
+            assertThat(conv.book().tradeCount()).isEqualTo(heap.tradeCount());
+            assertThat(m.var()).isPositive();
+        }
+        System.out.println(say);
+    }
+
     @Test
     void scaledToABankOfBillionsTheRoundingStaysWithinTheBound(@TempDir Path own) throws IOException {
         double scale = 1000.37;

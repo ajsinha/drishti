@@ -121,10 +121,12 @@ Every kind of the pack has a data contract: a YAML file beside the pack (`config
 | `POS` | `position` | drishti-owned | `POSITION_ID` | One position per business date, derived (never stored); POS-<TT_BOOK>~<security> or POS-<TT_BOOK>~<trade>. | 38 |
 | `PORT` | `portfolio` | input | `PORTFOLIO_ID` | One row per portfolio per BUSINESS_DATE, keyed by PORTFOLIO_ID. | 17 |
 | `PNLV` | `pnl-vector` | input | `VECTOR_ID` | One row per p&l vector (509 scenarios) per BUSINESS_DATE, keyed by VECTOR_ID. | 32 |
+| `SPV` | `scenario-pv` | input | `SCENARIO_PV_ID` | One row per trade, business date and scenario set (BUSINESS_DATE), keyed by SCENARIO_PV_ID; a trade is in this kind or in pnl-vector, never both on one date. | 33 |
+| `FXS` | `fx-scenario` | input | `FX_SCENARIO_ID` | One row per currency, business date and scenario set (BUSINESS_DATE), keyed by FX_SCENARIO_ID (FXS-<CURRENCY>-<SCENARIO_SET_ID>). | 9 |
 | `SSET` | `scenario-set` | input | `SCENARIO_SET_ID` | One row per scenario set per BUSINESS_DATE, keyed by SCENARIO_SET_ID. | 11 |
 | `HIER` | `risk-hierarchy` | input | `NODE_ID` | One row per risk hierarchy node per BUSINESS_DATE, keyed by NODE_ID. | 14 |
-| `VRES` | `var-result` | computed | — | One answer per question (the scope asked for and the business date), computed when asked. | 22 |
-| `VWIF` | `var-whatif` | computed | — | One answer per question (the scope, the sandbox and the parameters, the business date), computed when asked. | 19 |
+| `VRES` | `var-result` | computed | — | One answer per question (the scope asked for and the business date), computed when asked. | 23 |
+| `VWIF` | `var-whatif` | computed | — | One answer per question (the scope, the sandbox and the parameters, the business date), computed when asked. | 20 |
 | `VOFF` | `var-official` | computed | `NODE_ID`, `RESULT_VERSION` | One row per hierarchy node per BUSINESS_DATE and RESULT_VERSION, keyed by NODE_ID and RESULT_VERSION; the latest version of a date is the date's figure. | 25 |
 
 *Class*: **fundamental** data is delivered by a source system and stored; **input** is stored data an engine reads; **computed** is worked out by Drishti when asked and never stored by a source; **drishti-owned** is kept by Drishti itself.
@@ -448,6 +450,79 @@ P&L vector of a trade
 
 **Links:** `TRADE_ID` → `trade`, `LEGAL_ENTITY` → `legal-entity`, `DESK` → `desk`, `TT_BOOK` → `book`, `PORTFOLIO` → `book`, `COUNTERPARTY` → `counterparty`.
 
+### SPV: Scenario PVs of a trade (509 scenarios, its currency) (`scenario-pv`)
+
+A trade's present value under each historical scenario and its base PV of the same run, in the trade's own currency: the form of a trade's scenario P&L a bank may send instead of a P&L vector (2.9.4; VAR_GUIDE.md section 15.9). The VaR engine turns it into the trade's USD P&L when it loads the date: P&L(s) = PV(s) x FX(s) - PV(base) x FX(base).
+
+**Class** input · **Key** `SCENARIO_PV_ID` · **Dated by** `BUSINESS_DATE` · **Cadence** daily · **Stored by** connector `risk-store` (plugin `delta`), table `<root>/risk/scenario-pv/` · **Ids** `^SPV-`.
+
+**Grain:** One row per trade, business date and scenario set (BUSINESS_DATE), keyed by SCENARIO_PV_ID; a trade is in this kind or in pnl-vector, never both on one date. **Contract:** `contracts/scenario-pv.contract.yaml` ([full contract page](../../../../docs/contracts/packs/market-risk.md#spv-scenario-pvs-of-a-trade-509-scenarios-its-currency-scenario-pv)).
+
+| Column | Type | Key | Presence | Unit | Example or values | Link | Meaning |
+|---|---|---|---|---|---|---|---|
+| `SCENARIO_PV_ID` | id | key | required |  | `SPV-1000054-HS-509` (pattern `^SPV-`) | `scenario-pv` | The record's id (the business key) |
+| `TRADE_ID` | id |  | required |  | `1000054` | `trade` | Trade: the trade it refers to |
+| `SECURITY_ID` | id |  | optional |  | `XCH-ComFut-USD-08` |  | — |
+| `INSTRUMENT` | text |  | required |  | `ENGY-SWAP EUR 2026-09` |  | — |
+| `BUSINESS_DATE` | date |  | required |  | `2026-09-30` |  | — |
+| `SCENARIO_SET_ID` | id |  | required |  | `HS-509` |  | — |
+| `SOURCE_SYSTEM` | text |  | required |  | `ENDUR` |  | — |
+| `TRADE_VERSIONS` | text |  | required |  | `v2` |  | — |
+| `TRADE_STATUS` | text |  | required |  | `AMENDED`, `NEW`, `VALIDATED` |  | — |
+| `MATURITY_DATE` | date |  | required |  | `2026-09-30` |  | — |
+| `LEGAL_ENTITY` | id |  | required |  | `LE-NY` (pattern `^LE-`) | `legal-entity` | Legal entity: the legal-entity it refers to |
+| `DIVISION` | id |  | required |  | `DIV-MARKETS` |  | — |
+| `DESK` | id |  | required |  | `DESK-COMM` (pattern `^DESK-`) | `desk` | Desk: the desk it refers to |
+| `TT_BOOK` | id |  | required |  | `BOOK-COMM-1` (pattern `^BOOK-`) | `book` | Book: the book it refers to |
+| `PORTFOLIO` | id |  | required |  | `BOOK-COMM-1` (pattern `^BOOK-`) | `book` | Portfolio: the book it refers to |
+| `STRATEGY` | unknown |  | optional |  |  |  | — |
+| `PRODUCT_GROUP` | text |  | required |  | `Commodity` |  | — |
+| `PRODUCT_TYPE` | text |  | required |  | `CallNot`, `Cash`, `ComFut`, `ComSwap`, `Commodity` |  | — |
+| `CURRENCY` | text |  | required |  | `CAD`, `EUR`, `USD` |  | The currency both PVs are in: the trade's own currency (one stated currency for a whole file is the same thing). |
+| `COUNTERPARTY` | id |  | required |  | `CP-NORTHPLAINS` (pattern `^CP-`) | `counterparty` | Counterparty: the counterparty it refers to |
+| `DIRECTION` | text |  | required |  | `LONG`, `SHORT` |  | — |
+| `QUANTITY` | amount |  | required |  | `-18000.0` |  | — |
+| `TAGS` | text |  | optional |  | `option` |  | — |
+| `BASE_PV` | amount |  | required | the trade's currency (CURRENCY) | `14997.44` |  | The trade's present value on the business date, from the same run as the scenario PVs. |
+| `VALUATION_DATE` | date |  | required |  | `2026-09-30` |  | The date the scenario PVs are valued on: the business date. |
+| `BASE_VALUATION_DATE` | date |  | required |  | `2026-09-30` |  | The date the base PV is valued on: the same as the scenario PVs', the business date. |
+| `SCENARIO_PV` | vector |  | required | the trade's currency (CURRENCY) |  |  | The trade's present value under each historical scenario day, oldest first: index i is the scenario set's day i. A scenario that failed to price is null: the trade is then not loaded (DRS-5206), never filled with zero. *509 values in the test data* |
+| `STATUS` | text |  | required |  | `ok` |  | ok, proxied (priced by a proxy) or failed (no scenario PVs: counted, never taken as zero). |
+| `PRICER` | text |  | required |  | `demo-factor-model` |  | — |
+| `MODEL_VERSION` | text |  | required |  | `demo-2` |  | — |
+| `COMPUTED_AT` | timestamp |  | required |  | `2026-09-30T22:30:00Z` |  | — |
+| `BATCH_ID` | id |  | required |  | `B-2026-09-30-01` |  | — |
+| `RESTATEMENT` | integer |  | required |  | `0` |  | — |
+
+**Links:** `SCENARIO_PV_ID` → `scenario-pv`, `TRADE_ID` → `trade`, `LEGAL_ENTITY` → `legal-entity`, `DESK` → `desk`, `TT_BOOK` → `book`, `PORTFOLIO` → `book`, `COUNTERPARTY` → `counterparty`.
+
+- The engine (VarIntake) rejects a row, counted and listed in every answer's provenance, never padded: a null or NaN in SCENARIO_PV (DRS-5206, the scenarios named: a scenario that failed to price is never filled with zero), a currency with no scenario FX on the date (DRS-5207), a length other than the scenario set's, no BASE_PV, or a VALUATION_DATE or BASE_VALUATION_DATE that differs from the other or from the business date (DRS-5201).
+- FX: each currency's scenario rates from fx-scenario when the batch supplies them, else derived from the FX history of fx-spot (today's rate moved by each scenario day's 1-day move); every cross goes through USD.
+- The same one-run checks as pnl-vector: one BATCH_ID and the date's SCENARIO_SET_ID across both kinds; a TRADE_ID in both refuses the date (DRS-5202).
+
+### FXS: Scenario FX of a currency (509 scenarios) (`fx-scenario`)
+
+A currency's rate against USD today and under each historical scenario, as the risk batch supplies it (2.9.4; VAR_GUIDE.md section 15.9): the VaR engine converts scenario PVs and reporting currencies with it. A currency the batch does not supply is derived from the FX history (fx-spot).
+
+**Class** input · **Key** `FX_SCENARIO_ID` · **Dated by** `BUSINESS_DATE` · **Cadence** daily · **Stored by** connector `risk-store` (plugin `delta`), table `<root>/risk/fx-scenario/` · **Ids** `^FXS-`.
+
+**Grain:** One row per currency, business date and scenario set (BUSINESS_DATE), keyed by FX_SCENARIO_ID (FXS-<CURRENCY>-<SCENARIO_SET_ID>). **Contract:** `contracts/fx-scenario.contract.yaml` ([full contract page](../../../../docs/contracts/packs/market-risk.md#fxs-scenario-fx-of-a-currency-509-scenarios-fx-scenario)).
+
+| Column | Type | Key | Presence | Unit | Example or values | Link | Meaning |
+|---|---|---|---|---|---|---|---|
+| `FX_SCENARIO_ID` | id | key | required |  | `FXS-EUR-HS-509` (pattern `^FXS-`) |  | The record's id (the business key) |
+| `BUSINESS_DATE` | date |  | required |  | `2026-09-30` |  | — |
+| `SCENARIO_SET_ID` | id |  | required |  | `HS-509` |  | — |
+| `CURRENCY` | text |  | required |  | `EUR` |  | The currency the rates are for (ISO code). |
+| `QUOTE` | text |  | required |  | `USD per 1 EUR` |  | — |
+| `RATE` | rate |  | required | USD per unit | `1.174` |  | USD per one unit of the currency on the business date. |
+| `RATES` | vector |  | required | USD per unit |  |  | USD per one unit of the currency under each scenario, oldest first: index i is the scenario set's day i. Every cross rate goes through USD. *509 values in the test data* |
+| `SOURCE` | text |  | required |  | `demo-factor-model` |  | — |
+| `BATCH_ID` | id |  | required |  | `B-2026-09-30-01` |  | — |
+
+- Always USD per one unit of CURRENCY (RATE today, RATES under each scenario, in the scenario set's order); USD itself is never sent. Every cross rate goes through USD: units of B per unit of A are rate(A) / rate(B).
+- A rate that is not a positive number, or RATES of another length than the scenario set's, leaves the currency out of the date (the engine says so: a trade priced in it is rejected, DRS-5207; the currency cannot be asked as a reporting currency).
+
 ### SSET: Scenario set (`scenario-set`)
 
 Scenario set
@@ -518,21 +593,22 @@ The VaR, ES, decomposition, worst scenarios and P&L vector of any scope (the sco
 | `LABEL` | text |  | required |  |  |  | — |
 | `NODE` | id |  | optional |  |  |  | The hierarchy node when the scope is exactly one node. |
 | `BUSINESS_DATE` | date |  | required |  |  |  | — |
-| `VAR` | amount |  | required | USD |  |  | VaR at CONFIDENCE, positive for a loss (VAR_GUIDE.md section 18.1). |
-| `ES` | amount |  | required | USD |  |  | Expected shortfall at ES_CONFIDENCE (VAR_GUIDE.md section 18.2). |
+| `CURRENCY` | text |  | required |  | `USD` |  | The reporting currency of every amount of the answer (2.9.4): the parameter ccy, USD by default (VRES DESK:RATES~ccy=EUR); VAR_GUIDE.md section 15.10. |
+| `VAR` | amount |  | required | CURRENCY |  |  | VaR at CONFIDENCE, positive for a loss (VAR_GUIDE.md section 18.1). |
+| `ES` | amount |  | required | CURRENCY |  |  | Expected shortfall at ES_CONFIDENCE (VAR_GUIDE.md section 18.2). |
 | `CONFIDENCE` | rate |  | required |  | `0.99` |  | — |
 | `ES_CONFIDENCE` | rate |  | required |  | `0.975` |  | — |
 | `K` | integer |  | required |  |  |  | The VaR rank (the 6th worst of 509 at 99%). |
 | `ES_COUNT` | integer |  | required |  |  |  | — |
 | `SCENARIOS` | integer |  | required |  |  |  | — |
-| `LIMIT` | amount |  | optional | USD |  |  | — |
+| `LIMIT` | amount |  | optional | CURRENCY |  |  | — |
 | `LIMIT_USE` | rate |  | optional |  |  |  | — |
-| `SUM_STANDALONE` | amount |  | optional | USD |  |  | — |
-| `DIVERSIFICATION` | amount |  | optional | USD |  |  | — |
+| `SUM_STANDALONE` | amount |  | optional | CURRENCY |  |  | — |
+| `DIVERSIFICATION` | amount |  | optional | CURRENCY |  |  | — |
 | `BACKTEST` | record |  | required |  |  |  | DAYS, EXCEPTIONS, LIGHT, KUPIEC_LR, KUPIEC_P_VALUE, CHRISTOFFERSEN_LR, CHRISTOFFERSEN_P_VALUE (VAR_GUIDE.md section 18.4). |
 | `CHILDREN` | record list |  | required |  |  |  | The default parts (VAR_GUIDE.md section 11.3) with KEY, SCOPE, LABEL, KIND, STANDALONE_VAR, COMPONENT_VAR, COMPONENT_ES, INCREMENTAL_VAR, PCT. |
 | `WORST` | record list |  | required |  |  |  | The 25 worst scenarios (RANK, INDEX, DATE, PNL). |
-| `PNL` | vector |  | required | USD |  |  | The scope's P&L under each scenario day, oldest first (unrounded). |
+| `PNL` | vector |  | required | CURRENCY |  |  | The scope's P&L under each scenario day, oldest first (unrounded). |
 | `PROVENANCE` | record |  | required |  |  |  | The headline's provenance in UPPER_SNAKE (VAR_GUIDE.md section 11.2), with TIER saying where the vector came from. |
 
 - No stored key: an answer's id is the scope asked (the id in the request); VAR <scope> <GO> opens the same answer in the explorer.
@@ -551,21 +627,22 @@ A scope's VaR and ES before and after hypothetical trades kept in the person's p
 | `SCOPE` | text |  | required |  |  |  | The base scope (the id), e.g. DESK:RATES - TRD:X to take a trade out exactly. |
 | `CANONICAL` | text |  | required |  |  |  | — |
 | `BUSINESS_DATE` | date |  | required |  |  |  | — |
+| `CURRENCY` | text |  | required |  | `USD` |  | The reporting currency of every amount (2.9.4): the parameter ccy, USD by default; the scope's var-result is read in it. |
 | `ITEMS` | integer |  | required |  |  |  | The hypothetical trades of the sandbox (0 without one). |
-| `BEFORE_VAR` | amount |  | required | USD |  |  | — |
-| `AFTER_VAR` | amount |  | required | USD |  |  | — |
-| `CHANGE_VAR` | amount |  | required | USD |  |  | — |
-| `BEFORE_ES` | amount |  | required | USD |  |  | — |
-| `AFTER_ES` | amount |  | required | USD |  |  | — |
-| `CHANGE_ES` | amount |  | required | USD |  |  | — |
-| `LIMIT` | amount |  | optional | USD |  |  | — |
+| `BEFORE_VAR` | amount |  | required | CURRENCY |  |  | — |
+| `AFTER_VAR` | amount |  | required | CURRENCY |  |  | — |
+| `CHANGE_VAR` | amount |  | required | CURRENCY |  |  | — |
+| `BEFORE_ES` | amount |  | required | CURRENCY |  |  | — |
+| `AFTER_ES` | amount |  | required | CURRENCY |  |  | — |
+| `CHANGE_ES` | amount |  | required | CURRENCY |  |  | — |
+| `LIMIT` | amount |  | optional | CURRENCY |  |  | — |
 | `LIMIT_USE_BEFORE` | rate |  | optional |  |  |  | — |
 | `LIMIT_USE_AFTER` | rate |  | optional |  |  |  | — |
 | `CONFIDENCE` | rate |  | required |  |  |  | — |
 | `ES_CONFIDENCE` | rate |  | required |  |  |  | — |
 | `STRESS_WINDOW` | integer |  | required |  |  |  | Scenario days of the stressed window (0 when not asked). |
-| `STRESSED_VAR_BEFORE` | amount |  | optional | USD |  |  | The largest VaR over every run of STRESS_WINDOW consecutive scenario days, before the what-if. |
-| `STRESSED_VAR_AFTER` | amount |  | optional | USD |  |  | — |
+| `STRESSED_VAR_BEFORE` | amount |  | optional | CURRENCY |  |  | The largest VaR over every run of STRESS_WINDOW consecutive scenario days, before the what-if. |
+| `STRESSED_VAR_AFTER` | amount |  | optional | CURRENCY |  |  | — |
 | `STRESSED_FROM` | integer |  | optional |  |  |  | The index of the stressed window's first scenario day. |
 
 **Links:** `SCOPE` → `var-result`.
@@ -630,6 +707,8 @@ Where each kind's data comes from, how it reaches the lake and how to check it. 
 | `POS` | `position` | computed by Drishti: (the VaR engine derives positions from the trades of pnl-vector when a date loads, docs/guides/VAR_GUIDE.md section 15.6); see the [VaR guide](../../../../docs/guides/VAR_GUIDE.md) (positions) | nothing to load: computed from its inputs when asked |
 | `PORT` | `portfolio` | synthetic: `python3 tools/packgen/var/make_var_data.py` | `data/testdata/market-risk/portfolio/` → `lake demo` → connector `risk-store` |
 | `PNLV` | `pnl-vector` | synthetic: `python3 tools/packgen/var/make_var_data.py` | `data/testdata/market-risk/pnl-vector/` → `lake demo` → connector `risk-store` |
+| `SPV` | `scenario-pv` | synthetic: `python3 tools/packgen/var/make_var_data.py` | `data/testdata/market-risk/scenario-pv/` → `lake demo` → connector `risk-store` |
+| `FXS` | `fx-scenario` | synthetic: `python3 tools/packgen/var/make_var_data.py` | `data/testdata/market-risk/fx-scenario/` → `lake demo` → connector `risk-store` |
 | `SSET` | `scenario-set` | synthetic: `python3 tools/packgen/var/make_var_data.py` | `data/testdata/market-risk/scenario-set/` → `lake demo` → connector `risk-store` |
 | `HIER` | `risk-hierarchy` | synthetic: `python3 tools/packgen/var/make_var_data.py` | `data/testdata/market-risk/risk-hierarchy/` → `lake demo` → connector `risk-store` |
 | `VRES` | `var-result` | computed by Drishti: the reactive connector var-engine (java engine com.ash.drishti.server.var.VarResultEngine); see the [VaR guide](../../../../docs/guides/VAR_GUIDE.md) | nothing to load: computed from its inputs when asked |
