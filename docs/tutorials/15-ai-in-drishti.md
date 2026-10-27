@@ -341,7 +341,7 @@ pages:
       - { id: v, type: bar, title: V, at: { x: 0, y: 0, w: 4, h: 3 }, wells: { axis: [economies.NOPE], values: [Nothing] } }
 ```
 
-![Check, explained in plain words: two DRS-9031 problems (no column NOPE, no measure Nothing), each with what it means and what to change](img/t15/10-check-explained.jpg)
+![Check, explained in plain words: two DRS-9031 problems (no column nope, no measure Nothing), each with what it means and what to change](img/t15/10-check-explained.jpg)
 
 You should see the two `DRS-9031` problems the checker found and, under **Explain in plain words**, a sentence and a fix for each. The API behind
 the button, with that YAML as the body's `yaml` (captured):
