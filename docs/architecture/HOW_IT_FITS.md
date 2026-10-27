@@ -514,7 +514,7 @@ your role: Limit", panels with no data and why) and where next (the F-keys, one 
 again, or *The full guide to this screen*, goes to the guide as it always did. When a live frame brings a newer
 generation, `about.js` asks again, passing the generation it shows; the server marks a still newer one `newer`.
 
-![The drawer on a VaR page](../guides/img/about/01-var-drawer.jpg)
+![The drawer on a stress result page](../guides/img/about/01-var-drawer.jpg)
 
 **The same for the gene variant (example B).** `VRNT VRNT-BRAF-V600E` takes the same eleven steps with other inputs:
 the pack is `genomics` (no `extends`), the Sutra `variant v1` (no `where`, so there are no rejected candidates), the

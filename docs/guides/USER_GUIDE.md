@@ -943,16 +943,16 @@ The footer repeats the source and generation, and the business date when one is 
 button beside the title). A drawer opens on the right; the page stays usable beside it. It is written for you: what it
 says is worked out from the page **you** have, so a field hidden from your role is never explained with its value.
 
-![The About drawer on a VaR view](img/about/01-var-drawer.jpg)
+![The About drawer on a stress result view](img/about/01-var-drawer.jpg)
 
 Each layer is a section you can fold; the first ones are open, and Drishti remembers which you folded (in this
 browser only).
 
 | Layer | What it tells you | Example |
 |---|---|---|
-| **What you are looking at** | One sentence about this entity, written by the domain pack and filled with its own numbers; the screen's description; notes on single panels; which pack wrote it | "VAR-EQD is a 1-day 99% historical VaR for DESK-EQD: 14.7m USD, 70% of its 20.9m limit, with 0 exception(s) in 250 days." |
-| **Where the data came from** | The source, its health (`up`, `degraded`, `down`), the generation, when it was fetched and updated, whether it is fresh or stale, a snapshot or a live feed, and how many linked entities were fetched | "Source var-engine · health up · fresh · a snapshot" |
-| **Why the page looks like this** | Which Sutra (layout) was chosen and why; panels that were added by inference; panels with no data and the reason (missing, null, empty list, masked); fields hidden for your role; panels you may not open | "Layout: Sutra var v1, the one that applies to this kind, priority 10." · "1 field hidden for your role: Limit (in strip)." |
+| **What you are looking at** | One sentence about this entity, written by the domain pack and filled with its own numbers; the screen's description; notes on single panels; which pack wrote it | "STR-GFC2008-RATES: under \"Global financial crisis 2008\" the portfolio changes in value by −73.6m USD against a limit of −67.5m." |
+| **Where the data came from** | The source, its health (`up`, `degraded`, `down`), the generation, when it was fetched and updated, whether it is fresh or stale, a snapshot or a live feed, and how many linked entities were fetched | "Source stress-engine · health up · fresh · a snapshot" |
+| **Why the page looks like this** | Which Sutra (layout) was chosen and why; panels that were added by inference; panels with no data and the reason (missing, null, empty list, masked); fields hidden for your role; panels you may not open | "Layout: Sutra stress-result v1, the one that applies to this kind, priority 10." · "1 field hidden for your role: Limit (in strip)." |
 | **Where next** | The keys on this page (F7 and F8), and one link per kind of panel on it, to the guide that explains how to read it | "The histogram panel: what it shows and how to read it" |
 
 A layer with nothing to say is not shown. If you see **What each number means** (a layer that explains the figures one
@@ -993,8 +993,8 @@ All the layers open, on the same view:
 ### Someone else sees less
 
 Ask the same page as a user whose role hides a field and the drawer hides it too. In this picture the administrator
-chose to mask `limit` for the *viewer* role (a **demo**: no standard setup masks it). The sentence reads "••• of its •••
-limit" and layer 3 says "1 field hidden for your role: Limit":
+chose to mask `limit` for the *viewer* role (a **demo**: no standard setup masks it). The sentence reads "against a limit of
+•••" and the glossary marks Limit *hidden for your role*:
 
 ![The drawer for a viewer: the limit is masked](img/about/05-viewer-masked.jpg)
 
