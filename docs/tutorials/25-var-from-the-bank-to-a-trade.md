@@ -242,7 +242,7 @@ basket tray opens as a strip at the top. Type `pf usd` in it: the engine's hints
 trades and its VaR alone; **Enter** adds it. Type `-book-rates-1` and **Enter**: the book is taken away (a dashed **−** chip; the **+ / −**
 on any chip switches it). As you pick, the tray shows the selection's VaR and ES, its trades, the sum of the parts' VaRs and the
 diversification, computed by the engine. **Open without saving** moves the explorer to it: *unsaved basket*, its contributions are its
-parts. Anywhere else in the console the top bar's **◫ Basket** (or **Alt+B**) opens the same tray as a popup.
+parts. The basket lives on the VaR page: **◫ Construct your basket** (or **Alt+B**) opens it; what it holds stays in your browser.
 
 ![Construct your basket: the rates desk from its row in the tree, the USD rates portfolio from the hints, a book taken away; the selection's VaR live and the explorer on it, its contributions by part](img/t25/06-basket.jpg)
 

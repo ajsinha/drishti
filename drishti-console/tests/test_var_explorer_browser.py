@@ -27,7 +27,8 @@ data built into a scratch lake (lake demo --only market-risk/<the VaR kinds>) an
 - "Construct your basket": "+ basket" on a contribution row and on a tree row, hints as you type (arrow keys and Enter), a part taken
   away, the selection's VaR live with the sum of the parts and the diversification, an id that matches nothing flagged at once and said
   in words, saved, the explorer moved to it, its parts by term, reopened in a fresh browser with its parts loaded back into the tray,
-  captured, and the capture reopened with its numbers; anywhere else the top bar's ◫ Basket (Alt+B) opens it as a popup;
+  captured, and the capture reopened with its numbers; elsewhere no Basket in the top bar and Alt+B does nothing, the explorer opens
+  the tray with the basket kept;
 - the pre-deal what-if in the tray: a copy of a booked trade, unwound, before and after by the Python VaR engine (compute on);
 - an id that is not a live trade (VAR TRD 10000000) says so, never a VaR of 0 that looks computed;
 - a trade page's Risk group (risk-links@1): its P&L vector and its VaR one click away, and why it has no exposure.
@@ -184,7 +185,7 @@ def test_the_tabs_path_history_and_contributions(stack, browser):
     shot(pg, "explorer-history")
     pg.locator('.vx-tab[data-tab="contrib"]').click()
     wait(pg, "document.querySelector('[data-var]').dataset.tabPainted === 'contrib'")
-    total = pg.evaluate("Number(document.querySelector('[data-vx-ctable] tr.vx-total td:nth-child(3)').textContent.replace(/,/g, ''))")
+    total = pg.evaluate("Number(document.querySelector('[data-vx-ctable] tr.vx-total td:nth-child(4)').textContent.replace(/,/g, ''))")
     var = pg.evaluate("window.VarExplorer.state.head.var")
     assert abs(total - var) <= len(pg.locator("[data-vx-ctable] tbody tr[data-scope]").all())   # rounded each: within a unit a row
     pg.locator('.vx-segb[data-by="trade"]').click()
@@ -303,19 +304,18 @@ def test_construct_your_basket_hints_live_save_reopen_and_capture(stack, browser
     # the selection survives a reload
     pg.reload()
     wait(pg, "document.querySelectorAll('[data-vb-chip]').length === 4", 60)
-    # anywhere else: the top bar's Basket (Alt+B) opens the tray as a popup; its Save goes to the explorer
+    # anywhere else: no Basket in the top bar and Alt+B does nothing; the explorer opens the tray with the basket kept (this browser)
     pg.goto(str(stack) + "/t")
-    wait(pg, "!!document.querySelector('[data-basket-btn]')")
-    assert pg.locator("[data-basket-count]").inner_text() == "4"
+    wait(pg, "!!document.querySelector('header, nav')")
+    assert pg.locator("[data-basket-btn]").count() == 0
     pg.keyboard.press("Alt+b")
-    wait(pg, "document.querySelector('[data-vb-popup]') && !document.querySelector('[data-vb-popup]').hidden")
-    assert pg.locator("[data-vb-popup] [data-vb-chip]").count() == 4
-    assert pg.locator("[data-vb-save]").inner_text() == "Save basket and open VaR"
-    tray_live(pg)
-    shot(pg, "basket-popup")
-    pg.locator("[data-vb-open]").click()
-    pg.wait_for_url("**/var?scope=**", timeout=30000)
-    wait(pg, "window.VarExplorer && window.VarExplorer.state.head && window.VarExplorer.state.head.kind === 'adhoc'", 60)
+    pg.wait_for_timeout(300)
+    assert pg.locator("[data-vb-popup]").count() == 0 and pg.locator("[data-vb-chip]").count() == 0
+    pg.goto(str(stack) + "/var?scope=BANK")
+    wait(pg, "window.VarExplorer && window.VarExplorer.state.head", 60)
+    assert pg.locator("[data-vx-basket-open] [data-basket-count]").inner_text() == "4"
+    pg.keyboard.press("Alt+b")
+    wait(pg, "document.querySelectorAll('[data-vb-chip]').length === 4")
     ctx.close()
 
 

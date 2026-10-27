@@ -267,7 +267,7 @@ Three columns, as the approved mock-up:
   quantity, VaR, ES, the component VaR in the book); a position opens to its trades. Below: *Ad-hoc scopes*, the stored portfolios and
   your baskets, and **◫ Construct your basket**. Every row has **+ basket** (shown as you point at it).
 - **Construct your basket** (a strip across the top, [section 3.5](#35-construct-your-basket)): shown whenever the explorer is on an
-  ad-hoc scope or a basket, or your basket holds parts; **Close** hides it, the top bar's **◫ Basket** (or Alt+B) brings it back.
+  ad-hoc scope or a basket, or your basket holds parts; **Close** hides it, **◫ Construct your basket** (or Alt+B) brings it back.
 - **The scope** (middle): the breadcrumb, six tiles (VaR 99% 1-day, ES 97.5%, the sum of the children's standalone VaR, the
   diversification, the limit use, the backtest exceptions over 250 days with the Basel light), and the tabs.
 - **How this number was built** (right, [section 3.6](#36-how-this-number-was-built)), **Export CSV** (the scope's path) and **Capture
@@ -346,10 +346,10 @@ ranked path also list each trade's or position's **Trade currency**.
 
 ### 3.5 Construct your basket
 
-*VaR of any mix of portfolios, trades and counterparties.* Ad-hoc scopes and baskets are one thing, built one way: the basket tray. In
-the explorer it is a strip across the top; on any other page the top bar's **◫ Basket** (with the count of its parts) or **Alt+B** opens
-it as a popup, and its **Save basket and open VaR** goes to the explorer. What you put in it stays in this browser across pages and
-reloads.
+*VaR of any mix of portfolios, trades and counterparties.* Ad-hoc scopes and baskets are one thing, built one way: the basket tray, a
+strip across the top of the explorer, opened by **◫ Construct your basket** (with the count of its parts) or **Alt+B**. It lives on the
+VaR page only (2.9.4: the top bar has no Basket button, and Alt+B does nothing elsewhere); what you put in it stays in this browser, so a
+basket built earlier is there when the explorer opens.
 
 - **Type to add.** Hints come from the engine as you type: portfolios, saved baskets, desks, books, legal entities, divisions,
   counterparties, positions and trades, each with its type, id, name, trade count and standalone VaR (`pf usd`, `aldershot`, `MX-3000`,

@@ -17,6 +17,13 @@
 
 ## 2.9.4 (unreleased)
 
+- **The basket is on the VaR page only (2026-10-27; product owner).** The top bar's **◫ Basket** button is gone (it did not apply to
+  every screen); the VaR explorer keeps **◫ Construct your basket** (now with the count of its parts), the basket strip, **+ basket**
+  on rows and the what-if. **Alt+B** opens the tray only where the page offers it (the explorer); elsewhere it does nothing, and the
+  landing page's **← Back to** keeps it. The basket's contents still persist in the browser, so it is there when the VaR page opens;
+  `var-basket.js` and its CSS load only on the VaR page. No other page had a basket action. **Tests:** `test_var_routes.py`,
+  `test_var_explorer_browser.py`. **Docs:** USER_GUIDE (the top bar, the VaR section), VAR_GUIDE section 3.5, tutorial 25.
+
 - **P&L vectors in any currency (2026-10-27; product owner).** On a P&L record `CURRENCY` is now the currency the values are in: a
   vector in CAD is converted to USD per scenario with that scenario's FX (approximate, counted in `tradesWithoutPv`), its `PV` at
   today's rate; no scenario FX for it rejects the row (`DRS-5207`). The trade's own currency is the optional `TRADE_CURRENCY` (scopes,

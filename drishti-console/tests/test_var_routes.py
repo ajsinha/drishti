@@ -83,10 +83,14 @@ def test_the_basket_trays_hints_and_what_if_go_to_the_engine_as_the_user(client,
     assert seen[-1][3] == {"asOf": "2026-09-30"}
 
 
-def test_the_top_bar_has_the_basket_button_and_alt_b(client):
+def test_the_basket_is_on_the_var_page_not_in_the_top_bar(client):
+    """2.9.4: the top bar has no Basket button; the VaR explorer offers "Construct your basket" (Alt+B there) and loads the tray."""
     html = client.get("/t").text
-    assert "data-basket-btn" in html and 'aria-keyshortcuts="Alt+B"' in html and "Basket" in html
-    assert "/static/js/var-basket.js" in html and "/static/css/var-basket.css" in html
+    assert "data-basket-btn" not in html and "/static/js/var-basket.js" not in html and "/static/css/var-basket.css" not in html
+    page = client.get("/var?scope=BANK").text
+    assert "data-basket-btn" not in page
+    assert "data-vx-basket-open" in page and 'aria-keyshortcuts="Alt+B"' in page and "data-basket-count" in page
+    assert "/static/js/var-basket.js" in page and "/static/css/var-basket.css" in page
 
 
 def test_in_a_currency_the_command_opens_the_page_in_it():

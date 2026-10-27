@@ -129,7 +129,7 @@ landing page then shows **← Back to …** (the view, Build, Admin or Help page
 takes you back where you were; *Open the terminal* goes to the terminal instead.
 
 ```text
-◉ Drishti  > TRD MX-20000001, CPTY north …  [2026-09-30]   Views ▾  BI ▾  Build ▾  Admin ▾  Help ▾   [◫ Basket 3] [bell] [box 12] [palette] (Live) (A) Ash ▾
+◉ Drishti  > TRD MX-20000001, CPTY north …  [2026-09-30]   Views ▾  BI ▾  Build ▾  Admin ▾  Help ▾   [bell] [box 12] [palette] (Live) (A) Ash ▾
 ```
 
 **Beside the brand** (click it to go back to `/`) are the [command line](#the-command-line), which takes the
@@ -170,7 +170,6 @@ Excel made as you (your masks and row rules), and sent by a subscription as one 
 | Tool | Looks like | What it does |
 |---|---|---|
 | Live | the round button right of the theme switcher | Your choice and this page's stream in one: green while live (glowing while ticks arrive, an amber ring while it reconnects, steady on a page without a stream), red with pause bars while paused or on a picked date. Hover to read both, for example *Live updates on — click to pause · Live, built 1.92 ms*. A click switches ([Business dates](#business-dates-live-or-a-day-in-the-past)) |
-| Basket | **◫ Basket**, with the count of its parts | **Construct your basket**: the VaR of any mix of portfolios, trades and counterparties. Opens the basket tray as a popup on any page (in the VaR explorer, as a strip at its top); type for hints, **+ / −** each part, the selection's VaR live, a pre-deal what-if, **Save basket and open VaR**. Shortcut `Alt+B` (on the landing page `Alt+B` stays its **← Back to**). What it holds stays in your browser across pages ([VAR_GUIDE.md section 3.5](VAR_GUIDE.md#35-construct-your-basket)) |
 | Alerts | a bell | Opens `/alerts`. A number on the bell counts alerts you have not seen ([Alerts](#alerts)), and BI runs that finished, failed or were started again (`BI RUNS <GO>` lists them: [BI_RUNS_GUIDE.md](BI_RUNS_GUIDE.md)) |
 | Packs | a box with a number | Appears when you may use more than one pack. The number is how many you have switched on; hover to read their names ([Domain packs](#domain-packs-choosing-what-you-see)) |
 | Theme | a palette | Ten themes ([Themes](#themes)) |
@@ -261,6 +260,11 @@ command ends with `IN <currency>`, `VAR DESK DESK-RATES IN EUR <GO>`. The tab **
 scope's VaR and ES in each configured currency side by side, with each one's VaR in the page's currency at today's rate; click a row to
 move the page to it. A currency's VaR is never the USD VaR at a rate: the currency move on each scenario day is part of its risk
 ([VAR_GUIDE.md section 15.11](VAR_GUIDE.md#1511-reporting-currencies-built-ahead-per-trade-currency-totals-and-the-picker-as-built-294)).
+
+**Construct your basket.** On the VaR page, **◫ Construct your basket** (or `Alt+B`) opens the basket tray across its top: the VaR
+of any mix of portfolios, trades and counterparties; type for hints, **+ / −** each part, the selection's VaR live, a pre-deal what-if,
+**Save basket and open VaR**. It is on the VaR page only (2.9.4: no longer in the top bar); what it holds stays in your browser, so it is
+there when you come back ([VAR_GUIDE.md section 3.5](VAR_GUIDE.md#35-construct-your-basket)).
 
 **One year or two; 99% or 95% (2.9.4).** The page's labels say the confidence the figures are at (*VaR 95% · 1 day* when the
 server is set to 95%), and *How this number was built* says the scenario window (*newest 250 of 509 scenarios*);

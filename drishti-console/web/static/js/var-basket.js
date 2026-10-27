@@ -15,8 +15,9 @@
  */
 /* "Construct your basket" (docs/guides/VAR_GUIDE.md section 3.5): the VaR of any mix of portfolios, trades and counterparties.
 
-   One tray, two places: in the VaR explorer a strip at the top (always shown on an ad-hoc scope or a basket); on every other page a
-   popup from the top bar's "◫ Basket" button or Alt+B, whose "Save basket and open VaR" goes to the explorer. Typing shows hints from the
+   The tray lives on the VaR explorer (2.9.4: the top bar has no Basket button): a strip at the top, always shown on an ad-hoc scope or
+   a basket, opened by "Construct your basket" or Alt+B (Alt+B does nothing on pages without the basket). Its contents stay in this
+   browser, so a basket built earlier is there when the explorer opens. Typing shows hints from the
    engine (/api/var/hints: portfolios, saved baskets, desks, books, legal entities, counterparties, positions, trades, each with its
    type, id, name, trade count and standalone VaR; arrow keys and Enter pick, a leading "-" takes away); "+ Rule" adds a WHERE:
    condition; each chip is + or −. As you pick, the engine computes the selection (a trade in two chips counts once): its VaR and ES,
@@ -602,13 +603,13 @@
     if (attached && !attached.closed) show();
   }
 
-  // ---------------------------------------------------------------------------------------------------------------- the top bar
+  // ---------------------------------------------------------------------------------------------------------------- Alt+B
   function start() {
     countBadge();
-    document.querySelectorAll("[data-basket-btn]").forEach(function (b) { b.addEventListener("click", function () { toggle(); }); });
     document.addEventListener("keydown", function (ev) {
       if (ev.altKey && !ev.ctrlKey && !ev.metaKey && (ev.key === "b" || ev.key === "B" || ev.code === "KeyB")) {
-        if (!document.querySelector("[data-basket-btn]") || document.querySelector("[accesskey=b]")) return;   // the landing page: Alt+B is its Back to
+        // only where the page offers the basket (the explorer's "Construct your basket"); the landing page's Alt+B is its Back to
+        if (!document.querySelector("[data-vx-basket-open]") || document.querySelector("[accesskey=b]")) return;
         ev.preventDefault();
         toggle();
       }

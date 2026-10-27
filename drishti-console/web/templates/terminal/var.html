@@ -22,7 +22,7 @@
 {% block title %}VaR · {{ scope }} · {{ PRODUCT }}{% endblock %}
 {% block screen %}var{% endblock %}
 {% block body_class %}terminal{% endblock %}
-{% block head %}<link rel="stylesheet" href="/static/css/var.css?v={{ ASSET_V }}">{% endblock %}
+{% block head %}<link rel="stylesheet" href="/static/css/var.css?v={{ ASSET_V }}"><link rel="stylesheet" href="/static/css/var-basket.css?v={{ ASSET_V }}">{% endblock %}
 {% block nav %}{% with command_text='VAR ' ~ (scope | replace(':', ' ')) ~ ' <GO>' %}{% include "terminal/_topbar.html" %}{% endwith %}{% endblock %}
 {% block content %}
 <div class="vx" data-var data-scope="{{ scope }}" data-capture="{{ capture }}" data-hierarchy="{{ hierarchy }}" data-user="{{ user }}" data-ccy="{{ ccy }}">
@@ -51,7 +51,7 @@
         <select class="vx-select" data-vx-hierarchy aria-label="Hierarchy"><option value="MGMT">Management</option><option value="LEGAL">Legal entity</option></select>
         <span class="vx-fresh" data-vx-fresh="tree">loading…</span></div>
       <div class="vx-tree" role="tree" data-vx-tree></div>
-      <div class="vx-sec">Ad-hoc scopes <button type="button" class="btn btn-sm vx-btn" data-vx-basket-open title="Construct your basket (Alt+B)">◫ Construct your basket</button></div>
+      <div class="vx-sec">Ad-hoc scopes <button type="button" class="btn btn-sm vx-btn" data-vx-basket-open title="Construct your basket (Alt+B)" aria-keyshortcuts="Alt+B">◫ Construct your basket <span class="tool-count" data-basket-count hidden>0</span></button></div>
       <div class="vx-tree vx-adhoc" role="tree" data-vx-adhoc></div>
     </aside>
 
@@ -125,4 +125,4 @@
   </div>
 </div>
 {% endblock %}
-{% block scripts %}<script src="/static/js/var-charts.js?v={{ ASSET_V }}"></script><script src="/static/js/var-explorer.js?v={{ ASSET_V }}"></script>{% endblock %}
+{% block scripts %}<script src="/static/js/var-basket.js?v={{ ASSET_V }}"></script><script src="/static/js/var-charts.js?v={{ ASSET_V }}"></script><script src="/static/js/var-explorer.js?v={{ ASSET_V }}"></script>{% endblock %}
