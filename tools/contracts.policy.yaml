@@ -112,6 +112,10 @@ removed:
     release: 2.8.0
     contract: ../guides/VAR_GUIDE.md
     figures: [VAR_99, VAR_RESULT]
+  legal-entity:
+    release: 2.9.2
+    contract: ../guides/VAR_GUIDE.md
+    figures: ["BOOKS[].VAR"]
   portfolio:
     release: 2.8.0
     contract: ../guides/VAR_GUIDE.md
@@ -127,7 +131,8 @@ removed:
     figures: [PFE_PEAK]
 
 engine-columns:
-  var: [VAR_99, ES_975, COMPONENT_VAR, BOOK_VAR, PCT_OF_BOOK_VAR, PCT_OF_VAR, HYPO_PNL, EXCEPTIONS_250, VAR_RESULT, VAR_ENGINE]
+  var: [VAR_99, ES_975, COMPONENT_VAR, BOOK_VAR, PCT_OF_BOOK_VAR, PCT_OF_VAR, HYPO_PNL, EXCEPTIONS_250, VAR_RESULT, VAR_ENGINE,
+        "BOOKS[].VAR"]   # a path (A[].B: B of every element of A) where the plain name is too common to guard (legal-entity, 2.9.2)
   exposure: [EPE, EEPE, PFE_PEAK, EE_PEAK, PEAK_PFE, PEAK_EE, EAD_IMM, PFE_95, PFE_99, EXPOSURE_ENGINE, EXPOSURE_PROFILE]
   correlation: [RHO, SHRINKAGE, MIN_RHO, MAX_RHO, FACTOR_STATS]
 
@@ -142,6 +147,8 @@ notes:
     - "The portfolio definitions are an engine input (IMPLEMENTATION_PLAN.md); the figures of the retired stored record (VaR, ES, positions, contributions, P&L) are computed as the page opens (VAR_ENGINE), never stored."
   desk:
     - "The desk's VaR is the engine's (DESK:<id>), computed as the page opens (VAR_ENGINE); VAR_99 and VAR_RESULT left the record in 2.8.0."
+  legal-entity:
+    - "The legal entity's VaR and its books' are the engine's (LE:<id>, BOOK:<id>), computed as the page opens (VAR_ENGINE); BOOKS[].VAR left the record in 2.9.2."
   netting-set:
     - "The netting set's exposure is the exposure engine's (NSET:<id>), computed as the page opens (EXPOSURE_ENGINE); EE_PEAK, PFE_PEAK, PROFILE and the EXPOSURE_PROFILE link left the record in 2.9.0 (EXPOSURE_GUIDE.md section 22). UTILISATION and CVA stay stored (LIM and CVA are parked)."
   counterparty:

@@ -296,7 +296,7 @@ def reference(trades: dict, docs: dict) -> None:
         desks = [d for d, v in N.DESKS.items() if v[1] == le]
         docs["legal-entity"][le] = {"entityId": le, "name": name, "lei": ids.lei(name), "jurisdiction": country, "regulator": reg,
                                     "desks": [{"id": d, "name": N.DESKS[d][0]} for d in desks],
-                                    "books": [{"book": b, "desk": N.DESKS[d][0], "var": round(book_var(books[b]) * 0.85), "pnl": round(fsum(t["pnl1d"] for t in books[b])),
+                                    "books": [{"book": b, "desk": N.DESKS[d][0], "pnl": round(fsum(t["pnl1d"] for t in books[b])),   # no VaR: the engine's (2.9.2)
                                                "mtm": round(fsum(t["mtm"] for t in books[b])), "trades": len(books[b])} for d in desks for b in TR.books_of(d) if books[b]],
                                     "_meta": {"source": "entity-master", "generation": 1}}
     for desk, (name, le, classes, head) in N.DESKS.items():
