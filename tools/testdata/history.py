@@ -47,6 +47,11 @@ import amend as A  # noqa: E402
 
 PART_BYTES = 9 * 1024 * 1024
 DATED = ("AS_OF", "VALUATION_DATE", "RUN_DATE")
+# Dates a market document holds at a fixed number of business days from its business date (an FX spot's value date, T+2; an IR curve's
+# pillar maturities): moved with the day, by as many USNY business days as the day is from the last one, so the 2026-09-29 spot does
+# not settle on the 2026-09-30 spot's date. tools/lake/demo.py moves the same fields when it moves the dates to today.
+TENOR_DATES = ("SPOT_DATE",)
+TENOR_POINTS = {"POINTS": "MATURITY"}
 # The price a document's CHANGE_1D is the day's move of (equity PRICE, index LEVEL, FX MID): worked out from the walked price of the day
 # and of the day before, so it moves with the price instead of staying the last day's figure on every day (QA1-10).
 PRICE_OF_CHANGE = ("PRICE", "LEVEL", "MID", "SPOT", "LAST_PRICE")
@@ -152,6 +157,24 @@ def _order(k: str):
 
 def trade_states(book: list[dict], days: Days, seed: int = 5):
     """The book of each day as {TRADE_ID: json}: bookings by TRADE_DATE, then amendments day by day."""
+    for live in books(book, days, seed):
+        yield {k: dumps(t) for k, t in live.items()}
+
+
+def timelines(book: list[dict], days: Days, seed: int = 5) -> dict[str, list[tuple[int, dict]]]:
+    """Each trade's versions as trade_states writes them: TRADE_ID -> [(the day index it took effect, the trade)], oldest first. The
+    last is the trade on the last day (its latest version, status and terms), which the netting sets and valuations follow."""
+    out: dict[str, list[tuple[int, dict]]] = {}
+    for i, live in enumerate(books(book, days, seed)):
+        for k, t in live.items():
+            seen = out.setdefault(k, [])
+            if not seen or seen[-1][1] is not t:
+                seen.append((i, t))
+    return out
+
+
+def books(book: list[dict], days: Days, seed: int = 5):
+    """The book of each day as {TRADE_ID: trade} (the documents themselves: an unchanged trade is the same object as the day before)."""
     joins = {}
     for t in book:
         joins.setdefault(days.booked(t.get("TRADE_DATE")), []).append(t)
@@ -165,15 +188,16 @@ def trade_states(book: list[dict], days: Days, seed: int = 5):
             if stamp[:10] > day:                              # a feed stamps a trade when it sends it: never after the day it joins
                 t["SOURCE_UPDATE_TIME"] = f"{day}{stamp[10:]}"
             live[str(t["TRADE_ID"])] = t
-        yield {k: dumps(t) for k, t in live.items()}
+        yield live
 
 
 def doc_states(kind: str, docs: dict[str, dict], days: Days, since: dict[str, int] | None = None, members: dict | None = None,
-               market=None):
+               market=None, versions: dict | None = None):
     """The documents of each day as {id: json}: the last day as built, earlier days walked back; ``since`` (id -> first day index)
-    leaves a document out before that day; ``members`` (trade id -> first day) trims a netting set's TRADE_IDS to the trades booked.
-    ``market`` (marketdays.MarketDays) builds the day's market documents of the kinds it handles, their quoted fields moving together
-    (QA2-201), instead of the walk."""
+    leaves a document out before that day; ``members`` (trade id -> first day) trims a netting set's TRADE_IDS and TRADES rows to the
+    trades booked. ``market`` (marketdays.MarketDays) builds the day's market documents of the kinds it handles, their quoted fields
+    moving together (QA2-201), instead of the walk. ``versions`` (id -> [(first day index, trade status, notional factor)], valuation_versions)
+    gives a trade valuation the status and notional of its trade's version of the day."""
     last = len(days.dates) - 1
     prev: dict[str, dict] = {}
     coherent = market is not None and market.handles(kind)
@@ -196,10 +220,80 @@ def doc_states(kind: str, docs: dict[str, dict], days: Days, since: dict[str, in
             for f in DATED:
                 if isinstance(body.get(f), str) and len(body[f]) == 10:
                     body[f] = day
+            if last - i:
+                move_tenor_dates(body, i - last)
             if members is not None and isinstance(body.get("TRADE_IDS"), list):
                 body["TRADE_IDS"] = [t for t in body["TRADE_IDS"] if members.get(t, 0) <= i]
+                if isinstance(body.get("TRADES"), list):
+                    body["TRADES"] = [r for r in body["TRADES"] if members.get(str(r.get("TRADE_ID")), 0) <= i]
+            if versions and id_ in versions:
+                as_of_day(body, versions[id_], i)
             out[id_] = dumps(body)
         yield out
+
+
+_CAL: list = []
+
+
+def move_tenor_dates(doc: dict, n: int, cal=None) -> None:
+    """Moves a document's TENOR_DATES and TENOR_POINTS dates by ``n`` business days (``cal``, default USNY)."""
+    from datetime import date
+    if cal is None:
+        if not _CAL:
+            from samplegen.dates import Calendar
+            _CAL.append(Calendar.of("USNY"))
+        cal = _CAL[0]
+
+    def one(v):
+        if not (isinstance(v, str) and len(v) == 10 and v[4] == "-"):
+            return v
+        try:
+            return cal.add_business_days(date.fromisoformat(v), n).isoformat()
+        except ValueError:
+            return v
+    for f in TENOR_DATES:
+        if f in doc:
+            doc[f] = one(doc[f])
+    for lst, f in TENOR_POINTS.items():
+        points = doc.get(lst)
+        if isinstance(points, list):
+            for pt in points:
+                if isinstance(pt, dict) and f in pt:
+                    pt[f] = one(pt[f])
+
+
+#: a trade valuation's figures that scale with its trade's notional
+SCALES_WITH_NOTIONAL = ("NOTIONAL", "MTM", "PNL_1D", "DV01")
+
+
+def leg_notional(trade: dict) -> float:
+    """The notional of a trade's first leg (the one a valuation and a trade's title show), 0 when it has none."""
+    try:
+        return abs(float(((trade.get("LEGS") or [{}])[0]).get("NOTIONAL") or 0.0))
+    except (TypeError, ValueError):
+        return 0.0
+
+
+def valuation_versions(timeline: dict[str, list[tuple[int, dict]]]) -> dict[str, list[tuple[int, str, float]]]:
+    """VALUATION_ID -> [(first day index, the trade's status, its notional over the last version's)] for every trade with more than
+    one version: the valuation of a day values the trade's version of that day (QA: a valuation never of an older version)."""
+    out = {}
+    for tid, seen in timeline.items():
+        if len(seen) < 2:
+            continue
+        last = leg_notional(seen[-1][1])
+        out[f"TVAL-{tid}"] = [(i, str(t.get("TRADE_STATUS") or ""), (leg_notional(t) / last) if last else 1.0) for i, t in seen]
+    return out
+
+
+def as_of_day(body: dict, seen: list[tuple[int, str, float]], i: int) -> None:
+    """Sets a valuation's TRADE_STATUS and notional-led figures to its trade's version on day i (``seen`` from valuation_versions)."""
+    _, status, factor = next((v for v in reversed(seen) if v[0] <= i), seen[0])
+    body["TRADE_STATUS"] = status
+    if factor != 1.0:
+        for f in SCALES_WITH_NOTIONAL:
+            if isinstance(body.get(f), (int, float)) and not isinstance(body[f], bool):
+                body[f] = round(body[f] * factor, 2) if isinstance(body[f], float) else round(body[f] * factor)
 
 
 def gz_lines(path: Path):

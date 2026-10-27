@@ -17,7 +17,8 @@ netting sets of the business date (their member trades, MtM, notional, maturity 
 deliver them:
 
     simulation-run/   XR-<date>-01: the run's grid (13 primary dates 1W .. 10Y and their look-back dates), 200 paths, the model
-    exposure-path/    one row per live member trade and grid date up to its maturity (+10 business days): MTM over the 200 paths
+    exposure-path/    one row per live member trade (status NEW, VALIDATED or AMENDED in its booking system, not matured) and grid
+                      date up to its maturity (+10 business days): MTM over the 200 paths
                       (the vector column MTM, list<double> in the lake, whole USD), sorted by netting set, trade and grid index
 
 The committed run covers eight netting sets (EXPOSURE_GUIDE.md section 23): the four of CP-ALDERSHOT (a securities-financing set, a negative set, a
@@ -51,7 +52,7 @@ sys.path.insert(0, str(ROOT / "tools"))
 sys.path.insert(0, str(ROOT / "tools" / "packgen" / "var"))
 import ccrmath as M  # noqa: E402
 import paths as PT  # noqa: E402
-from positions import replay  # noqa: E402  (a dataset's documents on its last day)
+from positions import LIVE, replay  # noqa: E402  (a dataset's documents on its last day; the live trade statuses, as VaR's)
 
 PACK, CONNECTOR = "counterparty-risk", "exposure-store"
 KEYS = {"simulation-run": "RUN_ID", "exposure-path": "PATH_ROW_ID"}
@@ -83,9 +84,17 @@ def mpor_days(csa: dict) -> int:
 class Inputs:
     """The committed reference data of the business date: netting sets with their members, CSAs, collateral held, the books' desks."""
 
-    def __init__(self, testdata: Path, dates: list[str]):
+    def __init__(self, testdata: Path, dates: list[str], live_on: str | None = None):
+        """``live_on``: the business date a trade must not have matured by, when later than the data's (``lake demo`` moves the
+        dates to today: a trade that matured between the two is not live on the demo's date)."""
         self.cob = dates[-1]
+        self.live_on = max(self.cob, live_on or self.cob)
         self.sets = replay(testdata / PACK / "netting-set", "NETTING_SET_ID", dates)
+        self.status = {}                    # trade id -> its status on the business date (its latest version), from the booking systems
+        for system in ("endur", "calypso", "murex"):
+            folder = testdata / "trades" / system
+            if folder.is_dir():
+                self.status.update({tid: str(t.get("TRADE_STATUS") or "").upper() for tid, t in replay(folder, "TRADE_ID", dates).items()})
         self.csas = replay(testdata / PACK / "csa", "CSA_ID", dates)
         self.balances = replay(testdata / PACK / "collateral-balance", "BALANCE_ID", dates)
         self.desk_of_book = {}
@@ -93,10 +102,15 @@ class Inputs:
             for b in d.get("BOOKS") or []:
                 self.desk_of_book[b["ID"]] = d["DESK_ID"]
 
+    def live(self, t: dict) -> bool:
+        """A member trade is live: its status in the booking system is live (NEW, VALIDATED, AMENDED: the market-risk pack's
+        live-statuses, VaR's rule; a trade the booking data does not hold counts) and it has not matured by the business date."""
+        status = self.status.get(str(t["TRADE_ID"]))
+        return (not status or status in LIVE) and str(t.get("MATURITY") or "9999") >= self.live_on
+
     def members(self, ns: str) -> list[dict]:
-        """The set's live member trades on the business date (maturity on or after it), by trade id."""
-        return sorted((t for t in self.sets[ns].get("TRADES") or [] if str(t.get("MATURITY") or "9999") >= self.cob),
-                      key=lambda t: t["TRADE_ID"])
+        """The set's live member trades on the business date, by trade id."""
+        return sorted((t for t in self.sets[ns].get("TRADES") or [] if self.live(t)), key=lambda t: t["TRADE_ID"])
 
     def csa(self, ns: str) -> M.Csa | None:
         s = self.sets[ns]
@@ -390,11 +404,11 @@ def demo_sets(inputs: Inputs, limit: int = DEMO_TRADES) -> list[str]:
     return sorted(out)
 
 
-def write_demo(testdata: Path, out: Path, dates: list[str]) -> tuple[int, int, list[dict]]:
+def write_demo(testdata: Path, out: Path, dates: list[str], live_on: str | None = None) -> tuple[int, int, list[dict]]:
     """The demo run (``demo_sets``, the committed run's paths and grid) as test-data files under ``out``: (sets, trades, entries).
     tools/lake/demo.py loads it in place of the committed run, so the demo lake has exposure for most counterparties; nothing of it is
-    committed (about 100 MB)."""
-    inputs = Inputs(testdata, dates)
+    committed (about 100 MB). ``live_on``: the lake's business date (``Inputs``): a trade matured by then has no paths."""
+    inputs = Inputs(testdata, dates, live_on)
     run = Run(inputs, demo_sets(inputs))
     docs, _ = build(run)
     return len(run.sets), sum(len(v) for v in run.trades.values()), write(out, docs)

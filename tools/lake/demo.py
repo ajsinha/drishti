@@ -82,6 +82,11 @@ REDATE = re.compile(r'("(?:AS_OF|VALUATION_DATE|RUN_DATE|SOURCE_UPDATE_TIME|BUIL
 # missing days between its series and the stored days (QA1-10). Holidays and coupon schedules are real dates and stay.
 SERIES = ("HISTORY", "OHLC", "FIXINGS", "PNL_SERIES")
 SERIES_MARK = tuple(f'"{k}":[{{"DATE":"' for k in SERIES)
+# Dates a market document holds a fixed number of business days from its business date (an FX spot's value date, an IR curve's pillar
+# maturities; tools/testdata/history.py TENOR_DATES and TENOR_POINTS): moved by the same number of business days as the dates.
+TENOR_DATES = ("SPOT_DATE",)
+TENOR_POINTS = {"POINTS": "MATURITY"}
+TENOR_MARK = ('"SPOT_DATE":"', '"POINTS":[{')
 
 
 def data_dir() -> pathlib.Path:
@@ -240,7 +245,7 @@ class DemoLake:
         if not self.shift:
             return line
         line = REDATE.sub(lambda m: m.group(1) + self.shift.get(m.group(2), m.group(2)), line)
-        if not any(mark in line for mark in SERIES_MARK):
+        if not any(mark in line for mark in SERIES_MARK + TENOR_MARK):
             return line
         doc = json.loads(line)
         for k in SERIES:
@@ -249,6 +254,15 @@ class DemoLake:
                 for pt in points:
                     if isinstance(pt, dict) and isinstance(pt.get("DATE"), str) and len(pt["DATE"]) == 10:
                         pt["DATE"] = self.move_day(pt["DATE"])
+        for k in TENOR_DATES:                               # an FX spot's value date: T+2 of the moved date, not of the data's
+            if isinstance(doc.get(k), str) and len(doc[k]) == 10:
+                doc[k] = self.move_day(doc[k])
+        for k, f in TENOR_POINTS.items():                   # an IR curve's pillar maturities
+            points = doc.get(k)
+            if isinstance(points, list):
+                for pt in points:
+                    if isinstance(pt, dict) and isinstance(pt.get(f), str) and len(pt[f]) == 10:
+                        pt[f] = self.move_day(pt[f])
         return json.dumps(doc, separators=(",", ":"), ensure_ascii=False)
 
     def move_day(self, day: str) -> str:
@@ -441,7 +455,8 @@ class DemoLake:
             sys.path.insert(0, str(ROOT / "tools" / "packgen" / "ccr"))
             import make_ccr_data
             started = time.monotonic()
-            n_sets, n_trades, _ = make_ccr_data.write_demo(self.testdata, out, self.manifest.dates)
+            # members live on the lake's own business date: a trade that matured between the data's date and it has no paths
+            n_sets, n_trades, _ = make_ccr_data.write_demo(self.testdata, out, self.manifest.dates, self.dates[-1])
             if not self.a.quiet:
                 print(f"  exposure demo run: {n_sets} netting sets, {n_trades:,} trades generated in {time.monotonic() - started:.0f} s")
         return out / ds["folder"]
