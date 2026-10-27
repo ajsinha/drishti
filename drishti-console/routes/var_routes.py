@@ -114,9 +114,9 @@ _GETS = {"scope": ("scope",), "hints": ("q", "limit"), "scope/path": ("scope", "
 async def api_get(request: Request, path: str):
     q = request.query_params
     try:
-        if path.startswith("captures/") and path.endswith("/csv"):
+        if path.startswith("captures/") and path.endswith(("/csv", "/jsonl")):     # a capture's CSV or JSON Lines (2.9.4), as the server made it
             body, headers = await request.app.state.backend.var("GET", "/" + path, ident(request), raw=True, part=q.get("part", ""))
-            return Response(body, media_type="text/csv",
+            return Response(body, media_type="text/csv" if path.endswith("/csv") else "application/jsonl",
                             headers={"Content-Disposition": headers.get("content-disposition", "attachment")})
         if path.startswith("captures/") or path.startswith("baskets/"):
             return await request.app.state.backend.var("GET", "/" + path, ident(request))

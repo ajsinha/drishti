@@ -17,7 +17,9 @@
 import csv
 import io
 
-from core.export import panel_rows, plain
+import json
+
+from core.export import panel_rows, plain, to_jsonl
 
 
 def _read(body: bytes) -> list[list[str]]:
@@ -44,6 +46,44 @@ def test_every_panel_shape_exports():
     assert panel_rows(bars)[1] == [["5Y", -27722]]
     assert panel_rows({"kind": "markdown", "data": {"text": "x"}}) == ([], [])
     assert panel_rows({"kind": "table", "empty": True, "data": {}}) == ([], [])
+
+
+def _lines(body: bytes) -> list[dict]:
+    assert not body.startswith("\ufeff".encode("utf-8")) and b"\r" not in body       # JSON Lines: no BOM, LF only
+    return [json.loads(x) for x in body.decode("utf-8").splitlines()]
+
+
+def test_to_jsonl_is_a_row_a_line_keyed_as_the_csv_header():
+    import datetime
+    body = to_jsonl(["Date", "Amount", "Note"], [[datetime.date(2026, 10, 1), -1250.0, ""], ["Total", -1250.0, "=SUM()"]])
+    assert _lines(body) == [{"Date": "2026-10-01", "Amount": -1250.0, "Note": None}, {"Date": "Total", "Amount": -1250.0, "Note": "=SUM()"}]
+    assert _lines(to_jsonl([], [[1, 2]])) == [{"col1": 1, "col2": 2}]
+
+
+def test_every_csv_download_has_a_jsonl_twin(client, backend):
+    """2.9.4 (docs/guides/DATA_FORMATS.md): panel, search, grid and comparison downloads offer JSON Lines with the CSV's column names."""
+    r = client.get("/export/trade/IRS-48213/cashflows.jsonl")
+    assert r.status_code == 200 and r.headers["content-type"].startswith("application/jsonl")
+    assert 'filename="IRS-48213-cashflows.jsonl"' in r.headers["content-disposition"]
+    header = _read(client.get("/export/trade/IRS-48213/cashflows.csv").content)[0]
+    lines = _lines(r.content)
+    assert lines and list(lines[0]) == header
+    g = client.post("/export/grid.jsonl", json={"name": "pivot", "header": ["Desk", "MTM"], "rows": [["D-1", 5.5], ["=x", -1]]})
+    assert _lines(g.content) == [{"Desk": "D-1", "MTM": 5.5}, {"Desk": "=x", "MTM": -1}] and g.headers["content-disposition"].endswith('.jsonl"')
+
+    async def search(q, ident=None):
+        return {"kind": "trade", "mnemonic": "TRD", "columns": ["$.mtm"], "labels": {"$.mtm": "MTM"},
+                "rows": [{"ref": {"kind": "trade", "id": "IRS-48213"}, "title": "IRS-48213", "values": {"$.mtm": -412580.5}}]}
+    backend.search = search
+    assert _lines(client.get("/export/search.jsonl", params={"q": "TRD"}).content) == [{"TRD": "IRS-48213", "Title": "IRS-48213", "MTM": -412580.5}]
+    assert client.get("/export/search.xml", params={"q": "TRD"}).status_code == 404
+
+    async def history_diff(kind, id_, ident=None, **params):
+        return {"from": {"businessDate": "2026-09-28"}, "to": {"businessDate": "2026-09-29"},
+                "changes": [{"label": "MTM", "path": "mtm", "kind": "changed", "before": 100, "after": 110, "delta": 10}]}
+    backend.history_diff = history_diff
+    assert _lines(client.get("/export/compare/trade/IRS-48213.jsonl", params={"from": "2026-09-28"}).content) == [
+        {"Field": "MTM", "Path": "mtm", "Change": "changed", "2026-09-28": 100, "2026-09-29": 110, "Difference": 10}]
 
 
 def test_a_panel_downloads_as_csv_with_a_dated_name(client):

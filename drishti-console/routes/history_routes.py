@@ -27,7 +27,7 @@ from fastapi import APIRouter, Request
 from fastapi.responses import Response
 
 from core.backend import BackendError, drs_message
-from core.export import filename, to_csv, to_xlsx
+from core.export import JSONL_MEDIA, filename, to_csv, to_jsonl, to_xlsx
 from core.history_rows import build_page, chart_data, export_rows, range_label
 from routes.common import ident, render
 
@@ -129,6 +129,18 @@ async def history_csv(request: Request, kind: str, id_: str):
     safe = [[("'" + v) if isinstance(v, str) and v[:1] in ("=", "+", "-", "@") else v for v in r] for r in rows]
     return Response(to_csv(header, safe), media_type="text/csv; charset=utf-8",
                     headers={"Content-Disposition": f'attachment; filename="{_name(id_, data, ".csv")}"'})
+
+
+@router.get("/export/history/{kind}/{id_:path}.jsonl")
+async def history_jsonl(request: Request, kind: str, id_: str):
+    """The same table as JSON Lines (2.9.4): one business day a line, newest first, keyed as the CSV's header, numbers as numbers."""
+    try:
+        data = await _data(request, kind, id_)
+    except BackendError as e:
+        return _shown_problem(e)
+    header, rows = export_rows(data, only_changed=request.query_params.get("only") == "1")
+    return Response(to_jsonl(header, rows), media_type=JSONL_MEDIA,
+                    headers={"Content-Disposition": f'attachment; filename="{_name(id_, data, ".jsonl")}"'})
 
 
 @router.get("/export/history/{kind}/{id_:path}.xlsx")

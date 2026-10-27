@@ -52,5 +52,14 @@ class HistoryHeadline(unittest.TestCase):
         self.assertIn("avg —", head)
 
 
+class HistoryExports(unittest.TestCase):
+    def test_jsonl_is_the_csv_table_a_day_a_line(self):
+        """2.9.4: --jsonl writes the same table as --csv, one business day a line keyed as the CSV's header, numbers as numbers."""
+        import json
+        lines = [json.loads(x) for x in H.to_jsonl(ANSWER).splitlines()]
+        self.assertEqual(lines, [{"Date": "2026-10-20", "Price": 21.84, "Changed": ""}])
+        self.assertTrue(H.to_csv(ANSWER).lstrip("\ufeff").startswith("Date,Price,Changed"))
+
+
 if __name__ == "__main__":
     unittest.main()

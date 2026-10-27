@@ -26,6 +26,7 @@ import urllib.parse
 EPILOG = ("examples:\n  drishti.py exposure show NSET:NS-ALDERSHOT-NY\n  drishti.py exposure show CPTY:CP-ALDERSHOT --q 0.99 --date 2026-09-30\n"
           "  drishti.py exposure parts CPTY:CP-ALDERSHOT\n  drishti.py exposure parts NSET:NS-ALDERSHOT-NY --by trade --figure EE --top 10\n"
           "  drishti.py exposure tree\n  drishti.py exposure profile NSET:NS-ALDERSHOT-NY --csv > ns-ny.csv\n"
+          "  drishti.py exposure profile NSET:NS-ALDERSHOT-NY --jsonl > ns-ny.jsonl\n"
           "  drishti.py exposure distribution NSET:NS-ALDERSHOT-NY --at 1Y\n  drishti.py exposure status\n"
           "  drishti.py exposure capture CPTY:CP-ALDERSHOT --note 'before the unwind'\n  drishti.py exposure compare XCAP-20260930-1 now\n"
           "  drishti.py exposure whatif CPTY:CP-ALDERSHOT --like CLY-4003028 --factor -1 --set NS-ALDERSHOT-FRA\n"
@@ -168,8 +169,8 @@ def register(groups, srv, ctx: dict) -> None:
             say_json(res) if a.json else render_tree(res, print)
         elif c == "profile":
             p = asked(a, {"scope": a.scope})
-            if a.csv:
-                p["format"] = "csv"
+            if a.csv or a.jsonl:                          # the server's own file: CSV, or JSON Lines (a grid date a line)
+                p["format"] = "jsonl" if a.jsonl else "csv"
                 print(api.request("GET", "/api/v1/exposure/scope/profile?" + enc(p))[1].decode("utf-8"), end="")
             else:
                 say_json(api.json("GET", "/api/v1/exposure/scope/profile?" + enc(p)))
@@ -244,6 +245,7 @@ def register(groups, srv, ctx: dict) -> None:
     t.add_argument("--q", type=float, metavar="Q")
     pf = scoped("profile", "a scope's profile at every primary date (--csv: tenor,date,t,ee,ene,eee,pfe,pfe_99,ee_uncoll)")
     pf.add_argument("--csv", action="store_true")
+    pf.add_argument("--jsonl", action="store_true", help="the profile as JSON Lines: a grid date a line, keyed as the CSV's header")
     ds = scoped("distribution", "the exposure distribution at a primary date (the peak by default) and the path fan at every date")
     ds.add_argument("--at", metavar="TENOR|DATE")
     sub.add_parser("status", help="the engine's settings, hot files and loaded dates", parents=[srv])

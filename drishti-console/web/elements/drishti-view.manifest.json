@@ -1,6 +1,6 @@
 {
-  "bytes": 137236,
-  "gzip": 25191,
+  "bytes": 137277,
+  "gzip": 25199,
   "iconFont": {
     "family": "bootstrap-icons",
     "registered": "FontFace API (the sheet has no @font-face)"
@@ -13,6 +13,9 @@
       "static/js/tables.js"
     ],
     "box": [
+      "templates/_macros/panels.html"
+    ],
+    "braces": [
       "templates/_macros/panels.html"
     ],
     "calendar2-week": [
@@ -53,7 +56,7 @@
       "templates/_macros/panels.html"
     ]
   },
-  "sha256": "f4995a648c760b6755570f7d4e22f7236c407ddfbad7ce3505e39a054ceecb9d",
+  "sha256": "8e10d00a94afd94bd4081b309e083070b214846961834d48dafe0618df924ff4",
   "sources": [
     "css/tokens.css",
     "css/theme.css",
@@ -67,5 +70,5 @@
     "css/touch.css",
     "vendor/bootstrap-icons/bootstrap-icons.css"
   ],
-  "version": "2c4a59c084f0"
+  "version": "efb46e75be18"
 }

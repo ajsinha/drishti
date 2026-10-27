@@ -17,7 +17,8 @@ token's user, as the BI Studio's Paper tab previews them and a subscription mail
 masks and row rules.
 
   bi statement preview REPORT|--file F [--page P] [--date D] [--param k=v]   the pages: count, paper, period, and each page's header and footer
-  bi statement file REPORT|--file F [--format pdf|xlsx] [-o OUT] ...          the PDF (page-exact) or the Excel workbook (set to print on the paper)
+  bi statement file REPORT|--file F [--format pdf|xlsx|jsonl] [-o OUT] ...    the PDF (page-exact), the Excel workbook (set to print on the paper)
+                                                                               or the statement's rows as JSON Lines (one a line)
 
 Both say `cut: <table>: The first 10,000 rows only ...` for each table that stops at drishti.distribution.statements.max-rows.
 """
@@ -46,7 +47,7 @@ def register(bi, srv, ctx) -> None:
         p.add_argument("--date", default="", help="the statement's date, yyyy-mm-dd: its period is worked out from it (default: the latest business date)")
         p.add_argument("--param", action="append", default=[], metavar="NAME=VALUE", help="a parameter of the report's model (a field parameter's choice, a what-if value)")
         if act == "file":
-            p.add_argument("--format", choices=("pdf", "xlsx"), default="pdf")
+            p.add_argument("--format", choices=("pdf", "xlsx", "jsonl"), default="pdf")
             p.add_argument("-o", "--out", help="where to write it (default: the name the server gives it)")
         p.set_defaults(func=(lambda a, extra: preview(a, ctx)) if act == "preview" else (lambda a, extra: make(a, ctx)))
 
@@ -102,7 +103,7 @@ def make(a, ctx) -> int:
     body = body_of(a, ctx)
     body["format"] = a.format
     api = ctx["Api"].from_args(a)
-    _, raw = api.request("POST", "/api/v1/bi/reports/statement/file", body, extra={"Accept": "application/pdf, application/vnd.openxmlformats-officedocument.spreadsheetml.sheet, application/json"})
+    _, raw = api.request("POST", "/api/v1/bi/reports/statement/file", body, extra={"Accept": "application/pdf, application/vnd.openxmlformats-officedocument.spreadsheetml.sheet, application/jsonl, application/json"})
     out = pathlib.Path(a.out) if a.out else pathlib.Path(("statement." + a.format))
     out.write_bytes(raw)
     print(f"wrote {out} ({len(raw):,} bytes)")

@@ -17,6 +17,17 @@
 
 ## 2.9.4 (unreleased)
 
+- **JSON Lines in every console download and CLI export (2026-10-27; product owner).** A shared `to_jsonl` in `core/export.py`
+  (a row a line keyed as the CSV's header, no BOM, numbers as numbers) and a `.jsonl` twin of every CSV route: `/export/search`,
+  `/export/grid`, `/export/compare/...`, a panel's `/export/<kind>/<id>/<panel>`, `/export/history/...` (a day a line); `/dist/bi` and
+  `/dist/view` pass `jsonl` to the server; the exposure and VaR pass-throughs take `jsonl`. UI: JSONL in a table chart's export
+  (`E`), the Pivot tab, BI runs (**Export JSONL**), a BI report's Export bar, the statement editor, a view's Export menu, a panel's
+  `{}` icon, the history `E` menu, search and form results, the exposure explorer (profile, captures), the VaR explorer (the path,
+  built in the browser, and captures: two small additions beside the CSV ones), the Subscribe form's *Send as* and the scheduled
+  report's *Format*. CLI: `history --jsonl`, `exposure profile --jsonl`, `bi runs result|export --format jsonl`, `bi sql --format
+  jsonl`, `bi statement file --format jsonl`. CSV, Excel, PDF and PNG stay. Element sheet regenerated (the `braces` icon). Tests:
+  console exports, history, dist routes, and the five CLI test files. Docs: DATA_FORMATS section 4, USER_GUIDE, CLI guide, BI runs.
+
 - **JSON Lines on every server export (2026-10-27; product owner).** Beside the formats each has (CSV, Excel, PDF and PNG all stay): `GET
   /api/v1/search/jsonl` (forwarded across a cluster like `/search/csv`: `ViewForwardFilter`'s allow-list); `POST /api/v1/bi/sql`
   `format: jsonl`; `GET /bi/runs/{id}/result?format=jsonl` and `POST /bi/runs/{id}/export {format: jsonl}`; `POST /api/v1/export/jsonl`

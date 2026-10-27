@@ -234,6 +234,8 @@
     renderProv(d);
     var csv = $("[data-xx-csv]");
     csv.href = "/api/exposure/scope/profile?" + query({ scope: d.canonical, format: "csv" });
+    var jl = $("[data-xx-jsonl]");
+    if (jl) { jl.href = "/api/exposure/scope/profile?" + query({ scope: d.canonical, format: "jsonl" }); }
     document.title = "Exposure · " + d.label + (document.body.dataset.product ? " · " + document.body.dataset.product : "");
   }
 
@@ -493,7 +495,11 @@
     var a = h("a", null, "download");
     a.href = "/api/exposure/scope/profile?" + query({ scope: d.canonical, format: "csv" });
     p.appendChild(a);
-    p.appendChild(document.createTextNode(" · drishti.py exposure profile '" + d.canonical + "' --csv · GET /api/v1/exposure/scope/profile?format=csv"));
+    p.appendChild(document.createTextNode(" · "));
+    var aj = h("a", null, "JSON Lines");
+    aj.href = "/api/exposure/scope/profile?" + query({ scope: d.canonical, format: "jsonl" });
+    p.appendChild(aj);
+    p.appendChild(document.createTextNode(" · drishti.py exposure profile '" + d.canonical + "' --csv (or --jsonl) · GET /api/v1/exposure/scope/profile?format=csv"));
     pane.appendChild(p);
   }
 
@@ -760,6 +766,10 @@
         var csv = h("a", null, "CSV");
         csv.href = "/api/exposure/captures/" + encodeURIComponent(c.id) + "/csv";
         act.appendChild(csv);
+        act.appendChild(document.createTextNode(" "));
+        var jsonl = h("a", null, "JSONL");
+        jsonl.href = "/api/exposure/captures/" + encodeURIComponent(c.id) + "/jsonl";
+        act.appendChild(jsonl);
         tb.appendChild(tr);
       });
       pane.appendChild(wrap(t));

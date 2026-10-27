@@ -286,7 +286,7 @@
   if (view) {
     document.querySelectorAll('[data-export-panel]').forEach(function (a) {
       a.href = '/export/' + encodeURIComponent(view.dataset.kind) + '/' + encodeURIComponent(view.dataset.id) + '/' +
-        encodeURIComponent(a.getAttribute('data-export-panel')) + '.csv';
+        encodeURIComponent(a.getAttribute('data-export-panel')) + '.' + (a.getAttribute('data-export-ext') || 'csv');
       a.hidden = false;
     });
   }

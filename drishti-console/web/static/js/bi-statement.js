@@ -135,7 +135,7 @@
     downloads(files);
   }
 
-  /** PDF and Excel of the saved draft (the server makes them as you, from what is saved): offered once the item exists. */
+  /** PDF, Excel and JSON Lines of the saved draft (the server makes them as you, from what is saved): offered once the item exists. */
   function downloads(host) {
     B.clear(host);
     if (!D.itemId) { return; }
@@ -143,6 +143,7 @@
     const base = '/dist/bi/' + B.id2path(D.itemId);
     host.appendChild(h('a', { class: 'btn-pill btn-ghost bi-small', href: base + '.pdf?page=' + encodeURIComponent(page), 'data-st-pdf': '', title: 'The saved draft as a PDF, made as you' }, B.icon('file-earmark-pdf'), ' PDF'));
     host.appendChild(h('a', { class: 'btn-pill btn-ghost bi-small', href: base + '.xlsx?page=' + encodeURIComponent(page), 'data-st-xlsx': '', title: 'The saved draft as Excel, set to print on this paper' }, B.icon('file-earmark-spreadsheet'), ' Excel'));
+    host.appendChild(h('a', { class: 'btn-pill btn-ghost bi-small', href: base + '.jsonl?page=' + encodeURIComponent(page), 'data-st-jsonl': '', title: 'The saved draft\'s rows as JSON Lines, one a line, made as you' }, B.icon('braces'), ' JSONL'));
   }
 
   function preview() {

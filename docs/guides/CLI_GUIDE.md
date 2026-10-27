@@ -1865,6 +1865,7 @@ drishti.py history equity EQ-CSCA --range 3M --fields PRICE,CHANGE_1D
 drishti.py history trade 1000015 --from 2026-09-01 --to 2026-09-30 --diff
 drishti.py history trade 1000015 --days 30 --changes-only --json
 drishti.py history trade 1000015 --days 30 --csv > trade-1000015.csv
+drishti.py history trade 1000015 --days 30 --jsonl > trade-1000015.jsonl  # a day a line, keyed as the CSV's header
 ```
 
 | Option | Does |
@@ -1876,7 +1877,7 @@ drishti.py history trade 1000015 --days 30 --csv > trade-1000015.csv
 | `--known-at T` | the history as it was known at an instant (stores with time travel: Delta, Iceberg) |
 | `--diff` | each day's changes against the day before, listed after the table |
 | `--changes-only` | only the days on which something changed |
-| `--json`, `--csv` | the server's answer as JSON; the table as CSV (UTF-8 with a BOM, CRLF, formulas kept as text) |
+| `--json`, `--csv`, `--jsonl` | the server's answer as JSON; the table as CSV (UTF-8 with a BOM, CRLF, formulas kept as text); the table as JSON Lines (a day a line, the CSV's column names, numbers as numbers) |
 
 `drishti.py history trade 1000015 --days 30 --changes-only` (the contract's fixture trade):
 
@@ -1956,6 +1957,7 @@ drishti.py exposure parts CPTY:CP-ALDERSHOT                          contributio
 drishti.py exposure parts NSET:NS-ALDERSHOT-NY --by trade --figure EE --top 10
 drishti.py exposure tree                                             bank, legal entities, counterparties, netting sets
 drishti.py exposure profile NSET:NS-ALDERSHOT-NY --csv > ns-ny.csv   the profile as CSV
+drishti.py exposure profile NSET:NS-ALDERSHOT-NY --jsonl > ns-ny.jsonl   the profile as JSON Lines (a grid date a line)
 drishti.py exposure distribution NSET:NS-ALDERSHOT-NY --at 1Y        the distribution at a date and the path fan
 drishti.py exposure status                                           settings, hot files and loaded dates
 drishti.py exposure capture CPTY:CP-ALDERSHOT --note 'before the unwind'
@@ -2358,7 +2360,7 @@ drishti.py bi migrate --models DIR [--dry-run] [--out D] [--keep-old] [--report 
 drishti.py bi migrate --models [--dry-run] [--report F]                  the same for the server's stored items (bi-admin)
 drishti.py bi migrate --boards FILE|DIR... [--write] [--keep-old]          2.3 boards to reports with board pages (2.4.0): writes reports/<name>.report.yaml, removes the board file
 drishti.py bi migrate --boards [--dry-run]                              the same for the server's stored boards (bi-admin; the server does it at start too)
-drishti.py bi sql "SELECT ..." --model M [--explain] [--format table|json|csv] [--file F]   Drishti SQL over a model
+drishti.py bi sql "SELECT ..." --model M [--explain] [--format table|json|csv|jsonl] [--file F]   Drishti SQL over a model
 ```
 
 `bi migrate` reads `*.dataset|model|report|board|notebook.yaml` under a folder; without `--write` it prints what would change; `--check` changes nothing and
@@ -2485,7 +2487,7 @@ tab previews and a subscription mails.
 
 ```
 drishti.py bi statement preview REPORT|--file F [--page P] [--date D] [--param NAME=VALUE ...]   the pages: count, paper, period, each page's header and footer
-drishti.py bi statement file REPORT|--file F [--format pdf|xlsx] [-o OUT] [--page P] [--date D] [--param NAME=VALUE ...]   the PDF (page-exact) or the Excel workbook
+drishti.py bi statement file REPORT|--file F [--format pdf|xlsx|jsonl] [-o OUT] [--page P] [--date D] [--param NAME=VALUE ...]   the PDF (page-exact), the Excel workbook or the rows as JSON Lines
 ```
 
 `REPORT` is the report's id (`file:report:<name>` for a shipped file); `--file` sends a draft's YAML (a BI author). `--date` is the statement's date: its

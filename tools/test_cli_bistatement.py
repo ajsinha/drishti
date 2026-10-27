@@ -71,6 +71,14 @@ class BiStatement(unittest.TestCase):
         sent = json.loads(FakeServer.requests[-1][5])
         self.assertEqual(("pdf", "report: monthly\nmodel: m@1\n"), (sent["format"], sent["yaml"]))
 
+    def test_file_as_jsonl_asks_for_the_rows(self):
+        FakeServer.routes[("POST", "/api/v1/bi/reports/statement/file")] = (200, b'{"Desk":"FX"}\n')
+        out_file = self.tmp / "rows.jsonl"
+        code, out, _ = run("bi", "statement", "file", "file:report:monthly-statement", "--format", "jsonl", "-o", str(out_file), env=self.env)
+        self.assertEqual(0, code, out)
+        self.assertEqual(b'{"Desk":"FX"}\n', out_file.read_bytes())
+        self.assertEqual("jsonl", json.loads(FakeServer.requests[-1][5])["format"])
+
     def test_preview_and_file_say_when_a_table_was_cut_at_max_rows(self):
         """QA2-204: the API's cut (preview) and X-Statement-Cut (file) are printed, as the PDF's note says it."""
         note = "Positions: The first 10,000 rows only: the table goes on (drishti.distribution.statements.max-rows)."

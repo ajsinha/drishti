@@ -249,9 +249,9 @@
     return s.schedule + ' on ' + (s.data === 'same' ? 'the same dates' : 'the newest data') + (s.enabled === false ? ' · paused' : s.nextAt ? ' · next ' + when(s.nextAt) + ' UTC' : '')
       + (s.lastRun ? ' · last run ' + s.lastRun : '');
   };
-  /** A finished run's result as a file (CSV or Excel), made by the server from the stored result as the caller's own version: masked cells stay masked. */
+  /** A finished run's result as a file (CSV, Excel or JSON Lines), made by the server from the stored result as the caller's own version: masked cells stay masked. */
   R.exportRun = function (run, fmt, tell) {
-    tell('Preparing the ' + (fmt === 'xlsx' ? 'Excel' : 'CSV') + ' file…', false);
+    tell('Preparing the ' + (fmt === 'xlsx' ? 'Excel' : fmt === 'jsonl' ? 'JSON Lines' : 'CSV') + ' file…', false);
     return fetch('/bi/api/runs/' + encodeURIComponent(run.id) + '/export', { method: 'POST', credentials: 'same-origin', headers: { 'Content-Type': 'application/json', Accept: '*/*' }, body: JSON.stringify({ format: fmt }) })
       .then((res) => {
         if (!res.ok) { return res.json().catch(() => ({})).then((d) => { throw Object.assign(new Error(d.detail || res.statusText), { code: d.code, detail: d.detail || res.statusText }); }); }
@@ -265,7 +265,7 @@
         });
       }).catch((e) => tell(R.words(e.code, e.detail), true));
   };
-  /** The two export buttons (CSV, Excel) of a finished run the caller may export. */
+  /** The export buttons (CSV, Excel, JSON Lines) of a finished run the caller may export. */
   R.exportButtons = function (run, tell) {
     if (!(run.can || {}).export || !R.finished(run.state)) { return null; }
     const b = (fmt, label) => {
@@ -273,7 +273,7 @@
       x.addEventListener('click', () => { x.disabled = true; R.exportRun(run, fmt, (t, bad) => tell(t, bad, x)).then(() => { x.disabled = false; }); });
       return x;
     };
-    return h('span', { class: 'bi-run-export', role: 'group', 'aria-label': 'Export the result' }, b('csv', 'Export CSV'), b('xlsx', 'Export Excel'));
+    return h('span', { class: 'bi-run-export', role: 'group', 'aria-label': 'Export the result' }, b('csv', 'Export CSV'), b('xlsx', 'Export Excel'), b('jsonl', 'Export JSONL'));
   };
 
   // ---- settings and the event stream ------------------------------------------------------------------------------------------------------------------
