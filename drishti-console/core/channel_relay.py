@@ -72,19 +72,20 @@ async def stop() -> None:
             await asyncio.wait_for(server.wait_closed(), 2)
 
 
-async def forward(cid: str, op: str, payload: dict) -> dict | None:
-    """The answer of the worker that holds channel ``cid``; None when no other worker holds it (or none answers)."""
+async def forward(cid: str, op: str, payload: dict, limit: int = LINE_LIMIT, timeout: float = TIMEOUT) -> dict | None:
+    """The answer of the worker that holds channel ``cid`` (or another object named so: a pack job); None when no other worker holds it
+    (or none answers). ``limit`` bounds the answer's line, ``timeout`` the wait for it."""
     port = owner_port(cid)
     if not key() or port is None or port == _state["port"]:
         return None
     try:
-        reader, writer = await asyncio.wait_for(asyncio.open_connection("127.0.0.1", port, limit=LINE_LIMIT), TIMEOUT)
+        reader, writer = await asyncio.wait_for(asyncio.open_connection("127.0.0.1", port, limit=limit), TIMEOUT)
     except (OSError, asyncio.TimeoutError):
         return None
     try:
         writer.write((json.dumps({"key": key(), "op": op, "cid": cid, "payload": payload}) + "\n").encode())
         await writer.drain()
-        line = await asyncio.wait_for(reader.readline(), TIMEOUT)
+        line = await asyncio.wait_for(reader.readline(), timeout)
         got = json.loads(line) if line else None
         return got if isinstance(got, dict) else None
     except (OSError, asyncio.TimeoutError, ValueError):

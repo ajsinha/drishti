@@ -360,3 +360,41 @@ def test_data_files_follow_a_renamed_kind(post):
     q = post("/build/pack/api/plan", body(data=[{"name": "x.jsonl", "rows": 12, "bytes": 1, "docs": trades()}], kindOf={"x.jsonl": "deal"},
                                           overrides={"trade": {"kind": "deal"}})).json()
     assert next(k for k in q["kinds"] if k["kind"] == "deal")["samples"] == 12
+
+
+def test_a_job_call_reaching_another_worker_is_answered_by_the_worker_holding_the_job(client, post, monkeypatch):
+    """The console serves its port from several workers: a job lives in the one that started it, and a call another worker receives is
+    run there (core/channel_relay.py) and answered as is, a JSON answer or a download (the screenshot run's DRS-5006, 2026-10-27)."""
+    from core import channel_relay
+    from routes import pack_routes
+    jid, _ = run_job(client, post, body(pack={"name": "my-bank", "version": "1.2.0"}))
+    here = {"status": client.get(f"/build/pack/api/jobs/{jid}").json(), "summary": client.get(f"/build/pack/api/jobs/{jid}/summary").json(),
+            "tar": client.get(f"/build/pack/api/jobs/{jid}/bundle").content}
+    jobs = client.app.state.pack_jobs
+    held = jobs.jobs.pop(jid)                                   # now held by "another worker"
+    calls = []
+
+    async def forward(cid, op, payload, **kw):
+        calls.append((cid, op, payload["op"], payload["me"]["user"]))
+        jobs.jobs[cid] = held                                   # the owner's side of the relay
+        try:
+            return await pack_routes._relayed_job(client.app, cid, payload)
+        finally:
+            jobs.jobs.pop(cid, None)
+
+    monkeypatch.setattr(channel_relay, "owner_port", lambda cid: 4321)
+    monkeypatch.setattr(channel_relay, "forward", forward)
+    assert client.get(f"/build/pack/api/jobs/{jid}").json() == here["status"]
+    assert client.get(f"/build/pack/api/jobs/{jid}/summary").json() == here["summary"]
+    r = client.get(f"/build/pack/api/jobs/{jid}/bundle")
+    assert r.status_code == 200 and r.content == here["tar"] and r.headers["content-disposition"] == 'attachment; filename="my-bank-1.2.0.tar.gz"'
+    assert [c[2] for c in calls] == ["status", "summary", "bundle"] and all(c[0] == jid and c[1] == pack_routes.RELAY_OP for c in calls)
+    held.owner = "someone-else"                                 # the owner's worker still checks whose job it is
+    assert client.get(f"/build/pack/api/jobs/{jid}").status_code == 404
+
+
+def test_a_job_id_names_its_worker_when_the_console_has_several(monkeypatch):
+    from core import channel_relay
+    monkeypatch.setitem(channel_relay._state, "port", 40123)
+    assert channel_relay.suffix() == ".40123"
+    assert channel_relay.owner_port("abc" + channel_relay.suffix()) == 40123

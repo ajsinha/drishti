@@ -75,6 +75,21 @@ def test_authored_text_is_escaped(client, backend, monkeypatch):
     assert "<script>" not in h and "&lt;script&gt;" in h
 
 
+def test_the_chosen_sutra_is_never_also_listed_as_not_chosen(client, backend, monkeypatch):
+    """The server's candidates include the chosen Sutra (flagged chosen): the drawer lists only the others (the screenshot run, 2026-10-27)."""
+    ex = json.loads((FIXTURES / "explain_trade_IRS-48213.json").read_text())
+    s = ex["layout"]["sutra"]
+    ex["layout"]["candidates"] = [{"name": s["name"], "version": s["version"], "priority": s.get("priority", 10), "where": s.get("where"),
+                                   "result": "its condition held", "chosen": True},
+                                  {"name": s["name"], "version": s["version"], "priority": 10, "result": "its condition held"},
+                                  {"name": "irs-exotic", "version": 2, "priority": 5, "result": "its condition was false", "chosen": False}]
+    async def explain(kind, id_, user, generation=None):
+        return ex
+    monkeypatch.setattr(backend, "explain", explain)
+    h = client.get("/v/trade/IRS-48213/about").text
+    assert h.count("Not chosen:") == 1 and "irs-exotic v2" in h
+
+
 def test_an_unknown_entity_answers_with_the_servers_problem(client):
     r = client.get("/v/trade/NOPE-1/about")
     assert r.status_code == 404 and "DRS-1001" in r.text and "about-error" in r.text
