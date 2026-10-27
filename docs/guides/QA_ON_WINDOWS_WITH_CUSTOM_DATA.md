@@ -732,6 +732,22 @@ JSONL: one JSON object per line, the contract a pricing system sends.
 
 ---
 
+## 6i. What is new in 2.9.5: Iceberg (20 minutes)
+
+Delta stays the default for every table. These checks put the **risk domain** in Iceberg on purpose, then back. Build the jar first
+(`.\mvnw.cmd -q package -DskipTests`): the Iceberg loader and maintenance run from it. Nothing here needs Docker, AWS or an `.exe`.
+
+| # | Do | You should see |
+|---|---|---|
+| 1 | `…\.venv\Scripts\python.exe tools\build_demo_lakes.py --only market-risk --store risk=iceberg` | lines `risk/pnl-vector into Iceberg` (and the other risk tables), then `Risk domain: iceberg …\data\iceberg\risk; risk-store: now reads iceberg` |
+| 2 | **Admin → Connectors** | `risk-store` with plugin **iceberg**; **Admin → Health**: `risk-store` `UP` |
+| 3 | **Admin → Packs → market-risk → Data source → Test connection** on `risk-store` | each business date of `pnl-vector` with the same number of positions as before the switch (read from Iceberg's id maps) |
+| 4 | Open a P&L vector row (Search `pnl-vector`, any position) | its `PNL` array of 509 numbers, a missing value shown empty, never 0 |
+| 5 | Restart the server, open the same position again | it opens at once: its id map and document come from `data\cache\risk-store\` (Admin → Caches: `idMapsMappedFromDisk` above 0) |
+| 6 | `tools\drishti.py lake build --from data\testdata\market-risk\pnl-vector\cob-2026-09-30.part-001.jsonl.gz --pack config\packs\market-risk --connector risk-store --kind pnl-vector --lake data\iceberg --domain scratch --format iceberg` | a summary with `format: iceberg` and no rejects; `data\iceberg\scratch\pnl-vector\metadata` exists |
+| 7 | **Admin → Lakes**, with `data\iceberg` among the console's lake roots (`lakes.roots`) | the table `scratch/pnl-vector` with **Format** Iceberg; tick it, **Dry run**: *would expire snapshots older than 168 h; would remove 0 orphan file(s)* |
+| 8 | `…\python.exe tools\build_demo_lakes.py --only market-risk --store risk=delta` | `risk-store: now reads delta`; Admin → Connectors shows `risk-store` as delta again, with the same counts as in row 3 |
+
 ## 7. If something goes wrong
 
 | What you see | Do this |
@@ -780,6 +796,7 @@ JSONL: one JSON object per line, the contract a pricing system sends.
 - [ ] Step 6f (2.9.3): the changed data rebuilt; `DATAMAP` draws and lists its findings; Home shows a fact of the day; `HIER LEGAL~BANK` shows 150m; `IDX SP500` has 495 members.
 - [ ] Step 6g (2.9.4): step 3.0 run again; the feed is `fixing.jsonl`, Health has no CSV note; JSONL downloads from a search, a view, a history page and a BI report; `drishti.py convert` on a CSV.
 - [ ] Step 6h (2.9.4): the VaR data rebuilt; the Reporting currency select and **In other currencies**; `VAR BANK IN GBP`; a trade's Trade currency; `tools\pvgen\intraday.py` with `--lake` and `--server` shows the intraday badge; `check.py` says every scope is *ok*.
+- [ ] Step 6i (2.9.5): the risk domain moved to Iceberg and back (`--store risk=iceberg`, then `risk=delta`); the same counts both ways; a P&L vector opens with its 509 values; Admin → Lakes shows **Format** Iceberg for an Iceberg table and its dry run.
 
 **After the demo:**
 

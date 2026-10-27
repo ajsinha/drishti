@@ -15,6 +15,45 @@
 -->
 # Changelog
 
+## 2.9.5 (unreleased)
+
+### Iceberg
+
+Delta stays the default lake format everywhere; Iceberg is chosen only by configuration (a connector file, `lake build --format iceberg`,
+`build_demo_lakes.py --store …=iceberg`, `deploy/aws/iceberg/`).
+
+- **The Iceberg connector answers as the Delta connector on the same rows.** Vector columns (`layout.<kind>.vectors`: the P&L and
+  scenario-PV vectors as `list<double>`, a missing element null, never 0) are read in bulk by `vectors()` (both engines, bit for bit)
+  and put back into a fetched document in place of their `{"$vector": …}` marker; `documents()` reads a date in one pass; plus
+  `tableIdentity()` (the metadata's `table-uuid`, stable after a copy read through `relocate`), `inventory()`, `holdsNone()` and
+  `refreshVersions()` (a data-load signal re-reads each table's snapshot at once). `IcebergLoader` writes vector columns from staged
+  lines (a list that is not numbers is a reject, counted at the end). **Tests:** `IcebergVectorsTest`, `IcebergParityTest`.
+- **Disk caches for Iceberg, as Delta's.** Each date's id map memory-mapped under `<data>/cache/<connector>/idmaps`, documents in a
+  RocksDB store under `<data>/cache/<connector>/docs`, both kept across restarts and keyed by the date's files (a commit of another date
+  keeps them valid); `id-map-disk.enabled`, `doc-disk-cache.*` (on by default). **Test:** `IcebergDiskCacheTest` (after a restart no data
+  file is read for a hit).
+- **`lake build --format iceberg`** stages as for Delta and streams the rows to Drishti's Iceberg loader (vector columns kept; only
+  `overwrite-dates`; partition columns kept as columns); `--lake s3://…` or a REST catalog through `--iceberg-set` for object storage.
+  **`build_demo_lakes.py --store risk=iceberg`** moves every table of the risk domain into Iceberg and writes `risk-store.yaml` to read it
+  (`risk=delta`, or a full build without `--store risk=…`, puts it back). **Tests:** `test_vectors.py`, `test_stores.py`,
+  `test_build_demo_lakes.py`.
+- **Admin → Lakes and `lake maintain` for Iceberg.** A lake with `format: iceberg` (or Iceberg tables under a local root) is maintained by
+  `IcebergMaintenance`: retention, relayout, snapshot expiry, and **orphan files** (`--remove-orphans --older-than-hours`, 72 at least,
+  with a dry run), under the 7-year floor of `risk` and `risk-results` (`--floor-days 2557`: no date dropped and no snapshot expired
+  inside it), the ownership rule, schedules and history. The tables list has a **Format** column. **Tests:** `IcebergOrphanFilesTest`,
+  `test_maintain_iceberg.py`, `test_admin_lake_maintain.py`.
+- **`deploy/aws/iceberg/`**: `load-day.sh` (no publish step: the loader commits), `backfill.sh`, `maintain.sh`, `setup-lifecycle.sh`
+  (tiers `data/` by business date beside the Delta rules, never `metadata/`, no expiry; the Delta script now keeps the Iceberg rules too),
+  `setup-alarms.sh`, `report.sh`, `setup-iam.sh` with `iam/*.json` (Glue `GetDatabase/GetTable(s)/CreateTable/UpdateTable`, Lake
+  Formation `GetDataAccess`), `tables.example`, `check-conditional-writes.sh`, and `check-glue.sh`. **Test:** `test_deploy_aws.py`
+  (`--help`, `--dry-run`, the Glue path, the lifecycle; shellcheck where installed).
+- **Glue and S3 Tables.** `GlueLiveTest` (runs only with `DRISHTI_GLUE_LIVE=1`, through `check-glue.sh`) creates a Glue database and a
+  table of P&L vectors with Drishti's loader, reads them back through the connector (`vectors()` bit for bit) and drops them. Not run in
+  2.9.5: no AWS account; the product owner runs it (AWS_DEPLOYMENT.md section 22). S3 Tables (`check-glue.sh --s3-tables ARN`, signing
+  name `s3tables`): the code is written, **not run**, deferred to the product owner's run.
+- Docs: ICEBERG_CONNECTOR sections 18–19, DRISHTI_ICEBERG section 16, LAKE_MAINTENANCE section 8, AWS_DEPLOYMENT section 22,
+  CONFIGURATION, USER_GUIDE (Admin → Lakes), Windows QA §6i.
+
 ## 2.9.4 (unreleased)
 
 - **The basket is on the VaR page only (2026-10-27; product owner).** The top bar's **◫ Basket** button is gone (it did not apply to

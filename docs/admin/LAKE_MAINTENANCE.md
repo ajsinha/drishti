@@ -33,6 +33,10 @@ settings say ([VAR_GUIDE.md section 23.1](../guides/VAR_GUIDE.md#231-open-questi
 days, so a checkpoint's log clean-up keeps the log as long. A lake's `retain-years:` mapping changes the floor per domain
 (`retain-years: {risk: 10}`; `0` turns it off on purpose).
 
+**Delta is the default; Iceberg by configuration.** Every table above is a Delta table unless the lake says `format: iceberg` or holds
+Iceberg tables (`lake build --format iceberg`): those are maintained by Drishti's Iceberg maintenance with the same floor, ownership
+rule, lock, schedules and history, and orphan files are removed too ([section 8](#8-iceberg-lakes)).
+
 There is one engine, `tools/lake/maintain.py`. The page **Admin → Lakes** runs it in the console, and `drishti.py lake maintain` runs it
 from a terminal, cron or a container. Both read and write the same file, `<data>/lakes/lake-maintenance.yaml`, and keep the same history.
 
@@ -43,6 +47,7 @@ from a terminal, cron or a container. Both read and write the same file, `<data>
 - [5. Schedules](#5-schedules)
 - [6. History](#6-history)
 - [7. The file, the API and the settings](#7-the-file-the-api-and-the-settings)
+- [8. Iceberg lakes](#8-iceberg-lakes)
 
 The examples use a small demo lake, the same one in the UI and on the command line. It has two trade tables that `lake build` made from
 six small loads each (`trading/trade_endur` and `trading/trade_calypso`), and one table that another system published (`risk/var_published`).
@@ -274,3 +279,51 @@ Console settings ([CONFIGURATION.md](CONFIGURATION.md)):
 
 See also [TOOLS.md §7](../guides/TOOLS.md#7-lake-maintenance-toolslakemaintainpy) for the command line in depth, including `relayout`,
 storage options for S3, and `max-drop-share`.
+
+## 8. Iceberg lakes
+
+Delta stays the default. A lake's tables are maintained as Iceberg tables when the lake says `format: iceberg` in the file, or, with
+`format: auto` (the default), when a table under a local root is an Iceberg table (`<root>/<domain>/<table>/metadata/*.metadata.json`,
+as `lake build --format iceberg` writes it). The tables list shows each table's **Format** (Delta or Iceberg).
+
+For an Iceberg table the run is `IcebergMaintenance` from the server's exec jar (`tools/lake/maintain_iceberg.py` builds the command;
+`DRISHTI_ICEBERG_CLASSPATH` in development), each step one Iceberg commit:
+
+| Step | Delta | Iceberg |
+|---|---|---|
+| Retention | `keep-business-days`: dates older than N business days back from today | the table's newest N business dates on or before today are kept; older days go in one metadata-only delete; `max-drop-share` as for Delta |
+| Compaction | merge small files, or relayout a laid-out table | relayout of the days that drifted from the layout (sorted by id) |
+| Checkpoint | `checkpoint` | none (an Iceberg table has no log to replay) |
+| Vacuum | `vacuum-hours`: unused files older than that | `vacuum-hours`: snapshots older than that are expired, and the files only they used deleted |
+| Orphans | none | `orphan-hours` (72, the least allowed): files no snapshot references, older than that (a load that died before its commit left them) |
+
+**The floor holds for Iceberg too.** For the `risk` and `risk-results` domains `keep-business-days` and `vacuum-hours` are raised to
+7 years as for Delta, and the Java side is given `--floor-days 2557`: it never drops a business date, nor expires a snapshot, younger
+than that, whatever else it is told. The run reports `floor` (the first date it keeps) beside `retention-floor`.
+
+**Dry run.** It lists the dates retention would drop and the orphan files the sweep would remove (`orphans.wouldRemove`, the first
+five paths), and changes nothing. The results table says *would expire snapshots older than … h; would remove N orphan file(s)*.
+
+**Ownership, locks, schedules, history.** As for Delta: only tables `lake build --format iceberg` built under this root are maintained
+(their build record in `<lake>/_drishti-lake/tables-built.json`); `--force-foreign` overrides with a warning. A run holds the lake's
+lock; schedules (cron or after-build) and the history are shared. A history entry carries each table's `format`, `orphans` and
+`floor`.
+
+**Object storage and REST catalogs.** `root: s3://bucket/prefix` with `format: iceberg` lists the tables by their `metadata/` folders.
+A lake read through a REST catalog (AWS Glue) names its tables (`tables:`) and its catalog in `iceberg-settings:`, passed to the
+maintenance as `--set key=value`:
+
+```yaml
+lakes:
+  - root: s3://acme-drishti-prod-lake/iceberg
+    format: iceberg
+    keep-business-days: 1800
+    vacuum-hours: 168
+    orphan-hours: 72
+    iceberg-settings: {catalog: rest, uri: "https://glue.eu-west-2.amazonaws.com/iceberg", warehouse: "123456789012",
+                       catalog.rest.sigv4-enabled: "true", catalog.rest.signing-name: glue, catalog.rest.signing-region: eu-west-2}
+    tables: {risk/pnl_vector: {}}
+```
+
+`deploy/aws/iceberg/maintain.sh` writes such a file and runs it nightly ([AWS_DEPLOYMENT.md section 22](../architecture/AWS_DEPLOYMENT.md#22-iceberg-on-aws-295)).
+The setting `orphan-hours` is in **Settings per table** of the page too (under 72 is refused).

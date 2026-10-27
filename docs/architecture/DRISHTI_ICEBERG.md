@@ -27,7 +27,8 @@ Delta Lake), [GETTING_STARTED.md: Windows](../guides/GETTING_STARTED.md#drishti-
 9. [Files: local disk and S3](#9-files-local-disk-and-s3) · 10. [Engines and configuration](#10-engines-and-configuration) ·
 11. [Windows](#11-windows) · 12. [Proving it keeps to the protocol](#12-proving-it-keeps-to-the-protocol) ·
 13. [Build plan](#13-build-plan) · 14. [Risks and open questions](#14-risks-and-open-questions) ·
-15. [Two connectors: Drishti tables and external tables](#15-two-connectors-drishti-tables-and-external-tables)
+15. [Two connectors: Drishti tables and external tables](#15-two-connectors-drishti-tables-and-external-tables) ·
+16. [Vector columns and orphan files (2.9.5)](#16-vector-columns-and-orphan-files-295)
 
 ## 1. The ask
 
@@ -364,3 +365,21 @@ decimals, timestamptz), a current-only reference table, and a table renamed and 
 widened). For each: one entity, a search on any column, type-ahead, a reverse link, time travel, and the document's
 JSON compared with pyiceberg's rows converted by the rules of section 15.2.
 
+## 16. Vector columns and orphan files (2.9.5)
+
+**`list<double>` columns.** The layout's vector column (`layout.<kind>.vectors`, a P&L vector of 509 values) is an optional
+`list<double>` whose elements are optional: field ids are assigned after the promoted columns, the column's then its element's. The
+writer (`ParquetDataWriter`) writes a three-level list; a null element is written as an empty element group, so it reads back as null
+(never 0). The reader's list converter (`Converters.ListConverter`) gives a `List` with the nulls in place; the connector turns it into a
+`double[]` with NaN for null ([ICEBERG_CONNECTOR.md section 18](../connectors/ICEBERG_CONNECTOR.md#18-parity-with-delta-vectors-documents-and-disk-caches-295)).
+Adding a vector column to an existing table (`Operations.addColumns`) gives the column the next id and its element the one after, and
+records the higher as `last-column-id`. Delta stays the default lake format; this is the Iceberg side of the same column.
+
+**Orphan files.** A load that dies after writing data files but before its commit leaves files no snapshot references, and Iceberg's
+expiry only removes the files of the snapshots it expires. `OrphanFiles` (in the plugin, run by `IcebergMaintenance --remove-orphans`)
+lists every file under the table's location first, then reads the references: the current metadata file and every one its
+`metadata-log` lists, `version-hint.text`, each snapshot's manifest list, every manifest and every data and delete file they name (any
+entry status, so a file a kept snapshot may read is never taken) and the statistics files. A file not referenced and older than
+`--older-than-hours` (72 at least: longer than the longest load) is deleted; `--dry-run` lists them. Reading the references after the
+listing means a commit landing in between only adds references; the age keeps a load in flight safe. The sweep reads the table with
+drishti-iceberg whichever engine wrote it, on local disk and in S3 alike (`IcebergOrphanFilesTest`).

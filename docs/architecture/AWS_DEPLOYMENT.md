@@ -51,6 +51,7 @@ and Kubernetes today, `deploy/docker/server.Dockerfile` and `deploy/docker/conso
 19. [Tests and acceptance](#19-tests-and-acceptance)
 20. [Build plan](#20-build-plan)
 21. [Open questions](#21-open-questions)
+22. [Iceberg on AWS (2.9.5)](#22-iceberg-on-aws-295)
 
 ## 1. The ask and the rule
 
@@ -739,3 +740,44 @@ discounts):
 - **Consoles**: one per node (this design), or a console service scaled on its own (recommended at the scale of
   SUPER_SCALE.md).
 - **TLS inside the VPC**: required by the bank or not.
+
+## 22. Iceberg on AWS (2.9.5)
+
+Delta Lake stays the default ([AWS_DELTA_LAKE.md](AWS_DELTA_LAKE.md), `deploy/aws/delta-lake/`). A deployment that keeps some tables in
+Apache Iceberg (the risk domain, a source system's trades) lists them in `ICEBERG_TABLES_FILE` and runs the scripts of
+[`deploy/aws/iceberg/`](../../deploy/aws/iceberg). They share `deploy/aws/env` and `lib/common.sh` with the Delta scripts; every one has
+`--help` and `--dry-run` and is tested that way (`tools/test_deploy_aws.py`); none has yet run against a real AWS account.
+
+| Script | What it does |
+|---|---|
+| `setup-iam.sh` | three policies (`iceberg-read`, `-load`, `-maintain`, from `iam/*.json`) on the server, loader and maintenance task roles: S3 on `ICEBERG_PREFIX`, KMS, and for Glue `glue:GetDatabase/GetTable(s)`, `CreateDatabase`, `CreateTable`, `UpdateTable`, `lakeformation:GetDataAccess` |
+| `check-conditional-writes.sh` | proves the bucket refuses a second create of one key (`If-None-Match: *`): a path-based table's commit is that create |
+| `load-day.sh --date D` | per table, under its EFS lock: the day's dumps from the landing bucket, then `lake build --format iceberg --lake s3://LAKE_BUCKET/ICEBERG_PREFIX` (Drishti's loader writes the data files and commits one overwrite of the day: no publish step); metrics `LoadSucceeded`, `LoadSeconds`, `PublishedBusinessDate`. With `ICEBERG_CATALOG=glue` the Glue database of the domain is created first with its S3 location |
+| `backfill.sh --from D1 --to D2` | `load-day.sh` for each business date, oldest first; stops at the first failure and says how to resume |
+| `maintain.sh` | `lake maintain` over `lake-maintenance.s3.yaml` (`format: iceberg`): retention with the 7-year floor of `risk` and `risk-results`, relayout, snapshot expiry (`ICEBERG_EXPIRE_HOURS`), orphan files older than `ICEBERG_ORPHAN_HOURS` (72 at least); then `setup-lifecycle.sh` |
+| `setup-lifecycle.sh` | storage tiers of `data/business_date=YYYY-MM` by business date (Standard-IA, then Glacier Instant Retrieval), in the bucket's one lifecycle configuration beside the Delta rules (each script keeps the other's rules); never `metadata/`, never an expiry of a current object |
+| `setup-alarms.sh` | per table: load failed, not loaded for three days, load slow, more than `ALARM_ICEBERG_SNAPSHOTS` (500) snapshots |
+| `report.sh` | per table from its current metadata file: version, snapshots, records, data files, business dates and the newest; sends `IcebergSnapshots` and `NewestBusinessDate` |
+| `check-glue.sh` | the Glue proof below |
+
+Settings in `deploy/aws/env` (from `env.example`): `ICEBERG_PREFIX` (`iceberg`), `ICEBERG_CATALOG` (`hadoop`: path-based tables in S3;
+`glue`: the AWS Glue Iceberg REST catalog, the domain being the Glue database), `GLUE_CATALOG_ID` (the account), `ICEBERG_TABLES_FILE`,
+`ICEBERG_KEEP_BUSINESS_DAYS`, `ICEBERG_EXPIRE_HOURS`, `ICEBERG_ORPHAN_HOURS`.
+
+**Path-based tables or Glue.** A path-based table in S3 commits by a conditional create of its next metadata file, so two writers of one
+table are safe when the bucket honours `If-None-Match` (`check-conditional-writes.sh`); the scripts also hold one EFS lock per table. With
+Glue the catalog commits atomically and other engines (Athena, Spark) see the same tables. The server reads either through its
+connector file (`plugin: iceberg`; [ICEBERG_CONNECTOR.md section 19](../connectors/ICEBERG_CONNECTOR.md#19-aws-glue-s3-tables-and-the-iam-they-need-295)).
+
+**How the product owner proves Glue (no AWS account is available to the build).**
+
+1. In a sandbox account: `cp deploy/aws/env.example deploy/aws/env`, fill in `AWS_REGION`, `AWS_ACCOUNT_ID`, `LAKE_BUCKET` (an existing
+   bucket) and `ICEBERG_PREFIX`.
+2. Credentials in the default chain (`aws configure --profile sandbox` and `AWS_PROFILE=sandbox`), allowed what `iam/loader-policy.json`
+   allows plus `glue:DeleteTable`, `glue:DeleteDatabase` and `s3:DeleteObject` under `<ICEBERG_PREFIX>/_drishti-glue-check/`.
+3. `deploy/aws/iceberg/check-glue.sh --dry-run` shows what it will run; then `deploy/aws/iceberg/check-glue.sh`. It runs `GlueLiveTest`
+   (Maven, Java 21): a Glue database `drishti_check_<time>` at `s3://<bucket>/<prefix>/_drishti-glue-check/…`, a table of 25 P&L
+   vectors written by Drishti's loader, read back through the connector (a document, and `vectors()` bit for bit), then dropped
+   (`--keep` keeps them). Exit 0 means Glue works end to end; the steps are printed from `target/glue-live-report.txt`.
+4. S3 Tables: create a table bucket, then `check-glue.sh --s3-tables arn:aws:s3tables:<region>:<account>:bucket/<name>`. **Not run in
+   2.9.5** (no account; the time box went to the code); the result of the product owner's run is recorded in the CHANGELOG.

@@ -24,7 +24,9 @@ builds it.
 Related: [AWS_DEPLOYMENT.md](AWS_DEPLOYMENT.md) (ECS, EFS and the identical-path rule), [SUPER_SCALE.md](SUPER_SCALE.md)
 (500 GB a day for seven years), [DELTA_CONNECTOR.md](../connectors/DELTA_CONNECTOR.md) (how Drishti reads a Delta table),
 [LAKE_MAINTENANCE.md](../admin/LAKE_MAINTENANCE.md) (`lake maintain`), [TOOLS.md](../guides/TOOLS.md) (`lake build`,
-`lake publish`), [DRISHTI_NET.md](DRISHTI_NET.md) (several servers).
+`lake publish`), [DRISHTI_NET.md](DRISHTI_NET.md) (several servers). Delta is the default; tables a deployment keeps in Apache Iceberg
+instead have their own scripts, `deploy/aws/iceberg/` ([AWS_DEPLOYMENT.md section 22](AWS_DEPLOYMENT.md#22-iceberg-on-aws-295)); the two
+lifecycle scripts keep each other's rules in the bucket's one configuration.
 
 > **The lake lives in Amazon S3: every table's Parquet data files AND its `_delta_log`.** Nothing of the lake is on EFS.
 > EFS holds only what a node must find again after a restart: its configuration, users and tokens, Drishti\*net state, and
