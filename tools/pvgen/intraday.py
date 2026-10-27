@@ -65,9 +65,10 @@ def main(argv=None) -> int:
     p.add_argument("--every", default="0", help="with --lake: wait this long between batches (30s, 2m; default 0)")
     p.add_argument("--first", type=int, default=1, help="the first batch's number (default 1): a second run on the same date goes on "
                    "from the last one (--first 21), so that each batch keeps a BATCH_ID of its own")
+    C.grain_args(p)
     p.add_argument("--dry-run", action="store_true", help="say what would be written; write nothing")
     a = p.parse_args(argv)
-    morning = C.Morning(Path(a.testdata), C.systems(a.morning_pv_systems), a.date)
+    morning = C.Morning(Path(a.testdata), C.systems(a.morning_pv_systems), a.date, C.grain_systems(a))
     ups = C.Updates(morning, a.seed, C.mix_of(a.mix), C.M.pv_systems(a.pv_systems, a.pnl_systems, a.all_vectors), a.start,
                     only=C.systems(a.systems), first=a.first)
     plan = [x.strip() for x in a.plan.split(",") if x.strip()] or None

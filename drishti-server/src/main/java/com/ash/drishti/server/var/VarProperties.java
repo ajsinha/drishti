@@ -58,13 +58,50 @@ import org.springframework.boot.context.properties.ConfigurationProperties;
  *     hierarchy data's own {@code NAME}
  * @param rootNames the name of one hierarchy's root (hierarchy id to name, e.g. MGMT, LEGAL); wins over {@code rootName} for it
  * @param intraday the intraday updates' settings: the PV topic's window (VAR_GUIDE.md section 8.4, Kafka)
+ * @param inputs an optional pin per source system of what its records are (VAR_GUIDE.md section 15.13): the form ({@code pv}, {@code pnl}
+ *     or {@code any}) and the grain ({@code trade}, {@code position} or {@code any}); {@code default} for the systems not listed. Every
+ *     record says what it is ({@code VALUE_TYPE}, {@code GRAIN}); a pin is a cross-check: a record that disagrees is refused
+ *     ({@code DRS-5209}). Read at start: a change applies after a restart, from the next date loaded
  */
 @ConfigurationProperties("drishti.var")
 public record VarProperties(Boolean enabled, Double confidence, Double esConfidence, String rankRule, Integer componentWindow,
         Boolean componentScaleToVar, Integer threads, Integer parallelRows, Long memoryBudgetMb, Integer rowsPerChunk, Integer hotDates,
         Integer historyDays, Integer histogramBins, Integer maxParts, Kinds kinds, Map<String, Map<String, String>> access, Integer pathPage,
         Positions positions, Official official, Tier tier, List<String> currencies, Integer currencyRetentionDates, String rootName,
-        Map<String, String> rootNames, Intraday intraday) {
+        Map<String, String> rootNames, Intraday intraday, Map<String, Input> inputs) {
+
+    /**
+     * What a source system sends (VAR_GUIDE.md section 15.13): the form and the grain, each {@code any} when not pinned.
+     *
+     * @param form {@code pv} (scenario PVs, {@code VALUE_TYPE: PV}), {@code pnl} (P&amp;L vectors, {@code PNL}) or {@code any}
+     * @param grain {@code trade} ({@code GRAIN: TRADE}), {@code position} ({@code POSITION}) or {@code any}
+     */
+    public record Input(String form, String grain) {
+        public Input {
+            form = norm(form, List.of("PV", "PNL"), "form");
+            grain = norm(grain, List.of("TRADE", "POSITION"), "grain");
+        }
+
+        private static String norm(String v, List<String> allowed, String what) {
+            String u = v == null || v.isBlank() ? "ANY" : v.strip().toUpperCase(Locale.ROOT);
+            if (!u.equals("ANY") && !allowed.contains(u)) {
+                throw new IllegalArgumentException("drishti.var.inputs: " + what + " " + v + " is not one of " + allowed + " or any");
+            }
+            return u;
+        }
+
+        /** Says it in words: {@code pv, position}. */
+        @Override
+        public String toString() {
+            return form.toLowerCase(Locale.ROOT) + ", " + grain.toLowerCase(Locale.ROOT);
+        }
+    }
+
+    /** A source system's pin: its own, else {@code default}, else any (system names in any case). */
+    public Input input(String system) {
+        Input own = system == null ? null : inputs.get(system.strip().toUpperCase(Locale.ROOT));
+        return own != null ? own : inputs.getOrDefault("DEFAULT", new Input(null, null));
+    }
 
     /**
      * The intraday updates (VAR_GUIDE.md section 8.4).
@@ -247,6 +284,11 @@ public record VarProperties(Boolean enabled, Double confidence, Double esConfide
         currencyRetentionDates = currencyRetentionDates == null || currencyRetentionDates < 1 ? 5 : currencyRetentionDates;
         rootName = rootName == null ? "" : rootName;
         intraday = intraday == null ? new Intraday(null) : intraday;
+        Map<String, Input> in = new java.util.LinkedHashMap<>();
+        if (inputs != null) {
+            inputs.forEach((sys, v) -> in.put(sys.strip().toUpperCase(Locale.ROOT), v == null ? new Input(null, null) : v));
+        }
+        inputs = Map.copyOf(in);
         Map<String, String> rn = new java.util.LinkedHashMap<>();
         if (rootNames != null) {
             rootNames.forEach((h, n) -> {

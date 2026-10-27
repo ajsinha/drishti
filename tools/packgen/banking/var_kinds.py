@@ -107,13 +107,16 @@ FIELDS = {"POSITION_ID": ("position", "Position"), "PORTFOLIO_ID": ("portfolio",
 _HIER = ["LEGAL_ENTITY", "DIVISION", "DESK", "TT_BOOK", "PORTFOLIO"]
 #: the risk-store layout of each kind: promoted columns, and the vector columns (list<double>, out of the document)
 LAYOUT = {
-    "pnl-vector": {"columns": ["TRADE_ID", "SECURITY_ID", "INSTRUMENT", *_HIER, "STRATEGY", "PRODUCT_GROUP", "PRODUCT_TYPE", "CURRENCY",
-                               "COUNTERPARTY", "DIRECTION", "QUANTITY", "PV", "TAGS", "TRADE_STATUS", "MATURITY_DATE", "STATUS",
-                               "REPORTING_CCY", "SCENARIO_SET_ID", "BATCH_ID", "RUN_KIND", "COMPUTED_AT"],
+    # 2.9.4: every record says what it is first (VALUE_TYPE, GRAIN, its id, CURRENCY, SOURCE_SYSTEM: VAR_GUIDE.md section 15.13)
+    "pnl-vector": {"columns": ["VALUE_TYPE", "GRAIN", "TRADE_ID", "POSITION_ID", "CURRENCY", "SOURCE_SYSTEM", "SECURITY_ID", "INSTRUMENT",
+                               *_HIER, "STRATEGY", "PRODUCT_GROUP", "PRODUCT_TYPE", "COUNTERPARTY", "DIRECTION", "QUANTITY", "PV", "TAGS",
+                               "TRADE_STATUS", "MATURITY_DATE", "STATUS", "REPORTING_CCY", "SCENARIO_SET_ID", "BATCH_ID", "RUN_KIND",
+                               "COMPUTED_AT", "TRADE_IDS"],
                    "vectors": ["PNL"]},
-    "scenario-pv": {"columns": ["TRADE_ID", "SECURITY_ID", "INSTRUMENT", *_HIER, "STRATEGY", "PRODUCT_GROUP", "PRODUCT_TYPE", "CURRENCY",
-                                "COUNTERPARTY", "DIRECTION", "QUANTITY", "BASE_PV", "VALUATION_DATE", "BASE_VALUATION_DATE", "TAGS",
-                                "TRADE_STATUS", "MATURITY_DATE", "STATUS", "SCENARIO_SET_ID", "BATCH_ID", "RUN_KIND", "COMPUTED_AT"],
+    "scenario-pv": {"columns": ["VALUE_TYPE", "GRAIN", "TRADE_ID", "POSITION_ID", "CURRENCY", "SOURCE_SYSTEM", "SECURITY_ID", "INSTRUMENT",
+                                *_HIER, "STRATEGY", "PRODUCT_GROUP", "PRODUCT_TYPE", "COUNTERPARTY", "DIRECTION", "QUANTITY", "BASE_PV",
+                                "VALUATION_DATE", "BASE_VALUATION_DATE", "TAGS", "TRADE_STATUS", "MATURITY_DATE", "STATUS", "SCENARIO_SET_ID",
+                                "BATCH_ID", "RUN_KIND", "COMPUTED_AT", "TRADE_IDS"],
                     "vectors": ["SCENARIO_PV"]},
     "fx-scenario": {"columns": ["CURRENCY", "RATE", "SCENARIO_SET_ID"]},
     "risk-hierarchy": {"columns": ["NODE_ID", "HIERARCHY", "LEVEL", "PARENT_ID", "NAME", "LIMIT_VAR"]},

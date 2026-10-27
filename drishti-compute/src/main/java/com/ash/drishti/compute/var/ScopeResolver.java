@@ -86,6 +86,7 @@ public final class ScopeResolver {
             }
             if (r.word().equals("TRD") && r.ids().size() == 1) {
                 trade = book.tradeOrdinalAnyCase(r.ids().get(0));
+                trade = book.supplied(trade) ? -1 : trade;
             }
         }
         return new Resolution(set, e.toString(), node, position, trade, List.copyOf(unknown), List.copyOf(notes), List.copyOf(warnings));
@@ -139,7 +140,11 @@ public final class ScopeResolver {
                 OrdinalSet.Builder b = new OrdinalSet.Builder();
                 for (String id : r.ids()) {
                     int o = book.tradeOrdinalAnyCase(id);
-                    if (o < 0) {
+                    if (o >= 0 && book.supplied(o)) {                    // a supplied position: no trade-level VaR, said in words
+                        unknown.add(id);
+                        notes.add("TRD:" + id + " is a position its source system sends whole (position grain): ask POS:" + id
+                                + "; there is no trade-level VaR for it on this date");
+                    } else if (o < 0) {
                         unknown.add(id);
                     } else {
                         b.add(o);

@@ -122,6 +122,20 @@ final class VarPositions {
             }
             trades.add(r);
         }
+        if (VarBook.SUPPLIED.equals(pc.text("POSITION_RULE", p))) {
+            // a supplied position (position grain, VAR_GUIDE.md section 15.13): no trades of its own in the engine; the ones its
+            // source system named (TRADE_IDS) kept for navigation, without figures
+            ids = new ArrayList<>(d.intake().tradesOf(id));
+            trades = new ArrayList<>();
+            for (String t : ids) {
+                Map<String, Object> r = new LinkedHashMap<>();
+                r.put("TRADE_ID", t);
+                trades.add(r);
+            }
+            m.put("TRADE_COUNT", (long) ids.size());
+            m.put("POSITION_NOTE", "supplied whole by its source system (position grain): the VaR is the position's; "
+                    + (ids.isEmpty() ? "its trades are not named" : "its trades are listed as named, without trade-level figures"));
+        }
         m.put("TRADE_IDS", ids);
         m.put("TRADES", trades);
         for (String c : List.of("LEGAL_ENTITY", "DIVISION", "DESK", "TT_BOOK", "PORTFOLIO", "STRATEGY", "COUNTERPARTY", "PRODUCT_GROUP",

@@ -60,6 +60,16 @@ public final class VarBook {
             "TAGS", "POSITION_RULE", "PV_CURRENCY");
     public static final List<String> TRADE_NUMBERS = List.of("QUANTITY", "PV");
     /**
+     * The {@code POSITION_RULE} of a supplied position: a record at position grain (VAR_GUIDE.md section 15.13), held as one row whose id
+     * is its {@code POSITION_ID}, never derived from trades; it has no trades of its own in the engine.
+     */
+    public static final String SUPPLIED = "supplied";
+
+    /** True when the row at {@code ordinal} is a supplied position (a record at position grain), not a trade. */
+    public boolean supplied(int ordinal) {
+        return ordinal >= 0 && SUPPLIED.equals(trades().text("POSITION_RULE", ordinal));
+    }
+    /**
      * The positions' columns, derived from their trades when the date is built (VAR_GUIDE.md section 15.6): the first trade's instrument,
      * hierarchy, product and rule; the direction of the net quantity; the counterparty when every trade has the same one; the tags of
      * every trade; and the sums (signed quantity, market value from the trades' PV, notional as the gross quantity, trade counts).

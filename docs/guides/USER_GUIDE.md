@@ -266,6 +266,10 @@ move the page to it. A currency's VaR is never the USD VaR at a rate: the curren
 can set any name with `drishti.var.root-name` (or one per hierarchy with `drishti.var.root-names`), and the page, the command line and new
 captures follow it ([CONFIGURATION.md](../admin/CONFIGURATION.md)).
 
+**Any form, any grain (2.9.4).** *How this number was built* says, per source system, whether its figures came as scenario PVs or P&L
+vectors, per trade or per position. A position its system sends whole answers `POS:<id>`; its trades have no VaR of their own on that
+date (the trade page says so and links the position).
+
 **Intraday (2.9.4).** When pricing systems re-send trades during the day (amended, new or cancelled), the VaR page applies them as they
 land and shows an **intraday** badge in its status line (*intraday · 5 trades · 2026-09-30 11:00*): its figures are the morning run with
 those trades updated; point at the badge for the batches. The official end-of-day records stay the morning run's. `drishti.py var

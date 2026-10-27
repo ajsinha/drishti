@@ -180,7 +180,8 @@ final class VarLoader {
         List<String> columns = VarIntake.columns(router.columnar(k.vector()), pr);
         List<String> pvColumns = VarIntake.columns(router.columnar(k.scenarioPv()), pr, VarIntake.PV_COLUMNS);
         String unmarked = unmarked(columns, pvColumns);
-        VarIntake intake = new VarIntake(b, pr, date, columns.subList(1, columns.size())).scenarioSet(setId);
+        VarIntake intake = new VarIntake(b, pr, date, columns.subList(1, columns.size())).scenarioSet(setId)
+                .inputs(new VarInputs(props::input));
         boolean read;
         boolean readPv;
         try {
@@ -211,6 +212,7 @@ final class VarLoader {
         if (!otherSets.isEmpty()) {
             throw inconsistent(date, "vectors of the scenario set " + String.join(", ", otherSets) + " beside the date's set " + setId);
         }
+        intake.verify();                                                // one form and one grain per source system (VAR_GUIDE.md 15.13)
         return intake;
     }
 
@@ -257,7 +259,7 @@ final class VarLoader {
         long ms = (System.nanoTime() - t0) / 1_000_000;
         VarDate vd = new VarDate(date, book, portfolios, version(date), java.time.Instant.now(), ms, 0, sum, v, List.of(), VarDate.USD, fx);
         try {                                                          // the hot file holds the morning run: the day's updates read again
-            return withIntraday(vd, readIntraday(date, book, java.util.Set.of()), book.scenarioDates());
+            return withIntraday(vd, readIntraday(date, book, java.util.Set.of(), sum), book.scenarioDates());
         } catch (RuntimeException e) {
             org.slf4j.LoggerFactory.getLogger(VarLoader.class).warn("VaR: the intraday updates of {} could not be read: {}", date, e.getMessage());
             return vd;
@@ -366,27 +368,29 @@ final class VarLoader {
     private String unmarked(List<String> columns, List<String> pvColumns) {
         VarProperties.Kinds k = props.kinds();
         List<String> missing = new ArrayList<>();
-        if (!router.columnar(k.vector()).isEmpty() && !columns.containsAll(List.of("RUN_KIND", "COMPUTED_AT"))) {
+        if (!router.columnar(k.vector()).isEmpty() && !columns.containsAll(MARKED)) {
             missing.add("layout." + k.vector() + ".columns");
         }
-        if (!router.columnar(k.scenarioPv()).isEmpty() && !pvColumns.containsAll(List.of("RUN_KIND", "COMPUTED_AT"))) {
+        if (!router.columnar(k.scenarioPv()).isEmpty() && !pvColumns.containsAll(MARKED)) {
             missing.add("layout." + k.scenarioPv() + ".columns");
         }
         if (missing.isEmpty()) {
             return null;
         }
-        String why = "the connector does not promote RUN_KIND and COMPUTED_AT (" + String.join(", ", missing) + "), so intraday updates "
-                + "(VAR_GUIDE.md section 8.4) cannot be told from the morning run: a connector file written from the pack's template before "
-                + "2.9.4 (config/connectors/<connector>.yaml is never overwritten) needs both added to those settings";
+        String why = "the connector does not promote " + String.join(", ", MARKED) + " (" + String.join(", ", missing) + "), so the "
+                + "records cannot say what they are (VAR_GUIDE.md sections 8.4 and 15.13): a connector file written from the pack's template "
+                + "before 2.9.4 (config/connectors/<connector>.yaml is never overwritten) needs them added to those settings";
         if (UNMARKED_SAID.compareAndSet(false, true)) {
             org.slf4j.LoggerFactory.getLogger(VarLoader.class).warn("VaR: {}", why);
         }
         return why;
     }
 
+    /** The columns a PV record says what it is with (2.9.4): a connector's layout must promote them. */
+    private static final List<String> MARKED = List.of("RUN_KIND", "COMPUTED_AT", "VALUE_TYPE", "GRAIN", "SOURCE_SYSTEM", "POSITION_ID");
     private static final java.util.concurrent.atomic.AtomicBoolean UNMARKED_SAID = new java.util.concurrent.atomic.AtomicBoolean();
 
-    VarIntake readIntraday(LocalDate date, VarBook morning, java.util.Set<String> applied) {
+    VarIntake readIntraday(LocalDate date, VarBook morning, java.util.Set<String> applied, VarIntake.Summary morningRun) {
         VarProperties.Kinds k = props.kinds();
         AsOf asOf = AsOf.of(date);
         PositionRules pr = rules.get();
@@ -395,7 +399,10 @@ final class VarLoader {
         List<String> columns = VarIntake.columns(router.columnar(k.vector()), pr);
         List<String> pvColumns = VarIntake.columns(router.columnar(k.scenarioPv()), pr, VarIntake.PV_COLUMNS);
         unmarked(columns, pvColumns);
-        VarIntake intake = new VarIntake(none, pr, date, columns.subList(1, columns.size())).scenarioSet(morning.scenarioSet()).intradayOnly(applied);
+        VarInputs in = new VarInputs(props::input);
+        in.restore(morningRun == null ? null : morningRun.inputs());     // each system's morning form and grain: an update follows it
+        VarIntake intake = new VarIntake(none, pr, date, columns.subList(1, columns.size())).scenarioSet(morning.scenarioSet()).intradayOnly(applied)
+                .inputs(in);
         try {
             router.vectors(k.vector(), "PNL", columns, asOf, (id, values, len, row) -> intake.row(id, values, len, row));
             intake.scenarioPvs(pvColumns.subList(1, pvColumns.size()), () -> fx(date, days), days);

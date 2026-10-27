@@ -88,11 +88,12 @@ def main(argv=None) -> int:
     p.add_argument("--morning-pv-systems", default="ENDUR", metavar="SYS,SYS")
     p.add_argument("--start", metavar="ISO", help="the first record's COMPUTED_AT (default five minutes after the morning run)")
     p.add_argument("--save", help="also write every record sent to this JSONL file (for tools/pvgen/check.py)")
+    C.grain_args(p)
     p.add_argument("--dry-run", action="store_true", help="make the messages and print them; publish nothing (no broker needed)")
     a = p.parse_args(argv)
     if a.per_message < 1:
         p.error("--per-message must be 1 or more")
-    morning = C.Morning(Path(a.testdata), C.systems(a.morning_pv_systems), a.date)
+    morning = C.Morning(Path(a.testdata), C.systems(a.morning_pv_systems), a.date, C.grain_systems(a))
     ups = C.Updates(morning, a.seed, C.mix_of(a.mix), C.M.pv_systems(a.pv_systems, a.pnl_systems, a.all_vectors), a.start)
     count = int(a.rate * a.seconds) if a.seconds > 0 else 10 ** 12
     saved: list[dict] = []

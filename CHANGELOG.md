@@ -17,6 +17,31 @@
 
 ## 2.9.4 (unreleased)
 
+- **Inputs in any form and any grain; every record says what it is (2026-10-27; local branch, for the product owner's review: not
+  pushed).** A pricing system may send **scenario PVs or P&L vectors, per trade or per position**, and switch between dates. **2.9.4
+  requires every PV or vector record to say what it is**, leading each line: `VALUE_TYPE` (`PV` or `PNL`), `GRAIN` (`TRADE` with a
+  `TRADE_ID`, or `POSITION` with a `POSITION_ID`), `CURRENCY` and `SOURCE_SYSTEM` (the value fields keep their names: `SCENARIO_PV`,
+  `BASE_PV`, `PNL`; a P&L vector's currency stays `REPORTING_CCY`, USD, and `CURRENCY` is the trade's or position's own). **Older files
+  need the fields added:** `drishti.py var convert FILE --set VALUE_TYPE=PNL --set GRAIN=TRADE --set CURRENCY=USD --set
+  SOURCE_SYSTEM=MUREX` (or `--infer`); a record without them is refused (`DRS-5208`), as is one whose `VALUE_TYPE` is not its payload or
+  `GRAIN` not its id. A position sent whole is used as it is (never derived), placed by its book (`LEGAL_ENTITY`, `DESK`, `TT_BOOK`),
+  naming its trades in `TRADE_IDS` for navigation; everything that adds up works on it (tree, portfolios, `LE:`, `DESK:`, `BOOK:`, `CPTY:`,
+  baskets, what-if, captures, official records, currencies, intraday files and Kafka keyed by `POSITION_ID`); trade-level features say
+  so in words (`TRD:` of a position, contributions by trade, a trade page linking its position). **One source system sends one form and
+  one grain on a date** (else the date is refused, `DRS-5210`, as is a supplied position covering a trade also sent on its own); an
+  intraday update in another form or grain than the system's morning run is refused and listed. **Optional pins**
+  (`drishti.var.inputs: {ENDUR: {form: pv, grain: position}, default: {form: any, grain: any}}`) cross-check the records (`DRS-5209`
+  when they disagree). Every answer's provenance has `inputsBySystem` (form, grain, rows, how decided, `tradesWithoutPv`), the status
+  too, and the page's *How this number was built*. `drishti.py var intraday --load` routes a mixed file by `VALUE_TYPE`. The test data,
+  the samples and every script write the fields (the bank unchanged: 112,041,646 / 160,143,809); `make_var_data.py --position-systems`,
+  `--inputs-config`; `tools/pvgen --grain position`, `--position-systems`; the checker reads both grains. **Tests:** `VarInputsApiTest`
+  (the same trades as their positions give the same node VaR and ES in all four combinations; a system switching grain; two grains on a
+  date refused; records refused with their codes; an intraday update in another grain refused), `VarInputsTest`, `VarPvStreamTest` (a
+  Kafka message mixing all four of four systems, a pin disagreeing, a field missing), `test_pvgen.py` (per position equals per trade to
+  the cent), `test_varcli.py` (routing, convert). **Docs:** VAR_GUIDE 1.9 (section 15.13 with the 2x2 table, the pin, the currency
+  caveat; 15.12's example lines; errors), the contracts, CONFIGURATION, API_GUIDE, TROUBLESHOOTING, USER_GUIDE, the Market risk
+  Knowledge page.
+
 - **A stand-in pricing system, JSONL only, and both forms per system (2026-10-27; local branch, for the product owner's review: not
   pushed).** `tools/pvgen` (each with a `.sh` beside it and `tools/windows/pvgen-*.ps1`; pure Python from the console's environment,
   kafka-python for Kafka; `--help`, `--dry-run`, a fixed `--seed`): `morning.py` writes a day's `scenario-pv`, `pnl-vector` and

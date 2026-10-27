@@ -404,7 +404,7 @@ public final class VarService implements AutoCloseable {
         synchronized (intradayLocks.computeIfAbsent(d, x -> new Object())) {
             VarDate usd = dates.get(d).join();
             VarIntradayRows state = usd.intraday() == null ? new VarIntradayRows().morning(null, usd.intake().batchIds()) : usd.intraday();
-            VarIntake read = loader.readIntraday(d, usd.book().morning(), state.parts());
+            VarIntake read = loader.readIntraday(d, usd.book().morning(), state.parts(), usd.intake());
             java.util.Set<String> morning = new java.util.TreeSet<>(read.summary().batchIds());
             // new batch parts (a batch's scenario PVs and P&L vectors may land as two loads, each its own signal)
             java.util.Set<String> fresh0 = new java.util.TreeSet<>(read.intradayParts());
@@ -532,6 +532,7 @@ public final class VarService implements AutoCloseable {
                 m.put("positions", vd.book().positionCount());
                 m.put("nodes", vd.book().nodes().size());
                 m.put("vectorBytes", vd.book().vectorBytes());
+                m.put("inputsBySystem", vd.intake().inputs() == null ? Map.of() : vd.intake().inputs());   // per source system: form, grain (15.13)
                 m.put("tier", vd.book().tier());
                 m.put("aggregateBytes", vd.book().aggregateBytes());
                 if (vd.book().hot() != null) {

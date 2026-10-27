@@ -51,6 +51,20 @@ DATED = ("BUSINESS_DATE", "VALUATION_DATE", "BASE_VALUATION_DATE", "COMPUTED_AT"
 NEW_IDS = {"ENDUR": (9_000_000, ""), "CALYPSO": (9_000_000, "CLY-"), "MUREX": (90_000_000, "MX-")}
 
 
+def grain_args(p) -> None:
+    """--grain and --position-systems: which systems send per position (GRAIN POSITION) rather than per trade."""
+    p.add_argument("--grain", choices=("trade", "position"), default="trade",
+                   help="position: every system sends per position (each record a position, summed from its trades, naming them)")
+    p.add_argument("--position-systems", default="", metavar="SYS,SYS", help="these systems send per position, the rest per trade")
+
+
+def grain_systems(a) -> tuple[str, ...]:
+    """The systems sending per position: all with --grain position, else --position-systems (the morning run and its updates alike)."""
+    if getattr(a, "grain", "trade") == "position":
+        return ("ENDUR", "MUREX", "CALYPSO")
+    return systems(getattr(a, "position_systems", ""))
+
+
 def systems(text: str) -> tuple[str, ...]:
     return tuple(s.strip().upper() for s in (text or "").split(",") if s.strip())
 
@@ -96,14 +110,14 @@ def validate(kind: str, row: dict) -> list[str]:
 _DEMOS: dict = {}
 
 
-def demo(testdata: Path, pv_systems: tuple[str, ...]):
-    """The demo's risk batch of the test data's business date (the factor model), the given systems as scenario PVs (kept per process:
-    the same inputs give the same batch)."""
+def demo(testdata: Path, pv_systems: tuple[str, ...], position_systems: tuple[str, ...] = ()):
+    """The demo's risk batch of the test data's business date (the factor model), the given systems as scenario PVs and the given ones
+    per position (GRAIN POSITION; kept per process: the same inputs give the same batch)."""
     import yaml
-    key = (str(Path(testdata).resolve()), tuple(pv_systems))
+    key = (str(Path(testdata).resolve()), tuple(pv_systems), tuple(position_systems))
     if key not in _DEMOS:
         dates = yaml.safe_load((testdata / "testdata.yaml").read_text(encoding="utf-8"))["business-dates"]
-        _DEMOS[key] = M.Demo(testdata, dates, pv_systems=pv_systems)
+        _DEMOS[key] = M.Demo(testdata, dates, pv_systems=pv_systems, position_systems=position_systems)
     return _DEMOS[key]
 
 
@@ -184,8 +198,9 @@ class Morning:
     """The demo's morning run as a pricing system sends it: the trades' rows (scenario PVs or P&L vectors), the scenario FX, moved to
     ``day``; each row exactly its contract's fields; ``RUN_KIND: FULL``."""
 
-    def __init__(self, testdata: Path, pv_systems: tuple[str, ...], day: str | None = None):
-        self.demo = demo(testdata, pv_systems)
+    def __init__(self, testdata: Path, pv_systems: tuple[str, ...], day: str | None = None, position_systems: tuple[str, ...] = ()):
+        self.demo = demo(testdata, pv_systems, position_systems)
+        self.position_systems = position_systems
         self.pv_systems = pv_systems
         self.cob = self.demo.cob
         self.day = day or self.cob
@@ -198,12 +213,21 @@ class Morning:
         self.at = max(str(r.get("COMPUTED_AT")) for k in ("scenario-pv", "pnl-vector") for r in self.rows[k])
 
     def trades(self) -> dict[str, tuple[str, dict]]:
-        """Every trade of the run: its id to (its kind, its row)."""
+        """Every record of the run, a trade or a supplied position: its id to (its kind, its row)."""
         out = {}
         for k in ("scenario-pv", "pnl-vector"):
             for r in self.rows[k]:
-                out[str(r["TRADE_ID"])] = (k, r)
+                out[ident(r)] = (k, r)
         return out
+
+
+def ident(r: dict) -> str:
+    """A record's id: its TRADE_ID, or its POSITION_ID at GRAIN POSITION."""
+    return str(r["POSITION_ID"] if r.get("GRAIN") == "POSITION" else r["TRADE_ID"])
+
+
+def id_field(r: dict) -> str:
+    return "POSITION_ID" if r.get("GRAIN") == "POSITION" else "TRADE_ID"
 
 
 # ---------------------------------------------------------------------------------------------------------------- intraday updates
@@ -249,23 +273,23 @@ class Updates:
         pv_usd, pnl, ccy = self._usd(src_kind, src)
         system = str(src.get("SOURCE_SYSTEM") or "")
         base = {k: v for k, v in src.items() if k not in ("SCENARIO_PV_ID", "VECTOR_ID", "SCENARIO_PV", "PNL", "BASE_PV", "PV", "REPORTING_CCY",
-                                                       "VALUATION_DATE", "BASE_VALUATION_DATE")}
-        base.update({"TRADE_ID": tid, "BATCH_ID": batch_id, "COMPUTED_AT": at, "RUN_KIND": "INTRADAY", "QUANTITY": round(float(src.get("QUANTITY")
+                                                       "VALUATION_DATE", "BASE_VALUATION_DATE", "TRADE_ID", "POSITION_ID")}
+        base.update({id_field(src): tid, "BATCH_ID": batch_id, "COMPUTED_AT": at, "RUN_KIND": "INTRADAY", "QUANTITY": round(float(src.get("QUANTITY")
                      or 0) * f, 6), "TRADE_STATUS": status or ("AMENDED" if tid in self.live else "NEW"), "STATUS": "ok"})
         day = self.m.day
         if system in self.pv_systems and self.m.fx.has(ccy):
             b, pvs = SFX.scenario_pvs(self.m.fx, ccy, pv_usd * f, [x * f for x in pnl])
-            row = {**base, "SCENARIO_PV_ID": f"SPV-{tid}-HS-509-{batch_id}", "BASE_PV": b, "SCENARIO_PV": pvs, "VALUATION_DATE": day,
-                   "BASE_VALUATION_DATE": day, "CURRENCY": ccy}
+            row = {**base, "VALUE_TYPE": "PV", "SCENARIO_PV_ID": f"SPV-{tid}-HS-509-{batch_id}", "BASE_PV": b, "SCENARIO_PV": pvs,
+                   "VALUATION_DATE": day, "BASE_VALUATION_DATE": day, "CURRENCY": ccy}
             return "scenario-pv", contract_row("scenario-pv", row)
-        row = {**base, "VECTOR_ID": f"PV-{tid}-HS-509-{batch_id}", "PV": round(pv_usd * f, 2), "PNL": [round(x * f, 2) for x in pnl],
-               "REPORTING_CCY": "USD"}
+        row = {**base, "VALUE_TYPE": "PNL", "VECTOR_ID": f"PV-{tid}-HS-509-{batch_id}", "PV": round(pv_usd * f, 2),
+               "PNL": [round(x * f, 2) for x in pnl], "REPORTING_CCY": "USD"}
         return "pnl-vector", contract_row("pnl-vector", row)
 
     def _cancel(self, kind: str, src: dict, batch_id: str, at: str) -> tuple[str, dict]:
         row = {**src, "BATCH_ID": batch_id, "COMPUTED_AT": at, "RUN_KIND": "INTRADAY", "TRADE_STATUS": "CANCELLED", "STATUS": "ok",
                VECTORS[kind]: None}
-        row[KEYS[kind]] = f"{'SPV' if kind == 'scenario-pv' else 'PV'}-{src['TRADE_ID']}-HS-509-{batch_id}"
+        row[KEYS[kind]] = f"{'SPV' if kind == 'scenario-pv' else 'PV'}-{ident(src)}-HS-509-{batch_id}"
         return kind, contract_row(kind, row)
 
     def batch(self, size: int, plan: list[str] | None = None) -> tuple[str, list[tuple[str, dict]]]:
@@ -285,7 +309,7 @@ class Updates:
                 system = str(src.get("SOURCE_SYSTEM") or "ENDUR")
                 n = self.next_new.get(system, 9_000_000)
                 self.next_new[system] = n + 1
-                tid = f"{NEW_IDS.get(system, (0, ''))[1]}{n}"
+                tid = f"POS-{system}-NEW-{n}" if src.get("GRAIN") == "POSITION" else f"{NEW_IDS.get(system, (0, ''))[1]}{n}"
                 kind2, row = self._row(kind, src, round(self.rnd.uniform(0.5, 1.5), 2), tid, batch_id, at)
                 self.live[tid] = (kind2, row)
                 self.ids.append(tid)
@@ -334,11 +358,11 @@ def expected(morning_rows: dict[str, list[dict]], intraday_rows: list[dict], bus
     morning_at = ""
     for k in ("pnl-vector", "scenario-pv"):
         for r in morning_rows.get(k) or []:
-            trades[str(r["TRADE_ID"])] = {**r, "_kind": k}
+            trades[ident(r)] = {**r, "_kind": k}
             morning_at = max(morning_at, str(r.get("COMPUTED_AT") or ""))
     latest: dict[str, dict] = {}
     for r in intraday_rows:
-        tid, at = str(r["TRADE_ID"]), str(r.get("COMPUTED_AT") or "")
+        tid, at = ident(r), str(r.get("COMPUTED_AT") or "")
         if at and morning_at and at < morning_at:
             continue
         if tid in latest and at <= str(latest[tid].get("COMPUTED_AT") or ""):

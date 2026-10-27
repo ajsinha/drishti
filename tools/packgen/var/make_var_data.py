@@ -80,7 +80,8 @@ nice = PF.nice
 class Demo:
     """Everything the VaR demo data holds for one business date."""
 
-    def __init__(self, testdata: Path, dates: list[str], budget: int = 0, rules: P.Rules | None = None, pv_systems=None):
+    def __init__(self, testdata: Path, dates: list[str], budget: int = 0, rules: P.Rules | None = None, pv_systems=None,
+                 position_systems=()):
         self.cob = dates[-1]
         trades: dict[str, dict] = {}
         for system in ("endur", "calypso", "murex"):
@@ -91,7 +92,8 @@ class Demo:
         self.rules = rules or P.Rules.of_pack(PACK_YAML)
         market = F.Market()
         self.fx = SFX.Fx(market, SFX.today_rates(P.replay(testdata / "market-data" / "fx-spot", "PAIR", dates)))
-        self.batch = P.Batch(trades, desks, vals, self.cob, self.rules, budget, market=market, fx=self.fx, pv_systems=pv_systems)
+        self.batch = P.Batch(trades, desks, vals, self.cob, self.rules, budget, market=market, fx=self.fx, pv_systems=pv_systems,
+                             position_systems=position_systems)
         self.scenario_dates = business_days(previous_day(self.cob), F.N_SCENARIOS)
         self.n = F.N_SCENARIOS
         self.nodes = self._hierarchy()
@@ -262,6 +264,17 @@ def samples(demo: Demo, docs: dict[str, list[dict]]) -> dict[Path, str]:
              "scenario-set": docs["scenario-set"],
              "risk-hierarchy": [n for n in docs["risk-hierarchy"] if n["NODE_ID"] in ("MGMT~DESK-RATES", "LEGAL~LE-NY")],
              "portfolio": [r for r in docs["portfolio"] if r["PORTFOLIO_ID"] in ("PF-RATES-DESK", "PF-USD-RATES", "PF-ASHA-UNWIND")]}
+    # and the same data at position grain (VAR_GUIDE.md section 15.13): a position its source system sends whole, naming its trades
+    b = demo.batch
+    for kind, key, form in (("pnl-vector", "VECTOR_ID", "PNL"), ("scenario-pv", "SCENARIO_PV_ID", "PV")):
+        rows = {r["TRADE_ID"]: r for r in docs[kind] if r.get("GRAIN") == "TRADE"}
+        for p in pos:
+            members = [rows.get(t) for t in p["TRADE_IDS"]]
+            if len(members) > 1 and all(members) and len({m["SOURCE_SYSTEM"] for m in members}) == 1:
+                k, row = b.supply(p["POSITION_ID"], members[0]["SOURCE_SYSTEM"], members)
+                if k == kind:
+                    picks[kind] = picks[kind] + [row]
+                    break
     out = {SAMPLES / f"{k}.jsonl": "".join(json.dumps(d, ensure_ascii=False, separators=(",", ":")) + "\n" for d in v) for k, v in picks.items()}
     # the pack's Sutra tests (tests/<kind>/<id>.json and expect.yaml: java -jar <server> sutra test config/packs/market-risk). The VaR
     # figures of these pages are the engine's, added when the page is opened: a test of the stored document checks the rest.
@@ -303,11 +316,21 @@ def main(argv=None) -> int:
                    help=f"the source systems whose trades come as scenario PVs in their own currency (default {','.join(SFX.PV_SYSTEMS)})")
     p.add_argument("--pnl-systems", default="", metavar="SYS,SYS", help="systems whose trades come as P&L vectors (USD) even if listed above")
     p.add_argument("--all-vectors", action="store_true", help="every system as P&L vectors, exactly as in 2.9.3 (no scenario PVs)")
+    p.add_argument("--position-systems", default="", metavar="SYS,SYS",
+                   help="systems whose records come per position (GRAIN POSITION, summed from their trades, naming them in TRADE_IDS) "
+                        "rather than per trade (default: none)")
+    p.add_argument("--inputs-config", action="store_true",
+                   help="print the drishti.var.inputs snippet matching the data the flags produce, and stop")
     a = p.parse_args(argv)
     import yaml
     td = Path(a.testdata)
     dates = yaml.safe_load((td / "testdata.yaml").read_text(encoding="utf-8"))["business-dates"]
-    demo = Demo(td, dates, a.budget, pv_systems=pv_systems(a.pv_systems, a.pnl_systems, a.all_vectors))
+    pv = pv_systems(a.pv_systems, a.pnl_systems, a.all_vectors)
+    by_position = tuple(s.strip().upper() for s in a.position_systems.split(",") if s.strip())
+    if a.inputs_config:
+        print(inputs_config(pv, by_position))
+        return 0
+    demo = Demo(td, dates, a.budget, pv_systems=pv, position_systems=by_position)
     if a.check:
         import tempfile
         with tempfile.TemporaryDirectory(prefix="drishti-var-check-") as tmp:
@@ -337,6 +360,20 @@ def main(argv=None) -> int:
           f"scenario FX supplied for {', '.join(SFX.CURRENCIES)}")
     print("  the bank as the engine computes it: " + bank_figures(demo))
     return 0
+
+
+SYSTEMS = ("ENDUR", "MUREX", "CALYPSO")
+
+
+def inputs_config(pv: tuple[str, ...], by_position: tuple[str, ...]) -> str:
+    """The drishti.var.inputs pins matching the data (VAR_GUIDE.md section 15.13): optional, a cross-check of each record's own fields."""
+    lines = ["drishti:", "  var:", "    inputs:                      # optional: a record that disagrees with its system's pin is refused (DRS-5209)"]
+    for s in SYSTEMS:
+        form = "pv" if s in pv else "pnl"
+        grain = "position" if s in by_position else "trade"
+        lines.append(f"      {s + ':':<9}{{ form: {form + ',':<4} grain: {grain} }}")
+    lines.append("      default: { form: any, grain: any }")
+    return "\n".join(lines)
 
 
 def pv_systems(pv: str, pnl: str = "", all_vectors: bool = False) -> tuple[str, ...]:

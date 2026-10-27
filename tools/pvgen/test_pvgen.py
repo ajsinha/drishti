@@ -110,6 +110,47 @@ class MorningTest(unittest.TestCase):
             self.assertEqual((round(var), round(es)), (112_035_906, 160_132_107))
 
 
+class GrainTest(unittest.TestCase):
+    """Per position (--grain position, --position-systems): each record a position summed from its trades, naming them; every record
+    says what it is first (VALUE_TYPE, GRAIN, its id, CURRENCY, SOURCE_SYSTEM); the bank and every desk the same as per trade, to the
+    cent (docs/guides/VAR_GUIDE.md section 15.13)."""
+
+    def test_the_same_trades_as_their_positions_give_the_same_bank_and_desks(self):
+        with tempfile.TemporaryDirectory() as t:
+            rc, _ = run(morning.main, "--out", t + "/trade")
+            rc2, said = run(morning.main, "--out", t + "/position", "--grain", "position")
+            self.assertEqual((rc, rc2), (0, 0))
+            self.assertIn("per position: ENDUR, MUREX, CALYPSO", said)
+            by_trade = check.load_morning(Path(t) / "trade" / "morning-2026-09-30")
+            by_position = check.load_morning(Path(t) / "position" / "morning-2026-09-30")
+            for kind in ("scenario-pv", "pnl-vector"):
+                for r in by_position[kind]:
+                    self.assertEqual(list(r)[:5], ["VALUE_TYPE", "GRAIN", "POSITION_ID", "CURRENCY", "SOURCE_SYSTEM"])
+                    self.assertEqual(C.validate(kind, r), [])
+                    self.assertTrue(r["TRADE_IDS"])
+            self.assertLess(len(by_position["pnl-vector"]) + len(by_position["scenario-pv"]), 9572)
+            a = C.expected(by_trade, [], "2026-09-30")
+            b = C.expected(by_position, [], "2026-09-30")
+            self.assertEqual(sorted(a), sorted(b))
+            for scope in a:
+                for x, y in zip(a[scope], b[scope]):
+                    self.assertAlmostEqual(x, y, delta=0.01)
+            # the intraday updates follow each record's grain
+            rc, said = run(intraday.main, "--out", t + "/i", "--grain", "position", "--batches", "1", "--trades-per-batch", "6")
+            rows = every_line(Path(t) / "i")
+            self.assertTrue(rows)
+            for kind, r in rows:
+                self.assertEqual(r["GRAIN"], "POSITION")
+                self.assertEqual(C.validate(kind, r), [])
+
+    def test_the_generator_prints_the_pins_of_its_data(self):
+        import make_var_data as M
+        text = M.inputs_config(("ENDUR",), ("MUREX",))
+        self.assertIn("ENDUR:   { form: pv,  grain: trade }", text)
+        self.assertIn("MUREX:   { form: pnl, grain: position }", text)
+        self.assertIn("default: { form: any, grain: any }", text)
+
+
 class IntradayTest(unittest.TestCase):
 
     @classmethod

@@ -302,12 +302,23 @@
     if (chipText) c.appendChild(h("span", "vx-chip amber", chipText));
   }
 
+  /** Per source system on the date: its form and grain, its records, how decided (VAR_GUIDE.md section 15.13). */
+  function bySystem(m) {
+    var names = Object.keys(m || {}).sort();
+    if (!names.length) return "one form a trade";
+    return names.map(function (k) {
+      var x = m[k];
+      return k + ": " + (x.form === "pv" ? "scenario PVs" : "P&L vectors") + " per " + x.grain + " (" + int(x.rows) + ")";
+    }).join("; ");
+  }
+
   function renderProv(p, d) {
     var dl = $("[data-vx-prov]");
     dl.textContent = "";
     var fx = p.fx || {};
     [["Scope", d.kind + " " + d.label], ["Reporting currency", (p.currency || "USD") + ", chosen in the header"],
       ["Input", p.input || "P&L vectors (USD)"],
+      ["By source system", bySystem(p.inputsBySystem)],
       ["Intraday", p.intraday ? int(p.intraday.updates) + " updates of " + int(p.intraday.trades) + " trades in " + int(p.intraday.batchCount)
         + " batches, latest " + p.intraday.lastAt + "; the official records are the morning run's" : "none: the morning run"], ["Scenario FX", fx.scenarioFx || "none needed"], ["Cross rates", "via USD"],
       ["Resolved", (p.resolved || []).join("; ") || p.scope], ["Positions", int(p.positions)],

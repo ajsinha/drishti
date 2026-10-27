@@ -93,6 +93,13 @@ final class VarLakeFixture {
     }
 
     /** Writes the business date {@link #DAY} under {@code root}/risk/; returns root. */
+    /** Sets a field the row does not name at all (a row that names it as null keeps the null: a record missing it). */
+    private static void putIfMissing(Map<String, Object> r, String k, Object v) {
+        if (!r.containsKey(k)) {
+            r.put(k, v);
+        }
+    }
+
     static Path write(Path root) throws Exception {
         return write(root, DAY, 1.0, false, false);
     }
@@ -183,12 +190,32 @@ final class VarLakeFixture {
     /** The same, in a write mode of the lake writer ({@code append}: an intraday batch beside the morning run). */
     static void table(Path root, Path work, String kind, String key, List<Map<String, Object>> docs, List<String> promoted, String vector,
             String mode) throws Exception {
+        if (kind.equals("pnl-vector") || kind.equals("scenario-pv")) {    // every PV record says what it is (VAR_GUIDE.md 15.13)
+            List<Map<String, Object>> said = new ArrayList<>();
+            for (Map<String, Object> d : docs) {
+                Map<String, Object> r = new LinkedHashMap<>(d);
+                putIfMissing(r, "VALUE_TYPE", kind.equals("pnl-vector") ? "PNL" : "PV");
+                putIfMissing(r, "GRAIN", r.get("POSITION_ID") != null && r.get("TRADE_ID") == null ? "POSITION" : "TRADE");
+                putIfMissing(r, "SOURCE_SYSTEM", kind.equals("pnl-vector") ? "MUREX" : "ENDUR");
+                putIfMissing(r, "CURRENCY", "USD");
+                said.add(r);
+            }
+            docs = said;
+            List<String> p = new ArrayList<>(promoted);
+            for (String c : List.of("VALUE_TYPE", "GRAIN", "POSITION_ID", "SOURCE_SYSTEM", "TRADE_IDS", "CURRENCY")) {
+                if (!p.contains(c)) {
+                    p.add(c);
+                }
+            }
+            promoted = p;
+        }
         Map<String, List<String>> byDay = new LinkedHashMap<>();
         for (Map<String, Object> d : docs) {
             Map<String, Object> doc = new LinkedHashMap<>(d);
             Map<String, Object> cols = new LinkedHashMap<>();
             for (String c : promoted) {
-                cols.put(c, d.get(c));
+                Object x = d.get(c);
+                cols.put(c, x instanceof java.util.Collection<?> ? JSON.writeValueAsString(x) : x);   // a list (TRADE_IDS) as JSON text
             }
             if (vector != null) {
                 cols.put(vector, d.get(vector));
@@ -206,7 +233,8 @@ final class VarLakeFixture {
         List<Map<String, Object>> columns = new ArrayList<>(List.of(Map.of("name", "id", "type", "string"), Map.of("name", "doc", "type", "string"),
                 Map.of("name", "business_date", "type", "date")));
         for (String c : promoted) {
-            boolean num = docs.stream().allMatch(d -> d.get(c) == null || d.get(c) instanceof Number);
+            boolean num = docs.stream().anyMatch(d -> d.get(c) instanceof Number) && docs.stream().allMatch(d -> d.get(c) == null
+                    || d.get(c) instanceof Number);                                    // a column with no value yet (POSITION_ID) is text
             columns.add(Map.of("name", c, "type", num ? "double" : "string"));
         }
         if (vector != null) {

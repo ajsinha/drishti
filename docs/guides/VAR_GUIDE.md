@@ -1036,9 +1036,9 @@ The key is not read: it may be absent or name a batch. An example message of thr
 509 values):
 
 ```text
-{"SCENARIO_PV_ID":"SPV-1002344-HS-509-K","TRADE_ID":"1002344","BUSINESS_DATE":"2026-09-30","SCENARIO_SET_ID":"HS-509","SOURCE_SYSTEM":"ENDUR","TRADE_STATUS":"AMENDED","CURRENCY":"USD","BASE_PV":-302670.0,"SCENARIO_PV":[-208989.8,-396009.18,-356724.62],"COMPUTED_AT":"2026-09-30T11:00:00Z","RUN_KIND":"INTRADAY",…}
-{"VECTOR_ID":"PV-MX-20000300-HS-509-K","TRADE_ID":"MX-20000300","BUSINESS_DATE":"2026-09-30","SCENARIO_SET_ID":"HS-509","SOURCE_SYSTEM":"MUREX","TRADE_STATUS":"AMENDED","CURRENCY":"USD","PV":1250.5,"PNL":[-133.9,155.06,-78.11],"COMPUTED_AT":"2026-09-30T11:00:01Z","RUN_KIND":"INTRADAY",…}
-{"SCENARIO_PV_ID":"SPV-1000414-HS-509-K","TRADE_ID":"1000414","BUSINESS_DATE":"2026-09-30","SCENARIO_SET_ID":"HS-509","SOURCE_SYSTEM":"ENDUR","TRADE_STATUS":"CANCELLED","CURRENCY":"USD","SCENARIO_PV":null,"COMPUTED_AT":"2026-09-30T11:00:02Z","RUN_KIND":"INTRADAY",…}
+{"VALUE_TYPE":"PV","GRAIN":"TRADE","TRADE_ID":"1002344","CURRENCY":"USD","SOURCE_SYSTEM":"ENDUR","SCENARIO_PV_ID":"SPV-1002344-HS-509-I-2026-09-30-001","SECURITY_ID":"XCH-ComFut-USD-03","INSTRUMENT":"ENGY-EXCH-FUT USD 2026-09","BUSINESS_DATE":"2026-09-30","SCENARIO_SET_ID":"HS-509","TRADE_VERSIONS":"v6","TRADE_STATUS":"AMENDED","MATURITY_DATE":"2026-09-30","LEGAL_ENTITY":"LE-NY","DIVISION":"DIV-MARKETS","DESK":"DESK-COMM","TT_BOOK":"BOOK-COMM-3","PORTFOLIO":"BOOK-COMM-3","STRATEGY":"","PRODUCT_GROUP":"Commodity","PRODUCT_TYPE":"ComFut","COUNTERPARTY":"CP-METROEX","DIRECTION":"SHORT","QUANTITY":-5900.0,"TAGS":"","BASE_PV":-302670.0,"VALUATION_DATE":"2026-09-30","BASE_VALUATION_DATE":"2026-09-30","SCENARIO_PV":[-208989.8,-396009.18,-356724.62],"STATUS":"ok","PRICER":"demo-factor-model","MODEL_VERSION":"demo-2","COMPUTED_AT":"2026-09-30T06:05:00Z","BATCH_ID":"I-2026-09-30-001","RESTATEMENT":0,"RUN_KIND":"INTRADAY"}
+{"VALUE_TYPE":"PNL","GRAIN":"POSITION","POSITION_ID":"POS-BOOK-COMM-1~XCH-CMD_FUTURE-USD-03","CURRENCY":"USD","SOURCE_SYSTEM":"MUREX","VECTOR_ID":"PV-POS-BOOK-COMM-1~XCH-CMD_FUTURE-USD-03-HS-509","BUSINESS_DATE":"2026-09-30","SCENARIO_SET_ID":"HS-509","TRADE_STATUS":"AMENDED","LEGAL_ENTITY":"LE-NY","DIVISION":"DIV-MARKETS","DESK":"DESK-COMM","TT_BOOK":"BOOK-COMM-1","PORTFOLIO":"BOOK-COMM-1","STRATEGY":"","PRODUCT_GROUP":"Commodity","PRODUCT_TYPE":"CMD_FUTURE","SECURITY_ID":"XCH-CMD_FUTURE-USD-03","INSTRUMENT":"Commodity future USD 2027-09","MATURITY_DATE":"2027-09-10","COUNTERPARTY":"CP-SUMMIT","DIRECTION":"LONG","QUANTITY":122.0,"TAGS":"","REPORTING_CCY":"USD","PV":1595886,"PNL":[-471736.0,508921.0,273690.0],"STATUS":"ok","PRICER":"demo-factor-model","MODEL_VERSION":"demo-2","COMPUTED_AT":"2026-09-30T06:00:00Z","BATCH_ID":"B-2026-09-30-01","RESTATEMENT":0,"RUN_KIND":"FULL","TRADE_IDS":["MX-20000291","MX-30002954"]}
+{"VALUE_TYPE":"PV","GRAIN":"TRADE","TRADE_ID":"1000414","CURRENCY":"USD","SOURCE_SYSTEM":"ENDUR","SCENARIO_PV_ID":"SPV-1000414-HS-509-I-2026-09-30-001","SECURITY_ID":null,"INSTRUMENT":"ENGY-SWAP USD 2026-11","BUSINESS_DATE":"2026-09-30","SCENARIO_SET_ID":"HS-509","TRADE_VERSIONS":"v8","TRADE_STATUS":"CANCELLED","MATURITY_DATE":"2026-11-30","LEGAL_ENTITY":"LE-NY","DIVISION":"DIV-MARKETS","DESK":"DESK-COMM","TT_BOOK":"BOOK-COMM-1","PORTFOLIO":"BOOK-COMM-1","STRATEGY":"","PRODUCT_GROUP":"Commodity","PRODUCT_TYPE":"ComSwap","COUNTERPARTY":"CP-NORTHPLAINS","DIRECTION":"LONG","QUANTITY":96000.0,"TAGS":"","BASE_PV":581788.0,"VALUATION_DATE":"2026-09-30","BASE_VALUATION_DATE":"2026-09-30","SCENARIO_PV":null,"STATUS":"ok","PRICER":"demo-factor-model","MODEL_VERSION":"demo-2","COMPUTED_AT":"2026-09-30T06:05:04Z","BATCH_ID":"I-2026-09-30-001","RESTATEMENT":0,"RUN_KIND":"INTRADAY"}
 ```
 
 | Setting | Default | |
@@ -1383,6 +1383,7 @@ by `VarProperties` (`@ConfigurationProperties("drishti.var")`); `GET /api/v1/var
 | `drishti.var.kinds.scenario-pv`, `.fx-scenario`, `.fx-spot` | `scenario-pv`, `fx-scenario`, `fx-spot` | the same | 2.9.4: scenario PVs, supplied scenario FX, the FX history derived FX comes from ([section 15.9](#159-scenario-pv-scenario-pvs-per-trade-in-the-trades-currency-as-built-294)) |
 | `drishti.var.currencies` | `${DRISHTI_VAR_CURRENCIES:USD,EUR,CAD,JPY,GBP}` | `[USD, EUR, CAD, JPY, GBP]` (USD always first) | 2.9.4: the reporting currencies **built ahead**: after a date's USD book loads, each listed currency's book is built in the background into its own hot file, so a VaR in it never waits on its first ask; the console's picker lists them ([section 15.11](#1511-reporting-currencies-built-ahead-per-trade-currency-totals-and-the-picker-as-built-294)) |
 | `drishti.var.root-name` | `${DRISHTI_VAR_ROOT_NAME:}` | blank: the hierarchy data's `NAME` | 2.9.4: the name of every hierarchy's root node (the top of the tree, breadcrumbs, headline, CLI, `var-result`, captures and new official records; older records keep theirs); applied when a date loads and part of the hot file's digest, so a running server shows it after a restart or a reload of the dates |
+| `drishti.var.inputs` | none | `default: {form: any, grain: any}` | 2.9.4: an optional pin per source system (`{ENDUR: {form: pv, grain: position}}`): a record that disagrees is refused (`DRS-5209`); read at start ([section 15.13](#1513-inputs-any-form-any-grain-as-built-294)) |
 | `drishti.var.root-names` | none | none | 2.9.4: one hierarchy's root name (`{MGMT: "Group", LEGAL: "Group legal entities"}`), over `root-name` |
 | `drishti.var.currency-retention-dates` | `${DRISHTI_VAR_CURRENCY_RETENTION_DATES:5}` | 5 (below 1) | 2.9.4: the newest business dates whose listed currencies are built ahead and kept on disk; older dates' listed-currency hot files are deleted (built again on first ask) |
 | `drishti.var.official.currencies` | `[USD]` | `[USD]` (USD always first) | 2.9.4: the reporting currencies captured officially; only USD is published ([section 15.10](#1510-reporting-currency-as-built-294)) |
@@ -2019,24 +2020,27 @@ portfolio figures stay in USD.
 
 A pricing system sends a business day's trades in either form, side by side: **P&L vectors** in USD (`pnl-vector`, section 15.2) or
 **scenario PVs** in each trade's own currency with its base PV (`scenario-pv`, section 15.9), with the **scenario FX** (`fx-scenario`)
-when it has it; during the day, only the changed trades (section 8.4). **This is the contract a pricing system sends:** JSONL, one
+when it has it; during the day, only the changed trades (section 8.4); per trade or per position (section 15.13). **This is the
+contract a pricing system sends:** every record leads with what it is (`VALUE_TYPE`, `GRAIN`, its id, `CURRENCY`, `SOURCE_SYSTEM`); JSONL, one
 JSON object per line, UTF-8, a file `.jsonl` (or `.jsonl.gz`), each line exactly the fields of its kind's contract
 (`config/packs/market-risk/contracts/{scenario-pv,pnl-vector,fx-scenario}.contract.yaml`, which say the same), no other. Sample lines
 (the vector cut to its first 3 values here: a row carries all 509):
 
 ```text
-# scenario-pv, the morning run (RUN_KIND FULL)
-{"SCENARIO_PV_ID":"SPV-1000003-HS-509","TRADE_ID":"1000003","SECURITY_ID":null,"INSTRUMENT":"ENGY-B-SWAP USD 2027-02","BUSINESS_DATE":"2026-09-30","SCENARIO_SET_ID":"HS-509","SOURCE_SYSTEM":"ENDUR","TRADE_VERSIONS":"v7","TRADE_STATUS":"AMENDED","MATURITY_DATE":"2027-02-28","LEGAL_ENTITY":"LE-NY","DIVISION":"DIV-MARKETS","DESK":"DESK-COMM","TT_BOOK":"BOOK-COMM-1","PORTFOLIO":"BOOK-COMM-1","STRATEGY":"","PRODUCT_GROUP":"Commodity","PRODUCT_TYPE":"ComSwap","CURRENCY":"USD","COUNTERPARTY":"CP-CASCADIA","DIRECTION":"SHORT","QUANTITY":-4687500.0,"TAGS":"","BASE_PV":-5176568.0,"VALUATION_DATE":"2026-09-30","BASE_VALUATION_DATE":"2026-09-30","SCENARIO_PV":[-4754754.0,-5608689.0,-5444664.0],"STATUS":"ok","PRICER":"demo-factor-model","MODEL_VERSION":"demo-2","COMPUTED_AT":"2026-09-30T06:00:00Z","BATCH_ID":"B-2026-09-30-01","RESTATEMENT":0,"RUN_KIND":"FULL"}
-# pnl-vector, the morning run
-{"VECTOR_ID":"PV-MX-20000300-HS-509","TRADE_ID":"MX-20000300","SECURITY_ID":null,"INSTRUMENT":"Commodity forward USD 2026-10","BUSINESS_DATE":"2026-09-30","SCENARIO_SET_ID":"HS-509","SOURCE_SYSTEM":"MUREX","TRADE_VERSIONS":"v1","TRADE_STATUS":"VALIDATED","MATURITY_DATE":"2026-10-07","LEGAL_ENTITY":"LE-NY","DIVISION":"DIV-MARKETS","DESK":"DESK-COMM","TT_BOOK":"BOOK-COMM-1","PORTFOLIO":"BOOK-COMM-1","STRATEGY":"","PRODUCT_GROUP":"Commodity","PRODUCT_TYPE":"CMD_FORWARD","CURRENCY":"USD","COUNTERPARTY":"CP-NORTHBRIDGE","DIRECTION":"LONG","QUANTITY":345225.0,"TAGS":"","REPORTING_CCY":"USD","PV":1033434,"PNL":[-268529,278946,184056],"STATUS":"ok","PRICER":"demo-factor-model","MODEL_VERSION":"demo-2","COMPUTED_AT":"2026-09-30T06:00:00Z","BATCH_ID":"B-2026-09-30-01","RESTATEMENT":0,"RUN_KIND":"FULL"}
-# scenario-pv, an intraday amendment (RUN_KIND INTRADAY, its own BATCH_ID, a later COMPUTED_AT)
-{"SCENARIO_PV_ID":"SPV-1002344-HS-509-I-2026-09-30-001","TRADE_ID":"1002344","SECURITY_ID":"XCH-ComFut-USD-03","INSTRUMENT":"ENGY-EXCH-FUT USD 2026-09","BUSINESS_DATE":"2026-09-30","SCENARIO_SET_ID":"HS-509","SOURCE_SYSTEM":"ENDUR","TRADE_VERSIONS":"v6","TRADE_STATUS":"AMENDED","MATURITY_DATE":"2026-09-30","LEGAL_ENTITY":"LE-NY","DIVISION":"DIV-MARKETS","DESK":"DESK-COMM","TT_BOOK":"BOOK-COMM-3","PORTFOLIO":"BOOK-COMM-3","STRATEGY":"","PRODUCT_GROUP":"Commodity","PRODUCT_TYPE":"ComFut","CURRENCY":"USD","COUNTERPARTY":"CP-METROEX","DIRECTION":"SHORT","QUANTITY":-5900.0,"TAGS":"","BASE_PV":-302670.0,"VALUATION_DATE":"2026-09-30","BASE_VALUATION_DATE":"2026-09-30","SCENARIO_PV":[-208989.8,-396009.18,-356724.62],"STATUS":"ok","PRICER":"demo-factor-model","MODEL_VERSION":"demo-2","COMPUTED_AT":"2026-09-30T06:05:00Z","BATCH_ID":"I-2026-09-30-001","RESTATEMENT":0,"RUN_KIND":"INTRADAY"}
-# pnl-vector, an intraday amendment
-{"VECTOR_ID":"PV-CLY-4001039-HS-509-I-2026-09-30-001","TRADE_ID":"CLY-4001039","SECURITY_ID":null,"INSTRUMENT":"Total return swap on a loan index GBP 2032-08","BUSINESS_DATE":"2026-09-30","SCENARIO_SET_ID":"HS-509","SOURCE_SYSTEM":"CALYPSO","TRADE_VERSIONS":"v1","TRADE_STATUS":"AMENDED","MATURITY_DATE":"2032-08-31","LEGAL_ENTITY":"LE-NY","DIVISION":"DIV-MARKETS","DESK":"DESK-CREDIT","TT_BOOK":"BOOK-CREDIT-2","PORTFOLIO":"BOOK-CREDIT-2","STRATEGY":"","PRODUCT_GROUP":"Credit","PRODUCT_TYPE":"TRS_LOAN_INDEX","CURRENCY":"GBP","COUNTERPARTY":"CP-MERIDIAN-RE","DIRECTION":"LONG","QUANTITY":94737600.0,"TAGS":"","REPORTING_CCY":"USD","PV":-1791656.64,"PNL":[-133904.64,155064.96,-78112.32],"STATUS":"ok","PRICER":"demo-factor-model","MODEL_VERSION":"demo-2","COMPUTED_AT":"2026-09-30T06:05:00Z","BATCH_ID":"I-2026-09-30-001","RESTATEMENT":0,"RUN_KIND":"INTRADAY"}
+# scenario PVs of a trade, the morning run (VALUE_TYPE PV, GRAIN TRADE: its TRADE_ID; CURRENCY the PVs' own)
+{"VALUE_TYPE":"PV","GRAIN":"TRADE","TRADE_ID":"1000054","CURRENCY":"EUR","SOURCE_SYSTEM":"ENDUR","SCENARIO_PV_ID":"SPV-1000054-HS-509","SECURITY_ID":null,"INSTRUMENT":"ENGY-SWAP EUR 2026-09","BUSINESS_DATE":"2026-09-30","SCENARIO_SET_ID":"HS-509","TRADE_VERSIONS":"v2","TRADE_STATUS":"VALIDATED","MATURITY_DATE":"2026-09-30","LEGAL_ENTITY":"LE-NY","DIVISION":"DIV-MARKETS","DESK":"DESK-COMM","TT_BOOK":"BOOK-COMM-1","PORTFOLIO":"BOOK-COMM-1","STRATEGY":"","PRODUCT_GROUP":"Commodity","PRODUCT_TYPE":"ComSwap","COUNTERPARTY":"CP-NORTHPLAINS","DIRECTION":"SHORT","QUANTITY":-18000.0,"TAGS":"","BASE_PV":14997.44,"VALUATION_DATE":"2026-09-30","BASE_VALUATION_DATE":"2026-09-30","SCENARIO_PV":[139808.35,-108734.24,-56739.35],"STATUS":"ok","PRICER":"demo-factor-model","MODEL_VERSION":"demo-2","COMPUTED_AT":"2026-09-30T06:00:00Z","BATCH_ID":"B-2026-09-30-01","RESTATEMENT":0,"RUN_KIND":"FULL"}
+# scenario PVs of a position its source system sends whole (GRAIN POSITION: its POSITION_ID, placed by its book, naming its trades)
+{"VALUE_TYPE":"PV","GRAIN":"POSITION","POSITION_ID":"POS-BOOK-COMM-1~XCH-ComFut-EUR-03","CURRENCY":"EUR","SOURCE_SYSTEM":"ENDUR","SCENARIO_PV_ID":"SPV-POS-BOOK-COMM-1~XCH-ComFut-EUR-03-HS-509","BUSINESS_DATE":"2026-09-30","SCENARIO_SET_ID":"HS-509","TRADE_STATUS":"AMENDED","LEGAL_ENTITY":"LE-NY","DIVISION":"DIV-MARKETS","DESK":"DESK-COMM","TT_BOOK":"BOOK-COMM-1","PORTFOLIO":"BOOK-COMM-1","STRATEGY":"","PRODUCT_GROUP":"Commodity","PRODUCT_TYPE":"ComFut","SECURITY_ID":"XCH-ComFut-EUR-03","INSTRUMENT":"ENGY-EXCH-FUT EUR 2026-11","MATURITY_DATE":"2026-12-31","COUNTERPARTY":"","DIRECTION":"LONG","QUANTITY":8750.0,"TAGS":"","BASE_PV":8252.13,"VALUATION_DATE":"2026-09-30","BASE_VALUATION_DATE":"2026-09-30","SCENARIO_PV":[-94382.46,93080.07,58121.8],"STATUS":"ok","PRICER":"demo-factor-model","MODEL_VERSION":"demo-2","COMPUTED_AT":"2026-09-30T06:00:00Z","BATCH_ID":"B-2026-09-30-01","RESTATEMENT":0,"RUN_KIND":"FULL","TRADE_IDS":["1001385","1001840","1004234"]}
+# a P&L vector of a trade (VALUE_TYPE PNL: the vector in REPORTING_CCY, USD; CURRENCY the trade's own)
+{"VALUE_TYPE":"PNL","GRAIN":"TRADE","TRADE_ID":"MX-20000274","CURRENCY":"USD","SOURCE_SYSTEM":"MUREX","VECTOR_ID":"PV-MX-20000274-HS-509","SECURITY_ID":"SEC-WARRANT-USD-01","INSTRUMENT":"Equity warrant USD 2027-05","BUSINESS_DATE":"2026-09-30","SCENARIO_SET_ID":"HS-509","TRADE_VERSIONS":"v4","TRADE_STATUS":"AMENDED","MATURITY_DATE":"2027-05-26","LEGAL_ENTITY":"LE-LDN","DIVISION":"DIV-MARKETS","DESK":"DESK-EQD","TT_BOOK":"BOOK-EQD-2","PORTFOLIO":"BOOK-EQD-2","STRATEGY":"","PRODUCT_GROUP":"Equity","PRODUCT_TYPE":"WARRANT","COUNTERPARTY":"CP-SUMMIT","DIRECTION":"SHORT","QUANTITY":-179000000.0,"TAGS":"","REPORTING_CCY":"USD","PV":3143714,"PNL":[4169,-3347,-1306],"STATUS":"ok","PRICER":"demo-factor-model","MODEL_VERSION":"demo-2","COMPUTED_AT":"2026-09-30T06:00:00Z","BATCH_ID":"B-2026-09-30-01","RESTATEMENT":0,"RUN_KIND":"FULL"}
+# a P&L vector of a position
+{"VALUE_TYPE":"PNL","GRAIN":"POSITION","POSITION_ID":"POS-BOOK-COMM-1~XCH-CMD_FUTURE-USD-03","CURRENCY":"USD","SOURCE_SYSTEM":"MUREX","VECTOR_ID":"PV-POS-BOOK-COMM-1~XCH-CMD_FUTURE-USD-03-HS-509","BUSINESS_DATE":"2026-09-30","SCENARIO_SET_ID":"HS-509","TRADE_STATUS":"AMENDED","LEGAL_ENTITY":"LE-NY","DIVISION":"DIV-MARKETS","DESK":"DESK-COMM","TT_BOOK":"BOOK-COMM-1","PORTFOLIO":"BOOK-COMM-1","STRATEGY":"","PRODUCT_GROUP":"Commodity","PRODUCT_TYPE":"CMD_FUTURE","SECURITY_ID":"XCH-CMD_FUTURE-USD-03","INSTRUMENT":"Commodity future USD 2027-09","MATURITY_DATE":"2027-09-10","COUNTERPARTY":"CP-SUMMIT","DIRECTION":"LONG","QUANTITY":122.0,"TAGS":"","REPORTING_CCY":"USD","PV":1595886,"PNL":[-471736.0,508921.0,273690.0],"STATUS":"ok","PRICER":"demo-factor-model","MODEL_VERSION":"demo-2","COMPUTED_AT":"2026-09-30T06:00:00Z","BATCH_ID":"B-2026-09-30-01","RESTATEMENT":0,"RUN_KIND":"FULL","TRADE_IDS":["MX-20000291","MX-30002954"]}
+# an intraday amendment (RUN_KIND INTRADAY, its own BATCH_ID, a later COMPUTED_AT)
+{"VALUE_TYPE":"PV","GRAIN":"TRADE","TRADE_ID":"1002344","CURRENCY":"USD","SOURCE_SYSTEM":"ENDUR","SCENARIO_PV_ID":"SPV-1002344-HS-509-I-2026-09-30-001","SECURITY_ID":"XCH-ComFut-USD-03","INSTRUMENT":"ENGY-EXCH-FUT USD 2026-09","BUSINESS_DATE":"2026-09-30","SCENARIO_SET_ID":"HS-509","TRADE_VERSIONS":"v6","TRADE_STATUS":"AMENDED","MATURITY_DATE":"2026-09-30","LEGAL_ENTITY":"LE-NY","DIVISION":"DIV-MARKETS","DESK":"DESK-COMM","TT_BOOK":"BOOK-COMM-3","PORTFOLIO":"BOOK-COMM-3","STRATEGY":"","PRODUCT_GROUP":"Commodity","PRODUCT_TYPE":"ComFut","COUNTERPARTY":"CP-METROEX","DIRECTION":"SHORT","QUANTITY":-5900.0,"TAGS":"","BASE_PV":-302670.0,"VALUATION_DATE":"2026-09-30","BASE_VALUATION_DATE":"2026-09-30","SCENARIO_PV":[-208989.8,-396009.18,-356724.62],"STATUS":"ok","PRICER":"demo-factor-model","MODEL_VERSION":"demo-2","COMPUTED_AT":"2026-09-30T06:05:00Z","BATCH_ID":"I-2026-09-30-001","RESTATEMENT":0,"RUN_KIND":"INTRADAY"}
 # an intraday cancel: TRADE_STATUS CANCELLED, the vector null
-{"SCENARIO_PV_ID":"SPV-1000414-HS-509-I-2026-09-30-001","TRADE_ID":"1000414","SECURITY_ID":null,"INSTRUMENT":"ENGY-SWAP USD 2026-11","BUSINESS_DATE":"2026-09-30","SCENARIO_SET_ID":"HS-509","SOURCE_SYSTEM":"ENDUR","TRADE_VERSIONS":"v8","TRADE_STATUS":"CANCELLED","MATURITY_DATE":"2026-11-30","LEGAL_ENTITY":"LE-NY","DIVISION":"DIV-MARKETS","DESK":"DESK-COMM","TT_BOOK":"BOOK-COMM-1","PORTFOLIO":"BOOK-COMM-1","STRATEGY":"","PRODUCT_GROUP":"Commodity","PRODUCT_TYPE":"ComSwap","CURRENCY":"USD","COUNTERPARTY":"CP-NORTHPLAINS","DIRECTION":"LONG","QUANTITY":96000.0,"TAGS":"","BASE_PV":581788.0,"VALUATION_DATE":"2026-09-30","BASE_VALUATION_DATE":"2026-09-30","SCENARIO_PV":null,"STATUS":"ok","PRICER":"demo-factor-model","MODEL_VERSION":"demo-2","COMPUTED_AT":"2026-09-30T06:05:04Z","BATCH_ID":"I-2026-09-30-001","RESTATEMENT":0,"RUN_KIND":"INTRADAY"}
+{"VALUE_TYPE":"PV","GRAIN":"TRADE","TRADE_ID":"1000414","CURRENCY":"USD","SOURCE_SYSTEM":"ENDUR","SCENARIO_PV_ID":"SPV-1000414-HS-509-I-2026-09-30-001","SECURITY_ID":null,"INSTRUMENT":"ENGY-SWAP USD 2026-11","BUSINESS_DATE":"2026-09-30","SCENARIO_SET_ID":"HS-509","TRADE_VERSIONS":"v8","TRADE_STATUS":"CANCELLED","MATURITY_DATE":"2026-11-30","LEGAL_ENTITY":"LE-NY","DIVISION":"DIV-MARKETS","DESK":"DESK-COMM","TT_BOOK":"BOOK-COMM-1","PORTFOLIO":"BOOK-COMM-1","STRATEGY":"","PRODUCT_GROUP":"Commodity","PRODUCT_TYPE":"ComSwap","COUNTERPARTY":"CP-NORTHPLAINS","DIRECTION":"LONG","QUANTITY":96000.0,"TAGS":"","BASE_PV":581788.0,"VALUATION_DATE":"2026-09-30","BASE_VALUATION_DATE":"2026-09-30","SCENARIO_PV":null,"STATUS":"ok","PRICER":"demo-factor-model","MODEL_VERSION":"demo-2","COMPUTED_AT":"2026-09-30T06:05:04Z","BATCH_ID":"I-2026-09-30-001","RESTATEMENT":0,"RUN_KIND":"INTRADAY"}
 # fx-scenario: a currency's rate today and under each scenario, USD per one unit
-{"FX_SCENARIO_ID":"FXS-AUD-HS-509","BUSINESS_DATE":"2026-09-30","SCENARIO_SET_ID":"HS-509","CURRENCY":"AUD","QUOTE":"USD per 1 AUD","RATE":0.661,"RATES":[0.6636463229,0.6635844635,0.6613830351],"SOURCE":"demo-factor-model","BATCH_ID":"B-2026-09-30-01"}
+{"FX_SCENARIO_ID":"FXS-EUR-HS-509","BUSINESS_DATE":"2026-09-30","SCENARIO_SET_ID":"HS-509","CURRENCY":"EUR","QUOTE":"USD per 1 EUR","RATE":1.174,"RATES":[1.1717623212,1.1782367396,1.1795979081],"SOURCE":"demo-factor-model","BATCH_ID":"B-2026-09-30-01"}
 ```
 
 **The stand-in pricing system** (`tools/pvgen`, each a standalone script with `--help`, `--dry-run`, a `.sh` beside it and a `.ps1` in
@@ -2055,6 +2059,78 @@ the engine's to the unit (`check.py` on it: VaR 112,041,646, ES 160,143,809; wit
 The committed intraday sample (`config/packs/market-risk/samples/intraday/I-2026-09-30-001.scenario-pv.jsonl`: three amended Endur trades,
 one new, one cancelled) loads with `drishti.py var intraday --load <file> --date <the lake's date>`. `make_var_data.py` takes the same
 `--pv-systems`, `--pnl-systems` and `--all-vectors`: the P&L-vector generation is whole, for any system.
+
+### 15.13 Inputs: any form, any grain (AS BUILT, 2.9.4)
+
+Source systems cannot be made to change, so the engine takes any of four inputs and lets a system switch between them from one date to
+the next: the **form** (scenario PVs, or a path of P&L) times the **grain** (one record a trade, or one a position the system sends
+whole).
+
+| | Per trade (`GRAIN: TRADE`, `TRADE_ID`) | Per position (`GRAIN: POSITION`, `POSITION_ID`) |
+|---|---|---|
+| **Scenario PVs** (`VALUE_TYPE: PV`, kind `scenario-pv`) | each trade's 509 PVs and `BASE_PV` in its own `CURRENCY`; its position derived by the rules | a position's PVs (its trades' summed, one currency) placed by its book; never derived |
+| **P&L vectors** (`VALUE_TYPE: PNL`, kind `pnl-vector`) | each trade's P&L path in `REPORTING_CCY` (USD); `CURRENCY` the trade's own | a position's P&L path; `CURRENCY` the position's |
+
+**Every record says what it is**, leading with `VALUE_TYPE`, `GRAIN`, its id (`TRADE_ID` or `POSITION_ID`), `CURRENCY` and
+`SOURCE_SYSTEM`, in files and in Kafka lines alike (section 15.12 has a line of each; the value fields keep their names: `SCENARIO_PV`,
+`BASE_PV`, `PNL`). A position record carries what places it without a trade master: `LEGAL_ENTITY`, `DESK`, `TT_BOOK`, `COUNTERPARTY`
+when it has one, `CURRENCY`, the identifiers the position rules use (`SECURITY_ID`, `PRODUCT_TYPE`), and optionally `TRADE_IDS`, the
+trades it aggregates.
+
+| Refused | Code | Where |
+|---|---|---|
+| a record without `VALUE_TYPE`, `GRAIN`, its id, `CURRENCY` or `SOURCE_SYSTEM`; a `VALUE_TYPE` that is not its payload (PVs or a P&L array); a `GRAIN` that is not its id | `DRS-5208` | the record is refused and listed (`provenance.rejections`; a Kafka line with its partition, offset and line); the rest loads |
+| a record that disagrees with its system's pin (`drishti.var.inputs`) | `DRS-5209` | refused and listed, naming the system, the pin and what the record says |
+| one system sending two forms or two grains on one date; a supplied position naming in `TRADE_IDS` a trade also sent on its own | `DRS-5210` | the date is refused (nothing would say which counts: never a double count); an intraday update in another form or grain than the system's morning run is refused and listed, never mixed in |
+
+**The pin (optional).** Either the record's fields or a pin is enough to know what a record is; the fields are required, and a pin is a
+cross-check: when both exist they must agree.
+
+```yaml
+drishti:
+  var:
+    inputs:                       # optional: a record that disagrees with its system's pin is refused (DRS-5209)
+      ENDUR:   { form: pv,  grain: position }
+      CALYPSO: { form: pnl, grain: trade }
+      MUREX:   { form: pv,  grain: trade }
+      default: { form: any, grain: any }
+```
+
+The record's `SOURCE_SYSTEM` selects its pin (`default` for the rest; `any` accepts whatever arrives). The pins are read at start: a
+change applies after a restart, from the next date loaded; a date loaded before keeps what it was read with (its provenance says it), and
+a restated date is read with the pins in force then. `make_var_data.py --inputs-config` prints the pins matching the data it makes.
+
+**Switching between days just works.** Each business date is read as it stands: a system that sent P&L per trade yesterday and PVs per
+position today needs no change. One date, one system: one form and one grain. Different systems on one date may differ (Endur per
+position as PVs beside Murex per trade as P&L vectors).
+
+**What still adds up.** A supplied position is one row of the date, its id its `POSITION_ID`, placed in its book's nodes in both
+hierarchies: the tree, portfolios, `LE:`, `DESK:`, `BOOK:`, `CPTY:` (when the record has one), baskets and what-if at position level,
+captures, official records, the reporting currencies and the per-currency node totals, intraday files and Kafka (keyed by
+`POSITION_ID`, the latest `COMPUTED_AT` winning). **What degrades, in words:** `TRD:<id>` of a supplied position answers *a position its
+source system sends whole (position grain): ask POS:<id>*; contributions by trade list it as the position it is; a trade page of such a
+system says *its source system sends PVs per position: the trade is in the supplied position …* and links the position (when
+`TRADE_IDS` names it); the position page lists the named trades without trade-level figures; Trade currency on a trade page is not
+shown for them.
+
+**The currency caveat.** Scenario PVs in their own currency convert exactly into any reporting currency with each scenario's FX
+(section 15.11). A P&L vector arrives in USD: converting it is exact for the scenario's USD value, but its currency move inside the trade
+is already folded in, so `inputsBySystem.<system>.tradesWithoutPv` counts the records that limit multi-currency exactness.
+
+**Visibility.** Every answer's provenance carries `inputsBySystem`: per source system on the date, `form`, `grain`, `rows`,
+`decidedBy` (*record fields*, or *record fields, agreeing with the pin pv, position*) and `tradesWithoutPv`; `GET /api/v1/var/status`
+lists it per loaded date; the VaR page shows it in *How this number was built*.
+
+**Older files.** 2.9.4 requires the fields on every PV or vector record: a 2.8.0 file is refused (`DRS-5208`). `drishti.py var convert
+FILE --set VALUE_TYPE=PNL --set GRAIN=TRADE --set CURRENCY=USD --set SOURCE_SYSTEM=MUREX` adds them (`--infer` takes `VALUE_TYPE` from
+the payload and `GRAIN` from the id); the generator and the PV scripts always write them. A connector file written from the pack's
+template before 2.9.4 (`config/connectors/risk-store.yaml`) must promote them (section 8.4, *An installation from before 2.9.4*).
+`drishti.py var intraday --load` routes a mixed file by `VALUE_TYPE`. The scripts make either grain: `make_var_data.py --position-systems
+MUREX`, `tools/pvgen/morning.py --grain position` (or `--position-systems`), the same on `intraday.py` and `publish_kafka.py`;
+`check.py` reads both. **Tested:** `VarInputsApiTest` (the same trades as their positions give the same node VaR and ES in all four
+combinations, a system switching grain between dates, two grains on one date refused, records refused with their codes, an intraday
+update in another grain refused), `VarInputsTest` (fields, pins, the per-system rule), `VarPvStreamTest` (a Kafka message mixing all four
+of four systems, a pin disagreeing, a field missing), `test_pvgen.py` (per position equal to per trade to the cent).
 
 ## 16. Reference and master data read
 
@@ -2264,8 +2340,10 @@ not a list of numbers`). A `null` element inside a vector is accepted and stays 
 | 503 | `DRS-5205` | `POST /what-if` without the Python VaR engine (the compute workers off), or it did not answer in 30 s | *the what-if runs in the Python VaR engine (the reactive connector var-whatif …), which is not running on this server …* |
 | 422 | `DRS-5207` | `ccy` names a currency with no scenario FX on the date (2.9.4) | *no CHF FX for the scenarios of <date>: CHF: no scenario rates supplied and no FX history to derive them from; the currencies with FX on the date: …* |
 | 400 | `DRS-5001` | `ccy` is not a three-letter code; a compare of two captures in different currencies | *ccy is a currency's ISO code (USD, EUR, CAD ...), not EURO*; *… is in EUR and … in USD: a compare reads two captures in one currency* |
+| 422 | `DRS-5210` | one source system sent two forms or grains on the date, or a supplied position covers a trade also sent on its own (2.9.4, section 15.13) | *the inputs of 2026-09-30 are not loaded: MUREX sent {PNL/POSITION=1, PNL/TRADE=7}; one source system sends one form and one grain on one date* |
 
-`DRS-5201`, `DRS-5206` and (for a trade) `DRS-5207` are not HTTP answers: they name a rejected row in `provenance.rejections` (section 20.3).
+`DRS-5208` (a record that does not say what it is, or contradicts itself) and `DRS-5209` (a record against its system's pin) name a
+refused record in `provenance.rejections` (an intraday one in `intraday.rejections` too). `DRS-5201`, `DRS-5206` and (for a trade) `DRS-5207` are not HTTP answers: they name a rejected row in `provenance.rejections` (section 20.3).
 An intraday row of another scenario set is refused as `DRS-5203` in `intraday.rejections`; the date is not.
 
 ### 20.3 What the load checks (as built)
@@ -2509,6 +2587,7 @@ recommended defaults unless the product owner said otherwise):
 | 1.2 | 2026-10-25 | Official end-of-day captures published to `risk-results/var-official` for other systems (product owner); official captures kept 7 years |
 | 1.3 | 2026-10-25 | **AS BUILT (2.8.0, VaR complete part 1):** the stored `var` and `var-node` kinds retired (§21); computed figures removed from `position`, `portfolio` and `desk`, the pages show the engine's (§3.7), with a guard test; positions derived by Drishti by configured rules (§15.6); every live trade valued (9,572; open question 1); 28 portfolio definitions; official end-of-day captures of every node, published append-only (§19); the data-load signal reloads and captures (§15.8); 7-year retention (§15.1); the load's checks and `DRS-5201` to `DRS-5204` (§20); `by=node`, the largest parts, masks, BASKET portfolios refused to aggregate-only viewers, basket and reload audit, input versions and batch ids in provenance, ids in any case; scope words `LE:` (the trades' legal entity) and `CPTY:` (§5.5) |
 | 1.5 | 2026-10-27 | **AS BUILT (2.9.4, local branch for the product owner's review):** scenario PVs in each trade's currency (`scenario-pv`) beside or instead of P&L vectors, converted to USD P&L at load; scenario FX supplied (`fx-scenario`) or derived from the FX history (`fx-spot`), crosses through USD, 1-day; `DRS-5206` (a scenario that failed to price) and `DRS-5207` (no FX) (§15.9, §20); a reporting currency on every answer (`ccy`, `--ccy`), books per currency built on first ask on the tiered memory, official records per `drishti.var.official.currencies` (§15.10); the demo's Endur trades as scenario PVs (§22.1) |
+| 1.9 | 2026-10-27 | **AS BUILT (2.9.4, local):** inputs in any form and any grain (§15.13): every record says what it is (`VALUE_TYPE`, `GRAIN`, its id, `CURRENCY`, `SOURCE_SYSTEM`, leading each line), positions supplied whole (`GRAIN: POSITION`), the optional pins `drishti.var.inputs`, one form and grain per system per date, `DRS-5208`, `DRS-5209`, `DRS-5210`, `drishti.py var convert`; Kafka messages of JSONL records (§8.4) |
 | 1.8 | 2026-10-27 | **AS BUILT (2.9.4, local):** the delivery format JSONL, one row of the contract a line (the three contracts), and the stand-in pricing system `tools/pvgen` (morning run, intraday files, Kafka publisher, checker) with both forms side by side (§15.12); `make_var_data.py --pv-systems/--pnl-systems/--all-vectors` |
 | 1.7 | 2026-10-27 | **AS BUILT (2.9.4, local):** intraday updates (§8.4): `RUN_KIND: INTRADAY` rows appended to `scenario-pv` and `pnl-vector` (§15.8, §15.9), applied on the loaded date without a reload (each trade's difference into its book and nodes, the totals, the currencies), the latest `COMPUTED_AT` per trade winning, cancels, new trades, another scenario set refused; `intraday` on every answer, the badge, `drishti.py var intraday`; the official records the morning run's |
 | 1.6 | 2026-10-27 | **AS BUILT (2.9.4, local):** the listed reporting currencies built ahead in the background and kept for the newest 5 dates (`drishti.var.currencies`, `drishti.var.currency-retention-dates`); every node's PVs summed per trade currency (`CTOT`, hot file format 2) for the headline in any currency and the tab *In other currencies* (`GET /scope/currencies`, `GET /currencies`); the console's Reporting currency picker, `VAR … IN EUR`, Trade currency on the trade pages and the VaR tables (§15.11) |

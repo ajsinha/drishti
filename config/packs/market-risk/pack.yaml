@@ -193,7 +193,12 @@ connectors:
           row-group-rows: 1000
         pnl-vector:
           columns:
+          - VALUE_TYPE
+          - GRAIN
           - TRADE_ID
+          - POSITION_ID
+          - CURRENCY
+          - SOURCE_SYSTEM
           - SECURITY_ID
           - INSTRUMENT
           - LEGAL_ENTITY
@@ -204,7 +209,6 @@ connectors:
           - STRATEGY
           - PRODUCT_GROUP
           - PRODUCT_TYPE
-          - CURRENCY
           - COUNTERPARTY
           - DIRECTION
           - QUANTITY
@@ -218,11 +222,17 @@ connectors:
           - BATCH_ID
           - RUN_KIND
           - COMPUTED_AT
+          - TRADE_IDS
           vectors:
           - PNL
         scenario-pv:
           columns:
+          - VALUE_TYPE
+          - GRAIN
           - TRADE_ID
+          - POSITION_ID
+          - CURRENCY
+          - SOURCE_SYSTEM
           - SECURITY_ID
           - INSTRUMENT
           - LEGAL_ENTITY
@@ -233,7 +243,6 @@ connectors:
           - STRATEGY
           - PRODUCT_GROUP
           - PRODUCT_TYPE
-          - CURRENCY
           - COUNTERPARTY
           - DIRECTION
           - QUANTITY
@@ -248,6 +257,7 @@ connectors:
           - BATCH_ID
           - RUN_KIND
           - COMPUTED_AT
+          - TRADE_IDS
           vectors:
           - SCENARIO_PV
         fx-scenario:

@@ -111,6 +111,10 @@ public final class VarPvStreamPlugin implements SourcePlugin {
 
     @Override
     public void start(SourceContext ctx) {
+        if (ctx.setting("topic", null) == null || ctx.setting("bootstrap-servers", null) == null) {
+            // only as a connector (the market-risk pack's pv-updates, off by default), never as a bare plugin reaching a default broker
+            throw new com.ash.drishti.api.PluginNotConfigured("var-pv-stream needs settings.topic and settings.bootstrap-servers");
+        }
         source = ctx.setting("source-name", NAME);
         topic = ctx.setting("topic", "drishti.risk.pv-updates");
         settings = Map.copyOf(ctx.settings());
@@ -191,15 +195,17 @@ public final class VarPvStreamPlugin implements SourcePlugin {
             } catch (java.io.IOException e) {
                 v = null;
             }
+            boolean position = v != null && "POSITION".equalsIgnoreCase(v.path("GRAIN").asText(""));
+            String id = position ? "POSITION_ID" : "TRADE_ID";
             String bad = !(v instanceof com.fasterxml.jackson.databind.node.ObjectNode) ? "not a JSON object (one JSONL record a line)"
-                    : !v.hasNonNull("TRADE_ID") ? "no TRADE_ID" : null;
+                    : !v.hasNonNull(id) ? "no " + id + (position ? " (GRAIN POSITION)" : "") : null;
             if (bad != null) {
                 out.add(new VarPvWindow.Msg(null, line, at.toString(), r.partition(), r.offset(), i + 1, at,
                         com.ash.drishti.common.ErrorCode.VAR_ROW_REJECTED.code() + " " + bad));
                 continue;
             }
             String computed = v.hasNonNull("COMPUTED_AT") ? v.get("COMPUTED_AT").asText() : at.toString();
-            out.add(new VarPvWindow.Msg(v.get("TRADE_ID").asText(), line, computed, r.partition(), r.offset(), i + 1, at, null));
+            out.add(new VarPvWindow.Msg(v.get(id).asText(), line, computed, r.partition(), r.offset(), i + 1, at, null));
         }
         return out;
     }

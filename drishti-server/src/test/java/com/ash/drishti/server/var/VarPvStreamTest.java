@@ -76,16 +76,17 @@ import org.springframework.test.web.servlet.MockMvc;
         "drishti.sources.connectors.risk-lake.settings.refresh-seconds=1",
         "drishti.sources.connectors.risk-lake.settings.layout.pnl-vector.columns=TRADE_ID,LEGAL_ENTITY,DIVISION,DESK,TT_BOOK,PORTFOLIO,"
                 + "PRODUCT_GROUP,PRODUCT_TYPE,SECURITY_ID,CURRENCY,COUNTERPARTY,DIRECTION,QUANTITY,PV,TRADE_STATUS,MATURITY_DATE,STATUS,REPORTING_CCY,"
-                + "SCENARIO_SET_ID,BATCH_ID,RUN_KIND,COMPUTED_AT",
+                + "SCENARIO_SET_ID,BATCH_ID,RUN_KIND,COMPUTED_AT,VALUE_TYPE,GRAIN,POSITION_ID,SOURCE_SYSTEM,TRADE_IDS",
         "drishti.sources.connectors.risk-lake.settings.layout.pnl-vector.vectors=PNL",
         "drishti.sources.connectors.risk-lake.settings.layout.scenario-pv.columns=TRADE_ID,LEGAL_ENTITY,DIVISION,DESK,TT_BOOK,PORTFOLIO,"
                 + "PRODUCT_GROUP,PRODUCT_TYPE,CURRENCY,COUNTERPARTY,DIRECTION,QUANTITY,BASE_PV,VALUATION_DATE,BASE_VALUATION_DATE,TRADE_STATUS,"
-                + "MATURITY_DATE,STATUS,SCENARIO_SET_ID,BATCH_ID,RUN_KIND,COMPUTED_AT",
+                + "MATURITY_DATE,STATUS,SCENARIO_SET_ID,BATCH_ID,RUN_KIND,COMPUTED_AT,VALUE_TYPE,GRAIN,POSITION_ID,SOURCE_SYSTEM,TRADE_IDS",
         "drishti.sources.connectors.risk-lake.settings.layout.scenario-pv.vectors=SCENARIO_PV",
         "drishti.sources.connectors.var-positions.plugin=var-positions", "drishti.sources.connectors.var-positions.kinds[0]=position",
-        "drishti.sources.connectors.pv-updates.plugin=var-pv-stream", "drishti.sources.connectors.pv-updates.kinds[0]=pv-update",
-        "drishti.sources.connectors.pv-updates.settings.topic=pv-updates", "drishti.sources.connectors.pv-updates.settings.poll-ms=50",
+        "drishti.sources.connectors.pv-test.plugin=var-pv-stream", "drishti.sources.connectors.pv-test.kinds[0]=pv-update",
+        "drishti.sources.connectors.pv-test.settings.topic=pv-updates", "drishti.sources.connectors.pv-test.settings.poll-ms=50",
         "drishti.var.intraday.kafka.window=10m", "drishti.var.intraday.kafka.max-trades=3",
+        "drishti.var.inputs.SYS-B.form=pv", "drishti.var.inputs.SYS-B.grain=position",
         "drishti.sources.routes.pnl-vector=risk-lake", "drishti.sources.routes.position=var-positions",
         "drishti.sources.routes.scenario-set=risk-lake", "drishti.sources.routes.risk-hierarchy=risk-lake",
         "drishti.sources.routes.portfolio=risk-lake", "drishti.sources.routes.scenario-pv=risk-lake",
@@ -144,8 +145,8 @@ class VarPvStreamTest {
         r.add("drishti.sources.connectors.risk-lake.settings.root", lake::toString);
         r.add("drishti.var.official.root", lake::toString);
         r.add("drishti.var.tier.dir", () -> lake.resolve("hot").toString());
-        r.add("drishti.sources.connectors.pv-updates.settings.bootstrap-servers", broker::getBrokersAsString);
-        r.add("drishti.sources.connectors.pv-updates.settings.lake", lake::toString);
+        r.add("drishti.sources.connectors.pv-test.settings.bootstrap-servers", broker::getBrokersAsString);
+        r.add("drishti.sources.connectors.pv-test.settings.lake", lake::toString);
     }
 
     @AfterAll
@@ -186,7 +187,7 @@ class VarPvStreamTest {
     }
 
     static VarPvStreamPlugin stream() {
-        return VarPvStreamPlugin.RUNNING.get("pv-updates");
+        return VarPvStreamPlugin.RUNNING.get("pv-test");
     }
 
     static void waitFor(BooleanSupplier ok, int seconds) throws InterruptedException {
@@ -202,7 +203,7 @@ class VarPvStreamTest {
     }
 
     private JsonNode applyNow() throws Exception {
-        return JSON.readTree(mvc.perform(post("/api/v1/var/intraday/streams/pv-updates/apply").header("Authorization", token("admin")))
+        return JSON.readTree(mvc.perform(post("/api/v1/var/intraday/streams/pv-test/apply").header("Authorization", token("admin")))
                 .andExpect(status().isOk()).andReturn().getResponse().getContentAsString());
     }
 
@@ -363,5 +364,51 @@ class VarPvStreamTest {
         assertThat(st.get(0).get("topic").asText()).isEqualTo("pv-updates");
         Map<String, Object> once = new LinkedHashMap<>(again.status());
         assertThat(((Number) once.get("applied")).longValue()).isZero();
+    }
+
+    private static Map<String, Object> asPosition(Map<String, Object> r, String id, String system) {
+        Map<String, Object> p = new LinkedHashMap<>(r);
+        p.remove("TRADE_ID");
+        p.put("GRAIN", "POSITION");
+        p.put("POSITION_ID", id);
+        p.put("SOURCE_SYSTEM", system);
+        return p;
+    }
+
+    private static Map<String, Object> from(Map<String, Object> r, String system) {
+        r.put("SOURCE_SYSTEM", system);
+        return r;
+    }
+
+    @Test
+    @Order(6)
+    void aMessageMixingAllFourFormsAndGrainsOfFourSystemsAndTheirChecks() throws Exception {
+        int before = svc.date(DAY).book().intraday().info().trades();
+        long rejected = count("rejected");
+        String at = DAY + "T13:00:00Z";
+        Map<String, Object> pvTrade = from(VarIntradayLake.pv(DAY, "A1", "CAD", 100, VarPvFixture.plus(100, VarLakeFixture.V, 2), "INTRADAY", "x",
+                at, "HS-20"), "SYS-A");
+        Map<String, Object> pvPosition = asPosition(VarIntradayLake.pv(DAY, "x", "EUR", 300, VarPvFixture.plus(300, VarLakeFixture.U, 4), "INTRADAY",
+                "x", at, "HS-20"), "PB1", "SYS-B");                    // SYS-B is pinned to pv, position: agrees
+        Map<String, Object> pnlTrade = from(vec("C1", 7, VarLakeFixture.scale(VarLakeFixture.U, 7), "T13:00:00Z"), "SYS-C");
+        Map<String, Object> pnlPosition = asPosition(vec("x", 9, VarLakeFixture.scale(VarLakeFixture.V, 9), "T13:00:00Z"), "PD1", "SYS-D");
+        Map<String, Object> offPin = from(VarIntradayLake.pv(DAY, "B2", "EUR", 10, VarPvFixture.plus(10, VarLakeFixture.U, 1), "INTRADAY", "x", at,
+                "HS-20"), "SYS-B");                                    // per trade: SYS-B's pin says position
+        Map<String, Object> unsaid = from(vec("E1", 1, VarLakeFixture.scale(VarLakeFixture.U, 1), "T13:00:00Z"), "SYS-E");
+        unsaid.remove("VALUE_TYPE");                                   // does not say what it is
+        send("mixed", pvTrade, pvPosition, pnlTrade, pnlPosition, offPin, unsaid);
+        waitFor(() -> {
+            stream().applyNow();
+            stream().flushIfDue();
+            return count("rejected") >= rejected + 2 && svc.date(DAY).book().intraday().info().trades() == before + 4;
+        }, 30);
+        @SuppressWarnings("unchecked")
+        List<String> why = (List<String>) stream().describe().get("rejections");
+        assertThat(String.join("\n", why)).contains("DRS-5209 p").contains("SYS-B is pinned to pv, position").contains("DRS-5208 p")
+                .contains("no VALUE_TYPE");
+        assertThat(ask("/api/v1/var/scope", "POS:PB1", DAY, null).get("var").asDouble()).isPositive();
+        assertThat(ask("/api/v1/var/scope", "POS:PD1", DAY, null).get("var").asDouble()).isPositive();
+        assertThat(ask("/api/v1/var/scope", "TRD:A1", DAY, null).get("var").asDouble()).isPositive();
+        assertThat(ask("/api/v1/var/scope", "TRD:C1", DAY, null).get("var").asDouble()).isPositive();
     }
 }

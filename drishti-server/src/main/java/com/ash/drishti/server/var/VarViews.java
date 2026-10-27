@@ -201,6 +201,8 @@ final class VarViews {
         m.put("currency", s.date().currency());
         m.put("intraday", intradayNote(s.date()));
         m.put("intradayRejections", s.date().intraday() == null ? List.of() : s.date().intraday().rejections());
+        // per source system on the date: the form and grain of its records, how many, how decided, the P&L rows (VAR_GUIDE.md 15.13)
+        m.put("inputsBySystem", s.date().intake().inputs() == null ? Map.of() : s.date().intake().inputs());
         m.put("fx", fxNote(s.date()));
         m.put("resolved", s.res().notes());
         m.put("trades", s.set().size());
@@ -537,6 +539,10 @@ final class VarViews {
         a.put("book", tc.text("TT_BOOK", o));
         a.put("pv", nan(tc.number("PV", o)));
         String id = b.tradeId(o);
+        if (b.supplied(o)) {                                            // a supplied position (position grain): listed as the position it is
+            a.put("note", "supplied whole by its source system: a position, no trades of its own");
+            return new Part(id, "POS:" + id, id, "position", b.tradeVector(o), nz(tc.number("PV", o)) == 0 ? Double.NaN : tc.number("PV", o), a);
+        }
         return new Part(id, "TRD:" + id, id, "trade", b.tradeVector(o), nz(tc.number("PV", o)) == 0 ? Double.NaN : tc.number("PV", o), a);
     }
 

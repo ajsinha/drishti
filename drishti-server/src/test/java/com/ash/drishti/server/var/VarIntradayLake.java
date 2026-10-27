@@ -44,8 +44,12 @@ final class VarIntradayLake {
     static Map<String, Object> vector(LocalDate day, String id, String book, String desk, String le, String ccy, double qty, double[] pnl,
             String status, String runKind, String batch, String at) {
         Map<String, Object> d = new LinkedHashMap<>();
-        d.put("VECTOR_ID", "PV-" + id + "-HS-20" + ("INTRADAY".equals(runKind) ? "-" + batch : ""));
+        d.put("VALUE_TYPE", "PNL");                                   // what the record is (VAR_GUIDE.md section 15.13)
+        d.put("GRAIN", "TRADE");
         d.put("TRADE_ID", id);
+        d.put("CURRENCY", ccy);
+        d.put("SOURCE_SYSTEM", "MUREX");
+        d.put("VECTOR_ID", "PV-" + id + "-HS-20" + ("INTRADAY".equals(runKind) ? "-" + batch : ""));
         d.put("BUSINESS_DATE", day.toString());
         d.put("SCENARIO_SET_ID", "HS-20");
         d.put("BATCH_ID", batch);

@@ -340,18 +340,21 @@ One trade's P&L under each of the 509 scenario days, in USD: the grain every VaR
 
 **Id:** pattern `^PV-`.
 
-Fields, from 1 sample document:
+Fields, from 2 sample documents:
 
 | Field | Type | Example | Description |
 |---|---|---|---|
+| `VALUE_TYPE` | string | `PNL` | — |
+| `GRAIN` | string | `TRADE` | — |
+| `TRADE_ID` | string | `MX-20000274` | link to `trade` (in 50%) |
+| `CURRENCY` | string | `USD` | — |
+| `SOURCE_SYSTEM` | string | `MUREX` | — |
 | `VECTOR_ID` | string | `PV-MX-20000274-HS-509` | PV-<trade>-HS-509 |
-| `TRADE_ID` | string | `MX-20000274` | link to `trade` |
 | `SECURITY_ID` | string | `SEC-WARRANT-USD-01` | The security or exchange contract of a securities or listed trade (the demo's are synthetic) |
 | `INSTRUMENT` | string | `Equity warrant USD 2027-05` | — |
 | `BUSINESS_DATE` | date | `2026-09-30` | — |
 | `SCENARIO_SET_ID` | string | `HS-509` | — |
-| `SOURCE_SYSTEM` | string | `MUREX` | — |
-| `TRADE_VERSIONS` | string | `v4` | — |
+| `TRADE_VERSIONS` | string | `v4` | — (in 50%) |
 | `TRADE_STATUS` | string | `AMENDED` | The trade's status: NEW, VALIDATED and AMENDED count on the date |
 | `MATURITY_DATE` | date | `2027-05-26` | — |
 | `LEGAL_ENTITY` | string | `LE-LDN` | link to `legal-entity` |
@@ -362,14 +365,13 @@ Fields, from 1 sample document:
 | `STRATEGY` | null |  | — |
 | `PRODUCT_GROUP` | string | `Equity` | — |
 | `PRODUCT_TYPE` | string | `WARRANT` | — |
-| `CURRENCY` | string | `USD` | — |
 | `COUNTERPARTY` | string | `CP-SUMMIT` | link to `counterparty` |
 | `DIRECTION` | string | `SHORT` | — |
 | `QUANTITY` | number | `-179000000.0` | The trade's quantity: positive for a buy, negative for a sell. |
 | `TAGS` | null |  | — |
 | `REPORTING_CCY` | string | `USD` | — |
 | `PV` | integer | `3143714` | The trade's value on the business date. (USD) |
-| `PNL` | list of integers |  | 509 values, oldest scenario first, stored as a list<double> column (out of the document) |
+| `PNL` | list of integers or list of numbers |  | 509 values, oldest scenario first, stored as a list<double> column (out of the document) |
 | `STATUS` | string | `ok` | ok, proxied (priced by a proxy) or failed (no vector: counted, never taken as zero). |
 | `PRICER` | string | `demo-factor-model` | — |
 | `MODEL_VERSION` | string | `demo-2` | — |
@@ -377,8 +379,10 @@ Fields, from 1 sample document:
 | `BATCH_ID` | string | `B-2026-09-30-01` | — |
 | `RESTATEMENT` | integer | `0` | — |
 | `RUN_KIND` | string | `FULL` | — |
+| `POSITION_ID` | string | `POS-BOOK-COMM-1~XCH-CMD_FUTURE-USD-03` | link to `position` (in 50%) |
+| `TRADE_IDS` | list of strings |  | link to `trade` (in 50%) |
 
-Links: `COUNTERPARTY` → `counterparty`, `DESK` → `desk`, `LEGAL_ENTITY` → `legal-entity`, `PORTFOLIO` → `book`, `TRADE_ID` → `trade`, `TT_BOOK` → `book`.
+Links: `COUNTERPARTY` → `counterparty`, `DESK` → `desk`, `LEGAL_ENTITY` → `legal-entity`, `PORTFOLIO` → `book`, `POSITION_ID` → `position`, `TRADE_ID` → `trade`, `TRADE_IDS` → `trade`, `TT_BOOK` → `book`.
 
 ### `scenario-pv`
 
@@ -388,18 +392,21 @@ About: Scenario PVs of a trade.
 
 **Id:** pattern `^SPV-`.
 
-Fields, from 1 sample document:
+Fields, from 2 sample documents:
 
 | Field | Type | Example | Description |
 |---|---|---|---|
+| `VALUE_TYPE` | string | `PV` | — |
+| `GRAIN` | string | `TRADE` | — |
+| `TRADE_ID` | string | `1000054` | link to `trade` (in 50%) |
+| `CURRENCY` | string | `EUR` | The currency both PVs are in: the trade's own currency (one stated currency for a whole file is the same thing). |
+| `SOURCE_SYSTEM` | string | `ENDUR` | — |
 | `SCENARIO_PV_ID` | string | `SPV-1000054-HS-509` | link to `scenario-pv` |
-| `TRADE_ID` | string | `1000054` | link to `trade` |
-| `SECURITY_ID` | null |  | — |
+| `SECURITY_ID` | string | `XCH-ComFut-EUR-03` | — |
 | `INSTRUMENT` | string | `ENGY-SWAP EUR 2026-09` | — |
 | `BUSINESS_DATE` | date | `2026-09-30` | — |
 | `SCENARIO_SET_ID` | string | `HS-509` | — |
-| `SOURCE_SYSTEM` | string | `ENDUR` | — |
-| `TRADE_VERSIONS` | string | `v2` | — |
+| `TRADE_VERSIONS` | string | `v2` | — (in 50%) |
 | `TRADE_STATUS` | string | `VALIDATED` | — |
 | `MATURITY_DATE` | date | `2026-09-30` | — |
 | `LEGAL_ENTITY` | string | `LE-NY` | link to `legal-entity` |
@@ -410,7 +417,6 @@ Fields, from 1 sample document:
 | `STRATEGY` | null |  | — |
 | `PRODUCT_GROUP` | string | `Commodity` | — |
 | `PRODUCT_TYPE` | string | `ComSwap` | — |
-| `CURRENCY` | string | `EUR` | The currency both PVs are in: the trade's own currency (one stated currency for a whole file is the same thing). |
 | `COUNTERPARTY` | string | `CP-NORTHPLAINS` | link to `counterparty` |
 | `DIRECTION` | string | `SHORT` | — |
 | `QUANTITY` | number | `-18000.0` | — |
@@ -426,8 +432,10 @@ Fields, from 1 sample document:
 | `BATCH_ID` | string | `B-2026-09-30-01` | — |
 | `RESTATEMENT` | integer | `0` | — |
 | `RUN_KIND` | string | `FULL` | — |
+| `POSITION_ID` | string | `POS-BOOK-COMM-1~XCH-ComFut-EUR-03` | link to `position` (in 50%) |
+| `TRADE_IDS` | list of strings |  | link to `trade` (in 50%) |
 
-Links: `COUNTERPARTY` → `counterparty`, `DESK` → `desk`, `LEGAL_ENTITY` → `legal-entity`, `PORTFOLIO` → `book`, `SCENARIO_PV_ID` → `scenario-pv`, `TRADE_ID` → `trade`, `TT_BOOK` → `book`.
+Links: `COUNTERPARTY` → `counterparty`, `DESK` → `desk`, `LEGAL_ENTITY` → `legal-entity`, `PORTFOLIO` → `book`, `POSITION_ID` → `position`, `SCENARIO_PV_ID` → `scenario-pv`, `TRADE_ID` → `trade`, `TRADE_IDS` → `trade`, `TT_BOOK` → `book`.
 
 ### `fx-scenario`
 

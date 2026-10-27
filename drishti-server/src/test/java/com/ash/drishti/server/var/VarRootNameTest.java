@@ -50,7 +50,7 @@ import org.springframework.test.web.servlet.MockMvc;
         "drishti.sources.connectors.risk-lake.settings.domain=risk",
         "drishti.sources.connectors.risk-lake.settings.layout.pnl-vector.columns=TRADE_ID,LEGAL_ENTITY,DIVISION,DESK,TT_BOOK,PORTFOLIO,"
                 + "PRODUCT_GROUP,PRODUCT_TYPE,SECURITY_ID,CURRENCY,COUNTERPARTY,DIRECTION,QUANTITY,PV,TRADE_STATUS,MATURITY_DATE,STATUS,REPORTING_CCY,"
-                + "SCENARIO_SET_ID,BATCH_ID",
+                + "SCENARIO_SET_ID,BATCH_ID,VALUE_TYPE,GRAIN,POSITION_ID,SOURCE_SYSTEM,TRADE_IDS",
         "drishti.sources.connectors.risk-lake.settings.layout.pnl-vector.vectors=PNL",
         "drishti.sources.connectors.var-positions.plugin=var-positions", "drishti.sources.connectors.var-positions.kinds[0]=position",
         "drishti.sources.routes.pnl-vector=risk-lake", "drishti.sources.routes.position=var-positions",
@@ -104,12 +104,12 @@ class VarRootNameTest {
     @Test
     void blankKeepsTheDataNameAndTheNamesAreInTheHotFilesDigest() {
         VarProperties none = new VarProperties(null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null,
-                null, null, null, null, null, null, " ", null, null);
+                null, null, null, null, null, null, " ", null, null, null);
         assertThat(none.rootName("MGMT", null, "Drishti Bank")).isEqualTo("Drishti Bank");
         assertThat(none.rootName("LEGAL", "", "Drishti Bank")).isEqualTo("Drishti Bank");
         assertThat(none.rootNamesKey()).isEmpty();                                               // the files of earlier releases still match
         VarProperties set = new VarProperties(null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null,
-                null, null, null, null, null, null, "", Map.of("mgmt", "Group"), null);
+                null, null, null, null, null, null, "", Map.of("mgmt", "Group"), null, null);
         assertThat(set.rootName("MGMT", null, "Drishti Bank")).isEqualTo("Group");
         assertThat(set.rootName("LEGAL", null, "Drishti Bank")).isEqualTo("Drishti Bank");      // blank root-name: the data's
         assertThat(set.rootName("MGMT", "MGMT~BANK", "Rates")).isEqualTo("Rates");               // not a root

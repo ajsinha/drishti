@@ -151,14 +151,23 @@ def security_ids(trades: list[dict], rules: Rules) -> dict[str, str]:
     return out
 
 
+def lead(value_type: str, grain: str, ident: str, currency: str, system) -> dict:
+    """The fields a PV record leads with, saying what it is (VAR_GUIDE.md section 15.13): VALUE_TYPE (PV or PNL), GRAIN (TRADE or
+    POSITION), its id (TRADE_ID or POSITION_ID), CURRENCY and SOURCE_SYSTEM."""
+    return {"VALUE_TYPE": value_type, "GRAIN": grain, ("TRADE_ID" if grain == "TRADE" else "POSITION_ID"): ident, "CURRENCY": currency,
+            "SOURCE_SYSTEM": system}
+
+
 class Batch:
     """The demo risk batch of one business date: every live trade valued, each with its vector; the positions the rules derive."""
 
     def __init__(self, trades: dict[str, dict], desks: dict[str, dict], valuations: dict[str, dict], cob: str, rules: Rules, budget: int = 0,
-                 market: F.Market | None = None, fx: SFX.Fx | None = None, pv_systems=None):
+                 market: F.Market | None = None, fx: SFX.Fx | None = None, pv_systems=None, position_systems=()):
         self.cob, self.market, self.rules, self.fx = cob, market or F.Market(), rules, fx
         # the systems whose trades come as scenario PVs (the rest as P&L vectors); () makes every trade a P&L vector, as before 2.9.4
         self.pv_systems = tuple(SFX.PV_SYSTEMS if pv_systems is None else pv_systems)
+        # the systems whose records come per position, not per trade (GRAIN POSITION, VAR_GUIDE.md section 15.13); none by default
+        self.position_systems = tuple(position_systems or ())
         self.desk_of_book: dict[str, str] = {}
         self.le_of_desk: dict[str, str] = {}
         for d in desks.values():
@@ -208,6 +217,7 @@ class Batch:
 
     def _value(self) -> None:
         m = self.market
+        supplied: dict[tuple[str, str], list[tuple[dict, dict]]] = defaultdict(list)   # (position, system) -> its trades' records
         for pid, ts in self.groups.items():
             t0 = ts[0]
             book = book_of(t0)
@@ -238,15 +248,60 @@ class Batch:
                          "DIRECTION": "LONG" if q >= 0 else "SHORT", "QUANTITY": q, "TAGS": "|".join(self._tags(t))}
                 run = {"STATUS": "ok", "PRICER": "demo-factor-model", "MODEL_VERSION": "demo-2", "COMPUTED_AT": f"{self.cob}T06:00:00Z",   # the morning run; intraday updates come after it
                        "BATCH_ID": f"B-{self.cob}-01", "RESTATEMENT": 0, "RUN_KIND": "FULL"}   # a full run (VAR_GUIDE.md section 8.4)
-                if self.fx is not None and t.get("SOURCE_SYSTEM") in self.pv_systems and self.fx.has(ccy):
+                sys = t.get("SOURCE_SYSTEM")
+                if self.fx is not None and sys in self.pv_systems and self.fx.has(ccy):
                     base, pvs = SFX.scenario_pvs(self.fx, ccy, float(round(pv)), vec)
                     self.engine_vectors[tid] = SFX.engine_pnl(self.fx, ccy, base, pvs)
-                    self.pv_rows.append({"SCENARIO_PV_ID": f"SPV-{tid}-HS-509", **terms, "BASE_PV": base, "VALUATION_DATE": self.cob,
-                                         "BASE_VALUATION_DATE": self.cob, "SCENARIO_PV": pvs[:m.n], **run})
+                    row = {**lead("PV", "TRADE", tid, ccy, sys), "SCENARIO_PV_ID": f"SPV-{tid}-HS-509", **terms, "BASE_PV": base,
+                           "VALUATION_DATE": self.cob, "BASE_VALUATION_DATE": self.cob, "SCENARIO_PV": pvs[:m.n], **run}
+                    rows = self.pv_rows
                 else:
-                    self.vector_rows.append({"VECTOR_ID": f"PV-{tid}-HS-509", **terms, "REPORTING_CCY": "USD", "PV": round(pv),
-                                             "PNL": vec[:m.n], **run})
+                    row = {**lead("PNL", "TRADE", tid, ccy, sys), "VECTOR_ID": f"PV-{tid}-HS-509", **terms, "REPORTING_CCY": "USD",
+                           "PV": round(pv), "PNL": vec[:m.n], **run}
+                    rows = self.vector_rows
+                if sys in self.position_systems:
+                    supplied[(pid, sys)].append((t, row))             # sent whole per position (below), not per trade
+                else:
+                    rows.append(row)
             self.positions.append(self.position(pid, ts))
+        for (pid, sys), members in supplied.items():
+            kind, row = self.supply(pid, sys, [r for _, r in members])
+            (self.pv_rows if kind == "scenario-pv" else self.vector_rows).append(row)
+
+    def supply(self, pid: str, sys: str, rows: list[dict]) -> tuple[str, dict]:
+        """One position of a system sent at position grain: its trades' records summed (PVs or P&L, linear) into one record keyed by
+        POSITION_ID, placed by its book (LEGAL_ENTITY, DESK, TT_BOOK), naming its trades (TRADE_IDS). Scenario PVs only when its trades
+        share a currency (else as a P&L vector, in USD)."""
+        pv_form = all("SCENARIO_PV" in r for r in rows) and len({r["CURRENCY"] for r in rows}) == 1
+        first = rows[0]
+        ids = [r["TRADE_ID"] for r in rows]
+        qty = sum(float(r["QUANTITY"]) for r in rows)
+        cps = sorted({r.get("COUNTERPARTY") or "" for r in rows} - {""})
+        place = {k: first.get(k) for k in ("BUSINESS_DATE", "SCENARIO_SET_ID", "TRADE_STATUS", "LEGAL_ENTITY", "DIVISION", "DESK", "TT_BOOK",
+                                            "PORTFOLIO", "STRATEGY", "PRODUCT_GROUP", "PRODUCT_TYPE")}
+        place.update({"SECURITY_ID": first.get("SECURITY_ID"), "INSTRUMENT": first.get("INSTRUMENT"),
+                      "MATURITY_DATE": max(str(r.get("MATURITY_DATE") or "") for r in rows) or None,
+                      "COUNTERPARTY": cps[0] if len(cps) == 1 else "", "DIRECTION": "LONG" if qty >= 0 else "SHORT", "QUANTITY": qty,
+                      "TAGS": "|".join(sorted({x for r in rows for x in str(r.get("TAGS") or "").split("|") if x}))})
+        run = {k: first[k] for k in ("STATUS", "PRICER", "MODEL_VERSION", "COMPUTED_AT", "BATCH_ID", "RESTATEMENT", "RUN_KIND")}
+        n = self.market.n
+        if pv_form:
+            ccy = first["CURRENCY"]
+            base = round(sum(float(r["BASE_PV"]) for r in rows), 2)
+            pvs = [round(sum(float(r["SCENARIO_PV"][j]) for r in rows), 2) for j in range(n)]
+            self.engine_vectors[pid] = SFX.engine_pnl(self.fx, ccy, base, pvs)
+            return "scenario-pv", {**lead("PV", "POSITION", pid, ccy, sys), "SCENARIO_PV_ID": f"SPV-{pid}-HS-509", **place, "BASE_PV": base,
+                                   "VALUATION_DATE": self.cob, "BASE_VALUATION_DATE": self.cob, "SCENARIO_PV": pvs, **run, "TRADE_IDS": ids}
+        pnl = [0.0] * n
+        for r in rows:
+            v = r.get("PNL") if "PNL" in r else self.engine_vectors[r["TRADE_ID"]]
+            for j in range(n):
+                pnl[j] += float(v[j])
+        ccys = {r["CURRENCY"] for r in rows}
+        return "pnl-vector", {**lead("PNL", "POSITION", pid, ccys.pop() if len(ccys) == 1 else "USD", sys),
+                              "VECTOR_ID": f"PV-{pid}-HS-509", **place, "REPORTING_CCY": "USD",
+                              "PV": round(sum(float(r.get("PV") or 0) for r in rows if "PV" in r)), "PNL": [round(x, 2) for x in pnl],
+                              **run, "TRADE_IDS": ids}
 
     def position(self, pid: str, ts: list[dict]) -> dict:
         """A position as the server serves it (VarPositions.document): derived from its trades, no VaR figure on it."""

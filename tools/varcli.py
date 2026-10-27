@@ -21,6 +21,7 @@ the currency move is part of the risk (VAR_GUIDE.md section 15.10). Exit codes: 
 from __future__ import annotations
 
 import json
+import sys
 import urllib.parse
 
 EPILOG = ("examples:\n  drishti.py var show 'DESK:RATES'\n  drishti.py var show 'BANK - DESK:CREDIT' --date 2026-09-30\n"
@@ -127,12 +128,25 @@ def trades_of(path: str, err) -> list[dict]:
 DATED = ("BUSINESS_DATE", "VALUATION_DATE", "BASE_VALUATION_DATE", "COMPUTED_AT", "BATCH_ID", "SCENARIO_PV_ID", "VECTOR_ID")
 
 
+def route(rows: list[dict]) -> dict[str, list[dict]]:
+    """A file's records by kind, routed by each record's VALUE_TYPE (PV: scenario-pv, PNL: pnl-vector), so one file may mix both
+    (VAR_GUIDE.md section 15.13); a record without one is refused with its line (drishti.py var convert adds it)."""
+    out: dict[str, list[dict]] = {}
+    for n, r in enumerate(rows, 1):
+        vt = str(r.get("VALUE_TYPE") or "").upper()
+        if vt not in ("PV", "PNL"):
+            raise ValueError(f"line {n}: VALUE_TYPE is {r.get('VALUE_TYPE')!r}, not PV or PNL: every record says what it is "
+                             "(drishti.py var convert --set VALUE_TYPE=... adds it to an older file)")
+        out.setdefault("scenario-pv" if vt == "PV" else "pnl-vector", []).append(r)
+    return out
+
+
 def intraday_kind(rows: list[dict]) -> str:
-    """The kind of an intraday file's rows: scenario PVs (SCENARIO_PV or BASE_PV) or P&L vectors (PNL); one kind a file."""
-    kinds = {"scenario-pv" if ("SCENARIO_PV" in r or "BASE_PV" in r) else "pnl-vector" for r in rows}
+    """The kind of an intraday file whose records are all one form (by VALUE_TYPE)."""
+    kinds = route(rows)
     if len(kinds) != 1:
-        raise ValueError("an intraday file holds one kind: scenario PVs or P&L vectors, not both")
-    return kinds.pop()
+        raise ValueError("these records are scenario PVs and P&L vectors: drishti.py var intraday --load routes them by VALUE_TYPE")
+    return next(iter(kinds))
 
 
 def move_dates(rows: list[dict], day: str) -> list[dict]:
@@ -161,26 +175,31 @@ def load_intraday(path: str, lake: str, day: str | None, signal: str | None, tok
         rows = [json.loads(x) for x in fh if x.strip()]
     if not rows:
         raise ValueError(f"{path}: no rows")
-    kind = intraday_kind(rows)
     if day:
         rows = move_dates(rows, day)
-    marked = sum(1 for r in rows if str(r.get("RUN_KIND") or "").upper() == "INTRADAY")
-    say(f"{path}: {len(rows)} {kind} rows ({marked} marked RUN_KIND INTRADAY), business date {rows[0].get('BUSINESS_DATE')}, "
-        f"batches {sorted({str(r.get('BATCH_ID')) for r in rows})}")
+    kinds = route(rows)
+    for kind, kr in kinds.items():
+        marked = sum(1 for r in kr if str(r.get("RUN_KIND") or "").upper() == "INTRADAY")
+        say(f"{path}: {len(kr)} {kind} rows ({marked} marked RUN_KIND INTRADAY), business date {kr[0].get('BUSINESS_DATE')}, "
+            f"batches {sorted({str(r.get('BATCH_ID')) for r in kr})}")
     if dry_run:
         say("dry run: nothing written")
         return 0
     root = Path(__file__).resolve().parents[1]
-    key = "SCENARIO_PV_ID" if kind == "scenario-pv" else "VECTOR_ID"
-    with tempfile.TemporaryDirectory(prefix="drishti-intraday-") as tmp:
-        f = Path(tmp) / "rows.jsonl"
-        f.write_text("".join(json.dumps(r) + "\n" for r in rows), encoding="utf-8")
-        cmd = [sys.executable, str(root / "tools" / "drishti.py"), "lake", "build", "--from", str(f), "--pack", str(root / "config" / "packs" / "market-risk"),
-               "--connector", "risk-store", "--kind", kind, "--key", key, "--date", "BUSINESS_DATE", "--mode", "append", "--lake", lake, "-q"]
-        if signal:
-            cmd += ["--signal", signal]
-        env = dict(os.environ, **({"DRISHTI_TOKEN": token} if token else {}))
-        return subprocess.run(cmd, env=env, cwd=root).returncode
+    rc = 0
+    for kind, kr in kinds.items():
+        key = "SCENARIO_PV_ID" if kind == "scenario-pv" else "VECTOR_ID"
+        with tempfile.TemporaryDirectory(prefix="drishti-intraday-") as tmp:
+            f = Path(tmp) / "rows.jsonl"
+            f.write_text("".join(json.dumps(r) + "\n" for r in kr), encoding="utf-8")
+            cmd = [sys.executable, str(root / "tools" / "drishti.py"), "lake", "build", "--from", str(f), "--pack",
+                   str(root / "config" / "packs" / "market-risk"), "--connector", "risk-store", "--kind", kind, "--key", key, "--date",
+                   "BUSINESS_DATE", "--mode", "append", "--lake", lake, "-q"]
+            if signal:
+                cmd += ["--signal", signal]                     # each kind's own signal: the engine reads a batch's two kinds apart
+            env = dict(os.environ, **({"DRISHTI_TOKEN": token} if token else {}))
+            rc = rc or subprocess.run(cmd, env=env, cwd=root).returncode
+    return rc
 
 
 def register(groups, srv, ctx: dict) -> None:
@@ -198,6 +217,8 @@ def register(groups, srv, ctx: dict) -> None:
         return params
 
     def cmd(a, extra) -> int:
+        if a.var_cmd == "convert":
+            return convert(a)
         api = Api.from_args(a)
         c = a.var_cmd
         if c == "show":
@@ -343,6 +364,14 @@ def register(groups, srv, ctx: dict) -> None:
     it.add_argument("--lake", default="data/delta", help="the Delta root to append to (default data/delta, the demo lake)")
     it.add_argument("--no-signal", action="store_true", help="append only; no data-load signal")
     it.add_argument("--dry-run", action="store_true", help="read and say what would be appended; write nothing")
+    cv = sub.add_parser("convert", help="add the fields every PV record says what it is with (VALUE_TYPE, GRAIN, CURRENCY, ...) to an "
+                        "older JSONL file: --set FIELD=VALUE, or --infer from each record")
+    cv.add_argument("file", metavar="FILE.jsonl", help="a scenario-pv or pnl-vector file (JSONL, .jsonl.gz too)")
+    cv.add_argument("--set", action="append", default=[], metavar="FIELD=VALUE",
+                    help="set a field on every record that lacks it (VALUE_TYPE=PNL, GRAIN=TRADE, CURRENCY=USD, SOURCE_SYSTEM=MUREX)")
+    cv.add_argument("--infer", action="store_true",
+                    help="VALUE_TYPE from the payload (SCENARIO_PV or PNL), GRAIN from the id (TRADE_ID or POSITION_ID), where a record lacks them")
+    cv.add_argument("--out", metavar="FILE.jsonl", help="where to write (default: FILE with .converted before .jsonl)")
     sub.add_parser("reload", help="drop the loaded dates (administrators): the next request maps the hot file again or reads the lake",
                    parents=[srv])
     w = scoped("whatif", "a scope's VaR before and after hypothetical trades (the Python engine, var-whatif), and its stressed window")
@@ -350,3 +379,53 @@ def register(groups, srv, ctx: dict) -> None:
     w.add_argument("--stress-window", type=int, default=250, metavar="DAYS", help="scenario days of the stressed window (0: none)")
     w.add_argument("--wait", type=int, default=10000, metavar="MS")
     p.set_defaults(func=cmd, cmd=None)
+
+
+LEAD = ("VALUE_TYPE", "GRAIN", "TRADE_ID", "POSITION_ID", "CURRENCY", "SOURCE_SYSTEM")
+
+
+def convert(a) -> int:
+    """``drishti.py var convert FILE --set VALUE_TYPE=PNL --set GRAIN=TRADE --set CURRENCY=USD`` (VAR_GUIDE.md section 15.13): an older
+    PV file made to say what each record is; the fields lead each line; a record already carrying a field keeps its value. Prints what
+    still lacks a required field (the engine refuses those, DRS-5208)."""
+    import gzip
+    import json
+    from pathlib import Path
+    src = Path(a.file)
+    sets = {}
+    for kv in a.set:
+        k, sep, v = kv.partition("=")
+        if not sep or not k.strip():
+            print(f"--set {kv}: FIELD=VALUE", file=sys.stderr)
+            return 2
+        sets[k.strip().upper()] = v.strip()
+    opener = gzip.open if src.name.endswith(".gz") else open
+    out = Path(a.out) if a.out else src.with_name(src.name.replace(".jsonl", ".converted.jsonl", 1))
+    rows, lacking = [], 0
+    with opener(src, "rt", encoding="utf-8") as fh:
+        for line in fh:
+            if not line.strip():
+                continue
+            r = json.loads(line)
+            for k, v in sets.items():
+                if r.get(k) in (None, ""):
+                    r[k] = v
+            if a.infer:
+                if r.get("VALUE_TYPE") in (None, ""):
+                    r["VALUE_TYPE"] = "PV" if "SCENARIO_PV" in r or "BASE_PV" in r else "PNL" if "PNL" in r else None
+                if r.get("GRAIN") in (None, ""):
+                    r["GRAIN"] = "POSITION" if r.get("POSITION_ID") and not r.get("TRADE_ID") else "TRADE" if r.get("TRADE_ID") else None
+            lead = {k: r[k] for k in LEAD if k in r}
+            r = {**lead, **{k: v for k, v in r.items() if k not in lead}}
+            if any(r.get(k) in (None, "") for k in ("VALUE_TYPE", "GRAIN", "CURRENCY", "SOURCE_SYSTEM")):
+                lacking += 1
+            rows.append(r)
+    text = "".join(json.dumps(r, ensure_ascii=False, separators=(",", ":")) + "\n" for r in rows)
+    if out.name.endswith(".gz"):
+        with gzip.open(out, "wt", encoding="utf-8") as fh:
+            fh.write(text)
+    else:
+        out.write_text(text, encoding="utf-8")
+    print(f"wrote {len(rows):,} records to {out}" + (f"; {lacking:,} still lack VALUE_TYPE, GRAIN, CURRENCY or SOURCE_SYSTEM "
+                                                     "(the engine refuses them: DRS-5208)" if lacking else ""))
+    return 1 if lacking else 0

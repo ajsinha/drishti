@@ -51,13 +51,15 @@ def main(argv=None) -> int:
     p.add_argument("--lake", help="also write them into this Delta root with lake build (the date replaced)")
     p.add_argument("--server", help="with --lake: raise the data-load signal on this server (http://host:port)")
     p.add_argument("--token-file", help="the API token for --server (default DRISHTI_TOKEN)")
+    C.grain_args(p)
     p.add_argument("--dry-run", action="store_true", help="say what would be written; write nothing")
     a = p.parse_args(argv)
     pv = C.M.pv_systems(a.pv_systems, a.pnl_systems, a.all_vectors)
-    m = C.Morning(Path(a.testdata), pv, a.date)
+    m = C.Morning(Path(a.testdata), pv, a.date, C.grain_systems(a))
     folder = Path(a.out) / f"morning-{m.day}"
-    print(f"morning run of {m.day}: {len(m.rows['scenario-pv']):,} trades as scenario PVs ({', '.join(pv) or 'none'}), "
-          f"{len(m.rows['pnl-vector']):,} as P&L vectors, scenario FX for {len(m.rows['fx-scenario'])} currencies; computed at {m.at}")
+    grain = ", per position: " + ", ".join(m.position_systems) if m.position_systems else ""
+    print(f"morning run of {m.day}: {len(m.rows['scenario-pv']):,} records as scenario PVs ({', '.join(pv) or 'none'}), "
+          f"{len(m.rows['pnl-vector']):,} as P&L vectors{grain}, scenario FX for {len(m.rows['fx-scenario'])} currencies; computed at {m.at}")
     if a.dry_run:
         print(f"dry run: nothing written (would write {folder})")
         return 0

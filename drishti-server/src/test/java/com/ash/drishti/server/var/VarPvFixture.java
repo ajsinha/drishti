@@ -110,8 +110,12 @@ final class VarPvFixture {
 
     static Map<String, Object> row(LocalDate day, String id, String ccy, double basePv, Object pvs, LocalDate valued) {
         Map<String, Object> d = new LinkedHashMap<>();
-        d.put("SCENARIO_PV_ID", "SPV-" + id + "-HS-20");
+        d.put("VALUE_TYPE", "PV");                                    // what the record is (VAR_GUIDE.md section 15.13)
+        d.put("GRAIN", "TRADE");
         d.put("TRADE_ID", id);
+        d.put("CURRENCY", ccy);
+        d.put("SOURCE_SYSTEM", "ENDUR");
+        d.put("SCENARIO_PV_ID", "SPV-" + id + "-HS-20");
         d.put("BUSINESS_DATE", day.toString());
         d.put("SCENARIO_SET_ID", "HS-20");
         d.put("BATCH_ID", "B-" + day + "-01");

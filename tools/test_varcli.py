@@ -156,15 +156,16 @@ class IntradayTest(unittest.TestCase):
     """`drishti.py var intraday` (docs/guides/VAR_GUIDE.md section 8.4): a file's kind from its rows, its dates moved to another business
     date, a dry run that writes nothing, and the headline's intraday line."""
 
-    ROWS = [{"SCENARIO_PV_ID": "SPV-1000003-HS-509-I-2026-09-30-001", "TRADE_ID": "1000003", "BUSINESS_DATE": "2026-09-30",
+    ROWS = [{"VALUE_TYPE": "PV", "GRAIN": "TRADE", "TRADE_ID": "1000003", "CURRENCY": "EUR", "SOURCE_SYSTEM": "ENDUR",
+             "SCENARIO_PV_ID": "SPV-1000003-HS-509-I-2026-09-30-001", "BUSINESS_DATE": "2026-09-30",
              "VALUATION_DATE": "2026-09-30", "BASE_VALUATION_DATE": "2026-09-30", "COMPUTED_AT": "2026-09-30T23:05:00Z",
              "BATCH_ID": "I-2026-09-30-001", "RUN_KIND": "INTRADAY", "BASE_PV": 1.0, "SCENARIO_PV": [1.0, 2.0]}]
 
     def test_the_kind_and_the_moved_dates(self):
         self.assertEqual(V.intraday_kind(self.ROWS), "scenario-pv")
-        self.assertEqual(V.intraday_kind([{"PNL": [1.0], "VECTOR_ID": "PV-1"}]), "pnl-vector")
+        self.assertEqual(V.intraday_kind([{"VALUE_TYPE": "PNL", "PNL": [1.0], "VECTOR_ID": "PV-1"}]), "pnl-vector")
         with self.assertRaises(ValueError):
-            V.intraday_kind(self.ROWS + [{"PNL": [1.0]}])
+            V.intraday_kind(self.ROWS + [{"VALUE_TYPE": "PNL", "PNL": [1.0]}])
         moved = V.move_dates(self.ROWS, "2026-10-27")[0]
         self.assertEqual(moved["BUSINESS_DATE"], "2026-10-27")
         self.assertEqual(moved["COMPUTED_AT"], "2026-10-27T23:05:00Z")
@@ -187,6 +188,22 @@ class IntradayTest(unittest.TestCase):
                                                   "lastAt": "2026-09-30T23:10:00Z"}}, said.append)
         self.assertTrue(any("intraday   5 trades updated" in s for s in said), said)
 
+
+    def test_a_mixed_file_is_routed_by_value_type_and_convert_adds_the_fields(self):
+        rows = [{"VALUE_TYPE": "PV", "GRAIN": "TRADE", "TRADE_ID": "1", "SCENARIO_PV": [1.0]},
+                {"VALUE_TYPE": "PNL", "GRAIN": "POSITION", "POSITION_ID": "P", "PNL": [2.0]}]
+        self.assertEqual({k: len(v) for k, v in V.route(rows).items()}, {"scenario-pv": 1, "pnl-vector": 1})
+        with self.assertRaisesRegex(ValueError, "line 1: VALUE_TYPE is None"):
+            V.route([{"TRADE_ID": "1", "PNL": [1.0]}])
+        with tempfile.TemporaryDirectory() as tmp:
+            old = Path(tmp) / "old.jsonl"
+            old.write_text(json.dumps({"VECTOR_ID": "PV-1", "TRADE_ID": "1", "PNL": [1.0]}) + "\n", encoding="utf-8")
+            self.assertEqual(run("convert", str(old), "--set", "VALUE_TYPE=PNL", "--set", "GRAIN=TRADE", "--set", "CURRENCY=USD",
+                                 "--set", "SOURCE_SYSTEM=MUREX"), 0)
+            new = json.loads((Path(tmp) / "old.converted.jsonl").read_text(encoding="utf-8"))
+            self.assertEqual(list(new)[:5], ["VALUE_TYPE", "GRAIN", "TRADE_ID", "CURRENCY", "SOURCE_SYSTEM"])
+            self.assertEqual(run("convert", str(old), "--infer", "--out", str(Path(tmp) / "x.jsonl")), 1)   # no CURRENCY nor SOURCE_SYSTEM
+            self.assertEqual(json.loads((Path(tmp) / "x.jsonl").read_text(encoding="utf-8"))["GRAIN"], "TRADE")
 
 if __name__ == "__main__":
     unittest.main()

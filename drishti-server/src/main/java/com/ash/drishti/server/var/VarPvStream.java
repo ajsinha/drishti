@@ -142,11 +142,23 @@ final class VarPvStream {
             } catch (IOException e) {
                 v = null;
             }
-            if (!(v instanceof ObjectNode row) || !row.hasNonNull("TRADE_ID")) {
-                reject(ErrorCode.VAR_ROW_REJECTED.code(), m.where(), "not a JSON object of the contract with a TRADE_ID");
+            if (!(v instanceof ObjectNode row)) {
+                reject(ErrorCode.VAR_ROW_REJECTED.code(), m.where(), "not a JSON object of the contract");
                 continue;
             }
-            String trade = row.get("TRADE_ID").asText();
+            // what the record is (VAR_GUIDE.md section 15.13): its own fields, against its payload, its id and its system's pin
+            String payload = row.has("SCENARIO_PV") || row.has("BASE_PV") ? VarInputs.PV : row.has("PNL") ? VarInputs.PNL : null;
+            String[] said = new VarInputs(svc.props()::input).check(payload, text(row, "VALUE_TYPE"), text(row, "GRAIN"), text(row, "TRADE_ID"),
+                    text(row, "POSITION_ID"), text(row, "SOURCE_SYSTEM"), text(row, "CURRENCY"));
+            if (said == null && payload == null) {
+                said = new String[] {ErrorCode.VAR_RECORD_INVALID.code(), "no SCENARIO_PV, BASE_PV or PNL: neither scenario PVs nor a P&L vector"};
+            }
+            if (said != null) {
+                reject(said[0], m.where(), said[1]);
+                dateRejections.add(said[0] + " " + m.where() + ": " + said[1]);
+                continue;
+            }
+            String trade = m.key();
             String date = row.path("BUSINESS_DATE").asText("");
             if (!date.startsWith(day.toString())) {
                 count("otherDate", 1);                                  // another business date: not today's layer
@@ -160,8 +172,8 @@ final class VarPvStream {
                         + set);
                 continue;
             }
-            // the form: scenario PVs (SCENARIO_PV, BASE_PV) or a P&L vector (PNL); a cancel line carries its form's vector as null
-            String kind = row.has("SCENARIO_PV") || row.has("BASE_PV") ? "scenario-pv" : "pnl-vector";
+            // routed by VALUE_TYPE: scenario PVs to scenario-pv, a P&L vector to pnl-vector (a cancel line carries its vector as null)
+            String kind = text(row, "VALUE_TYPE").equalsIgnoreCase(VarInputs.PV) ? "scenario-pv" : "pnl-vector";
             boolean live = !"CANCELLED".equalsIgnoreCase(row.path("TRADE_STATUS").asText("")) && svc.loader().rules().live(row.path("TRADE_STATUS")
                     .asText(null));
             if (!live && book.tradeOrdinal(trade) < 0 && (held == null || held.get(trade) == null || held.get(trade).cancel())) {
@@ -241,6 +253,11 @@ final class VarPvStream {
         return out;
     }
 
+    private static String text(JsonNode row, String field) {
+        JsonNode x = row.get(field);
+        return x == null || x.isNull() ? null : x.asText();
+    }
+
     /** Why a vector is not the set's PVs: its length, a null (a failed scenario) or a value not finite; null when it is fine. */
     static String badVector(JsonNode v, int width) {
         if (v == null || !v.isArray()) {
@@ -271,7 +288,8 @@ final class VarPvStream {
                     Map<String, Object> cols = new LinkedHashMap<>();
                     for (String c : promoted) {
                         JsonNode x = r.get(c);
-                        cols.put(c, x == null || x.isNull() ? null : x.isNumber() ? x.asDouble() : x.asText());
+                        cols.put(c, x == null || x.isNull() ? null : x.isNumber() ? x.asDouble() : x.isContainerNode() ? JSON.writeValueAsString(x)
+                                : x.asText());                         // an array (TRADE_IDS) as JSON text, as lake build keeps it
                         if (x != null && !x.isNull()) {
                             types.merge(c, x.isNumber() ? "double" : "string", (a, b) -> a.equals(b) ? a : "string");
                         }

@@ -210,6 +210,12 @@ VAR BANK  ·  Drishti Bank  ·  node  ·  2026-10-26
 
 (*Drishti Bank* is the root node's name in the demo's hierarchy data; `drishti.var.root-name` sets another, 2.9.4.)
 
+**Any form, any grain (2.9.4).** A pricing system may send scenario PVs or P&L vectors, per trade or per position (a position sent
+whole, placed by its book, naming its trades): every record says what it is (`VALUE_TYPE`, `GRAIN`, its id, `CURRENCY`,
+`SOURCE_SYSTEM`), one system sends one form and one grain on a date, and a system may switch between dates. The same trades sent per
+trade or as their positions give the same VaR on every node; a trade inside a supplied position has no VaR of its own (its page says so
+and links the position). `drishti.var.inputs` can pin what each system sends, as a cross-check (VAR_GUIDE.md section 15.13).
+
 Read it as: on the 6th worst of the 509 days the bank would lose 126.5 million; the 13 worst days lose 172.5 million on average, so
 the tail beyond VaR is fat; the VaR uses 84.4% of the 150 million limit; the model had 3 exceptions in the last 249 days (green).
 

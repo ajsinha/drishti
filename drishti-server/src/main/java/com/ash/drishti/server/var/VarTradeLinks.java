@@ -86,6 +86,17 @@ final class VarTradeLinks implements ViewAugmenter {
                 fields.put("VAR_RESULT_ID", DataNode.of("TRD:" + tid));
                 links.put("VAR", "TRD:" + tid);
                 currency(d, o2, links);
+            } else if (d.intake().positionOf(id) != null || positionGrain(d, doc)) {
+                // its source system sends PVs per position (VAR_GUIDE.md section 15.13): no trade-level VaR, a link to its position
+                String pos = d.intake().positionOf(id);
+                String note = "its source system sends PVs per position on " + day + (pos == null ? "" : ": the trade is in the supplied position "
+                        + pos) + "; there is no trade-level P&L vector";
+                links.put("PNL_VECTOR_NOTE", note);
+                links.put("VAR_NOTE", note + ", so no trade-level VaR" + (pos == null ? "" : " (see POS:" + pos + ")"));
+                if (pos != null) {
+                    links.put("POSITION", pos);
+                    fields.put("POSITION_ID", DataNode.of(pos));
+                }
             } else {
                 String why = d.intake().notLiveWhy(id);
                 String note = "not live on " + day + (why == null ? "" : ": " + why) + "; no P&L vector";
@@ -99,6 +110,13 @@ final class VarTradeLinks implements ViewAugmenter {
         }
         fields.put(FIELD, DataNode.of(links));
         return new EntityDocument(doc.ref(), new DataNode.Obj(fields), doc.provenance(), doc.deleted());
+    }
+
+    /** True when the trade's source system sent its records at position grain on the date. */
+    private static boolean positionGrain(VarDate d, EntityDocument doc) {
+        DataNode sys = doc.data() instanceof DataNode.Obj o ? o.get("SOURCE_SYSTEM") : null;
+        String in = sys == null || sys.isNull() ? null : d.intake().inputOf(sys.asText());
+        return in != null && in.endsWith("position");
     }
 
     /**
