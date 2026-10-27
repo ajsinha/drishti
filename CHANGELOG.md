@@ -47,6 +47,8 @@
   `fx-spot.CONVENTIONS.CALENDAR` holds `GBLO+USNY`, not `CAL-` ids; `simulation-run.NETTING_SETS` is a count (76); the counterparty's
   `NEWS_ID` opens no story offline; `legal-entity.BOOKS[].DESK`, `lei-entity.SUCCESSOR` (4 of 7), `portfolio.DEFINITION.MEMBERS[].POSITION_ID`
   (28 of 31) and `us-company.FINANCIALS[].EQUITY`.
+  Screenshots: USER_GUIDE *The data map* shows the Map view opened with `DATAMAP trade` and the Cards view with the Trades domain open
+  (`docs/guides/img/datamap/`, made by the new `tools/docs/shots/datamap.py`: `screenshots.py --guide datamap`).
 - **Home: Did you know, the fact of the day (2026-10-27; product owner, mock-up D3).** Signed in, Home keeps its headline *See what your
   data hasn't told you yet.* on the left and shows a tile on the right: the domain and business date, one surprising sentence, a small
   picture, a collapsible *Why does that happen?* with a link to the Knowledge section, a button opening the command, a WHAT link and

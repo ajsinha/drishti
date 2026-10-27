@@ -315,6 +315,10 @@ and the selection are in the address, so a link opens the same picture.
   with the field) and the command that opens each, **Comes from** (the pack README's sources) and **Crosses into** (the other domains
   its joins reach, and through which fields).
 
+![DATAMAP trade: the Map view with the trade selected, its joins lit and the side panel showing their coverage](img/datamap/01-map-trade.jpg)
+
+![The Cards view with the Trades domain open: its kinds, counts and joins, where the data comes from and the domains it crosses into](img/datamap/02-cards.jpg)
+
 Domains follow `drishti-console/config/datamap.yaml`, which is presentation only: their names, their order and which packs they hold
 (and, rarely, a kind to draw dashed that its contract does not mark computed). A pack the file does not name appears as a domain of its
 own under its pack title, with its kinds and joins, with no configuration at all.
