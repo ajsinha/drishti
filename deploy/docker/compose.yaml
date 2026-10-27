@@ -19,7 +19,7 @@
 #   docker compose -f deploy/docker/compose.yaml up
 services:
   server:
-    image: drishti-server:2.9.3
+    image: drishti-server:2.9.4
     build: { context: ../.., dockerfile: deploy/docker/server.Dockerfile }
     environment:
       DRISHTI_SECURITY_ENABLED: "true"
@@ -36,7 +36,7 @@ services:
       - drishti-identity:/opt/drishti/data/identity
     ports: ["127.0.0.1:18480:18480"]      # the console reaches the server over the compose network; publish wider only behind TLS
   console:
-    image: drishti-console:2.9.3
+    image: drishti-console:2.9.4
     build: { context: ../.., dockerfile: deploy/docker/console.Dockerfile }
     depends_on: [server]
     environment:
