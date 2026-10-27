@@ -50,7 +50,7 @@ categories:
     icon: terminal
     blurb: "Working in the console: commands, views, forms, reports, sharing, and Python on any screen."
     guides:
-      - { slug: user-guide, doc: guides/USER_GUIDE.md, title: User guide, icon: terminal, summary: "The top bar, commands, type-ahead, every key, tables, filters, controls, layout mode, the Pivot tab, business dates, Compare, workspaces, monitors, alerts, the ten themes and how to choose one, settings, and what changes (nothing) when several servers act as one." }
+      - { slug: user-guide, doc: guides/USER_GUIDE.md, title: User guide, icon: terminal, summary: "Home and its fact of the day, the top bar, commands, type-ahead, every key, tables, filters, controls, layout mode, the Pivot tab, business dates, Compare, workspaces, monitors, alerts, the ten themes and how to choose one, settings, and what changes (nothing) when several servers act as one." }
       - { slug: query-by-form, doc: guides/QUERY_BY_FORM.md, title: Query by form, icon: card-checklist, summary: "Fill in boxes instead of writing a search: the forms home, the inputs, the search it writes, saving and scheduling it; a date with no data says so and offers the newest one." }
       - { slug: reports-page, doc: guides/SCHEDULED_REPORTS.md, title: Reports and subscriptions, icon: file-earmark-bar-graph, summary: "The Reports page: scheduled searches, when they run and where the file goes, export, and subscriptions by email." }
       - { slug: sharing-and-discussion, title: Sharing and collaboration, icon: chat-square-text, summary: "Send a view with a note, read your inbox, discuss a number: what travels is your words and a link, and everyone sees the view with their own permissions." }
@@ -132,6 +132,7 @@ categories:
 # the help centre at their path slug, so the old addresses keep working.
 moved:
   docs-guides-public-data: external-data   # docs/guides/PUBLIC_DATA.md, listed as External data (2.9.1)
+  fact-of-the-day: user-guide#home-the-fact-of-the-day   # Home's Did you know tile (2.9.3), a section of the user guide (the page cap stands)
   public-data: external-data
   lake-maintenance: docs-admin-lake-maintenance   # Admin -> Lakes -> Maintain's help link (docs/admin/LAKE_MAINTENANCE.md, in the reference)
   net: docs-admin-net                 # Admin -> Net's help link (docs/admin/NET.md, the Drishti*net operator's guide, in the reference)
@@ -241,7 +242,7 @@ knowledge:
 
 # F1 opens the guide for the current screen.
 contextual:
-  landing: user-guide
+  landing: user-guide#home-the-fact-of-the-day
   bi: bi-guide
   terminal: user-guide
   view: user-guide

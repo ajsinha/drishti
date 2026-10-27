@@ -2821,6 +2821,10 @@ sign-on settings (`auth.oidc`) apply to every server; each server verifies the I
 | `copyright` / `notice` | the Drishti copyright and a ban on unauthorised copying | The legal lines in the footer and on the About page. Change them here, never in code; the server has the same under `drishti.branding`. |
 | `error_advice` | a short text for each of `DRS-1001`, `DRS-1002`, `DRS-1003`, `DRS-1004`, `DRS-1016`, `DRS-1007`, `DRS-4003`, `DRS-4004`, and `default` | What an error page tells the user to do, by the code the server answered with. `{kind}` and `{id}` in a text become the entity asked for; a code with no entry gets `default`. Edit it so the advice fits your site (who to ask, which channel). |
 | `showcase` | four screenshots of the retired finance example pack | The landing page's pictures: `{slug, title, cmd, sutra}` each, the image being `web/static/img/shot-<slug>.png`. A caption names its `cmd` only when that command is one of the packs' examples. |
+| `facts.enabled` | `${DRISHTI_HOME_FACTS:true}` | Home's **Did you know** tile (the fact of the day, signed in): the facts each pack declares in `config/facts.yaml`, computed as the user on the business date ([USER_GUIDE.md](../guides/USER_GUIDE.md#home-the-fact-of-the-day), [PACK_DEVELOPER_GUIDE.md](../guides/PACK_DEVELOPER_GUIDE.md#facts-for-home)). `false`: no tile. |
+| `facts.cache_seconds` | `21600` | How long the facts of one user, business date and set of packs are kept before they are computed again. |
+| `facts.timeout_seconds` | `90` | A fact that takes longer is left out of the tile. |
+| `home_cards` | Market risk (`VAR BANK`), Exposure (`EXP BANK`), Funds and ETFs (`FUND SPY`), Data map (`DATAMAP`) | The quick cards under Home's headline, signed in: `{title, cmd, pack, icon}` each; a card naming a `pack` is shown only while that pack is on for the user. |
 
 ### `embed` — embedded views
 

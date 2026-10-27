@@ -1,0 +1,74 @@
+# Project Drishti · Any data. Any domain. One grammar.
+#
+# Copyright (c) 2026 Ashutosh Sinha <ajsinha@gmail.com>.
+# All rights reserved.
+#
+# PROPRIETARY AND CONFIDENTIAL.
+#
+# This file is the confidential and proprietary property of Ashutosh Sinha.
+# Unauthorised copying, use, modification, distribution or disclosure of this
+# file, via any medium, is strictly prohibited except with the express prior
+# written permission of the copyright holder.
+#
+# See the LICENSE file in the root of this repository for the full terms.
+
+# Did you know: this pack's facts for Home (drishti-console/core/facts.py; docs/guides/PACK_DEVELOPER_GUIDE.md, "Facts for Home").
+# Every number is computed from the VaR engine's answers on the business date, as the user who opens Home; a fact whose condition
+# does not hold today is not shown. Steps: var / exposure (an API path and params), search (a structured search), raw (one record),
+# let (a value), pick (the best row: where, order). when: what makes it surprising. Templates fill {expression|format}.
+facts: 1
+items:
+  - id: book-over-limit-desk-within
+    domain: Market risk
+    title: A book over its VaR limit inside a desk within its own
+    steps:
+      - { as: first, var: /tree }                                  # the default hierarchy, and the names of all of them
+      - { as: trees, each: first.hierarchies, var: /tree, params: { hierarchy: "{it}" }, limit: 10 }
+      - { as: nodes, let: "flat(pluck(trees, 'ans.nodes'))" }
+      - as: book
+        pick: nodes
+        where: "book.limitUse > 1 and find(nodes, 'id', book.parent).limitUse <= 1"
+        order: book.limitUse
+      - { as: parent, let: "find(nodes, 'id', book.parent)" }
+    when: "book.limitUse > 1 and parent.limitUse <= 1"
+    text: "{book.name} is at **{book.limitUse|pct}** of its VaR limit, while its {parent.level}, {parent.name}, is within its own."
+    why: >-
+      A limit is set on each node of the risk hierarchy. The {book.level}'s VaR is {book.var|money} against a limit of
+      {book.limit|money}; the {parent.level}'s is {parent.var|money} against {parent.limit|money}. The other parts of the
+      {parent.level} offset it, so a report that stops at the {parent.level} shows no breach: only the {book.level} level does.
+    picture:
+      type: bars
+      caption: "Share of the VaR limit used, {asOf}"
+      bars:
+        - { label: "{book.name}", value: book.limitUse, format: pct, tone: alert }
+        - { label: "{parent.name}", value: parent.limitUse, format: pct }
+    open: "VAR NODE {book.id}"
+    what: VaR limit
+    knowledge: market-risk.md#4-a-worked-example-on-the-demo-data
+
+  - id: desk-that-lowers-var
+    domain: Market risk
+    title: A desk that adds VaR on paper and lowers it in fact
+    steps:
+      - { as: parts, var: /scope/contributions, params: { scope: BANK, by: desk } }
+      - as: desk
+        pick: parts.rows
+        where: "desk.componentVar > 0 and desk.incrementalVar < 0"
+        order: "0 - desk.incrementalVar"
+      - { as: tree, var: /tree }
+      - { as: node, let: "find(tree.nodes, 'scope', desk.scope)" }
+      - { as: name, let: "node.name or desk.label" }
+    text: "Take the **{name}** desk out and the bank's VaR would rise by {0 - desk.incrementalVar|money}, though the desk adds {desk.componentVar|money} to it on paper."
+    why: >-
+      Component VaR shares the bank's VaR of {parts.var|money} out among the desks, so the shares add up. Incremental VaR asks a
+      different question: what if the desk were not there? The desk's trades gain on the days the rest of the bank loses most,
+      so without them the bank's worst days get worse.
+    picture:
+      type: bars
+      caption: "{name} in the bank's VaR, {asOf}"
+      bars:
+        - { label: Component (its share), value: desk.componentVar, format: money }
+        - { label: Incremental (without it), value: desk.incrementalVar, format: money, tone: alert }
+    open: "VAR DESK {desk.key}"
+    what: Incremental VaR
+    knowledge: market-risk.md#4-a-worked-example-on-the-demo-data

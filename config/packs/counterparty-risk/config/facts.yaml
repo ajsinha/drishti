@@ -1,0 +1,74 @@
+# Project Drishti · Any data. Any domain. One grammar.
+#
+# Copyright (c) 2026 Ashutosh Sinha <ajsinha@gmail.com>.
+# All rights reserved.
+#
+# PROPRIETARY AND CONFIDENTIAL.
+#
+# This file is the confidential and proprietary property of Ashutosh Sinha.
+# Unauthorised copying, use, modification, distribution or disclosure of this
+# file, via any medium, is strictly prohibited except with the express prior
+# written permission of the copyright holder.
+#
+# See the LICENSE file in the root of this repository for the full terms.
+
+# Did you know: this pack's facts for Home (drishti-console/core/facts.py; docs/guides/PACK_DEVELOPER_GUIDE.md, "Facts for Home").
+# Every number is computed from the exposure engine's answers (and the VaR engine's, for the fact that needs market-risk) on the
+# business date, as the user who opens Home; a fact whose condition does not hold today is not shown.
+facts: 1
+items:
+  - id: collateral-raises-exposure
+    domain: Counterparty credit
+    title: Collateral that raises exposure
+    steps:
+      - { as: tree, exposure: /tree }
+      - { as: sets, let: "flat(pluck(flat(pluck(tree.groups, 'children')), 'children'))" }
+      - { as: answers, each: sets, exposure: /scope, params: { scope: "{it.scope}" }, limit: 500 }
+      - as: hit
+        pick: answers
+        where: "hit.ans.collateral.atPeak.eeUncoll > 0 and hit.ans.collateral.atPeak.ee > 2 * hit.ans.collateral.atPeak.eeUncoll"
+        order: "hit.ans.collateral.atPeak.ee - hit.ans.collateral.atPeak.eeUncoll"
+      - { as: at, let: hit.ans.collateral.atPeak }
+      - { as: coll, let: hit.ans.collateral }
+    when: "at.ee > 2 * at.eeUncoll"
+    text: "Collateral made **{hit.it.id}** more risky, not less: its expected exposure at {at.tenor} is {at.ee|money} with it and {at.eeUncoll|money} without ({at.ee / at.eeUncoll - 1|signpct})."
+    why: >-
+      The set's trades are worth {coll.netMtm|money} to the bank today and its collateral balance is {coll.heldToday|money}
+      (negative: posted by the bank). On paths where the trades swing in the bank's favour, the bank is owed their value and gets
+      its posted collateral back only after the margin period, so the collateral adds to what the counterparty owes.
+    picture:
+      type: bars
+      caption: "Expected exposure at {at.tenor}, netting set {hit.it.id}"
+      bars:
+        - { label: without collateral, value: at.eeUncoll, format: money }
+        - { label: with it, value: at.ee, format: money, tone: alert }
+    open: "EXP {hit.it.id}"
+    what: Collateral effect
+    knowledge: counterparty-credit-risk.md#4-a-worked-example-on-the-demo-data
+
+  - id: var-versus-peak-pfe
+    domain: Counterparty credit
+    title: The same trades, two risks
+    needs: [market-risk]
+    steps:
+      - { as: tree, exposure: /tree }
+      - as: cp
+        pick: "flat(pluck(tree.groups, 'children'))"
+        where: "cp.peakPfe > 0"
+        order: cp.peakPfe
+      - { as: v, var: /scope, params: { scope: "CPTY:{cp.id}" } }
+    when: "v.var > 0 and cp.peakPfe > 5 * v.var"
+    text: "{cp.label}'s trades have a VaR of {v.var|money} but a peak PFE of **{cp.peakPfe|money}**: {cp.peakPfe / v.var|times} as large."
+    why: >-
+      Both read the same {v.trades|int} trades. VaR is what they could lose the bank in one day of market moves; PFE is what the
+      counterparty could owe the bank if it defaulted, at the worst point of the trades' life ({cp.peakPfeTenor}). A book that is
+      hedged against the market can still leave a large claim on one counterparty.
+    picture:
+      type: bars
+      caption: "{cp.label}, {asOf}"
+      bars:
+        - { label: VaR (1 day 99%), value: v.var, format: money }
+        - { label: "Peak PFE ({cp.peakPfeTenor})", value: cp.peakPfe, format: money, tone: alert }
+    open: "EXP {cp.id}"
+    what: Peak PFE
+    knowledge: market-risk.md#4-a-worked-example-on-the-demo-data

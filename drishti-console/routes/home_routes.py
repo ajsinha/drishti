@@ -12,18 +12,18 @@
 #
 # See the LICENSE file in the root of this repository for the full terms.
 
-"""Public pages: the landing page."""
+"""Public pages: the landing page (Home), with its fact of the day (core/facts.py) and quick cards."""
 from __future__ import annotations
 
 from pathlib import Path
-from urllib.parse import unquote
+from urllib.parse import quote, unquote
 
 from fastapi import APIRouter, Request
 from fastapi.responses import FileResponse, JSONResponse
 
 from core.nextpath import safe_next
 from core.packs import samples
-from routes.common import packs, render
+from routes.common import library, packs, render
 
 ICONS = Path(__file__).resolve().parent.parent / "web" / "static" / "img" / "icons"
 
@@ -37,7 +37,8 @@ async def landing(request: Request):
     """The public landing page. Its example commands come from the packs switched on, never from a pack that may be
     absent (UX-05); with no examples it shows the command's form instead of an entity."""
     settings = request.app.state.settings
-    current = samples(await packs(request))
+    active = await packs(request)
+    current = samples(active)
     commands = [s["cmd"] + " <GO>" for s in current][: int(settings.get("ui.landing_examples", 4) or 4)] or [GENERIC]
     known = {s["cmd"].upper() for s in current}
     showcase = [{**s, "cmd": s.get("cmd") if str(s.get("cmd", "")).upper() in known else ""} for s in settings.get("ui.showcase") or []]
@@ -46,7 +47,49 @@ async def landing(request: Request):
         target = safe_next(request.query_params.get("from"), default="")
         if target and target.split("?", 1)[0] not in ("/", "/login"):
             back = {"href": target, "label": back_label(target)}
-    return render(request, "landing.html", showcase=showcase, commands=commands, back=back)
+    me = getattr(request.state, "identity", None)
+    facts_on = me is not None and request.app.state.facts.enabled
+    return render(request, "landing.html", showcase=showcase, commands=commands, back=back, facts_on=facts_on,
+                  home_cards=home_cards(settings.get("ui.home_cards") or [], active) if me is not None else [])
+
+
+def home_cards(cards: list, current: list) -> list:
+    """The quick cards under the Home headline (``ui.home_cards``): each one opens a command; a card naming a pack is shown only while
+    that pack is on for the user, one naming none (a reserved word such as DATAMAP) always."""
+    on = {p.get("name") for p in current}
+    out = []
+    for c in cards:
+        if not isinstance(c, dict) or not c.get("cmd") or not c.get("title"):
+            continue
+        if c.get("pack") and c["pack"] not in on:
+            continue
+        out.append({"title": str(c["title"]), "cmd": str(c["cmd"]), "href": "/go?q=" + quote(str(c["cmd"]) + " <GO>"),
+                    "icon": str(c.get("icon") or "")})
+    return out
+
+
+@router.get("/api/home/facts")
+async def home_facts(request: Request):
+    """The fact of the day for the signed-in user (core/facts.py): ``{date, facts}``, the day's fact first, computed from the server's
+    answers on the user's business date for the packs the user has on. Empty when none holds; the page then hides the tile."""
+    from core import servers
+    from core.facts import Fetcher, links, rotate
+
+    me = getattr(request.state, "identity", None)
+    svc = request.app.state.facts
+    if me is None or not svc.enabled:
+        return JSONResponse({"date": None, "facts": []}, headers={"Cache-Control": "no-store"})
+    current = await packs(request)
+    eligible = svc.eligible(current)
+    info = await request.app.state.business_dates.info(request.app.state.backend, me, getattr(request.state, "asof", "live"))
+    day = str((info or {}).get("selected") or (info or {}).get("current") or "")
+    if not eligible or not day:
+        return JSONResponse({"date": day or None, "facts": []}, headers={"Cache-Control": "no-store"})
+    key = (servers.current(), me.user, tuple(sorted(me.roles)), day, tuple(sorted(p.get("name", "") for p in current)))
+    found = await svc.today(key, eligible, Fetcher(request.app.state.backend, me, day), day)
+    lib = await library(request)
+    out = [links(f, request.app.state.glossary, lib) for f in rotate(found, day)]
+    return JSONResponse({"date": day, "facts": out}, headers={"Cache-Control": "no-store"})
 
 
 def back_label(path: str) -> str:
