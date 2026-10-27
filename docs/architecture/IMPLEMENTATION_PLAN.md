@@ -528,9 +528,9 @@ Once the banking and finance measures are done, the same pattern of fundamental 
 served by Python engines and reactive connectors is carried to other industries. Each gets its own packs, connectors and compute
 engines. Which industries, and in what order, is for the product owner to decide then.
 
-## 2.9.3 (planned): VaR from scenario PVs, in any reporting currency (product owner, 2026-10-26)
+## 2.9.4 (planned): VaR from scenario PVs, in any reporting currency (product owner, 2026-10-26)
 
-Decided after 2.9.1: the upstream engine gives **scenario PVs** (each live trade revalued under each historical scenario) and the
+Moved from 2.9.3 to its own release, 2.9.4 (product owner, 2026-10-27). Decided after 2.9.1: the upstream engine gives **scenario PVs** (each live trade revalued under each historical scenario) and the
 **base PV**, and FX rates are available; Drishti computes the P&L vectors itself and reports VaR and ES **in a chosen currency**.
 The P&L-vector input of 2.8.0 stays supported (a bank sends either).
 
