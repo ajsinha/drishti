@@ -332,6 +332,9 @@ files (`application-files.yaml`, `application-postgres.yaml`, …) and packs hav
 | `DRISHTI_VAR_CURRENCY_RETENTION_DATES` | `drishti.var.currency-retention-dates` | `5` | 2.9.4. The newest business dates whose listed currencies are built ahead and kept on disk. |
 | `DRISHTI_VAR_INTRADAY_KAFKA_WINDOW` | `drishti.var.intraday.kafka.window` | `5m` | 2.9.4. The PV topic's window: everything received in it is appended to the lake as one intraday batch and applied (`30s`, `5m`, `1h`). |
 | `DRISHTI_VAR_INTRADAY_KAFKA_MAX_TRADES` | `drishti.var.intraday.kafka.max-trades` | `500` | 2.9.4. A window is applied earlier once this many trades wait. |
+| `DRISHTI_VAR_CONFIDENCE` | `drishti.var.confidence` | `0.99` | VaR's confidence: 0.99 or 0.95 (refused at start outside (0.5, 1)); every label follows it; limits are set against it. |
+| `DRISHTI_VAR_ES_CONFIDENCE` | `drishti.var.es-confidence` | `0.975` | Expected shortfall's confidence. |
+| `DRISHTI_VAR_SCENARIO_WINDOW` | `drishti.var.scenario-window` | `all` | 2.9.4. The scenarios used: `all` (the scenario set's length) or N ≥ 20, the newest N of each date's set (250: one year). |
 | `DRISHTI_VAR_ROOT_NAME` | `drishti.var.root-name` | empty | 2.9.4. The name of the top of the VaR tree (every hierarchy's root node); empty keeps the hierarchy data's `NAME` (*Drishti Bank* in the demo). `drishti.var.root-names` (a map, hierarchy to name) wins for one hierarchy. Read when a date loads: restart the server (or reload the dates) after changing it. |
 | `DRISHTI_COMPUTE_VAR_WORKERS` | `compute.pools.var.workers.max` (`config/compute/compute.yaml`) | `4` | Python workers of the compute pool `var` (the Python VaR engine: what-if and the stressed window) on this node. |
 | `DRISHTI_VAR_OFFICIAL` | `drishti.var.official.enabled` | `true` | Capture every node officially at the end of each loaded date, and publish it to `risk-results/var-official`. |
@@ -1421,8 +1424,9 @@ else by `drishti.var.positions`.
 | Key | Default | Meaning |
 |---|---|---|
 | `enabled` | `true` (`DRISHTI_VAR_ENABLED`) | The engine at all. Off: `/api/v1/var` and the explorer are not served. |
-| `confidence` | `0.99` | VaR's confidence. |
-| `es-confidence` | `0.975` | Expected shortfall's confidence. |
+| `confidence` | `0.99` (`DRISHTI_VAR_CONFIDENCE`) | VaR's confidence: 0.99 or 0.95; refused at start outside (0.5, 1). Every label (console, CLI, Home facts) follows it; limits are set against it, so a change changes limit use; backtesting keeps 99% (the Basel light). `confidence=` per request recomputes the headline, never official. |
+| `es-confidence` | `0.975` (`DRISHTI_VAR_ES_CONFIDENCE`) | Expected shortfall's confidence; refused outside (0.5, 1). |
+| `scenario-window` | `all` (`DRISHTI_VAR_SCENARIO_WINDOW`) | 2.9.4. `all`, or N ≥ 20: the newest N scenarios of each date's set, every row cut to them at load; k = ceil(N (1 − confidence)); a shorter set is used whole (a warning in the provenance); in the hot file's digest; official records state it. `window=` per request recomputes the headline, never official. [VAR_GUIDE.md section 18.5](../guides/VAR_GUIDE.md#185-the-scenario-window-and-the-confidences-as-built-294). |
 | `rank-rule` | `kth-worst` | `kth-worst` (k = ceil(N (1 − confidence)): the 6th worst of 509) or `interpolated`. |
 | `component-window` | `5` | Component VaR averages this many scenarios ranked around the VaR scenario (k−2 to k+2). |
 | `threads` | `0` (`DRISHTI_VAR_THREADS`) | Cores the vector sums use; `0` is every core. |

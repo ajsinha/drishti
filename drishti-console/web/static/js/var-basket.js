@@ -483,7 +483,8 @@
       ["", "Before", "After", "Incremental"].forEach(function (x, i) { hr.appendChild(h("th", i ? "n" : null, x)); });
       t.appendChild(h("thead")).appendChild(hr);
       var tb = h("tbody");
-      [["VaR 99%", b["var"], a["var"], ch["var"]], ["ES 97.5%", b.es, a.es, ch.es]].forEach(function (r) {
+      var cl = function (x) { return x ? Math.round(x * 1000) / 10 + "%" : ""; };   // the answer's confidences, never fixed here
+      [[("VaR " + cl(w.confidence)).trim(), b["var"], a["var"], ch["var"]], [("ES " + cl(w.esConfidence)).trim(), b.es, a.es, ch.es]].forEach(function (r) {
         var tr = h("tr");
         tr.appendChild(h("td", null, r[0]));
         tr.appendChild(h("td", "n mono", money(r[1])));

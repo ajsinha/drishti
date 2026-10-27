@@ -69,6 +69,25 @@ final class VarViews {
         return svc.calc().measures(pt.vector()).var();
     }
 
+    /** The scenarios the date uses (VAR_GUIDE.md section 18.5): the newest {@code used} of the set's {@code of}, their dates, a warning. */
+    Map<String, Object> scenarioWindow(VarDate d) {
+        List<LocalDate> days = d.book().scenarioDates();
+        int of = d.intake().setLength() > 0 ? d.intake().setLength() : days.size();
+        Map<String, Object> w = new LinkedHashMap<>();
+        w.put("setting", svc.props().scenarioWindow());
+        w.put("used", days.size());
+        w.put("of", of);
+        w.put("from", days.get(0).toString());
+        w.put("to", days.get(days.size() - 1).toString());
+        w.put("note", (days.size() == of ? "all " + of : "newest " + days.size() + " of " + of) + " scenarios (" + days.get(0) + " … "
+                + days.get(days.size() - 1) + ")");
+        int n = svc.props().window();
+        if (n > of) {
+            w.put("warning", "drishti.var.scenario-window is " + n + " but the scenario set has " + of + ": the whole set is used");
+        }
+        return w;
+    }
+
     private static String versionOf() {
         String v = VarBook.class.getPackage().getImplementationVersion();
         return v == null ? "dev" : v;
@@ -78,6 +97,51 @@ final class VarViews {
 
     Map<String, Object> headline(Principal p, String scope, LocalDate date) {
         return headline(p, scope, date, VarDate.USD);
+    }
+
+    /**
+     * The headline's VaR and ES recomputed on the newest {@code window} scenarios (null: the date's) and at other confidences (null: the
+     * settings'), from the same vector (VAR_GUIDE.md section 18.5): {@code override} says what changed; never official, never captured.
+     */
+    Map<String, Object> override(Map<String, Object> h, Principal p, String scope, LocalDate date, String ccy, String window, Double conf,
+            Double esConf) {
+        VarService.Scoped s = svc.scoped(p, scope, date, ccy);
+        double[] v = s.vector();
+        Map<String, Object> o = new LinkedHashMap<>();
+        if (window != null && !window.equals("all")) {
+            int n = Integer.parseInt(window);
+            if (n < v.length) {
+                v = java.util.Arrays.copyOfRange(v, v.length - n, v.length);
+            } else {
+                o.put("warning", "window " + n + " is more than the " + v.length + " scenarios loaded: all of them used");
+            }
+        }
+        VarProperties pr = svc.props();
+        double c = conf == null ? pr.confidence() : conf;
+        double ec = esConf == null ? pr.esConfidence() : esConf;
+        com.ash.drishti.compute.var.VarCalc calc = new com.ash.drishti.compute.var.VarCalc(c, ec, svc.calc().rule(), svc.calc().window(),
+                svc.calc().scaleToVar());
+        com.ash.drishti.compute.var.VarCalc.Measures m = calc.measures(v);
+        List<LocalDate> days = s.date().book().scenarioDates();
+        o.put("window", v.length);
+        o.put("of", s.vector().length);
+        o.put("from", days.get(days.size() - v.length).toString());
+        o.put("to", days.get(days.size() - 1).toString());
+        o.put("confidence", c);
+        o.put("esConfidence", ec);
+        o.put("official", false);
+        o.put("note", "asked for this answer: the VaR and ES of the newest " + v.length + " of " + s.vector().length + " scenarios at "
+                + Math.round(c * 1000) / 10.0 + "% (ES " + Math.round(ec * 1000) / 10.0 + "%); never official; the rest of the answer is the date's");
+        Map<String, Object> out = new LinkedHashMap<>(h);
+        out.put("var", round(m.var()));
+        out.put("es", round(m.es()));
+        out.put("k", m.k());
+        out.put("esCount", m.esCount());
+        out.put("scenarios", v.length);
+        out.put("confidence", c);
+        out.put("esConfidence", ec);
+        out.put("override", o);
+        return out;
     }
 
     /** The headline in a reporting currency ({@code ccy}; every amount of the answer is in it, and {@code currency} says which). */
@@ -201,6 +265,9 @@ final class VarViews {
         m.put("currency", s.date().currency());
         m.put("intraday", intradayNote(s.date()));
         m.put("intradayRejections", s.date().intraday() == null ? List.of() : s.date().intraday().rejections());
+        m.put("scenarioWindow", scenarioWindow(s.date()));
+        m.put("confidence", svc.props().confidence());
+        m.put("esConfidence", svc.props().esConfidence());
         // per source system on the date: the form and grain of its records, how many, how decided, the P&L rows (VAR_GUIDE.md 15.13)
         m.put("inputsBySystem", s.date().intake().inputs() == null ? Map.of() : s.date().intake().inputs());
         m.put("fx", fxNote(s.date()));

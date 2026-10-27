@@ -47,7 +47,7 @@ import java.util.function.BiFunction;
  *
  * <p>The guards: a record of another business date is ignored (counted); one computed before the morning run, or not later than the
  * update the date already holds for the trade (a redelivery, a restart replaying the topic), is ignored; one of another scenario set
- * ({@code DRS-5203}), with PVs that are not the set's 509 finite numbers ({@code DRS-5201}, {@code DRS-5206}: never filled with zero), or
+ * ({@code DRS-5203}), with PVs that are not the set's length of finite numbers (509 in the demo) ({@code DRS-5201}, {@code DRS-5206}: never filled with zero), or
  * a line that is not a JSON object of the contract ({@code DRS-5201}) is rejected and listed with its partition, offset and line number,
  * in the admin status and in the date's {@code intraday.rejections}; the other lines of its message are applied. A cancel is a cancel
  * line ({@code TRADE_STATUS: CANCELLED}, its vector null), as in the files; a tombstone carries no record and is ignored.
@@ -123,7 +123,7 @@ final class VarPvStream {
         VarDate usd = svc.date(day);
         VarBook book = usd.book();
         String set = book.scenarioSet();
-        int width = book.width();
+        int setLength = usd.intake().setLength() > 0 ? usd.intake().setLength() : book.width();   // a row carries the whole set
         VarIntradayRows held = usd.intraday();
         String morningAt = held != null ? held.morningAt() : null;
         String batch = "K-" + day + "-" + Instant.now().toString().replaceAll("[^0-9]", "").substring(0, 14) + "-" + String.format("%03d", ++seq);
@@ -181,7 +181,7 @@ final class VarPvStream {
                 continue;
             }
             if (live) {
-                String bad = badVector(row.get(kind.equals("scenario-pv") ? "SCENARIO_PV" : "PNL"), width);
+                String bad = badVector(row.get(kind.equals("scenario-pv") ? "SCENARIO_PV" : "PNL"), setLength);
                 if (bad == null && kind.equals("scenario-pv") && !(row.path("BASE_PV").isNumber() && Double.isFinite(row.path("BASE_PV").asDouble()))) {
                     bad = ErrorCode.VAR_ROW_REJECTED.code() + " no BASE_PV";
                 }

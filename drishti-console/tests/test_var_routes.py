@@ -145,3 +145,17 @@ def test_apply_now_of_a_pv_stream_goes_to_the_engine(client, backend, monkeypatc
     assert seen[-1][:2] == ("POST", "/intraday/streams/pv-updates/apply")
     assert client.get("/api/var/intraday/streams").status_code == 200 and seen[-1][1] == "/intraday/streams"
     assert client.post("/api/var/intraday/other/apply").status_code == 404
+
+
+def test_no_confidence_is_hard_coded_the_labels_follow_the_answer(client):
+    """VaR at 99% or 95% (drishti.var.confidence, VAR_GUIDE.md section 18.5): the page, the explorer and the basket label the figures
+    from the answer's confidence and esConfidence, never a fixed 99% or 97.5%."""
+    from pathlib import Path
+    html = client.get("/var?scope=BANK").text
+    assert "VaR 99%" not in html and "ES 97.5%" not in html
+    js = Path(__file__).resolve().parents[1] / "web" / "static" / "js"
+    for f in ("var-explorer.js", "var-basket.js"):
+        text = (js / f).read_text(encoding="utf-8")
+        assert "99%" not in text and "97.5%" not in text, f
+    assert "d.confidence" in (js / "var-explorer.js").read_text(encoding="utf-8")
+    assert "w.confidence" in (js / "var-basket.js").read_text(encoding="utf-8")

@@ -262,6 +262,10 @@ scope's VaR and ES in each configured currency side by side, with each one's VaR
 move the page to it. A currency's VaR is never the USD VaR at a rate: the currency move on each scenario day is part of its risk
 ([VAR_GUIDE.md section 15.11](VAR_GUIDE.md#1511-reporting-currencies-built-ahead-per-trade-currency-totals-and-the-picker-as-built-294)).
 
+**One year or two; 99% or 95% (2.9.4).** The page's labels say the confidence the figures are at (*VaR 95% · 1 day* when the
+server is set to 95%), and *How this number was built* says the scenario window (*newest 250 of 509 scenarios*);
+`drishti.py var show BANK --window 250 --confidence 0.95` compares on the command line, never official.
+
 **The top of the tree (2.9.4).** The VaR tree's top node shows the hierarchy data's name (*Drishti Bank* in the demo); an administrator
 can set any name with `drishti.var.root-name` (or one per hierarchy with `drishti.var.root-names`), and the page, the command line and new
 captures follow it ([CONFIGURATION.md](../admin/CONFIGURATION.md)).

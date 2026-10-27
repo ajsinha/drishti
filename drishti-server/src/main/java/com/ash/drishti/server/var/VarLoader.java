@@ -115,8 +115,8 @@ final class VarLoader {
         // a date with scenario PVs converts them with the date's FX: its hot file is built from those versions too
         String inputsKey = trades.isBlank() || !versions.containsKey(k.scenarioPv()) ? trades
                 : trades + "|fx=" + versions.get(k.fxScenario()) + "/" + router.dataVersion(k.fxSpot(), asOf).orElse("");
-        String digest = tier.mapped() ? VarTier.digest(date, inputsKey, versions.get(k.hierarchy()) + props.rootNamesKey(), versions.get(k.scenarioSet()),
-                pr.digest()) : "";
+        String digest = tier.mapped() ? VarTier.digest(date, inputsKey, versions.get(k.hierarchy()) + props.rootNamesKey(), versions.get(k.scenarioSet())
+                + (props.window() > 0 ? "|window=" + props.window() : ""), pr.digest()) : "";
         java.util.Optional<java.nio.file.Path> hot = tier.mapped() ? tier.existing(date, digest) : java.util.Optional.empty();
         if (hot.isPresent()) {
             VarDate reopened = reopen(date, hot.get(), versions, t0);
@@ -133,14 +133,17 @@ final class VarLoader {
             throw inconsistent(date, sets.size() + " scenario sets (" + String.join(", ", sets.keySet()) + "): one per date");
         }
         String setId = text(set, "SCENARIO_SET_ID");
-        List<LocalDate> scenarioDates = scenarioDates(date, setId, set);
+        List<LocalDate> fullSet = scenarioDates(date, setId, set);
+        // the scenario window (drishti.var.scenario-window, VAR_GUIDE.md section 18.5): the newest N scenarios of the set, every row cut
+        // to them at load (P&L vectors and scenario PVs alike); a set shorter than N is used whole (said in the provenance)
+        List<LocalDate> scenarioDates = window(fullSet);
         long budget = props.memoryBudgetMb() * 1024 * 1024;
         VarBook.Builder b = tier.mapped() ? new VarBook.Builder(date, setId, scenarioDates, budget, tier.target(date, digest))
                 : new VarBook.Builder(date, setId, scenarioDates, props.rowsPerChunk(), budget);
         // the build sums every node's PVs per trade currency too (VAR_GUIDE.md section 15.11): the date's FX, read only when a trade needs it
         b.currencyRates(c -> fx(date, scenarioDates).rates(c).orElse(null));
         try {
-            VarIntake intake = intake(date, asOf, b, pr, setId, scenarioDates);
+            VarIntake intake = intake(date, asOf, b, pr, setId, scenarioDates, fullSet.size());
             List<LocalDate> days = scenarioDates;
             VarIntake.Summary sum = intake.summary();
             long tVectors = System.nanoTime();
@@ -175,13 +178,20 @@ final class VarLoader {
      * Streams the date's trades through the intake into the builder, then checks the date is one run: the P&amp;L vectors, then the
      * scenario PVs (converted to USD as they stream, with the date's FX read on the first PV row); a bank may send either or both.
      */
-    private VarIntake intake(LocalDate date, AsOf asOf, VarBook.Builder b, PositionRules pr, String setId, List<LocalDate> scenarioDates) {
+    /** The newest {@code drishti.var.scenario-window} scenarios of a set (all of it for {@code all}, or when the set is shorter). */
+    List<LocalDate> window(List<LocalDate> fullSet) {
+        int n = props.window();
+        return n <= 0 || n >= fullSet.size() ? fullSet : List.copyOf(fullSet.subList(fullSet.size() - n, fullSet.size()));
+    }
+
+    private VarIntake intake(LocalDate date, AsOf asOf, VarBook.Builder b, PositionRules pr, String setId, List<LocalDate> scenarioDates,
+            int setLength) {
         VarProperties.Kinds k = props.kinds();
         List<String> columns = VarIntake.columns(router.columnar(k.vector()), pr);
         List<String> pvColumns = VarIntake.columns(router.columnar(k.scenarioPv()), pr, VarIntake.PV_COLUMNS);
         String unmarked = unmarked(columns, pvColumns);
         VarIntake intake = new VarIntake(b, pr, date, columns.subList(1, columns.size())).scenarioSet(setId)
-                .inputs(new VarInputs(props::input));
+                .inputs(new VarInputs(props::input)).setLength(setLength);
         boolean read;
         boolean readPv;
         try {
@@ -402,7 +412,7 @@ final class VarLoader {
         VarInputs in = new VarInputs(props::input);
         in.restore(morningRun == null ? null : morningRun.inputs());     // each system's morning form and grain: an update follows it
         VarIntake intake = new VarIntake(none, pr, date, columns.subList(1, columns.size())).scenarioSet(morning.scenarioSet()).intradayOnly(applied)
-                .inputs(in);
+                .inputs(in).setLength(morningRun == null || morningRun.setLength() <= 0 ? days.size() : morningRun.setLength());
         try {
             router.vectors(k.vector(), "PNL", columns, asOf, (id, values, len, row) -> intake.row(id, values, len, row));
             intake.scenarioPvs(pvColumns.subList(1, pvColumns.size()), () -> fx(date, days), days);
@@ -443,9 +453,10 @@ final class VarLoader {
             if (ccy == null || rs == null || rs.isMissing() || rs.isNull()) {
                 continue;
             }
-            double[] r = new double[rs.size()];
+            int skip = Math.max(0, rs.size() - scenarioDates.size());   // a scenario window: the set's newest scenarios
+            double[] r = new double[rs.size() - skip];
             for (int i = 0; i < r.length; i++) {
-                r[i] = rs.get(i).isNull() ? Double.NaN : rs.get(i).asDouble();
+                r[i] = rs.get(i + skip).isNull() ? Double.NaN : rs.get(i + skip).asDouble();
             }
             supplied.add(new com.ash.drishti.compute.var.ScenarioFx.Rates(ccy, number(text(d, "RATE")), r, "supplied"));
         }

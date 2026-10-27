@@ -1365,8 +1365,9 @@ by `VarProperties` (`@ConfigurationProperties("drishti.var")`); `GET /api/v1/var
 | Setting | application.yaml | Default when unset or invalid | Meaning |
 |---|---|---|---|
 | `drishti.var.enabled` | `${DRISHTI_VAR_ENABLED:true}` | `true` | the engine, its API and its computed kinds; off: every VaR request answers `403 DRS-5002` |
-| `drishti.var.confidence` | `0.99` | 0.99 (outside (0.5, 1)) | VaR's α |
-| `drishti.var.es-confidence` | `0.975` | 0.975 | ES's α |
+| `drishti.var.confidence` | `${DRISHTI_VAR_CONFIDENCE:0.99}` | 0.99 (refused at start outside (0.5, 1)) | VaR's α: 0.99 or 0.95; every label follows it; limits are set against it ([section 18.5](#185-the-scenario-window-and-the-confidences-as-built-294)) |
+| `drishti.var.es-confidence` | `${DRISHTI_VAR_ES_CONFIDENCE:0.975}` | 0.975 (refused outside (0.5, 1)) | ES's α |
+| `drishti.var.scenario-window` | `${DRISHTI_VAR_SCENARIO_WINDOW:all}` | all | 2.9.4: `all` (the scenario set's length, 509 in the demo) or N ≥ 20, the newest N scenarios of each date's set (250: one year); backtesting keeps `history-days` ([section 18.5](#185-the-scenario-window-and-the-confidences-as-built-294)) |
 | `drishti.var.rank-rule` | `kth-worst` | `kth-worst`; any value starting `interp` is `interpolated` | k = ceil(N (1 − a)): the 6th worst of 509; or `interpolated` ([section 18.1](#181-var)) |
 | `drishti.var.component-window` | `5` | 5 (below 1) | the scenarios around the VaR rank component VaR averages over |
 | `drishti.var.component-scale-to-var` | `true` | `true` | scale components to add up to VaR (else to the smoothed VaR) |
@@ -2237,6 +2238,36 @@ p-value: P(χ²₁ > LR) = erfc(sqrt(LR/2))   (Numerical Recipes' erfc, |error| 
 
 Not built: ES backtests (the design's Acerbi–Székely tests), and the cross-check against QLRisk's backtesting.
 
+### 18.5 The scenario window and the confidences (AS BUILT, 2.9.4)
+
+**The window.** `drishti.var.scenario-window` (`${DRISHTI_VAR_SCENARIO_WINDOW:all}`) is `all`, the whole scenario set of each date (its
+length, 509 in the demo), or a number N: the **newest N scenarios** of the date's set (its `SCENARIO_DATES` are strictly increasing, so
+the last N). Every row is cut to the same N at load: P&L vectors and scenario PVs alike, and the scenario FX supplied or derived; the
+rank, the ES count and the component window follow N: k = ceil(N·(1 − α)), the 3rd worst of 250 at 99%, ES the mean of the 7 worst at
+97.5%. A set shorter than N is used whole, with a warning in the provenance; N below 20 is refused at start. The provenance says
+*scenario window: newest 250 of 509 (2025-09-.. … 2026-09-29)* (`scenarioWindow`); the hot file's digest and the currency books include
+N, so a change is never masked by a file built before; official records state it (`SCENARIO_WINDOW`): a change gives the next official
+capture the new window, the records already captured keep theirs.
+
+**Choosing the window.** One year (250 scenarios) is the regulatory minimum for historical-simulation VaR and reacts faster to a
+changed market; two years (about 500) put more days in the tail (the 5th or 6th worst rather than the 3rd at 99%), so the figure moves
+less from one day's scenario dropping out. The bank's lake can keep receiving longer histories: the window decides what the engine uses.
+**Backtesting is separate** (`drishti.var.history-days`, 250): the window does not change it.
+
+**The confidences.** `drishti.var.confidence` (`${DRISHTI_VAR_CONFIDENCE:0.99}`: 99%, or 95%) and `drishti.var.es-confidence`
+(`${DRISHTI_VAR_ES_CONFIDENCE:0.975}`); a value outside (0.5, 1) is refused at start. Every answer carries `confidence` and
+`esConfidence`, and the console, the CLI and the Home facts label their figures from them (*VaR 95% · 1 day*), never from a fixed
+99%. **Limits** are set against VaR at the configured confidence: changing the confidence changes limit use. **Backtesting** stays at
+its own setting: the Basel traffic light is defined at 99%.
+
+**Asked per request.** `GET /api/v1/var/scope?scope=BANK&window=250&confidence=0.95&es-confidence=0.975` (`drishti.py var show BANK
+--window 250 --confidence 0.95`) recomputes the headline's VaR and ES from the same vector on the newest 250 scenarios or at another
+confidence, to compare one year with two or 95% with 99%: the answer says so (`override`: `window`, `of`, `from`, `to`, the
+confidences, `official: false`, a note) and is never official or captured; a window longer than the date's is used whole, with a
+warning; a confidence outside (0.5, 1) answers `400`. **Tested:** `VarWindowApiTest` (a window of 25 on a set of 40 equal to a set of
+only those 25, for the bank and every node; the provenance; the per-request window and confidence; the rank at 95%; refusals; the
+digest).
+
 ## 19. Official end-of-day results
 
 **Official end-of-day captures (as built).** When a date's inputs are complete (the date loads as one run, with trades and hierarchy
@@ -2587,6 +2618,7 @@ recommended defaults unless the product owner said otherwise):
 | 1.2 | 2026-10-25 | Official end-of-day captures published to `risk-results/var-official` for other systems (product owner); official captures kept 7 years |
 | 1.3 | 2026-10-25 | **AS BUILT (2.8.0, VaR complete part 1):** the stored `var` and `var-node` kinds retired (§21); computed figures removed from `position`, `portfolio` and `desk`, the pages show the engine's (§3.7), with a guard test; positions derived by Drishti by configured rules (§15.6); every live trade valued (9,572; open question 1); 28 portfolio definitions; official end-of-day captures of every node, published append-only (§19); the data-load signal reloads and captures (§15.8); 7-year retention (§15.1); the load's checks and `DRS-5201` to `DRS-5204` (§20); `by=node`, the largest parts, masks, BASKET portfolios refused to aggregate-only viewers, basket and reload audit, input versions and batch ids in provenance, ids in any case; scope words `LE:` (the trades' legal entity) and `CPTY:` (§5.5) |
 | 1.5 | 2026-10-27 | **AS BUILT (2.9.4, local branch for the product owner's review):** scenario PVs in each trade's currency (`scenario-pv`) beside or instead of P&L vectors, converted to USD P&L at load; scenario FX supplied (`fx-scenario`) or derived from the FX history (`fx-spot`), crosses through USD, 1-day; `DRS-5206` (a scenario that failed to price) and `DRS-5207` (no FX) (§15.9, §20); a reporting currency on every answer (`ccy`, `--ccy`), books per currency built on first ask on the tiered memory, official records per `drishti.var.official.currencies` (§15.10); the demo's Endur trades as scenario PVs (§22.1) |
+| 1.10 | 2026-10-27 | **AS BUILT (2.9.4, local):** the scenario window (`drishti.var.scenario-window`, the newest N scenarios) and the confidences with placeholders, refused at start outside (0.5, 1), every label from the answer; `window=`, `confidence=` per request, never official (§18.5) |
 | 1.9 | 2026-10-27 | **AS BUILT (2.9.4, local):** inputs in any form and any grain (§15.13): every record says what it is (`VALUE_TYPE`, `GRAIN`, its id, `CURRENCY`, `SOURCE_SYSTEM`, leading each line), positions supplied whole (`GRAIN: POSITION`), the optional pins `drishti.var.inputs`, one form and grain per system per date, `DRS-5208`, `DRS-5209`, `DRS-5210`, `drishti.py var convert`; Kafka messages of JSONL records (§8.4) |
 | 1.8 | 2026-10-27 | **AS BUILT (2.9.4, local):** the delivery format JSONL, one row of the contract a line (the three contracts), and the stand-in pricing system `tools/pvgen` (morning run, intraday files, Kafka publisher, checker) with both forms side by side (§15.12); `make_var_data.py --pv-systems/--pnl-systems/--all-vectors` |
 | 1.7 | 2026-10-27 | **AS BUILT (2.9.4, local):** intraday updates (§8.4): `RUN_KIND: INTRADAY` rows appended to `scenario-pv` and `pnl-vector` (§15.8, §15.9), applied on the loaded date without a reload (each trade's difference into its book and nodes, the totals, the currencies), the latest `COMPUTED_AT` per trade winning, cancels, new trades, another scenario set refused; `intraday` on every answer, the badge, `drishti.py var intraday`; the official records the morning run's |

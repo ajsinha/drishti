@@ -54,6 +54,8 @@ def render_headline(h: dict, say) -> None:
     cur = h.get("currency") or "USD"
     say(f"  VaR {conf * 100:g}%   {money(h.get('var'))} {cur}   (the {h.get('k')}th worst of {h.get('scenarios')})")
     say(f"  ES {(h.get('esConfidence') or 0) * 100:g}%   {money(h.get('es'))} {cur}   (mean of the {h.get('esCount')} worst)")
+    if h.get("override"):
+        say("  asked     " + str(h["override"].get("note") or ""))
     if h.get("limit") is not None:
         say(f"  limit      {money(h.get('limit'))} {cur}   use {100 * (h.get('limitUse') or 0):.1f}%")
     if h.get("children"):
@@ -222,7 +224,11 @@ def register(groups, srv, ctx: dict) -> None:
         api = Api.from_args(a)
         c = a.var_cmd
         if c == "show":
-            res = api.json("GET", "/api/v1/var/scope?" + enc(dated(a, {"scope": a.scope})))
+            q = {"scope": a.scope}
+            for k, v in (("window", a.window), ("confidence", a.confidence), ("es-confidence", a.es_confidence)):
+                if v is not None:
+                    q[k] = v
+            res = api.json("GET", "/api/v1/var/scope?" + enc(dated(a, q)))
             say_json(res) if a.json else render_headline(res, print)
         elif c == "parts":
             res = api.json("GET", "/api/v1/var/scope/contributions?" + enc(dated(a, {"scope": a.scope, "by": a.by, **({"scenario": a.scenario}
@@ -325,7 +331,10 @@ def register(groups, srv, ctx: dict) -> None:
         s.add_argument("--ccy", metavar="CCY", help="the reporting currency (USD by default; any currency with scenario FX on the date)")
         return s
 
-    scoped("show", "a scope's headline: VaR, ES, limit, parts, backtest, provenance")
+    sh = scoped("show", "a scope's headline: VaR, ES, limit, parts, backtest, provenance")
+    sh.add_argument("--window", metavar="N", help="VaR and ES on the newest N scenarios (250: one year), to compare; never official")
+    sh.add_argument("--confidence", type=float, metavar="Q", help="VaR at this confidence (0.95), to compare; never official")
+    sh.add_argument("--es-confidence", type=float, metavar="Q", help="ES at this confidence, to compare; never official")
     pr = scoped("parts", "a scope's contributions: standalone, component, incremental VaR per part")
     pr.add_argument("--by", default="child", choices=["child", "node", "position", "trade", "desk", "book"])
     pr.add_argument("--scenario", metavar="YYYY-MM-DD", help="each part's P&L on this scenario day")

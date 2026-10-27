@@ -67,7 +67,7 @@ items:
       type: bars
       caption: "{cp.label}, {asOf}"
       bars:
-        - { label: VaR (1 day 99%), value: v.var, format: money }
+        - { label: "VaR (1 day, {v.confidence|pct})", value: v.var, format: money }
         - { label: "Peak PFE ({cp.peakPfeTenor})", value: cp.peakPfe, format: money, tone: alert }
     open: "EXP {cp.id}"
     what: Peak PFE

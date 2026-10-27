@@ -608,8 +608,9 @@ drishti:
     keep-runs: 20
   var:                               # the VaR engine (docs/guides/VAR_GUIDE.md): VaR of any set of trades from the stored P&L vectors
     enabled: ${DRISHTI_VAR_ENABLED:true}
-    confidence: 0.99                 # VaR's confidence
-    es-confidence: 0.975             # expected shortfall's
+    confidence: ${DRISHTI_VAR_CONFIDENCE:0.99}          # VaR's confidence: 0.99 or 0.95 (refused at start outside (0.5, 1))
+    es-confidence: ${DRISHTI_VAR_ES_CONFIDENCE:0.975}   # expected shortfall's
+    scenario-window: ${DRISHTI_VAR_SCENARIO_WINDOW:all}  # all (the scenario set's length, 509 in the demo) or N: the newest N scenarios (250: 1 year; at least 20)
     rank-rule: kth-worst             # kth-worst (k = ceil(N (1 - a)): the 6th worst of 509) or interpolated
     component-window: 5              # component VaR averages the scenarios ranked k-2 .. k+2, scaled to add up to the VaR
     threads: ${DRISHTI_VAR_THREADS:0}                  # cores the vector sums use (0: every core)

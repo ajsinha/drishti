@@ -249,6 +249,8 @@ def main() -> None:
     existing = {f for t in targets if t.exists() for f in t.rglob("*.json*")}    # the JSONL files, and any older <kind>/<id>.json
     # the VaR engine's reference samples are tools/packgen/var/make_var_data.py's (from the committed test data), not this generator's
     existing = {f for f in existing if not (f.parent == PACKS / "market-risk" / "samples" and f.name.split(".")[0] in VK.KINDS)}
+    # and the intraday sample of tools/pvgen (VAR_GUIDE.md section 15.12): a batch file the scripts write, not a banking document
+    existing = {f for f in existing if f.parent != PACKS / "market-risk" / "samples" / "intraday"}
     existing = {f for f in existing if not (f.parent == PACKS / "counterparty-risk" / "samples" and f.name.split(".")[0] in XK.KINDS)}
     if "--check" in sys.argv:
         stale = [str(f) for f, t in files.items() if not f.exists() or f.read_text(encoding="utf-8") != t] + TT.stale(docs["trade"])

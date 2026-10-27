@@ -70,7 +70,7 @@ final class VarIntake {
      */
     record Summary(int rejected, List<String> rejections, int excluded, List<String> batchIds, List<String> scenarioSets, String rules,
             String rulesDigest, Map<String, String> notLive, int scenarioPv, java.util.Set<String> pvTrades,
-            Map<String, Map<String, Object>> inputs, Map<String, List<String>> positionTrades) {
+            Map<String, Map<String, Object>> inputs, Map<String, List<String>> positionTrades, int setLength) {
 
         /** The supplied position that names a trade in its {@code TRADE_IDS}, or null. */
         String positionOf(String trade) {
@@ -209,9 +209,33 @@ final class VarIntake {
     }
 
     /**
+     * The scenario set's length: a row carries all of its scenarios, and the engine keeps the newest {@code width} of them (the scenario
+     * window, VAR_GUIDE.md section 18.5); the whole set when they are the same.
+     */
+    VarIntake setLength(int n) {
+        this.full = n <= 0 ? width : n;
+        this.cut = new double[width];
+        return this;
+    }
+
+    /** A row's values cut to the scenario window (the set's newest scenarios); the row as it is when the window is the whole set. */
+    private double[] windowed(double[] values, int length) {
+        if (full == width || length != full) {
+            return values;
+        }
+        System.arraycopy(values, full - width, cut, 0, width);
+        return cut;
+    }
+
+    /**
      * One row of the stream: {@code row[0]} the trade id (null: the lake key {@code id}, or a record at position grain), then the columns.
      */
-    void row(String id, double[] values, int length, String[] row) {
+    void row(String id, double[] values0, int length0, String[] row) {
+        if (full < 0) {
+            setLength(width);
+        }
+        double[] values = windowed(values0, length0);
+        int length = values == values0 ? length0 : width;
         String position = text(row, "POSITION_ID");
         String trade = row[0] != null ? row[0] : position != null && "POSITION".equalsIgnoreCase(text(row, "GRAIN")) ? position : id;
         String batch = text(row, "BATCH_ID");
@@ -377,6 +401,8 @@ final class VarIntake {
     private final VarIntradayRows intraday = new VarIntradayRows();
     private final TreeSet<String> intradayBatches = new TreeSet<>();
     private final TreeSet<String> intradayParts = new TreeSet<>();
+    private int full = -1;
+    private double[] cut;
     private final List<Object[]> pending = new ArrayList<>();
     private VarInputs inputs = new VarInputs(s -> new VarProperties.Input(null, null));
     private final Map<String, List<String>> positionTrades = new HashMap<>();
@@ -500,7 +526,7 @@ final class VarIntake {
             return "STATUS is failed but the row carries a vector";
         }
         if (length != width) {
-            return "the vector has " + length + " values; the scenario set has " + width;
+            return "the vector has " + length + " values; the scenario set has " + full;
         }
         for (int j = 0; j < length; j++) {
             if (!Double.isFinite(values[j])) {
@@ -523,7 +549,7 @@ final class VarIntake {
             return new String[] {bad, "STATUS is failed but the row carries scenario PVs"};
         }
         if (length != width) {
-            return new String[] {bad, "the row has " + length + " scenario PVs; the scenario set has " + width};
+            return new String[] {bad, "the row has " + length + " scenario PVs; the scenario set has " + full};
         }
         String valued = text(row, "VALUATION_DATE");
         String baseValued = text(row, "BASE_VALUATION_DATE");
@@ -573,6 +599,6 @@ final class VarIntake {
 
     Summary summary() {
         return new Summary(rejected, List.copyOf(rejections), excluded, List.copyOf(batches), List.copyOf(sets), rules.toString(), rules.digest(),
-                Map.copyOf(notLive), scenarioPv, java.util.Set.copyOf(pvTrades), inputs.describe(), Map.copyOf(positionTrades));
+                Map.copyOf(notLive), scenarioPv, java.util.Set.copyOf(pvTrades), inputs.describe(), Map.copyOf(positionTrades), full);
     }
 }

@@ -389,6 +389,7 @@ final class VarOfficial implements AutoCloseable {
         r.put("CONFIDENCE", svc.props().confidence());
         r.put("ES_CONFIDENCE", svc.props().esConfidence());
         r.put("SCENARIO_SET_ID", d.book().scenarioSet());
+        r.put("SCENARIO_WINDOW", (long) d.book().width());             // the newest N scenarios used (drishti.var.scenario-window)
         r.put("STANDALONE_SUM", f.get("sumStandalone"));
         r.put("DIVERSIFICATION", f.get("diversification"));
         r.put("HYPO_PNL", f.get("hypoPnl"));

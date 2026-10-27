@@ -69,6 +69,7 @@ final class VarPublisher {
             c.put(s, "double");
         }
         c.put("SCENARIO_SET_ID", "string");
+        c.put("SCENARIO_WINDOW", "long");                              // 2.9.4: the scenarios used (the newest N of the set)
         for (String s : List.of("STANDALONE_SUM", "DIVERSIFICATION", "HYPO_PNL", "LIMIT", "LIMIT_USE")) {
             c.put(s, "double");
         }

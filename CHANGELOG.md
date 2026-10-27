@@ -17,6 +17,19 @@
 
 ## 2.9.4 (unreleased)
 
+- **A configurable scenario window and confidences (2026-10-27; local branch, for the product owner's review: not pushed).**
+  **`drishti.var.scenario-window`** (`DRISHTI_VAR_SCENARIO_WINDOW`, default `all`: the whole set, 509 in the demo) or N: the newest N
+  scenarios of each date's set, every row (P&L vectors, scenario PVs, scenario FX) cut to them at load; k = ceil(N (1 − α)) (the 3rd
+  worst of 250 at 99%, ES the mean of the 7 worst); a shorter set used whole with a warning; N below 20 refused at start; the window in
+  the provenance (`scenarioWindow`), in the hot file's digest and in official records (`SCENARIO_WINDOW`, the var-official contract and
+  published table). **`drishti.var.confidence`** and **`es-confidence`** gain placeholders (`DRISHTI_VAR_CONFIDENCE` 0.99,
+  `DRISHTI_VAR_ES_CONFIDENCE` 0.975) and are refused at start outside (0.5, 1) (they were silently replaced); the provenance states them;
+  the console no longer hard-codes 99% or 97.5% (the legends, the tiles while computing, the tab *In other currencies*, the basket's
+  what-if), the what-if answer carries its confidences, a Home fact's label reads the answer's. **Per request:** `window=`,
+  `confidence=`, `es-confidence=` on `GET /api/v1/var/scope` (`drishti.py var show --window --confidence --es-confidence`) recompute the
+  headline from the same vector, labelled (`override`) and never official. Backtesting keeps `history-days` and 99%. **Tests:**
+  `VarWindowApiTest`. **Docs:** VAR_GUIDE section 18.5 and settings, CONFIGURATION, USER_GUIDE, the Market risk Knowledge page.
+
 - **Inputs in any form and any grain; every record says what it is (2026-10-27; local branch, for the product owner's review: not
   pushed).** A pricing system may send **scenario PVs or P&L vectors, per trade or per position**, and switch between dates. **2.9.4
   requires every PV or vector record to say what it is**, leading each line: `VALUE_TYPE` (`PV` or `PNL`), `GRAIN` (`TRADE` with a

@@ -35,7 +35,7 @@ One section per command of the pack: the shape of its data, how it is stored and
 | [HIER](#hier-risk-hierarchy-node-risk-hierarchy) | `risk-hierarchy` | input | active | 12 | 5 |
 | [VRES](#vres-var-of-a-scope-computed-var-result) | `var-result` | computed | active | 23 | 0 |
 | [VWIF](#vwif-var-what-if-computed-python-var-whatif) | `var-whatif` | computed | active | 20 | 0 |
-| [VOFF](#voff-var-official-results-published-var-official) | `var-official` | computed | active | 25 | 0 |
+| [VOFF](#voff-var-official-results-published-var-official) | `var-official` | computed | active | 26 | 0 |
 
 ## SCN: Stress scenario (`stress-scenario`)
 
@@ -1063,6 +1063,7 @@ The official end-of-day VaR and ES of every node of the MGMT and LEGAL hierarchi
 | `CONFIDENCE` | rate | required |  | — | `0.99` |  |
 | `ES_CONFIDENCE` | rate | required |  | — | `0.975` |  |
 | `SCENARIO_SET_ID` | id | required |  | — | `HS-509` |  |
+| `SCENARIO_WINDOW` | integer | optional |  | The scenarios the record was computed on (2.9.4): the newest N of the scenario set (drishti.var.scenario-window; the set's length, 509 in the demo, for all). Records captured before a change keep theirs; older records lack it. | `509` |  |
 | `STANDALONE_SUM` | amount | optional | USD | The sum of the children's VaR (positions for a book). |  |  |
 | `DIVERSIFICATION` | amount | optional | USD | STANDALONE_SUM minus VAR. |  |  |
 | `HYPO_PNL` | amount | optional | USD | The node's hypothetical P&L for the date (the backtest's input). |  |  |

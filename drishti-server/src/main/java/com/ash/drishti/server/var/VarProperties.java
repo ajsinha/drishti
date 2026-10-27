@@ -62,13 +62,50 @@ import org.springframework.boot.context.properties.ConfigurationProperties;
  *     or {@code any}) and the grain ({@code trade}, {@code position} or {@code any}); {@code default} for the systems not listed. Every
  *     record says what it is ({@code VALUE_TYPE}, {@code GRAIN}); a pin is a cross-check: a record that disagrees is refused
  *     ({@code DRS-5209}). Read at start: a change applies after a restart, from the next date loaded
+ * @param scenarioWindow how many scenarios the engine uses (VAR_GUIDE.md section 18.5): {@code all} (the whole scenario set, its length
+ *     509 in the demo) or a number N, the newest N scenarios of each date's set (250: one year, about 500: two); at least 20; a set
+ *     shorter than N is used whole, with a warning in the provenance
  */
 @ConfigurationProperties("drishti.var")
 public record VarProperties(Boolean enabled, Double confidence, Double esConfidence, String rankRule, Integer componentWindow,
         Boolean componentScaleToVar, Integer threads, Integer parallelRows, Long memoryBudgetMb, Integer rowsPerChunk, Integer hotDates,
         Integer historyDays, Integer histogramBins, Integer maxParts, Kinds kinds, Map<String, Map<String, String>> access, Integer pathPage,
         Positions positions, Official official, Tier tier, List<String> currencies, Integer currencyRetentionDates, String rootName,
-        Map<String, String> rootNames, Intraday intraday, Map<String, Input> inputs) {
+        Map<String, String> rootNames, Intraday intraday, Map<String, Input> inputs, String scenarioWindow) {
+
+    /** The smallest scenario window: fewer scenarios than this make a tail of one or two days. */
+    public static final int MIN_WINDOW = 20;
+
+    /** The scenario window: 0 for the whole set, else N (the newest N scenarios of each date's set). */
+    public int window() {
+        return scenarioWindow.equals("all") ? 0 : Integer.parseInt(scenarioWindow);
+    }
+
+    /** Checks a confidence (VaR's, ES's, or one asked per request): in (0.5, 1). */
+    public static double checkConfidence(Double c, String what) {
+        if (c == null || !Double.isFinite(c) || c <= 0.5 || c >= 1) {
+            throw new IllegalArgumentException(what + " " + c + " is not in (0.5, 1): 0.99 or 0.95 for VaR, 0.975 for ES");
+        }
+        return c;
+    }
+
+    /** Checks a scenario window (the setting, or one asked per request): all, or a number of at least {@link #MIN_WINDOW}. */
+    public static String checkWindow(String w, String what) {
+        String v = w == null || w.isBlank() ? "all" : w.strip().toLowerCase(Locale.ROOT);
+        if (v.equals("all")) {
+            return v;
+        }
+        int n;
+        try {
+            n = Integer.parseInt(v);
+        } catch (NumberFormatException e) {
+            throw new IllegalArgumentException(what + " " + w + " is neither all nor a number of scenarios");
+        }
+        if (n < MIN_WINDOW) {
+            throw new IllegalArgumentException(what + " " + n + " is below " + MIN_WINDOW + " scenarios: too few for a tail (250 is one year)");
+        }
+        return Integer.toString(n);
+    }
 
     /**
      * What a source system sends (VAR_GUIDE.md section 15.13): the form and the grain, each {@code any} when not pinned.
@@ -261,8 +298,10 @@ public record VarProperties(Boolean enabled, Double confidence, Double esConfide
 
     public VarProperties {
         enabled = enabled == null || enabled;
-        confidence = confidence == null || confidence <= 0.5 || confidence >= 1 ? 0.99 : confidence;
-        esConfidence = esConfidence == null || esConfidence <= 0.5 || esConfidence >= 1 ? 0.975 : esConfidence;
+        // refused at start when out of range (never silently replaced): VaR at 99% or 95%, ES at 97.5% (VAR_GUIDE.md section 18.5)
+        confidence = confidence == null ? 0.99 : checkConfidence(confidence, "drishti.var.confidence");
+        esConfidence = esConfidence == null ? 0.975 : checkConfidence(esConfidence, "drishti.var.es-confidence");
+        scenarioWindow = checkWindow(scenarioWindow, "drishti.var.scenario-window");
         rankRule = rankRule == null || rankRule.isBlank() ? "kth-worst" : rankRule.trim().toLowerCase(Locale.ROOT);
         componentWindow = componentWindow == null || componentWindow < 1 ? 5 : componentWindow;
         componentScaleToVar = componentScaleToVar == null || componentScaleToVar;

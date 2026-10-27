@@ -93,10 +93,27 @@ public class VarController {
         return scope.trim();
     }
 
+    /**
+     * A scope's headline. {@code window}, {@code confidence} and {@code es-confidence} (2.9.4, VAR_GUIDE.md section 18.5) recompute its
+     * VaR and ES on the newest {@code window} scenarios or at another confidence, to compare (1 year against 2, 95% against 99%): the
+     * answer says so ({@code override}) and is never official.
+     */
     @GetMapping("/scope")
-    public Map<String, Object> headline(@RequestParam String scope, @RequestParam(required = false) String ccy, AsOf asOf,
+    public Map<String, Object> headline(@RequestParam String scope, @RequestParam(required = false) String ccy,
+            @RequestParam(required = false) String window, @RequestParam(required = false) Double confidence,
+            @RequestParam(name = "es-confidence", required = false) Double esConfidence, AsOf asOf,
             @RequestAttribute(Principal.ATTRIBUTE) Principal p) {
-        return views.headline(p, scope(scope), date(asOf), ccy);
+        Map<String, Object> h = views.headline(p, scope(scope), date(asOf), ccy);
+        if (window == null && confidence == null && esConfidence == null) {
+            return h;
+        }
+        try {
+            return views.override(h, p, scope(scope), date(asOf), ccy, window == null ? null : VarProperties.checkWindow(window, "window"),
+                    confidence == null ? null : VarProperties.checkConfidence(confidence, "confidence"),
+                    esConfidence == null ? null : VarProperties.checkConfidence(esConfidence, "es-confidence"));
+        } catch (IllegalArgumentException e) {
+            throw new DrishtiException(ErrorCode.BAD_REQUEST, e.getMessage());
+        }
     }
 
     /** The design's path form for a simple scope ({@code /var/scopes/DESK:RATES}); a scope with a slash uses {@code ?scope=}. */

@@ -175,6 +175,8 @@ final class VarWhatIf {
         out.put("canonical", base.res().canonical());
         out.put("businessDate", base.date().date().toString());
         out.put("currency", base.date().currency());
+        out.put("confidence", doc.get("CONFIDENCE"));                  // the labels the console shows (never hard-coded)
+        out.put("esConfidence", doc.get("ES_CONFIDENCE"));
         out.put("before", before);
         out.put("after", after);
         out.put("change", change);

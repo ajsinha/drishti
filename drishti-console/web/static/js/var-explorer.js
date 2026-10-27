@@ -214,7 +214,7 @@
     var t = $("[data-vx-tiles]");
     if (!t.children.length || t.querySelector(".vx-err")) {
       t.textContent = "";
-      ["VaR 99% · 1 day", "ES 97.5%", "Sum of standalone VaR", "Diversification", "Limit utilisation", "Backtest exceptions"].forEach(function (l) {
+      ["VaR · 1 day", "ES", "Sum of standalone VaR", "Diversification", "Limit utilisation", "Backtest exceptions"].forEach(function (l) {
         var d = h("div", "vx-tile"); d.appendChild(h("div", "l", l)); d.appendChild(h("div", "v", "…")); d.appendChild(h("div", "s", "computing"));
         t.appendChild(d);
       });
@@ -659,6 +659,11 @@
       trade currency, each with that currency's scenario FX), that VaR in the page's currency at today's rate, and the difference. */
   function loadCurrencies(seq) {
     var tb = $("[data-vx-ccytable] tbody");
+    if (S.head && S.head.confidence) {                                // the headers say the answer's confidences
+      var th = $("[data-vx-ccytable] thead").querySelectorAll("th");
+      th[1].textContent = "VaR " + Math.round(S.head.confidence * 1000) / 10 + "%";
+      th[2].textContent = "ES " + Math.round(S.head.esConfidence * 1000) / 10 + "%";
+    }
     if (!tb.children.length) { var w = document.createElement("tr"); cell(w, "computing…", "vx-note").colSpan = 5; tb.appendChild(w); }
     root.dataset.ccyLoads = String(Number(root.dataset.ccyLoads || 0) + 1);
     return api("scope/currencies", { scope: S.scope }).then(function (d) {
