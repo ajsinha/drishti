@@ -71,13 +71,18 @@ ok   config/packs/market-risk/sutras/market-risk/var.v1.sutra.yaml (2 samples)
 config/packs/<pack>/
   sutras/.../irs-fixfloat.v1.sutra.yaml
   tests/irs-fixfloat/         <- one folder per Sutra, named by the Sutra's name (the `sutra:` line)
-    MX-20000001.json          <- plain entity documents; the kind comes from the Sutra's `match.kind`
+    cases.jsonl               <- the cases, one a line: {"case": "MX-20000001", "document": {...}}; the kind comes from the Sutra's `match.kind`
     expect.yaml               <- optional
   tests/help-coverage.txt     <- optional: a floor of help coverage per Sutra (irs-fixfloat=0.9), never lowered
 ```
 
-`.json` files hold one document, `.jsonl` files one per line (reported as `file.jsonl:1`, `file.jsonl:2`...). Without a `tests/<sutra>/` folder, a Sutra file is tested against the `.json` beside it
-with the same name (that is how the documented examples work). The trading pack's `tests/irs-fixfloat/expect.yaml`:
+Since 2.9.4 a Sutra's cases are **one file, `cases.jsonl`, one case a line** (`{"case": "<name>", "document": {...}}`;
+[DATA_FORMATS.md](DATA_FORMATS.md)); each case is reported by its name. A line that is not such an object is a failed case
+(`cases.jsonl:3: a case is one line {"case": ...`). **The older layout, one `<name>.json` file per case, is deprecated**: it is still read
+during 2.9.4, with `warning: <folder>: one .json file per case is deprecated (2.9.4) ...` on standard error, and will not be read in a
+later release; `drishti.py convert` does not write cases, so convert a folder by hand or regenerate it. Other `.jsonl` files in the folder
+are plain documents, one a line (reported as `file.jsonl:1`, `file.jsonl:2`...). Without a `tests/<sutra>/` folder, a Sutra file is tested
+against the `.json` beside it with the same name (that is how the documented examples work). The trading pack's `tests/irs-fixfloat/expect.yaml`:
 
 ```yaml
 noErrors: true            # no panel in an error state on any sample (the default)
@@ -85,16 +90,16 @@ nonEmpty: [legs, ticket]  # these panels must render with data on every sample
 help: { about: true }     # the About this page text renders for every sample
 ```
 
-The keys: `noErrors`, `nonEmpty` (panel ids), `samples` (per sample file: `PF-RATES-DESK.json: { nonEmpty: [definition] }`) and `help` (`coverage`: the share, 0 to 1, of the fields the Sutra shows that must
+The keys: `noErrors`, `nonEmpty` (panel ids), `samples` (per case: `PF-RATES-DESK: { nonEmpty: [definition] }`; the older `PF-RATES-DESK.json` key still matches) and `help` (`coverage`: the share, 0 to 1, of the fields the Sutra shows that must
 have a glossary entry; `about: true`: the page text renders). Any other key is a usage error (exit 2), so a typo cannot silently pass. The workbench's *pack fragment export* writes this layout, so an
 exported fragment passes `sutra test` unchanged. Choose samples like a tester: a rich document, a thin one that lacks the optional parts, and one with an empty list; `nonEmpty` then names the panels
 that must never silently vanish. For a trading product, take the samples from the demo lakes (`curl … /entities/trade/<id>/raw`, the `data`), one per sub type.
 
 ### Drafting many Sutras from JSON Lines
 
-`sutra design --each <dir>` drafts one Sutra per immediate subfolder of `<dir>` that holds `.json` samples, in one JVM (a JVM start costs about 5 s). `sutra gen` (`tools/sutragen.py`) builds on it: it
+`sutra design --each <dir>` drafts one Sutra per immediate subfolder of `<dir>` that holds `.json` or `.jsonl` samples, in one JVM (a JVM start costs about 5 s). `sutra gen` (`tools/sutragen.py`) builds on it: it
 splits JSON Lines files into groups by the values of the `--match` fields, writes each group's samples, calls `design --each` once, edits the name, description, `match` line and title id, writes
-`tests/<sutra>/sample-*.json`, and runs `sutra lint`. On 400 Endur trades of the committed test data:
+`tests/<sutra>/cases.jsonl` (cases `sample-1` ...), and runs `sutra lint`. On 400 Endur trades of the committed test data:
 
 ```bash
 mkdir -p /tmp/gen && zcat data/testdata/trades/endur/snapshot-2026-07-08.jsonl.gz | head -400 > /tmp/gen/trade.jsonl

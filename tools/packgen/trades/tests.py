@@ -12,15 +12,18 @@
 #
 # See the LICENSE file in the root of this repository for the full terms.
 
-"""The trading pack's Sutra tests (config/packs/trading/tests/): one sample trade per deal Sutra (per PRODUCT_TYPE, from every source
-system), each with an expect.yaml (no errors, the legs panel filled, the about text renders) and the help-coverage ratchet."""
+"""The trading pack's Sutra tests (config/packs/trading/tests/<sutra>/cases.jsonl, one {case, document} a line): one sample trade per
+deal Sutra (per PRODUCT_TYPE, from every source system), each with an expect.yaml (no errors, the legs panel filled, the about text
+renders) and the help-coverage ratchet."""
 from __future__ import annotations
 
-import json
 import re
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[3]
+import sys  # noqa: E402
+sys.path.insert(0, str(ROOT / "tools" / "packgen" / "common"))
+import sutracases as SC  # noqa: E402  (tests/<sutra>/cases.jsonl)
 TESTS = ROOT / "config" / "packs" / "trading" / "tests"
 HEADER = "".join(f"# {line}".rstrip() + "\n" for line in (ROOT / "config" / "license-header.txt").read_text(encoding="utf-8").strip().splitlines())
 COVERAGE_NOTE = "# Lowest share of shown fields with a glossary entry, per Sutra (a ratchet: raise it when about.yaml grows, never lower it).\n"
@@ -45,13 +48,15 @@ def files(trades: dict[str, dict]) -> dict[Path, str]:
         if not m or m.group(1) not in by_type:
             continue
         name = re.search(r"^sutra: (\S+)", text, re.M).group(1)
+        cases = {}
         for t in [by_type[m.group(1)], *by_sub.get(m.group(1), {}).values()]:
             doc = {k: v for k, v in t.items() if k != "_meta"}
-            out[TESTS / name / f"{doc['TRADE_ID']}.json"] = json.dumps(doc, indent=1, ensure_ascii=False) + "\n"
+            cases[str(doc["TRADE_ID"])] = doc
+        out[TESTS / name / SC.FILE] = SC.text(sorted(cases.items()))
         out[TESTS / name / "expect.yaml"] = HEADER + EXPECT
         names.append(name)
     for kind, doc in derived_samples(trades).items():       # a page of each derived kind, as the derived connector computes it
-        out[TESTS / kind / f"{doc['_id']}.json"] = json.dumps({k: v for k, v in doc.items() if k != "_id"}, indent=1, ensure_ascii=False) + "\n"
+        out[TESTS / kind / SC.FILE] = SC.text([(doc["_id"], {k: v for k, v in doc.items() if k != "_id"})])
         out[TESTS / kind / "expect.yaml"] = HEADER + "\nnoErrors: true\nnonEmpty: [trades, by-product]\nhelp: { about: true }\n"
         names.append(kind)
     out[TESTS / "help-coverage.txt"] = COVERAGE_NOTE + "".join(f"{n}=1\n" for n in names)

@@ -117,7 +117,11 @@ def workbench_export(c: Ctx):
     c.page.set_viewport_size({"width": 1700, "height": 900})     # the Ship menu opens at the right edge
     sutra = (PACK / "sutras" / "ticket.v1.sutra.yaml").read_text(encoding="utf-8")
     d = c.api("/build/designs", {"name": "Ticket view", "kind": "ticket", "sutra": sutra})
-    files = [{"name": p.name, "text": p.read_text(encoding="utf-8")} for p in sorted((PACK / "tests" / "ticket").glob("*.json"))]
+    import json
+    import sys
+    sys.path.insert(0, str(Path(__file__).resolve().parents[2] / "packgen" / "common"))
+    import sutracases                                         # tests/ticket/cases.jsonl: a case a line
+    files = [{"name": n + ".json", "text": json.dumps(d, indent=1)} for n, d in sutracases.read(PACK / "tests" / "ticket")]
     c.api(f"/build/designs/{d['id']}/files", {"files": files})
     c.page.goto(f"{c.base}/build/d/{d['id']}")
     c.page.locator("[data-preview] [data-panel]").first.wait_for(timeout=30000)

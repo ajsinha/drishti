@@ -297,7 +297,7 @@ run them where that overlay names only packs that exist (or set `DRISHTI_DATA_DI
 
 ```text
 config/packs/<pack>/tests/<sutra>/        one folder per Sutra, named by the Sutra's name (the `sutra:` line)
-    TKT-1001.json                  plain entity documents (the kind comes from the Sutra's match.kind); .jsonl files hold one document per line
+    cases.jsonl                    the cases, one a line: {"case": "TKT-1001", "document": {...}} (the kind comes from the Sutra's match.kind)
     expect.yaml                    optional
 ```
 
@@ -414,8 +414,7 @@ a pack author, from an export of the help-desk ticket Sutra (the design id is in
 ```text
 ticket-view/pack.yaml
 ticket-view/sutras/studio/ticket.v1.sutra.yaml
-ticket-view/tests/ticket/TKT-1001.json
-ticket-view/tests/ticket/TKT-1002.json
+ticket-view/tests/ticket/cases.jsonl
 ticket-view/tests/ticket/expect.yaml
 ticket-view/samples/ticket.jsonl
 ticket-view/samples/catalog.json

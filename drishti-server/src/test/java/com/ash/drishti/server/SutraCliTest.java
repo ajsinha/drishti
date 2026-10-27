@@ -132,6 +132,26 @@ class SutraCliTest {
     }
 
     @Test
+    void casesJsonlIsOneCaseALineAndTheOlderFilesAreStillReadWithAWarning() throws IOException {
+        // 2.9.4 (docs/guides/DATA_FORMATS.md): tests/<sutra>/cases.jsonl, one {case, document} a line; expect.yaml names a case by its name
+        Path p = pack(SUTRA, "nonEmpty: [facts]\nsamples:\n  B: { nonEmpty: [facts] }\n", "cases.jsonl",
+                "{\"case\":\"A\",\"document\":{\"id\":\"A\",\"size\":3}}\n{\"case\":\"B\",\"document\":{\"id\":\"B\",\"size\":4}}\n");
+        Path xml = tmp.resolve("cases/junit.xml");
+        Run r = run("test", p.toString(), "--junit", xml.toString());
+        assertThat(r.code()).as(r.err()).isZero();
+        assertThat(Files.readString(xml)).contains("tests=\"2\" failures=\"0\"").contains("name=\"A\"").contains("name=\"B\"");
+        assertThat(r.err()).doesNotContain("deprecated");
+        Path bad = pack(SUTRA, null, "cases.jsonl", "{\"id\":\"A\",\"size\":3}\n");          // a document, not a case
+        Run b = run("test", bad.toString());
+        assertThat(b.code()).isEqualTo(1);
+        assertThat(b.err()).contains("a case is one line {\"case\"");
+        Path old = pack(SUTRA, null, "a.json", "{\"id\":\"A\",\"size\":3}");
+        Run o = run("test", old.toString());
+        assertThat(o.code()).isZero();
+        assertThat(o.err()).contains("one .json file per case is deprecated").contains("cases.jsonl");
+    }
+
+    @Test
     void anUnreadableSampleStillWritesTheJUnitFileAndFailsAsATestCase() throws IOException {
         Path p = pack(SUTRA, null, "a.json", "{\"id\":\"A\",\"size\":3}", "bad.json", "{not json", "bom.json", "\uFEFF{\"id\":\"B\",\"size\":4}",
                 "empty.json", "");

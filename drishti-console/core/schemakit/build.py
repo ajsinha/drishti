@@ -333,8 +333,9 @@ def assemble(plan: Plan, items: list[Item], drafts: dict, pack_dir: pathlib.Path
         f.write_text(text, encoding="utf-8")
         td = pack_dir / "tests" / it.name
         td.mkdir(parents=True, exist_ok=True)
-        for s in it.samples:
-            (td / f"{s.name}.json").write_text(json.dumps(s.doc, indent=1, ensure_ascii=False) + "\n", encoding="utf-8")
+        # the Sutra's test cases: tests/<sutra>/cases.jsonl, one {case, document} a line (2.9.4, docs/guides/DATA_FORMATS.md)
+        (td / "cases.jsonl").write_text("".join(json.dumps({"case": s.name, "document": s.doc}, ensure_ascii=False, separators=(",", ":")) + "\n"
+                                                for s in it.samples), encoding="utf-8")
         panels = panel_ids(text)
         expect = "noErrors: true\n" + (f"nonEmpty: [{', '.join(p for p in ('details',) if p in panels)}]\n" if "details" in panels and not it.sp.fallback else "")
         (td / "expect.yaml").write_text(expect, encoding="utf-8")
@@ -422,8 +423,8 @@ Generated from JSON Schema by schemakit (`docs/guides/SCHEMA_TO_PACK.md`). Nothi
 
 - `pack.yaml`: kinds, mnemonics, `columns` (pick-list columns), `graph.fields` (links between kinds)"""+(", the connectors it names (their connection settings are the pack's connector templates) and routes" if any(k.template in ("file", "delta") for k in plan.kinds) else "")+f""".
 - `sutras/<kind>/`: {len(items)} Sutra(s), drafted by auto-design from sample documents and then labelled from the schema (titles, descriptions, formats, links).
-- `tests/<sutra>/`: samples named `sample-N.json` (real documents), `sample-example-N.json` (the schema's own examples) or
-  `sample-synthetic-N.json` (generated from the schema: **synthetic**), and `expect.yaml`.
+- `tests/<sutra>/`: `cases.jsonl`, one case a line, named `sample-N` (real documents), `sample-example-N` (the schema's own examples) or
+  `sample-synthetic-N` (generated from the schema: **synthetic**), and `expect.yaml`.
   Sutras tested on synthetic samples only: {syn}.
 - `samples/`: documents so the pack opens before any data source is connected.{ANON if plan.settings.get("anonymised") else ""}
 - `config/about.yaml`: the *About this page* text from the schema descriptions; {built.todo} field(s) had no description and say `TODO`.

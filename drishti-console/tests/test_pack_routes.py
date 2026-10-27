@@ -286,7 +286,7 @@ def test_bundle_is_the_pack_bundle_format(client, post, tmp_path):
     with tarfile.open(archive) as t:
         names = t.getnames()
     assert "my-bank/MANIFEST.json" in names and "my-bank/pack.yaml" in names and "my-bank/sutras/trade/trade-irs.v1.sutra.yaml" in names
-    assert "my-bank/tests/trade-irs/sample-synthetic-1.json" in names and "my-bank/config/about.yaml" in names
+    assert "my-bank/tests/trade-irs/cases.jsonl" in names and "my-bank/config/about.yaml" in names               # a case a line (2.9.4)
     # the checks `pack verify` runs offline: the archive opens, the manifest's checksums match, the pack.yaml schema is accepted
     import importlib.util
     spec = importlib.util.spec_from_file_location("pb", TOOLS / "packbundle.py")

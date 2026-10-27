@@ -415,12 +415,13 @@ def test_assemble_writes_a_pack(tmp_path, plan):
     assert "connectors" not in man                                       # schemas only: the pack serves its samples
     assert (root / "sutras/trade/trade-irs.v1.sutra.yaml").is_file()
     tdir = root / "tests" / "trade-irs"
-    assert sorted(p.name for p in tdir.iterdir()) == ["expect.yaml", "sample-synthetic-1.json", "sample-synthetic-2.json", "sample-synthetic-3.json"]
+    assert sorted(p.name for p in tdir.iterdir()) == ["cases.jsonl", "expect.yaml"]                     # a case a line (2.9.4)
+    assert [json.loads(x)["case"] for x in (tdir / "cases.jsonl").read_text().splitlines()] == ["sample-synthetic-1", "sample-synthetic-2", "sample-synthetic-3"]
     assert "noErrors: true" in (tdir / "expect.yaml").read_text() and "nonEmpty: [details]" in (tdir / "expect.yaml").read_text()
     cat = json.loads((root / "samples/catalog.json").read_text())
     assert any(c["kind"] == "trade" and c["subtitle"].endswith("(synthetic sample)") for c in cat)
     assert len(built.synthetic) == 9 and built.todo > 0
-    assert "sample-synthetic-N.json" in (root / "README.md").read_text()
+    assert "sample-synthetic-N" in (root / "README.md").read_text()
     about = yaml.safe_load((root / "config/about.yaml").read_text())
     assert "trade" in about["kinds"]
 

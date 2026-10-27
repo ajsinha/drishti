@@ -470,7 +470,7 @@ options:
                         java)
   -r, --recursive       read *.jsonl in subfolders too
   --out OUT             writes <out>/<kind>/<kind>-<slug>.v1.sutra.yaml and
-                        <out>/tests/<sutra>/sample-*.json
+                        <out>/tests/<sutra>/cases.jsonl (one case a line)
   --tests-dir TESTS_DIR
                         put the samples here instead of <out>/tests
   --no-lint             do not run `sutra lint` on the result
@@ -504,7 +504,7 @@ ok      data/build/sutras/trade/trade-zero-bond.v1.sutra.yaml
 ```
 
 19,523 documents are the 15,000 trades and their amended versions of the later days (a trade counts once per file it is in). Each
-Sutra is `data/build/sutras/<kind>/<kind>-<group>.v1.sutra.yaml` with its `where` clause, and `data/build/sutras/tests/<sutra>/sample-*.json`
+Sutra is `data/build/sutras/<kind>/<kind>-<group>.v1.sutra.yaml` with its `where` clause, and `data/build/sutras/tests/<sutra>/cases.jsonl`
 holds samples drawn across the dates (with `--date FIELD`; the test data's trades carry no business-date field, their business date is the
 file's day). The `--out` folder is created when missing; it must not hold files of yours. A per-kind form names the field for each kind when
 one run reads several kinds: `--key trade=TRADE_ID,counterparty=COUNTERPARTY_ID`. The generator is described in
@@ -538,7 +538,7 @@ What comes out, for the 130 product types of the three sources:
 | Output | Where |
 |---|---|
 | 130 Sutras, each with `match: { kind: trade, where: "$.PRODUCT_TYPE == 'IRS_FIXFLOAT'", priority: 10 }` and the title id `$.TRADE_ID` | `data/build/sutras/trade/trade-<product>.v1.sutra.yaml` |
-| up to 5 sample trades per Sutra (`--samples N`; chosen deterministically, across dates with `--date`) | `data/build/sutras/tests/<sutra>/sample-*.json` |
+| up to 5 sample trades per Sutra (`--samples N`; chosen deterministically, across dates with `--date`) | `data/build/sutras/tests/<sutra>/cases.jsonl` (cases `sample-1` ...) |
 | a lint of everything written | exit code 1 if any Sutra has a problem |
 
 Options that help here: `--fallback` adds a low-priority `trade-default` Sutra so a product type that appears later still

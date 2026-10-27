@@ -547,8 +547,7 @@ A Sutra that renders today can break with next month's data. `tests/<sutra>/` ho
 port:
 
 ```text
-tests/ticket/TKT-1001.json        copies of two samples, one document a file (or .jsonl files, one a line)
-tests/ticket/TKT-1002.json
+tests/ticket/cases.jsonl          two cases, one a line: {"case": "TKT-1001", "document": {...}}
 tests/ticket/expect.yaml
 ```
 
@@ -571,8 +570,8 @@ glossary of step 10b is complete; 2 of 8 with only `AGE_HOURS` and `PRIORITY`). 
 report step. Now break the expectation on purpose (`nonEmpty: [history, timeline]`):
 
 ```text
-ticket / TKT-1001.json: panel timeline is not in the Sutra
-ticket / TKT-1002.json: panel timeline is not in the Sutra
+ticket / TKT-1001: panel timeline is not in the Sutra
+ticket / TKT-1002: panel timeline is not in the Sutra
      ticket: help coverage 8/8 (100%)
 FAIL config/packs/helpdesk/sutras/ticket.v1.sutra.yaml (2 samples)
 ```

@@ -1072,7 +1072,7 @@ def build_parser() -> argparse.ArgumentParser:
             "example:\n  drishti.py sutra gen data/testdata/trades/endur --kind trade --key TRADE_ID --match PRODUCT_TYPE --out data/build/sutras")
     g.add_argument("inputs", type=pathlib.Path, nargs="+", help="folders of *.jsonl and/or single .jsonl files")
     SG.add_arguments(g)
-    g.add_argument("--out", type=pathlib.Path, required=True, help="writes <out>/<kind>/<kind>-<slug>.v1.sutra.yaml and <out>/tests/<sutra>/sample-*.json")
+    g.add_argument("--out", type=pathlib.Path, required=True, help="writes <out>/<kind>/<kind>-<slug>.v1.sutra.yaml and <out>/tests/<sutra>/cases.jsonl (one case a line)")
     g.add_argument("--tests-dir", type=pathlib.Path, help="put the samples here instead of <out>/tests")
     g.add_argument("--no-lint", action="store_true", help="do not run `sutra lint` on the result")
 

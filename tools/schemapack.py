@@ -207,8 +207,7 @@ def jvm_draft(items, SG, opts, say=print) -> dict:
             d = t / "in" / f"g{i:04d}"
             d.mkdir(parents=True)
             (d / "kind").write_text(it.kp.kind + "\n")
-            for j, s in enumerate(it.samples, 1):
-                (d / f"s{j}.json").write_text(json.dumps(s.doc))
+            (d / "samples.jsonl").write_text("".join(json.dumps(s.doc) + "\n" for s in it.samples))      # one sample a line
         say(f"drafting {len(items)} Sutra(s) with one `sutra design --each` run ...")
         r = SG.sutra_cli(opts, "design", "--each", str(t / "in"), "--out", str(t / "out"))
         if r.returncode != 0:
@@ -245,7 +244,7 @@ def design(a, cli) -> int:
             if tests.exists():
                 shutil.rmtree(tests)
             shutil.copytree(pack_dir / "tests", tests)
-            print(f"wrote {len(built.sutras)} Sutra(s) under {out} (samples in {tests}; synthetic ones are named sample-synthetic-N.json)")
+            print(f"wrote {len(built.sutras)} Sutra(s) under {out} (cases in {tests}/<sutra>/cases.jsonl; synthetic ones are named sample-synthetic-N)")
             r = cli.run_java(a, ["lint", str(out)], capture=True)
             lines = cli.report_lines(r)
             help_warnings = [l for l in lines if "DRS-2047" in l or "DRS-2046" in l or "DRS-2045" in l]

@@ -45,7 +45,7 @@ import org.springframework.stereotype.Component;
 /**
  * A Design as a pack fragment and back. The export is a zip with one folder: {@code pack.yaml} (a stub: the kind, a mnemonic
  * suggestion, an id pattern and the id field), the Sutra under {@code sutras/}, the samples as tests in
- * {@code tests/<sutra>/*.json} with an {@code expect.yaml} (what {@code sutra test} checks), three samples in
+ * {@code tests/<sutra>/cases.jsonl} with an {@code expect.yaml} (what {@code sutra test} checks), three samples in
  * {@code samples/<kind>.jsonl} (one a line, with {@code samples/catalog.json}) and a README. The import reads a zip of the same layout (or any pack folder zipped) into Designs,
  * one per Sutra, with the samples found beside it. Nothing is written to disk; entries are read in memory with limits.
  */
@@ -144,13 +144,16 @@ public class PackFragment {
             put(zip, pack + "/sutras/" + domain + "/" + sutraName + ".v" + version + ".sutra.yaml", d.sutra == null ? "" : d.sutra);
             Set<String> used = new LinkedHashSet<>();
             int n = 0;
+            StringBuilder cases = new StringBuilder();                      // tests/<sutra>/cases.jsonl: one {case, document} a line (2.9.4)
             for (Map.Entry<String, JsonNode> e : docs) {
                 if (n++ >= MAX_TESTS) {
                     break;
                 }
-                put(zip, pack + "/tests/" + sutraName + "/" + unique(used, e.getKey()), JSON.writerWithDefaultPrettyPrinter().writeValueAsString(e.getValue()));
+                String file = unique(used, e.getKey());
+                cases.append(com.ash.drishti.server.cli.SutraCases.line(file.substring(0, file.length() - 5), e.getValue()));
             }
             if (!docs.isEmpty()) {
+                put(zip, pack + "/tests/" + sutraName + "/" + com.ash.drishti.server.cli.SutraCases.FILE, cases.toString());
                 put(zip, pack + "/tests/" + sutraName + "/expect.yaml", expectYaml(matrix));
             }
             StringBuilder lines = new StringBuilder();                      // samples/<kind>.jsonl, one document a line, and the catalogue
@@ -258,7 +261,7 @@ public class PackFragment {
                 + "A pack fragment made in the Build workbench (design `" + d.id + "`).\n\n"
                 + "- `pack.yaml`: a stub for the `" + kind + "` kind, with the mnemonic `" + mnemonic + "` and the id field `" + idField + "` suggested. Edit them.\n"
                 + "- `sutras/`: the Sutra `" + sutra + "`.\n"
-                + "- `tests/" + sutra + "/`: " + tests + " sample document(s) and `expect.yaml`; run them with\n"
+                + "- `tests/" + sutra + "/`: " + tests + " test case(s) in `cases.jsonl` (one `{case, document}` a line) and `expect.yaml`; run them with\n"
                 + "  `java -jar drishti-server-*-exec.jar sutra test " + pack + "`.\n"
                 + "- `samples/" + kind + ".jsonl`: up to three documents to try the view on, one a line (`samples/catalog.json` lists them).\n"
                 + (hasAbout(d) ? "- `" + ABOUT_FILE + "`: the About text (page text, panel text, glossary) written in the workbench's About tab.\n" : "")
@@ -344,6 +347,17 @@ public class PackFragment {
                 if (j.path().endsWith(".json") && (inFolder(j.path(), "tests", name) || (kind != null && inFolder(j.path(), "samples", kind)))) {
                     String sampleName = j.path().substring(j.path().lastIndexOf('/') + 1);
                     samples.putIfAbsent(sampleName, j.text());
+                }
+            }
+            for (Item j : items) {                                              // tests/<sutra>/cases.jsonl: a case a line, named
+                if (j.path().endsWith("/" + com.ash.drishti.server.cli.SutraCases.FILE) && inFolder(j.path(), "tests", name)) {
+                    for (com.ash.drishti.server.cli.SutraCases.Case c : com.ash.drishti.server.cli.SutraCases.parse(j.text(), j.path())) {
+                        if (c.document() != null) {
+                            samples.putIfAbsent(c.name() + ".json", c.document().toString());
+                        } else {
+                            skipped.add(c.error());
+                        }
+                    }
                 }
             }
             for (Item j : items) {                                              // samples/<kind>.jsonl (or .part-NNN.jsonl): a sample a line,

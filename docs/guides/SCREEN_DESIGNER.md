@@ -582,7 +582,7 @@ A design can leave the workbench as a **pack fragment**, a zip you can put in a 
 my-view/
   pack.yaml                         a stub: the kind, a mnemonic suggestion, an id pattern, the id field of your samples
   sutras/<domain>/my-view.v1.sutra.yaml
-  tests/my-view/<sample>.json       every kept sample (up to 20) ...
+  tests/my-view/cases.jsonl         every kept sample (up to 20), one case a line ...
   tests/my-view/expect.yaml         ... and what `sutra test` checks: noErrors, and the panels that were fine on every sample
   samples/<kind>/<sample>.json      three samples to try the view on
   config/about.yaml                 the About text (only when the design has one), named by `about:` in pack.yaml
@@ -620,7 +620,7 @@ java -jar drishti-server-<version>-exec.jar sutra design samples/*.json --kind d
 java -jar drishti-server-<version>-exec.jar sutra design --each samples-by-kind --out target/drafts   # one draft per subfolder
 ```
 
-`test` uses the **same checker as the Tests tab**, with the `config/packs/<pack>/tests/<sutra>/*.json` + `expect.yaml` convention that the pack fragment export writes. Exit codes: `0` ok, `1` problems, `2` usage. `--junit` writes JUnit XML for your CI's report step; `--out` writes HTML snapshots. The Maven build of this repository runs `sutra test` over every shipped pack that has tests and over the ten documented examples. All the details and a CI example are in [the Sutra command guide](SUTRA_DEVELOPER_GUIDE.md#15-testing-expectyaml-sutra-linttestpreview-ci).
+`test` uses the **same checker as the Tests tab**, with the `config/packs/<pack>/tests/<sutra>/cases.jsonl` + `expect.yaml` convention that the pack fragment export writes. Exit codes: `0` ok, `1` problems, `2` usage. `--junit` writes JUnit XML for your CI's report step; `--out` writes HTML snapshots. The Maven build of this repository runs `sutra test` over every shipped pack that has tests and over the ten documented examples. All the details and a CI example are in [the Sutra command guide](SUTRA_DEVELOPER_GUIDE.md#15-testing-expectyaml-sutra-linttestpreview-ci).
 
 ## 27. Binding a design to a file (development servers)
 

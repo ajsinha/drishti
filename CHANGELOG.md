@@ -17,6 +17,17 @@
 
 ## 2.9.4 (unreleased)
 
+- **Sutra test cases are one `cases.jsonl` per Sutra (2026-10-27; product owner).** `tests/<sutra>/cases.jsonl`, one case a line,
+  `{"case": "<name>", "document": {...}}`, beside `expect.yaml` (new `SutraCases`; `sutra test` names each case; `expect.yaml`'s
+  `samples:` takes the case name, the old `<name>.json` key still matching). The older one-`.json`-a-case folders are still read in
+  2.9.4 with a deprecation warning. All 197 committed test folders converted (the shipped packs, the retired examples and the
+  help-desk example; every generator's `--check` and `sutra test` over every pack green). Writers changed: `packgen/trades/tests.py`,
+  `var/make_var_data.py`, `realdata/pack_tests.py`, `sutragen.py` (and so `pack_from_jsonl.py`), `schemapack.py`, the console's
+  `schemakit/build.py`, and the workbench's pack fragment export and import (`PackFragment`, not in the audit's list); `sutra design
+  --each` reads `.jsonl` samples, so the drafters hand it one `samples.jsonl` per group. Shared Python helper
+  `tools/packgen/common/sutracases.py`. Docs: Sutra testing, pack developer and lifecycle guides, Screen designer, API and CLI guides,
+  BUILD_WORKBENCH, DATA_FORMATS.
+
 - **JSON Lines in every console download and CLI export (2026-10-27; product owner).** A shared `to_jsonl` in `core/export.py`
   (a row a line keyed as the CSV's header, no BOM, numbers as numbers) and a `.jsonl` twin of every CSV route: `/export/search`,
   `/export/grid`, `/export/compare/...`, a panel's `/export/<kind>/<id>/<panel>`, `/export/history/...` (a day a line); `/dist/bi` and
