@@ -17,6 +17,15 @@
 
 ## 2.9.3 — in progress
 
+- **Knowledge: Companies, funds and ETFs (2026-10-27).** An eighth Knowledge page, `docs/knowledge/companies-funds-and-etfs.md`, in
+  the same seven parts as the others: what a company's ticker, CIK, SIC code and division, share classes (GOOG and GOOGL), EDGAR filings
+  and XBRL facts are; mutual funds, ETFs and unit investment trusts, NAV and net assets, look-through holdings, expense ratios, index
+  funds, computed index weights, active share and fund overlap; how the us-equities, funds and gleif packs connect. The worked example
+  uses the committed snapshots (`USEQ AAPL`, `FUND VOO`'s four classes from 0.01% to 0.14%, `HELD AAPL` 19.02% of Apple's shares, overlap
+  from 46.6% for QQQ and VGT to 92.5% for SPY and VOO) and shows what they hide: Wikidata's Nasdaq-100 list misses NVIDIA and Meta, so
+  QQQ's active share reads 26.75%. 23 new glossary terms (162 in all), so `WHAT ETF`, `WHAT NAV`, `WHAT share class` open them; Help →
+  Knowledge lists the page, and `USEQ`, `FUND`, `HELD` and `TRACK` pages carry its *What does this mean?* link.
+
 - **One firm-wide VaR limit (2026-10-27).** The test data gave the bank two VaR limits, 150,000,000 at the management tree's root and
   210,000,000 at the legal-entity tree's root, because the generator drew each node's headroom at random and the two roots are separate
   nodes. Both roots now carry the management root's 150,000,000 (`tools/packgen/var/make_var_data.py`, `limits()`); every other limit,

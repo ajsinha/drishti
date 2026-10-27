@@ -205,7 +205,8 @@ def test_the_help_centre_has_seven_sections_and_about_sixty_pages():
     # 54: plus the funds pack's two (the funds and ETFs guide and tutorial 28, 2.9.2), the same rule (two documents, two entries).
     # 62: plus Knowledge (the product owner's request of 2026-10-26), a section of its own at the top: the home with the glossary and
     # the seven domain pages (docs/knowledge/, WHAT <GO>).
-    assert 30 <= total <= 62, total
+    # 63: plus the eighth Knowledge page, Companies, funds and ETFs (2.9.3).
+    assert 30 <= total <= 63, total
 
 
 def test_every_old_help_address_still_opens_something(client):

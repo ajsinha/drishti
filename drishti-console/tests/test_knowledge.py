@@ -44,7 +44,10 @@ def test_the_reserved_word_what_goes_to_knowledge(client, typed, where):
     ("expected shortfall", "/help/knowledge-market-risk#term-es"),
     ("P&L vector", "/help/knowledge-market-risk#term-p-l-vector"),
     ("LEI", "/help/knowledge-entities-and-ownership#term-lei"),
-    ("gdp", "/help/knowledge-economies#term-gdp")])
+    ("gdp", "/help/knowledge-economies#term-gdp"),
+    ("ETF", "/help/knowledge-companies-funds-and-etfs#term-etf"),
+    ("net asset value", "/help/knowledge-companies-funds-and-etfs#term-nav"),
+    ("GOOGL", "/help/knowledge-companies-funds-and-etfs#term-share-class")])
 def test_what_a_term_opens_its_glossary_entry(client, words, target):
     r = client.get("/what", params={"q": words}, follow_redirects=False)
     assert r.status_code == 303 and r.headers["location"] == target

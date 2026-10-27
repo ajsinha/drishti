@@ -29,6 +29,7 @@ domains:
   market-data: { page: market-data.md, title: Market data }
   data-and-contracts: { page: data-and-contracts.md, title: Data and contracts }
   economies: { page: economies.md, title: Economies }
+  companies-funds-and-etfs: { page: companies-funds-and-etfs.md, title: "Companies, funds and ETFs" }
 
 terms:
   # ---- market risk ---------------------------------------------------------------------------------------------------------------
@@ -767,3 +768,129 @@ terms:
     domain: economies
     meaning: "A country's government, office holders, elections and parties (CIA World Factbook). The bank's legal entities link to theirs."
     command: JUR JUR-GBR
+  # ---- companies, funds and ETFs -------------------------------------------------------------------------------------------------
+  - term: US company
+    synonyms: [company, useq, public company, listed us company]
+    domain: companies-funds-and-etfs
+    meaning: "A company that files with the SEC, keyed by its main ticker: its CIK, SIC code, LEI, indexes, filings and ten years of annual financials (us-equities pack)."
+    command: USEQ AAPL
+    cli: drishti.py view get us-company/AAPL
+  - term: Ticker
+    synonyms: [symbol, ticker symbol, trading symbol]
+    domain: companies-funds-and-etfs
+    meaning: "The short code a security trades under (AAPL, QQQ, VFIAX). One company or fund can have several, one per share class; Drishti keys each by one of them."
+    command: USEQ GOOGL
+  - term: CIK
+    name: Central Index Key
+    synonyms: [sec cik, cik number]
+    domain: companies-funds-and-etfs
+    meaning: "The SEC's ten-digit number for every filer, company or fund trust (Apple 0000320193). It never changes when a ticker or name does."
+    command: USEQ AAPL
+  - term: SIC code
+    name: Standard Industrial Classification
+    synonyms: [sic, sic industry, industry code]
+    domain: companies-funds-and-etfs
+    meaning: "The four-digit industry code the SEC gives a filer (3674 semiconductors, 6021 national commercial banks). SIC groups a code's companies when asked."
+    command: SIC 3674
+  - term: SIC division
+    synonyms: [sector, sic sector, division, industry division]
+    domain: companies-funds-and-etfs
+    meaning: "The broad group a SIC code falls in, A to J (D Manufacturing, H Finance, Insurance and Real Estate, I Services). Drishti's sector for companies and fund tilts."
+    command: SIC ALL
+  - term: Share class
+    synonyms: [class, share classes, dual class, goog, googl, class a, admiral shares]
+    domain: companies-funds-and-etfs
+    meaning: "One of several kinds of share in the same company or fund, each with its own ticker: Alphabet's GOOGL (votes) and GOOG (no vote); VOO, VFIAX and VFINX of one Vanguard fund, at different fees."
+    command: FUND VOO
+  - term: EDGAR
+    name: the SEC's filing system
+    synonyms: [sec filing, filing, filings, 10-k, 10-q, 8-k, form 4]
+    domain: companies-funds-and-etfs
+    meaning: "Where every SEC filing is published: annual 10-K, quarterly 10-Q, 8-K events, insiders' Form 4. EDGAR lists the latest by form; FILING opens one."
+    command: EDGAR 8-K
+  - term: Financial fact
+    synonyms: [fact, xbrl, xbrl fact, financials]
+    domain: companies-funds-and-etfs
+    meaning: "One line of a company's annual accounts (revenue, net income, assets ...) over ten fiscal years, as tagged in its XBRL filings."
+    command: FACT NVDA-REVENUE
+  - term: Index membership
+    synonyms: [idx, index members, constituents, index constituents]
+    domain: companies-funds-and-etfs
+    meaning: "The companies of an index or list: the S&P 500, Nasdaq-100 and Dow 30 from Wikidata, the bank lists kept by Drishti. No weights or levels."
+    command: IDX SP500
+  - term: Mutual fund
+    synonyms: [fund, open-end fund, mutual funds, open-ended fund]
+    domain: companies-funds-and-etfs
+    meaning: "A pooled fund you buy from and sell back to the fund itself, once a day at its NAV. Most have several share classes."
+    command: FUND FXAIX
+    cli: drishti.py view get fund/FXAIX
+  - term: ETF
+    name: exchange-traded fund
+    synonyms: [etfs, exchange traded fund]
+    domain: companies-funds-and-etfs
+    meaning: "A fund whose shares trade on an exchange all day; authorised participants create and redeem shares in large blocks (creation units), which keeps the price near the NAV."
+    command: FUND QQQ
+    cli: drishti.py view get fund/QQQ
+  - term: Unit investment trust
+    synonyms: [uit, etf uit]
+    domain: companies-funds-and-etfs
+    meaning: "A fund with a fixed trust deed and no board or adviser; SPY and DIA are ETFs built this way. They file no prospectus risk/return summary, so no expense ratio in the data."
+    command: FUND SPY
+  - term: NAV
+    name: net asset value
+    synonyms: [net asset value, net assets, nav per share]
+    domain: companies-funds-and-etfs
+    meaning: "What a fund owns less what it owes. Per share it is the price a mutual fund deals at; the funds pack shows the fund's total, as filed on N-PORT."
+    command: FUND QQQ
+  - term: N-PORT
+    name: Form N-PORT
+    synonyms: [nport, form n-port, n-cen, form n-cen]
+    domain: companies-funds-and-etfs
+    meaning: "The monthly report of every holding a US fund files with the SEC, made public each quarter. N-CEN is its yearly census: adviser, custodian, auditor, ETF facts."
+    command: FUND QQQ
+  - term: Look-through
+    synonyms: [holdings, look through, fund holdings, portfolio holdings, look-through holdings]
+    domain: companies-funds-and-etfs
+    meaning: "Seeing through a fund to what it holds: every holding with its weight, issuer, LEI and company, so exposure to a company counts what you hold through funds."
+    command: FUND QQQ
+  - term: Expense ratio
+    synonyms: [ter, total expense ratio, ongoing charge, fees, fund fees]
+    domain: companies-funds-and-etfs
+    meaning: "The share of a fund's assets taken each year to run it (0.03 is 0.03% a year), net of waivers, per share class, from the prospectus summary."
+    command: TRACK SP500
+  - term: Index fund
+    synonyms: [tracker, tracking fund, passive fund, index tracker, track]
+    domain: companies-funds-and-etfs
+    meaning: "A fund that copies an index rather than picking stocks. TRACK lists the funds whose name names a tracked index (S&P 500, Nasdaq-100, Dow)."
+    command: TRACK SP500
+  - term: Index weight
+    synonyms: [index weights, weight in the index, market-cap weight, cap weight]
+    domain: companies-funds-and-etfs
+    meaning: "A member's share of an index. Providers do not publish them; Drishti computes market-cap weights from SEC shares outstanding times the price the funds' filings imply."
+    command: FUND QQQ
+  - term: Active share
+    synonyms: [active weight]
+    domain: companies-funds-and-etfs
+    meaning: "Half the sum of the differences between a fund's and its index's weights: 0% is the index, 100% shares nothing with it."
+    command: FUND AGTHX
+  - term: Concentration
+    synonyms: [hhi, herfindahl, herfindahl index, top 10 weight]
+    domain: companies-funds-and-etfs
+    meaning: "How much of a fund sits in a few holdings: the top 10's weight, and the Herfindahl index (the sum of the squared weights; 1 is a single holding)."
+    command: FUND VGT
+  - term: Held by funds
+    synonyms: [fund ownership, fund holders, holders, held by]
+    domain: companies-funds-and-etfs
+    meaning: "Every fund of the pack holding a company, by value, with their share of its shares outstanding. HELD counts every holding, not only those a fund page keeps."
+    command: HELD AAPL
+    cli: drishti.py view get fund-holder/AAPL
+  - term: Fund overlap
+    synonyms: [overlap, portfolio overlap, common holdings]
+    domain: companies-funds-and-etfs
+    meaning: "How much two funds hold in common: for each company both hold, the smaller of its two weights, added up. Read from the two funds' Look-through tabs."
+    command: FUND VOO
+  - term: Adviser
+    synonyms: [investment adviser, fund manager, asset manager, sponsor]
+    domain: companies-funds-and-etfs
+    meaning: "The firm that manages a fund's money (The Vanguard Group, BlackRock Fund Advisors), from N-CEN, with its LEI."
+    command: FUND VOO

@@ -24,7 +24,8 @@ This guide has three parts. **Part I** is how to use it: the FUND page and its t
 index, the commands, the command line and the API, worked through on the committed data. **Part II** is the data contract of every
 kind: every column with its type, key, source in the SEC's tables and an example. **Part III** is where the data comes from: each
 source and its licence, how the 200 are chosen, the refresh script on Linux and Windows, the gzipped snapshot and offline use. The
-hands-on companion is [tutorial 28](../tutorials/28-funds-and-etfs.md).
+hands-on companion is [tutorial 28](../tutorials/28-funds-and-etfs.md); the words (NAV, share class, look-through, active share, overlap)
+are explained in [Knowledge: Companies, funds and ETFs](../knowledge/companies-funds-and-etfs.md).
 
 All figures below are from the committed snapshot: N-PORT reports dated 2026-05-31 to 2026-07-31 (the SEC's 2026 Q3 data set), retrieved
 on 2026-10-26.
