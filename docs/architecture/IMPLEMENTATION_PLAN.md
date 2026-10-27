@@ -583,6 +583,8 @@ side still lacks. 2.9.5 closes it, so every capability the Delta side has is bui
 | 3. Speed and convenience | Disk caches | Iceberg id maps and document caches across restarts, as Delta has |
 | | Lake build | `lake build --format iceberg` (and `build_demo_lakes.py`), JSONL in as everywhere |
 
+| 4. Hierarchies | Any number of VaR hierarchies | a third hierarchy beside MGMT and LEGAL, e.g. limit letters (a tree of nodes with VaR limits, rolled up like desk; a bank may have about 700): the `risk-hierarchy` contract's HIERARCHY and LEVEL open, the VaR page's selector listing the hierarchies the date holds, a scope word for a limit letter (`LL:<id>`), official VaR and exposure records for every hierarchy (product owner, 2026-10-27). Assumes a letter groups whole books; a letter holding part of a book would need position-level membership |
+
 Deferred (decided later): converting tables between Delta and Iceberg; S3 Tables if the REST route does not work.
 Docs: ICEBERG_CONNECTOR, DRISHTI_ICEBERG, VAR_GUIDE (section 29.3), EXPOSURE_GUIDE, LAKE_MAINTENANCE, AWS_DEPLOYMENT, the Windows QA guide
 where it changes, and both AWS decks (`Drishti-AWS-Iceberg.pptx` labels move from proposed to built).
