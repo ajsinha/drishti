@@ -251,8 +251,8 @@ public final class SubscriptionService implements AutoCloseable {
             throw invalid(e.getMessage());
         }
         String format = body.path("format").asText("html").toLowerCase(Locale.ROOT);
-        if (!Set.of("html", "pdf", "xlsx").contains(format)) {
-            throw invalid("format is html (inline in the email), pdf or xlsx");
+        if (!Set.of("html", "pdf", "xlsx", "jsonl").contains(format)) {
+            throw invalid("format is html (inline in the email), pdf, xlsx or jsonl (the rows attached, one a line)");
         }
         String date = body.path("date").asText("today");
         if (!Set.of("today", "previous", "load").contains(date)) {

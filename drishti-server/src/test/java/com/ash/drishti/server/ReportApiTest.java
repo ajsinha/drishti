@@ -101,6 +101,12 @@ class ReportApiTest {
                 .andExpect(status().isOk());
         mvc.perform(post("/api/v1/me/reports/To desk/run")).andExpect(jsonPath("$.status").value("ok")).andExpect(jsonPath("$.target").value(url));
         assertThat(received).anySatisfy(r -> assertThat(r).startsWith("To desk\nkind,id,title"));
+        mvc.perform(put("/api/v1/me/reports/As lines").contentType("application/json").content("{\"query\": \"TRD where mtm < 0\", \"schedule\": \"daily 07:00\", "
+                + "\"deliver\": \"webhook\", \"webhook\": \"" + url + "\", \"format\": \"jsonl\"}")).andExpect(status().isOk()).andExpect(jsonPath("$.format").value("jsonl"));
+        mvc.perform(post("/api/v1/me/reports/As lines/run")).andExpect(jsonPath("$.status").value("ok"));
+        assertThat(received).anySatisfy(r -> assertThat(r).startsWith("As lines\n{\"kind\":\"trade\",\"id\":"));       // JSON Lines, one entity a line
+        mvc.perform(put("/api/v1/me/reports/Bad format").contentType("application/json").content("{\"query\": \"TRD\", \"schedule\": \"daily 07:00\", "
+                + "\"deliver\": \"folder\", \"format\": \"xml\"}")).andExpect(status().isBadRequest());
         mvc.perform(delete("/api/v1/me/reports/To desk")).andExpect(status().isNoContent());
         mvc.perform(get("/api/v1/me/reports/To desk")).andExpect(status().isNotFound());
     }

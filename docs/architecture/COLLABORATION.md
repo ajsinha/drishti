@@ -597,8 +597,8 @@ needed to triage, values are not; the note is the user's own words, scrubbed lik
   Holds stop purge and permanent removal, not ordinary use. Placing and releasing are audited.
 - **Export (eDiscovery).** An asynchronous job writes a zip to `exports/` under `drishti.collab.dir` (kept `drishti.collab.export-keep`, 24 h):
   `manifest.json` (filters, who, when, counts, per-thread first and last hash, the software version),
-  `shares.ndjson` (each share with recipients, states and opens), `threads.ndjson` (each thread with every revision,
-  **unscrubbed** — the record — with author, pin, action, reason and hashes), `holds.ndjson`, and `README.txt`
+  `shares.jsonl` (each share with recipients, states and opens), `threads.jsonl` (each thread with every revision,
+  **unscrubbed** — the record — with author, pin, action, reason and hashes), `holds.jsonl`, and `README.txt`
   (field meanings). One JSON object per line, ISO-8601 UTC times, user names plus display names, stable ids. The export
   itself is audited and needs the `compliance` power; the zip is downloadable once per request by its requester and
   deleted after `export-keep`.
@@ -909,8 +909,8 @@ final hash), `HoldService`, `ChainVerifier`, `ExportService` and `ComplianceCont
 `ShareStore` gained `page` and `deleteThread` / `delete`. Moderation (hide, unhide, lock) was built in step 5. Deviations: (1) **API only at this step: the admin console
 page (`templates/admin/collab.html`, `collab_admin_routes.py`, Admin → Collaboration) came with the console work of step 6**; (2) a hold's scope also
 has `kind`, and any scope takes a date range (`drishti_collab_hold` gained `date_from` and `date_to`; SQLite databases made earlier get the columns at
-start); (3) the export streams a zip with `shares.ndjson`, `threads.ndjson`, `chains.ndjson` (first and last hash per thread, instead of a list inside the
-manifest, so memory is bounded), `holds.ndjson`, `README.txt` and a last `manifest.json` with every file's SHA-256; "notices" are the share
+start); (3) the export streams a zip with `shares.jsonl`, `threads.jsonl`, `chains.jsonl` (first and last hash per thread, instead of a list inside the
+manifest, so memory is bounded), `holds.jsonl`, `README.txt` and a last `manifest.json` with every file's SHA-256; "notices" are the share
 recipients' delivery states and opens and each comment's mentions, the outbox and inbox rows are not exported; (4) jobs are kept in memory (a restart forgets
 an unfinished one), one runs at a time with a queue of 8, and a download happens once; (5) `GET /admin/collab/verify` without `thread` checks everything
 (or one entity) and `GET /admin/collab/threads/{id}` gives the compliance officer the full record; (6) administrators may also run retention by hand
@@ -1002,7 +1002,7 @@ cross-cutting sections only.
   rows, or now plus the window if there is none; the dispatcher groups mail claimed in one tick by recipient and, for two or more, renders each with
   its own renderer (opt-out, rights, masking, skips decided per notice) and sends one `digest` message (`MailRenderer.renderDigest`, templates
   `digest.subject|txt|html`). One notice is sent as the ordinary message.
-- **Export.** `inbox.ndjson` (notices: recipient, type, entity, actor, times) and `outbox.ndjson` (channel, state, attempts, times; no body, no error
+- **Export.** `inbox.jsonl` (notices: recipient, type, entity, actor, times) and `outbox.jsonl` (channel, state, attempts, times; no body, no error
   text) are written for the filtered scope (share-type rows follow `includeShares`, the rest `includeThreads`; a kind or id filter resolves the
   row's share or comment) and listed in the manifest with SHA-256, size and line count. `OutboxStore.after(seq, limit)` pages the outbox.
 - **Share default.** `ShareService.postsToThread(requested, configured)`: the request wins; `share.post-to-thread` applies when it is absent.

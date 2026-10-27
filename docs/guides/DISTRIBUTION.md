@@ -95,7 +95,7 @@ visuals per export (`max-visuals`, 40), the layout width, orientation and the ta
 
 ### The API
 
-`POST /api/v1/export/{format}` (`pdf`, `png`, `xlsx`, `csv`), body `{type: "report", id, page?, visual?, state?, date?}` or `{type: "view", id: "kind/id", date?, view?}`. The answer is the file, with
+`POST /api/v1/export/{format}` (`pdf`, `png`, `xlsx`, `csv`, `jsonl`: one row a line, keyed as the CSV's header, [DATA_FORMATS.md](DATA_FORMATS.md)), body `{type: "report", id, page?, visual?, state?, date?}` or `{type: "view", id: "kind/id", date?, view?}`. The answer is the file, with
 `Content-Disposition: attachment` and `X-Export-Rows`. The console serves it at `/dist/bi/<report id>.<format>?page=&visual=&state=<JSON>&date=` and `/dist/view/<kind>/<id>.<format>` (with the page's
 `ctl.*` and `f.*` query). Every export is audited (`export`, who, what, rows, bytes). See [API_GUIDE.md](API_GUIDE.md#export-and-subscriptions-apiv1).
 

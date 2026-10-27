@@ -356,6 +356,9 @@ class LanguagesApiTest {
         assertThat(hana.path("rows").get(0).get(1).asDouble()).isEqualTo(viaMq.path("rows").get(0).get(1).asDouble());
         var csv = call("POST", "/api/v1/bi/sql", reader("rita"), Map.of("model", "lang-model@1", "sql", statement, "format", "csv")).andReturn().getResponse();
         assertThat(csv.getContentAsString()).startsWith("desk,notional,n\r\nDESK-A,92000.0,8");
+        var jsonl = call("POST", "/api/v1/bi/sql", reader("rita"), Map.of("model", "lang-model@1", "sql", statement, "format", "jsonl")).andReturn().getResponse();
+        assertThat(jsonl.getContentType()).startsWith("application/jsonl");
+        assertThat(jsonl.getContentAsString()).startsWith("{\"desk\":\"DESK-A\",\"notional\":92000.0,\"n\":8}\n");      // the CSV's columns, a row a line
         JsonNode explain = sql("hana", "EXPLAIN " + statement);
         assertThat(explain.path("text").asText()).contains("SecureScan trades").contains("rules: 1 applied").doesNotContain("DESK-A");
         JsonNode composite = sql("rita", "WITH d AS (SELECT trades.desk AS desk, MEASURE('Notional') AS notional FROM trades GROUP BY trades.desk AS OF DATE '" + DAY

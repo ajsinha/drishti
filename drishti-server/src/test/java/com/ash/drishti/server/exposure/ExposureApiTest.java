@@ -268,6 +268,12 @@ class ExposureApiTest {
         String csv = mvc.perform(org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get("/api/v1/exposure/captures/" + id + "/csv")
                 .header("Authorization", rita)).andExpect(status().isOk()).andReturn().getResponse().getContentAsString();
         assertThat(csv).contains("# id: " + id).contains("# note: before").contains("tenor,date,t,ee");
+        String jsonl = mvc.perform(org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get("/api/v1/exposure/captures/" + id + "/jsonl")
+                .header("Authorization", rita)).andExpect(status().isOk()).andReturn().getResponse().getContentAsString();
+        String[] lines = jsonl.split("\n");
+        assertThat(lines).hasSize(3);                                     // a grid date a line, the CSV's column names
+        assertThat(json.readTree(lines[0]).has("pfe_99")).isTrue();
+        assertThat(json.readTree(lines[0]).has("ee_uncoll")).isTrue();
         mvc.perform(org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get("/api/v1/exposure/captures/" + id)
                 .header("Authorization", as("ola", "other"))).andExpect(status().isNotFound());
     }

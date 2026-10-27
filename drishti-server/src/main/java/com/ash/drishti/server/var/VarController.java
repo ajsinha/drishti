@@ -248,6 +248,16 @@ public class VarController {
                 .body(captures.csv(p, id, part));
     }
 
+    /** A capture as JSON Lines, one row a line keyed as its CSV's header (2.9.4). */
+    @GetMapping("/captures/{id}/jsonl")
+    public ResponseEntity<String> captureJsonl(@PathVariable String id, @RequestParam(required = false) String part,
+            @RequestAttribute(Principal.ATTRIBUTE) Principal p) {
+        entitlements.requireOpen(p, svc.props().kinds().vector());
+        return ResponseEntity.ok().contentType(MediaType.parseMediaType(com.ash.drishti.server.dist.JsonlWriter.MEDIA_TYPE))
+                .header("Content-Disposition", "attachment; filename=\"" + id + (part == null ? "" : "-" + part) + ".jsonl\"")
+                .body(captures.jsonl(p, id, part));
+    }
+
     /** Two captures side by side ({@code a}, {@code b}), or a capture and now ({@code b=now}). */
     @GetMapping("/compare")
     public Map<String, Object> compare(@RequestParam String a, @RequestParam(required = false) String b,

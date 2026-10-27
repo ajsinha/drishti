@@ -36,7 +36,7 @@ import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 
 /**
- * Exports a BI report, page or visual, or a Sutra view, as one reader sees it, to PDF, PNG, Excel or CSV (and the table form that an email
+ * Exports a BI report, page or visual, or a Sutra view, as one reader sees it, to PDF, PNG, Excel, CSV or JSON Lines (and the table form that an email
  * body is made from). The numbers come from the same places as the screen, as that reader, so masks and row rules apply; the limits are
  * settings ({@code drishti.distribution.export.*}).
  */
@@ -48,6 +48,7 @@ public final class ContentExporter implements AutoCloseable {
         PNG("image/png", "png"),
         XLSX("application/vnd.openxmlformats-officedocument.spreadsheetml.sheet", "xlsx"),
         CSV("text/csv; charset=utf-8", "csv"),
+        JSONL(JsonlWriter.MEDIA_TYPE + "; charset=utf-8", "jsonl"),
         HTML("text/html; charset=utf-8", "html");
 
         private final String type;
@@ -70,7 +71,7 @@ public final class ContentExporter implements AutoCloseable {
             try {
                 return valueOf(s == null ? "" : s.trim().toUpperCase(Locale.ROOT));
             } catch (IllegalArgumentException e) {
-                throw new DrishtiException(ErrorCode.EXPORT_FAILED, "format is pdf, png, xlsx or csv");
+                throw new DrishtiException(ErrorCode.EXPORT_FAILED, "format is pdf, png, xlsx, csv or jsonl");
             }
         }
     }
@@ -176,7 +177,7 @@ public final class ContentExporter implements AutoCloseable {
         byte[] bytes;
         ViewExporter.Built view = null;
         StatementService st = statements;
-        if (st != null && t.isReport() && f != Format.CSV && f != Format.PNG && st.isStatement(who, t)) {
+        if (st != null && t.isReport() && f != Format.CSV && f != Format.JSONL && f != Format.PNG && st.isStatement(who, t)) {
             return statement(st, t, f, who);
         }
         if (t.isReport()) {
@@ -192,6 +193,7 @@ public final class ContentExporter implements AutoCloseable {
         bytes = switch (f) {
             case XLSX -> XlsxWriter.write(doc);
             case CSV -> CsvWriter.write(doc);
+            case JSONL -> JsonlWriter.write(doc);           // one row a line, the CSV's column names as keys
             case HTML -> new byte[0];                       // the table form (Output.doc) is the result; the caller writes the HTML it wants
             case PDF -> pdf(doc, view, who, footer, stamp, t);
             case PNG -> png(doc, view, who, stamp, t);

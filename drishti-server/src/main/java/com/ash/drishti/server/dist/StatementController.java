@@ -119,12 +119,15 @@ public class StatementController {
                 body.path("date").asText(""));
     }
 
-    /** Body as {@link #preview} plus {@code format}: {@code pdf} (the default) or {@code xlsx}; the file, made for the caller. */
+    /**
+     * Body as {@link #preview} plus {@code format}: {@code pdf} (the default), {@code xlsx}, or {@code jsonl} (the statement's rows, one a line, as the
+     * export's other formats name the columns); the file, made for the caller.
+     */
     @PostMapping("/api/v1/bi/reports/statement/file")
     public ResponseEntity<byte[]> file(@RequestBody JsonNode body, @RequestAttribute(Principal.ATTRIBUTE) Principal p) {
         String format = body.path("format").asText("pdf").trim().toLowerCase(java.util.Locale.ROOT);
-        if (!format.equals("pdf") && !format.equals("xlsx")) {            // one answer for every other format, docx as png (QA2-11)
-            throw new DrishtiException(ErrorCode.STATEMENT_INVALID, "a statement is made as pdf or xlsx, not '" + format + "'");
+        if (!format.equals("pdf") && !format.equals("xlsx") && !format.equals("jsonl")) {   // one answer for every other format, docx as png (QA2-11)
+            throw new DrishtiException(ErrorCode.STATEMENT_INVALID, "a statement is made as pdf, xlsx or jsonl, not '" + format + "'");
         }
         ContentExporter.Format f = ContentExporter.Format.of(format);
         String yaml = body.path("yaml").isTextual() ? body.get("yaml").asText() : null;
@@ -134,7 +137,11 @@ public class StatementController {
         }
         StatementService.Run run = statements.run(p, yaml == null ? id : null, yaml, body.path("page").asText(""), body.path("state").isObject() ? body.get("state") : null,
                 body.path("date").asText(""));
-        byte[] bytes = f == ContentExporter.Format.PDF ? statements.pdf(run) : statements.xlsx(run);
+        byte[] bytes = switch (f) {
+            case PDF -> statements.pdf(run);
+            case JSONL -> JsonlWriter.write(run.doc());                    // the statement's tables, a row a line
+            default -> statements.xlsx(run);
+        };
         audit.record(p.user(), "statement", "report/" + (yaml == null ? id : "draft"), f.extension() + " · " + StatementService.pages(run.pages().pages().size()) + " · " + bytes.length + " bytes");
         return ResponseEntity.ok().contentType(MediaType.parseMediaType(f.contentType()))
                 .header(HttpHeaders.CONTENT_DISPOSITION, ContentDisposition.attachment().filename(StatementService.filename(run, p, f), StandardCharsets.UTF_8).build().toString())

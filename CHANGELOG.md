@@ -17,6 +17,17 @@
 
 ## 2.9.4 (unreleased)
 
+- **JSON Lines on every server export (2026-10-27; product owner).** Beside the formats each has (CSV, Excel, PDF and PNG all stay): `GET
+  /api/v1/search/jsonl` (forwarded across a cluster like `/search/csv`: `ViewForwardFilter`'s allow-list); `POST /api/v1/bi/sql`
+  `format: jsonl`; `GET /bi/runs/{id}/result?format=jsonl` and `POST /bi/runs/{id}/export {format: jsonl}`; `POST /api/v1/export/jsonl`
+  (reports, visuals, views: new `JsonlWriter`, beside `CsvWriter`); statements `format: jsonl`; subscriptions `format: jsonl` (the rows
+  attached); scheduled reports `format: csv | jsonl` (a webhook gets `application/jsonl`, a folder a `.jsonl` file); exposure
+  `scope/profile?format=jsonl` and `captures/{id}/jsonl`; VaR `captures/{id}/jsonl` (a self-contained addition: one endpoint in
+  `VarController` and one method in `VarCaptures`). A JSONL download is one row a line, keyed as the CSV's header, values typed. The
+  compliance export's `.ndjson` files are renamed `.jsonl` (same content). Tests: search, SQL, runs, dist, statements, reports,
+  exposure, VaR and compliance. Docs: API guide, SQL, statements, distribution, scheduled reports, exposure and VaR guides,
+  OPERATIONS, COLLABORATION, HOW_IT_FITS, TROUBLESHOOTING.
+
 - **CSV input deprecated; `drishti.py convert` (2026-10-27; product owner).** The readers keep what they accept (JSON Lines, JSON
   arrays, per-entity `.json`), and CSV is deprecated, to be removed in a later release. The only CSV reader, the file connector's
   feed files (`<kind>/<id>.csv`), still serves them, logs one warning per file and names them in Admin → Health

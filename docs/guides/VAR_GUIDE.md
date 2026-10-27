@@ -1074,7 +1074,7 @@ the date before it, with a warning). Errors are RFC 7807 problems with a `code` 
 | `GET /baskets/{owner}/{name}`, `DELETE /baskets/{owner}/{name}` | | one basket; delete one's own (`204`) |
 | `POST /captures` | body `{scope, note}`, `asOf` | `201` `{id, capturedAt, var, es, memberCount}` ([section 6](#6-captures-and-compare)) |
 | `GET /captures` | `scope` (optional, compared in canonical form) | the captures the caller may read, newest first |
-| `GET /captures/{id}`, `GET /captures/{id}/csv` | `part` (`components`, else the vector) | one capture; CSV |
+| `GET /captures/{id}`, `GET /captures/{id}/csv`, `/jsonl` | `part` (`components`, else the vector) | one capture; CSV; JSON Lines (the CSV's rows, one a line) |
 | `GET /compare` | `a` (capture id), `b` (capture id, or `now`/empty) | the comparison |
 
 ```
