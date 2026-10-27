@@ -99,6 +99,15 @@ class CommandTest(unittest.TestCase):
         self.assertNotIn("--remove-orphans", none)
         self.assertNotIn("--keep-days", none)
 
+    def test_a_rest_catalog_lake_names_its_tables_and_passes_its_settings(self):
+        glue = {"catalog": "rest", "uri": "https://glue.eu-west-2.amazonaws.com/iceberg", "catalog.rest.signing-name": "glue"}
+        lake = {"root": "s3://b/iceberg", "format": "iceberg", "iceberg-settings": glue, "tables": {"risk/pnl-vector": {}}}
+        self.assertEqual(maintain_iceberg.catalog_tables(lake, None), ["s3://b/iceberg/risk/pnl-vector"])
+        self.assertEqual(maintain_iceberg.catalog_tables(lake, {"risk/x"}), ["s3://b/iceberg/risk/x"])
+        self.assertIsNone(maintain_iceberg.catalog_tables({"root": "s3://b/iceberg"}, None))
+        text = " ".join(self.command({"iceberg-settings": glue}))
+        self.assertIn("--set catalog=rest --set uri=https://glue.eu-west-2.amazonaws.com/iceberg --set catalog.rest.signing-name=glue", text)
+
     def test_the_floor_days_of_the_risk_domains(self):
         self.assertEqual(maintconfig.floor_days("risk/pnl-vector"), 2557)
         self.assertEqual(maintconfig.floor_days("risk-results/var-official"), 2557)

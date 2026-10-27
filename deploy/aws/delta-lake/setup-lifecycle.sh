@@ -71,6 +71,9 @@ if [[ "$BASE_ONLY" == 0 ]]; then
     done
   done < <(tables)
 fi
+if [[ "$PRINT" == 0 ]]; then                # the Iceberg tables' rules (deploy/aws/iceberg/setup-lifecycle.sh) stay in the configuration
+  while read -r other; do [[ -n "$other" ]] && rules+=("$other"); done < <(lifecycle_others "drishti-,tier-")
+fi
 (( ${#rules[@]} <= 1000 )) || die "${#rules[@]} lifecycle rules: S3 allows 1,000; raise LAKE_FIRST_YEAR or merge tables"
 
 { printf '{"Rules":[\n'; printf '%s' "${rules[0]}"; printf ',\n%s' "${rules[@]:1}"; printf '\n]}\n'; } > "$WORK/lifecycle.json"

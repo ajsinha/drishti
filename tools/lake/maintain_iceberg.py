@@ -38,6 +38,15 @@ ORPHAN_HOURS = 72
 VERSION = re.compile(r"^v?(\d+)[.-]")
 
 
+def catalog_tables(lake: dict, want: set[str] | None) -> list[str] | None:
+    """A lake read through a REST catalog (iceberg-settings.catalog: rest, AWS Glue's): its tables are not folders to list, so they are
+    the ones named (the run's --tables, else the lake's tables: settings); None for a path-based lake."""
+    if str((lake.get("iceberg-settings") or {}).get("catalog", "")).lower() != "rest":
+        return None
+    names = sorted(want) if want else sorted((lake.get("tables") or {}).keys())
+    return [str(lake["root"]).rstrip("/") + "/" + n for n in names]
+
+
 def is_table(t: pathlib.Path) -> bool:
     """A path-based Iceberg table: a metadata folder holding a metadata file (and no Delta log)."""
     m = t / "metadata"
@@ -134,6 +143,8 @@ def command(uri: str, conf: dict, today: date, dry_run: bool, force_drop: bool, 
         cmd += ["--dry-run"]
     if force_drop:
         cmd += ["--force-drop"]
+    for key, value in (conf.get("iceberg-settings") or {}).items():   # a REST catalog (AWS Glue: catalog, uri, warehouse, catalog.rest.*)
+        cmd += ["--set", f"{key}={value}"]
     opts = conf.get("storage-options") or {}
     for key, setting in (("AWS_ENDPOINT_URL", "s3.endpoint"), ("AWS_ACCESS_KEY_ID", "s3.access-key"), ("AWS_SECRET_ACCESS_KEY", "s3.secret-key"),
                          ("AWS_REGION", "s3.region")):

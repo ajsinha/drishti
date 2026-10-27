@@ -1,0 +1,29 @@
+# Project Drishti · Any data. Any domain. One grammar.
+#
+# Copyright (c) 2026 Ashutosh Sinha <ajsinha@gmail.com>.
+# All rights reserved.
+#
+# PROPRIETARY AND CONFIDENTIAL.
+#
+# This file is the confidential and proprietary property of Ashutosh Sinha.
+# Unauthorised copying, use, modification, distribution or disclosure of this
+# file, via any medium, is strictly prohibited except with the express prior
+# written permission of the copyright holder.
+#
+# See the LICENSE file in the root of this repository for the full terms.
+
+# The maintenance of the Iceberg tables in S3 (tools/lake/maintain.py, run by deploy/aws/iceberg/maintain.sh, which fills the ${...} and
+# the iceberg-settings). docs/admin/LAKE_MAINTENANCE.md explains every key; "Iceberg lakes" the ones below.
+schedule:
+  at: "02:30"                    # unused here: EventBridge Scheduler starts maintain.sh (MAINTAIN_SCHEDULE)
+  zone: ${LOAD_SCHEDULE_ZONE}
+lakes:
+  - root: s3://${LAKE_BUCKET}/${ICEBERG_PREFIX}
+    format: iceberg                                        # Drishti's Iceberg maintenance (Delta stays the default elsewhere)
+    domains: ["*"]
+    storage-options: { AWS_REGION: "${AWS_REGION}" }      # credentials: the task role, through the AWS default chain
+    keep-business-days: ${ICEBERG_KEEP_BUSINESS_DAYS}      # the newest N business dates kept (risk, risk-results: 7 years at least)
+    max-drop-share: 0.5                                    # a run that would remove more than half a table removes nothing
+    compact: true                                          # days that drifted from the layout are rewritten sorted by id
+    vacuum-hours: ${ICEBERG_EXPIRE_HOURS}                  # snapshots older than this are expired, and the files only they used deleted
+    orphan-hours: ${ICEBERG_ORPHAN_HOURS}                  # files no snapshot references, older than this (72 at least), are removed

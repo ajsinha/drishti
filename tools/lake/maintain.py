@@ -276,7 +276,8 @@ def run_detailed(config: dict, dry_run: bool, today: date | None = None, force_d
         try:
             opts = base.get("storage-options") or {}
             found = [] if fmt == "iceberg" else tables(root, list(base["domains"]), opts)
-            iceberg = set() if fmt == "delta" or (fmt == "auto" and "://" in root and not root.startswith("file://")) \
+            named = maintain_iceberg.catalog_tables(lake, want) if fmt == "iceberg" else None
+            iceberg = set(named) if named is not None else set() if fmt == "delta" or (fmt == "auto" and "://" in root and not root.startswith("file://")) \
                 else set(maintain_iceberg.tables(root, list(base["domains"]), opts))
             found = sorted(set(found) | iceberg)
         except Exception as e:  # noqa: BLE001 - one lake must not stop the others

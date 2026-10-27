@@ -14,7 +14,9 @@
 
 """deploy/aws and deploy/docker/ecs: every script parses, answers --help without settings, and with --dry-run on a fake settings file
 prints its AWS calls without making one (a fake `aws` on the PATH fails the test if called); every JSON template renders to valid
-JSON; the lifecycle tiers by business date and never expires or deep-archives table files; the settings file stays out of git.
+JSON; the lifecycle tiers by business date and never expires or deep-archives table files; the settings file stays out of git. The
+Iceberg scripts (deploy/aws/iceberg, 2.9.5; Delta stays the default) load with lake build --format iceberg and no publish step, create the
+Glue database with ICEBERG_CATALOG=glue, tier data/ by business date and never touch metadata/; shellcheck, where installed, finds nothing.
 
     python3 -m unittest tools/test_deploy_aws.py
 """
@@ -154,8 +156,9 @@ class DeployAwsTest(unittest.TestCase):
             m = re.match(r'^([A-Z_0-9]+)=("?)([^"#]*)\2', line)
             if m and m.group(1) not in values:
                 values[m.group(1)] = m.group(3).strip()
-        files = sorted((AWS / "ecs" / "templates").glob("*.json")) + sorted((AWS / "delta-lake" / "iam").glob("*.json"))
-        self.assertGreaterEqual(len(files), 11)
+        files = sorted((AWS / "ecs" / "templates").glob("*.json")) + sorted((AWS / "delta-lake" / "iam").glob("*.json")) \
+            + sorted((AWS / "iceberg" / "iam").glob("*.json"))
+        self.assertGreaterEqual(len(files), 14)
         for f in files:
             text = f.read_text(encoding="utf-8")
             for name in set(re.findall(r"\$\{([A-Z_][A-Z0-9_]*)\}", text)):
@@ -166,6 +169,58 @@ class DeployAwsTest(unittest.TestCase):
         mounts = {m["containerPath"] for c in task["containerDefinitions"] for m in c["mountPoints"]}
         self.assertTrue({"/opt/drishti/data", "/opt/drishti/config", "/opt/drishti/sutras"} <= mounts)
         self.assertTrue(all(c["readonlyRootFilesystem"] for c in task["containerDefinitions"]))
+
+    def test_iceberg_load_day_builds_iceberg_in_s3_with_no_publish(self):
+        r = self.run_script(AWS / "iceberg" / "load-day.sh", "--dry-run", "--date", "2026-10-20", "--tables", "risk/pnl-vector",
+                            env_file=self.env_file)
+        self.assertEqual(r.returncode, 0, r.stderr)
+        lines = [ln for ln in r.stderr.splitlines() if ln.startswith("+ ")]
+        build = next(ln for ln in lines if " lake build " in ln)
+        for part in ("--format iceberg", "--lake s3://acme-drishti-test-lake/iceberg", "--domain risk", "--table pnl-vector",
+                     "--date BUSINESS_DATE", "--iceberg-set s3.region=eu-west-2", "--connector risk-store"):
+            self.assertIn(part, build)
+        self.assertFalse(any(" lake publish " in ln for ln in lines), "Iceberg commits itself: no publish step")
+        self.assertNotIn("glue", r.stderr)                                       # ICEBERG_CATALOG=hadoop: path-based tables
+
+    def test_iceberg_with_glue_creates_the_database_and_signs_for_glue(self):
+        glue = self.tmp / "env-glue"
+        glue.write_text(self.env_file.read_text(encoding="utf-8").replace("ICEBERG_CATALOG=hadoop", "ICEBERG_CATALOG=glue"), encoding="utf-8")
+        r = self.run_script(AWS / "iceberg" / "load-day.sh", "--dry-run", "--date", "2026-10-20", "--tables", "risk/pnl-vector", env_file=glue)
+        self.assertEqual(r.returncode, 0, r.stderr)
+        self.assertIn("? aws glue get-database", r.stderr)
+        create = next(ln for ln in r.stderr.splitlines() if ln.startswith("+ aws glue create-database"))
+        self.assertIn("s3://acme-drishti-test-lake/iceberg/risk", create)
+        build = next(ln for ln in r.stderr.splitlines() if " lake build " in ln)
+        for part in ("--iceberg-set catalog=rest", "--iceberg-set uri=https://glue.eu-west-2.amazonaws.com/iceberg",
+                     "--iceberg-set catalog.rest.signing-name=glue", "--iceberg-set warehouse=123456789012"):
+            self.assertIn(part, build)
+        m = self.run_script(AWS / "iceberg" / "maintain.sh", "--dry-run", env_file=glue)
+        self.assertEqual(m.returncode, 0, m.stderr)
+        self.assertIn("--force-foreign --tables risk/pnl-vector", m.stderr)
+        self.assertFalse(self.marker.exists())
+
+    def test_iceberg_lifecycle_tiers_data_by_business_date_and_never_metadata(self):
+        r = self.run_script(AWS / "iceberg" / "setup-lifecycle.sh", "--print", env_file=self.env_file)
+        self.assertEqual(r.returncode, 0, r.stderr)
+        rules = json.loads(r.stdout)["Rules"]
+        tiers = [x for x in rules if x["ID"].startswith("iceberg-tier-")]
+        self.assertTrue(tiers)
+        for x in tiers:
+            self.assertRegex(x["Filter"]["And"]["Prefix"], r"^iceberg/[a-z_-]+/[a-z_-]+/data/business_date=\d{4}(-\d{2})?")
+            self.assertNotIn("metadata", json.dumps(x))
+            self.assertNotIn("Expiration", x)
+        for x in rules:
+            if "Expiration" in x:
+                self.assertEqual(x["Expiration"], {"ExpiredObjectDeleteMarker": True}, "a lifecycle rule expires current table objects")
+        self.assertLessEqual(len(rules), 1000)
+
+    def test_shellcheck_finds_nothing_where_installed(self):
+        import shutil
+        if not shutil.which("shellcheck"):
+            self.skipTest("shellcheck is not installed here")
+        r = subprocess.run(["shellcheck", "-x", "-S", "warning", *map(str, SCRIPTS), str(AWS / "lib" / "common.sh")], cwd=ROOT,
+                           capture_output=True, text=True)
+        self.assertEqual(r.returncode, 0, r.stdout[-3000:])
 
     def test_settings_file_is_ignored_and_holds_no_secret(self):
         r = subprocess.run(["git", "check-ignore", "-q", "--no-index", "deploy/aws/env"], cwd=ROOT)
