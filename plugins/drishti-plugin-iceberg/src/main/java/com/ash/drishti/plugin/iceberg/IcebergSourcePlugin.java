@@ -81,6 +81,12 @@ import java.util.concurrent.locks.ReentrantLock;
  * table found), {@code mode.<kind>}, {@code table.<kind>} (the table a kind is read from, default the kind: {@code trade_calypso} for kind
  * {@code trade}), {@code lookback-days} (10), {@code max-load-rows} (200000), {@code reverse-index}
  * (true), {@code cache-mb} (512), {@code source-name} ({@code iceberg}); object storage as {@link IcebergLake} says.
+ *
+ * <p>Vector columns ({@code layout.<kind>.vectors}, a {@code list<double>} such as a trade's P&amp;L vector) are read in bulk by
+ * {@link #vectors} and put back into a fetched document in place of their markers ({@link IcebergVectors}); {@link #documents} reads
+ * a date in one pass. Id maps are written to disk and memory-mapped, and documents read are kept in a disk cache, both across restarts
+ * ({@code id-map-disk.enabled}, {@code doc-disk-cache.enabled}, default true: {@link IcebergDiskCaches}). Delta is Drishti's default
+ * lake format; this connector serves the same kinds when a deployment chooses Iceberg by configuration.
  */
 public final class IcebergSourcePlugin implements SourcePlugin {
 
@@ -96,6 +102,12 @@ public final class IcebergSourcePlugin implements SourcePlugin {
     private final Map<String, String> modes = new ConcurrentHashMap<>();
     private final Map<String, Long> current = new ConcurrentHashMap<>();
     private final Map<String, List<String>> promoted = new ConcurrentHashMap<>();
+    /** Per kind, its vector columns ({@code layout.<kind>.vectors}: list&lt;double&gt; columns such as a P&amp;L vector). */
+    private final Map<String, List<String>> vectorCols = new ConcurrentHashMap<>();
+    /** Id maps and documents on disk, kept across restarts ({@code id-map-disk.enabled}, {@code doc-disk-cache.enabled}). */
+    private IcebergDiskCaches disk;
+    /** Set when a data-load signal found a new snapshot: the next refresh rebuilds type-ahead. */
+    private volatile boolean reindexDue;
     private final HitIndex index = new HitIndex();
     private volatile DatedHitIndex dated = new DatedHitIndex(Map.of(), null);   // past days (index.days > 1), set at start
     private final Map<String, Long> datedSnapshots = new java.util.concurrent.ConcurrentHashMap<>();
@@ -175,8 +187,11 @@ public final class IcebergSourcePlugin implements SourcePlugin {
         ctx.settings().forEach((k, v) -> {
             if (k.startsWith("layout.") && k.endsWith(".columns")) {
                 promoted.put(k.substring(7, k.length() - 8), Arrays.stream(v.split(",")).map(String::trim).filter(x -> !x.isEmpty()).toList());
+            } else if (k.startsWith("layout.") && k.endsWith(".vectors")) {
+                vectorCols.put(k.substring(7, k.length() - 8), Arrays.stream(v.split(",")).map(String::trim).filter(x -> !x.isEmpty()).toList());
             }
         });
+        this.disk = new IcebergDiskCaches(sourceName, ctx);
         String kinds = ctx.setting("kinds", "");
         this.discover = kinds.isBlank();
         for (String kind : kinds.split(",")) {
@@ -244,7 +259,8 @@ public final class IcebergSourcePlugin implements SourcePlugin {
                     // unreachable or being rewritten: the last snapshot keeps serving, health reports reachability
                 }
             }
-            if (changed || index.size() == 0) {
+            if (changed || reindexDue || index.size() == 0) {
+                reindexDue = false;
                 reindex();
             }
         } finally {
@@ -326,8 +342,9 @@ public final class IcebergSourcePlugin implements SourcePlugin {
         return snapshot.map(id -> load(kind, layouts, new SnapKey(kind, id), k -> t.layout(id)));
     }
 
+    /** The day's id map: from the heap, else mapped from disk (written by this run or an earlier one), else read from the id column. */
     private IdMap idMap(String kind, Layout l, Day d) {
-        return load(kind, idMaps, new DayKey(kind, d.date(), d.fingerprint()), k -> tables.get(kind).ids(l, d));
+        return load(kind, idMaps, new DayKey(kind, d.date(), d.fingerprint()), k -> disk.idMap(kind, d, () -> tables.get(kind).ids(l, d)));
     }
 
     /** The promoted paths the table really has as columns (a pack may declare more than a writer wrote). */
@@ -473,13 +490,23 @@ public final class IcebergSourcePlugin implements SourcePlugin {
             String key = ref.kind() + "\u001f" + d.fingerprint() + "\u001f" + d.date() + "\u001f" + ref.id();
             String json = docs.getIfPresent(key);
             if (json == null) {
+                json = disk.doc(key);                          // second tier: read before, on disk (also by an earlier run)
+                if (json != null) {
+                    docs.put(key, json);
+                }
+            }
+            if (json == null) {
                 docReads.acquire();
                 try {
                     json = tables.get(ref.kind()).doc(l.get(), d, file, ref.id()).orElse(null);
+                    if (json != null && json.contains("\"$vector\"")) {
+                        json = withVectors(ref, l.get(), d, file, json);   // kept with its vectors: a hit reads no data file
+                    }
                 } finally {
                     docReads.release();
                 }
                 if (json != null) {
+                    disk.putDoc(key, json);                    // the disk first, so a document in the heap is on disk too
                     docs.put(key, json);
                 }
             }
@@ -602,6 +629,198 @@ public final class IcebergSourcePlugin implements SourcePlugin {
     @Override
     public Instant lastUpdate() {
         return lastUpdate;
+    }
+
+    /** A document whose vector columns were kept out of it ({@code {"$vector": "PNL"}} markers) with the vectors put back. */
+    private String withVectors(EntityRef ref, Layout l, Day d, int file, String json) {
+        List<String> cols = vectorCols.getOrDefault(ref.kind(), List.of()).stream().filter(l::hasColumn).toList();
+        if (cols.isEmpty()) {
+            return json;
+        }
+        Map<String, double[]> vecs = IcebergVectors.vectorsOf(tables.get(ref.kind()), l, d, file, ref.id(), cols);
+        return vecs.isEmpty() ? json : IcebergVectors.withVectors(json, vecs);
+    }
+
+    /**
+     * The date's documents in one pass over its files (derived pages): a snapshot table only, whose newest day on or before the date
+     * holds every entity; an effective table (an entity's latest row across dates) is read entity by entity. As the Delta connector, a
+     * document comes as stored (a vector column's marker stays).
+     */
+    @Override
+    public boolean documents(String kind, AsOf asOf, java.util.function.Consumer<EntityDocument> sink) {
+        if (!tables.containsKey(kind) || effective(kind)) {
+            return false;
+        }
+        Optional<Layout> l = layout(kind, asOf.knownAt());
+        if (l.isEmpty()) {
+            return true;                                       // no such table yet: it holds nothing
+        }
+        List<Day> days = candidates(kind, l.get(), asOf.businessDate());
+        if (days.isEmpty()) {
+            return true;
+        }
+        Day d = days.get(0);
+        long generation = tables.get(kind).sequenceNumber(l.get().snapshotId());
+        LocalDate date = LocalDate.MIN.equals(d.date()) ? null : d.date();
+        try {
+            IcebergVectors.documents(tables.get(kind), l.get(), d, (id, json) -> {
+                try {
+                    sink.accept(new EntityDocument(EntityRef.of(kind, id), context.parseJson(new ByteArrayInputStream(json.getBytes(StandardCharsets.UTF_8))),
+                            new Provenance(sourceName, generation, Instant.now(), false, date)));
+                } catch (IOException e) {
+                    throw new java.io.UncheckedIOException(e);
+                }
+            });
+        } catch (RuntimeException e) {
+            throw failed(kind, e);
+        }
+        problems.ok(kind);
+        return true;
+    }
+
+    /** A read's failure recorded for Health (one per kind) and given back as an unchecked exception. */
+    private RuntimeException failed(String kind, RuntimeException e) {
+        Throwable given = problems.failed(kind, e);
+        return given instanceof RuntimeException re ? re : new CompletionException(given);
+    }
+
+    @Override
+    public Set<String> vectorColumns(String kind) {
+        List<String> v = vectorCols.get(kind);
+        if (v == null || effective(kind)) {
+            return Set.of();
+        }
+        try {
+            return layout(kind, null).map(l -> {
+                Set<String> have = new java.util.LinkedHashSet<>();
+                v.stream().filter(l::hasColumn).forEach(have::add);
+                return have;
+            }).orElse(Set.of());
+        } catch (RuntimeException e) {
+            return Set.of();
+        }
+    }
+
+    /**
+     * Every entity's vector {@code column} on the date with the text columns {@code texts} (each one the table keeps as a promoted
+     * column), streamed file by file (VAR_GUIDE.md section 29.3). False, having given nothing, when the column is not a vector column
+     * of the kind or a text column is not kept (as the Delta connector); true when the date was read (possibly nothing).
+     */
+    @Override
+    public boolean vectors(String kind, String column, List<String> texts, AsOf asOf, com.ash.drishti.api.VectorSink sink) {
+        if (!vectorColumns(kind).contains(column)) {
+            return false;
+        }
+        Optional<Layout> l = layout(kind, asOf.knownAt());
+        if (l.isEmpty()) {
+            return true;
+        }
+        Map<String, String> cols = promotedColumns(kind, l.get());
+        List<String> physical = new ArrayList<>();
+        for (String t : texts) {
+            String c = cols.get(t);
+            if (c == null) {
+                return false;                                   // a text column the table does not keep: not answerable as columns
+            }
+            physical.add(c);
+        }
+        List<Day> days = candidates(kind, l.get(), asOf.businessDate());
+        if (days.isEmpty()) {
+            return true;
+        }
+        try {
+            IcebergVectors.vectors(tables.get(kind), l.get(), days.get(0), column, physical, sink);
+        } catch (RuntimeException e) {
+            throw failed(kind, e);
+        }
+        problems.ok(kind);
+        return true;
+    }
+
+    /** What the table holds, newest business date first: each date's ids from its id map (no document is read). */
+    @Override
+    public Map<LocalDate, Long> inventory(String kind, int maxDates) {
+        if (!tables.containsKey(kind)) {
+            return Map.of();
+        }
+        Map<LocalDate, Long> out = new LinkedHashMap<>();
+        layout(kind, null).ifPresent(l -> {
+            for (Day d : l.days().descendingMap().values()) {
+                if (out.size() >= maxDates) {
+                    break;
+                }
+                out.put(d.date(), (long) idMap(kind, l, d).size());
+            }
+        });
+        return out;
+    }
+
+    /**
+     * The table's {@code table-uuid} from its metadata ({@code iceberg:<uuid>}), else its location: the same on every server reading this
+     * table (Drishti*net's replicas), and the same after the table is copied elsewhere and read through {@code relocate}.
+     */
+    @Override
+    public Optional<String> tableIdentity(String kind) {
+        KindTable t = tables.get(kind);
+        if (t == null) {
+            return Optional.empty();
+        }
+        try {
+            return t.uuidAndLocation().map(u -> {
+                if (u[0] != null && !u[0].isBlank()) {
+                    return "iceberg:" + u[0];
+                }
+                String where = u[1] == null ? "" : u[1].replaceAll("/+$", "");
+                boolean remote = where.matches("^[a-zA-Z][a-zA-Z0-9+.-]*://.*") && !where.startsWith("file:");
+                return "location:" + (remote ? "" : host() + ":") + where;
+            });
+        } catch (RuntimeException e) {
+            return Optional.empty();                           // unreachable now: it cannot say
+        }
+    }
+
+    private static String host() {
+        try {
+            return java.net.InetAddress.getLocalHost().getHostName();
+        } catch (IOException e) {
+            return "localhost";
+        }
+    }
+
+    /** No table for the kind, or a table with no snapshot yet: nothing of it is here (Drishti*net leaves this source out of the digest). */
+    @Override
+    public boolean holdsNone(String kind) {
+        if (!tables.containsKey(kind)) {
+            return true;
+        }
+        try {
+            return layout(kind, null).isEmpty();
+        } catch (RuntimeException e) {
+            return false;                                      // cannot be read now: it may hold some
+        }
+    }
+
+    /**
+     * A data-load signal: each table's current snapshot is read again now (metadata only), so the next read sees the load; type-ahead is
+     * rebuilt in the background when one changed. No cached data is dropped (each day's caches are keyed by its files).
+     */
+    @Override
+    public void refreshVersions() {
+        boolean changed = false;
+        for (Map.Entry<String, KindTable> e : tables.entrySet()) {
+            try {
+                Optional<Long> id = e.getValue().refresh();
+                if (id.isPresent() && !id.get().equals(current.put(e.getKey(), id.get()))) {
+                    changed = true;
+                }
+            } catch (RuntimeException ex) {
+                // unreachable now: the scheduled refresh tries again
+            }
+        }
+        if (changed) {
+            reindexDue = true;
+            loaders.execute(this::refresh);
+        }
     }
 
     /**
@@ -744,6 +963,7 @@ public final class IcebergSourcePlugin implements SourcePlugin {
                 "columnSets", columnSets.synchronous().estimatedSize(), "documents", docs.estimatedSize(),
                 "partitions", parts.synchronous().estimatedSize(), "daysWithDeletes", deletes, "ids", index.size()));
         m.put("engine", lake.engine().label());
+        m.putAll(disk.stats());
         if (dated.enabled()) {
             m.putAll(dated.health());
         }
@@ -762,6 +982,7 @@ public final class IcebergSourcePlugin implements SourcePlugin {
         columnSets.synchronous().invalidateAll();
         parts.synchronous().invalidateAll();
         docs.invalidateAll();
+        disk.purge();
         if (lake.engine() == IcebergEngine.NATIVE) {           // the native engine's per-file caches (footers, manifests, delete files)
             com.ash.drishti.lakeio.ParquetFooters.purge();
             com.ash.drishti.iceberg.scan.Planner.purge();
@@ -786,6 +1007,14 @@ public final class IcebergSourcePlugin implements SourcePlugin {
             refreshTask.cancel(false);
         }
         loaders.shutdownNow();               // loads in flight are abandoned; their callers get an error, not a hang
+        if (disk != null) {
+            try {
+                loaders.awaitTermination(5, TimeUnit.SECONDS);   // a read still inside the disk cache leaves it before it closes
+            } catch (InterruptedException e) {
+                Thread.currentThread().interrupt();
+            }
+            disk.close();
+        }
         if (lake == null) {
             return;                          // the start failed before the lake was opened (a relocate it cannot read: QA4-05)
         }

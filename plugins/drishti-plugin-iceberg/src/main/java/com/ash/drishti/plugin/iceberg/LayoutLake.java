@@ -67,7 +67,12 @@ interface LayoutLake extends Closeable {
     }
 
     /** The kind's table, created in the layout if it does not exist; promoted paths it lacks are added. */
-    LayoutTable open(String kind, Map<String, Boolean> promoted, long rowGroupBytes, int fileRows);
+    default LayoutTable open(String kind, Map<String, Boolean> promoted, long rowGroupBytes, int fileRows) {
+        return open(kind, promoted, java.util.Set.of(), rowGroupBytes, fileRows);
+    }
+
+    /** {@link #open(String, Map, long, int)} with vector columns ({@code list<double>}: a P&amp;L vector), added when missing too. */
+    LayoutTable open(String kind, Map<String, Boolean> promoted, java.util.Set<String> vectors, long rowGroupBytes, int fileRows);
 
     /** The kind's table, or empty. */
     Optional<LayoutTable> load(String kind);
@@ -150,8 +155,8 @@ interface LayoutLake extends Closeable {
         }
 
         @Override
-        public LayoutTable open(String kind, Map<String, Boolean> promoted, long rowGroupBytes, int fileRows) {
-            return new Kind(lake, kind, IcebergLayout.open(lake, kind, promoted, rowGroupBytes, fileRows));
+        public LayoutTable open(String kind, Map<String, Boolean> promoted, java.util.Set<String> vectors, long rowGroupBytes, int fileRows) {
+            return new Kind(lake, kind, IcebergLayout.open(lake, kind, promoted, vectors, rowGroupBytes, fileRows));
         }
 
         @Override
@@ -246,8 +251,8 @@ interface LayoutLake extends Closeable {
         }
 
         @Override
-        public LayoutTable open(String kind, Map<String, Boolean> promoted, long rowGroupBytes, int fileRows) {
-            return new Kind(catalog, kind, NativeLayout.open(catalog, kind, promoted, rowGroupBytes, fileRows));
+        public LayoutTable open(String kind, Map<String, Boolean> promoted, java.util.Set<String> vectors, long rowGroupBytes, int fileRows) {
+            return new Kind(catalog, kind, NativeLayout.open(catalog, kind, promoted, vectors, rowGroupBytes, fileRows));
         }
 
         @Override

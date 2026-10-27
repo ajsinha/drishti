@@ -202,8 +202,8 @@ public final class Operations {
     }
 
     /**
-     * Adds optional columns (name to type), each with the next field id; columns already there are left as they are.
-     * Returns the table's schema after the change.
+     * Adds optional columns (name to type), each with the next field id (a list's element takes the id after its column's: the
+     * element id given is replaced); columns already there are left as they are. Returns the table's schema after the change.
      */
     public static Schema addColumns(Table t, Map<String, Type> columns) {
         for (int attempt = 0;; attempt++) {
@@ -214,7 +214,10 @@ public final class Operations {
             boolean changed = false;
             for (Map.Entry<String, Type> c : columns.entrySet()) {
                 if (s.field(c.getKey()) == null) {
-                    fields.add(NestedField.optional(++next, c.getKey(), c.getValue()));
+                    int id = ++next;
+                    Type type = c.getValue() instanceof Type.ListType l && l.element() instanceof Type.Primitive
+                            ? new Type.ListType(++next, l.elementRequired(), l.element()) : c.getValue();
+                    fields.add(NestedField.optional(id, c.getKey(), type));
                     changed = true;
                 }
             }

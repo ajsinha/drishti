@@ -111,6 +111,11 @@ final class NativeKindTable extends KindTable {
         return table().flatMap(t -> t.metadata().snapshot(snapshotId)).map(Snapshot::sequenceNumber).orElse(0L);
     }
 
+    @Override
+    Optional<String[]> uuidAndLocation() {
+        return table().map(t -> new String[] {t.metadata().uuid(), t.metadata().location()});
+    }
+
     private Snapshot snapshot(Table t, long snapshotId) {
         Optional<Snapshot> s = t.metadata().snapshot(snapshotId);
         if (s.isEmpty()) {

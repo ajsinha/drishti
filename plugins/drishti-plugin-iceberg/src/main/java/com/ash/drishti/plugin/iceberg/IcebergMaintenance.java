@@ -305,7 +305,8 @@ public final class IcebergMaintenance {
             if (f.recordCount() > fileRows) {
                 return true;
             }
-            if (hasCounts(f) && promoted.stream().anyMatch(c -> !f.valueCounts().containsKey(c.fieldId()))) {
+            // a vector column (a list) has its metrics under its element's id: only scalar columns say a file predates them
+            if (hasCounts(f) && promoted.stream().anyMatch(c -> c.type().isPrimitiveType() && !f.valueCounts().containsKey(c.fieldId()))) {
                 return true;                                   // written before a promoted column was added
             }
             String lo = bound(f.lowerBounds());
@@ -348,8 +349,12 @@ public final class IcebergMaintenance {
                 for (int c = 0; c < promoted.size(); c++) {
                     Types.NestedField field = promoted.get(c);
                     String path = field.name().replace("__", ".");
-                    boolean inFile = !hasCounts(f) || f.valueCounts().containsKey(field.fieldId());
+                    // a vector column is copied as it is (its document holds only a marker, never the values)
+                    boolean inFile = !field.type().isPrimitiveType() || !hasCounts(f) || f.valueCounts().containsKey(field.fieldId());
                     Object v = r.get(c + 2);
+                    if (v instanceof List<?> list) {
+                        v = new ArrayList<>(list);                // the reader reuses its containers: the row keeps its own copy
+                    }
                     if (!inFile && r.get(1) != null) {
                         doc = doc == null ? JSON.readTree(r.get(1).toString()) : doc;
                         JsonNode n = at(doc, path);

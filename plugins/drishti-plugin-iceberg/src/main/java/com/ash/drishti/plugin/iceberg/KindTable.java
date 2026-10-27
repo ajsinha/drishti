@@ -72,16 +72,60 @@ abstract class KindTable {
         }
     }
 
-    /** One business date's ids, sorted, each with the index of the file that holds it (in the day's file list). */
-    record IdMap(String[] ids, int[] files) {
-        int file(String id) {
-            int i = Arrays.binarySearch(ids, id);
+    /**
+     * One business date's ids, sorted, each with the index of the file that holds it (in the day's file list): in the heap
+     * ({@link Sorted}) or memory-mapped from a file under {@code cache/<connector>/idmaps} ({@link MappedIdMap}).
+     */
+    interface IdMap {
+        int size();
+
+        /** The {@code i}th id, in sorted order. */
+        String id(int i);
+
+        /** The index of the file holding {@code id}, or -1. */
+        int file(String id);
+
+        /** What it weighs in the heap (a mapped map: almost nothing). */
+        long bytes();
+
+        /** The ids in order, as a view. */
+        default List<String> ids() {
+            return new java.util.AbstractList<>() {
+                @Override
+                public String get(int i) {
+                    return id(i);
+                }
+
+                @Override
+                public int size() {
+                    return IdMap.this.size();
+                }
+            };
+        }
+    }
+
+    /** An id map in the heap: the ids sorted and the file of each. */
+    record Sorted(String[] idArray, int[] files) implements IdMap {
+        @Override
+        public int size() {
+            return idArray.length;
+        }
+
+        @Override
+        public String id(int i) {
+            return idArray[i];
+        }
+
+        @Override
+        public int file(String id) {
+            int i = Arrays.binarySearch(idArray, id);
             return i < 0 ? -1 : files[i];
         }
 
-        long bytes() {
+        @Override
+        public long bytes() {
             long b = 64L + 4L * files.length;
-            for (String s : ids) {
+            for (String s : idArray) {
                 b += 48L + s.length();
             }
             return b;
@@ -108,6 +152,9 @@ abstract class KindTable {
 
     /** The snapshot's sequence number (0 in a v1 table), for provenance. */
     abstract long sequenceNumber(long snapshotId);
+
+    /** The table's {@code table-uuid} from its metadata, and its location: empty while the table does not exist. */
+    abstract Optional<String[]> uuidAndLocation();
 
     /** Plans the snapshot's files, grouped by business date (the manifests the snapshot lists are read once). */
     final Layout layout(long snapshotId) {
@@ -193,9 +240,9 @@ abstract class KindTable {
                 sortedIds[i] = ids[idx[i]];
                 sortedFiles[i] = files[idx[i]];
             }
-            return new IdMap(sortedIds, sortedFiles);
+            return new Sorted(sortedIds, sortedFiles);
         }
-        return new IdMap(ids, files);
+        return new Sorted(ids, files);
     }
 
     private static boolean sorted(String[] ids) {

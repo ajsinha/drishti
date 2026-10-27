@@ -111,6 +111,11 @@ final class IcebergTable extends KindTable {
         return table().map(t -> t.snapshot(snapshotId)).map(Snapshot::sequenceNumber).orElse(0L);
     }
 
+    @Override
+    Optional<String[]> uuidAndLocation() {
+        return table().map(t -> new String[] {t.uuid() == null ? null : t.uuid().toString(), t.location()});
+    }
+
     /** The day's files as Iceberg's tasks. */
     @SuppressWarnings("unchecked")
     static List<FileScanTask> tasks(Day day) {
