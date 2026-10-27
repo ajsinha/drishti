@@ -43,6 +43,11 @@ def tab(c: Ctx, title: str):
     c.page.locator("#p-views [role=tab]", has_text=title).first.click()
     c.page.wait_for_timeout(1200)
     c.page.locator("#p-views").scroll_into_view_if_needed()
+    # a picture of the whole tab is taller than the window: the fixed bar of function keys at the bottom would sit across the middle of it
+    c.page.evaluate("""() => document.querySelectorAll('body *').forEach(e => {
+        const s = getComputedStyle(e);
+        if ((s.position === 'fixed' || s.position === 'sticky') && e.getBoundingClientRect().top > window.innerHeight / 2) e.style.visibility = 'hidden';
+    })""")
 
 
 @shot("01-pack-overview.jpg")
