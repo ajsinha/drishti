@@ -244,9 +244,9 @@ servers advertise `http://<task IP>:18480`, never loopback.
 
 ```bash
 ./mvnw -q package -DskipTests
-docker build -f deploy/docker/ecs/server.Dockerfile  -t "$ECR_REGISTRY/drishti-server-ecs:2.9.1" .
-docker build -f deploy/docker/ecs/console.Dockerfile -t "$ECR_REGISTRY/drishti-console-ecs:2.9.1" .
-docker build -f deploy/docker/ecs/loader.Dockerfile  -t "$ECR_REGISTRY/drishti-loader-ecs:2.9.1" .   # carries deploy/aws/env
+docker build -f deploy/docker/ecs/server.Dockerfile  -t "$ECR_REGISTRY/drishti-server-ecs:2.9.2" .
+docker build -f deploy/docker/ecs/console.Dockerfile -t "$ECR_REGISTRY/drishti-console-ecs:2.9.2" .
+docker build -f deploy/docker/ecs/loader.Dockerfile  -t "$ECR_REGISTRY/drishti-loader-ecs:2.9.2" .   # carries deploy/aws/env
 docker push …                                         # each of the three, after aws ecr get-login-password
 ```
 

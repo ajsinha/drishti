@@ -15,7 +15,7 @@
 -->
 # Changelog
 
-## Unreleased
+## 2.9.2 — Funds and ETFs; Knowledge and WHAT; Construct your basket and the pre-deal what-if; trade pages' Risk links; data-quality fixes; About rewritten (2026-10-26)
 
 - **Tutorial 11 and BI_RECIPES rerun on the 2.9.2 data (2026-10-26).** Tutorial 11's *MTM floor* alert is set below 3,500,000,000 (the bank's MTM is now 3,210,381,877, above the old 3,000,000,000, so the alert no longer fired as the tutorial says); its desk figures, DESK-FX MTM (-681,989,222), CSV and export sizes rerun and its alert, refresh and export pictures retaken (`tools/docs/shots/t11.py`). BI_RECIPES.md's `trades-basic` and `trading-risk` answers (desks, exposure by counterparty, the rollup, rita and hana) rerun on the same lake.
 - **Tutorials 10 and 18 rerun on the 2.9.2 data (2026-10-26).** Every BI figure and command output rerun on a scratch stack over the default `lake demo` with the official exposure published at start (all 76 netting sets now carry exposure: EE peak 2,663,018,256, was 2,613,297,860; ΣMTM 3,210,381,877, was 2,796,077,089; DESK-FX MTM -681,989,222; hana's Python table 2,407,959,011), the "a figure may differ" hedges dropped, and the pictures retaken (`tools/docs/shots/t10.py` hides the Studio Explorer before placing visuals; the relative-date example uses *Last 3 months*, as *Last 4 weeks* now holds no trades); DATASETS.md section 15's desk MTMs too.

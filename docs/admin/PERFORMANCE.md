@@ -507,7 +507,7 @@ Restart the server and check that `timings.fetch` is below the new timeout and t
 ### Example 2: many fast-ticking entities on a small server
 
 ```bash
-java -XX:+UseZGC -XX:+ZGenerational -jar drishti-server-2.9.1-exec.jar \
+java -XX:+UseZGC -XX:+ZGenerational -jar drishti-server-2.9.2-exec.jar \
   --drishti.live.frame=100ms --drishti.live.max-streams=5000
 ```
 
@@ -548,7 +548,7 @@ The server image runs with `-XX:MaxRAMPercentage=75 -XX:+UseZGC -XX:+ZGeneration
 p99. Use the same flags when you run the jar yourself:
 
 ```bash
-JAVA_TOOL_OPTIONS="-XX:MaxRAMPercentage=75 -XX:+UseZGC -XX:+ZGenerational" java -jar drishti-server-2.9.1-exec.jar
+JAVA_TOOL_OPTIONS="-XX:MaxRAMPercentage=75 -XX:+UseZGC -XX:+ZGenerational" java -jar drishti-server-2.9.2-exec.jar
 ```
 
 Check heap use under load in Admin → Health (`server.heapUsedMb`, `heapMaxMb`) or with
@@ -578,7 +578,7 @@ about `-Xmx` plus 0.4 GB with two arenas. Budget the machine or container for th
 
 ```bash
 export MALLOC_ARENA_MAX=2                      # glibc: two malloc arenas, not one per busy thread (500 MB less RSS here)
-JAVA_TOOL_OPTIONS="-Xmx2g -XX:MaxDirectMemorySize=256m -XX:TrimNativeHeapInterval=60000" java -jar drishti-server-2.9.1-exec.jar
+JAVA_TOOL_OPTIONS="-Xmx2g -XX:MaxDirectMemorySize=256m -XX:TrimNativeHeapInterval=60000" java -jar drishti-server-2.9.2-exec.jar
 ```
 
 `-XX:MaxDirectMemorySize` caps direct buffers (9 MB in use in these runs; the default cap is the heap size); `-XX:TrimNativeHeapInterval`

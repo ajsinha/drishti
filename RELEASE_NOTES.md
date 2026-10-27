@@ -13,6 +13,36 @@
 
   See the LICENSE file in the root of this repository for the full terms.
 -->
+# Drishti 2.9.2 — release notes
+
+*2026-10-26.* **US funds and ETFs with their holdings; Knowledge pages and `WHAT` that explain the data; construct your own basket and see its VaR; a pre-deal what-if for VaR and exposure; risk one click from every trade.**
+
+- **Funds and ETFs** ([FUNDS_GUIDE.md](docs/guides/FUNDS_GUIDE.md), tutorial 28): the 200 largest US mutual funds and ETFs from SEC
+  N-PORT, N-CEN and the prospectus summaries, with GLEIF relationships; `FUND <ticker>` (a fact sheet, its look-through holdings and
+  how it compares with its index), `HELD`, `TRACK`, `FUNDS`; USEQ's *Held by funds* and *Fund ownership*, IDX's funds tracking it;
+  a refresh script for Linux and Windows; 5.6 MB of gzipped data, offline. Sectors are SIC divisions (GICS is proprietary) and
+  index weights are computed from SEC filings; the page says so.
+- **Knowledge** ([docs/knowledge](docs/knowledge/README.md)): market risk, counterparty credit risk, trades and products, entities and
+  ownership, market data, data and contracts, economies; a 139-term glossary; each page with its plain idea, how the records
+  connect, a worked example on the demo data and the questions to ask it. `WHAT <term>` explains a term; Help opens on Knowledge;
+  "What does this mean?" beside the VaR and exposure explorers and the risk pages.
+- **Construct your basket** ([VAR_GUIDE.md section 3.5](docs/guides/VAR_GUIDE.md)): pick portfolios, baskets, desks, books, legal
+  entities, counterparties, positions, trades or a rule as you type, add or take away each, and see the mix's VaR, ES and
+  diversification live; save it as a basket that opens in the full explorer. A strip in the VaR explorer, a popup elsewhere
+  (◫ Basket, Alt+B). It replaces "+ New scope".
+- **The pre-deal what-if:** a hypothetical trade (a copy of a booked one, scaled; −1 its unwind) in the basket shows VaR before and
+  after; the exposure explorer has it on the counterparty as well as the netting set. Exact methods run on the compute workers.
+- **Trade pages' Risk links:** P&L vector, VaR of this trade, exposure of this trade, or why not. Ids that match nothing and trades
+  that are not live are said in words instead of a VaR of 0.
+- **Data quality** (found while writing the Knowledge pages): economy debt is the latest actual year, not a 2031 projection; netting
+  sets and exposure runs hold live trades only (a cancelled trade had driven half of one set's exposure); valuations follow the
+  trade's version of the day; equity beta shows its decimals; FX spot dates move with the business date; legal entities no longer
+  carry stored VaR. **Exposure figures change** (e.g. NS-ALDERSHOT-LDN peak PFE 85.1m on the data's date); VaR does not.
+- **About and Competitive** rewritten for what Drishti now is.
+- **Known open:** limits still read the stored credit limits (LIM parked); the bank's VaR limit differs between the management and
+  legal-entity hierarchies (150m and about 210m) in the data; about 600 older screenshots are refreshed in 2.9.3.
+- **Tested:** the drill passed licence headers, Java 21, Java 25, the tools and the console.
+
 # Drishti 2.9.1 — release notes
 
 *2026-10-26.* **Every command in one directory (`FUNC`); groupings and analytics computed, not stored; one External data page; every pack's guide carries its data contracts and where its data comes from.**
