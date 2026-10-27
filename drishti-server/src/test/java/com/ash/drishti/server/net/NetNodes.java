@@ -35,13 +35,14 @@ import org.springframework.context.ConfigurableApplicationContext;
 /**
  * Several Drishti servers in one test JVM (DRISHTI_NET.md section 17): each a full Spring Boot context on its own port with its
  * own data folder, identity database and {@code config/net/} folder, talking to the others over real HTTP. Ports are the scratch
- * ports 18783 to 18785, or the three named by the system property {@code drishti.net.it.ports} (comma-separated, for a builder whose
+ * ports 18783 to 18785, or the three named by the system property {@code drishti.net.it.ports} or the environment variable
+ * {@code DRISHTI_NET_IT_PORTS} (comma-separated: the drill gives its Java 25 stage 19783 to 19785, beside the console stage; for a builder whose
  * scratch ports are others); one cluster at a time.
  */
 final class NetNodes implements AutoCloseable {
 
     static final String KEY = "a-test-cluster-key-of-at-least-32-bytes";
-    static final int[] PORTS = ports(System.getProperty("drishti.net.it.ports", "18783,18784,18785"));
+    static final int[] PORTS = ports(System.getProperty("drishti.net.it.ports", System.getenv().getOrDefault("DRISHTI_NET_IT_PORTS", "18783,18784,18785")));
     /** This machine's real address: members never advertise a loopback one, so nodes on one machine call each other by it too. */
     static final String HOST = com.ash.drishti.net.config.HostAddress.primary().orElse(null);
 

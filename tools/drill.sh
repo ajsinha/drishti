@@ -163,7 +163,7 @@ java25_verify() {
   trap "rm -rf '$copy'" EXIT
   git archive HEAD | tar -x -C "$copy"
   cd "$copy"
-  DOCKER_HOST=unix:///nonexistent/drill-java25 TESTCONTAINERS_RYUK_DISABLED=true JAVA_HOME="$JAVA25_HOME" ./mvnw -q -o clean verify -Ddrishti.test.forks=2 -Dsurefire.rerunFailingTestsCount=1 ${DRILL_MVN_ARGS:-}
+  DOCKER_HOST=unix:///nonexistent/drill-java25 DRISHTI_NET_IT_PORTS=19783,19784,19785 TESTCONTAINERS_RYUK_DISABLED=true JAVA_HOME="$JAVA25_HOME" ./mvnw -q -o clean verify -Ddrishti.test.forks=2 -Dsurefire.rerunFailingTestsCount=1 ${DRILL_MVN_ARGS:-}
 }
 
 # Every run cleans up after itself, passed or failed: the temporary folders the tests made under /tmp during this run
