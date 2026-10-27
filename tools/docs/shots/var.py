@@ -41,7 +41,7 @@ def explorer_desk(c: Ctx):
 def scenario(c: Ctx):
     open_var(c, "/var?scope=DESK:DESK-RATES")
     painted(c, "DESK:DESK-RATES")
-    c.page.locator("[data-vx-pathtable] tbody tr").first.click()
+    c.page.locator("[data-vx-pathtable] tbody tr").first.locator("td").first.click()   # the rank: the row drills (its loss-from cell opens that part)
     c.until("document.querySelector('[data-vx-drill]') && !document.querySelector('[data-vx-drill]').hidden"
             " && document.querySelectorAll('[data-vx-drill] tbody tr').length > 0")
     c.page.wait_for_timeout(500)
@@ -196,3 +196,37 @@ def computed_kind(c: Ctx):
     c.until("document.body.innerText.indexOf('VaR of a scope') >= 0 || document.body.innerText.indexOf('DESK:DESK-RATES') >= 0", 90)
     c.page.wait_for_timeout(2500)
     c.save("12-var-result-kind.jpg")
+
+
+def in_currency(c: Ctx, scope: str, ccy: str) -> None:
+    """The explorer on a scope in a reporting currency (VAR_GUIDE.md section 15.11), through the header's picker."""
+    open_var(c, "/var?scope=" + scope)
+    painted(c, scope)
+    c.until("document.querySelector('[data-var]').dataset.ccyReady === 'true'", 60)
+    c.page.select_option("[data-vx-ccy]", ccy)
+    c.until("document.querySelector('.vx-tile[data-tile=\"0\"] .l').innerText.indexOf(%r) >= 0" % ccy, 90)
+    painted(c, scope)
+    c.until("document.querySelector('.vx-tree .vx-row.hdr') && document.querySelector('.vx-tree .vx-row.hdr').innerText.indexOf(%r) >= 0" % ccy, 90)
+
+
+def back_to_usd(c: Ctx) -> None:
+    """The session's currency back to USD, so the pictures after this one are in USD."""
+    c.page.evaluate("sessionStorage.removeItem('drishti.var.ccy')")
+
+
+@shot("15-reporting-currency.jpg")
+def reporting_currency(c: Ctx):
+    in_currency(c, "DESK:DESK-RATES", "EUR")
+    c.page.wait_for_timeout(600)
+    c.save("15-reporting-currency.jpg")
+    back_to_usd(c)
+
+
+@shot("16-other-currencies.jpg")
+def other_currencies(c: Ctx):
+    open_var(c, "/var?scope=DESK:DESK-RATES&ccy=USD")
+    painted(c, "DESK:DESK-RATES")
+    tab(c, "ccy")
+    c.until("document.querySelectorAll('[data-vx-ccytable] tbody tr[data-ccy]').length >= 5", 60)
+    c.save("16-other-currencies.jpg", locator=".vx-main")
+    back_to_usd(c)

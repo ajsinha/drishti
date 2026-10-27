@@ -23,7 +23,12 @@
    shows an ad-hoc scope or a basket (or the tray holds parts): hints as you type, + / − chips, a rule, "+ basket" on every row of the
    tree and the contributions, the selection's VaR live, a pre-deal what-if, Save (a basket, private or shared read-only) and Open.
    Opening a basket loads its parts back into the tray. "Capture VaR" stores an immutable snapshot that reopens exactly, compares with
-   another capture or with now, and exports as CSV. */
+   another capture or with now, and exports as CSV.
+
+   The reporting currency (2.9.4, the product owner's mock-up A): a select in the header strip lists the configured currencies and
+   "More…" (every currency with scenario FX on the date); the whole page follows it (tiles, path, history, contributions, tree,
+   captures, the basket). The choice stays for the session (sessionStorage) and goes into the link (ccy=EUR); VAR ... IN EUR says the
+   same. The tab "In other currencies" is loaded only when opened: the scope in each listed currency, a click switches the page. */
 (function () {
   "use strict";
   var root = document.querySelector("[data-var]");
@@ -31,8 +36,11 @@
   var C = window.VarCharts;
   var $ = function (sel) { return root.querySelector(sel); };
   var params = new URLSearchParams(location.search);
+  var CCY_KEY = "drishti.var.ccy";
+  function storedCcy() { try { return sessionStorage.getItem(CCY_KEY) || ""; } catch (e) { return ""; } }
   var S = { scope: root.dataset.scope || "BANK", hierarchy: root.dataset.hierarchy || "MGMT", tab: "path", by: "child", page: 0,
-            asOf: params.get("asOf") || "", tree: null, expanded: {}, children: {}, head: null, seq: 0, user: root.dataset.user || "" };
+            asOf: params.get("asOf") || "", tree: null, expanded: {}, children: {}, head: null, seq: 0, user: root.dataset.user || "",
+            ccy: (root.dataset.ccy || params.get("ccy") || storedCcy() || "USD").toUpperCase() };
   var B = window.VarBasket || null;
   var cache = new Map();
   var retired = params.get("from") || "";     // an id of the retired stored VaR (VAR-COMM, VN-<node>): opened at its scope
@@ -57,6 +65,7 @@
     var p = new URLSearchParams();
     Object.keys(q || {}).forEach(function (k) { if (q[k] !== undefined && q[k] !== null && q[k] !== "") p.set(k, q[k]); });
     if (S.asOf) p.set("asOf", S.asOf);
+    if (S.ccy && S.ccy !== "USD" && !p.has("ccy")) p.set("ccy", S.ccy);
     var key = path + "?" + p.toString();
     if (!fresh && cache.has(key)) return cache.get(key);
     var pr = fetch("/api/var/" + path + "?" + p.toString(), { headers: { Accept: "application/json" }, credentials: "same-origin" })
@@ -72,7 +81,10 @@
   }
 
   function send(method, path, body) {
-    return fetch("/api/var/" + path + (S.asOf ? "?asOf=" + encodeURIComponent(S.asOf) : ""), {
+    var qs = new URLSearchParams();
+    if (S.asOf) qs.set("asOf", S.asOf);
+    if (S.ccy && S.ccy !== "USD") qs.set("ccy", S.ccy);
+    return fetch("/api/var/" + path + (qs.toString() ? "?" + qs.toString() : ""), {
       method: method, credentials: "same-origin", headers: { "Content-Type": "application/json", Accept: "application/json" },
       body: body ? JSON.stringify(body) : undefined
     }).then(function (r) {
@@ -115,6 +127,9 @@
   }
   /** The command that opens a scope: VAR DESK DESK-RATES, VAR LE LE-NY, VAR POS <id>, VAR SCOPE <basket>, VAR SCOPE <scope text>. */
   function words(scope) {
+    return scopeWords(scope) + (S.ccy && S.ccy !== "USD" ? " IN " + S.ccy : "");
+  }
+  function scopeWords(scope) {
     var m = /^NODE:(MGMT|LEGAL)~(.*)$/.exec(scope);
     if (m) {
       var n = S.byId && S.byId[m[1] + "~" + m[2]];
@@ -142,7 +157,8 @@
       var u = new URL(location.href);
       u.searchParams.set("scope", scope);
       u.searchParams.delete("capture");
-      history.pushState({ scope: scope }, "", u.toString());
+      if (S.ccy && S.ccy !== "USD") u.searchParams.set("ccy", S.ccy); else u.searchParams.delete("ccy");
+      history.pushState({ scope: scope, ccy: S.ccy }, "", u.toString());
     }
     $("[data-vx-cmd]").textContent = words(scope);
     var topIn = document.querySelector("#cmd, input[name=q]");
@@ -178,6 +194,7 @@
     if (S.tab === "path") return loadPath(seq);
     if (S.tab === "hist") return loadHistory(seq);
     if (S.tab === "contrib") return loadContrib(seq);
+    if (S.tab === "ccy") return loadCurrencies(seq);
     return loadCaptures(seq);
   }
 
@@ -197,7 +214,7 @@
     var t = $("[data-vx-tiles]");
     if (!t.children.length || t.querySelector(".vx-err")) {
       t.textContent = "";
-      ["VaR 99% · 1 day", "ES 97.5%", "Sum of standalone VaR", "Diversification", "Limit utilisation", "Backtest exceptions"].forEach(function (l) {
+      ["VaR · 1 day", "ES", "Sum of standalone VaR", "Diversification", "Limit utilisation", "Backtest exceptions"].forEach(function (l) {
         var d = h("div", "vx-tile"); d.appendChild(h("div", "l", l)); d.appendChild(h("div", "v", "…")); d.appendChild(h("div", "s", "computing"));
         t.appendChild(d);
       });
@@ -213,14 +230,14 @@
     var conf = Math.round(d.confidence * 1000) / 10, esc = Math.round(d.esConfidence * 1000) / 10;
     $("[data-vx-var-legend]").textContent = "VaR " + conf + "% (" + d.k + (d.k === 1 ? "st" : d.k === 2 ? "nd" : d.k === 3 ? "rd" : "th") + " worst)";
     $("[data-vx-es-legend]").textContent = "ES " + esc + "% (mean of worst " + d.esCount + ")";
-    var bt = d.backtest || {}, u = d.limitUse;
+    var bt = d.backtest || {}, u = d.limitUse, cur = d.currency || "USD";
     var tiles = [
-      ["VaR " + conf + "% · 1 day", d.empty ? "—" : C.money(d["var"]), d.empty ? "no trades: nothing to compute" : d.k + "th worst of " + d.scenarios, null],
-      ["ES " + esc + "%", d.empty ? "—" : C.money(d.es), d.empty ? "no trades" : "mean of worst " + d.esCount, null],
+      ["VaR " + conf + "% · 1 day · " + cur, d.empty ? "—" : C.money(d["var"]), d.empty ? "no trades: nothing to compute" : d.k + "th worst of " + d.scenarios, null],
+      ["ES " + esc + "% · " + cur, d.empty ? "—" : C.money(d.es), d.empty ? "no trades" : "mean of worst " + d.esCount, null],
       ["Sum of standalone VaR", d.sumStandalone === null ? "—" : C.money(d.sumStandalone), d.childKind ? d.children + " " + d.childKind + (d.children === 1 ? "" : "s") : (d.children ? d.children + " parts" : "no parts"), null],
       ["Diversification", d.diversification === null ? "—" : "−" + C.money(d.diversification),
         d.diversification === null ? "single part" : (d.diversification / d.sumStandalone * 100).toFixed(1) + "% of standalone", null],
-      ["Limit utilisation", u === null || u === undefined ? "—" : (u * 100).toFixed(0) + "%", d.limit ? "limit " + C.money(d.limit) : "no limit set", u === null || u === undefined ? null : utilClass(u)],
+      ["Limit utilisation", u === null || u === undefined ? "—" : (u * 100).toFixed(0) + "%", d.limit ? "limit " + C.money(d.limit) + (cur !== "USD" ? " " + cur + " (set in USD, at today's rate)" : "") : "no limit set", u === null || u === undefined ? null : utilClass(u)],
       ["Backtest exceptions (" + (bt.days || 0) + " d)", String(bt.exceptions === undefined ? "—" : bt.exceptions), (bt.light || "") + " zone · Basel", "light-" + (bt.light || "")]
     ];
     var t = $("[data-vx-tiles]");
@@ -238,8 +255,21 @@
       t.appendChild(tile);
     });
     renderCrumb(d);
+    renderIntraday(d.intraday);
     renderProv(d.provenance, d);
     document.title = "VaR · " + d.label + (document.body.dataset.product ? " · " + document.body.dataset.product : "");
+  }
+
+  /** The intraday badge (VAR_GUIDE.md section 8.4): the figures include trades re-sent since the morning run; none, hidden. */
+  function renderIntraday(i) {
+    var b = $("[data-vx-intraday]");
+    if (!i) { b.hidden = true; b.textContent = ""; delete root.dataset.intraday; return; }
+    var at = String(i.lastAt || "").replace("T", " ").slice(0, 16);
+    b.textContent = "intraday · " + int(i.trades) + " trade" + (i.trades === 1 ? "" : "s") + (at ? " · " + at : "");
+    b.title = i.note + ". " + int(i.updates) + " updates in " + int(i.batchCount) + " batches" + ((i.batches || []).length ? " (latest: "
+      + i.batches.slice(-3).join(", ") + ")" : "") + "; " + int(i.amended) + " amended, " + int(i.added) + " new, " + int(i.cancelled) + " cancelled.";
+    b.hidden = false;
+    root.dataset.intraday = String(i.updates);
   }
 
   /** What the scope names but cannot count, in words (an id that matches nothing, a trade not live on the date), and an empty scope. */
@@ -272,17 +302,33 @@
     if (chipText) c.appendChild(h("span", "vx-chip amber", chipText));
   }
 
+  /** Per source system on the date: its form and grain, its records, how decided (VAR_GUIDE.md section 15.13). */
+  function bySystem(m) {
+    var names = Object.keys(m || {}).sort();
+    if (!names.length) return "one form a trade";
+    return names.map(function (k) {
+      var x = m[k];
+      return k + ": " + (x.form === "pv" ? "scenario PVs" : "P&L vectors") + " per " + x.grain + " (" + int(x.rows) + ")";
+    }).join("; ");
+  }
+
   function renderProv(p, d) {
     var dl = $("[data-vx-prov]");
     dl.textContent = "";
-    [["Scope", d.kind + " " + d.label], ["Resolved", (p.resolved || []).join("; ") || p.scope], ["Positions", int(p.positions)],
+    var fx = p.fx || {};
+    [["Scope", d.kind + " " + d.label], ["Reporting currency", (p.currency || "USD") + ", chosen in the header"],
+      ["Input", p.input || "P&L vectors (USD)"],
+      ["By source system", bySystem(p.inputsBySystem)],
+      ["Intraday", p.intraday ? int(p.intraday.updates) + " updates of " + int(p.intraday.trades) + " trades in " + int(p.intraday.batchCount)
+        + " batches, latest " + p.intraday.lastAt + "; the official records are the morning run's" : "none: the morning run"], ["Scenario FX", fx.scenarioFx || "none needed"], ["Cross rates", "via USD"],
+      ["Resolved", (p.resolved || []).join("; ") || p.scope], ["Positions", int(p.positions)],
       ["Trades", int(p.trades) + (p.failed ? " · " + p.failed + " without a vector" : "")],
       ["Outside your view", p.hidden ? int(p.hidden) + " trades not included" : "none"],
       ["Unknown ids", (p.unknown || []).length ? p.unknown.join(", ") : "none"],
       ["Warnings", (p.warnings || []).length ? p.warnings.join("; ") : "none"],
       ["Rows left out", int(p.rejected || 0) + " rejected" + ((p.rejections || []).length ? " (" + p.rejections.slice(0, 3).join("; ") + ")" : "")
         + " · " + int(p.excluded || 0) + " not live"],
-      ["Vectors", p.vectors], ["Scenario set", p.scenarioSet], ["Method", p.method], ["ES", p.es], ["Components", p.components],
+      ["Vectors", p.vectors + (p.tier ? " · " + p.tier : "")], ["Scenario set", p.scenarioSet], ["Method", p.method], ["ES", p.es], ["Components", p.components],
       ["Positions by", p.positionRules || ""],
       ["Engine", p.engine], ["View", p.view], ["Members", p.membershipHash],
       ["Computed", p.computedAt.replace("T", " ").slice(0, 19) + " · " + p.computeMs + " ms · cache " + p.cache]].forEach(function (r) {
@@ -343,6 +389,7 @@
       cell(tr, int(r.pnl), "n mono " + (r.pnl < 0 ? "neg" : "pos"));
       var from = cell(tr, r.from || "—", "mono");
       if (r.fromScope) { from.classList.add("vx-linkcell"); from.addEventListener("click", function (ev) { ev.stopPropagation(); select(r.fromScope); }); }
+      cell(tr, r.fromCurrency || "", "mono");
       cell(tr, r.fromPnl === undefined ? "" : int(r.fromPnl), "n mono neg");
       tr.addEventListener("click", function () { drill(r.date); });
       tb.appendChild(tr);
@@ -370,18 +417,19 @@
       box.appendChild(head);
       var t = h("table", "vx-table");
       var thr = document.createElement("tr");
-      ["Part", "P&L that day", "Component VaR"].forEach(function (x, i) { thr.appendChild(h("th", i ? "n" : null, x)); });
+      ["Part", "Trade currency", "P&L that day", "Component VaR"].forEach(function (x, i) { thr.appendChild(h("th", i > 1 ? "n" : null, x)); });
       t.appendChild(h("thead")).appendChild(thr);
       var tb = h("tbody");
       d.rows.slice(0, 15).forEach(function (r) {
         var tr = document.createElement("tr");
         cell(tr, r.label, "vx-linkcell");
+        cell(tr, r.tradeCurrency || "", "mono");
         cell(tr, int(r.scenarioPnl), "n mono " + (r.scenarioPnl < 0 ? "neg" : "pos"));
         cell(tr, int(r.componentVar), "n mono");
         tr.addEventListener("click", function () { select(r.scope); });
         tb.appendChild(tr);
       });
-      if (!d.rows.length) { var tr = document.createElement("tr"); cell(tr, "No parts below this scope.", "vx-note").colSpan = 3; tb.appendChild(tr); }
+      if (!d.rows.length) { var tr = document.createElement("tr"); cell(tr, "No parts below this scope.", "vx-note").colSpan = 4; tb.appendChild(tr); }
       t.appendChild(tb);
       box.appendChild(t);
     }).catch(function (e) { errorBox(box, e); });
@@ -420,7 +468,7 @@
   // ---------------------------------------------------------------------------------------------------------------- contributions
   function loadContrib(seq) {
     var tb = $("[data-vx-ctable] tbody");
-    if (!tb.children.length) { tb.textContent = ""; var tr = document.createElement("tr"); cell(tr, "computing…", "vx-note").colSpan = 7; tb.appendChild(tr); }
+    if (!tb.children.length) { tb.textContent = ""; var tr = document.createElement("tr"); cell(tr, "computing…", "vx-note").colSpan = 8; tb.appendChild(tr); }
     return api("scope/contributions", { scope: S.scope, by: S.by === "child" ? "" : S.by }).then(function (d) {
       if (seq !== S.seq) return;
       renderContrib(d);
@@ -428,7 +476,7 @@
       if (seq !== S.seq) return;
       tb.textContent = "";
       var tr = document.createElement("tr");
-      cell(tr, e.message, "vx-err").colSpan = 7;
+      cell(tr, e.message, "vx-err").colSpan = 8;
       tb.appendChild(tr);
     });
   }
@@ -440,7 +488,7 @@
       var tr = document.createElement("tr");
       cell(tr, S.head && S.head.kind === "trade" ? "A trade has no parts: its P&L path is its own vector." :
         S.head && S.head.empty ? "No trades: nothing to break down." : "No parts you may see below this scope (a position level your role sees in aggregate only, or none).",
-        "vx-note").colSpan = 7;
+        "vx-note").colSpan = 8;
       tb.appendChild(tr);
       return;
     }
@@ -454,6 +502,8 @@
       name.appendChild(document.createTextNode(" " + r.label + (r.quantity !== undefined ? " · " + int(r.quantity) : "") + (r.partial ? " (part)" : "")
         + (r.kind === "part" ? " · " + int(r.trades) + " trades" : "")));
       name.appendChild(addButton(r.scope, { type: r.kind === "part" ? r.word : kindWord(r.kind), id: r.key, name: r.label }));
+      var tc = cell(tr, r.tradeCurrency || "", "mono");
+      if (r.tradeCurrencyFrom) tc.title = "from " + r.tradeCurrencyFrom;
       cell(tr, int(r.standaloneVar), "n mono");
       cell(tr, int(r.componentVar), "n mono");
       cell(tr, pct(r.pct), "n mono");
@@ -471,6 +521,7 @@
     var t = document.createElement("tr");
     t.className = "vx-total";
     cell(t, "Total");
+    cell(t, "");
     cell(t, int(d.sumStandalone), "n mono");
     cell(t, int(d.sumComponent), "n mono");
     cell(t, "100.0%", "n mono");
@@ -512,8 +563,9 @@
         cell(tr, c.businessDate, "mono");
         cell(tr, String(c.capturedAt).replace("T", " ").slice(0, 19), "mono");
         cell(tr, c.owner);
-        cell(tr, int(c["var"]), "n mono");
-        cell(tr, int(c.es), "n mono");
+        var cc = c.currency && c.currency !== "USD" ? " " + c.currency : "";
+        cell(tr, int(c["var"]) + cc, "n mono");
+        cell(tr, int(c.es) + cc, "n mono");
         cell(tr, c.note || "");
         var act = cell(tr, "");
         [["Reopen", function () { reopen(c.id); }], ["Compare with now", function () { compare(c.id, "now"); }]].forEach(function (a) {
@@ -606,6 +658,111 @@
     }).catch(function (e) { errorBox(box, e); });
   }
 
+  // ---------------------------------------------------------------------------------------------------------------- currencies
+  /** The tab "In other currencies", loaded only when opened: the scope's VaR and ES in each listed currency (from its PVs summed per
+      trade currency, each with that currency's scenario FX), that VaR in the page's currency at today's rate, and the difference. */
+  function loadCurrencies(seq) {
+    var tb = $("[data-vx-ccytable] tbody");
+    if (S.head && S.head.confidence) {                                // the headers say the answer's confidences
+      var th = $("[data-vx-ccytable] thead").querySelectorAll("th");
+      th[1].textContent = "VaR " + Math.round(S.head.confidence * 1000) / 10 + "%";
+      th[2].textContent = "ES " + Math.round(S.head.esConfidence * 1000) / 10 + "%";
+    }
+    if (!tb.children.length) { var w = document.createElement("tr"); cell(w, "computing…", "vx-note").colSpan = 5; tb.appendChild(w); }
+    root.dataset.ccyLoads = String(Number(root.dataset.ccyLoads || 0) + 1);
+    return api("scope/currencies", { scope: S.scope }).then(function (d) {
+      if (seq !== S.seq) return;
+      $("[data-vx-ccy-inpage]").textContent = "VaR in " + d.currency + " at today's rate";
+      $("[data-vx-ccy-note]").textContent = "The same scope in each reporting currency: " + d.note + ". Trade currencies in this scope: "
+        + (d.tradeCurrencies || []).join(", ") + ".";
+      tb.textContent = "";
+      d.rows.forEach(function (r) {
+        var tr = document.createElement("tr");
+        tr.dataset.ccy = r.currency;
+        if (r.shown) tr.className = "shown";
+        var c = cell(tr, "");
+        if (r.shown) c.textContent = r.currency + " · shown";
+        else {
+          var b = h("button", "vx-link", r.currency);
+          b.type = "button";
+          b.title = "Show the page in " + r.currency;
+          b.addEventListener("click", function (ev) { ev.stopPropagation(); setCcy(r.currency); });
+          c.appendChild(b);
+        }
+        if (r.note) { cell(tr, r.note, "vx-note").colSpan = 4; tb.appendChild(tr); return; }
+        cell(tr, C.money(r["var"]), "n mono");
+        cell(tr, C.money(r.es), "n mono");
+        cell(tr, C.money(r.varInPage), "n mono");
+        cell(tr, r.difference === null || r.difference === undefined ? "—"
+          : C.signed(r.difference) + (r.differencePct === null || r.differencePct === undefined ? "" : " (" + (r.differencePct > 0 ? "+" : "") + (r.differencePct * 100).toFixed(1) + "%)"),
+          "n mono");
+        if (!r.shown) { tr.className = "vx-click"; tr.addEventListener("click", function () { setCcy(r.currency); }); }
+        tb.appendChild(tr);
+      });
+    }).catch(function (e) {
+      if (seq !== S.seq) return;
+      tb.textContent = "";
+      var tr = document.createElement("tr");
+      cell(tr, e.message, "vx-err").colSpan = 5;
+      tb.appendChild(tr);
+    });
+  }
+
+  var NAMES = { USD: "US dollar", EUR: "Euro", CAD: "Canadian dollar", JPY: "Japanese yen", GBP: "Pound sterling", CHF: "Swiss franc",
+                AUD: "Australian dollar", NZD: "New Zealand dollar", SEK: "Swedish krona", NOK: "Norwegian krone", HKD: "Hong Kong dollar",
+                SGD: "Singapore dollar", CNY: "Chinese yuan", INR: "Indian rupee", MXN: "Mexican peso", BRL: "Brazilian real" };
+  function option(c) { var o = document.createElement("option"); o.value = c; o.textContent = c + (NAMES[c] ? " · " + NAMES[c] : ""); return o; }
+
+  /** The header's Reporting currency: the listed currencies and "More…", which adds every other currency with FX on the date. */
+  function loadPicker(more) {
+    var sel = $("[data-vx-ccy]");
+    api("currencies", {}).then(function (d) {
+      sel.textContent = "";
+      var listed = d.listed || ["USD"];
+      listed.forEach(function (c) { sel.appendChild(option(c)); });
+      var others = (d.available || []).filter(function (c) { return listed.indexOf(c) < 0; });
+      if (more || listed.indexOf(S.ccy) < 0) {
+        var g = document.createElement("optgroup");
+        g.label = "More currencies with FX on " + d.businessDate;
+        others.forEach(function (c) { g.appendChild(option(c)); });
+        if (others.indexOf(S.ccy) < 0 && listed.indexOf(S.ccy) < 0) g.appendChild(option(S.ccy));
+        if (g.children.length) sel.appendChild(g);
+      } else if (others.length) {
+        var m = document.createElement("option");
+        m.value = "__more";
+        m.textContent = "More…";
+        sel.appendChild(m);
+      }
+      sel.value = S.ccy;
+      root.dataset.ccyReady = "true";
+    }).catch(function () { sel.value = S.ccy; });
+  }
+
+  /** The whole page in another reporting currency: kept for the session, put in the link and the command, every panel reloaded. */
+  function setCcy(c) {
+    c = (c || "USD").toUpperCase();
+    if (c === S.ccy) return;
+    S.ccy = c;
+    root.dataset.ccy = c;
+    try { sessionStorage.setItem(CCY_KEY, c); } catch (e) { /* private window: the link still carries it */ }
+    var u = new URL(location.href);
+    if (c !== "USD") u.searchParams.set("ccy", c); else u.searchParams.delete("ccy");
+    history.replaceState({ scope: S.scope, ccy: c }, "", u.toString());
+    var sel = $("[data-vx-ccy]");
+    if (![].some.call(sel.options, function (o) { return o.value === c; })) sel.appendChild(option(c));
+    sel.value = c;
+    S.children = {};
+    S.tree = null;
+    loadTree();
+    select(S.scope, { noPush: true });
+    document.dispatchEvent(new CustomEvent("var:currency", { detail: { ccy: c } }));
+  }
+  $("[data-vx-ccy]").addEventListener("change", function (ev) {
+    var v = ev.target.value;
+    if (v === "__more") { ev.target.value = S.ccy; loadPicker(true); setTimeout(function () { ev.target.focus(); }, 0); return; }
+    setCcy(v);
+  });
+
   // ---------------------------------------------------------------------------------------------------------------- the tree
   function loadTree() {
     fresh("tree", "loading…", "computing");
@@ -660,7 +817,7 @@
     var t = $("[data-vx-tree]");
     t.textContent = "";
     var hd = h("div", "vx-row hdr");
-    ["Scope", "VaR", "ES", "Limit"].forEach(function (x, i) { hd.appendChild(h("span", i ? "num" : null, x)); });
+    ["Scope", "VaR " + S.ccy, "ES", "Limit"].forEach(function (x, i) { hd.appendChild(h("span", i ? "num" : null, x)); });
     t.appendChild(hd);
     var shown = {};
     (S.tree.nodes || []).forEach(function (n) {
@@ -751,7 +908,7 @@
     renderTab(seq).then(function () {
       if (seq === S.seq) {
         root.dataset.tabPainted = tab;
-        fresh("main", tab + " in " + Math.round(performance.now() - t0) + " ms");
+        fresh("main", (tab === "ccy" ? "currencies" : tab) + " in " + Math.round(performance.now() - t0) + " ms");
       }
     });
   }
@@ -806,7 +963,11 @@
   var jsonlPath = $("[data-vx-jsonl-path]");
   if (jsonlPath) jsonlPath.addEventListener("click", jsonlOfPath);
 
-  window.addEventListener("popstate", function (ev) { if (ev.state && ev.state.scope) select(ev.state.scope, { noPush: true }); });
+  window.addEventListener("popstate", function (ev) {
+    if (!ev.state || !ev.state.scope) return;
+    if (ev.state.ccy && ev.state.ccy !== S.ccy) { S.scope = ev.state.scope; setCcy(ev.state.ccy); return; }
+    select(ev.state.scope, { noPush: true });
+  });
   var resizeTimer = null;
   window.addEventListener("resize", function () {
     clearTimeout(resizeTimer);
@@ -814,7 +975,14 @@
   });
 
   // ---------------------------------------------------------------------------------------------------------------- start
-  history.replaceState({ scope: S.scope }, "", location.href);
+  (function () {                                       // the session's currency goes into the link the page opened with
+    var u = new URL(location.href);
+    if (S.ccy !== "USD" && u.searchParams.get("ccy") !== S.ccy) u.searchParams.set("ccy", S.ccy);
+    try { sessionStorage.setItem(CCY_KEY, S.ccy); } catch (e) { /* the link carries it */ }
+    root.dataset.ccy = S.ccy;
+    history.replaceState({ scope: S.scope, ccy: S.ccy }, "", u.toString());
+  })();
+  loadPicker(false);
   loadTree();
   if (root.dataset.capture) {
     api("captures/" + encodeURIComponent(root.dataset.capture), {}, true).then(function (c) {
@@ -825,5 +993,5 @@
   } else {
     select(S.scope, { noPush: true });
   }
-  window.VarExplorer = { select: select, switchTab: switchTab, state: S };
+  window.VarExplorer = { select: select, switchTab: switchTab, setCcy: setCcy, state: S };
 })();

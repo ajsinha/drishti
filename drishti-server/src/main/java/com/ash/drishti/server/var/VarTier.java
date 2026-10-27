@@ -133,35 +133,57 @@ final class VarTier implements AutoCloseable {
     }
 
     Path folder(LocalDate date) {
-        return root.resolve(date.toString());
+        return folder(date, VarDate.USD);
+    }
+
+    /**
+     * A date's folder: {@code <date>} for its USD book, {@code <date>-<CCY>} for a reporting currency's (VAR_GUIDE.md section 26: each its
+     * own folder, so the date's other currency is never taken for an older build of it).
+     */
+    Path folder(LocalDate date, String currency) {
+        return root.resolve(VarDate.USD.equals(currency) ? date.toString() : date + "-" + currency);
     }
 
     Path file(LocalDate date, String digest) {
-        return folder(date).resolve(PREFIX + digest.substring(0, 16) + VarHotFile.SUFFIX);
+        return file(date, VarDate.USD, digest);
+    }
+
+    Path file(LocalDate date, String currency, String digest) {
+        return folder(date, currency).resolve(PREFIX + digest.substring(0, 16) + VarHotFile.SUFFIX);
     }
 
     /** The hot file built from exactly these inputs, if one is on disk and whole. */
     Optional<Path> existing(LocalDate date, String digest) {
+        return existing(date, VarDate.USD, digest);
+    }
+
+    /** The hot file of a date's book in a currency built from exactly these inputs, if one is on disk and whole. */
+    Optional<Path> existing(LocalDate date, String currency, String digest) {
         if (digest.isEmpty()) {
             return Optional.empty();
         }
-        Path f = file(date, digest);
+        Path f = file(date, currency, digest);
         VarHotFile.Header h = Files.isRegularFile(f) ? VarHotFile.header(f) : null;
         return h != null && h.digest().equals(digest) && h.businessDate().equals(date) ? Optional.of(f) : Optional.empty();
     }
 
     /** Where a new load of the date writes: its spill and its part file made in the date's folder, and the final name. */
     VarBook.HotTarget target(LocalDate date, String digest) {
+        return target(date, VarDate.USD, digest);
+    }
+
+    /** Where a date's book in a currency writes (its own folder). */
+    VarBook.HotTarget target(LocalDate date, String currency, String digest) {
         built.incrementAndGet();
         try {
-            Path dir = Files.createDirectories(folder(date));
+            Path dir = Files.createDirectories(folder(date, currency));
             String d = digest.isEmpty() ? "unversioned-" + System.nanoTime() : digest;
             Path spill = TempFiles.createFile(dir, "spill-", ".f64");
             Path part = TempFiles.createFile(dir, "build-", ".part");
-            Path file = digest.isEmpty() ? dir.resolve(PREFIX + "unversioned-" + System.nanoTime() + VarHotFile.SUFFIX) : file(date, digest);
+            Path file = digest.isEmpty() ? dir.resolve(PREFIX + "unversioned-" + System.nanoTime() + VarHotFile.SUFFIX) : file(date, currency, digest);
             return new VarBook.HotTarget(spill, part, file, d);
         } catch (IOException e) {
-            throw new UncheckedIOException("the VaR hot folder " + folder(date) + " cannot be written: " + e.getMessage(), e);
+            throw new UncheckedIOException("the VaR hot folder " + folder(date, currency) + " cannot be written: " + e.getMessage(), e);
         }
     }
 
@@ -252,6 +274,72 @@ final class VarTier implements AutoCloseable {
         }
     }
 
+    /**
+     * The retention of the currencies built ahead (VAR_GUIDE.md section 15.11): the hot files of {@code currencies} (not USD) of every date
+     * not in {@code keep} are deleted, unless a request has them open (then they go when retired, or at the next pass). Returns the files
+     * deleted.
+     */
+    int pruneCurrencies(java.util.Set<LocalDate> keep, java.util.Collection<String> currencies) {
+        if (!Files.isDirectory(root)) {
+            return 0;
+        }
+        List<Path> gone = new ArrayList<>();
+        lock.lock();
+        try (Stream<Path> s = Files.list(root)) {
+            for (Path dir : s.filter(Files::isDirectory).toList()) {
+                String n = dir.getFileName().toString();
+                if (n.length() != 14 || n.charAt(10) != '-' || !currencies.contains(n.substring(11)) || VarDate.USD.equals(n.substring(11))) {
+                    continue;
+                }
+                LocalDate d;
+                try {
+                    d = LocalDate.parse(n.substring(0, 10));
+                } catch (java.time.format.DateTimeParseException e) {
+                    continue;
+                }
+                if (keep.contains(d)) {
+                    continue;
+                }
+                try (Stream<Path> in = Files.list(dir)) {
+                    in.filter(p -> p.getFileName().toString().endsWith(VarHotFile.SUFFIX) && !open.containsKey(p)).forEach(gone::add);
+                }
+            }
+            gone.forEach(used::remove);
+        } catch (IOException e) {
+            LOG.debug("VaR hot files: currency retention not applied now: {}", e.toString());
+        } finally {
+            lock.unlock();
+        }
+        gone.forEach(this::delete);
+        if (!gone.isEmpty()) {
+            removeEmptyFolders();
+        }
+        return gone.size();
+    }
+
+    /** The bytes and files a date's books in other currencies take on disk ({@code <date>-<CCY>} folders), for the status answer. */
+    Map<String, Object> currencyFiles() {
+        long bytes = 0;
+        int files = 0;
+        if (Files.isDirectory(root)) {
+            try (Stream<Path> s = Files.walk(root, 2)) {
+                for (Path p : s.filter(Files::isRegularFile).toList()) {
+                    String dir = p.getParent().getFileName().toString();
+                    if (dir.length() == 14 && dir.charAt(10) == '-' && p.getFileName().toString().endsWith(VarHotFile.SUFFIX)) {
+                        bytes += Files.size(p);
+                        files++;
+                    }
+                }
+            } catch (IOException e) {
+                // gone meanwhile
+            }
+        }
+        Map<String, Object> m = new LinkedHashMap<>();
+        m.put("files", files);
+        m.put("bytes", bytes);
+        return m;
+    }
+
     /** The files on disk and the dates open, for the status answer. */
     Map<String, Object> describe() {
         lock.lock();
@@ -275,6 +363,7 @@ final class VarTier implements AutoCloseable {
                 }
             }
             m.put("diskBytes", bytes);
+            m.put("currencies", currencyFiles());
             return m;
         } finally {
             lock.unlock();

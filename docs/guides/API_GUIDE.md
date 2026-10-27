@@ -1865,6 +1865,11 @@ The complete list (from `ErrorCode` in `drishti-common`). The first digit groups
 | DRS-5203 | 422 | VaR inputs not one run | a date's vectors come from several batch runs, or another scenario set, or the date has two scenario sets or a bad one: the date is not loaded; the date before it is answered, with a warning |
 | DRS-5204 | 503 | VaR capacity | a date's vectors need more memory than `drishti.var.memory-budget-mb`: try later, raise the budget or the heap, or keep fewer dates loaded |
 | DRS-5205 | 503 | VaR what-if unavailable | `POST /api/v1/var/what-if` needs the Python VaR engine (`var-whatif`, the compute workers on: `DRISHTI_COMPUTE_ENABLED=true`); it is not running or did not answer in time |
+| DRS-5206 | 422 | VaR scenario failed | a trade's scenario PVs (`scenario-pv`) hold a scenario that failed to price (a null or NaN PV): the trade is not loaded, never filled with zero (listed with the scenarios in `provenance.rejections`, never an error of the request) |
+| DRS-5207 | 422 | VaR: no FX | no FX for a currency on the date's scenarios (none supplied in `fx-scenario`, and the FX history of `fx-spot` does not cover the scenario days): a reporting currency asked with `ccy=` is refused; a trade priced in that currency is not loaded (listed in `provenance.rejections`) |
+| DRS-5208 | 422 | VaR: a record that does not say what it is | a PV or vector record without `VALUE_TYPE`, `GRAIN`, its id, `CURRENCY` or `SOURCE_SYSTEM`, or whose `VALUE_TYPE` is not its payload or `GRAIN` not its id (2.9.4): the record is refused and listed in `provenance.rejections` (a Kafka line with its place), the rest loads; `drishti.py var convert` adds the fields to an older file |
+| DRS-5209 | 422 | VaR: a record against its system's pin | the record disagrees with `drishti.var.inputs` for its `SOURCE_SYSTEM` (2.9.4): refused and listed, naming the system, the pin and the record's fields |
+| DRS-5210 | 422 | VaR: one system, two forms or grains on one date | a source system sent scenario PVs and P&L vectors, or trades and positions, on one date, or a supplied position names a trade also sent on its own (2.9.4): the date is refused; an intraday update in another form or grain than the morning run's is refused and listed |
 | DRS-5440 | 400 | Exposure parameter | a scope word the exposure engine does not answer, or a bad `q`, `collateral`, `date`, `by`, `figure` or `run` |
 | DRS-5441 | 409 | Exposure run inconsistent | the date's simulation run is not one run (its grid, two batch ids, a duplicate row, a trade in two netting sets): the date before answers with a warning; `strict=true` gets this |
 | DRS-5442 | 400 | What-if not on the run | a what-if candidate's paths are of another run than the date's |
@@ -2866,6 +2871,13 @@ sees the counterparty masked. A date's vectors over the memory budget answer `50
 (float32 rows, summed in float64)` or `memory (float64 rows)`; [VAR_GUIDE.md section 26](VAR_GUIDE.md#26-the-tiered-memory-and-the-hot-file)). Saving a basket or a capture needs the `risk:write` token scope; saving and deleting
 a basket and a reload are audited (`var-basket-save`, `var-basket-delete`, `var-reload`).
 
+**Reporting currency (2.9.4).** Every scope endpoint, `/tree`, `/hints`, `POST /what-if` (`"ccy"` in the body or the query),
+`POST /captures` and `GET /official` take `ccy=EUR` (none: USD) and say it in `currency`; the vectors are converted through USD with
+each scenario's FX, so the same scope has a different VaR in each currency ([VAR_GUIDE.md section 15.10](VAR_GUIDE.md#1510-reporting-currency-as-built-294)).
+A currency with no scenario FX on the date answers `422 DRS-5207`; a `ccy` that is not three letters, `400`. Trades a batch sends as
+scenario PVs are converted to USD when the date loads; a failed scenario rejects its trade (`DRS-5206` in `provenance.rejections`), and
+`provenance.fx` says where each currency's rates came from ([section 15.9](VAR_GUIDE.md#159-scenario-pv-scenario-pvs-per-trade-in-the-trades-currency-as-built-294)).
+
 | Method and path | What it does |
 |---|---|
 | `GET /api/v1/var/scope?scope=` | the headline: VaR, ES, diversification, limit, backtest and provenance |
@@ -2885,6 +2897,11 @@ a basket and a reload are audited (`var-basket-save`, `var-basket-delete`, `var-
 | `GET /api/v1/var/captures/{id}/csv?part=` | a capture as CSV: its provenance as `#` lines, then the vector by scenario date, or its components with `part=components` |
 | `GET /api/v1/var/captures/{id}/jsonl?part=` | the same rows as JSON Lines, one a line keyed as the CSV's header (`scenario_date`, `pnl`; or the components); the provenance is the capture's JSON |
 | `GET /api/v1/var/compare?a=&b=` | two captures side by side, or a capture and now (`b=now`) |
+| `GET /api/v1/var/scope/currencies?scope=&ccy=` | 2.9.4: the scope in every listed reporting currency (`drishti.var.currencies`), each VaR and ES from its PVs summed per trade currency, that VaR in `ccy` at today's rate and the difference ([VAR_GUIDE.md section 15.11](VAR_GUIDE.md#1511-reporting-currencies-built-ahead-per-trade-currency-totals-and-the-picker-as-built-294)) |
+| `POST /api/v1/packs/market-risk/loads` (kind `scenario-pv` or `pnl-vector`, an intraday batch) | 2.9.4: the data-load signal of an intraday batch (`RUN_KIND: INTRADAY` rows appended): the VaR engine applies it on the loaded date without a reload; every answer then carries `intraday` (`updates`, `trades`, `amended`, `added`, `cancelled`, `lastAt`, `batches`, `batchCount`, `rejections`); a full run reloads ([VAR_GUIDE.md section 8.4](VAR_GUIDE.md#84-what-if-pricing-and-intraday-recomputes-what-if-planned-intraday-updates-as-built-in-294)) |
+| `GET /api/v1/var/currencies?asOf=` | 2.9.4: the reporting currencies a page offers: `listed`, `available` (every currency with scenario FX on the date), `ready` (built already) |
+| `GET /api/v1/var/intraday/streams` | 2.9.4: the PV topics' streams (`var-pv-stream` connectors): topic, state, waiting trades, offsets, counts, the last windows and rejections ([VAR_GUIDE.md section 8.4](VAR_GUIDE.md#84-what-if-pricing-and-intraday-recomputes-what-if-planned-intraday-updates-as-built-in-294)) |
+| `POST /api/v1/var/intraday/streams/{connector}/apply` | 2.9.4, administrators: the stream's waiting window applied now, as one intraday batch |
 | `GET /api/v1/var/official?asOf=` | a date's official end-of-day record: its result version, the inputs' versions and batch ids, and every node of every hierarchy with its VaR, ES, hypothetical P&L, limit, counts, backtest and capture id (a viewer who sees every node; [VAR_GUIDE.md section 19](VAR_GUIDE.md#19-official-end-of-day-results)) |
 | `POST /api/v1/var/official?asOf=` | administrators: captures the date officially now (the data-load signal of an input does it by itself): `{status: captured, restated, unchanged or skipped, resultVersion, nodes, published}` |
 

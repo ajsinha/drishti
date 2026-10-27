@@ -19,6 +19,8 @@ import com.ash.drishti.common.DrishtiException;
 import com.ash.drishti.common.ErrorCode;
 import com.ash.drishti.compute.var.Backtest;
 import com.ash.drishti.compute.var.Columns;
+import com.ash.drishti.compute.var.CurrencyTotals;
+import com.ash.drishti.compute.var.ScenarioFx;
 import com.ash.drishti.compute.var.VarBook;
 import com.ash.drishti.compute.var.VarCalc;
 import com.ash.drishti.compute.var.VarMath;
@@ -67,6 +69,25 @@ final class VarViews {
         return svc.calc().measures(pt.vector()).var();
     }
 
+    /** The scenarios the date uses (VAR_GUIDE.md section 18.5): the newest {@code used} of the set's {@code of}, their dates, a warning. */
+    Map<String, Object> scenarioWindow(VarDate d) {
+        List<LocalDate> days = d.book().scenarioDates();
+        int of = d.intake().setLength() > 0 ? d.intake().setLength() : days.size();
+        Map<String, Object> w = new LinkedHashMap<>();
+        w.put("setting", svc.props().scenarioWindow());
+        w.put("used", days.size());
+        w.put("of", of);
+        w.put("from", days.get(0).toString());
+        w.put("to", days.get(days.size() - 1).toString());
+        w.put("note", (days.size() == of ? "all " + of : "newest " + days.size() + " of " + of) + " scenarios (" + days.get(0) + " … "
+                + days.get(days.size() - 1) + ")");
+        int n = svc.props().window();
+        if (n > of) {
+            w.put("warning", "drishti.var.scenario-window is " + n + " but the scenario set has " + of + ": the whole set is used");
+        }
+        return w;
+    }
+
     private static String versionOf() {
         String v = VarBook.class.getPackage().getImplementationVersion();
         return v == null ? "dev" : v;
@@ -75,11 +96,63 @@ final class VarViews {
     // ------------------------------------------------------------------------------------------------------------------- headline
 
     Map<String, Object> headline(Principal p, String scope, LocalDate date) {
-        VarService.Scoped s = svc.scoped(p, scope, date);
+        return headline(p, scope, date, VarDate.USD);
+    }
+
+    /**
+     * The headline's VaR and ES recomputed on the newest {@code window} scenarios (null: the date's) and at other confidences (null: the
+     * settings'), from the same vector (VAR_GUIDE.md section 18.5): {@code override} says what changed; never official, never captured.
+     */
+    Map<String, Object> override(Map<String, Object> h, Principal p, String scope, LocalDate date, String ccy, String window, Double conf,
+            Double esConf) {
+        VarService.Scoped s = svc.scoped(p, scope, date, ccy);
+        double[] v = s.vector();
+        Map<String, Object> o = new LinkedHashMap<>();
+        if (window != null && !window.equals("all")) {
+            int n = Integer.parseInt(window);
+            if (n < v.length) {
+                v = java.util.Arrays.copyOfRange(v, v.length - n, v.length);
+            } else {
+                o.put("warning", "window " + n + " is more than the " + v.length + " scenarios loaded: all of them used");
+            }
+        }
+        VarProperties pr = svc.props();
+        double c = conf == null ? pr.confidence() : conf;
+        double ec = esConf == null ? pr.esConfidence() : esConf;
+        com.ash.drishti.compute.var.VarCalc calc = new com.ash.drishti.compute.var.VarCalc(c, ec, svc.calc().rule(), svc.calc().window(),
+                svc.calc().scaleToVar());
+        com.ash.drishti.compute.var.VarCalc.Measures m = calc.measures(v);
+        List<LocalDate> days = s.date().book().scenarioDates();
+        o.put("window", v.length);
+        o.put("of", s.vector().length);
+        o.put("from", days.get(days.size() - v.length).toString());
+        o.put("to", days.get(days.size() - 1).toString());
+        o.put("confidence", c);
+        o.put("esConfidence", ec);
+        o.put("official", false);
+        o.put("note", "asked for this answer: the VaR and ES of the newest " + v.length + " of " + s.vector().length + " scenarios at "
+                + Math.round(c * 1000) / 10.0 + "% (ES " + Math.round(ec * 1000) / 10.0 + "%); never official; the rest of the answer is the date's");
+        Map<String, Object> out = new LinkedHashMap<>(h);
+        out.put("var", round(m.var()));
+        out.put("es", round(m.es()));
+        out.put("k", m.k());
+        out.put("esCount", m.esCount());
+        out.put("scenarios", v.length);
+        out.put("confidence", c);
+        out.put("esConfidence", ec);
+        out.put("override", o);
+        return out;
+    }
+
+    /** The headline in a reporting currency ({@code ccy}; every amount of the answer is in it, and {@code currency} says which). */
+    Map<String, Object> headline(Principal p, String scope, LocalDate date, String ccy) {
+        VarService.Scoped s = svc.scoped(p, scope, date, ccy);
         VarBook b = s.date().book();
         List<Part> parts = parts(s, "child", p);
         Map<String, Object> out = new LinkedHashMap<>();
         out.put("scope", scope);
+        out.put("currency", s.date().currency());
+        out.put("intraday", intradayNote(s.date()));
         out.put("canonical", s.res().canonical());
         out.put("kind", s.kind());
         out.put("label", s.label());
@@ -189,6 +262,15 @@ final class VarViews {
         positions = count[0];
         Map<String, Object> m = new LinkedHashMap<>();
         m.put("scope", s.res().canonical());
+        m.put("currency", s.date().currency());
+        m.put("intraday", intradayNote(s.date()));
+        m.put("intradayRejections", s.date().intraday() == null ? List.of() : s.date().intraday().rejections());
+        m.put("scenarioWindow", scenarioWindow(s.date()));
+        m.put("confidence", svc.props().confidence());
+        m.put("esConfidence", svc.props().esConfidence());
+        // per source system on the date: the form and grain of its records, how many, how decided, the P&L rows (VAR_GUIDE.md 15.13)
+        m.put("inputsBySystem", s.date().intake().inputs() == null ? Map.of() : s.date().intake().inputs());
+        m.put("fx", fxNote(s.date()));
         m.put("resolved", s.res().notes());
         m.put("trades", s.set().size());
         m.put("positions", positions);
@@ -196,11 +278,14 @@ final class VarViews {
         m.put("hidden", s.hidden());
         m.put("unknown", s.res().unknown());
         m.put("notices", selection.notices(s));
-        m.put("vectors", svc.props().kinds().vector() + " · batch " + String.join(", ", s.date().intake().batchIds()) + " of " + s.date().date()
+        int fromPv = s.date().intake().scenarioPv();
+        m.put("vectors", svc.props().kinds().vector() + (fromPv == 0 ? "" : " and " + svc.props().kinds().scenarioPv() + " (" + fromPv
+                + " trades from scenario PVs)") + " · batch " + String.join(", ", s.date().intake().batchIds()) + " of " + s.date().date()
                 + " · data version " + s.date().version());
         m.put("inputs", s.date().inputs());
         m.put("rejected", s.date().intake().rejected());
         m.put("rejections", s.date().intake().rejections());
+        m.put("scenarioPvTrades", s.date().intake().scenarioPv());
         m.put("excluded", s.date().intake().excluded());
         m.put("positionRules", s.date().intake().rules());
         List<String> warnings = new ArrayList<>(s.date().warnings());
@@ -214,12 +299,67 @@ final class VarViews {
                 ? ", scaled to add up to the VaR" : ""));
         m.put("engine", "VaR engine in the server · " + ENGINE + " · " + svc.sums().threads() + " threads");
         m.put("view", s.view().full() ? "every node at positions level" : "restricted by node (" + s.hidden() + " trades outside your entitlement)");
-        m.put("tier", tier(s));
+        m.put("tier", VarDate.USD.equals(s.date().currency()) ? tier(s)
+                : "per-trade-currency totals of the USD book (float64), converted with the scenario FX of " + s.date().currency());
+        int all = s.date().book().tradeCount();
+        m.put("input", fromPv == 0 ? "P&L vectors (USD)" : fromPv >= all ? "scenario PVs in each trade's currency"
+                : "P&L vectors (USD) and scenario PVs in each trade's currency (" + fromPv + " of " + all + " trades)");
         m.put("membershipHash", s.set().digest());
         m.put("computedAt", Instant.now().toString());
         m.put("computeMs", s.computeMs());
         m.put("cache", s.cached() ? "hit" : "miss");
         m.put("loadedMs", s.date().loadMs());
+        return m;
+    }
+
+    /**
+     * The intraday label (VAR_GUIDE.md section 8.4): what the figures include beyond the morning run, or null when nothing: the updates
+     * applied, the trades changed (amended, added, cancelled), the newest {@code COMPUTED_AT}, the batches; the official records never
+     * include them.
+     */
+    static Map<String, Object> intradayNote(VarDate d) {
+        com.ash.drishti.compute.var.VarIntraday l = d.book().intraday();
+        if (l == null) {
+            return null;
+        }
+        com.ash.drishti.compute.var.VarIntraday.Info i = l.info();
+        Map<String, Object> m = new LinkedHashMap<>();
+        m.put("updates", i.updates());
+        m.put("trades", i.trades());
+        m.put("amended", i.amended());
+        m.put("added", i.added());
+        m.put("cancelled", i.cancelled());
+        m.put("lastAt", i.lastAt());
+        m.put("batches", i.batches());
+        m.put("batchCount", i.batchCount());
+        if (d.intraday() != null) {
+            m.put("olderIgnored", d.intraday().older());
+            m.put("beforeMorningIgnored", d.intraday().beforeMorning());
+            m.put("morningAt", d.intraday().morningAt());
+            m.put("rejections", d.intraday().rejections());
+        }
+        m.put("note", "intraday: the morning run with " + i.trades() + " trade" + (i.trades() == 1 ? "" : "s") + " updated since (latest "
+                + i.lastAt() + "); the official end-of-day records are the morning run's");
+        return m;
+    }
+
+    /**
+     * How the date's vectors met FX (VAR_GUIDE.md sections 15.9 and 15.10): the reporting currency, and per currency converted the
+     * source of its scenario rates (supplied by the batch, or derived from the FX history) and today's rate in USD per unit; every
+     * cross goes through USD.
+     */
+    static Map<String, Object> fxNote(VarDate d) {
+        Map<String, Object> m = new LinkedHashMap<>();
+        m.put("reporting", d.currency());
+        m.put("crosses", "through USD");
+        m.put("rates", d.fx());
+        java.util.TreeSet<String> sources = new java.util.TreeSet<>();
+        d.fx().values().forEach(v -> {
+            if (v instanceof Map<?, ?> r && r.get("source") != null && !"base".equals(r.get("source"))) {   // USD itself: no rates
+                sources.add(String.valueOf(r.get("source")));
+            }
+        });
+        m.put("scenarioFx", sources.isEmpty() ? "none needed (every trade in USD)" : String.join(" and ", sources));
         return m;
     }
 
@@ -375,16 +515,13 @@ final class VarViews {
     /** A position's gross size: its market value, else its trades' PV, else their quantities (absolute values). */
     private static double positionSize(VarBook b, OrdinalSet set, int pi) {
         double mv = b.positions().number("MARKET_VALUE", pi);
-        if (!Double.isNaN(mv) && set.coversRange(b.positionFrom(pi), b.positionTo(pi))) {
+        OrdinalSet members = b.positionMembers(pi);                  // its run, and any trade added during the day
+        if (!Double.isNaN(mv) && set.containsAll(members)) {
             return Math.abs(mv);
         }
-        double s = 0;
-        for (int o = b.positionFrom(pi); o < b.positionTo(pi); o++) {
-            if (set.contains(o)) {
-                s += tradeSize(b, o);
-            }
-        }
-        return s;
+        double[] s = {0};
+        members.and(set).forEach(o -> s[0] += tradeSize(b, o));
+        return s[0];
     }
 
     private static double tradeSize(VarBook b, int o) {
@@ -393,9 +530,8 @@ final class VarViews {
     }
 
     private Part position(VarBook b, OrdinalSet set, int pi) {
-        int from = b.positionFrom(pi);
-        int to = b.positionTo(pi);
-        boolean whole = set.coversRange(from, to);
+        OrdinalSet members = b.positionMembers(pi);
+        boolean whole = set.containsAll(members);
         double[] v;
         double qty;
         Columns pc = b.positions();
@@ -403,15 +539,14 @@ final class VarViews {
             v = b.positionVector(pi);
             qty = pc.number("QUANTITY", pi);
         } else {                                                     // part of a position: the trades of it the scope holds
-            v = new double[b.width()];
-            double q = 0;
-            for (int o = from; o < to; o++) {
-                if (set.contains(o)) {
-                    b.store().addInto(v, o);
-                    q += nz(b.trades().number("QUANTITY", o));
-                }
-            }
-            qty = q;
+            double[] acc = new double[b.width()];
+            double[] q = {0};
+            members.and(set).forEach(o -> {
+                b.store().addInto(acc, o);
+                q[0] += nz(b.trades().number("QUANTITY", o));
+            });
+            v = acc;
+            qty = q[0];
         }
         Map<String, Object> a = new LinkedHashMap<>();
         a.put("instrument", pc.text("INSTRUMENT", pi));
@@ -419,21 +554,50 @@ final class VarViews {
         a.put("quantity", qty);
         a.put("marketValue", nan(pc.number("MARKET_VALUE", pi)));
         a.put("currency", pc.text("CURRENCY", pi));
+        a.put("tradeCurrency", positionCurrency(b, set, pi));
         a.put("book", pc.text("TT_BOOK", pi));
         a.put("productType", pc.text("PRODUCT_TYPE", pi));
         a.put("securityId", pc.text("SECURITY_ID", pi));
         a.put("rule", pc.text("POSITION_RULE", pi));
-        a.put("trades", whole ? to - from : set.countIn(from, to));
+        a.put("trades", whole ? members.size() : members.and(set).size());
         a.put("partial", !whole);
         String id = b.positionId(pi);
         return new Part(id, "POS:" + id, pc.text("INSTRUMENT", pi) == null ? id : pc.text("INSTRUMENT", pi), "position", v,
                 Double.isNaN(pc.number("MARKET_VALUE", pi)) ? Double.NaN : pc.number("MARKET_VALUE", pi), a);
     }
 
+    /**
+     * A trade's currency (VAR_GUIDE.md section 15.11): the currency its PVs came in (a scenario-PV row's {@code CURRENCY}), else the
+     * trade's own {@code CURRENCY} (a P&amp;L vector, sent in USD); {@code [currency, where from]}.
+     */
+    static String[] tradeCurrency(Columns tc, int o) {
+        String pv = tc.has(CurrencyTotals.COLUMN) ? tc.text(CurrencyTotals.COLUMN, o) : null;
+        if (pv != null) {
+            return new String[] {pv, "scenario PVs"};
+        }
+        String own = tc.text("CURRENCY", o);
+        return new String[] {own, own == null ? null : "trade"};
+    }
+
+    /** A position's trade currency: its trades' when they agree, else {@code mixed}. */
+    private static String positionCurrency(VarBook b, OrdinalSet set, int pi) {
+        java.util.Set<String> seen = new java.util.TreeSet<>();
+        b.positionMembers(pi).and(set).forEach(o -> {
+            String t = tradeCurrency(b.trades(), o)[0];
+            if (t != null) {
+                seen.add(t);
+            }
+        });
+        return seen.isEmpty() ? null : seen.size() > 1 ? "mixed" : seen.iterator().next();
+    }
+
     private static Part trade(VarBook b, int o) {
         Columns tc = b.trades();
         double q = nz(tc.number("QUANTITY", o));
         Map<String, Object> a = new LinkedHashMap<>();
+        String[] ccy = tradeCurrency(tc, o);
+        a.put("tradeCurrency", ccy[0]);
+        a.put("tradeCurrencyFrom", ccy[1]);
         a.put("direction", q > 0 ? "LONG" : q < 0 ? "SHORT" : "FLAT");
         a.put("quantity", q);
         a.put("productType", tc.text("PRODUCT_TYPE", o));
@@ -442,13 +606,21 @@ final class VarViews {
         a.put("book", tc.text("TT_BOOK", o));
         a.put("pv", nan(tc.number("PV", o)));
         String id = b.tradeId(o);
+        if (b.supplied(o)) {                                            // a supplied position (position grain): listed as the position it is
+            a.put("note", "supplied whole by its source system: a position, no trades of its own");
+            return new Part(id, "POS:" + id, id, "position", b.tradeVector(o), nz(tc.number("PV", o)) == 0 ? Double.NaN : tc.number("PV", o), a);
+        }
         return new Part(id, "TRD:" + id, id, "trade", b.tradeVector(o), nz(tc.number("PV", o)) == 0 ? Double.NaN : tc.number("PV", o), a);
     }
 
     // ------------------------------------------------------------------------------------------------------------------- contributions
 
     Map<String, Object> contributions(Principal p, String scope, LocalDate date, String by, String scenario) {
-        VarService.Scoped s = svc.scoped(p, scope, date);
+        return contributions(p, scope, date, by, scenario, VarDate.USD);
+    }
+
+    Map<String, Object> contributions(Principal p, String scope, LocalDate date, String by, String scenario, String ccy) {
+        VarService.Scoped s = svc.scoped(p, scope, date, ccy);
         VarBook b = s.date().book();
         Parts ps = partsOf(s, by, p);
         List<Part> parts = ps.list();
@@ -494,6 +666,8 @@ final class VarViews {
         }
         Map<String, Object> out = new LinkedHashMap<>();
         out.put("canonical", s.res().canonical());
+        out.put("currency", s.date().currency());
+        out.put("intraday", intradayNote(s.date()));
         out.put("by", parts.isEmpty() ? null : parts.get(0).kind());
         out.put("var", round(s.measures().var()));
         out.put("es", round(s.measures().es()));
@@ -521,15 +695,87 @@ final class VarViews {
         return -1;
     }
 
+    // ------------------------------------------------------------------------------------------------------------------- currencies
+
+    /**
+     * The scope in every listed reporting currency (VAR_GUIDE.md section 15.11, the explorer's "In other currencies" tab): each currency's
+     * VaR and ES computed from the scope's per-trade-currency totals with that currency's scenario FX (never the page's VaR at a rate),
+     * that VaR in the page's currency {@code ccy} at today's rate, and the difference from the page's VaR. As the viewer.
+     */
+    Map<String, Object> inCurrencies(Principal p, String scope, LocalDate date, String ccy) {
+        long t0 = System.nanoTime();
+        String page = VarCurrencies.normalise(ccy);
+        VarService.Scoped s = svc.scoped(p, scope, date);
+        VarDate usd = s.date();
+        ScenarioFx fx = svc.fx(usd);
+        if (fx.rates(page).isEmpty()) {
+            throw new DrishtiException(ErrorCode.VAR_NO_FX, "no " + page + " FX for the scenarios of " + usd.date() + "; the currencies with FX on "
+                    + "the date: " + String.join(", ", fx.currencies()));
+        }
+        CurrencyTotals.Sums totals = svc.totals(usd, s.set(), s.res().node());
+        List<String> list = new ArrayList<>(svc.props().currencies());
+        if (!list.contains(page)) {
+            list.add(page);
+        }
+        Map<String, VarCalc.Measures> measures = new LinkedHashMap<>();
+        for (String c : list) {
+            double[] v = c.equals(VarDate.USD) ? s.vector() : totals.in(fx, c);
+            measures.put(c, v == null ? null : svc.calc().measures(v));
+        }
+        double pageVar = measures.get(page) == null ? Double.NaN : measures.get(page).var();
+        List<Map<String, Object>> rows = new ArrayList<>();
+        for (String c : list) {
+            VarCalc.Measures m = measures.get(c);
+            Map<String, Object> r = new LinkedHashMap<>();
+            r.put("currency", c);
+            r.put("shown", c.equals(page));
+            r.put("listed", svc.props().currencies().contains(c));
+            if (m == null) {
+                r.put("note", "no " + c + " scenario FX on " + usd.date());
+                rows.add(r);
+                continue;
+            }
+            double rate = fx.cross(c, page, -1);
+            double inPage = m.var() * rate;
+            r.put("var", round(m.var()));
+            r.put("es", round(m.es()));
+            r.put("rate", rate);
+            r.put("varInPage", round(inPage));
+            r.put("difference", c.equals(page) ? null : round(inPage - pageVar));
+            r.put("differencePct", c.equals(page) || pageVar == 0 ? null : (inPage - pageVar) / pageVar);
+            rows.add(r);
+        }
+        Map<String, Object> out = new LinkedHashMap<>();
+        out.put("canonical", s.res().canonical());
+        out.put("label", s.label());
+        out.put("businessDate", usd.date().toString());
+        out.put("currency", page);
+        out.put("var", round(pageVar));
+        out.put("rows", rows);
+        out.put("tradeCurrencies", java.util.Arrays.asList(totals.currencies()));
+        out.put("note", "each currency's VaR is computed from the scope's PVs summed per trade currency, converted with that currency's "
+                + "scenario FX (crosses through USD): the currency move on the scenario days is part of its risk, so it is not the " + page
+                + " VaR at today's rate");
+        out.put("computeMs", (System.nanoTime() - t0) / 1_000_000);
+        svc.audit(p, "var-currencies", s, "page=" + page);
+        return out;
+    }
+
     // ------------------------------------------------------------------------------------------------------------------- path
 
     Map<String, Object> path(Principal p, String scope, LocalDate date, int page, int size) {
-        VarService.Scoped s = svc.scoped(p, scope, date);
+        return path(p, scope, date, page, size, VarDate.USD);
+    }
+
+    Map<String, Object> path(Principal p, String scope, LocalDate date, int page, int size, String ccy) {
+        VarService.Scoped s = svc.scoped(p, scope, date, ccy);
         VarBook b = s.date().book();
         double[] v = s.vector();
         int[] order = s.measures().order();
         Map<String, Object> out = new LinkedHashMap<>();
         out.put("canonical", s.res().canonical());
+        out.put("currency", s.date().currency());
+        out.put("intraday", intradayNote(s.date()));
         out.put("var", round(s.measures().var()));
         out.put("es", round(s.measures().es()));
         out.put("k", s.measures().k());
@@ -566,6 +812,9 @@ final class VarViews {
                 }
             }
             if (worstPart != null) {
+                if (worstPart.attrs().get("tradeCurrency") != null) {
+                    row.put("fromCurrency", worstPart.attrs().get("tradeCurrency"));
+                }
                 row.put("from", worstPart.label());
                 row.put("fromScope", worstPart.scope());
                 row.put("fromPnl", round(worstPart.vector()[j]));
@@ -595,6 +844,10 @@ final class VarViews {
         return history(svc.scoped(p, scope, date));
     }
 
+    Map<String, Object> history(Principal p, String scope, LocalDate date, String ccy) {
+        return history(svc.scoped(p, scope, date, ccy));
+    }
+
     /**
      * A node's official history (its official end-of-day captures: VaR, ES and the day's hypothetical P&amp;L over the window) and its
      * backtest; any other scope replays today's members over the window's scenario days against today's VaR (in-sample: it says so; not
@@ -607,7 +860,8 @@ final class VarViews {
         Map<String, Object> out = new LinkedHashMap<>();
         List<Map<String, Object>> rows = new ArrayList<>();
         VarOfficialStore.NodeHistory h = s.res().node() != null && s.view().full()
-                ? svc.official().history(s.res().node(), s.date().date(), svc.props().historyDays()) : null;
+                ? svc.official().history(s.res().node(), s.date().date(), svc.props().historyDays(), s.date().currency()) : null;
+        out.put("currency", s.date().currency());
         Backtest bt;
         if (h != null && h.dates().length > 1) {
             bt = Backtest.of(h.hypo(), h.var(), conf);
@@ -659,7 +913,11 @@ final class VarViews {
 
     /** Every node of a hierarchy the viewer sees, with its VaR, ES, limit and counts (the explorer's left pane). */
     Map<String, Object> tree(Principal p, String hierarchy, LocalDate date) {
-        VarDate d = svc.date(date);
+        return tree(p, hierarchy, date, VarDate.USD);
+    }
+
+    Map<String, Object> tree(Principal p, String hierarchy, LocalDate date, String ccy) {
+        VarDate d = svc.date(date, ccy);
         VarBook b = d.book();
         String h = hierarchy == null || hierarchy.isBlank() ? "MGMT" : hierarchy.toUpperCase(java.util.Locale.ROOT);
         VarBook.Node root = b.root(h);
@@ -667,9 +925,11 @@ final class VarViews {
             throw new DrishtiException(ErrorCode.ENTITY_NOT_FOUND, "no hierarchy " + h + " on " + d.date());
         }
         List<Map<String, Object>> rows = new ArrayList<>();
-        walk(p, b, root, 0, rows, date);
+        walk(p, b, root, 0, rows, date, d.currency());
         Map<String, Object> out = new LinkedHashMap<>();
         out.put("hierarchy", h);
+        out.put("currency", d.currency());
+        out.put("intraday", intradayNote(d));
         out.put("hierarchies", b.nodes().values().stream().filter(n -> n.parent() == null).map(VarBook.Node::hierarchy).sorted().toList());
         out.put("businessDate", d.date().toString());
         out.put("nodes", rows);
@@ -687,10 +947,10 @@ final class VarViews {
         return out;
     }
 
-    private void walk(Principal p, VarBook b, VarBook.Node n, int depth, List<Map<String, Object>> rows, LocalDate date) {
+    private void walk(Principal p, VarBook b, VarBook.Node n, int depth, List<Map<String, Object>> rows, LocalDate date, String ccy) {
         VarService.Scoped s;
         try {
-            s = svc.scoped(p, "NODE:" + n.id(), date);
+            s = svc.scoped(p, "NODE:" + n.id(), date, ccy);
         } catch (DrishtiException e) {
             return;
         }
@@ -715,7 +975,7 @@ final class VarViews {
         for (String c : n.children()) {
             VarBook.Node cn = b.node(c);
             if (cn != null) {
-                walk(p, b, cn, depth + 1, rows, date);
+                walk(p, b, cn, depth + 1, rows, date, ccy);
             }
         }
     }

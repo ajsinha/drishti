@@ -393,6 +393,7 @@ drishti:
       - "POST /api/v1/compute/events"          # trigger events (the write-back hook): the server and administrators, never a token
       - "POST /api/v1/var/reload"              # reloading the VaR vectors: an administrator in the console
       - "POST /api/v1/var/official"            # running the official end-of-day VaR capture: an administrator in the console
+      - "POST /api/v1/var/intraday/streams/*/apply"   # applying a PV topic's waiting window now: an administrator in the console
       - "POST /api/v1/exposure/reload"         # reloading the exposure paths: an administrator in the console
       - "POST /api/v1/exposure/official"       # running the official end-of-day exposure capture: an administrator in the console
       - "* /api/v1/embed/**"
@@ -608,8 +609,9 @@ drishti:
     keep-runs: 20
   var:                               # the VaR engine (docs/guides/VAR_GUIDE.md): VaR of any set of trades from the stored P&L vectors
     enabled: ${DRISHTI_VAR_ENABLED:true}
-    confidence: 0.99                 # VaR's confidence
-    es-confidence: 0.975             # expected shortfall's
+    confidence: ${DRISHTI_VAR_CONFIDENCE:0.99}          # VaR's confidence: 0.99 or 0.95 (refused at start outside (0.5, 1))
+    es-confidence: ${DRISHTI_VAR_ES_CONFIDENCE:0.975}   # expected shortfall's
+    scenario-window: ${DRISHTI_VAR_SCENARIO_WINDOW:all}  # all (the scenario set's length, 509 in the demo) or N: the newest N scenarios (250: 1 year; at least 20)
     rank-rule: kth-worst             # kth-worst (k = ceil(N (1 - a)): the 6th worst of 509) or interpolated
     component-window: 5              # component VaR averages the scenarios ranked k-2 .. k+2, scaled to add up to the VaR
     threads: ${DRISHTI_VAR_THREADS:0}                  # cores the vector sums use (0: every core)
@@ -622,6 +624,14 @@ drishti:
     histogram-bins: 42               # bins of the P&L distribution sent to the screen
     max-parts: 5000                  # most parts a contribution table computes at once (more: the largest by gross size, and said)
     path-page: 60                    # rows of the ranked P&L path per page
+    currencies: ${DRISHTI_VAR_CURRENCIES:USD,EUR,CAD,JPY,GBP}   # reporting currencies built ahead after the USD book (background, own hot files; USD always); others on first ask
+    currency-retention-dates: ${DRISHTI_VAR_CURRENCY_RETENTION_DATES:5}   # newest business dates whose listed currencies are built ahead and kept on disk
+    intraday:
+      kafka:                         # the PV topic (the market-risk pack's pv-updates connector, off by default): VAR_GUIDE.md section 8.4
+        window: ${DRISHTI_VAR_INTRADAY_KAFKA_WINDOW:5m}   # everything received in a window: one intraday batch in the lake, applied
+        max-trades: ${DRISHTI_VAR_INTRADAY_KAFKA_MAX_TRADES:500}   # a window applied earlier once this many trades wait
+    root-name: ${DRISHTI_VAR_ROOT_NAME:}   # the top of the VaR tree (every hierarchy's root node); blank keeps the hierarchy data's NAME
+    # root-names: {MGMT: "Group", LEGAL: "Group legal"}   # one hierarchy's root name; wins over root-name for it
     tier:                            # the tiered memory (docs/guides/VAR_GUIDE.md section 26): where a loaded date's vectors live
       mode: ${DRISHTI_VAR_TIER:mapped}                 # mapped: each date a float32 hot file, memory-mapped (heap: aggregates, columns, links); heap: float64 rows on the heap
       dir: ${DRISHTI_VAR_HOT_DIR:${drishti.data.dir:./data}/var/hot}   # one folder per business date; never under the repository
@@ -634,6 +644,9 @@ drishti:
       hierarchy: risk-hierarchy
       scenario-set: scenario-set
       portfolio: portfolio
+      scenario-pv: scenario-pv       # 2.9.4: trades sent as scenario PVs in their own currency, converted to USD P&L at load (beside or instead of vectors)
+      fx-scenario: fx-scenario       # 2.9.4: each currency's rate under each scenario, when the batch supplies it (USD per unit)
+      fx-spot: fx-spot               # 2.9.4: the FX history scenario rates are derived from when not supplied (the market-data pack's)
     access: {}                       # per role, per node: positions | aggregate (drishti.var.access.<role>[MGMT~DESK-RATES]=aggregate)
     positions:                       # how positions are derived from the trades when no loaded pack has a positions: section (the market-risk pack's wins)
       live-statuses: [NEW, VALIDATED, AMENDED]   # trade statuses that count on their date (a row with no status counts)
@@ -644,6 +657,7 @@ drishti:
       root: ${DRISHTI_DELTA_ROOT:${drishti.data.dir:./data}/delta}   # the risk lake's root; an s3:// root is not published by this writer
       retention-years: 7             # the published table keeps its log and removed files (time travel) this long
       on-start: true                 # at start, capture the newest date when it has no official record yet
+      currencies: [USD]              # reporting currencies captured officially (USD always, and the only one published); e.g. [USD, EUR]
       jsonl: true                    # also write each published date as JSON Lines: <root>/risk-results/jsonl/var-official/<date>/ (2.9.4)
   ccr:
     exposure:                        # the exposure engine (docs/guides/EXPOSURE_GUIDE.md): EE, ENE, EEE, PFE, EPE, EEPE of any counterparty scope from the exposure paths

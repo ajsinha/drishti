@@ -17,6 +17,9 @@ date (data/testdata/trades/*) and the core pack's desks, as an upstream risk bat
 
     pnl-vector/       one P&L vector per live trade: 509 scenario P&Ls in USD, the vector column PNL (list<double> in the lake), with the
                       trade's terms the server derives positions from (SECURITY_ID, TRADE_STATUS, MATURITY_DATE, product, book)
+    scenario-pv/      2.9.4: the Endur trades' scenario PVs instead (scenario_fx.py): each trade's PV under the 509 scenarios and its base
+                      PV, in its own currency, the vector column SCENARIO_PV; the server turns them into USD P&L when it loads the date
+    fx-scenario/      2.9.4: the scenario FX the batch supplies: per currency, USD per unit today and under each scenario
     scenario-set/     HS-509: the scenario days of the business date
     risk-hierarchy/   the MGMT tree (bank, division, desk, book) and the LEGAL tree (bank, legal entity, desk, book), with VaR limits
     portfolio/        portfolio definitions of the three types (HIERARCHY, RULE, BASKET), overlapping on purpose: no figures
@@ -46,6 +49,7 @@ ROOT = HERE.parents[2]
 sys.path.insert(0, str(HERE))
 sys.path.insert(0, str(ROOT / "tools"))
 import factors as F  # noqa: E402
+import scenario_fx as SFX  # noqa: E402
 import portfolios as PF  # noqa: E402
 import positions as P  # noqa: E402
 import varmath as VM  # noqa: E402
@@ -54,7 +58,8 @@ import sutracases as SC  # noqa: E402  (tests/<sutra>/cases.jsonl)
 
 PACK, CONNECTOR, SET = "market-risk", "risk-store", "HS-509"
 #: kind -> its id field (the lake key)
-KEYS = {"pnl-vector": "VECTOR_ID", "scenario-set": "SCENARIO_SET_ID", "risk-hierarchy": "NODE_ID", "portfolio": "PORTFOLIO_ID"}
+KEYS = {"pnl-vector": "VECTOR_ID", "scenario-pv": "SCENARIO_PV_ID", "fx-scenario": "FX_SCENARIO_ID", "scenario-set": "SCENARIO_SET_ID",
+        "risk-hierarchy": "NODE_ID", "portfolio": "PORTFOLIO_ID"}
 #: the folders this generator used to write and no longer does (removed when it writes)
 RETIRED = ("position", "var-node")
 PART_BYTES = 1_200_000                       # compressed bytes per file: the vectors are split into a few small files
@@ -77,7 +82,8 @@ nice = PF.nice
 class Demo:
     """Everything the VaR demo data holds for one business date."""
 
-    def __init__(self, testdata: Path, dates: list[str], budget: int = 0, rules: P.Rules | None = None):
+    def __init__(self, testdata: Path, dates: list[str], budget: int = 0, rules: P.Rules | None = None, pv_systems=None,
+                 position_systems=()):
         self.cob = dates[-1]
         trades: dict[str, dict] = {}
         for system in ("endur", "calypso", "murex"):
@@ -86,7 +92,10 @@ class Demo:
         vals = P.latest(testdata / "market-risk" / "trade-valuation", "VALUATION_ID", dates)
         self.desks = desks
         self.rules = rules or P.Rules.of_pack(PACK_YAML)
-        self.batch = P.Batch(trades, desks, vals, self.cob, self.rules, budget)
+        market = F.Market()
+        self.fx = SFX.Fx(market, SFX.today_rates(P.replay(testdata / "market-data" / "fx-spot", "PAIR", dates)))
+        self.batch = P.Batch(trades, desks, vals, self.cob, self.rules, budget, market=market, fx=self.fx, pv_systems=pv_systems,
+                             position_systems=position_systems)
         self.scenario_dates = business_days(previous_day(self.cob), F.N_SCENARIOS)
         self.n = F.N_SCENARIOS
         self.nodes = self._hierarchy()
@@ -197,6 +206,8 @@ def documents(demo: Demo) -> dict[str, list[dict]]:
     return {"risk-hierarchy": demo.hierarchy_rows(), "scenario-set": [demo.scenario_set()],
             # sorted as a book's trades are contiguous (the engine sorts a date in memory anyway: the lake's order does not matter)
             "pnl-vector": sorted(demo.batch.vector_rows, key=lambda r: (r["LEGAL_ENTITY"], r["DESK"], r["TT_BOOK"], r["TRADE_ID"])),
+            "scenario-pv": sorted(demo.batch.pv_rows, key=lambda r: (r["LEGAL_ENTITY"], r["DESK"], r["TT_BOOK"], r["TRADE_ID"])),
+            "fx-scenario": demo.fx.rows(demo.cob, SET, f"B-{demo.cob}-01"),
             "portfolio": PF.rows(demo)}
 
 
@@ -250,9 +261,22 @@ def samples(demo: Demo, docs: dict[str, list[dict]]) -> dict[Path, str]:
     otc = next(p for p in pos if p["DESK"] == "DESK-RATES" and p["POSITION_RULE"] == "otc")
     picks = {"position": [fungible, otc],
              "pnl-vector": [r for r in docs["pnl-vector"] if r["TRADE_ID"] == fungible["TRADE_IDS"][0]],
+             "scenario-pv": [r for r in docs["scenario-pv"] if r["CURRENCY"] != "USD"][:1],
+             "fx-scenario": [r for r in docs["fx-scenario"] if r["CURRENCY"] == "EUR"],
              "scenario-set": docs["scenario-set"],
              "risk-hierarchy": [n for n in docs["risk-hierarchy"] if n["NODE_ID"] in ("MGMT~DESK-RATES", "LEGAL~LE-NY")],
              "portfolio": [r for r in docs["portfolio"] if r["PORTFOLIO_ID"] in ("PF-RATES-DESK", "PF-USD-RATES", "PF-ASHA-UNWIND")]}
+    # and the same data at position grain (VAR_GUIDE.md section 15.13): a position its source system sends whole, naming its trades
+    b = demo.batch
+    for kind, key, form in (("pnl-vector", "VECTOR_ID", "PNL"), ("scenario-pv", "SCENARIO_PV_ID", "PV")):
+        rows = {r["TRADE_ID"]: r for r in docs[kind] if r.get("GRAIN") == "TRADE"}
+        for p in pos:
+            members = [rows.get(t) for t in p["TRADE_IDS"]]
+            if len(members) > 1 and all(members) and len({m["SOURCE_SYSTEM"] for m in members}) == 1:
+                k, row = b.supply(p["POSITION_ID"], members[0]["SOURCE_SYSTEM"], members)
+                if k == kind:
+                    picks[kind] = picks[kind] + [row]
+                    break
     out = {SAMPLES / f"{k}.jsonl": "".join(json.dumps(d, ensure_ascii=False, separators=(",", ":")) + "\n" for d in v) for k, v in picks.items()}
     # the pack's Sutra tests (tests/<kind>/cases.jsonl and expect.yaml: java -jar <server> sutra test config/packs/market-risk). The VaR
     # figures of these pages are the engine's, added when the page is opened: a test of the stored document checks the rest.
@@ -289,11 +313,25 @@ def main(argv=None) -> int:
     p.add_argument("--out", help="where to write (default: --testdata, with its testdata.yaml entries)")
     p.add_argument("--budget", type=int, default=0, help="most trades valued per book, whole positions only (default 0: every live trade)")
     p.add_argument("--check", action="store_true", help="fail if the committed files differ from what would be written")
+    p.add_argument("--pv-systems", default=",".join(SFX.PV_SYSTEMS), metavar="SYS,SYS",
+                   help=f"the source systems whose trades come as scenario PVs in their own currency (default {','.join(SFX.PV_SYSTEMS)})")
+    p.add_argument("--pnl-systems", default="", metavar="SYS,SYS", help="systems whose trades come as P&L vectors (USD) even if listed above")
+    p.add_argument("--all-vectors", action="store_true", help="every system as P&L vectors, exactly as in 2.9.3 (no scenario PVs)")
+    p.add_argument("--position-systems", default="", metavar="SYS,SYS",
+                   help="systems whose records come per position (GRAIN POSITION, summed from their trades, naming them in TRADE_IDS) "
+                        "rather than per trade (default: none)")
+    p.add_argument("--inputs-config", action="store_true",
+                   help="print the drishti.var.inputs snippet matching the data the flags produce, and stop")
     a = p.parse_args(argv)
     import yaml
     td = Path(a.testdata)
     dates = yaml.safe_load((td / "testdata.yaml").read_text(encoding="utf-8"))["business-dates"]
-    demo = Demo(td, dates, a.budget)
+    pv = pv_systems(a.pv_systems, a.pnl_systems, a.all_vectors)
+    by_position = tuple(s.strip().upper() for s in a.position_systems.split(",") if s.strip())
+    if a.inputs_config:
+        print(inputs_config(pv, by_position))
+        return 0
+    demo = Demo(td, dates, a.budget, pv_systems=pv, position_systems=by_position)
     if a.check:
         import tempfile
         with tempfile.TemporaryDirectory(prefix="drishti-var-check-") as tmp:
@@ -319,7 +357,43 @@ def main(argv=None) -> int:
     print(f"wrote {len(b.trade_vectors):,} trades in {len(b.positions):,} positions ({fungible:,} fungible, "
           f"{sum(1 for x in b.positions if x['LONG_TRADES'] and x['SHORT_TRADES'])} with buys and sells), {len(demo.nodes)} hierarchy nodes, "
           f"{len(entries)} folders, {total / 1e6:.2f} MB")
+    print(f"  {len(b.vector_rows):,} trades as P&L vectors, {len(b.pv_rows):,} as scenario PVs ({', '.join(b.pv_systems) or 'none'}), "
+          f"scenario FX supplied for {', '.join(SFX.CURRENCIES)}")
+    print("  the bank as the engine computes it: " + bank_figures(demo))
     return 0
+
+
+SYSTEMS = ("ENDUR", "MUREX", "CALYPSO")
+
+
+def inputs_config(pv: tuple[str, ...], by_position: tuple[str, ...]) -> str:
+    """The drishti.var.inputs pins matching the data (VAR_GUIDE.md section 15.13): optional, a cross-check of each record's own fields."""
+    lines = ["drishti:", "  var:", "    inputs:                      # optional: a record that disagrees with its system's pin is refused (DRS-5209)"]
+    for s in SYSTEMS:
+        form = "pv" if s in pv else "pnl"
+        grain = "position" if s in by_position else "trade"
+        lines.append(f"      {s + ':':<9}{{ form: {form + ',':<4} grain: {grain} }}")
+    lines.append("      default: { form: any, grain: any }")
+    return "\n".join(lines)
+
+
+def pv_systems(pv: str, pnl: str = "", all_vectors: bool = False) -> tuple[str, ...]:
+    """The systems sent as scenario PVs: ``--pv-systems`` less ``--pnl-systems``; none with ``--all-vectors`` (every trade a P&L vector)."""
+    if all_vectors:
+        return ()
+    keep = [s.strip().upper() for s in (pv or "").split(",") if s.strip()]
+    drop = {s.strip().upper() for s in (pnl or "").split(",") if s.strip()}
+    return tuple(s for s in keep if s not in drop)
+
+
+def bank_figures(demo: Demo) -> str:
+    """The bank's VaR 99% and ES 97.5% in USD from the files as the server reads them (vectors as sent, scenario PVs converted), and
+    from the factor model's USD vectors alone (what every trade's P&L vector was before 2.9.4): the difference is the FX translation of
+    the scenario-PV trades in other currencies."""
+    b = demo.batch
+    model = VM.add(v[:demo.n] for v in b.trade_vectors.values())
+    engine = VM.add((b.engine_vectors.get(t) or v)[:demo.n] for t, v in b.trade_vectors.items())
+    return (f"VaR {VM.var(engine):,.0f} ES {VM.es(engine):,.0f} (all as P&L vectors: VaR {VM.var(model):,.0f} ES {VM.es(model):,.0f})")
 
 
 if __name__ == "__main__":

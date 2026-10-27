@@ -20138,7 +20138,7 @@ datasets:
   dated-by: BUSINESS_DATE
   first-date: '2026-09-30'
   last-date: '2026-09-30'
-  documents: 9572
+  documents: 8233
   files:
   - cob-2026-09-30.part-001.jsonl.gz
   - cob-2026-09-30.part-002.jsonl.gz
@@ -20150,9 +20150,33 @@ datasets:
   - cob-2026-09-30.part-008.jsonl.gz
   - cob-2026-09-30.part-009.jsonl.gz
   - cob-2026-09-30.part-010.jsonl.gz
-  - cob-2026-09-30.part-011.jsonl.gz
-  - cob-2026-09-30.part-012.jsonl.gz
-  bytes: 15735933
+  bytes: 13442175
+- folder: market-risk/scenario-pv
+  pack: market-risk
+  kind: scenario-pv
+  connector: risk-store
+  key: SCENARIO_PV_ID
+  dated-by: BUSINESS_DATE
+  first-date: '2026-09-30'
+  last-date: '2026-09-30'
+  documents: 1339
+  files:
+  - cob-2026-09-30.part-001.jsonl.gz
+  - cob-2026-09-30.part-002.jsonl.gz
+  - cob-2026-09-30.part-003.jsonl.gz
+  bytes: 2769177
+- folder: market-risk/fx-scenario
+  pack: market-risk
+  kind: fx-scenario
+  connector: risk-store
+  key: FX_SCENARIO_ID
+  dated-by: BUSINESS_DATE
+  first-date: '2026-09-30'
+  last-date: '2026-09-30'
+  documents: 6
+  files:
+  - cob-2026-09-30.jsonl.gz
+  bytes: 16315
 - folder: market-risk/portfolio
   pack: market-risk
   kind: portfolio

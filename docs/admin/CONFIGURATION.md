@@ -328,6 +328,14 @@ files (`application-files.yaml`, `application-postgres.yaml`, …) and packs hav
 | `DRISHTI_VAR_MEMORY_MB` | `drishti.var.memory-budget-mb` | `0` | Most memory one date's P&L vectors take (`0`: a quarter of the heap). |
 | `DRISHTI_VAR_TIER` | `drishti.var.tier.mode` | `mapped` | Where a loaded date's vectors live: `mapped` (a memory-mapped float32 hot file per date) or `heap` (float64 on the heap). |
 | `DRISHTI_VAR_HOT_DIR` | `drishti.var.tier.dir` | `./data/var/hot` | The VaR hot files' folder (one folder per business date); under the data folder unless set. |
+| `DRISHTI_VAR_CURRENCIES` | `drishti.var.currencies` | `USD,EUR,CAD,JPY,GBP` | 2.9.4. The reporting currencies built ahead after each date's USD book (USD always). |
+| `DRISHTI_VAR_CURRENCY_RETENTION_DATES` | `drishti.var.currency-retention-dates` | `5` | 2.9.4. The newest business dates whose listed currencies are built ahead and kept on disk. |
+| `DRISHTI_VAR_INTRADAY_KAFKA_WINDOW` | `drishti.var.intraday.kafka.window` | `5m` | 2.9.4. The PV topic's window: everything received in it is appended to the lake as one intraday batch and applied (`30s`, `5m`, `1h`). |
+| `DRISHTI_VAR_INTRADAY_KAFKA_MAX_TRADES` | `drishti.var.intraday.kafka.max-trades` | `500` | 2.9.4. A window is applied earlier once this many trades wait. |
+| `DRISHTI_VAR_CONFIDENCE` | `drishti.var.confidence` | `0.99` | VaR's confidence: 0.99 or 0.95 (refused at start outside (0.5, 1)); every label follows it; limits are set against it. |
+| `DRISHTI_VAR_ES_CONFIDENCE` | `drishti.var.es-confidence` | `0.975` | Expected shortfall's confidence. |
+| `DRISHTI_VAR_SCENARIO_WINDOW` | `drishti.var.scenario-window` | `all` | 2.9.4. The scenarios used: `all` (the scenario set's length) or N ≥ 20, the newest N of each date's set (250: one year). |
+| `DRISHTI_VAR_ROOT_NAME` | `drishti.var.root-name` | empty | 2.9.4. The name of the top of the VaR tree (every hierarchy's root node); empty keeps the hierarchy data's `NAME` (*Drishti Bank* in the demo). `drishti.var.root-names` (a map, hierarchy to name) wins for one hierarchy. Read when a date loads: restart the server (or reload the dates) after changing it. |
 | `DRISHTI_COMPUTE_VAR_WORKERS` | `compute.pools.var.workers.max` (`config/compute/compute.yaml`) | `4` | Python workers of the compute pool `var` (the Python VaR engine: what-if and the stressed window) on this node. |
 | `DRISHTI_VAR_OFFICIAL` | `drishti.var.official.enabled` | `true` | Capture every node officially at the end of each loaded date, and publish it to `risk-results/var-official`. |
 | `DRISHTI_DELTA_ROOT` | `drishti.var.official.root` | `./data/delta` | The Delta root the official VaR results are published under (`risk-results/var-official`); the packs' Delta connectors use the same variable. |
@@ -1417,8 +1425,9 @@ else by `drishti.var.positions`.
 | Key | Default | Meaning |
 |---|---|---|
 | `enabled` | `true` (`DRISHTI_VAR_ENABLED`) | The engine at all. Off: `/api/v1/var` and the explorer are not served. |
-| `confidence` | `0.99` | VaR's confidence. |
-| `es-confidence` | `0.975` | Expected shortfall's confidence. |
+| `confidence` | `0.99` (`DRISHTI_VAR_CONFIDENCE`) | VaR's confidence: 0.99 or 0.95; refused at start outside (0.5, 1). Every label (console, CLI, Home facts) follows it; limits are set against it, so a change changes limit use; backtesting keeps 99% (the Basel light). `confidence=` per request recomputes the headline, never official. |
+| `es-confidence` | `0.975` (`DRISHTI_VAR_ES_CONFIDENCE`) | Expected shortfall's confidence; refused outside (0.5, 1). |
+| `scenario-window` | `all` (`DRISHTI_VAR_SCENARIO_WINDOW`) | 2.9.4. `all`, or N ≥ 20: the newest N scenarios of each date's set, every row cut to them at load; k = ceil(N (1 − confidence)); a shorter set is used whole (a warning in the provenance); in the hot file's digest; official records state it. `window=` per request recomputes the headline, never official. [VAR_GUIDE.md section 18.5](../guides/VAR_GUIDE.md#185-the-scenario-window-and-the-confidences-as-built-294). |
 | `rank-rule` | `kth-worst` | `kth-worst` (k = ceil(N (1 − confidence)): the 6th worst of 509) or `interpolated`. |
 | `component-window` | `5` | Component VaR averages this many scenarios ranked around the VaR scenario (k−2 to k+2). |
 | `threads` | `0` (`DRISHTI_VAR_THREADS`) | Cores the vector sums use; `0` is every core. |
@@ -1437,6 +1446,7 @@ else by `drishti.var.positions`.
 | `max-parts` | `5000` | Most parts a contribution table computes at once; more: the largest by gross size (market value, PV, quantity), and the answer says so. |
 | `path-page` | `60` | Rows of the ranked P&L path per page. |
 | `kinds.vector`, `kinds.position`, `kinds.hierarchy`, `kinds.scenario-set`, `kinds.portfolio` | `pnl-vector`, `position`, `risk-hierarchy`, `scenario-set`, `portfolio` | The kinds the engine reads (the market-risk pack's), and `position`, the kind its derived positions are served as (the `var-positions` connector). The data-load signal of an input kind (and of `trade`) reloads that date and captures it officially. |
+| `kinds.scenario-pv`, `kinds.fx-scenario`, `kinds.fx-spot` | `scenario-pv`, `fx-scenario`, `fx-spot` | 2.9.4. Trades sent as **scenario PVs** in their own currency (beside or instead of P&L vectors; converted to USD P&L when the date loads), each currency's **supplied** scenario FX, and the **FX history** scenario rates are derived from when none is supplied (the market-data pack's `fx-spot`). `scenario-pv` and `fx-scenario` are inputs (their data-load signal reloads the date); `fx-spot` is not ([VAR_GUIDE.md section 15.9](../guides/VAR_GUIDE.md#159-scenario-pv-scenario-pvs-per-trade-in-the-trades-currency-as-built-294)). |
 | `access` | `{}` | Per role and hierarchy node, `positions` or `aggregate`: an aggregate-only role sees figures but no positions or trades below that node (`drishti.var.access.<role>[MGMT~DESK-RATES]=aggregate`). |
 | `positions.live-statuses` | `[NEW, VALIDATED, AMENDED]` | Trade statuses (the vector rows' `TRADE_STATUS`) that count on their date; a row with no status counts; a matured trade (`MATURITY_DATE` before the date) never does. Used when no loaded pack has a `positions:` section. |
 | `positions.rules` | `[]` | First match wins: `{name, groups: [PRODUCT_GROUP…], types: [PRODUCT_TYPE…], key: [SECURITY_ID, ISIN…]}`; a trade's position is `POS-<TT_BOOK>~<the first key field it carries>`, else (no rule, no key) one position per trade, `POS-<TT_BOOK>~<TRADE_ID>` ([VAR_GUIDE.md section 15.6](../guides/VAR_GUIDE.md#156-positions-derived-by-drishti-as-built)). A loaded pack's `positions:` section wins. |
@@ -1445,6 +1455,14 @@ else by `drishti.var.positions`.
 | `official.root` | `${DRISHTI_DELTA_ROOT:${drishti.data.dir:./data}/delta}` | The Delta root the results are published under (a local or shared folder; an `s3://` root is not published by this writer). |
 | `official.retention-years` | `7` | The published table keeps its log and its removed files this long (`delta.logRetentionDuration`, `delta.deletedFileRetentionDuration`): its time travel reaches back that far. |
 | `official.on-start` | `true` | At start, capture the newest date when it has no official record yet (a lake built while the server was down). |
+| `currencies` | `USD,EUR,CAD,JPY,GBP` (`DRISHTI_VAR_CURRENCIES`) | 2.9.4. The reporting currencies **built ahead**: once a date's USD book has loaded, a background thread builds each listed currency's book into its own hot file (`<hot>/<date>-<CCY>/`), so a VaR in it never waits on its first ask; USD always, first. Any other currency with scenario FX is built on first ask. Mapped tier only (on the heap tier they stay first-ask). About 2.5 KB a trade a currency a date on disk ([VAR_GUIDE.md section 15.11](../guides/VAR_GUIDE.md#1511-reporting-currencies-built-ahead-per-trade-currency-totals-and-the-picker-as-built-294)). |
+| `intraday.kafka.window` | `5m` (`DRISHTI_VAR_INTRADAY_KAFKA_WINDOW`) | 2.9.4. The PV topic's micro-batch window (the `pv-updates` connector, [VAR_GUIDE.md section 8.4](../guides/VAR_GUIDE.md#84-what-if-pricing-and-intraday-recomputes-what-if-planned-intraday-updates-as-built-in-294)): every record received in it is appended to the lake as one intraday batch, then applied. |
+| `intraday.kafka.max-trades` | `500` (`DRISHTI_VAR_INTRADAY_KAFKA_MAX_TRADES`) | 2.9.4. A window is applied earlier once this many trades wait; an administrator's **Apply now** applies it at once. |
+| `root-name` | empty (`DRISHTI_VAR_ROOT_NAME`) | 2.9.4. The name every hierarchy's root node shows (the top of the VaR tree, the breadcrumbs, the headline, the command line, `var-result`, captures and new official records); empty keeps the data's `NAME`. Records captured before a change keep the name they were captured with. The name is part of a hot file's digest, so a change rebuilds the date's file at its next load. |
+| `inputs` | none (`default: {form: any, grain: any}`) | 2.9.4. An optional pin per source system of what its PV records are: `inputs: {ENDUR: {form: pv, grain: position}, CALYPSO: {form: pnl, grain: trade}, default: {form: any, grain: any}}` (`form` pv, pnl or any; `grain` trade, position or any). Every record says what it is (`VALUE_TYPE`, `GRAIN`); a pin is a cross-check: a record that disagrees is refused (`DRS-5209`). Read at start (a change needs a restart and applies from the next date loaded). [VAR_GUIDE.md section 15.13](../guides/VAR_GUIDE.md#1513-inputs-any-form-any-grain-as-built-294). |
+| `root-names` | none | 2.9.4. One hierarchy's root name, over `root-name`: `root-names: {MGMT: "Group", LEGAL: "Group legal entities"}` (hierarchy ids in any case). |
+| `currency-retention-dates` | `5` (`DRISHTI_VAR_CURRENCY_RETENTION_DATES`) | 2.9.4. The newest business dates whose listed currencies are built ahead and kept; older dates' listed-currency hot files are deleted after each build (asked again, they are built on first ask). |
+| `official.currencies` | `[USD]` | 2.9.4. The reporting currencies captured officially: USD always (first, and the only one published to `risk-results/var-official`); each other one (`[USD, EUR]`) is captured from the date's book in that currency and kept in the content store (`var/official/<CCY>/<date>.json`), read by `GET /api/v1/var/official?ccy=EUR` and by a node's history in that currency. |
 | `official.jsonl` | `true` | Also write each published date as JSON Lines beside the table, one row a line: `<root>/risk-results/jsonl/var-official/<date>/var-official-v<table version>.jsonl`, one file per commit (2.9.4, [DATA_FORMATS.md](../guides/DATA_FORMATS.md)). |
 
 ### `drishti.ccr.exposure` — the exposure engine
@@ -2682,12 +2700,14 @@ Packs declare their connectors in `pack.yaml` with placeholders, so you switch t
 | `DRISHTI_LAKE_ENABLED` | `true` | every shipped pack | Switch every pack's data connector off (the demo samples still answer). Leave it `true` with the `postgres`, `aerospike` or `duckdb` profile: those profiles change the plugin of the same connectors, and this switch would turn them off too. |
 | `DRISHTI_ALLOW_INSECURE_TLS` | unset | every connector with `tls.*` | Must be `true` for a connector to run with `tls.insecure-trust-all: true` (development only). |
 | `DRISHTI_STREAM_TRADING` | `false` | trading | Turn on the `trading-stream` Kafka connector. |
-| `DRISHTI_KAFKA_BOOTSTRAP` | `localhost:9092` | trading | Its brokers. |
+| `DRISHTI_KAFKA_BOOTSTRAP` | `localhost:9092` | trading, market-risk | Its brokers (and the PV topic's). |
 | `DRISHTI_TRADING_TOPIC` | `drishti.trading.trades` | trading | Its topic. |
 | `DRISHTI_STREAM_DISK_CACHE` | `true` | trading | Its disk cache on or off. |
 | `DRISHTI_CACHE_ROOT` | `./data/cache` | trading | Disk cache root (one sub-directory per connector). |
 | `DRISHTI_STREAM_CACHE_GB` | `10` | trading | Disk cache size. |
 | `DRISHTI_CACHE_RESET_AT` | `02:00` | trading | Nightly clearing time (New York). |
+| `DRISHTI_VAR_PV_STREAM` | `false` | market-risk | 2.9.4: turn on the `pv-updates` connector (plugin `var-pv-stream`): the pricing systems' PV topic, windowed into intraday batches of the risk lake ([VAR_GUIDE.md section 8.4](../guides/VAR_GUIDE.md#84-what-if-pricing-and-intraday-recomputes-what-if-planned-intraday-updates-as-built-in-294)). |
+| `DRISHTI_VAR_PV_TOPIC` | `drishti.risk.pv-updates` | market-risk | Its topic: each message's value JSONL text, one or more records of `scenario-pv` or `pnl-vector` (a cancel a cancel line). The window is the server's `drishti.var.intraday.kafka.window`. |
 | `DRISHTI_FEED_NYFED_SOFR`, `DRISHTI_FEED_ECB_ESTR`, `DRISHTI_FEED_ECB_FX`, `DRISHTI_FEED_US_TREASURY`, `DRISHTI_FEED_FRED` | `false` | market-data | Turn each public feed on. |
 | `FRED_API_KEY`, `DRISHTI_FRED_SERIES` | empty, `DGS10,DFF` | market-data | FRED needs a key. |
 
@@ -2976,7 +2996,7 @@ Server (S), console (C), or both.
 | `DRISHTI_PUBLIC_URL`, `DRISHTI_CONSOLE_URL`, `DRISHTI_EMBED_KEY_FILE` | S | `drishti.embed.issuer`, `.audiences`, `.signing-key` |
 | `DRISHTI_OIDC_CLIENT_SECRET`, `DRISHTI_OIDC_REDIRECT_URI` | C | `auth.oidc.*` |
 | `DRISHTI_SEED_ADMIN` and other identity variables | S | see [USER_MANAGEMENT.md](USER_MANAGEMENT.md) |
-| `DRISHTI_DELTA_ROOT`, `DRISHTI_DELTA_ENGINE`, `DRISHTI_LAKE_ENABLED`, `DRISHTI_STREAM_*`, `DRISHTI_KAFKA_BOOTSTRAP`, `DRISHTI_TRADING_TOPIC`, `DRISHTI_CACHE_*`, `DRISHTI_FEED_*`, `FRED_API_KEY`, `DRISHTI_FRED_SERIES` | S (packs) | [pack connectors](#environment-variables-used-by-the-packs-and-profiles) |
+| `DRISHTI_DELTA_ROOT`, `DRISHTI_DELTA_ENGINE`, `DRISHTI_LAKE_ENABLED`, `DRISHTI_STREAM_*`, `DRISHTI_KAFKA_BOOTSTRAP`, `DRISHTI_TRADING_TOPIC`, `DRISHTI_VAR_PV_*`, `DRISHTI_CACHE_*`, `DRISHTI_FEED_*`, `FRED_API_KEY`, `DRISHTI_FRED_SERIES` | S (packs) | [pack connectors](#environment-variables-used-by-the-packs-and-profiles) |
 | `SPRING_PROFILES_ACTIVE`, `DRISHTI_PG_*`, `DRISHTI_AEROSPIKE_*`, `DRISHTI_DUCKDB_*`, `DRISHTI_FILES_ROOT`, `DRISHTI_ICEBERG_*`, `DRISHTI_MONGODB_*`, `DRISHTI_REDIS_*` | S | [profiles](#profiles-another-store-instead-of-delta-lake) |
 | `DRISHTI_CONSOLE_HOST`, `DRISHTI_CONSOLE_PORT`, `DRISHTI_BACKEND_URL`, `DRISHTI_USER` | C | `server.*`, `backend.url`, `ui.user` |
 | `DRISHTI_AUTH_ENABLED`, `DRISHTI_SESSION_SECRET`, `DRISHTI_SECURE_COOKIE` | C | `auth.*` |

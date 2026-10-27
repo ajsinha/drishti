@@ -86,6 +86,7 @@ public final class ScopeResolver {
             }
             if (r.word().equals("TRD") && r.ids().size() == 1) {
                 trade = book.tradeOrdinalAnyCase(r.ids().get(0));
+                trade = book.supplied(trade) ? -1 : trade;
             }
         }
         return new Resolution(set, e.toString(), node, position, trade, List.copyOf(unknown), List.copyOf(notes), List.copyOf(warnings));
@@ -124,22 +125,26 @@ public final class ScopeResolver {
                 return book.node(id).members();
             }
             case "POS" -> {
-                OrdinalSet.Builder b = new OrdinalSet.Builder();
+                OrdinalSet out = OrdinalSet.empty();
                 for (String id : r.ids()) {
                     int p = book.positionIndexAnyCase(id);
                     if (p < 0) {
                         unknown.add(id);
                     } else {
-                        b.addRange(book.positionFrom(p), book.positionTo(p));
+                        out = out.or(book.positionMembers(p));            // its run, and any trade an intraday batch added to it
                     }
                 }
-                return b.build();
+                return out;
             }
             case "TRD" -> {
                 OrdinalSet.Builder b = new OrdinalSet.Builder();
                 for (String id : r.ids()) {
                     int o = book.tradeOrdinalAnyCase(id);
-                    if (o < 0) {
+                    if (o >= 0 && book.supplied(o)) {                    // a supplied position: no trade-level VaR, said in words
+                        unknown.add(id);
+                        notes.add("TRD:" + id + " is a position its source system sends whole (position grain): ask POS:" + id
+                                + "; there is no trade-level VaR for it on this date");
+                    } else if (o < 0) {
                         unknown.add(id);
                     } else {
                         b.add(o);
@@ -164,7 +169,7 @@ public final class ScopeResolver {
                 for (int p = 0; p < book.positionCount(); p++) {
                     int pi = p;
                     if (rule.matches(f -> pc.value(f, pi))) {
-                        b.addRange(book.positionFrom(p), book.positionTo(p));
+                        book.positionMembers(p).forEachRun(b::addRange);
                         matched++;
                     }
                 }

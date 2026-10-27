@@ -35,7 +35,7 @@ import java.util.concurrent.Callable;
 import java.util.zip.CRC32C;
 
 /**
- * The hot file of one business date (VAR_GUIDE.md section 26, format 1, as built in 2.8.0): a local, write-once, little-endian file under the
+ * The hot file of one business date (VAR_GUIDE.md section 26, format 2: 2.8.0's format 1 with the optional {@code CTOT} section, 2.9.4): a local, write-once, little-endian file under the
  * data folder that holds everything the engine needs to answer a date without the lake: the trades' and positions' columns and ids, the
  * positions' runs, the books and nodes, the node aggregates in float64, and the vectors as a <b>float32</b> matrix of <b>positions</b> in
  * hierarchy order (plus the trades of positions of more than one trade). It is memory-mapped: the heap keeps the aggregates, columns and
@@ -65,12 +65,13 @@ import java.util.zip.CRC32C;
  *
  * Sections: {@code META} (the server's JSON: intake, versions, rules), {@code SCEN} (scenario days), {@code TIDS}, {@code TCOL},
  * {@code PIDS}, {@code PRUN}, {@code PCOL}, {@code BOOK}, {@code NODE}, {@code AKEY}, {@code AGGS} (float64 M x N), {@code TMAP} (trade to
- * TMAT row), {@code PMAT} (float32 P x N, 64-byte aligned), {@code TMAT} (float32 Q x N, 64-byte aligned). Every section carries a CRC32C;
- * the small ones are checked on open, the matrices by {@link #verify}.
+ * TMAT row), {@code CTOT} (a USD book's per-trade-currency totals of every node, float64, {@link CurrencyTotals}; optional),
+ * {@code PMAT} (float32 P x N, 64-byte aligned), {@code TMAT} (float32 Q x N, 64-byte aligned). Every section carries a CRC32C; the
+ * small ones are checked on open, the matrices by {@link #verify}.
  */
 public final class VarHotFile {
 
-    public static final int VERSION = 1;
+    public static final int VERSION = 2;
     public static final String SUFFIX = ".vhot";
     static final byte[] MAGIC = "DRSHVAR1".getBytes(StandardCharsets.US_ASCII);
     static final int HEADER = 256;
@@ -84,7 +85,7 @@ public final class VarHotFile {
     /** The date's content for {@link #write}: everything the book holds, in hierarchy order. */
     record Content(LocalDate businessDate, String scenarioSet, List<LocalDate> scenarioDates, String[] tradeIds, Columns trades,
             String[] positionIds, int[] posFrom, int[] posTo, Columns positions, Map<String, int[]> bookRange, Map<String, VarBook.Node> nodes,
-            Map<String, double[]> aggregates, int failed, String batchId, String digest, String meta) {}
+            Map<String, double[]> aggregates, int failed, String batchId, String digest, String meta, CurrencyTotals totals) {}
 
     private VarHotFile() {}
 
@@ -121,6 +122,9 @@ public final class VarHotFile {
         small.put("AKEY", strings(keys.toArray(new String[0])));
         small.put("AGGS", aggregates(keys, c.aggregates(), n));
         small.put("TMAP", ints(memberRow));
+        if (c.totals() != null) {
+            small.put("CTOT", c.totals().write());
+        }
         int sections = small.size() + 1 + (q > 0 ? 1 : 0);
         long at = HEADER + (long) sections * ENTRY;
         List<long[]> table = new ArrayList<>();                         // {id, offset, length, crc}
@@ -468,6 +472,7 @@ public final class VarHotFile {
         Map<String, VarBook.Node> nodes;
         Map<String, double[]> agg = new java.util.concurrent.ConcurrentHashMap<>();
         int[] memberRow;
+        CurrencyTotals totals;
         try (FileChannel ch = FileChannel.open(file, StandardOpenOption.READ)) {
             h = header(read(ch, 0, HEADER));
             table = table(ch);
@@ -507,6 +512,7 @@ public final class VarHotFile {
             for (int i = 0; i < memberRow.length; i++) {
                 memberRow[i] = tm.getInt();
             }
+            totals = table.containsKey("CTOT") ? CurrencyTotals.read(section(ch, table, "CTOT"), h.width()) : null;
         }
         int[] posOf = new int[tids.length];
         for (int k = 0; k < pids.length; k++) {
@@ -527,7 +533,7 @@ public final class VarHotFile {
         Vectors store = new GroupedVectors(positions, trades, posOf, from, to, memberRow);
         VarBook.Hot hot = new VarBook.Hot(file, positions, trades, h.digest(), meta, h.writtenAt());
         return new VarBook(h.businessDate(), h.scenarioSet(), scen, store, tids, tcols, posOf, pids, from, to, pcols, nodes, bookRange, agg,
-                (int) h.failed(), loadMillis, hot);
+                (int) h.failed(), loadMillis, hot, totals);
     }
 
     private static Map<String, VarBook.Node> readNodes(In in, Map<String, int[]> bookRange) {

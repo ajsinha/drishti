@@ -38,7 +38,12 @@ storage:
   domain: risk
   table: <root>/risk/pnl-vector/
   columns:
+  - VALUE_TYPE
+  - GRAIN
   - TRADE_ID
+  - POSITION_ID
+  - CURRENCY
+  - SOURCE_SYSTEM
   - SECURITY_ID
   - INSTRUMENT
   - LEGAL_ENTITY
@@ -49,7 +54,6 @@ storage:
   - STRATEGY
   - PRODUCT_GROUP
   - PRODUCT_TYPE
-  - CURRENCY
   - COUNTERPARTY
   - DIRECTION
   - QUANTITY
@@ -61,24 +65,71 @@ storage:
   - REPORTING_CCY
   - SCENARIO_SET_ID
   - BATCH_ID
+  - RUN_KIND
+  - COMPUTED_AT
+  - TRADE_IDS
   vectors:
   - PNL
   test-data:
   - data/testdata/market-risk/pnl-vector
 fields:
+- name: VALUE_TYPE
+  type: text
+  presence: required
+  description: 'What the values are (2.9.4, VAR_GUIDE.md section 15.13): PV, scenario PVs and BASE_PV in CURRENCY; PNL, a P&L vector.
+    It must be the record''s payload (refused as DRS-5208 when it is not) and agree with its system''s pin when drishti.var.inputs pins
+    one (DRS-5209).'
+  example: PNL
+  enum: [PV, PNL]
+- name: GRAIN
+  type: text
+  presence: required
+  description: 'What one record is (2.9.4, VAR_GUIDE.md section 15.13): TRADE, one trade, with its TRADE_ID (its position derived by
+    the pack''s rules); POSITION, one position its source system sends whole, with its POSITION_ID, placed by its book (LEGAL_ENTITY,
+    DESK, TT_BOOK) and naming its trades in TRADE_IDS when it knows them. It must match the id (DRS-5208) and the pin (DRS-5209); one
+    source system sends one form and one grain on one date (DRS-5210).'
+  example: TRADE
+  enum: [TRADE, POSITION]
+- name: TRADE_ID
+  type: id
+  presence: optional
+  description: 'Trade: the trade it refers to, at GRAIN TRADE (required then)'
+  example: MX-20000274
+  pattern: ^((MX|CLY)-)?\d+$
+  link: trade
+- name: POSITION_ID
+  type: id
+  presence: optional
+  description: 'The position, at GRAIN POSITION (required then, and no TRADE_ID): used as it is, never derived from trades. At GRAIN
+    TRADE it is absent (the engine derives the trade''s position).'
+  example: POS-ENDUR-BOOK-COMM-1-ComSwap-USD
+  link: position
+- name: CURRENCY
+  type: text
+  presence: required
+  description: 'The currency the P&L values are in (2.9.4; USD in the demo). A vector in another currency is converted to USD per
+    scenario with that scenario''s FX (approximate: the currency move inside the trade is already folded into the vector; counted in
+    tradesWithoutPv); a currency with no scenario FX on the date rejects the row (DRS-5207). The trade''s own currency is TRADE_CURRENCY.'
+  example: USD
+- name: SOURCE_SYSTEM
+  type: text
+  presence: required
+  example: MUREX
+  enum:
+  - CALYPSO
+  - MUREX
 - name: VECTOR_ID
   type: id
   presence: required
   description: The record's id (the business key)
   example: PV-MX-20000274-HS-509
   pattern: ^PV-
-- name: TRADE_ID
-  type: id
-  presence: required
-  description: 'Trade: the trade it refers to'
-  example: MX-20000274
-  pattern: ^(MX|CLY)-\d+$
-  link: trade
+- name: TRADE_CURRENCY
+  type: text
+  presence: optional
+  description: 'The trade''s (or position''s) own currency when it is not the P&L''s (2.9.4): what scopes, rules and the pages'' Trade
+    currency read. Absent: CURRENCY.'
+  example: GBP
 - name: SECURITY_ID
   type: id
   presence: optional
@@ -97,16 +148,9 @@ fields:
   type: id
   presence: required
   example: HS-509
-- name: SOURCE_SYSTEM
-  type: text
-  presence: required
-  example: MUREX
-  enum:
-  - CALYPSO
-  - MUREX
 - name: TRADE_VERSIONS
   type: text
-  presence: required
+  presence: optional
   example: v4
 - name: TRADE_STATUS
   type: text
@@ -160,6 +204,7 @@ fields:
   presence: required
   example: Equity
   enum:
+  - Commodity
   - Equity
   - FX
   - Securities financing
@@ -167,20 +212,9 @@ fields:
   type: text
   presence: required
   example: WARRANT
-- name: CURRENCY
-  type: text
-  presence: required
-  example: USD
-  enum:
-  - CAD
-  - CHF
-  - EUR
-  - GBP
-  - JPY
-  - USD
 - name: COUNTERPARTY
   type: id
-  presence: required
+  presence: optional
   description: 'Counterparty: the counterparty it refers to'
   example: CP-SUMMIT
   pattern: ^CP-
@@ -203,7 +237,9 @@ fields:
   example: option
 - name: REPORTING_CCY
   type: text
-  presence: required
+  presence: optional
+  description: 'Deprecated (2.9.4): an alias of CURRENCY, the P&L values'' currency; when present it must equal CURRENCY, else the row is
+    refused (DRS-5208).'
   example: USD
 - name: PV
   type: amount
@@ -233,7 +269,7 @@ fields:
 - name: COMPUTED_AT
   type: timestamp
   presence: required
-  example: '2026-09-30T22:30:00Z'
+  example: '2026-09-30T06:00:00Z'
 - name: BATCH_ID
   type: id
   presence: required
@@ -242,6 +278,22 @@ fields:
   type: integer
   presence: required
   example: 0
+- name: RUN_KIND
+  type: text
+  presence: optional
+  description: 'Which run the row belongs to (2.9.4, VAR_GUIDE.md section 8.4): FULL (or none) for the day''s full run; INTRADAY for an
+    update a pricing system sends during the day: only the changed trades, amended, new or cancelled, priced over the same scenario
+    set; each intraday batch has its own BATCH_ID and a later COMPUTED_AT, and the latest COMPUTED_AT per trade wins. A cancel is an
+    INTRADAY row whose TRADE_STATUS is not live (CANCELLED), its PVs empty.'
+  example: FULL
+  enum: [FULL, INTRADAY]
+- name: TRADE_IDS
+  type: id list
+  presence: optional
+  description: 'At GRAIN POSITION, the trades the position aggregates when its source system knows them: kept for navigation (the
+    position page lists them; a trade page links its position); none of them may be sent on its own as well (DRS-5210).'
+  example: '["1000279", "1000280"]'
+  link: trade
 links:
 - field: TRADE_ID
   kind: trade
@@ -346,6 +398,12 @@ validation:
   field: PNL
   same: every row of one business date
 notes: []
+notes:
+- 'Delivery format (product owner, 2026-10-27): JSONL: one JSON object per line, UTF-8, one row of this contract a line, exactly its fields (no other); a file is .jsonl, or .jsonl.gz. This is the contract a pricing system sends; tools/pvgen writes it (docs/guides/VAR_GUIDE.md section 15.12). The vector of the examples below is cut to its first 3 values: a row carries all 509.'
+- 'Kafka (the PV topic, docs/guides/VAR_GUIDE.md section 8.4): each message''s value is JSONL text too, UTF-8: one or more records, one row of this contract (or of the other form''s) a line; a message may mix trades, both forms and cancels; a blank line is skipped; a malformed line is rejected with its partition, offset and line number, never filling zero and never dropping the other lines; the message''s key is not read (each line names its trade); a cancel is the cancel line (TRADE_STATUS CANCELLED, its vector null), not a tombstone. Drishti keeps the latest COMPUTED_AT per trade over a window (drishti.var.intraday.kafka.window, 5 minutes) and appends the window to the lake as one intraday batch. An example message of three lines (cut): {"VALUE_TYPE":"PV","GRAIN":"TRADE","TRADE_ID":"1002344","CURRENCY":"USD","SOURCE_SYSTEM":"ENDUR","SCENARIO_PV_ID":"SPV-1002344-HS-509-I-2026-09-30-001","SECURITY_ID":"XCH-ComFut-USD-03","INSTRUMENT":"ENGY-EXCH-FUT USD 2026-09","BUSINESS_DATE":"2026-09-30","SCENARIO_SET_ID":"HS-509","TRADE_VERSIONS":"v6","TRADE_STATUS":"AMENDED","MATURITY_DATE":"2026-09-30","LEGAL_ENTITY":"LE-NY","DIVISION":"DIV-MARKETS","DESK":"DESK-COMM","TT_BOOK":"BOOK-COMM-3","PORTFOLIO":"BOOK-COMM-3","STRATEGY":"","PRODUCT_GROUP":"Commodity","PRODUCT_TYPE":"ComFut","COUNTERPARTY":"CP-METROEX","DIRECTION":"SHORT","QUANTITY":-5900.0,"TAGS":"","BASE_PV":-302670.0,"VALUATION_DATE":"2026-09-30","BASE_VALUATION_DATE":"2026-09-30","SCENARIO_PV":[-208989.8,-396009.18,-356724.62],"STATUS":"ok","PRICER":"demo-factor-model","MODEL_VERSION":"demo-2","COMPUTED_AT":"2026-09-30T06:05:00Z","BATCH_ID":"I-2026-09-30-001","RESTATEMENT":0,"RUN_KIND":"INTRADAY"} \n {"VALUE_TYPE":"PNL","GRAIN":"POSITION","POSITION_ID":"POS-BOOK-COMM-1~XCH-CMD_FUTURE-USD-03","CURRENCY":"USD","SOURCE_SYSTEM":"MUREX","VECTOR_ID":"PV-POS-BOOK-COMM-1~XCH-CMD_FUTURE-USD-03-HS-509","BUSINESS_DATE":"2026-09-30","SCENARIO_SET_ID":"HS-509","TRADE_STATUS":"AMENDED","LEGAL_ENTITY":"LE-NY","DIVISION":"DIV-MARKETS","DESK":"DESK-COMM","TT_BOOK":"BOOK-COMM-1","PORTFOLIO":"BOOK-COMM-1","STRATEGY":"","PRODUCT_GROUP":"Commodity","PRODUCT_TYPE":"CMD_FUTURE","SECURITY_ID":"XCH-CMD_FUTURE-USD-03","INSTRUMENT":"Commodity future USD 2027-09","MATURITY_DATE":"2027-09-10","COUNTERPARTY":"CP-SUMMIT","DIRECTION":"LONG","QUANTITY":122.0,"TAGS":"","TRADE_CURRENCY":"USD","REPORTING_CCY":"USD","PV":1595886,"PNL":[-471736.0,508921.0,273690.0],"STATUS":"ok","PRICER":"demo-factor-model","MODEL_VERSION":"demo-2","COMPUTED_AT":"2026-09-30T06:00:00Z","BATCH_ID":"B-2026-09-30-01","RESTATEMENT":0,"RUN_KIND":"FULL","TRADE_IDS":["MX-20000291","MX-30002954"]} \n {"VALUE_TYPE":"PV","GRAIN":"TRADE","TRADE_ID":"1000414","CURRENCY":"USD","SOURCE_SYSTEM":"ENDUR","SCENARIO_PV_ID":"SPV-1000414-HS-509-I-2026-09-30-001","SECURITY_ID":null,"INSTRUMENT":"ENGY-SWAP USD 2026-11","BUSINESS_DATE":"2026-09-30","SCENARIO_SET_ID":"HS-509","TRADE_VERSIONS":"v8","TRADE_STATUS":"CANCELLED","MATURITY_DATE":"2026-11-30","LEGAL_ENTITY":"LE-NY","DIVISION":"DIV-MARKETS","DESK":"DESK-COMM","TT_BOOK":"BOOK-COMM-1","PORTFOLIO":"BOOK-COMM-1","STRATEGY":"","PRODUCT_GROUP":"Commodity","PRODUCT_TYPE":"ComSwap","COUNTERPARTY":"CP-NORTHPLAINS","DIRECTION":"LONG","QUANTITY":96000.0,"TAGS":"","BASE_PV":581788.0,"VALUATION_DATE":"2026-09-30","BASE_VALUATION_DATE":"2026-09-30","SCENARIO_PV":null,"STATUS":"ok","PRICER":"demo-factor-model","MODEL_VERSION":"demo-2","COMPUTED_AT":"2026-09-30T06:05:04Z","BATCH_ID":"I-2026-09-30-001","RESTATEMENT":0,"RUN_KIND":"INTRADAY"}'
+- 'Example line, a trade, the morning run: {"VALUE_TYPE":"PNL","GRAIN":"TRADE","TRADE_ID":"MX-20000274","CURRENCY":"USD","SOURCE_SYSTEM":"MUREX","VECTOR_ID":"PV-MX-20000274-HS-509","SECURITY_ID":"SEC-WARRANT-USD-01","INSTRUMENT":"Equity warrant USD 2027-05","BUSINESS_DATE":"2026-09-30","SCENARIO_SET_ID":"HS-509","TRADE_VERSIONS":"v4","TRADE_STATUS":"AMENDED","MATURITY_DATE":"2027-05-26","LEGAL_ENTITY":"LE-LDN","DIVISION":"DIV-MARKETS","DESK":"DESK-EQD","TT_BOOK":"BOOK-EQD-2","PORTFOLIO":"BOOK-EQD-2","STRATEGY":"","PRODUCT_GROUP":"Equity","PRODUCT_TYPE":"WARRANT","COUNTERPARTY":"CP-SUMMIT","DIRECTION":"SHORT","QUANTITY":-179000000.0,"TAGS":"","TRADE_CURRENCY":"USD","REPORTING_CCY":"USD","PV":3143714,"PNL":[4169,-3347,-1306],"STATUS":"ok","PRICER":"demo-factor-model","MODEL_VERSION":"demo-2","COMPUTED_AT":"2026-09-30T06:00:00Z","BATCH_ID":"B-2026-09-30-01","RESTATEMENT":0,"RUN_KIND":"FULL"}'
+- 'Example line, a position its source system sends whole: {"VALUE_TYPE":"PNL","GRAIN":"POSITION","POSITION_ID":"POS-BOOK-COMM-1~XCH-CMD_FUTURE-USD-03","CURRENCY":"USD","SOURCE_SYSTEM":"MUREX","VECTOR_ID":"PV-POS-BOOK-COMM-1~XCH-CMD_FUTURE-USD-03-HS-509","BUSINESS_DATE":"2026-09-30","SCENARIO_SET_ID":"HS-509","TRADE_STATUS":"AMENDED","LEGAL_ENTITY":"LE-NY","DIVISION":"DIV-MARKETS","DESK":"DESK-COMM","TT_BOOK":"BOOK-COMM-1","PORTFOLIO":"BOOK-COMM-1","STRATEGY":"","PRODUCT_GROUP":"Commodity","PRODUCT_TYPE":"CMD_FUTURE","SECURITY_ID":"XCH-CMD_FUTURE-USD-03","INSTRUMENT":"Commodity future USD 2027-09","MATURITY_DATE":"2027-09-10","COUNTERPARTY":"CP-SUMMIT","DIRECTION":"LONG","QUANTITY":122.0,"TAGS":"","TRADE_CURRENCY":"USD","REPORTING_CCY":"USD","PV":1595886,"PNL":[-471736.0,508921.0,273690.0],"STATUS":"ok","PRICER":"demo-factor-model","MODEL_VERSION":"demo-2","COMPUTED_AT":"2026-09-30T06:00:00Z","BATCH_ID":"B-2026-09-30-01","RESTATEMENT":0,"RUN_KIND":"FULL","TRADE_IDS":["MX-20000291","MX-30002954"]}'
+- 'The other form''s lines (the scenario-pv contract): a trade''s scenario PVs, a position''s, a cancel line; both forms may come from one pricing system on different days, never on one date (DRS-5210).'
 review:
 - 'required inferred from 100% coverage in 2001 documents (1 samples and 2000 test-data documents (data/testdata/market-risk/pnl-vector/cob-2026-09-30.part-001.jsonl.gz,
   data/testdata/market-risk/pnl-vector/cob-2026-09-30.part-002.jsonl.gz, data/testdata/market-risk/pnl-vector/cob-2026-09-30.part-003.jsonl.gz)):

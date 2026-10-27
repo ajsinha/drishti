@@ -104,7 +104,7 @@ final class VarPositions {
         List<String> ids = new ArrayList<>();
         List<Map<String, Object>> trades = new ArrayList<>();
         java.util.TreeSet<String> cps = new java.util.TreeSet<>();
-        for (int o = b.positionFrom(p); o < b.positionTo(p); o++) {
+        for (int o : members(b, p)) {
             String t = b.tradeId(o);
             ids.add(t);
             double q = tc.number("QUANTITY", o);
@@ -116,10 +116,25 @@ final class VarPositions {
             r.put("PV", Double.isNaN(pv) ? null : pv);
             r.put("PRODUCT_TYPE", tc.text("PRODUCT_TYPE", o));
             r.put("COUNTERPARTY", tc.text("COUNTERPARTY", o));
+            r.put("TRADE_CURRENCY", VarViews.tradeCurrency(tc, o)[0]);
             if (tc.text("COUNTERPARTY", o) != null) {
                 cps.add(tc.text("COUNTERPARTY", o));
             }
             trades.add(r);
+        }
+        if (VarBook.SUPPLIED.equals(pc.text("POSITION_RULE", p))) {
+            // a supplied position (position grain, VAR_GUIDE.md section 15.13): no trades of its own in the engine; the ones its
+            // source system named (TRADE_IDS) kept for navigation, without figures
+            ids = new ArrayList<>(d.intake().tradesOf(id));
+            trades = new ArrayList<>();
+            for (String t : ids) {
+                Map<String, Object> r = new LinkedHashMap<>();
+                r.put("TRADE_ID", t);
+                trades.add(r);
+            }
+            m.put("TRADE_COUNT", (long) ids.size());
+            m.put("POSITION_NOTE", "supplied whole by its source system (position grain): the VaR is the position's; "
+                    + (ids.isEmpty() ? "its trades are not named" : "its trades are listed as named, without trade-level figures"));
         }
         m.put("TRADE_IDS", ids);
         m.put("TRADES", trades);
@@ -138,5 +153,14 @@ final class VarPositions {
         m.put("VAR_SCOPE", "POS:" + id);
         m.put("DERIVED_BY", "the server's position rules " + d.intake().rulesDigest() + " (VAR_GUIDE.md section 15.6)");
         return m;
+    }
+
+    /** A position's member trades in order: its run, and any trade an intraday batch added (VAR_GUIDE.md section 8.4). */
+    private static int[] members(com.ash.drishti.compute.var.VarBook b, int p) {
+        com.ash.drishti.compute.vector.OrdinalSet m = b.positionMembers(p);
+        int[] out = new int[m.size()];
+        int[] i = {0};
+        m.forEach(o -> out[i[0]++] = o);
+        return out;
     }
 }

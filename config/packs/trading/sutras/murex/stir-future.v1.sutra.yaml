@@ -23,8 +23,8 @@ doc:
     Exchange-traded future on a 3-month RFR period (e.g. SR3). One deal screen per MUREX Short-term interest rate future trade
     (matched on SOURCE_SYSTEM and PRODUCT_TYPE): the deal ticket (DES), the legs side by side, every cash flow in one schedule,
     the events by leg and as a table filtered by the Legs and Between controls, the netted payment ladder and payments by month,
-    how the view was built and the linked entities (F7 opens the counterparty's trades). The strip gives the source, side,
-    notional, quantity, trade date, maturity, status and portfolio.
+    how the view was built and the linked entities (F7 opens the counterparty's trades). The strip gives the trade currency,
+    side, notional, quantity, trade date, maturity, status and portfolio.
   params:
     legs: { type: text, default: all, meaning: "The Legs control: the legs whose events the table lists" }
     when: { type: text, default: '', meaning: "The Between control: the dates whose events the table lists" }
@@ -37,7 +37,7 @@ doc:
 match: { kind: trade, where: "$.SOURCE_SYSTEM == 'MUREX' && $.PRODUCT_TYPE == 'STIR_FUTURE'", priority: 10 }
 title: { pill: "Rates · Short-term interest rate future", id: $.TRADE_ID, with: "link($.COUNTERPARTY, 'counterparty')" }
 strip:
-  - { label: Source, bind: $.SOURCE_SYSTEM }
+  - { label: Trade currency, bind: "nonblank($.RISK_LINKS.TRADE_CURRENCY) ? $.RISK_LINKS.TRADE_CURRENCY + ($.RISK_LINKS.TRADE_CURRENCY_FROM == 'its scenario PVs' ? ' · as priced' : ' · as booked') : nonblank($.CURRENCY, '–') + ' · as booked'" }
   - { label: Side, bind: "$.BUY_SELL_CODE == 'B' ? 'Buy' : ($.BUY_SELL_CODE == 'S' ? 'Sell' : nonblank($.BUY_SELL_CODE, '–'))" }
   - { label: Notional, bind: "$.CURRENCY + ' ' + fmt(first($.LEGS).NOTIONAL, 'amount0')", emphasis: true }
   - { label: Quantity, bind: "fmt($.QUANTITY, 'amount0') + (nonblank(first($.LEGS).PRICE_UNIT) ? ' ' + first($.LEGS).PRICE_UNIT : '')" }

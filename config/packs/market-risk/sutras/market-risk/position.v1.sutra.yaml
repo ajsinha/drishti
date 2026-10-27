@@ -59,6 +59,7 @@ panels:
       - { label: Direction, bind: "@.DIRECTION" }
       - { label: Quantity, bind: "@.QUANTITY", fmt: amount0, total: true }
       - { label: PV, bind: "@.PV", fmt: amount0, total: true }
+      - { label: Trade currency, bind: "nonblank(@.TRADE_CURRENCY, '–')" }
       - { label: Counterparty, bind: "@.COUNTERPARTY", link: true }
   - id: trade-var
     kind: table
@@ -68,6 +69,7 @@ panels:
     columns:
       - { label: Trade, bind: "@.TRADE_ID", link: true }
       - { label: Direction, bind: "@.DIRECTION" }
+      - { label: Trade currency, bind: "nonblank(@.TRADE_CURRENCY, '–')" }
       - { label: "VaR 99% (on its own)", bind: "@.VAR", fmt: amount0 }
       - { label: Component VaR, bind: "@.COMPONENT_VAR", fmt: amount0, total: true }
   - { use: pnl-distribution@1, with: { id: dist, title: "P&L over the scenario days (the sum of its trades' vectors)", rows: $.VAR_ENGINE.PNL, var: $.VAR_ENGINE.VAR, es: $.VAR_ENGINE.ES, key: F3 } }

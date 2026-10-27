@@ -60,7 +60,7 @@ import org.springframework.test.web.servlet.MockMvc;
         "drishti.sources.connectors.risk-lake.settings.refresh-seconds=1",
         "drishti.sources.connectors.risk-lake.settings.layout.pnl-vector.columns=TRADE_ID,LEGAL_ENTITY,DIVISION,DESK,TT_BOOK,PORTFOLIO,"
                 + "PRODUCT_GROUP,PRODUCT_TYPE,SECURITY_ID,CURRENCY,COUNTERPARTY,DIRECTION,QUANTITY,PV,TRADE_STATUS,MATURITY_DATE,STATUS,REPORTING_CCY,"
-                + "SCENARIO_SET_ID,BATCH_ID",
+                + "SCENARIO_SET_ID,BATCH_ID,VALUE_TYPE,GRAIN,POSITION_ID,SOURCE_SYSTEM,TRADE_IDS,TRADE_CURRENCY",
         "drishti.sources.connectors.risk-lake.settings.layout.pnl-vector.vectors=PNL",
         "drishti.sources.connectors.var-positions.plugin=var-positions", "drishti.sources.connectors.var-positions.kinds[0]=position",
         "drishti.sources.routes.pnl-vector=risk-lake", "drishti.sources.routes.position=var-positions",

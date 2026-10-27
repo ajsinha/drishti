@@ -54,9 +54,13 @@ import org.springframework.web.bind.annotation.RestController;
  *   GET  /api/v1/var/tree?hierarchy=MGMT                 every node with its figures; the stored portfolios
  *   GET  /api/v1/var/status                              what is loaded, the settings
  *   GET|POST /api/v1/var/baskets, GET|DELETE /api/v1/var/baskets/{owner}/{name}
- *   POST /api/v1/var/captures {scope, note}; GET /api/v1/var/captures?scope=; GET /api/v1/var/captures/{id}[/csv]; GET /api/v1/var/compare?a=&amp;b=
- *   GET  /api/v1/var/official?asOf=                     a date's official end-of-day record; POST runs it (administrators)
+ *   POST /api/v1/var/captures {scope, note, ccy}; GET /api/v1/var/captures?scope=; GET /api/v1/var/captures/{id}[/csv]; GET /api/v1/var/compare?a=&amp;b=
+ *   GET  /api/v1/var/official?asOf=&amp;ccy=               a date's official end-of-day record; POST runs it (administrators)
  * </pre>
+ *
+ * <p>Every answer of a scope, the tree, the hints, a capture, the what-if ({@code "ccy"} in its body) and the official record take a
+ * reporting currency, {@code ccy=EUR} (VAR_GUIDE.md section 15.10; none: USD), and say it in {@code currency}: the vectors are converted
+ * through USD with each scenario's FX, so the currency move is part of the risk.
  */
 @RestController
 @RequestMapping("/api/v1/var")
@@ -89,51 +93,104 @@ public class VarController {
         return scope.trim();
     }
 
+    /**
+     * A scope's headline. {@code window}, {@code confidence} and {@code es-confidence} (2.9.4, VAR_GUIDE.md section 18.5) recompute its
+     * VaR and ES on the newest {@code window} scenarios or at another confidence, to compare (1 year against 2, 95% against 99%): the
+     * answer says so ({@code override}) and is never official.
+     */
     @GetMapping("/scope")
-    public Map<String, Object> headline(@RequestParam String scope, AsOf asOf, @RequestAttribute(Principal.ATTRIBUTE) Principal p) {
-        return views.headline(p, scope(scope), date(asOf));
+    public Map<String, Object> headline(@RequestParam String scope, @RequestParam(required = false) String ccy,
+            @RequestParam(required = false) String window, @RequestParam(required = false) Double confidence,
+            @RequestParam(name = "es-confidence", required = false) Double esConfidence, AsOf asOf,
+            @RequestAttribute(Principal.ATTRIBUTE) Principal p) {
+        Map<String, Object> h = views.headline(p, scope(scope), date(asOf), ccy);
+        if (window == null && confidence == null && esConfidence == null) {
+            return h;
+        }
+        try {
+            return views.override(h, p, scope(scope), date(asOf), ccy, window == null ? null : VarProperties.checkWindow(window, "window"),
+                    confidence == null ? null : VarProperties.checkConfidence(confidence, "confidence"),
+                    esConfidence == null ? null : VarProperties.checkConfidence(esConfidence, "es-confidence"));
+        } catch (IllegalArgumentException e) {
+            throw new DrishtiException(ErrorCode.BAD_REQUEST, e.getMessage());
+        }
     }
 
     /** The design's path form for a simple scope ({@code /var/scopes/DESK:RATES}); a scope with a slash uses {@code ?scope=}. */
     @GetMapping("/scopes/{scope}")
-    public Map<String, Object> headlinePath(@PathVariable String scope, AsOf asOf, @RequestAttribute(Principal.ATTRIBUTE) Principal p) {
-        return views.headline(p, scope(scope), date(asOf));
+    public Map<String, Object> headlinePath(@PathVariable String scope, @RequestParam(required = false) String ccy, AsOf asOf,
+            @RequestAttribute(Principal.ATTRIBUTE) Principal p) {
+        return views.headline(p, scope(scope), date(asOf), ccy);
     }
 
     @GetMapping("/scope/path")
     public Map<String, Object> path(@RequestParam String scope, @RequestParam(defaultValue = "0") int page, @RequestParam(defaultValue = "0") int size,
-            AsOf asOf, @RequestAttribute(Principal.ATTRIBUTE) Principal p) {
-        return views.path(p, scope(scope), date(asOf), page, size);
+            @RequestParam(required = false) String ccy, AsOf asOf, @RequestAttribute(Principal.ATTRIBUTE) Principal p) {
+        return views.path(p, scope(scope), date(asOf), page, size, ccy);
     }
 
     @GetMapping("/scope/history")
-    public Map<String, Object> history(@RequestParam String scope, AsOf asOf, @RequestAttribute(Principal.ATTRIBUTE) Principal p) {
-        return views.history(p, scope(scope), date(asOf));
+    public Map<String, Object> history(@RequestParam String scope, @RequestParam(required = false) String ccy, AsOf asOf,
+            @RequestAttribute(Principal.ATTRIBUTE) Principal p) {
+        return views.history(p, scope(scope), date(asOf), ccy);
     }
 
     @GetMapping("/scope/contributions")
     public Map<String, Object> contributions(@RequestParam String scope, @RequestParam(required = false) String by,
-            @RequestParam(required = false) String scenario, AsOf asOf, @RequestAttribute(Principal.ATTRIBUTE) Principal p) {
-        return views.contributions(p, scope(scope), date(asOf), by, scenario);
+            @RequestParam(required = false) String scenario, @RequestParam(required = false) String ccy, AsOf asOf,
+            @RequestAttribute(Principal.ATTRIBUTE) Principal p) {
+        return views.contributions(p, scope(scope), date(asOf), by, scenario, ccy);
+    }
+
+    /**
+     * The same scope in every listed reporting currency (the explorer's "In other currencies" tab, VAR_GUIDE.md section 15.11): each
+     * currency's VaR and ES from the scope's per-trade-currency totals, that VaR in {@code ccy} at today's rate and the difference.
+     */
+    @GetMapping("/scope/currencies")
+    public Map<String, Object> inCurrencies(@RequestParam String scope, @RequestParam(required = false) String ccy, AsOf asOf,
+            @RequestAttribute(Principal.ATTRIBUTE) Principal p) {
+        return views.inCurrencies(p, scope(scope), date(asOf), ccy);
+    }
+
+    /** The reporting currencies a page offers: the listed ones, and every currency with scenario FX on the date ("More…"). */
+    @GetMapping("/currencies")
+    public Map<String, Object> currencies(AsOf asOf, @RequestAttribute(Principal.ATTRIBUTE) Principal p) {
+        entitlements.requireOpen(p, svc.props().kinds().vector());
+        VarDate d = svc.date(date(asOf));
+        Map<String, Object> m = new LinkedHashMap<>();
+        m.put("businessDate", d.date().toString());
+        m.put("listed", svc.props().currencies());
+        m.put("available", List.copyOf(svc.fx(d).currencies()));
+        Map<String, Object> ready = new LinkedHashMap<>();
+        svc.props().currencies().forEach(c -> ready.put(c, svc.ready(d, c)));
+        m.put("ready", ready);
+        return m;
     }
 
     /** The basket tray's type-ahead: what {@code q} may name, each with its type, id, name, trade count and standalone VaR as the caller. */
     @GetMapping("/hints")
-    public List<Map<String, Object>> hints(@RequestParam(required = false) String q, @RequestParam(defaultValue = "8") int limit, AsOf asOf,
-            @RequestAttribute(Principal.ATTRIBUTE) Principal p) {
-        return views.selection().hints(p, q, limit, date(asOf));
+    public List<Map<String, Object>> hints(@RequestParam(required = false) String q, @RequestParam(defaultValue = "8") int limit,
+            @RequestParam(required = false) String ccy, AsOf asOf, @RequestAttribute(Principal.ATTRIBUTE) Principal p) {
+        return views.selection().hints(p, q, limit, date(asOf), ccy);
     }
 
     /** A pre-deal what-if: {@code {scope, items: [{copyOf, factor, label}]}}, by the Python VaR engine (503 DRS-5205 when it is not running). */
     @PostMapping("/what-if")
-    public Map<String, Object> whatIf(@RequestBody Map<String, Object> body, AsOf asOf, @RequestAttribute(Principal.ATTRIBUTE) Principal p) {
+    public Map<String, Object> whatIf(@RequestBody Map<String, Object> body, @RequestParam(required = false) String ccy, AsOf asOf,
+            @RequestAttribute(Principal.ATTRIBUTE) Principal p) {
         entitlements.requireOpen(p, svc.props().kinds().vector());
-        return whatIf.whatIf(p, body, date(asOf));
+        Map<String, Object> b = body;
+        if (ccy != null && !body.containsKey("ccy")) {
+            b = new LinkedHashMap<>(body);
+            b.put("ccy", ccy);
+        }
+        return whatIf.whatIf(p, b, date(asOf));
     }
 
     @GetMapping("/tree")
-    public Map<String, Object> tree(@RequestParam(required = false) String hierarchy, AsOf asOf, @RequestAttribute(Principal.ATTRIBUTE) Principal p) {
-        return views.tree(p, hierarchy, date(asOf));
+    public Map<String, Object> tree(@RequestParam(required = false) String hierarchy, @RequestParam(required = false) String ccy, AsOf asOf,
+            @RequestAttribute(Principal.ATTRIBUTE) Principal p) {
+        return views.tree(p, hierarchy, date(asOf), ccy);
     }
 
     @GetMapping("/status")
@@ -152,9 +209,37 @@ public class VarController {
         m.put("kinds", pr.kinds().all());
         m.put("positionRules", svc.loader().rules().toString());
         m.put("official", Map.of("enabled", pr.official().enabled(), "publish", pr.official().publish(), "retentionYears",
-                pr.official().retentionYears(), "dates", svc.official().dates().size()));
+                pr.official().retentionYears(), "dates", svc.official().dates().size(), "currencies", pr.official().currencies()));
+        Map<String, Object> cur = new LinkedHashMap<>();
+        cur.put("listed", pr.currencies());
+        cur.put("retentionDates", pr.currencyRetentionDates());
+        cur.put("note", "USD at load; the listed currencies built ahead in the background after it (tiered memory), kept for the newest "
+                + pr.currencyRetentionDates() + " dates; any other currency with scenario FX on first ask (ccy=CHF), cached per date");
+        cur.put("builtAhead", svc.builtAhead());
+        m.put("currencies", cur);
         m.put("loaded", svc.loaded());
         return m;
+    }
+
+    /** The PV topics' streams (the {@code var-pv-stream} connectors, VAR_GUIDE.md section 8.4): their windows and what they applied. */
+    @GetMapping("/intraday/streams")
+    public List<Map<String, Object>> streams(@RequestAttribute(Principal.ATTRIBUTE) Principal p) {
+        entitlements.requireOpen(p, svc.props().kinds().vector());
+        return VarPvStreamPlugin.RUNNING.values().stream().map(VarPvStreamPlugin::describe).toList();
+    }
+
+    /** An administrator's "apply now": the stream's waiting window applied at once, as one intraday batch. */
+    @PostMapping("/intraday/streams/{name}/apply")
+    public Map<String, Object> applyNow(@PathVariable String name, @RequestAttribute(Principal.ATTRIBUTE) Principal p) {
+        entitlements.requireAdmin(p);
+        VarPvStreamPlugin s = VarPvStreamPlugin.RUNNING.get(name);
+        if (s == null) {
+            throw new DrishtiException(ErrorCode.ENTITY_NOT_FOUND, "no PV stream " + name + " running (a var-pv-stream connector, enabled)");
+        }
+        s.applyNow();
+        Map<String, Object> r = s.flushIfDue();
+        svc.audit(p.user(), "var-intraday-apply-now", name, String.valueOf(r));
+        return r == null ? Map.of("status", "nothing waiting") : r;
     }
 
     /** Drops the loaded dates, so the next request reads the lake again (after a new load). Administrators only. */
@@ -170,12 +255,15 @@ public class VarController {
 
     /** A date's official end-of-day record (every node's figures and capture id), for a viewer who sees every node. */
     @GetMapping("/official")
-    public Map<String, Object> officialRecord(AsOf asOf, @RequestAttribute(Principal.ATTRIBUTE) Principal p) {
+    public Map<String, Object> officialRecord(@RequestParam(required = false) String ccy, AsOf asOf, @RequestAttribute(Principal.ATTRIBUTE) Principal p) {
         if (!svc.access().seesAll(p)) {
             throw new DrishtiException(ErrorCode.FORBIDDEN, "the official record covers every node: your role sees only some of them");
         }
+        String c = VarCurrencies.normalise(ccy);
         LocalDate d = svc.date(date(asOf)).date();
-        return svc.official().index(d).orElseThrow(() -> new DrishtiException(ErrorCode.ENTITY_NOT_FOUND, "no official VaR record of " + d));
+        return svc.official().index(d, c).orElseThrow(() -> new DrishtiException(ErrorCode.ENTITY_NOT_FOUND, "no official VaR record of " + d
+                + (c.equals(VarDate.USD) ? "" : " in " + c + " (the currencies captured officially: " + svc.props().official().currencies()
+                + ", drishti.var.official.currencies)")));
     }
 
     /** Captures a date officially now (the data-load signal does it by itself). Administrators only; says what it did. */
@@ -223,8 +311,11 @@ public class VarController {
     /** Captures a scope's VaR now: {@code {"scope": "BASKET:me/x", "note": "before the unwind"}}. */
     @PostMapping("/captures")
     @ResponseStatus(HttpStatus.CREATED)
-    public Map<String, Object> capture(@RequestBody Map<String, Object> body, AsOf asOf, @RequestAttribute(Principal.ATTRIBUTE) Principal p) {
-        return captures.capture(p, scope((String) body.get("scope")), date(asOf), body.get("note") == null ? null : String.valueOf(body.get("note")));
+    public Map<String, Object> capture(@RequestBody Map<String, Object> body, @RequestParam(required = false) String ccy, AsOf asOf,
+            @RequestAttribute(Principal.ATTRIBUTE) Principal p) {
+        Object c = body.get("ccy") != null ? body.get("ccy") : ccy;
+        return captures.capture(p, scope((String) body.get("scope")), date(asOf), body.get("note") == null ? null : String.valueOf(body.get("note")),
+                c == null ? null : String.valueOf(c));
     }
 
     @GetMapping("/captures")

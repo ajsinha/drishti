@@ -49,30 +49,175 @@ import org.springframework.boot.context.properties.ConfigurationProperties;
  * @param positions how positions are derived from the trades when no loaded pack says (a pack's {@code positions:} section wins)
  * @param official the official end-of-day captures and their published results
  * @param tier where a loaded date's vectors are kept: the memory-mapped hot file (default) or the heap (VAR_GUIDE.md section 26)
+ * @param currencies the reporting currencies built ahead (VAR_GUIDE.md section 15.11): after a date's USD book loads, each listed
+ *     currency's book is built in the background from it and kept as its own hot file, so a VaR in a listed currency never waits on its
+ *     first ask; USD always first; default USD, EUR, CAD, JPY, GBP; any other currency with FX is still built on first ask
+ * @param currencyRetentionDates the newest business dates whose listed currencies are built ahead and kept on disk (5, one business
+     *     week); an older date's listed-currency files are deleted when the next date is built ahead (on first ask they are built again)
+ * @param rootName the name of every hierarchy's root node (the top of the VaR tree, "Drishti Bank" in the demo data); blank keeps the
+ *     hierarchy data's own {@code NAME}
+ * @param rootNames the name of one hierarchy's root (hierarchy id to name, e.g. MGMT, LEGAL); wins over {@code rootName} for it
+ * @param intraday the intraday updates' settings: the PV topic's window (VAR_GUIDE.md section 8.4, Kafka)
+ * @param inputs an optional pin per source system of what its records are (VAR_GUIDE.md section 15.13): the form ({@code pv}, {@code pnl}
+ *     or {@code any}) and the grain ({@code trade}, {@code position} or {@code any}); {@code default} for the systems not listed. Every
+ *     record says what it is ({@code VALUE_TYPE}, {@code GRAIN}); a pin is a cross-check: a record that disagrees is refused
+ *     ({@code DRS-5209}). Read at start: a change applies after a restart, from the next date loaded
+ * @param scenarioWindow how many scenarios the engine uses (VAR_GUIDE.md section 18.5): {@code all} (the whole scenario set, its length
+ *     509 in the demo) or a number N, the newest N scenarios of each date's set (250: one year, about 500: two); at least 20; a set
+ *     shorter than N is used whole, with a warning in the provenance
  */
 @ConfigurationProperties("drishti.var")
 public record VarProperties(Boolean enabled, Double confidence, Double esConfidence, String rankRule, Integer componentWindow,
         Boolean componentScaleToVar, Integer threads, Integer parallelRows, Long memoryBudgetMb, Integer rowsPerChunk, Integer hotDates,
         Integer historyDays, Integer histogramBins, Integer maxParts, Kinds kinds, Map<String, Map<String, String>> access, Integer pathPage,
-        Positions positions, Official official, Tier tier) {
+        Positions positions, Official official, Tier tier, List<String> currencies, Integer currencyRetentionDates, String rootName,
+        Map<String, String> rootNames, Intraday intraday, Map<String, Input> inputs, String scenarioWindow) {
 
-    /** The kinds the engine reads, as the market-risk pack names them; {@code position} is the kind its derived positions are served as. */
-    public record Kinds(String vector, String position, String hierarchy, String scenarioSet, String portfolio) {
+    /** The smallest scenario window: fewer scenarios than this make a tail of one or two days. */
+    public static final int MIN_WINDOW = 20;
+
+    /** The scenario window: 0 for the whole set, else N (the newest N scenarios of each date's set). */
+    public int window() {
+        return scenarioWindow.equals("all") ? 0 : Integer.parseInt(scenarioWindow);
+    }
+
+    /** Checks a confidence (VaR's, ES's, or one asked per request): in (0.5, 1). */
+    public static double checkConfidence(Double c, String what) {
+        if (c == null || !Double.isFinite(c) || c <= 0.5 || c >= 1) {
+            throw new IllegalArgumentException(what + " " + c + " is not in (0.5, 1): 0.99 or 0.95 for VaR, 0.975 for ES");
+        }
+        return c;
+    }
+
+    /** Checks a scenario window (the setting, or one asked per request): all, or a number of at least {@link #MIN_WINDOW}. */
+    public static String checkWindow(String w, String what) {
+        String v = w == null || w.isBlank() ? "all" : w.strip().toLowerCase(Locale.ROOT);
+        if (v.equals("all")) {
+            return v;
+        }
+        int n;
+        try {
+            n = Integer.parseInt(v);
+        } catch (NumberFormatException e) {
+            throw new IllegalArgumentException(what + " " + w + " is neither all nor a number of scenarios");
+        }
+        if (n < MIN_WINDOW) {
+            throw new IllegalArgumentException(what + " " + n + " is below " + MIN_WINDOW + " scenarios: too few for a tail (250 is one year)");
+        }
+        return Integer.toString(n);
+    }
+
+    /**
+     * What a source system sends (VAR_GUIDE.md section 15.13): the form and the grain, each {@code any} when not pinned.
+     *
+     * @param form {@code pv} (scenario PVs, {@code VALUE_TYPE: PV}), {@code pnl} (P&amp;L vectors, {@code PNL}) or {@code any}
+     * @param grain {@code trade} ({@code GRAIN: TRADE}), {@code position} ({@code POSITION}) or {@code any}
+     */
+    public record Input(String form, String grain) {
+        public Input {
+            form = norm(form, List.of("PV", "PNL"), "form");
+            grain = norm(grain, List.of("TRADE", "POSITION"), "grain");
+        }
+
+        private static String norm(String v, List<String> allowed, String what) {
+            String u = v == null || v.isBlank() ? "ANY" : v.strip().toUpperCase(Locale.ROOT);
+            if (!u.equals("ANY") && !allowed.contains(u)) {
+                throw new IllegalArgumentException("drishti.var.inputs: " + what + " " + v + " is not one of " + allowed + " or any");
+            }
+            return u;
+        }
+
+        /** Says it in words: {@code pv, position}. */
+        @Override
+        public String toString() {
+            return form.toLowerCase(Locale.ROOT) + ", " + grain.toLowerCase(Locale.ROOT);
+        }
+    }
+
+    /** A source system's pin: its own, else {@code default}, else any (system names in any case). */
+    public Input input(String system) {
+        Input own = system == null ? null : inputs.get(system.strip().toUpperCase(Locale.ROOT));
+        return own != null ? own : inputs.getOrDefault("DEFAULT", new Input(null, null));
+    }
+
+    /**
+     * The intraday updates (VAR_GUIDE.md section 8.4).
+     *
+     * @param kafka the PV topic's micro-batches (the {@code var-pv-stream} connector)
+     */
+    public record Intraday(Kafka kafka) {
+        public Intraday {
+            kafka = kafka == null ? new Kafka(null, null) : kafka;
+        }
+    }
+
+    /**
+     * The PV topic's micro-batches: everything received in a window is appended to the lake as one intraday batch and applied.
+     *
+     * @param window how long a window collects ({@code 5m}: every five minutes; {@code 30s}, {@code 1h})
+     * @param maxTrades a window is applied earlier once this many trades wait (500)
+     */
+    public record Kafka(String window, Integer maxTrades) {
+        public Kafka {
+            window = window == null || window.isBlank() ? "5m" : window.strip();
+            maxTrades = maxTrades == null || maxTrades < 1 ? 500 : maxTrades;
+        }
+
+        /** The window as a duration. */
+        public java.time.Duration windowDuration() {
+            return java.time.Duration.ofMillis((long) (VarPvStreamPlugin.seconds(window) * 1000));
+        }
+    }
+
+    /**
+     * The name a hierarchy's root node shows: {@code root-names} for the hierarchy, else {@code root-name}, else the data's (VAR_GUIDE.md
+     * section 20, settings). Null for a node that is not a root.
+     */
+    public String rootName(String hierarchy, String parentId, String dataName) {
+        if (parentId != null && !parentId.isBlank()) {
+            return dataName;
+        }
+        String own = hierarchy == null ? null : rootNames.get(hierarchy.strip().toUpperCase(Locale.ROOT));
+        if (own != null && !own.isBlank()) {
+            return own.strip();
+        }
+        return rootName.isBlank() ? dataName : rootName.strip();
+    }
+
+    /** What the configured root names add to a hot file's digest (empty when none is set: the files of earlier releases stay valid). */
+    public String rootNamesKey() {
+        return rootName.isBlank() && rootNames.isEmpty() ? "" : "|root=" + rootName.strip() + new java.util.TreeMap<>(rootNames);
+    }
+
+    /**
+     * The kinds the engine reads, as the market-risk pack names them; {@code position} is the kind its derived positions are served as.
+     * A bank sends its trades' scenario P&amp;L as P&amp;L vectors ({@code vector}, USD) or as scenario PVs in each trade's currency
+     * ({@code scenarioPv}, 2.9.4), or both for different trades; the FX of the scenarios is {@code fxScenario} when the batch supplies
+     * it, else derived from the FX history of {@code fxSpot} (the market-data pack's).
+     */
+    public record Kinds(String vector, String position, String hierarchy, String scenarioSet, String portfolio, String scenarioPv,
+            String fxScenario, String fxSpot) {
         public Kinds {
             vector = vector == null ? "pnl-vector" : vector;
             position = position == null ? "position" : position;
             hierarchy = hierarchy == null ? "risk-hierarchy" : hierarchy;
             scenarioSet = scenarioSet == null ? "scenario-set" : scenarioSet;
             portfolio = portfolio == null ? "portfolio" : portfolio;
+            scenarioPv = scenarioPv == null ? "scenario-pv" : scenarioPv;
+            fxScenario = fxScenario == null ? "fx-scenario" : fxScenario;
+            fxSpot = fxSpot == null ? "fx-spot" : fxSpot;
         }
 
         public List<String> all() {
-            return List.of(vector, position, hierarchy, scenarioSet, portfolio);
+            return List.of(vector, position, hierarchy, scenarioSet, portfolio, scenarioPv, fxScenario, fxSpot);
         }
 
-        /** The kinds whose load changes a date's answers (the data-load signal reloads the date): the inputs. */
+        /**
+         * The kinds whose load changes a date's answers (the data-load signal reloads the date): the inputs. The FX history
+         * ({@code fxSpot}) is not one: a market-data load does not reload VaR; a date reads the history it finds when it loads.
+         */
         public List<String> inputs() {
-            return List.of(vector, hierarchy, scenarioSet, portfolio);
+            return List.of(vector, hierarchy, scenarioSet, portfolio, scenarioPv, fxScenario);
         }
     }
 
@@ -110,8 +255,12 @@ public record VarProperties(Boolean enabled, Double confidence, Double esConfide
      * @param root the Delta root the results are published under (the risk lake's root)
      * @param retentionYears the years the published table keeps its log and removed files (time travel), 7 by default
      * @param onStart at start, capture the newest date when it has no official record yet (a lake built while the server was down)
+     * @param currencies the reporting currencies captured officially (USD always, first and published; others kept in the content
+     *     store beside it, VAR_GUIDE.md section 19)
+     * @param jsonl also write each published date as JSON Lines beside the table (2.9.4, true by default)
      */
-    public record Official(Boolean enabled, Boolean publish, String root, Integer retentionYears, Boolean onStart, Boolean jsonl) {
+    public record Official(Boolean enabled, Boolean publish, String root, Integer retentionYears, Boolean onStart, List<String> currencies,
+            Boolean jsonl) {
         public Official {
             jsonl = jsonl == null || jsonl;                 // 2.9.4: each published date also as JSON Lines beside the table
             enabled = enabled == null || enabled;
@@ -119,6 +268,7 @@ public record VarProperties(Boolean enabled, Double confidence, Double esConfide
             root = root == null || root.isBlank() ? null : root;
             retentionYears = retentionYears == null || retentionYears < 1 ? 7 : retentionYears;
             onStart = onStart == null || onStart;
+            currencies = currencyList(currencies == null ? List.of() : currencies);
         }
     }
 
@@ -151,8 +301,10 @@ public record VarProperties(Boolean enabled, Double confidence, Double esConfide
 
     public VarProperties {
         enabled = enabled == null || enabled;
-        confidence = confidence == null || confidence <= 0.5 || confidence >= 1 ? 0.99 : confidence;
-        esConfidence = esConfidence == null || esConfidence <= 0.5 || esConfidence >= 1 ? 0.975 : esConfidence;
+        // refused at start when out of range (never silently replaced): VaR at 99% or 95%, ES at 97.5% (VAR_GUIDE.md section 18.5)
+        confidence = confidence == null ? 0.99 : checkConfidence(confidence, "drishti.var.confidence");
+        esConfidence = esConfidence == null ? 0.975 : checkConfidence(esConfidence, "drishti.var.es-confidence");
+        scenarioWindow = checkWindow(scenarioWindow, "drishti.var.scenario-window");
         rankRule = rankRule == null || rankRule.isBlank() ? "kth-worst" : rankRule.trim().toLowerCase(Locale.ROOT);
         componentWindow = componentWindow == null || componentWindow < 1 ? 5 : componentWindow;
         componentScaleToVar = componentScaleToVar == null || componentScaleToVar;
@@ -164,12 +316,42 @@ public record VarProperties(Boolean enabled, Double confidence, Double esConfide
         historyDays = historyDays == null || historyDays <= 1 ? 250 : historyDays;
         histogramBins = histogramBins == null || histogramBins < 5 ? 42 : histogramBins;
         maxParts = maxParts == null || maxParts <= 0 ? 5000 : maxParts;
-        kinds = kinds == null ? new Kinds(null, null, null, null, null) : kinds;
+        kinds = kinds == null ? new Kinds(null, null, null, null, null, null, null, null) : kinds;
         access = access == null ? Map.of() : access;
         pathPage = pathPage == null || pathPage <= 0 ? 60 : pathPage;
         positions = positions == null ? new Positions(null, null) : positions;
-        official = official == null ? new Official(null, null, null, null, null, null) : official;
+        official = official == null ? new Official(null, null, null, null, null, null, null) : official;
         tier = tier == null ? new Tier(null, null, null, null, null) : tier;
+        currencies = currencyList(currencies == null ? List.of("USD", "EUR", "CAD", "JPY", "GBP") : currencies);
+        currencyRetentionDates = currencyRetentionDates == null || currencyRetentionDates < 1 ? 5 : currencyRetentionDates;
+        rootName = rootName == null ? "" : rootName;
+        intraday = intraday == null ? new Intraday(null) : intraday;
+        Map<String, Input> in = new java.util.LinkedHashMap<>();
+        if (inputs != null) {
+            inputs.forEach((sys, v) -> in.put(sys.strip().toUpperCase(Locale.ROOT), v == null ? new Input(null, null) : v));
+        }
+        inputs = Map.copyOf(in);
+        Map<String, String> rn = new java.util.LinkedHashMap<>();
+        if (rootNames != null) {
+            rootNames.forEach((h, n) -> {
+                if (h != null && n != null && !n.isBlank()) {
+                    rn.put(h.strip().toUpperCase(Locale.ROOT), n.strip());
+                }
+            });
+        }
+        rootNames = Map.copyOf(rn);
+    }
+
+    /** ISO codes in upper case, USD first and once, the rest in the order given (duplicates and blanks dropped). */
+    static List<String> currencyList(List<String> given) {
+        List<String> c = new ArrayList<>(List.of("USD"));
+        for (String x : given) {
+            String u = x == null ? "" : x.trim().toUpperCase(Locale.ROOT);
+            if (u.matches("[A-Z]{3}") && !c.contains(u)) {
+                c.add(u);
+            }
+        }
+        return List.copyOf(c);
     }
 
     public com.ash.drishti.compute.var.VarMath.RankRule rule() {

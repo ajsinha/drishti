@@ -17,6 +17,8 @@ package com.ash.drishti.server.var;
 
 import com.ash.drishti.common.DrishtiException;
 import com.ash.drishti.common.ErrorCode;
+import com.ash.drishti.compute.var.CurrencyTotals;
+import com.ash.drishti.compute.var.ScenarioFx;
 import com.ash.drishti.compute.var.ScopeExpr;
 import com.ash.drishti.compute.var.ScopeResolver;
 import com.ash.drishti.compute.var.VarBook;
@@ -66,6 +68,22 @@ public final class VarService implements AutoCloseable {
     private final ParallelSums sums;
     private final VarCalc calc;
     private final Map<LocalDate, CompletableFuture<VarDate>> dates = new ConcurrentHashMap<>();
+    /** The dates in other reporting currencies, built from the USD date when first asked: {@code <date>|<CCY>|<version>}. */
+    private final Map<String, CompletableFuture<VarDate>> inCurrency = new ConcurrentHashMap<>();
+    private final VarCurrencies currencies;
+    /**
+     * The listed currencies built ahead after a date's USD book loads (VAR_GUIDE.md section 15.11): one at a time, on one low-priority
+     * thread, so a USD answer never waits for them; a request in a currency not built yet builds it on first ask, as before.
+     */
+    private final java.util.concurrent.ExecutorService ahead = java.util.concurrent.Executors.newSingleThreadExecutor(r -> {
+        Thread t = new Thread(r, "drishti-var-currencies");
+        t.setDaemon(true);
+        t.setPriority(Thread.MIN_PRIORITY);
+        return t;
+    });
+    /** The dates (and versions) whose listed currencies were queued, and what building each did ({@code <date>|<CCY>}: a sentence). */
+    private final java.util.Set<String> aheadQueued = ConcurrentHashMap.newKeySet();
+    private final Map<String, String> aheadState = new java.util.concurrent.ConcurrentSkipListMap<>();
     /** Dates that could not be loaded, with the vector version they were refused at and why. */
     private final Map<LocalDate, String[]> refused = new ConcurrentHashMap<>();
     private final com.github.benmanes.caffeine.cache.Cache<String, Scoped> cache =
@@ -80,6 +98,7 @@ public final class VarService implements AutoCloseable {
         this.audit = audit;
         this.sums = sums;
         this.calc = props.calc();
+        this.currencies = new VarCurrencies(loader, props, sums);
     }
 
     VarProperties props() {
@@ -122,7 +141,50 @@ public final class VarService implements AutoCloseable {
             throw new DrishtiException(ErrorCode.ENTITY_NOT_FOUND, "no P&L vectors in any connector (kind " + props.kinds().vector()
                     + "): build the demo lake (drishti.py lake demo) or point the market-risk pack's risk-store at your lake");
         }
-        return load(asked == null || asked.isAfter(latest) ? latest : asked, 0);
+        VarDate vd = load(asked == null || asked.isAfter(latest) ? latest : asked, 0);
+        return MORNING.get() ? vd.morning() : vd;
+    }
+
+    /** True on a thread computing the official records: every date read without its intraday layer (VAR_GUIDE.md section 8.4). */
+    private static final ThreadLocal<Boolean> MORNING = ThreadLocal.withInitial(() -> false);
+
+    /** Runs {@code work} on the morning runs alone (the official captures: never the intraday layer). */
+    <T> T morningOnly(java.util.function.Supplier<T> work) {
+        boolean was = MORNING.get();
+        MORNING.set(true);
+        try {
+            return work.get();
+        } finally {
+            MORNING.set(was);
+        }
+    }
+
+    /**
+     * The date a request reads in a reporting currency (VAR_GUIDE.md section 15.10): USD is the date as loaded; another currency is built
+     * from it the first time it is asked and kept with it (dropped when the date is). The answered date's warnings come with it.
+     */
+    VarDate date(LocalDate asked, String ccy) {
+        String c = VarCurrencies.normalise(ccy);
+        VarDate usd = date(asked);
+        if (c.equals(VarDate.USD)) {
+            return usd;
+        }
+        String key = usd.date() + "|" + c + "|" + usd.version();
+        CompletableFuture<VarDate> f = inCurrency.computeIfAbsent(key, k -> CompletableFuture.supplyAsync(() -> currencies.convert(usd, c)));
+        VarDate vd;
+        try {
+            vd = f.join();
+        } catch (java.util.concurrent.CompletionException e) {
+            inCurrency.remove(key, f);                                  // asked again, tried again
+            if (e.getCause() instanceof DrishtiException de) {
+                throw de;
+            }
+            throw new DrishtiException(ErrorCode.SOURCE_FAILED, "the VaR data of " + usd.date() + " in " + c + " could not be built: " + e.getCause());
+        }
+        for (String w : usd.warnings()) {
+            vd = vd.warned(w);
+        }
+        return MORNING.get() ? vd.morning() : vd;
     }
 
     /**
@@ -161,6 +223,7 @@ public final class VarService implements AutoCloseable {
         try {
             VarDate vd = f.join();
             evictOld(d);
+            buildAhead(vd);
             return vd;
         } catch (java.util.concurrent.CompletionException e) {
             dates.remove(d, f);                                        // a failed load is tried again by the next request
@@ -172,6 +235,231 @@ public final class VarService implements AutoCloseable {
                 throw de;
             }
             throw new DrishtiException(ErrorCode.SOURCE_FAILED, "the VaR data of " + d + " could not be loaded: " + e.getCause());
+        }
+    }
+
+    // ---------------------------------------------------------------------------------------------------------------- currencies
+
+    /**
+     * Queues the listed currencies of a date just loaded (once per date and version), when the date is among the newest
+     * {@code currency-retention-dates} and the tiered memory is on (a heap date would hold every currency's vectors on the heap: there
+     * they stay on first ask). Then the retention: listed-currency files of older dates are deleted.
+     */
+    private void buildAhead(VarDate usd) {
+        if (!loader.tier().mapped() || props.currencies().size() <= 1 || !aheadQueued.add(usd.date() + "|" + usd.version())) {
+            return;
+        }
+        java.util.Set<LocalDate> keep = newest(props.currencyRetentionDates());
+        if (!keep.contains(usd.date())) {
+            return;
+        }
+        for (String c : props.currencies()) {
+            if (!c.equals(VarDate.USD)) {
+                aheadState.putIfAbsent(usd.date() + "|" + c, "queued");
+            }
+        }
+        ahead.submit(() -> {
+            for (String c : props.currencies()) {
+                if (!c.equals(VarDate.USD) && dates.containsKey(usd.date())) {
+                    buildOne(usd, c);
+                }
+            }
+            int pruned = loader.tier().pruneCurrencies(keep, props.currencies());
+            if (pruned > 0) {
+                org.slf4j.LoggerFactory.getLogger(VarService.class).info("VaR: {} hot files of listed currencies outside the newest {} dates deleted",
+                        pruned, keep.size());
+            }
+        });
+    }
+
+    /** One listed currency of a date, built unless a request built (or is building) it; a failure is said in the status, never thrown. */
+    private void buildOne(VarDate usd, String c) {
+        String key = usd.date() + "|" + c + "|" + usd.version();
+        String state = usd.date() + "|" + c;
+        CompletableFuture<VarDate> mine = new CompletableFuture<>();
+        CompletableFuture<VarDate> there = inCurrency.putIfAbsent(key, mine);
+        if (there != null) {
+            aheadState.put(state, "built on first ask");
+            return;
+        }
+        long t0 = System.nanoTime();
+        aheadState.put(state, "building");
+        try {
+            VarDate vd = currencies.convert(usd, c);
+            mine.complete(vd);
+            long ms = (System.nanoTime() - t0) / 1_000_000;
+            long bytes = vd.book().hot() == null ? 0 : sizeOf(vd.book().hot().file());
+            aheadState.put(state, "built ahead in " + ms + " ms, " + bytes + " bytes");
+            org.slf4j.LoggerFactory.getLogger(VarService.class).info("VaR: {} in {} built ahead in {} ms ({} bytes on disk)", usd.date(), c, ms, bytes);
+        } catch (RuntimeException e) {
+            mine.completeExceptionally(e);
+            inCurrency.remove(key, mine);                               // a request tries again on first ask
+            aheadState.put(state, "not built: " + e.getMessage());
+        }
+    }
+
+    private static long sizeOf(java.nio.file.Path f) {
+        try {
+            return java.nio.file.Files.size(f);
+        } catch (java.io.IOException e) {
+            return 0;
+        }
+    }
+
+    /** The newest {@code n} business dates with trades' scenario P&amp;L. */
+    private java.util.Set<LocalDate> newest(int n) {
+        java.util.Set<LocalDate> out = new java.util.TreeSet<>();
+        LocalDate d = loader.latest();
+        while (d != null && out.size() < n) {
+            out.add(d);
+            d = loader.previous(d);
+        }
+        return out;
+    }
+
+    /** What building the listed currencies ahead did, per date and currency, for the status answer. */
+    Map<String, String> builtAhead() {
+        return Map.copyOf(aheadState);
+    }
+
+    /** True when a date's book in a currency is ready (built ahead or on an earlier ask): a request in it does not wait. */
+    boolean ready(VarDate usd, String ccy) {
+        if (VarDate.USD.equals(ccy)) {
+            return true;
+        }
+        CompletableFuture<VarDate> f = inCurrency.get(usd.date() + "|" + ccy + "|" + usd.version());
+        return f != null && f.isDone() && !f.isCompletedExceptionally();
+    }
+
+    /** The date's FX against USD for its scenarios (supplied or derived, VAR_GUIDE.md section 15.9). */
+    ScenarioFx fx(VarDate usd) {
+        return loader.fx(usd.date(), usd.book().scenarioDates());
+    }
+
+    /**
+     * A set's per-trade-currency totals (VAR_GUIDE.md section 15.11) on a USD date: a node's stored with the date when the set is the node
+     * whole, else summed from the set's trades.
+     */
+    CurrencyTotals.Sums totals(VarDate usd, OrdinalSet set, String node) {
+        CurrencyTotals t = usd.book().currencyTotals();
+        VarBook.Node n = node == null ? null : usd.book().node(node);
+        if (t != null && n != null && set.equals(n.members()) && t.get(node) != null) {
+            return t.get(node);
+        }
+        return CurrencyTotals.of(usd.book(), set, fx(usd), sums);
+    }
+
+    /**
+     * The vector of a set in a reporting currency other than USD, from the per-trade-currency totals of the USD book (exact, and cheap for a
+     * node); the converted book's own sum when the date's FX lacks a currency the totals need.
+     */
+    private double[] inCurrencyVector(VarDate d, OrdinalSet set, ScopeResolver.Resolution res) {
+        VarDate usd = load(d.date(), 0);
+        usd = MORNING.get() ? usd.morning() : usd;
+        if (!usd.date().equals(d.date())) {
+            return vector(d, set, res);
+        }
+        double[] v = totals(usd, set, res.node()).in(fx(usd), d.currency());
+        return v != null ? v : vector(d, set, res);
+    }
+
+    // ---------------------------------------------------------------------------------------------------------------- intraday
+
+    private final Map<LocalDate, java.util.concurrent.locks.ReentrantLock> intradayLocks = new ConcurrentHashMap<>();
+
+    /** Intraday updates refused before they reached the lake (the PV topic's guards): listed with the date's layer. */
+    void intradayRejected(LocalDate d, List<String> why) {
+        CompletableFuture<VarDate> f = dates.get(d);
+        if (f == null || !f.isDone() || f.isCompletedExceptionally() || why.isEmpty()) {
+            return;
+        }
+        java.util.concurrent.locks.ReentrantLock lock = intradayLocks.computeIfAbsent(d, x -> new java.util.concurrent.locks.ReentrantLock());
+        lock.lock();                                                     // no blocking under synchronized (virtual threads)
+        try {
+            VarDate vd = dates.get(d).join();
+            VarIntradayRows rows = vd.intraday() == null ? new VarIntradayRows().morning(null, vd.intake().batchIds()) : vd.intraday().copy();
+            rows.rejected(why);
+            dates.put(d, CompletableFuture.completedFuture(vd.withBook(vd.book(), rows)));
+        } finally {
+            lock.unlock();
+        }
+    }
+
+    /** True when a loaded date has intraday batches (applied or met). */
+    boolean hasIntraday(LocalDate d) {
+        CompletableFuture<VarDate> f = dates.get(d);
+        return f != null && f.isDone() && !f.isCompletedExceptionally() && f.join().intraday() != null && !f.join().intraday().batches().isEmpty();
+    }
+
+    /** What an intraday signal did: {@code applied}, {@code none} (nothing new), {@code reload} (a full run: the date reloaded), {@code not loaded}. */
+    record IntradayResult(String status, int updates, int trades, java.util.List<String> batches, String note) {}
+
+    /**
+     * The data-load signal of a trades' input (VAR_GUIDE.md section 8.4): on a loaded date, its new intraday batches are applied on the
+     * book in place (each updated trade's difference into its book and nodes, its reporting currencies, the totals; nothing else
+     * recomputed); a full run (no new intraday batch, another morning batch, another morning {@code COMPUTED_AT}, an intraday batch
+     * gone) reloads the date as before. A date not loaded is left to load with its updates.
+     */
+    IntradayResult intraday(LocalDate d) {
+        CompletableFuture<VarDate> f = dates.get(d);
+        if (f == null || !f.isDone() || f.isCompletedExceptionally()) {
+            return new IntradayResult("not loaded", 0, 0, java.util.List.of(), "the date loads with its updates when first asked");
+        }
+        java.util.concurrent.locks.ReentrantLock lock = intradayLocks.computeIfAbsent(d, x -> new java.util.concurrent.locks.ReentrantLock());
+        lock.lock();                                                     // no blocking under synchronized (virtual threads)
+        try {
+            VarDate usd = dates.get(d).join();
+            VarIntradayRows state = usd.intraday() == null ? new VarIntradayRows().morning(null, usd.intake().batchIds()) : usd.intraday();
+            VarIntake read = loader.readIntraday(d, usd.book().morning(), state.parts(), usd.intake());
+            java.util.Set<String> morning = new java.util.TreeSet<>(read.summary().batchIds());
+            // new batch parts (a batch's scenario PVs and P&L vectors may land as two loads, each its own signal)
+            java.util.Set<String> fresh0 = new java.util.TreeSet<>(read.intradayParts());
+            fresh0.removeAll(state.parts());
+            // no new intraday batch: the signal is a full run (a restatement with the same batch id included), as before 2.9.4
+            boolean restated = fresh0.isEmpty() || !morning.equals(new java.util.TreeSet<>(usd.intake().batchIds()))
+                    || state.morningAt() != null && read.morningAt() != null && !state.morningAt().equals(read.morningAt())
+                    || !read.intradayParts().containsAll(state.parts());
+            if (restated) {
+                reload(d);
+                return new IntradayResult("reload", 0, 0, java.util.List.of(), "a full run of the date: reloaded, its intraday layer dropped");
+            }
+            VarIntradayRows next = state.copy();
+            if (next.morningAt() == null) {
+                next.morning(read.morningAt(), usd.intake().batchIds());
+            }
+            next.met(read.intradayBatches());
+            next.metParts(read.intradayParts());
+            next.rejected(read.intradayRejections());
+            java.util.List<VarIntradayRows.Row> fresh = new java.util.ArrayList<>();
+            for (VarIntradayRows.Row r : read.intraday().rows()) {
+                if (next.offer(r)) {
+                    fresh.add(r);
+                }
+            }
+            java.util.List<String> batches = fresh.stream().map(VarIntradayRows.Row::batchId).distinct().toList();
+            if (fresh.isEmpty()) {
+                if (!next.parts().equals(state.parts())) {
+                    dates.put(d, CompletableFuture.completedFuture(usd.withBook(usd.book(), next)));
+                }
+                return new IntradayResult("none", 0, 0, batches, "no update newer than what is applied");
+            }
+            VarBook nb = loader.apply(d, usd.book(), fresh, usd.book().scenarioDates(), usd.intake());
+            VarDate nvd = usd.withBook(nb, next);
+            dates.put(d, CompletableFuture.completedFuture(nvd));
+            for (String k : new ArrayList<>(inCurrency.keySet())) {          // the reporting currencies follow: only those trades reconverted
+                if (k.startsWith(d + "|")) {
+                    CompletableFuture<VarDate> cf = inCurrency.get(k);
+                    if (cf != null && cf.isDone() && !cf.isCompletedExceptionally()) {
+                        VarDate cur = cf.join();
+                        inCurrency.put(k, CompletableFuture.completedFuture(currencies.apply(cur, nvd, fresh)));
+                    }
+                }
+            }
+            cache.asMap().keySet().removeIf(k -> k.startsWith(d + "|"));
+            audit(VarOfficialStore.OWNER, "var-intraday", d.toString(), "batches=" + batches + " updates=" + fresh.size());
+            return new IntradayResult("applied", fresh.size(), nb.intraday().info().trades(), batches, null);
+        } finally {
+            lock.unlock();
         }
     }
 
@@ -194,6 +482,7 @@ public final class VarService implements AutoCloseable {
         for (LocalDate d : ds.subList(Math.min(ds.size(), props.hotDates()), ds.size())) {
             if (!d.equals(keep)) {
                 retire(dates.remove(d), false);
+                retireCurrencies(d);
                 cache.asMap().keySet().removeIf(k -> k.startsWith(d + "|"));
             }
         }
@@ -205,13 +494,24 @@ public final class VarService implements AutoCloseable {
      */
     private void retire(CompletableFuture<VarDate> f, boolean stale) {
         if (f != null) {
-            f.thenAccept(vd -> loader.tier().retire(vd.book(), stale));
+            f.thenAccept(vd -> loader.tier().retire(vd.book().morning(), stale));      // the book the tier opened (a layer shares its file)
+        }
+    }
+
+    /** The date's books in other currencies leave memory with it (or with a new version of its inputs). */
+    private void retireCurrencies(LocalDate d) {
+        for (String k : new ArrayList<>(inCurrency.keySet())) {
+            if (d == null || k.startsWith(d + "|")) {
+                retire(inCurrency.remove(k), false);
+            }
         }
     }
 
     /** Drops every loaded date (an administrator's reload). */
     void reload() {
+        aheadQueued.clear();
         new ArrayList<>(dates.keySet()).forEach(d -> retire(dates.remove(d), false));
+        retireCurrencies(null);
         refused.clear();
         cache.invalidateAll();
     }
@@ -221,7 +521,9 @@ public final class VarService implements AutoCloseable {
      * unused when the inputs changed (a restatement); unchanged inputs open the same file again.
      */
     void reload(LocalDate d) {
+        aheadQueued.removeIf(k -> k.startsWith(d + "|"));
         retire(dates.remove(d), false);
+        retireCurrencies(d);
         refused.remove(d);
         cache.asMap().keySet().removeIf(k -> k.startsWith(d + "|"));
     }
@@ -238,6 +540,7 @@ public final class VarService implements AutoCloseable {
                 m.put("positions", vd.book().positionCount());
                 m.put("nodes", vd.book().nodes().size());
                 m.put("vectorBytes", vd.book().vectorBytes());
+                m.put("inputsBySystem", vd.intake().inputs() == null ? Map.of() : vd.intake().inputs());   // per source system: form, grain (15.13)
                 m.put("tier", vd.book().tier());
                 m.put("aggregateBytes", vd.book().aggregateBytes());
                 if (vd.book().hot() != null) {
@@ -248,6 +551,23 @@ public final class VarService implements AutoCloseable {
                 m.put("rejected", vd.intake().rejected());
                 m.put("excluded", vd.intake().excluded());
                 m.put("batchIds", vd.intake().batchIds());
+                m.put("intraday", VarViews.intradayNote(vd));
+                out.add(m);
+            }
+        });
+        inCurrency.forEach((k, f) -> {
+            if (f.isDone() && !f.isCompletedExceptionally()) {
+                VarDate vd = f.join();
+                Map<String, Object> m = new LinkedHashMap<>();
+                m.put("businessDate", vd.date().toString());
+                m.put("currency", vd.currency());
+                m.put("trades", vd.book().tradeCount());
+                m.put("tier", vd.book().tier());
+                if (vd.book().hot() != null) {
+                    m.put("hotFile", loader.tier().root().relativize(vd.book().hot().file()).toString().replace('\\', '/'));
+                }
+                m.put("loadMs", vd.loadMs());
+                m.put("fx", vd.fx());
                 out.add(m);
             }
         });
@@ -311,10 +631,15 @@ public final class VarService implements AutoCloseable {
         }).orElse(List.of());
     }
 
-    /** Resolves and computes a scope as the viewer (cached); a null viewer is the server (every node at positions level). */
+    /** Resolves and computes a scope as the viewer (cached); a null viewer is the server (every node at positions level). In USD. */
     Scoped scoped(Principal p, String scope, LocalDate asked) {
+        return scoped(p, scope, asked, VarDate.USD);
+    }
+
+    /** The same in a reporting currency ({@code ccy}: null or blank is USD). */
+    Scoped scoped(Principal p, String scope, LocalDate asked, String ccy) {
         long t0 = System.nanoTime();
-        VarDate d = date(asked);
+        VarDate d = date(asked, ccy);
         VarAccess.View view = access.view(p, d);
         ScopeResolver.Resolution res;
         ScopeExpr parsed;
@@ -332,7 +657,7 @@ public final class VarService implements AutoCloseable {
             throw new DrishtiException(ErrorCode.FORBIDDEN, "a scope of positions, trades, a counterparty, a rule or a basket portfolio may only "
                     + "name what you see position by position; your role sees some of these only in aggregate");
         }
-        String key = d.date() + "|" + d.version() + "|" + view.signature() + "|" + res.canonical() + "|" + res.set().digest();
+        String key = d.date() + "|" + d.currency() + "|" + d.version() + "|i" + d.intradayStamp() + "|" + view.signature() + "|" + res.canonical() + "|" + res.set().digest();
         Scoped hit = cache.getIfPresent(key);
         if (hit != null) {
             return new Scoped(d, hit.view(), hit.res(), hit.set(), hit.hidden(), hit.vector(), hit.measures(), hit.kind(), hit.label(),
@@ -340,7 +665,7 @@ public final class VarService implements AutoCloseable {
         }
         OrdinalSet set = view.full() ? res.set() : res.set().and(view.visible());
         int hidden = res.set().size() - set.size();
-        double[] v = vector(d, set, res);
+        double[] v = VarDate.USD.equals(d.currency()) ? vector(d, set, res) : inCurrencyVector(d, set, res);
         VarCalc.Measures m = calc.measures(v);
         String kind = kindOf(res, parsed);
         Scoped s = new Scoped(d, view, res, set, hidden, v, m, kind, label(d, res, parsed, kind, p), (System.nanoTime() - t0) / 1_000_000, false);
@@ -439,6 +764,7 @@ public final class VarService implements AutoCloseable {
 
     @Override
     public void close() {
+        ahead.shutdownNow();
         loader.tier().close();
         sums.close();
     }

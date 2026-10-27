@@ -83,7 +83,83 @@ def test_the_basket_trays_hints_and_what_if_go_to_the_engine_as_the_user(client,
     assert seen[-1][3] == {"asOf": "2026-09-30"}
 
 
-def test_the_top_bar_has_the_basket_button_and_alt_b(client):
+def test_the_basket_is_on_the_var_page_not_in_the_top_bar(client):
+    """2.9.4: the top bar has no Basket button; the VaR explorer offers "Construct your basket" (Alt+B there) and loads the tray."""
     html = client.get("/t").text
-    assert "data-basket-btn" in html and 'aria-keyshortcuts="Alt+B"' in html and "Basket" in html
-    assert "/static/js/var-basket.js" in html and "/static/css/var-basket.css" in html
+    assert "data-basket-btn" not in html and "/static/js/var-basket.js" not in html and "/static/css/var-basket.css" not in html
+    page = client.get("/var?scope=BANK").text
+    assert "data-basket-btn" not in page
+    assert "data-vx-basket-open" in page and 'aria-keyshortcuts="Alt+B"' in page and "data-basket-count" in page
+    assert "/static/js/var-basket.js" in page and "/static/css/var-basket.css" in page
+
+
+def test_in_a_currency_the_command_opens_the_page_in_it():
+    """``VAR ... IN EUR`` (docs/guides/VAR_GUIDE.md section 15.11): the page in that reporting currency, its link carrying ccy=EUR."""
+    assert var_command("VAR DESK DESK-RATES IN EUR".split(), "asha") == "/var?scope=DESK%3ADESK-RATES&ccy=EUR"
+    assert var_command("var bank in gbp".split(), "asha") == "/var?scope=BANK&ccy=GBP"
+    assert var_command("VAR TRD MX-1 IN CAD <GO>".split(), "asha") == "/var?scope=TRD%3AMX-1&ccy=CAD"
+    assert var_command("VAR CAPTURE CAP-1 IN JPY".split(), "asha") == "/var?capture=CAP-1&ccy=JPY"
+    assert var_command("VAR IN EUR".split(), "asha") == "/var?ccy=EUR"
+    assert var_command("VAR SCOPE DESK:DESK-FX - TRD:MX-1 IN EUR".split(), "asha") == "/var?scope=DESK%3ADESK-FX%20-%20TRD%3AMX-1&ccy=EUR"
+    assert var_command("VAR DESK IN EUR".split(), "asha") is None          # nothing named before IN
+    assert var_command("VAR DESK DESK-RATES IN EURO".split(), "asha") == "/var?scope=DESK%3ADESK-RATES-IN-EURO"   # not a currency: words of the id
+
+
+def test_the_page_has_the_reporting_currency_picker_and_the_tab(client):
+    html = client.get("/var?scope=DESK:DESK-RATES&ccy=eur").text
+    assert 'data-ccy="EUR"' in html
+    assert 'aria-label="Reporting currency"' in html and "data-vx-ccy" in html
+    assert 'data-tab="ccy"' in html and "In other currencies" in html and "data-vx-ccytable" in html
+    assert "<th>Trade currency</th>" in html                               # the contributions and the worst scenarios list it
+    assert 'data-ccy=""' in client.get("/var?scope=BANK&ccy=12").text       # not a currency: the session's, else USD
+    assert "data-vx-intraday" in html                                       # the intraday badge (filled when the figures include updates)
+
+
+def test_every_answer_passes_the_reporting_currency_to_the_engine(client, backend, monkeypatch):
+    seen = []
+
+    async def var(method, path, ident, body=None, raw=False, **params):
+        seen.append((method, path, body, params))
+        return {"ok": 1}
+    monkeypatch.setattr(backend, "var", var, raising=False)
+    for url in ("/api/var/scope?scope=BANK&ccy=EUR", "/api/var/scope/path?scope=BANK&page=0&ccy=EUR", "/api/var/tree?hierarchy=MGMT&ccy=EUR",
+                "/api/var/scope/contributions?scope=BANK&by=trade&ccy=EUR", "/api/var/hints?q=x&ccy=EUR"):
+        assert client.get(url).status_code == 200
+        assert seen[-1][3]["ccy"] == "EUR", url
+    # the tab "In other currencies" and the picker's list are the engine's too
+    assert client.get("/api/var/scope/currencies?scope=DESK%3ADESK-RATES&ccy=CAD").status_code == 200
+    assert seen[-1][1] == "/scope/currencies" and seen[-1][3] == {"scope": "DESK:DESK-RATES", "ccy": "CAD"}
+    assert client.get("/api/var/currencies").status_code == 200 and seen[-1][1] == "/currencies"
+    # a capture in the page's currency
+    assert client.post("/api/var/captures?ccy=EUR", json={"scope": "BANK"}).status_code == 200
+    assert seen[-1][3] == {"asOf": "", "ccy": "EUR"}
+
+
+def test_apply_now_of_a_pv_stream_goes_to_the_engine(client, backend, monkeypatch):
+    """The var-pv-stream connector's Apply now (VAR_GUIDE.md section 8.4): the console passes the POST on as the user (the engine
+    checks the administrator), and the streams' status; any other path under intraday/ is refused."""
+    seen = []
+
+    async def var(method, path, ident, body=None, raw=False, **params):
+        seen.append((method, path, body, params))
+        return {"status": "applied", "rows": 3, "batchId": "K-2026-09-30-1"}
+    monkeypatch.setattr(backend, "var", var, raising=False)
+    r = client.post("/api/var/intraday/streams/pv-updates/apply")
+    assert r.status_code == 200 and r.json()["rows"] == 3
+    assert seen[-1][:2] == ("POST", "/intraday/streams/pv-updates/apply")
+    assert client.get("/api/var/intraday/streams").status_code == 200 and seen[-1][1] == "/intraday/streams"
+    assert client.post("/api/var/intraday/other/apply").status_code == 404
+
+
+def test_no_confidence_is_hard_coded_the_labels_follow_the_answer(client):
+    """VaR at 99% or 95% (drishti.var.confidence, VAR_GUIDE.md section 18.5): the page, the explorer and the basket label the figures
+    from the answer's confidence and esConfidence, never a fixed 99% or 97.5%."""
+    from pathlib import Path
+    html = client.get("/var?scope=BANK").text
+    assert "VaR 99%" not in html and "ES 97.5%" not in html
+    js = Path(__file__).resolve().parents[1] / "web" / "static" / "js"
+    for f in ("var-explorer.js", "var-basket.js"):
+        text = (js / f).read_text(encoding="utf-8")
+        assert "99%" not in text and "97.5%" not in text, f
+    assert "d.confidence" in (js / "var-explorer.js").read_text(encoding="utf-8")
+    assert "w.confidence" in (js / "var-basket.js").read_text(encoding="utf-8")

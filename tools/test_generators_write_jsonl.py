@@ -44,7 +44,8 @@ PY = sys.executable
 
 #: the generators whose source is read (data generators; tests and fixtures under them are skipped)
 GENERATORS = ["tools/packgen/**/*.py", "tools/samplegen/*.py", "tools/testdata/*.py", "tools/realdata/*.py", "tools/publicdata/*.py",
-              "tools/sutragen.py", "tools/schemapack.py", "tools/bench/trades.py", "tools/convertcmd.py", "config/packs/*/tools/*.py",
+              "tools/sutragen.py", "tools/schemapack.py", "tools/bench/trades.py", "tools/convertcmd.py", "tools/pvgen/*.py",
+              "config/packs/*/tools/*.py",
               "examples/packs/*/tools/*.py"]
 
 #: files that write a store on purpose: the loaders (generating and loading are separate steps; these are the loading step)
@@ -126,6 +127,14 @@ class RunTheGenerators(unittest.TestCase):
         self.run_tool("tools/packgen/comswap_synth.py", "--deals", "3", "--out", out / "deals.jsonl")
         self.run_tool("tools/packgen/note_synth.py", "--notes", "2", "--out", out / "notes.jsonl")
         self.assert_jsonl(out, 2)
+
+    def test_the_stand_in_pricing_system(self):
+        """tools/pvgen (VAR_GUIDE.md section 15.12): the intraday batches as JSON Lines, loaded only with --lake."""
+        self.run_tool("tools/pvgen/intraday.py", "--batches", "2", "--trades-per-batch", "4", "--out", self.d / "pv")
+        self.run_tool("tools/pvgen/intraday.py", "--batches", "1", "--trades-per-batch", "3", "--grain", "position", "--gzip",
+                      "--out", self.d / "pv-positions")
+        self.assert_jsonl(self.d / "pv", 2)
+        self.assert_jsonl(self.d / "pv-positions")
 
     def test_the_trade_books(self):
         self.run_tool("tools/packgen/trades/make_trades.py", "--trades", "3", "--days", "1", "--systems", "ENDUR", "--out", self.d / "trades")

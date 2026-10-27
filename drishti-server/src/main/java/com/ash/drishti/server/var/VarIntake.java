@@ -17,6 +17,7 @@ package com.ash.drishti.server.var;
 
 import com.ash.drishti.common.ErrorCode;
 import com.ash.drishti.compute.var.PositionRules;
+import com.ash.drishti.compute.var.ScenarioFx;
 import com.ash.drishti.compute.var.VarBook;
 import java.time.LocalDate;
 import java.util.ArrayList;
@@ -24,28 +25,76 @@ import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.TreeMap;
 import java.util.TreeSet;
+import java.util.function.Supplier;
 
 /**
- * One date's P&amp;L vector rows on their way into the {@link VarBook} (VAR_GUIDE.md sections 15.6 and 20.3), row by row as the connector
- * streams them: a vector of the wrong length, with NaN or infinity, in another currency, or a failed row that carries a vector is
- * rejected ({@code DRS-5201}: counted and listed, never padded); a trade that is not live on the date (its status, its maturity) is left
- * out; every other row gets its position from the configured rules and goes to the builder (a trade id seen twice refuses the date).
- * The batch ids and scenario-set ids are gathered for the one-run check made when the stream ends.
+ * One date's trade rows on their way into the {@link VarBook} (VAR_GUIDE.md sections 15.6, 15.9 and 20.3), row by row as the connector
+ * streams them, in two forms a bank may send (either, or both for different trades):
+ *
+ * <ul>
+ *   <li><b>P&amp;L vectors</b> ({@code pnl-vector}, USD): a vector of the wrong length, with NaN or infinity, in another currency, or a
+ *       failed row that carries a vector is rejected ({@code DRS-5201}: counted and listed, never padded);</li>
+ *   <li><b>scenario PVs</b> ({@code scenario-pv}, 2.9.4): the trade's PV under each scenario and its base PV of the same run, in the
+ *       trade's own currency ({@code CURRENCY}); converted to the USD P&amp;L at load, {@code P&L(s) = PV(s) × FX(s) − PV(base) × FX(base)}
+ *       ({@link ScenarioFx#pnlFromPv}). A scenario that failed to price (a null or NaN PV) rejects the trade ({@code DRS-5206}, the
+ *       scenarios listed; never zero-filled); a currency without scenario FX rejects it too ({@code DRS-5207}); a wrong length, no base PV,
+ *       or valuation dates that differ from each other or from the business date reject it as {@code DRS-5201}.</li>
+ * </ul>
+ *
+ * A trade that is not live on the date (its status, its maturity) is left out; every other row gets its position from the configured
+ * rules and goes to the builder (a trade id seen twice, in either form, refuses the date). The batch ids and scenario-set ids are gathered
+ * for the one-run check made when the stream ends.
  */
 final class VarIntake {
 
     /** The trade columns read besides the engine's own when the table keeps them (VAR_GUIDE.md section 15.2). */
-    static final List<String> OPTIONAL = List.of("TRADE_STATUS", "MATURITY_DATE", "BATCH_ID", "SCENARIO_SET_ID", "REPORTING_CCY", "STATUS");
+    static final List<String> OPTIONAL = List.of("TRADE_STATUS", "MATURITY_DATE", "BATCH_ID", "SCENARIO_SET_ID", "REPORTING_CCY", "STATUS",
+            "RUN_KIND", "COMPUTED_AT", "VALUE_TYPE", "GRAIN", "POSITION_ID", "SOURCE_SYSTEM", "TRADE_IDS", "TRADE_CURRENCY");
+    /** The position rule a supplied position (a record at position grain, VAR_GUIDE.md section 15.13) carries: never derived. */
+    static final String SUPPLIED = VarBook.SUPPLIED;
+    /** The scenario-PV form's own columns (VAR_GUIDE.md section 15.9), read when the table keeps them. */
+    static final List<String> PV_COLUMNS = List.of("BASE_PV", "VALUATION_DATE", "BASE_VALUATION_DATE");
     /** The engine's columns the vector table must keep (the rest of the trade columns are read when kept). */
     static final List<String> REQUIRED = List.of("LEGAL_ENTITY", "DESK", "TT_BOOK");
     private static final int LISTED = 20;
     /** The trades left out that are remembered with their reason, for the explorer's notice (beyond it: counted only). */
     private static final int NOT_LIVE_KEPT = 200_000;
 
-    /** What the intake did, for the provenance of every answer of the date. */
+    /**
+     * What the intake did, for the provenance of every answer of the date.
+     *
+     * @param scenarioPv the trades loaded from scenario PVs (converted to USD at load)
+     * @param pvTrades their ids (the first 200,000: a trade page links its scenario PVs rather than a P&amp;L vector)
+     */
     record Summary(int rejected, List<String> rejections, int excluded, List<String> batchIds, List<String> scenarioSets, String rules,
-            String rulesDigest, Map<String, String> notLive) {
+            String rulesDigest, Map<String, String> notLive, int scenarioPv, java.util.Set<String> pvTrades,
+            Map<String, Map<String, Object>> inputs, Map<String, List<String>> positionTrades, int setLength) {
+
+        /** The supplied position that names a trade in its {@code TRADE_IDS}, or null. */
+        String positionOf(String trade) {
+            if (positionTrades == null || trade == null) {
+                return null;
+            }
+            for (Map.Entry<String, List<String>> e : positionTrades.entrySet()) {
+                if (e.getValue().contains(trade)) {
+                    return e.getKey();
+                }
+            }
+            return null;
+        }
+
+        /** The form and grain a source system's records came in on the date ({@code inputs}), in words, or null. */
+        String inputOf(String system) {
+            Map<String, Object> d = inputs == null || system == null ? null : inputs.get(system);
+            return d == null ? null : d.get("form") + ", " + d.get("grain");
+        }
+
+        /** The trades a supplied position names ({@code TRADE_IDS}), or none. */
+        List<String> tradesOf(String position) {
+            return positionTrades == null || position == null ? List.of() : positionTrades.getOrDefault(position, List.of());
+        }
 
         /** Why a trade the date's vectors carry was left out (its status, its maturity), or null: the explorer's notice. */
         String notLiveWhy(String trade) {
@@ -62,6 +111,11 @@ final class VarIntake {
             }
             return why;
         }
+
+        /** True when the trade's row came as scenario PVs. */
+        boolean fromScenarioPv(String trade) {
+            return pvTrades != null && trade != null && pvTrades.contains(trade);
+        }
     }
 
     private final VarBook.Builder book;
@@ -75,8 +129,16 @@ final class VarIntake {
     private final TreeSet<String> batches = new TreeSet<>();
     private final TreeSet<String> sets = new TreeSet<>();
     private final Map<String, String> notLive = new HashMap<>();
+    private final TreeSet<String> pvTrades = new TreeSet<>();
+    /** Per currency met in scenario PVs: how its rates were found, and today's rate (VarDate.fx). */
+    private final Map<String, Object> fxUsed = new TreeMap<>();
     private int rejected;
     private int excluded;
+    private int scenarioPv;
+    /** Scenario-PV mode: the date's FX (asked on the first PV row) and scenario days; null while reading P&amp;L vectors. */
+    private Supplier<ScenarioFx> fx;
+    private List<LocalDate> scenarioDates;
+    private double[] usd;
 
     /** {@code columns} are the texts the vector read returns after {@code TRADE_ID}, in order. */
     VarIntake(VarBook.Builder book, PositionRules rules, LocalDate date, List<String> columns) {
@@ -84,21 +146,51 @@ final class VarIntake {
         this.rules = rules;
         this.date = date;
         this.width = book.width();
+        map(columns);
+    }
+
+    private void map(List<String> columns) {
+        at.clear();
         for (int i = 0; i < columns.size(); i++) {
             at.put(columns.get(i), i + 1);
         }
     }
 
+    /**
+     * From now on the rows are scenario PVs ({@code columns} the texts the PV read returns after {@code TRADE_ID}): converted to USD
+     * with the date's FX, asked once, on the first row that needs it.
+     */
+    void scenarioPvs(List<String> columns, Supplier<ScenarioFx> dateFx, List<LocalDate> days) {
+        map(columns);
+        ScenarioFx[] memo = {null};
+        this.fx = () -> {
+            if (memo[0] == null) {
+                memo[0] = dateFx.get();
+            }
+            return memo[0];
+        };
+        this.scenarioDates = days;
+        this.usd = new double[width];
+    }
+
     /** The columns to ask the vector table for: TRADE_ID, the engine's, the rules' keys and the checks', those it keeps. */
     static List<String> columns(java.util.Set<String> kept, PositionRules rules) {
+        return columns(kept, rules, List.of());
+    }
+
+    /** The same, with a form's own columns ({@link #PV_COLUMNS}) asked when kept. */
+    static List<String> columns(java.util.Set<String> kept, PositionRules rules, List<String> own) {
         List<String> want = new ArrayList<>(List.of("TRADE_ID"));
         LinkedHashMap<String, Boolean> all = new LinkedHashMap<>();
-        VarBook.TRADE_TEXTS.stream().filter(c -> !c.equals("POSITION_ID") && !c.equals("POSITION_RULE")).forEach(c -> all.put(c, true));
+        VarBook.TRADE_TEXTS.stream().filter(c -> !c.equals("POSITION_ID") && !c.equals("POSITION_RULE") && !c.equals("PV_CURRENCY"))
+                .forEach(c -> all.put(c, true));
         VarBook.TRADE_NUMBERS.forEach(c -> all.put(c, true));
         rules.keyFields().forEach(c -> all.put(c, true));
         OPTIONAL.forEach(c -> all.put(c, true));
+        own.forEach(c -> all.put(c, true));
         for (String c : all.keySet()) {
-            if (kept.isEmpty() ? REQUIRED.contains(c) || VarBook.TRADE_NUMBERS.contains(c) || isEngineText(c) : kept.contains(c) || REQUIRED.contains(c)) {
+            if (kept.isEmpty() ? REQUIRED.contains(c) || VarBook.TRADE_NUMBERS.contains(c) || isEngineText(c) || own.contains(c)
+                    : kept.contains(c) || REQUIRED.contains(c)) {
                 want.add(c);
             }
         }
@@ -116,32 +208,156 @@ final class VarIntake {
         return v == null || v.isEmpty() ? null : v;
     }
 
-    /** One row of the stream: {@code row[0]} the trade id (null: the lake key {@code id}), then the columns. */
-    void row(String id, double[] values, int length, String[] row) {
-        String trade = row[0] == null ? id : row[0];
-        String batch = text(row, "BATCH_ID");
-        if (batch != null) {
-            batches.add(batch);
+    /**
+     * The scenario set's length: a row carries all of its scenarios, and the engine keeps the newest {@code width} of them (the scenario
+     * window, VAR_GUIDE.md section 18.5); the whole set when they are the same.
+     */
+    /** The date's FX, for P&L vectors whose CURRENCY is not USD (each scenario's P&L at that scenario's rate into USD). */
+    VarIntake pnlFx(Supplier<ScenarioFx> dateFx) {
+        ScenarioFx[] memo = {null};
+        this.pnlFx = () -> {
+            if (memo[0] == null) {
+                memo[0] = dateFx.get();
+            }
+            return memo[0];
+        };
+        this.usdPnl = new double[width];
+        return this;
+    }
+
+    VarIntake setLength(int n) {
+        this.full = n <= 0 ? width : n;
+        this.cut = new double[width];
+        return this;
+    }
+
+    /** A row's values cut to the scenario window (the set's newest scenarios); the row as it is when the window is the whole set. */
+    private double[] windowed(double[] values, int length) {
+        if (full == width || length != full) {
+            return values;
         }
+        System.arraycopy(values, full - width, cut, 0, width);
+        return cut;
+    }
+
+    /**
+     * One row of the stream: {@code row[0]} the trade id (null: the lake key {@code id}, or a record at position grain), then the columns.
+     */
+    void row(String id, double[] values0, int length0, String[] row) {
+        if (full < 0) {
+            setLength(width);
+        }
+        double[] values = windowed(values0, length0);
+        int length = values == values0 ? length0 : width;
+        String position = text(row, "POSITION_ID");
+        String trade = row[0] != null ? row[0] : position != null && "POSITION".equalsIgnoreCase(text(row, "GRAIN")) ? position : id;
+        String batch = text(row, "BATCH_ID");
         String set = text(row, "SCENARIO_SET_ID");
-        if (set != null) {
-            sets.add(set);
+        String at = text(row, "COMPUTED_AT");
+        boolean intra = INTRADAY.equalsIgnoreCase(text(row, "RUN_KIND"));
+        currentIntra = intra;
+        if (intra) {
+            String part = (fx != null ? "scenario-pv|" : "pnl-vector|") + batch;    // a batch may come in both kinds, as two loads
+            if (batch != null) {
+                intradayBatches.add(batch);
+                intradayParts.add(part);
+            }
+            if (batch != null && applied.contains(part)) {
+                return;                                                 // applied already (a redelivery, or a date opened again)
+            }
+            if (setId != null && set != null && !set.equals(setId)) {
+                reject(new String[] {ErrorCode.VAR_INCONSISTENT_DATE.code(), "an intraday update of the scenario set " + set + " (batch " + batch
+                        + "); the date's set is " + setId + ": not applied"}, trade);
+                return;
+            }
+        } else {
+            if (batch != null) {
+                batches.add(batch);
+            }
+            if (set != null) {
+                sets.add(set);
+            }
+            if (at != null && (morningAt == null || at.compareTo(morningAt) > 0)) {
+                morningAt = at;
+            }
+            if (intradayOnly) {
+                return;                                                 // reading only the intraday rows of a loaded date
+            }
+        }
+        // what the record is (VAR_GUIDE.md section 15.13): its own fields, checked against its payload, its id and its system's pin
+        String system = text(row, "SOURCE_SYSTEM");
+        String[] bad = inputs.check(fx == null ? VarInputs.PNL : VarInputs.PV, text(row, "VALUE_TYPE"), text(row, "GRAIN"), row[0], position,
+                system, text(row, "CURRENCY"));
+        if (bad != null) {
+            reject(bad, trade);
+            return;
+        }
+        String combo = VarInputs.combo(text(row, "VALUE_TYPE"), text(row, "GRAIN"));
+        boolean supplied = combo.endsWith("/" + VarInputs.POSITION);
+        if (!intra) {
+            inputs.saw(system.strip(), combo);
+            if (supplied) {
+                List<String> named = tradeIds(text(row, "TRADE_IDS"));
+                if (!named.isEmpty()) {
+                    positionTrades.put(trade, named);
+                }
+            } else {
+                tradeGrain.add(trade);
+            }
         }
         String status = text(row, "TRADE_STATUS");
         String maturity = text(row, "MATURITY_DATE");
-        if (!rules.live(status) || matured(maturity)) {
+        boolean live = rules.live(status) && !matured(maturity);
+        if (!live && !intra) {
             excluded++;
             if (notLive.size() < NOT_LIVE_KEPT && trade != null) {
                 notLive.put(trade, !rules.live(status) ? "its status is " + status : "it matured on " + maturity.substring(0, 10));
             }
             return;
         }
-        String why = check(values, length, text(row, "STATUS"), text(row, "REPORTING_CCY"));
-        if (why != null) {
-            rejected++;
-            if (rejections.size() < LISTED) {
-                rejections.add(ErrorCode.VAR_ROW_REJECTED.code() + " " + trade + ": " + why);
+        double[] vector = values;
+        double pvUsd = Double.NaN;
+        String[] why = null;
+        String vectorCcy = null;                                        // a P&L vector's CURRENCY when it is not USD (converted)
+        if (live) {
+            if (fx == null) {
+                // a P&L vector's values are in its CURRENCY (2.9.4); REPORTING_CCY is a deprecated alias that must say the same
+                String ccy = currency(row);
+                String rep = text(row, "REPORTING_CCY");
+                String w = rep != null && !rep.strip().equalsIgnoreCase(ccy) ? "REPORTING_CCY " + rep + " is not the CURRENCY " + ccy
+                        + " the values are in (REPORTING_CCY is a deprecated alias of CURRENCY)" : check(values, length, text(row, "STATUS"), null);
+                why = w == null ? null : new String[] {rep != null && !rep.strip().equalsIgnoreCase(ccy) ? ErrorCode.VAR_RECORD_INVALID.code()
+                        : ErrorCode.VAR_ROW_REJECTED.code(), w};
+                if (why == null && length >= 0 && !ccy.equals(ScenarioFx.USD)) {
+                    java.util.Optional<ScenarioFx.Rates> r = pnlFx == null ? java.util.Optional.empty() : pnlFx.get().rates(ccy);
+                    if (r.isEmpty()) {
+                        why = new String[] {ErrorCode.VAR_NO_FX.code(), "its P&L vector is in " + ccy + " and the date has no " + ccy + " scenario FX"};
+                    } else {
+                        // each scenario's P&L at that scenario's FX into USD: approximate, the currency move inside the trade is
+                        // already folded into the vector (tradesWithoutPv; VAR_GUIDE.md section 15.13)
+                        for (int s = 0; s < length; s++) {
+                            usdPnl[s] = values[s] * r.get().scenarios()[s];
+                        }
+                        vector = usdPnl;
+                        pvUsd = VarLoader.number(text(row, "PV")) * r.get().base();
+                        vectorCcy = ccy;
+                        fxUsed.putIfAbsent(ccy, Map.of("source", r.get().source(), "base", r.get().base()));
+                    }
+                }
+            } else {
+                why = checkPv(values, length, row);
+                if (why == null && length >= 0) {
+                    ScenarioFx.Rates r = fx.get().rates(currency(row)).orElseThrow();
+                    double base = VarLoader.number(text(row, "BASE_PV"));
+                    ScenarioFx.pnlFromPv(base, values, length, r, usd);
+                    vector = usd;
+                    pvUsd = base * r.base();
+                    fxUsed.putIfAbsent(r.currency(), Map.of("source", r.source(), "base", r.base()));
+                }
             }
+        }
+        if (why != null) {
+            reject(why, trade);
             return;
         }
         for (int c = 0; c < texts.length; c++) {
@@ -150,17 +366,192 @@ final class VarIntake {
         for (int c = 0; c < numbers.length; c++) {
             numbers[c] = VarLoader.number(text(row, VarBook.TRADE_NUMBERS.get(c)));
         }
-        PositionRules.Derived d = rules.derive(trade, text(row, "TT_BOOK"), text(row, "PRODUCT_GROUP"), text(row, "PRODUCT_TYPE"),
-                k -> text(row, k));
-        texts[VarBook.TRADE_TEXTS.indexOf("POSITION_ID")] = d.positionId();
-        texts[VarBook.TRADE_TEXTS.indexOf("POSITION_RULE")] = d.rule();
-        texts[VarBook.TRADE_TEXTS.indexOf("INSTRUMENT_ID")] = d.instrumentId();
-        texts[VarBook.TRADE_TEXTS.indexOf("SECURITY_ID")] = d.securityId();
+        if (fx == null) {
+            // a P&L row's CURRENCY is its values' currency: the trade's own is TRADE_CURRENCY when sent (scopes, rules, Trade currency)
+            String own = text(row, "TRADE_CURRENCY");
+            if (own != null) {
+                texts[VarBook.TRADE_TEXTS.indexOf("CURRENCY")] = own;
+            }
+            if (vectorCcy != null) {
+                numbers[VarBook.TRADE_NUMBERS.indexOf("PV")] = pvUsd;       // its PV, also in CURRENCY, in USD at today's rate
+            }
+        }
+        if (fx != null) {
+            numbers[VarBook.TRADE_NUMBERS.indexOf("PV")] = pvUsd;           // the trade's USD value today, as a P&L vector's PV
+            if (!intra) {
+                scenarioPv++;
+                if (pvTrades.size() < NOT_LIVE_KEPT && trade != null) {
+                    pvTrades.add(trade);
+                }
+            }
+        }
+        if (supplied) {                                                 // a supplied position: as it is, never derived from trades
+            texts[VarBook.TRADE_TEXTS.indexOf("POSITION_ID")] = trade;
+            texts[VarBook.TRADE_TEXTS.indexOf("POSITION_RULE")] = SUPPLIED;
+            String sec = text(row, "SECURITY_ID");
+            texts[VarBook.TRADE_TEXTS.indexOf("INSTRUMENT_ID")] = sec != null ? sec : trade;
+        } else {
+            PositionRules.Derived d = rules.derive(trade, text(row, "TT_BOOK"), text(row, "PRODUCT_GROUP"), text(row, "PRODUCT_TYPE"),
+                    k -> text(row, k));
+            texts[VarBook.TRADE_TEXTS.indexOf("POSITION_ID")] = d.positionId();
+            texts[VarBook.TRADE_TEXTS.indexOf("POSITION_RULE")] = d.rule();
+            texts[VarBook.TRADE_TEXTS.indexOf("INSTRUMENT_ID")] = d.instrumentId();
+            texts[VarBook.TRADE_TEXTS.indexOf("SECURITY_ID")] = d.securityId();
+        }
+        // the currency the trade's PVs came in (VAR_GUIDE.md section 15.11): a scenario-PV row's CURRENCY; none for a P&L vector (USD)
+        texts[VarBook.TRADE_TEXTS.indexOf("PV_CURRENCY")] = fx != null ? currency(row) : null;
         if (texts[VarBook.TRADE_TEXTS.indexOf("INSTRUMENT")] == null) {
-            texts[VarBook.TRADE_TEXTS.indexOf("INSTRUMENT")] = d.securityId() != null ? d.securityId()
+            String sec = texts[VarBook.TRADE_TEXTS.indexOf("SECURITY_ID")];
+            texts[VarBook.TRADE_TEXTS.indexOf("INSTRUMENT")] = sec != null ? sec
                     : text(row, "PRODUCT_TYPE") == null ? trade : text(row, "PRODUCT_TYPE") + " " + trade;
         }
-        book.trade(trade, values, length, texts, numbers);
+        if (intra) {                                                    // an intraday update: the latest per trade kept, applied on the book
+            if (live && length < 0) {
+                return;                                                 // no PVs and not cancelled: nothing to apply
+            }
+            double pvAt = numbers[VarBook.TRADE_NUMBERS.indexOf("PV")];
+            double[] pnl = live ? java.util.Arrays.copyOf(vector, width) : null;
+            // offered when the morning run's form and grain are known for the system (an update in another is refused, never mixed in)
+            pending.add(new Object[] {system.strip(), combo, new VarIntradayRows.Row(trade, at, batch == null ? "" : batch,
+                    new com.ash.drishti.compute.var.VarIntraday.Update(trade, pnl, pvAt, texts.clone(), numbers.clone(), pvAt,
+                            pnl == null ? null : pnl.clone()))});
+            return;
+        }
+        book.trade(trade, vector, length, texts, numbers);
+    }
+
+    private void reject(String[] why, String trade) {
+        rejected++;
+        if (rejections.size() < LISTED) {
+            rejections.add(why[0] + " " + trade + ": " + why[1]);
+        }
+        if (currentIntra && intradayRejections.size() < LISTED) {
+            intradayRejections.add(why[0] + " " + trade + ": " + why[1]);
+        }
+    }
+
+    private boolean currentIntra;
+    private final List<String> intradayRejections = new ArrayList<>();
+
+    /** The intraday rows rejected, in words (the first 20). */
+    List<String> intradayRejections() {
+        intraday();                                                     // the updates in another form or grain are refused there
+        return List.copyOf(intradayRejections);
+    }
+
+    // ---------------------------------------------------------------------------------------------------------- intraday
+
+    /** The marker of an intraday update (VAR_GUIDE.md section 8.4): {@code RUN_KIND: INTRADAY}. A full run has none, or {@code FULL}. */
+    static final String INTRADAY = "INTRADAY";
+    private final VarIntradayRows intraday = new VarIntradayRows();
+    private final TreeSet<String> intradayBatches = new TreeSet<>();
+    private final TreeSet<String> intradayParts = new TreeSet<>();
+    private int full = -1;
+    private double[] cut;
+    private final List<Object[]> pending = new ArrayList<>();
+    /** The date's FX for P&L vectors in another currency than USD (2.9.4): asked on the first such row. */
+    private Supplier<ScenarioFx> pnlFx;
+    private double[] usdPnl;
+    private VarInputs inputs = new VarInputs(s -> new VarProperties.Input(null, null));
+    private final Map<String, List<String>> positionTrades = new HashMap<>();
+    private final java.util.Set<String> tradeGrain = new java.util.HashSet<>();
+    private java.util.Set<String> applied = java.util.Set.of();
+    private boolean intradayOnly;
+    private String setId;
+    private String morningAt;
+
+    /** The date's scenario set: an intraday row of another is rejected ({@code DRS-5203}), never applied. */
+    VarIntake scenarioSet(String id) {
+        this.setId = id;
+        return this;
+    }
+
+    /** Reads only the intraday rows of a loaded date, skipping the batch parts ({@code <kind>|<BATCH_ID>}) {@code applied} already. */
+    VarIntake intradayOnly(java.util.Set<String> applied) {
+        this.intradayOnly = true;
+        this.applied = applied == null ? java.util.Set.of() : applied;
+        return this;
+    }
+
+    /**
+     * The intraday updates read (the latest per trade), each in its system's morning form and grain: an update in another is refused
+     * ({@code DRS-5210}) and listed, never mixed in.
+     */
+    VarIntradayRows intraday() {
+        if (!pending.isEmpty()) {
+            for (Object[] p : pending) {
+                String morning = inputs.morning((String) p[0]);
+                VarIntradayRows.Row r = (VarIntradayRows.Row) p[2];
+                if (morning != null && !morning.equals(p[1])) {
+                    currentIntra = true;
+                    reject(new String[] {ErrorCode.VAR_INPUT_MIXED.code(), p[0] + "'s morning run sent " + morning + "; this update is " + p[1]
+                            + " (batch " + r.batchId() + "): not applied"}, r.tradeId());
+                    continue;
+                }
+                intraday.offer(r);
+            }
+            pending.clear();
+        }
+        return intraday;
+    }
+
+    /** The morning run's per-system form and grain (an intraday read: the date's, from its provenance); the pins checked with them. */
+    VarIntake inputs(VarInputs in) {
+        this.inputs = in;
+        return this;
+    }
+
+    /**
+     * Refuses the date ({@code DRS-5210}) when a system sent two forms or grains, or a supplied position names a trade also sent on its
+     * own: nothing would say which counts.
+     */
+    void verify() {
+        List<String> mixed = inputs.mixed();
+        if (!mixed.isEmpty()) {
+            throw new com.ash.drishti.common.DrishtiException(ErrorCode.VAR_INPUT_MIXED, "the inputs of " + date + " are not loaded: "
+                    + String.join("; ", mixed) + "; one source system sends one form and one grain on one date (VAR_GUIDE.md section 15.13)");
+        }
+        for (Map.Entry<String, List<String>> e : positionTrades.entrySet()) {
+            for (String t : e.getValue()) {
+                if (tradeGrain.contains(t)) {
+                    throw new com.ash.drishti.common.DrishtiException(ErrorCode.VAR_INPUT_MIXED, "the inputs of " + date + " are not loaded: "
+                            + "the supplied position " + e.getKey() + " covers the trade " + t + ", which is also sent on its own: it would count twice");
+                }
+            }
+        }
+    }
+
+    private static List<String> tradeIds(String json) {
+        if (json == null || json.isBlank()) {
+            return List.of();
+        }
+        List<String> out = new ArrayList<>();
+        for (String x : json.replaceAll("[\\[\\]\"]", "").split(",")) {
+            if (!x.isBlank()) {
+                out.add(x.strip());
+            }
+        }
+        return out;
+    }
+
+    /** The intraday batch parts met, {@code <kind>|<BATCH_ID>}: a batch sent in both kinds is two parts, each loaded on its own. */
+    java.util.Set<String> intradayParts() {
+        return java.util.Set.copyOf(intradayParts);
+    }
+
+    /** The intraday batches met (applied before or not). */
+    java.util.Set<String> intradayBatches() {
+        return java.util.Set.copyOf(intradayBatches);
+    }
+
+    /** The newest {@code COMPUTED_AT} of the morning run's rows (an intraday update before it is older than the run, and ignored). */
+    String morningAt() {
+        return morningAt;
+    }
+
+    private String currency(String[] row) {
+        String c = text(row, "CURRENCY");
+        return c == null ? ScenarioFx.USD : c.trim().toUpperCase(java.util.Locale.ROOT);
     }
 
     private boolean matured(String maturity) {
@@ -183,7 +574,7 @@ final class VarIntake {
             return "STATUS is failed but the row carries a vector";
         }
         if (length != width) {
-            return "the vector has " + length + " values; the scenario set has " + width;
+            return "the vector has " + length + " values; the scenario set has " + full;
         }
         for (int j = 0; j < length; j++) {
             if (!Double.isFinite(values[j])) {
@@ -196,8 +587,66 @@ final class VarIntake {
         return null;
     }
 
+    /** Why a scenario-PV row is rejected ({code, reason}), or null: its PVs, their valuation dates, its currency's FX. */
+    private String[] checkPv(double[] values, int length, String[] row) {
+        String bad = ErrorCode.VAR_ROW_REJECTED.code();
+        if (length < 0) {
+            return null;                                                // no scenario PVs: a failed row, counted by the builder
+        }
+        if ("failed".equalsIgnoreCase(text(row, "STATUS"))) {
+            return new String[] {bad, "STATUS is failed but the row carries scenario PVs"};
+        }
+        if (length != width) {
+            return new String[] {bad, "the row has " + length + " scenario PVs; the scenario set has " + full};
+        }
+        String valued = text(row, "VALUATION_DATE");
+        String baseValued = text(row, "BASE_VALUATION_DATE");
+        if (valued != null && baseValued != null && !valued.regionMatches(0, baseValued, 0, 10)) {
+            return new String[] {bad, "the scenario PVs are valued on " + head(valued) + " and the base PV on " + head(baseValued) + ": one run values both on one date"};
+        }
+        for (String v : new String[] {valued, baseValued}) {
+            if (v != null && !head(v).equals(date.toString())) {
+                return new String[] {bad, "the PVs are valued on " + head(v) + ", not on the business date " + date};
+            }
+        }
+        double base = VarLoader.number(text(row, "BASE_PV"));
+        if (!Double.isFinite(base)) {
+            return new String[] {bad, "no BASE_PV: the P&L is the scenario PV less the base PV of the same run"};
+        }
+        List<Integer> failed = new ArrayList<>();
+        for (int j = 0; j < length; j++) {
+            if (!Double.isFinite(values[j])) {
+                failed.add(j);
+            }
+        }
+        if (!failed.isEmpty()) {
+            StringBuilder b = new StringBuilder();
+            for (int i = 0; i < Math.min(5, failed.size()); i++) {
+                int j = failed.get(i);
+                b.append(i == 0 ? "" : ", ").append(j).append(scenarioDates == null || j >= scenarioDates.size() ? "" : " (" + scenarioDates.get(j) + ")");
+            }
+            return new String[] {ErrorCode.VAR_SCENARIO_FAILED.code(), failed.size() + " scenario" + (failed.size() == 1 ? "" : "s")
+                    + " failed to price: " + b + (failed.size() > 5 ? ", ..." : "") + "; the trade is not loaded (never filled with zero)"};
+        }
+        String ccy = currency(row);
+        if (fx.get().rates(ccy).isEmpty()) {
+            String note = fx.get().notes().stream().filter(n -> n.startsWith(ccy + ":")).findFirst().orElse(ccy + ": no rates");
+            return new String[] {ErrorCode.VAR_NO_FX.code(), "its PVs are in " + ccy + " and the date has no " + ccy + " scenario FX (" + note + ")"};
+        }
+        return null;
+    }
+
+    private static String head(String d) {
+        return d.length() >= 10 ? d.substring(0, 10) : d;
+    }
+
+    /** Per currency the scenario PVs were in: the source of its rates and today's rate. */
+    Map<String, Object> fx() {
+        return Map.copyOf(fxUsed);
+    }
+
     Summary summary() {
         return new Summary(rejected, List.copyOf(rejections), excluded, List.copyOf(batches), List.copyOf(sets), rules.toString(), rules.digest(),
-                Map.copyOf(notLive));
+                Map.copyOf(notLive), scenarioPv, java.util.Set.copyOf(pvTrades), inputs.describe(), Map.copyOf(positionTrades), full);
     }
 }

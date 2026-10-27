@@ -267,7 +267,7 @@ Each trigger says which results it affects with `affects:`:
 - `subscribed`: only results some open screen is watching.
 - an **expression** over the event (Rachana-EL, as panels use): `"scopes_of(trade.TT_BOOK)"` returns the keys the event touches. The
   function `scopes_of` is supplied by the connector (for VaR: the book and its ancestors in the hierarchy, plus every saved ad-hoc
-  scope that contains the trade; [VAR_GUIDE.md section 8.4](../guides/VAR_GUIDE.md#84-what-if-pricing-and-intraday-recomputes-planned)).
+  scope that contains the trade; [VAR_GUIDE.md section 8.4](../guides/VAR_GUIDE.md#84-what-if-pricing-and-intraday-recomputes-what-if-planned-intraday-updates-as-built-in-294)).
 
 Only affected results that **somebody is watching** are recomputed at once; the others are only marked stale and recompute on their
 next read. A trigger never computes for a screen nobody has open.
@@ -401,7 +401,7 @@ A burst of events for one key (twenty amendments to one book in a second) must n
 
 A connector may declare that a kind is **incremental**: given the previous result and the events since, it can produce the new result
 without starting again. For VaR this is natural: the P&L vector of a scope is a sum, so an amended trade changes the scope's vector by
-(new vector − old vector), and only the scopes above the trade change ([VAR_GUIDE.md section 8.4](../guides/VAR_GUIDE.md#84-what-if-pricing-and-intraday-recomputes-planned)).
+(new vector − old vector), and only the scopes above the trade change ([VAR_GUIDE.md section 8.4](../guides/VAR_GUIDE.md#84-what-if-pricing-and-intraday-recomputes-what-if-planned-intraday-updates-as-built-in-294)).
 The connector's entry point receives `previous` (result plus stamp) and `events`; it may answer *full recompute needed* when the
 events are too many or of a kind it cannot apply incrementally. Every Nth incremental result (`incremental.verify-every`, default 50)
 is checked against a full recompute in the background; a difference beyond tolerance is a health warning and the full result wins.

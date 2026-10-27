@@ -122,6 +122,30 @@ public enum ErrorCode {
      * {@code var-whatif} (compute pool {@code var}); it is not running on this server (the compute workers are off) or did not answer in time.
      */
     VAR_WHATIF_UNAVAILABLE("DRS-5205", 503),
+    /**
+     * VaR: a trade's scenario PVs (the {@code scenario-pv} kind) hold a scenario that failed to price (a null or NaN PV): the trade is not
+     * loaded, never filled with zero. Counted and listed in the answer's provenance with the scenarios, not thrown.
+     */
+    VAR_SCENARIO_FAILED("DRS-5206", 422),
+    /**
+     * VaR: no FX for a currency on the date's scenarios (none supplied, and the FX history does not cover the scenario days): a trade
+     * priced in it is not loaded (listed in the provenance), and a reporting currency without rates is refused.
+     */
+    VAR_NO_FX("DRS-5207", 422),
+    /**
+     * VaR: a PV record that does not say what it is, or says it wrongly (2.9.4, VAR_GUIDE.md section 15.13): no {@code VALUE_TYPE},
+     * {@code GRAIN}, id, {@code CURRENCY} or {@code SOURCE_SYSTEM}; a {@code VALUE_TYPE} that is not its payload (PVs or a P&amp;L
+     * vector); a {@code GRAIN} that is not its id ({@code TRADE_ID} or {@code POSITION_ID}). The record is refused, listed, never guessed.
+     */
+    VAR_RECORD_INVALID("DRS-5208", 422),
+    /** VaR: a PV record disagrees with its source system's pin ({@code drishti.var.inputs}): refused and listed, naming both. */
+    VAR_INPUT_PIN("DRS-5209", 422),
+    /**
+     * VaR: one source system sent two forms or grains on one date (scenario PVs and P&amp;L vectors, or trades and positions), or a
+     * supplied position covers a trade also sent on its own: nothing would say which counts, so the date is refused (an intraday update
+     * in another form or grain than the morning run's is refused and listed).
+     */
+    VAR_INPUT_MIXED("DRS-5210", 422),
     /** Exposure: a bad scope word or parameter ({@code q}, {@code collateral}, {@code date} not a grid date, {@code by}, {@code run}). */
     EXPOSURE_BAD_PARAMETER("DRS-5440", 400),
     /**

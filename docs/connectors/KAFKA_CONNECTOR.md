@@ -47,6 +47,7 @@ connectors, which keep their own copy because a queue cannot be replayed, are in
 14. [Settings](#14-settings)
 15. [Trying it: `stream.py`](#15-trying-it-streampy)
 16. [Checklist for production](#16-checklist-for-production)
+17. [The VaR PV topic (`var-pv-stream`, 2.9.4)](#17-the-var-pv-topic-var-pv-stream-294)
 
 ---
 
@@ -1021,6 +1022,62 @@ to the lake rather than to a random-walk sample.
 8. Pair it with a **dated store** for the same kinds, and check the order in [section 10.4](#104-with-a-lake-for-history).
 9. After start, check Health: `UP (catching up)` then `UP`, `indexedEntities` near the number of entities, and a
    view's `provenance.source`.
+
+## 17. The VaR PV topic (`var-pv-stream`, 2.9.4)
+
+The market-risk pack's connector `pv-updates` (plugin `var-pv-stream`, **off by default**: `DRISHTI_VAR_PV_STREAM=true`) is not
+this connector's state store: it reads a pricing system's **PV topic** the same way (every partition from the beginning, no
+consumer group, the same `bootstrap-servers`, security and `client.*` settings), and turns it into **intraday batches of the risk
+lake**, so the VaR engine's intraday layer applies them exactly as it applies a file
+([VAR_GUIDE.md section 8.4](../guides/VAR_GUIDE.md#84-what-if-pricing-and-intraday-recomputes-what-if-planned-intraday-updates-as-built-in-294)).
+
+**The topic.** A message's value is **JSONL text**, UTF-8: one or more PV records, one JSON object a line, each a row of the
+`scenario-pv` contract (a trade's 509 scenario PVs in its own currency and `BASE_PV`) or of the `pnl-vector` contract (its P&L
+vector), with `COMPUTED_AT`; the contracts are in [docs/contracts/packs/market-risk.md](../contracts/packs/market-risk.md). A message
+may carry one trade or many, both forms and cancels; the key is not read (it may be absent or name a batch: each line names its trade).
+A cancel is a **cancel line** (`TRADE_STATUS: CANCELLED`, its vector null), as in the files; a tombstone carries no record and is
+ignored. A blank line is skipped; a malformed line is rejected (`DRS-5201`, with its partition, offset and line number), the message's
+other lines applied. An example message of three lines (cut):
+
+```text
+{"VALUE_TYPE":"PV","GRAIN":"TRADE","TRADE_ID":"1002344","CURRENCY":"USD","SOURCE_SYSTEM":"ENDUR","SCENARIO_PV_ID":"SPV-1002344-HS-509-I-2026-09-30-001","SECURITY_ID":"XCH-ComFut-USD-03","INSTRUMENT":"ENGY-EXCH-FUT USD 2026-09","BUSINESS_DATE":"2026-09-30","SCENARIO_SET_ID":"HS-509","TRADE_VERSIONS":"v6","TRADE_STATUS":"AMENDED","MATURITY_DATE":"2026-09-30","LEGAL_ENTITY":"LE-NY","DIVISION":"DIV-MARKETS","DESK":"DESK-COMM","TT_BOOK":"BOOK-COMM-3","PORTFOLIO":"BOOK-COMM-3","STRATEGY":"","PRODUCT_GROUP":"Commodity","PRODUCT_TYPE":"ComFut","COUNTERPARTY":"CP-METROEX","DIRECTION":"SHORT","QUANTITY":-5900.0,"TAGS":"","BASE_PV":-302670.0,"VALUATION_DATE":"2026-09-30","BASE_VALUATION_DATE":"2026-09-30","SCENARIO_PV":[-208989.8,-396009.18,-356724.62],"STATUS":"ok","PRICER":"demo-factor-model","MODEL_VERSION":"demo-2","COMPUTED_AT":"2026-09-30T06:05:00Z","BATCH_ID":"I-2026-09-30-001","RESTATEMENT":0,"RUN_KIND":"INTRADAY"}
+{"VALUE_TYPE":"PNL","GRAIN":"POSITION","POSITION_ID":"POS-BOOK-COMM-1~XCH-CMD_FUTURE-USD-03","CURRENCY":"USD","SOURCE_SYSTEM":"MUREX","VECTOR_ID":"PV-POS-BOOK-COMM-1~XCH-CMD_FUTURE-USD-03-HS-509","BUSINESS_DATE":"2026-09-30","SCENARIO_SET_ID":"HS-509","TRADE_STATUS":"AMENDED","LEGAL_ENTITY":"LE-NY","DIVISION":"DIV-MARKETS","DESK":"DESK-COMM","TT_BOOK":"BOOK-COMM-1","PORTFOLIO":"BOOK-COMM-1","STRATEGY":"","PRODUCT_GROUP":"Commodity","PRODUCT_TYPE":"CMD_FUTURE","SECURITY_ID":"XCH-CMD_FUTURE-USD-03","INSTRUMENT":"Commodity future USD 2027-09","MATURITY_DATE":"2027-09-10","COUNTERPARTY":"CP-SUMMIT","DIRECTION":"LONG","QUANTITY":122.0,"TAGS":"","TRADE_CURRENCY":"USD","REPORTING_CCY":"USD","PV":1595886,"PNL":[-471736.0,508921.0,273690.0],"STATUS":"ok","PRICER":"demo-factor-model","MODEL_VERSION":"demo-2","COMPUTED_AT":"2026-09-30T06:00:00Z","BATCH_ID":"B-2026-09-30-01","RESTATEMENT":0,"RUN_KIND":"FULL","TRADE_IDS":["MX-20000291","MX-30002954"]}
+{"VALUE_TYPE":"PV","GRAIN":"TRADE","TRADE_ID":"1000414","CURRENCY":"USD","SOURCE_SYSTEM":"ENDUR","SCENARIO_PV_ID":"SPV-1000414-HS-509-I-2026-09-30-001","SECURITY_ID":null,"INSTRUMENT":"ENGY-SWAP USD 2026-11","BUSINESS_DATE":"2026-09-30","SCENARIO_SET_ID":"HS-509","TRADE_VERSIONS":"v8","TRADE_STATUS":"CANCELLED","MATURITY_DATE":"2026-11-30","LEGAL_ENTITY":"LE-NY","DIVISION":"DIV-MARKETS","DESK":"DESK-COMM","TT_BOOK":"BOOK-COMM-1","PORTFOLIO":"BOOK-COMM-1","STRATEGY":"","PRODUCT_GROUP":"Commodity","PRODUCT_TYPE":"ComSwap","COUNTERPARTY":"CP-NORTHPLAINS","DIRECTION":"LONG","QUANTITY":96000.0,"TAGS":"","BASE_PV":581788.0,"VALUATION_DATE":"2026-09-30","BASE_VALUATION_DATE":"2026-09-30","SCENARIO_PV":null,"STATUS":"ok","PRICER":"demo-factor-model","MODEL_VERSION":"demo-2","COMPUTED_AT":"2026-09-30T06:05:04Z","BATCH_ID":"I-2026-09-30-001","RESTATEMENT":0,"RUN_KIND":"INTRADAY"}
+```
+
+**The window.** The connector collects records for the server's `drishti.var.intraday.kafka.window` (default `5m`: every five
+minutes), keeping the **latest per trade** (by `COMPUTED_AT`, then partition, offset and line order); it flushes earlier once
+`drishti.var.intraday.kafka.max-trades` trades wait (default `500`), or when an administrator asks (`POST /api/v1/var/intraday/streams/pv-updates/apply`, the **Apply now** button on the connector's page). A
+window is written to the lake as **one** intraday batch (`RUN_KIND: INTRADAY`, `BATCH_ID: K-<date>-<time>-<n>`) by Drishti's own
+lake writer, then announced as a data load of the kind.
+
+**The guards.** A message of another business date is ignored; one computed before the morning run, or not later than what the
+day already holds for the trade (a redelivery, the topic replayed after a restart), is ignored, so nothing is applied twice; one of
+another scenario set (`DRS-5203`), with a failed scenario (`DRS-5206`) or that is not a JSON object of the contract (`DRS-5201`) is
+rejected, never filled with zero, and listed in the stream's status (`GET /api/v1/var/intraday/streams`) and in the VaR page's
+provenance.
+
+**Sizing.** A record is 4–8 KB (509 numbers as JSON text); 10,000 updates a day are 40–80 MB on the topic and, after a window's
+latest per trade, fewer rows in the lake. The window and the early flush are the server's settings (`drishti.var.intraday.kafka`,
+[CONFIGURATION.md](../admin/CONFIGURATION.md)), not the connector's. A window's batch is written in well under a second for a few hundred trades.
+
+| Setting | Default | Meaning |
+|---|---|---|
+| `bootstrap-servers` | `${DRISHTI_KAFKA_BOOTSTRAP:localhost:9092}` | The brokers. |
+| `topic` | `${DRISHTI_VAR_PV_TOPIC:drishti.risk.pv-updates}` | The PV topic. |
+| `lake` | `${DRISHTI_DELTA_ROOT:./data/delta}` | The risk lake's root (tables `<lake>/risk/scenario-pv`, `<lake>/risk/pnl-vector`). |
+| `poll-ms` | `200` | The poll timeout. |
+
+**The publisher.** `tools/pvgen/publish-kafka.sh` (`tools\windows\pvgen-publish-kafka.ps1`), a stand-in pricing system: it sends
+amended, new and cancelled trades of the demo's date as such records, `--per-message` records a message (default 10), at `--rate`
+messages a second for `--seconds`, a fixed `--seed`, cancel lines for cancels, as scenario PVs or as P&L vectors (`--pv-systems`, `--pnl-systems`, `--all-vectors`, as the morning script); `--dry-run` prints
+what it would send; `--save` writes the same rows to a JSONL file for `tools/pvgen/check.sh`, which recomputes the answer and
+compares it with the server's ([VAR_GUIDE.md section 15.12](../guides/VAR_GUIDE.md#1512-producing-pl-vectors-and-scenario-pvs-as-built-294)).
+
+```bash
+DRISHTI_VAR_PV_STREAM=true DRISHTI_KAFKA_BOOTSTRAP=localhost:9092 ./drishti.sh start
+tools/pvgen/publish-kafka.sh --bootstrap localhost:9092 --rate 20 --seconds 60 --save pv-sent.jsonl
+```
 
 ---
 

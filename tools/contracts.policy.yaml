@@ -32,7 +32,7 @@
 #   review       kind -> questions copied into the draft's review list
 
 classes:
-  input: [pnl-vector, scenario-set, risk-hierarchy, portfolio, path-book, path-strip, simulation-run, exposure-path]
+  input: [pnl-vector, scenario-pv, fx-scenario, scenario-set, risk-hierarchy, portfolio, path-book, path-strip, simulation-run, exposure-path]
   drishti-owned: [position]
   computed: [path-sum, path-sum-java, var-result, var-whatif, exposure-result, var-official, exposure-official-cpty,   # var-official, exposure-official-cpty: the published official VaR and exposure (read only)
              lei-group, lei-country, sic-sector, country-group, correlation-result, equity-beta]   # the groupings and analytics (2.9.2)

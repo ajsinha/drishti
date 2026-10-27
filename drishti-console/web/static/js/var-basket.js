@@ -15,8 +15,9 @@
  */
 /* "Construct your basket" (docs/guides/VAR_GUIDE.md section 3.5): the VaR of any mix of portfolios, trades and counterparties.
 
-   One tray, two places: in the VaR explorer a strip at the top (always shown on an ad-hoc scope or a basket); on every other page a
-   popup from the top bar's "◫ Basket" button or Alt+B, whose "Save basket and open VaR" goes to the explorer. Typing shows hints from the
+   The tray lives on the VaR explorer (2.9.4: the top bar has no Basket button): a strip at the top, always shown on an ad-hoc scope or
+   a basket, opened by "Construct your basket" or Alt+B (Alt+B does nothing on pages without the basket). Its contents stay in this
+   browser, so a basket built earlier is there when the explorer opens. Typing shows hints from the
    engine (/api/var/hints: portfolios, saved baskets, desks, books, legal entities, counterparties, positions, trades, each with its
    type, id, name, trade count and standalone VaR; arrow keys and Enter pick, a leading "-" takes away); "+ Rule" adds a WHERE:
    condition; each chip is + or −. As you pick, the engine computes the selection (a trade in two chips counts once): its VaR and ES,
@@ -51,7 +52,11 @@
     if (a >= 1e3) return s + (a / 1e3).toFixed(a >= 1e5 ? 0 : 1) + "k";
     return s + Math.round(a);
   }
-  function asOf() { var p = new URLSearchParams(location.search).get("asOf"); return p ? "&asOf=" + encodeURIComponent(p) : ""; }
+  /** The page's business date and reporting currency (the explorer keeps ccy in its link, 2.9.4): every answer of the tray in it. */
+  function asOf() {
+    var q = new URLSearchParams(location.search), p = q.get("asOf"), c = q.get("ccy");
+    return (p ? "&asOf=" + encodeURIComponent(p) : "") + (c && /^[A-Za-z]{3}$/.test(c) ? "&ccy=" + encodeURIComponent(c.toUpperCase()) : "");
+  }
   function get(path) {
     return fetch("/api/var/" + path + asOf(), { headers: { Accept: "application/json" }, credentials: "same-origin" }).then(answer);
   }
@@ -435,7 +440,8 @@
         el.live.appendChild(h("span", null, " · this selection holds no live trade with a P&L vector on " + d.businessDate + ": no VaR to show"));
       } else {
         el.live.appendChild(h("span", null, "VaR " + Math.round(d.confidence * 1000) / 10 + "% 1D of the selection "));
-        el.live.appendChild(h("b", "mono", money(d["var"])));
+        el.live.appendChild(h("b", "mono", money(d["var"]) + (d.currency && d.currency !== "USD" ? " " + d.currency : "")));
+        el.live.dataset.ccy = d.currency || "USD";
         var parts = c.rows || [];
         var rest = " · ES " + money(d.es) + " · " + d.trades.toLocaleString("en-US") + " trade" + (d.trades === 1 ? "" : "s");
         if (parts.length) rest += " · sum of the parts " + money(c.sumStandalone);
@@ -478,7 +484,8 @@
       ["", "Before", "After", "Incremental"].forEach(function (x, i) { hr.appendChild(h("th", i ? "n" : null, x)); });
       t.appendChild(h("thead")).appendChild(hr);
       var tb = h("tbody");
-      [["VaR 99%", b["var"], a["var"], ch["var"]], ["ES 97.5%", b.es, a.es, ch.es]].forEach(function (r) {
+      var cl = function (x) { return x ? Math.round(x * 1000) / 10 + "%" : ""; };   // the answer's confidences, never fixed here
+      [[("VaR " + cl(w.confidence)).trim(), b["var"], a["var"], ch["var"]], [("ES " + cl(w.esConfidence)).trim(), b.es, a.es, ch.es]].forEach(function (r) {
         var tr = h("tr");
         tr.appendChild(h("td", null, r[0]));
         tr.appendChild(h("td", "n mono", money(r[1])));
@@ -596,17 +603,19 @@
     if (attached && !attached.closed) show();
   }
 
-  // ---------------------------------------------------------------------------------------------------------------- the top bar
+  // ---------------------------------------------------------------------------------------------------------------- Alt+B
   function start() {
     countBadge();
-    document.querySelectorAll("[data-basket-btn]").forEach(function (b) { b.addEventListener("click", function () { toggle(); }); });
     document.addEventListener("keydown", function (ev) {
       if (ev.altKey && !ev.ctrlKey && !ev.metaKey && (ev.key === "b" || ev.key === "B" || ev.code === "KeyB")) {
-        if (!document.querySelector("[data-basket-btn]") || document.querySelector("[accesskey=b]")) return;   // the landing page: Alt+B is its Back to
+        // only where the page offers the basket (the explorer's "Construct your basket"); the landing page's Alt+B is its Back to
+        if (!document.querySelector("[data-vx-basket-open]") || document.querySelector("[accesskey=b]")) return;
         ev.preventDefault();
         toggle();
       }
     });
+    // the explorer moved to another reporting currency: the selection's figures follow it
+    document.addEventListener("var:currency", function () { if (T.items.length && el.live) live(); });
   }
   if (document.readyState === "loading") document.addEventListener("DOMContentLoaded", start); else start();
 

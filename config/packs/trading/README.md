@@ -91,7 +91,7 @@ Fields, from 765 sample documents:
 
 | Field | Type | Example | Description |
 |---|---|---|---|
-| `SOURCE_SYSTEM` | string | `ENDUR` | Source |
+| `SOURCE_SYSTEM` | string | `ENDUR` | — |
 | `SOURCE_UPDATE_TIME` | timestamp | `2026-09-30T18:30:00Z` | When the booking system last changed the trade |
 | `TRADE_DATE` | date | `2025-06-20` | Trade date |
 | `INPUT_DATE` | date | `2024-04-19` | The day the trade was entered |
@@ -164,7 +164,7 @@ No samples ship: documents are read live from its connector `trade-pages` (plugi
 | Field | Shown as |
 |---|---|
 | `AMOUNT` | Amount |
-| `CURRENCY` | Currency |
+| `CURRENCY` | Trade currency |
 | `EVENT_DATE` | Date |
 | `LAST_MATURITY` | Last maturity |
 | `MATURITY_DATE` | Maturity |
@@ -186,7 +186,7 @@ No samples ship: documents are read live from its connector `trade-pages` (plugi
 | Field | Shown as |
 |---|---|
 | `AMOUNT` | Amount |
-| `CURRENCY` | Currency |
+| `CURRENCY` | Trade currency |
 | `EVENT_DATE` | Date |
 | `LAST_MATURITY` | Last maturity |
 | `MATURITY_DATE` | Maturity |
@@ -208,7 +208,7 @@ No samples ship: documents are read live from its connector `trade-pages` (plugi
 | Field | Shown as |
 |---|---|
 | `AMOUNT` | Amount |
-| `CURRENCY` | Currency |
+| `CURRENCY` | Trade currency |
 | `EVENT_DATE` | Date |
 | `LAST_MATURITY` | Last maturity |
 | `MATURITY_DATE` | Maturity |
@@ -230,7 +230,7 @@ No samples ship: documents are read live from its connector `trade-pages` (plugi
 | Field | Shown as |
 |---|---|
 | `AMOUNT` | Amount |
-| `CURRENCY` | Currency |
+| `CURRENCY` | Trade currency |
 | `EVENT_DATE` | Date |
 | `LAST_MATURITY` | Last maturity |
 | `MATURITY_DATE` | Maturity |

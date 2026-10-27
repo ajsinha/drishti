@@ -56,7 +56,7 @@ ones below (`--as-of today`, the default, moves the date to your today and trade
 
 ```bash
 python3 tools/drishti.py lake demo --as-of data \
-  --only market-risk/pnl-vector,market-risk/scenario-set,market-risk/risk-hierarchy,market-risk/portfolio
+  --only market-risk/pnl-vector,market-risk/scenario-pv,market-risk/fx-scenario,market-risk/scenario-set,market-risk/risk-hierarchy,market-risk/portfolio
 ```
 
 Start the server and console (tutorial 1), then ask for the bank:
@@ -64,13 +64,14 @@ Start the server and console (tutorial 1), then ask for the bank:
 ```text
 $ drishti.py var show BANK
 VAR BANK  ·  Drishti Bank  ·  node  ·  2026-09-30
-  VaR 99%   112,035,906 USD   (the 6th worst of 509)
-  ES 97.5%   160,132,107 USD   (mean of the 13 worst)
+  VaR 99%   112,041,646 USD   (the 6th worst of 509)
+  ES 97.5%   160,143,809 USD   (mean of the 13 worst)
   limit      150,000,000 USD   use 74.7%
-  parts      2 division   standalone sum 130,105,348   diversification 18,069,442
+  parts      2 division   standalone sum 130,101,896   diversification 18,060,250
   backtest   amber  5 exceptions in 249 days   Kupiec p 0.160   Christoffersen p 0.076
   9572 trades in 7984 positions
-  pnl-vector · batch B-2026-09-30-01 of 2026-09-30 · data version risk-store=dc731161ff617ac4
+  pnl-vector and scenario-pv (1339 trades from scenario PVs) · batch B-2026-09-30-01 of 2026-09-30 · data version …
+  in USD, crosses through USD; FX CAD supplied (0.719942 USD); EUR supplied (1.174 USD)
   node aggregate (float64) · historical, equal weights, 1-day, k = 6th worst of 509 · 1 ms (hit)
 ```
 
@@ -79,7 +80,8 @@ VAR BANK  ·  Drishti Bank  ·  node  ·  2026-09-30
 ![VAR BANK: the hierarchy with every node's VaR and limit bar, the six tiles, the P&L path](img/t25/01-bank.jpg)
 
 **What it reads.** The market-risk pack's connector `risk-store` keeps the P&L vector as a `list<double>` column of the `pnl-vector`
-table (`config/packs/market-risk/pack.yaml`):
+table, and (2.9.4) the trades a batch sends as **scenario PVs** in their own currency as the `list<double>` column `SCENARIO_PV` of
+the `scenario-pv` table, with each currency's scenario FX in `fx-scenario` (`config/packs/market-risk/pack.yaml`):
 
 ```yaml
 connectors:
@@ -92,12 +94,51 @@ connectors:
           columns: [TRADE_ID, SECURITY_ID, INSTRUMENT, LEGAL_ENTITY, DIVISION, DESK, TT_BOOK, PORTFOLIO, ..., QUANTITY, PV, TRADE_STATUS,
                     MATURITY_DATE, STATUS, REPORTING_CCY, SCENARIO_SET_ID, BATCH_ID]
           vectors: [PNL]
+        scenario-pv:
+          columns: [TRADE_ID, ..., CURRENCY, ..., BASE_PV, VALUATION_DATE, BASE_VALUATION_DATE, ..., SCENARIO_SET_ID, BATCH_ID]
+          vectors: [SCENARIO_PV]
+        fx-scenario:
+          columns: [CURRENCY, RATE, SCENARIO_SET_ID]
 ```
 
-**You should see** VaR 112,035,906 and ES 160,132,107 on 2026-09-30, over 9,572 trades in 7,984 positions. On the 6th worst of the 509
-days the bank loses 112 million; the two divisions alone would add up to 130 million: holding them together saves 18 million.
+The demo's Endur trades (1,339) come that way: when the date loads, the engine turns each into its USD P&L,
+`PV(s) × FX(s) − PV(base) × FX(base)`, and from then on they are trades like any other.
 
-**Further in the guide:** [section 15.1](../guides/VAR_GUIDE.md#151-where-they-live) (the inputs), [section 2.2](../guides/VAR_GUIDE.md#22-on-the-test-data) (the bank's numbers read).
+**You should see** VaR 112,041,646 and ES 160,143,809 on 2026-09-30, over 9,572 trades in 7,984 positions, 1,339 of them from scenario
+PVs. On the 6th worst of the 509 days the bank loses 112 million; the two divisions alone would add up to 130 million: holding them
+together saves 18 million. (Until 2.9.3 every trade was a P&L vector and the bank's VaR was 112,035,906: the 250 Endur trades in EUR and
+CAD now also carry the move of their currency on their value.)
+
+**In another currency.** In the console, pick **EUR** in the **Reporting currency** select at the right end of the status line (or type
+`VAR BANK IN EUR <GO>`): every tile, the tree, the path and the provenance move to euros, the link gains `&ccy=EUR`, and the choice stays
+while you move around this tab. Open the tab **In other currencies**: one row per configured currency (USD, EUR, CAD, JPY, GBP), each
+with its own VaR and ES, that VaR in euros at today's rate, and the difference; click **CAD** to move the page to it. On the command
+line every `drishti.py var` command takes `--ccy` (the API: `ccy=EUR`):
+
+```text
+$ drishti.py var show BANK --ccy EUR
+VAR BANK  ·  Drishti Bank  ·  node  ·  2026-09-30
+  VaR 99%   111,837,045 EUR   (the 6th worst of 509)
+  ES 97.5%   137,631,546 EUR   (mean of the 13 worst)
+  …
+  in EUR, crosses through USD; FX CAD supplied (0.719942 USD); EUR supplied (1.174 USD)
+  …
+$ drishti.py var show BANK --ccy INR
+the server said 422 DRS-5207: DRS-5207 no INR FX for the scenarios of 2026-09-30: INR: neither supplied (fx-scenario) nor in the FX history
+(fx-spot); the currencies with FX on the date: AUD, CAD, CHF, EUR, GBP, JPY, USD
+```
+
+![VAR BANK IN EUR: the picker in the status line, the tiles in EUR, and the tab In other currencies with each currency's own VaR](img/t25/12-reporting-currency.jpg)
+
+**You should see** 111.8 million EUR, not the 95.4 million that 112.0 million USD makes at today's 1.174: in euros the bank's whole value
+(3.65 billion USD) moves with the euro on every scenario day, and that move is part of a euro-based owner's risk. The configured
+currencies (`drishti.var.currencies`: USD, EUR, CAD, JPY, GBP) are built ahead in the background once the USD book has loaded, so the
+picker never waits; `drishti.py var status` says it under `currencies.builtAhead` (`built ahead in 148 ms, 21399944 bytes`). Any other
+currency (**More…**, or `--ccy CHF`) is built the first time it is asked. The headline in any currency comes from every node's PVs
+summed per trade currency, exact to the cent. A trade page's strip now says its **Trade currency** (`EUR · as priced` for an Endur trade
+sent as scenario PVs, `USD · as booked` for one sent as a P&L vector).
+
+**Further in the guide:** [section 15.1](../guides/VAR_GUIDE.md#151-where-they-live) (the inputs), [section 2.2](../guides/VAR_GUIDE.md#22-on-the-test-data) (the bank's numbers read), [section 15.9](../guides/VAR_GUIDE.md#159-scenario-pv-scenario-pvs-per-trade-in-the-trades-currency-as-built-294) (scenario PVs and their FX), [section 15.10](../guides/VAR_GUIDE.md#1510-reporting-currency-as-built-294) (reporting currencies), [section 15.11](../guides/VAR_GUIDE.md#1511-reporting-currencies-built-ahead-per-trade-currency-totals-and-the-picker-as-built-294) (built ahead, the totals, the picker).
 
 ## Step 2 · Drill down from the bank to a trade
 
@@ -117,12 +158,12 @@ A book lists its positions, each LONG or SHORT, with its VaR and its component i
 $ drishti.py var tree --hierarchy LEGAL
 Node                             VaR          ES           Limit use  Trades
 -------------------------------  -----------  -----------  ---------  ------
-Drishti Bank                     112,035,906  160,132,107      53.4%    9572
+Drishti Bank                     112,041,646  160,143,809      53.4%    9572
   LE-FRA                           1,536,322    1,665,992      66.8%     611
   LE-LDN                          48,350,793   53,764,068      63.6%    2679
     Equity derivatives            35,827,767   34,901,016      77.9%    1201
       BOOK-EQD-2                  33,619,633   66,673,176      65.9%     374
-  LE-NY                          144,267,105  174,614,379      80.1%    6008
+  LE-NY                          144,262,258  174,617,643      80.1%    6008
     Credit trading               130,670,864  189,194,564      65.3%     943
 ```
 
@@ -201,7 +242,7 @@ basket tray opens as a strip at the top. Type `pf usd` in it: the engine's hints
 trades and its VaR alone; **Enter** adds it. Type `-book-rates-1` and **Enter**: the book is taken away (a dashed **−** chip; the **+ / −**
 on any chip switches it). As you pick, the tray shows the selection's VaR and ES, its trades, the sum of the parts' VaRs and the
 diversification, computed by the engine. **Open without saving** moves the explorer to it: *unsaved basket*, its contributions are its
-parts. Anywhere else in the console the top bar's **◫ Basket** (or **Alt+B**) opens the same tray as a popup.
+parts. The basket lives on the VaR page: **◫ Construct your basket** (or **Alt+B**) opens it; what it holds stays in your browser.
 
 ![Construct your basket: the rates desk from its row in the tree, the USD rates portfolio from the hints, a book taken away; the selection's VaR live and the explorer on it, its contributions by part](img/t25/06-basket.jpg)
 
@@ -504,6 +545,60 @@ entitlement)* for the bank: the bank's 9,572 trades less the rates desk's 1,487,
 
 **Further in the guide:** [section 9](../guides/VAR_GUIDE.md#9-who-sees-what-entitlements-and-audit) (entitlements and audit).
 
+## Step 13 · Intraday: a pricing system re-sends trades
+
+During the day a pricing system sends only the trades that changed. `tools/pvgen` is a stand-in for one (pure Python, JSONL only, every
+line one row of the contract; [VAR_GUIDE.md section 15.12](../guides/VAR_GUIDE.md#1512-producing-pl-vectors-and-scenario-pvs-as-built-294)).
+
+**From the command line**, with the server of step 1 running (Windows: `tools\windows\pvgen-intraday.ps1` with the same options):
+
+```text
+$ tools/pvgen/intraday.sh --batches 3 --trades-per-batch 10 --lake data/delta --server http://<host>:<port>
+lake-build ok exit=0 ... kind=pnl-vector engine=drishti mode=append rows=8 rejected=0 dates=1 partitions=1 seconds=1.75
+lake-build ok exit=0 ... kind=scenario-pv engine=drishti mode=append rows=2 rejected=0 dates=1 partitions=1 seconds=1.742
+...
+I-2026-09-30-001: 10 trades (7 amended, 3 new, 0 cancelled), 8 pnl-vector, 2 scenario-pv
+I-2026-09-30-002: 10 trades (6 amended, 4 new, 0 cancelled), 9 pnl-vector, 1 scenario-pv
+I-2026-09-30-003: 10 trades (6 amended, 1 new, 3 cancelled), 7 pnl-vector, 3 scenario-pv
+wrote 3 batches to data/pvgen/intraday-2026-09-30
+```
+
+Each batch is a small JSONL file per kind (`data/pvgen/intraday-2026-09-30/I-2026-09-30-001.pnl-vector.jsonl`, `….scenario-pv.jsonl`),
+marked `RUN_KIND: INTRADAY` with its own `BATCH_ID` and a later `COMPUTED_AT`, appended to the lake and signalled: the engine applies it
+without a reload.
+
+**In the UI**, the VaR page's status line shows the **intraday** badge; point at it for the batches:
+
+![The bank after three intraday batches: the intraday badge in the status line, its tooltip listing the batches](img/t25/13-intraday.jpg)
+
+```text
+$ drishti.py var intraday
+2026-09-30: intraday, 30 updates of 30 trades (19 amended, 8 new, 3 cancelled) in 3 batches, latest 2026-09-30T06:07:09Z
+  batches I-2026-09-30-001, I-2026-09-30-002, I-2026-09-30-003; ignored as older 0, before the morning run 0
+```
+
+**Check it.** `tools/pvgen/check.sh` recomputes the bank's and every desk's VaR and ES from the files themselves (the morning run of
+`tools/pvgen/morning.sh --out data/pvgen`, then the batches) and compares them with the server:
+
+```text
+$ tools/pvgen/check.sh --morning data/pvgen/morning-2026-09-30 --intraday data/pvgen/intraday-2026-09-30 --server http://<host>:<port>
+2026-09-30: the morning run (9,572 trades) and 30 intraday rows
+  BANK                     VaR      111,939,005  ES      159,035,721   server VaR      111,939,005  ES      159,035,721  ok  (intraday updates 30)
+  DESK:DESK-COMM           VaR       16,590,438  ES       17,486,765   server VaR       16,590,438  ES       17,486,765  ok  (intraday updates 30)
+  ...
+  DESK:DESK-RATES          VaR       75,756,517  ES       75,852,800   server VaR       75,756,517  ES       75,852,800  ok  (intraday updates 30)
+  DESK:DESK-STRUCT         VaR        9,987,431  ES       11,163,708   server VaR        9,987,431  ES       11,163,708  ok  (intraday updates 30)
+every figure agrees
+```
+
+**You should see** the bank move from 112,041,646 to **111,939,005** (ES 160,143,809 to 159,035,721), the badge, *intraday* in *How this number was built*, and every line of the check `ok`. The official end-of-day
+record is still the morning run's. The same updates can come from Kafka (the `pv-updates` connector, off by default; the publisher
+`tools/pvgen/publish-kafka.sh`): [VAR_GUIDE.md section 8.4](../guides/VAR_GUIDE.md#84-what-if-pricing-and-intraday-recomputes-what-if-planned-intraday-updates-as-built-in-294).
+
+**Further in the guide:** [section 8.4](../guides/VAR_GUIDE.md#84-what-if-pricing-and-intraday-recomputes-what-if-planned-intraday-updates-as-built-in-294)
+(the rules: latest `COMPUTED_AT` wins, cancels, new trades), [section 15.12](../guides/VAR_GUIDE.md#1512-producing-pl-vectors-and-scenario-pvs-as-built-294)
+(the scripts, both forms side by side).
+
 ## Next steps
 
 - Read [VAR_GUIDE.md](../guides/VAR_GUIDE.md): the measures by hand on ten scenarios, the data flow and restatements, the scope grammar in full, the
@@ -518,6 +613,8 @@ entitlement)* for the bank: the bank's 9,572 trades less the rates desk's 1,487,
 |---|---|
 | *no P&L vectors in any connector* | build the lake (step 1); is the market-risk pack loaded? |
 | other numbers than these | you built the lake with `--as-of today`: trades matured since 2026-09-30 drop out; rebuild with `--as-of data` |
+| the bank's VaR is 112,035,906 and the provenance says only `pnl-vector` | the lake has no `scenario-pv` table (built before 2.9.4, or `--only` without it): the Endur trades are missing too (8,233 trades); rebuild with the `--only` list of step 1 |
+| `--ccy` answers `422 DRS-5207` | the date has no rates for that currency: supply them in `fx-scenario`, or load enough FX history in `fx-spot` ([VAR_GUIDE.md section 15.9](../guides/VAR_GUIDE.md#159-scenario-pv-scenario-pvs-per-trade-in-the-trades-currency-as-built-294)) |
 | `PORT <id>` says *no source holds portfolio/…* | the page opens on today's date; pick **2026-09-30** in the date box (the explorer finds the newest date by itself) |
 | step 11 answers *could not start* | the compute workers are off: `DRISHTI_COMPUTE_ENABLED=true`, and Admin → Compute shows the pool `var` |
 | *the vectors of … were unloaded while this answer was computed* | ask again ([VAR_GUIDE.md section 13](../guides/VAR_GUIDE.md#13-troubleshooting)) |

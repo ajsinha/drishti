@@ -58,7 +58,7 @@ panels:
         - { label: Source, bind: "@.SOURCE_SYSTEM" }
         - { label: Product, bind: "@.PRODUCT_TYPE" }
         - { label: Side, bind: "@.BUY_SELL_CODE == 'B' ? 'Buy' : (@.BUY_SELL_CODE == 'S' ? 'Sell' : nonblank(@.BUY_SELL_CODE, '–'))" }
-        - { label: Currency, bind: "@.CURRENCY" }
+        - { label: Trade currency, bind: "@.CURRENCY" }
         - { label: Notional, bind: "@.NOTIONAL", fmt: amount0, total: true }
         - { label: Index, bind: "nonblank(@.INDEX_NAME, '–')" }
         - { label: Maturity, bind: "@.MATURITY_DATE", fmt: date }

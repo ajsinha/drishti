@@ -20,9 +20,10 @@ Inputs: ``base``, the scope's ``var-result`` (the Java engine's answer, read as 
 its ``PNL`` vector over the same scenarios (priced elsewhere: a pricer, a copy of a booked trade's vector) and an optional ``FACTOR``
 (scaled linearly, 1 by default) and ``LABEL``. Taking trades out is the scope's own algebra (``DESK:RATES - TRD:X``), so it is exact.
 
-Parameters: ``stress-window`` (scenario days of the stressed window, 250 by default; 0: none), ``component-window`` (5).
+Parameters: ``stress-window`` (scenario days of the stressed window, 250 by default; 0: none), ``component-window`` (5), ``ccy`` (the
+reporting currency, USD by default: the connector reads the scope's ``var-result`` in it, and the sandbox's vectors are in it too).
 
-Result: one row (``SCOPE``, ``CANONICAL``, ``BUSINESS_DATE``, ``ITEMS``, ``BEFORE_VAR``, ``AFTER_VAR``, ``CHANGE_VAR``, ``BEFORE_ES``,
+Result: one row (``SCOPE``, ``CANONICAL``, ``BUSINESS_DATE``, ``CURRENCY`` (the base's), ``ITEMS``, ``BEFORE_VAR``, ``AFTER_VAR``, ``CHANGE_VAR``, ``BEFORE_ES``,
 ``AFTER_ES``, ``CHANGE_ES``, ``LIMIT``, ``LIMIT_USE_BEFORE``, ``LIMIT_USE_AFTER``, ``STRESSED_VAR_BEFORE``, ``STRESSED_VAR_AFTER``,
 ``STRESS_WINDOW``, ``STRESSED_FROM``, ``CONFIDENCE``, ``ES_CONFIDENCE``) and the tables ``items`` (each trade's standalone VaR, its
 incremental VaR in the order listed and alone, its component VaR and ES in the scope after) and ``pnl`` (``DAY``, ``BEFORE``,
@@ -97,7 +98,8 @@ class VarWhatIfEngine(Engine):
             r["COMPONENT_VAR"] = M.component(vec, ma)
             r["COMPONENT_ES"] = M.component_es(vec, ma)
         limit = _number(b.get("LIMIT"))
-        row = {"SCOPE": b.get("SCOPE") or b.get("CANONICAL"), "CANONICAL": b.get("CANONICAL"), "BUSINESS_DATE": b.get("BUSINESS_DATE"), "ITEMS": len(prepared),
+        row = {"SCOPE": b.get("SCOPE") or b.get("CANONICAL"), "CANONICAL": b.get("CANONICAL"), "BUSINESS_DATE": b.get("BUSINESS_DATE"),
+               "CURRENCY": b.get("CURRENCY") or "USD", "ITEMS": len(prepared),
                "BEFORE_VAR": mb.var, "AFTER_VAR": ma.var, "CHANGE_VAR": ma.var - mb.var, "BEFORE_ES": mb.es, "AFTER_ES": ma.es,
                "CHANGE_ES": ma.es - mb.es, "LIMIT": limit, "LIMIT_USE_BEFORE": mb.var / limit if limit else None,
                "LIMIT_USE_AFTER": ma.var / limit if limit else None, "CONFIDENCE": conf, "ES_CONFIDENCE": es_conf, "STRESS_WINDOW": stress}

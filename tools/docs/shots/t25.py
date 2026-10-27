@@ -23,7 +23,11 @@ column with its tier, and the computed kind var-result."""
 from __future__ import annotations
 
 from _tut import OUT
-from _var import open_var, painted, start_servers, tab  # noqa: F401 - start_servers is the driver's hook
+import subprocess
+import sys
+
+from _var import LAKE, open_var, painted, server, start_servers, tab  # noqa: F401 - start_servers is the driver's hook
+from shotlib import ROOT
 from shotlib import Ctx, register
 
 shot = register("t25", OUT / "t25")
@@ -150,3 +154,37 @@ def var_result(c: Ctx):
     c.until("document.body.innerText.indexOf('DESK:DESK-RATES') >= 0", 90)
     c.page.wait_for_timeout(2500)
     c.save("11-var-result.jpg")
+
+
+@shot("12-reporting-currency.jpg")
+def reporting_currency(c: Ctx):
+    """Step 1's picker: the bank in EUR, then the tab In other currencies (VAR_GUIDE.md section 15.11)."""
+    open_var(c, "/var?scope=BANK")
+    painted(c, "BANK")
+    c.until("document.querySelector('[data-var]').dataset.ccyReady === 'true'", 60)
+    c.page.select_option("[data-vx-ccy]", "EUR")
+    c.until("document.querySelector('.vx-tile[data-tile=\"0\"] .l').innerText.indexOf('EUR') >= 0", 90)
+    painted(c, "BANK")
+    tab(c, "ccy")
+    c.until("document.querySelectorAll('[data-vx-ccytable] tbody tr[data-ccy]').length >= 5", 60)
+    c.page.wait_for_timeout(600)
+    c.save("12-reporting-currency.jpg")
+    c.page.evaluate("sessionStorage.removeItem('drishti.var.ccy')")
+
+
+@shot("13-intraday.jpg")
+def intraday(c: Ctx):
+    """Step 13: the stand-in pricing system's intraday batches (tools/pvgen/intraday.py) appended to the shot lake and signalled; the
+    bank's badge. Last: it changes the lake the other pictures read."""
+    r = subprocess.run([sys.executable, str(ROOT / "tools" / "pvgen" / "intraday.py"), "--batches", "3", "--trades-per-batch", "10",
+                        "--out", str(LAKE[0].parent / "pvgen"), "--lake", str(LAKE[0]), "--server", server()],
+                       capture_output=True, text=True, cwd=ROOT, timeout=600)
+    if r.returncode:
+        raise RuntimeError("intraday.py failed: " + (r.stderr or r.stdout)[-600:])
+    open_var(c, "/var?scope=BANK")
+    painted(c, "BANK")
+    c.until("(document.querySelector('[data-vx-intraday]') || {}).textContent && "
+            "document.querySelector('[data-vx-intraday]').textContent.indexOf('intraday') >= 0", 60)
+    c.page.locator("[data-vx-intraday]").hover()
+    c.page.wait_for_timeout(800)
+    c.save("13-intraday.jpg")

@@ -27,13 +27,15 @@ import urllib.request
 from shotlib import CONSOLE_PORT, ROOT, SERVER_PORT, Ctx
 from shotlib import start_servers as _start
 
-VAR_DATA = ",".join([f"market-risk/{k}" for k in ("pnl-vector", "scenario-set", "risk-hierarchy", "portfolio")] + ["trades/murex"])   # trades: the Risk links
+VAR_DATA = ",".join([f"market-risk/{k}" for k in ("pnl-vector", "scenario-pv", "fx-scenario", "scenario-set", "risk-hierarchy", "portfolio")] + ["trades/murex"])   # trades: the Risk links
 WIDE, HIGH = 1600, 1000
+LAKE: list = []                                  # the scratch lake start_servers built (a shot appends intraday batches to it)
 
 
 def start_servers(work) -> list:
     """Builds the VaR lake under the scratch folder, then the scratch server and console reading it."""
     lake = work / "delta"
+    LAKE[:] = [lake]
     r = subprocess.run([sys.executable, str(ROOT / "tools" / "drishti.py"), "lake", "demo", "--lake", str(lake), "--data-dir", str(work / "data"),
                         "--connectors-dir", str(work / "connectors"), "--as-of", "data", "--only", VAR_DATA, "--no-signal", "-q",
                         "--engine", "auto"], capture_output=True, text=True, cwd=ROOT, timeout=900)

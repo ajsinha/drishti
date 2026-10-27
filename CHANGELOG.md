@@ -17,6 +17,210 @@
 
 ## 2.9.4 (unreleased)
 
+- **The basket is on the VaR page only (2026-10-27; product owner).** The top bar's **◫ Basket** button is gone (it did not apply to
+  every screen); the VaR explorer keeps **◫ Construct your basket** (now with the count of its parts), the basket strip, **+ basket**
+  on rows and the what-if. **Alt+B** opens the tray only where the page offers it (the explorer); elsewhere it does nothing, and the
+  landing page's **← Back to** keeps it. The basket's contents still persist in the browser, so it is there when the VaR page opens;
+  `var-basket.js` and its CSS load only on the VaR page. No other page had a basket action. **Tests:** `test_var_routes.py`,
+  `test_var_explorer_browser.py`. **Docs:** USER_GUIDE (the top bar, the VaR section), VAR_GUIDE section 3.5, tutorial 25.
+
+- **P&L vectors in any currency (2026-10-27; product owner).** On a P&L record `CURRENCY` is now the currency the values are in: a
+  vector in CAD is converted to USD per scenario with that scenario's FX (approximate, counted in `tradesWithoutPv`), its `PV` at
+  today's rate; no scenario FX for it rejects the row (`DRS-5207`). The trade's own currency is the optional `TRADE_CURRENCY` (scopes,
+  rules, Trade currency); `REPORTING_CCY` is a deprecated alias that must equal `CURRENCY` (`DRS-5208`). The generator and the scripts
+  write `CURRENCY: USD` and `TRADE_CURRENCY` on P&L records (the bank unchanged); the checker converts a non-USD vector the same way.
+  **Tests:** `VarInputsApiTest` (a CAD P&L vector equal to its conversion; a contradicting `REPORTING_CCY` refused). **Docs:** VAR_GUIDE
+  sections 15.2 and 15.13, the pnl-vector contract.
+
+- **Upgrading to 2.9.4: connector files get the new columns by themselves (2026-10-27).** A connector file written from a pack's
+  template at an earlier first start (`config/connectors/risk-store.yaml`) lacked the columns the VaR inputs gained (`RUN_KIND`,
+  `COMPUTED_AT`, `VALUE_TYPE`, `GRAIN`, `SOURCE_SYSTEM`, `POSITION_ID`, `TRADE_IDS`), so a plain upgrade could not read intraday updates
+  or the record fields. Connector template updates now treat a layout list that lacks the template's new columns
+  (`layout.<kind>.columns`, `.vectors`) as additive: with `template-updates: additive` (the default) the server appends them at start,
+  keeps the connector's own columns and order, keeps the file as it was beside it (`<name>.yaml.before-<time>.bak`), logs one line and
+  lists it under Admin → Connectors → Template updates; a list that differs only by an administrator's edit stays a conflict. **Upgrade
+  notes:** pull, build, rebuild the risk lake (`build_demo_lakes.py --only market-risk`), start: nothing to edit by hand (with
+  `template-updates: notify` or `off`, press **Add missing kinds** once). **Tests:** `TemplateUpdatesTest`. **Docs:** CONNECTOR_FILES,
+  VAR_GUIDE section 8.4, the Windows QA guide's 2.9.4 section.
+
+- **A configurable scenario window and confidences (2026-10-27; local branch, for the product owner's review: not pushed).**
+  **`drishti.var.scenario-window`** (`DRISHTI_VAR_SCENARIO_WINDOW`, default `all`: the whole set, 509 in the demo) or N: the newest N
+  scenarios of each date's set, every row (P&L vectors, scenario PVs, scenario FX) cut to them at load; k = ceil(N (1 − α)) (the 3rd
+  worst of 250 at 99%, ES the mean of the 7 worst); a shorter set used whole with a warning; N below 20 refused at start; the window in
+  the provenance (`scenarioWindow`), in the hot file's digest and in official records (`SCENARIO_WINDOW`, the var-official contract and
+  published table). **`drishti.var.confidence`** and **`es-confidence`** gain placeholders (`DRISHTI_VAR_CONFIDENCE` 0.99,
+  `DRISHTI_VAR_ES_CONFIDENCE` 0.975) and are refused at start outside (0.5, 1) (they were silently replaced); the provenance states them;
+  the console no longer hard-codes 99% or 97.5% (the legends, the tiles while computing, the tab *In other currencies*, the basket's
+  what-if), the what-if answer carries its confidences, a Home fact's label reads the answer's. **Per request:** `window=`,
+  `confidence=`, `es-confidence=` on `GET /api/v1/var/scope` (`drishti.py var show --window --confidence --es-confidence`) recompute the
+  headline from the same vector, labelled (`override`) and never official. Backtesting keeps `history-days` and 99%. **Tests:**
+  `VarWindowApiTest`. **Docs:** VAR_GUIDE section 18.5 and settings, CONFIGURATION, USER_GUIDE, the Market risk Knowledge page.
+
+- **Inputs in any form and any grain; every record says what it is (2026-10-27; local branch, for the product owner's review: not
+  pushed).** A pricing system may send **scenario PVs or P&L vectors, per trade or per position**, and switch between dates. **2.9.4
+  requires every PV or vector record to say what it is**, leading each line: `VALUE_TYPE` (`PV` or `PNL`), `GRAIN` (`TRADE` with a
+  `TRADE_ID`, or `POSITION` with a `POSITION_ID`), `CURRENCY` and `SOURCE_SYSTEM` (the value fields keep their names: `SCENARIO_PV`,
+  `BASE_PV`, `PNL`; a P&L vector's currency stays `REPORTING_CCY`, USD, and `CURRENCY` is the trade's or position's own). **Older files
+  need the fields added:** `drishti.py var convert FILE --set VALUE_TYPE=PNL --set GRAIN=TRADE --set CURRENCY=USD --set
+  SOURCE_SYSTEM=MUREX` (or `--infer`); a record without them is refused (`DRS-5208`), as is one whose `VALUE_TYPE` is not its payload or
+  `GRAIN` not its id. A position sent whole is used as it is (never derived), placed by its book (`LEGAL_ENTITY`, `DESK`, `TT_BOOK`),
+  naming its trades in `TRADE_IDS` for navigation; everything that adds up works on it (tree, portfolios, `LE:`, `DESK:`, `BOOK:`, `CPTY:`,
+  baskets, what-if, captures, official records, currencies, intraday files and Kafka keyed by `POSITION_ID`); trade-level features say
+  so in words (`TRD:` of a position, contributions by trade, a trade page linking its position). **One source system sends one form and
+  one grain on a date** (else the date is refused, `DRS-5210`, as is a supplied position covering a trade also sent on its own); an
+  intraday update in another form or grain than the system's morning run is refused and listed. **Optional pins**
+  (`drishti.var.inputs: {ENDUR: {form: pv, grain: position}, default: {form: any, grain: any}}`) cross-check the records (`DRS-5209`
+  when they disagree). Every answer's provenance has `inputsBySystem` (form, grain, rows, how decided, `tradesWithoutPv`), the status
+  too, and the page's *How this number was built*. `drishti.py var intraday --load` routes a mixed file by `VALUE_TYPE`. The test data,
+  the samples and every script write the fields (the bank unchanged: 112,041,646 / 160,143,809); `make_var_data.py --position-systems`,
+  `--inputs-config`; `tools/pvgen --grain position`, `--position-systems`; the checker reads both grains. **Tests:** `VarInputsApiTest`
+  (the same trades as their positions give the same node VaR and ES in all four combinations; a system switching grain; two grains on a
+  date refused; records refused with their codes; an intraday update in another grain refused), `VarInputsTest`, `VarPvStreamTest` (a
+  Kafka message mixing all four of four systems, a pin disagreeing, a field missing), `test_pvgen.py` (per position equals per trade to
+  the cent), `test_varcli.py` (routing, convert). **Docs:** VAR_GUIDE 1.9 (section 15.13 with the 2x2 table, the pin, the currency
+  caveat; 15.12's example lines; errors), the contracts, CONFIGURATION, API_GUIDE, TROUBLESHOOTING, USER_GUIDE, the Market risk
+  Knowledge page.
+
+- **A stand-in pricing system, JSONL only, and both forms per system (2026-10-27; local branch, for the product owner's review: not
+  pushed).** `tools/pvgen` (each with a `.sh` beside it and `tools/windows/pvgen-*.ps1`; pure Python from the console's environment,
+  kafka-python for Kafka; `--help`, `--dry-run`, a fixed `--seed`): `morning.py` writes a day's `scenario-pv`, `pnl-vector` and
+  `fx-scenario` from the demo's factor model and `scenario_fx.py` (`--out`, or `--lake` with `--server` to load and signal);
+  `intraday.py` N small batches of amended, new and cancelled trades, each its own `BATCH_ID`, `RUN_KIND: INTRADAY` and a later
+  `COMPUTED_AT` (`--batches`, `--trades-per-batch`, `--mix`, `--plan`, `--lake`, `--server`, `--every 30s`); `publish_kafka.py` the
+  same to the PV topic, each message JSONL text of `--per-message` records, a cancel a cancel line (`--rate`, `--seconds`, `--save`); `check.py` recomputes the bank's and
+  each desk's VaR and ES from the files with the engine's formula and compares them with the server (exit 1 on a difference over one
+  unit). Every file is **JSONL** (`.jsonl`, `--gzip` for `.jsonl.gz`), each line exactly one row of its kind's contract, no other field;
+  a Kafka message's value is one such row. **Both forms per system:** `--pv-systems`/`--pnl-systems` (default Endur as scenario PVs,
+  Murex and Calypso as P&L vectors), `--all-vectors` every system as P&L vectors exactly as 2.9.3 (the bank on the test data's 2026-09-30 112,035,906 /
+  160,132,107, as in 2.9.3); the same flags on `tools/packgen/var/make_var_data.py`. The contracts of `scenario-pv`, `pnl-vector` and `fx-scenario`
+  state the delivery format (JSONL, one row a line) with an example line each (a full run's, an intraday amendment, a cancel); the
+  demo's morning rows say `COMPUTED_AT` 06:00Z (was 22:30Z: an intraday update must come after the morning run); the committed intraday
+  sample `config/packs/market-risk/samples/intraday/I-2026-09-30-001.scenario-pv.jsonl` is what `intraday.py` writes (`--first` numbers a
+  second run on). **Upgrading:** a `config/connectors/risk-store.yaml` written before 2.9.4 needs `RUN_KIND,COMPUTED_AT` added to its
+  layouts, the server says so (VAR_GUIDE 8.4). **Fixed** on the
+  way: a batch sent in both kinds as two loads (each with its signal) applied only its first kind; the engine now tracks each kind of a
+  batch apart. **Tests:** `tools/pvgen/test_pvgen.py` (dry runs, the shape and determinism by seed, every written line a JSON object of
+  its contract, the sample regenerated byte for byte, the checker against the engine's figures), `test_var_data.py` (the forms per
+  system; all vectors reproducing 2.9.3), `VarIntradayApiTest` (a batch in two loads), `VarIntradayTest` (a trade changing form).
+  **Docs:** VAR_GUIDE 1.8 (section 15.12 *Producing P&L vectors and scenario PVs*: both forms side by side, one sample line of each kind
+  with the intraday marker and a cancel, "this is the contract a pricing system sends"), tutorial 25 step 13 (the intraday script, the
+  badge, the check; picture 13), TOOLS, QA_ON_WINDOWS_WITH_CUSTOM_DATA (2.9.4, PowerShell with the venv's python.exe; Kafka optional),
+  the contracts and pack guide pages.
+
+- **Intraday updates from Kafka, micro-batched (2026-10-27; local branch, for the product owner's review: not pushed).** The
+  market-risk pack's connector **`pv-updates`** (plugin `var-pv-stream`, off by default: `DRISHTI_VAR_PV_STREAM`, `DRISHTI_VAR_PV_TOPIC`,
+  `DRISHTI_VAR_PV_WINDOW` default `5m`, `DRISHTI_VAR_PV_MAX_TRADES` default 500) reads a pricing system's PV topic (compacted, keyed by
+  `TRADE_ID`, the value one JSONL row of `scenario-pv` or `pnl-vector`, a tombstone a cancel) like the Kafka connector (`KafkaClients`,
+  now public, gives it the same consumer settings and security), keeps the latest message per trade over a window (`COMPUTED_AT`, the
+  offset breaking a tie), flushes early at `max-trades` or on an administrator's **Apply now** (`POST
+  /api/v1/var/intraday/streams/{connector}/apply`, a button on the connector's Admin page; `GET /api/v1/var/intraday/streams`), and
+  writes the window to the lake as **one** intraday batch (`K-<date>-<time>-<n>`, Drishti's lake writer, the pack's layout), then raises
+  the data-load signal once: the intraday layer applies it as a file. Guards: another business date, before the morning run, or not later
+  than what the date holds (a redelivery, a replay after a restart) ignored and counted; another scenario set (`DRS-5203`), a failed
+  scenario (`DRS-5206`) or a malformed row (`DRS-5201`) rejected, never filled with zero, listed in the stream's status and the
+  provenance's `intradayRejections`. **Tests:** `VarPvStreamTest` (in-process Kafka, no Docker: a window of several trades, latest
+  wins, a file batch between windows, an early flush with a tombstone, the guards, files and windows mixed equal to one run to the cent
+  in USD, EUR and CAD, a replay writing nothing), `test_var_routes.py`. **Docs:** VAR_GUIDE section 8.4 (Kafka: flow, rules, settings,
+  sizing 4–8 KB a message), KAFKA_CONNECTOR section 17, CONFIGURATION, API_GUIDE, USER_GUIDE.
+
+- **The top of the VaR tree named by a setting (2026-10-27; local branch, for the product owner's review: not pushed).**
+  **`drishti.var.root-name`** (env `DRISHTI_VAR_ROOT_NAME`, blank by default: the hierarchy data's `NAME`, *Drishti Bank* in the demo)
+  names the root node of every hierarchy when a date loads; **`drishti.var.root-names`** (`{MGMT: "…", LEGAL: "…"}`) names one
+  hierarchy's root over it. The tree, breadcrumbs, headline, command line, `var-result`, captures and new official records show it;
+  records captured before keep their name (append-only). The name is part of the hot file's digest, so a change is not masked by a file
+  built before; a running server shows it after a restart (or a reload of the dates). No console text named the root: the page reads the
+  node's name. **Tests:** `VarRootNameTest` (both trees renamed, `root-names` winning, nodes below unchanged, blank keeps the data's
+  name, the digest). **Docs:** VAR_GUIDE settings, CONFIGURATION (server table and placeholders), USER_GUIDE, the Market risk Knowledge
+  page.
+
+- **Intraday updates from files (2026-10-27; local branch, for the product owner's review: not pushed).** A second `BATCH_ID` on a date no
+  longer turns today's VaR into yesterday's: a pricing system sends **only the changed trades** during the day (amended, new or
+  cancelled), priced over the morning run's scenario set, marked **`RUN_KIND: INTRADAY`** (the contracts of `scenario-pv` and
+  `pnl-vector`, with `COMPUTED_AT`; the risk-store layout promotes both), each batch its own `BATCH_ID`, appended to the lake. The
+  data-load signal of such a batch applies it **without a reload** (`VarIntraday`, `OverlayVectors`): each updated trade's difference
+  goes into its book and every node above it in both hierarchies, the per-trade-currency totals and every reporting currency already
+  built (only that trade reconverted); the morning hot file is never changed; the latest `COMPUTED_AT` per trade wins across every batch
+  (an update older than the morning run, or than the one held, is ignored and counted); a cancel (`TRADE_STATUS` not live) removes the
+  trade; a new trade gets its book and its position by the rules; a trade moved to another book moves; another scenario set is refused
+  (`DRS-5203` in `intraday.rejections`); a full run of the date (or a signal with no new intraday batch) reloads as before and drops the
+  layer; a restart rebuilds the same from the lake. Only the current P&L per trade is kept, so the work of a batch does not grow with
+  the batches before it. Every answer that includes updates says **`intraday`** (`updates`, `trades`, `amended`, `added`, `cancelled`,
+  `lastAt`, `batches`, `batchCount`, `rejections`), the VaR page shows an **intraday** badge, and the provenance a row; the official
+  records and publishing read the morning run alone (an intraday batch never restates them). `drishti.py var intraday` lists each date's
+  layer and `--load FILE.jsonl` appends a batch (`lake build --mode append`) and signals it; `var show` and `var status` say it. The
+  demo's morning rows now say `RUN_KIND: FULL` (regenerated; figures unchanged); `lake demo` moves the scenario PVs' valuation dates.
+  **Tests:** `VarIntradayTest` (amended, new, cancelled, moved, updated twice, a new trade in an existing position, a cancel and a revival:
+  equal to the cent to the final data built as one run, every node in both hierarchies, any scope, every position, the totals in four
+  currencies, heap and mapped), `VarIntradayApiTest` (files and signals: a P&L vector amended, a cancel, a new trade, a scenario-PV
+  trade updated twice, an older update ignored, another scenario set refused; equal to the cent to the same final data loaded as one run
+  in USD, EUR and CAD; the official record the morning run's; a full run drops the layer; 200 batches on one date, the time per batch flat,
+  equal to one run and to a restart), `test_varcli.py`, `test_var_routes.py`.
+  **Docs:** VAR_GUIDE 1.7 (section 8.4 as built, 15.8, 15.9, 20.2, the CLI), USER_GUIDE (the badge), the Market risk Knowledge page,
+  API_GUIDE, the two contracts.
+
+- **Reporting currencies built ahead, per-trade-currency totals, the currency picker and Trade currency (2026-10-27; local branch, for
+  the product owner's review: not pushed).** The product owner's decisions on the VaR currencies: (1) PVs stay as received, in each
+  trade's own currency; (2) **`drishti.var.currencies`** (default `USD, EUR, CAD, JPY, GBP`, env `DRISHTI_VAR_CURRENCIES`) lists the
+  reporting currencies **built ahead**: once a date's USD book has loaded, one low-priority background thread builds each listed
+  currency's book into its own hot file, so a VaR in it never waits on its first ask (a request meanwhile joins the build, or builds it,
+  as before); mapped tier only; **`drishti.var.currency-retention-dates`** (default 5, env `DRISHTI_VAR_CURRENCY_RETENTION_DATES`) keeps
+  them for the newest five dates, older ones' files deleted after each build. Measured on the demo lake (8,566 trades): 21.4 MB and 58 to
+  148 ms a currency a date (four currencies: 86 MB, 0.37 s, in the background; the USD load 0.58 s); per 100k trades about 250 MB a
+  currency a date and 4.3 s for four. `GET /status` says what was built (`currencies.builtAhead`, `tier.currencies`). (3) Every node
+  keeps its PVs **summed per trade currency** (`CurrencyTotals`, the hot file's new `CTOT` section, format 2): a node's P&L in any
+  currency is `Σ_c [PVsum_c(s) × FX_c→X(s) − PVbase_c × FX_c→X(base)]`, the same to the cent as converting each trade; the headline VaR
+  and ES in any currency other than USD come from it, and the new **`GET /api/v1/var/scope/currencies`** (the scope in every listed
+  currency, that VaR in the page's currency at today's rate, the difference) and **`GET /api/v1/var/currencies`** (listed, available,
+  ready). (4) The VaR page has a **Reporting currency** select in its status line (mock-up A: the listed currencies and More…); every
+  panel, the tree, captures and the basket tray follow it; it stays for the tab's session and goes into the link (`ccy=EUR`); the
+  command line takes **`VAR … IN EUR`**; the provenance says the reporting currency, the input form, the scenario FX and the cross
+  rates via USD; a new tab **In other currencies** (mock-up C's table, loaded only when opened; a click switches the page). (5) Every
+  trade page's strip says **Trade currency** (`EUR · as priced` from its scenario PVs, else `USD · as booked`; it takes the place of
+  Source, which stays in the deal ticket: the strip holds eight), its Risk group the trade currency and its **Base PV** in it
+  (`RISK_LINKS.TRADE_CURRENCY`, `TRADE_CURRENCY_FROM`, `BASE_PV`); the VaR contributions and worst scenarios list it, a position's trades
+  too (`TRADES[].TRADE_CURRENCY`, contract), and the derived trade pages label their column Trade currency. The demo lake now moves the
+  scenario PVs' valuation dates with the business date (`lake demo --as-of today` rejected them all as valued on another day).
+  On the demo lake (2026-10-27) the bank is 126,537,611 / 172,532,570 USD and **110,448,804 / 144,379,703 EUR**; the test data's figures
+  are unchanged.
+  **Docs:** VAR_GUIDE 1.6 (section 15.11, settings, API, sections 3.1, 3.2, 3.4, 26's format 2 and `CTOT`), USER_GUIDE (the picker,
+  `IN <currency>`, Trade currency), CONFIGURATION (the two settings and their placeholders), tutorial 25 (step 1: the picker and the
+  tab), the Market risk Knowledge page, the position contract; the VaR guide's and tutorial 25's pictures retaken, two new.
+  **Tests:** `CurrencyTotalsTest` (every node's totals equal the trade-level result to the cent in five currencies, heap and mapped;
+  equal the book converted trade by trade; the native sums; the hot file; any scope), `VarTestDataPrecisionTest` (the test data's nodes in
+  six currencies), `VarCurrencyAheadTest` (built ahead, the status, the currencies list, totals against the converted book, the tab, a
+  trade's currency), `VarCurrencyRetentionTest`, `test_var_routes.py` (`IN EUR`, the picker and the tab on the page, `ccy` passed on),
+  `test_var_currency_browser.py` (the picker moves every panel, the tab loads only when opened, a row switches, the session, More…,
+  `IN EUR`, phone width, a trade page's Trade currency).
+
+- **VaR from scenario PVs, in any reporting currency (2026-10-27; local branch, for the product owner's review: not pushed).** A bank's
+  batch may now send a trade's scenario P&L as **scenario PVs** in the trade's own currency (the new kind `scenario-pv`, `SPV`: its PV
+  under each of the 509 scenarios and its base PV of the same run) beside or instead of the P&L vector; the VaR engine turns them into
+  the trade's USD P&L when it loads the date, `P&L(s) = PV(s) × FX(s) − PV(base) × FX(base)`. Scenario FX is the batch's when it supplies
+  it (the new kind `fx-scenario`, `FXS`: USD per unit today and under each scenario), else derived from the FX history of `fx-spot`
+  (today's rate moved by each scenario day's 1-day move); every cross goes through USD (the product owner's four decisions). A scenario
+  that failed to price rejects its trade with the new **`DRS-5206`** (the scenarios named, never filled with zero); a currency without
+  FX, the new **`DRS-5207`**; valuation dates other than the business date, `DRS-5201`. Every answer takes a **reporting currency**,
+  `ccy=EUR` on the API and `--ccy EUR` on `drishti.py var` (headline, path, contributions, history, tree, hints, captures and compare,
+  the what-if, `var-result` and `var-whatif` with the parameter `ccy`, the official record), and says it in `currency`; the USD book is
+  built at load, another currency's on its first ask, from the USD book (`CurrencyBook`, `ScenarioFx`), kept per date on the tiered
+  memory (its own hot file under `<hot>/<date>-<CCY>/`); `drishti.var.official.currencies` (default `[USD]`) captures other currencies
+  officially beside USD (only USD is published). The provenance says how the vectors met FX (`fx`: per currency `supplied` or
+  `derived` and today's rate; `scenarioPvTrades`). The console's picker: the entry above.
+  **Test data:** the Endur trades (1,339: 1,089 USD, 246 EUR, 4 CAD) now come as scenario PVs (`tools/packgen/var/scenario_fx.py`), with
+  supplied FX for AUD, CAD, CHF, EUR, GBP and JPY; the other 8,233 trades stay P&L vectors; `lake demo` builds 84 tables (was 82). A USD
+  trade's P&L from its scenario PVs is its 2.9.3 vector exactly; the EUR and CAD trades now also carry their currency's move on their
+  value, so the bank on 2026-09-30 moves from VaR 112,035,906 / ES 160,132,107 to **112,041,646 / 160,143,809**, and on the default
+  demo lake (2026-10-26) from 126,544,583 / 172,580,660 to **126,537,611 / 172,532,570**; only the commodity desk, its books, LE-NY,
+  Markets and the bank change. In EUR the bank's VaR is 111,837,045 (not 95.4 m at today's rate: the bank's 3.65 bn USD of value moves
+  against the euro). Limits and portfolios unchanged.
+  **Docs:** VAR_GUIDE contract 1.5 (sections 15.9 scenario PVs, 15.10 reporting currency, settings, errors, CLI, API, official
+  records, test data; the figures that moved), tutorial 25 (step 1: scenario PVs and `--ccy`), the Market risk Knowledge page ("From
+  scenario PV to the P&L vector" as built, the figures), the two new contracts and `var-result`/`var-whatif`'s `CURRENCY`, the pack's
+  guide and README, API_GUIDE and TROUBLESHOOTING (the two codes), CONFIGURATION (the new settings), the demo-table counts.
+  **Tests:** `ScenarioFxTest` (the conversion, crosses through USD, supplied over derived, bad rates, a whole book converted),
+  `VarCurrencyApiTest` (both forms side by side, a failed scenario, no FX, a valuation date, every answer in a currency, captures,
+  the official record in EUR, `var-result` with `ccy`), `VarTestDataPrecisionTest` (the committed data in every supplied currency),
+  `test_var_data.py`, `test_varcli.py`, `test_var_engine.py`.
 - **Fixes found by the screenshot run (2026-10-27).** New pack: a job reached through another console worker answered `DRS-5006 no such job` (the console serves from several workers; a job lives in the one that started it): job ids now name their worker and the call is relayed to it, as live channels are, and the hand-off to Admin → Packs reads such ids. The console reads the server's installed packs (registry and Deploy archive: `packs.installed_dir`, `DRISHTI_PACKS_INSTALLED`, default `<data dir>/packs/installed`) first, as the server does, so an installed pack's help guide, examples and workspaces reach the console (the help centre said *There is no guide called helpdesk-pack*). The About drawer no longer lists the chosen Sutra under *Not chosen*. A Sutra control's open multi-select list floats over the panel instead of pushing the header's controls apart. The BI test stack's sample dataset is in today's grammar (approving it failed the check, DRS-9010). The screenshot stacks share the installed-packs folder, tutorial 5's shots recreate tutorial 4's connector, and the pictures the run could not make are retaken: tutorial 5 whole, tutorials 14 (Calc, the Python console) and 16 (the React sample; both need their git-ignored runtimes), the pack developer guide, schema to pack 09-10, controls, the BI guide and the Screen designer's rebase. A deal's own events stay listed whatever the Legs filter, as documented (RACHANA_REFERENCE, Controls).
 
 - **Your bank's names in the demo (2026-10-27; product owner).** New `config/demo/names.yaml`: the bank, its short name, the legal

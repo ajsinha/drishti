@@ -57,15 +57,21 @@ fields:
 - name: BUSINESS_DATE
   type: date
   presence: required
+- name: CURRENCY
+  type: text
+  presence: required
+  description: 'The reporting currency of every amount of the answer (2.9.4): the parameter ccy, USD by default (VRES DESK:RATES~ccy=EUR);
+    VAR_GUIDE.md section 15.10.'
+  example: USD
 - name: VAR
   type: amount
   presence: required
-  unit: USD
+  unit: CURRENCY
   description: VaR at CONFIDENCE, positive for a loss (VAR_GUIDE.md section 18.1).
 - name: ES
   type: amount
   presence: required
-  unit: USD
+  unit: CURRENCY
   description: Expected shortfall at ES_CONFIDENCE (VAR_GUIDE.md section 18.2).
 - name: CONFIDENCE
   type: rate
@@ -88,18 +94,18 @@ fields:
 - name: LIMIT
   type: amount
   presence: optional
-  unit: USD
+  unit: CURRENCY
 - name: LIMIT_USE
   type: rate
   presence: optional
 - name: SUM_STANDALONE
   type: amount
   presence: optional
-  unit: USD
+  unit: CURRENCY
 - name: DIVERSIFICATION
   type: amount
   presence: optional
-  unit: USD
+  unit: CURRENCY
 - name: BACKTEST
   type: record
   presence: required
@@ -116,7 +122,7 @@ fields:
 - name: PNL
   type: vector
   presence: required
-  unit: USD
+  unit: CURRENCY
   description: The scope's P&L under each scenario day, oldest first (unrounded).
 - name: PROVENANCE
   type: record

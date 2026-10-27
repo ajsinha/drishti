@@ -19,7 +19,7 @@
 
 Every command (mnemonic) of every pack has a data contract: a YAML file beside its pack (`config/packs/<pack>/contracts/<kind>.contract.yaml`, checked against `tools/contracts.schema.json`) and a section of its pack's page here. The shared rules are in [the contracts README](../README.md); the computed measures that replace the retiring kinds have their own contracts there.
 
-100 contracts, 468 points still to review. Check them with `drishti.py contract check`; draft a new one with `drishti.py contract bootstrap KIND --write`.
+102 contracts, 478 points still to review. Check them with `drishti.py contract check`; draft a new one with `drishti.py contract bootstrap KIND --write`.
 
 | Command | Kind | Pack | Class | Status | Replaced by | To review |
 |---|---|---|---|---|---|---|
@@ -89,6 +89,8 @@ Every command (mnemonic) of every pack has a data contract: a YAML file beside i
 | `POS` | `position` | [market-risk](market-risk.md#pos-position-position) | drishti-owned | active |  | 6 |
 | `PORT` | `portfolio` | [market-risk](market-risk.md#port-portfolio-portfolio) | input | active |  | 5 |
 | `PNLV` | `pnl-vector` | [market-risk](market-risk.md#pnlv-pl-vector-509-scenarios-pnl-vector) | input | active |  | 6 |
+| `SPV` | `scenario-pv` | [market-risk](market-risk.md#spv-scenario-pvs-of-a-trade-509-scenarios-its-currency-scenario-pv) | input | active |  | 6 |
+| `FXS` | `fx-scenario` | [market-risk](market-risk.md#fxs-scenario-fx-of-a-currency-509-scenarios-fx-scenario) | input | active |  | 4 |
 | `SSET` | `scenario-set` | [market-risk](market-risk.md#sset-scenario-set-scenario-set) | input | active |  | 4 |
 | `HIER` | `risk-hierarchy` | [market-risk](market-risk.md#hier-risk-hierarchy-node-risk-hierarchy) | input | active |  | 5 |
 | `VRES` | `var-result` | [market-risk](market-risk.md#vres-var-of-a-scope-computed-var-result) | computed | active |  | 0 |

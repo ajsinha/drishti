@@ -41,7 +41,7 @@ import java.util.Map;
  * is deleted after. Without the Python engine the answer is {@code 503 DRS-5205}, in words.
  *
  * <pre>
- *   POST /api/v1/var/what-if {"scope": "BASKET:asha/unwind", "items": [{"copyOf": "MX-30000121", "factor": -1}]}
+ *   POST /api/v1/var/what-if {"scope": "BASKET:asha/unwind", "items": [{"copyOf": "MX-30000121", "factor": -1}], "ccy": "EUR"}
  * </pre>
  */
 final class VarWhatIf {
@@ -66,7 +66,8 @@ final class VarWhatIf {
         if (asked.isEmpty() || asked.size() > MAX_ITEMS) {
             throw new DrishtiException(ErrorCode.BAD_REQUEST, "a what-if has 1 to " + MAX_ITEMS + " items: [{\"copyOf\": <a booked trade>, \"factor\": 1}]");
         }
-        VarService.Scoped base = svc.scoped(p, scope, date);
+        String ccy = VarCurrencies.normalise(body.get("ccy") == null ? null : String.valueOf(body.get("ccy")));
+        VarService.Scoped base = svc.scoped(p, scope, date, ccy);
         if (base.set().isEmpty()) {
             throw new DrishtiException(ErrorCode.BAD_REQUEST, "the scope " + scope + " has no trades on " + base.date().date() + ": a what-if starts from a scope that has");
         }
@@ -90,6 +91,7 @@ final class VarWhatIf {
         try {
             Map<String, Object> params = new LinkedHashMap<>();
             params.put("sandbox", box.id());
+            params.put("ccy", base.date().currency());
             String ref = ComputeRef.format(base.res().canonical(), params);
             Answer a = c.answer(new ReactiveConnector.Ask(KIND, ref, AsOf.of(base.date().date()), Viewers.of(p), RequestClass.INTERACTIVE, WAIT));
             if (!a.ready() || a.document() == null) {
@@ -112,7 +114,7 @@ final class VarWhatIf {
             throw new DrishtiException(ErrorCode.BAD_REQUEST, "a what-if item is a copy of a booked trade: {\"copyOf\": \"MX-30000121\", \"factor\": 1}");
         }
         double f = it.get("factor") instanceof Number n ? n.doubleValue() : it.get("factor") == null ? 1.0 : parse(it.get("factor"));
-        VarService.Scoped t = svc.scoped(p, "TRD:" + from, base.date().date());
+        VarService.Scoped t = svc.scoped(p, "TRD:" + from, base.date().date(), base.date().currency());
         if (t.set().isEmpty()) {
             List<String> n = new VarSelection(svc).notices(t);
             throw new DrishtiException(ErrorCode.BAD_REQUEST, n.isEmpty() ? "TRD:" + from + " has no P&L vector on " + base.date().date() : n.get(0));
@@ -172,6 +174,9 @@ final class VarWhatIf {
         out.put("scope", scope);
         out.put("canonical", base.res().canonical());
         out.put("businessDate", base.date().date().toString());
+        out.put("currency", base.date().currency());
+        out.put("confidence", doc.get("CONFIDENCE"));                  // the labels the console shows (never hard-coded)
+        out.put("esConfidence", doc.get("ES_CONFIDENCE"));
         out.put("before", before);
         out.put("after", after);
         out.put("change", change);

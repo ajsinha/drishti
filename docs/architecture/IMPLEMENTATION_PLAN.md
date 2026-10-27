@@ -325,7 +325,7 @@ of the VaR engine are built (as built: [VAR_GUIDE.md](../guides/VAR_GUIDE.md), P
 | R1–R4 | reactive connectors: the plugin and its interface, typed source parameters, cache and single flight, the worker bridge with progress, triggers with coalescing and ordering, per-user isolation (**built**, unreleased: the `reactive` plugin in `drishti-compute`, the SPI in `drishti-api`, panel states in the console, the compute-demo sample pack, [REACTIVE_CONNECTOR.md](../connectors/REACTIVE_CONNECTOR.md), tutorial 23; per-event impacts wait for W6/V5) | [REACTIVE_CONNECTORS.md](REACTIVE_CONNECTORS.md) sections 18 and 21 |
 | V0–V3 (built) | VaR data (positions, vectors, hierarchies, vector columns in the lake tools and the Delta plugin), the engine and the VaR explorer, history and backtesting, baskets, captures, entitlements and audit; the portfolio and position pages | [VAR_GUIDE.md section 30](../guides/VAR_GUIDE.md#30-the-design-record) (phased delivery), [section 29](../guides/VAR_GUIDE.md#29-the-pl-vector-in-the-lake) |
 | W6–W7 | forms save through connectors; applied changes trigger recomputes; viewers updated (**built** 2026-10-25, unreleased) | [WRITE_BACK.md](WRITE_BACK.md) section 18 |
-| C4–C6, V4 | the pricer interface and stand-in; what-if; **QLRisk only if its API is declared stable, otherwise in 2.8.x**; the QuantLib Java worker with its parity test (Linux) | [PYTHON_COMPUTE.md](PYTHON_COMPUTE.md) section 9, [VAR_GUIDE.md section 8.4](../guides/VAR_GUIDE.md#84-what-if-pricing-and-intraday-recomputes-planned) |
+| C4–C6, V4 | the pricer interface and stand-in; what-if; **QLRisk only if its API is declared stable, otherwise in 2.8.x**; the QuantLib Java worker with its parity test (Linux) | [PYTHON_COMPUTE.md](PYTHON_COMPUTE.md) section 9, [VAR_GUIDE.md section 8.4](../guides/VAR_GUIDE.md#84-what-if-pricing-and-intraday-recomputes-what-if-planned-intraday-updates-as-built-in-294) |
 | R5–R6, V5–V6 | one as-of per screen; the cluster (key owners, sharded vector store); intraday VaR from write-backs; the targets measured on a real server | [REACTIVE_CONNECTORS.md](REACTIVE_CONNECTORS.md), [VAR_GUIDE.md section 27](../guides/VAR_GUIDE.md#27-sizes-performance-and-the-benchmark) |
 
 Open questions for the product owner are listed at the end of each design.
@@ -531,6 +531,12 @@ engines. Which industries, and in what order, is for the product owner to decide
 
 ## 2.9.4 (planned): VaR from scenario PVs, in any reporting currency (product owner, 2026-10-26)
 
+**Status (2026-10-27): built on a local branch for the product owner's review, not pushed or merged** (VAR_GUIDE.md sections 15.9 and
+15.10, contract 1.5): scenario PVs (`scenario-pv`) beside P&L vectors, FX supplied (`fx-scenario`) or derived (`fx-spot`), crosses through
+USD, `DRS-5206` and `DRS-5207`, `ccy` on every answer and `--ccy` on the command line, books per currency on first ask, official records
+per `drishti.var.official.currencies`; the demo's Endur trades as scenario PVs. Open: the console's currency picker (mock-ups), the
+screenshots of tutorial 25 and VAR_GUIDE on the new figures.
+
 Moved from 2.9.3 to its own release, 2.9.4 (product owner, 2026-10-27). Decided after 2.9.1: the upstream engine gives **scenario PVs** (each live trade revalued under each historical scenario) and the
 **base PV**, and FX rates are available; Drishti computes the P&L vectors itself and reports VaR and ES **in a chosen currency**.
 The P&L-vector input of 2.8.0 stays supported (a bank sends either).
@@ -543,8 +549,9 @@ The P&L-vector input of 2.8.0 stays supported (a bank sends either).
 | Engine | vectors per reporting currency built at load (USD always; others on first ask, cached per date), on the existing memory tiering |
 | Docs and screens | mock-ups for the currency picker first; VAR_GUIDE Part II (the contract) for PV input; tutorial 25; the Market risk Knowledge page ("From scenario PV to the P&L vector"); test data regenerated as scenario PVs and FX |
 
-Open questions for the product owner: (1) PVs in each trade's currency or one currency; (2) scenario FX supplied or derived from the
-scenario dates' FX history; (3) cross rates via USD or direct pairs; (4) the holding period (1-day moves, as today).
+Decided by the product owner (2026-10-27): (1) PVs in each trade's own currency (one stated currency for a file is the same thing);
+(2) scenario FX derived from the FX history of the scenario dates, the batch's supplied FX used when it sends it; (3) cross rates via USD;
+(4) 1-day moves, as today.
 
 ### 2.9.4 also: JSON Lines is the data standard (product owner, 2026-10-27; built)
 

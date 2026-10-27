@@ -67,6 +67,7 @@
     <p class="adm-actions det-actions">
       <button type="button" class="fk" data-act="edit" aria-label="Edit {{ c.name }}">Edit</button>
       <button type="button" class="fk" data-act="test" aria-label="Test the connection of {{ c.name }}">Test connection</button>
+      {% if c.plugin == 'var-pv-stream' and c.enabled %}<button type="button" class="fk" data-act="var-apply-now" aria-label="Apply the waiting window of {{ c.name }} now, as one intraday batch" title="The PV topic's waiting window applied now, as one intraday batch (VAR_GUIDE.md section 8.4)">Apply now</button>{% endif %}
       <button type="button" class="fk" data-act="{{ 'disable' if c.enabled else 'enable' }}" aria-label="{{ 'Disable' if c.enabled else 'Enable' }} {{ c.name }}">{{ 'Disable' if c.enabled else 'Enable' }}</button>
       {% if c.source == 'shared' and not c.template %}<button type="button" class="fk" data-act="reset" aria-label="Reset {{ c.name }}: remove the shared edit">Reset to file</button>
       {% elif c.template %}<button type="button" class="fk" data-act="reset" aria-label="Reset {{ c.name }} to the default of pack {{ c.template }}">Reset to pack default</button>

@@ -40,6 +40,8 @@ import java.util.regex.Pattern;
  *       derived them, so every official figure can be recomputed from its inputs; JSON Lines since 2.9.4 (a header line, then a position
  *       or a node a line). Records written before are {@code -membership-v<n>.json}, one document, read as they are.</li>
  *   <li>{@code var/captures/official/<CAP-id>.json}: one capture per node, {@code official: true}, owner {@code drishti}.</li>
+ *   <li>{@code var/official/<CCY>/<date>.json} and {@code var/official/<CCY>/<date>-membership-v<n>.json}: the same in another reporting
+ *       currency of {@code drishti.var.official.currencies} (2.9.4); USD keeps the paths above.</li>
  * </ul>
  *
  * The indexes are read once and kept in memory (they change only when a date is captured here).
@@ -51,10 +53,9 @@ final class VarOfficialStore {
 
     static final String OWNER = "drishti";
     static final String FOLDER = "var/captures/official/";
-    private static final Pattern INDEX = Pattern.compile("var/official/(\\d{4}-\\d{2}-\\d{2})\\.json");
     private final ContentDocs docs;
-    private final Map<LocalDate, Map<String, Object>> indexes = new ConcurrentHashMap<>();
-    private volatile NavigableSet<LocalDate> dates;
+    private final Map<String, Map<String, Object>> indexes = new ConcurrentHashMap<>();
+    private final Map<String, NavigableSet<LocalDate>> dates = new ConcurrentHashMap<>();
 
     VarOfficialStore(ContentStore store) {
         this.docs = new ContentDocs(store);
@@ -64,54 +65,83 @@ final class VarOfficialStore {
         return docs;
     }
 
+    /** The folder of a currency's records: {@code var/official/} for USD, {@code var/official/<CCY>/} for another. */
+    private static String folder(String currency) {
+        return currency == null || VarDate.USD.equals(currency) ? "var/official/" : "var/official/" + currency + "/";
+    }
+
     static String indexKey(LocalDate d) {
-        return "var/official/" + d + ".json";
+        return indexKey(d, VarDate.USD);
+    }
+
+    static String indexKey(LocalDate d, String currency) {
+        return folder(currency) + d + ".json";
     }
 
     static String membershipKey(LocalDate d, long version) {
-        return "var/official/" + d + "-membership-v" + version + ".jsonl";
+        return membershipKey(d, version, VarDate.USD);
+    }
+
+    /** A date's membership in a reporting currency's folder: JSON Lines from 2.9.4 on (MembershipLines). */
+    static String membershipKey(LocalDate d, long version, String currency) {
+        return folder(currency) + d + "-membership-v" + version + ".jsonl";
     }
 
     /** The dates that have an official record, oldest first. */
     NavigableSet<LocalDate> dates() {
-        NavigableSet<LocalDate> d = dates;
-        if (d == null) {
+        return dates(VarDate.USD);
+    }
+
+    /** The dates that have an official record in a currency, oldest first. */
+    NavigableSet<LocalDate> dates(String currency) {
+        String c = currency == null ? VarDate.USD : currency;
+        return dates.computeIfAbsent(c, x -> {
             TreeSet<LocalDate> out = new TreeSet<>();
-            for (String key : docs.store().list("var/official/")) {
-                Matcher m = INDEX.matcher(key);
+            Pattern p = Pattern.compile(Pattern.quote(folder(c)) + "(\\d{4}-\\d{2}-\\d{2})\\.json");
+            for (String key : docs.store().list(folder(c))) {
+                Matcher m = p.matcher(key);
                 if (m.matches()) {
                     out.add(LocalDate.parse(m.group(1)));
                 }
             }
-            d = java.util.Collections.unmodifiableNavigableSet(out);
-            dates = d;
-        }
-        return d;
+            return java.util.Collections.unmodifiableNavigableSet(out);
+        });
     }
 
     /** A date's official record (the latest result version), if any. */
-    @SuppressWarnings("unchecked")
     Optional<Map<String, Object>> index(LocalDate date) {
-        Map<String, Object> m = indexes.get(date);
+        return index(date, VarDate.USD);
+    }
+
+    /** A date's official record in a currency (the latest result version), if any. */
+    @SuppressWarnings("unchecked")
+    Optional<Map<String, Object>> index(LocalDate date, String currency) {
+        String key = indexKey(date, currency);
+        Map<String, Object> m = indexes.get(key);
         if (m == null) {
-            m = docs.value(indexKey(date), Map.class).map(x -> (Map<String, Object>) x).orElse(null);
+            m = docs.value(key, Map.class).map(x -> (Map<String, Object>) x).orElse(null);
             if (m == null) {
                 return Optional.empty();
             }
-            indexes.put(date, m);
+            indexes.put(key, m);
         }
         return Optional.of(m);
     }
 
     /** Writes a date's record (after its captures and membership): the history reads it from now on. */
     void putIndex(LocalDate date, Map<String, Object> index) {
-        docs.putLatest(indexKey(date), index);
-        indexes.put(date, index);
-        dates = null;
+        putIndex(date, index, VarDate.USD);
     }
 
-    void putMembership(LocalDate date, long version, Map<String, Object> membership) {
-        docs.store().putLatest(membershipKey(date, version), MembershipLines.write(membership));
+    void putIndex(LocalDate date, Map<String, Object> index, String currency) {
+        String key = indexKey(date, currency);
+        docs.putLatest(key, index);
+        indexes.put(key, index);
+        dates.remove(currency == null ? VarDate.USD : currency);
+    }
+
+    void putMembership(LocalDate date, long version, Map<String, Object> membership, String currency) {
+        docs.store().putLatest(membershipKey(date, version, currency), MembershipLines.write(membership));
     }
 
     /** A membership record: the JSON Lines of 2.9.4 on, or the one JSON document written before (never rewritten). */
@@ -131,15 +161,19 @@ final class VarOfficialStore {
     /**
      * A node's official figures on the dates up to {@code upTo}, at most {@code days} of them, oldest first; empty arrays when none.
      */
-    @SuppressWarnings("unchecked")
     NodeHistory history(String node, LocalDate upTo, int days) {
+        return history(node, upTo, days, VarDate.USD);
+    }
+
+    /** The same in a reporting currency: its own official records (none when the currency is not captured officially). */
+    NodeHistory history(String node, LocalDate upTo, int days, String currency) {
         List<LocalDate> ds = new ArrayList<>();
         List<double[]> rows = new ArrayList<>();
-        for (LocalDate d : dates().headSet(upTo, true).descendingSet()) {
+        for (LocalDate d : dates(currency).headSet(upTo, true).descendingSet()) {
             if (ds.size() >= days) {
                 break;
             }
-            Object n = index(d).map(m -> m.get("nodes")).orElse(null);
+            Object n = index(d, currency).map(m -> m.get("nodes")).orElse(null);
             if (n instanceof Map<?, ?> nodes && nodes.get(node) instanceof Map<?, ?> f) {
                 ds.add(0, d);
                 rows.add(0, new double[] {num(f.get("var")), num(f.get("es")), num(f.get("hypoPnl")), num(f.get("limit"))});

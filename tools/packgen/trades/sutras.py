@@ -32,6 +32,11 @@ from __future__ import annotations
 import re
 import textwrap
 
+# a trade's currency in the strip (VAR_GUIDE.md section 15.11): the currency its PVs come in when the VaR engine holds the trade as scenario
+# PVs (RISK_LINKS, set by the engine), else its own CURRENCY; the strip says which (as priced / as booked); its source system is in the
+# deal ticket (DES)
+TRADE_CURRENCY = ("nonblank($.RISK_LINKS.TRADE_CURRENCY) ? $.RISK_LINKS.TRADE_CURRENCY + ($.RISK_LINKS.TRADE_CURRENCY_FROM == 'its scenario PVs' "
+                  "? ' · as priced' : ' · as booked') : nonblank($.CURRENCY, '–') + ' · as booked'")
 RATE_GROUPS = {"Rates", "Inflation", "Credit", "Money market", "Fixed income", "Securities financing"}
 DERIVED = {  # derived kind: (mnemonic, label, group-by expression, id field, what it is)
     "counterparty-trades": ("CTRD", "Counterparty trades", "$.COUNTERPARTY", "COUNTERPARTY", "counterparty", "Every trade with a counterparty, from every source system"),
@@ -333,7 +338,7 @@ def deal_doc(name: str, system: str, desc: str, sample: str | None) -> list[str]
     about = (f"{desc} One deal screen per {system} {name.replace(chr(34), '”')} trade (matched on SOURCE_SYSTEM and PRODUCT_TYPE): "
              "the deal ticket (DES), the legs side by side, every cash flow in one schedule, the events by leg and as a table filtered "
              "by the Legs and Between controls, the netted payment ladder and payments by month, how the view was built and the "
-             "linked entities (F7 opens the counterparty's trades). The strip gives the source, side, notional, quantity, trade "
+             "linked entities (F7 opens the counterparty's trades). The strip gives the trade currency, side, notional, quantity, trade "
              "date, maturity, status and portfolio.")
     examples = [f"/v/trade/{sample}", f"TRD {sample}"] if sample else ["TRD"]
     return (["doc:", f"  summary: {q(head)}", "  description: >-", *["    " + ln for ln in _wrap(about)], "  params:",
@@ -359,7 +364,7 @@ def deal_yaml(code: str, name: str, group: str, desc: str, system: str, sutra: s
         f"match: {{ kind: trade, where: \"$.SOURCE_SYSTEM == '{system}' && $.PRODUCT_TYPE == '{code}'\", priority: 10 }}",
         f"title: {{ pill: {q(pill)}, id: $.TRADE_ID, with: \"link($.COUNTERPARTY, 'counterparty')\" }}",
         "strip:",
-        "  - { label: Source, bind: $.SOURCE_SYSTEM }",
+        f"  - {{ label: Trade currency, bind: {q(TRADE_CURRENCY)} }}",
         f"  - {{ label: Side, bind: {q(side())} }}",
         "  - { label: Notional, bind: \"$.CURRENCY + ' ' + fmt(first($.LEGS).NOTIONAL, 'amount0')\", emphasis: true }",
         "  - { label: Quantity, bind: \"fmt($.QUANTITY, 'amount0') + (nonblank(first($.LEGS).PRICE_UNIT) ? ' ' + first($.LEGS).PRICE_UNIT : '')\" }",
@@ -431,7 +436,7 @@ TRADE_COLUMNS = [
     "- { label: Source, bind: \"@.SOURCE_SYSTEM\" }",
     "- { label: Product, bind: \"@.PRODUCT_TYPE\" }",
     f"- {{ label: Side, bind: {q(side('@.BUY_SELL_CODE'))} }}",
-    "- { label: Currency, bind: \"@.CURRENCY\" }",
+    "- { label: Trade currency, bind: \"@.CURRENCY\" }",
     "- { label: Notional, bind: \"@.NOTIONAL\", fmt: amount0, total: true }",
     "- { label: Index, bind: \"nonblank(@.INDEX_NAME, '–')\" }",
     "- { label: Maturity, bind: \"@.MATURITY_DATE\", fmt: date }",

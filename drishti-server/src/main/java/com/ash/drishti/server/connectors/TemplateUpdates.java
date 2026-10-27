@@ -40,8 +40,10 @@ import org.slf4j.LoggerFactory;
  * once from an older template can lack kinds the pack serves now; this finds, for each connector with text (a file or a shared
  * edit):
  * <ul>
- *   <li><b>additive</b>: kinds the template serves that the connector lacks, and settings keys the template has and the connector
- *       does not (layout entries for those kinds among them);</li>
+ *   <li><b>additive</b>: kinds the template serves that the connector lacks, settings keys the template has and the connector
+ *       does not (layout entries for those kinds among them), and columns a layout list of the template has and the connector's same
+ *       list lacks ({@code layout.<kind>.columns} and {@code .vectors}: a pack that gains columns, as the VaR inputs did in 2.9.4; the
+ *       connector's own columns and their order kept, the template's new ones appended);</li>
  *   <li><b>conflicting</b>: settings both have with different values (an administrator's edit, never changed automatically);</li>
  *   <li><b>obsolete</b>: kinds in the connector that no loaded pack serves.</li>
  * </ul>
@@ -70,10 +72,16 @@ public final class TemplateUpdates implements AutoCloseable {
 
     /** One drifted connector: its three classes, the current text and the template's text (for the side-by-side view). */
     public record Drift(String name, String pack, List<String> missingKinds, Map<String, String> newSettings,
-            Map<String, List<String>> conflicting, List<String> obsoleteKinds, String etag, String text, String templateText) {
+            Map<String, List<String>> conflicting, List<String> obsoleteKinds, String etag, String text, String templateText,
+            Map<String, String> extendedLists) {
+
+        public Drift(String name, String pack, List<String> missingKinds, Map<String, String> newSettings,
+                Map<String, List<String>> conflicting, List<String> obsoleteKinds, String etag, String text, String templateText) {
+            this(name, pack, missingKinds, newSettings, conflicting, obsoleteKinds, etag, text, templateText, Map.of());
+        }
 
         public boolean additive() {
-            return !missingKinds.isEmpty() || !newSettings.isEmpty();
+            return !missingKinds.isEmpty() || !newSettings.isEmpty() || !extendedLists.isEmpty();
         }
 
         public boolean any() {
@@ -86,6 +94,7 @@ public final class TemplateUpdates implements AutoCloseable {
             m.put("pack", pack);
             m.put("missingKinds", missingKinds);
             m.put("newSettings", newSettings.keySet().stream().sorted().toList());
+            m.put("extendedLists", extendedLists.keySet().stream().sorted().toList());
             List<Map<String, Object>> c = new ArrayList<>();
             conflicting.forEach((k, v) -> c.add(Map.of("key", k, "connector", v.get(0), "template", v.get(1))));
             m.put("conflicting", c);
@@ -151,6 +160,7 @@ public final class TemplateUpdates implements AutoCloseable {
         List<String> missing = new ArrayList<>();
         Map<String, String> fresh = new LinkedHashMap<>();
         Map<String, List<String>> conflicting = new LinkedHashMap<>();
+        Map<String, String> extended = new LinkedHashMap<>();
         String templateText = null;
         String pack = null;
         if (t.isPresent() && String.valueOf(t.get().definition().get("plugin")).equals(d.plugin())) {
@@ -172,14 +182,48 @@ public final class TemplateUpdates implements AutoCloseable {
                 if (fv == null) {
                     fresh.put(k, tv);
                 } else if (!fv.equals(tv)) {
-                    conflicting.put(k, List.of(fv, tv));
+                    String grown = layoutList(k) ? grown(fv, tv) : null;
+                    if (grown != null) {
+                        extended.put(k, grown);                         // columns the template gained: appended, the rest kept
+                    } else {
+                        conflicting.put(k, List.of(fv, tv));
+                    }
                 }
             });
         } else if (t.isPresent()) {
             pack = t.get().pack();
             templateText = manager.templateText(t.get());
         }
-        return Optional.of(new Drift(name, pack, missing, fresh, conflicting, obsolete, d.etag(), d.text(), templateText));
+        return Optional.of(new Drift(name, pack, missing, fresh, conflicting, obsolete, d.etag(), d.text(), templateText, extended));
+    }
+
+    /** A pack layout's list of columns ({@code layout.<kind>.columns} or {@code .vectors}). */
+    static boolean layoutList(String key) {
+        return key.startsWith("layout.") && (key.endsWith(".columns") || key.endsWith(".vectors"));
+    }
+
+    /**
+     * The connector's list with the template's columns it lacks appended (its own columns and order kept), or null when it lacks none
+     * (then the lists differ by the connector's own edit only: a conflict, never changed automatically).
+     */
+    static String grown(String connector, String template) {
+        List<String> have = new ArrayList<>();
+        for (String c : connector.split(",")) {
+            if (!c.isBlank()) {
+                have.add(c.strip());
+            }
+        }
+        List<String> add = new ArrayList<>();
+        for (String c : template.split(",")) {
+            if (!c.isBlank() && !have.contains(c.strip()) && !add.contains(c.strip())) {
+                add.add(c.strip());
+            }
+        }
+        if (add.isEmpty()) {
+            return null;
+        }
+        have.addAll(add);
+        return String.join(",", have);
     }
 
     // -- changing --------------------------------------------------------------------------------------------------
@@ -195,6 +239,7 @@ public final class TemplateUpdates implements AutoCloseable {
         });
         Map<String, Object> settings = new LinkedHashMap<>(d.settings());
         drift.newSettings().forEach(settings::putIfAbsent);
+        settings.putAll(drift.extendedLists());
         StringBuilder header = new StringBuilder();
         for (String line : d.text().split("\n", -1)) {
             if (!line.startsWith("#")) {
@@ -213,11 +258,33 @@ public final class TemplateUpdates implements AutoCloseable {
             throw new DrishtiException(ErrorCode.CONNECTOR_CONFLICT, "connector '" + name + "' changed since you read it; reload it");
         }
         ConnectorFiles.Definition d = manager.files().read(name);
-        Drift use = additive ? drift : new Drift(name, drift.pack(), List.of(), Map.of(), Map.of(), drift.obsoleteKinds(), drift.etag(), drift.text(), drift.templateText());
+        Drift use = additive ? drift : new Drift(name, drift.pack(), List.of(), Map.of(), Map.of(), drift.obsoleteKinds(), drift.etag(), drift.text(),
+                drift.templateText());
+        if (additive && !drift.extendedLists().isEmpty()) {
+            backup(name);                                              // the file as it was, beside it (besides the history)
+        }
         String text = merged(manager.files(), d, use, dropObsolete ? drift.obsoleteKinds() : List.of());
         ConnectorManager.Change c = manager.save(name, text, drift.etag(), true);
         audit.record(user, "connector-template-update", name, what);
         return c;
+    }
+
+    /**
+     * Keeps the connector's file as it was before columns were added to its layout: {@code <name>.yaml.before-<yyyyMMdd-HHmmss>.bak} in
+     * the connectors folder (not a {@code .yaml}, so never read as a connector); a shared edit's previous text stays in the history.
+     */
+    private void backup(String name) {
+        try {
+            java.nio.file.Path f = manager.files().file(name);
+            if (f != null && java.nio.file.Files.isRegularFile(f)) {
+                String at = java.time.LocalDateTime.now(java.time.ZoneOffset.UTC).format(java.time.format.DateTimeFormatter.ofPattern("yyyyMMdd-HHmmss"));
+                java.nio.file.Path b = f.resolveSibling(f.getFileName() + ".before-" + at + ".bak");
+                java.nio.file.Files.copy(f, b);
+                LOG.info("connector {}: the file before its layout gained the template's columns is kept as {}", name, b.getFileName());
+            }
+        } catch (java.io.IOException | RuntimeException e) {
+            LOG.warn("connector {}: no backup of the file before the update ({})", name, e.getMessage());
+        }
     }
 
     /** Add missing kinds: merges the additive part, keeping every edit. */
@@ -283,8 +350,10 @@ public final class TemplateUpdates implements AutoCloseable {
                 }
                 try {
                     write(d.name(), d.etag(), true, false, ACTOR, "added automatically from the template of pack " + d.pack() + ": kinds "
-                            + d.missingKinds() + ", settings " + d.newSettings().keySet() + " (template-updates: additive)");
-                    String what = "added from pack " + d.pack() + "'s template: kinds " + d.missingKinds() + ", settings " + d.newSettings().keySet();
+                            + d.missingKinds() + ", settings " + d.newSettings().keySet() + ", columns in " + d.extendedLists().keySet()
+                            + " (template-updates: additive)");
+                    String what = "added from pack " + d.pack() + "'s template: kinds " + d.missingKinds() + ", settings " + d.newSettings().keySet()
+                            + (d.extendedLists().isEmpty() ? "" : ", the template's new columns in " + d.extendedLists().keySet());
                     LOG.info("connector {}: {}; every edit kept, the previous text is in the history", d.name(), what);
                     notices.addFirst(new Notice(Instant.now(), d.name(), what));
                     while (notices.size() > 50) {

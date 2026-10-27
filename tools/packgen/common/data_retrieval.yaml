@@ -173,6 +173,8 @@ packs:
     default: { generator: testdata, also: banking-samples }
     kinds:
       pnl-vector: { generator: var }
+      scenario-pv: { generator: var }
+      fx-scenario: { generator: var }
       scenario-set: { generator: var }
       risk-hierarchy: { generator: var }
       portfolio: { generator: var }

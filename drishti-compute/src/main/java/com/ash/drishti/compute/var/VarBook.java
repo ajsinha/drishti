@@ -57,8 +57,18 @@ public final class VarBook {
     /** The trades' text columns the engine keeps (from the pnl-vector rows), in this order. */
     public static final List<String> TRADE_TEXTS = List.of("POSITION_ID", "LEGAL_ENTITY", "DIVISION", "DESK", "TT_BOOK", "PORTFOLIO",
             "PRODUCT_GROUP", "PRODUCT_TYPE", "CURRENCY", "COUNTERPARTY", "DIRECTION", "INSTRUMENT_ID", "SECURITY_ID", "INSTRUMENT", "STRATEGY",
-            "TAGS", "POSITION_RULE");
+            "TAGS", "POSITION_RULE", "PV_CURRENCY");
     public static final List<String> TRADE_NUMBERS = List.of("QUANTITY", "PV");
+    /**
+     * The {@code POSITION_RULE} of a supplied position: a record at position grain (VAR_GUIDE.md section 15.13), held as one row whose id
+     * is its {@code POSITION_ID}, never derived from trades; it has no trades of its own in the engine.
+     */
+    public static final String SUPPLIED = "supplied";
+
+    /** True when the row at {@code ordinal} is a supplied position (a record at position grain), not a trade. */
+    public boolean supplied(int ordinal) {
+        return ordinal >= 0 && SUPPLIED.equals(trades().text("POSITION_RULE", ordinal));
+    }
     /**
      * The positions' columns, derived from their trades when the date is built (VAR_GUIDE.md section 15.6): the first trade's instrument,
      * hierarchy, product and rule; the direction of the net quantity; the counterparty when every trade has the same one; the tags of
@@ -122,10 +132,27 @@ public final class VarBook {
     private final int failed;
     private final long loadMillis;
     private final Map<Integer, double[]> positionCache = new ConcurrentHashMap<>();
+    private final CurrencyTotals totals;
+    /** The morning book this one layers an intraday batch on (VAR_GUIDE.md section 8.4), or this book itself. */
+    private final VarBook morning;
+    /** The intraday layer, or null (a morning book). */
+    private final VarIntraday layer;
 
     VarBook(LocalDate businessDate, String scenarioSet, List<LocalDate> scenarioDates, Vectors store, String[] tradeIds, Columns trades,
             int[] positionOf, String[] positionIds, int[] posFrom, int[] posTo, Columns positions, Map<String, Node> nodes,
-            Map<String, int[]> bookRange, Map<String, double[]> aggregates, int failed, long loadMillis, Hot hot) {
+            Map<String, int[]> bookRange, Map<String, double[]> aggregates, int failed, long loadMillis, Hot hot, CurrencyTotals totals) {
+        this(businessDate, scenarioSet, scenarioDates, store, tradeIds, trades, positionOf, positionIds, posFrom, posTo, positions, nodes, bookRange,
+                aggregates, failed, loadMillis, hot, totals, null, null);
+    }
+
+    /** A book with an intraday layer over {@code morning} ({@link VarIntraday}): its cancelled trades are in no index. */
+    VarBook(LocalDate businessDate, String scenarioSet, List<LocalDate> scenarioDates, Vectors store, String[] tradeIds, Columns trades,
+            int[] positionOf, String[] positionIds, int[] posFrom, int[] posTo, Columns positions, Map<String, Node> nodes,
+            Map<String, int[]> bookRange, Map<String, double[]> aggregates, int failed, long loadMillis, Hot hot, CurrencyTotals totals,
+            VarBook morning, VarIntraday layer) {
+        this.totals = totals;
+        this.morning = morning == null ? this : morning;
+        this.layer = layer;
         this.businessDate = businessDate;
         this.scenarioSet = scenarioSet;
         this.scenarioDates = List.copyOf(scenarioDates);
@@ -134,7 +161,9 @@ public final class VarBook {
         this.tradeIds = tradeIds;
         this.tradeOrdinal = new HashMap<>(tradeIds.length * 2);
         for (int i = 0; i < tradeIds.length; i++) {
-            tradeOrdinal.put(tradeIds[i], i);
+            if (layer == null || !layer.cancelled(i)) {
+                tradeOrdinal.put(tradeIds[i], i);
+            }
         }
         this.trades = trades;
         this.positionOf = positionOf;
@@ -149,14 +178,71 @@ public final class VarBook {
         this.nodes = nodes;
         this.bookRange = bookRange;
         this.aggregates = aggregates;
-        this.tradeUpper = upperIndex(tradeIds);
-        this.positionUpper = upperIndex(positionIds);
+        this.tradeUpper = upperIndex(tradeIds, layer == null ? null : layer.cancelledSet());
+        this.positionUpper = upperIndex(positionIds, null);
         this.failed = failed;
         this.loadMillis = loadMillis;
     }
 
     public LocalDate businessDate() {
         return businessDate;
+    }
+
+    /**
+     * Every node's per-trade-currency totals (VAR_GUIDE.md section 15.11): built with a USD book whose builder was given the date's FX
+     * ({@link Builder#currencyRates}); null for a book built without (one in another reporting currency).
+     */
+    public CurrencyTotals currencyTotals() {
+        return totals;
+    }
+
+    /** The morning book: this one without its intraday layer (the official captures read it, VAR_GUIDE.md section 8.4). */
+    public VarBook morning() {
+        return morning;
+    }
+
+    /** The intraday layer on the morning book, or null. */
+    public VarIntraday intraday() {
+        return layer;
+    }
+
+    // the arrays an intraday layer copies and extends (VarIntraday), never changed in place
+    String[] tradeIdsArray() {
+        return tradeIds;
+    }
+
+    int[] positionOfArray() {
+        return positionOf;
+    }
+
+    String[] positionIdsArray() {
+        return positionIds;
+    }
+
+    int[] posFromArray() {
+        return posFrom;
+    }
+
+    int[] posToArray() {
+        return posTo;
+    }
+
+    Map<String, int[]> bookRanges() {
+        return bookRange;
+    }
+
+    /** The aggregates the plan reads (a morning book's: as loaded). */
+    Map<String, double[]> morningAggregates() {
+        return aggregates;
+    }
+
+    double[] morningAggregate(String key) {
+        return aggregates.get(key);
+    }
+
+    /** True when trade {@code o} was cancelled by an intraday batch (its P&amp;L removed; it is in no scope). */
+    public boolean cancelled(int o) {
+        return layer != null && layer.cancelled(o);
     }
 
     public String scenarioSet() {
@@ -245,9 +331,12 @@ public final class VarBook {
     }
 
     /** Ids by their upper-case form, for a lookup that ignores case; two ids equal in upper case map to -1 (ambiguous). */
-    private static Map<String, Integer> upperIndex(String[] ids) {
+    private static Map<String, Integer> upperIndex(String[] ids, java.util.BitSet skip) {
         Map<String, Integer> out = new HashMap<>(ids.length * 2);
         for (int i = 0; i < ids.length; i++) {
+            if (skip != null && skip.get(i)) {
+                continue;
+            }
             out.merge(ids[i].toUpperCase(java.util.Locale.ROOT), i, (a, x) -> -1);
         }
         return out;
@@ -295,7 +384,7 @@ public final class VarBook {
         if (any) {
             for (int o = 0; o < tradeIds.length; o++) {
                 int code = trades.code(column, o);
-                if (code >= 0 && wanted[code]) {
+                if (code >= 0 && wanted[code] && !cancelled(o)) {
                     b.add(o);
                 }
             }
@@ -330,7 +419,8 @@ public final class VarBook {
     }
 
     public OrdinalSet positionMembers(int index) {
-        return OrdinalSet.range(posFrom[index], posTo[index]);
+        OrdinalSet m = OrdinalSet.range(posFrom[index], posTo[index]);
+        return layer == null ? m : layer.members(index, m);
     }
 
     public Columns positions() {
@@ -342,6 +432,11 @@ public final class VarBook {
      * row of the hot file, read when asked).
      */
     public double[] positionVector(int index) {
+        if (layer != null) {
+            double[] acc = new double[store.width()];
+            positionMembers(index).forEachRun((f, t) -> store.addRangeInto(acc, f, t));
+            return acc;
+        }
         if (hot != null) {
             double[] v = new double[store.width()];
             hot.positions().copy(index, v);
@@ -378,6 +473,10 @@ public final class VarBook {
     public List<Integer> positionsOfBook(String book) {
         int[] r = bookRange.get(book);
         List<Integer> out = new ArrayList<>();
+        if (layer != null) {
+            out.addAll(layer.positionsOfBook(book, r));
+            return out;
+        }
         if (r == null) {
             return out;
         }
@@ -394,7 +493,8 @@ public final class VarBook {
 
     /** A node's vector (summed when the date was loaded); a book's too, under its node id or its book name. */
     public double[] aggregate(String nodeOrBook) {
-        return aggregates.get(nodeOrBook);
+        double[] a = aggregates.get(nodeOrBook);
+        return layer == null || a == null ? a : layer.withAdded(nodeOrBook, a);
     }
 
     /** The root of a hierarchy ({@code MGMT~BANK}), or null. */
@@ -404,7 +504,8 @@ public final class VarBook {
 
     /** Every ordinal of the date. */
     public OrdinalSet all() {
-        return OrdinalSet.range(0, tradeIds.length);
+        OrdinalSet a = OrdinalSet.range(0, tradeIds.length);
+        return layer == null ? a : a.andNot(layer.cancelledOrdinals());
     }
 
     /**
@@ -414,6 +515,16 @@ public final class VarBook {
      * numbers, within rounding for others); the cost is the number of aggregates and uncovered rows, not the size of the nodes.
      */
     public double[] vector(OrdinalSet set, ParallelSums sums) {
+        if (layer != null && layer.added() > 0 && set.intersects(layer.addedOrdinals())) {
+            // the trades added during the day are summed on their own; the morning's ordinals go through the plan
+            double[] acc = plannedVector(set.andNot(layer.addedOrdinals()), sums);
+            set.and(layer.addedOrdinals()).forEach(o -> store.addInto(acc, o));
+            return acc;
+        }
+        return plannedVector(set, sums);
+    }
+
+    private double[] plannedVector(OrdinalSet set, ParallelSums sums) {
         double[] acc = new double[store.width()];
         Node root = root("MGMT");
         if (root == null || set.isEmpty()) {
@@ -551,6 +662,7 @@ public final class VarBook {
         private int failed;
         private String batchId = "";
         private String meta = "";
+        private java.util.function.Function<String, ScenarioFx.Rates> currencyRates;
 
         /** A date held on the heap, in float64 chunks of {@code rowsPerChunk} rows, within {@code budgetBytes} (8 bytes a value). */
         public Builder(LocalDate businessDate, String scenarioSet, List<LocalDate> scenarioDates, int rowsPerChunk, long budgetBytes) {
@@ -585,6 +697,15 @@ public final class VarBook {
             return this;
         }
 
+        /**
+         * The date's FX by currency (null: none), so the build also sums every node's PVs per trade currency ({@link CurrencyTotals});
+         * a book built without has no totals.
+         */
+        public Builder currencyRates(java.util.function.Function<String, ScenarioFx.Rates> rates) {
+            this.currencyRates = rates;
+            return this;
+        }
+
         /** The server's own record of the date (JSON: what the load counted, the inputs' versions), kept in the hot file. */
         public Builder meta(String json) {
             this.meta = json == null ? "" : json;
@@ -616,6 +737,17 @@ public final class VarBook {
             } finally {
                 lock.unlock();
             }
+        }
+
+        /** Trades the batch had no vector for, counted as failed (a book built from another date's book carries its count over). */
+        public Builder failedRows(int n) {
+            lock.lock();
+            try {
+                failed += Math.max(0, n);
+            } finally {
+                lock.unlock();
+            }
+            return this;
         }
 
         /** A node of a hierarchy, with the books beneath it. */
@@ -692,16 +824,18 @@ public final class VarBook {
             if (spill == null) {
                 VectorStore store = sorted ? vectors.build() : vectors.permuted(order);
                 Map<String, double[]> agg = aggregates(store, books, nodes, sums);
+                CurrencyTotals ct = currencyRates == null ? null : CurrencyTotals.build(store, tcols, books, nodes, currencyRates);
                 long ms = (System.nanoTime() - t0) / 1_000_000;
                 return new VarBook(businessDate, scenarioSet, scenarioDates, store, tids, tcols, posOf, positionIds, from, to, pcols, nodes, books,
-                        agg, failed, ms, null);
+                        agg, failed, ms, null, ct);
             }
             try {
                 MappedMatrix lake = spill.finish();
                 Vectors rows = sorted ? lake : new PermutedVectors(lake, order);
                 Map<String, double[]> agg = aggregates(rows, books, nodes, sums);
+                CurrencyTotals ct = currencyRates == null ? null : CurrencyTotals.build(rows, tcols, books, nodes, currencyRates);
                 VarHotFile.write(target.part(), new VarHotFile.Content(businessDate, scenarioSet, scenarioDates, tids, tcols, positionIds, from,
-                        to, pcols, books, nodes, agg, failed, batchId, target.digest(), meta), rows, sums);
+                        to, pcols, books, nodes, agg, failed, batchId, target.digest(), meta, ct), rows, sums);
                 Files.move(target.part(), target.file(), StandardCopyOption.REPLACE_EXISTING, StandardCopyOption.ATOMIC_MOVE);
             } catch (IOException e) {
                 throw new UncheckedIOException("the hot file of " + businessDate + " could not be written: " + e.getMessage(), e);
@@ -744,6 +878,17 @@ public final class VarBook {
          * and the counts.
          */
         private static void derivePosition(Columns.Builder pc, Columns t, int from, int to) {
+            int[] m = new int[to - from];
+            for (int i = 0; i < m.length; i++) {
+                m[i] = from + i;
+            }
+            Object[] row = positionRow(t, m);
+            pc.add((String[]) row[0], (double[]) row[1]);
+        }
+
+        /** A position's texts and numbers ({@link #POSITION_TEXTS}, {@link #POSITION_NUMBERS}) from its member trades (in order). */
+        static Object[] positionRow(Columns t, int[] members) {
+            int from = members.length == 0 ? 0 : members[0];
             String[] texts = new String[POSITION_TEXTS.size()];
             for (int c = 0; c < texts.length; c++) {
                 String col = POSITION_TEXTS.get(c);
@@ -757,7 +902,7 @@ public final class VarBook {
             boolean anyPv = false;
             String cpty = t.text("COUNTERPARTY", from);
             java.util.TreeSet<String> tags = new java.util.TreeSet<>();
-            for (int o = from; o < to; o++) {
+            for (int o : members) {
                 double tq = t.number("QUANTITY", o);
                 if (!Double.isNaN(tq)) {
                     q += tq;
@@ -785,8 +930,8 @@ public final class VarBook {
             texts[POSITION_TEXTS.indexOf("COUNTERPARTY")] = cpty;
             texts[POSITION_TEXTS.indexOf("TAGS")] = String.join("|", tags);
             texts[POSITION_TEXTS.indexOf("STATUS")] = q == 0 ? "flat" : "open";
-            texts[POSITION_TEXTS.indexOf("POSITION_TYPE")] = to - from > 1 ? "fungible" : "single-trade";
-            pc.add(texts, new double[] {q, anyPv ? mv : Double.NaN, gross, to - from, longs, shorts});
+            texts[POSITION_TEXTS.indexOf("POSITION_TYPE")] = members.length > 1 ? "fungible" : "single-trade";
+            return new Object[] {texts, new double[] {q, anyPv ? mv : Double.NaN, gross, members.length, longs, shorts}};
         }
 
         private static double[] sumUp(Node n, Map<String, Node> nodes, Map<String, double[]> agg, int width) {

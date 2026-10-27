@@ -123,6 +123,12 @@ fields:
   type: id
   presence: required
   example: HS-509
+- name: SCENARIO_WINDOW
+  type: integer
+  presence: optional
+  description: 'The scenarios the record was computed on (2.9.4): the newest N of the scenario set (drishti.var.scenario-window; the
+    set''s length, 509 in the demo, for all). Records captured before a change keep theirs; older records lack it.'
+  example: 509
 - name: STANDALONE_SUM
   type: amount
   presence: optional

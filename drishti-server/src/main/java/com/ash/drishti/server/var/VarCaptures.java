@@ -46,17 +46,24 @@ final class VarCaptures {
     }
 
     Map<String, Object> capture(Principal p, String scope, LocalDate date, String note) {
-        VarService.Scoped s = svc.scoped(p, scope, date);
+        return capture(p, scope, date, note, VarDate.USD);
+    }
+
+    /** A capture in a reporting currency: every amount in it, and {@code currency} says which (a compare with now reads it the same way). */
+    Map<String, Object> capture(Principal p, String scope, LocalDate date, String note, String ccy) {
+        VarService.Scoped s = svc.scoped(p, scope, date, ccy);
+        String c0 = s.date().currency();
         VarBook b = s.date().book();
-        Map<String, Object> head = views.headline(p, scope, date);
-        Map<String, Object> contrib = views.contributions(p, scope, date, "child", null);
-        Map<String, Object> path = views.path(p, scope, date, 0, 25);
+        Map<String, Object> head = views.headline(p, scope, date, c0);
+        Map<String, Object> contrib = views.contributions(p, scope, date, "child", null, c0);
+        Map<String, Object> path = views.path(p, scope, date, 0, 25, c0);
         Map<String, Object> c = new LinkedHashMap<>();
         c.put("scope", scope);
         c.put("canonical", s.res().canonical());
         c.put("label", s.label());
         c.put("kind", s.kind());
         c.put("businessDate", s.date().date().toString());
+        c.put("currency", c0);
         c.put("capturedAt", Instant.now().toString());
         c.put("owner", p.user());
         c.put("sharedWith", List.of());
@@ -90,6 +97,7 @@ final class VarCaptures {
         svc.audit(p, "var-capture", s, "capture=" + id);
         Map<String, Object> out = new LinkedHashMap<>();
         out.put("id", id);
+        out.put("currency", c0);
         out.put("capturedAt", c.get("capturedAt"));
         out.put("var", c.get("var"));
         out.put("es", c.get("es"));
@@ -134,27 +142,34 @@ final class VarCaptures {
     Map<String, Object> compare(Principal p, String a, String b) {
         Map<String, Object> ca = get(p, a);
         Map<String, Object> cb;
+        String ccy = currency(ca);
         if (b == null || b.isBlank() || b.equalsIgnoreCase("now")) {
             String scope = String.valueOf(ca.get("scope"));
-            Map<String, Object> head = views.headline(p, scope, null);
-            Map<String, Object> contrib = views.contributions(p, scope, null, "child", null);
+            Map<String, Object> head = views.headline(p, scope, null, ccy);
+            Map<String, Object> contrib = views.contributions(p, scope, null, "child", null, ccy);
             cb = new LinkedHashMap<>();
             cb.put("id", "now");
             cb.put("scope", scope);
             cb.put("businessDate", head.get("businessDate"));
+            cb.put("currency", ccy);
             cb.put("capturedAt", Instant.now().toString());
             cb.put("var", head.get("var"));
             cb.put("es", head.get("es"));
             cb.put("components", contrib.get("rows"));
-            VarService.Scoped s = svc.scoped(p, scope, null);
+            VarService.Scoped s = svc.scoped(p, scope, null, ccy);
             List<String> members = new ArrayList<>();
             s.set().forEach(o -> members.add(s.date().book().tradeId(o)));
             cb.put("members", members);
             cb.put("memberCount", members.size());
         } else {
             cb = get(p, b);
+            if (!currency(cb).equals(ccy)) {
+                throw new DrishtiException(ErrorCode.BAD_REQUEST, a + " is in " + ccy + " and " + b + " in " + currency(cb)
+                        + ": a compare reads two captures in one currency (capture the scope again with ccy=" + ccy + ")");
+            }
         }
         Map<String, Object> out = new LinkedHashMap<>();
+        out.put("currency", ccy);
         out.put("a", summary(ca));
         out.put("b", summary(cb));
         out.put("varChange", num(cb.get("var")) - num(ca.get("var")));
@@ -181,8 +196,15 @@ final class VarCaptures {
         return out;
     }
 
+    /** A capture's reporting currency (one written before 2.9.4 is in USD). */
+    static String currency(Map<String, Object> c) {
+        Object v = c.get("currency");
+        return v == null || String.valueOf(v).isBlank() ? VarDate.USD : String.valueOf(v);
+    }
+
     private static Map<String, Object> summary(Map<String, Object> c) {
         Map<String, Object> m = new LinkedHashMap<>();
+        m.put("currency", currency(c));
         for (String f : List.of("id", "scope", "label", "businessDate", "capturedAt", "owner", "note", "var", "es", "memberCount", "dataVersion")) {
             if (c.containsKey(f)) {
                 m.put(f, c.get(f));
@@ -203,6 +225,7 @@ final class VarCaptures {
         for (String f : List.of("id", "scope", "label", "businessDate", "capturedAt", "owner", "note", "var", "es", "dataVersion", "scenarioSet")) {
             sb.append("# ").append(f).append(": ").append(String.valueOf(c.get(f)).replace('\n', ' ')).append('\n');
         }
+        sb.append("# currency: ").append(currency(c)).append('\n');
         if ("components".equals(part)) {
             sb.append("key,label,standalone_var,component_var,component_es,pct_of_var,incremental_var\n");
             for (Map<String, Object> r : (List<Map<String, Object>>) c.getOrDefault("components", List.of())) {
