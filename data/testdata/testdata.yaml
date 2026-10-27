@@ -19680,89 +19680,6 @@ datasets:
     files:
     - changes-2026-09-30.jsonl.gz
     bytes: 622130
-- folder: market-risk/risk-hierarchy
-  pack: market-risk
-  kind: risk-hierarchy
-  connector: risk-store
-  key: NODE_ID
-  dated-by: BUSINESS_DATE
-  first-date: '2026-09-30'
-  last-date: '2026-09-30'
-  documents: 88
-  files:
-  - cob-2026-09-30.jsonl.gz
-  bytes: 2130
-- folder: market-risk/scenario-set
-  pack: market-risk
-  kind: scenario-set
-  connector: risk-store
-  key: SCENARIO_SET_ID
-  dated-by: BUSINESS_DATE
-  first-date: '2026-09-30'
-  last-date: '2026-09-30'
-  documents: 1
-  files:
-  - cob-2026-09-30.jsonl.gz
-  bytes: 1399
-- folder: market-risk/pnl-vector
-  pack: market-risk
-  kind: pnl-vector
-  connector: risk-store
-  key: VECTOR_ID
-  dated-by: BUSINESS_DATE
-  first-date: '2026-09-30'
-  last-date: '2026-09-30'
-  documents: 8233
-  files:
-  - cob-2026-09-30.part-001.jsonl.gz
-  - cob-2026-09-30.part-002.jsonl.gz
-  - cob-2026-09-30.part-003.jsonl.gz
-  - cob-2026-09-30.part-004.jsonl.gz
-  - cob-2026-09-30.part-005.jsonl.gz
-  - cob-2026-09-30.part-006.jsonl.gz
-  - cob-2026-09-30.part-007.jsonl.gz
-  - cob-2026-09-30.part-008.jsonl.gz
-  - cob-2026-09-30.part-009.jsonl.gz
-  - cob-2026-09-30.part-010.jsonl.gz
-  bytes: 13442175
-- folder: market-risk/scenario-pv
-  pack: market-risk
-  kind: scenario-pv
-  connector: risk-store
-  key: SCENARIO_PV_ID
-  dated-by: BUSINESS_DATE
-  first-date: '2026-09-30'
-  last-date: '2026-09-30'
-  documents: 1339
-  files:
-  - cob-2026-09-30.part-001.jsonl.gz
-  - cob-2026-09-30.part-002.jsonl.gz
-  - cob-2026-09-30.part-003.jsonl.gz
-  bytes: 2769177
-- folder: market-risk/fx-scenario
-  pack: market-risk
-  kind: fx-scenario
-  connector: risk-store
-  key: FX_SCENARIO_ID
-  dated-by: BUSINESS_DATE
-  first-date: '2026-09-30'
-  last-date: '2026-09-30'
-  documents: 6
-  files:
-  - cob-2026-09-30.jsonl.gz
-  bytes: 16315
-- folder: market-risk/portfolio
-  pack: market-risk
-  kind: portfolio
-  connector: risk-store
-  key: PORTFOLIO_ID
-  dated-by: BUSINESS_DATE
-  first-date: '2026-09-30'
-  last-date: '2026-09-30'
-  documents: 28
-  files:
-  - cob-2026-09-30.jsonl.gz
-  bytes: 1753
 - folder: core/trader
   pack: core
   kind: trader
@@ -20189,6 +20106,89 @@ datasets:
     files:
     - changes-2026-09-30.jsonl.gz
     bytes: 20
+- folder: market-risk/risk-hierarchy
+  pack: market-risk
+  kind: risk-hierarchy
+  connector: risk-store
+  key: NODE_ID
+  dated-by: BUSINESS_DATE
+  first-date: '2026-09-30'
+  last-date: '2026-09-30'
+  documents: 88
+  files:
+  - cob-2026-09-30.jsonl.gz
+  bytes: 2130
+- folder: market-risk/scenario-set
+  pack: market-risk
+  kind: scenario-set
+  connector: risk-store
+  key: SCENARIO_SET_ID
+  dated-by: BUSINESS_DATE
+  first-date: '2026-09-30'
+  last-date: '2026-09-30'
+  documents: 1
+  files:
+  - cob-2026-09-30.jsonl.gz
+  bytes: 1399
+- folder: market-risk/pnl-vector
+  pack: market-risk
+  kind: pnl-vector
+  connector: risk-store
+  key: VECTOR_ID
+  dated-by: BUSINESS_DATE
+  first-date: '2026-09-30'
+  last-date: '2026-09-30'
+  documents: 8233
+  files:
+  - cob-2026-09-30.part-001.jsonl.gz
+  - cob-2026-09-30.part-002.jsonl.gz
+  - cob-2026-09-30.part-003.jsonl.gz
+  - cob-2026-09-30.part-004.jsonl.gz
+  - cob-2026-09-30.part-005.jsonl.gz
+  - cob-2026-09-30.part-006.jsonl.gz
+  - cob-2026-09-30.part-007.jsonl.gz
+  - cob-2026-09-30.part-008.jsonl.gz
+  - cob-2026-09-30.part-009.jsonl.gz
+  - cob-2026-09-30.part-010.jsonl.gz
+  bytes: 13442175
+- folder: market-risk/scenario-pv
+  pack: market-risk
+  kind: scenario-pv
+  connector: risk-store
+  key: SCENARIO_PV_ID
+  dated-by: BUSINESS_DATE
+  first-date: '2026-09-30'
+  last-date: '2026-09-30'
+  documents: 1339
+  files:
+  - cob-2026-09-30.part-001.jsonl.gz
+  - cob-2026-09-30.part-002.jsonl.gz
+  - cob-2026-09-30.part-003.jsonl.gz
+  bytes: 2769177
+- folder: market-risk/fx-scenario
+  pack: market-risk
+  kind: fx-scenario
+  connector: risk-store
+  key: FX_SCENARIO_ID
+  dated-by: BUSINESS_DATE
+  first-date: '2026-09-30'
+  last-date: '2026-09-30'
+  documents: 6
+  files:
+  - cob-2026-09-30.jsonl.gz
+  bytes: 16315
+- folder: market-risk/portfolio
+  pack: market-risk
+  kind: portfolio
+  connector: risk-store
+  key: PORTFOLIO_ID
+  dated-by: BUSINESS_DATE
+  first-date: '2026-09-30'
+  last-date: '2026-09-30'
+  documents: 28
+  files:
+  - cob-2026-09-30.jsonl.gz
+  bytes: 1753
 - folder: counterparty-risk/simulation-run
   pack: counterparty-risk
   kind: simulation-run
