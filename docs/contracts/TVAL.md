@@ -455,12 +455,14 @@ MtM day by day (`_meta.walk.MTM`); `PNL_1D` is **not** walked in the daily files
 | `TvalApiTest` | paging is exact, sort stable, FX conversion, `422` without a rate, aggregate-only refusals |
 | Guard test (README section 14) | `trade-valuation` absent; `MTM_TOTAL`-like computed columns absent from input tables |
 
-### 13.4 What the current data shows (checked 2026-10-25)
+### 13.4 What the current data shows (checked 2026-10-26, 2.9.2)
 
-- The 2026-09-30 file holds 15,000 valuations (CALYPSO 5,000, MUREX 5,000, ENDUR 5,000), every status included (`CANCELLED` 195,
-  `MATURED` 2,249). Σ MTM = 2,796,077,089 USD; Σ PNL_1D = 91,932,705 USD.
-- **`PNL_1D` does not reconcile to the MtM:** `TVAL-1000001` moves from 4,091,839 (2026-09-29) to 4,121,280 (2026-09-30), +29,441,
-  while its `PNL_1D` is −277,804 on both days. The demo walks the MtM only.
+- The 2026-09-30 file holds 15,000 valuations (CALYPSO 5,000, MUREX 5,000, ENDUR 5,000), every status included (`CANCELLED` 2,352,
+  `MATURED` 2,249). Σ MTM = 3,210,381,877 USD; Σ PNL_1D = 90,804,863 USD. Since 2.9.2 each valuation values its trade's version of the
+  day: its `TRADE_STATUS` is the trade's, and `NOTIONAL`, `MTM`, `PNL_1D` and `DV01` follow the first leg's notional
+  (`TVAL-1000001`: AMENDED, notional 209,962,179, as the trade's version 7; it valued version 1 at 167,969,743 before).
+- **`PNL_1D` does not reconcile to the MtM:** `TVAL-1000001` moves from 5,114,799 (2026-09-29) to 5,151,600 (2026-09-30), +36,801,
+  while its `PNL_1D` is −347,255 on both days. The demo walks the MtM only.
 - The desks `DESK-MM` and `DESK-SFT` appear on no valuation; all 5,000 ENDUR valuations are on `DESK-COMM` by construction.
 - The pack's sample (765 records) has `NETTING_SET` empty; the test data has it filled.
 

@@ -97,7 +97,7 @@ def main(argv=None) -> int:
     out = Path(a.out)
     H.PART_BYTES = int(a.part_mb * 1024 * 1024)
     days = H.Days(business_days(a.days))
-    u = UV.Universe(a.per_system).build()
+    u = UV.Universe(a.per_system).build(days)          # the documents follow each trade's version on the last day
     print(f"universe: {sum(len(b) for b in u.trades.values()):,} trades, {sum(len(v) for v in u.docs.values()):,} other documents "
           f"({time.monotonic() - started:.0f} s)")
     for sub in [d for d in out.iterdir() if d.is_dir() and d.name not in KEEP] if out.exists() else []:   # ours; README.md and the snapshot stay
@@ -124,7 +124,8 @@ def main(argv=None) -> int:
         since = {f"TVAL-{tid}": i for tid, i in booked.items()} if kind == "trade-valuation" else None
         members = booked if kind == "netting-set" else None
         folder = f"{pack}/{kind}"
-        hist = H.DatasetHistory(out / folder, key, days).write(H.doc_states(kind, docs, days, since, members, market))
+        versions = H.valuation_versions(u.timeline) if kind == "trade-valuation" else None
+        hist = H.DatasetHistory(out / folder, key, days).write(H.doc_states(kind, docs, days, since, members, market, versions))
         datasets.append({"folder": folder, "pack": pack, "kind": kind, "connector": connector, "key": key, **hist})
     # the VaR engine's data (positions netting the trades just written, a P&L vector per trade, hierarchies, the nodes' history,
     # portfolios): tools/packgen/var/make_var_data.py, dated by its documents

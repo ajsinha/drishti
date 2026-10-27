@@ -240,7 +240,10 @@ The security master's stored `BETA` (1.28 for Novatek) is gone. The equity page'
 for the equity's beta against its index (`EQUITY_INDEX`: EQX-NDX), the regression of the two daily log return series on the dates both
 have: over the 29 returns to 2026-09-30, **−0.07** with a correlation of −0.03. The demo's prices are independent synthetic walks, so
 their measured betas are near zero; the stored ones were set by hand. An equity whose record names no index (EQ-CSCA, EQ-LUMN) gets a
-refusal in words instead of a number. `EQB EQ-NVTK~window=20` takes the last 20 returns.
+refusal in words instead of a number. `EQB EQ-NVTK~window=20` takes the last 20 returns. `EQB` has its own page since 2.9.2
+(`config/packs/market-data/sutras/market-data/equity-beta.v1.sutra.yaml`): the beta, correlation and R² in the strip to 2 decimals, and
+the regression to 4 (beta −0.0725, alpha −0.0881% a day, correlation −0.0333, R² 0.0011, volatility 26.72% against the index's 12.27%),
+where the inferred layout had rounded them to whole numbers ("0").
 
 ## 9. Old ids, links and commands
 

@@ -125,8 +125,8 @@ links:  COUNTERPARTY → counterparty, AGREEMENT → agreement, CSA → csa, CRE
 **One trade, walked along the links.** Each step is a click on a link field, or the command beside it:
 
 ```text
-TRD CLY-4000879           a CALYPSO repurchase agreement, EUR 880,079,000, book BOOK-SFT-3, booked by LE-FRA, counterparty CP-ALDERSHOT
- └─ NSET NS-ALDERSHOT-FRA  its netting set: Aldershot's trades booked in Frankfurt (43 trades)
+TRD CLY-4003028           a CALYPSO reverse repo, USD 994,297,500, book BOOK-SFT-1, booked by LE-FRA, counterparty CP-ALDERSHOT
+ └─ NSET NS-ALDERSHOT-FRA  its netting set: Aldershot's live trades booked in Frankfurt (35 trades)
      ├─ CSA CSA-ALDERSHOT  the collateral terms: thresholds 10m each way, MTA 500,000, MPOR 10 business days
      │   └─ AGR AGR-ALDERSHOT-ISDA   the ISDA 2002 Master, English law, close-out netting enforceable
      ├─ COLL COLL-ALDERSHOT-FRA     the collateral held and posted for this set
@@ -137,10 +137,11 @@ TRD CLY-4000879           a CALYPSO repurchase agreement, EUR 880,079,000, book 
 Five packs (trading, counterparty-risk, core, world-economy, and market-data for the credit curve) answer that one path, each from its
 own source, joined only by ids that the contracts declare as links.
 
-Read on the demo lake on business date **2026-10-26**. The walk also shows why the links matter: the trade page says
-`CLY-4000879` is **CANCELLED** (version 4), while its netting set still lists it as live and the exposure run still carries it (48% of
-the set's expected exposure, [Counterparty credit risk](counterparty-credit-risk.md#4-a-worked-example-on-the-demo-data)). Each record is
-right for its own source; only following the link shows that the sources disagree.
+Read on the demo lake on business date **2026-10-26**. The walk also shows why the links matter: the netting set lists 35 member
+trades, but 13 of them matured between the test data's own date and the demo's (their maturities were not moved with the dates), so the
+exposure run carries 22 ([Counterparty credit risk](counterparty-credit-risk.md#4-a-worked-example-on-the-demo-data)). Each record is
+right for its own source; only following the link shows that the sources describe different populations. (Until 2.9.2 a cancelled
+trade, `CLY-4000879`, was still listed as a live member: a netting set now holds the booking system's live trades only.)
 
 ## 5. Questions to ask your data
 

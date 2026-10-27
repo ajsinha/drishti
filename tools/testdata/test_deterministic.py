@@ -42,7 +42,7 @@ sys.path.insert(0, {here!r})
 import history as H, make_testdata as MT, universe as UV
 out = sys.argv[1]
 days = H.Days(MT.business_days(12))
-u = UV.Universe(400).build()
+u = UV.Universe(400).build(days)
 for kind, folder in (("counterparty", "core/counterparty"), ("netting-set", "counterparty-risk/netting-set")):
     docs = u.docs[kind]
     H.DatasetHistory(__import__("pathlib").Path(out) / folder, MT.key_of(next(iter(docs.values()))), days).write(H.doc_states(kind, docs, days))

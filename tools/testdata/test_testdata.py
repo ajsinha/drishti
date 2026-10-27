@@ -203,6 +203,49 @@ class TestData(unittest.TestCase):
         uens = [d["UEN"] for d in cps.values()]
         self.assertEqual(len(uens), len(set(uens)), "UEN unique")
 
+    def latest_trades(self) -> dict[str, dict]:
+        out = {}
+        for system in ("endur", "calypso", "murex"):
+            out.update({str(t["TRADE_ID"]): t for t in rebuild(f"trades/{system}", "TRADE_ID", self.dates)})
+        return out
+
+    def test_a_netting_set_holds_live_trades_only(self):
+        """A cancelled or matured trade (its latest version in the booking system) is in no netting set's members or rows, so it
+        neither nets nor drives exposure: the live statuses are the market-risk pack's live-statuses, VaR's (NEW, VALIDATED, AMENDED)."""
+        trades = self.latest_trades()
+        live = {"NEW", "VALIDATED", "AMENDED"}
+        dead = []
+        for s in rebuild("counterparty-risk/netting-set", "NETTING_SET_ID", self.dates):
+            ids = set(s["TRADE_IDS"]) | {r["TRADE_ID"] for r in s.get("TRADES") or []}
+            dead += [f"{s['NETTING_SET_ID']} {t} {trades[t]['TRADE_STATUS']}" for t in sorted(ids) if trades[t]["TRADE_STATUS"] not in live]
+            self.assertEqual(s["TRADE_COUNT"], len(s["TRADE_IDS"]), s["NETTING_SET_ID"])
+        self.assertEqual(dead[:5], [], f"{len(dead)} members not live")
+        self.assertEqual(trades["CLY-4000879"]["TRADE_STATUS"], "CANCELLED")         # the Knowledge writer's case (2026-10-26)
+
+    def test_a_valuation_values_the_trades_latest_version(self):
+        """TVAL-<id> carries its trade's status and first-leg notional of the day: never an older version's (TVAL-1000001, AMENDED v7)."""
+        trades = self.latest_trades()
+        vals = rebuild("market-risk/trade-valuation", "VALUATION_ID", self.dates)
+        wrong = [v["VALUATION_ID"] for v in vals if v["TRADE_STATUS"] != trades[str(v["TRADE_ID"])]["TRADE_STATUS"]]
+        self.assertEqual(wrong[:5], [], f"{len(wrong)} valuations of an older status")
+        v = next(v for v in vals if v["VALUATION_ID"] == "TVAL-1000001")
+        t = trades["1000001"]
+        self.assertEqual((v["TRADE_STATUS"], v["NOTIONAL"]), (t["TRADE_STATUS"], t["LEGS"][0]["NOTIONAL"]))
+        # an earlier day: the valuation of that day values the version of that day
+        i = len(self.dates) // 2
+        then = {str(x["TRADE_ID"]): x for s in ("endur", "calypso", "murex") for x in rebuild(f"trades/{s}", "TRADE_ID", self.dates, i)}
+        old = [v for v in rebuild("market-risk/trade-valuation", "VALUATION_ID", self.dates, i)]
+        self.assertEqual([v["VALUATION_ID"] for v in old if v["TRADE_STATUS"] != then[str(v["TRADE_ID"])]["TRADE_STATUS"]][:5], [])
+
+    def test_an_fx_spot_value_date_follows_its_business_date(self):
+        """SPOT_DATE (T+2) and an IR curve's pillar maturities move with the day: the 2026-09-29 spot does not settle on 09-30's date."""
+        last = {d["PAIR"]: d for d in rebuild("market-data/fx-spot", "PAIR", self.dates)}
+        before = {d["PAIR"]: d for d in rebuild("market-data/fx-spot", "PAIR", self.dates, len(self.dates) - 2)}
+        pair = "FX-EURUSD" if "FX-EURUSD" in last else sorted(last)[0]
+        self.assertGreater(last[pair]["SPOT_DATE"], self.dates[-1])
+        self.assertLess(before[pair]["SPOT_DATE"], last[pair]["SPOT_DATE"])
+        self.assertGreater(before[pair]["SPOT_DATE"], self.dates[-2])
+
     def test_the_captured_market_snapshot_covers_every_company_and_topic(self):
         snaps = {ds["kind"]: ds for ds in self.m["datasets"] if "snapshot" in ds and ds["pack"] == "news-and-markets"}
         if not snaps:

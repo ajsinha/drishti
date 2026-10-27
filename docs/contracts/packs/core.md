@@ -365,7 +365,6 @@ The bank's own booking entity.
 |---|---|---|---|---|---|---|
 | `BOOK` | id | required |  | Book: the book it refers to | `BOOK-SFT-1` (pattern `^BOOK-`) | `book` |
 | `DESK` | id | required |  | Desk: the desk it refers to | `Repo and securities lending` | `desk` |
-| `VAR` | amount | required |  | — | `14855706` |  |
 | `PNL` | amount | required |  | — | `-327989` |  |
 | `MTM` | amount | required |  | — | `8879873` |  |
 | `TRADES` | integer | required |  | — | `17` |  |
@@ -386,6 +385,7 @@ The bank's own booking entity.
 
 **Notes**
 
+- The legal entity's VaR and its books' are the VaR engine's (LE:<id>, BOOK:<id>), computed as the page opens (VAR_ENGINE); BOOKS[].VAR left the record in 2.9.2 (a stored figure, never the engine's).
 - Dated by the lake's business_date partition: `drishti.py lake build` writes each test-data file's day into it; the documents carry no date field of their own.
 
 **To review (7)**
@@ -394,9 +394,9 @@ The bank's own booking entity.
 - source 'entity-master' is the test data's _meta.source (synthetic): name the production system that delivers it.
 - due time of each business date is not known: state it (for example, by 06:00 New York the next business day).
 - enum values inferred from the data, not from a glossary: NAME, LEI, REGULATOR: confirm they are closed lists.
-- number types decided by the field's name: BOOKS[].VAR amount, BOOKS[].PNL amount, BOOKS[].MTM amount: confirm amount, rate or integer.
-- no unit stated for the amounts BOOKS[].VAR, BOOKS[].PNL, BOOKS[].MTM (docs/contracts/README.md section 7: USD unless stated): confirm the currency.
-- no description in about.yaml or the Sutras for BOOKS[].VAR, BOOKS[].PNL, BOOKS[].MTM, BOOKS[].TRADES: write them in the pack's config/about.yaml glossary.
+- number types decided by the field's name: BOOKS[].PNL amount, BOOKS[].MTM amount: confirm amount, rate or integer.
+- no unit stated for the amounts BOOKS[].PNL, BOOKS[].MTM (docs/contracts/README.md section 7: USD unless stated): confirm the currency.
+- no description in about.yaml or the Sutras for BOOKS[].PNL, BOOKS[].MTM, BOOKS[].TRADES: write them in the pack's config/about.yaml glossary.
 
 ## BOOK: Book (`book`)
 

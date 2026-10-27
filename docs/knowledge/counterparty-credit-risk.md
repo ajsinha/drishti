@@ -94,7 +94,7 @@ the expected loss from EE; **regulatory capital** under the internal model metho
 | <a id="term-exposure-profile"></a>**Exposure profile** | EE, ENE, EEE and PFE of a scope at each future date (1W to 10Y): the shape of the exposure over time. Computed when asked (kind exposure-result). | `EXP NS-ALDERSHOT-LDN <GO>` · `drishti.py exposure profile NSET:NS-ALDERSHOT-LDN` |
 | <a id="term-netting-benefit"></a>**Netting benefit** | How much lower a netting set's exposure is than the sum of its trades' exposures alone, because gains and losses on its trades offset. | `drishti.py exposure parts NSET:NS-ALDERSHOT-LDN --by trade` |
 | <a id="term-collateral-effect"></a>**Collateral effect** | The change in EE that collateral makes at the peak date. Collateral held lowers exposure; collateral the bank has posted can raise it. | `EXP NS-ALDERSHOT-LDN <GO>` |
-| <a id="term-exposure-what-if"></a>**Exposure what-if** | What a new trade (or an unwind) would do to a counterparty's PFE before it is dealt: exactly on the paths, or by a conservative add-on proxy. | `drishti.py exposure whatif CPTY:CP-ALDERSHOT --like CLY-4000879 --factor -1 --set NS-ALDERSHOT-FRA` |
+| <a id="term-exposure-what-if"></a>**Exposure what-if** | What a new trade (or an unwind) would do to a counterparty's PFE before it is dealt: exactly on the paths, or by a conservative add-on proxy. | `drishti.py exposure whatif CPTY:CP-ALDERSHOT --like CLY-4003028 --factor -1 --set NS-ALDERSHOT-FRA` |
 | <a id="term-official-exposure"></a>**Official exposure** | The end-of-day exposure figures of every netting set and counterparty, captured and published once a day as the record of the date. | `drishti.py exposure official` |
 | <a id="term-cva"></a>**CVA** (credit valuation adjustment) | The market price of the counterparty's possible default, taken off the trades' value: roughly loss given default times EE weighted by default probability. Stored from an upstream XVA engine; Drishti does not compute it yet. | `CVA CVA-ALDERSHOT-FRA <GO>` |
 | <a id="term-dva"></a>**DVA** (debit valuation adjustment) | CVA's mirror: the value of the bank's own possible default. FVA prices funding and KVA the cost of capital. All stored on the CVA record; not computed by Drishti. | `CVA CVA-ALDERSHOT-FRA <GO>` |
@@ -161,44 +161,47 @@ enforceable) and one CSA (`CSA-ALDERSHOT`: thresholds 10 million each way, MTA 5
 
 | Scope | Trades | CE | EPE | Peak PFE 95% | at |
 |---|---|---|---|---|---|
-| `NSET:NS-ALDERSHOT-NY` | 305 | 188.5 m | 39.8 m | 353.3 m | 2W |
-| `NSET:NS-ALDERSHOT-LDN` | 194 | 0 | 15.3 m | 78.7 m | 2M |
-| `NSET:NS-ALDERSHOT-TKY` | 22 | 4.3 m | 11.7 m | 56.9 m | 2M |
-| `NSET:NS-ALDERSHOT-FRA` | 43 | 1.7 m | 2.8 m | 29.4 m | 2W |
-| **`CPTY:CP-ALDERSHOT`** | 564 | **194.4 m** | 67.9 m | **395.3 m** | 2W |
+| `NSET:NS-ALDERSHOT-NY` | 233 | 226.4 m | 35.9 m | 355.3 m | 2W |
+| `NSET:NS-ALDERSHOT-LDN` | 141 | 0 | 14.8 m | 85.1 m | 2M |
+| `NSET:NS-ALDERSHOT-TKY` | 21 | 5.0 m | 12.0 m | 61.4 m | 2M |
+| `NSET:NS-ALDERSHOT-FRA` | 22 | 7.2 m | 2.2 m | 23.8 m | 2W |
+| **`CPTY:CP-ALDERSHOT`** | 417 | **238.5 m** | 63.5 m | **395.3 m** | 2W |
 
-- **CE adds up**: 188.5 + 0 + 4.3 + 1.7 = 194.4 million.
-- **PFE does not**: the four peaks sum to 518.4 million; the counterparty's peak is 395.3 million. The sets' bad paths and dates differ.
-- **Where the peak comes from** (`drishti.py exposure parts CPTY:CP-ALDERSHOT --by netting-set`): NY 346.4 m (87.6%), FRA 20.3 m,
-  TKY 16.1 m, LDN 12.5 m. LDN's own peak is 78.7 million, but it peaks at 2M; at the counterparty's peak (2W) it adds little.
-- Its limit `LIM-ALDERSHOT` is 8,843 million on peak PFE: 4.5% used.
+The trades are the live ones (status `NEW`, `VALIDATED` or `AMENDED`) that have not matured by 2026-10-26.
 
-**Collateral that raises exposure.** `EXP NS-ALDERSHOT-LDN <GO>`, the Collateral tab. The set's trades are worth −122.4 million to the
-bank today (the bank owes Aldershot) and the bank has *posted* 98.8 million of collateral (`COLL COLL-ALDERSHOT-LDN <GO>`). At the peak (2M) EE is **19.0 million with collateral
-against 4.0 million without: +380%**. On paths where the trades swing in the bank's favour, the bank is owed the trades' value *and*
-its posted collateral back until the next call settles. After a year the effect turns: at 5Y EE is 6.9 million with collateral against
-80.8 million without.
+- **CE adds up**: 226.4 + 0 + 5.0 + 7.2 = 238.5 million.
+- **PFE does not**: the four peaks sum to 525.5 million; the counterparty's peak is 395.3 million. The sets' bad paths and dates differ.
+- **Where the peak comes from** (`drishti.py exposure parts CPTY:CP-ALDERSHOT --by netting-set`): NY 348.8 m (88.2%), TKY 22.5 m,
+  FRA 15.2 m, LDN 8.8 m. LDN's own peak is 85.1 million, but it peaks at 2M; at the counterparty's peak (2W) it adds little.
+- Its limit `LIM-ALDERSHOT` is 7,980 million on peak PFE: 5.0% used.
 
-**Netting at work.** `drishti.py exposure parts NSET:NS-ALDERSHOT-LDN --by trade --figure EE`: at 2M a convertible bond adds 37.5
-million to the set's EE of 19.0 million and an equity total return swap takes away 39.0 million. Alone, each would be a large exposure;
-together they largely cancel.
+**Collateral that raises exposure.** `EXP NS-ALDERSHOT-LDN <GO>`, the Collateral tab. The set's trades are worth −139.1 million to the
+bank today (the bank owes Aldershot) and the bank has *posted* 112.2 million of collateral (`COLL COLL-ALDERSHOT-LDN <GO>`). At the peak (2M) EE is **19.5 million with collateral
+against 3.5 million without: +452%**. On paths where the trades swing in the bank's favour, the bank is owed the trades' value *and*
+its posted collateral back until the next call settles. After a year the effect turns: at 5Y EE is 6.8 million with collateral against
+86.7 million without.
 
-**A group.** `drishti.py exposure show GROUP:GRP-MERIDIAN`: Meridian Life Assurance (peak PFE 148.5 m) and Meridian Reinsurance (200.6 m)
-together peak at **271.2 million**, less than the 349.1 million their peaks add to.
+**Netting at work.** `drishti.py exposure parts NSET:NS-ALDERSHOT-LDN --by trade --figure EE`: at 2M a convertible bond adds 31.7
+million to the set's EE of 19.5 million, while a quanto option and a basket swap take away 14.2 and 13.0 million. Alone, each would be
+a large exposure; together they largely cancel.
 
-**The bank and a legal entity.** `EXP BANK <GO>`: peak PFE 2,810.5 million at 2W, EPE 922.3 million, CE 1,538.7 million.
-`EXP LE:LE-LDN <GO>` and its counterparty board: peak PFE 558.4 million at 2M; the largest contributors are Tokai Mutual Trust Bank
-(69.2 m), Aurora Sovereign Wealth Fund (50.2 m) and Pinnacle Credit Partners (48.3 m).
+**A group.** `drishti.py exposure show GROUP:GRP-MERIDIAN`: Meridian Life Assurance (peak PFE 151.3 m) and Meridian Reinsurance (282.0 m)
+together peak at **357.0 million**, less than the 433.3 million their peaks add to.
 
-**What the data hasn't told you.** `NSET NS-ALDERSHOT-FRA <GO>` lists 43 member trades, all *LIVE*, and the largest contributor to
-the set's EE is `CLY-4000879`, a repo that makes **48%** of it. Open the trade itself (`TRD CLY-4000879 <GO>`): the booking system says
-**CANCELLED** (version 4). The same list shows trades maturing on 2026-10-07 and 2026-10-12 as live on 2026-10-26. The exposure run
-and the netting set describe a book the booking system no longer holds; the explorer's numbers are right for its inputs, and the
-inputs are stale. (In the demo this comes from moving the test data's dates to today; in a bank it is exactly the reconciliation break
-a credit officer needs to see.)
+**The bank and a legal entity.** `EXP BANK <GO>`: peak PFE 2,893.9 million at 2W, EPE 974.4 million, CE 1,730.4 million, over all 76
+netting sets (8,302 live trades). `EXP LE:LE-LDN <GO>` and its counterparty board: peak PFE 694.4 million at 1M; the largest
+contributors are Summit Clearing (205.9 m), Kestrel Global Macro Fund (78.8 m) and Northbridge Capital (52.3 m).
 
-The netting-set record itself carries a stored `UTILISATION` of **66%** of a 4.2 billion limit for `NS-ALDERSHOT-LDN`, from the
-upstream engine; the engine's own peak PFE of 78.7 million is under 2% of that limit. A stored figure and a computed one side by side
+**What the data hasn't told you.** The test data's dates were moved to today, but its trades' maturities were not: `NSET
+NS-ALDERSHOT-FRA <GO>` lists 35 member trades, all live in the booking system, of which 13 matured between the data's own date
+(2026-09-30) and 2026-10-26 (`CLY-4004249` on 2026-10-07, `CLY-4000583` on 2026-10-15 …). The exposure run of the demo leaves them
+out (22 trades have paths), so the explorer and the netting-set record count different populations. In a bank this is the
+reconciliation a credit officer runs every morning: the record lists what the upstream system last sent, the engine what is live on
+the date. (Until 2.9.2 a cancelled trade, `CLY-4000879`, was still a member and made half of this set's EE: a netting set now holds
+live trades only.)
+
+The netting-set record itself carries a stored `UTILISATION` of **66%** of a 3.6 billion limit for `NS-ALDERSHOT-LDN`, from the
+upstream engine; the engine's own peak PFE of 85.1 million is under 3% of that limit. A stored figure and a computed one side by side
 on one page: the computed one is made from the paths you can see, the stored one from whatever the upstream system had.
 
 ## 5. Questions to ask your data
@@ -211,7 +214,7 @@ on one page: the computed one is made from the paths you can see, the stored one
 | Is collateral helping or hurting? | `EXP NS-ALDERSHOT-LDN <GO>` → the Collateral tab | the effect of collateral at the peak; posted collateral can raise exposure |
 | How much does netting save? | `drishti.py exposure parts NSET:NS-ALDERSHOT-LDN --by trade` | each trade alone against its contribution inside the set |
 | Which asset class makes the exposure? | `drishti.py exposure parts CPTY:CP-ALDERSHOT --by asset` | contributions by asset class |
-| Would this unwind free up limit before I deal? | `drishti.py exposure whatif CPTY:CP-ALDERSHOT --like CLY-4000879 --factor -1 --set NS-ALDERSHOT-FRA` | PFE before and after, by the exact paths or the add-on proxy |
+| Would this unwind free up limit before I deal? | `drishti.py exposure whatif CPTY:CP-ALDERSHOT --like CLY-4003028 --factor -1 --set NS-ALDERSHOT-FRA` | PFE before and after, by the exact paths or the add-on proxy |
 | Who is in breach of their limit? | `drishti.py exposure tree` | peak PFE against each counterparty's limit |
 | How spread out could the exposure be in a year? | `drishti.py exposure distribution NSET:NS-ALDERSHOT-NY --at 1Y` | the histogram of exposures over the paths, the share at zero |
 | What are the terms we trade under with them? | `AGR AGR-ALDERSHOT-ISDA <GO>`, then `CSA CSA-ALDERSHOT <GO>` | governing law, close-out netting, thresholds, MTA, MPOR |

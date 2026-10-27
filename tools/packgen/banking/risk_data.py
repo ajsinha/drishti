@@ -46,9 +46,11 @@ KINDS = [
          [P("table", "bonds", "Bonds outstanding", "$.bonds", [("ISIN", "@.isin", None, None, False), ("Coupon", "@.coupon", "pct2", None, False), ("Maturity", "@.maturity", "date", None, False)], key="F2")],
          links={"creditCurve": ("credit-curve", "Credit curve"), "equity": ("equity", "Equity")}, badge="$.rating"),
     Kind("legal-entity", "LE", "LE-", "Bank legal entity", ORG, "The bank's own booking entity.", "entityId",
-         [("Name", "$.name", None, None, False), ("LEI", "$.lei", None, None, False), ("Jurisdiction", "$.jurisdiction", None, None, False), ("Regulator", "$.regulator", None, None, True)],
+         [("Name", "$.name", None, None, False), ("LEI", "$.lei", None, None, False), ("Jurisdiction", "$.jurisdiction", None, None, False), ("Regulator", "$.regulator", None, None, False),
+          ("VaR 99% 1D (engine)", "$.varEngine.var", "compact", None, True)],
          [P("table", "desks", "Desks", "$.desks", [("Desk", "@.id", None, None, False), ("Name", "@.name", None, None, False)], key="F2"),
-          P("scatter", "riskReturn", "Risk and return (books: VaR against today's P&L, USD)", "$.books", x="var", y="pnl", label="book", fmt="signed0", key="F3",
+          # the books' VaR is the VaR engine's (BOOK:<id>), added under VAR_ENGINE as the page opens; the record stores none (2.9.2)
+          P("scatter", "riskReturn", "Risk and return (books: VaR against today's P&L, USD)", "$.varEngine.books", x="var", y="pnl", label="book", fmt="signed0", key="F3",
             code="RR", opts={"size": "trades", "group": "desk", "xFmt": "compact", "xLabel": "VaR 99% 1D (USD)", "yLabel": "P&L 1D (USD)"})]),
     Kind("agreement", "AGR", "AGR-", "Master agreement", CP, "ISDA, GMRA or GMSLA master agreement with its key elections.", "agreementId",
          [("Type", "$.type", None, None, False), ("Counterparty", "$.counterpartyName", None, None, False), ("Governing law", "$.governingLaw", None, None, False), ("Signed", "$.signed", "date", None, False), ("Close-out netting", "$.closeOutNetting", None, None, True)],

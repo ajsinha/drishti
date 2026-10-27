@@ -278,6 +278,9 @@ form:
   - path: REGULATOR
     label: Regulator
     type: text
+  - path: VAR_ENGINE
+    label: VaR engine
+    type: text
   book:
   - path: BOOK_ID
     label: Book id

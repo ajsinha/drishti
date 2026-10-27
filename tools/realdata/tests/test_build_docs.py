@@ -42,6 +42,16 @@ def test_economy_values_are_the_dataset_values():
     assert e["growthPath"][0]["year"] == "2015" and ECO["economy"]["ECON-USA"]["name"] == "United States"
 
 
+
+def test_economy_debt_is_the_fiscal_records_latest_actual_year():
+    """ECON's debt is FISC's: the IMF series' latest actual year (to 2025), never the WEO's last projection year."""
+    fisc = ECO["fiscal-position"]
+    both = [e for e in ECO["economy"].values() if e.get("fiscal") in fisc and e.get("debtToGdp") is not None]
+    assert len(both) > 150
+    for e in both:
+        assert e["debtToGdp"] == fisc[e["fiscal"]]["debt"] == D.last("debt", e["iso3"], 2025)[1], e["economyId"]
+    assert ECO["economy"]["ECON-GBR"]["debtToGdp"] == fisc["FISC-GBR"]["debt"] and fisc["FISC-GBR"]["year"] == "2025"
+
 def test_links_point_at_documents_that_exist():
     kinds = {k: set(v) for k, v in ECO.items()}
     groups = {f"ECG-{g}" for g in D.G}                    # the country groups are computed from these keys (since 2.9.2)

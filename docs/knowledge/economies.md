@@ -104,6 +104,7 @@ GB. Its `ECONOMY` link is `ECON-GBR`:
 | Real growth | 1.39% | after 0.27% in 2023 and 1.08% in 2024 |
 | Inflation | 3.88% | consumer prices, above the Bank of England's 2% target |
 | Unemployment | 4.75% | ILO estimate |
+| Government debt | 102.3% of GDP | 2025, the same figure as `FISC FISC-GBR` |
 | Current account | −3.13% of GDP | the UK borrows from abroad to pay for it |
 | Region and income group | `ECG-ECS` (Europe and Central Asia), `ECG-HIC` (high income) | its two country groups |
 
@@ -115,10 +116,9 @@ GB. Its `ECONOMY` link is `ECON-GBR`:
 GDP), median inflation 2.34%. The UK grows more slowly and its prices rise faster than the high-income median. `ECG ECG-WLD <GO>`: 213
 economies, 117,327 bn USD, growth 2.80%.
 
-**What the data hasn't told you.** Debt appears twice, and the two disagree: `FISC FISC-GBR <GO>` says 102.3% of GDP for 2025, while
-`ECON ECON-GBR` shows 102.6%. The economy record took the IMF series' *last* year, the projection for 2031, though the record's year
-is 2025. It is the same for 181 of the 189 economies that have both (the United States: 123.9% in 2025 on `FISC`, 142.1% on `ECON`).
-Until the economy record is corrected, read government debt from `FISC`, which carries its year, and its path from the forecast.
+**Debt, twice, one figure.** Debt appears on the economy record and on the fiscal record, and both carry the same year:
+`ECON ECON-GBR` and `FISC FISC-GBR <GO>` both say 102.3% of GDP for 2025 (the United States: 123.9% on both). The economy record takes
+the IMF series' latest *actual* year, never a projection; the path beyond 2025 is on the forecast, `FCST FCST-GBR-WEO <GO>`.
 
 ## 5. Questions to ask your data
 
