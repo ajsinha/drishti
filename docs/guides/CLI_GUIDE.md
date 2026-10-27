@@ -1826,6 +1826,33 @@ Why this layout: Sutra counterparty v1 + inference (a Sutra plus inference for w
 Next: F2 Netting sets; F3 Group hierarchy; F7 Counterparty group; F8 Impact; F9 Raw JSON
 ```
 
+### `convert`: CSV, a JSON array or a folder of `.json` files into JSON Lines
+
+JSON Lines is Drishti's data format ([DATA_FORMATS.md](DATA_FORMATS.md)), and **CSV input is deprecated**, to be removed in a later
+release. `drishti.py convert FILE` (`tools/convertcmd.py`) turns what you have into JSON Lines, one object a line, streaming (a large
+JSON array is never read whole):
+
+```text
+drishti.py convert trades.csv                          trades.jsonl: one line per CSV row, cells typed (numbers, true/false; empty: null)
+drishti.py convert book.json --out book.jsonl.gz       a JSON array: one line per element (one object: one line); .gz gzips
+drishti.py convert data/feeds/settlement               settlement.jsonl beside the folder: one line per <id>.json, the file name as "id"
+drishti.py convert data/feeds/fixing/SOFR-HISTORY.csv --rows-document --out data/feeds/fixing.jsonl
+                                                       one line {"id": "SOFR-HISTORY", "rows": [...]}: the file connector's reading of a
+                                                       CSV feed file, so FIX SOFR-HISTORY opens the same document
+drishti.py convert big.json --out -                    to standard output
+```
+
+| Option | Does |
+|---|---|
+| `--out FILE` | where to write (default: the input's name with `.jsonl`; a folder: `<folder>.jsonl` beside it; `-`: standard output) |
+| `--rows-document` | a CSV file becomes one line, `{"id": <file name>, "rows": [...]}`, as the file connector serves a CSV feed file |
+| `--force` | replace an existing output file |
+
+`drishti.py convert data/feeds/fixing/SOFR-HISTORY.csv --rows-document --out data/feeds/fixing.jsonl` prints
+`data/feeds/fixing.jsonl: 1 lines from data/feeds/fixing/SOFR-HISTORY.csv`. A line that cannot be read stops the run and names it
+(`bad.ndjson:2: ...`); nothing is written then. Exit codes: 0 converted; 1 a file could not be read or the output exists (without
+`--force`); 2 usage or no such file.
+
 ### `history`: an entity over time
 
 `drishti.py history KIND ID` prints one row per business day the entity has data, newest first, a changed cell marked `*`: the same

@@ -2260,7 +2260,7 @@ TLS for `jdbc:postgresql://`: the shared [`tls.*`](#tls--tls-for-connectors) set
 
 ### `file` — JSON or CSV files on disk
 
-Layout: `<root>/<kind>/<id>.json` (or `.csv`), and dated `<root>/<yyyy-MM-dd>/<kind>/<id>.json`.
+Layout: `<root>/<kind>.jsonl` (JSON Lines, one entity a line), `<root>/<kind>/<id>.json` (or `.csv`, deprecated), and dated `<root>/<yyyy-MM-dd>/<kind>/<id>.json`.
 
 | Setting | Default | Meaning |
 |---|---|---|

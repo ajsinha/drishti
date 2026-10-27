@@ -60,7 +60,7 @@ nightly export or reference data kept by hand; for a million entities a day kept
 `<root>/<domain>/<yyyy-MM-dd>/<kind>.jsonl` files (and undated `<root>/<domain>/<kind>.jsonl`, the same for every date), listed every
 `rescan-seconds` (30). The first read of a day indexes it (ids, line offsets and promoted fields); the newest day is indexed in the
 background, older days on first use, and a changed file is re-indexed when next read. Kinds are `snapshot` or `effective`
-(`mode.<kind>`). It also reads the older layout of one file per entity (`<root>/<kind>/<id>.json` or `.csv`, dated
+(`mode.<kind>`). It also reads the older layout of one file per entity (`<root>/<kind>/<id>.json` or `.csv`, CSV deprecated: logged once per file and named in health, dated
 `<root>/<yyyy-MM-dd>/<kind>/<id>.json`), as the public-data feeds use. No time travel: a *known at* read is refused with `DRS-1007`.
 It never writes; `tools/load-files.sh` (`JsonlLoader`) does.
 

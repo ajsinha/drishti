@@ -49,7 +49,8 @@ import java.util.stream.Stream;
  * read per entity and searches, derived kinds, impact and reverse lookups from the columns. See
  * {@code docs/connectors/FILE_CONNECTOR.md}.
  *
- * <p>Also serves feed files from a directory laid out as {@code <root>/<kind>/<id>.json} or {@code .csv}, and, for dated
+ * <p>Also serves feed files from a directory laid out as {@code <root>/<kind>/<id>.json} or {@code .csv} (CSV input is deprecated:
+ * logged once per file and named in health), and, for dated
  * data, {@code <root>/<yyyy-MM-dd>/<kind>/<id>.json}. A read for a business date takes the file from the latest
  * dated folder on or before that date (within {@code lookback-days}), then the undated folder. The generation is
  * the file's modification time in milliseconds, so a rewritten file is newer data.
@@ -90,6 +91,9 @@ public final class FileSourcePlugin implements SourcePlugin {
     /** Days whose file had unreadable lines, duplicate ids, or could not be read: for health and stats. */
     private final java.util.Map<DayKey, JsonlDay.Report> problems = new java.util.concurrent.ConcurrentHashMap<>();
     private final java.util.concurrent.atomic.LongAdder indexBuilds = new java.util.concurrent.atomic.LongAdder();
+    /** The CSV feed files found or read (relative to the root): CSV input is deprecated, each is warned about once and named in health. */
+    private final Set<String> csvFiles = java.util.concurrent.ConcurrentHashMap.newKeySet();
+    private final Set<String> csvWarned = java.util.concurrent.ConcurrentHashMap.newKeySet();
     private static final System.Logger LOG = System.getLogger(FileSourcePlugin.class.getName());
 
     @Override
@@ -201,6 +205,7 @@ public final class FileSourcePlugin implements SourcePlugin {
 
     private DataNode parse(Path p) throws IOException {
         if (p.toString().endsWith(".csv")) {
+            csv(p);
             try (BufferedReader r = Files.newBufferedReader(p, StandardCharsets.UTF_8)) {
                 return CsvReader.read(r);
             }
@@ -208,6 +213,30 @@ public final class FileSourcePlugin implements SourcePlugin {
         try (InputStream in = Files.newInputStream(p)) {
             return context.parseJson(in);
         }
+    }
+
+    /**
+     * A CSV feed file found or read: CSV input is deprecated (docs/guides/DATA_FORMATS.md), so it is logged once per file and named in
+     * health until it is gone. JSON Lines is the format to use; {@code drishti.py convert FILE.csv --rows-document} turns a feed file into one.
+     */
+    private void csv(Path p) {
+        String rel = root.relativize(p.toAbsolutePath().normalize()).toString().replace('\\', '/');
+        csvFiles.add(rel);
+        if (csvWarned.add(rel)) {
+            LOG.log(System.Logger.Level.WARNING, "{0}: {1}: CSV input is deprecated and will be removed in a later release; convert it to "
+                    + "JSON Lines (drishti.py convert {1} --rows-document)", sourceName, rel);
+        }
+    }
+
+    /** What health says about CSV feed files still found (null when there are none). */
+    private String csvNotice() {
+        csvFiles.removeIf(f -> !Files.isRegularFile(root.resolve(f)));
+        if (csvFiles.isEmpty()) {
+            return null;
+        }
+        List<String> names = new java.util.TreeSet<>(csvFiles).stream().toList();
+        return "CSV input is deprecated: " + String.join(", ", names.subList(0, Math.min(3, names.size())))
+                + (names.size() > 3 ? " and " + (names.size() - 3) + " more" : "") + " (convert to JSON Lines: drishti.py convert)";
     }
 
     private boolean effective(String kind) {
@@ -656,6 +685,9 @@ public final class FileSourcePlugin implements SourcePlugin {
                             .forEach(n -> {
                                 String id = n.substring(0, n.lastIndexOf('.'));
                                 hits.add(new EntityHit(EntityRef.of(kind, id), id, kind + " · " + sourceName));
+                                if (n.endsWith(".csv")) {
+                                    csv(kindDir.resolve(n));
+                                }
                             });
                 }
             }
@@ -715,6 +747,9 @@ public final class FileSourcePlugin implements SourcePlugin {
                         String id = n.substring(0, n.lastIndexOf('.'));
                         EntityRef r = EntityRef.of(kind, id);
                         hits.putIfAbsent(r, new EntityHit(r, id, kind + " · " + sourceName));   // a map: a million ids stay linear
+                        if (n.endsWith(".csv")) {
+                            csv(kindDir.resolve(n));
+                        }
                     });
                 }
             }
@@ -764,6 +799,10 @@ public final class FileSourcePlugin implements SourcePlugin {
         String indexNote = datedIdx.enabled() ? datedIdx.index().summary() : null;
         said = new ArrayList<>(said);
         said.addAll(stale(LocalDate.now(java.time.ZoneId.of(businessZone))));
+        String csv = csvNotice();
+        if (csv != null) {
+            said.add(0, csv);                              // first, so the three named always include it
+        }
         if (said.isEmpty()) {
             return indexNote == null ? "UP" : "UP (" + indexNote + ")";
         }

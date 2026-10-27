@@ -420,7 +420,7 @@ it.
 
 ## 13. The older layout: a file per entity
 
-The connector still reads one file per entity, `<root>/<kind>/<id>.json` (or `.csv`) and dated
+The connector still reads one file per entity, `<root>/<kind>/<id>.json` (or `.csv`, deprecated) and dated
 `<root>/<yyyy-MM-dd>/<kind>/<id>.json`, as some public-data feeds use. It suits
 a handful of documents; for more than a few thousand entities a day use JSON lines, since a file per entity means a
 file system entry per entity per day. When a kind has JSON-lines files they are read first.
@@ -474,7 +474,12 @@ The kind is the folder name, the id is the file name without `.json` (or `.csv`)
 }
 ```
 
-A CSV file needs a header row and becomes `{"rows": [...]}`, numbers and booleans typed. The sample feed `make_data.py` and `lake demo` write
+A CSV file needs a header row and becomes `{"rows": [...]}`, numbers and booleans typed. **CSV input is deprecated** (it will be
+removed in a later release; [DATA_FORMATS.md](../guides/DATA_FORMATS.md)): each CSV file found or read logs one warning,
+`feed-file: fixing/X.csv: CSV input is deprecated ...`, and Admin → Health names it, `UP (CSV input is deprecated: fixing/X.csv
+(convert to JSON Lines: drishti.py convert))`, until it is gone. `drishti.py convert fixing/X.csv --rows-document --out fixing.jsonl`
+turns it into the JSON Lines line that serves the same document ([CLI_GUIDE.md](../guides/CLI_GUIDE.md#convert-csv-a-json-array-or-a-folder-of-json-files-into-json-lines)).
+The sample feed `make_data.py` and `lake demo` write
 (nothing under `data/` is in git) is JSON Lines already, `data/feeds/fixing.jsonl`, one fixing series a line:
 
 ```text

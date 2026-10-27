@@ -17,6 +17,14 @@
 
 ## 2.9.4 (unreleased)
 
+- **CSV input deprecated; `drishti.py convert` (2026-10-27; product owner).** The readers keep what they accept (JSON Lines, JSON
+  arrays, per-entity `.json`), and CSV is deprecated, to be removed in a later release. The only CSV reader, the file connector's
+  feed files (`<kind>/<id>.csv`), still serves them, logs one warning per file and names them in Admin → Health
+  (`UP (CSV input is deprecated: fixing/X.csv (convert to JSON Lines: drishti.py convert))`) until they are gone. New
+  `drishti.py convert FILE [--out X.jsonl] [--rows-document] [--force]` (`tools/convertcmd.py`, `tools/test_convert.py` in the
+  drill) turns CSV, a JSON array (streamed), one object, gzip or a folder of `<id>.json` files into JSON Lines. Docs: DATA_FORMATS
+  section 3, CLI guide (`convert`), FILE_CONNECTOR, CONFIGURATION, CONNECTOR_RECIPES, TOOLS, the file plugin README.
+
 - **JSON Lines is the data standard: the generators (2026-10-27; product owner).** Every generator under `tools/` writes JSONL (one
   JSON object a line, UTF-8; `.jsonl.gz` where the repository gzips), and generating and loading are separate steps
   ([DATA_FORMATS.md](docs/guides/DATA_FORMATS.md), new). `make_data.py --lake`, `samplegen/lake.py` and the pack generators' `--lake`

@@ -723,7 +723,7 @@ routes:
 
 This pack states the route for every kind (`routes:` becomes `drishti.sources.routes.variant`, read by
 `SourceRouter.candidates()`). The lake data is `data/delta/genomics/variant/business_date=2026-09-17` and later. As in
-example A, today's read is answered from the pack's samples (`examples/packs/genomics/samples/variant/`) by the demo plugin, and
+example A, today's read is answered from the pack's samples (`examples/packs/genomics/samples/variant.jsonl`) by the demo plugin, and
 `?asOf=2026-09-30` is answered by `genomics-store` (`"source":"genomics-store","businessDate":"2026-09-30"`).
 
 **Document** (`GET /api/v1/entities/variant/VRNT-BRAF-V600E/raw`, trimmed): `variantId`, `geneSymbol: BRAF`,

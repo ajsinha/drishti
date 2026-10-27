@@ -1323,6 +1323,7 @@ def build_parser() -> argparse.ArgumentParser:
     load_module("bistatement", "bistatement.py").register(bi, srv_b, {"Api": Api, "CliError": CliError, "say_json": say_json})   # bi statement (2.6.0)
 
     load_module("historycmd", "historycmd.py").register(groups, srv, {"Api": Api, "CliError": CliError, "say_json": say_json})   # history KIND ID (2.6.5)
+    load_module("convertcmd", "convertcmd.py").register(groups, {})          # convert FILE: CSV, JSON array, .json folder -> JSONL (2.9.4)
     load_module("computecli", "computecli.py").register(groups, srv, {"Api": Api, "CliError": CliError, "say_json": say_json})   # compute run|cancel|event (2.8.0)
     load_module("changecli", "changecli.py").register(groups, srv, {"Api": Api, "CliError": CliError, "say_json": say_json})     # change propose|submit|approve..., edits status (2.8.0)
     load_module("varcli", "varcli.py").register(groups, srv, {"Api": Api, "CliError": CliError, "say_json": say_json})   # var show|parts|path|whatif (2.8.0)
