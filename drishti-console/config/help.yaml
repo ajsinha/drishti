@@ -35,7 +35,7 @@ categories:
       - { slug: knowledge-trades-and-products, doc: knowledge/trades-and-products.md, title: "Trades and products", icon: receipt, kind: knowledge, summary: "A trade and its three booking systems, statuses, products, notional and MTM, legs and events, books, desks and traders, valuations; what links to a trade, on the demo data." }
       - { slug: knowledge-entities-and-ownership, doc: knowledge/entities-and-ownership.md, title: "Entities and ownership", icon: diagram-3, kind: knowledge, summary: "The LEI and GLEIF, direct and ultimate parents, ownership groups and countries, the bank's legal entities, counterparties and their groups, issuers; who owns whom, on the demo data." }
       - { slug: knowledge-market-data, doc: knowledge/market-data.md, title: "Market data", icon: graph-up, kind: knowledge, summary: "Curves, fixings, FX spot and forwards, volatility surfaces and cubes, credit curves, equities, indices and commodities, correlations and beta; how they link to what uses them." }
-      - { slug: knowledge-data-and-contracts, doc: knowledge/data-and-contracts.md, title: "Data and contracts", icon: file-earmark-ruled, kind: knowledge, summary: "Packs, kinds and commands; fundamental, engine input, Drishti's own and computed data; data contracts, business dates, links and ids; where the data comes from (with External data)." }
+      - { slug: knowledge-data-and-contracts, doc: knowledge/data-and-contracts.md, title: "Data and contracts", icon: file-earmark-ruled, kind: knowledge, summary: "Packs, kinds and commands; fundamental, engine input, Drishti's own and computed data; data contracts, business dates, links and ids; where the data comes from (with External data); DATAMAP draws it all, each join checked against the data." }
       - { slug: knowledge-companies-funds-and-etfs, doc: knowledge/companies-funds-and-etfs.md, title: "Companies, funds and ETFs", icon: briefcase, kind: knowledge, summary: "Tickers, CIK, SIC codes and divisions, share classes (GOOG and GOOGL), EDGAR filings and XBRL facts; mutual funds, ETFs and unit investment trusts, NAV and net assets, look-through holdings, expense ratios, index funds, computed index weights and active share, fund overlap; how the us-equities, funds and gleif packs connect, on the demo data." }
       - { slug: knowledge-economies, doc: knowledge/economies.md, title: "Economies", icon: globe, kind: knowledge, summary: "GDP, growth, inflation, unemployment, debt and the current account; IMF forecasts, country groups and governments; how a counterparty links to its economy, on the demo data." }
   - id: start
@@ -265,6 +265,7 @@ contextual:
   var: docs-guides-var-guide        # the VaR explorer (F1 and its ?): the VaR guide, listed under Use
   exposure: docs-guides-exposure-guide   # the exposure explorer (F1 and its ?): the exposure guide, listed under Use
   func: docs-admin-commands       # Functions, FUNC (F1 and its ?): the command directory and, for administrators, the switches
+  datamap: user-guide#the-data-map   # the data map, DATAMAP (F1 and its ?): kinds, counts and joins checked against the data
   bi-designer: bi-guide#26-bi-studio-authoring-as-one-product-wave-c-240
   bi-theme-designer: reports#52-themes
   bi-transform: python-bi#17-data-prep-the-transform-editor-240

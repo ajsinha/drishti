@@ -1,0 +1,39 @@
+# Project Drishti · Any data. Any domain. One grammar.
+#
+# Copyright (c) 2026 Ashutosh Sinha <ajsinha@gmail.com>.
+# All rights reserved.
+#
+# PROPRIETARY AND CONFIDENTIAL.
+#
+# This file is the confidential and proprietary property of Ashutosh Sinha.
+# Unauthorised copying, use, modification, distribution or disclosure of this
+# file, via any medium, is strictly prohibited except with the express prior
+# written permission of the copyright holder.
+#
+# See the LICENSE file in the root of this repository for the full terms.
+
+# The data map's presentation, DATAMAP <GO> (docs/guides/USER_GUIDE.md "The data map"). Presentation only: what the map shows is inferred
+# from the loaded packs (kinds, data contracts, their links and graph fields) and the data (counts and each join's coverage, read by the
+# server's GET /api/v1/datamap); node positions come from an automatic layout. Nothing here is needed: a pack this file does not name
+# appears as a domain of its own, titled as its pack.yaml titles it, after the domains below. Read again when it changes.
+
+# The order domains are drawn and listed in, a domain's name on the map, and the packs it holds (one domain per pack, or several packs as
+# one). A pack that is not loaded or not enabled for the user is simply absent.
+domains:
+  - { id: trades, title: Trades, packs: [trading] }
+  - { id: organisation, title: Organisation, packs: [core] }
+  - { id: market-risk, title: Market risk, packs: [market-risk] }
+  - { id: counterparty-credit, title: Counterparty credit, packs: [counterparty-risk] }
+  - { id: market-data, title: Market data, packs: [market-data] }
+  - { id: legal-entities, title: Legal entities, packs: [gleif] }
+  - { id: companies, title: Companies, packs: [us-equities] }
+  - { id: funds, title: Funds and ETFs, packs: [funds] }
+  - { id: world-economy, title: World economy, packs: [world-economy] }
+  - { id: news-and-markets, title: News and markets, packs: [news-and-markets] }
+
+# Kinds drawn dashed, as computed on demand, besides those whose data contract says `class: computed` (that is the default; list a kind
+# here only when its contract does not say so).
+computed: []
+
+# A join is a finding when fewer than this share of the ids it holds name an entity that exists (0.95: under 95% match).
+low-coverage: 0.95

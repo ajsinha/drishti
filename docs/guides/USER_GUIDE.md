@@ -105,7 +105,7 @@ you are on is highlighted.
 
 | Menu | Column | Entries |
 |---|---|---|
-| **Views** | Look up | *Terminal* (`/t`), *Search & pick lists* (`/s`), *Forms* (`/forms`: the [forms home](QUERY_BY_FORM.md#the-forms-home), query by form), *Functions* (`/func`, also `FUNC <GO>`: every command you can use, what it does and an example; administrators switch commands on or off there, [COMMANDS.md](../admin/COMMANDS.md)), *Reports* (`/reports`: every scheduled report and subscription, with a box to find one, and links to your alerts and the BI reports) |
+| **Views** | Look up | *Terminal* (`/t`), *Search & pick lists* (`/s`), *Forms* (`/forms`: the [forms home](QUERY_BY_FORM.md#the-forms-home), query by form), *Functions* (`/func`, also `FUNC <GO>`: every command you can use, what it does and an example; administrators switch commands on or off there, [COMMANDS.md](../admin/COMMANDS.md)), *Data map* (`/datamap`, also `DATAMAP <GO>`: every kind of data, how it joins and how much there is, [The data map](#the-data-map)), *Reports* (`/reports`: every scheduled report and subscription, with a box to find one, and links to your alerts and the BI reports) |
 | | Watch | *Workspaces* (`/w`), *Monitors* (`/m`), *Alerts* (`/alerts`) |
 | **BI** (people with the `bi` power) | Rupaka: business intelligence | *BI home* (`/bi`), *My workspace* (`/bi/w/me`), *Catalogue* (`/bi/catalogue`), then *Recent*: the three items you opened last. Administrators with `bi-admin` also see *BI settings* ([BI_GUIDE.md](BI_GUIDE.md)) |
 | **Build** | Create | *New screen* (`/build/new`), *New pack* (`/build/pack/new`: schema files and/or JSON Lines in, a pack to download or deploy out; [Schema to pack](SCHEMA_TO_PACK.md)), *My designs* (`/build`), *Examples* |
@@ -118,7 +118,7 @@ you are on is highlighted.
 **BI and the `BI` keyword (alias `RUPAKA`).** Where your roles hold the `bi` power, a **BI** menu sits between **Views** and **Forms**, and the reserved command
 word `BI` goes there from the command line, in any case: `BI <GO>` the BI home, `BI WORKSPACE <GO>` your personal workspace, `BI CATALOGUE <GO>` the
 catalogue, `BI SETTINGS <GO>` the BI settings (administrators with `bi-admin`), `BI <report-or-board> <GO>` a published item by id or title (a **report opens drawn**, with its slicers, drill-down and drill-through; type-ahead completes after `BI `; `RUPAKA` still works as an alias). Without the power the menu is not there and `BI <GO>`
-says what is missing. No pack can define a mnemonic named `BI`, `RUPAKA`, `FORM`, `FUNC` or `WHAT`. The BI page, its keys (`/`, `g h`, `g c`, `g w`, `?`) and what it can and cannot do yet:
+says what is missing. No pack can define a mnemonic named `BI`, `RUPAKA`, `FORM`, `FUNC`, `WHAT` or `DATAMAP`. The BI page, its keys (`/`, `g h`, `g c`, `g w`, `?`) and what it can and cannot do yet:
 [BI_GUIDE.md](BI_GUIDE.md). **Using a report:** click a bar and the page filters to it, the buttons in a visual's header drill down, drill through to another page, show the rows behind it or open a trade in the terminal, and a slicer filters
 what it can reach ([BI_GUIDE.md](BI_GUIDE.md) section 14); **building one:** *Designer* in the BI rail, drag fields onto the canvas in BI Studio, with its Explorer, tabs and Problems and Query dock ([BI_GUIDE.md](BI_GUIDE.md) sections 15 and 26, [tutorial 10](../tutorials/10-first-bi-report.md)); the YAML reference is [REPORTS.md](REPORTS.md). The BI rail also opens *Analyse*, *Transforms* (Python data prep step by step) and the *Python console*.
 
@@ -218,13 +218,14 @@ Mnemonics come from the packs that are switched on. Every command, with what it 
 
 ### Reserved words
 
-Five words are keywords of the console itself, not mnemonics of a pack, and no pack may define a mnemonic with
+Six words are keywords of the console itself, not mnemonics of a pack, and no pack may define a mnemonic with
 their name. They work in any case, and each has type-ahead.
 
 | Type | You get | More |
 |---|---|---|
 | `WHAT <GO>` | Knowledge, the home of the [Knowledge pages](#knowledge-what-the-words-mean): what the words of your data mean and how the data connects | `WHAT PFE <GO>`, `WHAT netting set <GO>`, `WHAT value at risk <GO>` open the term's glossary entry (its long name or a synonym works too, any case); other words (`WHAT collateral posted <GO>`) search the Knowledge pages. The type-ahead lists the terms as you type |
 | `FUNC <GO>` | Functions, `/func`: every command you can use, by pack, with what it does and an example ([COMMANDS.md](../admin/COMMANDS.md)) | `FUNC exposure <GO>` opens it filtered (every word must appear in a command's code, title, description or its pack); `FUNC trading` lists one pack's commands. Click a command to open it with its example, a pack to open its search form |
+| `DATAMAP <GO>` | the [data map](#the-data-map), `/datamap`: every kind of data your packs hold, how much of it there is, and how the kinds join | `DATAMAP trade <GO>` opens it on one kind (its name, mnemonic or label: `DATAMAP CPTY`), `DATAMAP organisation` or `DATAMAP counterparty-risk` on one domain; other words fill its Find box |
 | `FORM <GO>` | the forms home, `/forms` | `FORM trading <GO>` opens the trading pack's search form, `FORM trading trade <GO>` its form for trades ([Search with a form](#search-with-a-form-form-pack)) |
 | `BI <GO>` | the BI home, `/bi` (only with the `bi` power; otherwise the terminal says what is missing) | `BI WORKSPACE`, `BI CATALOGUE`, `BI SETTINGS`, `BI <report-or-board>` ([BI_GUIDE.md](BI_GUIDE.md)) |
 | `RUPAKA <GO>` | the same as `BI`, the older name | everything that works after `BI` works after `RUPAKA` |
@@ -247,6 +248,39 @@ The [Knowledge home](../knowledge/README.md) lists every term A to Z.
 Reach it three ways: `WHAT <GO>` (or `WHAT <term> <GO>` for one entry), **Build → Learn → Knowledge** or **Help → Knowledge**, and
 the **What does this mean?** link on a data page: the VaR explorer, `VRES` and `DESK` open Market risk; `CPTY`, `NSET`, `CSA` and the
 exposure explorer open Counterparty credit risk. F1 and **?** still open the page's help as before.
+
+### The data map
+
+**Views → Data map** (`/datamap`, or `DATAMAP <GO>`) shows every kind of data your packs hold, how much of it there is on the business
+date, and how the kinds join. Nothing on it is drawn by hand; it is inferred each time from what is loaded:
+
+- **Domains and kinds** come from the packs switched on for you: each pack's kinds, titled by their data contracts
+  (`config/packs/<pack>/contracts/<kind>.contract.yaml`). A kind whose contract says `class: computed` (VaR and ES, EE and PFE, the
+  what-ifs) is drawn **dashed**: it is computed on demand and never stored, so it has no count.
+- **Joins** are what the contracts declare: their `links:`, their fields' `link:` and the fields a pack's `graph.fields` names (the
+  trade's `COUNTERPARTY` → counterparty, `PORTFOLIO` → book, `TRADER_ID` → trader; the P&L vector's and the exposure paths' `TRADE_ID`
+  → trade). Each join is **checked against the data**: the server reads the field over the kind's rows (as columns where the lake keeps
+  them so, else from the documents; at most 20,000 rows a kind, `drishti.datamap.max-rows`) and counts how many of the ids name an
+  entity that exists, so a join reads *15,000 of 15,000 ids match (100%)*. A join under 95% is a **finding**, listed above the map and
+  drawn in the warning colour: the contract promises a link the data does not keep.
+- **Counts** are read from the lake when you open the page (the server keeps them for the business date for 15 minutes,
+  `drishti.datamap.ttl`). The first visit of a day may say *Counting and checking the data*: the map fills in as the server goes.
+- **Positions** come from an automatic layout: each domain a box, its kinds in a grid, the most joined first.
+
+Two views share one selection, the domain chips and the **Find** box (a kind, a mnemonic or a field: `LEI`, `PORTFOLIO`); the view
+and the selection are in the address, so a link opens the same picture.
+
+- **Map** (the default): click a kind to light its joins and dim the rest. The side panel shows its join fields with their coverage,
+  the kinds that join to it, the commands that open it (its example from Functions, its search form) and its *Data contract*, its pack's
+  guide and its *WHAT* entry. Ctrl-click (Cmd-click) a kind to open it directly; Esc clears the selection. On a phone the map scrolls
+  inside its box.
+- **Cards**: one card per domain with its largest counts. Open one for a table of its kinds with their counts, joins (→ to, ← from,
+  with the field) and the command that opens each, **Comes from** (the pack README's sources) and **Crosses into** (the other domains
+  its joins reach, and through which fields).
+
+Domains follow `drishti-console/config/datamap.yaml`, which is presentation only: their names, their order and which packs they hold
+(and, rarely, a kind to draw dashed that its contract does not mark computed). A pack the file does not name appears as a domain of its
+own under its pack title, with its kinds and joins, with no configuration at all.
 
 ### Suggestions as you type
 

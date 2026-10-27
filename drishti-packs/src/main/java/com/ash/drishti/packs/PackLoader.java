@@ -41,7 +41,7 @@ import java.util.Map;
 public final class PackLoader {
 
     /** Command words the console owns: no pack may define a mnemonic with one of these names, in any case (RUPAKA.md section 4). */
-    public static final java.util.Set<String> RESERVED_WORDS = new java.util.TreeSet<>(java.util.Set.of("BI", "RUPAKA", "FORM", "FUNC", "WHAT"));
+    public static final java.util.Set<String> RESERVED_WORDS = new java.util.TreeSet<>(java.util.Set.of("BI", "RUPAKA", "FORM", "FUNC", "WHAT", "DATAMAP"));
 
     private final ObjectMapper yaml = new ObjectMapper(new YAMLFactory());
     /** The connector files of the site; a pack's template for a connector is only used when no file of that name exists. */

@@ -119,6 +119,12 @@ async def suggest(request: Request, q: str = "", limit: int | None = None):
         return [{"mnemonic": "FUNC", "title": "Functions: every command you can use" + (f", matching {words}" if words else ""),
                  "subtitle": "FUNC <GO> opens the list; FUNC <words> opens it filtered (a command, a word of what it does, a pack)",
                  "complete": f"FUNC {words}".strip(), "href": "/func" + (f"?q={quote(words)}" if words else ""), "type": "func"}]
+    dmap = re.match(r"(?is)^\s*datamap(?:\s+(.*))?$", q.replace("<GO>", ""))
+    if dmap:                                                   # the reserved word DATAMAP: the data map, focused on what follows
+        words = (dmap.group(1) or "").strip()
+        return [{"mnemonic": "DATAMAP", "title": "Data map: every kind of data, how it joins, how much there is" + (f", at {words}" if words else ""),
+                 "subtitle": "DATAMAP <GO> opens the map; DATAMAP <domain or kind> opens it focused (DATAMAP trade, DATAMAP counterparty)",
+                 "complete": f"DATAMAP {words}".strip(), "href": "/datamap" + (f"?q={quote(words)}" if words else ""), "type": "datamap"}]
     what = re.match(r"(?is)^\s*what(?:\s+(.*))?$", q.replace("<GO>", ""))
     if what:                                                   # the reserved word WHAT: the Knowledge pages, then the glossary's terms
         return await what_suggestions(request, (what.group(1) or "").strip())

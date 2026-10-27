@@ -1,0 +1,99 @@
+{#
+  Project Drishti · Any data. Any domain. One grammar.
+
+  Copyright (c) 2026 Ashutosh Sinha <ajsinha@gmail.com>.
+  All rights reserved.
+
+  PROPRIETARY AND CONFIDENTIAL.
+
+  This file is the confidential and proprietary property of Ashutosh Sinha.
+  Unauthorised copying, use, modification, distribution or disclosure of this
+  file, via any medium, is strictly prohibited except with the express prior
+  written permission of the copyright holder.
+
+  See the LICENSE file in the root of this repository for the full terms.
+#}
+{% extends "base.html" %}
+{% block title %}Data map · {{ PRODUCT }}{% endblock %}
+{% block head %}<link rel="stylesheet" href="/static/css/functions.css?v={{ ASSET_V }}"><link rel="stylesheet" href="/static/css/datamap.css?v={{ ASSET_V }}">{% endblock %}
+{% block screen %}datamap{% endblock %}
+{% block body_class %}terminal{% endblock %}
+{% block nav %}{% include "terminal/_topbar.html" %}{% endblock %}
+{% block content %}
+{# The data map, DATAMAP <GO> (docs/guides/USER_GUIDE.md "The data map"; routes/datamap_routes.py, core/datamap.py). Everything drawn is
+   inferred: kinds and joins from the packs' data contracts, counts and each join's coverage from the data, positions from an automatic
+   layout. Map (default) and Cards share the selection, the domain chips and Find; static/js/datamap.js keeps them in the address, draws
+   the side panel from data-model and follows /datamap/data while the server is still counting and checking. #}
+{% set sel = selected.kind if selected else '' %}
+{% set dom = open_domain.id if open_domain else '' %}
+<div class="adm dmap" data-datamap data-view="{{ view }}" data-kind="{{ sel }}" data-domain="{{ dom }}" data-chip="{{ chip }}"
+     data-model="{{ m | tojson | forceescape }}">
+  <h1 class="ws-h">Data map <span class="func-word mono" title="Type DATAMAP, or DATAMAP and a domain or kind, then &lt;GO&gt;">DATAMAP</span>
+    <a class="emb-help" href="/help/user-guide#the-data-map" aria-label="Help: the data map" title="Help: the data map">?</a></h1>
+  <p class="text-muted-d dmap-lede">{{ m.packs }} pack{{ '' if m.packs == 1 else 's' }}, {{ m.kinds | length }} kinds, {{ m.joins | length }} joins{% if m.businessDate and m.businessDate != 'latest' %} on {{ m.businessDate }}{% endif %}.
+    Click any kind to see what it holds, what it joins to and the command that opens it. Drawn from the packs' data contracts; counts and joins
+    are checked against the data.</p>
+
+  <div class="dmap-bar">
+    <div class="dmap-views" role="group" aria-label="View">
+      <a class="dmap-view{% if view == 'map' %} on{% endif %}" href="/datamap?view=map{% if sel %}&amp;kind={{ sel }}{% elif dom %}&amp;domain={{ dom }}{% endif %}" data-set-view="map"{% if view == 'map' %} aria-current="page"{% endif %}>Map</a>
+      <a class="dmap-view{% if view == 'cards' %} on{% endif %}" href="/datamap?view=cards{% if sel %}&amp;kind={{ sel }}{% elif dom %}&amp;domain={{ dom }}{% endif %}" data-set-view="cards"{% if view == 'cards' %} aria-current="page"{% endif %}>Cards</a>
+    </div>
+    <div class="dmap-chips" role="group" aria-label="Domains">
+      <a class="dmap-chip{% if not chip %} on{% endif %}" href="/datamap?view={{ view }}" data-chip-set="">All</a>
+      {% for d in m.domains %}<a class="dmap-chip{% if chip == d.id %} on{% endif %}" href="/datamap?view={{ view }}&amp;chip={{ d.id }}" data-chip-set="{{ d.id }}">{{ d.title }}</a>{% endfor %}
+    </div>
+    <label class="cmd-find dmap-find">Find <input type="search" data-find value="{{ find }}" placeholder="a kind or a field, e.g. LEI" autocomplete="off" aria-label="Find a kind or a field"></label>
+  </div>
+  <p class="dmap-state text-muted-d" data-state role="status" aria-live="polite">{% if m.state != 'ready' %}Counting and checking the data: {{ m.counted }} of {{ m.kinds | length }} kinds counted so far; the map fills in as it goes.{% endif %}</p>
+  <div data-findings-box>{% if m.findings %}
+  <details class="dmap-findings" data-findings>
+    <summary><span class="st st-warn">{{ m.findings | length }} finding{{ '' if m.findings | length == 1 else 's' }}</span> joins whose ids mostly name nothing (under {{ (m.low * 100) | round | int }}% match)</summary>
+    <ul>{% for f in m.findings %}<li><a href="/datamap?view={{ view }}&amp;kind={{ f.from }}" data-select="{{ f.from }}">{{ f.text }}</a></li>{% endfor %}</ul>
+  </details>
+  {% endif %}</div>
+
+  <div class="dmap-body">
+    <section class="dmap-map" data-pane="map" aria-label="Map"{% if view != 'map' %} hidden{% endif %}>
+      <div class="dmap-canvas" tabindex="0" aria-label="The data map: scroll to see all of it">
+        <svg class="dmap-svg" width="{{ m.width }}" height="{{ m.height }}" viewBox="0 0 {{ m.width }} {{ m.height }}" role="img" aria-labelledby="dmapSvgTitle">
+          <title id="dmapSvgTitle">Domains, their kinds and the joins between them</title>
+          {% for d in m.domains %}<g class="dm-region" data-domain="{{ d.id }}">
+            <rect x="{{ d.box.x }}" y="{{ d.box.y }}" width="{{ d.box.w }}" height="{{ d.box.h }}" rx="12"></rect>
+            <text class="dm-region-t" x="{{ d.box.x + 14 }}" y="{{ d.box.y + 20 }}">{{ d.title | upper }}{% if d.packs | length == 1 and d.title | lower != d.packs[0] %} · {{ d.packs[0] }}{% endif %}</text></g>
+          {% endfor %}
+          <g class="dm-lines">{% for l in m.lines %}<line class="dm-j{% if l.low %} dm-j-low{% endif %}{% if l.cross %} dm-j-cross{% endif %}" x1="{{ l.x1 }}" y1="{{ l.y1 }}" x2="{{ l.x2 }}" y2="{{ l.y2 }}" data-from="{{ l.from }}" data-to="{{ l.to }}" data-fields="{{ l.fields | join(' ') }}"></line>{% endfor %}</g>
+          {% for k in m.kinds %}<a class="dm-n{% if k.computed %} dm-computed{% endif %}{% if k.kind == sel %} dm-sel{% endif %}" href="{{ k.open or ('/datamap?kind=' ~ k.kind) }}" data-kind="{{ k.kind }}" data-domain="{{ k.domain }}"
+             data-text="{{ (k.kind ~ ' ' ~ k.label ~ ' ' ~ (k.code or '') ~ ' ' ~ (m.joins | selectattr('from', 'equalto', k.kind) | map(attribute='field') | join(' '))) | lower }}" aria-label="{{ k.label }}: {{ k.countText }}">
+            <title>{{ k.label }}{% if k.code %} ({{ k.code }}){% endif %}: {{ k.countText }}</title>
+            <rect x="{{ k.x }}" y="{{ k.y }}" width="{{ k.w }}" height="{{ k.h }}" rx="8"></rect>
+            <text class="dm-n-l" x="{{ k.x + k.w // 2 }}" y="{{ k.y + 21 }}">{{ k.label | truncate(21, True, '…', 0) }}</text>
+            <text class="dm-n-c" x="{{ k.x + k.w // 2 }}" y="{{ k.y + 39 }}" data-count>{{ k.countText }}</text></a>
+          {% endfor %}
+        </svg>
+      </div>
+    </section>
+
+    <section class="dmap-cards" data-pane="cards" aria-label="Cards"{% if view != 'cards' %} hidden{% endif %}>
+      {% for d in m.domains %}<a class="dm-card{% if d.id == dom %} on{% endif %}" href="/datamap?view=cards&amp;domain={{ d.id }}" data-card="{{ d.id }}" data-domain="{{ d.id }}"
+         data-text="{{ (d.title ~ ' ' ~ (d.packs | join(' ')) ~ ' ' ~ (d.kinds | join(' '))) | lower }}">
+        <span class="dm-card-t">{{ d.title }}</span><span class="dm-card-s text-muted-d" data-summary>{{ d.summary }}</span></a>{% endfor %}
+    </section>
+
+    <aside class="dmap-side" data-side aria-live="polite" aria-label="Selected">
+      <div data-side-body>
+        <span class="dm-eyebrow">Nothing selected</span>
+        <p class="text-muted-d">Click a kind on the map, or a domain card, to see its joins, how well the data honours them, and the commands that open it.</p>
+      </div>
+      <div class="dm-legend text-muted-d">
+        <span><i class="dm-key dm-key-stored" aria-hidden="true"></i> stored in the lake</span>
+        <span><i class="dm-key dm-key-computed" aria-hidden="true"></i> computed on demand, never stored</span>
+        <span><i class="dm-key dm-key-sel" aria-hidden="true"></i> joins of the selected kind</span>
+        <span><i class="dm-key dm-key-low" aria-hidden="true"></i> a join whose ids mostly name nothing</span>
+      </div>
+    </aside>
+  </div>
+  <noscript><p class="text-muted-d">The side panel needs JavaScript; every node still opens its kind.</p></noscript>
+</div>
+{% endblock %}
+{% block scripts %}<script src="/static/js/command.js?v={{ ASSET_V }}"></script><script src="/static/js/datamap.js?v={{ ASSET_V }}"></script>{% endblock %}

@@ -1191,6 +1191,22 @@ the page's own values ([CONTEXT_HELP.md](../architecture/CONTEXT_HELP.md#pack-sc
 | `max-rendered` | `1000` | Longest text after its expressions are filled in; the rest is cut with `…`. |
 | `packs` | set by the server | The packs' About files and their `extends` lineage, written by the pack loader. Do not set it. |
 
+### `drishti.datamap` — the data map
+
+The data map (`DATAMAP <GO>`, `GET /api/v1/datamap`; [USER_GUIDE.md](../guides/USER_GUIDE.md#the-data-map)) counts every stored kind and
+checks every join the data contracts declare against the data, in the background, once per business date and set of loaded packs.
+
+| Key | Default | Meaning |
+|---|---|---|
+| `max-rows` | `20000` | The most rows of one kind read to count it and to check its joins; a larger kind is counted as `20,000+` and its joins are marked *a sample*. |
+| `ttl` | `PT15M` | How long a built map is kept before it is read again (a load may have changed the data). |
+| `read-budget` | `PT30S` | The time one read (a listing, a column read) may take before the kind is reported as not read. |
+| `threads` | `4` | Kinds read at once. |
+
+The console's `drishti-console/config/datamap.yaml` holds the map's presentation only: domain names, their order and which packs each holds, kinds to
+draw dashed beyond those whose contract says `class: computed`, and the coverage under which a join is a finding (`low-coverage`, 0.95).
+A pack it does not name is a domain of its own.
+
 ### `drishti.builder` — the Screen Builder's shape extractor
 
 `POST /api/v1/builder/shape` merges sample JSON documents into one JSON Schema with roles. Input over a limit is refused

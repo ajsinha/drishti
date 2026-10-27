@@ -17,6 +17,27 @@
 
 ## 2.9.3 — in progress
 
+- **The data map, `DATAMAP` (2026-10-27; product owner, mock-ups A and C approved as one page).** **Views → Data map** (`/datamap`,
+  `DATAMAP <GO>`, `DATAMAP trade`, `DATAMAP counterparty`) shows every kind of data the user's packs hold, how much there is on the
+  business date and how the kinds join, in two views sharing one selection, domain chips and Find, kept in the address: **Map** (domain
+  regions, kind nodes with counts, join lines; selecting a kind lights its joins; a side panel with its join fields and their coverage,
+  the kinds joining to it, the commands that open it and its data contract, pack guide and WHAT links; computed measures such as VaR and
+  exposure dashed) and **Cards** (one card per domain; open, a table of kinds, counts, joins and open commands, *Comes from* and *Crosses
+  into*). Inferred, never drawn by hand: kinds from the enabled packs and their contracts (`class: computed` drawn dashed), joins from the
+  contracts' `links:`, fields' `link:` and the packs' `graph.fields`, each **checked against the lake** (*15,000 of 15,000 ids match*;
+  under 95% a *finding*), counts read at request time and kept per business date (`drishti.datamap.ttl`, 15 minutes), positions from an
+  automatic layout. `drishti-console/config/datamap.yaml` holds presentation only: domain names, order and grouping; a new pack appears with
+  zero configuration. New API `GET /api/v1/datamap` (`state` counting → checking → ready while the server reads; only kinds the caller may
+  open). `DATAMAP` is a reserved command word (pack loader, `drishti.py pack check`, command catalog). USER_GUIDE.md *The data map*; Help
+  (F1 on the page); API_GUIDE; CONFIGURATION (`drishti.datamap.*`).
+  On the default demo lake (10 packs, 2026-10-27): 96 kinds, 226 joins, 176 checked in about 1.5 s (50 touch a computed kind), and
+  **11 findings** to fix in the contracts or the data, not in the map: the trade's `LEGS[].INDEX.GROUP` holds index groups (*Metals*), not
+  counterparty groups; `us-company.EQUITY` is shareholders' equity, a number, read as a link by market-data's graph field `EQUITY`;
+  `legal-entity.JURISDICTION` and `lei-entity.JURISDICTION` hold ISO codes (`DE`) where jurisdiction ids are `JUR-DEU`;
+  `fx-spot.CONVENTIONS.CALENDAR` holds `GBLO+USNY`, not `CAL-` ids; `simulation-run.NETTING_SETS` is a count (76); the counterparty's
+  `NEWS_ID` opens no story offline; `legal-entity.BOOKS[].DESK`, `lei-entity.SUCCESSOR` (4 of 7), `portfolio.DEFINITION.MEMBERS[].POSITION_ID`
+  (28 of 31) and `us-company.FINANCIALS[].EQUITY`.
+
 - **Knowledge: Companies, funds and ETFs (2026-10-27).** An eighth Knowledge page, `docs/knowledge/companies-funds-and-etfs.md`, in
   the same seven parts as the others: what a company's ticker, CIK, SIC code and division, share classes (GOOG and GOOGL), EDGAR filings
   and XBRL facts are; mutual funds, ETFs and unit investment trusts, NAV and net assets, look-through holdings, expense ratios, index

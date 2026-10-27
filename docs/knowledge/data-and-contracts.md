@@ -101,6 +101,11 @@ kind's id: `netting-set.COUNTERPARTY → counterparty`) and its **storage** (con
 into a graph you can walk: from a trade to its counterparty, from there to its netting sets, their CSA and collateral, and on to the
 counterparty's economy. Every page in this Knowledge section draws its diagram from those link columns.
 
+`DATAMAP <GO>` draws all of it for the packs you have: every kind with how many entities it holds today, every link its contract
+declares, and how well the data keeps each link (*15,000 of 15,000 ids match*; a link whose ids mostly name nothing is listed as a
+finding). Nothing on it is drawn by hand: it is read from the contracts and checked against the lake when you open it
+([The data map](../guides/USER_GUIDE.md#the-data-map)).
+
 **Id conventions.** A kind's ids start with its prefix (`CP-`, `NS-`, `CSA-`, `LIM-`, `CRV-`, `ECON-`), except where the world already
 has an id (an LEI, an ISIN, a ticker, a booking system's trade id). A computed kind's id is what you asked for: a scope
 (`DESK:RATES`), a group's key (`ECG-WLD`), or an id with parameters after `~` (`CORR-EU-EQ~window=20`).
@@ -148,6 +153,7 @@ trade, `CLY-4000879`, was still listed as a live member: a netting set now holds
 | Question | Ask | What it reveals |
 |---|---|---|
 | What commands can I use, and what does each show? | `FUNC <GO>` (or `FUNC exposure <GO>`) | every command you may use, by pack, with what it does and an example |
+| How do the kinds join, and does the data keep the joins? | `DATAMAP <GO>` (or `DATAMAP netting-set <GO>`) | every kind with its count and every contract link, each checked against the data |
 | What exactly is in a netting set row? | `drishti.py contract show NSET` | the contract: grain, key, every field, links, storage, cadence |
 | Which commands are computed, which stored? | `drishti.py contract list` | every command's class and status |
 | Where did this number come from? | the page's **?** (About this page), or `drishti.py var show BANK` | the inputs, batch, data version and rules behind it |
