@@ -1028,6 +1028,8 @@ picks the business date (default the newest with vectors); `--json` prints the s
 - `var history SCOPE` prints the history and backtest (the official record for a node, else the replay of today's vector) with the
   traffic light, Kupiec and Christoffersen.
 - `var tree [--hierarchy MGMT|LEGAL]` prints every node with its VaR, ES and limit use, indented.
+- `--ccy EUR` (2.9.4; `show`, `parts`, `path`, `history`, `tree`, `capture`, `official`, `whatif`) asks every figure in a reporting
+  currency; the headline says the currency and where its FX came from ([VAR_GUIDE.md section 15.10](VAR_GUIDE.md#1510-reporting-currency-as-built-294)).
 - `var status` prints the engine's settings, its tiered memory (hot files on disk, dates open, how this JVM maps) and the dates loaded.
 - `var capture SCOPE [--note TEXT]`, `var captures [--scope SCOPE]`, `var compare A [B|now]`: captures (writing needs `risk:write`).
 - `var basket NAME SCOPE [--title] [--description] [--share USER|role:NAME ...]`, `var baskets`: saved baskets.

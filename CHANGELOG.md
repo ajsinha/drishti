@@ -15,6 +15,38 @@
 -->
 # Changelog
 
+## 2.9.4 (unreleased)
+
+- **VaR from scenario PVs, in any reporting currency (2026-10-27; local branch, for the product owner's review: not pushed).** A bank's
+  batch may now send a trade's scenario P&L as **scenario PVs** in the trade's own currency (the new kind `scenario-pv`, `SPV`: its PV
+  under each of the 509 scenarios and its base PV of the same run) beside or instead of the P&L vector; the VaR engine turns them into
+  the trade's USD P&L when it loads the date, `P&L(s) = PV(s) × FX(s) − PV(base) × FX(base)`. Scenario FX is the batch's when it supplies
+  it (the new kind `fx-scenario`, `FXS`: USD per unit today and under each scenario), else derived from the FX history of `fx-spot`
+  (today's rate moved by each scenario day's 1-day move); every cross goes through USD (the product owner's four decisions). A scenario
+  that failed to price rejects its trade with the new **`DRS-5206`** (the scenarios named, never filled with zero); a currency without
+  FX, the new **`DRS-5207`**; valuation dates other than the business date, `DRS-5201`. Every answer takes a **reporting currency**,
+  `ccy=EUR` on the API and `--ccy EUR` on `drishti.py var` (headline, path, contributions, history, tree, hints, captures and compare,
+  the what-if, `var-result` and `var-whatif` with the parameter `ccy`, the official record), and says it in `currency`; the USD book is
+  built at load, another currency's on its first ask, from the USD book (`CurrencyBook`, `ScenarioFx`), kept per date on the tiered
+  memory (its own hot file under `<hot>/<date>-<CCY>/`); `drishti.var.official.currencies` (default `[USD]`) captures other currencies
+  officially beside USD (only USD is published). The provenance says how the vectors met FX (`fx`: per currency `supplied` or
+  `derived` and today's rate; `scenarioPvTrades`). No console picker yet: its mock-ups come first.
+  **Test data:** the Endur trades (1,339: 1,089 USD, 246 EUR, 4 CAD) now come as scenario PVs (`tools/packgen/var/scenario_fx.py`), with
+  supplied FX for AUD, CAD, CHF, EUR, GBP and JPY; the other 8,233 trades stay P&L vectors; `lake demo` builds 84 tables (was 82). A USD
+  trade's P&L from its scenario PVs is its 2.9.3 vector exactly; the EUR and CAD trades now also carry their currency's move on their
+  value, so the bank on 2026-09-30 moves from VaR 112,035,906 / ES 160,132,107 to **112,041,646 / 160,143,809**, and on the default
+  demo lake (2026-10-26) from 126,544,583 / 172,580,660 to **126,537,611 / 172,532,570**; only the commodity desk, its books, LE-NY,
+  Markets and the bank change. In EUR the bank's VaR is 111,837,045 (not 95.4 m at today's rate: the bank's 3.65 bn USD of value moves
+  against the euro). Limits and portfolios unchanged.
+  **Docs:** VAR_GUIDE contract 1.5 (sections 15.9 scenario PVs, 15.10 reporting currency, settings, errors, CLI, API, official
+  records, test data; the figures that moved), tutorial 25 (step 1: scenario PVs and `--ccy`), the Market risk Knowledge page ("From
+  scenario PV to the P&L vector" as built, the figures), the two new contracts and `var-result`/`var-whatif`'s `CURRENCY`, the pack's
+  guide and README, API_GUIDE and TROUBLESHOOTING (the two codes), CONFIGURATION (the new settings), the demo-table counts.
+  **Tests:** `ScenarioFxTest` (the conversion, crosses through USD, supplied over derived, bad rates, a whole book converted),
+  `VarCurrencyApiTest` (both forms side by side, a failed scenario, no FX, a valuation date, every answer in a currency, captures,
+  the official record in EUR, `var-result` with `ccy`), `VarTestDataPrecisionTest` (the committed data in every supplied currency),
+  `test_var_data.py`, `test_varcli.py`, `test_var_engine.py`.
+
 ## 2.9.3 — DATAMAP; the fact of the day on Home; Companies, funds and ETFs Knowledge; index membership from the tracking ETFs; one firm-wide VaR limit (2026-10-27)
 
 - **Windows QA guide for 2.9.3 (2026-10-27).** `docs/guides/QA_ON_WINDOWS_WITH_CUSTOM_DATA.md` gains section 6f (what to rebuild after the pull: `--only us-equities,gleif,funds,market-risk/risk-hierarchy`, then eleven checks: DATAMAP, the fact of the day, one 150m bank limit on both trees, the index members from the tracking ETFs, active share, the Knowledge page) and a checklist line; the jar it names is `drishti-server-2.9.3-exec.jar` (it still said 2.9.2).

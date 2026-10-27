@@ -173,25 +173,28 @@ The bank on 2026-09-30 (`drishti.py var show BANK`):
 
 ```text
 VAR BANK  ·  Drishti Bank  ·  node  ·  2026-09-30
-  VaR 99%   112,035,906 USD   (the 6th worst of 509)
-  ES 97.5%   160,132,107 USD   (mean of the 13 worst)
+  VaR 99%   112,041,646 USD   (the 6th worst of 509)
+  ES 97.5%   160,143,809 USD   (mean of the 13 worst)
   limit      150,000,000 USD   use 74.7%
-  parts      2 division   standalone sum 130,105,348   diversification 18,069,442
+  parts      2 division   standalone sum 130,101,896   diversification 18,060,250
   backtest   amber  5 exceptions in 249 days   Kupiec p 0.160   Christoffersen p 0.076
   9572 trades in 7984 positions
-  pnl-vector · batch B-2026-09-30-01 of 2026-09-30 · data version risk-store=dc731161ff617ac4
+  pnl-vector and scenario-pv (1339 trades from scenario PVs) · batch B-2026-09-30-01 of 2026-09-30 · data version …
+  in USD, crosses through USD; FX CAD supplied (0.719942 USD); EUR supplied (1.174 USD)
   node aggregate (float64) · historical, equal weights, 1-day, k = 6th worst of 509 · 1 ms (hit)
 ```
 
 Read it as: on the 6th worst of the 509 historical days the whole bank would lose 112.0 million USD; the 13 worst days lose 160.1 million
 on average; the two divisions alone add up to 130.1 million, so holding them together saves 18.1 million (diversification); the VaR uses
-74.7% of the bank's 150 million limit.
+74.7% of the bank's 150 million limit. The Endur trades came as scenario PVs (two of their currencies converted with the supplied FX,
+[section 15.9](#159-scenario-pv-scenario-pvs-per-trade-in-the-trades-currency-as-built-294)); `--ccy EUR` asks the same bank in euros
+([section 15.10](#1510-reporting-currency-as-built-294)).
 
 The ten desks (the engine's VaR on 2026-09-30; the stored figures they replaced are in [section 21.2](#212-reconciliation-stored-var-comm-4469-m-against-the-engines-197-m)):
 
 | Desk | VaR | Live trades |
 |---|---|---|
-| COMM | 17,523,118 | 2,141 |
+| COMM | 17,514,512 | 2,141 |
 | CREDIT | 130,670,864 | 943 |
 | EQD | 35,827,767 | 1,201 |
 | FI | 33,274,561 | 1,013 |
@@ -574,17 +577,17 @@ On the default demo lake (`drishti.py lake demo`, which moves the test data's si
 
 | Scope | VaR | Trades |
 |---|---|---|
-| `BANK` | 126,544,583 | 8,566 |
-| `LE:NY` | 135,906,338 | 5,542 |
+| `BANK` | 126,537,611 | 8,566 |
+| `LE:NY` | 135,903,940 | 5,542 |
 | `DESK:RATES` | 64,434,451 | 1,281 |
-| `BANK - DESK:CREDIT` | 60,228,839 | 7,623 |
+| `BANK - DESK:CREDIT` | 60,252,392 | 7,623 |
 | `DESK:RATES - TRD:MX-30000121` | 64,605,209 | 1,280 |
 | `PORT:PF-USD-RATES` | 33,031,967 | 842 |
-| `WHERE:CURRENCY == 'EUR' and DIRECTION == 'SHORT'` | 126,453,445 | 609 |
+| `WHERE:CURRENCY == 'EUR' and DIRECTION == 'SHORT'` | 127,307,698 | 609 |
 | `DESK:RATES & WHERE:DIRECTION == 'SHORT'` (saved as `BASKET:rita/rates-short`) | 253,470,623 | 677 |
 | `POS:POS-BOOK-EQD-2~SEC-WARRANT-USD-01` | 67,209 | 9 |
 
-The rest of this guide reads the lake built on the data's own date (`--as-of data`, 2026-09-30), where the bank's VaR is 112,035,906 on
+The rest of this guide reads the lake built on the data's own date (`--as-of data`, 2026-09-30), where the bank's VaR is 112,041,646 on
 9,572 trades. Both are built from the same test data but do not hold the same live trades: moving the business dates does not move the trades'
 maturities, so on 2026-10-26 the trades that mature in between are no longer live (8,566 instead of 9,572), and the bank's worst days
 change with them.
@@ -1004,7 +1007,7 @@ retention; official numbers are kept 7 years ([section 19](#19-official-end-of-d
 
 | Command | Does |
 |---|---|
-| `var show <scope> [--date D]` | the headline (VaR, ES, limit, parts, backtest, provenance) |
+| `var show <scope> [--date D] [--ccy CCY]` | the headline (VaR, ES, limit, parts, backtest, provenance); `--ccy` (every command but `status`, `basket`, `baskets`, `compare` and `reload`): in a reporting currency ([section 15.10](#1510-reporting-currency-as-built-294)) |
 | `var parts <scope> [--by child\|node\|position\|trade\|desk\|book] [--scenario D] [--top N]` | contributions |
 | `var path <scope> [--size N] [--page P]` | the ranked P&L path |
 | `var history <scope>` | history and backtest |
@@ -1038,12 +1041,12 @@ hierarchy (`drishti.py var tree --hierarchy LEGAL`, the first rows):
 ```text
 Node                             VaR          ES           Limit use  Trades
 -------------------------------  -----------  -----------  ---------  ------
-Drishti Bank                     112,035,906  160,132,107      53.4%    9572
+Drishti Bank                     112,041,646  160,143,809      53.4%    9572
   LE-FRA                           1,536,322    1,665,992      66.8%     611
     Repo and securities lending    1,536,322    1,665,992      61.5%     611
   LE-LDN                          48,350,793   53,764,068      63.6%    2679
     Equity derivatives            35,827,767   34,901,016      77.9%    1201
-  LE-NY                          144,267,105  174,614,379      80.1%    6008
+  LE-NY                          144,262,258  174,617,643      80.1%    6008
     Credit trading               130,670,864  189,194,564      65.3%     943
 ```
 
@@ -1058,7 +1061,7 @@ the date before it, with a warning). Errors are RFC 7807 problems with a `code` 
 
 | Method and path | Parameters | Answer |
 |---|---|---|
-| `GET /scope` | `scope`, `asOf` | the headline ([section 11.2](#112-the-headline-get-scope-and-its-provenance)) |
+| `GET /scope` | `scope`, `asOf`, `ccy` | the headline ([section 11.2](#112-the-headline-get-scope-and-its-provenance)); `ccy` (here and on `/scopes`, `/scope/path`, `/scope/history`, `/scope/contributions`, `/hints`, `/tree`, `/what-if`, `/captures` and `/official`): the reporting currency, USD by default, said in every answer's `currency` ([section 15.10](#1510-reporting-currency-as-built-294)) |
 | `GET /scopes/{scope}` | `{scope}` in the path (no slash), `asOf` | the same |
 | `GET /scope/path` | `scope`, `page` (0), `size` (0 → `path-page`; at most 509), `asOf` | the P&L path ([section 11.3](#113-path-and-contributions)) |
 | `GET /scope/history` | `scope`, `asOf` | history and backtest ([section 11.4](#114-history-the-tree-and-the-status)) |
@@ -1238,6 +1241,8 @@ by `VarProperties` (`@ConfigurationProperties("drishti.var")`); `GET /api/v1/var
 | `drishti.var.max-parts` | `5000` | 5,000 | most parts a contribution table computes; more: the largest by gross size ([section 11.1](#111-the-endpoints)) |
 | `drishti.var.path-page` | `60` | 60 | rows per page of the ranked P&L path |
 | `drishti.var.kinds.vector`, `.position`, `.hierarchy`, `.scenario-set`, `.portfolio` | the market-risk kinds | `pnl-vector`, `position`, `risk-hierarchy`, `scenario-set`, `portfolio` | the kinds read (and `position`: the kind the derived positions are served as) |
+| `drishti.var.kinds.scenario-pv`, `.fx-scenario`, `.fx-spot` | `scenario-pv`, `fx-scenario`, `fx-spot` | the same | 2.9.4: scenario PVs, supplied scenario FX, the FX history derived FX comes from ([section 15.9](#159-scenario-pv-scenario-pvs-per-trade-in-the-trades-currency-as-built-294)) |
+| `drishti.var.official.currencies` | `[USD]` | `[USD]` (USD always first) | 2.9.4: the reporting currencies captured officially; only USD is published ([section 15.10](#1510-reporting-currency-as-built-294)) |
 | `drishti.var.access` | `{}` | no restriction | per role and node: `positions` or `aggregate` ([section 9](#9-who-sees-what-entitlements-and-audit)) |
 | `drishti.var.positions.live-statuses`, `.rules` | `[NEW, VALIDATED, AMENDED]`, `[]` | the same | the position rules when no loaded pack has a `positions:` section ([section 15.6](#156-positions-derived-by-drishti-as-built)) |
 | `drishti.var.official.enabled`, `.publish`, `.root`, `.retention-years`, `.on-start` | `${DRISHTI_VAR_OFFICIAL:true}`, `true`, `${DRISHTI_DELTA_ROOT:…/delta}`, `7`, `true` | the same | the official end-of-day captures and their published results ([section 19](#19-official-end-of-day-results)) |
@@ -1289,7 +1294,7 @@ More codes: [TROUBLESHOOTING.md](TROUBLESHOOTING.md).
 
 ## 14. The contract at a glance
 
-*Contract version 1.4 · 2026-10-26 · Shared rules: [the contracts' README](../contracts/README.md).* This part is the data contract of
+*Contract version 1.5 · 2026-10-27 · Shared rules: [the contracts' README](../contracts/README.md).* This part is the data contract of
 Drishti's VaR engine: what an upstream risk batch delivers, what Drishti builds from it, and what Drishti answers. Every column, type,
 key and formula was checked against the code and the committed test data on 2026-10-25. Where the designs say otherwise, the code wins
 and the difference is noted (**Design differs**). The shared rules of every contract (the common risk lake, keys, types, dates, signs,
@@ -1345,6 +1350,8 @@ also served as the computed kinds `var-result` (Java) and `var-whatif` (Python) 
 | The command line `drishti.py var` (show, parts, path, history, tree, status, captures, baskets, official, reload, whatif) | AS BUILT | §10 |
 | What-if pricing of amended or new trades over the scenarios (QLRisk) | PLANNED (parked until QLRisk's API is stable; a what-if trade's vector is supplied) | §8.4 |
 | Scope words `GROUP:` and `NSET:` | PARKED (product owner, 2026-10-25: fundamentals and VaR only) | §5.5 |
+| **Scenario PVs** in each trade's currency (`scenario-pv`) beside or instead of P&L vectors, converted to USD P&L at load; scenario FX supplied (`fx-scenario`) or derived from the FX history (`fx-spot`); crosses through USD; a failed scenario `DRS-5206`, no FX `DRS-5207` (2.9.4, local branch) | AS BUILT | §15.9 |
+| **Reporting currency** `ccy=` on every answer, `--ccy` on the command line; USD built at load, other currencies on first ask, kept per date on the tiered memory; official records per `drishti.var.official.currencies` (2.9.4, local branch) | AS BUILT (the console's picker: mock-ups first) | §15.10 |
 
 ## 15. Inputs from upstream engines
 
@@ -1359,6 +1366,8 @@ publishes live beside them, never read back ([section 19](#19-official-end-of-da
 ${DRISHTI_DELTA_ROOT}/
 ├── risk/                                        the inputs (engines read these)
 │   ├── pnl-vector/   business_date=YYYY-MM-DD/part-*.parquet    one row per trade per date: the P&L vector and the trade's terms
+│   ├── scenario-pv/  business_date=YYYY-MM-DD/                  2.9.4: one row per trade per date: its scenario PVs and base PV (its currency)
+│   ├── fx-scenario/  business_date=YYYY-MM-DD/                  2.9.4: one row per currency per date: its rate today and per scenario
 │   ├── scenario-set/ business_date=YYYY-MM-DD/                  one row per scenario set per date
 │   ├── risk-hierarchy/ business_date=YYYY-MM-DD/                one row per hierarchy node per date
 │   └── portfolio/    business_date=YYYY-MM-DD/                  one row per portfolio definition per date
@@ -1379,6 +1388,9 @@ promoted column's type, or `doc` when the field is only in the document. How the
 | Kind | `drishti.var.kinds` key (default) | Lake key (`id`) | Promoted columns (pack.yaml) | Vector columns |
 |---|---|---|---|---|
 | `pnl-vector` | `vector` (`pnl-vector`) | `VECTOR_ID` | 23 ([section 15.2](#152-pnl-vector-one-pl-vector-per-trade-as-built)) | `PNL` |
+| `scenario-pv` (2.9.4) | `scenario-pv` (`scenario-pv`) | `SCENARIO_PV_ID` | 24 ([section 15.9](#159-scenario-pv-scenario-pvs-per-trade-in-the-trades-currency-as-built-294)) | `SCENARIO_PV` |
+| `fx-scenario` (2.9.4) | `fx-scenario` (`fx-scenario`) | `FX_SCENARIO_ID` | `CURRENCY`, `RATE`, `SCENARIO_SET_ID` | none (`RATES` stays in the document) |
+| `fx-spot` (market-data pack, read for derived FX) | `fx-spot` (`fx-spot`) | `PAIR` | (the market-data pack's) | none |
 | `scenario-set` | `scenario-set` (`scenario-set`) | `SCENARIO_SET_ID` | none | none |
 | `risk-hierarchy` | `hierarchy` (`risk-hierarchy`) | `NODE_ID` | `NODE_ID`, `HIERARCHY`, `LEVEL`, `PARENT_ID`, `NAME`, `LIMIT_VAR` | none |
 | `portfolio` | `portfolio` (`portfolio`) | `PORTFOLIO_ID` | `PORTFOLIO_ID`, `NAME`, `TYPE`, `OWNER`, `LIMIT_VAR` | none |
@@ -1487,7 +1499,7 @@ rejected (`DRS-5201`, counted and listed in the provenance); otherwise it gets i
 | Type | `list<double>` (Parquet LIST of DOUBLE), float64; JSON array of numbers in the test data |
 | Length | N = the scenario set's `SCENARIO_COUNT` (509), the same for every row of the date |
 | Order | element *i* is the P&L under the move of `SCENARIO_DATES[i]` of the scenario set of the same `BUSINESS_DATE`; oldest first |
-| Currency | USD (`REPORTING_CCY`); amounts in currency units, not thousands; the test data's are whole USD |
+| Currency | USD (`REPORTING_CCY`); amounts in currency units, not thousands; the test data's are whole USD. A trade priced in another currency is sent as scenario PVs instead ([section 15.9](#159-scenario-pv-scenario-pvs-per-trade-in-the-trades-currency-as-built-294)); answers in another currency are asked with `ccy` ([section 15.10](#1510-reporting-currency-as-built-294)) |
 | Sign | gain positive, loss negative, from the bank's point of view |
 | Horizon | 1 day (`HORIZON_DAYS` of the scenario set) |
 | Missing | no `null`, `NaN` or infinity inside a vector; a trade the batch could not value has `STATUS: failed` and `PNL` null |
@@ -1671,6 +1683,120 @@ hot file is built (its name is the digest of the new inputs, [section 26](#26-th
 capture is taken again with the next result version; the earlier one is kept. Time travel (*the VaR of a date as it was known on a later
 day*) reads the table at that instant, within the 7 years kept.
 
+### 15.9 `scenario-pv`: scenario PVs per trade, in the trade's currency (AS BUILT, 2.9.4)
+
+A bank's batch may send a trade's scenario P&L in a second form (product owner, 2026-10-27): the trade **revalued under each scenario**
+and its **base PV** of the same run, both in the trade's own currency, instead of the P&L vector. Drishti computes the P&L itself when it
+loads the date, in USD, and from there in any reporting currency ([section 15.10](#1510-reporting-currency-as-built-294)). The two forms
+live side by side: a date may hold P&L vectors for some trades and scenario PVs for others (the demo does: its Endur trades come as
+scenario PVs); a trade is in one form only (a trade id in both refuses the date, `DRS-5202`). The P&L-vector form of section 15.2 is
+unchanged.
+
+**The decisions (product owner, 2026-10-27):** (1) PVs are in **each trade's own currency**, its `CURRENCY`; one stated currency for a
+whole file is the same thing; (2) scenario FX is **derived** from the FX history of each scenario's date, unless the batch **supplies** it
+(then the supplied rates are used); (3) every cross rate goes **through USD**; (4) the holding period stays **1 day**.
+
+**The conversion at load** (`VarIntake`, `ScenarioFx.pnlFromPv`), for a trade in currency `c`, with `FX_c` in USD per unit of `c`:
+
+```
+P&L_USD(s) = PV(s) × FX_c(s) − PV(base) × FX_c(base)          s = 0 … 508, the scenario set's order
+```
+
+The trade's USD value today, `PV(base) × FX_c(base)`, becomes its `PV` (the position's market value, the size of its marginal VaR), as a
+P&L vector's `PV`. A USD trade's P&L is `PV(s) − PV(base)`. Converted, the trade joins the store like any vector; positions, nodes,
+scopes, captures and the official record do not know which form it came in (the provenance counts them: `scenarioPvTrades`).
+
+**Grain:** one row per trade, business date and scenario set. **Key:** `SCENARIO_PV_ID` (`SPV-<TRADE_ID>-<SCENARIO_SET_ID>`), command
+`SPV`. **Table:** `risk/scenario-pv/`, the vector column `SCENARIO_PV` (`list<double>`), the same promoted trade columns as `pnl-vector`
+plus those below. Contract: `config/packs/market-risk/contracts/scenario-pv.contract.yaml`.
+
+| Column | JSON | Delta | Req. | Engine | Unit | Meaning | Example |
+|---|---|---|---|---|---|---|---|
+| `SCENARIO_PV_ID` | id | `id` STRING | required | – | | the lake key | `SPV-1000054-HS-509` |
+| `TRADE_ID` … `TAGS` | | | | R | | the trade's terms, as in [section 15.2](#152-pnl-vector-one-pl-vector-per-trade-as-built) (`LEGAL_ENTITY`, `DESK` and `TT_BOOK` promoted) | |
+| `CURRENCY` | ccy | STRING | required | R | | the currency **both PVs** are in: the trade's own | `EUR` |
+| `BASE_PV` | amount | DOUBLE | required | R | `CURRENCY` | the trade's value on the business date, from the same run as the scenario PVs | `14997.44` |
+| `SCENARIO_PV` | vector | `list<double>` | required | R | `CURRENCY` | the trade's value under each scenario, in `SCENARIO_DATES` order; length `SCENARIO_COUNT`; a scenario that failed to price is `null` | `[15062.11, 14950.27, …]` (509) |
+| `VALUATION_DATE`, `BASE_VALUATION_DATE` | date | STRING | required | C | | the dates the scenario PVs and the base PV are valued on: the same, the business date | `2026-09-30` |
+| `TRADE_STATUS`, `MATURITY_DATE` | | STRING | optional | R | | live or not, as in section 15.2 | |
+| `STATUS` | text | STRING | required | C | | `ok`, `proxied` or `failed` (then `SCENARIO_PV` null: counted as failed, never zero) | `ok` |
+| `SCENARIO_SET_ID`, `BATCH_ID` | id | STRING | required | C | | the run, checked with the vectors': one batch and the date's set across both forms (`DRS-5203`) | `HS-509`, `B-2026-09-30-01` |
+| `SOURCE_SYSTEM`, `TRADE_VERSIONS`, `PRICER`, `MODEL_VERSION`, `COMPUTED_AT`, `RESTATEMENT` | | doc | optional | – | | as in section 15.2 | |
+
+**What the load checks** (each a rejected row, counted and listed in `provenance.rejections`, never padded): a `null` or `NaN` in
+`SCENARIO_PV` is a **scenario that failed to price**: `DRS-5206 <trade>: 1 scenario failed to price: 312 (2025-11-21); the trade is not
+loaded (never filled with zero)`; a currency with no scenario FX on the date: `DRS-5207 <trade>: its PVs are in CHF and the date has no
+CHF scenario FX (…)`; a length other than the set's, no `BASE_PV`, a `VALUATION_DATE` and `BASE_VALUATION_DATE` that differ, or either
+not the business date: `DRS-5201`. Every trade uses the scenario set's order: the order is the set's `SCENARIO_DATES`, the same for both
+forms, and its length is checked.
+
+**FX: `fx-scenario` (supplied) or `fx-spot` (derived).** For each currency met, the engine takes, in this order:
+
+| Source | Kind | What | Rates |
+|---|---|---|---|
+| supplied | `fx-scenario` (`FXS`, market-risk pack, `risk/fx-scenario/`) | one row per currency and date: `CURRENCY`, `RATE` (today), `RATES` (509, the scenario set's order), always **USD per one unit**, `SCENARIO_SET_ID`, `BATCH_ID` | as sent |
+| derived | `fx-spot` (`FX`, market-data pack) | each pair against USD (`FX-EURUSD`, `FX-USDJPY`): today's `MID` and its `HISTORY` (`DATE`, `MID`) | `FX(s) = FX(base) × H(d_s) / H(d_s − 1)`: today's rate moved by the scenario day's 1-day relative move, `d_s − 1` the history's previous date |
+
+Cross pairs (`FX-EURGBP`) are never read: every cross goes through USD, units of `B` per unit of `A` being `FX_A / FX_B`. A currency with
+neither, or whose history does not cover every scenario day and the day before the first, has no rates on the date; the provenance's
+`fx` says per currency where its rates came from (`supplied`, `derived`) and today's rate. The market-data pack's demo history is 30
+days, so the demo **supplies** its scenario FX (AUD, CAD, CHF, EUR, GBP, JPY); a bank with 510 days of FX history needs to send none.
+`scenario-pv` and `fx-scenario` are inputs (their data-load signal reloads the date, and they enter the hot file's digest); `fx-spot` is
+read when a date loads, not watched. Contract: `config/packs/market-risk/contracts/fx-scenario.contract.yaml`.
+
+**On the test data (2.9.4).** The Endur trades (1,339: 1,089 USD, 246 EUR, 4 CAD) come as scenario PVs: the same factor-model move as
+before, valued in the trade's currency (`tools/packgen/var/scenario_fx.py`). A USD trade's P&L from its scenario PVs is its 2.8.0
+vector **exactly**; a EUR or CAD trade's adds the move of its currency on its value, as a bank's revaluation would. The bank on
+2026-09-30 moves from VaR 112,035,906 and ES 160,132,107 (every trade a P&L vector, 2.9.3) to **112,041,646** and **160,143,809**
+(+5,740 and +11,702); only the nodes holding those 250 trades change (the commodity desk 17,523,118 → 17,514,512, its books, LE-NY,
+Markets, the bank). On the default demo lake (2026-10-26, 8,566 live trades) the bank moves from 126,544,583 and 172,580,660 to
+126,537,611 and 172,532,570. `tools/packgen/var/make_var_data.py` prints both figures.
+
+### 15.10 Reporting currency (AS BUILT, 2.9.4)
+
+Every answer of the engine takes a **reporting currency**, `ccy=EUR` (none: USD), and says it in `currency`: the headline and its
+provenance, the path, the contributions, the history, the tree, the hints, captures and compare, the pre-deal what-if, `var-result` and
+`var-whatif` (the parameter `ccy`: `VRES DESK:RATES~ccy=EUR`), and the official record (`GET /official?ccy=EUR`). The command line takes
+`--ccy` ([section 10](#10-the-command-line)). The console's currency picker is not built yet (its mock-ups are with the product owner).
+
+**The conversion.** The USD book is built when the date loads; a book in another currency `r` is built from it **the first time it is
+asked**, every trade converted with its USD value today `p` (its `PV`) and the scenario FX of `r` (`CurrencyBook`, `ScenarioFx.convert`):
+
+```
+P&L_r(s) = (p + P&L_USD(s)) / FX_r(s) − p / FX_r(base)
+```
+
+the trade's USD value under the scenario at the scenario's rate, less today's value at today's rate. For a scenario-PV trade in `c` this
+is exactly `PV(s) × FX_c(s)/FX_r(s) − PV(base) × FX_c(base)/FX_r(base)`, the cross through USD. **The currency move is part of the risk:**
+the same trades give a different VaR in each currency, never the USD VaR at today's rate. A trade with no `PV` converts its P&L alone
+(counted: `fx.rates.<CCY>.tradesWithoutPv`). Limits convert at today's rate (a node's `LIMIT_VAR` and a portfolio's are set in USD).
+
+**Kept like the USD book.** The book in `r` has the same trades, positions and nodes in the same order (a scope resolves to the same
+members in every currency); with the tiered memory it is its own hot file under `<hot>/<date>-<CCY>/` (digest: the USD book's, the
+currency and the FX versions), opened again from it like a history date, and it leaves memory with its date. `GET /status` lists the
+books in other currencies (`loaded[].currency`). A currency without rates on the date answers `422 DRS-5207` in words (*no CHF FX for the
+scenarios of 2026-09-30: …; the currencies with FX on the date: AUD, CAD, CHF …*); a `ccy` that is not three letters, `400 DRS-5001`.
+
+**Official records.** `drishti.var.official.currencies` (default `[USD]`) lists the currencies captured officially: USD always, first,
+and the only one published to `risk-results/var-official`; each other one is captured from the date's book in that currency into the
+content store (`var/official/<CCY>/<date>.json`, its own result versions), read by `GET /official?ccy=` and by a node's history in that
+currency. A node's history in a currency without official records replays today's members, as for any scope.
+
+**On the test data** (2026-09-30; `tools/packgen/var` FX, `VarTestDataPrecisionTest` prints them):
+
+| Currency | Bank VaR 99% | Bank ES 97.5% |
+|---|---|---|
+| USD | 112,041,646 | 160,143,809 |
+| EUR | 111,837,045 | 137,631,546 |
+| GBP | 104,139,554 | 125,595,958 |
+| CHF | 113,028,100 | 127,541,032 |
+| CAD | 189,801,404 | 230,680,413 |
+| AUD | 221,227,565 | 241,623,693 |
+| JPY | 20,883,226,318 | 23,578,418,999 |
+
+At today's rates the USD VaR would be 95.4 million EUR or 155.6 million CAD: the difference is the bank's net value (3.65 billion USD)
+moving against each currency on the scenario days, a risk a euro-based owner carries and a dollar-based one does not.
+
 ## 16. Reference and master data read
 
 **The server engine reads no master directly** (decided 2026-10-25): everything it needs is denormalised onto the `pnl-vector` rows (the
@@ -1787,6 +1913,11 @@ from the same inputs (the same versions and batch ids) is not captured again (`u
 next **result version**, the earlier captures kept. Kept 7 years, like the vectors (decided, open question 10): the content store keeps
 every version, and nothing deletes them. `VarOfficialStore` serves the node history from them.
 
+**In other reporting currencies (2.9.4).** The record above is the USD one, and the only one published. Each other currency of
+`drishti.var.official.currencies` (`[USD, EUR]`) is captured in the same run, from the date's book in that currency, under
+`var/official/<CCY>/<date>.json` with its own result versions; every capture and record says its `currency`
+([section 15.10](#1510-reporting-currency-as-built-294)).
+
 | Record | Key in the content store | Content |
 |---|---|---|
 | A node's official capture | `var/captures/official/<CAP-id>.json` | the capture document of [section 6](#6-captures-and-compare) with `official: true`, `owner: drishti`, `node`, `resultVersion`, `hypoPnl`, the components (the 50 largest; `componentCount` says how many there were), the worst 25, the vector (whole units), `membership` (the date's membership record), `memberCount`, `membershipHash`, `inputs`, `provenance`. No member list of its own: `CAPTURE:<id>` resolves the node's trades from the membership record |
@@ -1872,8 +2003,10 @@ not a list of numbers`). A `null` element inside a vector is accepted and stays 
 | 502 | `DRS-1003` | the vectors cannot be read; no connector keeps `pnl-vector.PNL` as a vector column with the columns asked | *the P&L vectors of <date> could not be read: …*; *no connector keeps pnl-vector.PNL as a vector column with the columns …* |
 | 503 | `DRS-5204` | a date's vectors exceed `memory-budget-mb` (capacity: decided, open question 9) | *<n> vectors of 509 values need <m> MB; the vector store's budget is <b> MB …: the engine has no room for this date now; raise …* |
 | 503 | `DRS-5205` | `POST /what-if` without the Python VaR engine (the compute workers off), or it did not answer in 30 s | *the what-if runs in the Python VaR engine (the reactive connector var-whatif …), which is not running on this server …* |
+| 422 | `DRS-5207` | `ccy` names a currency with no scenario FX on the date (2.9.4) | *no CHF FX for the scenarios of <date>: CHF: no scenario rates supplied and no FX history to derive them from; the currencies with FX on the date: …* |
+| 400 | `DRS-5001` | `ccy` is not a three-letter code; a compare of two captures in different currencies | *ccy is a currency's ISO code (USD, EUR, CAD ...), not EURO*; *… is in EUR and … in USD: a compare reads two captures in one currency* |
 
-`DRS-5201` is not an HTTP answer: it names a rejected row in `provenance.rejections` (section 20.3).
+`DRS-5201`, `DRS-5206` and (for a trade) `DRS-5207` are not HTTP answers: they name a rejected row in `provenance.rejections` (section 20.3).
 
 ### 20.3 What the load checks (as built)
 
@@ -1887,6 +2020,9 @@ counted (`provenance.rejected`, `GET /status`) and its reason listed (`provenanc
 | Finiteness | no `null`, `NaN` or infinity in `PNL` | row rejected (`DRS-5201`) |
 | Failed rows | `STATUS = failed` with a vector | row rejected (`DRS-5201`); a null `PNL` is a failed row, counted (`failed`) |
 | Currency | `REPORTING_CCY = USD` (when promoted) | row rejected (`DRS-5201`) |
+| Scenario PVs (2.9.4) | every `SCENARIO_PV` finite (a null or NaN is a scenario that failed to price) | row rejected (`DRS-5206`, the scenarios listed), never zero-filled |
+| Scenario FX (2.9.4) | the row's `CURRENCY` has scenario FX on the date (supplied or derived) | row rejected (`DRS-5207`) |
+| Valuation dates (2.9.4) | `VALUATION_DATE` = `BASE_VALUATION_DATE` = the business date (when promoted); `BASE_PV` present; length = `SCENARIO_COUNT` | row rejected (`DRS-5201`) |
 | Unique trade | one row per (`BUSINESS_DATE`, `SCENARIO_SET_ID`, `TRADE_ID`) | the date is not loaded (`422 DRS-5202`) |
 | One run | one `BATCH_ID` across the date's vectors; every `SCENARIO_SET_ID` equals the set's | the date is not loaded (`DRS-5203`); the date before it is answered with the reason in `provenance.warnings`, until the date's vectors change |
 | Scenario set | one set per date; `SCENARIO_DATES` strictly increasing and all before `BUSINESS_DATE` | the date is not loaded (`DRS-5203`), as above |
@@ -1984,7 +2120,9 @@ loads each folder in one run, every date moved with the business dates):
 
 | Kind | Folder files | Dated | Documents | Bytes (gzip) |
 |---|---|---|---|---|
-| `pnl-vector` | `cob-2026-09-30.part-001.jsonl.gz` … `part-012` | 2026-09-30 | **9,572** trades (CALYPSO 4,155, MUREX 4,078, ENDUR 1,339; LONG 4,887, SHORT 4,685; AMENDED 4,781, VALIDATED 4,682, NEW 109; all `ok`), every vector 509 values; 2,159 of them in 358 securities | 15,735,874 |
+| `pnl-vector` | `cob-2026-09-30.part-001.jsonl.gz` … `part-010` | 2026-09-30 | **8,233** trades (CALYPSO 4,155, MUREX 4,078; all `ok`), every vector 509 values (2.9.4: the Endur trades moved to `scenario-pv`; until 2.9.3 all 9,572 trades were here) | 13,421,007 |
+| `scenario-pv` | `cob-2026-09-30.part-001.jsonl.gz` … `part-003` | 2026-09-30 | **1,339** Endur trades (USD 1,089, EUR 246, CAD 4), 509 scenario PVs and a base PV each, in cents of the trade's currency ([section 15.9](#159-scenario-pv-scenario-pvs-per-trade-in-the-trades-currency-as-built-294)) | 2,768,838 |
+| `fx-scenario` | `cob-2026-09-30.jsonl.gz` | 2026-09-30 | 6 currencies (AUD, CAD, CHF, EUR, GBP, JPY): today's `fx-spot` mid and 509 scenario rates moved by the factor model's FX factors | 16,315 |
 | `scenario-set` | `cob-2026-09-30.jsonl.gz` | 2026-09-30 | 1 (`HS-509`, 2024-09-17 to 2026-09-29) | 1,399 |
 | `risk-hierarchy` | `cob-2026-09-30.jsonl.gz` | 2026-09-30 | **88** nodes | 2,133 |
 | `portfolio` | `cob-2026-09-30.jsonl.gz` | 2026-09-30 | **28** definitions | 1,756 |
@@ -1994,7 +2132,8 @@ The data's 30 books hold every live trade of the date (9,572; open question 1), 
 and per legal entity (`PF-LE-<x>`, 4) and `PF-COMM-BOOK-1`; RULE portfolios `PF-USD-RATES`, `PF-EUR-ALL`, `PF-SHORT-RISK`,
 `PF-GOVT-BONDS`, `PF-LISTED`, `PF-OPTIONS`, `PF-FX-CROSSES`, `PF-LARGE-LONGS`; BASKET portfolios `PF-ASHA-UNWIND`, `PF-NETTED-FLOW`,
 `PF-HEDGE-PAIRS`, `PF-TOP-SECURITIES`, `PF-PARTIAL-FILLS` (single trades of fungible positions); they overlap on purpose. Engine VaR on
-2026-09-30: the bank 112,035,906 (ES 160,132,107). No position, `var` or `var-node` folder, and no VaR figure on any document. The
+2026-09-30: the bank 112,041,646 (ES 160,143,809; 112,035,906 and 160,132,107 until 2.9.3, when every trade was a P&L vector: the
+difference is the FX translation of the Endur trades in EUR and CAD, section 15.9). No position, `var` or `var-node` folder, and no VaR figure on any document. The
 security ids on securities and listed trades are synthetic too. The node history starts with the first official capture.
 
 **Repository size (as built):** the committed test data and packs grew by 11.96 MB (gzip): the vectors went from 2.20 MB to 15.74 MB;
@@ -2006,7 +2145,7 @@ about 200 positions over 60 dates, about 21 MB compressed).
 
 ```bash
 python3 tools/drishti.py lake demo --as-of data \
-  --only market-risk/pnl-vector,market-risk/scenario-set,market-risk/risk-hierarchy,market-risk/portfolio
+  --only market-risk/pnl-vector,market-risk/scenario-pv,market-risk/fx-scenario,market-risk/scenario-set,market-risk/risk-hierarchy,market-risk/portfolio
 ```
 
 `--as-of data` keeps the test data's own date (2026-09-30), so the numbers are this guide's; `--as-of today` (the default) moves the
@@ -2109,6 +2248,7 @@ recommended defaults unless the product owner said otherwise):
 | 1.1 | 2026-10-25 | Product owner's decisions: the data-load signal reloads the engine automatically; vectors kept 7 years; `LE:` is the bank's legal entity (the trade's booking `LEGAL_ENTITY`) |
 | 1.2 | 2026-10-25 | Official end-of-day captures published to `risk-results/var-official` for other systems (product owner); official captures kept 7 years |
 | 1.3 | 2026-10-25 | **AS BUILT (2.8.0, VaR complete part 1):** the stored `var` and `var-node` kinds retired (§21); computed figures removed from `position`, `portfolio` and `desk`, the pages show the engine's (§3.7), with a guard test; positions derived by Drishti by configured rules (§15.6); every live trade valued (9,572; open question 1); 28 portfolio definitions; official end-of-day captures of every node, published append-only (§19); the data-load signal reloads and captures (§15.8); 7-year retention (§15.1); the load's checks and `DRS-5201` to `DRS-5204` (§20); `by=node`, the largest parts, masks, BASKET portfolios refused to aggregate-only viewers, basket and reload audit, input versions and batch ids in provenance, ids in any case; scope words `LE:` (the trades' legal entity) and `CPTY:` (§5.5) |
+| 1.5 | 2026-10-27 | **AS BUILT (2.9.4, local branch for the product owner's review):** scenario PVs in each trade's currency (`scenario-pv`) beside or instead of P&L vectors, converted to USD P&L at load; scenario FX supplied (`fx-scenario`) or derived from the FX history (`fx-spot`), crosses through USD, 1-day; `DRS-5206` (a scenario that failed to price) and `DRS-5207` (no FX) (§15.9, §20); a reporting currency on every answer (`ccy`, `--ccy`), books per currency built on first ask on the tiered memory, official records per `drishti.var.official.currencies` (§15.10); the demo's Endur trades as scenario PVs (§22.1) |
 | 1.4 | 2026-10-26 | **AS BUILT (2.8.0, VaR complete part 2):** the tiered memory (§26: each date a memory-mapped float32 hot file, aggregates float64, history dates mapped again from their file, eviction, cleaning, safe unmapping; the hot file's format 1 fixed; precision bound and measurements); `drishti.var.tier.*` (§12); the budget measured on the float32 copy; `provenance.tier`, the status's `tier` (§11.2, §11.4); the benchmark measured at 100,000 × 5 and extrapolated to 1 M × 50, with the full command (§27.3); the computed kinds `var-result` and `var-whatif` through reactive connectors, the Python VaR engine in the pool `var` (§8); `drishti.py var` (§10); open questions 8 and 12 decided; sharding documented as planned, not built (§28) |
 
 **2026-10-26, no change to the contract:** the contract (formerly the contracts folder's VAR.md, now [archived](../archive/VAR.md) as history) was merged with the user guide, the

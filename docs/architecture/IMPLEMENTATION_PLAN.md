@@ -531,6 +531,12 @@ engines. Which industries, and in what order, is for the product owner to decide
 
 ## 2.9.4 (planned): VaR from scenario PVs, in any reporting currency (product owner, 2026-10-26)
 
+**Status (2026-10-27): built on a local branch for the product owner's review, not pushed or merged** (VAR_GUIDE.md sections 15.9 and
+15.10, contract 1.5): scenario PVs (`scenario-pv`) beside P&L vectors, FX supplied (`fx-scenario`) or derived (`fx-spot`), crosses through
+USD, `DRS-5206` and `DRS-5207`, `ccy` on every answer and `--ccy` on the command line, books per currency on first ask, official records
+per `drishti.var.official.currencies`; the demo's Endur trades as scenario PVs. Open: the console's currency picker (mock-ups), the
+screenshots of tutorial 25 and VAR_GUIDE on the new figures.
+
 Moved from 2.9.3 to its own release, 2.9.4 (product owner, 2026-10-27). Decided after 2.9.1: the upstream engine gives **scenario PVs** (each live trade revalued under each historical scenario) and the
 **base PV**, and FX rates are available; Drishti computes the P&L vectors itself and reports VaR and ES **in a chosen currency**.
 The P&L-vector input of 2.8.0 stays supported (a bank sends either).
@@ -543,8 +549,9 @@ The P&L-vector input of 2.8.0 stays supported (a bank sends either).
 | Engine | vectors per reporting currency built at load (USD always; others on first ask, cached per date), on the existing memory tiering |
 | Docs and screens | mock-ups for the currency picker first; VAR_GUIDE Part II (the contract) for PV input; tutorial 25; the Market risk Knowledge page ("From scenario PV to the P&L vector"); test data regenerated as scenario PVs and FX |
 
-Open questions for the product owner: (1) PVs in each trade's currency or one currency; (2) scenario FX supplied or derived from the
-scenario dates' FX history; (3) cross rates via USD or direct pairs; (4) the holding period (1-day moves, as today).
+Decided by the product owner (2026-10-27): (1) PVs in each trade's own currency (one stated currency for a file is the same thing);
+(2) scenario FX derived from the FX history of the scenario dates, the batch's supplied FX used when it sends it; (3) cross rates via USD;
+(4) 1-day moves, as today.
 
 ## Known gaps
 

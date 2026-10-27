@@ -100,8 +100,10 @@ Why a bank cares:
 ```text
 scenario-set  SSET HS-509          the 509 historical days, oldest first (day i is position i of every vector)
    │
-pnl-vector    PNLV PV-<trade>-HS-509   one per live trade: 509 P&Ls, with the trade's LEGAL_ENTITY, DESK, TT_BOOK, COUNTERPARTY
+pnl-vector    PNLV PV-<trade>-HS-509   one per live trade: 509 P&Ls in USD, with the trade's LEGAL_ENTITY, DESK, TT_BOOK, COUNTERPARTY
    │  TRADE_ID ───────────────────────► trade  TRD <id>            (trading pack: the deal itself)
+scenario-pv   SPV SPV-<trade>-HS-509   or (2.9.4) its 509 scenario PVs and base PV in its own currency; Drishti makes the P&L
+fx-scenario   FXS FXS-<ccy>-HS-509     each currency's rate today and under each scenario (else derived from fx-spot FX <pair>)
    │
    ▼  Drishti nets a book's trades by the pack's positions: rules
 position      POS POS-<book>~<security | contract | trade>   (derived each date, never delivered)
@@ -136,8 +138,10 @@ The links are the packs' contract link columns (`config/packs/market-risk/contra
 
 ### From scenario PV to the P&L vector
 
-Drishti receives P&L vectors; it does not make them. It helps to know how the upstream batch makes them, because every VaR figure
-inherits their quality. For each live trade and each scenario day *s* of the scenario set:
+A bank's batch sends each trade's scenario P&L in one of two forms: the finished **P&L vector** in USD, or (since 2.9.4) the trade's
+**scenario PVs**, its value under each scenario and its base value, in its own currency, from which Drishti makes the vector itself when
+it loads the date. Either way it helps to know how a vector is made, because every VaR figure inherits its quality. For each live trade
+and each scenario day *s* of the scenario set:
 
 ```text
 P&L(s) = PV(s) · FX(s)  −  PV(base) · FX(base)
@@ -151,19 +155,28 @@ P&L(s) = PV(s) · FX(s)  −  PV(base) · FX(base)
   or *relative* (the share fell 3%, so take 3% off today's price). Rates and spreads are usually shifted absolutely, prices and
   volatilities relatively; the two give different P&L when today's level is far from the level on day *s*.
 - **FX(s)** is the scenario's exchange rate, moved like every other factor, so a EUR bond's P&L in USD holds both the bond's move and the
-  euro's move on day *s*. Using today's FX for every scenario would drop the currency risk.
+  euro's move on day *s*. Using today's FX for every scenario would drop the currency risk. When Drishti makes the vector, it takes the
+  batch's scenario FX when the batch sends it (`fx-scenario`), else derives it from the FX history: today's rate moved by day *s*'s
+  1-day move (`FX(s) = FX(base) × H(d_s) / H(d_s − 1)`). Every cross goes **through USD**: EUR into JPY is EUR→USD→JPY, never a direct
+  EUR/JPY quote.
 - **The same scenario order** for every trade: position *i* of every vector is the scenario set's day *i* (`SSET HS-509` lists them,
   oldest first). That is what makes vectors addable; Drishti adds only vectors of one scenario set and one batch.
 - **A scenario the batch could not price is flagged, never filled with zero.** A trade with no vector is `STATUS: failed` and counted in
-  the answer's provenance; one priced by a proxy is `proxied`. A zero would claim the trade neither gains nor loses on that day, which
+  the answer's provenance; one priced by a proxy is `proxied`. A scenario PV that is empty (null) leaves the trade out with
+  `DRS-5206`, the scenario named, in every answer's provenance. A zero would claim the trade neither gains nor loses on that day, which
   quietly lowers the VaR.
 - **Full revaluation or sensitivities.** *Full revaluation* reprices the trade under each scenario. *Sensitivities* approximate the
   P&L from deltas, gammas and vegas (a Taylor expansion): fast, but wrong for large moves and for options near a barrier or strike.
   The scenario set says which the batch used (`REVALUATION`).
 
-Today Drishti reads vectors already in the reporting currency (a row in another currency is left out and counted). **Planned for
-2.9.3:** VaR from delivered scenario PVs in any reporting currency: Drishti will take PV(s), PV(base) and the scenario FX itself and
-build the vectors as above.
+**In Drishti (2.9.4).** A trade sent as scenario PVs (`SPV SPV-<trade>-HS-509`) becomes its USD vector when the date loads; the demo's
+Endur trades come that way, the rest as vectors. Both PVs must have the same valuation date (the business date), and a currency with no
+scenario FX leaves its trades out (`DRS-5207`). From the USD vectors Drishti answers in **any reporting currency** (`--ccy EUR`,
+`ccy=EUR`): each trade's USD value under the scenario at the scenario's rate, less today's value at today's rate. So the same bank has a
+different VaR in each currency: on 2026-09-30 112.0 million USD is 111.8 million EUR, not the 95.4 million today's rate makes, because a
+euro-based owner also carries the bank's 3.65 billion USD of value moving against the euro. Which currency is right is the owner's
+question, not the model's. The guide's [section 15.9](../guides/VAR_GUIDE.md#159-scenario-pv-scenario-pvs-per-trade-in-the-trades-currency-as-built-294)
+has the contract, [section 15.10](../guides/VAR_GUIDE.md#1510-reporting-currency-as-built-294) the reporting currencies.
 
 ## 4. A worked example on the demo data
 
@@ -174,15 +187,15 @@ today): business date **2026-10-26**, batch `B-2026-10-26-01`, scenario set `HS-
 
 ```text
 VAR BANK  ·  Drishti Bank  ·  node  ·  2026-10-26
-  VaR 99%   126,544,583 USD   (the 6th worst of 509)
-  ES 97.5%   172,580,660 USD   (mean of the 13 worst)
+  VaR 99%   126,537,611 USD   (the 6th worst of 509)
+  ES 97.5%   172,532,570 USD   (mean of the 13 worst)
   limit      150,000,000 USD   use 84.4%
-  parts      2 division   standalone sum 138,788,322   diversification 12,243,739
+  parts      2 division   standalone sum 138,781,350   diversification 12,243,739
   backtest   green  3 exceptions in 249 days   Kupiec p 0.753   Christoffersen p 0.786
   8566 trades in 7115 positions
 ```
 
-Read it as: on the 6th worst of the 509 days the bank would lose 126.5 million; the 13 worst days lose 172.6 million on average, so
+Read it as: on the 6th worst of the 509 days the bank would lose 126.5 million; the 13 worst days lose 172.5 million on average, so
 the tail beyond VaR is fat; the VaR uses 84.4% of the 150 million limit; the model had 3 exceptions in the last 249 days (green).
 
 **Diversification depends on how you cut the bank.** The same 126.5 million against different parts:
@@ -191,7 +204,7 @@ the tail beyond VaR is fat; the VaR uses 84.4% of the 150 million limit; the mod
 |---|---|---|
 | 2 divisions | 138.8 m | 12.2 m |
 | 4 legal entities (`drishti.py var tree --hierarchy LEGAL`): LE-NY 135.9 m, LE-LDN 29.7 m, LE-TKY 10.0 m, LE-FRA 1.8 m | 177.4 m | **50.9 m** |
-| 10 desks (`drishti.py var parts BANK --by desk`) | 327.8 m | 201.2 m |
+| 10 desks (`drishti.py var parts BANK --by desk`) | 327.7 m | 201.2 m |
 
 The finer the cut, the more the parts offset each other. LE-NY alone (135.9 m) has a larger VaR than the bank.
 
@@ -210,7 +223,7 @@ a VaR of 22.2 million (ES 34.5 m). The same counterparty's peak PFE is 395.3 mil
 two different questions about the same trades.
 
 **What the data hasn't told you.** The bank uses 84.4% of its 150 million limit, in the Management tree (`VAR BANK`) and in the
-Legal tree (`drishti.py var tree --hierarchy LEGAL`) alike: one firm-wide limit, two ways of splitting it. In the Legal tree, `BOOK-COMM-1` is at **223%** of its limit and `BOOK-EQD-1` at 133%, while their desks are within
+Legal tree (`drishti.py var tree --hierarchy LEGAL`) alike: one firm-wide limit, two ways of splitting it. In the Legal tree, `BOOK-COMM-1` is at **222%** of its limit and `BOOK-EQD-1` at 133%, while their desks are within
 theirs: a breach a desk-level report would never show.
 
 ## 5. Questions to ask your data

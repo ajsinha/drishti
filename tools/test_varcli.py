@@ -108,6 +108,25 @@ class VarCli(unittest.TestCase):
         run("status")
         self.assertEqual(FakeApi.calls[-1][1], "/api/v1/var/status")
 
+    def test_every_figure_in_a_reporting_currency(self):
+        run("show", "BANK", "--ccy", "EUR")
+        self.assertEqual(self.query(), ("GET", "/api/v1/var/scope", {"scope": "BANK", "ccy": "EUR"}, None))
+        run("parts", "DESK:RATES", "--ccy", "CAD")
+        self.assertEqual(self.query()[2]["ccy"], "CAD")
+        run("tree", "--ccy", "GBP", "--json")
+        self.assertEqual(self.query()[1:3], ("/api/v1/var/tree", {"hierarchy": "MGMT", "ccy": "GBP"}))
+        run("capture", "TRD:X-1", "--ccy", "EUR")
+        self.assertEqual(self.query()[0:3], ("POST", "/api/v1/var/captures", {"ccy": "EUR"}))
+        run("official", "--ccy", "EUR")
+        self.assertEqual(self.query()[0:3], ("GET", "/api/v1/var/official", {"ccy": "EUR"}))
+        run("whatif", "DESK:RATES", "--ccy", "EUR", "--stress-window", "0")
+        self.assertEqual(FakeApi.calls[-1][2]["params"], {"stress-window": 0, "ccy": "EUR"})
+        out = []
+        V.render_headline({**HEAD, "currency": "EUR", "provenance": {**HEAD["provenance"], "fx": {
+            "reporting": "EUR", "crosses": "through USD", "rates": {"EUR": {"source": "supplied", "base": 1.174, "reporting": True}}}}}, out.append)
+        self.assertIn("  VaR 99%   74,633,680 EUR   (the 6th worst of 509)", out)
+        self.assertIn("  in EUR, crosses through USD; FX EUR supplied (1.174 USD)", out)
+
     def test_a_headline_and_its_parts_print_in_a_few_lines(self):
         out = []
         V.render_headline(HEAD, out.append)
