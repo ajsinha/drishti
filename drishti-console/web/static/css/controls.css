@@ -99,6 +99,8 @@
 .ms-item[hidden] { display: none; }
 .ms-item:hover { background: var(--d-highlight); }
 .ms-box:not([open]) > .ms-pop, .ctl-pop.ms:not([open]) > .ms-pop { display: none; }
+/* a Sutra control's open list floats over the panel below it, never pushing the header's other controls apart (2.9.4 screenshot run) */
+.ctl-pop > .ms-pop { position: absolute; left: 0; top: 100%; max-height: 22rem; overflow: auto; }
 .ms-sum { cursor: pointer; background: var(--d-bg-2); color: var(--d-ink); border: 1px solid var(--d-border); border-radius: 4px; padding: .2rem .5rem; min-height: 30px; list-style: none; }
 .ms-sum::-webkit-details-marker { display: none; }
 .ms-sum::after { content: "▾"; margin-left: auto; color: var(--d-muted); }
