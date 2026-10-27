@@ -43,7 +43,9 @@ class DomainPacksTest {
     /** Panels the exposure engine fills from the lake's paths (2.9.0): empty in the demo, which has no lake; ExposureApiTest covers them. */
     private static final java.util.Set<String> ENGINE_PANELS = java.util.Set.of("netting-set/exposure",
             // CORR's correlations (2.9.2): the reactive correlation-engine answers after the view is drawn (the panels fill in place)
-            "correlation-matrix/average", "correlation-matrix/pairs", "correlation-matrix/factors", "correlation-matrix/stamp", "equity/beta");
+            "correlation-matrix/average", "correlation-matrix/pairs", "correlation-matrix/factors", "correlation-matrix/stamp", "equity/beta",
+            // a legal entity's books' VaR (2.9.2): the VaR engine's (VAR_ENGINE.BOOKS), none on the demo source
+            "legal-entity/riskReturn");
 
     @Test
     void everyAdvertisedExampleOpensAFullView() throws Exception {

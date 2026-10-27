@@ -42,7 +42,7 @@ class BankingPacksTest {
         mvc.perform(get("/api/v1/sources"))
                 .andExpect(jsonPath("$.sources[*].name").value(hasItems("reference-store", "market-store", "trade-endur", "trade-calypso", "trade-murex", "trade-pages", "risk-store",
                         "legal-store", "credit-store", "collateral-store")));
-        mvc.perform(get("/api/v1/sutras")).andExpect(jsonPath("$.length()").value(182))
+        mvc.perform(get("/api/v1/sutras")).andExpect(jsonPath("$.length()").value(183))      // equity-beta's (2.9.2)
                 .andExpect(jsonPath("$[*].name").value(hasItems("irs-fixfloat", "endur-comswap", "counterparty-trades", "netting-set", "stress-result", "ir-curve", "counterparty")));
         mvc.perform(get("/api/v1/command/suggest").param("q", "NSE"))
                 .andExpect(jsonPath("$[*].mnemonic").value(hasItem("NSET")));
@@ -80,7 +80,7 @@ class BankingPacksTest {
     void theChartAndAggregatePanelsHaveTheirSampleData() throws Exception {
         String[][] cases = {
             {"pnl-explain/PNL-COMM-1", "explain", "waterfall"},
-            {"desk/DESK-RATES", "mtmGrid", "pivot"}, {"desk/DESK-RATES", "tradeCount", "pivot"}, {"legal-entity/LE-NY", "riskReturn", "scatter"},
+            {"desk/DESK-RATES", "mtmGrid", "pivot"}, {"desk/DESK-RATES", "tradeCount", "pivot"},
             {"counterparty/CP-ALDERSHOT", "hierarchy", "graph"}, {"equity/EQ-CSCA", "ohlc", "candlestick"}, {"commodity/CMD-BRENT", "ohlc", "candlestick"},
             {"trade/MX-20000001", "ladder", "hbar"}, {"trade/MX-20000001", "events", "timeline"}, {"trade/1000001", "ladder", "hbar"}};
         for (String[] c : cases) {
@@ -89,6 +89,9 @@ class BankingPacksTest {
                     .andExpect(jsonPath(panel + ".kind").value(hasItem(c[2])))
                     .andExpect(jsonPath(panel + ".empty").value(hasItem(false)));
         }
+        // a legal entity's risk-return scatter reads the VaR engine's book VaRs (VAR_ENGINE.BOOKS, 2.9.2): drawn, empty on the demo source
+        mvc.perform(get("/api/v1/views/legal-entity/LE-NY")).andExpect(status().isOk())
+                .andExpect(jsonPath("$.panels[?(@.id == 'riskReturn')].kind").value(hasItem("scatter")));
         mvc.perform(get("/api/v1/views/counterparty/CP-ALDERSHOT"))
                 .andExpect(jsonPath("$.panels[?(@.id == 'hierarchy')].data.nodes[?(@.focus == true)].id").value(hasItem("CP-ALDERSHOT")))
                 .andExpect(jsonPath("$.panels[?(@.id == 'hierarchy')].data.nodes[?(@.id == 'GRP-ALDERSHOT')].link.kind").value(hasItem("counterparty-group")));
