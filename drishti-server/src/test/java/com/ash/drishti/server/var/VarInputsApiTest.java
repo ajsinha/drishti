@@ -138,6 +138,7 @@ class VarInputsApiTest {
         while (svc.loader().version(day).equals(before) && System.currentTimeMillis() < until) {
             Thread.sleep(50);
         }
+        Thread.sleep(1500);                                              // the connector's refresh (1 s) has both tables' new versions
         svc.reload(day);
     }
 
