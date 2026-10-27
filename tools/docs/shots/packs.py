@@ -82,7 +82,9 @@ def registry_install(c: Ctx):
     c.page.wait_for_timeout(800)
     registry_section(c, "02-registry-installed.jpg")
     row = c.page.locator('tr[data-pack="helpdesk"]').first
-    row.scroll_into_view_if_needed()
+    # the row well below the sticky top bar, which would otherwise sit over it in the picture
+    c.page.evaluate("() => { const r = document.querySelector('tr[data-pack=\"helpdesk\"]'); window.scrollBy(0, r.getBoundingClientRect().top - 240); }")
+    c.page.wait_for_timeout(300)
     row.screenshot(path=str(out_dir("packs") / "02b-helpdesk-pack-row.jpg"), type="jpeg", quality=84)
     print("  wrote", (out_dir("packs") / "02b-helpdesk-pack-row.jpg").relative_to(ROOT))
 
