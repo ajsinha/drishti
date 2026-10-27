@@ -256,8 +256,9 @@ class Batch:
                            "VALUATION_DATE": self.cob, "BASE_VALUATION_DATE": self.cob, "SCENARIO_PV": pvs[:m.n], **run}
                     rows = self.pv_rows
                 else:
-                    row = {**lead("PNL", "TRADE", tid, ccy, sys), "VECTOR_ID": f"PV-{tid}-HS-509", **terms, "REPORTING_CCY": "USD",
-                           "PV": round(pv), "PNL": vec[:m.n], **run}
+                    # a P&L vector's CURRENCY is its values' (USD here); the trade's own is TRADE_CURRENCY (2.9.4)
+                    row = {**lead("PNL", "TRADE", tid, "USD", sys), "VECTOR_ID": f"PV-{tid}-HS-509", **terms, "CURRENCY": "USD",
+                           "TRADE_CURRENCY": ccy, "REPORTING_CCY": "USD", "PV": round(pv), "PNL": vec[:m.n], **run}
                     rows = self.vector_rows
                 if sys in self.position_systems:
                     supplied[(pid, sys)].append((t, row))             # sent whole per position (below), not per trade
@@ -297,9 +298,10 @@ class Batch:
             v = r.get("PNL") if "PNL" in r else self.engine_vectors[r["TRADE_ID"]]
             for j in range(n):
                 pnl[j] += float(v[j])
-        ccys = {r["CURRENCY"] for r in rows}
-        return "pnl-vector", {**lead("PNL", "POSITION", pid, ccys.pop() if len(ccys) == 1 else "USD", sys),
-                              "VECTOR_ID": f"PV-{pid}-HS-509", **place, "REPORTING_CCY": "USD",
+        ccys = {r.get("TRADE_CURRENCY") or r["CURRENCY"] for r in rows}
+        own = {"TRADE_CURRENCY": ccys.pop()} if len(ccys) == 1 else {}
+        return "pnl-vector", {**lead("PNL", "POSITION", pid, "USD", sys),
+                              "VECTOR_ID": f"PV-{pid}-HS-509", **place, "CURRENCY": "USD", **own, "REPORTING_CCY": "USD",
                               "PV": round(sum(float(r.get("PV") or 0) for r in rows if "PV" in r)), "PNL": [round(x, 2) for x in pnl],
                               **run, "TRADE_IDS": ids}
 

@@ -223,6 +223,7 @@ connectors:
           - RUN_KIND
           - COMPUTED_AT
           - TRADE_IDS
+          - TRADE_CURRENCY
           vectors:
           - PNL
         scenario-pv:

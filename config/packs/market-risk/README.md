@@ -369,6 +369,7 @@ Fields, from 2 sample documents:
 | `DIRECTION` | string | `SHORT` | — |
 | `QUANTITY` | number | `-179000000.0` | The trade's quantity: positive for a buy, negative for a sell. |
 | `TAGS` | null |  | — |
+| `TRADE_CURRENCY` | string | `USD` | — |
 | `REPORTING_CCY` | string | `USD` | — |
 | `PV` | integer | `3143714` | The trade's value on the business date. (USD) |
 | `PNL` | list of integers or list of numbers |  | 509 values, oldest scenario first, stored as a list<double> column (out of the document) |

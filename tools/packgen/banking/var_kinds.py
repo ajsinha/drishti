@@ -111,7 +111,7 @@ LAYOUT = {
     "pnl-vector": {"columns": ["VALUE_TYPE", "GRAIN", "TRADE_ID", "POSITION_ID", "CURRENCY", "SOURCE_SYSTEM", "SECURITY_ID", "INSTRUMENT",
                                *_HIER, "STRATEGY", "PRODUCT_GROUP", "PRODUCT_TYPE", "COUNTERPARTY", "DIRECTION", "QUANTITY", "PV", "TAGS",
                                "TRADE_STATUS", "MATURITY_DATE", "STATUS", "REPORTING_CCY", "SCENARIO_SET_ID", "BATCH_ID", "RUN_KIND",
-                               "COMPUTED_AT", "TRADE_IDS"],
+                               "COMPUTED_AT", "TRADE_IDS", "TRADE_CURRENCY"],
                    "vectors": ["PNL"]},
     "scenario-pv": {"columns": ["VALUE_TYPE", "GRAIN", "TRADE_ID", "POSITION_ID", "CURRENCY", "SOURCE_SYSTEM", "SECURITY_ID", "INSTRUMENT",
                                 *_HIER, "STRATEGY", "PRODUCT_GROUP", "PRODUCT_TYPE", "COUNTERPARTY", "DIRECTION", "QUANTITY", "BASE_PV",

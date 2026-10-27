@@ -191,7 +191,7 @@ final class VarLoader {
         List<String> pvColumns = VarIntake.columns(router.columnar(k.scenarioPv()), pr, VarIntake.PV_COLUMNS);
         String unmarked = unmarked(columns, pvColumns);
         VarIntake intake = new VarIntake(b, pr, date, columns.subList(1, columns.size())).scenarioSet(setId)
-                .inputs(new VarInputs(props::input)).setLength(setLength);
+                .inputs(new VarInputs(props::input)).setLength(setLength).pnlFx(() -> fx(date, scenarioDates));
         boolean read;
         boolean readPv;
         try {
@@ -412,7 +412,8 @@ final class VarLoader {
         VarInputs in = new VarInputs(props::input);
         in.restore(morningRun == null ? null : morningRun.inputs());     // each system's morning form and grain: an update follows it
         VarIntake intake = new VarIntake(none, pr, date, columns.subList(1, columns.size())).scenarioSet(morning.scenarioSet()).intradayOnly(applied)
-                .inputs(in).setLength(morningRun == null || morningRun.setLength() <= 0 ? days.size() : morningRun.setLength());
+                .inputs(in).setLength(morningRun == null || morningRun.setLength() <= 0 ? days.size() : morningRun.setLength())
+                .pnlFx(() -> fx(date, days));
         try {
             router.vectors(k.vector(), "PNL", columns, asOf, (id, values, len, row) -> intake.row(id, values, len, row));
             intake.scenarioPvs(pvColumns.subList(1, pvColumns.size()), () -> fx(date, days), days);

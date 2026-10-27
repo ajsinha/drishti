@@ -51,7 +51,7 @@ final class VarIntake {
 
     /** The trade columns read besides the engine's own when the table keeps them (VAR_GUIDE.md section 15.2). */
     static final List<String> OPTIONAL = List.of("TRADE_STATUS", "MATURITY_DATE", "BATCH_ID", "SCENARIO_SET_ID", "REPORTING_CCY", "STATUS",
-            "RUN_KIND", "COMPUTED_AT", "VALUE_TYPE", "GRAIN", "POSITION_ID", "SOURCE_SYSTEM", "TRADE_IDS");
+            "RUN_KIND", "COMPUTED_AT", "VALUE_TYPE", "GRAIN", "POSITION_ID", "SOURCE_SYSTEM", "TRADE_IDS", "TRADE_CURRENCY");
     /** The position rule a supplied position (a record at position grain, VAR_GUIDE.md section 15.13) carries: never derived. */
     static final String SUPPLIED = VarBook.SUPPLIED;
     /** The scenario-PV form's own columns (VAR_GUIDE.md section 15.9), read when the table keeps them. */
@@ -212,6 +212,19 @@ final class VarIntake {
      * The scenario set's length: a row carries all of its scenarios, and the engine keeps the newest {@code width} of them (the scenario
      * window, VAR_GUIDE.md section 18.5); the whole set when they are the same.
      */
+    /** The date's FX, for P&L vectors whose CURRENCY is not USD (each scenario's P&L at that scenario's rate into USD). */
+    VarIntake pnlFx(Supplier<ScenarioFx> dateFx) {
+        ScenarioFx[] memo = {null};
+        this.pnlFx = () -> {
+            if (memo[0] == null) {
+                memo[0] = dateFx.get();
+            }
+            return memo[0];
+        };
+        this.usdPnl = new double[width];
+        return this;
+    }
+
     VarIntake setLength(int n) {
         this.full = n <= 0 ? width : n;
         this.cut = new double[width];
@@ -305,10 +318,32 @@ final class VarIntake {
         double[] vector = values;
         double pvUsd = Double.NaN;
         String[] why = null;
+        String vectorCcy = null;                                        // a P&L vector's CURRENCY when it is not USD (converted)
         if (live) {
             if (fx == null) {
-                String w = check(values, length, text(row, "STATUS"), text(row, "REPORTING_CCY"));
-                why = w == null ? null : new String[] {ErrorCode.VAR_ROW_REJECTED.code(), w};
+                // a P&L vector's values are in its CURRENCY (2.9.4); REPORTING_CCY is a deprecated alias that must say the same
+                String ccy = currency(row);
+                String rep = text(row, "REPORTING_CCY");
+                String w = rep != null && !rep.strip().equalsIgnoreCase(ccy) ? "REPORTING_CCY " + rep + " is not the CURRENCY " + ccy
+                        + " the values are in (REPORTING_CCY is a deprecated alias of CURRENCY)" : check(values, length, text(row, "STATUS"), null);
+                why = w == null ? null : new String[] {rep != null && !rep.strip().equalsIgnoreCase(ccy) ? ErrorCode.VAR_RECORD_INVALID.code()
+                        : ErrorCode.VAR_ROW_REJECTED.code(), w};
+                if (why == null && length >= 0 && !ccy.equals(ScenarioFx.USD)) {
+                    java.util.Optional<ScenarioFx.Rates> r = pnlFx == null ? java.util.Optional.empty() : pnlFx.get().rates(ccy);
+                    if (r.isEmpty()) {
+                        why = new String[] {ErrorCode.VAR_NO_FX.code(), "its P&L vector is in " + ccy + " and the date has no " + ccy + " scenario FX"};
+                    } else {
+                        // each scenario's P&L at that scenario's FX into USD: approximate, the currency move inside the trade is
+                        // already folded into the vector (tradesWithoutPv; VAR_GUIDE.md section 15.13)
+                        for (int s = 0; s < length; s++) {
+                            usdPnl[s] = values[s] * r.get().scenarios()[s];
+                        }
+                        vector = usdPnl;
+                        pvUsd = VarLoader.number(text(row, "PV")) * r.get().base();
+                        vectorCcy = ccy;
+                        fxUsed.putIfAbsent(ccy, Map.of("source", r.get().source(), "base", r.get().base()));
+                    }
+                }
             } else {
                 why = checkPv(values, length, row);
                 if (why == null && length >= 0) {
@@ -330,6 +365,16 @@ final class VarIntake {
         }
         for (int c = 0; c < numbers.length; c++) {
             numbers[c] = VarLoader.number(text(row, VarBook.TRADE_NUMBERS.get(c)));
+        }
+        if (fx == null) {
+            // a P&L row's CURRENCY is its values' currency: the trade's own is TRADE_CURRENCY when sent (scopes, rules, Trade currency)
+            String own = text(row, "TRADE_CURRENCY");
+            if (own != null) {
+                texts[VarBook.TRADE_TEXTS.indexOf("CURRENCY")] = own;
+            }
+            if (vectorCcy != null) {
+                numbers[VarBook.TRADE_NUMBERS.indexOf("PV")] = pvUsd;       // its PV, also in CURRENCY, in USD at today's rate
+            }
         }
         if (fx != null) {
             numbers[VarBook.TRADE_NUMBERS.indexOf("PV")] = pvUsd;           // the trade's USD value today, as a P&L vector's PV
@@ -404,6 +449,9 @@ final class VarIntake {
     private int full = -1;
     private double[] cut;
     private final List<Object[]> pending = new ArrayList<>();
+    /** The date's FX for P&L vectors in another currency than USD (2.9.4): asked on the first such row. */
+    private Supplier<ScenarioFx> pnlFx;
+    private double[] usdPnl;
     private VarInputs inputs = new VarInputs(s -> new VarProperties.Input(null, null));
     private final Map<String, List<String>> positionTrades = new HashMap<>();
     private final java.util.Set<String> tradeGrain = new java.util.HashSet<>();

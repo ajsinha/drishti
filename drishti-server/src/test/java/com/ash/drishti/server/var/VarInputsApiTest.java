@@ -65,7 +65,7 @@ import org.springframework.test.web.servlet.MockMvc;
         "drishti.sources.connectors.risk-lake.settings.refresh-seconds=1",
         "drishti.sources.connectors.risk-lake.settings.layout.pnl-vector.columns=VALUE_TYPE,GRAIN,TRADE_ID,POSITION_ID,CURRENCY,SOURCE_SYSTEM,"
                 + "LEGAL_ENTITY,DIVISION,DESK,TT_BOOK,PORTFOLIO,PRODUCT_GROUP,PRODUCT_TYPE,SECURITY_ID,COUNTERPARTY,DIRECTION,QUANTITY,PV,"
-                + "TRADE_STATUS,MATURITY_DATE,STATUS,REPORTING_CCY,SCENARIO_SET_ID,BATCH_ID,RUN_KIND,COMPUTED_AT,TRADE_IDS",
+                + "TRADE_STATUS,MATURITY_DATE,STATUS,REPORTING_CCY,SCENARIO_SET_ID,BATCH_ID,RUN_KIND,COMPUTED_AT,TRADE_IDS,TRADE_CURRENCY",
         "drishti.sources.connectors.risk-lake.settings.layout.pnl-vector.vectors=PNL",
         "drishti.sources.connectors.risk-lake.settings.layout.scenario-pv.columns=VALUE_TYPE,GRAIN,TRADE_ID,POSITION_ID,CURRENCY,SOURCE_SYSTEM,"
                 + "LEGAL_ENTITY,DIVISION,DESK,TT_BOOK,PORTFOLIO,PRODUCT_GROUP,PRODUCT_TYPE,COUNTERPARTY,DIRECTION,QUANTITY,BASE_PV,VALUATION_DATE,"
@@ -100,6 +100,8 @@ class VarInputsApiTest {
     static final LocalDate TWO_GRAINS = TRADES.minusDays(1);
     /** Records that do not say what they are, or contradict themselves or the pin. */
     static final LocalDate BAD_RECORDS = TRADES.minusDays(2);
+    /** A P&L vector in CAD (its CURRENCY), converted to USD with each scenario's FX. */
+    static final LocalDate CAD_PNL = BAD_RECORDS;                   // written again after the bad records
     static Path lake;
 
     @DynamicPropertySource
@@ -299,5 +301,36 @@ class VarInputsApiTest {
         assertThat(bank.at("/intraday/rejections").toString()).contains("DRS-5210").contains("MUREX's morning run sent PNL/TRADE")
                 .contains("PNL/POSITION");
         assertThat(ask("/api/v1/var/scope", "TRD:T1", TRADES).get("var").asDouble()).isEqualTo(1500);
+    }
+
+    @Test
+    @Order(5)
+    void aPnlVectorInCadIsConvertedWithEachScenariosFx() throws Exception {
+        List<Map<String, Object>> v = VarIntradayLake.morningVectors(CAD_PNL);
+        for (Map<String, Object> r : v) {
+            if (r.get("TRADE_ID").equals("T1")) {
+                r.put("CURRENCY", "CAD");                                      // the values are in CAD
+                r.put("TRADE_CURRENCY", "USD");                                // the trade's own
+                r.remove("REPORTING_CCY");
+            }
+        }
+        rewrite(CAD_PNL, v, VarIntradayLake.morningPvs(CAD_PNL));
+        double[] got = svc.scoped(null, "TRD:T1", CAD_PNL, null).vector();
+        VarDate d = svc.date(CAD_PNL);
+        com.ash.drishti.compute.var.ScenarioFx.Rates cad = svc.loader().fx(CAD_PNL, d.book().scenarioDates()).rates("CAD").orElseThrow();
+        double[] cadPnl = VarLakeFixture.scale(VarLakeFixture.U, 100);                     // T1's vector as the fixture writes it
+        for (int j = 0; j < got.length; j++) {
+            assertThat(got[j]).as("scenario " + j).isCloseTo(cadPnl[j] * cad.scenarios()[j], within(0.01));
+        }
+        assertThat(ask("/api/v1/var/scope", "BANK", CAD_PNL).at("/provenance/inputsBySystem/MUREX/tradesWithoutPv").asInt()).isPositive();
+        // REPORTING_CCY, a deprecated alias, must say the same as CURRENCY
+        for (Map<String, Object> r : v) {
+            if (r.get("TRADE_ID").equals("T1")) {
+                r.put("REPORTING_CCY", "USD");
+            }
+        }
+        rewrite(CAD_PNL, v, VarIntradayLake.morningPvs(CAD_PNL));
+        assertThat(ask("/api/v1/var/scope", "BANK", CAD_PNL).at("/provenance/rejections").toString())
+                .contains("DRS-5208 T1: REPORTING_CCY USD is not the CURRENCY CAD");
     }
 }

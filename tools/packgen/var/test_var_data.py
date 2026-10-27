@@ -211,6 +211,7 @@ class VarDataTest(unittest.TestCase):
         tags = sorted({x for t in ts for x in (t.get("TAGS") or "").split("|") if x})
         return {**{k: t0.get(k) for k in ("LEGAL_ENTITY", "DIVISION", "DESK", "TT_BOOK", "PORTFOLIO", "PRODUCT_GROUP", "PRODUCT_TYPE", "CURRENCY",
                                            "STRATEGY", "SECURITY_ID", "INSTRUMENT")},
+                "CURRENCY": t0.get("TRADE_CURRENCY") or t0.get("CURRENCY"),   # a P&L row's own currency (its CURRENCY is the values')
                 "DIRECTION": "LONG" if q > 0 else "SHORT" if q < 0 else "FLAT", "QUANTITY": q, "TAGS": tags,
                 "MARKET_VALUE": sum(t["PV"] for t in ts), "TRADE_COUNT": len(ts),
                 "POSITION_RULE": VarDataTest.rules.derive(t0["TRADE_ID"], t0["TT_BOOK"], t0["PRODUCT_GROUP"], t0["PRODUCT_TYPE"], t0.get)["POSITION_RULE"]}

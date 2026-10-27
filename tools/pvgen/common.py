@@ -263,8 +263,8 @@ class Updates:
 
     def _usd(self, kind: str, row: dict) -> tuple[float, list[float], str]:
         """A row's USD value today and USD P&L (as the engine computes it), and its currency."""
-        if kind == "pnl-vector":
-            return float(row.get("PV") or 0.0), [float(x) for x in row["PNL"]], str(row.get("CURRENCY") or "USD")
+        if kind == "pnl-vector":                           # the values in USD (CURRENCY); the trade's own currency TRADE_CURRENCY
+            return float(row.get("PV") or 0.0), [float(x) for x in row["PNL"]], str(row.get("TRADE_CURRENCY") or row.get("CURRENCY") or "USD")
         ccy = row["CURRENCY"]
         return row["BASE_PV"] * self.m.fx.today(ccy), SFX.engine_pnl(self.m.fx, ccy, row["BASE_PV"], row["SCENARIO_PV"]), ccy
 
@@ -279,11 +279,11 @@ class Updates:
         day = self.m.day
         if system in self.pv_systems and self.m.fx.has(ccy):
             b, pvs = SFX.scenario_pvs(self.m.fx, ccy, pv_usd * f, [x * f for x in pnl])
-            row = {**base, "VALUE_TYPE": "PV", "SCENARIO_PV_ID": f"SPV-{tid}-HS-509-{batch_id}", "BASE_PV": b, "SCENARIO_PV": pvs,
-                   "VALUATION_DATE": day, "BASE_VALUATION_DATE": day, "CURRENCY": ccy}
+            row = {**{k: v for k, v in base.items() if k != "TRADE_CURRENCY"}, "VALUE_TYPE": "PV", "SCENARIO_PV_ID": f"SPV-{tid}-HS-509-{batch_id}",
+                   "BASE_PV": b, "SCENARIO_PV": pvs, "VALUATION_DATE": day, "BASE_VALUATION_DATE": day, "CURRENCY": ccy}
             return "scenario-pv", contract_row("scenario-pv", row)
         row = {**base, "VALUE_TYPE": "PNL", "VECTOR_ID": f"PV-{tid}-HS-509-{batch_id}", "PV": round(pv_usd * f, 2),
-               "PNL": [round(x * f, 2) for x in pnl], "REPORTING_CCY": "USD"}
+               "PNL": [round(x * f, 2) for x in pnl], "CURRENCY": "USD", "TRADE_CURRENCY": ccy, "REPORTING_CCY": "USD"}
         return "pnl-vector", contract_row("pnl-vector", row)
 
     def _cancel(self, kind: str, src: dict, batch_id: str, at: str) -> tuple[str, dict]:
@@ -375,6 +375,9 @@ def expected(morning_rows: dict[str, list[dict]], intraday_rows: list[dict], bus
             continue
         if t["_kind"] == "pnl-vector":
             v = [float(x) for x in t["PNL"]]
+            ccy = str(t.get("CURRENCY") or "USD")
+            if ccy != "USD":                                   # a P&L vector in another currency: each scenario at its FX (approximate)
+                v = [x * fx.at(ccy, j) for j, x in enumerate(v)]
         else:
             v = SFX.engine_pnl(fx, t["CURRENCY"], t["BASE_PV"], t["SCENARIO_PV"])
         for scope in ("BANK", f"DESK:{t.get('DESK')}"):

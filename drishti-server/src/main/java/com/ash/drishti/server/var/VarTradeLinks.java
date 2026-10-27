@@ -132,7 +132,7 @@ final class VarTradeLinks implements ViewAugmenter {
         }
         links.put("TRADE_CURRENCY", ccy[0]);
         boolean fromPv = "scenario PVs".equals(ccy[1]);
-        links.put("TRADE_CURRENCY_FROM", fromPv ? "its scenario PVs" : "the trade's CURRENCY (its P&L vector is in USD)");
+        links.put("TRADE_CURRENCY_FROM", fromPv ? "its scenario PVs" : "the trade's own currency (TRADE_CURRENCY, else CURRENCY; its P&L vector in USD)");
         double pv = tc.has("PV") ? tc.number("PV", o) : Double.NaN;
         if (Double.isNaN(pv)) {
             return;

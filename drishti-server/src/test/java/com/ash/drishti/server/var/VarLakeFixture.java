@@ -198,11 +198,17 @@ final class VarLakeFixture {
                 putIfMissing(r, "GRAIN", r.get("POSITION_ID") != null && r.get("TRADE_ID") == null ? "POSITION" : "TRADE");
                 putIfMissing(r, "SOURCE_SYSTEM", kind.equals("pnl-vector") ? "MUREX" : "ENDUR");
                 putIfMissing(r, "CURRENCY", "USD");
+                // a P&L row's CURRENCY is its values' (2.9.4): the fixture's trade currency moves to TRADE_CURRENCY
+                if (kind.equals("pnl-vector") && !r.containsKey("TRADE_CURRENCY") && r.get("REPORTING_CCY") != null
+                        && !r.get("REPORTING_CCY").equals(r.get("CURRENCY"))) {
+                    putIfMissing(r, "TRADE_CURRENCY", r.get("CURRENCY"));
+                    r.put("CURRENCY", r.get("REPORTING_CCY"));
+                }
                 said.add(r);
             }
             docs = said;
             List<String> p = new ArrayList<>(promoted);
-            for (String c : List.of("VALUE_TYPE", "GRAIN", "POSITION_ID", "SOURCE_SYSTEM", "TRADE_IDS", "CURRENCY")) {
+            for (String c : List.of("VALUE_TYPE", "GRAIN", "POSITION_ID", "SOURCE_SYSTEM", "TRADE_IDS", "CURRENCY", "TRADE_CURRENCY")) {
                 if (!p.contains(c)) {
                     p.add(c);
                 }

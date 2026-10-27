@@ -17,6 +17,14 @@
 
 ## 2.9.4 (unreleased)
 
+- **P&L vectors in any currency (2026-10-27; product owner).** On a P&L record `CURRENCY` is now the currency the values are in: a
+  vector in CAD is converted to USD per scenario with that scenario's FX (approximate, counted in `tradesWithoutPv`), its `PV` at
+  today's rate; no scenario FX for it rejects the row (`DRS-5207`). The trade's own currency is the optional `TRADE_CURRENCY` (scopes,
+  rules, Trade currency); `REPORTING_CCY` is a deprecated alias that must equal `CURRENCY` (`DRS-5208`). The generator and the scripts
+  write `CURRENCY: USD` and `TRADE_CURRENCY` on P&L records (the bank unchanged); the checker converts a non-USD vector the same way.
+  **Tests:** `VarInputsApiTest` (a CAD P&L vector equal to its conversion; a contradicting `REPORTING_CCY` refused). **Docs:** VAR_GUIDE
+  sections 15.2 and 15.13, the pnl-vector contract.
+
 - **Upgrading to 2.9.4: connector files get the new columns by themselves (2026-10-27).** A connector file written from a pack's
   template at an earlier first start (`config/connectors/risk-store.yaml`) lacked the columns the VaR inputs gained (`RUN_KIND`,
   `COMPUTED_AT`, `VALUE_TYPE`, `GRAIN`, `SOURCE_SYSTEM`, `POSITION_ID`, `TRADE_IDS`), so a plain upgrade could not read intraday updates
