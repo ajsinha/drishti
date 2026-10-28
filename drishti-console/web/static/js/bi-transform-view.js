@@ -13,7 +13,7 @@
  *
  * See the LICENSE file in the root of this repository for the full terms.
  */
-/* Wave C (2.4.0): the drawing half of the Transform editor (docs/guides/PYTHON_BI.md section 17) and its profiling panel (docs/archive/BI_PARITY_PLAN.md P3): a frame's
+/* Wave C (2.4.0): the drawing half of the Transform editor (docs/guides/PYTHON_BI.md section 17) and its profiling panel (docs/architecture/BI_DESIGN.md section 11.1, item P3): a frame's
    first rows as a table, and one card per column with its type, what its text looks like, nulls, distinct values, a key hint, min and max, the most common
    values and a histogram (an SVG, so the strict policy holds: no inline style). Text only, never markup. Exposes drishtiBi.txView. */
 (function () {

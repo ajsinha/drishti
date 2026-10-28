@@ -586,6 +586,51 @@ The hub (`live-hub.js`) forwards the two event names `tick` and `status`; a tab 
 Pause, the "last update" time and the stale and disconnected states of the indicator are the page's (`bi-live.js`): *stale* is "nothing heard for `bi.live.stale_seconds`" (the 5-second status is what keeps a quiet healthy stream from looking stale) or the table's own `stale` state
 (a feed that pushes and then goes silent for `drishti.bi.live.stale-after`).
 
+### Results computed by a streaming producer
+
+A live table keeps the current rows of a kind and recomputes measures over them; it does not maintain heavy aggregates over a large stream
+incrementally (only the plain rollups a dataset declares, [RUPAKA.md](RUPAKA.md) section 20.11). That belongs in a **producer**: Pravaha, Flink,
+ksqlDB or a custom BI server computes keyed result rows (a total per desk, per desk and currency) and owns its arithmetic; Drishti **serves**
+them: a screen per result, live delivery to many browsers, field masks, alerts, sharing and embedding, as for any kind.
+
+This needs no Drishti code. The producer writes each result row to a **compacted Kafka topic** as an envelope keyed `<kind>/<id>`
+([KAFKA_CONNECTOR.md](../connectors/KAFKA_CONNECTOR.md)), and a pack declares the result kind, its command and a Kafka connector:
+
+```yaml
+kinds:
+- desk-exposure                             # a result kind, declared like any other
+mnemonics:
+  DEXP:
+    kind: desk-exposure
+    label: Desk exposure (live)
+connectors:
+  risk-results:
+    plugin: kafka
+    kinds:
+    - desk-exposure
+    settings:
+      bootstrap-servers: ${DRISHTI_KAFKA_BOOTSTRAP:localhost:9092}
+      topics: ${DRISHTI_RISK_RESULTS_TOPIC:risk.results}
+      stale-after: 2m                       # amber in Health if the producer goes quiet
+      disk-cache.enabled: true
+```
+
+`DEXP RATES <GO>` then opens a live view of the desk's exposure that ticks as the producer upserts, and a dataset table with `mode: live` over
+`desk-exposure` puts the rows in a report. The rows follow a few rules:
+
+- **Stable ids from the group-by key**: `RATES` for a desk, `RATES|USD` for desk and currency (`|` between key parts, distinct from other kinds'
+  ids); a grand total is a row like any other with the id `ALL`.
+- **State, not deltas**: each message is the whole current row (an upsert); a row that leaves the result is deleted with a tombstone, not sent
+  as zeros. A producer that thinks in weighted deltas (+1 / −1) turns them into state before it writes.
+- **Per key, in order**: one row's messages go to one partition; a new Drishti server reads the compacted topic from the start and has the
+  current state, so a producer never replays for Drishti.
+- **Small rows**: under 64 KB, a list inside a row under 500 items; detail belongs in the rows of the source kind.
+
+Not built (proposed 2026-10-06): a `bi` source plugin that takes an HTTP stream and turns deltas into state, metadata read from a `_bi` field
+(generation, as-of, input watermark: today it shows as an ordinary field), drill-down from a total to its rows by predicate, and protection
+against aggregates that leak (a result field computed from a masked input declared `masked-from: [field]`, and a minimum group size below which a
+row's figures show as `•••` for readers without `raw`).
+
 ## Latency
 
 The top bar shows `Live, p99 N ms`: the rolling (30 s) p99 of source-tick → frame-built across the

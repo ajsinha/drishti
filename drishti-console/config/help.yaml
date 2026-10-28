@@ -206,7 +206,7 @@ moved:
   runbook-sutra-broken: docs-admin-runbooks-sutra-broken
   runbook-live-latency: docs-admin-runbooks-live-latency-high
   runbook-sign-in: docs-admin-runbooks-sign-in
-  how-it-fits: docs-architecture-architecture#5-walk-through-one-request   # HOW_IT_FITS.md archived (2.9.6): its walk is ARCHITECTURE section 5
+  how-it-fits: docs-architecture-architecture#5-walk-through-one-request   # HOW_IT_FITS.md deleted (2.9.6): its walk is ARCHITECTURE section 5
   elements: docs-architecture-elements
   mcp-client: docs-architecture-mcp-client
   rupaka: docs-architecture-rupaka
@@ -216,8 +216,8 @@ moved:
   quant-service: docs-architecture-quant-service
   decisions: docs-architecture-adr-readme
   plan: docs-architecture-implementation-plan
-  docs-architecture-rupaka-poc: docs-archive-rupaka-poc            # archived (history): docs/archive/RUPAKA_POC.md, unlisted and not searched
-  docs-architecture-bi-parity-plan: docs-archive-bi-parity-plan    # archived (history): docs/archive/BI_PARITY_PLAN.md
+  docs-architecture-rupaka-poc: docs-architecture-rupaka            # RUPAKA_POC.md deleted (2.9.6): the design it tested is RUPAKA
+  docs-architecture-bi-parity-plan: docs-architecture-bi-design#111-the-21-studys-item-ids    # BI_PARITY_PLAN.md deleted (2.9.6): its item ids are BI_DESIGN section 11.1
   notices: third-party-notices
   sutra-guide: sutra-developer-guide
   rachana-guide: sutra-developer-guide
@@ -227,12 +227,12 @@ moved:
   # The 2.9.6 documentation merge (one home per topic): a merged-away document's path slug opens the section that took it over.
   docs-connectors-connector-recipes: connectors#combining-connectors   # docs/connectors/CONNECTOR_RECIPES.md, merged into CONNECTORS.md
   docs-connectors-connector-operations: connector-files#12-health-and-problems   # docs/connectors/CONNECTOR_OPERATIONS.md, merged into CONNECTOR_FILES.md section 12 and TROUBLESHOOTING
-  docs-architecture-how-it-fits: docs-architecture-architecture#5-walk-through-one-request   # archived (history): docs/archive/HOW_IT_FITS.md
-  docs-architecture-live-bi: docs-archive-live-bi   # archived (history): docs/archive/LIVE_BI.md
-  docs-architecture-bi-model-architecture: docs-architecture-bi-design#14-the-model-architecture-decisions-d1-to-d6   # archived (history); D1 to D6 now BI_DESIGN section 14
-  docs-architecture-screen-builder: screen-designer#32-reference-the-shape-engine-auto-design-and-the-builder-api   # archived (history); its reference is SCREEN_DESIGNER section 32
-  docs-architecture-cassandra-connector-design: docs-connectors-cassandra-connector   # archived (history): docs/archive/CASSANDRA_CONNECTOR_DESIGN.md
-  docs-admin-load-and-memory: docs-admin-performance#9-many-users-soak-runs-and-memory-profiling   # archived (history); its method is PERFORMANCE method 9
+  docs-architecture-how-it-fits: docs-architecture-architecture#5-walk-through-one-request   # HOW_IT_FITS.md deleted (2.9.6)
+  docs-architecture-live-bi: docs-architecture-live#results-computed-by-a-streaming-producer   # LIVE_BI.md deleted (2.9.6): its live part is LIVE.md
+  docs-architecture-bi-model-architecture: docs-architecture-bi-design#14-the-model-architecture-decisions-d1-to-d6   # deleted (2.9.6); D1 to D6 now BI_DESIGN section 14
+  docs-architecture-screen-builder: screen-designer#32-reference-the-shape-engine-auto-design-and-the-builder-api   # deleted (2.9.6); its reference is SCREEN_DESIGNER section 32
+  docs-architecture-cassandra-connector-design: docs-connectors-cassandra-connector   # CASSANDRA_CONNECTOR_DESIGN.md deleted (2.9.6)
+  docs-admin-load-and-memory: docs-admin-performance#9-many-users-soak-runs-and-memory-profiling   # deleted (2.9.6); its method is PERFORMANCE method 9
   admin-artifacts: deploy#18-admin--artifacts-install-and-uninstall-safely   # Admin -> Artifacts' help link; docs/admin/ARTIFACTS.md merged into OPERATIONALISING.md section 18
   docs-guides-operationalising: deploy   # OPERATIONALISING.md is listed as Deploy, promote and roll back
   docs-guides-pack-modelling-guide: pack-developer-guide#part-ii-modelling-in-depth-kinds-data-and-content   # merged into PACK_DEVELOPER_GUIDE Part II

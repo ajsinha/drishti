@@ -12,7 +12,7 @@
 #
 # See the LICENSE file in the root of this repository for the full terms.
 
-"""Wave C (2.4.0), the Transform editor (docs/guides/PYTHON_BI.md section 17; docs/archive/BI_PARITY_PLAN.md P1 to P3 and P5): the page at ``/bi/transform`` and its routes.
+"""Wave C (2.4.0), the Transform editor (docs/guides/PYTHON_BI.md section 17; docs/architecture/BI_DESIGN.md section 11.1, items P1 to P3 and P5): the page at ``/bi/transform`` and its routes.
 
 A person builds a Python Transform step by step without typing YAML: inputs (a pack kind read through a connector, or a model query), then steps picked
 from the snippets library or written by hand. After every change the page asks ``POST /bi/transform/steps``: the console asks the server for each input

@@ -363,7 +363,7 @@ It runs with every `./mvnw verify`, so a change that makes views slow cannot be 
 
 ### 9. Many users, soak runs and memory profiling
 
-The method behind the numbers for many users at once, long runs and memory (from the load and memory strategy of 2026-10-08, whose principles and build plan are history: [archived](../archive/LOAD_AND_MEMORY.md)). Items marked **(to build)** are not built yet.
+The method behind the numbers for many users at once, long runs and memory (from the load and memory strategy of 2026-10-08, LOAD_AND_MEMORY.md, whose principles and build plan were deleted: in git at tag v2.9.5). Items marked **(to build)** are not built yet.
 
 #### 5. Five kinds of test
 

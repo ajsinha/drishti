@@ -25,7 +25,7 @@ unlisted, under a slug made from its path, so a link from one document to anothe
 help centre (DOC-18). A link to a repository file the help centre cannot show (source, ``LICENSE``, a folder
 without a README) is shown as its text with the path, not as a link that goes nowhere. Headings get GitHub's
 anchors (:class:`GithubSlugger`), so ``#delta--delta-lake`` works on GitHub and in the app alike (DOC-19).
-The archive (``docs/archive/``, history) is reachable by link like that, but never listed and never searched.
+The QA records (``docs/qa/``, history) are reachable by link like that, but never listed and never searched.
 """
 from __future__ import annotations
 
@@ -51,7 +51,7 @@ _EXTERNAL = re.compile(r"^(?:[a-z][a-z0-9+.-]*:|/|#)", re.I)
 _FRONT = re.compile(r"\A(?:\s*<!--.*?-->)*\s*(---\n.*?\n---\n)", re.S)
 # Where an unlisted repository document sits in the help centre, by its top folder.
 _DOC_CATEGORY = {"connectors": "data", "admin": "operate", "guides": "use", "architecture": "build", "tutorials": "start", "knowledge": "knowledge",
-                 "qa": "build", "archive": "build", "": "operate"}
+                 "qa": "build", "": "operate"}
 
 
 _WORDS = ["zero", "one", "two", "three", "four", "five", "six", "seven", "eight", "nine", "ten", "eleven", "twelve", "thirteen", "fourteen", "fifteen", "sixteen",
@@ -164,13 +164,6 @@ class Library:
             self.guides[slug] = Guide(slug, title, "", "file-earmark-text", "document", cat["id"], path, listed=False)
             self.by_file[path] = slug
 
-    def archived(self, g: Guide) -> bool:
-        """A document of ``docs/archive/``: history (replaced or removed designs), opened by link only, never listed or searched."""
-        try:
-            return g.path.resolve().relative_to(self.docs_dir.resolve()).parts[0] == "archive"
-        except (ValueError, IndexError):
-            return False
-
     def render(self, slug: str) -> dict:
         g = self.guides[slug]
         mtime = g.path.stat().st_mtime
@@ -256,8 +249,8 @@ class Library:
             return []
         hits = []
         for g in self.guides.values():
-            if not g.listed and ("qa" in g.path.parts or self.archived(g)):
-                continue                             # the QA records and the archive (history) are reachable by link, not search
+            if not g.listed and "qa" in g.path.parts:
+                continue                             # the QA records (history) are reachable by link, not search
             text = self.render(g.slug)["text"]
             low = text.lower()
             score = sum(low.count(w) for w in words) + sum(10 for w in words if w in g.title.lower())

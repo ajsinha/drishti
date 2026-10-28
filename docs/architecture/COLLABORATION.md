@@ -779,7 +779,7 @@ Made after the data safety QA pass ([DATA_SAFETY.md](../qa/2026-10-05/DATA_SAFET
 
 ## Share and Discussion, end to end
 
-*Captured before 2.3.0, as a walk through one request (moved here from HOW_IT_FITS.md, now history: [archived](../archive/HOW_IT_FITS.md)). Since 2.3.0 the trading pack reads trades per source system (`trade-endur`, `trade-calypso`, `trade-murex`) instead of `trading-store`; the flow is unchanged.*
+*Captured before 2.3.0, as a walk through one request (moved here from HOW_IT_FITS.md, since deleted: in git at tag v2.9.5). Since 2.3.0 the trading pack reads trades per source system (`trade-endur`, `trade-calypso`, `trade-murex`) instead of `trading-store`; the flow is unchanged.*
 
 *Two people, one trade.* `asha` (role `author`, sees every field) is looking at `TRD MX-20000001` on the business date 2026-09-30 and wants `vera`
 (role `viewer`, no `raw`: the trader and counterparty fields read `•••` for her) to check something. Then they talk about it in the open. The code
@@ -957,7 +957,7 @@ what their reader needs.
 | [OPERATIONS.md](../admin/OPERATIONS.md) | the outbox (dead letters, retry, mail test), several servers (lease, `outbox.enabled`), retention purge, backups of the collab tables |
 | [TROUBLESHOOTING.md](../guides/TROUBLESHOOTING.md) | "the email never arrived", "the shared link opened today's data", "someone was not notified"; error rows |
 | [ARCHITECTURE.md](ARCHITECTURE.md) | the collab package in the module list and security section (one paragraph, link here) |
-| [HOW_IT_FITS.md](../archive/HOW_IT_FITS.md) (history, archived; the section now lives [here](#share-and-discussion-end-to-end)) | a full section, *Share and Discussion, end to end* (§3.10, done in step 8): worked on trade MX-20000001 — the dialog → `POST /shares` with the as-of headers → pin, `mayReach` per recipient, masked spans → one transaction (share, inbox, outbox, access log) → the `notice` SSE event on the channel → the bell → `/share/sh_…` → the view built for the recipient with `asOf`/`knownAt` per request → the banner; then a comment with `@risk` on the VaR contribution panel and *Open as it was*; the genomics variant in a few lines (`link-only` email); collab added to §1's picture and §2's pieces; §7 rows (who may share, email, retention) |
+| HOW_IT_FITS.md (deleted, in git at tag v2.9.5; the section now lives [here](#share-and-discussion-end-to-end)) | a full section, *Share and Discussion, end to end* (§3.10, done in step 8): worked on trade MX-20000001 — the dialog → `POST /shares` with the as-of headers → pin, `mayReach` per recipient, masked spans → one transaction (share, inbox, outbox, access log) → the `notice` SSE event on the channel → the bell → `/share/sh_…` → the view built for the recipient with `asOf`/`knownAt` per request → the banner; then a comment with `@risk` on the VaR contribution panel and *Open as it was*; the genomics variant in a few lines (`link-only` email); collab added to §1's picture and §2's pieces; §7 rows (who may share, email, retention) |
 | `adr/020-collaboration-records-live-in-the-identity-database.md` | why the identity database, a transactional outbox, and links instead of data |
 | [USER_GUIDE.md › Monitors](../guides/USER_GUIDE.md#monitors) (help address `monitors-and-alerts`) | the bell becomes the inbox (notices beside alerts); `help.yaml` `contextual:` gains `inbox` |
 | [docs/README.md](../README.md) | this document in the architecture list (done with this design) |

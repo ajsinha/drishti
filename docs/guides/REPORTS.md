@@ -999,7 +999,7 @@ checks it).
 
 ## 20. Report schema v2 in one report (2.4.0)
 
-The parity tasks of a Power BI author (items 6 to 8 and 13 of the 2.1 parity study, now history in docs/archive/BI_PARITY_PLAN.md section 4) in one report on `trades-basic`, every part made in the designer (BI Studio) without
+The parity tasks of a Power BI author (items 6 to 8 and 13 of the 2.1 parity study, [BI_DESIGN.md section 11.1](../architecture/BI_DESIGN.md#111-the-21-studys-item-ids)) in one report on `trades-basic`, every part made in the designer (BI Studio) without
 the YAML tab; the YAML is what the designer writes:
 
 ```yaml
@@ -1121,7 +1121,7 @@ pages:
 
 A **board** is a wall of tiles for a screen on the wall of a trading desk, a risk team or an operations room. Each tile is one visual of a report; the board lays them out, keeps them up to date as the data ticks, turns its pages by itself in **kiosk** mode, and colours a tile amber or red when its number crosses a threshold.
 
-**Since 2.4.0 a board is a report page** (item R7 of the 2.1 parity study, now history in docs/archive/BI_PARITY_PLAN.md): a page with `layout: board` holds **tiles** (visuals of other reports, with their alert colours) beside the report's **own visuals**, which take the report's filters, slicers, cross-filter and drill like on any page. The separate `board` kind is gone: stored boards became reports at the first start of 2.4.0, the shipped samples are reports (`config/bi/reports/desk-wall.report.yaml`, `python-wall.report.yaml`), and the old addresses (`/bi/b/<id>`, `/bi/design/board/<id>`) open the report viewer and the report designer (section 12). For the live tables behind tiles see [DATASETS.md](DATASETS.md#71-live-tables-phase-5); for the visuals see [REPORTS.md](#13-live-visuals); for the pages see [BI_GUIDE.md](BI_GUIDE.md) section 18; for a walk-through with pictures see [tutorial 12](../tutorials/12-live-bi-and-boards.md).
+**Since 2.4.0 a board is a report page** (item R7 of the 2.1 parity study, [BI_DESIGN.md section 11.1](../architecture/BI_DESIGN.md#111-the-21-studys-item-ids)): a page with `layout: board` holds **tiles** (visuals of other reports, with their alert colours) beside the report's **own visuals**, which take the report's filters, slicers, cross-filter and drill like on any page. The separate `board` kind is gone: stored boards became reports at the first start of 2.4.0, the shipped samples are reports (`config/bi/reports/desk-wall.report.yaml`, `python-wall.report.yaml`), and the old addresses (`/bi/b/<id>`, `/bi/design/board/<id>`) open the report viewer and the report designer (section 12). For the live tables behind tiles see [DATASETS.md](DATASETS.md#71-live-tables-phase-5); for the visuals see [REPORTS.md](#13-live-visuals); for the pages see [BI_GUIDE.md](BI_GUIDE.md) section 18; for a walk-through with pictures see [tutorial 12](../tutorials/12-live-bi-and-boards.md).
 
 
 ### 23.1 What a board is, and is not

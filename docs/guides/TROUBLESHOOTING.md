@@ -1303,7 +1303,7 @@ The state of every refresh is kept in `<BI store>/refresh/state.json`. `interrup
 
 * **A Python dataset (`source.python`) answers `DRS-9074`.** The server starts the console's runner itself: set `drishti.bi.transform.python` to the Python with pandas and pyarrow (the console's `.venv/bin/python`) and `drishti.bi.transform.runner` to the console's `core/transform_cli.py`; with neither set it looks for `drishti-console/` from the working directory upwards. `DRS-9071`/`9072`/`9073` are the sandbox's, as for any Python item ([PYTHON_BI.md](PYTHON_BI.md) section 10); `DRS-9075` is a frame that lacks a declared column.
 * **The Transform runs again for every person.** Its result is kept per reader and version of the inputs (`drishti.bi.transform.cache-ttl`, `cache-entries`): a different person has different rows and masks, so a different frame. After a data load the inputs' version changes and the next reader runs it again.
-* **A dataset with `from:` or `derived:` says `DRS-9190`.** It is a 2.1 composed or derived dataset, removed in 2.2: `drishti.py bi migrate --models` converts it (see the migration rows further down). The 2.1 entries for them were replaced and are history, archived in [DATASETS_2_1_COMPOSED_DERIVED.md](../archive/DATASETS_2_1_COMPOSED_DERIVED.md#troubleshooting-in-21).
+* **A dataset with `from:` or `derived:` says `DRS-9190`.** It is a 2.1 composed or derived dataset, removed in 2.2: `drishti.py bi migrate --models` converts it (see the migration rows further down). The 2.1 entries for them were replaced and deleted (DATASETS_2_1_COMPOSED_DERIVED.md, in git at tag v2.9.5).
 
 ## BI: a subscription or an export
 

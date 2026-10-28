@@ -12,7 +12,7 @@
 #
 # See the LICENSE file in the root of this repository for the full terms.
 
-"""The data-prep snippets library of the Transform editor (docs/guides/PYTHON_BI.md section 17; docs/archive/BI_PARITY_PLAN.md P2).
+"""The data-prep snippets library of the Transform editor (docs/guides/PYTHON_BI.md section 17; docs/architecture/BI_DESIGN.md section 11.1, item P2).
 
 A snippet is one step of a Transform: a few lines of pandas over ``df`` (the frame so far) with parameters a person fills in a form. The library is
 ``config/prep-snippets.yaml`` (and the file ``bi.transform.snippets_file`` names, if any). :meth:`SnippetLibrary.render` writes each value into the code as a

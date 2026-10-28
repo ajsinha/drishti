@@ -46,6 +46,10 @@ If you will change the code, continue with [DEVELOPER_GUIDE.md](guides/DEVELOPER
 | [architecture/](architecture/) | how Drishti is built: the architecture, design notes (inference, live updates, Rūpaka, Elements, collaboration, the AI layer), the implementation plan, the [scale strategy](architecture/SCALE_STRATEGY.md) (millions of trades a day, a year of history) and the decision records (ADRs) |
 | [requirements/](requirements/), [publications/](publications/) | the reference mockups and logo; the design-and-evidence presentation |
 
+There is no archive folder. An obsolete design is deleted: git keeps its history, so its live content moves into the current document
+first, and a document that still mentions it names the release tag where it last lived (for example "in git at tag v2.9.5"), as text,
+not as a link.
+
 ## If you want to…
 
 ### Use Drishti
@@ -128,7 +132,7 @@ If you will change the code, continue with [DEVELOPER_GUIDE.md](guides/DEVELOPER
 | Say what a number should be (`tests:`: expected values that Check runs as a role and that stop a publish) | [REPORTS.md](guides/REPORTS.md#17-expected-values-tests) |
 | Show "last 30 days" or "this quarter to date" (a relative-date slicer, business-day aware) | [REPORTS.md](guides/REPORTS.md#61-the-relative-date-slicer) |
 | Rank, lag and moving averages in a measure (window functions) | [DATASETS.md](guides/DATASETS.md#43-window-functions) |
-| Put live BI results (aggregates, pivots, rankings streamed by Pravaha, Flink or a custom BI server) in front of people as live views and boards | [LIVE.md, live BI](architecture/LIVE.md#live-bi-a-reports-live-tables) (the producer contract proposed for this is history: [LIVE_BI.md](archive/LIVE_BI.md), archived) |
+| Put live BI results (aggregates, pivots, rankings streamed by Pravaha, Flink or a custom BI server) in front of people as live views and boards | [LIVE.md, live BI](architecture/LIVE.md#live-bi-a-reports-live-tables) and [results computed by a streaming producer](architecture/LIVE.md#results-computed-by-a-streaming-producer) |
 
 ### Add an industry or data
 
@@ -446,14 +450,6 @@ Each run has a README (what was tested, findings by severity, how each was fixed
 | [qa/2026-10-03/ux/LOG.md](qa/2026-10-03/ux/LOG.md) | 2026-10-03/ux: the activity log |
 | [qa/2026-10-05/BEHAVIOUR.md](qa/2026-10-05/BEHAVIOUR.md) | 2026-10-05: behaviour pass: collaboration, About/Ask, time, failure modes |
 | [qa/2026-10-05/DATA_SAFETY.md](qa/2026-10-05/DATA_SAFETY.md) | 2026-10-05: data-safety pass: collaboration, explain, Ask, bridges, email, snapshots |
-
-### Archive (`archive/`)
-
-History only: designs that were replaced or removed, kept so old decisions and the item ids the code cites can be traced. Do not use them to learn how Drishti works today.
-
-| Document | Read this when… |
-|---|---|
-| [archive/README.md](archive/README.md) | you followed an old link to an archived design (history: the Rūpaka proof of concept, the 2.1 Power BI parity study, the replaced BI wave plan, the Screen Builder's build plan, the 2.1 composed and derived datasets) and want to know what replaced it |
 
 ### Records
 

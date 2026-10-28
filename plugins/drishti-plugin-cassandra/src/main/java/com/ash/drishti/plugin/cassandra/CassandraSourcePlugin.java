@@ -63,7 +63,7 @@ import java.util.function.Consumer;
  * bucket keyed by id, and the shared {@code entity_days} and {@code kind_days}. Readers follow {@code kind_days}, so a day
  * being loaded or reloaded is seen whole or not at all (the loader names the new generation there last).
  *
- * <p>Reads (docs/archive/CASSANDRA_CONNECTOR_DESIGN.md section 5): the catalogue is each kind's {@code kind_days}
+ * <p>Reads (docs/connectors/CASSANDRA_CONNECTOR.md section 5): the catalogue is each kind's {@code kind_days}
  * partition, re-read every {@code refresh-seconds} (60). One entity on a day is one row of one partition: a {@code snapshot}
  * kind takes the kind's newest day on or before the date asked (within {@code lookback-days}, 10), an {@code effective} kind
  * the entity's own latest day from {@code entity_days}; documents are kept by {@code doc-cache-mb} (64). Type-ahead is the

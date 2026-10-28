@@ -12,7 +12,7 @@
 #
 # See the LICENSE file in the root of this repository for the full terms.
 
-"""Static files served compressed (docs/archive/RUPAKA_POC.md, adjustment 2): text and WebAssembly answer ``br`` or ``gzip`` when the browser accepts it, are compressed
+"""Static files served compressed: text and WebAssembly answer ``br`` or ``gzip`` when the browser accepts it, are compressed
 once per version, small and already-compressed files and range requests go as they are, and the content is the same bytes."""
 import gzip
 

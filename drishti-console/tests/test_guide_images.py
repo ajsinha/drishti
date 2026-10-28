@@ -17,7 +17,7 @@
 Every guide's screenshots are made by tools/docs/screenshots.py (one module per guide in tools/docs/shots/, output in docs/guides/img/<guide>/, or
 docs/connectors/img/connectors/): a guide that shows a picture that is not there fails here, so does a picture no guide shows, and so does a picture
 the script cannot make. Then the screen designer guide (docs/guides/SCREEN_DESIGNER.md): in the help centre, F1 on every Build page, linked from
-the Build menu, QUICKSTART and SCREEN_BUILDER.md."""
+the Build menu, QUICKSTART and BUILD_WORKBENCH.md."""
 from pathlib import Path
 import re
 import subprocess
@@ -155,7 +155,7 @@ def test_the_build_menu_help_centre_getting_started_and_the_architecture_note_li
     assert "/help/screen-designer" in menu and "Screen designer guide" in menu
     assert "/help/screen-designer" in client.get("/build/new").text
     assert "SCREEN_DESIGNER.md" in (ROOT / "docs" / "guides" / "GETTING_STARTED.md").read_text() or "SCREEN_DESIGNER.md" in (ROOT / "docs" / "guides" / "USER_GUIDE.md").read_text()
-    assert "SCREEN_DESIGNER.md" in (ROOT / "docs" / "archive" / "SCREEN_BUILDER.md").read_text()
+    assert "SCREEN_DESIGNER.md" in (ROOT / "docs" / "architecture" / "BUILD_WORKBENCH.md").read_text()
     index = client.get("/help").text
     assert "/help/screen-designer" in index
 

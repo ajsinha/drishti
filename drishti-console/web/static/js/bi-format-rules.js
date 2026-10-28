@@ -13,7 +13,7 @@
  *
  * See the LICENSE file in the root of this repository for the full terms.
  */
-/* Conditional formatting in the Format pane (R6, 2.4.0; docs/archive/BI_PARITY_PLAN.md gap 6), as the format schema's `rules` control: a list of rules, each with what it colours
+/* Conditional formatting in the Format pane (R6, 2.4.0; docs/architecture/BI_DESIGN.md section 11.1, gap 6), as the format schema's `rules` control: a list of rules, each with what it colours
    (a measure of the visual, or a field for a colour per value) and its kind. A rule colours the text or the background when a measure (this one or another
    one of the model) compares with a number; a colour scale runs from a low to a high colour, with a middle colour if wanted, over the visual's own values (or
    fixed values); icons put an arrow, a light, a sign or a flag by the number against one or two thresholds; a colour per value colours the values of a field.
