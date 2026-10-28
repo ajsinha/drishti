@@ -400,13 +400,23 @@ public final class IcebergMaintenance {
     }
 
     /**
+     * True for a table the parallel lake loader laid out by more than the id ({@code drishti.layout.sort-by}: legal entity, desk, id; a
+     * file of a day then overlaps another's id range by design): relayout leaves its days in their order (2.9.6); loading a day again
+     * re-lays it.
+     */
+    static boolean shardSorted(java.util.Map<String, String> properties) {
+        String by = properties.getOrDefault("drishti.layout.sort-by", "").trim();
+        return !by.isEmpty() && !by.equals("id");
+    }
+
+    /**
      * Rewrites the days that drifted from the layout (every day when {@code force}), each in one commit that replaces
      * the day's files and delete files; returns how many days were rewritten.
      */
     static int relayout(Table t, boolean force, Path spillDir, long budget) {
         t.refresh();
-        if (t.currentSnapshot() == null) {
-            return 0;
+        if (t.currentSnapshot() == null || shardSorted(t.properties())) {
+            return 0;                                           // laid out by the parallel loader's sort-by: left in its order
         }
         int fileRows = IcebergLayout.fileRows(t);
         int rewritten = 0;
