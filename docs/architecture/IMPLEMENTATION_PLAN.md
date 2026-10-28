@@ -591,12 +591,10 @@ Removing CSV input is for a later release (not yet planned); the per-file Sutra 
 | Docs | the guides above, [EXTERNAL_LAKES.md](../guides/EXTERNAL_LAKES.md) (Databricks Delta or Iceberg), tutorial 25 step 14 and [tutorial 29](../tutorials/29-var-on-iceberg.md) (the risk lake and the official results on Iceberg) |
 
 **Deferred:** the AWS Glue and S3 Tables **live runs** (`deploy/aws/iceberg/check-glue.sh`: written, never run; they need an AWS account,
-the product owner's); the format guard of an `s3://` official root is tested on S3Mock only, **not against real S3**; **shellcheck was
-not run** on the new scripts (not installed on the build machine). Seen in the docs review, for 2.9.6: tables `build_demo_lakes.py`
-copies into Iceberg leave no build record, so Admin -> Lakes lists them read only; a `var-results.yaml` that `lake demo` wrote is not
-stamped, so it stays on Delta and its change of plugin is not listed under Template updates (Reset to pack default puts it back);
-`pv-updates` is listed as having an obsolete kind (`pv-update`) under Template updates; the Iceberg copy of `scenario-pv` is flagged
-*not laid out as the pack declares (30 of 32 columns)*.
+the product owner's); the format guard of an `s3://` official root has no automated test (S3Mock cannot run in the server's tests) and
+was **not run against real S3**; **shellcheck was not run** on the new scripts (not installed on the build machine). The four gaps the
+docs review found were fixed in 2.9.5 (CHANGELOG, *Iceberg*): build records for the copied tables, `lake demo` leaving the official
+results' readers to the server, a template's own kinds never obsolete, and all-null columns kept in the copy.
 
 The plan as agreed (2026-10-27):
 

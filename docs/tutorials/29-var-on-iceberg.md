@@ -217,28 +217,26 @@ its own format, Iceberg's by snapshot expiry and orphan-file removal under the 7
 ([LAKE_MAINTENANCE.md section 8](../admin/LAKE_MAINTENANCE.md#8-iceberg-lakes)).
 
 **You should see** `trading/trade_murex` as **Delta**, the seven risk tables and `risk-results/var-official` as **Iceberg**. The risk
-tables are listed **read only** (*not built by drishti.py lake build*): the script copied them with the loader, which leaves no build
-record, so the ownership rule treats them as another system's. Tables written with `drishti.py lake build --format iceberg` are
-maintained here; for the copied ones use `--force-foreign` on the command line.
+tables are maintained here like the ones `drishti.py lake build --format iceberg` writes: the copy leaves the same build record
+(`<iceberg root>/_drishti-lake/tables-built.json`, with the Delta table's pack and kind).
 
 **Further:** [LAKE_MAINTENANCE.md](../admin/LAKE_MAINTENANCE.md).
 
 ## Step 6 · BI's reader of the official results follows the format
 
 The market-risk pack's `var-results` connector (BI's `VOFF`) is `plugin: delta` in the pack; with `format: iceberg` the server reads
-that template as `plugin: iceberg` over `${drishti.var.official.root}`. A file the server generated and nobody edited follows by itself.
-**The file `lake demo` wrote** (its first line *Written by drishti.py lake demo*) carries no template stamp, so it counts as edited and
-stays on Delta: put the pack's default back.
+that template as `plugin: iceberg` over `${drishti.var.official.root}`. The file the server generated (stamped) and nobody edited
+follows by itself: nothing to do. `lake demo` and `build_demo_lakes.py` leave this file to the server; one an earlier `lake demo` wrote
+(its first line *Written by drishti.py lake demo*) is moved to the history by the build of step 1, so the server writes the stamped one.
+An edited file is kept, and the change of plugin is listed under **Admin → Connectors → Template updates** (**Use the pack's value**).
 
-**In the UI.** **Admin → Connectors → var-results → Reset to pack default**:
+**In the UI.** **Admin → Connectors → var-results**:
 
-![var-results after Reset to pack default: plugin iceberg](img/t29/04-var-results.jpg)
+![var-results: plugin iceberg](img/t29/04-var-results.jpg)
 
 **From the command line:**
 
 ```text
-$ drishti.py connector reset var-results
-var-results is back to the pack's default (running)
 $ drishti.py connector get var-results
 connector var-results   origin file   plugin iceberg   running   …
   root                         ${drishti.var.official.root:${DRISHTI_DELTA_ROOT:${drishti.data.dir:./data}/delta}}
@@ -295,5 +293,5 @@ a table keeps its format). A full build without `--store risk=…` also puts the
 | *could not find the server jar* or the copy into Iceberg fails | build the server first (`./mvnw clean package -DskipTests`) |
 | `VAR BANK` answers *no P&L vectors in any connector* | the server reads another Iceberg root: set `DRISHTI_ICEBERG_ROOT` to the folder beside your `--lake` |
 | `publishError` *… is a Delta table and the official format is iceberg* | give the official results another root (step 2) |
-| `var-results` stays `delta` | the file `lake demo` wrote counts as edited: Reset to pack default (step 6) |
+| `var-results` stays `delta` | the file was edited: Admin → Connectors → Template updates → **Use the pack's value** for `plugin` (step 6) |
 | Admin → Lakes lists no Iceberg table | the console's `DRISHTI_LAKE_ROOTS` lacks `data/iceberg` (step 3) |

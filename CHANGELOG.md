@@ -119,10 +119,18 @@ Delta stays the default lake format everywhere; Iceberg is chosen only by config
   created in (a format changed with the root not is refused in words); BI's `var-results` and `exposure-results` follow the format by themselves:
   with `….official.format: iceberg` the server reads their pack templates as `plugin: iceberg` over the official root (`engine:
   native`, the `s3.*` of `….official.storage`), so the file generated at start says so, a file never edited follows a change of format
-  (back to Delta too) and an edited one is kept (a file `lake demo` wrote counts as edited: Reset to pack default puts the pack's reader back) (`OfficialReaders`; `tools/test_contracts.py` allows an
+  (back to Delta too) and an edited one is kept (`OfficialReaders`; `tools/test_contracts.py` allows an
   Iceberg reader of `risk-results` as the Delta one: read only, computed kinds only). `DRISHTI_VAR_OFFICIAL_FORMAT`,
   `DRISHTI_EXPOSURE_OFFICIAL_FORMAT`. **Test:** `OfficialReadersTest`. **Tests:** `OfficialSinkTest` (both
   formats, a restatement, six writers at once), `OfficialS3Test` (S3Mock: both formats, two writers in sequence, the exclusive create).
+- **Four gaps from the docs review, fixed.** (1) `lake demo` and `build_demo_lakes.py` leave `var-results.yaml` and
+  `exposure-results.yaml` to the server, which writes them stamped, so they follow the official format; a file an earlier `lake demo`
+  wrote (unstamped: it counted as edited and stayed on Delta) is moved to the history by the next build. (2) A table
+  `--store …=iceberg` copies into Iceberg gets a build record (the Delta table's pack and kind), so Admin → Lakes maintains it instead
+  of listing it read only. (3) Template updates never counts a kind the template itself names as obsolete (`pv-updates`' own
+  `pv-update` was listed). (4) The copy into Iceberg keeps a column null on every row (the scenario PVs' `POSITION_ID` and
+  `TRADE_IDS`), so `risk-store` no longer says *scenario-pv (30 of 32 columns)*. **Tests:** `test_demo.py` (`ResultsReaders`),
+  `test_stores.py` (the build record, the null column), `TemplateUpdatesTest`.
 - Docs (VaR, exposure and official results on Iceberg): VAR_GUIDE sections 8.4, 19 and 29.3, EXPOSURE_GUIDE section 20 and its
   settings, ICEBERG_CONNECTOR section 18, AWS_DEPLOYMENT section 22 (official results to S3), CONFIGURATION, Windows QA §6i rows 1, 2
   and 8 to 10.
@@ -140,8 +148,7 @@ Delta stays the default lake format everywhere; Iceberg is chosen only by config
   warning, the LEGAL tree's bank at 74.7%, the ad-hoc scopes, the status with the currencies built ahead and 131 nodes); tutorial 26's
   official record with the limit letters; `LIMIT_LETTER` on the example lines of the contracts, VAR_GUIDE and KAFKA_CONNECTOR (a live row
   without it is refused); `PNL-` ids in PYTHON_CALC; `EXP`, not `XPO`; intraday on an Iceberg lake (the pricing system's append or Kafka,
-  `pv-updates`' `lake`); a `var-results.yaml` written by `lake demo` stays on Delta (Reset to pack default); tables the script copies into
-  Iceberg are read only in Admin → Lakes; API_GUIDE's `use-template-value`; PANELS' download menu.
+  `pv-updates`' `lake`); API_GUIDE's `use-template-value`; PANELS' download menu.
 - **Audit fixes in the areas 2.9.4 and 2.9.5 touched:** VAR_GUIDE section 12 and CONFIGURATION agree (`official.format`,
   `official.storage`, the Kafka window; an engine switched off answers `403 DRS-5002`), the same for exposure; knowledge/market-risk
   section 4 on 2026-09-30's figures; subscriptions send `jsonl` too (DISTRIBUTION, TROUBLESHOOTING); the 2.9.4 jar in GETTING_STARTED;
