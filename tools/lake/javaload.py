@@ -21,8 +21,9 @@ its keys); ``--loader-set KEY=VALUE`` adds any key (``memory.budget-mb=4096``, `
 ``parallel.writers=16``, ``target.layout.sort-by=[LEGAL_ENTITY,DESK,id]``). This build holds the lake's lock and writes the run log and
 summary as usual; the loader's summary (the same keys, plus throughput and memory) is merged into it.
 
-``--engine auto`` picks the loader for a large load: every input JSON Lines, at least ``--java-above-mb`` (1024 MB) of them, mode
-overwrite-dates, and a jar (or DRISHTI_LAKE_CLASSPATH) that has the loader; anything else goes the way it always went. Java is started
+The Python path is the default: ``--engine auto`` never picks the loader on its own. Only with ``--java-above-mb N`` does it pick the
+loader for a large load: every input JSON Lines, at least N MB of them, mode overwrite-dates, and a jar (or DRISHTI_LAKE_CLASSPATH) that
+has the loader; anything else goes the way it always went. Java is started
 only through ``tools/javacmd.py``'s ``java_cmd``."""
 from __future__ import annotations
 
@@ -91,7 +92,9 @@ def is_jsonl(path: pathlib.Path) -> bool:
 def wanted(a, files: list[pathlib.Path], jar: str | None, java: str | None) -> tuple[bool, str]:
     """(use the loader, why) for ``--engine auto``."""
     above = getattr(a, "java_above_mb", None)
-    threshold = (1024 if above is None else int(above)) * 1048576
+    if above is None:                         # the default: the Python path; the loader only when asked (--engine java or --java-above-mb)
+        return False, "the Python path is the default (--engine java, or --java-above-mb N, for the parallel loader)"
+    threshold = int(above) * 1048576
     size = sum(f.stat().st_size for f in files)
     if size < threshold:
         return False, f"{size / 1048576:.0f} MB of input is under --java-above-mb"

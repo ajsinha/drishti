@@ -222,8 +222,9 @@ Windows (Java only; zstd-jni and snappy-java are JNI libraries inside their jars
 `--key`, `--date`/`--as-of`, `--promote`, `--vector`, `--partition-by`, the pack's flatten, `--format`, `--iceberg-set`) become the
 loader's configuration (a JSON file in the run's staging folder); `--loader-set KEY=VALUE` adds any key. The build holds the lock and
 writes the run log, the summary (the loader's keys merged in, plus `throughput` and `memory`) and the ownership record as before; the
-data-load signal and the BI-store stamp work unchanged. `--engine auto` (the default) picks the loader only for a large load: every input
-JSON Lines, at least `--java-above-mb` (1024) MB, `--mode overwrite-dates`, and a jar (or `DRISHTI_LAKE_CLASSPATH`) with the loader;
+data-load signal and the BI-store stamp work unchanged. The Python path is the default (product owner, 2026-10-28):
+the loader runs only when asked, with `--engine java`. `--engine auto` (the default) picks it on its own only when `--java-above-mb N` is
+given: every input JSON Lines, at least N MB, `--mode overwrite-dates`, and a jar (or `DRISHTI_LAKE_CLASSPATH`) with the loader;
 everything else (the demo lakes, small loads, JSON arrays, other modes) goes exactly the way it went before. Java is started through
 `tools/javacmd.py` (`-Djava.io.tmpdir` into the staging folder); the heap is `DRISHTI_LAKE_LOADER_HEAP` (default `4g`). `--from s3://`
 and a Delta `--lake s3://` work with `--engine java` only.

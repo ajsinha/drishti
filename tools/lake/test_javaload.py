@@ -60,6 +60,8 @@ def test_auto_picks_the_loader_only_for_large_json_lines(tmp_path, monkeypatch):
     arr = tmp_path / "array.json"
     arr.write_text('[{"id": 1}]', encoding="utf-8")
     monkeypatch.setattr(javaload, "command", lambda jar, java: ("java", ["-cp", "x", javaload.LOADER_MAIN]))
+    use, why = javaload.wanted(args(java_above_mb=None), [small], None, None)
+    assert not use and "Python path is the default" in why                 # not asked: never the loader, however large
     use, why = javaload.wanted(args(java_above_mb=1024), [small], None, None)
     assert not use and "--java-above-mb" in why
     use, why = javaload.wanted(args(java_above_mb=0), [small], None, None)
