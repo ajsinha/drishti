@@ -195,7 +195,7 @@ git clone https://github.com/ajsinha/drishti.git && cd drishti
 uv venv --python 3.13 drishti-console/.venv
 uv pip install --python drishti-console/.venv/bin/python -r drishti-console/requirements.txt
 ./mvnw -q package -DskipTests -pl drishti-server -am                 # 1 min 12 s with ~/.m2 filled
-drishti-console/.venv/bin/python tools/drishti.py lake demo           # about 15 min (943 s): 84 Delta tables, sixty days, under data/delta
+drishti-console/.venv/bin/python tools/drishti.py lake demo           # about 15 min (943 s): 85 Delta tables, sixty days, under data/delta
 ```
 
 then the server and the console as the run configurations start them ([GETTING_STARTED.md, Steps 6 and 7](GETTING_STARTED.md#step-6--start-the-server)).
