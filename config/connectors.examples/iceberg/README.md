@@ -88,7 +88,7 @@ For a REST catalog set `DRISHTI_ICEBERG_CATALOG=rest`, `DRISHTI_ICEBERG_URI`, `D
 | `credit-store.yaml` | `iceberg` | `netting-set`, `credit-limit`, `cva`, `sa-ccr` | credit-store read from iceberg (the former application-iceberg.yaml profile) |
 | `market-store.yaml` | `iceberg` | `ir-curve`, `repo-curve`, `fx-spot`, `fx-forward-curve`, `fx-vol-surface`, `ir-vol-cube`, `cap-vol-surface`, `equity`, `equity-index`, `dividend-curve`, `equity-vol-surface`, `credit-curve`, `inflation-index`, `inflation-curve`, `commodity`, `commodity-curve`, `commodity-vol-surface`, `rate-fixing`, `bond`, `correlation-matrix` | market-store read from iceberg (the former application-iceberg.yaml profile) |
 | `reference-store.yaml` | `iceberg` | `counterparty`, `counterparty-group`, `issuer`, `agreement`, `ccp`, `legal-entity`, `book`, `desk`, `trader`, `calendar`, `csa`, `clearing-account` | reference-store read from iceberg (the former application-iceberg.yaml profile) |
-| `risk-store.yaml` | `iceberg` | `stress-scenario`, `stress-result`, `frtb-sensitivity`, `pnl-explain`, `trade-valuation`, `portfolio`, `pnl-vector`, `scenario-pv`, `fx-scenario`, `scenario-set`, `risk-hierarchy` | risk-store read from Iceberg (the market-risk pack's risk domain; Delta stays the default) |
+| `risk-store.yaml` | `iceberg` | `stress-scenario`, `stress-result`, `frtb-sensitivity`, `pnl-explain`, `trade-valuation`, `portfolio`, `pnl-vector`, `scenario-pv`, `fx-scenario`, `scenario-set`, `risk-hierarchy`, `var-limit` | risk-store read from Iceberg (the market-risk pack's risk domain; Delta stays the default) |
 | `trade-endur.yaml` | `iceberg` | `trade` | trades read from Iceberg (loaded by tools/load-iceberg.sh) |
 <!-- files:end -->
 

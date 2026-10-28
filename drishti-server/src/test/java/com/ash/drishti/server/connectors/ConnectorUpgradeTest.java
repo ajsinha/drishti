@@ -91,9 +91,10 @@ class ConnectorUpgradeTest {
         copy(FIXTURE.resolve("connectors"), BASE.resolve("connectors"));
         copy(FIXTURE.resolve("generated"), BASE.resolve("data/connectors/generated"));
         Path delta = Files.createDirectories(BASE.resolve("data/delta"));
-        fixture("com.ash.drishti.server.var.VarLakeFixture", delta);
+        // the VaR inputs as the current pack expects them: with LIMIT_LETTER, which its demo hierarchy LL is built from (2.9.5)
+        fixture("com.ash.drishti.server.var.VarHierarchyFixture", delta);
         Path ccr = Files.createDirectories(BASE.resolve("ccr"));
-        fixture("com.ash.drishti.server.exposure.ExposureLakeFixture", ccr);
+        fixture("com.ash.drishti.server.exposure.ExposureHierarchyFixture", ccr);    // exposure paths with LIMIT_LETTER (2.9.5)
         // the exposure tables where the counterparty-risk pack's connectors read them
         for (String[] t : new String[][] {{"simulation-run", "risk"}, {"exposure-path", "risk"}, {"netting-set", "credit"}, {"csa", "legal"},
                 {"collateral-balance", "collateral"}, {"counterparty", "reference"}, {"counterparty-group", "reference"}}) {
@@ -176,7 +177,18 @@ class ConnectorUpgradeTest {
         ConnectorFiles.Definition riskT = files.parse("risk-store", template("risk-store"));
         Map<String, String> want = new LinkedHashMap<>(riskT.settings());
         want.put("refresh-seconds", "45");
-        assertThat(risk.settings()).isEqualTo(want);
+        assertThat(risk.settings()).containsOnlyKeys(want.keySet());
+        want.forEach((k, v) -> {
+            if (TemplateUpdates.layoutList(k)) {
+                // a layout list keeps the file's columns in their order and gains the template's new ones after them (LIMIT_LETTER in 2.9.5)
+                List<String> have = List.of(risk.settings().get(k).split(","));
+                assertThat(have).as(k).containsExactlyInAnyOrder(v.split(","));
+                List<String> old = have.stream().filter(c -> !List.of("LIMIT_LETTER").contains(c)).toList();
+                assertThat(have.subList(0, old.size())).as(k + ": the file's own columns first").isEqualTo(old);
+            } else {
+                assertThat(risk.settings().get(k)).as(k).isEqualTo(v);
+            }
+        });
         assertThat(risk.kinds()).isEqualTo(riskT.kinds());
         assertThat(TemplateStamp.pristine(risk.text())).isFalse();
 
@@ -190,9 +202,14 @@ class ConnectorUpgradeTest {
         ConnectorFiles.Definition wT = files.parse("var-whatif", template("var-whatif"));
         Map<String, Object> expected = TemplateMerge.set(TemplateMerge.set(wT.compute(), List.of("limits", "wait"), "45s"),
                 List.of("reads", "[0]", "id"), "{id}");
-        // the trigger keeps the file's kinds in their order and gains the template's new ones after them
-        expected = TemplateMerge.set(expected, List.of("triggers", "[0]", "kinds"),
-                List.of("pnl-vector", "risk-hierarchy", "scenario-set", "portfolio", "scenario-pv", "fx-scenario"));
+        // the trigger keeps the file's kinds (2.9.3's) in their order and gains the template's new ones after them, in the template's order
+        List<Object> kinds = new ArrayList<>(List.of("pnl-vector", "risk-hierarchy", "scenario-set", "portfolio"));
+        for (Object k : (List<?>) ((Map<?, ?>) ((List<?>) wT.compute().get("triggers")).get(0)).get("kinds")) {
+            if (!kinds.contains(k)) {
+                kinds.add(k);
+            }
+        }
+        expected = TemplateMerge.set(expected, List.of("triggers", "[0]", "kinds"), kinds);
         assertThat(TemplateMerge.same(w.compute(), expected)).as(w.compute() + " vs " + expected).isTrue();
 
         // use the pack's value: the reads' id becomes the template's, the edit of limits.wait stays
