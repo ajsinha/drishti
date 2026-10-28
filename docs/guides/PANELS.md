@@ -79,7 +79,7 @@ Each kind below says what is special to it. These hold for all of them.
 - **Live.** A live view sends only the panels that changed. A `line` or `area` patch carries data and moves the existing chart; every other kind is re-rendered by the same macro as the first paint, so it looks identical after a tick.
 - **Phone.** Below 640 px every panel takes the whole width, one per row; tables scroll sideways inside their panel, charts resize, and a chart's numbers are in a collapsed **Data** section under it.
 - **Accessibility.** Charts are `role="img"` with a label that says what they show; colour is never alone (a tone always has a sign or a word); tables take the keyboard (arrows, PgUp/PgDn, Home/End, Enter). Contrast is checked for every theme by `drishti-console/tests/test_contrast.py`.
-- **Download.** The ↓ in a panel's heading downloads it as CSV with numbers as numbers; each kind lists its columns below. A table's Pivot tab has its own CSV and Excel buttons.
+- **Download.** The ↓ in a panel's heading opens a small menu: **CSV** (numbers as numbers) or **JSON Lines** (one row a line, [DATA_FORMATS.md](DATA_FORMATS.md)); each kind lists its columns below. One button, so a zoomed panel's heading stays on one line on a phone (2.9.4). A table's Pivot tab has its own CSV and Excel buttons.
 - **Limits.** Long lists are bounded by `drishti.panels` (nodes, events, points, pivot rows, tree depth): see [CONFIGURATION.md](../admin/CONFIGURATION.md).
 - **Keys every panel takes** (`id`, `kind`, `title`, `description`, `key`, `code`, `area`, `span`, `height`, `infer`): [Keys every panel takes](RACHANA_REFERENCE.md#keys-every-panel-takes).
 
@@ -1276,7 +1276,7 @@ new HTML and the panel's id and kind.
 
 ### 11. CSV export
 
-The ↓ in a panel's heading downloads `/export/{kind}/{id}/{panel}.csv`. Three places, and the old recipe named one:
+The ↓ in a panel's heading opens its menu: **CSV** downloads `/export/{kind}/{id}/{panel}.csv`, **JSON Lines** the same rows as `.jsonl`. Three places, and the old recipe named one:
 
 1. `drishti-console/core/export.py`, `EXPORTABLE`: the set of kinds that can download:
 
@@ -1296,11 +1296,13 @@ The ↓ in a panel's heading downloads `/export/{kind}/{id}/{panel}.csv`. Three 
 
    `plain(text)` turns a shown number (`−1,250`, `4.25%`) back into a number, so a spreadsheet gets numbers, not
    strings. The panel's `empty` flag yields no rows.
-3. `drishti-console/web/templates/_macros/panels.html`: the tuple in the `pnl-help` download link line, which decides whether the
-   heading shows the ↓ (`data-export-panel`):
+3. `drishti-console/web/templates/_macros/panels.html`: the tuple in the download menu's line, which decides whether the
+   heading shows the ↓ and its menu (`data-export-menu`, one `data-export-panel` link per format):
 
    ```jinja
-   {% if p.kind in ('table', 'ladder', 'kv', ..., 'pivot', 'metric') and not p.empty %}<a class="pnl-help" data-export-panel="{{ p.id }}" hidden ...
+   {% if not embed and p.kind in ('table', 'ladder', 'kv', ..., 'pivot', 'metric', 'map') and not p.empty %}<details class="pnl-dl" data-export-menu hidden>
+     <summary class="pnl-help" title="Download">…</summary><span class="pnl-dl-menu"><a data-export-panel="{{ p.id }}" …>CSV</a>
+     <a data-export-panel="{{ p.id }}" data-export-ext="jsonl" …>JSON Lines</a></span></details>{% endif %}
    ```
 
 Add the kind's columns to the catalogue entry (the **CSV** line) and a test (`test_metric.py` asserts the header and the

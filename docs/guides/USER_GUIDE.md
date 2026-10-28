@@ -922,6 +922,8 @@ header with:
 - a **↓** button to download the panel: its menu offers **CSV** or **JSON Lines**;
 - a **?** that explains this kind of panel.
 
+![A table panel's heading with its download button open: CSV or JSON Lines](img/zoom/05-download-menu.jpg)
+
 `MX-20000001` shows *Deal ticket* (F2), *Legs* (F3, the legs side by side), *Cash-flow schedule, every leg* (F4), *Events by leg* (F5),
 *Events*, *Netted payments by date* (F6), *Payments by month*, *How this view was built* and *Linked entities*; F7 opens the counterparty's
 trades, F8 the impact and F9 the raw JSON.

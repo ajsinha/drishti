@@ -286,6 +286,8 @@ Delta stays the default. A lake's tables are maintained as Iceberg tables when t
 `format: auto` (the default), when a table under a local root is an Iceberg table (`<root>/<domain>/<table>/metadata/*.metadata.json`,
 as `lake build --format iceberg` writes it). The tables list shows each table's **Format** (Delta or Iceberg).
 
+![Admin → Lakes over two roots: MUREX's trades in Delta, the risk tables and the official results in Iceberg (tutorial 29)](../tutorials/img/t29/03-lakes.jpg)
+
 For an Iceberg table the run is `IcebergMaintenance` from the server's exec jar (`tools/lake/maintain_iceberg.py` builds the command;
 `DRISHTI_ICEBERG_CLASSPATH` in development), each step one Iceberg commit:
 

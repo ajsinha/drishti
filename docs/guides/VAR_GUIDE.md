@@ -2219,6 +2219,10 @@ select lists it as *(not available)*, disabled. A row that leaves the column emp
 (`DRS-5211`), never placed under a guessed node. The connector's layout must promote the column (`layout.pnl-vector.columns`,
 `layout.scenario-pv.columns`, `layout.exposure-path.columns`: the pack's do). The same rule holds for exposure.
 
+![A lake whose P&L vectors predate the letters: the select lists Limit letters (not available), greyed; the provenance's DRS-5211 warning names the column and the fix](img/varskip/01-hierarchy-not-available.jpg)
+
+![Admin → Health: Hierarchy skipped (var LL), with the reason and the fix](img/varskip/02-health-hierarchy-skipped.jpg)
+
 **The equality tests** (`HierarchyEquivalenceTest`, the 8,233 + 1,339 rows of 2026-09-30): MGMT configured as `DIVISION > DESK > TT_BOOK`
 (leaf ids; levels `division`, `desk`, `book`) and LEGAL as `LEGAL_ENTITY > DESK > TT_BOOK` give the rows' trees exactly: the same node
 ids, parents, levels and members, the aggregates to the bit, VaR, ES, the children's component VaR and the worst scenarios to the cent at

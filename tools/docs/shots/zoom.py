@@ -65,3 +65,17 @@ def table(c: Ctx):
 def phone(c: Ctx):
     open_view(c, 390, 844)
     zoomed(c, "[data-kind=line], [data-kind=area], [data-kind=hbar]", "04-phone.jpg")
+
+
+@shot("05-download-menu.jpg")
+def download_menu(c: Ctx):
+    """A table panel's heading with its one download button open (2.9.4): CSV or JSON Lines."""
+    open_view(c, 1440, 900, TABLE_VIEW)
+    panel = c.page.locator("section.pnl[data-panel]:is([data-kind=table], [data-kind=ladder])").first
+    panel.scroll_into_view_if_needed()
+    c.page.evaluate("window.scrollBy(0, -160)")           # clear of the sticky top bar
+    panel.locator("[data-export-menu] summary").click()
+    c.page.wait_for_timeout(500)
+    box = panel.bounding_box()
+    left = max(0, box["x"] - 90)                          # the menu opens leftwards, past the panel's edge
+    c.save("05-download-menu.jpg", clip={"x": left, "y": box["y"], "width": box["width"] + box["x"] - left, "height": min(box["height"], 240)})
