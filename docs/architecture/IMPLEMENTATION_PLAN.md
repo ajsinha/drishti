@@ -631,7 +631,7 @@ Build, test and close 2.9.5 (drill, main, tag) first; only the editions design d
 | # | Part | What |
 |---|---|---|
 | 0 | The parallel lake loader | **built (2026-10-28)**: a config-driven, multi-threaded Java loader of JSON Lines (folder or S3) into Delta or Iceberg, memory bounded by `memory.budget-mb`, one commit per business date, shard-aligned files and a load manifest for item 2; `lake build --engine java` ([PARALLEL_LOADER.md](PARALLEL_LOADER.md)). Measured at 10K positions; the 2.3M load is estimated at 1 to 5 minutes, to be measured with item 3 |
-| 1 | Editions | one setting, `drishti.edition`, bundling packs, allowed commands, menus and features, Home, help, Admin and branding (the logo and the about 26 hard-coded literals); `var-engine` first; a design doc, EDITIONS.md under docs/architecture (to be written) |
+| 1 | Editions | **moved to 2.9.7** (product owner, 2026-10-28): built there with the Drishti Risk edition (VaR and exposure first) instead of a VaR-only edition now and a redo later |
 | 2 | Scale-out | **VaR sharding built (2026-10-28)**, measure-agnostic machinery ([VAR_SHARDING.md](VAR_SHARDING.md)); several servers as one cluster; VaR sharded (a map-reduce of vectors); consoles without sticky sessions. Target (product owner): many small ECS Fargate tasks each owning a shard of books, auto-sharding and rebalancing, all reading the same Delta or Iceberg lake on S3; any task coordinates and sums the partial vectors; a hot file per shard on its own EBS; replicas auto-scale, Fargate Spot for read replicas. Cost options compared in the BMO deck: A (ECS on EC2 capacity), B (Fargate), C (sharded Fargate) |
 | 3 | The scale benchmark | no server for 2.3M (product owner, 2026-10-28): measured locally at **200K positions and 1,500 portfolios**, single server and a 3-node sharded cluster, Python and Java loaders; 2.3M extrapolated and labelled so |
 | 4 | Screenshots | the about 271 pictures still showing the old top bar |
@@ -650,7 +650,7 @@ Item 9's live runs need the product owner's AWS credentials.
 
 | # | Part | What |
 |---|---|---|
-| 1 | The Risk edition | **Drishti Risk**, a one-stop shop to manage risk: VaR, exposure, liquidity and climate risk and more, fully clustered and scalable (each measure sharded on the 2.9.6 machinery by its own unit). Exposure joins here (kept out of the 2.9.6 VaR edition); liquidity and climate risk measures need their own designs first |
+| 1 | Editions and the Risk edition | the editions mechanism (one setting, `drishti.edition`: packs, commands, menus, Home, help, Admin, branding; decided: Drishti's own branding, BI limited to the edition's datasets, commands hidden never renamed), first used by **Drishti Risk**, a one-stop shop to manage risk: VaR and exposure first, then liquidity, climate and more, fully clustered and scalable (each measure sharded on the 2.9.6 machinery by its own unit). Exposure joins here (kept out of the 2.9.6 VaR edition); liquidity and climate risk measures need their own designs first |
 | 2 | A client-side renderer | a distributable JS/CSS library that paints Drishti screens from the server's ViewModel JSON (`/api/v1/views/...` and its patch stream), so other applications render them while the Drishti backend stays in one place; one renderer (the console moves onto it), the 20 panel kinds ported from the Jinja macros with parity tests; revisits ADR-021 for Elements |
 
 ## Known gaps
