@@ -405,9 +405,9 @@ def test_a_trade_page_has_its_risk_links(stack, browser):
         pg.reload()
         wait(pg, "!!document.querySelector('#p-risk') && document.querySelector('#p-risk').innerText.indexOf('HS-509') >= 0", 60)
     text = risk.inner_text()
-    assert f"PV-{tid}-HS-509" in text and f"TRD:{tid}" in text, text
+    assert f"PNL-{tid}-HS-509" in text and f"TRD:{tid}" in text, text   # 2.9.5: PNL-<trade>-<set>
     assert "no exposure" in text, text
-    assert risk.locator(f'a[href*="/v/pnl-vector/PV-{tid}-HS-509"]').count() == 1
+    assert risk.locator(f'a[href*="/v/pnl-vector/PNL-{tid}-HS-509"]').count() == 1
     assert risk.locator('a[href*="/v/var-result/"]').count() == 1
     shot(pg, "trade-risk-links")
     pg.locator(f'#p-risk a[href*="/v/pnl-vector/"]').click()
@@ -437,7 +437,8 @@ def test_a_portfolio_page_lists_its_positions_and_opens_one_beside(stack, browse
 
 
 def test_the_newest_date_is_captured_officially_at_start(stack):
-    """Every node of both hierarchies (MGMT and LEGAL) captured by the server for the newest date (VAR_GUIDE.md section 19)."""
+    """Every node of every hierarchy (MGMT and LEGAL from the rows, 88; the limit letters LL from the columns, 43, 2.9.5) captured by the
+    server for the newest date (VAR_GUIDE.md section 19)."""
     import json
     deadline = time.monotonic() + 120
     record = None
@@ -448,9 +449,10 @@ def test_the_newest_date_is_captured_officially_at_start(stack):
         except urllib.error.HTTPError:
             time.sleep(1)                                                   # 404 until the capture at start has written it
     assert record is not None, "no official record within 120 s"
-    assert record["resultVersion"] == 1 and len(record["nodes"]) == 88
+    assert record["resultVersion"] == 1 and len(record["nodes"]) == 88 + 43
+    assert record["nodes"]["LL~BANK"]["captureId"].startswith("CAP-")
     assert record["nodes"]["MGMT~DESK-FX"]["captureId"].startswith("CAP-")
-    assert {n["hierarchy"] for n in record["nodes"].values()} == {"MGMT", "LEGAL"}
+    assert {n["hierarchy"] for n in record["nodes"].values()} == {"MGMT", "LEGAL", "LL"}
 
 
 def test_on_a_phone_the_explorer_stacks_without_scrolling_sideways(stack, browser):
