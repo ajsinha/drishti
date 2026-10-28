@@ -39,12 +39,12 @@ import org.springframework.context.ConfigurableApplicationContext;
  * {@code DRISHTI_NET_IT_PORTS} (comma-separated: the drill gives its Java 25 stage 19783 to 19785, beside the console stage; for a builder whose
  * scratch ports are others); one cluster at a time.
  */
-final class NetNodes implements AutoCloseable {
+public final class NetNodes implements AutoCloseable {
 
-    static final String KEY = "a-test-cluster-key-of-at-least-32-bytes";
-    static final int[] PORTS = ports(System.getProperty("drishti.net.it.ports", System.getenv().getOrDefault("DRISHTI_NET_IT_PORTS", "18783,18784,18785")));
+    public static final String KEY = "a-test-cluster-key-of-at-least-32-bytes";
+    public static final int[] PORTS = ports(System.getProperty("drishti.net.it.ports", System.getenv().getOrDefault("DRISHTI_NET_IT_PORTS", "18783,18784,18785")));
     /** This machine's real address: members never advertise a loopback one, so nodes on one machine call each other by it too. */
-    static final String HOST = com.ash.drishti.net.config.HostAddress.primary().orElse(null);
+    public static final String HOST = com.ash.drishti.net.config.HostAddress.primary().orElse(null);
 
     private static int[] ports(String list) {
         int[] p = java.util.Arrays.stream(list.split(",")).map(String::trim).filter(x -> !x.isEmpty()).mapToInt(Integer::parseInt).toArray();
@@ -55,16 +55,16 @@ final class NetNodes implements AutoCloseable {
     }
 
     /** One node: its context, port and folders. */
-    record Node(String name, int port, Path root, ConfigurableApplicationContext ctx) {
-        String url() {
+    public record Node(String name, int port, Path root, ConfigurableApplicationContext ctx) {
+        public String url() {
             return "http://" + HOST + ":" + port;
         }
 
-        NetService net() {
+        public NetService net() {
             return ctx.getBean(NetService.class);
         }
 
-        <T> T bean(Class<T> type) {
+        public <T> T bean(Class<T> type) {
             return ctx.getBean(type);
         }
     }
@@ -77,7 +77,7 @@ final class NetNodes implements AutoCloseable {
     private final java.nio.channels.FileChannel lockFile;
     private final java.nio.channels.FileLock lock;
 
-    NetNodes(Path root) throws IOException {
+    public NetNodes(Path root) throws IOException {
         this.root = root;
         Path lockPath = Path.of("target", "net-it.lock").toAbsolutePath();
         Files.createDirectories(lockPath.getParent());
@@ -86,7 +86,7 @@ final class NetNodes implements AutoCloseable {
     }
 
     /** Writes a node's config/net/ folder: node.yaml (enabled, its address, tags, the key) and one peer file per seed. */
-    static void folder(Path netDir, int port, List<String> tags, List<String> peerOnly, List<Integer> seeds) throws IOException {
+    public static void folder(Path netDir, int port, List<String> tags, List<String> peerOnly, List<Integer> seeds) throws IOException {
         org.junit.jupiter.api.Assumptions.assumeTrue(HOST != null, "this machine has no address but loopback: a cluster member never advertises one");
         Files.createDirectories(netDir.resolve("peers"));
         Files.writeString(netDir.resolve("node.yaml"), "enabled: true\nadvertise-url: http://" + HOST + ":" + port + "\ntags: " + tags
@@ -98,12 +98,12 @@ final class NetNodes implements AutoCloseable {
     }
 
     /** Starts a node on {@code port}; {@code extra} are more {@code --key=value} arguments (packs, security). */
-    Node start(String name, int port, String... extra) {
+    public Node start(String name, int port, String... extra) {
         return start(name, port, List.of(), extra);
     }
 
     /** As {@link #start(String, int, String...)}, with more classes registered as beans of the node (a test's slow start-up). */
-    Node start(String name, int port, List<Class<?>> beans, String... extra) {
+    public Node start(String name, int port, List<Class<?>> beans, String... extra) {
         Path dir = root.resolve(name);
         List<String> args = new ArrayList<>(List.of("--server.port=" + port, "--drishti.data.dir=" + dir.resolve("data"),
                 "--drishti.net.dir=" + dir.resolve("net"), "--drishti.net.poll=200ms",
@@ -128,16 +128,16 @@ final class NetNodes implements AutoCloseable {
         return n;
     }
 
-    Node node(String name) {
+    public Node node(String name) {
         return nodes.get(name);
     }
 
     /** Stops only the node's web server: its gossip goes on, so peers still take it for alive, but its port refuses connections. */
-    void closePort(String name) {
+    public void closePort(String name) {
         ((org.springframework.boot.web.servlet.context.ServletWebServerApplicationContext) nodes.get(name).ctx()).getWebServer().stop();
     }
 
-    void stop(String name) {
+    public void stop(String name) {
         Node n = nodes.remove(name);
         if (n != null) {
             n.ctx().close();
@@ -145,7 +145,7 @@ final class NetNodes implements AutoCloseable {
     }
 
     /** Waits up to {@code ms} for a condition, polling every 100 ms; true when it held. */
-    static boolean await(long ms, BooleanSupplier ok) throws InterruptedException {
+    public static boolean await(long ms, BooleanSupplier ok) throws InterruptedException {
         long end = System.currentTimeMillis() + ms;
         while (System.currentTimeMillis() < end) {
             if (ok.getAsBoolean()) {
@@ -157,7 +157,7 @@ final class NetNodes implements AutoCloseable {
     }
 
     /** A plain (unsigned) request as a browser or the console makes it. */
-    HttpResponse<String> call(String method, String url, String body, String... headers) throws IOException, InterruptedException {
+    public HttpResponse<String> call(String method, String url, String body, String... headers) throws IOException, InterruptedException {
         HttpRequest.Builder b = HttpRequest.newBuilder(URI.create(url)).timeout(Duration.ofSeconds(20))
                 .method(method, body == null ? HttpRequest.BodyPublishers.noBody() : HttpRequest.BodyPublishers.ofString(body));
         for (int i = 0; i + 1 < headers.length; i += 2) {

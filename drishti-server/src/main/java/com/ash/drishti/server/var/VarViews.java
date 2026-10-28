@@ -329,6 +329,9 @@ final class VarViews {
         m.put("computeMs", s.computeMs());
         m.put("cache", s.cached() ? "hit" : "miss");
         m.put("loadedMs", s.date().loadMs());
+        if (s.shards() != null) {
+            m.put("shards", s.shards());                              // a sharded date (VAR_SHARDING.md): the shards asked, who answered
+        }
         return m;
     }
 

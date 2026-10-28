@@ -108,6 +108,24 @@ class VarCli(unittest.TestCase):
         run("status")
         self.assertEqual(FakeApi.calls[-1][1], "/api/v1/var/status")
 
+    def test_shards_lists_the_map_and_drains(self):
+        run("shards", "--date", "2026-09-30", "--json")
+        self.assertEqual(self.query()[0:3], ("GET", "/api/v1/var/shards", {"asOf": "2026-09-30"}))
+        run("shards", "--drain")
+        self.assertEqual(FakeApi.calls[-1], ("POST", "/api/v1/var/shards/drain", {"on": True}))
+        run("shards", "--undrain", "--json")
+        self.assertEqual(FakeApi.calls[-1][2], {"on": False})
+        out = []
+        V.render_shards({"enabled": True, "origin": "pack market-risk", "key": ["LEGAL_ENTITY", "DESK"], "targetShardMb": 2048, "replicas": 2,
+                         "self": "n-a", "members": [{"node": "n-a", "self": True, "owner": True, "inView": True}],
+                         "map": {"businessDate": "2026-09-30", "digest": "abc", "shards": [{"shard": "S0", "range": "LE-A/DESK-X..LE-A/DESK-Y",
+                                                                                      "rows": 5, "owners": ["n-a", "n-b"], "ready": ["n-a"]}]}},
+                        out.append)
+        self.assertTrue(any("S0" in line and "n-a, n-b" in line for line in out), out)
+        out = []
+        V.render_shards({"enabled": False, "origin": "default"}, out.append)
+        self.assertIn("off", out[0])
+
     def test_every_figure_in_a_reporting_currency(self):
         run("show", "BANK", "--ccy", "EUR")
         self.assertEqual(self.query(), ("GET", "/api/v1/var/scope", {"scope": "BANK", "ccy": "EUR"}, None))

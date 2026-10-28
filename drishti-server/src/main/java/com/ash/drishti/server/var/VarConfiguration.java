@@ -42,19 +42,24 @@ import org.springframework.context.event.EventListener;
  * figures the position, portfolio and desk pages show.
  */
 @Configuration
-@EnableConfigurationProperties(VarProperties.class)
+@EnableConfigurationProperties({VarProperties.class, VarShardingProperties.class})
 public class VarConfiguration {
 
     @Bean(destroyMethod = "close")
-    public VarService varService(VarProperties props, SourceRouter router, Entitlements entitlements, ContentStore store,
-            ObjectProvider<AuditLog> audit, ObjectProvider<PackRegistry> packs) {
+    public VarService varService(VarProperties props, VarShardingProperties sharding, SourceRouter router, Entitlements entitlements,
+            ContentStore store, ObjectProvider<AuditLog> audit, ObjectProvider<PackRegistry> packs,
+            ObjectProvider<com.ash.drishti.server.net.NetService> net, ObjectProvider<com.ash.drishti.server.net.DigestService> digests) {
         ParallelSums sums = new ParallelSums(props.threads(), props.parallelRows());
         VarAccess access = new VarAccess(props, entitlements);
         java.util.function.Supplier<Hierarchies> hierarchies = Hierarchies.of(props, packs::getIfAvailable);   // a bad setting refuses the start
-        VarService svc = new VarService(props, new VarLoader(router, props, sums, rules(props, packs), new VarTier(props.tier()).start(),
-                hierarchies), access,
-                new VarSaved(store, access::seesAll), new VarOfficialStore(store), audit.getIfAvailable(), sums);
+        VarLoader loader = new VarLoader(router, props, sums, rules(props, packs), new VarTier(props.tier()).start(), hierarchies);
+        VarService svc = new VarService(props, loader, access, new VarSaved(store, access::seesAll), new VarOfficialStore(store),
+                audit.getIfAvailable(), sums);
         svc.saved().words(() -> svc.words().keySet());
+        // VaR sharding across Drishti*net (VAR_SHARDING.md): off unless the pack's sharding block or drishti.var.sharding switches it on
+        java.util.function.Supplier<VarSharding> shardSettings = VarSharding.of(sharding, props, packs::getIfAvailable);
+        svc.shards(new VarShards(props, sharding, shardSettings, loader, new com.ash.drishti.server.shard.ShardPeers(VarSharding.MEASURE.service(), net::getIfAvailable, digests::getIfAvailable), access,
+                sums).start());
         VarPositions.install(new VarPositions(svc));
         return svc;
     }

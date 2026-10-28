@@ -163,6 +163,36 @@ public final class OrdinalSet {
         return bits.nextSetBit(0);
     }
 
+    /**
+     * The members in {@code [from, to)}, renumbered from {@code from} (member {@code from + i} becomes {@code i}): one shard's part of a
+     * set, in the shard's own ordinals (VAR_SHARDING.md).
+     */
+    public OrdinalSet slice(int from, int to) {
+        return to <= from ? EMPTY : new OrdinalSet(bits.get(from, to));
+    }
+
+    /** The members moved up by {@code offset} (a shard's ordinals placed back in the date's). */
+    public OrdinalSet shifted(int offset) {
+        if (offset == 0 || bits.isEmpty()) {
+            return this;
+        }
+        BitSet b = new BitSet(bits.length() + offset);
+        for (int i = bits.nextSetBit(0); i >= 0; i = bits.nextSetBit(i + 1)) {
+            b.set(i + offset);
+        }
+        return new OrdinalSet(b);
+    }
+
+    /** The members as the words of a bitmap (64 per word, little-endian bit order), to send to another server. */
+    public long[] words() {
+        return bits.toLongArray();
+    }
+
+    /** A set from the words of {@link #words()}. */
+    public static OrdinalSet ofWords(long[] words) {
+        return new OrdinalSet(BitSet.valueOf(words));
+    }
+
     /** A stable digest of the members (the membership hash a result's stamp carries). */
     public String digest() {
         long h = 1125899906842597L;

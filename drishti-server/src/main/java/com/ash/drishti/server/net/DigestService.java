@@ -70,6 +70,8 @@ public final class DigestService implements AutoCloseable {
     private final Map<String, Long> pulledAt = new ConcurrentHashMap<>();
     private final Map<String, String> packHashes = new ConcurrentHashMap<>();
     private volatile Supplier<List<String>> reports = List::of;
+    /** The cluster services this node runs and their state now (VaR shards, 2.9.6), published in its digest. */
+    private final Map<String, Supplier<String>> services = new ConcurrentHashMap<>();
     private volatile Digest self;
     private volatile CapabilityTable table = CapabilityTable.EMPTY;
     private volatile Thread loop;
@@ -92,6 +94,32 @@ public final class DigestService implements AutoCloseable {
     /** The BI report ids this node serves (wired by the BI layer). */
     public void reports(Supplier<List<String>> ids) {
         this.reports = ids == null ? List::of : ids;
+    }
+
+    /**
+     * A cluster service's state, published in this node's digest under {@code name} and rebuilt every round (VaR shards: the shards this
+     * node holds, VAR_SHARDING.md); a change raises the digest's hash, so peers pull it within a round. Null removes it.
+     */
+    public void service(String name, Supplier<String> state) {
+        if (state == null) {
+            services.remove(name);
+        } else {
+            services.put(name, state);
+        }
+    }
+
+    /** Builds this node's digest now and announces a new hash at once (a service's state changed and peers should know soon). */
+    public void announce() {
+        NetService.Node n = net.node().orElse(null);
+        if (n == null) {
+            return;
+        }
+        Digest mine = build(n);
+        boolean changed = self == null || !self.hash().equals(mine.hash());
+        self = mine;
+        if (changed) {
+            net.digestHash(mine.hash());
+        }
     }
 
     /** Told after the capability table changed (the peer sources, the router). */
@@ -336,9 +364,16 @@ public final class DigestService implements AutoCloseable {
         double rps = ((Number) last.getOrDefault("requests", 0L)).doubleValue() / 60.0;
         double ms = ((Number) last.getOrDefault("avgMs", 0.0)).doubleValue();
         Map<String, List<String>> access = net.config().access().roles();
+        Map<String, String> svc = new java.util.TreeMap<>();
+        services.forEach((name, state) -> {
+            String v = safe(state);
+            if (!v.isEmpty()) {
+                svc.put(name, v);
+            }
+        });
         return new Digest(n.id(), me.url(), net.version(), Member.PROTOCOL, packEntries, kinds, new Digest.Load(Math.round(rps * 100) / 100.0, ms),
                 calendar.get(), me.tags(), security.redact().stream().sorted().toList(), access, reports.get().stream().sorted().toList(),
-                System.currentTimeMillis());
+                System.currentTimeMillis(), svc);
     }
 
     private List<Digest.SourceEntry> sourcesOf(String kind) {

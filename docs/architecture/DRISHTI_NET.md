@@ -669,6 +669,17 @@ address they advertise, never a loopback one. Tested by `RunClusterTest`.
 
 Each phase as it was built, with anything that differs from the design above. The operator's guide is [NET.md](../admin/NET.md).
 
+**VaR sharding over the members (2.9.6, off by default).** The VaR engine can spread each date's rows over the members
+([VAR_SHARDING.md](VAR_SHARDING.md)): shard maps by legal entity and desk, owners by rendezvous hashing over the members that may own shards
+(as `RunCluster` chooses a model's owner, with replicas, zones and a stable view), each owner building its shards from the lake. It uses
+Drishti*net as it is: membership and liveness from the member table; **readiness in the capability digest**, a new optional field
+`services` (name to compact text; the VaR engine publishes `var-shards`: on, owner, draining, per date the shard map and the shards ready
+with their data digest), so a change raises the digest's hash, gossip carries it and peers pull it within a round; the coordinator's calls
+(`POST /api/v1/var/partial`, `GET /api/v1/var/shards/skeleton`) are signed one-hop calls, a partial with the caller's on-behalf-of token so
+the owner applies the caller's rights too (masks and entitlements on both sides), the endpoints refusing an unsigned call (`401
+DRS-5051`). `drishti-net` itself gained only the `services` field (no Spring, no engine). The machinery is measure-agnostic
+(`com.ash.drishti.compute.shard`, `com.ash.drishti.server.shard`); VaR is its first measure.
+
 **N1, membership (built).** The core is a module of its own, `drishti-net` (no Spring, no engine: an ArchUnit rule keeps it so): `MemberTable`
 (the merge rule of section 5), `Gossiper` (rounds, push-pull, direct and indirect probes, suspicion, death, forgetting, leave, rejoin, the join
 list of seeds and saved members), `PeersFile`, `NodeIdentity`, `NetFolder` and `NetSchema` (the folder of section 14 with line numbers,

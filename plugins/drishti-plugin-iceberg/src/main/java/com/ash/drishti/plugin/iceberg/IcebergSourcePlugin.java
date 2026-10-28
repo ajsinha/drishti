@@ -708,6 +708,16 @@ public final class IcebergSourcePlugin implements SourcePlugin {
      */
     @Override
     public boolean vectors(String kind, String column, List<String> texts, AsOf asOf, com.ash.drishti.api.VectorSink sink) {
+        return vectors(kind, column, texts, asOf, null, sink);
+    }
+
+    /**
+     * The date's vectors for the keys of {@code range} (a VaR shard, VAR_SHARDING.md): a data file whose manifest bounds of the first key
+     * column (and its null count) show none of them is not read; the reader checks every row.
+     */
+    @Override
+    public boolean vectors(String kind, String column, List<String> texts, AsOf asOf, com.ash.drishti.api.KeyRange range,
+            com.ash.drishti.api.VectorSink sink) {
         if (!vectorColumns(kind).contains(column)) {
             return false;
         }
@@ -728,8 +738,15 @@ public final class IcebergSourcePlugin implements SourcePlugin {
         if (days.isEmpty()) {
             return true;
         }
+        KindTable kt = tables.get(kind);
+        Day day = days.get(0);
+        String keyColumn = range == null || range.columns().isEmpty() ? null : cols.get(range.columns().get(0));
+        java.util.function.IntPredicate keep = keyColumn == null ? f -> true : f -> {
+            String[] b = kt.textBounds(l.get(), day, f, keyColumn);
+            return range.mayHold(b[0], b[1], b[2] == null || !"0".equals(b[2]));
+        };
         try {
-            IcebergVectors.vectors(tables.get(kind), l.get(), days.get(0), column, physical, sink);
+            IcebergVectors.vectors(kt, l.get(), day, column, physical, keep, sink);
         } catch (RuntimeException e) {
             throw failed(kind, e);
         }

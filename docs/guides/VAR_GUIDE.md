@@ -70,7 +70,7 @@ fat-tailed factor market), not prices.
 25. [One business date in memory](#25-one-business-date-in-memory)
 26. [The tiered memory and the hot file](#26-the-tiered-memory-and-the-hot-file)
 27. [Sizes, performance and the benchmark](#27-sizes-performance-and-the-benchmark)
-28. [Sharding across Drishti\*net (planned)](#28-sharding-across-drishtinet-planned)
+28. [Sharding across Drishti\*net (as built, 2.9.6)](#28-sharding-across-drishtinet-as-built-296)
 29. [The P&L vector in the lake](#29-the-pl-vector-in-the-lake)
 30. [The design record](#30-the-design-record)
 31. [Open items](#31-open-items)
@@ -1515,7 +1515,7 @@ also served as the computed kinds `var-result` (Java) and `var-whatif` (Python) 
 | An optional "risk position" grouping for viewing (book × product × currency × underlying × maturity quarter) | PLANNED | §15.6 |
 | Tiered memory: each loaded date a memory-mapped local hot file (float32 position rows in hierarchy order, the trades of fungible positions, float64 aggregates; Delta stays float64), the heap holding aggregates, columns and links; history dates opened lazily from their file; rebuilt when the inputs change; cleaned on eviction and shutdown | AS BUILT | §26 |
 | The benchmark 1 M trades × 50 dates (`VarTierBenchmark`, opt-in): measured at 100,000 trades × 5 dates, extrapolated | AS BUILT (measured locally; the full run is for a server) | §27.3 |
-| Sharding the hot store across Drishti*net nodes | PLANNED (the mechanism is not built) | §28 |
+| Sharding the hot store across Drishti*net nodes | AS BUILT (2.9.6, off by default: the pack's `sharding:` block) | §28, [VAR_SHARDING.md](../architecture/VAR_SHARDING.md) |
 | The common risk lake (domain `risk`, one connector `risk-store` for every risk pack) | PLANNED (VaR's tables already there) | §15.1 |
 | The computed kinds `var-result` (`VRES`, the Java engine through the reactive connector `var-engine`) and `var-whatif` (`VWIF`, the Python VaR engine in the compute pool `var` through `var-whatif`: hypothetical trades from a private sandbox, the stressed window) | AS BUILT | §8 |
 | The command line `drishti.py var` (show, parts, path, history, tree, status, captures, baskets, official, reload, whatif) | AS BUILT | §10 |
@@ -2755,7 +2755,7 @@ recommended defaults unless the product owner said otherwise):
 | `VAR-COMM` mapping | the shared rules' section 14: `DIVISION:COMM` (corrected in 2.8.0 to `DESK:COMM`) | the record is the desk `DESK-COMM`; the division word is `DIV:` |
 | Scope sections | the shared rules' sections 4 and 8 pointed to *VAR.md section 9* (scopes) and *section 11* (memory) | scopes are [section 5](#5-scopes-portfolios-and-baskets) of this guide and memory [section 26](#26-the-tiered-memory-and-the-hot-file) |
 | Hot file (proposed in 1.3) | `<data folder>/var/hot/<date>/<SCENARIO_SET_ID>.vhot`, a `STRS` section of every dictionary, `NODE` with member runs over position rows, `TMAT` of every trade | `<date>/inputs-<16 hex of the inputs' digest>.vhot` (the set id is in the header); each column section carries its dictionaries; `NODE` holds books (runs come from `BOOK`); `META`, `SCEN`, `AKEY`, `TMAP` added; `TMAT` holds only the trades of fungible positions |
-| Sharding | each node maps the shards it owns | not built: each server holds whole dates ([section 28](#28-sharding-across-drishtinet-planned)) |
+| Sharding | each node maps the shards it owns | as built (2.9.6, [section 28](#28-sharding-across-drishtinet-as-built-296)): each owner builds and maps only its shards; every member holds the date's skeleton and node aggregates |
 | Computed kinds | `var-result`, `var-contribution`, `var-path`, `var-history`, `what-if` | `var-result` and `var-whatif`; parts and worst scenarios inside `var-result` |
 | Where the engine runs | a reactive connector `var-engine` over a Python package `compute/drishti-var` | base VaR in the server's JVM (additions and sorts next to the data); the reactive connectors and the Python engine (part 2) serve the computed kinds ([section 24](#24-where-the-engine-lives)) |
 | The explorer | a Sutra of the market-risk pack, opened by `VARX <scope>` | a console page (`/var`), opened by `VAR` ([section 24](#24-where-the-engine-lives)) |
@@ -2776,6 +2776,7 @@ recommended defaults unless the product owner said otherwise):
 | 1.7 | 2026-10-27 | **AS BUILT (2.9.4, local):** intraday updates (§8.4): `RUN_KIND: INTRADAY` rows appended to `scenario-pv` and `pnl-vector` (§15.8, §15.9), applied on the loaded date without a reload (each trade's difference into its book and nodes, the totals, the currencies), the latest `COMPUTED_AT` per trade winning, cancels, new trades, another scenario set refused; `intraday` on every answer, the badge, `drishti.py var intraday`; the official records the morning run's |
 | 1.6 | 2026-10-27 | **AS BUILT (2.9.4, local):** the listed reporting currencies built ahead in the background and kept for the newest 5 dates (`drishti.var.currencies`, `drishti.var.currency-retention-dates`); every node's PVs summed per trade currency (`CTOT`, hot file format 2) for the headline in any currency and the tab *In other currencies* (`GET /scope/currencies`, `GET /currencies`); the console's Reporting currency picker, `VAR … IN EUR`, Trade currency on the trade pages and the VaR tables (§15.11) |
 | 1.11 | 2026-10-28 | **AS BUILT (2.9.5):** configurable hierarchies (§15.14): the pack's `hierarchies:` block or `drishti.var.hierarchies`, from the `risk-hierarchy` rows or from the trades' columns (path or leaf ids, a scope word, a limits kind); the demo's limit letters `LL` (`LIMIT_LETTER > DESK`) beside MGMT and LEGAL; the `risk-hierarchy` enums opened; the new kind `var-limit` (§15.15); `LIMIT_LETTER` on every P&L, scenario-PV and exposure-path row; cells and hot file format 3 (§25, §26.3); a position under two nodes split (`<position>@<value>`); official records of every configured hierarchy with cell membership lines (§19); `DRS-5211` to `DRS-5214` (§20); P&L-vector ids `PNL-<trade or position>-<set>` (`PV-` still read) |
+| 1.12 | 2026-10-28 | **AS BUILT (2.9.6, unreleased):** sharding across Drishti\*net (§28, [VAR_SHARDING.md](../architecture/VAR_SHARDING.md)): off by default; the pack's `sharding:` block or `drishti.var.sharding.*`; a shard map per date by legal entity and desk, owners by rendezvous hashing, each owner building its shards from the lake, every member putting the date together (node aggregates to the bit), partial sums with an exactly-once check, handover through readiness in the capability digest, drain; `provenance.shards`; `GET /api/v1/var/shards`, `drishti.py var shards`; `DRS-5215` to `DRS-5217` |
 | 1.4 | 2026-10-26 | **AS BUILT (2.8.0, VaR complete part 2):** the tiered memory (§26: each date a memory-mapped float32 hot file, aggregates float64, history dates mapped again from their file, eviction, cleaning, safe unmapping; the hot file's format 1 fixed; precision bound and measurements); `drishti.var.tier.*` (§12); the budget measured on the float32 copy; `provenance.tier`, the status's `tier` (§11.2, §11.4); the benchmark measured at 100,000 × 5 and extrapolated to 1 M × 50, with the full command (§27.3); the computed kinds `var-result` and `var-whatif` through reactive connectors, the Python VaR engine in the pool `var` (§8); `drishti.py var` (§10); open questions 8 and 12 decided; sharding documented as planned, not built (§28) |
 
 **2026-10-26, no change to the contract:** the contract (formerly the contracts folder's VAR.md, now [archived](../archive/VAR.md) as history) was merged with the user guide, the
@@ -3017,7 +3018,7 @@ below a position, `TRD:`, a basket naming trades, a position held in part); ever
 | vectors on the heap in `double[]` chunks; an off-heap variant optional (`ByteBuffer.allocateDirect`), no FFM | the rows are never on the heap when mapped: the load streams them to a spill file and writes the hot file from it; the heap holds about 0.8 KB a trade (columns, ids, links) |
 | position vectors in the store | one float32 row per position (the float64 sum of its trades, rounded once) and the rows of the trades of positions of more than one trade; a single-trade position's trade is its position's row |
 | float32 precision estimated (±4,000 USD on 10⁹ over 2 million positions), an opt-in `vectors.hot-precision: float32` | the bound proven and measured ([section 26.6](#266-precision-float32-rows-float64-sums)); float32 is the default |
-| sharding by legal entity and desk, two replicas | not built ([section 28](#28-sharding-across-drishtinet-planned)); the file keeps rows contiguous by legal entity and desk so a shard can be a byte range of `PMAT` |
+| sharding by legal entity and desk, two replicas | built in 2.9.6 ([section 28](#28-sharding-across-drishtinet-as-built-296)): a shard is its own hot file (the same format, a `RANG` section) built from its key range of the lake, not a byte range of one date's `PMAT` |
 
 ### 26.6 Precision: float32 rows, float64 sums
 
@@ -3147,7 +3148,7 @@ whole bank reads only the 50,000 position rows (3.2 ms), and a drill to a positi
 
 **The targets** of section 27.2 are met at the measured size and, by the extrapolation, at 1 M trades on one server: a node under 1 ms, a
 scope of nodes plus or minus positions in a few ms, the whole bank in tens of ms once resident. **Still to measure on a real server:** the
-full 1 M × 50 run above, a cold first touch of a history date from its file, and (when built) the sharded store.
+full 1 M × 50 run above, a cold first touch of a history date from its file, and the sharded store (built in 2.9.6, not yet measured at scale).
 
 ### 27.4 A large bank: the design's reference sizing
 
@@ -3193,23 +3194,29 @@ visible job ([BI_RUNS.md](../architecture/BI_RUNS.md)), then cached; position-le
 what-if of one vanilla trade priced over 509 scenarios 3 s (QLRisk to be measured), of 100 trades 60 s with progress; an applied
 write-back reflected in the shared VaR on every watcher's screen 2 s after the change applies.
 
-## 28. Sharding across Drishti\*net (planned)
+## 28. Sharding across Drishti\*net (as built, 2.9.6)
 
-The design shards the hot store by node of the hierarchy across Drishti\*net: each member maps the shards it owns, contiguous ranges of
-positions aligned to legal entities and desks (a desk is never split), about equal in bytes, two replicas each (a member leaving costs no
-reload on the critical path), and a sum over the bank is a scatter-gather of partial sums: the query's coordinator (the owner of the
-request key, [REACTIVE_CONNECTORS.md section 14](../architecture/REACTIVE_CONNECTORS.md#14-several-servers-drishtinet)) sends each owner
-its part of the set and receives a partial sum (N doubles, 4 KB), then adds the partials. Sums are exact to add in any order in float64
-to well within a currency unit at this scale.
+**Off by default.** With no `sharding:` block in the market-risk pack and no `drishti.var.sharding.enabled`, every server holds whole dates
+as in sections 25 to 27. Switched on, a date's rows are spread over the Drishti\*net members; the design, the handover, the failure cases,
+the settings and the tests are in [VAR_SHARDING.md](../architecture/VAR_SHARDING.md). In short:
 
-**The mechanism is not in place**: Drishti\*net routes entities and compute requests to members (`NetComputePeers` fans a reactive
-computation's chunks out to the peers of a pool), but nothing assigns ranges of a VaR date to members, replicates hot files, or gathers
-partial vectors. So it is **not built in 2.8.0**; each server holds whole dates. The plan, unchanged: (1) a shard map per date (ranges of
-`PMAT` rows by legal entity and desk, two owners each) published with the date's digest; (2) each owner builds and maps only its ranges
-(the same file format, a `RANGE` header field); (3) `VarBook.vector` sends the set's ranges to their owners
-(`POST /api/v1/var/partial` with the ordinal set's runs) and adds the partial float64 vectors in a fixed order; (4) a node's aggregate
-stays on every member (M × N doubles: 20 MB for 5,000 nodes). The hot file's format already keeps rows contiguous by legal entity and
-desk, so a shard is a byte range of `PMAT`.
+- **A shard map per date**: the date's rows counted per legal entity and desk (columns only, no vector), cut into contiguous ranges near
+  `target-shard-mb` (a desk never split), the same on every member that reads the same data (`ShardMap`).
+- **Owners by rendezvous hashing** of each shard's range over the members that may own shards (alive, sharding on, not `coordinator-only`,
+  not draining), the top `replicas`; the view moves only once the membership has been stable for `stable-seconds`; no consensus protocol.
+- **Each owner builds only its shards** from the lake (the connector skips files whose statistics hold none of the range's keys; every row
+  checked), each its own hot file (`<hot>/<date>-shard-<i>/`, the same format with a `RANG` section).
+- **Every member puts the date together** from its own shards and the others' skeletons (the hot file without its matrices): the same
+  trades, positions and nodes as one server, **every node's aggregate to the bit**, so `VAR BANK` and the desks answer at once everywhere.
+- **Any other scope**: the planner's rows split by shard, each part summed by one ready owner (`POST /api/v1/var/partial`, signed, one hop,
+  as the caller), exactly one answer per shard, added in shard order, VaR and ES taken once. No live owner of a needed shard: `503
+  DRS-5215`, never a partial VaR. The answer's `provenance.shards` says how many shards were asked and who answered.
+- **Handover**: a new owner builds its shards from the lake and announces them ready in its capability digest; the old owner keeps
+  serving until the new one has been ready for `grace-seconds`. A member drains before it stops (`drishti.py var shards --drain`).
+
+Measured equal to one server **to the cent** (VaR, ES, contributions, the P&L path, the tree, intraday, the official record) on three
+members in USD and EUR, on Delta and Iceberg inputs (`VarShardClusterTest`, VAR_SHARDING.md section 12). `GET /api/v1/var/shards?asOf=`
+and `drishti.py var shards` show the map, the owners and who is ready.
 
 ## 29. The P&L vector in the lake
 
@@ -3351,7 +3358,7 @@ wholly inside, so 8,420 leaves are summed (about 34 MB, about 10 ms); the stamp 
 | *VaR complete* parts 1 and 2 | retired stored kinds, derived positions, official captures and their publication, 7-year retention (part 1); the tiered memory, the benchmark, the computed kinds and the Python engine, `drishti.py var` (part 2) | built (2.8.0) |
 | V4 | what-if: sandboxes, unwind and linear scaling, the reprice check; pricing through QLRisk if its API is stable; the QuantLib-Java parity. Accepted: a sandbox removing three trades matches the scope minus those trades exactly; with QLRisk, a new swap's incremental VaR in under 3 s | partly: hypothetical vectors in a sandbox; pricing planned ([section 8.4](#84-what-if-pricing-and-intraday-recomputes-what-if-planned-intraday-updates-as-built-in-294)) |
 | V5 | intraday: `write-back` and `data-version` triggers, the intraday layer, per-event impacts, pushes ([WRITE_BACK.md section 18](../architecture/WRITE_BACK.md#18-280-saving-through-connectors-triggers-and-viewers)). Accepted: two traders' amendments to one book: each sees their own impact, both see one shared number stamped with both events | planned |
-| V6 | scale: sharding across Drishti\*net, the targets measured on a real server. Accepted: the measured numbers published; any target missed has a stated reason and plan | the hot store built (part 2); sharding planned ([section 28](#28-sharding-across-drishtinet-planned)) |
+| V6 | scale: sharding across Drishti\*net, the targets measured on a real server. Accepted: the measured numbers published; any target missed has a stated reason and plan | the hot store built (part 2); sharding built in 2.9.6 ([section 28](#28-sharding-across-drishtinet-as-built-296)) |
 
 **Tests.** The design asked for: additivity (a scope's vector equals the sum of its trades'; node vectors equal their children's sums);
 algebra (canonical forms of equal scopes are equal; union, difference and intersection against brute force); measures against textbook
@@ -3388,7 +3395,7 @@ Still planned or parked after 2.8.0, each described above:
 - what-if **pricing** of amended or new trades over the scenarios through QLRisk, only when its API is declared stable, with the reprice
   check, *Book via write-back…* and the QuantLib-Java alternative (V4, [section 8.4](#84-what-if-pricing-and-intraday-recomputes-what-if-planned-intraday-updates-as-built-in-294));
 - **intraday** recomputes from write-backs and feeds, the intraday layer and per-event impacts (V5, section 8.4);
-- **sharding** the hot store across Drishti\*net and the full 1 M × 50 benchmark on a real server (V6, [section 28](#28-sharding-across-drishtinet-planned), [section 27.3](#273-the-tiered-store-measured-and-extrapolated-as-built-280));
+- the full 1 M × 50 benchmark on a real server, sharded (sharding built in 2.9.6; V6, [section 28](#28-sharding-across-drishtinet-as-built-296), [section 27.3](#273-the-tiered-store-measured-and-extrapolated-as-built-280));
 - the lake layout at bank scale: the sort by hierarchy, the partition by scenario set, file and row-group sizes, `BYTE_STREAM_SPLIT` +
   ZSTD (open question 7, [section 29.2](#292-the-layout-the-design-chose-and-what-is-built));
 - several scenario sets on one date and a stressed set `SVAR-250` (open question 6); age-weighted and filtered methods; 10-day VaR; ES

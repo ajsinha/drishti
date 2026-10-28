@@ -14,7 +14,8 @@
 
 """`drishti.py var ...`: the VaR engine from the command line (docs/guides/VAR_GUIDE.md; the API: /api/v1/var), as the token's user sees
 it: a scope's headline (show), its ranked P&L path (path), history and backtest (history), contributions (parts), the hierarchy
-(tree), the engine's state and tiers (status), captures (capture, captures, compare), baskets (basket, baskets), the official end-of-day
+(tree), the engine's state and tiers (status), the shards across Drishti*net (shards: the date's shard map, owners, members; --drain), captures
+(capture, captures, compare), baskets (basket, baskets), the official end-of-day
 record (official), a reload (administrators) and a what-if through the Python engine (whatif: hypothetical trades from a JSON file).
 Every figure in a reporting currency with --ccy (2.9.4; USD by default): the vectors converted through USD with each scenario's FX, so
 the currency move is part of the risk (VAR_GUIDE.md section 15.10). Exit codes: 0, 1 (the server said no), 2 (usage)."""
@@ -28,6 +29,7 @@ EPILOG = ("examples:\n  drishti.py var show 'DESK:RATES'\n  drishti.py var show 
           "  drishti.py var show BANK --ccy EUR\n"
           "  drishti.py var parts 'DESK:RATES' --by position --top 10\n  drishti.py var path 'DESK:RATES' --size 10\n"
           "  drishti.py var history 'DESK:RATES'\n  drishti.py var tree --hierarchy LEGAL\n  drishti.py var status\n"
+          "  drishti.py var shards --date 2026-09-30\n"
           "  drishti.py var basket rates-hedges \"WHERE:'hedge' in TAGS\" --title 'Rates hedges'\n"
           "  drishti.py var capture 'BASKET:asha/rates-hedges' --note 'before the unwind'\n  drishti.py var compare CAP-20260930-7 now\n"
           "  drishti.py var whatif 'DESK:RATES' --trades new-swap.json --stress-window 250")
@@ -111,6 +113,34 @@ def render_history(hs: dict, say) -> None:
     for r in (hs.get("rows") or [])[-15:]:
         rows.append([str(r.get("date")), money(r.get("var")), money(r.get("es")), money(r.get("pnl")), "yes" if r.get("exception") else ""])
     table(rows, say)
+
+
+def render_shards(s: dict, say) -> None:
+    """VaR sharding across Drishti*net (docs/architecture/VAR_SHARDING.md): the settings, the members, the date's shards and their owners."""
+    if not s.get("enabled"):
+        say(f"VaR sharding is off ({s.get('origin')}): every date is loaded whole on each server"
+            + (f"; {s['problem']}" if s.get("problem") else ""))
+        return
+    say(f"VaR sharding on ({s.get('origin')}): key {'/'.join(s.get('key') or [])}, target {s.get('targetShardMb')} MB a shard, "
+        f"{s.get('replicas')} owners each; this member {s.get('self')}" + (" (coordinator only)" if s.get("coordinatorOnly") else "")
+        + (", draining" + (": safe to stop" if s.get("safeToStop") else ": handing its shards over") if s.get("draining") else ""))
+    rows = [["Member", "Owns shards", "In view", "Draining", "Zone"]]
+    for m in s.get("members") or []:
+        rows.append([str(m.get("node")) + (" (this)" if m.get("self") else ""), "yes" if m.get("owner") else "no",
+                     "yes" if m.get("inView") else "no", "yes" if m.get("draining") else "", str(m.get("zone") or "")])
+    table(rows, say)
+    mp = s.get("map")
+    if mp:
+        say(f"{mp.get('businessDate')}: {len(mp.get('shards') or [])} shards, map {str(mp.get('digest'))[:16]}"
+            + (f" ({mp['note']})" if mp.get("note") else ""))
+        rows = [["Shard", "Range", "Rows", "Owners", "Ready on"]]
+        for sh in mp.get("shards") or []:
+            rows.append([str(sh.get("shard")), str(sh.get("range")), str(sh.get("rows")), ", ".join(sh.get("owners") or []),
+                         ", ".join(sh.get("ready") or [])])
+        table(rows, say)
+    held = s.get("held") or []
+    if held:
+        say("held here: " + ", ".join(f"{h.get('businessDate')} {h.get('shard')} {h.get('currency')} ({h.get('state')})" for h in held))
 
 
 def trades_of(path: str, err) -> list[dict]:
@@ -205,7 +235,7 @@ def load_intraday(path: str, lake: str, day: str | None, signal: str | None, tok
 
 
 def register(groups, srv, ctx: dict) -> None:
-    """Adds ``var show|parts|path|history|tree|status|capture|captures|compare|basket|baskets|official|reload|whatif``."""
+    """Adds ``var show|parts|path|history|tree|status|shards|capture|captures|compare|basket|baskets|official|reload|whatif``."""
     import argparse
 
     Api, CliError, say_json = ctx["Api"], ctx["CliError"], ctx["say_json"]
@@ -261,6 +291,12 @@ def register(groups, srv, ctx: dict) -> None:
                     i = d.get("intraday")
                     print(f"{d.get('businessDate')} {d.get('currency') or 'USD'}: " + (f"intraday, {i.get('trades')} trades updated in "
                           f"{i.get('batchCount')} batches, latest {i.get('lastAt')}" if i else "the morning run, no intraday update"))
+        elif c == "shards":
+            if a.drain or a.undrain:
+                res = api.json("POST", "/api/v1/var/shards/drain", {"on": bool(a.drain)})
+            else:
+                res = api.json("GET", "/api/v1/var/shards?" + enc(dated(a, {})))
+            say_json(res) if a.json else render_shards(res, print)
         elif c == "intraday":
             if a.load:
                 return load_intraday(a.load, a.lake, a.date, None if a.no_signal else api.base, api.token, a.dry_run, print)
@@ -348,6 +384,12 @@ def register(groups, srv, ctx: dict) -> None:
     t.add_argument("--date", metavar="YYYY-MM-DD")
     t.add_argument("--ccy", metavar="CCY", help="the reporting currency (USD by default)")
     sub.add_parser("status", help="the engine's settings, tiers (hot files on disk, mapped dates) and loaded dates", parents=[srv])
+    sh = sub.add_parser("shards", help="VaR sharding across Drishti*net: the date's shard map, each shard's owners and the members ready for it; "
+                        "--drain hands this member's shards over before it stops (administrators)", parents=[srv])
+    sh.add_argument("--date", metavar="YYYY-MM-DD", help="the business date (default: the newest)")
+    dr = sh.add_mutually_exclusive_group()
+    dr.add_argument("--drain", action="store_true", help="hand this member's shards to other owners and take none (a scale-in)")
+    dr.add_argument("--undrain", action="store_true", help="take shards again")
     cp = scoped("capture", "capture a scope's answer, immutable (needs risk:write)")
     cp.add_argument("--note")
     cs = sub.add_parser("captures", help="the captures you may read, newest first", parents=[srv])

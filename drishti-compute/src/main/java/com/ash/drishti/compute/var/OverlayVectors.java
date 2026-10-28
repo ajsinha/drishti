@@ -15,6 +15,9 @@
  */
 package com.ash.drishti.compute.var;
 
+import com.ash.drishti.compute.vector.OrdinalSet;
+import com.ash.drishti.compute.vector.ParallelSums;
+import com.ash.drishti.compute.vector.SetSums;
 import com.ash.drishti.compute.vector.Vectors;
 import java.util.List;
 import java.util.Map;
@@ -23,9 +26,11 @@ import java.util.NavigableMap;
 /**
  * A date's morning rows with its intraday layer on top (VAR_GUIDE.md section 8.4): the morning store unchanged (the hot file is written
  * once), each updated trade's row corrected by its difference ({@code current − morning as stored}), the trades added during the day
- * appended after the morning's ({@code row >= base.rows()}). Immutable: each intraday batch makes a new one, sharing the rows.
+ * appended after the morning's ({@code row >= base.rows()}). Immutable: each intraday batch makes a new one, sharing the rows. Over a
+ * sharded morning ({@link SetSums}, VAR_SHARDING.md) a set's morning rows go to their shards' owners whole and the differences and added
+ * rows, held here, are added to it.
  */
-final class OverlayVectors implements Vectors {
+final class OverlayVectors implements Vectors, SetSums {
 
     private final Vectors base;
     private final NavigableMap<Integer, double[]> delta;
@@ -35,6 +40,28 @@ final class OverlayVectors implements Vectors {
         this.base = base;
         this.delta = delta;
         this.added = added;
+    }
+
+    @Override
+    public boolean sumsSets() {
+        return base instanceof SetSums s && s.sumsSets();
+    }
+
+    @Override
+    public double[] sumSet(OrdinalSet set, ParallelSums sums) {
+        int t = base.rows();
+        double[] acc = sums.sum(base, set.slice(0, t));
+        for (Map.Entry<Integer, double[]> e : delta.entrySet()) {
+            if (set.contains(e.getKey())) {
+                VarMath.addInto(acc, e.getValue());
+            }
+        }
+        set.forEachRunIn(t, rows(), (f, x) -> {
+            for (int r = f; r < x; r++) {
+                VarMath.addInto(acc, added.get(r - t));
+            }
+        });
+        return acc;
     }
 
     @Override

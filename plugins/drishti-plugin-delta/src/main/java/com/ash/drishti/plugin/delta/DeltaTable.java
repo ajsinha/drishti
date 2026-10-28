@@ -265,6 +265,50 @@ final class DeltaTable {
         return out;
     }
 
+    /**
+     * A text column's statistics in a scan file's add action ({@code minValues}, {@code maxValues}, {@code nullCount}): {min, max, nulls},
+     * each null when not stated. A value of 32 characters or more may be cut by the writer: not used (not stated).
+     */
+    static String[] textBounds(Row scanFile, String physical) {
+        String[] out = new String[3];
+        try {
+            Row add = scanFile.getStruct(InternalScanFileUtils.ADD_FILE_ORDINAL);
+            int at = add.getSchema().indexOf("stats");
+            if (at < 0 || add.isNullAt(at)) {
+                return out;
+            }
+            try (com.fasterxml.jackson.core.JsonParser p = new com.fasterxml.jackson.core.JsonFactory().createParser(add.getString(at))) {
+                String section = null;
+                int depth = 0;
+                for (com.fasterxml.jackson.core.JsonToken t = p.nextToken(); t != null; t = p.nextToken()) {
+                    if (t == com.fasterxml.jackson.core.JsonToken.START_OBJECT) {
+                        depth++;
+                    } else if (t == com.fasterxml.jackson.core.JsonToken.END_OBJECT) {
+                        depth--;
+                        if (depth <= 1) {
+                            section = null;
+                        }
+                    } else if (t == com.fasterxml.jackson.core.JsonToken.FIELD_NAME && depth == 1) {
+                        section = p.currentName();
+                    } else if (t == com.fasterxml.jackson.core.JsonToken.FIELD_NAME && depth == 2 && physical.equals(p.currentName())) {
+                        p.nextToken();
+                        String v = p.getValueAsString();
+                        if ("minValues".equals(section) && v != null && v.length() < 32) {
+                            out[0] = v;
+                        } else if ("maxValues".equals(section) && v != null && v.length() < 32) {
+                            out[1] = v;
+                        } else if ("nullCount".equals(section)) {
+                            out[2] = p.getValueAsString();
+                        }
+                    }
+                }
+            }
+        } catch (IOException | RuntimeException e) {
+            return new String[3];                                      // no statistics to go by: the file is read
+        }
+        return out;
+    }
+
     /** {@code numRecords} of a scan file's add action statistics, or null when it has none. */
     private static Long numRecords(Row scanFile) {
         try {
@@ -476,7 +520,13 @@ final class DeltaTable {
      * double exactly. Read as stored (no deletion vectors: the vector tables are written without them); partition values come from the log.
      */
     void vectors(Layout layout, LocalDate date, String vectorColumn, List<String> textColumns, com.ash.drishti.api.VectorSink sink) {
-        List<Row> files = layout.files().getOrDefault(date, List.of());
+        vectors(layout, date, vectorColumn, textColumns, f -> true, sink);
+    }
+
+    /** As above, only the files {@code keep} accepts (a VaR shard's read skips those its statistics show hold none of its keys). */
+    void vectors(Layout layout, LocalDate date, String vectorColumn, List<String> textColumns, java.util.function.Predicate<Row> keep,
+            com.ash.drishti.api.VectorSink sink) {
+        List<Row> files = layout.files().getOrDefault(date, List.of()).stream().filter(keep).toList();
         StructType schema = new StructType().add(idColumn, StringType.STRING).add(vectorColumn, vectorType(layout, vectorColumn));
         for (String c : textColumns) {
             // read in the type the table has (QUANTITY is a double): its value comes back as text (a number keeps its digits)

@@ -102,7 +102,13 @@ public final class VarBook {
      * A mapped date's hot file: the file, its matrices (float32 positions; the trades of positions of several trades, or null), the
      * digest of the inputs it was built from, the server's own record (JSON) and when it was written.
      */
-    public record Hot(Path file, MappedMatrix positions, MappedMatrix trades, String digest, String meta, long writtenAt) {}
+    public record Hot(Path file, MappedMatrix positions, MappedMatrix trades, String digest, String meta, long writtenAt, String range) {
+
+        /** A date's whole hot file (no {@code RANG} section). */
+        public Hot(Path file, MappedMatrix positions, MappedMatrix trades, String digest, String meta, long writtenAt) {
+            this(file, positions, trades, digest, meta, writtenAt, null);
+        }
+    }
 
     /**
      * Where a mapped load writes: the spill of the lake's rows (a temporary file, deleted after the build), the hot file being written
@@ -316,9 +322,9 @@ public final class VarBook {
         return store;
     }
 
-    /** {@code mapped} (the hot file) or {@code heap}. */
+    /** {@code mapped} (the hot file), {@code heap}, or {@code sharded} (a date put together from its shards, VAR_SHARDING.md). */
     public String tier() {
-        return hot == null ? "heap" : "mapped";
+        return hot != null ? "mapped" : sharded() ? "sharded" : "heap";
     }
 
     /** The hot file of a mapped date, or null. */
@@ -607,9 +613,22 @@ public final class VarBook {
         if (!anyWhole) {                       // scattered leaves (a basket, a rule): no aggregate helps; one parallel pass over them
             return sums.sum(store, set);
         }
-        plan(root, set, acc, covered, sums);
+        Deferred d = sharded() ? new Deferred() : null;
+        plan(root, set, acc, covered, sums, d);
         // trades in no book of the hierarchy (none in a consistent batch) are summed as leaves
         OrdinalSet rest = set.andNot(root.members());
+        if (d != null) {
+            // a sharded date (VAR_SHARDING.md): the rows the plan adds and those it takes away, each set summed shard by shard by owners
+            VarMath.addInto(acc, sums.sum(store, d.plus.build().or(rest)));
+            OrdinalSet minus = d.minus.build();
+            if (!minus.isEmpty()) {
+                double[] m = sums.sum(store, minus);
+                for (int j = 0; j < acc.length; j++) {
+                    acc[j] -= m[j];
+                }
+            }
+            return acc;
+        }
         if (!rest.isEmpty()) {
             VarMath.addInto(acc, sums.sum(store, rest));
         }
@@ -633,7 +652,18 @@ public final class VarBook {
         return s;
     }
 
-    private void plan(Node n, OrdinalSet set, double[] acc, Map<String, Integer> covered, ParallelSums sums) {
+    /** The rows a plan over a sharded date adds and takes away, gathered so each is one set asked of the owners (not run by run). */
+    private static final class Deferred {
+        final OrdinalSet.Builder plus = new OrdinalSet.Builder();
+        final OrdinalSet.Builder minus = new OrdinalSet.Builder();
+    }
+
+    /** True when this date's rows are sharded across Drishti*net members (VAR_SHARDING.md): a set is summed by the shards' owners. */
+    public boolean sharded() {
+        return store instanceof com.ash.drishti.compute.vector.SetSums s && s.sumsSets();
+    }
+
+    private void plan(Node n, OrdinalSet set, double[] acc, Map<String, Integer> covered, ParallelSums sums, Deferred d) {
         int c = count(n, covered);
         if (c == 0) {
             return;
@@ -647,6 +677,20 @@ public final class VarBook {
         int missing = size - c;
         if (agg != null && missing <= Math.max(16, c / 8)) {            // a node minus a few trades: its aggregate minus them
             VarMath.addInto(acc, agg);
+            if (d != null) {
+                for (String b : n.books()) {
+                    int[] r = bookRange.get(b);
+                    if (r != null && covered.getOrDefault(b, 0) < r[1] - r[0]) {
+                        int[] at = {r[0]};
+                        set.forEachRunIn(r[0], r[1], (f, t) -> {
+                            d.minus.addRange(at[0], f);
+                            at[0] = t;
+                        });
+                        d.minus.addRange(at[0], r[1]);
+                    }
+                }
+                return;
+            }
             double[] miss = new double[store.width()];
             for (String b : n.books()) {
                 int[] r = bookRange.get(b);
@@ -667,7 +711,9 @@ public final class VarBook {
         if (n.level().equals("book") || n.children().isEmpty()) {
             for (String b : n.books()) {
                 int[] r = bookRange.get(b);
-                if (r != null) {
+                if (r != null && d != null) {
+                    set.forEachRunIn(r[0], r[1], (f, t) -> d.plus.addRange(f, t));
+                } else if (r != null) {
                     set.forEachRunIn(r[0], r[1], (f, t) -> store.addRangeInto(acc, f, t));
                 }
             }
@@ -676,7 +722,7 @@ public final class VarBook {
         for (String child : n.children()) {
             Node cn = nodes.get(child);
             if (cn != null) {
-                plan(cn, set, acc, covered, sums);
+                plan(cn, set, acc, covered, sums, d);
             }
         }
     }
@@ -732,6 +778,7 @@ public final class VarBook {
         private int failed;
         private String batchId = "";
         private String meta = "";
+        private String range;
         private java.util.function.Function<String, ScenarioFx.Rates> currencyRates;
 
         /** A date held on the heap, in float64 chunks of {@code rowsPerChunk} rows, within {@code budgetBytes} (8 bytes a value). */
@@ -801,6 +848,15 @@ public final class VarBook {
          */
         public Builder currencyRates(java.util.function.Function<String, ScenarioFx.Rates> rates) {
             this.currencyRates = rates;
+            return this;
+        }
+
+        /**
+         * A shard's book (VAR_SHARDING.md): the shard's range in the date's shard map (JSON), written as the hot file's {@code RANG} section;
+         * null for a whole date.
+         */
+        public Builder range(String json) {
+            this.range = json;
             return this;
         }
 
@@ -922,7 +978,7 @@ public final class VarBook {
                 Map<String, double[]> agg = aggregates(vrows, books, nodes, sums);
                 CurrencyTotals ct = currencyRates == null ? null : CurrencyTotals.build(vrows, tcols, books, nodes, currencyRates);
                 VarHotFile.write(target.part(), new VarHotFile.Content(businessDate, scenarioSet, scenarioDates, tids, tcols, positionIds, from,
-                        to, pcols, books, nodes, agg, failed, batchId, target.digest(), meta, ct, cellColumns, lay.split()), vrows, sums);
+                        to, pcols, books, nodes, agg, failed, batchId, target.digest(), meta, ct, cellColumns, lay.split(), range), vrows, sums);
                 Files.move(target.part(), target.file(), StandardCopyOption.REPLACE_EXISTING, StandardCopyOption.ATOMIC_MOVE);
             } catch (IOException e) {
                 throw new UncheckedIOException("the hot file of " + businessDate + " could not be written: " + e.getMessage(), e);
@@ -964,7 +1020,7 @@ public final class VarBook {
          * has the same one (else empty); the tags of every trade; the signed and gross quantities, the market value (the trades' PV)
          * and the counts.
          */
-        private static void derivePosition(Columns.Builder pc, Columns t, int from, int to) {
+        static void derivePosition(Columns.Builder pc, Columns t, int from, int to) {
             int[] m = new int[to - from];
             for (int i = 0; i < m.length; i++) {
                 m[i] = from + i;
@@ -1021,7 +1077,7 @@ public final class VarBook {
             return new Object[] {texts, new double[] {q, anyPv ? mv : Double.NaN, gross, members.length, longs, shorts}};
         }
 
-        private static double[] sumUp(Node n, Map<String, Node> nodes, Map<String, double[]> agg, int width) {
+        static double[] sumUp(Node n, Map<String, Node> nodes, Map<String, double[]> agg, int width) {
             double[] acc = new double[width];
             if (n.children().isEmpty()) {
                 for (String b : n.books()) {

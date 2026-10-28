@@ -177,6 +177,28 @@ final class NativeKindTable extends KindTable {
     }
 
     @Override
+    String[] textBounds(Layout l, Day day, int file, String column) {
+        String[] out = new String[3];
+        try {
+            Table t = table().orElseThrow();
+            NestedField f = t.metadata().schemaFor(snapshot(t, l.snapshotId())).field(column);
+            if (f == null || file < 0 || file >= day.files().size()) {
+                return out;
+            }
+            DataFile d = tasks(day).get(file).file();
+            byte[] lo = d.lowerBounds() == null ? null : d.lowerBounds().get(f.id());
+            byte[] hi = d.upperBounds() == null ? null : d.upperBounds().get(f.id());
+            Long nulls = d.nullValueCounts() == null ? null : d.nullValueCounts().get(f.id());
+            out[0] = lo == null ? null : new String(lo, java.nio.charset.StandardCharsets.UTF_8);   // a cut bound is still a bound (the spec)
+            out[1] = hi == null ? null : new String(hi, java.nio.charset.StandardCharsets.UTF_8);
+            out[2] = nulls == null ? null : nulls.toString();
+        } catch (RuntimeException e) {
+            return new String[3];
+        }
+        return out;
+    }
+
+    @Override
     void scan(Layout l, Day day, int file, List<String> columns, String idEquals, Consumer<Object[]> sink) {
         Table t = table().orElseThrow();
         Schema snap = t.metadata().schemaFor(snapshot(t, l.snapshotId()));

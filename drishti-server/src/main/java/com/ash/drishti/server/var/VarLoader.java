@@ -105,38 +105,133 @@ final class VarLoader {
         return pv.isEmpty() || pv.equals("none") ? v : v + "|" + props.kinds().scenarioPv() + ":" + pv;
     }
 
-    /** The position rules a load uses now (a pack's section, else the server's setting). */
-    PositionRules rules() {
-        return rules.get();
+    /**
+     * The rows of a date per shard key value (VAR_SHARDING.md section 3), read as columns (no vector is read): every kind of {@code kinds}
+     * that a connector holds counted together. Empty when a kind's source cannot answer the key as columns (the date is then not cut).
+     */
+    java.util.Optional<java.util.SortedMap<List<String>, Long>> keyCounts(LocalDate date, List<String> key, List<String> kinds) {
+        AsOf asOf = AsOf.of(date);
+        java.util.SortedMap<List<String>, Long> out = com.ash.drishti.compute.shard.ShardMap.counts();
+        for (String kind : kinds) {
+            String v = router.dataVersion(kind, asOf).orElse("");
+            if (v.isEmpty() || v.equals("none")) {
+                continue;                                              // no connector holds the kind on the date
+            }
+            if (!router.columnar(kind).containsAll(key)) {
+                return java.util.Optional.empty();
+            }
+            java.util.Optional<com.ash.drishti.api.ColumnSet> cs = router.columns(kind, key, asOf, java.time.Duration.ofMinutes(5));
+            if (cs.isEmpty()) {
+                return java.util.Optional.empty();
+            }
+            String[][] cols = key.stream().map(c -> cs.get().texts().get(c)).toArray(String[][]::new);
+            for (int i = 0; i < cs.get().size(); i++) {
+                List<String> k = new ArrayList<>(key.size());
+                for (String[] c : cols) {
+                    String x = c == null ? null : c[i];
+                    k.add(x == null ? "" : x);
+                }
+                out.merge(List.copyOf(k), 1L, Long::sum);
+            }
+        }
+        return java.util.Optional.of(out);
     }
 
-    VarDate load(LocalDate date) {
-        long t0 = System.nanoTime();
+    /** The scenarios a date's vectors keep: its scenario set's length, or the scenario window (0 when the date has no set). */
+    int width(LocalDate date) {
+        try {
+            DataNode set = documents(props.kinds().scenarioSet(), AsOf.of(date)).values().stream().findFirst().orElse(null);
+            DataNode sd = set == null ? null : set.get("SCENARIO_DATES");
+            int n = sd == null ? 0 : sd.size();
+            return props.window() > 0 ? Math.min(n, props.window()) : n;
+        } catch (RuntimeException e) {
+            return 0;
+        }
+    }
+
+    /** The data versions of a date's input kinds, as a load records them (the optional kinds only when a connector holds them). */
+    Map<String, String> versions(LocalDate date) {
         VarProperties.Kinds k = props.kinds();
         AsOf asOf = AsOf.of(date);
         Map<String, String> versions = new LinkedHashMap<>();
         for (String kind : k.inputs()) {
             String v = router.dataVersion(kind, asOf).orElse("");
             boolean optional = kind.equals(k.scenarioPv()) || kind.equals(k.fxScenario()) || kind.equals(k.limit());
-            if (!optional || !v.isEmpty() && !v.equals("none")) {     // the 2.9.4 kinds only when a connector holds them (records stay comparable)
+            if (!optional || !v.isEmpty() && !v.equals("none")) {
                 versions.put(kind, v);
             }
         }
+        return versions;
+    }
+
+    /** The stored portfolios of a date (their definitions), read again for a date put together from its shards. */
+    Map<String, VarDate.Portfolio> portfolios(LocalDate date) {
+        Map<String, VarDate.Portfolio> out = new LinkedHashMap<>();
+        documents(props.kinds().portfolio(), AsOf.of(date)).forEach((id, p) -> out.put(id, VarDate.Portfolio.of(id, p)));
+        return out;
+    }
+
+    /** The position rules a load uses now (a pack's section, else the server's setting). */
+    PositionRules rules() {
+        return rules.get();
+    }
+
+    VarDate load(LocalDate date) {
+        return load(date, null);
+    }
+
+    /**
+     * The digest of the inputs a date (or one of its shards) is built from: the data versions of its trades (and the FX that converts their
+     * scenario PVs), hierarchy and scenario set, the hierarchies' configuration and limits, the scenario window, the position rules and (a
+     * shard) its place in its shard map. A hot file built from other inputs is not reopened.
+     */
+    private String digest(LocalDate date, Map<String, String> versions, Hierarchies hs, PositionRules pr, VarShardScope shard) {
+        VarProperties.Kinds k = props.kinds();
+        String trades = version(date);
+        // a date with scenario PVs converts them with the date's FX: its hot file is built from those versions too
+        String inputsKey = trades.isBlank() || !versions.containsKey(k.scenarioPv()) ? trades
+                : trades + "|fx=" + versions.get(k.fxScenario()) + "/" + router.dataVersion(k.fxSpot(), AsOf.of(date)).orElse("");
+        if (shard != null && !inputsKey.isBlank()) {
+            inputsKey += "|shard=" + shard.key();                         // a shard's file: its range of its map is part of its inputs
+        }
+        // the hierarchies' configuration (2.9.5) and their limits' version: a file built under another is not reopened
+        String hierKey = versions.get(k.hierarchy()) + props.rootNamesKey() + hs.digest()
+                + (hs.limitKinds().isEmpty() ? "" : "|limits=" + versions.getOrDefault(k.limit(), ""));
+        return VarTier.digest(date, inputsKey, hierKey, versions.get(k.scenarioSet()) + (props.window() > 0 ? "|window=" + props.window() : ""),
+                pr.digest());
+    }
+
+    /**
+     * The digest a shard's book built now would have (VAR_SHARDING.md section 6): what a member that puts the date together expects of the
+     * shard's skeleton, computed from its own reads of the inputs' versions (empty when the trades' source cannot say its version).
+     */
+    String shardDigest(LocalDate date, VarShardScope shard) {
+        return digest(date, versions(date), effective(date, hierarchies.get()), rules.get(), shard);
+    }
+
+    /**
+     * One shard of a sharded date (VAR_SHARDING.md section 5): the date's inputs read for the rows of the shard's key range only (the
+     * plugin skips the files whose statistics hold none of its keys; every row is checked here), built and written as the shard's own hot
+     * file (its {@code RANG} section), the morning run only (the day's updates are applied by each member on the date it puts together).
+     */
+    VarDate loadShard(LocalDate date, VarShardScope shard) {
+        return load(date, shard);
+    }
+
+    private VarDate load(LocalDate date, VarShardScope shard) {
+        long t0 = System.nanoTime();
+        VarProperties.Kinds k = props.kinds();
+        AsOf asOf = AsOf.of(date);
+        Map<String, String> versions = versions(date);                // the 2.9.4 kinds only when a connector holds them (records stay comparable)
         PositionRules pr = rules.get();
         // a column hierarchy whose level column a source does not keep is skipped, said (DRS-5211 as a warning); the rest load (2.9.5)
         Hierarchies hs = effective(date, hierarchies.get());
         String trades = version(date);
-        // a date with scenario PVs converts them with the date's FX: its hot file is built from those versions too
-        String inputsKey = trades.isBlank() || !versions.containsKey(k.scenarioPv()) ? trades
-                : trades + "|fx=" + versions.get(k.fxScenario()) + "/" + router.dataVersion(k.fxSpot(), asOf).orElse("");
-        // the hierarchies' configuration (2.9.5) and their limits' version: a file built under another is not reopened
-        String hierKey = versions.get(k.hierarchy()) + props.rootNamesKey() + hs.digest()
-                + (hs.limitKinds().isEmpty() ? "" : "|limits=" + versions.getOrDefault(k.limit(), ""));
-        String digest = tier.mapped() ? VarTier.digest(date, inputsKey, hierKey, versions.get(k.scenarioSet())
-                + (props.window() > 0 ? "|window=" + props.window() : ""), pr.digest()) : "";
-        java.util.Optional<java.nio.file.Path> hot = tier.mapped() ? tier.existing(date, digest) : java.util.Optional.empty();
+        String digest = tier.mapped() ? digest(date, versions, hs, pr, shard) : "";
+        java.util.Optional<java.nio.file.Path> hot = !tier.mapped() ? java.util.Optional.empty()
+                : shard == null ? tier.existing(date, digest) : tier.existing(date, VarDate.USD, shard.index(), digest);
         if (hot.isPresent()) {
-            VarDate reopened = reopen(date, hot.get(), versions, t0);
+            VarDate reopened = reopen(date, hot.get(), versions, t0, shard == null);
             if (reopened != null) {
                 return reopened;
             }
@@ -155,8 +250,15 @@ final class VarLoader {
         // to them at load (P&L vectors and scenario PVs alike); a set shorter than N is used whole (said in the provenance)
         List<LocalDate> scenarioDates = window(fullSet);
         long budget = props.memoryBudgetMb() * 1024 * 1024;
-        VarBook.Builder b = tier.mapped() ? new VarBook.Builder(date, setId, scenarioDates, budget, tier.target(date, digest))
+        if (shard != null && !tier.mapped()) {
+            throw new DrishtiException(ErrorCode.BAD_REQUEST, "a sharded date needs the tiered memory (drishti.var.tier.mode: mapped)");
+        }
+        VarBook.Builder b = tier.mapped() ? new VarBook.Builder(date, setId, scenarioDates, budget,
+                shard == null ? tier.target(date, digest) : tier.target(date, VarDate.USD, shard.index(), digest))
                 : new VarBook.Builder(date, setId, scenarioDates, props.rowsPerChunk(), budget);
+        if (shard != null) {
+            b.range(shard.json(digest));
+        }
         // the build sums every node's PVs per trade currency too (VAR_GUIDE.md section 15.11): the date's FX, read only when a trade needs it
         b.currencyRates(c -> fx(date, scenarioDates).rates(c).orElse(null));
         Map<String, Double> limits = limits(asOf, hs);
@@ -164,24 +266,13 @@ final class VarLoader {
         b.columnHierarchies(hs.specs().stream().map(s -> s.columns() ? s.withRootName(props.rootName(s.id(), null, s.rootName())) : s).toList(),
                 limits);
         try {
-            VarIntake intake = intake(date, asOf, b, pr, setId, scenarioDates, fullSet.size(), hs);
+            VarIntake intake = intake(date, asOf, b, pr, setId, scenarioDates, fullSet.size(), hs, shard);
             List<LocalDate> days = scenarioDates;
             VarIntake.Summary sum = intake.summary();
             long tVectors = System.nanoTime();
-            for (DataNode n : documents(k.hierarchy(), asOf).values()) {
-                if (!hs.fromRows(text(n, "HIERARCHY"))) {
-                    continue;                                          // a hierarchy built from the columns: its rows are not read
-                }
-                List<String> books = new ArrayList<>();
-                DataNode bs = n.get("BOOKS");
-                for (int i = 0; bs != null && i < bs.size(); i++) {
-                    books.add(bs.get(i).asText());
-                }
-                // a root's name from drishti.var.root-name(s) when set (the top of the VaR tree), else the data's
-                String name = props.rootName(text(n, "HIERARCHY"), text(n, "PARENT_ID"), text(n, "NAME"));
-                String nid = text(n, "NODE_ID");
-                b.node(nid, text(n, "HIERARCHY"), text(n, "LEVEL"), name, text(n, "PARENT_ID"), books,
-                        limits.getOrDefault(nid, number(text(n, "LIMIT_VAR"))));   // a var-limit row wins over the row's own LIMIT_VAR
+            com.ash.drishti.compute.var.ShardAssembly.Nodes rows = nodeRows(asOf, hs, limits);
+            for (String[] r : rows.rows()) {
+                b.node(r[0], r[1], r[2], r[3], r[4], rows.books().get(r[0]), rows.limits().get(r[0]));
             }
             Map<String, VarDate.Portfolio> portfolios = new LinkedHashMap<>();
             documents(k.portfolio(), asOf).forEach((id, p) -> portfolios.put(id, VarDate.Portfolio.of(id, p)));
@@ -203,6 +294,9 @@ final class VarLoader {
             long ms = (System.nanoTime() - t0) / 1_000_000;
             VarDate vd = new VarDate(date, book, portfolios, trades, java.time.Instant.now(), ms, (tVectors - t0) / 1_000_000, sum,
                     versions, List.of(), VarDate.USD, intake.fx());
+            if (shard != null) {
+                return vd;                                             // a shard: the morning run only
+            }
             unknownLimits(date, unknownLimits);
             return withIntraday(vd, intake, days);
         } catch (RuntimeException e) {
@@ -221,8 +315,38 @@ final class VarLoader {
         return n <= 0 || n >= fullSet.size() ? fullSet : List.copyOf(fullSet.subList(fullSet.size() - n, fullSet.size()));
     }
 
+    /**
+     * The hierarchy rows of a date (the {@code risk-hierarchy} kind, for the hierarchies built from rows) with their books and limits (a
+     * var-limit row wins over the row's own {@code LIMIT_VAR}), the root names as configured, and the hierarchies built from columns: what
+     * a date's nodes are built from (a load, or a sharded date put together, VAR_SHARDING.md).
+     */
+    com.ash.drishti.compute.var.ShardAssembly.Nodes nodeRows(AsOf asOf, Hierarchies hs, Map<String, Double> limits) {
+        List<String[]> rows = new ArrayList<>();
+        Map<String, List<String>> books = new java.util.HashMap<>();
+        Map<String, Double> lim = new java.util.HashMap<>();
+        for (DataNode n : documents(props.kinds().hierarchy(), asOf).values()) {
+            if (!hs.fromRows(text(n, "HIERARCHY"))) {
+                continue;                                              // a hierarchy built from the columns: its rows are not read
+            }
+            List<String> bs = new ArrayList<>();
+            DataNode list = n.get("BOOKS");
+            for (int i = 0; list != null && i < list.size(); i++) {
+                bs.add(list.get(i).asText());
+            }
+            // a root's name from drishti.var.root-name(s) when set (the top of the VaR tree), else the data's
+            String name = props.rootName(text(n, "HIERARCHY"), text(n, "PARENT_ID"), text(n, "NAME"));
+            String nid = text(n, "NODE_ID");
+            rows.add(new String[] {nid, text(n, "HIERARCHY"), text(n, "LEVEL"), name, text(n, "PARENT_ID")});
+            books.put(nid, List.copyOf(bs));
+            lim.put(nid, limits.getOrDefault(nid, number(text(n, "LIMIT_VAR"))));   // a var-limit row wins over the row's own LIMIT_VAR
+        }
+        List<com.ash.drishti.compute.var.HierarchySpec> specs = hs.specs().stream().filter(com.ash.drishti.compute.var.HierarchySpec::columns)
+                .map(s -> s.withRootName(props.rootName(s.id(), null, s.rootName()))).toList();
+        return new com.ash.drishti.compute.var.ShardAssembly.Nodes(rows, books, lim, specs, limits);
+    }
+
     private VarIntake intake(LocalDate date, AsOf asOf, VarBook.Builder b, PositionRules pr, String setId, List<LocalDate> scenarioDates,
-            int setLength, Hierarchies hs) {
+            int setLength, Hierarchies hs, VarShardScope shard) {
         VarProperties.Kinds k = props.kinds();
         List<String> levels = hs.levelColumns();
         List<String> columns = VarIntake.columns(router.columnar(k.vector()), pr, List.of(), levels);
@@ -233,9 +357,10 @@ final class VarLoader {
         boolean read;
         boolean readPv;
         try {
-            read = router.vectors(k.vector(), "PNL", columns, asOf, (id, values, len, row) -> intake.row(id, values, len, row));
+            com.ash.drishti.api.KeyRange range = shard == null ? null : shard.range();
+            read = router.vectors(k.vector(), "PNL", columns, asOf, range, shardRows(shard, columns, intake::row));
             intake.scenarioPvs(pvColumns.subList(1, pvColumns.size()), () -> fx(date, scenarioDates), scenarioDates);
-            readPv = router.vectors(k.scenarioPv(), SCENARIO_PV, pvColumns, asOf, (id, values, len, row) -> intake.row(id, values, len, row));
+            readPv = router.vectors(k.scenarioPv(), SCENARIO_PV, pvColumns, asOf, range, shardRows(shard, pvColumns, intake::row));
         } catch (com.ash.drishti.compute.vector.VectorStore.BudgetExceeded e) {
             throw new DrishtiException(ErrorCode.VAR_CAPACITY, e.getMessage() + ": the engine has no room for this date now; raise "
                     + "drishti.var.memory-budget-mb or the server's heap, or keep fewer dates loaded (drishti.var.hot-dates)");
@@ -262,6 +387,27 @@ final class VarLoader {
         }
         intake.verify();                                                // one form and one grain per source system (VAR_GUIDE.md 15.13)
         return intake;
+    }
+
+    /**
+     * The rows a load takes: every row, or (a shard) those whose key is in the shard's range, by the row's own key columns as the read
+     * returns them ({@code columns}: TRADE_ID first, as the row's values).
+     */
+    private static com.ash.drishti.api.VectorSink shardRows(VarShardScope shard, List<String> columns, com.ash.drishti.api.VectorSink to) {
+        if (shard == null) {
+            return to;
+        }
+        int[] at = shard.range().columns().stream().mapToInt(columns::indexOf).toArray();
+        return (id, values, len, row) -> {
+            String[] key = new String[at.length];
+            for (int i = 0; i < at.length; i++) {
+                String v = at[i] < 0 || at[i] >= row.length ? null : row[at[i]];
+                key[i] = v == null ? "" : v;
+            }
+            if (shard.range().contains(java.util.Arrays.asList(key))) {
+                to.row(id, values, len, row);
+            }
+        };
     }
 
     /** Per business date, the column hierarchies skipped on it and why (2.9.5). */
@@ -380,7 +526,7 @@ final class VarLoader {
      * A date opened from its hot file (built from the same inputs): mapped, its intake and versions from the file, its portfolios read
      * again (they are not in the file's digest). Null when the file cannot be used (then the date is built from the lake).
      */
-    private VarDate reopen(LocalDate date, java.nio.file.Path file, Map<String, String> versions, long t0) {
+    private VarDate reopen(LocalDate date, java.nio.file.Path file, Map<String, String> versions, long t0, boolean withDay) {
         VarBook book;
         try {
             book = tier.open(file, t0);
@@ -409,6 +555,9 @@ final class VarLoader {
         tier.opened(book);
         long ms = (System.nanoTime() - t0) / 1_000_000;
         VarDate vd = new VarDate(date, book, portfolios, version(date), java.time.Instant.now(), ms, 0, sum, v, List.of(), VarDate.USD, fx);
+        if (!withDay) {
+            return vd;                                                 // a shard: the morning run only
+        }
         unknownLimits(date, unknownLimits(date, book));
         try {                                                          // the hot file holds the morning run: the day's updates read again
             return withIntraday(vd, readIntraday(date, book, java.util.Set.of(), sum), book.scenarioDates());
@@ -460,7 +609,7 @@ final class VarLoader {
      * {@code PV-<trade>-<set>}; {@code SPV-<trade>-<set>}), its float32 row when that cannot be read.
      */
     com.ash.drishti.compute.var.VarIntraday.Morning exact(LocalDate date, VarBook morning, VarIntake.Summary sum, List<LocalDate> days) {
-        if (morning.hot() == null) {
+        if (morning.hot() == null && !morning.sharded()) {
             return morning::tradeVector;
         }
         return o -> {

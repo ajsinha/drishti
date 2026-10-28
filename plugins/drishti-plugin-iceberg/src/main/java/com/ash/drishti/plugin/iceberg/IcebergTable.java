@@ -202,6 +202,28 @@ final class IcebergTable extends KindTable {
     }
 
     @Override
+    String[] textBounds(Layout l, Day day, int file, String column) {
+        String[] out = new String[3];
+        try {
+            Table t = table().orElseThrow();
+            org.apache.iceberg.types.Types.NestedField f = SnapshotUtil.schemaFor(t, l.snapshotId()).findField(column);
+            if (f == null || file < 0 || file >= day.files().size() || f.type().typeId() != Type.TypeID.STRING) {
+                return out;
+            }
+            org.apache.iceberg.DataFile d = tasks(day).get(file).file();
+            java.nio.ByteBuffer lo = d.lowerBounds() == null ? null : d.lowerBounds().get(f.fieldId());
+            java.nio.ByteBuffer hi = d.upperBounds() == null ? null : d.upperBounds().get(f.fieldId());
+            Long nulls = d.nullValueCounts() == null ? null : d.nullValueCounts().get(f.fieldId());
+            out[0] = lo == null ? null : org.apache.iceberg.types.Conversions.fromByteBuffer(f.type(), lo).toString();
+            out[1] = hi == null ? null : org.apache.iceberg.types.Conversions.fromByteBuffer(f.type(), hi).toString();
+            out[2] = nulls == null ? null : nulls.toString();
+        } catch (RuntimeException e) {
+            return new String[3];
+        }
+        return out;
+    }
+
+    @Override
     void scan(Layout l, Day day, int file, List<String> columns, String idEquals, Consumer<Object[]> sink) {
         Table t = table().orElseThrow();
         Schema schema = SnapshotUtil.schemaFor(t, l.snapshotId());

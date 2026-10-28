@@ -44,6 +44,27 @@
   (BYTE_STREAM_SPLIT, no dictionary, no statistics, a codec); `LakeWriter.engineFor` and `LakeWriter.removals` are public; Iceberg
   relayout (`lake maintain`) leaves a table laid out by `drishti.layout.sort-by` in its order.
 
+### VaR sharding across Drishti*net
+
+- **VaR sharded across Drishti\*net (off by default; product owner's design of 2026-10-28).** With the market-risk pack's new `sharding:`
+  block (`enabled`, `key: [LEGAL_ENTITY, DESK]`, `kinds`, `target-shard-mb`, `replicas`) or `drishti.var.sharding.*`, each date's trades
+  are cut into a shard map of legal entity and desk ranges near the target size (a desk never split, the same on every member), each shard
+  owned by `replicas` members by rendezvous hashing (no consensus protocol; owners move only once the membership has been stable for
+  `stable-seconds`; zones, pins, a coordinator-only member), each owner building only its shards from the lake (the Delta and Iceberg
+  connectors skip files by the key column's statistics, every row checked) into its own hot file (a `RANG` section). Every member puts the
+  date together from its shards and the others' skeletons: the same trades, positions and nodes as one server, **every node's aggregate to
+  the bit**; any other scope's rows are summed shard by shard by one ready owner (`POST /api/v1/var/partial`, signed, one hop, as the
+  caller), exactly one answer per shard, added in shard order. No live owner: `503 DRS-5215`, never a partial VaR; another data version:
+  `409 DRS-5216`; data that does not cut along the key: `422 DRS-5217`. Handover through readiness in the capability digest (a new
+  `services` field) and a grace period; `drishti.py var shards --drain` before a scale-in. `GET /api/v1/var/shards`, `drishti.py var
+  shards`, `provenance.shards`. Measured equal to one server to the cent (VaR, ES, contributions, the P&L path, the tree, intraday, the
+  official record) on three members in USD and EUR on Delta and Iceberg (`VarShardClusterTest`); `ShardMapTest`, `ShardOwnersTest`,
+  `ShardGatherTest`, `ShardAssemblyTest`, `VarShardHandoverTest`, `VarShardingSettingsTest`, `VarShardSingleNodeTest`. The machinery
+  (shard map, ownership, handover, gather with its completeness check, readiness) is measure-agnostic (`compute.shard`, `server.shard`,
+  `ShardedMeasure`), VaR its first measure. Docs: [VAR_SHARDING.md](docs/architecture/VAR_SHARDING.md), VAR_GUIDE.md section 28,
+  DRISHTI_NET.md, NET.md, CONFIGURATION.md, TROUBLESHOOTING.md, TOOLS.md, CLI_GUIDE.md. Open: an Admin → Health "Shards" panel (mock-ups
+  first).
+
 ## 2.9.5 — Iceberg as a full alternative to Delta; VaR hierarchies by columns (limit letters); connector files that upgrade themselves safely (2026-10-28)
 
 ### Hierarchies

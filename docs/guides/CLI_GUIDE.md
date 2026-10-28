@@ -1934,6 +1934,8 @@ drishti.py var path 'DESK:RATES' --size 10                         the scenario 
 drishti.py var history 'DESK:RATES'                                VaR history, exceptions, traffic light, Kupiec and Christoffersen
 drishti.py var tree --hierarchy LEGAL                              every node with its VaR, ES and limit use
 drishti.py var status                                              settings, the tiered memory (hot files, open dates) and loaded dates
+drishti.py var shards --date 2026-09-30                            VaR sharding: the date's shard map, owners, members ready (2.9.6)
+drishti.py var shards --drain                                      hand this member's shards over before it stops (administrators)
 drishti.py var basket hedges "WHERE:'hedge' in TAGS" --share role:market-risk
 drishti.py var capture 'BASKET:asha/hedges' --note 'before the unwind'
 drishti.py var compare CAP-20260930-7 now
