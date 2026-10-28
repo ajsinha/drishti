@@ -39,7 +39,6 @@ import java.util.TreeMap;
 import java.util.TreeSet;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ConcurrentHashMap;
-import java.util.function.Consumer;
 import java.util.function.Supplier;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -57,6 +56,11 @@ import org.slf4j.LoggerFactory;
  * Every {@code rebalance-seconds} this member builds the shards it owns of the dates in use and holds no version of (announcing each ready
  * in its digest), releases what {@link ShardHandover} says it may, and puts together again a date of its own whose shards' owners have
  * moved on (a new owner, newer data, a new cut), so it never reads a shard nobody serves any more.
+ *
+ * <p>Putting a date together again never drops the date loaded: the replacement is put together beside it and swapped in, in one step, once
+ * complete ({@link #rebuild}). Until then the date loaded answers (every node's aggregate, the shards held here, the others' rows at the
+ * data it was put together from); when a shard has no live owner the replacement cannot be completed and only the scopes that need that
+ * shard's rows are refused ({@code DRS-5215}). A book the date loaded reads is released only once a replacement no longer reads it.
  */
 final class VarShards implements AutoCloseable {
 
@@ -77,9 +81,14 @@ final class VarShards implements AutoCloseable {
     private final Map<String, Assembled> assembled = new ConcurrentHashMap<>();
     private final Map<VarShardBooks.Key, Long> successorSince = new ConcurrentHashMap<>();
     private final Map<String, Long> missingSince = new ConcurrentHashMap<>();
+    /** What each date put together here was put together from, by its book: a conversion reads its own USD date's. */
+    private final Map<VarBook, Assembled> byBook = java.util.Collections.synchronizedMap(new java.util.WeakHashMap<>());
+    /** Books handed over that a date loaded here still reads: released once a replacement put together without them is swapped in. */
+    private final Set<VarShardBooks.Key> leaving = ConcurrentHashMap.newKeySet();
+    private final Map<LocalDate, CompletableFuture<Boolean>> rebuilding = new ConcurrentHashMap<>();
     private volatile boolean draining;
     private final ShardMembership membership;
-    private volatile Consumer<LocalDate> dropDate = d -> { };
+    private volatile Swap swap = (d, build) -> false;
     private volatile Supplier<Set<LocalDate>> openDates = Set::of;
     private volatile Thread loop;
     private final java.util.concurrent.locks.ReentrantLock tickLock = new java.util.concurrent.locks.ReentrantLock();
@@ -99,9 +108,15 @@ final class VarShards implements AutoCloseable {
         peers.publish(() -> on() ? state().json() : "");
     }
 
-    /** How dates put together here are dropped and listed (wired by {@link VarService}). */
-    void wire(Consumer<LocalDate> dropDate, Supplier<Set<LocalDate>> openDates) {
-        this.dropDate = dropDate;
+    /** How the service replaces a date loaded with one put together again ({@link VarService#swap}). */
+    interface Swap {
+        /** Builds the replacement ({@code build}) and swaps it in when the date loaded is still the one it replaces; false when not. */
+        boolean swap(LocalDate date, Supplier<VarDate> build);
+    }
+
+    /** How dates put together here are replaced and listed (wired by {@link VarService}). */
+    void wire(Swap swap, Supplier<Set<LocalDate>> openDates) {
+        this.swap = swap;
         this.openDates = openDates;
     }
 
@@ -199,6 +214,23 @@ final class VarShards implements AutoCloseable {
 
     /** A sharded date in USD: the shards held here and the others' skeletons put together; the day's updates applied as one server does. */
     VarDate assemble(LocalDate date) {
+        VarDate vd = build(date);
+        adopt(vd);
+        return vd;
+    }
+
+    /** The date loaded here is now {@code usd}: its other currencies are put together again from it when asked. */
+    void adopt(VarDate usd) {
+        Assembled a = byBook.get(usd.book().morning());
+        assembled.keySet().removeIf(k -> k.startsWith(usd.date() + "|"));
+        missingSince.keySet().removeIf(k -> k.startsWith(usd.date() + "|"));
+        if (a != null) {
+            assembled.put(usd.date() + "|" + VarDate.USD, a);
+        }
+    }
+
+    /** {@link #assemble} without making it the date loaded here: a replacement put together beside it. */
+    private VarDate build(LocalDate date) {
         long t0 = System.nanoTime();
         ShardMap map = map(date);
         List<ShardAssembly.Part> parts = parts(map, VarDate.USD);
@@ -235,10 +267,13 @@ final class VarShards implements AutoCloseable {
         ScenarioFx fxs = loader.fx(date, ub.scenarioDates());
         ScenarioFx.Rates rep = fxs.rates(ccy).orElseThrow(() -> new DrishtiException(ErrorCode.VAR_NO_FX, "no " + ccy + " FX for the scenarios of "
                 + date + "; the currencies with FX on the date: " + String.join(", ", fxs.currencies())));
-        Assembled a = assembled.get(date + "|" + VarDate.USD);
+        Assembled a = byBook.get(ub);                                  // the data this USD date was put together from, swapped in or not
         ShardMap map = a != null ? a.map() : map(date);
         List<ShardAssembly.Part> parts = parts(map, ccy, a == null ? null : a.digests());
         VarBook book = book(date, map, ccy, parts, ShardAssembly.Nodes.of(ub, rep.base()), t0);
+        if (a != null && assembled.get(date + "|" + VarDate.USD) == a) {
+            assembled.put(date + "|" + ccy, byBook.get(book));           // a currency of the date loaded (not of one replaced meanwhile)
+        }
         int withoutPv = 0;
         for (ShardAssembly.Part p : parts) {
             withoutPv += VarShardIntake.read(p.meta()).withoutPv();
@@ -276,7 +311,7 @@ final class VarShards implements AutoCloseable {
         } catch (VarBook.DuplicateTrade e) {
             throw new DrishtiException(ErrorCode.VAR_DUPLICATE_TRADE, "the P&L vectors of " + date + " are not loaded: " + e.getMessage());
         }
-        assembled.put(date + "|" + ccy, new Assembled(date, ccy, map, digests, held));
+        byBook.put(b, new Assembled(date, ccy, map, digests, held));
         return b;
     }
 
@@ -308,7 +343,7 @@ final class VarShards implements AutoCloseable {
 
     private ShardAssembly.Part part(VarShardScope scope, String ccy, String digest) {
         VarShardBooks.Key k = new VarShardBooks.Key(scope.map().date(), ccy, scope.map().digest(), scope.index(), digest);
-        if (books.held(k).isPresent() || ownerCapable() && owners(scope.shard()).contains(peers.self())) {
+        if (!leaving.contains(k.usd()) && (books.held(k).isPresent() || ownerCapable() && owners(scope.shard()).contains(peers.self()))) {
             return ShardAssembly.Part.of(scope.index(), served(scope.map().date(), ccy, scope.index(), scope.map().digest(), digest));
         }
         return rows.skeleton(scope, ccy, digest);
@@ -450,6 +485,7 @@ final class VarShards implements AutoCloseable {
     private boolean release() {
         boolean any = false;
         long now = System.currentTimeMillis();
+        leaving.removeIf(k -> !books.ready(k));                         // gone another way: built again here only when owned again
         Map<String, ShardPeers.Peer> byNode = new TreeMap<>();
         members().forEach(p -> byNode.put(p.node(), p));
         for (VarShardBooks.Key k : books.keys()) {
@@ -475,16 +511,18 @@ final class VarShards implements AutoCloseable {
             ShardHandover.Facts f = new ShardHandover.Facts(owner, current, staleMap, successor);
             if (owner && current && !staleMap || !staleMap && !successor) {
                 successorSince.remove(k);
+                leaving.remove(k);
                 continue;
             }
             long since = successorSince.computeIfAbsent(k, x -> now);
             if (ShardHandover.decide(f, since, now, own.graceSeconds() * 1000L) == ShardHandover.Verdict.RELEASE) {
-                for (Assembled a : assembled.values()) {
-                    if (a.date().equals(k.date()) && a.map().digest().equals(k.map()) && a.held()[k.index()]) {
-                        drop(a.date());                                 // put together again, reading this shard from its owners
-                    }
+                if (readHere(k)) {                                      // the date loaded reads it: put together again without it and
+                    leaving.add(k);                                     // swapped in, released in a later round (the date is never dropped)
+                    rebuild(k.date());
+                    continue;
                 }
                 books.release(k, true);
+                leaving.remove(k);
                 successorSince.remove(k);
                 any = true;
                 LOG.info("VaR shards: {} released S{} of {} ({})", peers.self(), k.index(), k.date(), staleMap ? "a shard map since replaced"
@@ -492,6 +530,21 @@ final class VarShards implements AutoCloseable {
             }
         }
         return any;
+    }
+
+    /** True when a date loaded here reads the book {@code k} (that shard at that data version, held here). */
+    private boolean readHere(VarShardBooks.Key k) {
+        for (Assembled a : assembled.values()) {
+            if (a.date().equals(k.date()) && a.map().digest().equals(k.map()) && a.held()[k.index()] && k.digest().equals(a.digests()[k.index()])) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    /** True when the book {@code k} is handed over: no date is put together here from it any more. */
+    boolean leaving(VarShardBooks.Key k) {
+        return leaving.contains(k.usd());
     }
 
     /** The newest USD book held here of the same date, map and shard as {@code k}. */
@@ -545,21 +598,48 @@ final class VarShards implements AutoCloseable {
             }
             long since = missingSince.computeIfAbsent(key, x -> now);
             if (now - since >= Math.min(5_000L, own.graceSeconds() * 1000L / 2)) {
-                LOG.info("VaR shards: {} puts {} together again: its shards' owners serve newer data or another cut", peers.self(), a.date());
-                drop(a.date());
+                LOG.info("VaR shards: {} puts {} together again: its shards' owners serve newer data or another cut, or none is served",
+                        peers.self(), a.date());
+                rebuild(a.date());                                      // the date loaded answers until the replacement is complete
                 missingSince.remove(key);
             }
         }
     }
 
-    private void drop(LocalDate date) {
-        assembled.keySet().removeIf(k -> k.startsWith(date + "|"));
-        dropDate.accept(date);
+    /**
+     * Puts a date loaded here together again on another thread and swaps it in once complete; the date loaded answers meanwhile and stays
+     * when the replacement cannot be completed (a shard without a live owner: tried again in a later round). One at a time per date; the
+     * future says whether it was swapped in (false: the date was not loaded, or reloaded meanwhile), or why it could not be completed.
+     */
+    CompletableFuture<Boolean> rebuild(LocalDate date) {
+        CompletableFuture<Boolean> mine = new CompletableFuture<>();
+        CompletableFuture<Boolean> running = rebuilding.putIfAbsent(date, mine);
+        if (running != null) {
+            return running;
+        }
+        CompletableFuture.runAsync(() -> {
+            boolean swapped = false;
+            RuntimeException failed = null;
+            try {
+                swapped = swap.swap(date, () -> build(date));
+            } catch (RuntimeException e) {
+                failed = e;
+                LOG.info("VaR shards: {} keeps {} as put together: its replacement is not complete ({})", peers.self(), date, e.getMessage());
+            } finally {
+                rebuilding.remove(date, mine);
+            }
+            if (failed != null) {
+                mine.completeExceptionally(failed);
+            } else {
+                mine.complete(swapped);
+            }
+        }, rows.ask());
+        return mine;
     }
 
-    /** Drops a date put together here, soon and on another thread (its shards are held at another data version than it was built from). */
+    /** Puts a date loaded here together again, soon (its shards are held at another data version than it was put together from). */
     void dropLater(LocalDate date) {
-        CompletableFuture.runAsync(() -> drop(date), rows.ask());
+        rebuild(date);
     }
 
     /** A date dropped by its service (a reload, an eviction): forgotten here too. */

@@ -310,6 +310,10 @@ final class VarShardRows {
                 + "&digest=" + digest;
         for (String node : candidates(date, scope.map(), index, digest)) {
             if (node.equals(shards.peers().self())) {
+                if (shards.leaving(new VarShardBooks.Key(date, ccy, scope.map().digest(), index, digest))) {
+                    why.add(node + ": hands the shard over");                // a replacement is put together without its copy here
+                    continue;
+                }
                 try {
                     return ShardAssembly.Part.of(index, shards.served(date, ccy, index, scope.map().digest(), digest));
                 } catch (DrishtiException e) {

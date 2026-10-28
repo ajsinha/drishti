@@ -37,9 +37,9 @@ import org.slf4j.LoggerFactory;
 
 /**
  * User state across nodes (DRISHTI_NET.md section 11, phase N7): every change to a user's settings (saved searches among them), layouts,
- * pivots and workspaces is sent to every routable peer ({@code POST /api/v1/net/state}, signed, in batches, a quarter of a second at most
- * after it was made), and a change a peer sends is applied here, the newest write winning. A peer that does not answer keeps its changes
- * waiting (at most 10,000) and gets them when it does; a member that joins gets every such document this node holds, applied there only
+ * pivots and workspaces is sent to every member not gone ({@code POST /api/v1/net/state}, signed, in batches, a quarter of a second at most
+ * after it was made; a suspect one once it is heard again), and a change a peer sends is applied here, the newest write winning. A peer
+ * that does not answer keeps its changes waiting (at most 10,000) and gets them when it does; a member that joins gets every such document this node holds, applied there only
  * where it has none. Alerts, monitors and scheduled reports are not copied: they act, and would act once per node. With routing.yaml's
  * {@code user-state: off} (one shared identity database already shares them) nothing is sent.
  *
@@ -135,21 +135,36 @@ public final class StateSync implements AutoCloseable {
         return v;
     }
 
-    /** A session opened or ended here: queued for every routable peer. */
+    /** A session opened or ended here: queued for every member ({@link #member}). */
     private void broadcast(String user, String key, JsonNode value) {
         if (!active()) {
             return;
         }
         Change c = new Change(user, SESSIONS, key, value, System.currentTimeMillis(), net.nodeId(), false);
-        net.node().ifPresent(n -> n.table().others().stream().map(k -> k.member()).filter(Member::routable).forEach(m -> queue(m.nodeId(), c)));
+        net.node().ifPresent(n -> n.table().others().stream().map(k -> k.member()).filter(StateSync::member).forEach(m -> queue(m.nodeId(), c)));
     }
 
-    /** A part's change made here: queued for every routable peer (nothing while the cluster is off or user-state is off). */
+    /** A part's change made here: queued for every member ({@link #member}) (nothing while the cluster is off or user-state is off). */
     public void publish(Change c) {
         if (!active()) {
             return;
         }
-        net.node().ifPresent(n -> n.table().others().stream().map(k -> k.member()).filter(Member::routable).forEach(m -> queue(m.nodeId(), c)));
+        net.node().ifPresent(n -> n.table().others().stream().map(k -> k.member()).filter(StateSync::member).forEach(m -> queue(m.nodeId(), c)));
+    }
+
+    /**
+     * A member a change made here is queued for: every one that is not gone and speaks this protocol, a suspect or drained one too. A
+     * member suspected for a moment (a busy server's pause) that is heard again never "joins" again, so it gets no catch-up: a change not
+     * queued for it then would be lost for good (a node keeping an administrator the others disabled). A member that goes dead drops its
+     * queue and gets the catch-up when it comes back.
+     */
+    static boolean member(Member m) {
+        return !m.state().gone() && m.protocol() == Member.PROTOCOL;
+    }
+
+    /** A member the queued changes are sent to now: alive and speaking this protocol (a drained member serves its own users). */
+    static boolean reachable(Member m) {
+        return m.state() == com.ash.drishti.net.member.MemberState.ALIVE && m.protocol() == Member.PROTOCOL;
     }
 
     /** This node's id (the origin of the changes it makes). */
@@ -166,7 +181,7 @@ public final class StateSync implements AutoCloseable {
         return user + "\u001f" + ns + "\u001f" + key;
     }
 
-    /** A change made here (the replicating store calls it): queued for every routable peer. */
+    /** A change made here (the replicating store calls it): queued for every member ({@link #member}). */
     void changed(String user, String namespace, String key, JsonNode value) {
         if (!active() || !NAMESPACES.contains(namespace)) {
             return;
@@ -174,7 +189,7 @@ public final class StateSync implements AutoCloseable {
         long at = System.currentTimeMillis();
         last.put(key(user, namespace, key), at);
         Change c = new Change(user, namespace, key, value, at, net.nodeId(), false);
-        net.node().ifPresent(n -> n.table().others().stream().map(k -> k.member()).filter(Member::routable).forEach(m -> queue(m.nodeId(), c)));
+        net.node().ifPresent(n -> n.table().others().stream().map(k -> k.member()).filter(StateSync::member).forEach(m -> queue(m.nodeId(), c)));
     }
 
     private void queue(String peer, Change c) {
@@ -345,7 +360,7 @@ public final class StateSync implements AutoCloseable {
                 pending.remove(peer);                      // gone: its catch-up when it comes back covers what it missed
                 continue;
             }
-            if (!known.member().routable()) {
+            if (!reachable(known.member())) {
                 continue;
             }
             List<Change> batch = new ArrayList<>();

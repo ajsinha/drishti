@@ -796,6 +796,11 @@ newest write wins), and on a member's join queues every such document it holds a
 - The last-writer-wins clock is each node's wall clock (the nodes are within 60 s of each other, since the cluster key refuses more); the times of
   writes are kept in memory, so a catch-up after a restart fills only what is absent and never overwrites.
 - A user deleted on one node is deleted on the others (with their tokens, settings and sessions), by the identity copy below.
+- A change is queued for every member that is not gone (`alive` or `suspect`, drained ones included, speaking the protocol) and sent once
+  the member is alive. A member suspected for a moment and heard again never joins again, so it gets no catch-up: before 2.9.6 the changes
+  were queued for routable peers only, and one made while a peer was suspected (a busy server's pause) never reached it. The drill saw a
+  node keep the seeded administrator enabled after another node disabled it (`NetLastAdminTest`, now reproducing it by marking the peer
+  suspect at the moment of the change). A member that goes dead drops its queue and gets the catch-up when it comes back.
 
 **Identity across nodes (built, after N7).** A user known to one node used to be refused by the others (`registered-users-only`), so a console
 that fell over from the node where the user was created signed them out. `IdentitySync`, a `StateSync.Part`, copies the identity over the same

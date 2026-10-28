@@ -137,7 +137,7 @@ public final class VarService implements AutoCloseable {
     void shards(VarShards s) {
         this.shards = s;
         if (s != null) {
-            s.wire(this::reload, () -> {
+            s.wire(this::swap, () -> {
                 java.util.Set<LocalDate> open = new java.util.TreeSet<>();
                 dates.forEach((d, f) -> {
                     if (f.isDone() && !f.isCompletedExceptionally()) {
@@ -636,6 +636,41 @@ public final class VarService implements AutoCloseable {
         retireCurrencies(d);
         refused.remove(d);
         cache.asMap().keySet().removeIf(k -> k.startsWith(d + "|"));
+    }
+
+    /**
+     * A sharded date put together again while the one loaded keeps answering (VAR_SHARDING.md section 10): {@code build} runs outside every
+     * lock; the result replaces the date only when the date loaded is still the one the build started from (the same morning book: an
+     * intraday batch applied meanwhile is read again by the build), in one step, so every answer reads one whole date. False when nothing
+     * was replaced (not loaded, reloaded meanwhile); a failed build throws and the date loaded stays.
+     */
+    boolean swap(LocalDate d, java.util.function.Supplier<VarDate> build) {
+        CompletableFuture<VarDate> start = dates.get(d);
+        if (start == null || !start.isDone() || start.isCompletedExceptionally()) {
+            return false;                                                // nothing loaded: the next request loads it
+        }
+        VarBook from = start.join().book().morning();
+        VarDate fresh = build.get();
+        java.util.concurrent.locks.ReentrantLock lock = intradayLocks.computeIfAbsent(d, x -> new java.util.concurrent.locks.ReentrantLock());
+        lock.lock();
+        try {
+            CompletableFuture<VarDate> f0 = dates.get(d);
+            if (f0 == null || !f0.isDone() || f0.isCompletedExceptionally() || f0.join().book().morning() != from
+                    || !dates.replace(d, f0, CompletableFuture.completedFuture(fresh))) {
+                loader.tier().retire(fresh.book().morning(), false);
+                return false;
+            }
+            shards.adopt(fresh);
+            aheadQueued.removeIf(k -> k.startsWith(d + "|"));
+            retireCurrencies(d);
+            refused.remove(d);
+            cache.asMap().keySet().removeIf(k -> k.startsWith(d + "|"));
+            retire(f0, false);
+        } finally {
+            lock.unlock();
+        }
+        buildAhead(fresh);
+        return true;
     }
 
     /** What is loaded, for the provenance box and Admin. */
