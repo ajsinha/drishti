@@ -12,7 +12,7 @@
 > Drishti (दृष्टि, "sight") turns any record from any system into a dense,
 > keyboard-driven, live terminal view — without a hand-built screen per product.
 
-**New to Drishti?** [Section 5](#5-walk-through-one-request) follows one command from the keyboard to a live screen, and ends with [where to change what](#where-to-change-what).
+**New to Drishti?** [Section 5](#5-walk-through-one-request) follows one command from the keyboard to a live screen, and ends with [where to change what](#where-to-change-what). [Section 7a](#7a-how-a-screen-is-made-generic-not-bespoke) shows, with real outputs, how every screen is drawn by the same generic code.
 
 ---
 
@@ -354,13 +354,14 @@ panels:
       - …
 ```
 
-**Panel kinds** (the `PanelKind` enum, twenty): `kv`, `table`, `tabs`, `line`, `area`, `hbar`, `ladder`, `links`,
-`status`, `provenance`, `markdown`, `gauge`, `surface`, `waterfall`, `histogram`, `scatter`, `candlestick`, `graph`, `timeline`, `pivot`. The chart and aggregate kinds are bound
+**Panel kinds** (the `PanelKind` enum, twenty-two): `kv`, `table`, `tabs`, `line`, `area`, `hbar`, `ladder`, `links`,
+`status`, `provenance`, `markdown`, `gauge`, `surface`, `waterfall`, `histogram`, `scatter`, `candlestick`, `graph`, `timeline`, `pivot`,
+`metric`, `map`. The chart and aggregate kinds are bound
 by `ChartBinder` under the `drishti.panels` limits and drawn by `static/js/charts.js`; [PANELS.md](../guides/PANELS.md)
 describes every kind in depth. The full grammar is in
 [RACHANA_REFERENCE.md](../guides/RACHANA_REFERENCE.md). A new kind is added to the enum (with its required and allowed
 options) and to the binder on the Java side, plus a Jinja macro in `_macros/panels.html` and its client-side
-handling on the console.
+handling on the console ([section 7a](#7a-how-a-screen-is-made-generic-not-bespoke) maps each kind to its macro).
 
 **Formats** (`fmt`) are named and config driven: the core set is in `drishti-rachana/src/main/resources/formats.yaml`
 (`text`, `amount0`, `amount2`, `signed0`, `signed2`, `pct0`, `pct2`, `price2`, `compact` (4.1m), `date`, `dmy`), a
@@ -395,6 +396,346 @@ are found by the entity graph, not by a rule (section 8). Semantic hints come fr
 `drishti-inference/src/main/resources/inference/semantics.yaml` plus each pack's `semantics:` file. Every inferred
 panel carries `"inferred": true`, and the provenance label says `+ inference`; Sutra Studio can show the inferred
 layout as a Sutra to start from (`GET /api/v1/studio/inferred/{kind}/{id}`).
+
+---
+
+## 7a. How a screen is made: generic, not bespoke
+
+A Sutra is **not** compiled to JavaScript or HTML, and no code is generated from it. It is YAML that the server reads
+and interprets: `SutraBuilder` turns it into a model, `LayoutMerger` combines it with what inference proposes into a
+**data-free layout**, and `Binder` (with `ChartBinder` for the chart kinds) binds that layout to one document into a
+**JSON ViewModel**. The console draws every ViewModel with the same page template and **one Jinja macro per panel
+kind**, and the browser runs the same generic scripts on every page: charts, tables, tabs, keys and live patches.
+Every entity of every mnemonic, in every pack, goes through this one path. There is no screen per product, per kind
+or per mnemonic.
+
+```
+ config/packs/<pack>/sutras/**/*.sutra.yaml        the entity's document (any connector)
+          │  SutraBuilder (load, validate)                    │
+          ▼                                                   ▼
+   Sutra model ── SutraMatcher ─► LayoutMerger ◄── InferenceEngine (shape rules)
+                                       │
+                         Layout: data-free, cached per (Sutra version, kind, fingerprint)
+                                       │  Binder, ChartBinder (drishti-engine)
+                                       ▼
+                         ViewModel JSON   GET /api/v1/views/{kind}/{id}
+                                       │
+   console   terminal/view.html ─ _macros/view.html (title, strip) ─ _macros/panels.html (one macro per panel kind)
+                                       │
+   browser   view.js (tabs, keys, line, area, surface) · charts.js (waterfall … graph, donut, map) · tables.js,
+             tree-rows.js, pivot.js · live.js (frames from the live channel, same macros server-side)
+```
+
+What is code and what is configuration:
+
+| Layer | Written once, used by every kind | Written per pack or kind |
+|---|---|---|
+| Server | `SutraBuilder`, `SutraMatcher`, `InferenceEngine`, `LayoutMerger`, `Binder`, `ChartBinder`, `PatchDiffer` | nothing |
+| Console | `terminal/view.html`, `_macros/view.html`, `_macros/panels.html`, `api_routes._panel_html` (live patches) | nothing |
+| Browser | `view.js`, `charts.js`, `geomap.js`, `tables.js`, `tree-rows.js`, `pivot.js`, `live.js` | nothing |
+| Pack | — | YAML only: Sutras (or none), fragments, `form:`, `columns:`, `pivot:`, `semantics:`, formats |
+
+The default packs hold 219 Sutras (`config/packs/*/sutras/`) and the UI kit and packs 36 fragments; all of them are
+drawn by the one page template and the one macro file. Search, query by form and the pivot are generic in the same
+way (examples 3 and 4). The examples below were captured from a server started from the repository with the default
+packs and `DRISHTI_LAKE_ENABLED=false`, so the `demo` connector's committed samples answered, and a console pointed at
+it; the commands use the quick-start port 18480.
+
+### Example 1: Sutra → ViewModel → HTML
+
+**The Sutra.** `TRD MX-20000001` matches `config/packs/trading/sutras/murex/irs-fixfloat.v1.sutra.yaml` (generated
+by `tools/packgen/banking/make_sutras.py`). One strip cell, and the first panel, which it takes from a fragment:
+
+```yaml
+match: { kind: trade, where: "$.SOURCE_SYSTEM == 'MUREX' && $.PRODUCT_TYPE == 'IRS_FIXFLOAT'", priority: 10 }
+strip:
+  - { label: Notional, bind: "$.CURRENCY + ' ' + fmt(first($.LEGS).NOTIONAL, 'amount0')", emphasis: true }
+panels:
+  - { use: trading/deal-ticket@1, with: { rate-fmt: pct4, product: "Interest rate swap (fixed/float)" } }
+```
+
+The fragment (`config/packs/trading/sutras/common/deal-ticket.v1.fragment.yaml`) is a `kv` panel, still only YAML:
+
+```yaml
+panels:
+  - id: ticket
+    kind: kv
+    title: Deal ticket
+    code: DES
+    key: F2
+    columns:
+      - { label: Trade id, bind: $.TRADE_ID }
+      - { label: Transaction, bind: "nonblank($.TRANSACTION_ID, '–')" }
+      - { label: Version, bind: "nonblank($.TRADE_VERSION, '–')" }
+      - …                                   # 31 fields in all
+```
+
+**The ViewModel.** The server binds it to the document; abbreviated:
+
+```bash
+curl -s http://localhost:18480/api/v1/views/trade/MX-20000001
+```
+
+```json
+{
+  "ref": {"kind": "trade", "id": "MX-20000001"}, "mnemonic": "TRD",
+  "strip": [ …, {"label": "Notional", "text": "AUD 242,000,000", "emphasis": true, "path": "$.CURRENCY"}, … ],
+  "panels": [
+    {"id": "ticket", "kind": "kv", "title": "Deal ticket", "code": "DES", "key": "F2", "area": "main", "inferred": false,
+     "data": {"fields": [
+        {"label": "Trade id", "text": "MX-20000001", "link": {"kind": "trade", "id": "MX-20000001", "mnemonic": "TRD"}, "path": "$.TRADE_ID"},
+        {"label": "Transaction", "text": "20000001002", "path": "$.TRANSACTION_ID"},
+        {"label": "Version", "text": "2", "path": "$.TRADE_VERSION"}, … ]},
+     "empty": false},
+    {"id": "legs", "kind": "tabs", …}, {"id": "flows", "kind": "table", …}, {"id": "events", "kind": "timeline", …}, …],
+  "provenance": {"layout": "Sutra irs-fixfloat v1 + inference", "sutra": "irs-fixfloat", "source": "murex", …}
+}
+```
+
+The ViewModel is the whole contract between server and console: labels, formatted text, tones, links and the JSON
+path of every value. Nothing in it says "trade" or "swap" to the console.
+
+**The macro.** For each panel the page calls `panel(p)` in `drishti-console/web/templates/_macros/panels.html`; it
+draws the frame (`<section>`, header, code, key, download and help) and dispatches on `p.kind` in `pbody`:
+
+```jinja
+{% elif p.kind in ['kv', 'status'] %}{{ fields(p.data.fields, 4 if p.area == 'main' else 2) }}
+…
+{% macro fields(list, cols=4) -%}
+<dl class="kv kv-{{ cols }}">
+  {% for f in (list or []) %}<div class="kv-item"><dt>{{ f.label }}</dt><dd class="mono{{ tone(f) }}"{% if f.path %} data-path="{{ f.path }}"{% endif %}>{{ cell_text(f) }}</dd></div>{% endfor %}
+</dl>
+{%- endmacro %}
+```
+
+**The HTML.** What the console sent for `/v/trade/MX-20000001` (abbreviated; the download menu left out):
+
+```html
+<section class="pnl" id="p-ticket" data-panel="ticket" data-kind="kv" data-key="F2" data-span="12" data-height="0" …>
+  <header class="pnl-h"><h3 id="h-ticket">Deal ticket</h3>
+    <span class="pnl-code">DES · F2 … <a class="pnl-help" href="/help/panels#kv" …></a></span></header>
+  <div class="pnl-b">
+  <dl class="kv kv-4">
+  <div class="kv-item"><dt>Trade id</dt><dd class="mono" data-path="$.TRADE_ID"><a class="lnk" href="/v/trade/MX-20000001">MX-20000001</a></dd></div>
+  <div class="kv-item"><dt>Transaction</dt><dd class="mono" data-path="$.TRANSACTION_ID">20000001002</dd></div>
+  <div class="kv-item"><dt>Version</dt><dd class="mono" data-path="$.TRADE_VERSION">2</dd></div> …
+```
+
+A field with a `link` becomes an anchor to `/v/{kind}/{id}`; `data-path` is what the About drawer, the live flash
+and the export read. When a tick changes the panel, the console renders it again with the same `panel` macro
+(`routes/api_routes.py`, `_panel_html`) and `live.js` swaps it in (section 10).
+
+**Panel kind → macro → browser script.** One to one, for all twenty-two kinds of the `PanelKind` enum:
+
+| `kind` | Macro in `_macros/panels.html` | Drawn or enhanced in the browser by |
+|---|---|---|
+| `kv`, `status` | `fields` | none (plain HTML) |
+| `provenance`, `markdown`, `metric`, `gauge` | inline in `pbody` | none |
+| `table`, `ladder` | `table` (through `pivotable`; `drill` when the Sutra has `levels:`) | `tables.js`, `colfilter.js`, `tree-rows.js`, `pivot.js` (the Pivot tab) |
+| `tabs` | `tabs` (each tab's body is again `pbody`) | `view.js` |
+| `line`, `area` | `chart` (`data-chart` JSON) | `view.js` (ECharts) |
+| `hbar` | `bars`, or `donut` with `shape: donut` | none; `charts.js` for the donut |
+| `surface` | `surface` (`data-surface` JSON) | `view.js` (heatmap or 3D) |
+| `links` | `links` | none |
+| `waterfall`, `histogram`, `scatter`, `candlestick`, `graph` | the macro of the same name (`xchart`, `data-xchart` JSON) | `charts.js` |
+| `timeline` | `timeline` | none |
+| `map` | `geomap` | `geomap.js`, `charts.js` |
+| `pivot` | `pivot`, `pivot_table` | `tree-rows.js`, `pivot-grid.js` |
+
+### Example 2: a kind with no Sutra
+
+No Sutra in the default packs matches `risk-hierarchy` (`HIER`, a node of a VaR hierarchy; it is normally read from
+the `risk-store` lake). To show what inference alone makes of it, the first line of the committed sample
+`config/packs/market-risk/samples/risk-hierarchy.jsonl` was put in the `file` connector's folder of the scratch
+server (`<data>/feeds/risk-hierarchy/LEGAL~LE-NY.json`). The document is flat UPPER_SNAKE fields, a `REF` object and
+two lists of ids (`CHILDREN`, `BOOKS`).
+
+```bash
+curl -s 'http://localhost:18480/api/v1/views/risk-hierarchy/LEGAL~LE-NY'
+```
+
+Abbreviated:
+
+```json
+{
+  "title": {"pill": "Risk hierarchy", "id": "risk-hierarchy", "with": null},
+  "strip": [{"label": "Node ID", "text": "LEGAL~LE-NY", "path": "$.NODE_ID"},
+            {"label": "Hierarchy", "text": "LEGAL", "path": "$.HIERARCHY"},
+            {"label": "Limit VaR", "text": "180,000,000", "path": "$.LIMIT_VAR"},
+            {"label": "Business date", "text": "2026-09-30", "path": "$.BUSINESS_DATE"}, …],
+  "panels": [
+    {"id": "built", "kind": "provenance", "title": "How this view was built", "inferred": true,
+     "data": {"fields": [{"label": "Layout", "text": "inference only"}, …]}},
+    {"id": "ref", "kind": "kv", "title": "Ref", "area": "right", "inferred": true,
+     "explanation": "NestedObjectRule 0.55: 2 fields",
+     "data": {"fields": [{"label": "Kind", "text": "legal-entity"}, {"label": "ID", "text": "LE-NY"}]}},
+    {"id": "refs", "kind": "links", "title": "Linked entities", "area": "right", "inferred": true, "empty": true, …}],
+  "provenance": {"layout": "inference only", "sutra": null, "source": "feed-file", "fingerprint": "fd66…eda6", …}
+}
+```
+
+Reading it: `provenance.layout` is `inference only` and `sutra` is `null`; every panel says `"inferred": true` and
+why (`explanation`); the strip is the eight top-ranked scalars. The lists of plain ids gave no panel, and the
+identifier rules look for camelCase names (`riskHierarchyId`, `id`, `code`, `name`), so the title falls back to the
+kind's name; a Sutra with `title: { id: $.NODE_ID }` fixes both. The ViewModel has the same shape as example 1, so
+the same template and macros draw it. To start that Sutra from what inference made:
+
+```bash
+curl -s 'http://localhost:18480/api/v1/studio/inferred/risk-hierarchy/LEGAL~LE-NY?name=risk-node'
+```
+
+```yaml
+# Started from what inference makes of risk-hierarchy LEGAL~LE-NY. Edit freely.
+rachana: 1
+sutra: risk-node
+version: 1
+match: { kind: risk-hierarchy, priority: 1 }
+title: { pill: "Risk hierarchy", id: "'risk-hierarchy'" }
+strip:
+  - { label: "Node ID", bind: "$.NODE_ID" }
+  - …
+panels:
+  - id: ref
+    kind: kv
+    title: "Ref"
+    area: right
+    rows: "$.REF"
+    columns:
+      - { label: "Kind", bind: "@.KIND" }
+      - { label: "ID", bind: "@.ID" }
+```
+
+[INFERENCE.md](INFERENCE.md#from-an-inferred-layout-to-a-sutra) explains the rules and the step from here to a Sutra.
+
+### Example 3: query by form
+
+**The YAML.** A pack lists the fields people search a kind by; from `config/packs/trading/pack.yaml`:
+
+```yaml
+form:
+  trade:
+  - path: SOURCE_SYSTEM
+    label: Source system
+    type: enum
+    group: Identity
+    order: 2
+    help: 'ENDUR, CALYPSO or MUREX: the booking system the trade comes from.'
+  - path: CURRENCY
+    label: Currency
+    type: enum
+    group: Where
+    order: 8
+  - path: QUANTITY
+    label: Quantity
+    type: amount
+    group: Money
+    order: 12
+    operators: ['>=', '<=', between, '=']
+```
+
+**The page.** `FORM trading <GO>` goes to `/form/trading` (`drishti-console/routes/form_routes.py`, `form_page`).
+The route asks the server for the form (`GET /api/v1/forms/trading?kind=trade`: the fields with their operators and
+the values the data holds, e.g. `"values": ["CALYPSO", "ENDUR", "MUREX"]`), and `core/forms.py` groups the fields for
+`web/templates/terminal/form.html`, which has one branch per field **type** (`text`, `number`/`amount`, `date`,
+`enum`, `id`, `bool`), never per pack or field. The address holds the criteria:
+
+```text
+/form/trading?kind=trade&op.SOURCE_SYSTEM=in&v.SOURCE_SYSTEM=MUREX&op.CURRENCY=in&v.CURRENCY=EUR&v.CURRENCY=USD&op.QUANTITY=%3E%3D&v.QUANTITY=100m&run=1
+```
+
+**The search it writes.** `forms.criteria_from` reads the criteria from the address and the server compiles them to
+the search grammar:
+
+```bash
+curl -s -X POST -H 'Content-Type: application/json' http://localhost:18480/api/v1/forms/trading/trade/compile \
+  -d '{"criteria":[{"path":"SOURCE_SYSTEM","op":"in","values":["MUREX"]},
+                   {"path":"CURRENCY","op":"in","values":["EUR","USD"]},
+                   {"path":"QUANTITY","op":">=","values":["100m"]}],"limit":100}'
+```
+
+```json
+{"command":"TRD where SOURCE_SYSTEM = 'MUREX' and (CURRENCY = 'EUR' or CURRENCY = 'USD') and QUANTITY >= 100m limit 100"}
+```
+
+The route runs that command as any search (`GET /api/v1/search?q=…`, example 4) and the page shows it with Copy and
+Edit as text, then the results table (`127 of 765 trades` on the demo samples). Masks, kinds per role and packs per
+user apply because it is an ordinary search. A pack adds a form by adding YAML; no form has code of its own. The
+reference is [QUERY_BY_FORM.md](../guides/QUERY_BY_FORM.md).
+
+### Example 4: search and the pivot
+
+**Plain words.** `murex trades in eur over 100m <GO>` is not a command, so `/go` sends it to
+`/s?words=murex%20trades%20in%20eur%20over%20100m`; the console asks the server what the words mean:
+
+```bash
+curl -s 'http://localhost:18480/api/v1/phrase?text=murex%20trades%20in%20eur%20over%20100m'
+```
+
+```json
+{"query": "TRD where SOURCE_SYSTEM = 'MUREX' and CURRENCY = 'EUR' and QUANTITY > 100000000",
+ "kind": "trade",
+ "steps": [{"words": "trades", "meaning": "Trade (TRD)"}, {"words": "murex", "meaning": "source system is MUREX"},
+           {"words": "eur", "meaning": "currency is EUR"}, {"words": "over 100m", "meaning": "quantity > 100000000"}],
+ "ignored": [], "problem": null, "command": null}
+```
+
+The page says *Your words make this search:* and links the query; following it runs the structured search.
+
+**The search.** Typed directly (`TRD where … <GO>`) or reached from words or a form, it is one call:
+
+```bash
+curl -s "http://localhost:18480/api/v1/search?q=TRD%20where%20SOURCE_SYSTEM%20%3D%20'MUREX'%20and%20CURRENCY%20%3D%20'EUR'%20and%20QUANTITY%20%3E%20100000000%20limit%20100"
+```
+
+Abbreviated:
+
+```json
+{"query": "TRD where SOURCE_SYSTEM = 'MUREX' and CURRENCY = 'EUR' and QUANTITY > 100000000 limit 100",
+ "kind": "trade", "mnemonic": "TRD",
+ "condition": "lower($.SOURCE_SYSTEM) == lower('MUREX') && lower($.CURRENCY) == lower('EUR') && $.QUANTITY > 100000000",
+ "columns": ["$.SOURCE_SYSTEM", "$.CURRENCY", "$.QUANTITY", "$.PRODUCT_TYPE", …],
+ "labels": {"$.SOURCE_SYSTEM": "Source system", "$.CURRENCY": "Currency", …},
+ "rows": [{"ref": {"kind": "trade", "id": "MX-20000002"}, "title": "MX-20000002",
+           "values": {"$.SOURCE_SYSTEM": "MUREX", "$.CURRENCY": "EUR", "$.QUANTITY": 110000000.0, …}}, …],
+ "scanned": 765, "matched": 21, "elapsedMs": 7.72,
+ "pivot": {"rows": ["PRODUCT_TYPE"], "columns": ["SOURCE_SYSTEM"], "values": [{"field": "QUANTITY", "agg": "sum"}], …}}
+```
+
+**The results page.** `/s` (`routes/terminal_routes.py`, `search`) renders `web/templates/terminal/search.html`
+for every kind: `21 of 765 trades match`, a table whose columns come from the pack's `columns:` for the kind (each
+row links to `/v/{kind}/{id}`), a chart of the rows, and, because the trading pack declares `pivot:` for `trade`, a
+**Table | Pivot** switch drawn by `pivot.js` from the `pivot` block above. A kind without `columns:` gets columns
+from the condition and the documents; a kind without `pivot:` gets the table alone. The grammar is in
+[USER_GUIDE.md, Search by value](../guides/USER_GUIDE.md#search-by-value) and
+[Asking in plain words](../guides/USER_GUIDE.md#asking-in-plain-words).
+
+### When code is needed
+
+YAML covers new kinds, packs, screens, forms, searches and pivots. Code is needed only to give the grammar or the
+platform a new capability, and then it serves every pack:
+
+| Need | Code to write | Where |
+|---|---|---|
+| A new panel kind | the enum entry with its required and allowed options; its binding; its macro; its client script if it draws anything; its help entry | `PanelKind` (`drishti-rachana`), `Binder` or `ChartBinder` (`drishti-engine`, package `bind`), `drishti-console/web/templates/_macros/panels.html` (`pbody` and a macro), `drishti-console/web/static/js/view.js` or `charts.js`; [PANELS.md](../guides/PANELS.md), [DEVELOPER_GUIDE.md](../guides/DEVELOPER_GUIDE.md) |
+| A new kind of store (a source plugin) | a `SourcePlugin` (`fetch`, optionally `subscribe`, `search`, `reverse`) in a plugin module; after that each store is a connector file | `SourcePlugin` (`drishti-api`), a module under `plugins/` such as `drishti-plugin-file`; [CONNECTOR_DEVELOPER_GUIDE.md](../connectors/CONNECTOR_DEVELOPER_GUIDE.md#the-sourceplugin-spi) |
+| A new computed measure | the computation: a Java engine (as VaR and exposure in `drishti-compute`, packages `var` and `ccr`) or a Python engine behind a `reactive` connector; its result is then an ordinary kind, drawn by the generic view | [REACTIVE_CONNECTOR.md](../connectors/REACTIVE_CONNECTOR.md), [VAR_GUIDE.md, Part III](../guides/VAR_GUIDE.md#24-where-the-engine-lives) |
+
+### The hand-built pages and why
+
+Some pages are hand-built. Each is a product feature that works across packs and kinds, built on the same server
+APIs, entitlements and masks as the generic view; none is a screen for one product or one mnemonic.
+
+| Page | Routes | Templates | Why it is its own page |
+|---|---|---|---|
+| VaR explorer | `/var` (`VAR <scope> <GO>`) | `terminal/var.html`, `static/js/var-explorer.js`, `var-charts.js` | Any scope (hierarchy node, book, basket, trade) computed on demand by the VaR engine (`/api/v1/var`), with drill-down, captures and compare; the computed kinds stay ordinary kinds on `/v/…` too. [VAR_GUIDE.md](../guides/VAR_GUIDE.md#3-the-explorer-screen-by-screen) |
+| Exposure explorer | `/exposure` (`EXP <scope> <GO>`) | `terminal/exposure.html`, `static/js/exposure-explorer.js`, `exposure-charts.js` | The same for counterparty exposure (`/api/v1/exposure`); `exposure-result` is still a kind. [EXPOSURE_GUIDE.md](../guides/EXPOSURE_GUIDE.md#3-the-explorer-screen-by-screen) |
+| BI Studio, report viewer and the BI pages | `/bi/…` | `templates/bi/` | Reports and models over datasets (DuckDB on the server), a different job from one entity's view. [BI_GUIDE.md](../guides/BI_GUIDE.md) |
+| Admin | `/admin/…` | `templates/admin/` | Running the system: users, packs, connectors, lakes, Drishti\*net |
+| Sutra designer and Build | `/designer`, `/build/…`, `/studio` | `templates/designer/`, `templates/build/`, `templates/studio/` | Tools that write Sutras; their previews are the generic view's macros. [SCREEN_DESIGNER.md](../guides/SCREEN_DESIGNER.md) |
+| Data map | `/datamap` (`DATAMAP <GO>`) | `terminal/datamap.html`, `static/js/datamap.js` | The packs' kinds and joins, checked against the data (`/api/v1/datamap`). [USER_GUIDE.md](../guides/USER_GUIDE.md#the-data-map) |
+| Landing and Home | `/`, `/t` | `landing.html`, `terminal/home.html` | Entry pages: the command line, recent entities, the watch list |
+| Workspaces and Monitors | `/w/…`, `/m/…`, `/alerts` | `templates/workspace/`, `templates/monitor/` | Arrangements of generic views and searches, saved per user; a workspace pane is a `/v/…` view. [USER_GUIDE.md](../guides/USER_GUIDE.md#workspaces) |
+| Help centre | `/help/…`, `/what` | `templates/help/` | Renders the repository's guides and the packs' Knowledge pages |
 
 ---
 
@@ -777,25 +1118,37 @@ bg, bg-2, surface and surface-2, and for `--d-on-accent` on accent fills; ≥ 3:
 | `/t` | Terminal home: command line, recent entities, watch list |
 | `/go?q=` | Resolves a command and redirects to its view (or to search) |
 | `/v/{kind}/{id}` | Entity view (server-rendered first paint, then live patches over the tab's channel) |
-| `/s?q=` | Structured search results |
+| `/s?q=`, `/s?words=` | Structured search results (one generic page for every kind, with the Pivot tab where the pack declares `pivot:`); plain words shown as the search they make |
+| `/p/{name}` | A pack at a glance (its code typed alone, e.g. `MKT`): its kinds, mnemonics, counts and README |
+| `/v/{kind}/{id}/history` | History query: the entity over time (`TRD <id> 30`) |
 | `/compare/{kind}/{id}` | History: what changed in the entity between two business dates, or since a "known at" time |
 | `/impact/{kind}/{id}` | F8 Impact: dependents by reverse lookup, rolled up along pack-configured fields, with summed measures |
+| `/var` | VaR explorer (`VAR <scope>`): any scope computed on demand, drill-down, captures and compare (hand-built, section 7a) |
+| `/exposure` | Exposure explorer (`EXP <scope>`): counterparty exposure computed for any scope (hand-built, section 7a) |
+| `/datamap` | Data map (`DATAMAP`): the packs' kinds and their joins, checked against the data |
+| `/func` | Functions (`FUNC`): the command directory for everyone; administrators switch commands on and off there (`/admin/commands` redirects here) |
+| `/what` | Knowledge (`WHAT <term>`): what the words mean |
 | `/m`, `/m/{name}` | Monitors: live watchlists |
-| `/alerts` | Alert rules (Rachana-EL, evaluated server-side on every tick, edge-triggered), pack suggestions, history; a bell and toasts on every page |
+| `/alerts`, `/alerts/all` | Alert rules (Rachana-EL, evaluated server-side on every tick, edge-triggered), pack suggestions, history; a bell and toasts on every page |
 | `/w`, `/w/{name}` | Workspaces: 2–4 embedded views with follow-the-selection between panes, saved per user on the server |
 | `/studio`, `/studio/reviews` | Sutra Studio (editor + live preview) and the review queue |
+| `/designer`, `/designer/new`, `/designer/grid`, `/designer/outline` | The Sutra designer and its modes (`ui.designer`, off by default) |
 | `/build`, `/build/d/{id}`, `/build/new`, `/build/pack/new` | The Build workbench: My designs, one design (Sutra, samples, panels, controls, form, About), New pack from schemas |
+| `/build/reviews`, `/review/changes` | Designs waiting for review; write-back changes waiting for an approver |
 | `/forms`, `/form/{pack}` | Query by form: the forms home and one pack's form |
-| `/reports` | Saved and scheduled reports, and BI reports |
+| `/reports`, `/reports/all` | Saved and scheduled reports, and BI reports |
 | `/bi`, `/bi/catalogue`, `/bi/workspaces`, `/bi/models`, `/bi/d/{id}`, `/bi/r/{id}`, `/bi/designer`, `/bi/design/theme/{id}`, `/bi/m/{dataset}` | Rūpaka: home, catalogue, workspaces, models, datasets, report viewer (boards are report pages; `/bi/b/{id}` opens the viewer), BI Studio's report and model designers and the theme designer, Model view |
+| `/bi/datasets`, `/bi/w/{workspace}`, `/bi/environments`, `/bi/run/{id}` | BI datasets, one BI workspace, environments (export and import a workspace), where a BI run opens |
 | `/bi/explore`, `/bi/transform`, `/pyconsole` | Analyse (Slice, SQL and Python cells, worked out by the servers), the Transform editor (Python data prep step by step), the browser Python console on a masked extract |
 | `/inbox`, `/share/{id}` | The inbox and the page a shared link opens |
-| `/help`, `/help/{slug}`, `/help/search` | Help centre: guides and the repository's docs rendered in-app; F1 opens help for the current screen |
-| `/about` | Version and build, Java, uptime, loaded Sutras, source health, licence and notices |
-| `/account` | Own profile, settings and password |
-| `/admin/users`, `/admin/roles`, `/admin/tokens`, `/admin/audit`, `/admin/access`, `/admin/health`, `/admin/caches` | User administration, roles, API tokens, audit log, who looked at what, health of everything, caches |
+| `/help`, `/help/{slug}`, `/help/search`, `/help/examples` | Help centre: guides and the repository's docs rendered in-app; F1 opens help for the current screen; the Rachana examples |
+| `/about`, `/about/competitive` | Version and build, Java, uptime, loaded Sutras, source health, licence and notices; the competitive comparison |
+| `/login`, `/logout`, `/account` | Sign-in and sign-out; own profile, settings and password |
+| `/asof` | Sets the business date (and "known at") for the session, then returns to the page |
+| `/servers` | One console, many servers: the list of servers and the one this browser works with |
+| `/admin/users`, `/admin/roles`, `/admin/tokens`, `/admin/audit`, `/admin/access`, `/admin/health`, `/admin/caches`, `/admin/edits` | User administration, roles, API tokens, audit log, who looked at what, health of everything, caches, write-back edits |
 | `/admin/packs`, `/admin/packs/{name}`, `/admin/connectors`, `/admin/connectors/{name}`, `/admin/loads` | Packs (switch, load, deploy, registry), connectors, data loads |
-| `/admin/embedding`, `/admin/collab`, `/admin/ai`, `/admin/bi` | Host applications for embedding, collaboration compliance, AI and MCP, BI settings |
+| `/admin/embedding`, `/admin/collab`, `/admin/ai`, `/admin/bi`, `/admin/bi/runs`, `/admin/bi/usage`, `/admin/compute` | Host applications for embedding, collaboration compliance, AI and MCP, BI settings, BI runs and usage, compute pools and requests |
 | `/admin/lakes`, `/admin/artifacts`, `/admin/net` | Delta lakes and their maintenance, installed artifacts (install and uninstall safely), Drishti\*net (members, files, capability map, security, access, routing) |
 | `/api/channel` | The browser's single live channel, shared by its tabs (section 10); `/api/channel/who` the session it carries |
 
@@ -811,7 +1164,8 @@ when hidden.
 
 **Renderer contract** — each panel kind has a Jinja macro (`_macros/panels.html`) for first paint. Live patches
 reuse it: the console renders a changed non-chart panel with the same macro and sends the HTML; `live.js` swaps that
-one panel, updates strip cells in place, and hands chart panels new data — so a tick never re-renders the whole view.
+one panel, updates strip cells in place, and hands chart panels new data — so a tick never re-renders the whole view. The kind-to-macro table and worked examples are in
+[section 7a](#7a-how-a-screen-is-made-generic-not-bespoke).
 
 ---
 

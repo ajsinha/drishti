@@ -96,6 +96,13 @@
 
 ### Documentation
 
+- **ARCHITECTURE.md section 7a, "How a screen is made: generic, not bespoke"**: a Sutra is not compiled to JavaScript or HTML; the server
+  interprets it into a data-free layout and a JSON ViewModel, and one page template, one Jinja macro per panel kind and generic scripts draw
+  every kind. Four worked examples with captured outputs (Sutra to ViewModel to HTML for `TRD MX-20000001`; `risk-hierarchy` laid out by
+  inference only; the trading pack's form to the search it writes; plain words and a structured search to the generic results page and its
+  Pivot tab), the panel kind to macro to script table, when code is needed, and the hand-built pages and why. Section 17's page table gains
+  the missing routes (`/var`, `/exposure`, `/datamap`, `/func`, `/what`, `/p/{name}`, the designer, history, reviews, BI and admin pages);
+  section 6 lists the twenty-two panel kinds (`metric` and `map` were missing).
 - **Contradictions between documents fixed** (the 2.9.6 documentation audit, C1 to C20; the structural merges come later, after review).
   Each fact now has one home and the others link to it:
   - A connector's `kinds:` is the exact list it serves: it adds (consulted after the routed connector) **and** narrows (a kind missing
