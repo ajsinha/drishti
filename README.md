@@ -195,7 +195,7 @@ export JAVA_HOME=/usr/lib/jvm/java-21-openjdk-amd64
 # 2. The console's Python environment (also runs tools/drishti.py)
 uv venv drishti-console/.venv && uv pip install --python drishti-console/.venv/bin/python -r drishti-console/requirements.txt
 
-# 3. The demo lakes the seven packs read: sixty business days from the committed test data (about 15 minutes, 2.2 GB)
+# 3. The demo lakes the seven packs read: sixty business days from the committed test data (about 15 minutes, 3.4 GB)
 drishti-console/.venv/bin/python tools/drishti.py lake demo
 
 # 4. Start the server on :18480 with the packs to load (their parents load with them)

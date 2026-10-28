@@ -299,7 +299,7 @@ Connector files:
 
 (The table lines were captured on a clean clone of 2.5.0, on the seven-day lakes, with `--server` naming a port where nothing ran, so
 their row counts are left out; the summary line is from a sixty-day run of 2.6.5 that kept the test data's own dates: 943 s, about
-2.2 GB on disk.) By default the sixty days are moved to end on today's business date, so every page opens on data; `--as-of data` keeps the test data's own dates.
+3.4 GB on disk.) By default the sixty days are moved to end on today's business date, so every page opens on data; `--as-of data` keeps the test data's own dates.
 Start the server with the samples off so that every page reads the lakes: the run configuration **Drishti server (demo lakes)**, or
 `DRISHTI_DEMO_ENABLED=false` with the seven packs. Running `lake demo` again while a server runs is safe: it sends the data-load
 signal for every table and date it wrote (`--server`, `--token-file`), and a running server also sees each rebuilt Delta date by

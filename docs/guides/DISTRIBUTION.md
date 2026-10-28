@@ -110,7 +110,7 @@ A subscription says **what** (a report, a page or one visual, with the view stat
 | Name | 1 to 64 letters, digits, spaces, dots, dashes, underscores; yours alone |
 | When | the schedule, below |
 | Data for | `today` (the current business date), `previous` (the business day before: the pack calendar's), or `load` (the business date of the load that triggered an `after-load` run) |
-| Send as | `html` (the tables are in the email), `pdf` or `xlsx` (the file is attached; the body says what it holds) |
+| Send as | `html` (the tables are in the email), `pdf`, `xlsx` or `jsonl` (the file is attached; the body says what it holds; `jsonl`: the rows, one a line, [DATA_FORMATS.md](DATA_FORMATS.md)) |
 | To | user names and `role:NAME` (everyone with the role, today: a role is the group). **Never an email address**: the form refuses it (`DRS-9061`) |
 | View state | taken from the report or view you pressed Subscribe on: slicers, selections, drill path, carried values; a view's controls and filters |
 

@@ -182,7 +182,7 @@ The currencies a bank reports in are **built ahead** (USD, EUR, CAD, JPY and GBP
 hierarchy keeps its trades' PVs **summed per trade currency**: its P&L in any currency `X` is then
 `Σ_c [PVsum_c(s) × FX_c→X(s) − PVbase_c × FX_c→X(base)]`, the same, to the cent, as converting every trade on its own. The VaR page's
 **Reporting currency** picker (or `VAR BANK IN EUR`) moves every figure to that currency, and its tab **In other currencies** puts them
-side by side: on the demo lake the bank's 126.5 million USD is 110.4 million EUR. A trade page says its **Trade currency**: the currency
+side by side: on the test data (2026-09-30) the bank's 112.0 million USD is 111.8 million EUR. A trade page says its **Trade currency**: the currency
 its PVs come in. The guide's [section 15.11](../guides/VAR_GUIDE.md#1511-reporting-currencies-built-ahead-per-trade-currency-totals-and-the-picker-as-built-294)
 has the details.
 
@@ -193,19 +193,21 @@ trade wins, and the figures say *intraday*. The official end-of-day numbers stay
 
 ## 4. A worked example on the demo data
 
-From a scratch server over the default demo lake (`drishti.py lake demo`, which moves the test data's sixty business days to end
-today): business date **2026-10-26**, batch `B-2026-10-26-01`, scenario set `HS-509`.
+From a scratch server over the demo lake built on the test data's own date (`drishti.py lake demo --as-of data`, as the
+[VaR guide](../guides/VAR_GUIDE.md) and [tutorial 25](../tutorials/25-var-from-the-bank-to-a-trade.md) use it): business date
+**2026-09-30**, batch `B-2026-09-30-01`, scenario set `HS-509`. (The default `lake demo` moves the days to end today, and trades
+matured since drop out, so its figures differ.)
 
 **The bank.** `VAR BANK <GO>` (or `drishti.py var show BANK`):
 
 ```text
-VAR BANK  ·  Drishti Bank  ·  node  ·  2026-10-26
-  VaR 99%   126,537,611 USD   (the 6th worst of 509)
-  ES 97.5%   172,532,570 USD   (mean of the 13 worst)
-  limit      150,000,000 USD   use 84.4%
-  parts      2 division   standalone sum 138,781,350   diversification 12,243,739
-  backtest   green  3 exceptions in 249 days   Kupiec p 0.753   Christoffersen p 0.786
-  8566 trades in 7115 positions
+VAR BANK  ·  Drishti Bank  ·  node  ·  2026-09-30
+  VaR 99%   112,041,646 USD   (the 6th worst of 509)
+  ES 97.5%   160,143,809 USD   (mean of the 13 worst)
+  limit      150,000,000 USD   use 74.7%
+  parts      2 division   standalone sum 130,101,896   diversification 18,060,250
+  backtest   amber  5 exceptions in 249 days   Kupiec p 0.160   Christoffersen p 0.076
+  9572 trades in 7993 positions
 ```
 
 (*Drishti Bank* is the root node's name in the demo's hierarchy data; `drishti.var.root-name` sets another, 2.9.4.)
@@ -220,36 +222,41 @@ and links the position). `drishti.var.inputs` can pin what each system sends, as
 `all` is the whole set, 509 in the demo) and `drishti.var.confidence` sets VaR at 99% or 95%; every label follows the answer, and
 `window=` or `confidence=` on one request compares without changing anything official (VAR_GUIDE.md section 18.5).
 
-Read it as: on the 6th worst of the 509 days the bank would lose 126.5 million; the 13 worst days lose 172.5 million on average, so
-the tail beyond VaR is fat; the VaR uses 84.4% of the 150 million limit; the model had 3 exceptions in the last 249 days (green).
+Read it as: on the 6th worst of the 509 days the bank would lose 112.0 million; the 13 worst days lose 160.1 million on average, so
+the tail beyond VaR is fat; the VaR uses 74.7% of the 150 million limit; the model had 5 exceptions in the last 249 days (amber: 2.5
+are expected at 99%).
 
-**Diversification depends on how you cut the bank.** The same 126.5 million against different parts:
+**Diversification depends on how you cut the bank.** The same 112.0 million against different parts:
 
 | Cut by | Sum of the parts' standalone VaRs | Diversification |
 |---|---|---|
-| 2 divisions | 138.8 m | 12.2 m |
-| 4 legal entities (`drishti.py var tree --hierarchy LEGAL`): LE-NY 135.9 m, LE-LDN 29.7 m, LE-TKY 10.0 m, LE-FRA 1.8 m | 177.4 m | **50.9 m** |
-| 10 desks (`drishti.py var parts BANK --by desk`) | 327.7 m | 201.2 m |
+| 2 divisions | 130.1 m | 18.1 m |
+| 4 legal entities (`drishti.py var tree --hierarchy LEGAL`): LE-NY 144.3 m, LE-LDN 48.4 m, LE-TKY 10.0 m, LE-FRA 1.5 m | 204.1 m | **92.1 m** |
+| 10 desks (`drishti.py var parts BANK --by desk`) | 367.9 m | 255.8 m |
 
-The finer the cut, the more the parts offset each other. LE-NY alone (135.9 m) has a larger VaR than the bank.
+The finer the cut, the more the parts offset each other. LE-NY alone (144.3 m) has a larger VaR than the bank.
 
-**Who drives it and who hedges.** `drishti.py var parts BANK --by desk`: the credit desk's component is 91.6 million (72.4% of the
-bank's VaR), rates 29.6 million (23.4%). Four desks have negative components: inflation (−6.9 m), money markets (−2.4 m), structured
-(−1.9 m) and FX (−0.05 m); they gain on the bank's worst days. Commodities has a positive component (3.0 m) but an incremental VaR of
-**−10.7 million**: take the whole desk out and the bank's VaR rises.
+**Who drives it and who hedges.** `drishti.py var parts BANK --by desk`: the credit desk's component is 89.5 million (79.9% of the
+bank's VaR), equity derivatives 13.3 million (11.8%). Three desks have negative components: structured (−6.6 m), money markets (−3.9 m)
+and FX (−1.8 m); they gain on the bank's worst days. Rates has a positive component (7.2 m) but an incremental VaR of **−17.5
+million**: take the whole desk out and the bank's VaR rises (FX's is −28.4 million).
 
-**A desk by book.** `drishti.py var parts DESK:RATES`: VaR 64.4 million; `BOOK-RATES-3` alone 56.3 m and 83.4% of the desk;
-`BOOK-RATES-1` alone 28.6 m but a component of 0.09 m and an incremental VaR of −6.9 m: it hedges the other two.
+**A desk by book.** `drishti.py var parts DESK:RATES`: VaR 74.6 million; `BOOK-RATES-3` is the riskiest alone (61.5 m) but
+contributes the least (18.7 m, 25.1%): its worst days are not the desk's; `BOOK-RATES-1` contributes most (30.6 m, 41.0%) yet has an
+incremental VaR of −5.1 m: take it out and the desk's VaR rises.
 
-**One trade.** `VAR SCOPE DESK:RATES - TRD:MX-30000121 <GO>`: 64,605,209, so this swap's incremental VaR in its desk is −170,758.
+**One trade.** `VAR SCOPE DESK:RATES - TRD:MX-30000121 <GO>`: 74,720,890, so this swap's incremental VaR in its desk is −87,210.
 
-**From the credit side.** `drishti.py var show CPTY:CP-ALDERSHOT`: the 425 live trades with Aldershot Pension Trust, across desks, have
-a VaR of 22.2 million (ES 34.5 m). The same counterparty's peak PFE is 395.3 million ([Counterparty credit risk](counterparty-credit-risk.md#4-a-worked-example-on-the-demo-data)):
-two different questions about the same trades.
+**From the credit side.** `drishti.py var show CPTY:CP-ALDERSHOT`: the 469 live trades with Aldershot Pension Trust, across desks, have
+a VaR of 25.1 million (ES 37.3 m). The same counterparty's peak PFE on the same date is 400.0 million (`drishti.py exposure show
+CPTY:CP-ALDERSHOT`; [Counterparty credit risk](counterparty-credit-risk.md#4-a-worked-example-on-the-demo-data)): two different questions
+about the same trades.
 
-**What the data hasn't told you.** The bank uses 84.4% of its 150 million limit, in the Management tree (`VAR BANK`) and in the
-Legal tree (`drishti.py var tree --hierarchy LEGAL`) alike: one firm-wide limit, two ways of splitting it. In the Legal tree, `BOOK-COMM-1` is at **222%** of its limit and `BOOK-EQD-1` at 133%, while their desks are within
-theirs: a breach a desk-level report would never show.
+**What the data hasn't told you.** The bank uses 74.7% of its 150 million limit, in the Management tree (`VAR BANK`), in the
+Legal tree (`drishti.py var tree --hierarchy LEGAL`) and in the limit letters' tree (`--hierarchy LL`, 2.9.5) alike: one firm-wide
+limit, three ways of splitting it. The same book is held to different limits in each: `BOOK-RATES-2` uses 90.8% of its limit in the
+Management tree and 93.6% in the Legal tree, and `BOOK-FX-3` 95.1% in both, the closest to a breach on 2026-09-30, while its desk
+(G10 and EM FX) uses 80.2%: a book near its limit that a desk-level report would not show.
 
 ## 5. Questions to ask your data
 

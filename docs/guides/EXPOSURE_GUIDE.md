@@ -547,7 +547,7 @@ Every setting is under `drishti.ccr.exposure` in `application.yaml` (and [CONFIG
 
 | Setting | Default | Meaning |
 |---|---|---|
-| `enabled` | `true` (`DRISHTI_EXPOSURE_ENABLED`) | the engine, the connectors `exposure-engine` and `exposure-whatif` |
+| `enabled` | `true` (`DRISHTI_EXPOSURE_ENABLED`) | the engine, the connectors `exposure-engine` and `exposure-whatif`; off: every exposure request answers `403 DRS-5002` |
 | `confidence` | `[0.95, 0.99]` | PFE confidences computed for every answer (any q in (0.5, 1) may be asked) |
 | `limit-confidence` | `0.95` | the PFE credit limits are set on; the default q |
 | `rank-rule` | `kth` | `kth` (the ⌈P·q⌉-th smallest) or `interpolated` |

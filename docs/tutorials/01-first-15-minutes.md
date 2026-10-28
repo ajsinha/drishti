@@ -88,7 +88,7 @@ Connector files:
 
 You should see a line for each of the 85 tables, then `Demo lake ready` with sixty business dates ending on *your* today's business date (the summary above is from a
 sixty-day run that kept the test data's own dates, 2026-07-08 to 2026-09-30; the table lines' row counts, captured on the seven-day lakes of 2.5.0, are left out).
-It takes about 15 minutes and about 2.2 GB of disk. The other outputs in these tutorials were captured on Saturday 17 October 2026 on the seven-day lakes of 2.5.0
+It takes about 15 minutes and about 3.4 GB of disk. The other outputs in these tutorials were captured on Saturday 17 October 2026 on the seven-day lakes of 2.5.0
 (Friday **2026-10-16** back to **2026-10-07**): on the sixty-day lakes the ids are the same, but a captured count or value may differ.
 
 Now ask the machine whether it is ready. `doctor` prints green, yellow and red lines, each red or yellow with a fix:

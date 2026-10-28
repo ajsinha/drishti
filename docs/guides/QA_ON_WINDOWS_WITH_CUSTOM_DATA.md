@@ -52,7 +52,7 @@ Names used below:
 | **Python 3.12 or 3.13** | PowerShell: `py -3.13 --version` (or `py -3.12 --version`) |
 | **IntelliJ IDEA** (for the server) and **PyCharm** (for the console and the tools) | both start |
 | pip and Maven reach your **internal mirror** | if a download fails, see section 7 |
-| 8 GB free memory, 5 GB free disk (the sixty-day demo lakes take about 2.2 GB) | Task Manager |
+| 8 GB free memory, 5 GB free disk (the sixty-day demo lakes take about 3.4 GB) | Task Manager |
 
 ---
 
@@ -172,7 +172,7 @@ days** of the committed test data (moved to end on the date of your newest ENDUR
    ```
 
 You should see three numbered steps: `1/3 the demo lakes …` (the longest: about 15 minutes on a fast, idle machine and up to 45 minutes
-on a busy laptop, for sixty days; `data\delta` ends at about 2.2 GB), `2/3 your ENDUR files (N: <first date> … <last date>)` with one `lake-build ok … rejected=0` line per file, and `3/3 done in … s`.
+on a busy laptop, for sixty days; `data\delta` ends at about 3.4 GB), `2/3 your ENDUR files (N: <first date> … <last date>)` with one `lake-build ok … rejected=0` line per file, and `3/3 done in … s`.
 
 - Without your files (synthetic data only): leave out `--endur-dir …`; the lakes then end on today's business date.
 - To keep the synthetic ENDUR trades beside yours: add `--keep-synthetic-endur`.

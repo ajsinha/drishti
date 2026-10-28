@@ -485,7 +485,7 @@ $ drishti.py exposure official
   "runId": "XR-2026-09-30-01",
   "confidence": 0.95,
   "collateralModel": "lagged",
-  "trades": "exposure/official/2026-09-30-trades-v1.json",
+  "trades": "exposure/official/2026-09-30-trades-v1.jsonl",
   "scopes": {
     "NSET:NS-ALDERSHOT-FRA": {"ce": 0, "epe": 1837009, "eepe": 18431387, "peakEe": 19151377, "peakPfe95": 30610762, ...},
     ...
@@ -509,8 +509,12 @@ $ drishti.py exposure retention        (abridged)
 }
 ```
 
-The record holds 124 scopes (74 netting sets, 23 counterparties, 22 groups, the four legal entities and the bank's management node),
-and is also appended to the Delta tables `risk-results/exposure-official` and `risk-results/exposure-official-cpty` of the lake. A
+The record holds 124 scopes (74 netting sets, 23 counterparties, 22 groups, the four legal entities and the bank's management node)
+and, since 2.9.5, the 43 nodes of the limit letters, a hierarchy built from the exposure paths' `LIMIT_LETTER` and `DESK` (167 in all;
+with the market-risk pack's `risk-hierarchy` in the lake too, every MGMT and LEGAL node is captured as well: 250 scopes on the test data,
+`LL:LL~LL-0011` among them). It is also appended to the tables `risk-results/exposure-official` and `risk-results/exposure-official-cpty`
+of the lake: Delta by default (`"published": "… (Delta version 0)"`), Iceberg with `drishti.ccr.exposure.official.format: iceberg`
+([EXPOSURE_GUIDE.md section 20](../guides/EXPOSURE_GUIDE.md); [tutorial 29](29-var-on-iceberg.md) for VaR's). A
 second capture of the same run is `unchanged`; a new run of the date makes `resultVersion` 2. `--capture` is for administrators.
 
 The settings (`drishti-server/src/main/resources/application.yaml`):
