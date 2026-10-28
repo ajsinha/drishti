@@ -17,6 +17,21 @@
 
 ## 2.9.5 (unreleased)
 
+### Connector upgrades
+
+- **Connector upgrades are airtight (product owner, after the 2.9.4 drill met a var-whatif file without `ccy`).** A file Drishti writes from
+  a pack template carries its fingerprint in its own text (`# drishti-template: pack=… template=… text=…`, so it survives the content-store
+  overlay and the history): at an upgrade, a file nobody edited is replaced in full by the new template (changed values included), the
+  file before kept beside it (`.before-upgrade-….bak`) and in the history, one log line, audited as `connector-template-upgrade`. An
+  edited file gets every key the template has at any depth: settings, kinds, layout lists, description, and a reactive connector's
+  `kinds.*.params`, `kinds.*.result`, `reads`, `engine`, `triggers`, `coalesce`, `cache`, `limits`, `history`; its values are never
+  overwritten, lists keep their order and gain the missing items. Conflicts are listed in **Admin → Connectors → Template updates** with
+  **Use the pack's value** per key (`POST …/template-updates/<name>/use-template-value`). Reset to pack default and Regenerate write a
+  stamped file again. **Tests:** `TemplateStampTest`, `TemplateMergeTest`, `TemplateUpdatesTest`, and the upgrade drill stage
+  `ConnectorUpgradeTest` (a server on release 2.9.4's generated files, `tools/connector_upgrade_fixture.py`, with an edited risk-store and
+  the edited 2.9.3 var-whatif: every unedited file equals the current template, the edits stay, var-result, var-whatif with `ccy` and
+  exposure-result answer). **Docs:** CONNECTOR_FILES "Upgrades", OPERATIONS, the Windows QA guide's upgrade note.
+
 ### Iceberg
 
 Delta stays the default lake format everywhere; Iceberg is chosen only by configuration (a connector file, `lake build --format iceberg`,

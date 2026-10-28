@@ -1,0 +1,27 @@
+# Generated at first start from the connector template of pack 'market-data'. Edit it freely: it is never overwritten.
+plugin: delta
+enabled: ${DRISHTI_LAKE_ENABLED:true}
+kinds:
+- ir-curve
+- repo-curve
+- fx-spot
+- fx-forward-curve
+- fx-vol-surface
+- ir-vol-cube
+- cap-vol-surface
+- equity
+- equity-index
+- dividend-curve
+- equity-vol-surface
+- credit-curve
+- inflation-index
+- inflation-curve
+- commodity
+- commodity-curve
+- commodity-vol-surface
+- rate-fixing
+- bond
+- correlation-matrix
+settings:
+  root: ${DRISHTI_DELTA_ROOT:${drishti.data.dir:./data}/delta}
+  domain: market

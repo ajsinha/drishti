@@ -250,4 +250,43 @@ class TemplateUpdatesTest {
         assertThat(b.files().source("risk-store")).isEqualTo("shared");
         assertThat(b.updates().drift("risk-store").orElseThrow().additive()).isFalse();
     }
+
+    /** 2.9.5: a stamped file nobody edited follows its pack's new template in full, changed values included, the file before kept. */
+    @Test
+    void anUneditedStampedFileIsReplacedByTheNewTemplate(@TempDir Path dir) throws Exception {
+        Path conf = Files.createDirectories(dir.resolve("connectors"));
+        Path pack = Files.createDirectories(dir.resolve("packs/risk"));
+        Files.writeString(pack.resolve("pack.yaml"), PACK.replace("db://pack-default", "db://old-default"));
+        ConnectorFiles gen = new ConnectorFiles(conf, dir.resolve("state"));
+        var old = new com.ash.drishti.packs.PackLoader().load(dir.resolve("packs"), List.of("risk"));
+        String text = com.ash.drishti.packs.ConnectorBootstrap.generate(gen, "risk-store", "risk", old.get(0).connectorTemplates().get("risk-store"));
+        Node n = node(dir, null, TemplateUpdates.Mode.ADDITIVE, PACK, text);                  // the pack moved on: url changed, a pristine file
+        TemplateUpdates.Drift d = n.updates().drift("risk-store").orElseThrow();
+        assertThat(d.pristine()).isTrue();
+        assertThat(d.followsPack()).isTrue();
+        assertThat(n.updates().check()).containsExactly("risk-store");
+        assertThat(n.files().read("risk-store").settings()).containsEntry("url", "db://pack-default");    // the changed value too
+        assertThat(com.ash.drishti.packs.TemplateStamp.pristine(n.files().text("risk-store"))).isTrue();
+        assertThat(audited).anyMatch(a -> a.startsWith("system connector-template-upgrade risk-store"));
+        try (var s = Files.list(conf)) {
+            assertThat(s.map(f -> f.getFileName().toString())).anyMatch(f -> f.startsWith("risk-store.yaml.before-upgrade-"));
+        }
+        assertThat(n.updates().drift("risk-store").orElseThrow().any()).isFalse();
+        assertThat(n.updates().check()).isEmpty();
+    }
+
+    @Test
+    void useThePacksValueSetsOneConflictingKeyAndKeepsTheRest(@TempDir Path dir) throws Exception {
+        Node n = node(dir, null, TemplateUpdates.Mode.OFF);
+        n.updates().addMissing("risk-store", null, "admin");
+        TemplateUpdates.Drift d = n.updates().drift("risk-store").orElseThrow();
+        assertThat(d.toMap().get("conflicting").toString()).contains("where=settings").contains("key=url");
+        n.updates().useTemplateValue("risk-store", "settings", "url", d.etag(), "admin");
+        ConnectorFiles.Definition after = n.files().read("risk-store");
+        assertThat(after.settings()).containsEntry("url", "db://pack-default").containsEntry("layout.price-basket", "p");
+        assertThat(after.kinds()).contains("price-basket");                                       // the obsolete kind is still the admin's to remove
+        assertThat(audited).anyMatch(a -> a.contains("used pack risk's value for url"));
+        org.assertj.core.api.Assertions.assertThatThrownBy(() -> n.updates().useTemplateValue("risk-store", "settings", "url", null, "admin"))
+                .hasMessageContaining("no conflicting setting");
+    }
 }

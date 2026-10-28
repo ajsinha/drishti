@@ -46,6 +46,25 @@
       });
       return;
     }
+    if (b.hasAttribute('data-use-template')) {
+      var row = b.closest('[data-conflict]');
+      var drift = b.closest('[data-drift]');
+      var key = row.getAttribute('data-conflict');
+      var n = drift.getAttribute('data-drift');
+      if (!window.confirm('Use the pack\'s value for ' + key + ' in ' + n + '? The current text is kept in the history.')) { return; }
+      b.disabled = true;
+      fetch('/admin/connectors/api/template-updates/' + encodeURIComponent(n) + '/use-template-value', {
+        method: 'POST', headers: { 'Content-Type': 'application/json', 'If-Match': drift.getAttribute('data-etag') },
+        body: JSON.stringify({ where: row.getAttribute('data-where'), key: key })
+      }).then(function (r) {
+        return r.json().catch(function () { return {}; }).then(function (body) { return { ok: r.ok, status: r.status, body: body }; });
+      }).then(function (r) {
+        if (!r.ok) { say(why(r), true); b.disabled = false; return; }
+        say(n + ': ' + key + ' now has the pack\'s value.');
+        setTimeout(function () { location.reload(); }, 800);
+      });
+      return;
+    }
     var act = b.getAttribute('data-act');
     var card = b.closest('[data-drift]');
     if (!act || !card) { return; }

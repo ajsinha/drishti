@@ -1,0 +1,12 @@
+# Generated at first start from the connector template of pack 'market-data'. Edit it freely: it is never overwritten.
+plugin: feed
+enabled: ${DRISHTI_FEED_FRED:false}
+kinds:
+- rate-fixing
+settings:
+  feed: fred
+  user-agent: ${drishti.branding.product:feed} public data feed connector
+  stale-after: 4d
+  refresh-minutes: '60'
+  api-key: ${FRED_API_KEY:}
+  series: ${DRISHTI_FRED_SERIES:DGS10,DFF}

@@ -270,6 +270,12 @@ keeping every edit, and logs it; with `notify` it only lists them. Either way **
 drifted connector beside its template with *Add missing kinds*, *Regenerate from template*, *Remove obsolete kinds* and *Fix all
 additive*. See [CONNECTOR_FILES.md, Template updates](../connectors/CONNECTOR_FILES.md#template-updates).
 
+From 2.9.5 an upgrade is airtight ([CONNECTOR_FILES.md, Upgrades](../connectors/CONNECTOR_FILES.md#upgrades-295)): a file nobody edited
+carries a stamp (`# drishti-template: …`) and is replaced in full by the pack's new template, the file before kept beside it
+(`.before-upgrade-….bak`), logged and audited (`connector-template-upgrade`); an edited file gets every key its template gained at any
+depth (settings, kinds, layout lists, a reactive connector's parameters, result, reads, triggers, limits …) and keeps every value it has.
+Where its value and the pack's differ, Template updates lists the key under *changed* with **Use the pack's value**.
+
 ### What changes live (no restart)
 
 Drishti is meant to run for months. Anything you can write as a file or set on an Admin page is noticed while the server runs; only the

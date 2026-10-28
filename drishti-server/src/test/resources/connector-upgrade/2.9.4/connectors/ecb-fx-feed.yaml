@@ -1,0 +1,10 @@
+# Generated at first start from the connector template of pack 'market-data'. Edit it freely: it is never overwritten.
+plugin: feed
+enabled: ${DRISHTI_FEED_ECB_FX:false}
+kinds:
+- fx-spot
+settings:
+  feed: ecb-fx
+  user-agent: ${drishti.branding.product:feed} public data feed connector
+  stale-after: 4d
+  refresh-minutes: '60'

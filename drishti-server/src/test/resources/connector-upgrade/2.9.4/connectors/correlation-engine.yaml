@@ -1,0 +1,62 @@
+# Generated at first start from the connector template of pack 'market-data'. Edit it freely: it is never overwritten.
+plugin: reactive
+mode: reactive
+enabled: ${DRISHTI_LAKE_ENABLED:true}
+description: 'The correlations of a factor set computed when asked from its factors'' daily closes (log returns over a window, Pearson or Ledoit-Wolf), by the server''s Java engine, as the viewer: CORRC CORR-EU-EQ <GO>'
+kinds:
+  correlation-result:
+    compute: correlation
+    params:
+      window:
+        type: int
+        default: 0
+        min: 0
+        max: 5000
+      estimator:
+        type: enum
+        options:
+        - pearson
+        - ledoit-wolf
+        default: pearson
+    result:
+      required:
+      - AVERAGE
+      - PAIRS
+      - WINDOW
+      types:
+        AVERAGE: number
+        PAIRS: list
+        WINDOW: number
+reads:
+- kind: correlation-matrix
+  as: set
+  id: '{id}'
+- kind: equity
+  as: equities
+  ids: '{inputs.set.EQUITY_IDS}'
+  limit: 200
+- kind: fx-spot
+  as: fx
+  ids: '{inputs.set.FX_IDS}'
+  limit: 200
+engine:
+  type: java
+  class: com.ash.drishti.compute.reactive.analytics.CorrelationEngine
+  version: '1.0'
+triggers:
+- 'on': data-version
+  kinds:
+  - correlation-matrix
+  - equity
+  - fx-spot
+  affects: all
+coalesce:
+  quiet: 250ms
+  max-wait: 2s
+cache:
+  results: 500
+  ttl: 1h
+limits:
+  timeout: 30s
+  wait: 5s
+  max-inflight-per-user: 4

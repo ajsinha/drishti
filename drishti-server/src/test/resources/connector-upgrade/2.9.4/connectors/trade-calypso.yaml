@@ -1,0 +1,15 @@
+# Generated at first start from the connector template of pack 'trading'. Edit it freely: it is never overwritten.
+plugin: delta
+enabled: ${DRISHTI_LAKE_ENABLED:true}
+kinds:
+- trade
+settings:
+  root: ${DRISHTI_DELTA_ROOT:${drishti.data.dir:./data}/delta}
+  domain: trading
+  layout.trade.columns: TRADE_ID,SOURCE_SYSTEM,PRODUCT_TYPE,PRODUCT_SUB_TYPE,PRODUCT_GROUP,TRADE_STATUS,TRADE_VERSION,BUY_SELL_CODE,CURRENCY,QUANTITY,TRADE_DATE,MATURITY_DATE,COUNTERPARTY,LEGAL_ENTITY,PORTFOLIO,TRADER_ID,NOTIONAL,INDEX_NAME
+  layout.trade.sort-by: id
+  layout.trade.file-rows: '250000'
+  layout.trade.row-group-rows: '1000'
+  union: 'true'
+  table.trade: trade_calypso
+  source-name: trade-calypso

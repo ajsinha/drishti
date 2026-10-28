@@ -637,11 +637,13 @@ the running server without a restart; only that connector restarts. The model, t
 
 - **Templates and what gets generated.** A pack may carry a suggestion for each connector it names: the `connectors:` **mapping** of definitions that every pack
   shipped with Drishti uses (read as the pack's templates), or `connector-templates:` beside a plain list of names. At the first start, for each connector a pack
-  names, the server writes `config/connectors/<name>.yaml` from the template **if no file of that name exists**, and never overwrites a file afterwards (it is logged and
-  audited as `connector-generated`). The file starts with the line `# Generated at first start from the connector template of pack '<pack>'. Edit it freely: it is
-  never overwritten.`, and the server keeps a marker of what it generated in `<data>/connectors/generated/<name>.properties`. So a shipped pack works out of the box.
-  From then on the **file is the site's**: it replaces the template wholesale (nothing is merged), and an edit of the pack's template (a new version, or a
-  live edit of `pack.yaml`) does not touch it.
+  names, the server writes `config/connectors/<name>.yaml` from the template **if no file of that name exists**, and never overwrites an edited file afterwards (it is logged and
+  audited as `connector-generated`). The file starts with the line `# Generated at first start from the connector template of pack '<pack>'. Edit it freely: an edited file is
+  never overwritten; an unedited one follows the pack's template at an upgrade.`, then a stamp line (`# drishti-template: …`, the template's fingerprint and the
+  text's hash), and the server keeps a marker of what it generated in `<data>/connectors/generated/<name>.properties`. So a shipped pack works out of the box.
+  A file nobody edited follows the pack: a new version of the template replaces it (the file before kept beside it). Once edited, the **file is the site's**: it
+  replaces the template (its values are never overwritten), and an upgrade only adds the keys the template gained, at any depth
+  ([CONNECTOR_FILES.md, Upgrades](../connectors/CONNECTOR_FILES.md#upgrades-295)).
 - **Back to the pack's template.** *Reset to pack default* (Admin → Connectors, or `drishti.py connector reset <name>`) rewrites the file from the pack's current template,
   keeping the earlier text in `<data>/connectors/history/<name>.<timestamp>.yaml`:
 

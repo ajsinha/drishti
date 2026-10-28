@@ -80,6 +80,16 @@ public class TemplateUpdatesController {
         return done(updates.removeObsolete(name, unquote(ifMatch), p.user()));
     }
 
+    /** Use the pack's value: body {@code {where: settings|definition, key}}, one conflicting key set to the template's value. */
+    @PostMapping("/{name}/use-template-value")
+    public Map<String, Object> useTemplateValue(@PathVariable String name, @org.springframework.web.bind.annotation.RequestBody Map<String, Object> body,
+            @RequestHeader(value = "If-Match", required = false) String ifMatch, @RequestAttribute(Principal.ATTRIBUTE) Principal p) {
+        entitlements.requireAdmin(p);
+        String where = body == null || body.get("where") == null ? "settings" : String.valueOf(body.get("where"));
+        String key = body == null || body.get("key") == null ? "" : String.valueOf(body.get("key"));
+        return done(updates.useTemplateValue(name, where, key, unquote(ifMatch), p.user()));
+    }
+
     @PostMapping("/fix-all")
     public Map<String, Object> fixAll(@RequestAttribute(Principal.ATTRIBUTE) Principal p) {
         entitlements.requireAdmin(p);

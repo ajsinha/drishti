@@ -163,7 +163,7 @@ in `config/connectors.examples/` declares one.
 start):
 
 ```yaml
-# Generated at first start from the connector template of pack 'trading'. Edit it freely: it is never overwritten.
+# Generated at first start from the connector template of pack 'trading'. Edit it freely: an edited file is never overwritten; an unedited one follows the pack's template at an upgrade.
 plugin: delta
 enabled: "${DRISHTI_LAKE_ENABLED:true}"
 kinds:
@@ -470,8 +470,9 @@ connectors: connector file trade-endur.yaml generated from the template of pack 
 ```
 
 **Edited or not.** A generated file you never edited follows its pack: when the pack's template changes (a new release), the file is
-written again from it (its text kept in the history). A file you edited is never overwritten; the Connectors page and Health flag that
-the pack now suggests something else, and **Reset to pack default** takes the suggestion when you want it. If you delete a generated
+written again from it (its text kept in the history). A file you edited is never overwritten: it gets what the template gained, every
+edit kept ([Upgrades](#upgrades-295)); the Connectors page and Health flag that the pack now suggests something else, and **Reset to pack
+default** takes the suggestion when you want it. If you delete a generated
 file by hand while the pack still suggests it, it is written again at the next start. To stop generating files altogether, set
 `drishti.sources.connectors-generate: false`; the templates are then used in memory.
 
@@ -511,7 +512,52 @@ drifted, and the Connectors page links to it) lists every drifted connector with
 template's text replaces the connector's; asks first), **Remove obsolete kinds** (asks first) and **Fix all additive**. Every button
 keeps the old text in the history (Restore on the connector's page puts it back) and sends the version read, so a change made
 meanwhile is a `409 DRS-5032`. REST: `GET /api/v1/admin/connectors/template-updates`, `POST …/template-updates/<name>/add-missing`,
-`…/regenerate`, `…/remove-obsolete`, `POST …/template-updates/fix-all`.
+`…/regenerate`, `…/remove-obsolete`, `…/use-template-value`, `POST …/template-updates/fix-all`. What an upgrade does to unedited and
+edited files, at any depth: [Upgrades](#upgrades-295).
+
+### Upgrades (2.9.5)
+
+A new release can change a pack's connector templates (2.9.4 gave var-whatif the parameter `ccy`; a file generated before it refused the
+reporting-currency what-if with `DRS-5205`). From 2.9.5 an upgrade keeps every connector file in step, with two rules:
+
+**1. A file nobody edited follows the pack.** Drishti stamps every file it writes from a template with one line after the header:
+
+```
+# Generated at first start from the connector template of pack 'market-risk'. Edit it freely: an edited file is never overwritten; an unedited one follows the pack's template at an upgrade.
+# drishti-template: pack=market-risk template=6f1c0a9d2e7b4c3a text=1b8e4f0c9a2d7e65
+```
+
+`template` is the fingerprint of the template the file came from, `text` the hash of the text below the line as written. The stamp is
+part of the text, so it travels with it: the file on disk, a shared edit in the content store (section 8), the history, a copy to another
+server. At start (before the server answers) and at every template check, a file whose text below the stamp still has that hash was
+never edited: when its template's fingerprint changed it is **replaced in full** by the new template, changed values included. The file
+before is kept beside it as `<name>.yaml.before-upgrade-<yyyyMMdd-HHmmss>.bak` and in the history; the log has one line, the audit trail
+`connector-template-upgrade`, and *Recent automatic updates* the notice. A CRLF save is not an edit. Files of an older generation without
+the stamp are recognised by their marker in `<data dir>/connectors/generated/` in the same way, and stamped when rewritten. **Reset to
+pack default** and **Regenerate from template** write a stamped file again, so a connector you put back follows the pack once more.
+
+**2. An edited file gets every missing key, at any depth.** The additive merge reaches the whole definition: kinds, settings, the
+layout lists (`layout.<kind>.columns`, `.vectors`), a missing `description`, and a reactive connector's computation: `kinds.<kind>.params`,
+`kinds.<kind>.result`, `reads`, `engine`, `triggers`, `coalesce`, `cache`, `limits`, `history`. Any key the template has and the file lacks
+is added. A value the file has is never overwritten. Lists are kept in the file's order and get the template's missing items appended, as
+the layout lists do; a mapping in a list that names the same thing as one of the file's (the same `kind`, `name`, `id`, `topic` or
+`connector`, such as var-whatif's read of `var-result`) is merged into it rather than added twice.
+
+**Conflicts.** The same key with a different value (an administrator's edit, or a value the pack changed under an edited file) is listed
+in **Admin → Connectors → Template updates** under *changed*, settings and definition paths alike (`refresh-seconds`, `limits.wait`,
+`reads[0].id`), each with a **Use the pack's value** button: that one key takes the template's value, every other edit stays, the old
+text goes to the history and the audit trail records `connector-template-update`. REST: `POST
+/api/v1/admin/connectors/template-updates/<name>/use-template-value` with `{"where": "settings"|"definition", "key": "<key>"}` and the
+connector's version as `If-Match`.
+
+**Example.** var-whatif, generated by 2.9.3 and edited (`limits.wait: 45s`), after the 2.9.5 upgrade: `kinds.var-whatif.params.ccy` and
+the new triggers' kinds are added, `limits.wait` stays `45s`, and `reads[0].id` (`{id}` in the file, `{id}~ccy={params.ccy}` in the
+template) is listed as a conflict until an administrator uses the pack's value.
+
+**The upgrade drill.** `ConnectorUpgradeTest` (in the drill's Java stage) starts a server on the connector files release 2.9.4's server
+generated (`drishti-server/src/test/resources/connector-upgrade/2.9.4/`, written by `tools/connector_upgrade_fixture.py --rev
+<release>`, with an edited risk-store and the edited 2.9.3 var-whatif) and checks that every unedited file is the current template, the
+edited ones keep their edits and gain the rest, and var-result, var-whatif with `ccy` and exposure-result answer.
 
 ### A pack names a connector nobody defined
 

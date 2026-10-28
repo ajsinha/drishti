@@ -97,6 +97,17 @@ async def api_template_fix_all(request: Request):
         return _problem(e)
 
 
+@router.post("/api/template-updates/{name}/use-template-value")
+async def api_template_use_value(request: Request, name: str):
+    """Use the pack's value for one conflicting key: {where: settings|definition, key}."""
+    body = await json_body(request)
+    pick = {"where": str(body.get("where") or "settings"), "key": str(body.get("key") or "")}
+    try:
+        return await _server(request, "POST", f"/template-updates/{quote(name)}/use-template-value", pick, headers=_match(request), timeout=60.0)
+    except BackendError as e:
+        return _problem(e)
+
+
 @router.post("/api/template-updates/{name}/{action}")
 async def api_template_action(request: Request, name: str, action: str):
     if action not in _TEMPLATE_ACTIONS:

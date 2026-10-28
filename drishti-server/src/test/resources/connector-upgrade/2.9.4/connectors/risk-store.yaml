@@ -1,0 +1,30 @@
+# Generated at first start from the connector template of pack 'market-risk'. Edit it freely: it is never overwritten.
+plugin: delta
+enabled: ${DRISHTI_LAKE_ENABLED:true}
+kinds:
+- stress-scenario
+- stress-result
+- frtb-sensitivity
+- pnl-explain
+- trade-valuation
+- portfolio
+- pnl-vector
+- scenario-pv
+- fx-scenario
+- scenario-set
+- risk-hierarchy
+settings:
+  root: ${DRISHTI_DELTA_ROOT:${drishti.data.dir:./data}/delta}
+  domain: risk
+  layout.trade-valuation.columns: VALUATION_ID,TRADE_ID,SOURCE_SYSTEM,PRODUCT_TYPE,PRODUCT_GROUP,PORTFOLIO,DESK,COUNTERPARTY,NETTING_SET,TRADER_ID,BUY_SELL_CODE,TRADE_STATUS,CURRENCY,NOTIONAL,MTM,MTM_CURRENCY,PNL_1D,DV01,TRADE_DATE,MATURITY_DATE,VALUATION_DATE
+  layout.trade-valuation.sort-by: id
+  layout.trade-valuation.file-rows: '250000'
+  layout.trade-valuation.row-group-rows: '1000'
+  layout.pnl-vector.columns: VALUE_TYPE,GRAIN,TRADE_ID,POSITION_ID,CURRENCY,SOURCE_SYSTEM,SECURITY_ID,INSTRUMENT,LEGAL_ENTITY,DIVISION,DESK,TT_BOOK,PORTFOLIO,STRATEGY,PRODUCT_GROUP,PRODUCT_TYPE,COUNTERPARTY,DIRECTION,QUANTITY,PV,TAGS,TRADE_STATUS,MATURITY_DATE,STATUS,REPORTING_CCY,SCENARIO_SET_ID,BATCH_ID,RUN_KIND,COMPUTED_AT,TRADE_IDS,TRADE_CURRENCY
+  layout.pnl-vector.vectors: PNL
+  layout.scenario-pv.columns: VALUE_TYPE,GRAIN,TRADE_ID,POSITION_ID,CURRENCY,SOURCE_SYSTEM,SECURITY_ID,INSTRUMENT,LEGAL_ENTITY,DIVISION,DESK,TT_BOOK,PORTFOLIO,STRATEGY,PRODUCT_GROUP,PRODUCT_TYPE,COUNTERPARTY,DIRECTION,QUANTITY,BASE_PV,VALUATION_DATE,BASE_VALUATION_DATE,TAGS,TRADE_STATUS,MATURITY_DATE,STATUS,SCENARIO_SET_ID,BATCH_ID,RUN_KIND,COMPUTED_AT,TRADE_IDS
+  layout.scenario-pv.vectors: SCENARIO_PV
+  layout.fx-scenario.columns: CURRENCY,RATE,SCENARIO_SET_ID
+  layout.risk-hierarchy.columns: NODE_ID,HIERARCHY,LEVEL,PARENT_ID,NAME,LIMIT_VAR
+  layout.portfolio.columns: PORTFOLIO_ID,NAME,TYPE,OWNER,LIMIT_VAR
+  refresh-seconds: '45'

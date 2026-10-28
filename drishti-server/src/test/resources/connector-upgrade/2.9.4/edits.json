@@ -1,0 +1,18 @@
+{
+  "rev": "0bcfb7322",
+  "packs": [
+    "core",
+    "market-data",
+    "trading",
+    "counterparty-risk",
+    "market-risk"
+  ],
+  "edited": {
+    "risk-store": [
+      "refresh-seconds"
+    ],
+    "var-whatif": [
+      "limits.wait"
+    ]
+  }
+}

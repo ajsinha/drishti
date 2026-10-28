@@ -1,0 +1,5 @@
+# Generated at first start from the connector template of pack 'market-risk'. Edit it freely: it is never overwritten.
+plugin: var-positions
+enabled: ${DRISHTI_VAR_ENABLED:true}
+kinds:
+- position
