@@ -109,7 +109,7 @@ export JAVA_HOME=/usr/lib/jvm/java-21-openjdk-amd64
 ls drishti-server/target/*-exec.jar
 ```
 
-You should see exactly one file, for example `drishti-server/target/drishti-server-2.9.2-exec.jar`.
+You should see exactly one file, for example `drishti-server/target/drishti-server-2.9.5-exec.jar`.
 
 > Use `clean`. Without it, `target/` keeps the jars of earlier versions, and both `java -jar
 > drishti-server-*-exec.jar` and the server Dockerfile's `COPY drishti-server/target/drishti-server-*-exec.jar`
@@ -120,7 +120,7 @@ You should see exactly one file, for example `drishti-server/target/drishti-serv
 ```bash
 sudo useradd --system --home /opt/drishti drishti
 sudo mkdir -p /opt/drishti/data /opt/drishti/sutras
-sudo cp drishti-server/target/drishti-server-2.9.2-exec.jar /opt/drishti/drishti-server.jar
+sudo cp drishti-server/target/drishti-server-2.9.5-exec.jar /opt/drishti/drishti-server.jar
 sudo cp -r config drishti-console docs /opt/drishti/
 sudo cp LICENSE CHANGELOG.md RELEASE_NOTES.md THIRD-PARTY-NOTICES.md /opt/drishti/   # the help centre shows them
 sudo chown -R drishti:drishti /opt/drishti

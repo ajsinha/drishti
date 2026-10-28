@@ -96,7 +96,7 @@ Now ask the machine whether it is ready. `doctor` prints green, yellow and red l
 ```text
 $ drishti-console/.venv/bin/python tools/drishti.py doctor
 GREEN  java                    /usr/lib/jvm/java-21-openjdk-amd64/bin/java: Java 21.0 (Ubuntu)
-GREEN  server jar              ~/drishti/drishti-server/target/drishti-server-2.9.2-exec.jar (version 2.5.0)
+GREEN  server jar              ~/drishti/drishti-server/target/drishti-server-2.9.5-exec.jar (version 2.5.0)
 GREEN  python                  ~/drishti/drishti-console/.venv/bin/python: Python 3.13.15
 GREEN  python pyyaml           installed
 GREEN  python deltalake        installed
@@ -128,7 +128,7 @@ export DRISHTI_SECURITY_ENABLED=true
 export DRISHTI_TOKEN_SECRET=drishti-dev-only-token-secret-change-me-0123456789
 export DRISHTI_SEED_ADMIN=true
 mkdir -p data/tmp/server        # Java's temp folder for the server: native libraries unpack here, not in /tmp
-java -Djava.io.tmpdir=data/tmp/server -jar drishti-server/target/drishti-server-2.9.2-exec.jar
+java -Djava.io.tmpdir=data/tmp/server -jar drishti-server/target/drishti-server-2.9.5-exec.jar
 ```
 
 The console, in the second (the same token secret, so the two trust each other):
