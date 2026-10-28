@@ -125,7 +125,7 @@ Plugin `demo`. Every pack's samples, in memory, ticking.
 
 **Also built in: `derived`.** Kinds computed from other kinds (members grouped by an expression, with `count`, `sum`,
 `avg`, …), read through whichever connectors serve the members. It is part of the engine, not a plugin: see
-[PACK_DEVELOPER_GUIDE.md](../guides/PACK_MODELLING_GUIDE.md#derived-kinds-entities-computed-from-other-kinds).
+[PACK_DEVELOPER_GUIDE.md](../guides/PACK_DEVELOPER_GUIDE.md#derived-kinds-entities-computed-from-other-kinds).
 
 
 Everything else (how it reads, every setting, scale and limits, troubleshooting, a walk-through): [DEMO_CONNECTOR.md](DEMO_CONNECTOR.md).

@@ -1377,8 +1377,8 @@ ExecStart=/opt/drishti/drishti-console/.venv/bin/python tools/drishti.py lake ma
 | `tools/packgen/pack_from_jsonl.py` | the engine of `drishti.py pack new`: a complete pack from a folder of JSON Lines |
 | `tools/contracts.py` | the data contract of every command (`drishti.py contract`, [5.11](#511-contract)): drafts one from a pack and its data, checks them all, writes `docs/contracts/packs`; the schema `tools/contracts.schema.json` and the product owner's decisions `tools/contracts.policy.yaml` beside it |
 | `tools/knowledge.py` | the Knowledge pages' glossaries (`docs/knowledge/`): writes each page's terms and the home's A to Z from `docs/knowledge/glossary.yaml`; `--check` fails when a page differs or the glossary is invalid (`tools/test_knowledge_pages.py`) |
-| `tools/packgen/readme.py` | a pack's `README.md` (the README standard, [PACK_GENERATORS_GUIDE.md](PACK_GENERATORS_GUIDE.md#the-readme-standard)) for a pack without a generator of its own; `--all --check` fails on any pack whose README is missing, stale or breaks the standard |
-| `tools/packgen/common/guide_data.py` | every pack guide's *Data contracts* and *Data retrieval* sections (from the contracts and `data_retrieval.yaml`; the pack generators call it); run alone it writes compute-demo's guide and the generated block of the news-and-markets guide; `--check` fails when they are stale ([PACK_GENERATORS_GUIDE.md](PACK_GENERATORS_GUIDE.md#the-readme-standard)) |
+| `tools/packgen/readme.py` | a pack's `README.md` (the README standard, [PACK_DEVELOPER_GUIDE.md Part IV](PACK_DEVELOPER_GUIDE.md#the-readme-standard)) for a pack without a generator of its own; `--all --check` fails on any pack whose README is missing, stale or breaks the standard |
+| `tools/packgen/common/guide_data.py` | every pack guide's *Data contracts* and *Data retrieval* sections (from the contracts and `data_retrieval.yaml`; the pack generators call it); run alone it writes compute-demo's guide and the generated block of the news-and-markets guide; `--check` fails when they are stale ([PACK_DEVELOPER_GUIDE.md Part IV](PACK_DEVELOPER_GUIDE.md#the-readme-standard)) |
 | `tools/connector_readmes.py` | the settings tables of every connector README (from `plugin-settings.yaml`) and the file tables of the template folders' READMEs; `--check` fails when one is stale ([CONNECTOR_DEVELOPER_GUIDE.md](../connectors/CONNECTOR_DEVELOPER_GUIDE.md#the-readme-standard)) |
 | `tools/packgen/banking/make_data.py`, `make_packs.py`, `make_sutras.py`, `make_docs.py` | the banking packs: their sample data and lake, manifests, Sutras and guides, from one taxonomy |
 | `tools/packgen/climate/make.py`, `liquidity/make.py`, `oprisk/make.py`, `retail/make.py` | the climate-risk, liquidity-risk, operational-risk and retail-banking packs, built on the banking data |
@@ -1504,7 +1504,7 @@ template, restore an earlier version. The terminal twin is `drishti.py connector
 ### 10.4 Admin → Artifacts (`/admin/artifacts`)
 
 Install and uninstall packs, connectors and BI files safely: what depends on what, the impact before a change, a cascade that takes
-the dependants along only when confirmed by name, and the uninstalled files kept. Guide: [ARTIFACTS.md](../admin/ARTIFACTS.md).
+the dependants along only when confirmed by name, and the uninstalled files kept. Guide: [OPERATIONALISING.md section 18](OPERATIONALISING.md#18-admin--artifacts-install-and-uninstall-safely).
 
 ### 10.5 Admin → BI (`/admin/bi`) and the migration
 

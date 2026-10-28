@@ -247,9 +247,7 @@ def ignored(paths: list[str]) -> set[str]:
 EXAMPLE_PATHS = {
     "docs/guides/DEVELOPER_GUIDE.md": ("MnemonicController.java", "MnemonicApiTest.java", "/Notice", "/db/NoticeEntity.java", "source_routes.py",
                                        "sources.html", "sources.js", "test_sources.py"),
-    "docs/guides/PACK_DEVELOPER_GUIDE.md": ("config/packs/helpdesk",),
-    "docs/guides/PACK_GENERATORS_GUIDE.md": ("config/packs/library", "tools/packgen/library"),
-    "docs/guides/PACK_LIFECYCLE_GUIDE.md": ("config/packs/my-bank",),
+    "docs/guides/PACK_DEVELOPER_GUIDE.md": ("config/packs/helpdesk", "config/packs/library", "tools/packgen/library", "config/packs/my-bank"),
     "docs/connectors/CONNECTORS.md": ("config/packs/equity-desk",),
     "docs/guides/CLI_GUIDE.md": ("config/packs/curves-demo",),
     "docs/guides/DATA_LOADS.md": ("docs/BATCH_FILE_PROCESSING.md", "docs/HEADLESS_AND_ORCHESTRATION.md", "docs/TUTORIAL_delegate_connectors.md"),

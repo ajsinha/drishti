@@ -554,7 +554,7 @@ curl -s -H "Authorization: Bearer $DRISHTI_TOKEN" $B/views/trade/1000001/explain
 | Block | Fields |
 |---|---|
 | `ref`, `mnemonic`, `locale`, `generation`, `newer` | the page; `newer` is present (true) only when the server holds a newer generation than `?generation=` |
-| `about` | the pack's words, rendered over the document the caller may see (a field masked for them reads `•••` in `text`): `pack` (`name`, `title`), `kindTitle`, `text`, `sutraDescription` (the Sutra's `description` as written, never evaluated) and `panels` (`id`, `title`, `description`). Authored in the pack's `config/about.yaml` ([pack guide](PACK_MODELLING_GUIDE.md#about-text-and-glossary)); absent when neither the pack nor the Sutra wrote anything |
+| `about` | the pack's words, rendered over the document the caller may see (a field masked for them reads `•••` in `text`): `pack` (`name`, `title`), `kindTitle`, `text`, `sutraDescription` (the Sutra's `description` as written, never evaluated) and `panels` (`id`, `title`, `description`). Authored in the pack's `config/about.yaml` ([pack guide](PACK_DEVELOPER_GUIDE.md#about-text-and-glossary)); absent when neither the pack nor the Sutra wrote anything |
 | `data` | `source`, `generation`, `fetchedAt`, `businessDate`, `current`, `live`, `updatedAt`, `staleAfter`, `stale`, `health` (`up`, `degraded` or `down`, as the admin health page reduces it) and `linked` (`fetched`, `pending`, `denied`, `budgetMs`) |
 | `layout.sutra` | the Sutra chosen: `name`, `version`, `priority`, `where` (its source text), `description` (the author's plain text) |
 | `layout.candidates` | every Sutra of the kind in priority order, **the chosen one included** (`chosen: true`; a view that no Sutra matched has none and is inferred), each with its `where` and `result`: `true`, `false`, `error`, or `masked` (the answer depends on a field the caller may not see, so it is not told; the chosen Sutra's own `where` is already in `layout.sutra`) |
@@ -1488,7 +1488,7 @@ curl -s -X POST "$B/admin/packs/deploy/$ID?acceptBreaking=true" | jq -c '{deploy
 
 ### Packs from a signed registry
 
-Admin → Packs → Registry from a script ([PACK_DEVELOPER_GUIDE.md](PACK_LIFECYCLE_GUIDE.md#a-signed-pack-registry-publishing-and-installing) publishes to one;
+Admin → Packs → Registry from a script ([PACK_DEVELOPER_GUIDE.md](PACK_DEVELOPER_GUIDE.md#a-signed-pack-registry-publishing-and-installing) publishes to one;
 [ADR 018](../architecture/adr/018-signed-pack-registry.md) explains the signing). Administrators only; a personal token needs `packs:admin` for the `POST`s.
 
 | Method | Path | Notes |
@@ -1548,7 +1548,7 @@ HTTP/1.1 404
 ### Administration: Artifacts (`/api/v1/admin/artifacts`)
 
 Everything installed (packs, connector files, shipped BI files) in one list, what depends on each, and the safe ways out: disable, uninstall to an archive, restore,
-delete for good, and a BI file upload with a dry run. Guide: [ARTIFACTS.md](../admin/ARTIFACTS.md). Every call needs an administrator, and **no personal token may call
+delete for good, and a BI file upload with a dry run. Guide: [OPERATIONALISING.md section 18](OPERATIONALISING.md#18-admin--artifacts-install-and-uninstall-safely). Every call needs an administrator, and **no personal token may call
 any of it** (`* /api/v1/admin/artifacts/**` is in `drishti.security.token-never`). Every action and every refusal is audited (`artifact-disabled`, `artifact-enabled`,
 `artifact-uninstalled`, `artifact-restored`, `artifact-purged`, `artifact-pruned`, `artifact-installed`, `artifact-refused`).
 
@@ -1837,7 +1837,7 @@ and the fix for the codes that need more than the meaning.
 | DRS-2040–DRS-2044 | — | — | a pack's `config/about.yaml` has a problem (unknown key or bad version, kind not in the pack's lineage, a template that does not compile, `use` with no vocabulary entry, a text over the cap); listed by `GET /api/v1/sutras/problems` as `<pack>/about.yaml`; the entry is left out and the page is unaffected; see [RACHANA_REFERENCE.md](RACHANA_REFERENCE.md#problem-codes) |
 | DRS-2045–DRS-2047 | — | — | `sutra lint` help warnings (not load errors): a Sutra binds `F1`, an about `panels.<id>` matches no panel, a shown field has no glossary entry; `--strict` fails the run on them |
 | DRS-2048 | — | — | a shared panel block cannot be used: `use:` names no block or version, `with:` names a parameter the block does not declare, a block uses another block (only a fragment may, at pinned versions, at most 3 deep, without a cycle), or a block file is misnamed ([Shared panel blocks](RACHANA_REFERENCE.md#shared-panel-blocks-use)) |
-| DRS-2055 | — | — | a fragment's `doc:` docstring is missing or incomplete (summary, description, every parameter with type, default and meaning, emits, expects, examples, since; a composite's `uses`): the fragment is not loaded and its uses fail with `DRS-2048`. For a Sutra or an older block it is a warning only (`sutra lint --docs` prints it, never fails on it) ([Fragments and docstrings](PACK_MODELLING_GUIDE.md#fragments-and-docstrings)) |
+| DRS-2055 | — | — | a fragment's `doc:` docstring is missing or incomplete (summary, description, every parameter with type, default and meaning, emits, expects, examples, since; a composite's `uses`): the fragment is not loaded and its uses fail with `DRS-2048`. For a Sutra or an older block it is a warning only (`sutra lint --docs` prints it, never fails on it) ([Fragments and docstrings](PACK_DEVELOPER_GUIDE.md#fragments-and-docstrings)) |
 | DRS-2056 | — | — | a child panel nested more than 3 deep (screen, child, grandchild at most) | flatten the screen: move the deepest children up a level |
 | DRS-2057 | — | — | an event or source reference is wrong: a panel named in `@panel.event` or a `source:` that does not exist, a cycle, a panel called `parent`, or a trigger not yet supported | fix the panel name or the event; `sutra lint` names the panel and line |
 | DRS-2058 | — | — | a panel's `form:` does not read: an unknown key, a field type, a `step` or `key` naming nothing, a rule reading a field the form does not have, a pattern that does not compile | the message names the key; see [SUTRA_FORMS_GUIDE.md](../guides/SUTRA_FORMS_GUIDE.md) |
@@ -1903,7 +1903,7 @@ and the fix for the codes that need more than the meaning.
 | DRS-5032 | 409 | connector conflict | a connector change conflicts (HTTP 409): the version you read is stale (reload and apply again), a file of that name exists and no `If-Match` was sent, or the change switches off or deletes a connector packs use (repeat with `confirm=true`/`--confirm` once you have read who uses it), or you tried to delete a connector a pack's template names (reset or disable it) |
 | DRS-5033 | 404 | no such connector | no connector of that name (a file, a pack template or the server's configuration) |
 | DRS-5040 | 404 | artifact not found | Admin → Artifacts: no such installed pack, connector or BI file, or no such archive |
-| DRS-5041 | 409 | artifact in use | an uninstall (or switching a pack off) was refused because other things depend on it (HTTP 409): the answer lists them. Disable it instead, or tick *Also disable or uninstall what depends on it* and type the name ([ARTIFACTS.md](../admin/ARTIFACTS.md#4-uninstall)) |
+| DRS-5041 | 409 | artifact in use | an uninstall (or switching a pack off) was refused because other things depend on it (HTTP 409): the answer lists them. Disable it instead, or tick *Also disable or uninstall what depends on it* and type the name ([OPERATIONALISING.md section 18](OPERATIONALISING.md#184-uninstall)) |
 | DRS-5042 | 409 | artifact conflict | a restore or a BI upload found an artifact of that name already there (HTTP 409): open it to compare, then choose *replace* (the one in the way is archived first) |
 | DRS-5043 | 422 | name not typed | a destructive step needs the artifact's name typed (HTTP 422): uninstall with dependants, replace, delete an archive for good |
 | DRS-5044 | 422 | artifact invalid | the action does not apply (HTTP 422): a connector a pack's template names (disable or reset it), a pack named in `drishti.packs.enabled` (take it out of the setting, or disable it), a connector with no file (it comes from `application.yaml`), or an uploaded BI file that is not valid (the problems are listed) |

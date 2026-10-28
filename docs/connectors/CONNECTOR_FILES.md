@@ -675,7 +675,7 @@ On the demo lakes it lists the seven packs' connectors: the three trade connecto
 anything does, and otherwise **moves the file** to `<data dir>/uninstalled/` where **Admin → Artifacts → Uninstalled** restores it. A
 connector created or edited through Admin (the shared overlay in the content store) is archived the same way: the text in force goes to the
 archive, the overlay is removed (its text stays in the shared history) with any file under it, and a restore puts it back as a file. A
-connector a pack's template names is only disabled or reset. See [ARTIFACTS.md](../admin/ARTIFACTS.md).
+connector a pack's template names is only disabled or reset. See [OPERATIONALISING.md section 18](../guides/OPERATIONALISING.md#18-admin--artifacts-install-and-uninstall-safely).
 
 The list shows each connector's **origin** (`file`, `pack` for a template with no file yet, `application` for the deprecated
 configuration), plugin, kinds, **status** with the plugin's own health beside it, which packs use it (and for which kinds), and when it

@@ -448,7 +448,7 @@ If any field is not promoted, the search reads documents as before, up to `drish
 ### 7.2 Derived kinds
 
 A derived kind (the trading pack's `portfolio-trades`: trades grouped by `$.PORTFOLIO`, `count`, `distinct $.CURRENCY` …, see
-[PACK_DEVELOPER_GUIDE.md](../guides/PACK_MODELLING_GUIDE.md#derived-kinds-entities-computed-from-other-kinds)) is computed from columns
+[PACK_DEVELOPER_GUIDE.md](../guides/PACK_DEVELOPER_GUIDE.md#derived-kinds-entities-computed-from-other-kinds)) is computed from columns
 when all its expressions are plain paths that are promoted:
 
 1. Rows are grouped by the key column directly (the `PORTFOLIO` value of each row).

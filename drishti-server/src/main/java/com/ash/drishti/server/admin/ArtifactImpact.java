@@ -42,7 +42,7 @@ import java.util.function.Predicate;
 import org.springframework.beans.factory.ObjectProvider;
 
 /**
- * What would stop working if an artifact went (docs/admin/ARTIFACTS.md, "Impact"). One question, asked of a pack, a connector or a
+ * What would stop working if an artifact went (docs/guides/OPERATIONALISING.md, "Impact"). One question, asked of a pack, a connector or a
  * shipped BI file: which packs, connectors, BI datasets, reports and boards, saved searches, monitors, alert rules, measure alerts,
  * subscriptions, shares, workspaces and embed hosts name it. It reads the stores directly and decides nothing about who may see what:
  * the caller is an administrator, who sees everything. The answer is counts plus the first {@link #NAMED} names of each kind.

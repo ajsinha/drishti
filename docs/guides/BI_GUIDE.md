@@ -381,7 +381,7 @@ bi-cd5f8b2cc5   board    promoted  published v1   Counterparty exposure  (Rates 
 **Disabling and uninstalling a shipped file.** **Admin → Artifacts** (and *Shipped files* on *Admin → BI*) lists the files of `config/bi`. **Disable** hides a file from the catalogue and keeps
 it; **Uninstall…** shows the reports, boards, models, alerts and subscriptions that depend on it, refuses while any do, and otherwise moves the file to
 `data/uninstalled/`, from where it is restored. An administrator can also upload a `<name>.<kind>.yaml` file there: it is checked and its impact shown before it is placed. See
-[ARTIFACTS.md](../admin/ARTIFACTS.md).
+[OPERATIONALISING.md section 18](OPERATIONALISING.md#18-admin--artifacts-install-and-uninstall-safely).
 
 ## 11. Built and not built
 

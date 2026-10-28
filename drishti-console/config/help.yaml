@@ -119,7 +119,7 @@ categories:
     guides:
       - { slug: configuration, doc: admin/CONFIGURATION.md, title: Configuration, icon: sliders, summary: "Every server and console setting with its default: the type-ahead index, the BI and Python settings, config/net/ for Drishti*net, the business calendars (CATO among them) and -Djava.io.tmpdir for the JVM." }
       - { slug: operations, doc: admin/OPERATIONS.md, title: Operations, icon: hdd-stack, summary: "Deploying, the security checklist, monitoring, capacity, connection pools, the type-ahead index, several console workers, several servers as one (Drishti*net: Admin → Net, real addresses only, drishti-stack), and shipping by copying; the runbooks." }
-      - { slug: admin-artifacts, doc: admin/ARTIFACTS.md, title: "Artifacts: install and uninstall safely", icon: archive, summary: "Admin → Artifacts: every installed pack, connector file and BI file in one list; what depends on each; disable, uninstall to an archive, restore, install a BI file." }
+      - { slug: deploy, doc: guides/OPERATIONALISING.md, title: "Deploy, promote and roll back", icon: archive, summary: "Bundles, offline verification, deploying by copying, promotion dev to test to prod, checks after a deploy and roll back; Admin → Packs (deploy an archive, history, roll back) and Admin → Artifacts (every installed pack, connector file and BI file, what depends on each, disable, uninstall to an archive, restore, install a BI file)." }
       - { slug: user-management, doc: admin/USER_MANAGEMENT.md, title: Users and roles, icon: people, summary: "The seeded admin, managing users, roles and BI powers, password rules, lockout and the audit log." }
       - { slug: api, doc: guides/API_GUIDE.md, title: API, icon: braces-asterisk, summary: "REST endpoints (BI, Python data prep, themes, Drishti*net), the ViewModel contract and error codes." }
       - { slug: tools, doc: guides/TOOLS.md, title: "Tools", icon: tools, summary: "Every command, script and page that builds, loads and looks after Drishti: drishti.py, lake build for large JSON exports, loaders, maintenance, generators, scheduling and sizing." }
@@ -205,7 +205,7 @@ moved:
   connector-kafka: connectors#kafka
   connector-activemq: connectors#activemq
   connector-rabbitmq: connectors#rabbitmq
-  operationalising: docs-guides-operationalising
+  operationalising: deploy
   real-data: docs-guides-real-data
   runbook-source-down: docs-admin-runbooks-source-down
   runbook-sutra-broken: docs-admin-runbooks-sutra-broken
@@ -238,6 +238,11 @@ moved:
   docs-architecture-screen-builder: screen-designer#32-reference-the-shape-engine-auto-design-and-the-builder-api   # archived (history); its reference is SCREEN_DESIGNER section 32
   docs-architecture-cassandra-connector-design: docs-connectors-cassandra-connector   # archived (history): docs/archive/CASSANDRA_CONNECTOR_DESIGN.md
   docs-admin-load-and-memory: docs-admin-performance#9-many-users-soak-runs-and-memory-profiling   # archived (history); its method is PERFORMANCE method 9
+  admin-artifacts: deploy#18-admin--artifacts-install-and-uninstall-safely   # Admin -> Artifacts' help link; docs/admin/ARTIFACTS.md merged into OPERATIONALISING.md section 18
+  docs-guides-operationalising: deploy   # OPERATIONALISING.md is listed as Deploy, promote and roll back
+  docs-guides-pack-modelling-guide: pack-developer-guide#part-ii-modelling-in-depth-kinds-data-and-content   # merged into PACK_DEVELOPER_GUIDE Part II
+  docs-guides-pack-lifecycle-guide: pack-developer-guide#part-iii-around-the-pack-inheritance-tests-versions-the-registry   # merged into PACK_DEVELOPER_GUIDE Part III
+  docs-guides-pack-generators-guide: pack-developer-guide#part-iv-generated-packs-the-readme-standard-json-lines   # merged into PACK_DEVELOPER_GUIDE Part IV
 
 # "What does this mean?" beside a data page's help (the explorers' ?, a view's About): the Knowledge page, or glossary entry, that
 # explains the screen (var, exposure) or the kind of the record (core/app.py reads it at start; tests/test_help.py checks each target).

@@ -215,7 +215,7 @@ The YAML tab is Studio's editor on the design's Sutra: completion of keys and va
 
 **Summary** reads the Sutra back as a page: what it applies to, the strip, each panel with its columns.
 
-**About text.** The Sutra's `description` and each panel's `description` (YAML tab) are what the *About this page* drawer says about your screen, so write them for the person who will press `?`. The sentence with the entity's own numbers, the panels' text and the glossary are the pack's `config/about.yaml` ([About text and glossary](PACK_MODELLING_GUIDE.md#about-text-and-glossary)); the **About** tab, described next, writes that file beside the Sutra and shows the card it makes.
+**About text.** The Sutra's `description` and each panel's `description` (YAML tab) are what the *About this page* drawer says about your screen, so write them for the person who will press `?`. The sentence with the entity's own numbers, the panels' text and the glossary are the pack's `config/about.yaml` ([About text and glossary](PACK_DEVELOPER_GUIDE.md#about-text-and-glossary)); the **About** tab, described next, writes that file beside the Sutra and shows the card it makes.
 
 ### The About tab
 
@@ -228,7 +228,7 @@ The **About** tab (right pane, after Versions) is the pack's `config/about.yaml`
 - **Export and import.** *Ship → Export as a pack fragment* adds `config/about.yaml` and `about: config/about.yaml` in the `pack.yaml`; importing a fragment (or a pack folder) puts that file back in the design's About tab.
 - **Keyboard.** The tab is reached like the others (arrow keys between tabs, Enter or Space opens it); the box does **not** trap Tab, so Tab leaves it.
 
-**Not live.** About text authored here is evidence and a draft: *Submit for review* and approval make the **Sutra** live, not the About text, because packs are loaded by administrators. To make the text live, put the exported `config/about.yaml` in the pack ([PACK_DEVELOPER_GUIDE.md](PACK_MODELLING_GUIDE.md#about-text-and-glossary)); until then the drawer on a live view shows what the pack says. The preview in the tab shows yours over the pack's.
+**Not live.** About text authored here is evidence and a draft: *Submit for review* and approval make the **Sutra** live, not the About text, because packs are loaded by administrators. To make the text live, put the exported `config/about.yaml` in the pack ([PACK_DEVELOPER_GUIDE.md](PACK_DEVELOPER_GUIDE.md#about-text-and-glossary)); until then the drawer on a live view shows what the pack says. The preview in the tab shows yours over the pack's.
 
 ### The Controls tab
 

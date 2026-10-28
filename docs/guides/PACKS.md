@@ -39,7 +39,7 @@ pack step by step.
 ## What a pack is
 
 A pack is configuration and content only. It contains no Java and no Python that the server runs (its Calc snippets,
-`python/*.py`, run in the user's browser; see [Calc](PACK_MODELLING_GUIDE.md#calc-python-snippets)). Here is a small
+`python/*.py`, run in the user's browser; see [Calc](PACK_DEVELOPER_GUIDE.md#calc-python-snippets)). Here is a small
 complete pack, the help-desk pack the [Pack developer guide](PACK_DEVELOPER_GUIDE.md) builds
 (`docs/guides/examples/pack/helpdesk/`):
 
@@ -234,7 +234,7 @@ Typical combinations:
 | Everything, with the 200 largest US funds and ETFs too | `core,market-data,trading,counterparty-risk,market-risk,world-economy,news-and-markets,us-equities,gleif,funds` |
 
 You do not have to list `core`, `market-data` or `trading`: the packs that extend them bring them in (see
-[Inheritance](PACK_LIFECYCLE_GUIDE.md#inheritance)).
+[Inheritance](PACK_DEVELOPER_GUIDE.md#inheritance)).
 
 ### Retired example packs (examples/packs)
 
@@ -502,12 +502,12 @@ answers `DRS-5002` (forbidden). Its mnemonics, suggestions, examples, starter wo
 suggestions disappear too. Kinds no pack owns are not affected. A user who may see
 `market-risk` may also open the kinds of the packs it extends (a VaR result links to its trades and books).
 
-Roles work on top of packs: a role lists the kinds it may open (see [Roles and field masks](PACK_MODELLING_GUIDE.md#roles-and-field-masks)).
+Roles work on top of packs: a role lists the kinds it may open (see [Roles and field masks](PACK_DEVELOPER_GUIDE.md#roles-and-field-masks)).
 
 ## Loading a pack while the server runs
 
 Admin → Packs → **Load** brings in a pack that is on disk but not loaded, without anyone touching the machine and **without a restart**
-(a pack from a signed registry is installed the same way: [the registry](PACK_LIFECYCLE_GUIDE.md#a-signed-pack-registry-publishing-and-installing)).
+(a pack from a signed registry is installed the same way: [the registry](PACK_DEVELOPER_GUIDE.md#a-signed-pack-registry-publishing-and-installing)).
 Every way a pack changes while the server runs (Load, Unload, a deploy, a registry install or rollback, and an edit in the packs folder, below)
 takes the same path, so they all behave alike:
 
@@ -561,7 +561,7 @@ runs at a time. (Copying the help-desk pack into `config/packs/` of a running se
 **Taking a pack out safely.** Deleting the folder works, but **Admin → Artifacts** (and the *Uninstall…* button on each pack in Admin → Packs) first lists what depends on
 the pack (packs that extend it, connectors only it uses, BI datasets and reports over its kinds, monitors, alert rules, subscriptions, workspaces, shares, embed hosts),
 refuses while anything does and offers *Disable instead*, and otherwise moves the folder to `<data>/uninstalled/` where it can be restored for 30 days. See
-[ARTIFACTS.md](../admin/ARTIFACTS.md).
+[OPERATIONALISING.md section 18](OPERATIONALISING.md#18-admin--artifacts-install-and-uninstall-safely).
 
 ### A pack that was refused is tried again by itself
 
@@ -701,7 +701,7 @@ back to pack kinds and their connectors ([BI_DESIGN.md section 14.3](../architec
   shipped pack defines, a `pack.<pack>.<kind>` that exists), so a renamed kind or a retired pack cannot leave a broken BI sample behind.
 - **BI inside a pack archive.** A pack may carry its own BI items in `config/bi/` inside the pack folder; deploying the pack imports them
   as a bundle into the shared workspace `packs`, with the pack as their audience ([BI_GOVERNANCE.md](BI_GOVERNANCE.md#bi-content-in-a-pack-archive)).
-- **Before an uninstall**, Admin → Artifacts lists the BI datasets and reports over the pack's kinds ([ARTIFACTS.md](../admin/ARTIFACTS.md)).
+- **Before an uninstall**, Admin → Artifacts lists the BI datasets and reports over the pack's kinds ([OPERATIONALISING.md section 18](OPERATIONALISING.md#18-admin--artifacts-install-and-uninstall-safely)).
 
 ## Deploying an archive, history, and the pack's connectors (Admin → Packs)
 
@@ -782,7 +782,7 @@ trading TRDS [('TRD', 15000, 'CLY-3000001'), ('CTRD', 24, 'CP-ALDERSHOT'), ('PTR
 ```
 
 A pack author sets the code with `code:` in `pack.yaml` (in a generated pack, in its generator:
-[how the shipped packs are generated](PACK_GENERATORS_GUIDE.md#how-the-shipped-packs-are-generated)).
+[how the shipped packs are generated](PACK_DEVELOPER_GUIDE.md#how-the-shipped-packs-are-generated)).
 
 ## Upgrading and removing a pack
 

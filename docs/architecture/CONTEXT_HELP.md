@@ -695,7 +695,7 @@ source.
 
 Where each part is changed is section 7; the design, the open decisions and the build plan are in
 [CONTEXT_HELP.md](CONTEXT_HELP.md); how to write the text is in the
-[pack developer guide](../guides/PACK_MODELLING_GUIDE.md#about-text-and-glossary).
+[pack developer guide](../guides/PACK_DEVELOPER_GUIDE.md#about-text-and-glossary).
 
 ## Documentation changes
 

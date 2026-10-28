@@ -535,7 +535,7 @@ source.
 
 Where each part is changed is section 7; the design, the open decisions and the build plan are in
 [CONTEXT_HELP.md](../architecture/CONTEXT_HELP.md); how to write the text is in the
-[pack developer guide](../guides/PACK_MODELLING_GUIDE.md#about-text-and-glossary).
+[pack developer guide](../guides/PACK_DEVELOPER_GUIDE.md#about-text-and-glossary).
 
 ### 3.10 Share and Discussion, end to end
 
@@ -843,7 +843,7 @@ documents it draws, and its panels' `$.paths` are checked against your samples. 
 | Decide who may see what | `roles:` in `pack.yaml` (kinds, `raw`), `drishti.security.redact` (fields shown as `•••`), the Admin pages | [USER_MANAGEMENT.md](../admin/USER_MANAGEMENT.md) |
 | Add a command word | `mnemonics:` in `pack.yaml` (or under `drishti.commands` for a site) | PACKS.md |
 | Add a link between kinds | `graph.fields` in `pack.yaml` and `link(...)` in the Sutra | PACKS.md |
-| Change the sentence the About drawer says about a kind | `kinds.<kind>.about` in the pack's `config/about.yaml` (a `${...}` template over the document); for a generated pack, the about source in `tools/packgen/` | [PACK_DEVELOPER_GUIDE.md](../guides/PACK_MODELLING_GUIDE.md#about-text-and-glossary) |
+| Change the sentence the About drawer says about a kind | `kinds.<kind>.about` in the pack's `config/about.yaml` (a `${...}` template over the document); for a generated pack, the about source in `tools/packgen/` | [PACK_DEVELOPER_GUIDE.md](../guides/PACK_DEVELOPER_GUIDE.md#about-text-and-glossary) |
 | Explain a field (term, meaning, unit, sign) | `glossary.<field path>` in `about.yaml`, or a shared `vocabulary.<name>` entry in the lowest pack that owns the concept (the glossary layer and field hints are step 4 of [CONTEXT_HELP.md](../architecture/CONTEXT_HELP.md); section 3.9 says what is in today) | PACK_DEVELOPER_GUIDE.md |
 | Change how the drawer looks or behaves | `drishti-console/web/templates/_macros/about.html` and `terminal/_about.html`, `static/js/about.js`, `static/css/about.css` | [CONTEXT_HELP.md](../architecture/CONTEXT_HELP.md) |
 | Change what the explanation says about the layout and the data | `ExplainService`, `PageContext`, `EmptinessReason` (`drishti-engine`, package `explain`), `MatchTrace` (`SutraMatcher.explain`); the endpoint is `ExplainController`; limits under `drishti.explain.*` | [API_GUIDE.md](../guides/API_GUIDE.md), [CONFIGURATION.md](../admin/CONFIGURATION.md) |

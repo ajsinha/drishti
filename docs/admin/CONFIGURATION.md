@@ -881,7 +881,7 @@ The pack loader also writes some keys for the rest of the server (`drishti.packs
 | `max-archive-mb` / `max-unpacked-mb` | `50` / `200` | Size limits for an archive and for what it unpacks to. |
 | `allow-http` | `false` | Accept plain `http:` registries. For tests only. |
 
-See [PACK_DEVELOPER_GUIDE.md](../guides/PACK_LIFECYCLE_GUIDE.md#a-signed-pack-registry-publishing-and-installing).
+See [PACK_DEVELOPER_GUIDE.md](../guides/PACK_DEVELOPER_GUIDE.md#a-signed-pack-registry-publishing-and-installing).
 
 ### `drishti.packs.deploy` and `drishti.packs.settings-dir` — deploy an archive, and the legacy data-source overrides
 
@@ -1419,7 +1419,7 @@ decides who may use it (roles with `calc`), keeps each user's snippets, and serv
 | `max-snippet-chars` | `50000` | A saved snippet's code, at most (never more than 60,000: a saved document is at most 64 KB). Each user keeps at most 50 snippets. |
 
 Which views offer Calc is a pack's choice (`python: { enabled: true }` in `pack.yaml`), not configuration; see
-[PACK_DEVELOPER_GUIDE.md](../guides/PACK_MODELLING_GUIDE.md#calc-python-snippets).
+[PACK_DEVELOPER_GUIDE.md](../guides/PACK_DEVELOPER_GUIDE.md#calc-python-snippets).
 
 ### `drishti.var` — the VaR engine
 
@@ -2153,7 +2153,7 @@ A person chooses which events are emailed under `notify.email.{share,mention,rep
 
 ### `drishti.admin` — uninstalling packs, connectors and BI files safely
 
-Admin → Artifacts ([ARTIFACTS.md](ARTIFACTS.md)) moves what it uninstalls into an archive instead of deleting it. All values are read at start.
+Admin → Artifacts ([OPERATIONALISING.md section 18](../guides/OPERATIONALISING.md#18-admin--artifacts-install-and-uninstall-safely)) moves what it uninstalls into an archive instead of deleting it. All values are read at start.
 
 | Key | Default | Meaning |
 |---|---|---|
@@ -2257,7 +2257,7 @@ document explains how it reads, its layout, scale and limits.
 | <a id="cassandra"></a>`cassandra` | Cassandra, ScyllaDB, Astra, Keyspaces; retention is the loader's (`--ttl-days`, `--keep-days`); `proxy.*` refused | [README, Settings](../../plugins/drishti-plugin-cassandra/README.md#settings) | [CASSANDRA_CONNECTOR.md](../connectors/CASSANDRA_CONNECTOR.md) |
 | <a id="feed--public-data-feeds"></a>`feed` | public data feeds, one connector per feed (off by default) | [README, Settings](../../plugins/drishti-plugin-feeds/README.md#settings) | [FEEDS_CONNECTOR.md](../connectors/FEEDS_CONNECTOR.md) |
 | <a id="news-and-yfinance--connectors-that-compute-data-on-demand"></a>`news`, `yfinance` | computed on demand, nothing stored; off as shipped (names leave the network); pages reading them through `source:` need `drishti.graph.link-budget` raised above 40 ms | [README, Settings](../../plugins/drishti-plugin-news/README.md#settings), [README, Settings](../../plugins/drishti-plugin-yfinance/README.md#settings) | [NEWS.md](../connectors/NEWS.md), [YFINANCE.md](../connectors/YFINANCE.md) |
-| <a id="derived--kinds-computed-from-other-kinds"></a>`derived` | kinds computed from other kinds (built in) | [types/derived/README.md](../connectors/types/derived/README.md) | [PACK_MODELLING_GUIDE.md](../guides/PACK_MODELLING_GUIDE.md#derived-kinds-entities-computed-from-other-kinds) |
+| <a id="derived--kinds-computed-from-other-kinds"></a>`derived` | kinds computed from other kinds (built in) | [types/derived/README.md](../connectors/types/derived/README.md) | [PACK_DEVELOPER_GUIDE.md Part II](../guides/PACK_DEVELOPER_GUIDE.md#derived-kinds-entities-computed-from-other-kinds) |
 | <a id="demo--sample-data"></a>`demo` | the packs' samples; the shipped `application.yaml` sets only `drishti.sources.plugins.demo.enabled` (`DRISHTI_DEMO_ENABLED`) | [README, Settings](../../plugins/drishti-plugin-demo/README.md#settings) | [DEMO_CONNECTOR.md](../connectors/DEMO_CONNECTOR.md) |
 
 ---

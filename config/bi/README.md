@@ -19,7 +19,7 @@ This folder is the one home of BI content shipped with a site. It is read by the
 (environment variable `DRISHTI_BI_DIR`, default `./config/bi`). BI files are never placed inside a pack: a pack
 describes data (Sutras, links, vocabulary); BI content may combine kinds from many packs and is deployed on its own.
 
-Disabling, uninstalling (to an archive that can be restored) and uploading files here is **Admin → Artifacts**; see [docs/admin/ARTIFACTS.md](../../docs/admin/ARTIFACTS.md).
+Disabling, uninstalling (to an archive that can be restored) and uploading files here is **Admin → Artifacts**; see [docs/guides/OPERATIONALISING.md](../../docs/guides/OPERATIONALISING.md#18-admin--artifacts-install-and-uninstall-safely).
 
 ```
 config/bi/

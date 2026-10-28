@@ -210,7 +210,7 @@ to jump to it. The preview changes nothing on the server.
 works at once, but the drill (`tools/drill.sh`) then fails with `… out of date`, and the next run of the
 generator undoes it. Use the in-place fix only to restore service; then make the same change in the generator (or the taxonomy
 it reads, `tools/packgen/banking/taxonomy.py`), run it, and commit both. The banking packs' Sutras come from `tools/packgen/banking/make_sutras.py`; the
-others from `tools/packgen/<area>/make.py` ([PACK_DEVELOPER_GUIDE.md](../../guides/PACK_GENERATORS_GUIDE.md#how-the-shipped-packs-are-generated)).
+others from `tools/packgen/<area>/make.py` ([PACK_DEVELOPER_GUIDE.md](../../guides/PACK_DEVELOPER_GUIDE.md#how-the-shipped-packs-are-generated)).
 To change a generated layout for your site only, save a higher version in the site Sutra folder (Studio does
 this) instead of editing the pack.
 

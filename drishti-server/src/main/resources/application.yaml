@@ -601,7 +601,7 @@ drishti:
       cache-size: 50                            # pictures kept by view, generation and rights profile
       cache-ttl: 10m
       recipients: count                         # the watermark names: count | names
-  admin:                             # Admin, Artifacts: uninstalling packs, connector files and shipped BI files safely (docs/admin/ARTIFACTS.md)
+  admin:                             # Admin, Artifacts: uninstalling packs, connector files and shipped BI files safely (docs/guides/OPERATIONALISING.md)
     uninstalled-dir: ${DRISHTI_UNINSTALLED_DIR:${drishti.data.dir:./data}/uninstalled}   # an uninstall MOVES the artifact here; nothing is deleted
     uninstalled-keep: ${DRISHTI_UNINSTALLED_KEEP:30d}      # archives older than this are removed, once a day; 0 keeps them for ever
     uninstalled-prune-interval: 1d                        # how often the archive is pruned

@@ -255,7 +255,7 @@ itself (see *Retries* in section 13).
 
 ### Taking a pack, a connector or a BI file out safely
 
-**Admin → Artifacts** (`/admin/artifacts`; [ARTIFACTS.md](ARTIFACTS.md)) is the careful way to remove something. *Uninstall…* asks what depends on it (packs that extend it,
+**Admin → Artifacts** (`/admin/artifacts`; [OPERATIONALISING.md section 18](../guides/OPERATIONALISING.md#18-admin--artifacts-install-and-uninstall-safely)) is the careful way to remove something. *Uninstall…* asks what depends on it (packs that extend it,
 connectors only it uses, BI datasets, reports and boards, saved searches, monitors, alert rules, subscriptions, shares, workspaces, embed hosts), refuses while
 anything does (`DRS-5041`) and offers *Disable instead*, and otherwise **moves** the folder or file to `data/uninstalled/<time>-<kind>-<name>/`
 (`drishti.admin.uninstalled-dir`); the watchers then unload or stop it as if you had deleted it. Archives are kept `drishti.admin.uninstalled-keep` (30 days) and pruned

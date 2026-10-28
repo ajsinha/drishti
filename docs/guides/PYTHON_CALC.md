@@ -361,7 +361,7 @@ computes.
 The shipped ones are written by `tools/packgen/banking/make_packs.py` (the generator kept its name from the banking packs it began with) from their sources,
 `tools/packgen/banking/snippets/<pack>/<name>.py` (read by `calc_snippets.py`; never edit the generated
 `config/packs/<pack>/python/` files: change the source and run the generator, see
-[PACK_DEVELOPER_GUIDE.md](PACK_GENERATORS_GUIDE.md#how-the-shipped-packs-are-generated)). A source starts, after its copyright header, with
+[PACK_DEVELOPER_GUIDE.md](PACK_DEVELOPER_GUIDE.md#how-the-shipped-packs-are-generated)). A source starts, after its copyright header, with
 
 ```python
 # title: Key-rate DV01 by bump and reprice

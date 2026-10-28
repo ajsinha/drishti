@@ -873,7 +873,7 @@ On a phone the legs become tabs that scroll along one line, the terms stack, and
 The same layout is what you get from **inference** for any document that holds lists inside a short list of records, even with no Sutra written
 for it ([Inference](../architecture/INFERENCE.md#the-rules)). To build such a screen see
 [Panels inside a tab](RACHANA_REFERENCE.md#panels-inside-a-tab) and
-[Modelling deep documents](PACK_MODELLING_GUIDE.md#modelling-deep-documents-legs-cashflows-and-fixings).
+[Modelling deep documents](PACK_DEVELOPER_GUIDE.md#modelling-deep-documents-legs-cashflows-and-fixings).
 
 ## Reading a view
 
@@ -1056,7 +1056,7 @@ world-economy pack (`ECON ECON-USA`), in that pack's words:
 - The drawer is fetched the first time you open it, never with the page, so it does not slow a view down.
 - When a live update brings a newer generation of the data, an open drawer asks again (at most once in two seconds).
 - No text? A pack without an `about` entry for the kind still shows the other layers; the pack's author can add one
-  ([how](PACK_MODELLING_GUIDE.md#about-text-and-glossary); how it works inside is
+  ([how](PACK_DEVELOPER_GUIDE.md#about-text-and-glossary); how it works inside is
   [HOW_IT_FITS.md](../architecture/CONTEXT_HELP.md#about-this-page-end-to-end)).
 - Hover hints on field labels and a help popover on each panel's `?` come with the glossary stage; today the panel `?`
   still opens that panel kind's page in this guide.
@@ -2301,7 +2301,7 @@ between them without the menu.
 | Users | `/admin/users` | Create users; set roles and the packs each user may use; enable, disable, reset passwords |
 | Roles | `/admin/roles` | Define roles: the kinds each opens, and its powers |
 | Packs | `/admin/packs` | Switch a domain pack off or on for everyone; deploy an archive; see which connectors a pack reads through (**Data source**, read only) |
-| Artifacts | `/admin/artifacts` | Everything installed in one list (packs, connector files, shipped BI files): see what depends on each, **disable** it, **uninstall** it to an archive and **restore** it, install a BI file ([ARTIFACTS.md](../admin/ARTIFACTS.md)) |
+| Artifacts | `/admin/artifacts` | Everything installed in one list (packs, connector files, shipped BI files): see what depends on each, **disable** it, **uninstall** it to an archive and **restore** it, install a BI file ([OPERATIONALISING.md section 18](OPERATIONALISING.md#18-admin--artifacts-install-and-uninstall-safely)) |
 | Connectors | `/admin/connectors` | Where data comes from: one connector per YAML file in `config/connectors/`; create, edit, test, switch off and see which packs use each ([CONNECTOR_FILES.md](../connectors/CONNECTOR_FILES.md)) |
 | Tokens | `/admin/tokens` | Every personal API token (never its secret): its owner, its scopes (*read only* or what it may write), when it was last used (in the console's time zone, named), and revoking any of them ([CLIENTS.md](CLIENTS.md)) |
 | Access | `/admin/access` | Who read which entity, filtered by user, action, kind, id and dates ([USER_MANAGEMENT.md](../admin/USER_MANAGEMENT.md)) |
@@ -2321,7 +2321,7 @@ origin; **/** focuses it). *Uninstall…* (here, and on the Packs, Connectors an
 it **moves** the folder or file to `data/uninstalled/<time>-<kind>-<name>/`; with dependants it is refused and **Disable instead** (keep it, switch it off) is the
 default; taking the dependants along needs the name typed. The **Uninstalled** tab restores an archive (refused if the name exists again, unless you replace it) or
 deletes it for good (name typed); archives older than 30 days are removed. *Install* uploads a BI file with a dry run first. Every action is audited, and no API
-token can do any of it. Full guide: [ARTIFACTS.md](../admin/ARTIFACTS.md).
+token can do any of it. Full guide: [OPERATIONALISING.md section 18](OPERATIONALISING.md#18-admin--artifacts-install-and-uninstall-safely).
 
 ### Admin → Roles: what a role may do
 
