@@ -21,8 +21,8 @@ pyiceberg), in their own layout, as Drishti kinds: a table is a kind, a row is a
 runs on Windows too, and it **never writes**: the tables' owners maintain them with their own engines.
 
 For tables Drishti's own loader writes (an `id`, a `doc` column, `business_date`, promoted columns, sorted by id) use the `iceberg`
-connector ([ICEBERG_CONNECTOR.md](ICEBERG_CONNECTOR.md)): it reads that layout faster. The design of both is section 15 of
-DRISHTI_ICEBERG.md. Every setting is also in [CONFIGURATION.md](../admin/CONFIGURATION.md#iceberg-external--iceberg-tables-drishti-does-not-write).
+connector ([ICEBERG_CONNECTOR.md](ICEBERG_CONNECTOR.md)): it reads that layout faster. Why there are two is section 15 of
+[DRISHTI_ICEBERG.md](../architecture/DRISHTI_ICEBERG.md#15-two-connectors-drishti-tables-and-external-tables); this page is the one reference of `iceberg-external`. Every setting is also in [CONFIGURATION.md](../admin/CONFIGURATION.md#iceberg-external--iceberg-tables-drishti-does-not-write).
 
 ## Contents
 
@@ -216,7 +216,7 @@ A *Make a pack* button on Admin → Connectors for this connector is planned; un
 
 ## 12. How it is tested
 
-`IcebergExternalPluginTest` serves the shapes of DRISHTI_ICEBERG.md section 15.5 from the pyiceberg-written fixtures
+`IcebergExternalPluginTest` serves the shapes other engines write from the pyiceberg-written fixtures
 (`tools/iceberg/fixtures.py`): a Spark-style trade table (partitioned by the day of a timestamp, unsorted, a merge-on-read
 position delete added by the Iceberg library), a Snowflake-style counterparty table (identifier fields, a nested struct, a map,
 decimals, timestamptz, an equality delete), a current-only reference table, a table renamed and evolved, an unsorted table read

@@ -31,7 +31,7 @@ import java.util.List;
 import java.util.Map;
 
 /**
- * A row's values as JSON (DRISHTI_ICEBERG.md section 15.2): numbers and booleans as JSON numbers and booleans, decimals
+ * A row's values as JSON (ICEBERG_EXTERNAL_CONNECTOR.md section 3): numbers and booleans as JSON numbers and booleans, decimals
  * as numbers (or text with {@code decimals: string}), dates, times and timestamps as ISO-8601 text ({@code 2026-09-30},
  * {@code 18:30:00}, {@code 2026-09-30T18:30:00}, {@code 2026-09-30T18:30:00Z}; a fraction of a second only when there is
  * one, six digits), strings and UUIDs as text, fixed and binary as Base64 (or left out with {@code binary: omit}),

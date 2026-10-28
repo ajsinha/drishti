@@ -26,7 +26,7 @@ import java.util.Set;
 import java.util.TreeSet;
 
 /**
- * How one kind is read from one external table (DRISHTI_ICEBERG.md section 15.1), from the connector's settings
+ * How one kind is read from one external table (ICEBERG_EXTERNAL_CONNECTOR.md section 2), from the connector's settings
  * {@code tables.<kind>.*} (YAML nested under {@code tables:}, flattened by the server):
  *
  * @param table {@code namespace.table} (dots: namespace levels), or the table's name in the catalog's namespace

@@ -69,7 +69,7 @@ final class ExternalTable {
     /** A snapshot's shape and dates (MIN alone for a current-only kind). */
     record Layout(long snapshotId, long timestampMs, long sequenceNumber, Shape shape, NavigableMap<LocalDate, Day> days) {}
 
-    /** How the values of the document come out (DRISHTI_ICEBERG.md section 15.2). */
+    /** How the values of the document come out (ICEBERG_EXTERNAL_CONNECTOR.md section 3). */
     private final JsonValues.Options options;
     private final KindConfig cfg;
     private final Table table;
