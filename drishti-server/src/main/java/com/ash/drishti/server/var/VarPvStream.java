@@ -282,6 +282,8 @@ final class VarPvStream {
         String key = kind.equals("scenario-pv") ? "SCENARIO_PV_ID" : "VECTOR_ID";
         List<String> promoted = columns.apply(kind, "columns");
         Path staged = TempFiles.createFile("var-pv-", ".rows");
+        boolean iceberg = com.ash.drishti.server.official.LakeAppends.iceberg(lake, "risk", kind);   // 2.9.5: an Iceberg risk lake
+        List<com.ash.drishti.plugin.iceberg.IcebergAppender.Row> appends = new ArrayList<>();
         try {
             Map<String, String> types = new LinkedHashMap<>();
             try (BufferedWriter out = Files.newBufferedWriter(staged, StandardCharsets.UTF_8)) {
@@ -300,7 +302,16 @@ final class VarPvStream {
                     doc.set(vector, JSON.createObjectNode().put("$vector", vector));
                     out.write(JSON.writeValueAsString(List.of(r.get(key).asText(), JSON.writeValueAsString(doc), cols)));
                     out.newLine();
+                    if (iceberg) {
+                        Map<String, Object> ic = new LinkedHashMap<>(cols);
+                        ic.put(vector, cols.get(vector) == null ? null : java.util.Arrays.stream((double[]) cols.get(vector)).boxed().toList());
+                        appends.add(new com.ash.drishti.plugin.iceberg.IcebergAppender.Row(r.get(key).asText(), JSON.writeValueAsString(doc), ic));
+                    }
                 }
+            }
+            if (iceberg) {                                             // the window as one Iceberg append (nothing replaced)
+                com.ash.drishti.server.official.LakeAppends.appendIceberg(lake, "risk", kind, day, appends, types, vector);
+                return;
             }
             List<LakeManifest.Column> cs = new ArrayList<>(List.of(new LakeManifest.Column("id", "string"), new LakeManifest.Column("doc", "string"),
                     new LakeManifest.Column("business_date", "date")));

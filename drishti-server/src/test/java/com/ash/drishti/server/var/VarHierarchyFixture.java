@@ -136,4 +136,9 @@ final class VarHierarchyFixture {
         m.put("BUSINESS_DATE", DAY.toString());
         return m;
     }
+
+    /** {@link #write(Path)} into {@code deltaRoot} and the same tables into the Iceberg root {@code icebergRoot} (2.9.5). */
+    static Path writeIceberg(Path deltaRoot, Path icebergRoot) throws Exception {
+        return com.ash.drishti.server.IcebergMirror.into(icebergRoot, () -> write(deltaRoot));
+    }
 }

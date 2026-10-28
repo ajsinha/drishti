@@ -217,5 +217,11 @@ final class ExposureLakeFixture {
         if (code != 0) {
             throw new IllegalStateException(kind + ": " + err.toString(StandardCharsets.UTF_8));
         }
+        com.ash.drishti.server.IcebergMirror.table(kind, byDay, "overwrite-dates");   // the same lines into Iceberg too (2.9.5)
+    }
+
+    /** {@link #write(Path)} into {@code deltaRoot} and the same tables into the Iceberg root {@code icebergRoot} (2.9.5). */
+    static Path writeIceberg(Path deltaRoot, Path icebergRoot) throws Exception {
+        return com.ash.drishti.server.IcebergMirror.into(icebergRoot, () -> write(deltaRoot));
     }
 }

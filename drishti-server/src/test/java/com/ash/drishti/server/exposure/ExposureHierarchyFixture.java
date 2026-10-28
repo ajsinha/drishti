@@ -128,5 +128,11 @@ final class ExposureHierarchyFixture {
         if (code != 0) {
             throw new IllegalStateException("exposure-path: " + err.toString(StandardCharsets.UTF_8));
         }
+        com.ash.drishti.server.IcebergMirror.table("exposure-path", Map.of(DAY.toString(), lines), "overwrite-dates");
+    }
+
+    /** {@link #write(Path)} into {@code deltaRoot} and the same tables into the Iceberg root {@code icebergRoot} (2.9.5). */
+    static Path writeIceberg(Path deltaRoot, Path icebergRoot) throws Exception {
+        return com.ash.drishti.server.IcebergMirror.into(icebergRoot, () -> write(deltaRoot));
     }
 }

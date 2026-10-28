@@ -263,5 +263,16 @@ final class VarLakeFixture {
         if (code != 0) {
             throw new IllegalStateException(kind + ": " + err.toString(StandardCharsets.UTF_8));
         }
+        com.ash.drishti.server.IcebergMirror.table(kind, byDay, mode);    // the same lines into Iceberg too, inside writeIceberg (2.9.5)
+    }
+
+    /** {@link #write(Path)} into {@code deltaRoot} and the same tables into the Iceberg root {@code icebergRoot} (2.9.5). */
+    static Path writeIceberg(Path deltaRoot, Path icebergRoot) throws Exception {
+        return com.ash.drishti.server.IcebergMirror.into(icebergRoot, () -> write(deltaRoot));
+    }
+
+    /** {@link #write(Path, LocalDate, double, boolean, boolean)} into both formats. */
+    static Path writeIceberg(Path deltaRoot, Path icebergRoot, LocalDate day, double factor, boolean mixedRuns, boolean duplicate) throws Exception {
+        return com.ash.drishti.server.IcebergMirror.into(icebergRoot, () -> write(deltaRoot, day, factor, mixedRuns, duplicate));
     }
 }

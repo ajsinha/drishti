@@ -172,6 +172,11 @@ public final class IcebergLoader {
         return one.length() <= n ? one : one.substring(0, n - 1) + "…";
     }
 
+    /** A load from Java (other modules' tests and tools): as {@link #main}, its failure thrown rather than ending the process. */
+    public static void run(String[] args) throws Exception {
+        load(args);
+    }
+
     /** The load itself (tests call it, and see its exceptions). */
     static void load(String[] args) throws Exception {
         String file = args[0];
