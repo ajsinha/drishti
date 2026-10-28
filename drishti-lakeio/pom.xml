@@ -43,4 +43,34 @@
     <dependency><groupId>org.slf4j</groupId><artifactId>slf4j-api</artifactId></dependency>
     <dependency><groupId>com.ash.drishti</groupId><artifactId>drishti-testkit</artifactId><scope>test</scope></dependency>
   </dependencies>
+  <build>
+    <plugins>
+      <plugin>
+        <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-surefire-plugin</artifactId>
+        <executions>
+          <execution>
+            <id>default-test</id>
+            <configuration>
+              <excludes><exclude>**/DirectMemorySoakTest.java</exclude></excludes>
+            </configuration>
+          </execution>
+          <!-- the direct-memory soak runs alone in a JVM with a small direct-memory cap, as a server with
+               -XX:MaxDirectMemorySize would: without the fix its reads fail within seconds. No
+               jdk.nio.maxCachedBufferSize here, so the test proves the code, not the launch flag. -->
+          <execution>
+            <id>direct-memory-soak</id>
+            <phase>test</phase>
+            <goals><goal>test</goal></goals>
+            <configuration>
+              <forkCount>1</forkCount>
+              <reuseForks>false</reuseForks>
+              <includes><include>**/DirectMemorySoakTest.java</include></includes>
+              <argLine>@{argLine} -Djava.io.tmpdir=${project.build.directory}/tmp -XX:MaxDirectMemorySize=64m -Xmx1g</argLine>
+            </configuration>
+          </execution>
+        </executions>
+      </plugin>
+    </plugins>
+  </build>
 </project>

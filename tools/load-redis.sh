@@ -51,7 +51,7 @@ uv run -q --with pyyaml python tools/packgen/banking/make_data.py --jsonl "$DATA
 ./mvnw -q -o install -DskipTests -pl plugins/drishti-plugin-redis -am
 CP="plugins/drishti-plugin-redis/target/classes:$(./mvnw -q -o dependency:build-classpath -pl plugins/drishti-plugin-redis -Dmdep.outputFile=/dev/stdout)"
 # the loader keeps one day's promoted values per kind (about 230 MB per million trades) until the input ends
-JAVA=("$JAVA_HOME/bin/java" -Djava.io.tmpdir="$JTMP" -Xmx"${DRISHTI_LOADER_HEAP:-4g}" -cp "$CP")
+JAVA=("$JAVA_HOME/bin/java" -Djava.io.tmpdir="$JTMP" -Xmx"${DRISHTI_LOADER_HEAP:-4g}" -Djdk.nio.maxCachedBufferSize=262144 -cp "$CP")
 SAMPLE_OPTS=("${OPTS[@]}")
 if [[ -n "$TRADES" && " ${OPTS[*]} " != *" --replace "* ]]; then
   # the bulk book below replaces the trade days it covers; the samples merge, so a reload over an earlier bulk book is

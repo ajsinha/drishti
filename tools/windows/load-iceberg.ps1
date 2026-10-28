@@ -97,7 +97,7 @@ Remove-Item $cpFile
 $loaderArgs = @('--engine', $Engine, '--spill-dir', $SpillDir)
 if ($KeepDays -gt 0) { $loaderArgs += @('--keep-days', "$KeepDays") }
 foreach ($kv in $Set) { $loaderArgs += @('--set', $kv) }
-$jvm = @("-Djava.io.tmpdir=$jtmp", "-Xmx$Heap", '-cp', $cp, 'com.ash.drishti.plugin.iceberg.IcebergLoader')
+$jvm = @("-Djava.io.tmpdir=$jtmp", "-Xmx$Heap", '-Djdk.nio.maxCachedBufferSize=262144', '-cp', $cp, 'com.ash.drishti.plugin.iceberg.IcebergLoader')
 
 & $java @jvm $jsonl $Root @loaderArgs
 if ($LASTEXITCODE -ne 0) {

@@ -117,8 +117,8 @@ final class LocalWriteFileIO implements FileIO {
             public PositionOutputStream create(boolean putIfAbsent) throws IOException {
                 Files.createDirectories(target.getParent());
                 OutputStream out = putIfAbsent
-                        ? Files.newOutputStream(target, StandardOpenOption.CREATE_NEW, StandardOpenOption.WRITE)
-                        : Files.newOutputStream(target, StandardOpenOption.CREATE, StandardOpenOption.TRUNCATE_EXISTING, StandardOpenOption.WRITE);
+                        ? com.ash.drishti.api.ChannelIo.newOutputStream(target, StandardOpenOption.CREATE_NEW, StandardOpenOption.WRITE)
+                        : com.ash.drishti.api.ChannelIo.newOutputStream(target, StandardOpenOption.CREATE, StandardOpenOption.TRUNCATE_EXISTING, StandardOpenOption.WRITE);
                 return new Counting(new java.io.BufferedOutputStream(out, 1 << 16));
             }
 

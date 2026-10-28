@@ -40,10 +40,10 @@ done
 uv run -q --with pyyaml python tools/packgen/banking/make_data.py --jsonl "$DATA/banking.jsonl"
 ./mvnw -q -o install -DskipTests -pl plugins/drishti-plugin-file -am
 CP="plugins/drishti-plugin-file/target/classes:$(./mvnw -q -o dependency:build-classpath -pl plugins/drishti-plugin-file -Dmdep.outputFile=/dev/stdout)"
-"$JAVA_HOME/bin/java" -Djava.io.tmpdir="$JTMP" -Xmx"${DRISHTI_LOADER_HEAP:-4g}" -cp "$CP" com.ash.drishti.plugin.file.JsonlLoader "$DATA/banking.jsonl" "$ROOT" "${OPTS[@]}"
+"$JAVA_HOME/bin/java" -Djava.io.tmpdir="$JTMP" -Xmx"${DRISHTI_LOADER_HEAP:-4g}" -Djdk.nio.maxCachedBufferSize=262144 -cp "$CP" com.ash.drishti.plugin.file.JsonlLoader "$DATA/banking.jsonl" "$ROOT" "${OPTS[@]}"
 if [[ -n "$TRADES" ]]; then
   # the bulk book straight from the generator into the loader: no intermediate file
   uv run -q --with deltalake --with pyarrow --with pyyaml python tools/samplegen/bulk_trades.py --trades "$TRADES" --days "$DAYS" --jsonl - \
-    | "$JAVA_HOME/bin/java" -Djava.io.tmpdir="$JTMP" -Xmx"${DRISHTI_LOADER_HEAP:-4g}" -cp "$CP" com.ash.drishti.plugin.file.JsonlLoader - "$ROOT" "${OPTS[@]}"
+    | "$JAVA_HOME/bin/java" -Djava.io.tmpdir="$JTMP" -Xmx"${DRISHTI_LOADER_HEAP:-4g}" -Djdk.nio.maxCachedBufferSize=262144 -cp "$CP" com.ash.drishti.plugin.file.JsonlLoader - "$ROOT" "${OPTS[@]}"
 fi
 rm -f "$DATA/banking.jsonl"

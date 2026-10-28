@@ -17,6 +17,36 @@
 
 ## Unreleased (2.9.6)
 
+### Direct memory: a server no longer runs out after hours (2026-10-28)
+
+- **The fault.** After about 13 hours a cluster node started with `-XX:MaxDirectMemorySize=256m` failed every lake read with
+  `OutOfMemoryError: Cannot reserve 8192 bytes of direct buffer memory (allocated: 268430166, limit: 268435456)` (87 times, and on the 27th
+  too), and trade pages showed errors. On Java 21, `FileChannel.read` into a heap buffer copies through a temporary direct buffer as
+  large as the read and keeps it cached on that (carrier) thread, with no size limit by default; `LocalStorage`'s reader passed the Delta
+  kernel's and the Parquet reader's multi-megabyte heap reads straight to the channel, on many threads.
+- **The fix.** `ChannelIo` (`drishti-api`): file-channel reads and writes of heap buffers go in 128 KB slices through a bounded pool of
+  reusable direct buffers (64 at most, 8 MB); when all are busy the transfer is sliced through the JDK's own buffer at 128 KB. Used by
+  `LocalStorage` (every Delta, Iceberg and Parquet read), the lake loader's sort runs, rejects and outputs, the Delta and Iceberg local
+  writers' streams, VaR and exposure hot files (whole-section reads and writes; `ShardSkeleton` through them), compute results
+  (`ArrowIpc`, read and written in slices), day index segments, the JSON Lines connector's 4 MB scan blocks, and the content store
+  (`FileContentStore.get` without `Files.readAllBytes`; the version check hashes the file in 64 KB pieces; `exists()` for a run's answer
+  instead of reading it). Kafka consumers fetch at most 4 MB (`fetch.max.bytes`) and 1 MB a partition by default (`client.*` overrides).
+  Throughput holds (a 128 MB file in the page cache, Java 21, old then new: 8 MB reads 8.1 to 9.5 GB/s on one thread and 11.8 to
+  25.3 GB/s on eight; 1 MB reads 10.7 to 10.8 and 41.8 to 55.6; 64 KB reads 11.4 to 10.4 and 57.4 to 55.0).
+- **Launch flags.** `-Djdk.nio.maxCachedBufferSize=262144` in every server and loader launcher (`drishti-stack/stack.py`, the Docker and
+  ECS server images, the ECS lake task, `tools/windows/start-server.ps1`, `load-iceberg.ps1`, `load-cassandra.ps1`, every
+  `tools/load-*.sh`, the IntelliJ run configurations, and `tools/javacmd.py`'s `java_cmd`), with `-XX:NativeMemoryTracking=summary`; the
+  production launchers add a heap dump on OutOfMemoryError (`dumps/`) and a rotated GC log (`gc-%p.log`, 5 x 20 MB), making both folders
+  first. OPERATIONS.md 12.1a, CONFIGURATION.md *JVM flags for a long run*, PERFORMANCE.md; `tools/test_launcher_memory.py` checks them.
+- **Admin → Health: Memory and files.** A row with direct memory against `MaxDirectMemorySize` (amber with a warning from 80%), mapped
+  memory, heap, live threads, open files against the limit and (Linux) descriptors still open on deleted files; the same figures under
+  `server` in `GET /api/v1/admin/health` (`ProcessResources`).
+- **Proof.** `DirectMemorySoakTest` (drishti-lakeio: 24 platform and 48 virtual threads reading 2 to 4 MB ranges of local files through
+  `LocalStorage` for 12 s in a JVM with `-XX:MaxDirectMemorySize=64m`) and `HotFileDirectMemorySoakTest` (drishti-compute: the same threads
+  opening three dates' VaR hot files of 9,000 trades for 10 s at 32m) run in their own surefire executions, without the launch flag.
+  Against develop's code they fail within two seconds with the production error; with the fix direct memory stays flat, under 8 MB and
+  5 MB. `ChannelIoTest`, `ProcessResourcesTest`, the Health API and console tests cover the rest.
+
 ### The parallel lake loader
 
 - **A config-driven, multi-threaded Java loader of JSON Lines into Delta or Iceberg (2026-10-28; the release's top item).** New module

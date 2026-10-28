@@ -271,11 +271,7 @@ public final class ExposureHotFile {
     }
 
     private static long writeAt(FileChannel ch, ByteBuffer b, long pos) throws IOException {
-        long written = 0;
-        while (b.hasRemaining()) {
-            written += ch.write(b, pos + written);
-        }
-        return written;
+        return com.ash.drishti.api.ChannelIo.write(ch, b, pos);          // chunked: no direct buffer as large as the section
     }
 
     private static ByteBuffer read(FileChannel ch, long pos, long length) throws IOException {
@@ -283,10 +279,10 @@ public final class ExposureHotFile {
             throw new IOException("a section of " + length + " bytes is too large to read whole");
         }
         ByteBuffer b = ByteBuffer.allocate((int) length).order(ByteOrder.LITTLE_ENDIAN);
-        while (b.hasRemaining()) {
-            if (ch.read(b, pos + b.position()) < 0) {
-                throw new IOException("the exposure hot file ends early");
-            }
+        try {
+            com.ash.drishti.api.ChannelIo.readFully(ch, b, pos);      // chunked: no direct buffer as large as the section
+        } catch (java.io.EOFException e) {
+            throw new IOException("the exposure hot file ends early", e);
         }
         b.flip();
         return b;

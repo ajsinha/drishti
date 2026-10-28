@@ -68,9 +68,15 @@ fi
 v=$(java -XX:-UsePerfData -XshowSettings:properties -version 2>&1 | sed -n 's/.*java.specification.version = //p')
 if [ "${v:-21}" -ge 25 ]; then set -- -XX:+UseCompactObjectHeaders; else set --; fi
 # -XX:-UsePerfData: no hsperfdata file in /tmp (the root is read-only); crash files and heap dumps go to EFS
-# native memory (PERFORMANCE.md, Resident memory): two glibc malloc arenas, direct buffers capped, freed native memory given back
+# native memory (PERFORMANCE.md, Resident memory): two glibc malloc arenas, direct buffers capped, the JDK's per-thread temporary
+# direct buffers cached up to 256 KB only, freed native memory given back, native memory tracked (jcmd <pid> VM.native_memory summary).
+# Diagnostics of a long run (OPERATIONS.md): heap dump on OutOfMemoryError in data/dumps, a rotated GC log (5 x 20 MB) in data/logs;
+# the JVM does not start when the GC log's folder is missing, so both are made first
 export MALLOC_ARENA_MAX="${MALLOC_ARENA_MAX:-2}"
+mkdir -p "$D/data/logs" "$D/data/dumps"
 exec java "$@" -Xmx"${DRISHTI_HEAP:-8g}" -XX:+UseZGC -XX:-UsePerfData -XX:MaxDirectMemorySize=256m -XX:TrimNativeHeapInterval=60000 \
+  -Djdk.nio.maxCachedBufferSize=262144 -XX:NativeMemoryTracking=summary \
   -Djava.io.tmpdir="$TMPDIR" -Duser.home="$HOME" \
-  -XX:ErrorFile="$D/data/logs/hs_err_pid%p.log" -XX:+HeapDumpOnOutOfMemoryError -XX:HeapDumpPath="$D/data/logs" \
+  -XX:ErrorFile="$D/data/logs/hs_err_pid%p.log" -XX:+HeapDumpOnOutOfMemoryError -XX:HeapDumpPath="$D/data/dumps" \
+  -Xlog:gc*:file="$D/data/logs/gc-%p.log":time,uptime:filecount=5,filesize=20m \
   -jar "$D/app.jar"

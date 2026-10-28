@@ -20,7 +20,6 @@ import java.io.BufferedOutputStream;
 import java.io.DataOutputStream;
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
-import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -238,7 +237,7 @@ final class ParseWorker implements Callable<Void> {
             firstRejects.subList(keep, firstRejects.size()).clear();
         }
         if (rejectsOut == null) {
-            rejectsOut = new DataOutputStream(new BufferedOutputStream(Files.newOutputStream(rejectsFile), 1 << 16));
+            rejectsOut = new DataOutputStream(new BufferedOutputStream(com.ash.drishti.api.ChannelIo.newOutputStream(rejectsFile), 1 << 16));
         }
         rejectsOut.writeInt(w.split());
         rejectsOut.writeInt(w.seq());

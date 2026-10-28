@@ -20,7 +20,6 @@ import java.io.IOException;
 import java.io.OutputStream;
 import java.nio.ByteBuffer;
 import java.nio.ByteOrder;
-import java.nio.channels.Channels;
 import java.nio.channels.FileChannel;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
@@ -78,7 +77,7 @@ public final class ArrowIpc {
     /** Writes the table to a file (created or replaced). */
     public static void write(ArrowTable t, Path file) throws IOException {
         try (FileChannel ch = FileChannel.open(file, StandardOpenOption.CREATE, StandardOpenOption.TRUNCATE_EXISTING, StandardOpenOption.WRITE);
-                OutputStream out = new java.io.BufferedOutputStream(Channels.newOutputStream(ch), 1 << 20)) {
+                OutputStream out = new java.io.BufferedOutputStream(com.ash.drishti.api.ChannelIo.outputStream(ch), 1 << 20)) {
             write(t, out);
         }
     }
@@ -306,7 +305,7 @@ public final class ArrowIpc {
         }
         ByteBuffer b = ByteBuffer.allocate((int) size);
         try (FileChannel ch = FileChannel.open(file, StandardOpenOption.READ)) {
-            while (b.hasRemaining() && ch.read(b) >= 0) {
+            while (b.hasRemaining() && com.ash.drishti.api.ChannelIo.read(ch, b) >= 0) {
                 // read it whole
             }
         }

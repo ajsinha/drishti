@@ -118,10 +118,12 @@ def test_the_guard_catches_what_it_should():
 
 def test_java_cmd_puts_the_flag_first_and_makes_the_folder(tmp_path):
     from java_launch import FLAG, java_cmd, server_tmp
+    cache = "-Djdk.nio.maxCachedBufferSize=262144"          # the JDK's per-thread temporary direct buffers cached up to 256 KB only
     cmd = java_cmd("/jdk/bin/java", ["-Xmx1g", "-jar", "s.jar", "--server.port=1"], tmp=tmp_path / "jvm")
-    assert cmd == ["/jdk/bin/java", f"{FLAG}{tmp_path / 'jvm'}", "-Xmx1g", "-jar", "s.jar", "--server.port=1"]
+    assert cmd == ["/jdk/bin/java", f"{FLAG}{tmp_path / 'jvm'}", cache, "-Xmx1g", "-jar", "s.jar", "--server.port=1"]
     assert (tmp_path / "jvm").is_dir()
-    assert java_cmd("java", [f"{FLAG}/elsewhere", "-jar", "s.jar"], tmp=tmp_path / "no") == ["java", f"{FLAG}/elsewhere", "-jar", "s.jar"]
+    assert java_cmd("java", [f"{FLAG}/elsewhere", "-jar", "s.jar"], tmp=tmp_path / "no") == ["java", cache, f"{FLAG}/elsewhere", "-jar", "s.jar"]
+    assert java_cmd("java", ["-Djdk.nio.maxCachedBufferSize=0", "-jar", "s.jar"], tmp=tmp_path / "jvm")[2:] == ["-Djdk.nio.maxCachedBufferSize=0", "-jar", "s.jar"]
     assert not (tmp_path / "no").exists()
     # the default: the server's own temp base for that working folder and environment, as TempFiles.configuredBase computes it
     assert server_tmp(tmp_path, {}) == (tmp_path / "data" / "tmp" / "server").resolve()

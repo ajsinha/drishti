@@ -100,7 +100,7 @@ them (a lake holds the day, the topic is the change feed).
 | `poll-ms` | int | `200` | Poll interval |
 | `cache-mb` | int | `256` | Memory cache, weighed by message length |
 | `disk-cache.*` | string |  | On-disk cache (enabled, dir, max-gb, ...) |
-| `client.*` | string |  | Any Kafka client property (client.max.poll.records); applied last, wins over everything above |
+| `client.*` | string |  | Any Kafka client property (client.max.poll.records); applied last, wins over everything above. Fetches default to `fetch.max.bytes` 4 MB and `max.partition.fetch.bytes` 1 MB (Kafka's own default is 50 MB; each poll thread reads a fetch through a temporary direct buffer): `client.fetch.max.bytes` and `client.max.partition.fetch.bytes` raise them |
 | `value-format` | one of string, confluent |  | string (default), or confluent to read the Confluent wire format (implied by schema-registry.url) |
 | `flavour` | one of apache, confluent | `apache` | confluent: Confluent Cloud defaults (SASL PLAIN with api-key and api-secret, DNS lookup of all addresses) |
 | `security.protocol` | one of PLAINTEXT, SSL, SASL_PLAINTEXT, SASL_SSL |  | `PLAINTEXT`, `SSL`, `SASL_PLAINTEXT` or `SASL_SSL`. Absent: `SASL_SSL` if `sasl.mechanism` is set and TLS is wanted (`tls.enabled: true`), `SASL_PLAINTEXT` with a mechanism and no TLS, `SSL` with `tls.enabled`, else `PLAINTEXT`. Always write it down in production. |

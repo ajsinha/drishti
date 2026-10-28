@@ -278,6 +278,18 @@ class KafkaSecurityTest {
     }
 
     @Test
+    void fetchesAreSmallByDefaultAndClientSettingsRaiseThem() throws Exception {
+        Map<String, String> plain = m("bootstrap-servers", "b1:9092");
+        Properties p = KafkaSourcePlugin.consumerProperties(plain, "orders", KafkaSecurity.translate(plain));
+        assertThat(p.getProperty("fetch.max.bytes")).isEqualTo(String.valueOf(4 << 20));
+        assertThat(p.getProperty("max.partition.fetch.bytes")).isEqualTo(String.valueOf(1 << 20));
+        Map<String, String> raised = m("bootstrap-servers", "b1:9092", "client.fetch.max.bytes", "16777216", "client.max.partition.fetch.bytes", "4194304");
+        Properties q = KafkaSourcePlugin.consumerProperties(raised, "orders", KafkaSecurity.translate(raised));
+        assertThat(q.getProperty("fetch.max.bytes")).isEqualTo("16777216");
+        assertThat(q.getProperty("max.partition.fetch.bytes")).isEqualTo("4194304");
+    }
+
+    @Test
     void theKafkaClientAcceptsTheTranslatedProperties() throws Exception {
         // the consumer config validates every key and value it is given; nothing connects (no bootstrap resolves)
         Path cert = dir.resolve("c.pem");

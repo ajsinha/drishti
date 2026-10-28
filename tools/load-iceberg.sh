@@ -60,7 +60,7 @@ if ! {
     # the bulk book straight from the generator: no file of gigabytes in between
     uv run -q --with deltalake --with pyarrow --with pyyaml python tools/samplegen/bulk_trades.py --trades "$TRADES" --days "$DAYS" --jsonl -
   fi
-} | "$JAVA_HOME/bin/java" -Djava.io.tmpdir="$JTMP" -Xmx"${DRISHTI_LOADER_HEAP:-4g}" -cp "$CP" com.ash.drishti.plugin.iceberg.IcebergLoader - "$ROOT" "${OPTS[@]}"; then
+} | "$JAVA_HOME/bin/java" -Djava.io.tmpdir="$JTMP" -Xmx"${DRISHTI_LOADER_HEAP:-4g}" -Djdk.nio.maxCachedBufferSize=262144 -cp "$CP" com.ash.drishti.plugin.iceberg.IcebergLoader - "$ROOT" "${OPTS[@]}"; then
   rm -f "$DATA/banking.jsonl"
   echo "load-iceberg: the load did not finish: see the line above" >&2
   exit 1

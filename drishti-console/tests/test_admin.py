@@ -72,6 +72,32 @@ def test_the_health_page_shows_connectors_packs_and_live(client, backend, monkey
     assert "data-health-body" not in body and "setInterval" in client.get("/static/js/admin.js").text
 
 
+def test_the_health_page_shows_direct_memory_and_open_files(client, backend, monkeypatch):
+    """What a long run exhausts: direct memory against -XX:MaxDirectMemorySize (amber from 80%), mapped files, heap, threads, files."""
+    server = {"version": "2.9.6", "uptimeSeconds": 60, "java": "21", "heapUsedMb": 300, "heapMaxMb": 4000, "threads": 60, "cpus": 8,
+              "directUsedBytes": 50 * 1048576, "directCapacityBytes": 50 * 1048576, "directBuffers": 12, "directMaxBytes": 256 * 1048576,
+              "directPercent": 19, "directWarning": False, "mappedUsedBytes": 80 * 1048576, "mappedBuffers": 4, "openFiles": 412,
+              "maxFiles": 65536, "deletedOpenFiles": 3}
+    data = {"status": "OK", "summary": {"sources": 0, "sourcesDown": 0, "failedToStart": 0, "packs": 0, "packsWithProblems": 0},
+            "server": server, "sources": [], "packs": [], "live": {}, "tmp": {}}
+
+    async def admin(method, path, ident, body=None, **params):
+        return {"connectors": []} if path == "/connectors" else data
+    monkeypatch.setattr(backend, "admin", admin)
+    page = client.get("/admin/health").text
+    flat = " ".join(__import__("re").sub(r"<[^>]+>", "", page).split())
+    assert "data-process-memory" in page
+    assert "direct 50.0/256 MB (19%) · 12 buffers" in flat and "mapped 80.0 MB · 4 files" in flat
+    assert "heap 300/4000 MB" in flat and "60 live threads" in flat and "412/65536 open files · 3 on deleted files" in flat
+    assert "data-direct-warning" not in page and 'class="mono t-warn" data-direct' not in page
+    server.update(directUsedBytes=220 * 1048576, directPercent=85, directWarning=True)
+    page = client.get("/admin/health").text
+    assert 'class="mono t-warn" data-direct' in page and "data-direct-warning" in page and "85% of -XX:MaxDirectMemorySize" in page
+    # a server older than 2.9.6 sends none of it: no row
+    data["server"] = {k: server[k] for k in ("version", "uptimeSeconds", "java", "heapUsedMb", "heapMaxMb", "threads", "cpus")}
+    assert "data-process-memory" not in client.get("/admin/health").text
+
+
 def test_a_degraded_connector_is_shown_with_what_it_cannot_read(client, backend, monkeypatch):
     """DATA-18: a connector that serves but cannot read a table says which, in amber."""
     data = {"status": "DEGRADED", "summary": {"sources": 1, "sourcesDown": 0, "sourcesDegraded": 1, "failedToStart": 0, "packs": 0,

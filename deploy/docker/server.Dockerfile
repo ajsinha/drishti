@@ -14,9 +14,11 @@ USER drishti
 EXPOSE 18480
 # -Djava.io.tmpdir: DuckDB, RocksDB and CatBoost unpack their native libraries into the JVM's startup temp folder (only the command
 # line moves it); the server removes stale copies from its temp base at start, so a killed container leaves nothing in /tmp
-# native memory (PERFORMANCE.md, Resident memory): two glibc malloc arenas, direct buffers capped, freed native memory given back
-ENV JAVA_TOOL_OPTIONS="-XX:MaxRAMPercentage=75 -XX:+UseZGC -XX:MaxDirectMemorySize=256m -XX:TrimNativeHeapInterval=60000 -Djava.io.tmpdir=/opt/drishti/data/tmp/server" \
+# native memory (PERFORMANCE.md, Resident memory): two glibc malloc arenas, direct buffers capped, the JDK's per-thread temporary direct
+# buffers cached up to 256 KB only, freed native memory given back, native memory tracked; a heap dump on OutOfMemoryError in data/dumps
+ENV JAVA_TOOL_OPTIONS="-XX:MaxRAMPercentage=75 -XX:+UseZGC -XX:MaxDirectMemorySize=256m -XX:TrimNativeHeapInterval=60000 -Djdk.nio.maxCachedBufferSize=262144 -XX:NativeMemoryTracking=summary -XX:+HeapDumpOnOutOfMemoryError -XX:HeapDumpPath=/opt/drishti/data/dumps -Djava.io.tmpdir=/opt/drishti/data/tmp/server" \
     MALLOC_ARENA_MAX=2
 HEALTHCHECK --interval=15s --timeout=3s CMD wget -qO- http://localhost:18480/actuator/health/readiness || exit 1
-# -XX:+UseCompactObjectHeaders exists from Java 25 (Java 21 refuses to start with it), so the entrypoint adds it only there
-ENTRYPOINT ["sh", "-c", "v=$(java -XshowSettings:properties -version 2>&1 | sed -n 's/.*java.specification.version = //p'); if [ \"$v\" -ge 25 ]; then set -- -XX:+UseCompactObjectHeaders; else set --; fi; exec java \"$@\" -jar app.jar"]
+# -XX:+UseCompactObjectHeaders exists from Java 25 (Java 21 refuses to start with it), so the entrypoint adds it only there; the rotated
+# GC log (5 x 20 MB) goes to data/logs, made first (the data folder is a volume, and the JVM does not start when the log's folder is missing)
+ENTRYPOINT ["sh", "-c", "mkdir -p /opt/drishti/data/logs /opt/drishti/data/dumps; v=$(java -XshowSettings:properties -version 2>&1 | sed -n 's/.*java.specification.version = //p'); if [ \"$v\" -ge 25 ]; then set -- -XX:+UseCompactObjectHeaders; else set --; fi; exec java \"$@\" -Xlog:gc*:file=/opt/drishti/data/logs/gc-%p.log:time,uptime:filecount=5,filesize=20m -jar app.jar"]

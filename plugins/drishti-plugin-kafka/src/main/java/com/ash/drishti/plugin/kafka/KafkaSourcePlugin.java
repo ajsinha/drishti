@@ -117,7 +117,8 @@ public final class KafkaSourcePlugin implements SourcePlugin {
 
     /**
      * The consumer properties: the connector's own, then the security settings translated to Kafka properties, then every
-     * {@code client.<property>} setting, which wins over both.
+     * {@code client.<property>} setting, which wins over both. Fetches are capped at 4 MB ({@code fetch.max.bytes}) and 1 MB per
+     * partition ({@code max.partition.fetch.bytes}) unless a {@code client.} setting says otherwise.
      */
     static Properties consumerProperties(Map<String, String> settings, String sourceName, KafkaSecurity.Result security) {
         Properties p = new Properties();
@@ -127,6 +128,11 @@ public final class KafkaSourcePlugin implements SourcePlugin {
         p.put(ConsumerConfig.VALUE_DESERIALIZER_CLASS_CONFIG, StringDeserializer.class.getName());
         p.put(ConsumerConfig.ENABLE_AUTO_COMMIT_CONFIG, "false");
         p.put(ConsumerConfig.CLIENT_ID_CONFIG, "drishti-" + sourceName);
+        // a fetch is read through one temporary direct buffer per poll thread: keep it small (Kafka's defaults are 50 MB and
+        // 1 MB per partition); a record batch larger than these still arrives. client.fetch.max.bytes and
+        // client.max.partition.fetch.bytes override them.
+        p.put(ConsumerConfig.FETCH_MAX_BYTES_CONFIG, String.valueOf(4 << 20));
+        p.put(ConsumerConfig.MAX_PARTITION_FETCH_BYTES_CONFIG, String.valueOf(1 << 20));
         security.properties().forEach(p::put);
         settings.forEach((k, v) -> {
             if (k.startsWith("client.")) {

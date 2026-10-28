@@ -41,6 +41,11 @@ public interface ContentStore extends AutoCloseable {
 
     Optional<Item> get(String key);
 
+    /** Whether an item exists, without reading it (a run's answer can be large). */
+    default boolean exists(String key) {
+        return get(key).isPresent();
+    }
+
     /**
      * Compare-and-set write. {@code expectedVersion} null: the item must not exist (a create); otherwise it must still have that
      * version. Returns the new version; throws {@link ErrorCode#CONTENT_CONFLICT} on a mismatch.

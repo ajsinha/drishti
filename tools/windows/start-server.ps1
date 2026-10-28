@@ -131,8 +131,17 @@ if ($Iceberg) {
 # unpack their native libraries there, and the server removes stale copies at start; java.io.tmpdir only moves on the command line
 $tmpDir = if ($env:DRISHTI_TMP_DIR) { $env:DRISHTI_TMP_DIR } elseif ($env:DRISHTI_DATA_DIR) { Join-Path $env:DRISHTI_DATA_DIR 'tmp\server' } else { Join-Path $root 'data\tmp\server' }
 New-Item -ItemType Directory -Force -Path $tmpDir | Out-Null
-# native memory (PERFORMANCE.md, Resident memory): direct buffers capped, freed native memory given back (MALLOC_ARENA_MAX is glibc's: not here)
-$javaArgs = @("-Djava.io.tmpdir=$tmpDir", "-Xmx$Heap", '-XX:MaxDirectMemorySize=256m', '-XX:TrimNativeHeapInterval=60000', '-jar', $Jar)
+# native memory (PERFORMANCE.md, Resident memory): direct buffers capped, the JDK's per-thread temporary direct buffers cached up to
+# 256 KB only, freed native memory given back, native memory tracked (MALLOC_ARENA_MAX is glibc's: not here). Diagnostics of a long run
+# (OPERATIONS.md): a heap dump on OutOfMemoryError in data\dumps and a rotated GC log (5 x 20 MB) in data\logs. The GC log's path is
+# relative to the working folder (the repository): -Xlog reads a colon as a separator, so a drive letter cannot appear in it; the
+# JVM does not start when the folder is missing, so both are made first.
+$logs = Join-Path $root 'data\logs'
+$dumps = Join-Path $root 'data\dumps'
+New-Item -ItemType Directory -Force -Path $logs, $dumps | Out-Null
+$javaArgs = @("-Djava.io.tmpdir=$tmpDir", "-Xmx$Heap", '-XX:MaxDirectMemorySize=256m', '-XX:TrimNativeHeapInterval=60000',
+    '-Djdk.nio.maxCachedBufferSize=262144', '-XX:NativeMemoryTracking=summary', '-XX:+HeapDumpOnOutOfMemoryError', "-XX:HeapDumpPath=$dumps",
+    '-Xlog:gc*:file=data/logs/gc-%p.log:time,uptime:filecount=5,filesize=20m', '-jar', $Jar)
 if ($major -ge 25) { $javaArgs = @('-XX:+UseCompactObjectHeaders') + $javaArgs }
 Write-Host "Drishti server: $Jar on port $Port, Delta engine $Engine, lake $LakeRoot, packs $(if ($Packs) { $Packs } else { '(default)' }), heap $Heap$(if ($DemoLakes) { ', offline demo on the lakes (sign in as drishti-dev-admin)' })"
 
