@@ -253,6 +253,7 @@ connectors:
           - LEGAL_ENTITY
           - DESK
           - TT_BOOK
+          - LIMIT_LETTER
           - ASSET_CLASS
           - PRODUCT
           - SOURCE_SYSTEM

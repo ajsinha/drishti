@@ -27,7 +27,7 @@ grain: One row per p&l vector (509 scenarios) per BUSINESS_DATE, keyed by VECTOR
 key:
 - VECTOR_ID
 id-pattern:
-- ^PNL-
+- ^PNL-.+-HS-[0-9]+$
 - ^PV-
 dated-by: BUSINESS_DATE
 cadence:

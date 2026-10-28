@@ -163,7 +163,7 @@ Every kind of the pack has a data contract: a YAML file beside the pack (`config
 | `MC` | `margin-call` | fundamental | `CALL_ID` | One row per margin call per business date, keyed by CALL_ID. | 14 |
 | `SIMM` | `simm` | fundamental | `CALC_ID` | One row per isda simm initial margin per business date, keyed by CALC_ID. | 10 |
 | `XRUN` | `simulation-run` | input | `RUN_ID` | One row per simulation run and business date, keyed by RUN_ID; the newest complete run of a date answers. | 24 |
-| `XPATH` | `exposure-path` | input | `PATH_ROW_ID` | One row per trade, grid date and run per business date, keyed by PATH_ROW_ID (<run>~<trade>~<grid index>); sparse by maturity. | 20 |
+| `XPATH` | `exposure-path` | input | `PATH_ROW_ID` | One row per trade, grid date and run per business date, keyed by PATH_ROW_ID (<run>~<trade>~<grid index>); sparse by maturity. | 21 |
 | `EXP` | `exposure-result` | computed | — | One answer per question (the scope asked for, its parameters q, collateral and run, and the business date), computed when asked. | 27 |
 | `XWIF` | `exposure-whatif` | computed | — | One answer per question (the scope, the sandbox, the parameters q, collateral and sets, the business date), computed when asked. | 27 |
 | `XOFC` | `exposure-official-cpty` | computed | `NODE_ID`, `RESULT_VERSION` | One row per scope (netting set, counterparty or group) per BUSINESS_DATE and RESULT_VERSION, keyed by NODE_ID and RESULT_VERSION; the latest version of a date is the date's figure. | 32 |
@@ -570,6 +570,7 @@ One trade's mark to market on every path of a simulation run at one grid date, i
 | `LEGAL_ENTITY` | id |  | required |  | `LE-FRA` (pattern `^LE-`) | `legal-entity` | Legal entity: the legal-entity it refers to |
 | `DESK` | id |  | required |  | `DESK-SFT` (pattern `^DESK-`) | `desk` | Desk: the desk it refers to |
 | `TT_BOOK` | id |  | required |  | `BOOK-SFT-1` (pattern `^BOOK-`) | `book` | Book: the book it refers to |
+| `LIMIT_LETTER` | text |  | optional |  | `LL-0003` |  | The trade's limit letter (2.9.5), as its VaR records carry it: the level column of the hierarchy LL (LIMIT_LETTER > DESK, VAR_GUIDE.md section 16). When a hierarchy is built from it, every row carries it (a row without it is refused, DRS-5211). |
 | `ASSET_CLASS` | text |  | required |  | `Equity`, `FX`, `Inflation`, `Securities financing` |  | — |
 | `PRODUCT` | text |  | required |  | `Tri-party repo` |  | — |
 | `NOTIONAL` | amount |  | required |  | `237000000.0` |  | — |

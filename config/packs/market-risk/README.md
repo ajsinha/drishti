@@ -33,6 +33,7 @@ kinds:
 - fx-scenario
 - scenario-set
 - risk-hierarchy
+- var-limit
 - var-result
 - var-whatif
 - var-official
@@ -49,6 +50,7 @@ commands:
   FXS: fx-scenario
   SSET: scenario-set
   HIER: risk-hierarchy
+  VLIM: var-limit
   VRES: var-result
   VWIF: var-whatif
   VOFF: var-official
@@ -338,7 +340,7 @@ Links: `PORTFOLIO_ID` → `portfolio`.
 
 One trade's P&L under each of the 509 scenario days, in USD: the grain every VaR is summed from, with the trade's terms the server derives its position from
 
-**Id:** pattern `^PV-`.
+**Id:** pattern `^PNL-.+-HS-[0-9]+$`, `^PV-`.
 
 Fields, from 2 sample documents:
 
@@ -349,7 +351,7 @@ Fields, from 2 sample documents:
 | `TRADE_ID` | string | `MX-20000274` | link to `trade` (in 50%) |
 | `CURRENCY` | string | `USD` | — |
 | `SOURCE_SYSTEM` | string | `MUREX` | — |
-| `VECTOR_ID` | string | `PV-MX-20000274-HS-509` | PV-<trade>-HS-509 |
+| `VECTOR_ID` | string | `PNL-MX-20000274-HS-509` | PV-<trade>-HS-509 |
 | `SECURITY_ID` | string | `SEC-WARRANT-USD-01` | The security or exchange contract of a securities or listed trade (the demo's are synthetic) |
 | `INSTRUMENT` | string | `Equity warrant USD 2027-05` | — |
 | `BUSINESS_DATE` | date | `2026-09-30` | — |
@@ -361,6 +363,7 @@ Fields, from 2 sample documents:
 | `DIVISION` | string | `DIV-MARKETS` | — |
 | `DESK` | string | `DESK-EQD` | link to `desk` |
 | `TT_BOOK` | string | `BOOK-EQD-2` | link to `book` |
+| `LIMIT_LETTER` | string | `LL-0008` | — |
 | `PORTFOLIO` | string | `BOOK-EQD-2` | link to `book` |
 | `STRATEGY` | null |  | — |
 | `PRODUCT_GROUP` | string | `Equity` | — |
@@ -414,6 +417,7 @@ Fields, from 2 sample documents:
 | `DIVISION` | string | `DIV-MARKETS` | — |
 | `DESK` | string | `DESK-COMM` | link to `desk` |
 | `TT_BOOK` | string | `BOOK-COMM-1` | link to `book` |
+| `LIMIT_LETTER` | string | `LL-0001` | — |
 | `PORTFOLIO` | string | `BOOK-COMM-1` | link to `book` |
 | `STRATEGY` | null |  | — |
 | `PRODUCT_GROUP` | string | `Commodity` | — |
@@ -517,6 +521,27 @@ Nested structures:
 
 Links: `NODE_ID` → `risk-hierarchy`.
 
+### `var-limit`
+
+**VaR limit of a hierarchy node** · mnemonic `VLIM` · read through connector `risk-store`.
+
+**Id:** pattern `^VL-`.
+
+Fields, from 4 sample documents:
+
+| Field | Type | Example | Description |
+|---|---|---|---|
+| `LIMIT_ID` | string | `VL-LL~BANK` | — |
+| `HIERARCHY` | string | `LL` | — |
+| `NODE_ID` | string | `LL~BANK` | link to `risk-hierarchy` |
+| `LIMIT_VAR` | integer | `150000000` | — |
+| `CURRENCY` | string | `USD` | — |
+| `BUSINESS_DATE` | date | `2026-09-30` | — |
+| `VALID_FROM` | date | `2026-01-02` | — |
+| `VALID_TO` | null |  | — |
+
+Links: `NODE_ID` → `risk-hierarchy`.
+
 ### `var-result`
 
 **VaR of a scope (computed)** · mnemonic `VRES` · read through connector `var-engine`.
@@ -563,6 +588,7 @@ No samples ship: documents are read live from its connector `var-results` (plugi
 | `FXS` | `fx-scenario` | Scenario FX of a currency (509 scenarios) |
 | `SSET` | `scenario-set` | Scenario set |
 | `HIER` | `risk-hierarchy` | Risk hierarchy node |
+| `VLIM` | `var-limit` | VaR limit of a hierarchy node |
 | `VRES` | `var-result` | VaR of a scope (computed) |
 | `VWIF` | `var-whatif` | VaR what-if (computed, Python) |
 | `VOFF` | `var-official` | VaR official results (published) |
@@ -607,7 +633,7 @@ The connectors it brings (written once to `config/connectors/<name>.yaml`, then 
 
 | Connector | Plugin | Kinds | Enabled |
 |---|---|---|---|
-| `risk-store` | `delta` | `stress-scenario`, `stress-result`, `frtb-sensitivity`, `pnl-explain`, `trade-valuation`, `portfolio`, `pnl-vector`, `scenario-pv`, `fx-scenario`, `scenario-set`, `risk-hierarchy` | `${DRISHTI_LAKE_ENABLED:true}` |
+| `risk-store` | `delta` | `stress-scenario`, `stress-result`, `frtb-sensitivity`, `pnl-explain`, `trade-valuation`, `portfolio`, `pnl-vector`, `scenario-pv`, `fx-scenario`, `scenario-set`, `risk-hierarchy`, `var-limit` | `${DRISHTI_LAKE_ENABLED:true}` |
 | `var-results` | `delta` | `var-official` | `${DRISHTI_VAR_ENABLED:true}` |
 | `var-positions` | `var-positions` | `position` | `${DRISHTI_VAR_ENABLED:true}` |
 | `pv-updates` | `var-pv-stream` | `pv-update` | `${DRISHTI_VAR_PV_STREAM:false}` |

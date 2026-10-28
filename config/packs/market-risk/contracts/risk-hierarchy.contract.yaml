@@ -27,7 +27,7 @@ grain: One row per risk hierarchy node per BUSINESS_DATE, keyed by NODE_ID.
 key:
 - NODE_ID
 id-pattern:
-- ^[A-Z][A-Z0-9_]*~
+- ^(MGMT|LEGAL)~
 dated-by: BUSINESS_DATE
 cadence:
   frequency: daily

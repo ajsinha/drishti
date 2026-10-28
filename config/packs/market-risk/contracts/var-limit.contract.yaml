@@ -65,6 +65,7 @@ fields:
     the date is unused and said (DRS-5212). A node without a row has no limit (shown blank, never zero).'
   example: LL~LL-0003/DESK-RATES
   pattern: ^[A-Z][A-Z0-9_]*~
+  link: risk-hierarchy
 - name: LIMIT_VAR
   type: amount
   presence: required
