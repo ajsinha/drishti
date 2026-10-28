@@ -627,7 +627,7 @@ Build, test and close 2.9.5 (drill, main, tag) first; only the editions design d
 
 | # | Part | What |
 |---|---|---|
-| 1 | Editions | one setting, `drishti.edition`, bundling packs, allowed commands, menus and features, Home, help, Admin and branding (the logo and the about 26 hard-coded literals); `var-engine` first; design doc `docs/architecture/EDITIONS.md` |
+| 1 | Editions | one setting, `drishti.edition`, bundling packs, allowed commands, menus and features, Home, help, Admin and branding (the logo and the about 26 hard-coded literals); `var-engine` first; a design doc, EDITIONS.md under docs/architecture (to be written) |
 | 2 | Scale-out | several servers as one cluster; VaR sharded (a map-reduce of vectors); consoles without sticky sessions. Target (product owner): many small ECS Fargate tasks each owning a shard of books, auto-sharding and rebalancing, all reading the same Delta or Iceberg lake on S3; any task coordinates and sums the partial vectors; a hot file per shard on its own EBS; replicas auto-scale, Fargate Spot for read replicas. Cost options compared in the BMO deck: A (ECS on EC2 capacity), B (Fargate), C (sharded Fargate) |
 | 3 | The 2.3M-position benchmark | on a real server (the local machine stays at 10K trades), with exposure sizing; needs the product owner's server |
 | 4 | Screenshots | the about 271 pictures still showing the old top bar |
