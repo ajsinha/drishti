@@ -12,9 +12,10 @@
 #
 # See the LICENSE file in the root of this repository for the full terms.
 
-"""`drishti.py lake build|publish|scan|status|demo|maintain`: build and look after Delta lakes from the terminal or a scheduler.
+"""`drishti.py lake build|publish|scan|status|demo|maintain`: build and look after lakes from the terminal or a scheduler (Delta Lake,
+the default; Apache Iceberg with `build --format iceberg`, and `maintain` for a lake whose `format: iceberg`).
 
-    build      stream a JSON array, JSON Lines or .gz export into <lake>/<domain>/<kind> (tools/lake/build.py)
+    build      stream a JSON array, JSON Lines or .gz export into <lake>/<domain>/<kind> (tools/lake/build.py; --format delta|iceberg)
     scan       the fields of an export with their values, and the suggested --key, --date and --partition-by (tools/lake/scan.py)
     publish    commit a table lake build wrote (a scratch lake) into a Delta table in S3, one commit (tools/lake/publish.py)
     status     whether the lake's lock is held (lake maintain, or a load), and the last runs (from <lake>/_drishti-lake)

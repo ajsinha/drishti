@@ -69,7 +69,13 @@ final class SortedRuns implements Closeable {
 
     /** About what a row takes in memory: its text (one byte a character for ASCII), objects and promoted values. */
     static long weight(Row r) {
-        return 96L + r.id().length() + (r.doc() == null ? 0 : r.doc().length()) + 64L * r.columns().size();
+        long w = 96L + r.id().length() + (r.doc() == null ? 0 : r.doc().length()) + 64L * r.columns().size();
+        for (Object v : r.columns().values()) {
+            if (v instanceof List<?> l) {
+                w += 24L * l.size();                            // a vector's boxed doubles
+            }
+        }
+        return w;
     }
 
     /** Buffers a row; returns its weight. */
@@ -342,6 +348,17 @@ final class SortedRuns implements Closeable {
             Object v = e.getValue();
             if (v == null) {
                 out.writeByte(0);
+            } else if (v instanceof List<?> list) {
+                out.writeByte(3);                               // a vector: its length, then per element null or the double
+                out.writeInt(list.size());
+                for (Object x : list) {
+                    if (x == null) {
+                        out.writeByte(0);
+                    } else {
+                        out.writeByte(1);
+                        out.writeDouble(((Number) x).doubleValue());
+                    }
+                }
             } else if (v instanceof Number n) {
                 out.writeByte(1);
                 out.writeDouble(n.doubleValue());
@@ -352,6 +369,15 @@ final class SortedRuns implements Closeable {
         }
     }
 
+    private static List<Double> readVector(DataInputStream in) throws IOException {
+        int n = in.readInt();
+        List<Double> out = new ArrayList<>(n);
+        for (int i = 0; i < n; i++) {
+            out.add(in.readByte() == 0 ? null : in.readDouble());
+        }
+        return out;
+    }
+
     private static Row readRow(DataInputStream in) throws IOException {
         String id = readString(in);                             // EOFException at the end of the run
         String doc = readString(in);
@@ -360,7 +386,7 @@ final class SortedRuns implements Closeable {
         for (int i = 0; i < n; i++) {
             String path = readString(in);
             byte type = in.readByte();
-            cols.put(path, type == 0 ? null : type == 1 ? (Object) in.readDouble() : readString(in));
+            cols.put(path, type == 0 ? null : type == 1 ? (Object) in.readDouble() : type == 3 ? readVector(in) : readString(in));
         }
         return new Row(id, doc, cols);
     }

@@ -1,0 +1,44 @@
+# Generated at first start from the connector template of pack 'market-risk'. Edit it freely: it is never overwritten.
+plugin: reactive
+mode: reactive
+enabled: ${DRISHTI_VAR_ENABLED:true}
+description: 'The VaR of any scope, computed when asked by the server''s VaR engine (the additive aggregation over the hot store), as the viewer: VRES <scope> <GO>'
+kinds:
+  var-result:
+    compute: var-result
+    params:
+      ccy:
+        type: text
+        default: USD
+    result:
+      required:
+      - VAR
+      - ES
+      - PNL
+      types:
+        VAR: number
+        ES: number
+engine:
+  type: java
+  class: com.ash.drishti.server.var.VarResultEngine
+  version: '1.0'
+triggers:
+- 'on': data-version
+  kinds:
+  - pnl-vector
+  - scenario-pv
+  - fx-scenario
+  - risk-hierarchy
+  - scenario-set
+  - portfolio
+  affects: all
+coalesce:
+  quiet: 250ms
+  max-wait: 2s
+cache:
+  results: 2000
+  ttl: 1h
+limits:
+  timeout: 60s
+  wait: 5s
+  max-inflight-per-user: 4

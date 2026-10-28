@@ -31,6 +31,8 @@
     <dependency><groupId>com.ash.drishti</groupId><artifactId>drishti-api</artifactId></dependency>
     <!-- engine: native (no Hadoop); engine: library is Apache Iceberg Java below -->
     <dependency><groupId>com.ash.drishti</groupId><artifactId>drishti-iceberg</artifactId></dependency>
+    <!-- documents already read, on disk across restarts (as the Delta connector) -->
+    <dependency><groupId>com.ash.drishti</groupId><artifactId>drishti-diskcache</artifactId></dependency>
     <dependency><groupId>org.apache.iceberg</groupId><artifactId>iceberg-core</artifactId><version>${iceberg.version}</version></dependency>
     <dependency><groupId>org.apache.iceberg</groupId><artifactId>iceberg-parquet</artifactId><version>${iceberg.version}</version></dependency>
     <dependency>
@@ -65,6 +67,9 @@
     <dependency><groupId>com.github.ben-manes.caffeine</groupId><artifactId>caffeine</artifactId></dependency>
     <dependency><groupId>com.ash.drishti</groupId><artifactId>drishti-common</artifactId><scope>test</scope></dependency>
     <dependency><groupId>com.ash.drishti</groupId><artifactId>drishti-testkit</artifactId><scope>test</scope></dependency>
+    <!-- the parity tests: the same rows through the Delta connector (and Drishti's Delta writer) -->
+    <dependency><groupId>com.ash.drishti</groupId><artifactId>drishti-plugin-delta</artifactId><scope>test</scope></dependency>
+    <dependency><groupId>com.ash.drishti</groupId><artifactId>drishti-deltalake</artifactId><scope>test</scope></dependency>
     <!-- MinIO and an Iceberg REST catalog in Docker for the REST test; skipped where Docker is not reachable -->
     <dependency><groupId>com.adobe.testing</groupId><artifactId>s3mock</artifactId><version>${s3mock.version}</version><scope>test</scope></dependency>
     <dependency><groupId>org.testcontainers</groupId><artifactId>testcontainers</artifactId><version>${testcontainers.version}</version><scope>test</scope></dependency>

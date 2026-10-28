@@ -1,0 +1,10 @@
+# Generated at first start from the connector template of pack 'counterparty-risk'. Edit it freely: it is never overwritten.
+plugin: delta
+enabled: ${DRISHTI_EXPOSURE_ENABLED:true}
+description: 'The official end-of-day exposure of every netting set, counterparty and group the server publishes (risk-results/exposure-official-cpty), read only: for BI and other readers, never an engine''s input'
+kinds:
+- exposure-official-cpty
+settings:
+  root: ${DRISHTI_DELTA_ROOT:${drishti.data.dir:./data}/delta}
+  domain: risk-results
+  layout.exposure-official-cpty.columns: HIERARCHY,NODE_ID,NODE_NAME,PARENT_ID,LEVEL,COUNTERPARTY,LEGAL_ENTITY,RESULT_VERSION,RUN_ID,PATHS,CE,EPE,EEPE,PEAK_EE,PEAK_PFE_95,PEAK_PFE_99,EAD_IMM,PEAK_PFE_DATE,PFE_95_1Y,PFE_95_5Y,EE_1Y,EE_5Y,NETTING_SETS,TRADES,FAILED_TRADES,PARTIAL_SETS

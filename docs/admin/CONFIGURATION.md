@@ -481,6 +481,12 @@ From `drishti-console/config/application.yaml`, resolved from environment variab
 | `DRISHTI_JAR` | `lakes.jar` | empty | The drishti-server exec jar whose Java writer the page's builds use (`lakes.engine: auto`); empty: the newest `drishti-server/target/drishti-server-*-exec.jar`, else the Python `deltalake` package. |
 | `DRISHTI_DATA_DIR` | `lakes.data_dir` | `../data` | Admin → Lakes → Maintain ([LAKE_MAINTENANCE.md](LAKE_MAINTENANCE.md)): the data folder whose `lakes/lake-maintenance.yaml` (the file `lake maintain` reads by default) and `lakes/maintenance-history.jsonl` the page uses (relative paths resolve from `drishti-console/`). |
 | `DRISHTI_LAKE_MAINTENANCE_SCHEDULES` | `lakes.maintenance_schedules` | `true` | Run the lake-maintenance schedules in this console; `false` when `lake maintain --daemon` runs them instead (run them in one place). |
+
+In `lake-maintenance.yaml` (2.9.5): a lake's `format` is `delta` (the default), `iceberg`, or `auto` (Iceberg tables under a local root
+found beside Delta ones); `orphan-hours` (72, the least allowed) is read for Iceberg tables only; `iceberg-settings` (a mapping) is
+passed to an Iceberg lake's maintenance as `--set key=value` (a REST catalog such as Glue: `catalog`, `uri`, `warehouse`,
+`catalog.rest.*`). [LAKE_MAINTENANCE.md section 8](LAKE_MAINTENANCE.md#8-iceberg-lakes). `lake build --format delta|iceberg` (default
+`delta`) and `--iceberg-set KEY=VALUE` choose and configure the format of a build ([TOOLS.md](../guides/TOOLS.md)).
 | (no variable) | `lakes.max_upload_mb`, `scan_docs`, `engine`, `python`, `keep_min`, `jobs` | `4096`, `20000`, `auto`, the console's Python, `240`, `2` | Largest upload (streamed to the console's temp folder); documents read to suggest the id, date and classifiers; `auto`, `drishti` or `deltalake`; the Python that runs `tools/lake/build.py`; minutes an upload and a finished build are kept; builds at once. |
 | `DRISHTI_AI_ENABLED` | `ai.enabled` | `false` | Turn on the console's own LLM provider layer (the recommended provider is `type: server`, which delegates to the server so keys stay there). |
 | `DRISHTI_AI_DIR` | `ai.dir` | `./config/ai` | The folder of provider files (the same format and, if you share the folder, the same files as the server). |
@@ -2426,9 +2432,12 @@ TLS: an `https://` `endpoint` with the shared [`tls.*`](#tls--tls-for-connectors
 
 ### `iceberg` — Apache Iceberg
 
-Path-based tables or a REST catalog (Polaris, Snowflake Open Catalog, Glue), in the same layout as Delta Lake. Design,
-loading and maintenance: [ICEBERG_CONNECTOR.md](../connectors/ICEBERG_CONNECTOR.md); the two engines: its
-[section 17](../connectors/ICEBERG_CONNECTOR.md#17-engines-native-and-library).
+Path-based tables or a REST catalog (Polaris, Snowflake Open Catalog, Glue), in the same layout as Delta Lake. Delta is the default for
+every pack; a domain is read from Iceberg only by configuration (a connector file with `plugin: iceberg`). Design, loading and
+maintenance: [ICEBERG_CONNECTOR.md](../connectors/ICEBERG_CONNECTOR.md); the two engines: its
+[section 17](../connectors/ICEBERG_CONNECTOR.md#17-engines-native-and-library); vectors, documents and the disk caches (2.9.5): its
+[section 18](../connectors/ICEBERG_CONNECTOR.md#18-parity-with-delta-vectors-documents-and-disk-caches-295); Glue and S3 Tables: its
+[section 19](../connectors/ICEBERG_CONNECTOR.md#19-aws-glue-s3-tables-and-the-iam-they-need-295).
 
 | Setting | Default | Meaning |
 |---|---|---|
@@ -2450,6 +2459,9 @@ loading and maintenance: [ICEBERG_CONNECTOR.md](../connectors/ICEBERG_CONNECTOR.
 | `mode.<kind>` | `snapshot` | `snapshot` or `effective` |
 | `lookback-days` | `10` | how far back a snapshot read looks for the newest day on or before the date asked |
 | `layout.<kind>.columns` | none | promoted paths ([ICEBERG_CONNECTOR.md](../connectors/ICEBERG_CONNECTOR.md#5-declaring-the-layout-in-a-pack)) |
+| `layout.<kind>.vectors` | none | vector columns (`list<double>`: `PNL`, `SCENARIO_PV`), read in bulk and put back into documents (2.9.5) |
+| `id-map-disk.enabled`, `id-map-disk.dir` | `true`, `<data>/cache/<connector>/idmaps` | each date's id map written once and memory-mapped, kept across restarts (2.9.5) |
+| `doc-disk-cache.enabled`, `.dir`, `.max-gb`, `.ttl`, `.reset-at`, `.zone` | `true`, `<data>/cache/<connector>/docs`, `1`, `12h`, `02:00`, `America/New_York` | documents already read, on disk across restarts (2.9.5) |
 | `refresh-seconds` | `10` | how often each table's current snapshot is checked |
 | `layout-cache` | `64` | planned snapshots kept |
 | `id-map-mb` | `1024` | memory for days' id maps |

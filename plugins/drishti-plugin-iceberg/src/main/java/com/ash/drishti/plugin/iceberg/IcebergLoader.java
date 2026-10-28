@@ -46,7 +46,10 @@ import java.util.concurrent.locks.ReentrantLock;
  * com.ash.drishti.plugin.iceberg.IcebergLoader FILE|- [root] [options]}. Each line is {@code {"domain", "kind", "id",
  * "date", "doc", "columns": {path: value}}} ({@code columns}, the fields the pack promotes, is optional), as
  * {@code make_data.py --jsonl} and {@code bulk_trades.py --jsonl} write it; {@code -} reads a stream, so a book of
- * millions loads without a file of tens of gigabytes.
+ * millions loads without a file of tens of gigabytes. A column whose value is a list of numbers (a P&amp;L vector, as
+ * {@code lake build} stages it) becomes a {@code list<double>} column, a null element kept null (never 0); a list holding
+ * anything but numbers and nulls is a reject: the row is not loaded, and the load ends with an error counting them (the
+ * other rows are loaded).
  *
  * <p>Rows may come in any order (the generator interleaves days and ids). Each business day of each kind is sorted by
  * id with an external sort ({@link SortedRuns}): at most {@code --buffer-mb} (1024) of rows are held, the largest
@@ -76,7 +79,11 @@ public final class IcebergLoader {
 
     private record Bucket(String domain, String kind, LocalDate date) {}
 
-    private record Line(String domain, String kind, LocalDate date, Row row) {}
+    /** One input line; {@code reject} says why it is not loaded (null: it is). */
+    private record Line(String domain, String kind, LocalDate date, Row row, String reject) {}
+
+    /** A column's list that is not a list of numbers. */
+    private static final Object NOT_NUMBERS = new Object();
 
     /**
      * Runs a load; a failure ends it with one line on standard error and exit status 1, never a Java stack trace (QA3B-12: a REST
@@ -210,6 +217,9 @@ public final class IcebergLoader {
         private final Map<Bucket, SortedRuns> buckets = new LinkedHashMap<>();
         /** Per domain and kind, per promoted path: 1 when a number was seen, 2 when text was. */
         private final Map<String, Map<String, Integer>> seen = new HashMap<>();
+        /** Rows not loaded (a vector that is not a list of numbers), and the first few reasons. */
+        private long rejected;
+        private final List<String> rejects = new ArrayList<>();
         private final Map<String, LayoutLake> lakes = new ConcurrentHashMap<>();
         private final Map<String, ReentrantLock> commitLocks = new ConcurrentHashMap<>();
         /** Per table, its days of fewer than {@link #SMALL_DAY} rows, committed together once all are written. */
@@ -238,8 +248,12 @@ public final class IcebergLoader {
             for (LayoutLake l : lakes.values()) {
                 l.close();
             }
-            System.out.printf("iceberg: loaded %,d rows into %d tables in %,.0f s%n", n, loaded.size(), (System.nanoTime() - t0) / 1e9);
+            System.out.printf("iceberg: loaded %,d rows into %d tables in %,.0f s%n", n - rejected, loaded.size(), (System.nanoTime() - t0) / 1e9);
             guard.finish();
+            if (rejected > 0) {
+                throw new IllegalStateException(String.format(java.util.Locale.ROOT, "%,d rows not loaded: %s. The other rows are loaded.",
+                        rejected, String.join("; ", rejects)));
+            }
         }
 
         /** Reads every line into its day's sorter, spilling the largest buffers beyond the budget. */
@@ -258,13 +272,20 @@ public final class IcebergLoader {
                         continue;
                     }
                     Line line = parse(json, text);
+                    if (line.reject() != null) {
+                        if (rejected++ < 3) {
+                            rejects.add(line.domain() + " " + line.kind() + " " + line.row().id() + " " + line.date() + ": " + line.reject());
+                        }
+                        continue;
+                    }
                     if (!guard.accept(line.date(), line.domain() + " " + line.kind() + " " + line.row().id())) {
                         continue;
                     }
                     Bucket b = new Bucket(line.domain(), line.kind(), line.date());
                     buffered += buckets.computeIfAbsent(b, k -> new SortedRuns(spillDir, k.kind() + "-" + k.date())).add(line.row());
                     Map<String, Integer> types = seen.computeIfAbsent(line.domain() + "/" + line.kind(), k -> new LinkedHashMap<>());
-                    line.row().columns().forEach((path, v) -> types.merge(path, v == null ? 0 : v instanceof Number ? 1 : 2, (x, y) -> x | y));
+                    line.row().columns().forEach((path, v) -> types.merge(path, v == null ? 0 : v instanceof List ? 4 : v instanceof Number ? 1 : 2,
+                            (x, y) -> x | y));
                     if (++n % 100_000 == 0) {
                         System.err.printf("iceberg: %,d rows read (%,.0f s)%n", n, (System.nanoTime() - t0) / 1e9);
                     }
@@ -298,8 +319,15 @@ public final class IcebergLoader {
                 String key = b.domain() + "/" + b.kind();
                 if (!tables.containsKey(key)) {
                     Map<String, Boolean> promoted = new LinkedHashMap<>();
-                    seen.getOrDefault(key, Map.of()).forEach((path, t) -> promoted.put(path, t == 1));   // numbers only: a number column
-                    tables.put(key, lake(b.domain()).open(b.kind(), promoted, rowGroupBytes, fileRows));
+                    java.util.Set<String> vectors = new java.util.LinkedHashSet<>();
+                    seen.getOrDefault(key, Map.of()).forEach((path, t) -> {
+                        if ((t & 4) != 0) {
+                            vectors.add(path);                   // lists of numbers: a list<double> column
+                        } else {
+                            promoted.put(path, t == 1);          // numbers only: a number column
+                        }
+                    });
+                    tables.put(key, lake(b.domain()).open(b.kind(), promoted, vectors, rowGroupBytes, fileRows));
                 }
             }
             Semaphore slots = new Semaphore(threads);
@@ -371,6 +399,7 @@ public final class IcebergLoader {
         String date = null;
         String doc = null;
         Map<String, Object> columns = new LinkedHashMap<>();
+        String reject = null;
         try (JsonParser p = json.createParser(line)) {
             p.nextToken();
             while (p.nextToken() == JsonToken.FIELD_NAME) {
@@ -387,8 +416,14 @@ public final class IcebergLoader {
                             while (p.nextToken() == JsonToken.FIELD_NAME) {
                                 String path = p.currentName();
                                 JsonToken v = p.nextToken();
-                                columns.put(path, v == JsonToken.VALUE_NUMBER_INT || v == JsonToken.VALUE_NUMBER_FLOAT ? (Object) p.getDoubleValue()
-                                        : v == JsonToken.VALUE_NULL ? null : v.isStructStart() ? skip(p) : p.getText());
+                                Object value = v == JsonToken.VALUE_NUMBER_INT || v == JsonToken.VALUE_NUMBER_FLOAT ? (Object) p.getDoubleValue()
+                                        : v == JsonToken.VALUE_NULL ? null : v == JsonToken.START_ARRAY ? vector(p) : v.isStructStart() ? skip(p)
+                                        : p.getText();
+                                if (value == NOT_NUMBERS) {
+                                    reject = reject != null ? reject : "the vector field '" + path + "' is not a list of numbers";
+                                    value = null;
+                                }
+                                columns.put(path, value);
                             }
                         }
                     }
@@ -399,7 +434,25 @@ public final class IcebergLoader {
         if (kind == null || id == null || date == null) {
             throw new IOException("a line needs kind, id and date: " + line.substring(0, Math.min(120, line.length())));
         }
-        return new Line(domain, kind, LocalDate.parse(date), new Row(id, doc, columns));
+        return new Line(domain, kind, LocalDate.parse(date), new Row(id, doc, columns), reject);
+    }
+
+    /** A list of numbers (nulls kept: a missing value is never 0), or {@link #NOT_NUMBERS}; the parser is left after the list. */
+    private static Object vector(JsonParser p) throws IOException {
+        List<Double> out = new ArrayList<>();
+        boolean numbers = true;
+        JsonToken t;
+        while ((t = p.nextToken()) != JsonToken.END_ARRAY) {
+            if (t == JsonToken.VALUE_NUMBER_INT || t == JsonToken.VALUE_NUMBER_FLOAT) {
+                out.add(p.getDoubleValue());
+            } else if (t == JsonToken.VALUE_NULL) {
+                out.add(null);
+            } else {
+                numbers = false;
+                p.skipChildren();
+            }
+        }
+        return numbers ? out : NOT_NUMBERS;
     }
 
     private static Object skip(JsonParser p) throws IOException {

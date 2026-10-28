@@ -1,0 +1,13 @@
+{
+  "Version": "2012-10-17",
+  "Statement": [
+    { "Sid": "ListTheIcebergTables", "Effect": "Allow", "Action": "s3:ListBucket", "Resource": "arn:aws:s3:::${LAKE_BUCKET}",
+      "Condition": { "StringLike": { "s3:prefix": ["${ICEBERG_PREFIX}/*"] } } },
+    { "Sid": "ReadTheIcebergTablesOnly", "Effect": "Allow", "Action": "s3:GetObject", "Resource": "arn:aws:s3:::${LAKE_BUCKET}/${ICEBERG_PREFIX}/*" },
+    { "Sid": "DecryptTheLake", "Effect": "Allow", "Action": "kms:Decrypt", "Resource": "${LAKE_KMS_KEY_ARN}" },
+    { "Sid": "ReadTheGlueCatalog", "Effect": "Allow", "Action": ["glue:GetCatalog", "glue:GetDatabase", "glue:GetDatabases", "glue:GetTable", "glue:GetTables"],
+      "Resource": ["arn:aws:glue:${AWS_REGION}:${GLUE_CATALOG_ID}:catalog", "arn:aws:glue:${AWS_REGION}:${GLUE_CATALOG_ID}:database/*",
+                   "arn:aws:glue:${AWS_REGION}:${GLUE_CATALOG_ID}:table/*/*"] },
+    { "Sid": "LakeFormationVendedCredentials", "Effect": "Allow", "Action": "lakeformation:GetDataAccess", "Resource": "*" }
+  ]
+}

@@ -146,7 +146,20 @@ plugins:
     tls: true
     proxy: true
     settings:
-      - { name: "layout.*", desc: "Per-kind column layout", group: mapping }
+      - { name: "layout.*", desc: "Per-kind layout: layout.<kind>.columns (promoted document paths), layout.<kind>.vectors (list<double> columns such as a P&L vector, read in bulk and put back into documents)", group: mapping }
+      - { name: doc-disk-cache.enabled, type: bool, default: "true", desc: "Documents already read also kept on disk (RocksDB, one per connector), keyed by the date's files: answered without reading a data file, also after a restart", group: tuning }
+      - { name: doc-disk-cache.dir, type: path, default: "<data dir>/cache/<connector>/docs", desc: "Its folder", group: tuning }
+      - { name: doc-disk-cache.max-gb, type: number, default: "1", desc: "Its size cap; the oldest files go first", group: tuning }
+      - { name: doc-disk-cache.ttl, type: duration, default: "12h", desc: "Entries written longer ago go (compacted hourly)", group: tuning }
+      - { name: doc-disk-cache.reset-at, default: "02:00", desc: "Daily clearing time", group: tuning }
+      - { name: doc-disk-cache.zone, default: "America/New_York", desc: "Zone of the daily clearing", group: tuning }
+      - { name: id-map-disk.enabled, type: bool, default: "true", desc: "Each business date's id map written once per date's files and memory-mapped: no heap per id, kept across restarts and commits of other dates", group: tuning }
+      - { name: id-map-disk.dir, type: path, default: "<data dir>/cache/<connector>/idmaps", desc: "Its folder", group: tuning }
+      - { name: id-map-mb, type: int, default: "1024", desc: "Id maps kept in the heap (MB)", group: tuning }
+      - { name: doc-cache-mb, type: int, default: "256", desc: "Documents kept in the heap (MB)", group: tuning }
+      - { name: columns-cache-mb, type: int, default: "1024", desc: "Promoted columns kept in the heap (MB)", group: tuning }
+      - { name: cache-mb, type: int, default: "512", desc: "Whole small days kept for reverse lookups (MB)", group: tuning }
+      - { name: source-name, desc: "The name the connector's documents carry as their source", group: mapping }
       - { name: "table.*", desc: "Per-kind table name under the namespace when it is not the kind's name (table.trade: trade_calypso)", group: mapping }
       - { name: engine, type: "enum:native|library|auto", default: "native", desc: "native: drishti-iceberg, no Hadoop (local disk and S3; Windows without winutils.exe; left to the default, a root it cannot reach is read by the library); library: Apache Iceberg Java over Hadoop (also Azure, Google Cloud Storage, HDFS); auto: native on Windows, library elsewhere. DRISHTI_ICEBERG_ENGINE sets it for every connector", group: connection }
       - { name: "metadata-location.*", desc: "A table named by its metadata file, read-only (metadata-location.<kind>: s3://…/v12.metadata.json); native engine", group: connection }

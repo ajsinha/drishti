@@ -1,0 +1,29 @@
+# Project Drishti · Any data. Any domain. One grammar.
+#
+# Copyright (c) 2026 Ashutosh Sinha <ajsinha@gmail.com>.
+# All rights reserved.
+#
+# PROPRIETARY AND CONFIDENTIAL.
+#
+# This file is the confidential and proprietary property of Ashutosh Sinha.
+# Unauthorised copying, use, modification, distribution or disclosure of this
+# file, via any medium, is strictly prohibited except with the express prior
+# written permission of the copyright holder.
+#
+# See the LICENSE file in the root of this repository for the full terms.
+
+# The tables the Iceberg scripts load, tier and maintain (ICEBERG_TABLES_FILE). Delta Lake stays the default (deploy/aws/delta-lake);
+# a table is listed here only when the deployment chooses Iceberg for it. One line per table, whitespace-separated:
+#   table      <domain>/<table>: s3://LAKE_BUCKET/ICEBERG_PREFIX/<domain>/<table>/ (ICEBERG_CATALOG=hadoop), or table <table> of the
+#              Glue database <domain> (ICEBERG_CATALOG=glue)
+#   kind       the entity kind the table holds (lake build --kind; the data-load signal names it)
+#   pack       the pack folder (relative to the repository or the loader image): layout, promoted columns, vector columns, id field
+#   connector  the pack's connector the table is for (its layout is the table's)
+#   landing    the dump prefix in s3://LANDING_BUCKET/, {date} replaced by the business date (YYYY-MM-DD)
+#   date       the business-date field of each document, or - for "the day being loaded" (lake build --as-of)
+#   partition  fields kept as columns too (an Iceberg table here is partitioned by business_date alone), or - for none
+#
+# table                  kind         pack                       connector    landing                     date            partition
+risk/pnl-vector          pnl-vector   config/packs/market-risk   risk-store   {date}/risk/pnl-vector/     BUSINESS_DATE   -
+risk/scenario-pv         scenario-pv  config/packs/market-risk   risk-store   {date}/risk/scenario-pv/    BUSINESS_DATE   -
+trading/trade_calypso    trade        config/packs/trading       trade-calypso {date}/calypso/            -               PRODUCT_TYPE

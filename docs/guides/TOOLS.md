@@ -258,6 +258,22 @@ summary: lake/_drishti-lake/runs/20261017T174401-1340283.json
 2026-10-17T17:44:01-04:00 lake-build failed exit=1 run=20261017T174401-1340283 domain=trading kind=trade mode=overwrite-dates seconds=0.0 error="lake/trading/trade is partitioned by business_date, PRODUCT_TYPE; this run asks for business_date, PORTFOLIO (give --partition-by PRODUCT_TYPE or write a new table)"
 ```
 
+### 4.4b Iceberg instead of Delta: `--format iceberg` (2.9.5)
+
+Delta is the default format of `lake build` and of every pack. `--format iceberg` writes the same staged rows into an Apache Iceberg
+table `<lake>/<domain>/<table>` with Drishti's Iceberg loader (in the server's exec jar; `DRISHTI_ICEBERG_CLASSPATH` in development):
+the documents, the promoted columns and the vector columns (`--vector PNL`: `list<double>`) exactly as for Delta. Only
+`overwrite-dates` (each business date of the input replaces that date in one Iceberg commit); `--partition-by` columns are kept as
+columns, the table being partitioned by business date alone. `--lake s3://bucket/prefix` writes to S3 (staged in a local scratch
+folder, no run record in the lake), and `--iceberg-set KEY=VALUE` (repeatable) passes any loader setting (`s3.region`, or a REST catalog
+such as AWS Glue: `catalog=rest`, `uri=…`, `warehouse=…`, `catalog.rest.signing-name=glue`). The build record makes the table Drishti's
+to maintain ([LAKE_MAINTENANCE.md section 8](../admin/LAKE_MAINTENANCE.md#8-iceberg-lakes)).
+
+```bash
+python3 tools/drishti.py lake build --from data/testdata/market-risk/pnl-vector/ --pack config/packs/market-risk --connector risk-store \
+    --kind pnl-vector --lake data/iceberg --format iceberg
+```
+
 ### 4.5 The two engines
 
 `--engine auto` (the default) uses **Drishti's own Java writer** when it finds the server's exec jar with the writer in it, and the
@@ -1122,7 +1138,9 @@ guides are listed in [CONNECTORS.md](../connectors/CONNECTORS.md).
 
 `drishti.py lake maintain` (the same as `tools/lake/maintain.py`) keeps a lake bounded: **retention** (business dates older than
 `keep-business-days`, never more than `max-drop-share` of a table without `--force-drop`), **compaction** of each day's small
-files (or a re-layout into the pack's declared layout), a **checkpoint**, and **vacuum** of unreferenced files. Local lakes and S3.
+files (or a re-layout into the pack's declared layout), a **checkpoint**, and **vacuum** of unreferenced files. Local lakes and S3. An Iceberg
+table (`format: iceberg`, or found under a local root) gets retention, relayout, snapshot expiry and orphan-file removal instead
+(`tools/lake/maintain_iceberg.py`, [LAKE_MAINTENANCE.md section 8](../admin/LAKE_MAINTENANCE.md#8-iceberg-lakes)).
 
 **Who maintains a table.** Whoever writes a table maintains it.
 

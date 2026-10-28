@@ -20,7 +20,8 @@
 <section class="mt" data-maint aria-labelledby="lkTables">
   <h2 class="lk-h2" id="lkTables">The lakes <a class="emb-help" href="/help/lake-maintenance" aria-label="Help: lake maintenance" title="Help: lake maintenance">?</a></h2>
   <p class="text-muted-d mt-intro">Tick the tables to maintain: retention drops old business dates, compaction merges small files, a checkpoint shortens the log,
-    vacuum removes files no longer used. <strong>Dry run</strong> shows what would change; <strong>Maintain now</strong> does it in the background, one run at a time per lake.
+    vacuum removes files no longer used. An Iceberg table (Format: Iceberg) expires its old snapshots instead of vacuum and also removes orphan
+    files (files no snapshot uses, at least 72 hours old); the risk domains keep 7 years whatever is set. <strong>Dry run</strong> shows what would change; <strong>Maintain now</strong> does it in the background, one run at a time per lake.
     Only tables {{ PRODUCT }}'s lake build made can be maintained; a table another system publishes is its publisher's to maintain.</p>
   {% if maint %}
   <div class="mt-bar" role="toolbar" aria-label="Choose tables">
@@ -33,20 +34,21 @@
   </div>
   {% endif %}
   <div class="tbl-wrap"><table class="tbl adm-tbl lk-tables" data-lake-tables aria-labelledby="lkTables">
-    <thead><tr>{% if maint %}<th scope="col" class="mt-pick-col"><span class="visually-hidden">Maintain</span></th>{% endif %}<th scope="col">Table</th><th scope="col" class="num">Rows</th><th scope="col" class="num">Files</th><th scope="col" class="num">Size</th>
+    <thead><tr>{% if maint %}<th scope="col" class="mt-pick-col"><span class="visually-hidden">Maintain</span></th>{% endif %}<th scope="col">Table</th><th scope="col" title="Delta (the default) or Iceberg (by configuration)">Format</th><th scope="col" class="num">Rows</th><th scope="col" class="num">Files</th><th scope="col" class="num">Size</th>
       <th scope="col" class="num">Partitions</th><th scope="col" class="num">Business dates</th><th scope="col">Latest date</th><th scope="col">Last build</th>{% if maint %}<th scope="col">Maintenance</th>{% endif %}</tr></thead>
     <tbody>{% set owners = {} %}{% if maint %}{% for m in maint.tables %}{% set _ = owners.update({m.root ~ "|" ~ m.table: m}) %}{% endfor %}{% endif %}
     {% for t in tables %}{% set m = owners.get(t.root ~ "|" ~ t.table) %}<tr data-lake-table="{{ t.table }}" data-root="{{ t.root }}" data-domain="{{ t.domain }}"{% if m and not m.owned %} class="mt-foreign"{% endif %}>
       {% if maint %}<td class="mt-pick-col">{% if m and m.owned %}<label class="mt-check"><input type="checkbox" data-mt-pick value="{{ t.table }}" data-root="{{ t.root }}" data-domain="{{ t.domain }}"><span class="visually-hidden">Maintain {{ t.table }}</span></label>
         {% else %}<label class="mt-check" title="{{ m.reason if m else 'not readable' }}"><input type="checkbox" disabled aria-describedby="mtWhy{{ loop.index }}"><span class="visually-hidden">{{ t.table }} cannot be maintained here</span></label>{% endif %}</td>{% endif %}
       <th scope="row"><a class="mono" href="/admin/lakes/table?root={{ t.root | urlencode }}&amp;table={{ t.table | urlencode }}" title="Dates, columns, commits and loads of {{ t.table }}">{{ t.table }}</a><br><small class="text-muted-d">{{ t.root }}</small></th>
+      <td data-mt-format="{{ t.format or 'delta' }}">{{ "Iceberg" if t.format == "iceberg" else "Delta" }}</td>
       {% if t.error %}<td colspan="7" class="text-muted-d">Not readable: {{ t.error }}</td>{% else %}
       <td class="num mono">{{ "{:,}".format(t.rows) if t.rows is not none else "?" }}</td><td class="num mono" data-mt-files>{{ t.files }}</td><td class="num mono" data-mt-size>{{ t.size }}</td>
       <td class="num mono">{{ t.partitions }}{% set by = t.partitionBy | reject("equalto", "business_date") | list %}{% if by %} <small class="text-muted-d">by {{ by | join(", ") }}</small>{% endif %}</td>
       <td class="num mono">{{ t.dates }}</td><td class="mono">{{ t.latestDate or "–" }}</td><td class="mono">{{ t.lastBuild or "–" }}</td>{% endif %}
       {% if maint %}<td class="mt-own">{% if m and m.owned %}<span data-mt-settings>{{ settings_text(m.settings) }}</span>{% if m.owner and m.owner.pack %}<br><small class="text-muted-d">built for {{ m.owner.pack }}</small>{% endif %}
         {% else %}<span class="mt-publisher" id="mtWhy{{ loop.index }}">Maintained by its publisher</span><br><small class="text-muted-d">not built by drishti.py lake build: read only here</small>{% endif %}</td>{% endif %}</tr>
-    {% else %}<tr><td colspan="10" class="text-muted-d">No Delta table under these roots yet: build one above, or run <code>drishti.py lake demo</code>.</td></tr>{% endfor %}</tbody>
+    {% else %}<tr><td colspan="11" class="text-muted-d">No table under these roots yet: build one above, or run <code>drishti.py lake demo</code>.</td></tr>{% endfor %}</tbody>
   </table></div>
 
   {% if maint %}

@@ -121,3 +121,42 @@ tables() {
   [[ -f "$f" ]] || die "no tables file $f (LAKE_TABLES_FILE)"
   grep -v '^[[:space:]]*\(#\|$\)' "$f"
 }
+
+# lifecycle_others OWN-PREFIXES: the lake bucket's current lifecycle rules that another script wrote (their ID starts with none of the
+# comma-separated OWN-PREFIXES), one JSON object a line, so a put of this script's rules keeps them (the Delta and the Iceberg tier
+# rules live in one configuration). Nothing in a dry run, or when the bucket has none.
+lifecycle_others() {
+  local cur
+  cur=$(aws_ask s3api get-bucket-lifecycle-configuration --bucket "$LAKE_BUCKET" --output json) || return 0
+  "$(python_bin)" -c 'import json, sys
+own = tuple(sys.argv[1].split(","))
+for r in json.load(sys.stdin).get("Rules", []):
+    if not r.get("ID", "").startswith(own):
+        print(json.dumps(r, separators=(",", ":")))' "$1" <<<"$cur"
+}
+
+# ---------------------------------------------------------------------------------------------------------- Iceberg (deploy/aws/iceberg)
+
+iceberg_root() { echo "s3://$LAKE_BUCKET/$ICEBERG_PREFIX"; }
+
+# iceberg_tables: the lines of ICEBERG_TABLES_FILE without comments: table kind pack connector landing date partition-by
+iceberg_tables() {
+  local f="${ICEBERG_TABLES_FILE:-$AWS_DIR/iceberg/tables.example}"
+  [[ "$f" = /* ]] || f="$REPO_DIR/$f"
+  [[ -f "$f" ]] || die "no tables file $f (ICEBERG_TABLES_FILE)"
+  grep -v '^[[:space:]]*\(#\|$\)' "$f"
+}
+
+# iceberg_sets: the Iceberg loader's and maintenance's settings, one KEY=VALUE a line: the region, and for ICEBERG_CATALOG=glue the
+# AWS Glue Iceberg REST endpoint signed with SigV4 (credentials: the task role, through the AWS default chain)
+iceberg_sets() {
+  echo "s3.region=$AWS_REGION"
+  if [[ "${ICEBERG_CATALOG:-hadoop}" == glue ]]; then
+    echo "catalog=rest"
+    echo "uri=https://glue.$AWS_REGION.amazonaws.com/iceberg"
+    echo "warehouse=${GLUE_CATALOG_ID:-$AWS_ACCOUNT_ID}"
+    echo "catalog.rest.sigv4-enabled=true"
+    echo "catalog.rest.signing-name=glue"
+    echo "catalog.rest.signing-region=$AWS_REGION"
+  fi
+}

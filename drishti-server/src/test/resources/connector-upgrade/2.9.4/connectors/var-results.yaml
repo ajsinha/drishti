@@ -1,0 +1,10 @@
+# Generated at first start from the connector template of pack 'market-risk'. Edit it freely: it is never overwritten.
+plugin: delta
+enabled: ${DRISHTI_VAR_ENABLED:true}
+description: 'The official end-of-day VaR results the server publishes (risk-results/var-official), read only: for BI and other readers, never an engine''s input'
+kinds:
+- var-official
+settings:
+  root: ${DRISHTI_DELTA_ROOT:${drishti.data.dir:./data}/delta}
+  domain: risk-results
+  layout.var-official.columns: HIERARCHY,NODE_ID,NODE_NAME,PARENT_ID,LEVEL,CAPTURE_ID,RESULT_VERSION,VAR,ES,LIMIT,LIMIT_USE,DIVERSIFICATION,HYPO_PNL,EXCEPTIONS_250,TRAFFIC_LIGHT

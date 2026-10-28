@@ -68,3 +68,29 @@ def test_the_page_is_closed_to_non_admins_and_shows_server_errors(client, backen
     with_backend(backend, monkeypatch, [], fail=BackendError(403, "DRS-5002", "not an administrator"))
     assert client.get("/admin/connectors/template-updates").status_code == 403
     assert client.post("/admin/connectors/api/template-updates/fix-all").status_code == 403
+
+
+def test_use_the_packs_value_per_conflict_reaches_the_server_with_the_key_and_version(client, backend, monkeypatch):
+    """2.9.5: each changed key has its own button; the request carries where and which key, and the connector's version."""
+    calls, bodies = [], []
+    with_backend(backend, monkeypatch, calls)
+    drift = {**DRIFT, "drifts": [{**DRIFT["drifts"][0], "conflicting": DRIFT["drifts"][0]["conflicting"] + [
+        {"key": "reads[0].id", "where": "definition", "connector": "{id}", "template": "{id}~ccy={params.ccy}"}],
+        "computeAdded": ["kinds.var-whatif.params.ccy"], "followsPack": False}]}
+    with_backend(backend, monkeypatch, calls, drift=drift)
+    page = client.get("/admin/connectors/template-updates").text
+    for text in ('data-conflict="reads[0].id"', 'data-where="definition"', 'data-where="settings"', "Use the pack",
+                 "kinds.var-whatif.params.ccy"):
+        assert text in page, text
+    original = backend.admin
+
+    async def admin(method, path, ident, body=None, timeout=None, headers=None, **params):
+        bodies.append(body)
+        return await original(method, path, ident, body, timeout, headers, **params)
+    monkeypatch.setattr(backend, "admin", admin)
+    r = client.post("/admin/connectors/api/template-updates/macro-store/use-template-value", headers={"If-Match": "e1"},
+                    json={"where": "definition", "key": "reads[0].id"})
+    assert r.status_code == 200
+    assert ("POST", "/connectors/template-updates/macro-store/use-template-value", {"If-Match": "e1"}) in calls
+    assert bodies[-1] == {"where": "definition", "key": "reads[0].id"}
+

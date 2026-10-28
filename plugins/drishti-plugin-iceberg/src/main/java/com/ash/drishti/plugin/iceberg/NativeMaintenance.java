@@ -62,8 +62,13 @@ final class NativeMaintenance {
         return new NativeKindTable(t, pool).layout(t.currentSnapshot().orElseThrow().snapshotId(), true);
     }
 
-    /** As {@link IcebergMaintenance#keepDays(org.apache.iceberg.Table, int, LoadGuard)}. */
+    /** As {@link IcebergMaintenance#keepDays(org.apache.iceberg.Table, int, LoadGuard, LocalDate)}. */
     static int keepDays(Table t, int keep, LoadGuard guard) {
+        return keepDays(t, keep, guard, null);
+    }
+
+    /** As {@link IcebergMaintenance#keepDays(org.apache.iceberg.Table, int, LoadGuard, LocalDate)}: no date on or after {@code floor} goes. */
+    static int keepDays(Table t, int keep, LoadGuard guard, LocalDate floor) {
         t.refresh();
         if (t.currentSnapshot().isEmpty()) {
             return 0;
@@ -72,11 +77,14 @@ final class NativeMaintenance {
         try (ExecutorService pool = IcebergTable.virtualPool()) {
             days = layout(t, pool).days();
         }
-        var from = guard.keepFromNewest(days.keySet(), keep);
+        var from = IcebergMaintenance.keepFrom(days.navigableKeySet(), keep, guard, floor);
         if (from.isEmpty()) {
             return 0;
         }
         var old = days.headMap(from.get(), false);
+        if (old.isEmpty()) {
+            return 0;
+        }
         guard.checkDrop(t.name(), old.values().stream().mapToLong(Day::rows).sum(), days.values().stream().mapToLong(Day::rows).sum(), "rows");
         LocalDate cut = from.get();
         Operations.deletePartitions(t, f -> {
@@ -209,7 +217,8 @@ final class NativeMaintenance {
             if (f.recordCount() > fileRows) {
                 return true;
             }
-            if (!f.valueCounts().isEmpty() && promoted.stream().anyMatch(c -> !f.valueCounts().containsKey(c.id()))) {
+            // a vector column (a list) has its metrics under its element's id: only scalar columns say a file predates them
+            if (!f.valueCounts().isEmpty() && promoted.stream().anyMatch(c -> c.type() instanceof Type.Primitive && !f.valueCounts().containsKey(c.id()))) {
                 return true;                                   // written before a promoted column was added
             }
             byte[] lo = f.lowerBounds().get(1);
@@ -239,7 +248,8 @@ final class NativeMaintenance {
             for (int c = 0; c < promoted.size(); c++) {
                 NestedField field = promoted.get(c);
                 String path = field.name().replace("__", ".");
-                boolean inFile = f.valueCounts().isEmpty() || f.valueCounts().containsKey(field.id());
+                // a vector column is copied as it is (its document holds only a marker, never the values)
+                boolean inFile = !(field.type() instanceof Type.Primitive) || f.valueCounts().isEmpty() || f.valueCounts().containsKey(field.id());
                 Object v = r[c + 2];
                 if (!inFile && r[1] != null) {
                     try {

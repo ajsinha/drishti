@@ -33,8 +33,11 @@ import java.util.stream.Stream;
  *   <li><b>Migration</b>, once: the data-source overrides an administrator saved from Admin &rarr; Packs &rarr; Data source
  *   ({@code data/packs/settings/<pack>.yaml}) become edits of the connector files of the same names. The override file is
  *   moved to {@code .migrated/} (a backup), and the connector file's earlier text is kept in its {@code .history/}.</li>
- *   <li><b>Generation</b>: a pack's connector template with no file of that name gets one written from it, once. An existing
- *   file is never touched.</li>
+ *   <li><b>Generation</b>: a pack's connector template with no file of that name gets one written from it, stamped with the
+ *   template's fingerprint ({@link TemplateStamp}).</li>
+ *   <li><b>Upgrade</b>: a file whose stamp says it was never edited follows its pack: when the template changed it is replaced in full
+ *   by the new one (the file before kept beside it and in the history). An edited file is kept; the server's template updates add what
+ *   the template gained, keeping every edit (CONNECTOR_FILES.md, "Upgrades").</li>
  * </ol>
  * It reports what it did as messages, for the log and the audit trail.
  */
@@ -96,8 +99,7 @@ public final class ConnectorBootstrap {
                     continue;
                 }
                 String packName = templateOwner.get(name).name();
-                String header = "Generated at first start from the connector template of pack '" + packName
-                        + "'. Edit it freely: it is never overwritten.";
+                String header = header(packName);
                 if (files.exists(name)) {
                     try {
                         revisit(files, name, packName, e.getValue(), header, regenerated, changed, messages);
@@ -107,7 +109,7 @@ public final class ConnectorBootstrap {
                     continue;
                 }
                 try {
-                    String text = fromTemplate(files, name, e.getValue(), header);
+                    String text = TemplateStamp.stamp(fromTemplate(files, name, e.getValue(), header), packName, fingerprint(files, name, e.getValue()));
                     files.write(name, text);
                     files.writeMarker(name, text, fingerprint(files, name, e.getValue()), kindsOf(e.getValue()));
                     generated.add(name);
@@ -132,6 +134,27 @@ public final class ConnectorBootstrap {
         String text = files.text(name);
         ConnectorFiles.Marker mk = files.marker(name);
         List<String> newKinds = kindsOf(t);
+        java.util.Optional<TemplateStamp.Stamp> stamp = TemplateStamp.of(text);
+        if (stamp.isPresent()) {                                         // the fingerprint in the text itself (2.9.5)
+            if (fp.equals(stamp.get().template())) {
+                return;
+            }
+            if (TemplateStamp.pristine(text)) {
+                String fresh = TemplateStamp.stamp(fromTemplate(files, name, t, header), pack, fp);
+                Path kept = files.keepBeside(name, "before-upgrade");
+                files.write(name, fresh);
+                files.writeMarker(name, fresh, fp, newKinds);
+                regenerated.add(name);
+                messages.add("connector file " + name + ".yaml replaced by the new template of pack '" + pack + "': it had never been edited"
+                        + (kept == null ? "" : " (the file before is kept as " + kept.getFileName() + " and in the history)"));
+            } else {
+                TemplateChange c = new TemplateChange(name, pack, mk == null ? files.parse(name, text).kinds() : mk.kinds(), newKinds);
+                changed.add(c);
+                messages.add("connector file " + name + ".yaml was edited and the template of pack '" + pack + "' changed; the file is kept and "
+                        + "gets what the template gained, every edit kept");
+            }
+            return;
+        }
         if (mk == null) {
             if (text == null || !text.startsWith("# Generated at first start")) {
                 return;                                                  // the site's own file
@@ -156,7 +179,8 @@ public final class ConnectorBootstrap {
             return;
         }
         if (ConnectorFiles.etag(text).equals(mk.fileEtag())) {
-            String fresh = fromTemplate(files, name, t, header);
+            String fresh = TemplateStamp.stamp(fromTemplate(files, name, t, header), pack, fp);
+            files.keepBeside(name, "before-upgrade");
             files.write(name, fresh);
             files.writeMarker(name, fresh, fp, newKinds);
             regenerated.add(name);
@@ -167,6 +191,17 @@ public final class ConnectorBootstrap {
             changed.add(c);
             messages.add("connector file " + name + ".yaml was edited and the template of pack '" + pack + "' changed; the file is kept. " + c.message());
         }
+    }
+
+    /** The header of a file generated from a pack's template. */
+    public static String header(String pack) {
+        return "Generated at first start from the connector template of pack '" + pack + "'. Edit it freely: an edited file is never overwritten; "
+                + "an unedited one follows the pack's template at an upgrade.";
+    }
+
+    /** The text Drishti writes for a connector from its pack's template: the header, the stamp and the template rendered. */
+    public static String generate(ConnectorFiles files, String name, String pack, Map<String, Object> t) {
+        return TemplateStamp.stamp(fromTemplate(files, name, t, header(pack)), pack, fingerprint(files, name, t));
     }
 
     /** What a template says, apart from the header: equal templates have equal fingerprints. */

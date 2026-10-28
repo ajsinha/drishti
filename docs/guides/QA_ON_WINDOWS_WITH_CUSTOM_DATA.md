@@ -751,6 +751,28 @@ letters (`drishti.var.hierarchies` in your settings would win over it).
 
 ---
 
+## 6i. What is new in 2.9.5: Iceberg (20 minutes)
+
+Delta stays the default for every table. These checks put the **risk domain** in Iceberg on purpose, then back. Build the jar first
+(`.\mvnw.cmd -q package -DskipTests`): the Iceberg loader and maintenance run from it. Nothing here needs Docker, AWS or an `.exe`.
+
+| # | Do | You should see |
+|---|---|---|
+| 1 | `…\.venv\Scripts\python.exe tools\build_demo_lakes.py --only market-risk --store risk=iceberg` | lines `risk/pnl-vector into Iceberg` (and the other risk tables), then `Risk domain: iceberg …\data\iceberg\risk; risk-store: now reads iceberg` |
+| 2 | **Admin → Connectors** | `risk-store` with plugin **iceberg**; **Admin → Health**: `risk-store` `UP` |
+| 3 | **Admin → Packs → market-risk → Data source → Test connection** on `risk-store` | each business date of `pnl-vector` with the same number of positions as before the switch (read from Iceberg's id maps) |
+| 4 | Open a P&L vector row (Search `pnl-vector`, any position) | its `PNL` array of 509 numbers, a missing value shown empty, never 0 |
+| 5 | Restart the server, open the same position again | it opens at once: its id map and document come from `data\cache\risk-store\` (Admin → Caches: `idMapsMappedFromDisk` above 0) |
+| 6 | `tools\drishti.py lake build --from data\testdata\market-risk\pnl-vector\cob-2026-09-30.part-001.jsonl.gz --pack config\packs\market-risk --connector risk-store --kind pnl-vector --lake data\iceberg --domain scratch --format iceberg` | a summary with `format: iceberg` and no rejects; `data\iceberg\scratch\pnl-vector\metadata` exists |
+| 7 | **Admin → Lakes**, with `data\iceberg` among the console's lake roots (`lakes.roots`) | the table `scratch/pnl-vector` with **Format** Iceberg; tick it, **Dry run**: *would expire snapshots older than 168 h; would remove 0 orphan file(s)* |
+| 8 | `…\python.exe tools\build_demo_lakes.py --only market-risk --store risk=delta` | `risk-store: now reads delta`; Admin → Connectors shows `risk-store` as delta again, with the same counts as in row 3 |
+
+**Upgrading from 2.9.4: your connector files (2.9.5).** Start the new server on your existing `config\connectors` folder: nothing to do
+by hand. Before it answers, each file you never edited is replaced by the pack's new template (the file before stays beside it as
+`<name>.yaml.before-upgrade-….bak`), and each file you edited keeps your values and gets every key the template gained (var-whatif's
+`ccy` among them). Check **Admin → Connectors → Template updates**: *Recent automatic updates* lists what was done; a key listed under
+*changed* is one where your value and the pack's differ, and **Use the pack's value** takes the pack's for that key only.
+
 ## 7. If something goes wrong
 
 | What you see | Do this |
@@ -760,6 +782,7 @@ letters (`drishti.var.hierarchies` in your settings would win over it).
 | The Run tab says **DrishtiApplication**, quotes or news try the internet, or sample trades appear | The server was started from the ▶ in `DrishtiApplication.java`: stop it and start **Drishti server (demo lakes)** (section 4.1, way A). |
 | IntelliJ: **module not specified**, the main class `com.ash.drishti.server.DrishtiApplication` in red | PyCharm was opened on `drishti-orig` and rewrote its `.idea`: do the note of step 2.2 (close both, delete `drishti-orig\.idea`, PyCharm on `drishti-console`), or reload the Maven projects (section 4.1, way A), or use way B. |
 | `start-server.ps1 … cannot be loaded because running scripts is disabled` | Type the line exactly as in section 4.1 way B (`powershell -ExecutionPolicy Bypass -File …`): it allows this one script only. |
+| The what-if says `DRS-5205` (unknown parameter `ccy`), or a page misses a kind the pack serves | A connector file from an older release that the upgrade has not reached: restart the server (2.9.5 upgrades connector files before it answers), then **Admin → Connectors → Template updates**; a value listed under *changed* stays yours until you click **Use the pack's value**. |
 | The server log scrolls with thousands of `FilterCompat` or `delta.kernel` INFO lines | An older copy of the project: `git pull` (since 2026-10-18 these libraries log at WARN; Drishti says one line per large table loaded). |
 | **BI → Trades overview** shows 0 trades, or a page of the demo shows nothing while Admin → Lakes has the table | Old connector files: stop the server, delete `config\connectors` (step 3.1 point 0), start the server again. |
 | `Port 18480 (or 17480) is already in use` | Another copy is running: stop it in IntelliJ / PyCharm (red square), or reboot. |
@@ -800,6 +823,7 @@ letters (`drishti.var.hierarchies` in your settings would win over it).
 - [ ] Step 6g (2.9.4): step 3.0 run again; the feed is `fixing.jsonl`, Health has no CSV note; JSONL downloads from a search, a view, a history page and a BI report; `drishti.py convert` on a CSV.
 - [ ] Step 6j (2.9.5): the VaR and exposure data rebuilt; **Limit letters** in the VaR tree's select; LL-0011 at 71% of its limit; LL-0002's DESK-COMM with no limit; `LL:LL-0011` in the scope box; the split-position warning.
 - [ ] Step 6h (2.9.4): the VaR data rebuilt; the Reporting currency select and **In other currencies**; `VAR BANK IN GBP`; a trade's Trade currency; `tools\pvgen\intraday.py` with `--lake` and `--server` shows the intraday badge; `check.py` says every scope is *ok*.
+- [ ] Step 6i (2.9.5): the risk domain moved to Iceberg and back (`--store risk=iceberg`, then `risk=delta`); the same counts both ways; a P&L vector opens with its 509 values; Admin → Lakes shows **Format** Iceberg for an Iceberg table and its dry run.
 
 **After the demo:**
 

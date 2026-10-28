@@ -728,8 +728,8 @@ routes:
 ```
 
 Save. When the pack reloads (a few seconds) the server writes `config/connectors/helpdesk-store.yaml` from the template, starting with the
-line `# Generated at first start from the connector template of pack 'helpdesk'. Edit it freely: it is never overwritten.`, and never
-overwrites it afterwards. Check the connector, then open `TKT TKT-2001`:
+line `# Generated at first start from the connector template of pack 'helpdesk'. Edit it freely: an edited file is never overwritten; an unedited one follows the pack's template at an upgrade.` and a stamp line, and never
+overwrites it once edited. Check the connector, then open `TKT TKT-2001`:
 
 ```bash
 curl -s $B/sources | python3 -c 'import json,sys; [print(s["name"], s["kinds"], s["health"]) for s in json.load(sys.stdin)["sources"] if s["name"]=="helpdesk-store"]'
@@ -1229,10 +1229,11 @@ routes: { netting-set: credit-store, margin-call: collateral-store }
 - **`connectors:` is a list of names or a mapping.** A list names site connectors. A mapping (what every pack shipped with Drishti uses, shown above) is read as the names **plus** the
   pack's templates. `connector-templates:` carries templates beside a list; `pack new` writes that form.
 - **A template is a suggestion, written once.** When the pack loads, for each connector it names, the server writes `config/connectors/<name>.yaml` from the template
-  if no file of that name exists, logs `connector file credit-store.yaml generated from the template of pack 'counterparty-risk'`, and never overwrites a file
-  afterwards. The generated file starts with `# Generated at first start from the connector template of pack '<pack>'. Edit it freely: it is never overwritten.`,
-  and the server notes what it generated in `<data>/connectors/generated/<name>.properties`. After that the file is the site's: it **replaces** the template
-  wholesale (the settings are not merged, so a later version of your pack cannot silently change a site's file), and the site edits it in an editor or in
+  if no file of that name exists, logs `connector file credit-store.yaml generated from the template of pack 'counterparty-risk'`, and never overwrites an edited file
+  afterwards. The generated file starts with `# Generated at first start from the connector template of pack '<pack>'. Edit it freely: an edited file is never overwritten; an unedited one follows the pack's template at an upgrade.`,
+  and the server notes what it generated in `<data>/connectors/generated/<name>.properties`. A file the site never edited follows your pack (its stamp line says so: a later version of
+  the template replaces it). Once edited the file is the site's: it **replaces** the template, a later version of your pack never changes a value the site set
+  and only adds the keys it gained ([CONNECTOR_FILES.md, Upgrades](../connectors/CONNECTOR_FILES.md#upgrades-295)), and the site edits it in an editor or in
   Admin → Connectors, applied live to that one connector. *Reset to pack default* (or `drishti.py connector reset <name>`) writes the pack's current template
   over it, keeping the earlier text in `<data>/connectors/history/`.
 - **Kinds go through `routes:`.** You know which kind lives where, so you route it; the file's `kinds:` can only narrow that. A kind read is tried at its route's

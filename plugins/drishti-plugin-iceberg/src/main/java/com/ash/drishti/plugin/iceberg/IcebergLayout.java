@@ -45,7 +45,8 @@ import org.apache.iceberg.types.Types;
  * The table layout the connector reads fastest, shared by the connector, {@link IcebergLoader} and
  * {@link IcebergMaintenance}: one table per kind with columns {@code id}, {@code doc} (the whole JSON document),
  * {@code business_date} (an identity partition) and the pack's promoted fields beside them ({@code counterparty.id} is
- * column {@code counterparty__id}; numbers are {@code double}, everything else {@code string}); each business day
+ * column {@code counterparty__id}; numbers are {@code double}, everything else {@code string}; a vector field,
+ * {@code layout.<kind>.vectors}, is an optional {@code list<double>} column whose missing elements are null, never 0); each business day
  * sorted by id and cut into files of {@code file-rows} rows, each file its own id range; small Parquet row groups, so
  * one entity is one small row group; column metrics (minimum and maximum) for every column but {@code doc}.
  */
@@ -76,15 +77,31 @@ public final class IcebergLayout {
 
     /** The table's schema: id, doc, business_date, then each promoted path (true: a number). */
     public static Schema schema(Map<String, Boolean> promoted) {
+        return schema(promoted, java.util.Set.of());
+    }
+
+    /** The table's schema with vector columns after the promoted ones: {@code list<double>}, optional elements (a missing value is null). */
+    public static Schema schema(Map<String, Boolean> promoted, java.util.Set<String> vectors) {
         List<Types.NestedField> fields = new ArrayList<>();
         fields.add(Types.NestedField.required(1, ID, Types.StringType.get()));
         fields.add(Types.NestedField.optional(2, DOC, Types.StringType.get()));
         fields.add(Types.NestedField.required(3, DATE, Types.DateType.get()));
         int next = 4;
         for (Map.Entry<String, Boolean> e : promoted.entrySet()) {
-            fields.add(Types.NestedField.optional(next++, column(e.getKey()), e.getValue() ? Types.DoubleType.get() : Types.StringType.get()));
+            if (!vectors.contains(e.getKey())) {
+                fields.add(Types.NestedField.optional(next++, column(e.getKey()), e.getValue() ? Types.DoubleType.get() : Types.StringType.get()));
+            }
+        }
+        for (String v : vectors) {
+            int id = next++;
+            fields.add(Types.NestedField.optional(id, column(v), vectorType(next++)));
         }
         return new Schema(fields);
+    }
+
+    /** A vector column's type: a list of optional doubles. */
+    static Types.ListType vectorType(int elementId) {
+        return Types.ListType.ofOptional(elementId, Types.DoubleType.get());
     }
 
     public static PartitionSpec spec(Schema schema) {
@@ -122,9 +139,15 @@ public final class IcebergLayout {
      * path's type is fixed once the column exists).
      */
     public static Table open(IcebergLake lake, String kind, Map<String, Boolean> promoted, long rowGroupBytes, int fileRows) {
+        return open(lake, kind, promoted, java.util.Set.of(), rowGroupBytes, fileRows);
+    }
+
+    /** {@link #open(IcebergLake, String, Map, long, int)} with vector columns ({@code list<double>}), added when missing too. */
+    public static Table open(IcebergLake lake, String kind, Map<String, Boolean> promoted, java.util.Set<String> vectors, long rowGroupBytes,
+            int fileRows) {
         Table t = lake.load(kind).orElse(null);
         if (t == null) {
-            Schema s = schema(promoted);
+            Schema s = schema(promoted, vectors);
             try {
                 return lake.create(kind, s, spec(s), sortOrder(s), properties(rowGroupBytes, fileRows));
             } catch (org.apache.iceberg.exceptions.AlreadyExistsException e) {
@@ -132,10 +155,13 @@ public final class IcebergLayout {
             }
         }
         Schema has = t.schema();
-        List<Map.Entry<String, Boolean>> missing = promoted.entrySet().stream().filter(e -> has.findField(column(e.getKey())) == null).toList();
-        if (!missing.isEmpty()) {
+        List<Map.Entry<String, Boolean>> missing = promoted.entrySet().stream()
+                .filter(e -> !vectors.contains(e.getKey()) && has.findField(column(e.getKey())) == null).toList();
+        List<String> missingVectors = vectors.stream().filter(v -> has.findField(column(v)) == null).toList();
+        if (!missing.isEmpty() || !missingVectors.isEmpty()) {
             UpdateSchema u = t.updateSchema();
             missing.forEach(e -> u.addColumn(column(e.getKey()), e.getValue() ? Types.DoubleType.get() : Types.StringType.get()));
+            missingVectors.forEach(v -> u.addColumn(column(v), vectorType(0)));     // the element's id is assigned by the update
             u.commit();
         }
         return t;
@@ -200,6 +226,9 @@ public final class IcebergLayout {
         if (v == null) {
             return null;
         }
+        if (type.typeId() == Type.TypeID.LIST) {
+            return vector(v);
+        }
         if (type.typeId() == Type.TypeID.DOUBLE) {
             if (v instanceof Number n) {
                 return n.doubleValue();
@@ -214,6 +243,24 @@ public final class IcebergLayout {
             return String.valueOf(d.longValue());                     // 42.0 promoted into a text column reads "42"
         }
         return String.valueOf(v);
+    }
+
+    /**
+     * A vector value as a list of doubles, a null element kept null (never 0); null for anything that is not a list of numbers (the
+     * loader rejected such a row already).
+     */
+    static List<Double> vector(Object v) {
+        if (!(v instanceof List<?> list)) {
+            return null;
+        }
+        List<Double> out = new ArrayList<>(list.size());
+        for (Object e : list) {
+            if (e != null && !(e instanceof Number)) {
+                return null;
+            }
+            out.add(e == null ? null : ((Number) e).doubleValue());
+        }
+        return out;
     }
 
     /**

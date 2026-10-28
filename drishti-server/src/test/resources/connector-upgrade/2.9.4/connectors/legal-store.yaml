@@ -1,0 +1,11 @@
+# Generated at first start from the connector template of pack 'counterparty-risk'. Edit it freely: it is never overwritten.
+plugin: delta
+enabled: ${DRISHTI_LAKE_ENABLED:true}
+kinds:
+- agreement
+- csa
+settings:
+  root: ${DRISHTI_DELTA_ROOT:${drishti.data.dir:./data}/delta}
+  domain: legal
+  mode.agreement: effective
+  mode.csa: effective

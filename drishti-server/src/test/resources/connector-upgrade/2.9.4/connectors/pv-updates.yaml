@@ -1,0 +1,10 @@
+# Generated at first start from the connector template of pack 'market-risk'. Edit it freely: it is never overwritten.
+plugin: var-pv-stream
+enabled: ${DRISHTI_VAR_PV_STREAM:false}
+kinds:
+- pv-update
+settings:
+  bootstrap-servers: ${DRISHTI_KAFKA_BOOTSTRAP:localhost:9092}
+  topic: ${DRISHTI_VAR_PV_TOPIC:drishti.risk.pv-updates}
+  lake: ${DRISHTI_DELTA_ROOT:${drishti.data.dir:./data}/delta}
+  pack: market-risk

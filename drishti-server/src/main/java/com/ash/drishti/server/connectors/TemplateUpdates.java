@@ -47,6 +47,12 @@ import org.slf4j.LoggerFactory;
  *   <li><b>conflicting</b>: settings both have with different values (an administrator's edit, never changed automatically);</li>
  *   <li><b>obsolete</b>: kinds in the connector that no loaded pack serves.</li>
  * </ul>
+ * A file that was never edited ({@link com.ash.drishti.packs.TemplateStamp}, or the marker of an older generation) follows its pack: when
+ * the template changed it is replaced in full by the new template, the file before kept beside it and in the history. For an edited file
+ * the additive part reaches every depth ({@link TemplateMerge}): settings, kinds, layout lists, a missing description, and a reactive
+ * connector's whole computation ({@code kinds.*.params}, {@code kinds.*.result}, {@code reads}, {@code engine}, {@code triggers},
+ * {@code coalesce}, {@code cache}, {@code limits}, {@code history}); a value it has is never overwritten, and a different one is a
+ * conflict with a <i>use the pack's value</i> button ({@link #useTemplateValue}).
  * With {@code template-updates: additive} (the default) the additive part is merged automatically, keeping every edit, through
  * {@link ConnectorManager#save} (so a shared edit, on every node, with the previous text in the history); {@code notify} only lists;
  * {@code off} does nothing automatically. Conflicting and obsolete parts are only ever changed by an administrator's button.
@@ -73,7 +79,15 @@ public final class TemplateUpdates implements AutoCloseable {
     /** One drifted connector: its three classes, the current text and the template's text (for the side-by-side view). */
     public record Drift(String name, String pack, List<String> missingKinds, Map<String, String> newSettings,
             Map<String, List<String>> conflicting, List<String> obsoleteKinds, String etag, String text, String templateText,
-            Map<String, String> extendedLists, Map<String, Object> newParams) {
+            Map<String, String> extendedLists, Map<String, Object> newParams, Map<String, Object> mergedCompute, List<String> computeAdded,
+            List<TemplateMerge.Conflict> computeConflicts, String newDescription, boolean pristine, boolean templateMoved) {
+
+        public Drift(String name, String pack, List<String> missingKinds, Map<String, String> newSettings,
+                Map<String, List<String>> conflicting, List<String> obsoleteKinds, String etag, String text, String templateText,
+                Map<String, String> extendedLists, Map<String, Object> newParams) {
+            this(name, pack, missingKinds, newSettings, conflicting, obsoleteKinds, etag, text, templateText, extendedLists, newParams, null, List.of(),
+                    List.of(), null, false, false);
+        }
 
         public Drift(String name, String pack, List<String> missingKinds, Map<String, String> newSettings,
                 Map<String, List<String>> conflicting, List<String> obsoleteKinds, String etag, String text, String templateText,
@@ -87,11 +101,17 @@ public final class TemplateUpdates implements AutoCloseable {
         }
 
         public boolean additive() {
-            return !missingKinds.isEmpty() || !newSettings.isEmpty() || !extendedLists.isEmpty() || !newParams.isEmpty();
+            return !missingKinds.isEmpty() || !newSettings.isEmpty() || !extendedLists.isEmpty() || !newParams.isEmpty() || !computeAdded.isEmpty()
+                    || newDescription != null;
+        }
+
+        /** Never edited and its template has moved on: replaced in full by the new template (at start, or the next check). */
+        public boolean followsPack() {
+            return pristine && templateMoved;
         }
 
         public boolean any() {
-            return additive() || !conflicting.isEmpty() || !obsoleteKinds.isEmpty();
+            return additive() || followsPack() || !conflicting.isEmpty() || !computeConflicts.isEmpty() || !obsoleteKinds.isEmpty();
         }
 
         public Map<String, Object> toMap() {
@@ -102,8 +122,14 @@ public final class TemplateUpdates implements AutoCloseable {
             m.put("newSettings", newSettings.keySet().stream().sorted().toList());
             m.put("extendedLists", extendedLists.keySet().stream().sorted().toList());
             m.put("newParams", newParams.keySet().stream().sorted().toList());
+            m.put("computeAdded", computeAdded);
+            m.put("newDescription", newDescription != null);
+            m.put("pristine", pristine);
+            m.put("followsPack", followsPack());
             List<Map<String, Object>> c = new ArrayList<>();
-            conflicting.forEach((k, v) -> c.add(Map.of("key", k, "connector", v.get(0), "template", v.get(1))));
+            conflicting.forEach((k, v) -> c.add(Map.of("key", k, "where", "settings", "connector", v.get(0), "template", v.get(1))));
+            computeConflicts.forEach(x -> c.add(Map.of("key", x.key(), "where", "definition", "connector", String.valueOf(x.file()),
+                    "template", String.valueOf(x.template()))));
             m.put("conflicting", c);
             m.put("obsoleteKinds", obsoleteKinds);
             m.put("additive", additive());
@@ -201,9 +227,48 @@ public final class TemplateUpdates implements AutoCloseable {
             pack = t.get().pack();
             templateText = manager.templateText(t.get());
         }
-        Map<String, Object> params = t.isPresent() && String.valueOf(t.get().definition().get("plugin")).equals(d.plugin())
-                ? newParams(t.get().definition(), d.compute()) : Map.of();
-        return Optional.of(new Drift(name, pack, missing, fresh, conflicting, obsolete, d.etag(), d.text(), templateText, extended, params));
+        boolean samePlugin = t.isPresent() && String.valueOf(t.get().definition().get("plugin")).equals(d.plugin());
+        Map<String, Object> params = samePlugin ? newParams(t.get().definition(), d.compute()) : Map.of();
+        Map<String, Object> mergedCompute = null;
+        List<String> computeAdded = List.of();
+        List<TemplateMerge.Conflict> computeConflicts = List.of();
+        String newDescription = null;
+        boolean pristine = false;
+        boolean moved = false;
+        if (samePlugin) {
+            Map<String, Object> tc = com.ash.drishti.packs.ConnectorFiles.computeOf(t.get().definition());
+            if (!tc.isEmpty()) {
+                TemplateMerge.Result r = TemplateMerge.merge(d.compute(), tc);
+                computeAdded = r.added();
+                computeConflicts = r.conflicts();
+                mergedCompute = r.changed() ? r.merged() : null;
+            }
+            Object td = t.get().definition().get("description");
+            if (d.description().isBlank() && td != null && !String.valueOf(td).isBlank()) {
+                newDescription = String.valueOf(td);
+            }
+            String fp = com.ash.drishti.packs.ConnectorBootstrap.fingerprint(manager.files(), name, t.get().definition());
+            Optional<com.ash.drishti.packs.TemplateStamp.Stamp> stamp = com.ash.drishti.packs.TemplateStamp.of(d.text());
+            ConnectorFiles.Marker mk = markerOf(name);
+            if (stamp.isPresent()) {
+                pristine = com.ash.drishti.packs.TemplateStamp.pristine(d.text());
+                moved = !fp.equals(stamp.get().template());
+            } else if (mk != null) {
+                pristine = ConnectorFiles.etag(d.text()).equals(mk.fileEtag());
+                moved = !fp.equals(mk.templateFingerprint());
+            }
+        }
+        return Optional.of(new Drift(name, pack, missing, fresh, conflicting, obsolete, d.etag(), d.text(), templateText, extended, params,
+                mergedCompute, computeAdded, computeConflicts, newDescription, pristine, moved));
+    }
+
+    /** The marker of an older generation (a file on disk only: a shared edit has none), or null. */
+    private ConnectorFiles.Marker markerOf(String name) {
+        try {
+            return manager.files().source(name) != null && manager.files().source(name).startsWith("shared") ? null : manager.files().marker(name);
+        } catch (RuntimeException e) {
+            return null;
+        }
     }
 
     /**
@@ -302,8 +367,9 @@ public final class TemplateUpdates implements AutoCloseable {
         }
         Object enabled = d.enabled() == null ? null : "true".equals(d.enabled().trim()) ? Boolean.TRUE
                 : "false".equals(d.enabled().trim()) ? Boolean.FALSE : d.enabled();
-        return files.render(header.toString(), d.plugin(), enabled, kinds, d.description(), settings, d.requires(), withParams(d.compute(), drift.newParams()),
-                d.writes());
+        Map<String, Object> compute = drift.mergedCompute() != null ? drift.mergedCompute() : withParams(d.compute(), drift.newParams());
+        String description = drift.newDescription() != null ? drift.newDescription() : d.description();
+        return files.render(header.toString(), d.plugin(), enabled, kinds, description, settings, d.requires(), compute, d.writes());
     }
 
     private ConnectorManager.Change write(String name, String ifMatch, boolean additive, boolean dropObsolete, String user, String what) {
@@ -314,7 +380,7 @@ public final class TemplateUpdates implements AutoCloseable {
         ConnectorFiles.Definition d = manager.files().read(name);
         Drift use = additive ? drift : new Drift(name, drift.pack(), List.of(), Map.of(), Map.of(), drift.obsoleteKinds(), drift.etag(), drift.text(),
                 drift.templateText());
-        if (additive && (!drift.extendedLists().isEmpty() || !drift.newParams().isEmpty())) {
+        if (additive && (!drift.extendedLists().isEmpty() || !drift.newParams().isEmpty() || !drift.computeAdded().isEmpty())) {
             backup(name);                                              // the file as it was, beside it (besides the history)
         }
         String text = merged(manager.files(), d, use, dropObsolete ? drift.obsoleteKinds() : List.of());
@@ -365,9 +431,84 @@ public final class TemplateUpdates implements AutoCloseable {
         if (ifMatch != null && etag != null && !ifMatch.equals(etag)) {
             throw new DrishtiException(ErrorCode.CONNECTOR_CONFLICT, "connector '" + name + "' changed since you read it; reload it");
         }
-        ConnectorManager.Change c = manager.save(name, manager.templateText(t), etag, true);
+        ConnectorManager.Change c = manager.save(name, com.ash.drishti.packs.ConnectorBootstrap.generate(manager.files(), name, t.pack(), t.definition()),
+                etag, true);
         audit.record(user, "connector-template-update", name, "regenerated from the template of pack " + t.pack() + " (the old text is in the history)");
         return c;
+    }
+
+    /**
+     * Replaces a never-edited connector by its pack's new template (an upgrade): the file before kept beside it ({@code .before-upgrade-…bak})
+     * and in the history, one log line, audited, a notice. Returns false when it is not (any more) such a connector.
+     */
+    boolean followPack(Drift d, String user) {
+        ConnectorManager.Template t = manager.template(d.name()).orElse(null);
+        if (t == null || !d.followsPack()) {
+            return false;
+        }
+        java.nio.file.Path kept = manager.files().keepBeside(d.name(), "before-upgrade");
+        String text = com.ash.drishti.packs.ConnectorBootstrap.generate(manager.files(), d.name(), t.pack(), t.definition());
+        manager.save(d.name(), text, d.etag(), true);
+        if (manager.files().source(d.name()) == null || !manager.files().source(d.name()).startsWith("shared")) {
+            manager.files().writeMarker(d.name(), text, com.ash.drishti.packs.ConnectorBootstrap.fingerprint(manager.files(), d.name(), t.definition()),
+                    com.ash.drishti.packs.ConnectorBootstrap.kindsOf(t.definition()));
+        }
+        String what = "replaced by pack " + t.pack() + "'s new template: it had never been edited"
+                + (kept == null ? " (the text before is in the history)" : " (the file before is kept as " + kept.getFileName() + " and in the history)");
+        LOG.info("connector {}: {}", d.name(), what);
+        audit.record(user, "connector-template-upgrade", d.name(), what);
+        notices.addFirst(new Notice(Instant.now(), d.name(), what));
+        while (notices.size() > 50) {
+            notices.removeLast();
+        }
+        return true;
+    }
+
+    /**
+     * Use the pack's value: one conflicting key ({@code settings}: a setting; {@code definition}: a path of the computation, as the
+     * drift lists it) set to the template's value, every other edit kept; audited and in the history.
+     */
+    @SuppressWarnings("unchecked")
+    public ConnectorManager.Change useTemplateValue(String name, String where, String key, String ifMatch, String user) {
+        Drift drift = drift(name).orElseThrow(() -> new DrishtiException(ErrorCode.CONNECTOR_NOT_FOUND, "connector '" + name + "' has no file or shared edit"));
+        if (ifMatch != null && !ifMatch.equals(drift.etag())) {
+            throw new DrishtiException(ErrorCode.CONNECTOR_CONFLICT, "connector '" + name + "' changed since you read it; reload it");
+        }
+        ConnectorFiles.Definition d = manager.files().read(name);
+        Map<String, Object> settings = new LinkedHashMap<>(d.settings());
+        Map<String, Object> compute = d.compute();
+        String before;
+        String after;
+        if ("settings".equals(where)) {
+            List<String> v = drift.conflicting().get(key);
+            if (v == null) {
+                throw new DrishtiException(ErrorCode.CONNECTOR_CONFLICT, "connector '" + name + "' has no conflicting setting '" + key + "'");
+            }
+            before = v.get(0);
+            after = v.get(1);
+            settings.put(key, after);
+        } else if ("definition".equals(where)) {
+            TemplateMerge.Conflict c = drift.computeConflicts().stream().filter(x -> x.key().equals(key)).findFirst()
+                    .orElseThrow(() -> new DrishtiException(ErrorCode.CONNECTOR_CONFLICT, "connector '" + name + "' has no conflicting value at '" + key + "'"));
+            before = String.valueOf(c.file());
+            after = String.valueOf(c.template());
+            compute = TemplateMerge.set(d.compute(), c.path(), c.template());
+        } else {
+            throw new DrishtiException(ErrorCode.CONNECTOR_CONFLICT, "where is settings or definition, not '" + where + "'");
+        }
+        StringBuilder header = new StringBuilder();
+        for (String line : d.text().split("\n", -1)) {
+            if (!line.startsWith("#")) {
+                break;
+            }
+            header.append(header.isEmpty() ? "" : "\n").append(line);
+        }
+        Object enabled = d.enabled() == null ? null : "true".equals(d.enabled().trim()) ? Boolean.TRUE
+                : "false".equals(d.enabled().trim()) ? Boolean.FALSE : d.enabled();
+        String text = manager.files().render(header.toString(), d.plugin(), enabled, d.kinds(), d.description(), settings, d.requires(), compute, d.writes());
+        ConnectorManager.Change ch = manager.save(name, text, drift.etag(), true);
+        audit.record(user, "connector-template-update", name, "used pack " + drift.pack() + "'s value for " + key + ": " + before + " -> " + after);
+        return ch;
     }
 
     /** Fix all additive: merges the additive part of every drifted connector; returns the names changed. */
@@ -399,16 +540,27 @@ public final class TemplateUpdates implements AutoCloseable {
         try {
             List<String> done = new ArrayList<>();
             for (Drift d : drifts()) {
+                if (d.followsPack()) {
+                    try {
+                        if (followPack(d, ACTOR)) {
+                            done.add(d.name());
+                        }
+                    } catch (DrishtiException e) {
+                        LOG.debug("connector {}: upgrade to the pack's template skipped ({})", d.name(), e.getMessage());
+                    }
+                    continue;
+                }
                 if (!d.additive()) {
                     continue;
                 }
                 try {
                     write(d.name(), d.etag(), true, false, ACTOR, "added automatically from the template of pack " + d.pack() + ": kinds "
                             + d.missingKinds() + ", settings " + d.newSettings().keySet() + ", columns in " + d.extendedLists().keySet()
-                            + ", parameters " + d.newParams().keySet() + " (template-updates: additive)");
+                            + ", parameters " + d.newParams().keySet() + ", definition " + d.computeAdded() + " (template-updates: additive)");
                     String what = "added from pack " + d.pack() + "'s template: kinds " + d.missingKinds() + ", settings " + d.newSettings().keySet()
                             + (d.extendedLists().isEmpty() ? "" : ", the template's new columns in " + d.extendedLists().keySet())
-                            + (d.newParams().isEmpty() ? "" : ", the template's new parameters " + d.newParams().keySet());
+                            + (d.newParams().isEmpty() ? "" : ", the template's new parameters " + d.newParams().keySet())
+                            + (d.computeAdded().isEmpty() ? "" : ", in its definition " + d.computeAdded());
                     LOG.info("connector {}: {}; every edit kept, the previous text is in the history", d.name(), what);
                     notices.addFirst(new Notice(Instant.now(), d.name(), what));
                     while (notices.size() > 50) {

@@ -562,6 +562,26 @@ public final class ConnectorFiles {
         }
     }
 
+    /**
+     * Keeps a copy of the connector's file on disk beside it, {@code <name>.yaml.<label>-<yyyyMMdd-HHmmss>.bak} (not a {@code .yaml}, so
+     * never read as a connector), before an automatic change; returns it, or null when there is no file on disk (a shared edit's earlier
+     * text stays in the shared history) or it cannot be written.
+     */
+    public Path keepBeside(String name, String label) {
+        try {
+            Path f = file(name);
+            if (!Files.isRegularFile(f)) {
+                return null;
+            }
+            String at = java.time.LocalDateTime.now(java.time.ZoneOffset.UTC).format(java.time.format.DateTimeFormatter.ofPattern("yyyyMMdd-HHmmss"));
+            Path b = f.resolveSibling(f.getFileName() + "." + label + "-" + at + ".bak");
+            Files.copy(f, b, StandardCopyOption.REPLACE_EXISTING);
+            return b;
+        } catch (IOException | RuntimeException e) {
+            return null;
+        }
+    }
+
     // -- generated-file markers ------------------------------------------------------------------------------------
 
     /**

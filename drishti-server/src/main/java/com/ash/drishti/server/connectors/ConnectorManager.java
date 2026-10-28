@@ -1199,7 +1199,7 @@ public final class ConnectorManager {
         }
         Template t = template(name).orElseThrow(() -> new DrishtiException(ErrorCode.CONNECTOR_CONFLICT,
                 "connector '" + name + "' has no pack default to go back to; delete it, or edit it"));
-        String text = templateText(t);
+        String text = com.ash.drishti.packs.ConnectorBootstrap.generate(files, name, t.pack(), t.definition());   // stamped: it follows the pack again
         Change c = save(name, text, files.exists(name) ? ifMatch == null ? ConnectorFiles.etag(files.text(name)) : ifMatch : null, true);
         if (files.exists(name) && ConnectorFiles.etag(files.text(name)).equals(ConnectorFiles.etag(text))) {
             files.writeMarker(name, text, ConnectorBootstrap.fingerprint(files, name, t.definition()), ConnectorBootstrap.kindsOf(t.definition()));
@@ -1237,7 +1237,12 @@ public final class ConnectorManager {
             if (t == null) {
                 return false;
             }
-            files.write(name, templateText(t));
+            String text = com.ash.drishti.packs.ConnectorBootstrap.generate(files, name, t.pack(), t.definition());
+            files.write(name, text);
+            if (files.source(name) == null || !files.source(name).startsWith("shared")) {
+                files.writeMarker(name, text, com.ash.drishti.packs.ConnectorBootstrap.fingerprint(files, name, t.definition()),
+                        com.ash.drishti.packs.ConnectorBootstrap.kindsOf(t.definition()));
+            }
             scan();
             return true;
         } finally {

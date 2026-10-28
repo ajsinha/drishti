@@ -1,0 +1,10 @@
+# Generated at first start from the connector template of pack 'market-data'. Edit it freely: it is never overwritten.
+plugin: feed
+enabled: ${DRISHTI_FEED_US_TREASURY:false}
+kinds:
+- ir-curve
+settings:
+  feed: us-treasury
+  user-agent: ${drishti.branding.product:feed} public data feed connector
+  stale-after: 4d
+  refresh-minutes: '60'

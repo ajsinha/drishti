@@ -1,0 +1,65 @@
+# Generated at first start from the connector template of pack 'counterparty-risk'. Edit it freely: it is never overwritten.
+plugin: reactive
+mode: reactive
+enabled: ${DRISHTI_EXPOSURE_ENABLED:true}
+description: 'A scope''s exposure before and after candidate trades (a private sandbox), exact: each candidate''s paths on the run added to its netting set, collateral and exposure computed again by the Python exposure engine in the compute pool exposure from the scope''s exposure-result: XWIF <scope> <GO>'
+kinds:
+  exposure-whatif:
+    compute: exposure-whatif
+    params:
+      sandbox:
+        type: sandbox-ref
+      q:
+        type: decimal
+        default: 0.95
+        min: 0.5
+        max: 0.9999
+      collateral:
+        type: enum
+        options:
+        - lagged
+        - current
+        - none
+        default: lagged
+      sets:
+        type: text
+        default: ''
+    result:
+      required:
+      - BEFORE_PEAK_PFE
+      - AFTER_PEAK_PFE
+      types:
+        BEFORE_PEAK_PFE: number
+        AFTER_PEAK_PFE: number
+reads:
+- kind: exposure-result
+  as: base
+  id: '{id}~collateral={params.collateral}~detail=whatif~q={params.q}~sets={params.sets}'
+- kind: exposure-result
+  as: sets
+  ids: '{inputs.base.WHATIF_SETS}'
+  limit: 50
+engine:
+  type: python
+  entry: drishti_compute.exposure.whatif:ExposureWhatIfEngine
+  pool: exposure
+  version: '1.0'
+triggers:
+- 'on': data-version
+  kinds:
+  - simulation-run
+  - exposure-path
+  - netting-set
+  - csa
+  - collateral-balance
+  affects: all
+coalesce:
+  quiet: 1s
+  max-wait: 10s
+cache:
+  results: 200
+  ttl: 1h
+limits:
+  timeout: 60s
+  wait: 250ms
+  max-inflight-per-user: 2

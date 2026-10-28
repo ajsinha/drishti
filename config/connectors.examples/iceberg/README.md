@@ -38,7 +38,9 @@ Ready-made connector files for the `iceberg` plugin: one file per banking data d
 
 Each file reads the tables of one domain: `<root>/<domain>/<kind>` with the default `catalog: hadoop`, or the namespace `<domain>` of a
 REST catalog with `catalog: rest`. The reference kinds are read in `effective` mode; every other kind in `snapshot` mode. Nothing is
-written. `trade-endur.yaml` also carries the trading pack's promoted columns and file layout for `trade`; the domain files carry none.
+written. `trade-endur.yaml` also carries the trading pack's promoted columns and file layout for `trade`; `risk-store.yaml` carries the
+market-risk pack's kinds and layouts, its P&L and scenario-PV vectors as `list<double>` columns (`layout.<kind>.vectors`, 2.9.5); the
+other domain files carry none. Delta is the default for every domain: a file here is copied in only to read that domain from Iceberg.
 
 ## Settings
 
@@ -86,7 +88,7 @@ For a REST catalog set `DRISHTI_ICEBERG_CATALOG=rest`, `DRISHTI_ICEBERG_URI`, `D
 | `credit-store.yaml` | `iceberg` | `netting-set`, `credit-limit`, `cva`, `sa-ccr` | credit-store read from iceberg (the former application-iceberg.yaml profile) |
 | `market-store.yaml` | `iceberg` | `ir-curve`, `repo-curve`, `fx-spot`, `fx-forward-curve`, `fx-vol-surface`, `ir-vol-cube`, `cap-vol-surface`, `equity`, `equity-index`, `dividend-curve`, `equity-vol-surface`, `credit-curve`, `inflation-index`, `inflation-curve`, `commodity`, `commodity-curve`, `commodity-vol-surface`, `rate-fixing`, `bond`, `correlation-matrix` | market-store read from iceberg (the former application-iceberg.yaml profile) |
 | `reference-store.yaml` | `iceberg` | `counterparty`, `counterparty-group`, `issuer`, `agreement`, `ccp`, `legal-entity`, `book`, `desk`, `trader`, `calendar`, `csa`, `clearing-account` | reference-store read from iceberg (the former application-iceberg.yaml profile) |
-| `risk-store.yaml` | `iceberg` | `var`, `stress-scenario`, `stress-result`, `frtb-sensitivity`, `pnl-explain` | risk-store read from iceberg (the former application-iceberg.yaml profile) |
+| `risk-store.yaml` | `iceberg` | `stress-scenario`, `stress-result`, `frtb-sensitivity`, `pnl-explain`, `trade-valuation`, `portfolio`, `pnl-vector`, `scenario-pv`, `fx-scenario`, `scenario-set`, `risk-hierarchy` | risk-store read from Iceberg (the market-risk pack's risk domain; Delta stays the default) |
 | `trade-endur.yaml` | `iceberg` | `trade` | trades read from Iceberg (loaded by tools/load-iceberg.sh) |
 <!-- files:end -->
 

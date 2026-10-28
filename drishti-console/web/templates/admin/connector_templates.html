@@ -26,7 +26,9 @@
   <h1 class="ws-h" id="tuTitle">Template updates <a class="emb-help" href="/help/connector-files#template-updates" aria-label="Help: template updates" title="Help: template updates">?</a></h1>
   <details class="adm-about" open><summary>About this page</summary>
   <p class="text-muted-d">Connectors whose text differs from their pack's current template. <b>Missing</b>: kinds or settings the template has and the
-    connector lacks (a file generated from an older template). <b>Changed</b>: settings an administrator edited; never changed for you.
+    connector lacks, at any depth (a file generated from an older template). <b>Changed</b>: values an administrator edited; never changed
+    for you: <b>Use the pack's value</b> takes the template's for that one key. A file nobody edited <b>follows the pack</b>: replaced in full by
+    the new template.
     <b>Obsolete</b>: kinds no loaded pack serves. Automatic updates: <span class="mono" data-mode>{{ updates.mode }}</span>
     ({{ 'missing kinds and settings are added for you, keeping every edit' if updates.mode == 'additive' else 'only listed here' if updates.mode == 'notify' else 'off' }}).
     Every change is kept in the connector's history and applies on every node.</p>
@@ -42,8 +44,13 @@
       {% if d.missingKinds or d.newSettings %}<li><span class="st st-warn">missing</span>
         {% if d.missingKinds %}kinds <span class="mono">{{ d.missingKinds | join(', ') }}</span>{% endif %}
         {% if d.newSettings %}{{ '; ' if d.missingKinds }}settings <span class="mono">{{ d.newSettings | join(', ') }}</span>{% endif %}</li>{% endif %}
+      {% if d.followsPack %}<li><span class="st st-warn">follows the pack</span> never edited: replaced by the pack's new template at the next check
+        (the file before is kept beside it and in the history)</li>{% endif %}
+      {% if d.computeAdded %}<li><span class="st st-warn">missing</span> in its definition <span class="mono">{{ d.computeAdded | join(', ') }}</span></li>{% endif %}
       {% if d.conflicting %}<li><span class="st">changed</span>
-        {% for c in d.conflicting %}<span class="mono">{{ c.key }}</span>: <span class="mono">{{ c.connector }}</span> (template <span class="mono">{{ c.template }}</span>){{ '; ' if not loop.last }}{% endfor %}</li>{% endif %}
+        <ul class="tu-conflicts">{% for c in d.conflicting %}<li data-conflict="{{ c.key }}" data-where="{{ c.where or 'settings' }}"><span class="mono">{{ c.key }}</span>:
+          <span class="mono">{{ c.connector }}</span> (template <span class="mono">{{ c.template }}</span>)
+          <button type="button" class="fk" data-use-template aria-label="Use the pack's value for {{ c.key }} in {{ d.name }}">Use the pack's value</button></li>{% endfor %}</ul></li>{% endif %}
       {% if d.obsoleteKinds %}<li><span class="st st-bad">obsolete</span> kinds <span class="mono">{{ d.obsoleteKinds | join(', ') }}</span></li>{% endif %}
     </ul>
     <div class="tu-diff">

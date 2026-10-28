@@ -50,7 +50,12 @@ interface LayoutLake extends Closeable {
         /** Makes each day's files that day's data, in one commit. */
         void commitDays(Map<LocalDate, List<?>> days);
 
-        int keepDays(int keep, LoadGuard guard);
+        default int keepDays(int keep, LoadGuard guard) {
+            return keepDays(keep, guard, null);
+        }
+
+        /** Keeps the newest {@code keep} business days, never dropping one on or after {@code floor} (null: no floor). */
+        int keepDays(int keep, LoadGuard guard, LocalDate floor);
 
         void expireSnapshots(long hours);
 
@@ -67,7 +72,12 @@ interface LayoutLake extends Closeable {
     }
 
     /** The kind's table, created in the layout if it does not exist; promoted paths it lacks are added. */
-    LayoutTable open(String kind, Map<String, Boolean> promoted, long rowGroupBytes, int fileRows);
+    default LayoutTable open(String kind, Map<String, Boolean> promoted, long rowGroupBytes, int fileRows) {
+        return open(kind, promoted, java.util.Set.of(), rowGroupBytes, fileRows);
+    }
+
+    /** {@link #open(String, Map, long, int)} with vector columns ({@code list<double>}: a P&amp;L vector), added when missing too. */
+    LayoutTable open(String kind, Map<String, Boolean> promoted, java.util.Set<String> vectors, long rowGroupBytes, int fileRows);
 
     /** The kind's table, or empty. */
     Optional<LayoutTable> load(String kind);
@@ -114,8 +124,8 @@ interface LayoutLake extends Closeable {
             }
 
             @Override
-            public int keepDays(int keep, LoadGuard guard) {
-                return IcebergMaintenance.keepDays(t, keep, guard);
+            public int keepDays(int keep, LoadGuard guard, LocalDate floor) {
+                return IcebergMaintenance.keepDays(t, keep, guard, floor);
             }
 
             @Override
@@ -150,8 +160,8 @@ interface LayoutLake extends Closeable {
         }
 
         @Override
-        public LayoutTable open(String kind, Map<String, Boolean> promoted, long rowGroupBytes, int fileRows) {
-            return new Kind(lake, kind, IcebergLayout.open(lake, kind, promoted, rowGroupBytes, fileRows));
+        public LayoutTable open(String kind, Map<String, Boolean> promoted, java.util.Set<String> vectors, long rowGroupBytes, int fileRows) {
+            return new Kind(lake, kind, IcebergLayout.open(lake, kind, promoted, vectors, rowGroupBytes, fileRows));
         }
 
         @Override
@@ -206,8 +216,8 @@ interface LayoutLake extends Closeable {
             }
 
             @Override
-            public int keepDays(int keep, LoadGuard guard) {
-                return NativeMaintenance.keepDays(t, keep, guard);
+            public int keepDays(int keep, LoadGuard guard, LocalDate floor) {
+                return NativeMaintenance.keepDays(t, keep, guard, floor);
             }
 
             @Override
@@ -246,8 +256,8 @@ interface LayoutLake extends Closeable {
         }
 
         @Override
-        public LayoutTable open(String kind, Map<String, Boolean> promoted, long rowGroupBytes, int fileRows) {
-            return new Kind(catalog, kind, NativeLayout.open(catalog, kind, promoted, rowGroupBytes, fileRows));
+        public LayoutTable open(String kind, Map<String, Boolean> promoted, java.util.Set<String> vectors, long rowGroupBytes, int fileRows) {
+            return new Kind(catalog, kind, NativeLayout.open(catalog, kind, promoted, vectors, rowGroupBytes, fileRows));
         }
 
         @Override

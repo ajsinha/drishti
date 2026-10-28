@@ -45,6 +45,10 @@ overlaps a build, and is kept in the history (<data>/lakes/maintenance-history.j
                             rewrite tables into the layout their pack declares (tools/samplegen/layout.py), one business
                             date at a time; a date already in the layout is left as it is, so running it again is harmless
 
+Iceberg lakes (a lake with ``format: iceberg``, or tables with metadata/*.metadata.json under a local root; Delta is the default) are
+maintained by Drishti's Iceberg maintenance instead (tools/lake/maintain_iceberg.py: retention, relayout, snapshot expiry for vacuum-hours,
+and orphan files older than orphan-hours, 72 at least), under the same floor, ownership rule, lock, schedules and history.
+
 Every table of every configured domain is visited; one failing table is reported and the rest go on. A line of JSON
 is printed per table and step (size and file counts before and after), for logs and monitoring."""
 from __future__ import annotations
@@ -64,6 +68,7 @@ from samplegen.layout import Layout, column_name, keep_stats_small, layouts_by_t
 from samplegen.layout import stats_columns as stats_columns_of  # noqa: E402
 
 sys.path.insert(0, str(Path(__file__).resolve().parent))
+import maintain_iceberg  # noqa: E402
 import maintconfig  # noqa: E402
 import maintschedule  # noqa: E402
 import ownership  # noqa: E402
@@ -267,8 +272,14 @@ def run_detailed(config: dict, dry_run: bool, today: date | None = None, force_d
         want = wanted_tables(tables_spec, root)
         if want is not None and not want:
             continue
+        fmt = str(lake.get("format") or "auto").lower()
         try:
-            found = tables(root, list(base["domains"]), base.get("storage-options") or {})
+            opts = base.get("storage-options") or {}
+            found = [] if fmt == "iceberg" else tables(root, list(base["domains"]), opts)
+            named = maintain_iceberg.catalog_tables(lake, want) if fmt == "iceberg" else None
+            iceberg = set(named) if named is not None else set() if fmt == "delta" or (fmt == "auto" and "://" in root and not root.startswith("file://")) \
+                else set(maintain_iceberg.tables(root, list(base["domains"]), opts))
+            found = sorted(set(found) | iceberg)
         except Exception as e:  # noqa: BLE001 - one lake must not stop the others
             out["failures"] += 1
             out["tables"].append({"root": root, "table": root, "name": "*", "error": f"{type(e).__name__}: {e}"})
@@ -276,7 +287,7 @@ def run_detailed(config: dict, dry_run: bool, today: date | None = None, force_d
         found = [u for u in found if want is None or table_name(u) in want]
         for name in sorted((want or set()) - {table_name(u) for u in found}):
             out["failures"] += 1
-            out["tables"].append({"root": root, "table": f"{root.rstrip('/')}/{name}", "name": name, "error": "no such Delta table under this lake"})
+            out["tables"].append({"root": root, "table": f"{root.rstrip('/')}/{name}", "name": name, "error": "no such table under this lake"})
         owned = ownership.built(root)
         lock = None
         if not dry_run and "://" not in root and Path(root).is_dir():
@@ -294,7 +305,8 @@ def run_detailed(config: dict, dry_run: bool, today: date | None = None, force_d
                 if cancel and cancel():
                     out["cancelled"] = True
                     break
-                out["tables"].append(_one(uri, root, lake, base, owned, want, day, dry_run, force_drop, force_foreign, emit, quiet, out))
+                out["tables"].append(_one(uri, root, lake, base, owned, want, day, dry_run, force_drop, force_foreign, emit, quiet, out,
+                                          uri in iceberg))
         finally:
             if lock is not None:
                 lock.__exit__(None, None, None)
@@ -303,9 +315,9 @@ def run_detailed(config: dict, dry_run: bool, today: date | None = None, force_d
     return out
 
 
-def _one(uri, root, lake, base, owned, want, day, dry_run, force_drop, force_foreign, emit, quiet, out) -> dict:
+def _one(uri, root, lake, base, owned, want, day, dry_run, force_drop, force_foreign, emit, quiet, out, iceberg: bool = False) -> dict:
     name = table_name(uri)
-    res: dict = {"root": root, "table": uri, "name": name, "owner": owned.get(name)}
+    res: dict = {"root": root, "table": uri, "name": name, "owner": owned.get(name), "format": "iceberg" if iceberg else "delta"}
     if name not in owned and not force_foreign:
         res["skipped"] = ownership.FOREIGN
         if want is not None:                       # named on purpose: a refusal, not a quiet skip
@@ -326,7 +338,10 @@ def _one(uri, root, lake, base, owned, want, day, dry_run, force_drop, force_for
             log(event="warning", table=uri, warning="; ".join(floor))
     emit("start", res)
     try:
-        res.update(maintain(uri, conf, day, dry_run, force_drop))
+        if iceberg:
+            res.update(maintain_iceberg.maintain(uri, conf, day, dry_run, force_drop, maintconfig.floor_days(name, lake.get("retain-years"))))
+        else:
+            res.update(maintain(uri, conf, day, dry_run, force_drop))
         if not quiet:
             log(event="maintained", dry_run=dry_run, **{k: v for k, v in res.items() if k not in ("root", "name", "owner")})
     except Exception as e:  # noqa: BLE001 - one table must not stop the others
@@ -344,7 +359,8 @@ def changed(res: dict) -> bool:
     if res.get("error") or res.get("skipped") or res.get("dryRun"):
         return False
     b, a = res.get("before") or {}, res.get("after") or {}
-    return bool((res.get("retention") or {}).get("dates")) or b.get("files") != a.get("files") or b.get("mb") != a.get("mb")
+    ret = res.get("retention") or {}
+    return bool(ret.get("dates") or ret.get("removed")) or b.get("files") != a.get("files") or b.get("mb") != a.get("mb")
 
 
 def signal_bodies(results: list[dict], run_id: str) -> list[tuple[str, str, dict]]:
@@ -368,7 +384,8 @@ def outcome(report: dict) -> str:
 
 
 def history_entry(report: dict, dry_run: bool, by: str, schedule: str | None = None, note: str | None = None, started: str | None = None) -> dict:
-    keep = ("name", "root", "before", "after", "estimate", "retention", "compact", "checkpoint", "vacuum", "error", "skipped", "forced", "signal")
+    keep = ("name", "root", "format", "before", "after", "estimate", "retention", "compact", "checkpoint", "vacuum", "orphans", "floor", "error",
+            "skipped", "forced", "signal")
     return {"at": started or maintconfig.now_iso(), "finished": maintconfig.now_iso(), "by": by, "schedule": schedule, "dryRun": dry_run,
             "outcome": outcome(report), "note": note, "tables": [{k: v for k, v in t.items() if k in keep} for t in report["tables"]]}
 

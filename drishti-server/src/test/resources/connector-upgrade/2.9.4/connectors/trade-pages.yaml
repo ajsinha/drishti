@@ -1,0 +1,134 @@
+# Generated at first start from the connector template of pack 'trading'. Edit it freely: it is never overwritten.
+plugin: derived
+kinds:
+- counterparty-trades
+- portfolio-trades
+- legal-entity-trades
+- index-trades
+settings:
+  refresh: 60s
+  store: disk
+  counterparty-trades.from: trade
+  counterparty-trades.group-by: $.COUNTERPARTY
+  counterparty-trades.id-field: COUNTERPARTY
+  counterparty-trades.members: TRADE_IDS
+  counterparty-trades.max-members: '1000'
+  counterparty-trades.rows-field: TRADES
+  counterparty-trades.fields.TRADE_COUNT: count
+  counterparty-trades.fields.NOTIONAL: sum first($.LEGS).NOTIONAL
+  counterparty-trades.fields.SOURCE_SYSTEMS: distinct $.SOURCE_SYSTEM
+  counterparty-trades.fields.PRODUCT_TYPES: distinct $.PRODUCT_TYPE
+  counterparty-trades.fields.CURRENCIES: distinct $.CURRENCY
+  counterparty-trades.fields.LAST_MATURITY: max $.MATURITY_DATE
+  counterparty-trades.fields.PAY_7D: sum sum(flatten($.EVENTS)[?nonblank(@.AMOUNT) && nonblank(@.EVENT_DATE)][?days(today(), @.EVENT_DATE) >= 0 && days(today(), @.EVENT_DATE) <= 7], 'AMOUNT')
+  counterparty-trades.fields.PAY_7D_EVENTS: sum size(flatten($.EVENTS)[?nonblank(@.AMOUNT) && nonblank(@.EVENT_DATE)][?days(today(), @.EVENT_DATE) >= 0 && days(today(), @.EVENT_DATE) <= 7])
+  counterparty-trades.fields.PAY_30D: sum sum(flatten($.EVENTS)[?nonblank(@.AMOUNT) && nonblank(@.EVENT_DATE)][?days(today(), @.EVENT_DATE) >= 0 && days(today(), @.EVENT_DATE) <= 30], 'AMOUNT')
+  counterparty-trades.fields.PAY_30D_EVENTS: sum size(flatten($.EVENTS)[?nonblank(@.AMOUNT) && nonblank(@.EVENT_DATE)][?days(today(), @.EVENT_DATE) >= 0 && days(today(), @.EVENT_DATE) <= 30])
+  counterparty-trades.fields.PAY_90D: sum sum(flatten($.EVENTS)[?nonblank(@.AMOUNT) && nonblank(@.EVENT_DATE)][?days(today(), @.EVENT_DATE) >= 0 && days(today(), @.EVENT_DATE) <= 90], 'AMOUNT')
+  counterparty-trades.fields.PAY_90D_EVENTS: sum size(flatten($.EVENTS)[?nonblank(@.AMOUNT) && nonblank(@.EVENT_DATE)][?days(today(), @.EVENT_DATE) >= 0 && days(today(), @.EVENT_DATE) <= 90])
+  counterparty-trades.rows.TRADE_ID: $.TRADE_ID
+  counterparty-trades.rows.SOURCE_SYSTEM: $.SOURCE_SYSTEM
+  counterparty-trades.rows.PRODUCT_TYPE: $.PRODUCT_TYPE
+  counterparty-trades.rows.BUY_SELL_CODE: $.BUY_SELL_CODE
+  counterparty-trades.rows.CURRENCY: $.CURRENCY
+  counterparty-trades.rows.NOTIONAL: first($.LEGS).NOTIONAL
+  counterparty-trades.rows.MATURITY_DATE: $.MATURITY_DATE
+  counterparty-trades.rows.TRADE_STATUS: $.TRADE_STATUS
+  counterparty-trades.rows.INDEX_NAME: nonblank($.LEGS[0].INDEX.NAME, $.LEGS[1].INDEX.NAME, '')
+  counterparty-trades.rows.COUNTERPARTY: $.COUNTERPARTY
+  counterparty-trades.rows.PORTFOLIO: $.PORTFOLIO
+  counterparty-trades.rows.LEGAL_ENTITY: $.LEGAL_ENTITY
+  counterparty-trades.rows.EVENTS: $.EVENTS
+  portfolio-trades.from: trade
+  portfolio-trades.group-by: $.PORTFOLIO
+  portfolio-trades.id-field: PORTFOLIO
+  portfolio-trades.members: TRADE_IDS
+  portfolio-trades.max-members: '1000'
+  portfolio-trades.rows-field: TRADES
+  portfolio-trades.fields.TRADE_COUNT: count
+  portfolio-trades.fields.NOTIONAL: sum first($.LEGS).NOTIONAL
+  portfolio-trades.fields.SOURCE_SYSTEMS: distinct $.SOURCE_SYSTEM
+  portfolio-trades.fields.PRODUCT_TYPES: distinct $.PRODUCT_TYPE
+  portfolio-trades.fields.CURRENCIES: distinct $.CURRENCY
+  portfolio-trades.fields.LAST_MATURITY: max $.MATURITY_DATE
+  portfolio-trades.fields.PAY_7D: sum sum(flatten($.EVENTS)[?nonblank(@.AMOUNT) && nonblank(@.EVENT_DATE)][?days(today(), @.EVENT_DATE) >= 0 && days(today(), @.EVENT_DATE) <= 7], 'AMOUNT')
+  portfolio-trades.fields.PAY_7D_EVENTS: sum size(flatten($.EVENTS)[?nonblank(@.AMOUNT) && nonblank(@.EVENT_DATE)][?days(today(), @.EVENT_DATE) >= 0 && days(today(), @.EVENT_DATE) <= 7])
+  portfolio-trades.fields.PAY_30D: sum sum(flatten($.EVENTS)[?nonblank(@.AMOUNT) && nonblank(@.EVENT_DATE)][?days(today(), @.EVENT_DATE) >= 0 && days(today(), @.EVENT_DATE) <= 30], 'AMOUNT')
+  portfolio-trades.fields.PAY_30D_EVENTS: sum size(flatten($.EVENTS)[?nonblank(@.AMOUNT) && nonblank(@.EVENT_DATE)][?days(today(), @.EVENT_DATE) >= 0 && days(today(), @.EVENT_DATE) <= 30])
+  portfolio-trades.fields.PAY_90D: sum sum(flatten($.EVENTS)[?nonblank(@.AMOUNT) && nonblank(@.EVENT_DATE)][?days(today(), @.EVENT_DATE) >= 0 && days(today(), @.EVENT_DATE) <= 90], 'AMOUNT')
+  portfolio-trades.fields.PAY_90D_EVENTS: sum size(flatten($.EVENTS)[?nonblank(@.AMOUNT) && nonblank(@.EVENT_DATE)][?days(today(), @.EVENT_DATE) >= 0 && days(today(), @.EVENT_DATE) <= 90])
+  portfolio-trades.rows.TRADE_ID: $.TRADE_ID
+  portfolio-trades.rows.SOURCE_SYSTEM: $.SOURCE_SYSTEM
+  portfolio-trades.rows.PRODUCT_TYPE: $.PRODUCT_TYPE
+  portfolio-trades.rows.BUY_SELL_CODE: $.BUY_SELL_CODE
+  portfolio-trades.rows.CURRENCY: $.CURRENCY
+  portfolio-trades.rows.NOTIONAL: first($.LEGS).NOTIONAL
+  portfolio-trades.rows.MATURITY_DATE: $.MATURITY_DATE
+  portfolio-trades.rows.TRADE_STATUS: $.TRADE_STATUS
+  portfolio-trades.rows.INDEX_NAME: nonblank($.LEGS[0].INDEX.NAME, $.LEGS[1].INDEX.NAME, '')
+  portfolio-trades.rows.COUNTERPARTY: $.COUNTERPARTY
+  portfolio-trades.rows.PORTFOLIO: $.PORTFOLIO
+  portfolio-trades.rows.LEGAL_ENTITY: $.LEGAL_ENTITY
+  portfolio-trades.rows.EVENTS: $.EVENTS
+  legal-entity-trades.from: trade
+  legal-entity-trades.group-by: $.LEGAL_ENTITY
+  legal-entity-trades.id-field: LEGAL_ENTITY
+  legal-entity-trades.members: TRADE_IDS
+  legal-entity-trades.max-members: '1000'
+  legal-entity-trades.rows-field: TRADES
+  legal-entity-trades.fields.TRADE_COUNT: count
+  legal-entity-trades.fields.NOTIONAL: sum first($.LEGS).NOTIONAL
+  legal-entity-trades.fields.SOURCE_SYSTEMS: distinct $.SOURCE_SYSTEM
+  legal-entity-trades.fields.PRODUCT_TYPES: distinct $.PRODUCT_TYPE
+  legal-entity-trades.fields.CURRENCIES: distinct $.CURRENCY
+  legal-entity-trades.fields.LAST_MATURITY: max $.MATURITY_DATE
+  legal-entity-trades.fields.PAY_7D: sum sum(flatten($.EVENTS)[?nonblank(@.AMOUNT) && nonblank(@.EVENT_DATE)][?days(today(), @.EVENT_DATE) >= 0 && days(today(), @.EVENT_DATE) <= 7], 'AMOUNT')
+  legal-entity-trades.fields.PAY_7D_EVENTS: sum size(flatten($.EVENTS)[?nonblank(@.AMOUNT) && nonblank(@.EVENT_DATE)][?days(today(), @.EVENT_DATE) >= 0 && days(today(), @.EVENT_DATE) <= 7])
+  legal-entity-trades.fields.PAY_30D: sum sum(flatten($.EVENTS)[?nonblank(@.AMOUNT) && nonblank(@.EVENT_DATE)][?days(today(), @.EVENT_DATE) >= 0 && days(today(), @.EVENT_DATE) <= 30], 'AMOUNT')
+  legal-entity-trades.fields.PAY_30D_EVENTS: sum size(flatten($.EVENTS)[?nonblank(@.AMOUNT) && nonblank(@.EVENT_DATE)][?days(today(), @.EVENT_DATE) >= 0 && days(today(), @.EVENT_DATE) <= 30])
+  legal-entity-trades.fields.PAY_90D: sum sum(flatten($.EVENTS)[?nonblank(@.AMOUNT) && nonblank(@.EVENT_DATE)][?days(today(), @.EVENT_DATE) >= 0 && days(today(), @.EVENT_DATE) <= 90], 'AMOUNT')
+  legal-entity-trades.fields.PAY_90D_EVENTS: sum size(flatten($.EVENTS)[?nonblank(@.AMOUNT) && nonblank(@.EVENT_DATE)][?days(today(), @.EVENT_DATE) >= 0 && days(today(), @.EVENT_DATE) <= 90])
+  legal-entity-trades.rows.TRADE_ID: $.TRADE_ID
+  legal-entity-trades.rows.SOURCE_SYSTEM: $.SOURCE_SYSTEM
+  legal-entity-trades.rows.PRODUCT_TYPE: $.PRODUCT_TYPE
+  legal-entity-trades.rows.BUY_SELL_CODE: $.BUY_SELL_CODE
+  legal-entity-trades.rows.CURRENCY: $.CURRENCY
+  legal-entity-trades.rows.NOTIONAL: first($.LEGS).NOTIONAL
+  legal-entity-trades.rows.MATURITY_DATE: $.MATURITY_DATE
+  legal-entity-trades.rows.TRADE_STATUS: $.TRADE_STATUS
+  legal-entity-trades.rows.INDEX_NAME: nonblank($.LEGS[0].INDEX.NAME, $.LEGS[1].INDEX.NAME, '')
+  legal-entity-trades.rows.COUNTERPARTY: $.COUNTERPARTY
+  legal-entity-trades.rows.PORTFOLIO: $.PORTFOLIO
+  legal-entity-trades.rows.LEGAL_ENTITY: $.LEGAL_ENTITY
+  legal-entity-trades.rows.EVENTS: $.EVENTS
+  index-trades.from: trade
+  index-trades.group-by: nonblank($.LEGS[0].INDEX.NAME, $.LEGS[1].INDEX.NAME)
+  index-trades.id-field: INDEX_NAME
+  index-trades.members: TRADE_IDS
+  index-trades.max-members: '1000'
+  index-trades.rows-field: TRADES
+  index-trades.fields.TRADE_COUNT: count
+  index-trades.fields.NOTIONAL: sum first($.LEGS).NOTIONAL
+  index-trades.fields.SOURCE_SYSTEMS: distinct $.SOURCE_SYSTEM
+  index-trades.fields.PRODUCT_TYPES: distinct $.PRODUCT_TYPE
+  index-trades.fields.CURRENCIES: distinct $.CURRENCY
+  index-trades.fields.LAST_MATURITY: max $.MATURITY_DATE
+  index-trades.fields.PAY_7D: sum sum(flatten($.EVENTS)[?nonblank(@.AMOUNT) && nonblank(@.EVENT_DATE)][?days(today(), @.EVENT_DATE) >= 0 && days(today(), @.EVENT_DATE) <= 7], 'AMOUNT')
+  index-trades.fields.PAY_7D_EVENTS: sum size(flatten($.EVENTS)[?nonblank(@.AMOUNT) && nonblank(@.EVENT_DATE)][?days(today(), @.EVENT_DATE) >= 0 && days(today(), @.EVENT_DATE) <= 7])
+  index-trades.fields.PAY_30D: sum sum(flatten($.EVENTS)[?nonblank(@.AMOUNT) && nonblank(@.EVENT_DATE)][?days(today(), @.EVENT_DATE) >= 0 && days(today(), @.EVENT_DATE) <= 30], 'AMOUNT')
+  index-trades.fields.PAY_30D_EVENTS: sum size(flatten($.EVENTS)[?nonblank(@.AMOUNT) && nonblank(@.EVENT_DATE)][?days(today(), @.EVENT_DATE) >= 0 && days(today(), @.EVENT_DATE) <= 30])
+  index-trades.fields.PAY_90D: sum sum(flatten($.EVENTS)[?nonblank(@.AMOUNT) && nonblank(@.EVENT_DATE)][?days(today(), @.EVENT_DATE) >= 0 && days(today(), @.EVENT_DATE) <= 90], 'AMOUNT')
+  index-trades.fields.PAY_90D_EVENTS: sum size(flatten($.EVENTS)[?nonblank(@.AMOUNT) && nonblank(@.EVENT_DATE)][?days(today(), @.EVENT_DATE) >= 0 && days(today(), @.EVENT_DATE) <= 90])
+  index-trades.rows.TRADE_ID: $.TRADE_ID
+  index-trades.rows.SOURCE_SYSTEM: $.SOURCE_SYSTEM
+  index-trades.rows.PRODUCT_TYPE: $.PRODUCT_TYPE
+  index-trades.rows.BUY_SELL_CODE: $.BUY_SELL_CODE
+  index-trades.rows.CURRENCY: $.CURRENCY
+  index-trades.rows.NOTIONAL: first($.LEGS).NOTIONAL
+  index-trades.rows.MATURITY_DATE: $.MATURITY_DATE
+  index-trades.rows.TRADE_STATUS: $.TRADE_STATUS
+  index-trades.rows.INDEX_NAME: nonblank($.LEGS[0].INDEX.NAME, $.LEGS[1].INDEX.NAME, '')
+  index-trades.rows.COUNTERPARTY: $.COUNTERPARTY
+  index-trades.rows.PORTFOLIO: $.PORTFOLIO
+  index-trades.rows.LEGAL_ENTITY: $.LEGAL_ENTITY
+  index-trades.rows.EVENTS: $.EVENTS

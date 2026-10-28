@@ -12,18 +12,36 @@
 #
 # See the LICENSE file in the root of this repository for the full terms.
 # Example: copy to config/connectors/risk-store.yaml to read the risk-store data from iceberg. It replaces the
-# connector file of the same name (settings are not merged). Credentials are ${ENV_VAR} references.
+# Example: copy to config/connectors/risk-store.yaml to read the risk domain from Iceberg instead of Delta (Delta is the default;
+# Iceberg only by configuration). It replaces the market-risk pack's risk-store connector (settings are not merged), with the same
+# kinds and layouts: the P&L and scenario-PV vectors are list<double> columns (layout.<kind>.vectors), as `lake build --format iceberg`
+# and `build_demo_lakes.py --store risk=iceberg` write them. Credentials are ${ENV_VAR} references.
 plugin: iceberg
 kinds:
-- var
 - stress-scenario
 - stress-result
 - frtb-sensitivity
 - pnl-explain
-description: risk-store read from iceberg (the former application-iceberg.yaml profile)
+- trade-valuation
+- portfolio
+- pnl-vector
+- scenario-pv
+- fx-scenario
+- scenario-set
+- risk-hierarchy
+description: risk-store read from Iceberg (the market-risk pack's risk domain; Delta stays the default)
 settings:
   root: ${DRISHTI_ICEBERG_ROOT:${drishti.data.dir:./data}/iceberg}
   domain: risk
+  engine: native
+  layout.trade-valuation.columns: VALUATION_ID,TRADE_ID,SOURCE_SYSTEM,PRODUCT_TYPE,PRODUCT_GROUP,PORTFOLIO,DESK,COUNTERPARTY,NETTING_SET,TRADER_ID,BUY_SELL_CODE,TRADE_STATUS,CURRENCY,NOTIONAL,MTM,MTM_CURRENCY,PNL_1D,DV01,TRADE_DATE,MATURITY_DATE,VALUATION_DATE
+  layout.pnl-vector.columns: VALUE_TYPE,GRAIN,TRADE_ID,POSITION_ID,CURRENCY,SOURCE_SYSTEM,SECURITY_ID,INSTRUMENT,LEGAL_ENTITY,DIVISION,DESK,TT_BOOK,PORTFOLIO,STRATEGY,PRODUCT_GROUP,PRODUCT_TYPE,COUNTERPARTY,DIRECTION,QUANTITY,PV,TAGS,TRADE_STATUS,MATURITY_DATE,STATUS,REPORTING_CCY,SCENARIO_SET_ID,BATCH_ID,RUN_KIND,COMPUTED_AT,TRADE_IDS,TRADE_CURRENCY
+  layout.pnl-vector.vectors: PNL
+  layout.scenario-pv.columns: VALUE_TYPE,GRAIN,TRADE_ID,POSITION_ID,CURRENCY,SOURCE_SYSTEM,SECURITY_ID,INSTRUMENT,LEGAL_ENTITY,DIVISION,DESK,TT_BOOK,PORTFOLIO,STRATEGY,PRODUCT_GROUP,PRODUCT_TYPE,COUNTERPARTY,DIRECTION,QUANTITY,BASE_PV,VALUATION_DATE,BASE_VALUATION_DATE,TAGS,TRADE_STATUS,MATURITY_DATE,STATUS,SCENARIO_SET_ID,BATCH_ID,RUN_KIND,COMPUTED_AT,TRADE_IDS
+  layout.scenario-pv.vectors: SCENARIO_PV
+  layout.fx-scenario.columns: CURRENCY,RATE,SCENARIO_SET_ID
+  layout.risk-hierarchy.columns: NODE_ID,HIERARCHY,LEVEL,PARENT_ID,NAME,LIMIT_VAR
+  layout.portfolio.columns: PORTFOLIO_ID,NAME,TYPE,OWNER,LIMIT_VAR
   catalog: ${DRISHTI_ICEBERG_CATALOG:hadoop}
   uri: ${DRISHTI_ICEBERG_URI:}
   warehouse: ${DRISHTI_ICEBERG_WAREHOUSE:}

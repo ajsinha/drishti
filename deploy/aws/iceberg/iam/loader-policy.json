@@ -1,0 +1,24 @@
+{
+  "Version": "2012-10-17",
+  "Statement": [
+    { "Sid": "ListLandingAndTables", "Effect": "Allow", "Action": "s3:ListBucket",
+      "Resource": ["arn:aws:s3:::${LANDING_BUCKET}", "arn:aws:s3:::${LAKE_BUCKET}"] },
+    { "Sid": "ReadTheDumps", "Effect": "Allow", "Action": "s3:GetObject", "Resource": "arn:aws:s3:::${LANDING_BUCKET}/*" },
+    { "Sid": "WriteDataFilesAndMetadata", "Effect": "Allow",
+      "Action": ["s3:GetObject", "s3:PutObject", "s3:AbortMultipartUpload", "s3:ListMultipartUploadParts"],
+      "Resource": "arn:aws:s3:::${LAKE_BUCKET}/${ICEBERG_PREFIX}/*" },
+    { "Sid": "NeverDeleteFromTheLake", "Effect": "Deny", "Action": ["s3:DeleteObject", "s3:DeleteObjectVersion"],
+      "Resource": "arn:aws:s3:::${LAKE_BUCKET}/*" },
+    { "Sid": "EncryptAndDecrypt", "Effect": "Allow", "Action": ["kms:Decrypt", "kms:Encrypt", "kms:GenerateDataKey"],
+      "Resource": "${LAKE_KMS_KEY_ARN}" },
+    { "Sid": "CommitThroughGlue", "Effect": "Allow",
+      "Action": ["glue:GetCatalog", "glue:GetDatabase", "glue:CreateDatabase", "glue:GetTable", "glue:GetTables", "glue:CreateTable", "glue:UpdateTable"],
+      "Resource": ["arn:aws:glue:${AWS_REGION}:${GLUE_CATALOG_ID}:catalog", "arn:aws:glue:${AWS_REGION}:${GLUE_CATALOG_ID}:database/*",
+                   "arn:aws:glue:${AWS_REGION}:${GLUE_CATALOG_ID}:table/*/*"] },
+    { "Sid": "LakeFormationVendedCredentials", "Effect": "Allow", "Action": "lakeformation:GetDataAccess", "Resource": "*" },
+    { "Sid": "LoadMetrics", "Effect": "Allow", "Action": "cloudwatch:PutMetricData", "Resource": "*",
+      "Condition": { "StringEquals": { "cloudwatch:namespace": "Drishti/Lake" } } },
+    { "Sid": "MountTheLoaderFolder", "Effect": "Allow", "Action": ["elasticfilesystem:ClientMount", "elasticfilesystem:ClientWrite"],
+      "Resource": "arn:aws:elasticfilesystem:${AWS_REGION}:${AWS_ACCOUNT_ID}:file-system/${EFS_FILE_SYSTEM_ID}" }
+  ]
+}

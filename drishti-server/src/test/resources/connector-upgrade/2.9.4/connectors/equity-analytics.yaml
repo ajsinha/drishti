@@ -1,0 +1,51 @@
+# Generated at first start from the connector template of pack 'market-data'. Edit it freely: it is never overwritten.
+plugin: reactive
+mode: reactive
+enabled: ${DRISHTI_LAKE_ENABLED:true}
+description: 'An equity''s beta against its index computed when asked from both price histories (the regression of the daily log returns), by the server''s Java engine, as the viewer: EQB EQ-NVTK <GO>'
+kinds:
+  equity-beta:
+    compute: beta
+    params:
+      window:
+        type: int
+        default: 0
+        min: 0
+        max: 5000
+    result:
+      required:
+      - BETA
+      - INDEX
+      - WINDOW
+      types:
+        BETA: number
+        INDEX: text
+        WINDOW: number
+reads:
+- kind: equity
+  as: equity
+  id: '{id}'
+- kind: equity-index
+  as: index
+  ids: '{inputs.equity.EQUITY_INDEX}'
+  limit: 1
+engine:
+  type: java
+  class: com.ash.drishti.compute.reactive.analytics.BetaEngine
+  version: '1.0'
+triggers:
+- 'on': data-version
+  kinds:
+  - equity
+  - equity-index
+  affects: all
+coalesce:
+  quiet: 250ms
+  max-wait: 2s
+cache:
+  results: 500
+  ttl: 1h
+limits:
+  timeout: 30s
+  wait: 5s
+  max-inflight-per-user: 4

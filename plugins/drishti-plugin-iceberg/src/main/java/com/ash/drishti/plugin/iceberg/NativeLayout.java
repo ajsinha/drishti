@@ -51,13 +51,24 @@ final class NativeLayout {
 
     /** The layout's schema (as {@link IcebergLayout#schema}). */
     static Schema schema(Map<String, Boolean> promoted) {
+        return schema(promoted, Set.of());
+    }
+
+    /** The layout's schema with vector columns ({@code list<double>}, optional elements), as {@link IcebergLayout#schema(Map, Set)}. */
+    static Schema schema(Map<String, Boolean> promoted, Set<String> vectors) {
         List<NestedField> fields = new ArrayList<>();
         fields.add(NestedField.required(1, IcebergLayout.ID, Type.Primitive.STRING));
         fields.add(NestedField.optional(2, IcebergLayout.DOC, Type.Primitive.STRING));
         fields.add(NestedField.required(3, IcebergLayout.DATE, Type.Primitive.DATE));
         int next = 4;
         for (Map.Entry<String, Boolean> e : promoted.entrySet()) {
-            fields.add(NestedField.optional(next++, IcebergLayout.column(e.getKey()), e.getValue() ? Type.Primitive.DOUBLE : Type.Primitive.STRING));
+            if (!vectors.contains(e.getKey())) {
+                fields.add(NestedField.optional(next++, IcebergLayout.column(e.getKey()), e.getValue() ? Type.Primitive.DOUBLE : Type.Primitive.STRING));
+            }
+        }
+        for (String v : vectors) {
+            int id = next++;
+            fields.add(NestedField.optional(id, IcebergLayout.column(v), new Type.ListType(next++, false, Type.Primitive.DOUBLE)));
         }
         return new Schema(0, fields);
     }
@@ -81,10 +92,15 @@ final class NativeLayout {
 
     /** The kind's table, created in the layout if it does not exist; promoted paths it lacks are added as columns. */
     static Table open(Catalog catalog, String kind, Map<String, Boolean> promoted, long rowGroupBytes, int fileRows) {
+        return open(catalog, kind, promoted, Set.of(), rowGroupBytes, fileRows);
+    }
+
+    /** {@link #open(Catalog, String, Map, long, int)} with vector columns ({@code list<double>}), added when missing too. */
+    static Table open(Catalog catalog, String kind, Map<String, Boolean> promoted, Set<String> vectors, long rowGroupBytes, int fileRows) {
         try {
             Table t = catalog.load(kind).orElse(null);
             if (t == null) {
-                Schema s = schema(promoted);
+                Schema s = schema(promoted, vectors);
                 PartitionSpec spec = new PartitionSpec(0, List.of(new PartitionSpec.Field(3, 1000, IcebergLayout.DATE, Transform.Identity.INSTANCE)));
                 SortOrder order = new SortOrder(1, List.of(new SortOrder.Field(1, Transform.Identity.INSTANCE, true, true)));
                 try {
@@ -95,8 +111,13 @@ final class NativeLayout {
             }
             Map<String, Type> missing = new LinkedHashMap<>();
             for (Map.Entry<String, Boolean> e : promoted.entrySet()) {
-                if (t.metadata().schema().field(IcebergLayout.column(e.getKey())) == null) {
+                if (!vectors.contains(e.getKey()) && t.metadata().schema().field(IcebergLayout.column(e.getKey())) == null) {
                     missing.put(IcebergLayout.column(e.getKey()), e.getValue() ? Type.Primitive.DOUBLE : Type.Primitive.STRING);
+                }
+            }
+            for (String v : vectors) {
+                if (t.metadata().schema().field(IcebergLayout.column(v)) == null) {
+                    missing.put(IcebergLayout.column(v), new Type.ListType(0, false, Type.Primitive.DOUBLE));   // ids assigned by the commit
                 }
             }
             if (!missing.isEmpty()) {
@@ -193,6 +214,9 @@ final class NativeLayout {
     static Object value(Type type, Object v) {
         if (v == null) {
             return null;
+        }
+        if (type.id() == Type.Id.LIST) {
+            return IcebergLayout.vector(v);
         }
         if (type.id() == Type.Id.DOUBLE) {
             if (v instanceof Number n) {

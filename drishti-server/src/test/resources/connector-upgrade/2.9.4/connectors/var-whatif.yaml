@@ -1,0 +1,55 @@
+# Generated at first start from the connector template of pack 'market-risk'. Edit it freely: it is never overwritten.
+plugin: reactive
+mode: reactive
+enabled: ${DRISHTI_VAR_ENABLED:true}
+description: 'A scope''s VaR before and after hypothetical trades (a private sandbox) and its stressed window, computed by the Python VaR engine in the compute pool var from the scope''s var-result: VWIF <scope> <GO>'
+kinds:
+  var-whatif:
+    compute: var-whatif
+    params:
+      sandbox:
+        type: sandbox-ref
+      stress-window:
+        type: int
+        default: 250
+        min: 0
+        max: 5000
+      component-window:
+        type: int
+        default: 5
+        min: 1
+        max: 51
+    result:
+      required:
+      - BEFORE_VAR
+      - AFTER_VAR
+      types:
+        BEFORE_VAR: number
+        AFTER_VAR: number
+reads:
+- kind: var-result
+  as: base
+  id: '{id}'
+engine:
+  type: python
+  entry: drishti_compute.var.whatif:VarWhatIfEngine
+  pool: var
+  version: '1.0'
+triggers:
+- 'on': data-version
+  kinds:
+  - pnl-vector
+  - risk-hierarchy
+  - scenario-set
+  - portfolio
+  affects: all
+coalesce:
+  quiet: 250ms
+  max-wait: 2s
+cache:
+  results: 500
+  ttl: 1h
+limits:
+  timeout: 60s
+  wait: 45s
+  max-inflight-per-user: 2

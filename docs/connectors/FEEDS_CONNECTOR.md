@@ -676,7 +676,7 @@ and may suggest a template; the server writes the template to the file once, at 
 `<data dir>/connectors/generated/`), and the file is then the site's. The file the server wrote on the demo stack:
 
 ```yaml
-# Generated at first start from the connector template of pack 'market-data'. Edit it freely: it is never overwritten.
+# Generated at first start from the connector template of pack 'market-data'. Edit it freely: an edited file is never overwritten; an unedited one follows the pack's template at an upgrade.
 plugin: feed
 enabled: "${DRISHTI_FEED_NYFED_SOFR:false}"
 kinds:

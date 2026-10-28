@@ -1,0 +1,27 @@
+# Generated at first start from the connector template of pack 'core'. Edit it freely: it is never overwritten.
+plugin: delta
+enabled: ${DRISHTI_LAKE_ENABLED:true}
+kinds:
+- counterparty
+- counterparty-group
+- issuer
+- ccp
+- legal-entity
+- book
+- desk
+- trader
+- calendar
+- clearing-account
+settings:
+  root: ${DRISHTI_DELTA_ROOT:${drishti.data.dir:./data}/delta}
+  domain: reference
+  mode.counterparty: effective
+  mode.counterparty-group: effective
+  mode.issuer: effective
+  mode.ccp: effective
+  mode.legal-entity: effective
+  mode.book: effective
+  mode.desk: effective
+  mode.trader: effective
+  mode.calendar: effective
+  mode.clearing-account: effective
