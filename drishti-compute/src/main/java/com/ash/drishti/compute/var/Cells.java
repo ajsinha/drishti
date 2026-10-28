@@ -190,6 +190,17 @@ public final class Cells {
             Map<String, List<String>> nodeUnits, Map<String, Double> nodeLimits) {
         String root = s.rootNodeId();
         rows.add(new String[] {root, s.id(), HierarchySpec.ROOT_LEVEL, s.rootName(), null});
+        List<String[]> mine = new ArrayList<>();
+        derivePaths(s, t, units, limits, mine, nodeUnits, nodeLimits);
+        // the nodes in id order, so each node's children are (as the risk-hierarchy rows' are, sorted by NODE_ID): a parent's aggregate
+        // is then summed in the same order as the same tree's from the rows, to the bit
+        mine.sort(java.util.Comparator.comparing((String[] r) -> r[0]));
+        rows.addAll(mine);
+    }
+
+    private static void derivePaths(HierarchySpec s, Columns t, Map<String, int[]> units, Map<String, Double> limits, List<String[]> rows,
+            Map<String, List<String>> nodeUnits, Map<String, Double> nodeLimits) {
+        String root = s.rootNodeId();
         List<String> all = new ArrayList<>();
         nodeUnits.put(root, all);
         nodeLimits.put(root, limits.getOrDefault(root, Double.NaN));

@@ -85,6 +85,11 @@ public record HierarchySpec(String id, String title, String source, List<String>
         return new HierarchySpec(id, title, RISK_HIERARCHY, List.of(), List.of(), null, null, false, null, null);
     }
 
+    /** The same hierarchy with another root name. */
+    public HierarchySpec withRootName(String name) {
+        return new HierarchySpec(id, title, source, levels, levelNames, rootId, name, leafIds, word, limits);
+    }
+
     public boolean columns() {
         return COLUMNS.equals(source);
     }
