@@ -25,7 +25,9 @@ import java.util.Map;
 /**
  * An official date's membership record as JSON Lines (2.9.4, docs/guides/DATA_FORMATS.md): a header line {@code {"row": "header",
  * businessDate, resultVersion, positionRules, ...}}, then one {@code {"row": "position", book, position, trades}} a position and one
- * {@code {"row": "node", node, books}} a hierarchy node. {@link #read} gives back the document {@code VarOfficial} built.
+ * {@code {"row": "node", node, books}} a hierarchy node; with a hierarchy built from columns (2.9.5) also one {@code {"row": "cell", cell,
+ * book, values, positions}} a cell (a node of such a hierarchy lists its cells as {@code books}). {@link #read} gives back the document
+ * {@code VarOfficial} built.
  */
 final class MembershipLines {
 
@@ -37,7 +39,7 @@ final class MembershipLines {
         Map<String, Object> head = new LinkedHashMap<>();
         head.put("row", "header");
         membership.forEach((k, v) -> {
-            if (!"books".equals(k) && !"nodes".equals(k)) {
+            if (!"books".equals(k) && !"nodes".equals(k) && !"cells".equals(k)) {
                 head.put(k, v);
             }
         });
@@ -55,6 +57,18 @@ final class MembershipLines {
                 });
             }
         });
+        Map<String, Object> cells = membership.get("cells") instanceof Map<?, ?> m ? (Map<String, Object>) m : Map.of();
+        cells.forEach((cell, c) -> {
+            Map<String, Object> l = new LinkedHashMap<>();
+            l.put("row", "cell");
+            l.put("cell", cell);
+            if (c instanceof Map<?, ?> cm) {
+                l.put("book", cm.get("book"));
+                l.put("values", cm.get("values"));
+                l.put("positions", cm.get("positions"));
+            }
+            line(b, l);
+        });
         Map<String, Object> nodes = membership.get("nodes") instanceof Map<?, ?> m ? (Map<String, Object>) m : Map.of();
         nodes.forEach((node, bs) -> {
             Map<String, Object> l = new LinkedHashMap<>();
@@ -71,6 +85,7 @@ final class MembershipLines {
         Map<String, Object> out = new LinkedHashMap<>();
         Map<String, Map<String, Object>> books = new LinkedHashMap<>();
         Map<String, Object> nodes = new LinkedHashMap<>();
+        Map<String, Object> cells = new LinkedHashMap<>();
         for (String s : text.split("\n")) {
             if (s.isBlank()) {
                 continue;
@@ -81,11 +96,15 @@ final class MembershipLines {
                 case "position" -> books.computeIfAbsent(String.valueOf(m.get("book")), x -> new LinkedHashMap<>())
                         .put(String.valueOf(m.get("position")), m.get("trades") instanceof List<?> l ? l : List.of());
                 case "node" -> nodes.put(String.valueOf(m.get("node")), m.get("books"));
+                case "cell" -> cells.put(String.valueOf(m.remove("cell")), m);
                 default -> { }
             }
         }
         out.put("books", books);
         out.put("nodes", nodes);
+        if (!cells.isEmpty()) {
+            out.put("cells", cells);
+        }
         return out;
     }
 
