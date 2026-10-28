@@ -129,6 +129,10 @@
   showcase, the reference trades, broken and empty documents, a masked view, a denied panel, live frames) with a small built-in
   validator, so the schema cannot drift from what the server sends.
 
+### Tests
+
+- The console's browser tests no longer read the checkout's own site configuration: `wb_live.py` copied a git-ignored `config/connectors/` into its test server, so in a checkout that runs a server (with connector files left from older pack templates) the test server served other sources and timings, and `test_refresh_browser.py` saw the trades panel already stale on load (at v2.9.5 as at develop). The test server now starts with an empty connectors folder, as in a clean checkout, and never links `config/net/`.
+
 ### Documentation
 
 - **ARCHITECTURE.md section 7a, "How a screen is made: generic, not bespoke"**: a Sutra is not compiled to JavaScript or HTML; the server
