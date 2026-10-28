@@ -16,7 +16,6 @@
 package com.ash.drishti.server.var;
 
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 
 import com.ash.drishti.server.IcebergMirror;
 import com.ash.drishti.server.PinnedBusinessDate;
@@ -40,7 +39,6 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.context.annotation.Import;
-import org.springframework.http.MediaType;
 import org.springframework.test.web.servlet.MockMvc;
 
 /**
@@ -78,7 +76,11 @@ class VarFormatEqualityTest {
     static final Path BASE = Path.of("target", "var-format-equality").toAbsolutePath();
     static final Path DELTA = BASE.resolve("delta");
     static final Path ICEBERG = BASE.resolve("iceberg");
+    static final Path DELTA_INTRADAY = BASE.resolve("delta-intraday");
+    static final Path ICEBERG_INTRADAY = BASE.resolve("iceberg-intraday");
     static final LocalDate DAY = VarHierarchyFixture.DAY;
+    static final List<String> INTRADAY_SCOPES = List.of("BANK", "NODE:MGMT~DESK-X", "NODE:MGMT~DESK-Y", "NODE:MGMT~BOOK-1", "NODE:LEGAL~LE-B",
+            "TRD:T1", "TRD:N1", "TRD:P1");
     static final String PNL_COLUMNS = "TRADE_ID,LEGAL_ENTITY,DIVISION,DESK,TT_BOOK,LIMIT_LETTER,PORTFOLIO,PRODUCT_GROUP,PRODUCT_TYPE,SECURITY_ID,"
             + "CURRENCY,COUNTERPARTY,DIRECTION,QUANTITY,PV,TRADE_STATUS,MATURITY_DATE,STATUS,REPORTING_CCY,SCENARIO_SET_ID,BATCH_ID,RUN_KIND,"
             + "COMPUTED_AT,VALUE_TYPE,GRAIN,POSITION_ID,SOURCE_SYSTEM,TRADE_IDS,TRADE_CURRENCY";
@@ -102,8 +104,25 @@ class VarFormatEqualityTest {
                 VarPvFixture.write(DELTA, DAY);
                 return null;
             });
+            IcebergMirror.into(ICEBERG_INTRADAY, () -> {
+                VarIntradayLake.morning(DELTA_INTRADAY, DAY);
+                return null;
+            });
             Path conn = Files.createDirectories(BASE.resolve("connectors"));
             Files.writeString(conn.resolve("risk-lake.yaml"), riskLake("delta", DELTA));
+            Files.writeString(conn.resolve("var-engine.yaml"), """
+                    plugin: reactive
+                    mode: reactive
+                    kinds:
+                      var-result:
+                        compute: var-result
+                        params: { ccy: { type: text, default: USD } }
+                        result: { required: [VAR, ES, PNL], types: { VAR: number, ES: number } }
+                    engine: { type: java, class: com.ash.drishti.server.var.VarResultEngine, version: "1.0" }
+                    triggers:
+                      - { on: data-version, kinds: [pnl-vector, scenario-pv, fx-scenario, risk-hierarchy, scenario-set, portfolio, var-limit], affects: all }
+                    coalesce: { quiet: 250ms, max-wait: 2s }
+                    """);
         } catch (Exception e) {
             throw new IllegalStateException("the two lakes cannot be written: " + e, e);
         }
@@ -133,29 +152,50 @@ class VarFormatEqualityTest {
     @Autowired com.ash.drishti.server.connectors.ConnectorManager manager;
     final ObjectMapper json = new ObjectMapper();
 
-    private JsonNode result(String scope, String ccy) throws Exception {
-        String body = json.writeValueAsString(Map.of("id", scope, "asOf", DAY.toString(), "params", Map.of("ccy", ccy), "wait", 30000));
-        JsonNode a = json.readTree(mvc.perform(post("/api/v1/compute/var-engine/var-result")
-                .header("Authorization", "Bearer " + tokens.mint("rita", List.of("risk"), 300)).contentType(MediaType.APPLICATION_JSON).content(body))
-                .andReturn().getResponse().getContentAsString());
-        assertThat(a.path("state").asText()).as(scope + " " + ccy + ": " + a).isEqualTo("ready");
-        return a.get("result");
+    private JsonNode get(String url, String scope, String ccy) throws Exception {
+        String body = mvc.perform(org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get(url).param("scope", scope)
+                .param("asOf", DAY.toString()).param("ccy", ccy).header("Authorization", "Bearer " + tokens.mint("rita", List.of("risk"), 300)))
+                .andReturn().getResponse().getContentAsString();
+        JsonNode a = json.readTree(body);
+        assertThat(a.has("var") || a.has("rows") || a.has("contributions") || a.has("children")).as(url + " " + scope + " " + ccy + ": " + body).isTrue();
+        return a;
     }
 
-    /** What must be equal: the figures (to the cent), the children, the worst scenarios, the limit; the vector kept as it is. */
-    private JsonNode figures(JsonNode r) {
+    /**
+     * What must be equal for a scope in a currency (the VaR engine's own answers, computed for the asked date, not a cached result): the
+     * scope (VaR, ES, the tail, scenarios, limit and its use, the sum of standalones, diversification, backtest, intraday) and its
+     * contributions (every child's component and incremental VaR), every figure to the cent; the rejected rows in words. What names the
+     * lake (data versions, its inputs) is left out: it differs by construction.
+     */
+    private JsonNode figures(String scope, String ccy) throws Exception {
         ObjectNode out = json.createObjectNode();
-        for (String k : List.of("SCOPE", "CURRENCY", "VAR", "ES", "K", "ES_COUNT", "SCENARIOS", "LIMIT", "LIMIT_USE", "SUM_STANDALONE",
-                "DIVERSIFICATION", "CHILDREN", "WORST", "BACKTEST")) {
-            if (r.has(k)) {
-                out.set(k, cents(r.get(k)));
-            }
-        }
-        out.set("PNL_BITS", bits(r.get("PNL")));
-        out.set("TRADES", r.at("/PROVENANCE/TRADES"));
-        out.set("POSITIONS", r.at("/PROVENANCE/POSITIONS"));
-        out.set("REJECTED", r.at("/PROVENANCE/REJECTED"));
+        JsonNode sc = get("/api/v1/var/scope", scope, ccy);
+        out.set("rejections", sc.at("/provenance/rejections"));
+        out.set("positions", sc.at("/provenance/positions"));
+        out.set("scope", cents(strip(sc)));
+        out.set("contributions", cents(strip(get("/api/v1/var/scope/contributions", scope, ccy))));
         return out;
+    }
+
+    private JsonNode strip(JsonNode n) {
+        if (n.isArray()) {
+            ArrayNode a = json.createArrayNode();
+            n.forEach(x -> a.add(strip(x)));
+            return a;
+        }
+        if (n.isObject()) {
+            ObjectNode o = json.createObjectNode();
+            for (Iterator<Map.Entry<String, JsonNode>> it = n.fields(); it.hasNext();) {
+                Map.Entry<String, JsonNode> e = it.next();
+                String k = e.getKey().toLowerCase(java.util.Locale.ROOT);
+                if (!k.equals("provenance") && !k.contains("version") && !k.equals("inputs") && !k.equals("vectors") && !k.equals("computedat")
+                        && !k.equals("elapsedms") && !k.equals("took")) {
+                    o.set(e.getKey(), strip(e.getValue()));
+                }
+            }
+            return o;
+        }
+        return n;
     }
 
     private JsonNode cents(JsonNode n) {
@@ -178,19 +218,15 @@ class VarFormatEqualityTest {
         return n;
     }
 
-    private JsonNode bits(JsonNode pnl) {
-        ArrayNode a = json.createArrayNode();
-        if (pnl != null) {
-            pnl.forEach(x -> a.add(x.isNull() ? "null" : Long.toHexString(Double.doubleToRawLongBits(x.asDouble()))));
-        }
-        return a;
+    private Map<String, JsonNode> all() throws Exception {
+        return all(SCOPES);
     }
 
-    private Map<String, JsonNode> all() throws Exception {
+    private Map<String, JsonNode> all(List<String> scopes) throws Exception {
         Map<String, JsonNode> out = new TreeMap<>();
         for (String ccy : List.of("USD", "EUR")) {
-            for (String scope : SCOPES) {
-                out.put(scope + " in " + ccy, figures(result(scope, ccy)));
+            for (String scope : scopes) {
+                out.put(scope + " in " + ccy, figures(scope, ccy));
             }
         }
         return out;
@@ -199,6 +235,7 @@ class VarFormatEqualityTest {
     /** Switches the risk lake's connector to {@code plugin} and waits until the VaR inputs of the day are read from it. */
     private void use(String plugin, Path root) throws Exception {
         String before = svc.loader().version(DAY);
+        Object loaded = svc.date(DAY).inputs().get("pnl-vector");
         connectors.write("risk-lake", riskLake(plugin, root));
         manager.scan();
         long until = System.currentTimeMillis() + 60_000;
@@ -206,12 +243,27 @@ class VarFormatEqualityTest {
             Thread.sleep(100);
         }
         assertThat(svc.loader().version(DAY)).as("the day is read from " + plugin).isNotEqualTo(before);
+        svc.reload();                                                  // the loaded dates dropped (POST /api/v1/var/reload)
+        assertThat(svc.date(DAY).inputs().get("pnl-vector")).as("the date loaded again from " + plugin).isNotEqualTo(loaded);
     }
 
-    private static Map<String, Object> letterRow(String id, String book, String desk, String le, String letter, double qty, double[] pnl, String at) {
-        Map<String, Object> d = VarIntradayLake.vector(DAY, id, book, desk, le, "USD", qty, pnl, qty == 0 ? "CANCELLED" : "AMENDED", "INTRADAY", "B-I1", at);
-        d.put("LIMIT_LETTER", letter);
-        return d;
+    /** An intraday batch appended to both intraday lakes (Delta, and Iceberg as one append), then its data-load signal. */
+    private void batch(String kind, List<Map<String, Object>> rows) throws Exception {
+        String before = svc.loader().version(DAY);
+        IcebergMirror.into(ICEBERG_INTRADAY, () -> {
+            if (kind.equals("pnl-vector")) {
+                VarIntradayLake.writeVectors(DELTA_INTRADAY, rows, "append");
+            } else {
+                VarIntradayLake.writePvs(DELTA_INTRADAY, rows, "append");
+            }
+            return null;
+        });
+        long until = System.currentTimeMillis() + 30_000;
+        while (svc.loader().version(DAY).equals(before) && System.currentTimeMillis() < until) {
+            Thread.sleep(50);
+        }
+        assertThat(svc.loader().version(DAY)).as(kind + " batch seen in the lake").isNotEqualTo(before);
+        official.onLoad(kind, DAY);
     }
 
     @Test
@@ -223,35 +275,38 @@ class VarFormatEqualityTest {
         Map<String, JsonNode> iceberg = all();
         assertThat(iceberg.keySet()).isEqualTo(delta.keySet());
         delta.forEach((k, v) -> assertThat(iceberg.get(k)).as(k).isEqualTo(v));
-        assertThat(delta.get("BANK in USD").get("VAR").asDouble()).isPositive();
-        assertThat(delta.get("LL:LL-A in EUR").get("CURRENCY").asText()).isEqualTo("EUR");
+        assertThat(delta.get("BANK in USD").at("/scope/var").asDouble()).isPositive();
+        assertThat(delta.get("LL:LL-A in EUR").at("/scope/currency").asText()).isEqualTo("EUR");
         Map<String, Object> capturedIceberg = official.capture(DAY);
 
-        // 2. an intraday batch appended to both lakes (an Iceberg append), applied live from Iceberg
+        // 2. intraday: the morning run of VarIntradayLake in both formats; batches appended to both (on Iceberg an append), applied live
+        //    from Iceberg, equal to the Delta lake read with them
+        use("iceberg", ICEBERG_INTRADAY);
+        Map<String, JsonNode> morning = all(INTRADAY_SCOPES);
         String at = DAY + "T1";
-        List<Map<String, Object>> batch = new ArrayList<>(List.of(
-                letterRow("T1", "BOOK-1", "DESK-X", "LE-A", "LL-A", 150, VarLakeFixture.scale(VarLakeFixture.U, 150), at + "0:00:00Z"),
-                letterRow("T4", "BOOK-2", "DESK-X", "LE-A", "LL-B", -60, VarLakeFixture.scale(VarLakeFixture.U, -60), at + "0:00:00Z")));
-        String before = svc.loader().version(DAY);
-        IcebergMirror.into(ICEBERG, () -> {
-            VarLakeFixture.table(DELTA, Files.createDirectories(DELTA.resolve("_work")), "pnl-vector", "VECTOR_ID", batch,
-                    List.of(PNL_COLUMNS.split(",")), "PNL", "append");
-            return null;
-        });
-        long until = System.currentTimeMillis() + 30_000;
-        while (svc.loader().version(DAY).equals(before) && System.currentTimeMillis() < until) {
-            Thread.sleep(50);
-        }
-        official.onLoad("pnl-vector", DAY);
-        Map<String, JsonNode> icebergIntraday = all();
-        assertThat(icebergIntraday.get("TRD:T1 in USD")).as("the batch applied").isNotEqualTo(iceberg.get("TRD:T1 in USD"));
-        use("delta", DELTA);
-        Map<String, JsonNode> deltaIntraday = all();
+        batch("pnl-vector", List.of(
+                VarIntradayLake.vector(DAY, "T1", "BOOK-1", "DESK-X", "LE-A", "USD", 150, VarLakeFixture.scale(VarLakeFixture.U, 150), "AMENDED",
+                        "INTRADAY", "B-I1", at + "0:00:00Z"),
+                VarIntradayLake.vector(DAY, "T2", "BOOK-1", "DESK-X", "LE-A", "USD", -40, null, "CANCELLED", "INTRADAY", "B-I1", at + "0:00:00Z"),
+                VarIntradayLake.vector(DAY, "N1", "BOOK-3", "DESK-Y", "LE-B", "USD", -30, VarLakeFixture.scale(VarLakeFixture.V, -30), "NEW",
+                        "INTRADAY", "B-I1", at + "0:00:00Z")));
+        batch("scenario-pv", List.of(
+                VarIntradayLake.pv(DAY, "P1", "EUR", 1200, VarPvFixture.plus(1200, VarLakeFixture.U, 30), "INTRADAY", "B-I2", at + "1:00:00Z", "HS-20")));
+        Map<String, JsonNode> icebergIntraday = all(INTRADAY_SCOPES);
+        assertThat(icebergIntraday.get("TRD:T1 in USD")).as("the batch applied").isNotEqualTo(morning.get("TRD:T1 in USD"));
+        assertThat(icebergIntraday.get("TRD:P1 in EUR")).as("the PV batch applied").isNotEqualTo(morning.get("TRD:P1 in EUR"));
+        use("delta", DELTA_INTRADAY);
+        Map<String, JsonNode> deltaIntraday = all(INTRADAY_SCOPES);
+        assertThat(icebergIntraday.keySet()).isEqualTo(deltaIntraday.keySet());
         deltaIntraday.forEach((k, v) -> assertThat(icebergIntraday.get(k)).as("intraday " + k).isEqualTo(v));
 
         // 3. the official records of the morning, captured from Delta and from Iceberg (both published to the Iceberg official table)
-        assertThat(String.valueOf(capturedDelta.get("published"))).contains("Iceberg sequence number");
-        assertThat(capturedIceberg.get("resultVersion")).isEqualTo(2L);
+        assertThat(capturedDelta.get("published")).as(capturedDelta.toString()).isEqualTo(true);
+        assertThat(capturedIceberg.get("published")).as(capturedIceberg.toString()).isEqualTo(true);
+        assertThat(capturedIceberg.get("resultVersion")).as("restated from the other lake's inputs").isEqualTo(2L);
+        assertThat(capturedDelta).doesNotContainKey("publishError");
+        assertThat(BASE.resolve("official/risk-results/var-official/metadata")).as("the official table is an Iceberg table").isDirectory();
+        assertThat(BASE.resolve("official/risk-results/var-official/_delta_log")).doesNotExist();
         Path jsonl = BASE.resolve("official/risk-results/jsonl/var-official/" + DAY);
         List<Path> files;
         try (Stream<Path> s = Files.list(jsonl)) {
