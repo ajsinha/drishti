@@ -143,6 +143,8 @@ immutable inputs, so they are safe to run concurrently and their results cache w
         └─► REST response  /  the first `view` event of a live stream
 ```
 
+The ViewModel's every field, panel kind and live patch: [VIEWMODEL.md](VIEWMODEL.md).
+
 Notes on each stage, checked against the code:
 
 - **Fetch order.** `SourceRouter` tries the plugin routed for the kind (`drishti.sources.routes`), then

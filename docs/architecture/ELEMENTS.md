@@ -113,10 +113,10 @@ the host page (it is the host's user looking at it), and the host must trust the
 
 ### Why not a second renderer (and what we give up)
 
-A JavaScript renderer for the ViewModel (the JSON `/api/v1/views/{kind}/{id}` returns) would make the element
+A JavaScript renderer for the ViewModel (the JSON `/api/v1/views/{kind}/{id}` returns, defined in [VIEWMODEL.md](VIEWMODEL.md)) would make the element
 independent of the console. We do not do it:
 
-- **Twenty panel kinds, tree rows, pivots, tabs, gauges, surfaces** are rendered by one set of Jinja macros
+- **Twenty-two panel kinds, tree rows, pivots, tabs, gauges, surfaces** are rendered by one set of Jinja macros
   (`drishti-console/web/templates/_macros/panels.html`, `panel()` and its helpers). Live frames already reuse those macros
   (`_panel_html` in `drishti-console/routes/api_routes.py`) so that "live and static views look identical". A second
   renderer would be a second implementation of every panel kind, every accessibility detail and every fix, forever.

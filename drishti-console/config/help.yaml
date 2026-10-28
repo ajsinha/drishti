@@ -107,6 +107,7 @@ categories:
       - { slug: connector-developer-guide, doc: connectors/CONNECTOR_DEVELOPER_GUIDE.md, title: Connector developer guide, icon: plug, summary: "Which connector to use, the source SPI (manifest, capabilities, fetch, search, subscribe), the shared TLS and proxy modules, testing and a worked plugin." }
       - { slug: developer-guide, doc: guides/DEVELOPER_GUIDE.md, title: Developer guide, icon: tools, summary: "Repository map, building and testing from a fresh clone, the drill, project rules, the request path of a view, a live tick and a BI question (model query, DEL, SQL, live push), and recipes for endpoints, plugins, panel kinds and pages; IDE setup is in GETTING_STARTED.md (IDE)." }
       - { slug: elements-guide, doc: guides/ELEMENTS.md, title: "Embedding: Drishti Elements", icon: window-stack, summary: "Put views, panels and BI reports in your own web application: a five-minute start, the token exchange, the registered host, the elements (view, panel, report, about, search), React, Vue and Angular samples, theming and limits." }
+      - { slug: viewmodel, doc: architecture/VIEWMODEL.md, title: "ViewModel contract", icon: braces, summary: "The JSON the server returns for every entity screen: the top level, cells, tones, provenance and masks, the data of all 22 panel kinds with real examples, live frames and patches, how to render it, versioning, and its JSON Schema." }
   - id: operate
     name: Operate
     icon: shield-lock

@@ -599,6 +599,7 @@ Entities the caller opened recently (per `X-Drishti-User` or token subject) are 
 | `GET` | `/views/{kind}/{id}/panels/{panel}/records` | as-of. Every row of a table or ladder whose Sutra says `pivot:`, as raw values of its pivot's fields (masked fields `"•••"`), for the [Pivot tab](#the-pivot-tab-panel-rows-search-pivots-saved-pivots); `404 DRS-1001` when the view has no such panel or the panel offers no pivot |
 | `POST` | `/views/{kind}/{id}/ask` | Ask about this page, optional and off by default. Body `{question, locale?}`; answer `{answer, sources[]}` (plain text). `404 DRS-4007` when Ask is off globally or for the page's pack, `502`/`504 DRS-4008` when the model endpoint fails or is slow, `429 DRS-4009` over the per-user rate, `400` for an empty or too long question, `403 DRS-5002` as the view. See [Ask about this page](#ask-about-this-page) |
 | `GET` | `/views/{kind}/{id}/explain` | as-of. About this page, layers 3 and 4 ([design](../architecture/CONTEXT_HELP.md)): where the data came from and why the page looks as it does, for exactly what the caller sees. Query `panel` (narrows to a panel of the view, else `404 DRS-4006`) and `generation` (the generation your page shows; a newer one on the server adds `"newer":true`). Same rules as the view: `403 DRS-5002`, `404 DRS-1001`, `400 DRS-4003`. See [Explaining a view](#explaining-a-view) |
+| `GET` | `/viewmodel/schema` | The JSON Schema (draft 2020-12, `application/schema+json`) of the `ViewModel`, its panels' `data` and the live stream's frames (`$defs.Frame`), generated from the server's own records. Read only. See [VIEWMODEL.md section 9](../architecture/VIEWMODEL.md#9-the-json-schema) |
 
 Opening a view also records it in the caller's recent list. A view is formatted for display: every value
 comes as text with a tone, so all clients show `−1,403,091` the same way.
@@ -636,7 +637,7 @@ curl -s $B/views/trade/MX-20000001 | jq -c '.panels[] | {id, kind, title, key, a
 {"id":"refs","kind":"links","title":"Linked entities","key":null,"area":"right"}
 ```
 
-The full shape is in [The ViewModel in detail](#the-viewmodel-in-detail).
+The full shape is in [The ViewModel in detail](#the-viewmodel-in-detail) and, as a contract, [VIEWMODEL.md](../architecture/VIEWMODEL.md).
 
 `?sutra=<name>` draws the view with another Sutra of the entity's kind (the newest version; `400 DRS-5001` for one of another kind):
 `GET /api/v1/views/portfolio-trades/BOOK-RATES-2?sutra=book-desk`. `?design=<id>` draws it with one of the caller's own Designs (the
@@ -1887,58 +1888,31 @@ drishti_view_seconds_max 0.017122086
 
 ## The ViewModel in detail
 
-The server returns **formatted text and a tone** for every value, never raw numbers to format, so every
-client shows `−1,403,091` identically. The top level:
+The full contract is [VIEWMODEL.md](../architecture/VIEWMODEL.md): every field of the top level, the common types (Cell, Link,
+tones, keys, provenance, `empty`/`error`/`denied`, grid), the `data` shape of all 22 panel kinds with real examples, live
+frames and patches, masks, a minimal render loop, and compatibility. Its JSON Schema is served at
+`GET /api/v1/viewmodel/schema`.
 
-| Field | Meaning |
-|---|---|
-| `ref` | `{kind, id}` |
-| `mnemonic` | the kind's command-line code (`TRD`) |
-| `title` | `{pill, id, with}` — `with` is an optional related entity `{text, link}` |
-| `strip` | the headline values: a list of `Cell` |
-| `panels` | the panels: `{id, kind, title, code, key, area, inferred, explanation?, data, error?, empty}` |
-| `keys` | function keys: `{key, label, action, panel?, link?}`; `action` is `panel` (jump to a panel), `link` (open another entity) or `denied` |
-| `provenance` | `{layout, fingerprint, source, generation, fetchedAt, live, businessDate}` — which Sutra (or inference) laid it out, which source, which version of the data |
-| `timings` | milliseconds for `fetch`, `layout`, `links`, `bind` and `total` |
-
-A **Cell** is `{label?, text, tone?, link?, emphasis?, path?}`. `tone` is `pos`, `neg` or another named tone;
-`path` (a JSON path such as `$.mtm`) is what live `frame` patches address. A panel whose binding failed carries
-`error` and no `data`; the rest of the view is unaffected. `empty: true` means the document lacks what the panel
-asks for.
-
-`data` by panel kind, with real examples from `MX-20000001`:
-
-| Panel `kind` | `data` shape |
-|---|---|
-| `kv`, `status`, `provenance` | `{"fields": [Cell]}` |
-| `table`, `ladder` | `{"columns", "numeric", "rows": [{"cells", "highlight", "path"}], "total", "more"}` |
-| `tabs` | `{"layout": "tabs" \| "columns", "tabs": [{"title", "fields": [Cell]}]}` |
-| `line`, `area` | `{"x", "series": [{"label", "values", "tone"}], "mark", "markText", "limit", "limitLabel", "source"}` |
-| `hbar` | `{"bars": [{"label", "value", "text", "tone"}]}` |
-| `links` | `{"links": [{"label", "text", "link", "badge", "status": "resolved" \| "pending" \| "missing" \| "denied"}]}` |
+In short: the server returns **formatted text and a tone** for every value, never raw numbers to format (chart values travel
+as numbers beside their text), so every client shows `−1,403,091` identically. The top level is `ref`, `mnemonic`, `title`,
+`strip` (Cells), `panels` (`{id, kind, title, area, inferred, empty, data, error?, denied?, ...}`), `keys`, `provenance`
+(`{layout, fingerprint, source, generation, fetchedAt, live, businessDate, ..., masked, maskedPanels}`) and `timings`, plus
+`controls`, `selects` and `layout` when the Sutra has them. A **Cell** is `{label?, text, tone?, link?, emphasis?, path?}`.
 
 ```bash
 curl -s $B/views/trade/MX-20000001 > t.json
 jq -c '.panels[] | select(.id=="terms").data.fields[0:2]' t.json
-jq -c '.panels[] | select(.id=="schedule").data | {columns, numeric, row: .rows[0], total}' t.json
-jq -c '.panels[] | select(.id=="sensitivities").data.bars[0:2]' t.json
-jq -c '.panels[] | select(.id=="refs").data.links[0:2]' t.json
 ```
 
 ```
 [{"label":"Fixed rate","text":"4.0829%","path":"$.terms.fixedRate"},{"label":"Pay frequency","text":"Annual","path":"$.terms.payFrequency"}]
-{"columns":["Pay date","Leg","Type","Rate","Amount","PV"],"numeric":[false,false,false,true,true,true],
- "row":{"cells":[{"label":"Pay date","text":"2025-09-29"},{"label":"Leg","text":"2"},{"label":"Type","text":"Float"},{"label":"Rate","text":"3.5377%"},{"label":"Amount","text":"−1,403,091","tone":"neg"},{"label":"PV","text":"0"}],"highlight":false,"path":"$.schedule[0]"},
- "total":{"cells":[{},{},{},{},{"text":"Total"},{"text":"+1,875,863","tone":"pos"}],"highlight":false,"path":null}}
-[{"label":"3M","value":-5544.0,"text":"−5,544","tone":"neg"},{"label":"6M","value":-11089.0,"text":"−11,089","tone":"neg"}]
-[{"label":"Counterparty","text":"CP-MERIDIAN-RE","link":{"kind":"counterparty","id":"CP-MERIDIAN-RE","mnemonic":"CPTY"},"badge":"A","status":"resolved"},
- {"label":"Netting set","text":"NS-MERIDIAN-RE-NY","link":{"kind":"netting-set","id":"NS-MERIDIAN-RE-NY","mnemonic":"NSET"},"badge":"PFE 46.0m","status":"resolved"}]
 ```
 
 **Entitlements in a view.** If the caller may not open a linked kind, the link is still shown but disabled:
 in a `links` panel the item has `status: "denied"` and `badge: "no access"`; a function key's label gets
 ` (no access)` and `action: "denied"`; the title's `with` loses its link. People learn the entity exists
-without seeing it.
+without seeing it. Masked values read `•••` and `provenance.masked` counts them
+([VIEWMODEL.md section 6](../architecture/VIEWMODEL.md#6-entitlements-and-masks-in-a-view)).
 
 ## Error code table
 
