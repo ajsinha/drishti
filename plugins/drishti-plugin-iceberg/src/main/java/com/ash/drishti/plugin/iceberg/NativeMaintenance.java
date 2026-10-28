@@ -153,8 +153,8 @@ final class NativeMaintenance {
     /** As {@link IcebergMaintenance#relayout}: rewrites the days that drifted (every day when {@code force}); returns how many. */
     static int relayout(Table t, boolean force, Path spillDir, long budget) {
         t.refresh();
-        if (t.currentSnapshot().isEmpty()) {
-            return 0;
+        if (t.currentSnapshot().isEmpty() || IcebergMaintenance.shardSorted(t.metadata().properties())) {
+            return 0;                                           // laid out by the parallel loader's sort-by: left in its order
         }
         int fileRows = NativeLayout.fileRows(t);
         int rewritten = 0;

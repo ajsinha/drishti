@@ -39,8 +39,11 @@ default. An Iceberg lake may be in object storage (--lake s3://bucket/prefix, or
 --iceberg-set catalog=rest --iceberg-set uri=...): the loader commits there itself (an Iceberg commit is atomic), the rows are staged in a
 local scratch folder (TMPDIR) and no run record is kept in the lake (deploy/aws/iceberg/load-day.sh keeps its own).
 
-Engines (--engine, Delta only): auto (default) uses Drishti's own Java writer in the server's exec jar when one is found (--jar, DRISHTI_JAR,
-drishti-server/target), else the Python deltalake package; the run says which ran and why.
+Engines (--engine): auto (default) uses Drishti's own Java writer in the server's exec jar when one is found (--jar, DRISHTI_JAR,
+drishti-server/target), else the Python deltalake package; the run says which ran and why. java (2.9.6): the whole build by the parallel
+lake loader in the same jar (tools/lake/javaload.py; Delta or Iceberg, every stage multi-threaded, memory bounded, input from a folder or
+s3://, a Delta lake in s3:// too; --loader-set KEY=VALUE for its settings). auto also picks it for a large load: every input JSON Lines,
+at least --java-above-mb (1024) of it, mode overwrite-dates.
 
 For schedulers: exit 0 ok, 2 written with rejects (or the data-load signal failed), 1 failure (nothing was committed for the
 table that failed), 3 another run holds the table's lock (or lake maintain the lake's). Each run appends one line to <lake>/_drishti-lake/runs.log and writes a
@@ -145,6 +148,9 @@ def _flock(path: pathlib.Path, shared: bool, what: str):
             else:
                 import fcntl
                 fcntl.flock(fh.fileno(), (fcntl.LOCK_SH if shared else fcntl.LOCK_EX) | fcntl.LOCK_NB)
+                # a POSIX lock on the same byte as well: the parallel loader run on its own (Java's FileLock is a POSIX lock, which a
+                # flock does not see) and this build exclude each other (2.9.6)
+                fcntl.lockf(fh.fileno(), (fcntl.LOCK_SH if shared else fcntl.LOCK_EX) | fcntl.LOCK_NB, 1, 0)
     except OSError:
         fh.seek(0)
         holder = fh.read().strip() or "another run"
@@ -273,7 +279,7 @@ def run(a, say=print) -> tuple[int, dict]:
     try:
         if not a.src:
             raise BuildError("give --from (a file or a folder)")
-        if remote and getattr(a, "format", "delta") != "iceberg":
+        if remote and getattr(a, "format", "delta") != "iceberg" and getattr(a, "engine", "auto") != "java":
             raise BuildError("--lake s3://... is for --format iceberg: a Delta table in object storage is built locally and published with lake publish")
         if not lake and not remote and not a.dry_run:
             raise BuildError("give --lake DIR (the Delta root the connector reads)")
@@ -310,9 +316,18 @@ def _go(a, p, as_of, lake, table, summary, prog, started, say, remote_root: str 
         if old.is_dir():                                   # left by a run of this table that died: we hold its lock
             shutil.rmtree(old, ignore_errors=True)
         staging = old / summary["run"]
-    st = stage.Stager(staging, p["key"], p["date"], as_of, p["partition_by"], p["promote"], p.get("flatten"), p.get("vectors"))
     iceberg = getattr(a, "format", "delta") == "iceberg"
     summary["format"] = "iceberg" if iceberg else "delta"
+    engine = getattr(a, "engine", "auto")
+    if any(str(s).startswith(("s3://", "s3a://")) for s in a.src) and engine != "java":
+        raise BuildError("--from s3://... is read by the parallel loader: add --engine java")
+    if engine == "java" or engine == "auto" and not a.dry_run:
+        import javaload
+        use, why = (True, "--engine java: the parallel lake loader") if engine == "java" else \
+            javaload.wanted(a, jsonstream.input_files(a.src, a.recursive), a.jar, a.java)
+        if use:
+            return _go_java(a, p, as_of, lake, table, summary, prog, started, say, staging, remote_root, iceberg, why)
+    st = stage.Stager(staging, p["key"], p["date"], as_of, p["partition_by"], p["promote"], p.get("flatten"), p.get("vectors"))
     try:
         if table and not iceberg:                                          # a table of another partitioning fails before anything is read
             writers.check_layout(writers.Table(table, [stage.column_name(c) for c in p["partition_by"]], {}, a.mode, a.batch_rows, []))
@@ -376,18 +391,7 @@ def _go(a, p, as_of, lake, table, summary, prog, started, say, remote_root: str 
         timings["writeSeconds"] = round(time.monotonic() - t1, 3)
         summary["commit"] = res
         summary["columns"] = {"partition": names, "promoted": promoted}
-        summary["status"] = "partial" if st.stats.rejected else "ok"
-        code = EXIT_PARTIAL if st.stats.rejected else EXIT_OK
-        if a.signal:
-            sig = signal(a, p, summary)
-            summary["signal"] = sig
-            if any(not s.get("ok") for s in sig):
-                code = EXIT_PARTIAL
-                summary["status"] = "partial"
-        if not a.no_stamp and served_lake(lake) and (not a.signal or any(not s.get("ok") for s in summary.get("signal") or [])):
-            summary["stamp"] = str(leave_stamp(lake, table, summary))
-        prog.update(force=True, phase="done", status=summary["status"])
-        return _finish(a, lake, summary, code, started, say)
+        return _written(a, p, lake, table, summary, prog, started, say, st.stats.rejected)
     finally:
         st.close()
         if staging and staging.exists() and not a.keep_staging:
@@ -398,6 +402,56 @@ def _go(a, p, as_of, lake, table, summary, prog, started, say, remote_root: str 
                 pass
         if remote_root and staging and not a.keep_staging:
             shutil.rmtree(staging.parent, ignore_errors=True)   # the scratch folder of an object-storage build
+
+
+def _written(a, p, lake, table, summary, prog, started, say, rejected: int) -> tuple[int, dict]:
+    """After a commit: the status, the data-load signal, the BI-store stamp, the summary."""
+    summary["status"] = "partial" if rejected else "ok"
+    code = EXIT_PARTIAL if rejected else EXIT_OK
+    if a.signal:
+        sig = signal(a, p, summary)
+        summary["signal"] = sig
+        if any(not s.get("ok") for s in sig):
+            code = EXIT_PARTIAL
+            summary["status"] = "partial"
+    if not a.no_stamp and served_lake(lake) and (not a.signal or any(not s.get("ok") for s in summary.get("signal") or [])):
+        summary["stamp"] = str(leave_stamp(lake, table, summary))
+    prog.update(force=True, phase="done", status=summary["status"])
+    return _finish(a, lake, summary, code, started, say)
+
+
+def _go_java(a, p, as_of, lake, table, summary, prog, started, say, staging, remote_root, iceberg: bool, why: str) -> tuple[int, dict]:
+    """The whole build by the parallel lake loader (tools/lake/javaload.py): this run holds the lock and keeps the run log."""
+    import tempfile
+    import javaload
+    summary["engine"], summary["engineWhy"] = "java-loader", why
+    scratch = None
+    if staging is None:                                    # a dry run without --lake: a scratch folder for the loader's files
+        scratch = pathlib.Path(tempfile.mkdtemp(prefix="drishti-build-"))
+        staging = scratch / summary["run"]
+    target = str(remote_root or lake or staging / "dry-run-lake")
+    prog.update(force=True, phase="loading", engine="java-loader")
+    try:
+        if a.dry_run:
+            a.loader_set = list(getattr(a, "loader_set", None) or []) + ["report.dry-run=true"]
+        res = javaload.run(a, p, as_of, target, iceberg, staging, a.progress)
+        javaload.merge(summary, res)
+        if a.dry_run:
+            summary["status"] = "dry-run"
+            summary["engine"] = None
+            return _finish(a, None, summary, EXIT_PARTIAL if summary.get("rejected") else EXIT_OK, started, say, write_files=False)
+        return _written(a, p, lake, table, summary, prog, started, say, int(summary.get("rejected") or 0))
+    except javaload.LoaderError as e:
+        raise writers.WriteError(str(e)) from None
+    finally:
+        if staging.exists() and not a.keep_staging:
+            shutil.rmtree(staging, ignore_errors=True)
+            try:
+                staging.parent.rmdir()
+            except OSError:
+                pass
+        if scratch is not None or remote_root:
+            shutil.rmtree(scratch or staging.parent, ignore_errors=True)
 
 
 # ------------------------------------------------------------------------------------------------ the data-load signal
@@ -565,7 +619,13 @@ def add_arguments(p: argparse.ArgumentParser) -> argparse.ArgumentParser:
     g.add_argument("--iceberg-set", action="append", metavar="KEY=VALUE",
                    help="--format iceberg: a setting for the Iceberg loader (s3.region=eu-west-2, catalog=rest, uri=..., warehouse=..., "
                         "catalog.rest.signing-name=glue); repeatable")
-    g.add_argument("--engine", choices=("auto", "drishti", "deltalake"), default="auto", help="Delta only. auto (default): Drishti's Java writer when the server jar is found, else deltalake")
+    g.add_argument("--engine", choices=("auto", "drishti", "deltalake", "java"), default="auto",
+                   help="auto (default): Drishti's Java writer when the server jar is found, else deltalake; java: the parallel lake loader "
+                        "(Delta or Iceberg, multi-threaded, memory bounded; auto picks it for --java-above-mb of JSON Lines)")
+    g.add_argument("--java-above-mb", type=int, default=1024, help="--engine auto: JSON Lines inputs of at least this many MB go to the parallel loader (default 1024)")
+    g.add_argument("--loader-set", action="append", metavar="KEY=VALUE",
+                   help="--engine java: a setting of the parallel loader (memory.budget-mb=4096, memory.spill-dir=/mnt/ebs, parallel.writers=16, "
+                        "target.layout.sort-by=[LEGAL_ENTITY,DESK,id]; docs/guides/TOOLS.md section 4.13); repeatable")
     g.add_argument("--mode", choices=MODES, default="overwrite-dates", help="overwrite-dates (default), overwrite-partitions or append")
     g.add_argument("--batch-rows", type=int, default=50_000, help="most rows per batch written (default 50,000; also the most rows sorted at once)")
     g.add_argument("--batch-mb", type=int, default=128, help="most MB of documents per batch (default 128): large documents make smaller batches, so memory stays flat")

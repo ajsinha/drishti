@@ -245,6 +245,14 @@ tools/load-iceberg.sh --catalog rest --uri http://polaris:8181/api/catalog --war
 tools/load-iceberg.sh s3a://risk-lake/iceberg --set s3.region=us-east-1 --spill-dir /data/tmp
 ```
 
+**Millions of rows: the parallel lake loader (2.9.6).** `drishti.py lake build --format iceberg --engine java`, or the loader on its own
+(`java -Dloader.main=com.ash.drishti.lakeload.LakeLoad -jar drishti-server-*-exec.jar --config load.yaml` with `target.format: iceberg`),
+writes the same layout as `IcebergLoader` (field ids 1 to 3, the identity partition on `business_date`, the layout's properties, vector
+columns `list<double>`) from JSON Lines in a folder or S3, every stage multi-threaded and memory bounded, one overwrite per business
+date, on a path-based table or through a REST catalog (`target.iceberg`). Sorted by `LEGAL_ENTITY`, `DESK`, id by default (the table
+then says so in `drishti.layout.sort-by`, which relayout respects): [TOOLS.md section 4.13](../guides/TOOLS.md#413-the-parallel-lake-loader-296),
+[PARALLEL_LOADER.md](../architecture/PARALLEL_LOADER.md).
+
 **The demo lakes, a source system in Iceberg (2.6.7).** `tools/build_demo_lakes.py --store calypso=iceberg` (or `all=iceberg`)
 puts a source system's trades in Iceberg beside the others in Delta: the system is built as Delta, then its rows (id, document, every
 promoted column) are streamed into `IcebergLoader` with `--engine native` from the server's exec jar (`java -Dloader.main=com.ash.drishti.plugin.iceberg.IcebergLoader -jar drishti-server-*-exec.jar - <root> …`,

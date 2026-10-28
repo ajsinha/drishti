@@ -275,6 +275,42 @@ C:\Users\asinh09\IdeaProjects\drishti-orig\drishti-console\.venv\Scripts\python.
    configuration), so the folder you run from does not matter.
 3. Repeat step 2 for **each** of your files (each with its own path and date).
 
+**The same load with the parallel loader (2.9.6), two ways.** The Python lines above stay the way to do it; these load the same file
+into the same table with the Java loader (every core; the table is the same, so either may be used, and running both is safe: each
+replaces the date). Your file must be JSON Lines (one trade a line, as `.jsonl`); a file that is one JSON array goes the Python way only.
+
+- *Through `lake build`*: the line of step 2 with `--engine java` added at the end (in the configuration's *Parameters*, or the terminal
+  line). The last line then says `engine=java-loader`.
+- *Java on its own* (PowerShell; Java only, no `.exe`, no Python). Save this as `C:\Users\asinh09\drishti-private\load-endur.yaml`
+  (paths in single quotes keep their backslashes):
+
+  ```yaml
+  source:
+    files: 'C:\Users\asinh09\drishti-private\endur\2026-10-15.jsonl'
+    pack: 'C:\Users\asinh09\IdeaProjects\drishti-orig\config\packs\trading'
+    connector: trade-endur
+    as-of: 2026-10-15
+    partition-by: [PRODUCT_TYPE]
+  target:
+    format: delta
+    lake: 'C:\Users\asinh09\IdeaProjects\drishti-orig\data\delta'
+    kind: trade
+  memory: {budget-mb: 2048, spill-dir: 'C:\Users\asinh09\IdeaProjects\drishti-orig\data\tmp\spill'}
+  ```
+
+  and run, from `C:\Users\asinh09\IdeaProjects\drishti-orig` (the `-D` options in quotes: PowerShell would split them at the dots):
+
+  ```powershell
+  $jar = (Get-ChildItem drishti-server\target\drishti-server-*-exec.jar | Sort-Object LastWriteTime | Select-Object -Last 1).FullName
+  java -Xmx4g "-Djava.io.tmpdir=data\tmp\server" "-Dloader.main=com.ash.drishti.lakeload.LakeLoad" -jar $jar --config C:\Users\asinh09\drishti-private\load-endur.yaml
+  ```
+
+  The pack gives the domain (`trading`), the table (`trade_endur`), the key (`TRADE_ID`), the promoted columns and the flattened
+  `NOTIONAL` and `INDEX_NAME`, and the order of the rows (its `sort-by: id`), as `--pack … --connector trade-endur` does for `lake build`. The last line is
+  `… lake-build ok exit=0 … domain=trading kind=trade engine=java-loader mode=overwrite-dates rows=500 rejected=0 dates=1 …`, the summary and
+  the load manifest are in `data\delta\_drishti-lake\runs\`. Stop the server first or not: a load replaces the date in one commit, and the
+  running server picks up the new version.
+
 You should see, for each file, a last line like:
 
 ```
@@ -765,6 +801,7 @@ Delta stays the default for every table. These checks put the **risk domain** in
 | 4 | Open a P&L vector row (Search `pnl-vector`, any position) | its `PNL` array of 509 numbers, a missing value shown empty, never 0 |
 | 5 | Restart the server, open the same position again | it opens at once: its id map and document come from `data\cache\risk-store\` (Admin → Caches: `idMapsMappedFromDisk` above 0) |
 | 6 | `tools\drishti.py lake build --from data\testdata\market-risk\pnl-vector\cob-2026-09-30.part-001.jsonl.gz --pack config\packs\market-risk --connector risk-store --kind pnl-vector --lake data\iceberg --domain scratch --format iceberg` | a summary with `format: iceberg` and no rejects; `data\iceberg\scratch\pnl-vector\metadata` exists |
+| 6b | 2.9.6: the same line with `--engine java` at the end, and `--domain scratch2` (or the Java loader on its own: section 6k, `target.format: iceberg`) | the same rows and no rejects, `engine: java-loader`; `data\iceberg\scratch2\pnl-vector\metadata` exists |
 | 7 | **Admin → Lakes**, with `data\iceberg` among the console's lake roots (`lakes.roots`) | the table `scratch/pnl-vector` with **Format** Iceberg; tick it, **Dry run**: *would expire snapshots older than 168 h; would remove 0 orphan file(s)* |
 | 8 | Before row 9, with the risk domain still in Iceberg: `VAR BANK <GO>`, then `VAR BANK EUR <GO>`, `VAR LL:` and any limit letter, and `EXP BANK <GO>`; write down VaR, ES, a letter's VaR and EPE | figures on every page, the provenance's inputs saying `risk-store` (VaR) and `exposure-store` (exposure) |
 | 9 | `…\python.exe tools\build_demo_lakes.py --only market-risk --store risk=delta` | `risk-store: now reads delta`, `exposure-store: now reads delta`; Admin → Connectors shows both as delta again, with the same counts as in row 3; the pages of row 8 show the **same figures to the cent** |
@@ -775,6 +812,43 @@ by hand. Before it answers, each file you never edited is replaced by the pack's
 `<name>.yaml.before-upgrade-….bak`), and each file you edited keeps your values and gets every key the template gained (var-whatif's
 `ccy` among them). Check **Admin → Connectors → Template updates**: *Recent automatic updates* lists what was done; a key listed under
 *changed* is one where your value and the pack's differ, and **Use the pack's value** takes the pack's for that key only.
+
+## 6k. What is new in 2.9.6: the parallel lake loader (15 minutes)
+
+The Java loader that loads millions of JSON Lines rows on every core with bounded memory
+([TOOLS.md section 4.13](TOOLS.md#413-the-parallel-lake-loader-296)). Build the jar first (step 2.3). Java and the jar only; Python
+only for the `lake build` rows. From `C:\Users\asinh09\IdeaProjects\drishti-orig` in PowerShell; `$jar` as in section 3.2:
+
+```powershell
+$jar = (Get-ChildItem drishti-server\target\drishti-server-*-exec.jar | Sort-Object LastWriteTime | Select-Object -Last 1).FullName
+```
+
+Save as `C:\Users\asinh09\drishti-private\load-pv.yaml` (the market-risk pack's scenario PVs into a scratch lake):
+
+```yaml
+source:
+  files: 'C:\Users\asinh09\IdeaProjects\drishti-orig\data\testdata\market-risk\scenario-pv\*.jsonl.gz'
+  pack: 'C:\Users\asinh09\IdeaProjects\drishti-orig\config\packs\market-risk'
+  id: SCENARIO_PV_ID
+  date: BUSINESS_DATE
+target:
+  format: delta
+  lake: 'C:\Users\asinh09\IdeaProjects\drishti-orig\data\scratch-lake'
+  kind: scenario-pv
+memory: {budget-mb: 512, spill-dir: 'C:\Users\asinh09\IdeaProjects\drishti-orig\data\tmp\spill'}
+```
+
+| # | Do | You should see |
+|---|---|---|
+| 1 | `java -Xmx2g "-Djava.io.tmpdir=data\tmp\server" "-Dloader.main=com.ash.drishti.lakeload.LakeLoad" -jar $jar --config C:\Users\asinh09\drishti-private\load-pv.yaml` | `2026-09-30  1,339 rows  (version 0, …)`, `rejected: 0`, a line per stage (read, decompress, parse, sortSpill, write, commit) with its threads and rate, `memory: budget 512 MB, peak heap used …`, and the last line `… lake-build ok exit=0 … kind=scenario-pv engine=java-loader …`; `data\scratch-lake\risk\scenario-pv\_delta_log\00000000000000000000.json` exists |
+| 2 | The same command again | `version 1`: the date replaced in one commit, still 1,339 rows (`_delta_log` has `…01.json`) |
+| 3 | The same command with `--set memory.budget-mb=16` at the end | the same rows; `spilled` above 0 MB in the memory line (the rows sorted on disk); the table the same |
+| 4 | With `--set target.format=iceberg --set target.lake=C:\Users\asinh09\IdeaProjects\drishti-orig\data\scratch-iceberg` | `data\scratch-iceberg\risk\scenario-pv\metadata` exists; the same rows |
+| 5 | Open `data\scratch-lake\_drishti-lake\runs\` | the run's `<run>.json` (the summary: `throughput`, `memory`) and `<run>.manifest.json` (each file with its first and last `LEGAL_ENTITY`, `DESK`, id) |
+| 6 | `…\.venv\Scripts\python.exe tools\drishti.py lake build --from data\testdata\market-risk\scenario-pv --pack config\packs\market-risk --kind scenario-pv --key SCENARIO_PV_ID --date BUSINESS_DATE --lake data\scratch-lake2 --engine java` | `engine: java-loader`, 1,339 rows, exit 0: `lake build` driving the loader |
+| 7 | Put a line `{not json` into a copy of one file, load it with `--set rejects.file=data\tmp\rejects.jsonl` | exit 2, `rejected 1: not JSON (…)` with `e.g. <file>:<line>`; the line in `data\tmp\rejects.jsonl` |
+
+Delete `data\scratch-lake`, `data\scratch-lake2` and `data\scratch-iceberg` afterwards (the server does not read them).
 
 ## 7. If something goes wrong
 

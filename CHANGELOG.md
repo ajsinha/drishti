@@ -15,6 +15,35 @@
 -->
 # Changelog
 
+## Unreleased (2.9.6)
+
+### The parallel lake loader
+
+- **A config-driven, multi-threaded Java loader of JSON Lines into Delta or Iceberg (2026-10-28; the release's top item).** New module
+  `drishti-lakeload` (`com.ash.drishti.lakeload.LakeLoad`, in the server's exec jar), for the bank's scenario-PV load (2.3M positions x
+  510 scenarios, 20+ GB): readers (a plain file in byte ranges, ranged GETs on S3; a `.gz` or `.zst` decompressed as a stream by one
+  reader, multi-member gzip included), parsers (streaming Jackson, the document re-written byte for byte as `lake build` keeps it, vectors
+  straight to `double[]`), sorted runs spilled to `memory.spill-dir`, writers merging key ranges into Parquet files of
+  `file-size-mb`, and **one commit per business date** (a Delta version replacing the date through Kernel; an Iceberg overwrite of the
+  date). Memory bounded by `memory.budget-mb` (queue, sort buffers, writers), the spill space checked before reading, the spill removed
+  however the load ends; the summary reports each stage's throughput (decompress its own), the peak heap and the MB spilled. Each date
+  sorted by `LEGAL_ENTITY`, `DESK`, id by default (shard-aligned files, statistics a reader can prune by) and a **load manifest** listing
+  each file's first and last keys for the cluster's VaR shards. The vector column BYTE_STREAM_SPLIT + ZSTD. Folder or `s3://` in, folder
+  or `s3://` out, credentials only from the AWS chain; Windows with Java only. Design, decisions and the 2.3M estimate:
+  [PARALLEL_LOADER.md](docs/architecture/PARALLEL_LOADER.md); every key: [TOOLS.md section 4.13](docs/guides/TOOLS.md#413-the-parallel-lake-loader-296).
+- **`drishti.py lake build --engine java`** runs the build in the loader (`tools/lake/javaload.py`; `--loader-set KEY=VALUE`; Delta or
+  Iceberg; `--from s3://` and a Delta `--lake s3://`); `--engine auto` picks it only for at least `--java-above-mb` (1024) MB of JSON Lines
+  in `overwrite-dates` mode, so the demo and small loads run as before. `lake build` also takes a POSIX lock beside its `flock`, so it
+  and a loader run on its own exclude each other.
+- **Measured** at the machine's limit, 10,000 positions x 510 scenarios (54 MB of JSON in eight gzip files) on 24 cores: 0.2 s warm
+  (about 50,000 rows/s); a 24 MB budget and a `-Xmx192m` JVM give the identical table. 2.3M estimated at 1 to 5 minutes on a 16 to 32
+  vCPU server (an estimate, to be measured on a real server: release item 3).
+- Equal to the Python path: `PythonPathEqualityTest` runs `lake build` both ways on Delta and Iceberg (synthetic positions and the
+  market-risk pack's scenario PVs) and compares every row, document, column and vector; the Delta and Iceberg connectors read both alike.
+- Supporting changes: `ParquetDataWriter` (drishti-iceberg) takes `double[]` list values, UTF-8 text and per-column options
+  (BYTE_STREAM_SPLIT, no dictionary, no statistics, a codec); `LakeWriter.engineFor` and `LakeWriter.removals` are public; Iceberg
+  relayout (`lake maintain`) leaves a table laid out by `drishti.layout.sort-by` in its order.
+
 ## 2.9.5 — Iceberg as a full alternative to Delta; VaR hierarchies by columns (limit letters); connector files that upgrade themselves safely (2026-10-28)
 
 ### Hierarchies
