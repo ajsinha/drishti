@@ -150,6 +150,8 @@ Spring), the Rachana grammar and inference, the engine, identity (SQLite or Post
 (`drishti-deltalake`, `drishti-iceberg`, `drishti-lakeio`, no Hadoop), compute (Python worker pools, VaR), Drishti\*net, the AI
 layer, and one plugin per connector under `plugins/`. The full picture: [ARCHITECTURE.md](docs/architecture/ARCHITECTURE.md).
 
+The connector plugins, `plugins/drishti-plugin-*/`: `demo`, `file`, `rest`, `jdbc`, `delta`, `aerospike`, `cassandra`, `redis`, `mongodb`, `iceberg`, `iceberg-external`, `duckdb`, `feeds`, `news`, `yfinance`, `kafka`, `activemq`, `rabbitmq`, `s3`.
+
 ## Documentation
 
 - **[Install and run](docs/guides/GETTING_STARTED.md)**: Linux, Windows, Docker and the IDEs.
