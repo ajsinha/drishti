@@ -43,7 +43,7 @@ connectors:
                     BUY_SELL_CODE, CURRENCY, QUANTITY, TRADE_DATE, MATURITY_DATE, COUNTERPARTY, LEGAL_ENTITY, PORTFOLIO, TRADER_ID]
           sort-by: id               # each business day sorted by id, cut into files of file-rows
           file-rows: 250000
-          row-group-rows: 1000      # opening one trade decodes one row group of documents
+          row-group-rows: 1000      # the Python writers only; lake build sizes row groups in bytes (DELTA_CONNECTOR.md, Row-group size)
 ```
 
 - **The writers follow it.** `drishti.py lake build` (and `lake demo`, which calls it for every table) writes the table this way: `id`, the

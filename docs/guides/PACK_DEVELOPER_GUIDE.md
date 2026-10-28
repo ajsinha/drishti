@@ -1236,8 +1236,8 @@ routes: { netting-set: credit-store, margin-call: collateral-store }
   and only adds the keys it gained ([CONNECTOR_FILES.md, Upgrades](../connectors/CONNECTOR_FILES.md#upgrades-295)), and the site edits it in an editor or in
   Admin → Connectors, applied live to that one connector. *Reset to pack default* (or `drishti.py connector reset <name>`) writes the pack's current template
   over it, keeping the earlier text in `<data>/connectors/history/`.
-- **Kinds go through `routes:`.** You know which kind lives where, so you route it; the file's `kinds:` can only narrow that. A kind read is tried at its route's
-  connector first, then the default route, then any other connector that serves the kind. A connector is therefore reusable by other packs.
+- **Kinds go through `routes:`.** You know which kind lives where, so you route it. How a connector file's `kinds:` adds to and narrows the
+  routes is stated once, in [CONNECTOR_FILES.md, How packs and files fit together](../connectors/CONNECTOR_FILES.md#6-how-packs-and-files-fit-together). A connector is therefore reusable by other packs.
 - **Shared connectors.** Connectors are per data domain, not per pack: the lake is laid out as `<root>/<domain>/<kind>/`, and several packs may name the same
   connector. If two related packs (one `extends` the other) suggest different templates under one name, the more specific pack's template is the one written; two
   unrelated packs suggesting different definitions of one name is an error. Admin → Connectors shows which packs use a connector and asks before the site switches

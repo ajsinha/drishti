@@ -208,12 +208,14 @@ From the shared module (today's `drishti-deltalake` classes, moved):
 
 | `engine` | What reads and writes | Use it for |
 |---|---|---|
-| `native` (default once built) | `drishti-iceberg` | everything on local disk and S3; Windows |
+| `native` (the default since 2.6.0) | `drishti-iceberg` | everything on local disk and S3; Windows. Left to the default, a root it cannot read (`abfs://`, `gs://`, `hdfs://`) is read by the library; asked for by name, such a root refuses to start |
 | `library` | Apache Iceberg Java over Hadoop (today's code) | Azure, Google Cloud Storage, HDFS; a fallback |
-| `auto` | `native` on Windows, `library` elsewhere | the first release, while `native` earns trust |
+| `auto` | `native` on Windows, `library` elsewhere | kept from 2.6.0's first release, while `native` earned trust |
 
 `DRISHTI_ICEBERG_ENGINE` sets it for every connector, as `DRISHTI_DELTA_ENGINE` does for Delta. The loader and
-maintenance take `--engine`. All other settings (ICEBERG_CONNECTOR.md section 15) are unchanged.
+maintenance take `--engine`. All other settings (ICEBERG_CONNECTOR.md section 15) are unchanged. This table is the `iceberg`
+connector's; `iceberg-external` takes `native` or `auto` only and refuses `library` ([ICEBERG_EXTERNAL_CONNECTOR.md section 10](../connectors/ICEBERG_EXTERNAL_CONNECTOR.md#10-settings)).
+As built: [ICEBERG_CONNECTOR.md section 17](../connectors/ICEBERG_CONNECTOR.md#17-engines-native-and-library).
 
 ## 11. Windows
 
@@ -242,7 +244,8 @@ Fixture tables are small, synthetic and committed under the plugin's test resour
 
 ## 13. Build plan
 
-Five steps, each merged with its tests and docs; the `library` engine stays the default until step 5.
+Five steps, each merged with its tests and docs. (The plan kept `library` the default until step 5; as built, 2.6.0 made `native`
+the default.)
 
 | Step | Content | Done when |
 |---|---|---|
@@ -351,7 +354,7 @@ kind, its fields, a default Sutra listing them, links from `links`), then edited
 | Setting | Default | Meaning |
 |---|---|---|
 | catalog settings | as `iceberg` | `catalog`, `root`, `uri`, `warehouse`, `credential`, `token`, `scope`, `prefix`, `s3.*`, TLS, proxy |
-| `engine` | `auto` | `native`, `library`, `auto` (section 10) |
+| `engine` | `auto` | see [ICEBERG_EXTERNAL_CONNECTOR.md section 10](../connectors/ICEBERG_EXTERNAL_CONNECTOR.md#10-settings): `native` or `auto`; `library` is refused |
 | `tables` | none | per kind: `table`, `id`, `id-separator`, `date`, `date-from`, `date-zone`, `mode`, `document`, `columns`, `links`, `depth`; or `auto` with `namespace` |
 | `decimals`, `binary` | `number`, `base64` | how those types appear in documents |
 | `id-index-mb`, `id-index-warn-rows`, `max-index-rows` | 1024, 5,000,000, 10,000,000 | section 15.3 |

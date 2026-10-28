@@ -108,21 +108,19 @@ it ([section 5](#5-writing-the-lake)); the connector uses it when it is there an
 ## 3. What is on disk
 
 ```
-<root>/                                         DRISHTI_DELTA_ROOT, e.g. ./data/delta or s3a://risk-lake/banking
+<root>/                                         DRISHTI_DELTA_ROOT, e.g. ./data/delta or s3a://risk-lake/lake
 └── trading/                                    the data domain (the connector's `domain`)
-    └── trade/                                  one Delta table per kind
-        ├── _delta_log/                         the transaction log: one JSON file per commit, plus checkpoints
-        │   ├── 00000000000000000000.json
-        │   ├── …
-        │   └── 00000000000000001800.checkpoint.parquet
-        ├── business_date=2026-09-28/           one partition per business day
-        ├── business_date=2026-09-29/
-        └── business_date=2026-09-30/
-            ├── part-00000-….snappy.parquet     ids BBG-60000001 … CLY-4083458  (250,000 rows)
-            ├── part-00001-….snappy.parquet     ids CLY-4083459 … IMG-500374
-            ├── part-00002-….snappy.parquet     ids IMG-500375 … MX-30083832
-            └── part-00003-….snappy.parquet     ids MX-30083833 … WSS-2166540
-                                                each file: 250 row groups of 1,000 rows
+    ├── trade_endur/                            one Delta table per source system and kind (`table.trade` of connector trade-endur)
+    │   ├── _delta_log/                         the transaction log: one JSON file per commit, plus checkpoints
+    │   │   ├── 00000000000000000000.json
+    │   │   ├── …
+    │   │   └── 00000000000000000010.checkpoint.parquet
+    │   ├── business_date=2026-09-29/           one partition per business day
+    │   └── business_date=2026-09-30/
+    │       ├── PRODUCT_TYPE=FX_FORWARD/part-00000-<uuid>.c000.snappy.parquet     the second partition column
+    │       └── PRODUCT_TYPE=IRS_FIXFLOAT/part-00000-<uuid>.c000.snappy.parquet …  each file sorted by id, its own id range
+    ├── trade_calypso/ …                        the union's other two members (`union: true`)
+    └── trade_murex/ …
 ```
 
 Each row has these columns:
@@ -166,9 +164,9 @@ Why each part is shaped this way:
 - **Sorted by id, a file per id range.** Delta records each file's minimum and maximum `id` in its log; Parquet records
   each row group's minimum and maximum in the file's footer. With rows sorted, a reader looking for one id skips every
   file and row group whose range cannot contain it.
-- **Row groups of 1,000 rows.** Reading one document decodes one row group of the `doc` column: about 7 MB of
-  documents at 1,000 rows, about 70 MB at 10,000. Smaller groups make single reads cheaper; column scans barely notice,
-  since the promoted columns compress to almost nothing either way.
+- **Small row groups.** Reading one document decodes one row group of the `doc` column, so smaller groups make single reads
+  cheaper; column scans barely notice, since the promoted columns compress to almost nothing either way. How big a group is
+  depends on the writer: see [Row-group size](#row-group-size) in section 4, the one place it is stated.
 - **Files of 250,000 rows (about 430 MB).** Four files a day keep the log small (seven years is about 7,000 files) and
   each file large enough to read efficiently from object storage.
 - **Statistics only on useful columns.** Delta stores per-file minimum and maximum values in the log for statistics
@@ -213,7 +211,20 @@ connectors:
 | `table.<kind>` | The kind's table folder under the domain when it is not the kind's name (`trade_endur`): several connectors then serve one kind from tables side by side. Only the named kinds are this connector's tables. |
 | `layout.<kind>.sort-by` | `id` (the default and the right choice for entity tables): rows sorted by id within each business day. |
 | `layout.<kind>.file-rows` | Rows per file (default 250,000). Each file holds a contiguous id range. |
-| `layout.<kind>.row-group-rows` | Rows per Parquet row group (default 10,000; the trading pack sets 1,000, which keeps the first open of a trade fast). |
+| `layout.<kind>.row-group-rows` | Rows per Parquet row group, for the Python sample writers only (default 10,000; the trading pack sets 1,000). `lake build` and `lake demo` size groups in bytes instead: see below. |
+
+#### Row-group size
+
+This is the one statement of the row-group size; other documents link here.
+
+| Writer | Row group | Set by |
+|---|---|---|
+| `drishti.py lake build`, `lake demo`, `build_demo_lakes.py` and the parallel lake loader, into **Delta** (the Java writer, `LakeWriter` and `DeltaTarget`) | **256 KB** in bytes, pages of 64 KB | `DRISHTI_LAKE_ROW_GROUP_KB`, `DRISHTI_LAKE_PAGE_KB` (`DRISHTI_LAKE_ROW_GROUP_MB` is still read). The AWS deployment sets 1 MB (`LAKE_ROW_GROUP_KB=1024` in `deploy/aws/env`; [AWS_DELTA_LAKE.md section 7.1](../architecture/AWS_DELTA_LAKE.md#71-the-numbers)) |
+| the parallel lake loader into **Iceberg** | 1 MB, unless the load's layout sets `rowGroupBytes` | the loader's configuration ([PARALLEL_LOADER.md](../architecture/PARALLEL_LOADER.md)) |
+| the Python writers built on `tools/samplegen/layout.py` (`ingest_jsonl.py`, `samplegen/lake.py`, the banking `make_data.py`, `maintain.py relayout`) | `layout.<kind>.row-group-rows` **rows** (default 10,000; the trading pack sets 1,000) | the pack's layout |
+
+`row-group-rows` in a pack's layout therefore does **not** change what `lake build` writes; the byte size does. 256 KB holds a few
+dozen to a few hundred trade documents, so one open decodes a small group either way.
 
 The pack loader flattens the nested settings into the connector's flat settings (`layout.trade.columns =
 TRADE_ID,SOURCE_SYSTEM,…`, `table.trade = trade_endur`), which is what the connector reads; in a connector file you may write them nested or flat.
@@ -256,14 +267,13 @@ The bulk generator, for example:
 uv run --with deltalake --with pyarrow --with pyyaml python tools/samplegen/bulk_trades.py --trades 1000000 --days 3
 ```
 
-```
-data/delta/trading/trade: 1,000,000 trades x 3 business days (2026-09-28 to 2026-09-30), 4 files a day, 4.85 GB, 82 s
-```
+It prints one line for the JSON Lines it wrote (`<folder>: <n> trades x <d> business days (<first> to <last>) as JSON Lines, <s> s`), then one
+line per system and date as `lake build` loads it into that system's table (`trade_endur`, `trade_calypso`, `trade_murex`).
 
 It lists and sorts every id first and builds the documents on all cores in slices of 5,000; the main process appends each slice
 to the day's JSONL file in id order, and `lake build` then loads each file in batches, so memory stays flat whatever the size of
-the book. (Until 2.9.4 it wrote the table directly, about 28 seconds per million trade-days on 24 cores; the output above is from
-then. Writing JSONL first and loading it is slower, by the time `lake build` takes.)
+the book. (Until 2.9.4 it wrote the table directly, about 28 seconds per million trade-days on 24 cores. Writing JSONL first and loading it is
+slower, by the time `lake build` takes.)
 
 **Your own loader** (Spark, Databricks, a Python job) writes the same thing. In Spark, for one business day:
 
@@ -332,7 +342,7 @@ offer them.
 1. The file list gives the day's files; for a past date, the newest day on or before it within `lookback-days`.
 2. The day's id map gives the file holding `MX-20000017` (a binary search).
 3. That file is read with the predicate `id = 'MX-20000017'`. Parquet compares it with each row group's statistics and
-   decodes only the one row group (1,000 rows) whose id range can contain it, and only the `id` and `doc` columns.
+   decodes only the one row group ([a small one](#row-group-size)) whose id range can contain it, and only the `id` and `doc` columns.
 4. The document is parsed and kept in the document cache in the heap (`doc-cache-mb`, shared by default) and in the
    document cache on disk (`doc-disk-cache.*`, below). Deletion vectors are honoured.
 

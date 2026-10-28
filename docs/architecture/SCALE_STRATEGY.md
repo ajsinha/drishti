@@ -92,7 +92,7 @@ partition rebuilt when the data version it was read from changes.
 | Test | Result |
 |---|---|
 | `lake build`, 303,780 trades, one day | **42 s**; files of 3K–60K trades by product type |
-| Old writer layout | one Parquet row group per file (up to 60K trades); now 1 MB row groups |
+| Old writer layout | one Parquet row group per file (up to 60K trades); then 1 MB row groups, now 256 KB ([Row-group size](../connectors/DELTA_CONNECTOR.md#row-group-size)) |
 | Single trade open, 300K, 4 GB heap (30 random ids, console) | p50 **0.09–0.14 s**, p95 **0.29–0.35 s**, 0 failures, also **during** a grouped-page rebuild |
 | Trading form, 300K | 0.45 s |
 | Grouped pages, 15K trades, one at a time (before) | **16.6 s** |
@@ -182,9 +182,9 @@ DOWN with that reason, its pages answer "unavailable", and the rest of the serve
 - **A full partition per business date** (`mode: snapshot`). Storing only changed trades was considered and rejected:
   the dumps change too many fields every day (section 17).
 - **Partitions**: `business_date` + `PRODUCT_TYPE` for trades; `business_date` for reference data.
-- **Files**: sorted by id; at most `file-rows` (250,000) rows; Parquet **row groups of 1 MB** (done; was one group per
-  file). A single read decodes about 1 MB. Takes effect for data loaded after the change; Admin → Lakes → Maintain
-  (compaction) rewrites older files.
+- **Files**: sorted by id; at most `file-rows` (250,000) rows; small Parquet row groups (done; was one group per
+  file), sized in bytes by the lake writer: 256 KB by default, 1 MB on AWS ([DELTA_CONNECTOR.md, Row-group size](../connectors/DELTA_CONNECTOR.md#row-group-size)).
+  Takes effect for data loaded after the change; Admin → Lakes → Maintain (compaction) rewrites older files.
 - **Promoted columns** cover every field a search, form, list, grouped page or BI table reads, including values
   inside arrays flattened at load time (for example the first leg's notional as `NOTIONAL`), so none of them needs a
   document.
@@ -354,7 +354,7 @@ list (a counterparty with 20,000 trades shows them a page at a time) comes with 
 | `max-scan` | `derived` connector | 50000 | members read one at a time, for sources that cannot read a day in one pass |
 | `<kind>.max-members` | `derived` connector | 1000 | members listed on a page; the count and totals cover every member |
 | `drishti.sources.fetch-timeout` | server | **5s** | longest single read (`DRS-1004`) |
-| `DRISHTI_LAKE_ROW_GROUP_KB`, `DRISHTI_LAKE_PAGE_KB` | `lake build` (Java writer) | **256**, **64** | Parquet row group and page size (`DRISHTI_LAKE_ROW_GROUP_MB` is still read) |
+| `DRISHTI_LAKE_ROW_GROUP_KB`, `DRISHTI_LAKE_PAGE_KB` | `lake build` (Java writer) | **256**, **64** | Parquet row group and page size ([DELTA_CONNECTOR.md, Row-group size](../connectors/DELTA_CONNECTOR.md#row-group-size)) |
 | `ingest.<kind>.flatten`, `ingest.<kind>.key` | pack (read by `lake build`) | none | flattened fields written as plain fields and promoted columns; the id field, so `--key` is optional |
 | `drishti.tmp-dir` / `DRISHTI_TMP_DIR` | server | **`<data dir>/tmp/server`** | temporary files (the console's: `<data dir>/tmp/console`) |
 | `server.workers` / `DRISHTI_CONSOLE_WORKERS` | console | **4** | worker processes sharing the console's port |
