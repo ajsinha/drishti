@@ -489,7 +489,7 @@ connector that has text (a file or a shared edit) with its pack's current templa
 
 | Part | What | Applied automatically |
 |---|---|---|
-| **Missing** (additive) | kinds the template serves that the connector lacks; settings keys the template has and the connector does not (the layout entries for those kinds among them); columns a layout list of the template has and the connector's same list lacks (`layout.<kind>.columns`, `.vectors`: a pack that gained columns, as the VaR inputs did in 2.9.4; the connector's own columns and order kept, the new ones appended, the file before kept beside it as `<name>.yaml.before-<yyyyMMdd-HHmmss>.bak`) | with `additive` |
+| **Missing** (additive) | kinds the template serves that the connector lacks; settings keys the template has and the connector does not (the layout entries for those kinds among them); columns a layout list of the template has and the connector's same list lacks (`layout.<kind>.columns`, `.vectors`: a pack that gained columns, as the VaR inputs did in 2.9.4; the connector's own columns and order kept, the new ones appended, the file before kept beside it as `<name>.yaml.before-<yyyyMMdd-HHmmss>.bak`); parameters a reactive connector's template gained (`kinds.<kind>.params.<name>`, as var-whatif's `ccy` in 2.9.4; the file's own parameters kept, the file before kept beside it). Applied once at start, before the server answers, then every `template-check-ms` | with `additive` |
 | **Changed** (conflicting) | settings both have with different values: an administrator's edit | never |
 | **Obsolete** | kinds in the connector that no loaded pack serves | never |
 

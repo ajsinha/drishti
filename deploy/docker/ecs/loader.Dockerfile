@@ -16,7 +16,7 @@
 # with what they run, and nothing else: Java 21 and the server's exec jar (Drishti's Delta writer, `lake build`), Python with
 # deltalake, pyarrow and pyyaml (`lake publish`, `lake maintain`), the AWS CLI v2, the tools and the shipped packs (layouts, ingest keys).
 # Build from the repository root after ./mvnw -q package -DskipTests:
-#   docker build -f deploy/docker/ecs/loader.Dockerfile -t drishti-loader-ecs:2.9.3 .
+#   docker build -f deploy/docker/ecs/loader.Dockerfile -t drishti-loader-ecs:2.9.4 .
 # The task mounts one EFS access point at /opt/drishti/data (scratch lakes, locks, temp, home); the root file system is read-only.
 ARG BASE_IMAGE=eclipse-temurin:21-jre
 FROM ${BASE_IMAGE}
