@@ -21,6 +21,7 @@ import com.ash.drishti.compute.vector.OrdinalSet;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Locale;
+import java.util.Map;
 import java.util.Optional;
 
 /**
@@ -53,20 +54,32 @@ public final class ExposureScopes {
 
     /** The words of the scope grammar the exposure engine answers. */
     public static final List<String> WORDS = List.of("BANK", "NSET", "CPTY", "GROUP", "LE", "DESK", "BOOK", "TRD", "WHERE");
-    /** The trade columns a {@code WHERE:} rule may read. */
+    /** The trade columns a {@code WHERE:} rule may read (and the configured hierarchies' level columns the trades carry, 2.9.5). */
     public static final List<String> COLUMNS = List.of("NETTING_SET", "COUNTERPARTY", "LEGAL_ENTITY", "DESK", "TT_BOOK", "ASSET_CLASS", "PRODUCT",
             "SOURCE_SYSTEM", "MATURITY_DATE", "NOTIONAL", "MTM");
 
     private final ExposureBook book;
     private final Groups groups;
+    /** The configured column hierarchies with a scope word (2.9.5): word to its hierarchy ({@code LL:LL-0003/DESK-RATES}). */
+    private final Map<String, com.ash.drishti.compute.var.HierarchySpec> words = new java.util.LinkedHashMap<>();
 
     public ExposureScopes(ExposureBook book, Groups groups) {
+        this(book, groups, List.of());
+    }
+
+    /** A resolver that also knows the configured column hierarchies' words ({@code LL:<letter>[/<desk>]}). */
+    public ExposureScopes(ExposureBook book, Groups groups, List<com.ash.drishti.compute.var.HierarchySpec> hierarchies) {
         this.book = book;
         this.groups = groups == null ? g -> Optional.empty() : groups;
+        for (com.ash.drishti.compute.var.HierarchySpec s : hierarchies == null ? List.<com.ash.drishti.compute.var.HierarchySpec>of() : hierarchies) {
+            if (s.columns() && s.word() != null) {
+                words.put(s.word(), s);
+            }
+        }
     }
 
     public Resolution resolve(String text) {
-        ScopeExpr e = ScopeExpr.parse(text);
+        ScopeExpr e = ScopeExpr.parse(text, words.keySet());
         List<String> unknown = new ArrayList<>();
         List<String> notes = new ArrayList<>();
         OrdinalSet set = eval(e, unknown, notes);
@@ -207,9 +220,46 @@ public final class ExposureScopes {
                 notes.add("rule matched " + matched[0] + " trades");
                 return b.build();
             }
-            default -> throw new IllegalArgumentException(r.word() + ": is not a scope of exposure; use " + String.join(", ", WORDS)
-                    + " (NSET:<netting set>, CPTY:<counterparty>, GROUP:<group>, LE:<legal entity>, TRD:<trades>)");
+            default -> {
+                com.ash.drishti.compute.var.HierarchySpec h = words.get(r.word());
+                if (h != null) {                                          // a node of a column hierarchy: its path of values (2.9.5)
+                    OrdinalSet s = node(h, r.arg());
+                    if (s.isEmpty()) {
+                        unknown.add(r.toString());
+                    } else {
+                        notes.add("node " + h.id() + "~" + r.arg() + ": " + s.size() + " trades");
+                    }
+                    return s;
+                }
+                throw new IllegalArgumentException(r.word() + ": is not a scope of exposure; use " + String.join(", ", WORDS)
+                        + " (NSET:<netting set>, CPTY:<counterparty>, GROUP:<group>, LE:<legal entity>, TRD:<trades>)");
+            }
         }
+    }
+
+    /**
+     * The trades of a column hierarchy's node, named by its path ({@code LL-0003/DESK-RATES}: the first levels' values) or, with leaf ids,
+     * by its own value (at any level).
+     */
+    private OrdinalSet node(com.ash.drishti.compute.var.HierarchySpec h, String arg) {
+        String[] parts = arg.split("/");
+        OrdinalSet.Builder b = new OrdinalSet.Builder();
+        if (h.leafIds() && parts.length == 1) {
+            addWhere(b, t -> h.levels().stream().anyMatch(c -> arg.equalsIgnoreCase(String.valueOf(column(t, c)))));
+            return b.build();
+        }
+        if (parts.length > h.levels().size()) {
+            return OrdinalSet.empty();
+        }
+        addWhere(b, t -> {
+            for (int i = 0; i < parts.length; i++) {
+                if (!parts[i].equalsIgnoreCase(String.valueOf(column(t, h.levels().get(i))))) {
+                    return false;
+                }
+            }
+            return true;
+        });
+        return b.build();
     }
 
     private void addWhere(OrdinalSet.Builder b, java.util.function.Predicate<ExposureBook.TradeInfo> p) {
@@ -221,8 +271,8 @@ public final class ExposureScopes {
         }
     }
 
-    /** A trade's column for a rule ({@link #COLUMNS}); numbers as numbers. */
-    Object column(ExposureBook.TradeInfo t, String field) {
+    /** A trade's column for a rule ({@link #COLUMNS}, then the level columns it carries); numbers as numbers. */
+    public Object column(ExposureBook.TradeInfo t, String field) {
         return switch (field.toUpperCase(Locale.ROOT)) {
             case "NETTING_SET" -> t.set() < 0 ? null : book.set(t.set()).id();
             case "COUNTERPARTY" -> t.counterparty();
@@ -235,7 +285,7 @@ public final class ExposureScopes {
             case "MATURITY_DATE" -> t.maturity();
             case "NOTIONAL" -> t.notional();
             case "MTM" -> t.mtm0();
-            default -> null;
+            default -> t.attribute(field.toUpperCase(Locale.ROOT));
         };
     }
 

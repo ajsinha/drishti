@@ -55,6 +55,8 @@ final class ExposureLoader {
     private final SourceRouter router;
     private final ExposureProperties props;
     private final ExposureTier tier;
+    /** The hierarchies (2.9.5, shared with VaR): the level columns of the column hierarchies are read from the paths' rows. */
+    private java.util.function.Supplier<com.ash.drishti.server.var.Hierarchies> hierarchies = com.ash.drishti.server.var.Hierarchies::defaults;
 
     ExposureLoader(SourceRouter router, ExposureProperties props, ExposureTier tier) {
         this.router = router;
@@ -64,6 +66,47 @@ final class ExposureLoader {
 
     ExposureTier tier() {
         return tier;
+    }
+
+    /** The hierarchies VaR builds (the setting, a pack's block, or the default), so exposure's nodes are the same. */
+    ExposureLoader hierarchies(java.util.function.Supplier<com.ash.drishti.server.var.Hierarchies> h) {
+        this.hierarchies = h;
+        return this;
+    }
+
+    com.ash.drishti.server.var.Hierarchies hierarchies() {
+        try {
+            return hierarchies.get();
+        } catch (RuntimeException e) {
+            return com.ash.drishti.server.var.Hierarchies.defaults();
+        }
+    }
+
+    /** The configured hierarchies (the column ones' words name nodes in a scope). */
+    List<com.ash.drishti.compute.var.HierarchySpec> hierarchySpecs() {
+        return hierarchies().specs();
+    }
+
+    /** The scope words of the configured column hierarchies. */
+    java.util.Set<String> words() {
+        java.util.Set<String> out = new java.util.LinkedHashSet<>();
+        hierarchies().columnSpecs().forEach(s -> {
+            if (s.word() != null) {
+                out.add(s.word());
+            }
+        });
+        return out;
+    }
+
+    /** The level columns the trades' rows must carry: the column hierarchies' (but those the engine reads anyway). */
+    List<String> levels() {
+        List<String> out = new ArrayList<>();
+        for (String c : hierarchies().levelColumns()) {
+            if (!List.of("COUNTERPARTY", "LEGAL_ENTITY", "DESK", "TT_BOOK", "ASSET_CLASS", "PRODUCT", "SOURCE_SYSTEM").contains(c)) {
+                out.add(c);
+            }
+        }
+        return out;
     }
 
     SourceRouter router() {
@@ -99,7 +142,9 @@ final class ExposureLoader {
         DataNode run = run(date, documents(k.run(), asOf));
         Reference ref = reference(date, asOf, run);
         String runId = text(run, "RUN_ID");
-        String digest = ExposureTier.digest(date, versions, runId, props.collateralModel(), props.imModel());
+        List<String> levels = levels();
+        String digest = ExposureTier.digest(date, versions, runId, props.collateralModel(), props.imModel()
+                + (levels.isEmpty() ? "" : "|levels=" + levels));
         Optional<Path> hot = props.mapped() ? tier.existing(date, digest) : Optional.empty();
         ExposureBook book = null;
         if (hot.isPresent()) {
@@ -129,8 +174,19 @@ final class ExposureLoader {
         }
         long budget = (long) (props.memoryBudgetGb() * (1L << 30));
         ExposureBook.Builder b = new ExposureBook.Builder(grid, paths, text(run, "RUN_ID"), text(run, "BATCH_ID"), runRecord(run), props.model(), budget);
-        ExposureIntake intake = new ExposureIntake(b, grid, date, text(run, "RUN_ID"), text(run, "BATCH_ID"), ref.memberOf, props.t0Tolerance());
+        List<String> levels = levels();
+        b.attributeColumns(levels);                                      // the column hierarchies' level columns, kept per trade (2.9.5)
+        ExposureIntake intake = new ExposureIntake(b, grid, date, text(run, "RUN_ID"), text(run, "BATCH_ID"), ref.memberOf, props.t0Tolerance())
+                .levels(levels);
         List<String> columns = columns();
+        java.util.Set<String> kept = router.columnar(props.kinds().paths());
+        for (String c : levels) {
+            if (!kept.isEmpty() && !kept.contains(c)) {
+                throw new DrishtiException(ErrorCode.VAR_HIERARCHY_COLUMN, "the exposure paths of " + date + " are not loaded: a hierarchy is built "
+                        + "from the column " + c + ", which " + props.kinds().paths() + " does not keep (add it to the connector's layout."
+                        + props.kinds().paths() + ".columns, and to the rows)");
+            }
+        }
         boolean read;
         try {
             read = router.vectors(props.kinds().paths(), "MTM", columns, asOf, (id, values, len, row) -> intake.row(id, values, len, row, columns));
@@ -160,6 +216,11 @@ final class ExposureLoader {
         List<String> out = new ArrayList<>(List.of("TRADE_ID"));
         for (String c : COLUMNS) {
             if (kept.isEmpty() ? List.of("NETTING_SET", "COUNTERPARTY", "LEGAL_ENTITY", "GRID_INDEX", "RUN_ID").contains(c) : kept.contains(c)) {
+                out.add(c);
+            }
+        }
+        for (String c : levels()) {
+            if (!out.contains(c)) {
                 out.add(c);
             }
         }

@@ -54,7 +54,20 @@ public final class ExposureBook implements AutoCloseable {
 
     /** A trade of the date (its row's columns). */
     public record TradeInfo(String id, int set, String counterparty, String legalEntity, String desk, String book, String assetClass,
-            String product, String sourceSystem, String maturity, double notional, double mtm0, double lifeYears) {}
+            String product, String sourceSystem, String maturity, double notional, double mtm0, double lifeYears, Map<String, String> attributes) {
+
+        public TradeInfo {
+            attributes = attributes == null ? Map.of() : attributes;
+        }
+
+        /**
+         * The level columns of the configured column hierarchies the trade's rows carried (2.9.5, {@code LIMIT_LETTER}): column to value;
+         * empty when no hierarchy is built from columns.
+         */
+        public String attribute(String column) {
+            return attributes.get(column);
+        }
+    }
 
     /** Where the trades' paths come from when a scope needs them (the lake): {@code G x P} per trade, an absent row zero. */
     @FunctionalInterface
@@ -307,6 +320,7 @@ public final class ExposureBook implements AutoCloseable {
         private final Map<String, double[]> values = new TreeMap<>();
         private final Map<String, String[]> setCols = new HashMap<>();
         private final Map<String, TradeRow> tradeRows = new HashMap<>();
+        private List<String> attributeColumns = List.of();
         private long bytes;
 
         private static final class TradeRow {
@@ -334,9 +348,37 @@ public final class ExposureBook implements AutoCloseable {
         }
 
         /**
+         * The level columns of the configured column hierarchies (2.9.5): a row's {@code cols} carry their values after the seven fixed
+         * columns, in this order, kept as each trade's {@link TradeInfo#attributes()}.
+         */
+        public Builder attributeColumns(List<String> columns) {
+            this.attributeColumns = List.copyOf(columns);
+            return this;
+        }
+
+        public List<String> attributeColumns() {
+            return attributeColumns;
+        }
+
+        private Map<String, String> attributes(String[] cols) {
+            if (attributeColumns.isEmpty()) {
+                return Map.of();
+            }
+            Map<String, String> out = new LinkedHashMap<>();
+            for (int i = 0; i < attributeColumns.size(); i++) {
+                String v = 7 + i < cols.length ? cols[7 + i] : null;
+                if (v != null) {
+                    out.put(attributeColumns.get(i), v);
+                }
+            }
+            return out;
+        }
+
+        /**
          * One row: a trade's values at grid index k.
          *
-         * @param cols the trade's columns: counterparty, legal entity, desk, book, asset class, product, source system
+         * @param cols the trade's columns: counterparty, legal entity, desk, book, asset class, product, source system, then the
+         *     {@link #attributeColumns} (2.9.5)
          */
         public void row(String trade, String nettingSet, String[] cols, String maturity, double notional, int k, double[] values, int length) {
             String set = nettingSet == null || nettingSet.isBlank() ? "TRD~" + trade : nettingSet.trim();
@@ -430,7 +472,7 @@ public final class ExposureBook implements AutoCloseable {
                     life = Math.max(life, tl);
                     v0 += m0;
                     tradeInfos.add(new TradeInfo(tid, s, t.cols[0], t.cols[1], t.cols[2], t.cols[3], t.cols[4], t.cols[5], t.cols[6], t.maturity,
-                            t.notional, m0, tl));
+                            t.notional, m0, tl, attributes(t.cols)));
                 }
                 CsaTerms csa = id.startsWith("TRD~") ? CsaTerms.NONE : ref.terms(id);
                 List<String> flags = new ArrayList<>(ref.flags(id));
@@ -508,6 +550,9 @@ public final class ExposureBook implements AutoCloseable {
             m.put("notional", t.notional());
             m.put("mtm0", t.mtm0());
             m.put("lifeYears", t.lifeYears());
+            if (!t.attributes().isEmpty()) {
+                m.put("attributes", t.attributes());
+            }
             return m;
         }
     }
@@ -533,7 +578,8 @@ public final class ExposureBook implements AutoCloseable {
             Map<String, Object> t = (Map<String, Object>) x;
             trades.add(new TradeInfo((String) t.get("id"), (int) num(t.get("set")), (String) t.get("counterparty"), (String) t.get("legalEntity"),
                     (String) t.get("desk"), (String) t.get("book"), (String) t.get("assetClass"), (String) t.get("product"), (String) t.get("sourceSystem"),
-                    (String) t.get("maturity"), num(t.get("notional")), num(t.get("mtm0")), num(t.get("lifeYears"))));
+                    (String) t.get("maturity"), num(t.get("notional")), num(t.get("mtm0")), num(t.get("lifeYears")),
+                    t.get("attributes") instanceof Map<?, ?> a ? (Map<String, String>) a : Map.of()));
         }
         ExposureHotFile.Header h = o.header();
         return new ExposureBook(grid, h.paths(), h.runId(), h.batchId(), (Map<String, Object>) m.get("run"), sets, trades, o.v(), o.e(), o.n(),

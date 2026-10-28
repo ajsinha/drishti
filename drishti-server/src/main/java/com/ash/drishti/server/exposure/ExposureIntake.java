@@ -53,6 +53,8 @@ final class ExposureIntake {
     private final Map<String, String> maturity = new HashMap<>();
     private final Map<String, Double> notional = new HashMap<>();
     private final Map<String, Double> firstMean = new HashMap<>();
+    /** The level columns of the column hierarchies (2.9.5): carried after the seven fixed columns; a row without one is refused. */
+    private List<String> levels = List.of();
     private int rows;
     private int rejected;
     private int otherRuns;
@@ -69,6 +71,11 @@ final class ExposureIntake {
         this.batchId = batchId;
         this.memberOf = memberOf;
         this.t0Tolerance = t0Tolerance;
+    }
+
+    ExposureIntake levels(List<String> columns) {
+        this.levels = List.copyOf(columns);
+        return this;
     }
 
     private static String col(String[] row, List<String> columns, String name) {
@@ -96,8 +103,21 @@ final class ExposureIntake {
             moved++;
             set = listed;
         }
-        String[] cols = {col(row, columns, "COUNTERPARTY"), col(row, columns, "LEGAL_ENTITY"), col(row, columns, "DESK"), col(row, columns, "TT_BOOK"),
+        String[] cols = new String[7 + levels.size()];
+        String[] fixed = {col(row, columns, "COUNTERPARTY"), col(row, columns, "LEGAL_ENTITY"), col(row, columns, "DESK"), col(row, columns, "TT_BOOK"),
             col(row, columns, "ASSET_CLASS"), col(row, columns, "PRODUCT"), col(row, columns, "SOURCE_SYSTEM")};
+        System.arraycopy(fixed, 0, cols, 0, 7);
+        for (int i = 0; i < levels.size(); i++) {
+            cols[7 + i] = col(row, columns, levels.get(i));
+            if (cols[7 + i] == null) {                                  // a column hierarchy places the trade by it: refused, never guessed
+                rejected++;
+                if (rejections.size() < LISTED) {
+                    rejections.add(ErrorCode.VAR_HIERARCHY_COLUMN.code() + " " + trade + ": " + levels.get(i) + " is empty: a hierarchy is built "
+                            + "from it, so the trade has no node");
+                }
+                return;
+            }
+        }
         String mat = col(row, columns, "MATURITY_DATE");
         double n = number(col(row, columns, "NOTIONAL"));
         String status = col(row, columns, "STATUS");
