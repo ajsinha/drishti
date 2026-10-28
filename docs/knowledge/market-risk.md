@@ -68,7 +68,7 @@ Why a bank cares:
 | <a id="term-es"></a>**ES** (expected shortfall) | The average loss on the worst days beyond a confidence level: in Drishti the mean of the 13 worst of 509 days (97.5%). It sees how bad the tail is, which VaR does not. | `VAR BANK <GO>` · `drishti.py var show BANK` |
 | <a id="term-historical-simulation"></a>**Historical simulation** | VaR from real past market moves: each of the last 509 business days' moves is applied to today's trades, and the losses are ranked. Equal weights, one-day horizon. | `SSET HS-509 <GO>` |
 | <a id="term-scenario-set"></a>**Scenario set** | The list of historical days whose moves make the scenarios (HS-509: 509 days ending the day before the business date). Position i of every P&L vector is day i. | `SSET HS-509 <GO>` |
-| <a id="term-p-l-vector"></a>**P&L vector** (profit and loss vector) | One trade's P&L under each of the 509 scenario days, priced upstream by the risk batch. Drishti adds vectors element by element; every VaR figure is read from the sum. | `PNLV PV-MX-20000274-HS-509 <GO>` |
+| <a id="term-p-l-vector"></a>**P&L vector** (profit and loss vector) | One trade's P&L under each of the 509 scenario days, priced upstream by the risk batch. Drishti adds vectors element by element; every VaR figure is read from the sum. | `PNLV PNL-MX-20000274-HS-509 <GO>` |
 | <a id="term-full-revaluation"></a>**Full revaluation** | Repricing each trade under each scenario to get its P&L, rather than approximating the P&L from sensitivities (delta, gamma, vega). The scenario set says which the batch used. | `SSET HS-509 <GO>` |
 | <a id="term-scenario-shift"></a>**Scenario shift** | How a past day's move is applied to today's market: absolute (add the 12 bp the rate moved) or relative (take off the 3% the price fell). Scenario FX is shifted too. | `SSET HS-509 <GO>` |
 | <a id="term-confidence-level"></a>**Confidence level** | How far into the tail a figure looks: 99% for VaR (the 6th worst of 509), 97.5% for ES. Exposure uses 95% and 99% for PFE. | `VAR BANK <GO>` |
@@ -100,7 +100,7 @@ Why a bank cares:
 ```text
 scenario-set  SSET HS-509          the 509 historical days, oldest first (day i is position i of every vector)
    │
-pnl-vector    PNLV PV-<trade>-HS-509   one per live trade: 509 P&Ls in USD, with the trade's LEGAL_ENTITY, DESK, TT_BOOK, COUNTERPARTY
+pnl-vector    PNLV PNL-<trade>-HS-509  one per live trade: 509 P&Ls in USD, with the trade's LEGAL_ENTITY, DESK, TT_BOOK, COUNTERPARTY
    │  TRADE_ID ───────────────────────► trade  TRD <id>            (trading pack: the deal itself)
 scenario-pv   SPV SPV-<trade>-HS-509   or (2.9.4) its 509 scenario PVs and base PV in its own currency; Drishti makes the P&L
 fx-scenario   FXS FXS-<ccy>-HS-509     each currency's rate today and under each scenario (else derived from fx-spot FX <pair>)

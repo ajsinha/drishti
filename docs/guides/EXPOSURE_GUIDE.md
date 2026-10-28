@@ -1175,6 +1175,17 @@ before 2.9.4 are `.json` and are read as they are). Each published date is also 
 (`<root>/risk-results/jsonl/<table>/<date>/<table>-v<n>.jsonl`, one row a line, one file per commit; `official.jsonl`, on by default).
 Captured after the data-load signal and once at start for the newest date.
 
+**Hierarchies (2.9.5).** The nodes are those of the hierarchies VaR builds (`drishti.var.hierarchies`, else the market-risk pack's
+`hierarchies:` block; [VAR_GUIDE.md section 15.14](VAR_GUIDE.md#1514-hierarchies-from-the-rows-or-from-the-trades-columns-as-built-295)):
+a hierarchy of the `risk-hierarchy` rows keeps its book-based scope (`BOOK:a + BOOK:b`); a hierarchy built from columns (the demo's limit
+letters `LL`, `LIMIT_LETTER > DESK`) has the root `LL~BANK` (scope `BANK`) and a node for every distinct path of its trades' values, its
+scope a rule over them (`WHERE:LIMIT_LETTER == 'LL-0003' and DESK == 'DESK-RATES'`), so a letter's EE, PFE and EPE are those of exactly
+its trades (the sets it cuts recomputed). The level columns are read from the exposure paths' rows (the pack's layout promotes
+`LIMIT_LETTER`; a column the table does not keep refuses the date, `DRS-5211`; a row without it is refused and listed) and kept per trade
+in the hot file; a rule may read them (`WHERE:LIMIT_LETTER == 'LL-0003'`), and a hierarchy's word names a node in any exposure scope
+(`LL:LL-0003`, `LL:LL-0003/DESK-RATES`). `ExposureOfficialHierarchiesTest` checks a letter's figures against the same rule and the desk it
+is alone on.
+
 ## 21. Validation, errors and data quality
 
 | Check | Rule | Outcome |
