@@ -116,9 +116,12 @@ Delta stays the default lake format everywhere; Iceberg is chosen only by config
   them on the same storage (`<root>/risk-results/jsonl/<table>/<date>/<table>-v<version>.jsonl`). On S3 each Delta commit file is an
   exclusive create (conditional PUT through drishti-lakeio), so two servers publishing at once both land. An `s3://` root no longer
   ends in `publishError` ("not a local folder"); a failed publish names the format and the table. A table keeps the format it was
-  created in (a format changed with the root not is refused in words); BI's `var-results` and `exposure-results` read an Iceberg
-  official table once their files say `plugin: iceberg` (`tools/test_contracts.py` allows an Iceberg reader of `risk-results` as the
-  Delta one: read only, computed kinds only). **Tests:** `OfficialSinkTest` (both
+  created in (a format changed with the root not is refused in words); BI's `var-results` and `exposure-results` follow the format by themselves:
+  with `….official.format: iceberg` the server reads their pack templates as `plugin: iceberg` over the official root (`engine:
+  native`, the `s3.*` of `….official.storage`), so the file generated at start says so, a file never edited follows a change of format
+  (back to Delta too) and an edited one is kept and listed in Template updates (`OfficialReaders`; `tools/test_contracts.py` allows an
+  Iceberg reader of `risk-results` as the Delta one: read only, computed kinds only). `DRISHTI_VAR_OFFICIAL_FORMAT`,
+  `DRISHTI_EXPOSURE_OFFICIAL_FORMAT`. **Test:** `OfficialReadersTest`. **Tests:** `OfficialSinkTest` (both
   formats, a restatement, six writers at once), `OfficialS3Test` (S3Mock: both formats, two writers in sequence, the exclusive create).
 - Docs (VaR, exposure and official results on Iceberg): VAR_GUIDE sections 8.4, 19 and 29.3, EXPOSURE_GUIDE section 20 and its
   settings, ICEBERG_CONNECTOR section 18, AWS_DEPLOYMENT section 22 (official results to S3), CONFIGURATION, Windows QA §6i rows 1, 2

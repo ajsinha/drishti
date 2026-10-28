@@ -893,7 +893,8 @@ server then answered `VAR BANK` (USD and EUR), a limit letter and `XPO BANK` fro
 official tables (`risk-results.var-official`, `exposure-official`, `exposure-official-cpty`) with Drishti's Iceberg engine
 (`IcebergAppender`): append commits only (`drishti.append-only=true`), `history.expire.max-snapshot-age-ms` of 7 years, every metadata
 file kept; under a folder or `s3://` (`….official.storage`, the `s3.*` settings). A reader is this connector over `domain:
-risk-results` (BI's `var-results` and `exposure-results` files switched to `plugin: iceberg`). [VAR_GUIDE.md section
+risk-results`: BI's `var-results` and `exposure-results` are generated as `plugin: iceberg` over the official root by themselves when
+the format is Iceberg (`OfficialReaders`; a file never edited follows a change of format). [VAR_GUIDE.md section
 19](../guides/VAR_GUIDE.md#19-official-end-of-day-results).
 
 ## 19. AWS: Glue, S3 Tables and the IAM they need (2.9.5)

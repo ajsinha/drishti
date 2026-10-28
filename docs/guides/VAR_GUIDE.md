@@ -2406,9 +2406,11 @@ is a folder or an object store (`s3://bucket/prefix`, with `drishti.var.official
 region, keys or the default credential chain, `s3.path-style`). The table is **append-only** either way, so nothing is ever overwritten:
 a restated date adds rows with the next `RESULT_VERSION`, and the latest version of a date is the rows with the highest. A table keeps
 the format it was created in: with the format changed and the root not, the publish is refused in words (`publishError`), so give the
-new format another root. The readers follow by their connector file: BI's `var-results` (the market-risk pack's template, `plugin:
-delta`) reads an Iceberg official table once its file in `config/connectors` says `plugin: iceberg` and `root:` the official root (an
-Iceberg reader of `risk-results` is allowed as the Delta one is: read only, computed kinds only, `tools/test_contracts.py`).
+new format another root. The readers follow by themselves: with `format: iceberg` the server reads the market-risk pack's `var-results`
+template (BI's reader, `plugin: delta` in the pack) as `plugin: iceberg` over `${drishti.var.official.root}` with `engine: native` and
+the `s3.*` settings of `drishti.var.official.storage` (`OfficialReaders`). The file generated at start says so; a file never edited
+follows when the format changes (back to Delta too); an edited file is kept and the difference listed in Admin → Connectors → Template
+updates. An Iceberg reader of `risk-results` is allowed as the Delta one is: read only, computed kinds only (`tools/test_contracts.py`).
 
 | Format | Append-only | 7 years |
 |---|---|---|
