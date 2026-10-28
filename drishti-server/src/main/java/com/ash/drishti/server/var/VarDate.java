@@ -77,6 +77,15 @@ record VarDate(LocalDate date, VarBook book, Map<String, Portfolio> portfolios, 
         return new VarDate(date, book, portfolios, version, loadedAt, loadMs, vectorMs, intake, versions, w, currency, fx, intraday);
     }
 
+    /** The same date without the warnings that begin with {@code prefix} (a condition that has passed). */
+    VarDate unwarned(String prefix) {
+        if (warnings.stream().noneMatch(w -> w.startsWith(prefix))) {
+            return this;
+        }
+        return new VarDate(date, book, portfolios, version, loadedAt, loadMs, vectorMs, intake, versions,
+                warnings.stream().filter(w -> !w.startsWith(prefix)).toList(), currency, fx, intraday);
+    }
+
     /** The input tables' versions and batch ids, as an official capture and the provenance record them (and the currency, not USD). */
     Map<String, Object> inputs() {
         Map<String, Object> m = new java.util.LinkedHashMap<>(versions);

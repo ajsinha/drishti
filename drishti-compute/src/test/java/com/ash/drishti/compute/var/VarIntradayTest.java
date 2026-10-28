@@ -294,4 +294,32 @@ class VarIntradayTest {
         assertThat(b.all().size()).isEqualTo(morning.tradeCount() - 1);
         assertThat(b.intraday().info().cancelled()).isEqualTo(1);
     }
+
+    @Test
+    void theBatchesAreListedByTheirNewestComputedAtThenIdWhateverOrderTheyWereAppliedIn() {
+        VarBook morning = build(MORNING, null);
+        T a = MORNING.get("T-31");
+        T b = MORNING.get("T-32");
+        VarIntraday.Morning exact = o -> MORNING.get(morning.tradeId(o)).pnl().clone();
+        java.util.function.Function<String, ScenarioFx.Rates> rates = x -> fx.rates(x).orElse(null);
+        List<VarIntraday.Update> ua = List.of(update(new T(a.id(), a.book(), a.pos(), a.ccy(), a.pv(), a.pnl(), false)));
+        List<VarIntraday.Update> ub = List.of(update(new T(b.id(), b.book(), b.pos(), b.ccy(), b.pv(), b.pnl(), false)));
+        // B-2 computed at 10:00, B-1 at 11:00, B-0 also at 11:00: listed B-2, B-0, B-1 however they come
+        VarBook one = VarIntraday.apply(VarIntraday.apply(morning, ub, exact, rates, Map.of("B-1", "2026-09-30T11:00:00Z", "B-0",
+                "2026-09-30T11:00:00Z"), "2026-09-30T11:00:00Z"), ua, exact, rates, Map.of("B-2", "2026-09-30T10:00:00Z"), "2026-09-30T10:00:00Z");
+        VarBook two = VarIntraday.apply(VarIntraday.apply(morning, ua, exact, rates, Map.of("B-2", "2026-09-30T10:00:00Z"), "2026-09-30T10:00:00Z"),
+                ub, exact, rates, Map.of("B-0", "2026-09-30T11:00:00Z", "B-1", "2026-09-30T11:00:00Z"), "2026-09-30T11:00:00Z");
+        Map<String, String> all = new java.util.LinkedHashMap<>();
+        all.put("B-1", "2026-09-30T11:00:00Z");
+        all.put("B-2", "2026-09-30T10:00:00Z");
+        all.put("B-0", "2026-09-30T11:00:00Z");
+        List<VarIntraday.Update> both = new java.util.ArrayList<>(ub);
+        both.addAll(ua);
+        VarBook three = VarIntraday.apply(morning, both, exact, rates, all, "2026-09-30T11:00:00Z");
+        for (VarBook x : List.of(one, two, three)) {
+            assertThat(x.intraday().info().batches()).containsExactly("B-2", "B-0", "B-1");
+            assertThat(x.intraday().info().batchCount()).isEqualTo(3);
+            assertThat(x.intraday().info().lastAt()).isEqualTo("2026-09-30T11:00:00Z");
+        }
+    }
 }

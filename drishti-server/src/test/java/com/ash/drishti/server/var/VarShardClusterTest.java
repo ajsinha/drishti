@@ -74,6 +74,8 @@ class VarShardClusterTest {
             "TRD:T1", "TRD:N1", "TRD:P1", "TRD:T3,T5", "BANK - TRD:T4");
     /** Rows of 20 scenarios as float32: 80 bytes; a target of under four rows makes each legal entity and desk a shard of its own. */
     static final String TARGET_MB = "0.0003";
+    /** Member C's node id: S1 is pinned to it, so C takes a shard when it joins whatever the hashing gives. */
+    static final String C_ID = "n-member-c";
     static NetNodes cluster;
     static Path root;
     static Path delta;
@@ -131,7 +133,7 @@ class VarShardClusterTest {
         List<String> a = common(node);
         a.addAll(List.of("--drishti.var.sharding.enabled=true", "--drishti.var.sharding.target-shard-mb=" + TARGET_MB,
                 "--drishti.var.sharding.replicas=2", "--drishti.var.sharding.stable-seconds=15", "--drishti.var.sharding.grace-seconds=3",
-                "--drishti.var.sharding.rebalance-seconds=1"));
+                "--drishti.var.sharding.rebalance-seconds=1", "--drishti.var.sharding.pins.S1=" + C_ID));
         return a;
     }
 
@@ -155,6 +157,9 @@ class VarShardClusterTest {
         NetNodes.folder(root.resolve("a/net"), p[0], List.of(), List.of(), List.of());
         NetNodes.folder(root.resolve("b/net"), p[1], List.of(), List.of(), List.of(p[0]));
         NetNodes.folder(root.resolve("c/net"), p[2], List.of(), List.of(), List.of(p[0], p[1]));
+        // C's id fixed and S1 pinned to it (sharded()): node ids are random, and with three members and two owners a shard C owns none of
+        // the two shards about one run in nine, which the join test could not tell from a handover that never happened
+        Files.writeString(root.resolve("c/net/node.yaml"), "node-id: " + C_ID + "\n", java.nio.file.StandardOpenOption.APPEND);
         for (String n : List.of("ref", "a", "b", "c")) {
             connectors(root.resolve(n), "delta", delta);
         }
@@ -438,6 +443,7 @@ class VarShardClusterTest {
             cluster.node(n).bean(VarOfficial.class).onLoad("pnl-vector", DAY);
             cluster.node(n).bean(VarOfficial.class).onLoad("scenario-pv", DAY);
         }
+        converged(List.of("B-I1", "B-I2"));
         sameAsOneServer(INTRADAY_SCOPES, "intraday batches");
         assertThat(get(url("a") + "/api/v1/var/scope?" + q("TRD:N1", "USD")).path("var").asDouble()).as("the new trade counts").isNotZero();
         // the official record of the day (the morning run, every node of every hierarchy) is the same rows on a member and on one server
@@ -513,6 +519,38 @@ class VarShardClusterTest {
             }
         })).as("the member left owns S0 once the membership settled").isTrue();
         assertThat(back[0]).isEqualTo(expect);
+    }
+
+    /**
+     * Waits as a client would until every server answers with the day's batches: the provenance of the bank (a node: its aggregate) and of
+     * a set summed from the shards' rows, in USD and in EUR, lists {@code batches}. A member whose signal was a full run (the batches were
+     * all applied by the signal before) puts the date together again meanwhile; no fixed sleep.
+     */
+    static void converged(List<String> batches) throws Exception {
+        List<String> nodes = new ArrayList<>(List.of("ref"));
+        nodes.addAll(MEMBERS);
+        String[] last = {""};
+        boolean done = NetNodes.await(60_000, () -> {
+            for (String n : nodes) {
+                for (String ccy : List.of("USD", "EUR")) {
+                    for (String scope : List.of("BANK", "BANK - TRD:T4")) {
+                        try {
+                            HttpResponse<String> r = call(url(n), "/api/v1/var/scope?" + q(scope, ccy));
+                            JsonNode got = r.statusCode() == 200 ? JSON.readTree(r.body()).at("/provenance/intraday/batches") : null;
+                            if (got == null || !got.toString().equals(JSON.valueToTree(batches).toString())) {
+                                last[0] = n + " " + scope + " in " + ccy + ": " + r.statusCode() + " " + got;
+                                return false;
+                            }
+                        } catch (Exception e) {
+                            last[0] = n + ": " + e;
+                            return false;
+                        }
+                    }
+                }
+            }
+            return true;
+        });
+        assertThat(done).as("every server answers with the batches " + batches + "; last seen " + last[0]).isTrue();
     }
 
     /** Switches a node's risk lake to {@code plugin} at {@code lake} and waits until the day is read from it. */

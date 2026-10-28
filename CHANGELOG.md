@@ -64,6 +64,24 @@
   `ShardedMeasure`), VaR its first measure. Docs: [VAR_SHARDING.md](docs/architecture/VAR_SHARDING.md), VAR_GUIDE.md section 28,
   DRISHTI_NET.md, NET.md, CONFIGURATION.md, TROUBLESHOOTING.md, TOOLS.md, CLI_GUIDE.md. Open: an Admin → Health "Shards" panel (mock-ups
   first).
+- **Fixed (drill): a reporting currency could keep answering without the day's intraday updates.** The official capture reads every
+  currency as the morning run; when it built a currency first (it runs after a full-run data-load signal) its morning book became
+  everyone's book in that currency until the date was dropped (`intraday: null`, the morning figures); a batch applied while a currency was
+  being built was lost the same way. On one server as on a member (the drill's `VarShardClusterTest`: member A's `BANK - TRD:T4` in EUR, 5
+  positions and VaR 802 against 6 and 1,268). Now a currency keeps its morning run per date and data version and every answer puts the
+  USD date's layer on it as the USD date holds it then (applied incrementally per batch as before). A date whose updates cannot be read is
+  answered with a warning saying so, never silently from the morning run. `VarIntradayApiTest` reproduces it on one server;
+  `VarShardClusterTest` now waits, as a client would, until every server's answers list the batches in USD and EUR. VAR_GUIDE.md sections
+  8.4 and 28, VAR_SHARDING.md sections 7 and 12.
+- **Fixed (drill): the intraday batches are listed in one stable order.** `intraday.batches` followed the order the signals applied them
+  in, so one server and a member (or two runs) could list `["B-I2","B-I1"]` and `["B-I1","B-I2"]`. Now everywhere (the answers'
+  `intraday`, the provenance, `drishti.py var intraday`, the data-load signal's log): by each batch's newest `COMPUTED_AT`, then by
+  `BATCH_ID`, oldest first, the newest 20; `batchCount` counts every batch applied (`VarIntraday.BATCH_ORDER`, `VarIntradayTest`).
+- **Fixed (drill): `POST /api/v1/var/partial` and `POST /api/v1/var/shards/drain` are in `token-never`** (`TokenScopeGuardTest`): the
+  first is the members' signed channel made as the caller (like `/compute/peer/**`), the second an administrator's action (like
+  `/var/reload`). API_GUIDE.md, VAR_SHARDING.md section 10.
+- **Test: `VarShardClusterTest`'s join no longer depends on the random node ids.** With three members and two owners per shard the third
+  member owned neither shard about one run in nine (seen once in five runs); its node id is now fixed and S1 pinned to it.
 
 ## 2.9.5 — Iceberg as a full alternative to Delta; VaR hierarchies by columns (limit letters); connector files that upgrade themselves safely (2026-10-28)
 

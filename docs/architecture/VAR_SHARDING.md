@@ -164,6 +164,24 @@ So there is never a moment when a shard in use has no ready holder: the old owne
 other way round. An intraday batch changes no shard: the morning shard books stay, and each member applies the day's updates on the date
 it put together.
 
+**Convergence after a batch (2.9.6 drill finding).** A member never answers from data older than what it has read, and says so when it
+cannot read the updates:
+
+- The intraday layer is read by each member from the lake on its own data-load signal, never from a peer's skeleton, so peers still on the
+  morning shard books cannot make a member's layer stale: the skeletons and shard books are the morning run on every member.
+- When a member's signal is a full run (its earlier signal already applied every batch part, so the second finds none new and reloads, as
+  one server does), it puts the date together again at the new data version; its owners build the shards at that version, and the other
+  members put their dates together again once the old version is no longer announced (step 3 above).
+- A reporting currency keeps its **morning run** per date and data version; each answer puts the USD date's intraday layer on it as the USD
+  date holds it then (VAR_GUIDE.md section 8.4). Before this fix the official capture, which reads every currency as the morning run and
+  runs after a full-run signal, could store its morning EUR book as the member's EUR book: the member then answered EUR without the day's
+  updates (`intraday: null`) until the date was dropped. `VarShardClusterTest` saw it under load on one member
+  (`BANK - TRD:T4 in EUR`: 5 positions, VaR 802 against 6 and 1,268); `VarIntradayApiTest` reproduces it on one server, every time.
+- A date whose updates cannot be read is answered from its morning run with a warning on every answer, until the next signal reads them.
+- How a client knows a member has the batches: `provenance.intraday.batches` (and `batchCount`, `lastAt`) on any answer, in each
+  currency; the batches are listed in one order on every member (by each batch's newest `COMPUTED_AT`, then `BATCH_ID`), whatever order
+  the signals applied them in.
+
 ## 8. Failure cases
 
 | Case | What happens |
@@ -217,6 +235,12 @@ Sharding needs the tiered memory (`drishti.var.tier.mode: mapped`, the default).
 | `POST /api/v1/var/partial` | members only (signed) | a shard's part of a set summed here |
 | `GET /api/v1/var/shards/skeleton?date=&ccy=&shard=&map=&digest=` | members only (signed) | a shard's skeleton |
 
+**API tokens** (`drishti.security.token-never` in application.yaml, TOKEN_SCOPES in API_GUIDE.md): both `POST`s are never open to a
+personal API token. `/partial` reads data, but it is not a read `POST` for a token (`token-read-posts`): it is the members' own channel,
+signed with the cluster key and made with the caller's on-behalf-of token (the owner applies the caller's rights again), like
+`/compute/peer/**`; opening it to tokens would only add a door to that channel. `/shards/drain` is an administrator's action (the console,
+the CLI, a task's stop hook signed in as an administrator), like `/var/reload`. `GET /api/v1/var/shards` reads as any `GET`.
+
 `drishti.py var shards [--date D] [--json]` prints the same; `--drain` and `--undrain` (administrators). No new screen: a proposed Admin →
 Health "Shards" panel is an open item (mock-ups first).
 
@@ -242,12 +266,14 @@ owners, announced and held ready for the grace period). The draining member leav
 | `VarShardClusterTest` | three real members and one reference server in one JVM (the next section) |
 
 **The equality evidence** (`VarShardClusterTest`): the limit-letter fixture of `VarFormatEqualityTest` (two legal entities and desks, five
-trades with letters, five scenario-PV trades in four currencies, 20 scenarios) cut into two shards with two owners each. For 13 scopes (the
+trades with letters, five scenario-PV trades in four currencies, 20 scenarios) cut into two shards with two owners each (S1 pinned to
+the third member, so it takes a shard when it joins: with random node ids it would own neither about one run in nine). For 13 scopes (the
 bank, desks, a book, both legal entities, the limit letters and a letter's desk node, a trade, a basket of trades in both shards, the bank
 minus a trade, a desk plus a trade) in USD and EUR, the headline (VaR, ES, the tail, limit use, diversification), every child's
 contribution, a page of the P&L path and the MGMT tree of every member equal the reference server's **to the cent** on Delta, with two
 members, then with three, and on Iceberg; an intraday batch (an amendment, a cancel, a new trade, a scenario-PV update in EUR) applied live
-equals the reference for ten scopes; the official record of the day has the same figures. While the third member joins and takes its
+equals the reference for ten scopes, once every server's answers list both batches in USD and EUR (the test polls the provenance as a
+client would, no fixed sleep); the official record of the day has the same figures. While the third member joins and takes its
 shards, 2 scopes are asked on two members every 300 ms: no request fails or differs. A partial with another data version is refused (409,
 `DRS-5216`), an unsigned one too (401). With one owner of a shard stopped its replica answers; with both stopped a scope needing it answers
 `503 DRS-5215` (the bank, a node, still answers its aggregate); 15 s later the member left owns the shard and answers the reference's numbers.

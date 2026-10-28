@@ -345,4 +345,19 @@ class VarIntradayApiTest {
             assertThat(again.vector()[j]).isCloseTo(vb[j], within(0.005));
         }
     }
+
+    @Test
+    @Order(6)
+    void theOfficialCaptureReadingAReportingCurrencyNeverPinsEveryoneElseToTheMorningRun() throws Exception {
+        // the official capture reads each currency as the morning run (morningOnly); its EUR book must not become everyone's EUR book
+        svc.reload(MANY);
+        VarDate morningEur = svc.morningOnly(() -> svc.date(MANY, "EUR"));
+        assertThat(morningEur.book().intraday()).as("the capture reads the morning run").isNull();
+        VarDate live = svc.date(MANY);
+        assertThat(live.book().intraday()).isNotNull();
+        VarDate eur = svc.date(MANY, "EUR");
+        assertThat(eur.book().intraday()).as("EUR after an official capture read it: still with the day's updates").isNotNull();
+        assertThat(eur.book().intraday().info().trades()).isEqualTo(live.book().intraday().info().trades());
+        assertThat(ask("/api/v1/var/scope", "BANK", MANY, "EUR").at("/intraday/trades").asInt()).isEqualTo(live.book().intraday().info().trades());
+    }
 }

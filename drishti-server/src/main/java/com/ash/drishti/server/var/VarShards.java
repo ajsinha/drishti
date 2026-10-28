@@ -223,7 +223,7 @@ final class VarShards implements AutoCloseable {
             return loader.withIntraday(vd, loader.readIntraday(date, book, Set.of(), sum), book.scenarioDates());
         } catch (RuntimeException e) {
             LOG.warn("VaR: the intraday updates of {} could not be read: {}", date, e.getMessage());
-            return vd;
+            return vd.warned(VarLoader.intradayUnread(date, e));       // said on every answer, never a silent morning run
         }
     }
 

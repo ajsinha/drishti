@@ -563,9 +563,18 @@ final class VarLoader {
             return withIntraday(vd, readIntraday(date, book, java.util.Set.of(), sum), book.scenarioDates());
         } catch (RuntimeException e) {
             org.slf4j.LoggerFactory.getLogger(VarLoader.class).warn("VaR: the intraday updates of {} could not be read: {}", date, e.getMessage());
-            return vd;
+            return vd.warned(intradayUnread(date, e));                 // said on every answer, never a silent morning run
         }
     }
+
+    /** The warning of a date answered without its intraday updates because they could not be read (the next data-load signal reads them). */
+    static String intradayUnread(LocalDate date, RuntimeException e) {
+        return INTRADAY_UNREAD + date + " could not be read (" + e.getMessage() + "): the morning run alone is answered until the next data-load "
+                + "signal of the date reads them";
+    }
+
+    /** The start of {@link #intradayUnread}'s warning: dropped once a signal has read the updates. */
+    static final String INTRADAY_UNREAD = "the intraday updates of ";
 
     // ---------------------------------------------------------------------------------------------------------------- intraday
 
@@ -590,17 +599,15 @@ final class VarLoader {
 
     /** Applies updates (USD) on a USD book: each trade's difference into its book, its nodes and the per-trade-currency totals. */
     VarBook apply(LocalDate date, VarBook book, List<VarIntradayRows.Row> rows, List<LocalDate> days, VarIntake.Summary sum) {
-        java.util.Set<String> batches = new java.util.LinkedHashSet<>();
         String last = null;
         List<com.ash.drishti.compute.var.VarIntraday.Update> ups = new ArrayList<>();
         for (VarIntradayRows.Row r : rows) {
-            batches.add(r.batchId());
             last = VarIntradayRows.compare(r.computedAt(), last) > 0 ? r.computedAt() : last;
             ups.add(r.usd());
         }
         com.ash.drishti.compute.var.ScenarioFx fx = fx(date, days);
         return com.ash.drishti.compute.var.VarIntraday.apply(book, ups, exact(date, book.morning(), sum, days), c -> fx.rates(c).orElse(null),
-                List.copyOf(batches), last);
+                VarIntradayRows.batchAt(rows), last);
     }
 
     /**

@@ -73,6 +73,9 @@ public final class VarService implements AutoCloseable {
     private final Map<LocalDate, CompletableFuture<VarDate>> dates = new ConcurrentHashMap<>();
     /** The dates in other reporting currencies, built from the USD date when first asked: {@code <date>|<CCY>|<version>}. */
     private final Map<String, CompletableFuture<VarDate>> inCurrency = new ConcurrentHashMap<>();
+    /** A currency's book with the day's updates, per {@link #inCurrency} key: the USD layer it was built from and the book. */
+    private record Layered(VarIntradayRows source, VarDate date) {}
+    private final Map<String, Layered> layered = new ConcurrentHashMap<>();
     private final VarCurrencies currencies;
     /**
      * The listed currencies built ahead after a date's USD book loads (VAR_GUIDE.md section 15.11): one at a time, on one low-priority
@@ -156,13 +159,34 @@ public final class VarService implements AutoCloseable {
         return s != null && s.on();
     }
 
-    /** A date's book in a reporting currency: converted on this server, or (sharded) put together from its shards' books in it. */
-    private VarDate convert(VarDate usd, String c) {
+    /**
+     * A date's morning run in a reporting currency: converted on this server, or (sharded) put together from its shards' books in it. The day's
+     * updates are applied on it for each USD intraday layer ({@link #layered}), never baked into it.
+     */
+    private VarDate convertMorning(VarDate usd, String c) {
         if (!sharded() || !usd.book().morning().sharded()) {
-            return currencies.convert(usd, c);
+            return currencies.convertMorning(usd, c);
         }
-        VarDate out = shards.convert(usd, c);
-        return usd.intraday() == null || usd.intraday().isEmpty() ? out : currencies.apply(out, usd, usd.intraday().rows());
+        return shards.convert(usd, c);
+    }
+
+    /**
+     * A reporting currency's morning run with the USD date's intraday layer on it: kept per USD layer (the {@link VarIntradayRows} the USD
+     * date holds, by identity), so an answer in a currency is always the USD date's layer as it is now, whichever thread built or asked
+     * it first (an official capture reads the morning run; a batch applied while a currency was being built).
+     */
+    private VarDate layered(String key, VarDate morning, VarDate usd) {
+        VarIntradayRows rows = usd.intraday();
+        if (rows == null || rows.isEmpty()) {
+            return morning;
+        }
+        Layered l = layered.get(key);
+        if (l != null && l.source() == rows && l.date().book().morning() == morning.book()) {
+            return l.date();
+        }
+        VarDate out = currencies.apply(morning, usd, rows.rows());
+        layered.put(key, new Layered(rows, out));
+        return out;
     }
 
     ParallelSums sums() {
@@ -173,6 +197,12 @@ public final class VarService implements AutoCloseable {
 
     /** The date a request reads: the one asked when it has vectors, else the newest on or before it. */
     VarDate date(LocalDate asked) {
+        VarDate vd = live(asked);
+        return MORNING.get() ? vd.morning() : vd;
+    }
+
+    /** The date asked (or the newest before it) with its intraday layer, whatever the thread. */
+    private VarDate live(LocalDate asked) {
         if (!props.enabled()) {
             throw new DrishtiException(ErrorCode.FORBIDDEN, "the VaR engine is switched off on this server (drishti.var.enabled)");
         }
@@ -181,8 +211,7 @@ public final class VarService implements AutoCloseable {
             throw new DrishtiException(ErrorCode.ENTITY_NOT_FOUND, "no P&L vectors in any connector (kind " + props.kinds().vector()
                     + "): build the demo lake (drishti.py lake demo) or point the market-risk pack's risk-store at your lake");
         }
-        VarDate vd = load(asked == null || asked.isAfter(latest) ? latest : asked, 0);
-        return MORNING.get() ? vd.morning() : vd;
+        return load(asked == null || asked.isAfter(latest) ? latest : asked, 0);
     }
 
     /** True on a thread computing the official records: every date read without its intraday layer (VAR_GUIDE.md section 8.4). */
@@ -201,16 +230,18 @@ public final class VarService implements AutoCloseable {
 
     /**
      * The date a request reads in a reporting currency (VAR_GUIDE.md section 15.10): USD is the date as loaded; another currency is built
-     * from it the first time it is asked and kept with it (dropped when the date is). The answered date's warnings come with it.
+     * from it the first time it is asked and kept with it (dropped when the date is). The answered date's warnings come with it. What is
+     * kept is the currency's morning run; the USD date's intraday layer is applied on it as the USD date holds it now ({@link #layered}),
+     * so the official capture (which reads the morning run) never leaves a currency without the day's updates for everyone else.
      */
     VarDate date(LocalDate asked, String ccy) {
         String c = VarCurrencies.normalise(ccy);
-        VarDate usd = date(asked);
+        VarDate usd = live(asked);
         if (c.equals(VarDate.USD)) {
-            return usd;
+            return MORNING.get() ? usd.morning() : usd;
         }
         String key = usd.date() + "|" + c + "|" + usd.version();
-        CompletableFuture<VarDate> f = inCurrency.computeIfAbsent(key, k -> CompletableFuture.supplyAsync(() -> convert(usd, c)));
+        CompletableFuture<VarDate> f = inCurrency.computeIfAbsent(key, k -> CompletableFuture.supplyAsync(() -> convertMorning(usd, c)));
         VarDate vd;
         try {
             vd = f.join();
@@ -221,10 +252,11 @@ public final class VarService implements AutoCloseable {
             }
             throw new DrishtiException(ErrorCode.SOURCE_FAILED, "the VaR data of " + usd.date() + " in " + c + " could not be built: " + e.getCause());
         }
+        vd = MORNING.get() ? vd : layered(key, vd, usd);
         for (String w : usd.warnings()) {
             vd = vd.warned(w);
         }
-        return MORNING.get() ? vd.morning() : vd;
+        return vd;
     }
 
     /**
@@ -325,7 +357,7 @@ public final class VarService implements AutoCloseable {
         long t0 = System.nanoTime();
         aheadState.put(state, "building");
         try {
-            VarDate vd = convert(usd, c);
+            VarDate vd = convertMorning(usd, c);
             mine.complete(vd);
             long ms = (System.nanoTime() - t0) / 1_000_000;
             long bytes = vd.book().hot() == null ? 0 : sizeOf(vd.book().hot().file());
@@ -420,8 +452,19 @@ public final class VarService implements AutoCloseable {
             VarIntradayRows rows = vd.intraday() == null ? new VarIntradayRows().morning(null, vd.intake().batchIds()) : vd.intraday().copy();
             rows.rejected(why);
             dates.put(d, CompletableFuture.completedFuture(vd.withBook(vd.book(), rows)));
+            relabel(d, vd.intraday(), rows);
         } finally {
             lock.unlock();
+        }
+    }
+
+    /** The currencies' books built on the USD layer {@code from} now stand on {@code to}: the same updates, only its labels changed. */
+    private void relabel(LocalDate d, VarIntradayRows from, VarIntradayRows to) {
+        for (String k : new ArrayList<>(layered.keySet())) {
+            Layered l = layered.get(k);
+            if (k.startsWith(d + "|") && l != null && from != null && l.source() == from) {
+                layered.put(k, new Layered(to, l.date().withBook(l.date().book(), to)));
+            }
         }
     }
 
@@ -476,22 +519,25 @@ public final class VarService implements AutoCloseable {
                     fresh.add(r);
                 }
             }
-            java.util.List<String> batches = fresh.stream().map(VarIntradayRows.Row::batchId).distinct().toList();
+            java.util.List<String> batches = VarIntradayRows.batchAt(fresh).entrySet().stream()      // the order the answers list them in
+                    .sorted(com.ash.drishti.compute.var.VarIntraday.BATCH_ORDER).map(Map.Entry::getKey).toList();
             if (fresh.isEmpty()) {
                 if (!next.parts().equals(state.parts())) {
                     dates.put(d, CompletableFuture.completedFuture(usd.withBook(usd.book(), next)));
+                    relabel(d, state, next);
                 }
                 return new IntradayResult("none", 0, 0, batches, "no update newer than what is applied");
             }
             VarBook nb = loader.apply(d, usd.book(), fresh, usd.book().scenarioDates(), usd.intake());
-            VarDate nvd = usd.withBook(nb, next);
+            VarDate nvd = usd.withBook(nb, next).unwarned(VarLoader.INTRADAY_UNREAD);   // read now: no longer the morning run alone
             dates.put(d, CompletableFuture.completedFuture(nvd));
-            for (String k : new ArrayList<>(inCurrency.keySet())) {          // the reporting currencies follow: only those trades reconverted
-                if (k.startsWith(d + "|")) {
-                    CompletableFuture<VarDate> cf = inCurrency.get(k);
-                    if (cf != null && cf.isDone() && !cf.isCompletedExceptionally()) {
-                        VarDate cur = cf.join();
-                        inCurrency.put(k, CompletableFuture.completedFuture(currencies.apply(cur, nvd, fresh)));
+            for (String k : new ArrayList<>(layered.keySet())) {             // the reporting currencies follow: only those trades reconverted
+                Layered l = layered.get(k);
+                if (k.startsWith(d + "|") && l != null) {
+                    if (l.source() == state) {
+                        layered.put(k, new Layered(next, currencies.apply(l.date(), nvd, fresh)));
+                    } else {
+                        layered.remove(k, l);                               // built from another layer: built again from this one when asked
                     }
                 }
             }
@@ -540,6 +586,7 @@ public final class VarService implements AutoCloseable {
 
     /** The date's books in other currencies leave memory with it (or with a new version of its inputs). */
     private void retireCurrencies(LocalDate d) {
+        layered.keySet().removeIf(k -> d == null || k.startsWith(d + "|"));        // they share the morning books retired below
         for (String k : new ArrayList<>(inCurrency.keySet())) {
             if (d == null || k.startsWith(d + "|")) {
                 retire(inCurrency.remove(k), false);
