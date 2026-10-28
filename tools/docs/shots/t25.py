@@ -172,6 +172,27 @@ def reporting_currency(c: Ctx):
     c.page.evaluate("sessionStorage.removeItem('drishti.var.ccy')")
 
 
+@shot("14-limit-letters.jpg")
+def limit_letters(c: Ctx):
+    """Step 14 (2.9.5): the hierarchy select on Limit letters, the letter LL-0011 (part of BOOK-RATES-1) chosen: the tree of letters and
+    desks with their limit bars."""
+    open_var(c, "/var?scope=LL:LL-0011&hierarchy=LL")
+    painted(c, "LL:LL-0011")
+    c.until("document.querySelectorAll('.vx-tree .vx-row[data-scope^=\"NODE:LL~LL-\"]').length > 3", 60)
+    c.page.wait_for_timeout(600)
+    c.save("14-limit-letters.jpg")
+
+
+@shot("15-letter-desks.jpg")
+def letter_desks(c: Ctx):
+    """Step 14: the letter's contributions by its desks (each a node LL~LL-0011/DESK-...)."""
+    open_var(c, "/var?scope=LL:LL-0011&hierarchy=LL")
+    painted(c, "LL:LL-0011")
+    tab(c, "contrib")
+    c.until("document.querySelectorAll('[data-vx-ctable] tbody tr[data-scope]').length > 0")
+    c.save("15-letter-desks.jpg", locator=".vx-main")
+
+
 @shot("13-intraday.jpg")
 def intraday(c: Ctx):
     """Step 13: the stand-in pricing system's intraday batches (tools/pvgen/intraday.py) appended to the shot lake and signalled; the

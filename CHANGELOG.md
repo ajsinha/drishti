@@ -32,7 +32,7 @@
     `limits: var-limit`; a node without a row shows no limit (never zero); a row naming no node is said (`DRS-5212`).
   - **Refusals:** a source that does not keep a level column refuses the date (`DRS-5211`, naming the kind and the column); a row with
     it empty is refused and listed; a bad configuration `DRS-5213`; a tree of a hierarchy the date lacks `DRS-5214`.
-  - **Official records** of every configured hierarchy (VaR: 158 nodes on the test data), the membership lines with `{"row": "cell"}`;
+  - **Official records** of every configured hierarchy (VaR: 131 nodes on the test data, 88 + 43), the membership lines with `{"row": "cell"}`;
     exposure's official nodes for a column hierarchy are rules over the trades' values.
   - **The explorer:** the hierarchy selector lists the date's hierarchies by title (the tree's `hierarchyInfo`), the choice kept in the
     link (`hierarchy=LL`), an unknown one shows MGMT with a note; `VAR LL LL-0003` and the search find letters.

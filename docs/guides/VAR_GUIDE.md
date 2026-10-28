@@ -2200,8 +2200,8 @@ the test data has none.)
 
 ### 15.15 `var-limit`: the nodes' VaR limits (AS BUILT, 2.9.5)
 
-**Grain:** one row per node with a limit and business date. **Key:** `LIMIT_ID` = `VL-<NODE_ID>`. **Row count:** 158 in the test data
-(the 70 nodes of LL but two letter-desk nodes left without one, and the 88 MGMT and LEGAL nodes with their rows' `LIMIT_VAR`). Read for the
+**Grain:** one row per node with a limit and business date. **Key:** `LIMIT_ID` = `VL-<NODE_ID>`. **Row count:** 129 in the test data
+(41: the 43 nodes of LL but two letter-desk nodes left without one, and the 88 MGMT and LEGAL nodes with their rows' `LIMIT_VAR`). Read for the
 hierarchies whose `limits` names the kind (`drishti.var.kinds.limit`, `var-limit`); JSON Lines, one row a line.
 
 | Column | JSON | Delta | Req. | Meaning | Example |
@@ -2355,7 +2355,7 @@ digest).
 
 **Official end-of-day captures (as built).** When a date's inputs are complete (the date loads as one run, with trades and hierarchy
 nodes), the server captures **every node of every hierarchy** (MGMT and LEGAL; 88 nodes in the test data) as the **official** record,
-as the server itself (every node at positions level; since 2.9.5 every **configured** hierarchy, the limit letters' too: 158 nodes in the
+as the server itself (every node at positions level; since 2.9.5 every **configured** hierarchy, the limit letters' too: 131 nodes in the
 test data, [section 15.14](#1514-hierarchies-from-the-rows-or-from-the-trades-columns-as-built-295)): after the data-load signal of an input kind ([section 15.8](#158-cadence-delivery-and-the-load-signal)),
 at start for the newest date without a record (`drishti.var.official.on-start`), and by an administrator (`POST /official`,
 `drishti.py var official --capture`). One capture runs at a time, in the background (`VarOfficial`, its own thread); a date captured
@@ -2606,7 +2606,7 @@ about 200 positions over 60 dates, about 21 MB compressed).
 
 ```bash
 python3 tools/drishti.py lake demo --as-of data \
-  --only market-risk/pnl-vector,market-risk/scenario-pv,market-risk/fx-scenario,market-risk/scenario-set,market-risk/risk-hierarchy,market-risk/portfolio
+  --only market-risk/pnl-vector,market-risk/scenario-pv,market-risk/fx-scenario,market-risk/scenario-set,market-risk/risk-hierarchy,market-risk/portfolio,market-risk/var-limit
 ```
 
 `--as-of data` keeps the test data's own date (2026-09-30), so the numbers are this guide's; `--as-of today` (the default) moves the
