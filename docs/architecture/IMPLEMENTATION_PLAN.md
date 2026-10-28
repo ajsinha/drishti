@@ -632,19 +632,26 @@ Build, test and close 2.9.5 (drill, main, tag) first; only the editions design d
 |---|---|---|
 | 0 | The parallel lake loader | **built (2026-10-28)**: a config-driven, multi-threaded Java loader of JSON Lines (folder or S3) into Delta or Iceberg, memory bounded by `memory.budget-mb`, one commit per business date, shard-aligned files and a load manifest for item 2; `lake build --engine java` ([PARALLEL_LOADER.md](PARALLEL_LOADER.md)). Measured at 10K positions; the 2.3M load is estimated at 1 to 5 minutes, to be measured with item 3 |
 | 1 | Editions | one setting, `drishti.edition`, bundling packs, allowed commands, menus and features, Home, help, Admin and branding (the logo and the about 26 hard-coded literals); `var-engine` first; a design doc, EDITIONS.md under docs/architecture (to be written) |
-| 2 | Scale-out | several servers as one cluster; VaR sharded (a map-reduce of vectors); consoles without sticky sessions. Target (product owner): many small ECS Fargate tasks each owning a shard of books, auto-sharding and rebalancing, all reading the same Delta or Iceberg lake on S3; any task coordinates and sums the partial vectors; a hot file per shard on its own EBS; replicas auto-scale, Fargate Spot for read replicas. Cost options compared in the BMO deck: A (ECS on EC2 capacity), B (Fargate), C (sharded Fargate) |
-| 3 | The 2.3M-position benchmark | on a real server (the local machine stays at 10K trades), with exposure sizing; needs the product owner's server |
+| 2 | Scale-out | **VaR sharding built (2026-10-28)**, measure-agnostic machinery ([VAR_SHARDING.md](VAR_SHARDING.md)); several servers as one cluster; VaR sharded (a map-reduce of vectors); consoles without sticky sessions. Target (product owner): many small ECS Fargate tasks each owning a shard of books, auto-sharding and rebalancing, all reading the same Delta or Iceberg lake on S3; any task coordinates and sums the partial vectors; a hot file per shard on its own EBS; replicas auto-scale, Fargate Spot for read replicas. Cost options compared in the BMO deck: A (ECS on EC2 capacity), B (Fargate), C (sharded Fargate) |
+| 3 | The scale benchmark | no server for 2.3M (product owner, 2026-10-28): measured locally at **200K positions and 1,500 portfolios**, single server and a 3-node sharded cluster, Python and Java loaders; 2.3M extrapolated and labelled so |
 | 4 | Screenshots | the about 271 pictures still showing the old top bar |
 | 5 | Delta <-> Iceberg conversion | table conversion between the formats (deferred from 2.9.5) |
 | 6 | Stressed and 10-day VaR, ES backtests | |
 | 7 | The data map's 11 findings | joins that do not hold (2.9.3) |
 | 8 | Test data from seeds | approved; the plan is [TESTDATA_FROM_SEEDS_PLAN.md](TESTDATA_FROM_SEEDS_PLAN.md) |
-| 9 | Glue and S3 Tables live runs | `deploy/aws/iceberg/check-glue.sh` with AWS credentials (the product owner's) |
+| 9 | Glue and S3 Tables | the code completed and tested on simulators where they exist, with a runbook; the live runs once the product owner's AWS credentials arrive |
 | 10 | In-place Delta schema evolution | add a nullable promoted column to an existing Delta table without rewriting it (old files read as null), with an optional backfill from the `doc` column; tested on both formats and in the upgrade drill. Both VaR decks carry a Delta-vs-Iceberg slide and a *when the data's structure changes* section |
 | 11 | Plain tables and Unity Catalog | reading plain tables (no `doc` column), driven by per-table configuration; Delta through Unity Catalog (`catalog.schema.table`, credential vending, UC permissions) as an opt-in per connector ([EXTERNAL_LAKES.md](../guides/EXTERNAL_LAKES.md)) |
-| 12 | The docs audit's other contradictions | the ones in areas 2.9.4 and 2.9.5 did not touch, left for 2.9.6 by the product owner (2026-10-28) |
+| 12 | Documentation consolidation | **done (2026-10-28)**: the audit's 20 contradictions fixed from the code; one home per topic (178 to 152 active documents, help 64 to 59 pages); obsolete designs deleted, not archived (git keeps them) |
 
-Items 3 and 9 need the product owner (a real server; AWS credentials).
+Item 9's live runs need the product owner's AWS credentials.
+
+## 2.9.7 (future, product owner 2026-10-28; not started)
+
+| # | Part | What |
+|---|---|---|
+| 1 | The Risk edition | **Drishti Risk**, a one-stop shop to manage risk: VaR, exposure, liquidity and climate risk and more, fully clustered and scalable (each measure sharded on the 2.9.6 machinery by its own unit). Exposure joins here (kept out of the 2.9.6 VaR edition); liquidity and climate risk measures need their own designs first |
+| 2 | A client-side renderer | a distributable JS/CSS library that paints Drishti screens from the server's ViewModel JSON (`/api/v1/views/...` and its patch stream), so other applications render them while the Drishti backend stays in one place; one renderer (the console moves onto it), the 20 panel kinds ported from the Jinja macros with parity tests; revisits ADR-021 for Elements |
 
 ## Known gaps
 
