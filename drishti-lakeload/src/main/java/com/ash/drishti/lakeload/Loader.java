@@ -433,8 +433,9 @@ final class Loader {
     }
 
     /**
-     * The heap a load really uses, for the summary: the used heap sampled every 20 ms (its largest value), and the sum of the heap pools'
-     * own peaks (an upper bound: the pools peak at different moments).
+     * The heap a load really uses, for the summary: the used heap sampled every 20 ms (its largest value, garbage not yet collected
+     * included), the largest heap left after a collection (what the load really held: the live rows, buffers and runs), and the sum of
+     * the heap pools' own peaks (an upper bound: the pools peak at different moments).
      */
     static final class HeapWatch implements AutoCloseable {
         private final LoadReport report;
@@ -452,10 +453,21 @@ final class Loader {
             timer.scheduleAtFixedRate(this::sample, 0, 20, java.util.concurrent.TimeUnit.MILLISECONDS);
         }
 
+        private volatile long live;
+
         private void sample() {
             long used = bean.getHeapMemoryUsage().getUsed();
             if (used > peak) {
                 peak = used;
+            }
+            long afterGc = 0;
+            for (java.lang.management.MemoryPoolMXBean p : java.lang.management.ManagementFactory.getMemoryPoolMXBeans()) {
+                if (p.getType() == java.lang.management.MemoryType.HEAP && p.getCollectionUsage() != null) {
+                    afterGc += p.getCollectionUsage().getUsed();
+                }
+            }
+            if (afterGc > live) {
+                live = afterGc;
             }
         }
 
@@ -470,6 +482,7 @@ final class Loader {
                 }
             }
             report.peakHeapBytes = peak;
+            report.peakLiveBytes = live;
             report.heapPoolPeaksBytes = pools;
         }
     }

@@ -68,7 +68,8 @@ final class RowParser {
 
     private static final Pattern YMD = Pattern.compile("^(\\d{4})(\\d{2})(\\d{2})$");
     private static final Pattern STEP = Pattern.compile("([^.\\[\\]]+)|\\[(\\d+)]");
-    private static final JsonFactory JSON = JsonFactory.builder().enable(JsonReadFeature.ALLOW_NON_NUMERIC_NUMBERS).build();
+    private static final JsonFactory JSON = JsonFactory.builder().enable(JsonReadFeature.ALLOW_NON_NUMERIC_NUMBERS)
+            .enable(com.fasterxml.jackson.core.StreamReadFeature.USE_FAST_DOUBLE_PARSER).build();     // numbers to doubles several times faster, exactly
 
     private final RowPlan plan;
     private final Node root = new Node();

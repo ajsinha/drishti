@@ -61,7 +61,7 @@ class LakeLoadTest {
         }
         ByteArrayOutputStream said = new ByteArrayOutputStream();
         int code = LakeLoad.run(args.toArray(new String[0]), new PrintStream(said, true, StandardCharsets.UTF_8));
-        JsonNode s = JSON.readTree(summary.toFile());
+        JsonNode s = Files.size(summary) == 0 ? JSON.createObjectNode() : JSON.readTree(summary.toFile());   // none: a refused configuration
         ((com.fasterxml.jackson.databind.node.ObjectNode) s).put("exit", code).put("said", said.toString(StandardCharsets.UTF_8));
         return s;
     }

@@ -67,6 +67,7 @@ final class LoadReport {
     long spillEstimate;
     long peakHeapBytes;
     long heapPoolPeaksBytes;
+    long peakLiveBytes;
     final Map<String, Long> rejectsByReason = new LinkedHashMap<>();
     final List<ObjectNode> firstRejects = new ArrayList<>();
     final Map<String, Long> rowsByDate = new TreeMap<>();
@@ -308,7 +309,7 @@ final class LoadReport {
         ObjectNode memory = s.putObject("memory");
         memory.put("maxHeapMb", Runtime.getRuntime().maxMemory() / 1048576).put("budgetMb", mem.budget() / 1048576)
                 .put("queueMb", mem.queueBytes() / 1048576).put("sortBufferMb", mem.sortBytes() / 1048576).put("writersMb", mem.writeBytes() / 1048576)
-                .put("peakHeapUsedMb", peakHeapBytes / 1048576).put("heapPoolPeaksMb", heapPoolPeaksBytes / 1048576)
+                .put("peakHeapUsedMb", peakHeapBytes / 1048576).put("peakHeapAfterGcMb", peakLiveBytes / 1048576).put("heapPoolPeaksMb", heapPoolPeaksBytes / 1048576)
                 .put("spillEstimateMb", spillEstimate / 1048576);
         Meter sp = meters.get("sortSpill");
         memory.put("spilledMb", sp == null ? 0 : sp.bytesOut.sum() / 1048576);
