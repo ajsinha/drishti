@@ -571,7 +571,9 @@ Every setting is under `drishti.ccr.exposure` in `application.yaml` (and [CONFIG
 | `access.<role>[<counterparty, group or legal entity>]` | `{}` | `trades`, `aggregate` or `none` ([section 9](#9-who-sees-what-entitlements-and-audit)) |
 | `official.enabled` | `true` (`DRISHTI_EXPOSURE_OFFICIAL`) | capture every set, counterparty, group and node when a date's run is complete |
 | `official.publish` | `true` | also append to `<root>/risk-results/exposure-official` and `-cpty` |
-| `official.root` | `${DRISHTI_DELTA_ROOT}` | the risk lake's root (an `s3://` root is not published by this writer) |
+| `official.root` | `${DRISHTI_DELTA_ROOT}` | the root of the published tables: a folder or `s3://bucket/prefix` (2.9.5; before, an `s3://` root ended in `publishError`) |
+| `official.format` | `delta` | `delta` (Drishti's lake writer) or `iceberg` (Drishti's Iceberg engine), 2.9.5 |
+| `official.storage` | none | the `s3.*` settings for an `s3://` root (`s3.region`, `s3.endpoint`, keys or the default credential chain, `s3.path-style`) |
 | `official.retention-years` | `7` | the published tables keep their log and removed files this long |
 | `official.on-start` | `true` | at start, capture the newest date when it has no official record |
 | `official.jsonl` | `true` | also write each published date as JSON Lines beside the tables (`<root>/risk-results/jsonl/<table>/<date>/<table>-v<n>.jsonl`) |
@@ -1174,6 +1176,20 @@ every scope's figures and profile; every trade's EE contribution per primary dat
 before 2.9.4 are `.json` and are read as they are). Each published date is also written as JSON Lines beside the tables
 (`<root>/risk-results/jsonl/<table>/<date>/<table>-v<n>.jsonl`, one row a line, one file per commit; `official.jsonl`, on by default).
 Captured after the data-load signal and once at start for the newest date.
+
+**Delta or Iceberg, a folder or S3 (2.9.5).** Both tables are written through the same `OfficialSink` as VaR's
+([VAR_GUIDE.md section 19](VAR_GUIDE.md#19-official-end-of-day-results)): Delta by default, Iceberg with
+`drishti.ccr.exposure.official.format: iceberg`, under a folder or an `s3://` root (`drishti.ccr.exposure.official.storage`). Either way
+append-only and 7 years: Delta `delta.appendOnly` and its log retention, Iceberg append commits with
+`history.expire.max-snapshot-age-ms` of 2,557 days and every metadata file kept; on S3 each Delta commit file is an exclusive create.
+The JSON Lines go beside the tables on the same storage; `<n>` is the Delta version or the Iceberg sequence number. A failed publish
+names the format and the table in `publishError`. A table keeps the format it was created in (another format needs another root), and
+BI's `exposure-results` connector reads an Iceberg official table once its file says `plugin: iceberg` and the official root.
+
+**Exposure from an Iceberg CCR lake (2.9.5).** `simulation-run` and `exposure-path` may live in Iceberg (`build_demo_lakes.py --store
+risk=iceberg` switches `exposure-store.yaml` with the market-risk pack's `risk-store.yaml`): the same day on Delta and on Iceberg gives
+EE, PFE, EPE, the profiles, the contributions and the official records equal to the cent (`ExposureFormatEqualityTest`). Exposure has
+one reporting currency, so there is no second one to compare.
 
 **Hierarchies (2.9.5).** The nodes are those of the hierarchies VaR builds (`drishti.var.hierarchies`, else the market-risk pack's
 `hierarchies:` block; [VAR_GUIDE.md section 15.14](VAR_GUIDE.md#1514-hierarchies-from-the-rows-or-from-the-trades-columns-as-built-295)):

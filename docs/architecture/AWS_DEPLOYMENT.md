@@ -781,3 +781,28 @@ connector file (`plugin: iceberg`; [ICEBERG_CONNECTOR.md section 19](../connecto
    (`--keep` keeps them). Exit 0 means Glue works end to end; the steps are printed from `target/glue-live-report.txt`.
 4. S3 Tables: create a table bucket, then `check-glue.sh --s3-tables arn:aws:s3tables:<region>:<account>:bucket/<name>`. **Not run in
    2.9.5** (no account; the time box went to the code); the result of the product owner's run is recorded in the CHANGELOG.
+
+**Official results to S3 (2.9.5).** The official VaR and exposure tables (`risk-results/var-official`, `exposure-official`,
+`exposure-official-cpty`) and their JSON Lines can be written straight to the bucket, in Delta (the default) or Iceberg, by the server
+that captures them; before 2.9.5 an `s3://` root ended in `publishError`. In the server's settings:
+
+```yaml
+drishti:
+  var:
+    official:
+      root: s3://LAKE_BUCKET/risk          # tables at s3://LAKE_BUCKET/risk/risk-results/<table>
+      format: delta                        # or iceberg
+      storage: { s3.region: us-east-1 }    # no keys: the task role through the default credential chain
+  ccr:
+    exposure:
+      official:
+        root: s3://LAKE_BUCKET/risk
+        format: delta
+        storage: { s3.region: us-east-1 }
+```
+
+The task role needs `s3:GetObject`, `s3:PutObject` and `s3:ListBucket` on that prefix (no delete: the tables are append-only). A Delta
+commit file is an exclusive create (`If-None-Match: *`, proved by `check-conditional-writes.sh`), so two servers publishing at once both
+land, the second on the next version; an Iceberg table commits by the conditional create of its next metadata file. The lifecycle rules
+(`setup-lifecycle.sh`) tier the data files and never touch `_delta_log/` or `metadata/`; nothing expires inside the 7 years. Tested on
+S3Mock in process (`OfficialS3Test`); not yet run against a real bucket.

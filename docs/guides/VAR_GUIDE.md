@@ -1032,7 +1032,9 @@ pricing system ──► PV topic (each message's value JSONL text: one or more 
 | a null, non-numeric or infinite value, the wrong length, no `BASE_PV` | rejected, `DRS-5206` or `DRS-5201`, with its place; never filled with zero |
 
 The window's rows are written with the trades' table layout of the loaded pack and announced as a data load of the kind (one signal a
-window). The lake is the record: a restart rebuilds the layer from the lake, and the stream reading the topic again writes nothing it
+window). The window goes to the lake in the lake's own format (2.9.5): one Delta commit on a Delta risk lake, as before, or, when the
+kind's table is an Iceberg table (`<lake>/risk/<kind>/metadata`, no `_delta_log`), one Iceberg append (`LakeAppends`: nothing replaced,
+the vector as `list<double>`); either way the intraday layer applies it the same ([section 29.3](#293-how-the-lake-tools-and-the-delta-plugin-carry-a-vector-as-built)). The lake is the record: a restart rebuilds the layer from the lake, and the stream reading the topic again writes nothing it
 already holds.
 
 **The message.** A message's value is **JSONL text**, UTF-8: one or more PV records, one JSON object a line, each exactly a row of the
@@ -2378,7 +2380,7 @@ every version, and nothing deletes them. `VarOfficialStore` serves the node hist
 | A node's official capture | `var/captures/official/<CAP-id>.json` | the capture document of [section 6](#6-captures-and-compare) with `official: true`, `owner: drishti`, `node`, `resultVersion`, `hypoPnl`, the components (the 50 largest; `componentCount` says how many there were), the worst 25, the vector (whole units), `membership` (the date's membership record), `memberCount`, `membershipHash`, `inputs`, `provenance`. No member list of its own: `CAPTURE:<id>` resolves the node's trades from the membership record |
 | The date's record | `var/official/<YYYY-MM-DD>.json` | `businessDate`, `resultVersion`, `computedAt`, `contractVersion`, `inputs` (versions, batch ids, rules digest), `positionRules`, `membership`, `published` or `publishError`, and `nodes`: per node `captureId`, `hierarchy`, `level`, `name`, `parent`, `var`, `es`, `hypoPnl`, `limit`, `limitUse`, `sumStandalone`, `diversification`, `trades`, `positions`, `exceptions250`, `light`. A restatement writes a new version of it (the store keeps the old) |
 | The date's membership | `var/official/<YYYY-MM-DD>-membership-v<n>.jsonl` | JSON Lines (2.9.4): a header line (the position rules' text and digest, trade and position counts), then every derived position with its trades and book, and each node's books, one a line. With a hierarchy built from columns (2.9.5) also one `{"row": "cell", cell, book, values, positions}` a cell, and a column node lists its cells as its `books` (`CAPTURE:<id>` of such a node reads its cells' positions). Records written before 2.9.4 are `.json`, one document, read as they are |
-| The published rows as JSON Lines | `<root>/risk-results/jsonl/var-official/<date>/var-official-v<n>.jsonl` (a file, beside the Delta table) | the rows of each publish commit, one a line (`drishti.var.official.jsonl`, on by default) |
+| The published rows as JSON Lines | `<root>/risk-results/jsonl/var-official/<date>/var-official-v<n>.jsonl` (a file beside the official table, on the same storage: a folder or `s3://`; `<n>` the Delta version or the Iceberg sequence number of the commit) | the rows of each publish commit, one a line (`drishti.var.official.jsonl`, on by default) |
 
 The rates desk's entry in the official record of 2026-09-30:
 
@@ -2395,15 +2397,37 @@ who sees every node. The backtest of a record counts exceptions over the officia
 ([README.md section 11](../contracts/README.md#11-what-drishti-answers-computed-kinds-the-api-captures)). These are the numbers of record:
 each can be recomputed from its inputs (the same vectors, the same engine version) at any later date.
 
-**Published official results (as built; decided 2026-10-25).** Each official capture run is also appended to
-`${DRISHTI_DELTA_ROOT}/risk-results/var-official/` (`drishti.var.official.root`) for other systems, by Drishti's own lake writer
-(`VarPublisher`), one Delta commit per run: one row per node of `MGMT` and `LEGAL` per business date and result version. The table is
-created **append-only** (`delta.appendOnly`) with 7 years of log and removed files (`delta.logRetentionDuration`,
-`delta.deletedFileRetentionDuration`: `interval 2557 days`), so nothing is ever overwritten: a restated date adds rows with the next
-`RESULT_VERSION`, and the latest version of a date is the rows with the highest. No engine reads it (a guard test,
+**Published official results (as built; decided 2026-10-25; Iceberg and S3 in 2.9.5).** Each official capture run is also appended to
+`<root>/risk-results/var-official/` (`drishti.var.official.root`, by default `${DRISHTI_DELTA_ROOT}`) for other systems, by
+`VarPublisher` through an `OfficialSink`, one commit per run: one row per node of every hierarchy per business date and result version.
+The format is **Delta by default** (`drishti.var.official.format: delta`, Drishti's own lake writer) or **Iceberg**
+(`drishti.var.official.format: iceberg`, Drishti's Iceberg engine; the table `risk-results.var-official` under the root), and the root
+is a folder or an object store (`s3://bucket/prefix`, with `drishti.var.official.storage` holding the `s3.*` settings: endpoint,
+region, keys or the default credential chain, `s3.path-style`). The table is **append-only** either way, so nothing is ever overwritten:
+a restated date adds rows with the next `RESULT_VERSION`, and the latest version of a date is the rows with the highest. A table keeps
+the format it was created in: with the format changed and the root not, the publish is refused in words (`publishError`), so give the
+new format another root. The readers follow by their connector file: BI's `var-results` (the market-risk pack's template, `plugin:
+delta`) reads an Iceberg official table once its file in `config/connectors` says `plugin: iceberg` and `root:` the official root (an
+Iceberg reader of `risk-results` is allowed as the Delta one is: read only, computed kinds only, `tools/test_contracts.py`).
+
+| Format | Append-only | 7 years |
+|---|---|---|
+| Delta | `delta.appendOnly=true`; each commit file on S3 an exclusive create (a conditional PUT through drishti-lakeio), so two servers publishing at once both land, the second on the next version | `delta.logRetentionDuration`, `delta.deletedFileRetentionDuration`: `interval 2557 days` |
+| Iceberg | append commits only; `drishti.append-only=true` on the table | `history.expire.max-snapshot-age-ms` of 2,557 days; `write.metadata.delete-after-commit.enabled=false` (every metadata file kept) |
+
+```yaml
+drishti:
+  var:
+    official:
+      root: s3://bank-risk-lake/prod          # the table: s3://bank-risk-lake/prod/risk-results/var-official
+      format: iceberg                         # delta (the default) or iceberg
+      storage:                                # the s3.* settings of the connectors (ICEBERG_CONNECTOR.md, DELTA_CONNECTOR.md)
+        s3.region: us-east-1                  # no keys: the default AWS credential chain (an instance or task role)
+``` No engine reads it (a guard test,
 `tools/test_contracts.py`, fails the build when a connector other than a read-only Delta connector of computed kinds, such as BI's
-`var-results`, points at `risk-results`, or when a reactive connector reads or triggers on those kinds). A publish that fails (an `s3://` root, a disk)
-is recorded in the date's record (`publishError`) and logged; the capture stands.
+`var-results`, points at `risk-results`, or when a reactive connector reads or triggers on those kinds). A publish that fails (storage refused, a disk)
+is recorded in the date's record (`publishError`, naming the format and the table) and logged; the capture stands. Before 2.9.5 an
+`s3://` root always ended in `publishError` (the writer took local folders only): it is published now.
 
 | Column | Type | Meaning |
 |---|---|---|
@@ -3228,7 +3252,7 @@ the whole bank's vectors as 10 GB of JSON a date, usable for a few desk-level ar
 | the test data | the vector stays a JSON array of numbers in the JSON Lines (P&Ls in whole units); the generator writes the kinds deterministically and lists them in `testdata.yaml` ([section 22](#22-test-data-and-generators)) |
 | `tools/lake/stage.py`, `tools/lake/writers.py`, `tools/lake/build.py` | `lake build --vector` and both writers write a vector column as `list<double>` (pyarrow `pa.list_(pa.float64())` for the `deltalake` engine; type `vector` in Drishti's Java `LakeWriter`), the document keeping `{"$vector": "PNL"}` (the vector not stored twice); Snappy and default encodings (no `BYTE_STREAM_SPLIT` yet) |
 | the Delta plugin (`DeltaTable`, `DeltaSourcePlugin`) | streams a date's vectors (`SourcePlugin.vectors`, `VectorSink`, through `SourceRouter.vectors`) one buffer per read, reused for every row, so a date of millions of vectors is never held there; puts a vector back into a fetched document, so a page shows the P&L path unchanged; reading goes through Delta Kernel's own list reader (no custom fast path yet) |
-| Iceberg (`--store iceberg`) | **not built for VaR.** `lake build --store iceberg` writes the same `list<double>` column, but the engine cannot read VaR or exposure inputs from Iceberg today: only the Delta plugin implements `SourcePlugin.vectors()`, and the Iceberg plugin also lacks `documents()`, `tableIdentity()`, `inventory()` and `refreshVersions()`. Keep the risk tables on Delta; the product owner will decide when to build the Iceberg side |
+| Iceberg (`--store iceberg`) | **built in 2.9.5.** `lake build --format iceberg` and `build_demo_lakes.py --store risk=iceberg` write the same `list<double>` column; the Iceberg plugin implements `vectors()`, `documents()`, `tableIdentity()`, `inventory()` and `refreshVersions()`, so VaR and exposure read their inputs from an Iceberg risk lake as from Delta. The same day on both formats gives VaR, ES, component VaR, the limit-letter nodes, intraday and the official records equal to the cent in USD and EUR (`VarFormatEqualityTest`), exposure too (`ExposureFormatEqualityTest`). Delta stays the default |
 | the data pattern | unchanged ([DEMO_DATA.md](../connectors/DEMO_DATA.md)): `data/testdata/<domain>/<kind>/*.jsonl.gz` → `lake demo` (`tools/lake/demo.py`, each day with `lake build`) → Delta → the connector `risk-store`, with `DRISHTI_LAKE_ENABLED` as for every pack and the demo connector off; in production the bank's batch writes Parquet or JSON Lines and the loader (`lake build`, `lake publish`) builds the same tables |
 | tests | a vector round trip (JSON Lines → Delta → `double[]` → document) equal to the bit: `DeltaVectorColumnTest`, `tools/lake/test_vectors.py` |
 

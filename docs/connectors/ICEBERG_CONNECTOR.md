@@ -879,6 +879,23 @@ data files of those dates and both still answer). A document cache that another 
 10 minutes while reads go on without it. A purge of the connector's caches (Admin → Caches) empties both. Admin → Caches shows `idMapsMappedFromDisk`,
 `idMapsReadFromLake`, `docsOnDiskMB`, `docsOnDiskHits` and `docsOnDiskMisses`.
 
+**VaR and exposure on an Iceberg risk lake.** With the risk domain in Iceberg (`build_demo_lakes.py --store risk=iceberg` switches the
+market-risk pack's `risk-store.yaml` and the counterparty-risk pack's `exposure-store.yaml` together), the engines read P&L vectors,
+scenario PVs, the hierarchy, limits and the exposure paths through this connector. The same day on Delta and on Iceberg, written from
+the same lines and read by one connector switched from `plugin: delta` to `plugin: iceberg`, gives VaR, ES, component and incremental
+VaR, the limit-letter nodes, intraday and the official records equal to the cent in USD and EUR (`VarFormatEqualityTest`), and EE, PFE,
+EPE, profiles and contributions equal to the cent (`ExposureFormatEqualityTest`). Intraday batches are **Iceberg appends**: a file
+batch appended to the table (one commit, nothing replaced) is applied live after its data-load signal, and the Kafka PV stream writes
+each window to an Iceberg table as one append (`LakeAppends`). Run on the demo data: 14 risk tables (955,124 rows) moved in 579 s; the
+server then answered `VAR BANK` (USD and EUR), a limit letter and `XPO BANK` from Iceberg.
+
+**Official results in Iceberg.** `drishti.var.official.format: iceberg` and `drishti.ccr.exposure.official.format: iceberg` write the
+official tables (`risk-results.var-official`, `exposure-official`, `exposure-official-cpty`) with Drishti's Iceberg engine
+(`IcebergAppender`): append commits only (`drishti.append-only=true`), `history.expire.max-snapshot-age-ms` of 7 years, every metadata
+file kept; under a folder or `s3://` (`….official.storage`, the `s3.*` settings). A reader is this connector over `domain:
+risk-results` (BI's `var-results` and `exposure-results` files switched to `plugin: iceberg`). [VAR_GUIDE.md section
+19](../guides/VAR_GUIDE.md#19-official-end-of-day-results).
+
 ## 19. AWS: Glue, S3 Tables and the IAM they need (2.9.5)
 
 **AWS Glue.** The Glue Iceberg REST endpoint is `https://glue.<region>.amazonaws.com/iceberg`, the warehouse the account id (the Glue

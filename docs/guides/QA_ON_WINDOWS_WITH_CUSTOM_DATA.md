@@ -759,14 +759,16 @@ Delta stays the default for every table. These checks put the **risk domain** in
 
 | # | Do | You should see |
 |---|---|---|
-| 1 | `…\.venv\Scripts\python.exe tools\build_demo_lakes.py --only market-risk --store risk=iceberg` | lines `risk/pnl-vector into Iceberg` (and the other risk tables), then `Risk domain: iceberg …\data\iceberg\risk; risk-store: now reads iceberg` |
-| 2 | **Admin → Connectors** | `risk-store` with plugin **iceberg**; **Admin → Health**: `risk-store` `UP` |
+| 1 | `…\.venv\Scripts\python.exe tools\build_demo_lakes.py --only market-risk --store risk=iceberg` | lines `risk/pnl-vector into Iceberg` (and the other risk tables), then `Risk domain: iceberg …\data\iceberg\risk; risk-store: now reads iceberg …; exposure-store: now reads iceberg …` |
+| 2 | **Admin → Connectors** | `risk-store` and `exposure-store` with plugin **iceberg**; **Admin → Health**: both `UP` |
 | 3 | **Admin → Packs → market-risk → Data source → Test connection** on `risk-store` | each business date of `pnl-vector` with the same number of positions as before the switch (read from Iceberg's id maps) |
 | 4 | Open a P&L vector row (Search `pnl-vector`, any position) | its `PNL` array of 509 numbers, a missing value shown empty, never 0 |
 | 5 | Restart the server, open the same position again | it opens at once: its id map and document come from `data\cache\risk-store\` (Admin → Caches: `idMapsMappedFromDisk` above 0) |
 | 6 | `tools\drishti.py lake build --from data\testdata\market-risk\pnl-vector\cob-2026-09-30.part-001.jsonl.gz --pack config\packs\market-risk --connector risk-store --kind pnl-vector --lake data\iceberg --domain scratch --format iceberg` | a summary with `format: iceberg` and no rejects; `data\iceberg\scratch\pnl-vector\metadata` exists |
 | 7 | **Admin → Lakes**, with `data\iceberg` among the console's lake roots (`lakes.roots`) | the table `scratch/pnl-vector` with **Format** Iceberg; tick it, **Dry run**: *would expire snapshots older than 168 h; would remove 0 orphan file(s)* |
-| 8 | `…\python.exe tools\build_demo_lakes.py --only market-risk --store risk=delta` | `risk-store: now reads delta`; Admin → Connectors shows `risk-store` as delta again, with the same counts as in row 3 |
+| 8 | Before row 9, with the risk domain still in Iceberg: `VAR BANK <GO>`, then `VAR BANK EUR <GO>`, `VAR LL:` and any limit letter, and `XPO BANK <GO>`; write down VaR, ES, a letter's VaR and EPE | figures on every page, the provenance's inputs saying `risk-store` (VaR) and `exposure-store` (exposure) |
+| 9 | `…\python.exe tools\build_demo_lakes.py --only market-risk --store risk=delta` | `risk-store: now reads delta`, `exposure-store: now reads delta`; Admin → Connectors shows both as delta again, with the same counts as in row 3; the pages of row 8 show the **same figures to the cent** |
+| 10 | Optional, official results in Iceberg: add `drishti.var.official.format: iceberg` and `drishti.var.official.root: <the project>\data\official-iceberg` to the server's settings (an official table keeps its format: the Delta one under `data\delta` would refuse it), restart, then `…\python.exe tools\drishti.py var official --capture` (an administrator's token) | a date already captured with the same inputs says *unchanged* (nothing published again); one whose inputs changed since (rows 1 to 9 moved them) says *restated*, its record *published … (Iceberg sequence number N)*; `data\official-iceberg\risk-results\var-official\metadata` exists and the JSON Lines are in `data\official-iceberg\risk-results\jsonl\var-official\<date>\` |
 
 **Upgrading from 2.9.4: your connector files (2.9.5).** Start the new server on your existing `config\connectors` folder: nothing to do
 by hand. Before it answers, each file you never edited is replaced by the pack's new template (the file before stays beside it as

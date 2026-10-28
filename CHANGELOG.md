@@ -100,6 +100,29 @@ Delta stays the default lake format everywhere; Iceberg is chosen only by config
   name `s3tables`): the code is written, **not run**, deferred to the product owner's run.
 - Docs: ICEBERG_CONNECTOR sections 18–19, DRISHTI_ICEBERG section 16, LAKE_MAINTENANCE section 8, AWS_DEPLOYMENT section 22,
   CONFIGURATION, USER_GUIDE (Admin → Lakes), Windows QA §6i.
+- **VaR and exposure on an Iceberg risk lake, equal to Delta to the cent.** The same day written from the very same lines to a Delta
+  lake and to an Iceberg lake, read by one connector switched from `plugin: delta` to `plugin: iceberg`, gives the same VaR, ES,
+  component and incremental VaR, worst scenarios, limits and limit-letter nodes, in USD and in EUR, and the same EE, PFE, EPE, profiles
+  and contributions. Intraday works on Iceberg too: file batches appended to an Iceberg table apply live as on Delta, and the Kafka PV
+  stream's windows go to an Iceberg risk lake as one Iceberg append each (`LakeAppends`; on Delta, as before). `--store risk=iceberg`
+  now also switches the counterparty-risk pack's `exposure-store.yaml` (it reads `simulation-run` and `exposure-path`, both in the risk
+  domain: before, exposure lost its tables once they were moved). Run for real on the demo data: 14 risk tables, 955,124 rows, in
+  Iceberg in 579 s; a server on that lake answered `VAR BANK` (USD 124,948,241; EUR 111,265,495), the limit letter `LL:LL-0003` and
+  `XPO BANK` from Iceberg and published its official records. **Tests:** `VarFormatEqualityTest`, `ExposureFormatEqualityTest`, `LakeAppendsTest`, `test_stores.py`.
+- **Official results to Delta or Iceberg, in a folder or on `s3://`.** `drishti.var.official.format` and
+  `drishti.ccr.exposure.official.format` (`delta`, the default, or `iceberg`) with `….official.storage` (the `s3.*` settings). The
+  official tables stay append-only (Delta: `delta.appendOnly`; Iceberg: append commits only, `drishti.append-only=true`), keep seven
+  years of history (Delta log retention; Iceberg `history.expire.max-snapshot-age-ms`, metadata files kept), and the JSON Lines beside
+  them on the same storage (`<root>/risk-results/jsonl/<table>/<date>/<table>-v<version>.jsonl`). On S3 each Delta commit file is an
+  exclusive create (conditional PUT through drishti-lakeio), so two servers publishing at once both land. An `s3://` root no longer
+  ends in `publishError` ("not a local folder"); a failed publish names the format and the table. A table keeps the format it was
+  created in (a format changed with the root not is refused in words); BI's `var-results` and `exposure-results` read an Iceberg
+  official table once their files say `plugin: iceberg` (`tools/test_contracts.py` allows an Iceberg reader of `risk-results` as the
+  Delta one: read only, computed kinds only). **Tests:** `OfficialSinkTest` (both
+  formats, a restatement, six writers at once), `OfficialS3Test` (S3Mock: both formats, two writers in sequence, the exclusive create).
+- Docs (VaR, exposure and official results on Iceberg): VAR_GUIDE sections 8.4, 19 and 29.3, EXPOSURE_GUIDE section 20 and its
+  settings, ICEBERG_CONNECTOR section 18, AWS_DEPLOYMENT section 22 (official results to S3), CONFIGURATION, Windows QA §6i rows 1, 2
+  and 8 to 10.
 
 ## 2.9.4 — VaR from scenario PVs or P&L, by trade or position, in any currency, intraday from files and Kafka; JSON Lines as the data standard; the decks rewritten (2026-10-27)
 
