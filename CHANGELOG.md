@@ -30,8 +30,11 @@
   Hot file format 3 (the `CELL` section) only for a date with cells; the hierarchies' configuration is in the hot file's digest.
   - **Limits:** the new dated kind `var-limit` (`VLIM`, JSONL; `HIERARCHY`, `NODE_ID`, `LIMIT_VAR` in USD) for a hierarchy whose
     `limits: var-limit`; a node without a row shows no limit (never zero); a row naming no node is said (`DRS-5212`).
-  - **Refusals:** a source that does not keep a level column refuses the date (`DRS-5211`, naming the kind and the column); a row with
-    it empty is refused and listed; a bad configuration `DRS-5213`; a tree of a hierarchy the date lacks `DRS-5214`.
+  - **Data without the column (product owner, 2026-10-28):** a source that does not keep a level column (P&L vectors or exposure paths
+    written before the letters) **skips that hierarchy alone**: the date, MGMT, LEGAL, exposure and the official captures answer as
+    before, and a `DRS-5211` warning names the hierarchy, the column, the kind and the fix, in the provenance, Admin → Health (*Hierarchy
+    skipped*) and the log; its tree answers `DRS-5214` with the reason and the explorer lists it disabled. A row that leaves the column
+    empty is still refused and listed; a bad configuration `DRS-5213`. `HierarchyColumnMissingTest`, `HierarchyUpgradeWithoutLettersTest`.
   - **Official records** of every configured hierarchy (VaR: 131 nodes on the test data, 88 + 43), the membership lines with `{"row": "cell"}`;
     exposure's official nodes for a column hierarchy are rules over the trades' values.
   - **The explorer:** the hierarchy selector lists the date's hierarchies by title (the tree's `hierarchyInfo`), the choice kept in the

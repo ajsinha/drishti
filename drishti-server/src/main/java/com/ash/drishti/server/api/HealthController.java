@@ -172,6 +172,8 @@ public class HealthController {
         out.put("tmp", com.ash.drishti.common.TempFiles.info());
         out.put("externalLib", com.ash.drishti.common.ExternalLib.info());
         out.put("sources", sources);
+        // 2.9.5: a hierarchy the VaR or exposure engine skipped (its level column not in the source): "var LL" to why (DRS-5211, a warning)
+        out.put("hierarchiesSkipped", com.ash.drishti.server.var.Hierarchies.skipped());
         Map<String, Object> identityPool = PoolReport.identity(identityDataSource.getIfAvailable(), identity.sqlite()).map(com.ash.drishti.api.pool.PoolStats::toMap).orElse(null);
         out.put("identityPool", identityPool);                        // the identity database's pool (SQLite: embedded, exempt)
         if (PoolReport.needsAttention(identityPool)) {

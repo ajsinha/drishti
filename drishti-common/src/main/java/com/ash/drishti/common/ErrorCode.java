@@ -148,8 +148,9 @@ public enum ErrorCode {
     VAR_INPUT_MIXED("DRS-5210", 422),
     /**
      * VaR and exposure (2.9.5): a hierarchy built from columns ({@code drishti.var.hierarchies}, a pack's {@code hierarchies:}) names a
-     * level column a source does not keep (the date is refused, naming the source kind and the column), or a row leaves it empty (the
-     * row is refused and listed, never placed under a guessed node).
+     * level column a source does not keep: that hierarchy alone is skipped, a warning naming it, the column, the kind and the fix (the date,
+     * the other hierarchies and the official capture go on); or a row leaves the column empty: the row is refused and listed, never placed
+     * under a guessed node.
      */
     VAR_HIERARCHY_COLUMN("DRS-5211", 422),
     /** VaR (2.9.5): a {@code var-limit} row names a node no hierarchy of the date has: a warning in the provenance, the row unused. */

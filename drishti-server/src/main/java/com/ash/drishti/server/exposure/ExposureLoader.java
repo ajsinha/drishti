@@ -75,11 +75,34 @@ final class ExposureLoader {
     }
 
     com.ash.drishti.server.var.Hierarchies hierarchies() {
+        com.ash.drishti.server.var.Hierarchies all;
         try {
-            return hierarchies.get();
+            all = hierarchies.get();
         } catch (RuntimeException e) {
             return com.ash.drishti.server.var.Hierarchies.defaults();
         }
+        // a column hierarchy whose level column the paths' table does not keep is skipped, said (DRS-5211 as a warning); the rest load
+        if (all.columnSpecs().isEmpty()) {
+            skipped = Map.of();
+            return all;
+        }
+        Map<String, String> why = all.missingColumns(Map.of(props.kinds().paths(), router.columnar(props.kinds().paths())), "");
+        for (com.ash.drishti.compute.var.HierarchySpec s : all.columnSpecs()) {
+            com.ash.drishti.server.var.Hierarchies.skipped("exposure", s.id(), why.get(s.id()));
+        }
+        if (!why.equals(skipped)) {
+            why.values().forEach(w -> org.slf4j.LoggerFactory.getLogger(ExposureLoader.class).warn("exposure: {}", w));
+        }
+        skipped = why;
+        return all.without(why.keySet());
+    }
+
+    /** The column hierarchies skipped now (their level column not in the paths' table), id to why (2.9.5). */
+    private volatile Map<String, String> skipped = Map.of();
+
+    Map<String, String> skipped() {
+        hierarchies();
+        return skipped;
     }
 
     /** The configured hierarchies (the column ones' words name nodes in a scope). */
@@ -179,14 +202,7 @@ final class ExposureLoader {
         ExposureIntake intake = new ExposureIntake(b, grid, date, text(run, "RUN_ID"), text(run, "BATCH_ID"), ref.memberOf, props.t0Tolerance())
                 .levels(levels);
         List<String> columns = columns();
-        java.util.Set<String> kept = router.columnar(props.kinds().paths());
-        for (String c : levels) {
-            if (!kept.isEmpty() && !kept.contains(c)) {
-                throw new DrishtiException(ErrorCode.VAR_HIERARCHY_COLUMN, "the exposure paths of " + date + " are not loaded: a hierarchy is built "
-                        + "from the column " + c + ", which " + props.kinds().paths() + " does not keep (add it to the connector's layout."
-                        + props.kinds().paths() + ".columns, and to the rows)");
-            }
-        }
+
         boolean read;
         try {
             read = router.vectors(props.kinds().paths(), "MTM", columns, asOf, (id, values, len, row) -> intake.row(id, values, len, row, columns));

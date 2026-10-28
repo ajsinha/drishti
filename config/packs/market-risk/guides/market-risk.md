@@ -436,7 +436,7 @@ P&L vector of a trade
 | `DIVISION` | id |  | required |  | `DIV-MARKETS` |  | — |
 | `DESK` | id |  | required |  | `DESK-EQD` (pattern `^DESK-`) | `desk` | Desk: the desk it refers to |
 | `TT_BOOK` | id |  | required |  | `BOOK-EQD-2` (pattern `^BOOK-`) | `book` | Book: the book it refers to |
-| `LIMIT_LETTER` | text |  | optional |  | `LL-0003` |  | The limit letter (2.9.5): the letter of authority the record's VaR limit is granted under. A hierarchy may be built from it (the market-risk pack's LL, LIMIT_LETTER > DESK, VAR_GUIDE.md section 16): when one is, every row carries it (a row without it is refused, DRS-5211). Per row, so a letter may hold part of a book. |
+| `LIMIT_LETTER` | text |  | optional |  | `LL-0003` |  | The limit letter (2.9.5): the letter of authority the record's VaR limit is granted under. A hierarchy may be built from it (the market-risk pack's LL, LIMIT_LETTER > DESK, VAR_GUIDE.md section 16): when one is, every row carries it (a row that leaves it empty is refused, DRS-5211; a table without the column skips that hierarchy alone, with a DRS-5211 warning, and the rest loads). Per row, so a letter may hold part of a book. |
 | `PORTFOLIO` | id |  | required |  | `BOOK-EQD-2` (pattern `^BOOK-`) | `book` | Portfolio: the book it refers to |
 | `STRATEGY` | unknown |  | optional |  |  |  | — |
 | `PRODUCT_GROUP` | text |  | required |  | `Commodity`, `Equity`, `FX`, `Securities financing` |  | — |
@@ -493,7 +493,7 @@ A trade's present value under each historical scenario and its base PV of the sa
 | `DIVISION` | id |  | required |  | `DIV-MARKETS` |  | — |
 | `DESK` | id |  | required |  | `DESK-COMM` (pattern `^DESK-`) | `desk` | Desk: the desk it refers to |
 | `TT_BOOK` | id |  | required |  | `BOOK-COMM-1` (pattern `^BOOK-`) | `book` | Book: the book it refers to |
-| `LIMIT_LETTER` | text |  | optional |  | `LL-0003` |  | The limit letter (2.9.5): the letter of authority the record's VaR limit is granted under. A hierarchy may be built from it (the market-risk pack's LL, LIMIT_LETTER > DESK, VAR_GUIDE.md section 16): when one is, every row carries it (a row without it is refused, DRS-5211). Per row, so a letter may hold part of a book. |
+| `LIMIT_LETTER` | text |  | optional |  | `LL-0003` |  | The limit letter (2.9.5): the letter of authority the record's VaR limit is granted under. A hierarchy may be built from it (the market-risk pack's LL, LIMIT_LETTER > DESK, VAR_GUIDE.md section 16): when one is, every row carries it (a row that leaves it empty is refused, DRS-5211; a table without the column skips that hierarchy alone, with a DRS-5211 warning, and the rest loads). Per row, so a letter may hold part of a book. |
 | `PORTFOLIO` | id |  | required |  | `BOOK-COMM-1` (pattern `^BOOK-`) | `book` | Portfolio: the book it refers to |
 | `STRATEGY` | unknown |  | optional |  |  |  | — |
 | `PRODUCT_GROUP` | text |  | required |  | `Commodity` |  | — |

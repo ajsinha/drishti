@@ -75,6 +75,59 @@ public record Hierarchies(List<HierarchySpec> specs, String origin) {
         }
     }
 
+    /** These hierarchies without the ones named (a column hierarchy skipped on a date: its column is not in the source). */
+    public Hierarchies without(java.util.Collection<String> ids) {
+        if (ids.isEmpty()) {
+            return this;
+        }
+        return new Hierarchies(specs.stream().filter(s -> !ids.contains(s.id())).toList(), origin);
+    }
+
+    /**
+     * The hierarchies skipped now, by engine and hierarchy ({@code var LL}, {@code exposure LL}) to the reason (2.9.5): a column hierarchy
+     * whose level column a source does not keep is not built (the rest load; DRS-5211 as a warning). Admin → Health lists them.
+     */
+    private static final Map<String, String> SKIPPED = new java.util.concurrent.ConcurrentSkipListMap<>();
+
+    /** Records (or clears, {@code reason} null) a hierarchy skipped by an engine. */
+    public static void skipped(String engine, String hierarchy, String reason) {
+        if (reason == null) {
+            SKIPPED.remove(engine + " " + hierarchy);
+        } else {
+            SKIPPED.put(engine + " " + hierarchy, reason);
+        }
+    }
+
+    /** Every hierarchy skipped now, engine and id to the reason (Admin → Health). */
+    public static Map<String, String> skipped() {
+        return Map.copyOf(SKIPPED);
+    }
+
+    /**
+     * The column hierarchies a source cannot place (2.9.5): per hierarchy, why, when a level column is not among those the source keeps
+     * ({@code kept} per kind; an empty set: the connector cannot say, nothing is skipped). The fix is in the words.
+     */
+    public Map<String, String> missingColumns(Map<String, java.util.Set<String>> kept, String what) {
+        Map<String, String> out = new LinkedHashMap<>();
+        for (HierarchySpec s : columnSpecs()) {
+            for (Map.Entry<String, java.util.Set<String>> e : kept.entrySet()) {
+                if (e.getValue().isEmpty() || out.containsKey(s.id())) {
+                    continue;
+                }
+                for (String c : s.levels()) {
+                    if (!e.getValue().contains(c)) {
+                        out.put(s.id(), ErrorCode.VAR_HIERARCHY_COLUMN.code() + " the hierarchy " + s.id() + " (" + s.title() + ") is not built"
+                                + what + ": " + e.getKey() + " does not keep its level column " + c + "; add " + c
+                                + " to the pricing system's records and to the connector's layout." + e.getKey() + ".columns (the other hierarchies "
+                                + "load as usual)");
+                        break;
+                    }
+                }
+            }
+        }
+        return out;
+    }
+
     /** The hierarchy of this id, or null. */
     public HierarchySpec spec(String id) {
         return specs.stream().filter(s -> s.id().equalsIgnoreCase(id)).findFirst().orElse(null);
@@ -136,9 +189,14 @@ public record Hierarchies(List<HierarchySpec> specs, String origin) {
 
     /** The hierarchies a date has, with their titles and words, in the configured order then the data's: the screens' selector. */
     public List<Map<String, Object>> describe(List<String> present) {
+        return describe(present, Map.of());
+    }
+
+    /** The same, with the configured hierarchies skipped on the date ({@code skipped}: id to why), each said so (the selector disables it). */
+    public List<Map<String, Object>> describe(List<String> present, Map<String, String> skipped) {
         List<String> order = new ArrayList<>();
         specs.forEach(s -> {
-            if (present.contains(s.id())) {
+            if (present.contains(s.id()) || skipped.containsKey(s.id())) {
                 order.add(s.id());
             }
         });
@@ -155,6 +213,10 @@ public record Hierarchies(List<HierarchySpec> specs, String origin) {
             }
             if (s != null && s.columns()) {
                 m.put("levels", s.levels());
+            }
+            if (skipped.containsKey(h)) {
+                m.put("skipped", true);
+                m.put("note", skipped.get(h));
             }
             out.add(m);
         }
