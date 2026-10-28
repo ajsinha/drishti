@@ -70,10 +70,11 @@ VAR BANK  ·  Drishti Bank  ·  node  ·  2026-09-30
   limit      150,000,000 USD   use 74.7%
   parts      2 division   standalone sum 130,101,896   diversification 18,060,250
   backtest   amber  5 exceptions in 249 days   Kupiec p 0.160   Christoffersen p 0.076
-  9572 trades in 7984 positions
+  9572 trades in 7993 positions
   pnl-vector and scenario-pv (1339 trades from scenario PVs) · batch B-2026-09-30-01 of 2026-09-30 · data version …
-  in USD, crosses through USD; FX CAD supplied (0.719942 USD); EUR supplied (1.174 USD)
-  node aggregate (float64) · historical, equal weights, 1-day, k = 6th worst of 509 · 1 ms (hit)
+  in USD, crosses through USD; FX CAD supplied (0.719942 USD); EUR supplied (1.174 USD); USD base (1 USD)
+  node aggregate (float64) · historical, equal weights, 1-day, k = 6th worst of 509 · 2 ms (miss)
+  warning: 9 positions had trades under two nodes of a hierarchy built from columns and are split, one part per node (<position>@<value>)
 ```
 
 **In the UI.** Type `VAR BANK` and press Enter:
@@ -92,7 +93,7 @@ connectors:
       domain: risk
       layout:
         pnl-vector:
-          columns: [TRADE_ID, SECURITY_ID, INSTRUMENT, LEGAL_ENTITY, DIVISION, DESK, TT_BOOK, PORTFOLIO, ..., QUANTITY, PV, TRADE_STATUS,
+          columns: [TRADE_ID, SECURITY_ID, INSTRUMENT, LEGAL_ENTITY, DIVISION, DESK, TT_BOOK, LIMIT_LETTER, PORTFOLIO, ..., QUANTITY, PV, TRADE_STATUS,
                     MATURITY_DATE, STATUS, REPORTING_CCY, SCENARIO_SET_ID, BATCH_ID]
           vectors: [PNL]
         scenario-pv:
@@ -105,8 +106,8 @@ connectors:
 The demo's Endur trades (1,339) come that way: when the date loads, the engine turns each into its USD P&L,
 `PV(s) × FX(s) − PV(base) × FX(base)`, and from then on they are trades like any other.
 
-**You should see** VaR 112,041,646 and ES 160,143,809 on 2026-09-30, over 9,572 trades in 7,984 positions, 1,339 of them from scenario
-PVs. On the 6th worst of the 509 days the bank loses 112 million; the two divisions alone would add up to 130 million: holding them
+**You should see** VaR 112,041,646 and ES 160,143,809 on 2026-09-30, over 9,572 trades in 7,993 positions, 1,339 of them from scenario
+PVs (7,984 positions before 2.9.5: the limit letters of step 14 split nine positions in two, as the warning says). On the 6th worst of the 509 days the bank loses 112 million; the two divisions alone would add up to 130 million: holding them
 together saves 18 million. (Until 2.9.3 every trade was a P&L vector and the bank's VaR was 112,035,906: the 250 Endur trades in EUR and
 CAD now also carry the move of their currency on their value.)
 
@@ -157,9 +158,10 @@ A book lists its positions, each LONG or SHORT, with its VaR and its component i
 
 ```text
 $ drishti.py var tree --hierarchy LEGAL
+LEGAL on 2026-09-30, in USD
 Node                             VaR          ES           Limit use  Trades
 -------------------------------  -----------  -----------  ---------  ------
-Drishti Bank                     112,041,646  160,143,809      53.4%    9572
+Drishti Bank                     112,041,646  160,143,809      74.7%    9572
   LE-FRA                           1,536,322    1,665,992      66.8%     611
   LE-LDN                          48,350,793   53,764,068      63.6%    2679
     Equity derivatives            35,827,767   34,901,016      77.9%    1201
@@ -190,7 +192,7 @@ the P&L by scenario date, and the ranked table. The highlighted row is rank 6: t
 
 ```text
 $ drishti.py var path DESK:RATES --size 8
-DESK:RATES  VaR 74,633,680 (rank 6)  ES 75,377,415 (worst 13)
+DESK:RATES  VaR 74,633,680 (rank 6)  ES 75,377,415 (worst 13)  USD
 Rank  Scenario day  P&L           Lost most
 ----  ------------  ------------  -------------------------
 1       2025-12-22  -119,535,289  BOOK-RATES-3 -128,077,862
@@ -220,7 +222,7 @@ the 13 worst (509 × 2.5% = 12.7, rounded up): 75,377,415. Click a row in the UI
 
 ```text
 $ drishti.py var parts DESK:RATES
-DESK:RATES  by book  VaR 74,633,680  ES 75,377,415  sum of components 74,633,680
+DESK:RATES  by book  VaR 74,633,680  ES 75,377,415 USD  sum of components 74,633,680
 Part          Standalone VaR  Component VaR  % of VaR  Incremental VaR  Component ES
 ------------  --------------  -------------  --------  ---------------  ------------
 BOOK-RATES-1      33,153,425     30,612,282      41.0       -5,131,638    10,403,265
@@ -256,10 +258,10 @@ vector)*), never a VaR of 0.
 ```text
 $ drishti.py var show 'BANK - DESK:CREDIT'
 VAR BANK - DESK:CREDIT  ·  BANK - DESK:CREDIT  ·  adhoc  ·  2026-09-30
-  VaR 99%   76,607,919 USD   (the 6th worst of 509)
-  ES 97.5%   76,758,288 USD   (mean of the 13 worst)
+  VaR 99%   76,605,857 USD   (the 6th worst of 509)
+  ES 97.5%   76,775,085 USD   (mean of the 13 worst)
   ...
-  8629 trades in 7041 positions
+  8629 trades in 7050 positions
 $ drishti.py var show 'DESK:RATES - TRD:MX-30000121' --json        (abridged)
 {"canonical": "DESK:RATES - TRD:MX-30000121", "kind": "adhoc", "var": 74720890, "es": 75093413, ...}
 ```
@@ -269,10 +271,10 @@ and a rule over the positions' columns:
 ```text
 $ drishti.py var show "WHERE:CURRENCY == 'EUR' and DIRECTION == 'SHORT'"
 VAR WHERE:CURRENCY == 'EUR' and DIRECTION == 'SHORT'  ·  ...  ·  rule  ·  2026-09-30
-  VaR 99%   133,970,477 USD   (the 6th worst of 509)
-  ES 97.5%   140,222,022 USD   (mean of the 13 worst)
-  parts      595 position   standalone sum 230,956,330   diversification 96,985,853
-  700 trades in 595 positions
+  VaR 99%   134,918,298 USD   (the 6th worst of 509)
+  ES 97.5%   140,529,561 USD   (mean of the 13 worst)
+  parts      596 position   standalone sum 231,439,042   diversification 96,520,744
+  700 trades in 596 positions
 ```
 
 **The grammar** (the full table is in [VAR_GUIDE.md section 5.2](../guides/VAR_GUIDE.md#52-the-grammar)): nodes (`BANK`, `DESK:RATES`,
@@ -378,7 +380,7 @@ light with Kupiec's and Christoffersen's tests.
 
 ```text
 $ drishti.py var history DESK:FX
-history (replay): today's members over the last 250 scenario days against today's VaR: in-sample, not a regulatory backtest
+history (replay, USD): today's members over the last 250 scenario days against today's VaR: in-sample, not a regulatory backtest
   green  3 exceptions in 249 days   Kupiec LR 0.099 (p 0.753)   Christoffersen LR 0.073 (p 0.786)
 Date        VaR         ES          P&L          Exception
 ----------  ----------  ----------  -----------  ---------
@@ -408,9 +410,12 @@ other scope sums the date's float32 position rows in float64:
 ```text
 $ drishti.py var status        (abridged)
   "tier": { "mode": "mapped", "diskDates": 60, "keepOnShutdown": false, "closeGraceSeconds": 60,
-            "mapping": "shared arena (unmapped on close)", "built": 1, "reopened": 0, "files": 1, "open": 1, "diskBytes": 23770624 },
-  "loaded": [ { "businessDate": "2026-09-30", "trades": 9572, "positions": 7984, "nodes": 88, "vectorBytes": 20457728,
-                "tier": "mapped", "aggregateBytes": 480496, "hotFile": "2026-09-30/inputs-a9df6dd969f2a9c2.vhot", "loadMs": 572, ... } ]
+            "mapping": "shared arena (unmapped on close)", "built": 5, "reopened": 0, "files": 5, "open": 5, "diskBytes": 121569900,
+            "currencies": { "files": 4, "bytes": 96688112 } },
+  "loaded": [ { "businessDate": "2026-09-30", "trades": 9572, "positions": 7993, "nodes": 131, "vectorBytes": 20465872,
+                "tier": "mapped", "aggregateBytes": 785896, "hotFile": "2026-09-30/inputs-438361ce8f808055.vhot", "loadMs": 646, ... },
+              { "businessDate": "2026-09-30", "currency": "JPY", "trades": 9572, "tier": "mapped", "hotFile": "2026-09-30-JPY/inputs-….vhot", ... },
+              ... ]
 ```
 
 **The YAML** (the server's `application.yaml`; every key has this default):
@@ -427,11 +432,13 @@ drishti:
       close-grace-seconds: 60
 ```
 
-The first request of a date read the lake and wrote `var/hot/2026-09-30/inputs-….vhot` under the data folder (23.8 MB here, against 39
-MB of float64 vectors on the heap before 2.8.0). An administrator's `drishti.py var reload` drops the open dates; the next request maps
+The first request of a date read the lake and wrote `var/hot/2026-09-30/inputs-….vhot` under the data folder (24.9 MB here, against 39
+MB of float64 vectors on the heap before 2.8.0); the four other configured currencies, built ahead in the background (step 1), have a
+file each beside it (`2026-09-30-EUR/…`, 96.7 MB together). An administrator's `drishti.py var reload` drops the open dates; the next request maps
 the same file again (`reopened` goes up) without reading the lake. At shutdown the files are deleted.
 
-**You should see** `mode: mapped`, one file, and `node aggregate (float64)` as the tier of every node; `hot file (float32 rows, summed in
+**You should see** `mode: mapped`, five files (USD and the four currencies built ahead), 131 nodes (88 MGMT and LEGAL, 43 limit
+letters), and `node aggregate (float64)` as the tier of every node; `hot file (float32 rows, summed in
 float64)` for any other scope. On the test data both give exactly the lake's numbers ([VAR_GUIDE.md section
 26.6](../guides/VAR_GUIDE.md#266-precision-float32-rows-float64-sums)).
 
