@@ -27,7 +27,8 @@ import urllib.request
 from shotlib import CONSOLE_PORT, ROOT, SERVER_PORT, Ctx
 from shotlib import start_servers as _start
 
-VAR_DATA = ",".join([f"market-risk/{k}" for k in ("pnl-vector", "scenario-pv", "fx-scenario", "scenario-set", "risk-hierarchy", "portfolio")] + ["trades/murex"])   # trades: the Risk links
+VAR_DATA = ",".join([f"market-risk/{k}" for k in ("pnl-vector", "scenario-pv", "fx-scenario", "scenario-set", "risk-hierarchy", "portfolio", "var-limit")]
+                    + ["trades/murex"])   # trades: the Risk links; var-limit: the limit letters' limits (2.9.5)
 WIDE, HIGH = 1600, 1000
 LAKE: list = []                                  # the scratch lake start_servers built (a shot appends intraday batches to it)
 

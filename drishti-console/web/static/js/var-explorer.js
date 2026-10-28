@@ -129,9 +129,17 @@
   function words(scope) {
     return scopeWords(scope) + (S.ccy && S.ccy !== "USD" ? " IN " + S.ccy : "");
   }
+  /** The configured hierarchies' scope words (2.9.5, the tree's hierarchyInfo): hierarchy id to word, LL to LL. */
+  function hierWords() {
+    var out = {};
+    ((S.tree && S.tree.hierarchyInfo) || []).forEach(function (x) { if (x.word) out[x.id] = x.word; });
+    return out;
+  }
   function scopeWords(scope) {
-    var m = /^NODE:(MGMT|LEGAL)~(.*)$/.exec(scope);
-    if (m) {
+    var m = /^NODE:([A-Z][A-Z0-9_]*)~(.*)$/.exec(scope);
+    var hw = hierWords();
+    if (m && hw[m[1]] && m[2] !== "BANK") return "VAR SCOPE " + hw[m[1]] + ":" + m[2];   // a configured hierarchy's node: VAR SCOPE LL:LL-0003
+    if (m && (m[1] === "MGMT" || m[1] === "LEGAL")) {
       var n = S.byId && S.byId[m[1] + "~" + m[2]];
       var level = n ? n.level : /^DESK-/.test(m[2]) ? "desk" : /^BOOK-/.test(m[2]) ? "book" : /^DIV-/.test(m[2]) ? "division"
         : /^LE-/.test(m[2]) ? "legal-entity" : "";
@@ -140,6 +148,7 @@
       return word ? "VAR " + word + " " + m[2] : "VAR SCOPE " + scope;
     }
     if (/^BASKET:/.test(scope)) return "VAR SCOPE " + scope.slice(7).replace(new RegExp("^" + S.user + "/"), "");
+    if (m) return "VAR SCOPE " + scope;
     if (/^(DESK|BOOK|LE|DIV|POS|TRD|CPTY|PORT):[^ ]+$/.test(scope)) return "VAR " + scope.replace(":", " ");
     return scope === "BANK" ? "VAR BANK" : "VAR SCOPE " + scope;
   }
@@ -770,13 +779,53 @@
     return api("tree", { hierarchy: S.hierarchy }).then(function (d) {
       S.treeLoading = false;
       S.tree = d;
+      fillHierarchies(d);
       var byId = {};
       d.nodes.forEach(function (n) { byId[n.id] = n; if (n.depth < 2) S.expanded[n.scope] = true; });
       S.byId = byId;
       renderTree();
       renderAdhoc();
       fresh("tree", d.businessDate);
-    }).catch(function (e) { S.treeLoading = false; errorBox($("[data-vx-tree]"), e); fresh("tree", "failed", "stale"); });
+    }).catch(function (e) {
+      S.treeLoading = false;
+      if (e.status === 404 && S.hierarchy !== "MGMT") {             // a hierarchy the date has not: the management tree, said
+        var n = $("[data-vx-notice]");
+        n.hidden = false;
+        n.textContent = "No hierarchy " + S.hierarchy + " on this date: the management tree is shown.";
+        setHierarchy("MGMT");
+        return loadTree();
+      }
+      errorBox($("[data-vx-tree]"), e);
+      fresh("tree", "failed", "stale");
+    });
+  }
+
+  /** The hierarchy selector from the date's hierarchies (2.9.5: every configured one, by its title), the current one chosen. */
+  function fillHierarchies(d) {
+    var sel = $("[data-vx-hierarchy]");
+    var info = d.hierarchyInfo || (d.hierarchies || []).map(function (id) { return { id: id, title: id }; });
+    if (!info.length) return;
+    var have = Array.prototype.map.call(sel.options, function (o) { return o.value + "|" + o.textContent; }).join(",");
+    var want = info.map(function (x) { return x.id + "|" + (x.title || x.id); }).join(",");
+    if (have !== want) {
+      sel.textContent = "";
+      info.forEach(function (x) {
+        var o = document.createElement("option");
+        o.value = x.id;
+        o.textContent = x.title || x.id;
+        sel.appendChild(o);
+      });
+    }
+    sel.value = d.hierarchy || S.hierarchy;
+  }
+
+  /** The hierarchy shown, kept in the page's link (hierarchy=LL). */
+  function setHierarchy(id) {
+    S.hierarchy = id;
+    root.dataset.hierarchy = id;
+    var u = new URL(location.href);
+    if (id === "MGMT") u.searchParams.delete("hierarchy"); else u.searchParams.set("hierarchy", id);
+    history.replaceState(history.state, "", u.toString());
   }
 
   function treeRow(label, scope, depth, v, es, lim, opts) {
@@ -925,7 +974,7 @@
     api("scope/path", { scope: S.scope, page: S.page }).then(function (d) { pathRows(d, true); });
   });
   $("[data-vx-hierarchy]").value = S.hierarchy;
-  $("[data-vx-hierarchy]").addEventListener("change", function (ev) { S.hierarchy = ev.target.value; loadTree(); });
+  $("[data-vx-hierarchy]").addEventListener("change", function (ev) { setHierarchy(ev.target.value); loadTree(); });
   $("[data-vx-capture]").addEventListener("click", function () { doCapture($("[data-vx-cap-note]")); });
   $("[data-vx-capture-side]").addEventListener("click", function () { doCapture(null); });
 

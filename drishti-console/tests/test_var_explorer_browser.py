@@ -48,7 +48,7 @@ from test_workbench_browser import browser, wait  # noqa: F401 - fixtures and he
 from wb_live import _stack
 
 ROOT = Path(__file__).resolve().parents[2]
-VAR_DATA = ",".join([f"market-risk/{k}" for k in ("pnl-vector", "scenario-pv", "fx-scenario", "scenario-set", "risk-hierarchy", "portfolio")] + ["trades/murex"])
+VAR_DATA = ",".join([f"market-risk/{k}" for k in ("pnl-vector", "scenario-pv", "fx-scenario", "scenario-set", "risk-hierarchy", "portfolio", "var-limit")] + ["trades/murex"])
 SHOTS = os.environ.get("DRISHTI_VAR_SHOTS")
 #: the time from a click on a desk to its painted panels (the product owner's target is 300 ms on the demo data); generous here, as the
 #: suite runs beside builds: the measured time is printed and kept in the docs
@@ -161,6 +161,48 @@ def test_the_command_opens_the_desk_and_a_drill_from_bank_to_trade_stays_in_plac
     pg.go_back()
     painted(pg, trd)
     assert pg.evaluate("window.__marker") == 1
+    pg.close()
+
+
+def test_the_limit_letters_tree_a_letter_its_desk_and_a_trade(stack, browser):
+    """2.9.5 (docs/guides/VAR_GUIDE.md section 15.14): the selector lists the date's hierarchies by title (the pack's MGMT, LEGAL and LL);
+    LL is kept in the link; a letter carries its limit bar; a drill from the letter to its desk node to a position and a trade stays in
+    place; LL:<letter> in the scope box is the letter's node."""
+    pg = open_var(browser, str(stack), "/var?scope=BANK")
+    painted(pg, "BANK")
+    wait(pg, "document.querySelectorAll('[data-vx-hierarchy] option').length >= 3")
+    titles = pg.locator("[data-vx-hierarchy] option").all_inner_texts()
+    assert {"Management", "Legal entities", "Limit letters"} <= set(titles)
+    pg.select_option("[data-vx-hierarchy]", "LL")
+    wait(pg, "document.querySelectorAll('.vx-tree .vx-row[data-scope^=\"NODE:LL~LL-\"]').length > 3")
+    assert "hierarchy=LL" in pg.url
+    letter = pg.locator('.vx-tree .vx-row[data-scope^="NODE:LL~LL-"]').first.get_attribute("data-scope")
+    assert "/" not in letter
+    assert pg.locator('.vx-tree .vx-row[data-scope="%s"] .lim .vx-ubar, .vx-tree .vx-row[data-scope="%s"] .lim svg' % (letter, letter)).count() + \
+        pg.locator('.vx-tree .vx-row[data-scope="%s"] .lim *' % letter).count() > 0
+    pg.locator('.vx-tree .vx-row[data-scope="%s"]' % letter).click()
+    painted(pg, letter)
+    shot(pg, "explorer-limit-letter")
+    pg.locator('.vx-tab[data-tab="contrib"]').click()
+    wait(pg, "document.querySelectorAll('[data-vx-ctable] tbody tr[data-scope]').length > 0")
+    desk = pg.locator("[data-vx-ctable] tbody tr[data-scope]").first.get_attribute("data-scope")
+    assert desk.startswith(letter + "/DESK-")
+    pg.locator("[data-vx-ctable] tbody tr[data-scope]").first.click()
+    painted(pg, desk)
+    wait(pg, "document.querySelectorAll('[data-vx-ctable] tbody tr[data-scope^=\"POS:\"]').length > 0")
+    pos = pg.locator('[data-vx-ctable] tbody tr[data-scope^="POS:"]').first.get_attribute("data-scope")
+    pg.locator('[data-vx-ctable] tbody tr[data-scope^="POS:"]').first.click()
+    painted(pg, pos)
+    wait(pg, "document.querySelectorAll('[data-vx-ctable] tbody tr[data-scope^=\"TRD:\"]').length > 0")
+    trd = pg.locator('[data-vx-ctable] tbody tr[data-scope^="TRD:"]').first.get_attribute("data-scope")
+    pg.locator('[data-vx-ctable] tbody tr[data-scope^="TRD:"]').first.click()
+    painted(pg, trd)
+    pg.close()
+    # the scope word: LL:<letter> is the letter's node (its VaR the tree's)
+    word = "LL:" + letter.split("~", 1)[1]
+    pg = open_var(browser, str(stack), "/var?scope=" + word)
+    painted(pg, word)
+    assert pg.locator('.vx-tile[data-tile="0"] .v').inner_text()
     pg.close()
 
 
