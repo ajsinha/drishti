@@ -113,7 +113,7 @@ public final class ParquetDataWriter implements Closeable {
             public void release() {
             }
         };
-        this.writer = new Builder(output(storage, resolved, written), new RowWriteSupport(message, schema)).withConf(ParquetFooters.PLAIN)
+        Builder b = new Builder(output(storage, resolved, written), new RowWriteSupport(message, schema)).withConf(ParquetFooters.PLAIN)
                 .withCodecFactory(codecs).withCompressionCodec(codec).withWriteMode(ParquetFileWriter.Mode.OVERWRITE)
                 .withRowGroupSize(Long.parseLong(props.getOrDefault("write.parquet.row-group-size-bytes", String.valueOf(128L << 20))))
                 .withPageSize(Integer.parseInt(props.getOrDefault("write.parquet.page-size-bytes", String.valueOf(1 << 20))))
@@ -121,7 +121,45 @@ public final class ParquetDataWriter implements Closeable {
                 .withDictionaryPageSize(Integer.parseInt(props.getOrDefault("write.parquet.dict-size-bytes", String.valueOf(2 << 20))))
                 .withMinRowCountForPageSizeCheck(Integer.parseInt(props.getOrDefault("write.parquet.row-group-check-min-record-count", "100")))
                 .withMaxRowCountForPageSizeCheck(Integer.parseInt(props.getOrDefault("write.parquet.row-group-check-max-record-count", "10000")))
-                .withDictionaryEncoding(true).build();
+                .withDictionaryEncoding(true);
+        this.writer = columnOptions(b, props).build();
+    }
+
+    /**
+     * Per-column writer options a caller may add to {@code props} (the parallel lake loader, 2.9.6; never table properties): a list of
+     * Parquet column paths each ({@code PNL.list.element}), comma separated: {@code drishti.parquet.byte-stream-split} (BYTE_STREAM_SPLIT
+     * encoding: a double's bytes split into streams, which ZSTD packs far better), {@code drishti.parquet.no-dictionary},
+     * {@code drishti.parquet.no-statistics}; and {@code drishti.parquet.codec.<column path>} a codec for that column alone.
+     */
+    private static Builder columnOptions(Builder b, Map<String, String> props) {
+        for (String c : paths(props.get("drishti.parquet.byte-stream-split"))) {
+            b = b.withByteStreamSplitEncoding(c, true);
+        }
+        for (String c : paths(props.get("drishti.parquet.no-dictionary"))) {
+            b = b.withDictionaryEncoding(c, false);
+        }
+        for (String c : paths(props.get("drishti.parquet.no-statistics"))) {
+            b = b.withStatisticsEnabled(c, false);
+        }
+        for (Map.Entry<String, String> e : props.entrySet()) {
+            if (e.getKey().startsWith("drishti.parquet.codec.")) {
+                b = b.withCompressionCodec(e.getKey().substring("drishti.parquet.codec.".length()),
+                        CompressionCodecName.valueOf(e.getValue().trim().toUpperCase(Locale.ROOT)));
+            }
+        }
+        return b;
+    }
+
+    private static List<String> paths(String list) {
+        List<String> out = new ArrayList<>();
+        if (list != null) {
+            for (String s : list.split(",")) {
+                if (!s.isBlank()) {
+                    out.add(s.trim());
+                }
+            }
+        }
+        return out;
     }
 
     /** One row: the schema's top-level columns in order, values in their internal form. */
@@ -438,6 +476,7 @@ public final class ParquetDataWriter implements Closeable {
                     }
                     out.endGroup();
                 }
+                case Type.ListType l when v instanceof double[] a -> doubles(l, a);
                 case Type.ListType l -> {
                     List<?> items = (List<?>) v;
                     out.startGroup();
@@ -482,6 +521,32 @@ public final class ParquetDataWriter implements Closeable {
             }
         }
 
+        /** A list of doubles given as {@code double[]} (a P&amp;L vector, never boxed): a NaN element is written as null. */
+        private void doubles(Type.ListType l, double[] a) {
+            boolean floats = l.element() instanceof Type.Primitive p && p.id() == Type.Id.FLOAT;
+            out.startGroup();
+            if (a.length > 0) {
+                out.startField("list", 0);
+                for (double d : a) {
+                    out.startGroup();
+                    if (!Double.isNaN(d)) {
+                        out.startField("element", 0);
+                        if (floats) {
+                            out.addFloat((float) d);
+                        } else {
+                            out.addDouble(d);
+                        }
+                        out.endField("element", 0);
+                    } else if (l.elementRequired()) {
+                        throw new IllegalArgumentException("a list of required elements holds a null");
+                    }
+                    out.endGroup();
+                }
+                out.endField("list", 0);
+            }
+            out.endGroup();
+        }
+
         private void primitive(Type.Primitive p, Object v) {
             switch (p.id()) {
                 case BOOLEAN -> out.addBoolean((Boolean) v);
@@ -489,7 +554,7 @@ public final class ParquetDataWriter implements Closeable {
                 case LONG, TIME, TIMESTAMP, TIMESTAMPTZ -> out.addLong(((Number) v).longValue());
                 case FLOAT -> out.addFloat(((Number) v).floatValue());
                 case DOUBLE -> out.addDouble(((Number) v).doubleValue());
-                case STRING -> out.addBinary(Binary.fromString(v.toString()));
+                case STRING -> out.addBinary(v instanceof byte[] utf8 ? Binary.fromConstantByteArray(utf8) : Binary.fromString(v.toString()));
                 case UUID -> {
                     UUID u = (UUID) v;
                     out.addBinary(Binary.fromConstantByteArray(ByteBuffer.allocate(16).putLong(u.getMostSignificantBits())

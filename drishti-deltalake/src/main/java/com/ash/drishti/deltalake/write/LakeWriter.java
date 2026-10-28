@@ -119,10 +119,19 @@ public final class LakeWriter {
      * ({@code s3.endpoint}, {@code s3.region}, {@code s3.access-key}, {@code s3.secret-key}; none: the AWS default chain).
      */
     public static LakeWriter forTable(String table, Map<String, String> settings) {
+        return new LakeWriter(engineFor(table, settings));
+    }
+
+    /**
+     * The Delta Kernel engine this writer commits with for {@code table}: a local folder ({@link LocalWriteFileIO}) or an object store
+     * ({@link StorageWriteFileIO}, commits as exclusive creates). Other writers that commit through Kernel use it too (the parallel lake
+     * loader, 2.9.6, which writes its Parquet files itself and hands Kernel their statuses).
+     */
+    public static Engine engineFor(String table, Map<String, String> settings) {
         if (com.ash.drishti.lakeio.LocalPaths.isLocal(table)) {
-            return new LakeWriter();
+            return DefaultEngine.create(new LocalWriteFileIO(parquetConf()));
         }
-        return new LakeWriter(DefaultEngine.create(new StorageWriteFileIO(com.ash.drishti.lakeio.S3Settings.from(settings), parquetConf())));
+        return DefaultEngine.create(new StorageWriteFileIO(com.ash.drishti.lakeio.S3Settings.from(settings), parquetConf()));
     }
 
     /** Writes the manifest's parts; {@code partsDone} is told after each part. */
@@ -251,6 +260,18 @@ public final class LakeWriter {
             partitions.add(p.values());
         }
         boolean byDate = m.mode().equals("overwrite-dates");
+        return removals(engine, s, pv -> {
+            Map<String, String> mine = new HashMap<>();
+            m.partitionColumns().forEach(c -> mine.put(c, pv.get(c)));
+            return byDate ? dates.contains(pv.get("business_date")) : partitions.contains(mine);
+        });
+    }
+
+    /**
+     * Remove actions for every file of {@code s} whose partition values ({@code business_date} as yyyy-MM-dd and the partition columns)
+     * {@code replaced} accepts: what a commit that replaces those dates or partitions adds beside its new files.
+     */
+    public static List<Row> removals(Engine engine, Snapshot s, java.util.function.Predicate<Map<String, String>> replaced) throws IOException {
         long now = System.currentTimeMillis();
         List<Row> out = new ArrayList<>();
         Scan scan = s.getScanBuilder().build();
@@ -259,10 +280,7 @@ public final class LakeWriter {
                 try (CloseableIterator<Row> rows = it.next().getRows()) {
                     while (rows.hasNext()) {
                         Row r = rows.next();
-                        Map<String, String> pv = InternalScanFileUtils.getPartitionValues(r);
-                        Map<String, String> mine = new HashMap<>();
-                        m.partitionColumns().forEach(c -> mine.put(c, pv.get(c)));
-                        if (byDate ? dates.contains(pv.get("business_date")) : partitions.contains(mine)) {
+                        if (replaced.test(InternalScanFileUtils.getPartitionValues(r))) {
                             Row add = r.getStruct(r.getSchema().indexOf("add"));
                             out.add(SingleAction.createRemoveFileSingleAction(new AddFile(add).toRemoveFileRow(true, Optional.of(now))));
                         }
