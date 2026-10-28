@@ -15,6 +15,7 @@
  */
 package com.ash.drishti.server.bi.board;
 
+import com.ash.drishti.common.Branding;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import com.ash.drishti.server.bi.report.Report;
@@ -38,6 +39,16 @@ class BoardsAsReportsTest {
 
     @Test
     void eachTwoThreeBoardConvertsToAReportThatReadsBackToTheSameBoard() throws IOException {
+        Branding was = Branding.current();
+        Branding.install(new Branding("Drishti", null, null, null, null));   // the shipped files name the product as the server does; not left to test order
+        try {
+            convertsAndMatchesTheShippedReports();
+        } finally {
+            Branding.install(was);
+        }
+    }
+
+    private static void convertsAndMatchesTheShippedReports() throws IOException {
         for (String name : List.of("desk-wall", "python-wall")) {
             String board = Files.readString(OLD.resolve(name + ".board.yaml"));
             String report = BoardConverter.toReport(board, "boards/" + name + ".board.yaml");
