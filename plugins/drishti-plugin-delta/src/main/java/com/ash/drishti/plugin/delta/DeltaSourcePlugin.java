@@ -1028,6 +1028,16 @@ public final class DeltaSourcePlugin implements SourcePlugin {
 
     @Override
     public boolean vectors(String kind, String column, List<String> texts, AsOf asOf, com.ash.drishti.api.VectorSink sink) {
+        return vectors(kind, column, texts, asOf, null, sink);
+    }
+
+    /**
+     * The date's vectors for the keys of {@code range} (a VaR shard, VAR_SHARDING.md): a file whose statistics (the first key column's
+     * {@code minValues} and {@code maxValues}, its {@code nullCount}) show none of them is not read; the reader checks every row.
+     */
+    @Override
+    public boolean vectors(String kind, String column, List<String> texts, AsOf asOf, com.ash.drishti.api.KeyRange range,
+            com.ash.drishti.api.VectorSink sink) {
         if (!vectorColumns(kind).contains(column)) {
             return false;
         }
@@ -1048,8 +1058,13 @@ public final class DeltaSourcePlugin implements SourcePlugin {
         if (dates.isEmpty()) {
             return true;
         }
+        String keyColumn = range == null || range.columns().isEmpty() ? null : cols.get(range.columns().get(0));
+        java.util.function.Predicate<io.delta.kernel.data.Row> keep = keyColumn == null ? f -> true : f -> {
+            String[] b = DeltaTable.textBounds(f, keyColumn);
+            return range.mayHold(b[0], b[1], b[2] == null || !"0".equals(b[2]));
+        };
         try {
-            tables.get(kind).vectors(l.get(), dates.get(0), column, physical, sink);
+            tables.get(kind).vectors(l.get(), dates.get(0), column, physical, keep, sink);
         } catch (RuntimeException e) {
             throw problems.failed(kind, dates.get(0).toString(), l.get().timestamp(), e);
         }

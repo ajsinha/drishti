@@ -1091,8 +1091,18 @@ public final class SourceRouter implements com.ash.drishti.common.LiveSettings {
      * {@code sink} by the first source in routing order that keeps the column as a vector; false when none does.
      */
     public boolean vectors(String kind, String column, List<String> texts, AsOf asOf, com.ash.drishti.api.VectorSink sink) throws Exception {
+        return vectors(kind, column, texts, asOf, null, sink);
+    }
+
+    /**
+     * The same, for the rows whose key is in {@code range} (a VaR shard, VAR_SHARDING.md; null: the whole date): the source may skip the
+     * files its statistics show hold none; the caller checks every row it is given.
+     */
+    public boolean vectors(String kind, String column, List<String> texts, AsOf asOf, com.ash.drishti.api.KeyRange range,
+            com.ash.drishti.api.VectorSink sink) throws Exception {
         for (SourcePlugin p : candidates(kind)) {
-            if (p.vectorColumns(kind).contains(column) && p.vectors(kind, column, texts, asOf, sink)) {
+            if (p.vectorColumns(kind).contains(column)
+                    && (range == null ? p.vectors(kind, column, texts, asOf, sink) : p.vectors(kind, column, texts, asOf, range, sink))) {
                 return true;
             }
         }

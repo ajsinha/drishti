@@ -193,6 +193,16 @@ public interface SourcePlugin extends AutoCloseable {
     }
 
     /**
+     * As {@link #vectors(String, String, java.util.List, AsOf, VectorSink)}, for a reader that needs only the rows whose key is in
+     * {@code range} (a VaR shard, VAR_SHARDING.md): a source may skip the files whose statistics show none inside; it may still give
+     * rows outside (the reader checks each row). By default the whole date, as the plain read.
+     */
+    default boolean vectors(String kind, String column, java.util.List<String> texts, AsOf asOf, KeyRange range, VectorSink sink)
+            throws Exception {
+        return vectors(kind, column, texts, asOf, sink);
+    }
+
+    /**
      * Every document of the kind on the business date, in one pass over the source (a whole day read file by file, not
      * entity by entity), for connectors built from other kinds (derived pages). Returns false, having given nothing to
      * {@code sink}, when the source cannot read so (the caller then reads entity by entity); true when it read the date

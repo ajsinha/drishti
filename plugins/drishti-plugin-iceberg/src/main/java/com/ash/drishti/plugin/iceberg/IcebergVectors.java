@@ -43,11 +43,20 @@ final class IcebergVectors {
      * in file order: one buffer, reused for every row, so a date of millions of vectors is never held here.
      */
     static void vectors(KindTable t, Layout l, Day day, String column, List<String> textColumns, VectorSink sink) {
+        vectors(t, l, day, column, textColumns, f -> true, sink);
+    }
+
+    /** As above, only the files {@code keep} accepts by index (a VaR shard's read skips those holding none of its keys). */
+    static void vectors(KindTable t, Layout l, Day day, String column, List<String> textColumns, java.util.function.IntPredicate keep,
+            VectorSink sink) {
         List<String> cols = new ArrayList<>(List.of(IcebergLayout.ID, column));
         cols.addAll(textColumns);
         double[][] buf = {new double[512]};
         String[] texts = new String[textColumns.size()];
         for (int f = 0; f < day.files().size(); f++) {
+            if (!keep.test(f)) {
+                continue;
+            }
             t.scan(l, day, f, cols, null, r -> {
                 for (int c = 0; c < texts.length; c++) {
                     texts[c] = text(r[c + 2]);

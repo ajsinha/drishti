@@ -60,8 +60,9 @@ class ShardMapTest {
         ShardMap b = ShardMap.cut(DAY, "v1", List.of("legal_entity", "desk"), new TreeMap<>(counts(3)), WIDTH, 4_000 * ROW);
         assertThat(a.digest()).isEqualTo(b.digest());
         assertThat(a.shards()).isEqualTo(b.shards());
-        assertThat(ShardMap.cut(DAY, "v2", ShardMap.ORDER, counts(3), WIDTH, 4_000 * ROW).digest()).as("another data version")
-                .isNotEqualTo(a.digest());
+        assertThat(ShardMap.cut(DAY, "v2", ShardMap.ORDER, counts(3), WIDTH, 4_000 * ROW).digest()).as("another data version, the same cut")
+                .isEqualTo(a.digest());
+        assertThat(ShardMap.cut(DAY, "v1", ShardMap.ORDER, counts(3), WIDTH, 2_000 * ROW).digest()).as("another cut").isNotEqualTo(a.digest());
     }
 
     @Test

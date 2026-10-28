@@ -89,7 +89,7 @@ class ShardAssemblyTest {
                 parts.add(ShardSkeleton.read(sk, index));                       // on an owner: its skeleton only
             }
         }
-        ShardedVectors.Remote owner = (shard, set) -> {
+        ShardedVectors.Remote owner = (shard, set, ctx) -> {
             asked.computeIfAbsent(shard, k -> new AtomicInteger()).incrementAndGet();
             return sums.sum(shardBooks.get(shard).store(), set);
         };
@@ -188,7 +188,7 @@ class ShardAssemblyTest {
         for (int i = 0; i < shardBooks.size(); i++) {
             parts.add(ShardAssembly.Part.of(i, shardBooks.get(i)).withoutRows());
         }
-        VarBook none = ShardAssembly.assemble(DAY, parts, ShardAssembly.Nodes.of(whole, 1.0), (shard, set) -> {
+        VarBook none = ShardAssembly.assemble(DAY, parts, ShardAssembly.Nodes.of(whole, 1.0), (shard, set, ctx) -> {
             throw new IllegalStateException("shard " + shard + " has no live owner");
         }, 1);
         assertThat(none.aggregate("MGMT~BANK")).containsExactly(whole.aggregate("MGMT~BANK"));   // a node: its aggregate, here
@@ -225,7 +225,7 @@ class ShardAssemblyTest {
                 42, t -> moved.test(t) && t[1].equals("LE-1")).build(sums);
         try {
             assertThatThrownBy(() -> ShardAssembly.assemble(DAY, List.of(ShardAssembly.Part.of(0, first), ShardAssembly.Part.of(1, second)),
-                    ShardAssembly.Nodes.of(whole, 1.0), (s, x) -> null, 1)).isInstanceOf(ShardAssembly.NotShardable.class)
+                    ShardAssembly.Nodes.of(whole, 1.0), (s, x, c) -> null, 1)).isInstanceOf(ShardAssembly.NotShardable.class)
                     .hasMessageContaining("BOOK-0-0-0");
         } finally {
             first.close();

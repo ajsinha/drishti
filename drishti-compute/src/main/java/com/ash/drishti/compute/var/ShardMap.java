@@ -31,7 +31,9 @@ import java.util.TreeMap;
  * One business date's shard map (VAR_SHARDING.md section 3): the date's trades cut into contiguous ranges of the shard key (legal entity,
  * then desk), in the hot file's own order, each near the target size, a key (a desk) never split. A pure function of the date's row
  * counts per key, so every member that reads the same data version computes the same map; its {@link #digest()} is sent with every
- * partial sum and skeleton, and an answer built from another map is refused.
+ * partial sum and skeleton, and an answer built from another map is refused. The digest names the cut, not the data: the date, the key, the
+ * target and the shards' first and last keys (an intraday batch that adds rows without moving a cut keeps the map; a shard's data is
+ * named by its own hot file's digest).
  *
  * <p>Shard {@code i} holds every key from its first one up to (excluded) the next shard's first: the ranges cover the whole key space, so
  * a row whose key was not counted (it cannot be, at one data version) still has exactly one shard.
@@ -42,7 +44,7 @@ import java.util.TreeMap;
  * @param shards the shards in key order, indexed from 0
  * @param targetBytes the target size of a shard (its float32 rows)
  * @param note why the date was not cut, or null (one shard covers the whole date)
- * @param digest SHA-256 (hex) of the date, the version, the key and every shard's range and rows
+ * @param digest SHA-256 (hex) of the date, the key, the target and every shard's first and last key
  */
 public record ShardMap(LocalDate date, String version, List<String> key, List<Shard> shards, long targetBytes, String note, String digest) {
 
@@ -231,9 +233,9 @@ public record ShardMap(LocalDate date, String version, List<String> key, List<Sh
     }
 
     private static String digest(LocalDate date, String version, List<String> key, long target, List<Shard> shards) {
-        StringBuilder b = new StringBuilder("shards|").append(date).append('|').append(version).append('|').append(key).append('|').append(target);
+        StringBuilder b = new StringBuilder("shards|").append(date).append('|').append(key).append('|').append(target);
         for (Shard s : shards) {
-            b.append('|').append(s.index()).append(':').append(s.first()).append("..").append(s.last()).append(':').append(s.rows());
+            b.append('|').append(s.index()).append(':').append(s.first()).append("..").append(s.last());
         }
         try {
             return HexFormat.of().formatHex(MessageDigest.getInstance("SHA-256").digest(b.toString().getBytes(StandardCharsets.UTF_8)));

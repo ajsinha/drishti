@@ -144,6 +144,40 @@ final class VarTier implements AutoCloseable {
         return root.resolve(VarDate.USD.equals(currency) ? date.toString() : date + "-" + currency);
     }
 
+    /**
+     * A shard's folder (VAR_SHARDING.md): {@code <date>-shard-<i>} (USD) or {@code <date>-<CCY>-shard-<i>}, each its own, so a shard's file
+     * is never taken for another's or the whole date's older build.
+     */
+    Path folder(LocalDate date, String currency, int shard) {
+        return root.resolve(folder(date, currency).getFileName() + "-shard-" + shard);
+    }
+
+    /** A shard's hot file built from exactly these inputs, if one is on disk and whole. */
+    Optional<Path> existing(LocalDate date, String currency, int shard, String digest) {
+        if (digest.isEmpty()) {
+            return Optional.empty();
+        }
+        Path f = folder(date, currency, shard).resolve(PREFIX + digest.substring(0, 16) + VarHotFile.SUFFIX);
+        VarHotFile.Header h = Files.isRegularFile(f) ? VarHotFile.header(f) : null;
+        return h != null && h.digest().equals(digest) && h.businessDate().equals(date) ? Optional.of(f) : Optional.empty();
+    }
+
+    /** Where a shard's book writes (its own folder). */
+    VarBook.HotTarget target(LocalDate date, String currency, int shard, String digest) {
+        built.incrementAndGet();
+        Path dir = folder(date, currency, shard);
+        try {
+            Files.createDirectories(dir);
+            Path spill = TempFiles.createFile(dir, "spill-", ".f64");
+            Path part = TempFiles.createFile(dir, "build-", ".part");
+            String d = digest.isEmpty() ? "unversioned-" + System.nanoTime() : digest;
+            Path file = dir.resolve(PREFIX + (digest.isEmpty() ? d : digest.substring(0, 16)) + VarHotFile.SUFFIX);
+            return new VarBook.HotTarget(spill, part, file, d);
+        } catch (IOException e) {
+            throw new UncheckedIOException("the VaR hot folder " + dir + " cannot be written: " + e.getMessage(), e);
+        }
+    }
+
     Path file(LocalDate date, String digest) {
         return file(date, VarDate.USD, digest);
     }

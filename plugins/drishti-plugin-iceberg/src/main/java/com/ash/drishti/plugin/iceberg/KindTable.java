@@ -172,6 +172,15 @@ abstract class KindTable {
     abstract void scan(Layout l, Day day, int file, List<String> columns, String idEquals, Consumer<Object[]> sink);
 
     /** The fingerprint of a day's files: their paths and their delete files' paths. */
+    /**
+     * A text column's bounds in one data file of the day, from its manifest entry: {min, max, nulls} ({@code nulls} "0" when the file
+     * has no row without a value), each null when not stated. A VaR shard's read skips the files that hold none of its keys
+     * (VAR_SHARDING.md); an engine that cannot say gives nothing, and the file is read.
+     */
+    String[] textBounds(Layout l, Day day, int file, String column) {
+        return new String[3];
+    }
+
     static long fingerprint(List<String> paths, int files) {
         long fp = 1125899906842597L;
         for (String p : paths) {

@@ -52,9 +52,12 @@ import java.util.concurrent.ConcurrentHashMap;
  */
 public final class VarService implements AutoCloseable {
 
-    /** A scope resolved and computed for one viewer on one date. */
+    /**
+     * A scope resolved and computed for one viewer on one date; {@code shards} what its sum asked of a sharded date's shards (null: the
+     * date is not sharded, VAR_SHARDING.md).
+     */
     record Scoped(VarDate date, VarAccess.View view, ScopeResolver.Resolution res, OrdinalSet set, int hidden, double[] vector,
-            VarCalc.Measures measures, String kind, String label, long computeMs, boolean cached) {}
+            VarCalc.Measures measures, String kind, String label, long computeMs, boolean cached, Map<String, Object> shards) {}
 
     /** The words of a scope that name positions or trades one by one: only for a viewer who sees them one by one. */
     private static final List<String> NAMING = List.of("POS", "TRD", "CPTY", "WHERE", "BASKET", "CAPTURE");
@@ -86,6 +89,8 @@ public final class VarService implements AutoCloseable {
     private final Map<String, String> aheadState = new java.util.concurrent.ConcurrentSkipListMap<>();
     /** Dates that could not be loaded, with the vector version they were refused at and why. */
     private final Map<LocalDate, String[]> refused = new ConcurrentHashMap<>();
+    /** VaR sharding across Drishti*net (VAR_SHARDING.md): a date put together from its shards when on; null in tests that do not set it. */
+    private volatile VarShards shards;
     private final com.github.benmanes.caffeine.cache.Cache<String, Scoped> cache =
             com.github.benmanes.caffeine.cache.Caffeine.newBuilder().maximumSize(CACHE).build();      // the answers last asked for
 
@@ -123,6 +128,41 @@ public final class VarService implements AutoCloseable {
 
     VarLoader loader() {
         return loader;
+    }
+
+    /** Sets VaR sharding up (it replaces the whole-date load while switched on): its dates dropped and listed through this service. */
+    void shards(VarShards s) {
+        this.shards = s;
+        if (s != null) {
+            s.wire(this::reload, () -> {
+                java.util.Set<LocalDate> open = new java.util.TreeSet<>();
+                dates.forEach((d, f) -> {
+                    if (f.isDone() && !f.isCompletedExceptionally()) {
+                        open.add(d);
+                    }
+                });
+                return open;
+            });
+        }
+    }
+
+    VarShards shards() {
+        return shards;
+    }
+
+    /** True while dates are sharded across Drishti*net (the market-risk pack's sharding block, or drishti.var.sharding). */
+    boolean sharded() {
+        VarShards s = shards;
+        return s != null && s.on();
+    }
+
+    /** A date's book in a reporting currency: converted on this server, or (sharded) put together from its shards' books in it. */
+    private VarDate convert(VarDate usd, String c) {
+        if (!sharded() || !usd.book().morning().sharded()) {
+            return currencies.convert(usd, c);
+        }
+        VarDate out = shards.convert(usd, c);
+        return usd.intraday() == null || usd.intraday().isEmpty() ? out : currencies.apply(out, usd, usd.intraday().rows());
     }
 
     ParallelSums sums() {
@@ -170,7 +210,7 @@ public final class VarService implements AutoCloseable {
             return usd;
         }
         String key = usd.date() + "|" + c + "|" + usd.version();
-        CompletableFuture<VarDate> f = inCurrency.computeIfAbsent(key, k -> CompletableFuture.supplyAsync(() -> currencies.convert(usd, c)));
+        CompletableFuture<VarDate> f = inCurrency.computeIfAbsent(key, k -> CompletableFuture.supplyAsync(() -> convert(usd, c)));
         VarDate vd;
         try {
             vd = f.join();
@@ -219,7 +259,7 @@ public final class VarService implements AutoCloseable {
             return previous(d, r[1], depth);
         }
         refused.remove(d);
-        CompletableFuture<VarDate> f = dates.computeIfAbsent(d, x -> CompletableFuture.supplyAsync(() -> loader.load(x)));
+        CompletableFuture<VarDate> f = dates.computeIfAbsent(d, x -> CompletableFuture.supplyAsync(() -> sharded() ? shards.assemble(x) : loader.load(x)));
         try {
             VarDate vd = f.join();
             evictOld(d);
@@ -285,7 +325,7 @@ public final class VarService implements AutoCloseable {
         long t0 = System.nanoTime();
         aheadState.put(state, "building");
         try {
-            VarDate vd = currencies.convert(usd, c);
+            VarDate vd = convert(usd, c);
             mine.complete(vd);
             long ms = (System.nanoTime() - t0) / 1_000_000;
             long bytes = vd.book().hot() == null ? 0 : sizeOf(vd.book().hot().file());
@@ -521,6 +561,9 @@ public final class VarService implements AutoCloseable {
      * unused when the inputs changed (a restatement); unchanged inputs open the same file again.
      */
     void reload(LocalDate d) {
+        if (shards != null) {
+            shards.forget(d);
+        }
         aheadQueued.removeIf(k -> k.startsWith(d + "|"));
         retire(dates.remove(d), false);
         retireCurrencies(d);
@@ -684,16 +727,34 @@ public final class VarService implements AutoCloseable {
         Scoped hit = cache.getIfPresent(key);
         if (hit != null) {
             return new Scoped(d, hit.view(), hit.res(), hit.set(), hit.hidden(), hit.vector(), hit.measures(), hit.kind(), hit.label(),
-                    (System.nanoTime() - t0) / 1_000_000, true);
+                    (System.nanoTime() - t0) / 1_000_000, true, hit.shards());
         }
         OrdinalSet set = view.full() ? res.set() : res.set().and(view.visible());
         int hidden = res.set().size() - set.size();
-        double[] v = VarDate.USD.equals(d.currency()) ? vector(d, set, res) : inCurrencyVector(d, set, res);
+        VarDate dd = d;
+        VarShardRows.Stats st = d.book().morning().sharded() ? new VarShardRows.Stats() : null;
+        double[] v = st == null ? (VarDate.USD.equals(d.currency()) ? vector(d, set, res) : inCurrencyVector(d, set, res))
+                : VarShardRows.counting(st, () -> VarDate.USD.equals(dd.currency()) ? vector(dd, set, res) : inCurrencyVector(dd, set, res));
         VarCalc.Measures m = calc.measures(v);
         String kind = kindOf(res, parsed);
-        Scoped s = new Scoped(d, view, res, set, hidden, v, m, kind, label(d, res, parsed, kind, p), (System.nanoTime() - t0) / 1_000_000, false);
+        Scoped s = new Scoped(d, view, res, set, hidden, v, m, kind, label(d, res, parsed, kind, p), (System.nanoTime() - t0) / 1_000_000, false,
+                st == null ? null : shardNote(d, st));
         cache.put(key, s);
         return s;
+    }
+
+    /** What a sharded answer asked of the shards (its provenance): the date's map, the shards asked and who answered. */
+    private Map<String, Object> shardNote(VarDate d, VarShardRows.Stats st) {
+        Map<String, Object> m = new LinkedHashMap<>(st.describe());
+        if (d.book().morning().store() instanceof com.ash.drishti.compute.vector.ShardedVectors sv) {
+            m.put("shards", sv.parts().size());
+            m.put("heldHere", sv.parts().stream().filter(com.ash.drishti.compute.vector.ShardedVectors.Part::held).count());
+        }
+        m.put("node", shards == null ? "" : shards.peers().self());
+        if (st.shards.isEmpty()) {
+            m.put("note", "a node's figures: its aggregate, held on every member");
+        }
+        return m;
     }
 
     /** A stored portfolio of type BASKET (named positions and trades): probing it is naming them (VAR_GUIDE.md section 5.3). */
@@ -787,6 +848,9 @@ public final class VarService implements AutoCloseable {
 
     @Override
     public void close() {
+        if (shards != null) {
+            shards.close();
+        }
         ahead.shutdownNow();
         loader.tier().close();
         sums.close();

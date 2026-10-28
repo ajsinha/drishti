@@ -39,8 +39,19 @@ public final class ShardedVectors implements Vectors, SetSums {
         /**
          * The sum of shard {@code shard}'s rows {@code rows} (in the shard's own ordinals, from 0), as one owner computed it. Throws when no
          * owner answers (the date's figures are then refused, never partial).
+         *
+         * @param context what {@link #context()} gave on the thread that asked (the caller, for the owner to apply their rights)
          */
-        double[] sum(int shard, OrdinalSet rows);
+        double[] sum(int shard, OrdinalSet rows, Object context);
+
+        /** The asking thread's context, taken before the owners are asked on other threads (null: none). */
+        default Object context() {
+            return null;
+        }
+
+        /** Shard {@code shard}'s part of a set was summed here, from its rows held here (for the answer's provenance). */
+        default void held(int shard, Object context) {
+        }
     }
 
     /**
@@ -101,6 +112,7 @@ public final class ShardedVectors implements Vectors, SetSums {
         List<CompletableFuture<double[]>> asked = new ArrayList<>(n);
         OrdinalSet[] slices = new OrdinalSet[n];
         int wanted = 0;
+        Object ctx = remote.context();
         for (int i = 0; i < n; i++) {
             Part p = parts.get(i);
             OrdinalSet slice = set.slice(p.from(), p.to());
@@ -111,12 +123,13 @@ public final class ShardedVectors implements Vectors, SetSums {
             wanted++;
             slices[i] = slice;
             if (!p.held()) {
-                asked.set(i, CompletableFuture.supplyAsync(() -> remote.sum(p.shard(), slice), ASK));     // the owners asked side by side
+                asked.set(i, CompletableFuture.supplyAsync(() -> remote.sum(p.shard(), slice, ctx), ASK));     // the owners asked side by side
             }
         }
         for (int i = 0; i < n; i++) {
             if (slices[i] != null && parts.get(i).held()) {
                 got[i] = sums.sum(parts.get(i).rows(), slices[i]);
+                remote.held(parts.get(i).shard(), ctx);
             }
         }
         for (int i = 0; i < n; i++) {
@@ -205,7 +218,7 @@ public final class ShardedVectors implements Vectors, SetSums {
         if (p.held()) {
             return p.rows().value(row - p.from(), j);
         }
-        return remote.sum(p.shard(), OrdinalSet.of(row - p.from()))[j];
+        return remote.sum(p.shard(), OrdinalSet.of(row - p.from()), remote.context())[j];
     }
 
     @Override
@@ -215,7 +228,7 @@ public final class ShardedVectors implements Vectors, SetSums {
             p.rows().copy(row - p.from(), out);
             return;
         }
-        System.arraycopy(remote.sum(p.shard(), OrdinalSet.of(row - p.from())), 0, out, 0, width);
+        System.arraycopy(remote.sum(p.shard(), OrdinalSet.of(row - p.from()), remote.context()), 0, out, 0, width);
     }
 
     @Override
@@ -225,7 +238,7 @@ public final class ShardedVectors implements Vectors, SetSums {
             p.rows().addInto(acc, row - p.from());
             return;
         }
-        add(acc, remote.sum(p.shard(), OrdinalSet.of(row - p.from())));
+        add(acc, remote.sum(p.shard(), OrdinalSet.of(row - p.from()), remote.context()));
     }
 
     @Override
@@ -243,7 +256,7 @@ public final class ShardedVectors implements Vectors, SetSums {
             if (p.held()) {
                 p.rows().addRangeInto(acc, a - p.from(), b - p.from());
             } else {
-                add(acc, remote.sum(p.shard(), OrdinalSet.range(a - p.from(), b - p.from())));
+                add(acc, remote.sum(p.shard(), OrdinalSet.range(a - p.from(), b - p.from()), remote.context()));
             }
         }
     }

@@ -44,10 +44,19 @@ import java.util.Optional;
  * @param access nodes per role as this node's access.yaml says, gossiped so Admin → Net can show where they differ
  * @param reports the BI report ids this node serves (a report on a model held elsewhere is answered there)
  * @param builtAt when it was built (epoch milliseconds)
+ * @param services the state of the cluster services the node runs, by name, each as compact text (2.9.6: {@code var-shards}, the VaR
+ *     shards it holds and is ready to serve, VAR_SHARDING.md); empty from a node that runs none or an older node
  */
 @JsonIgnoreProperties(ignoreUnknown = true)
 public record Digest(String nodeId, String url, String version, int protocol, List<PackEntry> packs, List<KindEntry> kinds, Load load,
-        String calendar, List<String> tags, List<String> redact, Map<String, List<String>> access, List<String> reports, long builtAt) {
+        String calendar, List<String> tags, List<String> redact, Map<String, List<String>> access, List<String> reports, long builtAt,
+        Map<String, String> services) {
+
+    /** A digest without services (an older node, a test). */
+    public Digest(String nodeId, String url, String version, int protocol, List<PackEntry> packs, List<KindEntry> kinds, Load load,
+            String calendar, List<String> tags, List<String> redact, Map<String, List<String>> access, List<String> reports, long builtAt) {
+        this(nodeId, url, version, protocol, packs, kinds, load, calendar, tags, redact, access, reports, builtAt, Map.of());
+    }
 
     /** One pack: name, short code, version, a hash of its files, whether it is served to peers only. */
     @JsonIgnoreProperties(ignoreUnknown = true)
@@ -120,13 +129,14 @@ public record Digest(String nodeId, String url, String version, int protocol, Li
         redact = redact == null ? List.of() : List.copyOf(redact);
         access = access == null ? Map.of() : Map.copyOf(access);
         reports = reports == null ? List.of() : List.copyOf(reports);
+        services = services == null ? Map.of() : Map.copyOf(services);
     }
 
     /** The hash gossiped with the member entry: everything but the load and the build time. */
     @JsonIgnore
     public String hash() {
         try {
-            Digest stable = new Digest(nodeId, url, version, protocol, packs, kinds, Load.NONE, calendar, tags, redact, access, reports, 0);
+            Digest stable = new Digest(nodeId, url, version, protocol, packs, kinds, Load.NONE, calendar, tags, redact, access, reports, 0, services);
             byte[] h = MessageDigest.getInstance("SHA-256").digest(CANON.writeValueAsString(stable).getBytes(StandardCharsets.UTF_8));
             return HexFormat.of().formatHex(h, 0, 8);
         } catch (Exception e) {

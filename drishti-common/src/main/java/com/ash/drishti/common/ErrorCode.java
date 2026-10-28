@@ -162,6 +162,22 @@ public enum ErrorCode {
     VAR_HIERARCHY_INVALID("DRS-5213", 422),
     /** VaR (2.9.5): the tree of a hierarchy the date does not have ({@code GET /api/v1/var/tree?hierarchy=LL}). */
     VAR_HIERARCHY_UNKNOWN("DRS-5214", 404),
+    /**
+     * VaR sharding (2.9.6, VAR_SHARDING.md): a shard of the date has no live owner that holds it (every replica down, draining or refusing),
+     * so its part of a scope cannot be summed: the scope's figures are refused, never given from the other shards alone.
+     */
+    VAR_SHARD_UNAVAILABLE("DRS-5215", 503),
+    /**
+     * VaR sharding (2.9.6): a partial sum or a shard's skeleton was asked for another data version or shard map than the owner holds (a
+     * load landed between the two): refused by the owner; the asking member reloads the date and the next request is answered.
+     */
+    VAR_SHARD_STALE("DRS-5216", 409),
+    /**
+     * VaR sharding (2.9.6): a date cannot be put together from its shards because its data does not cut along the shard key (a book under
+     * two legal entities or desks that fall in two shards, a position under two shards with a hierarchy built from columns): refused, never
+     * answered differently from one server.
+     */
+    VAR_NOT_SHARDABLE("DRS-5217", 422),
     /** Exposure: a bad scope word or parameter ({@code q}, {@code collateral}, {@code date} not a grid date, {@code by}, {@code run}). */
     EXPOSURE_BAD_PARAMETER("DRS-5440", 400),
     /**
