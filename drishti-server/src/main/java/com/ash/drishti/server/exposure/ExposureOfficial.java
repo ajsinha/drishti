@@ -362,13 +362,61 @@ final class ExposureOfficial implements AutoCloseable {
         return out;
     }
 
+    /** A column hierarchy's nodes from the date's trades: the root (the bank), then every distinct path of the level columns' values. */
+    static List<Node> columnNodes(ExposureDate d, com.ash.drishti.compute.var.HierarchySpec s) {
+        List<Node> out = new ArrayList<>();
+        out.add(new Node(s.id(), s.rootNodeId(), s.rootName(), null, com.ash.drishti.compute.var.HierarchySpec.ROOT_LEVEL, "BANK"));
+        com.ash.drishti.compute.ccr.ExposureScopes cols = new com.ash.drishti.compute.ccr.ExposureScopes(d.book(), null);
+        Set<String> seen = new java.util.HashSet<>();
+        Map<String, String> parentOf = new java.util.HashMap<>();
+        int k = s.levels().size();
+        for (ExposureBook.TradeInfo t : d.book().trades()) {
+            List<String> values = new ArrayList<>(k);
+            for (String c : s.levels()) {
+                Object v = cols.column(t, c);
+                values.add(v == null ? "" : String.valueOf(v));
+            }
+            String parent = s.rootNodeId();
+            StringBuilder where = new StringBuilder("WHERE:");
+            for (int i = 1; i <= k; i++) {
+                String id = s.nodeId(values, i);
+                where.append(i == 1 ? "" : " and ").append(s.levels().get(i - 1)).append(" == '").append(values.get(i - 1)).append('\'');
+                if (seen.add(id)) {
+                    out.add(new Node(s.id(), id, values.get(i - 1), parent, s.levelNames().get(i - 1), where.toString()));
+                    parentOf.put(id, parent);
+                } else if (s.leafIds() && !parent.equals(parentOf.get(id))) {
+                    throw new DrishtiException(com.ash.drishti.common.ErrorCode.VAR_HIERARCHY_INVALID, "the hierarchy " + s.id() + " names its nodes by their own value "
+                            + "(ids: leaf), but " + values.get(i - 1) + " sits under both " + parentOf.get(id) + " and " + parent + ": use ids: path");
+                }
+                parent = id;
+            }
+        }
+        return out;
+    }
+
     /** A hierarchy node and the scope of its trades (its books'). */
     record Node(String hierarchy, String id, String name, String parent, String level, String scope) {}
 
-    /** The MGMT and LEGAL hierarchies' nodes (the market-risk pack's risk-hierarchy), else the bank and the legal entities. */
-    private List<Node> nodes(ExposureDate d) {
+    /**
+     * The hierarchies' nodes VaR builds (2.9.5, {@code Hierarchies}): those of the market-risk pack's risk-hierarchy rows (a node's scope its
+     * books, {@code BOOK:a + BOOK:b}), and those of every hierarchy built from columns (a node's scope its path of values,
+     * {@code WHERE:LIMIT_LETTER == 'LL-0003' and DESK == 'DESK-RATES'}); with neither, the bank and the legal entities.
+     */
+    List<Node> nodes(ExposureDate d) {
         List<Node> out = new ArrayList<>();
-        Map<String, DataNode> h = svc.loader().documents(svc.props().kinds().hierarchy(), AsOf.of(d.date()));
+        com.ash.drishti.server.var.Hierarchies hs = svc.loader().hierarchies();
+        Map<String, DataNode> h = new LinkedHashMap<>();
+        try {
+            svc.loader().documents(svc.props().kinds().hierarchy(), AsOf.of(d.date())).forEach((id, n) -> {
+                if (hs.fromRows(String.valueOf(ExposureLoader.text(n, "HIERARCHY")))) {
+                    h.put(id, n);
+                }
+            });
+        } catch (RuntimeException e) {
+            if (hs.columnSpecs().isEmpty()) {
+                throw e;
+            }
+        }
         Set<String> books = new LinkedHashSet<>();
         d.book().trades().forEach(t -> {
             if (t.book() != null) {
@@ -387,6 +435,9 @@ final class ExposureOfficial implements AutoCloseable {
             String id = e.getKey();
             out.add(new Node(String.valueOf(ExposureLoader.text(n, "HIERARCHY")), id, ExposureLoader.text(n, "NAME"), ExposureLoader.text(n, "PARENT_ID"),
                     ExposureLoader.text(n, "LEVEL"), bs.isEmpty() ? null : String.join(" + ", bs)));
+        }
+        for (com.ash.drishti.compute.var.HierarchySpec s : hs.columnSpecs()) {
+            out.addAll(columnNodes(d, s));
         }
         if (out.isEmpty()) {
             out.add(new Node("MGMT", "MGMT~BANK", "Bank", null, "bank", "BANK"));

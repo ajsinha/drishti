@@ -65,13 +65,18 @@ import org.springframework.boot.context.properties.ConfigurationProperties;
  * @param scenarioWindow how many scenarios the engine uses (VAR_GUIDE.md section 18.5): {@code all} (the whole scenario set, its length
  *     509 in the demo) or a number N, the newest N scenarios of each date's set (250: one year, about 500: two); at least 20; a set
  *     shorter than N is used whole, with a warning in the provenance
+ * @param hierarchies the hierarchies (2.9.5, VAR_GUIDE.md section 16): id to its settings ({@code title}, {@code source:
+ *     risk-hierarchy|columns}, {@code levels: "LIMIT_LETTER > DESK"}, {@code level-names}, {@code root}, {@code ids: path|leaf},
+ *     {@code word}, {@code limits}); when set, wins over a loaded pack's {@code hierarchies:} block; neither: MGMT and LEGAL from the
+ *     {@code risk-hierarchy} rows, as before 2.9.5
  */
 @ConfigurationProperties("drishti.var")
 public record VarProperties(Boolean enabled, Double confidence, Double esConfidence, String rankRule, Integer componentWindow,
         Boolean componentScaleToVar, Integer threads, Integer parallelRows, Long memoryBudgetMb, Integer rowsPerChunk, Integer hotDates,
         Integer historyDays, Integer histogramBins, Integer maxParts, Kinds kinds, Map<String, Map<String, String>> access, Integer pathPage,
         Positions positions, Official official, Tier tier, List<String> currencies, Integer currencyRetentionDates, String rootName,
-        Map<String, String> rootNames, Intraday intraday, Map<String, Input> inputs, String scenarioWindow) {
+        Map<String, String> rootNames, Intraday intraday, Map<String, Input> inputs, String scenarioWindow,
+        Map<String, Map<String, Object>> hierarchies) {
 
     /** The smallest scenario window: fewer scenarios than this make a tail of one or two days. */
     public static final int MIN_WINDOW = 20;
@@ -193,10 +198,11 @@ public record VarProperties(Boolean enabled, Double confidence, Double esConfide
      * The kinds the engine reads, as the market-risk pack names them; {@code position} is the kind its derived positions are served as.
      * A bank sends its trades' scenario P&amp;L as P&amp;L vectors ({@code vector}, USD) or as scenario PVs in each trade's currency
      * ({@code scenarioPv}, 2.9.4), or both for different trades; the FX of the scenarios is {@code fxScenario} when the batch supplies
-     * it, else derived from the FX history of {@code fxSpot} (the market-data pack's).
+     * it, else derived from the FX history of {@code fxSpot} (the market-data pack's). The nodes' VaR limits by hierarchy and node id
+     * are {@code limit} (2.9.5, {@code var-limit}), read for the hierarchies whose {@code limits} names it.
      */
     public record Kinds(String vector, String position, String hierarchy, String scenarioSet, String portfolio, String scenarioPv,
-            String fxScenario, String fxSpot) {
+            String fxScenario, String fxSpot, String limit) {
         public Kinds {
             vector = vector == null ? "pnl-vector" : vector;
             position = position == null ? "position" : position;
@@ -206,10 +212,11 @@ public record VarProperties(Boolean enabled, Double confidence, Double esConfide
             scenarioPv = scenarioPv == null ? "scenario-pv" : scenarioPv;
             fxScenario = fxScenario == null ? "fx-scenario" : fxScenario;
             fxSpot = fxSpot == null ? "fx-spot" : fxSpot;
+            limit = limit == null ? "var-limit" : limit;
         }
 
         public List<String> all() {
-            return List.of(vector, position, hierarchy, scenarioSet, portfolio, scenarioPv, fxScenario, fxSpot);
+            return List.of(vector, position, hierarchy, scenarioSet, portfolio, scenarioPv, fxScenario, fxSpot, limit);
         }
 
         /**
@@ -217,7 +224,7 @@ public record VarProperties(Boolean enabled, Double confidence, Double esConfide
          * ({@code fxSpot}) is not one: a market-data load does not reload VaR; a date reads the history it finds when it loads.
          */
         public List<String> inputs() {
-            return List.of(vector, hierarchy, scenarioSet, portfolio, scenarioPv, fxScenario);
+            return List.of(vector, hierarchy, scenarioSet, portfolio, scenarioPv, fxScenario, limit);
         }
     }
 
@@ -316,7 +323,8 @@ public record VarProperties(Boolean enabled, Double confidence, Double esConfide
         historyDays = historyDays == null || historyDays <= 1 ? 250 : historyDays;
         histogramBins = histogramBins == null || histogramBins < 5 ? 42 : histogramBins;
         maxParts = maxParts == null || maxParts <= 0 ? 5000 : maxParts;
-        kinds = kinds == null ? new Kinds(null, null, null, null, null, null, null, null) : kinds;
+        kinds = kinds == null ? new Kinds(null, null, null, null, null, null, null, null, null) : kinds;
+        hierarchies = hierarchies == null ? Map.of() : hierarchies;
         access = access == null ? Map.of() : access;
         pathPage = pathPage == null || pathPage <= 0 ? 60 : pathPage;
         positions = positions == null ? new Positions(null, null) : positions;

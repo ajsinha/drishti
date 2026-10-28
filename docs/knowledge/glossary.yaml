@@ -62,7 +62,7 @@ terms:
     synonyms: [pnl vector, pnl-vector, p and l vector, pnlv, vector]
     domain: market-risk
     meaning: "One trade's P&L under each of the 509 scenario days, priced upstream by the risk batch. Drishti adds vectors element by element; every VaR figure is read from the sum."
-    command: PNLV PV-MX-20000274-HS-509
+    command: PNLV PNL-MX-20000274-HS-509
   - term: Full revaluation
     synonyms: [revaluation, sensitivities based pnl, taylor expansion, sensitivity-based revaluation]
     domain: market-risk

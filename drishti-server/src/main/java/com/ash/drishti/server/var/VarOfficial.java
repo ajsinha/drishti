@@ -416,6 +416,30 @@ final class VarOfficial implements AutoCloseable {
         }
         Map<String, List<String>> nodes = new LinkedHashMap<>();
         b.nodes().forEach((id, n) -> nodes.put(id, n.books()));
+        // the cells a column hierarchy's nodes list (2.9.5): each its book, its values and its positions (a position is in one cell)
+        Map<String, Map<String, Object>> cells = new LinkedHashMap<>();
+        if (!b.cellColumns().isEmpty()) {
+            List<String> cols = b.trades().textColumns();
+            for (int p = 0; p < b.positionCount(); p++) {
+                if (b.positionTo(p) <= b.positionFrom(p)) {
+                    continue;
+                }
+                String[] t = b.trades().textsOf(b.positionFrom(p));
+                String cell = b.cellOf(t);
+                Map<String, Object> c = cells.computeIfAbsent(cell, x -> {
+                    Map<String, Object> e = new LinkedHashMap<>();
+                    e.put("book", t[cols.indexOf("TT_BOOK")]);
+                    Map<String, String> values = new LinkedHashMap<>();
+                    b.cellColumns().forEach(col -> values.put(col, t[cols.indexOf(col)]));
+                    e.put("values", values);
+                    e.put("positions", new ArrayList<String>());
+                    return e;
+                });
+                @SuppressWarnings("unchecked")
+                List<String> ps = (List<String>) c.get("positions");
+                ps.add(b.positionId(p));
+            }
+        }
         Map<String, Object> m = new LinkedHashMap<>();
         m.put("businessDate", d.date().toString());
         m.put("resultVersion", version);
@@ -425,6 +449,9 @@ final class VarOfficial implements AutoCloseable {
         m.put("positions", b.positionCount());
         m.put("books", books);
         m.put("nodes", nodes);
+        if (!cells.isEmpty()) {
+            m.put("cells", cells);
+        }
         return m;
     }
 }

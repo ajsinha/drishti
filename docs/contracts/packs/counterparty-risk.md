@@ -31,7 +31,7 @@ One section per command of the pack: the shape of its data, how it is stored and
 | [MC](#mc-margin-call-margin-call) | `margin-call` | fundamental | active | 11 | 7 |
 | [SIMM](#simm-isda-simm-initial-margin-simm) | `simm` | fundamental | active | 8 | 5 |
 | [XRUN](#xrun-exposure-simulation-run-simulation-run) | `simulation-run` | input | active | 24 | 4 |
-| [XPATH](#xpath-exposure-path-a-trades-mtm-on-every-path-at-a-grid-date-exposure-path) | `exposure-path` | input | active | 20 | 7 |
+| [XPATH](#xpath-exposure-path-a-trades-mtm-on-every-path-at-a-grid-date-exposure-path) | `exposure-path` | input | active | 21 | 7 |
 | [EXP](#exp-exposure-profile-of-a-scope-computed-exposure-result) | `exposure-result` | computed | active | 27 | 0 |
 | [XWIF](#xwif-exposure-what-if-before-dealing-computed-python-exposure-whatif) | `exposure-whatif` | computed | active | 27 | 0 |
 | [XOFC](#xofc-exposure-official-results-by-netting-set-and-counterparty-published-exposure-official-cpty) | `exposure-official-cpty` | computed | active | 32 | 0 |
@@ -780,7 +780,7 @@ One trade's mark to market on every path of a simulation run at one grid date, i
 | Dated by | `BUSINESS_DATE` |
 | Cadence | daily (due: to be agreed with the simulator's owner (EXPOSURE_GUIDE.md open question 1); a bank's run often lands 04:00-07:00) |
 | Storage | connector `exposure-store` (plugin `delta`), table `<root>/risk/exposure-path/` |
-| Columns | `TRADE_ID`, `NETTING_SET`, `COUNTERPARTY`, `LEGAL_ENTITY`, `DESK`, `TT_BOOK`, `ASSET_CLASS`, `PRODUCT`, `SOURCE_SYSTEM`, `MATURITY_DATE`, `NOTIONAL`, `GRID_INDEX`, `GRID_DATE`, `RUN_ID`, `BATCH_ID`, `STATUS` |
+| Columns | `TRADE_ID`, `NETTING_SET`, `COUNTERPARTY`, `LEGAL_ENTITY`, `DESK`, `TT_BOOK`, `LIMIT_LETTER`, `ASSET_CLASS`, `PRODUCT`, `SOURCE_SYSTEM`, `MATURITY_DATE`, `NOTIONAL`, `GRID_INDEX`, `GRID_DATE`, `RUN_ID`, `BATCH_ID`, `STATUS` |
 | Vectors | `MTM` |
 | Test data | data/testdata/counterparty-risk/exposure-path |
 
@@ -798,6 +798,7 @@ One trade's mark to market on every path of a simulation run at one grid date, i
 | `LEGAL_ENTITY` | id | required |  | Legal entity: the legal-entity it refers to | `LE-FRA` (pattern `^LE-`) | `legal-entity` |
 | `DESK` | id | required |  | Desk: the desk it refers to | `DESK-SFT` (pattern `^DESK-`) | `desk` |
 | `TT_BOOK` | id | required |  | Book: the book it refers to | `BOOK-SFT-1` (pattern `^BOOK-`) | `book` |
+| `LIMIT_LETTER` | text | optional |  | The trade's limit letter (2.9.5), as its VaR records carry it: the level column of the hierarchy LL (LIMIT_LETTER > DESK, VAR_GUIDE.md section 16). When a hierarchy is built from it, every row carries it (a row without it is refused, DRS-5211). | `LL-0003` |  |
 | `ASSET_CLASS` | text | required |  | — | `Equity`, `FX`, `Inflation`, `Securities financing` |  |
 | `PRODUCT` | text | required |  | — | `Tri-party repo` |  |
 | `NOTIONAL` | amount | required |  | — | `237000000.0` |  |

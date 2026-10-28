@@ -85,7 +85,7 @@ trade   TRD <id>     ENDUR 1000001 · MUREX MX-20000005 · CALYPSO CLY-3000001
    │  LEGS[], EVENTS[]        nested: each leg's notional, index, schedule; each dated payment or fixing
    │
    ├─◄ trade-valuation   TVAL TVAL-<trade id>        the risk engine's MTM, 1-day P&L, DV01, NETTING_SET
-   ├─◄ pnl-vector        PNLV PV-<trade id>-HS-509   509 scenario P&Ls (market risk)
+   ├─◄ pnl-vector        PNLV PNL-<trade id>-HS-509  509 scenario P&Ls (market risk)
    ├─◄ position          POS POS-<book>~<security | trade>  the trade netted with others in its book (market risk)
    ├─◄ exposure-path     XPATH <run>~<trade id>~<n>  MtM on every path (counterparty risk)
    └─◄ netting-set       NSET NS-<counterparty>-<legal entity>   TRADE_IDS (counterparty risk)

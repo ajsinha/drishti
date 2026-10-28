@@ -19,7 +19,7 @@
 
 Every command (mnemonic) of every pack has a data contract: a YAML file beside its pack (`config/packs/<pack>/contracts/<kind>.contract.yaml`, checked against `tools/contracts.schema.json`) and a section of its pack's page here. The shared rules are in [the contracts README](../README.md); the computed measures that replace the retiring kinds have their own contracts there.
 
-102 contracts, 478 points still to review. Check them with `drishti.py contract check`; draft a new one with `drishti.py contract bootstrap KIND --write`.
+103 contracts, 478 points still to review. Check them with `drishti.py contract check`; draft a new one with `drishti.py contract bootstrap KIND --write`.
 
 | Command | Kind | Pack | Class | Status | Replaced by | To review |
 |---|---|---|---|---|---|---|
@@ -93,6 +93,7 @@ Every command (mnemonic) of every pack has a data contract: a YAML file beside i
 | `FXS` | `fx-scenario` | [market-risk](market-risk.md#fxs-scenario-fx-of-a-currency-509-scenarios-fx-scenario) | input | active |  | 4 |
 | `SSET` | `scenario-set` | [market-risk](market-risk.md#sset-scenario-set-scenario-set) | input | active |  | 4 |
 | `HIER` | `risk-hierarchy` | [market-risk](market-risk.md#hier-risk-hierarchy-node-risk-hierarchy) | input | active |  | 5 |
+| `VLIM` | `var-limit` | [market-risk](market-risk.md#vlim-var-limit-of-a-hierarchy-node-var-limit) | input | active |  | 0 |
 | `VRES` | `var-result` | [market-risk](market-risk.md#vres-var-of-a-scope-computed-var-result) | computed | active |  | 0 |
 | `VWIF` | `var-whatif` | [market-risk](market-risk.md#vwif-var-what-if-computed-python-var-whatif) | computed | active |  | 0 |
 | `VOFF` | `var-official` | [market-risk](market-risk.md#voff-var-official-results-published-var-official) | computed | active |  | 0 |

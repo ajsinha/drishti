@@ -48,7 +48,7 @@
   <div class="vx-layout">
     <aside class="vx-panel vx-tree-panel" aria-label="Scopes">
       <div class="vx-ph"><h2>Scopes</h2>
-        <select class="vx-select" data-vx-hierarchy aria-label="Hierarchy"><option value="MGMT">Management</option><option value="LEGAL">Legal entity</option></select>
+        <select class="vx-select" data-vx-hierarchy aria-label="Hierarchy"><option value="{{ hierarchy or 'MGMT' }}">{{ hierarchy or 'MGMT' }}</option></select>
         <span class="vx-fresh" data-vx-fresh="tree">loading…</span></div>
       <div class="vx-tree" role="tree" data-vx-tree></div>
       <div class="vx-sec">Ad-hoc scopes <button type="button" class="btn btn-sm vx-btn" data-vx-basket-open title="Construct your basket (Alt+B)" aria-keyshortcuts="Alt+B">◫ Construct your basket <span class="tool-count" data-basket-count hidden>0</span></button></div>

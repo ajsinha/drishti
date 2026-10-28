@@ -45,3 +45,14 @@ positions:
               CMD_FUT_OPTION, ComFut, EMISSIONS_FUTURE]
       key: [SECURITY_ID, CONTRACT]
     - name: otc                         # everything else: one position per trade
+
+# The hierarchies the VaR and exposure engines build (docs/guides/VAR_GUIDE.md section 16, 2.9.5); drishti.var.hierarchies in the
+# server's settings wins over this block. source: risk-hierarchy reads the risk-hierarchy rows (book-based: each node lists its books,
+# with its name and LIMIT_VAR); source: columns (the default when levels are given) builds the nodes from the trades' own columns, every
+# distinct path of values a node under one root (LL~BANK), its members the rows (a letter may hold part of a book). ids: path (default,
+# LL~LL-0003/DESK-RATES) or leaf (LL~DESK-RATES, when each value has one parent). word: the scope word naming a node (LL:LL-0003).
+# limits: the kind the nodes' VaR limits come from (var-limit, by hierarchy and node id; a node without one has no limit).
+hierarchies:
+  MGMT: { title: Management, source: risk-hierarchy }
+  LEGAL: { title: Legal entities, source: risk-hierarchy }
+  LL: { title: Limit letters, levels: "LIMIT_LETTER > DESK", word: LL, limits: var-limit }

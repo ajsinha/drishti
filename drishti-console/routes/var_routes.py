@@ -121,12 +121,23 @@ def _problem(e: BackendError) -> JSONResponse:
     return JSONResponse({"code": e.code, "detail": e.detail}, status_code=e.status)
 
 
+#: a hierarchy's id (2.9.5: any configured one, LL; the page's selector lists the date's from the engine)
+HIERARCHY = re.compile(r"^[A-Z][A-Z0-9_]{0,31}$")
+
+
+def hierarchy_of(text: str) -> str:
+    """The hierarchy a link asks for, upper case: any well-formed id (the engine says when the date has none: the page then shows MGMT,
+    with a note); MGMT for anything else."""
+    h = (text or "").strip().upper()
+    return h if HIERARCHY.match(h) else "MGMT"
+
+
 @router.get("/var")
 async def page(request: Request, scope: str = "", capture: str = "", hierarchy: str = "MGMT", ccy: str = ""):
     """The explorer's shell; its panels load in place (no full-page reload when drilling). ``ccy`` is the page's reporting currency
-    (none: the one chosen earlier in the session, else USD)."""
+    (none: the one chosen earlier in the session, else USD); ``hierarchy`` the tree shown (MGMT, LEGAL, LL: any configured one)."""
     me = getattr(request.state, "identity", None)
-    return render(request, "terminal/var.html", scope=scope or "BANK", capture=capture, hierarchy=hierarchy.upper() or "MGMT",
+    return render(request, "terminal/var.html", scope=scope or "BANK", capture=capture, hierarchy=hierarchy_of(hierarchy),
                   user=(me.user if me else "") or "", screen="var", ccy=ccy.upper() if CCY.match(ccy or "") else "")
 
 

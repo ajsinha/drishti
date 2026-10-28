@@ -202,7 +202,9 @@ public final class VarIntraday {
         for (int k = 0; k < newPositions.size(); k++) {
             int p = p0 + k;
             int o = extras.getOrDefault(p, List.of(-1)).get(0);
-            if (o >= 0 && book.equals(addedTexts.get(o - t0)[VarBook.TRADE_TEXTS.indexOf("TT_BOOK")]) && !members(p, OrdinalSet.empty()).isEmpty()) {
+            String[] at = o >= 0 ? addedTexts.get(o - t0) : null;
+            if (o >= 0 && (book.equals(at[VarBook.TRADE_TEXTS.indexOf("TT_BOOK")]) || book.equals(morning.cellOf(at)))
+                    && !members(p, OrdinalSet.empty()).isEmpty()) {
                 out.add(p);
             }
         }
@@ -229,7 +231,13 @@ public final class VarIntraday {
         int idxPv = VarBook.TRADE_NUMBERS.indexOf("PV");
         Set<String> touched = new LinkedHashSet<>();
         int amended = 0;
-        for (Update u : updates) {
+        for (Update u0 : updates) {
+            Update u = u0;
+            if (!m.cellColumns().isEmpty() && u.texts() != null && u.texts()[idxPos] != null) {   // a split position: the part in its cell
+                String[] ut = u.texts().clone();
+                ut[idxPos] = m.positionIdFor(ut[idxPos], ut);
+                u = new Update(u.tradeId(), u.pnl(), u.pv(), ut, u.numbers(), u.pvUsd(), u.pnlUsd());
+            }
             touched.add(u.tradeId());
             Integer known = l.ordinalOf.get(u.tradeId());
             int o = known != null ? known : m.tradeOrdinal(u.tradeId());
@@ -243,7 +251,9 @@ public final class VarIntraday {
                 continue;
             }
             String[] oldTexts = o < 0 ? null : l.textsOf(o);
-            boolean moved = o >= 0 && (!eq(oldTexts[idxBook], u.texts()[idxBook]) || !eq(oldTexts[idxPos], u.texts()[idxPos]));
+            // a trade moved to another book, position or cell (a limit letter changed) leaves its old one: cancelled there, added anew
+            boolean moved = o >= 0 && (!eq(oldTexts[idxBook], u.texts()[idxBook]) || !eq(oldTexts[idxPos], u.texts()[idxPos])
+                    || !eq(m.cellOf(oldTexts), m.cellOf(u.texts())));
             if (o >= 0 && !moved) {                                    // amended in place (or revived after a cancel)
                 l.cancelled.clear(o);
                 l.change(o, u.pnl(), u.pv(), u.pvUsd(), u.pnlUsd(), u.texts(), exact, keysOfBook, fx, w);
@@ -322,7 +332,25 @@ public final class VarIntraday {
         }
     }
 
-    /** Every aggregate key a book's trades are summed into: the book, and each node holding it (both hierarchies). */
+    /**
+     * Every aggregate key a trade with these texts is summed into: its book and the nodes holding it, and its cell and the nodes holding
+     * that (a column hierarchy's, {@link Cells}). A cell the morning did not have holds no node: the trade is summed as a leaf until the
+     * next load, as a new book is.
+     */
+    private List<String> keysOf(String[] t, Map<String, List<String>> keysOfBook) {
+        String book = t[VarBook.TRADE_TEXTS.indexOf("TT_BOOK")];
+        if (book == null) {
+            return List.of();
+        }
+        List<String> keys = new ArrayList<>(keysOfBook.getOrDefault(book, List.of(book)));
+        String cell = morning.cellOf(t);
+        if (cell != null && !cell.equals(book)) {
+            keys.addAll(keysOfBook.getOrDefault(cell, List.of()));
+        }
+        return keys;
+    }
+
+    /** Every aggregate key a book's (or a cell's) trades are summed into: the book, and each node holding it (every hierarchy). */
     private static Map<String, List<String>> keysOfBook(VarBook m) {
         Map<String, List<String>> out = new HashMap<>();
         for (VarBook.Node n : m.morning().nodes().values()) {
@@ -346,9 +374,7 @@ public final class VarIntraday {
         for (int s = 0; s < w; s++) {
             diff[s] = now[s] - old[s];
         }
-        String[] t = textsOf(o);
-        String book = t[VarBook.TRADE_TEXTS.indexOf("TT_BOOK")];
-        List<String> keys = book == null ? List.of() : keysOfBook.getOrDefault(book, List.of(book));
+        List<String> keys = keysOf(textsOf(o), keysOfBook);
         Map<String, double[]> into = base ? planner : added;
         for (String k : keys) {
             double[] a = base ? planner.getOrDefault(k, morning.morningAggregate(k)) : added.get(k);
@@ -472,7 +498,13 @@ public final class VarIntraday {
         Map<String, List<Integer>> addedByBook = new HashMap<>();
         for (int k = 0; k < na; k++) {
             if (!cancelled.get(t0 + k)) {
-                addedByBook.computeIfAbsent(String.valueOf(addedTexts.get(k)[VarBook.TRADE_TEXTS.indexOf("TT_BOOK")]), x -> new ArrayList<>()).add(t0 + k);
+                String[] at = addedTexts.get(k);
+                String bk = String.valueOf(at[VarBook.TRADE_TEXTS.indexOf("TT_BOOK")]);
+                addedByBook.computeIfAbsent(bk, x -> new ArrayList<>()).add(t0 + k);
+                String cell = m.cellOf(at);
+                if (cell != null && !cell.equals(bk)) {
+                    addedByBook.computeIfAbsent(cell, x -> new ArrayList<>()).add(t0 + k);
+                }
             }
         }
         OrdinalSet gone = cancelledOrdinals();
@@ -492,6 +524,7 @@ public final class VarIntraday {
         agg.putAll(planner);
         CurrencyTotals ct = m.currencyTotals() == null ? null : m.currencyTotals().withChanges(totals);
         return new VarBook(m.businessDate(), m.scenarioSet(), m.scenarioDates(), new OverlayVectors(m.store(), delta, addedRows), tids, tcols, posOf,
-                pids, from, to, pcols, nodes, m.bookRanges(), agg, m.failed(), m.loadMillis(), m.hot(), ct, m, this);
+                pids, from, to, pcols, nodes, m.bookRanges(), agg, m.failed(), m.loadMillis(), m.hot(), ct, m, this, m.cellColumns(),
+                m.splitPositions());
     }
 }

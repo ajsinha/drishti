@@ -13,7 +13,7 @@
 # See the LICENSE file in the root of this repository for the full terms.
 
 """Shared pieces of the VaR pictures (the guide docs/guides/VAR_GUIDE.md, module var; tutorial 25, module t25): a scratch server and
-console over the market-risk pack's committed VaR test data (9,572 trades of 2026-09-30, 88 hierarchy nodes, 28 portfolios), built into
+console over the market-risk pack's committed VaR test data (9,572 trades of 2026-09-30, 131 hierarchy nodes: 88 MGMT and LEGAL, 43 limit letters, 28 portfolios), built into
 a scratch lake exactly as drishti-console/tests/test_var_explorer_browser.py builds it (`drishti.py lake demo --only` the four VaR
 kinds), the demo connector off, offline. The engine is waited for (the bank's VaR answers) before the first picture."""
 from __future__ import annotations
@@ -27,7 +27,8 @@ import urllib.request
 from shotlib import CONSOLE_PORT, ROOT, SERVER_PORT, Ctx
 from shotlib import start_servers as _start
 
-VAR_DATA = ",".join([f"market-risk/{k}" for k in ("pnl-vector", "scenario-pv", "fx-scenario", "scenario-set", "risk-hierarchy", "portfolio")] + ["trades/murex"])   # trades: the Risk links
+VAR_DATA = ",".join([f"market-risk/{k}" for k in ("pnl-vector", "scenario-pv", "fx-scenario", "scenario-set", "risk-hierarchy", "portfolio", "var-limit")]
+                    + ["trades/murex"])   # trades: the Risk links; var-limit: the limit letters' limits (2.9.5)
 WIDE, HIGH = 1600, 1000
 LAKE: list = []                                  # the scratch lake start_servers built (a shot appends intraday batches to it)
 

@@ -67,7 +67,7 @@ final class VarSelection {
 
     /** The scope's top-level terms with their sign; a single saved basket stands for its definition's terms. */
     List<Term> terms(Principal p, String scope) {
-        ScopeExpr e = expanded(p, ScopeExpr.parse(scope));
+        ScopeExpr e = expanded(p, ScopeExpr.parse(scope, svc.words().keySet()));
         List<Term> out = new ArrayList<>();
         flatten(e, "+", out);
         return out;
@@ -79,7 +79,7 @@ final class VarSelection {
             Optional<String> def = svc.saved().basket(p, r.arg()).map(b -> String.valueOf(b.get("scope")));
             if (def.isPresent()) {
                 try {
-                    return ScopeExpr.parse(def.get());
+                    return ScopeExpr.parse(def.get(), svc.words().keySet());
                 } catch (IllegalArgumentException x) {
                     return e;
                 }
@@ -138,7 +138,7 @@ final class VarSelection {
     List<VarViews.Part> parts(Principal p, VarService.Scoped s) {
         VarDate d = s.date();
         VarBook b = d.book();
-        ScopeResolver resolver = new ScopeResolver(b, svc.definitions(p, d));
+        ScopeResolver resolver = new ScopeResolver(b, svc.definitions(p, d), svc.words());
         OrdinalSet taken = OrdinalSet.empty();
         List<VarViews.Part> out = new ArrayList<>();
         for (Term t : terms(p, s.res().canonical())) {
@@ -188,6 +188,10 @@ final class VarSelection {
                 return "rule: " + r.arg();
             }
             default -> {
+                if (svc.words().containsKey(r.word())) {                    // a configured hierarchy's node (2.9.5)
+                    String id = new ScopeResolver(d.book(), svc.definitions(p, d), svc.words()).nodeId(r);
+                    return id == null ? r.toString() : d.book().node(id).name();
+                }
                 return r.toString();
             }
         }
@@ -205,7 +209,7 @@ final class VarSelection {
         List<String> unknown = s.res().unknown();
         ScopeExpr parsed;
         try {
-            parsed = ScopeExpr.parse(s.res().canonical());
+            parsed = ScopeExpr.parse(s.res().canonical(), svc.words().keySet());
         } catch (IllegalArgumentException e) {
             return out;
         }
@@ -265,12 +269,12 @@ final class VarSelection {
         int max = limit <= 0 ? HINTS : Math.min(limit, 25);
         List<Entry> found = new ArrayList<>();
         String typedWord = text.contains(":") ? text.substring(0, text.indexOf(':')).trim().toUpperCase(Locale.ROOT) : "";
-        if (ScopeExpr.WORDS.contains(typedWord) && text.length() > typedWord.length() + 1) {
+        if ((ScopeExpr.WORDS.contains(typedWord) || svc.words().containsKey(typedWord)) && text.length() > typedWord.length() + 1) {
             found.add(new Entry(typedWord, text, text.substring(text.indexOf(':') + 1).trim(), "as typed", ""));
         }
         String needle = text.toLowerCase(Locale.ROOT);
         String[] words = needle.split("\\s+");
-        List<Entry> all = new ArrayList<>(catalogue(d));
+        List<Entry> all = new ArrayList<>(catalogue(d, svc.words()));
         if (p != null) {
             for (Map<String, Object> b : svc.saved().baskets(p)) {
                 String id = String.valueOf(b.get("id"));
@@ -294,7 +298,7 @@ final class VarSelection {
             }
         }
         matches.sort(Comparator.comparingInt((Entry e) -> e.id().toLowerCase(Locale.ROOT).startsWith(needle) ? 0 : 1)
-                .thenComparingInt(e -> TYPES.indexOf(e.type())).thenComparing(Entry::id));
+                .thenComparingInt(e -> TYPES.contains(e.type()) ? TYPES.indexOf(e.type()) : TYPES.indexOf("BOOK")).thenComparing(Entry::id));
         found.addAll(matches);
         List<Map<String, Object>> out = new ArrayList<>();
         java.util.Set<String> seen = new java.util.HashSet<>();
@@ -335,20 +339,33 @@ final class VarSelection {
         return out;
     }
 
-    /** The date's catalogue: nodes, portfolios, counterparties, positions and trades (built once per date and data version). */
-    private List<Entry> catalogue(VarDate d) {
-        String key = d.date() + "|" + d.version();
+    /**
+     * The date's catalogue: nodes (each configured hierarchy's by its word, 2.9.5), portfolios, counterparties, positions and trades
+     * (built once per date, data version and configured words).
+     */
+    private List<Entry> catalogue(VarDate d, Map<String, String> words) {
+        String key = d.date() + "|" + d.version() + "|" + words;
         return catalogues.computeIfAbsent(key, k -> {
             catalogues.keySet().removeIf(x -> !x.equals(k) && catalogues.size() > 3);
-            return build(d);
+            return build(d, words);
         });
     }
 
-    private static List<Entry> build(VarDate d) {
+    private static List<Entry> build(VarDate d, Map<String, String> words) {
         VarBook b = d.book();
         List<Entry> out = new ArrayList<>();
         d.portfolios().values().forEach(pf -> out.add(entry("PORT", "PORT:" + pf.id(), pf.id(), pf.name() == null ? pf.id() : pf.name())));
+        Map<String, String> wordOf = new HashMap<>();
+        words.forEach((w, h) -> wordOf.put(h, w));
         b.nodes().values().forEach(n -> {
+            String own = wordOf.get(n.hierarchy());
+            if (own != null) {                                           // a configured hierarchy's node, named by its word: LL:LL-0042
+                if (n.parent() != null) {
+                    String id = n.id().substring(n.id().indexOf('~') + 1);
+                    out.add(entry(own, own + ":" + id, id, n.name()));
+                }
+                return;
+            }
             String type = switch (n.level() == null ? "" : n.level()) {
                 case "desk" -> "DESK";
                 case "book" -> "BOOK";

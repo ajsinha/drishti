@@ -35,6 +35,7 @@ kinds:
 - fx-scenario
 - scenario-set
 - risk-hierarchy
+- var-limit
 - var-result
 - var-whatif
 - var-official
@@ -77,6 +78,9 @@ mnemonics:
   HIER:
     kind: risk-hierarchy
     label: Risk hierarchy node
+  VLIM:
+    kind: var-limit
+    label: VaR limit of a hierarchy node
   VRES:
     kind: var-result
     label: VaR of a scope (computed)
@@ -88,6 +92,8 @@ mnemonics:
     label: VaR official results (published)
 graph:
   id-patterns:
+  - pattern: ^PNL-.+-HS-[0-9]+$
+    kind: pnl-vector
   - pattern: ^SCN-
     kind: stress-scenario
   - pattern: ^STR-
@@ -112,6 +118,8 @@ graph:
     kind: scenario-set
   - pattern: ^(MGMT|LEGAL)~
     kind: risk-hierarchy
+  - pattern: ^VL-
+    kind: var-limit
   fields:
     NODE_ID:
       kind: risk-hierarchy
@@ -161,6 +169,7 @@ connectors:
     - fx-scenario
     - scenario-set
     - risk-hierarchy
+    - var-limit
     settings:
       root: ${DRISHTI_DELTA_ROOT:${drishti.data.dir:./data}/delta}
       domain: risk
@@ -205,6 +214,7 @@ connectors:
           - DIVISION
           - DESK
           - TT_BOOK
+          - LIMIT_LETTER
           - PORTFOLIO
           - STRATEGY
           - PRODUCT_GROUP
@@ -240,6 +250,7 @@ connectors:
           - DIVISION
           - DESK
           - TT_BOOK
+          - LIMIT_LETTER
           - PORTFOLIO
           - STRATEGY
           - PRODUCT_GROUP
@@ -274,6 +285,13 @@ connectors:
           - PARENT_ID
           - NAME
           - LIMIT_VAR
+        var-limit:
+          columns:
+          - LIMIT_ID
+          - HIERARCHY
+          - NODE_ID
+          - LIMIT_VAR
+          - CURRENCY
         portfolio:
           columns:
           - PORTFOLIO_ID
@@ -358,6 +376,7 @@ connectors:
       - risk-hierarchy
       - scenario-set
       - portfolio
+      - var-limit
       affects: all
     coalesce:
       quiet: 250ms
@@ -419,6 +438,7 @@ connectors:
       - risk-hierarchy
       - scenario-set
       - portfolio
+      - var-limit
       affects: all
     coalesce:
       quiet: 250ms
@@ -443,6 +463,7 @@ routes:
   fx-scenario: risk-store
   scenario-set: risk-store
   risk-hierarchy: risk-store
+  var-limit: risk-store
   var-result: var-engine
   var-whatif: var-whatif
   var-official: var-results
@@ -636,6 +657,19 @@ form:
   - path: LIMIT_VAR
     label: Limit VaR
     type: amount
+  var-limit:
+  - path: LIMIT_ID
+    label: Limit id
+    type: id
+  - path: HIERARCHY
+    label: Hierarchy
+    type: text
+  - path: NODE_ID
+    label: Node id
+    type: id
+  - path: LIMIT_VAR
+    label: Limit VaR
+    type: amount
   var-official:
   - path: NODE_ID
     label: Node id
@@ -710,3 +744,14 @@ positions:
               CMD_FUT_OPTION, ComFut, EMISSIONS_FUTURE]
       key: [SECURITY_ID, CONTRACT]
     - name: otc                         # everything else: one position per trade
+
+# The hierarchies the VaR and exposure engines build (docs/guides/VAR_GUIDE.md section 16, 2.9.5); drishti.var.hierarchies in the
+# server's settings wins over this block. source: risk-hierarchy reads the risk-hierarchy rows (book-based: each node lists its books,
+# with its name and LIMIT_VAR); source: columns (the default when levels are given) builds the nodes from the trades' own columns, every
+# distinct path of values a node under one root (LL~BANK), its members the rows (a letter may hold part of a book). ids: path (default,
+# LL~LL-0003/DESK-RATES) or leaf (LL~DESK-RATES, when each value has one parent). word: the scope word naming a node (LL:LL-0003).
+# limits: the kind the nodes' VaR limits come from (var-limit, by hierarchy and node id; a node without one has no limit).
+hierarchies:
+  MGMT: { title: Management, source: risk-hierarchy }
+  LEGAL: { title: Legal entities, source: risk-hierarchy }
+  LL: { title: Limit letters, levels: "LIMIT_LETTER > DESK", word: LL, limits: var-limit }

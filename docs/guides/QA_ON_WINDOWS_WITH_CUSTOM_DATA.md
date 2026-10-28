@@ -237,7 +237,7 @@ shows CALYPSO, MUREX and ENDUR together.
 2. Press ▶ (Run).
 
 You should see, after about a minute: the Run window ends with what to start next; `data\delta` now holds the folders
-`trading`, `reference`, `legal`, `collateral`, `credit`, `risk`, `market`, `macro`, `news`, `civic`, `us-equities`, `gleif` and `funds` (84 tables). This includes the quotes and news snapshot,
+`trading`, `reference`, `legal`, `collateral`, `credit`, `risk`, `market`, `macro`, `news`, `civic`, `us-equities`, `gleif` and `funds` (85 tables). This includes the quotes and news snapshot,
 the world economy data and the us-equities, gleif and funds public data.
 
 Terminal instead (one line, from any folder):
@@ -730,6 +730,25 @@ Kafka is optional here: no broker runs on this machine, so `tools\pvgen\publish_
 the messages it would send, each a JSONL text of `--per-message` records, a cancel a cancel line). The files are the main path. Every file the scripts write is
 JSONL: one JSON object per line, the contract a pricing system sends.
 
+## 6j. What is new in 2.9.5: hierarchies and limit letters (15 minutes)
+
+**Before you start:** `git pull`, build the jar, and rebuild the VaR and exposure data: every P&L, scenario-PV and exposure-path row
+now carries `LIMIT_LETTER`, and the new kind `var-limit` holds the limits. Stop the server, run the `build_demo_lakes.py` of step 3.0
+with `--only market-risk,counterparty-risk --as-of <the lakes' last date>`, and start the server and the console again. At start the
+server adds `LIMIT_LETTER` and the `var-limit` kind to your `config\connectors\risk-store.yaml` (the old file kept beside it; **Admin →
+Connectors → Template updates** lists it). Nothing to edit by hand: the market-risk pack's `hierarchies:` block configures the limit
+letters (`drishti.var.hierarchies` in your settings would win over it).
+
+| # | Do | You should see |
+|---|---|---|
+| 1 | `VAR BANK`, the select above the tree | *Management*, *Legal entities* and *Limit letters*; choose **Limit letters**: twelve letters (LL-0001 to LL-0012), each with its desks, the link ends `&hierarchy=LL` |
+| 2 | Click **LL-0011** | VaR 29.28m, limit 41.00m (71%); the breadcrumb *Limit letters › LL-0011*; **Contributions**: DESK-RATES and DESK-FI |
+| 3 | Expand **LL-0002** | DESK-COMM shows *no limit* (blank, never zero: `var-limit` has no row for it) |
+| 4 | Type `LL:LL-0011` in the scope box, then `BOOK:BOOK-RATES-1 & LL:LL-0011` | the letter; then the part of BOOK-RATES-1 under it (142 trades) |
+| 5 | *How this number was built* | the warning *9 positions had trades under two nodes …*: `POS:POS-BOOK-RATES-1~XCH-BOND_FUTURE-GBP-01@LL-0011` answers one part |
+| 6 | `.\drishti-console\.venv\Scripts\python.exe tools\drishti.py var tree --hierarchy LL` | the letters' tree in text, the bank at the top (112,041,646) |
+| 7 | In the browser, `http://127.0.0.1:18480/api/v1/exposure/official` (signed in as an administrator) | among `scopes`, the limit letters' nodes (`LL:LL~LL-0001`, …) beside the netting sets, counterparties and MGMT/LEGAL nodes |
+
 ---
 
 ## 7. If something goes wrong
@@ -779,6 +798,7 @@ JSONL: one JSON object per line, the contract a pricing system sends.
 - [ ] Step 6d (2.6.7): **Chart** (or K) on a table, a masked field never plotted, an export.
 - [ ] Step 6f (2.9.3): the changed data rebuilt; `DATAMAP` draws and lists its findings; Home shows a fact of the day; `HIER LEGAL~BANK` shows 150m; `IDX SP500` has 495 members.
 - [ ] Step 6g (2.9.4): step 3.0 run again; the feed is `fixing.jsonl`, Health has no CSV note; JSONL downloads from a search, a view, a history page and a BI report; `drishti.py convert` on a CSV.
+- [ ] Step 6j (2.9.5): the VaR and exposure data rebuilt; **Limit letters** in the VaR tree's select; LL-0011 at 71% of its limit; LL-0002's DESK-COMM with no limit; `LL:LL-0011` in the scope box; the split-position warning.
 - [ ] Step 6h (2.9.4): the VaR data rebuilt; the Reporting currency select and **In other currencies**; `VAR BANK IN GBP`; a trade's Trade currency; `tools\pvgen\intraday.py` with `--lake` and `--server` shows the intraday badge; `check.py` says every scope is *ok*.
 
 **After the demo:**

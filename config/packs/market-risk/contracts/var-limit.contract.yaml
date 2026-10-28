@@ -1,0 +1,119 @@
+# Project Drishti · Any data. Any domain. One grammar.
+#
+# Copyright (c) 2026 Ashutosh Sinha <ajsinha@gmail.com>.
+# All rights reserved.
+#
+# PROPRIETARY AND CONFIDENTIAL.
+#
+# This file is the confidential and proprietary property of Ashutosh Sinha.
+# Unauthorised copying, use, modification, distribution or disclosure of this
+# file, via any medium, is strictly prohibited except with the express prior
+# written permission of the copyright holder.
+#
+# See the LICENSE file in the root of this repository for the full terms.
+
+# Data contract of the var-limit kind (command VLIM): docs/contracts/README.md section 16. Written with the kind in 2.9.5.
+kind: var-limit
+mnemonic: VLIM
+pack: market-risk
+version: '1.0'
+class: input
+status: active
+title: VaR limit of a hierarchy node
+description: The 1-day 99% VaR limit of one node of a hierarchy, keyed by the hierarchy and the node's id, in USD
+source: Synthetic sample data (tools/packgen/var/make_var_data.py)
+grain: One row per hierarchy node with a limit per BUSINESS_DATE, keyed by LIMIT_ID (VL-<NODE_ID>).
+key:
+- LIMIT_ID
+id-pattern:
+- ^VL-
+dated-by: BUSINESS_DATE
+cadence:
+  frequency: daily
+  due: with the morning run's inputs (before the official capture)
+storage:
+  connector: risk-store
+  plugin: delta
+  domain: risk
+  table: <root>/risk/var-limit/
+  columns:
+  - LIMIT_ID
+  - HIERARCHY
+  - NODE_ID
+  - LIMIT_VAR
+  - CURRENCY
+  test-data:
+  - data/testdata/market-risk/var-limit
+fields:
+- name: LIMIT_ID
+  type: id
+  presence: required
+  description: The record's id, VL-<NODE_ID> (the business key)
+  example: VL-LL~LL-0003
+  pattern: ^VL-
+- name: HIERARCHY
+  type: text
+  presence: required
+  description: 'The hierarchy the node is in (A-Z, digits, _): LL, MGMT, LEGAL in the demo. Read for a hierarchy whose configuration names
+    this kind (limits: var-limit, VAR_GUIDE.md section 16).'
+  example: LL
+  pattern: ^[A-Z][A-Z0-9_]*$
+- name: NODE_ID
+  type: id
+  presence: required
+  description: 'The node: its id as the engine builds it (LL~LL-0003, LL~LL-0003/DESK-RATES; MGMT~DESK-RATES). A row that names no node of
+    the date is unused and said (DRS-5212). A node without a row has no limit (shown blank, never zero).'
+  example: LL~LL-0003/DESK-RATES
+  pattern: ^[A-Z][A-Z0-9_]*~
+  link: risk-hierarchy
+- name: LIMIT_VAR
+  type: amount
+  presence: required
+  unit: USD
+  description: The 1-day 99% VaR the node may take, in USD (shown in another reporting currency at today's rate). It wins over a
+    risk-hierarchy row's own LIMIT_VAR for the same node.
+  example: 8500000
+- name: CURRENCY
+  type: text
+  presence: required
+  description: USD.
+  example: USD
+  enum:
+  - USD
+- name: BUSINESS_DATE
+  type: date
+  presence: required
+  example: '2026-09-30'
+- name: VALID_FROM
+  type: date
+  presence: required
+  example: '2026-01-02'
+- name: VALID_TO
+  type: date
+  presence: optional
+links:
+- field: NODE_ID
+  kind: risk-hierarchy
+validation:
+- rule: required
+  fields:
+  - LIMIT_ID
+  - HIERARCHY
+  - NODE_ID
+  - LIMIT_VAR
+  - CURRENCY
+  - BUSINESS_DATE
+  - VALID_FROM
+- rule: unique
+  key:
+  - LIMIT_ID
+  per: BUSINESS_DATE
+- rule: pattern
+  field: LIMIT_ID
+  pattern: ^VL-
+- rule: pattern
+  field: NODE_ID
+  pattern: ^[A-Z][A-Z0-9_]*~
+notes:
+- 'JSON Lines, one row per line (UTF-8). Example line: {"LIMIT_ID":"VL-LL~LL-0003","HIERARCHY":"LL","NODE_ID":"LL~LL-0003","LIMIT_VAR":4100000,"CURRENCY":"USD","BUSINESS_DATE":"2026-09-30","VALID_FROM":"2026-01-02","VALID_TO":null}'
+review: []

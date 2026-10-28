@@ -632,6 +632,8 @@ drishti:
         max-trades: ${DRISHTI_VAR_INTRADAY_KAFKA_MAX_TRADES:500}   # a window applied earlier once this many trades wait
     root-name: ${DRISHTI_VAR_ROOT_NAME:}   # the top of the VaR tree (every hierarchy's root node); blank keeps the hierarchy data's NAME
     # root-names: {MGMT: "Group", LEGAL: "Group legal"}   # one hierarchy's root name; wins over root-name for it
+    # hierarchies:                   # 2.9.5 (VAR_GUIDE.md section 15.14): wins over a loaded pack's hierarchies: block (the market-risk pack's:
+    #   LL: { title: Limit letters, levels: "LIMIT_LETTER > DESK", word: LL, limits: var-limit }   # MGMT, LEGAL from the rows; LL from columns)
     tier:                            # the tiered memory (docs/guides/VAR_GUIDE.md section 26): where a loaded date's vectors live
       mode: ${DRISHTI_VAR_TIER:mapped}                 # mapped: each date a float32 hot file, memory-mapped (heap: aggregates, columns, links); heap: float64 rows on the heap
       dir: ${DRISHTI_VAR_HOT_DIR:${drishti.data.dir:./data}/var/hot}   # one folder per business date; never under the repository
@@ -647,6 +649,7 @@ drishti:
       scenario-pv: scenario-pv       # 2.9.4: trades sent as scenario PVs in their own currency, converted to USD P&L at load (beside or instead of vectors)
       fx-scenario: fx-scenario       # 2.9.4: each currency's rate under each scenario, when the batch supplies it (USD per unit)
       fx-spot: fx-spot               # 2.9.4: the FX history scenario rates are derived from when not supplied (the market-data pack's)
+      limit: var-limit               # 2.9.5: the nodes' VaR limits by hierarchy and node id (USD), for a hierarchy whose limits: names it
     access: {}                       # per role, per node: positions | aggregate (drishti.var.access.<role>[MGMT~DESK-RATES]=aggregate)
     positions:                       # how positions are derived from the trades when no loaded pack has a positions: section (the market-risk pack's wins)
       live-statuses: [NEW, VALIDATED, AMENDED]   # trade statuses that count on their date (a row with no status counts)

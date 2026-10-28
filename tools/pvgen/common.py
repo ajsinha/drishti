@@ -282,14 +282,14 @@ class Updates:
             row = {**{k: v for k, v in base.items() if k != "TRADE_CURRENCY"}, "VALUE_TYPE": "PV", "SCENARIO_PV_ID": f"SPV-{tid}-HS-509-{batch_id}",
                    "BASE_PV": b, "SCENARIO_PV": pvs, "VALUATION_DATE": day, "BASE_VALUATION_DATE": day, "CURRENCY": ccy}
             return "scenario-pv", contract_row("scenario-pv", row)
-        row = {**base, "VALUE_TYPE": "PNL", "VECTOR_ID": f"PV-{tid}-HS-509-{batch_id}", "PV": round(pv_usd * f, 2),
+        row = {**base, "VALUE_TYPE": "PNL", "VECTOR_ID": f"PNL-{tid}-HS-509-{batch_id}", "PV": round(pv_usd * f, 2),
                "PNL": [round(x * f, 2) for x in pnl], "CURRENCY": "USD", "TRADE_CURRENCY": ccy, "REPORTING_CCY": "USD"}
         return "pnl-vector", contract_row("pnl-vector", row)
 
     def _cancel(self, kind: str, src: dict, batch_id: str, at: str) -> tuple[str, dict]:
         row = {**src, "BATCH_ID": batch_id, "COMPUTED_AT": at, "RUN_KIND": "INTRADAY", "TRADE_STATUS": "CANCELLED", "STATUS": "ok",
                VECTORS[kind]: None}
-        row[KEYS[kind]] = f"{'SPV' if kind == 'scenario-pv' else 'PV'}-{ident(src)}-HS-509-{batch_id}"
+        row[KEYS[kind]] = f"{'SPV' if kind == 'scenario-pv' else 'PNL'}-{ident(src)}-HS-509-{batch_id}"   # PNL- since 2.9.5 (PV- before)
         return kind, contract_row(kind, row)
 
     def batch(self, size: int, plan: list[str] | None = None) -> tuple[str, list[tuple[str, dict]]]:

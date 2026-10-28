@@ -437,6 +437,7 @@ Fields, from 1 sample document:
 | `LEGAL_ENTITY` | string | `LE-FRA` | link to `legal-entity` |
 | `DESK` | string | `DESK-SFT` | link to `desk` |
 | `TT_BOOK` | string | `BOOK-SFT-1` | link to `book` |
+| `LIMIT_LETTER` | string | `LL-0001` | — |
 | `ASSET_CLASS` | string | `Securities financing` | — |
 | `PRODUCT` | string | `Tri-party repo` | — |
 | `NOTIONAL` | number | `260700000.0` | — |

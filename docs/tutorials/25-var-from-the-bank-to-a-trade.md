@@ -26,7 +26,7 @@ that go further.
 
 ## Time to complete
 
-About 40 minutes.
+About 45 minutes.
 
 ## Before you start
 
@@ -47,7 +47,8 @@ The VaR data is **synthetic** (a correlated, fat-tailed factor market over the c
 - how positions are derived by the pack's rules, never delivered;
 - baskets, captures and compare; the history, the traffic light, Kupiec's and Christoffersen's tests;
 - the memory tiers: the date's memory-mapped hot file, float32 rows summed in float64;
-- VaR as a kind (`VRES`) and a what-if by the Python engine (`VWIF`).
+- VaR as a kind (`VRES`) and a what-if by the Python engine (`VWIF`);
+- a hierarchy built from the trades' own columns: the limit letters, a letter holding part of a book (2.9.5).
 
 ## Step 1 · Build the VaR data and open the bank
 
@@ -56,7 +57,7 @@ ones below (`--as-of today`, the default, moves the date to your today and trade
 
 ```bash
 python3 tools/drishti.py lake demo --as-of data \
-  --only market-risk/pnl-vector,market-risk/scenario-pv,market-risk/fx-scenario,market-risk/scenario-set,market-risk/risk-hierarchy,market-risk/portfolio
+  --only market-risk/pnl-vector,market-risk/scenario-pv,market-risk/fx-scenario,market-risk/scenario-set,market-risk/risk-hierarchy,market-risk/portfolio,market-risk/var-limit
 ```
 
 Start the server and console (tutorial 1), then ask for the bank:
@@ -170,7 +171,7 @@ Drishti Bank                     112,041,646  160,143,809      53.4%    9572
 Other ways in: `VAR LE LE-NY`, `VAR BOOK BOOK-RATES-1`, `VAR CPTY CP-SUMMIT` (every trade with a counterparty), `VAR PORT
 PF-USD-RATES`; the retired stored ids still work (`VAR VAR-RATES` opens `DESK:RATES` and says so).
 
-(The output lists every node; a few rows are shown.) The same with `--hierarchy MGMT`, and in the UI with the *Legal entity* choice above
+(The output lists every node; a few rows are shown.) The same with `--hierarchy MGMT`, and in the UI with the *Legal entities* choice above
 the tree.
 
 **You should see** that New York alone (144.3 million) has a larger VaR than the whole bank: London's and Frankfurt's trades gain on
@@ -599,6 +600,80 @@ record is still the morning run's. The same updates can come from Kafka (the `pv
 (the rules: latest `COMPUTED_AT` wins, cancels, new trades), [section 15.12](../guides/VAR_GUIDE.md#1512-producing-pl-vectors-and-scenario-pvs-as-built-294)
 (the scripts, both forms side by side).
 
+## Step 14 · Limit letters: a hierarchy from the trades' own columns
+
+A **limit letter** is the letter of authority a trade's VaR limit is granted under. Every P&L and scenario-PV row of the demo carries one
+(`LIMIT_LETTER`: twelve letters dealt over the books, two books split between two letters), and the market-risk pack configures a third
+hierarchy built from it, beside MGMT and LEGAL from the `risk-hierarchy` rows:
+
+```yaml
+# config/packs/market-risk/pack.yaml (generated from tools/packgen/banking/kept/market-risk.yaml); drishti.var.hierarchies wins over it
+hierarchies:
+  MGMT:  { title: Management, source: risk-hierarchy }
+  LEGAL: { title: Legal entities, source: risk-hierarchy }
+  LL:    { title: Limit letters, levels: "LIMIT_LETTER > DESK", word: LL, limits: var-limit }
+```
+
+Its nodes are every distinct path of the rows' values (`LL~LL-0011`, `LL~LL-0011/DESK-RATES`), its limits come from the new kind
+`var-limit` (one row per node, USD), and its word names a node in any scope (`LL:LL-0011`).
+
+**In the UI**, choose **Limit letters** in the select above the tree (the link keeps it: `&hierarchy=LL`), then **LL-0011**:
+
+![The limit letters' tree, LL-0011 chosen: 29.28 million, 71% of its 41 million limit](img/t25/14-limit-letters.jpg)
+
+LL-0011 holds BOOK-FI-2, BOOK-RATES-2 and **part of BOOK-RATES-1** (the rest of that book is LL-0010). Its **Contributions** tab lists
+its desks:
+
+![LL-0011's desks: DESK-RATES 30.33 million standalone, DESK-FI 6.69 million](img/t25/15-letter-desks.jpg)
+
+**From the command line:**
+
+```text
+$ drishti.py var tree --hierarchy LL
+LL on 2026-09-30, in USD
+Node             VaR          ES           Limit use  Trades
+---------------  -----------  -----------  ---------  ------
+Limit letters    112,041,646  160,143,809      74.7%    9572
+  LL-0001          8,768,015    8,582,767      87.7%    1163
+    DESK-COMM      1,537,187    1,527,166      80.9%     715
+  ...
+  LL-0002         20,801,848   21,949,223      83.2%    1437
+    DESK-COMM     19,384,902   19,741,119                709
+  ...
+  LL-0011         29,280,653   42,227,782      71.4%    1035
+    DESK-FI        6,690,001    8,556,441      81.6%     385
+    DESK-RATES    30,330,399   43,711,977      72.2%     650
+
+$ drishti.py var show LL:LL-0011
+VAR LL:LL-0011  ·  LL-0011  ·  node  ·  2026-09-30
+  VaR 99%   29,280,653 USD   (the 6th worst of 509)
+  ES 97.5%   42,227,782 USD   (mean of the 13 worst)
+  limit      41,000,000 USD   use 71.4%
+  parts      2 desk   standalone sum 37,020,400   diversification 7,739,747
+  ...
+  warning: 9 positions had trades under two nodes of a hierarchy built from columns and are split, one part per node (<position>@<value>)
+
+$ drishti.py var show 'BOOK:BOOK-RATES-1 & LL:LL-0011'
+VAR BOOK:BOOK-RATES-1 & LL:LL-0011  ·  BOOK:BOOK-RATES-1 & LL:LL-0011  ·  adhoc  ·  2026-09-30
+  VaR 99%   6,664,282 USD   (the 6th worst of 509)
+  ...
+  142 trades in 134 positions
+```
+
+**You should see** the bank's VaR at the top of the letters' tree (112,041,646: the same trades, another tree), LL-0002's DESK-COMM
+with no limit (blank, never zero: `var-limit` has no row for it), and the part of BOOK-RATES-1 under LL-0011: 142 trades. A position
+whose trades sit under both letters is split in two, one part per letter: `POS:POS-BOOK-RATES-1~XCH-BOND_FUTURE-GBP-01@LL-0010` and
+`…@LL-0011`, four trades each; the provenance says how many were split (nine). A letter's VaR is exactly that of its trades, to the cent:
+`LL:LL-0011` equals the same trades named one by one.
+
+**Your own hierarchy.** Any column the trades carry can be a hierarchy: add it to the connector's layout and to the rows, then a block in
+`drishti.var.hierarchies` (or the pack's `hierarchies:`). A row without the column is refused (`DRS-5211`); a configuration that is not
+valid refuses the start (`DRS-5213`).
+
+**Further in the guide:** [section 15.14](../guides/VAR_GUIDE.md#1514-hierarchies-from-the-rows-or-from-the-trades-columns-as-built-295)
+(the configuration, cells, split positions, the equality tests), [section 15.15](../guides/VAR_GUIDE.md#1515-var-limit-the-nodes-var-limits-as-built-295)
+(`var-limit`).
+
 ## Next steps
 
 - Read [VAR_GUIDE.md](../guides/VAR_GUIDE.md): the measures by hand on ten scenarios, the data flow and restatements, the scope grammar in full, the
@@ -618,3 +693,5 @@ record is still the morning run's. The same updates can come from Kafka (the `pv
 | `PORT <id>` says *no source holds portfolio/…* | the page opens on today's date; pick **2026-09-30** in the date box (the explorer finds the newest date by itself) |
 | step 11 answers *could not start* | the compute workers are off: `DRISHTI_COMPUTE_ENABLED=true`, and Admin → Compute shows the pool `var` |
 | *the vectors of … were unloaded while this answer was computed* | ask again ([VAR_GUIDE.md section 13](../guides/VAR_GUIDE.md#13-troubleshooting)) |
+| no *Limit letters* in the select | the lake was built before 2.9.5 (no `LIMIT_LETTER`, no `var-limit`): rebuild it with step 1's `--only` list, which includes `market-risk/var-limit` |
+| `422 DRS-5211` *… is built from the column LIMIT_LETTER, which pnl-vector does not keep* | a `config/connectors/risk-store.yaml` written before 2.9.5 lacks the column in its layout: let the server's template update add it (Admin → Connectors → Template updates) |

@@ -515,7 +515,8 @@ union    := and ( SP ('+' | '-') SP and )*          left to right; '+' and '-' h
 and      := atom ( SP '&' SP atom )*                '&' binds before '+' and '-'
 atom     := '(' union ')' | ref
 ref      := WORD | WORD ':' arg | 'WHERE' ':' rule
-WORD     := letters only, case-insensitive: BANK LE DIV DESK BOOK NODE POS TRD CPTY PORT BASKET CAPTURE WHERE
+WORD     := a letter, then letters, digits or '_', case-insensitive: BANK LE DIV DESK BOOK NODE POS TRD CPTY PORT BASKET CAPTURE WHERE,
+            and each configured hierarchy's word (2.9.5: LL, section 15.14)
 arg      := characters up to whitespace, '(' or ')'; for POS, TRD and CPTY, whitespace next to a comma is allowed ("a, b")
 rule     := characters up to an unmatched ')', or up to whitespace + one of '+', '-', '&' + whitespace, outside quotes and parentheses
 SP       := whitespace (or, before an operator, a closing ')'; after it, an opening '(')
@@ -531,6 +532,7 @@ SP       := whitespace (or, before an operator, a closing ')'; after it, an open
 | Canonical text | words upper case; `POS`/`TRD`/`CPTY` ids sorted and unique (as written); the terms of a union sorted; `A - B` written `A - (B)` when B is a combination; `&` operands in parentheses unless a term or another `&` |
 | Depth | `PORT`, `BASKET` and `CAPTURE` may refer to each other at most 8 deep; deeper: *the scope refers to itself* (`400`) |
 | Errors | empty scope, an unknown word, a word without `:` and argument, an empty argument, an unmatched `(`, trailing text, a rule that does not parse: `400 DRS-5001` with the reason |
+| Configured words (2.9.5) | a hierarchy's `word` ([section 15.14](#1514-hierarchies-from-the-rows-or-from-the-trades-columns-as-built-295)) names a node of it: `LL:LL-0003` is the node `LL~LL-0003`, `LL:0003` too, `LL:LL-0003/DESK-RATES` a path; `NODE:LL~LL-0003/DESK-RATES` names it by id. Kept as written in the canonical text; a word no hierarchy has is *not a scope word* |
 
 ### 5.3 Resolution rules
 
@@ -541,7 +543,7 @@ SP       := whitespace (or, before an operator, a closing ')'; after it, an open
 | Rules and positions | `WHERE:` and `POS:` take whole positions; `TRD:` takes single trades (a position held in part is a *partial* part) |
 | Entitlements | the resolved set is intersected with the trades the viewer may see; the rest are counted (`hidden`). A scope that names `POS`, `TRD`, `CPTY`, `WHERE`, `BASKET`, `CAPTURE` or a `PORT:` of a BASKET-type portfolio is refused (`403 DRS-5002`) unless every resolved trade is at `positions` level for the viewer; `CPTY:` is refused to a viewer who sees `COUNTERPARTY` masked |
 | Warnings | data-quality findings about what was resolved, in `provenance.warnings`: a legal entity's trades outside its `LEGAL` node, a `LEGAL` node holding another entity's trades ([section 5.5](#55-scope-words-by-a-trades-attribute)) |
-| Kind of a scope | `node` (exactly one node term, `LE:` included when its `LEGAL` node exists), `position`, `trade` (exactly one id), `portfolio`, `basket`, `capture`, `rule`, `counterparty`, `legal-entity` (one term of that word), else `adhoc` |
+| Kind of a scope | `node` (exactly one node term, `LE:` included when its `LEGAL` node exists, a configured word's node too), `position`, `trade` (exactly one id), `portfolio`, `basket`, `capture`, `rule`, `counterparty`, `legal-entity` (one term of that word), else `adhoc` |
 | Date | resolved on the request's date: a `CAPTURE:` or a basket of trades holds ids; trades the date does not have are `unknown` |
 
 **Aggregate-only access** ([section 9](#9-who-sees-what-entitlements-and-audit)): a scope that is a node or a HIERARCHY or RULE portfolio
@@ -1040,7 +1042,7 @@ The key is not read: it may be absent or name a batch. An example message of thr
 
 ```text
 {"VALUE_TYPE":"PV","GRAIN":"TRADE","TRADE_ID":"1002344","CURRENCY":"USD","SOURCE_SYSTEM":"ENDUR","SCENARIO_PV_ID":"SPV-1002344-HS-509-I-2026-09-30-001","SECURITY_ID":"XCH-ComFut-USD-03","INSTRUMENT":"ENGY-EXCH-FUT USD 2026-09","BUSINESS_DATE":"2026-09-30","SCENARIO_SET_ID":"HS-509","TRADE_VERSIONS":"v6","TRADE_STATUS":"AMENDED","MATURITY_DATE":"2026-09-30","LEGAL_ENTITY":"LE-NY","DIVISION":"DIV-MARKETS","DESK":"DESK-COMM","TT_BOOK":"BOOK-COMM-3","PORTFOLIO":"BOOK-COMM-3","STRATEGY":"","PRODUCT_GROUP":"Commodity","PRODUCT_TYPE":"ComFut","COUNTERPARTY":"CP-METROEX","DIRECTION":"SHORT","QUANTITY":-5900.0,"TAGS":"","BASE_PV":-302670.0,"VALUATION_DATE":"2026-09-30","BASE_VALUATION_DATE":"2026-09-30","SCENARIO_PV":[-208989.8,-396009.18,-356724.62],"STATUS":"ok","PRICER":"demo-factor-model","MODEL_VERSION":"demo-2","COMPUTED_AT":"2026-09-30T06:05:00Z","BATCH_ID":"I-2026-09-30-001","RESTATEMENT":0,"RUN_KIND":"INTRADAY"}
-{"VALUE_TYPE":"PNL","GRAIN":"POSITION","POSITION_ID":"POS-BOOK-COMM-1~XCH-CMD_FUTURE-USD-03","CURRENCY":"USD","SOURCE_SYSTEM":"MUREX","VECTOR_ID":"PV-POS-BOOK-COMM-1~XCH-CMD_FUTURE-USD-03-HS-509","BUSINESS_DATE":"2026-09-30","SCENARIO_SET_ID":"HS-509","TRADE_STATUS":"AMENDED","LEGAL_ENTITY":"LE-NY","DIVISION":"DIV-MARKETS","DESK":"DESK-COMM","TT_BOOK":"BOOK-COMM-1","PORTFOLIO":"BOOK-COMM-1","STRATEGY":"","PRODUCT_GROUP":"Commodity","PRODUCT_TYPE":"CMD_FUTURE","SECURITY_ID":"XCH-CMD_FUTURE-USD-03","INSTRUMENT":"Commodity future USD 2027-09","MATURITY_DATE":"2027-09-10","COUNTERPARTY":"CP-SUMMIT","DIRECTION":"LONG","QUANTITY":122.0,"TAGS":"","TRADE_CURRENCY":"USD","REPORTING_CCY":"USD","PV":1595886,"PNL":[-471736.0,508921.0,273690.0],"STATUS":"ok","PRICER":"demo-factor-model","MODEL_VERSION":"demo-2","COMPUTED_AT":"2026-09-30T06:00:00Z","BATCH_ID":"B-2026-09-30-01","RESTATEMENT":0,"RUN_KIND":"FULL","TRADE_IDS":["MX-20000291","MX-30002954"]}
+{"VALUE_TYPE":"PNL","GRAIN":"POSITION","POSITION_ID":"POS-BOOK-COMM-1~XCH-CMD_FUTURE-USD-03","CURRENCY":"USD","SOURCE_SYSTEM":"MUREX","VECTOR_ID":"PNL-POS-BOOK-COMM-1~XCH-CMD_FUTURE-USD-03-HS-509","BUSINESS_DATE":"2026-09-30","SCENARIO_SET_ID":"HS-509","TRADE_STATUS":"AMENDED","LEGAL_ENTITY":"LE-NY","DIVISION":"DIV-MARKETS","DESK":"DESK-COMM","TT_BOOK":"BOOK-COMM-1","PORTFOLIO":"BOOK-COMM-1","STRATEGY":"","PRODUCT_GROUP":"Commodity","PRODUCT_TYPE":"CMD_FUTURE","SECURITY_ID":"XCH-CMD_FUTURE-USD-03","INSTRUMENT":"Commodity future USD 2027-09","MATURITY_DATE":"2027-09-10","COUNTERPARTY":"CP-SUMMIT","DIRECTION":"LONG","QUANTITY":122.0,"TAGS":"","TRADE_CURRENCY":"USD","REPORTING_CCY":"USD","PV":1595886,"PNL":[-471736.0,508921.0,273690.0],"STATUS":"ok","PRICER":"demo-factor-model","MODEL_VERSION":"demo-2","COMPUTED_AT":"2026-09-30T06:00:00Z","BATCH_ID":"B-2026-09-30-01","RESTATEMENT":0,"RUN_KIND":"FULL","TRADE_IDS":["MX-20000291","MX-30002954"]}
 {"VALUE_TYPE":"PV","GRAIN":"TRADE","TRADE_ID":"1000414","CURRENCY":"USD","SOURCE_SYSTEM":"ENDUR","SCENARIO_PV_ID":"SPV-1000414-HS-509-I-2026-09-30-001","SECURITY_ID":null,"INSTRUMENT":"ENGY-SWAP USD 2026-11","BUSINESS_DATE":"2026-09-30","SCENARIO_SET_ID":"HS-509","TRADE_VERSIONS":"v8","TRADE_STATUS":"CANCELLED","MATURITY_DATE":"2026-11-30","LEGAL_ENTITY":"LE-NY","DIVISION":"DIV-MARKETS","DESK":"DESK-COMM","TT_BOOK":"BOOK-COMM-1","PORTFOLIO":"BOOK-COMM-1","STRATEGY":"","PRODUCT_GROUP":"Commodity","PRODUCT_TYPE":"ComSwap","COUNTERPARTY":"CP-NORTHPLAINS","DIRECTION":"LONG","QUANTITY":96000.0,"TAGS":"","BASE_PV":581788.0,"VALUATION_DATE":"2026-09-30","BASE_VALUATION_DATE":"2026-09-30","SCENARIO_PV":null,"STATUS":"ok","PRICER":"demo-factor-model","MODEL_VERSION":"demo-2","COMPUTED_AT":"2026-09-30T06:05:04Z","BATCH_ID":"I-2026-09-30-001","RESTATEMENT":0,"RUN_KIND":"INTRADAY"}
 ```
 
@@ -1389,6 +1391,8 @@ by `VarProperties` (`@ConfigurationProperties("drishti.var")`); `GET /api/v1/var
 | `drishti.var.root-name` | `${DRISHTI_VAR_ROOT_NAME:}` | blank: the hierarchy data's `NAME` | 2.9.4: the name of every hierarchy's root node (the top of the tree, breadcrumbs, headline, CLI, `var-result`, captures and new official records; older records keep theirs); applied when a date loads and part of the hot file's digest, so a running server shows it after a restart or a reload of the dates |
 | `drishti.var.inputs` | none | `default: {form: any, grain: any}` | 2.9.4: an optional pin per source system (`{ENDUR: {form: pv, grain: position}}`): a record that disagrees is refused (`DRS-5209`); read at start ([section 15.13](#1513-inputs-any-form-any-grain-as-built-294)) |
 | `drishti.var.root-names` | none | none | 2.9.4: one hierarchy's root name (`{MGMT: "Group", LEGAL: "Group legal entities"}`), over `root-name` |
+| `drishti.var.hierarchies` | none (commented example) | a loaded pack's `hierarchies:` block, else MGMT and LEGAL from the rows | 2.9.5: the hierarchies, id to `{title, source, levels, level-names, root, ids, word, limits}`; wins over the pack's block; refused at start when not valid (`DRS-5213`) ([section 15.14](#1514-hierarchies-from-the-rows-or-from-the-trades-columns-as-built-295)) |
+| `drishti.var.kinds.limit` | `var-limit` | `var-limit` | 2.9.5: the kind the nodes' VaR limits come from, for a hierarchy whose `limits` names it ([section 15.15](#1515-var-limit-the-nodes-var-limits-as-built-295)) |
 | `drishti.var.currency-retention-dates` | `${DRISHTI_VAR_CURRENCY_RETENTION_DATES:5}` | 5 (below 1) | 2.9.4: the newest business dates whose listed currencies are built ahead and kept on disk; older dates' listed-currency hot files are deleted (built again on first ask) |
 | `drishti.var.official.currencies` | `[USD]` | `[USD]` (USD always first) | 2.9.4: the reporting currencies captured officially; only USD is published ([section 15.10](#1510-reporting-currency-as-built-294)) |
 | `drishti.var.access` | `{}` | no restriction | per role and node: `positions` or `aggregate` ([section 9](#9-who-sees-what-entitlements-and-audit)) |
@@ -1594,7 +1598,7 @@ links and audit).
 
 | Column | JSON | Delta | Req. | Engine | Unit | Meaning | Example |
 |---|---|---|---|---|---|---|---|
-| `VECTOR_ID` | id | `id` STRING | required | – | | `PV-<TRADE_ID>-<SCENARIO_SET_ID>`; the lake key | `PV-MX-20000274-HS-509` |
+| `VECTOR_ID` | id | `id` STRING | required | – | | `PNL-<TRADE_ID or POSITION_ID>-<SCENARIO_SET_ID>` (2.9.5; `PV-` before, still read); the lake key | `PNL-MX-20000274-HS-509` |
 | `TRADE_ID` | id | STRING | required | R | | the booking system's trade id (text even when all digits). When null the engine uses the row's `id` | `MX-20000274` |
 | `SECURITY_ID` | id | STRING | for securities and listed products | R | | the security or exchange contract the trade is in: a position rule's key (section 15.6). The test data's are synthetic | `SEC-WARRANT-USD-01` |
 | `ISIN`, `TICKER`, `CONTRACT` | id | STRING | optional | R (when a rule names them) | | other keys a rule may name, read when promoted | |
@@ -1687,8 +1691,8 @@ desks) with a `DIV-MARKETS` division added; nothing contradicts them.
 | Column | JSON | Delta | Req. | Engine | Unit | Meaning | Example |
 |---|---|---|---|---|---|---|---|
 | `NODE_ID` | id | STRING (also `id`) | required | R | | `<HIERARCHY>~<id>` | `LEGAL~LE-NY` |
-| `HIERARCHY` | text | STRING | required | R | | `MGMT` or `LEGAL` (any name works; scope words look in these two) | `LEGAL` |
-| `LEVEL` | text | STRING | required | R | | `bank`, `division`, `legal-entity`, `desk`, `book` | `legal-entity` |
+| `HIERARCHY` | text | STRING | required | R | | any id (`[A-Z][A-Z0-9_]*`, 2.9.5: the enum opened); `MGMT` and `LEGAL` in the demo. `DIV`, `DESK`, `BOOK` look in MGMT, `LE` in LEGAL; a configured word in its own hierarchy ([section 15.14](#1514-hierarchies-from-the-rows-or-from-the-trades-columns-as-built-295)) | `LEGAL` |
+| `LEVEL` | text | STRING | required | R | | the hierarchy's own level names (2.9.5: the enum opened): `bank`, `division`, `legal-entity`, `desk`, `book` in the demo | `legal-entity` |
 | `PARENT_ID` | id | STRING | required (null at the root) | R | | parent node; the engine builds children from it | `LEGAL~BANK` |
 | `NAME` | text | STRING | required | R | | display name | `LE-NY` |
 | `REF` | record | doc | optional | – | | the master the node is: `{KIND, ID}` | `{"KIND": "legal-entity", "ID": "LE-NY"}` |
@@ -1699,7 +1703,8 @@ desks) with a `DIV-MARKETS` division added; nothing contradicts them.
 | `VALID_FROM`, `VALID_TO` | date | doc | optional | – | | validity of the node (informational) | `2026-01-02`, `null` |
 
 A past date's VaR uses that date's hierarchy, never today's: a book moved to another desk last month counts under its old desk for dates
-before the move.
+before the move. Since 2.9.5 `risk-hierarchy` is one source of hierarchies among two (the rows, book-based; or the trades' columns:
+[section 15.14](#1514-hierarchies-from-the-rows-or-from-the-trades-columns-as-built-295)); the demo keeps MGMT and LEGAL on it.
 
 ### 15.5 `portfolio`: stored portfolio definitions (AS BUILT)
 
@@ -2037,9 +2042,9 @@ JSON object per line, UTF-8, a file `.jsonl` (or `.jsonl.gz`), each line exactly
 # scenario PVs of a position its source system sends whole (GRAIN POSITION: its POSITION_ID, placed by its book, naming its trades)
 {"VALUE_TYPE":"PV","GRAIN":"POSITION","POSITION_ID":"POS-BOOK-COMM-1~XCH-ComFut-EUR-03","CURRENCY":"EUR","SOURCE_SYSTEM":"ENDUR","SCENARIO_PV_ID":"SPV-POS-BOOK-COMM-1~XCH-ComFut-EUR-03-HS-509","BUSINESS_DATE":"2026-09-30","SCENARIO_SET_ID":"HS-509","TRADE_STATUS":"AMENDED","LEGAL_ENTITY":"LE-NY","DIVISION":"DIV-MARKETS","DESK":"DESK-COMM","TT_BOOK":"BOOK-COMM-1","PORTFOLIO":"BOOK-COMM-1","STRATEGY":"","PRODUCT_GROUP":"Commodity","PRODUCT_TYPE":"ComFut","SECURITY_ID":"XCH-ComFut-EUR-03","INSTRUMENT":"ENGY-EXCH-FUT EUR 2026-11","MATURITY_DATE":"2026-12-31","COUNTERPARTY":"","DIRECTION":"LONG","QUANTITY":8750.0,"TAGS":"","BASE_PV":8252.13,"VALUATION_DATE":"2026-09-30","BASE_VALUATION_DATE":"2026-09-30","SCENARIO_PV":[-94382.46,93080.07,58121.8],"STATUS":"ok","PRICER":"demo-factor-model","MODEL_VERSION":"demo-2","COMPUTED_AT":"2026-09-30T06:00:00Z","BATCH_ID":"B-2026-09-30-01","RESTATEMENT":0,"RUN_KIND":"FULL","TRADE_IDS":["1001385","1001840","1004234"]}
 # a P&L vector of a trade (VALUE_TYPE PNL: CURRENCY the values' currency, USD here; TRADE_CURRENCY the trade's own)
-{"VALUE_TYPE":"PNL","GRAIN":"TRADE","TRADE_ID":"MX-20000274","CURRENCY":"USD","SOURCE_SYSTEM":"MUREX","VECTOR_ID":"PV-MX-20000274-HS-509","SECURITY_ID":"SEC-WARRANT-USD-01","INSTRUMENT":"Equity warrant USD 2027-05","BUSINESS_DATE":"2026-09-30","SCENARIO_SET_ID":"HS-509","TRADE_VERSIONS":"v4","TRADE_STATUS":"AMENDED","MATURITY_DATE":"2027-05-26","LEGAL_ENTITY":"LE-LDN","DIVISION":"DIV-MARKETS","DESK":"DESK-EQD","TT_BOOK":"BOOK-EQD-2","PORTFOLIO":"BOOK-EQD-2","STRATEGY":"","PRODUCT_GROUP":"Equity","PRODUCT_TYPE":"WARRANT","COUNTERPARTY":"CP-SUMMIT","DIRECTION":"SHORT","QUANTITY":-179000000.0,"TAGS":"","TRADE_CURRENCY":"USD","REPORTING_CCY":"USD","PV":3143714,"PNL":[4169,-3347,-1306],"STATUS":"ok","PRICER":"demo-factor-model","MODEL_VERSION":"demo-2","COMPUTED_AT":"2026-09-30T06:00:00Z","BATCH_ID":"B-2026-09-30-01","RESTATEMENT":0,"RUN_KIND":"FULL"}
+{"VALUE_TYPE":"PNL","GRAIN":"TRADE","TRADE_ID":"MX-20000274","CURRENCY":"USD","SOURCE_SYSTEM":"MUREX","VECTOR_ID":"PNL-MX-20000274-HS-509","SECURITY_ID":"SEC-WARRANT-USD-01","INSTRUMENT":"Equity warrant USD 2027-05","BUSINESS_DATE":"2026-09-30","SCENARIO_SET_ID":"HS-509","TRADE_VERSIONS":"v4","TRADE_STATUS":"AMENDED","MATURITY_DATE":"2027-05-26","LEGAL_ENTITY":"LE-LDN","DIVISION":"DIV-MARKETS","DESK":"DESK-EQD","TT_BOOK":"BOOK-EQD-2","PORTFOLIO":"BOOK-EQD-2","STRATEGY":"","PRODUCT_GROUP":"Equity","PRODUCT_TYPE":"WARRANT","COUNTERPARTY":"CP-SUMMIT","DIRECTION":"SHORT","QUANTITY":-179000000.0,"TAGS":"","TRADE_CURRENCY":"USD","REPORTING_CCY":"USD","PV":3143714,"PNL":[4169,-3347,-1306],"STATUS":"ok","PRICER":"demo-factor-model","MODEL_VERSION":"demo-2","COMPUTED_AT":"2026-09-30T06:00:00Z","BATCH_ID":"B-2026-09-30-01","RESTATEMENT":0,"RUN_KIND":"FULL"}
 # a P&L vector of a position
-{"VALUE_TYPE":"PNL","GRAIN":"POSITION","POSITION_ID":"POS-BOOK-COMM-1~XCH-CMD_FUTURE-USD-03","CURRENCY":"USD","SOURCE_SYSTEM":"MUREX","VECTOR_ID":"PV-POS-BOOK-COMM-1~XCH-CMD_FUTURE-USD-03-HS-509","BUSINESS_DATE":"2026-09-30","SCENARIO_SET_ID":"HS-509","TRADE_STATUS":"AMENDED","LEGAL_ENTITY":"LE-NY","DIVISION":"DIV-MARKETS","DESK":"DESK-COMM","TT_BOOK":"BOOK-COMM-1","PORTFOLIO":"BOOK-COMM-1","STRATEGY":"","PRODUCT_GROUP":"Commodity","PRODUCT_TYPE":"CMD_FUTURE","SECURITY_ID":"XCH-CMD_FUTURE-USD-03","INSTRUMENT":"Commodity future USD 2027-09","MATURITY_DATE":"2027-09-10","COUNTERPARTY":"CP-SUMMIT","DIRECTION":"LONG","QUANTITY":122.0,"TAGS":"","TRADE_CURRENCY":"USD","REPORTING_CCY":"USD","PV":1595886,"PNL":[-471736.0,508921.0,273690.0],"STATUS":"ok","PRICER":"demo-factor-model","MODEL_VERSION":"demo-2","COMPUTED_AT":"2026-09-30T06:00:00Z","BATCH_ID":"B-2026-09-30-01","RESTATEMENT":0,"RUN_KIND":"FULL","TRADE_IDS":["MX-20000291","MX-30002954"]}
+{"VALUE_TYPE":"PNL","GRAIN":"POSITION","POSITION_ID":"POS-BOOK-COMM-1~XCH-CMD_FUTURE-USD-03","CURRENCY":"USD","SOURCE_SYSTEM":"MUREX","VECTOR_ID":"PNL-POS-BOOK-COMM-1~XCH-CMD_FUTURE-USD-03-HS-509","BUSINESS_DATE":"2026-09-30","SCENARIO_SET_ID":"HS-509","TRADE_STATUS":"AMENDED","LEGAL_ENTITY":"LE-NY","DIVISION":"DIV-MARKETS","DESK":"DESK-COMM","TT_BOOK":"BOOK-COMM-1","PORTFOLIO":"BOOK-COMM-1","STRATEGY":"","PRODUCT_GROUP":"Commodity","PRODUCT_TYPE":"CMD_FUTURE","SECURITY_ID":"XCH-CMD_FUTURE-USD-03","INSTRUMENT":"Commodity future USD 2027-09","MATURITY_DATE":"2027-09-10","COUNTERPARTY":"CP-SUMMIT","DIRECTION":"LONG","QUANTITY":122.0,"TAGS":"","TRADE_CURRENCY":"USD","REPORTING_CCY":"USD","PV":1595886,"PNL":[-471736.0,508921.0,273690.0],"STATUS":"ok","PRICER":"demo-factor-model","MODEL_VERSION":"demo-2","COMPUTED_AT":"2026-09-30T06:00:00Z","BATCH_ID":"B-2026-09-30-01","RESTATEMENT":0,"RUN_KIND":"FULL","TRADE_IDS":["MX-20000291","MX-30002954"]}
 # an intraday amendment (RUN_KIND INTRADAY, its own BATCH_ID, a later COMPUTED_AT)
 {"VALUE_TYPE":"PV","GRAIN":"TRADE","TRADE_ID":"1002344","CURRENCY":"USD","SOURCE_SYSTEM":"ENDUR","SCENARIO_PV_ID":"SPV-1002344-HS-509-I-2026-09-30-001","SECURITY_ID":"XCH-ComFut-USD-03","INSTRUMENT":"ENGY-EXCH-FUT USD 2026-09","BUSINESS_DATE":"2026-09-30","SCENARIO_SET_ID":"HS-509","TRADE_VERSIONS":"v6","TRADE_STATUS":"AMENDED","MATURITY_DATE":"2026-09-30","LEGAL_ENTITY":"LE-NY","DIVISION":"DIV-MARKETS","DESK":"DESK-COMM","TT_BOOK":"BOOK-COMM-3","PORTFOLIO":"BOOK-COMM-3","STRATEGY":"","PRODUCT_GROUP":"Commodity","PRODUCT_TYPE":"ComFut","COUNTERPARTY":"CP-METROEX","DIRECTION":"SHORT","QUANTITY":-5900.0,"TAGS":"","BASE_PV":-302670.0,"VALUATION_DATE":"2026-09-30","BASE_VALUATION_DATE":"2026-09-30","SCENARIO_PV":[-208989.8,-396009.18,-356724.62],"STATUS":"ok","PRICER":"demo-factor-model","MODEL_VERSION":"demo-2","COMPUTED_AT":"2026-09-30T06:05:00Z","BATCH_ID":"I-2026-09-30-001","RESTATEMENT":0,"RUN_KIND":"INTRADAY"}
 # an intraday cancel: TRADE_STATUS CANCELLED, the vector null
@@ -2140,6 +2145,76 @@ MUREX`, `tools/pvgen/morning.py --grain position` (or `--position-systems`), the
 combinations, a system switching grain between dates, two grains on one date refused, records refused with their codes, an intraday
 update in another grain refused), `VarInputsTest` (fields, pins, the per-system rule), `VarPvStreamTest` (a Kafka message mixing all four
 of four systems, a pin disagreeing, a field missing), `test_pvgen.py` (per position equal to per trade to the cent).
+
+### 15.14 Hierarchies: from the rows or from the trades' columns (AS BUILT, 2.9.5)
+
+Before 2.9.5 the engine had two hierarchies, MGMT and LEGAL, read from the `risk-hierarchy` rows, each node a list of books. Since 2.9.5
+the hierarchies are **configured**, and a hierarchy can also be built from the trades' own columns: the demo's **limit letters** (`LL`,
+the letter of authority each trade's VaR limit is granted under) are `LIMIT_LETTER > DESK`, read from every P&L and scenario-PV row.
+
+**Where they are configured.** The market-risk pack's manifest, `hierarchies:` beside `positions:` (generated from
+`tools/packgen/banking/kept/market-risk.yaml`); `drishti.var.hierarchies` in the server's settings wins over it when set; neither: MGMT
+and LEGAL from the rows, as before. The exposure engine builds the same hierarchies ([EXPOSURE_GUIDE.md](EXPOSURE_GUIDE.md)).
+
+```yaml
+hierarchies:
+  MGMT:  { title: Management, source: risk-hierarchy }
+  LEGAL: { title: Legal entities, source: risk-hierarchy }
+  LL:    { title: Limit letters, levels: "LIMIT_LETTER > DESK", word: LL, limits: var-limit }
+```
+
+| Key | Default | Meaning |
+|---|---|---|
+| `title` | the id | what the explorer's selector and the tree call it |
+| `source` | `columns` when `levels` is given, else `risk-hierarchy` | `risk-hierarchy`: the rows of the kind (book-based, names and `LIMIT_VAR` on the rows); `columns`: built from the trades' columns |
+| `levels` | none | the level columns, top first: `"LIMIT_LETTER > DESK"` or a list. Every distinct path of values is a node under one root |
+| `level-names` | each column in lower case (`limit-letter`, `desk`) | the level each column's nodes are at |
+| `root` | `{id: BANK, name: <title>}` | the root's own id (the node `LL~BANK`) and name; `drishti.var.root-name(s)` names it as it names the rows' roots |
+| `ids` | `path` | `path`: a node's id is its path (`LL~LL-0003/DESK-RATES`); `leaf`: its own value (`MGMT~DESK-RATES`), refused at load (`DRS-5213`) when a value sits under two parents on the date |
+| `word` | none | the scope word naming the hierarchy's nodes: `LL:LL-0003`, `LL:LL-0003/DESK-RATES`, `LL:0003` (the word's own prefix, as `DESK:RATES`). Not one of the engine's words (`BANK LE DIV DESK BOOK NODE POS TRD CPTY PORT BASKET WHERE CAPTURE NSET GROUP`) |
+| `limits` | none | the kind the nodes' VaR limits come from: `var-limit` ([section 15.15](#1515-var-limit-the-nodes-var-limits-as-built-295)). A node without a row has no limit (blank, never zero). For a `risk-hierarchy` hierarchy a row wins over the row's own `LIMIT_VAR` |
+
+Ids, words and level columns are checked at start (a duplicate id or word, a reserved word, a column hierarchy without levels: refused,
+`DRS-5213`). A hierarchy of the `risk-hierarchy` rows that no configuration names is still built (its id as its title): the data decides,
+as before. A hierarchy configured from columns ignores the rows of the same id.
+
+**Members are rows, not books.** A column node's members are the trades whose values start with its path: a letter may hold part of a
+book (two of the demo's books are split between two letters). The engine sums every **cell** once when the date loads (a run of trades
+of one book with the same values of every level column; [section 25](#25-one-business-date-in-memory)) and a node's aggregate from its
+cells, so a letter's VaR is computed as fast as a desk's.
+
+**A position under two nodes is split** (decision D4): its trades in each node are a position of their own, `<position>@<value>`
+(`POS-BOOK-RATES-1~SEC-GOVT_BOND-USD-03@LL-0004`), and the date's provenance says how many were split. `POS:<position>` names the parts by
+their ids; the trades are unchanged.
+
+**Every row carries the level columns.** A source whose table does not keep a level column refuses the date (`422 DRS-5211`, naming the
+kind and the column); a row that leaves one empty is refused and listed (`DRS-5211`), never placed under a guessed node. The connector's
+layout must promote the column (`layout.pnl-vector.columns`, `layout.scenario-pv.columns`, `layout.exposure-path.columns`: the pack's do).
+
+**The equality tests** (`HierarchyEquivalenceTest`, the 8,233 + 1,339 rows of 2026-09-30): MGMT configured as `DIVISION > DESK > TT_BOOK`
+(leaf ids; levels `division`, `desk`, `book`) and LEGAL as `LEGAL_ENTITY > DESK > TT_BOOK` give the rows' trees exactly: the same node
+ids, parents, levels and members, the aggregates to the bit, VaR, ES, the children's component VaR and the worst scenarios to the cent at
+every node, in USD and in EUR, and the limits of `var-limit` equal to the rows' `LIMIT_VAR`. Every limit letter is exactly the sum of its
+rows. (LEGAL by columns follows each row's `LEGAL_ENTITY`; it differs from the book-based tree where a book holds another entity's trades:
+the test data has none.)
+
+### 15.15 `var-limit`: the nodes' VaR limits (AS BUILT, 2.9.5)
+
+**Grain:** one row per node with a limit and business date. **Key:** `LIMIT_ID` = `VL-<NODE_ID>`. **Row count:** 129 in the test data
+(41: the 43 nodes of LL but two letter-desk nodes left without one, and the 88 MGMT and LEGAL nodes with their rows' `LIMIT_VAR`). Read for the
+hierarchies whose `limits` names the kind (`drishti.var.kinds.limit`, `var-limit`); JSON Lines, one row a line.
+
+| Column | JSON | Delta | Req. | Meaning | Example |
+|---|---|---|---|---|---|
+| `LIMIT_ID` | id | STRING (also `id`) | required | `VL-<NODE_ID>` | `VL-LL~LL-0003` |
+| `HIERARCHY` | text | STRING | required | the node's hierarchy | `LL` |
+| `NODE_ID` | id | STRING | required | the node's id as the engine builds it; a row naming no node of the date is unused and said (`DRS-5212` in `provenance.warnings`) | `LL~LL-0003/DESK-RATES` |
+| `LIMIT_VAR` | amount | DOUBLE | required | the 1-day 99% VaR limit, USD (another reporting currency: at today's rate) | `4100000` |
+| `CURRENCY` | text | STRING | required | `USD` | `USD` |
+| `BUSINESS_DATE` | date | `business_date` DATE | required | | `2026-09-30` |
+| `VALID_FROM`, `VALID_TO` | date | doc | `VALID_FROM` required | validity (informational) | `2026-01-02`, `null` |
+
+The kind is an input: its data version is part of a date's hot-file digest, and its data-load signal reloads the date.
 
 ## 16. Reference and master data read
 
@@ -2280,7 +2355,8 @@ digest).
 
 **Official end-of-day captures (as built).** When a date's inputs are complete (the date loads as one run, with trades and hierarchy
 nodes), the server captures **every node of every hierarchy** (MGMT and LEGAL; 88 nodes in the test data) as the **official** record,
-as the server itself (every node at positions level): after the data-load signal of an input kind ([section 15.8](#158-cadence-delivery-and-the-load-signal)),
+as the server itself (every node at positions level; since 2.9.5 every **configured** hierarchy, the limit letters' too: 131 nodes in the
+test data, [section 15.14](#1514-hierarchies-from-the-rows-or-from-the-trades-columns-as-built-295)): after the data-load signal of an input kind ([section 15.8](#158-cadence-delivery-and-the-load-signal)),
 at start for the newest date without a record (`drishti.var.official.on-start`), and by an administrator (`POST /official`,
 `drishti.py var official --capture`). One capture runs at a time, in the background (`VarOfficial`, its own thread); a date captured
 from the same inputs (the same versions and batch ids) is not captured again (`unchanged`); a restated date is captured anew with the
@@ -2296,7 +2372,7 @@ every version, and nothing deletes them. `VarOfficialStore` serves the node hist
 |---|---|---|
 | A node's official capture | `var/captures/official/<CAP-id>.json` | the capture document of [section 6](#6-captures-and-compare) with `official: true`, `owner: drishti`, `node`, `resultVersion`, `hypoPnl`, the components (the 50 largest; `componentCount` says how many there were), the worst 25, the vector (whole units), `membership` (the date's membership record), `memberCount`, `membershipHash`, `inputs`, `provenance`. No member list of its own: `CAPTURE:<id>` resolves the node's trades from the membership record |
 | The date's record | `var/official/<YYYY-MM-DD>.json` | `businessDate`, `resultVersion`, `computedAt`, `contractVersion`, `inputs` (versions, batch ids, rules digest), `positionRules`, `membership`, `published` or `publishError`, and `nodes`: per node `captureId`, `hierarchy`, `level`, `name`, `parent`, `var`, `es`, `hypoPnl`, `limit`, `limitUse`, `sumStandalone`, `diversification`, `trades`, `positions`, `exceptions250`, `light`. A restatement writes a new version of it (the store keeps the old) |
-| The date's membership | `var/official/<YYYY-MM-DD>-membership-v<n>.jsonl` | JSON Lines (2.9.4): a header line (the position rules' text and digest, trade and position counts), then every derived position with its trades and book, and each node's books, one a line. Records written before 2.9.4 are `.json`, one document, read as they are |
+| The date's membership | `var/official/<YYYY-MM-DD>-membership-v<n>.jsonl` | JSON Lines (2.9.4): a header line (the position rules' text and digest, trade and position counts), then every derived position with its trades and book, and each node's books, one a line. With a hierarchy built from columns (2.9.5) also one `{"row": "cell", cell, book, values, positions}` a cell, and a column node lists its cells as its `books` (`CAPTURE:<id>` of such a node reads its cells' positions). Records written before 2.9.4 are `.json`, one document, read as they are |
 | The published rows as JSON Lines | `<root>/risk-results/jsonl/var-official/<date>/var-official-v<n>.jsonl` (a file, beside the Delta table) | the rows of each publish commit, one a line (`drishti.var.official.jsonl`, on by default) |
 
 The rates desk's entry in the official record of 2026-09-30:
@@ -2381,10 +2457,15 @@ not a list of numbers`). A `null` element inside a vector is accepted and stays 
 | 422 | `DRS-5207` | `ccy` names a currency with no scenario FX on the date (2.9.4) | *no CHF FX for the scenarios of <date>: CHF: no scenario rates supplied and no FX history to derive them from; the currencies with FX on the date: …* |
 | 400 | `DRS-5001` | `ccy` is not a three-letter code; a compare of two captures in different currencies | *ccy is a currency's ISO code (USD, EUR, CAD ...), not EURO*; *… is in EUR and … in USD: a compare reads two captures in one currency* |
 | 422 | `DRS-5210` | one source system sent two forms or grains on the date, or a supplied position covers a trade also sent on its own (2.9.4, section 15.13) | *the inputs of 2026-09-30 are not loaded: MUREX sent {PNL/POSITION=1, PNL/TRADE=7}; one source system sends one form and one grain on one date* |
+| 422 | `DRS-5211` | a hierarchy is built from a column a source of the trades does not keep (2.9.5, section 15.14) | *the VaR inputs of <date> are not loaded: the hierarchy LL is built from the column LIMIT_LETTER, which pnl-vector does not keep (add it to the connector's layout.pnl-vector.columns, and to the rows)* |
+| 422 | `DRS-5213` | the hierarchies' configuration is not valid, or a hierarchy with `ids: leaf` has a value under two parents on the date (2.9.5) | *the VaR inputs of <date> are not loaded: the hierarchy MGMT names its nodes by their own value (ids: leaf), but DESK-X sits under both … : use ids: path* |
+| 404 | `DRS-5214` | `GET /tree?hierarchy=<id>` of a hierarchy the date has not (2.9.5) | *no hierarchy NOPE on <date> (it has LL, LEGAL, MGMT)* |
 
 `DRS-5208` (a record that does not say what it is, or contradicts itself) and `DRS-5209` (a record against its system's pin) name a
 refused record in `provenance.rejections` (an intraday one in `intraday.rejections` too). `DRS-5201`, `DRS-5206` and (for a trade) `DRS-5207` are not HTTP answers: they name a rejected row in `provenance.rejections` (section 20.3).
-An intraday row of another scenario set is refused as `DRS-5203` in `intraday.rejections`; the date is not.
+An intraday row of another scenario set is refused as `DRS-5203` in `intraday.rejections`; the date is not. A row that leaves a level
+column of a column hierarchy empty is refused as `DRS-5211` in `provenance.rejections` (2.9.5); a `var-limit` row naming no node of the
+date is said as `DRS-5212` in `provenance.warnings`, and a position split between two nodes is counted there too.
 
 ### 20.3 What the load checks (as built)
 
@@ -2405,6 +2486,8 @@ counted (`provenance.rejected`, `GET /status`) and its reason listed (`provenanc
 | One run | one `BATCH_ID` across the date's vectors; every `SCENARIO_SET_ID` equals the set's | the date is not loaded (`DRS-5203`); the date before it is answered with the reason in `provenance.warnings`, until the date's vectors change |
 | Scenario set | one set per date; `SCENARIO_DATES` strictly increasing and all before `BUSINESS_DATE` | the date is not loaded (`DRS-5203`), as above |
 | Memory | the date's vectors within `memory-budget-mb` | `503 DRS-5204` (capacity) |
+| Level columns (2.9.5) | every level column of a column hierarchy kept by each source and set on each row | a column not kept: the date is not loaded (`422 DRS-5211`); a row without a value: rejected (`DRS-5211`) |
+| Limits (2.9.5) | every `var-limit` row of a hierarchy reading them names a node of the date | the row is unused; `DRS-5212` in `provenance.warnings` |
 
 **Still not checked (planned):** a `TRADE_ID` live in the trade master and a `TT_BOOK` in exactly one leaf of each hierarchy (`unmapped`
 in provenance); one root per hierarchy, every `PARENT_ID` existing, a node's `BOOKS` the union of its children's; a RULE portfolio naming
@@ -2523,7 +2606,7 @@ about 200 positions over 60 dates, about 21 MB compressed).
 
 ```bash
 python3 tools/drishti.py lake demo --as-of data \
-  --only market-risk/pnl-vector,market-risk/scenario-pv,market-risk/fx-scenario,market-risk/scenario-set,market-risk/risk-hierarchy,market-risk/portfolio
+  --only market-risk/pnl-vector,market-risk/scenario-pv,market-risk/fx-scenario,market-risk/scenario-set,market-risk/risk-hierarchy,market-risk/portfolio,market-risk/var-limit
 ```
 
 `--as-of data` keeps the test data's own date (2026-09-30), so the numbers are this guide's; `--as-of today` (the default) moves the
@@ -2632,6 +2715,7 @@ recommended defaults unless the product owner said otherwise):
 | 1.8 | 2026-10-27 | **AS BUILT (2.9.4, local):** the delivery format JSONL, one row of the contract a line (the three contracts), and the stand-in pricing system `tools/pvgen` (morning run, intraday files, Kafka publisher, checker) with both forms side by side (§15.12); `make_var_data.py --pv-systems/--pnl-systems/--all-vectors` |
 | 1.7 | 2026-10-27 | **AS BUILT (2.9.4, local):** intraday updates (§8.4): `RUN_KIND: INTRADAY` rows appended to `scenario-pv` and `pnl-vector` (§15.8, §15.9), applied on the loaded date without a reload (each trade's difference into its book and nodes, the totals, the currencies), the latest `COMPUTED_AT` per trade winning, cancels, new trades, another scenario set refused; `intraday` on every answer, the badge, `drishti.py var intraday`; the official records the morning run's |
 | 1.6 | 2026-10-27 | **AS BUILT (2.9.4, local):** the listed reporting currencies built ahead in the background and kept for the newest 5 dates (`drishti.var.currencies`, `drishti.var.currency-retention-dates`); every node's PVs summed per trade currency (`CTOT`, hot file format 2) for the headline in any currency and the tab *In other currencies* (`GET /scope/currencies`, `GET /currencies`); the console's Reporting currency picker, `VAR … IN EUR`, Trade currency on the trade pages and the VaR tables (§15.11) |
+| 1.11 | 2026-10-28 | **AS BUILT (2.9.5):** configurable hierarchies (§15.14): the pack's `hierarchies:` block or `drishti.var.hierarchies`, from the `risk-hierarchy` rows or from the trades' columns (path or leaf ids, a scope word, a limits kind); the demo's limit letters `LL` (`LIMIT_LETTER > DESK`) beside MGMT and LEGAL; the `risk-hierarchy` enums opened; the new kind `var-limit` (§15.15); `LIMIT_LETTER` on every P&L, scenario-PV and exposure-path row; cells and hot file format 3 (§25, §26.3); a position under two nodes split (`<position>@<value>`); official records of every configured hierarchy with cell membership lines (§19); `DRS-5211` to `DRS-5214` (§20); P&L-vector ids `PNL-<trade or position>-<set>` (`PV-` still read) |
 | 1.4 | 2026-10-26 | **AS BUILT (2.8.0, VaR complete part 2):** the tiered memory (§26: each date a memory-mapped float32 hot file, aggregates float64, history dates mapped again from their file, eviction, cleaning, safe unmapping; the hot file's format 1 fixed; precision bound and measurements); `drishti.var.tier.*` (§12); the budget measured on the float32 copy; `provenance.tier`, the status's `tier` (§11.2, §11.4); the benchmark measured at 100,000 × 5 and extrapolated to 1 M × 50, with the full command (§27.3); the computed kinds `var-result` and `var-whatif` through reactive connectors, the Python VaR engine in the pool `var` (§8); `drishti.py var` (§10); open questions 8 and 12 decided; sharding documented as planned, not built (§28) |
 
 **2026-10-26, no change to the contract:** the contract (formerly the contracts folder's VAR.md, now [archived](../archive/VAR.md) as history) was merged with the user guide, the
@@ -2698,11 +2782,12 @@ then `VarBook.Builder.build`:
 
 | Structure | Exact content |
 |---|---|
-| **Trade order** | sorted by `LEGAL_ENTITY`, `DESK`, `TT_BOOK`, `POSITION_ID` (text order of the values; null as empty) then `TRADE_ID`: each position and each book is a contiguous run of ordinals, so summing a position or a book is one sequential scan. The sort and the permutation of the vectors happen once per load (both copies held during the permutation) |
+| **Trade order** | sorted by `LEGAL_ENTITY`, `DESK`, `TT_BOOK`, the cell columns (2.9.5, below), `POSITION_ID` (text order of the values; null as empty) then `TRADE_ID`: each position, each cell and each book is a contiguous run of ordinals, so summing a position or a book is one sequential scan. The sort and the permutation of the vectors happen once per load (both copies held during the permutation) |
+| **Cells** (2.9.5) | with a hierarchy built from columns ([section 15.14](#1514-hierarchies-from-the-rows-or-from-the-trades-columns-as-built-295)), the **cell columns** are every level column of every column hierarchy but `TT_BOOK` (`LIMIT_LETTER`, `DESK` in the demo), kept as trade columns after `TRADE_TEXTS`; a **cell** is a run of one book's trades with the same values of them, named `<book>\|<value>\|<value>` (`Cells`). Each cell is summed once into its own aggregate, as a book is; a column node's `books` are its cells. With no column hierarchy there are no cells: the book is the unit, as before. A position never crosses a cell: one that would is split, `<position>@<value>`, and counted |
 | **Trade columns** (`TRADE_TEXTS`) | `POSITION_ID` (derived), `LEGAL_ENTITY`, `DIVISION`, `DESK`, `TT_BOOK`, `PORTFOLIO`, `PRODUCT_GROUP`, `PRODUCT_TYPE`, `CURRENCY`, `COUNTERPARTY`, `DIRECTION`, `INSTRUMENT_ID` (derived), `SECURITY_ID`, `INSTRUMENT`, `STRATEGY`, `TAGS`, `POSITION_RULE` (int code per row, −1 for null, one dictionary per column: `Columns`); `TRADE_NUMBERS`: `QUANTITY`, `PV` (`double`, NaN for none) |
 | **Position columns** | derived from each run ([section 15.6](#156-positions-derived-by-drishti-as-built)): `POSITION_TEXTS`: `INSTRUMENT_ID`, `INSTRUMENT`, `DIRECTION`, `LEGAL_ENTITY`, `DIVISION`, `DESK`, `TT_BOOK`, `PORTFOLIO`, `PRODUCT_GROUP`, `PRODUCT_TYPE`, `CURRENCY`, `COUNTERPARTY`, `STRATEGY`, `TAGS` (stored joined by a vertical bar, read as a list), `STATUS`, `SECURITY_ID`, `POSITION_RULE`, `POSITION_TYPE`; `POSITION_NUMBERS`: `QUANTITY`, `MARKET_VALUE`, `NOTIONAL`, `TRADE_COUNT`, `LONG_TRADES`, `SHORT_TRADES` |
-| **Nodes** | from `risk-hierarchy`; a node's books are those of its `BOOKS` the date has trades in; children from `PARENT_ID` |
-| **Aggregates** | every book's vector (one parallel pass per book run), then every node's bottom-up from the roots (a leaf node sums its books; others their children). Keyed by book name and by node id |
+| **Nodes** | from `risk-hierarchy`; a node's books are those of its `BOOKS` the date has trades in; children from `PARENT_ID`. A column hierarchy's nodes (2.9.5) are derived at build from the distinct paths of its cells' values, in id order, each listing its cells |
+| **Aggregates** | every book's and every cell's vector (one parallel pass per run), then every node's bottom-up from the roots (a leaf node sums its books or cells; others their children). Keyed by book name, cell name and node id. The planner walks MGMT (else the first hierarchy) |
 | **Position vectors** | summed on first use from the position's run and cached for the date's life (unbounded: at most one `double[N]` per position) |
 | **Failed** | count of rows with a null vector |
 
@@ -2756,7 +2841,8 @@ changes; the date before it is answered meanwhile, with the reason in `provenanc
 A bank's vectors are large: 509 values per trade, 4,072 bytes in float64, **4.07 GB a day for a million trades**. Approved by the product
 owner (2026-10-25), built in *VaR complete, part 2* (2026-10-26) by `VarLoader`, `VarTier`, `VarBook.Builder`, `VarHotFile`,
 `RowSpill`, `MappedMatrix`, `GroupedVectors` and `FileMaps`. The format below is **fixed** (format 1; format 2, 2.9.4, adds the
-optional `CTOT` section: a format-1 file is not read, the date is built again from the lake).
+optional `CTOT` section: a format-1 file is not read, the date is built again from the lake; format 3, 2.9.5, is format 2 with the `CELL`
+section, written only for a date with cells: a date without cells is still format 2, so earlier files stay valid).
 
 ### 26.1 The tiers
 
@@ -2792,7 +2878,8 @@ optional `CTOT` section: a format-1 file is not read, the date is built again fr
 
 ```
  request for date D
-   │  the inputs' digest = SHA-256(format | D | data versions of pnl-vector, risk-hierarchy, scenario-set | position rules' digest)
+   │  the inputs' digest = SHA-256(format | D | data versions of pnl-vector, risk-hierarchy, scenario-set | position rules' digest
+   │                               | 2.9.5: the hierarchies' configuration and var-limit's version, when not the default)
    ├─ <data folder>/var/hot/D/inputs-<16 hex of the digest>.vhot exists and its header has that digest
    │     → map it (the small sections onto the heap, checked; the matrices mapped) and read the portfolios: the date is open
    └─ else read the lake: scenario set (checked) → every vector row through VarIntake → appended to D/spill-*.f64 (float64, lake order;
@@ -2842,7 +2929,9 @@ offset  bytes  field
 | `TCOL` | the trade columns: rows; per text column its name, dictionary and an int32 code per row (−1 none); per number column its name and a float64 per row |
 | `PIDS`, `PRUN`, `PCOL` | position ids; per position its run of trades (`from`, `to`, int32); the position columns (as `TCOL`) |
 | `BOOK` | per book its run of trades |
-| `NODE` | per node id, hierarchy, level, name, parent, limit (float64) and its books |
+| `BOOK` (format 3) | the cells' runs too, after the books' (a cell's name has a `\|`, a book's never) |
+| `NODE` | per node id, hierarchy, level, name, parent, limit (float64) and its books (a column node: its cells) |
+| `CELL` | format 3 (2.9.5): the positions split at a cell's edge (int32), then the cell columns (count, names) |
 | `AKEY`, `AGGS` | the aggregates' keys (books and nodes), then **float64 M × N**, summed from the lake's float64 rows (exact, independent of the float32 copy) |
 | `TMAP` | per trade its row in `TMAT`, −1 when its position has one trade (its row is the position's) |
 | `CTOT` | 2.9.4, a USD book only: every node's per-trade-currency totals (section 15.11): count; per node its id and currencies, each with its trade count (int32), today's native PV sum and the N scenarios' (float64) |

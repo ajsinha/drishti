@@ -274,6 +274,13 @@ server is set to 95%), and *How this number was built* says the scenario window 
 can set any name with `drishti.var.root-name` (or one per hierarchy with `drishti.var.root-names`), and the page, the command line and new
 captures follow it ([CONFIGURATION.md](../admin/CONFIGURATION.md)).
 
+**Hierarchies and limit letters (2.9.5).** The select above the tree lists the date's hierarchies by name: *Management*, *Legal
+entities* and, in the demo, *Limit letters*: the letter of authority each trade's VaR limit is granted under, then its desks. A letter
+may hold part of a book: its VaR is exactly that of its own trades. Choose one and the tree, the breadcrumbs and the contributions
+follow it, and the link keeps it (`&hierarchy=LL`); a letter's limit bar reads its own limit (blank when it has none). Type a letter in
+the scope box (`LL:LL-0003`, `LL:LL-0003/DESK-RATES`) or search for it. Which hierarchies exist, and from which columns, is set by an
+administrator ([VAR_GUIDE.md section 15.14](VAR_GUIDE.md#1514-hierarchies-from-the-rows-or-from-the-trades-columns-as-built-295)).
+
 **Any form, any grain (2.9.4).** *How this number was built* says, per source system, whether its figures came as scenario PVs or P&L
 vectors, per trade or per position. A position its system sends whole answers `POS:<id>`; its trades have no VaR of their own on that
 date (the trade page says so and links the position).

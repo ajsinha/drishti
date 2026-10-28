@@ -37,6 +37,7 @@ import java.util.TreeSet;
  *   BASKET:asha/unwind                      a basket a person saved
  *   WHERE:PRODUCT_GROUP == 'Rates' and CURRENCY == 'USD'      a rule over the positions' columns (PositionRule)
  *   A + B   A - B   A &amp; B   ( ... )            union, difference, intersection; &amp; binds before + and -
+ *   LL:LL-0042   LL:LL-0042/DESK-RATES                     a node of a configured hierarchy, by its word (2.9.5, {@link HierarchySpec})
  * </pre>
  *
  * The ids of {@code POS}, {@code TRD}, {@code CPTY} and {@code NSET} are kept as written (a booking system's ids are text and may be lower case;
@@ -133,10 +134,18 @@ public sealed interface ScopeExpr {
 
     /** Parses scope text; {@link IllegalArgumentException} says what is wrong and where. */
     static ScopeExpr parse(String text) {
+        return parse(text, Set.of());
+    }
+
+    /**
+     * Parses scope text that may also use the configured hierarchies' words ({@code extra}: {@code LL}, upper case; 2.9.5): each names a
+     * node of its hierarchy ({@code LL:LL-0042}), kept in the canonical text as written.
+     */
+    static ScopeExpr parse(String text, Set<String> extra) {
         if (text == null || text.isBlank()) {
             throw new IllegalArgumentException("an empty scope: write BANK, DESK:<desk>, POS:<ids>, TRD:<ids>, PORT:<id> or a combination");
         }
-        Parser p = new Parser(text.trim());
+        Parser p = new Parser(text.trim(), extra == null ? Set.of() : extra);
         ScopeExpr e = p.union();
         p.skipSpace();
         if (p.i < p.s.length()) {
@@ -148,10 +157,12 @@ public sealed interface ScopeExpr {
     /** A recursive-descent parser over the scope text. */
     final class Parser {
         private final String s;
+        private final Set<String> extra;
         private int i;
 
-        Parser(String s) {
+        Parser(String s, Set<String> extra) {
             this.s = s;
+            this.extra = extra;
         }
 
         void skipSpace() {
@@ -233,13 +244,14 @@ public sealed interface ScopeExpr {
                 return e;
             }
             int start = i;
-            while (i < s.length() && (Character.isLetter(s.charAt(i)))) {
+            while (i < s.length() && (Character.isLetter(s.charAt(i)) || i > start && (Character.isDigit(s.charAt(i)) || s.charAt(i) == '_'))) {
                 i++;
             }
             String word = s.substring(start, i).toUpperCase(Locale.ROOT);
-            if (!WORDS.contains(word)) {
-                throw new IllegalArgumentException("'" + (word.isEmpty() ? s.substring(start) : word) + "' is not a scope word: use one of "
-                        + new TreeSet<>(WORDS));
+            if (!WORDS.contains(word) && !extra.contains(word)) {
+                TreeSet<String> all = new TreeSet<>(WORDS);
+                all.addAll(extra);
+                throw new IllegalArgumentException("'" + (word.isEmpty() ? s.substring(start) : word) + "' is not a scope word: use one of " + all);
             }
             if (word.equals("BANK") && (i >= s.length() || s.charAt(i) != ':')) {
                 return new Ref("BANK", "");

@@ -43,9 +43,14 @@ public class ExposureConfiguration {
 
     @Bean(destroyMethod = "close")
     ExposureService exposureService(ExposureProperties props, SourceRouter router, Entitlements entitlements, ContentStore store,
-            ObjectProvider<AuditLog> audit) {
-        return new ExposureService(props, new ExposureLoader(router, props, new ExposureTier(props).start()), new ExposureAccess(props, entitlements),
-                new ExposureOfficialStore(store), audit.getIfAvailable());
+            ObjectProvider<AuditLog> audit, ObjectProvider<com.ash.drishti.server.var.VarProperties> varProps,
+            ObjectProvider<com.ash.drishti.packs.PackRegistry> packs) {
+        ExposureLoader loader = new ExposureLoader(router, props, new ExposureTier(props).start());
+        com.ash.drishti.server.var.VarProperties vp = varProps.getIfAvailable();
+        if (vp != null) {                                               // the hierarchies VaR builds (2.9.5): the same nodes here
+            loader.hierarchies(com.ash.drishti.server.var.Hierarchies.of(vp, packs::getIfAvailable));
+        }
+        return new ExposureService(props, loader, new ExposureAccess(props, entitlements), new ExposureOfficialStore(store), audit.getIfAvailable());
     }
 
     @Bean

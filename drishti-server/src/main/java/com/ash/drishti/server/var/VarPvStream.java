@@ -206,8 +206,9 @@ final class VarPvStream {
             row.put("RUN_KIND", VarIntake.INTRADAY);
             row.put("BATCH_ID", batch);
             row.put("BUSINESS_DATE", day.toString());
-            row.put(kind.equals("scenario-pv") ? "SCENARIO_PV_ID" : "VECTOR_ID", (kind.equals("scenario-pv") ? "SPV-" : "PV-") + trade + "-" + set
-                    + "-" + batch);
+            // the record's id: SPV-<trade>-<set>-<batch>, or (2.9.5) PNL-<trade>-<set>-<batch> for a P&L vector (PV- before)
+            row.put(kind.equals("scenario-pv") ? "SCENARIO_PV_ID" : "VECTOR_ID", (kind.equals("scenario-pv") ? "SPV-" : VarLoader.PNL_ID) + trade + "-"
+                    + set + "-" + batch);
             if (kind.equals("scenario-pv")) {
                 row.put("VALUATION_DATE", row.path("VALUATION_DATE").asText(day.toString()));
                 row.put("BASE_VALUATION_DATE", row.path("BASE_VALUATION_DATE").asText(day.toString()));

@@ -17,11 +17,11 @@
 
 # The command catalog
 
-Every command of the command line: its own words and forms, the 11 packs' codes, and the 102 mnemonics the packs define, each with what it does and an example. A pack's mnemonics work when the pack is switched on ([PACKS.md](PACKS.md)); how to type them is in [USER_GUIDE.md](USER_GUIDE.md).
+Every command of the command line: its own words and forms, the 11 packs' codes, and the 103 mnemonics the packs define, each with what it does and an example. A pack's mnemonics work when the pack is switched on ([PACKS.md](PACKS.md)); how to type them is in [USER_GUIDE.md](USER_GUIDE.md).
 
 **Data** says what kind of data a command shows ([the data contracts](../contracts/README.md#3-four-kinds-of-data)): *fundamental* (masters, terms, market and public data, kept as delivered), *engine input* (what upstream engines deliver for the computed measures), *Drishti's own* (made by Drishti) and *computed* (worked out when asked). **Change** says when a command moves to the compute model, or when the figures on a record start to be computed instead of stored ([the roadmap](../architecture/IMPLEMENTATION_PLAN.md#the-computed-measures-roadmap-280-to-2120-product-owner-2026-10-25)). Each mnemonic's fields are in its data contract ([every command's contract](../contracts/packs/README.md)).
 
-In numbers: 73 fundamental, 10 engine input, 1 Drishti's own and 18 computed; 0 move to the compute model and 0 keep their record while its figures become computed.
+In numbers: 73 fundamental, 11 engine input, 1 Drishti's own and 18 computed; 0 move to the compute model and 0 keep their record while its figures become computed.
 
 ## Contents
 
@@ -196,11 +196,12 @@ Value at risk, stress testing, FRTB sensitivities and P&L explain.
 | `TVAL` | Trade valuation | A trade's valuation from the risk engine, for every source system: MTM, one-day P&L and DV01, with what it values (source system, portfolio, desk, product). | `TVAL TVAL-1000001` | fundamental |  |
 | `POS` | Position | A position: one security held in one book (or one OTC trade), the trades that build or reduce it, and its VaR computed as the page opens. | `POS POS-BOOK-EQD-2~SEC-WARRANT-USD-01` | Drishti's own |  |
 | `PORT` | Portfolio | A portfolio in terms of the positions inside it: longs and shorts, market value, VaR, ES and each position's contribution. | `PORT PF-RATES-DESK` | engine input |  |
-| `PNLV` | P&L vector (509 scenarios) | P&L vector of a trade | `PNLV PV-MX-20000274-HS-509` | engine input |  |
+| `PNLV` | P&L vector (509 scenarios) | P&L vector of a trade | `PNLV PNL-MX-20000274-HS-509` | engine input |  |
 | `SPV` | Scenario PVs of a trade (509 scenarios, its currency) | A trade's present value under each historical scenario and its base PV of the same run, in the trade's own currency: the form of a trade's scenario P&L a bank may send instead of a P&L vector (2.9.4; VAR_GUIDE.md section 15.9). The VaR engine turns it into the trade's USD P&L when it loads the date: P&L(s) = PV(s) x FX(s) - PV(base) x FX(base). | `SPV SPV-1000054-HS-509` | engine input |  |
 | `FXS` | Scenario FX of a currency (509 scenarios) | A currency's rate against USD today and under each historical scenario, as the risk batch supplies it (2.9.4; VAR_GUIDE.md section 15.9): the VaR engine converts scenario PVs and reporting currencies with it. A currency the batch does not supply is derived from the FX history (fx-spot). | `FXS FXS-EUR-HS-509` | engine input |  |
 | `SSET` | Scenario set | Scenario set | `SSET HS-509` | engine input |  |
 | `HIER` | Risk hierarchy node | Risk hierarchy node | `HIER LEGAL~LE-NY` | engine input |  |
+| `VLIM` | VaR limit of a hierarchy node | The 1-day 99% VaR limit of one node of a hierarchy, keyed by the hierarchy and the node's id, in USD | `VLIM VL-LL~LL-0003` | engine input |  |
 | `VRES` | VaR of a scope (computed) | The VaR, ES, decomposition, worst scenarios and P&L vector of any scope (the scope grammar of VAR_GUIDE.md section 5), computed when asked by the server's VaR engine as the person asking; never stored. | `VRES DESK:RATES` | computed |  |
 | `VWIF` | VaR what-if (computed, Python) | A scope's VaR and ES before and after hypothetical trades kept in the person's private sandbox, and its stressed window, computed when asked by the Python VaR engine from the scope's var-result; never stored. |  | computed |  |
 | `VOFF` | VaR official results (published) | The official end-of-day VaR and ES of every node of the MGMT and LEGAL hierarchies, as the server captured and published them (one row per node, business date and result version); read only, for BI and other readers, never an engine's input. | `VOFF MGMT~DESK-RATES` | computed |  |

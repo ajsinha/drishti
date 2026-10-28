@@ -308,12 +308,14 @@ final class ExposureService implements AutoCloseable {
         ExposureAccess.View view = access.view(p, d);
         ExposureScopes.Resolution res;
         try {
-            res = new ExposureScopes(d.book(), g -> Optional.ofNullable(d.groups().get(g))).resolve(scope);
+            res = new ExposureScopes(d.book(), g -> Optional.ofNullable(d.groups().get(g)), loader.hierarchySpecs()).resolve(scope);
         } catch (IllegalArgumentException e) {
             throw new DrishtiException(ErrorCode.EXPOSURE_BAD_PARAMETER, e.getMessage());
         }
         noPaths(d, res, scope);
-        boolean naming = com.ash.drishti.compute.var.ScopeExpr.parse(scope).refs().stream().anyMatch(r -> NAMING.contains(r.word()));
+        java.util.Set<String> words = loader.words();
+        boolean naming = com.ash.drishti.compute.var.ScopeExpr.parse(scope, words).refs().stream()
+                .anyMatch(r -> NAMING.contains(r.word()) || words.contains(r.word()));        // a column hierarchy's node names trades as DESK: does
         if (naming && !view.seesTrades(res.trades().and(view.visible()))) {
             throw new DrishtiException(ErrorCode.FORBIDDEN, "a scope of trades, desks, books or a rule may only name the netting sets you see trade "
                     + "by trade; your role sees some of these only in aggregate");

@@ -163,3 +163,16 @@ def test_no_confidence_is_hard_coded_the_labels_follow_the_answer(client):
         assert "99%" not in text and "97.5%" not in text, f
     assert "d.confidence" in (js / "var-explorer.js").read_text(encoding="utf-8")
     assert "w.confidence" in (js / "var-basket.js").read_text(encoding="utf-8")
+
+
+def test_any_configured_hierarchy_is_kept_in_the_page_and_a_configured_word_opens_by_scope(client):
+    """2.9.5 (docs/guides/VAR_GUIDE.md section 15.14): the page takes any well-formed hierarchy id (LL), upper case, and fills its
+    selector from the engine's tree (hierarchyInfo); anything else is MGMT. A configured word's node opens as scope text."""
+    html = client.get("/var?scope=BANK&hierarchy=ll").text
+    assert 'data-hierarchy="LL"' in html
+    assert 'data-vx-hierarchy' in html and '<option value="LL">LL</option>' in html
+    assert 'data-hierarchy="MGMT"' in client.get("/var?scope=BANK&hierarchy=ll-1%3Cx%3E").text
+    assert var_command("VAR SCOPE LL:LL-0003".split(), "asha") == "/var?scope=LL%3ALL-0003"
+    assert var_command("VAR NODE LL~LL-0003/DESK-RATES".split(), "asha") == "/var?scope=NODE%3ALL~LL-0003/DESK-RATES"
+    js = client.get("/static/js/var-explorer.js").text
+    assert "/^NODE:(MGMT|LEGAL)~/" not in js and "hierarchyInfo" in js and "setHierarchy" in js
