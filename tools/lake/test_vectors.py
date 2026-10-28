@@ -144,7 +144,7 @@ class IcebergFormatTest(unittest.TestCase):
         self.assertEqual(summary["format"], "iceberg")
         table = self.root / "ice" / "risk" / "pnl-vector"
         self.assertTrue((table / "metadata").is_dir())
-        t = pq.ParquetDataset(sorted(str(f) for f in (table / "data").rglob("*.parquet"))).read()
+        t = pq.ParquetDataset(sorted(str(f) for f in (table / "data").rglob("*.parquet")), partitioning=None).read()
         self.assertIn("DESK", t.schema.names)                              # a partition column kept as a column
         rows = {r["id"]: r for r in t.to_pylist()}
         self.assertEqual(len(rows), len(self.docs))
