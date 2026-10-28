@@ -94,6 +94,21 @@
   `[106,307,…]`). The intraday side was correct. The test now loads that date first, writes the full run, waits until the date's version
   shows it and sends its signal, as a loader does; the full-run test waits for both tables' versions.
 
+### The ViewModel contract
+
+- **[VIEWMODEL.md](docs/architecture/VIEWMODEL.md): one document defines the ViewModel** (2026-10-28), the JSON the server returns for
+  every entity screen and the contract the 2.9.7 client-side renderer will depend on: principles, every top-level field, the common
+  types (Cell, Link, tones, keys, provenance, `empty`/`error`/`denied`, grid), the `data` of all **22** panel kinds (checked against
+  `PanelKind` and the binders; older documents said twenty) with real examples, live frames and their five patch ops, masks and
+  entitlements, how to fetch, stream, preview and render it, and compatibility (a version marker proposed for 2.9.7, not built).
+  API_GUIDE's *The ViewModel in detail* is now a summary that links it; ADR-004, ARCHITECTURE section 4, LIVE.md and ELEMENTS.md link
+  it; a help-centre page under Build (60 pages).
+- **`GET /api/v1/viewmodel/schema`: the ViewModel's JSON Schema** (draft 2020-12, read only), generated from the Java records by
+  `ViewModelSchema` (required and nullable from each record's Jackson inclusion; each kind's `data` record, the closed word lists and
+  the tones on top), with `$defs.Frame` for live frames. `ViewModelSchemaTest` validates real views against it (the all-panels
+  showcase, the reference trades, broken and empty documents, a masked view, a denied panel, live frames) with a small built-in
+  validator, so the schema cannot drift from what the server sends.
+
 ### Documentation
 
 - **Contradictions between documents fixed** (the 2.9.6 documentation audit, C1 to C20; the structural merges come later, after review).

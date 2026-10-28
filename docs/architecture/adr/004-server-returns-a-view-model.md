@@ -27,3 +27,6 @@ The server returns a JSON ViewModel: the bound layout. The console renders it wi
 
 ## Consequences
 The same model feeds the console, API clients and golden tests, and live patches address ViewModel paths.
+
+The ViewModel's structure, standard and use are defined in [VIEWMODEL.md](../VIEWMODEL.md), with its JSON Schema at
+`GET /api/v1/viewmodel/schema`.

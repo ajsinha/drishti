@@ -157,7 +157,8 @@ painted by the console.
 | `frame` | the frame's `seq` | `{"seq", "generation", "patches": [...], "latencyMs", "p99Ms"}`. |
 | comment `:hb` | none | Heartbeat every `drishti.live.heartbeat` (15 s) when no frame was sent. |
 
-A frame's `patches` are a list of these:
+The ViewModel and the frame are defined field by field in [VIEWMODEL.md](VIEWMODEL.md#5-live-the-stream-and-its-patches), with a JSON Schema
+(`$defs.Frame`) at `GET /api/v1/viewmodel/schema`. A frame's `patches` are a list of these:
 
 | `op` | Fields | Apply it by |
 |---|---|---|
