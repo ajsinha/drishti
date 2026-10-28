@@ -13,6 +13,36 @@
 
   See the LICENSE file in the root of this repository for the full terms.
 -->
+# Drishti 2.9.4 — release notes
+
+*2026-10-27.* **VaR from the pricing systems' own data, in any currency, updated through the day; JSON Lines as the one data
+standard.**
+
+- **Any input contract** ([VAR_GUIDE 15.9–15.13](docs/guides/VAR_GUIDE.md)): scenario PVs or path P&L, by trade or by position,
+  in any currency, from files or Kafka. Every record says what it is (`VALUE_TYPE`, `GRAIN`, its id, `CURRENCY`, `SOURCE_SYSTEM`);
+  a per-system pin (`drishti.var.inputs`) is an optional cross-check; a source system may switch form or grain from one day to the
+  next. Scenario PVs are converted to P&L with scenario FX (supplied, or derived from the FX history; crosses via USD).
+- **VaR in any reporting currency:** USD, EUR, CAD, JPY and GBP built ahead in the background; any other on first ask; a reporting
+  currency picker and an *In other currencies* tab on the VaR page; each trade's currency on its page.
+- **Intraday:** changed trades or positions only, from small JSONL files or Kafka (JSONL messages, micro-batched every 5 minutes,
+  early flush, Apply now), applied as new − old up the tree; the result equals a full reload to the cent. Official numbers come only
+  from full runs.
+- **Settings:** the scenario window (`all` or the newest N days, e.g. 250), the confidence (99% by default, 95% by setting), the VaR
+  tree's top name, the demo's bank and legal-entity names (`config/demo/names.yaml`).
+- **A stand-in pricing system** (`tools/pvgen`): a day's morning run, intraday files, a Kafka publisher and a checker that recomputes
+  VaR independently; P&L-vector scripts kept.
+- **JSON Lines is the data standard** ([DATA_FORMATS](docs/guides/DATA_FORMATS.md)): every generator writes JSONL, loaders load it
+  into Delta; CSV input is deprecated (`drishti.py convert`); every export and download also offers JSONL.
+- **Also:** the Basket button left the top bar (Construct your basket stays on the VaR page); connector files get new columns by
+  themselves on upgrade (a backup kept); 351 documentation pictures retaken and the fixes the screenshot run found (New pack across
+  console workers, installed packs' guides, the About drawer, the Legs list); the decks in `docs/publications` rewritten.
+- **Upgrade:** rebuild the demo lakes (`build_demo_lakes.py`); P&L files without `GRAIN`/`VALUE_TYPE`/`CURRENCY` are refused, so add
+  them (`drishti.py var convert --set …`).
+- **Known open:** about 271 pictures in other guides still show the old top bar; VaR sharding across servers is planned.
+- **Next, 2.9.5:** Iceberg as a full alternative to Delta (Delta stays the default); VaR hierarchies configured by columns, such as
+  limit letters; all VaR feeds regenerated.
+- **Tested:** the drill passed licence headers, Java 21, Java 25, the tools and the console.
+
 # Drishti 2.9.3 — release notes
 
 *2026-10-27.* **A map of all your data that draws itself; a surprising fact from your own data on Home; index membership that is

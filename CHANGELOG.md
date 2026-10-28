@@ -54,7 +54,7 @@ Delta stays the default lake format everywhere; Iceberg is chosen only by config
 - Docs: ICEBERG_CONNECTOR sections 18–19, DRISHTI_ICEBERG section 16, LAKE_MAINTENANCE section 8, AWS_DEPLOYMENT section 22,
   CONFIGURATION, USER_GUIDE (Admin → Lakes), Windows QA §6i.
 
-## 2.9.4 (unreleased)
+## 2.9.4 — VaR from scenario PVs or P&L, by trade or position, in any currency, intraday from files and Kafka; JSON Lines as the data standard; the decks rewritten (2026-10-27)
 
 - **The basket is on the VaR page only (2026-10-27; product owner).** The top bar's **◫ Basket** button is gone (it did not apply to
   every screen); the VaR explorer keeps **◫ Construct your basket** (now with the count of its parts), the basket strip, **+ basket**
