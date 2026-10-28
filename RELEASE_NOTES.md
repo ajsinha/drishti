@@ -13,6 +13,38 @@
 
   See the LICENSE file in the root of this repository for the full terms.
 -->
+# Drishti 2.9.5 — release notes
+
+*Unreleased (draft; the date is set at the release).* **Iceberg as a full alternative to Delta; VaR hierarchies of your own, such as
+limit letters; connector files that upgrade themselves safely.**
+
+- **Hierarchies by columns** ([VAR_GUIDE 15.14–15.15](docs/guides/VAR_GUIDE.md)): besides MGMT and LEGAL, any hierarchy built from the
+  trades' own columns, configured in the market-risk pack (`hierarchies:`) or `drishti.var.hierarchies`. The demo's **limit letters**
+  (`LIMIT_LETTER > DESK`) with their limits (`var-limit`); a letter may hold part of a book (the positions split, and said); `VAR SCOPE
+  LL:LL-0011`, the VaR page's hierarchy select, official VaR and exposure records for every hierarchy. Data without the column skips
+  that hierarchy alone, with a warning (`DRS-5211`, Admin → Health, *not available* in the select); the rest answers as before.
+- **Iceberg, as a full alternative to Delta** ([ICEBERG_CONNECTOR 18–19](docs/connectors/ICEBERG_CONNECTOR.md),
+  [tutorial 29](docs/tutorials/29-var-on-iceberg.md)): VaR, intraday (files and Kafka) and exposure read from Iceberg, equal to Delta
+  to the cent (VAR BANK 112,041,646 on 2026-09-30 on both); `lake build --format iceberg`, `build_demo_lakes.py --store risk=iceberg`;
+  Admin → Lakes and `lake maintain` for Iceberg (the Format column, snapshot expiry, orphan files, the 7-year floor); official results
+  published as Delta or Iceberg, to a folder or to S3, with BI's readers following; `deploy/aws/iceberg/` scripts. Delta stays the
+  default.
+- **Your own lake** ([EXTERNAL_LAKES](docs/guides/EXTERNAL_LAKES.md)): Databricks Delta tables or Iceberg tables from Spark, Databricks,
+  Trino or Snowflake, path-based or through a REST catalog (Unity Catalog, Polaris, Glue), by configuration only.
+- **Connector upgrades made airtight** ([CONNECTOR_FILES "Upgrades"](docs/connectors/CONNECTOR_FILES.md)): a file nobody edited follows
+  the pack's new template; an edited one gains every missing key and keeps its values; each conflict has **Use the pack's value**; the
+  file before is kept beside it (`.before-upgrade-….bak`); an upgrade test in the drill.
+- **Also:** P&L-vector ids are `PNL-<trade>-<set>` (`PV-` ids still read); one download button per panel with a CSV / JSON Lines menu;
+  subscriptions in `jsonl` documented; the demo lake measured at 85 tables, about 3.4 GB.
+- **Upgrade:** rebuild the demo lakes (`build_demo_lakes.py`: `LIMIT_LETTER` and `var-limit`); connector files follow by themselves. A
+  `var-results.yaml` written by `lake demo` stays on Delta when the official results move to Iceberg: **Reset to pack default**.
+- **Known open:** the AWS Glue and S3 Tables live runs (written, not run: they need an AWS account); the S3 format guard is tested on
+  S3Mock only; shellcheck was not run on the new scripts; tables copied into Iceberg by `build_demo_lakes.py` are read only in Admin →
+  Lakes; about 271 pictures in other guides still show the old top bar.
+- **Next, 2.9.6:** editions (`var-engine` first), VaR sharded across servers, the 2.3M-position benchmark, Delta ↔ Iceberg conversion,
+  stressed and 10-day VaR, in-place Delta schema evolution, plain tables and Delta through Unity Catalog.
+- **Tested:** (to be filled in by the drill).
+
 # Drishti 2.9.4 — release notes
 
 *2026-10-27.* **VaR from the pricing systems' own data, in any currency, updated through the day; JSON Lines as the one data
