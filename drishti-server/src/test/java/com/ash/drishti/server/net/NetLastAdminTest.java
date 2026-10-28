@@ -20,6 +20,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 import com.ash.drishti.identity.AuditLog;
 import com.ash.drishti.identity.User;
 import com.ash.drishti.identity.UserService;
+import com.ash.drishti.net.member.MemberState;
 import java.nio.file.Path;
 import java.util.List;
 import java.util.Map;
@@ -96,8 +97,18 @@ class NetLastAdminTest {
         }
         assertThat(NetNodes.await(10_000, () -> NODES.stream().allMatch(n -> admins(n).containsAll(Set.of("ada", "bob")))))
                 .as("ada and bob are administrators on every node").isTrue();
+        // A disables the seeded administrator while it suspects C for a moment (a busy server's pause, as under a loaded test run): the
+        // change is queued for C all the same and sent once C is heard again (a suspect member heard again never joins again, so no
+        // catch-up would bring it; before 2.9.6 it was lost and C kept the seeded administrator enabled)
+        StateSync sa = cluster.node("a").bean(StateSync.class);
+        String cId = cluster.node("c").net().nodeId();
+        sa.hold(true);
+        int before = waiting(sa, cId);
+        cluster.node("a").net().node().orElseThrow().table().mark(cId, MemberState.SUSPECT);
         a.setEnabled("test", SEEDED, false);
-        assertThat(NetNodes.await(10_000, () -> everywhere(Set.of("ada", "bob")))).as("only ada and bob left enabled").isTrue();
+        assertThat(waiting(sa, cId)).as("the change is queued for the suspected member").isGreaterThan(before);
+        sa.hold(false);
+        converge(30_000, () -> everywhere(Set.of("ada", "bob")), "only ada and bob left enabled");
 
         // at the same moment A disables ada and B disables bob: each is allowed where it is made, one other administrator being left
         hold(true);
@@ -109,9 +120,9 @@ class NetLastAdminTest {
         hold(false);
 
         // the changes cross: every node keeps bob, the most recently enabled (disabled last), and agrees
-        assertThat(NetNodes.await(10_000, () -> everywhere(Set.of("bob")))).as("bob kept enabled everywhere: " + state()).isTrue();
+        converge(10_000, () -> everywhere(Set.of("bob")), "bob kept enabled everywhere");
         Thread.sleep(1_500);
-        assertThat(everywhere(Set.of("bob"))).as("and it stays so: " + state()).isTrue();
+        assertThat(everywhere(Set.of("bob"))).as("and it stays so: %s", detail()).isTrue();
         assertThat(users("c").find("ada").orElseThrow().enabled()).isFalse();
         assertThat(NODES.stream().anyMatch(n -> cluster.node(n).bean(AuditLog.class).recent(50, "bob").stream()
                 .anyMatch(e -> e.action().equals("last-admin-kept")))).as("the repair is audited").isTrue();
@@ -120,17 +131,42 @@ class NetLastAdminTest {
 
         // two deletions at the same moment: ada is enabled again, then A deletes ada and B deletes bob
         a.setEnabled("test", "ada", true);
-        assertThat(NetNodes.await(10_000, () -> everywhere(Set.of("ada", "bob")))).isTrue();
+        converge(10_000, () -> everywhere(Set.of("ada", "bob")), "ada enabled again everywhere");
         hold(true);
         a.delete("test", "ada");
         Thread.sleep(20);
         users("b").delete("test", "bob");
         hold(false);
-        assertThat(NetNodes.await(10_000, () -> NODES.stream().noneMatch(n -> admins(n).isEmpty()) && NODES.stream().map(NetLastAdminTest::admins)
-                .distinct().count() == 1)).as("an administrator stands on every node, the same: " + state()).isTrue();
+        converge(10_000, () -> NODES.stream().noneMatch(n -> admins(n).isEmpty()) && NODES.stream().map(NetLastAdminTest::admins).distinct()
+                .count() == 1, "an administrator stands on every node, the same");
         Thread.sleep(1_500);
         assertThat(NODES.stream().map(NetLastAdminTest::admins).distinct().toList()).as(state().toString()).hasSize(1);
         assertThat(admins("a")).isNotEmpty();
+    }
+
+    /** The changes a node holds for a peer, not sent yet. */
+    static int waiting(StateSync s, String peer) {
+        Object n = ((Map<?, ?>) s.summary().get("waiting")).get(peer);
+        return n == null ? 0 : (Integer) n;
+    }
+
+    /** Waits for the cluster to converge; when it does not, says what each node holds then (not when the wait began). */
+    static void converge(long ms, java.util.function.BooleanSupplier ok, String what) throws InterruptedException {
+        if (!NetNodes.await(ms, ok)) {
+            org.junit.jupiter.api.Assertions.fail(what + " within " + ms + " ms; now: " + detail());
+        }
+    }
+
+    /** Each node's enabled administrators, every administrator's record (enabled, created, updated) and what its user state has sent. */
+    static String detail() {
+        StringBuilder b = new StringBuilder();
+        for (String n : NODES) {
+            b.append("\n  ").append(n).append(' ').append(cluster.node(n).net().nodeId()).append(": ").append(admins(n));
+            users(n).list("").stream().filter(u -> u.roles().contains("admin")).forEach(u -> b.append("\n    ").append(u.username())
+                    .append(" enabled=").append(u.enabled()).append(" created=").append(u.createdAt()).append(" updated=").append(u.updatedAt()));
+            b.append("\n    sync ").append(cluster.node(n).bean(StateSync.class).summary());
+        }
+        return b.toString();
     }
 
     static Map<String, Set<String>> state() {

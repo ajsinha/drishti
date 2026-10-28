@@ -503,8 +503,29 @@ class VarShardClusterTest {
         }
         assertThat(none.statusCode()).as(none.body()).isEqualTo(503);
         assertThat(none.body()).contains("DRS-5215").contains("no partial VaR");
+        double bank = get(refUrl + "/api/v1/var/scope?" + q("BANK", "USD")).path("var").asDouble();
         assertThat(get(url(left) + "/api/v1/var/scope?" + q("BANK", "USD")).path("var").asDouble()).as("a node's figures: held here")
-                .isEqualTo(get(refUrl + "/api/v1/var/scope?" + q("BANK", "USD")).path("var").asDouble());
+                .isEqualTo(bank);
+        // once the members see both owners gone, the rebalancing rounds put the date together again: the replacement cannot be completed
+        // without S0, and the date loaded keeps answering a node's figures (it is never dropped to be put together again)
+        VarShards ls = cluster.node(left).bean(VarService.class).shards();
+        List<String> gone = new ArrayList<>();
+        s0.path("owners").forEach(x -> gone.add(x.asText()));
+        assertThat(NetNodes.await(60_000, () -> ls.members().stream().noneMatch(p -> gone.contains(p.node()) && p.routable())))
+                .as("the member left sees both owners of S0 gone").isTrue();
+        long rounds = System.currentTimeMillis() + 3_000;                  // past the rounds' wait before a date is put together again
+        while (System.currentTimeMillis() < rounds) {
+            ls.tick();
+            Thread.sleep(100);
+        }
+        Throwable why = ls.rebuild(DAY).handle((ok, e) -> e).join();
+        assertThat(why).as("a replacement of the date needs S0").isNotNull();
+        assertThat(String.valueOf(why)).contains("DRS-5215");
+        assertThat(get(url(left) + "/api/v1/var/scope?" + q("BANK", "USD")).path("var").asDouble())
+                .as("a node's figures while the date cannot be put together again").isEqualTo(bank);
+        HttpResponse<String> still = call(url(left), "/api/v1/var/scope?" + q(scope, "USD"));
+        assertThat(still.statusCode()).as(still.body()).isEqualTo(503);
+        assertThat(still.body()).contains("DRS-5215");
         JsonNode[] back = {null};
         assertThat(NetNodes.await(90_000, () -> {
             try {

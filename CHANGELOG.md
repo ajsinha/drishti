@@ -93,6 +93,26 @@
   load the read still saw the old snapshot, so the expected side was that date's morning run (`MGMT~BANK` `[52,168,…]` against the right
   `[106,307,…]`). The intraday side was correct. The test now loads that date first, writes the full run, waits until the date's version
   shows it and sends its signal, as a loader does; the full-run test waits for both tables' versions.
+- **Fixed (drill): a member stopped answering BANK when both owners of a shard were down.** With every owner of S0 stopped, `VAR BANK`
+  answered `503 DRS-5215` on the member left once a rebalancing round had passed: the round dropped the date to put it together again,
+  and putting it together needed S0's skeleton. Now a date is never dropped to be put together again: the replacement is put together
+  beside it and swapped in, in one step, once complete; meanwhile the date loaded answers every node's aggregate, the shards held here and
+  the others' rows at its own data versions, and only the scopes that need the missing shard's rows answer `DRS-5215`. A shard book the
+  date loaded reads is released only after a replacement without it is in place (before, releasing even an *older* version of a shard
+  dropped a date that read the newer one); a member that finds itself stale puts the date together again the same way. Answers still
+  never mix data versions: each partial is asked at the version its date was put together from. `VarShardClusterTest` runs the rounds
+  and a forced replacement with both owners down (BANK answered `503` before the fix, every time). VAR_SHARDING.md sections 7 and 8.
+
+### Drishti*net
+
+- **Fixed (drill): a user-state change made while a peer was suspected for a moment never reached it.** `StateSync` queued a change only
+  for the peers routable at that moment; a member suspected during a busy server's pause and then heard again never "joins" again, so no
+  catch-up brought the change either. The drill's `NetLastAdminTest` saw a node keep the seeded administrator enabled after another node
+  disabled it (`only ada and bob left enabled` failed under load). Now a change (settings, layouts, pivots, workspaces, sessions, users,
+  roles, tokens) is queued for every member that is not gone, suspected or drained included, and sent once it is alive; a dead member
+  still drops its queue and gets the catch-up when it comes back. The last-administrator rule itself was right: it relies on every node
+  seeing every change. `NetLastAdminTest` marks the peer suspect at the moment of the change (the change was queued for nobody before the
+  fix). DRISHTI_NET.md section N7.
 
 ### The ViewModel contract
 

@@ -156,9 +156,19 @@ Every `rebalance-seconds` each member, once the membership has settled (`stable-
    lake, never from a peer, and announces them;
 2. releases what `ShardHandover` allows: a shard it no longer owns once **every** owner has announced it ready for `grace-seconds`; an older
    data version of a shard it owns once the newer has been ready here for the grace period; a shard of a replaced cut once the grace period
-   has passed. A date put together here that reads a released shard's rows is dropped first and put together again;
+   has passed. A shard book that the date put together here reads is released only after a replacement of the date, put together
+   without it (its rows from the new owners), has been swapped in: the date is never dropped for it;
 3. puts together again a date of its own whose remote shards' owners now announce newer data, or that nobody announces any more (after a few
    seconds, before the old holder's grace period ends), or whose cut changed.
+
+**Putting a date together again never drops it (2.9.6 drill finding).** The replacement is put together beside the date loaded, on another
+thread, and swapped in in one step once complete (`VarService.swap`: only when the date loaded is still the one the replacement started
+from). Until then the date loaded answers: every node's aggregate (BANK, desks, legal entities), the shards held here, and the others' rows
+at the data versions it was put together from. When the replacement cannot be completed (a shard with no live owner) the date loaded stays
+and the replacement is tried again in a later round. Before 2.9.6 step 3 dropped the date and left the next request to put it together:
+with both owners of a shard down that request needed the shard's skeleton, so **BANK** itself answered `503 DRS-5215` once a round had
+passed (`VarShardClusterTest` under load in the drill; the test now runs those rounds and a forced replacement while both owners are down,
+and BANK must still answer). Step 2 also dropped the date when it released an *older* version of a shard although the date read the newer one.
 
 So there is never a moment when a shard in use has no ready holder: the old owner's release waits for the new owner's readiness, never the
 other way round. An intraday batch changes no shard: the morning shard books stay, and each member applies the day's updates on the date
@@ -187,8 +197,8 @@ cannot read the updates:
 | Case | What happens |
 |---|---|
 | an owner of a shard stops (or dies) | its replica answers the next request (the order of section 6); after `stable-seconds` a new owner builds the shard and the replica count is restored |
-| every owner of a shard down | a scope that needs the shard's rows answers `503 DRS-5215`; a node's figures (aggregates on every member) still answer; once the membership has been stable for `stable-seconds`, the shard's new owners build it from the lake and it answers again |
-| a member holds another data version (a load landed between two members) | `409 DRS-5216`, the next member is asked; when every member refused as stale, this member drops the date and the next request is answered from the new version |
+| every owner of a shard down | a scope that needs the shard's rows answers `503 DRS-5215`; a node's figures (aggregates on every member) still answer, and keep answering while the rebalancing rounds try to put the date together again (the date loaded is never dropped; a replacement that cannot read the shard is not swapped in); once the membership has been stable for `stable-seconds`, the shard's new owners build it from the lake and it answers again |
+| a member holds another data version (a load landed between two members) | `409 DRS-5216`, the next member is asked; when every member refused as stale, this member puts the date together again at the new version and swaps it in once complete; until then the scopes that need those rows answer `409 DRS-5216` and the others answer from the date loaded, one data version throughout (a partial is asked at the data version the date was put together from, and refused at any other) |
 | a load of the date's inputs (a full rerun) | the data-load signal reloads the date as before; the date is put together again at the new version, its shards built anew by their owners, the old ones released after the grace period |
 | a book under two shards (one book under two legal entities or desks), a position under two shards with a hierarchy built from columns | the date is refused (`422 DRS-5217`, naming the book or position), never answered differently from one server; shard by legal entity only, correct the data, or switch sharding off |
 | a skeleton or partial with another map or data version | refused and the next member asked |
