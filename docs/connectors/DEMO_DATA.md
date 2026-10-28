@@ -37,7 +37,7 @@ days) and, for scale tests, a generated trade book: the scripts in [the other st
 drishti-console/.venv/bin/python tools/drishti.py lake demo
 ```
 
-(the IDE run configuration **Build demo lakes**). Measured for sixty days: **943 s (about 15 minutes), 85 tables, about 2.7 GB**, sixty business days
+(the IDE run configuration **Build demo lakes**). Measured for sixty days: **943 s (about 15 minutes), 85 tables, about 3.4 GB**, sixty business days
 ending on today's business date (the test data's 2026-07-08 to 2026-09-30, moved; `--as-of data` keeps them). The trades go to one
 table per source system, `data/delta/trading/trade_endur`, `trade_calypso` and `trade_murex`, partitioned by business date and
 `PRODUCT_TYPE`, each read by its own connector (`trade-endur`, `trade-calypso`, `trade-murex`) and served together as one kind,
@@ -52,8 +52,8 @@ table, partitions, documents on day 1, changes a day, size), are in [data/testda
 | Business days | 60 (USNY calendar; the test data's 2026-07-08 to 2026-09-30) |
 | Trades | 5,000 per source system on the last day, 15,000 in all (4,407 ENDUR, 3,471 CALYPSO, 4,198 MUREX on the first); about 3–7% amended each day (`TRADE_VERSION` moves) |
 | Source systems | `ENDUR` (ids `1000001` …), `CALYPSO` (`CLY-3000001` …), `MUREX` (`MX-20000001` …): ids unique across them |
-| Tables | 64: 3 trade tables, 46 test-data datasets of the five banking packs, 15 reference tables of world-economy and news-and-markets |
-| Disk | about 2.2 GB (the committed test data: about 120 MB) |
+| Tables | 85 (measured 2026-10-28): 3 trade tables, the test-data datasets of the banking packs (with the 2.9.5 `var-limit`), the reference tables of world-economy and news-and-markets, the public-data snapshots of us-equities, gleif and funds |
+| Disk | about 3.4 GB (measured 2026-10-28, `du` of the 85 tables; the committed test data: about 120 MB) |
 | Counterparties | fictitious look-alikes (`CP-NORTHPLAINS`, `CP-VAULTGUARD`, …), with UEN, country of risk, legal entity, agreements and netting sets holding their trades |
 
 Re-running `lake demo` rebuilds every table it writes (the folder is removed first) and is safe while a server runs: the server gets

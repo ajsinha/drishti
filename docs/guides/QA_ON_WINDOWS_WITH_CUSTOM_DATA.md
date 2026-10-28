@@ -52,7 +52,7 @@ Names used below:
 | **Python 3.12 or 3.13** | PowerShell: `py -3.13 --version` (or `py -3.12 --version`) |
 | **IntelliJ IDEA** (for the server) and **PyCharm** (for the console and the tools) | both start |
 | pip and Maven reach your **internal mirror** | if a download fails, see section 7 |
-| 8 GB free memory, 5 GB free disk (the sixty-day demo lakes take about 2.2 GB) | Task Manager |
+| 8 GB free memory, 5 GB free disk (the sixty-day demo lakes take about 3.4 GB) | Task Manager |
 
 ---
 
@@ -172,7 +172,7 @@ days** of the committed test data (moved to end on the date of your newest ENDUR
    ```
 
 You should see three numbered steps: `1/3 the demo lakes …` (the longest: about 15 minutes on a fast, idle machine and up to 45 minutes
-on a busy laptop, for sixty days; `data\delta` ends at about 2.2 GB), `2/3 your ENDUR files (N: <first date> … <last date>)` with one `lake-build ok … rejected=0` line per file, and `3/3 done in … s`.
+on a busy laptop, for sixty days; `data\delta` ends at about 3.4 GB), `2/3 your ENDUR files (N: <first date> … <last date>)` with one `lake-build ok … rejected=0` line per file, and `3/3 done in … s`.
 
 - Without your files (synthetic data only): leave out `--endur-dir …`; the lakes then end on today's business date.
 - To keep the synthetic ENDUR trades beside yours: add `--keep-synthetic-endur`.
@@ -766,9 +766,9 @@ Delta stays the default for every table. These checks put the **risk domain** in
 | 5 | Restart the server, open the same position again | it opens at once: its id map and document come from `data\cache\risk-store\` (Admin → Caches: `idMapsMappedFromDisk` above 0) |
 | 6 | `tools\drishti.py lake build --from data\testdata\market-risk\pnl-vector\cob-2026-09-30.part-001.jsonl.gz --pack config\packs\market-risk --connector risk-store --kind pnl-vector --lake data\iceberg --domain scratch --format iceberg` | a summary with `format: iceberg` and no rejects; `data\iceberg\scratch\pnl-vector\metadata` exists |
 | 7 | **Admin → Lakes**, with `data\iceberg` among the console's lake roots (`lakes.roots`) | the table `scratch/pnl-vector` with **Format** Iceberg; tick it, **Dry run**: *would expire snapshots older than 168 h; would remove 0 orphan file(s)* |
-| 8 | Before row 9, with the risk domain still in Iceberg: `VAR BANK <GO>`, then `VAR BANK EUR <GO>`, `VAR LL:` and any limit letter, and `XPO BANK <GO>`; write down VaR, ES, a letter's VaR and EPE | figures on every page, the provenance's inputs saying `risk-store` (VaR) and `exposure-store` (exposure) |
+| 8 | Before row 9, with the risk domain still in Iceberg: `VAR BANK <GO>`, then `VAR BANK EUR <GO>`, `VAR LL:` and any limit letter, and `EXP BANK <GO>`; write down VaR, ES, a letter's VaR and EPE | figures on every page, the provenance's inputs saying `risk-store` (VaR) and `exposure-store` (exposure) |
 | 9 | `…\python.exe tools\build_demo_lakes.py --only market-risk --store risk=delta` | `risk-store: now reads delta`, `exposure-store: now reads delta`; Admin → Connectors shows both as delta again, with the same counts as in row 3; the pages of row 8 show the **same figures to the cent** |
-| 10 | Optional, official results in Iceberg: add `drishti.var.official.format: iceberg` and `drishti.var.official.root: <the project>\data\official-iceberg` to the server's settings (an official table keeps its format: the Delta one under `data\delta` would refuse it), restart, then `…\python.exe tools\drishti.py var official --capture` (an administrator's token) | a date already captured with the same inputs says *unchanged* (nothing published again); one whose inputs changed since (rows 1 to 9 moved them) says *restated*, its record *published … (Iceberg sequence number N)*; `data\official-iceberg\risk-results\var-official\metadata` exists and the JSON Lines are in `data\official-iceberg\risk-results\jsonl\var-official\<date>\`; **Admin → Connectors**: `var-results` reads **iceberg** (generated so, no edit by hand), `UP` |
+| 10 | Optional, official results in Iceberg: add `drishti.var.official.format: iceberg` and `drishti.var.official.root: <the project>\data\official-iceberg` to the server's settings (an official table keeps its format: the Delta one under `data\delta` would refuse it), restart, then `…\python.exe tools\drishti.py var official --capture` (an administrator's token) | a date already captured with the same inputs says *unchanged* (nothing published again); one whose inputs changed since (rows 1 to 9 moved them) says *restated*, its record *published … (Iceberg sequence number N)*; `data\official-iceberg\risk-results\var-official\metadata` exists and the JSON Lines are in `data\official-iceberg\risk-results\jsonl\var-official\<date>\`; **Admin → Connectors**: `var-results` reads **iceberg**, `UP` (a file the server generated follows by itself; the `var-results.yaml` that `build_demo_lakes.py` wrote counts as edited and stays on delta: **Reset to pack default** on its page, or `tools\drishti.py connector reset var-results`) |
 
 **Upgrading from 2.9.4: your connector files (2.9.5).** Start the new server on your existing `config\connectors` folder: nothing to do
 by hand. Before it answers, each file you never edited is replaced by the pack's new template (the file before stays beside it as

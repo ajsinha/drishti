@@ -30,7 +30,7 @@ amended trades over 5m in BOOK-RATES-3, biggest first   →  plain words: Drisht
 ```
 
 **Current release: 2.9.4** (VaR from your pricing systems' own data: scenario PVs or P&L, by trade or position, in any currency, updated through the day from files or Kafka; JSON Lines as the one data standard; `DATAMAP` and the fact of the day since 2.9.3) ([release notes](RELEASE_NOTES.md) · [changelog](CHANGELOG.md) ·
-[what shipped when](docs/architecture/IMPLEMENTATION_PLAN.md)). **Learn it by doing:** [twenty-eight tutorials](docs/tutorials/README.md), from your first 15 minutes to BI, AI, embedding and
+[what shipped when](docs/architecture/IMPLEMENTATION_PLAN.md)). **Learn it by doing:** [twenty-nine tutorials](docs/tutorials/README.md), from your first 15 minutes to BI, AI, embedding and
 production, each with real screenshots; the [guides](docs/README.md) are the reference.
 
 ## What you can do
@@ -195,7 +195,7 @@ export JAVA_HOME=/usr/lib/jvm/java-21-openjdk-amd64
 # 2. The console's Python environment (also runs tools/drishti.py)
 uv venv drishti-console/.venv && uv pip install --python drishti-console/.venv/bin/python -r drishti-console/requirements.txt
 
-# 3. The demo lakes the seven packs read: sixty business days from the committed test data (about 15 minutes, 2.2 GB)
+# 3. The demo lakes the seven packs read: sixty business days from the committed test data (about 15 minutes, 3.4 GB)
 drishti-console/.venv/bin/python tools/drishti.py lake demo
 
 # 4. Start the server on :18480 with the packs to load (their parents load with them)
@@ -288,7 +288,7 @@ Start with **[Install and run](docs/guides/GETTING_STARTED.md)**, then the **[tu
 
 | Read this when… | Document |
 |---|---|
-| you want to learn by doing | [the twenty-eight tutorials](docs/tutorials/README.md) |
+| you want to learn by doing | [the twenty-nine tutorials](docs/tutorials/README.md) |
 | you want it installed and running | [GETTING_STARTED.md](docs/guides/GETTING_STARTED.md) |
 | you run the server in IntelliJ IDEA and the console (UX) in PyCharm | [IDE_GUIDE.md](docs/guides/IDE_GUIDE.md) |
 | you build, check, load and ship packs and Sutras from a terminal or a pipeline (`tools/drishti.py`) | [CLI_GUIDE.md](docs/guides/CLI_GUIDE.md) |

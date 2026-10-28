@@ -107,8 +107,8 @@ Delta stays the default lake format everywhere; Iceberg is chosen only by config
   stream's windows go to an Iceberg risk lake as one Iceberg append each (`LakeAppends`; on Delta, as before). `--store risk=iceberg`
   now also switches the counterparty-risk pack's `exposure-store.yaml` (it reads `simulation-run` and `exposure-path`, both in the risk
   domain: before, exposure lost its tables once they were moved). Run for real on the demo data: 14 risk tables, 955,124 rows, in
-  Iceberg in 579 s; a server on that lake answered `VAR BANK` (USD 124,948,241; EUR 111,265,495), the limit letter `LL:LL-0003` and
-  `XPO BANK` from Iceberg and published its official records. **Tests:** `VarFormatEqualityTest`, `ExposureFormatEqualityTest`, `LakeAppendsTest`, `test_stores.py`.
+  Iceberg in 579 s; a server on that lake answered `VAR BANK` (USD 124,948,241; EUR 111,265,495, the lake built to end on that day's business date; on the test data's own date, 2026-09-30, Delta and Iceberg both give 112,041,646, tutorial 29), the limit letter `LL:LL-0003` and
+  `EXP BANK` from Iceberg and published its official records. **Tests:** `VarFormatEqualityTest`, `ExposureFormatEqualityTest`, `LakeAppendsTest`, `test_stores.py`.
 - **Official results to Delta or Iceberg, in a folder or on `s3://`.** `drishti.var.official.format` and
   `drishti.ccr.exposure.official.format` (`delta`, the default, or `iceberg`) with `….official.storage` (the `s3.*` settings). The
   official tables stay append-only (Delta: `delta.appendOnly`; Iceberg: append commits only, `drishti.append-only=true`), keep seven
@@ -119,13 +119,36 @@ Delta stays the default lake format everywhere; Iceberg is chosen only by config
   created in (a format changed with the root not is refused in words); BI's `var-results` and `exposure-results` follow the format by themselves:
   with `….official.format: iceberg` the server reads their pack templates as `plugin: iceberg` over the official root (`engine:
   native`, the `s3.*` of `….official.storage`), so the file generated at start says so, a file never edited follows a change of format
-  (back to Delta too) and an edited one is kept and listed in Template updates (`OfficialReaders`; `tools/test_contracts.py` allows an
+  (back to Delta too) and an edited one is kept (a file `lake demo` wrote counts as edited: Reset to pack default puts the pack's reader back) (`OfficialReaders`; `tools/test_contracts.py` allows an
   Iceberg reader of `risk-results` as the Delta one: read only, computed kinds only). `DRISHTI_VAR_OFFICIAL_FORMAT`,
   `DRISHTI_EXPOSURE_OFFICIAL_FORMAT`. **Test:** `OfficialReadersTest`. **Tests:** `OfficialSinkTest` (both
   formats, a restatement, six writers at once), `OfficialS3Test` (S3Mock: both formats, two writers in sequence, the exclusive create).
 - Docs (VaR, exposure and official results on Iceberg): VAR_GUIDE sections 8.4, 19 and 29.3, EXPOSURE_GUIDE section 20 and its
   settings, ICEBERG_CONNECTOR section 18, AWS_DEPLOYMENT section 22 (official results to S3), CONFIGURATION, Windows QA §6i rows 1, 2
   and 8 to 10.
+
+
+### Docs (the 2.9.5 review)
+
+- **New:** [tutorial 29](docs/tutorials/29-var-on-iceberg.md), the risk lake and the official results on Iceberg (every step run on a
+  scratch copy: `build_demo_lakes.py --store risk=iceberg`, official results to Iceberg, VaR and the limit letters equal to Delta, Admin →
+  Lakes' Format, `var-results` reset, back to Delta; pictures by `tools/docs/shots/t29.py`); [EXTERNAL_LAKES.md](docs/guides/EXTERNAL_LAKES.md),
+  *Using Drishti with Databricks Delta Lake or Apache Iceberg* (the table shape, Delta on S3, Azure or Google Cloud, Iceberg path-based or
+  through REST catalogs incl. Unity Catalog and Glue, with or without Unity Catalog, what needs a change; in the help centre under Data,
+  64 pages); `deploy/aws/iceberg/README.md`; IMPLEMENTATION_PLAN: 2.9.5 as built and deferred, and the 2.9.6 plan.
+- **Re-run and corrected:** tutorial 25 and VAR_GUIDE outputs on the 2.9.5 data (7,993 positions with the nine split ones and the split
+  warning, the LEGAL tree's bank at 74.7%, the ad-hoc scopes, the status with the currencies built ahead and 131 nodes); tutorial 26's
+  official record with the limit letters; `LIMIT_LETTER` on the example lines of the contracts, VAR_GUIDE and KAFKA_CONNECTOR (a live row
+  without it is refused); `PNL-` ids in PYTHON_CALC; `EXP`, not `XPO`; intraday on an Iceberg lake (the pricing system's append or Kafka,
+  `pv-updates`' `lake`); a `var-results.yaml` written by `lake demo` stays on Delta (Reset to pack default); tables the script copies into
+  Iceberg are read only in Admin → Lakes; API_GUIDE's `use-template-value`; PANELS' download menu.
+- **Audit fixes in the areas 2.9.4 and 2.9.5 touched:** VAR_GUIDE section 12 and CONFIGURATION agree (`official.format`,
+  `official.storage`, the Kafka window; an engine switched off answers `403 DRS-5002`), the same for exposure; knowledge/market-risk
+  section 4 on 2026-09-30's figures; subscriptions send `jsonl` too (DISTRIBUTION, TROUBLESHOOTING); the 2.9.4 jar in GETTING_STARTED;
+  the demo lake measured: 85 tables, about 3.4 GB.
+- **Pictures retaken:** the hierarchy select with *Limit letters (not available)* and Admin → Health's *Hierarchy skipped*
+  (`tools/docs/shots/varskip.py`), Template updates with **Use the pack's value**, a panel's one download button and its menu, Admin →
+  Lakes with the Format column.
 
 ## 2.9.4 — VaR from scenario PVs or P&L, by trade or position, in any currency, intraday from files and Kafka; JSON Lines as the data standard; the decks rewritten (2026-10-27)
 

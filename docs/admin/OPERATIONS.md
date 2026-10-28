@@ -422,7 +422,7 @@ repository root.
 ### 5.1 Delta Lake (default)
 
 ```bash
-# the seven packs' lakes, from the committed test data (data/testdata): sixty business days ending today, about 15 minutes, 2.2 GB
+# the seven packs' lakes, from the committed test data (data/testdata): sixty business days ending today, about 15 minutes, 3.4 GB
 drishti-console/.venv/bin/python tools/drishti.py lake demo
 ```
 

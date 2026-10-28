@@ -90,7 +90,7 @@ panes have no Calc; open the view on its own.
 ## 3. The panel and its keys
 
 ```text
-| Calc  Python · PV-MX-20000274-HS-509   Done · 1.9 s · packages 373 ms · Python 1.5 s · memory 79 MB   ?  × |
+| Calc  Python · PNL-MX-20000274-HS-509   Done · 1.9 s · packages 373 ms · Python 1.5 s · memory 79 MB   ?  × |
 | [▶ Run] [■ Stop] [Snippets ▾] Save  Delete  Clear                           Ctrl+Enter run · Esc close |
 |  1 import numpy as np                                                                                 |
 |  2 pnl = np.asarray(view.doc["PNL"], dtype=float)                                                     |
@@ -129,7 +129,7 @@ run, how long it took, split into **packages** (loading libraries the code impor
 
 ## 4. A first session: VaR from the scenarios
 
-1. Open a trade's P&L vector, `PNLV PV-MX-20000274-HS-509 <GO>` (a short warrant position's trade: its P&L under the 509 scenario
+1. Open a trade's P&L vector, `PNLV PNL-MX-20000274-HS-509 <GO>` (a short warrant position's trade: its P&L under the 509 scenario
    days the VaR engine uses), and press `Alt+C`. Wait for *Python ready*.
 2. Type in the editor:
 
@@ -166,7 +166,7 @@ VaR, CVA, FRTB aggregation, …) is a submodule: `from drishti import quant as q
 
 | Attribute | Type | What it is |
 |---|---|---|
-| `view.kind`, `view.id` | str | The entity: `'pnl-vector'`, `'PV-MX-20000274-HS-509'` |
+| `view.kind`, `view.id` | str | The entity: `'pnl-vector'`, `'PNL-MX-20000274-HS-509'` |
 | `view.title` | str | The title the view shows |
 | `view.business_date` | str or None | The business date of the data (`'2026-09-30'`), or None for undated data |
 | `view.provenance` | dict | Source, generation, business date, last update (as in the footer of the view) |
@@ -598,7 +598,7 @@ q.swap_pv(curve.shifted(+1), par, 100e6, 10)                 # -84,732: receivin
 q.black_scholes(100, 100, 1, 0.05, 0.2)                      # 10.4506
 q.bs_greeks(100, 110, 0.75, 0.04, 0.3, q=0.01)["vega"]       # 33.91 per 1.00 of vol: 0.339 a vol point
 q.implied_vol(12.3, lambda s: q.black_scholes(100, 105, 1, 0.03, s))   # 0.3299
-q.historical_var(view.doc["PNL"], 0.99)   # PNLV PV-MX-20000274-HS-509: 7,705 (the 5th worst of 509; the engine takes the 6th, 7,102)
+q.historical_var(view.doc["PNL"], 0.99)   # PNLV PNL-MX-20000274-HS-509: 7,705 (the 5th worst of 509; the engine takes the 6th, 7,102)
 ```
 
 Conventions: times in years (ACT/365F); rates, vols and yields as decimals (`0.035`, not `3.5`); zero rates

@@ -575,7 +575,30 @@ guard test in the drill. The page: [DATA_FORMATS.md](../guides/DATA_FORMATS.md).
 
 Removing CSV input is for a later release (not yet planned); the per-file Sutra test folders stop being read after 2.9.4.
 
-## 2.9.5 (planned): Iceberg as a full production alternative to Delta (product owner, 2026-10-27)
+## 2.9.5 (built, unreleased): Iceberg as a full production alternative to Delta; hierarchies by columns (product owner, 2026-10-27)
+
+**Status (2026-10-28): built on develop, before its drill** ([CHANGELOG.md](../../CHANGELOG.md) `2.9.5 (unreleased)`). What was built:
+
+| Part | Built |
+|---|---|
+| Iceberg plugin parity | `vectors()`, `documents()`, `tableIdentity()`, `inventory()`, `holdsNone()`, `refreshVersions()`; vector columns (`list<double>`); id maps and documents cached on disk across restarts. VaR, intraday (file batches and Kafka windows as Iceberg appends) and exposure read from Iceberg equal to Delta to the cent (`VarFormatEqualityTest`, `ExposureFormatEqualityTest`); the demo's 2026-09-30 gives VAR BANK 112,041,646 on both |
+| Lake build | `lake build --format iceberg` (local, `s3://` or a REST catalog; `overwrite-dates` only); `build_demo_lakes.py --store risk=iceberg` (and `risk=delta` back) switching `risk-store.yaml` and `exposure-store.yaml` |
+| Official results anywhere | `drishti.var.official.format/storage`, `drishti.ccr.exposure.official.format/storage`: Delta (default) or Iceberg, a folder or `s3://` (Delta commits as exclusive creates); append-only, 7 years; a table keeps its format; BI's `var-results`/`exposure-results` follow the format (`OfficialReaders`) |
+| Admin and maintenance | Admin -> Lakes and `lake maintain` for Iceberg (retention under the 7-year floor, relayout, snapshot expiry, orphan files at 72 h at least, dry runs, ownership, schedules); the tables list's Format column |
+| AWS scripts | `deploy/aws/iceberg/`: load-day, backfill, maintain, lifecycle, alarms, report, IAM, conditional-write and Glue checks (`--help`/`--dry-run` tested) |
+| Hierarchies by columns | `HierarchySpec` (the pack's `hierarchies:` block, `drishti.var.hierarchies` over it); the limit letters (`LL`, `LIMIT_LETTER > DESK`) with `var-limit`; a letter may hold part of a book (positions split, `DRS-5212`); a source without a level column skips that hierarchy alone with a `DRS-5211` warning (Admin -> Health, the picker's *not available*), not a refusal; `DRS-5213`, `DRS-5214`; `LL:` in every scope; official VaR and exposure records for every hierarchy; P&L-vector ids `PNL-<trade>-<set>` (`PV-` still read) |
+| Connector upgrades | airtight: an unedited file follows the pack (the template stamp), an edited one gains every missing key, **Use the pack's value** per conflict, `.before-upgrade-….bak`; `ConnectorUpgradeTest` in the drill |
+| Docs | the guides above, [EXTERNAL_LAKES.md](../guides/EXTERNAL_LAKES.md) (Databricks Delta or Iceberg), tutorial 25 step 14 and [tutorial 29](../tutorials/29-var-on-iceberg.md) (the risk lake and the official results on Iceberg) |
+
+**Deferred:** the AWS Glue and S3 Tables **live runs** (`deploy/aws/iceberg/check-glue.sh`: written, never run; they need an AWS account,
+the product owner's); the format guard of an `s3://` official root is tested on S3Mock only, **not against real S3**; **shellcheck was
+not run** on the new scripts (not installed on the build machine). Seen in the docs review, for 2.9.6: tables `build_demo_lakes.py`
+copies into Iceberg leave no build record, so Admin -> Lakes lists them read only; a `var-results.yaml` that `lake demo` wrote is not
+stamped, so it stays on Delta and its change of plugin is not listed under Template updates (Reset to pack default puts it back);
+`pv-updates` is listed as having an obsolete kind (`pv-update`) under Template updates; the Iceberg copy of `scenario-pv` is flagged
+*not laid out as the pack declares (30 of 32 columns)*.
+
+The plan as agreed (2026-10-27):
 
 Production may run on Delta Lake or Iceberg. Above the storage plugins Drishti is already identical for both (packs, data contracts,
 connector names, engines, BI, UI, Drishti*net); the review behind `docs/publications/Drishti-AWS-Iceberg.pptx` found what the Iceberg
@@ -597,6 +620,27 @@ side still lacks. 2.9.5 closes it, so every capability the Delta side has is bui
 Deferred (decided later): converting tables between Delta and Iceberg; S3 Tables if the REST route does not work.
 Docs: ICEBERG_CONNECTOR, DRISHTI_ICEBERG, VAR_GUIDE (section 29.3), EXPOSURE_GUIDE, LAKE_MAINTENANCE, AWS_DEPLOYMENT, the Windows QA guide
 where it changes, and both AWS decks (`Drishti-AWS-Iceberg.pptx` labels move from proposed to built).
+
+## 2.9.6 (planned, product owner 2026-10-27; started only after 2.9.5 is on main)
+
+Build, test and close 2.9.5 (drill, main, tag) first; only the editions design doc may be drafted meanwhile. Two builders at most.
+
+| # | Part | What |
+|---|---|---|
+| 1 | Editions | one setting, `drishti.edition`, bundling packs, allowed commands, menus and features, Home, help, Admin and branding (the logo and the about 26 hard-coded literals); `var-engine` first; a design doc, EDITIONS.md under docs/architecture (to be written) |
+| 2 | Scale-out | several servers as one cluster; VaR sharded (a map-reduce of vectors); consoles without sticky sessions. Target (product owner): many small ECS Fargate tasks each owning a shard of books, auto-sharding and rebalancing, all reading the same Delta or Iceberg lake on S3; any task coordinates and sums the partial vectors; a hot file per shard on its own EBS; replicas auto-scale, Fargate Spot for read replicas. Cost options compared in the BMO deck: A (ECS on EC2 capacity), B (Fargate), C (sharded Fargate) |
+| 3 | The 2.3M-position benchmark | on a real server (the local machine stays at 10K trades), with exposure sizing; needs the product owner's server |
+| 4 | Screenshots | the about 271 pictures still showing the old top bar |
+| 5 | Delta <-> Iceberg conversion | table conversion between the formats (deferred from 2.9.5) |
+| 6 | Stressed and 10-day VaR, ES backtests | |
+| 7 | The data map's 11 findings | joins that do not hold (2.9.3) |
+| 8 | Test data from seeds | the plan [TESTDATA_FROM_SEEDS_PLAN.md](TESTDATA_FROM_SEEDS_PLAN.md) |
+| 9 | Glue and S3 Tables live runs | `deploy/aws/iceberg/check-glue.sh` with AWS credentials (the product owner's) |
+| 10 | In-place Delta schema evolution | add a nullable promoted column to an existing Delta table without rewriting it (old files read as null), with an optional backfill from the `doc` column; tested on both formats and in the upgrade drill. Both VaR decks carry a Delta-vs-Iceberg slide and a *when the data's structure changes* section |
+| 11 | Plain tables and Unity Catalog | reading plain tables (no `doc` column), driven by per-table configuration; Delta through Unity Catalog (`catalog.schema.table`, credential vending, UC permissions) as an opt-in per connector ([EXTERNAL_LAKES.md](../guides/EXTERNAL_LAKES.md)) |
+| 12 | The docs audit's other contradictions | the ones in areas 2.9.4 and 2.9.5 did not touch, left for 2.9.6 by the product owner (2026-10-28) |
+
+Items 3 and 9 need the product owner (a real server; AWS credentials).
 
 ## Known gaps
 

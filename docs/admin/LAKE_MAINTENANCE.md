@@ -286,6 +286,8 @@ Delta stays the default. A lake's tables are maintained as Iceberg tables when t
 `format: auto` (the default), when a table under a local root is an Iceberg table (`<root>/<domain>/<table>/metadata/*.metadata.json`,
 as `lake build --format iceberg` writes it). The tables list shows each table's **Format** (Delta or Iceberg).
 
+![Admin → Lakes over two roots: MUREX's trades in Delta, the risk tables and the official results in Iceberg (tutorial 29)](../tutorials/img/t29/03-lakes.jpg)
+
 For an Iceberg table the run is `IcebergMaintenance` from the server's exec jar (`tools/lake/maintain_iceberg.py` builds the command;
 `DRISHTI_ICEBERG_CLASSPATH` in development), each step one Iceberg commit:
 
@@ -305,7 +307,9 @@ than that, whatever else it is told. The run reports `floor` (the first date it 
 five paths), and changes nothing. The results table says *would expire snapshots older than … h; would remove N orphan file(s)*.
 
 **Ownership, locks, schedules, history.** As for Delta: only tables `lake build --format iceberg` built under this root are maintained
-(their build record in `<lake>/_drishti-lake/tables-built.json`); `--force-foreign` overrides with a warning. A run holds the lake's
+(their build record in `<lake>/_drishti-lake/tables-built.json`); `--force-foreign` overrides with a warning. Tables `build_demo_lakes.py --store …=iceberg` copied into
+Iceberg leave no build record (the copy is the loader's, not `lake build`'s), so they are listed read only (*not built by drishti.py
+lake build*); maintain them with `--force-foreign`, or build them with `lake build --format iceberg`. A run holds the lake's
 lock; schedules (cron or after-build) and the history are shared. A history entry carries each table's `format`, `orphans` and
 `floor`.
 

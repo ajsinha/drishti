@@ -41,6 +41,8 @@ iceberg`, `build_demo_lakes.py --store calypso=iceberg` or `--store risk=iceberg
 2.9.5 the connector answers everything the Delta connector does on the same rows (vector columns, a date's documents in one pass,
 table identity, inventory, `holdsNone`, the data-load signal) and keeps the same disk caches ([section 18](#18-parity-with-delta-vectors-documents-and-disk-caches-295)).
 
+Reading Iceberg tables that Spark, Databricks (Unity Catalog), Trino or Snowflake already write: [Using Drishti with Databricks Delta Lake or Apache Iceberg](../guides/EXTERNAL_LAKES.md).
+
 ## Contents
 
 1. [The problem](#1-the-problem)
@@ -887,7 +889,7 @@ VaR, the limit-letter nodes, intraday and the official records equal to the cent
 EPE, profiles and contributions equal to the cent (`ExposureFormatEqualityTest`). Intraday batches are **Iceberg appends**: a file
 batch appended to the table (one commit, nothing replaced) is applied live after its data-load signal, and the Kafka PV stream writes
 each window to an Iceberg table as one append (`LakeAppends`). Run on the demo data: 14 risk tables (955,124 rows) moved in 579 s; the
-server then answered `VAR BANK` (USD and EUR), a limit letter and `XPO BANK` from Iceberg.
+server then answered `VAR BANK` (USD and EUR), a limit letter and `EXP BANK` from Iceberg.
 
 **Official results in Iceberg.** `drishti.var.official.format: iceberg` and `drishti.ccr.exposure.official.format: iceberg` write the
 official tables (`risk-results.var-official`, `exposure-official`, `exposure-official-cpty`) with Drishti's Iceberg engine

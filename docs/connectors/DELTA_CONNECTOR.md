@@ -27,6 +27,8 @@ you change the connector. For setting the connector up the first time, start wit
 [CONFIGURATION.md](../admin/CONFIGURATION.md#delta--delta-lake). The Aerospike connector follows the same design with its own
 storage: [AEROSPIKE_CONNECTOR.md](AEROSPIKE_CONNECTOR.md).
 
+Reading tables Databricks (or any Spark job) already writes, with or without Unity Catalog: [Using Drishti with Databricks Delta Lake or Apache Iceberg](../guides/EXTERNAL_LAKES.md).
+
 ## Contents
 
 1. [The problem](#1-the-problem)
@@ -932,7 +934,8 @@ not decompress BROTLI Parquet pages …; rewrite the date with Snappy or ZSTD (t
 keeps the ids it listed before, and **Admin → Health** shows the connector `DEGRADED: cannot read trade 2026-09-30: …`;
 an LZ4 table is `UP` and lists and searches like any other.
 **Iceberg** is not part of this: its
-connector reads through Hadoop, so it is not supported on Windows (it is off unless the `iceberg` profile is used).
+connector has its own engines, `native` (drishti-iceberg, no Hadoop, Windows too; the default) and `library`
+([ICEBERG_CONNECTOR.md section 17](ICEBERG_CONNECTOR.md#17-engines-native-and-library)).
 
 ---
 

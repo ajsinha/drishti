@@ -1432,7 +1432,7 @@ else by `drishti.var.positions`.
 
 | Key | Default | Meaning |
 |---|---|---|
-| `enabled` | `true` (`DRISHTI_VAR_ENABLED`) | The engine at all. Off: `/api/v1/var` and the explorer are not served. |
+| `enabled` | `true` (`DRISHTI_VAR_ENABLED`) | The engine at all. Off: every VaR request answers `403 DRS-5002` (*the VaR engine is switched off on this server*), the explorer included, and no official capture runs. |
 | `confidence` | `0.99` (`DRISHTI_VAR_CONFIDENCE`) | VaR's confidence: 0.99 or 0.95; refused at start outside (0.5, 1). Every label (console, CLI, Home facts) follows it; limits are set against it, so a change changes limit use; backtesting keeps 99% (the Basel light). `confidence=` per request recomputes the headline, never official. |
 | `es-confidence` | `0.975` (`DRISHTI_VAR_ES_CONFIDENCE`) | Expected shortfall's confidence; refused outside (0.5, 1). |
 | `scenario-window` | `all` (`DRISHTI_VAR_SCENARIO_WINDOW`) | 2.9.4. `all`, or N ≥ 20: the newest N scenarios of each date's set, every row cut to them at load; k = ceil(N (1 − confidence)); a shorter set is used whole (a warning in the provenance); in the hot file's digest; official records state it. `window=` per request recomputes the headline, never official. [VAR_GUIDE.md section 18.5](../guides/VAR_GUIDE.md#185-the-scenario-window-and-the-confidences-as-built-294). |
@@ -1459,7 +1459,7 @@ else by `drishti.var.positions`.
 | `positions.live-statuses` | `[NEW, VALIDATED, AMENDED]` | Trade statuses (the vector rows' `TRADE_STATUS`) that count on their date; a row with no status counts; a matured trade (`MATURITY_DATE` before the date) never does. Used when no loaded pack has a `positions:` section. |
 | `positions.rules` | `[]` | First match wins: `{name, groups: [PRODUCT_GROUP…], types: [PRODUCT_TYPE…], key: [SECURITY_ID, ISIN…]}`; a trade's position is `POS-<TT_BOOK>~<the first key field it carries>`, else (no rule, no key) one position per trade, `POS-<TT_BOOK>~<TRADE_ID>` ([VAR_GUIDE.md section 15.6](../guides/VAR_GUIDE.md#156-positions-derived-by-drishti-as-built)). A loaded pack's `positions:` section wins. |
 | `official.enabled` | `true` (`DRISHTI_VAR_OFFICIAL`) | Capture every node of every hierarchy officially when a date's inputs are complete (after the data-load signal of an input, and once at start for the newest date without a record). The node history reads these captures. |
-| `official.publish` | `true` | Also append the official figures to `<root>/risk-results/var-official` (Delta, append-only: a restated date adds rows with the next `RESULT_VERSION`). No engine reads that folder. |
+| `official.publish` | `true` | Also append the official figures to `<root>/risk-results/var-official` (Delta or Iceberg by `official.format`, append-only: a restated date adds rows with the next `RESULT_VERSION`). No engine reads that folder. |
 | `official.root` | `${DRISHTI_DELTA_ROOT:${drishti.data.dir:./data}/delta}` | The root the results are published under: a local or shared folder, or `s3://bucket/prefix` (2.9.5; before, an `s3://` root ended in `publishError`). |
 | `official.format` | `delta` | 2.9.5. `delta` (Drishti's lake writer) or `iceberg` (Drishti's Iceberg engine: append commits only, 7 years of snapshots, every metadata file kept); anything else is refused at start. [VAR_GUIDE.md section 19](../guides/VAR_GUIDE.md#19-official-end-of-day-results). |
 | `official.storage` | none | 2.9.5. The `s3.*` settings for an `s3://` root, as in a connector file: `s3.region`, `s3.endpoint`, `s3.access-key`/`s3.secret-key` (none: the default AWS credential chain), `s3.path-style`. Each Delta commit on S3 is an exclusive create. |
@@ -1492,7 +1492,7 @@ compute workers on (`DRISHTI_COMPUTE_ENABLED=true`), otherwise that method answe
 
 | Key | Default | Meaning |
 |---|---|---|
-| `enabled` | `true` (`DRISHTI_EXPOSURE_ENABLED`) | The engine at all. Off: `/api/v1/exposure` answers 403 and the pages show no exposure. |
+| `enabled` | `true` (`DRISHTI_EXPOSURE_ENABLED`) | The engine at all. Off: every exposure request answers `403 DRS-5002` (*the exposure engine is switched off on this server*), and the pages show no exposure. |
 | `confidence` | `[0.95, 0.99]` | The PFE confidences every answer computes (any `q` in (0.5, 1) may be asked per request). |
 | `limit-confidence` | `0.95` | The PFE a credit limit is set on: the default `q` of an answer and of the official capture. |
 | `rank-rule` | `kth` | `kth` (the ceil(P q)-th smallest exposure) or `interpolated`. |

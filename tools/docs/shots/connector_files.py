@@ -69,6 +69,16 @@ def start_servers(work: Path) -> list:
         f"plugin: jdbc\nkinds: [ledger-entry]\ndescription: The ledger database (down on purpose)\nsettings:\n  url: jdbc:postgresql://127.0.0.1:{DEAD_DB}/ledger\n  user: drishti\n"
         "  password: ${LEDGER_DB_PASSWORD}\n  table: ledger.entities\n  tls:\n    enabled: true\n    ca-file: " + str(ca) + "\n"
         "    truststore-password: ${LEDGER_TRUSTSTORE_PASSWORD}\n", encoding="utf-8")
+    # an edited trade-murex (no template stamp): its file-rows changed by hand (a conflict, Use the pack's value) and NOTIONAL and
+    # INDEX_NAME missing from its layout (added at start, keeping the edit): Template updates (picture 15)
+    cols = "\n".join(f"          - {c}" for c in ("TRADE_ID", "SOURCE_SYSTEM", "PRODUCT_TYPE", "PRODUCT_SUB_TYPE", "PRODUCT_GROUP", "TRADE_STATUS",
+                                                  "TRADE_VERSION", "BUY_SELL_CODE", "CURRENCY", "QUANTITY", "TRADE_DATE", "MATURITY_DATE",
+                                                  "COUNTERPARTY", "LEGAL_ENTITY", "PORTFOLIO", "TRADER_ID"))
+    (conns / "trade-murex.yaml").write_text(
+        "# Edited by the desk: smaller files for MUREX\nplugin: delta\nenabled: ${DRISHTI_LAKE_ENABLED:true}\nkinds:\n- trade\nsettings:\n"
+        "  root: ${DRISHTI_DELTA_ROOT:${drishti.data.dir:./data}/delta}\n  domain: trading\n  layout:\n    trade:\n      columns:\n" + cols + "\n"
+        "      sort-by: id\n      file-rows: 100000\n      row-group-rows: 1000\n  union: true\n  table:\n    trade: trade_murex\n  source-name: trade-murex\n",
+        encoding="utf-8")
     (work / "application.local.yaml").write_text("drishti:\n  sources:\n    connectors:\n      legacy-feed:\n        plugin: file\n        settings: { root: ./data/legacy }\n", encoding="utf-8")
     for d in ("data/legacy", "data/desk-quotes", "delta"):
         (work / d).mkdir(parents=True, exist_ok=True)
@@ -244,3 +254,15 @@ def detail_phone(c: Ctx):
     c.save("13-connector-detail-phone.jpg")
     settle(c, "/admin/packs/desk-demo", "[data-connectors]")
     c.save("14-pack-detail-phone.jpg")
+
+
+@shot("15-template-updates.jpg")
+def template_updates(c: Ctx):
+    """Admin -> Connectors -> Template updates (2.9.5): the edited trade-murex, its missing columns already added at start, its own
+    file-rows listed as changed with Use the pack's value."""
+    wide(c, 1280, 1100)
+    settle(c, "/admin/connectors/template-updates", "body")
+    c.until("document.body.innerText.includes('trade-murex')", 60)
+    c.page.wait_for_selector('.tu-card[data-drift="trade-murex"]')
+    c.page.wait_for_timeout(400)
+    c.save("15-template-updates.jpg", '.tu-card[data-drift="trade-murex"]')   # the edited connector's card (the others are other pictures' setup)
