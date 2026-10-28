@@ -52,6 +52,7 @@ repository root. Scratch output (`lake`, `lake2`, `build/...`) goes into the clo
 | You want to | In a browser | In a terminal or a scheduler |
 |---|---|---|
 | Turn a large JSON export (an array or JSON Lines, gzipped or not) into a Delta lake a pack reads | Admin → Data loads → **Load a file into a lake** (`/admin/lakes`) | `drishti.py lake build` |
+| Load millions of JSON Lines rows (scenario PVs) into Delta or Iceberg, from a folder or S3, on every core | | `drishti.py lake build --engine java`, or the loader on its own (section 4.13) |
 | See what an export holds and which fields make a good id, date and classifier | the same page, step 2 | `drishti.py lake scan`, `drishti.py data profile` |
 | Make a pack from schema files or JSON | Build → **New pack** (`/build/pack/new`) | `drishti.py pack make`, `drishti.py pack new` |
 | Check a pack in CI | | `drishti.py pack check --junit` |
@@ -278,7 +279,8 @@ python3 tools/drishti.py lake build --from data/testdata/market-risk/pnl-vector/
 
 `--engine auto` (the default) uses **Drishti's own Java writer** when it finds the server's exec jar with the writer in it, and the
 Python `deltalake` package otherwise; the first line of the output says which ran and why. `--engine drishti` or
-`--engine deltalake` insists on one.
+`--engine deltalake` insists on one. A third, `--engine java` (2.9.6), runs the whole build, reading included, in the parallel lake
+loader, for Delta and Iceberg alike; `auto` picks it for at least 1 GB of JSON Lines (section 4.13).
 
 | | Drishti's writer (`drishti`) | `deltalake` (delta-rs) |
 |---|---|---|
@@ -644,6 +646,174 @@ with `DRISHTI_MINIO_BIN=/path/to/minio` or put one in `tools/cache/minio/` (git-
 binaries, so the default download answers `410 Gone` and the MinIO tests skip saying so. The drill runs all three (the Java ones in its
 verify, the Python one with uv). Results found so far: S3Mock honours create-only, update-if-match and delete-if-match but lets two
 racing creates both win; moto honours all three and its racing creates have one winner.
+
+### 4.13 The parallel lake loader (2.9.6)
+
+For a load too large for the Python path (the bank's scenario PVs: 2.3 million positions of 510 scenarios, 20+ GB of JSON Lines), the
+**parallel lake loader** (module `drishti-lakeload`, in the server's exec jar) does the whole build in Java: readers, parsers and writers
+on every core, memory bounded by `memory.budget-mb` whatever the input's size (rows that do not fit are sorted and spilled to disk), Delta
+or Iceberg, from a folder or `s3://`, **one commit per business date**. It writes exactly the tables `lake build` writes (the same
+documents byte for byte, columns and vectors; the connectors and the VaR loader read them unchanged). The design, the memory model and
+the 2.3M sizing: [PARALLEL_LOADER.md](../architecture/PARALLEL_LOADER.md). `tools/lake/javaload.py` is `lake build`'s side of it.
+
+**Through lake build** (the lock, the run log, the summary, the signal as always):
+
+```bash
+python3 tools/drishti.py lake build --engine java --from /data/pv/2026-10-28/ --pack config/packs/market-risk --kind scenario-pv \
+    --key SCENARIO_PV_ID --date BUSINESS_DATE --lake /var/lib/drishti/delta \
+    --loader-set memory.budget-mb=16384 --loader-set memory.spill-dir=/mnt/nvme/spill
+```
+
+`--engine auto` (the default) uses the loader by itself only for at least `--java-above-mb` (1024) MB of JSON Lines in mode
+`overwrite-dates`; smaller loads, JSON arrays and the other modes go the Python way as before. `--loader-set KEY=VALUE` (repeatable)
+sets any key below; `DRISHTI_LAKE_LOADER_HEAP` is the JVM's heap (default `4g`); `--from s3://…` and a Delta `--lake s3://…` need
+`--engine java`.
+
+**On its own** (a scheduler, a container, a machine without the console's Python):
+
+```bash
+java -Xmx40g -Djava.io.tmpdir=/mnt/nvme/tmp -Dloader.main=com.ash.drishti.lakeload.LakeLoad \
+    -jar drishti-server/target/drishti-server-<version>-exec.jar --config /etc/drishti/load-pv.yaml
+# development: java -cp <the module's class path> com.ash.drishti.lakeload.LakeLoad --config load.yaml
+```
+
+```powershell
+# Windows (PowerShell; Java only, no .exe)
+java -Xmx8g "-Djava.io.tmpdir=C:\drishti\data\tmp\server" "-Dloader.main=com.ash.drishti.lakeload.LakeLoad" `
+    -jar C:\drishti\drishti-server\target\drishti-server-<version>-exec.jar --config C:\drishti\load-pv.yaml
+```
+
+Options: `--config FILE`, `--set key.path=value` (repeatable; overrides the file), `--summary FILE`, `--progress FILE`, `--dry-run`
+(read and count only), `--no-lock`, `--no-run-log`, `--json` (the summary on standard output), `-q`. Exit codes as section 4.6: `0`,
+`2` (rejects), `1` (failed: no date that was not committed changed), `3` (locked). A local lake gets the run log and summary under
+`<lake>/_drishti-lake` and the lock of section 4.6.
+
+**Every key** (YAML or JSON; `${ENV}` and `${ENV:-default}` are expanded; an unknown key is refused with the list of the section's keys):
+
+| Key | Default | Meaning |
+|---|---|---|
+| `source.files` | (required) | a file, a folder (its `*.jsonl`, `*.ndjson`, `*.json`, `*.gz`, `*.zst`), or a glob (`/data/pv/*.jsonl.gz`, `C:\pv\cob-*.jsonl`, `**` for any depth; on S3 in the last segment: `s3://bucket/pv/2026-10-28/*.jsonl.gz`); a list for several |
+| `source.recursive` | `false` | a folder's subfolders too |
+| `source.storage-options` | none | S3: `region`, `endpoint`, `path-style`, `read-block-kb`, `tls.*`, `proxy.*`. Credentials only from the AWS default chain (environment, profile, instance or task role); a key here is refused |
+| `source.format` | `jsonl` | JSON Lines (the data standard); `.gz` and `.zst` decompressed as streams, multi-member gzip included |
+| `source.pack`, `source.connector` | none | a pack folder (as `--pack`): the connector's domain and table, `layout.<kind>.columns`, `vectors`, `flatten`, `ingest.<kind>.key` and `date`; the keys below win |
+| `source.id` | `id` (or the pack's) | the id field (`--key`), a dotted path |
+| `source.date` / `source.as-of` | (one of them) | the business-date field (ISO date or date-time, yyyymmdd) / one date for every row |
+| `source.promote` | the pack's | fields kept as columns (`layout.<kind>.columns`) |
+| `source.vectors` (`vector`) | the pack's | list-of-numbers fields as `list<double>` columns, the document keeping a `{"$vector": …}` marker (VAR_GUIDE.md section 29.3) |
+| `source.flatten` | the pack's | `NAME: LEGS[0].NOTIONAL`: fields added to the document and promoted |
+| `source.partition-by` | none | Delta partition folders after `business_date` (Iceberg: keep them as `promote`) |
+| `target.format` | `delta` | `delta` or `iceberg` (Iceberg through the native engine: no Hadoop) |
+| `target.lake`, `target.domain`, `target.kind`, `target.table` | (lake, domain, kind) | the table `<lake>/<domain>/<table or kind>`; `lake` a folder or `s3://bucket/prefix` |
+| `target.path` | none | the table's location instead of the four above |
+| `target.storage-options` | `source.storage-options` | the target's S3 options |
+| `target.mode` | `replace-date` | each business date of the input replaced in one commit (`overwrite-dates` is the same word) |
+| `target.properties` | none | Delta table properties for a new table (`delta.logRetentionDuration`, …) |
+| `target.iceberg` | none | Iceberg catalog settings as the connector's: `catalog: rest`, `uri`, `warehouse`, `token: ${ICEBERG_TOKEN}` (a secret only as `${VAR}`) |
+| `target.layout.sort-by` | the pack's `layout.<kind>.sort-by`, else `[LEGAL_ENTITY, DESK, id]` | the order of each date's rows (those of the fields the rows promote; `id` the row id); `[id]` is lake build's order |
+| `target.layout.file-size-mb` | `256` | Parquet files of about this size |
+| `target.layout.shard-aligned` | `true` | also a new file where `LEGAL_ENTITY`/`DESK` (the sort fields before the id) change, once a file holds a quarter of its size |
+| `target.layout.row-group-mb` | the format's | Parquet row groups (Delta: `DRISHTI_LAKE_ROW_GROUP_KB`, 256 KB; Iceberg: the table's, 1 MB) |
+| `target.layout.compression` | the format's | `snappy` (Delta), `zstd` (Iceberg) |
+| `target.layout.vector-compression` | `zstd` | the vector column's codec |
+| `target.layout.byte-stream-split` | `true` | the vector column BYTE_STREAM_SPLIT encoded (ZSTD packs it far better) |
+| `parallel.readers` | the cores | files (or ranges) read at once; never more files open than this |
+| `parallel.parsers` | the cores | parser threads |
+| `parallel.writers` | 8 (at most the cores) | writer threads (key ranges written at once) |
+| `parallel.split-mb` | `256` | a plain file larger than this is read as byte ranges in parallel (ranged GETs on S3) |
+| `parallel.queue-mb` | 15 % of the budget | lines read but not parsed yet (back-pressure) |
+| `memory.budget-mb` | half of `-Xmx` | everything the load holds: the queue, the sort buffers, the writers |
+| `memory.sort-buffer-mb` | 55 % of the budget | the parsers' rows before they are sorted and spilled |
+| `memory.spill-dir` | `java.io.tmpdir` | where sorted runs spill (local disk, EBS, Fargate ephemeral storage); removed however the load ends |
+| `memory.check-spill-space` | `true` | stop before reading when the spill folder has less free space than the estimate |
+| `rejects.file` | none | every reject as a JSON line: `where` (`file:line`), `reason`, `line` |
+| `rejects.max-pct` | `100` | more of the documents rejected than this: nothing is written, exit 1 |
+| `rejects.keep` | `50` | rejects kept in the summary |
+| `report.summary` | `<lake>/_drishti-lake/runs/<run>.json` | the JSON summary (lake build's keys, plus `throughput` per stage and `memory`) |
+| `report.manifest` | beside the summary | the load manifest: per date and file, rows and the first and last sort key (PARALLEL_LOADER.md section 7) |
+| `report.progress` | none | a JSON file rewritten twice a second (phase, bytes, documents, rejects, dates) |
+| `report.run-log`, `report.dry-run`, `lock` | `true`, `false`, `true` | as `--no-run-log`, `--dry-run`, `--no-lock` |
+
+**Local folder to S3, Delta** (the scenario PVs of the day, the pack's layout):
+
+```yaml
+source:
+  files: /data/pv/2026-10-28/*.jsonl.gz
+  pack: config/packs/market-risk
+  id: SCENARIO_PV_ID
+  date: BUSINESS_DATE
+target:
+  format: delta
+  lake: s3://bank-lake/delta
+  kind: scenario-pv                       # the table s3://bank-lake/delta/risk/scenario-pv (domain from the pack)
+  storage-options: {region: us-east-1}
+  layout: {sort-by: [LEGAL_ENTITY, DESK, id], file-size-mb: 256, shard-aligned: true}
+parallel: {writers: 16}
+memory: {budget-mb: 32768, spill-dir: /mnt/nvme/spill}
+rejects: {file: /var/log/drishti/rejects-2026-10-28.jsonl, max-pct: 1}
+```
+
+**S3 to S3, Iceberg** (MinIO here; on AWS leave out `endpoint` and `path-style`):
+
+```yaml
+source:
+  files: s3://landing/pv/2026-10-28/*.jsonl.zst
+  storage-options: {region: us-east-1, endpoint: '${MINIO_ENDPOINT}', path-style: true}
+  id: POSITION_ID
+  date: BUSINESS_DATE
+  promote: [LEGAL_ENTITY, DESK, TT_BOOK, CCY]
+  vectors: [PV]
+target:
+  format: iceberg
+  lake: s3://bank-lake/iceberg
+  domain: risk
+  kind: scenario-pv
+memory: {budget-mb: 8192, spill-dir: /scratch}
+```
+
+**A REST catalog** (AWS Glue's Iceberg endpoint): add `target.iceberg: {catalog: rest, uri: 'https://glue.us-east-1.amazonaws.com/iceberg',
+warehouse: '<account id>', catalog.rest.signing-name: glue}` (the domain is the namespace).
+
+**On Windows** (`C:\drishti\load-pv.yaml`; paths in single quotes keep their backslashes):
+
+```yaml
+source:
+  files: 'C:\drishti-private\pv\cob-2026-10-28.*.jsonl.gz'
+  pack: 'C:\drishti\config\packs\market-risk'
+  id: SCENARIO_PV_ID
+  date: BUSINESS_DATE
+target:
+  format: delta
+  lake: 'C:\drishti\data\delta'
+  kind: scenario-pv
+memory: {budget-mb: 4096, spill-dir: 'C:\drishti\data\tmp\spill'}
+```
+
+What it prints: the market-risk pack's scenario PVs of `data/testdata` (three gzip files, 1,339 positions), the first config above
+pointed at them and at a scratch lake, `-Xmx2g`, `budget-mb: 512`, captured 2026-10-28 (a cold JVM: a load this small is mostly start-up;
+warm rates are in PARALLEL_LOADER.md section 11). `-q` leaves only the last line.
+
+```
+loader: delta table /scratch/demo/lake/risk/scenario-pv
+  2026-09-30  1,339 rows  (version 0, 1 files)
+documents read: 1,339, rows written: 1,339, rejected: 0
+  read         3 threads       0.0 s    1,585.3 MB/s in
+  decompress   3 threads       0.0 s    141.6 MB/s in
+  parse       24 threads       0.2 s  5,666 rows/s  31.4 MB/s in
+  sortSpill   24 threads       0.0 s
+  write        8 threads       0.4 s  3,005 rows/s  6.6 MB/s out
+  commit       1 threads       0.1 s  16,038 rows/s
+  memory: budget 512 MB, peak heap used 150 MB of 2,048 MB, spilled 0 MB
+summary: /scratch/demo/lake/_drishti-lake/runs/20261028T085451-1591296.json
+load manifest: /scratch/demo/lake/_drishti-lake/runs/20261028T085451-1591296.manifest.json
+2026-10-28T08:54:52-04:00 lake-build ok exit=0 run=20261028T085451-1591296 domain=risk kind=scenario-pv engine=java-loader mode=overwrite-dates rows=1339 rejected=0 dates=1 partitions=1 seconds=1.42
+```
+
+(The scratch folder's path shortened to `/scratch`; the line now says `1 file(s)`.)
+
+The tests: `./mvnw -o -q -pl drishti-lakeload test` (equality with the Python path on both formats, through the connectors; one commit a
+date; a stopped load; S3 on S3Mock; gz, multi-member gz, many gz, zstd, byte ranges, 1 vs many threads, a tiny budget: identical tables;
+the 10K throughput) and `python3 -m pytest tools/lake/test_javaload.py`.
 
 ## 5. The other `drishti.py` groups
 
@@ -1389,5 +1559,9 @@ What grows with the input, and what does not:
   dozen values (`lake scan` shows the counts) and compact with `lake maintain`.
 * **The console's page** streams the upload to its temporary folder (`DRISHTI_CONSOLE_TMP_DIR`: room for the file) and runs the
   same builder; `lakes.jobs` (2) bounds the builds at once, so plan memory for two batches.
+* **Millions of documents** (2.9.6): the parallel lake loader (section 4.13, `--engine java`, picked by `auto` from 1 GB of JSON Lines)
+  parses and writes on every core with memory set by `memory.budget-mb`; 10,000 positions of 510 scenarios (54 MB of JSON) load in about
+  0.2 s warm on 24 cores, and 2.3 million are estimated at a few minutes on a 16 to 32 vCPU server (an estimate, with its basis and the
+  spill-disk and heap sizing: [PARALLEL_LOADER.md section 11](../architecture/PARALLEL_LOADER.md#11-measured-and-the-23m-estimate)).
 
 **Also in `tools/`:** `lake/s3sim.py` starts the S3 simulators (moto, MinIO) for the S3 tests (section 4.12).

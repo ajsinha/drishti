@@ -201,7 +201,7 @@ public final class LakeLoad {
         out.println("loader: " + s.path("format").asText() + " table " + s.path("table").asText());
         s.path("rows").fields().forEachRemaining(e -> out.printf("  %s  %,d rows%s%n", e.getKey(), e.getValue().asLong(),
                 s.path("commit").path("dates").has(e.getKey()) ? "  (version " + s.path("commit").path("dates").path(e.getKey()).path("version").asText()
-                        + ", " + s.path("commit").path("dates").path(e.getKey()).path("files").asInt() + " files)" : ""));
+                        + ", " + s.path("commit").path("dates").path(e.getKey()).path("files").asInt() + " file(s))" : ""));
         out.printf("documents read: %,d, rows written: %,d, rejected: %,d%n", s.path("documents").asLong(),
                 s.path("status").asText().equals("failed") || s.path("dryRun").asBoolean() ? 0 : s.path("accepted").asLong(), s.path("rejected").asLong());
         s.path("rejects").path("byReason").fields().forEachRemaining(e -> out.printf("  rejected %,d: %s%n", e.getValue().asLong(), e.getKey()));

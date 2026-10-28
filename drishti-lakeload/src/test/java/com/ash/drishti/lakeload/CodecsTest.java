@@ -124,6 +124,8 @@ class CodecsTest {
         assertThat(trades.tablePath()).isEqualTo("/l/trading/trade_endur");
         assertThat(trades.source().id()).isEqualTo("TRADE_ID");
         assertThat(trades.source().flatten()).containsEntry("NOTIONAL", "LEGS[0].NOTIONAL");
+        assertThat(trades.target().layout().sortBy()).containsExactly("id");               // the pack's layout.trade.sort-by
+        assertThat(risk.target().layout().sortBy()).isEmpty();                             // none: the loader's default
     }
 
     @Test

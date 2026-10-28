@@ -90,7 +90,8 @@ def is_jsonl(path: pathlib.Path) -> bool:
 
 def wanted(a, files: list[pathlib.Path], jar: str | None, java: str | None) -> tuple[bool, str]:
     """(use the loader, why) for ``--engine auto``."""
-    threshold = int(getattr(a, "java_above_mb", 1024) or 1024) * 1048576
+    above = getattr(a, "java_above_mb", None)
+    threshold = (1024 if above is None else int(above)) * 1048576
     size = sum(f.stat().st_size for f in files)
     if size < threshold:
         return False, f"{size / 1048576:.0f} MB of input is under --java-above-mb"
@@ -114,6 +115,10 @@ def config(a, p: dict, as_of, lake: str, iceberg: bool, workdir: pathlib.Path, e
         partition = []
     src = {"files": [str(s) for s in a.src], "recursive": bool(a.recursive), "id": p["key"], "promote": promote,
            "vectors": list(p.get("vectors") or []), "flatten": dict(p.get("flatten") or {}), "partition-by": partition}
+    if getattr(a, "pack", None):                   # the pack's layout.<kind>.sort-by too (the options above win over the rest of it)
+        src["pack"] = str(pathlib.Path(a.pack).resolve())
+        if p.get("connector"):
+            src["connector"] = p["connector"]
     if as_of:
         src["as-of"] = as_of.isoformat()
     else:

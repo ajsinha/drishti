@@ -626,6 +626,7 @@ Build, test and close 2.9.5 (drill, main, tag) first; only the editions design d
 
 | # | Part | What |
 |---|---|---|
+| 0 | The parallel lake loader | **built (2026-10-28)**: a config-driven, multi-threaded Java loader of JSON Lines (folder or S3) into Delta or Iceberg, memory bounded by `memory.budget-mb`, one commit per business date, shard-aligned files and a load manifest for item 2; `lake build --engine java` ([PARALLEL_LOADER.md](PARALLEL_LOADER.md)). Measured at 10K positions; the 2.3M load is estimated at 1 to 5 minutes, to be measured with item 3 |
 | 1 | Editions | one setting, `drishti.edition`, bundling packs, allowed commands, menus and features, Home, help, Admin and branding (the logo and the about 26 hard-coded literals); `var-engine` first; a design doc, EDITIONS.md under docs/architecture (to be written) |
 | 2 | Scale-out | several servers as one cluster; VaR sharded (a map-reduce of vectors); consoles without sticky sessions. Target (product owner): many small ECS Fargate tasks each owning a shard of books, auto-sharding and rebalancing, all reading the same Delta or Iceberg lake on S3; any task coordinates and sums the partial vectors; a hot file per shard on its own EBS; replicas auto-scale, Fargate Spot for read replicas. Cost options compared in the BMO deck: A (ECS on EC2 capacity), B (Fargate), C (sharded Fargate) |
 | 3 | The 2.3M-position benchmark | on a real server (the local machine stays at 10K trades), with exposure sizing; needs the product owner's server |

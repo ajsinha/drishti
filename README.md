@@ -265,6 +265,7 @@ drishti/
 ├── drishti-deltalake/           a Delta Kernel engine without Hadoop (local disk, Windows included, and S3)
 ├── drishti-lakeio/              the shared storage layer of the lakes: local disk and S3, Parquet footers and pages
 ├── drishti-iceberg/             drishti-iceberg, Drishti's own Iceberg engine without Hadoop
+├── drishti-lakeload/            the parallel lake loader: JSON Lines (folder or S3) into Delta or Iceberg on every core, memory bounded (2.9.6)
 ├── drishti-ai/                  the AI layer: model providers, the model registry, call policy, prompt masking, MCP clients (off by default)
 ├── drishti-net/                 Drishti*net: membership by gossip, the cluster key, capability digests (no Spring)
 ├── drishti-server/              the Spring Boot application: API, security, alerts, reports, pack registry

@@ -198,7 +198,7 @@ record LoadConfig(Source source, Target target, Parallel parallel, Memory memory
         if (pack != null) {
             promote = s.has("promote") ? promote : pack.promote();
             vectors = s.has("vectors") || s.has("vector") ? vectors : pack.vectors();
-            flatten.putAll(pack.flatten());
+            flatten.putAll(s.has("flatten") ? Map.of() : pack.flatten());
             id = id != null ? id : pack.key();
         }
         flatten.putAll(r.map(s.path("flatten"), "source.flatten"));
@@ -224,7 +224,7 @@ record LoadConfig(Source source, Target target, Parallel parallel, Memory memory
         iceberg.keySet().stream().filter(k -> SECRETS.contains(k) && !isReference(t.path("iceberg").path(k).asText())).findFirst().ifPresent(k -> {
             throw new IllegalArgumentException("target.iceberg." + k + ": a secret is never written in the file; give ${AN_ENVIRONMENT_VARIABLE}");
         });
-        List<String> sortBy = r.list(l, "sort-by");
+        List<String> sortBy = l.has("sort-by") || pack == null ? r.list(l, "sort-by") : pack.sortBy();      // the pack's layout.<kind>.sort-by when not set
         Layout layout = new Layout(sortBy, mb(r, l, "file-size-mb", 256), l.has("row-group-mb") && !r.text(l, "row-group-mb", "auto").equals("auto")
                 ? mb(r, l, "row-group-mb", 1) : 0, r.text(l, "compression", "auto").toLowerCase(Locale.ROOT),
                 r.text(l, "vector-compression", "zstd").toLowerCase(Locale.ROOT), r.bool(l, "byte-stream-split", true), r.bool(l, "shard-aligned", true));
