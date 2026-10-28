@@ -20,7 +20,6 @@ the repackaged jar under ``drishti-server/target`` run on a free port (or DRISHT
 tests that need it are skipped, never failed."""
 import json
 import os
-import shutil
 import re
 from pathlib import Path
 import socket
@@ -36,6 +35,10 @@ from conftest import CONSOLE
 from java_launch import java_cmd
 
 ROOT = CONSOLE.parent
+# The site's own configuration (git-ignored, written by a running server and Admin): a checkout someone runs a server from has them,
+# e.g. its connectors (stale ones from older pack templates among them) and Drishti*net membership. The test server never sees them,
+# or what it serves (sources, caches, timings) depends on that checkout's history, not on the code under test.
+SITE_CONFIG = {"connectors", "net"}
 EXAMPLES = ROOT / "docs" / "guides" / "examples"
 
 
@@ -124,11 +127,11 @@ def _stack(tmp_path_factory, extra_env, work=None, auth=False):
     work = work or tmp_path_factory.mktemp("wb-server")
     if (ROOT / "config").exists():                 # the server reads config beside where it runs; its data stays in the scratch directory
         (work / "config").mkdir()
-        for sub in (ROOT / "config").iterdir():    # each part linked, except connectors: a deployed test pack writes its connector file
-            if sub.name == "connectors":           # there, and it must land in the scratch copy, never in the repository's config
-                shutil.copytree(sub, work / "config" / "connectors", symlinks=True)
-            else:
+        for sub in (ROOT / "config").iterdir():    # each committed part linked; the site's own parts never (SITE_CONFIG)
+            if sub.name not in SITE_CONFIG:
                 (work / "config" / sub.name).symlink_to(sub)
+        (work / "config" / "connectors").mkdir()   # empty: the server writes the packs' connector files there at its first start, as in a
+                                                   # clean checkout, and a deployed test pack's file lands in the scratch copy
     env = {"PATH": os.environ.get("PATH", ""), "HOME": str(work), "DRISHTI_PORT": str(port), **extra_env}
     proc = subprocess.Popen(java_cmd(str(JAVA), ["-Xmx768m", "-jar", str(jar())], tmp=work / "jvm-tmp"), cwd=work, env=env, stdout=(work / "server.log").open("w"), stderr=subprocess.STDOUT)
     try:
