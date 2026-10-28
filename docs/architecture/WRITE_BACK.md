@@ -639,7 +639,7 @@ is the third.
 
 ### 18.1 From a form's draft to a saved change
 
-Since 2.7.0 a Sutra form saves **drafts only**, per person, through `/api/v1/drafts` ([SUTRA_FORMS_GUIDE.md](../guides/SUTRA_FORMS_GUIDE.md),
+Since 2.7.0 a Sutra form saves **drafts only**, per person, through `/api/v1/drafts` ([WRITE_BACK_GUIDE.md](../guides/WRITE_BACK_GUIDE.md),
 [SUTRA_NEXT.md section 10](SUTRA_NEXT.md#10-forms-and-data-entry)). In 2.8.0 a form gains **Submit**:
 
 ```yaml
@@ -753,8 +753,8 @@ VaR use is step V5 of [VAR_GUIDE.md section 30](../guides/VAR_GUIDE.md#30-the-de
 
 W1 to W7 are built (unreleased) in `drishti-server` (`com.ash.drishti.server.edit`), with the JDBC plugin's writes, the router's overlay
 layer in `drishti-engine`, `form.save` in `drishti-rachana`, the console's Submit, Review → Changes and Admin → Edits, and
-`drishti.py change` / `edits`. The administrator's guide is [EDITS.md](../admin/EDITS.md); the author's is
-[SUTRA_FORMS_GUIDE.md section 4a](../guides/SUTRA_FORMS_GUIDE.md#4a-submitting-a-change-280-write-back); a worked example is
+`drishti.py change` / `edits`. The administrator's guide is [WRITE_BACK_GUIDE.md, for administrators](../guides/WRITE_BACK_GUIDE.md#for-administrators-write-back-is-off-as-shipped); the author's is
+[WRITE_BACK_GUIDE.md section 4a](../guides/WRITE_BACK_GUIDE.md#4a-submitting-a-change-280-write-back); a worked example is
 [tutorial 24](../tutorials/24-correct-a-trade-and-approve-it.md).
 
 | Wave | Status | As built |

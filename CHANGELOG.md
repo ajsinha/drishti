@@ -143,6 +143,11 @@
     TROUBLESHOOTING.md's BI sections, named by wave and phase, are filed together by symptom; REPORTS.md section 13 and ANALYSE.md
     section 13 lose their Perspective and DuckDB-Wasm history titles. The help centre lists 60 pages (`bi-recipes`, `boards`, `bi-ai`
     and `reports-page` redirect to their sections).
+  - The Sutra family: SUTRA_FORMS_GUIDE.md and EDITS.md are one write-back guide, WRITE_BACK_GUIDE.md (sections 1 to 7 for the Sutra
+    author, 8 to 15 for the administrator; it pairs with tutorial 24). The Sutra guide stays under its 1500-line cap (`test_help.py`),
+    so SUTRA_TESTING_GUIDE.md went beside the `sutra` command in CLI_GUIDE.md section 4 (*Testing Sutras*; the Sutra guide's section 15
+    points there) and NESTED_DOCUMENTS.md beside *Modelling deep documents* in PACK_DEVELOPER_GUIDE.md (*Sutras over deep documents*;
+    `ImperfectDataTest` reads its Sutra there).
 
 ## 2.9.5 — Iceberg as a full alternative to Delta; VaR hierarchies by columns (limit letters); connector files that upgrade themselves safely (2026-10-28)
 
@@ -988,7 +993,7 @@ Delta stays the default lake format everywhere; Iceberg is chosen only by config
   `writes:` switched on by an administrator; the `edit` power on a role (Admin → Roles: *Submit edits*; the shipped `admin` role) and the
   `edit` token scope. New: Admin → Edits, `drishti.py change propose|submit|list|show|approve|reject|withdraw|history` and `edits status`,
   DRS-9301 to DRS-9306, `drishti.edit.file` (`DRISHTI_EDIT_FILE`), the book desk's form submits a trade's correction (one approver),
-  tutorial 24, [EDITS.md](docs/admin/EDITS.md). Decisions taken while building and what is not built (the S3 edit log, the lake fold of
+  tutorial 24, [EDITS.md](docs/guides/WRITE_BACK_GUIDE.md#for-administrators-write-back-is-off-as-shipped). Decisions taken while building and what is not built (the S3 edit log, the lake fold of
   overlays, the per-column `edit:`): [WRITE_BACK.md section 19](docs/architecture/WRITE_BACK.md#19-as-built-280-2026-10-25)
   (WriteBackFlowTest, WriteBackOffTest, EditLogTest, LanesTest, EditTriggersTest, JdbcWritesTest, test_write_back.py,
   test_write_back_browser.py, test_changecli.py). Also: the console's shared live connection now listens for `switches` events, which
@@ -1395,7 +1400,7 @@ Delta stays the default lake format everywhere; Iceberg is chosen only by config
   `designerMode`/`refresh` settings in API_GUIDE; `sutra lint config/packs` in CLI_GUIDE; the content store in the backups
   (OPERATIONS, tutorial 17); *Your selections were reset* explained; the nesting limitation (pack screens two levels; Grid edits two
   levels of opened panels); the help centre's designer, forms and Rachana entries; SUTRA_NEXT's status and phases; dead anchors fixed.
-- **An entity field searches the server as people type** ([SUTRA_FORMS_GUIDE.md](docs/guides/SUTRA_FORMS_GUIDE.md#money-a-date-and-time-a-linked-record-a-worked-out-default),
+- **An entity field searches the server as people type** ([SUTRA_FORMS_GUIDE.md](docs/guides/WRITE_BACK_GUIDE.md#money-a-date-and-time-a-linked-record-a-worked-out-default),
   [API_GUIDE](docs/guides/API_GUIDE.md#form-drafts)): `GET /api/v1/forms/lookup?kind=&pack=&q=&limit=` answers `{id, label}` for the
   records of a kind whose id or label holds the text, read as the caller (a masked value never offered or matched, a kind they may not
   open refused, at most 50, a 2 s budget); the console passes it through as `/api/forms/lookup` and the entity box asks it 250 ms after
@@ -1418,7 +1423,7 @@ Delta stays the default lake format everywhere; Iceberg is chosen only by config
   `stale`) in the view model, on the panel and in the panels endpoint; its header says "updated N s ago", "stale" and "X isn't
   answering" of its own source, the other panels of the page's. `PanelProvenanceTest`, `test_refresh.py`, `test_refresh_browser.py`.
 - **Form fields: money, a date and time, a linked record, worked-out defaults**
-  ([SUTRA_FORMS_GUIDE.md](docs/guides/SUTRA_FORMS_GUIDE.md#money-a-date-and-time-a-linked-record-a-worked-out-default)): `type: money`
+  ([SUTRA_FORMS_GUIDE.md](docs/guides/WRITE_BACK_GUIDE.md#money-a-date-and-time-a-linked-record-a-worked-out-default)): `type: money`
   (typed as 1.5m, 250k or 1,000,000, shown grouped, its `currency` fixed or held by another field and shown beside it; min and max),
   `type: datetime` (a date and a time with its time zone `tz` shown; min and max), `type: entity` (a linked record of any pack's kind
   picked by search: its id kept, its label shown, Open beside it; read as the viewer, a masked value never offered), and `default:`
@@ -1446,7 +1451,7 @@ Delta stays the default lake format everywhere; Iceberg is chosen only by config
   pictures are all made by `tools/docs/shots/designer.py` again (customize-linked, refresh-controls, freshness, layout-grid, outline,
   grid-mode).
 - **Forms: letting people edit records** (SUTRA_NEXT.md phase 5, [section 10](docs/architecture/SUTRA_NEXT.md#10-forms-and-data-entry);
-  [SUTRA_FORMS_GUIDE.md](docs/guides/SUTRA_FORMS_GUIDE.md)): `form:` on a panel or a use, with typed fields (`text`, `number`, `date`,
+  [SUTRA_FORMS_GUIDE.md](docs/guides/WRITE_BACK_GUIDE.md)): `form:` on a panel or a use, with typed fields (`text`, `number`, `date`,
   `enum`, `bool`, `textarea`, `lookup` over a source with carried values), `required`, `min`/`max`, `pattern`, `max-length`,
   `editable-by` roles, `readonly` with a reason, field and cross-field `rules` (error refuses, warn is said and kept) and computed
   `hints`, in a small expression language the browser and the server share; checked as `DRS-2058` and in the JSON schema. Three ways

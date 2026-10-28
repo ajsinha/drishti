@@ -38,7 +38,7 @@ def test_guides_render_examples_boxes_toc_and_internal_links(client):
     page = client.get("/help/install-and-run").text
     assert 'class="help-example"' in page and "data-copy" in page
     assert "On this page" in page and 'href="/help/user-guide"' in page
-    assert 'class="help-box tip"' in client.get("/help/docs-guides-nested-documents").text
+    assert 'class="help-box tip"' in client.get("/help/pack-developer-guide").text   # its deep-documents section (was NESTED_DOCUMENTS.md) has a tip box
     ref = client.get("/help/rachana-reference").text
     assert "DRS-2101" in ref and "panel kinds" in ref.lower()
     arch = client.get("/help/docs-architecture-architecture").text
@@ -153,7 +153,7 @@ def test_the_retired_sutra_guides_are_gone_and_their_addresses_redirect(client):
 
 def test_no_sutra_guide_tells_the_reader_to_open_studio():
     root = SUTRA_GUIDE.parents[2]
-    for f in (SUTRA_GUIDE, root / "docs" / "guides" / "RACHANA_REFERENCE.md", root / "docs" / "guides" / "NESTED_DOCUMENTS.md"):
+    for f in (SUTRA_GUIDE, root / "docs" / "guides" / "RACHANA_REFERENCE.md", root / "docs" / "guides" / "PACK_DEVELOPER_GUIDE.md"):
         text = f.read_text()
         assert "Open Studio" not in text and "(`/studio`)" not in text and "twenty panel" not in text, f.name
 

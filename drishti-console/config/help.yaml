@@ -175,7 +175,7 @@ moved:
   screen-builder: screen-designer
   panel-kinds: panels
   panel-developer-guide: panels#developing-a-panel-kind
-  nested-data: docs-guides-nested-documents
+  nested-data: pack-developer-guide#sutras-over-deep-documents   # NESTED_DOCUMENTS.md merged into the pack developer guide (2.9.6)
   inference: docs-architecture-inference
   live: docs-architecture-live
   performance: docs-admin-performance
@@ -249,6 +249,10 @@ moved:
   bi-ai: bi-guide#29-ai-in-bi-report-from-words-ask-the-data-explain-this-number   # docs/guides/BI_AI.md merged into BI_GUIDE.md section 29
   docs-guides-bi-ai: bi-guide#29-ai-in-bi-report-from-words-ask-the-data-explain-this-number   # docs/guides/BI_AI.md
   docs-guides-bi-runs-guide: bi-guide#28-background-runs-long-bi-questions   # docs/guides/BI_RUNS_GUIDE.md merged into BI_GUIDE.md section 28
+  docs-guides-nested-documents: pack-developer-guide#sutras-over-deep-documents   # docs/guides/NESTED_DOCUMENTS.md
+  docs-guides-sutra-testing-guide: cli-guide#testing-sutras-expectyaml-the-tests-convention-and-ci   # docs/guides/SUTRA_TESTING_GUIDE.md, beside the sutra command
+  docs-guides-sutra-forms-guide: docs-guides-write-back-guide   # docs/guides/SUTRA_FORMS_GUIDE.md, now WRITE_BACK_GUIDE.md sections 1 to 7
+  docs-admin-edits: docs-guides-write-back-guide#for-administrators-write-back-is-off-as-shipped   # docs/admin/EDITS.md, now WRITE_BACK_GUIDE.md sections 8 to 15
 
 # "What does this mean?" beside a data page's help (the explorers' ?, a view's About): the Knowledge page, or glossary entry, that
 # explains the screen (var, exposure) or the kind of the record (core/app.py reads it at start; tests/test_help.py checks each target).

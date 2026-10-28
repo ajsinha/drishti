@@ -147,7 +147,7 @@ variable, as everywhere in the file.
 
 A connector may declare `writes:`: named commands that change a record in its source, used by write-back's `source` target
 ([WRITE_BACK.md section 5.4](../architecture/WRITE_BACK.md#54-how-a-write-is-described-connector-writes); the administrator's guide
-[EDITS.md section 6](../admin/EDITS.md#6-writing-to-a-source-writes)). Each command has the `kind` it amends, the extra `params:` a Sutra
+[WRITE_BACK_GUIDE.md section 13](../guides/WRITE_BACK_GUIDE.md#13-writing-to-a-source-writes)). Each command has the `kind` it amends, the extra `params:` a Sutra
 may supply, its plugin's block (`jdbc:` with `sql`, the guard `expect-rows` and the idempotency clause `already-applied`), `confirm:`
 (`reply` or `next-load`) and `timeout:`. In 2.8.0 only the JDBC plugin writes ([JDBC_QUERIES.md section 16](JDBC_QUERIES.md#16-writes-commands-that-change-a-record-280));
 the File, Delta and Iceberg connectors never do (a lake is not written per edit) and every other plugin is refused (*plugin … cannot

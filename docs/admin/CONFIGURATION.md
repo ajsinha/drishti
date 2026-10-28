@@ -1300,7 +1300,7 @@ The start logs `content store: <backend> <root> (settings <file>)`.
 
 ### Write-back: `config/edit/`
 
-Write-back ([WRITE_BACK.md](../architecture/WRITE_BACK.md); the administrator's guide [EDITS.md](EDITS.md)) has its own folder, named by
+Write-back ([WRITE_BACK.md](../architecture/WRITE_BACK.md); the administrator's guide [WRITE_BACK_GUIDE.md, for administrators](../guides/WRITE_BACK_GUIDE.md#for-administrators-write-back-is-off-as-shipped)) has its own folder, named by
 `drishti.edit.file` (`DRISHTI_EDIT_FILE`, default `./config/edit/edit.yaml`; its siblings `lanes.yaml`, `policy.yaml` and `retention.yaml`
 are read from the same folder). A missing file or key means the default. **Off as shipped**: `edit.enabled: false`, so no change is
 accepted anywhere and no Submit is drawn; a fresh install or an upgrade is read-only. The edit log, lanes, approvals, overlays and owned

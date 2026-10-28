@@ -968,7 +968,7 @@ credit limits and shows the limit after the trade as it is typed.
 ![Editing a credit limit's buckets in the cells](img/designer/form-cells.jpg)
 
 Saving keeps a **draft** for each person; nothing is sent to the source until 2.8.0. Rules, masks and roles, the keys of the cells and the
-drawer are in [SUTRA_FORMS_GUIDE.md](SUTRA_FORMS_GUIDE.md).
+drawer are in [WRITE_BACK_GUIDE.md](WRITE_BACK_GUIDE.md).
 
 ![The New trade drawer](img/designer/form-drawer.jpg)
 

@@ -118,13 +118,14 @@ class ImperfectDataTest {
         assertThat(empties).isPositive();
     }
 
-    /** Tutorial 4's Sutra, over a real, deeply nested trade from the trading pack: every panel has data. */
+    /** The deep-documents Sutra (PACK_DEVELOPER_GUIDE.md, Sutras over deep documents), over a real, deeply nested trade from the trading pack: every panel has data. */
     @Test
     void theNestedDocumentsTutorialWorksOnARealTrade() throws Exception {
-        String guide = Files.readString(Path.of("../docs/guides/NESTED_DOCUMENTS.md"));
+        String guide = Files.readString(Path.of("../docs/guides/PACK_DEVELOPER_GUIDE.md"));
+        guide = guide.substring(guide.indexOf("#### Sutras over deep documents"));    // the deep-documents section (was NESTED_DOCUMENTS.md)
         var m = java.util.regex.Pattern.compile("(?ms)^```yaml\\s*$\\n((?:#[^\\n]*\\n|\\s*\\n)*rachana:.*?)^```\\s*$").matcher(guide);
         assertThat(m.find()).isTrue();
-        Sutra s = new com.ash.drishti.rachana.parse.SutraParser().parse(m.group(1), "NESTED_DOCUMENTS.md", "docs");
+        Sutra s = new com.ash.drishti.rachana.parse.SutraParser().parse(m.group(1), "PACK_DEVELOPER_GUIDE.md", "docs");
         DataNode trade = codec.read(com.ash.drishti.common.PackSamples.document(Path.of("../config/packs/trading/samples"), "trade", "MX-20000001").orElseThrow());
         ViewModel vm = pipeline.preview(Optional.of(s), new EntityDocument(EntityRef.of("trade", "MX-20000001"), trade,
                 new Provenance("test", 1, Instant.now(), false)));

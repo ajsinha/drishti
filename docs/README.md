@@ -109,7 +109,7 @@ If you will change the code, continue with [DEVELOPER_GUIDE.md](guides/DEVELOPER
 | Choose or configure a panel kind | [PANELS.md](guides/PANELS.md) |
 | Add a new panel kind to Drishti | [PANELS.md: developing a panel kind](guides/PANELS.md#developing-a-panel-kind) |
 | Edit a Sutra with live preview and submit it for review | [Screen designer guide](guides/SCREEN_DESIGNER.md) |
-| Lay out nested documents (lists inside lists) | [Nested documents tutorial](guides/NESTED_DOCUMENTS.md) |
+| Lay out nested documents (lists inside lists) | [Nested documents tutorial](guides/PACK_DEVELOPER_GUIDE.md#sutras-over-deep-documents) |
 | Choose the right panel kind | [PANELS.md](guides/PANELS.md) |
 | Build a new panel kind, end to end (grammar, engine, console, workbench, tests) | [PANELS.md: developing a panel kind](guides/PANELS.md#developing-a-panel-kind) |
 | Look up a key, format, expression or problem code | [RACHANA_REFERENCE.md](guides/RACHANA_REFERENCE.md) |
@@ -365,7 +365,7 @@ Every file under `docs/`, by folder. Documents marked *moved* are short pointers
 
 | Guide | Read this when… |
 |---|---|
-| [nested-data.md](guides/NESTED_DOCUMENTS.md) | your documents hold lists inside lists |
+| [nested-data.md](guides/PACK_DEVELOPER_GUIDE.md#sutras-over-deep-documents) | your documents hold lists inside lists |
 | [impact.md](guides/USER_GUIDE.md#f8--impact) | you use or configure F8 impact |
 | [monitors-and-alerts.md](guides/USER_GUIDE.md#monitors) | you set up watchlists and alert rules |
 | [workspaces.md](guides/USER_GUIDE.md#workspaces) | you arrange several live views on one screen |

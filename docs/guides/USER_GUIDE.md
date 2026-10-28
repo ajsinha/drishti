@@ -1185,14 +1185,14 @@ Newer screens (every pack screen is built from the same parts) can do more than 
 - **Editing a record.** Where a screen lets you, clicking a row opens a form beside the table, or a pencil on a column lets you edit
   in the cell, and **New …** opens a guided drawer. Fields you may not change say why; a wrong value is explained under its field.
   **Save draft** keeps a **draft** that only you see (*You have 2 drafts on this page* offers them again). The page asks before you
-  leave with changes not saved. The reference is [SUTRA_FORMS_GUIDE.md](SUTRA_FORMS_GUIDE.md).
+  leave with changes not saved. The reference is [WRITE_BACK_GUIDE.md](WRITE_BACK_GUIDE.md).
 - **Submitting a change (2.8.0 write-back).** Where editing is on, you hold the edit power and the form says where it goes (the book
   desk's trades do), **Submit…** opens a sheet: what you saw, what is there now and your change; where it goes (a correction kept beside
   the booking system's value, or an amendment sent to it); who approves (never you); what it recomputes; and the reason. After **Confirm**
   the sheet follows it: waiting for an approver, applied (everyone viewing the trade sees the new value at once, *How this view was built*
   says *Edited here*), or conflicted if the trade moved since you opened it (your draft is kept). Approvers decide in **Review → Changes**
   (Build → Govern → Changes). Someone else's change to the record you are viewing shows *Changed by … just now*.
-  The reference is [SUTRA_FORMS_GUIDE.md section 4a](SUTRA_FORMS_GUIDE.md#4a-submitting-a-change-280-write-back); a walk-through is
+  The reference is [WRITE_BACK_GUIDE.md section 4a](WRITE_BACK_GUIDE.md#4a-submitting-a-change-280-write-back); a walk-through is
   [tutorial 24](../tutorials/24-correct-a-trade-and-approve-it.md).
 - **Screens laid out on a grid.** A screen with named areas may have a split you drag (its position kept for you), areas shown as
   tabs and panels that fold. Where the screen allows it, you may drag panels to another place and resize them, for yourself;

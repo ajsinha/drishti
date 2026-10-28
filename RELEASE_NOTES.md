@@ -216,7 +216,7 @@ designs kept ([IMPLEMENTATION_PLAN.md](docs/architecture/IMPLEMENTATION_PLAN.md#
 - **Admin → Commands** ([COMMANDS.md](docs/admin/COMMANDS.md)): switch any command off for everyone; it then answers "not active"
   everywhere (page, API, command, CLI, search, exports, BI, AI; `403 DRS-1016`), stored in the Drishti database and gossiped to every
   server; ready for role-based access.
-- **Write-back** ([WRITE_BACK.md](docs/architecture/WRITE_BACK.md), [EDITS.md](docs/admin/EDITS.md), tutorial 24, off by default):
+- **Write-back** ([WRITE_BACK.md](docs/architecture/WRITE_BACK.md), [EDITS.md](docs/guides/WRITE_BACK_GUIDE.md#for-administrators-write-back-is-off-as-shipped), tutorial 24, off by default):
   forms save through an edit log in the Drishti database, with four-eyes approval, a cluster mode, JDBC writes through an outbox, and
   reactive recomputes and live updates after each change.
 - **Branding from configuration:** the product name, owner, copyright and notices come from configuration only; guard tests.
@@ -240,7 +240,7 @@ Everything since 2.6.7, including the patches pushed to main without a tag.
   - **Refresh and freshness:** `refresh:` per panel or screen, with pause, resume and interval per person and Pause all; every panel says
     "updated N s ago", marks stale data and names a source that is not answering.
   - **Layout:** named areas on a 12-column grid, splits, tabs, sections, a sticky header, phone order; `user-can-arrange` per reader.
-  - **Forms** ([SUTRA_FORMS_GUIDE.md](docs/guides/SUTRA_FORMS_GUIDE.md)): edit beside a table, in its cells, or New in a guided drawer;
+  - **Forms** ([SUTRA_FORMS_GUIDE.md](docs/guides/WRITE_BACK_GUIDE.md)): edit beside a table, in its cells, or New in a guided drawer;
     money, date-time and linked-record fields (live server search), rules, computed defaults, masks and roles; **drafts only** until
     2.8.0's write-back.
   - **One server per screen** on a cluster; "your selections were reset" in words when a server goes away.

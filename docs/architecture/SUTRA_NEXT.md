@@ -543,7 +543,7 @@ Still to come: a server-side `every` scheduler pushing over the live channel to 
 ## 10. Forms and data entry
 
 **Built (phase 5, 2.7.x; drafts only, the write is phase 6).** A panel (or a use, which carries it to the one panel it brings) says how
-people edit its records or start new ones with `form:`. The worked guide is [SUTRA_FORMS_GUIDE.md](../guides/SUTRA_FORMS_GUIDE.md); every
+people edit its records or start new ones with `form:`. The worked guide is [WRITE_BACK_GUIDE.md](../guides/WRITE_BACK_GUIDE.md); every
 key is in [RACHANA_REFERENCE.md](../guides/RACHANA_REFERENCE.md#forms-form-on-a-panel).
 
 ```yaml
@@ -595,7 +595,7 @@ panels:
   `edit trades beside|in the cells` and `new trade in a drawer` write it (SCREEN_DESIGNER.md section 31).
 - **On the packs**: the book desk's trades (beside and a New trade drawer) and a credit limit's buckets (cells).
 
-- **The richer fields (built, 2.7.x)** ([SUTRA_FORMS_GUIDE.md, money, a date and time, a linked record](../guides/SUTRA_FORMS_GUIDE.md#money-a-date-and-time-a-linked-record-a-worked-out-default)):
+- **The richer fields (built, 2.7.x)** ([WRITE_BACK_GUIDE.md, money, a date and time, a linked record](../guides/WRITE_BACK_GUIDE.md#money-a-date-and-time-a-linked-record-a-worked-out-default)):
   `money` is an amount typed as `1.5m`, `250k` or `1,000,000` in a fixed currency (`currency: USD`) or the one another field holds
   (`currency: ccy`); `datetime` is a date and a time in a named time zone (`tz`, UTC when absent); `entity` links a record of any
   pack's kind (`options: { source: { pack, kind }, label }`), its id kept and its label shown, found by a live search
