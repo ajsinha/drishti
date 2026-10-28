@@ -112,6 +112,21 @@ class CodecsTest {
     }
 
     @Test
+    void aPackGivesTheDomainTableLayoutKeyAndFlattenedFieldsAsLakeBuildReadsThem() throws IOException {
+        java.nio.file.Path packs = java.nio.file.Path.of("").toAbsolutePath().getParent().resolve("config/packs");
+        LoadConfig risk = LoadConfig.read(null, List.of("source.files=x.jsonl", "source.pack=" + packs.resolve("market-risk"), "source.date=BUSINESS_DATE",
+                "target.lake=/l", "target.kind=scenario-pv"));
+        assertThat(risk.target().domain()).isEqualTo("risk");
+        assertThat(risk.source().vectors()).containsExactly("SCENARIO_PV");
+        assertThat(risk.source().promote()).contains("LEGAL_ENTITY", "DESK", "TT_BOOK");
+        LoadConfig trades = LoadConfig.read(null, List.of("source.files=x.jsonl", "source.pack=" + packs.resolve("trading"), "source.connector=trade-endur",
+                "source.as-of=2026-10-15", "target.lake=/l", "target.kind=trade"));
+        assertThat(trades.tablePath()).isEqualTo("/l/trading/trade_endur");
+        assertThat(trades.source().id()).isEqualTo("TRADE_ID");
+        assertThat(trades.source().flatten()).containsEntry("NOTIONAL", "LEGS[0].NOTIONAL");
+    }
+
+    @Test
     void theConfigurationNamesAMistakeAndTheBudgetHoldsItsShares() throws IOException {
         assertThatThrownBy(() -> LoadConfig.read(null, List.of("source.files=x.jsonl", "source.date=D", "target.path=/t", "target.layuot.x=1")))
                 .hasMessageContaining("layuot is not a key");

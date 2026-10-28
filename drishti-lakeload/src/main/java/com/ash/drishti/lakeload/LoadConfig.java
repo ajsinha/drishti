@@ -87,7 +87,7 @@ record LoadConfig(Source source, Target target, Parallel parallel, Memory memory
     private static final Map<String, Set<String>> KEYS = Map.of(
             "", Set.of("source", "target", "parallel", "memory", "rejects", "report", "lock"),
             "source", Set.of("files", "recursive", "storage-options", "format", "id", "date", "as-of", "promote", "vectors", "vector", "flatten",
-                    "partition-by"),
+                    "partition-by", "pack", "connector"),
             "target", Set.of("format", "path", "lake", "domain", "kind", "table", "storage-options", "mode", "properties", "iceberg", "layout"),
             "target.layout", Set.of("sort-by", "file-size-mb", "row-group-mb", "compression", "vector-compression", "byte-stream-split",
                     "shard-aligned"),
@@ -170,14 +170,41 @@ record LoadConfig(Source source, Target target, Parallel parallel, Memory memory
             throw new IllegalArgumentException("source.as-of " + asOfText + ": give YYYY-MM-DD");
         }
         String date = r.text(s, "date", null);
+        // a pack (as lake build --pack): its connector's domain, table, layout columns, vectors and flattened fields, its ingest key and date
+        String packDir = r.text(s, "pack", null);
+        PackLayout pack = null;
+        if (packDir != null) {
+            String kind = r.text(t, "kind", null);
+            if (kind == null) {
+                throw new IllegalArgumentException("source.pack needs target.kind (the kind whose layout the pack gives)");
+            }
+            try {
+                pack = PackLayout.read(Path.of(packDir), kind, r.text(s, "connector", null));
+            } catch (IOException e) {
+                throw new IllegalArgumentException("source.pack " + packDir + ": " + e.getMessage());
+            }
+            if (date == null && asOf == null) {
+                date = pack.date();
+            }
+        }
         if (asOf == null && date == null) {
             throw new IllegalArgumentException("source.date: name the business-date field (or give source.as-of YYYY-MM-DD for every row)");
         }
         List<String> vectors = new ArrayList<>(r.list(s, "vectors"));
         vectors.addAll(r.list(s, "vector"));
+        List<String> promote = r.list(s, "promote");
+        Map<String, String> flatten = new java.util.LinkedHashMap<>();
+        String id = r.text(s, "id", null);
+        if (pack != null) {
+            promote = s.has("promote") ? promote : pack.promote();
+            vectors = s.has("vectors") || s.has("vector") ? vectors : pack.vectors();
+            flatten.putAll(pack.flatten());
+            id = id != null ? id : pack.key();
+        }
+        flatten.putAll(r.map(s.path("flatten"), "source.flatten"));
         Map<String, String> sourceStorage = storage(r, s.path("storage-options"), "source.storage-options");
-        Source src = new Source(files, r.bool(s, "recursive", false), sourceStorage, r.text(s, "id", "id"), date, asOf, r.list(s, "promote"),
-                vectors, r.map(s.path("flatten"), "source.flatten"), r.list(s, "partition-by"));
+        Source src = new Source(files, r.bool(s, "recursive", false), sourceStorage, id == null ? "id" : id, date, asOf, promote, vectors, flatten,
+                r.list(s, "partition-by"));
 
         String tf = r.text(t, "format", "delta").toLowerCase(Locale.ROOT);
         if (!tf.equals("delta") && !tf.equals("iceberg")) {
@@ -201,8 +228,9 @@ record LoadConfig(Source source, Target target, Parallel parallel, Memory memory
         Layout layout = new Layout(sortBy, mb(r, l, "file-size-mb", 256), l.has("row-group-mb") && !r.text(l, "row-group-mb", "auto").equals("auto")
                 ? mb(r, l, "row-group-mb", 1) : 0, r.text(l, "compression", "auto").toLowerCase(Locale.ROOT),
                 r.text(l, "vector-compression", "zstd").toLowerCase(Locale.ROOT), r.bool(l, "byte-stream-split", true), r.bool(l, "shard-aligned", true));
-        Target tgt = new Target(tf, r.text(t, "path", null), r.text(t, "lake", null), r.text(t, "domain", null), r.text(t, "kind", null),
-                r.text(t, "table", null), targetStorage, r.map(t.path("properties"), "target.properties"), iceberg, layout);
+        String domain = r.text(t, "domain", pack == null ? null : pack.domain());
+        String table = r.text(t, "table", pack == null ? null : pack.table());
+        Target tgt = new Target(tf, r.text(t, "path", null), r.text(t, "lake", null), domain, r.text(t, "kind", null), table, targetStorage, r.map(t.path("properties"), "target.properties"), iceberg, layout);
         if (tgt.path() == null && (tgt.lake() == null || tgt.domain() == null || tgt.kind() == null && tgt.table() == null)) {
             throw new IllegalArgumentException("target: give path (the table) or lake, domain and kind (the table <lake>/<domain>/<kind>)");
         }
