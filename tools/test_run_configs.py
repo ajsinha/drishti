@@ -18,8 +18,8 @@ Two projects, so IntelliJ and PyCharm never share one .idea folder: IntelliJ ope
 run-configs/; PyCharm opens drishti-console/ and reads the Python ones in drishti-console/run-configs/. A Python run configuration uses
 the project interpreter (SDK_HOME empty, IS_MODULE_SDK false: PyCharm's "Project Default"), never a path such as
 drishti-console/.venv/bin/python, which does not exist on Windows (there it is .venv\\Scripts\\python.exe). Every configuration runs
-from the repository root ($PROJECT_DIR$ for IntelliJ, $PROJECT_DIR$/.. for PyCharm) and parses as XML. docs/guides/QA_ON_WINDOWS_WITH_CUSTOM_DATA.md and
-docs/guides/IDE_GUIDE.md section 4 rely on this.
+from the repository root ($PROJECT_DIR$ for IntelliJ, $PROJECT_DIR$/.. for PyCharm) and parses as XML. docs/qa/windows-custom-data.md and
+docs/guides/GETTING_STARTED.md (Running from IntelliJ IDEA and PyCharm, section 4) rely on this.
 """
 import pathlib
 import unittest

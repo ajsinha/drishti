@@ -14,7 +14,7 @@
 
 # SAMPLE REPORT 2 of 3: "Counterparty risk". A cross-pack report on the dataset trading-risk (trades from the trading pack, counterparties from core,
 # netting sets from counterparty-risk): exposure by counterparty, two slicers that filter every page, and a drill-through from a counterparty's bar to a page
-# about that counterparty. Read it with three different people to see the row rules and masks at work (docs/guides/DATASETS.md, row rules and masks):
+# about that counterparty. Read it with three different people to see the row rules and masks at work (docs/guides/BI_RECIPES.md, row rules and masks):
 #   * a desk-head sees only the trades of their own desks, so the MTM visuals show their desk; the exposure visuals are REFUSED for them (a visual says why,
 #     DRS-9020: the row rule is on trades and a netting set does not reach trades) - this is the dataset's rule, not a bug of the report;
 #   * an analyst (no raw power) sees the counterparty name as ••• because the dataset masks it, so every counterparty is one bar.

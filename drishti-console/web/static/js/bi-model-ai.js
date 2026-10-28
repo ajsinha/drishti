@@ -13,7 +13,7 @@
  *
  * See the LICENSE file in the root of this repository for the full terms.
  */
-/* The model designer's AI helper (docs/guides/BI_GUIDE.md section 10), on the designer's object (window.drishtiModel, bi-model-designer.js): the server proposes
+/* The model designer's AI helper (docs/guides/BI_GUIDE.md section 29.10), on the designer's object (window.drishtiModel, bi-model-designer.js): the server proposes
    relationships, measures (with descriptions) and field descriptions for the saved model from its names, types and descriptions (never a value), each checked
    against the model; Accept makes it one undoable edit of the draft (relationships:, measures:, fields:), and Save keeps it. */
 (function () {

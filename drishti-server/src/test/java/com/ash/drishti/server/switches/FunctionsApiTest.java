@@ -34,7 +34,7 @@ import org.springframework.http.MediaType;
 import org.springframework.test.web.servlet.MockMvc;
 
 /**
- * Functions (FUNC, docs/admin/COMMANDS.md): every signed-in user reads the commands they can use (only those that are on, of packs active
+ * Functions (FUNC, docs/admin/USER_MANAGEMENT.md): every signed-in user reads the commands they can use (only those that are on, of packs active
  * for them, of kinds their roles open), with nothing of the switches; only an administrator may read or change the switches.
  */
 @SpringBootTest(properties = {"drishti.sources.plugins.demo.settings.ticking=false", "drishti.rachana.hot-reload=false",

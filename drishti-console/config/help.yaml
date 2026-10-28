@@ -66,7 +66,6 @@ categories:
       - { slug: docs-tutorials-27-groupings-and-analytics, doc: tutorials/27-groupings-and-analytics.md, title: "Groupings and analytics tutorial", icon: mortarboard, kind: tutorial, summary: "Ten hands-on steps on the committed data, each in the UI, on the command line and in YAML: an ownership group and every group, a country, a sector and the currency rule, a company's margin and growth, a World Bank region, correlations with a window and an estimator, an equity's beta, PXH off and internal, the guard." }
       - { slug: docs-guides-funds-guide, doc: guides/FUNDS_GUIDE.md, title: "Funds and ETFs guide", icon: briefcase, summary: "The 200 largest US mutual funds and ETFs from SEC data (Form N-PORT, Form N-CEN, the prospectus risk/return summaries): FUND, the fact sheet with its Look-through holdings and against-its-index tabs; HELD, the funds holding a company (and USEQ's Held by funds tab); TRACK, the funds tracking an index; the data contract of every kind (every column, its SEC source, an example); where the data comes from, the 200 chosen, the refresh script on Linux and Windows, the gzipped snapshot." }
       - { slug: docs-tutorials-28-funds-and-etfs, doc: tutorials/28-funds-and-etfs.md, title: "Funds and ETFs tutorial", icon: mortarboard, kind: tutorial, summary: "Nine hands-on steps on the committed SEC data, each in the UI, on the command line and in YAML: the pack, a fund's fact sheet, its look-through with derivatives and counterparties, the fund against its index, finding funds by share class and index, the funds holding Apple, the funds tracking the S&P 500, a phone, refreshing the data." }
-      - { slug: clients, doc: guides/CLIENTS.md, title: "Scripts, notebooks and Excel", icon: filetype-py, summary: "Personal API tokens, the Python client, and Excel through Power Query: read anything you may open, from code." }
   - id: bi
     name: BI
     icon: bar-chart-line
@@ -106,7 +105,7 @@ categories:
       - { slug: examples, doc: guides/examples/README.md, title: Sutra examples, icon: collection, summary: "Working Sutras with their data, covering every panel kind, nested pivots and tree rows: read them here, open each as a copy in the workbench." }
       - { slug: screen-designer, doc: guides/SCREEN_DESIGNER.md, title: "Screen designer and Build workbench", icon: bounding-box, summary: "The Sutra designer (when ui.designer is on): Customize the page you are on, Describe a screen in one line, Outline and Grid, refresh and freshness, letting people edit; and the Build workbench: data, panels and fields on the canvas, the inspector, the YAML, problems and tests, versions, rebase, ship; by mouse or keyboard." }
       - { slug: connector-developer-guide, doc: connectors/CONNECTOR_DEVELOPER_GUIDE.md, title: Connector developer guide, icon: plug, summary: "Which connector to use, the source SPI (manifest, capabilities, fetch, search, subscribe), the shared TLS and proxy modules, testing and a worked plugin." }
-      - { slug: developer-guide, doc: guides/DEVELOPER_GUIDE.md, title: Developer guide, icon: tools, summary: "Repository map, building and testing from a fresh clone, the drill, project rules, the request path of a view, a live tick and a BI question (model query, DEL, SQL, live push), and recipes for endpoints, plugins, panel kinds and pages; IDE setup is in IDE_GUIDE.md." }
+      - { slug: developer-guide, doc: guides/DEVELOPER_GUIDE.md, title: Developer guide, icon: tools, summary: "Repository map, building and testing from a fresh clone, the drill, project rules, the request path of a view, a live tick and a BI question (model query, DEL, SQL, live push), and recipes for endpoints, plugins, panel kinds and pages; IDE setup is in GETTING_STARTED.md (IDE)." }
       - { slug: elements-guide, doc: guides/ELEMENTS.md, title: "Embedding: Drishti Elements", icon: window-stack, summary: "Put views, panels and BI reports in your own web application: a five-minute start, the token exchange, the registered host, the elements (view, panel, report, about, search), React, Vue and Angular samples, theming and limits." }
   - id: operate
     name: Operate
@@ -152,7 +151,7 @@ moved:
   drishti-stack: docs-admin-net#2-a-cluster-of-three                     # the ready-made local cluster (drishti-stack/)
   quickstart: install-and-run
   windows: install-and-run#drishti-on-windows
-  ide-guide: docs-guides-ide-guide
+  ide-guide: install-and-run#running-from-intellij-idea-and-pycharm
   impact: user-guide#f8--impact
   monitors-and-alerts: user-guide#monitors
   workspaces: user-guide#workspaces
@@ -202,7 +201,7 @@ moved:
   connector-activemq: connectors#activemq
   connector-rabbitmq: connectors#rabbitmq
   operationalising: deploy
-  real-data: docs-guides-real-data
+  real-data: external-data#the-world-economy-data-in-detail
   runbook-source-down: docs-admin-runbooks-source-down
   runbook-sutra-broken: docs-admin-runbooks-sutra-broken
   runbook-live-latency: docs-admin-runbooks-live-latency-high
@@ -253,6 +252,12 @@ moved:
   docs-guides-sutra-testing-guide: cli-guide#testing-sutras-expectyaml-the-tests-convention-and-ci   # docs/guides/SUTRA_TESTING_GUIDE.md, beside the sutra command
   docs-guides-sutra-forms-guide: docs-guides-write-back-guide   # docs/guides/SUTRA_FORMS_GUIDE.md, now WRITE_BACK_GUIDE.md sections 1 to 7
   docs-admin-edits: docs-guides-write-back-guide#for-administrators-write-back-is-off-as-shipped   # docs/admin/EDITS.md, now WRITE_BACK_GUIDE.md sections 8 to 15
+  clients: api#clients-scripts-notebooks-and-excel   # Scripts, notebooks and Excel; docs/guides/CLIENTS.md merged into API_GUIDE.md
+  docs-guides-clients: api#clients-scripts-notebooks-and-excel   # docs/guides/CLIENTS.md
+  docs-guides-ide-guide: install-and-run#running-from-intellij-idea-and-pycharm   # docs/guides/IDE_GUIDE.md merged into GETTING_STARTED.md
+  docs-guides-real-data: external-data#the-world-economy-data-in-detail   # docs/guides/REAL_DATA.md merged into PUBLIC_DATA.md
+  docs-admin-commands: user-management#functions-func-every-command-and-turning-one-on-or-off   # docs/admin/COMMANDS.md merged into USER_MANAGEMENT.md
+  docs-guides-qa-on-windows-with-custom-data: docs-qa-windows-custom-data   # the Windows QA guide, now a QA script in docs/qa
 
 # "What does this mean?" beside a data page's help (the explorers' ?, a view's About): the Knowledge page, or glossary entry, that
 # explains the screen (var, exposure) or the kind of the record (core/app.py reads it at start; tests/test_help.py checks each target).
@@ -295,7 +300,7 @@ contextual:
   history: user-guide#history-an-entity-over-time
   var: docs-guides-var-guide        # the VaR explorer (F1 and its ?): the VaR guide, listed under Use
   exposure: docs-guides-exposure-guide   # the exposure explorer (F1 and its ?): the exposure guide, listed under Use
-  func: docs-admin-commands       # Functions, FUNC (F1 and its ?): the command directory and, for administrators, the switches
+  func: user-management#functions-func-every-command-and-turning-one-on-or-off       # Functions, FUNC (F1 and its ?): the command directory and, for administrators, the switches
   datamap: user-guide#the-data-map   # the data map, DATAMAP (F1 and its ?): kinds, counts and joins checked against the data
   bi-designer: bi-guide#26-bi-studio-authoring-as-one-product-wave-c-240
   bi-theme-designer: reports#52-themes

@@ -20,13 +20,13 @@
 {% block body_class %}terminal{% endblock %}
 {% block nav %}{% include "terminal/_topbar.html" %}{% endblock %}
 {% block content %}
-{# Functions, FUNC <GO> (docs/admin/COMMANDS.md): the command directory under Views, for everyone. A user sees the commands they can use
+{# Functions, FUNC <GO> (docs/admin/USER_MANAGEMENT.md): the command directory under Views, for everyone. A user sees the commands they can use
    (only those that are on), by pack, with what each does and its example: the command opens with the example (else its kind's search form),
    the pack opens its search form. An administrator also sees the commands that are off and switches them: the Everyone column per command
    and per pack, batched (Undo, Review N changes) and sent with one reason; the history and each server's version sit in "Cluster". #}
 <div class="adm func" data-functions{% if admin %} data-commands data-hash="{{ c.hash }}"{% endif %}>
   <h1 class="ws-h">Functions <span class="func-word mono" title="Type FUNC, or FUNC and words to filter, then &lt;GO&gt;">FUNC</span>
-    <a class="emb-help" href="/help/docs-admin-commands" aria-label="Help: Functions" title="Help: Functions">?</a></h1>
+    <a class="emb-help" href="/help/user-management#functions-func-every-command-and-turning-one-on-or-off" aria-label="Help: Functions" title="Help: Functions">?</a></h1>
   {% if admin %}
   <p class="text-muted-d">Every command of the packs, what it does, and whether it is on. As an administrator you also see the commands that
     are <b>off</b>, and switch them: a command that is off is <b>not active</b> everywhere (typed, by its page, its API, the command line tool,

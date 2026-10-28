@@ -25,7 +25,7 @@ import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 
 /**
- * Admin → Commands across Drishti*net (docs/admin/COMMANDS.md, "Several servers"): two real servers in one JVM, each with its own SQLite
+ * Admin → Commands across Drishti*net (docs/admin/USER_MANAGEMENT.md, "Several servers"): two real servers in one JVM, each with its own SQLite
  * identity database. A command turned off on one is off on the other within a gossip round, written to that node's database, and refused
  * there with {@code 403 DRS-1016}; a node that was down while a change was made loads its old state from its database at start, then
  * catches up from its peer (anti-entropy on rejoin), and both end with the same switches hash.

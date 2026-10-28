@@ -13,7 +13,7 @@
 
   See the LICENSE file in the root of this repository for the full terms.
 #}
-{# A command an administrator turned off (Admin -> Commands, docs/admin/COMMANDS.md): the server answered 403 DRS-1016 for its page, the
+{# A command an administrator turned off (Admin -> Commands, docs/admin/USER_MANAGEMENT.md): the server answered 403 DRS-1016 for its page, the
    typed command or a link to it. The same answer by command, link, API, CLI or AI; nothing of its data is shown. #}
 {% set cmd = (error.extra or {}).get('command') or (error.detail.split(' ')[0] if error.detail else '') %}
 {% set since = (error.extra or {}).get('since') or '' %}

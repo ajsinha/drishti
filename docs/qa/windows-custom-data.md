@@ -13,7 +13,7 @@
 
   See the LICENSE file in the root of this repository for the full terms.
 -->
-# How to QA in Windows Environment using Custom Data
+# QA script: Windows, offline, with your own ENDUR data
 
 A step-by-step recipe for a demo on a **Windows** machine **without internet access** (pip and Maven work through your
 company's internal mirror). You will show:
@@ -26,6 +26,16 @@ company's internal mirror). You will show:
 5. **World economy** data, committed here.
 
 Every step says what to click and what you should see. Do the steps **in order**, the day before the demo.
+
+**This is a QA script, not a guide.** Installing and running Drishti is [GETTING_STARTED.md](../guides/GETTING_STARTED.md) (with its
+[Drishti on Windows](../guides/GETTING_STARTED.md#drishti-on-windows) and [Running from IntelliJ IDEA and PyCharm](../guides/GETTING_STARTED.md#running-from-intellij-idea-and-pycharm));
+what each release added, and how to try it, is in [RELEASE_NOTES.md](../../RELEASE_NOTES.md) and the [tutorials](../tutorials/README.md).
+
+> **Loading your files with the Java loader (the parallel lake loader).** `lake build` (the script behind **Load ENDUR file into the
+> lake**) loads with Python unless you ask for Java: **without `--engine java` the script always uses the Python loader**, however
+> large the file. Add `--engine java` to its line, or run the Java loader on its own (Java only, no Python): the steps are in
+> [section 3.2](#32-by-hand-replace-the-synthetic-endur-trades-with-your-real-files) (your ENDUR files, both ways) and
+> [section 6k](#6k-the-parallel-lake-loader-java-15-minutes) (every stage, the memory budget, Iceberg, rejects).
 
 > **⚠ Your real ENDUR files are confidential and this repository is public.**
 > Keep them **outside** the project folder, in `C:\Users\asinh09\drishti-private\endur\`. Never copy them into
@@ -46,13 +56,10 @@ Names used below:
 
 ## 0. What you need on the machine
 
-| Item | Check |
-|---|---|
-| **JDK 21** (or newer) | PowerShell: `java -version` shows `21` or higher |
-| **Python 3.13** ([the minimum and why](GETTING_STARTED.md#step-1--install-the-prerequisites)) | PowerShell: `py -3.13 --version` |
-| **IntelliJ IDEA** (for the server) and **PyCharm** (for the console and the tools) | both start |
-| pip and Maven reach your **internal mirror** | if a download fails, see section 7 |
-| 8 GB free memory, 5 GB free disk (the sixty-day demo lakes take about 3.4 GB) | Task Manager |
+The prerequisites and how to check them are [GETTING_STARTED.md step 1](../guides/GETTING_STARTED.md#step-1--install-the-prerequisites) and
+[Drishti on Windows](../guides/GETTING_STARTED.md#drishti-on-windows): **JDK 21** or newer and **Python 3.13**. For this script you also need **IntelliJ IDEA**
+(the server) and **PyCharm** (the console and the tools), pip and Maven reaching your **internal mirror** (if a download fails, see
+section 7), and 8 GB free memory and 5 GB free disk (the sixty-day demo lakes take about 3.4 GB).
 
 ---
 
@@ -75,7 +82,7 @@ You should see: `drishti-orig` contains `drishti-server`, `drishti-console`, `to
 
 ### 2.1 The Python environment (PowerShell, once)
 
-Open **PowerShell** in the project folder and run:
+As [GETTING_STARTED.md step 4](../guides/GETTING_STARTED.md#step-4--set-up-the-consoles-python) says; on this machine, in **PowerShell** in the project folder:
 
 ```powershell
 cd C:\Users\asinh09\IdeaProjects\drishti-orig
@@ -95,24 +102,10 @@ folder they overwrite each other's (IntelliJ then says **module not specified** 
 | **IntelliJ** | `C:\Users\asinh09\IdeaProjects\drishti-orig` (the Java server) | `run-configs\`: **Drishti build server jar**, **Drishti server (demo lakes)**, … |
 | **PyCharm** | `C:\Users\asinh09\IdeaProjects\drishti-orig\drishti-console` (the console and the tools) | `drishti-console\run-configs\`: **Drishti console**, **Build demo lakes**, **Load ENDUR file into the lake**, the `drishti …` tools |
 
-**If PyCharm was opened on `drishti-orig` before** (it was until 2026-10-18): close **both** IDEs, delete the folder
-`C:\Users\asinh09\IdeaProjects\drishti-orig\.idea` in Windows Explorer (IDE settings only; it is not in git), then
-do step 2.3 (IntelliJ re-creates it) and the steps below. In PyCharm's start screen, remove `drishti-orig` from the recent
-projects (right-click → Remove from Recent Projects) so it is not opened there by habit.
-
-PyCharm:
-
-1. **File → Open** → choose `C:\Users\asinh09\IdeaProjects\drishti-orig\drishti-console` → **Trust Project**.
-2. **File → Settings → Project: drishti-console → Python Interpreter → Add Interpreter → Add Local Interpreter →
-   Virtualenv Environment → Existing** → `C:\Users\asinh09\IdeaProjects\drishti-orig\drishti-console\.venv\Scripts\python.exe`
-   → **OK**.
-3. **The tools folder as a source folder** (it sits next to `drishti-console`, not inside it): **File → Settings →
-   Project: drishti-console → Project Structure → + Add Content Root** → choose
-   `C:\Users\asinh09\IdeaProjects\drishti-orig\tools` → **OK**; select the new `tools` root in the list → click
-   **Sources** (the blue folder above the list) → **OK**. The **Project** panel now shows `drishti-console` and `tools`.
-   (This is for reading and navigating the tools' code; the run configurations work without it.)
-4. In the **Project** panel, right-click `tests` (inside `drishti-console`) → **Mark Directory as → Test Sources Root**.
-5. **File → Settings → Tools → Python Integrated Tools → Default test runner** → **pytest** → **OK**.
+Set PyCharm up once as [GETTING_STARTED.md describes it](../guides/GETTING_STARTED.md#4-pycharm-run-and-debug-the-console): **File → Open** `drishti-orig\drishti-console` (never `drishti-orig` itself: if
+it was, close both IDEs and delete `drishti-orig\.idea` first), the interpreter
+`C:\Users\asinh09\IdeaProjects\drishti-orig\drishti-console\.venv\Scripts\python.exe`, `tools` as a content root marked
+**Sources**, `tests` marked **Test Sources Root**, and **pytest** as the default test runner.
 
 You should see: the drop-down at the top right lists **Build demo lakes**, **Load ENDUR file into the lake**,
 **Drishti console** and the `drishti …` tools. They all use the interpreter of step 2 and run from the project folder
@@ -137,10 +130,9 @@ You should see: the drop-down at the top right lists **Build demo lakes**, **Loa
 
 ### 2.3 IntelliJ IDEA (once)
 
-1. **File → Open** → `C:\Users\asinh09\IdeaProjects\drishti-orig` → **Trust Project**. IntelliJ imports the Maven project
-   (bottom-right progress bar; it downloads through your mirror the first time).
-2. **File → Project Structure → Project → SDK** → your **JDK 21** → **OK**.
-3. Top-right drop-down → **Drishti build server jar** → ▶ (Run). (If IntelliJ says the Maven project is not found, or
+1. Open `C:\Users\asinh09\IdeaProjects\drishti-orig` in IntelliJ and set its SDK to your JDK 21, as
+   [GETTING_STARTED.md describes it](../guides/GETTING_STARTED.md#2-intellij-idea-open-and-build-the-server) (the first Maven import downloads through your mirror).
+2. Top-right drop-down → **Drishti build server jar** → ▶ (Run). (If IntelliJ says the Maven project is not found, or
    modules are missing because PyCharm was opened on the same folder: Maven tool window → **Reload All Maven Projects**
    first, see section 4.1.) (This is Maven `package -DskipTests -pl drishti-server -am`
    on the project's `pom.xml`.)
@@ -595,23 +587,12 @@ says the address is a loopback address, use `<your IPv4>` from `ipconfig` instea
 
 ---
 
-## 6b. What is new in 2.6.0: check these (30 minutes)
+## 6b. What each release added
 
-Do this after `git pull` on **main** and a fresh jar (step 2.3: the file is `drishti-server-2.9.5-exec.jar`), with the server and the
-console started as in section 4.
-
-| # | Check | How | You should see |
-|---|---|---|---|
-| 1 | **Three new themes** | the palette icon in the top bar → **Green Terminal**, then **Crimson Terminal**, then **Blue Terminal**; open a trade in each | dark ground in one hue; every text easy to read; buttons filled (Crimson: deep crimson with white labels, text dusty rose, no blood-red text). Reload the page: the theme stays |
-| 2 | **Theme on your phone** | phone on the same network → `http://<your IPv4>:17480` → sign in → pick a Terminal theme | the same look; if the phone shows the old themes, reload the page once |
-| 3 | **A statement (paper report)** | follow [tutorial 20](../tutorials/20-statements-and-field-parameters.md) steps 3–5: BI Studio → a report page → **Format → Layout → statement** → the **Paper** tab → preview | pages drawn one at a time with header and footer; **PDF** downloads a page-exact file, **Excel** one set to print on the same paper |
-| 4 | **Field parameters** | tutorial 20 steps 1–2: a chart whose slicer switches DESK ↔ PORTFOLIO and MTM ↔ NOTIONAL | the chart redraws with the chosen field; no error |
-| 5 | **Iceberg on Windows, no Hadoop** | in a **separate copy** of the project (say `C:\Users\asinh09\IdeaProjects\drishti-iceberg-test`, so your demo's `config\connectors` is untouched): `powershell -ExecutionPolicy Bypass -File tools\windows\load-iceberg.ps1 -Python drishti-console\.venv\Scripts\python.exe`, then `powershell -ExecutionPolicy Bypass -File tools\windows\start-server.ps1 -Iceberg` | the loader ends without any `winutils.exe` or `HADOOP_HOME` error; `data\iceberg` holds one folder per kind; the server starts and **Admin → Connectors** shows the `*-store` connectors **RUNNING** on Iceberg |
-| 6 | **Drishti*net addresses** (only if you did section 6a) | **Admin → Net → Members** | both members at `http://<your IPv4>:…`, never `127.0.0.1` |
-
-Not to check on Windows: the **Cassandra** connector needs a Cassandra or ScyllaDB server, which this machine does not have.
-
----
+The per-release checks (2.6.0 to 2.9.5: themes and statements, chart any table, DATAMAP and the fact of the day, JSON Lines,
+VaR in any currency and intraday, hierarchies and limit letters, Iceberg) are no longer repeated here: each is in
+[RELEASE_NOTES.md](../../RELEASE_NOTES.md) with the tutorial that walks through it ([tutorials](../tutorials/README.md): 20 statements,
+21 history, 25 VaR, 26 exposure, 27 groupings, 29 VaR on Iceberg). The Java loader into Iceberg is row 8 of section 6k.
 
 ## 6c. History of a trade or an equity (2.6.5)
 
@@ -642,23 +623,6 @@ Also try `TRD <id> YTD`, `TRD <id> FROM 2026-10-07 TO 2026-10-16`, `CPTY CP-NORT
 
 ---
 
-## 6d. What is new in 2.6.7: check these (15 minutes)
-
-| # | Do | You should see |
-|---|---|---|
-| 1 | Open any trade page, a counterparty page (`CPTY CP-NORTHPLAINS`), a search or an admin list → **Chart** in the table's heading (or click the table and press **K**) | a chart already drawn from the table, a type switcher (1–6), X / series / split pickers, and a sentence saying what was charted and what was left out |
-| 2 | In the chart: switch to bars, stacked, donut; **Top N** on a big table | the chart redraws at once; a big table starts at the top 20 plus *Others* |
-| 3 | Sign in as a role that masks a field (e.g. PRICE) and chart that table | the masked column is greyed in every picker and never plotted |
-| 4 | **Export** → PNG, SVG, CSV or Excel | the file holds only what is drawn |
-| 5 | `TRD 1000279 60` → **Shift+K** | the history table as a chart (plain k still steps to the previous day) |
-| 6 | Switch theme (Terminal, light) with the chart open | it redraws in the theme's own colours |
-| 7 | If you did step 3.3: open a CALYPSO trade and `TRD <CLY id> 10` | the same page and history as from Delta; Admin → Connectors shows `trade-calypso` as iceberg |
-| 8 | If you run two servers (6a): Admin → Health → Drishti*net | `gossipPort` (heartbeats on a port of their own, so a busy server is never taken for dead) and `peerProtocol: http2` |
-
-Two servers on Windows: the heartbeat port is picked free at start (`gossip-port: auto`). If Windows Firewall asks, allow Java; or set a
-fixed `gossip-port` in `config/net/node.yaml` and allow that port. A blocked heartbeat port falls back to the server port with one warning
-in the log, so the cluster still works.
-
 ## 6e. Optional: the S3 tests (10 minutes)
 
 The S3 code (the content store, the Iceberg table on S3, Delta on S3 and `lake publish`) is tested against S3 simulators that need no
@@ -675,150 +639,12 @@ update-if-match covered, delete-if-match covered, racing writers NOT atomic (ski
 same kind of line for moto. The MinIO tests are **skipped on Windows** (they run the MinIO server binary, on Linux only), with the line
 `MinIO (server binary): skipped: MinIO tests run on Linux only`. Skipped is expected, not a failure.
 
-## 6f. What is new in 2.9.3: check these (20 minutes)
-
-**Before you start:**
-- `git pull` on **main**.
-- Build the jar again (step 2.3; the file is `drishti-server-2.9.5-exec.jar`).
-- Rebuild the data that changed in 2.9.3: the companies, GLEIF and funds snapshots, and the VaR limits.
-
-  Stop the server first, then run the same `python.exe …\tools\build_demo_lakes.py` as in step 3.0, with:
-
-  ```
-  --only us-equities,gleif,funds,market-risk/risk-hierarchy --as-of <the lakes' last date>
-  ```
-
-  The last date is the date of your newest ENDUR file. This takes a few minutes. A full step 3.0 does the same and more.
-- Start the server and the console again.
-
-The figures below are from the 2.9.3 data on 2026-10-27. On your lakes the fact of the day and the counts depend on the last date, so
-they may differ a little. The index figures do not, because they come from the committed snapshot.
-
-| # | Do | You should see |
-|---|---|---|
-| 1 | **Views → Data map**, or type `DATAMAP` in the top bar → Enter | *Counting and checking the data* on the first visit of the day, then a map: one box per domain, its kinds inside, lines for the joins. About 96 kinds and 226 joins with every pack on. Dashed kinds (VaR, EE/PFE) are computed, so they have no count |
-| 2 | Click **Trade** on the map | its joins light up (`COUNTERPARTY` → counterparty, `PORTFOLIO` → book, `TRADER_ID` → trader), and the side panel shows each join's coverage (*n of n ids match*) and the commands that open it. Esc clears it |
-| 3 | The **Map \| Cards** switch → **Cards** → open a domain | a table of its kinds with counts, joins, *Comes from* and *Crosses into*; the selection is the same as on the map |
-| 4 | **Find** box: `LEI`, then `PORTFOLIO` | the kinds holding that field are picked out |
-| 5 | The list of findings above the map | joins under 95% coverage: links the contracts promise but the data does not keep (for example, jurisdiction codes in an id field). They are known and listed for 2.9.4, not errors of your setup |
-| 6 | **Home** (signed in) | a **Fact of the day** card with its domain and date, a picture, *Why does that happen?* and a link that opens the data. **Another fact** shows the next one (seven held on 2026-10-27, for example *BOOK-COMM-1 is at 259% of its VaR limit while its desk, Commodities, is within its own*, *VOO and IVV are 99.3% the same portfolio*) |
-| 7 | `HIER MGMT~BANK`, then `HIER LEGAL~BANK` | the same bank VaR in both trees (126.5m on 2026-10-27), and now the **same limit, 150m**, on both roots (2.9.2 showed 210m on the legal tree) |
-| 8 | `IDX SP500`, `IDX NDX`, `IDX DJIA` | 495, 99 and 30 members, as SPY, QQQ and DIA hold them in their newest SEC filing; Exxon Mobil and NVIDIA are members. The page's note names the few holdings the SEC no longer lists |
-| 9 | `FUND QQQ`, then `FUND DIA` | active share against the index about **11.2%** (QQQ) and **1.8%** (DIA), down from 26.75% and 57.6% |
-| 10 | `TRACK SP500` | the S&P 500 funds, each at an active share of about 5.3% to 5.8% |
-| 11 | **Help → Knowledge** (or `WHAT`) → **Companies, funds and ETFs** | the new Knowledge page, with its overlap table (SPY/VOO 99.4%, VOO/IVV 99.3%, QQQ/QQQM 91.2%) |
-
-An official end-of-day VaR record captured before you rebuilt keeps the 210m limit it was captured with. Official
-records are history and never rewritten. The live pages show 150m.
-
-To switch the fact of the day off: set `DRISHTI_HOME_FACTS=false` for the console (`ui.facts.enabled`) and restart it.
-
-## 6g. What is new in 2.9.4: JSON Lines (10 minutes)
-
-JSON Lines (one JSON object a line, `.jsonl`) is the data format from 2.9.4 ([DATA_FORMATS.md](DATA_FORMATS.md)). Nothing in steps 3.0
-to 3.3 changes: `build_demo_lakes.py` and `load-delta.ps1` are run as before (the generators now write JSONL under `data\build` and the
-loaders read it). After `git pull`, build the jar again and run step 3.0 once, so the sample feed becomes `data\feeds\fixing.jsonl`.
-
-| # | Do | You should see |
-|---|---|---|
-| 1 | **Admin → Health** | the `file` connector `UP`, with no *CSV input is deprecated* note. The old `data\feeds\fixing\SOFR-HISTORY.csv` is gone (step 3.0 replaced it); a CSV file you put in `data\feeds\<kind>\` would be named there |
-| 2 | `FIX SOFR-HISTORY` (with the finance example pack loaded) | the same SOFR fixings as before, now read from `fixing.jsonl` |
-| 3 | `TRD where QUANTITY > 1000000` → **JSONL** beside **CSV** on the results | a `.jsonl` file: one trade a line, the CSV's column names as keys |
-| 4 | Open a trade → **Export** → **JSON Lines**; on its history page `E` → **JSON Lines** | a `.jsonl` file of the view's rows, and one business day a line |
-| 5 | A BI report → **Export** → **JSONL** | the page's rows as JSON Lines |
-| 6 | In PowerShell: `…\.venv\Scripts\python.exe tools\drishti.py convert C:\temp\some.csv` | `C:\temp\some.jsonl: N lines from C:\temp\some.csv` |
-
-## 6h. What is new in 2.9.4: VaR (25 minutes)
-
-**Before you start:** `git pull`, build the jar (`drishti-server-2.9.5-exec.jar` once released), and rebuild the VaR data: the trades'
-tables gained columns (`RUN_KIND`, `COMPUTED_AT`, and every record now says what it is: `VALUE_TYPE`, `GRAIN`, `SOURCE_SYSTEM`,
-`POSITION_ID`). Stop the server, run the `build_demo_lakes.py` of step 3.0 with `--only market-risk --as-of <the lakes' last date>`,
-and start the server and the console again. **Nothing to edit by hand:** at start the server adds the new columns to your
-`config\connectors\risk-store.yaml` (written at an earlier first start) and keeps the old file beside it as
-`risk-store.yaml.before-<time>.bak`; **Admin → Connectors → Template updates** lists it under *Recent automatic updates*. If your
-`config\connectors-settings.yaml` says `template-updates: notify` (or `off`), press **Add missing kinds** there once.
-
-**The VaR page in another currency.**
-
-| # | Do | You should see |
-|---|---|---|
-| 1 | `VAR DESK DESK-RATES` → the **Reporting currency** select at the right of the status line → **EUR** | every tile says EUR, the tree's header *VaR EUR*, the link ends `&ccy=EUR`, the provenance says *EUR, chosen in the header*, the input form, the scenario FX and *via USD* |
-| 2 | The tab **In other currencies** | one row per currency (USD, EUR, CAD, JPY, GBP) with its own VaR and ES and that VaR in EUR at today's rate; click **CAD**: the page moves to CAD |
-| 3 | `VAR BANK IN GBP` in the top bar | the bank in GBP |
-| 4 | `TRD 1000003` (an Endur trade) | the strip's **Trade currency** (*EUR · as priced* or *USD · as priced*), and in the Risk group its base PV in that currency |
-
-**Intraday updates with the stand-in pricing system** (pure Python with the console's `python.exe`; no `.exe` of its own). In PowerShell,
-in the project folder, with the server running (sign-in on: put a token with `loads:write` in a file and add `--token-file <file>`):
-
-```
-.\drishti-console\.venv\Scripts\python.exe tools\pvgen\intraday.py --date <the lakes' last date> --batches 3 --trades-per-batch 10 --lake data\delta --server http://127.0.0.1:18480 --every 30s
-```
-
-or the same through `.\tools\windows\pvgen-intraday.ps1 <the same arguments>`. Every 30 seconds a batch lands.
-
-| # | Do | You should see |
-|---|---|---|
-| 5 | `VAR BANK`, after the first batch | an **intraday** badge in the status line (*intraday · 10 trades · …*); point at it for the batch; the provenance's *Intraday* row |
-| 6 | After the third batch, `.\drishti-console\.venv\Scripts\python.exe tools\pvgen\morning.py --date <the date> --dry-run` | the morning run's counts (nothing written) |
-| 7 | `.\drishti-console\.venv\Scripts\python.exe tools\pvgen\morning.py --date <the date>` then `tools\pvgen\check.py --morning data\pvgen\morning-<the date> --intraday data\pvgen\intraday-<the date> --server http://127.0.0.1:18480` | every scope *ok*: the engine's VaR and ES equal the script's own recomputation from the files |
-| 8 | `drishti.py var intraday` (or `python.exe tools\drishti.py var intraday`) | the date's layer: updates, trades, batches |
-
-Kafka is optional here: no broker runs on this machine, so `tools\pvgen\publish_kafka.py` is checked with `--dry-run` only (it prints
-the messages it would send, each a JSONL text of `--per-message` records, a cancel a cancel line). The files are the main path. Every file the scripts write is
-JSONL: one JSON object per line, the contract a pricing system sends.
-
-## 6j. What is new in 2.9.5: hierarchies and limit letters (15 minutes)
-
-**Before you start:** `git pull`, build the jar, and rebuild the VaR and exposure data: every P&L, scenario-PV and exposure-path row
-now carries `LIMIT_LETTER`, and the new kind `var-limit` holds the limits. Stop the server, run the `build_demo_lakes.py` of step 3.0
-with `--only market-risk,counterparty-risk --as-of <the lakes' last date>`, and start the server and the console again. At start the
-server adds `LIMIT_LETTER` and the `var-limit` kind to your `config\connectors\risk-store.yaml` (the old file kept beside it; **Admin →
-Connectors → Template updates** lists it). Nothing to edit by hand: the market-risk pack's `hierarchies:` block configures the limit
-letters (`drishti.var.hierarchies` in your settings would win over it).
-
-| # | Do | You should see |
-|---|---|---|
-| 1 | `VAR BANK`, the select above the tree | *Management*, *Legal entities* and *Limit letters*; choose **Limit letters**: twelve letters (LL-0001 to LL-0012), each with its desks, the link ends `&hierarchy=LL` |
-| 2 | Click **LL-0011** | VaR 29.28m, limit 41.00m (71%); the breadcrumb *Limit letters › LL-0011*; **Contributions**: DESK-RATES and DESK-FI |
-| 3 | Expand **LL-0002** | DESK-COMM shows *no limit* (blank, never zero: `var-limit` has no row for it) |
-| 4 | Type `LL:LL-0011` in the scope box, then `BOOK:BOOK-RATES-1 & LL:LL-0011` | the letter; then the part of BOOK-RATES-1 under it (142 trades) |
-| 5 | *How this number was built* | the warning *9 positions had trades under two nodes …*: `POS:POS-BOOK-RATES-1~XCH-BOND_FUTURE-GBP-01@LL-0011` answers one part |
-| 6 | `.\drishti-console\.venv\Scripts\python.exe tools\drishti.py var tree --hierarchy LL` | the letters' tree in text, the bank at the top (112,041,646) |
-| 6a | Before rebuilding the data (or with your own P&L vectors that have no `LIMIT_LETTER`) | VaR and exposure answer as in 2.9.4; *Limit letters (not available)* in the select, and *How this number was built* and **Admin → Health** say *DRS-5211 the hierarchy LL … is not built … add LIMIT_LETTER to the pricing system's records and to the connector's layout.pnl-vector.columns* |
-| 7 | In the browser, `http://127.0.0.1:18480/api/v1/exposure/official` (signed in as an administrator) | among `scopes`, the limit letters' nodes (`LL:LL~LL-0001`, …) beside the netting sets, counterparties and MGMT/LEGAL nodes |
-
----
-
-## 6i. What is new in 2.9.5: Iceberg (20 minutes)
-
-Delta stays the default for every table. These checks put the **risk domain** in Iceberg on purpose, then back. Build the jar first
-(`.\mvnw.cmd -q package -DskipTests`): the Iceberg loader and maintenance run from it. Nothing here needs Docker, AWS or an `.exe`.
-
-| # | Do | You should see |
-|---|---|---|
-| 1 | `…\.venv\Scripts\python.exe tools\build_demo_lakes.py --only market-risk --store risk=iceberg` | lines `risk/pnl-vector into Iceberg` (and the other risk tables), then `Risk domain: iceberg …\data\iceberg\risk; risk-store: now reads iceberg …; exposure-store: now reads iceberg …` |
-| 2 | **Admin → Connectors** | `risk-store` and `exposure-store` with plugin **iceberg**; **Admin → Health**: both `UP` |
-| 3 | **Admin → Packs → market-risk → Data source → Test connection** on `risk-store` | each business date of `pnl-vector` with the same number of positions as before the switch (read from Iceberg's id maps) |
-| 4 | Open a P&L vector row (Search `pnl-vector`, any position) | its `PNL` array of 509 numbers, a missing value shown empty, never 0 |
-| 5 | Restart the server, open the same position again | it opens at once: its id map and document come from `data\cache\risk-store\` (Admin → Caches: `idMapsMappedFromDisk` above 0) |
-| 6 | `tools\drishti.py lake build --from data\testdata\market-risk\pnl-vector\cob-2026-09-30.part-001.jsonl.gz --pack config\packs\market-risk --connector risk-store --kind pnl-vector --lake data\iceberg --domain scratch --format iceberg` | a summary with `format: iceberg` and no rejects; `data\iceberg\scratch\pnl-vector\metadata` exists |
-| 6b | 2.9.6: the same line with `--engine java` at the end, and `--domain scratch2` (or the Java loader on its own: section 6k, `target.format: iceberg`) | the same rows and no rejects, `engine: java-loader`; `data\iceberg\scratch2\pnl-vector\metadata` exists |
-| 7 | **Admin → Lakes**, with `data\iceberg` among the console's lake roots (`lakes.roots`) | the table `scratch/pnl-vector` with **Format** Iceberg; tick it, **Dry run**: *would expire snapshots older than 168 h; would remove 0 orphan file(s)* |
-| 8 | Before row 9, with the risk domain still in Iceberg: `VAR BANK <GO>`, then `VAR BANK EUR <GO>`, `VAR LL:` and any limit letter, and `EXP BANK <GO>`; write down VaR, ES, a letter's VaR and EPE | figures on every page, the provenance's inputs saying `risk-store` (VaR) and `exposure-store` (exposure) |
-| 9 | `…\python.exe tools\build_demo_lakes.py --only market-risk --store risk=delta` | `risk-store: now reads delta`, `exposure-store: now reads delta`; Admin → Connectors shows both as delta again, with the same counts as in row 3; the pages of row 8 show the **same figures to the cent** |
-| 10 | Optional, official results in Iceberg: add `drishti.var.official.format: iceberg` and `drishti.var.official.root: <the project>\data\official-iceberg` to the server's settings (an official table keeps its format: the Delta one under `data\delta` would refuse it), restart, then `…\python.exe tools\drishti.py var official --capture` (an administrator's token) | a date already captured with the same inputs says *unchanged* (nothing published again); one whose inputs changed since (rows 1 to 9 moved them) says *restated*, its record *published … (Iceberg sequence number N)*; `data\official-iceberg\risk-results\var-official\metadata` exists and the JSON Lines are in `data\official-iceberg\risk-results\jsonl\var-official\<date>\`; **Admin → Connectors**: `var-results` reads **iceberg**, `UP` (a file the server generated follows by itself; the `var-results.yaml` that `build_demo_lakes.py` wrote counts as edited and stays on delta: **Reset to pack default** on its page, or `tools\drishti.py connector reset var-results`) |
-
-**Upgrading from 2.9.4: your connector files (2.9.5).** Start the new server on your existing `config\connectors` folder: nothing to do
-by hand. Before it answers, each file you never edited is replaced by the pack's new template (the file before stays beside it as
-`<name>.yaml.before-upgrade-….bak`), and each file you edited keeps your values and gets every key the template gained (var-whatif's
-`ccy` among them). Check **Admin → Connectors → Template updates**: *Recent automatic updates* lists what was done; a key listed under
-*changed* is one where your value and the pack's differ, and **Use the pack's value** takes the pack's for that key only.
-
-## 6k. What is new in 2.9.6: the parallel lake loader (15 minutes)
+## 6k. The parallel lake loader (Java, 15 minutes)
 
 The Java loader that loads millions of JSON Lines rows on every core with bounded memory
-([TOOLS.md section 4.13](TOOLS.md#413-the-parallel-lake-loader-296)). Build the jar first (step 2.3). Java and the jar only; Python
-only for the `lake build` rows. From `C:\Users\asinh09\IdeaProjects\drishti-orig` in PowerShell; `$jar` as in section 3.2:
+([TOOLS.md section 4.13](../guides/TOOLS.md#413-the-parallel-lake-loader-296)). Build the jar first (step 2.3). Java and the jar only; Python
+only for the `lake build` rows, which run the Java loader **only with `--engine java`** (without it `lake build` always uses the Python
+loader). From `C:\Users\asinh09\IdeaProjects\drishti-orig` in PowerShell; `$jar` as in section 3.2:
 
 ```powershell
 $jar = (Get-ChildItem drishti-server\target\drishti-server-*-exec.jar | Sort-Object LastWriteTime | Select-Object -Last 1).FullName
@@ -848,8 +674,9 @@ memory: {budget-mb: 512, spill-dir: 'C:\Users\asinh09\IdeaProjects\drishti-orig\
 | 5 | Open `data\scratch-lake\_drishti-lake\runs\` | the run's `<run>.json` (the summary: `throughput`, `memory`) and `<run>.manifest.json` (each file with its first and last `LEGAL_ENTITY`, `DESK`, id) |
 | 6 | `…\.venv\Scripts\python.exe tools\drishti.py lake build --from data\testdata\market-risk\scenario-pv --pack config\packs\market-risk --kind scenario-pv --key SCENARIO_PV_ID --date BUSINESS_DATE --lake data\scratch-lake2 --engine java` | `engine: java-loader`, 1,339 rows, exit 0: `lake build` driving the loader |
 | 7 | Put a line `{not json` into a copy of one file, load it with `--set rejects.file=data\tmp\rejects.jsonl` | exit 2, `rejected 1: not JSON (…)` with `e.g. <file>:<line>`; the line in `data\tmp\rejects.jsonl` |
+| 8 | Into Iceberg through `lake build`: `…\.venv\Scripts\python.exe tools\drishti.py lake build --from data\testdata\market-risk\pnl-vector\cob-2026-09-30.part-001.jsonl.gz --pack config\packs\market-risk --connector risk-store --kind pnl-vector --lake data\iceberg --domain scratch2 --format iceberg --engine java` (or the Java loader on its own, row 4: `target.format: iceberg`) | the rows and no rejects, `engine: java-loader`; `data\iceberg\scratch2\pnl-vector\metadata` exists |
 
-Delete `data\scratch-lake`, `data\scratch-lake2` and `data\scratch-iceberg` afterwards (the server does not read them).
+Delete `data\scratch-lake`, `data\scratch-lake2`, `data\scratch-iceberg` and `data\iceberg\scratch2` afterwards (the server does not read them).
 
 ## 7. If something goes wrong
 
@@ -894,14 +721,8 @@ Delete `data\scratch-lake`, `data\scratch-lake2` and `data\scratch-iceberg` afte
 - [ ] Step 4: server and console start; sign-in works.
 - [ ] Step 5: Lakes, Connectors, Health as described.
 - [ ] Step 6: walk through the ten pages once.
-- [ ] Step 6b: the 2.6.0 checks (themes, statement, field parameters, Iceberg in a separate copy).
+- [ ] Step 6k: the Java loader (rows 1 to 8), and step 3.2 with `--engine java` if you load your ENDUR files that way.
 - [ ] Step 6c (2.6.5): `TRD 1000279 60`, `TRD <your id> 60` and `EQ EQ-CSCA 3M` show their history.
-- [ ] Step 6d (2.6.7): **Chart** (or K) on a table, a masked field never plotted, an export.
-- [ ] Step 6f (2.9.3): the changed data rebuilt; `DATAMAP` draws and lists its findings; Home shows a fact of the day; `HIER LEGAL~BANK` shows 150m; `IDX SP500` has 495 members.
-- [ ] Step 6g (2.9.4): step 3.0 run again; the feed is `fixing.jsonl`, Health has no CSV note; JSONL downloads from a search, a view, a history page and a BI report; `drishti.py convert` on a CSV.
-- [ ] Step 6j (2.9.5): the VaR and exposure data rebuilt; **Limit letters** in the VaR tree's select; LL-0011 at 71% of its limit; LL-0002's DESK-COMM with no limit; `LL:LL-0011` in the scope box; the split-position warning.
-- [ ] Step 6h (2.9.4): the VaR data rebuilt; the Reporting currency select and **In other currencies**; `VAR BANK IN GBP`; a trade's Trade currency; `tools\pvgen\intraday.py` with `--lake` and `--server` shows the intraday badge; `check.py` says every scope is *ok*.
-- [ ] Step 6i (2.9.5): the risk domain moved to Iceberg and back (`--store risk=iceberg`, then `risk=delta`); the same counts both ways; a P&L vector opens with its 509 values; Admin → Lakes shows **Format** Iceberg for an Iceberg table and its dry run.
 
 **After the demo:**
 

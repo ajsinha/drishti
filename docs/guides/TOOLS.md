@@ -930,7 +930,7 @@ total rows: 300
 drops a cache, and grouped pages kept on disk are rebuilt from the lake at once: Admin → Caches from the terminal),
 `server packs list|load|unload|on|off|deploy|history|rollback|datasource` (Admin → Packs from the terminal), `server commands list|off|on|history`
 (the administrator's switches of Functions, `FUNC`, from the terminal: commands, or with `--pack` packs, on or off for everyone with `--reason`; an administrator, and as the
-admin endpoints are never for a personal token, it runs where sign-in is off (`--user`); [COMMANDS.md](../admin/COMMANDS.md))
+admin endpoints are never for a personal token, it runs where sign-in is off (`--user`); [USER_MANAGEMENT.md (Functions)](../admin/USER_MANAGEMENT.md#functions-func-every-command-and-turning-one-on-or-off))
 and `server smoke` (opens sample views of every kind on two dates; exit `1` on any failure, the check after a deploy).
 `doctor` checks this machine without changing anything (paths shortened):
 

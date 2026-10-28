@@ -13,7 +13,7 @@
  *
  * See the LICENSE file in the root of this repository for the full terms.
  */
-/* Functions, FUNC (docs/admin/COMMANDS.md): the command directory for everyone and, for an administrator, the commands × who-may-use-them
+/* Functions, FUNC (docs/admin/USER_MANAGEMENT.md): the command directory for everyone and, for an administrator, the commands × who-may-use-them
    matrix with its side panel. Colours come from the theme tokens,
    so light and dark both work; a state always has its word (on, off, turning off), never colour alone. */
 .cmd-h { font-size: 1.05rem; margin: 1.2rem 0 .5rem; }

@@ -40,7 +40,7 @@ import org.springframework.data.domain.PageRequest;
 import org.springframework.transaction.support.TransactionTemplate;
 
 /**
- * The administrators' switches (docs/admin/COMMANDS.md): which commands and packs are on or off, kept in the Drishti database, which is
+ * The administrators' switches (docs/admin/USER_MANAGEMENT.md): which commands and packs are on or off, kept in the Drishti database, which is
  * the system of record ({@code drishti_switch}, every change in {@code drishti_switch_log}). Drishti*net only spreads it: each node
  * gossips {@link #hash()}, and a node whose hash differs from a peer's pulls the peer's {@link #entries()} and {@link #merge}s them.
  *

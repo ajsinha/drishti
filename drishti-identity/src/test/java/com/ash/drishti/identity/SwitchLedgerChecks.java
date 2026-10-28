@@ -24,7 +24,7 @@ import java.time.ZoneOffset;
 import java.util.List;
 import org.springframework.transaction.support.TransactionTemplate;
 
-/** The switches ledger on a database (docs/admin/COMMANDS.md): what every supported database must do the same. */
+/** The switches ledger on a database (docs/admin/USER_MANAGEMENT.md): what every supported database must do the same. */
 final class SwitchLedgerChecks {
 
     private SwitchLedgerChecks() {}

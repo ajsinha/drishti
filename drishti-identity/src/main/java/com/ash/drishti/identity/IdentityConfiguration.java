@@ -330,7 +330,7 @@ public class IdentityConfiguration {
     }
 
     /**
-     * The administrators' switches of commands and packs (docs/admin/COMMANDS.md): this database is their system of record; Drishti*net
+     * The administrators' switches of commands and packs (docs/admin/USER_MANAGEMENT.md): this database is their system of record; Drishti*net
      * spreads them (the server wires the gossip and names the node).
      */
     @Bean

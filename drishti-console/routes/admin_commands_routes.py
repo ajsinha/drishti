@@ -12,7 +12,7 @@
 #
 # See the LICENSE file in the root of this repository for the full terms.
 
-"""The command switches' same-origin JSON (docs/admin/COMMANDS.md), used by the Functions page (``/func``, routes/functions_routes.py) when an
+"""The command switches' same-origin JSON (docs/admin/USER_MANAGEMENT.md), used by the Functions page (``/func``, routes/functions_routes.py) when an
 administrator signs in: the listing, a batch of changes sent with one reason (kept in the audit log), the history, and what turning a command
 off stops. The server decides who may change anything (administrators only), writes its database and spreads the change to every server of
 the cluster. ``/admin/commands``, the page this used to be, redirects to ``/func``."""

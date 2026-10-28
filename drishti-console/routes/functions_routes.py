@@ -12,7 +12,7 @@
 #
 # See the LICENSE file in the root of this repository for the full terms.
 
-"""Functions (``/func``, ``FUNC <GO>``; docs/admin/COMMANDS.md): the command directory, under Views, for everyone. A user sees every
+"""Functions (``/func``, ``FUNC <GO>``; docs/admin/USER_MANAGEMENT.md): the command directory, under Views, for everyone. A user sees every
 command they can use (the server's ``/api/v1/functions``: only commands that are on, of their packs and roles), grouped by pack, with what
 each does and its example; the command opens with that example, the pack opens its search form (``FORM <pack>``). An administrator sees the
 same page with everything Admin → Commands had (the server's ``/api/v1/admin/commands``): commands that are off (struck through, never a

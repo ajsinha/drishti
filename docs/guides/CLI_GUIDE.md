@@ -3140,7 +3140,7 @@ The Java `sutra` commands keep their own 0/1/2 and pass them through.
 ## 14. Running the tools from PyCharm (and the Java `sutra` from IntelliJ)
 
 The tools are ordinary Python scripts, so PyCharm runs and debugs them like any other, and the Java `sutra` tool runs from IntelliJ
-IDEA. (For the server and the console themselves see [IDE_GUIDE.md](IDE_GUIDE.md).) This section is the whole path, from an
+IDEA. (For the server and the console themselves see [GETTING_STARTED.md (IDE)](GETTING_STARTED.md#running-from-intellij-idea-and-pycharm).) This section is the whole path, from an
 empty PyCharm to a run configuration for each common task.
 
 ### 14.1 Create the interpreter
@@ -3268,7 +3268,7 @@ environment `DRISHTI_JAR=...` (the tests that run `sutra lint` are skipped witho
 
 ### 14.7 Where next
 
-[IDE_GUIDE.md](IDE_GUIDE.md) runs the server and the console; [SUTRA_DEVELOPER_GUIDE.md](SUTRA_DEVELOPER_GUIDE.md) and
+[GETTING_STARTED.md (IDE)](GETTING_STARTED.md#running-from-intellij-idea-and-pycharm) runs the server and the console; [SUTRA_DEVELOPER_GUIDE.md](SUTRA_DEVELOPER_GUIDE.md) and
 [PACK_DEVELOPER_GUIDE.md](PACK_DEVELOPER_GUIDE.md) are the references for what these commands produce and check.
 
 ## 15. The headless Sutra tool

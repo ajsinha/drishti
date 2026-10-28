@@ -294,7 +294,7 @@ $ curl -s -H "Authorization: Bearer $DRISHTI_TOKEN" 'http://localhost:18480/api/
 ## Step 7 · A different domain: real public data
 
 The packs of other industries use exactly the same commands. The `world-economy` pack holds published data about countries (World Bank, UNDP and the CIA World Factbook, public sources;
-[REAL_DATA.md](../guides/REAL_DATA.md) lists them and their licences). Type `JUR JUR-USA`.
+[PUBLIC_DATA.md (world-economy)](../guides/PUBLIC_DATA.md#the-world-economy-data-in-detail) lists them and their licences). Type `JUR JUR-USA`.
 
 ![The jurisdiction view of the United States: government, legislature and indicators](img/t02/12-public-data.jpg)
 

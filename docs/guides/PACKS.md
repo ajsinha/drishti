@@ -105,7 +105,7 @@ example ids are real: they are in the pack's `samples/` and in the [demo lakes](
 | `trading` | `TRDS` | `core`, `market-data` | `TRD` trade, from three source systems (ENDUR, CALYPSO, MUREX) in one production schema · `CTRD` counterparty trades · `PTRD` portfolio trades · `LTRD` legal entity trades · `ITRD` index trades (the last four derived from the trades of every system) | `TRD MX-20000001`, `TRD 1000001`, `CTRD CP-ALDERSHOT` |
 | `counterparty-risk` | `CCR` | `trading` | `AGR` master agreement (ISDA) · `CSA` credit support annex · `NSET` netting set · `LIM` credit limit · `EXP` exposure profile · `CVA` CVA / XVA · `SACCR` SA-CCR exposure · `COLL` collateral balance · `MC` margin call · `SIMM` ISDA SIMM initial margin | `AGR AGR-NORTHBRIDGE-ISDA`, `NSET NS-SUMMIT-NY` |
 | `market-risk` | `MRSK` | `market-data`, `trading` | `VAR` VaR / expected shortfall · `SCN` stress scenario · `STR` stress result · `FRTB` FRTB sensitivities · `PNL` P&L explain · `TVAL` trade valuation (MTM, P&L 1d, DV01 of every trade) | `VAR VAR-RATES`, `TVAL TVAL-MX-20000001` |
-| `world-economy` | `WRLD` | — | `ECON` economy · `MACRO` macro indicator · `FCST` IMF forecast · `LABR` labour market · `FISC` fiscal position · `ECG` country group · `REGE` region economy · `JUR` jurisdiction · `PARTY` party · `OFFC` office holder · `ELEC` election · `REGN` world region · `SOCI` social indicator (real public data for about 216 countries: World Bank, IMF, CIA World Factbook, UNDP; [REAL_DATA](REAL_DATA.md); not a sample, but the IMF part is for internal demonstrations only) | `ECON ECON-IND` |
+| `world-economy` | `WRLD` | — | `ECON` economy · `MACRO` macro indicator · `FCST` IMF forecast · `LABR` labour market · `FISC` fiscal position · `ECG` country group · `REGE` region economy · `JUR` jurisdiction · `PARTY` party · `OFFC` office holder · `ELEC` election · `REGN` world region · `SOCI` social indicator (real public data for about 216 countries: World Bank, IMF, CIA World Factbook, UNDP; [REAL_DATA](PUBLIC_DATA.md#the-world-economy-data-in-detail); not a sample, but the IMF part is for internal demonstrations only) | `ECON ECON-IND` |
 | `news-and-markets` | `NWMK` | — | `TOPIC` news topic · `NEWS` headlines · `CO` listed company · `QUOTE` quote and price history (fifteen topics and twenty well-known companies; headlines from the [news connector](../connectors/NEWS.md), quotes from the [yfinance connector](../connectors/YFINANCE.md); a sample pack, both connectors off as shipped; topics and companies also from the demo lake, connector `news-store`, and offline the quotes and headlines too, from a committed snapshot: [offline mode](#news-and-markets-and-world-economy-offline)) | `TOPIC TOPIC-FED` |
 | `us-equities` | `USEQS` | — | `USEQ` US listed company · `IDX` index members · `SIC` SIC sector · `EDGAR` filings browser · `FILING` SEC filing · `FACT` financial fact · `PXH` price history (real public data on the Dow 30, Nasdaq-100 and S&P 500 companies: SEC EDGAR, GLEIF, Wikidata; **off by default**, add it to `DRISHTI_PACKS`; prices are live only, off and for internal use: [its guide](../../config/packs/us-equities/guides/us-equities.md)) | `USEQ AAPL`, `IDX SP500` |
 | `gleif` | `GLEIF` | — | `LEI` legal entity · `LEIG` ownership group · `LEIR` parent relationship · `LEIC` country · `LEIM` ISIN, BIC or MIC to LEI (real public data from GLEIF, CC0: the ownership groups of the us-equities companies and of the large banks, insurers, asset managers and market infrastructures, at most 50 entities a group; **off by default**, add it to `DRISHTI_PACKS`; with `us-equities` on, a company and its LEI record link both ways: [its guide](../../config/packs/gleif/guides/gleif.md)) | `LEI 8I5DZWZKVSZI1NUHU748`, `LEIG ALL` |
@@ -323,7 +323,7 @@ A demonstration often runs on a laptop with no internet. Both packs then work fu
 - **world-economy.** Already offline: all thirteen kinds (`economy`, `macro-indicator`, `economic-forecast`, `labour-market`,
   `fiscal-position`, `country-group`, `region-economy`, `jurisdiction`, `party`, `office-holder`, `election`, `region`,
   `social-indicator`) are the pack's samples (real World Bank, IMF, CIA World Factbook and UNDP figures captured when the pack was
-  built; [REAL_DATA](REAL_DATA.md); refresh with `tools/publicdata/world_economy.py`, [PUBLIC_DATA](PUBLIC_DATA.md)), served by `macro-store` and `civic-store` from the demo lake. The pack has no live connector.
+  built; [REAL_DATA](PUBLIC_DATA.md#the-world-economy-data-in-detail); refresh with `tools/publicdata/world_economy.py`, [PUBLIC_DATA](PUBLIC_DATA.md)), served by `macro-store` and `civic-store` from the demo lake. The pack has no live connector.
 - **Offline mode.** Start the server with `DRISHTI_OFFLINE=true` (the run configuration **Drishti server (demo lakes)** sets it):
   the `news`, `yfinance` and public-data `feed` connectors never start, even when a file enables them, so nothing waits on the
   network and Admin → Connectors shows them **off (offline mode)** while `news-store`, `macro-store` and `civic-store` run
@@ -349,9 +349,9 @@ server in), then in the folders of `drishti.packs.extra-dirs` (`DRISHTI_PACKS_EX
    DRISHTI_PACKS=market-risk,world-economy java -jar drishti-server/target/drishti-server-2.9.5-exec.jar
    ```
 
-   (or, from the IDE, the run configuration **Drishti server** with `DRISHTI_PACKS` changed; [IDE_GUIDE.md](IDE_GUIDE.md)).
+   (or, from the IDE, the run configuration **Drishti server** with `DRISHTI_PACKS` changed; [GETTING_STARTED.md (IDE)](GETTING_STARTED.md#running-from-intellij-idea-and-pycharm)).
 3. Check what loaded. With security on, an API token goes in the header (`-H "Authorization: Bearer $DRISHTI_TOKEN"`;
-   [CLIENTS.md](CLIENTS.md) says how to make one):
+   [API_GUIDE.md (clients)](API_GUIDE.md#clients-scripts-notebooks-and-excel) says how to make one):
 
    ```bash
    curl -s http://localhost:18480/api/v1/packs -H "Authorization: Bearer $DRISHTI_TOKEN" \
@@ -592,7 +592,7 @@ A pack that exists to demonstrate Drishti is marked `sample: true` in its `pack.
 default: [tutorial 23](../tutorials/23-computed-panels.md)) and **news-and-markets** (a small list of well-known topics and listed companies, with
 news and quotes that [connectors compute on demand](../connectors/CONNECTOR_DEVELOPER_GUIDE.md#connectors-that-compute-data-on-demand) from Google News and Yahoo Finance; their
 connectors are off as shipped, the Yahoo endpoint is unofficial and restricted, and names and tickers leave the network when they are on: internal demonstrations only); the retired example packs **genomics** and **logistics** (invented data in domains far from capital
-markets) are samples too; **world-economy** is not a sample: it carries real public data ([REAL_DATA](REAL_DATA.md)); the banking, markets and risk packs
+markets) are samples too; **world-economy** is not a sample: it carries real public data ([REAL_DATA](PUBLIC_DATA.md#the-world-economy-data-in-detail)); the banking, markets and risk packs
 are the reference packs real ones build on, and are not samples. Who sees sample packs is the setting `drishti.packs.samples`
 (`DRISHTI_PACKS_SAMPLES`):
 

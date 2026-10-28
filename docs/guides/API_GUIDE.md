@@ -170,6 +170,143 @@ curl -s $B/entities/trade/MX-20000001/raw | jq '.data | {tradeId, productType, a
 { "tradeId": "MX-20000001", "productType": "IRS_FIXFLOAT", "assetClass": "Rates" }
 ```
 
+## Clients: scripts, notebooks and Excel
+
+Everything you can open in the terminal you can also read from code, as yourself, with a **personal API token**.
+A token reads what you may read (your roles and packs, at the time of each call) and, unless you gave it a **write scope**,
+**never changes anything**: any request other than `GET` with a read-only token is refused (`403 DRS-5002 API tokens only
+read`), except the `POST`s that only read (`/search/pivot/**`, `/command`, the allow-list
+`drishti.security.token-read-posts`, which also lets a token ask a BI model, `POST /api/v1/bi/mq`). Tools and CI that must change things get a token with the scope for
+that job (the table in section 1); see "Personal API tokens" in [CLI_GUIDE.md](CLI_GUIDE.md) and below.
+
+### 1. Make a token
+
+1. Open **My account → API tokens**.
+2. Give it a name that says what uses it (`Risk notebook`, `Desk P&L workbook`) and, if you like, a lifetime in days
+   (1–366; blank for no expiry). Tick a **scope** only if the token must change things (the page explains each; the
+   list is `drishti.security.token-scopes`). A token with a write scope must expire (90 days at most).
+3. Press **Create token**. You see the token once, for example `drk_7QhK2mPq9xZa_4kq…` (`drk_`, a 12-character id, `_`,
+   a 43-character secret). **Copy it now**: Drishti keeps only a hash of the secret and cannot show it again.
+4. The list shows each token's id, when it was created, when it expires, when it was last used, and **Revoke**.
+
+| Scope | Lets the token | And still needs |
+|---|---|---|
+| `read` (always) | read what its owner may read | |
+| `design:write` | create, edit, check, propose and share Designs; save Sutras as proposals | the author role |
+| `design:approve` | approve or reject proposed Sutras | the approver or admin role |
+| `packs:admin` | load, unload, deploy and roll back packs; create, change, test and delete connectors; Retry now | the admin role |
+| `risk:write` | save and delete your VaR baskets, capture VaR results, keep what-if sandboxes, cancel your own computations | any user who can open the scope |
+| `loads:write` | announce that a batch of data has landed ([DATA_LOADS.md](DATA_LOADS.md)) | the owner's roles open the kind |
+| `bi:write` | create, edit, propose, publish and delete BI items; restore versions ([BI_GUIDE.md](BI_GUIDE.md)) | the `bi-author` power and a workspace role |
+| `bi:approve` | approve or reject proposed BI items, endorse, import a bundle | the approve power or `bi-steward` |
+| `bi:admin` | change a workspace and the BI settings | the workspace admin role or `bi-admin` |
+| `ai:use`, `ai:admin` | call the configured models and MCP tools; send a test call to a model | the admin role for `ai:admin` |
+
+Send it in the `Authorization` header:
+
+```bash
+curl -s -H "Authorization: Bearer $DRISHTI_TOKEN" "https://drishti.bank.example:18480/api/v1/entities/trade/MX-20000001/raw" | jq .data.QUANTITY
+```
+
+You should see the trade's quantity: on the demo lakes `242000000` (the MUREX interest-rate swap's notional; the trades carry no MTM,
+that is in the market-risk pack's trade valuations, `TVAL`).
+
+Keep tokens like passwords: in an environment variable or a secrets store, never in a shared file. If one leaks,
+revoke it: it stops at once. A token also stops when its owner is disabled, and when it expires. Administrators see
+and revoke everyone's tokens in **Admin → Tokens**; every creation and revocation is in the audit log
+(`token-created`, `token-revoked`).
+
+### 2. Python
+
+`clients/python/drishti_client.py` is one file that uses Python's standard library only: copy it next to your
+notebook, or put its folder on `PYTHONPATH`.
+
+```python
+from drishti_client import Drishti
+
+d = Drishti("https://drishti.bank.example:18480", token="drk_…")   # or set DRISHTI_URL and DRISHTI_TOKEN
+
+d.field("trade", "MX-20000001", "QUANTITY")            # 242000000.0
+d.field("trade", "MX-20000001", "LEGS[0].NOTIONAL")    # a path into the document: 242000000.0
+doc = d.document("trade", "MX-20000001")               # the whole document (masked fields stay masked)
+
+rows = d.search("TRD PRODUCT_TYPE=REPO")            # a pick list: one dict per entity, with the pack's key columns (96 repos)
+# [{'kind': 'trade', 'id': 'CLY-3000265', 'title': 'CLY-3000265', 'Product type': 'REPO', 'Source system': 'CALYPSO', …, 'Quantity': 180000000, …}, …]
+
+d.search("TRD where QUANTITY > 1bn order by QUANTITY desc limit 20", as_of="2026-10-14")   # a past business date
+d.diff("trade", "MX-20000022", "2026-10-07", "2026-10-16")                                    # what changed between two dates
+h = d.history("trade", "1000015", days=30)          # the entity over its last 30 business days with data (rows oldest first)
+d.history("equity", "EQ-CSCA", range_="3M", fields=["PRICE"])   # 30D, 2W, 1Y, YTD, MTD, QTD; or date_from=, date_to=; diff=True
+d.history_rows("trade", "1000015")                  # one flat dict per day, newest first: {'date': '2026-10-19', 'QUANTITY': 72000.0, …, 'changed': ['PRICE']}
+df = d.to_pandas("CPTY RATING=BBB")                 # a pandas DataFrame, if pandas is installed: 3 rows, columns kind, id, title, Rating, Name, …
+```
+
+A refusal raises `DrishtiError` with the server's code: `e.code == "DRS-5002"` (not yours to open), `"DRS-1001"` (no
+source holds it), `"DRS-5010"` (the token is unknown, revoked or expired).
+
+From the shell, the same client writes CSV:
+
+```bash
+export DRISHTI_URL=https://drishti.bank.example:18480 DRISHTI_TOKEN=drk_…
+python3 clients/python/drishti_client.py search "TRD PRODUCT_TYPE=REPO" > repos.csv
+python3 clients/python/drishti_client.py field trade MX-20000001 QUANTITY          # 242000000.0
+python3 clients/python/drishti_client.py --as-of 2026-10-14 document trade MX-20000001
+```
+
+### 3. Excel
+
+Any search or pick list is also CSV at `GET /api/v1/search/csv?q=…`: a header row (`kind`, `id`, `title`, then the
+columns) and one row per entity, values unformatted. Text that a spreadsheet would run as a formula (starting with
+`=`, `+`, `-` or `@`) is prefixed with `'`.
+
+**Power Query** (Data → Get Data → From Other Sources → Blank Query → Advanced Editor):
+
+```
+let
+    Url    = "https://drishti.bank.example:18480/api/v1/search/csv",
+    Token  = "drk_…",
+    Source = Csv.Document(Web.Contents(Url, [Query = [q = "TRD PRODUCT_TYPE=REPO"],
+                                             Headers = [Authorization = "Bearer " & Token]]),
+                          [Delimiter = ",", Encoding = 65001, QuoteStyle = QuoteStyle.Csv]),
+    Table  = Table.PromoteHeaders(Source, [PromoteAllScalars = true])
+in
+    Table
+```
+
+Press **Close & Load**: the sheet fills with the 96 repos of the demo lakes and their key columns (`kind,id,title,Product type,Source
+system,Trade status,Trade date,Buy sell code,Currency,Quantity,Maturity date,Portfolio,Counterparty`); **Refresh** reads them again.
+For another query change `q`; for a past business date add `Headers = [Authorization = …, #"X-Drishti-As-Of" = "2026-10-14"]`.
+When Excel asks how to connect, choose **Anonymous**: the token in the header is the credential. Better than writing
+the token into the query: keep it in a named cell or a Power Query parameter only you can see.
+
+### 4. Any other language
+
+It is plain HTTP and JSON; the [API guide](API_GUIDE.md) lists every endpoint. The ones scripts use most:
+
+| Read | `GET` |
+|---|---|
+| a document | `/api/v1/entities/{kind}/{id}/raw` |
+| a view (strip, panels, provenance) | `/api/v1/views/{kind}/{id}` |
+| a pick list or search | `/api/v1/search?q=…` (JSON) or `/api/v1/search/csv?q=…` (CSV) |
+| what changed between dates | `/api/v1/history/{kind}/{id}/diff?from=…&to=…` |
+| a pack's kinds | `/api/v1/packs/{code}/overview` |
+| the BI catalogue, an item, a dataset or report | `/api/v1/bi/catalogue`, `/api/v1/bi/items/{id}`, `/api/v1/bi/datasets/{id}`, `/api/v1/bi/reports/{id}` |
+
+A BI question is a model query, a `POST` with the fields, measures and filters in the body (`/api/v1/bi/mq`; the 2.1 dataset query
+`/api/v1/bi/datasets/{id}/query` answers `410` since 2.2); it only reads, so a read-only token may call it, and the answer carries the
+owner's row rules and masks ([BI_MODEL_SPEC.md](../architecture/BI_MODEL_SPEC.md), [API_GUIDE.md](API_GUIDE.md)):
+
+```bash
+curl -s -X POST -H "Authorization: Bearer $DRISHTI_TOKEN" -H 'Content-Type: application/json' "$DRISHTI_URL/api/v1/bi/mq" \
+  -d '{"mq":1,"model":"trades-basic","define":{"N":"count(trade)"},"select":{"fields":["trade.SOURCE_SYSTEM"],"measures":["N"]},"time":{"as-of":"2026-10-16"}}'
+# "rows":[["CALYPSO",5000],["ENDUR",5000],["MUREX",5000]]
+```
+
+Add `X-Drishti-As-Of: 2026-10-14` for a past business date and `X-Drishti-Known-At: 2026-10-14T14:30:00Z` for the
+data as known at an instant (stores with time travel only; others answer `DRS-1007`). For an id with a `/` (or `\`),
+put `~` in its place and the id in the query: `/api/v1/entities/trade/~/raw?id=sl%2Fash-6`; the Python client does
+this by itself.
+
 ## Who you are: authentication
 
 Every request under `/api/v1/` passes through the server's token filter (`TokenFilter`). What it does
@@ -425,7 +562,7 @@ themselves when an id needs it.
 | `GET` | `/command/suggest?q=&limit=` | as-of. Up to `limit` suggestions (default `drishti.commands.suggest-limit`, 25; at most 50), filtered to kinds the caller may open. For a caller with [field masks](#field-masks), each entity's `title` and `subtitle` are its view title as the caller sees it (`Rates · Interest rate swap (fixed/float) · •••`), and an entity is offered only when the text typed is in its id or in that subtitle |
 | `GET` | `/command/history` | your recent commands, newest first (the up arrow on the command line): a JSON array of strings; an embedded host never writes it |
 | `GET` · `PUT` | `/command/aliases` | your aliases, short words for longer commands: `{"MYBOOK": "BOOK BOOK-RATES-1"}`. `PUT` replaces the whole set with the body; a word that is a mnemonic or a pack code is refused. Never open to a personal API token (`token-never`) |
-| `GET` | `/functions` | Functions, `FUNC <GO>` ([COMMANDS.md](../admin/COMMANDS.md)): every command the caller can use, by pack: `{total, packs[{name, code, title, commands[{code, kind, label, description, example}]}]}`. Only commands that are on, of packs active for the caller, of kinds the caller's roles open; packs with none are left out; nothing of the switches (administrators read those at `/admin/commands`). Any signed-in user, a token too |
+| `GET` | `/functions` | Functions, `FUNC <GO>` ([USER_MANAGEMENT.md (Functions)](../admin/USER_MANAGEMENT.md#functions-func-every-command-and-turning-one-on-or-off)): every command the caller can use, by pack: `{total, packs[{name, code, title, commands[{code, kind, label, description, example}]}]}`. Only commands that are on, of packs active for the caller, of kinds the caller's roles open; packs with none are left out; nothing of the switches (administrators read those at `/admin/commands`). Any signed-in user, a token too |
 | `GET` | `/datamap` | The data map, `DATAMAP <GO>` ([USER_GUIDE.md](USER_GUIDE.md#the-data-map)): `{businessDate, state, built, packs[{name, code, title, description, extends}], kinds[{kind, pack, code, label, title, description, grain, class, computed, count, more, example, failed}], joins[{from, field, to, declaredBy, state, why, rows, filled, values, matched, coverage, partial}]}`. Inferred from the loaded packs' data contracts (`links:`, fields' `link:`, the packs' `graph.fields`); counts and each join's coverage (`matched` of `values` ids name an entity that exists) read from the data in the background (`state`: `counting`, `checking`, `ready`; a join's `state`: `pending`, `checked`, `computed`, `unchecked` with `why`). Only kinds the caller may open, and joins whose two ends they may open. Any signed-in user, a token too |
 
 The command is what the console's command line sends when you press Enter. The mnemonic (`TRD`) is mapped to
@@ -1466,7 +1603,7 @@ Every change is audited (`pack-upload-checked`, `pack-deployed`, `pack-rolled-ba
 | `DELETE` | `/admin/packs/deploy/{uploadId}` | Throws a verified upload away: `{discarded}` |
 | `GET` | `/admin/packs/samples` | Who sees sample packs: `{mode (visible, developers, hidden), configured, overridden, modes, samples[]}`. Admin. |
 | `PUT` | `/admin/packs/samples` | `{"mode": "visible" \| "developers" \| "hidden" \| "default"}`: saves the mode (it overrides `drishti.packs.samples`; `default` removes the saved setting), applies it at once (`hidden` unloads the sample packs) and audits it (`pack-samples`). `400` for any other mode. |
-| `GET` | `/admin/commands` | The switches, for the administrator's view of Functions ([COMMANDS.md](../admin/COMMANDS.md)): every command of the loaded packs, grouped by pack, `{node, hash, newest, total, off, roles[], nodes[{node, self, state, hash, inStep}], packs[{name, code, title, on, neededBy[], since, actor, reason, commands[{code, kind, label, description, example, on, since, actor, reason}]}]}`. `description` is the data contract's; `nodes` says which version of the switches each server of the cluster holds. Admin; never a token. |
+| `GET` | `/admin/commands` | The switches, for the administrator's view of Functions ([USER_MANAGEMENT.md (Functions)](../admin/USER_MANAGEMENT.md#functions-func-every-command-and-turning-one-on-or-off)): every command of the loaded packs, grouped by pack, `{node, hash, newest, total, off, roles[], nodes[{node, self, state, hash, inStep}], packs[{name, code, title, on, neededBy[], since, actor, reason, commands[{code, kind, label, description, example, on, since, actor, reason}]}]}`. `description` is the data contract's; `nodes` says which version of the switches each server of the cluster holds. Admin; never a token. |
 | `POST` | `/admin/commands` | `{"reason": "...", "changes": [{"scope": "command" \| "pack", "name": "FRTB", "on": false}]}`: applies the batch (at most 500 changes, a reason of at most 500 characters, kept in the audit log as `command-disabled`, `command-enabled`, `pack-disabled`, `pack-enabled`); a pack another enabled pack builds on cannot be switched off. Written to this server's database and spread to every server of the cluster within seconds; the answer is the list as `GET` gives it. `400 DRS-5001` for an unknown command, pack or scope. Admin; never a token. |
 | `GET` | `/admin/commands/history?scope=&name=&limit=200` | The changes, newest first: `{items[{scope, name, grantee, on, reason, actor, at, node}]}` (`scope` and `name` together narrow it to one switch). Admin; never a token. |
 | `GET` | `/admin/commands/{code}/impact` | What turning the command off stops: `{code, kind, page, api, uses[{category, label, count, items[{name, owner, detail}]}]}` (the BI datasets that read its kind and what is built on them, saved searches, monitors, alerts, subscriptions, workspaces, shares, embed hosts). Admin; never a token. |
@@ -1676,9 +1813,9 @@ ordered and cut as one node would, `scanned` and `matched` summed, and a node th
 
 | Method | Path | Who | Notes |
 |---|---|---|---|
-| `POST` | `/net/gossip` `{"members": [...]}` | node | Push-pull: the caller's member table is merged, this node's is the answer `{"members": [...]}`; the first entry is the node itself. Each member: `nodeId`, `url`, `incarnation`, `heartbeat`, `state` (`alive`, `suspect`, `dead`, `left`), `digestHash`, `version`, `protocol`, `tags`, `since`, `drained`, `gossipPort` (2.6.7: the member's own gossip port on the host of its `url`, 0 for none), `switchesHash` (2.8.0: the hash of its switches, [COMMANDS.md](../admin/COMMANDS.md#several-servers)). This, `/net/ping` and `/net/digest` are answered by the server's first filter, on its gossip port and on its own port alike (NET.md section 4) |
+| `POST` | `/net/gossip` `{"members": [...]}` | node | Push-pull: the caller's member table is merged, this node's is the answer `{"members": [...]}`; the first entry is the node itself. Each member: `nodeId`, `url`, `incarnation`, `heartbeat`, `state` (`alive`, `suspect`, `dead`, `left`), `digestHash`, `version`, `protocol`, `tags`, `since`, `drained`, `gossipPort` (2.6.7: the member's own gossip port on the host of its `url`, 0 for none), `switchesHash` (2.8.0: the hash of its switches, [USER_MANAGEMENT.md (Functions)](../admin/USER_MANAGEMENT.md#several-servers)). This, `/net/ping` and `/net/digest` are answered by the server's first filter, on its gossip port and on its own port alike (NET.md section 4) |
 | `GET` | `/net/ping` | node | A direct probe: `{"nodeId", "state"}`. `?target=<a member's url>`: an indirect probe, `{"answered": true}` when this node reached the target (only a member's address is probed: `400 DRS-5056` otherwise) |
-| `GET` | `/net/switches` | node | This node's switches ledger (the switches on Functions, `FUNC`): `{node, hash, entries[{scope, name, grantee, on, reason, actor, stamp, node, at}]}` (`stamp` a hybrid logical clock, `at` epoch milliseconds). A peer pulls it when the `switchesHash` in gossip differs from its own and merges it: the newer by (stamp, node) wins. Answered on the gossip port too ([COMMANDS.md](../admin/COMMANDS.md#several-servers)) |
+| `GET` | `/net/switches` | node | This node's switches ledger (the switches on Functions, `FUNC`): `{node, hash, entries[{scope, name, grantee, on, reason, actor, stamp, node, at}]}` (`stamp` a hybrid logical clock, `at` epoch milliseconds). A peer pulls it when the `switchesHash` in gossip differs from its own and merges it: the newer by (stamp, node) wins. Answered on the gossip port too ([USER_MANAGEMENT.md (Functions)](../admin/USER_MANAGEMENT.md#several-servers)) |
 | `GET` | `/net/digest` | node | This node's capability digest: `nodeId`, `url`, `version`, `protocol`, `packs` (`name`, `code`, `version`, `hash`, `peerOnly`), `kinds` (`kind`, `mnemonic`, `label`, `pack`, `renders`, `sources`: `connector`, `type`, `table`, `earliestDate`, `latestDate`, `dataVersion`, `columnar`, `dated`, `live`), `load` (`requestsPerSecond`, `latencyMs`), `calendar`, `tags`, `redact`, `access`, `reports`, `builtAt`. Peers pull it when the `digestHash` in gossip changes |
 | `GET` | `/net/capabilities` | node, admin | The capability table as Admin → Net's map shows it: `kinds` (each with `renderers`: `nodeId`, `version`, `newest`, `peerOnly`, `routable`; `holders`: `nodeId`, `connector`, `type`, `table`, `shared` (a replica), `latestDate`, `dataVersion`; `scatter`: the peers a search asks), `nodes`, `warnings` (`what`: `pack-content`, `calendar`, `redact`, `protocol`; `text`) |
 | `GET` | `/net/fetch/{kind}/{id}` (`~` and `?id=` for an id with a slash) | node, for a user | One entity document as the on-behalf-of user may see it here (masked by this node's rules), read from this node's own sources only, with the request's `X-Drishti-As-Of` and `X-Drishti-Known-At`: `{"kind", "id", "provenance": {source, generation, fetchedAt, live, businessDate}, "data"}`. `404` when not held here. The asking node renders it and masks it again |
@@ -1823,7 +1960,7 @@ and the fix for the codes that need more than the meaning.
 | DRS-1012 | 404 | history not kept | history queries: the kind keeps no daily history here (`history: {enabled: false}` for it in its pack, `drishti.history.enabled` off, or every connector of the kind holds today's data only and the pack declares no embedded `series:`) |
 | DRS-1013 | 404 | history: no data | the entity exists but has no data in the range asked; widen the range or move the date box |
 | DRS-1014 | 504 | history timeout | no day of the range was read within `drishti.history.timeout`, or `max-concurrent` history requests were running; when some days were read the answer is `200` with `partial: true` and the others in `problems` |
-| DRS-1016 | 403 | command off | an administrator turned the command off (Functions, `FUNC`, as an administrator; [COMMANDS.md](../admin/COMMANDS.md)): its page, its view and search endpoints, the typed command, exports, BI reads of its kind and the compute ask answer this, with `command`, `kind` and `since` in the problem; nothing of its data is sent. Ask an administrator to turn it on |
+| DRS-1016 | 403 | command off | an administrator turned the command off (Functions, `FUNC`, as an administrator; [USER_MANAGEMENT.md (Functions)](../admin/USER_MANAGEMENT.md#functions-func-every-command-and-turning-one-on-or-off)): its page, its view and search endpoints, the typed command, exports, BI reads of its kind and the compute ask answer this, with `command`, `kind` and `since` in the problem; nothing of its data is sent. Ask an administrator to turn it on |
 | DRS-1015 | 503 | connector restarting | the connector the kind is routed to is being restarted (its file changed, a retry) and was not back within 30 s; a read waits that long for it (and for any connector of the kind being restarted) before answering; try again |
 | DRS-2001 | 422 | sutra parse | the Sutra text cannot be parsed |
 | DRS-2002 | 422 | sutra invalid | the Sutra parsed but has problems (listed in `problems`) |
@@ -3194,7 +3331,7 @@ You should see a line such as `MTM (USD) +1,595,251` each time the value ticks.
 ## Personal API tokens
 
 A person makes tokens on **My account → API tokens** for scripts, notebooks and spreadsheets
-([CLIENTS.md](CLIENTS.md)). Send one as `Authorization: Bearer drk_<id>_<secret>`. It acts as its owner (their roles
+([Clients](#clients-scripts-notebooks-and-excel)). Send one as `Authorization: Bearer drk_<id>_<secret>`. It acts as its owner (their roles
 and packs at the time of each call), only while the owner is enabled. A token made without scopes (`read`) only reads: any
 other method answers `403 DRS-5002 API tokens only read`, except the `POST`s that only read (pivot of a search, `/command`, BI queries, exports and subscription previews: the
 allow-list `drishti.security.token-read-posts`). An unknown, wrong, revoked or expired token answers `401`.

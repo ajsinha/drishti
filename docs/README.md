@@ -6,7 +6,7 @@
 
 # Drishti documentation
 
-Most of these documents are also the console's in-app help (`/help`). The help centre lists **60 pages in 7 sections** (`drishti-console/config/help.yaml`; the table below is checked against it): *Knowledge*, *Start* (install and run, the tutorials), *Use*, *BI*, *Data*, *Build* and *Operate*.
+Most of these documents are also the console's in-app help (`/help`). The help centre lists **59 pages in 7 sections** (`drishti-console/config/help.yaml`; the table below is checked against it): *Knowledge*, *Start* (install and run, the tutorials), *Use*, *BI*, *Data*, *Build* and *Operate*.
 **The tutorials teach, the guides are reference:** every step-by-step walk-through lives in [tutorials/](tutorials/README.md); a guide says what a feature is, every option and every code, and points to the tutorial that
 shows it. The architecture documents, the per-plugin connector documents, the runbooks and the QA records stay in the repository (and open in the help centre when a page links to them), listed below. An address from
 before the consolidation (for example `/help/quickstart` or `/help/connector-kafka`) redirects to the page or section that took the subject over.
@@ -25,7 +25,7 @@ If you will change the code, continue with [DEVELOPER_GUIDE.md](guides/DEVELOPER
 |---|---|
 | **Knowledge** | [Knowledge home and glossary](knowledge/README.md) · [Market risk](knowledge/market-risk.md) · [Counterparty credit risk](knowledge/counterparty-credit-risk.md) · [Trades and products](knowledge/trades-and-products.md) · [Entities and ownership](knowledge/entities-and-ownership.md) · [Market data](knowledge/market-data.md) · [Data and contracts](knowledge/data-and-contracts.md) · [Companies, funds and ETFs](knowledge/companies-funds-and-etfs.md) · [Economies](knowledge/economies.md) |
 | **Start** | [Install and run](guides/GETTING_STARTED.md) · [Tutorials](tutorials/README.md) |
-| **Use** | [User guide](guides/USER_GUIDE.md) · [Query by form](guides/QUERY_BY_FORM.md) · Sharing and collaboration (console guide) · [Calc: Python on any view](guides/PYTHON_CALC.md) · [VaR guide](guides/VAR_GUIDE.md) · [VaR tutorial: from the bank to a trade](tutorials/25-var-from-the-bank-to-a-trade.md) · [Exposure guide](guides/EXPOSURE_GUIDE.md) · [Exposure tutorial: from the bank to a trade](tutorials/26-exposure-from-the-bank-to-a-trade.md) · [Groupings and analytics guide](guides/GROUPINGS_ANALYTICS_GUIDE.md) · [Groupings and analytics tutorial](tutorials/27-groupings-and-analytics.md) · [Funds and ETFs guide](guides/FUNDS_GUIDE.md) · [Funds and ETFs tutorial](tutorials/28-funds-and-etfs.md) · [Scripts, notebooks and Excel](guides/CLIENTS.md) |
+| **Use** | [User guide](guides/USER_GUIDE.md) · [Query by form](guides/QUERY_BY_FORM.md) · Sharing and collaboration (console guide) · [Calc: Python on any view](guides/PYTHON_CALC.md) · [VaR guide](guides/VAR_GUIDE.md) · [VaR tutorial: from the bank to a trade](tutorials/25-var-from-the-bank-to-a-trade.md) · [Exposure guide](guides/EXPOSURE_GUIDE.md) · [Exposure tutorial: from the bank to a trade](tutorials/26-exposure-from-the-bank-to-a-trade.md) · [Groupings and analytics guide](guides/GROUPINGS_ANALYTICS_GUIDE.md) · [Groupings and analytics tutorial](tutorials/27-groupings-and-analytics.md) · [Funds and ETFs guide](guides/FUNDS_GUIDE.md) · [Funds and ETFs tutorial](tutorials/28-funds-and-etfs.md) |
 | **BI** | [Business intelligence (Rupaka)](guides/BI_GUIDE.md) · [Datasets](guides/DATASETS.md) · [Expressions (DEL)](guides/EXPRESSIONS.md) · [Drishti SQL](guides/SQL.md) · [BI reports](guides/REPORTS.md) · [Governance](guides/BI_GOVERNANCE.md) · [Reports, export, subscriptions, alerts, embedding](guides/DISTRIBUTION.md) · [Python in BI](guides/PYTHON_BI.md) · [Analyse: slice, SQL and Python](guides/ANALYSE.md) |
 | **Data** | [Connectors](connectors/CONNECTORS.md) · [Connector files and Admin → Connectors](connectors/CONNECTOR_FILES.md) · [Databricks Delta Lake or Apache Iceberg](guides/EXTERNAL_LAKES.md) · [TLS and proxy](connectors/TLS.md) · [External data](guides/PUBLIC_DATA.md) · [Data loads](guides/DATA_LOADS.md) |
 | **Build** | [Packs](guides/PACKS.md) · [Pack developer guide](guides/PACK_DEVELOPER_GUIDE.md) · [Schema to pack](guides/SCHEMA_TO_PACK.md) · [Rachana guide: writing Sutras](guides/SUTRA_DEVELOPER_GUIDE.md) · [Rachana reference](guides/RACHANA_REFERENCE.md) · [Panels](guides/PANELS.md) · [Sutra examples](guides/examples/README.md) · [Screen designer and Build workbench](guides/SCREEN_DESIGNER.md) · [Connector developer guide](connectors/CONNECTOR_DEVELOPER_GUIDE.md) · [Developer guide](guides/DEVELOPER_GUIDE.md) · [Embedding: Drishti Elements](guides/ELEMENTS.md) |
@@ -69,12 +69,12 @@ If you will change the code, continue with [DEVELOPER_GUIDE.md](guides/DEVELOPER
 | Write or read a dataset: tables, relationships, measures, the expression language, row rules, masks, layers | [DATASETS.md](guides/DATASETS.md) |
 | Ship packs, Sutras and data to servers by copying: bundle, verify, deploy, promote, roll back | [OPERATIONALISING.md](guides/OPERATIONALISING.md) |
 | Install and run it on Windows (PowerShell, no Hadoop) | [GETTING_STARTED.md: Windows](guides/GETTING_STARTED.md#drishti-on-windows) |
-| Run and debug the server in IntelliJ IDEA and the console in PyCharm | [IDE_GUIDE.md](guides/IDE_GUIDE.md) |
-| Demo or QA on Windows with your own ENDUR files, offline | [QA_ON_WINDOWS_WITH_CUSTOM_DATA.md](guides/QA_ON_WINDOWS_WITH_CUSTOM_DATA.md) |
+| Run and debug the server in IntelliJ IDEA and the console in PyCharm | [GETTING_STARTED.md (IDE)](guides/GETTING_STARTED.md#running-from-intellij-idea-and-pycharm) |
+| Demo or QA on Windows with your own ENDUR files, offline | [qa/windows-custom-data.md](qa/windows-custom-data.md) (a QA script) |
 | Build a pack from JSON Lines, check it in CI, load data and drive the Screen Designer's review from a terminal | [CLI_GUIDE.md](guides/CLI_GUIDE.md) |
 | Find the right tool (command, script or page) for a job, load a large JSON export into a Delta lake, schedule loads and maintenance | [TOOLS.md](guides/TOOLS.md) |
 | Find your way around the top bar and its menus | [USER_GUIDE.md › The top bar](guides/USER_GUIDE.md#the-top-bar) |
-| Read Drishti from a script, a notebook or Excel with a personal API token | [CLIENTS.md](guides/CLIENTS.md) |
+| Read Drishti from a script, a notebook or Excel with a personal API token | [API_GUIDE.md (clients)](guides/API_GUIDE.md#clients-scripts-notebooks-and-excel) |
 | Run Python on the view you are looking at (`Alt+C`): re-price, recompute, pivot, chart | [PYTHON_CALC.md](guides/PYTHON_CALC.md) |
 | Open a view, and learn the command line and keys | [USER_GUIDE.md › The command line](guides/USER_GUIDE.md#the-command-line), [Keyboard](guides/USER_GUIDE.md#keyboard) |
 | List entities to pick from (`TRD MX-200000`, `CPTY north`, `TRD PRODUCT_TYPE=FX_QUANTO`) | [USER_GUIDE.md › Pick lists](guides/USER_GUIDE.md#pick-lists-when-a-command-names-several-entities) |
@@ -84,7 +84,7 @@ If you will change the code, continue with [DEVELOPER_GUIDE.md](guides/DEVELOPER
 | Find entities by value (`TRD where QUANTITY > 200m …`) | [USER_GUIDE.md › Search by value](guides/USER_GUIDE.md#search-by-value) |
 | Fill in a form instead of writing a search (`FORM trading <GO>`, Forms in the Views menu) | [QUERY_BY_FORM.md](guides/QUERY_BY_FORM.md) |
 | Choose what a panel shows with dropdowns, toggles and sliders; read a trade down to its fixings | [USER_GUIDE.md › Controls](guides/USER_GUIDE.md#controls-on-a-screen-choose-what-a-panel-shows), [A deep trade](guides/USER_GUIDE.md#a-deep-trade-legs-cashflows-and-fixings) |
-| Read what is in the world-economy pack, where it comes from and under what licence (IMF data: internal demonstrations only) | [REAL_DATA.md](guides/REAL_DATA.md) |
+| Read what is in the world-economy pack, where it comes from and under what licence (IMF data: internal demonstrations only) | [PUBLIC_DATA.md (world-economy)](guides/PUBLIC_DATA.md#the-world-economy-data-in-detail) |
 | Where external data comes from (every source, licence, internal-only flag) and refreshing or widening a pack built on it: one script a pack, with examples | [External data, PUBLIC_DATA.md](guides/PUBLIC_DATA.md) |
 | Look at a past date, or compare two dates | [USER_GUIDE.md › Business dates](guides/USER_GUIDE.md#business-dates-live-or-a-day-in-the-past), [Compare](guides/USER_GUIDE.md#compare-what-changed) |
 | See what depends on an entity (F8) | [Impact guide](guides/USER_GUIDE.md#f8--impact) |
@@ -150,7 +150,7 @@ If you will change the code, continue with [DEVELOPER_GUIDE.md](guides/DEVELOPER
 | If you want to… | Read |
 |---|---|
 | Create users, give roles and packs, read the audit log | [USER_MANAGEMENT.md](admin/USER_MANAGEMENT.md) |
-| Turn a command (FRTB, EQV, …) or a pack off for everyone, with a reason; every server of a cluster follows | [COMMANDS.md](admin/COMMANDS.md) |
+| Turn a command (FRTB, EQV, …) or a pack off for everyone, with a reason; every server of a cluster follows | [USER_MANAGEMENT.md (Functions)](admin/USER_MANAGEMENT.md#functions-func-every-command-and-turning-one-on-or-off) |
 | Define roles, or switch a pack off for everyone | [USER_GUIDE.md › Administration](guides/USER_GUIDE.md#administration) |
 | Look up any setting and its environment variable | [CONFIGURATION.md](admin/CONFIGURATION.md) |
 | Install Calc's Python runtime, offline too, and decide who may use it | [PYTHON_CALC.md › Installing](guides/PYTHON_CALC.md#12-installing-the-python-runtime), [Roles](guides/PYTHON_CALC.md#9-roles-who-may-use-calc) |
@@ -217,12 +217,12 @@ Every file under `docs/`, by folder. Documents marked *moved* are short pointers
 |---|---|
 | [GETTING_STARTED.md](guides/GETTING_STARTED.md) | you want Drishti running in ten minutes and need only the commands |
 | [GETTING_STARTED.md](guides/GETTING_STARTED.md) | you are installing for the first time and want each step explained, with what you should see |
-| [IDE_GUIDE.md](guides/IDE_GUIDE.md) | you run the server from IntelliJ IDEA and the console from PyCharm: JDK and interpreter setup, run configurations, debugging, reloading changes, tests in the IDE |
-| [QA_ON_WINDOWS_WITH_CUSTOM_DATA.md](guides/QA_ON_WINDOWS_WITH_CUSTOM_DATA.md) | you demo or QA on a Windows machine without internet, with your own ENDUR JSONL files replacing the synthetic ENDUR trades: setup, data, start, checks, a ten-page demo script |
+| [GETTING_STARTED.md (IDE)](guides/GETTING_STARTED.md#running-from-intellij-idea-and-pycharm) | you run the server from IntelliJ IDEA and the console from PyCharm: JDK and interpreter setup, run configurations, debugging, reloading changes, tests in the IDE |
+| [qa/windows-custom-data.md](qa/windows-custom-data.md) (a QA script) | you demo or QA on a Windows machine without internet, with your own ENDUR JSONL files replacing the synthetic ENDUR trades: setup, data, start, checks, a ten-page demo script |
 | [GETTING_STARTED.md: Windows](guides/GETTING_STARTED.md#drishti-on-windows) | you run Drishti on Windows: a JDK 21 or newer (production runs 21) and Python, building or copying the jar, the native Delta engine (no Hadoop, no `winutils.exe`), the PowerShell scripts, what does not work there, troubleshooting |
 | [USER_GUIDE.md](guides/USER_GUIDE.md) | you use the console: top bar, command line, pick lists, tables, views, dates, search, export, monitors, alerts, workspaces, settings, the Build workbench, administration |
 | [TROUBLESHOOTING.md](guides/TROUBLESHOOTING.md) | something is not working: each problem has what you see, how to check and the fix |
-| [CLIENTS.md](guides/CLIENTS.md) | you read Drishti from a script, a notebook or Excel: personal API tokens and scopes, the Python client, Power Query |
+| [API_GUIDE.md (clients)](guides/API_GUIDE.md#clients-scripts-notebooks-and-excel) | you read Drishti from a script, a notebook or Excel: personal API tokens and scopes, the Python client, Power Query |
 | [PYTHON_CALC.md](guides/PYTHON_CALC.md) | you run Python on a view (`Alt+C`): the `drishti` module, output, packs' snippets, roles, the security model, installing the runtime, measured sizes and speed, limits |
 | [PACKS.md](guides/PACKS.md) | you load, switch, assign or change a domain pack |
 | [COMMAND_CATALOG.md](guides/COMMAND_CATALOG.md) | you want every command in one list: the command line's own words, the packs' codes and every mnemonic, with what it does, an example, its kind of data and whether it moves to the compute model (generated) |
@@ -231,7 +231,7 @@ Every file under `docs/`, by folder. Documents marked *moved* are short pointers
 | [CLI_GUIDE.md](guides/CLI_GUIDE.md) | you work from a terminal or a pipeline: `tools/drishti.py` (`sutra`, `pack new|check|about-check|publish|install`, `data ingest|load|landed|loads`, `server packs`, `design create|check|propose|approve`), every option with real output, recipes, JSON formats, exit codes |
 | [DATA_LOADS.md](guides/DATA_LOADS.md) | your ETL has loaded a batch and Drishti should refresh, verify, check alerts, tell people and flag late data: the load API and CLI, expectations, the Data loads page, the token scope, recipes |
 | [OPERATIONALISING.md](guides/OPERATIONALISING.md) | you ship what you built to servers: bundle, verify, deploy by copying or from Admin → Packs, promote, roll back; Admin → Artifacts (install and uninstall safely) |
-| [REAL_DATA.md](guides/REAL_DATA.md) | you use or refresh the real public data in the world-economy pack: sources, licences (IMF data: internal demonstrations only), the pipeline that regenerates them |
+| [PUBLIC_DATA.md (world-economy)](guides/PUBLIC_DATA.md#the-world-economy-data-in-detail) | you use or refresh the real public data in the world-economy pack: sources, licences (IMF data: internal demonstrations only), the pipeline that regenerates them |
 | [PUBLIC_DATA.md](guides/PUBLIC_DATA.md) | the External data help page: every external source of every pack (URL, licence, internal only or not); you refresh or widen a pack built on it (worked examples on Linux and Windows): the per-pack scripts in `tools/publicdata/`, sources and licences, the internal-only rule, adding a source, Windows |
 | [BI_GUIDE.md](guides/BI_GUIDE.md) | what BI is and is not built, the BI menu and keyword, the four powers, workspace roles, items and versions, audiences, shipped files, BI settings, the CLI |
 | [tutorial 10](tutorials/10-first-bi-report.md) | build a report from scratch in the designer (cards, a map, a bar, a slicer), view, click and drill, publish, filter like Power BI, slicers across packs, a phone, two datasets in one report, relative dates, a tablet and the entity view |

@@ -82,7 +82,7 @@ production, each with real screenshots; the [guides](docs/README.md) are the ref
 - **Reports** (an entry of **Views**): a search run as you on a schedule (`business-days 18:30`) and delivered as CSV to a
   folder or an approved webhook, with your subscriptions and alerts beside it ([DISTRIBUTION.md section 0](docs/guides/DISTRIBUTION.md#0-scheduled-searches-and-the-reports-page)).
 - **API tokens** (read-only, revocable), a standard-library **Python client** and **Excel** through Power Query
-  ([CLIENTS.md](docs/guides/CLIENTS.md)).
+  ([API_GUIDE.md (clients)](docs/guides/API_GUIDE.md#clients-scripts-notebooks-and-excel)).
 
 **Business intelligence (Rūpaka)**
 - The **BI** menu and the `BI <GO>` keyword (`RUPAKA` still works): a catalogue and workspaces with roles, **data models** over
@@ -184,7 +184,7 @@ production, each with real screenshots; the [guides](docs/README.md) are the ref
 ## Try it
 
 New to Drishti? **[GETTING_STARTED.md](docs/guides/GETTING_STARTED.md)** installs and starts it from a clean machine, and
-**[tutorial 1](docs/tutorials/01-first-15-minutes.md)** takes you through your first quarter of an hour; **[IDE_GUIDE.md](docs/guides/IDE_GUIDE.md)** runs the server in IntelliJ IDEA and the console in PyCharm. The short version,
+**[tutorial 1](docs/tutorials/01-first-15-minutes.md)** takes you through your first quarter of an hour; **[GETTING_STARTED.md (IDE)](docs/guides/GETTING_STARTED.md#running-from-intellij-idea-and-pycharm)** runs the server in IntelliJ IDEA and the console in PyCharm. The short version,
 from the repository root (Java 21 or newer, production runs 21; Python 3.13, [the minimum and why](docs/guides/GETTING_STARTED.md#step-1--install-the-prerequisites), [uv](https://docs.astral.sh/uv/)):
 
 ```bash
@@ -291,14 +291,14 @@ Start with **[Install and run](docs/guides/GETTING_STARTED.md)**, then the **[tu
 |---|---|
 | you want to learn by doing | [the twenty-nine tutorials](docs/tutorials/README.md) |
 | you want it installed and running | [GETTING_STARTED.md](docs/guides/GETTING_STARTED.md) |
-| you run the server in IntelliJ IDEA and the console (UX) in PyCharm | [IDE_GUIDE.md](docs/guides/IDE_GUIDE.md) |
+| you run the server in IntelliJ IDEA and the console (UX) in PyCharm | [GETTING_STARTED.md (IDE)](docs/guides/GETTING_STARTED.md#running-from-intellij-idea-and-pycharm) |
 | you build, check, load and ship packs and Sutras from a terminal or a pipeline (`tools/drishti.py`) | [CLI_GUIDE.md](docs/guides/CLI_GUIDE.md) |
 | your ETL has loaded a batch and Drishti should refresh, verify, check alerts, tell people and flag late data | [DATA_LOADS.md](docs/guides/DATA_LOADS.md) |
 | you ship what you built to servers by copying: bundles, checksums, promotion, rollback (no API) | [OPERATIONALISING.md](docs/guides/OPERATIONALISING.md) |
 | you use the console | [USER_GUIDE.md](docs/guides/USER_GUIDE.md) |
 | you use or build business intelligence (Rūpaka) | [BI_GUIDE.md](docs/guides/BI_GUIDE.md), [tutorial 10](docs/tutorials/10-first-bi-report.md), [DATASETS.md](docs/guides/DATASETS.md), [REPORTS.md](docs/guides/REPORTS.md), [PYTHON_BI.md](docs/guides/PYTHON_BI.md), [ANALYSE.md](docs/guides/ANALYSE.md), [BI_GUIDE.md section 29](docs/guides/BI_GUIDE.md#29-ai-in-bi-report-from-words-ask-the-data-explain-this-number), [BI_GOVERNANCE.md](docs/guides/BI_GOVERNANCE.md), [REPORTS.md section 23](docs/guides/REPORTS.md) |
-| you run on Windows, or read from a script or Excel | [Install and run: Windows](docs/guides/GETTING_STARTED.md#drishti-on-windows), [CLIENTS.md](docs/guides/CLIENTS.md) |
-| you use or refresh the real public data (world-economy) | [REAL_DATA.md](docs/guides/REAL_DATA.md) |
+| you run on Windows, or read from a script or Excel | [Install and run: Windows](docs/guides/GETTING_STARTED.md#drishti-on-windows), [API_GUIDE.md (clients)](docs/guides/API_GUIDE.md#clients-scripts-notebooks-and-excel) |
+| you use or refresh the real public data (world-economy) | [PUBLIC_DATA.md (world-economy)](docs/guides/PUBLIC_DATA.md#the-world-economy-data-in-detail) |
 | you define connectors as files, with TLS or a proxy | [CONNECTOR_FILES.md](docs/connectors/CONNECTOR_FILES.md), [TLS.md](docs/connectors/TLS.md), [the proxy](docs/connectors/TLS.md#outbound-http-proxy-for-connectors-ai-providers-and-mcp-servers) |
 | you load, assign or install a domain pack | [PACKS.md](docs/guides/PACKS.md) |
 | you build a domain pack | [PACK_DEVELOPER_GUIDE.md](docs/guides/PACK_DEVELOPER_GUIDE.md) |
@@ -311,7 +311,7 @@ Start with **[Install and run](docs/guides/GETTING_STARTED.md)**, then the **[tu
 | you connect your own data | [CONNECTORS.md](docs/connectors/CONNECTORS.md) (a section per plugin), [CONNECTOR_DEVELOPER_GUIDE.md](docs/connectors/CONNECTOR_DEVELOPER_GUIDE.md) and the per-connector documents |
 | you need a setting's name, default and environment variable | [CONFIGURATION.md](docs/admin/CONFIGURATION.md) |
 | you manage users, roles, single sign-on, tokens or the access log | [USER_MANAGEMENT.md](docs/admin/USER_MANAGEMENT.md) |
-| you script against it, from Python, Excel or curl | [CLIENTS.md](docs/guides/CLIENTS.md), [API_GUIDE.md](docs/guides/API_GUIDE.md) |
+| you script against it, from Python, Excel or curl | [API_GUIDE.md (clients)](docs/guides/API_GUIDE.md#clients-scripts-notebooks-and-excel), [API_GUIDE.md](docs/guides/API_GUIDE.md) |
 | you run it in production | [OPERATIONS.md](docs/admin/OPERATIONS.md), [PERFORMANCE.md](docs/admin/PERFORMANCE.md), [LIVE.md](docs/architecture/LIVE.md) |
 | you run several servers as one cluster (Drishti\*net) | [NET.md](docs/admin/NET.md), [tutorial 19](docs/tutorials/19-a-cluster-of-three.md), [DRISHTI_NET.md](docs/architecture/DRISHTI_NET.md) |
 | you serve millions of entities a day for years | [DELTA_CONNECTOR.md](docs/connectors/DELTA_CONNECTOR.md), [POSTGRES_CONNECTOR.md](docs/connectors/POSTGRES_CONNECTOR.md), [AEROSPIKE_CONNECTOR.md](docs/connectors/AEROSPIKE_CONNECTOR.md) |

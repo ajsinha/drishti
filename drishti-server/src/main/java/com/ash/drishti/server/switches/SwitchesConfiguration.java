@@ -27,7 +27,7 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
 /**
- * The commands' and packs' switches (Admin → Commands, docs/admin/COMMANDS.md): the ledger (the identity database) gives the access checks
+ * The commands' and packs' switches (Admin → Commands, docs/admin/USER_MANAGEMENT.md): the ledger (the identity database) gives the access checks
  * which commands are off, names its changes after the Drishti*net node, is spread by gossip, and every change tells open consoles.
  */
 @Configuration(proxyBeanMethods = false)

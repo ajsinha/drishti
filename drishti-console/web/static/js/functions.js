@@ -13,7 +13,7 @@
  *
  * See the LICENSE file in the root of this repository for the full terms.
  */
-/* Functions, FUNC <GO> (docs/admin/COMMANDS.md): the command directory, server-rendered. For everyone: Find (every word must appear in a
+/* Functions, FUNC <GO> (docs/admin/USER_MANAGEMENT.md): the command directory, server-rendered. For everyone: Find (every word must appear in a
    command's code, title, description, kind or its pack's name and title; FUNC <words> arrives with them typed) and the Pack picker, kept in
    the address as ?q= so a reload or a shared link shows the same list. For an administrator (the page carries the switches): a row per
    command with the Everyone column and a pack switch; ticking a box only records a change: changes are batched (Undo takes back the last

@@ -19,7 +19,7 @@
 .DESCRIPTION
   Runs tools/pvgen/intraday.py with the console's Python (drishti-console\.venv\Scripts\python.exe, else python on the PATH),
   passing every argument on. Pure Python: no .exe of its own. Writes JSONL only (one JSON object per line, the contract a
-  pricing system sends). Guide: docs\guides\VAR_GUIDE.md section 15.12; on Windows: docs\guides\QA_ON_WINDOWS_WITH_CUSTOM_DATA.md.
+  pricing system sends). Guide: docs\guides\VAR_GUIDE.md section 15.12; on Windows: docs\qa\windows-custom-data.md.
 .EXAMPLE
   .\tools\windows\pvgen-intraday.ps1 --batches 20 --trades-per-batch 15
 .EXAMPLE

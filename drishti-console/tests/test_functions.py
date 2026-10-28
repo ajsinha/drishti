@@ -12,7 +12,7 @@
 #
 # See the LICENSE file in the root of this repository for the full terms.
 
-"""Functions, FUNC (docs/admin/COMMANDS.md): the command directory for everyone (a user sees only the commands that are on, no switches; an
+"""Functions, FUNC (docs/admin/USER_MANAGEMENT.md): the command directory for everyone (a user sees only the commands that are on, no switches; an
 administrator sees the matrix: commands × Everyone (no role columns until per-role access is built), off commands, the batch sent with its reason, the history and impact
 passed through); the reserved word FUNC; /admin/commands redirecting; and the "not active" page a command an administrator turned off
 answers with, by its page or the typed command; links and panels that read it say so."""

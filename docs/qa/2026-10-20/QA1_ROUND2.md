@@ -193,7 +193,7 @@ days`; `fields=TRADER_ID` shows the column. Still `DRS-1001`: QA1-208.
 **Actual:** `FileNotFoundError: … data/testdata/trades/endur/snapshot-2026-09-22.jsonl.gz`. The sixty-day test data (`546aada4b`, today 09:00)
 keeps only `snapshot-2026-07-08`; `trades.py` line 167 still opens `snapshot-2026-09-22`. `--dry-run` passes because it never opens the
 file. The same stale name is in the examples of `tools/drishti.py` (line 1046, `pack make`), `tools/packmake.py` line 18, `tools/authoring.py`
-line 40, `data/testdata/README.md` lines 244 and 249, `docs/guides/IDE_GUIDE.md` line 258 and `docs/guides/TOOLS.md` lines 145, 164, 220:
+line 40, `data/testdata/README.md` lines 244 and 249, `docs/guides/GETTING_STARTED.md` line 258 and `docs/guides/TOOLS.md` lines 145, 164, 220:
 copied as written, each fails the same way.
 **Reproduced:** twice (the 60-day run at 09:58, the small run at 10:27). Round 2 used a scratch copy with `snapshot-2026-07-08`.
 

@@ -30,7 +30,7 @@
   .\tools\windows\start-server.ps1 -Stop
 .EXAMPLE
   powershell -ExecutionPolicy Bypass -File tools\windows\start-server.ps1 -DemoLakes
-  The offline demo of docs\guides\QA_ON_WINDOWS_WITH_CUSTOM_DATA.md: what the IntelliJ run configuration
+  The offline demo of docs\qa\windows-custom-data.md: what the IntelliJ run configuration
   'Drishti server (demo lakes)' sets (the ten packs of the demo lakes: the seven of the server's default, us-equities, gleif and funds; samples off, offline mode, sign-in on with the
   drishti-dev-admin account, a 4 GB heap), without IntelliJ.
 #>

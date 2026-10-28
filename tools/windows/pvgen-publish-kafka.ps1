@@ -19,7 +19,7 @@
 .DESCRIPTION
   Runs tools/pvgen/publish_kafka.py with the console's Python (drishti-console\.venv\Scripts\python.exe, else python on the PATH),
   passing every argument on. Pure Python: no .exe of its own. Writes JSONL only (one JSON object per line, the contract a
-  pricing system sends). Guide: docs\guides\VAR_GUIDE.md section 15.12; on Windows: docs\guides\QA_ON_WINDOWS_WITH_CUSTOM_DATA.md.
+  pricing system sends). Guide: docs\guides\VAR_GUIDE.md section 15.12; on Windows: docs\qa\windows-custom-data.md.
 .EXAMPLE
   .\tools\windows\pvgen-publish-kafka.ps1 --bootstrap localhost:9092 --rate 5 --seconds 60
 .EXAMPLE

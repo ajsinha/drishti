@@ -20,7 +20,7 @@ import com.ash.drishti.identity.SwitchLedger;
 import java.util.Optional;
 
 /**
- * The commands administrators turned off (Admin → Commands, docs/admin/COMMANDS.md), read from the switches ledger. A command is its
+ * The commands administrators turned off (Admin → Commands, docs/admin/USER_MANAGEMENT.md), read from the switches ledger. A command is its
  * mnemonic ({@code FRTB}), which names one kind ({@code frtb-sensitivity}); when the command is off its kind is not active anywhere:
  * {@link PackAccess#kindAllowed} is false for everyone, so every surface that asks {@link Entitlements#mayOpen} leaves it out, and
  * {@link Entitlements#requireOpen} answers {@code 403 DRS-1016}. Kinds no mnemonic names are never off. Lock-free: two map lookups.

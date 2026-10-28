@@ -27,7 +27,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 /**
- * Functions (FUNC, docs/admin/COMMANDS.md): every command the caller can use, grouped by pack, with what it does and an example. For
+ * Functions (FUNC, docs/admin/USER_MANAGEMENT.md): every command the caller can use, grouped by pack, with what it does and an example. For
  * everyone: a command is listed only when the caller may open its kind now ({@link Entitlements#mayOpen}: the role allows it, its pack is
  * switched on and active for the caller, and no administrator turned the command off). Nothing about the switches themselves (who turned
  * what off, when, why) is here: that is the administrators' {@code /api/v1/admin/commands}.
