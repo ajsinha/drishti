@@ -24,7 +24,7 @@ About 15 minutes, plus the first build (a few minutes, once) and the demo lakes 
 
 ## Before you start
 
-You need a Linux, macOS or Windows machine with Java 21 or newer, Python 3.11 or newer, [uv](https://docs.astral.sh/uv/) and git. Nothing else: no database, no
+You need a Linux, macOS or Windows machine with Java 21 or newer, Python 3.13 ([the minimum](../guides/GETTING_STARTED.md#step-1--install-the-prerequisites)), [uv](https://docs.astral.sh/uv/) and git. Nothing else: no database, no
 Docker. On Windows follow [GETTING_STARTED.md (Windows)](../guides/GETTING_STARTED.md#drishti-on-windows) for the same steps in PowerShell.
 
 These tutorials run on the **quick-start environment** of [data/testdata/README.md](../../data/testdata/README.md): the seven packs (`core`, `market-data`, `trading`,

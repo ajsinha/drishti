@@ -93,7 +93,7 @@ You need a Linux or macOS machine with the tools below. On Windows, Drishti runs
 | Tool | Version | Why | Check with |
 |---|---|---|---|
 | OpenJDK | **21** or newer (production runs 21) | builds and runs the server | `java -version` |
-| Python | 3.11 or newer (3.13 recommended) | runs the console and the command-line tools | `python3 --version` |
+| Python | **3.13** (the version CI tests, the Docker images run and `uv venv --python 3.13` installs); the floor is **3.10**: `drishti.py doctor` fails below it and FastAPI, Uvicorn and deltalake need it, but 3.10 to 3.12 are not tested. This row is the one statement of the Python version; other documents link here | runs the console and the command-line tools | `python3 --version` |
 | uv | any recent (**recommended**) | makes the console's Python environment; works where `python3 -m venv` cannot | `uv --version` |
 | git | any | downloads the code | `git --version` |
 | Docker | optional | only to run everything in containers, or the PostgreSQL/Kafka/… extras | `docker --version` |
@@ -666,7 +666,7 @@ the default engine.
 | Tool | Version | Install with | Check with |
 |---|---|---|---|
 | JDK | **21 or newer; 21 is the production target** (Temurin or any OpenJDK) | `winget install EclipseAdoptium.Temurin.21.JDK`, or the MSI from adoptium.net | `java -version` shows `openjdk version "21…` (or 25…) |
-| Python | 3.11 or newer | `winget install Python.Python.3.13`, or python.org (tick *Add python.exe to PATH*) | `python --version` |
+| Python | 3.13 ([the minimum](#step-1--install-the-prerequisites)) | `winget install Python.Python.3.13`, or python.org (tick *Add python.exe to PATH*) | `python --version` |
 | uv | optional, recommended | `winget install astral-sh.uv` | `uv --version` |
 | git | to build from source | `winget install Git.Git` | `git --version` |
 

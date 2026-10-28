@@ -349,13 +349,14 @@ The console **listens** on every interface of its task (`0.0.0.0`, so the load b
 
 ### 8.1 Buckets
 
-| Bucket | Content | Settings |
-|---|---|---|
-| `<org>-drishti-<env>-lake` | the lakes (Delta Lake tables; Iceberg; files) | versioning **on** with noncurrent versions expired after 14 days (a safety net against a wrong delete; Delta keeps its own history; [AWS_DELTA_LAKE.md section 5.1](AWS_DELTA_LAKE.md#51-buckets)), SSE-KMS with `alias/drishti-lake`, Block Public Access, access logging to the logs bucket, lifecycle tiers by business date (`deploy/aws/delta-lake/setup-lifecycle.sh`; [SUPER_SCALE.md section 15](SUPER_SCALE.md#15-seven-years-storage-tiers-and-retention)) |
-| `<org>-drishti-<env>-artifacts` | pack bundles, release artifacts | versioning on, SSE-KMS |
-| `<org>-drishti-<env>-logs` | S3 and load balancer access logs | lifecycle: expire after the bank's log retention |
+The buckets (`<org>-drishti-<env>-lake`, `-landing` and `-logs`), their protections, retention and lifecycle are described once, in
+[AWS_DELTA_LAKE.md section 5.1](AWS_DELTA_LAKE.md#51-buckets), as `deploy/aws/delta-lake/setup-buckets.sh` creates them. A site that also
+keeps pack bundles and release artifacts in S3 adds its own `<org>-drishti-<env>-artifacts` bucket (versioning on, SSE-KMS); no script
+creates it.
 
 ### 8.2 How Drishti reads S3
+
+The prefixes and tables under the lake bucket: [AWS_DELTA_LAKE.md section 5.2](AWS_DELTA_LAKE.md#52-prefixes-and-tables).
 
 - The Delta Lake native engine, Iceberg and the S3 connector take `s3://` roots in their connector files
   (`/opt/drishti/config/connectors/*.yaml`, on EFS).
@@ -368,7 +369,10 @@ The console **listens** on every interface of its task (`0.0.0.0`, so the load b
 plugin: delta
 kinds: [trade]
 settings:
-  root: s3://acme-drishti-prod-lake/trades/endur
+  root: s3://acme-drishti-prod-lake/lake        # DRISHTI_DELTA_ROOT: s3://LAKE_BUCKET/LAKE_PREFIX
+  domain: trading
+  union: true
+  table: {trade: trade_endur}                  # read from s3://acme-drishti-prod-lake/lake/trading/trade_endur
   engine: native
   s3.region: eu-west-2
 ```

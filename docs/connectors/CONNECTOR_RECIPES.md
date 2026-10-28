@@ -110,10 +110,10 @@ kinds: [trade]
 settings: { root: "${DRISHTI_DELTA_ROOT:${drishti.data.dir:./data}/delta}", domain: trading }
 ```
 
-**Layout.** A table per kind, `<root>/<domain>/<kind>/`, rows `(id, doc)` plus the pack's promoted columns,
+**Layout.** A table per kind, `<root>/<domain>/<kind>/` (or the folder `table.<kind>` names, as the trading pack's `trade_endur`; [DELTA_CONNECTOR.md section 3](DELTA_CONNECTOR.md#3-what-is-on-disk)), rows `(id, doc)` plus the pack's promoted columns,
 partitioned by `business_date`; `root` may be `s3a://bucket/lake`. **Loader:** `tools/load-delta.sh [root] [--trades N
 --days D]` for samples; `tools/lake/maintain.py` keeps it bounded. **Limits:** *known at* resolves against the log
-files' modification times (copy lakes with `cp -p`); codecs other than Snappy and ZSTD are refused with a clear error.
+files' modification times (copy lakes with `cp -p`); BROTLI and LZO pages are refused with a clear error (every codec per engine: [DELTA_CONNECTOR.md section 16](DELTA_CONNECTOR.md#16-engines-native-and-hadoop)).
 → full reference: [DELTA_CONNECTOR.md](DELTA_CONNECTOR.md)
 
 ### `iceberg`

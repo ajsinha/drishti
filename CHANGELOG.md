@@ -83,6 +83,30 @@
 - **Test: `VarShardClusterTest`'s join no longer depends on the random node ids.** With three members and two owners per shard the third
   member owned neither shard about one run in nine (seen once in five runs); its node id is now fixed and S1 pinned to it.
 
+### Documentation
+
+- **Contradictions between documents fixed** (the 2.9.6 documentation audit, C1 to C20; the structural merges come later, after review).
+  Each fact now has one home and the others link to it:
+  - A connector's `kinds:` is the exact list it serves: it adds (consulted after the routed connector) **and** narrows (a kind missing
+    from it is not served, even when a route sends it there). Stated once in CONNECTOR_FILES.md section 6, from `ConnectorInstance` and
+    `SourceRouter.candidates`; PACKS.md, PACK_DEVELOPER_GUIDE.md and CONNECTORS.md (whose precedence table is now a link) link there.
+  - Row-group size stated once in DELTA_CONNECTOR.md (*Row-group size*): `lake build`, `lake demo` and the parallel loader size Delta
+    row groups in bytes (`DRISHTI_LAKE_ROW_GROUP_KB`, 256 KB; 1 MB on AWS); `row-group-rows` applies only to the Python writers. Its
+    on-disk tree redrawn with `trade_endur`, `trade_calypso`, `trade_murex` and `PRODUCT_TYPE=` folders; SCALE_STRATEGY.md,
+    AWS_DELTA_LAKE.md, PACK_MODELLING_GUIDE.md, CONFIGURATION.md and CONNECTOR_RECIPES.md (which also no longer says only Snappy and ZSTD
+    are read) link to it.
+  - AWS_DEPLOYMENT.md section 8 points to AWS_DELTA_LAKE.md section 5 for buckets and prefixes, with the example root corrected.
+  - DRISHTI_ICEBERG.md: `native` is the default (since 2.6.0) and `iceberg-external` refuses `engine: library`.
+  - The Delta settings catalogue (`plugin-settings.yaml`, which the plugin README is generated from) gives the code's defaults and
+    meanings (`cache-mb` and the other caches share the heap when not set; `lookback-days`; `engine`; `lz4-decoder`).
+  - CONFIGURATION.md: connector settings go in connector files (`drishti.sources.connectors` is deprecated); the `file` layout names
+    `<root>/<domain>/<date>/<kind>.jsonl`.
+  - docs/README.md's help-centre map matches `help.yaml` (64 pages in 7 sections), checked by `test_docs_help_map.py`; the help entry
+    *Scripts, notebooks and Excel* had parsed as *Scripts* (an unquoted comma).
+  - The Python version stated once (GETTING_STARTED.md step 1: 3.13; the floor 3.10, untested); eleven packs in PACKS.md (compute-demo
+    added); the compose service `server`; the runbook's `trade-endur`, `trade-calypso`, `trade-murex`; twelve Sutra examples; the
+    committed test data about 138 MB; ANALYSE.md's sandbox link.
+
 ## 2.9.5 — Iceberg as a full alternative to Delta; VaR hierarchies by columns (limit letters); connector files that upgrade themselves safely (2026-10-28)
 
 ### Hierarchies

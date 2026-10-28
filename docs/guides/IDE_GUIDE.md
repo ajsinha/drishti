@@ -20,7 +20,7 @@ Drishti has two programs, and each has an IDE that suits it:
 | Program | Language | IDE | Starts | Listens on |
 |---|---|---|---|---|
 | **Server** (`drishti-server`) | Java 21 or newer (production runs 21; 25 also supported), Spring Boot 3.5 | IntelliJ IDEA (Community or Ultimate) | `com.ash.drishti.server.DrishtiApplication` | `http://127.0.0.1:18480` |
-| **Console** (the UX, `drishti-console/`) | Python 3.11 or newer, FastAPI | PyCharm (Community or Professional) | `drishti-console/run_drishti_web.py` | `http://127.0.0.1:17480` |
+| **Console** (the UX, `drishti-console/`) | Python 3.13 ([the minimum](GETTING_STARTED.md#step-1--install-the-prerequisites)), FastAPI | PyCharm (Community or Professional) | `drishti-console/run_drishti_web.py` | `http://127.0.0.1:17480` |
 
 Start the server first, then the console: the console calls the server for everything it shows. You can use one IDE for
 both (IntelliJ IDEA Ultimate with the Python plugin runs the console too); the settings below are the same.
@@ -33,7 +33,7 @@ For the command-line way to build and run, see [GETTING_STARTED.md](GETTING_STAR
 | You need | Version | Check |
 |---|---|---|
 | A JDK (not only a JRE) | **21 or newer**, any vendor: OpenJDK, Oracle, Temurin, Corretto…; Java 21 is the production target | `java -version` and `javac -version` |
-| Python | 3.11 or newer | `python3 --version` |
+| Python | 3.13 ([the minimum](GETTING_STARTED.md#step-1--install-the-prerequisites)) | `python3 --version` |
 | The console's virtual environment | `drishti-console/.venv` | `ls drishti-console/.venv/bin/python` |
 | Docker (only for some tests) | any recent | `docker --version` |
 
@@ -91,7 +91,7 @@ nothing to type. Every one uses `$PROJECT_DIR$` (the repository root), the proje
 | **Drishti server (QA profile)** | The same, with **its own data folder `data/qa/data`** (git-ignored) so QA never touches `./data` or another stack. | **18580** |
 | **Drishti server (debug-friendly)** | The QA profile with sign-in **off**, DEBUG logging for `com.ash.drishti` and `-Xmx1g`: for stepping through code without logging in (pair it with a console whose sign-in is off too). | 18580 |
 | **Drishti build server jar** | Maven: `package -DskipTests -pl drishti-server -am`; produces `drishti-server/target/drishti-server-<version>-exec.jar`. | |
-| **Build demo lakes** (PyCharm) | `drishti.py lake demo`: the seven packs' Delta lakes under `data/delta`, sixty business days, from the committed test data ([data/testdata/README.md](../../data/testdata/README.md)); about 15 minutes and 2.2 GB; the sixty days end on today's business date. Then start **Drishti server (demo lakes)**. | |
+| **Build demo lakes** (PyCharm) | `drishti.py lake demo`: the seven packs' Delta lakes under `data/delta`, sixty business days, from the committed test data ([data/testdata/README.md](../../data/testdata/README.md)); about 15 minutes and 3.4 GB ([measured](../connectors/DEMO_DATA.md)); the sixty days end on today's business date. Then start **Drishti server (demo lakes)**. | |
 | **Drishti server (demo lakes)** | **Drishti server** with the samples off (`DRISHTI_DEMO_ENABLED=false`), so every page reads the demo lakes, and `-Xmx4g` (15,000 trades a day over sixty days and the BI tables of them). | 18480 |
 | **QA pack make (from JSON)**, **QA lake build (big JSON to Delta)**, **QA server smoke**, **QA doctor** (PyCharm) | The command-line tools of [CLI_GUIDE.md](CLI_GUIDE.md) as Python run configurations in `drishti-console/run-configs/`. Edit **Parameters** to point at your file (see section 6). | against 18580 |
 
@@ -168,7 +168,7 @@ reopen: IntelliJ on the root, PyCharm on `drishti-console/`.
 **Settings → Project → Python Interpreter → Add Interpreter → Add Local Interpreter**:
 
 - **Existing**: pick `drishti-console/.venv/bin/python` (Windows: `drishti-console\.venv\Scripts\python.exe`), created in §1; or
-- **Virtualenv → New**: location `drishti-console/.venv`, base interpreter Python 3.11 or newer; then in PyCharm's terminal
+- **Virtualenv → New**: location `drishti-console/.venv`, base interpreter Python 3.13; then in PyCharm's terminal
   `pip install -r drishti-console/requirements.txt -r drishti-console/requirements-test.txt`.
 
 ### 4.3 The run configurations (already in the repository)

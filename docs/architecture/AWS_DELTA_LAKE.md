@@ -376,7 +376,7 @@ table's (`the columns differ from the target's (new [...], missing [...], other 
 | Setting | Value | Set by | Why |
 |---|---|---|---|
 | Rows per file | `layout.<kind>.file-rows` (250,000) | the pack | few files per day, each large enough for S3 (hundreds of MB) |
-| Row group | **1 MB** (`LAKE_ROW_GROUP_KB=1024` → `DRISHTI_LAKE_ROW_GROUP_KB`; the writer's default is 256 KB) | `deploy/aws/env` | a single read fetches and decodes one row group: on S3 each GET costs 10–30 ms to the first byte, so 1 MB balances bytes moved against GETs; the page index narrows it further (`DRISHTI_LAKE_PAGE_KB`, 64) |
+| Row group | **1 MB** on AWS (`LAKE_ROW_GROUP_KB=1024` → `DRISHTI_LAKE_ROW_GROUP_KB`; every writer's sizes: [DELTA_CONNECTOR.md, Row-group size](../connectors/DELTA_CONNECTOR.md#row-group-size)) | `deploy/aws/env` | a single read fetches and decodes one row group: on S3 each GET costs 10–30 ms to the first byte, so 1 MB balances bytes moved against GETs; the page index narrows it further (`DRISHTI_LAKE_PAGE_KB`, 64) |
 | Compression | Snappy (Drishti's Java writer and delta-rs) | the writer | the native engine also reads ZSTD, GZIP and LZ4_RAW |
 | Statistics | `id`, `business_date`, promoted columns | `lake build` | file and row-group skipping without documents in the log |
 | Checkpoint | every 10 commits (`delta.checkpointInterval`, set by `lake publish` on a new table) and after every maintenance run | `lake publish`, `lake maintain` | a reader replays the last checkpoint plus at most a few commits |

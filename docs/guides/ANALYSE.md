@@ -19,7 +19,7 @@
 apply), and work on it three ways: **Slice** (a drag-and-drop pivot), **SQL** (cells over the extract) and **Python** (pandas cells, with charts). You save the work as a **notebook**
 (a BI item with versions and review like any other) and **promote** what is good: a Python cell becomes a Python Measure or Visual draft, a slice or a SQL cell becomes a **visual in a new or an existing report draft**.
 **Nothing runs in your browser** (wave B, 2.3.0): the Slice is worked out by the console, SQL is Drishti SQL run by the server over the model, Python runs in
-the console's sandbox ([section 13](#13-in-the-browser-duckdb-wasm)). The page asks and draws. A **Profile** tab (2.4.0, [section 15](#15-profile)) shows
+the console's sandbox ([PYTHON_BI.md section 7](PYTHON_BI.md#7-the-sandbox-exactly)). The page asks and draws. A **Profile** tab (2.4.0, [section 15](#15-profile)) shows
 every column of the extract; your own Python **in the browser** is the [Python console](#16-the-browser-python-console) (2.4.0), which is not a BI page.
 
 This is the reference. A walk-through is [tutorial 14](../tutorials/14-python-and-analyse.md); the design is [RUPAKA.md](../architecture/RUPAKA.md) section 20.9; the quant engine behind

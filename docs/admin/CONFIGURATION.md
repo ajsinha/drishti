@@ -2208,8 +2208,13 @@ drishti:
 
 ## Connector settings, plugin by plugin
 
-These go under `drishti.sources.plugins.<plugin>.settings` (single instance) or
-`drishti.sources.connectors.<name>.settings` (named instance). Every plugin takes `source-name`, the name shown
+A connector's settings go in its **connector file**, `config/connectors/<name>.yaml`, under `settings:`
+([CONNECTOR_FILES.md](../connectors/CONNECTOR_FILES.md)); each plugin's generated README lists every setting it reads. A plugin running
+under its own name (the demo plugin) takes them under `drishti.sources.plugins.<plugin>.settings`. Named connectors under
+`drishti.sources.connectors.<name>.settings` in `application.yaml` still start but are **deprecated**: the server logs a warning naming the
+file to write, and they override a file setting by setting until moved
+([CONNECTOR_FILES.md section 11](../connectors/CONNECTOR_FILES.md#11-moving-off-applicationyaml-and-the-old-data-source-override)). The
+tables below use the same keys either way. Every plugin takes `source-name`, the name shown
 in provenance and health (default: the connector's name, or the plugin's name). Writing a plugin of your own is
 described in [CONNECTOR_DEVELOPER_GUIDE.md](../connectors/CONNECTOR_DEVELOPER_GUIDE.md).
 
@@ -2221,17 +2226,15 @@ demo). The packs set it for the trading stream (`DRISHTI_STREAM_STALE_AFTER`, de
 feeds (`4d`, which covers a weekend and a holiday).
 
 ```yaml
-drishti:
-  sources:
-    connectors:
-      trading-stream:
-        settings:
-          stale-after: 5m        # trades arrive all day: five quiet minutes means something is wrong
+# config/connectors/trading-stream.yaml
+plugin: kafka
+settings:
+  stale-after: 5m        # trades arrive all day: five quiet minutes means something is wrong
 ```
 
 ### `delta` — Delta Lake
 
-Layout: `<root>/<domain>/<kind>/business_date=yyyy-MM-dd/` holding `(id, doc)` rows.
+Layout: `<root>/<domain>/<kind>/business_date=yyyy-MM-dd/` (or the folder `table.<kind>` names) holding `(id, doc)` rows and the promoted columns; the on-disk tree and the row-group sizes are in [DELTA_CONNECTOR.md section 3](../connectors/DELTA_CONNECTOR.md#3-what-is-on-disk).
 
 | Setting | Default | Meaning |
 |---|---|---|
@@ -2244,7 +2247,7 @@ Layout: `<root>/<domain>/<kind>/business_date=yyyy-MM-dd/` holding `(id, doc)` r
 | `id-column` / `doc-column` / `date-column` | `id` / `doc` / `business_date` | Column names. |
 | `refresh-seconds` | `10` | How often each table's latest version is checked. |
 | `cache-mb` | not set: shared, 5 % of the heap | Whole days kept in memory, by size, for small tables that are not laid out. |
-| `layout.<kind>.columns` | none | Document paths stored as columns beside the document (see [PACK_DEVELOPER_GUIDE.md](../guides/PACK_MODELLING_GUIDE.md#large-kinds-the-lake-layout)); searches, pick lists, derived kinds and impact read them instead of documents. `layout.<kind>.sort-by`, `file-rows`, `row-group-rows` tell the writers how to lay the table out. |
+| `layout.<kind>.columns` | none | Document paths stored as columns beside the document (see [PACK_DEVELOPER_GUIDE.md](../guides/PACK_MODELLING_GUIDE.md#large-kinds-the-lake-layout)); searches, pick lists, derived kinds and impact read them instead of documents. `layout.<kind>.sort-by`, `file-rows`, `row-group-rows` tell the writers how to lay the table out ([which writer honours which](../connectors/DELTA_CONNECTOR.md#row-group-size)). |
 | `id-map-mb` | not set: shared, 20 % of the heap | Each day's ids and the file each is in, read from the id column alone, kept by size. |
 | `doc-cache-mb` | not set: shared, 5 % of the heap | Single documents read recently. |
 | `doc-disk-cache.enabled` | `true` | One RocksDB per connector (its own folder, files and compactions; compacted hourly, so expired files go without writes; a cache that cannot open is skipped with a WARN and tried again every 30 s for 10 minutes). A second tier for single documents, on disk (RocksDB) under `doc-disk-cache.dir` (default `<data dir>/cache/<connector>/docs`): a document read once is answered without decompressing its Parquet pages, also after a restart. Keyed by the table version it was read from, so never stale. Measured on 362,804 ENDUR trades: 17 % less CPU per read for documents already read (2026-10-18). |
@@ -2318,7 +2321,7 @@ TLS for `jdbc:postgresql://`: the shared [`tls.*`](#tls--tls-for-connectors) set
 
 ### `file` — JSON or CSV files on disk
 
-Layout: `<root>/<kind>.jsonl` (JSON Lines, one entity a line), `<root>/<kind>/<id>.json` (or `.csv`, deprecated), and dated `<root>/<yyyy-MM-dd>/<kind>/<id>.json`.
+Layout: `<root>/<domain>/<yyyy-MM-dd>/<kind>.jsonl` (JSON Lines, one entity a line; the main layout), undated `<root>/<domain>/<kind>.jsonl` (the same for every date), and the older one file per entity, `<root>/<kind>/<id>.json` (or `.csv`, deprecated) and dated `<root>/<yyyy-MM-dd>/<kind>/<id>.json` ([FILE_CONNECTOR.md section 2](../connectors/FILE_CONNECTOR.md#2-the-layout)).
 
 | Setting | Default | Meaning |
 |---|---|---|

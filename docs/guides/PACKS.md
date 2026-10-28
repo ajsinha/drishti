@@ -94,7 +94,7 @@ Words used below:
 
 ## The packs that ship
 
-Ten packs ship in `config/packs/`; seven are on by default (`drishti.packs.enabled`, below) and `us-equities`, `gleif` and `funds` are turned on by adding them to `DRISHTI_PACKS`. Each row lists the
+Eleven packs ship in `config/packs/`; seven are on by default (`drishti.packs.enabled`, below), `us-equities`, `gleif` and `funds` are turned on by adding them to `DRISHTI_PACKS`, and `compute-demo` (a [sample pack](#sample-packs) for reactive connectors) likewise. Each row lists the
 pack, its code (typed alone it opens the pack's overview), what it inherits from, its mnemonics, and commands to try. The
 example ids are real: they are in the pack's `samples/` and in the [demo lakes](#the-demo-lakes-where-the-seven-packs-read-their-data).
 
@@ -110,6 +110,7 @@ example ids are real: they are in the pack's `samples/` and in the [demo lakes](
 | `us-equities` | `USEQS` | — | `USEQ` US listed company · `IDX` index members · `SIC` SIC sector · `EDGAR` filings browser · `FILING` SEC filing · `FACT` financial fact · `PXH` price history (real public data on the Dow 30, Nasdaq-100 and S&P 500 companies: SEC EDGAR, GLEIF, Wikidata; **off by default**, add it to `DRISHTI_PACKS`; prices are live only, off and for internal use: [its guide](../../config/packs/us-equities/guides/us-equities.md)) | `USEQ AAPL`, `IDX SP500` |
 | `gleif` | `GLEIF` | — | `LEI` legal entity · `LEIG` ownership group · `LEIR` parent relationship · `LEIC` country · `LEIM` ISIN, BIC or MIC to LEI (real public data from GLEIF, CC0: the ownership groups of the us-equities companies and of the large banks, insurers, asset managers and market infrastructures, at most 50 entities a group; **off by default**, add it to `DRISHTI_PACKS`; with `us-equities` on, a company and its LEI record link both ways: [its guide](../../config/packs/gleif/guides/gleif.md)) | `LEI 8I5DZWZKVSZI1NUHU748`, `LEIG ALL` |
 | `funds` | `FUNDS` | — | `FUND` fund or ETF · `HELD` funds holding a company · `TRACK` funds tracking an index (real public data from the SEC, public domain: the 200 largest US mutual funds and ETFs by net assets with their holdings from Form N-PORT, census facts from Form N-CEN, fees and returns from the prospectus summaries; **off by default**, after `us-equities`, whose companies its holdings open; [its guide](FUNDS_GUIDE.md)) | `FUND QQQ`, `HELD AAPL`, `TRACK SP500` |
+| `compute-demo` | `CMPD` | — | `PBOOK` path book · `PSTRIP` P&L strip · `PSUM` book path computed by the sample Python engine · `PSUMJ` the same by the Java engine (synthetic numbers; a sample pack, off unless named in `DRISHTI_PACKS`) | [tutorial 23](../tutorials/23-computed-panels.md) |
 
 What each pack holds, as shipped (counted in `config/packs/`):
 
@@ -125,6 +126,7 @@ What each pack holds, as shipped (counted in `config/packs/`):
 | `us-equities` | 7 | 8 (+ 4 fragments) | 13,504 | 0 | 0 | `us-equities-prices` (yfinance, off, internal use only) |
 | `gleif` | 5 | 7 (+ 2 fragments) | 22,169 | 0 | 0 | none: its samples are its data |
 | `funds` | 3 | 3 (+ 1 fragment) | 3 | 0 | 0 | `funds-store` (delta) |
+| `compute-demo` | 4 | 1 | 123 | 0 | 0 | `compute-demo-store` (delta); `path-sum-python`, `path-sum-java` (reactive) |
 
 **Links between them.** A `core` counterparty carries its country of risk (`COUNTRY_OF_RISK`, ISO 3166 alpha-2, as the trading
 systems name it on a trade: `COUNTERPARTY_COUNTRY_OF_RISK`) and its `UEN`, and two link fields that open other packs when they are on:
@@ -655,7 +657,7 @@ the running server without a restart; only that connector restarts. The model, t
   The file then starts `# The default suggested by pack 'helpdesk'.` A deploy of a new pack version also refreshes a generated file nobody edited when the
   pack's kinds changed; an edited one is flagged with *Reset to pack default*.
 - **Kinds go through routes.** The pack's `routes:` say which connector answers each kind (then the default route, then any other connector serving the kind);
-  the file's `kinds:` can narrow that. The same connector can therefore serve several packs while each pack stays in charge of its own kinds.
+  a connector file's `kinds:`, when set, is the exact list the connector serves (it adds and narrows; the rule is in [CONNECTOR_FILES.md, How packs and files fit together](../connectors/CONNECTOR_FILES.md#6-how-packs-and-files-fit-together)). The same connector can therefore serve several packs while each pack stays in charge of its own kinds.
 - **Several connectors for one kind.** Connectors with `union: true` that serve the same kind are read together, each holding its own part: the trading pack's three
   source systems ([Trading](#trading)).
 - **Shared connectors.** Several packs may name the same connector. Admin → Connectors shows which packs use each one and for which kinds, and asks before you disable or delete a connector that

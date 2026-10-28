@@ -2756,7 +2756,7 @@ wrote, comments included; then it reloads. A `name@version` already defined by a
 | `config/packs/market-data/sutras/market-data/equity-vol-surface.v1.sutra.yaml` | `EQV EQV-CSCA` | surface, table, line |
 | `config/packs/market-risk/sutras/market-risk/portfolio.v1.sutra.yaml` | `PORT PF-RATES-DESK` | the engine's figures on a page, a P&L distribution, ranked bars, a Pivot tab |
 | `config/packs/world-economy/sutras/economics/economy.v1.sutra.yaml` | `ECON ECON-AUS` | map with a shade and a link |
-| `docs/guides/examples/*.sutra.yaml` | Help → Examples | eleven self-contained examples with their own small documents, every kind |
+| `docs/guides/examples/*.sutra.yaml` | Help → Examples | twelve self-contained examples with their own small documents, every kind |
 
 For a guided, step-by-step introduction, see [SUTRA_DEVELOPER_GUIDE.md](SUTRA_DEVELOPER_GUIDE.md). For how inference fills what a Sutra
 leaves out, see [INFERENCE.md](../architecture/INFERENCE.md).

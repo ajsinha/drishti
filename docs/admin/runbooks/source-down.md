@@ -17,7 +17,7 @@
 
 A *source* is where Drishti reads entities from: a Delta Lake domain, a database, Kafka, a REST service, S3,
 a feed. Each one is a plugin instance, usually a named connector declared by a pack (for example the `trading`
-pack's `trading-store`, whose settings are in the site's file `config/connectors/trading-store.yaml`). When one fails, the others keep serving; only the kinds it holds are affected.
+pack's `trade-endur`, `trade-calypso` and `trade-murex`, one per source system, whose settings are in the site's files `config/connectors/trade-endur.yaml` and its two siblings). When one fails, the others keep serving; only the kinds it holds are affected (for a union such as the trading pack's three, the trades of that one source system).
 
 The examples use `http://localhost:18480`. With security on, add `-H "Authorization: Bearer $TOKEN"`
 (an admin's token for `/api/v1/admin/*`; see [API_GUIDE.md](../../guides/API_GUIDE.md)).
@@ -95,7 +95,7 @@ Compose `docker compose logs`:
 journalctl -u drishti-server --since "1 hour ago" | grep -E "failed to start|failed reading"
 ```
 
-You should find a line like `source plugin trading-store failed to start` followed by the cause (a missing
+You should find a line like `connector trade-endur failed to start` (`source plugin <name> failed to start` for a plugin running under its own name) followed by the cause (a missing
 directory, a refused connection, bad credentials, a missing setting). The usual causes:
 
 | Cause | What the cause usually mentions | Fix |

@@ -100,23 +100,23 @@ plugins:
     settings:
       - { name: root, type: path, default: "<data dir>/delta", desc: "Lake root (folder, or s3://bucket/prefix); default: the delta folder of the data directory", group: connection }
       - { name: domain, desc: "Domain folder under the root", group: connection }
-      - { name: kinds, type: list, desc: "Kinds to read", group: mapping }
+      - { name: kinds, type: list, desc: "Kinds to serve (comma list); not set: every table found under the domain", group: mapping }
       - { name: "mode.*", desc: "Per-kind read mode", group: mapping }
       - { name: "layout.*", desc: "Per-kind layout: layout.<kind>.columns (promoted document paths), layout.<kind>.type-ahead (promoted columns whose values the type-ahead also matches: a name finds its id)", group: mapping }
       - { name: "table.*", desc: "Per-kind table folder under the domain when it is not the kind's name (table.trade: trade_endur)", group: mapping }
       - { name: "hadoop.*", desc: "Any Hadoop configuration property (hadoop.fs.s3a.connection.maximum)", group: tuning }
-      - { name: engine, desc: "Reader engine", group: tuning }
-      - { name: date-column, desc: "Business date column", group: mapping }
-      - { name: id-column, desc: "Entity id column", group: mapping }
-      - { name: doc-column, desc: "Document column", group: mapping }
-      - { name: warm-dates, type: int, desc: "Business dates to warm at start", group: tuning }
-      - { name: refresh-seconds, type: int, desc: "Re-read interval", group: tuning }
-      - { name: lookback-days, type: int, desc: "Days of history to index", group: tuning }
-      - { name: max-load-rows, type: int, desc: "Rows to load at most", group: tuning }
-      - { name: max-concurrent-reads, type: int, desc: "Concurrent reads", group: tuning }
+      - { name: engine, default: "native", desc: "Reader engine: native (Delta Kernel without Hadoop; Windows), hadoop (also abfs://, gs://) or auto (native on Windows); not set: DRISHTI_DELTA_ENGINE, else native", group: tuning }
+      - { name: date-column, default: "business_date", desc: "Business date column", group: mapping }
+      - { name: id-column, default: "id", desc: "Entity id column", group: mapping }
+      - { name: doc-column, default: "doc", desc: "Document column", group: mapping }
+      - { name: warm-dates, type: int, default: "3", desc: "After start, in the background, each table's newest N dates get their id map and one document read, so the first read of a recent past date is not the slow one; 0 turns it off", group: tuning }
+      - { name: refresh-seconds, type: int, default: "10", desc: "How often each table's latest version is checked; the type-ahead index is rebuilt every six checks", group: tuning }
+      - { name: lookback-days, type: int, default: "10", desc: "How far back (days) a snapshot read looks for the newest day on or before the date asked; effective tables have no limit", group: tuning }
+      - { name: max-load-rows, type: int, default: "200000", desc: "The largest day loaded whole for reverse lookups when a table has no promoted columns", group: tuning }
+      - { name: max-concurrent-reads, type: int, default: "16", desc: "Single-document reads at once (each decodes one row group of documents)", group: tuning }
       - { name: max-queued-reads, type: int, default: "4096", desc: "Document reads that may wait for a slot; more are refused at once, and a read whose caller has gone leaves the queue", group: tuning }
-      - { name: cache-mb, type: int, default: "256", desc: "Cache size", group: tuning }
-      - { name: doc-cache-mb, type: int, desc: "Document cache size", group: tuning }
+      - { name: cache-mb, type: int, desc: "Memory for whole days of small tables, in MB; not set: the shared cache of every Delta connector, 5 % of the heap; set: a cache of this connector's own", group: tuning }
+      - { name: doc-cache-mb, type: int, desc: "Memory for recently read documents, in MB; not set: the shared cache, 5 % of the heap; set: a cache of this connector's own", group: tuning }
       - { name: doc-disk-cache.enabled, type: bool, default: "true", desc: "Documents already read also kept on disk (RocksDB, one per connector): answered without decompressing Parquet pages, also after a restart", group: tuning }
       - { name: doc-disk-cache.dir, type: path, default: "<data dir>/cache/<connector>/docs", desc: "Its folder", group: tuning }
       - { name: doc-disk-cache.max-gb, type: number, default: "1", desc: "Its size cap; the oldest files go first", group: tuning }
@@ -125,12 +125,13 @@ plugins:
       - { name: doc-disk-cache.zone, default: "America/New_York", desc: "Zone of the daily clearing", group: tuning }
       - { name: id-map-disk.enabled, type: bool, default: "true", desc: "Each table date id map written once per table version and memory-mapped: no heap per id, kept across restarts", group: tuning }
       - { name: id-map-disk.dir, type: path, default: "<data dir>/cache/<connector>/idmaps", desc: "Its folder", group: tuning }
-      - { name: columns-cache-mb, type: int, desc: "Column cache size", group: tuning }
-      - { name: id-map-mb, type: int, desc: "Id map size", group: tuning }
-      - { name: lz4-via-native, type: boolean, desc: "Use native LZ4", group: tuning }
+      - { name: columns-cache-mb, type: int, desc: "Memory for days' column sets, in MB; not set: the shared cache, 20 % of the heap; set: a cache of this connector's own", group: tuning }
+      - { name: id-map-mb, type: int, desc: "Memory for days' id maps, in MB; not set: the shared cache, 20 % of the heap; set: a cache of this connector's own", group: tuning }
+      - { name: lz4-via-native, type: boolean, default: "true", desc: "hadoop engine only: read LZ4 files through the native engine's decoder", group: tuning }
+      - { name: lz4-decoder, type: "enum:safe|fast", default: "safe", desc: "native engine: the LZ4 page decoder, safe (pure Java) or fast (JNI when available)", group: tuning }
       - { name: s3.endpoint, desc: "S3-compatible endpoint", group: s3 }
       - { name: s3.region, desc: "S3 region", group: s3 }
-      - { name: s3.path-style, type: boolean, desc: "Path-style S3 addressing", group: s3 }
+      - { name: s3.path-style, type: boolean, desc: "Path-style S3 addressing; not set: the native engine uses it only with s3.endpoint, the hadoop engine always", group: s3 }
       - { name: s3.access-key, secret: true, desc: "S3 access key: ${ENV_VAR} or file:/path", group: s3 }
       - { name: s3.secret-key, secret: true, desc: "S3 secret key: ${ENV_VAR} or file:/path", group: s3 }
       - { name: index.days, type: int, default: "1", desc: "Business days of ids kept for type-ahead (1 = the newest day only)", group: tuning }

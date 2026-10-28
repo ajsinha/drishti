@@ -49,7 +49,7 @@ Names used below:
 | Item | Check |
 |---|---|
 | **JDK 21** (or newer) | PowerShell: `java -version` shows `21` or higher |
-| **Python 3.12 or 3.13** | PowerShell: `py -3.13 --version` (or `py -3.12 --version`) |
+| **Python 3.13** ([the minimum and why](GETTING_STARTED.md#step-1--install-the-prerequisites)) | PowerShell: `py -3.13 --version` |
 | **IntelliJ IDEA** (for the server) and **PyCharm** (for the console and the tools) | both start |
 | pip and Maven reach your **internal mirror** | if a download fails, see section 7 |
 | 8 GB free memory, 5 GB free disk (the sixty-day demo lakes take about 3.4 GB) | Task Manager |

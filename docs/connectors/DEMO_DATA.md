@@ -24,7 +24,7 @@ fictitious, all deterministic:
 
 | Form | Where | What it is | Built by |
 |---|---|---|---|
-| **The test data** | `data/testdata/` (committed, about 120 MB of `.jsonl.gz`) | sixty business days of every dataset the seven packs read: up to 5,000 trades a day per source system (ENDUR, CALYPSO, MUREX), counterparties, market data, agreements, netting sets, risk results; a first-day snapshot and each later day's changes | `tools/testdata/make_testdata.py` (`--check` says whether the files are current) |
+| **The test data** | `data/testdata/` (committed, about 138 MB of `.jsonl.gz`, 2,863 files, measured 2026-10-28) | sixty business days of every dataset the seven packs read: up to 5,000 trades a day per source system (ENDUR, CALYPSO, MUREX), counterparties, market data, agreements, netting sets, risk results; a first-day snapshot and each later day's changes | `tools/testdata/make_testdata.py` (`--check` says whether the files are current) |
 | **The demo lakes** | `data/delta/` (generated, never committed) | the test data as Delta tables, one per dataset, sixty daily snapshots each: what the packs' connectors read | `drishti.py lake demo` (one command, about 15 minutes) |
 | **The samples** | `config/packs/<pack>/samples/<kind>.jsonl` (committed) | a few hundred documents a pack, the same shape, that the `demo` source serves live and ticking, with no store at all | `tools/packgen/banking/make_data.py` and each pack's generator |
 
@@ -53,7 +53,7 @@ table, partitions, documents on day 1, changes a day, size), are in [data/testda
 | Trades | 5,000 per source system on the last day, 15,000 in all (4,407 ENDUR, 3,471 CALYPSO, 4,198 MUREX on the first); about 3–7% amended each day (`TRADE_VERSION` moves) |
 | Source systems | `ENDUR` (ids `1000001` …), `CALYPSO` (`CLY-3000001` …), `MUREX` (`MX-20000001` …): ids unique across them |
 | Tables | 85 (measured 2026-10-28): 3 trade tables, the test-data datasets of the banking packs (with the 2.9.5 `var-limit`), the reference tables of world-economy and news-and-markets, the public-data snapshots of us-equities, gleif and funds |
-| Disk | about 3.4 GB (measured 2026-10-28, `du` of the 85 tables; the committed test data: about 120 MB) |
+| Disk | about 3.4 GB (measured 2026-10-28, `du` of the 85 tables; the committed test data: about 138 MB) |
 | Counterparties | fictitious look-alikes (`CP-NORTHPLAINS`, `CP-VAULTGUARD`, …), with UEN, country of risk, legal entity, agreements and netting sets holding their trades |
 
 Re-running `lake demo` rebuilds every table it writes (the folder is removed first) and is safe while a server runs: the server gets

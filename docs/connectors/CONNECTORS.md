@@ -31,7 +31,7 @@ its `pack.yaml`) and may **suggest** a template for each, which the server write
 # config/connectors/trading-lake.yaml
 plugin: delta                     # required: which source plugin (delta, jdbc, file, kafka, redis, …)
 enabled: true                     # optional, default true
-kinds: [trade]                    # optional: limit the kinds it serves
+kinds: [trade]                    # optional: the exact kinds it serves (see the rule below)
 description: Trading lake         # optional
 settings:                         # the plugin's settings; nesting is flattened to dotted keys
   root: ${DRISHTI_DELTA_ROOT:${drishti.data.dir:./data}/delta}
@@ -50,15 +50,11 @@ settings:                         # the plugin's settings; nesting is flattened 
 - A connector over the network takes the shared `tls.*` settings for a private CA or a client certificate ([TLS.md](TLS.md), with a matrix of what each does) and, when it speaks HTTP, the shared `proxy:` block ([TLS.md](TLS.md#outbound-http-proxy-for-connectors-ai-providers-and-mcp-servers)).
 - `drishti.sources.connectors` in `application.yaml` and the per-store profiles (`SPRING_PROFILES_ACTIVE=postgres`, …) still work but are **deprecated**.
 
-### Precedence
+### Precedence and kinds
 
-Highest first (the full rules are in [CONNECTOR_FILES.md](CONNECTOR_FILES.md#precedence)):
-
-| Source | Role |
-|---|---|
-| environment variables and `drishti.sources.connectors.*` in the server's own configuration (**deprecated**) | override a file setting by setting until you move them to the file |
-| `config/connectors/<name>.yaml` | the site's definition; it replaces the pack's template for that name wholesale |
-| the pack's template (`connectors:` mapping or `connector-templates:` in `pack.yaml`) | the pack's suggestion, written to the file once at the first start |
+Which definition wins (environment and the deprecated `drishti.sources.connectors.*`, then the file, then the pack's template) is in
+[CONNECTOR_FILES.md, Precedence](CONNECTOR_FILES.md#precedence); how `routes:` and a file's `kinds:` decide which connector answers a kind
+is in [CONNECTOR_FILES.md, How packs and files fit together](CONNECTOR_FILES.md#6-how-packs-and-files-fit-together).
 
 ### Several connectors for one kind: a union
 

@@ -406,10 +406,20 @@ routes:                             # which connector answers each kind first
 - `connectors:` is either a **list of names** (a pack that only names what it needs) or, as every shipped pack does, a **mapping of
   definitions**. A mapping is read as the pack's **templates**; both forms work, and `connector-templates:` carries templates beside a
   list.
-- **Kinds**: the pack's `routes:` decide the **primary** connector for a kind (the pack author knows where each kind lives). A
-  connector's own `kinds:` (file, template or server configuration) makes it **serve** those kinds in addition, so a second connector
-  listing a kind is consulted after the routed one (for example a lake behind a recent store, for dates the recent store does not
-  hold). With no `kinds:` it serves what its plugin and the routes say. `kinds:` never removes a kind the routes send to it.
+- **Kinds** (this is the one statement of the rule; other documents link here): the pack's `routes:` decide the **primary**
+  connector for a kind (the pack author knows where each kind lives). A read of a kind asks the routed connector first, then the
+  default route, then every other connector that serves the kind, in configuration order. A connector's own `kinds:` (file, template
+  or server configuration) is the **exact list** of kinds it serves, which works both ways:
+  - it **adds**: a connector listing a kind is consulted after the routed one even with no route to it (for example a lake behind a
+    recent store, for dates the recent store does not hold);
+  - it **narrows**: a kind missing from the list is not served by that connector, **even when a route sends the kind to it**. The
+    read falls through to the next connector that serves the kind, and a BI table that names the connector is refused with
+    `connector '…' does not serve kind '…' … add the kind to the connector's file` (`DRS-9026`).
+
+  With **no** `kinds:` the connector serves whatever its plugin serves (for most plugins, any kind), so the routes alone decide. The
+  code is `ConnectorInstance` and `SourceRouter.candidates` in drishti-engine; the tests are
+  `SourceRouterTest.connectorsServingOneKindAreAskedInConfigOrderAfterTheRoute` and
+  `LatestHeldDateTest.aNamedConnectorThatDoesNotServeTheKindIsSaidNotReadAsEmpty`.
 - **A union** (`union: true` on each connector of the kind): every union connector of a kind answers together, not one after another.
   A trade id is looked up in all three, a search or a type-ahead merges their hits (labelled by source), and a BI table over `trade`
   reads the three tables as one. Ids must be unique across the union (the trade ids are: `1000001` ENDUR, `CLY-3000157` CALYPSO,
