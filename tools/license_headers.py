@@ -12,7 +12,8 @@ import sys
 ROOT = pathlib.Path(__file__).resolve().parent.parent
 MARK = "Copyright (c) 2026 Ashutosh Sinha"
 TEXT = (ROOT / "config" / "license-header.txt").read_text().strip().splitlines()
-SKIP_DIRS = {"target", ".git", ".claude", ".venv", "vendor", "recorded", "__pycache__", ".mvn", "node_modules", ".pytest_cache", "requirements"}
+SKIP_DIRS = {"target", ".git", ".claude", ".venv", "vendor", "recorded", "__pycache__", ".mvn", "node_modules", ".pytest_cache", "requirements",
+             "connector-upgrade"}   # byte-exact copies of a past release's generated connector files (ConnectorUpgradeTest): a header would change them
 SKIP_FILES = {"mvnw", "mvnw.cmd", "LICENSE"}
 
 
