@@ -159,7 +159,7 @@ public enum ErrorCode {
      * hierarchy with {@code ids: leaf} whose value has two parents on the date): refused at start, or the date is refused, saying why.
      */
     VAR_HIERARCHY_INVALID("DRS-5213", 422),
-    /** VaR (2.9.5): a scope names a hierarchy or a node of one that the date does not have ({@code LL:<letter>}, {@code NODE:LL~...}). */
+    /** VaR (2.9.5): the tree of a hierarchy the date does not have ({@code GET /api/v1/var/tree?hierarchy=LL}). */
     VAR_HIERARCHY_UNKNOWN("DRS-5214", 404),
     /** Exposure: a bad scope word or parameter ({@code q}, {@code collateral}, {@code date} not a grid date, {@code by}, {@code run}). */
     EXPOSURE_BAD_PARAMETER("DRS-5440", 400),
