@@ -1081,7 +1081,7 @@ and `--async [--wait 2s] [--yes]` on `bi mq` and `bi sql`, which send `Prefer: r
 `bi runs share RUN --to WHO` prints each recipient's mode (sees the same, re-masked, recomputed as them; a refusal on stderr) and `unshare
 RUN WHO...` removes recipients; `bi runs schedule RUN "weekly mon 08:00"` and `schedules [list|edit ID WHEN|disable|enable|delete ID]`
 use the subscription grammar; `bi runs export RUN --format csv|xlsx --out FILE`; `bi runs suggestions [--model M] [accept|dismiss ID]`
-is the bi-admin's list of rollup suggestions. The guide with output: [BI_RUNS_GUIDE.md](BI_RUNS_GUIDE.md#on-the-command-line).
+is the bi-admin's list of rollup suggestions. The guide with output: [BI_GUIDE.md section 28](BI_GUIDE.md#on-the-command-line).
 
 ```bash
 drishti-console/.venv/bin/python tools/drishti.py bi runs submit --mq year.mq.json --yes --wait 0

@@ -28,7 +28,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 /**
- * BI on the AI layer (docs/guides/BI_AI.md): {@code GET /status}, {@code POST /draft} (report from words), {@code POST /ask} (ask the data),
+ * BI on the AI layer (docs/guides/BI_GUIDE.md): {@code GET /status}, {@code POST /draft} (report from words), {@code POST /ask} (ask the data),
  * {@code POST /explain} (explain this number) and the authoring helpers {@code POST /suggest}, {@code /explain-checks} and {@code /dataset-helper}. Off with the AI layer (DRS-4015); an unusable model answer is DRS-4020; the AI policy's refusals are DRS-4016..4019.
  */
 @RestController

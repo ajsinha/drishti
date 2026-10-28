@@ -83,7 +83,7 @@ was only opened on a single server), dialogs one by one under each theme (B-5).
 - **Evidence:** `POST /api/v1/bi/reports/query {page: statement, visual: positions, state: {limit: 10001}}` answers `rowCount 5000,
   total 15000, truncated true`; preview `rows: 5156`, `pageCount 118`; `pdftotext` finds 5,000 ids, the last `1005000`.
   ![Page 1 (Trades 15,000) and page 117 (the last rows, 1004996 to 1005000)](img/qa2-01-statement-cut-at-5000.png)
-- **Doc:** [STATEMENTS.md](../../guides/STATEMENTS.md) sections 3 and 9.
+- **Doc:** [STATEMENTS.md](../../guides/REPORTS.md#24-statements-paginated-reports-page-exact-one-per-reader) sections 3 and 9.
 - **Reproduced:** three times (preview, PDF, Excel), and in the bursting run.
 
 ## P2
@@ -104,7 +104,7 @@ was only opened on a single server), dialogs one by one under each theme (B-5).
   3 is accepted (200) and prints `{param.nope}` in the header of every page. Check accepts all three. In the header and footer
   `{page}`/`{pages}` work.
 - **Evidence:** preview `ops` with `role: text` and `role: title` as quoted.
-- **Doc:** [STATEMENTS.md](../../guides/STATEMENTS.md) section 2.
+- **Doc:** [STATEMENTS.md](../../guides/REPORTS.md#24-statements-paginated-reports-page-exact-one-per-reader) section 2.
 - **Reproduced:** twice (two separate runs).
 
 ### QA2-03 · Crimson Terminal: Save and Preview pages are pale pink under white labels (about 2:1)

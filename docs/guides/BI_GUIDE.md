@@ -24,16 +24,16 @@ Rūpaka is Drishti's business-intelligence layer, called **BI** in the top bar a
 | You want to | Read |
 |---|---|
 | **Learn by doing** | [tutorial 10](../tutorials/10-first-bi-report.md) (a first report in twelve steps: map, bar, slicer, publish, filters, two datasets, relative dates, a tablet). Then [11](../tutorials/11-bi-that-runs-itself.md) (refresh, subscriptions, alerts, export, expected values), [12](../tutorials/12-live-bi-and-boards.md) (live BI and boards), [13](../tutorials/13-govern-bi.md) (governance), [14](../tutorials/14-python-and-analyse.md) (Python, Vega-Lite and Analyse), [15](../tutorials/15-ai-in-drishti.md) (AI) [16](../tutorials/16-embed-drishti.md) (embedding) and [18](../tutorials/18-several-datasets-in-one-report.md) (several datasets in one report) |
-| Try each step with real answers | [BI_RECIPES.md](BI_RECIPES.md): a stack with four people, querying datasets, row rules and masks at work |
+| Try each step with real answers | [DATASETS.md section 17](DATASETS.md#17-worked-examples-the-shipped-models-row-rules-and-the-model-view): a stack with four people, querying datasets, row rules and masks at work |
 | Find your way round the pages, powers and workspaces | this guide, sections 2 to 12 |
 | Write or read a dataset (tables, relationships, measures, row rules, masks, live tables) | [DATASETS.md](DATASETS.md) |
 | Write or read a report (visuals, filters, slicers, live visuals) | [REPORTS.md](REPORTS.md) |
-| Put a wall of live tiles on a screen (a board page of a report) | [BOARDS.md](BOARDS.md) |
-| Follow a long question that runs in the background: the run card, confirming a large run, the Runs tab (`BI RUNS <GO>`), sharing, promoting and scheduling a run (2.6.7) | [BI_RUNS_GUIDE.md](BI_RUNS_GUIDE.md) |
+| Put a wall of live tiles on a screen (a board page of a report) | [REPORTS.md section 23](REPORTS.md#23-boards-report-pages-of-live-tiles) |
+| Follow a long question that runs in the background: the run card, confirming a large run, the Runs tab (`BI RUNS <GO>`), sharing, promoting and scheduling a run (2.6.7) | [section 28](#28-background-runs-long-bi-questions) |
 | Author in BI Studio: the Explorer, tabs, the Problems and Query dock, formatting, conditional formatting, themes, interactions, tooltip pages | section 26, [REPORTS.md section 5](REPORTS.md#5-format) |
 | Prepare data in Python step by step; run your own Python on a masked extract in the browser | [PYTHON_BI.md section 17](PYTHON_BI.md#17-data-prep-the-transform-editor-240), [ANALYSE.md section 16](ANALYSE.md#16-the-browser-python-console) |
 | Export a report or view as PDF, PNG, Excel or CSV; subscribe people by email | [DISTRIBUTION.md](DISTRIBUTION.md) |
-| Write measures, visuals and tests in Python; explore a dataset as an extract; ask the AI helpers | [PYTHON_BI.md](PYTHON_BI.md), [ANALYSE.md](ANALYSE.md), [BI_AI.md](BI_AI.md); Calc's `drishti_bi` and Graphic Walker: [PYTHON_CALC.md](PYTHON_CALC.md#19-the-bi-client-and-graphic-walker) |
+| Write measures, visuals and tests in Python; explore a dataset as an extract; ask the AI helpers | [PYTHON_BI.md](PYTHON_BI.md), [ANALYSE.md](ANALYSE.md), [section 29](#29-ai-in-bi-report-from-words-ask-the-data-explain-this-number); Calc's `drishti_bi` and Graphic Walker: [PYTHON_CALC.md](PYTHON_CALC.md#19-the-bi-client-and-graphic-walker) |
 | Show a report in another web application | [ELEMENTS.md](ELEMENTS.md) (`<drishti-report>`, with `<drishti-search>` and `<drishti-about>`), [tutorial 16](../tutorials/16-embed-drishti.md) |
 | Publish, review, certify, trace lineage, move content between servers | [BI_GOVERNANCE.md](BI_GOVERNANCE.md) |
 | See what ships in `config/bi` and how the folder is read | [config/bi/README.md](../../config/bi/README.md) |
@@ -42,7 +42,7 @@ Rūpaka is Drishti's business-intelligence layer, called **BI** in the top bar a
 | Understand the design and what each phase built | [RUPAKA.md](../architecture/RUPAKA.md) (section 20: every phase and wave as built, ending in the one list of what is not built), [BI_DESIGN.md](../architecture/BI_DESIGN.md) (the target design), [LIVE_BI.md](../archive/LIVE_BI.md) (history, archived: heavy continuous aggregation belongs in a producer), [QUANT_SERVICE.md](../architecture/QUANT_SERVICE.md) (server-side pricing, proposed) |
 | Fix a problem | section 12 here, [TROUBLESHOOTING.md](TROUBLESHOOTING.md) |
 
-A good first hour: read sections 2 to 4 here (the menu, the powers, the rail), then set up a stack with [BI_RECIPES.md](BI_RECIPES.md) (the *Set up* section) and do tutorial 10.
+A good first hour: read sections 2 to 4 here (the menu, the powers, the rail), then set up a stack with [DATASETS.md section 17](DATASETS.md#17-worked-examples-the-shipped-models-row-rules-and-the-model-view) (the *Set up* section) and do tutorial 10.
 
 ## Contents
 
@@ -355,7 +355,7 @@ netting set still carries as it ticks (net MTM, collateral, utilisation): its EE
 **Settings** (all in [CONFIGURATION.md](../admin/CONFIGURATION.md#drishtibi--rupaka-business-intelligence-phase-1-the-shell-and-the-catalogue)): `drishti.bi.enabled`,
 `dir`, `watch`, `folder-refresh`, `workspace-creation`, `max-body-bytes`, `versions-keep`, `usage-days`, `recent`, `list-limit`; the
 console's `bi.enabled` (`DRISHTI_BI_ENABLED`). Each later phase has a group of its own: `drishti.bi.query.*` (the query engine, [DATASETS.md](DATASETS.md#8-the-query)),
-`drishti.bi.report.*` ([REPORTS.md section 11](REPORTS.md#11-settings)), `drishti.bi.governance.*` ([BI_GOVERNANCE.md](BI_GOVERNANCE.md)) and `drishti.bi.live.*` with the console's `bi.live.*` and `bi.board.rotate_seconds` ([BOARDS.md section 8](BOARDS.md#8-settings)).
+`drishti.bi.report.*` ([REPORTS.md section 11](REPORTS.md#11-settings)), `drishti.bi.governance.*` ([BI_GOVERNANCE.md](BI_GOVERNANCE.md)) and `drishti.bi.live.*` with the console's `bi.live.*` and `bi.board.rotate_seconds` ([REPORTS.md section 8](REPORTS.md#238-settings)).
 
 **The proof of concept** (the phase 0 page `/bi/poc`, its routes and `bi.poc_enabled`) was removed in 2.2: the model layer replaced what it proved.
 Its findings are history, archived in [RUPAKA_POC.md](../archive/RUPAKA_POC.md).
@@ -385,7 +385,7 @@ it; **Uninstall…** shows the reports, boards, models, alerts and subscriptions
 
 ## 11. Built and not built
 
-What each phase built, in one paragraph each, with where the detail is. The authoritative list, with what is **not** built in each phase, is [RUPAKA.md](../architecture/RUPAKA.md) section 20; the references end with their own "built and not built" ([DATASETS.md section 10](DATASETS.md#10-what-is-not-built), [REPORTS.md section 12](REPORTS.md#12-built-and-not-built), [BI_GOVERNANCE.md section 10](BI_GOVERNANCE.md#10-built-and-not-built), [BOARDS.md section 10](BOARDS.md#10-built-and-not-built)).
+What each phase built, in one paragraph each, with where the detail is. The authoritative list, with what is **not** built in each phase, is [RUPAKA.md](../architecture/RUPAKA.md) section 20; the references end with their own "built and not built" ([DATASETS.md section 10](DATASETS.md#10-what-is-not-built), [REPORTS.md section 12](REPORTS.md#12-built-and-not-built), [BI_GOVERNANCE.md section 10](BI_GOVERNANCE.md#10-built-and-not-built), [REPORTS.md section 10](REPORTS.md#2310-built-and-not-built)).
 
 **Phase 1, the shell and the catalogue.** The BI menu and the `BI` keyword (alias `RUPAKA`) with type-ahead; the shell with its rail and keys; Home and the catalogue; personal and shared workspaces with four roles; typed items with YAML bodies; versions, restore, review with four-eyes, endorsement;
 audience-based visibility; shipped files, watched live; Admin, BI settings; four powers on roles; the audit trail; the CLI; `DRS-9001` to `9006`.
@@ -399,7 +399,7 @@ real data and query time while designing, Check, undo and redo, save and save a 
 
 **Phase 4, publishing and governance.** A saved state for every save and the side-by-side diff; review with the reviewer's diff, Check, impact and data preview; certification only by a steward with automatic revocation; lineage and impact analysis with the refusal `DRS-9040`; bundles between environments with a dry run (`DRS-9041`, `9042`); the audit trail. Reference: [BI_GOVERNANCE.md](BI_GOVERNANCE.md).
 
-**Phase 5, streaming BI.** `mode: live` tables kept in memory and updated by key from the same live machinery as the terminal (with retention and per-reader rows and masks on every update); a live stream per report and visuals that redraw in place (coalesced, with a live indicator, pause and resume, stale and disconnected states); the rolling chart (`live-chart`); the Perspective grid and pivot over masked Arrow with streaming rows, under the narrowest policy; boards with pages, tile alerts, kiosk and rotation; the two live datasets, two live reports and the board shipped as samples; `drishti.bi.live.*`; `DRS-9050` to `9053`. References: [DATASETS.md section 7.1](DATASETS.md#71-live-tables-phase-5), [REPORTS.md section 13](REPORTS.md#13-live-visuals-and-perspective-phase-5), [BOARDS.md](BOARDS.md).
+**Phase 5, streaming BI.** `mode: live` tables kept in memory and updated by key from the same live machinery as the terminal (with retention and per-reader rows and masks on every update); a live stream per report and visuals that redraw in place (coalesced, with a live indicator, pause and resume, stale and disconnected states); the rolling chart (`live-chart`); the Perspective grid and pivot over masked Arrow with streaming rows, under the narrowest policy; boards with pages, tile alerts, kiosk and rotation; the two live datasets, two live reports and the board shipped as samples; `drishti.bi.live.*`; `DRS-9050` to `9053`. References: [DATASETS.md section 7.1](DATASETS.md#71-live-tables-phase-5), [REPORTS.md section 13](REPORTS.md#13-live-visuals), [REPORTS.md section 23](REPORTS.md#23-boards-report-pages-of-live-tiles).
 
 **Wave 3, the BI essentials.** Scheduled refresh of datasets (`refresh:` with a clock, the pack's business-day calendar or `after-load`, retried with the shared policy, its state on the dataset page: [DATASETS.md section 7.2](DATASETS.md#72-scheduled-refresh));
 time intelligence in the measure language (`ytd`, `mtd`, `qtd`, `prior_period`, `same_period_last_year`, `running`: [DATASETS.md section 4.1](DATASETS.md#41-time-intelligence)), badged in the designer's Fields pane; the visuals **map** (countries by ISO code, regions by ISO 3166-2 code with a click that drills from the world to a country and its regions, or points by latitude and longitude, from a vendored
@@ -414,7 +414,7 @@ and the sample *Region economics* drills from the world map to Australian and US
 
 **Several datasets (2.1).** Composed datasets (`from:` / `join:`) and derived datasets made by a Python Transform (both removed in 2.2: several facts are one model, a Transform feeds a Python dataset), per-visual datasets and links in reports, several extracts in an Analyse notebook, impact and lineage across all of them (`DRS-9014` to `9017`, `9075`; [DATASETS.md section 11](DATASETS.md#11-composed-and-derived-datasets), [RUPAKA.md section 20.10](../architecture/RUPAKA.md)).
 
-**Governance, Python, AI and embedding (waves B to D).** A field renamed with the same meaning is recognised as a rename and the reports are rewritten with the dataset; a changed type or meaning is listed as an impact; every import is kept and can be **rolled back**; BI content travels **inside a pack archive**; lineage goes past the connector to the table or topic; a live table keeps a **history** of its measures; a board tile has alert **hysteresis**; boards had a **designer** of their own, folded into the report designer in 2.4.0 ([BI_GOVERNANCE.md](BI_GOVERNANCE.md), [BOARDS.md section 11](BOARDS.md)). **Vega-Lite** visuals, **Python** on boards and in alerts, tests shipped with a Python item, Calc's `drishti_bi` with Graphic Walker, **Perspective charts** (drawn as Drishti's grid since 2.3.0) and the settings panel ([REPORTS.md](REPORTS.md), [PYTHON_BI.md](PYTHON_BI.md), [PYTHON_CALC.md](PYTHON_CALC.md)). The designer copilot, the dataset helper and narrative summaries ([BI_AI.md](BI_AI.md)); charts in Excel exports, retries of alert email, webhook and text channels ([DISTRIBUTION.md](DISTRIBUTION.md)); `<drishti-about>` and `<drishti-search>` with React, Vue and Angular samples ([ELEMENTS.md](../architecture/ELEMENTS.md)). Measures that mix grains (`measure('MTM') / measure('Exposure')`) are worked out at each measure's own grain.
+**Governance, Python, AI and embedding (waves B to D).** A field renamed with the same meaning is recognised as a rename and the reports are rewritten with the dataset; a changed type or meaning is listed as an impact; every import is kept and can be **rolled back**; BI content travels **inside a pack archive**; lineage goes past the connector to the table or topic; a live table keeps a **history** of its measures; a board tile has alert **hysteresis**; boards had a **designer** of their own, folded into the report designer in 2.4.0 ([BI_GOVERNANCE.md](BI_GOVERNANCE.md), [REPORTS.md section 11](REPORTS.md#23-boards-report-pages-of-live-tiles)). **Vega-Lite** visuals, **Python** on boards and in alerts, tests shipped with a Python item, Calc's `drishti_bi` with Graphic Walker, **Perspective charts** (drawn as Drishti's grid since 2.3.0) and the settings panel ([REPORTS.md](REPORTS.md), [PYTHON_BI.md](PYTHON_BI.md), [PYTHON_CALC.md](PYTHON_CALC.md)). The designer copilot, the dataset helper and narrative summaries ([section 29](#29-ai-in-bi-report-from-words-ask-the-data-explain-this-number)); charts in Excel exports, retries of alert email, webhook and text channels ([DISTRIBUTION.md](DISTRIBUTION.md)); `<drishti-about>` and `<drishti-search>` with React, Vue and Angular samples ([ELEMENTS.md](../architecture/ELEMENTS.md)). Measures that mix grains (`measure('MTM') / measure('Exposure')`) are worked out at each measure's own grain.
 
 **Waves A, B and C (2.2.0 to 2.4.0).** Datasets and data models rooted in packs, the Python-like expression language (DEL) and read-only Drishti SQL in one query plan (section 24, [EXPRESSIONS.md](EXPRESSIONS.md), [SQL.md](SQL.md)); calculations with filter context, time and balances, standing queries pushed from the server, and the servers computing every number (section 25); **BI Studio**, report schema v2 (typed formats, conditional formatting, themes, the interactions matrix, sync groups, tooltip pages, small multiples, the matrix at every level), **boards as a report layout**, Python data prep step by step with **BI → Transforms**, and the browser **Python console** (section 26, [PYTHON_BI.md section 17](PYTHON_BI.md#17-data-prep-the-transform-editor-240), [ANALYSE.md section 16](ANALYSE.md#16-the-browser-python-console)).
 
@@ -440,7 +440,7 @@ The codes of the later phases are described once, in the reference that raises t
 | `DRS-9030` to `9036` | a report: structure, a name it lacks, a visual built wrongly, a reserved visual, its dataset, a visual query's state; a theme (9036) | [REPORTS.md section 9](REPORTS.md#9-checking-a-report-drs-9030-to-drs-9036) |
 | `DRS-9040` to `9042` | publishing and bundles: a change that would break published reports, a bad bundle, an import that conflicts | [BI_GOVERNANCE.md section 9](BI_GOVERNANCE.md#9-api) |
 | `DRS-9050`, `9051` | live tables and streams: a table that cannot be kept live, too many streams | [DATASETS.md sections 7.1 and 9](DATASETS.md#71-live-tables-phase-5) |
-| `DRS-9052`, `9053` | a board: malformed, or using a reserved, unbuilt setting | [BOARDS.md section 7](BOARDS.md#7-checking-a-board-drs-9052-and-drs-9053) |
+| `DRS-9052`, `9053` | a board: malformed, or using a reserved, unbuilt setting | [REPORTS.md section 7](REPORTS.md#237-checking-a-board-drs-9052-and-drs-9053) |
 
 Every code is also listed in [TROUBLESHOOTING.md](TROUBLESHOOTING.md#error-codes).
 
@@ -623,7 +623,7 @@ A phone shows the same sections one column wide with finger-sized buttons; the t
 
 ## 18. Live reports and boards (phase 5)
 
-The references are [DATASETS.md](DATASETS.md#71-live-tables-phase-5) (live tables), [REPORTS.md](REPORTS.md#13-live-visuals-and-perspective-phase-5) (live visuals) and [BOARDS.md](BOARDS.md); the walk-through is [tutorial 12](../tutorials/12-live-bi-and-boards.md).
+The references are [DATASETS.md](DATASETS.md#71-live-tables-phase-5) (live tables), [REPORTS.md](REPORTS.md#13-live-visuals) (live visuals) and [REPORTS.md section 23](REPORTS.md#23-boards-report-pages-of-live-tiles); the walk-through is [tutorial 12](../tutorials/12-live-bi-and-boards.md).
 
 **A live report.** Open **Live trading desk** from the catalogue (the samples are shipped with the site; a business user sees them unless *Hide samples* is on). Above the pages is the **live indicator**: a dot and a word (**Live**, **Paused**, **Stale**, **Feed failing**,
 **Disconnected**, **Paused (tab in background)**), *Last update 07:49:57* (when the table last changed), and **Pause** / **Resume**. The visuals redraw in place as the table changes, at most four times a second; Pause holds the picture, Resume catches up at once.
@@ -633,7 +633,7 @@ a connection of its own: the page uses the one channel the whole browser shares 
 **Pages of the sample:** *Desk* (cards, net MTM by desk, a rolling line, the worst trades, the latest changes), *Every trade* (a grid of all trades: Drishti's own grid of the server's answer), *Pivot* (a matrix by desk and currency, grouped and totalled by the server), *Chart* (a stacked column per desk, one series per currency). In a grid you can sort and scroll; the matrix and the chart are asked again on each
 tick, as every visual is. For a reader without the `raw` power the `TRADER_ID` column reads `•••`, in the cards, the tables and the grid alike.
 
-**A board.** Since 2.4.0 a board is a report whose pages have `layout: board` ([BOARDS.md](BOARDS.md)). Open **Desk wall** (`/bi/r/file:report:desk-wall`; the old `/bi/b/file:board:desk-wall` opens it too; from its item page: *Open the board*, which opens it in kiosk). Tabs switch its pages; tiles over live tables change in place; a tile whose number crosses a threshold gets an amber or red border and says "warning" or "critical" in the line
+**A board.** Since 2.4.0 a board is a report whose pages have `layout: board` ([REPORTS.md section 23](REPORTS.md#23-boards-report-pages-of-live-tiles)). Open **Desk wall** (`/bi/r/file:report:desk-wall`; the old `/bi/b/file:board:desk-wall` opens it too; from its item page: *Open the board*, which opens it in kiosk). Tabs switch its pages; tiles over live tables change in place; a tile whose number crosses a threshold gets an amber or red border and says "warning" or "critical" in the line
 under it. **Kiosk** (button, `k`, or `?kiosk=1`) hides the menus, fills the screen and turns the board pages by itself; `Esc` leaves. Keys: `k` kiosk, `p` pause. A phone shows the wall as one column.
 
 **Who may do what.** Opening needs the `bi` power and the right to read the report; each tile is its report's answer **to you** (your rows, your masks). A board is designed in the report designer (a page's *Layout: board*, the *tile* visual); publishing checks its tiles.
@@ -656,8 +656,8 @@ delivery's status, retries with the shared retry policy, an audit trail. The lis
 **Alerts.** *Alert me* (the bell in a visual's frame; or click a number on a view) watches one number: a visual of a report, a measure of a dataset or a field of a Sutra entity. It fires when the number crosses a limit
 (`above`, `below`, `between`, `outside`), moves too far (a percentage or an amount, against the previous look or the previous business day) or does not arrive by a time. It looks on a schedule, after a data load, or when a live table changes (after a quiet time).
 **Each person is judged on their own number**: the engine applies their row rules and masks; a masked number is never judged or shown. It stays quiet after firing until the number is back inside the limit (the *hysteresis*), and not again within the *cooldown*.
-It tells you in your inbox (the *Alerts* tab, and the bell), by email to your own address and in the chat bridges (a post with no number); there is a history, an audit trail, pause and resume. A board tile whose colour turns red can tell everyone who reads the board the same way (`notify:`, [BOARDS.md](BOARDS.md#notifications-a-tile-tells-people-when-it-turns-red)). The page is **Alerts** (`/alerts`), linked from **Reports** in the top bar;
-the reference is [DISTRIBUTION.md section 4](DISTRIBUTION.md#4-alerts-on-numbers); walk-through: [tutorial 11](../tutorials/11-bi-that-runs-itself.md); settings `drishti.alerts.measure.*`; code `DRS-9062`. Wave D adds retries of a failed alert delivery, webhook and text-message channels ([DISTRIBUTION.md section 6](DISTRIBUTION.md#6-webhooks-and-text-messages)) and, for subscriptions, a written summary ([BI_AI.md section 9](BI_AI.md#9-a-written-summary-at-the-top-of-a-subscriptions-email)). Not built: escalation.
+It tells you in your inbox (the *Alerts* tab, and the bell), by email to your own address and in the chat bridges (a post with no number); there is a history, an audit trail, pause and resume. A board tile whose colour turns red can tell everyone who reads the board the same way (`notify:`, [REPORTS.md section 23](REPORTS.md#notifications-a-tile-tells-people-when-it-turns-red)). The page is **Alerts** (`/alerts`), linked from **Reports** in the top bar;
+the reference is [DISTRIBUTION.md section 4](DISTRIBUTION.md#4-alerts-on-numbers); walk-through: [tutorial 11](../tutorials/11-bi-that-runs-itself.md); settings `drishti.alerts.measure.*`; code `DRS-9062`. Wave D adds retries of a failed alert delivery, webhook and text-message channels ([DISTRIBUTION.md section 6](DISTRIBUTION.md#6-webhooks-and-text-messages)) and, for subscriptions, a written summary ([section 29.9](#299-a-written-summary-at-the-top-of-a-subscriptions-email)). Not built: escalation.
 
 **Embedding.** `<drishti-report>` shows a published report, one page or one visual, in **another web application's** page (a Web Component, no iframe), masked whatever the user's roles, with slicers, cross-filter and live updates; the administrator lists the reports a host application may show (`report:<id>` or `report:*`) in Admin → Embedding. Reference: [DISTRIBUTION.md section 5](DISTRIBUTION.md#5-embedding-a-report-in-another-web-application); developer guide: [ELEMENTS.md](ELEMENTS.md#drishti-report); walk-through: [tutorial 16](../tutorials/16-embed-drishti.md); scope `embed:report`.
 
@@ -680,12 +680,12 @@ The rail's **Analyse** (`/bi/explore`) opens a dataset as an **extract**: the ro
 
 **Save as a notebook** keeps the extract's definition and the cells as a BI item of kind `notebook` (versions, review and publishing like any item; *Open in Analyse* on its page reopens it, rebuilt for whoever
 opens it). **Promote** turns a Python cell into a Python Measure or Visual draft (or, for a cell that joins several extracts, a Python Transform draft) and a slice into a report draft; nothing is published. Slice and SQL totals are the *extract's*, not the dataset's: use a
-report for true totals. Reference: [ANALYSE.md](ANALYSE.md); walk-through: [tutorial 14](../tutorials/14-python-and-analyse.md). Slice is worked out by the console and SQL is Drishti SQL run by the server (nothing runs in the browser since 2.3.0), and a slice or a SQL cell can be **promoted into a visual** of a report draft ([ANALYSE.md sections 13 and 14](ANALYSE.md#13-in-the-browser-duckdb-wasm)). Not built: a *Data* tab, *Notes*,
+report for true totals. Reference: [ANALYSE.md](ANALYSE.md); walk-through: [tutorial 14](../tutorials/14-python-and-analyse.md). Slice is worked out by the console and SQL is Drishti SQL run by the server (nothing runs in the browser since 2.3.0), and a slice or a SQL cell can be **promoted into a visual** of a report draft ([ANALYSE.md sections 13 and 14](ANALYSE.md#13-where-each-cell-runs-no-webassembly-in-bi)). Not built: a *Data* tab, *Notes*,
 million-row extracts, scheduled notebooks (ANALYSE.md section 12).
 
 ## 22. With AI: describe a report, ask the data, explain a number (stage 2)
 
-When your administrator has switched the AI layer on ([BI_AI.md](BI_AI.md)), three things appear; with it off (the default) none does.
+When your administrator has switched the AI layer on ([section 29](#29-ai-in-bi-report-from-words-ask-the-data-explain-this-number)), three things appear; with it off (the default) none does.
 
 * **Describe a report** (designer toolbar, `bi-author`): say what you want in words and the model drafts the report YAML over the report's dataset. The draft is **checked before you see it**,
   appears as text, and goes into the YAML tab only when you press *Use this draft*; nothing is saved or published.
@@ -694,7 +694,7 @@ When your administrator has switched the AI layer on ([BI_AI.md](BI_AI.md)), thr
   dimensions); with the administrator's `aggregates` setting also a short wording of it.
 
 The model is told the names, types and descriptions of the dataset and your words; **never a row**, a value, a measure's definition or a field masked for you (unless an administrator chose
-`aggregates`, which also lets it word *your own* masked results). It can choose a wrong query: that is why the query is shown. Reference, settings, codes and tests: [BI_AI.md](BI_AI.md).
+`aggregates`, which also lets it word *your own* masked results). It can choose a wrong query: that is why the query is shown. Reference, settings, codes and tests: [section 29](#29-ai-in-bi-report-from-words-ask-the-data-explain-this-number).
 
 ## 23. Models and pack datasets: the model layer (wave W1)
 
@@ -1058,10 +1058,10 @@ format defaults of each kind of visual, drawn by the same generated pane, with a
 
 ![The theme designer: series colours, the format defaults of matrices, and the preview](img/bistudio/theme-designer.jpg)
 
-**Boards** are designed here too: a page's *Layout: board*, the *tile* visual and its report, visual and alert ([BOARDS.md section 11](BOARDS.md#11-designing-a-board)).
+**Boards** are designed here too: a page's *Layout: board*, the *tile* visual and its report, visual and alert ([REPORTS.md section 11](REPORTS.md#2311-designing-a-board)).
 
 From the command line a theme and a report are items like any other (`drishti.py bi item save`, [CLI_GUIDE.md](CLI_GUIDE.md)); `drishti.py bi migrate --boards` converts 2.3 board files and the stored boards
-([BOARDS.md section 12](BOARDS.md#12-from-a-23-board-to-a-board-page)). The acceptance of the wave, a Power BI author's desk pack made without the YAML tab, is the browser test
+([REPORTS.md section 12](REPORTS.md#2312-from-a-23-board-to-a-board-page)). The acceptance of the wave, a Power BI author's desk pack made without the YAML tab, is the browser test
 `drishti-console/tests/test_bi_studio_browser.py` and [REPORTS.md section 20](REPORTS.md#20-report-schema-v2-in-one-report-240).
 
 ## 27. Field parameters in the wells, and statements (wave D, 2.6.0)
@@ -1082,10 +1082,561 @@ page by page, with a header and footer on every page. The **Paper** tab beside C
 footer (left, centre, right, with tokens such as `{page}`, `{pages}`, `{run-date}`, `{period}`, `{reader}`) and the period the statement covers, and
 **Preview pages** shows the statement page by page as the server lays it out for you, with **‹** and **›**. Each band's page break, keep-together, repeated
 column titles and grouping are in its Format, under **Statement**. **PDF** and **Excel** download the saved draft; a subscription to the page sends each
-recipient their own statement, made as them ([STATEMENTS.md](STATEMENTS.md), [DISTRIBUTION.md section 2](DISTRIBUTION.md#2-subscriptions)).
+recipient their own statement, made as them ([REPORTS.md section 24](REPORTS.md#24-statements-paginated-reports-page-exact-one-per-reader), [DISTRIBUTION.md section 2](DISTRIBUTION.md#2-subscriptions)).
 
 ![The Paper tab and page 2 of the preview](img/bi-wave-d/statement-designer.jpg)
 
 From the command line: `drishti.py bi statement preview <report>` lists the pages with their header and footer, `drishti.py bi statement file <report> -o
 statement.pdf` writes the PDF (`--format xlsx` the workbook) ([CLI_GUIDE.md](CLI_GUIDE.md#bi-statement)); tutorial 20 does both in the UI, the CLI and the
 YAML ([20-statements-and-field-parameters.md](../tutorials/20-statements-and-field-parameters.md)).
+
+## 28. Background runs: long BI questions
+
+Release 2.6.7. The design, with every rule and the API, is [BI_RUNS.md](../architecture/BI_RUNS.md). This guide is what you see and what you do.
+
+Every BI question (a report visual, a board tile, a model query, SQL) goes through one pipeline. The console waits about two seconds for
+the answer. When it comes in time, the visual is drawn exactly as before and nothing else happens. When it takes longer, the question
+becomes a **run**: it goes on in the background, the visual shows a run card, and you can keep working. The bell tells you when the run
+is ready. A slicer, a cross-filter or a drill on a dashboard never becomes a run: it is answered at once, or it tells you that it needs one.
+
+
+### The run card
+
+A visual whose question takes longer than the inline wait shows a run card instead of its chart. The rest of the page keeps working.
+
+![A run card on a report while its run runs: the estimate, why it is large, building 12 of 41 dates at 29 %, Cancel and Open in Runs](img/bi-runs/run-card-running.png)
+
+The card says:
+
+* **Running: 3 to 6 min.** The estimate is always a range, with how it was made. It is never a single number that looks more precise than it is.
+* **Why it is large.** For example "182 business dates of trade_endur, 41 to build first; no rollup has grain desk × month".
+* **Progress**, as a bar with its percentage and what is happening ("building 12 of 41 dates"). Progress is measured, never guessed. When the
+  server cannot measure it, the card says "progress is not measured for this one" and shows no bar.
+* **Cancel** stops the run and frees everything it holds at once. **Open in Runs** opens the run in the [Runs tab](#the-runs-tab).
+* **Export CSV**, **Export Excel** and **Export JSONL** (JSON Lines, a row a line), once the run is done (see [Export](#export)).
+
+When the run finishes while the page is open, the card turns into the chart without a reload. If you have left the page, the bell counts
+the run (see [the bell](#the-bell-and-the-inbox)).
+
+### Confirming a large run
+
+A question that would read a great deal of data (above a minute, or 500 million rows, by default) asks you first. Nothing has run yet.
+
+```
+ Confirm a background run
+ About 1.84 billion rows over 182 business days (Delta statistics). Expected 3 to 6 min on this server.
+ A rollup at this grain in the model makes this instant next time.
+ [ Run in background ]   [ Narrow the dates ]   [ Not now ]
+```
+
+* **Run in background** starts the run, and the card shows its progress.
+* **Narrow the dates** puts the focus on the report's date, so you can ask for fewer days.
+* **Not now** leaves it. Nothing was read. `Esc` does the same.
+
+When the size of a table is not known, the card says "We cannot estimate this yet: it reads tables whose size we do not know. It may take a
+long time." Such a question always asks first, when you ask it yourself (a model query, SQL, the CLI). A report's visual of unknown size does
+not ask: it draws as usual and becomes a run card if it takes longer than the inline wait, so a page on such a source never asks for every
+visual. A report's visual whose size is known asks as any question does.
+
+### A selection that needs a run
+
+Dashboards stay instant. A slicer, a cross-filter or a drill is answered from the model's rollups and the built layers. When a selection
+would need a long scan instead, the visual says so at once, before anything is read:
+
+```
+ This selection needs a background run (3 to 6 min)
+ [ Run in background ]   [ Not now ]
+```
+
+Choosing **Run in background** starts it as a visible run, with its card. The model's owner can add a rollup at that grain, and then the
+same selection is instant.
+
+### The Runs tab
+
+Open it from the BI rail (**Runs**, with the number of your runs queued or running), from My workspace's tab strip (**Items · Runs ·
+Members**), by typing `BI RUNS <GO>`, or with `g` then `r` on any BI page. The address keeps the tab: `/bi/w/me?tab=runs`.
+
+![The Runs tab in the Terminal green theme: a running run at 29 %, expired, cancelled, failed with its reason in words, a run shared by anna, and a done run with its estimate](img/bi-runs/runs-tab-terminal.png)
+
+Each row shows the question and where it came from, its status, the dates it is as of, the data version it read (for example
+`trade_endur delta v412`), how long it took, its rows and the estimate you were shown. Hover the data version for every table and date it
+read, and the estimate for "estimated 3 to 6 min, took 4 min 12 s". A failed run has a second line with its reason in words, and the code
+in brackets for support. ⇄ marks a run someone shared with you.
+
+Rows change as the runs do: there is no reload and no polling (**⟳ live**). Screen readers hear each change ("MTM by desk and month: Done ·
+4 min 12 s · 4,320 rows").
+
+Filters: **Status** (all, active, waiting for you, done, failed, cancelled, expired), **Source** (reports, boards, model queries, SQL,
+statements, schedules), **Who** (mine, shared with me, or both), **Since** (1 to 90 days) and **Search** on the title. A shared workspace's
+Runs tab lists the runs of that workspace's items that you may see.
+
+Keys: the arrow keys move between the tabs; `↑` and `↓` move between the rows; `Enter` opens a run; `Esc` closes it and puts the focus
+back on its row.
+
+### One run: the drawer
+
+![The drawer of a finished run in the light theme: Open, Re-run, Export, Promote; source, who ran it, filters, parameters, as of, data, estimate and actual, tier; kept until, shared with bob (re-masked), schedule](img/bi-runs/run-drawer-light.png)
+
+The drawer shows what the run is: its source, who ran it and as whom it was computed, the filters and parameters, the dates, the data
+versions (**all versions** lists each table), the estimate next to the actual, the tier and the engine. Then what you can do with it. The
+server decides what each person may do with a run, and the drawer shows only those actions:
+
+| Action | What it does |
+|---|---|
+| **Open** | A report's run opens the report with `?run=<id>`: the visual is drawn from the stored result and a line says so. Any other run opens its result. |
+| **Run again** (choose how in **Run again as**, then press the button) | *Same as before (as of D)*: the same question on the same dates and data versions; when the result is still stored it is **reused** at once and the drawer says *Done at once: reused the answer from <time>* with **Open result**. *With the latest data*: relative dates (this year, latest) worked out again. Changing the choice does nothing on its own. While the new run goes the button says *Running…* with a spinner (a still dot with reduced motion); the new run is highlighted at the top of the list, the drawer switches to it and follows it to Done or Failed, and the old run's row says *superseded by* the new run, with a link. |
+| **Cancel** | Stops a queued or running run. Its row says *Cancelled: cancelled by you*. |
+| **Export CSV** · **Export Excel** · **Export JSONL** | The stored result as a file (JSONL: a row a line, the CSV's column names), your own version of it: nothing is computed again, masked cells stay masked (see [Export](#export)). |
+| **Promote…** | A model query's or SQL run's result to a dataset snapshot or a report on it, as a draft for review (see [Promote a run](#promote-a-run)). Offered only when the server says you may (`can.promote`). |
+| **Keep longer** | 90 days, 180 days or a year, instead of the 30 days after the last open. |
+| **Delete result** | Removes the stored result now. The run stays listed, as expired. |
+| **Share…** · **Unshare** | See [Sharing a run](#sharing-a-run). |
+| **Schedule…** · **Edit** · **Pause** · **Remove** | See [Schedules](#schedules). |
+| **Run in background / Discard** | For a run waiting for your confirmation. |
+
+An expired run says when its result was removed, and offers Run again.
+
+### The same answer for the same access profile
+
+A report visual's answer is shared between everyone with the same **access profile**: the same roles, masks and row rules on the
+model it reads. When a colleague with your access profile has already drawn the visual on the same data and dates, you get their
+answer at once (**Reused**), or wait for the same run if it is still going; nothing is computed twice. Someone with another mask or
+row rule never gets your answer, and you never get theirs. A visual that depends on who is looking (a filter or value naming you,
+such as `user.name` or `me`, a row rule by your user name, a personal model) stays yours alone.
+
+### Sharing a run
+
+![The drawer of a shared, scheduled run in the Terminal theme: bob re-masked, dave sees the same, carol recomputed as them with her own run; the schedule business-days 07:30 with its next firing, and the schedule form set to weekly on Monday at 08:00](img/bi-runs/run-share-schedule.png)
+
+**Share…** opens a box with the people picker: type two letters of a name or a role and choose it (`↑` `↓`, `Enter`), and it becomes a
+chip; `×` takes it off. You can also type names, comma separated (`bob, role:risk-team`). A role is expanded to its members when you share.
+**Share** sends it. A share never hands over your result as such. The server decides, for each person, what their own rights allow, and
+the drawer lists each recipient with that decision:
+
+| Shown as | Meaning |
+|---|---|
+| **sees the same** | they have exactly your rights: they read your stored result |
+| **re-masked** | the same rows with their own extra masks applied: a masked column shows the mask, never a value |
+| **recomputed as them** | their rights differ, so the question runs again as them (the drawer names their run), and they are told when it is ready |
+
+A person who may not read the model gets no share, and the drawer says so in words with the code ("Not shared with eve (DRS-9021)").
+Ten people of one desk with equal rights cost one recomputation, not ten. The decision is taken again each time they read it, so a
+recipient whose rights narrowed since is told to re-run it, never shown the wider answer.
+
+**Unshare** beside a recipient stops sharing with that person. A run recomputed as them stays theirs.
+
+**What a recipient sees.** The run is in their own Runs tab (**Who** set to *shared with me* or *both*), marked **⇄ shared by anna**. Its
+drawer says "Shared with you by anna. Masks hold: you see what your own rights allow." They can open and export it (their own version);
+sharing on, scheduling and deleting stay with the owner. The bell tells them when it was shared.
+
+### Schedules
+
+**Schedule…** in the drawer asks the same question again on a schedule, as you, at the time it fires (if you lose access, the firing fails
+and you are told; it never borrows anyone's rights). Choose how often from the presets and the form writes the schedule for you, shown
+under it ("Writes `weekly mon 08:00`"):
+
+| Preset | Writes |
+|---|---|
+| Daily at | `daily 07:00` |
+| Weekdays at | `weekdays 07:30` (Monday to Friday) |
+| Business days at | `business-days 07:30` (the calendar's business days) |
+| Weekly on | `weekly mon 08:00` |
+| Monthly, the last day at | `monthly last 18:00` |
+| Monthly, the last business day at | `monthly last 18:00 business` |
+| Written out | anything in the same grammar, typed |
+
+The grammar is the subscriptions' one ([API_GUIDE.md](API_GUIDE.md), `POST /api/v1/bi/runs/{id}/schedule`); `after-load` is not offered
+for runs. **On** chooses the newest data (relative dates worked out again at each firing) or the same dates. Times are the server's zone.
+
+Once scheduled, the drawer's **Schedule** line says what it is and when it fires next ("business-days 07:30 on the newest data · next
+2026-10-22 07:30 UTC"). **Edit** opens the form on it, **Pause** stops the firings until you **Resume**, and **Remove** deletes the
+schedule (the runs it made stay listed). Each firing is a visible background run, confirmed in advance, and a notice on the bell.
+
+### Export
+
+**Export CSV**, **Export Excel** and **Export JSONL** download a finished run's result as a file. They are in the drawer, on the run card while a finished
+run's result is drawn, and on the line above a report drawn from a run (`?run=<id>`, "Drawn from the run of…"). The file is made by the
+server from the stored result, so nothing is computed again, and it is **your** version: a recipient of a share gets their re-masked or
+recomputed answer, and masked cells stay masked (the file's note names the masked columns). A very large result is cut at the export row
+limit, with a note saying so. Parquet and PDF are not offered for runs yet.
+
+### Promote a run
+
+**Promote…** in the drawer asks for a **Name** (the snapshot's and the dataset's, prefilled from the run's title), a **Title**, and **To**:
+*a dataset snapshot* keeps the result as a read-only table and makes a draft dataset in My workspace (`source: {run: …}`,
+[DATASETS.md](DATASETS.md)); *a report on it* also makes a draft report with one table of every column. The rows are kept as you see them:
+a column masked for you stays masked for every reader. The drawer then says *Promoted to name@1* with links to **the draft dataset** and
+**the draft report**. Both follow the normal review before publishing, and the reviewer sees as whom the data was computed.
+Only the runner promotes, with the bi-author power, and only a model query or a SQL run (not a report visual): the button appears only when
+the server allows it. The same name again is version 2 of the same draft. A name another person promoted is refused: *That snapshot name is
+taken by another person's promotion: choose another name (DRS-9004)*. A dataset that points at a snapshot it was not promoted to reads
+*This dataset may not read that run snapshot (DRS-9108)*: promote the run again to make your own. On the command line:
+`drishti.py bi runs promote RUN --to report --name desk-pnl-2026 --title "Desk P&L 2026"`.
+
+### The bell and the inbox
+
+When a visible run finishes, fails, or is started again after a server restart, the bell counts it once (a page draw that made several runs
+rings once, when the last one ends). The notice says "Run finished: MTM by desk and month, 2026-01-02 to 2026-09-30 (182 rows, 3 min 40 s)":
+names and counts only, never a value. Opening it goes to `/bi/run/<id>`, which opens the report drawn from the stored result, or the run in
+the Runs tab. The inbox has a **Runs** tab of its own (`/inbox?tab=run`).
+
+### On the command line
+
+`drishti.py bi runs` does what the Runs tab does, as the token's user (the full list is in [TOOLS.md](TOOLS.md) section 5.7 and
+[BI_RUNS.md](../architecture/BI_RUNS.md) section 14.4):
+
+```
+$ python3 tools/drishti.py bi runs list --state running,done --since 7d
+r-java-2-01JAC4Q8Z6T3M4R9B0X1Y2Z3W4  MTM by desk and month
+    running · building 12 of 41 dates · 29 %  · as of 2026-01-02 to 2026-09-30 (182 dates)  · trade_endur delta v412  · est. 3 to 6 min
+$ python3 tools/drishti.py bi runs submit --sql "SELECT desk, MEASURE('MTM') FROM trades GROUP BY desk" --model trading --wait 0 --yes
+r-java-2-01JAC4Q8Z6T3M4R9B0X1Y2Z3W5  queued  (expected 3 to 6 min)
+  follow it:  drishti.py bi runs wait r-java-2-01JAC4Q8Z6T3M4R9B0X1Y2Z3W5
+$ python3 tools/drishti.py bi runs wait r-java-2-01JAC4Q8Z6T3M4R9B0X1Y2Z3W5 --timeout 30m      # exit 0 done, 3 failed, 4 cancelled, 5 still running
+$ python3 tools/drishti.py bi runs result r-java-2-01JAC4Q8Z6T3M4R9B0X1Y2Z3W5 --format csv --out pnl.csv     # or --format jsonl: a row a line
+$ python3 tools/drishti.py bi runs share r-java-2-01JAC4Q8Z6T3M4R9B0X1Y2Z3W5 --to bob --to carol --to eve
+bob: re-masked (your result with their extra masks)
+carol: recomputed as them (their rights differ: a run of their own) (run r-java-2-01JAC4Q8Z6T3M4R9B0X1Y2Z3W6)
+eve: not shared: eve may not read the model trading (DRS-9021)                      (on stderr)
+$ python3 tools/drishti.py bi runs unshare r-java-2-01JAC4Q8Z6T3M4R9B0X1Y2Z3W5 carol
+carol: no longer shared
+$ python3 tools/drishti.py bi runs schedule r-java-2-01JAC4Q8Z6T3M4R9B0X1Y2Z3W5 "weekly mon 08:00" --data latest
+sch-1  weekly mon 08:00  on latest data  next 2026-10-26 08:00
+$ python3 tools/drishti.py bi runs schedules edit sch-1 "business-days 07:30"     # also: schedules [list] | disable | enable | delete ID
+$ python3 tools/drishti.py bi runs export r-java-2-01JAC4Q8Z6T3M4R9B0X1Y2Z3W5 --format xlsx --out pnl.xlsx
+$ python3 tools/drishti.py bi runs suggestions --model trading                    # bi-admin
+sg-1  trading  desk x month  suggested  37 runs, about 4 min each
+    asked 37 times this week, about 4 min each: make it a rollup refreshed at load
+$ python3 tools/drishti.py bi runs suggestions accept sg-1                         # or: dismiss sg-1
+sg-1  accepted: the rollup is in the draft of trading (bi-model-...); review it and publish it
+```
+
+`bi runs estimate` gives the tier, the engine and the estimate and runs nothing. A large question without `--yes` is refused with its estimate
+and exit 2. `drishti.py bi mq FILE --async` and `drishti.py bi sql "…" --model M --async` ask as a run: the answer when it is done within
+`--wait` (2 s by default), else the run's id; `--yes` accepts a large one in advance. Without `--async` they behave as before 2.6.7.
+
+### The Admin page for runs
+
+`/admin/bi/runs`, for BI administrators (also linked from Admin → BI). It shows the engine's gate now (slots in use per work class: interactive,
+standing and background, with the background cap), the interactive admission wait (the sign that background work is not slowing anyone),
+the queue per person, what runs now (with **Cancel**: the person is told an administrator cancelled it), the result store (results and
+snapshots, the biggest users), how accurate the estimates were, how many questions were answered inline, the settings file, and the heavy
+questions asked often enough that a rollup would answer them at once (see [Rollup suggestions](#rollup-suggestions)). It shows
+state, sizes and nodes, never a value. `drishti.py bi runs storage` prints the same.
+
+### Rollup suggestions
+
+The same heavy question asked again and again is better answered by a rollup in the model: then it is instant for everyone. The server
+counts the finished heavy model queries per model, grain and the shape of their filters (the field and the operator, never a value). When
+one is asked often enough (by default 5 times in 7 days, with a median of a minute or more), it becomes a suggestion with the rollup drafted.
+
+![Admin → BI → Runs, Repeated heavy questions in the light theme: desk × month on the trading model asked 37 times, about 4 min each, its rollup by_desk_month open, with Accept and Dismiss; counterparty asked 6 times](img/bi-runs/rollup-suggestions.png)
+
+**Repeated heavy questions** on `/admin/bi/runs` lists each one: the model, the grain and filters, how many runs, the typical time, its
+status, and **The rollup** (open it to read the YAML that would be added). For a BI administrator:
+
+* **Accept** adds the drafted rollup to the model's **draft**, under `rollups:` (the model's comments and order are kept). Nothing is
+  published: the change is reviewed and published like any other, and the message links to the model. For a model shipped in a pack the
+  suggestion is accepted with the YAML for you to add by hand.
+* **Dismiss** stops suggesting it.
+
+Once the model has a rollup at that grain the status says **Built**, and those questions are answered at once instead of becoming runs.
+While a model has open suggestions, its **model designer** shows a notice under the toolbar ("A heavy question on this model was asked 37
+times this week: a rollup would answer it at once. Review the suggested rollups") that opens this list for that model
+(`/admin/bi/runs?model=trading#suggestions`). The notice shows to BI administrators, who can accept. On the command line:
+`drishti.py bi runs suggestions [--model M]`, `suggestions accept ID`, `suggestions dismiss ID`.
+
+### The words for each state
+
+| State | Shown as | Meaning |
+|---|---|---|
+| `awaiting-confirm` | Waiting for you | it asked you to confirm; nothing has run |
+| `queued` | Queued | waiting for a slot |
+| `running` | Running, with progress | reading and computing |
+| `storing` | Storing | writing the result |
+| `done` | Done | the result is stored |
+| `reused` | Reused | the same question on the same data was already answered, by you or by someone with the same access profile: nothing ran |
+| `failed` | Failed: *reason* (code) | ended with a problem; the reason says what to do |
+| `cancelled` | Cancelled: *by whom* | by you, an administrator, a newer selection, or the page closing |
+| `expired` | Expired | the result was removed by retention or the storage budget |
+
+The codes `DRS-9080` to `DRS-9089` are listed with their fixes in [TROUBLESHOOTING.md](TROUBLESHOOTING.md).
+
+## 29. AI in BI: report from words, ask the data, explain this number
+
+Rūpaka stage 2 ([RUPAKA.md](../architecture/RUPAKA.md) section 20.1) puts a language model beside business intelligence, in three places and no more. It is **off by default**, it is the
+AI layer's ([AI_PROVIDERS.md](../architecture/AI_PROVIDERS.md)) and no other, and the model is never trusted with anything a person could not do by hand: **it writes a draft or a query, and
+Drishti checks it, runs it as the reader, and shows it.**
+
+| Where | What you do | What the model does | What Drishti does |
+|---|---|---|---|
+| Designer | **Describe a report** | drafts report YAML over the report's dataset | checks it with the report checker before you see it; puts it in the YAML tab; saves nothing |
+| A report page | **Ask the data** (a question box) | maps the question to a dataset query (fields, measures, filters, dates) | the engine runs it as you (row rules, masks), shows a table and the visual that suits it, and the query used |
+| A visual's header | **Explain** (the light bulb) | in `aggregates` mode only: words the breakdown | works out the lineage and the breakdown of the number by its main dimensions on the engine |
+
+![Ask the data on the Trades overview report](img/bi-ai/bi-ai-ask.png)
+
+### 29.1 Turn it on
+
+Two switches: the AI layer, with a provider, and (optionally) the BI settings. Nothing else changes for people who do not use it: the buttons are hidden and every call answers
+`404 DRS-4015` while `drishti.ai.enabled` is false.
+
+```yaml
+# config/ai/mock.yaml  (a deterministic provider for trying it; use config/ai/openai.yaml.example or anthropic.yaml.example for a real model)
+type: mock
+models:
+  - name: m
+```
+
+```
+DRISHTI_AI_ENABLED=true  DRISHTI_AI_DEFAULT_MODEL=mock/m
+```
+
+| Setting (`drishti.bi.ai.*`) | Default | Meaning |
+|---|---|---|
+| `model` | blank | `provider/model` the hooks use; blank is `drishti.ai.default-model` |
+| `values` | `labels-only` | `labels-only`: the model sees names, types and descriptions, **never a value**. `aggregates`: it may also word the reader's own masked aggregate results (section 5) |
+| `max-question-chars` | `600` | longest question or description |
+| `max-tokens` | `2000` | longest answer asked of the model |
+| `timeout-seconds` | `30` | one model call |
+| `ask-rows` | `200` | most rows an answer holds, and the most the model sees of them in `aggregates` mode |
+| `explain-dimensions` | `3` | dimensions a number is broken down by |
+| `explain-members` | `5` | members listed per dimension |
+| `suggestions` | `6` | most visuals the designer copilot proposes at once (section 10) |
+| `helper-items` | `8` | most items the dataset helper proposes per kind (section 11) |
+
+The policy settings are the AI layer's (`drishti.ai.policy.*`, [CONFIGURATION.md](../admin/CONFIGURATION.md#ai-and-mcp-policy-settings)). The features are named **`bi-draft`**, **`bi-ask`**
+and **`bi-explain`**, and for the helpers of sections 9 to 11 **`subscription-narrative`**, **`bi-suggest`**, **`bi-explain-checks`** and **`bi-helper`**, so `drishti.ai.policy.features."[bi-ask]": {roles: [analyst], per-user-per-minute: 10}` limits who asks and how often.
+
+### 29.2 Who may
+
+Two gates, both of which must open. The **BI power** decides first (`bi-author` to describe a report, `bi` to ask or explain: [BI_GUIDE.md](BI_GUIDE.md) section 2); then the **AI policy**
+(`features.<name>.roles`; masks, per-user and per-feature limits, the cost limit). An author whose role the policy does not list for `bi-draft` is refused `403 DRS-4018`. A person with no
+BI power never reaches the model. Every call is audited twice: the policy's access-log row (action `ai`, feature, model, sizes, tokens, outcome, never the text) and a BI audit row
+(`bi-ai-draft`, `bi-ai-ask`, `bi-ai-explain`, with the dataset or report and the outcome). Neither holds a prompt or an answer.
+
+### 29.3 What the model is sent
+
+The prompt is the **model** the report reads (its describe, as the person reads it) and the person's own words, nothing else. For *Ask the data* on the
+shipped report **Trades overview** (model `trades-basic@1`) the message is, word for word (rendered from the model as the server reads it):
+
+```text
+TASK: ask-query
+DATASET trades-basic: The simplest useful model: one table (the trading pack's trade) with four measures (Notional, MTM, Trades and average MTM per trade) and a desk-to-book hierarchy. Start here.
+FIELDS (write them as table.column):
+  table trade: the dataset trades-basic-trade 1.0.0, a fact
+    trade.VALUATION_ID string
+    trade.TRADE_ID string
+    trade.SOURCE_SYSTEM string
+    trade.DESK string
+    trade.PORTFOLIO string
+    trade.PRODUCT_TYPE string
+    trade.CURRENCY string
+    trade.TRADE_STATUS string
+    trade.NOTIONAL decimal
+    trade.MTM decimal
+    trade.PNL_1D decimal
+    trade.TRADE_DATE date
+    trade.MTM_IN_MILLIONS decimal - MTM in millions of USD
+MEASURES (write them by name):
+  Notional - Total notional of the trades, in the trade's own currency units.
+  MTM - Mark-to-market in USD, signed.
+  Trades - Number of trades.
+  Average MTM per trade - MTM divided by the number of trades (a measure built from measures).
+  Desk P&L volatility - Standard deviation of the one-day P&L per desk, computed in Python. Shown by a python visual (docs/guides/PYTHON_BI.md); a query cannot use it.
+  Count of trade
+HIERARCHIES:
+  Desk and book: [trade.DESK, trade.PORTFOLIO]
+QUESTION: notional by desk
+```
+
+Each table is an alias of the model, described by its dataset and role; each field is `alias.COLUMN type`, with its description when the model gives one.
+(Until 2.3.0 a question asked **on a report over a model** sent the model's name and measures but not its fields; it now sends them, as a question asked
+of the model by name always did.)
+
+What is **not** in it, in either mode: a row, a value of a field, a measure's definition, a connector or a path, and any field **masked for the reader** (it is left out, so the model cannot be
+told it exists). The AI policy then masks `drishti.security.redact` fields and the extra patterns in the prompt as it does for every call. `BiAiTest` records the prompts and checks all of this.
+
+| | `labels-only` (default) | `aggregates` |
+|---|---|---|
+| Report from words | the model | the model (no change: a draft never involves values) |
+| Ask the data | the model maps the question; **the answer is never sent to it** | then a second call words the reader's aggregate result (unmasked columns only, at most `ask-rows` rows) |
+| Explain | no model call at all: lineage and breakdown only | one call words the breakdown (totals and members of the main dimensions, as the reader sees them) |
+
+`aggregates` sends **the reader's own figures** to the model's provider. Use it only with a provider you may send such figures to (a model on your own network, or one whose terms allow it);
+masked columns and fields hidden by row rules never go, because the engine has already applied them. That is why it is a setting an administrator makes, and not a button.
+
+### 29.4 Report from words
+
+In the designer, **Describe a report** opens a box: say what you want ("notional by desk as a bar chart and the total as a card"), press **Draft it**. The model is told the report grammar
+(the visual types and their wells, the 12-column grid) and the dataset model (for a model of the model layer its `describe` as you read it: each alias
+a table with its dataset and version, the fields you may see, the measures not hidden from you), and answers with YAML. `dataset` in the request names
+a model (`world-economics@1`, its item id), a dataset of the model layer (`dataset:<name>`) or a version 1 dataset. Drishti then:
+
+1. strips a code fence if the model added one, and pins the draft to what the report you are editing reads: on a **model** (2.2) `rachana: 2` and
+   `model: <name>@<major>` in place of any `dataset:`, on a version 1 dataset `dataset:` to it;
+2. runs the **report parser and checker** on it (the same as *Check* and Save): unknown fields or measures, bad wells, a bad grid, anything;
+3. if it fails, tells the model the problems (names only) and asks once more; if it still fails you get `422 DRS-4020` naming the first problems, and the draft is **not shown**;
+4. shows the passing draft as text with *Use this draft*, which puts it in the YAML tab like text you typed. **Nothing is saved or published**: the designer's undo, Check and Save are unchanged,
+   and publishing still needs a person and the usual review.
+
+```text
+POST /api/v1/bi/ai/draft  {"dataset": "world-economics@1", "request": "GDP by region"}                (as an administrator)   200
+{ "yaml": "rachana: 2\nreport: gdp-by-region\nversion: 1\ntitle: GDP by region\nmodel: world-economics@1\npages:\n  - id: main\n ...",
+  "valid": true, "problems": [], "dataset": "world-economics@1", "model": "world-economics@1", "saved": false }
+
+POST /api/v1/bi/ai/draft  {"dataset": "trades-basic@1", "request": "notional by desk as a bar chart"}   (as an administrator)   422
+{ "status": 422, "code": "DRS-4020", "detail": "DRS-4020 the model's draft did not pass the report check, so it is not shown:
+  pages[0].visuals[0].wells.values: no measure 'GDP (USD bn)' in dataset 'trades-basic' (measures: Notional, MTM, Trades, Average MTM per trade,
+  Desk P&L volatility, Count of trade); pages[0].visuals[1].wells.axis: 'economies.REGION_NAME' is not a table.column of this dataset (tables: trade); ..." }
+
+POST /api/v1/bi/ai/draft  {"dataset": "trades-basic@1", "request": "x"}                                (as rita, no bi-author)   403
+{ "status": 403, "code": "DRS-9002", "detail": "DRS-9002 rita does not hold the bi-author power (an administrator grants it on a role)" }
+```
+
+(The second call is the checker at work: tutorial 15's mock answers every draft with the same world-economics report, which names nothing of
+`trades-basic@1`; it was told the problems once, answered the same, and the draft was refused, not shown.)
+
+![Describe a report in the designer](img/bi-ai/bi-ai-describe.png)
+
+### 29.5 Ask the data
+
+On a report page, the question box under the bar maps a question to a **query on the report's dataset**: `fields` to group by, `measures`, `filters`, `dates`, `orderBy`, `limit`: the same
+document the engine's visuals use ([DATASETS.md](DATASETS.md) section 8). The model chooses only names from the model it was shown; the **engine** validates every name and binds every value, and
+runs the query **as you**: your row rules and your masks apply, so two people asking the same question get the answers they are each entitled to (`BiAiTest` has a desk head and a risk
+analyst ask "notional by desk": one row and three rows; and an analyst asking for a masked measure gets it masked).
+
+The page shows the answer as a **table**, the **visual that suits it** (a card for one number, a line over dates, a bar for a few categories; chosen by Drishti from the shape of the query, not
+by the model), a note of how many rows the engine answered, and **the query the model chose** (a disclosure) so you can see, and trust or doubt, what was asked. A refusal by the engine
+(a field that is not there, a limit) is shown with its code (`DRS-9020`, `DRS-9025`) and "the query the model chose was refused".
+
+```text
+POST /api/v1/bi/ai/ask  {"report": "file:report:trades-overview", "question": "notional by desk"}          (as ann, bi-writer)   200
+{ "columns": [{"type": "string", "masked": false, "name": "trade.DESK"}, {"type": "decimal", "masked": false, "name": "Notional"}],
+  "rows": [["DESK-COMM", 8.888037427736503E11], ["DESK-RATES", 5.96934185E11], ["DESK-EQD", 4.28542341E11], ...], "rowCount": 10,
+  "meta": {"layer": "columns", "rows": 10, "cached": false, "dates": ["2026-10-16"], "tables": ["trade"], "masked": [], ...},
+  "question": "notional by desk",
+  "query": {"fields": ["trade.DESK"], "measures": ["Notional"], "filters": [], "orderBy": [{"desc": true, "by": "Notional"}], "limit": 200},
+  "visual": "bar", "values": "labels-only", "summary": null }
+
+POST /api/v1/bi/ai/ask  {"report": "file:report:trades-overview", "question": "something no rule knows"}   (the mock cannot answer)   422
+{ "status": 422, "code": "DRS-4020", "detail": "DRS-4020 the model did not answer with a query" }
+
+POST /api/v1/bi/ai/ask  {"report": "file:report:trades-overview", "question": "notional by desk"}          (as rita, risk)   403
+{ "status": 403, "code": "DRS-4018", "detail": "DRS-4018 feature 'bi-ask' is not open to your roles" }
+```
+
+(Captured on tutorial 15's stack, whose AI policy opens `bi-ask` to `admin` and `bi-writer` only, hence rita's refusal; with no policy entry for the
+feature she would be answered, with her own row rules and masks.)
+
+The body names a `report` (the question is asked of the dataset that report reads, with the report's grants) or a `dataset` (a catalogue id). In `aggregates` mode `summary` is the model's
+wording of the result; in `labels-only` it is `null`. A question the model cannot turn into a query on this dataset is `DRS-4020`, not a guess.
+
+### 29.6 Explain this number
+
+The light-bulb button in a visual's header (visuals that show a measure) explains the **first measure** of the visual under the **page's state**: its slicers, selections and date, so the
+number explained is the number on the screen. You get:
+
+* **Lineage**, from the dataset model and the packs, no model involved: the dataset, the measure's definition, the columns it reads, and the **sources**: each table's pack kind, connector
+  and mode.
+* **The breakdown**, computed by the engine as you: the total, then the value by up to `explain-dimensions` dimensions (the visual's own fields first, then the text columns of the tables the
+  measure reads), each with its top `explain-members` members and their **share**. A dimension masked for you, or one the engine will not group by, is left out.
+* **The narrative** (`aggregates` mode only): three sentences wording that breakdown, from numbers the model was given and told not to add to.
+
+```text
+POST /api/v1/bi/ai/explain  {"report": "file:report:trades-overview", "page": "overview", "visual": "notional", "measure": "Notional", "state": {}}   (as rita)   200
+{ "measure": "Notional",
+  "lineage": { "dataset": {"name": "trades-basic", "title": "Trades, the basics", "version": "1.0.0"}, "model": {"name": "trades-basic", "version": "1.0.0"},
+               "measure": {"name": "Notional", "expr": "sum(trade.NOTIONAL)", "description": "Total notional of the trades, in the trade's own currency units."},
+               "columns": [{"name": "trade.NOTIONAL", "type": "decimal", "calculated": false, "expr": null}],
+               "sources": [{"table": "trade", "dataset": "trades-basic-trade", "version": "1.0.0", "kind": "trade-valuation", "connector": "risk-store", "mode": "cached"}] },
+  "value": 3.6170686197736504E12,
+  "breakdown": [ {"dimension": "trade.TRADE_ID", "members": [{"member": "1001777", "value": 1.53911817E10, "share": 0.4}, ...]},
+                 {"dimension": "trade.SOURCE_SYSTEM", "members": [{"member": "MUREX", "value": 1.56906739E12, "share": 43.4},
+                                                                {"member": "CALYPSO", "value": 1.468877391E12, "share": 40.6},
+                                                                {"member": "ENDUR", "value": 5.791238387736503E11, "share": 16.0}]},
+                 {"dimension": "trade.DESK", "members": [{"member": "DESK-COMM", "value": 8.888037427736503E11, "share": 24.6}, ...]} ],
+  "values": "labels-only", "narrative": null }
+```
+
+![Explain this number](img/bi-ai/bi-ai-explain.png)
+
+Explain explains **what a number is made of**, not why it moved over time (no comparison between dates is made; that is "not built", section 9).
+
+### 29.7 Errors
+
+| Code | When |
+|---|---|
+| `DRS-4015` (404) | the AI layer is off |
+| `DRS-4016` (502 / 504) | the provider failed or did not answer in time |
+| `DRS-4017` (429) | over a per-user, per-feature or cost limit of the AI policy |
+| `DRS-4018` (403) | the AI policy does not open `bi-draft` / `bi-ask` / `bi-explain` / `bi-suggest` / `bi-explain-checks` / `bi-helper` to your role (for a subscription's narrative, `subscription-narrative` to the recipient: the summary is left out and the delivery says so) |
+| `DRS-4019` (404) | the configured model is not found |
+| **`DRS-4020`** (422) | the model's answer could not be used: a draft that did not pass the report check after one repair, or an answer that is not a query. Nothing was changed |
+| `DRS-9002` (403) | no BI power for the hook (`bi-author` to draft, `bi` to ask and explain) |
+| `DRS-9020` / `DRS-9021` / `DRS-9025` | the engine refused the query the model chose (an unknown field or measure; a masked field you may not group by; you already have the maximum number of queries running) |
+| `DRS-9030` .. `DRS-9035` | the report or visual named in an Ask or Explain is not there or does not check |
+
+### 29.8 Tests
+
+`BiAiTest` (server, mock provider only, security on): the draft prompt carries the model and **no row, value or measure definition**; a draft is shown only if the checker passes it (a bad one is
+`DRS-4020`); an author the policy does not list is refused; two readers asking the same question get different answers; a masked measure stays masked; the ask prompt in `labels-only` has no
+row and in `aggregates` only the reader's own unmasked aggregates; explain's lineage, sources and breakdown; the hooks off with the layer. `tests/test_bi_ai.py` (console routes and the script's
+hygiene: no `innerHTML`, no inline handler, same origin) and `tests/test_bi_ai_browser.py` (Chromium, real server and console, the mock provider: ask, explain, describe).
+Sections 9 to 11 are tested in `BiAiTest` (suggestions are checked and rename taken ids, explanations pair with the checker's problems and no problem means no model call, the helper drops a name that is
+not in the model, a relationship inside one table, a measure over an unknown column and a duplicate; the narrative needs `aggregates`), `SubscriptionServiceTest` (a narrative from each recipient's own
+render, left out for a masked one, refused at save while the AI layer is off) and `tests/test_wave_d.py` (the routes and the scripts' hygiene); `tests/test_wave_d_browser.py` runs the
+copilot and the helper in Chromium.
+
+### 29.9 A written summary at the top of a subscription's email
+
+A subscription with `narrative: true` (a checkbox on the Subscribe form: *Open the email with a short written summary*) opens each email with two or three sentences that word the report for **that
+recipient**. It is the same model call as the others, under the feature name **`subscription-narrative`**, made **as the recipient** (their roles, their per-user limits, `features."[subscription-narrative]".roles`),
+and the facts it is given are the recipient's own render of the report: the title, the as-of date and the tables as they see them, **every column masked for them left out**, at most
+`drishti.distribution.subscriptions.narrative-rows` (15) rows of each. The prompt asks for three sentences at most and no number that is not in the facts.
+
+It is written only when the AI policy lets the model see values: **`drishti.bi.ai.values: aggregates`**. Under `labels-only` the model never sees a figure, so the email goes without a summary and the delivery
+in the run's history says `summary: skipped: the AI policy lets the model see labels only`. It is the same when the AI layer is off, when the policy refuses the feature to the recipient, or when
+the provider fails: the email is sent without it (a summary is never a reason to hold a report back) and the history says why. A saved subscription with `narrative: true` is refused while the AI layer is
+off (`422 DRS-9061`). The summary is marked as written by an AI model; it is not stored anywhere but in the email, and the audit row (`ai-subscription-narrative`) holds no text.
+
+![Subscribe form with the summary and the channels](img/bi-dist/subscribe-form-channels.png)
+
+### 29.10 Designer copilot
+
+In the report designer, **Suggest visuals** (beside *Check*; hidden unless the AI layer is on and you have `bi-author`) takes a goal in your words ("where the exposure sits, and a way to filter it by
+desk") and the dataset the report reads, and proposes visuals, their wells and filters. The model is sent the dataset's model (names, types and descriptions, never a row) and the titles of what the report
+already has; it writes a report in YAML, the report checker runs on it as it does on a hand-written one (one repair attempt, then `DRS-4020`), and each visual in it comes back as a card with its type, its
+title, a sentence on why it is useful (the visual's `alt`) and **the YAML that would be added**. A slicer is a *filter*. Nothing is applied: **Add to this page** puts that visual at the bottom of the
+page you are on as one undoable edit of the draft (`Ctrl+Z` takes it back), and Save is still yours. An id the report already uses is renamed (`by-desk-2`). `POST /api/v1/bi/ai/suggest`,
+feature `bi-suggest`.
+
+**Explain in plain words** is a button in the Check panel. The checker's own problems (codes, paths and messages, nothing else; the dataset's names help the explanation) go to the model, which answers
+each with what it means and what to change, using the dataset's names. They are shown under the problems, marked as written by a model, and change nothing. With no problem the model is not called.
+`POST /api/v1/bi/ai/explain-checks`, feature `bi-explain-checks`.
+
+![Suggest visuals in the designer](img/bi-ai/designer-suggest.jpg)
+
+![The Check panel explained in plain words](img/bi-ai/check-explained.jpg)
+
+### 29.11 Dataset helper
+
+In the **model designer** (2.2; and on the Model view of a version 1 dataset), **Ask the AI helper** proposes what a model usually lacks, from its names, types and descriptions alone (a column masked for you is left out; no value, no row):
+
+* **relationships** between columns of the same type in different tables, with a cardinality and a reason;
+* **measures** with a name, an expression (one aggregate over a column the model has, or `count(table)`) and a one-sentence description;
+* **descriptions** for the columns that have none.
+
+Each item is checked against the model before it is shown, and a name that is not there, a relationship inside one table or one that exists, a measure over an unknown column or with a name taken, and a
+description for a column that has one are all dropped. Each is shown with the YAML it would add and an **Accept** button of its own: a relationship is added to the diagram and the `relationships:` block, a
+measure to the `measures:` block, a description into the column's line (whichever of the three ways it is written; when the line cannot be found the item says *Place it by hand* and the YAML is shown
+to copy). Nothing is saved until you press Save, and the draft is checked as you type like any other edit. `POST /api/v1/bi/ai/dataset-helper`, feature `bi-helper`.
+On a model the items are written for the model: a measure under `measures:`, a field's description under `fields:` (`economies.regionName: { description: "..." }`,
+kind `field`), a relationship under `relationships:`, each Accept one undoable edit of the designer's draft; the answer names the model (`"model": "my-world-economics@1"`).
+
+![The dataset helper on the Model view](img/bi-ai/dataset-helper.jpg)
+
+### 29.12 Not built
+
+The narrative, the designer copilot and the dataset helper are built (sections 9 to 11). Not built: "why did it move" between two dates, follow-up questions that remember the last (each question is alone), streaming answers, and a model that calls Drishti's
+tools itself (the MCP client exists; no BI hook uses it).

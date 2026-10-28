@@ -58,7 +58,7 @@ strip, the tables, searches and columns alike.
 | A figure everyone sees on a view, every time | a panel in the kind's Sutra ([Sutra developer guide](SUTRA_DEVELOPER_GUIDE.md)): computed on the server, cached, live |
 | Find entities by value (`TRD where mtm > 1m`) | [search](USER_GUIDE.md#search-by-value), on the command line |
 | Be told when a figure crosses a line | an [alert](USER_GUIDE.md#alerts): the server checks it on every change |
-| The same search as a file every morning | a [scheduled report](SCHEDULED_REPORTS.md#scheduled-reports) |
+| The same search as a file every morning | a [scheduled report](DISTRIBUTION.md#scheduled-reports) |
 | A long notebook, a model you keep in git, millions of rows, your own libraries | Python on your machine with a personal API token ([CLIENTS.md](CLIENTS.md)) |
 
 Calc is for questions that are yours, now, about the data in front of you. It is not a batch engine: it runs in one

@@ -13,7 +13,7 @@
  *
  * See the LICENSE file in the root of this repository for the full terms.
  */
-/* BI with AI (docs/guides/BI_AI.md): "Describe a report" in the designer, "Ask the data" and "Explain" on a report page. Off unless the server's AI layer is on
+/* BI with AI (docs/guides/BI_GUIDE.md): "Describe a report" in the designer, "Ask the data" and "Explain" on a report page. Off unless the server's AI layer is on
    (GET /bi/api/ai/status); every call is the signed-in person's, through the server's AI policy. The model never sees rows and never runs anything: a draft is checked by
    the report checker before it is shown, a question is run by the engine as the reader, a number's breakdown is worked out by the engine. Same-origin JSON only. */
 (function () {

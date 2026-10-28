@@ -13,7 +13,7 @@
  *
  * See the LICENSE file in the root of this repository for the full terms.
  */
-/* Boards as a report layout (R7, 2.4.0; docs/guides/BOARDS.md) in the report viewer: the tiles of a page with `layout: board` and the board's kiosk. A tile shows
+/* Boards as a report layout (R7, 2.4.0; docs/guides/REPORTS.md) in the report viewer: the tiles of a page with `layout: board` and the board's kiosk. A tile shows
    a visual of another report (`from:`): it is asked of that report, as the person looking (its model, their rows and masks), followed live like any visual,
    and coloured by its `alert:` (said in words under it, never by colour alone). Ordinary visuals on a board page are the report's own and take its slicers,
    cross-filter and drill. Kiosk fills the screen, hides the menus and turns the board pages by themselves (`board: { rotate }` of the report, else the

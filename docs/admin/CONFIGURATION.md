@@ -1666,7 +1666,7 @@ Times are in `drishti.business-date.zone`, business days by `drishti.business-da
 
 ### `drishti.bi.ai` — BI with AI (stage 2)
 
-The BI hooks on the AI layer ([BI_AI.md](../guides/BI_AI.md)). They also need `drishti.ai.enabled` (off by default) and a provider ([AI_PROVIDERS.md](../architecture/AI_PROVIDERS.md));
+The BI hooks on the AI layer ([BI_GUIDE.md section 29](../guides/BI_GUIDE.md#29-ai-in-bi-report-from-words-ask-the-data-explain-this-number)). They also need `drishti.ai.enabled` (off by default) and a provider ([AI_PROVIDERS.md](../architecture/AI_PROVIDERS.md));
 the policy's feature names are `bi-draft`, `bi-ask`, `bi-explain`, the authoring helpers `bi-suggest`, `bi-explain-checks` and `bi-helper`, and a subscription's narrative summary `subscription-narrative` (`drishti.ai.policy.features`, above).
 
 | Setting | Default | Meaning |
@@ -1684,7 +1684,7 @@ the policy's feature names are `bi-draft`, `bi-ask`, `bi-explain`, the authoring
 
 ### `drishti.bi.live` — streaming BI (phase 5)
 
-Live tables kept in memory by the engine and the streams that tell browsers they changed ([DATASETS.md](../guides/DATASETS.md#71-live-tables-phase-5), [REPORTS.md](../guides/REPORTS.md#13-live-visuals-and-perspective-phase-5), [BOARDS.md](../guides/BOARDS.md),
+Live tables kept in memory by the engine and the streams that tell browsers they changed ([DATASETS.md](../guides/DATASETS.md#71-live-tables-phase-5), [REPORTS.md](../guides/REPORTS.md#13-live-visuals), [REPORTS.md section 23](../guides/REPORTS.md#23-boards-report-pages-of-live-tiles),
 [BI_GUIDE.md](../guides/BI_GUIDE.md) section 18). A table starts on first use and closes when nobody has used it for `idle-close`. The console's own settings are `bi.live.min_interval_ms`, `bi.live.stale_seconds`, `bi.board.rotate_seconds` and, for the Python runner, `bi.python.*` (the environment table above; [PYTHON_BI.md](../guides/PYTHON_BI.md) section 9).
 
 | Key | Default | Meaning |
@@ -1826,7 +1826,7 @@ What the server does at start with BI items it **stores** (drafts, proposals and
 migration is **idempotent** (a converted item has nothing left to convert, so the second start changes nothing), **audited** (`bi-expressions-migrated`
 per item, `bi-migration-run` per run), keeps **the text before as a saved state** of the item's history (*History*, *Restore*), and **never changes an
 item silently**: an item it cannot convert keeps its text and is listed in Admin, BI settings (`migrationProblems`), on the item's page and at
-`GET /api/v1/bi/migrate/problems` ([TROUBLESHOOTING.md](../guides/TROUBLESHOOTING.md#bi-migrations-22-wave-a)).
+`GET /api/v1/bi/migrate/problems` ([TROUBLESHOOTING.md](../guides/TROUBLESHOOTING.md#bi-after-an-upgrade-from-21-migrations-of-stored-items)).
 
 | Key | Default | Meaning |
 |---|---|---|
@@ -1868,7 +1868,7 @@ Under `drishti.distribution.subscriptions`:
 | `load-delay` | `5s` | After a data load, wait this long before an `after-load` subscription runs, so the BI layers rebuild |
 | `narrative-rows` | `15` | Most rows per table the model is shown when it writes a subscription's narrative summary (`narrative: true`; only in `drishti.bi.ai.values: aggregates`, and only from the recipient's own unmasked columns) |
 
-Under `drishti.distribution.statements` (2.6.0, statement pages: [STATEMENTS.md](../guides/STATEMENTS.md)):
+Under `drishti.distribution.statements` (2.6.0, statement pages: [REPORTS.md section 24](../guides/REPORTS.md#24-statements-paginated-reports-page-exact-one-per-reader)):
 
 | Key | Default | Meaning |
 |---|---|---|

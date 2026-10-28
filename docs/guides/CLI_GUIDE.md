@@ -2399,7 +2399,7 @@ notebooks/pnl-vs-exposure-pandas.notebook.yaml: manual
 
 Without DIR, `bi migrate --models` converts the server's **stored** datasets and rebinds their reports (`POST /api/v1/bi/migrate/models`, bi-admin), as
 the server does at start: a dataset item becomes the model item (same id), each table a new dataset item, reports are published again; restricted roles
-are never given rows they did not see ([TROUBLESHOOTING.md](TROUBLESHOOTING.md#bi-migrations-22-wave-a)).
+are never given rows they did not see ([TROUBLESHOOTING.md](TROUBLESHOOTING.md#bi-after-an-upgrade-from-21-migrations-of-stored-items)).
 
 ### `bi model`, `bi mq`: models and model queries
 
@@ -2479,12 +2479,12 @@ fail  Close to 100 trades: expected 100 ± 1%, found 750
 ### `bi runs`, `bi mq --async`, `bi sql --async`: BI runs (2.6.7)
 
 `drishti.py bi runs list|get|submit|estimate|wait|result|cancel|rerun|export|share|unshare|promote|keep|schedule|schedules|storage|suggestions` does what the BI
-Runs tab does (sharing, schedules, CSV and Excel export, and for a bi-admin the rollup suggestions), as the token's user; `bi mq` and `bi sql` take `--async [--wait 2s] [--yes]`. Examples, exit codes and output: [BI_RUNS_GUIDE.md](BI_RUNS_GUIDE.md#on-the-command-line)
+Runs tab does (sharing, schedules, CSV and Excel export, and for a bi-admin the rollup suggestions), as the token's user; `bi mq` and `bi sql` take `--async [--wait 2s] [--yes]`. Examples, exit codes and output: [BI_GUIDE.md section 28](BI_GUIDE.md#on-the-command-line)
 and [TOOLS.md section 5.7](TOOLS.md#57-bi).
 
 ### `bi statement`
 
-A report's statement pages ([STATEMENTS.md](STATEMENTS.md), 2.6.0) made for the token's user, with their own masks and row rules: what the BI Studio's Paper
+A report's statement pages ([REPORTS.md section 24](REPORTS.md#24-statements-paginated-reports-page-exact-one-per-reader), 2.6.0) made for the token's user, with their own masks and row rules: what the BI Studio's Paper
 tab previews and a subscription mails.
 
 ```

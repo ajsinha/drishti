@@ -20,7 +20,7 @@ Decided by the product owner on 2026-10-20. Since 2.7.0 run records live in the 
 ([CONTENT_STORE.md](CONTENT_STORE.md) section 9), so every Drishti\*net member sees the same runs. Builds on [BI_DESIGN.md](BI_DESIGN.md) (sections 4.1 the pipeline, 6.1 caches, 6.3 concurrency, 6.5 horizontal scale, 6.7
 cost controls), [RUPAKA.md](RUPAKA.md) section 7 (the query engine), [SUPER_SCALE.md](SUPER_SCALE.md) (S4 products and rollups, S5 slices
 and owners, S6 split queries), [DRISHTI_NET.md](DRISHTI_NET.md) (several servers), [DATABASE.md](DATABASE.md) (where relational state
-lives) and the statement bursting of [STATEMENTS.md](../guides/STATEMENTS.md), whose per-recipient masking this reuses.
+lives) and the statement bursting of [REPORTS.md section 24](../guides/REPORTS.md#24-statements-paginated-reports-page-exact-one-per-reader), whose per-recipient masking this reuses.
 
 ## Contents
 
@@ -1499,7 +1499,7 @@ It runs as `drishti-it` `BiRunsLoadIT` (excluded from the default build, run in 
 | [DATASETS.md](../guides/DATASETS.md) | `source: {run: …}` snapshot datasets |
 | BI_DESIGN 6.3 | the class caps; correct its code column (busy is `DRS-9025`, not `DRS-9022`) |
 | `drishti-console/config/help.yaml` | cards for the Runs tab, the run card, the confirm dialog, the snapshot dataset |
-| a tutorial (planned; not written yet, the how-to is [BI_RUNS_GUIDE.md](../guides/BI_RUNS_GUIDE.md); number 22 went to the designer tutorial) | a year of P&L at a new grain: estimate, confirm, keep working, the bell, open, share, promote, add the rollup and see it become instant; every step in UI, CLI and YAML |
+| a tutorial (planned; not written yet, the how-to is [BI_GUIDE.md section 28](../guides/BI_GUIDE.md#28-background-runs-long-bi-questions); number 22 went to the designer tutorial) | a year of P&L at a new grain: estimate, confirm, keep working, the bell, open, share, promote, add the rollup and see it become instant; every step in UI, CLI and YAML |
 | CHANGELOG, RELEASE_NOTES | 2.6.7 |
 
 ## 21. Open questions

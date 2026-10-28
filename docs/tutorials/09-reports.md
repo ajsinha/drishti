@@ -214,7 +214,7 @@ You should see one line for each, its name, schedule, format or destination, rec
 ## Next steps
 
 - [DISTRIBUTION.md](../guides/DISTRIBUTION.md): export formats (PDF, PNG, Excel, CSV), subscriptions in depth, alerts on numbers, boards, embedding a report in another web application.
-- [USER_GUIDE.md › Scheduled reports](../guides/SCHEDULED_REPORTS.md#scheduled-reports) is the reference for the CSV reports.
+- [USER_GUIDE.md › Scheduled reports](../guides/DISTRIBUTION.md#scheduled-reports) is the reference for the CSV reports.
 - Tutorial 3 made the search; tutorial 7 told Drishti when the data lands, which is what `after-load` waits for.
 
 ## If something goes wrong

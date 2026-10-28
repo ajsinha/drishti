@@ -72,7 +72,7 @@ centre → Domain packs*) has a *Finding things* section with the same commands 
 | Alerts | `/alerts` | Your alerts on numbers, your alert rules and recent alerts (also **Reports**, *My alerts*) |
 | Workspaces | `/w` | Several live views on one screen |
 | Inbox | `/inbox` | Views and comments sent to you ([Your inbox](#your-inbox)) |
-| Reports | `/reports` | Saved searches delivered as CSV on a schedule, and your subscriptions ([Scheduled reports](#scheduled-reports), [Export, and subscriptions](SCHEDULED_REPORTS.md#export-and-subscriptions)) |
+| Reports | `/reports` | Saved searches delivered as CSV on a schedule, and your subscriptions ([Scheduled reports](#scheduled-reports), [Export, and subscriptions](DISTRIBUTION.md#export-and-subscriptions)) |
 | BI | `/bi`, `/bi/catalogue`, `/bi/w/me`, `/bi/r/<id>`, `/bi/models`, `/bi/datasets`, `/bi/designer`, `/bi/explore`, `/bi/transform` | Rūpaka business intelligence, for people with the `bi` power: reports (a board is a report page; `/bi/b/<id>` opens it), BI Studio's designers, Analyse and the Transform editor ([BI_GUIDE.md](BI_GUIDE.md)) |
 | Python console | `/pyconsole` | Your own Python in the browser on a masked extract of a BI model; promote it to the server (BI rail, *Python console*; [ANALYSE.md](ANALYSE.md#16-the-browser-python-console)) |
 | Build | `/build`, `/build/new`, `/build/pack/new`, `/build/reviews` | Design layouts (Sutras) in the workbench, make a pack from schemas, approve proposed Sutras |
@@ -163,14 +163,14 @@ what it can reach ([BI_GUIDE.md](BI_GUIDE.md) section 14); **building one:** *De
 by desk, then by portfolio; it shows MTM, then notional), and the choice is yours alone, as any slicer's ([REPORTS.md section 21](REPORTS.md#21-field-parameters-in-a-well-260)).
 A report may also have **statement pages**: paper, page by page, with a header and footer, page numbers and a period, downloaded as PDF or
 Excel made as you (your masks and row rules), and sent by a subscription as one statement per recipient; the reference is
-[STATEMENTS.md](STATEMENTS.md), the walk-through [tutorial 20](../tutorials/20-statements-and-field-parameters.md).
+[REPORTS.md section 24](REPORTS.md#24-statements-paginated-reports-page-exact-one-per-reader), the walk-through [tutorial 20](../tutorials/20-statements-and-field-parameters.md).
 
 **On the right:** round tools, from left to right.
 
 | Tool | Looks like | What it does |
 |---|---|---|
 | Live | the round button right of the theme switcher | Your choice and this page's stream in one: green while live (glowing while ticks arrive, an amber ring while it reconnects, steady on a page without a stream), red with pause bars while paused or on a picked date. Hover to read both, for example *Live updates on — click to pause · Live, built 1.92 ms*. A click switches ([Business dates](#business-dates-live-or-a-day-in-the-past)) |
-| Alerts | a bell | Opens `/alerts`. A number on the bell counts alerts you have not seen ([Alerts](#alerts)), and BI runs that finished, failed or were started again (`BI RUNS <GO>` lists them: [BI_RUNS_GUIDE.md](BI_RUNS_GUIDE.md)) |
+| Alerts | a bell | Opens `/alerts`. A number on the bell counts alerts you have not seen ([Alerts](#alerts)), and BI runs that finished, failed or were started again (`BI RUNS <GO>` lists them: [BI_GUIDE.md section 28](BI_GUIDE.md#28-background-runs-long-bi-questions)) |
 | Packs | a box with a number | Appears when you may use more than one pack. The number is how many you have switched on; hover to read their names ([Domain packs](#domain-packs-choosing-what-you-see)) |
 | Theme | a palette | Ten themes ([Themes](#themes)) |
 | You | a round avatar with your initial and name | A menu: your name, desk and roles, a clock in your time zone (`NY` by default), **My account**, **Settings**, and **Sign out** when sign-in is on (when it is off, the menu says *Sign-in is off on this server* and links to how to turn it on) |
@@ -1015,7 +1015,7 @@ are the reference. If it cannot be reached the box says "Ask is unavailable"; ev
 
 ### Ask the data, explain a number, describe a report (BI, when your administrator has turned AI on)
 
-In BI ([BI_AI.md](BI_AI.md)), a report page shows a box **Ask the data**: type "notional by desk" and you get a table, a chart that suits it and the query that was asked, answered from
+In BI ([BI_GUIDE.md section 29](BI_GUIDE.md#29-ai-in-bi-report-from-words-ask-the-data-explain-this-number)), a report page shows a box **Ask the data**: type "notional by desk" and you get a table, a chart that suits it and the query that was asked, answered from
 what *you* may see (the same rows and masks as the report). The light bulb in a visual's header **explains** its number: where it comes from and what it is made of. In the designer,
 **Describe a report** drafts a report from your words; you read it, use it and save it, or not. These are off unless your administrator switched them on; if you do not see the box and the bulb, they are off.
 
@@ -1925,7 +1925,7 @@ one live connection.
 
 ## Scheduled reports
 
-A report is a search that runs on its own, on a schedule, and delivers its result as a CSV or JSON Lines file (**Format**); **Reports** in the Views menu lists them with your subscriptions. Export and subscriptions are in the same place. The reference is [SCHEDULED_REPORTS.md](SCHEDULED_REPORTS.md); the walk-through is [tutorial 9](../tutorials/09-reports.md).
+A report is a search that runs on its own, on a schedule, and delivers its result as a CSV or JSON Lines file (**Format**); **Reports** in the Views menu lists them with your subscriptions. Export and subscriptions are in the same place. The reference is [DISTRIBUTION.md section 0](DISTRIBUTION.md#0-scheduled-searches-and-the-reports-page); the walk-through is [tutorial 9](../tutorials/09-reports.md).
 
 ## Alerts
 

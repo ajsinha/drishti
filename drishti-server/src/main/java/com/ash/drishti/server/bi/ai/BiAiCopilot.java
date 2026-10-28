@@ -32,7 +32,7 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 /**
- * The authoring helpers on the AI layer (docs/guides/BI_AI.md sections 9 to 11), each a feature of the AI policy of its own ({@code bi-suggest},
+ * The authoring helpers on the AI layer (docs/guides/BI_GUIDE.md sections 9 to 11), each a feature of the AI policy of its own ({@code bi-suggest},
  * {@code bi-explain-checks}, {@code bi-helper}). Like the report draft they send the model the dataset's MODEL (names, types, descriptions) and nothing else, and they
  * propose: a visual is YAML the report checker has passed, a dataset item is checked against the model; nothing is applied until the author accepts it item by item.
  */

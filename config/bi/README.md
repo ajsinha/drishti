@@ -59,7 +59,7 @@ Where to read more, in the order a newcomer wants it:
 | a tour of the pages and a walk-through with the samples in this folder | [docs/guides/BI_GUIDE.md](../../docs/guides/BI_GUIDE.md) (start here), [docs/tutorials/10-first-bi-report.md](../../docs/tutorials/10-first-bi-report.md) |
 | the dataset and model formats (`datasets/`, `models/`) | [docs/guides/DATASETS.md](../../docs/guides/DATASETS.md) |
 | the report format (`reports/`): a report names its model with `model: <name>@<major>` (a 2.1 live report still names a `dataset:`) | [docs/guides/REPORTS.md](../../docs/guides/REPORTS.md) |
-| boards, report pages of tiles (`layout: board`), and converting a 2.3 board file | [docs/guides/BOARDS.md](../../docs/guides/BOARDS.md) |
+| boards, report pages of tiles (`layout: board`), and converting a 2.3 board file | [docs/guides/REPORTS.md](../../docs/guides/REPORTS.md) |
 | the theme format (`themes/`) | [docs/guides/REPORTS.md section 5.2](../../docs/guides/REPORTS.md#52-themes) |
 | publishing, review, certification and moving content between servers | [docs/guides/BI_GOVERNANCE.md](../../docs/guides/BI_GOVERNANCE.md) |
 | the design and what each phase built | [docs/architecture/RUPAKA.md](../../docs/architecture/RUPAKA.md) (sections 6, 8 and 13, "Where BI files live", and section 20) |

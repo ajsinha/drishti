@@ -267,7 +267,7 @@ Everything since 2.6.7, including the patches pushed to main without a tag.
 *2026-10-21.* **BI runs: every heavy question becomes a visible, shareable run; chart any table; Delta and Iceberg side by side.**
 2.6.7 also carries 2.6.6, the QA release that was never tagged on its own (see below).
 
-- **BI runs** ([BI_RUNS.md](docs/architecture/BI_RUNS.md), [BI_RUNS_GUIDE.md](docs/guides/BI_RUNS_GUIDE.md)):
+- **BI runs** ([BI_RUNS.md](docs/architecture/BI_RUNS.md), [BI_RUNS_GUIDE.md](docs/guides/BI_GUIDE.md#28-background-runs-long-bi-questions)):
   - **Planned before it runs:** a planner sizes every question from metadata only (Delta's row counts, Iceberg's manifests, built
     layers; tested to read no data). A cheap question answers at once; a heavy one becomes a run; a very heavy one asks to confirm; an
     impossible one is refused before anything runs. Report visuals, MQ, SQL and statements all take `Prefer: respond-async`; without it
@@ -336,7 +336,7 @@ known bugs fixed.** (Wave D of [BI_DESIGN.md](docs/architecture/BI_DESIGN.md); t
 - **Paginated reports and statements:** a report page with `layout: statement` is paper: page-exact PDF (written by the
   server) and Excel set to print, headers and footers with tokens, page breaks, repeated column titles, groups kept
   together, and bursting through subscriptions, one statement per recipient, masked as them. The statement designer
-  (Format → Layout → statement, the Paper tab) previews page by page ([STATEMENTS.md](docs/guides/STATEMENTS.md), tutorial 20).
+  (Format → Layout → statement, the Paper tab) previews page by page ([STATEMENTS.md](docs/guides/REPORTS.md), tutorial 20).
 - **Field parameters in a report's wells:** a reader's slicer switches which field or measure a visual draws.
 - **Apache Cassandra connector** (`cassandra`): Cassandra 4 and 5, ScyllaDB, Astra; a day appears whole or not at all
   ([CASSANDRA_CONNECTOR.md](docs/connectors/CASSANDRA_CONNECTOR.md)).
@@ -625,7 +625,7 @@ embed reports need the `embed:report` scope and `report:<id>` (or `report:*`) in
   badges, certification revoked when a dataset change breaks what it certified; lineage and "what breaks if"; a publish
   that breaks published reports is refused unless a BI admin forces it; BI bundles between environments (dry run first,
   all or nothing, boards bring their reports and datasets); every step audited.
-- **Streaming BI (Rūpaka phase 5)** (docs/guides/BOARDS.md, REPORTS.md): live dataset tables kept in memory and updated by
+- **Streaming BI (Rūpaka phase 5)** (docs/guides/REPORTS.md, REPORTS.md): live dataset tables kept in memory and updated by
   key, live visuals redrawn in place (pause, resume, stale and disconnected states), Perspective grid and pivot under a
   narrow policy on the pages that hold them, boards with kiosk mode. Samples: Live trading desk, Live exposure, Desk wall.
 - **Outbound HTTP proxy** (docs/connectors/PROXY.md) for REST, feeds, news, Yahoo Finance, S3, Delta and Iceberg on S3,

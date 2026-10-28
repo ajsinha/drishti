@@ -861,7 +861,7 @@ documents it draws, and its panels' `$.paths` are checked against your samples. 
 | Show a view inside another web application | register the application in Admin → Embedding; the page uses `<drishti-view>` | [ELEMENTS.md](../architecture/ELEMENTS.md) |
 | Use a language model, or an MCP tool server | a provider file in `config/ai/` or `config/mcp/` and `drishti.ai.enabled` / `drishti.mcp.enabled` (both off by default) | [AI_PROVIDERS.md](../architecture/AI_PROVIDERS.md), [MCP_CLIENT.md](../architecture/MCP_CLIENT.md) |
 | Run several servers as one (Drishti\*net) | the files of `config/net/` (`node.yaml` with `enabled: true` and the cluster key, a seed in `peers/`), or Admin → Net → Files; members advertise a real address, never a loopback one | [NET.md](../admin/NET.md), [tutorial 19](../tutorials/19-a-cluster-of-three.md) |
-| Lay a report out on paper (a statement, one per recipient) | `layout: statement` on a report page and the report's `statement:`; BI Studio's Paper tab | [STATEMENTS.md](../guides/STATEMENTS.md) |
+| Lay a report out on paper (a statement, one per recipient) | `layout: statement` on a report page and the report's `statement:`; BI Studio's Paper tab | [STATEMENTS.md](../guides/REPORTS.md#24-statements-paginated-reports-page-exact-one-per-reader) |
 | Make something that failed (a pack, a connector, a provider) try again | nothing: it is retried with backoff; Retry now in Admin | [OPERATIONS.md](../admin/OPERATIONS.md#retries-what-failed-is-tried-again-by-itself) |
 
 ---

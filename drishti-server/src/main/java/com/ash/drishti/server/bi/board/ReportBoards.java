@@ -29,7 +29,7 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 /**
- * Boards as a report layout (docs/archive/BI_PARITY_PLAN.md R7, docs/guides/BOARDS.md): the pages of a report with {@code layout: board}, read as the
+ * Boards as a report layout (docs/archive/BI_PARITY_PLAN.md R7, docs/guides/REPORTS.md): the pages of a report with {@code layout: board}, read as the
  * {@link Board} the tile machinery knows (tile resolution, tile alerts and their notifications). A {@code tile} visual names a visual of another report
  * ({@code from:}) and may carry an {@code alert:}; the report's {@code board:} holds the kiosk rotation and the notification defaults. Ordinary visuals on a
  * board page are report visuals: they take the report's filters, slicers, cross-filter and drill, and are not part of the {@link Board}.

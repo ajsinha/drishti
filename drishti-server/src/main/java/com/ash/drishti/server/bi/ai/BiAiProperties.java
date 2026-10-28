@@ -18,7 +18,7 @@ package com.ash.drishti.server.bi.ai;
 import org.springframework.boot.context.properties.ConfigurationProperties;
 
 /**
- * {@code drishti.bi.ai.*} (docs/guides/BI_AI.md): the three BI hooks on the AI layer. They also need {@code drishti.ai.enabled}; while that is off every hook
+ * {@code drishti.bi.ai.*} (docs/guides/BI_GUIDE.md): the three BI hooks on the AI layer. They also need {@code drishti.ai.enabled}; while that is off every hook
  * answers DRS-4015.
  *
  * @param model the model the hooks use ({@code provider/model}); blank: the AI layer's default

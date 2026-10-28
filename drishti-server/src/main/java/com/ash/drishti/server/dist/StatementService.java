@@ -46,7 +46,7 @@ import java.util.concurrent.Semaphore;
 import java.util.function.Supplier;
 
 /**
- * Paginated reports and statements (docs/architecture/BI_DESIGN.md section 12.2, wave D server item 1; docs/guides/STATEMENTS.md): the statement pages of
+ * Paginated reports and statements (docs/architecture/BI_DESIGN.md section 12.2, wave D server item 1; docs/guides/REPORTS.md): the statement pages of
  * a report ({@code layout: statement}) made for <b>one reader</b>. Every band that holds data is asked of the report service as that reader, so their row
  * rules and masks apply exactly as on the screen; the period, the parameters and the business date of the run are the state every band is asked under.
  * The bands are then laid out page by page ({@link StatementLayout}) and written as PDF ({@link StatementPdf}) or Excel ({@link XlsxWriter}, the paper's

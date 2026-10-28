@@ -209,7 +209,7 @@ Seven features use the layer through `LLMFactory.model(...)` ([section 10](#10-o
 **`bi-explain-checks`** (the Check panel's problems in plain words), **`bi-helper`** (the dataset helper's relationships, measures and column descriptions) and **`subscription-narrative`** (the written
 summary at the top of a subscription's email, made **as the recipient** from their own unmasked figures, only in `aggregates` mode). Each is a feature name for the policy (section 4), so masks,
 per-feature roles and limits, the cost limit and the audit row apply; each runs under the caller's identity and sends the dataset **model** (names, types, descriptions) and the person's words,
-never a row. Point them at a model with `drishti.bi.ai.model`. Details, settings, errors (`DRS-4020`: an answer that cannot be used) and tests: [BI_AI.md](../guides/BI_AI.md).
+never a row. Point them at a model with `drishti.bi.ai.model`. Details, settings, errors (`DRS-4020`: an answer that cannot be used) and tests: [BI_GUIDE.md section 29](../guides/BI_GUIDE.md#29-ai-in-bi-report-from-words-ask-the-data-explain-this-number).
 
 ## 8. The console
 

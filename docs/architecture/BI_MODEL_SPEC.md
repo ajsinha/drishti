@@ -24,8 +24,8 @@ compatibility reader; packages S1, S2, S3, S6 and the implicit models of S5); th
 experience rules of its section 3). It fixes the **formats** W1 introduces so that W2 to W5 extend them without a
 second breaking change: every key that a later wave fills is already named here, marked with the wave that gives it
 behaviour. The gap analysis it answers was the 2.1 study, archived as history ([BI_PARITY_PLAN.md](../archive/BI_PARITY_PLAN.md); today's gap check is [BI_DESIGN.md section 11](BI_DESIGN.md#11-gap-check-against-power-bi)); the current shapes it replaces are
-[DATASETS.md](../guides/DATASETS.md), [REPORTS.md](../guides/REPORTS.md), [BOARDS.md](../guides/BOARDS.md),
-[ANALYSE.md](../guides/ANALYSE.md), [PYTHON_BI.md](../guides/PYTHON_BI.md), [BI_AI.md](../guides/BI_AI.md) and
+[DATASETS.md](../guides/DATASETS.md), [REPORTS.md](../guides/REPORTS.md), [REPORTS.md section 23](../guides/REPORTS.md#23-boards-report-pages-of-live-tiles),
+[ANALYSE.md](../guides/ANALYSE.md), [PYTHON_BI.md](../guides/PYTHON_BI.md), [BI_GUIDE.md section 29](../guides/BI_GUIDE.md#29-ai-in-bi-report-from-words-ask-the-data-explain-this-number) and
 [BI_GOVERNANCE.md](../guides/BI_GOVERNANCE.md).
 
 Contents: [0](#0-reading-guide-and-terms) terms · [1](#1-the-dataset) the dataset · [2](#2-the-data-model) the data
@@ -938,7 +938,7 @@ MQ per visual over one stream.
 ## 6. Worked examples
 
 All over the shipped samples as converted in section 8. The numbers quoted are real answers already documented in
-DATASETS.md, BI_AI.md and REPORTS.md; the converted samples must give the same (10.3), except where 8.5 says otherwise.
+DATASETS.md, BI_GUIDE.md (section 29, AI in BI) and REPORTS.md; the converted samples must give the same (10.3), except where 8.5 says otherwise.
 
 **1. A card: trades in the book** (*trades-overview*, visual `trades`; the model `trades-basic`).
 

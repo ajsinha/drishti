@@ -39,7 +39,7 @@ This is the reference. A walk-through is [tutorial 14](../tutorials/14-python-an
 10. [Errors](#10-errors)
 11. [The routes](#11-the-routes)
 12. [Built and not built](#12-built-and-not-built)
-13. [In the browser: DuckDB-Wasm](#13-in-the-browser-duckdb-wasm)
+13. [Where each cell runs: no WebAssembly in BI](#13-where-each-cell-runs-no-webassembly-in-bi)
 14. [Promote to a report visual](#14-promote-to-a-report-visual)
 15. [Profile](#15-profile)
 16. [The browser Python console](#16-the-browser-python-console)
@@ -271,9 +271,9 @@ uses the existing `POST /api/v1/bi/workspaces/me/items` and `PUT /api/v1/bi/item
 * **Pivot extras**: grand totals and subtotals in the Slice (use a matrix in a report for true totals), sorting by a value, number formats.
 * **Quant:** the real engine (QLRisk).
 
-## 13. In the browser: DuckDB-Wasm
+## 13. Where each cell runs: no WebAssembly in BI
 
-*Removed in 2.3.0; kept as history.* Wave B made the servers compute every number and the browser draw ([BI_DESIGN.md](../architecture/BI_DESIGN.md) principle P3): DuckDB-Wasm
+Since 2.3.0 no BI page loads WebAssembly. Wave B made the servers compute every number and the browser draw ([BI_DESIGN.md](../architecture/BI_DESIGN.md) principle P3): DuckDB-Wasm
 and the browser's Python (Pyodide) are no longer loaded by Analyse or any BI page, `bi.explore.browser_engine` and `browser_start_seconds` are gone (a
 setting left in a configuration is ignored), and `tools/fetch-duckdb-wasm.sh` is gone. The Slice is the console's, SQL the server's (or the console's
 for a cell over `extract`), Python the console's sandbox. Calc (the terminal's Python) still uses Pyodide in its own worker, and so does the

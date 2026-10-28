@@ -12,7 +12,7 @@
 #
 # See the LICENSE file in the root of this repository for the full terms.
 
-"""BI with AI in the console (docs/guides/BI_AI.md), over a stand-in server: the three hooks reach the server's /api/v1/bi/ai/* under the caller's identity and nothing else of
+"""BI with AI in the console (docs/guides/BI_GUIDE.md), over a stand-in server: the three hooks reach the server's /api/v1/bi/ai/* under the caller's identity and nothing else of
 ``ai`` does, the server's refusals (AI off DRS-4015, a policy refusal DRS-4018, an unusable draft DRS-4020) reach the page with their codes, the pages carry the script, and
 the script obeys the rules of the console (vendored, same-origin, no inline handler, no eval, no innerHTML)."""
 import re

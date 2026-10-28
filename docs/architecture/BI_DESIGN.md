@@ -1155,7 +1155,7 @@ D and E; Python data prep and the browser Python console moved into C).
    `DRS-9036`, shipped Corporate and Print), `pages[].interactions` (filter, highlight, none; highlight for line, area and combo), `format.syncGroup`,
    tooltip pages, the `split` well, matrix totals at every level; `layout: board` with `tile` visuals (`ReportBoards`, `BoardConverter`), stored boards
    converted at start (step `boards`, `BoardUpgrade`), board files read as reports, `POST /bi/boards/convert`, `POST /bi/migrate/boards`,
-   `drishti.py bi migrate --boards` ([REPORTS.md](../guides/REPORTS.md#20-report-schema-v2-in-one-report-240), [BOARDS.md](../guides/BOARDS.md)).
+   `drishti.py bi migrate --boards` ([REPORTS.md](../guides/REPORTS.md#20-report-schema-v2-in-one-report-240), [REPORTS.md section 23](../guides/REPORTS.md#23-boards-report-pages-of-live-tiles)).
 2. **Python data prep** (BI_PARITY_PLAN P1–P10): Transforms reading connectors directly, warm workers, a tested snippets
    library (as-of joins for prices and FX, unpivot, type fixes), profiling of a Transform's input and output, a step-by-step
    run (each step's rows and profile) for the editor. **Built (2.4.0):** a pack kind through a connector as an input, as the
@@ -1243,7 +1243,7 @@ Pivot tab is replaced before a pointer click settles; an in-one-step click was w
    bands, automatic and explicit page breaks, repeated column titles, keep-together bands and `groupBy` groups, headers and footers with tokens, a page
    limit), PDF written by the server (`StatementPdf`, no library) and Excel with the paper's print setup, the period and the model's parameters, bursting
    through subscriptions (one statement per recipient, made as them), `POST /bi/reports/statement/preview` and `/file`, `drishti.py bi statement`
-   ([STATEMENTS.md](../guides/STATEMENTS.md)); the acceptance (1) is `StatementApiTest`.
+   ([REPORTS.md section 24](../guides/REPORTS.md#24-statements-paginated-reports-page-exact-one-per-reader)); the acceptance (1) is `StatementApiTest`.
 2. ~~**Send and push**~~: **out of 2.6.0, after the 3.0.0 release** (product owner, 2026-10-20): Send to Outlook and Teams,
    SharePoint push from Forms, connector dump (TEAMS_EMAIL_SHAREPOINT.md) stay designed, not scheduled.
 3. ~~**Integration**~~: **out of 2.6.0, after the 3.0.0 release** (product owner, 2026-10-20): PostgreSQL-wire read-only

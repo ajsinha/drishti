@@ -65,7 +65,7 @@ import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.MvcResult;
 
 /**
- * The acceptance of paginated reports and statements (docs/architecture/BI_DESIGN.md section 12.2, wave D, accepted when (1); docs/guides/STATEMENTS.md):
+ * The acceptance of paginated reports and statements (docs/architecture/BI_DESIGN.md section 12.2, wave D, accepted when (1); docs/guides/REPORTS.md):
  * a monthly statement on a model bursts through a subscription to ten recipients (two roles), each made as that recipient and mailed as a PDF. Every PDF is
  * page-exact: A4 portrait pages, as many as the footer's {@code Page k of N} says, each with the header (title, period, recipient), the table's column titles
  * on every page it runs onto and the matrix on a page of its own. Two recipients' statements differ only by their masks and row rules: same desk and role,

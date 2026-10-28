@@ -248,7 +248,7 @@ matrix. Nothing new is needed.
 
 ### 7.2 A board: a live list of many rows (proposed)
 
-*Naming:* Rūpaka's **board** (phase 5, built: [BOARDS.md](../guides/BOARDS.md)) is a wall of tiles, each one visual of a report, and is a different thing from the board of this section, a live sorted list of many result rows of one kind. This one is still only proposed; if it is built it will need a name of its own (the name "board" is taken).
+*Naming:* Rūpaka's **board** (phase 5, built: [BOARDS.md](../guides/REPORTS.md#23-boards-report-pages-of-live-tiles)) is a wall of tiles, each one visual of a report, and is a different thing from the board of this section, a live sorted list of many result rows of one kind. This one is still only proposed; if it is built it will need a name of its own (the name "board" is taken).
 
 Monitors stream up to 50 named entities and only their strips. BI needs more: *all* rows of a kind (or those matching
 a predicate), sorted by a field, cut to the top N, with rows entering and leaving as values change. Proposal:

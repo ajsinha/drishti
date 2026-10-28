@@ -14,7 +14,7 @@
 
 # SAMPLE (streaming): live counterparty exposure. The counterparty-risk pack's netting sets as they tick, kept in memory like live-trading. It is the second
 # dataset of the "Desk wall" board, to show a wall of tiles from several reports over several datasets.
-# Tutorial: docs/tutorials/10-first-bi-report.md. Reference: docs/guides/DATASETS.md (live tables), docs/guides/BOARDS.md.
+# Tutorial: docs/tutorials/10-first-bi-report.md. Reference: docs/guides/DATASETS.md (live tables), docs/guides/REPORTS.md.
 
 rachana: 1
 dataset: live-exposure
