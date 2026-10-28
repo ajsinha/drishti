@@ -188,8 +188,9 @@ public final class TemplateUpdates implements AutoCloseable {
             return Optional.empty();
         }
         Set<String> served = new LinkedHashSet<>(manager.knownKinds());
-        List<String> obsolete = d.kinds().stream().filter(k -> !served.contains(k)).toList();
         Optional<ConnectorManager.Template> t = manager.template(name);
+        t.ifPresent(x -> served.addAll(ConnectorFiles.kindNames(x.definition().get("kinds"))));   // a kind the template names is never obsolete
+        List<String> obsolete = d.kinds().stream().filter(k -> !served.contains(k)).toList();
         List<String> missing = new ArrayList<>();
         Map<String, String> fresh = new LinkedHashMap<>();
         Map<String, List<String>> conflicting = new LinkedHashMap<>();

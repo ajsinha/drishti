@@ -37,7 +37,7 @@ import shutil
 import subprocess
 import sys
 import threading
-from datetime import datetime
+from datetime import datetime, timezone
 
 HERE = pathlib.Path(__file__).resolve().parent
 ROOT = HERE.parents[1]
@@ -123,7 +123,9 @@ def loader_command(data: pathlib.Path, jar: str | None = None, java: str | None 
 
 def rows(delta: pathlib.Path, table_name: str, newest: list, domain: str = DOMAIN):
     """The Delta table's rows as the loader's lines: {domain, kind (the table), id, date, doc, columns (every promoted and partition
-    column)}; ``newest`` gets the newest business date."""
+    column, a null kept: a column null on every row, such as POSITION_ID on trade-grain scenario PVs, is still a column of the Iceberg
+    table, as it is of the Delta one, so the layout check finds every column the pack declares)}; ``newest`` gets the newest business
+    date."""
     from deltalake import DeltaTable
     ds = DeltaTable(str(delta)).to_pyarrow_dataset()
     names = [n for n in ds.schema.names if n not in ("id", "doc", "business_date")]
@@ -135,7 +137,7 @@ def rows(delta: pathlib.Path, table_name: str, newest: list, domain: str = DOMAI
             if not newest or day > newest[0]:
                 newest[:] = [day]
             yield json.dumps({"domain": domain, "kind": table_name, "id": rid, "date": day, "doc": cols["doc"][i],
-                              "columns": {n: cols[n][i] for n in names if cols[n][i] is not None}}, ensure_ascii=False,
+                              "columns": {n: cols[n][i] for n in names}}, ensure_ascii=False,
                              separators=(",", ":")) + "\n"
 
 
@@ -173,7 +175,20 @@ def copy(delta: pathlib.Path, root: pathlib.Path, table_name: str, data: pathlib
         raise SystemExit(f"stores: the Iceberg load of {table_name} did not finish: {with_words[-1] if with_words else f'exit {proc.returncode}'}")
     with contextlib.suppress(OSError):
         spill.rmdir()                                           # the loader's run files are gone; the folder too when empty
+    record_build(delta, root, table_name, domain, n)
     return {"rows": n, "newest": newest[0] if newest else None}
+
+
+def record_build(delta: pathlib.Path, root: pathlib.Path, table_name: str, domain: str, rows: int) -> None:
+    """The copy's build record under the Iceberg root, as ``lake build --format iceberg`` writes one (tools/lake/ownership.py): the
+    table is Drishti's to maintain (Admin -> Lakes, ``lake maintain``), not another system's read-only table. The pack and kind are
+    the Delta table's own record's (none: the kind is the table's name)."""
+    import ownership
+    src = ownership.owner(delta.parent.parent, f"{delta.parent.name}/{delta.name}") or {}
+    now = datetime.now(timezone.utc)
+    ownership.record(root, {"table": str(root / domain / table_name), "pack": src.get("pack"), "kind": src.get("kind") or table_name,
+                            "finishedAt": now.strftime("%Y-%m-%dT%H:%M:%SZ"), "run": f"stores-copy-{now.strftime('%Y%m%dT%H%M%S%f')}",
+                            "rows": rows})
 
 
 # ---- connector files ---------------------------------------------------------------------------------------------------------------------

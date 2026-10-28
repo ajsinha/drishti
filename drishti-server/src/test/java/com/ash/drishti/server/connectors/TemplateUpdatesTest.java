@@ -127,6 +127,18 @@ class TemplateUpdatesTest {
         assertThat(n.updates().drifts()).hasSize(1);
     }
 
+    /** A template naming a kind no pack declares (the market-risk pack's pv-updates: the stream's own pv-update) and its file. */
+    private static final String STREAM = "pack: risk\nkinds: [trade]\nroutes:\n  trade: risk-store\nconnectors:\n  risk-store:\n    plugin: fake\n"
+            + "    kinds: [trade, pv-update]\n    settings:\n      url: db://pack-default\n";
+    private static final String STREAM_FILE = "# Generated at first start from the connector template of pack 'risk'.\nplugin: fake\n"
+            + "kinds: [trade, pv-update]\nsettings:\n  url: db://pack-default\n";
+
+    @Test
+    void aKindTheTemplateItselfNamesIsNeverObsolete(@TempDir Path dir) throws Exception {
+        Node n = node(dir, null, TemplateUpdates.Mode.NOTIFY, STREAM, STREAM_FILE);
+        assertThat(n.updates().drift("risk-store").map(TemplateUpdates.Drift::obsoleteKinds).orElse(List.of())).isEmpty();
+    }
+
     /** A pack whose layout gained columns (the VaR inputs in 2.9.4: RUN_KIND, COMPUTED_AT, VALUE_TYPE ...). */
     private static final String GROWN = "pack: risk\nkinds: [trade]\nroutes:\n  trade: risk-store\nconnectors:\n  risk-store:\n    plugin: fake\n"
             + "    kinds: [trade]\n    settings:\n      url: db://pack-default\n      layout:\n        trade:\n          columns: [TRADE_ID, DESK, RUN_KIND, GRAIN]\n"

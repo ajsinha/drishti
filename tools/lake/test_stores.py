@@ -93,3 +93,34 @@ def test_the_risk_domain_switches_its_connector_file_and_back(tmp_path, monkeypa
     assert not (folder / "exposure-store.yaml").exists()
     assert len(list((data / "connectors" / "history").glob("risk-store.*.yaml"))) == 1
     assert len(list((data / "connectors" / "history").glob("exposure-store.*.yaml"))) == 1
+
+
+def test_a_copy_into_iceberg_leaves_a_build_record(tmp_path):
+    """A table copied into Iceberg (--store risk=iceberg) is Drishti's to maintain, as one lake build --format iceberg wrote: its build
+    record under the Iceberg root carries the Delta table's pack and kind (Admin -> Lakes does not show it read only)."""
+    import ownership
+    delta, ice = tmp_path / "delta", tmp_path / "iceberg"
+    (delta / "risk" / "pnl-vector").mkdir(parents=True)
+    ownership.record(delta, {"table": str(delta / "risk" / "pnl-vector"), "pack": "market-risk", "kind": "pnl-vector",
+                             "finishedAt": "2026-10-28T06:00:00Z", "run": "r1"})
+    (ice / "risk" / "pnl-vector").mkdir(parents=True)
+    stores.record_build(delta / "risk" / "pnl-vector", ice, "pnl-vector", "risk", 12)
+    got = ownership.owner(ice, "risk/pnl-vector")
+    assert got and got["pack"] == "market-risk" and got["kind"] == "pnl-vector" and got["run"].startswith("stores-copy-")
+    (ice / "trading" / "trade_calypso").mkdir(parents=True)
+    stores.record_build(delta / "trading" / "trade_calypso", ice, "trade_calypso", "trading", 3)   # no Delta record: the table's name
+    assert ownership.owner(ice, "trading/trade_calypso")["kind"] == "trade_calypso"
+
+
+def test_a_column_null_on_every_row_is_still_copied(tmp_path):
+    """The scenario PVs' POSITION_ID and TRADE_IDS are null on every trade-grain row: the copy still sends them (null), so the Iceberg
+    table has every column the pack declares, as the Delta table does (risk-store reported 'scenario-pv (30 of 32 columns)')."""
+    import datetime as dt
+    import json as js
+    import pyarrow as pa
+    from deltalake import write_deltalake
+    t = tmp_path / "risk" / "scenario-pv"
+    write_deltalake(str(t), pa.table({"id": ["SPV-1"], "doc": ["{}"], "business_date": [dt.date(2026, 9, 30)], "TRADE_ID": ["P1"],
+                                      "POSITION_ID": pa.array([None], pa.string()), "BASE_PV": [1000.0]}))
+    lines = [js.loads(x) for x in stores.rows(t, "scenario-pv", [], "risk")]
+    assert lines[0]["columns"] == {"TRADE_ID": "P1", "POSITION_ID": None, "BASE_PV": 1000.0}
