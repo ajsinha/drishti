@@ -89,6 +89,11 @@ final class SyntheticBank {
 
     /** Adds every trade to a builder in a shuffled order, and the hierarchy's nodes (MGMT: bank, desk, book; LEGAL: bank, entity). */
     VarBook.Builder fill(VarBook.Builder b, long seed) {
+        return fill(b, seed, texts -> true);
+    }
+
+    /** As {@link #fill(VarBook.Builder, long)}, only the trades whose texts {@code keep} accepts (one shard of the bank). */
+    VarBook.Builder fill(VarBook.Builder b, long seed, java.util.function.Predicate<String[]> keep) {
         double[][] f = factors(seed);
         int books = books();
         int trades = positions * tradesPerPosition;
@@ -124,7 +129,9 @@ final class SyntheticBank {
             texts[11] = "INS-" + (p % 1000);
             nums[0] = qty;
             nums[1] = Double.NaN;
-            b.trade("T-" + t, v, WIDTH, texts, nums);
+            if (keep.test(texts)) {
+                b.trade("T-" + t, v, WIDTH, texts, nums);
+            }
         }
         b.node("MGMT~BANK", "MGMT", "bank", "Bank", null, allBooks(), Double.NaN);
         b.node("LEGAL~BANK", "LEGAL", "bank", "Bank", null, allBooks(), Double.NaN);

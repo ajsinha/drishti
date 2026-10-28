@@ -279,6 +279,43 @@ public final class CurrencyTotals {
         return new CurrencyTotals(width, out);
     }
 
+    /**
+     * The totals of several shards of one date added (VAR_SHARDING.md): per node and trade currency, the shards' sums and counts added in
+     * shard order. Null when no shard has totals (a book in another reporting currency).
+     */
+    static CurrencyTotals merge(List<CurrencyTotals> parts) {
+        int w = -1;
+        Map<String, Map<String, double[]>> acc = new LinkedHashMap<>();
+        Map<String, Map<String, int[]>> counts = new LinkedHashMap<>();
+        for (CurrencyTotals t : parts) {
+            if (t == null) {
+                continue;
+            }
+            w = t.width;
+            int width = w;
+            t.byKey.forEach((key, s) -> {
+                Map<String, double[]> a = acc.computeIfAbsent(key, k -> new TreeMap<>());
+                Map<String, int[]> n = counts.computeIfAbsent(key, k -> new TreeMap<>());
+                for (int i = 0; i < s.currencies().length; i++) {
+                    double[] v = a.computeIfAbsent(s.currencies()[i], k -> new double[width + 1]);
+                    for (int j = 0; j < width; j++) {
+                        v[j] += s.pv()[i][j];
+                    }
+                    v[width] += s.base()[i];
+                    n.computeIfAbsent(s.currencies()[i], k -> new int[1])[0] += s.trades()[i];
+                }
+            });
+        }
+        if (w < 0) {
+            return null;
+        }
+        Map<String, Sums> out = new LinkedHashMap<>();
+        for (Map.Entry<String, Map<String, double[]>> e : acc.entrySet()) {
+            out.put(e.getKey(), sums(e.getValue(), counts.get(e.getKey()), w));
+        }
+        return new CurrencyTotals(w, out);
+    }
+
     // ------------------------------------------------------------------------------------------------------------- the hot file
 
     /** The {@code CTOT} section: keys, then per key its currencies, each with its trades, today's sum and the scenarios' sums. */

@@ -109,6 +109,58 @@ public final class Columns {
         return t;
     }
 
+    /**
+     * Several column sets one after the other (a sharded date's shards, VAR_SHARDING.md): the rows of the first, then of the second ...; the
+     * columns of the first, each dictionary the union of theirs (codes renumbered). Every part has the same columns.
+     */
+    static Columns concat(List<Columns> parts) {
+        if (parts.size() == 1) {
+            return parts.get(0);
+        }
+        int n = 0;
+        for (Columns p : parts) {
+            n += p.rows;
+        }
+        Columns out = new Columns(n);
+        Columns head = parts.get(0);
+        for (String col : head.codes.keySet()) {
+            Map<String, Integer> pool = new LinkedHashMap<>();
+            int[] codes = new int[n];
+            int at = 0;
+            for (Columns p : parts) {
+                int[] c = p.codes.get(col);
+                String[] dict = p.dicts.get(col);
+                if (c == null) {
+                    throw new IllegalArgumentException("a shard has no column " + col);
+                }
+                int[] remap = new int[dict.length];
+                for (int k = 0; k < dict.length; k++) {
+                    remap[k] = pool.computeIfAbsent(dict[k], x -> pool.size());
+                }
+                for (int r = 0; r < p.rows; r++) {
+                    codes[at + r] = c[r] < 0 ? -1 : remap[c[r]];
+                }
+                at += p.rows;
+            }
+            out.codes.put(col, codes);
+            out.dicts.put(col, pool.keySet().toArray(new String[0]));
+        }
+        for (String col : head.numbers.keySet()) {
+            double[] v = new double[n];
+            int at = 0;
+            for (Columns p : parts) {
+                double[] x = p.numbers.get(col);
+                if (x == null) {
+                    throw new IllegalArgumentException("a shard has no column " + col);
+                }
+                System.arraycopy(x, 0, v, at, p.rows);
+                at += p.rows;
+            }
+            out.numbers.put(col, v);
+        }
+        return out;
+    }
+
     /** These columns with their rows in another order: row {@code i} of the result is row {@code order[i]} of this. */
     public Columns permuted(int[] order) {
         Columns out = new Columns(order.length);

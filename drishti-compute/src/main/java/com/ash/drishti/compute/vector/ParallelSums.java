@@ -65,6 +65,9 @@ public final class ParallelSums implements AutoCloseable {
         if (set.isEmpty()) {
             return acc;
         }
+        if (store instanceof SetSums s && s.sumsSets()) {
+            return s.sumSet(set, this);                                // a sharded date: each shard's part summed by an owner
+        }
         if (set.size() < parallelRows || threads == 1 || store.chunkCount() == 1 && set.size() < 4 * parallelRows) {
             set.forEachRun((from, to) -> store.addRangeInto(acc, from, to));
             return acc;
@@ -101,7 +104,7 @@ public final class ParallelSums implements AutoCloseable {
     /** Each part's sum (the children of a scope), the parts summed on the pool at once; part {@code i}'s sum at index {@code i}. */
     public double[][] sums(Vectors store, List<OrdinalSet> parts) {
         double[][] out = new double[parts.size()][];
-        if (parts.size() <= 1) {
+        if (parts.size() <= 1 || store instanceof SetSums s && s.sumsSets()) {
             for (int i = 0; i < parts.size(); i++) {
                 out[i] = sum(store, parts.get(i));
             }

@@ -81,7 +81,11 @@ public final class VarHotFile {
     public static final String SUFFIX = ".vhot";
     static final byte[] MAGIC = "DRSHVAR1".getBytes(StandardCharsets.US_ASCII);
     static final int HEADER = 256;
-    private static final int ENTRY = 32;
+    /** Header flag: the file holds one shard's rows of a sharded date (its {@code RANG} section says which, VAR_SHARDING.md). */
+    public static final int RANGE = 4;
+    /** Header flag: a shard's skeleton, without its matrices (sent to the members that do not own the shard). */
+    public static final int SKELETON = 8;
+    static final int ENTRY = 32;
     private static final int BATCH = 1024;
 
     /** What the header says, read without opening the date (to check a file is the one for the inputs now). */
@@ -92,7 +96,7 @@ public final class VarHotFile {
     record Content(LocalDate businessDate, String scenarioSet, List<LocalDate> scenarioDates, String[] tradeIds, Columns trades,
             String[] positionIds, int[] posFrom, int[] posTo, Columns positions, Map<String, int[]> bookRange, Map<String, VarBook.Node> nodes,
             Map<String, double[]> aggregates, int failed, String batchId, String digest, String meta, CurrencyTotals totals,
-            List<String> cellColumns, int splitPositions) {}
+            List<String> cellColumns, int splitPositions, String range) {}
 
     private VarHotFile() {}
 
@@ -131,6 +135,9 @@ public final class VarHotFile {
         small.put("TMAP", ints(memberRow));
         if (c.totals() != null) {
             small.put("CTOT", c.totals().write());
+        }
+        if (c.range() != null) {
+            small.put("RANG", c.range().getBytes(StandardCharsets.UTF_8));     // a shard's book: its range of the date's shard map
         }
         if (!c.cellColumns().isEmpty()) {
             Out cell = new Out();
@@ -230,7 +237,7 @@ public final class VarHotFile {
 
     private static ByteBuffer header(Content c, int n, int p, int t, int m, int q, int sections) {
         ByteBuffer h = ByteBuffer.allocate(HEADER).order(ByteOrder.LITTLE_ENDIAN);
-        h.put(MAGIC).putInt(c.cellColumns().isEmpty() ? VERSION : VERSION_CELLS).putInt(1 | (q > 0 ? 2 : 0));
+        h.put(MAGIC).putInt(c.cellColumns().isEmpty() ? VERSION : VERSION_CELLS).putInt(1 | (q > 0 ? 2 : 0) | (c.range() != null ? RANGE : 0));
         LocalDate d = c.businessDate();
         h.putInt(d.getYear() * 10_000 + d.getMonthValue() * 100 + d.getDayOfMonth());
         h.putInt(n).putInt(p).putInt(t).putInt(m).putInt(sections);
@@ -382,7 +389,7 @@ public final class VarHotFile {
         }
     }
 
-    private static Header header(ByteBuffer h) {
+    static Header header(ByteBuffer h) {
         byte[] magic = new byte[8];
         h.get(magic);
         if (!java.util.Arrays.equals(magic, MAGIC)) {
@@ -418,7 +425,7 @@ public final class VarHotFile {
         return new String(b, 0, len, StandardCharsets.UTF_8);
     }
 
-    private static ByteBuffer read(FileChannel ch, long pos, long length) throws IOException {
+    static ByteBuffer read(FileChannel ch, long pos, long length) throws IOException {
         if (length > Integer.MAX_VALUE - 8) {
             throw new IOException("a section of " + length + " bytes is too large to read whole");
         }
@@ -432,7 +439,7 @@ public final class VarHotFile {
         return b;
     }
 
-    private static Map<String, long[]> table(FileChannel ch) throws IOException {
+    static Map<String, long[]> table(FileChannel ch) throws IOException {
         ByteBuffer h = read(ch, 0, HEADER);
         h.position(36);
         int sections = h.getInt();
@@ -450,7 +457,7 @@ public final class VarHotFile {
         return out;
     }
 
-    private static In section(FileChannel ch, Map<String, long[]> table, String name) throws IOException {
+    static In section(FileChannel ch, Map<String, long[]> table, String name) throws IOException {
         long[] e = table.get(name);
         if (e == null) {
             throw new IOException("the hot file has no " + name + " section");
@@ -474,6 +481,7 @@ public final class VarHotFile {
         Header h;
         Map<String, long[]> table;
         String meta;
+        String range = null;
         List<LocalDate> scen = new ArrayList<>();
         String[] tids;
         Columns tcols;
@@ -528,6 +536,9 @@ public final class VarHotFile {
                 memberRow[i] = tm.getInt();
             }
             totals = table.containsKey("CTOT") ? CurrencyTotals.read(section(ch, table, "CTOT"), h.width()) : null;
+            if (table.containsKey("RANG")) {
+                range = new String(section(ch, table, "RANG").bytes(), StandardCharsets.UTF_8);
+            }
             if (table.containsKey("CELL")) {
                 In cs = section(ch, table, "CELL");
                 split = cs.getInt();
@@ -553,7 +564,7 @@ public final class VarHotFile {
             }
         }
         Vectors store = new GroupedVectors(positions, trades, posOf, from, to, memberRow);
-        VarBook.Hot hot = new VarBook.Hot(file, positions, trades, h.digest(), meta, h.writtenAt());
+        VarBook.Hot hot = new VarBook.Hot(file, positions, trades, h.digest(), meta, h.writtenAt(), range);
         return new VarBook(h.businessDate(), h.scenarioSet(), scen, store, tids, tcols, posOf, pids, from, to, pcols, nodes, bookRange, agg,
                 (int) h.failed(), loadMillis, hot, totals, cellColumns, split);
     }
