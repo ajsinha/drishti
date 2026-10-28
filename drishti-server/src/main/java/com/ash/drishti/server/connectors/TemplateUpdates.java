@@ -73,15 +73,21 @@ public final class TemplateUpdates implements AutoCloseable {
     /** One drifted connector: its three classes, the current text and the template's text (for the side-by-side view). */
     public record Drift(String name, String pack, List<String> missingKinds, Map<String, String> newSettings,
             Map<String, List<String>> conflicting, List<String> obsoleteKinds, String etag, String text, String templateText,
-            Map<String, String> extendedLists) {
+            Map<String, String> extendedLists, Map<String, Object> newParams) {
+
+        public Drift(String name, String pack, List<String> missingKinds, Map<String, String> newSettings,
+                Map<String, List<String>> conflicting, List<String> obsoleteKinds, String etag, String text, String templateText,
+                Map<String, String> extendedLists) {
+            this(name, pack, missingKinds, newSettings, conflicting, obsoleteKinds, etag, text, templateText, extendedLists, Map.of());
+        }
 
         public Drift(String name, String pack, List<String> missingKinds, Map<String, String> newSettings,
                 Map<String, List<String>> conflicting, List<String> obsoleteKinds, String etag, String text, String templateText) {
-            this(name, pack, missingKinds, newSettings, conflicting, obsoleteKinds, etag, text, templateText, Map.of());
+            this(name, pack, missingKinds, newSettings, conflicting, obsoleteKinds, etag, text, templateText, Map.of(), Map.of());
         }
 
         public boolean additive() {
-            return !missingKinds.isEmpty() || !newSettings.isEmpty() || !extendedLists.isEmpty();
+            return !missingKinds.isEmpty() || !newSettings.isEmpty() || !extendedLists.isEmpty() || !newParams.isEmpty();
         }
 
         public boolean any() {
@@ -95,6 +101,7 @@ public final class TemplateUpdates implements AutoCloseable {
             m.put("missingKinds", missingKinds);
             m.put("newSettings", newSettings.keySet().stream().sorted().toList());
             m.put("extendedLists", extendedLists.keySet().stream().sorted().toList());
+            m.put("newParams", newParams.keySet().stream().sorted().toList());
             List<Map<String, Object>> c = new ArrayList<>();
             conflicting.forEach((k, v) -> c.add(Map.of("key", k, "connector", v.get(0), "template", v.get(1))));
             m.put("conflicting", c);
@@ -194,7 +201,53 @@ public final class TemplateUpdates implements AutoCloseable {
             pack = t.get().pack();
             templateText = manager.templateText(t.get());
         }
-        return Optional.of(new Drift(name, pack, missing, fresh, conflicting, obsolete, d.etag(), d.text(), templateText, extended));
+        Map<String, Object> params = t.isPresent() && String.valueOf(t.get().definition().get("plugin")).equals(d.plugin())
+                ? newParams(t.get().definition(), d.compute()) : Map.of();
+        return Optional.of(new Drift(name, pack, missing, fresh, conflicting, obsolete, d.etag(), d.text(), templateText, extended, params));
+    }
+
+    /**
+     * A reactive connector's parameters its pack's template has gained since the file was written ({@code kinds.<kind>.params.<name>}, e.g.
+     * {@code ccy} on var-whatif in 2.9.4), keyed {@code <kind>.<param>}: an older file lacks them and a call naming one is refused (DRS-5205).
+     * Only parameters of kinds the file already computes; nothing it has is changed.
+     */
+    @SuppressWarnings("unchecked")
+    static Map<String, Object> newParams(Map<String, Object> template, Map<String, Object> compute) {
+        Map<String, Object> out = new LinkedHashMap<>();
+        if (!(template.get("kinds") instanceof Map<?, ?> tk) || compute == null || !(compute.get("kinds") instanceof Map<?, ?> fk)) {
+            return out;
+        }
+        tk.forEach((kind, tdef) -> {
+            if (fk.get(kind) instanceof Map<?, ?> fdef && tdef instanceof Map<?, ?> td && td.get("params") instanceof Map<?, ?> tp) {
+                Map<?, ?> fp = fdef.get("params") instanceof Map<?, ?> m ? m : Map.of();
+                tp.forEach((p, spec) -> {
+                    if (!fp.containsKey(p)) {
+                        out.put(kind + "." + p, spec);
+                    }
+                });
+            }
+        });
+        return out;
+    }
+
+    @SuppressWarnings("unchecked")
+    static Map<String, Object> withParams(Map<String, Object> compute, Map<String, Object> newParams) {
+        if (compute == null || newParams.isEmpty()) {
+            return compute;
+        }
+        Map<String, Object> c = new LinkedHashMap<>(compute);
+        Map<String, Object> kinds = new LinkedHashMap<>((Map<String, Object>) c.get("kinds"));
+        newParams.forEach((key, spec) -> {
+            int dot = key.indexOf('.');
+            String kind = key.substring(0, dot);
+            Map<String, Object> def = new LinkedHashMap<>((Map<String, Object>) kinds.get(kind));
+            Map<String, Object> params = def.get("params") instanceof Map<?, ?> m ? new LinkedHashMap<>((Map<String, Object>) m) : new LinkedHashMap<>();
+            params.putIfAbsent(key.substring(dot + 1), spec);
+            def.put("params", params);
+            kinds.put(kind, def);
+        });
+        c.put("kinds", kinds);
+        return c;
     }
 
     /** A pack layout's list of columns ({@code layout.<kind>.columns} or {@code .vectors}). */
@@ -249,7 +302,8 @@ public final class TemplateUpdates implements AutoCloseable {
         }
         Object enabled = d.enabled() == null ? null : "true".equals(d.enabled().trim()) ? Boolean.TRUE
                 : "false".equals(d.enabled().trim()) ? Boolean.FALSE : d.enabled();
-        return files.render(header.toString(), d.plugin(), enabled, kinds, d.description(), settings, d.requires(), d.compute(), d.writes());
+        return files.render(header.toString(), d.plugin(), enabled, kinds, d.description(), settings, d.requires(), withParams(d.compute(), drift.newParams()),
+                d.writes());
     }
 
     private ConnectorManager.Change write(String name, String ifMatch, boolean additive, boolean dropObsolete, String user, String what) {
@@ -260,7 +314,7 @@ public final class TemplateUpdates implements AutoCloseable {
         ConnectorFiles.Definition d = manager.files().read(name);
         Drift use = additive ? drift : new Drift(name, drift.pack(), List.of(), Map.of(), Map.of(), drift.obsoleteKinds(), drift.etag(), drift.text(),
                 drift.templateText());
-        if (additive && !drift.extendedLists().isEmpty()) {
+        if (additive && (!drift.extendedLists().isEmpty() || !drift.newParams().isEmpty())) {
             backup(name);                                              // the file as it was, beside it (besides the history)
         }
         String text = merged(manager.files(), d, use, dropObsolete ? drift.obsoleteKinds() : List.of());
@@ -351,9 +405,10 @@ public final class TemplateUpdates implements AutoCloseable {
                 try {
                     write(d.name(), d.etag(), true, false, ACTOR, "added automatically from the template of pack " + d.pack() + ": kinds "
                             + d.missingKinds() + ", settings " + d.newSettings().keySet() + ", columns in " + d.extendedLists().keySet()
-                            + " (template-updates: additive)");
+                            + ", parameters " + d.newParams().keySet() + " (template-updates: additive)");
                     String what = "added from pack " + d.pack() + "'s template: kinds " + d.missingKinds() + ", settings " + d.newSettings().keySet()
-                            + (d.extendedLists().isEmpty() ? "" : ", the template's new columns in " + d.extendedLists().keySet());
+                            + (d.extendedLists().isEmpty() ? "" : ", the template's new columns in " + d.extendedLists().keySet())
+                            + (d.newParams().isEmpty() ? "" : ", the template's new parameters " + d.newParams().keySet());
                     LOG.info("connector {}: {}; every edit kept, the previous text is in the history", d.name(), what);
                     notices.addFirst(new Notice(Instant.now(), d.name(), what));
                     while (notices.size() > 50) {
@@ -373,6 +428,11 @@ public final class TemplateUpdates implements AutoCloseable {
     /** Runs {@link #check()} now and then every {@code intervalMs} on a virtual thread. */
     public synchronized TemplateUpdates start(long intervalMs) {
         if (thread == null && mode == Mode.ADDITIVE) {
+            try {
+                check();                        // once before the server answers: a request never meets a connector the upgrade has not reached
+            } catch (RuntimeException e) {
+                LOG.warn("connector template updates at start: {}", e.getMessage());
+            }
             thread = Thread.ofVirtual().name("drishti-connector-template-updates").start(() -> loop(intervalMs));
         }
         return this;
@@ -382,14 +442,15 @@ public final class TemplateUpdates implements AutoCloseable {
     private void loop(long intervalMs) {
         while (!Thread.currentThread().isInterrupted()) {
             try {
+                Thread.sleep(Math.max(1000, intervalMs));      // the first check ran at start
+            } catch (InterruptedException e) {
+                Thread.currentThread().interrupt();
+                return;
+            }
+            try {
                 check();
             } catch (RuntimeException e) {
                 LOG.warn("connector template updates: {}", e.getMessage());
-            }
-            try {
-                Thread.sleep(Math.max(1000, intervalMs));
-            } catch (InterruptedException e) {
-                Thread.currentThread().interrupt();
             }
         }
     }

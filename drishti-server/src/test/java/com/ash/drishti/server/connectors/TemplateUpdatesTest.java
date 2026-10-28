@@ -156,6 +156,36 @@ class TemplateUpdatesTest {
         assertThat(TemplateUpdates.grown("A,X", "A")).isNull();
     }
 
+    /** A reactive connector written before its pack's template gained a parameter (var-whatif's ccy in 2.9.4: a call naming it was refused). */
+    private static final String OLD_REACTIVE = "plugin: reactive\nmode: reactive\nkinds:\n  var-whatif:\n    compute: var-whatif\n    params:\n"
+            + "      sandbox:\n        type: sandbox-ref\n      stress-window:\n        type: int\n        default: 250\n    result:\n"
+            + "      required: [AFTER_VAR]\nreads:\n- kind: var-result\n  as: base\n  id: \"{id}\"\nengine:\n  type: python\n"
+            + "  entry: drishti_compute.var.whatif:VarWhatIfEngine\n  pool: var\n";
+
+    @Test
+    void parametersAReactiveTemplateGainedAreAddedTheRestKept(@TempDir Path dir) throws Exception {
+        Path conf = Files.createDirectories(dir.resolve("connectors"));
+        Files.writeString(conf.resolve("var-whatif.yaml"), OLD_REACTIVE);
+        ConnectorFiles files = new ConnectorFiles(conf, dir.resolve("state"));
+        ConnectorFiles.Definition d = files.read("var-whatif");
+        Map<String, Object> template = Map.of("plugin", "reactive", "kinds", Map.of("var-whatif", Map.of("compute", "var-whatif", "params",
+                Map.of("sandbox", Map.of("type", "sandbox-ref"), "stress-window", Map.of("type", "int", "default", 500),
+                        "ccy", Map.of("type", "text", "default", "USD")))));
+        Map<String, Object> fresh = TemplateUpdates.newParams(template, d.compute());
+        assertThat(fresh).containsOnlyKeys("var-whatif.ccy");                                     // stress-window's other default is not touched
+        Map<String, Object> merged = TemplateUpdates.withParams(d.compute(), fresh);
+        String text = files.render("", d.plugin(), null, d.kinds(), d.description(), d.settings(), d.requires(), merged, d.writes());
+        Files.writeString(conf.resolve("var-whatif.yaml"), text);
+        ConnectorFiles.Definition after = new ConnectorFiles(conf, dir.resolve("state2")).read("var-whatif");
+        @SuppressWarnings("unchecked")
+        Map<String, Object> params = (Map<String, Object>) ((Map<String, Object>) ((Map<String, Object>) after.compute().get("kinds"))
+                .get("var-whatif")).get("params");
+        assertThat(params).containsKeys("sandbox", "stress-window", "ccy");
+        assertThat(String.valueOf(params.get("stress-window"))).contains("250");                // the file's own default kept
+        assertThat(after.compute()).containsKeys("reads", "engine");
+        assertThat(TemplateUpdates.newParams(template, after.compute())).isEmpty();                // once: nothing more to add
+    }
+
     @Test
     void withNotifyItIsOnlyListed(@TempDir Path dir) throws Exception {
         Node n = node(dir, null, TemplateUpdates.Mode.NOTIFY);
