@@ -25,9 +25,9 @@ format, live reload and the Admin page are in [CONNECTOR_FILES.md](CONNECTOR_FIL
 |---|---|
 | understand the words (entity, kind, connector, route, dated, live) and how a read picks a connector | [Concepts in plain words](#concepts-in-plain-words) |
 | pick a connector for your data | [Which connector should I use?](#which-connector-should-i-use) |
-| see each shipped connector in one screen, with a minimal configuration | [The shipped connectors](#the-shipped-connectors) |
+| see each shipped connector in one screen, with a minimal configuration | [The shipped connectors](CONNECTORS.md#which-connector) |
 | write your own connector | [The SourcePlugin SPI](#the-sourceplugin-spi) and [A worked example](#a-worked-example-the-dayfolder-plugin) |
-| run several connectors together, check them, fix them | [Combining connectors](#combining-connectors), [Operating connectors](#operating-connectors), [Troubleshooting](#troubleshooting) |
+| run several connectors together, check them, fix them | [Combining connectors](CONNECTORS.md#combining-connectors), [Operating connectors](CONNECTOR_FILES.md#12-health-and-problems), [Troubleshooting](../guides/TROUBLESHOOTING.md#a-connector-symptom-check-and-fix) |
 
 ## Contents
 
@@ -44,8 +44,8 @@ format, live reload and the Admin page are in [CONNECTOR_FILES.md](CONNECTOR_FIL
 11. [Testing with drishti-testkit](#testing-with-drishti-testkit)
 12. [A worked example: the dayfolder plugin](#a-worked-example-the-dayfolder-plugin)
 13. [The README standard](#the-readme-standard)
-14. [The shipped connectors](CONNECTOR_RECIPES.md#the-shipped-connectors) and 15. [Combining connectors](CONNECTOR_RECIPES.md#combining-connectors): in [CONNECTOR_RECIPES.md](CONNECTOR_RECIPES.md)
-16. [Operating connectors](CONNECTOR_OPERATIONS.md#operating-connectors) and 17. [Troubleshooting](CONNECTOR_OPERATIONS.md#troubleshooting): in [CONNECTOR_OPERATIONS.md](CONNECTOR_OPERATIONS.md)
+14. [The shipped connectors](CONNECTORS.md#which-connector) and 15. [Combining connectors](CONNECTORS.md#combining-connectors): in [CONNECTORS.md](CONNECTORS.md)
+16. [Operating connectors](CONNECTOR_FILES.md#12-health-and-problems): in [CONNECTOR_FILES.md](CONNECTOR_FILES.md), and 17. [Troubleshooting](../guides/TROUBLESHOOTING.md#a-connector-symptom-check-and-fix): in [TROUBLESHOOTING.md](../guides/TROUBLESHOOTING.md)
 
 ---
 
@@ -209,20 +209,20 @@ Whichever you choose, it is configured as a connector file (`config/connectors/<
 
 | Your data is… | Use | Why | Watch out for |
 |---|---|---|---|
-| JSON or CSV files dropped in a folder by a nightly job | [`file`](CONNECTOR_RECIPES.md#file) | no infrastructure; one folder per business date gives history | search sees new files after `rescan-seconds`; no live updates |
-| behind an in-house HTTP/JSON API, one entity per GET | [`rest`](CONNECTOR_RECIPES.md#rest) | uses the API the owning system already has | undated, no search, no reverse lookups; every view is a request to that service |
-| in an existing database schema | [`jdbc` query mode](CONNECTOR_RECIPES.md#jdbc-query-mode) | one SQL statement per kind; your tables stay as they are | no search or reverse lookups; you write the SQL for dates |
-| loaded by you into PostgreSQL for Drishti | [`jdbc` table mode](CONNECTOR_RECIPES.md#jdbc-table-mode) | one table per data domain, dated, search and reverse lookups from SQL | you run the load; size the indexes |
-| in a data lake (Delta Lake on disk, S3, MinIO) | [`delta`](CONNECTOR_RECIPES.md#delta) | the shipped default; years of history, *known at* time travel, search, reverse lookups, no Spark | partitions by `business_date`; keep it bounded with `tools/lake/maintain.py` |
-| in Aerospike | [`aerospike`](CONNECTOR_RECIPES.md#aerospike) | sub-millisecond key reads (two per view), millions of entities a day, retention by record TTL | searches and reverse lookups need the pack's promoted fields (`layout`) |
-| on Kafka topics (latest state per entity) | [`kafka`](CONNECTOR_RECIPES.md#kafka) | live views that tick; the topic is the state | undated: pair it with a lake for history |
-| on ActiveMQ queues or topics | [`activemq`](CONNECTOR_RECIPES.md#activemq) | live; the connector keeps the latest document per entity on local disk | a queue delivers once: the local state store is the only copy |
-| on RabbitMQ queues | [`rabbitmq`](CONNECTOR_RECIPES.md#rabbitmq) | as ActiveMQ, AMQP 0-9-1 | as ActiveMQ |
-| JSON objects in a bucket (S3, MinIO, Ceph) | [`s3`](CONNECTOR_RECIPES.md#s3) | the `file` layout in object storage, dated by folder | cost of listing large buckets; reads cached `cache-seconds` |
+| JSON or CSV files dropped in a folder by a nightly job | [`file`](CONNECTORS.md#file) | no infrastructure; one folder per business date gives history | search sees new files after `rescan-seconds`; no live updates |
+| behind an in-house HTTP/JSON API, one entity per GET | [`rest`](CONNECTORS.md#rest) | uses the API the owning system already has | undated, no search, no reverse lookups; every view is a request to that service |
+| in an existing database schema | [`jdbc` query mode](CONNECTORS.md#postgresql-and-jdbc) | one SQL statement per kind; your tables stay as they are | no search or reverse lookups; you write the SQL for dates |
+| loaded by you into PostgreSQL for Drishti | [`jdbc` table mode](CONNECTORS.md#postgresql-and-jdbc) | one table per data domain, dated, search and reverse lookups from SQL | you run the load; size the indexes |
+| in a data lake (Delta Lake on disk, S3, MinIO) | [`delta`](CONNECTORS.md#delta-lake) | the shipped default; years of history, *known at* time travel, search, reverse lookups, no Spark | partitions by `business_date`; keep it bounded with `tools/lake/maintain.py` |
+| in Aerospike | [`aerospike`](CONNECTORS.md#aerospike) | sub-millisecond key reads (two per view), millions of entities a day, retention by record TTL | searches and reverse lookups need the pack's promoted fields (`layout`) |
+| on Kafka topics (latest state per entity) | [`kafka`](CONNECTORS.md#kafka) | live views that tick; the topic is the state | undated: pair it with a lake for history |
+| on ActiveMQ queues or topics | [`activemq`](CONNECTORS.md#activemq) | live; the connector keeps the latest document per entity on local disk | a queue delivers once: the local state store is the only copy |
+| on RabbitMQ queues | [`rabbitmq`](CONNECTORS.md#rabbitmq) | as ActiveMQ, AMQP 0-9-1 | as ActiveMQ |
+| JSON objects in a bucket (S3, MinIO, Ceph) | [`s3`](CONNECTORS.md#s3) | the `file` layout in object storage, dated by folder | cost of listing large buckets; reads cached `cache-seconds` |
 | a total or summary of another kind (a book's P&L from its trades) | `derived` ([PACK_DEVELOPER_GUIDE.md](../guides/PACK_MODELLING_GUIDE.md#derived-kinds-entities-computed-from-other-kinds)) | computed by the server from the other kind, through whichever connectors serve it | reads every member once per `refresh`; keep `max-scan` above the member count |
-| public rates and FX | [`feed`](CONNECTOR_RECIPES.md#feed) | NY Fed SOFR, ECB €STR and FX, US Treasury curve, FRED; switched on by one variable each | needs internet (or a mirror); FRED needs a free key |
-| headlines about a named entity, computed on demand | [`news`](CONNECTOR_RECIPES.md#news) | Google News RSS, filtered, de-duplicated and cached per name; nothing stored | needs internet; names leave the network; off by default |
-| a quote and price history for a ticker, computed on demand | [`yfinance`](CONNECTOR_RECIPES.md#yfinance) | Yahoo Finance's unofficial chart endpoint; samples and internal demos only | needs internet; unofficial and restricted; off by default |
+| public rates and FX | [`feed`](CONNECTORS.md#public-feeds) | NY Fed SOFR, ECB €STR and FX, US Treasury curve, FRED; switched on by one variable each | needs internet (or a mirror); FRED needs a free key |
+| headlines about a named entity, computed on demand | [`news`](CONNECTORS.md#news) | Google News RSS, filtered, de-duplicated and cached per name; nothing stored | needs internet; names leave the network; off by default |
+| a quote and price history for a ticker, computed on demand | [`yfinance`](CONNECTORS.md#yahoo-finance) | Yahoo Finance's unofficial chart endpoint; samples and internal demos only | needs internet; unofficial and restricted; off by default |
 
 ### What each connector can do
 
@@ -253,7 +253,7 @@ Whichever you choose, it is configured as a connector file (`config/connectors/<
 
 - **History lives in a dated store; "now" can live in a stream.** The banking packs ship exactly this: a Delta Lake
   connector per data domain, plus a Kafka connector for live trades (off until switched on). See
-  [Combining connectors](#combining-connectors).
+  [Combining connectors](CONNECTORS.md#combining-connectors).
 - **Reverse lookups** (the *Linked entities* panel, impact analysis with F8) need a connector that indexes references:
   Delta Lake, PostgreSQL table mode, Aerospike, or the demo samples.
 - **Cost.** `rest` and `jdbc` query mode put one request on your system per view opened (plus linked entities).
@@ -1102,19 +1102,6 @@ doc: docs/connectors/DAYFOLDER_CONNECTOR.md
 hand-written settings table and `settings:` list. The full per-connector documents stay where they are; the README is the short,
 structured page that links to them.
 
-## The shipped connectors
+## The shipped connectors, combining them, operating them, troubleshooting
 
-This section moved to [CONNECTOR_RECIPES.md](CONNECTOR_RECIPES.md#the-shipped-connectors).
-
-## Combining connectors
-
-This section moved to [CONNECTOR_RECIPES.md](CONNECTOR_RECIPES.md#combining-connectors).
-
-## Operating connectors
-
-This section moved to [CONNECTOR_OPERATIONS.md](CONNECTOR_OPERATIONS.md#operating-connectors).
-
-## Troubleshooting
-
-This section moved to [CONNECTOR_OPERATIONS.md](CONNECTOR_OPERATIONS.md#troubleshooting).
-
+These sections were part of this guide; each now has one home: the shipped connectors and combining connectors are in [CONNECTORS.md](CONNECTORS.md#combining-connectors); health, caches, disk state, timeouts and capacity are in [CONNECTOR_FILES.md section 12](CONNECTOR_FILES.md#12-health-and-problems); the symptom, check and fix table is in [TROUBLESHOOTING.md](../guides/TROUBLESHOOTING.md#a-connector-symptom-check-and-fix).

@@ -229,6 +229,9 @@ moved:
   plugins: connector-developer-guide
   build-a-pack: pack-developer-guide
   sutra-studio: screen-designer
+  # The 2.9.6 documentation merge (one home per topic): a merged-away document's path slug opens the section that took it over.
+  docs-connectors-connector-recipes: connectors#combining-connectors   # docs/connectors/CONNECTOR_RECIPES.md, merged into CONNECTORS.md
+  docs-connectors-connector-operations: connector-files#12-health-and-problems   # docs/connectors/CONNECTOR_OPERATIONS.md, merged into CONNECTOR_FILES.md section 12 and TROUBLESHOOTING
 
 # "What does this mean?" beside a data page's help (the explorers' ?, a view's About): the Knowledge page, or glossary entry, that
 # explains the screen (var, exposure) or the kind of the record (core/app.py reads it at start; tests/test_help.py checks each target).

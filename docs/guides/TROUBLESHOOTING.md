@@ -1037,6 +1037,42 @@ Connectors are files, one per connector, in `config/connectors/` (the file name 
 - **Fix:** set `schema-registry.url` and `schema-registry.basic-auth: ${SR_KEY}:${SR_SECRET}`
   ([KAFKA_CONNECTOR.md, 11.5](../connectors/KAFKA_CONNECTOR.md#115-schema-registry-and-the-confluent-wire-format)).
 
+### A connector: symptom, check and fix
+
+Set `B=http://localhost:18480/api/v1` first. With security on, add `-H "Authorization: Bearer $TOKEN"` to admin
+calls.
+
+| Symptom | Check | Fix |
+|---|---|---|
+| The view says `DRS-1001 no source holds trade/MX-20000001` | `curl -s $B/sources \| jq -c '.sources[] \| select(.kinds==[] or (.kinds \| index("trade"))) \| {name, health}'` (who serves the kind) | the id is spelled differently in the store; the store is off; or the date is outside its history |
+| `DRS-1002 no source serves kind 'x'` | `curl -s $B/sources \| jq '.sources[].kinds'` | no running connector serves the kind (both `demo` and `file` are off): add `kinds` to a connector, or switch one on |
+| `DRS-1003 <connector> failed reading …` | `curl -s $B/admin/health \| jq '.sources[] \| select(.name=="<connector>") \| {health, reads}'` | the store is down or rejecting the query: `lastError` says why |
+| `DRS-1004 timed out reading …` | `reads.p99Ms` of the connectors serving the kind | raise `drishti.sources.fetch-timeout`; route the kind to the fast store |
+| A connector is missing from `/sources` | `curl -s $B/sources \| jq .failures`; `drishti.py connector list` (state and problems); the server log for `failed to start`, `connector file … is not usable` or `installed but not configured` | fix the setting named in the message; check `enabled` and the pack in `DRISHTI_PACKS`; a bad file keeps the last good configuration running |
+| `DRS-1011 connector <name> is not configured` | `ls config/connectors`; Admin → Packs → Data source | a pack routes the kind to a connector nobody defined: create it (Admin → Connectors, **Create**) |
+| `failedToStart` shows `no plugin named 'null'` | the connector's file in `config/connectors/` (`drishti.py connector get <name>`) | the file has no `plugin:` (or a typo in a name defined only in the deprecated `application.yaml` form) |
+| `failedToStart` shows `no plugin named 'x'` | `ls drishti-server/target/*exec.jar`; `DRISHTI_PLUGIN_DIR` | misspelt plugin name (`postgres` is not a plugin; it is `jdbc`) |
+| Health `DOWN: no Delta tables under ./data/delta/<domain>` | `ls data/delta/<domain>/*/_delta_log` | build the lake or set `DRISHTI_DELTA_ROOT`; restart |
+| A picked date shows *No data held for <date>* (the current data of an undated source) | `curl -s "$B/entities/<kind>/<id>/raw?asOf=<date>" \| jq .provenance` | the dated store does not hold that date (`lookback-days`, history kept); load it |
+| A picked date shows *Latest data on or before … is from …* | — | expected: the store's newest date on or before the one picked |
+| Live view does not tick | `jq .provenance` of the view (`/api/v1/views/<kind>/<id>`): `live` must be `true` | no live connector answers or pushes the kind: switch the stream on (`state` or `ticks` mode), the demo off |
+| Live view ticks from samples, not Kafka | `provenance.source` is a sample name (`murex-rates`) | `DRISHTI_DEMO_ENABLED=false` |
+| Type-ahead does not offer an id | `curl -s "$B/command/suggest?q=<MNEMONIC>%20<id-prefix>"` | `rest` and `jdbc` query mode cannot search; others list ids every `rescan-seconds`/`refresh-seconds` |
+| *Linked entities* is empty | does any connector with `reverseLookup: true` serve the linking kinds? | reverse lookups need `delta`, `jdbc` table mode, `aerospike` (`reverse-index`), or `demo` |
+| Kafka health stays `UP (catching up)` | `jq '.sources[] \| select(.name=="trading-stream") \| .cache'`: `indexedEntities` grows | wait for the replay; a very large topic needs compaction |
+| Kafka health `DOWN: … has no partitions yet` | `kafka-topics.sh --describe --topic <topic>` | create the topic |
+| Kafka health `DOWN: no connection to the broker (reconnecting)` | `nc -z <host> <port>` for each `bootstrap-servers` address, and the broker's advertised listeners | bring the broker back; the connector carries on by itself, no restart |
+| ActiveMQ/RabbitMQ `rejected` grows | the message bodies and `id` headers | bodies must be JSON with an id (header or `id-field.<destination>`) |
+| An old entity will not go away (message queues) | `stateMb`, `entities` in the connector's cache figures | send a delete (`deleted=true`), or clear the state store (server stopped) |
+| ActiveMQ/RabbitMQ health `DOWN: … (messages are not acknowledged and come again)` | `df -h` on `state.root`; the server log | the state store cannot write: free or grow the disk; the connector resumes by itself and the broker redelivers (ActiveMQ without limit unless `max-redeliveries` is set) |
+| ActiveMQ/RabbitMQ entities gone without deletes | `evicted` in the cache figures; WARN `state store over its budget` in the log | the store passed `state.max-gb` with `evict-oldest`: raise the budget and the disk, or `state.when-full: warn` |
+| ActiveMQ/RabbitMQ health `UP (state store over its budget: …)` | `stateMb` against `budgetMb` | raise `state.max-gb` or add disk (`warn`), or let `evict-oldest` finish |
+| Feed `DOWN: ConnectException: …` or `DOWN: HttpTimeoutException: …` | the server's outbound internet (or a proxy) | a proxy rule, or `url: file://…` |
+| The overall status is `DEGRADED` | `curl -s $B/admin/health \| jq '{summary, failedToStart, packs: [.packs[] \| select(.status!="OK") \| {name, connectorsDown, sutraProblems}]}'` | fix what is listed; a switched-off connector does not degrade |
+| Admin health answers `403` | the caller is not an administrator | use `/api/v1/sources` (anyone), or an admin token |
+
+Every setting of a connector is in its plugin's README and its own document ([CONNECTORS.md](../connectors/CONNECTORS.md) links each); health, caches, disk state and timeouts are in [CONNECTOR_FILES.md section 12](../connectors/CONNECTOR_FILES.md#12-health-and-problems).
+
 ## Monitoring endpoints
 
 ### A request under `/api` or `/actuator` answers `400 DRS-5001` "path parameters (;) are not accepted"

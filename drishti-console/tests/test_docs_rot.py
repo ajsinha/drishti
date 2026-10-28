@@ -250,7 +250,7 @@ EXAMPLE_PATHS = {
     "docs/guides/PACK_DEVELOPER_GUIDE.md": ("config/packs/helpdesk",),
     "docs/guides/PACK_GENERATORS_GUIDE.md": ("config/packs/library", "tools/packgen/library"),
     "docs/guides/PACK_LIFECYCLE_GUIDE.md": ("config/packs/my-bank",),
-    "docs/connectors/CONNECTOR_RECIPES.md": ("config/packs/equity-desk",),
+    "docs/connectors/CONNECTORS.md": ("config/packs/equity-desk",),
     "docs/guides/CLI_GUIDE.md": ("config/packs/curves-demo",),
     "docs/guides/DATA_LOADS.md": ("docs/BATCH_FILE_PROCESSING.md", "docs/HEADLESS_AND_ORCHESTRATION.md", "docs/TUTORIAL_delegate_connectors.md"),
 }
@@ -600,7 +600,7 @@ _GO = re.compile(r"(?:^[ \t>*-]*|[`\"“(])([A-Z][A-Z0-9]{1,9})(?:[ \t]+[^\s`<|]
 _KIND_SAID = re.compile(r"(?:\bthe `([a-z][a-z0-9-]*)` kind\b|\bdrishti\.py [^\n`]*--kind[ =]([a-z][a-z0-9-]*)\b|\s/v/([a-z][a-z0-9-]*)/)")
 _KIND_DEFINED = re.compile(r"^\s*-?\s*kind:\s*([a-z][a-z0-9-]*)\s*$", re.M)
 # Words a document uses as made-up examples of what an author would add (a pack being written in a tutorial).
-EXAMPLE_WORDS = {"ORD",          # CONNECTOR_RECIPES: the illustrative equity-desk pack
+EXAMPLE_WORDS = {"ORD",          # CONNECTORS (Combining connectors): the illustrative equity-desk pack
                  "DEA",          # SCHEMA_TO_PACK: the pack a schema turns into
                  "MYBOOK"}       # USER_GUIDE: a saved command a user names
 EXAMPLE_KINDS = {"deals", "desk-quote",                          # SCHEMA_TO_PACK's generated pack; tutorial 4 adds desk-quote in the page

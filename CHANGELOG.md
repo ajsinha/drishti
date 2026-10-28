@@ -111,6 +111,10 @@
   - One error-code table: API_GUIDE.md *Error code table* has every code (ErrorCode's, the console's own and the Sutra problem codes)
     with its HTTP status and meaning; TROUBLESHOOTING.md keeps a cause-and-fix row only for the 80 codes that need one and links the
     table (it had a second, 258-row copy). `test_docs_error_codes.py` and `test_docs_rot.py` check the one table.
+  - Connector reference: CONNECTOR_RECIPES.md merged into CONNECTORS.md (each plugin's layout, loader and limits joined its section;
+    *Combining connectors* is a section of its own) and CONNECTOR_OPERATIONS.md into CONNECTOR_FILES.md section 12 (health, every
+    health text, caches, disk state, timeouts, capacity) and TROUBLESHOOTING.md (*A connector: symptom, check and fix*). Both files
+    deleted; their help addresses open the new sections.
 
 ## 2.9.5 — Iceberg as a full alternative to Delta; VaR hierarchies by columns (limit letters); connector files that upgrade themselves safely (2026-10-28)
 
@@ -1287,8 +1291,8 @@ Delta stays the default lake format everywhere; Iceberg is chosen only by config
   were split: [PACK_DEVELOPER_GUIDE.md](docs/guides/PACK_DEVELOPER_GUIDE.md) keeps the worked example and `pack.yaml`, with
   [PACK_MODELLING_GUIDE.md](docs/guides/PACK_MODELLING_GUIDE.md), [PACK_LIFECYCLE_GUIDE.md](docs/guides/PACK_LIFECYCLE_GUIDE.md) and
   [PACK_GENERATORS_GUIDE.md](docs/guides/PACK_GENERATORS_GUIDE.md); [CONNECTOR_DEVELOPER_GUIDE.md](docs/connectors/CONNECTOR_DEVELOPER_GUIDE.md)
-  keeps the SPI and the worked plugin, with [CONNECTOR_RECIPES.md](docs/connectors/CONNECTOR_RECIPES.md) and
-  [CONNECTOR_OPERATIONS.md](docs/connectors/CONNECTOR_OPERATIONS.md) (the old headings point to the new places; its two proxy
+  keeps the SPI and the worked plugin, with [CONNECTOR_RECIPES.md](docs/connectors/CONNECTORS.md) and
+  [CONNECTOR_OPERATIONS.md](docs/connectors/CONNECTOR_FILES.md#12-health-and-problems) (the old headings point to the new places; its two proxy
   sections are one). SCREEN_DESIGNER section 31 is now "The Sutra designer: Customize, Describe, Outline and Grid" (every link
   updated). THIRD-PARTY-NOTICES lists the connectors' client libraries with their licences from the Maven POMs (the ActiveMQ
   README now gives the Jakarta Messaging API as EPL-2.0 / GPL-2.0 with Classpath Exception).
