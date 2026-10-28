@@ -22,7 +22,6 @@ import com.ash.drishti.identity.AuditLog;
 import com.ash.drishti.identity.content.ContentStore;
 import com.ash.drishti.server.loads.LoadService;
 import com.ash.drishti.server.security.Entitlements;
-import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.List;
 import org.springframework.beans.factory.ObjectProvider;
