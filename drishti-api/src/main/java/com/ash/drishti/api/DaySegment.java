@@ -234,13 +234,13 @@ public final class DaySegment {
             crc.update(header);
             data.forEach(crc::update);
             try (FileChannel ch = FileChannel.open(tmp, StandardOpenOption.CREATE_NEW, StandardOpenOption.WRITE)) {
-                ch.write(ByteBuffer.wrap(header));
+                ChannelIo.write(ch, ByteBuffer.wrap(header));
                 for (byte[] d : data) {
-                    ch.write(ByteBuffer.wrap(d));
+                    ChannelIo.write(ch, ByteBuffer.wrap(d));
                 }
                 ByteBuffer tail = ByteBuffer.allocate(8).putLong(crc.getValue());
                 tail.flip();
-                ch.write(tail);
+                ChannelIo.write(ch, tail);
                 ch.force(true);
             }
             Files.move(tmp, target, StandardCopyOption.ATOMIC_MOVE, StandardCopyOption.REPLACE_EXISTING);
@@ -379,7 +379,7 @@ public final class DaySegment {
         try {
             long at = offsets[b];
             while (slice.hasRemaining()) {
-                int n = channel.read(slice, at + slice.position());
+                int n = ChannelIo.read(channel, slice, at + slice.position());
                 if (n < 0) {
                     throw new IOException("end of file");
                 }

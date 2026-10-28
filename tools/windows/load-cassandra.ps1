@@ -90,6 +90,6 @@ $loaderArgs = @($jsonl, $ContactPoints, $Datacenter)
 if ($Create) { $loaderArgs += '--create' }
 if ($CreateKeyspace -gt 0) { $loaderArgs += @('--create-keyspace', "$CreateKeyspace") }
 $loaderArgs += $LoaderArgs
-& $java "-Djava.io.tmpdir=$tmpDir" -cp $cp com.ash.drishti.plugin.cassandra.CassandraLoader @loaderArgs
+& $java "-Djava.io.tmpdir=$tmpDir" "-Djdk.nio.maxCachedBufferSize=262144" -cp $cp com.ash.drishti.plugin.cassandra.CassandraLoader @loaderArgs
 if ($LASTEXITCODE -ne 0) { throw "the load failed (exit $LASTEXITCODE)" }
 Remove-Item $jsonl

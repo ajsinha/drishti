@@ -734,11 +734,15 @@ about `-Xmx` plus 0.4 GB with two arenas. Budget the machine or container for th
 
 ```bash
 export MALLOC_ARENA_MAX=2                      # glibc: two malloc arenas, not one per busy thread (500 MB less RSS here)
-JAVA_TOOL_OPTIONS="-Xmx2g -XX:MaxDirectMemorySize=256m -XX:TrimNativeHeapInterval=60000" java -jar drishti-server-2.9.5-exec.jar
+JAVA_TOOL_OPTIONS="-Xmx2g -XX:MaxDirectMemorySize=256m -XX:TrimNativeHeapInterval=60000 -Djdk.nio.maxCachedBufferSize=262144" java -jar drishti-server-2.9.5-exec.jar
 ```
 
 `-XX:MaxDirectMemorySize` caps direct buffers (9 MB in use in these runs; the default cap is the heap size); `-XX:TrimNativeHeapInterval`
 (Java 21.0.1 and later) returns freed native memory to the system every minute, as `System.trim_native_heap` did by hand.
+`-Djdk.nio.maxCachedBufferSize=262144` (2.9.6) stops Java 21 keeping a temporary direct buffer as large as each channel read into a heap
+array cached on every thread, which filled the 256 MB cap after 13 hours in one cluster
+([OPERATIONS.md](OPERATIONS.md#121a-direct-memory-and-the-diagnostics-of-a-long-run)); the production launchers also keep a heap dump
+on OutOfMemoryError, a rotated GC log and native memory tracking.
 
 The launchers Drishti ships set all three: `drishti-stack/stack.py` (each server it starts; a node's `jvm:` list adds to them), the ECS
 server image (`deploy/docker/ecs/server-entrypoint.sh`), `deploy/docker/server.Dockerfile` (in `JAVA_TOOL_OPTIONS`, with

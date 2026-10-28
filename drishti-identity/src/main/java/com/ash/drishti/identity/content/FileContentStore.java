@@ -80,7 +80,7 @@ public final class FileContentStore implements ContentStore {
         Path f = file(items, key);
         for (int attempt = 0; ; attempt++) {
             try {
-                byte[] b = Files.readAllBytes(f);
+                byte[] b = com.ash.drishti.api.ChannelIo.readAllBytes(f);  // no temporary direct buffer the item's size
                 return Optional.of(new Item(b, hash(b)));
             } catch (NoSuchFileException e) {
                 return Optional.empty();
@@ -90,6 +90,11 @@ public final class FileContentStore implements ContentStore {
                 throw new UncheckedIOException(e);
             }
         }
+    }
+
+    @Override
+    public boolean exists(String key) {
+        return Files.isRegularFile(file(items, key));
     }
 
     @Override
@@ -240,7 +245,7 @@ public final class FileContentStore implements ContentStore {
 
     private String current(Path f) throws IOException {
         try {
-            return hash(Files.readAllBytes(f));
+            return hash(f);                                              // streamed: the item is never read whole
         } catch (NoSuchFileException e) {
             return null;
         }
@@ -380,6 +385,23 @@ public final class FileContentStore implements ContentStore {
             }
         }
         return out.toString(StandardCharsets.UTF_8);
+    }
+
+    /** The SHA-256 of a file's bytes, read in 64 KB pieces (the same as {@link #hash(byte[])} of the whole file). */
+    static String hash(Path f) throws IOException {
+        try (java.nio.channels.FileChannel ch = java.nio.channels.FileChannel.open(f, java.nio.file.StandardOpenOption.READ)) {
+            MessageDigest md = MessageDigest.getInstance("SHA-256");
+            java.nio.ByteBuffer b = java.nio.ByteBuffer.allocate(64 << 10);
+            long at = 0;
+            int n;
+            while ((n = com.ash.drishti.api.ChannelIo.read(ch, b.clear(), at)) > 0) {
+                md.update(b.array(), 0, n);
+                at += n;
+            }
+            return HexFormat.of().formatHex(md.digest());
+        } catch (NoSuchAlgorithmException e) {
+            throw new IllegalStateException(e);
+        }
     }
 
     static String hash(byte[] b) {

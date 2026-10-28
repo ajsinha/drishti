@@ -43,7 +43,7 @@ done
 uv run -q --with pyyaml python tools/packgen/banking/make_data.py --jsonl "$DATA/banking.jsonl"
 ./mvnw -q -o install -DskipTests -pl plugins/drishti-plugin-mongodb -am
 CP="plugins/drishti-plugin-mongodb/target/classes:$(./mvnw -q -o dependency:build-classpath -pl plugins/drishti-plugin-mongodb -Dmdep.outputFile=/dev/stdout)"
-LOADER=("$JAVA_HOME/bin/java" -Djava.io.tmpdir="$JTMP" -Xmx"${DRISHTI_LOADER_HEAP:-4g}" -cp "$CP" com.ash.drishti.plugin.mongodb.MongoLoader)
+LOADER=("$JAVA_HOME/bin/java" -Djava.io.tmpdir="$JTMP" -Xmx"${DRISHTI_LOADER_HEAP:-4g}" -Djdk.nio.maxCachedBufferSize=262144 -cp "$CP" com.ash.drishti.plugin.mongodb.MongoLoader)
 if [[ -n "$TRADES" ]]; then
   "${LOADER[@]}" "$DATA/banking.jsonl" "$URI" "$DB" ${OPTS[@]+"${OPTS[@]}"}
   # the bulk book straight from the generator into the loader: no file of gigabytes in between

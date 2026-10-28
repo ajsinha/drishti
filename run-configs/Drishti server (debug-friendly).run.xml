@@ -17,7 +17,7 @@
   <configuration default="false" name="Drishti server (debug-friendly)" type="Application" factoryName="Application" folderName="Drishti">
     <option name="MAIN_CLASS_NAME" value="com.ash.drishti.server.DrishtiApplication" />
     <module name="drishti-server" />
-    <option name="VM_PARAMETERS" value="-Djava.io.tmpdir=$PROJECT_DIR$/data/qa/data/tmp/server -Xmx1g -XX:MaxDirectMemorySize=256m -XX:TrimNativeHeapInterval=60000" />
+    <option name="VM_PARAMETERS" value="-Djava.io.tmpdir=$PROJECT_DIR$/data/qa/data/tmp/server -Xmx1g -XX:MaxDirectMemorySize=256m -XX:TrimNativeHeapInterval=60000 -Djdk.nio.maxCachedBufferSize=262144 -XX:NativeMemoryTracking=summary -XX:+HeapDumpOnOutOfMemoryError -XX:HeapDumpPath=$PROJECT_DIR$/data/tmp/server" />
     <option name="WORKING_DIRECTORY" value="$PROJECT_DIR$" />
     <envs>
       <env name="MALLOC_ARENA_MAX" value="2" />

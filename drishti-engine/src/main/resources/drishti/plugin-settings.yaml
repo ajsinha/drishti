@@ -492,7 +492,7 @@ plugins:
       - { name: poll-ms, type: int, desc: "Poll interval", group: tuning, default: "200" }
       - { name: cache-mb, type: int, desc: "Memory cache, weighed by message length", group: tuning, default: "256" }
       - { name: "disk-cache.*", desc: "On-disk cache (enabled, dir, max-gb, ...)", group: tuning }
-      - { name: "client.*", desc: "Any Kafka client property (client.max.poll.records); applied last, wins over everything above", group: tuning }
+      - { name: "client.*", desc: "Any Kafka client property (client.max.poll.records); applied last, wins over everything above. Fetches default to `fetch.max.bytes` 4 MB and `max.partition.fetch.bytes` 1 MB (Kafka's own default is 50 MB; each poll thread reads a fetch through a temporary direct buffer): `client.fetch.max.bytes` and `client.max.partition.fetch.bytes` raise them", group: tuning }
       - { name: value-format, type: "enum:string|confluent", desc: "string (default), or confluent to read the Confluent wire format (implied by schema-registry.url)", group: mapping }
       - { name: flavour, type: "enum:apache|confluent", default: apache, desc: "confluent: Confluent Cloud defaults (SASL PLAIN with api-key and api-secret, DNS lookup of all addresses)", group: security }
       - { name: security.protocol, type: "enum:PLAINTEXT|SSL|SASL_PLAINTEXT|SASL_SSL", desc: "`PLAINTEXT`, `SSL`, `SASL_PLAINTEXT` or `SASL_SSL`. Absent: `SASL_SSL` if `sasl.mechanism` is set and TLS is wanted (`tls.enabled: true`), `SASL_PLAINTEXT` with a mechanism and no TLS, `SSL` with `tls.enabled`, else `PLAINTEXT`. Always write it down in production.", group: security }

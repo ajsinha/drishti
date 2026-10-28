@@ -21,7 +21,6 @@ import java.io.EOFException;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
-import java.nio.channels.Channels;
 import java.nio.channels.FileChannel;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -179,7 +178,7 @@ final class Runs {
             List<Long> offsets = new ArrayList<>();
             long written = 0;
             long nextSample = 0;
-            try (OutputStream out = new BufferedOutputStream(Files.newOutputStream(file), 1 << 20)) {
+            try (OutputStream out = new BufferedOutputStream(com.ash.drishti.api.ChannelIo.newOutputStream(file), 1 << 20)) {
                 for (long ref : order) {
                     byte[] a = arenas.get((int) (ref >>> 32));
                     int off = (int) ref;
@@ -350,8 +349,9 @@ final class Runs {
                 }
             }
             FileChannel ch = FileChannel.open(file, StandardOpenOption.READ);
-            ch.position(start);
-            InputStream in = new java.io.BufferedInputStream(Channels.newInputStream(ch), Math.max(8192, bufferBytes));
+            // through ChannelIo: a buffer of bufferBytes read through Channels.newInputStream would make the JDK cache a
+            // direct buffer that large on this thread
+            InputStream in = new java.io.BufferedInputStream(com.ash.drishti.api.ChannelIo.inputStream(ch, start), Math.max(8192, bufferBytes));
             return new Cursor() {
                 byte[] a = new byte[1 << 12];
                 int len;
@@ -482,7 +482,7 @@ final class Runs {
                 List<byte[]> keys = new ArrayList<>();
                 List<Long> offsets = new ArrayList<>();
                 long[] written = {0, 0, 0};                            // bytes, rows, next sample
-                try (OutputStream out = new BufferedOutputStream(Files.newOutputStream(file), 1 << 16)) {
+                try (OutputStream out = new BufferedOutputStream(com.ash.drishti.api.ChannelIo.newOutputStream(file), 1 << 16)) {
                     byte[] len = new byte[4];
                     merge(group, null, null, (buf, off, n) -> {
                         if (written[0] >= written[2]) {

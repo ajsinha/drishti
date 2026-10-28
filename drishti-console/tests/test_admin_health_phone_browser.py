@@ -28,7 +28,10 @@ from test_live_tabs_browser import _free_port  # noqa: E402
 
 LONG = "/opt/drishti-installations/production-cluster-node-07/releases/2.6.5/external_lib/java"
 HEALTH = {"status": "OK", "summary": {"sources": 0, "sourcesDown": 0, "failedToStart": 0, "packs": 0, "packsWithProblems": 0},
-          "server": {"version": "2.6.5", "uptimeSeconds": 60, "java": "21", "heapUsedMb": 300, "heapMaxMb": 4000, "threads": 60, "cpus": 8},
+          "server": {"version": "2.6.5", "uptimeSeconds": 60, "java": "21", "heapUsedMb": 300, "heapMaxMb": 4000, "threads": 60, "cpus": 8,
+                     "directUsedBytes": 230 * 1048576, "directBuffers": 1234, "directMaxBytes": 256 * 1048576, "directPercent": 89,
+                     "directWarning": True, "mappedUsedBytes": 812 * 1048576, "mappedBuffers": 96, "openFiles": 41234, "maxFiles": 1048576,
+                     "deletedOpenFiles": 117},
           "sources": [], "packs": [], "live": {},
           "externalLib": {"java": LONG, "jars": [{"name": f"vendor-connector-driver-{i}.0.0-shaded-with-all-dependencies.jar"} for i in range(6)]},
           "tmp": {"base": "/var/tmp/drishti-installations/production-cluster-node-07", "path": "/var/tmp/drishti-installations/production-cluster-node-07/drishti-4242",
@@ -88,6 +91,7 @@ def test_health_fits_a_phone(url, browser, theme):
         pg.goto(url + "/admin/health")
         pg.wait_for_selector("[data-external-lib] [data-ext-java]")
         assert LONG in pg.inner_text("[data-ext-java]")
+        assert "89%" in pg.inner_text("[data-direct]") and pg.is_visible("[data-direct-warning]")    # the memory row, in amber over 80%
         wide = pg.evaluate("document.documentElement.scrollWidth - window.innerWidth")
         assert wide <= 1, f"{wide} px of horizontal scroll"
         right = pg.evaluate("Math.max(...[...document.querySelectorAll('.hl-sum > span')].map(e => e.getBoundingClientRect().right))")

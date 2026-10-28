@@ -101,7 +101,7 @@ public final class ContentRunStore extends RunStore {
 
     @Override
     public boolean has(String key) {
-        return key != null && store.get(folder(key) + "answer.json").isPresent();
+        return key != null && store.exists(folder(key) + "answer.json");
     }
 
     @Override

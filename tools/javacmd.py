@@ -51,9 +51,17 @@ def tmp_flag(tmp=None, cwd=None, env=None) -> str:
     return FLAG + str(folder)
 
 
+# The JDK caches a temporary direct buffer per thread for every channel read into a heap buffer, as large as the read, unless capped:
+# a server or loader with many threads then exhausts -XX:MaxDirectMemorySize (OPERATIONS.md, Direct memory). 256 KB.
+CACHE_FLAG = "-Djdk.nio.maxCachedBufferSize="
+CACHE_LIMIT = CACHE_FLAG + "262144"
+
+
 def java_cmd(java, args, tmp=None, cwd=None, env=None) -> list:
-    """``[java, -Djava.io.tmpdir=<folder>, *args]``; ``cwd`` and ``env`` are the ones the JVM will run with (they decide the default folder)."""
+    """``[java, -Djava.io.tmpdir=<folder>, -Djdk.nio.maxCachedBufferSize=262144, *args]``; ``cwd`` and ``env`` are the ones the JVM
+    will run with (they decide the default folder). A flag already in the arguments wins."""
     args = [str(a) for a in args]
+    cache = [] if any(a.startswith(CACHE_FLAG) for a in args) else [CACHE_LIMIT]
     if any(a.startswith(FLAG) for a in args):
-        return [str(java), *args]
-    return [str(java), tmp_flag(tmp, cwd, env), *args]
+        return [str(java), *cache, *args]
+    return [str(java), tmp_flag(tmp, cwd, env), *cache, *args]

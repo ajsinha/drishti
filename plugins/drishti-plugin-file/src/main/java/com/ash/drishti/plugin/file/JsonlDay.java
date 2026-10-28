@@ -486,7 +486,7 @@ final class JsonlDay implements AutoCloseable {
             while (pos < to) {
                 block.clear();
                 block.limit((int) Math.min(BLOCK, to - pos));
-                int got = ch.read(block, pos);
+                int got = com.ash.drishti.api.ChannelIo.read(ch, block, pos);   // 4 MB into a heap buffer: chunked, no 4 MB direct buffer
                 if (got <= 0) {
                     break;
                 }

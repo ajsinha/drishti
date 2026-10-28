@@ -66,6 +66,12 @@ class HealthApiTest {
                 .andExpect(jsonPath("$.packs[?(@.name=='finance')].status").value(hasItem("DEGRADED")))
                 .andExpect(jsonPath("$.status").value("DEGRADED"))
                 .andExpect(jsonPath("$.server.heapMaxMb").value(greaterThan(0)))
+                // what a long run exhausts (the 2.9.6 direct-memory exhaustion): direct and mapped memory, open files
+                .andExpect(jsonPath("$.server.directMaxBytes").isNumber())
+                .andExpect(jsonPath("$.server.directUsedBytes").exists())
+                .andExpect(jsonPath("$.server.directPercent").exists())
+                .andExpect(jsonPath("$.server.directWarning").isBoolean())
+                .andExpect(jsonPath("$.server.mappedUsedBytes").exists())
                 .andExpect(jsonPath("$.tmp.jvmTmpdirPassed").value(true))           // surefire passes -Djava.io.tmpdir=: no warning on the page
                 .andExpect(jsonPath("$.tmp.jvmTmpdirWarning").value(""))
                 .andExpect(jsonPath("$.live.streams").exists());

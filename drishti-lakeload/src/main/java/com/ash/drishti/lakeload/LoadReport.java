@@ -210,7 +210,7 @@ final class LoadReport {
                 if (!Files.exists(pw.rejectsFile)) {
                     continue;
                 }
-                try (InputStream raw = Files.newInputStream(pw.rejectsFile); DataInputStream in = new DataInputStream(new java.io.BufferedInputStream(raw, 1 << 16))) {
+                try (InputStream raw = com.ash.drishti.api.ChannelIo.newInputStream(pw.rejectsFile); DataInputStream in = new DataInputStream(new java.io.BufferedInputStream(raw, 1 << 16))) {
                     while (true) {
                         int split;
                         try {

@@ -695,9 +695,10 @@ Wants=network-online.target
 User=drishti
 WorkingDirectory=/opt/drishti
 EnvironmentFile=/etc/drishti/drishti.env
-Environment=JAVA_TOOL_OPTIONS=-Xmx4g -XX:+UseZGC -XX:+ZGenerational -XX:MaxDirectMemorySize=256m -XX:TrimNativeHeapInterval=60000
+Environment=JAVA_TOOL_OPTIONS=-Xmx4g -XX:+UseZGC -XX:+ZGenerational -XX:MaxDirectMemorySize=256m -XX:TrimNativeHeapInterval=60000 -Djdk.nio.maxCachedBufferSize=262144 -XX:NativeMemoryTracking=summary -XX:+HeapDumpOnOutOfMemoryError -XX:HeapDumpPath=/opt/drishti/data/dumps
 Environment=MALLOC_ARENA_MAX=2
-ExecStart=/usr/lib/jvm/java-21-openjdk-amd64/bin/java -Djava.io.tmpdir=/opt/drishti/data/tmp/server -jar /opt/drishti/drishti-server.jar
+ExecStartPre=/usr/bin/mkdir -p /opt/drishti/data/logs /opt/drishti/data/dumps
+ExecStart=/usr/lib/jvm/java-21-openjdk-amd64/bin/java -Djava.io.tmpdir=/opt/drishti/data/tmp/server -Xlog:gc*:file=/opt/drishti/data/logs/gc-%p.log:time,uptime:filecount=5,filesize=20m -jar /opt/drishti/drishti-server.jar
 SuccessExitStatus=143
 TimeoutStopSec=45
 Restart=on-failure
@@ -716,6 +717,9 @@ WantedBy=multi-user.target
   back every minute; Java 21.0.1 or later). Every launcher Drishti ships sets them: `drishti-stack`, the Docker and ECS server images,
   `deploy/docker/compose.yaml`, `tools/windows/start-server.ps1` (the two JVM flags; `MALLOC_ARENA_MAX` is glibc's) and the IntelliJ run
   configurations. Budget the machine for `-Xmx` plus about 1 GB all the same ([PERFORMANCE.md](PERFORMANCE.md#resident-memory-what-to-budget-and-two-settings)).
+- `-Djdk.nio.maxCachedBufferSize=262144` stops the JDK hoarding direct memory per thread, and the heap dump, the GC log and native
+  memory tracking are what explain a failure after days: [12.1a](#121a-direct-memory-and-the-diagnostics-of-a-long-run). The
+  `ExecStartPre` line makes their folders: the JVM does not start when the GC log's folder is missing.
 
 ### 7.3 The console
 
@@ -1399,6 +1403,46 @@ being parsed, and a later view reads that one message back by its offset.
 
 The server's temporary files (DuckDB spill, native libraries, atomic-save scratch, Python transform runs) live in `drishti-<pid>` under `DRISHTI_TMP_DIR` (default `<data dir>/tmp/server`; the console's `<data dir>/tmp/console`); the console's (uploads, exports, the static-file cache, Python runner scratch) in `drishti-console-<pid>` under `DRISHTI_CONSOLE_TMP_DIR`. Each is removed on a clean stop. A `kill -9` or a power cut leaves one: the next start leaves it alone (removing them automatically is disabled) and Health lists it for you to delete. Put the base on a disk with room when DuckDB spills big queries: `DRISHTI_TMP_DIR=/var/tmp/drishti`. **Start Java with `-Djava.io.tmpdir=<that base>`** (every start command in this guide does; `JAVA_TOOL_OPTIONS=-Djava.io.tmpdir=…` works too): since JDK 17 only the command line moves the folder where DuckDB (60 MB), RocksDB and CatBoost unpack their native libraries, so without it every server killed without a clean stop leaves them in `/tmp`, whose quota fills. The server warns in its log and on Admin, Health when the flag is missing, and at start removes stale copies from its own base (never from `/tmp`). Admin, Health lists both with their size, so a growing folder is seen before the disk fills. Details: [CONFIGURATION.md](CONFIGURATION.md#temporary-folders-drishtitmp-dir-and-the-consoles-tmp_dir).
 
+### 12.1a Direct memory, and the diagnostics of a long run
+
+**Direct memory.** `-XX:MaxDirectMemorySize=256m` caps the server's direct (off-heap) buffers. On Java 21, every read of a file
+through a channel into an ordinary heap array makes the JDK copy through a temporary direct buffer as large as the read, and keep it
+cached on that thread for good (`jdk.nio.maxCachedBufferSize` is unlimited by default). Before 2.9.6 the lake readers read column chunks
+of up to 8 MB that way, on many threads: after about 13 hours a server had all 256 MB pinned, and every lake read failed with
+`java.lang.OutOfMemoryError: Cannot reserve 8192 bytes of direct buffer memory (allocated: 268430166, limit: 268435456)`, so pages showed
+errors. Two fixes, both in 2.9.6:
+
+- **The code.** Lake reads (local `LocalStorage`, the Delta and Iceberg streams, the Parquet reader), the lake loader's runs and
+  outputs, VaR and exposure hot files, compute results (Arrow IPC), the day index segments, the JSON Lines file connector and the
+  content store go through `ChannelIo` (`drishti-api`): a heap transfer is cut into 128 KB slices through a small pool of reusable
+  direct buffers (64 at most, 8 MB in all). Throughput holds (a 128 MB file in 8 MB reads: 8.1 GB/s before, 9.5 GB/s after, one
+  thread; 11.8 and 25.3 GB/s on eight; 64 KB reads within 10%). Kafka consumers fetch at most 4 MB (`fetch.max.bytes`) and 1 MB per partition
+  (`max.partition.fetch.bytes`); `client.fetch.max.bytes` and `client.max.partition.fetch.bytes` in the connector file raise them.
+- **The launch flag.** `-Djdk.nio.maxCachedBufferSize=262144` (256 KB): a temporary buffer larger than that is freed after its read
+  instead of kept, so any other library that reads into heap arrays cannot pin more than 256 KB per thread. Every launcher sets it:
+  `drishti-stack/stack.py`, the Docker and ECS server images, the ECS lake task, `tools/windows/start-server.ps1`, the IntelliJ run
+  configurations, every `tools/load-*.sh` and `tools/windows/load-*.ps1` loader, and `tools/javacmd.py` (every JVM the tools start). Set it
+  in any start command of your own.
+
+Java 25 copies through native memory outside the direct limit for these reads, so the old code did not fail there; production runs 21.
+**Admin → Health** shows direct memory against its limit, in amber from 80% ([13.2](#132-admin--health)).
+
+**Diagnostics of a long run.** The production launchers (`drishti-stack`, the Docker and ECS server images,
+`tools/windows/start-server.ps1`, and the systemd unit in [7.2](#72-the-server)) also start the server with:
+
+| Flag | What it gives you |
+|---|---|
+| `-XX:+HeapDumpOnOutOfMemoryError -XX:HeapDumpPath=<folder>/dumps` | a `java_pid<pid>.hprof` heap dump when the heap runs out: open it in Eclipse MAT or VisualVM to see what held the memory. A dump is about the size of the heap: keep room on that disk |
+| `-Xlog:gc*:file=<logs>/gc-%p.log:time,uptime:filecount=5,filesize=20m` | a GC log per process, rotated at 20 MB with five files kept (100 MB at most): heap after each collection, pauses, and whether the heap was filling for hours before a failure |
+| `-XX:NativeMemoryTracking=summary` | `jcmd <pid> VM.native_memory summary` (and `baseline` then `summary.diff scale=MB`) splits native memory by category; "Other" holds direct buffers. A few per cent of overhead |
+
+Where they go: `drishti-stack` puts dumps in `drishti-stack/run/dumps/<node>` and GC logs in `drishti-stack/run/logs/gc-<node>-<pid>.log`;
+the Docker and ECS images in `data/dumps` and `data/logs` of the node's data folder; `start-server.ps1` in `data\dumps` and `data\logs` of
+the repository (the GC log's path is relative there, because `-Xlog` reads a colon as a separator, so a drive letter cannot appear in it).
+The IntelliJ run configurations write a heap dump to `data/tmp/server` and keep no GC log (the JVM refuses to start when the log's
+folder is missing, and a run configuration cannot make it). The JVM makes neither folder; each launcher makes both before it starts
+Java.
+
 ### 12.2 Sizing the multi-day type-ahead index
 
 Each connector with `index.days` above 1 (see [CONFIGURATION.md](CONFIGURATION.md#drishtiindex--the-multi-day-type-ahead-index))
@@ -1522,8 +1566,12 @@ curl -s localhost:18480/api/v1/admin/health | python3 -m json.tool | head -40
 {
     "status": "OK",
     "summary": { "packsWithProblems": 0, "failedToStart": 0, "sourcesDown": 0, "sourcesDegraded": 0, "sources": 18, "packs": 12 },
-    "server": { "version": "2.5.0", "uptimeSeconds": 6916, "java": "21.0.12.1", "heapUsedMb": 121,
-                "heapMaxMb": 15640, "threads": 75, "cpus": 24 },
+    "server": { "version": "2.9.6", "uptimeSeconds": 6916, "java": "21.0.12.1", "heapUsedMb": 121,
+                "heapMaxMb": 15640, "threads": 75, "cpus": 24,
+                "directUsedBytes": 9437184, "directCapacityBytes": 9437184, "directBuffers": 71,
+                "mappedUsedBytes": 46137344, "mappedCapacityBytes": 46137344, "mappedBuffers": 12,
+                "directMaxBytes": 268435456, "directPercent": 3, "directWarning": false, "ioPoolBytes": 8388608,
+                "openFiles": 412, "maxFiles": 1048576, "deletedOpenFiles": 0 },
     "sources": [
         { "name": "credit-store", "version": "1.0", "status": "UP", "health": "UP",
           "kinds": ["credit-limit", "cva", "netting-set", "sa-ccr"],
@@ -1570,6 +1618,14 @@ How to read it:
   show the most recent failure; `p99Ms` its read latency.
 - **A pack** is `DEGRADED` when one of its Sutras has problems or one of its connectors is down. `connectorsOff`
   lists connectors switched off by configuration (for example a feed you did not enable): not a fault.
+- **`server`**, what a long run exhausts (2.9.6), shown on the page as the **Memory and files** row:
+  `directUsedBytes` of `directMaxBytes` (`-XX:MaxDirectMemorySize`, or the heap's maximum when it is not set) with `directPercent`
+  and `directBuffers`; from 80% (`directWarning`) the figure turns amber and a warning names the cause
+  ([12.1a](#121a-direct-memory-and-the-diagnostics-of-a-long-run)): at 100% every lake read fails. `mappedUsedBytes` and
+  `mappedBuffers` are memory-mapped files (Delta and Iceberg id maps, VaR hot files): outside the heap and the direct limit, but resident
+  memory all the same. `ioPoolBytes` is the direct memory the read pool holds (8 MB at most). `openFiles` of `maxFiles` (`ulimit -n`;
+  not on Windows) and, on Linux, `deletedOpenFiles`: descriptors still open on deleted files, whose disk space is not given back until
+  they close. A figure that only rises over days is a leak: note it with the time and take `jcmd <pid> VM.native_memory summary`.
 
 ### 13.3 The live numbers
 

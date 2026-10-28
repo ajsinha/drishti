@@ -54,6 +54,18 @@
   <span class="mono" data-tmp-console title="The console's folder drishti-console-&lt;pid&gt; (tmp_dir / DRISHTI_CONSOLE_TMP_DIR)">console {{ console_tmp.path or '—' }} · {{ ((console_tmp.bytes or 0) / 1048576) | round(1) }} MB · {{ console_tmp.files or 0 }} files</span>
   {% if (h.tmp or {}).get('nativeCopiesRemoved') %}<span class="mono" data-native-removed title="Native-library copies (DuckDB, RocksDB, sqlite…) that processes killed without a clean stop left in the server's temp base, removed at start">{{ h.tmp.nativeCopiesRemoved }} stale native copies removed at start</span>{% endif %}
 </div>
+{% set sv = h.server or {} %}
+{% if sv.get('directMaxBytes') %}
+<div class="hl-sum" data-process-memory aria-label="Memory and files">
+  <span><b>Memory and files</b></span>
+  <span class="mono{{ ' t-warn' if sv.get('directWarning') }}" data-direct title="Direct buffer memory in use against -XX:MaxDirectMemorySize; at the limit every lake read fails (OPERATIONS.md, Direct memory). Warns from 80%">direct {{ ((sv.get('directUsedBytes') or 0) / 1048576) | round(1) }}/{{ ((sv.directMaxBytes) / 1048576) | round(0) | int }} MB ({{ sv.get('directPercent') or 0 }}%) · {{ sv.get('directBuffers') or 0 }} buffers</span>
+  <span class="mono" data-mapped title="Files mapped into memory (the Delta and Iceberg id maps, VaR hot files): outside the heap and the direct limit">mapped {{ ((sv.get('mappedUsedBytes') or 0) / 1048576) | round(1) }} MB · {{ sv.get('mappedBuffers') or 0 }} files</span>
+  <span class="mono" data-heap>heap {{ sv.heapUsedMb }}/{{ sv.heapMaxMb }} MB</span>
+  <span class="mono" data-threads>{{ sv.threads }} live threads</span>
+  {% if sv.get('openFiles') is not none %}<span class="mono" data-open-files title="Open file descriptors against the process limit (ulimit -n)">{{ sv.openFiles }}/{{ sv.maxFiles }} open files{% if sv.get('deletedOpenFiles') is not none %} · <span title="Descriptors still open on files that were deleted: their disk space is not given back until they close. A number that only grows over days is a leak">{{ sv.deletedOpenFiles }} on deleted files</span>{% endif %}</span>{% endif %}
+</div>
+{% if sv.get('directWarning') %}<p class="hl-err" role="alert" data-direct-warning><b class="t-warn">Direct memory</b> {{ sv.directPercent }}% of -XX:MaxDirectMemorySize is in use: at the limit every lake read fails. Check that the server runs with -Djdk.nio.maxCachedBufferSize=262144 (OPERATIONS.md, Direct memory).</p>{% endif %}
+{% endif %}
 {% if (h.tmp or {}).get('jvmTmpdirWarning') %}<p class="hl-err" role="alert" data-tmpdir-warning><b class="t-warn">Java temp folder</b> {{ h.tmp.jvmTmpdirWarning }}</p>{% endif %}
 
 {% if h.dataLate %}

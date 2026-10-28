@@ -20,7 +20,7 @@
       "environment": [
         { "name": "DRISHTI_AWS_ENV", "value": "/opt/drishti/app/deploy/aws/env" },
         { "name": "AWS_REGION", "value": "${AWS_REGION}" },
-        { "name": "JAVA_TOOL_OPTIONS", "value": "-XX:MaxRAMPercentage=50 -XX:-UsePerfData -Djava.io.tmpdir=/opt/drishti/data/tmp/loader" } ],
+        { "name": "JAVA_TOOL_OPTIONS", "value": "-XX:MaxRAMPercentage=50 -XX:-UsePerfData -XX:MaxDirectMemorySize=256m -Djdk.nio.maxCachedBufferSize=262144 -Djava.io.tmpdir=/opt/drishti/data/tmp/loader" } ],
       "logConfiguration": { "logDriver": "awslogs", "options": { "awslogs-group": "/drishti/${DRISHTI_ENV}", "awslogs-region": "${AWS_REGION}",
                                                                  "awslogs-stream-prefix": "${JOB}" } } }
   ],

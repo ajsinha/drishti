@@ -241,6 +241,24 @@ Copies already in `/tmp` from earlier runs are not touched: remove them by hand 
 
 Admin, Health shows both folders (path, size and file count). All main code makes temporary files through one helper (`TempFiles` in the server, `core/tmpdir.py` in the console); an architecture test and a console test fail the build if anything else calls `Files.createTempFile`, `Files.createTempDirectory`, `File.createTempFile` or `tempfile.*`.
 
+### JVM flags for a long run
+
+Besides `-Djava.io.tmpdir=`, every launcher Drishti ships starts the server with these (they are JVM flags, not settings, so they go on
+the command line or in `JAVA_TOOL_OPTIONS`):
+
+| Flag | Why |
+|---|---|
+| `-XX:MaxDirectMemorySize=256m` | caps direct buffers |
+| `-Djdk.nio.maxCachedBufferSize=262144` | Java 21 keeps a temporary direct buffer as large as each channel read into a heap array cached on every thread; capping the cache at 256 KB stops that pinning the 256 MB (2.9.6: it failed every lake read after 13 hours). The lake loaders set it too |
+| `-XX:TrimNativeHeapInterval=60000` | gives freed native memory back every minute |
+| `-XX:NativeMemoryTracking=summary` | `jcmd <pid> VM.native_memory summary` |
+| `-XX:+HeapDumpOnOutOfMemoryError -XX:HeapDumpPath=<data dir>/dumps` | a heap dump when the heap runs out |
+| `-Xlog:gc*:file=<data dir>/logs/gc-%p.log:time,uptime:filecount=5,filesize=20m` | a rotated GC log (100 MB at most); make the folder first, or the JVM does not start |
+
+Where each launcher puts the dumps and GC logs, and how to read them: [OPERATIONS.md](OPERATIONS.md#121a-direct-memory-and-the-diagnostics-of-a-long-run).
+Kafka connectors fetch at most 4 MB a poll and 1 MB a partition; `client.fetch.max.bytes` and `client.max.partition.fetch.bytes` in the
+connector file change that.
+
 ### External libraries: `external_lib` (`DRISHTI_EXTERNAL_LIB`)
 
 One folder for your own libraries, loaded at start with no rebuild ([external_lib/README.md](../../external_lib/README.md)):

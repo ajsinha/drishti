@@ -243,8 +243,23 @@ def build_lake(stack: dict, name: str) -> None:
     shutil.rmtree(tmp, ignore_errors=True)
 
 
-# Native memory of a long-running server (SOAK-05, PERFORMANCE.md *Resident memory*): direct buffers capped, freed native memory given back
-SERVER_MEMORY_FLAGS = ["-XX:MaxDirectMemorySize=256m", "-XX:TrimNativeHeapInterval=60000"]
+# Native memory of a long-running server (SOAK-05, PERFORMANCE.md *Resident memory*): direct buffers capped, freed native memory given back,
+# the JDK's per-thread temporary direct buffers cached only up to 256 KB (a larger one is freed after its read), and native memory tracked
+# (jcmd <pid> VM.native_memory summary)
+SERVER_MEMORY_FLAGS = ["-XX:MaxDirectMemorySize=256m", "-XX:TrimNativeHeapInterval=60000", "-Djdk.nio.maxCachedBufferSize=262144",
+                       "-XX:NativeMemoryTracking=summary"]
+DUMPS = RUN / "dumps"
+
+
+def diagnostic_flags(name: str) -> list[str]:
+    """A heap dump on OutOfMemoryError (run/dumps/<node>) and a rotated GC log (run/logs/gc-<node>-<pid>.log, 5 x 20 MB): what a
+    multi-day soak needs to explain a failure (OPERATIONS.md, Diagnostics of a long run). The folders are made first: the JVM does
+    not start when the GC log's folder is missing."""
+    dumps = DUMPS / name
+    dumps.mkdir(parents=True, exist_ok=True)
+    LOGS.mkdir(parents=True, exist_ok=True)
+    return ["-XX:+HeapDumpOnOutOfMemoryError", f"-XX:HeapDumpPath={dumps}",
+            f"-Xlog:gc*:file={LOGS / ('gc-' + name + '-%p.log')}:time,uptime:filecount=5,filesize=20m"]
 
 
 def node_env(stack: dict, node: dict, keys: dict) -> tuple[dict, Path]:
@@ -280,7 +295,7 @@ def start_node(stack: dict, node: dict, keys: dict, jar: Path, pids: dict) -> bo
     if node.get("lake"):
         build_lake(stack, node["lake"])
     env, cwd = node_env(stack, node, keys)
-    args = [f"-Xmx{node.get('heap', '1536m')}", *SERVER_MEMORY_FLAGS, *node.get("jvm", []), "-jar", str(jar), f"--server.port={port}"]
+    args = [f"-Xmx{node.get('heap', '1536m')}", *SERVER_MEMORY_FLAGS, *diagnostic_flags(name), *node.get("jvm", []), "-jar", str(jar), f"--server.port={port}"]
     args += [f"--drishti.sources.connectors.{c}.enabled=false" for c in node.get("off", [])]
     args += node.get("args", [])
     cmd = java_cmd(java(stack), args, tmp=server_tmp(cwd, env), cwd=cwd, env=env)

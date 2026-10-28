@@ -107,7 +107,8 @@ class Tools(unittest.TestCase):
         code, _, _ = run("sutra", "lint", self.pack, "--strict", *self.jvm(), env=self.env)
         self.assertEqual(0, code)
         # -Djava.io.tmpdir= first (tools/javacmd.py): the server's temp base, here DRISHTI_TMP_DIR, made before java starts
-        self.assertEqual([f"-Djava.io.tmpdir={(self.tmp / 'jvm').resolve()} -jar {self.jar} sutra lint {self.pack} --strict"], self.calls())
+        self.assertEqual([f"-Djava.io.tmpdir={(self.tmp / 'jvm').resolve()} -Djdk.nio.maxCachedBufferSize=262144 -jar {self.jar} sutra lint {self.pack} --strict"],
+                         self.calls())
         self.assertTrue((self.tmp / "jvm").is_dir())
         self.assertEqual(1, run("sutra", "test", self.pack, "--junit", self.tmp / "t.xml", *self.jvm(), env={**self.env, "FAKE_EXIT": "1"})[0])
         self.assertIn(f"sutra test {self.pack} --junit {self.tmp / 't.xml'}", self.calls()[-1])
