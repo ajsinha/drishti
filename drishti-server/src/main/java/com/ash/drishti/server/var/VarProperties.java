@@ -265,9 +265,13 @@ public record VarProperties(Boolean enabled, Double confidence, Double esConfide
      * @param currencies the reporting currencies captured officially (USD always, first and published; others kept in the content
      *     store beside it, VAR_GUIDE.md section 19)
      * @param jsonl also write each published date as JSON Lines beside the table (2.9.4, true by default)
+     * @param format the published table's format, {@code delta} (the default) or {@code iceberg} (2.9.5)
+     * @param storage the object store's settings for an {@code s3://} root ({@code s3.endpoint}, {@code s3.region}, {@code s3.access-key},
+     *     {@code s3.secret-key}; none: the AWS default chain, a task role)
      */
     public record Official(Boolean enabled, Boolean publish, String root, Integer retentionYears, Boolean onStart, List<String> currencies,
-            Boolean jsonl) {
+            Boolean jsonl, String format, Map<String, String> storage) {
+
         public Official {
             jsonl = jsonl == null || jsonl;                 // 2.9.4: each published date also as JSON Lines beside the table
             enabled = enabled == null || enabled;
@@ -276,6 +280,11 @@ public record VarProperties(Boolean enabled, Double confidence, Double esConfide
             retentionYears = retentionYears == null || retentionYears < 1 ? 7 : retentionYears;
             onStart = onStart == null || onStart;
             currencies = currencyList(currencies == null ? List.of() : currencies);
+            format = format == null || format.isBlank() ? "delta" : format.strip().toLowerCase(java.util.Locale.ROOT);
+            if (!format.equals("delta") && !format.equals("iceberg")) {
+                throw new IllegalArgumentException("drishti.var.official.format is delta or iceberg, not '" + format + "'");
+            }
+            storage = storage == null ? Map.of() : Map.copyOf(storage);
         }
     }
 
@@ -328,7 +337,7 @@ public record VarProperties(Boolean enabled, Double confidence, Double esConfide
         access = access == null ? Map.of() : access;
         pathPage = pathPage == null || pathPage <= 0 ? 60 : pathPage;
         positions = positions == null ? new Positions(null, null) : positions;
-        official = official == null ? new Official(null, null, null, null, null, null, null) : official;
+        official = official == null ? new Official(null, null, null, null, null, null, null, null, null) : official;
         tier = tier == null ? new Tier(null, null, null, null, null) : tier;
         currencies = currencyList(currencies == null ? List.of("USD", "EUR", "CAD", "JPY", "GBP") : currencies);
         currencyRetentionDates = currencyRetentionDates == null || currencyRetentionDates < 1 ? 5 : currencyRetentionDates;

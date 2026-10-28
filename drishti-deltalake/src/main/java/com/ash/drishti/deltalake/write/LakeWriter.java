@@ -68,7 +68,8 @@ import java.util.function.IntConsumer;
 /**
  * Drishti's own Delta Lake writer: writes the staged files of a {@link LakeManifest} as Parquet through Delta Kernel and commits
  * them, with the files of the replaced business dates (or partitions) removed, as ONE version: a reader sees the whole load or
- * none of it. Local tables only; no Hadoop file system is used (see {@link LocalWriteFileIO}).
+ * none of it. Local tables ({@link LocalWriteFileIO}) and, through {@link #forTable}, tables in S3 ({@link StorageWriteFileIO}); no Hadoop
+ * file system is used.
  *
  * <p>Rows are read from the staged files a batch at a time and handed to the Parquet writer as they are read, so memory holds
  * one batch, the open Parquet row group and the commit's file list, whatever the size of the load. A staged row is one JSON object a line,
@@ -108,9 +109,27 @@ public final class LakeWriter {
         this.engine = engine;
     }
 
+    private static Map<String, String> parquetConf() {
+        return Map.of("parquet.compression", "SNAPPY", "parquet.block.size", String.valueOf(ROW_GROUP_BYTES), "parquet.page.size", String.valueOf(PAGE_BYTES));
+    }
+
+    /**
+     * The writer for a table wherever it is (2.9.5): a local folder as {@link #LakeWriter()}, an object store ({@code s3://}, {@code s3a://})
+     * through drishti-lakeio with its commits as exclusive creates ({@link StorageWriteFileIO}); {@code settings} are the S3 settings
+     * ({@code s3.endpoint}, {@code s3.region}, {@code s3.access-key}, {@code s3.secret-key}; none: the AWS default chain).
+     */
+    public static LakeWriter forTable(String table, Map<String, String> settings) {
+        if (com.ash.drishti.lakeio.LocalPaths.isLocal(table)) {
+            return new LakeWriter();
+        }
+        return new LakeWriter(DefaultEngine.create(new StorageWriteFileIO(com.ash.drishti.lakeio.S3Settings.from(settings), parquetConf())));
+    }
+
     /** Writes the manifest's parts; {@code partsDone} is told after each part. */
     public Result write(LakeManifest m, IntConsumer partsDone) throws IOException {
-        Files.createDirectories(LocalWriteFileIO.local(m.table()));
+        if (com.ash.drishti.lakeio.LocalPaths.isLocal(m.table())) {
+            Files.createDirectories(LocalWriteFileIO.local(m.table()));
+        }
         Table table = Table.forPath(engine, m.table());
         Snapshot before;
         try {

@@ -230,13 +230,14 @@ final class VarOfficial implements AutoCloseable {
         index.put("nodes", nodes);
         if (!VarDate.USD.equals(ccy)) {
             index.put("published", "not published: the published table holds the USD record (the content store keeps " + ccy + ")");
-        } else if (svc.props().official().publish() && publisher.table() != null) {
+        } else if (svc.props().official().publish() && publisher.where() != null) {
             try {
                 long v = publisher.publish(date, rows);
-                index.put("published", "risk-results/var-official (Delta version " + v + ")");   // never the server's own folder
+                index.put("published", "risk-results/var-official (" + publisher.describe(v) + ")");   // never the server's own folder
             } catch (java.io.IOException | RuntimeException e) {
-                index.put("publishError", String.valueOf(e.getMessage()));
-                LOG.warn("the official VaR results of {} could not be published to {}: {}", date, publisher.table(), e.getMessage());
+                String fmt = publisher.sink().format();
+                index.put("publishError", fmt + " table " + publisher.where() + ": " + e.getMessage());
+                LOG.warn("the official VaR results of {} could not be published to the {} table {}: {}", date, fmt, publisher.where(), e.getMessage());
             }
         }
         store.putIndex(date, index, ccy);

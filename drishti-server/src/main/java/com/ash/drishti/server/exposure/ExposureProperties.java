@@ -91,9 +91,18 @@ public record ExposureProperties(Boolean enabled, List<Double> confidence, Doubl
      * @param root the Delta root the results are published under (the risk lake's)
      * @param retentionYears the years the published tables keep their log and removed files (time travel)
      * @param onStart at start, capture the newest date when it has no official record yet
+     * @param format the published tables' format, {@code delta} (the default) or {@code iceberg} (2.9.5)
+     * @param storage the object store's settings for an {@code s3://} root ({@code s3.*}; none: the AWS default chain)
      */
-    public record Official(Boolean enabled, Boolean publish, String root, Integer retentionYears, Boolean onStart, Boolean jsonl) {
+    public record Official(Boolean enabled, Boolean publish, String root, Integer retentionYears, Boolean onStart, Boolean jsonl, String format,
+            Map<String, String> storage) {
+
         public Official {
+            format = format == null || format.isBlank() ? "delta" : format.strip().toLowerCase(java.util.Locale.ROOT);
+            if (!format.equals("delta") && !format.equals("iceberg")) {
+                throw new IllegalArgumentException("drishti.ccr.exposure.official.format is delta or iceberg, not '" + format + "'");
+            }
+            storage = storage == null ? Map.of() : Map.copyOf(storage);
             jsonl = jsonl == null || jsonl;                 // 2.9.4: each published date also as JSON Lines beside the tables
             enabled = enabled == null || enabled;
             publish = publish == null || publish;
@@ -145,7 +154,7 @@ public record ExposureProperties(Boolean enabled, List<Double> confidence, Doubl
         t0Tolerance = t0Tolerance == null || t0Tolerance <= 0 ? 0.10 : t0Tolerance;
         kinds = kinds == null ? new Kinds(null, null, null, null, null, null, null, null, null) : kinds;
         access = access == null ? Map.of() : access;
-        official = official == null ? new Official(null, null, null, null, null, null) : official;
+        official = official == null ? new Official(null, null, null, null, null, null, null, null) : official;
         retention = retention == null ? new Retention(null, null, null, null, null, null) : retention;
     }
 

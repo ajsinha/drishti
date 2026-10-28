@@ -62,9 +62,9 @@ public class ExposureConfiguration {
 
     @Bean(destroyMethod = "close")
     ExposureOfficial exposureOfficial(ExposureService svc, ExposureProperties props, ObjectProvider<LoadService> loads) {
-        String root = props.official().root();
-        Path local = root == null || root.contains("://") ? null : Path.of(root);
-        ExposureOfficial o = new ExposureOfficial(svc, new ExposurePublisher(local, props.official().retentionYears(), props.official().jsonl()));
+        var off = props.official();                                      // a folder or s3://, Delta (the default) or Iceberg (2.9.5)
+        ExposureOfficial o = new ExposureOfficial(svc, new ExposurePublisher(com.ash.drishti.server.official.OfficialSink.of(off.format(),
+                off.root(), off.storage(), off.retentionYears()), off.jsonl()));
         LoadService l = loads.getIfAvailable();
         if (l != null) {
             l.onReady(r -> o.onLoad(r.kind(), r.businessDate()));          // the data-load signal reloads the date, then captures it

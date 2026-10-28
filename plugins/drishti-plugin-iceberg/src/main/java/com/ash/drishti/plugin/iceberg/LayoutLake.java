@@ -50,6 +50,15 @@ interface LayoutLake extends Closeable {
         /** Makes each day's files that day's data, in one commit. */
         void commitDays(Map<LocalDate, List<?>> days);
 
+        /** Adds the files to the table in one append commit (nothing replaced: the official results' tables, 2.9.5). */
+        void append(List<?> files, Map<String, String> summary);
+
+        /** Sets table properties (one commit), keeping the others. */
+        void properties(Map<String, String> props);
+
+        /** The current snapshot's sequence number (0 when there is none). */
+        long sequenceNumber();
+
         default int keepDays(int keep, LoadGuard guard) {
             return keepDays(keep, guard, null);
         }
@@ -126,6 +135,27 @@ interface LayoutLake extends Closeable {
             @Override
             public int keepDays(int keep, LoadGuard guard, LocalDate floor) {
                 return IcebergMaintenance.keepDays(t, keep, guard, floor);
+            }
+
+            @Override
+            public void append(List<?> files, Map<String, String> summary) {
+                org.apache.iceberg.AppendFiles a = t.newAppend();
+                files.forEach(f -> a.appendFile((org.apache.iceberg.DataFile) f));
+                summary.forEach(a::set);
+                a.commit();
+            }
+
+            @Override
+            public void properties(Map<String, String> props) {
+                org.apache.iceberg.UpdateProperties u = t.updateProperties();
+                props.forEach(u::set);
+                u.commit();
+            }
+
+            @Override
+            public long sequenceNumber() {
+                t.refresh();
+                return t.currentSnapshot() == null ? 0 : t.currentSnapshot().sequenceNumber();
             }
 
             @Override
@@ -218,6 +248,23 @@ interface LayoutLake extends Closeable {
             @Override
             public int keepDays(int keep, LoadGuard guard, LocalDate floor) {
                 return NativeMaintenance.keepDays(t, keep, guard, floor);
+            }
+
+            @Override
+            @SuppressWarnings("unchecked")
+            public void append(List<?> files, Map<String, String> summary) {
+                com.ash.drishti.iceberg.write.Operations.append(t, (List<com.ash.drishti.iceberg.manifest.DataFile>) files, summary);
+            }
+
+            @Override
+            public void properties(Map<String, String> props) {
+                com.ash.drishti.iceberg.write.Operations.setProperties(t, props);
+            }
+
+            @Override
+            public long sequenceNumber() {
+                t.refresh();
+                return t.currentSnapshot().map(com.ash.drishti.iceberg.meta.Snapshot::sequenceNumber).orElse(0L);
             }
 
             @Override

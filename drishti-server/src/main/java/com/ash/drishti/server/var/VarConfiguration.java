@@ -83,9 +83,9 @@ public class VarConfiguration {
 
     @Bean(destroyMethod = "close")
     VarOfficial varOfficial(VarService svc, VarViews views, VarProperties props, ObjectProvider<LoadService> loads) {
-        String root = props.official().root();
-        Path local = root == null || root.contains("://") ? null : Path.of(root);
-        VarOfficial o = new VarOfficial(svc, views, new VarPublisher(local, props.official().retentionYears(), props.official().jsonl()));
+        var off = props.official();                                      // a folder or s3://, Delta (the default) or Iceberg (2.9.5)
+        VarOfficial o = new VarOfficial(svc, views, new VarPublisher(com.ash.drishti.server.official.OfficialSink.of(off.format(), off.root(),
+                off.storage(), off.retentionYears()), off.jsonl()));
         LoadService l = loads.getIfAvailable();
         if (l != null) {
             l.onReady(r -> o.onLoad(r.kind(), r.businessDate()));          // the data-load signal reloads the date, then captures it

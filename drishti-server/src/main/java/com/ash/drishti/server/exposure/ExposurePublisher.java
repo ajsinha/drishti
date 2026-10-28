@@ -15,14 +15,7 @@
  */
 package com.ash.drishti.server.exposure;
 
-import com.ash.drishti.common.TempFiles;
-import com.ash.drishti.deltalake.write.LakeManifest;
-import com.ash.drishti.deltalake.write.LakeWriter;
-import com.fasterxml.jackson.databind.ObjectMapper;
-import java.io.BufferedWriter;
 import java.io.IOException;
-import java.nio.charset.StandardCharsets;
-import java.nio.file.Files;
 import java.nio.file.Path;
 import java.time.LocalDate;
 import java.util.ArrayList;
@@ -49,16 +42,13 @@ final class ExposurePublisher {
     static final String FOLDER = "risk-results";
     static final String NODES = "exposure-official";
     static final String CPTY = "exposure-official-cpty";
-    private static final ObjectMapper JSON = new ObjectMapper();
 
     /** The published columns of the node table, in order (BUSINESS_DATE is the partition column business_date). */
     static final Map<String, String> COLUMNS = columns(false);
     /** The counterparty table's: the node table's and the counterparty's own. */
     static final Map<String, String> CPTY_COLUMNS = columns(true);
 
-    private final Path root;
-    private final int retentionDays;
-
+    private final com.ash.drishti.server.official.OfficialSink sink;
     private final boolean jsonl;
 
     ExposurePublisher(Path root, int retentionYears) {
@@ -66,9 +56,13 @@ final class ExposurePublisher {
     }
 
     ExposurePublisher(Path root, int retentionYears, boolean jsonl) {
+        this(com.ash.drishti.server.official.OfficialSink.of("delta", root == null ? null : root.toString(), Map.of(), retentionYears), jsonl);
+    }
+
+    /** Publishes through {@code sink} (Delta or Iceberg, a folder or {@code s3://}; null: nothing is published). */
+    ExposurePublisher(com.ash.drishti.server.official.OfficialSink sink, boolean jsonl) {
+        this.sink = sink;
         this.jsonl = jsonl;
-        this.root = root == null ? null : root.resolve(FOLDER);
-        this.retentionDays = retentionYears * 365 + (retentionYears + 3) / 4;
     }
 
     private static Map<String, String> columns(boolean cpty) {
@@ -102,64 +96,45 @@ final class ExposurePublisher {
         return java.util.Collections.unmodifiableMap(c);
     }
 
-    /** The folder the tables are under, or null when the root is not a local or shared folder. */
-    Path root() {
-        return root;
+    /** Where the tables are ({@code <root>/risk-results}), or null when nothing is published. */
+    String where() {
+        return sink == null ? null : sink.root() + "/" + FOLDER;
     }
 
-    Map<String, String> properties() {
-        return Map.of("delta.logRetentionDuration", "interval " + retentionDays + " days",
-                "delta.deletedFileRetentionDuration", "interval " + retentionDays + " days", "delta.appendOnly", "true");
+    /** {@code delta} or {@code iceberg}. */
+    String format() {
+        return sink == null ? "delta" : sink.format();
     }
 
-    /** Where a commit's JSON Lines go: {@code <root>/risk-results/jsonl/<table>/<date>/<table>-v<version>.jsonl}. */
+    /** "Delta version 4" or "Iceberg sequence number 4". */
+    String describe(long version) {
+        return sink.describe(version);
+    }
+
+    /** Where a commit's JSON Lines go on a local root: {@code <root>/risk-results/jsonl/<table>/<date>/<table>-v<version>.jsonl}. */
     Path jsonlFile(String table, LocalDate date, long version) {
-        return root.resolve("jsonl").resolve(table).resolve(date.toString()).resolve(table + "-v" + version + ".jsonl");
+        return com.ash.drishti.server.official.OfficialSink.folder(sink.root()).resolve(FOLDER).resolve("jsonl").resolve(table)
+                .resolve(date.toString()).resolve(table + "-v" + version + ".jsonl");
     }
 
-    /** Appends a date's rows to one table ({@link #NODES} or {@link #CPTY}) in one commit; returns the table version written. */
+    /** Appends a date's rows to one table ({@link #NODES} or {@link #CPTY}) in one commit; returns the version written. */
     long publish(String table, LocalDate date, List<Map<String, Object>> rows) throws IOException {
-        if (root == null) {
-            throw new IOException("no local folder to publish to (drishti.ccr.exposure.official.root)");
+        if (sink == null) {
+            throw new IOException("nowhere to publish to (drishti.ccr.exposure.official.root)");
         }
         Map<String, String> columns = table.equals(CPTY) ? CPTY_COLUMNS : COLUMNS;
-        Path staged = TempFiles.createFile("exposure-official-", ".rows");
-        try {
-            try (BufferedWriter w = Files.newBufferedWriter(staged, StandardCharsets.UTF_8)) {
-                for (Map<String, Object> r : rows) {
-                    Map<String, Object> promoted = new LinkedHashMap<>();
-                    columns.keySet().forEach(c -> promoted.put(c, r.get(c)));
-                    String id = r.get("HIERARCHY") + ":" + r.get("NODE_ID") + "@" + date + "#v" + r.get("RESULT_VERSION");
-                    Map<String, Object> doc = new LinkedHashMap<>(promoted);
-                    doc.put("BUSINESS_DATE", date.toString());
-                    Map<String, Object> line = new LinkedHashMap<>();      // one {id, doc, columns} a line (LakeWriter)
-                    line.put("id", id);
-                    line.put("doc", JSON.writeValueAsString(doc));
-                    line.put("columns", promoted);
-                    w.write(JSON.writeValueAsString(line));
-                    w.newLine();
-                }
+        long version = sink.append(table, date, columns, rows,
+                r -> r.get("HIERARCHY") + ":" + r.get("NODE_ID") + "@" + date + "#v" + r.get("RESULT_VERSION"));
+        if (jsonl) {                                                // the same rows as JSON Lines beside the table (2.9.4)
+            List<Map<String, Object>> docs = new ArrayList<>();
+            for (Map<String, Object> r : rows) {
+                Map<String, Object> doc = new LinkedHashMap<>();
+                columns.keySet().forEach(c -> doc.put(c, r.get(c)));
+                doc.put("BUSINESS_DATE", date.toString());
+                docs.add(doc);
             }
-            List<LakeManifest.Column> cols = new ArrayList<>(List.of(new LakeManifest.Column("id", "string"),
-                    new LakeManifest.Column("doc", "string"), new LakeManifest.Column("business_date", "date")));
-            columns.forEach((c, t) -> cols.add(new LakeManifest.Column(c, t)));
-            LakeManifest m = new LakeManifest(root.resolve(table).toString(), List.of("business_date"), cols, List.copyOf(columns.keySet()), "append",
-                    10_000, List.of("id", "business_date", "NODE_ID", "RESULT_VERSION"),
-                    List.of(new LakeManifest.Part(staged, rows.size(), Map.of("business_date", date.toString()))), properties());
-            long version = new LakeWriter().write(m, x -> { }).version();
-            if (jsonl) {                                            // the same rows as JSON Lines beside the table (2.9.4)
-                List<Map<String, Object>> docs = new ArrayList<>();
-                for (Map<String, Object> r : rows) {
-                    Map<String, Object> doc = new LinkedHashMap<>();
-                    columns.keySet().forEach(c -> doc.put(c, r.get(c)));
-                    doc.put("BUSINESS_DATE", date.toString());
-                    docs.add(doc);
-                }
-                com.ash.drishti.server.dist.JsonlWriter.writeFile(jsonlFile(table, date, version), docs);
-            }
-            return version;
-        } finally {
-            Files.deleteIfExists(staged);
+            sink.writeJsonl(table, date, version, docs);
         }
+        return version;
     }
 }

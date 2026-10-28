@@ -206,15 +206,16 @@ final class ExposureOfficial implements AutoCloseable {
         index.put("collateralModel", ask.collateral());
         index.put("trades", ExposureOfficialStore.tradesKey(date, version));
         index.put("scopes", scopes);
-        if (svc.props().official().publish() && publisher.root() != null) {
+        if (svc.props().official().publish() && publisher.where() != null) {
             try {
                 long vc = publisher.publish(ExposurePublisher.CPTY, date, cptyRows);
                 long vn = nodeRows.isEmpty() ? -1 : publisher.publish(ExposurePublisher.NODES, date, nodeRows);
-                index.put("published", "risk-results/" + ExposurePublisher.CPTY + " (Delta version " + vc + ")"
-                        + (vn < 0 ? "" : ", risk-results/" + ExposurePublisher.NODES + " (Delta version " + vn + ")"));
+                index.put("published", "risk-results/" + ExposurePublisher.CPTY + " (" + publisher.describe(vc) + ")"
+                        + (vn < 0 ? "" : ", risk-results/" + ExposurePublisher.NODES + " (" + publisher.describe(vn) + ")"));
             } catch (java.io.IOException | RuntimeException e) {
-                index.put("publishError", String.valueOf(e.getMessage()));
-                LOG.warn("the official exposure results of {} could not be published: {}", date, e.getMessage());
+                index.put("publishError", publisher.format() + " tables under " + publisher.where() + ": " + e.getMessage());
+                LOG.warn("the official exposure results of {} could not be published to the {} tables under {}: {}", date, publisher.format(),
+                        publisher.where(), e.getMessage());
             }
         }
         store.putIndex(date, index);
