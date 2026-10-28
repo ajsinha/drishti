@@ -264,6 +264,15 @@
   `drishti-compute`) became one paragraph linking ARCHITECTURE.md; scale figures not found in PERFORMANCE.md, SCALE_STRATEGY.md or
   SCALE_BENCHMARK.md (18 / 54 ms, 70 / 99 ms, 6–14 ms) dropped and the rest linked to the document that holds them; the drill merges
   `develop` into `main`.
+- **The root README as a complete product front page, with no versions** (180 → 350 lines; product owner, 2026-10-28): what Drishti is
+  and the idea behind it; features by chapter (look things up; search and forms; over time and live; BI; risk computed on demand, with
+  VaR scopes, column hierarchies, reporting currencies, intraday from files and Kafka, the official record, backtests, exposure and
+  sharding; data in; build without code; collaboration; embedding; operate), each linked to its guide and tutorial; *How it works*
+  with a new diagram, `docs/img/readme/drishti-flow.svg` (sources, connectors, the seven pipeline steps, the ViewModel, its renderers,
+  and the engines, BI and packs beneath), and a paragraph each on the pipeline, generic rendering, the ViewModel contract and the
+  module layout; the quick start with the jar named `drishti-server-*-exec.jar` and what to try first; measured figures without
+  release labels (adding the parallel loader and the Drishti\*net soak); a documentation map by audience; project facts. Releases
+  appear only as one line to the release notes, changelog and plan.
 
 ## 2.9.5 — Iceberg as a full alternative to Delta; VaR hierarchies by columns (limit letters); connector files that upgrade themselves safely (2026-10-28)
 
