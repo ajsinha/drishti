@@ -145,12 +145,23 @@ class VarIntradayApiTest {
     }
 
     private void batch(LocalDate day, String kind, List<Map<String, Object>> rows) throws Exception {
+        land(day, kind, () -> {
+            if (kind.equals("pnl-vector")) {
+                VarIntradayLake.writeVectors(lake, rows, "append");
+            } else {
+                VarIntradayLake.writePvs(lake, rows, "append");
+            }
+        });
+    }
+
+    interface Write {
+        void run() throws Exception;
+    }
+
+    /** Writes to the lake, waits until the date's version shows it (the connector's own refresh), and sends the data-load signal. */
+    private void land(LocalDate day, String kind, Write write) throws Exception {
         String before = svc.loader().version(day);
-        if (kind.equals("pnl-vector")) {
-            VarIntradayLake.writeVectors(lake, rows, "append");
-        } else {
-            VarIntradayLake.writePvs(lake, rows, "append");
-        }
+        write.run();
         long until = System.currentTimeMillis() + 20_000;
         while (svc.loader().version(day).equals(before) && System.currentTimeMillis() < until) {
             Thread.sleep(50);
@@ -263,8 +274,13 @@ class VarIntradayApiTest {
             row.put("COMPUTED_AT", DAY + "T18:00:00Z");
         });
         VarIntradayLake.writePvs(lake, p, "overwrite-dates");
+        String[] was = before.split("\\|", 2);                           // both tables seen new: P&L vectors, then |scenario-pv:...
         long until = System.currentTimeMillis() + 20_000;
-        while (svc.loader().version(DAY).equals(before) && System.currentTimeMillis() < until) {
+        while (System.currentTimeMillis() < until) {
+            String[] now = svc.loader().version(DAY).split("\\|", 2);
+            if (!now[0].equals(was[0]) && (was.length < 2 || now.length == 2 && !now[1].equals(was[1]))) {
+                break;
+            }
             Thread.sleep(200);
         }
         official.onLoad("scenario-pv", DAY);
@@ -315,6 +331,9 @@ class VarIntradayApiTest {
         assertThat(last).isLessThan(Math.max(3 * first, first + 250));
         // the same final state loaded as one run on another date: equal to the cent
         LocalDate one = MANY_AS_ONE_RUN;
+        // the date loaded with its morning run first: the full run below reaches it by its data-load signal, never by a timer (a date
+        // overwritten without one is answered as loaded, which is what failed a drill when this waited 1.5 s for the connector instead)
+        JsonNode stale = ask("/api/v1/var/scope/path?size=1", "NODE:MGMT~BANK", one, null);
 
         List<Map<String, Object>> v = new ArrayList<>();
         for (Map<String, Object> row : VarIntradayLake.morningVectors(one)) {
@@ -326,8 +345,8 @@ class VarIntradayApiTest {
             }
             v.add(row);
         }
-        VarIntradayLake.writeVectors(lake, v, "overwrite-dates");
-        Thread.sleep(1500);
+        land(one, "pnl-vector", () -> VarIntradayLake.writeVectors(lake, v, "overwrite-dates"));
+        assertThat(ask("/api/v1/var/scope/path?size=1", "NODE:MGMT~BANK", one, null).get("series")).isNotEqualTo(stale.get("series"));
         for (String node : svc.date(MANY).book().nodes().keySet()) {
             JsonNode a = ask("/api/v1/var/scope/path?size=1", "NODE:" + node, MANY, null);
             JsonNode e = ask("/api/v1/var/scope/path?size=1", "NODE:" + node, one, null);
@@ -359,5 +378,32 @@ class VarIntradayApiTest {
         assertThat(eur.book().intraday()).as("EUR after an official capture read it: still with the day's updates").isNotNull();
         assertThat(eur.book().intraday().info().trades()).isEqualTo(live.book().intraday().info().trades());
         assertThat(ask("/api/v1/var/scope", "BANK", MANY, "EUR").at("/intraday/trades").asInt()).isEqualTo(live.book().intraday().info().trades());
+    }
+
+    @Test
+    @Order(7)
+    void aReloadWhileABatchIsAppliedNeverBringsBackTheDroppedDate() throws Exception {
+        // another input's signal (or an administrator) reloads the date while a batch is applied on it: the layer built on the dropped
+        // morning book must not be published over the reload; the date as loaded again holds the batch, once
+        svc.reload(MANY);
+        ask("/api/v1/var/scope", "BANK", MANY, null);
+        VarDate before = svc.date(MANY);
+        VarLakeFixture.Trade t = VarLakeFixture.trades().stream().filter(x -> x.id().equals("T3")).findFirst().orElseThrow();
+        svc.beforePublish = d -> svc.reload(d);
+        try {
+            batch(MANY, "pnl-vector", List.of(VarIntradayLake.vector(MANY, "T3", t.book(), t.desk(), t.le(), t.ccy(), t.qty() * 2,
+                    VarLakeFixture.scale((double[]) t.v(), 2), t.status(), "INTRADAY", "B-RACE", MANY + "T12:00:00Z")));
+        } finally {
+            svc.beforePublish = d -> {};
+        }
+        VarDate after = svc.date(MANY);
+        assertThat(after.book().morning()).as("the dropped date's book is not brought back").isNotSameAs(before.book().morning());
+        assertThat(after.book().intraday().info().batches()).contains("B-RACE");
+        double[] v = svc.scoped(null, "NODE:MGMT~BANK", MANY, null).vector();
+        svc.reload(MANY);
+        double[] again = svc.scoped(null, "NODE:MGMT~BANK", MANY, null).vector();
+        for (int j = 0; j < v.length; j++) {
+            assertThat(v[j]).isCloseTo(again[j], within(0.005));
+        }
     }
 }

@@ -438,6 +438,8 @@ public final class VarService implements AutoCloseable {
     // ---------------------------------------------------------------------------------------------------------------- intraday
 
     private final Map<LocalDate, java.util.concurrent.locks.ReentrantLock> intradayLocks = new ConcurrentHashMap<>();
+    /** Runs between a batch's layer being built and its publication (tests: a reload landing at that moment). */
+    volatile java.util.function.Consumer<LocalDate> beforePublish = d -> {};
 
     /** Intraday updates refused before they reached the lake (the PV topic's guards): listed with the date's layer. */
     void intradayRejected(LocalDate d, List<String> why) {
@@ -448,11 +450,16 @@ public final class VarService implements AutoCloseable {
         java.util.concurrent.locks.ReentrantLock lock = intradayLocks.computeIfAbsent(d, x -> new java.util.concurrent.locks.ReentrantLock());
         lock.lock();                                                     // no blocking under synchronized (virtual threads)
         try {
-            VarDate vd = dates.get(d).join();
+            CompletableFuture<VarDate> f0 = dates.get(d);
+            if (f0 == null || !f0.isDone() || f0.isCompletedExceptionally()) {
+                return;                                                  // dropped meanwhile: the reloaded date lists what the lake holds
+            }
+            VarDate vd = f0.join();
             VarIntradayRows rows = vd.intraday() == null ? new VarIntradayRows().morning(null, vd.intake().batchIds()) : vd.intraday().copy();
             rows.rejected(why);
-            dates.put(d, CompletableFuture.completedFuture(vd.withBook(vd.book(), rows)));
-            relabel(d, vd.intraday(), rows);
+            if (dates.replace(d, f0, CompletableFuture.completedFuture(vd.withBook(vd.book(), rows)))) {
+                relabel(d, vd.intraday(), rows);
+            }
         } finally {
             lock.unlock();
         }
@@ -474,7 +481,10 @@ public final class VarService implements AutoCloseable {
         return f != null && f.isDone() && !f.isCompletedExceptionally() && f.join().intraday() != null && !f.join().intraday().batches().isEmpty();
     }
 
-    /** What an intraday signal did: {@code applied}, {@code none} (nothing new), {@code reload} (a full run: the date reloaded), {@code not loaded}. */
+    /**
+     * What an intraday signal did: {@code applied}, {@code none} (nothing new), {@code reload} (a full run: the date reloaded), {@code not loaded},
+     * {@code superseded} (the date reloaded while the batch was applied: the layer not published, the date reads its updates from the lake).
+     */
     record IntradayResult(String status, int updates, int trades, java.util.List<String> batches, String note) {}
 
     /**
@@ -491,7 +501,11 @@ public final class VarService implements AutoCloseable {
         java.util.concurrent.locks.ReentrantLock lock = intradayLocks.computeIfAbsent(d, x -> new java.util.concurrent.locks.ReentrantLock());
         lock.lock();                                                     // no blocking under synchronized (virtual threads)
         try {
-            VarDate usd = dates.get(d).join();
+            CompletableFuture<VarDate> f0 = dates.get(d);                // the date this batch is applied on: published only if still it
+            if (f0 == null || !f0.isDone() || f0.isCompletedExceptionally()) {
+                return new IntradayResult("not loaded", 0, 0, java.util.List.of(), "the date loads with its updates when first asked");
+            }
+            VarDate usd = f0.join();
             VarIntradayRows state = usd.intraday() == null ? new VarIntradayRows().morning(null, usd.intake().batchIds()) : usd.intraday();
             VarIntake read = loader.readIntraday(d, usd.book().morning(), state.parts(), usd.intake());
             java.util.Set<String> morning = new java.util.TreeSet<>(read.summary().batchIds());
@@ -522,15 +536,21 @@ public final class VarService implements AutoCloseable {
             java.util.List<String> batches = VarIntradayRows.batchAt(fresh).entrySet().stream()      // the order the answers list them in
                     .sorted(com.ash.drishti.compute.var.VarIntraday.BATCH_ORDER).map(Map.Entry::getKey).toList();
             if (fresh.isEmpty()) {
-                if (!next.parts().equals(state.parts())) {
-                    dates.put(d, CompletableFuture.completedFuture(usd.withBook(usd.book(), next)));
+                if (!next.parts().equals(state.parts()) && dates.replace(d, f0, CompletableFuture.completedFuture(usd.withBook(usd.book(), next)))) {
                     relabel(d, state, next);
                 }
                 return new IntradayResult("none", 0, 0, batches, "no update newer than what is applied");
             }
             VarBook nb = loader.apply(d, usd.book(), fresh, usd.book().scenarioDates(), usd.intake());
             VarDate nvd = usd.withBook(nb, next).unwarned(VarLoader.INTRADAY_UNREAD);   // read now: no longer the morning run alone
-            dates.put(d, CompletableFuture.completedFuture(nvd));
+            beforePublish.accept(d);
+            if (!dates.replace(d, f0, CompletableFuture.completedFuture(nvd))) {
+                // the date was dropped (a reload: another input's signal, an administrator) or loaded again while the batch was applied:
+                // the layer built on the old morning book is never published (its book may be retired); the date as loaded now (or when
+                // next asked) reads its updates, this batch included, from the lake
+                return new IntradayResult("superseded", 0, 0, batches, "the date was reloaded while the batch was applied: it reads its updates "
+                        + "from the lake");
+            }
             for (String k : new ArrayList<>(layered.keySet())) {             // the reporting currencies follow: only those trades reconverted
                 Layered l = layered.get(k);
                 if (k.startsWith(d + "|") && l != null) {

@@ -82,6 +82,17 @@
   `/var/reload`). API_GUIDE.md, VAR_SHARDING.md section 10.
 - **Test: `VarShardClusterTest`'s join no longer depends on the random node ids.** With three members and two owners per shard the third
   member owned neither shard about one run in nine (seen once in five runs); its node id is now fixed and S1 pinned to it.
+- **Fixed: a reload landing while an intraday batch was applied could bring the dropped date back.** The data-load signal applied the
+  batch on the date it had read and then put the result in place unconditionally; a reload in between (another input's signal, an
+  administrator's reload) dropped the date and retired its morning book, and the batch then published the old book and layer over the
+  reload. Now the layer is published only over the very date it was built on; otherwise the signal says `superseded` and the date, as
+  loaded again, reads its updates (this batch included, once) from the lake. A refused update's label likewise. `VarIntradayApiTest`
+  reloads the date at that moment, deterministically. VAR_GUIDE.md section 8.4.
+- **Test (drill): `VarIntradayApiTest`'s few hundred batches compared the intraday date with a date read before its full run reached the
+  connector.** The one-run date was overwritten and read after a fixed 1.5 s (the connector's 1 s refresh), with no data-load signal; under
+  load the read still saw the old snapshot, so the expected side was that date's morning run (`MGMT~BANK` `[52,168,…]` against the right
+  `[106,307,…]`). The intraday side was correct. The test now loads that date first, writes the full run, waits until the date's version
+  shows it and sends its signal, as a loader does; the full-run test waits for both tables' versions.
 
 ### Documentation
 
