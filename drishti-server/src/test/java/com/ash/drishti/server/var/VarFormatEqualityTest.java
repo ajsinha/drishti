@@ -188,7 +188,7 @@ class VarFormatEqualityTest {
                 Map.Entry<String, JsonNode> e = it.next();
                 String k = e.getKey().toLowerCase(java.util.Locale.ROOT);
                 if (!k.equals("provenance") && !k.contains("version") && !k.equals("inputs") && !k.equals("vectors") && !k.equals("computedat")
-                        && !k.equals("elapsedms") && !k.equals("took")) {
+                        && !k.equals("elapsedms") && !k.equals("computems") && !k.equals("took")) {
                     o.set(e.getKey(), strip(e.getValue()));
                 }
             }

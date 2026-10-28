@@ -82,13 +82,13 @@ class FoundAndListedTest(unittest.TestCase):
 class CommandTest(unittest.TestCase):
 
     def command(self, conf, dry=False, floor=0):
-        with mock.patch("stores.loader_command", lambda data, jar=None, java=None, main=None: ["java", main]):
+        with mock.patch("stores.loader_command", lambda data, jar=None, java=None, main=None: ["<launcher>", main]):
             return maintain_iceberg.command("/l/risk/pnl-vector", conf, date(2026, 10, 16), dry, False, floor, Path("/d"))
 
     def test_the_settings_become_the_maintenance_options(self):
         cmd = self.command({"keep-business-days": 260, "compact": True, "vacuum-hours": 168, "orphan-hours": 12,
                             "storage-options": {"AWS_ENDPOINT_URL": "http://127.0.0.1:9000", "AWS_REGION": "us-east-1"}}, dry=True, floor=2557)
-        self.assertEqual(cmd[:2], ["java", maintain_iceberg.MAINT])
+        self.assertEqual(cmd[:2], ["<launcher>", maintain_iceberg.MAINT])
         text = " ".join(cmd)
         for want in ("/l --domain risk --kinds pnl-vector --engine native --as-of 2026-10-16 --json", "--keep-days 260", "--relayout",
                      "--expire-hours 168", "--remove-orphans --older-than-hours 72", "--floor-days 2557", "--dry-run",
