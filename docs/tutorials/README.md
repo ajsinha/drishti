@@ -60,7 +60,7 @@ the tutorials say what to do first.
 
 ## What you need once
 
-Tutorials 1 to 3 need only [tutorial 1](01-first-15-minutes.md): Java 21 or newer, Python 3.11 or newer, `uv`, git, the demo lakes built (`lake demo`, about 15 minutes), and
+Tutorials 1 to 3 need only [tutorial 1](01-first-15-minutes.md): Java 21 or newer, Python 3.13 ([the minimum](../guides/GETTING_STARTED.md#step-1--install-the-prerequisites)), `uv`, git, the demo lakes built (`lake demo`, about 15 minutes), and
 the server and console started with sign-in on: the quick-start environment of [data/testdata/README.md](../../data/testdata/README.md), which the IDE run configurations
 **Build demo lakes**, **Drishti server (demo lakes)** and **Drishti console** set up in three clicks. Later tutorials say what else they need. For the command line you need a
 personal API token (tutorial 1, Step 9) in `DRISHTI_TOKEN`.

@@ -185,7 +185,7 @@ production, each with real screenshots; the [guides](docs/README.md) are the ref
 
 New to Drishti? **[GETTING_STARTED.md](docs/guides/GETTING_STARTED.md)** installs and starts it from a clean machine, and
 **[tutorial 1](docs/tutorials/01-first-15-minutes.md)** takes you through your first quarter of an hour; **[IDE_GUIDE.md](docs/guides/IDE_GUIDE.md)** runs the server in IntelliJ IDEA and the console in PyCharm. The short version,
-from the repository root (Java 21 or newer, production runs 21; Python 3.11 or newer, [uv](https://docs.astral.sh/uv/)):
+from the repository root (Java 21 or newer, production runs 21; Python 3.13, [the minimum and why](docs/guides/GETTING_STARTED.md#step-1--install-the-prerequisites), [uv](https://docs.astral.sh/uv/)):
 
 ```bash
 # 1. Build (Java 21 or newer, enforced; production runs 21; Maven comes with the repository)
@@ -195,7 +195,7 @@ export JAVA_HOME=/usr/lib/jvm/java-21-openjdk-amd64
 # 2. The console's Python environment (also runs tools/drishti.py)
 uv venv drishti-console/.venv && uv pip install --python drishti-console/.venv/bin/python -r drishti-console/requirements.txt
 
-# 3. The demo lakes the seven packs read: sixty business days from the committed test data (about 15 minutes, 3.4 GB)
+# 3. The demo lakes (the seven default packs, us-equities, gleif and funds): sixty business days from the committed test data (about 15 minutes, 3.4 GB)
 drishti-console/.venv/bin/python tools/drishti.py lake demo
 
 # 4. Start the server on :18480 with the packs to load (their parents load with them)

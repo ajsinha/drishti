@@ -36,7 +36,7 @@ that preview. Figures that depend on the business date (a count of payments stil
 | adding a new panel kind | [Panel developer guide](PANELS.md#developing-a-panel-kind) |
 | shipping Sutras in a pack | [Pack developer guide](PACK_DEVELOPER_GUIDE.md) |
 
-Eleven small working Sutras, each with a self-contained JSON document and a note, are in [examples](examples/README.md): together they use all 22 panel kinds, nested pivot groups and tree rows. They
+Twelve small working Sutras, each with a self-contained JSON document and a note, are in [examples](examples/README.md): together they use all 22 panel kinds, nested pivot groups and tree rows. They
 are teaching documents with their own small data (written in camel case, as such JSON often is); the shipped packs and everything below use the production attribute names in UPPER_SNAKE. In the
 workbench every example opens as **your own copy** (Build → New screen → Examples), and **File → Open** loads any `.yaml` or `.json` of your own.
 

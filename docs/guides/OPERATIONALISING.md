@@ -392,7 +392,7 @@ volumes:
   - /srv/lake:/opt/drishti/data/delta:ro
 ```
 
-On the host, deploy as usual (`pack deploy ... --to /srv/drishti/packs`), the server (which watches the folder) checks and loads the pack by itself; `docker compose restart drishti-server` is needed only to put it in `DRISHTI_PACKS` for every start (or use Admin → Packs → Load). A `:ro` mount is fine: the server only reads.
+On the host, deploy as usual (`pack deploy ... --to /srv/drishti/packs`), the server (which watches the folder) checks and loads the pack by itself; `docker compose restart server` (the service name in `deploy/docker/compose.yaml`) is needed only to put it in `DRISHTI_PACKS` for every start (or use Admin → Packs → Load). A `:ro` mount is fine: the server only reads.
 
 **Kubernetes: an init container copies the bundle in.** The bundle is the artifact; keep it in an object store or an image layer:
 

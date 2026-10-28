@@ -80,7 +80,7 @@ Things worth knowing before you plan an installation:
 | Need | Version | Why |
 |---|---|---|
 | OpenJDK | 21 (the build enforces it) | runs the server and builds it |
-| Python | 3.13 (the console image uses `python:3.13-slim`) | runs the console |
+| Python | 3.13 (the console image uses `python:3.13-slim`; the minimum: [GETTING_STARTED.md](../guides/GETTING_STARTED.md#step-1--install-the-prerequisites)) | runs the console |
 | `uv` (recommended) | any recent | creates the console's virtual environment and runs the data tools with their libraries |
 | Docker and Docker Compose | any recent | only for the container installation and the sample databases |
 | Disk | a few GB, plus the lake, the Kafka disk cache (up to `disk-cache.max-gb`, 10 GB per stream connector) and each ActiveMQ or RabbitMQ connector's state store (budget `state.max-gb`, 10 GB each; plan about twice that) | an SSD for the state stores: they sync every write by default |
