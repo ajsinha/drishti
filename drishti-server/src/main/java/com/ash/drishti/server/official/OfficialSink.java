@@ -113,6 +113,23 @@ public interface OfficialSink {
         return LocalPaths.isLocal(root);
     }
 
+    /**
+     * Refuses to append to a local table of the other format (the format changed while the root stayed): an official table keeps the
+     * format it was created in, and a second format's files in one folder would make a table neither reader trusts.
+     */
+    default void sameFormat(String table) throws java.io.IOException {
+        if (!local(root())) {
+            return;
+        }
+        java.nio.file.Path t = folder(root()).resolve(FOLDER).resolve(table);
+        boolean delta = java.nio.file.Files.isDirectory(t.resolve("_delta_log"));
+        boolean iceberg = !delta && java.nio.file.Files.isDirectory(t.resolve("metadata"));
+        if ("iceberg".equals(format()) ? delta : iceberg) {
+            throw new java.io.IOException("the table " + t + " is " + (delta ? "a Delta" : "an Iceberg") + " table and the official format is "
+                    + format() + ": an official table keeps its format; give the new format another root (drishti.*.official.root)");
+        }
+    }
+
     /** A local root as a folder path. */
     static java.nio.file.Path folder(String root) {
         return java.nio.file.Path.of(LocalPaths.toLocal(root, LocalPaths.WINDOWS));

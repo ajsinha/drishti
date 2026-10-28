@@ -73,6 +73,7 @@ final class IcebergSink implements OfficialSink {
     @Override
     public long append(String table, LocalDate date, Map<String, String> columns, List<Map<String, Object>> rows,
             Function<Map<String, Object>, String> id) throws IOException {
+        sameFormat(table);
         Map<String, Boolean> promoted = new LinkedHashMap<>();
         columns.forEach((c, t) -> promoted.put(c, "double".equals(t) || "long".equals(t)));
         List<IcebergAppender.Row> out = new ArrayList<>();

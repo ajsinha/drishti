@@ -196,14 +196,15 @@ class TheRetiredStoredVersions(unittest.TestCase):
 
     def test_no_connector_reads_the_published_results(self):
         """No engine's input is a published result. The one exception is a read-only Delta connector over risk-results whose kinds are all
-        computed (var-official and exposure-official-cpty, for BI since 2.9.0): it is left out of the text check, and no reactive connector may read or trigger on its kinds."""
+        computed (var-official and exposure-official-cpty, for BI since 2.9.0; an Iceberg one too since 2.9.5, for official results published
+        to Iceberg): it is left out of the text check, and no reactive connector may read or trigger on its kinds."""
         published = set()
         texts = []
         for p, m in self.manifests.items():
             conns = dict(m.get("connectors") or {})
             for name, c in list(conns.items()):
                 kinds = c.get("kinds") or []
-                if ((c.get("settings") or {}).get("domain") == "risk-results" and c.get("plugin") == "delta" and kinds
+                if ((c.get("settings") or {}).get("domain") == "risk-results" and c.get("plugin") in ("delta", "iceberg") and kinds
                         and set(kinds) <= set(self.pol["classes"]["computed"])):
                     published |= set(kinds)
                     del conns[name]

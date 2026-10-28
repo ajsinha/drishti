@@ -85,7 +85,11 @@ def test_the_risk_domain_switches_its_connector_file_and_back(tmp_path, monkeypa
     assert doc["plugin"] == "iceberg" and doc["settings"]["engine"] == "native" and doc["settings"]["domain"] == "risk"
     assert doc["settings"]["root"] == stores.ICEBERG_DEFAULT and "pnl-vector" in doc["kinds"]
     assert doc["settings"]["layout"]["pnl-vector"]["vectors"]          # the vector columns go with the layout
+    ex = yaml.safe_load((folder / "exposure-store.yaml").read_text(encoding="utf-8"))   # the CCR paths of the domain switch with it
+    assert ex["plugin"] == "iceberg" and "exposure-path" in ex["kinds"] and ex["settings"]["layout"]["exposure-path"]["vectors"]
     assert "reads iceberg already" in stores.switch_domain(folder, "risk", "iceberg", lake, ice, data, dry=False)
     assert "now reads delta, was iceberg" in stores.switch_domain(folder, "risk", "delta", lake, ice, data, dry=False)
     assert not (folder / "risk-store.yaml").exists()                     # the pack's own Delta connector serves again
+    assert not (folder / "exposure-store.yaml").exists()
     assert len(list((data / "connectors" / "history").glob("risk-store.*.yaml"))) == 1
+    assert len(list((data / "connectors" / "history").glob("exposure-store.*.yaml"))) == 1

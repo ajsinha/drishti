@@ -103,4 +103,14 @@ class OfficialSinkTest {
         }
         assertThat(OfficialTables.read(format, root.toString(), TABLE, Map.of())).hasSize(3 * 7);
     }
+
+    @Test
+    void aTableKeepsItsFormatWhenTheSettingChanges(@org.junit.jupiter.api.io.TempDir java.nio.file.Path root) throws Exception {
+        OfficialSink delta = OfficialSink.of("delta", root.toString(), java.util.Map.of(), 7);
+        delta.append("var-official", OfficialTables.DAY, OfficialTables.columns(), OfficialTables.rows(1, 1.0), r -> r.get("NODE_ID") + "#1");
+        OfficialSink iceberg = OfficialSink.of("iceberg", root.toString(), java.util.Map.of(), 7);
+        org.assertj.core.api.Assertions.assertThatThrownBy(() -> iceberg.append("var-official", OfficialTables.DAY, OfficialTables.columns(),
+                OfficialTables.rows(2, 1.0), r -> r.get("NODE_ID") + "#2")).isInstanceOf(java.io.IOException.class)
+                .hasMessageContaining("is a Delta table and the official format is iceberg");
+    }
 }

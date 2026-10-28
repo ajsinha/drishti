@@ -229,8 +229,10 @@ def switch(folder: pathlib.Path, system: str, store: str, lake: pathlib.Path, ic
 
 # ---- a whole domain in Iceberg (--store risk=iceberg) ------------------------------------------------------------------------------------
 
-#: the domains whose every table may be stored in Iceberg instead of Delta: domain -> (pack, connector)
-DOMAIN_STORES = {"risk": ("market-risk", "risk-store")}
+#: the domains whose every table may be stored in Iceberg instead of Delta: domain -> the (pack, connector) pairs reading its tables,
+#: every one switched together (the risk domain: the market-risk pack's risk-store, and the counterparty-risk pack's exposure-store,
+#: which reads its simulation runs and exposure paths); the first is the one whose file says the domain's store
+DOMAIN_STORES = {"risk": (("market-risk", "risk-store"), ("counterparty-risk", "exposure-store"))}
 
 
 def split_domains(values: list[str] | None) -> tuple[list[str], dict[str, str]]:
@@ -247,8 +249,8 @@ def split_domains(values: list[str] | None) -> tuple[list[str], dict[str, str]]:
     return systems, domains
 
 
-def domain_file(folder: pathlib.Path, domain: str) -> pathlib.Path:
-    return folder / f"{DOMAIN_STORES[domain][1]}.yaml"
+def domain_file(folder: pathlib.Path, domain: str, name: str | None = None) -> pathlib.Path:
+    return folder / f"{name or DOMAIN_STORES[domain][0][1]}.yaml"
 
 
 def current_domain(folder: pathlib.Path, domain: str) -> str:
@@ -260,11 +262,12 @@ def current_domain(folder: pathlib.Path, domain: str) -> str:
     return "iceberg" if m and m.group(1) == "iceberg" else "delta"
 
 
-def domain_connector_text(domain: str, store: str, lake: pathlib.Path, ice: pathlib.Path, data: pathlib.Path) -> str:
-    """The domain's connector file for its store: the pack's template (kinds, layouts with their vector columns) with plugin and root
-    set; ``engine: native`` for Iceberg."""
+def domain_connector_text(domain: str, store: str, lake: pathlib.Path, ice: pathlib.Path, data: pathlib.Path,
+                          pair: tuple[str, str] | None = None) -> str:
+    """One of the domain's connector files for its store: the pack's template (kinds, layouts with their vector columns) with plugin and
+    root set; ``engine: native`` for Iceberg. ``pair`` (pack, connector): by default the domain's first."""
     import yaml
-    pack_name, name = DOMAIN_STORES[domain]
+    pack_name, name = pair or DOMAIN_STORES[domain][0]
     pack = yaml.safe_load((ROOT / "config" / "packs" / pack_name / "pack.yaml").read_text(encoding="utf-8"))
     tpl = pack["connectors"][name]
     settings = dict(tpl.get("settings") or {})
@@ -282,10 +285,16 @@ def domain_connector_text(domain: str, store: str, lake: pathlib.Path, ice: path
 
 
 def switch_domain(folder: pathlib.Path, domain: str, store: str, lake: pathlib.Path, ice: pathlib.Path, data: pathlib.Path, dry: bool) -> str:
-    """Writes the domain's connector file for the store (the earlier text kept in <data>/connectors/history/); back to Delta, the file
-    goes and the pack's own template serves again. The line that says what was done."""
-    f = domain_file(folder, domain)
-    now = current_domain(folder, domain)
+    """Writes each of the domain's connector files for the store (the earlier text kept in <data>/connectors/history/); back to Delta,
+    the files go and the packs' own templates serve again. The lines that say what was done (one per connector)."""
+    return "; ".join(_switch_one(folder, domain, pair, store, lake, ice, data, dry) for pair in DOMAIN_STORES[domain])
+
+
+def _switch_one(folder: pathlib.Path, domain: str, pair: tuple[str, str], store: str, lake: pathlib.Path, ice: pathlib.Path,
+                data: pathlib.Path, dry: bool) -> str:
+    f = domain_file(folder, domain, pair[1])
+    m = re.search(r"(?m)^plugin:\s*['\"]?([A-Za-z0-9_-]+)", f.read_text(encoding="utf-8")) if f.is_file() else None
+    now = "iceberg" if m and m.group(1) == "iceberg" else "delta"
     if now == store:
         return f"{f.stem}: reads {store} already ({f})"
     if dry:
@@ -298,7 +307,7 @@ def switch_domain(folder: pathlib.Path, domain: str, store: str, lake: pathlib.P
         f.unlink()
         return f"{f.stem}: now reads delta, was {now} (the pack's own connector; a running server restarts it by itself)"
     folder.mkdir(parents=True, exist_ok=True)
-    f.write_text(domain_connector_text(domain, store, lake, ice, data), encoding="utf-8")
+    f.write_text(domain_connector_text(domain, store, lake, ice, data, pair), encoding="utf-8")
     return f"{f.stem}: now reads {store}, was {now} ({f}; a running server restarts this connector by itself)"
 
 

@@ -74,6 +74,7 @@ final class DeltaSink implements OfficialSink {
     @Override
     public long append(String table, LocalDate date, Map<String, String> columns, List<Map<String, Object>> rows,
             Function<Map<String, Object>, String> id) throws IOException {
+        sameFormat(table);
         Path staged = TempFiles.createFile(table + "-", ".rows");
         try {
             try (BufferedWriter w = Files.newBufferedWriter(staged, StandardCharsets.UTF_8)) {
