@@ -94,7 +94,8 @@ generated-by: tools/packgen/banking/make_docs.py
 
 Market-risk results over the trading pack's trades: stress scenarios and their results, FRTB standardised sensitivities, P&L explain and
 trade valuations (mark-to-market, P&L and sensitivities per trade), and the **VaR engine's inputs** (2.8.0, unreleased): one P&L vector
-per live trade over 509 historical scenario days, the scenario set, the MGMT and LEGAL hierarchies with VaR limits, and portfolio
+per live trade over 509 historical scenario days, the scenario set, the MGMT and LEGAL hierarchies with VaR limits (and since 2.9.5 the limit
+letters, LL, built from the trades' LIMIT_LETTER, with their limits in `var-limit`), and portfolio
 definitions (hierarchy, rule, basket). Value at risk is never stored: the VaR explorer (`VAR DESK DESK-RATES <GO>`,
 [VAR_GUIDE.md section 3](../../../docs/guides/VAR_GUIDE.md#3-the-explorer-screen-by-screen)) computes VaR, ES and contributions for any set of these trades, the portfolio
 and position pages (`PORT <id>`, `POS <id>`) show the engine's figures computed as they open, and each business date's official figures
@@ -351,7 +352,7 @@ Fields, from 2 sample documents:
 | `TRADE_ID` | string | `MX-20000274` | link to `trade` (in 50%) |
 | `CURRENCY` | string | `USD` | — |
 | `SOURCE_SYSTEM` | string | `MUREX` | — |
-| `VECTOR_ID` | string | `PNL-MX-20000274-HS-509` | PV-<trade>-HS-509 |
+| `VECTOR_ID` | string | `PNL-MX-20000274-HS-509` | PNL-<trade or position>-HS-509 (2.9.5; PV- before, still read) |
 | `SECURITY_ID` | string | `SEC-WARRANT-USD-01` | The security or exchange contract of a securities or listed trade (the demo's are synthetic) |
 | `INSTRUMENT` | string | `Equity warrant USD 2027-05` | — |
 | `BUSINESS_DATE` | date | `2026-09-30` | — |
@@ -363,7 +364,7 @@ Fields, from 2 sample documents:
 | `DIVISION` | string | `DIV-MARKETS` | — |
 | `DESK` | string | `DESK-EQD` | link to `desk` |
 | `TT_BOOK` | string | `BOOK-EQD-2` | link to `book` |
-| `LIMIT_LETTER` | string | `LL-0008` | — |
+| `LIMIT_LETTER` | string | `LL-0008` | The limit letter the trade's VaR limit is granted under (2.9.5): the hierarchy LL, LIMIT_LETTER > DESK, is built from it |
 | `PORTFOLIO` | string | `BOOK-EQD-2` | link to `book` |
 | `STRATEGY` | null |  | — |
 | `PRODUCT_GROUP` | string | `Equity` | — |
@@ -492,7 +493,7 @@ Fields, from 1 sample document:
 
 **Risk hierarchy node** · mnemonic `HIER` · read through connector `risk-store`.
 
-A node of a hierarchy: MGMT (bank, division, desk, book) or LEGAL (bank, legal entity, desk, book), with its VaR limit
+A node of a hierarchy: MGMT (bank, division, desk, book) or LEGAL (bank, legal entity, desk, book), with its VaR limit (any hierarchy id since 2.9.5)
 
 **Id:** pattern `^(MGMT|LEGAL)~`.
 
@@ -525,6 +526,8 @@ Links: `NODE_ID` → `risk-hierarchy`.
 
 **VaR limit of a hierarchy node** · mnemonic `VLIM` · read through connector `risk-store`.
 
+A node's 1-day 99% VaR limit by hierarchy and node id, in USD (2.9.5): the limit letters' (LL) and the MGMT and LEGAL nodes' own
+
 **Id:** pattern `^VL-`.
 
 Fields, from 4 sample documents:
@@ -533,8 +536,8 @@ Fields, from 4 sample documents:
 |---|---|---|---|
 | `LIMIT_ID` | string | `VL-LL~BANK` | — |
 | `HIERARCHY` | string | `LL` | — |
-| `NODE_ID` | string | `LL~BANK` | link to `risk-hierarchy` |
-| `LIMIT_VAR` | integer | `150000000` | — |
+| `NODE_ID` | string | `LL~BANK` | The node, as the engine builds it: LL~LL-0003, LL~LL-0003/DESK-RATES, MGMT~DESK-RATES; link to `risk-hierarchy` |
+| `LIMIT_VAR` | integer | `150000000` | The limit (USD); a node without a row has none |
 | `CURRENCY` | string | `USD` | — |
 | `BUSINESS_DATE` | date | `2026-09-30` | — |
 | `VALID_FROM` | date | `2026-01-02` | — |
