@@ -15,7 +15,7 @@
 -->
 # Changelog
 
-## 2.9.5 (unreleased)
+## 2.9.5 — Iceberg as a full alternative to Delta; VaR hierarchies by columns (limit letters); connector files that upgrade themselves safely (2026-10-28)
 
 ### Hierarchies
 

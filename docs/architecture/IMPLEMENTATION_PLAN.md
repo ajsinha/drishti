@@ -59,6 +59,7 @@ kept as they were planned, with notes where the delivery differed.
 | 2.9.2 | Funds and ETFs (SEC N-PORT, N-CEN, risk/return summaries, GLEIF); Knowledge pages and `WHAT`; Construct your basket and the pre-deal what-if for VaR and exposure; trade pages' Risk links; data-quality fixes; About and Competitive rewritten |
 | 2.9.3 | `DATAMAP` (Map and Cards, inferred from the packs and contracts, every join checked against the data); the fact of the day on Home (facts declared per pack, computed as the user); the Companies, funds and ETFs Knowledge page; index membership from the tracking ETFs' N-PORT (companies 503 to 586); one firm-wide VaR limit; the test-data-from-seeds plan |
 | 2.9.4 | VaR from scenario PVs or P&L, by trade or position, in any reporting currency (five built ahead, the currency picker, trade currency); intraday from files and Kafka micro-batches; the scenario window and confidence as settings; the stand-in pricing system; JSON Lines as the data standard and on every export; 351 pictures retaken; the decks rewritten |
+| 2.9.5 | Iceberg as a full alternative to Delta (VaR, intraday and exposure read from Iceberg; official results as Delta or Iceberg, local or S3; Delta = Iceberg to the cent); VaR hierarchies by columns (limit letters, `var-limit`, a missing column skips only its tree); `PNL-` vector ids; airtight connector upgrades | released 2026-10-28 |
 
 ## What 2.0.0 contains
 
@@ -575,7 +576,7 @@ guard test in the drill. The page: [DATA_FORMATS.md](../guides/DATA_FORMATS.md).
 
 Removing CSV input is for a later release (not yet planned); the per-file Sutra test folders stop being read after 2.9.4.
 
-## 2.9.5 (built, unreleased): Iceberg as a full production alternative to Delta; hierarchies by columns (product owner, 2026-10-27)
+## 2.9.5 (released 2026-10-28): Iceberg as a full production alternative to Delta; hierarchies by columns (product owner, 2026-10-27)
 
 **Status (2026-10-28): built on develop, before its drill** ([CHANGELOG.md](../../CHANGELOG.md) `2.9.5 (unreleased)`). What was built:
 

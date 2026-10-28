@@ -15,7 +15,7 @@
 -->
 # Drishti 2.9.5 — release notes
 
-*Unreleased (draft; the date is set at the release).* **Iceberg as a full alternative to Delta; VaR hierarchies of your own, such as
+*Released 2026-10-28.* **Iceberg as a full alternative to Delta; VaR hierarchies of your own, such as
 limit letters; connector files that upgrade themselves safely.**
 
 - **Hierarchies by columns** ([VAR_GUIDE 15.14–15.15](docs/guides/VAR_GUIDE.md)): besides MGMT and LEGAL, any hierarchy built from the
@@ -43,7 +43,7 @@ limit letters; connector files that upgrade themselves safely.**
   Lakes; about 271 pictures in other guides still show the old top bar.
 - **Next, 2.9.6:** editions (`var-engine` first), VaR sharded across servers, the 2.3M-position benchmark, Delta ↔ Iceberg conversion,
   stressed and 10-day VaR, in-place Delta schema evolution, plain tables and Delta through Unity Catalog.
-- **Tested:** (to be filled in by the drill).
+- **Tested:** the drill passed licence headers, Java 21, Java 25, the tools and the console.
 
 # Drishti 2.9.4 — release notes
 
