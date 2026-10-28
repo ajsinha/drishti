@@ -62,8 +62,13 @@ final class NativeMaintenance {
         return new NativeKindTable(t, pool).layout(t.currentSnapshot().orElseThrow().snapshotId(), true);
     }
 
-    /** As {@link IcebergMaintenance#keepDays(org.apache.iceberg.Table, int, LoadGuard)}. */
+    /** As {@link IcebergMaintenance#keepDays(org.apache.iceberg.Table, int, LoadGuard, LocalDate)}. */
     static int keepDays(Table t, int keep, LoadGuard guard) {
+        return keepDays(t, keep, guard, null);
+    }
+
+    /** As {@link IcebergMaintenance#keepDays(org.apache.iceberg.Table, int, LoadGuard, LocalDate)}: no date on or after {@code floor} goes. */
+    static int keepDays(Table t, int keep, LoadGuard guard, LocalDate floor) {
         t.refresh();
         if (t.currentSnapshot().isEmpty()) {
             return 0;
@@ -72,11 +77,14 @@ final class NativeMaintenance {
         try (ExecutorService pool = IcebergTable.virtualPool()) {
             days = layout(t, pool).days();
         }
-        var from = guard.keepFromNewest(days.keySet(), keep);
+        var from = IcebergMaintenance.keepFrom(days.navigableKeySet(), keep, guard, floor);
         if (from.isEmpty()) {
             return 0;
         }
         var old = days.headMap(from.get(), false);
+        if (old.isEmpty()) {
+            return 0;
+        }
         guard.checkDrop(t.name(), old.values().stream().mapToLong(Day::rows).sum(), days.values().stream().mapToLong(Day::rows).sum(), "rows");
         LocalDate cut = from.get();
         Operations.deletePartitions(t, f -> {

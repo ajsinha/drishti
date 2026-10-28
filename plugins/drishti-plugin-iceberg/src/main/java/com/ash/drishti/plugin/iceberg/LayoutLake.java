@@ -50,7 +50,12 @@ interface LayoutLake extends Closeable {
         /** Makes each day's files that day's data, in one commit. */
         void commitDays(Map<LocalDate, List<?>> days);
 
-        int keepDays(int keep, LoadGuard guard);
+        default int keepDays(int keep, LoadGuard guard) {
+            return keepDays(keep, guard, null);
+        }
+
+        /** Keeps the newest {@code keep} business days, never dropping one on or after {@code floor} (null: no floor). */
+        int keepDays(int keep, LoadGuard guard, LocalDate floor);
 
         void expireSnapshots(long hours);
 
@@ -119,8 +124,8 @@ interface LayoutLake extends Closeable {
             }
 
             @Override
-            public int keepDays(int keep, LoadGuard guard) {
-                return IcebergMaintenance.keepDays(t, keep, guard);
+            public int keepDays(int keep, LoadGuard guard, LocalDate floor) {
+                return IcebergMaintenance.keepDays(t, keep, guard, floor);
             }
 
             @Override
@@ -211,8 +216,8 @@ interface LayoutLake extends Closeable {
             }
 
             @Override
-            public int keepDays(int keep, LoadGuard guard) {
-                return NativeMaintenance.keepDays(t, keep, guard);
+            public int keepDays(int keep, LoadGuard guard, LocalDate floor) {
+                return NativeMaintenance.keepDays(t, keep, guard, floor);
             }
 
             @Override
