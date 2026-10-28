@@ -53,6 +53,7 @@ sys.path.insert(0, str(ROOT / "tools" / "packgen" / "var"))
 import ccrmath as M  # noqa: E402
 import paths as PT  # noqa: E402
 from positions import LIVE, replay  # noqa: E402  (a dataset's documents on its last day; the live trade statuses, as VaR's)
+from positions import letter_of, limit_letters  # noqa: E402  (2.9.5: each trade's limit letter, as the VaR feeds carry it)
 
 PACK, CONNECTOR = "counterparty-risk", "exposure-store"
 KEYS = {"simulation-run": "RUN_ID", "exposure-path": "PATH_ROW_ID"}
@@ -101,6 +102,7 @@ class Inputs:
         for d in replay(testdata / "core" / "desk", "DESK_ID", dates).values():
             for b in d.get("BOOKS") or []:
                 self.desk_of_book[b["ID"]] = d["DESK_ID"]
+        self.letters = limit_letters(sorted(self.desk_of_book))      # the limit letters (2.9.5), dealt as the VaR feeds deal them
 
     def live(self, t: dict) -> bool:
         """A member trade is live: its status in the booking system is live (NEW, VALIDATED, AMENDED: the market-risk pack's
@@ -168,7 +170,8 @@ class Run:
                 out.append({"PATH_ROW_ID": f"{self.run_id}~{t['TRADE_ID']}~{k}", "BUSINESS_DATE": self.inputs.cob, "RUN_ID": self.run_id,
                             "TRADE_ID": t["TRADE_ID"], "SOURCE_SYSTEM": source_system(t["TRADE_ID"]), "NETTING_SET": ns,
                             "COUNTERPARTY": s.get("COUNTERPARTY"), "LEGAL_ENTITY": s.get("LEGAL_ENTITY"),
-                            "DESK": self.inputs.desk_of_book.get(t.get("BOOK")), "TT_BOOK": t.get("BOOK"), "ASSET_CLASS": t.get("ASSET_CLASS"),
+                            "DESK": self.inputs.desk_of_book.get(t.get("BOOK")), "TT_BOOK": t.get("BOOK"),
+                            "LIMIT_LETTER": letter_of(self.inputs.letters, t.get("BOOK"), str(t["TRADE_ID"])), "ASSET_CLASS": t.get("ASSET_CLASS"),
                             "PRODUCT": t.get("PRODUCT"), "NOTIONAL": t.get("NOTIONAL"), "MATURITY_DATE": t.get("MATURITY"),
                             "GRID_INDEX": k, "GRID_DATE": d.isoformat(), "MTM": mtm[t["TRADE_ID"]][k], "STATUS": "ok",
                             "PRICER": "testgen-factor-walk", "BATCH_ID": self.batch})

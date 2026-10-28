@@ -25,27 +25,36 @@ for BI and other readers only: no engine reads it (tools/test_contracts.py).
 Since 2.9.4 a bank may send a trade's scenario P&L as **scenario PVs** instead of a P&L vector: the trade's PV under each scenario and its
 base PV, in the trade's own currency (``scenario-pv``, the vector column SCENARIO_PV), with each currency's scenario FX when the batch
 supplies it (``fx-scenario``; else the server derives it from the FX history of the market-data pack's fx-spot). The server converts them to
-USD P&L when the date loads, and every VaR answer takes a reporting currency (the parameter ccy of var-result and var-whatif)."""
+USD P&L when the date loads, and every VaR answer takes a reporting currency (the parameter ccy of var-result and var-whatif).
+
+Since 2.9.5 the hierarchies are configured (the manifest's ``hierarchies:`` block, kept/market-risk.yaml): MGMT and LEGAL from the
+``risk-hierarchy`` rows, and LL, the limit letters, built by the server from the rows' ``LIMIT_LETTER`` and ``DESK`` columns (promoted in
+both trades' layouts), with its limits from the new dated kind ``var-limit`` (by hierarchy and node id). A P&L vector's id is
+``PNL-<trade or position>-<set>`` (``PV-`` before, still read)."""
 from __future__ import annotations
 
 #: kind -> (mnemonic, label, id pattern, id field)
 KINDS = {
     "position": ("POS", "Position", "^POS-", "POSITION_ID"),
     "portfolio": ("PORT", "Portfolio", "^PF-", "PORTFOLIO_ID"),
-    "pnl-vector": ("PNLV", "P&L vector (509 scenarios)", "^PV-", "VECTOR_ID"),
+    "pnl-vector": ("PNLV", "P&L vector (509 scenarios)", "^PV-", "VECTOR_ID"),     # the ids before 2.9.5 (PNL- ids: ID_PATTERNS_FIRST)
     "scenario-pv": ("SPV", "Scenario PVs of a trade (509 scenarios, its currency)", "^SPV-", "SCENARIO_PV_ID"),
     "fx-scenario": ("FXS", "Scenario FX of a currency (509 scenarios)", "^FXS-", "FX_SCENARIO_ID"),
     "scenario-set": ("SSET", "Scenario set", "^HS-", "SCENARIO_SET_ID"),
     "risk-hierarchy": ("HIER", "Risk hierarchy node", "^(MGMT|LEGAL)~", "NODE_ID"),
+    # 2.9.5: a node's VaR limit by hierarchy and node id (USD), for the hierarchies whose limits name it (LL in the demo)
+    "var-limit": ("VLIM", "VaR limit of a hierarchy node", "^VL-", "LIMIT_ID"),
     # the computed kinds: the id is a scope (DESK:RATES), so no id pattern claims them
     "var-result": ("VRES", "VaR of a scope (computed)", None, None),
     "var-whatif": ("VWIF", "VaR what-if (computed, Python)", None, None),
     # the published official results: one row per node, business date and result version (id <NODE_ID>@<date>#v<n>); no pattern
     "var-official": ("VOFF", "VaR official results (published)", None, None),
 }
+#: id patterns that must come before the taxonomy's (2.9.5): a P&L vector's PNL-<trade>-<set> id before pnl-explain's ^PNL-
+ID_PATTERNS_FIRST = [{"pattern": "^PNL-.+-HS-[0-9]+$", "kind": "pnl-vector"}]
 #: kinds not served by risk-store: the connector each is routed to
 SERVED_BY = {"position": "var-positions", "var-result": "var-engine", "var-whatif": "var-whatif", "var-official": "var-results"}
-_INPUTS = ["pnl-vector", "scenario-pv", "fx-scenario", "risk-hierarchy", "scenario-set", "portfolio"]
+_INPUTS = ["pnl-vector", "scenario-pv", "fx-scenario", "risk-hierarchy", "scenario-set", "portfolio", "var-limit"]
 #: the reporting currency every VaR answer takes (2.9.4): USD unless asked, any currency with scenario FX on the date
 _CCY = {"ccy": {"type": "text", "default": "USD"}}
 #: the connectors besides risk-store: the positions the server derives, from the VaR engine's memory; the computed kinds
@@ -104,7 +113,8 @@ FIELDS = {"POSITION_ID": ("position", "Position"), "PORTFOLIO_ID": ("portfolio",
           # a trade page's Risk links (risk-links@1): set on the view by the VaR engine when the trade is live
           "PNL_VECTOR_ID": ("pnl-vector", "P&L vector"), "SCENARIO_PV_ID": ("scenario-pv", "Scenario PVs"),
           "VAR_RESULT_ID": ("var-result", "VaR of this trade")}
-_HIER = ["LEGAL_ENTITY", "DIVISION", "DESK", "TT_BOOK", "PORTFOLIO"]
+#: the hierarchy columns of the trades' rows; LIMIT_LETTER (2.9.5) is the level column of the pack's hierarchy LL
+_HIER = ["LEGAL_ENTITY", "DIVISION", "DESK", "TT_BOOK", "LIMIT_LETTER", "PORTFOLIO"]
 #: the risk-store layout of each kind: promoted columns, and the vector columns (list<double>, out of the document)
 LAYOUT = {
     # 2.9.4: every record says what it is first (VALUE_TYPE, GRAIN, its id, CURRENCY, SOURCE_SYSTEM: VAR_GUIDE.md section 15.13)
@@ -120,6 +130,7 @@ LAYOUT = {
                     "vectors": ["SCENARIO_PV"]},
     "fx-scenario": {"columns": ["CURRENCY", "RATE", "SCENARIO_SET_ID"]},
     "risk-hierarchy": {"columns": ["NODE_ID", "HIERARCHY", "LEVEL", "PARENT_ID", "NAME", "LIMIT_VAR"]},
+    "var-limit": {"columns": ["LIMIT_ID", "HIERARCHY", "NODE_ID", "LIMIT_VAR", "CURRENCY"]},
     "portfolio": {"columns": ["PORTFOLIO_ID", "NAME", "TYPE", "OWNER", "LIMIT_VAR"]},
 }
 #: the search form (FORM market-risk) of each kind: its key columns
@@ -130,6 +141,7 @@ FORM_COLUMNS = {"position": ["DIRECTION", "DESK", "TT_BOOK", "PRODUCT_TYPE", "CU
                 "fx-scenario": ["CURRENCY", "BUSINESS_DATE"],
                 "scenario-set": ["BUSINESS_DATE"],
                 "risk-hierarchy": ["HIERARCHY", "LEVEL", "NAME", "LIMIT_VAR"],
+                "var-limit": ["HIERARCHY", "NODE_ID", "LIMIT_VAR"],
                 "var-official": ["NODE_ID", "HIERARCHY", "LEVEL", "NODE_NAME", "RESULT_VERSION", "TRAFFIC_LIGHT"]}
 BADGES = {"position": "fmt($.QUANTITY, 'compact')", "portfolio": "$.TYPE"}
 #: the computed kinds' fields (VAR_GUIDE.md section 8): read as an ordinary kind, never stored

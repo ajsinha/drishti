@@ -270,6 +270,7 @@ def add_var_kinds(m: dict) -> None:
         m["routes"][k] = connector
         if k in VK.BADGES:
             m["graph"]["badges"][k] = VK.BADGES[k]
+    m["graph"]["id-patterns"][:0] = [dict(p) for p in VK.ID_PATTERNS_FIRST]     # before the taxonomy's (pnl-explain's ^PNL-)
     m["connectors"].update(VK.CONNECTORS)
     m["graph"]["fields"] = dict(sorted({**m["graph"]["fields"], **{f: {"kind": k, "label": lab} for f, (k, lab) in VK.FIELDS.items()}}.items()))
 

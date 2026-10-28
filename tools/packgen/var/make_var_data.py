@@ -23,6 +23,11 @@ date (data/testdata/trades/*) and the core pack's desks, as an upstream risk bat
     scenario-set/     HS-509: the scenario days of the business date
     risk-hierarchy/   the MGMT tree (bank, division, desk, book) and the LEGAL tree (bank, legal entity, desk, book), with VaR limits
     portfolio/        portfolio definitions of the three types (HIERARCHY, RULE, BASKET), overlapping on purpose: no figures
+    var-limit/        2.9.5: the VaR limits by hierarchy and node id (USD): every node of the limit-letter hierarchy LL (built by the
+                      server from the rows' LIMIT_LETTER and DESK; a few left without one, shown blank), and the MGMT and LEGAL nodes' own
+                      limits (the same as their risk-hierarchy LIMIT_VAR), so either source gives the same limits
+
+Every P&L and scenario-PV row carries its LIMIT_LETTER (2.9.5, positions.limit_letters): twelve letters, two books split between two.
 
 No position, no VaR and no node history is written: positions are derived by the server from the trades and the pack's rules (VAR_GUIDE.md
 section 3.7), every figure is computed when asked, and a node's history is its official end-of-day captures. Every live trade is valued
@@ -59,7 +64,7 @@ import sutracases as SC  # noqa: E402  (tests/<sutra>/cases.jsonl)
 PACK, CONNECTOR, SET = "market-risk", "risk-store", "HS-509"
 #: kind -> its id field (the lake key)
 KEYS = {"pnl-vector": "VECTOR_ID", "scenario-pv": "SCENARIO_PV_ID", "fx-scenario": "FX_SCENARIO_ID", "scenario-set": "SCENARIO_SET_ID",
-        "risk-hierarchy": "NODE_ID", "portfolio": "PORTFOLIO_ID"}
+        "risk-hierarchy": "NODE_ID", "portfolio": "PORTFOLIO_ID", "var-limit": "LIMIT_ID"}
 #: the folders this generator used to write and no longer does (removed when it writes)
 RETIRED = ("position", "var-node")
 PART_BYTES = 1_200_000                       # compressed bytes per file: the vectors are split into a few small files
@@ -163,6 +168,41 @@ class Demo:
             if n["LEVEL"] == "bank":
                 n["LIMIT_VAR"] = self.nodes["MGMT~BANK"]["LIMIT_VAR"]
 
+    def letter_nodes(self) -> dict[str, list[str]]:
+        """The limit-letter hierarchy LL as the server builds it from the rows (LIMIT_LETTER > DESK, path ids): node id -> its trades."""
+        b = self.batch
+        out: dict[str, list[str]] = defaultdict(list)
+        for p in b.positions:
+            for t in p["TRADE_IDS"]:
+                letter = b.letter[t]
+                out["LL~BANK"].append(t)
+                out[f"LL~{letter}"].append(t)
+                out[f"LL~{letter}/{p['DESK']}"].append(t)
+        return dict(sorted(out.items()))
+
+    def var_limit_rows(self) -> list[dict]:
+        """The var-limit rows: every LL node's limit (its VaR today times a headroom, as limits() sets them; the bank's is the firm-wide
+        limit; two letter-desk nodes left without one: no limit, shown blank), then every MGMT and LEGAL node's own LIMIT_VAR."""
+        rows = []
+
+        def row(h, nid, limit):
+            rows.append({"LIMIT_ID": f"VL-{nid}", "HIERARCHY": h, "NODE_ID": nid, "LIMIT_VAR": limit, "CURRENCY": "USD",
+                         "BUSINESS_DATE": self.cob, "VALID_FROM": "2026-01-02", "VALID_TO": None})
+        b = self.batch
+        unlimited = [n for n in self.letter_nodes() if "/" in n][3::17][:2]
+        for nid, trades in self.letter_nodes().items():
+            if nid in unlimited:
+                continue
+            if nid == "LL~BANK":
+                row("LL", nid, self.nodes["MGMT~BANK"]["LIMIT_VAR"])
+                continue
+            v = VM.var(VM.add(b.trade_vectors[t][:self.n] for t in trades))
+            r = F.seeded("limit", nid)
+            row("LL", nid, nice(v * (1.15 + 0.6 * r.random())))
+        for nid, n in sorted(self.nodes.items()):
+            row(n["HIERARCHY"], nid, n["LIMIT_VAR"])
+        return rows
+
     def hierarchy_rows(self) -> list[dict]:
         return [{**{k: v for k, v in n.items()}, "BUSINESS_DATE": self.cob, "VALID_FROM": "2026-01-02", "VALID_TO": None}
                 for _, n in sorted(self.nodes.items())]
@@ -208,7 +248,7 @@ def documents(demo: Demo) -> dict[str, list[dict]]:
             "pnl-vector": sorted(demo.batch.vector_rows, key=lambda r: (r["LEGAL_ENTITY"], r["DESK"], r["TT_BOOK"], r["TRADE_ID"])),
             "scenario-pv": sorted(demo.batch.pv_rows, key=lambda r: (r["LEGAL_ENTITY"], r["DESK"], r["TT_BOOK"], r["TRADE_ID"])),
             "fx-scenario": demo.fx.rows(demo.cob, SET, f"B-{demo.cob}-01"),
-            "portfolio": PF.rows(demo)}
+            "portfolio": PF.rows(demo), "var-limit": demo.var_limit_rows()}
 
 
 def write(out: Path, demo: Demo, with_samples: bool = True) -> list[dict]:
@@ -265,6 +305,8 @@ def samples(demo: Demo, docs: dict[str, list[dict]]) -> dict[Path, str]:
              "fx-scenario": [r for r in docs["fx-scenario"] if r["CURRENCY"] == "EUR"],
              "scenario-set": docs["scenario-set"],
              "risk-hierarchy": [n for n in docs["risk-hierarchy"] if n["NODE_ID"] in ("MGMT~DESK-RATES", "LEGAL~LE-NY")],
+             "var-limit": [r for r in docs["var-limit"] if r["HIERARCHY"] == "LL"][:3] + [r for r in docs["var-limit"]
+                                                                                          if r["NODE_ID"] == "MGMT~DESK-RATES"],
              "portfolio": [r for r in docs["portfolio"] if r["PORTFOLIO_ID"] in ("PF-RATES-DESK", "PF-USD-RATES", "PF-ASHA-UNWIND")]}
     # and the same data at position grain (VAR_GUIDE.md section 15.13): a position its source system sends whole, naming its trades
     b = demo.batch

@@ -31,7 +31,12 @@ its own (different dates, strikes, counterparties), rounded to whole USD.
 Since 2.9.4 the trades of the systems in scenario_fx.PV_SYSTEMS (Endur) come as **scenario PVs** in their own currency
 (``scenario-pv``) instead of a P&L vector, with the supplied scenario FX (``fx-scenario``): the same factor-model move, valued in the
 trade's currency (scenario_fx.py). ``trade_vectors`` keeps every trade's factor-model USD P&L (the limits and portfolios are set from it,
-as before); ``engine_vectors`` holds, for the scenario-PV trades, the USD P&L the server computes from their files."""
+as before); ``engine_vectors`` holds, for the scenario-PV trades, the USD P&L the server computes from their files.
+
+Since 2.9.5 every record carries its **limit letter** (``LIMIT_LETTER``, :func:`limit_letters`): the letter of authority its VaR limit is
+granted under. The demo's twelve letters each hold a few books across desks, and two books are split between two letters trade by trade
+(a letter holds part of a book), so the pack's hierarchy ``LL`` (``LIMIT_LETTER > DESK``) is built from the rows, not from books. A P&L
+vector's id is ``PNL-<trade or position>-<SCENARIO_SET_ID>`` (``PV-`` before 2.9.5)."""
 from __future__ import annotations
 
 import gzip
@@ -151,6 +156,33 @@ def security_ids(trades: list[dict], rules: Rules) -> dict[str, str]:
     return out
 
 
+#: how many limit letters the demo has, and the books split between two letters (a letter holding part of a book)
+LETTERS = 12
+SPLIT_BOOKS = ("BOOK-RATES-1", "BOOK-FX-1")
+#: a P&L vector's id prefix (2.9.5: PNL-<trade or position>-<set>; PV- before)
+PNL_ID = "PNL-"
+
+
+def letter_id(n: int) -> str:
+    return f"LL-{n:04d}"
+
+
+def limit_letters(books: list[str]) -> dict[str, tuple[str, str | None]]:
+    """book -> (its limit letter, the second letter part of its trades sit under, or None): the books in order dealt round the letters
+    (so a letter holds books of several desks), two books split with the next letter."""
+    out = {}
+    for k, b in enumerate(sorted(books)):
+        first = k % LETTERS + 1
+        out[b] = (letter_id(first), letter_id(first % LETTERS + 1) if b in SPLIT_BOOKS else None)
+    return out
+
+
+def letter_of(letters: dict, book: str, trade_id: str) -> str:
+    """A trade's limit letter: its book's, or for a split book the second letter for about a third of its trades (by a hash of the id)."""
+    first, second = letters.get(book, (letter_id(1), None))
+    return second if second and _h("letter|" + trade_id) % 3 == 0 else first
+
+
 def lead(value_type: str, grain: str, ident: str, currency: str, system) -> dict:
     """The fields a PV record leads with, saying what it is (VAR_GUIDE.md section 15.13): VALUE_TYPE (PV or PNL), GRAIN (TRADE or
     POSITION), its id (TRADE_ID or POSITION_ID), CURRENCY and SOURCE_SYSTEM."""
@@ -186,6 +218,8 @@ class Batch:
             self.derived[tid] = d
             groups[d["POSITION_ID"]].append(t)
         self.groups = self._sample(groups, budget)
+        self.letters = limit_letters(sorted(self.desk_of_book))       # every book of the desks: the exposure paths' letters are the same
+        self.letter: dict[str, str] = {}                    # trade id -> its limit letter (2.9.5)
         self.valuations = valuations
         self.trade_vectors: dict[str, list[int]] = {}       # trade id -> scenario P&Ls, then the business date's own move last
         self.positions: list[dict] = []
@@ -237,13 +271,15 @@ class Batch:
                 own = 0.06 * abs(q) * per_unit
                 vec = [round(q * per_unit * unit[j] + own * F.student_t(tr)) for j in range(m.n + 1)]
                 self.trade_vectors[tid] = vec
+                self.letter[tid] = letter_of(self.letters, book, tid)
                 pv = float((self.valuations.get(f"TVAL-{tid}") or {}).get("MTM") or 0.0)
                 ccy = t.get("CURRENCY") or "USD"
                 terms = {"TRADE_ID": tid, "SECURITY_ID": self.security.get(tid), "INSTRUMENT": instrument_name(t),
                          "BUSINESS_DATE": self.cob, "SCENARIO_SET_ID": "HS-509", "SOURCE_SYSTEM": t.get("SOURCE_SYSTEM"),
                          "TRADE_VERSIONS": f"v{t.get('TRADE_VERSION') or 1}", "TRADE_STATUS": t.get("TRADE_STATUS"),
                          "MATURITY_DATE": t.get("MATURITY_DATE"), "LEGAL_ENTITY": le, "DIVISION": DIVISIONS.get(desk, "DIV-MARKETS"), "DESK": desk,
-                         "TT_BOOK": book, "PORTFOLIO": t.get("PORTFOLIO") or book, "STRATEGY": t.get("STRATEGY") or "", "PRODUCT_GROUP": grp,
+                         "TT_BOOK": book, "LIMIT_LETTER": self.letter[tid], "PORTFOLIO": t.get("PORTFOLIO") or book, "STRATEGY": t.get("STRATEGY") or "",
+                         "PRODUCT_GROUP": grp,
                          "PRODUCT_TYPE": t.get("PRODUCT_TYPE"), "CURRENCY": ccy, "COUNTERPARTY": t.get("COUNTERPARTY") or "",
                          "DIRECTION": "LONG" if q >= 0 else "SHORT", "QUANTITY": q, "TAGS": "|".join(self._tags(t))}
                 run = {"STATUS": "ok", "PRICER": "demo-factor-model", "MODEL_VERSION": "demo-2", "COMPUTED_AT": f"{self.cob}T06:00:00Z",   # the morning run; intraday updates come after it
@@ -257,7 +293,7 @@ class Batch:
                     rows = self.pv_rows
                 else:
                     # a P&L vector's CURRENCY is its values' (USD here); the trade's own is TRADE_CURRENCY (2.9.4)
-                    row = {**lead("PNL", "TRADE", tid, "USD", sys), "VECTOR_ID": f"PV-{tid}-HS-509", **terms, "CURRENCY": "USD",
+                    row = {**lead("PNL", "TRADE", tid, "USD", sys), "VECTOR_ID": f"{PNL_ID}{tid}-HS-509", **terms, "CURRENCY": "USD",
                            "TRADE_CURRENCY": ccy, "REPORTING_CCY": "USD", "PV": round(pv), "PNL": vec[:m.n], **run}
                     rows = self.vector_rows
                 if sys in self.position_systems:
@@ -279,7 +315,7 @@ class Batch:
         qty = sum(float(r["QUANTITY"]) for r in rows)
         cps = sorted({r.get("COUNTERPARTY") or "" for r in rows} - {""})
         place = {k: first.get(k) for k in ("BUSINESS_DATE", "SCENARIO_SET_ID", "TRADE_STATUS", "LEGAL_ENTITY", "DIVISION", "DESK", "TT_BOOK",
-                                            "PORTFOLIO", "STRATEGY", "PRODUCT_GROUP", "PRODUCT_TYPE")}
+                                            "LIMIT_LETTER", "PORTFOLIO", "STRATEGY", "PRODUCT_GROUP", "PRODUCT_TYPE")}
         place.update({"SECURITY_ID": first.get("SECURITY_ID"), "INSTRUMENT": first.get("INSTRUMENT"),
                       "MATURITY_DATE": max(str(r.get("MATURITY_DATE") or "") for r in rows) or None,
                       "COUNTERPARTY": cps[0] if len(cps) == 1 else "", "DIRECTION": "LONG" if qty >= 0 else "SHORT", "QUANTITY": qty,
@@ -301,7 +337,7 @@ class Batch:
         ccys = {r.get("TRADE_CURRENCY") or r["CURRENCY"] for r in rows}
         own = {"TRADE_CURRENCY": ccys.pop()} if len(ccys) == 1 else {}
         return "pnl-vector", {**lead("PNL", "POSITION", pid, "USD", sys),
-                              "VECTOR_ID": f"PV-{pid}-HS-509", **place, "CURRENCY": "USD", **own, "REPORTING_CCY": "USD",
+                              "VECTOR_ID": f"{PNL_ID}{pid}-HS-509", **place, "CURRENCY": "USD", **own, "REPORTING_CCY": "USD",
                               "PV": round(sum(float(r.get("PV") or 0) for r in rows if "PV" in r)), "PNL": [round(x, 2) for x in pnl],
                               **run, "TRADE_IDS": ids}
 

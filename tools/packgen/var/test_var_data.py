@@ -106,6 +106,28 @@ class VarDataTest(unittest.TestCase):
         self.assertEqual({v["BATCH_ID"] for v in self.rows}, {f"B-{cob}-01"})
         self.assertEqual({v["SCENARIO_SET_ID"] for v in self.rows}, {"HS-509"})
 
+    def test_every_row_carries_its_limit_letter_some_letters_hold_part_of_a_book_and_the_limits_name_nodes(self):
+        """2.9.5 (VAR_GUIDE.md sections 15.14 and 15.15): LIMIT_LETTER on every P&L and scenario-PV row, twelve letters, two books split
+        between two letters; P&L-vector ids PNL-<trade>-<set>; var-limit rows name LL nodes (path ids) and every MGMT and LEGAL node with
+        its row's own LIMIT_VAR."""
+        letters_of_book: dict[str, set] = defaultdict(set)
+        for v in self.rows:
+            self.assertRegex(str(v.get("LIMIT_LETTER") or ""), r"^LL-\d{4}$", v["TRADE_ID"])
+            letters_of_book[v["TT_BOOK"]].add(v["LIMIT_LETTER"])
+        for v in self.vector_rows:
+            self.assertEqual(v["VECTOR_ID"], f"PNL-{v['TRADE_ID']}-HS-509")
+        self.assertEqual(len({v["LIMIT_LETTER"] for v in self.rows}), P.LETTERS)
+        split = sorted(b for b, ls in letters_of_book.items() if len(ls) > 1)
+        self.assertEqual(split, sorted(P.SPLIT_BOOKS))
+        limits = {r["NODE_ID"]: r for r in docs("var-limit")}
+        for nid, n in self.nodes.items():
+            self.assertEqual(limits[nid]["LIMIT_VAR"], n["LIMIT_VAR"], nid)
+        ll = {n for n in limits if n.startswith("LL~")}
+        self.assertIn("LL~BANK", ll)
+        for v in self.rows:
+            self.assertIn(f"LL~{v['LIMIT_LETTER']}", ll)
+        self.assertTrue(all(r["LIMIT_ID"] == "VL-" + r["NODE_ID"] and r["CURRENCY"] == "USD" for r in limits.values()))
+
     def test_scenario_pvs_in_the_trades_currency_with_the_supplied_fx(self):
         self.assertGreater(len(self.pv_rows), 1000)
         self.assertEqual({r["SOURCE_SYSTEM"] for r in self.pv_rows}, set(SFX.PV_SYSTEMS))
