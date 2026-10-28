@@ -180,6 +180,14 @@
   the new homes. `test_docs_rot.py` drops its archive rules (the history exemption, the banner and README checks, the help-centre check)
   and checks every relative link without exception: a link to a missing document fails even on a line that says it was deleted; a new
   test fails if `docs/archive/` comes back. The help centre's code no longer special-cases an archive.
+- **The root README rewritten as a short, current front page** (312 → 180 lines): what Drishti is (Sutras and inference, BI,
+  VaR and exposure computed on demand), the 2.9.5 headline and 2.9.6 as in development, the feature list grouped into short linked
+  bullets (risk now has its own group), the quick start as GETTING_STARTED states it (`uv venv --python 3.13`, 85 tables), and only
+  measured figures with their sources. Corrected: eleven packs ship, not eight (`gleif`, `funds`, `compute-demo`); Drishti\*net
+  gossip has its own port since 2.6.7, not "no separate port"; twenty-nine tutorials, not 22, in the tree; the module tree (it lacked
+  `drishti-compute`) became one paragraph linking ARCHITECTURE.md; scale figures not found in PERFORMANCE.md, SCALE_STRATEGY.md or
+  SCALE_BENCHMARK.md (18 / 54 ms, 70 / 99 ms, 6–14 ms) dropped and the rest linked to the document that holds them; the drill merges
+  `develop` into `main`.
 
 ## 2.9.5 — Iceberg as a full alternative to Delta; VaR hierarchies by columns (limit letters); connector files that upgrade themselves safely (2026-10-28)
 
