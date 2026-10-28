@@ -437,9 +437,13 @@ class VarShardClusterTest {
         VarIntradayLake.writePvs(intraday, List.of(
                 VarIntradayLake.pv(DAY, "P1", "EUR", 1200, VarPvFixture.plus(1200, VarLakeFixture.U, 30), "INTRADAY", "B-I2", at + "1:00:00Z", "HS-20")),
                 "append");
+        String[] was = before.split("\\|", 2);                           // both tables seen new: P&L vectors, then |scenario-pv:...
         for (String n : List.of("ref", "a", "b", "c")) {
             VarService svc = cluster.node(n).bean(VarService.class);
-            assertThat(NetNodes.await(30_000, () -> !svc.loader().version(DAY).equals(before))).as(n + " sees the batch").isTrue();
+            assertThat(NetNodes.await(30_000, () -> {
+                String[] now = svc.loader().version(DAY).split("\\|", 2);
+                return !now[0].equals(was[0]) && (was.length < 2 || now.length == 2 && !now[1].equals(was[1]));
+            })).as(n + " sees both batches (P&L vectors and scenario PVs)").isTrue();
             cluster.node(n).bean(VarOfficial.class).onLoad("pnl-vector", DAY);
             cluster.node(n).bean(VarOfficial.class).onLoad("scenario-pv", DAY);
         }
