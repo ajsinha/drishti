@@ -982,7 +982,9 @@ next ask (the answers' cache is keyed by the layer). A reporting currency keeps 
 the USD date's layer on it as the USD date holds it at the time of the answer (2.9.6), so a currency is never left on an older layer: not
 by the official capture (which reads every currency as the morning run), nor by a batch applied while the currency was being built. A
 date whose updates could not be read is answered from its morning run **with a warning saying so** on every answer, until the next
-data-load signal reads them. Nothing else is recomputed, and the morning hot file is never changed: an updated
+data-load signal reads them. Signals of one date apply one at a time, and a batch's layer is published only over the very date it was
+built on: when the date is reloaded meanwhile (another input's signal, an administrator), the signal says `superseded` and the date, as
+loaded again, reads its updates from the lake, this batch included once (2.9.6). Nothing else is recomputed, and the morning hot file is never changed: an updated
 row is the stored row plus its difference, a new trade is appended after the morning's. The old P&L subtracted is the morning row exactly
 as received (on the heap its row; with the tiered memory, its float32 copy is not exact, so the row is read back from the lake by its id),
 so a node is equal to the cent to the same final data loaded as one run. Only the current P&L per trade is kept, never the batches: the
