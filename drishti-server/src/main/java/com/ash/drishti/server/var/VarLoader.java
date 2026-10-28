@@ -201,7 +201,8 @@ final class VarLoader {
             tier.opened(book);
             long ms = (System.nanoTime() - t0) / 1_000_000;
             VarDate vd = new VarDate(date, book, portfolios, trades, java.time.Instant.now(), ms, (tVectors - t0) / 1_000_000, sum,
-                    versions, warnings(book, unknownLimits), VarDate.USD, intake.fx());
+                    versions, List.of(), VarDate.USD, intake.fx());
+            unknownLimits(date, unknownLimits);
             return withIntraday(vd, intake, days);
         } catch (RuntimeException e) {
             b.discard();
@@ -307,6 +308,24 @@ final class VarLoader {
         return out;
     }
 
+    /** Per business date, the var-limit rows its load found naming no node (kept with the date; a date is never refused for them). */
+    private final Map<LocalDate, List<String>> unknownLimits = new java.util.concurrent.ConcurrentHashMap<>();
+
+    private void unknownLimits(LocalDate date, List<String> nodes) {
+        if (unknownLimits.size() > 64) {
+            unknownLimits.clear();
+        }
+        unknownLimits.put(date, List.copyOf(nodes));
+    }
+
+    /**
+     * What the answers of a date say about its hierarchies (2.9.5), in the provenance's warnings: positions split at a cell's edge, limits
+     * naming no node (DRS-5212). Data-quality notes: never a reason to answer another date or skip the official capture.
+     */
+    List<String> hierarchyNotes(VarDate d) {
+        return warnings(d.book(), unknownLimits.getOrDefault(d.date(), List.of()));
+    }
+
     /** What the answers of a date say about its hierarchies: positions split at a cell's edge, limits naming no node (DRS-5212). */
     static List<String> warnings(VarBook book, List<String> unknownLimits) {
         List<String> out = new ArrayList<>();
@@ -374,8 +393,8 @@ final class VarLoader {
         documents(props.kinds().portfolio(), AsOf.of(date)).forEach((id, p) -> portfolios.put(id, VarDate.Portfolio.of(id, p)));
         tier.opened(book);
         long ms = (System.nanoTime() - t0) / 1_000_000;
-        VarDate vd = new VarDate(date, book, portfolios, version(date), java.time.Instant.now(), ms, 0, sum, v,
-                warnings(book, unknownLimits(date, book)), VarDate.USD, fx);
+        VarDate vd = new VarDate(date, book, portfolios, version(date), java.time.Instant.now(), ms, 0, sum, v, List.of(), VarDate.USD, fx);
+        unknownLimits(date, unknownLimits(date, book));
         try {                                                          // the hot file holds the morning run: the day's updates read again
             return withIntraday(vd, readIntraday(date, book, java.util.Set.of(), sum), book.scenarioDates());
         } catch (RuntimeException e) {

@@ -308,6 +308,7 @@ final class VarViews {
         m.put("excluded", s.date().intake().excluded());
         m.put("positionRules", s.date().intake().rules());
         List<String> warnings = new ArrayList<>(s.date().warnings());
+        warnings.addAll(svc.loader().hierarchyNotes(s.date()));        // 2.9.5: split positions, limits naming no node
         warnings.addAll(s.res().warnings());
         m.put("warnings", warnings);
         m.put("scenarioSet", b.scenarioSet() + " · " + b.scenarioDates().get(0) + " .. " + b.scenarioDates().get(b.width() - 1));

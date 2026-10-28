@@ -39,7 +39,7 @@ import org.springframework.test.web.servlet.MockMvc;
  * Exposure on the configured hierarchies (2.9.5): the limit letters (LL, {@code LIMIT_LETTER > DESK}, {@code drishti.var.hierarchies})
  * on {@link ExposureHierarchyFixture}'s paths. The official record holds every letter's node; each node's EE, PFE and EPE are those of
  * its trades (the same as the scope {@code LL:<letter>}, as {@code WHERE:} on the letter, and LL-B's desk node as the desk B is alone on);
- * the root is the bank.
+ * the root is the bank (with no risk-hierarchy rows here, LL's are the only nodes).
  */
 @SpringBootTest(properties = {"drishti.rachana.hot-reload=false", "drishti.packs.enabled=finance",
         "drishti.sources.plugins.demo.enabled=false", "drishti.sources.connectors.finance-lake.enabled=false",
@@ -100,15 +100,15 @@ class ExposureOfficialHierarchiesTest {
         for (String n : List.of("LL~BANK", "LL~LL-A", "LL~LL-A/DESK-A", "LL~LL-B", "LL~LL-B/DESK-B")) {
             assertThat(s.has("LL:" + n)).as(n + " in " + s.fieldNames()).isTrue();
         }
-        JsonNode letterA = get("/api/v1/exposure/scope", rita, "scope", "LL:LL-A");
-        JsonNode whereA = get("/api/v1/exposure/scope", rita, "scope", "WHERE:LIMIT_LETTER == 'LL-A'");
-        for (String f : List.of("epe", "peakEe", "peakPfe95")) {
-            assertThat(s.at("/LL:LL~LL-A/" + f).asLong()).as(f).isEqualTo(Math.round(letterA.at("/figures/" + f).asDouble(letterA.path(f).asDouble())));
+        JsonNode letterA = get("/api/v1/exposure/scope", rita, "scope", "LL:LL-A", "q", "0.95");
+        JsonNode whereA = get("/api/v1/exposure/scope", rita, "scope", "WHERE:LIMIT_LETTER == 'LL-A'", "q", "0.95");
+        for (String[] f : new String[][] {{"epe", "epe"}, {"peakEe", "peakEe"}, {"peakPfe95", "peakPfe"}}) {
+            assertThat(s.path("LL:LL~LL-A").path(f[0]).asLong()).as(f[0]).isEqualTo(letterA.path(f[1]).asLong());
+            assertThat(whereA.path(f[1]).asLong()).as(f[0]).isEqualTo(letterA.path(f[1]).asLong());
         }
-        assertThat(s.at("/LL:LL~LL-A/epe").asLong()).isEqualTo(s.at("/LL:LL~LL-A/DESK-A/epe").asLong());   // LL-A is all DESK-A
-        assertThat(whereA.toString()).contains("rule matched 2 trades");
-        assertThat(s.at("/LL:LL~LL-B/DESK-B/epe").asLong()).isEqualTo(Math.round(get("/api/v1/exposure/scope", rita, "scope", "DESK:DESK-B")
-                .at("/figures/epe").asDouble(Double.NaN)));
-        assertThat(s.at("/LL:LL~BANK/peakEe").asLong()).isEqualTo(s.at("/MGMT:MGMT~BANK/peakEe").asLong());
+        assertThat(s.path("LL:LL~LL-A").path("epe").asLong()).as(String.join(",", (Iterable<String>) s::fieldNames)).isEqualTo(s.path("LL:LL~LL-A/DESK-A").path("epe").asLong());   // LL-A is all DESK-A
+        assertThat(s.path("LL:LL~LL-B/DESK-B").path("epe").asLong()).isEqualTo(Math.round(get("/api/v1/exposure/scope", rita, "scope", "DESK:DESK-B")
+                .path("epe").asDouble(Double.NaN)));
+        assertThat(s.path("LL:LL~BANK").path("peakEe").asLong()).isEqualTo(get("/api/v1/exposure/scope", rita, "scope", "BANK").path("peakEe").asLong());
     }
 }

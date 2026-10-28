@@ -166,12 +166,12 @@ class VarHierarchyApiTest {
 
     @Test
     void theOfficialRecordsHoldEveryHierarchysNodesAndTheWordIsSearchable() throws Exception {
-        JsonNode cap = json.readTree(mvc.perform(post("/api/v1/var/official").header("Authorization", "Bearer " + tokens.mint("ada", List.of("admin"), 300)))
+        JsonNode cap = json.readTree(mvc.perform(post("/api/v1/var/official").param("asOf", VarHierarchyFixture.DAY.toString()).header("Authorization", "Bearer " + tokens.mint("ada", List.of("admin"), 300)))
                 .andExpect(status().isOk()).andReturn().getResponse().getContentAsString());
-        assertThat(cap.get("nodes").asInt()).isEqualTo(9 + 6);
+        assertThat(cap.path("nodes").asInt()).as(cap.toString()).isEqualTo(9 + 6);
         JsonNode record = get("/api/v1/var/official");
-        assertThat(record.at("/nodes/LL~LL-A/var").asDouble()).isEqualTo(scope("LL:LL-A").get("var").asDouble());
-        String letterCapture = record.at("/nodes/LL~LL-A/captureId").asText();
+        assertThat(record.path("nodes").path("LL~LL-A").path("var").asDouble()).isEqualTo(scope("LL:LL-A").get("var").asDouble());
+        String letterCapture = record.path("nodes").path("LL~LL-A").path("captureId").asText();
         assertThat(scope("CAPTURE:" + letterCapture).get("var").asDouble()).isEqualTo(scope("LL:LL-A").get("var").asDouble());
         JsonNode hints = get("/api/v1/var/hints", "q", "LL-A");
         assertThat(hints.toString()).contains("LL:LL-A");
