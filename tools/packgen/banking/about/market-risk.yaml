@@ -283,9 +283,19 @@ kinds:
       ${size($.BOOKS)} book(s) beneath it and a VaR limit of ${fmt($.LIMIT_VAR, 'compact')} USD.
     guide: market-risk
     glossary:
-      HIERARCHY: { term: "Hierarchy", means: "MGMT: bank, division, desk, book. LEGAL: bank, legal entity, desk, book. A book is in one leaf of each." }
-      LEVEL: { term: "Level", means: "bank, division, legal-entity, desk or book." }
+      HIERARCHY: { term: "Hierarchy", means: "MGMT: bank, division, desk, book. LEGAL: bank, legal entity, desk, book. A book is in one leaf of each. Any id since 2.9.5." }
+      LEVEL: { term: "Level", means: "The hierarchy's own level names: bank, division, legal-entity, desk or book in the demo." }
       BOOKS: { term: "Books", means: "Every book beneath the node: its positions are the node's." }
+      LIMIT_VAR: { term: "VaR limit", means: "The 1-day 99% VaR the node may take.", unit: "USD" }
+  var-limit:
+    title: VaR limit of a hierarchy node
+    about: >-
+      The node ${$.NODE_ID} of the ${$.HIERARCHY} hierarchy may take a 1-day 99% VaR of ${fmt($.LIMIT_VAR, 'compact')} USD (from
+      ${$.VALID_FROM}). A node without such a row has no limit.
+    guide: market-risk
+    glossary:
+      HIERARCHY: { term: "Hierarchy", means: "The hierarchy the node is in: LL (the limit letters, built from the trades' LIMIT_LETTER and DESK), MGMT or LEGAL." }
+      NODE_ID: { term: "Node", means: "The node's id as the engine builds it: LL~LL-0003, LL~LL-0003/DESK-RATES, MGMT~DESK-RATES." }
       LIMIT_VAR: { term: "VaR limit", means: "The 1-day 99% VaR the node may take.", unit: "USD" }
   portfolio:
     title: Portfolio

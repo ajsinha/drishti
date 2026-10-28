@@ -502,8 +502,8 @@ Fields, from 2 sample documents:
 | Field | Type | Example | Description |
 |---|---|---|---|
 | `NODE_ID` | string | `LEGAL~LE-NY` | link to `risk-hierarchy` |
-| `HIERARCHY` | string | `LEGAL` | MGMT: bank, division, desk, book. LEGAL: bank, legal entity, desk, book. A book is in one leaf of each. |
-| `LEVEL` | string | `legal-entity` | bank, division, legal-entity, desk or book. |
+| `HIERARCHY` | string | `LEGAL` | MGMT: bank, division, desk, book. LEGAL: bank, legal entity, desk, book. A book is in one leaf of each. Any id since 2.9.5. |
+| `LEVEL` | string | `legal-entity` | The hierarchy's own level names: bank, division, legal-entity, desk or book in the demo. |
 | `PARENT_ID` | string | `LEGAL~BANK` | — |
 | `NAME` | string | `LE-NY` | — |
 | `REF` | object |  | Nested: see below |
@@ -535,7 +535,7 @@ Fields, from 4 sample documents:
 | Field | Type | Example | Description |
 |---|---|---|---|
 | `LIMIT_ID` | string | `VL-LL~BANK` | — |
-| `HIERARCHY` | string | `LL` | — |
+| `HIERARCHY` | string | `LL` | The hierarchy the node is in: LL (the limit letters, built from the trades' LIMIT_LETTER and DESK), MGMT or LEGAL. |
 | `NODE_ID` | string | `LL~BANK` | The node, as the engine builds it: LL~LL-0003, LL~LL-0003/DESK-RATES, MGMT~DESK-RATES; link to `risk-hierarchy` |
 | `LIMIT_VAR` | integer | `150000000` | The limit (USD); a node without a row has none |
 | `CURRENCY` | string | `USD` | — |
