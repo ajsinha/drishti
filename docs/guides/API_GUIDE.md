@@ -1521,6 +1521,7 @@ through; it does not carry their settings ([CONNECTOR_FILES.md](../connectors/CO
 | `POST` | `/admin/connectors/template-updates/{name}/add-missing` | Merge the missing kinds and settings, keeping every edit (`If-Match`: the connector's etag) |
 | `POST` | `/admin/connectors/template-updates/{name}/regenerate` | Replace the connector's text with its pack's template; the old text goes to the history |
 | `POST` | `/admin/connectors/template-updates/{name}/remove-obsolete` | Drop the kinds no loaded pack serves |
+| `POST` | `/admin/connectors/template-updates/{name}/use-template-value` | 2.9.5. Body `{"where": "settings"\|"definition", "key": "<key>"}`: that one changed key takes the pack template's value, every other edit stays; the old text goes to the history, audited as `connector-template-update` (`If-Match`: the connector's etag) |
 | `POST` | `/admin/connectors/template-updates/fix-all` | Merge the missing part of every drifted connector; returns `fixed` |
 | `POST` | `/admin/connectors/{name}/test` | Try a draft (the same bodies as `PUT`) or, with no body, the saved file: a throwaway instance is started, asked what it holds per kind (business dates and counts), and closed. Nothing that runs is changed. Failures come back in words, with a hint for TLS and network errors |
 | `POST` | `/admin/connectors/{name}/validate`, `/render`, `/parse` | The findings for a draft; the YAML of the form's fields; the form's fields of a YAML. Nothing is saved |

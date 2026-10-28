@@ -2426,8 +2426,10 @@ the format it was created in: with the format changed and the root not, the publ
 new format another root. The readers follow by themselves: with `format: iceberg` the server reads the market-risk pack's `var-results`
 template (BI's reader, `plugin: delta` in the pack) as `plugin: iceberg` over `${drishti.var.official.root}` with `engine: native` and
 the `s3.*` settings of `drishti.var.official.storage` (`OfficialReaders`). The file generated at start says so; a file never edited
-follows when the format changes (back to Delta too); an edited file is kept and the difference listed in Admin → Connectors → Template
-updates. An Iceberg reader of `risk-results` is allowed as the Delta one is: read only, computed kinds only (`tools/test_contracts.py`).
+follows when the format changes (back to Delta too); an edited file is kept. A `var-results.yaml` written by `drishti.py lake demo` or
+`build_demo_lakes.py` (first line *Written by …*) carries no template stamp, so it counts as edited and stays on Delta, and the change of
+plugin is not listed under Template updates: put it back with **Reset to pack default** (`drishti.py connector reset var-results`;
+[tutorial 29](../tutorials/29-var-on-iceberg.md) step 6). An Iceberg reader of `risk-results` is allowed as the Delta one is: read only, computed kinds only (`tools/test_contracts.py`).
 
 | Format | Append-only | 7 years |
 |---|---|---|

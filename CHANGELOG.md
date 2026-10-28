@@ -108,7 +108,7 @@ Delta stays the default lake format everywhere; Iceberg is chosen only by config
   now also switches the counterparty-risk pack's `exposure-store.yaml` (it reads `simulation-run` and `exposure-path`, both in the risk
   domain: before, exposure lost its tables once they were moved). Run for real on the demo data: 14 risk tables, 955,124 rows, in
   Iceberg in 579 s; a server on that lake answered `VAR BANK` (USD 124,948,241; EUR 111,265,495), the limit letter `LL:LL-0003` and
-  `XPO BANK` from Iceberg and published its official records. **Tests:** `VarFormatEqualityTest`, `ExposureFormatEqualityTest`, `LakeAppendsTest`, `test_stores.py`.
+  `EXP BANK` from Iceberg and published its official records. **Tests:** `VarFormatEqualityTest`, `ExposureFormatEqualityTest`, `LakeAppendsTest`, `test_stores.py`.
 - **Official results to Delta or Iceberg, in a folder or on `s3://`.** `drishti.var.official.format` and
   `drishti.ccr.exposure.official.format` (`delta`, the default, or `iceberg`) with `….official.storage` (the `s3.*` settings). The
   official tables stay append-only (Delta: `delta.appendOnly`; Iceberg: append commits only, `drishti.append-only=true`), keep seven
@@ -119,7 +119,7 @@ Delta stays the default lake format everywhere; Iceberg is chosen only by config
   created in (a format changed with the root not is refused in words); BI's `var-results` and `exposure-results` follow the format by themselves:
   with `….official.format: iceberg` the server reads their pack templates as `plugin: iceberg` over the official root (`engine:
   native`, the `s3.*` of `….official.storage`), so the file generated at start says so, a file never edited follows a change of format
-  (back to Delta too) and an edited one is kept and listed in Template updates (`OfficialReaders`; `tools/test_contracts.py` allows an
+  (back to Delta too) and an edited one is kept (a file `lake demo` wrote counts as edited: Reset to pack default puts the pack's reader back) (`OfficialReaders`; `tools/test_contracts.py` allows an
   Iceberg reader of `risk-results` as the Delta one: read only, computed kinds only). `DRISHTI_VAR_OFFICIAL_FORMAT`,
   `DRISHTI_EXPOSURE_OFFICIAL_FORMAT`. **Test:** `OfficialReadersTest`. **Tests:** `OfficialSinkTest` (both
   formats, a restatement, six writers at once), `OfficialS3Test` (S3Mock: both formats, two writers in sequence, the exclusive create).

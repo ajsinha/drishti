@@ -305,7 +305,9 @@ than that, whatever else it is told. The run reports `floor` (the first date it 
 five paths), and changes nothing. The results table says *would expire snapshots older than … h; would remove N orphan file(s)*.
 
 **Ownership, locks, schedules, history.** As for Delta: only tables `lake build --format iceberg` built under this root are maintained
-(their build record in `<lake>/_drishti-lake/tables-built.json`); `--force-foreign` overrides with a warning. A run holds the lake's
+(their build record in `<lake>/_drishti-lake/tables-built.json`); `--force-foreign` overrides with a warning. Tables `build_demo_lakes.py --store …=iceberg` copied into
+Iceberg leave no build record (the copy is the loader's, not `lake build`'s), so they are listed read only (*not built by drishti.py
+lake build*); maintain them with `--force-foreign`, or build them with `lake build --format iceberg`. A run holds the lake's
 lock; schedules (cron or after-build) and the history are shared. A history entry carries each table's `format`, `orphans` and
 `floor`.
 

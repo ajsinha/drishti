@@ -1185,7 +1185,7 @@ append-only and 7 years: Delta `delta.appendOnly` and its log retention, Iceberg
 The JSON Lines go beside the tables on the same storage; `<n>` is the Delta version or the Iceberg sequence number. A failed publish
 names the format and the table in `publishError`. A table keeps the format it was created in (another format needs another root), and
 BI's `exposure-results` connector follows the format by itself (generated as `plugin: iceberg` over the official root; a file never
-edited follows a change, an edited one is kept and listed in Admin → Connectors → Template updates).
+edited follows a change, an edited one is kept; a file `lake demo` wrote counts as edited and stays on Delta, unlisted: Reset to pack default).
 
 **Exposure from an Iceberg CCR lake (2.9.5).** `simulation-run` and `exposure-path` may live in Iceberg (`build_demo_lakes.py --store
 risk=iceberg` switches `exposure-store.yaml` with the market-risk pack's `risk-store.yaml`): the same day on Delta and on Iceberg gives
