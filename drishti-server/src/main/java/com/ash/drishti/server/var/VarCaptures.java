@@ -114,7 +114,7 @@ final class VarCaptures {
         String canonical = null;
         if (scope != null && !scope.isBlank()) {
             try {
-                canonical = com.ash.drishti.compute.var.ScopeExpr.parse(scope).toString();
+                canonical = com.ash.drishti.compute.var.ScopeExpr.parse(scope, svc.words().keySet()).toString();
             } catch (IllegalArgumentException e) {
                 throw new DrishtiException(ErrorCode.BAD_REQUEST, e.getMessage());
             }

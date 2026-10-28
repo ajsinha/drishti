@@ -218,13 +218,32 @@ final class VarViews {
         return Double.NaN;
     }
 
+    /**
+     * A book's node in the primary hierarchy: {@code MGMT~<book>}, else the first leaf whose only book it is (a hierarchy whose ids are not
+     * the books' own); null when none.
+     */
+    static String bookNode(VarBook b, String book) {
+        if (book == null) {
+            return null;
+        }
+        if (b.node("MGMT~" + book) != null) {
+            return "MGMT~" + book;
+        }
+        for (VarBook.Node n : b.nodes().values()) {
+            if (n.children().isEmpty() && n.books().equals(List.of(book))) {
+                return n.id();
+            }
+        }
+        return null;
+    }
+
     /** The path from the root to the node, for the breadcrumb (positions and trades: their book's path, then the position). */
     private static List<Map<String, Object>> ancestors(VarBook b, String node, VarService.Scoped s) {
         List<Map<String, Object>> out = new ArrayList<>();
         String n = node;
         if (n == null && (s.res().position() >= 0 || s.res().trade() >= 0)) {
             int o = s.res().trade() >= 0 ? s.res().trade() : b.positionFrom(s.res().position());
-            n = "MGMT~" + b.trades().text("TT_BOOK", o);
+            n = bookNode(b, b.trades().text("TT_BOOK", o));
             if (s.res().trade() >= 0) {
                 int pi = b.positionOf(o);
                 out.add(crumb(b.positionId(pi), "POS:" + b.positionId(pi)));
@@ -455,7 +474,7 @@ final class VarViews {
                 s.set().forEach(o -> groups.computeIfAbsent(String.valueOf(b.trades().text(col, o)), k -> new OrdinalSet.Builder()).add(o));
                 groups.forEach((k, g) -> {
                     OrdinalSet m = g.build();
-                    String node = "MGMT~" + k;
+                    String node = group.equals("book") ? String.valueOf(bookNode(b, k)) : "MGMT~" + k;
                     boolean whole = b.node(node) != null && m.equals(b.node(node).members());
                     out.add(new Part(k, b.node(node) != null ? "NODE:" + node : col.equals("DESK") ? "DESK:" + k : "BOOK:" + k, k, group,
                             whole ? b.aggregate(node) : b.vector(m, svc.sums()), Double.NaN, Map.of()));
@@ -919,10 +938,13 @@ final class VarViews {
     Map<String, Object> tree(Principal p, String hierarchy, LocalDate date, String ccy) {
         VarDate d = svc.date(date, ccy);
         VarBook b = d.book();
-        String h = hierarchy == null || hierarchy.isBlank() ? "MGMT" : hierarchy.toUpperCase(java.util.Locale.ROOT);
+        List<String> present = b.hierarchies();
+        String h = hierarchy == null || hierarchy.isBlank() ? (present.contains("MGMT") || present.isEmpty() ? "MGMT" : present.get(0))
+                : hierarchy.toUpperCase(java.util.Locale.ROOT);
         VarBook.Node root = b.root(h);
         if (root == null) {
-            throw new DrishtiException(ErrorCode.ENTITY_NOT_FOUND, "no hierarchy " + h + " on " + d.date());
+            throw new DrishtiException(ErrorCode.VAR_HIERARCHY_UNKNOWN, "no hierarchy " + h + " on " + d.date() + " (it has " + String.join(", ", present)
+                    + ")");
         }
         List<Map<String, Object>> rows = new ArrayList<>();
         walk(p, b, root, 0, rows, date, d.currency());
@@ -930,7 +952,11 @@ final class VarViews {
         out.put("hierarchy", h);
         out.put("currency", d.currency());
         out.put("intraday", intradayNote(d));
-        out.put("hierarchies", b.nodes().values().stream().filter(n -> n.parent() == null).map(VarBook.Node::hierarchy).sorted().toList());
+        // the date's hierarchies (2.9.5): their ids as before, in the configured order, and each with its title, word and levels
+        List<Map<String, Object>> info = svc.hierarchies().describe(present);
+        out.put("hierarchies", info.stream().map(m -> String.valueOf(m.get("id"))).toList());
+        out.put("hierarchyInfo", info);
+        out.put("title", svc.hierarchies().title(h));
         out.put("businessDate", d.date().toString());
         out.put("nodes", rows);
         List<Map<String, Object>> ports = new ArrayList<>();

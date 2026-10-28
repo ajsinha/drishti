@@ -61,6 +61,14 @@ final class VarSaved {
         return s;
     }
 
+    /** The configured hierarchies' scope words a basket may use (2.9.5). */
+    private java.util.function.Supplier<java.util.Set<String>> words = java.util.Set::of;
+
+    VarSaved words(java.util.function.Supplier<java.util.Set<String>> w) {
+        this.words = w;
+        return this;
+    }
+
     private static String owner(String user) {
         return ContentDocs.name(user);
     }
@@ -74,7 +82,7 @@ final class VarSaved {
         if (scope.isEmpty()) {
             throw new DrishtiException(ErrorCode.BAD_REQUEST, "a basket has a scope (its members or its rule)");
         }
-        com.ash.drishti.compute.var.ScopeExpr.parse(scope);              // refused here when it does not parse
+        com.ash.drishti.compute.var.ScopeExpr.parse(scope, words.get());  // refused here when it does not parse
         String type = scope.startsWith("WHERE:") && !scope.contains(" + ") ? "RULE" : "BASKET";
         String key = "var/baskets/" + owner(p.user()) + "/" + name + ".json";
         Map<String, Object> b = new LinkedHashMap<>();

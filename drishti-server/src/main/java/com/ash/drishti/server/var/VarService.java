@@ -577,6 +577,20 @@ public final class VarService implements AutoCloseable {
 
     // ---------------------------------------------------------------------------------------------------------------------- scopes
 
+    /** The configured hierarchies' scope words (2.9.5): word to hierarchy id; none when the configuration cannot be read. */
+    Map<String, String> words() {
+        try {
+            return loader.hierarchies().words();
+        } catch (RuntimeException e) {
+            return Map.of();
+        }
+    }
+
+    /** The hierarchies configured now (the setting, a pack's block, or the default). */
+    Hierarchies hierarchies() {
+        return loader.hierarchies();
+    }
+
     /** Definitions of stored portfolios, the caller's baskets and captures, for the resolver. */
     ScopeResolver.Definitions definitions(Principal p, VarDate d) {
         return new ScopeResolver.Definitions() {
@@ -616,6 +630,7 @@ public final class VarService implements AutoCloseable {
             List<String> out = new ArrayList<>();
             Object books = m.get("nodes") instanceof Map<?, ?> n ? n.get(String.valueOf(node)) : null;
             Map<?, ?> byBook = m.get("books") instanceof Map<?, ?> bb ? bb : Map.of();
+            Map<?, ?> cells = m.get("cells") instanceof Map<?, ?> cc ? cc : Map.of();
             if (books instanceof List<?> l) {
                 for (Object book : l) {
                     if (byBook.get(String.valueOf(book)) instanceof Map<?, ?> positions) {
@@ -624,6 +639,13 @@ public final class VarService implements AutoCloseable {
                                 tl.forEach(t -> out.add(String.valueOf(t)));
                             }
                         });
+                    } else if (cells.get(String.valueOf(book)) instanceof Map<?, ?> cell && cell.get("positions") instanceof List<?> ps
+                            && byBook.get(String.valueOf(cell.get("book"))) instanceof Map<?, ?> positions) {   // a cell (2.9.5): its positions
+                        for (Object pid : ps) {
+                            if (positions.get(String.valueOf(pid)) instanceof List<?> tl) {
+                                tl.forEach(t -> out.add(String.valueOf(t)));
+                            }
+                        }
                     }
                 }
             }
@@ -644,8 +666,9 @@ public final class VarService implements AutoCloseable {
         ScopeResolver.Resolution res;
         ScopeExpr parsed;
         try {
-            parsed = ScopeExpr.parse(scope);
-            res = new ScopeResolver(d.book(), definitions(p, d)).resolve(scope);
+            Map<String, String> words = words();
+            parsed = ScopeExpr.parse(scope, words.keySet());
+            res = new ScopeResolver(d.book(), definitions(p, d), words).resolve(scope);
         } catch (IllegalArgumentException e) {
             throw new DrishtiException(ErrorCode.BAD_REQUEST, e.getMessage());
         }
