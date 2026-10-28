@@ -22,11 +22,11 @@ Drishti's business intelligence (Rūpaka). Where it overlaps another document, t
 
 | Document | What still stands | What this design supersedes |
 |---|---|---|
-| [Section 14](#14-the-model-architecture-decisions-d1-to-d6) (from BI_MODEL_ARCHITECTURE.md, archived as history) | decisions D1–D6, §2a shared models, §2b mini database rooted in packs, §2c servers compute, §3 experience rules | its wave plan and risks: replaced by section 12 here, archived as history in [BI_MODEL_ARCHITECTURE_WAVES.md](../archive/BI_MODEL_ARCHITECTURE_WAVES.md) |
+| [Section 14](#14-the-model-architecture-decisions-d1-to-d6) (from BI_MODEL_ARCHITECTURE.md, deleted; in git at tag v2.9.5) | decisions D1–D6, §2a shared models, §2b mini database rooted in packs, §2c servers compute, §3 experience rules | its wave plan and risks: replaced by section 12 here, deleted (BI_MODEL_ARCHITECTURE_WAVES.md, in git at tag v2.9.5) |
 | [BI_MODEL_SPEC.md](BI_MODEL_SPEC.md) | the W1 formats (dataset, model, MQ v1, implicit models, codes 9100–9199), §12 tiers, §13 worked example | §5.4 "compilation to the existing engine" as the *end state* (it is the W1 path; section 4 is the target); §5.8's W3 promises are restated in 4.6 |
-| [BI_PARITY_PLAN.md](../archive/BI_PARITY_PLAN.md) (archived: history, a 2.1 study) | the item ids the code cites (P1–P10, R1–R8, numbered gaps) | everything else: its gap analysis is replaced by section 11, its roadmap (§5) by section 12 |
-| [RUPAKA.md](RUPAKA.md) | positioning, the BI page, as-built history (§20) | §7 query engine and §17 architecture diagram (replaced; the 2.1 text is history in [RUPAKA_2_1_ENGINE.md](../archive/RUPAKA_2_1_ENGINE.md)), §13.2 "two targets" (browser Python) |
-| [LIVE_BI.md](../archive/LIVE_BI.md) (history, archived) | the BI stream contract (producers own their arithmetic) | nothing; standing queries (4.6) consume what it produces |
+| BI_PARITY_PLAN.md (a 2.1 study, deleted; in git at tag v2.9.5) | the item ids the code cites (P1–P10, R1–R8, numbered gaps), listed in [section 11.1](#111-the-21-studys-item-ids) | everything else: its gap analysis is replaced by section 11, its roadmap (§5) by section 12 |
+| [RUPAKA.md](RUPAKA.md) | positioning, the BI page, as-built history (§20) | §7 query engine and §17 architecture diagram (replaced; the 2.1 text, RUPAKA_2_1_ENGINE.md, was deleted: in git at tag v2.9.5), §13.2 "two targets" (browser Python) |
+| LIVE_BI.md (a 2026-10-06 note, deleted; in git at tag v2.9.5) | producers own their arithmetic: a streaming producer's results served as a kind ([LIVE.md](LIVE.md#results-computed-by-a-streaming-producer)) | nothing; standing queries (4.6) consume what it produces |
 | Guides (DATASETS, REPORTS, BOARDS, BI_GOVERNANCE, PYTHON_BI, ANALYSE, BI_AI, DISTRIBUTION) | how 2.1/W1 behave today | the browser paths they describe (Pyodide, DuckDB-Wasm, console SQLite) end in B |
 
 Contents: [1](#1-principles-and-non-goals) principles · [2](#2-conceptual-model-and-vocabulary) concepts ·
@@ -957,7 +957,7 @@ additive: a v1 query is a valid v2 query); DSQL by `sql:` (1); item formats by `
 
 ## 11. Gap check against Power BI
 
-From the 2.1 study's §2 and §4 (top gaps; the study is history, archived as docs/archive/BI_PARITY_PLAN.md), mapped to the component of this design that delivers each, and the wave.
+From the 2.1 study's §2 and §4 (top gaps; the study was deleted, in git at tag v2.9.5; its item ids are [11.1](#111-the-21-studys-item-ids)), mapped to the component of this design that delivers each, and the wave.
 
 | Power BI capability | Drishti component | Wave | Better than Power BI because |
 |---|---|---|---|
@@ -991,6 +991,46 @@ From the 2.1 study's §2 and §4 (top gaps; the study is history, archived as do
 
 Where we remain behind by choice: no Power Query UI, no DAX, no custom-visual marketplace, no publish-to-web, no
 VertiPaq-class in-memory engine (we rely on DuckDB, rollups and caches; B's load test decides whether that holds).
+
+### 11.1 The 2.1 study's item ids
+
+The code, the guides and the CHANGELOG cite items of the 2.1 parity study by id (for example *P3*, *R6*, *gap 7*). The study itself was deleted
+(it is in git at tag v2.9.5); this is what each id names. The data-prep items are not this design's principles P1 to P9 of section 1.
+
+**Data-prep items P1 to P10** (the Python path instead of Power Query; built ones are in [PYTHON_BI.md section 17](../guides/PYTHON_BI.md#17-data-prep-the-transform-editor-240)):
+
+| Id | Item |
+|---|---|
+| P1 | Step history and preview in the Transform editor: the frame after each step, run on a sample as the author |
+| P2 | A snippets library of tested, parameterised pandas transforms (append, unpivot, pivot, fill down, split, dedupe, as-of join) |
+| P3 | A profiling view of an extract or a Transform's output (nulls, distinct values, minimum and maximum, top values, histogram, type guess) |
+| P4 | AI-written Transforms: "describe the reshape" gives a draft over the inputs' schemas, checked and run on a sample |
+| P5 | Connector-kind inputs: a Transform reads a pack kind through a connector, as the reader, before any dataset exists |
+| P6 | Precompute on refresh for configured roles, and a warm pool of sandboxed workers |
+| P7 | Transform parameters bound to the report's what-if or field parameters |
+| P8 | An incremental Transform mode: run only for the new business date and append |
+| P9 | Promote several Analyse cells into a Transform with the cells as steps |
+| P10 | A declared output schema compared on every run, with a drift warning |
+
+**Redesign items R1 to R8** (breaking changes, each with a converter for the samples):
+
+| Id | Item |
+|---|---|
+| R1 | One table model for every dataset: every table has one `source:` (connector, model query, SQL, Python) |
+| R2 | Measure language v2 with an explicit filter context |
+| R3 | Stable ids for fields and measures, so renames are safe |
+| R4 | Relationships as filter propagation (direction, cardinality, active), implemented as semi-joins |
+| R5 | Calendars as a model object (pack calendar, fiscal year, retail 4-4-5) |
+| R6 | Report schema v2: a typed `format:` per visual family, theme items, interactions and parameters |
+| R7 | Boards as a report layout (`layout: board`) |
+| R8 | Python measures in queries, as a step after aggregation |
+
+**Gaps 1 to 15** (the study's top gaps, ranked by value and effort): 1 what-if and numeric parameters; 2 filter-context functions (share of
+total, ignore, with); 3 calculation groups; 4 semi-additive and balance measures; 5 inactive relationships and role-playing dates;
+6 conditional formatting depth; 7 matrix depth (expand and collapse at every level, subtotals, stepped layout); 8 format pane depth and themes
+as items; 9 field parameters; 10 Excel live access; 11 the Python data-prep experience (P1 to P4); 12 fiscal and custom calendars from the
+pack calendar; 13 tooltip pages, small multiples, edit interactions, sync-slicer groups; 14 comments on reports and usage metrics;
+15 a semantic SQL endpoint.
 
 ---
 
@@ -1115,7 +1155,7 @@ round's findings are fixed before the drill.
 5. **Scale.** Work classes and per-model shares, per-query memory, cost estimates and budgets, Micrometer metrics
    (6.8), model-shard ownership and the subscription directory for several Java nodes, no static shared state; a
    load test of 500 viewers on a real server (never locally).
-6. **Apache Cassandra connector** (added 2026-10-20, [CASSANDRA_CONNECTOR.md](../connectors/CASSANDRA_CONNECTOR.md); its design is history, archived).
+6. **Apache Cassandra connector** (added 2026-10-20, [CASSANDRA_CONNECTOR.md](../connectors/CASSANDRA_CONNECTOR.md)).
 7. **drishti-iceberg**, Drishti's own Iceberg engine with no Hadoop (added 2026-10-20, [DRISHTI_ICEBERG.md](DRISHTI_ICEBERG.md), steps I1–I5).
 
 **Console lane:**
@@ -1253,7 +1293,7 @@ Pivot tab is replaced before a pointer click settles; an in-one-step click was w
    the reader's parameter slicer switches the field or measure it draws; checked by the report schema.
    *Built (2.6.0):* `FieldParams` (`DRS-9037`), the report state's `params` (every model query of a report takes them as MQ v2 `params`), a field
    parameter of measures in MQ `select.measures` and `sort`; `FieldParamsApiTest` ([REPORTS.md section 21](../guides/REPORTS.md#21-field-parameters-in-a-well-260)).
-6. **Apache Cassandra connector** (added 2026-10-20, [CASSANDRA_CONNECTOR.md](../connectors/CASSANDRA_CONNECTOR.md); its design is history, archived).
+6. **Apache Cassandra connector** (added 2026-10-20, [CASSANDRA_CONNECTOR.md](../connectors/CASSANDRA_CONNECTOR.md)).
    *Built (2.6.0):* plugin `cassandra` (Cassandra 4 and 5, ScyllaDB, Astra), its loader (a day appears whole) and every read path, equal to the
    Delta connector over the same data ([CASSANDRA_CONNECTOR.md](../connectors/CASSANDRA_CONNECTOR.md)).
 7. **drishti-iceberg**, Drishti's own Iceberg engine with no Hadoop (added 2026-10-20, [DRISHTI_ICEBERG.md](DRISHTI_ICEBERG.md), steps I1–I5),
@@ -1410,12 +1450,12 @@ parameter rules moves a model and its reports from dev to test; (3) QA findings 
 
 ## 14. The model architecture: decisions D1 to D6
 
-These decisions were agreed with the product owner on 2026-10-12 in BI_MODEL_ARCHITECTURE.md, which is now history ([archived](../archive/BI_MODEL_ARCHITECTURE.md));
+These decisions were agreed with the product owner on 2026-10-12 in BI_MODEL_ARCHITECTURE.md, since deleted (in git at tag v2.9.5);
 they still stand, and this section is their home. Its wave plan W1 to W16 was replaced by [section 12](#12-w1-as-built-against-this-design-and-the-revised-wave-plan)
-(the original is history, archived in [BI_MODEL_ARCHITECTURE_WAVES.md](../archive/BI_MODEL_ARCHITECTURE_WAVES.md)), and the expression language is now Python-like ([section 3.3](#33-del-the-drishti-expression-language-python-like)).
+(the original, BI_MODEL_ARCHITECTURE_WAVES.md, was deleted: in git at tag v2.9.5), and the expression language is now Python-like ([section 3.3](#33-del-the-drishti-expression-language-python-like)).
 
 *Agreed with the product owner on 2026-10-12.* They settled the BI architecture before more features are added, and
-replaced the roadmap part of the 2.1 parity study (history, archived: [BI_PARITY_PLAN.md](../archive/BI_PARITY_PLAN.md); the gap check is now [BI_DESIGN.md section 11](BI_DESIGN.md#11-gap-check-against-power-bi)). Most of it was
+replaced the roadmap part of the 2.1 parity study (BI_PARITY_PLAN.md, deleted: in git at tag v2.9.5; its item ids are [section 11.1](#111-the-21-studys-item-ids); the gap check is now [BI_DESIGN.md section 11](BI_DESIGN.md#11-gap-check-against-power-bi)). Most of it was
 built in 2.2.0 to 2.4.0 (BI_DESIGN.md section 12.2 records what). Drishti is not in production, so these are breaking changes on purpose; the foundation stays **YAML,
 Python, datasets and data models**. No Power Query-like tool: Python is the data-prep path. The design
 specification of wave W1 (the dataset and model YAML, the model query language v1, pack-generated datasets, the

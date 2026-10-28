@@ -213,7 +213,7 @@ final class DatasetSources implements StagedTables {
 
     /**
      * An input of a Transform bound for the reader (TransformInputs): a model query as the dataset states it, or a pack kind read through a connector (2.4.0,
-     * docs/archive/BI_PARITY_PLAN.md P5), asked as the reader at the outer query's date. Kept per key, as the inner models are, so the fingerprint and the run agree.
+     * docs/architecture/BI_DESIGN.md section 11.1, item P5), asked as the reader at the outer query's date. Kept per key, as the inner models are, so the fingerprint and the run agree.
      */
     private TransformInputs.Asked asked(String key, JsonNode in) {
         TransformInputs.Asked a = askedInputs.get(key);

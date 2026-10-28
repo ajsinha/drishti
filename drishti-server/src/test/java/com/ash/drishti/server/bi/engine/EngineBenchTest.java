@@ -30,7 +30,7 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
 
 /**
- * The numbers RUPAKA.md section 18 and docs/archive/RUPAKA_POC.md ask for, measured through the real engine: the first query builds the columns layer from the
+ * The numbers RUPAKA.md section 18 asks for, measured through the real engine: the first query builds the columns layer from the
  * source (the cost paid once per date and per data load), then the same aggregation answered from the columns layer, from a rollup, and from the
  * result cache. Local-safe: 10,000 trades a day for 2 days (20,000 rows). Writes {@code target/bi-engine-bench.txt}; asserts only that the three
  * answers agree and the layers are ordered as the design says (a cache hit and a rollup are not slower than the columns layer by a margin).

@@ -25,7 +25,7 @@ trade). In the console, **F1** on the explorer (or its **?**) opens this guide.
 
 On 2026-10-26 the product owner's rule for measures (each measure has exactly two documents, the guide and one tutorial, and two help
 entries) folded the exposure data contract `EXP.md` into Part II of this guide;
-the contract is kept as history in the [archive](../archive/README.md). Where the original proposal said otherwise, the code wins and the difference is stated (**As built:**).
+the old contract page was deleted (in git at tag v2.9.5). Where the original proposal said otherwise, the code wins and the difference is stated (**As built:**).
 VaR follows the same rule: [VAR_GUIDE.md](VAR_GUIDE.md) and tutorial 25.
 
 Every number below that is not a hand-made example is the engine's on the demo lake that `drishti.py lake demo` builds by default
@@ -609,7 +609,7 @@ system environment, `DRISHTI_COMPUTE_EXPOSURE_WORKERS` workers (4), 2 GB, 300 CP
 contract: [VAR_GUIDE.md Part II](VAR_GUIDE.md#14-the-contract-at-a-glance) · Netting and the shared counterparty tables:
 [NSET.md](../contracts/NSET.md)*
 
-This is the contract of Drishti's **exposure engine** (formerly `docs/contracts/EXP.md`, now [archived](../archive/EXP.md)): what an
+This is the contract of Drishti's **exposure engine** (formerly `docs/contracts/EXP.md`, deleted; in git at tag v2.9.5): what an
 upstream exposure simulator delivers (every trade's MtM on every Monte Carlo path at every date of a time grid), what Drishti builds from
 it (netting-set path matrices, collateral on each path, tiered memory), and what it answers (EE, ENE, EPE, effective EE and EPE, PFE at
 any confidence, peaks, contributions, incremental figures before dealing) for any scope. It defines the two **shared path tables**,

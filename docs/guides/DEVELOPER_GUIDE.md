@@ -502,6 +502,7 @@ Both kinds are listed here.
 | Sutras shown in docs and pack guides are valid | `DocumentedSutrasTest` |
 | Every pack Sutra loads without problems | `PackSutrasTest` |
 | Warm views stay fast | `ViewPipelineTest.warmViewsStayWellUnderFiftyMillisecondsAtP99` |
+| Every relative link and anchor in the documents resolves; an obsolete design is deleted, not archived: git keeps its history, so move any live content into the current document first, and a document that still mentions it names the release tag where it last lived, as text | `drishti-console/tests/test_docs_rot.py` |
 | Object-oriented, concurrent, configuration-driven code; virtual threads; no SQL in code; schema files per database; git author only | Review (this section) |
 
 ### 3.1 The copyright header

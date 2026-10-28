@@ -12,7 +12,7 @@
 #
 # See the LICENSE file in the root of this repository for the full terms.
 
-"""Wave C acceptance (BI_DESIGN.md section 12.2, 2.4.0): a Power BI author builds the parity task list (docs/archive/BI_PARITY_PLAN.md section 4, items 6 to 8 and 13) in BI
+"""Wave C acceptance (BI_DESIGN.md section 12.2, 2.4.0): a Power BI author builds the parity task list (docs/architecture/BI_DESIGN.md section 11.1, gaps 6 to 8 and 13) in BI
 Studio, in Chromium over the real server and console (tests/bi_report_stack.py, security on, the small lake of trade valuations), and never opens the YAML tab:
 
 * a P&L matrix by desk and portfolio across currencies, with subtotals at every level, opening at the first level, a colour scale on MTM and icons on

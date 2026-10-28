@@ -13,7 +13,7 @@
  *
  * See the LICENSE file in the root of this repository for the full terms.
  */
-/* Small multiples (R6, 2.4.0; docs/archive/BI_PARITY_PLAN.md gap 13): a bar, column, line or area chart with a field in its Small multiples well (`split`) is drawn as one small
+/* Small multiples (R6, 2.4.0; docs/architecture/BI_DESIGN.md section 11.1, gap 13): a bar, column, line or area chart with a field in its Small multiples well (`split`) is drawn as one small
    chart per value of that field, side by side in rows (`format.multiples: { columns, max, sharedAxis }`), from the one answer the server gave (grouped by the
    axis, the legend and the split field). One ECharts instance holds every small chart (a grid each), so it is one canvas to resize and dispose; a click on a
    mark selects the mark's axis value as on any chart, and the keyboard walks the marks of the first chart. */

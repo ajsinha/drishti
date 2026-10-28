@@ -23,7 +23,7 @@ compatibility reader; packages S1, S2, S3, S6 and the implicit models of S5); th
 "Layers and the query language"** of BI_MODEL_ARCHITECTURE.md, now [BI_DESIGN.md section 14](BI_DESIGN.md#14-the-model-architecture-decisions-d1-to-d6) (decisions D1 to D6, the
 experience rules of its section 3). It fixes the **formats** W1 introduces so that W2 to W5 extend them without a
 second breaking change: every key that a later wave fills is already named here, marked with the wave that gives it
-behaviour. The gap analysis it answers was the 2.1 study, archived as history ([BI_PARITY_PLAN.md](../archive/BI_PARITY_PLAN.md); today's gap check is [BI_DESIGN.md section 11](BI_DESIGN.md#11-gap-check-against-power-bi)); the current shapes it replaces are
+behaviour. The gap analysis it answers was the 2.1 study (BI_PARITY_PLAN.md, deleted: in git at tag v2.9.5; today's gap check is [BI_DESIGN.md section 11](BI_DESIGN.md#11-gap-check-against-power-bi)); the current shapes it replaces are
 [DATASETS.md](../guides/DATASETS.md), [REPORTS.md](../guides/REPORTS.md), [REPORTS.md section 23](../guides/REPORTS.md#23-boards-report-pages-of-live-tiles),
 [ANALYSE.md](../guides/ANALYSE.md), [PYTHON_BI.md](../guides/PYTHON_BI.md), [BI_GUIDE.md section 29](../guides/BI_GUIDE.md#29-ai-in-bi-report-from-words-ask-the-data-explain-this-number) and
 [BI_GOVERNANCE.md](../guides/BI_GOVERNANCE.md).

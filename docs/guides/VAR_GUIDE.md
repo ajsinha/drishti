@@ -24,7 +24,7 @@ sizing and benchmark, and what is still planned (Part III). The hands-on walk-th
 (or its **?**) opens this guide.
 
 On 2026-10-26 this guide replaced five documents (this guide's first version, the explorer's page, the data contract `VAR.md`, the
-engine design and the data model); they are kept as history in the [archive](../archive/README.md). Where a design said otherwise,
+engine design and the data model); they were deleted (in git at tag v2.9.5). Where a design said otherwise,
 the code wins and the difference is marked **Design differs**.
 
 Every number below that is not a hand-made example was read from a server over the committed test data: the market-risk pack's VaR
@@ -2784,7 +2784,7 @@ recommended defaults unless the product owner said otherwise):
 | 1.12 | 2026-10-28 | **AS BUILT (2.9.6, unreleased):** sharding across Drishti\*net (§28, [VAR_SHARDING.md](../architecture/VAR_SHARDING.md)): off by default; the pack's `sharding:` block or `drishti.var.sharding.*`; a shard map per date by legal entity and desk, owners by rendezvous hashing, each owner building its shards from the lake, every member putting the date together (node aggregates to the bit), partial sums with an exactly-once check, handover through readiness in the capability digest, drain; `provenance.shards`; `GET /api/v1/var/shards`, `drishti.py var shards`; `DRS-5215` to `DRS-5217` |
 | 1.4 | 2026-10-26 | **AS BUILT (2.8.0, VaR complete part 2):** the tiered memory (§26: each date a memory-mapped float32 hot file, aggregates float64, history dates mapped again from their file, eviction, cleaning, safe unmapping; the hot file's format 1 fixed; precision bound and measurements); `drishti.var.tier.*` (§12); the budget measured on the float32 copy; `provenance.tier`, the status's `tier` (§11.2, §11.4); the benchmark measured at 100,000 × 5 and extrapolated to 1 M × 50, with the full command (§27.3); the computed kinds `var-result` and `var-whatif` through reactive connectors, the Python VaR engine in the pool `var` (§8); `drishti.py var` (§10); open questions 8 and 12 decided; sharding documented as planned, not built (§28) |
 
-**2026-10-26, no change to the contract:** the contract (formerly the contracts folder's VAR.md, now [archived](../archive/VAR.md) as history) was merged with the user guide, the
+**2026-10-26, no change to the contract:** the contract (formerly the contracts folder's VAR.md, deleted; in git at tag v2.9.5) was merged with the user guide, the
 explorer's page, the engine design and the data model into this guide (product owner: one VaR reference and one tutorial); the section
 numbers above are this guide's. The contract stays at version 1.4; the published rows still carry `CONTRACT_VERSION` `1.3`.
 

@@ -557,7 +557,7 @@ drishti:
 
 ## About this page, end to end
 
-*Captured before 2.3.0, as a walk through one request (moved here from HOW_IT_FITS.md, now history: [archived](../archive/HOW_IT_FITS.md)). Since 2.3.0 the trading pack reads trades per source system (`trade-endur`, `trade-calypso`, `trade-murex`) instead of `trading-store`; the flow is unchanged.*
+*Captured before 2.3.0, as a walk through one request (moved here from HOW_IT_FITS.md, since deleted: in git at tag v2.9.5). Since 2.3.0 the trading pack reads trades per source system (`trade-endur`, `trade-calypso`, `trade-murex`) instead of `trading-store`; the flow is unchanged.*
 
 Everything so far answers "show me `MX-20000001`". The About drawer answers the next questions: *what am I looking at,
 can I trust it, and why does it look like this?* It adds no second pipeline: it asks the first one again, for the same
@@ -710,7 +710,7 @@ Where each part is changed is section 7; the design, the open decisions and the 
 | [SCREEN_DESIGNER.md](../guides/SCREEN_DESIGNER.md) | the workbench *About* tab |
 | [CONFIGURATION.md](../admin/CONFIGURATION.md) | `drishti.explain.*`, `drishti.about.*` |
 | [TROUBLESHOOTING.md](../guides/TROUBLESHOOTING.md) | error-code table rows; "the About drawer says a field has no explanation" |
-| [HOW_IT_FITS.md](../archive/HOW_IT_FITS.md) (history, archived; the section now lives [here](#about-this-page-end-to-end)) | a full section, not a line: *About this page, end to end*, worked on the same trade MX-20000001 as example A (the `?` press → `GET …/explain` → the view re-run for the caller → `MatchTrace`, emptiness reasons, provenance and health → `about.yaml` from the pack (with `extends`) rendered over the redacted document → the glossary → the drawer), the same for the genomics variant in example B in a few lines, `about.yaml` added to §1's picture and §2's pieces, and §7 *Where to change what* rows (about text, glossary, drawer, explain) |
+| HOW_IT_FITS.md (deleted, in git at tag v2.9.5; the section now lives [here](#about-this-page-end-to-end)) | a full section, not a line: *About this page, end to end*, worked on the same trade MX-20000001 as example A (the `?` press → `GET …/explain` → the view re-run for the caller → `MatchTrace`, emptiness reasons, provenance and health → `about.yaml` from the pack (with `extends`) rendered over the redacted document → the glossary → the drawer), the same for the genomics variant in example B in a few lines, `about.yaml` added to §1's picture and §2's pieces, and §7 *Where to change what* rows (about text, glossary, drawer, explain) |
 
 ## Build plan
 

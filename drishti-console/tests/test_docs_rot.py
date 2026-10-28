@@ -28,10 +28,11 @@ the console's own help guides. For each one the checks below compare a name the 
 * a command word typed with ``<GO>`` is a pack's mnemonic, a pack code or a reserved word;
 * a kind named as a kind (``the `trade` kind``, ``kind `trade```, ``--kind trade``, ``/v/trade/``) is a kind of some pack.
 
-History is exempt from the "still exists" checks, not from the link check: the CHANGELOG, the release notes, the
-dated QA logs (``docs/qa``) and the archive (``docs/archive``, designs that were replaced or removed) record what was true then.
-An active document may link into the archive only on a line that says it is history, and the help centre never lists or
-searches an archived document. Run this file directly to print every finding at once.
+History is exempt from the "still exists" checks, not from the link check: the CHANGELOG, the release notes and the
+dated QA logs (``docs/qa``) record what was true then, and every link in them, as in every document, goes to a file that
+exists, whatever the line around it says. An obsolete design is deleted, not archived: git keeps its history, and a
+document that still mentions it names the release tag where it last lived, as text, not as a link. Run this file
+directly to print every finding at once.
 """
 from __future__ import annotations
 
@@ -55,9 +56,7 @@ from core.guides import GithubSlugger  # noqa: E402
 NOT_DOCS = ("drishti-console/web/static/vendor/", "drishti-console/web/elements/package/", "plugins/drishti-plugin-feeds/src/test/",
             "tools/packgen/", "tools/elements-demo/", "data/", "config/packs/gleif/")
 # History: names that were true when written. Links in these must still resolve; the names in them need not exist.
-# docs/archive/ holds designs that were replaced or removed (its README says by what).
-ARCHIVE = "docs/archive/"
-HISTORY = ("CHANGELOG.md", "RELEASE_NOTES.md", "docs/qa/", ARCHIVE)
+HISTORY = ("CHANGELOG.md", "RELEASE_NOTES.md", "docs/qa/")
 
 
 @functools.lru_cache(maxsize=None)
@@ -648,7 +647,9 @@ def _fail(found: list[str], what: str) -> None:
 
 
 def test_every_relative_link_and_anchor_resolves():
-    _fail(link_problems(), "links that go nowhere")
+    # Not filtered by present(): a link to a deleted document is broken even on a line that says the document was deleted.
+    found = link_problems()
+    assert not found, f"{len(found)} links that go nowhere:\n" + "\n".join(found)
 
 
 def test_every_repository_path_named_exists():
@@ -671,56 +672,12 @@ def test_every_command_word_and_kind_named_exists():
     _fail(word_problems(), "command words or kinds no pack has")
 
 
-# ---- the archive ----------------------------------------------------------------------------------------------------
+# ---- obsolete designs ------------------------------------------------------------------------------------------------
 
-_SAYS_HISTORY = re.compile(r"\b(history|historical|archived|replaced)\b", re.I)
-
-
-def archive_link_problems() -> list[str]:
-    """A link from an active document into docs/archive/ on a line that does not say it is history: it would send a
-    reader to an obsolete design as if it were current."""
-    bad = []
-    archive = (ROOT / ARCHIVE).resolve()
-    for rel in documents():
-        if rel.startswith(HISTORY):
-            continue
-        lines = read(rel).split("\n")                  # as line_of counts them (splitlines also breaks on U+2028 and the like)
-        for line, href in links(rel, at_target=True):
-            target = href.partition("#")[0]
-            if not target or _EXTERNAL.match(href) or href.startswith("/"):
-                continue
-            path = ((ROOT / rel).parent / target.split("?")[0]).resolve()
-            if (path == archive or archive in path.parents) and not _SAYS_HISTORY.search(lines[line - 1]):
-                bad.append(f"{rel}:{line}: {href} (a link into the archive on a line that does not say it is history)")
-    return bad
-
-
-def test_an_active_document_links_into_the_archive_only_as_history():
-    found = archive_link_problems()
-    assert not found, f"{len(found)} links to archived designs:\n" + "\n".join(found)
-
-
-def test_the_archive_says_what_it_is_and_what_replaced_each_document():
-    readme = read(ARCHIVE + "README.md")
-    assert "These documents are history" in readme and "Do not use them to learn how Drishti works today" in readme
-    archived = sorted(p for p in documents() if p.startswith(ARCHIVE) and p != ARCHIVE + "README.md")
-    assert archived, "the archive is empty"
-    for p in archived:
-        name = p.removeprefix(ARCHIVE)
-        assert f"]({name})" in readme, f"{p} is not in the archive's README table"
-        top = "\n".join(read(p).splitlines()[:30])
-        assert "Archived: replaced by" in top, f"{p} has no 'Archived: replaced by' banner at its top"
-
-
-def test_the_help_centre_never_lists_or_searches_an_archived_document():
-    catalogue = yaml.safe_load((ROOT / "drishti-console/config/help.yaml").read_text(encoding="utf-8"))
-    listed = [g.get("doc", "") for c in catalogue.get("categories", []) for g in c.get("guides", [])]
-    assert not [d for d in listed if d.startswith("archive/")], "an archived document is listed in help.yaml"
-    from core.guides import Library
-    lib = Library(ROOT / "drishti-console", ROOT / "drishti-console/config/help.yaml", ROOT / "docs")
-    archived = [g for g in lib.guides.values() if lib.archived(g)]
-    assert archived and not [g.slug for g in archived if g.listed]
-    assert not [h for h in lib.search("Perspective DuckDB-Wasm proof concept") if lib.archived(h["guide"])]
+def test_obsolete_designs_are_deleted_not_archived():
+    """An obsolete design is deleted (git keeps its history; its live parts move into the current document first), so
+    there is no folder of documents that read as current and are not."""
+    assert not [p for p in tracked() if p.startswith("docs/archive/")], "docs/archive/ is back: delete an obsolete design instead"
 
 
 def test_the_corpus_is_the_whole_documentation():
@@ -733,9 +690,8 @@ def test_the_corpus_is_the_whole_documentation():
 
 if __name__ == "__main__":
     for name, fn in (("links", link_problems), ("paths", path_problems), ("commands", command_problems),
-                     ("settings", setting_problems), ("codes", code_problems), ("words", word_problems),
-                     ("archive", archive_link_problems)):
-        found = fn() if name in ("links", "archive") else present(fn())
+                     ("settings", setting_problems), ("codes", code_problems), ("words", word_problems)):
+        found = fn() if name == "links" else present(fn())
         print(f"== {name}: {len(found)}")
         for f in found:
             print("  " + f)

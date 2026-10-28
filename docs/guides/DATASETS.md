@@ -685,7 +685,7 @@ a window function **in a filter**, with the measures of another fact, or **insid
 the **BI store as a configured connector** (a folder today; S3 by mounting it); **other engines** than DuckDB (the interface exists); **Delta native deletes/updates** are honoured only as far as the Delta connector
 honours them (the engine reads through the connector, not the files); **classification tags** and **per-entry export rules**. (Lineage and impact analysis are phase 4: [BI_GOVERNANCE.md](BI_GOVERNANCE.md).) Reports, the designer and the Model view (a dataset's tables and relationships as a diagram, with the `layout:` key) are built in phase 3: [REPORTS.md](REPORTS.md), [BI_GUIDE.md](BI_GUIDE.md) sections 14 to 16.
 
-The list of what was not built for the 2.1 composed and derived datasets (removed in 2.2) is history, archived with them in [DATASETS_2_1_COMPOSED_DERIVED.md](../archive/DATASETS_2_1_COMPOSED_DERIVED.md#what-was-not-built).
+The list of what was not built for the 2.1 composed and derived datasets (removed in 2.2) was in DATASETS_2_1_COMPOSED_DERIVED.md, since deleted (in git at tag v2.9.5).
 
 ## 11. Composed and derived datasets
 
@@ -694,7 +694,7 @@ The list of what was not built for the 2.1 composed and derived datasets (remove
 > derived one a Python dataset (`source.python`) with a model of the old name ([BI_MODEL_SPEC.md 8.3.1](../architecture/BI_MODEL_SPEC.md#831-as-built-22-wave-a-task-6)).
 > What the 2.1 samples became is 11.5.
 
-The 2.1 description (the YAML of 11.1 and 11.2, who saw what, lineage and the Model view, sections 11.1 to 11.4) was replaced by models with several fact tables ([3.1](#31-several-unrelated-fact-tables-in-one-query)) and Python datasets ([PYTHON_BI.md section 13](PYTHON_BI.md#13-transforms-a-table-in-a-table-out)); it is history, archived in [DATASETS_2_1_COMPOSED_DERIVED.md](../archive/DATASETS_2_1_COMPOSED_DERIVED.md).
+The 2.1 description (the YAML of 11.1 and 11.2, who saw what, lineage and the Model view, sections 11.1 to 11.4) was replaced by models with several fact tables ([3.1](#31-several-unrelated-fact-tables-in-one-query)) and Python datasets ([PYTHON_BI.md section 13](PYTHON_BI.md#13-transforms-a-table-in-a-table-out)); it was deleted (DATASETS_2_1_COMPOSED_DERIVED.md, in git at tag v2.9.5).
 
 ### 11.5 The samples (as converted in 2.2)
 

@@ -21,8 +21,8 @@ seven years of history at a cost Cassandra's disks handle. It covers the table l
 whole or not at all), what the connector reads for each question, retention, sizing, security, measured numbers, limits and every
 setting.
 
-Read it if you run Drishti on Cassandra, load Cassandra for Drishti, or change the connector. The design and the reasoning behind it are
-in [CASSANDRA_CONNECTOR_DESIGN.md](../archive/CASSANDRA_CONNECTOR_DESIGN.md) (history, archived); the engine side (columns, searches, derived kinds,
+Read it if you run Drishti on Cassandra, load Cassandra for Drishti, or change the connector. The design note it was built from,
+CASSANDRA_CONNECTOR_DESIGN.md, was deleted (in git at tag v2.9.5); the engine side (columns, searches, derived kinds,
 impact) is shared with Delta Lake and explained in [DELTA_CONNECTOR.md, section 7](DELTA_CONNECTOR.md#7-searches-pick-lists-derived-kinds-and-impact-over-columns).
 The closest connector built before it is [Aerospike](AEROSPIKE_CONNECTOR.md).
 

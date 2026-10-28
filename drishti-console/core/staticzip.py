@@ -12,7 +12,7 @@
 #
 # See the LICENSE file in the root of this repository for the full terms.
 
-"""Static files served compressed (docs/archive/RUPAKA_POC.md, adjustment 2). Starlette's ``StaticFiles`` sends bytes as they are: the 36 MB DuckDB-Wasm module is
+"""Static files served compressed. Starlette's ``StaticFiles`` sends bytes as they are: the 36 MB DuckDB-Wasm module is
 35 MB on the wire, 8 MB gzipped. This subclass answers a request that accepts ``br`` or ``gzip`` with the compressed file instead, for the text
 and WebAssembly types worth compressing.
 
