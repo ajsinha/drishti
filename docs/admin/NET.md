@@ -658,6 +658,28 @@ or **Remove** it from their tables at once.
 **A clean stop with live views open** takes up to 30 seconds: the server's graceful shutdown waits that long for its open streams. It takes no
 new requests meanwhile, so the console moves to another server at once, and the open streams move when the stop ends them.
 
+### VaR shards (2.9.6)
+
+With VaR sharding on (the market-risk pack's `sharding:` block, or `drishti.var.sharding.enabled`; off by default), each date's trades are
+cut into shards by legal entity and desk and each shard is held by `replicas` members ([VAR_SHARDING.md](../architecture/VAR_SHARDING.md)).
+For the operator:
+
+- **Every member answers every VaR scope**; only the rows are spread. `drishti.py var shards --date D` lists the date's shards, their
+  owners and the members ready to serve each; `GET /api/v1/var/shards` the same as JSON. A member that should only coordinate (a small
+  front node) sets `drishti.var.sharding.coordinator-only: true`.
+- **A node joining or leaving** moves only its shards, once the membership has been the same for `stable-seconds` (30); a new owner builds
+  its shards from the lake and announces them; the old owner keeps serving until the new one has been ready for `grace-seconds` (30).
+- **Before stopping a member** (maintenance, a scale-in): `drishti.py var shards --drain`, then wait for `safeToStop: true` in
+  `drishti.py var shards --json`, then stop it. Net's own **Drain** (above) also takes the member out of the shards' owners, but does not
+  wait for the handover: use the VaR drain first.
+- **Both owners of a shard down** before the membership settles: a scope that needs the shard's rows answers `503 DRS-5215`; node figures
+  still answer; after `stable-seconds` other members own the shard and build it. Keep `replicas: 2` or more in production, and spread
+  them over zones with `zone-tag`.
+- **Disk**: each member keeps its shards' hot files under `<data folder>/var/hot/<date>-shard-<i>/` (and `<date>-<CCY>-shard-<i>/`);
+  memory is the date's columns and aggregates (about 0.8 KB a trade) plus the page cache of its own shards' rows.
+- The members must read the **same lake** (the same tables and versions): a member that reads another version refuses partials as stale
+  (`409 DRS-5216`).
+
 ## 11. Sizing
 
 Gossip is small: one round sends the member table (about 300 bytes a member) to `fanout` members, and gets theirs back. With 10 members, the

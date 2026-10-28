@@ -111,7 +111,7 @@ server take `--server` (default `DRISHTI_SERVER`, then `http://localhost:18480`)
 | `view` | `view get`, `view explain` | [5.8](#58-view-and-completion) |
 | `history` | `drishti.py history KIND ID` (`--days`, `--range`, `--from`/`--to`, `--diff`, `--changes-only`, `--csv`, `--json`): one entity over business days, as the console's history page shows it | [CLI_GUIDE.md](CLI_GUIDE.md) |
 | `contract` | `contract list`, `contract show`, `contract check`, `contract docs`, `contract bootstrap` | [5.11](#511-contract) |
-| `var` | `var show`, `var parts`, `var path`, `var history`, `var tree`, `var status`, `var capture`, `var captures`, `var compare`, `var basket`, `var baskets`, `var official`, `var reload`, `var intraday`, `var convert`, `var whatif` | [5.12](#512-var) |
+| `var` | `var show`, `var parts`, `var path`, `var history`, `var tree`, `var status`, `var shards`, `var capture`, `var captures`, `var compare`, `var basket`, `var baskets`, `var official`, `var reload`, `var intraday`, `var convert`, `var whatif` | [5.12](#512-var) |
 | `exposure` | `exposure show`, `exposure parts`, `exposure tree`, `exposure profile`, `exposure distribution`, `exposure status`, `exposure capture`, `exposure captures`, `exposure compare`, `exposure official`, `exposure retention`, `exposure reload`, `exposure whatif` | [5.13](#513-exposure) |
 | `completion` | `drishti.py completion bash` (also `zsh`, `powershell`) | [5.8](#58-view-and-completion) |
 
@@ -1047,6 +1047,9 @@ picks the business date (default the newest with vectors); `--json` prints the s
 - `--ccy EUR` (2.9.4; `show`, `parts`, `path`, `history`, `tree`, `capture`, `official`, `whatif`) asks every figure in a reporting
   currency; the headline says the currency and where its FX came from ([VAR_GUIDE.md section 15.10](VAR_GUIDE.md#1510-reporting-currency-as-built-294)).
 - `var status` prints the engine's settings, its tiered memory (hot files on disk, dates open, how this JVM maps) and the dates loaded.
+- `var shards [--date D] [--json]` (2.9.6): VaR sharding across Drishti*net: the settings, the members, the shards held here, and the
+  date's shard map with each shard's range, owners and the members ready for it ([VAR_SHARDING.md](../architecture/VAR_SHARDING.md));
+  `--drain` / `--undrain` (administrators) hand this member's shards over before it stops, or take shards again.
 - `var capture SCOPE [--note TEXT]`, `var captures [--scope SCOPE]`, `var compare A [B|now]`: captures (writing needs `risk:write`).
 - `var basket NAME SCOPE [--title] [--description] [--share USER|role:NAME ...]`, `var baskets`: saved baskets.
 - `var official [--date] [--capture]`: a date's official end-of-day record; `--capture` takes it now (administrators).

@@ -1477,6 +1477,29 @@ else by `drishti.var.positions`.
 | `official.currencies` | `[USD]` | 2.9.4. The reporting currencies captured officially: USD always (first, and the only one published to `risk-results/var-official`); each other one (`[USD, EUR]`) is captured from the date's book in that currency and kept in the content store (`var/official/<CCY>/<date>.json`), read by `GET /api/v1/var/official?ccy=EUR` and by a node's history in that currency. |
 | `official.jsonl` | `true` | Also write each published date as JSON Lines beside the table, one row a line: `<root>/risk-results/jsonl/var-official/<date>/var-official-v<table version>.jsonl`, one file per commit (2.9.4, [DATA_FORMATS.md](../guides/DATA_FORMATS.md)). |
 
+#### `drishti.var.sharding` — VaR sharding across Drishti*net (2.9.6)
+
+Off by default: what is sharded is the market-risk pack's `sharding:` block (`enabled`, `key`, `kinds`, `target-shard-mb`, `replicas`); with
+no block and no `enabled` here every date loads whole, as before. The same five keys here win over the block when set; a value that is not
+valid refuses the start. Design and operation: [VAR_SHARDING.md](../architecture/VAR_SHARDING.md), [NET.md](NET.md#var-shards-296).
+
+| Key | Default | Meaning |
+|---|---|---|
+| `enabled` | unset (the pack decides; off without a block) | Sharding on or off. |
+| `key` | `[LEGAL_ENTITY, DESK]` | The shard key: `[LEGAL_ENTITY, DESK]` or `[LEGAL_ENTITY]` (the hot file's order; a key value is never split). |
+| `kinds` | `[pnl-vector, scenario-pv]` | The kinds sharded: the trades' scenario P&L (both are always sharded together); every other kind is read whole by each member. |
+| `target-shard-mb` | `2048` | A shard's target size (its float32 rows); a desk larger than it is a shard of its own. |
+| `replicas` | `2` | Each shard's owners. |
+| `stable-seconds` | `30` | How long the members must stay the same before shards move to new owners. |
+| `grace-seconds` | `30` | How long a new owner must have been ready before the old one releases a shard. |
+| `coordinator-only` | `false` | This member owns no shard: it puts dates together and coordinates queries only. |
+| `zone-tag` | none | The member tag prefix naming its zone (`az`: a tag `az:us-east-1a`); a second owner goes to another zone. |
+| `pins` | none | A shard (`S3` or its range) pinned to a member id, its first owner whatever the hashing; the same on every member (tests). |
+| `drain` | `false` | Start drained: hand any shard over and take none (also `POST /api/v1/var/shards/drain`, `drishti.py var shards --drain`). |
+| `call-timeout-seconds` | `30` | A partial sum's time on an owner before the next member is asked. |
+| `skeleton-timeout-seconds` | `600` | An owner's time to build and send a shard's skeleton. |
+| `rebalance-seconds` | `2` | How often a member looks at the members and its shards. |
+
 ### `drishti.ccr.exposure` — the exposure engine
 
 The exposure engine (the guide and data contract [EXPOSURE_GUIDE.md](../guides/EXPOSURE_GUIDE.md), its settings in [section 12](../guides/EXPOSURE_GUIDE.md#12-settings)) computes exposure profiles (EE, ENE, effective EE, PFE at any
