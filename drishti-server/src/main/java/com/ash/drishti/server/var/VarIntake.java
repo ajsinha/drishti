@@ -70,7 +70,15 @@ final class VarIntake {
      */
     record Summary(int rejected, List<String> rejections, int excluded, List<String> batchIds, List<String> scenarioSets, String rules,
             String rulesDigest, Map<String, String> notLive, int scenarioPv, java.util.Set<String> pvTrades,
-            Map<String, Map<String, Object>> inputs, Map<String, List<String>> positionTrades, int setLength) {
+            Map<String, Map<String, Object>> inputs, Map<String, List<String>> positionTrades, int setLength, Boolean oldPnlIds) {
+
+        /**
+         * The prefix of the date's P&amp;L-vector ids: {@code PNL-} (2.9.5), or {@code PV-} when its rows carry the earlier ids (a lake
+         * written before 2.9.5; a hot file of then says neither, and is taken as {@code PNL-}).
+         */
+        String pnlIdPrefix() {
+            return Boolean.TRUE.equals(oldPnlIds) ? VarLoader.OLD_PNL_ID : VarLoader.PNL_ID;
+        }
 
         /** The supplied position that names a trade in its {@code TRADE_IDS}, or null. */
         String positionOf(String trade) {
@@ -123,7 +131,11 @@ final class VarIntake {
     private final LocalDate date;
     private final int width;
     private final Map<String, Integer> at = new HashMap<>();
-    private final String[] texts = new String[VarBook.TRADE_TEXTS.size()];
+    /** The builder's text columns ({@link VarBook#TRADE_TEXTS}, then a column hierarchy's level columns), in its order. */
+    private final List<String> textColumns;
+    private final String[] texts;
+    /** The level columns of the column hierarchies (2.9.5): a row that leaves one empty is refused (DRS-5211). */
+    private List<String> levels = List.of();
     private final double[] numbers = new double[VarBook.TRADE_NUMBERS.size()];
     private final List<String> rejections = new ArrayList<>();
     private final TreeSet<String> batches = new TreeSet<>();
@@ -146,7 +158,15 @@ final class VarIntake {
         this.rules = rules;
         this.date = date;
         this.width = book.width();
+        this.textColumns = book.textColumns();
+        this.texts = new String[textColumns.size()];
         map(columns);
+    }
+
+    /** The level columns every row must carry (the column hierarchies', 2.9.5). */
+    VarIntake levels(List<String> columns) {
+        this.levels = List.copyOf(columns);
+        return this;
     }
 
     private void map(List<String> columns) {
@@ -180,6 +200,11 @@ final class VarIntake {
 
     /** The same, with a form's own columns ({@link #PV_COLUMNS}) asked when kept. */
     static List<String> columns(java.util.Set<String> kept, PositionRules rules, List<String> own) {
+        return columns(kept, rules, own, List.of());
+    }
+
+    /** The same, with the level columns of the column hierarchies ({@code levels}, 2.9.5): always asked. */
+    static List<String> columns(java.util.Set<String> kept, PositionRules rules, List<String> own, List<String> levels) {
         List<String> want = new ArrayList<>(List.of("TRADE_ID"));
         LinkedHashMap<String, Boolean> all = new LinkedHashMap<>();
         VarBook.TRADE_TEXTS.stream().filter(c -> !c.equals("POSITION_ID") && !c.equals("POSITION_RULE") && !c.equals("PV_CURRENCY"))
@@ -188,9 +213,10 @@ final class VarIntake {
         rules.keyFields().forEach(c -> all.put(c, true));
         OPTIONAL.forEach(c -> all.put(c, true));
         own.forEach(c -> all.put(c, true));
+        levels.forEach(c -> all.put(c, true));
         for (String c : all.keySet()) {
-            if (kept.isEmpty() ? REQUIRED.contains(c) || VarBook.TRADE_NUMBERS.contains(c) || isEngineText(c) || own.contains(c)
-                    : kept.contains(c) || REQUIRED.contains(c)) {
+            if (kept.isEmpty() ? REQUIRED.contains(c) || VarBook.TRADE_NUMBERS.contains(c) || isEngineText(c) || own.contains(c) || levels.contains(c)
+                    : kept.contains(c) || REQUIRED.contains(c) || levels.contains(c)) {
                 want.add(c);
             }
         }
@@ -248,6 +274,9 @@ final class VarIntake {
             setLength(width);
         }
         double[] values = windowed(values0, length0);
+        if (fx == null && id != null && id.startsWith(VarLoader.OLD_PNL_ID)) {
+            oldPnlIds = true;
+        }
         int length = values == values0 ? length0 : width;
         String position = text(row, "POSITION_ID");
         String trade = row[0] != null ? row[0] : position != null && "POSITION".equalsIgnoreCase(text(row, "GRAIN")) ? position : id;
@@ -315,6 +344,13 @@ final class VarIntake {
             }
             return;
         }
+        for (String c : levels) {                                       // a column hierarchy places the row by its level columns (2.9.5)
+            if (live && text(row, c) == null) {                         // (a cancel needs no node)
+                reject(new String[] {ErrorCode.VAR_HIERARCHY_COLUMN.code(), c + " is empty: a hierarchy is built from it, so the row has no node "
+                        + "(never placed under a guessed one)"}, trade);
+                return;
+            }
+        }
         double[] vector = values;
         double pvUsd = Double.NaN;
         String[] why = null;
@@ -361,7 +397,7 @@ final class VarIntake {
             return;
         }
         for (int c = 0; c < texts.length; c++) {
-            texts[c] = text(row, VarBook.TRADE_TEXTS.get(c));
+            texts[c] = text(row, textColumns.get(c));
         }
         for (int c = 0; c < numbers.length; c++) {
             numbers[c] = VarLoader.number(text(row, VarBook.TRADE_NUMBERS.get(c)));
@@ -431,6 +467,8 @@ final class VarIntake {
     }
 
     private boolean currentIntra;
+    /** True when a P&amp;L vector's lake id is the earlier {@code PV-<trade>-<set>} (2.9.5 writes {@code PNL-}). */
+    private boolean oldPnlIds;
     private final List<String> intradayRejections = new ArrayList<>();
 
     /** The intraday rows rejected, in words (the first 20). */
@@ -647,6 +685,6 @@ final class VarIntake {
 
     Summary summary() {
         return new Summary(rejected, List.copyOf(rejections), excluded, List.copyOf(batches), List.copyOf(sets), rules.toString(), rules.digest(),
-                Map.copyOf(notLive), scenarioPv, java.util.Set.copyOf(pvTrades), inputs.describe(), Map.copyOf(positionTrades), full);
+                Map.copyOf(notLive), scenarioPv, java.util.Set.copyOf(pvTrades), inputs.describe(), Map.copyOf(positionTrades), full, oldPnlIds);
     }
 }

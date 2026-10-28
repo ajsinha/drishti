@@ -50,8 +50,11 @@ public class VarConfiguration {
             ObjectProvider<AuditLog> audit, ObjectProvider<PackRegistry> packs) {
         ParallelSums sums = new ParallelSums(props.threads(), props.parallelRows());
         VarAccess access = new VarAccess(props, entitlements);
-        VarService svc = new VarService(props, new VarLoader(router, props, sums, rules(props, packs), new VarTier(props.tier()).start()), access,
+        java.util.function.Supplier<Hierarchies> hierarchies = Hierarchies.of(props, packs::getIfAvailable);   // a bad setting refuses the start
+        VarService svc = new VarService(props, new VarLoader(router, props, sums, rules(props, packs), new VarTier(props.tier()).start(),
+                hierarchies), access,
                 new VarSaved(store, access::seesAll), new VarOfficialStore(store), audit.getIfAvailable(), sums);
+        svc.saved().words(() -> svc.words().keySet());
         VarPositions.install(new VarPositions(svc));
         return svc;
     }

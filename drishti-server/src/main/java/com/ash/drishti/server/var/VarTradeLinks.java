@@ -26,7 +26,8 @@ import java.util.Map;
 
 /**
  * The market-risk half of a trade page's Risk links (the UI kit fragment {@code risk-links@1}, VAR_GUIDE.md section 3.7): when the VaR
- * engine's date holds the trade's P&amp;L vector, the view of the trade carries {@code PNL_VECTOR_ID} ({@code PV-<trade>-<scenario set>},
+ * engine's date holds the trade's P&amp;L vector, the view of the trade carries {@code PNL_VECTOR_ID} ({@code PNL-<trade>-<scenario set>}
+ * since 2.9.5; {@code PV-<trade>-<scenario set>} on a date whose lake rows still carry the earlier ids),
  * the market-risk pack's {@code pnl-vector}; a trade sent as scenario PVs carries {@code SCENARIO_PV_ID}, {@code SPV-<trade>-<set>} of the
  * {@code scenario-pv} kind, instead) and {@code VAR_RESULT_ID} ({@code TRD:<trade>}, the computed kind {@code var-result}), links
  * the pack's graph names, so they are real links of the page (its linked entities, its keys); when it does not, {@code RISK_LINKS} says
@@ -79,7 +80,7 @@ final class VarTradeLinks implements ViewAugmenter {
                     fields.put("SCENARIO_PV_ID", DataNode.of(spv));
                     links.put("SCENARIO_PV", spv);
                 } else {
-                    String pv = "PV-" + tid + "-" + d.book().scenarioSet();
+                    String pv = d.intake().pnlIdPrefix() + tid + "-" + d.book().scenarioSet();
                     fields.put("PNL_VECTOR_ID", DataNode.of(pv));
                     links.put("PNL_VECTOR", pv);
                 }

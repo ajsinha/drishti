@@ -45,6 +45,7 @@ storage:
   - LEGAL_ENTITY
   - DESK
   - TT_BOOK
+  - LIMIT_LETTER
   - ASSET_CLASS
   - PRODUCT
   - SOURCE_SYSTEM
@@ -126,6 +127,12 @@ fields:
   example: BOOK-SFT-1
   pattern: ^BOOK-
   link: book
+- name: LIMIT_LETTER
+  type: text
+  presence: optional
+  description: 'The trade''s limit letter (2.9.5), as its VaR records carry it: the level column of the hierarchy LL (LIMIT_LETTER > DESK,
+    VAR_GUIDE.md section 16). When a hierarchy is built from it, every row carries it (a row without it is refused, DRS-5211).'
+  example: LL-0003
 - name: ASSET_CLASS
   type: text
   presence: required
