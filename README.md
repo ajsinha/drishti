@@ -26,10 +26,7 @@ TRD where QUANTITY > 200m order by QUANTITY desc   →  every trade over 200m, l
 amended trades over 5m in BOOK-RATES-3, biggest first   →  plain words: Drishti shows the search it makes
 ```
 
-**Current release: 2.9.5** (Iceberg as a full alternative to Delta, Delta still the default; VaR hierarchies of your own from the trades' columns, such as limit letters; connector files that upgrade themselves safely) ([release notes](RELEASE_NOTES.md) · [changelog](CHANGELOG.md) ·
-[what shipped when](docs/architecture/IMPLEMENTATION_PLAN.md)).
-**2.9.6 is in development** on `develop`, not released: a parallel Java lake loader and VaR sharded across Drishti\*net
-([Unreleased in the changelog](CHANGELOG.md#unreleased-296)).
+What changed and when: the [release notes](RELEASE_NOTES.md), the [changelog](CHANGELOG.md) and the [plan](docs/architecture/IMPLEMENTATION_PLAN.md).
 
 **Learn it by doing:** [twenty-nine tutorials](docs/tutorials/README.md), from your first 15 minutes to VaR on Iceberg, each with
 real screenshots; the [guides](docs/README.md) are the reference.
@@ -113,7 +110,7 @@ drishti-console/.venv/bin/python tools/drishti.py lake demo
 
 # 4. The server on :18480 (native libraries unpack in its own folder, not /tmp)
 mkdir -p data/tmp/server
-java -Djava.io.tmpdir=data/tmp/server -jar drishti-server/target/drishti-server-2.9.5-exec.jar
+java -Djava.io.tmpdir=data/tmp/server -jar drishti-server/target/drishti-server-*-exec.jar
 
 # 5. In a second terminal: the console on http://localhost:17480
 drishti-console/.venv/bin/python drishti-console/run_drishti_web.py
