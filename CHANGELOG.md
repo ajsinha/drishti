@@ -56,6 +56,8 @@ Delta stays the default lake format everywhere; Iceberg is chosen only by config
 
 ## 2.9.4 — VaR from scenario PVs or P&L, by trade or position, in any currency, intraday from files and Kafka; JSON Lines as the data standard; the decks rewritten (2026-10-27)
 
+- **Upgrade: a computed connector's new parameters too (2026-10-27).** A reactive connector file written before 2.9.4 (var-whatif without the `ccy` parameter) refused the reporting-currency what-if (DRS-5205). The connector template update now also adds the parameters a pack's template gained (`kinds.<kind>.params.<name>`), keeps the file's own, and keeps the file as it was beside it; and it runs once at start, before the server answers, so a request never meets a connector it has not reached yet. `TemplateUpdatesTest`; CONNECTOR_FILES.
+
 - **The basket is on the VaR page only (2026-10-27; product owner).** The top bar's **◫ Basket** button is gone (it did not apply to
   every screen); the VaR explorer keeps **◫ Construct your basket** (now with the count of its parts), the basket strip, **+ basket**
   on rows and the what-if. **Alt+B** opens the tray only where the page offers it (the explorer); elsewhere it does nothing, and the
