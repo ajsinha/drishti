@@ -12,7 +12,7 @@
 #
 # See the LICENSE file in the root of this repository for the full terms.
 
-"""The pictures of Share with a note, the inbox and Discussion (docs/guides/USER_GUIDE.md, docs/architecture/HOW_IT_FITS.md section 3.10),
+"""The pictures of Share with a note, the inbox and Discussion (docs/guides/USER_GUIDE.md, docs/archive/HOW_IT_FITS.md section 3.10),
 written to docs/guides/img/collab/.
 
 Sign-in is ON with two people on the trade MX-20000001: `asha` (role `author`, raw: sees every field) shares the view, pinned to a past

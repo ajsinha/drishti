@@ -15,8 +15,10 @@
 -->
 # Screen Builder: from JSON files to a working screen in minutes
 
+> **Archived: replaced by [SCREEN_DESIGNER.md](../guides/SCREEN_DESIGNER.md) (section 32 holds the shape engine, auto-design, the builder API and the limits, moved there in 2.9.6) and [BUILD_WORKBENCH.md](../architecture/BUILD_WORKBENCH.md).** This document is history: kept so old decisions can be traced. Do not use it to learn how Drishti works today.
+
 Status: built (version 1.20.0). This is the design document the builder was made from; where the shipped screens and API differ from the
-first plan, the sections below say so and point to the current guide ([SCREEN_DESIGNER.md](../guides/SCREEN_DESIGNER.md), [BUILD_WORKBENCH.md](BUILD_WORKBENCH.md), [API_GUIDE.md](../guides/API_GUIDE.md)). Owner: the Build menu (console) and the engine's inference.
+first plan, the sections below say so and point to the current guide ([SCREEN_DESIGNER.md](../guides/SCREEN_DESIGNER.md), [BUILD_WORKBENCH.md](../architecture/BUILD_WORKBENCH.md), [API_GUIDE.md](../guides/API_GUIDE.md)). Owner: the Build menu (console) and the engine's inference.
 
 Someone has a folder of JSON documents (trades, shipments, patients, sensor readings) and wants a screen for them. Today
 they write a Sutra by hand, or start from inference on one document and edit YAML. The Screen Builder turns that into
@@ -32,7 +34,7 @@ three guided steps, each also usable on its own:
 
 The result is always an ordinary Sutra: nothing here adds a second layout language or a second renderer.
 
-**Using the designer?** The step-by-step guide with screenshots is [SCREEN_DESIGNER.md](../guides/SCREEN_DESIGNER.md) (in the console: *Help → Screen designer*, or F1 on any Build page). The workbench that replaced the separate pages is described in [BUILD_WORKBENCH.md](BUILD_WORKBENCH.md).
+**Using the designer?** The step-by-step guide with screenshots is [SCREEN_DESIGNER.md](../guides/SCREEN_DESIGNER.md) (in the console: *Help → Screen designer*, or F1 on any Build page). The workbench that replaced the separate pages is described in [BUILD_WORKBENCH.md](../architecture/BUILD_WORKBENCH.md).
 
 ## Contents
 
@@ -55,7 +57,7 @@ These decide every detail below.
 |---|---|
 | **One layout language** | The designer edits a Sutra. Its canvas is the Sutra; its output is the Sutra; the YAML is always one tab away and edits in either place show in the other. No hidden canvas model to drift from the YAML. |
 | **One renderer** | The canvas *is* the real view, rendered by the same code that renders a view (the preview API), with selection handles drawn over it. Every panel kind, format, tone, theme and phone width is shown exactly as users will see it, with no second implementation to keep in step. |
-| **One inference** | Auto-design and the "suggest a panel" hints use the same rules as runtime inference ([INFERENCE.md](INFERENCE.md)), extended to work from a shape (many documents) instead of one document. What Drishti would show without a Sutra and what the builder drafts never disagree. |
+| **One inference** | Auto-design and the "suggest a panel" hints use the same rules as runtime inference ([INFERENCE.md](../architecture/INFERENCE.md)), extended to work from a shape (many documents) instead of one document. What Drishti would show without a Sutra and what the builder drafts never disagree. |
 | **One schema of options** | The inspector's forms are generated from the Rachana schema (`GET /api/v1/rachana/schema`), which already lists every panel kind and option. A new option added to the engine appears in the designer with no designer change. |
 | **Edits on the server** | Every change is an *operation* (add a panel, move it, set an option, bind a field) applied by the server's Sutra editor (`SutraLayoutEditor`, already used by layout mode), which keeps comments and key order. The browser never rewrites YAML text itself. |
 | **Robust over pretty** | A design is checked against all samples, not the one on screen. A field present in 3 of 40 files is flagged before anyone ships a panel built on it. |
@@ -270,7 +272,7 @@ the set. The same check warns at design time when a binding uses a field with lo
 ## Where it lives in the console
 
 The first plan gave Build three pages (`/build`, `/build/shape`, `/build/design`). As built, everything is one workbench around a persisted
-*design* ([BUILD_WORKBENCH.md](BUILD_WORKBENCH.md)). The top bar's **Build** menu now holds:
+*design* ([BUILD_WORKBENCH.md](../architecture/BUILD_WORKBENCH.md)). The top bar's **Build** menu now holds:
 
 ```
 Build ▾
@@ -332,7 +334,7 @@ no new framework.
 
 ## How it was built
 
-Steps 1 to 3 (the shape engine, the extractor and auto-design) were built as planned; steps 4 to 7 were replaced by [BUILD_WORKBENCH.md](BUILD_WORKBENCH.md), which organises every Build tool around one persisted *Design*. The original step table is history, archived in [SCREEN_BUILDER_BUILD_PLAN.md](../archive/SCREEN_BUILDER_BUILD_PLAN.md).
+Steps 1 to 3 (the shape engine, the extractor and auto-design) were built as planned; steps 4 to 7 were replaced by [BUILD_WORKBENCH.md](../architecture/BUILD_WORKBENCH.md), which organises every Build tool around one persisted *Design*. The original step table is history, archived in [SCREEN_BUILDER_BUILD_PLAN.md](SCREEN_BUILDER_BUILD_PLAN.md).
 
 ## What we chose not to do
 

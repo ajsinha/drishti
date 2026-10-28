@@ -1384,8 +1384,7 @@ choice for existing fields, which is why `AutoDesignerTest.suggestReturnsTheExpe
 
 #### 12.6 The first draft: `AutoDesigner`
 
-`AutoDesigner.Collector.scalar` decides which scalar fields become panels in the **draft** of auto-design (Step 3 of
-[SCREEN_BUILDER.md](../architecture/SCREEN_BUILDER.md)). Be conservative: a kind that is drafted for every field floods
+`AutoDesigner.Collector.scalar` decides which scalar fields become panels in the **draft** of auto-design ([SCREEN_DESIGNER.md section 32.2](SCREEN_DESIGNER.md#322-auto-design)). Be conservative: a kind that is drafted for every field floods
 the screen. `metric` is drafted only for the document's one headline measure:
 
 ```java

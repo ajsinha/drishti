@@ -16,13 +16,15 @@
 
 # Load testing and memory profiling: the strategy
 
+> **Archived: replaced by [PERFORMANCE.md](../admin/PERFORMANCE.md#9-many-users-soak-runs-and-memory-profiling) (method 9: the kinds of test, memory, profiling and the gates, moved there in 2.9.6).** This document is history: kept so old decisions can be traced. Do not use it to learn how Drishti works today.
+
 Status: strategy, adopted 2026-10-08. Section 3 lists what exists today; everything marked **(to build)** is proposed
 and has a step in [the build plan](#11-build-plan). Owner: the server (`drishti-server`, `drishti-engine`), the console
 (`drishti-console`) and `tools/bench/`.
 
 **What this document answers.** How many people can one Drishti server and one console serve, with how much memory,
 for how long, before latency or memory gets worse; and how to find out, repeatably, before a user does.
-[PERFORMANCE.md](PERFORMANCE.md) holds the numbers and the tuning knobs; [SCALE_BENCHMARK.md](SCALE_BENCHMARK.md)
+[PERFORMANCE.md](../admin/PERFORMANCE.md) holds the numbers and the tuning knobs; [SCALE_BENCHMARK.md](../admin/SCALE_BENCHMARK.md)
 holds the data-size runs. This document is the method that produces and defends those numbers.
 
 Contents

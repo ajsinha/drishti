@@ -15,17 +15,19 @@
 -->
 # Rūpaka next: the model architecture (decisions D1 to D6)
 
-> **Superseded in part by [BI_DESIGN.md](BI_DESIGN.md), the single authoritative BI target design.** Decisions D1–D6
+> **Archived: replaced by [BI_DESIGN.md section 14](../architecture/BI_DESIGN.md#14-the-model-architecture-decisions-d1-to-d6) (the decisions D1 to D6 and sections 2 to 3, which still stand, moved there in 2.9.6) and [section 12](../architecture/BI_DESIGN.md#12-w1-as-built-against-this-design-and-the-revised-wave-plan) (the waves).** This document is history: kept so old decisions can be traced. Do not use it to learn how Drishti works today.
+
+> **Superseded in part by [BI_DESIGN.md](../architecture/BI_DESIGN.md), the single authoritative BI target design.** Decisions D1–D6
 > and sections 2, 2a, 2b, 2c and 3 below still stand. The **wave plan and risks were replaced**
 > by BI_DESIGN.md section 12 (waves A = 2.2.0, B = 2.3.0, C = 2.4.0 and the later ones) and are archived as history
 > (section 4), and the expression language is now Python-like (BI_DESIGN.md section 3.3).
 
 *Agreed with the product owner on 2026-10-12.* This settles the BI architecture before more features are added, and
-replaced the roadmap part of the 2.1 parity study (history, archived: [BI_PARITY_PLAN.md](../archive/BI_PARITY_PLAN.md); the gap check is now [BI_DESIGN.md section 11](BI_DESIGN.md#11-gap-check-against-power-bi)). Most of it was
+replaced the roadmap part of the 2.1 parity study (history, archived: [BI_PARITY_PLAN.md](BI_PARITY_PLAN.md); the gap check is now [BI_DESIGN.md section 11](../architecture/BI_DESIGN.md#11-gap-check-against-power-bi)). Most of it was
 built in 2.2.0 to 2.4.0 (BI_DESIGN.md section 12.2 records what). Drishti is not in production, so these are breaking changes on purpose; the foundation stays **YAML,
 Python, datasets and data models**. No Power Query-like tool: Python is the data-prep path. The design
 specification of wave W1 (the dataset and model YAML, the model query language v1, pack-generated datasets, the
-migration, the UX flows and the build plan) is [BI_MODEL_SPEC.md](BI_MODEL_SPEC.md).
+migration, the UX flows and the build plan) is [BI_MODEL_SPEC.md](../architecture/BI_MODEL_SPEC.md).
 
 ## 1. Decisions
 
@@ -131,7 +133,7 @@ and one model serves live and as-of answers.
 Every number is computed by the Java server, the console backend (FastAPI, Python) or the source behind a pack's
 connector; the browser only draws the answer it receives, so every device (an iPhone's Safari, a PC's Chrome) shows the
 same answer. Today's browser paths (Python visuals, measures and Analyse cells through Pyodide, DuckDB-Wasm slicing)
-were to move to the servers in W3 (wave B, 2.3.0; [BI_DESIGN.md section 12.2](BI_DESIGN.md#122-the-three-waves) says what moved); a personal Python console in the browser came in 2.4.0 ([ANALYSE.md section 16](../guides/ANALYSE.md#16-the-browser-python-console)). Details: BI_MODEL_SPEC.md section 12.
+were to move to the servers in W3 (wave B, 2.3.0; [BI_DESIGN.md section 12.2](../architecture/BI_DESIGN.md#122-the-three-waves) says what moved); a personal Python console in the browser came in 2.4.0 ([ANALYSE.md section 16](../guides/ANALYSE.md#16-the-browser-python-console)). Details: BI_MODEL_SPEC.md section 12.
 
 ## 3. The experience comes first
 
@@ -154,4 +156,4 @@ connectors) plus a usability review against these rules, and its findings are fi
 
 ## 4. Waves and risks
 
-The wave plan W1 to W16 and its risks were replaced by [BI_DESIGN.md section 12](BI_DESIGN.md#12-w1-as-built-against-this-design-and-the-revised-wave-plan); the original is history, archived in [BI_MODEL_ARCHITECTURE_WAVES.md](../archive/BI_MODEL_ARCHITECTURE_WAVES.md) (the W numbers BI_MODEL_SPEC.md uses are defined there).
+The wave plan W1 to W16 and its risks were replaced by [BI_DESIGN.md section 12](../architecture/BI_DESIGN.md#12-w1-as-built-against-this-design-and-the-revised-wave-plan); the original is history, archived in [BI_MODEL_ARCHITECTURE_WAVES.md](BI_MODEL_ARCHITECTURE_WAVES.md) (the W numbers BI_MODEL_SPEC.md uses are defined there).

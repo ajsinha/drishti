@@ -20,7 +20,7 @@ answers, question 1 with the security safeguard of section 2.6). Wave W1's serve
 checks, pack-generated datasets, implicit models, the model query language with its API and standing queries, the
 compatibility reader; packages S1, S2, S3, S6 and the implicit models of S5); the connector-query, Python and model sources
 (S4), the consumers on MQ (S5), the console (C1, C2), the converter (M1) and the guides (D1) follow.* This is the specification behind wave **W1
-"Layers and the query language"** of [BI_MODEL_ARCHITECTURE.md](BI_MODEL_ARCHITECTURE.md) (decisions D1 to D6, the
+"Layers and the query language"** of BI_MODEL_ARCHITECTURE.md, now [BI_DESIGN.md section 14](BI_DESIGN.md#14-the-model-architecture-decisions-d1-to-d6) (decisions D1 to D6, the
 experience rules of its section 3). It fixes the **formats** W1 introduces so that W2 to W5 extend them without a
 second breaking change: every key that a later wave fills is already named here, marked with the wave that gives it
 behaviour. The gap analysis it answers was the 2.1 study, archived as history ([BI_PARITY_PLAN.md](../archive/BI_PARITY_PLAN.md); today's gap check is [BI_DESIGN.md section 11](BI_DESIGN.md#11-gap-check-against-power-bi)); the current shapes it replaces are
@@ -1321,7 +1321,7 @@ its reason.
 
 ## 9. UX flows
 
-Per the experience rules (BI_MODEL_ARCHITECTURE.md section 3): no dead ends, no YAML typing, direct manipulation,
+Per the experience rules (BI_DESIGN.md section 14.6): no dead ends, no YAML typing, direct manipulation,
 never lose work, feedback beside the control, right defaults, phone width and keyboard. Wireframes are text; `[ ]` is a
 button, `( )` a choice, `▸` a next step offered.
 

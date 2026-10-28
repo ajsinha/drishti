@@ -15,7 +15,7 @@
 -->
 # Screen Builder: the build plan of 1.20.0
 
-> **Archived: replaced by [BUILD_WORKBENCH.md](../architecture/BUILD_WORKBENCH.md)** (steps 4 to 8 there: one persisted Design and one workbench page). This is the step table of [SCREEN_BUILDER.md](../architecture/SCREEN_BUILDER.md) as planned for 1.20.0, kept as history; the separate pages it names (`/build/shape`, `/build/design`) no longer exist.
+> **Archived: replaced by [BUILD_WORKBENCH.md](../architecture/BUILD_WORKBENCH.md)** (steps 4 to 8 there: one persisted Design and one workbench page). This is the step table of [SCREEN_BUILDER.md](SCREEN_BUILDER.md) as planned for 1.20.0, kept as history; the separate pages it names (`/build/shape`, `/build/design`) no longer exist.
 
 ## How it was built, step by step
 

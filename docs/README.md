@@ -90,7 +90,7 @@ If you will change the code, continue with [DEVELOPER_GUIDE.md](guides/DEVELOPER
 | See what depends on an entity (F8) | [Impact guide](guides/USER_GUIDE.md#f8--impact) |
 | Download CSV or JSON, print, or share a link | [USER_GUIDE.md › Export, print and share](guides/USER_GUIDE.md#export-print-and-share) |
 | Send a view to a colleague with a note, read your inbox, discuss a number | [USER_GUIDE.md › Share a view with a note](guides/USER_GUIDE.md#share-a-view-with-a-note), [Your inbox](guides/USER_GUIDE.md#your-inbox), [Discussion](guides/USER_GUIDE.md#discussion) |
-| Follow a share and a comment end to end (rights, masks, audit, retention) | [HOW_IT_FITS.md §3.10](architecture/HOW_IT_FITS.md#310-share-and-discussion-end-to-end) |
+| Follow a share and a comment end to end (rights, masks, audit, retention) | [COLLABORATION.md, Share and Discussion end to end](architecture/COLLABORATION.md#share-and-discussion-end-to-end) |
 | Watch a list live, or be alerted when a figure crosses a line | [Monitors and alerts guide](guides/USER_GUIDE.md#monitors) |
 | Put several views on one screen | [Workspaces guide](guides/USER_GUIDE.md#workspaces) |
 | Change your theme, landing page or password | [USER_GUIDE.md › Your settings](guides/USER_GUIDE.md#your-settings) |
@@ -115,9 +115,9 @@ If you will change the code, continue with [DEVELOPER_GUIDE.md](guides/DEVELOPER
 | Look up a key, format, expression or problem code | [RACHANA_REFERENCE.md](guides/RACHANA_REFERENCE.md) |
 | Get completion for Sutras in your own editor (the JSON Schema of the language) | [API_GUIDE.md](guides/API_GUIDE.md#catalogue-about-packs-sources-sutras) (`GET /api/v1/rachana/schema`) |
 | Convert Markdown Sutras (`*.sutra.md`) from before 1.11 | [runbooks/sutra-broken.md](admin/runbooks/sutra-broken.md#step-1a-a-sutramd-or-plain-yaml-file-drs-2004-drs-2009) |
-| See how connectors, packs and Sutras fit together, and how the UI is bound to the backend at runtime | [HOW_IT_FITS.md](architecture/HOW_IT_FITS.md) |
+| See how connectors, packs and Sutras fit together, and how the UI is bound to the backend at runtime | [ARCHITECTURE.md, Walk through one request](architecture/ARCHITECTURE.md#5-walk-through-one-request) |
 | Understand the screens Drishti draws with no Sutra | [INFERENCE.md](architecture/INFERENCE.md) |
-| Design of the Screen Builder (JSON files → shape → visual designer → Sutra) | [SCREEN_BUILDER.md](architecture/SCREEN_BUILDER.md) |
+| The Screen Builder's shape engine, auto-design and API (JSON files → shape → design → Sutra) | [SCREEN_DESIGNER.md section 32](guides/SCREEN_DESIGNER.md#32-reference-the-shape-engine-auto-design-and-the-builder-api) |
 | The Build workbench: Designs, one page for data, canvas, YAML and tests, and the plan | [BUILD_WORKBENCH.md](architecture/BUILD_WORKBENCH.md) |
 | Design of *About this page*: context-aware help built from the page's data, pack glossaries, the explain API and the plan | [CONTEXT_HELP.md](architecture/CONTEXT_HELP.md) |
 | Design of Drishti Rūpaka, BI inside Drishti benchmarked against Power BI | [BI_DESIGN.md](architecture/BI_DESIGN.md), [RUPAKA.md](architecture/RUPAKA.md) |
@@ -128,7 +128,7 @@ If you will change the code, continue with [DEVELOPER_GUIDE.md](guides/DEVELOPER
 | Say what a number should be (`tests:`: expected values that Check runs as a role and that stop a publish) | [REPORTS.md](guides/REPORTS.md#17-expected-values-tests) |
 | Show "last 30 days" or "this quarter to date" (a relative-date slicer, business-day aware) | [REPORTS.md](guides/REPORTS.md#61-the-relative-date-slicer) |
 | Rank, lag and moving averages in a measure (window functions) | [DATASETS.md](guides/DATASETS.md#43-window-functions) |
-| Put live BI results (aggregates, pivots, rankings streamed by Pravaha, Flink or a custom BI server) in front of people as live views and boards | [LIVE_BI.md](architecture/LIVE_BI.md) |
+| Put live BI results (aggregates, pivots, rankings streamed by Pravaha, Flink or a custom BI server) in front of people as live views and boards | [LIVE.md, live BI](architecture/LIVE.md#live-bi-a-reports-live-tables) (the producer contract proposed for this is history: [LIVE_BI.md](archive/LIVE_BI.md), archived) |
 
 ### Add an industry or data
 
@@ -159,7 +159,7 @@ If you will change the code, continue with [DEVELOPER_GUIDE.md](guides/DEVELOPER
 | Run Python computations for connectors in worker pools: `config/compute/compute.yaml`, Admin → Compute, approving what a connector requires (four eyes), as many workers as you want, fan-out over nodes | [COMPUTE.md](admin/COMPUTE.md) |
 | Fix something that is not working | [TROUBLESHOOTING.md](guides/TROUBLESHOOTING.md), then the runbooks below |
 | Know how fast it is, and how that is measured | [PERFORMANCE.md](admin/PERFORMANCE.md) |
-| Know how many users a server holds, whether memory stays flat over a day, and how to load-test it | [LOAD_AND_MEMORY.md](admin/LOAD_AND_MEMORY.md) |
+| Know how many users a server holds, whether memory stays flat over a day, and how to load-test it | [PERFORMANCE.md, method 9](admin/PERFORMANCE.md#9-many-users-soak-runs-and-memory-profiling) |
 | Compare the stores at several sizes, see how each scales, and run the scale benchmark yourself | [SCALE_BENCHMARK.md](admin/SCALE_BENCHMARK.md) |
 | Lay a report out on paper: statements, page-exact PDF and Excel, one per recipient | [STATEMENTS.md](guides/STATEMENTS.md), [tutorial 20](tutorials/20-statements-and-field-parameters.md) |
 | See any entity over time (`TRD 1000279 60`, `EQ EQ-CSCA 3M`): one row per business day, changes only, DIFF | [USER_GUIDE › History](guides/USER_GUIDE.md#history-an-entity-over-time), [tutorial 21](tutorials/21-an-entity-over-time.md), [HISTORY_QUERIES.md](architecture/HISTORY_QUERIES.md) |
@@ -264,19 +264,15 @@ Every file under `docs/`, by folder. Documents marked *moved* are short pointers
 
 | Document | Read this when… |
 |---|---|
-| [HOW_IT_FITS.md](architecture/HOW_IT_FITS.md) | you are new and want the whole working: how connectors, packs and Sutras relate, and how a command becomes a live screen |
 | [ARCHITECTURE.md](architecture/ARCHITECTURE.md) | you want to understand how the pieces fit: pipeline, grammar, inference, graph, modules |
 | [INFERENCE.md](architecture/INFERENCE.md) | a view looks different from what you expected and *How this view was built* says `inference` |
 | [LIVE.md](architecture/LIVE.md) | you need to know how values tick: streams, frames, coalescing, reconnects, one channel per browser, shared by its tabs |
-| [SCREEN_BUILDER.md](architecture/SCREEN_BUILDER.md) | you want the design of the Screen Builder: JSON files to a shape, to a visual design, to a Sutra |
 | [BUILD_WORKBENCH.md](architecture/BUILD_WORKBENCH.md) | you want the design of the Build workbench: Designs, one page for data, canvas, YAML and tests, and the plan |
 | [CONTEXT_HELP.md](architecture/CONTEXT_HELP.md) | you want the design of *About this page*: the page's data, pack glossaries and `about.yaml`, the explain API, the Ask layer and the plan |
 | [COLLABORATION.md](architecture/COLLABORATION.md) | you want to know how *share with a note* and comment threads work and why: pins to the business date and generation, recipients' own rights, masks on user text, the inbox and email outbox, retention, legal hold, export, with a note on what was built differently from the design (steps 1 to 7 built; chat bridges and snapshots, phase 2, are not) |
 | [RUPAKA.md](architecture/RUPAKA.md) | you want the design of Drishti Rūpaka, BI inside Drishti benchmarked against Power BI: the BI page (`RUPAKA <GO>`), datasets, the query engine, reports, the designer, workspaces and catalogue, streaming BI, Python interfaces, AI hooks off by default, build plan (design) |
-| [BI_MODEL_ARCHITECTURE.md](architecture/BI_MODEL_ARCHITECTURE.md) | you want the agreed BI architecture after 2.1.0 (datasets, data models, one model per report, time modes, one model query language, AI through the model); its waves are replaced by BI_DESIGN.md |
 | [BI_DESIGN.md](architecture/BI_DESIGN.md) | you want the single authoritative BI target design: principles and non-goals, the Python-like expression language, Drishti SQL, Python and MQ meeting in one logical plan, query architecture, security at every tier, caching and scale, governance, the designers, AI, APIs, the Power BI gap check, W1 as built, the waves A (2.2.0), B (2.3.0), C (2.4.0) and the release order after them: N (2.5.0, Drishti\*net), D (2.6.0, sharing and integration), I (2.7.0, AI), E (2.8.0, QA findings and production readiness) |
 | [BI_MODEL_SPEC.md](architecture/BI_MODEL_SPEC.md) | you want the design specification of wave W1: the dataset and data model YAML, implicit models, how consumers bind to one model, the model query language v1 (validation, compilation, standing queries, ten worked examples), pack-generated datasets, the migration of every sample, the UX flows and the W1 build plan (design, not built) |
-| [LIVE_BI.md](architecture/LIVE_BI.md) | you want Drishti as the live front end of a streaming BI producer: the result-stream contract, Kafka with no code, a `bi` plugin, boards, drill-down, consistency (design note) |
 | [ELEMENTS.md](architecture/ELEMENTS.md) | you want the design of Drishti Elements: live views and BI reports inside other web applications as Web Components, no iframes; the embed API, token exchange, host registration, `<drishti-report>`, and which build steps are done |
 | [guides/ELEMENTS.md](guides/ELEMENTS.md) | you are embedding Drishti in your own application: a five-minute start, the token exchange (Node, Java, Python), versions, SRI and npm, the element reference, a cookbook, troubleshooting by code |
 | [GENUI.md](architecture/GENUI.md) | you want the design of GenUI (2.9.0, the AI release; not built): an AI agent composes a screen from governed Sutra fragments with typed slots, Drishti binds it to live data as the viewer and streams it to another application through `<drishti-genui>` |
@@ -294,7 +290,6 @@ Every file under `docs/`, by folder. Documents marked *moved* are short pointers
 | [TABLE_CHARTS.md](architecture/TABLE_CHARTS.md) | you want the design of chart any table (design, release 2.6.7): a Chart icon and K on every table (Sutra panels, search results and pick lists, history, BI tables) opening one shared `table-chart.js` popup over the pivot engine and ECharts; line, bar, area, pie, scatter and combo with series, split, Top N and two axes; smart defaults; chart all N through the panel records, the search pivot or a BI run; masks, themes and keys; save, export, Promote to Sutra as a `chart` panel, Open in BI |
 | [PARALLEL_LOADER.md](architecture/PARALLEL_LOADER.md) | you load millions of JSON Lines rows (2.3M scenario PVs) into Delta or Iceberg: the parallel lake loader of 2.9.6 (drishti-lakeload): the multi-threaded pipeline, the memory budget and spill, one commit per date, the shard-aligned layout and load manifest, measured at 10K and sized for 2.3M |
 | [DRISHTI_ICEBERG.md](architecture/DRISHTI_ICEBERG.md) | you want the design of drishti-iceberg (built in 2.6.0): Drishti's own Apache Iceberg engine with no Hadoop, so Iceberg runs on Windows; what of the spec it covers, catalogs, reads, commits, interop tests, the two Iceberg connectors |
-| [CASSANDRA_CONNECTOR_DESIGN.md](architecture/CASSANDRA_CONNECTOR_DESIGN.md) | you want the design of the Apache Cassandra connector (built for 2.6.0; [CASSANDRA_CONNECTOR.md](connectors/CASSANDRA_CONNECTOR.md) is the reference): Cassandra, ScyllaDB, Astra, Keyspaces; a partition per day per bucket, generations so a day appears whole, no secondary index, retention, sizing, tests, build plan |
 | [AWS_DEPLOYMENT.md](architecture/AWS_DEPLOYMENT.md) | you deploy Drishti on AWS (scripts in `deploy/`: the ECS images in `deploy/docker/ecs/`, access points, Cloud Map, task and service definitions in `deploy/aws/ecs/`): ECS with the server and the console as separate containers, every written path on EFS at the same path (read-only root), lakes in S3, Drishti*net on task addresses through Cloud Map |
 | [AWS_DELTA_LAKE.md](architecture/AWS_DELTA_LAKE.md) | you set up the Delta lake for Drishti in Amazon S3 so it stays fast past 200 TB: why S3 and not EFS, first-time setup step by step with the scripts of `deploy/aws/` (buckets, IAM, conditional-write check, tiers by business date, EFS access points, Cloud Map, ECS tasks, schedules, alarms), the layout and partition keys, ids and promoted columns, file and row-group sizes, the daily load (`lake build` then `lake publish`), backfill, restatement, maintenance, caches on EFS or NVMe, sizing, cost and runbooks; what is built and what is planned |
 | [SUPER_SCALE.md](architecture/SUPER_SCALE.md) | you want the design for 500 GB a day kept seven years (not built, release not decided): 500 GB of JSON a day; one Delta lake in S3 shared by many servers and consoles, with diagrams: tables by year, a loader fleet with a day register, products computed when loading, range maps instead of id maps, each server owning a share of (table, day) slices on the Drishti*net ring |
@@ -352,7 +347,6 @@ Every file under `docs/`, by folder. Documents marked *moved* are short pointers
 | [CONFIGURATION.md](admin/CONFIGURATION.md) | you need a setting's name, default and environment variable |
 | [OPERATIONS.md](admin/OPERATIONS.md) | you deploy, secure, monitor, back up or upgrade a server and console |
 | [PERFORMANCE.md](admin/PERFORMANCE.md) | you want the measured numbers, to measure your own installation, or to tune it |
-| [LOAD_AND_MEMORY.md](admin/LOAD_AND_MEMORY.md) | you need to know how many users a server holds, whether memory stays flat over a day, and how to load-test and memory-profile the server, the console and the browser (strategy, tools, gates, build plan) |
 | [NET.md](admin/NET.md) | you run several servers as one cluster (Drishti\*net, 2.5.0; real addresses only and the last administrator kept across nodes, 2.6.0): a cluster of three, the files of `config/net/`, membership, capability digests, security, routing, the console and several servers, Admin → Net, drain, sizing, troubleshooting |
 | [COMPUTE.md](admin/COMPUTE.md) | you run compute workers (2.8.0, unreleased, steps C1 to C3): pools and how many workers (per pool and per node), fair scheduling, fan-out over Drishti\*net nodes, limits and the sandbox, `requires:`, locked environments and their four-eyes approval, Admin → Compute, Windows, the load test |
 | [LAKE_MAINTENANCE.md](admin/LAKE_MAINTENANCE.md) | you keep Delta tables bounded and fast: retention, compaction, checkpoints and vacuum from Admin → Lakes or `lake maintain`, schedules, history |

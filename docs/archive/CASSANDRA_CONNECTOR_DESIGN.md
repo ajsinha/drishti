@@ -15,6 +15,8 @@
 -->
 # The Apache Cassandra connector: design
 
+> **Archived: replaced by [CASSANDRA_CONNECTOR.md](../connectors/CASSANDRA_CONNECTOR.md) (the connector as built, which superseded this design where they differ).** This document is history: kept so old decisions can be traced. Do not use it to learn how Drishti works today.
+
 Status: **built** for 2.6.0 (steps C1–C4 of [section 12](#12-build-plan)): `plugins/drishti-plugin-cassandra`, documented in
 [CASSANDRA_CONNECTOR.md](../connectors/CASSANDRA_CONNECTOR.md), which supersedes this design where they differ. As built: `kind_days`
 also records each day's `buckets`; a generation is the seconds since 2020 (at least the current one plus one), so a stopped load's
@@ -22,7 +24,7 @@ partitions are never reused; the data tables carry the comment `drishti kind: <k
 scanning; Amazon Keyspaces (SigV4) and Azure Cosmos DB are wired but not yet checked by hand, so not listed as supported. Related:
 [AEROSPIKE_CONNECTOR.md](../connectors/AEROSPIKE_CONNECTOR.md) (the closest connector built: a key-value store for recent
 days), [DELTA_CONNECTOR.md](../connectors/DELTA_CONNECTOR.md) section 7 (how the engine uses column sets),
-[DRISHTI_ICEBERG.md](DRISHTI_ICEBERG.md) (the other design of the same day).
+[DRISHTI_ICEBERG.md](../architecture/DRISHTI_ICEBERG.md) (the other design of the same day).
 
 ## Contents
 
@@ -42,7 +44,7 @@ derived kinds and impact, on any business day it holds, a million entities a day
 
 ## 2. A connector, not an engine of our own
 
-Unlike Iceberg ([DRISHTI_ICEBERG.md](DRISHTI_ICEBERG.md)), Cassandra needs **no engine of Drishti's own**. The Apache
+Unlike Iceberg ([DRISHTI_ICEBERG.md](../architecture/DRISHTI_ICEBERG.md)), Cassandra needs **no engine of Drishti's own**. The Apache
 Cassandra Java driver (4.x, `java-driver-core`) is pure Java: no Hadoop, no native library, the same on Windows and
 Linux. Reimplementing the native protocol would add risk and gain nothing. So this is an ordinary plugin,
 **`plugins/drishti-plugin-cassandra`**, implementing `SourcePlugin` like the Aerospike plugin, with the driver's own

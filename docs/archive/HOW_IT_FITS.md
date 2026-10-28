@@ -15,12 +15,14 @@
 -->
 # How Drishti fits together
 
+> **Archived: replaced by [ARCHITECTURE.md](../architecture/ARCHITECTURE.md) (a command's journey to a screen), [CONTEXT_HELP.md](../architecture/CONTEXT_HELP.md#about-this-page-end-to-end) (About this page, end to end) and [COLLABORATION.md](../architecture/COLLABORATION.md#share-and-discussion-end-to-end) (Share and Discussion, end to end), both moved there in 2.9.6.** This document is history: kept so old decisions can be traced. Do not use it to learn how Drishti works today.
+
 > **History: captured before 2.3.0** (the 2.2-era packs). Since 2.3.0 trades are production-shaped UPPER_SNAKE records read per
 > source system (`trade-endur`, `trade-calypso`, `trade-murex`, one Delta table each) instead of `trading-store`; the trading pack's
 > samples are one file, `config/packs/trading/samples/trade.jsonl`; its Sutras are kept per source system
 > (`config/packs/trading/sutras/murex/`, `calypso/`, `endur/`); and the risk and banking packs named below are examples under
 > `examples/packs/`. The flow (pack, connector, Sutra, ViewModel, live updates) is unchanged; names and captured outputs are as they were
-> then. The current plan is [IMPLEMENTATION_PLAN.md](IMPLEMENTATION_PLAN.md#roadmap)'s roadmap.
+> then. The current plan is [IMPLEMENTATION_PLAN.md](../architecture/IMPLEMENTATION_PLAN.md#roadmap)'s roadmap.
 
 *For someone new to Drishti who wants the whole working in one read: how a data store, a pack and a Sutra relate, and
 what happens between typing `TRD MX-20000001` and a live screen.* Every path, key, endpoint and output below is real:
@@ -101,12 +103,12 @@ The Maven modules: `drishti-api` (the plugin interface and shared types), `drish
 `drishti-rachana` (the grammar, parser, matcher, registry), `drishti-inference` (layouts from the shape of data),
 `drishti-packs` (pack loading), `drishti-server` (HTTP, security, governance), `plugins/*` (one connector each).
 The UI is the separate Python project in `drishti-console/`. The full module list is in
-[ARCHITECTURE.md §13](ARCHITECTURE.md#13-module-layout-java).
+[ARCHITECTURE.md §13](../architecture/ARCHITECTURE.md#13-module-layout-java).
 
 **Several servers as one** (Drishti\*net, since 2.5.0; off by default): with `config/net/` switched on, servers find each other by gossip,
 tell each other the packs and kinds they serve, and forward behind the source router what they cannot answer themselves, so a console
 connected to any node sees one Drishti. Nothing in the picture above changes; the router simply has more places to ask
-([ARCHITECTURE.md §13a](ARCHITECTURE.md#13a-several-servers-as-one-drishtinet), [NET.md](../admin/NET.md)).
+([ARCHITECTURE.md §13a](../architecture/ARCHITECTURE.md#13a-several-servers-as-one-drishtinet), [NET.md](../admin/NET.md)).
 
 ---
 
@@ -376,7 +378,7 @@ data:{"seq":1,"generation":2,"patches":[{"op":"strip","index":4,"cell":{"label":
 
 Patch `op`s are `strip` (one header cell), `panel` (a whole panel), `provenance`, and `deleted` / `restored`. The console
 turns each panel patch into ready HTML (`api_routes.py:_view_event`) and `live.js:onFrame` swaps it in. A view of a past
-business date never ticks: the source is the dated Delta table and the status shows Static. Details in [LIVE.md](LIVE.md).
+business date never ticks: the source is the dated Delta table and the status shows Static. Details in [LIVE.md](../architecture/LIVE.md).
 
 ### 3.8 Links and F-keys open another kind, with its own Sutra
 
@@ -411,7 +413,7 @@ caller, and writes down what that run decided. Press `?` on the trade view and f
 | 6 | **Why a panel is empty.** A panel with nothing to draw is named with the reason | engine | `EmptinessReason`: `missing`, `null`, `empty list`, `masked`, `no values` or `no data`, with the document path it looked at |
 | 7 | **Provenance and health.** Source, generation, business date, fetch and update times, freshness, and one word of health | engine | `ViewModel.Provenance`, the `SourceRouter` freshness, `SourceHealth` (`up`, `degraded`, `down`: the same reduction `HealthController` uses) |
 | 8 | **The pack's words.** The `about.yaml` entry for the kind is found and its template rendered over the document **after** your redaction | rachana | `AboutCatalog.forKind("trade")`, `AboutText.render` (`Template.renderLenient`: a failing `${...}` reads `—` and counts in `drishti.explain.template-errors`) |
-| 9 | **The glossary.** The entries for exactly the fields on the page: the "What each number means" layer and the hover hints. A field's entry is the kind's `glossary` by path, else a pack `vocabulary` entry by name, else a derived kind's own formula, else the core vocabulary | rachana, engine | `GlossaryResolver`, `GlossaryBuilder` (step 4 of [CONTEXT_HELP.md](CONTEXT_HELP.md)); the answer's `glossary` block |
+| 9 | **The glossary.** The entries for exactly the fields on the page: the "What each number means" layer and the hover hints. A field's entry is the kind's `glossary` by path, else a pack `vocabulary` entry by name, else a derived kind's own formula, else the core vocabulary | rachana, engine | `GlossaryResolver`, `GlossaryBuilder` (step 4 of [CONTEXT_HELP.md](../architecture/CONTEXT_HELP.md)); the answer's `glossary` block |
 | 10 | The answer is a `PageContext`, cached 60 s per (user, entity, business date, generation, locale, about revision) | engine | `PageContext`, `drishti.explain.*` |
 | 11 | The console turns it into the drawer, one `<details>` per layer, and moves focus to its heading | console | `_about.html`, `about.js`, `about.css` |
 
@@ -532,7 +534,7 @@ source.
 | **Unchanged** | `ExplainController`, `ExplainService`, `PageContext`, the drawer and its keys | the same |
 
 Where each part is changed is section 7; the design, the open decisions and the build plan are in
-[CONTEXT_HELP.md](CONTEXT_HELP.md); how to write the text is in the
+[CONTEXT_HELP.md](../architecture/CONTEXT_HELP.md); how to write the text is in the
 [pack developer guide](../guides/PACK_MODELLING_GUIDE.md#about-text-and-glossary).
 
 ### 3.10 Share and Discussion, end to end
@@ -541,7 +543,7 @@ Where each part is changed is section 7; the design, the open decisions and the 
 (role `viewer`, no `raw`: the trader and counterparty fields read `•••` for her) to check something. Then they talk about it in the open. The code
 lives in `drishti-server/.../collab` (services and controllers), `drishti-identity/.../collab` (records and stores) and the console
 (`routes/collab_routes.py`, `routes/thread_routes.py`, `core/collab.py`, `core/threads.py`, `share.js`, `discussion*.js`, `inbox.js`, `alerts.js`).
-The design and its reasons are in [COLLABORATION.md](COLLABORATION.md) and [ADR-020](adr/020-collaboration-records-live-in-the-identity-database.md); the
+The design and its reasons are in [COLLABORATION.md](../architecture/COLLABORATION.md) and [ADR-020](../architecture/adr/020-collaboration-records-live-in-the-identity-database.md); the
 pictures below are made by `tools/docs/shots/collab.py` on a server started with the QUICKSTART packs and sign-in on.
 
 **The rule that explains every step:** what a person receives is **computed for that person, when they look, from what they may see now**. A share
@@ -786,14 +788,14 @@ Sutra text, which you can edit and keep). Real summary of that output:
 It is a usable screen on day one, with every value shown and formatted by field name; a Sutra decides which figures
 lead, which chart suits which series, and what the keys do. A Sutra may also be partial: whatever it does not say,
 inference fills (*How this view was built* then says "Sutra X + inference"). The rules are in
-[INFERENCE.md](INFERENCE.md).
+[INFERENCE.md](../architecture/INFERENCE.md).
 
 ---
 
 ## 6. How a new screen gets made today
 
 A screen is a Sutra, so making one means making a Sutra and getting it into the registry. The Build workbench
-(console `/build`, [BUILD_WORKBENCH.md](BUILD_WORKBENCH.md)) does it without writing YAML by hand:
+(console `/build`, [BUILD_WORKBENCH.md](../architecture/BUILD_WORKBENCH.md)) does it without writing YAML by hand:
 
 ```
  Build > New     pick samples (JSON files), a schema, or an existing Sutra or example (it opens as a COPY)
@@ -836,28 +838,28 @@ documents it draws, and its panels' `$.paths` are checked against your samples. 
 | Add a domain (new kinds, commands, links) | A pack folder `config/packs/<name>/` with `pack.yaml`, `sutras/`, `samples/`; enable it with `DRISHTI_PACKS` | [PACKS.md](../guides/PACKS.md) |
 | Change how one screen looks | Its Sutra (`*.sutra.yaml`), or a Design in the Build workbench, proposed and approved | [RACHANA_REFERENCE.md](../guides/RACHANA_REFERENCE.md), [SCREEN_DESIGNER.md](../guides/SCREEN_DESIGNER.md) |
 | Change how a figure is formatted | `fmt:` in the Sutra; named formats in the pack's `config/formats.yaml` | RACHANA_REFERENCE.md |
-| Change how inference reads field names | The pack's `config/semantics.yaml` | [INFERENCE.md](INFERENCE.md) |
+| Change how inference reads field names | The pack's `config/semantics.yaml` | [INFERENCE.md](../architecture/INFERENCE.md) |
 | Add a panel kind | The engine (`Binder` and the panel model) and a console renderer (`_macros/panels.html`) | [PANELS.md](../guides/PANELS.md), [DEVELOPER_GUIDE.md](../guides/DEVELOPER_GUIDE.md) |
 | Decide who may see what | `roles:` in `pack.yaml` (kinds, `raw`), `drishti.security.redact` (fields shown as `•••`), the Admin pages | [USER_MANAGEMENT.md](../admin/USER_MANAGEMENT.md) |
 | Add a command word | `mnemonics:` in `pack.yaml` (or under `drishti.commands` for a site) | PACKS.md |
 | Add a link between kinds | `graph.fields` in `pack.yaml` and `link(...)` in the Sutra | PACKS.md |
 | Change the sentence the About drawer says about a kind | `kinds.<kind>.about` in the pack's `config/about.yaml` (a `${...}` template over the document); for a generated pack, the about source in `tools/packgen/` | [PACK_DEVELOPER_GUIDE.md](../guides/PACK_MODELLING_GUIDE.md#about-text-and-glossary) |
-| Explain a field (term, meaning, unit, sign) | `glossary.<field path>` in `about.yaml`, or a shared `vocabulary.<name>` entry in the lowest pack that owns the concept (the glossary layer and field hints are step 4 of [CONTEXT_HELP.md](CONTEXT_HELP.md); section 3.9 says what is in today) | PACK_DEVELOPER_GUIDE.md |
-| Change how the drawer looks or behaves | `drishti-console/web/templates/_macros/about.html` and `terminal/_about.html`, `static/js/about.js`, `static/css/about.css` | [CONTEXT_HELP.md](CONTEXT_HELP.md) |
+| Explain a field (term, meaning, unit, sign) | `glossary.<field path>` in `about.yaml`, or a shared `vocabulary.<name>` entry in the lowest pack that owns the concept (the glossary layer and field hints are step 4 of [CONTEXT_HELP.md](../architecture/CONTEXT_HELP.md); section 3.9 says what is in today) | PACK_DEVELOPER_GUIDE.md |
+| Change how the drawer looks or behaves | `drishti-console/web/templates/_macros/about.html` and `terminal/_about.html`, `static/js/about.js`, `static/css/about.css` | [CONTEXT_HELP.md](../architecture/CONTEXT_HELP.md) |
 | Change what the explanation says about the layout and the data | `ExplainService`, `PageContext`, `EmptinessReason` (`drishti-engine`, package `explain`), `MatchTrace` (`SutraMatcher.explain`); the endpoint is `ExplainController`; limits under `drishti.explain.*` | [API_GUIDE.md](../guides/API_GUIDE.md), [CONFIGURATION.md](../admin/CONFIGURATION.md) |
 | Decide who may share, comment or be mentioned | the role power `roles.<role>.collaborate` (on unless removed); `drishti.collab.packs.<pack>.share-enabled`; `mentionable-roles`, `directory.scope`, `share.max-recipients`, `limits.*` under `drishti.collab` | [CONFIGURATION.md](../admin/CONFIGURATION.md), [USER_MANAGEMENT.md](../admin/USER_MANAGEMENT.md) |
 | Change what a note or comment may contain, or what is masked in it | `drishti.security.redact` (the fields), `drishti.collab.text.on-masked-copy` and `deny-patterns`; the logic is `NoteText`, `Entitlements.maskedValues`, `CommentRenderer` | CONFIGURATION.md, §3.10 |
 | Switch on email, or change what it says | `spring.mail.*`, `drishti.collab.console-url`, `email.enabled`; per pack `packs.<pack>.email.content` (`comment`, `title`, `link-only`); templates in `drishti.collab.email.templates-dir`; the code is `EmailNotifier`, `OutboxDispatcher`, `MailRenderer` | [OPERATIONS.md](../admin/OPERATIONS.md#9a-2-collaboration-email-and-the-outbox) |
-| Add another channel (a chat bridge) | one more `Notifier` bean: `ShareService` and `ThreadService` hand every bean the audience, so neither service changes | [COLLABORATION.md](COLLABORATION.md) (phase 2) |
+| Add another channel (a chat bridge) | one more `Notifier` bean: `ShareService` and `ThreadService` hand every bean the audience, so neither service changes | [COLLABORATION.md](../architecture/COLLABORATION.md) (phase 2) |
 | Keep, hold or export what people wrote | `drishti.collab.retention.*` and `packs.<pack>.retention-days`; legal holds and the export through `/api/v1/admin/collab` (`CollabPurge`, `HoldService`, `ExportService`, `ChainVerifier`) | [OPERATIONS.md](../admin/OPERATIONS.md#9a-3-collaboration-retention-legal-holds-and-the-compliance-export) |
-| Change how the Share dialog, the inbox or the Discussion tab look or behave | `drishti-console/web/templates/terminal/_share.html`, `inbox.html`, `_discussion.html`; `static/js/share.js`, `inbox.js`, `alerts.js`, `discussion*.js`; `static/css/collab.css` | [COLLABORATION.md](COLLABORATION.md) (console design) |
+| Change how the Share dialog, the inbox or the Discussion tab look or behave | `drishti-console/web/templates/terminal/_share.html`, `inbox.html`, `_discussion.html`; `static/js/share.js`, `inbox.js`, `alerts.js`, `discussion*.js`; `static/css/collab.css` | [COLLABORATION.md](../architecture/COLLABORATION.md) (console design) |
 | Let people search a kind by filling in a form | the `form:` section of `pack.yaml` (fields, types, operators), or a Design's Form tab; people open it with `FORM <pack>` | [PACK_DEVELOPER_GUIDE.md](../guides/PACK_DEVELOPER_GUIDE.md#form-the-search-form-of-a-kind), [USER_GUIDE.md](../guides/USER_GUIDE.md) |
 | Let people choose what a panel shows | `controls:` in the Sutra (dropdowns, sliders, date ranges), read by panels as `ctl.<id>` | [RACHANA_REFERENCE.md](../guides/RACHANA_REFERENCE.md#controls) |
 | Tell Drishti a batch of data landed (refresh, verify, tell people, flag late data) | `POST /api/v1/packs/{pack}/loads` from your ETL; what a pack expects is its `loads:` section | [DATA_LOADS.md](../guides/DATA_LOADS.md) |
 | Reach a source over TLS or through a proxy | `tls.*` and `proxy:` in the connector file | [TLS.md](../connectors/TLS.md), [TLS.md (proxy)](../connectors/TLS.md#outbound-http-proxy-for-connectors-ai-providers-and-mcp-servers) |
-| Make a dataset, report or board (business intelligence) | YAML files in `config/bi/` (watched) or the BI pages (workspaces, designer, Model view); the query runs on the server over DuckDB with the reader's masks and row rules | [BI_GUIDE.md](../guides/BI_GUIDE.md), [DATASETS.md](../guides/DATASETS.md), [REPORTS.md](../guides/REPORTS.md), [RUPAKA.md](RUPAKA.md) |
-| Show a view inside another web application | register the application in Admin → Embedding; the page uses `<drishti-view>` | [ELEMENTS.md](ELEMENTS.md) |
-| Use a language model, or an MCP tool server | a provider file in `config/ai/` or `config/mcp/` and `drishti.ai.enabled` / `drishti.mcp.enabled` (both off by default) | [AI_PROVIDERS.md](AI_PROVIDERS.md), [MCP_CLIENT.md](MCP_CLIENT.md) |
+| Make a dataset, report or board (business intelligence) | YAML files in `config/bi/` (watched) or the BI pages (workspaces, designer, Model view); the query runs on the server over DuckDB with the reader's masks and row rules | [BI_GUIDE.md](../guides/BI_GUIDE.md), [DATASETS.md](../guides/DATASETS.md), [REPORTS.md](../guides/REPORTS.md), [RUPAKA.md](../architecture/RUPAKA.md) |
+| Show a view inside another web application | register the application in Admin → Embedding; the page uses `<drishti-view>` | [ELEMENTS.md](../architecture/ELEMENTS.md) |
+| Use a language model, or an MCP tool server | a provider file in `config/ai/` or `config/mcp/` and `drishti.ai.enabled` / `drishti.mcp.enabled` (both off by default) | [AI_PROVIDERS.md](../architecture/AI_PROVIDERS.md), [MCP_CLIENT.md](../architecture/MCP_CLIENT.md) |
 | Run several servers as one (Drishti\*net) | the files of `config/net/` (`node.yaml` with `enabled: true` and the cluster key, a seed in `peers/`), or Admin → Net → Files; members advertise a real address, never a loopback one | [NET.md](../admin/NET.md), [tutorial 19](../tutorials/19-a-cluster-of-three.md) |
 | Lay a report out on paper (a statement, one per recipient) | `layout: statement` on a report page and the report's `statement:`; BI Studio's Paper tab | [STATEMENTS.md](../guides/STATEMENTS.md) |
 | Make something that failed (a pack, a connector, a provider) try again | nothing: it is retried with backoff; Retry now in Admin | [OPERATIONS.md](../admin/OPERATIONS.md#retries-what-failed-is-tried-again-by-itself) |
@@ -866,18 +868,18 @@ documents it draws, and its panels' `$.paths` are checked against your samples. 
 
 ## 8. Glossary and further reading
 
-The glossary is [ARCHITECTURE.md §3](ARCHITECTURE.md#3-core-concepts) (entity, mnemonic, DataNode, source, fingerprint,
+The glossary is [ARCHITECTURE.md §3](../architecture/ARCHITECTURE.md#3-core-concepts) (entity, mnemonic, DataNode, source, fingerprint,
 Rachana, Sutra, inference, layout, ViewModel, patch, link). Then:
 
-- [ARCHITECTURE.md](ARCHITECTURE.md): the pipeline, the grammar, modules and security; [section 5](ARCHITECTURE.md#5-walk-through-one-request) is a second walk through one request.
-- [INFERENCE.md](INFERENCE.md): layouts without a Sutra.
-- [LIVE.md](LIVE.md): topics, frames, patches and reconnects.
-- [BUILD_WORKBENCH.md](BUILD_WORKBENCH.md) and [SCREEN_BUILDER.md](SCREEN_BUILDER.md): how screens are made.
+- [ARCHITECTURE.md](../architecture/ARCHITECTURE.md): the pipeline, the grammar, modules and security; [section 5](../architecture/ARCHITECTURE.md#5-walk-through-one-request) is a second walk through one request.
+- [INFERENCE.md](../architecture/INFERENCE.md): layouts without a Sutra.
+- [LIVE.md](../architecture/LIVE.md): topics, frames, patches and reconnects.
+- [BUILD_WORKBENCH.md](../architecture/BUILD_WORKBENCH.md) and [SCREEN_BUILDER.md](SCREEN_BUILDER.md): how screens are made.
 - [PACKS.md](../guides/PACKS.md): every key of `pack.yaml`.
 - [RACHANA_REFERENCE.md](../guides/RACHANA_REFERENCE.md): every key of a Sutra.
 - [CONNECTOR_FILES.md](../connectors/CONNECTOR_FILES.md): connector files, live reload and Admin → Connectors.
 - [CONNECTOR_DEVELOPER_GUIDE.md](../connectors/CONNECTOR_DEVELOPER_GUIDE.md): connectors.
-- [COLLABORATION.md](COLLABORATION.md): share, discussion, the inbox, email, retention.
-- [ELEMENTS.md](ELEMENTS.md): `<drishti-view>` in other web applications.
-- [RUPAKA.md](RUPAKA.md): business intelligence (datasets, reports, boards), as designed and as built phase by phase.
-- [AI_PROVIDERS.md](AI_PROVIDERS.md) and [MCP_CLIENT.md](MCP_CLIENT.md): the optional AI and MCP layers.
+- [COLLABORATION.md](../architecture/COLLABORATION.md): share, discussion, the inbox, email, retention.
+- [ELEMENTS.md](../architecture/ELEMENTS.md): `<drishti-view>` in other web applications.
+- [RUPAKA.md](../architecture/RUPAKA.md): business intelligence (datasets, reports, boards), as designed and as built phase by phase.
+- [AI_PROVIDERS.md](../architecture/AI_PROVIDERS.md) and [MCP_CLIENT.md](../architecture/MCP_CLIENT.md): the optional AI and MCP layers.

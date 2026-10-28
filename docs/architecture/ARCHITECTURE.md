@@ -12,7 +12,7 @@
 > Drishti (दृष्टि, "sight") turns any record from any system into a dense,
 > keyboard-driven, live terminal view — without a hand-built screen per product.
 
-**New to Drishti?** Read [How Drishti fits together](HOW_IT_FITS.md) first: how connectors, packs and Sutras relate, and what happens at runtime between typing a command and the live screen.
+**New to Drishti?** [Section 5](#5-walk-through-one-request) follows one command from the keyboard to a live screen; the older walk with every pack, connector and Sutra file shown is history ([HOW_IT_FITS.md](../archive/HOW_IT_FITS.md), archived, 2.2-era packs).
 
 ---
 
@@ -167,7 +167,7 @@ Notes on each stage, checked against the code:
 
 This follows a single command from the keyboard to the screen and then through one live tick. The outputs are
 real, captured from a running server with the `trading` pack enabled (security off, so no token is needed).
-For the same journey with the pack, connector and Sutra files shown next to each step, see [HOW_IT_FITS.md](HOW_IT_FITS.md).
+The same journey with the pack, connector and Sutra files shown next to each step is history, captured before 2.3.0 ([HOW_IT_FITS.md](../archive/HOW_IT_FITS.md), archived).
 
 **1. The user types `TRD MX-20000001` and presses Enter.** While typing, `command.js` asks the console for
 suggestions (debounced 60 ms, stale requests cancelled); the console forwards to the server:
@@ -808,7 +808,7 @@ one panel, updates strip cells in place, and hands chart panels new data — so 
 - **Collaboration** (share with a note, comment threads, the inbox; package `com.ash.drishti.server.collab`, records in `drishti-identity`).
   What travels is a person's words and a pinned link, never data: every share, comment, notice and email is rendered **for the reader, when
   they look**, from what they may see now (`Entitlements.mayReach`, `maskedValues`, `CommentRenderer`), and the records are tamper-evident
-  (`HashChain`). The whole path is worked through in [HOW_IT_FITS.md §3.10](HOW_IT_FITS.md#310-share-and-discussion-end-to-end), the design and
+  (`HashChain`). The whole path is worked through in [COLLABORATION.md, Share and Discussion end to end](COLLABORATION.md#share-and-discussion-end-to-end), the design and
   its as-built notes are [COLLABORATION.md](COLLABORATION.md), the decision is ADR-020.
 - **Console** CSP without `unsafe-inline`; all assets same-origin.
 

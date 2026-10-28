@@ -15,7 +15,7 @@
 -->
 # Build workbench: one place to design, test and ship screens
 
-Status: agreed architecture; steps 4 to 8 are built; replaces steps 4–7 of the build plan of [SCREEN_BUILDER.md](SCREEN_BUILDER.md) (that plan is history, archived in [SCREEN_BUILDER_BUILD_PLAN.md](../archive/SCREEN_BUILDER_BUILD_PLAN.md); steps 1–3 are built and stay:
+Status: agreed architecture; steps 4 to 8 are built; replaces steps 4–7 of the build plan of [SCREEN_BUILDER.md](../archive/SCREEN_BUILDER.md) (that plan is history, archived in [SCREEN_BUILDER_BUILD_PLAN.md](../archive/SCREEN_BUILDER_BUILD_PLAN.md); steps 1–3 are built and stay:
 the shape API, the shape extractor, auto-design and suggest). Owner: the Build menu, the builder APIs, the Rachana editor.
 
 ## Why

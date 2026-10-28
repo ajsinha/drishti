@@ -13,10 +13,9 @@
 
   See the LICENSE file in the root of this repository for the full terms.
 -->
-# Changelog
 # Plan: test data from seeds
 
-**Status: proposed, design not built (plan for review, 2026-10-27).** Goal: stop committing the synthetic part of `data/testdata` and regenerate
+**Status: proposed, design not built; approved for 2.9.6 by the product owner (plan of 2026-10-27, tracked in [IMPLEMENTATION_PLAN.md](IMPLEMENTATION_PLAN.md)).** Goal: stop committing the synthetic part of `data/testdata` and regenerate
 it, identically, on any machine (the offline Windows laptop included: Python only, no `.exe`, no internet), without git LFS. Public
 snapshots (funds, us-equities, gleif, news-and-markets) stay committed.
 

@@ -675,7 +675,7 @@ If you edit Sutras in an IDE and keep them in git, bind the design to a file so 
 
 The shared page has no editing keys: the *Preview with a file…*, *Preview a stored entity* and *Copy the Sutra* controls are real buttons and fields in reading order.
 
-See also: [the Sutra command](SUTRA_DEVELOPER_GUIDE.md#15-testing-expectyaml-sutra-linttestpreview-ci), [Screen Builder design](../architecture/SCREEN_BUILDER.md), [the examples](examples/README.md), [the Rachana reference](RACHANA_REFERENCE.md), [panels in depth](PANELS.md).
+See also: [the Sutra command](SUTRA_DEVELOPER_GUIDE.md#15-testing-expectyaml-sutra-linttestpreview-ci), [the shape engine and builder API](#32-reference-the-shape-engine-auto-design-and-the-builder-api), [the examples](examples/README.md), [the Rachana reference](RACHANA_REFERENCE.md), [panels in depth](PANELS.md).
 
 ## 31. The Sutra designer: Customize, Describe, Outline and Grid
 
@@ -990,3 +990,174 @@ move, a panel that did not change is left alone, the picked row stays picked and
 
 - When a refresh fails, the panel keeps what it showed and names the source in words: *trade-endur isn't answering; showing data from
   10:42*. The next refresh tries again.
+
+## 32. Reference: the shape engine, auto-design and the builder API
+
+The reference parts of the Screen Builder's design (built in 1.20.0; the design itself is history, [archived](../archive/SCREEN_BUILDER.md)):
+how samples become a shape, how auto-design drafts a screen from it, the server API and the limits.
+
+### 32.1 The shape: the JSON Schema extractor
+
+#### What goes in
+
+- Up to 50 files (setting `drishti.builder.max-samples`), each `.json` (one document) or `.jsonl` (one document per line;
+  each line counts as a sample, up to the same total).
+- Or **sample from a store**: pick a kind and Drishti reads up to 50 of its entities through the normal sources, with
+  the author's field masks applied (a masked field appears in the shape as masked, with no values).
+- Or a shape file saved earlier.
+
+#### How documents are merged
+
+Each document is walked once; the walks are merged into one tree of *path → observed facts*:
+
+| Observed across the samples | Becomes in the schema |
+|---|---|
+| Present in every document | `required` |
+| Present in some | optional, with `x-drishti.presence` = share of documents (0.25 = one in four) |
+| `null` in some | `type: [..., "null"]` |
+| Different types (number in some, text in others) | `oneOf` the types seen, flagged as a **conflict** in the report |
+| Integers beyond 2^53, huge decimals, NaN, infinities | `minimum`/`maximum` are written exactly (JSON integers of any size); a sample with a non-finite number carries no bound for it and the schema says so in `$comment` |
+| Object whose keys differ from document to document (ids as keys) | a map: `additionalProperties` with the merged value schema, not a record. Needs evidence that the keys are data: ids with a number in them (5 or more), dates or months (`2026-01-01`, `2026-01`), or 8 or more distinct keys that no document repeats, and values of one shape. Sparse optional sections (`rates`, `fx`, `credit`, each with its own fields) stay a record. It is a heuristic: a record of five keys `q1..q5` in one document is read as a map. |
+| Array | `items` = merge of every element of every document; `minItems`/`maxItems` seen |
+| Array of objects that contain an array of the same shape (`children`, `nodes`...) | a recursive `$ref` (a tree) |
+| Text with few distinct values (≤ 12, seen ≥ 3 times) | `enum` |
+| Text that is always a date / date-time / uuid / e-mail / ISO currency | `format` |
+| Numbers | `minimum`/`maximum` seen; integer if never fractional |
+
+#### Roles: what makes it more than a schema
+
+Each path also gets a **role**, the fact the designer needs and a plain schema cannot say. Roles come from the same
+rules runtime inference uses (field names, value patterns, the packs' link catalogue), so they are explainable:
+every role carries the reason it was chosen.
+
+| Role | Detected by | Used by the designer for |
+|---|---|---|
+| `id` | unique per document, id-like name or pattern (`tradeId`, `MX-2000…`) | the title's id, the match rule |
+| `link` | value matches a known kind's ids, or `{id, kind}`/`{id, name}` objects | links, `source:`, the links panel |
+| `measure` | number with a money/quantity name or spread | strip figures, chart values, totals |
+| `dimension` | low-cardinality text (`book`, `currency`, `status`) | pivot rows/columns, groups, colours |
+| `status` | dimension whose values are states (`Live`, `Settled`, `Failed`...) | `tone: status`, status panel |
+| `date` | date/date-time | axes, timelines, ladders |
+| `series` | array of `{date or tenor, number}` | line, area |
+| `ohlc` | array with open/high/low/close | candlestick |
+| `distribution` | array of numbers, or of objects with one measure | histogram |
+| `grid` | array of rows with several numeric columns on one axis | surface |
+| `steps` | array of `{label, signed number}` that sums to another measure | waterfall |
+| `graph` | `nodes` + `edges` | graph |
+| `tree` | recursive children | tree table, nested pivot |
+| `events` | array of `{date, label/description}` | timeline |
+| `text` | long text | markdown |
+
+The report beside the schema tree shows, per path: type, role (with its reason), presence, example values, and which
+files contributed it. Conflicts and rare fields are listed at the top: they are what bites a screen later.
+
+#### Output
+
+- **Download** `shape.json` (the schema).
+- **Open in Designer** (step 2).
+- **Copy as JSON Schema without annotations**, for use elsewhere.
+
+### 32.2 Auto-design
+
+Opening a shape in the designer starts from **auto-design**: the engine drafts a complete Sutra from the shape's roles,
+with a title (id + a dimension), a strip (up to six measures and dates), and one panel per meaningful structure, laid
+out by the same packing rules as inference (charts side by side, tables full width, links on the right). Authors
+refine rather than face an empty page. Auto-design can be re-run at any time; it never overwrites panels the author
+has touched.
+
+**As built (step 3).** `AutoDesigner` in `drishti-engine` (`com.ash.drishti.engine.design`) drafts the Sutra; nothing in
+it is a second rule set. Inference's pieces were made reusable and both paths call them: `LayoutPacker` (best candidate
+per path, density limits, function keys, provenance, links on the right), `PanelRecipes` (the options each kind gets) and
+`ColumnInference.fromFields` / `fieldColumn` (columns and formats from a field's name and kind). Runtime inference calls
+the same code on one document, and its output is unchanged (its tests were not touched).
+
+| Role (shape) | First choice, with its options filled | Runner-up kinds kept as alternatives |
+|---|---|---|
+| `series`, date axis, one measure, at least `line-min-points` points (5) | `line` | `area`, `ladder` |
+| `series`, date axis, several measures | `area` (series list) | `line` on the first, `ladder` |
+| `series`, date axis, few points or other columns | `ladder` (latest row highlighted) | `line`, `table` |
+| `series`, tenor axis, several measures | `area` | `line`, `table` |
+| `series`, tenor axis, one signed or money measure, up to 12 points | `hbar` | `line`, `table` |
+| `ohlc` | `candlestick` (volume if present) | `line` on the close, `table` |
+| `grid` | `surface` | `table` |
+| `steps` | `waterfall` | `hbar`, `table` |
+| `distribution` | `histogram` | `table` (for records) |
+| `graph` | `graph` (nodes and edges) | `table` of the nodes |
+| `tree` | `table` with `children:` and `expand: 1` | nested `pivot` (when there is a dimension and a measure), the flat top level |
+| `events` | `timeline` | `table` |
+| `table` with two or more dimensions and a measure | `pivot` with row groups: the dimension with fewest values goes `across`, the next up to three form `by: [..]`, coarse to fine | `table`, `scatter` when two measures |
+| `table` of 2 to 4 similar records with 5+ fields | `tabs` (one kv per record) | `table` |
+| `table` of label and amount, up to 12 rows | `hbar` when the amount is money, else `table` | the other |
+| other `table` | `table` (totals on money columns) | `pivot`, `scatter` |
+| object of scalars | `kv` (right column up to 6 fields); `status` when all are states | the other |
+| states spread over the document | one `status` panel | `kv` |
+| long `text` | `markdown` | `kv` |
+| top-level fields | `Details`, a `kv` of the document's own fields | none |
+| measure beside its limit (`limit`, `max`, `cap`... named for it, or a bare one when it is the only measure) | `gauge` with `max` | `kv` |
+| `link` | the `links` panel, a `with` in the title, and a function key from F7 | none |
+
+*Sample-aware.* The samples add what one merged shape cannot say. Series length is the median over the samples (a
+20-point history is a line, a 3-point one a ladder). The strip takes at most six figures ranked by role, presence and
+variety: a figure present in fewer than `rare-below` of the samples is left out, one that is the same in every sample is
+ranked lower, one that varies is ranked higher, and **emphasis** goes to the measure that varies most (with one sample,
+to the heaviest signed amount). Every figure and panel gets a reason ("`pnlHistory`: 'date' with 1 number column, 20
+points: a line over time (present in 3 of 3 samples)").
+
+*Alternatives.* Every panel keeps up to `drishti.builder.max-alternatives` (2) runner-up kinds with their options already
+filled and a reason each, returned beside the draft: the designer swaps one in with a click and no new rule runs.
+
+*Pruning.* The draft is previewed against every sample through the same preview path Studio uses. A panel that comes out
+empty or in error for more than `drishti.builder.prune-share` (0.5) of the samples is **demoted** to its first
+alternative if it has one, and **dropped** if that fares no better; a strip figure blank for more than the share is dropped.
+Each is listed with the count and the reason ("empty in 4 of 5 samples"). A panel that fails for a few samples stays and
+its reason says how many. Panels beyond `max-panels` (16 main, 4 side) are dropped and listed.
+
+*Suggest.* `AutoDesigner.suggest(shape, path[, at])` is the same chooser for one field, or for a dimension and a measure
+of the same rows (`at`): the designer calls it on a field drop and shows the ranked kinds.
+
+### 32.3 The builder API
+
+All under `/api/v1/builder`. Designing is not saving: shaping, drafting, suggesting, previewing and checking are open to every signed-in user and
+write nothing; the `author` power is needed to propose a Sutra. The stateless calls take the samples in the body; the workbench uses the
+per-design calls under `/builder/designs/{id}` (full list: [API_GUIDE.md](API_GUIDE.md#designs-your-work-kept-on-the-server)).
+
+| Endpoint | Does |
+|---|---|
+| `POST /builder/shape` | `{samples}`: returns the shape (schema + roles + report) |
+| `POST /builder/design` | `{samples}` or `{shape, samples}` (+ `kind`): auto-design; returns `{yaml, reasons, alternatives, pruned, preview, samples}` |
+| `POST /builder/suggest` | `{shape, path, at?}` (or `samples`): ranked panel kinds for a field, or for the pair `path` + `at`, each with filled options and a reason |
+| `POST /builder/edit` | `{yaml, ops[]}`: applies operations with the Sutra editor, returns new YAML, problems, preview |
+| `POST /builder/check` | `{yaml, kind?, samples}`: the panel × sample matrix |
+| `POST /builder/preview` | `{yaml, ...}`: the Sutra drawn against one sample |
+| `/builder/designs/{id}/...` | the persisted design: `ops`, `undo`, `redo`, `autodesign`, `check`, `shape`, `samples`, `versions`, `propose`, `rebase`, `share`, `export` (a pack fragment), `bind` / `sync` / `save-file` (development servers), and `about` and `form` |
+| `POST /builder/designs/import` | a pack fragment or folder (zip) into a new design |
+
+The first plan had `POST /builder/samples`, `/samples/from-store` and `/pack`: they were not built as such. Samples are added to a design
+(`POST /builder/designs/{id}/samples`, and stored entities as `refs` through the same call), and the pack scaffold is the design's `export`.
+
+Operations are small JSON objects: `{"op":"addPanel","kind":"line","at":{"area":"main","after":"terms"}}`,
+`{"op":"setOption","panel":"pnl","option":"y","value":"pnl"}` (a `null` value removes the option), `{"op":"bind","panel":"pnl","path":"$.pnlHistory"}`,
+`{"op":"move","panel":"pnl","area":"main","before":"dv01","span":6}`, `{"op":"remove","panel":"pnl"}`,
+`{"op":"setTitle"|"setStrip"|"setControls"|"setKeys"|"setMatch",...}` and `{"op":"text",...}` (the YAML tab's typing). A refused
+operation answers its own `DRS-5020` to `DRS-5024`; the Rachana reference lists the Sutra's codes.
+
+Engine placement: a `shape` package in `drishti-engine` (merging, roles), next to the inference it shares rules with;
+operations extend `SutraLayoutEditor` in `drishti-rachana`. The console adds templates and vendored JavaScript only;
+no new framework.
+
+### 32.4 Security, limits and accessibility
+
+- **Who may use it**: every signed-in user may shape, design, suggest and preview; the kind a pasted document is labelled with
+  (`sample`) is a label, not a permission. Saving, proposing, approving and deleting stay with the `author`, `approve` and
+  admin powers. Data access is not design: a preview against a stored entity needs the right to its kind, and any panel
+  with `source: link(id, kind)` is bound only when the caller may open `kind` (otherwise the panel shows "no access to kind", with none of
+  that entity's values), in views, previews (stored and pasted), the Pivot tab's records, live streams and the builder's previews.
+- **Limits** (all settings): 50 samples, 5 MB per file, 25 MB per set, nesting depth 64 (JSON parsing reuses the
+  connectors' hardened reader: bad lines counted and skipped, NaN as no value). Sample sets expire after 24 hours
+  unless saved; saved sets count against a per-user quota.
+- **Privacy**: samples are the author's own data, kept per user, never in a store, never shared, never logged
+  (only counts are). Sampling from a store applies the author's field masks.
+- **Requests**: same-origin and JSON content-type checks as the rest of the console; uploads are size-checked before
+  parsing.
+- **Accessibility**: every drag has a keyboard alternative (an *Add panel* menu; move and resize with keys as in layout
+  mode), announced through a live region; the canvas panels are focusable with their kind and title as names.

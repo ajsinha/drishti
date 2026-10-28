@@ -55,4 +55,4 @@ the records prove.
   snapshot with the share (it would freeze rights at send time and leak to later readers); an in-memory queue (loses mail on a crash).
 
 Design and as-built notes: [COLLABORATION.md](../COLLABORATION.md). The whole path worked through on one trade:
-[HOW_IT_FITS.md §3.10](../HOW_IT_FITS.md#310-share-and-discussion-end-to-end).
+[HOW_IT_FITS.md §3.10](../COLLABORATION.md#share-and-discussion-end-to-end).

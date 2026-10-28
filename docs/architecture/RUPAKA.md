@@ -17,7 +17,7 @@
 # Drishti Rūpaka: business intelligence in Drishti, live and governed
 
 Status: design, **built in part**. Phases 0 to 7 and 9 of section 20 and the AI stage are built (summary at 2.1.0 in [section 20.15](#2015-as-built-at-210-and-what-is-still-not-built)); the proof of concept (phase 0) was removed in 2.2, and since 2.3.0 (wave B, every number computed on the servers) no BI page loads Perspective or DuckDB-Wasm. Waves A to C and later BI work follow [BI_DESIGN.md](BI_DESIGN.md). Owner: the BI package of the server (`com.ash.drishti.server.bi`, with `dataset`, `engine`, `report`, `board` and, until 2.2, `poc` beside it), the console's BI routes, templates and scripts (`routes/bi_routes.py`, `web/templates/bi/`, `web/static/js/bi*.js`), the existing source layer, identity, collaboration and Elements.
-Companion notes: [LIVE_BI.md](LIVE_BI.md) (streaming result producers: the heavy case this design leaves to a producer), [RUPAKA_POC.md](../archive/RUPAKA_POC.md) (history, archived: the phase 0 proof of concept and later measurements), [QUANT_SERVICE.md](QUANT_SERVICE.md) (server-side pricing, proposed) and the Project Rūpaka SRS that this
+Companion notes: [LIVE_BI.md](../archive/LIVE_BI.md) (history, archived: streaming result producers: the heavy case this design leaves to a producer), [RUPAKA_POC.md](../archive/RUPAKA_POC.md) (history, archived: the phase 0 proof of concept and later measurements), [QUANT_SERVICE.md](QUANT_SERVICE.md) (server-side pricing, proposed) and the Project Rūpaka SRS that this
 design adopts and adapts.
 
 **How to read this document.** Sections 1 to 19 are the **design**: they say what Rūpaka should be and, where building changed the design, say **As built** in place. Section 20 is the build plan and, for each of phases 1 to 5, a **"as built"** subsection that lists exactly what exists and what does not; when a design section and an "as built" subsection differ, the subsection is right. The user documents are
@@ -114,7 +114,7 @@ bookmarks, export, subscriptions, and a good catalogue. Everything in this list 
 | **Measure** | A named aggregation in the closed expression language (`sum($.notional)`, `ratio(sum($.pnl), sum($.notional))`), or a Python measure (section 13) | Measure (DAX) |
 | **Report** | Pages of visuals over one or more datasets, with filters at three levels, bookmarks and drill-through targets | Report |
 | **Visual** | One chart, table, matrix, card, slicer or Perspective grid, bound to fields and measures | Visual |
-| **Board** | **As built (phase 5):** a wall of tiles, each one visual of a report, with alert colours and a kiosk mode ([BOARDS.md](../guides/BOARDS.md)). The design's "live sorted list of many result rows" ([LIVE_BI.md](LIVE_BI.md) section 7.2) is a different, still proposed thing | Streaming dashboard tile |
+| **Board** | **As built (phase 5):** a wall of tiles, each one visual of a report, with alert colours and a kiosk mode ([BOARDS.md](../guides/BOARDS.md)). The design's "live sorted list of many result rows" ([LIVE_BI.md](../archive/LIVE_BI.md) section 7.2, history, archived) is a different, still proposed thing | Streaming dashboard tile |
 | **Catalogue entry** | A published report or board with an audience, a description, an owner, tags and an endorsement | App / Endorsed content |
 | **Endorsement** | `promoted` (an owner says it is good) or `certified` (a data steward says it is authoritative) | Promoted / Certified |
 | **Refresh** | For cached tables: a schedule, a data-load signal (`POST /api/v1/packs/{pack}/loads`), or both | Scheduled refresh |
@@ -689,7 +689,7 @@ an administrator can restrict which workspaces and roles may use each hook.
 - **Usage:** views per report and user, slow visuals, unused content (candidates to archive).
 - **Backups:** workspaces, datasets and reports are documents in the identity database and on disk; included in the existing
   backup and export procedures.
-- **Load and memory:** the strategy of [LOAD_AND_MEMORY.md](../admin/LOAD_AND_MEMORY.md) gains a BI persona (report
+- **Load and memory:** the method of [PERFORMANCE.md, method 9](../admin/PERFORMANCE.md#9-many-users-soak-runs-and-memory-profiling) gains a BI persona (report
   viewers) and the runner's memory budget.
 
 ## 17. Architecture
@@ -858,7 +858,7 @@ and the Perspective retest, history now archived: [RUPAKA_POC.md](../archive/RUP
 
 **Not built, and not faked.**
 
-* **Incrementally maintained aggregates by group** (a change adjusting running sums, counts, minimums and maximums): built for the rollups a dataset declares over a live table (20.11); measures that are not plain stored aggregates are recomputed over the rows on each query and cached per live generation. Heavy continuous aggregation beyond that belongs in a producer ([LIVE_BI.md](LIVE_BI.md)).
+* **Incrementally maintained aggregates by group** (a change adjusting running sums, counts, minimums and maximums): built for the rollups a dataset declares over a live table (20.11); measures that are not plain stored aggregates are recomputed over the rows on each query and cached per live generation. Heavy continuous aggregation beyond that belongs in a producer ([LIVE_BI.md](../archive/LIVE_BI.md), history, archived).
 * **The "live targets met under the LOAD_AND_MEMORY capacity run"**: the done-when of the phase table. No million-row capacity run was made (local data stays at 10,000 rows a day); what was measured is history in docs/archive/RUPAKA_POC.md section 12.
 * **A history of every update of a live table** (append mode): a live table holds current state with retention. A bounded history of its *aggregates* is built (20.12, `live.history`); the rolling chart's points still live in the browser from the moment the page opened. Time buckets (`second`, `minute`) on `updatedAt` are not date parts.
 * **Per-visual frame rates** (the design's 4 and 30 a second): one cadence for a report.

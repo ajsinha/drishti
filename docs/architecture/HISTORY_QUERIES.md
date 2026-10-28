@@ -18,10 +18,10 @@
 Status: **built and released in 2.6.5** (2026-10-20), between 2.6.0 (wave D) and 2.6.6; the *As built* notes say where
 the build differs from the design. Written 2026-10-20 from the
 design agreed with the product owner, checked against the code on `develop` and against the two connector branches that are not merged
-yet (drishti-iceberg and iceberg-external; Cassandra). Related: [HOW_IT_FITS.md](HOW_IT_FITS.md) (a command becomes a screen),
+yet (drishti-iceberg and iceberg-external; Cassandra). Related: [ARCHITECTURE.md section 5](ARCHITECTURE.md#5-walk-through-one-request) (a command becomes a screen),
 [DRISHTI_NET.md](DRISHTI_NET.md) (forwarding), [SUPER_SCALE.md](SUPER_SCALE.md) section 10 (slices and owners),
 [SCALE_STRATEGY.md](SCALE_STRATEGY.md) (the history row of its table), [DRISHTI_ICEBERG.md](DRISHTI_ICEBERG.md),
-[CASSANDRA_CONNECTOR_DESIGN.md](CASSANDRA_CONNECTOR_DESIGN.md).
+[CASSANDRA_CONNECTOR.md](../connectors/CASSANDRA_CONNECTOR.md).
 
 ## Contents
 

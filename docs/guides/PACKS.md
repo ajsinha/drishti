@@ -693,7 +693,7 @@ columns, parts and chart ([PACK_DEVELOPER_GUIDE.md](PACK_DEVELOPER_GUIDE.md#hist
 A pack's kinds are BI data with nothing to build: every kind of every pack you may open is a **dataset** named `pack.<pack>.<kind>`
 (`pack.trading.trade`, `pack.core.counterparty`), certified by its pack, read-only, versioned with the pack, its columns, keys, meanings and
 masks taken from the pack ([BI_GUIDE.md](BI_GUIDE.md), *Models in the rail*). Every BI model is rooted in packs: each of its datasets traces
-back to pack kinds and their connectors ([BI_MODEL_ARCHITECTURE.md](../architecture/BI_MODEL_ARCHITECTURE.md)).
+back to pack kinds and their connectors ([BI_DESIGN.md section 14.3](../architecture/BI_DESIGN.md#143-a-model-is-a-mini-database-always-rooted-in-packs)).
 
 - **What ships.** `config/bi/` holds the BI samples over the seven packs (nine models such as `trades-basic`, `trading-risk`,
   `trading-cashflows`, `counterparty-exposure`, `world-economics`, their datasets, reports, boards, a notebook and Python items). A test,

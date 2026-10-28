@@ -1494,7 +1494,7 @@ It runs as `drishti-it` `BiRunsLoadIT` (excluded from the default build, run in 
 | [CLI_GUIDE.md](../guides/CLI_GUIDE.md) | `drishti.py bi runs …`, `bi mq --async` |
 | [CONFIGURATION.md](../admin/CONFIGURATION.md) | `config/runs/runs.yaml`, `drishti.bi.runs.file`, `drishti.bi.exec.background-share`, `standing-share`, `fragments-share` |
 | [TROUBLESHOOTING.md](../guides/TROUBLESHOOTING.md) | every new code; "my run says unknown estimate"; "my run was started again"; "the result expired" |
-| [PERFORMANCE.md](../admin/PERFORMANCE.md), [LOAD_AND_MEMORY.md](../admin/LOAD_AND_MEMORY.md) | the run engine's memory; the load test's numbers |
+| [PERFORMANCE.md](../admin/PERFORMANCE.md), [PERFORMANCE.md, method 9](../admin/PERFORMANCE.md#9-many-users-soak-runs-and-memory-profiling) | the run engine's memory; the load test's numbers |
 | [OPERATIONS.md](../admin/OPERATIONS.md), [NET.md](../admin/NET.md) | Admin → BI → Runs; runs in a cluster |
 | [DATASETS.md](../guides/DATASETS.md) | `source: {run: …}` snapshot datasets |
 | BI_DESIGN 6.3 | the class caps; correct its code column (busy is `DRS-9025`, not `DRS-9022`) |

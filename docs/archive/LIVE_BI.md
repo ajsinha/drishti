@@ -16,9 +16,11 @@
 
 # Live BI: Drishti as the live front end of a streaming BI producer
 
+> **Archived: replaced by [LIVE.md](../architecture/LIVE.md#live-bi-a-reports-live-tables) (live BI: a report's live tables), [REPORTS.md](../guides/REPORTS.md) (boards as report pages) and [BI_GUIDE.md section 25](../guides/BI_GUIDE.md#25-live-answers-and-standing-queries-wave-b-230) (standing queries).** This document is history: kept so old decisions can be traced. Do not use it to learn how Drishti works today.
+
 Status: design note, proposed (2026-10-06). Nothing in it is built beyond what section 2 lists as existing. **Update (Rūpaka phase 5):** the BI engine now has live tables fed by the same topics, with row rules and masks per reader, and reports, live visuals (Perspective until 2.3.0, Drishti's own grid since) and boards that follow
-them ([LIVE.md](LIVE.md#live-bi-a-reports-live-tables), [RUPAKA.md](RUPAKA.md) section 20.5); that is Drishti serving a *table of current state*, maintained incrementally, with measures recomputed over it. Continuous aggregation by group, the heavy case this note argues belongs in a producer, is **still not built** in Drishti; 2.3.0 added standing queries, model queries the server answers again and pushes when their data changes ([BI_GUIDE.md section 25](../guides/BI_GUIDE.md#25-live-answers-and-standing-queries-wave-b-230)). Owner: the
-server's source layer (`drishti-api`, `plugins/`), the live path ([LIVE.md](LIVE.md)) and the console's view pages.
+them ([LIVE.md](../architecture/LIVE.md#live-bi-a-reports-live-tables), [RUPAKA.md](../architecture/RUPAKA.md) section 20.5); that is Drishti serving a *table of current state*, maintained incrementally, with measures recomputed over it. Continuous aggregation by group, the heavy case this note argues belongs in a producer, is **still not built** in Drishti; 2.3.0 added standing queries, model queries the server answers again and pushes when their data changes ([BI_GUIDE.md section 25](../guides/BI_GUIDE.md#25-live-answers-and-standing-queries-wave-b-230)). Owner: the
+server's source layer (`drishti-api`, `plugins/`), the live path ([LIVE.md](../architecture/LIVE.md)) and the console's view pages.
 
 **The question.** Can Drishti work as a real-time BI server: aggregations, pivots and rankings, kept current and pushed
 to people as the data changes?
@@ -63,18 +65,18 @@ Contents
 
 ## 2. What Drishti already does
 
-Everything here exists (since 1.18, and in 1.20 as shipped) and is reused, not rebuilt. Rūpaka phase 5 added to it a live table inside the BI engine ([RUPAKA.md](RUPAKA.md) section 20.5), which this note does not need but can feed.
+Everything here exists (since 1.18, and in 1.20 as shipped) and is reused, not rebuilt. Rūpaka phase 5 added to it a live table inside the BI engine ([RUPAKA.md](../architecture/RUPAKA.md) section 20.5), which this note does not need but can feed.
 
 | Capability | What it gives BI | Where |
 |---|---|---|
-| **Per-entity live path** | `SourcePlugin.subscribe(ref, listener)` pushes each new generation of an entity; the TopicHub keeps one source subscription per entity, latest wins; ViewStream and PatchDiffer send only what changed over one channel per browser. Tick to frame p99 11.2 ms. | `drishti-api/.../SourcePlugin.java`; [LIVE.md](LIVE.md) |
-| **Deletes** | A tombstone becomes `EntityDocument.deleted(...)`; open views say the entity was deleted, and a later message brings it back in order. | [LIVE.md, Deleted entities](LIVE.md#deleted-entities) |
+| **Per-entity live path** | `SourcePlugin.subscribe(ref, listener)` pushes each new generation of an entity; the TopicHub keeps one source subscription per entity, latest wins; ViewStream and PatchDiffer send only what changed over one channel per browser. Tick to frame p99 11.2 ms. | `drishti-api/.../SourcePlugin.java`; [LIVE.md](../architecture/LIVE.md) |
+| **Deletes** | A tombstone becomes `EntityDocument.deleted(...)`; open views say the entity was deleted, and a later message brings it back in order. | [LIVE.md, Deleted entities](../architecture/LIVE.md#deleted-entities) |
 | **Kafka, state mode** | A compacted topic keyed by entity *is* the entity store: the latest message per key is the document, served on read and pushed live, with memory and disk caches. Envelope messages carry `kind`, `id` and `document`, keyed `<kind>/<id>`. | [KAFKA_CONNECTOR.md](../connectors/KAFKA_CONNECTOR.md) §2–§4 |
 | **Derived kinds** | The `derived` plugin groups one kind by an expression and sums, counts or averages fields, with a `members` list of ids that become links (`counterparty-trades` and three more from trades in `config/packs/trading/pack.yaml`). It **rebuilds when the data's version changes** (a load, checked every `version-check`, 10 s; `refresh` only for sources that cannot say their version), keeps pages on disk (`store: disk`) and lists at most `max-members` (1,000) members, the totals covering all. | `config/packs/trading/pack.yaml` `trade-pages` |
-| **Monitors** | A saved list of 1 to 50 entities streamed as one connection; only strip patches are sent. | [LIVE.md, Monitors](LIVE.md#monitors-and-alerts) |
-| **Alerts** | A Rachana-EL condition per rule, evaluated on every new document of the watched entities, firing on false → true. | [LIVE.md, Alerts](LIVE.md#monitors-and-alerts) |
+| **Monitors** | A saved list of 1 to 50 entities streamed as one connection; only strip patches are sent. | [LIVE.md, Monitors](../architecture/LIVE.md#monitors-and-alerts) |
+| **Alerts** | A Rachana-EL condition per rule, evaluated on every new document of the watched entities, firing on false → true. | [LIVE.md, Alerts](../architecture/LIVE.md#monitors-and-alerts) |
 | **Search, pivot, reports** | Questions over a kind (`TRD where mtm < -10m order by mtm`), a client-side pivot of the results, scheduled CSV reports. | USER_GUIDE |
-| **Masks, provenance, sharing, embedding** | Every value that leaves is masked per reader; every view says where it came from; any view can be shared, discussed or embedded with `<drishti-view>`. | [CONTEXT_HELP.md](CONTEXT_HELP.md), [COLLABORATION.md](COLLABORATION.md), [ELEMENTS.md](ELEMENTS.md) |
+| **Masks, provenance, sharing, embedding** | Every value that leaves is masked per reader; every view says where it came from; any view can be shared, discussed or embedded with `<drishti-view>`. | [CONTEXT_HELP.md](../architecture/CONTEXT_HELP.md), [COLLABORATION.md](../architecture/COLLABORATION.md), [ELEMENTS.md](../architecture/ELEMENTS.md) |
 
 So Drishti already has real-time *delivery* of keyed documents and *timed* aggregation. What it lacks for real-time BI
 is *incremental* aggregation, and a live view of *many* result rows at once.

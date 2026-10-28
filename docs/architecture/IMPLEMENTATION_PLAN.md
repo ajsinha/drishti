@@ -634,7 +634,7 @@ Build, test and close 2.9.5 (drill, main, tag) first; only the editions design d
 | 5 | Delta <-> Iceberg conversion | table conversion between the formats (deferred from 2.9.5) |
 | 6 | Stressed and 10-day VaR, ES backtests | |
 | 7 | The data map's 11 findings | joins that do not hold (2.9.3) |
-| 8 | Test data from seeds | the plan [TESTDATA_FROM_SEEDS_PLAN.md](TESTDATA_FROM_SEEDS_PLAN.md) |
+| 8 | Test data from seeds | approved; the plan is [TESTDATA_FROM_SEEDS_PLAN.md](TESTDATA_FROM_SEEDS_PLAN.md) |
 | 9 | Glue and S3 Tables live runs | `deploy/aws/iceberg/check-glue.sh` with AWS credentials (the product owner's) |
 | 10 | In-place Delta schema evolution | add a nullable promoted column to an existing Delta table without rewriting it (old files read as null), with an optional backfill from the `doc` column; tested on both formats and in the upgrade drill. Both VaR decks carry a Delta-vs-Iceberg slide and a *when the data's structure changes* section |
 | 11 | Plain tables and Unity Catalog | reading plain tables (no `doc` column), driven by per-table configuration; Delta through Unity Catalog (`catalog.schema.table`, credential vending, UC permissions) as an opt-in per connector ([EXTERNAL_LAKES.md](../guides/EXTERNAL_LAKES.md)) |
@@ -656,7 +656,7 @@ What is open today. None blocks normal use; each is a candidate for a future wav
 ## Roadmap
 
 **Agreed after 2.1.0 (2026-10-12):** the Rūpaka model architecture and waves W1–W16 for 2.2.0 to 3.0 — see
-[BI_MODEL_ARCHITECTURE.md](BI_MODEL_ARCHITECTURE.md); the gap check is [BI_DESIGN.md section 11](BI_DESIGN.md#11-gap-check-against-power-bi) (the 2.1 study behind it is archived as history: [BI_PARITY_PLAN.md](../archive/BI_PARITY_PLAN.md)).
+[BI_DESIGN.md section 14](BI_DESIGN.md#14-the-model-architecture-decisions-d1-to-d6); the gap check is [BI_DESIGN.md section 11](BI_DESIGN.md#11-gap-check-against-power-bi) (the 2.1 study behind it is archived as history: [BI_PARITY_PLAN.md](../archive/BI_PARITY_PLAN.md)).
 
 **Re-ordered again on 2026-10-25 (supersedes the release numbers below):** 2.8.0 is the measure foundation with VaR fully computed, Admin → Commands and write-back; 2.9.0 trading and market risk; 2.10.0 counterparty risk; 2.11.0 balance sheet and regulatory; 2.12.0 AI and GenUI (parked until then); then other industries. See [the computed-measures roadmap](#the-computed-measures-roadmap-280-to-2120-product-owner-2026-10-25).
 

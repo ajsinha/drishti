@@ -23,7 +23,7 @@ against this release on a fresh clone); the recipes follow the idioms of the rea
 
 If you only want to run Drishti, read [GETTING_STARTED.md](GETTING_STARTED.md); to run it from IntelliJ IDEA and PyCharm, read
 [IDE_GUIDE.md](IDE_GUIDE.md). For the design and its reasons, read [ARCHITECTURE.md](../architecture/ARCHITECTURE.md), the BI model
-architecture [BI_MODEL_ARCHITECTURE.md](../architecture/BI_MODEL_ARCHITECTURE.md) and the [decision records](../architecture/adr/README.md).
+architecture [BI_DESIGN.md section 14](../architecture/BI_DESIGN.md#14-the-model-architecture-decisions-d1-to-d6) and the [decision records](../architecture/adr/README.md).
 
 **Contents**
 
@@ -45,7 +45,7 @@ Drishti has two programs. The **server** is one Spring Boot 3.5 application on J
 (`drishti-server`), built from a Maven reactor of internal modules; it reads every source, lays out every screen, answers every BI
 question and pushes every live change. The **console** is a FastAPI and Jinja2 web application in `drishti-console/` that renders the
 server's JSON; the browser draws what it is sent and computes no number of its own (the BI rule *the servers compute, the browser
-draws*, [BI_MODEL_ARCHITECTURE.md](../architecture/BI_MODEL_ARCHITECTURE.md) section 2c). Industries are **packs** (`config/packs/`),
+draws*, [BI_DESIGN.md section 14.5](../architecture/BI_DESIGN.md#145-the-servers-compute-the-browser-draws)). Industries are **packs** (`config/packs/`),
 which are content and configuration, not code: seven ship (`core`, `market-data`, `trading`, `counterparty-risk`, `market-risk`,
 `world-economy`, `news-and-markets`), every attribute of their documents in UPPER_SNAKE.
 
@@ -707,7 +707,7 @@ and its live push.
 ### 4.4 A BI question: model query, DEL and SQL
 
 Rūpaka, the BI engine, lives in `drishti-server` under `server.bi` and follows the model architecture of
-[BI_MODEL_ARCHITECTURE.md](../architecture/BI_MODEL_ARCHITECTURE.md): **datasets** (one governed table each, every pack kind publishing
+[BI_DESIGN.md section 14](../architecture/BI_DESIGN.md#14-the-model-architecture-decisions-d1-to-d6): **datasets** (one governed table each, every pack kind publishing
 one automatically, `bi.layer.PackDatasets`), **data models** (datasets in a star, relationships, measures written in **DEL**, the
 Drishti Expression Language, [EXPRESSIONS.md](EXPRESSIONS.md)), and **consumers** (reports, boards, notebooks, alerts, subscriptions,
 exports, embeds, AI) each bound to one model. Every consumer asks a model the same way: a **model query** (MQ), a versioned JSON or YAML

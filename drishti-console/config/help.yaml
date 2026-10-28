@@ -211,7 +211,7 @@ moved:
   runbook-sutra-broken: docs-admin-runbooks-sutra-broken
   runbook-live-latency: docs-admin-runbooks-live-latency-high
   runbook-sign-in: docs-admin-runbooks-sign-in
-  how-it-fits: docs-architecture-how-it-fits
+  how-it-fits: docs-architecture-architecture#5-walk-through-one-request   # HOW_IT_FITS.md archived (2.9.6): its walk is ARCHITECTURE section 5
   elements: docs-architecture-elements
   mcp-client: docs-architecture-mcp-client
   rupaka: docs-architecture-rupaka
@@ -232,6 +232,12 @@ moved:
   # The 2.9.6 documentation merge (one home per topic): a merged-away document's path slug opens the section that took it over.
   docs-connectors-connector-recipes: connectors#combining-connectors   # docs/connectors/CONNECTOR_RECIPES.md, merged into CONNECTORS.md
   docs-connectors-connector-operations: connector-files#12-health-and-problems   # docs/connectors/CONNECTOR_OPERATIONS.md, merged into CONNECTOR_FILES.md section 12 and TROUBLESHOOTING
+  docs-architecture-how-it-fits: docs-architecture-architecture#5-walk-through-one-request   # archived (history): docs/archive/HOW_IT_FITS.md
+  docs-architecture-live-bi: docs-archive-live-bi   # archived (history): docs/archive/LIVE_BI.md
+  docs-architecture-bi-model-architecture: docs-architecture-bi-design#14-the-model-architecture-decisions-d1-to-d6   # archived (history); D1 to D6 now BI_DESIGN section 14
+  docs-architecture-screen-builder: screen-designer#32-reference-the-shape-engine-auto-design-and-the-builder-api   # archived (history); its reference is SCREEN_DESIGNER section 32
+  docs-architecture-cassandra-connector-design: docs-connectors-cassandra-connector   # archived (history): docs/archive/CASSANDRA_CONNECTOR_DESIGN.md
+  docs-admin-load-and-memory: docs-admin-performance#9-many-users-soak-runs-and-memory-profiling   # archived (history); its method is PERFORMANCE method 9
 
 # "What does this mean?" beside a data page's help (the explorers' ?, a view's About): the Knowledge page, or glossary entry, that
 # explains the screen (var, exposure) or the kind of the record (core/app.py reads it at start; tests/test_help.py checks each target).

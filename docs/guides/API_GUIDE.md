@@ -535,7 +535,7 @@ held by the node that issued them. Controls travel as `ctl.<id>` query parameter
 ### Explaining a view
 
 `GET /views/{kind}/{id}/explain` answers *can I trust this page, and why does it look like this* (the data behind the
-[About this page](../architecture/CONTEXT_HELP.md) drawer: [how a user reads it](USER_GUIDE.md#about-this-page), [how it works inside](../architecture/HOW_IT_FITS.md#39-about-this-page-end-to-end)). It rebuilds the view for the caller, with the same field masks, the
+[About this page](../architecture/CONTEXT_HELP.md) drawer: [how a user reads it](USER_GUIDE.md#about-this-page), [how it works inside](../architecture/CONTEXT_HELP.md#about-this-page-end-to-end)). It rebuilds the view for the caller, with the same field masks, the
 same right to open kinds and the same restricted links, and derives the answer from that, so it tells nothing the view does not:
 a masked field's value is in no part of it, and a panel the caller may not open is named only by its title and the kind of
 entity it names. Every block is omitted when empty; answers are cached per user, page and generation for

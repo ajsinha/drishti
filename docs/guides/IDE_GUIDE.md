@@ -131,7 +131,7 @@ Click **Debug** (Shift+F9) instead of Run, and set breakpoints as usual. Useful 
 | a connector fetching data | the plugin's `SourcePlugin.fetch(…)`, e.g. `FileSourcePlugin` |
 | a REST call arriving | the controllers under `com.ash.drishti.server` |
 
-[HOW_IT_FITS.md](../architecture/HOW_IT_FITS.md) follows one request through all of these.
+[ARCHITECTURE.md section 5](../architecture/ARCHITECTURE.md#5-walk-through-one-request) follows one request through all of these.
 
 ### 3.4 Changing code while it runs
 

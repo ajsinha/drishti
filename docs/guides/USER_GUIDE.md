@@ -1057,7 +1057,7 @@ world-economy pack (`ECON ECON-USA`), in that pack's words:
 - When a live update brings a newer generation of the data, an open drawer asks again (at most once in two seconds).
 - No text? A pack without an `about` entry for the kind still shows the other layers; the pack's author can add one
   ([how](PACK_MODELLING_GUIDE.md#about-text-and-glossary); how it works inside is
-  [HOW_IT_FITS.md](../architecture/HOW_IT_FITS.md#39-about-this-page-end-to-end)).
+  [HOW_IT_FITS.md](../architecture/CONTEXT_HELP.md#about-this-page-end-to-end)).
 - Hover hints on field labels and a help popover on each panel's `?` come with the glossary stage; today the panel `?`
   still opens that panel kind's page in this guide.
 - If the drawer says "could not be loaded", try again; the page itself is not affected. Error numbers are in
