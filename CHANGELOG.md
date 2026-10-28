@@ -155,6 +155,8 @@
     its "What is new in 2.6.0 to 2.9.5" checks give way to the release notes and the tutorials, and the Java loader steps (3.2 and 6k,
     now with the load into Iceberg) and the rule "without `--engine java` the script always uses the Python loader" stand at its top.
     The help centre lists 59 pages.
+  - Maps: the root README's *Documentation* is five links (install, tutorials, user guide, the documentation map, the developer
+    guide); docs/README.md is the one full map. USER_GUIDE.md's two sections on several servers are one.
 
 ## 2.9.5 — Iceberg as a full alternative to Delta; VaR hierarchies by columns (limit letters); connector files that upgrade themselves safely (2026-10-28)
 

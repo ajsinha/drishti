@@ -1978,7 +1978,6 @@ Rules are kept with your account, and so are the alerts they fire: the newest 1,
 (`drishti.alerts.keep`) are kept in the identity database, so they are still there after a server restart. More in the
 [Monitors and alerts guide](#monitors).
 
-
 ### Alerts on numbers
 
 Click **Alert me** (the bell in the corner of a visual of a BI report) or click a number on a view and choose **Alert me**: the form opens with that number filled in. Say when to tell you: when it goes **above** or **below** a limit,
@@ -2115,8 +2114,17 @@ server: the browser's cookie, or a copy of it, no longer signs anyone in. (Openi
 the server it was made on (it carries `?srv=…`). A server not shown in the list can still be reached with the link
 `/connect/<its id>` if you were given one.
 
-Servers that act as **one cluster** (Drishti\*net) are different: you sign in once and the console moves between them by itself; see
-[Several servers (Drishti\*net)](#several-servers-drishtinet).
+### Servers that act as one cluster (Drishti\*net)
+
+When your administrator runs several Drishti servers as one cluster, nothing changes for you: you sign in once, and every page and live view looks
+and works the same whichever server holds the data. If the server your console uses stops, the console moves to another by itself; the page you are
+on reloads its data, a live view reconnects, and you do not sign in again. A save made at the very moment a server stops says it did not save: save
+again. When the server that holds what you asked for is down, the page says so (`DRS-5052 ... cannot be reached now`) instead of showing nothing.
+A search covers every server's data; when one of them did not answer, the results say they are partial and name the server they are missing.
+A page that groups many records (a counterparty's trades, a book's P&L) counts the records of every server; if one did not answer, the page
+says it is partial and names the server.
+Your saved searches, layouts, pivots and workspaces follow you to whichever server you are on. Alerts and scheduled reports stay on the server they
+were made on (they act, and would act once per server).
 
 ## Your settings
 
@@ -2519,14 +2527,3 @@ full-screen at the terminal.
 - **Live values** keep ticking.
 - The **workbench** is left out on phones; everything else, including help and administration, works.
 
-## Several servers (Drishti*net)
-
-When your administrator runs several Drishti servers as one cluster, nothing changes for you: you sign in once, and every page and live view looks
-and works the same whichever server holds the data. If the server your console uses stops, the console moves to another by itself; the page you are
-on reloads its data, a live view reconnects, and you do not sign in again. A save made at the very moment a server stops says it did not save: save
-again. When the server that holds what you asked for is down, the page says so (`DRS-5052 ... cannot be reached now`) instead of showing nothing.
-A search covers every server's data; when one of them did not answer, the results say they are partial and name the server they are missing.
-A page that groups many records (a counterparty's trades, a book's P&L) counts the records of every server; if one did not answer, the page
-says it is partial and names the server.
-Your saved searches, layouts, pivots and workspaces follow you to whichever server you are on. Alerts and scheduled reports stay on the server they
-were made on (they act, and would act once per server).

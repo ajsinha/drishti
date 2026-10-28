@@ -284,42 +284,11 @@ drishti/
 
 ## Documentation
 
-Start with **[Install and run](docs/guides/GETTING_STARTED.md)**, then the **[tutorials](docs/tutorials/README.md)**; the **[user guide](docs/guides/USER_GUIDE.md)** is the reference. The
-**[documentation map](docs/README.md)** lists every document by what you want to do.
-
-| Read this when… | Document |
-|---|---|
-| you want to learn by doing | [the twenty-nine tutorials](docs/tutorials/README.md) |
-| you want it installed and running | [GETTING_STARTED.md](docs/guides/GETTING_STARTED.md) |
-| you run the server in IntelliJ IDEA and the console (UX) in PyCharm | [GETTING_STARTED.md (IDE)](docs/guides/GETTING_STARTED.md#running-from-intellij-idea-and-pycharm) |
-| you build, check, load and ship packs and Sutras from a terminal or a pipeline (`tools/drishti.py`) | [CLI_GUIDE.md](docs/guides/CLI_GUIDE.md) |
-| your ETL has loaded a batch and Drishti should refresh, verify, check alerts, tell people and flag late data | [DATA_LOADS.md](docs/guides/DATA_LOADS.md) |
-| you ship what you built to servers by copying: bundles, checksums, promotion, rollback (no API) | [OPERATIONALISING.md](docs/guides/OPERATIONALISING.md) |
-| you use the console | [USER_GUIDE.md](docs/guides/USER_GUIDE.md) |
-| you use or build business intelligence (Rūpaka) | [BI_GUIDE.md](docs/guides/BI_GUIDE.md), [tutorial 10](docs/tutorials/10-first-bi-report.md), [DATASETS.md](docs/guides/DATASETS.md), [REPORTS.md](docs/guides/REPORTS.md), [PYTHON_BI.md](docs/guides/PYTHON_BI.md), [ANALYSE.md](docs/guides/ANALYSE.md), [BI_GUIDE.md section 29](docs/guides/BI_GUIDE.md#29-ai-in-bi-report-from-words-ask-the-data-explain-this-number), [BI_GOVERNANCE.md](docs/guides/BI_GOVERNANCE.md), [REPORTS.md section 23](docs/guides/REPORTS.md) |
-| you run on Windows, or read from a script or Excel | [Install and run: Windows](docs/guides/GETTING_STARTED.md#drishti-on-windows), [API_GUIDE.md (clients)](docs/guides/API_GUIDE.md#clients-scripts-notebooks-and-excel) |
-| you use or refresh the real public data (world-economy) | [PUBLIC_DATA.md (world-economy)](docs/guides/PUBLIC_DATA.md#the-world-economy-data-in-detail) |
-| you define connectors as files, with TLS or a proxy | [CONNECTOR_FILES.md](docs/connectors/CONNECTOR_FILES.md), [TLS.md](docs/connectors/TLS.md), [the proxy](docs/connectors/TLS.md#outbound-http-proxy-for-connectors-ai-providers-and-mcp-servers) |
-| you load, assign or install a domain pack | [PACKS.md](docs/guides/PACKS.md) |
-| you build a domain pack | [PACK_DEVELOPER_GUIDE.md](docs/guides/PACK_DEVELOPER_GUIDE.md) |
-| you learn to build screens in the Build workbench, step by step | [tutorial 6](docs/tutorials/06-design-a-screen.md) |
-| you change a live page in plain words with the Sutra designer | [tutorial 22](docs/tutorials/22-build-a-screen-with-the-designer.md) |
-| you learn to write a Sutra | [SUTRA_DEVELOPER_GUIDE.md](docs/guides/SUTRA_DEVELOPER_GUIDE.md) |
-| you choose or add a panel kind | [PANELS.md](docs/guides/PANELS.md) (the kinds, and [developing one](docs/guides/PANELS.md#developing-a-panel-kind)) |
-| you need an exact Sutra key, format or expression | [RACHANA_REFERENCE.md](docs/guides/RACHANA_REFERENCE.md) |
-| a view is laid out by inference and you want to know why | [INFERENCE.md](docs/architecture/INFERENCE.md) |
-| you connect your own data | [CONNECTORS.md](docs/connectors/CONNECTORS.md) (a section per plugin), [CONNECTOR_DEVELOPER_GUIDE.md](docs/connectors/CONNECTOR_DEVELOPER_GUIDE.md) and the per-connector documents |
-| you need a setting's name, default and environment variable | [CONFIGURATION.md](docs/admin/CONFIGURATION.md) |
-| you manage users, roles, single sign-on, tokens or the access log | [USER_MANAGEMENT.md](docs/admin/USER_MANAGEMENT.md) |
-| you script against it, from Python, Excel or curl | [API_GUIDE.md (clients)](docs/guides/API_GUIDE.md#clients-scripts-notebooks-and-excel), [API_GUIDE.md](docs/guides/API_GUIDE.md) |
-| you run it in production | [OPERATIONS.md](docs/admin/OPERATIONS.md), [PERFORMANCE.md](docs/admin/PERFORMANCE.md), [LIVE.md](docs/architecture/LIVE.md) |
-| you run several servers as one cluster (Drishti\*net) | [NET.md](docs/admin/NET.md), [tutorial 19](docs/tutorials/19-a-cluster-of-three.md), [DRISHTI_NET.md](docs/architecture/DRISHTI_NET.md) |
-| you serve millions of entities a day for years | [DELTA_CONNECTOR.md](docs/connectors/DELTA_CONNECTOR.md), [POSTGRES_CONNECTOR.md](docs/connectors/POSTGRES_CONNECTOR.md), [AEROSPIKE_CONNECTOR.md](docs/connectors/AEROSPIKE_CONNECTOR.md) |
-| you need demo data, small or large | [DEMO_DATA.md](docs/connectors/DEMO_DATA.md) |
-| something is not working | [TROUBLESHOOTING.md](docs/guides/TROUBLESHOOTING.md), [runbooks](docs/admin/runbooks/) |
-| you change the code | [DEVELOPER_GUIDE.md](docs/guides/DEVELOPER_GUIDE.md) |
-| you want to understand the design and its decisions | [ARCHITECTURE.md](docs/architecture/ARCHITECTURE.md), [ADRs](docs/architecture/adr/README.md) |
-| you want to know what shipped when, and what is next | [IMPLEMENTATION_PLAN.md](docs/architecture/IMPLEMENTATION_PLAN.md), [CHANGELOG.md](CHANGELOG.md) |
+- **[Install and run](docs/guides/GETTING_STARTED.md)**: Linux, Windows, Docker and the IDEs.
+- **[Tutorials](docs/tutorials/README.md)**: twenty-nine hands-on walk-throughs, from your first 15 minutes to a cluster of three.
+- **[User guide](docs/guides/USER_GUIDE.md)**: the console, screen by screen.
+- **[Documentation map](docs/README.md)**: every document, by what you want to do, and the help centre section by section.
+- **[Developer guide](docs/guides/DEVELOPER_GUIDE.md)**: changing the code, the tests and the drill.
 
 ## Contributing rules
 
