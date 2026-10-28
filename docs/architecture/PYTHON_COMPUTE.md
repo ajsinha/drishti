@@ -15,7 +15,7 @@
 -->
 # Compute workers: Python and Java libraries for connectors, approved, pinned and isolated
 
-Status: **steps C1 to C3 built in 2.8.0 (unreleased)**; C4 to C6 planned ([section 16](#16-build-plan)). Built: the `drishti-compute`
+Status: **steps C1 to C3 built and released in 2.8.0 (2026-10-26)**; C4 to C6 planned, in no release yet ([section 16](#16-build-plan)). Built: the `drishti-compute`
 module (supervisor, Python pools in fork and warm mode, JSON-lines control, Arrow scratch transport, limits and the sandbox, fair
 scheduling, fan-out over N workers and Drishti\*net nodes), the pure-Python worker SDK `drishti_compute` with its sample engine,
 `requires:` on connector files, locked environments with manifests, Java libraries by sha256, the four-eyes approval in the Drishti
@@ -121,7 +121,7 @@ The **lock file** pins every wheel, including transitive ones, with its hash. It
 `drishti.py compute lock`, planned), reviewed, committed with the connector, and never resolved again at install time:
 
 ```text
-# requires/var-engine.lock            (planned, 2.8.0) python 3.12, platforms: manylinux_2_28_x86_64, win_amd64
+# requires/var-engine.lock            (planned, not built) python 3.12, platforms: manylinux_2_28_x86_64, win_amd64
 drishti-var==0.1.0     --hash=sha256:0d6a…      # Drishti's own package, built from compute/drishti-var
 numpy==2.1.3           --hash=sha256:a7c1…  --hash=sha256:51e9…
 polars==1.12.0         --hash=sha256:3f20…
@@ -289,7 +289,7 @@ worker counts against the request's budget.
 ## 8. The engine contract (Python)
 
 ```python
-# compute/drishti-var/src/drishti_var/connector.py             (planned, 2.8.0)
+# compute/drishti-var/src/drishti_var/connector.py             (planned, not built)
 from drishti_compute import Engine, Request, Inputs, Progress, Result    # the worker SDK shipped with Drishti (built, pure Python)
 
 class VarEngine(Engine):
@@ -320,7 +320,7 @@ amended or partly unwound trade priced over the 509 scenario days) and for stres
 ### 9.1 The pricer SPI
 
 ```python
-class Pricer(Protocol):                                  # planned, 2.8.0, in drishti_compute.pricing
+class Pricer(Protocol):                                  # planned (C4), not built, in drishti_compute.pricing
     name: str                                            # "qlrisk", "quantlib-java", "stand-in", a bank's own
     def products(self) -> set[str]: ...                  # product codes it can price (from the pack's pricer mapping)
     def price(self, trades: list[TradeDoc], market: MarketState) -> list[Valuation]: ...

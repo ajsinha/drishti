@@ -15,8 +15,8 @@
 -->
 # Write-back: editing and saving fields on a Sutra page
 
-Status: **W1 to W7 built (2.8.0, unreleased, 2026-10-25): [section 19](#19-as-built-280-2026-10-25)** says what is built, what is not, and the
-decisions taken while building. Planned for **2.8.0** (decided 2026-10-19 as 2.7.0; moved to 2.8.0 on 2026-10-21; 2.7.0 is Sutra Next since 2026-10-22; AI is 2.9.0); decisions in section 16 (2026-10-19 and
+Status: **W1 to W7 built (2026-10-25) and released in 2.8.0 (2026-10-26): [section 19](#19-as-built-280-2026-10-25)** says what is built, what is not, and the
+decisions taken while building. Planned for 2.8.0 and shipped in it (decided 2026-10-19 as 2.7.0; moved to 2.8.0 on 2026-10-21; 2.7.0 is Sutra Next since 2026-10-22; AI is 2.9.0); decisions in section 16 (2026-10-19 and
 2026-10-20). Related: [DATABASE.md](DATABASE.md) (the one Drishti database: the edit log, lanes, overlays and owned data live in it;
 2.8.0 item 0), [RUPAKA.md](RUPAKA.md) (Sutra and the renderer), [DRISHTI_NET.md](DRISHTI_NET.md) (several servers),
 [GENUI.md](GENUI.md) section 11 (write-back forms, deferred to this design), [BI_DESIGN.md](BI_DESIGN.md) (review and proposals, reused

@@ -128,6 +128,10 @@
     this page, end to end*: CONTEXT_HELP.md; *Share and Discussion, end to end*: COLLABORATION.md; the request's walk: ARCHITECTURE.md
     section 5), LOAD_AND_MEMORY.md (the kinds of test, memory, profiling and the gates: PERFORMANCE.md method 9), LIVE_BI.md and
     CASSANDRA_CONNECTOR_DESIGN.md. TESTDATA_FROM_SEEDS_PLAN.md stays (approved for 2.9.6): its stray `# Changelog` heading removed.
+  - Status lines that named a release that came and went: AI_MANAGEMENT.md and GENUI.md (parked, not 2.9.0), PYTHON_COMPUTE.md,
+    REACTIVE_CONNECTORS.md and WRITE_BACK.md (released in 2.8.0, not "unreleased"), QUANT_SERVICE.md (checked against 2.9.5), the six
+    contracts FRTB, PNL, SIMM, STR, TRADING_GROUPINGS and TVAL and IMPLEMENTATION_PLAN.md's 2.9.0 table (parked, not built), and the
+    plan's *Where things stand* (2.9.5 released, 2.9.6 under way).
 
 ## 2.9.5 — Iceberg as a full alternative to Delta; VaR hierarchies by columns (limit letters); connector files that upgrade themselves safely (2026-10-28)
 
