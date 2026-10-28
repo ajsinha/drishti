@@ -71,6 +71,15 @@ public final class ConnectorBootstrap {
      * @param generate whether to write files from templates
      */
     public static Result run(List<Pack> packs, ConnectorFiles files, PackSettings overrides, boolean generate) {
+        return run(packs, files, overrides, generate, java.util.function.UnaryOperator.identity());
+    }
+
+    /**
+     * The same, each template seen through {@code adjust} first (the server's view of a pack's template: {@link OfficialReaders}), so
+     * a file is generated from, and compared with, what the server reads.
+     */
+    public static Result run(List<Pack> packs, ConnectorFiles files, PackSettings overrides, boolean generate,
+            java.util.function.UnaryOperator<Map<String, Object>> adjust) {
         List<String> generated = new ArrayList<>();
         List<String> migrated = new ArrayList<>();
         List<String> messages = new ArrayList<>();
@@ -82,7 +91,7 @@ public final class ConnectorBootstrap {
         for (String packName : lineage.order()) {          // most specific first: its template is the one used
             packs.stream().filter(p -> p.name().equals(packName)).findFirst().ifPresent(p -> p.connectorTemplates().forEach((n, t) -> {
                 if (!templates.containsKey(n)) {
-                    templates.put(n, t);
+                    templates.put(n, adjust.apply(t));
                     templateOwner.put(n, p);
                 }
             }));

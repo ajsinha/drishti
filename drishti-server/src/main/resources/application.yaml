@@ -656,8 +656,10 @@ drishti:
       rules: []                      # first match wins: {name, groups: [PRODUCT_GROUP...], types: [PRODUCT_TYPE...], key: [SECURITY_ID, ISIN...]}; none: one position per trade
     official:                        # the official end-of-day captures (docs/guides/VAR_GUIDE.md section 19)
       enabled: ${DRISHTI_VAR_OFFICIAL:true}       # capture every node of every hierarchy when a date's inputs are complete (after the data-load signal)
-      publish: true                  # also append them to <root>/risk-results/var-official (Delta, append-only) for other systems
-      root: ${DRISHTI_DELTA_ROOT:${drishti.data.dir:./data}/delta}   # the risk lake's root; an s3:// root is not published by this writer
+      publish: true                  # also append them to <root>/risk-results/var-official (append-only) for other systems
+      root: ${DRISHTI_DELTA_ROOT:${drishti.data.dir:./data}/delta}   # a folder or s3://bucket/prefix (2.9.5)
+      format: ${DRISHTI_VAR_OFFICIAL_FORMAT:delta}   # delta or iceberg (2.9.5); BI's var-results connector follows it (generated as plugin iceberg)
+      storage: {}                    # the s3.* settings for an s3:// root (s3.region, s3.endpoint, keys; none: the default credential chain)
       retention-years: 7             # the published table keeps its log and removed files (time travel) this long
       on-start: true                 # at start, capture the newest date when it has no official record yet
       currencies: [USD]              # reporting currencies captured officially (USD always, and the only one published); e.g. [USD, EUR]
@@ -696,8 +698,10 @@ drishti:
       access: {}                     # per role, per counterparty, group or legal entity: trades | aggregate | none (drishti.ccr.exposure.access.<role>[CP-ALDERSHOT]=aggregate)
       official:                      # the official end-of-day captures (docs/guides/EXPOSURE_GUIDE.md section 20)
         enabled: ${DRISHTI_EXPOSURE_OFFICIAL:true}   # capture every netting set, counterparty, group and hierarchy node when a date's run is complete
-        publish: true                # also append them to <root>/risk-results/exposure-official and exposure-official-cpty (Delta, append-only)
-        root: ${DRISHTI_DELTA_ROOT:${drishti.data.dir:./data}/delta}   # the risk lake's root; an s3:// root is not published by this writer
+        publish: true                # also append them to <root>/risk-results/exposure-official and exposure-official-cpty (append-only)
+        root: ${DRISHTI_DELTA_ROOT:${drishti.data.dir:./data}/delta}   # a folder or s3://bucket/prefix (2.9.5)
+        format: ${DRISHTI_EXPOSURE_OFFICIAL_FORMAT:delta}   # delta or iceberg (2.9.5); BI's exposure-results connector follows it
+        storage: {}                  # the s3.* settings for an s3:// root, as drishti.var.official.storage
         retention-years: 7           # the published tables keep their log and removed files (time travel) this long
         on-start: true               # at start, capture the newest date when it has no official record yet
         jsonl: true                  # also write each published date as JSON Lines: <root>/risk-results/jsonl/<table>/<date>/ (2.9.4)

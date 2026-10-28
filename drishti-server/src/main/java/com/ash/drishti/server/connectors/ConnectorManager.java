@@ -460,7 +460,8 @@ public final class ConnectorManager {
         for (String pn : PackLoader.lineage(packs.packs()).order()) {
             for (Pack p : packs.packs()) {
                 if (p.name().equals(pn) && p.connectorTemplates().containsKey(name)) {
-                    return Optional.of(new Template(p.name(), p.connectorTemplates().get(name)));
+                    return Optional.of(new Template(p.name(), com.ash.drishti.packs.PackEnvironmentPostProcessor.officialReaders(env)
+                            .apply(p.connectorTemplates().get(name))));                // the readers of official results follow their format
                 }
             }
         }

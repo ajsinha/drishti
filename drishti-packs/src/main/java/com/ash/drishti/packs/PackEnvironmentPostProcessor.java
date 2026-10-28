@@ -66,7 +66,7 @@ public final class PackEnvironmentPostProcessor implements EnvironmentPostProces
         }
         // connector files: migrate old per-pack overrides once, write files from the packs' templates where none exist
         ConnectorBootstrap.Result boot = ConnectorBootstrap.run(packs, files, overrides,
-                Boolean.parseBoolean(env.getProperty("drishti.sources.connectors-generate", "true")));
+                Boolean.parseBoolean(env.getProperty("drishti.sources.connectors-generate", "true")), officialReaders(env));
         // the packs' own properties are computed after the files exist, so a template is left out where a file stands in for it
         env.getPropertySources().addLast(new MapPropertySource(SOURCE, loader.properties(packs)));
         java.util.Map<String, String> problems = new java.util.LinkedHashMap<>();
@@ -103,5 +103,12 @@ public final class PackEnvironmentPostProcessor implements EnvironmentPostProces
         }
         problems.forEach((n, m) -> fileProps.put("drishti.sources.connector-file-problems." + n, m));
         env.getPropertySources().addBefore(SOURCE, new MapPropertySource(FILES_SOURCE, fileProps));
+    }
+
+    /** A pack's template as the server reads it: the readers of official results follow their publishing format (OfficialReaders). */
+    public static java.util.function.UnaryOperator<java.util.Map<String, Object>> officialReaders(org.springframework.core.env.ConfigurableEnvironment env) {
+        org.springframework.boot.context.properties.bind.Binder binder = org.springframework.boot.context.properties.bind.Binder.get(env);
+        return t -> OfficialReaders.adjust(t, env::getProperty, prefix -> List.copyOf(binder.bind(prefix,
+                org.springframework.boot.context.properties.bind.Bindable.mapOf(String.class, String.class)).orElse(java.util.Map.of()).keySet()));
     }
 }

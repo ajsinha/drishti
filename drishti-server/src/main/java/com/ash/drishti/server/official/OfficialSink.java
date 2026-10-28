@@ -114,16 +114,27 @@ public interface OfficialSink {
     }
 
     /**
-     * Refuses to append to a local table of the other format (the format changed while the root stayed): an official table keeps the
+     * Refuses to append to a table (a folder or an object-store prefix) of the other format (the format changed while the root stayed): an official table keeps the
      * format it was created in, and a second format's files in one folder would make a table neither reader trusts.
      */
     default void sameFormat(String table) throws java.io.IOException {
-        if (!local(root())) {
-            return;
+        String t = where(table);
+        boolean delta;
+        boolean iceberg;
+        if (local(root())) {
+            java.nio.file.Path f = folder(root()).resolve(FOLDER).resolve(table);
+            t = f.toString();
+            delta = java.nio.file.Files.isDirectory(f.resolve("_delta_log"));
+            iceberg = !delta && java.nio.file.Files.isDirectory(f.resolve("metadata"));
+        } else {                                                       // an object store: a prefix with objects under it
+            S3Storage s3 = new S3Storage(S3Settings.from(settings()));
+            try {
+                delta = s3.isDirectory(t + "/_delta_log");
+                iceberg = !delta && s3.isDirectory(t + "/metadata");
+            } finally {
+                s3.close();
+            }
         }
-        java.nio.file.Path t = folder(root()).resolve(FOLDER).resolve(table);
-        boolean delta = java.nio.file.Files.isDirectory(t.resolve("_delta_log"));
-        boolean iceberg = !delta && java.nio.file.Files.isDirectory(t.resolve("metadata"));
         if ("iceberg".equals(format()) ? delta : iceberg) {
             throw new java.io.IOException("the table " + t + " is " + (delta ? "a Delta" : "an Iceberg") + " table and the official format is "
                     + format() + ": an official table keeps its format; give the new format another root (drishti.*.official.root)");
