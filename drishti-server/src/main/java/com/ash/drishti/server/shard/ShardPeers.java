@@ -13,7 +13,7 @@
  *
  * See the LICENSE file in the root of this repository for the full terms.
  */
-package com.ash.drishti.server.var;
+package com.ash.drishti.server.shard;
 
 import com.ash.drishti.net.digest.Digest;
 import com.ash.drishti.net.member.Member;
@@ -41,22 +41,23 @@ import java.util.UUID;
 import java.util.function.Supplier;
 
 /**
- * The members a sharded VaR date is spread over (VAR_SHARDING.md section 4): this server and the Drishti*net members that are alive, with
- * what each says of its VaR shards in its capability digest (the {@code var-shards} service: whether it owns shards, whether it is
+ * The members a sharded measure's dates are spread over (VAR_SHARDING.md section 4), for any measure: this server and the Drishti*net
+ * members that are alive, with what each says of the measure's shards in its capability digest (a service of its own per measure, VaR's
+ * {@code var-shards}: whether it owns shards, whether it is
  * draining, its zone, and per date the shard map it holds and the shards it is ready to serve). Readiness travels with the digest: a change
  * raises the digest's hash in gossip and the peers pull it within a round, so "ready for shard X" is announced through gossip without a
  * protocol of its own. Calls to a member are the cluster's signed, one-hop calls; a call for a person carries their on-behalf-of token.
  * With Drishti*net off the only member is this server ({@code local}).
  */
-final class VarShardPeers {
+public final class ShardPeers {
 
-    /** The digest service name of a member's VaR shard state. */
-    static final String SERVICE = "var-shards";
-    static final String LOCAL = "local";
+    /** The digest service name of a member's shard state for this measure ({@code var-shards}). */
+    private final String service;
+    public static final String LOCAL = "local";
     private static final com.fasterxml.jackson.databind.ObjectMapper JSON = new com.fasterxml.jackson.databind.ObjectMapper();
 
     /**
-     * What a member says of its VaR shards.
+     * What a member says of its shards of the measure.
      *
      * @param on sharding is on there
      * @param owner it may own shards (not coordinator-only)
@@ -64,10 +65,10 @@ final class VarShardPeers {
      * @param dates per business date the shard maps it holds shards of, each with the shards ready to serve and the data each was built
      *     from (the first 16 characters of the shard's hot file digest)
      */
-    record State(boolean on, boolean owner, boolean draining, Map<LocalDate, List<Ready>> dates) {
-        static final State NONE = new State(false, false, false, Map.of());
+    public record State(boolean on, boolean owner, boolean draining, Map<LocalDate, List<Ready>> dates) {
+        public static final State NONE = new State(false, false, false, Map.of());
 
-        String json() {
+        public String json() {
             Map<String, Object> m = new LinkedHashMap<>();
             m.put("on", on);
             m.put("owner", owner);
@@ -82,7 +83,7 @@ final class VarShardPeers {
             }
         }
 
-        static State parse(String json) {
+        public static State parse(String json) {
             if (json == null || json.isBlank()) {
                 return NONE;
             }
@@ -105,7 +106,7 @@ final class VarShardPeers {
         }
 
         /** The data a member holds shard {@code index} of the date's map {@code map} from (16 characters of its digest), or null. */
-        String held(LocalDate date, String map, int index) {
+        public String held(LocalDate date, String map, int index) {
             for (Ready r : dates.getOrDefault(date, List.of())) {
                 if (r.map().equals(map) && r.ready().containsKey(index)) {
                     return r.ready().get(index);
@@ -115,14 +116,14 @@ final class VarShardPeers {
         }
 
         /** True when the member is ready to serve shard {@code index} of the map built from data {@code digest} (any data when null). */
-        boolean ready(LocalDate date, String map, int index, String digest) {
+        public boolean ready(LocalDate date, String map, int index, String digest) {
             String h = held(date, map, index);
             return h != null && (digest == null || digest.startsWith(h));
         }
     }
 
     /** One shard map of a date and the shards of it ready on a member: index to the first 16 characters of the shard's data digest. */
-    record Ready(String map, Map<Integer, String> ready) {}
+    public record Ready(String map, Map<Integer, String> ready) {}
 
     /**
      * A member as the shards see it.
@@ -130,9 +131,9 @@ final class VarShardPeers {
      * @param routable alive, speaking this protocol, not drained by Drishti*net's own drain
      * @param zone its zone (the value of its tag {@code <zone-tag>:<zone>}), or empty
      */
-    record Peer(String node, String url, String zone, boolean self, boolean routable, State state) {
+    public record Peer(String node, String url, String zone, boolean self, boolean routable, State state) {
         /** May own shards now: routable, sharding on, not coordinator-only, not draining. */
-        boolean eligible() {
+        public boolean eligible() {
             return routable && state.on() && state.owner() && !state.draining();
         }
     }
@@ -140,32 +141,36 @@ final class VarShardPeers {
     private final Supplier<NetService> net;
     private final Supplier<DigestService> digests;
 
-    VarShardPeers(Supplier<NetService> net, Supplier<DigestService> digests) {
+    /**
+     * @param service the digest service name the measure's shard state is published under ({@code var-shards})
+     */
+    public ShardPeers(String service, Supplier<NetService> net, Supplier<DigestService> digests) {
+        this.service = service;
         this.net = net;
         this.digests = digests;
     }
 
     /** True while this server is a member of a running Drishti*net. */
-    boolean clustered() {
+    public boolean clustered() {
         NetService n = net.get();
         return n != null && n.running() && n.node().isPresent() && !n.nodeId().isEmpty();
     }
 
     /** This member's id ({@code local} with Drishti*net off). */
-    String self() {
+    public String self() {
         return clustered() ? net.get().nodeId() : LOCAL;
     }
 
     /** Publishes this member's state in its digest (rebuilt each round); a no-op with Drishti*net off. */
-    void publish(Supplier<String> state) {
+    public void publish(Supplier<String> state) {
         DigestService d = digests.get();
         if (d != null) {
-            d.service(SERVICE, state);
+            d.service(service, state);
         }
     }
 
     /** Rebuilds this member's digest now, so a shard just ready is announced in the next gossip round, not after the digest's own. */
-    void announce() {
+    public void announce() {
         DigestService d = digests.get();
         if (d != null && clustered()) {
             d.announce();
@@ -173,7 +178,7 @@ final class VarShardPeers {
     }
 
     /** This member, then every other member that is alive, with its state; {@code mine} is this member's own (never read from a digest). */
-    List<Peer> peers(State mine, String zoneTag) {
+    public List<Peer> peers(State mine, String zoneTag) {
         List<Peer> out = new ArrayList<>();
         if (!clustered()) {
             out.add(new Peer(LOCAL, "", "", true, true, mine));
@@ -190,14 +195,14 @@ final class VarShardPeers {
                 continue;
             }
             Digest d = theirs.get(m.nodeId());
-            State s = d == null ? State.NONE : State.parse(d.services().get(SERVICE));
+            State s = d == null ? State.NONE : State.parse(d.services().get(service));
             out.add(new Peer(m.nodeId(), m.url(), zone(m.tags(), zoneTag), false, m.routable(), s));
         }
         return out;
     }
 
     /** The zone of a member: the value of its tag {@code <tag>:<zone>}; empty without a zone tag or such a tag. */
-    static String zone(List<String> tags, String zoneTag) {
+    public static String zone(List<String> tags, String zoneTag) {
         if (zoneTag == null || zoneTag.isBlank() || tags == null) {
             return "";
         }
@@ -232,7 +237,7 @@ final class VarShardPeers {
     }
 
     /** One signed call to a member, its answer read whole; IOException when the member cannot be reached. */
-    PeerHttp.Answer call(String node, String method, String pathAndQuery, byte[] body, Principal p, Duration timeout) throws IOException {
+    public PeerHttp.Answer call(String node, String method, String pathAndQuery, byte[] body, Principal p, Duration timeout) throws IOException {
         try {
             return net.get().http().send(url(node), method, pathAndQuery, headers(node, p, "application/json"), body, timeout);
         } catch (InterruptedException e) {
@@ -242,7 +247,7 @@ final class VarShardPeers {
     }
 
     /** A signed call whose answer is streamed (a shard's skeleton); the caller closes it. */
-    HttpResponse<InputStream> open(String node, String pathAndQuery, Duration timeout) throws IOException {
+    public HttpResponse<InputStream> open(String node, String pathAndQuery, Duration timeout) throws IOException {
         try {
             return net.get().http().open(url(node), "GET", pathAndQuery, headers(node, null, "application/octet-stream"), null, timeout);
         } catch (InterruptedException e) {

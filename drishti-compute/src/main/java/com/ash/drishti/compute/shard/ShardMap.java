@@ -13,7 +13,7 @@
  *
  * See the LICENSE file in the root of this repository for the full terms.
  */
-package com.ash.drishti.compute.var;
+package com.ash.drishti.compute.shard;
 
 import java.nio.charset.StandardCharsets;
 import java.security.MessageDigest;
@@ -28,28 +28,26 @@ import java.util.SortedMap;
 import java.util.TreeMap;
 
 /**
- * One business date's shard map (VAR_SHARDING.md section 3): the date's trades cut into contiguous ranges of the shard key (legal entity,
- * then desk), in the hot file's own order, each near the target size, a key (a desk) never split. A pure function of the date's row
+ * One business date's shard map (VAR_SHARDING.md section 3), for any measure sharded across Drishti*net: the date's rows cut into contiguous
+ * ranges of the shard key (for VaR the legal entity, then the desk), in the order the measure keeps its rows, each near the target size, a
+ * key value (a desk) never split. A pure function of the date's row
  * counts per key, so every member that reads the same data version computes the same map; its {@link #digest()} is sent with every
  * partial sum and skeleton, and an answer built from another map is refused. The digest names the cut, not the data: the date, the key, the
  * target and the shards' first and last keys (an intraday batch that adds rows without moving a cut keeps the map; a shard's data is
- * named by its own hot file's digest).
+ * named by its own data digest, VaR: its hot file's).
  *
  * <p>Shard {@code i} holds every key from its first one up to (excluded) the next shard's first: the ranges cover the whole key space, so
  * a row whose key was not counted (it cannot be, at one data version) still has exactly one shard.
  *
  * @param date the business date
  * @param version the data version of the date's trades the counts were read at
- * @param key the shard key's columns, a prefix of the hot file's order ({@code LEGAL_ENTITY}, {@code DESK})
+ * @param key the shard key's columns (a prefix of the measure's row order, {@link #checkKey})
  * @param shards the shards in key order, indexed from 0
  * @param targetBytes the target size of a shard (its float32 rows)
  * @param note why the date was not cut, or null (one shard covers the whole date)
  * @param digest SHA-256 (hex) of the date, the key, the target and every shard's first and last key
  */
 public record ShardMap(LocalDate date, String version, List<String> key, List<Shard> shards, long targetBytes, String note, String digest) {
-
-    /** The key columns a shard key may use, in the hot file's order: a prefix of these (the legal entity, or it and the desk). */
-    public static final List<String> ORDER = List.of("LEGAL_ENTITY", "DESK");
 
     /**
      * One shard.
@@ -58,7 +56,7 @@ public record ShardMap(LocalDate date, String version, List<String> key, List<Sh
      * @param first the first key counted in it (shard 0 also holds every key before it; empty for a shard of the whole date)
      * @param last the last key counted in it (empty for a shard of the whole date)
      * @param rows the rows counted in it
-     * @param bytes its estimated float32 rows ({@code rows} × width × 4)
+     * @param bytes its estimated size ({@code rows} × the measure's bytes per row)
      */
     public record Shard(int index, List<String> first, List<String> last, long rows, long bytes) {
         public Shard {
@@ -66,7 +64,7 @@ public record ShardMap(LocalDate date, String version, List<String> key, List<Sh
             last = clean(last);
         }
 
-        /** A key's values, a missing one as empty (the hot file sorts it so). */
+        /** A key's values, a missing one as empty (the rows are sorted so). */
         private static List<String> clean(List<String> key) {
             List<String> out = new ArrayList<>(key.size());
             for (String v : key) {
@@ -111,17 +109,24 @@ public record ShardMap(LocalDate date, String version, List<String> key, List<Sh
         shards = List.copyOf(shards);
     }
 
-    /** Checks a configured shard key: a non-empty prefix of {@link #ORDER} (else the ranges would not be runs of the hot file). */
-    public static List<String> checkKey(List<String> key) {
-        List<String> k = key == null || key.isEmpty() ? ORDER : key.stream().map(c -> c.strip().toUpperCase(java.util.Locale.ROOT)).toList();
-        if (k.size() > ORDER.size() || !ORDER.subList(0, k.size()).equals(k)) {
-            throw new IllegalArgumentException("the shard key is " + k + ": it must be [LEGAL_ENTITY] or [LEGAL_ENTITY, DESK], the hot file's own "
-                    + "order (a desk is never split)");
+    /**
+     * Checks a configured shard key against the order a measure keeps its rows in ({@code order}; VaR: legal entity, desk): a non-empty prefix
+     * of it, else the ranges would not be runs of the measure's rows. None given: the whole order.
+     */
+    public static List<String> checkKey(List<String> key, List<String> order) {
+        List<String> k = key == null || key.isEmpty() ? order : key.stream().map(c -> c.strip().toUpperCase(java.util.Locale.ROOT)).toList();
+        if (k.size() > order.size() || !order.subList(0, k.size()).equals(k)) {
+            List<String> allowed = new ArrayList<>();
+            for (int i = 1; i <= order.size(); i++) {
+                allowed.add(order.subList(0, i).toString());
+            }
+            throw new IllegalArgumentException("the shard key is " + k + ": it must be " + String.join(" or ", allowed) + ", the order the rows are "
+                    + "kept in (a key value is never split)");
         }
         return k;
     }
 
-    /** Compares two keys column by column, a missing value as empty (the hot file's sort). */
+    /** Compares two keys column by column, a missing value as empty (the order the rows are sorted in). */
     public static int compare(List<String> a, List<String> b) {
         int n = Math.max(a.size(), b.size());
         for (int i = 0; i < n; i++) {
@@ -145,17 +150,17 @@ public record ShardMap(LocalDate date, String version, List<String> key, List<Sh
 
     /**
      * Cuts a date into shards: the keys in order, a shard closed when the next key would take it over {@code targetBytes} (a shard holds at
-     * least one key, however large), each key's bytes its rows × {@code width} × 4.
+     * least one key, however large), each key's bytes its rows × {@code bytesPerRow} (VaR: the scenarios × 4, a float32 row).
      *
      * @param rowsByKey rows per key value (each list as long as {@code key}), sorted by {@link #compare}
      */
-    public static ShardMap cut(LocalDate date, String version, List<String> key, SortedMap<List<String>, Long> rowsByKey, int width,
+    public static ShardMap cut(LocalDate date, String version, List<String> key, SortedMap<List<String>, Long> rowsByKey, long bytesPerRow,
             long targetBytes) {
-        List<String> k = checkKey(key);
+        List<String> k = List.copyOf(key);
         if (rowsByKey.isEmpty()) {
             return whole(date, version, k, targetBytes, "the date has no rows to cut");
         }
-        long per = (long) Math.max(1, width) * Float.BYTES;
+        long per = Math.max(1, bytesPerRow);
         List<Shard> out = new ArrayList<>();
         List<String> first = null;
         List<String> last = null;
@@ -180,7 +185,7 @@ public record ShardMap(LocalDate date, String version, List<String> key, List<Sh
     /** A map of one shard holding the whole date (the date could not be cut: {@code note} says why). */
     public static ShardMap whole(LocalDate date, String version, List<String> key, long targetBytes, String note) {
         List<Shard> one = List.of(new Shard(0, List.of(), List.of(), 0, 0));
-        return new ShardMap(date, version, checkKey(key), one, targetBytes, note, digest(date, version, checkKey(key), targetBytes, one));
+        return new ShardMap(date, version, key, one, targetBytes, note, digest(date, version, List.copyOf(key), targetBytes, one));
     }
 
     /** The shard a key falls in: the last shard whose first key is not after it (shard 0 for anything before every first key). */

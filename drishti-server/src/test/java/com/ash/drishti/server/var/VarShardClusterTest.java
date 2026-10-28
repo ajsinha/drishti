@@ -454,7 +454,7 @@ class VarShardClusterTest {
     @Order(5)
     void aPartialOfAnotherDataVersionOrWithoutTheClusterKeyIsRefused() throws Exception {
         VarShards a = cluster.node("a").bean(VarService.class).shards();
-        com.ash.drishti.compute.var.ShardMap m = a.map(DAY);
+        com.ash.drishti.compute.shard.ShardMap m = a.map(DAY);
         String body = new String(VarShardRows.request(DAY, "USD", m, 0, "0".repeat(64), com.ash.drishti.compute.vector.OrdinalSet.of(0)),
                 StandardCharsets.UTF_8);
         var signed = cluster.node("a").net().http().send(cluster.node("b").url(), "POST", "/api/v1/var/partial",

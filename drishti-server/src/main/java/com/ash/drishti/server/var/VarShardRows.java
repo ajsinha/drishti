@@ -18,7 +18,7 @@ package com.ash.drishti.server.var;
 import com.ash.drishti.common.DrishtiException;
 import com.ash.drishti.common.ErrorCode;
 import com.ash.drishti.compute.var.ShardAssembly;
-import com.ash.drishti.compute.var.ShardMap;
+import com.ash.drishti.compute.shard.ShardMap;
 import com.ash.drishti.compute.var.ShardSkeleton;
 import com.ash.drishti.compute.var.VarBook;
 import com.ash.drishti.compute.vector.OrdinalSet;
@@ -131,19 +131,19 @@ final class VarShardRows {
     /** The members to ask for a shard at data {@code digest}, in order (see the class). */
     List<String> candidates(LocalDate date, ShardMap map, int index, String digest) {
         List<String> owners = shards.owners(map.shard(index));
-        Map<String, VarShardPeers.Peer> byNode = new TreeMap<>();
+        Map<String, com.ash.drishti.server.shard.ShardPeers.Peer> byNode = new TreeMap<>();
         shards.members().forEach(p -> byNode.put(p.node(), p));
         Set<String> out = new LinkedHashSet<>();
         for (String n : owners) {
-            VarShardPeers.Peer p = byNode.get(n);
+            com.ash.drishti.server.shard.ShardPeers.Peer p = byNode.get(n);
             if (p != null && p.routable() && p.state().ready(date, map.digest(), index, digest)) {
                 out.add(n);
             }
         }
-        byNode.values().stream().filter(p -> p.routable() && p.state().ready(date, map.digest(), index, digest)).map(VarShardPeers.Peer::node)
+        byNode.values().stream().filter(p -> p.routable() && p.state().ready(date, map.digest(), index, digest)).map(com.ash.drishti.server.shard.ShardPeers.Peer::node)
                 .forEach(out::add);
         for (String n : owners) {
-            VarShardPeers.Peer p = byNode.get(n);
+            com.ash.drishti.server.shard.ShardPeers.Peer p = byNode.get(n);
             if (p != null && p.eligible()) {
                 out.add(n);
             }

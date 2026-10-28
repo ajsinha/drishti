@@ -17,7 +17,7 @@ package com.ash.drishti.server.var;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
-import com.ash.drishti.compute.var.ShardMap;
+import com.ash.drishti.compute.shard.ShardMap;
 import com.ash.drishti.compute.var.VarBook;
 import com.ash.drishti.compute.vector.OrdinalSet;
 import com.ash.drishti.compute.vector.ShardedVectors;

@@ -13,7 +13,7 @@
  *
  * See the LICENSE file in the root of this repository for the full terms.
  */
-package com.ash.drishti.compute.var;
+package com.ash.drishti.compute.shard;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
@@ -36,6 +36,8 @@ import org.junit.jupiter.api.Test;
 class ShardMapTest {
 
     static final LocalDate DAY = LocalDate.of(2026, 9, 30);
+    /** VaR's row order: legal entity, desk. */
+    static final List<String> ORDER = List.of("LEGAL_ENTITY", "DESK");
     static final int WIDTH = 509;
     static final long ROW = WIDTH * 4L;
 
@@ -56,20 +58,20 @@ class ShardMapTest {
 
     @Test
     void theSameCountsGiveTheSameMapWhateverTheirOrder() {
-        ShardMap a = ShardMap.cut(DAY, "v1", List.of("LEGAL_ENTITY", "DESK"), counts(3), WIDTH, 4_000 * ROW);
-        ShardMap b = ShardMap.cut(DAY, "v1", List.of("legal_entity", "desk"), new TreeMap<>(counts(3)), WIDTH, 4_000 * ROW);
+        ShardMap a = ShardMap.cut(DAY, "v1", ORDER, counts(3), ROW, 4_000 * ROW);
+        ShardMap b = ShardMap.cut(DAY, "v1", ShardMap.checkKey(List.of("legal_entity", "desk"), ORDER), new TreeMap<>(counts(3)), ROW, 4_000 * ROW);
         assertThat(a.digest()).isEqualTo(b.digest());
         assertThat(a.shards()).isEqualTo(b.shards());
-        assertThat(ShardMap.cut(DAY, "v2", ShardMap.ORDER, counts(3), WIDTH, 4_000 * ROW).digest()).as("another data version, the same cut")
+        assertThat(ShardMap.cut(DAY, "v2", ORDER, counts(3), ROW, 4_000 * ROW).digest()).as("another data version, the same cut")
                 .isEqualTo(a.digest());
-        assertThat(ShardMap.cut(DAY, "v1", ShardMap.ORDER, counts(3), WIDTH, 2_000 * ROW).digest()).as("another cut").isNotEqualTo(a.digest());
+        assertThat(ShardMap.cut(DAY, "v1", ORDER, counts(3), ROW, 2_000 * ROW).digest()).as("another cut").isNotEqualTo(a.digest());
     }
 
     @Test
     void shardsAreContiguousNearTheTargetAndNeverSplitADesk() {
         SortedMap<List<String>, Long> c = counts(11);
         long target = 6_000 * ROW;
-        ShardMap m = ShardMap.cut(DAY, "v1", ShardMap.ORDER, c, WIDTH, target);
+        ShardMap m = ShardMap.cut(DAY, "v1", ORDER, c, ROW, target);
         assertThat(m.size()).isGreaterThan(3);
         long total = 0;
         List<String> prevLast = null;
@@ -96,21 +98,22 @@ class ShardMapTest {
 
     @Test
     void aTargetLargerThanTheDateIsOneShardAndAnEmptyDateIsWhole() {
-        ShardMap one = ShardMap.cut(DAY, "v1", ShardMap.ORDER, counts(5), WIDTH, Long.MAX_VALUE / 4);
+        ShardMap one = ShardMap.cut(DAY, "v1", ORDER, counts(5), ROW, Long.MAX_VALUE / 4);
         assertThat(one.size()).isEqualTo(1);
         assertThat(one.shardOf(List.of("LE-3", "DESK-3-0"))).isZero();
-        ShardMap none = ShardMap.cut(DAY, "v1", ShardMap.ORDER, ShardMap.counts(), WIDTH, ROW);
+        ShardMap none = ShardMap.cut(DAY, "v1", ORDER, ShardMap.counts(), ROW, ROW);
         assertThat(none.size()).isEqualTo(1);
         assertThat(none.shard(0).range()).isEqualTo("all");
         assertThat(none.note()).isNotNull();
     }
 
     @Test
-    void theKeyMustBeTheHotFilesOrder() {
-        assertThat(ShardMap.checkKey(List.of("LEGAL_ENTITY"))).containsExactly("LEGAL_ENTITY");
-        assertThat(ShardMap.checkKey(null)).isEqualTo(ShardMap.ORDER);
-        assertThatThrownBy(() -> ShardMap.checkKey(List.of("DESK"))).hasMessageContaining("hot file");
-        assertThatThrownBy(() -> ShardMap.checkKey(List.of("LEGAL_ENTITY", "DESK", "TT_BOOK"))).hasMessageContaining("never split");
+    void theKeyMustBeAPrefixOfTheMeasuresRowOrder() {
+        assertThat(ShardMap.checkKey(List.of("LEGAL_ENTITY"), ORDER)).containsExactly("LEGAL_ENTITY");
+        assertThat(ShardMap.checkKey(null, ORDER)).isEqualTo(ORDER);
+        assertThatThrownBy(() -> ShardMap.checkKey(List.of("DESK"), ORDER)).hasMessageContaining("[LEGAL_ENTITY] or [LEGAL_ENTITY, DESK]");
+        assertThatThrownBy(() -> ShardMap.checkKey(List.of("LEGAL_ENTITY", "DESK", "TT_BOOK"), ORDER)).hasMessageContaining("never split");
+        assertThat(ShardMap.checkKey(List.of("NETTING_SET"), List.of("NETTING_SET"))).as("another measure's order").containsExactly("NETTING_SET");
     }
 
     private static List<String> next(SortedMap<List<String>, Long> c, List<String> key) {

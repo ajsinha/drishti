@@ -13,7 +13,7 @@
  *
  * See the LICENSE file in the root of this repository for the full terms.
  */
-package com.ash.drishti.compute.var;
+package com.ash.drishti.compute.shard;
 
 import java.nio.charset.StandardCharsets;
 import java.security.MessageDigest;

@@ -17,8 +17,6 @@ package com.ash.drishti.compute.vector;
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.concurrent.CompletableFuture;
-import java.util.concurrent.CompletionException;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
@@ -108,65 +106,23 @@ public final class ShardedVectors implements Vectors, SetSums {
     @Override
     public double[] sumSet(OrdinalSet set, ParallelSums sums) {
         int n = parts.size();
-        double[][] got = new double[n][];
-        List<CompletableFuture<double[]>> asked = new ArrayList<>(n);
         OrdinalSet[] slices = new OrdinalSet[n];
-        int wanted = 0;
-        Object ctx = remote.context();
+        List<Integer> touched = new ArrayList<>();
         for (int i = 0; i < n; i++) {
             Part p = parts.get(i);
             OrdinalSet slice = set.slice(p.from(), p.to());
-            asked.add(null);
-            if (slice.isEmpty()) {
-                continue;
-            }
-            wanted++;
-            slices[i] = slice;
-            if (!p.held()) {
-                asked.set(i, CompletableFuture.supplyAsync(() -> remote.sum(p.shard(), slice, ctx), ASK));     // the owners asked side by side
+            if (!slice.isEmpty()) {
+                slices[i] = slice;
+                touched.add(i);
             }
         }
-        for (int i = 0; i < n; i++) {
-            if (slices[i] != null && parts.get(i).held()) {
-                got[i] = sums.sum(parts.get(i).rows(), slices[i]);
-                remote.held(parts.get(i).shard(), ctx);
-            }
-        }
-        for (int i = 0; i < n; i++) {
-            if (asked.get(i) != null) {
-                got[i] = join(asked.get(i));
-            }
-        }
-        double[] acc = new double[width];
-        int answered = 0;
-        for (int i = 0; i < n; i++) {                                       // a fixed order: shard 0, 1, 2 ...
-            if (slices[i] == null) {
-                continue;
-            }
-            double[] v = got[i];
-            if (v == null || v.length != width) {
-                throw new IllegalStateException("shard " + parts.get(i).shard() + " gave no partial sum of " + width + " values");
-            }
-            answered++;
-            for (int j = 0; j < width; j++) {
-                acc[j] += v[j];
-            }
-        }
-        if (answered != wanted) {
-            throw new IllegalStateException(answered + " partial sums for " + wanted + " shards asked");
-        }
-        return acc;
-    }
-
-    private static double[] join(CompletableFuture<double[]> f) {
-        try {
-            return f.join();
-        } catch (CompletionException e) {
-            if (e.getCause() instanceof RuntimeException re) {
-                throw re;                                                   // the remote side's reason (no live owner, a stale version)
-            }
-            throw new IllegalStateException("a shard's partial sum failed: " + e.getCause(), e.getCause());
-        }
+        Object ctx = remote.context();
+        int[] asked = touched.stream().mapToInt(Integer::intValue).toArray();
+        return com.ash.drishti.compute.shard.ShardGather.gather(asked, i -> parts.get(i).held(), i -> {
+            double[] v = sums.sum(parts.get(i).rows(), slices[i]);
+            remote.held(parts.get(i).shard(), ctx);
+            return v;
+        }, i -> remote.sum(parts.get(i).shard(), slices[i], ctx), com.ash.drishti.compute.shard.ShardGather.sum(width), ASK);
     }
 
     /** The index in {@link #parts} of the shard holding {@code row}. */

@@ -20,11 +20,14 @@ import com.ash.drishti.common.DrishtiException;
 import com.ash.drishti.common.ErrorCode;
 import com.ash.drishti.compute.var.ScenarioFx;
 import com.ash.drishti.compute.var.ShardAssembly;
-import com.ash.drishti.compute.var.ShardMap;
-import com.ash.drishti.compute.var.ShardOwners;
+import com.ash.drishti.compute.shard.ShardHandover;
+import com.ash.drishti.compute.shard.ShardMap;
+import com.ash.drishti.compute.shard.ShardOwners;
 import com.ash.drishti.compute.var.VarBook;
 import com.ash.drishti.compute.vector.ParallelSums;
 import com.ash.drishti.server.security.Principal;
+import com.ash.drishti.server.shard.ShardMembership;
+import com.ash.drishti.server.shard.ShardPeers;
 import java.time.Instant;
 import java.time.LocalDate;
 import java.util.ArrayList;
@@ -52,7 +55,7 @@ import org.slf4j.LoggerFactory;
  * <p>The members' view: those alive, sharding on and owning shards; owners are computed from the view that has been the same for
  * {@code stable-seconds} (a member joining or leaving moves shards only once the membership settles); a draining member leaves it at once.
  * Every {@code rebalance-seconds} this member builds the shards it owns of the dates in use and holds no version of (announcing each ready
- * in its digest), releases what {@link VarShardHandover} says it may, and puts together again a date of its own whose shards' owners have
+ * in its digest), releases what {@link ShardHandover} says it may, and puts together again a date of its own whose shards' owners have
  * moved on (a new owner, newer data, a new cut), so it never reads a shard nobody serves any more.
  */
 final class VarShards implements AutoCloseable {
@@ -66,7 +69,7 @@ final class VarShards implements AutoCloseable {
     private final Supplier<VarSharding> settings;
     private final VarLoader loader;
     private final VarShardBooks books;
-    private final VarShardPeers peers;
+    private final ShardPeers peers;
     private final VarAccess access;
     private final ParallelSums sums;
     private final VarShardRows rows;
@@ -75,17 +78,13 @@ final class VarShards implements AutoCloseable {
     private final Map<VarShardBooks.Key, Long> successorSince = new ConcurrentHashMap<>();
     private final Map<String, Long> missingSince = new ConcurrentHashMap<>();
     private volatile boolean draining;
-    private volatile List<ShardOwners.Candidate> current = List.of();
-    private volatile long changedAt = System.currentTimeMillis();
-    private volatile List<ShardOwners.Candidate> stable;
-    private volatile List<ShardOwners.Candidate> lastView = List.of();
-    private volatile long lastViewAt;
+    private final ShardMembership membership;
     private volatile Consumer<LocalDate> dropDate = d -> { };
     private volatile Supplier<Set<LocalDate>> openDates = Set::of;
     private volatile Thread loop;
     private final java.util.concurrent.locks.ReentrantLock tickLock = new java.util.concurrent.locks.ReentrantLock();
 
-    VarShards(VarProperties props, VarShardingProperties own, Supplier<VarSharding> settings, VarLoader loader, VarShardPeers peers,
+    VarShards(VarProperties props, VarShardingProperties own, Supplier<VarSharding> settings, VarLoader loader, ShardPeers peers,
             VarAccess access, ParallelSums sums) {
         this.own = own;
         this.settings = settings;
@@ -96,6 +95,7 @@ final class VarShards implements AutoCloseable {
         this.sums = sums;
         this.draining = own.drain();
         this.rows = new VarShardRows(this);
+        this.membership = new ShardMembership(peers, this::state, own::stableSeconds, own.zoneTag(), own.pins());
         peers.publish(() -> on() ? state().json() : "");
     }
 
@@ -118,7 +118,7 @@ final class VarShards implements AutoCloseable {
         return own;
     }
 
-    VarShardPeers peers() {
+    ShardPeers peers() {
         return peers;
     }
 
@@ -155,7 +155,8 @@ final class VarShards implements AutoCloseable {
             return m;
         }
         int width = Math.max(1, loader.width(date));
-        ShardMap made = loader.keyCounts(date, cfg.key(), cfg.kinds()).map(c -> ShardMap.cut(date, version, cfg.key(), c, width, cfg.targetBytes()))
+        ShardMap made = loader.keyCounts(date, cfg.key(), cfg.kinds()).map(c -> ShardMap.cut(date, version, cfg.key(), c,
+                VarSharding.MEASURE.bytesPerRow(width), cfg.targetBytes()))
                 .orElseGet(() -> ShardMap.whole(date, version, cfg.key(), cfg.targetBytes(), "the trades' source cannot read " + cfg.key()
                         + " as columns, so the date is one shard (owned by " + cfg.replicas() + " members)"));
         if (maps.size() > 64) {
@@ -168,58 +169,30 @@ final class VarShards implements AutoCloseable {
     // ------------------------------------------------------------------------------------------------------------ the members
 
     /** This member's state as it publishes it: on, owner, draining, and per date the shards ready here with their data. */
-    VarShardPeers.State state() {
-        Map<LocalDate, List<VarShardPeers.Ready>> dates = new TreeMap<>();
+    ShardPeers.State state() {
+        Map<LocalDate, List<ShardPeers.Ready>> dates = new TreeMap<>();
         books.readyUsd().forEach((date, byMap) -> byMap.forEach((map, ready) -> dates.computeIfAbsent(date, x -> new ArrayList<>())
-                .add(new VarShardPeers.Ready(map, ready))));
-        return new VarShardPeers.State(on(), !own.coordinatorOnly(), draining, dates);
+                .add(new ShardPeers.Ready(map, ready))));
+        return new ShardPeers.State(on(), !own.coordinatorOnly(), draining, dates);
     }
 
-    List<VarShardPeers.Peer> members() {
-        return peers.peers(state(), own.zoneTag());
+    List<ShardPeers.Peer> members() {
+        return membership.members();
     }
 
-    /**
-     * The members that may own shards now: the view moves to those eligible once they have been the same for {@code stable-seconds} (a
-     * draining member leaves it at once); until the membership has first been stable that long, the members eligible now. Looked at again at
-     * most every quarter of a second (each request asks the owners of its shards).
-     */
+    /** The members that may own shards now ({@link ShardMembership}). */
     List<ShardOwners.Candidate> observe() {
-        long at = System.currentTimeMillis();
-        if (at - lastViewAt < 250) {
-            return lastView;
-        }
-        List<ShardOwners.Candidate> v = look(at);
-        lastView = v;
-        lastViewAt = at;
-        return v;
+        return membership.view();
     }
 
     /** Forgets the view looked at last (a drain; a test that moves members). */
     void refresh() {
-        lastViewAt = 0;
-    }
-
-    private List<ShardOwners.Candidate> look(long t) {
-        List<VarShardPeers.Peer> ps = members();
-        List<ShardOwners.Candidate> now = ps.stream().filter(p -> p.routable() && p.state().on() && p.state().owner())
-                .map(p -> new ShardOwners.Candidate(p.node(), p.zone())).sorted(java.util.Comparator.comparing(ShardOwners.Candidate::node)).toList();
-        if (!now.equals(current)) {
-            current = now;
-            changedAt = t;
-        }
-        if (t - changedAt >= own.stableSeconds() * 1000L) {
-            stable = now;
-        }
-        Set<String> drainingNow = new TreeSet<>();
-        ps.stream().filter(p -> p.state().draining()).forEach(p -> drainingNow.add(p.node()));
-        return (stable != null ? stable : now).stream().filter(c -> !drainingNow.contains(c.node())).toList();
+        membership.refresh();
     }
 
     /** The owners of a shard now, first owner first. */
     List<String> owners(ShardMap.Shard s) {
-        String pin = own.pins().getOrDefault(s.id(), own.pins().get(s.range()));
-        return ShardOwners.owners(s.ownershipKey(), observe(), settings.get().replicas(), pin);
+        return membership.owners(s, settings.get().replicas());
     }
 
     // ------------------------------------------------------------------------------------------------------------ putting a date together
@@ -416,7 +389,7 @@ final class VarShards implements AutoCloseable {
     /** The dates in use: put together here, or with shards ready on any member. */
     Set<LocalDate> activeDates() {
         Set<LocalDate> out = new TreeSet<>(openDates.get());
-        for (VarShardPeers.Peer p : members()) {
+        for (ShardPeers.Peer p : members()) {
             out.addAll(p.state().dates().keySet());
         }
         return out;
@@ -432,7 +405,7 @@ final class VarShards implements AutoCloseable {
         }
         try {
             List<ShardOwners.Candidate> view = observe();
-            if (stable == null) {
+            if (!membership.settled()) {
                 refreshOwnDates();
                 return;
             }
@@ -473,11 +446,11 @@ final class VarShards implements AutoCloseable {
         return false;
     }
 
-    /** Releases the USD books {@link VarShardHandover} says this member may (a date of its own that reads one is dropped first). */
+    /** Releases the USD books {@link ShardHandover} says this member may (a date of its own that reads one is dropped first). */
     private boolean release() {
         boolean any = false;
         long now = System.currentTimeMillis();
-        Map<String, VarShardPeers.Peer> byNode = new TreeMap<>();
+        Map<String, ShardPeers.Peer> byNode = new TreeMap<>();
         members().forEach(p -> byNode.put(p.node(), p));
         for (VarShardBooks.Key k : books.keys()) {
             if (!k.ccy().equals(VarDate.USD) || !books.ready(k)) {
@@ -496,16 +469,16 @@ final class VarShards implements AutoCloseable {
             boolean current = newest.equals(k);
             boolean successor = !current && books.ready(newest)
                     || !owner && !owners.isEmpty() && owners.stream().allMatch(n -> {
-                        VarShardPeers.Peer p = byNode.get(n);
+                        ShardPeers.Peer p = byNode.get(n);
                         return p != null && !p.self() && p.routable() && p.state().ready(k.date(), k.map(), k.index(), null);
                     });
-            VarShardHandover.Facts f = new VarShardHandover.Facts(owner, current, staleMap, successor);
+            ShardHandover.Facts f = new ShardHandover.Facts(owner, current, staleMap, successor);
             if (owner && current && !staleMap || !staleMap && !successor) {
                 successorSince.remove(k);
                 continue;
             }
             long since = successorSince.computeIfAbsent(k, x -> now);
-            if (VarShardHandover.decide(f, since, now, own.graceSeconds() * 1000L) == VarShardHandover.Verdict.RELEASE) {
+            if (ShardHandover.decide(f, since, now, own.graceSeconds() * 1000L) == ShardHandover.Verdict.RELEASE) {
                 for (Assembled a : assembled.values()) {
                     if (a.date().equals(k.date()) && a.map().digest().equals(k.map()) && a.held()[k.index()]) {
                         drop(a.date());                                 // put together again, reading this shard from its owners
@@ -540,7 +513,7 @@ final class VarShards implements AutoCloseable {
     private void refreshOwnDates() {
         Set<LocalDate> open = openDates.get();
         long now = System.currentTimeMillis();
-        List<VarShardPeers.Peer> ps = members();
+        List<ShardPeers.Peer> ps = members();
         for (Assembled a : new ArrayList<>(assembled.values())) {
             String key = a.date() + "|" + a.ccy();
             if (!open.contains(a.date())) {
@@ -631,9 +604,9 @@ final class VarShards implements AutoCloseable {
             m.put("pins", own.pins());
         }
         List<ShardOwners.Candidate> view = on() ? observe() : List.of();
-        List<VarShardPeers.Peer> ps = on() ? members() : List.of();
+        List<ShardPeers.Peer> ps = on() ? members() : List.of();
         List<Map<String, Object>> ms = new ArrayList<>();
-        for (VarShardPeers.Peer p : ps) {
+        for (ShardPeers.Peer p : ps) {
             Map<String, Object> x = new LinkedHashMap<>();
             x.put("node", p.node());
             x.put("self", p.self());
@@ -661,7 +634,7 @@ final class VarShards implements AutoCloseable {
                 Map<String, Object> x = s.describe();
                 x.put("owners", owners(s));
                 List<String> ready = new ArrayList<>();
-                for (VarShardPeers.Peer p : ps) {
+                for (ShardPeers.Peer p : ps) {
                     if (p.state().ready(date, map.digest(), s.index(), null)) {
                         ready.add(p.node());
                     }

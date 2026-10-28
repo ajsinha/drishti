@@ -18,6 +18,7 @@ package com.ash.drishti.compute.var;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
+import com.ash.drishti.compute.shard.ShardMap;
 import com.ash.drishti.compute.vector.OrdinalSet;
 import com.ash.drishti.compute.vector.ParallelSums;
 import com.ash.drishti.compute.vector.ShardedVectors;
@@ -70,7 +71,7 @@ class ShardAssemblyTest {
             counts.merge(List.of(whole.trades().text("LEGAL_ENTITY", o), whole.trades().text("DESK", o)), 1L, Long::sum);
         }
         // 1,800 trades over 6 desks (300 each): a target of 1.5 desks' rows cuts six shards, one desk each (a desk is never split)
-        map = ShardMap.cut(DAY, "v1", ShardMap.ORDER, counts, SyntheticBank.WIDTH, 450L * SyntheticBank.WIDTH * 4);
+        map = ShardMap.cut(DAY, "v1", List.of("LEGAL_ENTITY", "DESK"), counts, SyntheticBank.WIDTH * 4L, 450L * SyntheticBank.WIDTH * 4);
         List<ShardAssembly.Part> parts = new ArrayList<>();
         for (ShardMap.Shard s : map.shards()) {
             Path sd = Files.createDirectories(dir.resolve("shard-" + s.index()));

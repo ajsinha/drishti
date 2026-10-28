@@ -13,19 +13,19 @@
  *
  * See the LICENSE file in the root of this repository for the full terms.
  */
-package com.ash.drishti.server.var;
+package com.ash.drishti.compute.shard;
 
 /**
- * The handover rule of one shard book a member holds (VAR_SHARDING.md section 7), kept apart so it can be checked on its own. A member
+ * The handover rule of one shard a member holds, for any sharded measure (VAR_SHARDING.md section 7), kept apart to be checked alone. A member
  * keeps serving a shard it no longer owns until every new owner has announced it ready for the grace period, then releases it; it keeps an
  * older version of a shard it owns while it builds the newer (an older one is released once the newer has been ready here for the grace
  * period), and a shard of a shard map since replaced (the cut moved) once the grace period has passed. So a shard in use always has a ready
  * holder: the release waits for the readiness of the next one, never the other way round.
  */
-final class VarShardHandover {
+public final class ShardHandover {
 
     /** What to do with a book held. */
-    enum Verdict {
+    public enum Verdict {
         /** Keep serving it. */
         KEEP,
         /** Release it: unmap it and delete its file (its successor has been ready long enough). */
@@ -40,14 +40,14 @@ final class VarShardHandover {
      * @param staleMap it belongs to a shard map since replaced
      * @param successorReady what replaces it is ready: every owner has announced the shard (handed over), or the newer data is built here
      */
-    record Facts(boolean owner, boolean current, boolean staleMap, boolean successorReady) {}
+    public record Facts(boolean owner, boolean current, boolean staleMap, boolean successorReady) {}
 
-    private VarShardHandover() {}
+    private ShardHandover() {}
 
     /**
      * The verdict at {@code now} for a book whose successor has been ready since {@code readySince} (epoch milliseconds; 0: not ready).
      */
-    static Verdict decide(Facts f, long readySince, long now, long graceMs) {
+    public static Verdict decide(Facts f, long readySince, long now, long graceMs) {
         if (f.owner() && f.current() && !f.staleMap()) {
             return Verdict.KEEP;                                       // its owner's current book
         }

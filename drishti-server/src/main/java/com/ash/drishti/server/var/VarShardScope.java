@@ -16,7 +16,7 @@
 package com.ash.drishti.server.var;
 
 import com.ash.drishti.api.KeyRange;
-import com.ash.drishti.compute.var.ShardMap;
+import com.ash.drishti.compute.shard.ShardMap;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;

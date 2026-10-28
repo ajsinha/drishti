@@ -15,7 +15,7 @@
  */
 package com.ash.drishti.server.var;
 
-import com.ash.drishti.compute.var.ShardMap;
+import com.ash.drishti.compute.shard.ShardMap;
 import com.ash.drishti.packs.Pack;
 import com.ash.drishti.packs.PackRegistry;
 import java.util.ArrayList;
@@ -40,6 +40,8 @@ import java.util.function.Supplier;
  */
 record VarSharding(boolean enabled, List<String> key, List<String> kinds, long targetBytes, int replicas, String origin, String problem) {
 
+    /** VaR as a sharded measure: its shard key's order, its rows, its partial answers and how they combine. */
+    static final VarMeasure MEASURE = VarMeasure.INSTANCE;
     static final double DEFAULT_TARGET_MB = 2048;
     static final int DEFAULT_REPLICAS = 2;
 
@@ -50,7 +52,7 @@ record VarSharding(boolean enabled, List<String> key, List<String> kinds, long t
 
     /** Sharding off (no block, no setting). */
     static VarSharding off(VarProperties.Kinds k, String origin, String problem) {
-        return new VarSharding(false, ShardMap.ORDER, List.of(k.scenarioPv(), k.vector()), (long) (DEFAULT_TARGET_MB * 1024 * 1024),
+        return new VarSharding(false, MEASURE.keyOrder(), List.of(k.scenarioPv(), k.vector()), (long) (DEFAULT_TARGET_MB * 1024 * 1024),
                 DEFAULT_REPLICAS, origin, problem);
     }
 
@@ -86,7 +88,7 @@ record VarSharding(boolean enabled, List<String> key, List<String> kinds, long t
             return off(k, block.isEmpty() && own.enabled() == null ? "default" : origin, null);
         }
         try {
-            List<String> key = ShardMap.checkKey(own.key() != null ? own.key() : strings(block.get("key")));
+            List<String> key = ShardMap.checkKey(own.key() != null ? own.key() : strings(block.get("key")), MEASURE.keyOrder());
             List<String> kinds = own.kinds() != null ? own.kinds() : strings(block.get("kinds"));
             List<String> trades = List.of(k.vector(), k.scenarioPv());
             List<String> norm = new ArrayList<>();

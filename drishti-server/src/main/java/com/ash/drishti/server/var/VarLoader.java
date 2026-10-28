@@ -111,7 +111,7 @@ final class VarLoader {
      */
     java.util.Optional<java.util.SortedMap<List<String>, Long>> keyCounts(LocalDate date, List<String> key, List<String> kinds) {
         AsOf asOf = AsOf.of(date);
-        java.util.SortedMap<List<String>, Long> out = com.ash.drishti.compute.var.ShardMap.counts();
+        java.util.SortedMap<List<String>, Long> out = com.ash.drishti.compute.shard.ShardMap.counts();
         for (String kind : kinds) {
             String v = router.dataVersion(kind, asOf).orElse("");
             if (v.isEmpty() || v.equals("none")) {

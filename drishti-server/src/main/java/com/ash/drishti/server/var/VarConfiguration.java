@@ -58,7 +58,7 @@ public class VarConfiguration {
         svc.saved().words(() -> svc.words().keySet());
         // VaR sharding across Drishti*net (VAR_SHARDING.md): off unless the pack's sharding block or drishti.var.sharding switches it on
         java.util.function.Supplier<VarSharding> shardSettings = VarSharding.of(sharding, props, packs::getIfAvailable);
-        svc.shards(new VarShards(props, sharding, shardSettings, loader, new VarShardPeers(net::getIfAvailable, digests::getIfAvailable), access,
+        svc.shards(new VarShards(props, sharding, shardSettings, loader, new com.ash.drishti.server.shard.ShardPeers(VarSharding.MEASURE.service(), net::getIfAvailable, digests::getIfAvailable), access,
                 sums).start());
         VarPositions.install(new VarPositions(svc));
         return svc;

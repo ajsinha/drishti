@@ -17,8 +17,10 @@ package com.ash.drishti.server.var;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
-import com.ash.drishti.compute.var.ShardMap;
+import com.ash.drishti.compute.shard.ShardHandover;
+import com.ash.drishti.compute.shard.ShardMap;
 import com.ash.drishti.compute.vector.OrdinalSet;
+import com.ash.drishti.server.shard.ShardPeers;
 import java.time.LocalDate;
 import java.util.List;
 import java.util.Map;
@@ -37,19 +39,19 @@ class VarShardHandoverTest {
 
     @Test
     void anOwnersCurrentBookIsKeptAndAHandedOverOneOnlyAfterItsSuccessorWasReadyForTheGrace() {
-        VarShardHandover.Facts mine = new VarShardHandover.Facts(true, true, false, false);
-        assertThat(VarShardHandover.decide(mine, 0, 1_000_000, GRACE)).isEqualTo(VarShardHandover.Verdict.KEEP);
-        VarShardHandover.Facts movedNotReady = new VarShardHandover.Facts(false, true, false, false);
-        assertThat(VarShardHandover.decide(movedNotReady, 0, 1_000_000, GRACE)).as("nobody ready to take it").isEqualTo(VarShardHandover.Verdict.KEEP);
-        VarShardHandover.Facts movedReady = new VarShardHandover.Facts(false, true, false, true);
-        assertThat(VarShardHandover.decide(movedReady, 1_000_000, 1_000_000 + GRACE - 1, GRACE)).isEqualTo(VarShardHandover.Verdict.KEEP);
-        assertThat(VarShardHandover.decide(movedReady, 1_000_000, 1_000_000 + GRACE, GRACE)).isEqualTo(VarShardHandover.Verdict.RELEASE);
-        VarShardHandover.Facts older = new VarShardHandover.Facts(true, false, false, true);
-        assertThat(VarShardHandover.decide(older, 5, 5 + GRACE, GRACE)).as("an older version, the newer ready here").isEqualTo(VarShardHandover.Verdict.RELEASE);
-        VarShardHandover.Facts olderBuilding = new VarShardHandover.Facts(true, false, false, false);
-        assertThat(VarShardHandover.decide(olderBuilding, 0, 1_000_000, GRACE)).as("the newer is still building").isEqualTo(VarShardHandover.Verdict.KEEP);
-        VarShardHandover.Facts staleMap = new VarShardHandover.Facts(true, true, true, false);
-        assertThat(VarShardHandover.decide(staleMap, 10, 10 + GRACE, GRACE)).as("a shard map since replaced").isEqualTo(VarShardHandover.Verdict.RELEASE);
+        ShardHandover.Facts mine = new ShardHandover.Facts(true, true, false, false);
+        assertThat(ShardHandover.decide(mine, 0, 1_000_000, GRACE)).isEqualTo(ShardHandover.Verdict.KEEP);
+        ShardHandover.Facts movedNotReady = new ShardHandover.Facts(false, true, false, false);
+        assertThat(ShardHandover.decide(movedNotReady, 0, 1_000_000, GRACE)).as("nobody ready to take it").isEqualTo(ShardHandover.Verdict.KEEP);
+        ShardHandover.Facts movedReady = new ShardHandover.Facts(false, true, false, true);
+        assertThat(ShardHandover.decide(movedReady, 1_000_000, 1_000_000 + GRACE - 1, GRACE)).isEqualTo(ShardHandover.Verdict.KEEP);
+        assertThat(ShardHandover.decide(movedReady, 1_000_000, 1_000_000 + GRACE, GRACE)).isEqualTo(ShardHandover.Verdict.RELEASE);
+        ShardHandover.Facts older = new ShardHandover.Facts(true, false, false, true);
+        assertThat(ShardHandover.decide(older, 5, 5 + GRACE, GRACE)).as("an older version, the newer ready here").isEqualTo(ShardHandover.Verdict.RELEASE);
+        ShardHandover.Facts olderBuilding = new ShardHandover.Facts(true, false, false, false);
+        assertThat(ShardHandover.decide(olderBuilding, 0, 1_000_000, GRACE)).as("the newer is still building").isEqualTo(ShardHandover.Verdict.KEEP);
+        ShardHandover.Facts staleMap = new ShardHandover.Facts(true, true, true, false);
+        assertThat(ShardHandover.decide(staleMap, 10, 10 + GRACE, GRACE)).as("a shard map since replaced").isEqualTo(ShardHandover.Verdict.RELEASE);
     }
 
     /**
@@ -67,9 +69,9 @@ class VarShardHandoverTest {
                 newReady = true;                                         // built from the lake and announced
             }
             if (oldHolds) {
-                VarShardHandover.Facts f = new VarShardHandover.Facts(false, true, false, newReady);
+                ShardHandover.Facts f = new ShardHandover.Facts(false, true, false, newReady);
                 readySince = newReady ? (readySince == 0 ? t : readySince) : 0;
-                if (VarShardHandover.decide(f, readySince, t, GRACE) == VarShardHandover.Verdict.RELEASE) {
+                if (ShardHandover.decide(f, readySince, t, GRACE) == ShardHandover.Verdict.RELEASE) {
                     oldHolds = false;
                     released = t;
                 }
@@ -81,7 +83,7 @@ class VarShardHandoverTest {
 
     @Test
     void aPartialIsAnsweredOnlyWithItsOwnLabel() {
-        ShardMap map = ShardMap.whole(LocalDate.of(2026, 9, 30), "v1", ShardMap.ORDER, 1024, "test");
+        ShardMap map = ShardMap.whole(LocalDate.of(2026, 9, 30), "v1", VarSharding.MEASURE.keyOrder(), 1024, "test");
         double[] sum = {1.5, -2.25, 3};
         byte[] ok = json(VarShardRows.answer(0, "S0", map.digest(), "d1", "node-b", 4, sum));
         assertThat(VarShardRows.answer(ok, map, 0, "d1", 4)).containsExactly(sum);
@@ -97,16 +99,16 @@ class VarShardHandoverTest {
 
     @Test
     void aMembersStateReadsBackAsAnnounced() {
-        Map<LocalDate, List<VarShardPeers.Ready>> dates = new TreeMap<>();
-        dates.put(LocalDate.of(2026, 9, 30), List.of(new VarShardPeers.Ready("map1", new TreeMap<>(Map.of(0, "abcdef0123456789", 3, "fedcba")))));
-        VarShardPeers.State s = new VarShardPeers.State(true, true, false, dates);
-        VarShardPeers.State back = VarShardPeers.State.parse(s.json());
+        Map<LocalDate, List<ShardPeers.Ready>> dates = new TreeMap<>();
+        dates.put(LocalDate.of(2026, 9, 30), List.of(new ShardPeers.Ready("map1", new TreeMap<>(Map.of(0, "abcdef0123456789", 3, "fedcba")))));
+        ShardPeers.State s = new ShardPeers.State(true, true, false, dates);
+        ShardPeers.State back = ShardPeers.State.parse(s.json());
         assertThat(back).isEqualTo(s);
         assertThat(back.ready(LocalDate.of(2026, 9, 30), "map1", 0, "abcdef0123456789" + "0".repeat(48))).isTrue();
         assertThat(back.ready(LocalDate.of(2026, 9, 30), "map1", 0, "0".repeat(64))).as("another data version").isFalse();
         assertThat(back.ready(LocalDate.of(2026, 9, 30), "map2", 0, null)).isFalse();
-        assertThat(VarShardPeers.State.parse("not json")).isEqualTo(VarShardPeers.State.NONE);
-        assertThat(VarShardPeers.zone(List.of("region:emea", "az:us-east-1a"), "az")).isEqualTo("us-east-1a");
+        assertThat(ShardPeers.State.parse("not json")).isEqualTo(ShardPeers.State.NONE);
+        assertThat(ShardPeers.zone(List.of("region:emea", "az:us-east-1a"), "az")).isEqualTo("us-east-1a");
     }
 
     private static byte[] json(Object o) {
