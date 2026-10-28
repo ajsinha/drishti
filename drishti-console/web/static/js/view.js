@@ -288,6 +288,13 @@
       a.href = '/export/' + encodeURIComponent(view.dataset.kind) + '/' + encodeURIComponent(view.dataset.id) + '/' +
         encodeURIComponent(a.getAttribute('data-export-panel')) + '.' + (a.getAttribute('data-export-ext') || 'csv');
       a.hidden = false;
+      var menu = a.closest('[data-export-menu]');           // one download button, CSV or JSON Lines in its menu
+      if (menu) { menu.hidden = false; }
+    });
+    document.addEventListener('click', function (e) {      // a click elsewhere, or on a format, closes an open download menu
+      document.querySelectorAll('[data-export-menu][open]').forEach(function (d) {
+        if (!d.contains(e.target) || e.target.closest('a[data-export-panel]')) { d.open = false; }
+      });
     });
   }
   document.querySelectorAll('[data-share]').forEach(function (b) {

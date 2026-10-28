@@ -912,7 +912,7 @@ header with:
 
 - its **title** and, if it has one, its **function key** (`DES · F2` means press `F2` to jump here);
 - an **inferred** tag when Drishti laid the panel out by itself (hover over it to read why);
-- a **↓** icon to download the panel as CSV, and a **{}** icon for JSON Lines;
+- a **↓** button to download the panel: its menu offers **CSV** or **JSON Lines**;
 - a **?** that explains this kind of panel.
 
 `MX-20000001` shows *Deal ticket* (F2), *Legs* (F3, the legs side by side), *Cash-flow schedule, every leg* (F4), *Events by leg* (F5),
@@ -1800,7 +1800,7 @@ The buttons in a view's title line, and the **↓** in each panel header.
 
 | Action | Where | What you get |
 |---|---|---|
-| Panel as CSV or JSON Lines | **↓** (CSV) or **{}** (JSON Lines) in a panel header | Tables and ladders as they are; key/value panels as field and value; charts as one column per series; surfaces as a grid; bars as label and value |
+| Panel as CSV or JSON Lines | **↓** in a panel header, then **CSV** or **JSON Lines** | Tables and ladders as they are; key/value panels as field and value; charts as one column per series; surfaces as a grid; bars as label and value |
 | Search as CSV or JSON Lines | **CSV**, **JSONL** on the results page (and on a form's results) | One row per result |
 | Pivot as CSV, Excel or JSON Lines | **CSV**, **Excel**, **JSONL** in a [Pivot tab](#the-pivot-tab-slice-a-table-your-way) | The grid as shown: row fields, one column per column group and value, totals labelled; Excel with a bold frozen header |
 | Comparison as CSV or JSON Lines | **CSV** on the Compare page; the same address ending `.jsonl` | One row per change |

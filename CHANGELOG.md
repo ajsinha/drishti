@@ -17,6 +17,8 @@
 
 ## 2.9.4 — VaR from scenario PVs or P&L, by trade or position, in any currency, intraday from files and Kafka; JSON Lines as the data standard; the decks rewritten (2026-10-27)
 
+- **One download button per panel (2026-10-27).** A panel's CSV and JSON Lines downloads are one **↓** button with a small menu (CSV, JSON Lines) instead of two icons: the second icon wrapped a zoomed panel's header on a phone onto another line, leaving room for five rows (the drill's `test_phone_zoomed_table_fits_without_scrolling`). USER_GUIDE.
+
 - **Upgrade: a computed connector's new parameters too (2026-10-27).** A reactive connector file written before 2.9.4 (var-whatif without the `ccy` parameter) refused the reporting-currency what-if (DRS-5205). The connector template update now also adds the parameters a pack's template gained (`kinds.<kind>.params.<name>`), keeps the file's own, and keeps the file as it was beside it; and it runs once at start, before the server answers, so a request never meets a connector it has not reached yet. `TemplateUpdatesTest`; CONNECTOR_FILES.
 
 - **The basket is on the VaR page only (2026-10-27; product owner).** The top bar's **◫ Basket** button is gone (it did not apply to

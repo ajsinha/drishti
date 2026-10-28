@@ -600,6 +600,14 @@ body.embed .vhead { padding: .6rem .8rem; }
 .vhead-tools { display: inline-flex; gap: .15rem; }
 button.tbar-link { background: none; border: 0; padding: 0 .35rem; font: inherit; cursor: pointer; }
 .pnl-help[data-export-panel] { margin-right: .15rem; }
+/* a panel's one download button: CSV or JSON Lines in a small menu under it (two icons wrapped the header on a phone) */
+.pnl-dl { position: relative; display: inline-block; margin-right: .15rem; }
+.pnl-dl > summary { list-style: none; cursor: pointer; }
+.pnl-dl > summary::-webkit-details-marker { display: none; }
+.pnl-dl-menu { position: absolute; right: 0; top: 100%; z-index: 40; display: flex; flex-direction: column; min-width: 9rem; padding: .25rem 0;
+  background: var(--d-surface); border: 1px solid var(--d-border); border-radius: 6px; box-shadow: var(--d-shadow); }
+.pnl-dl-menu a { padding: .4rem .75rem; color: var(--d-ink); text-decoration: none; white-space: nowrap; min-height: 32px; display: flex; align-items: center; }
+.pnl-dl-menu a:hover, .pnl-dl-menu a:focus-visible { background: var(--d-highlight); }
 
 /* Print and "save as PDF": the view on paper, light whatever the theme, without the controls */
 @media print {
