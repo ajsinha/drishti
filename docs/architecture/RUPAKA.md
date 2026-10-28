@@ -17,11 +17,11 @@
 # Drishti Rūpaka: business intelligence in Drishti, live and governed
 
 Status: design, **built in part**. Phases 0 to 7 and 9 of section 20 and the AI stage are built (summary at 2.1.0 in [section 20.15](#2015-as-built-at-210-and-what-is-still-not-built)); the proof of concept (phase 0) was removed in 2.2, and since 2.3.0 (wave B, every number computed on the servers) no BI page loads Perspective or DuckDB-Wasm. Waves A to C and later BI work follow [BI_DESIGN.md](BI_DESIGN.md). Owner: the BI package of the server (`com.ash.drishti.server.bi`, with `dataset`, `engine`, `report`, `board` and, until 2.2, `poc` beside it), the console's BI routes, templates and scripts (`routes/bi_routes.py`, `web/templates/bi/`, `web/static/js/bi*.js`), the existing source layer, identity, collaboration and Elements.
-Companion notes: [LIVE_BI.md](LIVE_BI.md) (streaming result producers: the heavy case this design leaves to a producer), [RUPAKA_POC.md](../archive/RUPAKA_POC.md) (history, archived: the phase 0 proof of concept and later measurements), [QUANT_SERVICE.md](QUANT_SERVICE.md) (server-side pricing, proposed) and the Project Rūpaka SRS that this
+Companion notes: [LIVE_BI.md](../archive/LIVE_BI.md) (history, archived: streaming result producers: the heavy case this design leaves to a producer), [RUPAKA_POC.md](../archive/RUPAKA_POC.md) (history, archived: the phase 0 proof of concept and later measurements), [QUANT_SERVICE.md](QUANT_SERVICE.md) (server-side pricing, proposed) and the Project Rūpaka SRS that this
 design adopts and adapts.
 
 **How to read this document.** Sections 1 to 19 are the **design**: they say what Rūpaka should be and, where building changed the design, say **As built** in place. Section 20 is the build plan and, for each of phases 1 to 5, a **"as built"** subsection that lists exactly what exists and what does not; when a design section and an "as built" subsection differ, the subsection is right. The user documents are
-[BI_GUIDE.md](../guides/BI_GUIDE.md) (start here), [tutorial 10](../tutorials/10-first-bi-report.md), [DATASETS.md](../guides/DATASETS.md), [REPORTS.md](../guides/REPORTS.md), [BOARDS.md](../guides/BOARDS.md) and [BI_GOVERNANCE.md](../guides/BI_GOVERNANCE.md). The module names of the 2.1 design (`drishti-bi-core`, `-query`, `-live`, `-ai`; its diagram was replaced and is archived, section 17) were never modules: the code is one server package, with the same one-way dependencies.
+[BI_GUIDE.md](../guides/BI_GUIDE.md) (start here), [tutorial 10](../tutorials/10-first-bi-report.md), [DATASETS.md](../guides/DATASETS.md), [REPORTS.md](../guides/REPORTS.md), [REPORTS.md section 23](../guides/REPORTS.md#23-boards-report-pages-of-live-tiles) and [BI_GOVERNANCE.md](../guides/BI_GOVERNANCE.md). The module names of the 2.1 design (`drishti-bi-core`, `-query`, `-live`, `-ai`; its diagram was replaced and is archived, section 17) were never modules: the code is one server package, with the same one-way dependencies.
 
 **The goal.** Drishti becomes a business-intelligence platform as nimble and as capable as commercial BI products, with
 **Power BI** as the benchmark, while keeping what Drishti already does that they do not: live data at
@@ -114,7 +114,7 @@ bookmarks, export, subscriptions, and a good catalogue. Everything in this list 
 | **Measure** | A named aggregation in the closed expression language (`sum($.notional)`, `ratio(sum($.pnl), sum($.notional))`), or a Python measure (section 13) | Measure (DAX) |
 | **Report** | Pages of visuals over one or more datasets, with filters at three levels, bookmarks and drill-through targets | Report |
 | **Visual** | One chart, table, matrix, card, slicer or Perspective grid, bound to fields and measures | Visual |
-| **Board** | **As built (phase 5):** a wall of tiles, each one visual of a report, with alert colours and a kiosk mode ([BOARDS.md](../guides/BOARDS.md)). The design's "live sorted list of many result rows" ([LIVE_BI.md](LIVE_BI.md) section 7.2) is a different, still proposed thing | Streaming dashboard tile |
+| **Board** | **As built (phase 5):** a wall of tiles, each one visual of a report, with alert colours and a kiosk mode ([REPORTS.md section 23](../guides/REPORTS.md#23-boards-report-pages-of-live-tiles)). The design's "live sorted list of many result rows" ([LIVE_BI.md](../archive/LIVE_BI.md) section 7.2, history, archived) is a different, still proposed thing | Streaming dashboard tile |
 | **Catalogue entry** | A published report or board with an audience, a description, an owner, tags and an endorsement | App / Endorsed content |
 | **Endorsement** | `promoted` (an owner says it is good) or `certified` (a data steward says it is authoritative) | Promoted / Certified |
 | **Refresh** | For cached tables: a schedule, a data-load signal (`POST /api/v1/packs/{pack}/loads`), or both | Scheduled refresh |
@@ -269,7 +269,7 @@ config/bi/
   README.md
   datasets/   <id>.dataset.yaml   section 6
   reports/    <id>.report.yaml    section 8
-  boards/     <id>.board.yaml     phase 5 ([BOARDS.md](../guides/BOARDS.md))
+  boards/     <id>.board.yaml     phase 5 ([REPORTS.md section 23](../guides/REPORTS.md#23-boards-report-pages-of-live-tiles))
   notebooks/  <id>.notebook.yaml  stored, not run (phase 9)
   python/                         section 13: typed Python items (measures, visuals and Transforms; the Source interface is not built) with their manifests: <id>.python.yaml (phase 6: 20.8)
 ```
@@ -567,8 +567,8 @@ quant and production pricing share one path. Status: designed; built when QLRisk
 
 ## 12. Streaming BI
 
-Phase 5 is built; section 20.5 lists exactly what, and this section says how it works and where the first design changed. The user references are [DATASETS.md](../guides/DATASETS.md#71-live-tables-phase-5) (live tables), [REPORTS.md](../guides/REPORTS.md#13-live-visuals-and-perspective-phase-5)
-(live visuals, Perspective), [BOARDS.md](../guides/BOARDS.md) and [LIVE.md](LIVE.md#live-bi-a-reports-live-tables) (the stream).
+Phase 5 is built; section 20.5 lists exactly what, and this section says how it works and where the first design changed. The user references are [DATASETS.md](../guides/DATASETS.md#71-live-tables-phase-5) (live tables), [REPORTS.md](../guides/REPORTS.md#13-live-visuals)
+(live visuals, Perspective), [REPORTS.md section 23](../guides/REPORTS.md#23-boards-report-pages-of-live-tiles) and [LIVE.md](LIVE.md#live-bi-a-reports-live-tables) (the stream).
 
 - A `live` table is the current state of a live kind: the engine reads the kind once, subscribes to each entity through the **existing TopicHub** (the same topics live views use; a dataset that names a connector subscribes through it), and applies each change to an in-memory DuckDB table **by key**, in
   batches (100 ms, merged per entity), in one transaction with the retention. **As built:** a row whose declared columns did not change is skipped; every live table has `updateSeq` and `updatedAt`; a table that is not used for ten minutes is closed.
@@ -652,7 +652,7 @@ OpenAI-compatible endpoints, Anthropic, and on-premises models; configured by an
 > OpenAI-compatible endpoints, Anthropic, and a mock) with a matching `core/ai/` in the console, plus an MCP client
 > ([MCP_CLIENT.md](MCP_CLIENT.md)). "Ask about this page" already runs on it. The hooks in this table are stage 2 and build on that layer: a hook calls
 > the `LlmGateway` with its own feature name, so masking, audit, limits and "which roles may use which hook" come from the policy.
-> **Built (stage 2, first slice):** *report from words*, *ask the data* and *explain this number* (section 20.1, "Stage 2 as built"; [BI_AI.md](../guides/BI_AI.md)).
+> **Built (stage 2, first slice):** *report from words*, *ask the data* and *explain this number* (section 20.1, "Stage 2 as built"; [BI_GUIDE.md section 29](../guides/BI_GUIDE.md#29-ai-in-bi-report-from-words-ask-the-data-explain-this-number)).
 > Narrative summaries, the designer copilot and the dataset helper are built (section 20.14).
 Every feature below has a non-AI equivalent that works out of the box.
 
@@ -689,7 +689,7 @@ an administrator can restrict which workspaces and roles may use each hook.
 - **Usage:** views per report and user, slow visuals, unused content (candidates to archive).
 - **Backups:** workspaces, datasets and reports are documents in the identity database and on disk; included in the existing
   backup and export procedures.
-- **Load and memory:** the strategy of [LOAD_AND_MEMORY.md](../admin/LOAD_AND_MEMORY.md) gains a BI persona (report
+- **Load and memory:** the method of [PERFORMANCE.md, method 9](../admin/PERFORMANCE.md#9-many-users-soak-runs-and-memory-profiling) gains a BI persona (report
   viewers) and the runner's memory budget.
 
 ## 17. Architecture
@@ -839,7 +839,7 @@ Phase 4 (publishing and governance) is built; the reference is [BI_GOVERNANCE.md
 
 ### 20.5 Phase 5, as built
 
-Phase 5 (streaming BI) is built; the references are [DATASETS.md 7.1](../guides/DATASETS.md#71-live-tables-phase-5), [REPORTS.md 13](../guides/REPORTS.md#13-live-visuals-and-perspective-phase-5), [BOARDS.md](../guides/BOARDS.md), [LIVE.md](LIVE.md#live-bi-a-reports-live-tables),
+Phase 5 (streaming BI) is built; the references are [DATASETS.md 7.1](../guides/DATASETS.md#71-live-tables-phase-5), [REPORTS.md 13](../guides/REPORTS.md#13-live-visuals), [REPORTS.md section 23](../guides/REPORTS.md#23-boards-report-pages-of-live-tiles), [LIVE.md](LIVE.md#live-bi-a-reports-live-tables),
 [BI_GUIDE.md](../guides/BI_GUIDE.md) section 18, the walk-through [tutorial 12](../tutorials/12-live-bi-and-boards.md), the API [API_GUIDE.md](../guides/API_GUIDE.md), the settings `drishti.bi.live.*` and the console's `bi.live.*`, `bi.board.rotate_seconds` in [CONFIGURATION.md](../admin/CONFIGURATION.md),
 and the Perspective retest, history now archived: [RUPAKA_POC.md](../archive/RUPAKA_POC.md) section 12. Codes `DRS-9050` to `9053`.
 
@@ -858,7 +858,7 @@ and the Perspective retest, history now archived: [RUPAKA_POC.md](../archive/RUP
 
 **Not built, and not faked.**
 
-* **Incrementally maintained aggregates by group** (a change adjusting running sums, counts, minimums and maximums): built for the rollups a dataset declares over a live table (20.11); measures that are not plain stored aggregates are recomputed over the rows on each query and cached per live generation. Heavy continuous aggregation beyond that belongs in a producer ([LIVE_BI.md](LIVE_BI.md)).
+* **Incrementally maintained aggregates by group** (a change adjusting running sums, counts, minimums and maximums): built for the rollups a dataset declares over a live table (20.11); measures that are not plain stored aggregates are recomputed over the rows on each query and cached per live generation. Heavy continuous aggregation beyond that belongs in a producer ([LIVE_BI.md](../archive/LIVE_BI.md), history, archived).
 * **The "live targets met under the LOAD_AND_MEMORY capacity run"**: the done-when of the phase table. No million-row capacity run was made (local data stays at 10,000 rows a day); what was measured is history in docs/archive/RUPAKA_POC.md section 12.
 * **A history of every update of a live table** (append mode): a live table holds current state with retention. A bounded history of its *aggregates* is built (20.12, `live.history`); the rolling chart's points still live in the browser from the moment the page opened. Time buckets (`second`, `minute`) on `updatedAt` are not date parts.
 * **Per-visual frame rates** (the design's 4 and 30 a second): one cadence for a report.
@@ -895,7 +895,7 @@ Phase 7 (distribution) is built in parts. Part 1 is **export and subscriptions**
 
 #### 20.6, part 2: alerts on measures, fields and board tiles, as built
 
-References: [DISTRIBUTION.md section 4](../guides/DISTRIBUTION.md#4-alerts-on-numbers), [BOARDS.md](../guides/BOARDS.md#notifications-a-tile-tells-people-when-it-turns-red), the walk-through
+References: [DISTRIBUTION.md section 4](../guides/DISTRIBUTION.md#4-alerts-on-numbers), [REPORTS.md section 23](../guides/REPORTS.md#notifications-a-tile-tells-people-when-it-turns-red), the walk-through
 [tutorial 11](../tutorials/11-bi-that-runs-itself.md), the API [API_GUIDE.md](../guides/API_GUIDE.md#alerts-on-numbers-apiv1), the settings `drishti.alerts.measure.*` in
 [CONFIGURATION.md](../admin/CONFIGURATION.md#drishtialertsmeasure--alerts-on-numbers-and-board-notifications). Code `DRS-9062`; `DRS-9053` now refuses only `notifications` and `subscriptions`.
 
@@ -1013,7 +1013,7 @@ changes (so suggestions can arrive as diffs).
 
 #### Stage 2 as built (A2 report from words, A3 ask the data and explain this number)
 
-Reference: [BI_AI.md](../guides/BI_AI.md); the layer under it: [AI_PROVIDERS.md](AI_PROVIDERS.md) sections 7 and 10; tests `BiAiTest`, `test_bi_ai.py`, `test_bi_ai_browser.py` (mock provider only).
+Reference: [BI_GUIDE.md section 29](../guides/BI_GUIDE.md#29-ai-in-bi-report-from-words-ask-the-data-explain-this-number); the layer under it: [AI_PROVIDERS.md](AI_PROVIDERS.md) sections 7 and 10; tests `BiAiTest`, `test_bi_ai.py`, `test_bi_ai_browser.py` (mock provider only).
 
 * **Where.** `com.ash.drishti.server.bi.ai` (`BiAiService`, `BiAiController`, `BiAiPrompts`, `BiAiProperties`): `GET /api/v1/bi/ai/status`, `POST /draft`, `/ask`, `/explain`. They call the
   layer through `LLMFactory.model()` under the feature names `bi-draft`, `bi-ask`, `bi-explain`, so the policy (masks, audit, limits, roles) applies and the call counts in Admin -> AI. Off with
@@ -1152,11 +1152,11 @@ This is the one summary at 2.1.0. Since then (2.3.0, wave B) Perspective and Duc
 | Datasets (phase 2, waves A and B) | dataset YAML, expression language, cached, direct and live tables, row rules and masks, time intelligence, **window functions**, **several unrelated facts in one query**, **grain-correct measures** (also a measure that combines measures of different grains), scheduled refresh with **state that survives a restart** and Refresh now, composed and derived datasets, a Python Transform | [DATASETS.md](../guides/DATASETS.md) |
 | Reports and the designer (phase 3, waves A, C) | 30-odd visual types including map, funnel, histogram, box, bubble, entity view, **Vega-Lite** and **Perspective charts**; filters, slicers including the **relative-date slicer**, cross-filter, drill; designer with a phone and a **tablet** tab; **expected-value tests**; the Model view | [REPORTS.md](../guides/REPORTS.md) |
 | Governance (phase 4, wave B) | saved states and diffs, review, certification, lineage (past the connector), impact including **renames and changed type or meaning**, bundles, **BI in pack archives**, **import rollback** | [BI_GOVERNANCE.md](../guides/BI_GOVERNANCE.md) |
-| Streaming (phase 5, waves A and B) | live tables kept by key, **incremental live measures**, a **history of a live table**, Perspective grid, pivot and chart with the settings panel, boards with **tile hysteresis** and a **board designer**, kiosk | [BOARDS.md](../guides/BOARDS.md) |
+| Streaming (phase 5, waves A and B) | live tables kept by key, **incremental live measures**, a **history of a live table**, Perspective grid, pivot and chart with the settings panel, boards with **tile hysteresis** and a **board designer**, kiosk | [REPORTS.md section 23](../guides/REPORTS.md#23-boards-report-pages-of-live-tiles) |
 | Python (phase 6, wave C) | Measure, Visual and Transform interfaces, sandboxed runner, browser target, **tests shipped with an item**, **Python on boards and in alerts**, Vega-Lite output, Calc's **`drishti_bi`** and **Graphic Walker** | [PYTHON_BI.md](../guides/PYTHON_BI.md), [PYTHON_CALC.md](../guides/PYTHON_CALC.md) |
 | Distribution (phase 7, wave D) | PDF, PNG, Excel (with **real charts**) and CSV exports, subscriptions per recipient with optional **narrative summaries**, alerts on measures with **retries**, **webhook and text** channels, `<drishti-report>`, **`<drishti-about>`**, **`<drishti-search>`**, React, Vue and Angular sample pages | [DISTRIBUTION.md](../guides/DISTRIBUTION.md), [ELEMENTS.md](../guides/ELEMENTS.md) |
 | Analyse (phase 9, wave C) | masked extracts, Slice and SQL in the browser (**DuckDB-Wasm**), Python cells, notebooks, **promotion to a report visual**, several extracts | [ANALYSE.md](../guides/ANALYSE.md) |
-| Stage 2, AI | report from words, ask the data, explain a number, **designer copilot**, **dataset helper**, narrative summaries; off by default, under the AI policy | [BI_AI.md](../guides/BI_AI.md) |
+| Stage 2, AI | report from words, ask the data, explain a number, **designer copilot**, **dataset helper**, narrative summaries; off by default, under the AI policy | [BI_GUIDE.md section 29](../guides/BI_GUIDE.md#29-ai-in-bi-report-from-words-ask-the-data-explain-this-number) |
 | Operations | one temp folder per process; the multi-day type-ahead index with disk segments and reload | [OPERATIONS.md](../admin/OPERATIONS.md) |
 
 **Still not built, and not faked.** Nothing below is hinted at in the product as working.

@@ -48,7 +48,7 @@ How the connectors achieve these figures is in [DELTA_CONNECTOR.md](../connector
 Aerospike, [AEROSPIKE_CONNECTOR.md](../connectors/AEROSPIKE_CONNECTOR.md).
 
 Measured 2026-10-01 on the developer workstation (24 cores, server heap 15.6 GB), the trading pack's lake laid out as
-declared ([PACK_DEVELOPER_GUIDE.md](../guides/PACK_MODELLING_GUIDE.md#large-kinds-the-lake-layout)), 1,000,000 trades a day over three business days (5.2 GB;
+declared ([PACK_DEVELOPER_GUIDE.md](../guides/PACK_DEVELOPER_GUIDE.md#large-kinds-the-lake-layout)), 1,000,000 trades a day over three business days (5.2 GB;
 `tools/samplegen/bulk_trades.py --trades 1000000 --days 3`), times over HTTP:
 
 | What | Time |
@@ -139,8 +139,7 @@ measurements above: store sizes within about 25%, searches mostly within a facto
 
 ## How to measure
 
-Many users at once, soak runs and memory profiling (server, console and browser) have their own strategy:
-[LOAD_AND_MEMORY.md](LOAD_AND_MEMORY.md).
+Many users at once, soak runs and memory profiling (server, console and browser) are method 9 below.
 
 Start with method 1. It needs nothing but `curl` and tells you, for one view, where the time goes.
 
@@ -361,6 +360,163 @@ repository root whichever module Maven runs in). Add a name pattern to run one b
 view 300 times to warm up and then 2,000 times while timing: fetch, match, layout (cached), link fan-out on
 virtual threads, parallel binding. The build fails if p99 ≥ 50 ms or if the layout cache hit rate is ≤ 99 %.
 It runs with every `./mvnw verify`, so a change that makes views slow cannot be merged unnoticed.
+
+### 9. Many users, soak runs and memory profiling
+
+The method behind the numbers for many users at once, long runs and memory (from the load and memory strategy of 2026-10-08, whose principles and build plan are history: [archived](../archive/LOAD_AND_MEMORY.md)). Items marked **(to build)** are not built yet.
+
+#### 5. Five kinds of test
+
+##### 5.1 Baseline (exists)
+
+One user, warm caches, `measure.py`. Answers Q1. Run on every release candidate; numbers go to PERFORMANCE.md.
+
+##### 5.2 Capacity (`tools/bench/users.py`: a first version exists)
+
+The first version (2026-10-18) holds a fixed number of users for a fixed time against the server's API (`--server`,
+`--token-file`) or the console's pages (`--console`, `--user`, `--password`) on a lake made by `tools/bench/trades.py`, and prints
+one JSON line: requests a second and, per kind of request, p50/p95/p99 and failures (an HTTP error, a timeout, a page saying
+`DRS-1004`). It has no live channel, no steps and no workload file yet. The full version described next is still to build.
+
+`users.py` runs the workload model with **asyncio**: each simulated user is a coroutine with its own cookie jar that
+signs in through the console, opens views with `GET /v/...`, opens the tab's **live channel** (`/api/channel`, server-sent
+events, kept open and read to the end), subscribes and unsubscribes views on it as a browser does, types searches into
+`/api/suggest`, and records, per action, the latency people feel and, per live frame, the tick-to-frame time (the frame's arrival
+against the publish time `mqpublish.py` stamps into the document it sends). Standard library plus `httpx`, which
+the console already depends on.
+
+The run **steps** users: 50, 100, 200, 400, 800 … each held for 5 minutes after a 1-minute ramp, until a gate in section
+8 fails. The **capacity** is the last step that passed every gate. Output: one JSON line per step with users, p50/p95/p99
+per action, frames per second, errors by `DRS` code, server and console CPU, heap after GC, RSS, open streams.
+
+It can also drive **embedded views** (`/embed/v1/...` with a token from the exchange) and the server **API** directly
+(personal tokens), to size each entry point on its own.
+
+##### 5.3 Stress (to build: a mode of `users.py`)
+
+Keep adding users past capacity, and also push each limit on purpose: `drishti.live.max-streams`, the console's
+`embed.max_streams`, rate limits, a tick storm (10× the rate), a slow source (a JDBC source with 2 s latency). What we
+want to see, and test for: **graceful refusal** (`429 DRS-...` or `503` with a code and `Retry-After`), latency rising
+for new work while open views keep ticking, and **recovery** to baseline within a minute after the load stops. What
+fails the test: a crash, an `OutOfMemoryError`, a stuck stream, a refusal without a code, or no recovery.
+
+##### 5.4 Soak
+
+Part built: the cluster soak `tools/bench/net_soak.py` (with `soak_check.py`: kill windows, the memory slope, the verdict;
+[DRISHTI_NET.md](../architecture/DRISHTI_NET.md) section 17) runs over `users.py`. Still to build: a single-node soak mode of
+`users.py` and a memory watcher script beside it.
+
+Capacity × 0.7 for **8 hours** (a working day) and, before a major release, **72 hours**. Every 5 minutes
+`memwatch.py` records: heap after a full GC (`jcmd <pid> GC.run` then `GC.heap_info`), RSS, native memory summary
+(`jcmd <pid> VM.native_memory summary`, with `-XX:NativeMemoryTracking=summary`), thread count, open file descriptors,
+RocksDB disk-cache size, the console process's RSS and Python heap (section 7.4), open streams and topics. Pass: the
+**slope** of heap-after-GC and of RSS over the last 6 hours is not distinguishable from zero (section 8), latency
+gates still hold in the last hour, and nothing grows with the number of views ever opened (as opposed to open now).
+
+##### 5.5 Memory steps (to build: a mode of `users.py`)
+
+To answer Q5, hold everything still and change one thing in steps, with a full GC and a heap measure at each step:
+0 → 1,000 → 5,000 → 10,000 open live views (one user each, then 10 users sharing each view); 1 → 9 → 14 packs on;
+10,000 → 50,000 trades a day in the cache. A straight-line fit gives **bytes per open view**, **per shared subscription**,
+**per pack**, **per cached entity**: the memory budget of section 6.
+
+#### 6. Memory: where it goes and how to see it
+
+| Component | Grows with | How to see it | Budget (to measure in §5.5; targets) |
+|---|---|---|---|
+| Server: live topics (TopicHub) | distinct entities watched | live counters in Health; histogram of `TopicHub` classes | target ≤ 4 KB per topic plus its latest document |
+| Server: view streams (ViewStream) | open views (per tab, per view) | `drishti.live.*` metrics; histogram | target ≤ 50 KB per open view (layout cached by shape, not per view) |
+| Server: layout and view caches | distinct shapes, entities viewed | Admin → Caches (sizes); histogram | bounded by cache settings; purge returns it |
+| Server: connector caches | entities per connector | Admin → Caches; Kafka state mode memory and RocksDB disk cache | bounded by each connector's `memory` / `disk-cache.max-gb` |
+| Server: Delta caches | days read, documents read | Admin → Caches (the memory-budget row) | one shared budget, half the heap: id maps 20 %, columns 20 %, documents 5 %, whole days 5 %; id maps memory-mapped from disk and the document cache on disk (1 GB per connector) take no heap |
+| Server: grouped pages (`derived`) | groups (`store: disk`), members (`store: heap`) | Admin → Caches; the log line `derived pages … built in … s` | `store: disk`: each group's totals only (1.2 GB of heap for 1.16 million trades a day); `store: heap`: `max-stream` |
+| Server: identity, collaboration, audit | users, comments (JPA, SQLite or PostgreSQL) | database size; Hibernate statistics | small; the database holds it, not the heap |
+| Server: native memory | threads (virtual threads are cheap), direct buffers, RocksDB block cache, Delta Kernel | NMT summary; RSS minus heap | RSS ≤ heap max + 1.5 GB at capacity |
+| Console: live channels and hub | open tabs | console `/healthz`, Python heap (§7.4) | target ≤ 200 KB per open tab |
+| Console: template and asset caches | constant | Python heap | constant after warm-up |
+| Browser: one open view | panels, ticks over time | Chrome DevTools heap snapshot; Playwright CDP `Performance.getMetrics` | flat after 1 hour of ticks (no growth per tick) |
+
+A **memory budget** is then: `heap ≈ base + views × per-view + topics × per-topic + caches`, used to size `-Xmx`
+(`MaxRAMPercentage`) for a target number of users, and printed with the measured coefficients in PERFORMANCE.md.
+
+#### 7. Memory profiling, step by step
+
+##### 7.1 JVM flags for a profiled run
+
+```bash
+JAVA_TOOL_OPTIONS="-XX:MaxRAMPercentage=75 -XX:+UseZGC -XX:+ZGenerational \
+  -XX:NativeMemoryTracking=summary \
+  -Xlog:gc*:file=gc.log:time,uptime,level,tags:filecount=5,filesize=20m \
+  -XX:+HeapDumpOnOutOfMemoryError -XX:HeapDumpPath=./dumps \
+  -XX:StartFlightRecording=name=soak,settings=profile,maxage=6h,disk=true,filename=./dumps/soak.jfr" \
+  java -jar drishti-server/target/drishti-server-*-exec.jar
+```
+
+Flight Recorder's `profile` settings sample allocations with stack traces at low overhead (a few per cent); it is fine
+for a soak run, not for a latency gate run, which uses the plain flags of PERFORMANCE.md.
+
+##### 7.2 Is something growing? (cheap, any time)
+
+```bash
+jcmd <pid> GC.run && jcmd <pid> GC.heap_info                 # live set after a full GC
+jcmd <pid> GC.class_histogram | head -40 > histo-$(date +%H%M).txt   # what the heap is made of
+jcmd <pid> VM.native_memory summary                          # native: threads, code, GC, internal, other
+```
+
+Take a histogram at the start of a soak, after 1 hour and after 6 hours; **diff** them (with the memory watcher, to build)
+and look at classes whose instance count grows with time but not with the number of open views. Those are the leak
+suspects; for Drishti the likely ones are per-request objects kept in a map keyed by something that never repeats
+(stream ids, session ids, generations).
+
+##### 7.3 Who is holding it? (expensive, on suspicion)
+
+```bash
+jcmd <pid> GC.heap_dump -all=false ./dumps/heap-$(date +%H%M).hprof     # live objects only; pauses the server
+```
+
+Open it in **Eclipse Memory Analyzer** (MAT): *Leak Suspects*, then the *dominator tree* and *path to GC roots* of the
+suspect class (excluding weak and soft references). A heap dump of a 16 GB heap is about as large as the live set and
+pauses the server for seconds: take it on a test server, never on the users' one. **async-profiler** in allocation mode
+(`asprof -e alloc -d 60 -f alloc.html <pid>`) shows *who allocates* when the problem is churn (GC pressure, latency)
+rather than retention; it needs `perf_event` access on Linux.
+
+##### 7.4 The console (Python)
+
+- **Growth:** `tracemalloc` snapshots, taken by a debug-only endpoint (**to build**, `GET /debug/memory`, admin only,
+  off unless an environment switch to be named when it is built) that returns the top 30 allocation sites and the difference from the
+  previous snapshot. RSS comes from `/proc/<pid>/status` (`VmRSS`).
+- **Profiles:** `memray run --live drishti-console/run_drishti_web.py` on a test machine for allocation flame graphs;
+  `py-spy dump --pid <pid>` for where the event loop is stuck when latency jumps.
+- **What to watch:** live channels and hub subscriptions per closed tab (must return to zero), `ChannelSession` objects
+  after disconnects, the embed `StreamGuard`s after token expiry, httpx connection pool size (`backend.pool_size`).
+
+##### 7.5 The browser
+
+A view open for a working day must not grow. A Playwright test (**to build**, `tests/test_memory_soak_browser.py`,
+marked `slow`, not in the drill) opens a live view with a ticking source, records `JSHeapUsedSize` and DOM node count
+through CDP every minute for 60 minutes (8 hours in a soak run), with `HeapProfiler.collectGarbage` before each reading.
+Pass: no upward slope after the first 10 minutes. On failure, take two heap snapshots 30 minutes apart in Chrome
+DevTools and compare (*Objects allocated between snapshots*): usual suspects are detached DOM nodes from replaced
+panels, ECharts instances not disposed on panel replacement, and listeners added on every patch.
+
+#### 8. Pass and fail: the gates
+
+| Gate | Threshold | Test |
+|---|---|---|
+| Warm view p99 at capacity | < 50 ms | capacity |
+| Live tick to frame p99 at capacity | < 40 ms | capacity |
+| Type-ahead p95 at capacity | < 100 ms | capacity |
+| Errors at capacity | < 0.1 % of actions, none without a `DRS` code | capacity |
+| Past capacity | refusals carry a code and `Retry-After`; open views keep ticking; back to baseline within 60 s | stress |
+| No crash, no `OutOfMemoryError`, no stuck stream | always | all |
+| Heap after GC, slope over the last 6 h of a soak | < 1 % of heap max per hour, and the 95 % confidence interval of the slope includes 0 | soak |
+| RSS slope over the last 6 h | < 2 % per hour | soak |
+| Console RSS per open tab, after tabs close | returns within 10 % of the starting value | soak |
+| Browser JS heap over 60 minutes of ticks | no upward slope after 10 minutes | browser memory |
+| Regression against the last release | p99s not more than 10 % worse; per-view bytes not more than 15 % worse | release run |
+
+The drill keeps its own fast gate (PERFORMANCE.md §8); the gates above run before a release and after any change to
+the live path, caches or connectors, not on every commit.
 
 ## Java 21 and virtual-thread pinning
 

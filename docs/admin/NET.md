@@ -324,7 +324,7 @@ builds the **capability table**: for each kind, the nodes that render it and the
 **Commands and packs switched on or off** (Functions, `FUNC`, as an administrator, and Admin → Packs; 2.8.0) are the same on every node, even when each node has a
 database of its own: the switches carry a hybrid-logical-clock stamp, their hash rides each member's gossip entry (`switchesHash`), and a
 node whose hash differs from a peer's pulls the peer's switches and keeps the newer of each, written to its own database first. A node that
-was down catches up when it rejoins ([COMMANDS.md](COMMANDS.md#several-servers)).
+was down catches up when it rejoins ([USER_MANAGEMENT.md (Functions)](USER_MANAGEMENT.md#several-servers)).
 
 **Replicas and shards.** A source names where its data lives, the same on every server that reads the same data: a Delta table by the id in its
 log (or, failing that, its location; a local path counts only on its own machine); a `file` connector by its folder and a fingerprint of the

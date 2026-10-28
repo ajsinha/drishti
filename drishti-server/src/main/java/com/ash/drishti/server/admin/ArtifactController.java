@@ -39,7 +39,7 @@ import org.springframework.web.bind.annotation.RestController;
 /**
  * Admin, Artifacts: everything installed (packs, connector files, shipped BI files) in one list, what depends on each, and the safe
  * ways out of one: disable, uninstall to the archive, restore, delete for good. Administrators only; no personal API token may call
- * it (token-never). See docs/admin/ARTIFACTS.md.
+ * it (token-never). See docs/guides/OPERATIONALISING.md.
  */
 @RestController
 @RequestMapping("/api/v1/admin/artifacts")

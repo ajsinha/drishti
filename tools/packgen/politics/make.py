@@ -138,7 +138,7 @@ def spec() -> PB.PackSpec:
                  "document names its source, dataset, retrieval date and licence in its Data source panel. Opinion polls and bills have no open global dataset, so this pack has no such "
                  "kinds. A jurisdiction's page opens with a map: the country is highlighted on the world and a click on any other country opens that country's page (a country the pack holds "
                  "no jurisdiction for is not clickable and says so on hover); the shapes ship with the console, nothing is fetched from the internet. Refresh with "
-                 "`tools/realdata/realdata.py` (see docs/guides/REAL_DATA.md).",
+                 "`tools/realdata/realdata.py` (see docs/guides/PUBLIC_DATA.md).",
         roles={"analyst": {"kinds": [k.kind for k in KINDS], "raw": True}})
 
 

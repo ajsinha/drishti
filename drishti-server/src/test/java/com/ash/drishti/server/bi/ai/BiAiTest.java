@@ -60,7 +60,7 @@ import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.ResultActions;
 
 /**
- * BI on the AI layer (docs/guides/BI_AI.md) with the mock provider only: the prompt carries the dataset model and no row, a draft is shown only if the report
+ * BI on the AI layer (docs/guides/BI_GUIDE.md) with the mock provider only: the prompt carries the dataset model and no row, a draft is shown only if the report
  * checker passes it, a question runs on the engine as the reader (two readers, two answers; a masked field stays masked), and a number's lineage and breakdown
  * come from the engine. Security on, a small generated lake.
  */

@@ -48,7 +48,7 @@ import java.util.stream.Stream;
 /**
  * The pyiceberg-written fixture tables of the Iceberg connector's tests (made by {@code tools/iceberg/fixtures.py}, in
  * {@code plugins/drishti-plugin-iceberg/src/test/resources/iceberg-fixtures}): the shapes other engines write
- * (DRISHTI_ICEBERG.md section 15.5). A test copies them into a path-based lake of its own, where the Iceberg library can
+ * (ICEBERG_EXTERNAL_CONNECTOR.md section 12). A test copies them into a path-based lake of its own, where the Iceberg library can
  * add merge-on-read delete files as Spark and Flink do.
  */
 final class ExternalFixtures {

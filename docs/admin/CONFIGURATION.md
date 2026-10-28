@@ -881,7 +881,7 @@ The pack loader also writes some keys for the rest of the server (`drishti.packs
 | `max-archive-mb` / `max-unpacked-mb` | `50` / `200` | Size limits for an archive and for what it unpacks to. |
 | `allow-http` | `false` | Accept plain `http:` registries. For tests only. |
 
-See [PACK_DEVELOPER_GUIDE.md](../guides/PACK_LIFECYCLE_GUIDE.md#a-signed-pack-registry-publishing-and-installing).
+See [PACK_DEVELOPER_GUIDE.md](../guides/PACK_DEVELOPER_GUIDE.md#a-signed-pack-registry-publishing-and-installing).
 
 ### `drishti.packs.deploy` and `drishti.packs.settings-dir` — deploy an archive, and the legacy data-source overrides
 
@@ -1300,7 +1300,7 @@ The start logs `content store: <backend> <root> (settings <file>)`.
 
 ### Write-back: `config/edit/`
 
-Write-back ([WRITE_BACK.md](../architecture/WRITE_BACK.md); the administrator's guide [EDITS.md](EDITS.md)) has its own folder, named by
+Write-back ([WRITE_BACK.md](../architecture/WRITE_BACK.md); the administrator's guide [WRITE_BACK_GUIDE.md, for administrators](../guides/WRITE_BACK_GUIDE.md#for-administrators-write-back-is-off-as-shipped)) has its own folder, named by
 `drishti.edit.file` (`DRISHTI_EDIT_FILE`, default `./config/edit/edit.yaml`; its siblings `lanes.yaml`, `policy.yaml` and `retention.yaml`
 are read from the same folder). A missing file or key means the default. **Off as shipped**: `edit.enabled: false`, so no change is
 accepted anywhere and no Submit is drawn; a fresh install or an upgrade is read-only. The edit log, lanes, approvals, overlays and owned
@@ -1419,7 +1419,7 @@ decides who may use it (roles with `calc`), keeps each user's snippets, and serv
 | `max-snippet-chars` | `50000` | A saved snippet's code, at most (never more than 60,000: a saved document is at most 64 KB). Each user keeps at most 50 snippets. |
 
 Which views offer Calc is a pack's choice (`python: { enabled: true }` in `pack.yaml`), not configuration; see
-[PACK_DEVELOPER_GUIDE.md](../guides/PACK_MODELLING_GUIDE.md#calc-python-snippets).
+[PACK_DEVELOPER_GUIDE.md](../guides/PACK_DEVELOPER_GUIDE.md#calc-python-snippets).
 
 ### `drishti.var` — the VaR engine
 
@@ -1666,7 +1666,7 @@ Times are in `drishti.business-date.zone`, business days by `drishti.business-da
 
 ### `drishti.bi.ai` — BI with AI (stage 2)
 
-The BI hooks on the AI layer ([BI_AI.md](../guides/BI_AI.md)). They also need `drishti.ai.enabled` (off by default) and a provider ([AI_PROVIDERS.md](../architecture/AI_PROVIDERS.md));
+The BI hooks on the AI layer ([BI_GUIDE.md section 29](../guides/BI_GUIDE.md#29-ai-in-bi-report-from-words-ask-the-data-explain-this-number)). They also need `drishti.ai.enabled` (off by default) and a provider ([AI_PROVIDERS.md](../architecture/AI_PROVIDERS.md));
 the policy's feature names are `bi-draft`, `bi-ask`, `bi-explain`, the authoring helpers `bi-suggest`, `bi-explain-checks` and `bi-helper`, and a subscription's narrative summary `subscription-narrative` (`drishti.ai.policy.features`, above).
 
 | Setting | Default | Meaning |
@@ -1684,7 +1684,7 @@ the policy's feature names are `bi-draft`, `bi-ask`, `bi-explain`, the authoring
 
 ### `drishti.bi.live` — streaming BI (phase 5)
 
-Live tables kept in memory by the engine and the streams that tell browsers they changed ([DATASETS.md](../guides/DATASETS.md#71-live-tables-phase-5), [REPORTS.md](../guides/REPORTS.md#13-live-visuals-and-perspective-phase-5), [BOARDS.md](../guides/BOARDS.md),
+Live tables kept in memory by the engine and the streams that tell browsers they changed ([DATASETS.md](../guides/DATASETS.md#71-live-tables-phase-5), [REPORTS.md](../guides/REPORTS.md#13-live-visuals), [REPORTS.md section 23](../guides/REPORTS.md#23-boards-report-pages-of-live-tiles),
 [BI_GUIDE.md](../guides/BI_GUIDE.md) section 18). A table starts on first use and closes when nobody has used it for `idle-close`. The console's own settings are `bi.live.min_interval_ms`, `bi.live.stale_seconds`, `bi.board.rotate_seconds` and, for the Python runner, `bi.python.*` (the environment table above; [PYTHON_BI.md](../guides/PYTHON_BI.md) section 9).
 
 | Key | Default | Meaning |
@@ -1826,7 +1826,7 @@ What the server does at start with BI items it **stores** (drafts, proposals and
 migration is **idempotent** (a converted item has nothing left to convert, so the second start changes nothing), **audited** (`bi-expressions-migrated`
 per item, `bi-migration-run` per run), keeps **the text before as a saved state** of the item's history (*History*, *Restore*), and **never changes an
 item silently**: an item it cannot convert keeps its text and is listed in Admin, BI settings (`migrationProblems`), on the item's page and at
-`GET /api/v1/bi/migrate/problems` ([TROUBLESHOOTING.md](../guides/TROUBLESHOOTING.md#bi-migrations-22-wave-a)).
+`GET /api/v1/bi/migrate/problems` ([TROUBLESHOOTING.md](../guides/TROUBLESHOOTING.md#bi-after-an-upgrade-from-21-migrations-of-stored-items)).
 
 | Key | Default | Meaning |
 |---|---|---|
@@ -1868,7 +1868,7 @@ Under `drishti.distribution.subscriptions`:
 | `load-delay` | `5s` | After a data load, wait this long before an `after-load` subscription runs, so the BI layers rebuild |
 | `narrative-rows` | `15` | Most rows per table the model is shown when it writes a subscription's narrative summary (`narrative: true`; only in `drishti.bi.ai.values: aggregates`, and only from the recipient's own unmasked columns) |
 
-Under `drishti.distribution.statements` (2.6.0, statement pages: [STATEMENTS.md](../guides/STATEMENTS.md)):
+Under `drishti.distribution.statements` (2.6.0, statement pages: [REPORTS.md section 24](../guides/REPORTS.md#24-statements-paginated-reports-page-exact-one-per-reader)):
 
 | Key | Default | Meaning |
 |---|---|---|
@@ -2153,7 +2153,7 @@ A person chooses which events are emailed under `notify.email.{share,mention,rep
 
 ### `drishti.admin` — uninstalling packs, connectors and BI files safely
 
-Admin → Artifacts ([ARTIFACTS.md](ARTIFACTS.md)) moves what it uninstalls into an archive instead of deleting it. All values are read at start.
+Admin → Artifacts ([OPERATIONALISING.md section 18](../guides/OPERATIONALISING.md#18-admin--artifacts-install-and-uninstall-safely)) moves what it uninstalls into an archive instead of deleting it. All values are read at start.
 
 | Key | Default | Meaning |
 |---|---|---|
@@ -2232,506 +2232,33 @@ settings:
   stale-after: 5m        # trades arrive all day: five quiet minutes means something is wrong
 ```
 
-### `delta` — Delta Lake
+### Where each plugin's settings are
 
-Layout: `<root>/<domain>/<kind>/business_date=yyyy-MM-dd/` (or the folder `table.<kind>` names) holding `(id, doc)` rows and the promoted columns; the on-disk tree and the row-group sizes are in [DELTA_CONNECTOR.md section 3](../connectors/DELTA_CONNECTOR.md#3-what-is-on-disk).
+Each plugin's settings, with type, default and meaning, are listed in one place: the plugin's README, generated from the settings catalogue
+(`drishti-engine/src/main/resources/drishti/plugin-settings.yaml`, the one Admin → Connectors builds its form from). The connector's own
+document explains how it reads, its layout, scale and limits.
 
-| Setting | Default | Meaning |
-|---|---|---|
-| `root` | `./data/delta` (packs use `DRISHTI_DELTA_ROOT`) | Local directory (`C:\lakes\drishti` on Windows), or a URI such as `s3a://bucket/lake`, `s3://…`, `abfs://…`, `gs://…`. |
-| `engine` | `DRISHTI_DELTA_ENGINE`, else `native` | Which Delta Kernel engine reads the lake. `native`: no Hadoop; local disk through `java.nio` and S3 (`s3://`, `s3a://`) through the AWS SDK; the one that works on Windows without `winutils.exe`. `hadoop`: Kernel's default engine over Hadoop's file systems; also reads `abfs://`, `gs://` and HDFS. `auto`: `native` on Windows, `hadoop` elsewhere. A `native` connector on an `abfs://` or `gs://` root refuses to start and says to use `hadoop`. Health shows `UP (engine: native)`; the cache stats carry `engine`. See [DELTA_CONNECTOR.md › Engines](../connectors/DELTA_CONNECTOR.md#16-engines-native-and-hadoop). |
-| `domain` | empty | The data-domain sub-folder (`reference`, `trading`, `legal`). |
-| `kinds` | every table found | Comma list. |
-| `mode.<kind>` | `snapshot` | `snapshot`: a full copy every business date, read within `lookback-days`. `effective`: a row only when the entity changes, no limit. |
-| `lookback-days` | `10` | How far back a snapshot read looks for the latest partition. |
-| `id-column` / `doc-column` / `date-column` | `id` / `doc` / `business_date` | Column names. |
-| `refresh-seconds` | `10` | How often each table's latest version is checked. |
-| `cache-mb` | not set: shared, 5 % of the heap | Whole days kept in memory, by size, for small tables that are not laid out. |
-| `layout.<kind>.columns` | none | Document paths stored as columns beside the document (see [PACK_DEVELOPER_GUIDE.md](../guides/PACK_MODELLING_GUIDE.md#large-kinds-the-lake-layout)); searches, pick lists, derived kinds and impact read them instead of documents. `layout.<kind>.sort-by`, `file-rows`, `row-group-rows` tell the writers how to lay the table out ([which writer honours which](../connectors/DELTA_CONNECTOR.md#row-group-size)). |
-| `id-map-mb` | not set: shared, 20 % of the heap | Each day's ids and the file each is in, read from the id column alone, kept by size. |
-| `doc-cache-mb` | not set: shared, 5 % of the heap | Single documents read recently. |
-| `doc-disk-cache.enabled` | `true` | One RocksDB per connector (its own folder, files and compactions; compacted hourly, so expired files go without writes; a cache that cannot open is skipped with a WARN and tried again every 30 s for 10 minutes). A second tier for single documents, on disk (RocksDB) under `doc-disk-cache.dir` (default `<data dir>/cache/<connector>/docs`): a document read once is answered without decompressing its Parquet pages, also after a restart. Keyed by the table version it was read from, so never stale. Measured on 362,804 ENDUR trades: 17 % less CPU per read for documents already read (2026-10-18). |
-| `doc-disk-cache.max-gb`, `.ttl`, `.reset-at`, `.zone` | `1`, `12h`, `02:00`, `America/New_York` | Its size cap (the oldest files go first), time limit (entries written longer ago go), and daily clearing. |
-| `id-map-disk.enabled`, `id-map-disk.dir` | `true`, `<data dir>/cache/<connector>/idmaps` | Each table date's id map written once per table version and read through a memory map: no heap per id, and after a restart a date's first read needs no scan (3 ms instead of 0.7 s for 362,804 ids, 2026-10-18). Other versions' files go when a new one is written; a purge (Admin → Caches) deletes them. |
-| `columns-cache-mb` | not set: shared, 20 % of the heap | A day's promoted columns, read once and kept by size (the newest day is loaded in the background). |
-| (memory budget) | — | Delta connectors that do not set `cache-mb`, `id-map-mb`, `columns-cache-mb` or `doc-cache-mb` share one cache of each, sized from `-Xmx` (5 %, 20 %, 20 %, 5 %: half the heap in all, however many connectors run); a connector that sets one keeps a cache of its own of that size. Admin → Caches shows each shared cache's size against its cap. |
-| `max-concurrent-reads` | `16` | Single-document reads at once (each decodes one row group). |
-| `max-queued-reads` | `4096` | Single-document reads that may wait for one of those slots. More are refused at once (`DRS-1003 … reads already wait … the server is busy, try again`), and a waiting read whose caller has stopped waiting (its time-out, `drishti.sources.fetch-timeout`) leaves the queue and never reads. |
-| `max-load-rows` | `200000` | A table without columns has a whole day loaded for reverse lookups only up to this many rows. |
-| `warm-dates` | `3` | After start, in the background, each table's newest N dates get their id map and one document read, so the first read of a recent past date is not the slow one. `0` turns it off. |
-| `s3.endpoint`, `s3.access-key`, `s3.secret-key`, `s3.region`, `s3.path-style` | empty, empty, empty, empty, `true` with an endpoint | Shorthands for an `s3a://` (or, native engine, `s3://`) root; both engines read them. Without keys the AWS chain is used (environment, profile, instance role). |
-| `s3.read-block-kb` | `1024` | Native engine: the smallest ranged GET (a Parquet footer, a deletion vector); larger reads are one GET of their range. |
-| `hadoop.<key>` | none | Passed to Hadoop as `<key>` (any `fs.s3a.*` option); with the native engine, Kernel's options (`delta.kernel.default.parquet.reader.batch-size`, …) are read from here or from `kernel.<key>`. |
-
-```yaml
-drishti:
-  sources:
-    connectors:
-      risk-lake:
-        plugin: delta
-        settings:
-          root: s3a://bank-lake/drishti
-          domain: risk
-          s3.endpoint: https://minio.internal:9000
-          s3.access-key: ${LAKE_ACCESS_KEY}
-          s3.secret-key: ${LAKE_SECRET_KEY}
-```
-
-TLS to an S3-compatible store on a private CA: the shared [`tls.*`](#tls--tls-for-connectors) settings with `s3.endpoint: https://...`, read by the native engine ([DELTA_CONNECTOR.md, Security](../connectors/DELTA_CONNECTOR.md#security-tls-and-credentials)); refused with `engine: hadoop`.
-
-### `jdbc` — a database
-
-The JDBC driver jar goes on the class path or in `plugin-dir`.
-
-| Setting | Default | Meaning |
-|---|---|---|
-| `url`, `user`, `password` | empty | Connection. Keep the password in the environment. |
-| `pool-size` | `20` (`drishti.db.pool.size`) | Connections the pool opens at most; the rest of the [pool settings](#drishtidbpool--database-connection-pools) (`pool-min-idle`, `pool-idle-timeout`, `pool-max-lifetime`, `pool-connection-timeout`, `pool-leak-threshold`, `statement-timeout`) are read here too. A broken connection is replaced; the connector starts even if the database is down. |
-| `query.<kind>` | none | Query mode: SQL with one `?` for the id, or named `:id` and `:asOf` (the business date). The first row is the document: each column a field, or a column named `json` as the whole document; optional `generation` and `business_date` columns. A `json`/`jsonb` column becomes nested data. |
-| `query.<kind>.<part>`, `part-shape.<kind>.<part>` | none, `list` | Query mode: more of the entity from other tables; its rows become the field `<part>` (a list, or with `object` the first row). Parts run at once with the entity's query. |
-| `ids.<kind>` | none | Query mode: a day's ids (and optionally a title) for type-ahead, read every `refresh-seconds`. |
-| `columns.<kind>` | none | Query mode: a day's id and promoted fields (`:asOf`), for searches, pick lists, derived kinds, impact and reverse lookups without documents. |
-| `reverse.<kind>` | none | Query mode: the ids of the kind that reference `:target`. All query-mode keys: [JDBC_QUERIES.md](../connectors/JDBC_QUERIES.md). |
-| `json-columns` | none | Query mode: comma list of text columns that hold JSON (`legs, extras`), parsed into nested data like a `json`/`jsonb` column; a cell that is not JSON stays text. |
-| `table` | empty | Table mode: every kind of a domain in one PostgreSQL table of `(kind, id, business_date, doc jsonb, <promoted columns>)` rows, partitioned by month ([POSTGRES_CONNECTOR.md](../connectors/POSTGRES_CONNECTOR.md)). |
-| `mode.<kind>` | `snapshot` | Table mode: `snapshot` or `effective`. |
-| `kinds`, `kind-column`, `id-column`, `doc-column`, `date-column`, `lookback-days` | the kinds the table holds, `kind`, `id`, `doc`, `business_date`, `10` | Table mode column names and look-back. |
-| `layout.<kind>.columns` | none | Table mode: the paths the pack promotes, each a column of the table, read by searches, pick lists, derived kinds, impact and reverse lookups instead of documents. |
-| `refresh-seconds` | `60` | Table mode: how often each kind's dates and the newest day's ids (type-ahead, kept in memory) are re-read. |
-| `scan-threads` | `4` | Table mode: id ranges of a day read at once (on as many pooled connections) when reading a day's columns. |
-| `columns-cache-mb`, `columns-seconds` | `1024`, `300` | Table mode: memory for days of promoted columns, and how long a day is kept (a new load clears them). |
-| `max-load-rows`, `reverse-index` | `200000`, `true` | Table mode: the most documents a reverse lookup reads for a kind without promoted link columns; `false` turns reverse lookups off. |
-
-```yaml
-drishti:
-  sources:
-    plugins:
-      jdbc:
-        enabled: true
-        settings:
-          url: jdbc:postgresql://db:5432/trades
-          user: drishti
-          password: ${TRADES_DB_PASSWORD}
-          query.trade: >-
-            SELECT json FROM trades WHERE trade_id = :id AND business_date =
-            (SELECT MAX(business_date) FROM trades WHERE trade_id = :id AND business_date <= :asOf)
-```
-
-TLS for `jdbc:postgresql://`: the shared [`tls.*`](#tls--tls-for-connectors) settings (`tls.enabled: true` plus a CA, optionally a client certificate), handed to the driver as `sslmode=verify-full` (or `require` with `tls.verify-hostname: false`); the mapping, and the options for MySQL, SQL Server and Oracle, are in [POSTGRES_CONNECTOR.md, Security](../connectors/POSTGRES_CONNECTOR.md#security-tls-and-credentials).
-
-### `file` — JSON or CSV files on disk
-
-Layout: `<root>/<domain>/<yyyy-MM-dd>/<kind>.jsonl` (JSON Lines, one entity a line; the main layout), undated `<root>/<domain>/<kind>.jsonl` (the same for every date), and the older one file per entity, `<root>/<kind>/<id>.json` (or `.csv`, deprecated) and dated `<root>/<yyyy-MM-dd>/<kind>/<id>.json` ([FILE_CONNECTOR.md section 2](../connectors/FILE_CONNECTOR.md#2-the-layout)).
-
-| Setting | Default | Meaning |
-|---|---|---|
-| `root` | `./data/feeds` in the bundled file (`DRISHTI_FEEDS`) | The folder. |
-| `rescan-seconds` | `30` | How often the search index and dated folders are refreshed. |
-| `lookback-days` | `10` | How far back a dated read looks. |
-
-### `rest` — an HTTP/JSON service
-
-| Setting | Default | Meaning |
-|---|---|---|
-| `base-url` | required | `https://risk.internal/api` |
-| `path` | `/{kind}/{id}` | Appended to the base URL. |
-| `kinds` | empty = any | Comma list. |
-| `timeout-ms` | `2000` | Both the connect timeout and the request timeout. |
-| `generation-header` | `ETag` | A response header holding a numeric version; otherwise the fetch time. |
-| `header.<Name>` | none | Request headers, e.g. `header.Authorization: Bearer ${SERVICE_TOKEN}`. |
-| `source-name` | `rest` (a connector: its name) | The name shown in provenance and Health. |
-
-A 404 answer means "not held here". Any other status below 400 is the document (`204`, other `2xx` and `3xx` bodies
-are parsed; redirects are not followed; an empty body is an empty document, found); 400 or more is a failed read.
-Full detail: [REST_CONNECTOR.md](../connectors/REST_CONNECTOR.md).
-
-TLS: an `https://` `base-url` with the shared [`tls.*`](#tls--tls-for-connectors) settings for a private CA or mutual TLS ([REST_CONNECTOR.md, TLS](../connectors/REST_CONNECTOR.md#tls-for-the-rest-connector)).
-Proxy: a `proxy:` block, or the site default [`drishti.http.proxy`](#drishtihttpproxy--the-sites-outbound-http-proxy) ([REST_CONNECTOR.md, Outbound proxy](../connectors/REST_CONNECTOR.md#outbound-proxy)).
-
-### `tls.*` — TLS for connectors
-
-Every connector that connects to a server over the network reads its TLS settings from these keys (Kafka, ActiveMQ,
-RabbitMQ, Redis, REST, the feeds, S3, MongoDB, PostgreSQL, Aerospike, Cassandra, Delta and Iceberg; the matrix is in [TLS.md](../connectors/TLS.md#connector-matrix)). Every key is optional. Passwords are `${ENV}` placeholders or `…-password-file` paths,
-never written in a document. Full reference, with every source form, the openssl/keytool commands and rotation:
-[TLS.md](../connectors/TLS.md).
-
-| Setting | Default | Meaning |
-|---|---|---|
-| `tls.enabled` | `false` | Use TLS (a connector whose address says so, `amqps://`, `ssl://`, Kafka `security.protocol: SSL`, uses it without this; `true` against a plain address is a start-up error). |
-| `tls.ca-file` | none | Trust: a PEM file with one or many CA certificates (or the PEM text). |
-| `tls.truststore`, `tls.truststore-password`, `tls.truststore-type` | none, none, detected | Trust: a PKCS12 or JKS truststore. |
-| `tls.trust-jvm-default` | `true` unless a CA or truststore is given | Also trust the JVM's authorities (merged with the CA or store). |
-| `tls.cert-file`, `tls.key-file`, `tls.key-password` | none | Client identity (mutual TLS) from PEM: certificate chain, private key (PKCS#8, PKCS#1 RSA, SEC1 EC, or encrypted PKCS#8), key password. |
-| `tls.keystore`, `tls.keystore-password`, `tls.keystore-type`, `tls.key-alias` | none, none, detected, the only key | Client identity from a PKCS12 or JKS keystore (use this or the PEM pair). |
-| `tls.protocols` | `TLSv1.3,TLSv1.2` | Protocol versions offered. |
-| `tls.cipher-suites` | the JVM's | Cipher suites. |
-| `tls.verify-hostname` | `true` | Check the server's name against its certificate; `false` warns at every start. |
-| `tls.insecure-trust-all` | `false` | Accept any certificate; refused unless the environment has `DRISHTI_ALLOW_INSECURE_TLS=true` (development only). |
-
-Each `…-password` has a `…-password-file` twin. A wrong file or password stops the connector at start with the setting, the
-file and the reason; a certificate within 30 days of expiry adds a sentence to the source's health text.
-
-### `kafka` — a live stream
-
-| Setting | Default | Meaning |
-|---|---|---|
-| `bootstrap-servers` | `localhost:9092` | Brokers. |
-| `topics` | empty | Comma list. |
-| `kind`, `id-field` | none, `id` | Mapped messages: the whole value is the document of this kind, keyed by this field. Per topic: `kind.<topic>`, `id-field.<topic>`. Without them each message is an envelope `{"kind","id","doc"}`. |
-| `mode` | `state` | `state`: the stream is the store (memory: about 0.4–0.5 GB per million entities for the index and type-ahead, estimated, plus `cache-mb`). `ticks`: another store serves documents and the stream only ticks open views; it keeps nothing, but still replays the topic from the beginning at start. |
-| `cache-mb` | `256` | Recently read documents kept in memory. |
-| `search` | `true` | Keep identifiers for type-ahead. |
-| `poll-ms` | `200` | Consumer poll interval. |
-| `client.<property>` | none | Any Kafka consumer property, e.g. `client.security.protocol: SASL_SSL`; applied last, so it wins over the security settings below. |
-| `flavour` | `apache` | `confluent` is the Confluent Cloud preset (`SASL_SSL`, `PLAIN` with `api-key` / `api-secret`, `client.dns.lookup=use_all_dns_ips`, tuned timeouts). |
-| `security.protocol` | inferred | `PLAINTEXT`, `SSL`, `SASL_PLAINTEXT` or `SASL_SSL`; with the [`tls.*`](#tls--tls-for-connectors) settings for the TLS part. |
-| `sasl.mechanism` | none | `PLAIN`, `SCRAM-SHA-256`, `SCRAM-SHA-512`, `OAUTHBEARER` or `GSSAPI`. |
-| `sasl.username`, `sasl.password` (or `-file`) | none | PLAIN and SCRAM credentials (`api-key`, `api-secret` on Confluent Cloud). |
-| `sasl.oauth.token-endpoint`, `sasl.oauth.client-id`, `sasl.oauth.client-secret`, `sasl.oauth.scope` | none | OAUTHBEARER, OIDC client credentials. |
-| `sasl.kerberos.principal`, `sasl.kerberos.keytab`, `sasl.kerberos.use-ticket-cache`, `sasl.kerberos.service-name`, `sasl.kerberos.krb5-conf` | none, none, `false`, `kafka`, the JVM's | GSSAPI (Kerberos). |
-| `value-format` | `string`, or `confluent` with a registry | `confluent`: also read the Confluent wire format (JSON Schema, Avro). |
-| `schema-registry.url`, `schema-registry.basic-auth`, `schema-registry.bearer-token`, `schema-registry.timeout-ms`, `schema-registry.tls.*` | none, none, none, `10000`, the JVM's trust | The Schema Registry the Avro schema ids are resolved against. |
-| `disk-cache.enabled` | `false` | Also write every message to a RocksDB store on local disk. |
-| `disk-cache.root` / `disk-cache.dir` | `./data/cache` / `<root>/<connector>` | Where the store lives. |
-| `disk-cache.max-gb` | `10` | Size budget. |
-| `disk-cache.reset-at` / `disk-cache.zone` | `02:00` / `America/New_York` | Nightly clearing time. |
-| `source-name` | `kafka` (a connector: its name) | The name shown in provenance and Health. |
-
-Only a null value (a tombstone), or an envelope with `"doc": null`, deletes; an empty value does not. A delete is
-pushed to open views (they say the entity was deleted, and when) and takes the id out of type-ahead at once. Full detail:
-[KAFKA_CONNECTOR.md](../connectors/KAFKA_CONNECTOR.md); security in
-[its section 11](../connectors/KAFKA_CONNECTOR.md#11-security-tls-sasl-and-confluent).
-
-### `activemq` and `rabbitmq` — message queues
-
-Both keep the latest document of every entity in their own RocksDB store, because a queue delivers each
-message once.
-
-| Setting | Plugin | Default | Meaning |
+| Plugin | Reads | Settings | Reference |
 |---|---|---|---|
-| `broker-url` | activemq | `failover:(tcp://localhost:61616)?initialReconnectDelay=1000&maxReconnectDelay=30000` | The failover transport reconnects by itself. |
-| `max-redeliveries` | activemq | `-1` | Redeliveries of a message the state store could not keep before the broker dead-letters it; `-1` is without limit. |
-| `destinations` | activemq | empty | `queue:trades,topic:quotes`; a bare name is a queue. Topics use durable subscriptions, which stay on the broker after a topic is removed here. Each idle destination costs a 50 ms wait per polling loop. |
-| `user`, `password`, `client-id` | activemq | none, none, `drishti-<source-name>` | |
-| `uri` | rabbitmq | `amqp://guest:guest@localhost:5672/%2f` | `amqps://…:5671/…` connects over TLS. |
-| `auth-mechanism` | rabbitmq | `plain` | `external` logs in with the client certificate (needs `amqps://` and a client identity). |
-| `tls.*` | both | none | TLS for `ssl://` (ActiveMQ) and `amqps://` (RabbitMQ) endpoints: [`tls.*`](#tls--tls-for-connectors). |
-| `queues` | rabbitmq | empty | `trades,quotes`, all on one channel. Empty: `UP`, consuming nothing. |
-| `declare` | rabbitmq | `true` | Declare the queues durable. |
-| `bind.<queue>` | rabbitmq | none | `exchange:routing.key` to bind a declared queue. |
-| `prefetch`, `heartbeat-seconds`, `recovery-interval-ms` | rabbitmq | `100`, `20`, `2000` | |
-| `kind`, `kind.<destination>`, `id-field`, `id-field.<destination>` | both | none, `id` | As for Kafka. |
-| `cache-mb` | both | `128` | Memory cache. |
-| `state.root` / `state.dir` | both | `./data/state` / `<root>/<source-name>` | The RocksDB store, one per connector. Back it up: it survives restarts and is never cleared unless configured. It keeps the latest value of each entity (level compaction), so its size follows the entities held, not the messages. |
-| `state.durability` | both | `sync` | How a write is kept before the message is acknowledged. `sync`: the write-ahead log is synced on every write, so neither a crash nor a power loss loses an acknowledged message (one disk sync per message: typically thousands a second on an SSD). `wal`: the log is not synced (survives a crash of the process; a power loss can lose the last moments). `none`: no log (fastest; a crash can lose up to the 32 MB write buffer). Any other value fails the connector's start. |
-| `state.max-gb` | both | `10` | This connector's disk budget (decimal allowed), compared with the store's size (`stateMb`: table files plus write buffers). Each connector has its own. |
-| `state.when-full` | both | `evict-oldest` | Past the budget. `evict-oldest`: the entities written longest ago are removed until the store is under 90% of the budget, then it is compacted; each eviction is logged at WARN and counted (`evicted`). `warn`: nothing is removed; health reads `UP (state store over its budget: X of Y GB; nothing is dropped: raise state.max-gb or add disk)`. Any other value stops the connector at start (`failedToStart`), so a typo never evicts. |
-| `state.check-seconds` | both | `60` | How often the store's size is checked against the budget. |
-| `state.reset-at` / `state.zone` | both | `never` / `America/New_York` | Optional daily clearing time; clears the disk store only. |
-| `source-name` | both | `activemq` / `rabbitmq` (a connector: its name) | The name shown in provenance and Health; names the default state folder. |
-
-A message is acknowledged only after the state store has kept it. A message the store cannot keep (disk full, an I/O
-error) is not acknowledged: RabbitMQ requeues it and ActiveMQ redelivers it a second later (without limit: `max-redeliveries`, `-1`; a number
-sends the message to `ActiveMQ.DLQ` after that many), and health reads
-`DOWN: <reason> (messages are not acknowledged and come again)` until one is kept again. A message the connector
-cannot read (not JSON, no kind or id) is acknowledged, counted in `rejected` and dropped: there is no dead-lettering.
-Cache figures add `durability`, `budgetMb` and `evicted`. Full detail:
-[ACTIVEMQ_CONNECTOR.md](../connectors/ACTIVEMQ_CONNECTOR.md), [RABBITMQ_CONNECTOR.md](../connectors/RABBITMQ_CONNECTOR.md).
-
-### `s3` — documents in S3 or an S3-compatible store
-
-Layout as the file connector's per-entity form: `<prefix><kind>/<id>.json` and `<prefix><yyyy-MM-dd>/<kind>/<id>.json`.
-
-| Setting | Default | Meaning |
-|---|---|---|
-| `bucket` | required | |
-| `prefix` | empty | e.g. `risk/` |
-| `region` | `us-east-1` | |
-| `endpoint` | empty | For S3-compatible stores (MinIO, Ceph); path-style addressing then (`path-style`, `true`). |
-| `path-style` | `true` | Path-style addressing, used with `endpoint`. |
-| `access-key`, `secret-key` | empty | Static credentials, with no session token (temporary STS keys do not work here); otherwise the AWS credential chain. |
-| `rescan-seconds` | `60` | How often identifiers and dates are listed. |
-| `cache-seconds`, `cache-entries` | `30`, `10000` | Read cache (misses are cached too). |
-| `lookback-days` | `10` | How far back an older date folder may answer for an entity missing from newer ones. |
-| `source-name` | `s3` (a connector: its name) | The name shown in provenance and Health. |
-
-There is no `mode.<kind>`: a picked date reads the newest date folder on or before it that holds the entity (within
-`lookback-days`), then the undated object. A folder named like a date that is not a real one is ignored. Without
-`kinds`, the kinds served are those of the last successful listing, and an empty listing serves every kind. Connect
-(5 s) and socket (20 s) timeouts are fixed in the code. Full detail: [S3_CONNECTOR.md](../connectors/S3_CONNECTOR.md).
-
-TLS: an `https://` `endpoint` with the shared [`tls.*`](#tls--tls-for-connectors) settings for a private CA or a client certificate (`tls.verify-hostname: false` is refused here; [S3_CONNECTOR.md, TLS](../connectors/S3_CONNECTOR.md#tls-for-the-s3-connector)).
-
-### `iceberg` — Apache Iceberg
-
-Path-based tables or a REST catalog (Polaris, Snowflake Open Catalog, Glue), in the same layout as Delta Lake. Delta is the default for
-every pack; a domain is read from Iceberg only by configuration (a connector file with `plugin: iceberg`). Design, loading and
-maintenance: [ICEBERG_CONNECTOR.md](../connectors/ICEBERG_CONNECTOR.md); the two engines: its
-[section 17](../connectors/ICEBERG_CONNECTOR.md#17-engines-native-and-library); vectors, documents and the disk caches (2.9.5): its
-[section 18](../connectors/ICEBERG_CONNECTOR.md#18-parity-with-delta-vectors-documents-and-disk-caches-295); Glue and S3 Tables: its
-[section 19](../connectors/ICEBERG_CONNECTOR.md#19-aws-glue-s3-tables-and-the-iam-they-need-295).
-
-| Setting | Default | Meaning |
-|---|---|---|
-| `engine` | `native` (`DRISHTI_ICEBERG_ENGINE`) | `native`: drishti-iceberg, no Hadoop (local disk and S3; Windows; left to the default, a root it cannot reach is read by the library); `library`: Apache Iceberg Java over Hadoop (also Azure, Google Cloud Storage, HDFS); `auto`: native on Windows, library elsewhere |
-| `catalog` | `hadoop` | `hadoop` (path-based tables) or `rest` |
-| `root` | none (`root` or `uri` is required; the plugin stays idle without one; the `iceberg` profile sets `./data/iceberg`) | `hadoop`: the lake, a folder or `s3a://…` (`abfs://`, `gs://`, `hdfs://`) |
-| `domain` | empty | the data domain: the folder under `root`, or the REST namespace |
-| `namespace` | the domain | `rest`: the namespace (dots separate levels) |
-| `uri` | none | `rest`: the catalog's URI |
-| `warehouse`, `credential`, `token`, `scope`, `oauth2-server-uri`, `prefix`, `io-impl` | none | `rest`: passed to the catalog |
-| `catalog.<key>` | — | `rest`: any other catalog property (`catalog.rest.sigv4-enabled` …) |
-| `s3.endpoint`, `s3.access-key`, `s3.secret-key`, `s3.region`, `s3.path-style` | — | object storage for S3A and S3FileIO (`s3.path-style` defaults to `true` with an endpoint) |
-| `hadoop.<key>` | — | `library`: passed to Hadoop as `<key>` |
-| `metadata-location.<kind>` | none | `native`: the kind's table named by its metadata file, read-only |
-| `relocate` | none | `native`: `<old prefix> -> <new prefix>; …` reads a table copied elsewhere |
-| `vended-credentials` | `true` | `native`, `rest`: ask the catalog for each table's own S3 credentials |
-| `lz4-decoder` | `safe` | `native`: the LZ4 page decoder, `safe` or `fast` |
-| `kinds` | every table found (new ones too) | comma list of kinds to serve |
-| `mode.<kind>` | `snapshot` | `snapshot` or `effective` |
-| `lookback-days` | `10` | how far back a snapshot read looks for the newest day on or before the date asked |
-| `layout.<kind>.columns` | none | promoted paths ([ICEBERG_CONNECTOR.md](../connectors/ICEBERG_CONNECTOR.md#5-declaring-the-layout-in-a-pack)) |
-| `layout.<kind>.vectors` | none | vector columns (`list<double>`: `PNL`, `SCENARIO_PV`), read in bulk and put back into documents (2.9.5) |
-| `id-map-disk.enabled`, `id-map-disk.dir` | `true`, `<data>/cache/<connector>/idmaps` | each date's id map written once and memory-mapped, kept across restarts (2.9.5) |
-| `doc-disk-cache.enabled`, `.dir`, `.max-gb`, `.ttl`, `.reset-at`, `.zone` | `true`, `<data>/cache/<connector>/docs`, `1`, `12h`, `02:00`, `America/New_York` | documents already read, on disk across restarts (2.9.5) |
-| `refresh-seconds` | `10` | how often each table's current snapshot is checked |
-| `layout-cache` | `64` | planned snapshots kept |
-| `id-map-mb` | `1024` | memory for days' id maps |
-| `columns-cache-mb` | `1024` | memory for days' column sets |
-| `doc-cache-mb` | `256` | memory for recently read documents |
-| `cache-mb` | `512` | memory for small days read whole for reverse lookups |
-| `max-concurrent-reads` | `16` | single-document reads at once |
-| `max-queued-reads` | `4096` | single-document reads that may wait for a slot; more are refused at once, and a read whose caller has gone leaves the queue |
-| `max-load-rows` | `200000` | the largest day read whole for reverse lookups when a table has no promoted columns |
-| `reverse-index` | `true` | `false` turns reverse lookups off |
-| `source-name` | the connector's name | the name shown in provenance and Health |
-| `stale-after` | none | warn when no new data arrived for this long (engine setting) |
-
-TLS for a REST catalog's object store on a private CA: the shared [`tls.*`](#tls--tls-for-connectors) settings with `s3.endpoint: https://...` ([ICEBERG_CONNECTOR.md, Security](../connectors/ICEBERG_CONNECTOR.md#security-tls-and-credentials)); on the `library` engine refused with `catalog: hadoop`, on `native` accepted for path-based tables too.
-
-### `iceberg-external` — Iceberg tables Drishti does not write
-
-Tables of Spark, Flink, Trino, Snowflake, Glue, dbt or pyiceberg, in their own layout, read-only through drishti-iceberg: rows as
-documents, ids from identifier fields or columns, dates from a column or the partition spec, every column searchable
-([ICEBERG_EXTERNAL_CONNECTOR.md](../connectors/ICEBERG_EXTERNAL_CONNECTOR.md)).
-
-| Setting | Default | Meaning |
-|---|---|---|
-| the catalog's (`catalog`, `root`, `uri`, `warehouse`, `credential`, `token`, `scope`, `oauth2-server-uri`, `prefix`, `catalog.<key>`, `metadata-location.<kind>`, `relocate`, `vended-credentials`, `s3.*`, `tls.*`, `proxy.*`) | as `iceberg` | where the tables are |
-| `engine` | `auto` | `native` or `auto` (both drishti-iceberg); `library` is refused |
-| `tables.<kind>.table` | the kind | `namespace.table` |
-| `tables.<kind>.id`, `.id-separator` | the identifier fields, `:` | the id columns (several joined) |
-| `tables.<kind>.date`, `.date-from`, `.date-zone` | the partition spec's date, none, `UTC` | the business date: a date column, or a timestamp's `day` in a zone; none: current only |
-| `tables.<kind>.mode` | `snapshot` | `snapshot` or `effective` |
-| `tables.<kind>.document` | `row` | `row`, or `column:<name>` (a JSON column) |
-| `tables.<kind>.columns.exclude`, `.columns.rename.<column>`, `.links.<column>`, `.depth` | none, none, none, `2` | columns left out, renamed, naming other kinds, nesting searched |
-| `tables`, `namespace` | none | `tables: auto` serves every table of `namespace` |
-| `decimals`, `binary` | `number`, `base64` | `string` keeps decimals' precision; `omit` leaves binary out |
-| `id-index-mb`, `id-index-warn-rows`, `max-index-rows` | `1024`, `5000000`, `10000000` | the id index of unsorted tables; the Health hint; the rows type-ahead and columns take |
-| `refresh-seconds`, `lookback-days`, `doc-cache-mb`, `columns-cache-mb`, `max-concurrent-reads`, `source-name` | `10`, `10`, `256`, `1024`, `16`, `iceberg-external` | as `iceberg` |
-
-### `duckdb` — one embedded DuckDB file
-
-Every data domain in one DuckDB file (a schema per domain, `<domain>.entities`), read in-process with no database
-server; a load writes a new file and renames it over the old one while the server keeps answering. Design, loading,
-sizing and measurements: [DUCKDB_CONNECTOR.md](../connectors/DUCKDB_CONNECTOR.md).
-
-| Setting | Default | Meaning |
-|---|---|---|
-| `path` | required | the DuckDB file; connectors naming the same path share one read-only DuckDB instance |
-| `table` | required | `schema.entities`, the data domain this connector serves |
-| `memory-limit` | `1GB` | DuckDB's memory limit for the shared instance (native memory, outside the Java heap); the first connector on a file sets it |
-| `threads` | every core | DuckDB's threads for the shared instance; the first connector on a file sets it |
-| `pool-size` | `4` | reads of this connector at once; at least `scan-threads` plus the concurrent reads you expect. DuckDB is an embedded, in-process file, so there are no connections to pool: this is a limit on reads, not a [connection pool](#drishtidbpool--database-connection-pools), and `drishti.db.pool.*` does not apply |
-| `kinds` | the kinds the file holds | comma list of kinds to serve |
-| `mode.<kind>` | `snapshot` | `snapshot` or `effective` |
-| `lookback-days` | `10` | how far back a snapshot read looks for the newest day on or before the date asked |
-| `layout.<kind>.columns` | none | promoted paths ([DUCKDB_CONNECTOR.md](../connectors/DUCKDB_CONNECTOR.md#3-declaring-the-promoted-columns)) |
-| `refresh-seconds` | `10` | how often the file is checked for a new load (one `stat` when nothing changed) |
-| `scan-threads` | `4` | id ranges of a day read at once |
-| `columns-cache-mb` | `1024` | memory for days of promoted columns |
-| `columns-seconds` | `300` | how long a day's columns are kept (a new file clears them at once) |
-| `max-load-rows` | `200000` | the most documents a reverse lookup reads for a kind without promoted link columns |
-| `reverse-index` | `true` | `false` turns reverse lookups off |
-| `source-name` | `duckdb` (a connector: its name) | the name shown in provenance and Health |
-
-Retention is the loader's `--keep-days N` (`tools/load-duckdb.sh`); the connector has no retention setting.
-
-### `mongodb`
-
-A document per entity per business day, in a collection per data domain. Design, sizing and loader options:
-[MONGODB_CONNECTOR.md](../connectors/MONGODB_CONNECTOR.md).
-
-| Setting | Default | Meaning |
-|---|---|---|
-| `uri` | none (required; the plugin stays idle without it; the `mongodb` profile sets `mongodb://localhost:27017`) | connection string: hosts, replica set, credentials, TLS |
-| `database` | `drishti` | the database |
-| `collection` | the connector's `domain`, else `drishti` | the domain's collection (`<collection>_columns` beside it) |
-| `read-preference` | `primary` | `primary`, `primaryPreferred`, `secondary`, `secondaryPreferred` or `nearest` |
-| `kinds`, `mode.<kind>`, `lookback-days` | what the collection holds, `snapshot`, `10` | As for Delta. |
-| `layout.<kind>.columns` | none | the promoted fields |
-| `refresh-seconds` | `60` | how often the kinds' dates and the ids are re-read |
-| `read-threads`, `heavy-reads`, `batch-size` | `8`, `2`, `5000` | id ranges read at once for a day's columns; day reads at once; documents per cursor batch |
-| `columns-cache-mb`, `columns-seconds` | `1024`, `300` | memory for days' column sets; after this a day is re-read in the background |
-| `max-load-rows`, `reverse-index` | `200000`, `true` | the most documents a reverse lookup reads without promoted fields; `false` turns reverse lookups off |
-| `connect-timeout-ms` | `3000` | connection and server-selection timeout |
-| `pool-size` and the other `pool-*` keys, `statement-timeout` | `20` ... | The driver's connection pool: `maxPoolSize`, `minPoolSize`, idle and life times, `maxWaitTime`, socket read timeout; see [`drishti.db.pool`](#drishtidbpool--database-connection-pools). |
-
-TLS and certificate log-in: `tls.enabled: true` (or `tls=true` in the `uri`) with the shared [`tls.*`](#tls--tls-for-connectors) settings, and `auth-mechanism: x509` (optionally `x509-user`) to log in with the client certificate ([MONGODB_CONNECTOR.md, Security](../connectors/MONGODB_CONNECTOR.md#security-tls-certificate-log-in-and-credentials)).
-
-### `redis`
-
-Today and recent days in memory, with live updates; history behind it in Delta Lake. Design, sizing and every option:
-[REDIS_CONNECTOR.md](../connectors/REDIS_CONNECTOR.md).
-
-| Setting | Default | Meaning |
-|---|---|---|
-| `uri` | none (required; the plugin stays idle without it) | `redis://host:6379`; `rediss://` for TLS; credentials in the URI; several comma-separated for Cluster seeds |
-| `cluster` | `false` | Redis Cluster |
-| `user`, `password` | none | credentials (override the URI's) |
-| `domain` | `drishti` | the data domain: the key prefix |
-| `kinds`, `mode.<kind>`, `lookback-days` | what `<domain>:kinds` lists, `snapshot`, `10` | As for Delta. |
-| `layout.<kind>.columns` | none | the promoted fields, read from each day's column hash |
-| `refresh-seconds` | `60` | how often the kinds' days and the ids are re-read |
-| `columns-cache-mb`, `heavy-reads` | `1024`, `2` | memory for days' column sets; days read at once |
-| `max-load-rows`, `reverse-index` | `200000`, `true` | the most documents a reverse lookup reads without promoted fields; `false` turns reverse lookups off |
-| `live` | `true` | subscribe to `<domain>:changes` and push changed entities to open views |
-| `timeout-ms` | `5000` | connect and command timeout |
-| `pool-size`, `pool-min-idle`, `pool-idle-timeout`, `pool-leak-threshold`, `pool-pipeline-depth` | `20`, `2`, `10m`, `60s`, `32` | The connection pool: Lettuce connections are multiplexed, so one carries many commands; another is opened only when every open one has `pool-pipeline-depth` commands in flight, up to `pool-size`, and extra idle ones are closed. See [`drishti.db.pool`](#drishtidbpool--database-connection-pools). |
-
-TLS: a `rediss://` `uri` with the shared [`tls.*`](#tls--tls-for-connectors) settings for a private CA or a client certificate; the Lettuce `verifyPeer` URI option still works, deprecated ([REDIS_CONNECTOR.md, Security](../connectors/REDIS_CONNECTOR.md#security-tls-and-credentials)).
-
-### `aerospike`
-
-A data domain is three sets: `<set>` (a record per entity per business date, key `kind/id/yyyyMMdd`, bins `kind`,
-`id`, `date`, `doc` and the promoted fields), `<set>_ix` (a record per entity, key `kind/id`, bin `dates`) and
-`<set>_kinds` (a record per kind, bin `dates`). See the [connector guide](../connectors/AEROSPIKE_CONNECTOR.md#walk-through-step-by-step)
-and [AEROSPIKE_CONNECTOR.md](../connectors/AEROSPIKE_CONNECTOR.md).
-
-| Setting | Default | Meaning |
-|---|---|---|
-| `hosts` | `localhost:3000` | Seed hosts, `host:port`, comma-separated. |
-| `namespace` | `test` | |
-| `set` | the connector's `domain`, else `drishti` | The domain's set; the index and kinds sets add `_ix` and `_kinds`. |
-| `kinds` | what the kinds set lists | Kinds served. |
-| `mode.<kind>` | `snapshot` | `snapshot` or `effective`, as for Delta. |
-| `lookback-days` | `10` | How far back a snapshot kind's newest date may fall. |
-| `refresh-seconds` | `60` | How often the kinds' dates and the ids (the index set) are re-read. |
-| `reverse-index` | `true` | `false` turns reverse lookups off. |
-| `layout.<kind>.columns` | none | Fields promoted to bins (usually from the pack); searches, pick lists, derived kinds, impact and reverse lookups read a day's bins instead of its documents. |
-| `scan-threads` | `8` | Partition ranges scanned at once when a day is scanned. |
-| `columns-cache-mb` | `1024` | Memory for days of promoted bins. |
-| `columns-seconds` | `300` | A day's bins are read again after this. |
-| `max-load-rows` | `200000` | Record limit of a reverse-lookup scan over documents (kinds without promoted bins). |
-| `connect-timeout-ms` | `3000` | |
-| `user`, `password` | none | Security-enabled clusters. |
-| `pool-size`, `pool-min-idle`, `pool-idle-timeout`, `statement-timeout` | `20`, `2`, `10m`, `5m` | The client's connection pool, **per node**: `maxConnsPerNode`, `minConnsPerNode`, `maxSocketIdle`, read and write `totalTimeout`. See [`drishti.db.pool`](#drishtidbpool--database-connection-pools). |
-| `source-name` | `aerospike` (a connector: its name) | Provenance source. |
-
-Retention is the records' time to live, set by the loader (`tools/load-aerospike.sh --ttl-days N`); the connector
-has no retention setting.
-
-TLS and certificate log-in: `tls.enabled: true` with the shared [`tls.*`](#tls--tls-for-connectors) settings, `tls-name` (the name the server certificate carries; default each host's name), `auth-mode: pki` to log in with the client certificate. The server's TLS is Enterprise Edition ([AEROSPIKE_CONNECTOR.md, Security](../connectors/AEROSPIKE_CONNECTOR.md#security-tls-certificate-log-in-and-credentials)).
-
-### `cassandra`
-
-Apache Cassandra 4 and 5, ScyllaDB, DataStax Astra (Amazon Keyspaces through AWS's SigV4 plug-in). A data domain is a keyspace: a table
-per kind (`<kind>`: a partition per business day, generation and bucket, keyed by `id`; columns `doc` and the promoted fields), `entity_days`
-(the days each entity has) and `kind_days` (each kind's days and the generation readers follow). The loader writes them
-(`tools/load-cassandra.sh`); see [CASSANDRA_CONNECTOR.md](../connectors/CASSANDRA_CONNECTOR.md).
-
-| Setting | Default | Meaning |
-|---|---|---|
-| `contact-points` | required unless `secure-connect-bundle` | `host:port` list, comma-separated (port `9042` when left out). |
-| `local-datacenter` | required unless `secure-connect-bundle` | The data centre the driver prefers (`datacenter1` on a single node). |
-| `keyspace` | the connector's `domain`, else `drishti` | |
-| `kinds` | the keyspace's tables made by the loader | Kinds served. |
-| `mode.<kind>` | `snapshot` | `snapshot` or `effective`, as for Delta. |
-| `layout.<kind>.columns` | none | Promoted fields (usually from the pack): searches, pick lists, derived kinds, impact and reverse lookups read a day's columns instead of its documents. A path the table has no column for is read from documents. |
-| `consistency` | `LOCAL_QUORUM` | Read consistency; `LOCAL_ONE` for speed where staleness is acceptable. |
-| `lookback-days` | `10` | How far back a snapshot kind's newest day may fall. |
-| `refresh-seconds` | `60` | How often `kind_days` (the catalogue) is re-read; a day's ids are re-read when its generation changes. |
-| `page-size`, `scan-threads` | `5000`, `8` | Rows per page and partitions read at once when a day's columns or documents are read. |
-| `columns-cache-mb`, `doc-cache-mb` | `1024`, `64` | Memory for days of promoted columns and for documents. |
-| `max-load-rows` | `200000` | Documents read at most by a reverse lookup of a kind without promoted columns (and ids of an effective kind). |
-| `reverse-index` | `true` | `false` turns reverse lookups off. |
-| `connections-per-node`, `max-concurrent-reads` | `2`, `256` | The driver's pool (each connection carries many requests) and the requests in flight at once; more wait in the driver's queue. |
-| `request-timeout-ms`, `connect-timeout-ms` | `5000`, `5000` | Per statement; connecting (a cluster down is retried in the background and Health says DOWN). |
-| `speculative-executions`, `speculative-delay-ms` | `0`, `100` | Extra copies of a slow read to other replicas (off by default). |
-| `username`, `password` | none | Password log-in; `password` is `${ENV}` or `file:`. |
-| `secure-connect-bundle`, `token` | none | DataStax Astra: the bundle `.zip` and the application token. |
-| `sigv4`, `sigv4-region` | `false`, `AWS_REGION` | Amazon Keyspaces: SigV4 log-in; AWS's plug-in jar goes in the plugin folder. |
-| `source-name` | `cassandra` (a connector: its name) | Provenance source. |
-
-Retention is the loader's: `--ttl-days N` (cells expire; new tables get one-day time windows) or `--keep-days N` (whole partitions
-dropped). TLS: `tls.enabled: true` with the shared [`tls.*`](#tls--tls-for-connectors) settings. `proxy.*` is refused: the native
-protocol is TCP.
-
-### `feed` — public data feeds
-
-One connector per feed (the market-data pack declares them, all off by default).
-
-| Setting | Default | Meaning |
-|---|---|---|
-| `feed` | required | `nyfed-sofr`, `ecb-estr`, `ecb-fx`, `us-treasury`, `fred` |
-| `refresh-minutes` | `60` | |
-| `timeout-seconds` | `20` | Request timeout. The connect timeout is 10 s, fixed in the code. |
-| `url` | the feed's own | Override; `file:` URLs are read directly. |
-| `api-key`, `series` | empty, `DGS10,DFF` | FRED only. |
-| `user-agent` | `public-data-feed-connector` | The `User-Agent` header; the market-data pack sets `<product> public data feed connector`. |
-| `source-name` | the feed's name (a connector: its name) | The name shown in provenance and Health. |
-
-The history for picked dates is the window the last fetch returned. A failed fetch, or one that yields no series at all,
-keeps the last good data (`DOWN: the feed returned no data (serving the last data)`); a single-series feed answering
-with no rows replaces its data with none and stays `UP`. A purge clears the data, then
-refetches. `stale-after` does not notice a publisher that stopped publishing, since every successful parse counts as
-new data. Full detail: [FEEDS_CONNECTOR.md](../connectors/FEEDS_CONNECTOR.md).
-
-TLS for a mirror on a private CA: `url: https://...` with the shared [`tls.*`](#tls--tls-for-connectors) settings ([FEEDS_CONNECTOR.md, Security](../connectors/FEEDS_CONNECTOR.md#10-security)).
-
-### `news` and `yfinance` — connectors that compute data on demand
-
-Nothing is stored: each document is worked out when asked for (the news about the name in the id; the quote of the ticker in the id) and cached for a short time. Both are off as shipped (`enabled: false`), because the names and tickers they are asked about leave the network (to Google and to Yahoo), and the Yahoo endpoint is unofficial and restricted to samples and internal demonstrations. Every setting, its default and the failure behaviour are in [NEWS.md](../connectors/NEWS.md#6-settings) and [YFINANCE.md](../connectors/YFINANCE.md#6-settings). Common to both: `base-url`, `user-agent`, `timeout-seconds` (10), `cache-ttl-seconds` (600 news, 60 quotes), `cache-max-entities` / `cache-max-symbols`, `max-bytes` (2,000,000), `retries` (2), `retry-initial`, `retry-max`, `retry-factor`, `retry-jitter`, `id-prefix`, `kind`, `source-name`, and the shared `tls.*`. News only: `language`, `country`, `query-template`, `relevance`, `allow-sources`, `deny-sources`, `aliases.<Name>`, `max-items`. Yahoo only: `range`, `interval`. Pages that read them through a panel's `source:` need `drishti.graph.link-budget` raised above the 40 ms default (a web call is slower), or show the panel as pending on the first view.
-
-### `derived` — kinds computed from other kinds
-
-| Setting | Default | Meaning |
-|---|---|---|
-| `<kind>.from` | required | The kind it is built from. One `<kind>.from` per derived kind the connector serves. |
-| `<kind>.group-by` | required | Rachana-EL over a member: its group (the derived entity's id). |
-| `<kind>.where` | none | Rachana-EL: only members for which it is true count. |
-| `<kind>.id-field` | `id` | A field that holds the key besides `id`. |
-| `<kind>.members` | `members` | The field listing the members' ids. |
-| `<kind>.fields.<name>` | none | `count`, or `sum`/`avg`/`min`/`max`/`distinct`/`first` followed by an expression. |
-| `<kind>.rows.<column>` | none | One row per member with these columns (field `rows`, or `<kind>.rows-field`). |
-| `<kind>.max-members` | `1000` | Members listed (and rows) on a page; `memberCount` and every aggregate count all of them. |
-| `zone` | `America/New_York` | The zone whose calendar date `today()` is for the latest pages (a picked date's pages use that date). |
-| `store` | `heap` (`disk` in the trading pack's `trade-pages`) | `heap`: every page is built and kept in memory (small books). `disk`: the pages live under `store-dir`, the heap keeps each group's totals only; complete at any number of members (1.16 million trades a day measured in an 8 GB heap, 2026-10-18). |
-| `store-dir` | `<data dir>/derived/<connector>` | The pages' only folder (`store: disk`); emptied at start, one sub-folder per computation, deleted when a newer one replaces it. |
-| `retire-after` | `60s` | How long replaced pages on disk are kept for reads still running. |
-| `rebuild-delay` | `5s` | `store: disk`: after a purge (a data-load signal, Admin → Caches) the latest pages are rebuilt in the background this long after the last purge of a burst. A purge never starts a second full read beside one that runs: the running build is kept for its readers and the next reader after it builds once more. |
-| (restart) | — | With `store: disk`, the pages of the previous run are served again at start when built by the same definitions (`pages.json` in their folder); their data version is then checked as for any build. Without that, grouped pages would wait for the first build after every restart. |
-| `version-check` | `10s` | How often the members' data version is asked; a new version (a load) rebuilds, nothing else does. |
-| `refresh` | `30s` | Rebuild age, used only when a source cannot say its data's version. |
-| `max-stream` | `100000` | `store: heap`: members kept from a one-pass read (a WARN and Admin → Health DEGRADED say when it cuts). Not used with `store: disk`. |
-| `max-scan` | `50000` | Members read one at a time, for sources that cannot read a day in one pass. |
-
-Admin → Caches (or `drishti.py server caches purge <connector>`) drops a derived connector's pages; with `store: disk` the
-latest date is rebuilt from the lake at once, the old pages serving until the new ones are ready.
-
-In a pack the settings may be nested (`book-pnl: { from: trade, fields: { mtm: sum $.mtm } }`): nested maps become
-dotted keys. Worked example: [PACK_DEVELOPER_GUIDE.md](../guides/PACK_MODELLING_GUIDE.md#derived-kinds-entities-computed-from-other-kinds).
-
-### `demo` — sample data
-
-| Setting | Default | Meaning |
-|---|---|---|
-| `dirs` | from packs | Sample directories. |
-| `ticking` | `true` | Live documents move while someone watches. |
-| `tick-ms` | `400` | Tick interval. |
-
-The shipped `application.yaml` sets only `drishti.sources.plugins.demo.enabled` (`DRISHTI_DEMO_ENABLED`); `ticking`
-and `tick-ms` are the code's defaults. Full detail: [DEMO_CONNECTOR.md](../connectors/DEMO_CONNECTOR.md).
+| <a id="delta--delta-lake"></a>`delta` | Delta Lake tables, a table per kind, on disk or S3 | [README, Settings](../../plugins/drishti-plugin-delta/README.md#settings) | [DELTA_CONNECTOR.md](../connectors/DELTA_CONNECTOR.md) (layout and row groups: [section 3](../connectors/DELTA_CONNECTOR.md#3-what-is-on-disk)) |
+| <a id="jdbc--a-database"></a>`jdbc` | a database: table mode (Drishti's table) or query mode (your SQL); the driver jar on the class path or in `plugin-dir` | [README, Settings](../../plugins/drishti-plugin-jdbc/README.md#settings) | [POSTGRES_CONNECTOR.md](../connectors/POSTGRES_CONNECTOR.md), [JDBC_QUERIES.md](../connectors/JDBC_QUERIES.md) |
+| <a id="file--json-or-csv-files-on-disk"></a>`file` | JSON Lines in dated folders, `<root>/<domain>/<yyyy-MM-dd>/<kind>.jsonl` | [README, Settings](../../plugins/drishti-plugin-file/README.md#settings) | [FILE_CONNECTOR.md](../connectors/FILE_CONNECTOR.md) |
+| <a id="rest--an-httpjson-service"></a>`rest` | one entity per GET from an HTTP/JSON service | [README, Settings](../../plugins/drishti-plugin-rest/README.md#settings) | [REST_CONNECTOR.md](../connectors/REST_CONNECTOR.md) |
+| <a id="tls--tls-for-connectors"></a>`tls.*` | TLS for every connector that connects over the network (shared; each `…-password` has a `…-password-file` twin) | [TLS.md](../connectors/TLS.md) | [TLS.md, connector matrix](../connectors/TLS.md#connector-matrix) |
+| <a id="kafka--a-live-stream"></a>`kafka` | a live stream; a null value or `"doc": null` deletes | [README, Settings](../../plugins/drishti-plugin-kafka/README.md#settings) | [KAFKA_CONNECTOR.md](../connectors/KAFKA_CONNECTOR.md) (security: [section 11](../connectors/KAFKA_CONNECTOR.md#11-security-tls-sasl-and-confluent)) |
+| <a id="activemq-and-rabbitmq--message-queues"></a>`activemq`, `rabbitmq` | message queues; the latest document of every entity in a local RocksDB state store | [README, Settings](../../plugins/drishti-plugin-activemq/README.md#settings), [README, Settings](../../plugins/drishti-plugin-rabbitmq/README.md#settings) | [ACTIVEMQ_CONNECTOR.md](../connectors/ACTIVEMQ_CONNECTOR.md), [RABBITMQ_CONNECTOR.md](../connectors/RABBITMQ_CONNECTOR.md) |
+| <a id="s3--documents-in-s3-or-an-s3-compatible-store"></a>`s3` | a JSON object per entity in S3 or an S3-compatible store | [README, Settings](../../plugins/drishti-plugin-s3/README.md#settings) | [S3_CONNECTOR.md](../connectors/S3_CONNECTOR.md) |
+| <a id="iceberg--apache-iceberg"></a>`iceberg` | Iceberg tables in Drishti's layout, path-based or a REST catalog | [README, Settings](../../plugins/drishti-plugin-iceberg/README.md#settings) | [ICEBERG_CONNECTOR.md](../connectors/ICEBERG_CONNECTOR.md) (engines: [section 17](../connectors/ICEBERG_CONNECTOR.md#17-engines-native-and-library)) |
+| <a id="iceberg-external--iceberg-tables-drishti-does-not-write"></a>`iceberg-external` | Iceberg tables other engines write, read-only | [README, Settings](../../plugins/drishti-plugin-iceberg-external/README.md#settings) | [ICEBERG_EXTERNAL_CONNECTOR.md](../connectors/ICEBERG_EXTERNAL_CONNECTOR.md) |
+| <a id="duckdb--one-embedded-duckdb-file"></a>`duckdb` | every data domain in one DuckDB file; retention is the loader's `--keep-days` | [README, Settings](../../plugins/drishti-plugin-duckdb/README.md#settings) | [DUCKDB_CONNECTOR.md](../connectors/DUCKDB_CONNECTOR.md) |
+| <a id="mongodb"></a>`mongodb` | a document per entity per business day, a collection per domain | [README, Settings](../../plugins/drishti-plugin-mongodb/README.md#settings) | [MONGODB_CONNECTOR.md](../connectors/MONGODB_CONNECTOR.md) |
+| <a id="redis"></a>`redis` | today and recent days in memory, with live updates | [README, Settings](../../plugins/drishti-plugin-redis/README.md#settings) | [REDIS_CONNECTOR.md](../connectors/REDIS_CONNECTOR.md) |
+| <a id="aerospike"></a>`aerospike` | three sets per domain; retention is the records' time to live, set by the loader | [README, Settings](../../plugins/drishti-plugin-aerospike/README.md#settings) | [AEROSPIKE_CONNECTOR.md](../connectors/AEROSPIKE_CONNECTOR.md) |
+| <a id="cassandra"></a>`cassandra` | Cassandra, ScyllaDB, Astra, Keyspaces; retention is the loader's (`--ttl-days`, `--keep-days`); `proxy.*` refused | [README, Settings](../../plugins/drishti-plugin-cassandra/README.md#settings) | [CASSANDRA_CONNECTOR.md](../connectors/CASSANDRA_CONNECTOR.md) |
+| <a id="feed--public-data-feeds"></a>`feed` | public data feeds, one connector per feed (off by default) | [README, Settings](../../plugins/drishti-plugin-feeds/README.md#settings) | [FEEDS_CONNECTOR.md](../connectors/FEEDS_CONNECTOR.md) |
+| <a id="news-and-yfinance--connectors-that-compute-data-on-demand"></a>`news`, `yfinance` | computed on demand, nothing stored; off as shipped (names leave the network); pages reading them through `source:` need `drishti.graph.link-budget` raised above 40 ms | [README, Settings](../../plugins/drishti-plugin-news/README.md#settings), [README, Settings](../../plugins/drishti-plugin-yfinance/README.md#settings) | [NEWS.md](../connectors/NEWS.md), [YFINANCE.md](../connectors/YFINANCE.md) |
+| <a id="derived--kinds-computed-from-other-kinds"></a>`derived` | kinds computed from other kinds (built in) | [types/derived/README.md](../connectors/types/derived/README.md) | [PACK_DEVELOPER_GUIDE.md Part II](../guides/PACK_DEVELOPER_GUIDE.md#derived-kinds-entities-computed-from-other-kinds) |
+| <a id="demo--sample-data"></a>`demo` | the packs' samples; the shipped `application.yaml` sets only `drishti.sources.plugins.demo.enabled` (`DRISHTI_DEMO_ENABLED`) | [README, Settings](../../plugins/drishti-plugin-demo/README.md#settings) | [DEMO_CONNECTOR.md](../connectors/DEMO_CONNECTOR.md) |
 
 ---
 

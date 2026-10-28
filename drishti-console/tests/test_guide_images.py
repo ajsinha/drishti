@@ -155,7 +155,7 @@ def test_the_build_menu_help_centre_getting_started_and_the_architecture_note_li
     assert "/help/screen-designer" in menu and "Screen designer guide" in menu
     assert "/help/screen-designer" in client.get("/build/new").text
     assert "SCREEN_DESIGNER.md" in (ROOT / "docs" / "guides" / "GETTING_STARTED.md").read_text() or "SCREEN_DESIGNER.md" in (ROOT / "docs" / "guides" / "USER_GUIDE.md").read_text()
-    assert "SCREEN_DESIGNER.md" in (ROOT / "docs" / "architecture" / "SCREEN_BUILDER.md").read_text()
+    assert "SCREEN_DESIGNER.md" in (ROOT / "docs" / "archive" / "SCREEN_BUILDER.md").read_text()
     index = client.get("/help").text
     assert "/help/screen-designer" in index
 

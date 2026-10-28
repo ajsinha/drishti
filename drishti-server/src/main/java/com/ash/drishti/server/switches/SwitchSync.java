@@ -34,7 +34,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 /**
- * Spreads the switches ledger across Drishti*net (docs/admin/COMMANDS.md, "Several servers"). The ledger's hash rides this node's member
+ * Spreads the switches ledger across Drishti*net (docs/admin/USER_MANAGEMENT.md, "Several servers"). The ledger's hash rides this node's member
  * entry in gossip; every {@link #LOOK_MS} this node compares it with each live peer's, and pulls the entries of a peer whose hash differs
  * ({@code GET /api/v1/net/switches}, signed) and merges them: the newer by (stamp, node) wins, written to this node's database before it
  * takes effect. Both sides of a difference pull, so a node that rejoins after missing changes, or one that changed something while it was

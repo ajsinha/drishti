@@ -20,7 +20,7 @@ down by and which measure it shows. **Statements**: a report page laid out on pa
 numbers, page breaks, column titles on every page, groups kept together), made as a PDF or Excel and sent by a subscription to many people, **each made as
 that person**. This tutorial builds a model with two field parameters, a report whose chart the reader switches, and a monthly statement that bursts to a
 role. Each step shows the UI, the command line and the YAML. The references are [REPORTS.md section 21](../guides/REPORTS.md#21-field-parameters-in-a-well-260)
-and [STATEMENTS.md](../guides/STATEMENTS.md).
+and [REPORTS.md section 24](../guides/REPORTS.md#24-statements-paginated-reports-page-exact-one-per-reader).
 
 ## Time to complete
 
@@ -227,7 +227,7 @@ $ curl -s -H "Authorization: Bearer $DRISHTI_TOKEN" $DRISHTI_SERVER/api/v1/me/su
 ```
 
 and make your own statement as a file, which only reads (step 5's `drishti.py bi statement file`, or
-`POST /api/v1/bi/reports/statement/file`, [STATEMENTS.md](../guides/STATEMENTS.md)).
+`POST /api/v1/bi/reports/statement/file`, [REPORTS.md section 24](../guides/REPORTS.md#24-statements-paginated-reports-page-exact-one-per-reader)).
 
 **You should see:** after **Run now**, one mail per person in `role:desk-head`, each with their own PDF (*Monthly statement October 2026
 hana.pdf*), and in the subscription's history one delivery per person with `statement: true` and its page count; a desk head's PDF holds
@@ -241,7 +241,7 @@ only their desk's trades. On the command line, the subscription with `format: pd
 
 ## Next steps
 
-- [STATEMENTS.md](../guides/STATEMENTS.md): every key of a statement and how the layout decides where a page breaks.
+- [REPORTS.md section 24](../guides/REPORTS.md#24-statements-paginated-reports-page-exact-one-per-reader): every key of a statement and how the layout decides where a page breaks.
 - [DISTRIBUTION.md](../guides/DISTRIBUTION.md): schedules, recipients and retries of a subscription.
 - [REPORTS.md section 21](../guides/REPORTS.md#21-field-parameters-in-a-well-260): field parameters in every kind of well.
 - [Tutorial 13](13-govern-bi.md): workspaces, publishing and who may see a shared report.

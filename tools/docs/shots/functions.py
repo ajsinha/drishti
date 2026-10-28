@@ -12,7 +12,7 @@
 #
 # See the LICENSE file in the root of this repository for the full terms.
 
-"""The pictures of Functions, FUNC (docs/admin/COMMANDS.md): the page as a user and as an administrator, the administrator's Review side
+"""The pictures of Functions, FUNC (docs/admin/USER_MANAGEMENT.md): the page as a user and as an administrator, the administrator's Review side
 panel, and the "not active" page of a command that is off. A real scratch server and console with sign-in on, over a small demo lake
 (`drishti.py lake demo --only` a few kinds; the command list comes from the shipped packs, not from the data). The development administrator
 turns FRTB off (with a reason) so the administrator's picture shows an off command and the user's does not; it is turned on again at the end.

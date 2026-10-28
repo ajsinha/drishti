@@ -13,7 +13,7 @@
  *
  * See the LICENSE file in the root of this repository for the full terms.
  */
-/* The designer copilot (docs/guides/BI_AI.md section 9): "Suggest visuals" proposes visuals, wells and filters for the dataset and the goal you type, each as YAML the
+/* The designer copilot (docs/guides/BI_GUIDE.md section 29.9): "Suggest visuals" proposes visuals, wells and filters for the dataset and the goal you type, each as YAML the
    report checker has passed, and "Explain in plain words" explains the Check panel's problems. The model sees names, types and descriptions, never a row. A suggestion
    changes nothing until you press Add on it (a normal, undoable edit of the draft); an explanation changes nothing at all. Same-origin JSON only. */
 (function () {

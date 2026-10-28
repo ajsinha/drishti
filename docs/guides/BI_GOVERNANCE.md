@@ -119,7 +119,7 @@ POST /api/v1/bi/items/bi-f99d2f18d5/publish  { "note": "drop book", "force": tru
 * A **dataset**: **Comes from**: each table with its pack kind, the packs that define the kind, the connector's logical name (or "whichever serves the kind"), the mode, and whether it is one row per element of an array. **Read by**: the reports (published, and drafts for their authors) that name the dataset, with the fields and measures each uses.
 * A **report**: **Reads dataset** (with its endorsement and status), **Uses** (the fields, measures and hierarchies it names), and **Comes from**: the tables, kinds, packs and connectors behind the fields it uses.
 
-A report in a list is named only if you could open it; the rest are counted ("2 more reports you cannot open"). Boards are not in the lineage (a board names reports, and a report that loses a visual a board uses is found when the board is read, [BOARDS.md section 10](BOARDS.md#10-built-and-not-built)) and notebooks are not run, so they have none.
+A report in a list is named only if you could open it; the rest are counted ("2 more reports you cannot open"). Boards are not in the lineage (a board names reports, and a report that loses a visual a board uses is found when the board is read, [REPORTS.md section 10](REPORTS.md#2310-built-and-not-built)) and notebooks are not run, so they have none.
 
 ```
 GET /api/v1/bi/items/bi-f99d2f18d5/lineage          (a workspace dataset of 2.1; captured in 2.1, before the model layer)

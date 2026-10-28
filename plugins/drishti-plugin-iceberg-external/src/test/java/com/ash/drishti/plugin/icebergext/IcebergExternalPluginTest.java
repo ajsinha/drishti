@@ -49,7 +49,7 @@ import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 
 /**
- * The external-table connector over the shapes other engines write (DRISHTI_ICEBERG.md section 15.5), from the
+ * The external-table connector over the shapes other engines write (ICEBERG_EXTERNAL_CONNECTOR.md section 12), from the
  * pyiceberg fixtures: a Spark-style trade table (partitioned by the day of a timestamp, not sorted by id, with a
  * merge-on-read position delete added by the Iceberg library), a Snowflake-style counterparty table (identifier fields,
  * nested structs, a map, decimals, timestamptz, an equality delete), a current-only reference table, and a table renamed

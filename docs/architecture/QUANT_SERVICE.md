@@ -16,7 +16,7 @@
 # Server-side pricing: the quant service
 
 **Status: proposed; not in a planned release, a later candidate in [IMPLEMENTATION_PLAN.md › Roadmap](IMPLEMENTATION_PLAN.md#roadmap); the decision is
-[ADR-019](adr/019-pricing-is-a-quantlib-service-behind-the-server.md).** Nothing here is built yet (checked against 2.0.0: there is no `drishti-quant-gateway` module, no `drishti.quant.*` server setting and no `quant` power; `drishti.quant` below is the small browser library of Calc).
+[ADR-019](adr/019-pricing-is-a-quantlib-service-behind-the-server.md).** Nothing here is built yet (checked again against 2.9.5, 2026-10-28: there is no `drishti-quant-gateway` module, no `drishti.quant.*` server setting and no `quant` power; `drishti.quant` below is the small browser library of Calc).
 
 **2.8.0 update (2026-10-24): read [PYTHON_COMPUTE.md](PYTHON_COMPUTE.md) first.** The product owner decided that computations,
 pricing included, run in **compute workers supervised by the Drishti server** (out-of-process Python workers with QLRisk as the

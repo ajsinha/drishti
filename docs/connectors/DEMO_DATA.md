@@ -271,7 +271,7 @@ drishti-console/.venv/bin/python tools/drishti.py data ingest --from your-folder
 
 `--mode overwrite-dates` (default) replaces only the business dates present, so a re-run is idempotent; `append`; `replace`. Without
 `--pack`, give `--domain`, `--key`, `--date` per kind. Documents without the date are reported and skipped. See
-[Generating a pack from JSON Lines](../guides/PACK_GENERATORS_GUIDE.md#generating-a-pack-from-json-lines) and
+[Generating a pack from JSON Lines](../guides/PACK_DEVELOPER_GUIDE.md#generating-a-pack-from-json-lines) and
 [CLI_GUIDE.md](../guides/CLI_GUIDE.md).
 
 ## Your bank's names

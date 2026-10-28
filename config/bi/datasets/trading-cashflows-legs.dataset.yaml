@@ -14,7 +14,7 @@
 
 # STORED SAMPLE 3 of 3: a nested model. A trade document holds ARRAYS: its legs and its payment schedule. A table with `each:` has one row
 # per array element, so legs and cashflows become tables in their own right, one-to-many from the trade.
-# Tutorial: docs/tutorials/../guides/BI_RECIPES.md. Reference: docs/guides/DATASETS.md.
+# Worked examples: docs/guides/DATASETS.md section 17. Reference: docs/guides/DATASETS.md.
 
 # CONVERTED from datasets/trading-cashflows.dataset.yaml (rachana: 1) by the dataset-to-model converter (drishti.py bi migrate --models;
 # docs/architecture/BI_MODEL_SPEC.md section 8). The model keeps the old name and table names as aliases, so fields read as before.

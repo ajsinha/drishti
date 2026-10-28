@@ -788,7 +788,7 @@ def cmd_server_packs(a, extra) -> int:
 
 
 def cmd_server_commands(a, extra) -> int:
-    """Admin -> Commands (docs/admin/COMMANDS.md): list the commands with their state, turn some off or on with a reason, or the history."""
+    """Admin -> Commands (docs/admin/USER_MANAGEMENT.md): list the commands with their state, turn some off or on with a reason, or the history."""
     api = Api.from_args(a)
     if a.commands_cmd in ("on", "off"):
         changes = [{"scope": "pack" if a.pack else "command", "name": n if a.pack else n.upper(), "on": a.commands_cmd == "on"} for n in a.names]
@@ -1204,7 +1204,7 @@ def build_parser() -> argparse.ArgumentParser:
             p.add_argument("name", help="the pack's name")
     load_module("serverpacks", "serverpacks.py").register(sys.modules[__name__], ps, srv)
     scm = sv.add_parser("commands", help="server commands list|off|on|history: Admin -> Commands (commands on or off for everyone, with a reason)",
-                        description="Commands on or off for everyone (docs/admin/COMMANDS.md). An administrator; a personal API token is refused "
+                        description="Commands on or off for everyone (docs/admin/USER_MANAGEMENT.md). An administrator; a personal API token is refused "
                                     "(token-never): use it where sign-in is off, as --user, or use Admin -> Commands.")
     cms = scm.add_subparsers(dest="commands_cmd", metavar="ACTION", required=True)
     for act, what in (("list", "every command by pack: on or off, and what it does"), ("off", "turn commands (or, with --pack, packs) off for everyone"),

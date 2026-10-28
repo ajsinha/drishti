@@ -112,7 +112,7 @@ The prose has a place of its own, inside the file, as plain text:
 | `description` | any panel | One or two sentences on what the panel shows. |
 
 They are plain text: nothing in them is evaluated (a `${...}` in a `description` is shown as written; parameterised text belongs in
-the pack's `config/about.yaml`, see [About text and glossary](PACK_MODELLING_GUIDE.md#about-text-and-glossary)), and the engine does
+the pack's `config/about.yaml`, see [About text and glossary](PACK_DEVELOPER_GUIDE.md#about-text-and-glossary)), and the engine does
 not use them to build the view (they are not part of the ViewModel). The Sutra's `description` is **shown to users**: it is the
 second paragraph of *What you are looking at* in the [About this page](USER_GUIDE.md#about-this-page) drawer, and a panel's
 `description` is its note there. They travel with the file, so they are in the workbench, in a code review diff and in
@@ -563,7 +563,7 @@ panels.
 with: {...} }`). It carries a complete `doc:` docstring, checked strictly (`DRS-2055`: a fragment without one is not loaded), and may
 `use:` other fragments at a pinned version (`name@N`), passing parameters explicitly (`with: { title: "%{title}" }`), at most three
 fragments deep and without a cycle. A Sutra may carry a `doc:` too; without one `sutra lint --docs` warns. See
-[Fragments and docstrings](PACK_MODELLING_GUIDE.md#fragments-and-docstrings) and [SUTRA_NEXT.md](../architecture/SUTRA_NEXT.md).
+[Fragments and docstrings](PACK_DEVELOPER_GUIDE.md#fragments-and-docstrings) and [SUTRA_NEXT.md](../architecture/SUTRA_NEXT.md).
 
 ### Folders mean nothing
 
@@ -1953,7 +1953,7 @@ made before this was kept, is unchanged. The values are not copied data: they on
 
 Not to be confused with the pack search form below: a panel's `form:` lets people edit the records the panel shows, or start new ones,
 and keeps what they type as **drafts**; with `save:` it also submits them as change requests (2.8.0 write-back). A use carries it to the one panel it brings. The
-worked guide is [SUTRA_FORMS_GUIDE.md](SUTRA_FORMS_GUIDE.md); the design is SUTRA_NEXT.md section 10.
+worked guide is [WRITE_BACK_GUIDE.md](WRITE_BACK_GUIDE.md); the design is SUTRA_NEXT.md section 10.
 
 | Key | Required | Type | Meaning |
 |---|---|---|---|
@@ -1967,7 +1967,7 @@ worked guide is [SUTRA_FORMS_GUIDE.md](SUTRA_FORMS_GUIDE.md); the design is SUTR
 | `fields` | yes | list (at most 60) | the fields, below |
 | `rules` | | list of `{rule, message, severity, fields}` | `rule` must hold; `message` says what to do, in words; `severity: error` (default) refuses the draft, `warn` is said and kept; `fields` names where the message shows |
 | `hints` | | list of `{label, value, of, fmt, step}` | computed as people type: "label: value of of (n %)" |
-| `save` | | `{kind, target, connector, command, create, approval, reason}` | 2.8.0 write-back: where **Submit** sends the draft. `target` (required): `overlay` (a correction kept beside the source's value), `owned` (the record itself) or `source` (a connector's `writes:` command: `command` for an edit, `create` for a new record, required with `new: drawer`); `kind` the records' kind (the page's kind when absent); `connector` (the one connector of the kind that writes when absent); `approval` `none` \| `one` \| `two` (the site may ask for more); `reason` `required` \| `optional`. Without `save:` the form keeps drafts only ([SUTRA_FORMS_GUIDE.md section 4a](SUTRA_FORMS_GUIDE.md#4a-submitting-a-change-280-write-back)) |
+| `save` | | `{kind, target, connector, command, create, approval, reason}` | 2.8.0 write-back: where **Submit** sends the draft. `target` (required): `overlay` (a correction kept beside the source's value), `owned` (the record itself) or `source` (a connector's `writes:` command: `command` for an edit, `create` for a new record, required with `new: drawer`); `kind` the records' kind (the page's kind when absent); `connector` (the one connector of the kind that writes when absent); `approval` `none` \| `one` \| `two` (the site may ask for more); `reason` `required` \| `optional`. Without `save:` the form keeps drafts only ([WRITE_BACK_GUIDE.md section 4a](WRITE_BACK_GUIDE.md#4a-submitting-a-change-280-write-back)) |
 
 A field:
 
@@ -2513,7 +2513,7 @@ family (`DRS-2040` to `DRS-2047`), shared blocks (`DRS-2048`), docstrings (`DRS-
 | `DRS-2045` | `F1 is bound in keys: it opens About this page on a view, and this binding wins on this view (the drawer stays on '?'); bind another key to keep F1 for help` | a lint warning (`sutra lint`), not a load error: a Sutra binds `F1` | bind a key from `F2` to `F12`, or accept that `F1` runs your binding on this view |
 | `DRS-2046` | `about text for panel 'ghost' of kind 'widget' matches no panel of any Sutra for the kind` | a lint warning: `panels.<id>` in `about.yaml` names no panel | correct the id or delete the entry |
 | `DRS-2048` | `no block legs@3 (blocks: deal-ticket, legs, events)` | a `use:` names no block, a `with:` names no parameter, a block uses another or its file is misnamed | write the block, fix the name or version, or drop the parameter ([Shared panel blocks](#shared-panel-blocks-use)) |
-| `DRS-2055` | `fragment series-line: doc.params.fmt is missing (type, default, meaning)` | a fragment's `doc:` is missing or incomplete (strict: the fragment is not loaded); for a Sutra or an older block, a warning of `sutra lint` | complete the docstring ([Fragments and docstrings](PACK_MODELLING_GUIDE.md#fragments-and-docstrings)) |
+| `DRS-2055` | `fragment series-line: doc.params.fmt is missing (type, default, meaning)` | a fragment's `doc:` is missing or incomplete (strict: the fragment is not loaded); for a Sutra or an older block, a warning of `sutra lint` | complete the docstring ([Fragments and docstrings](PACK_DEVELOPER_GUIDE.md#fragments-and-docstrings)) |
 | `DRS-2058` | `rule 'notionl <= 30000000' reads 'notionl', which is not a field of the form`, `'form.edit' is beside (a form beside the table) or cells (edit in the table's cells), not 'inline'`, `field notional: min is a number`, `a form that edits records names the field that identifies one: key: <field id>` | a panel's `form:` that does not read | write the key or value the message names ([Forms](#forms-form-on-a-panel)) |
 | `DRS-2057` | `panel 'limit' reads @trade, which is no panel of this screen (panels: trades, flows, limit)` | an event read of a panel, event or payload field the screen does not have; a panel reading its own event; panels waiting on each other in a cycle; `$src` without a source; a source id reading a `number`, `date` or `bool` field; a trigger not built; a source naming none or several of id, where, search; a BI model source | name a panel and event that exist ([Events, sources and children](#events-sources-and-children-sutra-next)) |
 | `DRS-2056` | `panel 'l4' is nested 4 deep: children nest at most 3` | `@parent` in a panel that is not a child, or of an event its parent does not emit; children deeper than three; `expand-row` under a panel without rows; a group without panels | move the panel up a level, or read the screen panel's event by its id |

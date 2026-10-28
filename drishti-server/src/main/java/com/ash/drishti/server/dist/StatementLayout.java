@@ -24,7 +24,7 @@ import java.util.Map;
 import java.util.Objects;
 
 /**
- * Lays a statement's bands out on paper, page by page (docs/guides/STATEMENTS.md section 3). Rows of bands go top to bottom; the bands of one row share it
+ * Lays a statement's bands out on paper, page by page (docs/guides/REPORTS.md section 24.3). Rows of bands go top to bottom; the bands of one row share it
  * by their grid columns. A table runs over as many pages as it needs: it never leaves its title and column titles alone at the foot of a page, starts each
  * page it runs onto with its column titles ({@code repeatHeader}, the default), keeps the rows of one value of {@code groupBy} on one page when they fit, and
  * moves to the next page whole when it is {@code keepTogether} and fits on one. {@code pageBreak} starts a band on a new page, or a new page after it. The

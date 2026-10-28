@@ -70,7 +70,7 @@ $defs:
         x-label: Padding (px)
         x-group: Frame
   paged:
-    # a band of a statement page (layout: statement, 2.6.0): how it falls on paper (docs/guides/STATEMENTS.md). Ignored on a grid or board page.
+    # a band of a statement page (layout: statement, 2.6.0): how it falls on paper (docs/guides/REPORTS.md). Ignored on a grid or board page.
     type: object
     properties:
       pageBreak:

@@ -316,7 +316,7 @@ api-key: ${GROQ_API_KEY}              # an ${ENV_NAME} placeholder; export GROQ_
 default-model: llama-3.3-70b-versatile
 ```
 
-Everything about each type (settings, model catalogue, proxy, TLS, retries, errors that never carry a response body) is in [AI_PROVIDERS.md](../architecture/AI_PROVIDERS.md) section 11; the BI side (what the hooks send, `aggregates` mode, limits) is [BI_AI.md](../guides/BI_AI.md). Then use **Test connection** on the new row: the first honest answer tells you whether the key, the address and the network are right,
+Everything about each type (settings, model catalogue, proxy, TLS, retries, errors that never carry a response body) is in [AI_PROVIDERS.md](../architecture/AI_PROVIDERS.md) section 11; the BI side (what the hooks send, `aggregates` mode, limits) is [BI_GUIDE.md section 29](../guides/BI_GUIDE.md#29-ai-in-bi-report-from-words-ask-the-data-explain-this-number). Then use **Test connection** on the new row: the first honest answer tells you whether the key, the address and the network are right,
 before anyone asks the data a question. You should see `OK` or the reason on the new row.
 
 ## Step 8 · Suggestions, plain-words checks and the dataset helper
@@ -401,12 +401,12 @@ fields:
 ```
 
 (Asked of the shipped model itself, `{"dataset": "file:model:world-economics"}`, it proposes the same three items, but **Accept** needs a model you may
-edit. Asked of a version 1 dataset by its id, the helper still answers in that dataset's own YAML: `book: { type: string, description: ... }`.) The same layer writes the **summary at the top of a subscription's email** ([tutorial 11](11-bi-that-runs-itself.md), step 8). [BI_AI.md sections 9 to 11](../guides/BI_AI.md#9-a-written-summary-at-the-top-of-a-subscriptions-email).
+edit. Asked of a version 1 dataset by its id, the helper still answers in that dataset's own YAML: `book: { type: string, description: ... }`.) The same layer writes the **summary at the top of a subscription's email** ([tutorial 11](11-bi-that-runs-itself.md), step 8). [BI_GUIDE.md sections 9 to 11](../guides/BI_GUIDE.md#299-a-written-summary-at-the-top-of-a-subscriptions-email).
 
 ## Next steps
 
 - [Tutorial 16](16-embed-drishti.md): put a view or a report on another web page.
-- [BI_AI.md](../guides/BI_AI.md), [AI_PROVIDERS.md](../architecture/AI_PROVIDERS.md) and the policy settings in [CONFIGURATION.md](../admin/CONFIGURATION.md#ai-and-mcp-policy-settings).
+- [BI_GUIDE.md section 29](../guides/BI_GUIDE.md#29-ai-in-bi-report-from-words-ask-the-data-explain-this-number), [AI_PROVIDERS.md](../architecture/AI_PROVIDERS.md) and the policy settings in [CONFIGURATION.md](../admin/CONFIGURATION.md#ai-and-mcp-policy-settings).
 
 ## If something goes wrong
 

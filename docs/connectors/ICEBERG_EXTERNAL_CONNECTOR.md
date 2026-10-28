@@ -21,8 +21,8 @@ pyiceberg), in their own layout, as Drishti kinds: a table is a kind, a row is a
 runs on Windows too, and it **never writes**: the tables' owners maintain them with their own engines.
 
 For tables Drishti's own loader writes (an `id`, a `doc` column, `business_date`, promoted columns, sorted by id) use the `iceberg`
-connector ([ICEBERG_CONNECTOR.md](ICEBERG_CONNECTOR.md)): it reads that layout faster. The design of both is section 15 of
-DRISHTI_ICEBERG.md. Every setting is also in [CONFIGURATION.md](../admin/CONFIGURATION.md#iceberg-external--iceberg-tables-drishti-does-not-write).
+connector ([ICEBERG_CONNECTOR.md](ICEBERG_CONNECTOR.md)): it reads that layout faster. Why there are two is section 15 of
+[DRISHTI_ICEBERG.md](../architecture/DRISHTI_ICEBERG.md#15-two-connectors-drishti-tables-and-external-tables); this page is the one reference of `iceberg-external`. Every setting is also in [CONFIGURATION.md](../admin/CONFIGURATION.md#iceberg-external--iceberg-tables-drishti-does-not-write).
 
 ## Contents
 
@@ -185,23 +185,16 @@ A *Make a pack* button on Admin → Connectors for this connector is planned; un
 
 ## 10. Settings
 
+Every setting of `iceberg-external`, with its type, default and meaning, is in the plugin's generated README: [plugins/drishti-plugin-iceberg-external/README.md, Settings](../../plugins/drishti-plugin-iceberg-external/README.md#settings) (from the settings catalogue Admin → Connectors builds its form from). The shared `tls.*` settings are in [TLS.md](TLS.md).
+
+Read beside them, and not in that table:
+
 | Setting | Default | Meaning |
 |---|---|---|
 | `catalog`, `root`, `uri`, `warehouse`, `credential`, `token`, `scope`, `oauth2-server-uri`, `prefix`, `catalog.<key>`, `metadata-location.<kind>`, `relocate`, `vended-credentials`, `s3.*`, `tls.*`, `proxy.*` | as the `iceberg` connector's | where the tables are ([ICEBERG_CONNECTOR.md section 15](ICEBERG_CONNECTOR.md#15-settings)) |
-| `engine` | `auto` | `native` or `auto`: both read through drishti-iceberg; `library` is refused (it is the `iceberg` connector's only) |
-| `tables.<kind>.table` | the kind | `namespace.table` (dots: namespace levels) |
 | `tables.<kind>.id`, `id-separator` | the identifier fields, `:` | the id columns and how several are joined |
 | `tables.<kind>.date`, `date-from`, `date-zone` | the partition spec's date, none, `UTC` | the business date |
-| `tables.<kind>.mode` | `snapshot` | `snapshot` or `effective` |
-| `tables.<kind>.document` | `row` | `row`, or `column:<name>` for a JSON column |
 | `tables.<kind>.columns.exclude`, `columns.rename.<column>` | none | columns left out; their names in documents |
-| `tables.<kind>.links.<column>` | none | the kind a column's values name |
-| `tables.<kind>.depth` | `2` | how deep nested structs are searchable |
-| `tables`, `namespace` | none | `tables: auto`: every table of `namespace` |
-| `decimals`, `binary` | `number`, `base64` | how those types appear in documents |
-| `id-index-mb`, `id-index-warn-rows`, `max-index-rows` | 1024, 5,000,000, 10,000,000 | [section 6](#6-one-entity-at-scale), [section 5](#5-searches-type-ahead-and-reverse-links) |
-| `refresh-seconds`, `lookback-days`, `doc-cache-mb`, `columns-cache-mb`, `max-concurrent-reads` | 10, 10, 256, 1024, 16 | as the `iceberg` connector's |
-| `source-name` | `iceberg-external` | the name in provenance and Health |
 
 ## 11. Limits
 
@@ -216,7 +209,7 @@ A *Make a pack* button on Admin → Connectors for this connector is planned; un
 
 ## 12. How it is tested
 
-`IcebergExternalPluginTest` serves the shapes of DRISHTI_ICEBERG.md section 15.5 from the pyiceberg-written fixtures
+`IcebergExternalPluginTest` serves the shapes other engines write from the pyiceberg-written fixtures
 (`tools/iceberg/fixtures.py`): a Spark-style trade table (partitioned by the day of a timestamp, unsorted, a merge-on-read
 position delete added by the Iceberg library), a Snowflake-style counterparty table (identifier fields, a nested struct, a map,
 decimals, timestamptz, an equality delete), a current-only reference table, a table renamed and evolved, an unsorted table read

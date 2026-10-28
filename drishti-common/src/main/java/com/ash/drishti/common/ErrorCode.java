@@ -86,7 +86,7 @@ public enum ErrorCode {
     AI_POLICY("DRS-4018", 403),
     /** No such model, provider, MCP server or tool. */
     AI_NOT_FOUND("DRS-4019", 404),
-    /** BI with AI (docs/guides/BI_AI.md): the model's answer could not be used (not a valid report, not a query the engine accepts); nothing was changed. */
+    /** BI with AI (docs/guides/BI_GUIDE.md): the model's answer could not be used (not a valid report, not a query the engine accepts); nothing was changed. */
     AI_ANSWER("DRS-4020", 422),
     /** History queries: a range of more business days than the kind's or the server's max-days. */
     HISTORY_RANGE_TOO_LARGE("DRS-4021", 400),

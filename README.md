@@ -80,14 +80,14 @@ production, each with real screenshots; the [guides](docs/README.md) are the ref
 - **Export and share**: CSV of any table, search or comparison; the document as JSON; print or PDF; a link that
   reopens the view exactly as you see it.
 - **Reports** (an entry of **Views**): a search run as you on a schedule (`business-days 18:30`) and delivered as CSV to a
-  folder or an approved webhook, with your subscriptions and alerts beside it ([SCHEDULED_REPORTS.md](docs/guides/SCHEDULED_REPORTS.md)).
+  folder or an approved webhook, with your subscriptions and alerts beside it ([DISTRIBUTION.md section 0](docs/guides/DISTRIBUTION.md#0-scheduled-searches-and-the-reports-page)).
 - **API tokens** (read-only, revocable), a standard-library **Python client** and **Excel** through Power Query
-  ([CLIENTS.md](docs/guides/CLIENTS.md)).
+  ([API_GUIDE.md (clients)](docs/guides/API_GUIDE.md#clients-scripts-notebooks-and-excel)).
 
 **Business intelligence (Rūpaka)**
 - The **BI** menu and the `BI <GO>` keyword (`RUPAKA` still works): a catalogue and workspaces with roles, **data models** over
   **datasets** (tables from pack kinds; relationships, measures, row rules and masks) on an embedded query engine, **several fact tables in one
-  model** and Python datasets made by a Transform; heavy questions as **BI runs** (2.6.7) in a Runs tab ([BI_RUNS_GUIDE.md](docs/guides/BI_RUNS_GUIDE.md)); **reports** with a designer, a Model view, a **map** you
+  model** and Python datasets made by a Transform; heavy questions as **BI runs** (2.6.7) in a Runs tab ([BI_GUIDE.md section 28](docs/guides/BI_GUIDE.md#28-background-runs-long-bi-questions)); **reports** with a designer, a Model view, a **map** you
   drill from the world to a country and its regions, **dropdown slicers**, cross-filtering, drill-through, a relative-date slicer, **window functions** and measures that stay correct across several fact tables, **Vega-Lite** charts, expected-value tests that stop a bad publish, and a phone and a tablet layout of their own
   ([BI_GUIDE.md](docs/guides/BI_GUIDE.md), [tutorial 10](docs/tutorials/10-first-bi-report.md), [REPORTS.md](docs/guides/REPORTS.md)).
 - **BI Studio** (2.4.0): the report, model and theme designers in one shell, with an Explorer of your items, open items as tabs and a dock of
@@ -95,10 +95,10 @@ production, each with real screenshots; the [guides](docs/README.md) are the ref
   icons), **themes** (Corporate and Print shipped, a theme designer), an **interactions matrix**, slicer **sync groups**, **tooltip pages**,
   **small multiples** and the **matrix at every level** ([BI_GUIDE.md section 26](docs/guides/BI_GUIDE.md#26-bi-studio-authoring-as-one-product-wave-c-240)).
 - **Statements and field parameters** (2.6.0): report pages laid out on paper, page-exact PDF and Excel with headers, footers and page
-  numbers, one statement per recipient through a subscription, designed in BI Studio's Paper tab ([STATEMENTS.md](docs/guides/STATEMENTS.md));
+  numbers, one statement per recipient through a subscription, designed in BI Studio's Paper tab ([REPORTS.md section 24](docs/guides/REPORTS.md));
   a parameter slicer that switches which field or measure a visual draws ([tutorial 20](docs/tutorials/20-statements-and-field-parameters.md)).
 - **Live BI**: live tables, data that moves together (**coherent walks**), reports that follow the ticks with pause and resume,
-  incremental live measures and a history of a live table, and **boards**: report pages of live tiles (with the report's own visuals beside them) in kiosk mode, built in the report designer ([BOARDS.md](docs/guides/BOARDS.md), [tutorial 12](docs/tutorials/12-live-bi-and-boards.md)).
+  incremental live measures and a history of a live table, and **boards**: report pages of live tiles (with the report's own visuals beside them) in kiosk mode, built in the report designer ([REPORTS.md section 23](docs/guides/REPORTS.md), [tutorial 12](docs/tutorials/12-live-bi-and-boards.md)).
 - **Distribution**: export a report, page or visual as PDF, PNG, Excel or CSV; **subscriptions** by email; **alerts** on a number, each person on
   their own masks, with **charts in Excel**, retries and **webhook and text** channels, and **narrative summaries**; a report **embedded** in another application ([DISTRIBUTION.md](docs/guides/DISTRIBUTION.md), [tutorial 11](docs/tutorials/11-bi-that-runs-itself.md)).
 - **Govern it**: versions and diffs, review with four eyes, certification, lineage past the connector, impact of a change (renames, types), bundles between environments and inside pack archives, with rollback of an import
@@ -106,7 +106,7 @@ production, each with real screenshots; the [guides](docs/README.md) are the ref
   **Analyse** (slice, Drishti SQL and Python on your masked extract, worked out by the servers and promoted to a visual), **data prep step by step**
   (BI → Transforms: inputs read through a pack's connector, 21 tested snippets, a preview and a profile after every step), the browser **Python
   console** (`/pyconsole`: your own Python on a masked extract, promoted to the server); Calc's `drishti_bi` with Graphic Walker ([tutorial 14](docs/tutorials/14-python-and-analyse.md)). **AI in BI** (report from words, ask the data, explain a number, a designer copilot, a dataset helper)
-  ([BI_AI.md](docs/guides/BI_AI.md), [tutorial 15](docs/tutorials/15-ai-in-drishti.md)).
+  ([BI_GUIDE.md section 29](docs/guides/BI_GUIDE.md#29-ai-in-bi-report-from-words-ask-the-data-explain-this-number), [tutorial 15](docs/tutorials/15-ai-in-drishti.md)).
 
 **Shape it**
 - **Layout mode** (`Alt+L`): drag, resize and hide a view's panels on a 12-column grid, with the mouse, a pen, a finger
@@ -184,7 +184,7 @@ production, each with real screenshots; the [guides](docs/README.md) are the ref
 ## Try it
 
 New to Drishti? **[GETTING_STARTED.md](docs/guides/GETTING_STARTED.md)** installs and starts it from a clean machine, and
-**[tutorial 1](docs/tutorials/01-first-15-minutes.md)** takes you through your first quarter of an hour; **[IDE_GUIDE.md](docs/guides/IDE_GUIDE.md)** runs the server in IntelliJ IDEA and the console in PyCharm. The short version,
+**[tutorial 1](docs/tutorials/01-first-15-minutes.md)** takes you through your first quarter of an hour; **[GETTING_STARTED.md (IDE)](docs/guides/GETTING_STARTED.md#running-from-intellij-idea-and-pycharm)** runs the server in IntelliJ IDEA and the console in PyCharm. The short version,
 from the repository root (Java 21 or newer, production runs 21; Python 3.13, [the minimum and why](docs/guides/GETTING_STARTED.md#step-1--install-the-prerequisites), [uv](https://docs.astral.sh/uv/)):
 
 ```bash
@@ -284,42 +284,11 @@ drishti/
 
 ## Documentation
 
-Start with **[Install and run](docs/guides/GETTING_STARTED.md)**, then the **[tutorials](docs/tutorials/README.md)**; the **[user guide](docs/guides/USER_GUIDE.md)** is the reference. The
-**[documentation map](docs/README.md)** lists every document by what you want to do.
-
-| Read this when… | Document |
-|---|---|
-| you want to learn by doing | [the twenty-nine tutorials](docs/tutorials/README.md) |
-| you want it installed and running | [GETTING_STARTED.md](docs/guides/GETTING_STARTED.md) |
-| you run the server in IntelliJ IDEA and the console (UX) in PyCharm | [IDE_GUIDE.md](docs/guides/IDE_GUIDE.md) |
-| you build, check, load and ship packs and Sutras from a terminal or a pipeline (`tools/drishti.py`) | [CLI_GUIDE.md](docs/guides/CLI_GUIDE.md) |
-| your ETL has loaded a batch and Drishti should refresh, verify, check alerts, tell people and flag late data | [DATA_LOADS.md](docs/guides/DATA_LOADS.md) |
-| you ship what you built to servers by copying: bundles, checksums, promotion, rollback (no API) | [OPERATIONALISING.md](docs/guides/OPERATIONALISING.md) |
-| you use the console | [USER_GUIDE.md](docs/guides/USER_GUIDE.md) |
-| you use or build business intelligence (Rūpaka) | [BI_GUIDE.md](docs/guides/BI_GUIDE.md), [tutorial 10](docs/tutorials/10-first-bi-report.md), [DATASETS.md](docs/guides/DATASETS.md), [REPORTS.md](docs/guides/REPORTS.md), [PYTHON_BI.md](docs/guides/PYTHON_BI.md), [ANALYSE.md](docs/guides/ANALYSE.md), [BI_AI.md](docs/guides/BI_AI.md), [BI_GOVERNANCE.md](docs/guides/BI_GOVERNANCE.md), [BOARDS.md](docs/guides/BOARDS.md) |
-| you run on Windows, or read from a script or Excel | [Install and run: Windows](docs/guides/GETTING_STARTED.md#drishti-on-windows), [CLIENTS.md](docs/guides/CLIENTS.md) |
-| you use or refresh the real public data (world-economy) | [REAL_DATA.md](docs/guides/REAL_DATA.md) |
-| you define connectors as files, with TLS or a proxy | [CONNECTOR_FILES.md](docs/connectors/CONNECTOR_FILES.md), [TLS.md](docs/connectors/TLS.md), [the proxy](docs/connectors/TLS.md#outbound-http-proxy-for-connectors-ai-providers-and-mcp-servers) |
-| you load, assign or install a domain pack | [PACKS.md](docs/guides/PACKS.md) |
-| you build a domain pack | [PACK_DEVELOPER_GUIDE.md](docs/guides/PACK_DEVELOPER_GUIDE.md) |
-| you learn to build screens in the Build workbench, step by step | [tutorial 6](docs/tutorials/06-design-a-screen.md) |
-| you change a live page in plain words with the Sutra designer | [tutorial 22](docs/tutorials/22-build-a-screen-with-the-designer.md) |
-| you learn to write a Sutra | [SUTRA_DEVELOPER_GUIDE.md](docs/guides/SUTRA_DEVELOPER_GUIDE.md) |
-| you choose or add a panel kind | [PANELS.md](docs/guides/PANELS.md) (the kinds, and [developing one](docs/guides/PANELS.md#developing-a-panel-kind)) |
-| you need an exact Sutra key, format or expression | [RACHANA_REFERENCE.md](docs/guides/RACHANA_REFERENCE.md) |
-| a view is laid out by inference and you want to know why | [INFERENCE.md](docs/architecture/INFERENCE.md) |
-| you connect your own data | [CONNECTORS.md](docs/connectors/CONNECTORS.md) (a section per plugin), [CONNECTOR_DEVELOPER_GUIDE.md](docs/connectors/CONNECTOR_DEVELOPER_GUIDE.md) and the per-connector documents |
-| you need a setting's name, default and environment variable | [CONFIGURATION.md](docs/admin/CONFIGURATION.md) |
-| you manage users, roles, single sign-on, tokens or the access log | [USER_MANAGEMENT.md](docs/admin/USER_MANAGEMENT.md) |
-| you script against it, from Python, Excel or curl | [CLIENTS.md](docs/guides/CLIENTS.md), [API_GUIDE.md](docs/guides/API_GUIDE.md) |
-| you run it in production | [OPERATIONS.md](docs/admin/OPERATIONS.md), [PERFORMANCE.md](docs/admin/PERFORMANCE.md), [LIVE.md](docs/architecture/LIVE.md) |
-| you run several servers as one cluster (Drishti\*net) | [NET.md](docs/admin/NET.md), [tutorial 19](docs/tutorials/19-a-cluster-of-three.md), [DRISHTI_NET.md](docs/architecture/DRISHTI_NET.md) |
-| you serve millions of entities a day for years | [DELTA_CONNECTOR.md](docs/connectors/DELTA_CONNECTOR.md), [POSTGRES_CONNECTOR.md](docs/connectors/POSTGRES_CONNECTOR.md), [AEROSPIKE_CONNECTOR.md](docs/connectors/AEROSPIKE_CONNECTOR.md) |
-| you need demo data, small or large | [DEMO_DATA.md](docs/connectors/DEMO_DATA.md) |
-| something is not working | [TROUBLESHOOTING.md](docs/guides/TROUBLESHOOTING.md), [runbooks](docs/admin/runbooks/) |
-| you change the code | [DEVELOPER_GUIDE.md](docs/guides/DEVELOPER_GUIDE.md) |
-| you want to understand the design and its decisions | [ARCHITECTURE.md](docs/architecture/ARCHITECTURE.md), [ADRs](docs/architecture/adr/README.md) |
-| you want to know what shipped when, and what is next | [IMPLEMENTATION_PLAN.md](docs/architecture/IMPLEMENTATION_PLAN.md), [CHANGELOG.md](CHANGELOG.md) |
+- **[Install and run](docs/guides/GETTING_STARTED.md)**: Linux, Windows, Docker and the IDEs.
+- **[Tutorials](docs/tutorials/README.md)**: twenty-nine hands-on walk-throughs, from your first 15 minutes to a cluster of three.
+- **[User guide](docs/guides/USER_GUIDE.md)**: the console, screen by screen.
+- **[Documentation map](docs/README.md)**: every document, by what you want to do, and the help centre section by section.
+- **[Developer guide](docs/guides/DEVELOPER_GUIDE.md)**: changing the code, the tests and the drill.
 
 ## Contributing rules
 

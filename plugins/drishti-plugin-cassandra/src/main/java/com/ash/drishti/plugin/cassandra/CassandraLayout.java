@@ -28,7 +28,7 @@ import java.util.Set;
 import java.util.stream.Collectors;
 
 /**
- * The table layout the loader writes and the connector reads (docs/architecture/CASSANDRA_CONNECTOR_DESIGN.md section 4): a
+ * The table layout the loader writes and the connector reads (docs/archive/CASSANDRA_CONNECTOR_DESIGN.md section 4): a
  * data domain is a keyspace; each kind has one data table with a partition per business day, generation and bucket, keyed
  * by id; the domain shares {@code entity_days} (the days each entity has) and {@code kind_days} (each kind's days and the
  * generation of each that readers follow). Every statement either names a whole partition key or creates a table: none

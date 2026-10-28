@@ -44,7 +44,7 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 /**
- * The three BI hooks on the AI layer (docs/guides/BI_AI.md): report from words, ask the data, explain this number. Every model call goes through the
+ * The three BI hooks on the AI layer (docs/guides/BI_GUIDE.md): report from words, ask the data, explain this number. Every model call goes through the
  * {@link LlmGateway} under its own feature name ({@code bi-draft}, {@code bi-ask}, {@code bi-explain}), so the AI policy (masks, audit, limits, roles) applies;
  * each hook adds an access-log row of its own. The model never runs anything: a draft is validated by the report parser and checker, a query is run by the
  * dataset engine as the reader (row rules, masks), and a number is computed by the engine before the model is asked to word it.

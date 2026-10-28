@@ -96,7 +96,7 @@ runs is found without a restart. Two engines: `native` (the default; `java.nio` 
 | Setting | Type | Default | Meaning |
 |---|---|---|---|
 | `root` | path | `<data dir>/delta` | Lake root (folder, or s3://bucket/prefix); default: the delta folder of the data directory |
-| `domain` | string |  | Domain folder under the root |
+| `domain` | string |  | The data-domain folder under the root; may not contain `..` or start with `/` |
 | `kinds` | list |  | Kinds to serve (comma list); not set: every table found under the domain |
 | `mode.*` | string |  | Per-kind read mode |
 | `layout.*` | string |  | Per-kind layout: layout.<kind>.columns (promoted document paths), layout.<kind>.type-ahead (promoted columns whose values the type-ahead also matches: a name finds its id) |
@@ -106,7 +106,7 @@ runs is found without a restart. Two engines: `native` (the default; `java.nio` 
 | `date-column` | string | `business_date` | Business date column |
 | `id-column` | string | `id` | Entity id column |
 | `doc-column` | string | `doc` | Document column |
-| `warm-dates` | int | `3` | After start, in the background, each table's newest N dates get their id map and one document read, so the first read of a recent past date is not the slow one; 0 turns it off |
+| `warm-dates` | int | `3` | After start, in the background, each table's newest N dates get their id map and one document read, so the first read of a recent past date is not the slow one (cold about 5x a warm read: 40-70 ms against 10 ms on the samples, more on a large day); the warm-up reads take their own read slots, so a page never waits behind them; `0` turns it off |
 | `refresh-seconds` | int | `10` | How often each table's latest version is checked; the type-ahead index is rebuilt every six checks |
 | `lookback-days` | int | `10` | How far back (days) a snapshot read looks for the newest day on or before the date asked; effective tables have no limit |
 | `max-load-rows` | int | `200000` | The largest day loaded whole for reverse lookups when a table has no promoted columns |
@@ -115,20 +115,20 @@ runs is found without a restart. Two engines: `native` (the default; `java.nio` 
 | `cache-mb` | int |  | Memory for whole days of small tables, in MB; not set: the shared cache of every Delta connector, 5 % of the heap; set: a cache of this connector's own |
 | `doc-cache-mb` | int |  | Memory for recently read documents, in MB; not set: the shared cache, 5 % of the heap; set: a cache of this connector's own |
 | `doc-disk-cache.enabled` | bool | `true` | Documents already read also kept on disk (RocksDB, one per connector): answered without decompressing Parquet pages, also after a restart |
-| `doc-disk-cache.dir` | path | `<data dir>/cache/<connector>/docs` | Its folder |
+| `doc-disk-cache.dir` | path | `<data dir>/cache/<connector>/docs` | Documents read before, in a RocksDB on disk, kept across restarts (DELTA_CONNECTOR.md section 6.3) |
 | `doc-disk-cache.max-gb` | number | `1` | Its size cap; the oldest files go first |
 | `doc-disk-cache.ttl` | duration | `12h` | Entries written longer ago go (compacted hourly) |
 | `doc-disk-cache.reset-at` | string | `02:00` | Daily clearing time |
 | `doc-disk-cache.zone` | string | `America/New_York` | Zone of the daily clearing |
 | `id-map-disk.enabled` | bool | `true` | Each table date id map written once per table version and memory-mapped: no heap per id, kept across restarts |
-| `id-map-disk.dir` | path | `<data dir>/cache/<connector>/idmaps` | Its folder |
+| `id-map-disk.dir` | path | `<data dir>/cache/<connector>/idmaps` | Id maps written once per table version and date, read through a memory map (DELTA_CONNECTOR.md section 6.2) |
 | `columns-cache-mb` | int |  | Memory for days' column sets, in MB; not set: the shared cache, 20 % of the heap; set: a cache of this connector's own |
 | `id-map-mb` | int |  | Memory for days' id maps, in MB; not set: the shared cache, 20 % of the heap; set: a cache of this connector's own |
 | `lz4-via-native` | boolean | `true` | hadoop engine only: read LZ4 files through the native engine's decoder |
 | `lz4-decoder` | one of safe, fast | `safe` | native engine: the LZ4 page decoder, safe (pure Java) or fast (JNI when available) |
-| `s3.endpoint` | string |  | S3-compatible endpoint |
+| `s3.endpoint` | string |  | An S3-compatible store (MinIO, Ceph); also sets path-style access and TLS by scheme |
 | `s3.region` | string |  | S3 region |
-| `s3.path-style` | boolean |  | Path-style S3 addressing; not set: the native engine uses it only with s3.endpoint, the hadoop engine always |
+| `s3.path-style` | boolean | `true` | Path-style S3 addressing; not set: the native engine uses it only with s3.endpoint, the hadoop engine always |
 | `s3.access-key` | string |  | S3 access key: ${ENV_VAR} or file:/path (secret: give `${ENV_VAR}` or `file:/path`, never the value) |
 | `s3.secret-key` | string |  | S3 secret key: ${ENV_VAR} or file:/path (secret: give `${ENV_VAR}` or `file:/path`, never the value) |
 | `index.days` | int | `1` | Business days of ids kept for type-ahead (1 = the newest day only) |

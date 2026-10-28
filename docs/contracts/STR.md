@@ -6,7 +6,7 @@
 
 # STR, stress P&L: the data contract
 
-*Version 1.0 · 2026-10-25 · **Status:** proposed (PLANNED for 2.9.0) · Shared rules: [README.md](README.md) · Model contract:
+*Version 1.0 · 2026-10-25 · **Status:** proposed, not built (planned for 2.9.0, parked on 2026-10-26 when 2.9.0 shipped exposure instead; no release set) · Shared rules: [README.md](README.md) · Model contract:
 [VAR_GUIDE.md Part II](../guides/VAR_GUIDE.md#14-the-contract-at-a-glance) · Sensitivities: [FRTB.md](FRTB.md#32-sensitivity-one-row-per-trade-and-risk-factor-the-shared-table)*
 
 This is the planned data contract of **STR**: the P&L of any set of trades under a stress scenario, computed when asked, either by

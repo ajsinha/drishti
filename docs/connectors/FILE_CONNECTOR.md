@@ -399,21 +399,7 @@ approved ones into the next build; [WRITE_BACK.md section 5.2](../architecture/W
 
 ## 12. Settings
 
-| Setting | Default | Meaning |
-|---|---|---|
-| `root` | `data/feeds` | the folder; with `domain`, the connector reads `<root>/<domain>` |
-| `domain` | none | the data-domain folder under the root |
-| `mode.<kind>` | `snapshot` | `snapshot` or `effective` |
-| `lookback-days` | `10` | how far back a snapshot read looks for the newest day on or before the date asked |
-| `layout.<kind>.columns` | none | the promoted paths |
-| `id-field` | `id` | the id of a plain document per line |
-| `rescan-seconds` | `30` | how often the folders are listed again |
-| `business-zone` | `America/New_York` | the time zone whose today the health check compares the dated folders with ("0 rows served for <date>" warning) |
-| `index-cache-mb` | `1024` | memory for days' indexes |
-| `max-load-rows` | `200000` | lines a reverse lookup reads for a kind without promoted link fields |
-| `max-document-mb` | `64` | the longest line (and so document, or string in it); a longer line is skipped and counted |
-| `max-nesting-depth` | `1000` | the deepest nesting of objects and arrays in a line; a deeper line is skipped and counted |
-| `source-name` | `file` | the name shown in provenance and Health |
+Every setting of `file`, with its type, default and meaning, is in the plugin's generated README: [plugins/drishti-plugin-file/README.md, Settings](../../plugins/drishti-plugin-file/README.md#settings) (from the settings catalogue Admin → Connectors builds its form from). The shared `tls.*` settings are in [TLS.md](TLS.md).
 
 `JsonlLoader` takes the input (`FILE` or `-`), the root, `--future-days N` and `--zone Z`; `tools/load-files.sh [root] [--trades N] [--days D]` runs
 it.

@@ -12,7 +12,7 @@
 #
 # See the LICENSE file in the root of this repository for the full terms.
 
-"""Wave D in the console (docs/guides/BI_AI.md sections 8 to 11, DISTRIBUTION.md, ELEMENTS.md): the designer copilot, the check explanations and the dataset helper reach the server as
+"""Wave D in the console (docs/guides/BI_GUIDE.md sections 29.8 to 29.11, DISTRIBUTION.md, ELEMENTS.md): the designer copilot, the check explanations and the dataset helper reach the server as
 the caller and their scripts obey the console's rules; the Subscribe and alert forms offer narrative, webhooks and texts only when the server has them and send them in the
 server's words; ``<drishti-search>`` and ``<drishti-about>`` are in the library, served, and ``/embed/v1/search`` passes the embed caller to the server and its refusals back."""
 from __future__ import annotations

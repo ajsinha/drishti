@@ -12,7 +12,7 @@
 #
 # See the LICENSE file in the root of this repository for the full terms.
 
-# About this page: what the help desk's kinds mean (docs/guides/PACK_MODELLING_GUIDE.md, "About text and glossary").
+# About this page: what the help desk's kinds mean (docs/guides/PACK_DEVELOPER_GUIDE.md, "About text and glossary").
 about: 1
 kinds:
   ticket:

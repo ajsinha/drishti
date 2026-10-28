@@ -15,7 +15,7 @@
 -->
 # AI management: one console for every AI setting, use and review
 
-Status: **design, not built.** Planned for **2.9.0** (2.8.0 until the re-order of 2026-10-21; wave I, with the AI features it manages; see
+Status: **design, not built.** Not in a release yet: planned for 2.9.0 until 2026-10-25, then parked with the AI wave (2.9.0 to 2.9.5 shipped without it; the plan files AI and GenUI under 2.12.0; see
 [BI_DESIGN.md §12.2](BI_DESIGN.md#122-the-three-waves)). Asked by the product owner on 2026-10-18: "for AI in general we
 will need an elaborate UI to manage". Names marked **(new)** do not exist today.
 

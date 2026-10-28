@@ -113,7 +113,7 @@ CREATE TABLE IF NOT EXISTS drishti_pack_state (
     updated_by VARCHAR(64)  NOT NULL DEFAULT ''
 );
 
--- Administrators' switches (docs/admin/COMMANDS.md): commands and packs on or off, the system of record that Drishti*net gossip spreads.
+-- Administrators' switches (docs/admin/USER_MANAGEMENT.md): commands and packs on or off, the system of record that Drishti*net gossip spreads.
 -- One row per scope (command | pack), name and grantee (* is everyone; a role once commands are granted per role); last writer wins by
 -- (stamp, node), stamp being a hybrid logical clock. The log keeps every applied change (who, when, why), learned ones included, once.
 CREATE TABLE IF NOT EXISTS drishti_switch (

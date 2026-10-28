@@ -12,7 +12,7 @@
 #
 # See the LICENSE file in the root of this repository for the full terms.
 
-"""The pictures of Admin -> Artifacts (docs/admin/ARTIFACTS.md and tutorial 17), written to docs/admin/img/artifacts/.
+"""The pictures of Admin -> Artifacts (docs/guides/OPERATIONALISING.md and tutorial 17), written to docs/guides/img/artifacts/.
 
 The setup is its own: the scratch site of drishti-console/tests/artifact_stack.py (a pack the site always loads, three installed from archives of which one
 extends another, a connector the pack reads, one nothing uses, and three BI files), on the scratch ports of DRISHTI_SHOTS_SERVER_PORT / DRISHTI_SHOTS_CONSOLE_PORT.
@@ -29,7 +29,7 @@ from pathlib import Path
 
 from shotlib import CONSOLE_PORT, ROOT, SERVER_PORT, Ctx, listening, register
 
-OUT = ROOT / "docs" / "admin" / "img" / "artifacts"
+OUT = ROOT / "docs" / "guides" / "img" / "artifacts"
 shot = register("artifacts", OUT)
 
 

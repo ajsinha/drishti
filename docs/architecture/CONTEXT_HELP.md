@@ -555,6 +555,148 @@ drishti:
 | Load of about files | ≤ 50 ms for all shipped packs; templates compiled once |
 | Ask | bounded by `timeout`; never blocks the drawer |
 
+## About this page, end to end
+
+*Captured before 2.3.0, as a walk through one request (moved here from HOW_IT_FITS.md, now history: [archived](../archive/HOW_IT_FITS.md)). Since 2.3.0 the trading pack reads trades per source system (`trade-endur`, `trade-calypso`, `trade-murex`) instead of `trading-store`; the flow is unchanged.*
+
+Everything so far answers "show me `MX-20000001`". The About drawer answers the next questions: *what am I looking at,
+can I trust it, and why does it look like this?* It adds no second pipeline: it asks the first one again, for the same
+caller, and writes down what that run decided. Press `?` on the trade view and follow the request.
+
+| # | What happens | Where | Code |
+|---|---|---|---|
+| 1 | `?` (focus not in a text field) or `F1` opens the drawer; the first time, it fetches its content | browser | `static/js/about.js` asks the console for `GET /v/trade/MX-20000001/about?generation=1` (the generation of the page you see) |
+| 2 | The console asks the server for the explanation as you, and renders the drawer partial | console | `terminal_routes.py` `about()`, `BackendClient.explain`, `terminal/_about.html` over `_macros/about.html` |
+| 3 | The server checks you may open kind `trade` (`DRS-5002` if not), then explains | server | `ExplainController`: `GET /api/v1/views/trade/MX-20000001/explain` |
+| 4 | **The view is re-run for you.** The explanation is built by the same code and with the same masks as the page, so it can say nothing your page does not | engine | `ExplainService.explain` calls `ViewPipeline.built(doc, asOf, redact, mayOpen)`, the method the view itself uses: fetch, redact, match, layout, link, bind |
+| 5 | **Why this Sutra.** Every Sutra of the kind is tried, in priority order | rachana | `SutraMatcher.explain(kind, doc, seen)` returns a `MatchTrace`: a verdict per Sutra (`true`, `false`, `error`, `masked`) with its `where` text and priority. The chosen one is the one the view used |
+| 6 | **Why a panel is empty.** A panel with nothing to draw is named with the reason | engine | `EmptinessReason`: `missing`, `null`, `empty list`, `masked`, `no values` or `no data`, with the document path it looked at |
+| 7 | **Provenance and health.** Source, generation, business date, fetch and update times, freshness, and one word of health | engine | `ViewModel.Provenance`, the `SourceRouter` freshness, `SourceHealth` (`up`, `degraded`, `down`: the same reduction `HealthController` uses) |
+| 8 | **The pack's words.** The `about.yaml` entry for the kind is found and its template rendered over the document **after** your redaction | rachana | `AboutCatalog.forKind("trade")`, `AboutText.render` (`Template.renderLenient`: a failing `${...}` reads `—` and counts in `drishti.explain.template-errors`) |
+| 9 | **The glossary.** The entries for exactly the fields on the page: the "What each number means" layer and the hover hints. A field's entry is the kind's `glossary` by path, else a pack `vocabulary` entry by name, else a derived kind's own formula, else the core vocabulary | rachana, engine | `GlossaryResolver`, `GlossaryBuilder` (step 4 of [CONTEXT_HELP.md](CONTEXT_HELP.md)); the answer's `glossary` block |
+| 10 | The answer is a `PageContext`, cached 60 s per (user, entity, business date, generation, locale, about revision) | engine | `PageContext`, `drishti.explain.*` |
+| 11 | The console turns it into the drawer, one `<details>` per layer, and moves focus to its heading | console | `_about.html`, `about.js`, `about.css` |
+
+**The request and the answer.** The real answer for `MX-20000001`, from a server started with the QUICKSTART packs
+(the long lists are cut with `…`; times and the generation differ when you try it):
+
+```
+GET /api/v1/views/trade/MX-20000001/explain
+{ "ref": {"kind":"trade","id":"MX-20000001"}, "mnemonic": "TRD", "locale": "en", "generation": 1,
+  "about":  { "pack": {"name":"trading","title":"Trading"}, "kindTitle": "Trade",
+              "text": "MX-20000001: Interest rate swap (fixed/float) (Rates) with Meridian Reinsurance Ltd, booked as \"Receive fixed\": 242.0m AUD notional, maturing 2032-06-25. It is marked at +1,875,863 USD and its status is Live.",
+              "sutraDescription": "Exchanges fixed for floating RFR-compounded payments." },
+  "glossary": [ {"key":"mtm","label":"MTM (USD)","shownIn":["strip"],"term":"Mark to market","unit":"USD","sign":"Positive is an asset of the bank.",
+                 "means":"The trade's current fair value, from the bank's side. A positive number is an amount the bank is owed; a negative one is an amount it owes.",
+                 "origin":"trading:glossary.mtm"},
+                {"key":"terms.fixedRate","label":"Fixed rate","shownIn":["terms"],"term":"Fixed rate","unit":"% a year",
+                 "means":"The interest rate fixed in the contract, paid on its day-count basis.","origin":"trading:vocabulary.fixedRate"}, … 18 more ],
+  "data":   { "source": "murex-rates", "generation": 1, "fetchedAt": "2026-10-05T01:56:58Z", "current": true, "live": true,
+              "updatedAt": "2026-10-05T01:56:58Z", "stale": false, "health": "up",
+              "linked": {"fetched": 9, "pending": 0, "denied": 0, "budgetMs": 40} },
+  "layout": { "label": "Sutra irs-fixfloat v1 + inference", "fingerprint": "b597…7cd1", "inferred": true,
+              "sutra": {"name":"irs-fixfloat","version":1,"pack":"trading","priority":10,
+                        "where":"$.productType == 'IRS_FIXFLOAT'", "description":"…"},
+              "candidates": [ {"name":"abs","priority":10,"where":"$.productType == 'ABS'","result":"false"}, … ] },
+  "next":   { "keys": [ {"key":"F2","label":"Terms","action":"panel","panel":"terms"}, …,
+                        {"key":"F7","label":"Netting set","action":"link","link":{"kind":"netting-set","id":"NS-MERIDIAN-RE-NY"}}, … ],
+              "panelKinds": ["kv","tabs","ladder","waterfall","timeline","provenance","line","hbar","links"] },
+  "timings": {"view": 30.19, "explain": 1.5} }
+```
+
+Read it against the earlier sections. `layout.sutra` is section 3.3's choice (`irs-fixfloat v1`, found by its `where`);
+`candidates` are the other Sutras of the kind with what each `where` gave (here `false` for all 124); `data` is the
+provenance panel of 3.7 plus health; `next.keys` are the Sutra's F-keys of 3.8, with links already restricted to what
+you may open. Blocks that would be empty are left out: this page has no `noData`, `errors`, `masked` or `noAccess`
+block because nothing on it is empty, hidden or denied. (`layout.inferred` is true because the pipeline's inference
+completes the Sutra, as `layout` in 3.6 says: "Sutra irs-fixfloat v1 + inference".)
+
+**The pack's words (steps 8 and 9), and `extends`.** The `about` and `glossary` blocks above are the `trading` pack's: writing
+them is one file in the lowest pack that owns the kind, and it reaches `market-risk` and `counterparty-risk` through
+`extends`. This is the real file, shortened (it is generated, from `tools/packgen/banking/about/trading.yaml`; the
+vocabulary has about 190 terms, one per product field, and the `trade` entry the page-specific ones):
+
+```yaml
+# config/packs/trading/config/about.yaml
+about: 1
+vocabulary:                        # a word defined once, reused by every kind and every pack that extends trading
+  fixedRate:
+    term: Fixed rate
+    means: The interest rate fixed in the contract, paid on its day-count basis.
+    unit: "% a year"
+  dayCount:
+    term: Day-count convention
+    means: How the days of a period are counted to turn an annual rate into an amount, for example Actual/360 or 30/360.
+kinds:
+  trade:
+    title: Trade
+    about: >-
+      ${$.tradeId}: ${$.productName} (${$.assetClass}) with ${coalesce($.counterparty.name, 'no named counterparty')}, booked as "${$.direction}":
+      ${fmt($.notional, 'compact')} ${$.currency} notional, maturing ${$.maturityDate}. It is marked at ${fmt($.mtm, 'signed0')} ${$.mtmCurrency}
+      and its status is ${$.status}.
+    guide: trading
+    glossary:
+      mtm:
+        term: Mark to market
+        means: The trade's current fair value, from the bank's side. A positive number is an amount the bank is owed; a negative one is an amount it owes.
+        unit: USD
+        sign: Positive is an asset of the bank.
+      risk.dv01:
+        term: DV01
+        means: The change in value of the trade for a one basis point (0.01%) rise in interest rates.
+        unit: USD per bp
+        sign: Negative loses when rates rise.
+```
+
+The page text above is that template rendered over the trade: no number is written in the file, only `${...}` over the
+document, so it cannot go stale. A trade's table columns are keyed by their path (`schedule.pv`, `terms.fixedRate`);
+the ones that are plain field names and mean the same everywhere are vocabulary entries, found by the field's last name.
+
+`AboutCatalog` is built from every loaded pack's file, most specific pack first, using the lineage `PackLineage`
+computes for `extends` (child first, parents right to left: the order `semantics.yaml` already uses). A child pack may
+replace any entry by its key; it cannot delete one. `AboutParser` is strict (`DRS-2040` to `DRS-2044`: unknown key, a
+kind outside the lineage, a template that does not compile, a `use:` naming no vocabulary entry, text over the cap); a
+broken entry is left out and listed with the Sutra problems (`GET /api/v1/sutras/problems`, keyed `<pack>/<file>`), and
+never fails the view. **Redaction comes first.** The template is rendered over the document your redactor produced, so
+for a viewer whose role may not see `mtm` (if it were named in `drishti.security.redact`) the sentence above would read
+"…It is marked at ••• USD…", and the glossary never sees a value at all. That is the one rule of the whole feature: *the explanation is derived from your view, never from
+the stored document.* The text that ships today is the VaR page (`config/packs/market-risk/config/about.yaml`, kind `var`):
+
+```
+VAR-EQD is a 1-day 99% historical VaR for DESK-EQD: 14.7m USD, 70% of its 20.9m limit, with 0 exception(s) in 250 days.
+```
+
+and, with `limit` masked for the asker, "…14.7m USD, ••• of its ••• limit…". (`limit` is masked only in the screenshot
+demo of the [user guide](../guides/USER_GUIDE.md#about-this-page); no shipped configuration masks it.)
+
+**The drawer.** The partial lays the answer out as layers: what you are looking at (the pack's sentence, the Sutra
+description, panel notes, "Written by the <pack> pack"), where the data came from (layer 3), why the page looks like
+this (layer 4: "Layout: Sutra irs-fixfloat v1, the one that applies to this kind, priority 10", "1 field hidden for
+your role: Limit", panels with no data and why) and where next (the F-keys, one link per panel kind on the page). `F1`
+again, or *The full guide to this screen*, goes to the guide as it always did. When a live frame brings a newer
+generation, `about.js` asks again, passing the generation it shows; the server marks a still newer one `newer`.
+
+![The drawer on a stress result page](../guides/img/about/01-var-drawer.jpg)
+
+**The same for the gene variant (example B).** `VRNT VRNT-BRAF-V600E` takes the same eleven steps with other inputs:
+the pack is `genomics` (no `extends`), the Sutra `variant v1` (no `where`, so there are no rejected candidates), the
+source `reference-genome`, and the pack's `kinds.variant.about` yields, under the title *Sequence variant*,
+"VRNT-BRAF-V600E is a missense change in BRAF (p.Val600Glu, c.1799T>A); it is classified "Pathogenic (somatic)" for
+Melanoma, colorectal and thyroid cancer." Nothing in the code names `variant` or `genomics`: the words are in
+`examples/packs/genomics/config/about.yaml`, which the generator `tools/packgen/genomics/make.py` writes from its own about
+source.
+
+| | Trade (A) | Variant (B) |
+|---|---|---|
+| About file | `config/packs/trading/config/about.yaml`, `kinds.trade` | `examples/packs/genomics/config/about.yaml`, `kinds.variant` |
+| Candidates in the `MatchTrace` | 124 other Sutras of kind `trade` | none |
+| Source and health | `murex-rates`, `up` | `reference-genome`, `up` |
+| **Unchanged** | `ExplainController`, `ExplainService`, `PageContext`, the drawer and its keys | the same |
+
+Where each part is changed is section 7; the design, the open decisions and the build plan are in
+[CONTEXT_HELP.md](CONTEXT_HELP.md); how to write the text is in the
+[pack developer guide](../guides/PACK_DEVELOPER_GUIDE.md#about-text-and-glossary).
+
 ## Documentation changes
 
 | Document | Change |
@@ -568,7 +710,7 @@ drishti:
 | [SCREEN_DESIGNER.md](../guides/SCREEN_DESIGNER.md) | the workbench *About* tab |
 | [CONFIGURATION.md](../admin/CONFIGURATION.md) | `drishti.explain.*`, `drishti.about.*` |
 | [TROUBLESHOOTING.md](../guides/TROUBLESHOOTING.md) | error-code table rows; "the About drawer says a field has no explanation" |
-| [HOW_IT_FITS.md](HOW_IT_FITS.md) | a full section, not a line: *About this page, end to end*, worked on the same trade MX-20000001 as example A (the `?` press → `GET …/explain` → the view re-run for the caller → `MatchTrace`, emptiness reasons, provenance and health → `about.yaml` from the pack (with `extends`) rendered over the redacted document → the glossary → the drawer), the same for the genomics variant in example B in a few lines, `about.yaml` added to §1's picture and §2's pieces, and §7 *Where to change what* rows (about text, glossary, drawer, explain) |
+| [HOW_IT_FITS.md](../archive/HOW_IT_FITS.md) (history, archived; the section now lives [here](#about-this-page-end-to-end)) | a full section, not a line: *About this page, end to end*, worked on the same trade MX-20000001 as example A (the `?` press → `GET …/explain` → the view re-run for the caller → `MatchTrace`, emptiness reasons, provenance and health → `about.yaml` from the pack (with `extends`) rendered over the redacted document → the glossary → the drawer), the same for the genomics variant in example B in a few lines, `about.yaml` added to §1's picture and §2's pieces, and §7 *Where to change what* rows (about text, glossary, drawer, explain) |
 
 ## Build plan
 

@@ -448,7 +448,7 @@ If any field is not promoted, the search reads documents as before, up to `drish
 ### 7.2 Derived kinds
 
 A derived kind (the trading pack's `portfolio-trades`: trades grouped by `$.PORTFOLIO`, `count`, `distinct $.CURRENCY` …, see
-[PACK_DEVELOPER_GUIDE.md](../guides/PACK_MODELLING_GUIDE.md#derived-kinds-entities-computed-from-other-kinds)) is computed from columns
+[PACK_DEVELOPER_GUIDE.md](../guides/PACK_DEVELOPER_GUIDE.md#derived-kinds-entities-computed-from-other-kinds)) is computed from columns
 when all its expressions are plain paths that are promoted:
 
 1. Rows are grouped by the key column directly (the `PORTFOLIO` value of each row).
@@ -810,42 +810,13 @@ loader folds approved ones into the next day's build: [WRITE_BACK.md section 5.2
 
 In the connector file's `settings:` (see [As a connector file](#as-a-connector-file)):
 
+Every setting of `delta`, with its type, default and meaning, is in the plugin's generated README: [plugins/drishti-plugin-delta/README.md, Settings](../../plugins/drishti-plugin-delta/README.md#settings) (from the settings catalogue Admin → Connectors builds its form from). The shared `tls.*` settings are in [TLS.md](TLS.md).
+
+Read beside them, and not in that table:
+
 | Setting | Default | Meaning |
 |---|---|---|
-| `root` | `./data/delta` | the lake: a local folder or `s3a://bucket/path` |
-| `engine` | `DRISHTI_DELTA_ENGINE`, else `native` | `native` (no Hadoop; Windows), `hadoop` (also `abfs://`, `gs://`) or `auto` ([section 16](#16-engines-native-and-hadoop)) |
-| `lz4-decoder` | `safe` | LZ4 page decoder: `safe` (pure Java) or `fast` (JNI when available) ([section 16](#16-engines-native-and-hadoop)) |
-| `lz4-via-native` | `true` | `hadoop` engine only: read LZ4 files through the native decoder |
-| `domain` | empty | the data-domain folder under the root; may not contain `..` or start with `/` |
-| `kinds` | every table found | comma list of kinds to serve |
-| `mode.<kind>` | `snapshot` | `snapshot` (every entity every day) or `effective` (a row when an entity changes) |
-| `lookback-days` | `10` | how far back a snapshot read looks for the newest day on or before the date asked |
-| `layout.<kind>.columns` | none | promoted paths ([section 4](#4-declaring-the-layout-in-a-pack)) |
-| `layout.<kind>.type-ahead` | none | promoted paths whose values the type-ahead also matches (a name finds its id; [section 4](#4-declaring-the-layout-in-a-pack)) |
-| `table.<kind>` | the kind's name | the kind's table folder under the domain (`trade_endur`); with it, only the named kinds are served ([section 4](#4-declaring-the-layout-in-a-pack)) |
-| `union` | `false` | this connector is one slice of its kinds (one source system of several): reads, searches, type-ahead and BI ask every union connector of the kind ([CONNECTORS.md](CONNECTORS.md#several-connectors-for-one-kind-a-union)) |
 | `layout.<kind>.sort-by`, `file-rows`, `row-group-rows` | `id`, `250000`, `10000` (the trading pack: `1000`) | how writers lay the table out |
-| `refresh-seconds` | `10` | how often the table's latest version is checked; the type-ahead index is rebuilt every six |
-| `warm-dates` | `3` | after start, in the background, each table's newest N dates get their id map and one document read, so the first read of a recent past date is not the slow one (cold about 5x a warm read: 40-70 ms against 10 ms on the samples, more on a large day); the warm-up reads take their own read slots, so a page never waits behind them; `0` turns it off |
-| `id-map-mb` | not set: the shared cache, 20 % of the heap | memory for days' id maps; set, a cache of this connector's own |
-| `id-map-disk.enabled`, `id-map-disk.dir` | `true`, `<data dir>/cache/<connector>/idmaps` | id maps written once per table version and date, read through a memory map ([section 6.2](#62-the-id-map-of-a-day)) |
-| `columns-cache-mb` | not set: the shared cache, 20 % of the heap | memory for days' column sets |
-| `doc-cache-mb` | not set: the shared cache, 5 % of the heap | memory for recently read documents |
-| `doc-disk-cache.enabled`, `doc-disk-cache.dir` | `true`, `<data dir>/cache/<connector>/docs` | documents read before, in a RocksDB on disk, kept across restarts ([section 6.3](#63-opening-one-entity)) |
-| `doc-disk-cache.max-gb`, `.ttl`, `.reset-at`, `.zone` | `1`, `12h`, `02:00`, `America/New_York` | its size cap, time limit and daily clearing |
-| `max-concurrent-reads` | `16` | single-document reads at once |
-| `max-queued-reads` | `4096` | single-document reads that may wait for a slot; more are refused at once, and a read whose caller has gone leaves the queue |
-| `max-load-rows` | `200000` | the largest day loaded whole for reverse lookups when a table has no promoted columns |
-| `cache-mb` | not set: the shared cache, 5 % of the heap | memory for whole days of small tables |
-| `id-column`, `doc-column`, `date-column` | `id`, `doc`, `business_date` | column names |
-| `source-name` | the connector's name | the name shown in provenance and Health |
-| `stale-after` | none | warn when no new data arrived for this long |
-| `s3.region` | none | the S3 region |
-| `s3.endpoint` | none | an S3-compatible store (MinIO, Ceph); also sets path-style access and TLS by scheme |
-| `s3.path-style` | `true` | path-style addressing, only with `s3.endpoint` |
-| `s3.access-key`, `s3.secret-key` | none | static credentials; otherwise the AWS chain |
-| `proxy.*` | none | the outbound HTTP proxy ([TLS.md (proxy)](TLS.md#outbound-http-proxy-for-connectors-ai-providers-and-mcp-servers)): `proxy.url`, `proxy.username`, `proxy.password` (`${ENV}`), `proxy.no-proxy`, `proxy.enabled`, or `proxy: none`; for the S3 store |
-| `hadoop.<key>` | none | passed to Hadoop as `<key>` (see [CONFIGURATION.md](../admin/CONFIGURATION.md#delta--delta-lake)) |
 
 ## 15. Checklist for production
 

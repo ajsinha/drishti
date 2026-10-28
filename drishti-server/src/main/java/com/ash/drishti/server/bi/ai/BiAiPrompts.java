@@ -20,7 +20,7 @@ import java.util.List;
 import java.util.Map;
 
 /**
- * The prompts of the BI hooks (docs/guides/BI_AI.md section 6). They are built from the dataset's MODEL only: names, types and descriptions of the fields the
+ * The prompts of the BI hooks (docs/guides/BI_GUIDE.md section 29.6). They are built from the dataset's MODEL only: names, types and descriptions of the fields the
  * reader may use (a field masked for them is left out), the measures' names and descriptions, the hierarchies. No row, no value and no measure definition goes
  * in; in aggregates mode the explain/ask summaries add the reader's own aggregate results (see {@link BiAiService}), never anything else.
  */

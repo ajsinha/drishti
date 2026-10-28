@@ -49,7 +49,7 @@ Every step says what to do **in the UI** (IntelliJ IDEA and PyCharm run configur
 
 ## Step 1 · Install, build and check the machine
 
-**In the UI.** Open the repository in IntelliJ IDEA (its run configurations are in `run-configs/`, [IDE_GUIDE.md](../guides/IDE_GUIDE.md)) and run **Drishti build server jar**.
+**In the UI.** Open the repository in IntelliJ IDEA (its run configurations are in `run-configs/`, [GETTING_STARTED.md (IDE)](../guides/GETTING_STARTED.md#running-from-intellij-idea-and-pycharm)) and run **Drishti build server jar**.
 Then, in PyCharm opened on `drishti-console/` (its run configurations are in `drishti-console/run-configs/`), run **Build demo lakes**.
 
 **From the command line:**
@@ -348,7 +348,7 @@ export DRISHTI_SERVER=http://localhost:18480
 export DRISHTI_TOKEN=$(cat ~/drishti-tokens/tutorial.token)
 ```
 
-(The IDE's QA walk keeps it in `data/qa/token.txt` instead: [IDE_GUIDE.md](../guides/IDE_GUIDE.md). The folder `data/` is git-ignored.)
+(The IDE's QA walk keeps it in `data/qa/token.txt` instead: [GETTING_STARTED.md (IDE)](../guides/GETTING_STARTED.md#running-from-intellij-idea-and-pycharm). The folder `data/` is git-ignored.)
 
 Without a token a signed-in server says no, in plain words:
 

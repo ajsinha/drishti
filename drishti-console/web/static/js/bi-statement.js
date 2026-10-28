@@ -13,7 +13,7 @@
  *
  * See the LICENSE file in the root of this repository for the full terms.
  */
-/* The statement designer of BI Studio (2.6.0, docs/guides/STATEMENTS.md section 5): a page with layout: statement is paper. The Paper tab of the designer
+/* The statement designer of BI Studio (2.6.0, docs/guides/REPORTS.md section 24.5): a page with layout: statement is paper. The Paper tab of the designer
    sets the report's `statement:` (paper size, orientation, margins, the header and footer with their tokens, the period it covers, the text size) with
    plain controls, and previews the statement page by page as the server lays it out for you (POST /bi/api/reports/statement/preview: the same pages the
    PDF draws, with your own masks and row rules). Each band's page break, keep-together, repeated column titles and grouping are in Format, under

@@ -13,7 +13,7 @@
 
   See the LICENSE file in the root of this repository for the full terms.
 -->
-# Distribution: export, subscriptions, alerts and embedding
+# Distribution: scheduled reports, export, subscriptions, alerts and embedding
 
 Rūpaka phase 7 ([RUPAKA.md section 20.6](../architecture/RUPAKA.md#206-phase-7-part-1-as-built)). Part 1: two things leave Drishti as files and mail: an **export** (a BI report, a page, one
 visual, or a Sutra view, saved as PDF, a picture, an Excel workbook or CSV) and a **subscription** (the same content sent by email on a schedule, or after the day's data lands).
@@ -25,6 +25,45 @@ The walk-throughs with pictures are [tutorial 11](../tutorials/11-bi-that-runs-i
 **One rule runs through all of it: the file or the mail is made for the person who gets it.** The numbers are asked of the data engine *as that person*, so their row rules and their
 masks apply; nothing is copied from the sender's screen. A desk head's export holds her desk; an analyst whose column is masked gets the mask. **A masked
 cell reads `•••` in every format** (CSV, Excel, PDF, PNG and the mail's body), as on the screen.
+
+## 0. Scheduled searches and the Reports page
+
+The **Reports** page (`Views`, `Reports`, `/reports`) lists every scheduled report and subscription you have, with a box to find one, and links to your alerts and the BI reports. Learn it by doing in [tutorial 9](../tutorials/09-reports.md) (scheduled searches) and [tutorial 11](../tutorials/11-bi-that-runs-itself.md) (BI subscriptions, alerts, export); this page is the reference.
+
+### Scheduled reports
+
+A report is a search that runs on its own, on a schedule, and delivers its result as a CSV file or as JSON Lines (one entity a
+line, keyed as the CSV's header; [DATA_FORMATS.md](DATA_FORMATS.md)): **Format** in the dialog, `format: csv | jsonl` over the API. On the search page,
+after a search, press **Schedule…** (or open **Reports** in the top bar). Give it a name, check the search, and say when:
+
+| When | Runs |
+|---|---|
+| `business-days 18:30` | at 18:30 on weekdays that are not holidays in the server's calendar |
+| `weekdays 07:00` | at 07:00 Monday to Friday |
+| `daily 06:00` | every day at 06:00 |
+| `hourly` | on the hour |
+| `cron 0 0 8,12,16 * * MON-FRI` | a cron expression: second, minute, hour, day, month, weekday |
+
+Times are in the business-date zone (New York by default). **Data for** chooses the current business day or the
+one before (for a morning report on yesterday's close). **Deliver to** is the server's reports folder, or a
+webhook (a URL your administrator allows; the CSV is posted as `text/csv`, JSON Lines as `application/jsonl`, with `X-Drishti-Report`
+and `X-Drishti-Business-Date` headers); a folder delivery is a `.csv` or a `.jsonl` file. Email needs SMTP settings on the server and is not offered until then.
+
+A report runs **as you**: it sees what your roles let you see when it runs, with the same masked fields. If your
+account is disabled or deleted, it stops. The list shows each report's next run and its last run (rows, where the
+file went, or the error); **Run now** runs one at once. The walk-through (name, search, when, deliver to, and the file that appears) is [tutorial 9](../tutorials/09-reports.md).
+
+#### Export, and subscriptions
+
+**Export.** On a BI report, *Export* under the page tabs saves **this page** or one visual as **PDF**, a **PNG** picture, an **Excel** workbook (a sheet per visual, numbers as numbers), **CSV** or **JSON Lines** (a row a line, the CSV's column names as keys). On a
+view, *Export* in the header does the same for the view. What you save is what **you** may see: your masks and your row rules apply, and the slicers, controls and filters you set are in it, written in the header with the
+business date. A file made for you can be shared; it holds no one else's numbers.
+
+**Subscribe.** *Subscribe* (next to Export) sends the report or view to you by email, on a schedule: **Send** offers every day, every business day (07:30 to start with), every week on a day,
+the last business day of the month and every hour, at a time you pick; *on a schedule I write (advanced)* and **Advanced: the schedule as text** take any schedule, such as `after-load trade`
+(**after the day's data lands**). You choose the form (the tables in the email, a PDF, an Excel file or a JSON Lines file attached). A BI author or an administrator can also subscribe other people or a role; each of them receives a render made for
+them. Your subscriptions are on **Reports** in the top bar, in one list with your scheduled reports: *Run now*, *Pause*, *Resume*, *Delete*, and *History* (who was sent what, and if it failed, why). Reference:
+[sections 1 and 2](#1-export) below; walk-through: [tutorial 11](../tutorials/11-bi-that-runs-itself.md).
 
 ## 1. Export
 
@@ -116,7 +155,7 @@ A subscription says **what** (a report, a page or one visual, with the view stat
 
 ### Schedules
 
-Everything a [scheduled report](SCHEDULED_REPORTS.md#scheduled-reports) takes (`daily HH:MM`, `weekdays HH:MM`, `business-days HH:MM`, `hourly`, `cron` and six fields), and:
+Everything a [scheduled report](#scheduled-reports) takes (`daily HH:MM`, `weekdays HH:MM`, `business-days HH:MM`, `hourly`, `cron` and six fields), and:
 
 | Text | Runs |
 |---|---|
@@ -252,13 +291,13 @@ Ask the owner of the subscription, o
 
 ### Statements: one per recipient (2.6.0)
 
-A subscription to a **statement page** (a page with `layout: statement`, [STATEMENTS.md](STATEMENTS.md)) in `pdf` or `xlsx` **bursts** it: each recipient gets
+A subscription to a **statement page** (a page with `layout: statement`, [REPORTS.md section 24](REPORTS.md#24-statements-paginated-reports-page-exact-one-per-reader)) in `pdf` or `xlsx` **bursts** it: each recipient gets
 their own statement, laid out page by page and made **as them**, so two recipients' statements differ only by their masks and row rules (and their name in
 the header). The statement's `period` is worked out from the run's business date (*Data for*: `previous` on the first of the month makes a statement of the
 month before), and the subscription's view state may carry the model's parameters (`target.state.params`). The file is named after the statement, its period
 and the recipient (*Monthly statement September 2026 hana.pdf*); each delivery in the history has `statement: true`, its `pages` and its `file`. The
 acceptance is a monthly statement burst to ten recipients of two roles, every PDF checked for its page count and its header on every page
-(`StatementApiTest`, [STATEMENTS.md section 6](STATEMENTS.md#6-pdf-excel-and-bursting-through-subscriptions)). A table sorted by a measure that is masked for a
+(`StatementApiTest`, [REPORTS.md section 6](REPORTS.md#246-pdf-excel-and-bursting-through-subscriptions)). A table sorted by a measure that is masked for a
 recipient is drawn for them in the query's own order (its order would tell the masked figures), with a note above it, and their delivery says so in
 `notes` (*Positions: Not sorted: 'MTM' is masked for you …*). An Excel statement carries the same notes as the PDF (its *About* sheet and beside each
 table), and the mail's subject ends with the page count (*· 1 page*, *· 3 pages*). The **Subscribe** form says so when it opens on a statement page
@@ -271,7 +310,7 @@ An export of a statement page (**Export → PDF** or **Excel** on the page, `POS
 
 The tick-box *Open the email with a short written summary* appears on the form **only when AI is switched on** for this server (`drishti.ai.enabled`); without AI there is nothing to tick (and `narrative: true` is refused). With it, tick it (or send `narrative: true`). Each recipient's email then opens with two or three sentences by an AI model that word **their own** figures: the model is called **as that recipient**
 under the feature `subscription-narrative`, from the tables as that recipient's render holds them with every masked column left out, and **only when the AI policy lets the model see values**
-(`drishti.bi.ai.values: aggregates`, [BI_AI.md section 9](BI_AI.md#9-a-written-summary-at-the-top-of-a-subscriptions-email)). Otherwise (labels-only, the AI layer off, the policy refusing the recipient, the provider failing) the mail
+(`drishti.bi.ai.values: aggregates`, [BI_GUIDE.md section 9](BI_GUIDE.md#299-a-written-summary-at-the-top-of-a-subscriptions-email)). Otherwise (labels-only, the AI layer off, the policy refusing the recipient, the provider failing) the mail
 is sent as usual **without** it and the delivery says `summary: skipped: <why>` in the history. The summary is labelled as AI-written.
 
 ### Running, pausing, history
@@ -353,7 +392,7 @@ PUT /api/v1/me/measure-alerts/Vol
  "condition": {"type": "threshold", "op": "above", "value": 5000}, "trigger": {"mode": "after-load"}}
 ```
 
-A **board tile** that is a Python visual has no threshold alert of its own ([BOARDS.md](BOARDS.md#python-tiles)); an alert like the one above is how to be told. [PYTHON_BI.md section 16](PYTHON_BI.md#16-python-in-alerts-and-on-boards) has the rest, and the tests that read it against the real runner.
+A **board tile** that is a Python visual has no threshold alert of its own ([REPORTS.md section 23](REPORTS.md#python-tiles)); an alert like the one above is how to be told. [PYTHON_BI.md section 16](PYTHON_BI.md#16-python-in-alerts-and-on-boards) has the rest, and the tests that read it against the real runner.
 
 ### 4.2 When it fires: the condition
 
@@ -430,7 +469,7 @@ expression on every change of one entity; an alert on a number adds the BI sourc
 
 ### 4.8 Board notifications
 
-A board tile's colour (`alert:` with `warn` and `crit`; [BOARDS.md section 4](BOARDS.md#4-alerts-a-tile-changes-colour)) can also **tell people** when it turns red. The board's author says so in the YAML:
+A board tile's colour (`alert:` with `warn` and `crit`; [REPORTS.md section 4](REPORTS.md#234-alerts-a-tile-changes-colour)) can also **tell people** when it turns red. The board's author says so in the YAML:
 
 ```yaml
 board: desk-alerts
@@ -741,5 +780,5 @@ Both channels are in the history: an alert's `delivered` has `webhook:NAME` and 
 * **Excel pivot tables** inside the workbook, and charts other than bar, column, line, area, pie and donut in an Excel export (they are drawn as columns; the six are real Excel charts); **XLSX styling** beyond the header, number and date formats.
 * **Notifying the owner in the inbox** when a delivery fails for good: the history and the audit say so; the bell does not.
 * **Subscribing a live visual's state as it ticks**; a subscription reads the data as of the run.
-* **Charts on a statement page** (a statement draws text, cards, tables and matrices; [STATEMENTS.md section 10](STATEMENTS.md#10-built-and-not-built)).
+* **Charts on a statement page** (a statement draws text, cards, tables and matrices; [REPORTS.md section 10](REPORTS.md#2410-built-and-not-built)).
 * **Per-recipient pictures of a view with charts in the email body**: a view is sent as its tables (html) or as a PDF.

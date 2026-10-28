@@ -22,8 +22,8 @@ gives worked recipes for the changes people make most often. Every class, path a
 against this release on a fresh clone); the recipes follow the idioms of the real classes they imitate.
 
 If you only want to run Drishti, read [GETTING_STARTED.md](GETTING_STARTED.md); to run it from IntelliJ IDEA and PyCharm, read
-[IDE_GUIDE.md](IDE_GUIDE.md). For the design and its reasons, read [ARCHITECTURE.md](../architecture/ARCHITECTURE.md), the BI model
-architecture [BI_MODEL_ARCHITECTURE.md](../architecture/BI_MODEL_ARCHITECTURE.md) and the [decision records](../architecture/adr/README.md).
+[GETTING_STARTED.md (IDE)](GETTING_STARTED.md#running-from-intellij-idea-and-pycharm). For the design and its reasons, read [ARCHITECTURE.md](../architecture/ARCHITECTURE.md), the BI model
+architecture [BI_DESIGN.md section 14](../architecture/BI_DESIGN.md#14-the-model-architecture-decisions-d1-to-d6) and the [decision records](../architecture/adr/README.md).
 
 **Contents**
 
@@ -45,7 +45,7 @@ Drishti has two programs. The **server** is one Spring Boot 3.5 application on J
 (`drishti-server`), built from a Maven reactor of internal modules; it reads every source, lays out every screen, answers every BI
 question and pushes every live change. The **console** is a FastAPI and Jinja2 web application in `drishti-console/` that renders the
 server's JSON; the browser draws what it is sent and computes no number of its own (the BI rule *the servers compute, the browser
-draws*, [BI_MODEL_ARCHITECTURE.md](../architecture/BI_MODEL_ARCHITECTURE.md) section 2c). Industries are **packs** (`config/packs/`),
+draws*, [BI_DESIGN.md section 14.5](../architecture/BI_DESIGN.md#145-the-servers-compute-the-browser-draws)). Industries are **packs** (`config/packs/`),
 which are content and configuration, not code: seven ship (`core`, `market-data`, `trading`, `counterparty-risk`, `market-risk`,
 `world-economy`, `news-and-markets`), every attribute of their documents in UPPER_SNAKE.
 
@@ -147,7 +147,7 @@ drishti-benchmarks                (inference)
 | `examples/packs/` | The retired packs (`finance`, `genomics`, `logistics`, `retail-banking`, `climate-risk`, `operational-risk`, `liquidity-risk`), kept as examples and as fixtures for tests written against them; loaded only with `DRISHTI_PACKS_EXTRA_DIRS=examples/packs` |
 | `config/connectors/`, `config/connectors.examples/` | The site's connector files (written by the server at its first start from the packs' templates; not committed) and ready-made examples per store ([CONNECTOR_FILES.md](../connectors/CONNECTOR_FILES.md)) |
 | `config/bi/` | Shipped BI files: datasets, models, reports, boards |
-| `run-configs/` | The IntelliJ IDEA run configurations (IntelliJ opens the repository root; [IDE_GUIDE.md](IDE_GUIDE.md)): **Drishti build server jar**, **Drishti server**, **Drishti server (demo lakes)**, **Drishti server (debug-friendly)**, **Drishti server (QA profile)**. The PyCharm ones (PyCharm opens `drishti-console/`, so the two IDEs never share one `.idea`) are in `drishti-console/run-configs/`: **Drishti console**, **Build demo lakes**, **Load ENDUR file into the lake**, the QA console and the CLI tools |
+| `run-configs/` | The IntelliJ IDEA run configurations (IntelliJ opens the repository root; [GETTING_STARTED.md (IDE)](GETTING_STARTED.md#running-from-intellij-idea-and-pycharm)): **Drishti build server jar**, **Drishti server**, **Drishti server (demo lakes)**, **Drishti server (debug-friendly)**, **Drishti server (QA profile)**. The PyCharm ones (PyCharm opens `drishti-console/`, so the two IDEs never share one `.idea`) are in `drishti-console/run-configs/`: **Drishti console**, **Build demo lakes**, **Load ENDUR file into the lake**, the QA console and the CLI tools |
 | `data/testdata/` | The committed test data: sixty business days of every dataset the seven packs read (5,000 trades a day per source system), `.jsonl.gz`, with `testdata.yaml` and a README ([data/testdata/README.md](../../data/testdata/README.md)) |
 | `tools/drishti.py` | The one command line over the tools below and the server's REST: `sutra`, `pack ...` (`new`, `make`, `check`, `about-check`, `diff`, `i18n`, `publish`, `install`, `regenerate`, `catalogue`, `bundle`, `verify`, `deploy`, `rollback`, `keygen`), `data ingest|load|profile`, `server health|packs|smoke`, `connector ...`, `bi ...`, `view get|explain`, `design ...`, `lake build|publish|scan|status|demo|maintain`, `doctor`, `completion`, `docs shots`; the `test_cli_*.py` and `test_drishti_cli.py` suites cover it. See [CLI_GUIDE.md](CLI_GUIDE.md) and [TOOLS.md](TOOLS.md) |
 | `tools/lake/` | Delta lakes from Python: `build.py` (`lake build`: a large JSON export streamed into a Delta table, flat memory, partitions, promoted columns, the data-load signal or the BI-store stamp), `demo.py` (`lake demo`: the demo lakes from `data/testdata`), `scan.py`, `laketables.py` (`lake status`), `maintain.py` (retention, compaction, checkpoints, vacuum, `relayout`), each with its tests |
@@ -157,7 +157,7 @@ drishti-benchmarks                (inference)
 | `tools/load-*.sh` | Load the samples (and a generated book) into PostgreSQL, Iceberg, DuckDB, MongoDB, Redis, Aerospike, Cassandra, JSON-lines files or Delta ([DEMO_DATA.md](../connectors/DEMO_DATA.md)) |
 | `tools/bench/` | The scale benchmark: `scale.sh <store> <trades-a-day>`, `measure.py`, `report.py`; `results/` keeps each run's raw JSON lines; see [SCALE_BENCHMARK.md](../admin/SCALE_BENCHMARK.md) |
 | `tools/packgen/pack_from_jsonl.py`, `tools/packmake.py`, `tools/schemapack.py`, `tools/packbundle.py`, `tools/packform.py`, `tools/packdiff.py`, `tools/packi18n.py`, `tools/packregen.py`, `tools/sutragen.py`, `tools/authoring.py` | Pack authoring: a pack from JSON lines or from schemas, regeneration of unedited generated files, bundles, the `form:` section, `pack diff`, `pack i18n`; the `tools/drishti.py` commands call them (see [PACK_DEVELOPER_GUIDE.md](PACK_DEVELOPER_GUIDE.md), [SCHEMA_TO_PACK.md](SCHEMA_TO_PACK.md), [CLI_GUIDE.md](CLI_GUIDE.md)) |
-| `tools/realdata/`, `tools/docs/`, `tools/elements-demo/`, `tools/windows/`, `tools/maps/` | The real-data builds of the world-economy pack ([REAL_DATA.md](REAL_DATA.md)); the documentation screenshots (`tools/docs/screenshots.py`, `shots/`, one module per guide and tutorial); a sample host page for Drishti Elements; the PowerShell starters ([GETTING_STARTED.md (Windows)](GETTING_STARTED.md#drishti-on-windows)); the map region builder |
+| `tools/realdata/`, `tools/docs/`, `tools/elements-demo/`, `tools/windows/`, `tools/maps/` | The real-data builds of the world-economy pack ([PUBLIC_DATA.md (world-economy)](PUBLIC_DATA.md#the-world-economy-data-in-detail)); the documentation screenshots (`tools/docs/screenshots.py`, `shots/`, one module per guide and tutorial); a sample host page for Drishti Elements; the PowerShell starters ([GETTING_STARTED.md (Windows)](GETTING_STARTED.md#drishti-on-windows)); the map region builder |
 | `tools/packreg/` | `packreg.py`: signing keys, publishing packs to a signed registry, verifying one (ADR-018); `test_packreg.py` |
 | `tools/` (files) | `drill.sh` (verify and publish), `fetch-pyodide.sh` (installs Calc's Python runtime, pinned and verified, into `drishti-console/web/static/vendor/pyodide/`), `elements_sheet.py` (regenerates the Elements stylesheet), `make_icons.py` (favicon and app icons), `ingest_jsonl.py` and `ingest_watch.py` (`data ingest`), `serverpacks.py`, `serverconnectors.py`, `doctor.py`, `completion.py`, `viewcmd.py`, `dataprofile.py`, `license_headers.py` (check or insert the copyright header), `test_no_hidden_names.py` (no hidden names, section 8), `rachana/md_to_yaml.py` (converts Markdown Sutras read before 1.11 to `*.sutra.yaml`) |
 | `deploy/` | `server.Dockerfile`, `console.Dockerfile`, `compose.yaml`, `compose.data.yaml`, `lake-maintenance.yaml`, `grafana/` |
@@ -310,7 +310,7 @@ Server settings follow the same precedence as the console: `drishti-server/src/m
 `./application.local.yaml` (git-ignored; imported by `spring.config.import`), then environment variables, then `--key=value`
 arguments. For example `--drishti.live.frame=100ms` or `--server.port=18481`. The run configurations in `run-configs/` carry the
 settings of each way of starting it (sign-in on with the development admin, the demo source on or off, the QA profile on its own ports
-and data folder); [IDE_GUIDE.md](IDE_GUIDE.md) lists them.
+and data folder); [GETTING_STARTED.md (IDE)](GETTING_STARTED.md#running-from-intellij-idea-and-pycharm) lists them.
 
 The development loop that works best:
 
@@ -707,7 +707,7 @@ and its live push.
 ### 4.4 A BI question: model query, DEL and SQL
 
 Rūpaka, the BI engine, lives in `drishti-server` under `server.bi` and follows the model architecture of
-[BI_MODEL_ARCHITECTURE.md](../architecture/BI_MODEL_ARCHITECTURE.md): **datasets** (one governed table each, every pack kind publishing
+[BI_DESIGN.md section 14](../architecture/BI_DESIGN.md#14-the-model-architecture-decisions-d1-to-d6): **datasets** (one governed table each, every pack kind publishing
 one automatically, `bi.layer.PackDatasets`), **data models** (datasets in a star, relationships, measures written in **DEL**, the
 Drishti Expression Language, [EXPRESSIONS.md](EXPRESSIONS.md)), and **consumers** (reports, boards, notebooks, alerts, subscriptions,
 exports, embeds, AI) each bound to one model. Every consumer asks a model the same way: a **model query** (MQ), a versioned JSON or YAML
@@ -1549,7 +1549,7 @@ LOGGING_LEVEL_COM_ASH_DRISHTI=DEBUG java -jar drishti-server/target/drishti-serv
 
 The console runs Uvicorn with access logs off (`access_log=False` in `run_drishti_web.py`). The run configuration **Drishti server
 (debug-friendly)** is the one to start with **Debug** in IntelliJ: sign-in off (no token to mint while you step through), a 1 GB heap, port
-18580 and the QA data folder `data/qa/data`, so it runs beside a normal server ([IDE_GUIDE.md](IDE_GUIDE.md)).
+18580 and the QA data folder `data/qa/data`, so it runs beside a normal server ([GETTING_STARTED.md (IDE)](GETTING_STARTED.md#running-from-intellij-idea-and-pycharm)).
 
 ### 7.3 Debugging a live view
 

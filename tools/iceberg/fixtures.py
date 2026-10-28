@@ -24,7 +24,7 @@ committed under plugins/drishti-plugin-iceberg/src/test/resources/iceberg-fixtur
 Covered: format versions 1 and 2; every primitive type, structs, lists and maps; every partition transform (identity,
 bucket, truncate, year, month, day, hour); partition evolution; schema evolution (add, rename, widen int to long, float to
 double, decimal precision, drop, reorder); a file without field ids added with a name mapping; several snapshots (time
-travel); the external-table shapes of DRISHTI_ICEBERG.md section 15.5 (a Spark-style table partitioned by day of a
+travel); the external-table shapes of ICEBERG_EXTERNAL_CONNECTOR.md section 12 (a Spark-style table partitioned by day of a
 timestamp, a Snowflake-style table with identifier fields, nested structs, decimals and timestamptz, a current-only
 reference table). Delete files are written by the Java library in the tests themselves (pyiceberg does not write them).
 
@@ -59,7 +59,7 @@ UTC = dt.timezone.utc
 
 
 def jsonable(v):
-    """A value as the tests compare it (DRISHTI_ICEBERG.md section 15.2, decimals as text for exactness)."""
+    """A value as the tests compare it (ICEBERG_EXTERNAL_CONNECTOR.md section 3, decimals as text for exactness)."""
     if v is None or isinstance(v, (bool, int, str)):
         return v
     if isinstance(v, float):

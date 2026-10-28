@@ -72,14 +72,14 @@ It never writes; `tools/load-files.sh` (`JsonlLoader`) does.
 | `layout.*` | string |  | Per-kind promoted columns: layout.<kind>.columns: a, b, c |
 | `root` | path | `<data dir>/feeds` | Folder of documents; default: the feeds folder of the data directory |
 | `domain` | string |  | Domain |
-| `id-field` | string |  | Field holding the entity id |
-| `rescan-seconds` | int |  | Rescan interval |
-| `lookback-days` | int |  | Days of history to index |
+| `id-field` | string | `id` | Field holding the entity id |
+| `rescan-seconds` | int | `30` | How often the folders are listed again |
+| `lookback-days` | int | `10` | How far back a snapshot read looks for the newest day on or before the date asked |
 | `business-zone` | string | `America/New_York` | Time zone whose today is the business date the health check compares the folders with (the 0-rows warning) |
-| `max-load-rows` | int |  | Documents to load at most |
-| `max-document-mb` | int |  | Largest document |
-| `max-nesting-depth` | int |  | Deepest nesting |
-| `index-cache-mb` | int |  | Index cache size |
+| `max-load-rows` | int | `200000` | Lines a reverse lookup reads for a kind without promoted link fields |
+| `max-document-mb` | int | `64` | The longest line (and so document, or string in it); a longer line is skipped and counted |
+| `max-nesting-depth` | int | `1000` | The deepest nesting of objects and arrays in a line; a deeper line is skipped and counted |
+| `index-cache-mb` | int | `1024` | Index cache size |
 | `index.days` | int | `1` | Business days of ids kept for type-ahead (1 = the newest day only) |
 | `index.max-memory` | string | `600MB` | Most memory the kept days may use; older days drop early above it (600MB, 2GB; 0 = no cap) |
 | `index.warm` | one of background, lazy | `background` | Build past days in the background after start, or on the first search for them |

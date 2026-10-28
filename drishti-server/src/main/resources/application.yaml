@@ -383,7 +383,7 @@ drishti:
       - POST /api/v1/bi/migrate/boards           # the stored 2.3 boards converted into reports: an administrator in the console
       - POST /api/v1/bi/models/*/preview-as     # previews another role's answers: audited, in the console only
       - "* /api/v1/me/**"
-      - "* /api/v1/drafts/**"                  # form drafts: personal, kept per person, saved from the console (SUTRA_FORMS_GUIDE.md)
+      - "* /api/v1/drafts/**"                  # form drafts: personal, kept per person, saved from the console (WRITE_BACK_GUIDE.md)
       - POST /api/v1/admin/edits/**            # write-back's switches (a connector's writes, withdrawing an overlay): an administrator in the console
       - "* /api/v1/auth/**"
       - "* /api/v1/admin/tokens/**"
@@ -508,7 +508,7 @@ drishti:
       per-user-per-day: 0
       cost-per-user-per-day: 0       # in the unit of the models' cost-per-1k-* prices
       features: {}                   # per feature: "[ask]": {roles: [..], per-user-per-minute: 6}
-      # BI hooks use the features bi-draft, bi-ask and bi-explain (docs/guides/BI_AI.md), e.g. "[bi-ask]": {roles: [analyst], per-user-per-minute: 10}
+      # BI hooks use the features bi-draft, bi-ask and bi-explain (docs/guides/BI_GUIDE.md), e.g. "[bi-ask]": {roles: [analyst], per-user-per-minute: 10}
   mcp:                               # MCP client (docs/architecture/MCP_CLIENT.md): OFF by default
     enabled: ${DRISHTI_MCP_ENABLED:false}
     dir: ${DRISHTI_MCP_DIR:./config/mcp}      # one YAML per MCP server: transport, url, headers as ${ENV}, allowed-tools
@@ -601,7 +601,7 @@ drishti:
       cache-size: 50                            # pictures kept by view, generation and rights profile
       cache-ttl: 10m
       recipients: count                         # the watermark names: count | names
-  admin:                             # Admin, Artifacts: uninstalling packs, connector files and shipped BI files safely (docs/admin/ARTIFACTS.md)
+  admin:                             # Admin, Artifacts: uninstalling packs, connector files and shipped BI files safely (docs/guides/OPERATIONALISING.md)
     uninstalled-dir: ${DRISHTI_UNINSTALLED_DIR:${drishti.data.dir:./data}/uninstalled}   # an uninstall MOVES the artifact here; nothing is deleted
     uninstalled-keep: ${DRISHTI_UNINSTALLED_KEEP:30d}      # archives older than this are removed, once a day; 0 keeps them for ever
     uninstalled-prune-interval: 1d                        # how often the archive is pruned
@@ -732,7 +732,7 @@ drishti:
     workspace-creation: authors      # who creates shared workspaces: authors (bi-author), stewards (bi-steward), admins (bi-admin); Admin, BI settings changes it at run time
     max-body-bytes: 262144           # largest YAML body of one item
     versions-keep: 50                # published versions kept per item
-    ai:                              # the three BI hooks on the AI layer (docs/guides/BI_AI.md); they also need drishti.ai.enabled
+    ai:                              # the three BI hooks on the AI layer (docs/guides/BI_GUIDE.md); they also need drishti.ai.enabled
       model: ""                      # provider/model; blank = drishti.ai.default-model
       values: labels-only            # labels-only: the model sees names, types, descriptions, never a value | aggregates: it may also word the reader's own masked aggregates
       max-question-chars: 600

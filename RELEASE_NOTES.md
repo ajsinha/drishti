@@ -141,7 +141,7 @@ finally right.**
 
 *2026-10-26.* **Every command in one directory (`FUNC`); groupings and analytics computed, not stored; one External data page; every pack's guide carries its data contracts and where its data comes from.**
 
-- **Functions, `FUNC`** ([COMMANDS.md](docs/admin/COMMANDS.md)): Views → *Functions* lists every command you can use, by pack, with
+- **Functions, `FUNC`** ([COMMANDS.md](docs/admin/USER_MANAGEMENT.md#functions-func-every-command-and-turning-one-on-or-off)): Views → *Functions* lists every command you can use, by pack, with
   what it does and an example; `FUNC <words>` filters it. A pack's name opens its search form; a command opens with its example.
   Administrators see the same page with the commands that are off and the Everyone switches, review, history and the cluster's
   versions; `/admin/commands` opens it. The server still decides who may switch.
@@ -213,10 +213,10 @@ designs kept ([IMPLEMENTATION_PLAN.md](docs/architecture/IMPLEMENTATION_PLAN.md#
     `drishti.py var`.
   - **The numbers change:** with every live trade the bank's VaR on the test data is about 112m (the 1,673-trade sample gave 9.9m); the
     old stored VAR-COMM (446.9m) was not a historical-simulation figure.
-- **Admin → Commands** ([COMMANDS.md](docs/admin/COMMANDS.md)): switch any command off for everyone; it then answers "not active"
+- **Admin → Commands** ([COMMANDS.md](docs/admin/USER_MANAGEMENT.md#functions-func-every-command-and-turning-one-on-or-off)): switch any command off for everyone; it then answers "not active"
   everywhere (page, API, command, CLI, search, exports, BI, AI; `403 DRS-1016`), stored in the Drishti database and gossiped to every
   server; ready for role-based access.
-- **Write-back** ([WRITE_BACK.md](docs/architecture/WRITE_BACK.md), [EDITS.md](docs/admin/EDITS.md), tutorial 24, off by default):
+- **Write-back** ([WRITE_BACK.md](docs/architecture/WRITE_BACK.md), [EDITS.md](docs/guides/WRITE_BACK_GUIDE.md#for-administrators-write-back-is-off-as-shipped), tutorial 24, off by default):
   forms save through an edit log in the Drishti database, with four-eyes approval, a cluster mode, JDBC writes through an outbox, and
   reactive recomputes and live updates after each change.
 - **Branding from configuration:** the product name, owner, copyright and notices come from configuration only; guard tests.
@@ -240,7 +240,7 @@ Everything since 2.6.7, including the patches pushed to main without a tag.
   - **Refresh and freshness:** `refresh:` per panel or screen, with pause, resume and interval per person and Pause all; every panel says
     "updated N s ago", marks stale data and names a source that is not answering.
   - **Layout:** named areas on a 12-column grid, splits, tabs, sections, a sticky header, phone order; `user-can-arrange` per reader.
-  - **Forms** ([SUTRA_FORMS_GUIDE.md](docs/guides/SUTRA_FORMS_GUIDE.md)): edit beside a table, in its cells, or New in a guided drawer;
+  - **Forms** ([SUTRA_FORMS_GUIDE.md](docs/guides/WRITE_BACK_GUIDE.md)): edit beside a table, in its cells, or New in a guided drawer;
     money, date-time and linked-record fields (live server search), rules, computed defaults, masks and roles; **drafts only** until
     2.8.0's write-back.
   - **One server per screen** on a cluster; "your selections were reset" in words when a server goes away.
@@ -267,7 +267,7 @@ Everything since 2.6.7, including the patches pushed to main without a tag.
 *2026-10-21.* **BI runs: every heavy question becomes a visible, shareable run; chart any table; Delta and Iceberg side by side.**
 2.6.7 also carries 2.6.6, the QA release that was never tagged on its own (see below).
 
-- **BI runs** ([BI_RUNS.md](docs/architecture/BI_RUNS.md), [BI_RUNS_GUIDE.md](docs/guides/BI_RUNS_GUIDE.md)):
+- **BI runs** ([BI_RUNS.md](docs/architecture/BI_RUNS.md), [BI_RUNS_GUIDE.md](docs/guides/BI_GUIDE.md#28-background-runs-long-bi-questions)):
   - **Planned before it runs:** a planner sizes every question from metadata only (Delta's row counts, Iceberg's manifests, built
     layers; tested to read no data). A cheap question answers at once; a heavy one becomes a run; a very heavy one asks to confirm; an
     impossible one is refused before anything runs. Report visuals, MQ, SQL and statements all take `Prefer: respond-async`; without it
@@ -336,7 +336,7 @@ known bugs fixed.** (Wave D of [BI_DESIGN.md](docs/architecture/BI_DESIGN.md); t
 - **Paginated reports and statements:** a report page with `layout: statement` is paper: page-exact PDF (written by the
   server) and Excel set to print, headers and footers with tokens, page breaks, repeated column titles, groups kept
   together, and bursting through subscriptions, one statement per recipient, masked as them. The statement designer
-  (Format → Layout → statement, the Paper tab) previews page by page ([STATEMENTS.md](docs/guides/STATEMENTS.md), tutorial 20).
+  (Format → Layout → statement, the Paper tab) previews page by page ([STATEMENTS.md](docs/guides/REPORTS.md), tutorial 20).
 - **Field parameters in a report's wells:** a reader's slicer switches which field or measure a visual draws.
 - **Apache Cassandra connector** (`cassandra`): Cassandra 4 and 5, ScyllaDB, Astra; a day appears whole or not at all
   ([CASSANDRA_CONNECTOR.md](docs/connectors/CASSANDRA_CONNECTOR.md)).
@@ -459,7 +459,7 @@ demo you can run from a fresh clone in minutes.** (Wave B of [BI_DESIGN.md](docs
   2026-10-18) that `lake demo` builds into the lake. World economy data was already offline.
 - **Ids are text everywhere:** a numeric `TRADE_ID` in a file is read as its exact text; ids may hold letters, dashes and
   underscores; nothing expects a prefix. Older lakes with numeric id columns still read.
-- **[How to QA in Windows Environment using Custom Data](docs/guides/QA_ON_WINDOWS_WITH_CUSTOM_DATA.md):** an offline
+- **[How to QA in Windows Environment using Custom Data](docs/qa/windows-custom-data.md):** an offline
   Windows demo with your own ENDUR files replacing the synthetic ENDUR trades, with screenshots; a *Load ENDUR file into
   the lake* run configuration; every Python run configuration uses the project interpreter (works on Windows).
 - **Security fix:** field masks match whatever the case or naming style (a camelCase mask masks the UPPER_SNAKE field);
@@ -625,7 +625,7 @@ embed reports need the `embed:report` scope and `report:<id>` (or `report:*`) in
   badges, certification revoked when a dataset change breaks what it certified; lineage and "what breaks if"; a publish
   that breaks published reports is refused unless a BI admin forces it; BI bundles between environments (dry run first,
   all or nothing, boards bring their reports and datasets); every step audited.
-- **Streaming BI (Rūpaka phase 5)** (docs/guides/BOARDS.md, REPORTS.md): live dataset tables kept in memory and updated by
+- **Streaming BI (Rūpaka phase 5)** (docs/guides/REPORTS.md, REPORTS.md): live dataset tables kept in memory and updated by
   key, live visuals redrawn in place (pause, resume, stale and disconnected states), Perspective grid and pivot under a
   narrow policy on the pages that hold them, boards with kiosk mode. Samples: Live trading desk, Live exposure, Desk wall.
 - **Outbound HTTP proxy** (docs/connectors/PROXY.md) for REST, feeds, news, Yahoo Finance, S3, Delta and Iceberg on S3,

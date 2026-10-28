@@ -930,7 +930,7 @@ total rows: 300
 drops a cache, and grouped pages kept on disk are rebuilt from the lake at once: Admin → Caches from the terminal),
 `server packs list|load|unload|on|off|deploy|history|rollback|datasource` (Admin → Packs from the terminal), `server commands list|off|on|history`
 (the administrator's switches of Functions, `FUNC`, from the terminal: commands, or with `--pack` packs, on or off for everyone with `--reason`; an administrator, and as the
-admin endpoints are never for a personal token, it runs where sign-in is off (`--user`); [COMMANDS.md](../admin/COMMANDS.md))
+admin endpoints are never for a personal token, it runs where sign-in is off (`--user`); [USER_MANAGEMENT.md (Functions)](../admin/USER_MANAGEMENT.md#functions-func-every-command-and-turning-one-on-or-off))
 and `server smoke` (opens sample views of every kind on two dates; exit `1` on any failure, the check after a deploy).
 `doctor` checks this machine without changing anything (paths shortened):
 
@@ -1081,7 +1081,7 @@ and `--async [--wait 2s] [--yes]` on `bi mq` and `bi sql`, which send `Prefer: r
 `bi runs share RUN --to WHO` prints each recipient's mode (sees the same, re-masked, recomputed as them; a refusal on stderr) and `unshare
 RUN WHO...` removes recipients; `bi runs schedule RUN "weekly mon 08:00"` and `schedules [list|edit ID WHEN|disable|enable|delete ID]`
 use the subscription grammar; `bi runs export RUN --format csv|xlsx --out FILE`; `bi runs suggestions [--model M] [accept|dismiss ID]`
-is the bi-admin's list of rollup suggestions. The guide with output: [BI_RUNS_GUIDE.md](BI_RUNS_GUIDE.md#on-the-command-line).
+is the bi-admin's list of rollup suggestions. The guide with output: [BI_GUIDE.md section 28](BI_GUIDE.md#on-the-command-line).
 
 ```bash
 drishti-console/.venv/bin/python tools/drishti.py bi runs submit --mq year.mq.json --yes --wait 0
@@ -1152,7 +1152,7 @@ drishti-console/.venv/bin/python tools/drishti.py compute event write-back chg-7
 ### 5.10a change and edits
 
 Write-back from the terminal (2.8.0; `tools/changecli.py`, [WRITE_BACK.md](../architecture/WRITE_BACK.md),
-[SUTRA_FORMS_GUIDE.md section 4a](SUTRA_FORMS_GUIDE.md#4a-submitting-a-change-280-write-back)), as the caller's token (it needs the `edit` scope):
+[WRITE_BACK_GUIDE.md section 4a](WRITE_BACK_GUIDE.md#4a-submitting-a-change-280-write-back)), as the caller's token (it needs the `edit` scope):
 - `change propose --kind KIND --id ID --set FIELD=VALUE [...] [--from FIELD=VALUE ...] [--reason TEXT] [--sutra S --panel P] [--date YYYY-MM-DD] [--override]`
   proposes a change to a record's fields: the same request as a form's Submit. A field must be editable by a Sutra's form with `save:`;
   `--from` is the value you saw (a field that moved since is conflicted, never written over).
@@ -1377,8 +1377,8 @@ ExecStart=/opt/drishti/drishti-console/.venv/bin/python tools/drishti.py lake ma
 | `tools/packgen/pack_from_jsonl.py` | the engine of `drishti.py pack new`: a complete pack from a folder of JSON Lines |
 | `tools/contracts.py` | the data contract of every command (`drishti.py contract`, [5.11](#511-contract)): drafts one from a pack and its data, checks them all, writes `docs/contracts/packs`; the schema `tools/contracts.schema.json` and the product owner's decisions `tools/contracts.policy.yaml` beside it |
 | `tools/knowledge.py` | the Knowledge pages' glossaries (`docs/knowledge/`): writes each page's terms and the home's A to Z from `docs/knowledge/glossary.yaml`; `--check` fails when a page differs or the glossary is invalid (`tools/test_knowledge_pages.py`) |
-| `tools/packgen/readme.py` | a pack's `README.md` (the README standard, [PACK_GENERATORS_GUIDE.md](PACK_GENERATORS_GUIDE.md#the-readme-standard)) for a pack without a generator of its own; `--all --check` fails on any pack whose README is missing, stale or breaks the standard |
-| `tools/packgen/common/guide_data.py` | every pack guide's *Data contracts* and *Data retrieval* sections (from the contracts and `data_retrieval.yaml`; the pack generators call it); run alone it writes compute-demo's guide and the generated block of the news-and-markets guide; `--check` fails when they are stale ([PACK_GENERATORS_GUIDE.md](PACK_GENERATORS_GUIDE.md#the-readme-standard)) |
+| `tools/packgen/readme.py` | a pack's `README.md` (the README standard, [PACK_DEVELOPER_GUIDE.md Part IV](PACK_DEVELOPER_GUIDE.md#the-readme-standard)) for a pack without a generator of its own; `--all --check` fails on any pack whose README is missing, stale or breaks the standard |
+| `tools/packgen/common/guide_data.py` | every pack guide's *Data contracts* and *Data retrieval* sections (from the contracts and `data_retrieval.yaml`; the pack generators call it); run alone it writes compute-demo's guide and the generated block of the news-and-markets guide; `--check` fails when they are stale ([PACK_DEVELOPER_GUIDE.md Part IV](PACK_DEVELOPER_GUIDE.md#the-readme-standard)) |
 | `tools/connector_readmes.py` | the settings tables of every connector README (from `plugin-settings.yaml`) and the file tables of the template folders' READMEs; `--check` fails when one is stale ([CONNECTOR_DEVELOPER_GUIDE.md](../connectors/CONNECTOR_DEVELOPER_GUIDE.md#the-readme-standard)) |
 | `tools/packgen/banking/make_data.py`, `make_packs.py`, `make_sutras.py`, `make_docs.py` | the banking packs: their sample data and lake, manifests, Sutras and guides, from one taxonomy |
 | `tools/packgen/climate/make.py`, `liquidity/make.py`, `oprisk/make.py`, `retail/make.py` | the climate-risk, liquidity-risk, operational-risk and retail-banking packs, built on the banking data |
@@ -1504,7 +1504,7 @@ template, restore an earlier version. The terminal twin is `drishti.py connector
 ### 10.4 Admin → Artifacts (`/admin/artifacts`)
 
 Install and uninstall packs, connectors and BI files safely: what depends on what, the impact before a change, a cascade that takes
-the dependants along only when confirmed by name, and the uninstalled files kept. Guide: [ARTIFACTS.md](../admin/ARTIFACTS.md).
+the dependants along only when confirmed by name, and the uninstalled files kept. Guide: [OPERATIONALISING.md section 18](OPERATIONALISING.md#18-admin--artifacts-install-and-uninstall-safely).
 
 ### 10.5 Admin → BI (`/admin/bi`) and the migration
 

@@ -318,7 +318,7 @@ its own type, and nothing says "live" because the dataset does:
 ## Step 4 · A wall for the desk: a board
 
 A **board** puts the visuals of several reports on one screen. Since 2.4.0 a board is a **report whose pages have `layout: board`**: its tiles are visuals of other
-reports, and it may hold its own visuals too ([BOARDS.md](../guides/BOARDS.md)). Open **Catalogue → Desk wall** (`/bi/r/file:report:desk-wall`; the 2.3 address
+reports, and it may hold its own visuals too ([REPORTS.md section 23](../guides/REPORTS.md#23-boards-report-pages-of-live-tiles)). Open **Catalogue → Desk wall** (`/bi/r/file:report:desk-wall`; the 2.3 address
 `/bi/b/file:board:desk-wall` opens it too).
 
 ![The Desk wall: tiles from the trading desk report, two of them outlined amber](img/t12/08-board.jpg)
@@ -340,7 +340,7 @@ pages:
 ```
 
 A tile is a visual of a report (the report supplies the data, **as the person looking**) placed on a 12-column grid, with an optional `alert`: amber when the `warn` condition holds, red when `crit` does, and the footer says the word as well, so colour is never the only signal. Net MTM below 0 is a warning, below -1 billion critical (Losses: below -1.5 billion, below -2.5 billion);
-the live net MTM here (`-310,188,982`) is below 0 but above -1 billion, hence amber, and Losses (`-1,789,927,256`) likewise. A tile that turns red can also **tell people** (`notify:` on its alert; [BOARDS.md](../guides/BOARDS.md) section 4). The second page is another report over another live dataset:
+the live net MTM here (`-310,188,982`) is below 0 but above -1 billion, hence amber, and Losses (`-1,789,927,256`) likewise. A tile that turns red can also **tell people** (`notify:` on its alert; [REPORTS.md section 23](../guides/REPORTS.md#23-boards-report-pages-of-live-tiles) section 4). The second page is another report over another live dataset:
 
 ![The second page: Counterparty exposure tiles](img/t12/09-board-exposure.jpg)
 
@@ -355,7 +355,7 @@ file:report:desk-wall report    promoted  published v1   Desk wall  (Shipped con
 ```
 
 (`--body` prints its YAML: [config/bi/reports/desk-wall.report.yaml](../../config/bi/reports/desk-wall.report.yaml).) A board file of 2.3 (`board:` with `tiles:`) is read as such a report until you convert it:
-`python3 tools/drishti.py bi migrate --boards config/bi/boards --write` writes `config/bi/reports/<name>.report.yaml` ([BOARDS.md section 12](../guides/BOARDS.md#12-from-a-23-board-to-a-board-page)).
+`python3 tools/drishti.py bi migrate --boards config/bi/boards --write` writes `config/bi/reports/<name>.report.yaml` ([REPORTS.md section 12](../guides/REPORTS.md#2312-from-a-23-board-to-a-board-page)).
 
 ## Step 5 · Kiosk mode
 
@@ -522,7 +522,7 @@ measure of the model (`Desk P&L volatility: { python: desk-pnl-volatility, input
 ## Next steps
 
 - [Tutorial 13](13-govern-bi.md): publish with a review, certify, and see what a change would break.
-- [BOARDS.md](../guides/BOARDS.md): every tile option, alerts on tiles and notifications, the API. [DATASETS.md section 7.1](../guides/DATASETS.md#71-live-tables-phase-5) is the live-table reference.
+- [REPORTS.md section 23](../guides/REPORTS.md#23-boards-report-pages-of-live-tiles): every tile option, alerts on tiles and notifications, the API. [DATASETS.md section 7.1](../guides/DATASETS.md#71-live-tables-phase-5) is the live-table reference.
 - [DEMO_CONNECTOR.md](../connectors/DEMO_CONNECTOR.md) and [DEMO_DATA.md](../connectors/DEMO_DATA.md) say exactly what ticks and how.
 
 ## If something goes wrong

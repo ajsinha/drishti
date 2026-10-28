@@ -58,8 +58,8 @@ strip, the tables, searches and columns alike.
 | A figure everyone sees on a view, every time | a panel in the kind's Sutra ([Sutra developer guide](SUTRA_DEVELOPER_GUIDE.md)): computed on the server, cached, live |
 | Find entities by value (`TRD where mtm > 1m`) | [search](USER_GUIDE.md#search-by-value), on the command line |
 | Be told when a figure crosses a line | an [alert](USER_GUIDE.md#alerts): the server checks it on every change |
-| The same search as a file every morning | a [scheduled report](SCHEDULED_REPORTS.md#scheduled-reports) |
-| A long notebook, a model you keep in git, millions of rows, your own libraries | Python on your machine with a personal API token ([CLIENTS.md](CLIENTS.md)) |
+| The same search as a file every morning | a [scheduled report](DISTRIBUTION.md#scheduled-reports) |
+| A long notebook, a model you keep in git, millions of rows, your own libraries | Python on your machine with a personal API token ([API_GUIDE.md (clients)](API_GUIDE.md#clients-scripts-notebooks-and-excel)) |
 
 Calc is for questions that are yours, now, about the data in front of you. It is not a batch engine: it runs in one
 browser tab, with that tab's memory, and it reads what you could read by clicking (see [Limits](#14-limits)).
@@ -361,7 +361,7 @@ computes.
 The shipped ones are written by `tools/packgen/banking/make_packs.py` (the generator kept its name from the banking packs it began with) from their sources,
 `tools/packgen/banking/snippets/<pack>/<name>.py` (read by `calc_snippets.py`; never edit the generated
 `config/packs/<pack>/python/` files: change the source and run the generator, see
-[PACK_DEVELOPER_GUIDE.md](PACK_GENERATORS_GUIDE.md#how-the-shipped-packs-are-generated)). A source starts, after its copyright header, with
+[PACK_DEVELOPER_GUIDE.md](PACK_DEVELOPER_GUIDE.md#how-the-shipped-packs-are-generated)). A source starts, after its copyright header, with
 
 ```python
 # title: Key-rate DV01 by bump and reprice
@@ -527,7 +527,7 @@ Speed beside native CPython 3.14 on the same machine (best of three):
 - **Data volume.** A read moves JSON from the server through the console to the page and into Python: about 13 bytes
   a value for `drishti.columns()` (10,000 rows × 5 fields: 646 KB). 250,000 rows × 5 fields is about 16 MB, and a few
   seconds. Ask for the fields you need, aggregate with a search where you can, and use a script with a token
-  ([CLIENTS.md](CLIENTS.md)) for millions of rows.
+  ([API_GUIDE.md (clients)](API_GUIDE.md#clients-scripts-notebooks-and-excel)) for millions of rows.
 - **Searches** return at most 1000 rows (`limit`), and read at most `drishti.search.max-scan` documents (20,000) when
   the source keeps no columns. `drishti.columns()` returns at most `drishti.calc.max-column-rows` (250,000).
 - **Output** is capped per run ([section 6](#6-output-print-show-chart-figures)).

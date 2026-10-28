@@ -110,7 +110,7 @@ reads position and equality deletes and answers *known at* from older snapshots.
 | `doc-disk-cache.reset-at` | string | `02:00` | Daily clearing time |
 | `doc-disk-cache.zone` | string | `America/New_York` | Zone of the daily clearing |
 | `id-map-disk.enabled` | bool | `true` | Each business date's id map written once per date's files and memory-mapped: no heap per id, kept across restarts and commits of other dates |
-| `id-map-disk.dir` | path | `<data dir>/cache/<connector>/idmaps` | Its folder |
+| `id-map-disk.dir` | path | `<data dir>/cache/<connector>/idmaps` | (2.9.5) each date's id map written once and memory-mapped, kept across restarts |
 | `id-map-mb` | int | `1024` | Id maps kept in the heap (MB) |
 | `doc-cache-mb` | int | `256` | Documents kept in the heap (MB) |
 | `columns-cache-mb` | int | `1024` | Promoted columns kept in the heap (MB) |
@@ -119,32 +119,32 @@ reads position and equality deletes and answers *known at* from older snapshots.
 | `table.*` | string |  | Per-kind table name under the namespace when it is not the kind's name (table.trade: trade_calypso) |
 | `engine` | one of native, library, auto | `native` | native: drishti-iceberg, no Hadoop (local disk and S3; Windows without winutils.exe; left to the default, a root it cannot reach is read by the library); library: Apache Iceberg Java over Hadoop (also Azure, Google Cloud Storage, HDFS); auto: native on Windows, library elsewhere. DRISHTI_ICEBERG_ENGINE sets it for every connector |
 | `metadata-location.*` | string |  | A table named by its metadata file, read-only (metadata-location.<kind>: s3://…/v12.metadata.json); native engine |
-| `relocate` | string |  | Read a table copied elsewhere: '<old prefix> -> <new prefix>; …' replaces the start of every path its metadata names (native engine) |
-| `vended-credentials` | boolean | `true` | Ask a REST catalog for each table's own S3 credentials (X-Iceberg-Access-Delegation); native engine |
+| `relocate` | string |  | `native`: `<old folder> -> <new folder>; …` reads a table copied elsewhere (an S3 table synced to a laptop, a folder moved after loading: Health gives the pair to copy, ICEBERG_CONNECTOR.md section 14). Each side is a plain folder (`/data/ice1`, `C:\lake` or `C:/lake`, `\\fs\share\lake`) or a URI (`file:/data/ice1`, `file:///C:/lake`, `s3://bucket/wh`; `s3a://` and `s3n://` are the same bucket): both are read into the `file:` form the metadata names its files in, so the plain form and the `file:` form are the same pair. A folder matches whole folders (`/data/ice1` is not `/data/ice10`). Quote the value in YAML when it holds a backslash: `relocate: 'C:\old -> D:\new'`. A pair that cannot be read fails the start, naming it. The library engine does not read it, and Health says so |
+| `vended-credentials` | boolean | `true` | `native`, `rest`: ask the catalog for each table's own S3 credentials (`X-Iceberg-Access-Delegation`), renewed before they expire |
 | `lz4-decoder` | one of safe, fast | `safe` | The LZ4 page decoder of the native engine: safe (pure Java) or fast (JNI when present) |
 | `hadoop.*` | string |  | Any Hadoop configuration property (hadoop.fs.s3a.connection.maximum) |
 | `catalog.*` | string |  | Any Iceberg catalog property (catalog.<property>) |
 | `warehouse` | string |  | REST catalog warehouse |
 | `credential` | string |  | REST catalog credential: ${ENV_VAR} or file:/path (secret: give `${ENV_VAR}` or `file:/path`, never the value) |
-| `root` | path |  | Warehouse root |
-| `uri` | string |  | Catalog URI |
-| `catalog` | string |  | Catalog name |
-| `namespace` | string |  | Namespace |
+| `root` | path |  | `hadoop`: the lake, a folder or `s3a://…` (`abfs://`, `gs://`, `hdfs://`) |
+| `uri` | string |  | `rest`: the catalog's URI |
+| `catalog` | string | `hadoop` | `hadoop` (path-based tables) or `rest` |
+| `namespace` | string |  | `rest`: the namespace (dots separate levels) |
 | `domain` | string |  | Domain |
-| `kinds` | list |  | Kinds to read |
+| `kinds` | list |  | Comma list of kinds to serve |
 | `mode.*` | string |  | Per-kind read mode |
-| `refresh-seconds` | int |  | Re-read interval |
-| `lookback-days` | int |  | Days of history to index |
-| `max-load-rows` | int |  | Rows to load at most |
-| `max-concurrent-reads` | int |  | Concurrent reads |
+| `refresh-seconds` | int | `10` | How often each table's current snapshot is checked |
+| `lookback-days` | int | `10` | How far back a snapshot read looks for the newest day on or before the date asked |
+| `max-load-rows` | int | `200000` | The largest day read whole for reverse lookups when a table has no promoted columns |
+| `max-concurrent-reads` | int | `16` | Single-document reads at once |
 | `max-queued-reads` | int | `4096` | Document reads that may wait for a slot; more are refused at once, and a read whose caller has gone leaves the queue |
-| `layout-cache` | int |  | Layout cache entries |
-| `reverse-index` | boolean |  | Build the reverse index |
-| `s3.endpoint` | string |  | S3-compatible endpoint |
-| `s3.region` | string |  | S3 region |
-| `s3.path-style` | boolean |  | Path-style S3 addressing |
-| `s3.access-key` | string |  | S3 access key: ${ENV_VAR} or file:/path (secret: give `${ENV_VAR}` or `file:/path`, never the value) |
-| `s3.secret-key` | string |  | S3 secret key: ${ENV_VAR} or file:/path (secret: give `${ENV_VAR}` or `file:/path`, never the value) |
+| `layout-cache` | int | `64` | Layout cache entries |
+| `reverse-index` | boolean | `true` | Build the reverse index |
+| `s3.endpoint` | string |  | Object storage for S3A and S3FileIO (`s3.path-style` defaults to `true` with an endpoint) |
+| `s3.region` | string |  | Object storage for S3A and S3FileIO (`s3.path-style` defaults to `true` with an endpoint) |
+| `s3.path-style` | boolean |  | Object storage for S3A and S3FileIO (`s3.path-style` defaults to `true` with an endpoint) |
+| `s3.access-key` | string |  | Object storage for S3A and S3FileIO (`s3.path-style` defaults to `true` with an endpoint) (secret: give `${ENV_VAR}` or `file:/path`, never the value) |
+| `s3.secret-key` | string |  | Object storage for S3A and S3FileIO (`s3.path-style` defaults to `true` with an endpoint) (secret: give `${ENV_VAR}` or `file:/path`, never the value) |
 | `index.days` | int | `1` | Business days of ids kept for type-ahead (1 = the newest day only) |
 | `index.max-memory` | string | `600MB` | Most memory the kept days may use; older days drop early above it (600MB, 2GB; 0 = no cap) |
 | `index.warm` | one of background, lazy | `background` | Build past days in the background after start, or on the first search for them |

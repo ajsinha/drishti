@@ -15,7 +15,7 @@
 -->
 # Reactive connectors: data that is computed when it is asked for, and again when the world changes
 
-Status: **R1 to R4 built (2.8.0, unreleased); R5 and R6 planned.** Designed with the product owner (2026-10-24). What is built, and
+Status: **R1 to R4 built and released in 2.8.0 (2026-10-26); R5 and R6 planned, in no release yet.** Designed with the product owner (2026-10-24). What is built, and
 where it differs from the design below, is in [section 21](#21-as-built-r1-to-r4); the reference for people who write and run reactive
 connectors is [REACTIVE_CONNECTOR.md](../connectors/REACTIVE_CONNECTOR.md) and [tutorial 23](../tutorials/23-computed-panels.md).
 Everything named below that section 21 does not list as built is **planned**. Related designs:

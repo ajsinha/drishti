@@ -6,7 +6,7 @@
 
 # CTRD, PTRD, LTRD, ITRD, the trading groupings: the data contract
 
-*Version 1.0 · 2026-10-25 · **Status:** proposed (PLANNED for 2.9.0) · Shared rules: [README.md](README.md) · Model contract:
+*Version 1.0 · 2026-10-25 · **Status:** proposed, not built (planned for 2.9.0, parked on 2026-10-26 when 2.9.0 shipped exposure instead; no release set) · Shared rules: [README.md](README.md) · Model contract:
 [VAR_GUIDE.md Part II](../guides/VAR_GUIDE.md#14-the-contract-at-a-glance) · Figures from [TVAL.md](TVAL.md) and [VAR_GUIDE.md Part II](../guides/VAR_GUIDE.md#14-the-contract-at-a-glance)*
 
 This is the planned data contract of the four **trading groupings**: the pages that list every trade with a counterparty (CTRD), in a

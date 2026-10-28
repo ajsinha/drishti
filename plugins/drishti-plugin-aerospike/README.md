@@ -81,9 +81,9 @@ read-only; it runs at most two scans at a time, to share the cluster's scan limi
 | `layout.*` | string |  | Per-kind promoted columns: layout.<kind>.columns: a, b, c |
 | `hosts` | string | `localhost:3000` | host:port list, comma separated |
 | `namespace` | string | `test` | Namespace |
-| `set` | string |  | Set |
+| `set` | string |  | The data domain's set (`<set>_ix` and `<set>_kinds` beside it) |
 | `domain` | string |  | Domain |
-| `kinds` | list |  | Kinds to read |
+| `kinds` | list |  | Comma list of kinds to serve |
 | `user` | string |  | User (leave out with auth-mode: pki) |
 | `password` | string |  | Password: ${ENV_VAR} or file:/path (secret: give `${ENV_VAR}` or `file:/path`, never the value) |
 | `auth-mode` | one of internal, external, pki |  | pki logs in with the client certificate (tls.cert-file + tls.key-file, or tls.keystore) |
@@ -93,7 +93,7 @@ read-only; it runs at most two scans at a time, to share the cluster's scan limi
 | `pool-idle-timeout` | duration | `10m` | An idle connection beyond pool-min-idle is closed after this long |
 | `pool-leak-threshold` | duration | `60s` | A connection borrowed (or a command in flight) longer than this is logged with the borrower's stack; 0 = off |
 | `statement-timeout` | duration | `5m` | Longest one statement or operation may run; 0 = none |
-| `connect-timeout-ms` | int |  | Connect timeout |
+| `connect-timeout-ms` | int | `3000` | Connect timeout |
 | `pool-size` | int | `20` | Most connections open at once (default: drishti.db.pool.size) |
 | `pool-min-idle` | int | `2` | Idle connections kept when quiet (default: drishti.db.pool.min-idle) |
 | `pool-idle-timeout` | duration | `10m` | An idle connection beyond pool-min-idle is closed after this long |
@@ -101,13 +101,13 @@ read-only; it runs at most two scans at a time, to share the cluster's scan limi
 | `pool-connection-timeout` | duration | `10s` | How long a caller waits for a free connection before failing |
 | `pool-leak-threshold` | duration | `60s` | A connection borrowed (or a command in flight) longer than this is logged with the borrower's stack; 0 = off |
 | `statement-timeout` | duration | `5m` | Longest one statement or operation may run; 0 = none |
-| `refresh-seconds` | int |  | Re-read interval |
-| `lookback-days` | int |  | Days of history to index |
-| `max-load-rows` | int |  | Rows to load at most |
-| `scan-threads` | int |  | Threads for scans |
-| `columns-cache-mb` | int |  | Column cache size |
-| `columns-seconds` | int |  | Column cache lifetime |
-| `reverse-index` | boolean |  | Build the reverse index |
+| `refresh-seconds` | int | `60` | How often the kinds' dates and the ids are re-read |
+| `lookback-days` | int | `10` | How far back a snapshot read looks for the newest day on or before the date asked |
+| `max-load-rows` | int | `200000` | The most documents scanned for a reverse lookup on a kind without promoted bins |
+| `scan-threads` | int | `8` | Partition ranges scanned at once when reading a day's columns |
+| `columns-cache-mb` | int | `1024` | Memory for days' column sets |
+| `columns-seconds` | int | `300` | How long a day's column set is kept before it is read again |
+| `reverse-index` | boolean | `true` | Build the reverse index |
 
 Every connector also takes `source-name`, `mode.*`, `domain`, `stale-after`, `union` (docs/connectors/CONNECTOR_FILES.md). It takes the shared `tls.*` settings (docs/connectors/TLS.md).
 <!-- settings:end -->

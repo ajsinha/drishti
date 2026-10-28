@@ -634,26 +634,7 @@ The file is applied to the running server within seconds, without a restart, and
 
 In the connector file's `settings:` (see [As a connector file](#as-a-connector-file)):
 
-| Setting | Default | Meaning |
-|---|---|---|
-| `uri` | none (required: without it the plugin stays idle; the `mongodb` profile sets `mongodb://localhost:27017`) | connection string: hosts, replica set, credentials, TLS, compressors |
-| `database` | `drishti` | the database |
-| `collection` | the connector's `domain`, else `drishti` | the domain's collection (`<collection>_columns` beside it) |
-| `read-preference` | `primary` | `primary`, `primaryPreferred`, `secondary`, `secondaryPreferred` or `nearest` |
-| `kinds` | what the collection holds | comma list of kinds to serve |
-| `mode.<kind>` | `snapshot` | `snapshot` or `effective` |
-| `lookback-days` | `10` | how far back a snapshot read looks for the newest day on or before the date asked |
-| `layout.<kind>.columns` | none | the promoted fields ([section 3](#3-declaring-which-fields-are-columns)) |
-| `refresh-seconds` | `60` | how often the kinds' dates and the ids are re-read |
-| `read-threads` | `8` | id ranges read at once when a day's columns are read |
-| `heavy-reads` | `2` | day reads at once per connector |
-| `batch-size` | `5000` | documents per cursor batch for day reads |
-| `columns-cache-mb` | `1024` | memory for days' column sets |
-| `columns-seconds` | `300` | after this a day's column set is re-read in the background (the last read is served meanwhile) |
-| `max-load-rows` | `200000` | the most documents read for a reverse lookup on a kind without promoted fields |
-| `reverse-index` | `true` | `false` turns reverse lookups off |
-| `connect-timeout-ms` | `3000` | connection and server-selection timeout |
-| `source-name` | `mongodb` (a connector: its name) | the name shown in provenance and Health |
+Every setting of `mongodb`, with its type, default and meaning, is in the plugin's generated README: [plugins/drishti-plugin-mongodb/README.md, Settings](../../plugins/drishti-plugin-mongodb/README.md#settings) (from the settings catalogue Admin → Connectors builds its form from). The shared `tls.*` settings are in [TLS.md](TLS.md).
 
 Loader options (`tools/load-mongodb.sh` and `MongoLoader`): `--keep-days N`, `--ttl-days N`, `--doc-format string|bson`
 (`string`), `--batch N` (1000), `--in-flight N` (16), `--as-of yyyy-MM-dd` (today in the business zone), `--future-days N` (1), `--zone Z` (`DRISHTI_BUSINESS_ZONE`, else `America/New_York`), `--max-drop-share F` (0.5), `--force-drop`, `--trades N --days D` (the script only).

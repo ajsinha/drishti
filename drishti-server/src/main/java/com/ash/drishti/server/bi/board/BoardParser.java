@@ -30,7 +30,7 @@ import com.ash.drishti.server.dist.SubscriptionSchedule;
 import java.util.regex.Pattern;
 
 /**
- * Reads a board's YAML (docs/guides/BOARDS.md) into a {@link Board} and checks its structure; what a tile names inside its report is checked by
+ * Reads a board's YAML (docs/guides/REPORTS.md) into a {@link Board} and checks its structure; what a tile names inside its report is checked by
  * {@link com.ash.drishti.server.bi.board.BiBoardService}. Never throws for a bad document: the problems come back with their DRS code ({@code DRS-9052}, and
  * {@code DRS-9053} for what the grammar still reserves: {@code notifications} and {@code subscriptions}) and the path of the offending key.
  */

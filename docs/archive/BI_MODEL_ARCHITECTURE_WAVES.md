@@ -15,7 +15,7 @@
 -->
 # Rūpaka next: the wave plan W1 to W16 and its risks (2.2 to 3.0)
 
-> **Archived: replaced by [BI_DESIGN.md](../architecture/BI_DESIGN.md) section 12 (the waves A to I as planned and built).** These are sections 4 and 5 of [BI_MODEL_ARCHITECTURE.md](../architecture/BI_MODEL_ARCHITECTURE.md), agreed on 2026-10-12 and replaced soon after; kept as history because BI_MODEL_SPEC.md and the code still name the waves W1 to W16. The decisions D1 to D6 they served are current and stay in BI_MODEL_ARCHITECTURE.md.
+> **Archived: replaced by [BI_DESIGN.md](../architecture/BI_DESIGN.md) section 12 (the waves A to I as planned and built).** These are sections 4 and 5 of [BI_MODEL_ARCHITECTURE.md](BI_MODEL_ARCHITECTURE.md), agreed on 2026-10-12 and replaced soon after; kept as history because BI_MODEL_SPEC.md and the code still name the waves W1 to W16. The decisions D1 to D6 they served are current and stay in BI_MODEL_ARCHITECTURE.md.
 
 ## 4. Waves
 

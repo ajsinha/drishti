@@ -196,7 +196,7 @@ field, a `*_DATE` column a date field:
         - { id: maturity_date, label: Maturity, bind: MATURITY_DATE, type: date }
 ```
 
-Rules, money and linked-record fields, masks and roles are in [SUTRA_FORMS_GUIDE.md](../guides/SUTRA_FORMS_GUIDE.md). Saving keeps a
+Rules, money and linked-record fields, masks and roles are in [WRITE_BACK_GUIDE.md](../guides/WRITE_BACK_GUIDE.md). Saving keeps a
 **draft** for each person; nothing is written to the source system until write-back (2.8.0).
 
 **Command line.** Your drafts, checked again on the server with the same rules:
@@ -342,5 +342,5 @@ Your own version of the book's trades page (a linked record on a click, a refres
 | a part of the Describe line is red | the sentence beside it says why; the result says *Fix the red part to see the screen* until it reads |
 | a refresh interval faster than 5 s is not offered | the console's `views.refresh_min_seconds` (default 5) |
 | `DRS-2057` in `sutra lint` | an event or source reads a panel that does not exist (a renamed panel id) |
-| `DRS-2058` | the `form:` does not read: an unknown key or field type ([SUTRA_FORMS_GUIDE.md](../guides/SUTRA_FORMS_GUIDE.md)) |
+| `DRS-2058` | the `form:` does not read: an unknown key or field type ([WRITE_BACK_GUIDE.md](../guides/WRITE_BACK_GUIDE.md)) |
 | `DRS-2059` | the `layout:` names an area the picture does not have |

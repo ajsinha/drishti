@@ -15,7 +15,7 @@
 -->
 # GenUI: screens composed for an AI agent, bound to live data, streamed to another application
 
-Status: **design, not built.** Planned for **2.9.0** (wave I, AI, after write-back in 2.8.0; 2.8.0 until the re-order of 2026-10-21; see [BI_DESIGN.md §12.2](BI_DESIGN.md#122-the-three-waves)
+Status: **design, not built.** Not in a release yet: planned for 2.9.0 (wave I, AI) until 2026-10-25, then parked (2.9.0 to 2.9.5 shipped without it; the plan files AI and GenUI under 2.12.0; see [BI_DESIGN.md §12.2](BI_DESIGN.md#122-the-three-waves)
 and [IMPLEMENTATION_PLAN.md › Roadmap](IMPLEMENTATION_PLAN.md#roadmap)). Off by default when built.
 Names marked **(new)** do not exist in the code today; every other class, file and endpoint named here was checked
 against the repository on 2026-10-18.

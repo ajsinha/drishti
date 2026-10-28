@@ -12,11 +12,11 @@
 #
 # See the LICENSE file in the root of this repository for the full terms.
 
-"""Functions, FUNC, in a real browser (docs/admin/COMMANDS.md). As a user: only the commands that are on, no switches, Find and the pack
+"""Functions, FUNC, in a real browser (docs/admin/USER_MANAGEMENT.md). As a user: only the commands that are on, no switches, Find and the pack
 picker, a command opening with its example. As an administrator: the matrix, a change batched and undone, Review with what turning a command
 off blocks and a reason, Apply sending one batch, the history in Cluster; and the "not active" page of a command that is off. The stand-in
 server keeps the switches as the real one does. Runs Chromium through Playwright; skipped when Playwright or its Chromium is missing. The
-pictures of docs/admin/COMMANDS.md are made on a real stack over the demo lake by tools/docs/shots/functions.py, not here."""
+pictures of docs/admin/USER_MANAGEMENT.md are made on a real stack over the demo lake by tools/docs/shots/functions.py, not here."""
 import copy
 import socket
 import threading

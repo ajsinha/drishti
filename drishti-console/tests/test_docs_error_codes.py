@@ -14,8 +14,10 @@
 
 """The error-code lists in the docs match the code (DOC-09, DOC-11, DOC-12).
 
-API_GUIDE's table lists every code of drishti-common's ErrorCode and nothing the code lacks; TROUBLESHOOTING's table
-covers every code; RACHANA_REFERENCE's problem table lists every DRS-20xx code the Rachana parser can report.
+API_GUIDE's *Error code table* is the one table of every code (2.9.6 docs merge): every code of drishti-common's ErrorCode, the
+console's own and the Rachana parser's problem codes, with the HTTP status and the meaning, and nothing that nothing raises.
+TROUBLESHOOTING keeps the cause and the fix only for the codes that need them, and links the table. RACHANA_REFERENCE's problem
+table lists every DRS-20xx code the Rachana parser can report.
 """
 from __future__ import annotations
 
@@ -64,16 +66,18 @@ def _first_column_codes(section: str) -> set[str]:
     return codes
 
 
-def test_api_guide_lists_every_error_code_and_no_other():
-    documented = _first_column_codes(_section(_read("docs/guides/API_GUIDE.md"), "## Error code table"))
-    assert _server_codes() - documented == set(), "ErrorCode codes missing from API_GUIDE's table"
-    assert documented - _server_codes() == set(), "API_GUIDE's table lists codes ErrorCode does not have"
+def _api_table() -> set[str]:
+    return _first_column_codes(_section(_read("docs/guides/API_GUIDE.md"), "## Error code table"))
 
 
-def test_troubleshooting_covers_every_error_code():
-    covered = _first_column_codes(_section(_read("docs/guides/TROUBLESHOOTING.md"), "## Error codes"))
-    missing = (_server_codes() | CONSOLE_ONLY | _parser_codes()) - covered
-    assert not missing, f"TROUBLESHOOTING's error-code table lacks {sorted(missing)}"
+def test_api_guide_lists_every_error_code():
+    missing = (_server_codes() | CONSOLE_ONLY | _parser_codes()) - _api_table()
+    assert not missing, f"API_GUIDE's error code table lacks {sorted(missing)}"
+
+
+def test_troubleshooting_links_the_one_table():
+    section = _section(_read("docs/guides/TROUBLESHOOTING.md"), "## Error codes")
+    assert "API_GUIDE.md#error-code-table" in section, "TROUBLESHOOTING's error codes must link API_GUIDE's error code table"
 
 
 def test_rachana_reference_lists_every_problem_code_the_parser_reports():
@@ -96,8 +100,9 @@ def _raised_anywhere() -> set[str]:
     return found
 
 
-def test_troubleshooting_lists_no_code_that_nothing_raises():
-    """The other direction: a code in the table that no code can raise is a dead entry (DRS-3001 is documented as reserved)."""
-    listed = _first_column_codes(_section(_read("docs/guides/TROUBLESHOOTING.md"), "## Error codes"))
-    dead = listed - _raised_anywhere() - {"DRS-3001"}
-    assert not dead, f"TROUBLESHOOTING lists codes nothing raises: {sorted(dead)}"
+def test_the_tables_list_no_code_that_nothing_raises():
+    """The other direction: a code in a table that no code can raise is a dead entry (DRS-3001 is documented as reserved)."""
+    for rel, heading in (("docs/guides/API_GUIDE.md", "## Error code table"), ("docs/guides/TROUBLESHOOTING.md", "## Error codes")):
+        listed = _first_column_codes(_section(_read(rel), heading))
+        dead = listed - _raised_anywhere() - _server_codes() - {"DRS-3001"}
+        assert not dead, f"{rel} lists codes nothing raises: {sorted(dead)}"

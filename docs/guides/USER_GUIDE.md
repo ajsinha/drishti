@@ -72,7 +72,7 @@ centre → Domain packs*) has a *Finding things* section with the same commands 
 | Alerts | `/alerts` | Your alerts on numbers, your alert rules and recent alerts (also **Reports**, *My alerts*) |
 | Workspaces | `/w` | Several live views on one screen |
 | Inbox | `/inbox` | Views and comments sent to you ([Your inbox](#your-inbox)) |
-| Reports | `/reports` | Saved searches delivered as CSV on a schedule, and your subscriptions ([Scheduled reports](#scheduled-reports), [Export, and subscriptions](SCHEDULED_REPORTS.md#export-and-subscriptions)) |
+| Reports | `/reports` | Saved searches delivered as CSV on a schedule, and your subscriptions ([Scheduled reports](#scheduled-reports), [Export, and subscriptions](DISTRIBUTION.md#export-and-subscriptions)) |
 | BI | `/bi`, `/bi/catalogue`, `/bi/w/me`, `/bi/r/<id>`, `/bi/models`, `/bi/datasets`, `/bi/designer`, `/bi/explore`, `/bi/transform` | Rūpaka business intelligence, for people with the `bi` power: reports (a board is a report page; `/bi/b/<id>` opens it), BI Studio's designers, Analyse and the Transform editor ([BI_GUIDE.md](BI_GUIDE.md)) |
 | Python console | `/pyconsole` | Your own Python in the browser on a masked extract of a BI model; promote it to the server (BI rail, *Python console*; [ANALYSE.md](ANALYSE.md#16-the-browser-python-console)) |
 | Build | `/build`, `/build/new`, `/build/pack/new`, `/build/reviews` | Design layouts (Sutras) in the workbench, make a pack from schemas, approve proposed Sutras |
@@ -142,7 +142,7 @@ you are on is highlighted.
 
 | Menu | Column | Entries |
 |---|---|---|
-| **Views** | Look up | *Terminal* (`/t`), *Search & pick lists* (`/s`), *Forms* (`/forms`: the [forms home](QUERY_BY_FORM.md#the-forms-home), query by form), *Functions* (`/func`, also `FUNC <GO>`: every command you can use, what it does and an example; administrators switch commands on or off there, [COMMANDS.md](../admin/COMMANDS.md)), *Data map* (`/datamap`, also `DATAMAP <GO>`: every kind of data, how it joins and how much there is, [The data map](#the-data-map)), *Reports* (`/reports`: every scheduled report and subscription, with a box to find one, and links to your alerts and the BI reports) |
+| **Views** | Look up | *Terminal* (`/t`), *Search & pick lists* (`/s`), *Forms* (`/forms`: the [forms home](QUERY_BY_FORM.md#the-forms-home), query by form), *Functions* (`/func`, also `FUNC <GO>`: every command you can use, what it does and an example; administrators switch commands on or off there, [USER_MANAGEMENT.md (Functions)](../admin/USER_MANAGEMENT.md#functions-func-every-command-and-turning-one-on-or-off)), *Data map* (`/datamap`, also `DATAMAP <GO>`: every kind of data, how it joins and how much there is, [The data map](#the-data-map)), *Reports* (`/reports`: every scheduled report and subscription, with a box to find one, and links to your alerts and the BI reports) |
 | | Watch | *Workspaces* (`/w`), *Monitors* (`/m`), *Alerts* (`/alerts`) |
 | **BI** (people with the `bi` power) | Rupaka: business intelligence | *BI home* (`/bi`), *My workspace* (`/bi/w/me`), *Catalogue* (`/bi/catalogue`), then *Recent*: the three items you opened last. Administrators with `bi-admin` also see *BI settings* ([BI_GUIDE.md](BI_GUIDE.md)) |
 | **Build** | Create | *New screen* (`/build/new`), *New pack* (`/build/pack/new`: schema files and/or JSON Lines in, a pack to download or deploy out; [Schema to pack](SCHEMA_TO_PACK.md)), *My designs* (`/build`), *Examples* |
@@ -163,14 +163,14 @@ what it can reach ([BI_GUIDE.md](BI_GUIDE.md) section 14); **building one:** *De
 by desk, then by portfolio; it shows MTM, then notional), and the choice is yours alone, as any slicer's ([REPORTS.md section 21](REPORTS.md#21-field-parameters-in-a-well-260)).
 A report may also have **statement pages**: paper, page by page, with a header and footer, page numbers and a period, downloaded as PDF or
 Excel made as you (your masks and row rules), and sent by a subscription as one statement per recipient; the reference is
-[STATEMENTS.md](STATEMENTS.md), the walk-through [tutorial 20](../tutorials/20-statements-and-field-parameters.md).
+[REPORTS.md section 24](REPORTS.md#24-statements-paginated-reports-page-exact-one-per-reader), the walk-through [tutorial 20](../tutorials/20-statements-and-field-parameters.md).
 
 **On the right:** round tools, from left to right.
 
 | Tool | Looks like | What it does |
 |---|---|---|
 | Live | the round button right of the theme switcher | Your choice and this page's stream in one: green while live (glowing while ticks arrive, an amber ring while it reconnects, steady on a page without a stream), red with pause bars while paused or on a picked date. Hover to read both, for example *Live updates on — click to pause · Live, built 1.92 ms*. A click switches ([Business dates](#business-dates-live-or-a-day-in-the-past)) |
-| Alerts | a bell | Opens `/alerts`. A number on the bell counts alerts you have not seen ([Alerts](#alerts)), and BI runs that finished, failed or were started again (`BI RUNS <GO>` lists them: [BI_RUNS_GUIDE.md](BI_RUNS_GUIDE.md)) |
+| Alerts | a bell | Opens `/alerts`. A number on the bell counts alerts you have not seen ([Alerts](#alerts)), and BI runs that finished, failed or were started again (`BI RUNS <GO>` lists them: [BI_GUIDE.md section 28](BI_GUIDE.md#28-background-runs-long-bi-questions)) |
 | Packs | a box with a number | Appears when you may use more than one pack. The number is how many you have switched on; hover to read their names ([Domain packs](#domain-packs-choosing-what-you-see)) |
 | Theme | a palette | Ten themes ([Themes](#themes)) |
 | You | a round avatar with your initial and name | A menu: your name, desk and roles, a clock in your time zone (`NY` by default), **My account**, **Settings**, and **Sign out** when sign-in is on (when it is off, the menu says *Sign-in is off on this server* and links to how to turn it on) |
@@ -305,7 +305,7 @@ their name. They work in any case, and each has type-ahead.
 | Type | You get | More |
 |---|---|---|
 | `WHAT <GO>` | Knowledge, the home of the [Knowledge pages](#knowledge-what-the-words-mean): what the words of your data mean and how the data connects | `WHAT PFE <GO>`, `WHAT netting set <GO>`, `WHAT value at risk <GO>` open the term's glossary entry (its long name or a synonym works too, any case); other words (`WHAT collateral posted <GO>`) search the Knowledge pages. The type-ahead lists the terms as you type |
-| `FUNC <GO>` | Functions, `/func`: every command you can use, by pack, with what it does and an example ([COMMANDS.md](../admin/COMMANDS.md)) | `FUNC exposure <GO>` opens it filtered (every word must appear in a command's code, title, description or its pack); `FUNC trading` lists one pack's commands. Click a command to open it with its example, a pack to open its search form |
+| `FUNC <GO>` | Functions, `/func`: every command you can use, by pack, with what it does and an example ([USER_MANAGEMENT.md (Functions)](../admin/USER_MANAGEMENT.md#functions-func-every-command-and-turning-one-on-or-off)) | `FUNC exposure <GO>` opens it filtered (every word must appear in a command's code, title, description or its pack); `FUNC trading` lists one pack's commands. Click a command to open it with its example, a pack to open its search form |
 | `DATAMAP <GO>` | the [data map](#the-data-map), `/datamap`: every kind of data your packs hold, how much of it there is, and how the kinds join | `DATAMAP trade <GO>` opens it on one kind (its name, mnemonic or label: `DATAMAP CPTY`), `DATAMAP organisation` or `DATAMAP counterparty-risk` on one domain; other words fill its Find box |
 | `FORM <GO>` | the forms home, `/forms` | `FORM trading <GO>` opens the trading pack's search form, `FORM trading trade <GO>` its form for trades ([Search with a form](#search-with-a-form-form-pack)) |
 | `BI <GO>` | the BI home, `/bi` (only with the `bi` power; otherwise the terminal says what is missing) | `BI WORKSPACE`, `BI CATALOGUE`, `BI SETTINGS`, `BI <report-or-board>` ([BI_GUIDE.md](BI_GUIDE.md)) |
@@ -444,7 +444,7 @@ The number of suggestions is a server setting (`drishti.commands.suggest-limit`,
 | `DRS-4004 no trade has a field 'producttyp'; did you mean PRODUCT_TYPE, PRODUCT_GROUP?` | A pick list or search names a field the kind does not have (case does not matter, spelling does) | Use the name it suggests |
 | `DRS-4004 limit must be a whole number from 1 to 1000, not '0'` | `limit` outside its range | A number from 1 to 1000 |
 | `DRS-5002 <you> may not open trade-valuation entities` | Your roles, or the packs you have switched on, do not include that kind | Switch the pack on in the box menu; otherwise ask an administrator |
-| A page that says **FRTB is not active on this server**, *Off since 2026-10-24* | An administrator turned the command off for everyone (on Functions, `FUNC`, [COMMANDS.md](../admin/COMMANDS.md)). It is not active anywhere: typed, by its page, in search and type-ahead (it is not suggested), in exports and AI; a link to it on another page is struck through and says *not active*, and a panel that reads it says *not active (turned off by an administrator)* | Ask an administrator if you need it; an open page follows when it is turned on again |
+| A page that says **FRTB is not active on this server**, *Off since 2026-10-24* | An administrator turned the command off for everyone (on Functions, `FUNC`, [USER_MANAGEMENT.md (Functions)](../admin/USER_MANAGEMENT.md#functions-func-every-command-and-turning-one-on-or-off)). It is not active anywhere: typed, by its page, in search and type-ahead (it is not suggested), in exports and AI; a link to it on another page is struck through and says *not active*, and a panel that reads it says *not active (turned off by an administrator)* | Ask an administrator if you need it; an open page follows when it is turned on again |
 
 ### A pack at a glance
 
@@ -873,7 +873,7 @@ On a phone the legs become tabs that scroll along one line, the terms stack, and
 The same layout is what you get from **inference** for any document that holds lists inside a short list of records, even with no Sutra written
 for it ([Inference](../architecture/INFERENCE.md#the-rules)). To build such a screen see
 [Panels inside a tab](RACHANA_REFERENCE.md#panels-inside-a-tab) and
-[Modelling deep documents](PACK_MODELLING_GUIDE.md#modelling-deep-documents-legs-cashflows-and-fixings).
+[Modelling deep documents](PACK_DEVELOPER_GUIDE.md#modelling-deep-documents-legs-cashflows-and-fixings).
 
 ## Reading a view
 
@@ -1015,7 +1015,7 @@ are the reference. If it cannot be reached the box says "Ask is unavailable"; ev
 
 ### Ask the data, explain a number, describe a report (BI, when your administrator has turned AI on)
 
-In BI ([BI_AI.md](BI_AI.md)), a report page shows a box **Ask the data**: type "notional by desk" and you get a table, a chart that suits it and the query that was asked, answered from
+In BI ([BI_GUIDE.md section 29](BI_GUIDE.md#29-ai-in-bi-report-from-words-ask-the-data-explain-this-number)), a report page shows a box **Ask the data**: type "notional by desk" and you get a table, a chart that suits it and the query that was asked, answered from
 what *you* may see (the same rows and masks as the report). The light bulb in a visual's header **explains** its number: where it comes from and what it is made of. In the designer,
 **Describe a report** drafts a report from your words; you read it, use it and save it, or not. These are off unless your administrator switched them on; if you do not see the box and the bulb, they are off.
 
@@ -1056,8 +1056,8 @@ world-economy pack (`ECON ECON-USA`), in that pack's words:
 - The drawer is fetched the first time you open it, never with the page, so it does not slow a view down.
 - When a live update brings a newer generation of the data, an open drawer asks again (at most once in two seconds).
 - No text? A pack without an `about` entry for the kind still shows the other layers; the pack's author can add one
-  ([how](PACK_MODELLING_GUIDE.md#about-text-and-glossary); how it works inside is
-  [HOW_IT_FITS.md](../architecture/HOW_IT_FITS.md#39-about-this-page-end-to-end)).
+  ([how](PACK_DEVELOPER_GUIDE.md#about-text-and-glossary); how it works inside is
+  [HOW_IT_FITS.md](../architecture/CONTEXT_HELP.md#about-this-page-end-to-end)).
 - Hover hints on field labels and a help popover on each panel's `?` come with the glossary stage; today the panel `?`
   still opens that panel kind's page in this guide.
 - If the drawer says "could not be loaded", try again; the page itself is not affected. Error numbers are in
@@ -1185,14 +1185,14 @@ Newer screens (every pack screen is built from the same parts) can do more than 
 - **Editing a record.** Where a screen lets you, clicking a row opens a form beside the table, or a pencil on a column lets you edit
   in the cell, and **New …** opens a guided drawer. Fields you may not change say why; a wrong value is explained under its field.
   **Save draft** keeps a **draft** that only you see (*You have 2 drafts on this page* offers them again). The page asks before you
-  leave with changes not saved. The reference is [SUTRA_FORMS_GUIDE.md](SUTRA_FORMS_GUIDE.md).
+  leave with changes not saved. The reference is [WRITE_BACK_GUIDE.md](WRITE_BACK_GUIDE.md).
 - **Submitting a change (2.8.0 write-back).** Where editing is on, you hold the edit power and the form says where it goes (the book
   desk's trades do), **Submit…** opens a sheet: what you saw, what is there now and your change; where it goes (a correction kept beside
   the booking system's value, or an amendment sent to it); who approves (never you); what it recomputes; and the reason. After **Confirm**
   the sheet follows it: waiting for an approver, applied (everyone viewing the trade sees the new value at once, *How this view was built*
   says *Edited here*), or conflicted if the trade moved since you opened it (your draft is kept). Approvers decide in **Review → Changes**
   (Build → Govern → Changes). Someone else's change to the record you are viewing shows *Changed by … just now*.
-  The reference is [SUTRA_FORMS_GUIDE.md section 4a](SUTRA_FORMS_GUIDE.md#4a-submitting-a-change-280-write-back); a walk-through is
+  The reference is [WRITE_BACK_GUIDE.md section 4a](WRITE_BACK_GUIDE.md#4a-submitting-a-change-280-write-back); a walk-through is
   [tutorial 24](../tutorials/24-correct-a-trade-and-approve-it.md).
 - **Screens laid out on a grid.** A screen with named areas may have a split you drag (its position kept for you), areas shown as
   tabs and panels that fold. Where the screen allows it, you may drag panels to another place and resize them, for yourself;
@@ -1925,7 +1925,7 @@ one live connection.
 
 ## Scheduled reports
 
-A report is a search that runs on its own, on a schedule, and delivers its result as a CSV or JSON Lines file (**Format**); **Reports** in the Views menu lists them with your subscriptions. Export and subscriptions are in the same place. The reference is [SCHEDULED_REPORTS.md](SCHEDULED_REPORTS.md); the walk-through is [tutorial 9](../tutorials/09-reports.md).
+A report is a search that runs on its own, on a schedule, and delivers its result as a CSV or JSON Lines file (**Format**); **Reports** in the Views menu lists them with your subscriptions. Export and subscriptions are in the same place. The reference is [DISTRIBUTION.md section 0](DISTRIBUTION.md#0-scheduled-searches-and-the-reports-page); the walk-through is [tutorial 9](../tutorials/09-reports.md).
 
 ## Alerts
 
@@ -1977,7 +1977,6 @@ A pack may suggest rules for its kinds (`alerts:` in its `pack.yaml`; none of th
 Rules are kept with your account, and so are the alerts they fire: the newest 1,000 per user
 (`drishti.alerts.keep`) are kept in the identity database, so they are still there after a server restart. More in the
 [Monitors and alerts guide](#monitors).
-
 
 ### Alerts on numbers
 
@@ -2115,8 +2114,17 @@ server: the browser's cookie, or a copy of it, no longer signs anyone in. (Openi
 the server it was made on (it carries `?srv=…`). A server not shown in the list can still be reached with the link
 `/connect/<its id>` if you were given one.
 
-Servers that act as **one cluster** (Drishti\*net) are different: you sign in once and the console moves between them by itself; see
-[Several servers (Drishti\*net)](#several-servers-drishtinet).
+### Servers that act as one cluster (Drishti\*net)
+
+When your administrator runs several Drishti servers as one cluster, nothing changes for you: you sign in once, and every page and live view looks
+and works the same whichever server holds the data. If the server your console uses stops, the console moves to another by itself; the page you are
+on reloads its data, a live view reconnects, and you do not sign in again. A save made at the very moment a server stops says it did not save: save
+again. When the server that holds what you asked for is down, the page says so (`DRS-5052 ... cannot be reached now`) instead of showing nothing.
+A search covers every server's data; when one of them did not answer, the results say they are partial and name the server they are missing.
+A page that groups many records (a counterparty's trades, a book's P&L) counts the records of every server; if one did not answer, the page
+says it is partial and names the server.
+Your saved searches, layouts, pivots and workspaces follow you to whichever server you are on. Alerts and scheduled reports stay on the server they
+were made on (they act, and would act once per server).
 
 ## Your settings
 
@@ -2301,9 +2309,9 @@ between them without the menu.
 | Users | `/admin/users` | Create users; set roles and the packs each user may use; enable, disable, reset passwords |
 | Roles | `/admin/roles` | Define roles: the kinds each opens, and its powers |
 | Packs | `/admin/packs` | Switch a domain pack off or on for everyone; deploy an archive; see which connectors a pack reads through (**Data source**, read only) |
-| Artifacts | `/admin/artifacts` | Everything installed in one list (packs, connector files, shipped BI files): see what depends on each, **disable** it, **uninstall** it to an archive and **restore** it, install a BI file ([ARTIFACTS.md](../admin/ARTIFACTS.md)) |
+| Artifacts | `/admin/artifacts` | Everything installed in one list (packs, connector files, shipped BI files): see what depends on each, **disable** it, **uninstall** it to an archive and **restore** it, install a BI file ([OPERATIONALISING.md section 18](OPERATIONALISING.md#18-admin--artifacts-install-and-uninstall-safely)) |
 | Connectors | `/admin/connectors` | Where data comes from: one connector per YAML file in `config/connectors/`; create, edit, test, switch off and see which packs use each ([CONNECTOR_FILES.md](../connectors/CONNECTOR_FILES.md)) |
-| Tokens | `/admin/tokens` | Every personal API token (never its secret): its owner, its scopes (*read only* or what it may write), when it was last used (in the console's time zone, named), and revoking any of them ([CLIENTS.md](CLIENTS.md)) |
+| Tokens | `/admin/tokens` | Every personal API token (never its secret): its owner, its scopes (*read only* or what it may write), when it was last used (in the console's time zone, named), and revoking any of them ([API_GUIDE.md (clients)](API_GUIDE.md#clients-scripts-notebooks-and-excel)) |
 | Access | `/admin/access` | Who read which entity, filtered by user, action, kind, id and dates ([USER_MANAGEMENT.md](../admin/USER_MANAGEMENT.md)) |
 | AI | `/admin/ai` | The AI layer: off by default; providers, models, MCP servers and a test call ([AI_PROVIDERS.md](../architecture/AI_PROVIDERS.md)) |
 | Data loads | `/admin/loads` | What your ETL announced, what is due and what is late ([DATA_LOADS.md](DATA_LOADS.md)) |
@@ -2321,7 +2329,7 @@ origin; **/** focuses it). *Uninstall…* (here, and on the Packs, Connectors an
 it **moves** the folder or file to `data/uninstalled/<time>-<kind>-<name>/`; with dependants it is refused and **Disable instead** (keep it, switch it off) is the
 default; taking the dependants along needs the name typed. The **Uninstalled** tab restores an archive (refused if the name exists again, unless you replace it) or
 deletes it for good (name typed); archives older than 30 days are removed. *Install* uploads a BI file with a dry run first. Every action is audited, and no API
-token can do any of it. Full guide: [ARTIFACTS.md](../admin/ARTIFACTS.md).
+token can do any of it. Full guide: [OPERATIONALISING.md section 18](OPERATIONALISING.md#18-admin--artifacts-install-and-uninstall-safely).
 
 ### Admin → Roles: what a role may do
 
@@ -2519,14 +2527,3 @@ full-screen at the terminal.
 - **Live values** keep ticking.
 - The **workbench** is left out on phones; everything else, including help and administration, works.
 
-## Several servers (Drishti*net)
-
-When your administrator runs several Drishti servers as one cluster, nothing changes for you: you sign in once, and every page and live view looks
-and works the same whichever server holds the data. If the server your console uses stops, the console moves to another by itself; the page you are
-on reloads its data, a live view reconnects, and you do not sign in again. A save made at the very moment a server stops says it did not save: save
-again. When the server that holds what you asked for is down, the page says so (`DRS-5052 ... cannot be reached now`) instead of showing nothing.
-A search covers every server's data; when one of them did not answer, the results say they are partial and name the server they are missing.
-A page that groups many records (a counterparty's trades, a book's P&L) counts the records of every server; if one did not answer, the page
-says it is partial and names the server.
-Your saved searches, layouts, pivots and workspaces follow you to whichever server you are on. Alerts and scheduled reports stay on the server they
-were made on (they act, and would act once per server).

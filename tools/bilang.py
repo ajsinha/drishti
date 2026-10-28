@@ -75,7 +75,7 @@ def register(bi, srv, ctx) -> None:
     what = m.add_mutually_exclusive_group(required=True)
     what.add_argument("--expressions", action="store_true", help="convert the expressions to DEL v2")
     what.add_argument("--models", action="store_true", help="convert rachana: 1 datasets to datasets and models, and rebind their reports (BI_MODEL_SPEC.md 8.3)")
-    what.add_argument("--boards", action="store_true", help="convert 2.3 boards to reports whose pages have layout: board (2.4.0, docs/guides/BOARDS.md)")
+    what.add_argument("--boards", action="store_true", help="convert 2.3 boards to reports whose pages have layout: board (2.4.0, docs/guides/REPORTS.md)")
     m.add_argument("--write", action="store_true", help="FILEs: write the converted files")
     m.add_argument("--check", action="store_true", help="FILEs: change nothing; exit 1 when a file would change or cannot be converted")
     m.add_argument("--dry-run", action="store_true", help="change nothing, show what would change (stored items, and --models; for --expressions FILEs it is the default)")

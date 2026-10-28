@@ -629,23 +629,7 @@ The file is applied to the running server within seconds, without a restart, and
 
 In the connector file's `settings:` in table mode (see [As a connector file](#as-a-connector-file)):
 
-| Setting | Default | Meaning |
-|---|---|---|
-| `url`, `user`, `password` | empty | the connection; keep the password in the environment |
-| `table` | empty | `schema.table`; setting it turns table mode on |
-| `pool-size` | `20` | connections at most (the site default `drishti.db.pool.size`); at least `scan-threads` plus the concurrent reads you expect. All the [pool settings](#connection-pool) are read too |
-| `kinds` | the kinds the table holds | comma list of kinds to serve |
-| `mode.<kind>` | `snapshot` | `snapshot` or `effective` |
-| `lookback-days` | `10` | how far back a snapshot read looks for the newest day on or before the date asked |
-| `layout.<kind>.columns` | none | the promoted paths ([section 3](#3-declaring-the-promoted-columns)) |
-| `refresh-seconds` | `60` | how often the catalogue is read again |
-| `scan-threads` | `4` | id ranges of a day read at once |
-| `columns-cache-mb` | `1024` | memory for days of promoted columns |
-| `columns-seconds` | `300` | how long a day's columns are kept (a new load clears them at once) |
-| `max-load-rows` | `200000` | the most documents a reverse lookup reads for a kind without promoted link columns |
-| `reverse-index` | `true` | `false` turns reverse lookups off |
-| `kind-column`, `id-column`, `date-column`, `doc-column` | `kind`, `id`, `business_date`, `doc` | column names |
-| `source-name` | `jdbc` | the name shown in provenance and Health |
+Every setting of `jdbc`, with its type, default and meaning, is in the plugin's generated README: [plugins/drishti-plugin-jdbc/README.md, Settings](../../plugins/drishti-plugin-jdbc/README.md#settings) (from the settings catalogue Admin → Connectors builds its form from). The shared `tls.*` settings are in [TLS.md](TLS.md).
 
 Loader options (`PostgresLoader`, through `tools/load-postgres.sh`): `--user`, `--password` (default
 `DRISHTI_PG_USER`/`DRISHTI_PG_PASSWORD`, else `drishti`), `--writers` (8), `--batch` (2,000), `--recreate`,

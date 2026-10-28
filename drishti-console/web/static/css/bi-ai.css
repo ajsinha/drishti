@@ -13,7 +13,7 @@
  *
  * See the LICENSE file in the root of this repository for the full terms.
  */
-/* BI with AI (docs/guides/BI_AI.md): the question box under the report bar, its answer, the explain panel */
+/* BI with AI (docs/guides/BI_GUIDE.md): the question box under the report bar, its answer, the explain panel */
 .bi-ai-ask { margin: .5rem 0 1rem; padding: .6rem .8rem; border: 1px solid var(--d-border); border-radius: var(--d-radius); background: var(--d-surface); }
 .bi-ai-form { display: flex; flex-wrap: wrap; gap: .5rem; align-items: flex-end; }
 .bi-ai-form .bi-tool { flex: 1 1 18rem; }

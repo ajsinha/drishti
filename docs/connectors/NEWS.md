@@ -141,32 +141,13 @@ name the entity), `GET /api/v1/entities/news/NEWS-Federal_Reserve/raw`:
 
 All in the connector file's `settings:`. Durations are whole seconds.
 
+Every setting of `news`, with its type, default and meaning, is in the plugin's generated README: [plugins/drishti-plugin-news/README.md, Settings](../../plugins/drishti-plugin-news/README.md#settings) (from the settings catalogue Admin → Connectors builds its form from). The shared `tls.*` settings are in [TLS.md](TLS.md).
+
+Read beside them, and not in that table:
+
 | Setting | Default | Meaning |
 |---|---|---|
-| `base-url` | `https://news.google.com/rss/search` | the RSS search address |
-| `language` | `en` | edition language (`hl`) |
-| `country` | `US` | edition country (`gl`, and `ceid=<country>:<language>`) |
-| `query-template` | `{name}` | the search text; `{name}` is the entity name. `"{name}" when:7d` narrows to the last week |
-| `user-agent` | `Mozilla/5.0 (compatible; drishti-news-connector)` | the `User-Agent` header |
-| `id-prefix` | `NEWS-` | prefix of ids |
-| `kind` | `news` | the kind served |
-| `relevance` | `title` | `title`: the title must name the entity or an alias; `off`: keep everything |
-| `allow-sources` | none | comma list: only these publishers (case-insensitive) |
-| `deny-sources` | none | comma list: never these publishers |
 | `aliases.<Name_with_underscores>` | none | comma list of other names that count as naming the entity: `aliases.Federal_Reserve: Fed, FOMC` |
-| `max-items` | `10` | headlines per entity (1 to 100) |
-| `timeout-seconds` | `10` | one HTTP attempt (1 to 120) |
-| `cache-ttl-seconds` | `600` | how long an entity's headlines are reused; `0` never reuses |
-| `cache-max-entities` | `200` | names cached |
-| `max-bytes` | `2000000` | the largest response accepted |
-| `retries` | `2` | repeats of a failed request (0 to 10) |
-| `retry-initial` | `300ms` | wait before the first repeat |
-| `retry-max` | `3s` | longest wait |
-| `retry-factor` | `2` | growth of the wait |
-| `retry-jitter` | `0.2` | random spread of each wait, so many failing reads do not repeat together |
-| `source-name` | `news` | the name shown as the document's source |
-| `tls.*` | none | the shared [TLS settings](TLS.md), for an HTTPS mirror or proxy on a private CA |
-| `proxy.*` | none | the outbound HTTP proxy ([TLS.md (proxy)](TLS.md#outbound-http-proxy-for-connectors-ai-providers-and-mcp-servers)): `proxy.url`, `proxy.username`, `proxy.password` (`${ENV}`), `proxy.no-proxy`, `proxy.enabled`, or `proxy: none` |
 
 A bad value fails at start with the setting's name in the message. The settings form in Admin, Connectors lists these.
 

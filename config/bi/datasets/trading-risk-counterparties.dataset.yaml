@@ -15,7 +15,7 @@
 # STORED SAMPLE 2 of 3: the "real" example. A cross-pack model: trades (trading pack) joined to counterparties and desks and books
 # (core pack) and to netting sets (counterparty-risk pack), using the links the packs already declare.
 # It also shows a date hierarchy, a rollup, a row rule per role and masked columns.
-# Tutorial: docs/tutorials/../guides/BI_RECIPES.md, 4 and 8. Reference: docs/guides/DATASETS.md.
+# Worked examples: docs/guides/DATASETS.md section 17. Reference: docs/guides/DATASETS.md.
 
 # CONVERTED from datasets/trading-risk.dataset.yaml (rachana: 1) by the dataset-to-model converter (drishti.py bi migrate --models;
 # docs/architecture/BI_MODEL_SPEC.md section 8). The model keeps the old name and table names as aliases, so fields read as before.

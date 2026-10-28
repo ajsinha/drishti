@@ -31,7 +31,7 @@ The code is `plugins/drishti-plugin-demo` (`DemoSourcePlugin`, `DemoTicker`, `De
 [the walk-through at the end of this document](#walk-through-step-by-step) and
 [the configuration examples at the end of this document](#configuration-by-example). How the samples are generated, and how the same
 data is loaded into every real store, is in [DEMO_DATA.md](DEMO_DATA.md); the sample format from a pack author's side is in
-[PACK_DEVELOPER_GUIDE.md](../guides/PACK_MODELLING_GUIDE.md#samples).
+[PACK_DEVELOPER_GUIDE.md](../guides/PACK_DEVELOPER_GUIDE.md#samples).
 
 ## Contents
 

@@ -108,23 +108,7 @@ not JSON is an error, never a half-empty quote.
 
 ## 6. Settings
 
-| Setting | Default | Meaning |
-|---|---|---|
-| `base-url` | `https://query1.finance.yahoo.com/v8/finance/chart` | the endpoint, without the symbol |
-| `range` | `6mo` | history span: `1d 5d 1mo 3mo 6mo 1y 2y 5y 10y ytd max` |
-| `interval` | `1d` | bar size: `1m 2m 5m 15m 30m 60m 90m 1h 1d 5d 1wk 1mo 3mo` (Yahoo limits intraday bars to short ranges) |
-| `user-agent` | `Mozilla/5.0 (compatible; drishti-yfinance-connector)` | the `User-Agent` header; Yahoo refuses an empty one |
-| `id-prefix` | `QUOTE-` | prefix of ids |
-| `kind` | `quote` | the kind served |
-| `timeout-seconds` | `10` | one HTTP attempt (1 to 120) |
-| `cache-ttl-seconds` | `60` | how long a symbol's answer is reused; `0` never reuses |
-| `cache-max-symbols` | `100` | symbols cached (least recently used leave first) |
-| `max-bytes` | `2000000` | the largest response accepted |
-| `retries` | `2` | repeats of a failed request (0 to 10) |
-| `retry-initial`, `retry-max`, `retry-factor`, `retry-jitter` | `400ms`, `4s`, `2`, `0.2` | the shared backoff shape between repeats |
-| `source-name` | `yfinance` | the name shown as the document's source |
-| `tls.*` | none | the shared [TLS settings](TLS.md) |
-| `proxy.*` | none | the outbound HTTP proxy ([TLS.md (proxy)](TLS.md#outbound-http-proxy-for-connectors-ai-providers-and-mcp-servers)): `proxy.url`, `proxy.username`, `proxy.password` (`${ENV}`), `proxy.no-proxy`, `proxy.enabled`, or `proxy: none` |
+Every setting of `yfinance`, with its type, default and meaning, is in the plugin's generated README: [plugins/drishti-plugin-yfinance/README.md, Settings](../../plugins/drishti-plugin-yfinance/README.md#settings) (from the settings catalogue Admin → Connectors builds its form from). The shared `tls.*` settings are in [TLS.md](TLS.md).
 
 A bad value (a range or interval not in the lists, a non-HTTP address, a number out of range) fails at start with the setting's name.
 

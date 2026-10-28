@@ -24,7 +24,7 @@ import java.nio.file.Path;
 import java.util.List;
 import org.junit.jupiter.api.Test;
 
-/** The board parser (docs/guides/BOARDS.md): the shipped sample is clean, and every kind of mistake comes back with its DRS code and the path of the key. */
+/** The board parser (docs/guides/REPORTS.md): the shipped sample is clean, and every kind of mistake comes back with its DRS code and the path of the key. */
 class BoardParserTest {
 
     static final String HEAD = "board: wall\npages:\n  - id: p\n    tiles:\n";

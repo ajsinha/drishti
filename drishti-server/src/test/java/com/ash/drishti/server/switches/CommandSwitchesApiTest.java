@@ -33,7 +33,7 @@ import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.ResultActions;
 
 /**
- * Admin → Commands (docs/admin/COMMANDS.md) on one server: a command turned off answers "not active" ({@code 403 DRS-1016}) by its page,
+ * Admin → Commands (docs/admin/USER_MANAGEMENT.md) on one server: a command turned off answers "not active" ({@code 403 DRS-1016}) by its page,
  * the typed command, search and the API, leaves the type-ahead and the pack catalogue, and shows as "not active" where another page links
  * to it; turned on again, all of it is back. Packs switch through the same ledger, with the reason kept.
  */

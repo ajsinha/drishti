@@ -261,7 +261,7 @@ notes: |
 
 - `description` is one paragraph: what the layout shows and for which entities. The workbench and the catalogue show it, and so does the *About this page* drawer on every view this Sutra draws (it is
   shown as written, never evaluated). Text that has to change with the entity, such as "VAR-EQD is 70% of its limit", is written in the pack's `config/about.yaml`, not here ([About text and
-  glossary](PACK_MODELLING_GUIDE.md#about-text-and-glossary)).
+  glossary](PACK_DEVELOPER_GUIDE.md#about-text-and-glossary)).
 - `notes` is longer text for the next author and for reviewers: why the panels are in this order, what was tried and dropped. Write it as a YAML block (`notes: |` and the lines indented under it); the
   line breaks are kept. It is plain text, not Markdown.
 - A panel can have its own `description` too (`- { id: identity, kind: kv, description: Who they are, … }`) to say what that one panel is for.
@@ -1202,7 +1202,7 @@ panels:
 
 - **Fragments.** `use: name@N` with `with:` parameters; every fragment carries a `doc:` docstring (summary, parameters, emits,
   expects, examples, since), checked strictly (`DRS-2055`). The kit's catalogue is `GET /api/v1/ui-kit`; writing one is in
-  [PACK_DEVELOPER_GUIDE.md](PACK_MODELLING_GUIDE.md#fragments-and-docstrings) and [RACHANA_REFERENCE.md](RACHANA_REFERENCE.md#shared-panel-blocks-use).
+  [PACK_DEVELOPER_GUIDE.md](PACK_DEVELOPER_GUIDE.md#fragments-and-docstrings) and [RACHANA_REFERENCE.md](RACHANA_REFERENCE.md#shared-panel-blocks-use).
 - **Events and sources.** A panel `emits` an event (`open` on a row click, with a payload); another panel reads it as
   `@trades.open.ref` and, through its own `source:`, any enabled pack's kind (`$src`); until then it says its `waits:` text. A
   child reads its parent's event as `@parent.open.<field>`. Problems are `DRS-2057`; children nest at most three deep (`DRS-2056`),
@@ -1211,7 +1211,7 @@ panels:
   reader may pause it or slow it ([SUTRA_NEXT.md section 9](../architecture/SUTRA_NEXT.md#9-live-panels-refresh-control-and-freshness)).
 - **Placing panels.** `layout:` (section 4.8): areas, a split, tabs, sections, `user-can-arrange` (`DRS-2059`).
 - **Forms.** `form:` lets people edit a table's records beside it, in its cells or in a New drawer, kept as drafts:
-  [SUTRA_FORMS_GUIDE.md](SUTRA_FORMS_GUIDE.md) (`DRS-2058`).
+  [WRITE_BACK_GUIDE.md](WRITE_BACK_GUIDE.md) (`DRS-2058`).
 
 Every key is in [RACHANA_REFERENCE: Events, sources and children](RACHANA_REFERENCE.md#events-sources-and-children-sutra-next).
 You rarely need to write these by hand: the **Sutra designer** (section 16) writes them from plain choices, and
@@ -1270,7 +1270,7 @@ versions: [pivot-row-groups](examples/pivot-row-groups.md) and [tree-table](exam
 [`pivot`](RACHANA_REFERENCE.md#pivot)); do not confuse the **`pivot` panel kind** with the **`pivot:` option** that gives a table a user-driven Pivot tab ([the
 option](RACHANA_REFERENCE.md#pivot-a-pivot-tab-on-a-table-or-ladder)).
 
-For documents that are trees all the way down (legs holding cash flows holding resets), the [nested documents tutorial](NESTED_DOCUMENTS.md) shows how paths, tables and tabs go as deep as the data.
+For documents that are trees all the way down (legs holding cash flows holding resets), the [nested documents tutorial](PACK_DEVELOPER_GUIDE.md#sutras-over-deep-documents) shows how paths, tables and tabs go as deep as the data.
 
 ## 13. Dates, live data and imperfect data
 
@@ -1375,7 +1375,7 @@ The Sutra decides what matters; inference would still fill any panel of it that 
 ## 15. Testing: `expect.yaml`, `sutra lint|test|preview`, CI
 
 How to test a Sutra (`expect.yaml`, the `tests/<sutra>/` samples, `sutra lint`, `sutra test`, `sutra preview` and CI wiring) is in
-[SUTRA_TESTING_GUIDE.md](SUTRA_TESTING_GUIDE.md).
+[CLI_GUIDE.md, Testing Sutras](CLI_GUIDE.md#testing-sutras-expectyaml-the-tests-convention-and-ci), beside the rest of the `sutra` command.
 
 ## 16. The Build workbench
 
@@ -1435,7 +1435,7 @@ is malformed, duplicated, reads a missing parent or control, or has a default it
 
 - [RACHANA_REFERENCE.md](RACHANA_REFERENCE.md): every key, panel kind, format, function and problem code.
 - [PANELS.md](PANELS.md): the 22 panel kinds, one entry each, and [developing a panel kind](PANELS.md#developing-a-panel-kind) of your own.
-- [SUTRA_FORMS_GUIDE.md](SUTRA_FORMS_GUIDE.md) (forms: edit records beside a table, in its cells, in a drawer); [SCREEN_DESIGNER.md](SCREEN_DESIGNER.md), [Build tutorial](../tutorials/06-design-a-screen.md).
+- [WRITE_BACK_GUIDE.md](WRITE_BACK_GUIDE.md) (forms: edit records beside a table, in its cells, in a drawer); [SCREEN_DESIGNER.md](SCREEN_DESIGNER.md), [Build tutorial](../tutorials/06-design-a-screen.md).
 - [INFERENCE.md](../architecture/INFERENCE.md): what Drishti does without a Sutra, and how to start a Sutra from inference.
 - [LIVE.md](../architecture/LIVE.md): how a view you laid out keeps itself up to date.
 - [PACK_DEVELOPER_GUIDE.md](PACK_DEVELOPER_GUIDE.md): packaging Sutras with mnemonics, links, formats and samples.
