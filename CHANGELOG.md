@@ -32,8 +32,8 @@
   or `s3://` out, credentials only from the AWS chain; Windows with Java only. Design, decisions and the 2.3M estimate:
   [PARALLEL_LOADER.md](docs/architecture/PARALLEL_LOADER.md); every key: [TOOLS.md section 4.13](docs/guides/TOOLS.md#413-the-parallel-lake-loader-296).
 - **`drishti.py lake build --engine java`** runs the build in the loader (`tools/lake/javaload.py`; `--loader-set KEY=VALUE`; Delta or
-  Iceberg; `--from s3://` and a Delta `--lake s3://`); `--engine auto` picks it only for at least `--java-above-mb` (1024) MB of JSON Lines
-  in `overwrite-dates` mode, so the demo and small loads run as before. `lake build` also takes a POSIX lock beside its `flock`, so it
+  Iceberg; `--from s3://` and a Delta `--lake s3://`); the Python path stays the default: the loader runs only when asked (`--engine java`,
+  or `--java-above-mb N` for `--engine auto` to pick it for at least N MB of JSON Lines in `overwrite-dates` mode). `lake build` also takes a POSIX lock beside its `flock`, so it
   and a loader run on its own exclude each other.
 - **Measured** at the machine's limit, 10,000 positions x 510 scenarios (54 MB of JSON in eight gzip files) on 24 cores: 0.2 s warm
   (about 50,000 rows/s); a 24 MB budget and a `-Xmx192m` JVM give the identical table. 2.3M estimated at 1 to 5 minutes on a 16 to 32

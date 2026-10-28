@@ -280,7 +280,7 @@ python3 tools/drishti.py lake build --from data/testdata/market-risk/pnl-vector/
 `--engine auto` (the default) uses **Drishti's own Java writer** when it finds the server's exec jar with the writer in it, and the
 Python `deltalake` package otherwise; the first line of the output says which ran and why. `--engine drishti` or
 `--engine deltalake` insists on one. A third, `--engine java` (2.9.6), runs the whole build, reading included, in the parallel lake
-loader, for Delta and Iceberg alike; `auto` picks it for at least 1 GB of JSON Lines (section 4.13).
+loader, for Delta and Iceberg alike, only when you ask for it: the Python path stays the default (section 4.13).
 
 | | Drishti's writer (`drishti`) | `deltalake` (delta-rs) |
 |---|---|---|
@@ -664,8 +664,9 @@ python3 tools/drishti.py lake build --engine java --from /data/pv/2026-10-28/ --
     --loader-set memory.budget-mb=16384 --loader-set memory.spill-dir=/mnt/nvme/spill
 ```
 
-`--engine auto` (the default) uses the loader by itself only for at least `--java-above-mb` (1024) MB of JSON Lines in mode
-`overwrite-dates`; smaller loads, JSON arrays and the other modes go the Python way as before. `--loader-set KEY=VALUE` (repeatable)
+**The Python path is the default; the loader runs only when you ask for it** with `--engine java` (the same command line otherwise).
+`--engine auto` (the default) never picks the loader on its own; with `--java-above-mb N` it does, for at least N MB of JSON Lines in mode
+`overwrite-dates` (smaller loads, JSON arrays and the other modes go the Python way). `--loader-set KEY=VALUE` (repeatable)
 sets any key below; `DRISHTI_LAKE_LOADER_HEAP` is the JVM's heap (default `4g`); `--from s3://…` and a Delta `--lake s3://…` need
 `--engine java`.
 

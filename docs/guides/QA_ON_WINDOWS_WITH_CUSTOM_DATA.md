@@ -279,8 +279,9 @@ C:\Users\asinh09\IdeaProjects\drishti-orig\drishti-console\.venv\Scripts\python.
 into the same table with the Java loader (every core; the table is the same, so either may be used, and running both is safe: each
 replaces the date). Your file must be JSON Lines (one trade a line, as `.jsonl`); a file that is one JSON array goes the Python way only.
 
-- *Through `lake build`*: the line of step 2 with `--engine java` added at the end (in the configuration's *Parameters*, or the terminal
-  line). The last line then says `engine=java-loader`.
+- *Through `lake build`* (the same Python script): the line of step 2 with `--engine java` added at the end (in the configuration's
+  *Parameters*, or the terminal line). The last line then says `engine=java-loader`. **Without `--engine java` the script always uses
+  the Python loader**, however large the file: Java runs only when you ask for it.
 - *Java on its own* (PowerShell; Java only, no `.exe`, no Python). Save this as `C:\Users\asinh09\drishti-private\load-endur.yaml`
   (paths in single quotes keep their backslashes):
 

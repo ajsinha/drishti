@@ -42,8 +42,8 @@ local scratch folder (TMPDIR) and no run record is kept in the lake (deploy/aws/
 Engines (--engine): auto (default) uses Drishti's own Java writer in the server's exec jar when one is found (--jar, DRISHTI_JAR,
 drishti-server/target), else the Python deltalake package; the run says which ran and why. java (2.9.6): the whole build by the parallel
 lake loader in the same jar (tools/lake/javaload.py; Delta or Iceberg, every stage multi-threaded, memory bounded, input from a folder or
-s3://, a Delta lake in s3:// too; --loader-set KEY=VALUE for its settings). auto also picks it for a large load: every input JSON Lines,
-at least --java-above-mb (1024) of it, mode overwrite-dates.
+s3://, a Delta lake in s3:// too; --loader-set KEY=VALUE for its settings), only when asked: the Python path stays the default. With
+--java-above-mb N, auto also picks it for every input JSON Lines of at least N MB in mode overwrite-dates.
 
 For schedulers: exit 0 ok, 2 written with rejects (or the data-load signal failed), 1 failure (nothing was committed for the
 table that failed), 3 another run holds the table's lock (or lake maintain the lake's). Each run appends one line to <lake>/_drishti-lake/runs.log and writes a
@@ -621,8 +621,10 @@ def add_arguments(p: argparse.ArgumentParser) -> argparse.ArgumentParser:
                         "catalog.rest.signing-name=glue); repeatable")
     g.add_argument("--engine", choices=("auto", "drishti", "deltalake", "java"), default="auto",
                    help="auto (default): Drishti's Java writer when the server jar is found, else deltalake; java: the parallel lake loader "
-                        "(Delta or Iceberg, multi-threaded, memory bounded; auto picks it for --java-above-mb of JSON Lines)")
-    g.add_argument("--java-above-mb", type=int, default=1024, help="--engine auto: JSON Lines inputs of at least this many MB go to the parallel loader (default 1024)")
+                        "(Delta or Iceberg, multi-threaded, memory bounded; only when asked: the Python path is the default)")
+    g.add_argument("--java-above-mb", type=int, default=None,
+                   help="--engine auto: JSON Lines inputs of at least this many MB go to the parallel loader (not set: never; the Python path is "
+                        "the default, --engine java asks for the loader)")
     g.add_argument("--loader-set", action="append", metavar="KEY=VALUE",
                    help="--engine java: a setting of the parallel loader (memory.budget-mb=4096, memory.spill-dir=/mnt/ebs, parallel.writers=16, "
                         "target.layout.sort-by=[LEGAL_ENTITY,DESK,id]; docs/guides/TOOLS.md section 4.13); repeatable")
