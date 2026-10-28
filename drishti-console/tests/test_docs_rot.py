@@ -23,7 +23,8 @@ the console's own help guides. For each one the checks below compare a name the 
 * a repository path written in backticks exists;
 * a ``drishti.py`` command and its sub-commands exist in the CLI's argparse tree;
 * a ``DRISHTI_*`` environment variable, a ``drishti.*`` server setting and a console ``application.yaml`` key exist;
-* a ``DRS-NNNN`` code is one the code has, and every code the code has is in TROUBLESHOOTING or RACHANA_REFERENCE;
+* a ``DRS-NNNN`` code is one the code has, and every code the code has is in the one error-code table (API_GUIDE's *Error code
+  table*, status and meaning; TROUBLESHOOTING keeps cause and fix only where needed) or RACHANA_REFERENCE;
 * a command word typed with ``<GO>`` is a pack's mnemonic, a pack code or a reserved word;
 * a kind named as a kind (``the `trade` kind``, ``kind `trade```, ``--kind trade``, ``/v/trade/``) is a kind of some pack.
 
@@ -528,7 +529,7 @@ def _ranges(text: str) -> set[str]:
     return codes
 
 
-# Codes the documents name as reserved or retired on purpose (TROUBLESHOOTING says which).
+# Codes the documents name as reserved or retired on purpose (the error code table says which).
 RESERVED_CODES = {"DRS-3001"}
 # What a worked example adds: DEVELOPER_GUIDE section 5 builds an endpoint answering DRS-4005 and a drishti.notices setting.
 EXAMPLE_NAMES = {"docs/guides/DEVELOPER_GUIDE.md": {"DRS-4005", "drishti.notices.max-length"}}
@@ -544,8 +545,10 @@ def code_problems() -> list[str]:
         for m in _CODE.finditer(text):
             if m.group(0) not in known and m.group(0) not in EXAMPLE_NAMES.get(rel, ()):
                 bad.append(f"{rel}:{line_of(text, m.start())}: {m.group(0)} (not in the code)")
-    listed = _ranges(read("docs/guides/TROUBLESHOOTING.md")) | _ranges(read("docs/guides/RACHANA_REFERENCE.md"))
-    bad += [f"{c} is in the code and in neither TROUBLESHOOTING nor RACHANA_REFERENCE" for c in sorted(codes_in_code() - listed)]
+    api = read("docs/guides/API_GUIDE.md")
+    table = api.split("\n## Error code table", 1)[1].split("\n## ", 1)[0]
+    listed = _ranges(table) | _ranges(read("docs/guides/RACHANA_REFERENCE.md"))
+    bad += [f"{c} is in the code and neither in API_GUIDE's error code table nor in RACHANA_REFERENCE" for c in sorted(codes_in_code() - listed)]
     return bad
 
 

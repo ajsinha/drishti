@@ -106,6 +106,11 @@
   - The Python version stated once (GETTING_STARTED.md step 1: 3.13; the floor 3.10, untested); eleven packs in PACKS.md (compute-demo
     added); the compose service `server`; the runbook's `trade-endur`, `trade-calypso`, `trade-murex`; twelve Sutra examples; the
     committed test data about 138 MB; ANALYSE.md's sandbox link.
+- **One home per topic: the structural documentation merge** (the audit's steps 10 to 19, approved by the product owner: "too many
+  documents can cause confusion"). Content was moved, not lost; where two copies differed, the one that matches the code was kept.
+  - One error-code table: API_GUIDE.md *Error code table* has every code (ErrorCode's, the console's own and the Sutra problem codes)
+    with its HTTP status and meaning; TROUBLESHOOTING.md keeps a cause-and-fix row only for the 80 codes that need one and links the
+    table (it had a second, 258-row copy). `test_docs_error_codes.py` and `test_docs_rot.py` check the one table.
 
 ## 2.9.5 — Iceberg as a full alternative to Delta; VaR hierarchies by columns (limit letters); connector files that upgrade themselves safely (2026-10-28)
 
