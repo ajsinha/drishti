@@ -146,7 +146,7 @@ public final class ViewModelSchema {
         Map<String, Object> s = new LinkedHashMap<>();
         s.put("$schema", "https://json-schema.org/draft/2020-12/schema");
         s.put("$id", ID);
-        s.put("title", "Drishti ViewModel");
+        s.put("title", "ViewModel");
         s.put("description", "The JSON the server returns for every entity screen (GET /api/v1/views/{kind}/{id}, and the view event of its "
                 + "stream). $defs.Frame is a frame event of the stream. See docs/architecture/VIEWMODEL.md.");
         s.put("$ref", "#/$defs/ViewModel");

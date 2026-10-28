@@ -856,7 +856,7 @@ curl -s $B/viewmodel/schema | jq -c '."$defs".PanelView.allOf[0]'
 ```
 
 ```json
-{"title":"Drishti ViewModel","ref":"#/$defs/ViewModel","defs":55}
+{"title":"ViewModel","ref":"#/$defs/ViewModel","defs":55}
 {"if":{"required":["kind"],"properties":{"kind":{"const":"kv"}}},"then":{"properties":{"data":{"anyOf":[{"$ref":"#/$defs/Fields"},{"type":"null"}]}}}}
 ```
 
