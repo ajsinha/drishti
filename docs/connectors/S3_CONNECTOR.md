@@ -595,21 +595,7 @@ The file is applied to the running server within seconds, without a restart, and
 In the connector file's `settings:`, or for the plugin as itself
 (`drishti.sources.plugins.s3.settings`), as `S3SourcePlugin.start` reads them:
 
-| Setting | Default | Meaning |
-|---|---|---|
-| `bucket` | none (required) | the bucket; missing or blank fails the start with `s3 plugin needs settings.bucket` |
-| `prefix` | empty | the key prefix (e.g. `eod/`); a trailing `/` is added when missing |
-| `region` | `us-east-1` | the region used for requests and signing |
-| `endpoint` | empty | the URL of an S3-compatible store (MinIO, Ceph); empty means AWS |
-| `path-style` | `true` | path-style addressing; read only when `endpoint` is set |
-| `access-key` | empty | a static access key; blank means the AWS default credential chain |
-| `secret-key` | empty | the static secret key, used with `access-key` |
-| `rescan-seconds` | `60` | how often date folders, kinds and ids are listed (first listing at start) |
-| `cache-seconds` | `30` | how long a read, or a miss, is kept |
-| `cache-entries` | `10000` | the most reads and misses kept |
-| `lookback-days` | `10` | the oldest date folder used: the date asked minus this many calendar days |
-| `source-name` | `s3` (a named connector: its name) | the name in provenance and type-ahead subtitles |
-| `proxy.*` | none | the outbound HTTP proxy ([TLS.md (proxy)](TLS.md#outbound-http-proxy-for-connectors-ai-providers-and-mcp-servers)): `proxy.url`, `proxy.username`, `proxy.password` (`${ENV}`), `proxy.no-proxy`, `proxy.enabled`, or `proxy: none` |
+Every setting of `s3`, with its type, default and meaning, is in the plugin's generated README: [plugins/drishti-plugin-s3/README.md, Settings](../../plugins/drishti-plugin-s3/README.md#settings) (from the settings catalogue Admin → Connectors builds its form from). The shared `tls.*` settings are in [TLS.md](TLS.md).
 
 Connector keys (`plugin`, `enabled`, `kinds`) are as for every connector
 ([CONNECTOR_DEVELOPER_GUIDE.md, Configuration binding](CONNECTOR_DEVELOPER_GUIDE.md#configuration-binding)). Fixed in the code, not settings: connection timeout 5 s, socket

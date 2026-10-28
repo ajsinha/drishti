@@ -500,16 +500,13 @@ The file is applied to the running server within seconds, without a restart, and
 In the connector file's `settings:`, or for the plugin as itself
 (`drishti.sources.plugins.rest.settings`):
 
+Every setting of `rest`, with its type, default and meaning, is in the plugin's generated README: [plugins/drishti-plugin-rest/README.md, Settings](../../plugins/drishti-plugin-rest/README.md#settings) (from the settings catalogue Admin → Connectors builds its form from). The shared `tls.*` settings are in [TLS.md](TLS.md).
+
+Read beside them, and not in that table:
+
 | Setting | Default | Meaning |
 |---|---|---|
-| `base-url` | none (required) | the service root; trailing `/` are removed. Empty: the connector fails to start |
-| `path` | `/{kind}/{id}` | appended to `base-url`; `{kind}` and `{id}` are replaced by the URL-encoded kind and id |
-| `kinds` | empty (any kind) | comma list of kinds served; a connector's own `kinds:` list takes precedence |
-| `source-name` | `rest` (a named connector: its name) | the name in provenance and the error text |
-| `timeout-ms` | `2000` | connect timeout and request timeout, in milliseconds |
-| `generation-header` | `ETag` | response header holding a numeric version (quotes removed); otherwise the fetch time in milliseconds |
 | `header.<Name>` | none | a request header `<Name>` sent with every request |
-| `proxy.*` | none | the outbound HTTP proxy ([TLS.md (proxy)](TLS.md#outbound-http-proxy-for-connectors-ai-providers-and-mcp-servers)): `proxy.url`, `proxy.username`, `proxy.password` (`${ENV}`), `proxy.no-proxy`, `proxy.enabled`, or `proxy: none` |
 
 Server settings that bear on it: `drishti.sources.fetch-timeout` (5 s), `drishti.sources.routes.<kind>`,
 `drishti.graph.link-budget` (40 ms). Shipped environment variables for the plugin as itself: `DRISHTI_REST_ENABLED`

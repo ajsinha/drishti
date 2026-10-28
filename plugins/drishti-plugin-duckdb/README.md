@@ -71,19 +71,19 @@ DuckDB 1.5 or later wrote the file (the storage format).
 | Setting | Type | Default | Meaning |
 |---|---|---|---|
 | `layout.*` | string |  | Per-kind promoted columns: layout.<kind>.columns: a, b, c |
-| `path` | path |  | **Required.** DuckDB database file |
-| `table` | string |  | Table holding the entities |
-| `kinds` | list |  | Kinds to read |
-| `memory-limit` | string |  | DuckDB memory limit (e.g. 2GB) |
-| `threads` | int |  | DuckDB threads |
-| `pool-size` | int |  | Connections in the pool |
-| `refresh-seconds` | int |  | Re-read interval |
-| `lookback-days` | int |  | Days of history to index |
-| `max-load-rows` | int |  | Rows to load at most |
-| `scan-threads` | int |  | Threads for scans |
-| `columns-cache-mb` | int |  | Column cache size |
-| `columns-seconds` | int |  | Column cache lifetime |
-| `reverse-index` | boolean |  | Build the reverse index |
+| `path` | path |  | **Required.** The DuckDB file; connectors with the same path share one instance |
+| `table` | string |  | `schema.entities`, the data domain this connector serves |
+| `kinds` | list |  | Comma list of kinds to serve |
+| `memory-limit` | string | `1GB` | DuckDB's memory limit for the shared instance (native memory, outside the heap); the first connector on a file sets it |
+| `threads` | int |  | DuckDB's threads for the shared instance; the first connector on a file sets it |
+| `pool-size` | int | `4` | Reads of this connector at once; at least `scan-threads` plus the concurrent reads you expect |
+| `refresh-seconds` | int | `10` | How often the file is checked for a new load (one `stat` when nothing changed) |
+| `lookback-days` | int | `10` | How far back a snapshot read looks for the newest day on or before the date asked |
+| `max-load-rows` | int | `200000` | The most documents a reverse lookup reads for a kind without promoted link columns |
+| `scan-threads` | int | `4` | Id ranges of a day read at once |
+| `columns-cache-mb` | int | `1024` | Memory for days of promoted columns |
+| `columns-seconds` | int | `300` | How long a day's columns are kept (a new file clears them at once) |
+| `reverse-index` | boolean | `true` | Build the reverse index |
 | `index.days` | int | `1` | Business days of ids kept for type-ahead (1 = the newest day only) |
 | `index.max-memory` | string | `600MB` | Most memory the kept days may use; older days drop early above it (600MB, 2GB; 0 = no cap) |
 | `index.warm` | one of background, lazy | `background` | Build past days in the background after start, or on the first search for them |

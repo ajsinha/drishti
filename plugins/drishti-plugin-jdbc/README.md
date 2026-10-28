@@ -96,28 +96,28 @@ It is read-only in both modes: its database user needs `SELECT` only. A URL that
 | `url` | string |  | **Required.** JDBC URL, e.g. jdbc:postgresql://host:5432/db |
 | `user` | string |  | Database user |
 | `password` | string |  | Database password: ${ENV_VAR} or file:/path (secret: give `${ENV_VAR}` or `file:/path`, never the value) |
-| `table` | string |  | Table holding the entities |
-| `kind-column` | string |  | Column holding the kind |
-| `id-column` | string |  | Column holding the entity id |
-| `doc-column` | string |  | Column holding the JSON document |
-| `date-column` | string |  | Column holding the business date |
+| `table` | string |  | `schema.table`; setting it turns table mode on |
+| `kind-column` | string | `kind` | Column holding the kind |
+| `id-column` | string | `id` | Column holding the entity id |
+| `doc-column` | string | `doc` | Column holding the JSON document |
+| `date-column` | string | `business_date` | Column holding the business date |
 | `json-columns` | list |  | Columns that hold JSON |
-| `kinds` | list |  | Kinds to read |
+| `kinds` | list |  | Comma list of kinds to serve |
 | `zone` | string |  | Time zone of the date column |
-| `pool-size` | int | `20` | Most connections open at once (default: drishti.db.pool.size) |
+| `pool-size` | int | `20` | Connections at most (the site default `drishti.db.pool.size`); at least `scan-threads` plus the concurrent reads you expect. All the pool settings are read too |
 | `pool-min-idle` | int | `2` | Idle connections kept when quiet (default: drishti.db.pool.min-idle) |
 | `pool-idle-timeout` | duration | `10m` | An idle connection beyond pool-min-idle is closed after this long |
 | `pool-max-lifetime` | duration | `30m` | A connection is replaced after this long |
 | `pool-connection-timeout` | duration | `10s` | How long a caller waits for a free connection before failing |
 | `pool-leak-threshold` | duration | `60s` | A connection borrowed (or a command in flight) longer than this is logged with the borrower's stack; 0 = off |
 | `statement-timeout` | duration | `5m` | Longest one statement or operation may run; 0 = none |
-| `refresh-seconds` | int |  | Re-read interval |
-| `lookback-days` | int |  | Days of history to index |
-| `max-load-rows` | int |  | Rows to load at most |
-| `scan-threads` | int |  | Threads for scans |
-| `columns-cache-mb` | int |  | Column cache size |
-| `columns-seconds` | int |  | Column cache lifetime |
-| `reverse-index` | boolean |  | Build the reverse index |
+| `refresh-seconds` | int | `60` | How often the catalogue is read again |
+| `lookback-days` | int | `10` | How far back a snapshot read looks for the newest day on or before the date asked |
+| `max-load-rows` | int | `200000` | The most documents a reverse lookup reads for a kind without promoted link columns |
+| `scan-threads` | int | `4` | Id ranges of a day read at once |
+| `columns-cache-mb` | int | `1024` | Memory for days of promoted columns |
+| `columns-seconds` | int | `300` | How long a day's columns are kept (a new load clears them at once) |
+| `reverse-index` | boolean | `true` | Build the reverse index |
 | `query.*` | string |  | Custom SQL per purpose (query.trade, ...) |
 | `ids.*` | string |  | A day's ids (and optionally a title) for type-ahead: ids.<kind>, SQL with :asOf |
 | `columns.*` | string |  | A day's id and promoted fields, one row per entity: columns.<kind>, SQL with :asOf |

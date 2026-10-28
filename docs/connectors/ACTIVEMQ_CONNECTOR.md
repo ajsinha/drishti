@@ -800,29 +800,7 @@ The file is applied to the running server within seconds, without a restart, and
 
 In the connector file's `settings:` (or `drishti.sources.plugins.activemq.settings` for the plugin as itself):
 
-| Setting | Default | Meaning |
-|---|---|---|
-| `broker-url` | `failover:(tcp://localhost:61616)?initialReconnectDelay=1000&maxReconnectDelay=30000` (health shows `failover:(tcp://localhost:61616)`) | OpenWire URL; `failover:(…)` reconnects by itself; `ssl://` endpoints use TLS ([section 14.2](#142-tls-ssl-with-the-shared-tls-settings)) |
-| `max-redeliveries` | `-1` | redeliveries of a message the state store could not keep before the broker dead-letters it; `-1`: without limit |
-| `tls.*` | none | TLS for `ssl://` endpoints: a private CA, truststore, client certificate, hostname check; see [section 14.2](#142-tls-ssl-with-the-shared-tls-settings) and [TLS.md](TLS.md#1-the-settings) |
-| `user` | none | broker user |
-| `password` | none | broker password |
-| `destinations` | empty (required: the connector stays `DOWN` without it) | comma list: `queue:<name>`, `topic:<name>`, or `<name>` (a queue) |
-| `client-id` | `drishti-<source-name>` | JMS client id; durable subscriptions are named `drishti-<source-name>-<topic>` |
-| `kind` | none | the kind of every destination (bodies are documents) |
-| `kind.<destination>` | none | that destination's kind; without a kind, bodies are envelopes |
-| `id-field` | `id` | the body's id field, every destination |
-| `id-field.<destination>` | `id-field` | the body's id field on that destination |
-| `cache-mb` | `128` | memory for recent documents |
-| `state.root` | `./data/state` | parent of the default state folder |
-| `state.dir` | `<state.root>/<source-name>` | the RocksDB state store |
-| `state.durability` | `sync` | `sync` (write-ahead log synced on every write: no acknowledged message lost on a crash or a power loss), `wal` (not synced: survives a crash of the process, a power loss can lose the last moments), `none` (no log: a crash can lose up to the 32 MB write buffer) (section 7.1) |
-| `state.max-gb` | `10` | this connector's disk budget (decimal allowed); what happens past it is `state.when-full` (section 7.3) |
-| `state.when-full` | `evict-oldest` | `evict-oldest`: past the budget, remove the entities written longest ago until under 90% of it, then compact (logged, counted in `evicted`); `warn`: remove nothing, say so in health |
-| `state.check-seconds` | `60` | how often the store's size is checked against the budget |
-| `state.reset-at` | `never` | a daily clearing time, `HH:mm` |
-| `state.zone` | `America/New_York` | the zone of `state.reset-at` |
-| `source-name` | `activemq`; a named connector: its name | provenance source; names the default state folder and client id |
+Every setting of `activemq`, with its type, default and meaning, is in the plugin's generated README: [plugins/drishti-plugin-activemq/README.md, Settings](../../plugins/drishti-plugin-activemq/README.md#settings) (from the settings catalogue Admin → Connectors builds its form from). The shared `tls.*` settings are in [TLS.md](TLS.md).
 
 On the connector entry, beside `settings`: `plugin`, `enabled`, `kinds`. Under `settings` the engine also reads
 `stale-after`, a duration (`15m`, `2h`), as for every connector

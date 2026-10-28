@@ -33,28 +33,28 @@ plugins:
       - { name: url, required: true, desc: "JDBC URL, e.g. jdbc:postgresql://host:5432/db", group: connection }
       - { name: user, desc: "Database user", group: connection }
       - { name: password, secret: true, desc: "Database password: ${ENV_VAR} or file:/path", group: connection }
-      - { name: table, desc: "Table holding the entities", group: connection }
-      - { name: kind-column, desc: "Column holding the kind", group: mapping }
-      - { name: id-column, desc: "Column holding the entity id", group: mapping }
-      - { name: doc-column, desc: "Column holding the JSON document", group: mapping }
-      - { name: date-column, desc: "Column holding the business date", group: mapping }
+      - { name: table, desc: "`schema.table`; setting it turns table mode on", group: connection }
+      - { name: kind-column, desc: "Column holding the kind", group: mapping, default: "kind" }
+      - { name: id-column, desc: "Column holding the entity id", group: mapping, default: "id" }
+      - { name: doc-column, desc: "Column holding the JSON document", group: mapping, default: "doc" }
+      - { name: date-column, desc: "Column holding the business date", group: mapping, default: "business_date" }
       - { name: json-columns, type: list, desc: "Columns that hold JSON", group: mapping }
-      - { name: kinds, type: list, desc: "Kinds to read", group: mapping }
+      - { name: kinds, type: list, desc: "Comma list of kinds to serve", group: mapping }
       - { name: zone, desc: "Time zone of the date column", group: mapping }
-      - { name: pool-size, type: int, default: "20", desc: "Most connections open at once (default: drishti.db.pool.size)", group: pool }
+      - { name: pool-size, type: int, default: "20", desc: "Connections at most (the site default `drishti.db.pool.size`); at least `scan-threads` plus the concurrent reads you expect. All the pool settings are read too", group: pool }
       - { name: pool-min-idle, type: int, default: "2", desc: "Idle connections kept when quiet (default: drishti.db.pool.min-idle)", group: pool }
       - { name: pool-idle-timeout, type: duration, default: "10m", desc: "An idle connection beyond pool-min-idle is closed after this long", group: pool }
       - { name: pool-max-lifetime, type: duration, default: "30m", desc: "A connection is replaced after this long", group: pool }
       - { name: pool-connection-timeout, type: duration, default: "10s", desc: "How long a caller waits for a free connection before failing", group: pool }
       - { name: pool-leak-threshold, type: duration, default: "60s", desc: "A connection borrowed (or a command in flight) longer than this is logged with the borrower's stack; 0 = off", group: pool }
       - { name: statement-timeout, type: duration, default: "5m", desc: "Longest one statement or operation may run; 0 = none", group: pool }
-      - { name: refresh-seconds, type: int, desc: "Re-read interval", group: tuning }
-      - { name: lookback-days, type: int, desc: "Days of history to index", group: tuning }
-      - { name: max-load-rows, type: int, desc: "Rows to load at most", group: tuning }
-      - { name: scan-threads, type: int, desc: "Threads for scans", group: tuning }
-      - { name: columns-cache-mb, type: int, desc: "Column cache size", group: tuning }
-      - { name: columns-seconds, type: int, desc: "Column cache lifetime", group: tuning }
-      - { name: reverse-index, type: boolean, desc: "Build the reverse index", group: tuning }
+      - { name: refresh-seconds, type: int, desc: "How often the catalogue is read again", group: tuning, default: "60" }
+      - { name: lookback-days, type: int, desc: "How far back a snapshot read looks for the newest day on or before the date asked", group: tuning, default: "10" }
+      - { name: max-load-rows, type: int, desc: "The most documents a reverse lookup reads for a kind without promoted link columns", group: tuning, default: "200000" }
+      - { name: scan-threads, type: int, desc: "Id ranges of a day read at once", group: tuning, default: "4" }
+      - { name: columns-cache-mb, type: int, desc: "Memory for days of promoted columns", group: tuning, default: "1024" }
+      - { name: columns-seconds, type: int, desc: "How long a day's columns are kept (a new load clears them at once)", group: tuning, default: "300" }
+      - { name: reverse-index, type: boolean, desc: "Build the reverse index", group: tuning, default: "true" }
       - { name: "query.*", desc: "Custom SQL per purpose (query.trade, ...)", group: mapping }
       - { name: "ids.*", desc: "A day's ids (and optionally a title) for type-ahead: ids.<kind>, SQL with :asOf", group: mapping }
       - { name: "columns.*", desc: "A day's id and promoted fields, one row per entity: columns.<kind>, SQL with :asOf", group: mapping }
@@ -72,19 +72,19 @@ plugins:
   duckdb:
     settings:
       - { name: "layout.*", desc: "Per-kind promoted columns: layout.<kind>.columns: a, b, c", group: mapping }
-      - { name: path, required: true, desc: "DuckDB database file", type: path, group: connection }
-      - { name: table, desc: "Table holding the entities", group: connection }
-      - { name: kinds, type: list, desc: "Kinds to read", group: mapping }
-      - { name: memory-limit, desc: "DuckDB memory limit (e.g. 2GB)", group: tuning }
-      - { name: threads, type: int, desc: "DuckDB threads", group: tuning }
-      - { name: pool-size, type: int, desc: "Connections in the pool", group: tuning }
-      - { name: refresh-seconds, type: int, desc: "Re-read interval", group: tuning }
-      - { name: lookback-days, type: int, desc: "Days of history to index", group: tuning }
-      - { name: max-load-rows, type: int, desc: "Rows to load at most", group: tuning }
-      - { name: scan-threads, type: int, desc: "Threads for scans", group: tuning }
-      - { name: columns-cache-mb, type: int, desc: "Column cache size", group: tuning }
-      - { name: columns-seconds, type: int, desc: "Column cache lifetime", group: tuning }
-      - { name: reverse-index, type: boolean, desc: "Build the reverse index", group: tuning }
+      - { name: path, required: true, desc: "The DuckDB file; connectors with the same path share one instance", type: path, group: connection }
+      - { name: table, desc: "`schema.entities`, the data domain this connector serves", group: connection }
+      - { name: kinds, type: list, desc: "Comma list of kinds to serve", group: mapping }
+      - { name: memory-limit, desc: "DuckDB's memory limit for the shared instance (native memory, outside the heap); the first connector on a file sets it", group: tuning, default: "1GB" }
+      - { name: threads, type: int, desc: "DuckDB's threads for the shared instance; the first connector on a file sets it", group: tuning }
+      - { name: pool-size, type: int, desc: "Reads of this connector at once; at least `scan-threads` plus the concurrent reads you expect", group: tuning, default: "4" }
+      - { name: refresh-seconds, type: int, desc: "How often the file is checked for a new load (one `stat` when nothing changed)", group: tuning, default: "10" }
+      - { name: lookback-days, type: int, desc: "How far back a snapshot read looks for the newest day on or before the date asked", group: tuning, default: "10" }
+      - { name: max-load-rows, type: int, desc: "The most documents a reverse lookup reads for a kind without promoted link columns", group: tuning, default: "200000" }
+      - { name: scan-threads, type: int, desc: "Id ranges of a day read at once", group: tuning, default: "4" }
+      - { name: columns-cache-mb, type: int, desc: "Memory for days of promoted columns", group: tuning, default: "1024" }
+      - { name: columns-seconds, type: int, desc: "How long a day's columns are kept (a new file clears them at once)", group: tuning, default: "300" }
+      - { name: reverse-index, type: boolean, desc: "Build the reverse index", group: tuning, default: "true" }
       - { name: index.days, type: int, default: "1", desc: "Business days of ids kept for type-ahead (1 = the newest day only)", group: tuning }
       - { name: index.max-memory, default: "600MB", desc: "Most memory the kept days may use; older days drop early above it (600MB, 2GB; 0 = no cap)", group: tuning }
       - { name: index.warm, type: "enum:background|lazy", default: "background", desc: "Build past days in the background after start, or on the first search for them", group: tuning }
@@ -99,7 +99,7 @@ plugins:
     proxy: true
     settings:
       - { name: root, type: path, default: "<data dir>/delta", desc: "Lake root (folder, or s3://bucket/prefix); default: the delta folder of the data directory", group: connection }
-      - { name: domain, desc: "Domain folder under the root", group: connection }
+      - { name: domain, desc: "The data-domain folder under the root; may not contain `..` or start with `/`", group: connection }
       - { name: kinds, type: list, desc: "Kinds to serve (comma list); not set: every table found under the domain", group: mapping }
       - { name: "mode.*", desc: "Per-kind read mode", group: mapping }
       - { name: "layout.*", desc: "Per-kind layout: layout.<kind>.columns (promoted document paths), layout.<kind>.type-ahead (promoted columns whose values the type-ahead also matches: a name finds its id)", group: mapping }
@@ -109,7 +109,7 @@ plugins:
       - { name: date-column, default: "business_date", desc: "Business date column", group: mapping }
       - { name: id-column, default: "id", desc: "Entity id column", group: mapping }
       - { name: doc-column, default: "doc", desc: "Document column", group: mapping }
-      - { name: warm-dates, type: int, default: "3", desc: "After start, in the background, each table's newest N dates get their id map and one document read, so the first read of a recent past date is not the slow one; 0 turns it off", group: tuning }
+      - { name: warm-dates, type: int, default: "3", desc: "After start, in the background, each table's newest N dates get their id map and one document read, so the first read of a recent past date is not the slow one (cold about 5x a warm read: 40-70 ms against 10 ms on the samples, more on a large day); the warm-up reads take their own read slots, so a page never waits behind them; `0` turns it off", group: tuning }
       - { name: refresh-seconds, type: int, default: "10", desc: "How often each table's latest version is checked; the type-ahead index is rebuilt every six checks", group: tuning }
       - { name: lookback-days, type: int, default: "10", desc: "How far back (days) a snapshot read looks for the newest day on or before the date asked; effective tables have no limit", group: tuning }
       - { name: max-load-rows, type: int, default: "200000", desc: "The largest day loaded whole for reverse lookups when a table has no promoted columns", group: tuning }
@@ -118,20 +118,20 @@ plugins:
       - { name: cache-mb, type: int, desc: "Memory for whole days of small tables, in MB; not set: the shared cache of every Delta connector, 5 % of the heap; set: a cache of this connector's own", group: tuning }
       - { name: doc-cache-mb, type: int, desc: "Memory for recently read documents, in MB; not set: the shared cache, 5 % of the heap; set: a cache of this connector's own", group: tuning }
       - { name: doc-disk-cache.enabled, type: bool, default: "true", desc: "Documents already read also kept on disk (RocksDB, one per connector): answered without decompressing Parquet pages, also after a restart", group: tuning }
-      - { name: doc-disk-cache.dir, type: path, default: "<data dir>/cache/<connector>/docs", desc: "Its folder", group: tuning }
+      - { name: doc-disk-cache.dir, type: path, default: "<data dir>/cache/<connector>/docs", desc: "Documents read before, in a RocksDB on disk, kept across restarts (DELTA_CONNECTOR.md section 6.3)", group: tuning }
       - { name: doc-disk-cache.max-gb, type: number, default: "1", desc: "Its size cap; the oldest files go first", group: tuning }
       - { name: doc-disk-cache.ttl, type: duration, default: "12h", desc: "Entries written longer ago go (compacted hourly)", group: tuning }
       - { name: doc-disk-cache.reset-at, default: "02:00", desc: "Daily clearing time", group: tuning }
       - { name: doc-disk-cache.zone, default: "America/New_York", desc: "Zone of the daily clearing", group: tuning }
       - { name: id-map-disk.enabled, type: bool, default: "true", desc: "Each table date id map written once per table version and memory-mapped: no heap per id, kept across restarts", group: tuning }
-      - { name: id-map-disk.dir, type: path, default: "<data dir>/cache/<connector>/idmaps", desc: "Its folder", group: tuning }
+      - { name: id-map-disk.dir, type: path, default: "<data dir>/cache/<connector>/idmaps", desc: "Id maps written once per table version and date, read through a memory map (DELTA_CONNECTOR.md section 6.2)", group: tuning }
       - { name: columns-cache-mb, type: int, desc: "Memory for days' column sets, in MB; not set: the shared cache, 20 % of the heap; set: a cache of this connector's own", group: tuning }
       - { name: id-map-mb, type: int, desc: "Memory for days' id maps, in MB; not set: the shared cache, 20 % of the heap; set: a cache of this connector's own", group: tuning }
       - { name: lz4-via-native, type: boolean, default: "true", desc: "hadoop engine only: read LZ4 files through the native engine's decoder", group: tuning }
       - { name: lz4-decoder, type: "enum:safe|fast", default: "safe", desc: "native engine: the LZ4 page decoder, safe (pure Java) or fast (JNI when available)", group: tuning }
-      - { name: s3.endpoint, desc: "S3-compatible endpoint", group: s3 }
+      - { name: s3.endpoint, desc: "An S3-compatible store (MinIO, Ceph); also sets path-style access and TLS by scheme", group: s3 }
       - { name: s3.region, desc: "S3 region", group: s3 }
-      - { name: s3.path-style, type: boolean, desc: "Path-style S3 addressing; not set: the native engine uses it only with s3.endpoint, the hadoop engine always", group: s3 }
+      - { name: s3.path-style, type: boolean, desc: "Path-style S3 addressing; not set: the native engine uses it only with s3.endpoint, the hadoop engine always", group: s3, default: "true" }
       - { name: s3.access-key, secret: true, desc: "S3 access key: ${ENV_VAR} or file:/path", group: s3 }
       - { name: s3.secret-key, secret: true, desc: "S3 secret key: ${ENV_VAR} or file:/path", group: s3 }
       - { name: index.days, type: int, default: "1", desc: "Business days of ids kept for type-ahead (1 = the newest day only)", group: tuning }
@@ -155,7 +155,7 @@ plugins:
       - { name: doc-disk-cache.reset-at, default: "02:00", desc: "Daily clearing time", group: tuning }
       - { name: doc-disk-cache.zone, default: "America/New_York", desc: "Zone of the daily clearing", group: tuning }
       - { name: id-map-disk.enabled, type: bool, default: "true", desc: "Each business date's id map written once per date's files and memory-mapped: no heap per id, kept across restarts and commits of other dates", group: tuning }
-      - { name: id-map-disk.dir, type: path, default: "<data dir>/cache/<connector>/idmaps", desc: "Its folder", group: tuning }
+      - { name: id-map-disk.dir, type: path, default: "<data dir>/cache/<connector>/idmaps", desc: "(2.9.5) each date's id map written once and memory-mapped, kept across restarts", group: tuning }
       - { name: id-map-mb, type: int, default: "1024", desc: "Id maps kept in the heap (MB)", group: tuning }
       - { name: doc-cache-mb, type: int, default: "256", desc: "Documents kept in the heap (MB)", group: tuning }
       - { name: columns-cache-mb, type: int, default: "1024", desc: "Promoted columns kept in the heap (MB)", group: tuning }
@@ -164,32 +164,32 @@ plugins:
       - { name: "table.*", desc: "Per-kind table name under the namespace when it is not the kind's name (table.trade: trade_calypso)", group: mapping }
       - { name: engine, type: "enum:native|library|auto", default: "native", desc: "native: drishti-iceberg, no Hadoop (local disk and S3; Windows without winutils.exe; left to the default, a root it cannot reach is read by the library); library: Apache Iceberg Java over Hadoop (also Azure, Google Cloud Storage, HDFS); auto: native on Windows, library elsewhere. DRISHTI_ICEBERG_ENGINE sets it for every connector", group: connection }
       - { name: "metadata-location.*", desc: "A table named by its metadata file, read-only (metadata-location.<kind>: s3://…/v12.metadata.json); native engine", group: connection }
-      - { name: relocate, desc: "Read a table copied elsewhere: '<old prefix> -> <new prefix>; …' replaces the start of every path its metadata names (native engine)", group: connection }
-      - { name: vended-credentials, type: boolean, default: "true", desc: "Ask a REST catalog for each table's own S3 credentials (X-Iceberg-Access-Delegation); native engine", group: connection }
+      - { name: relocate, desc: "`native`: `<old folder> -> <new folder>; …` reads a table copied elsewhere (an S3 table synced to a laptop, a folder moved after loading: Health gives the pair to copy, ICEBERG_CONNECTOR.md section 14). Each side is a plain folder (`/data/ice1`, `C:\\lake` or `C:/lake`, `\\\\fs\\share\\lake`) or a URI (`file:/data/ice1`, `file:///C:/lake`, `s3://bucket/wh`; `s3a://` and `s3n://` are the same bucket): both are read into the `file:` form the metadata names its files in, so the plain form and the `file:` form are the same pair. A folder matches whole folders (`/data/ice1` is not `/data/ice10`). Quote the value in YAML when it holds a backslash: `relocate: 'C:\\old -> D:\\new'`. A pair that cannot be read fails the start, naming it. The library engine does not read it, and Health says so", group: connection }
+      - { name: vended-credentials, type: boolean, default: "true", desc: "`native`, `rest`: ask the catalog for each table's own S3 credentials (`X-Iceberg-Access-Delegation`), renewed before they expire", group: connection }
       - { name: lz4-decoder, type: "enum:safe|fast", default: "safe", desc: "The LZ4 page decoder of the native engine: safe (pure Java) or fast (JNI when present)", group: tuning }
       - { name: "hadoop.*", desc: "Any Hadoop configuration property (hadoop.fs.s3a.connection.maximum)", group: tuning }
       - { name: "catalog.*", desc: "Any Iceberg catalog property (catalog.<property>)", group: connection }
       - { name: warehouse, desc: "REST catalog warehouse", group: connection }
       - { name: credential, secret: true, desc: "REST catalog credential: ${ENV_VAR} or file:/path", group: connection }
-      - { name: root, type: path, desc: "Warehouse root", group: connection }
-      - { name: uri, desc: "Catalog URI", group: connection }
-      - { name: catalog, desc: "Catalog name", group: connection }
-      - { name: namespace, desc: "Namespace", group: connection }
+      - { name: root, type: path, desc: "`hadoop`: the lake, a folder or `s3a://…` (`abfs://`, `gs://`, `hdfs://`)", group: connection }
+      - { name: uri, desc: "`rest`: the catalog's URI", group: connection }
+      - { name: catalog, desc: "`hadoop` (path-based tables) or `rest`", group: connection, default: "hadoop" }
+      - { name: namespace, desc: "`rest`: the namespace (dots separate levels)", group: connection }
       - { name: domain, desc: "Domain", group: connection }
-      - { name: kinds, type: list, desc: "Kinds to read", group: mapping }
+      - { name: kinds, type: list, desc: "Comma list of kinds to serve", group: mapping }
       - { name: "mode.*", desc: "Per-kind read mode", group: mapping }
-      - { name: refresh-seconds, type: int, desc: "Re-read interval", group: tuning }
-      - { name: lookback-days, type: int, desc: "Days of history to index", group: tuning }
-      - { name: max-load-rows, type: int, desc: "Rows to load at most", group: tuning }
-      - { name: max-concurrent-reads, type: int, desc: "Concurrent reads", group: tuning }
+      - { name: refresh-seconds, type: int, desc: "How often each table's current snapshot is checked", group: tuning, default: "10" }
+      - { name: lookback-days, type: int, desc: "How far back a snapshot read looks for the newest day on or before the date asked", group: tuning, default: "10" }
+      - { name: max-load-rows, type: int, desc: "The largest day read whole for reverse lookups when a table has no promoted columns", group: tuning, default: "200000" }
+      - { name: max-concurrent-reads, type: int, desc: "Single-document reads at once", group: tuning, default: "16" }
       - { name: max-queued-reads, type: int, default: "4096", desc: "Document reads that may wait for a slot; more are refused at once, and a read whose caller has gone leaves the queue", group: tuning }
-      - { name: layout-cache, type: int, desc: "Layout cache entries", group: tuning }
-      - { name: reverse-index, type: boolean, desc: "Build the reverse index", group: tuning }
-      - { name: s3.endpoint, desc: "S3-compatible endpoint", group: s3 }
-      - { name: s3.region, desc: "S3 region", group: s3 }
-      - { name: s3.path-style, type: boolean, desc: "Path-style S3 addressing", group: s3 }
-      - { name: s3.access-key, secret: true, desc: "S3 access key: ${ENV_VAR} or file:/path", group: s3 }
-      - { name: s3.secret-key, secret: true, desc: "S3 secret key: ${ENV_VAR} or file:/path", group: s3 }
+      - { name: layout-cache, type: int, desc: "Layout cache entries", group: tuning, default: "64" }
+      - { name: reverse-index, type: boolean, desc: "Build the reverse index", group: tuning, default: "true" }
+      - { name: s3.endpoint, desc: "Object storage for S3A and S3FileIO (`s3.path-style` defaults to `true` with an endpoint)", group: s3 }
+      - { name: s3.region, desc: "Object storage for S3A and S3FileIO (`s3.path-style` defaults to `true` with an endpoint)", group: s3 }
+      - { name: s3.path-style, type: boolean, desc: "Object storage for S3A and S3FileIO (`s3.path-style` defaults to `true` with an endpoint)", group: s3 }
+      - { name: s3.access-key, secret: true, desc: "Object storage for S3A and S3FileIO (`s3.path-style` defaults to `true` with an endpoint)", group: s3 }
+      - { name: s3.secret-key, secret: true, desc: "Object storage for S3A and S3FileIO (`s3.path-style` defaults to `true` with an endpoint)", group: s3 }
       - { name: index.days, type: int, default: "1", desc: "Business days of ids kept for type-ahead (1 = the newest day only)", group: tuning }
       - { name: index.max-memory, default: "600MB", desc: "Most memory the kept days may use; older days drop early above it (600MB, 2GB; 0 = no cap)", group: tuning }
       - { name: index.warm, type: "enum:background|lazy", default: "background", desc: "Build past days in the background after start, or on the first search for them", group: tuning }
@@ -205,7 +205,7 @@ plugins:
     settings:
       - { name: "tables.*", desc: "Per kind: tables.<kind>.table (namespace.table), id (columns, joined by id-separator), id-separator (:), date, date-from (day), date-zone (UTC), mode (snapshot|effective), document (row|column:<name>), columns.exclude, columns.rename.<column>, links.<column> (a kind), depth (2); or tables: auto with namespace", group: mapping }
       - { name: tables, desc: "auto: every table of the namespace is a kind (its name in lower case with -), its id from the identifier fields, its date from the partition spec", group: mapping }
-      - { name: engine, type: "enum:native|auto", default: "auto", desc: "The engine: drishti-iceberg (no Hadoop); library is the iceberg connector's only", group: connection }
+      - { name: engine, type: "enum:native|auto", default: "auto", desc: "`native` or `auto`: both read through drishti-iceberg; `library` is refused (it is the `iceberg` connector's only)", group: connection }
       - { name: root, type: path, desc: "Path-based tables' root (a folder or s3://…); tables.<kind>.table names the folder under it", group: connection }
       - { name: uri, desc: "A REST catalog's URI (Polaris, Snowflake Open Catalog, Glue, Unity, Nessie, Lakekeeper)", group: connection }
       - { name: catalog, desc: "hadoop (path-based, the default) or rest", group: connection }
@@ -231,7 +231,7 @@ plugins:
       - { name: columns-cache-mb, type: int, default: "1024", desc: "Memory for a day's searchable columns", group: tuning }
       - { name: max-concurrent-reads, type: int, default: "16", desc: "Documents read at once at most", group: tuning }
       - { name: max-queued-reads, type: int, default: "4096", desc: "Document reads that may wait for a slot; more are refused at once, and a read whose caller has gone leaves the queue", group: tuning }
-      - { name: source-name, desc: "The connector's name in provenance (iceberg-external)", group: connection }
+      - { name: source-name, desc: "The connector's name in provenance (iceberg-external)", group: connection, default: "iceberg-external" }
       - { name: s3.endpoint, desc: "S3-compatible endpoint", group: s3 }
       - { name: s3.region, desc: "S3 region", group: s3 }
       - { name: s3.path-style, type: boolean, desc: "Path-style S3 addressing", group: s3 }
@@ -244,9 +244,9 @@ plugins:
       - { name: "layout.*", desc: "Per-kind promoted columns: layout.<kind>.columns: a, b, c", group: mapping }
       - { name: hosts, default: "localhost:3000", desc: "host:port list, comma separated", group: connection }
       - { name: namespace, default: test, desc: "Namespace", group: connection }
-      - { name: set, desc: "Set", group: connection }
+      - { name: set, desc: "The data domain's set (`<set>_ix` and `<set>_kinds` beside it)", group: connection }
       - { name: domain, desc: "Domain", group: connection }
-      - { name: kinds, type: list, desc: "Kinds to read", group: mapping }
+      - { name: kinds, type: list, desc: "Comma list of kinds to serve", group: mapping }
       - { name: user, desc: "User (leave out with auth-mode: pki)", group: connection }
       - { name: password, secret: true, desc: "Password: ${ENV_VAR} or file:/path", group: connection }
       - { name: auth-mode, type: "enum:internal|external|pki", desc: "pki logs in with the client certificate (tls.cert-file + tls.key-file, or tls.keystore)", group: security }
@@ -256,7 +256,7 @@ plugins:
       - { name: pool-idle-timeout, type: duration, default: "10m", desc: "An idle connection beyond pool-min-idle is closed after this long", group: pool }
       - { name: pool-leak-threshold, type: duration, default: "60s", desc: "A connection borrowed (or a command in flight) longer than this is logged with the borrower's stack; 0 = off", group: pool }
       - { name: statement-timeout, type: duration, default: "5m", desc: "Longest one statement or operation may run; 0 = none", group: pool }
-      - { name: connect-timeout-ms, type: int, desc: "Connect timeout", group: tuning }
+      - { name: connect-timeout-ms, type: int, desc: "Connect timeout", group: tuning, default: "3000" }
       - { name: pool-size, type: int, default: "20", desc: "Most connections open at once (default: drishti.db.pool.size)", group: pool }
       - { name: pool-min-idle, type: int, default: "2", desc: "Idle connections kept when quiet (default: drishti.db.pool.min-idle)", group: pool }
       - { name: pool-idle-timeout, type: duration, default: "10m", desc: "An idle connection beyond pool-min-idle is closed after this long", group: pool }
@@ -264,13 +264,13 @@ plugins:
       - { name: pool-connection-timeout, type: duration, default: "10s", desc: "How long a caller waits for a free connection before failing", group: pool }
       - { name: pool-leak-threshold, type: duration, default: "60s", desc: "A connection borrowed (or a command in flight) longer than this is logged with the borrower's stack; 0 = off", group: pool }
       - { name: statement-timeout, type: duration, default: "5m", desc: "Longest one statement or operation may run; 0 = none", group: pool }
-      - { name: refresh-seconds, type: int, desc: "Re-read interval", group: tuning }
-      - { name: lookback-days, type: int, desc: "Days of history to index", group: tuning }
-      - { name: max-load-rows, type: int, desc: "Rows to load at most", group: tuning }
-      - { name: scan-threads, type: int, desc: "Threads for scans", group: tuning }
-      - { name: columns-cache-mb, type: int, desc: "Column cache size", group: tuning }
-      - { name: columns-seconds, type: int, desc: "Column cache lifetime", group: tuning }
-      - { name: reverse-index, type: boolean, desc: "Build the reverse index", group: tuning }
+      - { name: refresh-seconds, type: int, desc: "How often the kinds' dates and the ids are re-read", group: tuning, default: "60" }
+      - { name: lookback-days, type: int, desc: "How far back a snapshot read looks for the newest day on or before the date asked", group: tuning, default: "10" }
+      - { name: max-load-rows, type: int, desc: "The most documents scanned for a reverse lookup on a kind without promoted bins", group: tuning, default: "200000" }
+      - { name: scan-threads, type: int, desc: "Partition ranges scanned at once when reading a day's columns", group: tuning, default: "8" }
+      - { name: columns-cache-mb, type: int, desc: "Memory for days' column sets", group: tuning, default: "1024" }
+      - { name: columns-seconds, type: int, desc: "How long a day's column set is kept before it is read again", group: tuning, default: "300" }
+      - { name: reverse-index, type: boolean, desc: "Build the reverse index", group: tuning, default: "true" }
   cassandra:
     tls: true
     settings:
@@ -304,75 +304,75 @@ plugins:
     tls: true
     settings:
       - { name: "layout.*", desc: "Per-kind promoted columns: layout.<kind>.columns: a, b, c", group: mapping }
-      - { name: uri, required: true, desc: "MongoDB URI (credentials as ${ENV} references)", group: connection }
-      - { name: database, desc: "Database", group: connection }
-      - { name: collection, desc: "Collection", group: connection }
+      - { name: uri, required: true, desc: "Connection string: hosts, replica set, credentials, TLS, compressors", group: connection }
+      - { name: database, desc: "Database", group: connection, default: "drishti" }
+      - { name: collection, desc: "The domain's collection (`<collection>_columns` beside it)", group: connection }
       - { name: domain, desc: "Domain", group: connection }
-      - { name: kinds, type: list, desc: "Kinds to read", group: mapping }
+      - { name: kinds, type: list, desc: "Comma list of kinds to serve", group: mapping }
       - { name: doc-format, desc: "Document format", group: mapping }
-      - { name: read-preference, desc: "Read preference", group: connection }
+      - { name: read-preference, desc: "`primary`, `primaryPreferred`, `secondary`, `secondaryPreferred` or `nearest`", group: connection, default: "primary" }
       - { name: auth-mechanism, type: "enum:x509", desc: "x509 logs in with the client certificate (needs tls.enabled and tls.cert-file + tls.key-file, or tls.keystore)", group: security }
       - { name: x509-user, desc: "The certificate subject to log in as (default: the server derives it from the certificate)", group: security }
-      - { name: connect-timeout-ms, type: int, desc: "Connect timeout", group: tuning }
-      - { name: refresh-seconds, type: int, desc: "Re-read interval", group: tuning }
-      - { name: lookback-days, type: int, desc: "Days of history to index", group: tuning }
-      - { name: max-load-rows, type: int, desc: "Rows to load at most", group: tuning }
-      - { name: batch-size, type: int, desc: "Batch size", group: tuning }
+      - { name: connect-timeout-ms, type: int, desc: "Connection and server-selection timeout", group: tuning, default: "3000" }
+      - { name: refresh-seconds, type: int, desc: "How often the kinds' dates and the ids are re-read", group: tuning, default: "60" }
+      - { name: lookback-days, type: int, desc: "How far back a snapshot read looks for the newest day on or before the date asked", group: tuning, default: "10" }
+      - { name: max-load-rows, type: int, desc: "The most documents read for a reverse lookup on a kind without promoted fields", group: tuning, default: "200000" }
+      - { name: batch-size, type: int, desc: "Documents per cursor batch for day reads", group: tuning, default: "5000" }
       - { name: batch, type: int, desc: "Batch", group: tuning }
-      - { name: read-threads, type: int, desc: "Read threads", group: tuning }
+      - { name: read-threads, type: int, desc: "Id ranges read at once when a day's columns are read", group: tuning, default: "8" }
       - { name: in-flight, type: int, desc: "Reads in flight", group: tuning }
-      - { name: heavy-reads, type: int, desc: "Heavy reads at once", group: tuning }
+      - { name: heavy-reads, type: int, desc: "Day reads at once per connector", group: tuning, default: "2" }
       - { name: ttl-days, type: int, desc: "Days to keep", group: tuning }
-      - { name: columns-seconds, type: int, desc: "Column cache lifetime", group: tuning }
-      - { name: columns-cache-mb, type: int, desc: "Column cache size", group: tuning }
-      - { name: reverse-index, type: boolean, desc: "Build the reverse index", group: tuning }
+      - { name: columns-seconds, type: int, desc: "After this a day's column set is re-read in the background (the last read is served meanwhile)", group: tuning, default: "300" }
+      - { name: columns-cache-mb, type: int, desc: "Memory for days' column sets", group: tuning, default: "1024" }
+      - { name: reverse-index, type: boolean, desc: "Build the reverse index", group: tuning, default: "true" }
   redis:
     tls: true
     settings:
       - { name: "layout.*", desc: "Per-kind promoted columns: layout.<kind>.columns: a, b, c", group: mapping }
-      - { name: uri, required: true, desc: "redis:// or rediss:// URI (credentials as ${ENV} references)", group: connection }
+      - { name: uri, required: true, desc: "Lettuce URI, e.g. `redis://localhost:6379`; `rediss://` for TLS, `redis://user:secret@host:port/db` for credentials; several comma-separated for Cluster seed nodes", group: connection }
       - { name: user, desc: "User", group: connection }
       - { name: password, secret: true, desc: "Password: ${ENV_VAR} or file:/path", group: connection }
-      - { name: cluster, type: boolean, desc: "Redis Cluster", group: connection }
-      - { name: domain, desc: "Domain", group: connection }
-      - { name: kinds, type: list, desc: "Kinds to read", group: mapping }
+      - { name: cluster, type: boolean, desc: "`true` for Redis Cluster (also implied by several URIs)", group: connection, default: "false" }
+      - { name: domain, desc: "Domain", group: connection, default: "drishti" }
+      - { name: kinds, type: list, desc: "Comma list of kinds to serve", group: mapping }
       - { name: codec, desc: "Document codec", group: mapping }
-      - { name: live, type: boolean, desc: "Subscribe to live updates", group: tuning }
-      - { name: fail-fast, type: boolean, desc: "Fail at start when unreachable", group: tuning }
-      - { name: timeout-ms, type: int, desc: "Command timeout", group: tuning }
+      - { name: live, type: boolean, desc: "Subscribe to `<domain>:changes` and push changed entities to open views", group: tuning, default: "true" }
+      - { name: fail-fast, type: boolean, desc: "While health says Redis is down, reads and column reads fail at once (`DRS-1003`, a message without host or credentials) instead of each waiting `timeout-ms`; `false` to always wait", group: tuning, default: "true" }
+      - { name: timeout-ms, type: int, desc: "Connect and command timeout", group: tuning, default: "5000" }
       - { name: pool-size, type: int, default: "20", desc: "Most connections open at once (default: drishti.db.pool.size); more are opened only when the open ones are busy", group: pool }
       - { name: pool-min-idle, type: int, default: "2", desc: "Idle connections kept when quiet (default: drishti.db.pool.min-idle)", group: pool }
       - { name: pool-idle-timeout, type: duration, default: "10m", desc: "An idle connection beyond pool-min-idle is closed after this long", group: pool }
       - { name: pool-leak-threshold, type: duration, default: "60s", desc: "A connection borrowed (or a command in flight) longer than this is logged with the borrower's stack; 0 = off", group: pool }
       - { name: pool-pipeline-depth, type: int, default: "32", desc: "Commands in flight on every open connection before another is opened", group: pool }
-      - { name: refresh-seconds, type: int, desc: "Re-read interval", group: tuning }
-      - { name: lookback-days, type: int, desc: "Days of history to index", group: tuning }
-      - { name: max-load-rows, type: int, desc: "Rows to load at most", group: tuning }
+      - { name: refresh-seconds, type: int, desc: "How often the kinds' days, the ids and `updated` are re-read (also on every announced day)", group: tuning, default: "60" }
+      - { name: lookback-days, type: int, desc: "How far back a snapshot read looks for the newest day on or before the date asked", group: tuning, default: "10" }
+      - { name: max-load-rows, type: int, desc: "The most documents read for a reverse lookup on a kind without promoted fields", group: tuning, default: "200000" }
       - { name: threads, type: int, desc: "Threads", group: tuning }
       - { name: in-flight, type: int, desc: "Reads in flight", group: tuning }
-      - { name: heavy-reads, type: int, desc: "Heavy reads at once", group: tuning }
+      - { name: heavy-reads, type: int, desc: "Days' column sets read at once", group: tuning, default: "2" }
       - { name: ttl-days, type: int, desc: "Days to keep", group: tuning }
       - { name: level, type: int, desc: "Compression level", group: tuning }
       - { name: chunk-rows, type: int, desc: "Rows per chunk", group: tuning }
       - { name: dict-kb, type: int, desc: "Dictionary size", group: tuning }
       - { name: dict-samples, type: int, desc: "Dictionary samples", group: tuning }
-      - { name: recheck-ms, type: int, desc: "Recheck interval", group: tuning }
+      - { name: recheck-ms, type: int, desc: "How often a down Redis is asked again (`PING`); reads resume at its first answer", group: tuning, default: "1000" }
       - { name: keep-replaced-seconds, type: int, desc: "Keep replaced data this long", group: tuning }
-      - { name: columns-cache-mb, type: int, desc: "Column cache size", group: tuning }
-      - { name: reverse-index, type: boolean, desc: "Build the reverse index", group: tuning }
+      - { name: columns-cache-mb, type: int, desc: "Memory for days' column sets", group: tuning, default: "1024" }
+      - { name: reverse-index, type: boolean, desc: "Build the reverse index", group: tuning, default: "true" }
   file:
     settings:
       - { name: "layout.*", desc: "Per-kind promoted columns: layout.<kind>.columns: a, b, c", group: mapping }
       - { name: root, type: path, default: "<data dir>/feeds", desc: "Folder of documents; default: the feeds folder of the data directory", group: connection }
       - { name: domain, desc: "Domain", group: connection }
-      - { name: id-field, desc: "Field holding the entity id", group: mapping }
-      - { name: rescan-seconds, type: int, desc: "Rescan interval", group: tuning }
-      - { name: lookback-days, type: int, desc: "Days of history to index", group: tuning }
+      - { name: id-field, desc: "Field holding the entity id", group: mapping, default: "id" }
+      - { name: rescan-seconds, type: int, desc: "How often the folders are listed again", group: tuning, default: "30" }
+      - { name: lookback-days, type: int, desc: "How far back a snapshot read looks for the newest day on or before the date asked", group: tuning, default: "10" }
       - { name: business-zone, default: "America/New_York", desc: "Time zone whose today is the business date the health check compares the folders with (the 0-rows warning)", group: tuning }
-      - { name: max-load-rows, type: int, desc: "Documents to load at most", group: tuning }
-      - { name: max-document-mb, type: int, desc: "Largest document", group: tuning }
-      - { name: max-nesting-depth, type: int, desc: "Deepest nesting", group: tuning }
-      - { name: index-cache-mb, type: int, desc: "Index cache size", group: tuning }
+      - { name: max-load-rows, type: int, desc: "Lines a reverse lookup reads for a kind without promoted link fields", group: tuning, default: "200000" }
+      - { name: max-document-mb, type: int, desc: "The longest line (and so document, or string in it); a longer line is skipped and counted", group: tuning, default: "64" }
+      - { name: max-nesting-depth, type: int, desc: "The deepest nesting of objects and arrays in a line; a deeper line is skipped and counted", group: tuning, default: "1000" }
+      - { name: index-cache-mb, type: int, desc: "Index cache size", group: tuning, default: "1024" }
       - { name: index.days, type: int, default: "1", desc: "Business days of ids kept for type-ahead (1 = the newest day only)", group: tuning }
       - { name: index.max-memory, default: "600MB", desc: "Most memory the kept days may use; older days drop early above it (600MB, 2GB; 0 = no cap)", group: tuning }
       - { name: index.warm, type: "enum:background|lazy", default: "background", desc: "Build past days in the background after start, or on the first search for them", group: tuning }
@@ -391,67 +391,67 @@ plugins:
     tls: true
     proxy: true
     settings:
-      - { name: url, desc: "Feed URL", group: connection }
-      - { name: feed, desc: "Built-in feed name", group: connection }
-      - { name: series, type: list, desc: "Series to read", group: mapping }
+      - { name: url, desc: "An override; `file:` URLs are read from disk; for `us-treasury` and `fred` a comma list (one per month, or one per series in the order of `series`)", group: connection }
+      - { name: feed, desc: "`nyfed-sofr`, `ecb-estr`, `ecb-fx`, `us-treasury` or `fred`; without it the plugin stays idle, an unknown value fails to start", group: connection }
+      - { name: series, type: list, desc: "FRED series ids, comma separated (`fred` only); each becomes `FIX-FRED-<series>`", group: mapping, default: "DGS10DFF" }
       - { name: api-key, secret: true, desc: "API key: ${ENV_VAR} or file:/path", group: connection }
-      - { name: user-agent, desc: "User-Agent header", group: connection }
-      - { name: refresh-minutes, type: int, desc: "Refresh interval", group: tuning }
-      - { name: timeout-seconds, type: int, desc: "Request timeout", group: tuning }
+      - { name: user-agent, desc: "The `User-Agent` header; the pack sets `<product> public data feed connector`", group: connection, default: "public-data-feed-connector" }
+      - { name: refresh-minutes, type: int, desc: "Minutes between the end of one fetch and the start of the next (a whole number); the first fetch is at start", group: tuning, default: "60" }
+      - { name: timeout-seconds, type: int, desc: "The request timeout of each HTTP request (a whole number); the connect timeout is a fixed 10 s", group: tuning, default: "20" }
   news:
     tls: true
     proxy: true
     settings:
-      - { name: base-url, desc: "RSS search address (default Google News)", group: connection }
-      - { name: language, desc: "Edition language, e.g. en", group: connection }
-      - { name: country, desc: "Edition country, e.g. US", group: connection }
+      - { name: base-url, desc: "RSS search address (default Google News)", group: connection, default: "https://news.google.com/rss/search" }
+      - { name: language, desc: "Edition language, e.g. en", group: connection, default: "en" }
+      - { name: country, desc: "Edition country (`gl`, and `ceid=<country>:<language>`)", group: connection, default: "US" }
       - { name: user-agent, desc: "User-Agent header", group: connection }
-      - { name: query-template, desc: "Search text; {name} is the entity name", group: mapping }
-      - { name: id-prefix, desc: "Prefix of entity ids (NEWS-)", group: mapping }
-      - { name: kind, desc: "Kind served (news)", group: mapping }
-      - { name: relevance, desc: "title: keep headlines naming the entity or an alias; off: keep all", group: mapping }
-      - { name: allow-sources, type: list, desc: "Only these publishers", group: mapping }
-      - { name: deny-sources, type: list, desc: "Never these publishers", group: mapping }
+      - { name: query-template, desc: "The search text; `{name}` is the entity name. `\"{name}\" when:7d` narrows to the last week", group: mapping, default: "{name}" }
+      - { name: id-prefix, desc: "Prefix of entity ids (NEWS-)", group: mapping, default: "NEWS-" }
+      - { name: kind, desc: "Kind served (news)", group: mapping, default: "news" }
+      - { name: relevance, desc: "title: keep headlines naming the entity or an alias; off: keep all", group: mapping, default: "title" }
+      - { name: allow-sources, type: list, desc: "Comma list: only these publishers (case-insensitive)", group: mapping }
+      - { name: deny-sources, type: list, desc: "Comma list: never these publishers", group: mapping }
       - { name: "aliases.*", desc: "Other names of an entity: aliases.<Name_with_underscores>: a, b", group: mapping }
-      - { name: max-items, type: int, desc: "Headlines per entity", group: tuning }
-      - { name: timeout-seconds, type: int, desc: "One request", group: tuning }
-      - { name: cache-ttl-seconds, type: int, desc: "How long an entity's headlines are reused", group: tuning }
-      - { name: cache-max-entities, type: int, desc: "Entities cached", group: tuning }
-      - { name: max-bytes, type: int, desc: "Largest response accepted", group: tuning }
-      - { name: retries, type: int, desc: "Repeats of a failed request", group: tuning }
-      - { name: retry-initial, desc: "First wait before a repeat (300ms)", group: tuning }
-      - { name: retry-max, desc: "Longest wait (3s)", group: tuning }
-      - { name: retry-factor, desc: "Growth of the wait (2)", group: tuning }
-      - { name: retry-jitter, desc: "Random spread of the wait (0.2)", group: tuning }
+      - { name: max-items, type: int, desc: "Headlines per entity (1 to 100)", group: tuning, default: "10" }
+      - { name: timeout-seconds, type: int, desc: "One HTTP attempt (1 to 120)", group: tuning, default: "10" }
+      - { name: cache-ttl-seconds, type: int, desc: "How long an entity's headlines are reused; `0` never reuses", group: tuning, default: "600" }
+      - { name: cache-max-entities, type: int, desc: "Entities cached", group: tuning, default: "200" }
+      - { name: max-bytes, type: int, desc: "Largest response accepted", group: tuning, default: "2000000" }
+      - { name: retries, type: int, desc: "Repeats of a failed request", group: tuning, default: "2" }
+      - { name: retry-initial, desc: "First wait before a repeat (300ms)", group: tuning, default: "300ms" }
+      - { name: retry-max, desc: "Longest wait (3s)", group: tuning, default: "3s" }
+      - { name: retry-factor, desc: "Growth of the wait (2)", group: tuning, default: "2" }
+      - { name: retry-jitter, desc: "Random spread of each wait, so many failing reads do not repeat together", group: tuning, default: "0.2" }
   yfinance:
     tls: true
     proxy: true
     settings:
-      - { name: base-url, desc: "Chart endpoint without the symbol", group: connection }
-      - { name: user-agent, desc: "User-Agent header", group: connection }
-      - { name: range, desc: "History span: 1mo, 3mo, 6mo, 1y, 5y, ytd, max ...", group: mapping }
-      - { name: interval, desc: "Bar size: 1d, 1wk, 1mo, 60m ...", group: mapping }
-      - { name: id-prefix, desc: "Prefix of entity ids (QUOTE-)", group: mapping }
+      - { name: base-url, desc: "Chart endpoint without the symbol", group: connection, default: "https://query1.finance.yahoo.com/v8/finance/chart" }
+      - { name: user-agent, desc: "The `User-Agent` header; Yahoo refuses an empty one", group: connection }
+      - { name: range, desc: "History span: 1mo, 3mo, 6mo, 1y, 5y, ytd, max ...", group: mapping, default: "6mo" }
+      - { name: interval, desc: "Bar size: `1m 2m 5m 15m 30m 60m 90m 1h 1d 5d 1wk 1mo 3mo` (Yahoo limits intraday bars to short ranges)", group: mapping, default: "1d" }
+      - { name: id-prefix, desc: "Prefix of entity ids (QUOTE-)", group: mapping, default: "QUOTE-" }
       - { name: benchmark, desc: "Symbol the price-history analytics compute beta against (SPY)", group: mapping }
-      - { name: kind, desc: "Kind served (quote)", group: mapping }
-      - { name: timeout-seconds, type: int, desc: "One request", group: tuning }
-      - { name: cache-ttl-seconds, type: int, desc: "How long a symbol's answer is reused", group: tuning }
-      - { name: cache-max-symbols, type: int, desc: "Symbols cached", group: tuning }
-      - { name: max-bytes, type: int, desc: "Largest response accepted", group: tuning }
-      - { name: retries, type: int, desc: "Repeats of a failed request", group: tuning }
-      - { name: retry-initial, desc: "First wait before a repeat (400ms)", group: tuning }
-      - { name: retry-max, desc: "Longest wait (4s)", group: tuning }
-      - { name: retry-factor, desc: "Growth of the wait (2)", group: tuning }
-      - { name: retry-jitter, desc: "Random spread of the wait (0.2)", group: tuning }
+      - { name: kind, desc: "Kind served (quote)", group: mapping, default: "quote" }
+      - { name: timeout-seconds, type: int, desc: "One HTTP attempt (1 to 120)", group: tuning, default: "10" }
+      - { name: cache-ttl-seconds, type: int, desc: "How long a symbol's answer is reused; `0` never reuses", group: tuning, default: "60" }
+      - { name: cache-max-symbols, type: int, desc: "Symbols cached (least recently used leave first)", group: tuning, default: "100" }
+      - { name: max-bytes, type: int, desc: "Largest response accepted", group: tuning, default: "2000000" }
+      - { name: retries, type: int, desc: "Repeats of a failed request", group: tuning, default: "2" }
+      - { name: retry-initial, desc: "First wait before a repeat (400ms)", group: tuning, default: "400ms" }
+      - { name: retry-max, desc: "Longest wait (4s)", group: tuning, default: "4s" }
+      - { name: retry-factor, desc: "Growth of the wait (2)", group: tuning, default: "2" }
+      - { name: retry-jitter, desc: "Random spread of the wait (0.2)", group: tuning, default: "0.2" }
   rest:
     tls: true
     proxy: true
     settings:
-      - { name: base-url, required: true, desc: "Base URL of the service", group: connection }
-      - { name: path, desc: "Path template", group: connection }
-      - { name: kinds, type: list, desc: "Kinds to read", group: mapping }
-      - { name: generation-header, desc: "Response header carrying the data generation", group: mapping }
-      - { name: timeout-ms, type: int, desc: "Request timeout", group: tuning }
+      - { name: base-url, required: true, desc: "The service root; trailing `/` are removed. Empty: the connector fails to start", group: connection }
+      - { name: path, desc: "Appended to `base-url`; `{kind}` and `{id}` are replaced by the URL-encoded kind and id", group: connection, default: "/{kind}/{id}" }
+      - { name: kinds, type: list, desc: "Comma list of kinds served; a connector's own `kinds:` list takes precedence", group: mapping }
+      - { name: generation-header, desc: "Response header holding a numeric version (quotes removed); otherwise the fetch time in milliseconds", group: mapping, default: "ETag" }
+      - { name: timeout-ms, type: int, desc: "Connect timeout and request timeout, in milliseconds", group: tuning, default: "2000" }
       - { name: "header.*", desc: "A request header: header.<Name> (header.Authorization: Bearer ${SERVICE_TOKEN})", group: connection }
   s3:
     tls: true
@@ -482,87 +482,87 @@ plugins:
     proxy: true
     settings:
       - { name: bootstrap-servers, default: "localhost:9092", desc: "Broker list host:port,...", group: connection }
-      - { name: topics, type: list, required: true, desc: "Topics to read", group: connection }
-      - { name: kind, desc: "Kind of the messages", group: mapping }
-      - { name: id-field, default: id, desc: "Field holding the entity id", group: mapping }
+      - { name: topics, type: list, required: true, desc: "Comma list; without it the plugin stays idle (`PluginNotConfigured`)", group: connection }
+      - { name: kind, desc: "Mapped messages on every topic: their kind", group: mapping }
+      - { name: id-field, default: id, desc: "Mapped messages without a key: the id field, every topic", group: mapping }
       - { name: "kind.*", desc: "Kind per topic: kind.<topic>", group: mapping }
       - { name: "id-field.*", desc: "Id field per kind: id-field.<kind>", group: mapping }
-      - { name: mode, type: "enum:state|ticks", default: state, desc: "Consumption mode", group: mapping }
-      - { name: search, type: boolean, desc: "Keep messages searchable", group: mapping }
-      - { name: poll-ms, type: int, desc: "Poll interval", group: tuning }
-      - { name: cache-mb, type: int, desc: "Cache size", group: tuning }
+      - { name: mode, type: "enum:state|ticks", default: state, desc: "`state` (index, caches, reads) or `ticks` (no reads; pushes to views of its kinds)", group: mapping }
+      - { name: search, type: boolean, desc: "Keep ids for type-ahead (state mode only)", group: mapping, default: "true" }
+      - { name: poll-ms, type: int, desc: "Poll interval", group: tuning, default: "200" }
+      - { name: cache-mb, type: int, desc: "Memory cache, weighed by message length", group: tuning, default: "256" }
       - { name: "disk-cache.*", desc: "On-disk cache (enabled, dir, max-gb, ...)", group: tuning }
       - { name: "client.*", desc: "Any Kafka client property (client.max.poll.records); applied last, wins over everything above", group: tuning }
       - { name: value-format, type: "enum:string|confluent", desc: "string (default), or confluent to read the Confluent wire format (implied by schema-registry.url)", group: mapping }
       - { name: flavour, type: "enum:apache|confluent", default: apache, desc: "confluent: Confluent Cloud defaults (SASL PLAIN with api-key and api-secret, DNS lookup of all addresses)", group: security }
-      - { name: security.protocol, type: "enum:PLAINTEXT|SSL|SASL_PLAINTEXT|SASL_SSL", desc: "Inferred when absent: tls.enabled and a SASL mechanism give SASL_SSL", group: security }
-      - { name: sasl.mechanism, type: "enum:PLAIN|SCRAM-SHA-256|SCRAM-SHA-512|OAUTHBEARER|GSSAPI", desc: "SASL mechanism (confluent flavour defaults to PLAIN)", group: security }
-      - { name: sasl.username, desc: "SASL user name (PLAIN, SCRAM); Confluent Cloud: the API key", group: security }
-      - { name: sasl.password, secret: true, desc: "SASL password (PLAIN, SCRAM): ${ENV} placeholder or sasl.password-file", group: security }
-      - { name: sasl.password-file, type: path, desc: "File whose first line is the SASL password", group: security }
+      - { name: security.protocol, type: "enum:PLAINTEXT|SSL|SASL_PLAINTEXT|SASL_SSL", desc: "`PLAINTEXT`, `SSL`, `SASL_PLAINTEXT` or `SASL_SSL`. Absent: `SASL_SSL` if `sasl.mechanism` is set and TLS is wanted (`tls.enabled: true`), `SASL_PLAINTEXT` with a mechanism and no TLS, `SSL` with `tls.enabled`, else `PLAINTEXT`. Always write it down in production.", group: security }
+      - { name: sasl.mechanism, type: "enum:PLAIN|SCRAM-SHA-256|SCRAM-SHA-512|OAUTHBEARER|GSSAPI", desc: "`PLAIN`, `SCRAM-SHA-256`, `SCRAM-SHA-512`, `OAUTHBEARER` or `GSSAPI`.", group: security }
+      - { name: sasl.username, desc: "PLAIN and SCRAM. Confluent Cloud calls them `api-key` and `api-secret`, accepted as aliases.", group: security }
+      - { name: sasl.password, secret: true, desc: "PLAIN and SCRAM. Confluent Cloud calls them `api-key` and `api-secret`, accepted as aliases.", group: security }
+      - { name: sasl.password-file, type: path, desc: "PLAIN and SCRAM. Confluent Cloud calls them `api-key` and `api-secret`, accepted as aliases.", group: security }
       - { name: api-key, desc: "Confluent Cloud API key (same as sasl.username)", group: security }
       - { name: api-secret, secret: true, desc: "Confluent Cloud API secret (same as sasl.password): ${ENV} placeholder or api-secret-file", group: security }
       - { name: api-secret-file, type: path, desc: "File whose first line is the Confluent Cloud API secret", group: security }
-      - { name: sasl.oauth.token-endpoint, desc: "OAUTHBEARER token endpoint URL", group: security }
-      - { name: sasl.oauth.client-id, desc: "OAUTHBEARER client id", group: security }
+      - { name: sasl.oauth.token-endpoint, desc: "OAUTHBEARER: the identity provider's token URL.", group: security }
+      - { name: sasl.oauth.client-id, desc: "OAUTHBEARER: the client-credentials pair.", group: security }
       - { name: sasl.oauth.client-secret, secret: true, desc: "OAUTHBEARER client secret: ${ENV} placeholder or sasl.oauth.client-secret-file", group: security }
       - { name: sasl.oauth.client-secret-file, type: path, desc: "File whose first line is the OAUTHBEARER client secret", group: security }
-      - { name: sasl.oauth.scope, desc: "OAUTHBEARER scope", group: security }
-      - { name: sasl.kerberos.principal, desc: "GSSAPI principal", group: security }
+      - { name: sasl.oauth.scope, desc: "OAUTHBEARER: the scope to request.", group: security }
+      - { name: sasl.kerberos.principal, desc: "GSSAPI: e.g. `drishti@BANK.EXAMPLE`.", group: security }
       - { name: sasl.kerberos.keytab, type: path, desc: "GSSAPI keytab file", group: security }
       - { name: sasl.kerberos.service-name, default: kafka, desc: "GSSAPI broker service name", group: security }
       - { name: sasl.kerberos.use-ticket-cache, type: boolean, default: "false", desc: "GSSAPI: use the ticket cache instead of a keytab", group: security }
-      - { name: sasl.kerberos.krb5-conf, type: path, desc: "Path of krb5.conf", group: security }
+      - { name: sasl.kerberos.krb5-conf, type: path, desc: "GSSAPI: path of `krb5.conf` (sets `java.security.krb5.conf` if the JVM has none yet).", group: security }
       - { name: schema-registry.url, desc: "Confluent Schema Registry URL (http:// or https://); reads Avro, Protobuf and JSON Schema payloads", group: schema-registry }
       - { name: schema-registry.basic-auth, secret: true, desc: "KEY:SECRET for the registry: ${SR_KEY}:${SR_SECRET}, or schema-registry.basic-auth-file", group: schema-registry }
       - { name: schema-registry.basic-auth-file, type: path, desc: "File whose first line is KEY:SECRET", group: schema-registry }
       - { name: schema-registry.bearer-token, secret: true, desc: "Bearer token for the registry (not with basic-auth): ${ENV} placeholder or schema-registry.bearer-token-file", group: schema-registry }
       - { name: schema-registry.bearer-token-file, type: path, desc: "File whose first line is the bearer token", group: schema-registry }
-      - { name: schema-registry.timeout-ms, type: int, default: "10000", desc: "Registry request timeout", group: schema-registry }
+      - { name: schema-registry.timeout-ms, type: int, default: "10000", desc: "Connect and read timeout for a registry call.", group: schema-registry }
     tls-prefixes: ["schema-registry.tls."]
   activemq:
     tls: true
     settings:
-      - { name: broker-url, default: "failover:(tcp://localhost:61616)?initialReconnectDelay=1000&maxReconnectDelay=30000", desc: "Broker URL", group: connection }
-      - { name: destinations, type: list, required: true, desc: "Queues and topics", group: connection }
+      - { name: broker-url, default: "failover:(tcp://localhost:61616)?initialReconnectDelay=1000&maxReconnectDelay=30000", desc: "OpenWire URL; `failover:(…)` reconnects by itself; `ssl://` endpoints use TLS (ACTIVEMQ_CONNECTOR.md section 14.2)", group: connection }
+      - { name: destinations, type: list, required: true, desc: "Comma list: `queue:<name>`, `topic:<name>`, or `<name>` (a queue)", group: connection }
       - { name: user, desc: "User", group: connection }
       - { name: password, secret: true, desc: "Password: ${ENV_VAR} or file:/path", group: connection }
-      - { name: client-id, desc: "Client id", group: connection }
+      - { name: client-id, desc: "JMS client id; durable subscriptions are named `drishti-<source-name>-<topic>`", group: connection, default: "drishti-<source-name>" }
       - { name: kind, desc: "Kind of the messages (kind.<queue> sets it per queue or topic)", group: mapping }
-      - { name: id-field, default: id, desc: "Field holding the entity id", group: mapping }
+      - { name: id-field, default: id, desc: "The body's id field, every destination", group: mapping }
       - { name: "kind.*", desc: "Kind per destination: kind.<destination>", group: mapping }
       - { name: "id-field.*", desc: "Id field per kind: id-field.<kind>", group: mapping }
       - { name: cache-mb, type: int, default: "128", desc: "Entities kept in memory", group: tuning }
-      - { name: state.dir, type: path, desc: "Folder of the received-state store; default: <state.root>/<connector name>", group: state }
+      - { name: state.dir, type: path, desc: "Folder of the received-state store; default: <state.root>/<connector name>", group: state, default: "<state.root>/<source-name>" }
       - { name: state.root, type: path, default: "<data dir>/state", desc: "Parent of the per-connector state folder", group: state }
-      - { name: state.max-gb, default: "10", desc: "Size budget of the state store in GB (a number, may be fractional)", group: state }
+      - { name: state.max-gb, default: "10", desc: "This connector's disk budget (decimal allowed); what happens past it is `state.when-full` (ACTIVEMQ_CONNECTOR.md section 7.3)", group: state }
       - { name: state.reset-at, default: never, desc: "Clock time (HH:mm) to clear the state store each day, or never", group: state }
       - { name: state.zone, default: America/New_York, desc: "Time zone of state.reset-at", group: state }
-      - { name: state.durability, type: "enum:none|wal|sync", default: sync, desc: "How a received message is made safe on disk: sync survives a power loss, wal a crash, none neither", group: state }
-      - { name: state.when-full, type: "enum:evict-oldest|warn", default: evict-oldest, desc: "At the size budget: drop the oldest entries, or only warn", group: state }
-      - { name: state.check-seconds, type: int, default: "60", desc: "How often the budget is checked", group: state }
-      - { name: max-redeliveries, type: int, desc: "Redeliveries before giving up", group: tuning }
+      - { name: state.durability, type: "enum:none|wal|sync", default: sync, desc: "`sync` (write-ahead log synced on every write: no acknowledged message lost on a crash or a power loss), `wal` (not synced: survives a crash of the process, a power loss can lose the last moments), `none` (no log: a crash can lose up to the 32 MB write buffer) (ACTIVEMQ_CONNECTOR.md section 7.1)", group: state }
+      - { name: state.when-full, type: "enum:evict-oldest|warn", default: evict-oldest, desc: "`evict-oldest`: past the budget, remove the entities written longest ago until under 90% of it, then compact (logged, counted in `evicted`); `warn`: remove nothing, say so in health", group: state }
+      - { name: state.check-seconds, type: int, default: "60", desc: "How often the store's size is checked against the budget", group: state }
+      - { name: max-redeliveries, type: int, desc: "Redeliveries of a message the state store could not keep before the broker dead-letters it; `-1`: without limit", group: tuning, default: "-1" }
   rabbitmq:
     tls: true
     settings:
-      - { name: uri, default: "amqp://guest:guest@localhost:5672/%2f", desc: "amqp:// or amqps:// URI (credentials as ${ENV} references)", group: connection }
+      - { name: uri, default: "amqp://guest:guest@localhost:5672/%2f", desc: "AMQP URI with user, password, host, port and vhost; `amqps://` for TLS (port 5671 by default)", group: connection }
       - { name: auth-mechanism, type: "enum:plain|external", default: plain, desc: "external logs in with the client certificate (needs amqps:// and tls.cert-file or tls.keystore)", group: security }
-      - { name: queues, type: list, required: true, desc: "Queues to read", group: connection }
+      - { name: queues, type: list, required: true, desc: "Comma list of queues to consume; empty means the connector connects and consumes nothing", group: connection }
       - { name: "bind.*", desc: "Queue bindings", group: connection }
       - { name: kind, desc: "Kind of the messages (kind.<queue> sets it per queue or topic)", group: mapping }
-      - { name: id-field, default: id, desc: "Field holding the entity id", group: mapping }
+      - { name: id-field, default: id, desc: "The body's id field, for every queue with a kind", group: mapping }
       - { name: "kind.*", desc: "Kind per queue: kind.<queue>", group: mapping }
       - { name: "id-field.*", desc: "Id field per kind: id-field.<kind>", group: mapping }
       - { name: cache-mb, type: int, default: "128", desc: "Entities kept in memory", group: tuning }
-      - { name: state.dir, type: path, desc: "Folder of the received-state store; default: <state.root>/<connector name>", group: state }
+      - { name: state.dir, type: path, desc: "Folder of the received-state store; default: <state.root>/<connector name>", group: state, default: "<state.root>/<source-name>" }
       - { name: state.root, type: path, default: "<data dir>/state", desc: "Parent of the per-connector state folder", group: state }
-      - { name: state.max-gb, default: "10", desc: "Size budget of the state store in GB (a number, may be fractional)", group: state }
+      - { name: state.max-gb, default: "10", desc: "This connector's disk budget (decimal values accepted); what happens past it is `state.when-full`", group: state }
       - { name: state.reset-at, default: never, desc: "Clock time (HH:mm) to clear the state store each day, or never", group: state }
       - { name: state.zone, default: America/New_York, desc: "Time zone of state.reset-at", group: state }
-      - { name: state.durability, type: "enum:none|wal|sync", default: sync, desc: "How a received message is made safe on disk: sync survives a power loss, wal a crash, none neither", group: state }
-      - { name: state.when-full, type: "enum:evict-oldest|warn", default: evict-oldest, desc: "At the size budget: drop the oldest entries, or only warn", group: state }
-      - { name: state.check-seconds, type: int, default: "60", desc: "How often the budget is checked", group: state }
-      - { name: declare, type: boolean, desc: "Declare queues at start", group: connection }
-      - { name: prefetch, type: int, desc: "Prefetch", group: tuning }
-      - { name: heartbeat-seconds, type: int, desc: "Heartbeat", group: tuning }
-      - { name: recovery-interval-ms, type: int, desc: "Recovery interval", group: tuning }
+      - { name: state.durability, type: "enum:none|wal|sync", default: sync, desc: "`sync` (write-ahead log synced on every write: no acknowledged message lost on a crash or a power loss), `wal` (not synced: survives a crash of the process, a power loss can lose the last moments), `none` (no log: a crash can lose up to the 32 MB memtable) (RABBITMQ_CONNECTOR.md section 6.1)", group: state }
+      - { name: state.when-full, type: "enum:evict-oldest|warn", default: evict-oldest, desc: "`evict-oldest`: past the budget, remove the entities written longest ago until under 90% of it, then compact (logged, counted in `evicted`); `warn`: remove nothing, say so in health (RABBITMQ_CONNECTOR.md section 6.3)", group: state }
+      - { name: state.check-seconds, type: int, default: "60", desc: "How often the store's size is checked against the budget", group: state }
+      - { name: declare, type: boolean, desc: "Declare each queue durable (no arguments) and bind it; `false` uses existing queues and ignores `bind.*`", group: connection, default: "true" }
+      - { name: prefetch, type: int, desc: "Unacknowledged messages in flight per consumer (`basicQos`)", group: tuning, default: "100" }
+      - { name: heartbeat-seconds, type: int, desc: "The requested AMQP heartbeat", group: tuning, default: "20" }
+      - { name: recovery-interval-ms, type: int, desc: "The automatic recovery's wait between reconnection attempts", group: tuning, default: "2000" }

@@ -727,43 +727,13 @@ The file is applied to the running server within seconds, without a restart, and
 
 In the connector file's `settings:` (see [As a connector file](#as-a-connector-file)):
 
+Every setting of `iceberg`, with its type, default and meaning, is in the plugin's generated README: [plugins/drishti-plugin-iceberg/README.md, Settings](../../plugins/drishti-plugin-iceberg/README.md#settings) (from the settings catalogue Admin → Connectors builds its form from). The shared `tls.*` settings are in [TLS.md](TLS.md).
+
+Read beside them, and not in that table:
+
 | Setting | Default | Meaning |
 |---|---|---|
-| `engine` | `native` | `native` (drishti-iceberg, no Hadoop; a root it cannot reach is read by the library unless `native` is set), `library` (Apache Iceberg Java over Hadoop) or `auto` (native on Windows, library elsewhere); `DRISHTI_ICEBERG_ENGINE` sets it for every connector ([section 17](#17-engines-native-and-library)) |
-| `catalog` | `hadoop` | `hadoop` (path-based tables) or `rest` |
-| `root` | none (`root` or `uri` is required: without either the plugin stays idle; the `iceberg` profile sets `./data/iceberg`) | `hadoop`: the lake, a folder or `s3a://…` (`abfs://`, `gs://`, `hdfs://`) |
-| `domain` | empty | the data domain: the folder under `root`, or the REST namespace |
-| `namespace` | the domain | `rest`: the namespace (dots separate levels) |
-| `uri` | none | `rest`: the catalog's URI |
 | `warehouse`, `credential`, `token`, `scope`, `oauth2-server-uri`, `prefix`, `io-impl` | none | `rest`: passed to the catalog |
-| `catalog.<key>` | — | `rest`: any other catalog property (`catalog.rest.sigv4-enabled` …) |
-| `s3.endpoint`, `s3.access-key`, `s3.secret-key`, `s3.region`, `s3.path-style` | — | object storage for S3A and S3FileIO (`s3.path-style` defaults to `true` with an endpoint) |
-| `hadoop.<key>` | — | `library`: passed to Hadoop as `<key>` |
-| `table.<kind>` | the kind | the table a kind is read from, a name under the domain (never a path): `table: {trade: trade_calypso}` serves kind `trade` from `<root>/trading/trade_calypso`, so several connectors serve one kind from tables side by side, one per source system, as the Delta connector's `table.<kind>` (what `build_demo_lakes.py --store calypso=iceberg` writes) |
-| `metadata-location.<kind>` | none | `native`: the kind's table named by its metadata file (`s3://…/v12.metadata.json`), read-only |
-| `relocate` | none | `native`: `<old folder> -> <new folder>; …` reads a table copied elsewhere (an S3 table synced to a laptop, a folder moved after loading: Health gives the pair to copy, [section 14](#14-diagnosing)). Each side is a plain folder (`/data/ice1`, `C:\lake` or `C:/lake`, `\\fs\share\lake`) or a URI (`file:/data/ice1`, `file:///C:/lake`, `s3://bucket/wh`; `s3a://` and `s3n://` are the same bucket): both are read into the `file:` form the metadata names its files in, so the plain form and the `file:` form are the same pair. A folder matches whole folders (`/data/ice1` is not `/data/ice10`). Quote the value in YAML when it holds a backslash: `relocate: 'C:\old -> D:\new'`. A pair that cannot be read fails the start, naming it. The library engine does not read it, and Health says so |
-| `vended-credentials` | `true` | `native`, `rest`: ask the catalog for each table's own S3 credentials (`X-Iceberg-Access-Delegation`), renewed before they expire |
-| `lz4-decoder` | `safe` | `native`: the LZ4 page decoder, `safe` (pure Java) or `fast` |
-| `kinds` | every table found (new ones too) | comma list of kinds to serve |
-| `mode.<kind>` | `snapshot` | `snapshot` or `effective` |
-| `lookback-days` | `10` | how far back a snapshot read looks for the newest day on or before the date asked |
-| `layout.<kind>.columns` | none | promoted paths ([section 5](#5-declaring-the-layout-in-a-pack)) |
-| `layout.<kind>.vectors` | none | (2.9.5) vector columns: `list<double>` columns such as a P&L vector, read in bulk by `vectors()` and put back into a fetched document in place of their `{"$vector": "PNL"}` markers ([section 18](#18-parity-with-delta-vectors-documents-and-disk-caches-295)) |
-| `id-map-disk.enabled`, `id-map-disk.dir` | `true`, `<data>/cache/<connector>/idmaps` | (2.9.5) each date's id map written once and memory-mapped, kept across restarts |
-| `doc-disk-cache.enabled`, `.dir`, `.max-gb`, `.ttl`, `.reset-at`, `.zone` | `true`, `<data>/cache/<connector>/docs`, `1`, `12h`, `02:00`, `America/New_York` | (2.9.5) documents already read, in a RocksDB store kept across restarts |
-| `refresh-seconds` | `10` | how often each table's current snapshot is checked |
-| `layout-cache` | `64` | planned snapshots kept |
-| `id-map-mb` | `1024` | memory for days' id maps |
-| `columns-cache-mb` | `1024` | memory for days' column sets |
-| `doc-cache-mb` | `256` | memory for recently read documents |
-| `cache-mb` | `512` | memory for small days read whole for reverse lookups |
-| `max-concurrent-reads` | `16` | single-document reads at once |
-| `max-queued-reads` | `4096` | single-document reads that may wait for a slot; more are refused at once, and a read whose caller has gone leaves the queue |
-| `max-load-rows` | `200000` | the largest day read whole for reverse lookups when a table has no promoted columns |
-| `reverse-index` | `true` | `false` turns reverse lookups off |
-| `source-name` | the connector's name | the name shown in provenance and Health |
-| `stale-after` | none | warn when no new data arrived for this long (engine setting) |
-| `proxy.*` | none | the outbound HTTP proxy ([TLS.md (proxy)](TLS.md#outbound-http-proxy-for-connectors-ai-providers-and-mcp-servers)): `proxy.url`, `proxy.username`, `proxy.password` (`${ENV}`), `proxy.no-proxy`, `proxy.enabled`, or `proxy: none`; for the REST catalog and the object store |
 
 Loader options (`IcebergLoader FILE|- [root]`): `--file-rows` (250000), `--row-group-mb` (1), `--buffer-mb` (1024),
 `--engine` (`native`, `library` or `auto`, as the connector's `engine`), `--threads` (half the cores, at most 8), `--spill-dir` (the system temp folder), `--keep-days`, `--as-of yyyy-MM-dd` (today in the business zone), `--future-days N` (1), `--zone Z` (`DRISHTI_BUSINESS_ZONE`, else `America/New_York`), `--max-drop-share F` (0.5), `--force-drop`, `--catalog`,

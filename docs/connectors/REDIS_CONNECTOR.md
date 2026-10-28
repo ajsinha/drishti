@@ -750,26 +750,7 @@ The file is applied to the running server within seconds, without a restart, and
 
 In the connector file's `settings:` (see [As a connector file](#as-a-connector-file)):
 
-| Setting | Default | Meaning |
-|---|---|---|
-| `uri` | none (required) | Lettuce URI, e.g. `redis://localhost:6379`; `rediss://` for TLS, `redis://user:secret@host:port/db` for credentials; several comma-separated for Cluster seed nodes |
-| `cluster` | `false` | `true` for Redis Cluster (also implied by several URIs) |
-| `user`, `password` | none | credentials (override the URI's) |
-| `domain` | `drishti` | the data domain: the key prefix (`trading:…`) |
-| `kinds` | what `<domain>:kinds` lists | comma list of kinds to serve |
-| `mode.<kind>` | `snapshot` | `snapshot` or `effective` |
-| `lookback-days` | `10` | how far back a snapshot read looks for the newest day on or before the date asked |
-| `layout.<kind>.columns` | none | the promoted fields, read from the day's column hash ([section 3](#3-declaring-which-fields-are-columns)) |
-| `refresh-seconds` | `60` | how often the kinds' days, the ids and `updated` are re-read (also on every announced day) |
-| `columns-cache-mb` | `1024` | memory for days' column sets |
-| `heavy-reads` | `2` | days' column sets read at once |
-| `max-load-rows` | `200000` | the most documents read for a reverse lookup on a kind without promoted fields |
-| `reverse-index` | `true` | `false` turns reverse lookups off |
-| `live` | `true` | subscribe to `<domain>:changes` and push changed entities to open views |
-| `timeout-ms` | `5000` | connect and command timeout |
-| `fail-fast` | `true` | while health says Redis is down, reads and column reads fail at once (`DRS-1003`, a message without host or credentials) instead of each waiting `timeout-ms`; `false` to always wait |
-| `recheck-ms` | `1000` | how often a down Redis is asked again (`PING`); reads resume at its first answer |
-| `source-name` | the connector's name | the name shown in provenance and Health |
+Every setting of `redis`, with its type, default and meaning, is in the plugin's generated README: [plugins/drishti-plugin-redis/README.md, Settings](../../plugins/drishti-plugin-redis/README.md#settings) (from the settings catalogue Admin → Connectors builds its form from). The shared `tls.*` settings are in [TLS.md](TLS.md).
 
 `RedisLoader <file|-> [uri]` options:
 

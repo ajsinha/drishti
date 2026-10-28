@@ -73,28 +73,28 @@ day's ids from a covered query, both re-read every `refresh-seconds`. Retention 
 | Setting | Type | Default | Meaning |
 |---|---|---|---|
 | `layout.*` | string |  | Per-kind promoted columns: layout.<kind>.columns: a, b, c |
-| `uri` | string |  | **Required.** MongoDB URI (credentials as ${ENV} references) |
-| `database` | string |  | Database |
-| `collection` | string |  | Collection |
+| `uri` | string |  | **Required.** Connection string: hosts, replica set, credentials, TLS, compressors |
+| `database` | string | `drishti` | Database |
+| `collection` | string |  | The domain's collection (`<collection>_columns` beside it) |
 | `domain` | string |  | Domain |
-| `kinds` | list |  | Kinds to read |
+| `kinds` | list |  | Comma list of kinds to serve |
 | `doc-format` | string |  | Document format |
-| `read-preference` | string |  | Read preference |
+| `read-preference` | string | `primary` | `primary`, `primaryPreferred`, `secondary`, `secondaryPreferred` or `nearest` |
 | `auth-mechanism` | one of x509 |  | x509 logs in with the client certificate (needs tls.enabled and tls.cert-file + tls.key-file, or tls.keystore) |
 | `x509-user` | string |  | The certificate subject to log in as (default: the server derives it from the certificate) |
-| `connect-timeout-ms` | int |  | Connect timeout |
-| `refresh-seconds` | int |  | Re-read interval |
-| `lookback-days` | int |  | Days of history to index |
-| `max-load-rows` | int |  | Rows to load at most |
-| `batch-size` | int |  | Batch size |
+| `connect-timeout-ms` | int | `3000` | Connection and server-selection timeout |
+| `refresh-seconds` | int | `60` | How often the kinds' dates and the ids are re-read |
+| `lookback-days` | int | `10` | How far back a snapshot read looks for the newest day on or before the date asked |
+| `max-load-rows` | int | `200000` | The most documents read for a reverse lookup on a kind without promoted fields |
+| `batch-size` | int | `5000` | Documents per cursor batch for day reads |
 | `batch` | int |  | Batch |
-| `read-threads` | int |  | Read threads |
+| `read-threads` | int | `8` | Id ranges read at once when a day's columns are read |
 | `in-flight` | int |  | Reads in flight |
-| `heavy-reads` | int |  | Heavy reads at once |
+| `heavy-reads` | int | `2` | Day reads at once per connector |
 | `ttl-days` | int |  | Days to keep |
-| `columns-seconds` | int |  | Column cache lifetime |
-| `columns-cache-mb` | int |  | Column cache size |
-| `reverse-index` | boolean |  | Build the reverse index |
+| `columns-seconds` | int | `300` | After this a day's column set is re-read in the background (the last read is served meanwhile) |
+| `columns-cache-mb` | int | `1024` | Memory for days' column sets |
+| `reverse-index` | boolean | `true` | Build the reverse index |
 
 Every connector also takes `source-name`, `mode.*`, `domain`, `stale-after`, `union` (docs/connectors/CONNECTOR_FILES.md). It takes the shared `tls.*` settings (docs/connectors/TLS.md).
 <!-- settings:end -->

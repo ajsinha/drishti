@@ -568,24 +568,7 @@ The file is applied to the running server within seconds, without a restart, and
 
 In the connector file's `settings:` (see [As a connector file](#as-a-connector-file)):
 
-| Setting | Default | Meaning |
-|---|---|---|
-| `hosts` | `localhost:3000` | seed nodes, comma separated |
-| `namespace` | `test` | the namespace |
-| `set` | the connector's `domain`, else `drishti` | the data domain's set (`<set>_ix` and `<set>_kinds` beside it) |
-| `kinds` | what the kinds set lists | comma list of kinds to serve |
-| `mode.<kind>` | `snapshot` | `snapshot` or `effective` |
-| `lookback-days` | `10` | how far back a snapshot read looks for the newest day on or before the date asked |
-| `layout.<kind>.columns` | none | the promoted fields, stored as bins ([section 3](#3-declaring-which-fields-are-bins)) |
-| `refresh-seconds` | `60` | how often the kinds' dates and the ids are re-read |
-| `scan-threads` | `8` | partition ranges scanned at once when reading a day's columns |
-| `columns-cache-mb` | `1024` | memory for days' column sets |
-| `columns-seconds` | `300` | how long a day's column set is kept before it is read again |
-| `max-load-rows` | `200000` | the most documents scanned for a reverse lookup on a kind without promoted bins |
-| `reverse-index` | `true` | `false` turns reverse lookups off |
-| `connect-timeout-ms` | `3000` | connection timeout |
-| `user`, `password` | none | credentials, if the cluster requires them |
-| `source-name` | the connector's name | the name shown in provenance and Health |
+Every setting of `aerospike`, with its type, default and meaning, is in the plugin's generated README: [plugins/drishti-plugin-aerospike/README.md, Settings](../../plugins/drishti-plugin-aerospike/README.md#settings) (from the settings catalogue Admin → Connectors builds its form from). The shared `tls.*` settings are in [TLS.md](TLS.md).
 
 ## 13. Checklist for production
 

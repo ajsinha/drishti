@@ -699,19 +699,7 @@ templates (list them with `drishti.py connector list`); the other stores' exampl
 
 In the connector file's `settings:` (see [As a connector file](#as-a-connector-file)):
 
-| Setting | Default | Meaning |
-|---|---|---|
-| `feed` | none (required) | `nyfed-sofr`, `ecb-estr`, `ecb-fx`, `us-treasury` or `fred`; without it the plugin stays idle, an unknown value fails to start |
-| `refresh-minutes` | `60` | minutes between the end of one fetch and the start of the next (a whole number); the first fetch is at start |
-| `timeout-seconds` | `20` | the request timeout of each HTTP request (a whole number); the connect timeout is a fixed 10 s |
-| `url` | the feed's public URL(s) (section 3) | an override; `file:` URLs are read from disk; for `us-treasury` and `fred` a comma list (one per month, or one per series in the order of `series`) |
-| `api-key` | empty | the FRED API key (`fred` only) |
-| `series` | `DGS10,DFF` | FRED series ids, comma separated (`fred` only); each becomes `FIX-FRED-<series>` |
-| `user-agent` | `public-data-feed-connector` | the `User-Agent` header; the pack sets `<product> public data feed connector` |
-| `source-name` | the connector's name (as itself: the `feed` value) | the name in provenance, health and search subtitles |
-| `stale-after` | none (the pack sets `4d`) | an engine setting: mark the connector stale when no refresh has brought data for this long |
-| `tls.*` | none | for an `https://` mirror on a private CA ([TLS.md](TLS.md)) |
-| `proxy.*` | the site default | the outbound HTTP proxy ([TLS.md (proxy)](TLS.md#outbound-http-proxy-for-connectors-ai-providers-and-mcp-servers)): `proxy.url`, `proxy.username`, `proxy.password` (`${ENV}`), `proxy.no-proxy`, `proxy.enabled`, or `proxy: none` |
+Every setting of `feed`, with its type, default and meaning, is in the plugin's generated README: [plugins/drishti-plugin-feeds/README.md, Settings](../../plugins/drishti-plugin-feeds/README.md#settings) (from the settings catalogue Admin → Connectors builds its form from). The shared `tls.*` settings are in [TLS.md](TLS.md).
 
 And on the connector itself: `plugin: feed`, `enabled` (the pack uses `${DRISHTI_FEED_<NAME>:false}`), and `kinds`.
 

@@ -118,6 +118,10 @@
   - DRISHTI_ICEBERG.md section 15 keeps why there are two Iceberg connectors and their comparison; its 15.1 to 15.5 (configuration,
     rows as documents, reading at scale, settings, tests) repeated ICEBERG_EXTERNAL_CONNECTOR.md nearly word for word and are now a
     map to its sections. The code comments that cited "DRISHTI_ICEBERG.md section 15.x" cite the external connector's sections.
+  - One home for connector settings: the plugin READMEs, generated from the settings catalogue (`plugin-settings.yaml`). The
+    catalogue took the hand-written tables' fuller meanings and defaults (about 180 settings; Admin → Connectors shows them too), the
+    `*_CONNECTOR.md` settings tables became a link to the README (keeping only rows the catalogue does not list), and CONFIGURATION.md's
+    *Connector settings, plugin by plugin* (about 500 lines) became one pointer table; its old section anchors still open it.
 
 ## 2.9.5 — Iceberg as a full alternative to Delta; VaR hierarchies by columns (limit letters); connector files that upgrade themselves safely (2026-10-28)
 

@@ -82,36 +82,36 @@ key (`--ttl-days`). It never writes; `tools/load-redis.sh` (`RedisLoader`) does.
 | Setting | Type | Default | Meaning |
 |---|---|---|---|
 | `layout.*` | string |  | Per-kind promoted columns: layout.<kind>.columns: a, b, c |
-| `uri` | string |  | **Required.** redis:// or rediss:// URI (credentials as ${ENV} references) |
+| `uri` | string |  | **Required.** Lettuce URI, e.g. `redis://localhost:6379`; `rediss://` for TLS, `redis://user:secret@host:port/db` for credentials; several comma-separated for Cluster seed nodes |
 | `user` | string |  | User |
 | `password` | string |  | Password: ${ENV_VAR} or file:/path (secret: give `${ENV_VAR}` or `file:/path`, never the value) |
-| `cluster` | boolean |  | Redis Cluster |
-| `domain` | string |  | Domain |
-| `kinds` | list |  | Kinds to read |
+| `cluster` | boolean | `false` | `true` for Redis Cluster (also implied by several URIs) |
+| `domain` | string | `drishti` | Domain |
+| `kinds` | list |  | Comma list of kinds to serve |
 | `codec` | string |  | Document codec |
-| `live` | boolean |  | Subscribe to live updates |
-| `fail-fast` | boolean |  | Fail at start when unreachable |
-| `timeout-ms` | int |  | Command timeout |
+| `live` | boolean | `true` | Subscribe to `<domain>:changes` and push changed entities to open views |
+| `fail-fast` | boolean | `true` | While health says Redis is down, reads and column reads fail at once (`DRS-1003`, a message without host or credentials) instead of each waiting `timeout-ms`; `false` to always wait |
+| `timeout-ms` | int | `5000` | Connect and command timeout |
 | `pool-size` | int | `20` | Most connections open at once (default: drishti.db.pool.size); more are opened only when the open ones are busy |
 | `pool-min-idle` | int | `2` | Idle connections kept when quiet (default: drishti.db.pool.min-idle) |
 | `pool-idle-timeout` | duration | `10m` | An idle connection beyond pool-min-idle is closed after this long |
 | `pool-leak-threshold` | duration | `60s` | A connection borrowed (or a command in flight) longer than this is logged with the borrower's stack; 0 = off |
 | `pool-pipeline-depth` | int | `32` | Commands in flight on every open connection before another is opened |
-| `refresh-seconds` | int |  | Re-read interval |
-| `lookback-days` | int |  | Days of history to index |
-| `max-load-rows` | int |  | Rows to load at most |
+| `refresh-seconds` | int | `60` | How often the kinds' days, the ids and `updated` are re-read (also on every announced day) |
+| `lookback-days` | int | `10` | How far back a snapshot read looks for the newest day on or before the date asked |
+| `max-load-rows` | int | `200000` | The most documents read for a reverse lookup on a kind without promoted fields |
 | `threads` | int |  | Threads |
 | `in-flight` | int |  | Reads in flight |
-| `heavy-reads` | int |  | Heavy reads at once |
+| `heavy-reads` | int | `2` | Days' column sets read at once |
 | `ttl-days` | int |  | Days to keep |
 | `level` | int |  | Compression level |
 | `chunk-rows` | int |  | Rows per chunk |
 | `dict-kb` | int |  | Dictionary size |
 | `dict-samples` | int |  | Dictionary samples |
-| `recheck-ms` | int |  | Recheck interval |
+| `recheck-ms` | int | `1000` | How often a down Redis is asked again (`PING`); reads resume at its first answer |
 | `keep-replaced-seconds` | int |  | Keep replaced data this long |
-| `columns-cache-mb` | int |  | Column cache size |
-| `reverse-index` | boolean |  | Build the reverse index |
+| `columns-cache-mb` | int | `1024` | Memory for days' column sets |
+| `reverse-index` | boolean | `true` | Build the reverse index |
 
 Every connector also takes `source-name`, `mode.*`, `domain`, `stale-after`, `union` (docs/connectors/CONNECTOR_FILES.md). It takes the shared `tls.*` settings (docs/connectors/TLS.md).
 <!-- settings:end -->

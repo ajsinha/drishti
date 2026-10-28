@@ -90,43 +90,43 @@ them (a lake holds the day, the topic is the change feed).
 | Setting | Type | Default | Meaning |
 |---|---|---|---|
 | `bootstrap-servers` | string | `localhost:9092` | Broker list host:port,... |
-| `topics` | list |  | **Required.** Topics to read |
-| `kind` | string |  | Kind of the messages |
-| `id-field` | string | `id` | Field holding the entity id |
+| `topics` | list |  | **Required.** Comma list; without it the plugin stays idle (`PluginNotConfigured`) |
+| `kind` | string |  | Mapped messages on every topic: their kind |
+| `id-field` | string | `id` | Mapped messages without a key: the id field, every topic |
 | `kind.*` | string |  | Kind per topic: kind.<topic> |
 | `id-field.*` | string |  | Id field per kind: id-field.<kind> |
-| `mode` | one of state, ticks | `state` | Consumption mode |
-| `search` | boolean |  | Keep messages searchable |
-| `poll-ms` | int |  | Poll interval |
-| `cache-mb` | int |  | Cache size |
+| `mode` | one of state, ticks | `state` | `state` (index, caches, reads) or `ticks` (no reads; pushes to views of its kinds) |
+| `search` | boolean | `true` | Keep ids for type-ahead (state mode only) |
+| `poll-ms` | int | `200` | Poll interval |
+| `cache-mb` | int | `256` | Memory cache, weighed by message length |
 | `disk-cache.*` | string |  | On-disk cache (enabled, dir, max-gb, ...) |
 | `client.*` | string |  | Any Kafka client property (client.max.poll.records); applied last, wins over everything above |
 | `value-format` | one of string, confluent |  | string (default), or confluent to read the Confluent wire format (implied by schema-registry.url) |
 | `flavour` | one of apache, confluent | `apache` | confluent: Confluent Cloud defaults (SASL PLAIN with api-key and api-secret, DNS lookup of all addresses) |
-| `security.protocol` | one of PLAINTEXT, SSL, SASL_PLAINTEXT, SASL_SSL |  | Inferred when absent: tls.enabled and a SASL mechanism give SASL_SSL |
-| `sasl.mechanism` | one of PLAIN, SCRAM-SHA-256, SCRAM-SHA-512, OAUTHBEARER, GSSAPI |  | SASL mechanism (confluent flavour defaults to PLAIN) |
-| `sasl.username` | string |  | SASL user name (PLAIN, SCRAM); Confluent Cloud: the API key |
-| `sasl.password` | string |  | SASL password (PLAIN, SCRAM): ${ENV} placeholder or sasl.password-file (secret: give `${ENV_VAR}` or `file:/path`, never the value) |
-| `sasl.password-file` | path |  | File whose first line is the SASL password |
+| `security.protocol` | one of PLAINTEXT, SSL, SASL_PLAINTEXT, SASL_SSL |  | `PLAINTEXT`, `SSL`, `SASL_PLAINTEXT` or `SASL_SSL`. Absent: `SASL_SSL` if `sasl.mechanism` is set and TLS is wanted (`tls.enabled: true`), `SASL_PLAINTEXT` with a mechanism and no TLS, `SSL` with `tls.enabled`, else `PLAINTEXT`. Always write it down in production. |
+| `sasl.mechanism` | one of PLAIN, SCRAM-SHA-256, SCRAM-SHA-512, OAUTHBEARER, GSSAPI |  | `PLAIN`, `SCRAM-SHA-256`, `SCRAM-SHA-512`, `OAUTHBEARER` or `GSSAPI`. |
+| `sasl.username` | string |  | PLAIN and SCRAM. Confluent Cloud calls them `api-key` and `api-secret`, accepted as aliases. |
+| `sasl.password` | string |  | PLAIN and SCRAM. Confluent Cloud calls them `api-key` and `api-secret`, accepted as aliases. (secret: give `${ENV_VAR}` or `file:/path`, never the value) |
+| `sasl.password-file` | path |  | PLAIN and SCRAM. Confluent Cloud calls them `api-key` and `api-secret`, accepted as aliases. |
 | `api-key` | string |  | Confluent Cloud API key (same as sasl.username) |
 | `api-secret` | string |  | Confluent Cloud API secret (same as sasl.password): ${ENV} placeholder or api-secret-file (secret: give `${ENV_VAR}` or `file:/path`, never the value) |
 | `api-secret-file` | path |  | File whose first line is the Confluent Cloud API secret |
-| `sasl.oauth.token-endpoint` | string |  | OAUTHBEARER token endpoint URL |
-| `sasl.oauth.client-id` | string |  | OAUTHBEARER client id |
+| `sasl.oauth.token-endpoint` | string |  | OAUTHBEARER: the identity provider's token URL. |
+| `sasl.oauth.client-id` | string |  | OAUTHBEARER: the client-credentials pair. |
 | `sasl.oauth.client-secret` | string |  | OAUTHBEARER client secret: ${ENV} placeholder or sasl.oauth.client-secret-file (secret: give `${ENV_VAR}` or `file:/path`, never the value) |
 | `sasl.oauth.client-secret-file` | path |  | File whose first line is the OAUTHBEARER client secret |
-| `sasl.oauth.scope` | string |  | OAUTHBEARER scope |
-| `sasl.kerberos.principal` | string |  | GSSAPI principal |
+| `sasl.oauth.scope` | string |  | OAUTHBEARER: the scope to request. |
+| `sasl.kerberos.principal` | string |  | GSSAPI: e.g. `drishti@BANK.EXAMPLE`. |
 | `sasl.kerberos.keytab` | path |  | GSSAPI keytab file |
 | `sasl.kerberos.service-name` | string | `kafka` | GSSAPI broker service name |
 | `sasl.kerberos.use-ticket-cache` | boolean | `false` | GSSAPI: use the ticket cache instead of a keytab |
-| `sasl.kerberos.krb5-conf` | path |  | Path of krb5.conf |
+| `sasl.kerberos.krb5-conf` | path |  | GSSAPI: path of `krb5.conf` (sets `java.security.krb5.conf` if the JVM has none yet). |
 | `schema-registry.url` | string |  | Confluent Schema Registry URL (http:// or https://); reads Avro, Protobuf and JSON Schema payloads |
 | `schema-registry.basic-auth` | string |  | KEY:SECRET for the registry: ${SR_KEY}:${SR_SECRET}, or schema-registry.basic-auth-file (secret: give `${ENV_VAR}` or `file:/path`, never the value) |
 | `schema-registry.basic-auth-file` | path |  | File whose first line is KEY:SECRET |
 | `schema-registry.bearer-token` | string |  | Bearer token for the registry (not with basic-auth): ${ENV} placeholder or schema-registry.bearer-token-file (secret: give `${ENV_VAR}` or `file:/path`, never the value) |
 | `schema-registry.bearer-token-file` | path |  | File whose first line is the bearer token |
-| `schema-registry.timeout-ms` | int | `10000` | Registry request timeout |
+| `schema-registry.timeout-ms` | int | `10000` | Connect and read timeout for a registry call. |
 
 Every connector also takes `source-name`, `mode.*`, `domain`, `stale-after`, `union` (docs/connectors/CONNECTOR_FILES.md). It takes the shared `tls.*` settings (docs/connectors/TLS.md), also under `schema-registry.tls.*`. It takes the shared `proxy.*` settings for an outbound HTTP proxy (CONNECTOR_DEVELOPER_GUIDE.md).
 <!-- settings:end -->

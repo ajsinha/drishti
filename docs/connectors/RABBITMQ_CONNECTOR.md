@@ -737,42 +737,13 @@ In the connector file's `settings:` (or `drishti.sources.plugins.rabbitmq.settin
 
 Read by `RabbitMqSourcePlugin`:
 
-| Setting | Default | Meaning |
-|---|---|---|
-| `uri` | `amqp://guest:guest@localhost:5672/%2f` | AMQP URI with user, password, host, port and vhost; `amqps://` for TLS (port 5671 by default) |
-| `auth-mechanism` | `plain` | `plain` (the URI's user and password) or `external` (log in with the client certificate; [section 12.3](#123-logging-in-with-the-client-certificate-external)) |
-| `tls.*` | none | TLS for `amqps://`: a private CA, truststore, client certificate, hostname check; see [section 12.2](#122-tls-amqps-with-the-shared-tls-settings) and [TLS.md](TLS.md#1-the-settings) |
-| `queues` | empty | comma list of queues to consume; empty means the connector connects and consumes nothing |
-| `declare` | `true` | declare each queue durable (no arguments) and bind it; `false` uses existing queues and ignores `bind.*` |
-| `bind.<queue>` | none | `exchange:routing.key`; split at the first `:`; only with `declare: true` |
-| `prefetch` | `100` | unacknowledged messages in flight per consumer (`basicQos`) |
-| `recovery-interval-ms` | `2000` | the automatic recovery's wait between reconnection attempts |
-| `heartbeat-seconds` | `20` | the requested AMQP heartbeat |
+Every setting of `rabbitmq`, with its type, default and meaning, is in the plugin's generated README: [plugins/drishti-plugin-rabbitmq/README.md, Settings](../../plugins/drishti-plugin-rabbitmq/README.md#settings) (from the settings catalogue Admin → Connectors builds its form from). The shared `tls.*` settings are in [TLS.md](TLS.md).
 
 Read by `MessageStateSource` (shared with `activemq`):
 
-| Setting | Default | Meaning |
-|---|---|---|
-| `kind` | none | every queue carries documents of this kind |
-| `kind.<queue>` | none | that queue's kind; a queue with no kind (and no `kind`) carries envelopes `{kind, id, doc}` |
-| `id-field` | `id` | the body's id field, for every queue with a kind |
-| `id-field.<queue>` | none | the id field on that queue |
-| `cache-mb` | `128` | memory for recent documents |
-| `state.root` | `./data/state` | the parent of the default state folder |
-| `state.dir` | `<state.root>/<source-name>` | the RocksDB state store's folder |
-| `state.durability` | `sync` | `sync` (write-ahead log synced on every write: no acknowledged message lost on a crash or a power loss), `wal` (not synced: survives a crash of the process, a power loss can lose the last moments), `none` (no log: a crash can lose up to the 32 MB memtable) ([section 6.1](#61-durability-what-an-acknowledged-message-survives)) |
-| `state.max-gb` | `10` | this connector's disk budget (decimal values accepted); what happens past it is `state.when-full` |
-| `state.when-full` | `evict-oldest` | `evict-oldest`: past the budget, remove the entities written longest ago until under 90% of it, then compact (logged, counted in `evicted`); `warn`: remove nothing, say so in health ([section 6.3](#63-the-disk-budget-per-connector)) |
-| `state.check-seconds` | `60` | how often the store's size is checked against the budget |
-| `state.reset-at` | `never` | a daily clearing time, `HH:mm` (`06:00`) |
-| `state.zone` | `America/New_York` | the zone of `state.reset-at` |
-| `source-name` | the connector's name (as itself: `rabbitmq`) | provenance source, type-ahead subtitle, and the default state folder's name |
 
 Read by the engine for every connector:
 
-| Setting | Default | Meaning |
-|---|---|---|
-| `stale-after` | none | a duration (`15m`, `2h`); nothing received for longer marks the connector stale |
 
 Connector keys (beside `settings`): `plugin: rabbitmq`, `enabled` (`true`), `kinds` (every kind the connector has
 seen or been configured with).

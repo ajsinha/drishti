@@ -185,23 +185,16 @@ A *Make a pack* button on Admin → Connectors for this connector is planned; un
 
 ## 10. Settings
 
+Every setting of `iceberg-external`, with its type, default and meaning, is in the plugin's generated README: [plugins/drishti-plugin-iceberg-external/README.md, Settings](../../plugins/drishti-plugin-iceberg-external/README.md#settings) (from the settings catalogue Admin → Connectors builds its form from). The shared `tls.*` settings are in [TLS.md](TLS.md).
+
+Read beside them, and not in that table:
+
 | Setting | Default | Meaning |
 |---|---|---|
 | `catalog`, `root`, `uri`, `warehouse`, `credential`, `token`, `scope`, `oauth2-server-uri`, `prefix`, `catalog.<key>`, `metadata-location.<kind>`, `relocate`, `vended-credentials`, `s3.*`, `tls.*`, `proxy.*` | as the `iceberg` connector's | where the tables are ([ICEBERG_CONNECTOR.md section 15](ICEBERG_CONNECTOR.md#15-settings)) |
-| `engine` | `auto` | `native` or `auto`: both read through drishti-iceberg; `library` is refused (it is the `iceberg` connector's only) |
-| `tables.<kind>.table` | the kind | `namespace.table` (dots: namespace levels) |
 | `tables.<kind>.id`, `id-separator` | the identifier fields, `:` | the id columns and how several are joined |
 | `tables.<kind>.date`, `date-from`, `date-zone` | the partition spec's date, none, `UTC` | the business date |
-| `tables.<kind>.mode` | `snapshot` | `snapshot` or `effective` |
-| `tables.<kind>.document` | `row` | `row`, or `column:<name>` for a JSON column |
 | `tables.<kind>.columns.exclude`, `columns.rename.<column>` | none | columns left out; their names in documents |
-| `tables.<kind>.links.<column>` | none | the kind a column's values name |
-| `tables.<kind>.depth` | `2` | how deep nested structs are searchable |
-| `tables`, `namespace` | none | `tables: auto`: every table of `namespace` |
-| `decimals`, `binary` | `number`, `base64` | how those types appear in documents |
-| `id-index-mb`, `id-index-warn-rows`, `max-index-rows` | 1024, 5,000,000, 10,000,000 | [section 6](#6-one-entity-at-scale), [section 5](#5-searches-type-ahead-and-reverse-links) |
-| `refresh-seconds`, `lookback-days`, `doc-cache-mb`, `columns-cache-mb`, `max-concurrent-reads` | 10, 10, 256, 1024, 16 | as the `iceberg` connector's |
-| `source-name` | `iceberg-external` | the name in provenance and Health |
 
 ## 11. Limits
 

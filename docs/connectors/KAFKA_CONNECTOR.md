@@ -501,26 +501,12 @@ mechanism**; they are in the broker's `listeners` and `sasl.enabled.mechanisms`.
 
 ### 11.2 Settings
 
+Every setting of `kafka`, with its type, default and meaning, is in the plugin's generated README: [plugins/drishti-plugin-kafka/README.md, Settings](../../plugins/drishti-plugin-kafka/README.md#settings) (from the settings catalogue Admin → Connectors builds its form from). The shared `tls.*` settings are in [TLS.md](TLS.md).
+
+Read beside them, and not in that table:
+
 | Setting | Default | Meaning |
 |---|---|---|
-| `flavour` | `apache` | `apache`, or `confluent` for the preset in [11.4](#114-the-confluent-flavour). |
-| `security.protocol` | inferred | `PLAINTEXT`, `SSL`, `SASL_PLAINTEXT` or `SASL_SSL`. Absent: `SASL_SSL` if `sasl.mechanism` is set and TLS is wanted (`tls.enabled: true`), `SASL_PLAINTEXT` with a mechanism and no TLS, `SSL` with `tls.enabled`, else `PLAINTEXT`. Always write it down in production. |
-| `tls.*` | | The shared settings, [TLS.md](TLS.md#1-the-settings), used when the protocol is `SSL` or `SASL_SSL`. |
-| `sasl.mechanism` | none (`PLAIN` with the Confluent flavour) | `PLAIN`, `SCRAM-SHA-256`, `SCRAM-SHA-512`, `OAUTHBEARER` or `GSSAPI`. |
-| `sasl.username`, `sasl.password` (`sasl.password-file`) | | PLAIN and SCRAM. Confluent Cloud calls them `api-key` and `api-secret`, accepted as aliases. |
-| `sasl.oauth.token-endpoint` | | OAUTHBEARER: the identity provider's token URL. |
-| `sasl.oauth.client-id`, `sasl.oauth.client-secret` (`-file`) | | OAUTHBEARER: the client-credentials pair. |
-| `sasl.oauth.scope` | none | OAUTHBEARER: the scope to request. |
-| `sasl.kerberos.principal` | | GSSAPI: e.g. `drishti@BANK.EXAMPLE`. |
-| `sasl.kerberos.keytab` | | GSSAPI: the keytab file. |
-| `sasl.kerberos.use-ticket-cache` | `false` | GSSAPI: use the ticket from `kinit` instead of a keytab. |
-| `sasl.kerberos.service-name` | `kafka` | GSSAPI: the brokers' service name. |
-| `sasl.kerberos.krb5-conf` | the JVM's | GSSAPI: path of `krb5.conf` (sets `java.security.krb5.conf` if the JVM has none yet). |
-| `value-format` | `string`; `confluent` when `schema-registry.url` is set | `confluent` also reads the Confluent wire format ([11.5](#115-schema-registry-and-the-confluent-wire-format)). |
-| `schema-registry.url` | none | The registry's `https://` (or `http://`) URL. |
-| `schema-registry.basic-auth` (`-file`) | none | `${SR_KEY}:${SR_SECRET}`. |
-| `schema-registry.bearer-token` (`-file`) | none | A bearer token instead of basic auth. |
-| `schema-registry.timeout-ms` | `10000` | Connect and read timeout for a registry call. |
 | `schema-registry.tls.*` | the JVM's trust | The same keys as `tls.*`, for the registry. |
 
 Secrets are written as `${ENV}` placeholders or `…-file` paths, never inline
@@ -950,30 +936,13 @@ The file is applied to the running server within seconds, without a restart, and
 
 In the connector file's `settings:` (see [As a connector file](#as-a-connector-file)):
 
+
+Read beside them, and not in that table:
+
 | Setting | Default | Meaning |
 |---|---|---|
-| `bootstrap-servers` | `localhost:9092` | the brokers |
-| `topics` | none (required) | comma list; without it the plugin stays idle (`PluginNotConfigured`) |
-| `kind` | none | mapped messages on every topic: their kind |
-| `kind.<topic>` | none | mapped messages on that topic: their kind (wins over `kind`) |
-| `id-field` | `id` | mapped messages without a key: the id field, every topic |
-| `id-field.<topic>` | none | the id field on that topic (wins over `id-field`) |
-| `mode` | `state` | `state` (index, caches, reads) or `ticks` (no reads; pushes to views of its kinds) |
-| `cache-mb` | `256` | memory cache, weighed by message length |
-| `search` | `true` | keep ids for type-ahead (state mode only) |
-| `poll-ms` | `200` | consumer poll interval in milliseconds |
-| `source-name` | `kafka` (a named connector: its name) | provenance source, Health name, client id `drishti-<source-name>` |
-| `client.<property>` | none | any Kafka consumer property, for both consumers; applied last, so it wins over the security settings below |
 | `flavour`, `security.protocol`, `tls.*`, `sasl.*` | `apache`, inferred | TLS, SASL and the Confluent preset; see [section 11](#11-security-tls-sasl-and-confluent) |
 | `value-format`, `schema-registry.*` | `string` | Confluent wire format and Schema Registry; see [section 11.5](#115-schema-registry-and-the-confluent-wire-format) |
-| `disk-cache.enabled` | `false` | write each message to a RocksDB store on local disk (state mode only) |
-| `disk-cache.root` | `./data/cache` | parent of the default folder |
-| `disk-cache.dir` | `<disk-cache.root>/<source-name>` | the store's folder |
-| `disk-cache.max-gb` | `10` | disk budget (decimal allowed); the oldest data goes first beyond it |
-| `disk-cache.reset-at` | `02:00` | daily clearing time; `never` or blank: never |
-| `disk-cache.zone` | `America/New_York` | the zone of `reset-at` |
-| `stale-after` | none | engine setting: Health marks the connector stale after this long without a new message |
-| `proxy.*` | none | the outbound HTTP proxy ([TLS.md (proxy)](TLS.md#outbound-http-proxy-for-connectors-ai-providers-and-mcp-servers)): `proxy.url`, `proxy.username`, `proxy.password` (`${ENV}`), `proxy.no-proxy`, `proxy.enabled`, or `proxy: none`; the Schema Registry only |
 
 Set by the connector and not to be overridden: `key.deserializer` and `value.deserializer` (a string deserializer; with the Confluent wire format, one that also strips and decodes it),
 `enable.auto.commit` (`false`), `client.id` (`drishti-<source-name>`; the reader `drishti-<source-name>-reader`, with

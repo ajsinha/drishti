@@ -88,7 +88,7 @@ name; tables in Azure, Google Cloud Storage or HDFS are not read; branches and t
 |---|---|---|---|
 | `tables.*` | string |  | Per kind: tables.<kind>.table (namespace.table), id (columns, joined by id-separator), id-separator (:), date, date-from (day), date-zone (UTC), mode (snapshot\|effective), document (row\|column:<name>), columns.exclude, columns.rename.<column>, links.<column> (a kind), depth (2); or tables: auto with namespace |
 | `tables` | string |  | auto: every table of the namespace is a kind (its name in lower case with -), its id from the identifier fields, its date from the partition spec |
-| `engine` | one of native, auto | `auto` | The engine: drishti-iceberg (no Hadoop); library is the iceberg connector's only |
+| `engine` | one of native, auto | `auto` | `native` or `auto`: both read through drishti-iceberg; `library` is refused (it is the `iceberg` connector's only) |
 | `root` | path |  | Path-based tables' root (a folder or s3://…); tables.<kind>.table names the folder under it |
 | `uri` | string |  | A REST catalog's URI (Polaris, Snowflake Open Catalog, Glue, Unity, Nessie, Lakekeeper) |
 | `catalog` | string |  | hadoop (path-based, the default) or rest |
@@ -114,7 +114,7 @@ name; tables in Azure, Google Cloud Storage or HDFS are not read; branches and t
 | `columns-cache-mb` | int | `1024` | Memory for a day's searchable columns |
 | `max-concurrent-reads` | int | `16` | Documents read at once at most |
 | `max-queued-reads` | int | `4096` | Document reads that may wait for a slot; more are refused at once, and a read whose caller has gone leaves the queue |
-| `source-name` | string |  | The connector's name in provenance (iceberg-external) |
+| `source-name` | string | `iceberg-external` | The connector's name in provenance (iceberg-external) |
 | `s3.endpoint` | string |  | S3-compatible endpoint |
 | `s3.region` | string |  | S3 region |
 | `s3.path-style` | boolean |  | Path-style S3 addressing |
