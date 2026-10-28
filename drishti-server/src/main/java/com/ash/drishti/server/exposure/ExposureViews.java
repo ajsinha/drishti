@@ -556,6 +556,7 @@ final class ExposureViews {
         m.put("failedTrades", s.date().intake().get("failed"));
         m.put("proxiedTrades", s.date().intake().get("proxied"));
         List<String> warnings = new ArrayList<>(s.date().warnings());
+        warnings.addAll(svc.loader().skipped().values());               // 2.9.5: a hierarchy skipped (DRS-5211), a warning only
         m.put("warnings", warnings);
         m.put("method", "Monte Carlo post-processing (EXPOSURE_GUIDE.md section 18): netting per path, " + s.ask().collateral() + " collateral, PFE "
                 + (svc.props().rule() == ExposureMath.Rule.KTH ? "the ceil(P q)-th smallest of " + b.paths() + " paths" : "interpolated")

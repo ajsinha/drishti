@@ -791,7 +791,7 @@
       if (e.status === 404 && S.hierarchy !== "MGMT") {             // a hierarchy the date has not: the management tree, said
         var n = $("[data-vx-notice]");
         n.hidden = false;
-        n.textContent = "No hierarchy " + S.hierarchy + " on this date: the management tree is shown.";
+        n.textContent = (e.message || ("No hierarchy " + S.hierarchy + " on this date")) + " The management tree is shown.";
         setHierarchy("MGMT");
         return loadTree();
       }
@@ -806,13 +806,14 @@
     var info = d.hierarchyInfo || (d.hierarchies || []).map(function (id) { return { id: id, title: id }; });
     if (!info.length) return;
     var have = Array.prototype.map.call(sel.options, function (o) { return o.value + "|" + o.textContent; }).join(",");
-    var want = info.map(function (x) { return x.id + "|" + (x.title || x.id); }).join(",");
+    var want = info.map(function (x) { return x.id + "|" + (x.title || x.id) + (x.skipped ? " (not available)" : ""); }).join(",");
     if (have !== want) {
       sel.textContent = "";
       info.forEach(function (x) {
         var o = document.createElement("option");
         o.value = x.id;
-        o.textContent = x.title || x.id;
+        o.textContent = (x.title || x.id) + (x.skipped ? " (not available)" : "");
+        if (x.skipped) { o.disabled = true; o.title = x.note || ""; }   // 2.9.5: skipped on this date (its column not in the data), said why
         sel.appendChild(o);
       });
     }

@@ -943,9 +943,10 @@ final class VarViews {
         String h = hierarchy == null || hierarchy.isBlank() ? (present.contains("MGMT") || present.isEmpty() ? "MGMT" : present.get(0))
                 : hierarchy.toUpperCase(java.util.Locale.ROOT);
         VarBook.Node root = b.root(h);
+        Map<String, String> skipped = svc.loader().skipped(d.date());
         if (root == null) {
-            throw new DrishtiException(ErrorCode.VAR_HIERARCHY_UNKNOWN, "no hierarchy " + h + " on " + d.date() + " (it has " + String.join(", ", present)
-                    + ")");
+            throw new DrishtiException(ErrorCode.VAR_HIERARCHY_UNKNOWN, skipped.containsKey(h) ? skipped.get(h)
+                    : "no hierarchy " + h + " on " + d.date() + " (it has " + String.join(", ", present) + ")");
         }
         List<Map<String, Object>> rows = new ArrayList<>();
         walk(p, b, root, 0, rows, date, d.currency());
@@ -954,8 +955,8 @@ final class VarViews {
         out.put("currency", d.currency());
         out.put("intraday", intradayNote(d));
         // the date's hierarchies (2.9.5): their ids as before, in the configured order, and each with its title, word and levels
-        List<Map<String, Object>> info = svc.hierarchies().describe(present);
-        out.put("hierarchies", info.stream().map(m -> String.valueOf(m.get("id"))).toList());
+        List<Map<String, Object>> info = svc.hierarchies().describe(present, skipped);
+        out.put("hierarchies", info.stream().filter(m -> !m.containsKey("skipped")).map(m -> String.valueOf(m.get("id"))).toList());
         out.put("hierarchyInfo", info);
         out.put("title", svc.hierarchies().title(h));
         out.put("businessDate", d.date().toString());

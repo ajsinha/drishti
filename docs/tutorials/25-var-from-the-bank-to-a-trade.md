@@ -667,8 +667,9 @@ whose trades sit under both letters is split in two, one part per letter: `POS:P
 `LL:LL-0011` equals the same trades named one by one.
 
 **Your own hierarchy.** Any column the trades carry can be a hierarchy: add it to the connector's layout and to the rows, then a block in
-`drishti.var.hierarchies` (or the pack's `hierarchies:`). A row without the column is refused (`DRS-5211`); a configuration that is not
-valid refuses the start (`DRS-5213`).
+`drishti.var.hierarchies` (or the pack's `hierarchies:`). A row that leaves the column empty is refused (`DRS-5211`); data without the column
+skips that hierarchy alone, with a `DRS-5211` warning, and everything else answers; a configuration that is not valid refuses the
+start (`DRS-5213`).
 
 **Further in the guide:** [section 15.14](../guides/VAR_GUIDE.md#1514-hierarchies-from-the-rows-or-from-the-trades-columns-as-built-295)
 (the configuration, cells, split positions, the equality tests), [section 15.15](../guides/VAR_GUIDE.md#1515-var-limit-the-nodes-var-limits-as-built-295)
@@ -694,4 +695,4 @@ valid refuses the start (`DRS-5213`).
 | step 11 answers *could not start* | the compute workers are off: `DRISHTI_COMPUTE_ENABLED=true`, and Admin → Compute shows the pool `var` |
 | *the vectors of … were unloaded while this answer was computed* | ask again ([VAR_GUIDE.md section 13](../guides/VAR_GUIDE.md#13-troubleshooting)) |
 | no *Limit letters* in the select | the lake was built before 2.9.5 (no `LIMIT_LETTER`, no `var-limit`): rebuild it with step 1's `--only` list, which includes `market-risk/var-limit` |
-| `422 DRS-5211` *… is built from the column LIMIT_LETTER, which pnl-vector does not keep* | a `config/connectors/risk-store.yaml` written before 2.9.5 lacks the column in its layout: let the server's template update add it (Admin → Connectors → Template updates) |
+| *Limit letters (not available)* in the select; the warning *DRS-5211 the hierarchy LL … is not built …: pnl-vector does not keep its level column LIMIT_LETTER* | the lake's rows predate the letters, or a `config/connectors/risk-store.yaml` written before 2.9.5 lacks the column in its layout: rebuild the data with step 1, and let the server's template update add the column (Admin → Connectors → Template updates); VaR answers meanwhile without LL |

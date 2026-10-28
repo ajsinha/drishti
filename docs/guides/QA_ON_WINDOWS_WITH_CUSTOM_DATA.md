@@ -747,6 +747,7 @@ letters (`drishti.var.hierarchies` in your settings would win over it).
 | 4 | Type `LL:LL-0011` in the scope box, then `BOOK:BOOK-RATES-1 & LL:LL-0011` | the letter; then the part of BOOK-RATES-1 under it (142 trades) |
 | 5 | *How this number was built* | the warning *9 positions had trades under two nodes …*: `POS:POS-BOOK-RATES-1~XCH-BOND_FUTURE-GBP-01@LL-0011` answers one part |
 | 6 | `.\drishti-console\.venv\Scripts\python.exe tools\drishti.py var tree --hierarchy LL` | the letters' tree in text, the bank at the top (112,041,646) |
+| 6a | Before rebuilding the data (or with your own P&L vectors that have no `LIMIT_LETTER`) | VaR and exposure answer as in 2.9.4; *Limit letters (not available)* in the select, and *How this number was built* and **Admin → Health** say *DRS-5211 the hierarchy LL … is not built … add LIMIT_LETTER to the pricing system's records and to the connector's layout.pnl-vector.columns* |
 | 7 | In the browser, `http://127.0.0.1:18480/api/v1/exposure/official` (signed in as an administrator) | among `scopes`, the limit letters' nodes (`LL:LL~LL-0001`, …) beside the netting sets, counterparties and MGMT/LEGAL nodes |
 
 ---

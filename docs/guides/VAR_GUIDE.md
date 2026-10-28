@@ -2187,9 +2187,14 @@ cells, so a letter's VaR is computed as fast as a desk's.
 (`POS-BOOK-RATES-1~SEC-GOVT_BOND-USD-03@LL-0004`), and the date's provenance says how many were split. `POS:<position>` names the parts by
 their ids; the trades are unchanged.
 
-**Every row carries the level columns.** A source whose table does not keep a level column refuses the date (`422 DRS-5211`, naming the
-kind and the column); a row that leaves one empty is refused and listed (`DRS-5211`), never placed under a guessed node. The connector's
-layout must promote the column (`layout.pnl-vector.columns`, `layout.scenario-pv.columns`, `layout.exposure-path.columns`: the pack's do).
+**Every row carries the level columns.** A source whose table does not keep a level column (P&L vectors or exposure paths written
+before the column existed) **skips that hierarchy alone** (product owner, 2026-10-28): the date loads, MGMT, LEGAL and every other
+hierarchy as usual, the official capture goes on, and a `DRS-5211` **warning** names the hierarchy, the column, the kind and the fix
+(*add LIMIT_LETTER to the pricing system's records and to the connector's layout.pnl-vector.columns*): in `provenance.warnings` on the
+VaR page, in Admin → Health (*Hierarchy skipped*) and in the log. Its tree answers `404 DRS-5214` with that reason, and the explorer's
+select lists it as *(not available)*, disabled. A row that leaves the column empty, in a table that keeps it, is refused and listed
+(`DRS-5211`), never placed under a guessed node. The connector's layout must promote the column (`layout.pnl-vector.columns`,
+`layout.scenario-pv.columns`, `layout.exposure-path.columns`: the pack's do). The same rule holds for exposure.
 
 **The equality tests** (`HierarchyEquivalenceTest`, the 8,233 + 1,339 rows of 2026-09-30): MGMT configured as `DIVISION > DESK > TT_BOOK`
 (leaf ids; levels `division`, `desk`, `book`) and LEGAL as `LEGAL_ENTITY > DESK > TT_BOOK` give the rows' trees exactly: the same node
@@ -2457,7 +2462,7 @@ not a list of numbers`). A `null` element inside a vector is accepted and stays 
 | 422 | `DRS-5207` | `ccy` names a currency with no scenario FX on the date (2.9.4) | *no CHF FX for the scenarios of <date>: CHF: no scenario rates supplied and no FX history to derive them from; the currencies with FX on the date: …* |
 | 400 | `DRS-5001` | `ccy` is not a three-letter code; a compare of two captures in different currencies | *ccy is a currency's ISO code (USD, EUR, CAD ...), not EURO*; *… is in EUR and … in USD: a compare reads two captures in one currency* |
 | 422 | `DRS-5210` | one source system sent two forms or grains on the date, or a supplied position covers a trade also sent on its own (2.9.4, section 15.13) | *the inputs of 2026-09-30 are not loaded: MUREX sent {PNL/POSITION=1, PNL/TRADE=7}; one source system sends one form and one grain on one date* |
-| 422 | `DRS-5211` | a hierarchy is built from a column a source of the trades does not keep (2.9.5, section 15.14) | *the VaR inputs of <date> are not loaded: the hierarchy LL is built from the column LIMIT_LETTER, which pnl-vector does not keep (add it to the connector's layout.pnl-vector.columns, and to the rows)* |
+| 404 | `DRS-5214` | the tree of a hierarchy skipped on the date: its level column is not in the source (2.9.5, section 15.14; the date itself answers, with the `DRS-5211` warning) | *DRS-5211 the hierarchy LL (Limit letters) is not built on 2026-09-30: pnl-vector does not keep its level column LIMIT_LETTER; add LIMIT_LETTER to the pricing system's records and to the connector's layout.pnl-vector.columns (the other hierarchies load as usual)* |
 | 422 | `DRS-5213` | the hierarchies' configuration is not valid, or a hierarchy with `ids: leaf` has a value under two parents on the date (2.9.5) | *the VaR inputs of <date> are not loaded: the hierarchy MGMT names its nodes by their own value (ids: leaf), but DESK-X sits under both … : use ids: path* |
 | 404 | `DRS-5214` | `GET /tree?hierarchy=<id>` of a hierarchy the date has not (2.9.5) | *no hierarchy NOPE on <date> (it has LL, LEGAL, MGMT)* |
 
@@ -2486,7 +2491,7 @@ counted (`provenance.rejected`, `GET /status`) and its reason listed (`provenanc
 | One run | one `BATCH_ID` across the date's vectors; every `SCENARIO_SET_ID` equals the set's | the date is not loaded (`DRS-5203`); the date before it is answered with the reason in `provenance.warnings`, until the date's vectors change |
 | Scenario set | one set per date; `SCENARIO_DATES` strictly increasing and all before `BUSINESS_DATE` | the date is not loaded (`DRS-5203`), as above |
 | Memory | the date's vectors within `memory-budget-mb` | `503 DRS-5204` (capacity) |
-| Level columns (2.9.5) | every level column of a column hierarchy kept by each source and set on each row | a column not kept: the date is not loaded (`422 DRS-5211`); a row without a value: rejected (`DRS-5211`) |
+| Level columns (2.9.5) | every level column of a column hierarchy kept by each source and set on each row | a column not kept: that hierarchy is skipped, the rest loads (`DRS-5211` in `provenance.warnings`); a row without a value: rejected (`DRS-5211`) |
 | Limits (2.9.5) | every `var-limit` row of a hierarchy reading them names a node of the date | the row is unused; `DRS-5212` in `provenance.warnings` |
 
 **Still not checked (planned):** a `TRADE_ID` live in the trade master and a `TT_BOOK` in exactly one leaf of each hierarchy (`unmapped`

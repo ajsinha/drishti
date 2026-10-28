@@ -798,7 +798,7 @@ One trade's mark to market on every path of a simulation run at one grid date, i
 | `LEGAL_ENTITY` | id | required |  | Legal entity: the legal-entity it refers to | `LE-FRA` (pattern `^LE-`) | `legal-entity` |
 | `DESK` | id | required |  | Desk: the desk it refers to | `DESK-SFT` (pattern `^DESK-`) | `desk` |
 | `TT_BOOK` | id | required |  | Book: the book it refers to | `BOOK-SFT-1` (pattern `^BOOK-`) | `book` |
-| `LIMIT_LETTER` | text | optional |  | The trade's limit letter (2.9.5), as its VaR records carry it: the level column of the hierarchy LL (LIMIT_LETTER > DESK, VAR_GUIDE.md section 16). When a hierarchy is built from it, every row carries it (a row without it is refused, DRS-5211). | `LL-0003` |  |
+| `LIMIT_LETTER` | text | optional |  | The trade's limit letter (2.9.5), as its VaR records carry it: the level column of the hierarchy LL (LIMIT_LETTER > DESK, VAR_GUIDE.md section 16). When a hierarchy is built from it, every row carries it (a row that leaves it empty is refused, DRS-5211; a table without the column skips that hierarchy alone, with a DRS-5211 warning). | `LL-0003` |  |
 | `ASSET_CLASS` | text | required |  | — | `Equity`, `FX`, `Inflation`, `Securities financing` |  |
 | `PRODUCT` | text | required |  | — | `Tri-party repo` |  |
 | `NOTIONAL` | amount | required |  | — | `237000000.0` |  |

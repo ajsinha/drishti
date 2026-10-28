@@ -1181,7 +1181,8 @@ a hierarchy of the `risk-hierarchy` rows keeps its book-based scope (`BOOK:a + B
 letters `LL`, `LIMIT_LETTER > DESK`) has the root `LL~BANK` (scope `BANK`) and a node for every distinct path of its trades' values, its
 scope a rule over them (`WHERE:LIMIT_LETTER == 'LL-0003' and DESK == 'DESK-RATES'`), so a letter's EE, PFE and EPE are those of exactly
 its trades (the sets it cuts recomputed). The level columns are read from the exposure paths' rows (the pack's layout promotes
-`LIMIT_LETTER`; a column the table does not keep refuses the date, `DRS-5211`; a row without it is refused and listed) and kept per trade
+`LIMIT_LETTER`; a table without the column skips that hierarchy alone, a `DRS-5211` warning in the provenance and Admin → Health, the
+rest as usual; a row that leaves it empty is refused and listed) and kept per trade
 in the hot file; a rule may read them (`WHERE:LIMIT_LETTER == 'LL-0003'`), and a hierarchy's word names a node in any exposure scope
 (`LL:LL-0003`, `LL:LL-0003/DESK-RATES`). `ExposureOfficialHierarchiesTest` checks a letter's figures against the same rule and the desk it
 is alone on.

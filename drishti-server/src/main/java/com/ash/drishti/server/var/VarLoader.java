@@ -123,7 +123,8 @@ final class VarLoader {
             }
         }
         PositionRules pr = rules.get();
-        Hierarchies hs = hierarchies.get();
+        // a column hierarchy whose level column a source does not keep is skipped, said (DRS-5211 as a warning); the rest load (2.9.5)
+        Hierarchies hs = effective(date, hierarchies.get());
         String trades = version(date);
         // a date with scenario PVs converts them with the date's FX: its hot file is built from those versions too
         String inputsKey = trades.isBlank() || !versions.containsKey(k.scenarioPv()) ? trades
@@ -226,8 +227,6 @@ final class VarLoader {
         List<String> levels = hs.levelColumns();
         List<String> columns = VarIntake.columns(router.columnar(k.vector()), pr, List.of(), levels);
         List<String> pvColumns = VarIntake.columns(router.columnar(k.scenarioPv()), pr, VarIntake.PV_COLUMNS, levels);
-        requireLevels(date, hs, k.vector());
-        requireLevels(date, hs, k.scenarioPv());
         String unmarked = unmarked(columns, pvColumns);
         VarIntake intake = new VarIntake(b, pr, date, columns.subList(1, columns.size())).scenarioSet(setId)
                 .inputs(new VarInputs(props::input)).setLength(setLength).pnlFx(() -> fx(date, scenarioDates)).levels(levels);
@@ -265,24 +264,38 @@ final class VarLoader {
         return intake;
     }
 
+    /** Per business date, the column hierarchies skipped on it and why (2.9.5). */
+    private final Map<LocalDate, Map<String, String>> skipped = new java.util.concurrent.ConcurrentHashMap<>();
+
     /**
-     * Refuses the date ({@code DRS-5211}) when a source of the trades does not keep a level column of a column hierarchy: no row could be
-     * placed. A connector that cannot say which columns it keeps is asked for them; its rows without one are refused one by one.
+     * The hierarchies a date is built with: the configured ones but the column hierarchies whose level column a source of the trades does not
+     * keep (the P&amp;L vectors' or the scenario PVs' table, when a connector serves it and can say its columns). Each skipped one is said:
+     * in the date's provenance (DRS-5211, a warning: the date and its official capture go on), in Admin → Health and in the log. A connector
+     * that cannot say its columns is asked for them; its rows without one are refused one by one, as a row with the column left blank is.
      */
-    private void requireLevels(LocalDate date, Hierarchies hs, String kind) {
-        java.util.Set<String> kept = router.columnar(kind);
-        if (kept.isEmpty()) {
-            return;
+    Hierarchies effective(LocalDate date, Hierarchies all) {
+        if (all.columnSpecs().isEmpty()) {
+            skipped.remove(date);
+            return all;
         }
-        for (com.ash.drishti.compute.var.HierarchySpec s : hs.columnSpecs()) {
-            for (String c : s.levels()) {
-                if (!kept.contains(c)) {
-                    throw new DrishtiException(ErrorCode.VAR_HIERARCHY_COLUMN, "the VaR inputs of " + date + " are not loaded: the hierarchy " + s.id()
-                            + " is built from the column " + c + ", which " + kind + " does not keep (add it to the connector's layout." + kind
-                            + ".columns, and to the rows)");
-                }
-            }
+        VarProperties.Kinds k = props.kinds();
+        Map<String, java.util.Set<String>> kept = new LinkedHashMap<>();
+        kept.put(k.vector(), router.columnar(k.vector()));
+        kept.put(k.scenarioPv(), router.columnar(k.scenarioPv()));
+        Map<String, String> why = all.missingColumns(kept, " on " + date);
+        Map<String, String> before = skipped.put(date, why);
+        for (com.ash.drishti.compute.var.HierarchySpec s : all.columnSpecs()) {
+            Hierarchies.skipped("var", s.id(), why.get(s.id()));
         }
+        if (!why.equals(before)) {
+            why.values().forEach(w -> org.slf4j.LoggerFactory.getLogger(VarLoader.class).warn("VaR: {}", w));
+        }
+        return all.without(why.keySet());
+    }
+
+    /** The column hierarchies skipped on a date, id to why (empty: none, or the date not loaded yet). */
+    Map<String, String> skipped(LocalDate date) {
+        return skipped.getOrDefault(date, Map.of());
     }
 
     /**
@@ -323,7 +336,9 @@ final class VarLoader {
      * naming no node (DRS-5212). Data-quality notes: never a reason to answer another date or skip the official capture.
      */
     List<String> hierarchyNotes(VarDate d) {
-        return warnings(d.book(), unknownLimits.getOrDefault(d.date(), List.of()));
+        List<String> out = new ArrayList<>(skipped(d.date()).values());
+        out.addAll(warnings(d.book(), unknownLimits.getOrDefault(d.date(), List.of())));
+        return out;
     }
 
     /** What the answers of a date say about its hierarchies: positions split at a cell's edge, limits naming no node (DRS-5212). */
@@ -539,7 +554,7 @@ final class VarLoader {
         List<LocalDate> days = morning.scenarioDates();
         VarBook.Builder none = new VarBook.Builder(date, morning.scenarioSet(), days, 1, Long.MAX_VALUE);   // never given a row
         none.cells(morning.cellColumns());                                 // the morning's cell columns: an update's texts in its order
-        List<String> levels = hierarchies.get().levelColumns();
+        List<String> levels = effective(date, hierarchies.get()).levelColumns();
         List<String> columns = VarIntake.columns(router.columnar(k.vector()), pr, List.of(), levels);
         List<String> pvColumns = VarIntake.columns(router.columnar(k.scenarioPv()), pr, VarIntake.PV_COLUMNS, levels);
         unmarked(columns, pvColumns);

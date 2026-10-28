@@ -195,8 +195,9 @@ fields:
   type: text
   presence: optional
   description: 'The limit letter (2.9.5): the letter of authority the record''s VaR limit is granted under. A hierarchy may be built from
-    it (the market-risk pack''s LL, LIMIT_LETTER > DESK, VAR_GUIDE.md section 16): when one is, every row carries it (a row without it is
-    refused, DRS-5211). Per row, so a letter may hold part of a book.'
+    it (the market-risk pack''s LL, LIMIT_LETTER > DESK, VAR_GUIDE.md section 16): when one is, every row carries it (a row that leaves
+    it empty is refused, DRS-5211; a table without the column skips that hierarchy alone, with a DRS-5211 warning, and the rest loads).
+    Per row, so a letter may hold part of a book.'
   example: LL-0003
 - name: PORTFOLIO
   type: id
