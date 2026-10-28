@@ -62,6 +62,15 @@ final class VarCurrencies {
 
     /** The date's book in {@code ccy}, built from its USD book {@code usd} (or opened from its hot file when built from the same inputs). */
     VarDate convert(VarDate usd, String ccy) {
+        VarDate out = convertMorning(usd, ccy);
+        return usd.intraday() == null || usd.intraday().isEmpty() ? out : apply(out, usd, usd.intraday().rows());
+    }
+
+    /**
+     * The morning run of the date in {@code ccy}, without the day's updates: a pure function of the USD date's inputs, so it is kept per date,
+     * currency and data version, and each USD intraday layer is applied on it ({@link #apply}).
+     */
+    VarDate convertMorning(VarDate usd, String ccy) {
         long t0 = System.nanoTime();
         LocalDate date = usd.date();
         VarBook ub = usd.book().morning();                           // the morning run: the day's updates are applied after
@@ -119,8 +128,7 @@ final class VarCurrencies {
         Map<String, String> versions = new LinkedHashMap<>(usd.versions());
         versions.put("fx", fxVersions);
         long ms = (System.nanoTime() - t0) / 1_000_000;
-        VarDate out = new VarDate(date, book, portfolios, usd.version(), java.time.Instant.now(), ms, 0, usd.intake(), versions, List.of(), ccy, fxUsed);
-        return usd.intraday() == null || usd.intraday().isEmpty() ? out : apply(out, usd, usd.intraday().rows());
+        return new VarDate(date, book, portfolios, usd.version(), java.time.Instant.now(), ms, 0, usd.intake(), versions, List.of(), ccy, fxUsed);
     }
 
     /**
@@ -137,12 +145,10 @@ final class VarCurrencies {
         int w = cur.book().width();
         VarBook um = usd.book().morning();
         List<com.ash.drishti.compute.var.VarIntraday.Update> ups = new java.util.ArrayList<>();
-        java.util.Set<String> batches = new java.util.LinkedHashSet<>();
         String last = null;
         int pvAt = VarBook.TRADE_NUMBERS.indexOf("PV");
         for (VarIntradayRows.Row r : rows) {
             com.ash.drishti.compute.var.VarIntraday.Update u = r.usd();
-            batches.add(r.batchId());
             last = VarIntradayRows.compare(r.computedAt(), last) > 0 ? r.computedAt() : last;
             double[] pnl = null;
             double pvUsd = u.pvUsd();
@@ -165,7 +171,7 @@ final class VarCurrencies {
             ScenarioFx.convert(Double.isNaN(p) ? 0 : p, row, w, rep, out);
             return out;
         };
-        VarBook b = com.ash.drishti.compute.var.VarIntraday.apply(cur.book(), ups, exact, c -> fx.rates(c).orElse(null), List.copyOf(batches), last);
+        VarBook b = com.ash.drishti.compute.var.VarIntraday.apply(cur.book(), ups, exact, c -> fx.rates(c).orElse(null), VarIntradayRows.batchAt(rows), last);
         return cur.withBook(b, usd.intraday());
     }
 }

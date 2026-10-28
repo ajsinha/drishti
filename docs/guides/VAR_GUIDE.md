@@ -978,7 +978,11 @@ loaded date reads the date's rows once, keeps the new intraday batches' latest r
 **without a reload** (`VarIntraday`): each updated trade's difference (new − old) is added to its book and every node above it in both
 hierarchies, to the per-trade-currency totals ([section 15.11](#1511-reporting-currencies-built-ahead-per-trade-currency-totals-and-the-picker-as-built-294)),
 and to every reporting currency already built (only that trade reconverted); a saved basket holding the trade is computed again on its
-next ask (the answers' cache is keyed by the layer). Nothing else is recomputed, and the morning hot file is never changed: an updated
+next ask (the answers' cache is keyed by the layer). A reporting currency keeps its **morning run** per date and data version and puts
+the USD date's layer on it as the USD date holds it at the time of the answer (2.9.6), so a currency is never left on an older layer: not
+by the official capture (which reads every currency as the morning run), nor by a batch applied while the currency was being built. A
+date whose updates could not be read is answered from its morning run **with a warning saying so** on every answer, until the next
+data-load signal reads them. Nothing else is recomputed, and the morning hot file is never changed: an updated
 row is the stored row plus its difference, a new trade is appended after the morning's. The old P&L subtracted is the morning row exactly
 as received (on the heap its row; with the tiered memory, its float32 copy is not exact, so the row is read back from the lake by its id),
 so a node is equal to the cent to the same final data loaded as one run. Only the current P&L per trade is kept, never the batches: the
@@ -986,7 +990,8 @@ work of a batch does not grow with the batches before it. A date not loaded yet 
 intraday batch at once), and so does a restart: the lake is the record, not the server.
 
 **Labels.** Every answer whose figures include updates says so: `intraday: {updates, trades, amended, added, cancelled, lastAt,
-batches (the newest 20), batchCount, olderIgnored, beforeMorningIgnored, morningAt, rejections, note}` on the headline, the path, the
+batches (the newest 20, in one stable order: by each batch's newest COMPUTED_AT, then by BATCH_ID, oldest first, whatever order the
+signals applied them in; 2.9.6), batchCount, olderIgnored, beforeMorningIgnored, morningAt, rejections, note}` on the headline, the path, the
 contributions and the tree, and in the provenance; the VaR page shows an **intraday** badge in its status line (*intraday · 5 trades ·
 2026-09-30 11:00*), its tooltip the batches; `drishti.py var show` adds an `intraday` line, `drishti.py var intraday` lists each loaded
 date's layer and `drishti.py var status` says it per date. **The official records are the morning run's**: the end-of-day capture and
@@ -3213,6 +3218,11 @@ the settings and the tests are in [VAR_SHARDING.md](../architecture/VAR_SHARDING
   DRS-5215`, never a partial VaR. The answer's `provenance.shards` says how many shards were asked and who answered.
 - **Handover**: a new owner builds its shards from the lake and announces them ready in its capability digest; the old owner keeps
   serving until the new one has been ready for `grace-seconds`. A member drains before it stops (`drishti.py var shards --drain`).
+- **Intraday**: each member reads the day's updates from the lake on its own data-load signal and applies them on the date it put
+  together; `provenance.intraday.batches` says which batches an answer includes, in the same order on every member (section 8.4). A client
+  that must see a batch everywhere polls it there (VAR_SHARDING.md section 7, *Convergence after a batch*).
+- **API tokens**: `POST /api/v1/var/partial` (the members' signed channel) and `POST /api/v1/var/shards/drain` (administrators) are in
+  `token-never`.
 
 Measured equal to one server **to the cent** (VaR, ES, contributions, the P&L path, the tree, intraday, the official record) on three
 members in USD and EUR, on Delta and Iceberg inputs (`VarShardClusterTest`, VAR_SHARDING.md section 12). `GET /api/v1/var/shards?asOf=`

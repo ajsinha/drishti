@@ -58,7 +58,9 @@ public final class VarIntraday {
 
     /**
      * What the layer holds, for the labels: the updates applied, the trades changed (amended, added, cancelled), the newest
-     * {@code COMPUTED_AT} and the batches (the newest 20, and how many).
+     * {@code COMPUTED_AT} and the batches (the newest 20, and how many). The batches are in one stable order whatever order they were
+     * applied in (one signal or several, a server or a member of Drishti*net): by each batch's newest {@code COMPUTED_AT}, then by batch
+     * id, oldest first ({@link #BATCH_ORDER}).
      */
     public record Info(int updates, int trades, int amended, int added, int cancelled, String lastAt, List<String> batches, int batchCount) {}
 
@@ -90,13 +92,20 @@ public final class VarIntraday {
     private final Map<String, Map<String, double[]>> totals; // per node and trade currency, the native change (N scenarios, then today)
     private final Map<Integer, List<Integer>> extras;      // position: the added ordinals it gained
     private final List<String> newPositions;
+    /** Every batch applied: its newest {@code COMPUTED_AT} (null: none stated). */
+    private final Map<String, String> batchAt;
     private final Info info;
+
+    /** The order the batches are listed in: by their newest {@code COMPUTED_AT} (none first), then by id. */
+    public static final java.util.Comparator<Map.Entry<String, String>> BATCH_ORDER = java.util.Comparator
+            .<Map.Entry<String, String>, String>comparing(Map.Entry::getValue, java.util.Comparator.nullsFirst(java.util.Comparator.naturalOrder()))
+            .thenComparing(Map.Entry::getKey);
 
     private VarIntraday(VarBook morning, NavigableMap<Integer, double[]> delta, Map<Integer, double[]> current, Map<Integer, double[]> currentUsd,
             Map<Integer, double[]> pvs, Map<String, Integer> ordinalOf, BitSet cancelled, List<String> addedIds, List<double[]> addedRows,
             List<String[]> addedTexts, List<double[]> addedNumbers, List<Integer> addedPosition, Map<Integer, String[]> texts,
             Map<Integer, double[]> numbers, Map<String, double[]> planner, Map<String, double[]> added, Map<String, Map<String, double[]>> totals,
-            Map<Integer, List<Integer>> extras, List<String> newPositions, Info info) {
+            Map<Integer, List<Integer>> extras, List<String> newPositions, Map<String, String> batchAt, Info info) {
         this.morning = morning;
         this.t0 = morning.tradeCount();
         this.p0 = morning.positionCount();
@@ -118,13 +127,14 @@ public final class VarIntraday {
         this.totals = totals;
         this.extras = extras;
         this.newPositions = newPositions;
+        this.batchAt = batchAt;
         this.info = info;
     }
 
     private static VarIntraday empty(VarBook m) {
         return new VarIntraday(m, new TreeMap<>(), new HashMap<>(), new HashMap<>(), new HashMap<>(), new HashMap<>(), new BitSet(), new ArrayList<>(),
                 new ArrayList<>(), new ArrayList<>(), new ArrayList<>(), new ArrayList<>(), new HashMap<>(), new HashMap<>(), new HashMap<>(),
-                new HashMap<>(), new HashMap<>(), new HashMap<>(), new ArrayList<>(), new Info(0, 0, 0, 0, 0, null, List.of(), 0));
+                new HashMap<>(), new HashMap<>(), new HashMap<>(), new ArrayList<>(), new HashMap<>(), new Info(0, 0, 0, 0, 0, null, List.of(), 0));
     }
 
     /** A copy to change (each map copied once; the vectors in it are replaced, never changed in place). */
@@ -136,7 +146,7 @@ public final class VarIntraday {
         return new VarIntraday(morning, new TreeMap<>(delta), new HashMap<>(current), new HashMap<>(currentUsd), new HashMap<>(pvs),
                 new HashMap<>(ordinalOf), (BitSet) cancelled.clone(), new ArrayList<>(addedIds), new ArrayList<>(addedRows), new ArrayList<>(addedTexts),
                 new ArrayList<>(addedNumbers), new ArrayList<>(addedPosition), new HashMap<>(texts), new HashMap<>(numbers), new HashMap<>(planner),
-                new HashMap<>(added), t, ex, new ArrayList<>(newPositions), info);
+                new HashMap<>(added), t, ex, new ArrayList<>(newPositions), new HashMap<>(batchAt), info);
     }
 
     public Info info() {
@@ -217,10 +227,21 @@ public final class VarIntraday {
      * Applies one batch of updates (each trade once: the latest of the batch) to {@code book} (a morning book, or one with a layer),
      * returning the new book. {@code exact} gives a morning trade's P&amp;L as its aggregates hold it; {@code fx} a currency's rates (for
      * the per-trade-currency totals; USD needs none); {@code batches} the batch ids the updates came in, {@code lastAt} their newest
-     * {@code COMPUTED_AT}.
+     * {@code COMPUTED_AT} (each batch taken as computed then: {@link #apply(VarBook, List, Morning, Function, Map, String)} says per batch).
      */
     public static VarBook apply(VarBook book, List<Update> updates, Morning exact, Function<String, ScenarioFx.Rates> fx, List<String> batches,
             String lastAt) {
+        Map<String, String> at = new LinkedHashMap<>();
+        batches.forEach(b -> at.put(b, lastAt));
+        return apply(book, updates, exact, fx, at, lastAt);
+    }
+
+    /**
+     * {@link #apply(VarBook, List, Morning, Function, List, String)} with each batch's newest {@code COMPUTED_AT} ({@code batchAt}: batch id to
+     * its updates' newest {@code COMPUTED_AT}), which orders the batches listed ({@link #BATCH_ORDER}).
+     */
+    public static VarBook apply(VarBook book, List<Update> updates, Morning exact, Function<String, ScenarioFx.Rates> fx,
+            Map<String, String> batchAt, String lastAt) {
         VarBook m = book.morning();
         VarIntraday l = book.intraday() == null ? empty(m) : book.intraday().copy();
         int w = m.width();
@@ -285,16 +306,13 @@ public final class VarIntraday {
             l.ordinalOf.put(u.tradeId(), n);
             l.change(n, u.pnl(), u.pv(), u.pvUsd(), u.pnlUsd(), u.texts(), exact, keysOfBook, fx, w);
         }
-        List<String> bs = new ArrayList<>(l.info.batches());
-        for (String b : batches) {
-            bs.remove(b);
-            bs.add(b);
-        }
-        int count = l.info.batchCount() + (int) batches.stream().filter(b -> !l.info.batches().contains(b)).count();
+        batchAt.forEach((b, when) -> l.batchAt.merge(b, when == null ? "" : when, (x, y) -> x.compareTo(y) >= 0 ? x : y));
+        List<String> bs = l.batchAt.entrySet().stream().sorted(BATCH_ORDER).map(Map.Entry::getKey).toList();   // none stated: ""
+        int count = l.batchAt.size();
         Set<String> all = new LinkedHashSet<>(l.ordinalOf.keySet());
         String at = l.info.lastAt() == null || lastAt != null && lastAt.compareTo(l.info.lastAt()) > 0 ? lastAt : l.info.lastAt();
         VarIntraday done = new VarIntraday(m, l.delta, l.current, l.currentUsd, l.pvs, l.ordinalOf, l.cancelled, l.addedIds, l.addedRows,
-                l.addedTexts, l.addedNumbers, l.addedPosition, l.texts, l.numbers, l.planner, l.added, l.totals, l.extras, l.newPositions,
+                l.addedTexts, l.addedNumbers, l.addedPosition, l.texts, l.numbers, l.planner, l.added, l.totals, l.extras, l.newPositions, l.batchAt,
                 new Info(l.info.updates() + updates.size(), all.size(), l.info.amended() + amended, l.addedIds.size(), l.cancelled.cardinality(), at,
                         List.copyOf(bs.subList(Math.max(0, bs.size() - 20), bs.size())), count));
         return done.book();

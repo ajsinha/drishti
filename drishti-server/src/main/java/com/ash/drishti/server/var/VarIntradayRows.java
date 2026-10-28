@@ -109,6 +109,18 @@ final class VarIntradayRows {
         return true;
     }
 
+    /**
+     * The batches of {@code rows}, each with its rows' newest {@code COMPUTED_AT} ("" when none states it): what orders the batches listed
+     * (VarIntraday.BATCH_ORDER, VAR_GUIDE.md section 8.4).
+     */
+    static Map<String, String> batchAt(List<Row> rows) {
+        Map<String, String> out = new LinkedHashMap<>();
+        for (Row r : rows) {
+            out.merge(r.batchId(), r.computedAt() == null ? "" : r.computedAt(), (x, y) -> compare(x, y) >= 0 ? x : y);
+        }
+        return out;
+    }
+
     /** {@code COMPUTED_AT} order: ISO instants compare as text; none is the oldest. */
     static int compare(String a, String b) {
         if (a == null || b == null) {
