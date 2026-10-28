@@ -41,7 +41,8 @@ class BrandingLiteralTest {
     private static final Pattern LOG = Pattern.compile("\\b(LOG|log|LOGGER|logger)\\s*\\.\\s*(trace|debug|info|warn|error)\\s*\\(|getLogger\\(");
     /** Literals that name the product on purpose, and why. */
     private static final Set<String> ALLOWED = Set.of(
-            "\"Drishti lake build\"");   // the Delta commit's engineInfo: who wrote the table, read by tools, not people
+            "\"Drishti lake build\"",    // the Delta commit's engineInfo: who wrote the table, read by tools, not people
+            "\"Drishti parallel loader\""); // the same, for the parallel lake loader's commits
 
     @Test
     void noServerMessageNamesTheProductInALiteral() {

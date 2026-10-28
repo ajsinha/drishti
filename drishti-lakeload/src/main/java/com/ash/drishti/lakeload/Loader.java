@@ -40,6 +40,7 @@ import java.util.concurrent.Future;
 import java.util.concurrent.LinkedBlockingQueue;
 import java.util.concurrent.Semaphore;
 import java.util.concurrent.atomic.AtomicLong;
+import java.util.concurrent.locks.ReentrantLock;
 import java.util.stream.Stream;
 
 /**
@@ -404,10 +405,13 @@ final class Loader {
             write();
         }
 
-        private synchronized void write() {
+        private final ReentrantLock writing = new ReentrantLock();   // file I/O: a lock, not synchronized (virtual threads)
+
+        private void write() {
             if (file == null) {
                 return;
             }
+            writing.lock();
             try {
                 var n = LoadReport.JSON.createObjectNode().put("phase", phase).put("bytesRead", report.bytesRead()).put("bytesTotal", report.bytesTotal)
                         .put("documents", report.documentsSoFar()).put("rejected", report.rejectedSoFar()).put("datesDone", datesDone)
@@ -420,6 +424,8 @@ final class Loader {
                 Files.move(tmp, file, java.nio.file.StandardCopyOption.REPLACE_EXISTING, java.nio.file.StandardCopyOption.ATOMIC_MOVE);
             } catch (IOException e) {
                 // progress is a courtesy: a failed write is tried again in half a second
+            } finally {
+                writing.unlock();
             }
         }
 
