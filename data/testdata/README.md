@@ -43,7 +43,7 @@ packs' public data ([below](#public-data-us-equities-and-gleif)), written by the
 
 ## Quick start: five steps
 
-On Windows, offline, with your own ENDUR files: [How to QA in Windows Environment using Custom Data](../../docs/guides/QA_ON_WINDOWS_WITH_CUSTOM_DATA.md).
+On Windows, offline, with your own ENDUR files: [How to QA in Windows Environment using Custom Data](../../docs/qa/windows-custom-data.md).
 
 1. **Clone** the repository (`git clone …`, then `cd drishti`).
 2. **Install** once: the console's Python with its requirements (PyYAML, deltalake and pyarrow among them),
