@@ -33,6 +33,7 @@ COPY --from=pyodide /src/drishti-console/ .
 # the help centre renders the repository's documents; packs as shipped, outside the EFS paths (as in the server image)
 COPY docs/ /opt/drishti/docs/
 COPY config/packs/ /opt/drishti/shipped/packs/
+COPY config/editions/ /opt/drishti/config/editions/
 COPY tools/packbundle.py /opt/drishti/tools/packbundle.py
 COPY LICENSE CHANGELOG.md RELEASE_NOTES.md THIRD-PARTY-NOTICES.md /opt/drishti/
 COPY deploy/docker/ecs/console-entrypoint.sh /opt/drishti/bin/entrypoint.sh

@@ -27,15 +27,52 @@ router = APIRouter(include_in_schema=False)
 ROOT = Path(__file__).resolve().parent.parent.parent
 
 
+def _edition(request):
+    return getattr(request.state, "edition", None) or request.app.state.editions.instance
+
+
+def shown(edition, guide) -> bool:
+    """Whether the edition (or the person's lens) keeps a guide (EDITIONS.md section 5.8): its category listed (help.categories), a
+    Knowledge page or pack guide about one of its packs (help.knowledge for Knowledge pages, packs.enabled for pack guides), and an
+    unlisted document only when the edition does not refuse them (help.unlisted-slugs: refuse). Without an edition: every guide."""
+    if not edition.active:
+        return True
+    cats = edition.help_categories()
+    if cats is not None and guide.category not in cats:
+        return False
+    if not guide.listed and edition.refuse_unlisted:
+        return False
+    if guide.packs:
+        wanted = edition.knowledge_packs() if guide.category == "knowledge" else edition._get("packs.enabled")
+        if isinstance(wanted, list) and not set(guide.packs) & {str(p) for p in wanted}:
+            return False
+    return True
+
+
+def categories_for(request, lib) -> list:
+    ed = _edition(request)
+    if not ed.active:
+        return lib.categories
+    out = []
+    for c in lib.categories:
+        guides = [g for g in c["guides"] if shown(ed, g)]
+        if guides:
+            out.append({**c, "guides": guides})
+    return out
+
+
 @router.get("/help")
 async def help_index(request: Request):
     lib = await library(request)
-    return render(request, "help/index.html", categories=lib.categories, count=lib.listed, screen="help")
+    cats = categories_for(request, lib)
+    return render(request, "help/index.html", categories=cats, count=sum(len(c["guides"]) for c in cats) if _edition(request).active else lib.listed,
+                  screen="help")
 
 
 @router.get("/help/search")
 async def help_search(request: Request, q: str = ""):
-    return render(request, "help/search.html", q=q, hits=(await library(request)).search(q), screen="help")
+    ed = _edition(request)
+    return render(request, "help/search.html", q=q, hits=[h for h in (await library(request)).search(q) if shown(ed, h["guide"])], screen="help")
 
 
 @router.get("/what")
@@ -54,7 +91,7 @@ async def what(request: Request, q: str = ""):
     slug = lib.by_file.get(folder / entry.page) if entry else None
     if entry and slug:
         return RedirectResponse(f"/help/{slug}#{entry.anchor}", status_code=303)
-    hits = [h for h in lib.search(words) if h["guide"].category == CATEGORY]
+    hits = [h for h in lib.search(words) if h["guide"].category == CATEGORY and shown(_edition(request), h["guide"])]
     return render(request, "help/search.html", q=words, hits=hits, knowledge=home or "", screen="help")
 
 
@@ -99,9 +136,10 @@ async def help_guide(request: Request, slug: str):
     lib = await library(request)
     if slug not in lib.guides and lib.moved.get(slug, "").partition("#")[0] in lib.guides:
         return RedirectResponse(f"/help/{lib.moved[slug]}", status_code=301)       # permanent: the address was retired, the target may carry an #anchor
-    if slug not in lib.guides:
+    ed = _edition(request)
+    if slug not in lib.guides or not shown(ed, lib.guides[slug]):        # a guide the edition hides is not reached by its address either
         return render(request, "help/search.html", status_code=404, q=slug.replace("-", " "),
-                      hits=lib.search(slug.replace("-", " ")), missing=slug, screen="help")
+                      hits=[h for h in lib.search(slug.replace("-", " ")) if shown(ed, h["guide"])], missing=slug, screen="help")
     g = lib.guides[slug]
     page = lib.render(slug)
     siblings = next(c for c in lib.categories if c["id"] == g.category)

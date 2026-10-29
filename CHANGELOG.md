@@ -17,6 +17,34 @@
 
 ## Unreleased (2.9.6)
 
+### Editions: Drishti Risk with one setting, and the risk lens (2026-10-29)
+
+- **Editions.** `drishti.edition: risk` (`DRISHTI_EDITION`) on the servers runs **Drishti Risk**, VaR and exposure first: the edition file
+  `config/editions/risk.yaml` is a layer under the site's configuration (`EditionEnvironmentPostProcessor`, before the packs load) and in
+  the console (learned from `/public/about`). Packs: the edition's five, `allow-only` refusing others at start, in Admin → Packs, Deploy
+  archive, the registry and the folder watcher (`403 DRS-1017`). Commands: an allow-list separate from kind access, hidden from the command
+  line, FUNC, the type-ahead, the packs' examples, entity pages and search (`404 DRS-4023`); the engines still read every kind. The words
+  BI, RUPAKA, FORM, FUNC, WHAT, DATAMAP, VAR and EXP switch with their pages. BI offers the edition's datasets and models, and the reports
+  and boards on them. Help, Knowledge (tagged by pack), Admin tabs and routes (404 for hidden ones) and branding follow. Blank: the full
+  Drishti, exactly as before (tested).
+- **One default pack list**, `config/editions/default-packs.yaml` (the server reads it from its jar, the console from disk); `DRISHTI_PACKS`
+  now defaults to the word `default` everywhere (the edition's packs, else that list); set empty it still means no packs.
+- **Menus and the footer as data**: `drishti-console/config/menus.yaml`, each item with `requires:`; the command line's placeholder from
+  configuration (`ui.placeholder`, an edition's `menus.placeholder`). New console switches `features.build`, `forms`, `datamap`,
+  `workspaces`, `monitors`, `alerts`, `lakes`, `reports`, `collaboration`; `studio.enabled` is now read.
+- **Drishti Risk's Home**: the three chosen mock-ups, Risk desk (default), Command first and Risk map, filled from the VaR and exposure
+  engines' answers; the person's choice kept in their settings (`homeLanding`); `home.landing-by-role` read as the hook for role-based
+  access later.
+- **The lens**: `drishti.lenses: risk` on a full instance gives each person "Open Drishti Risk" (and "Leave Drishti Risk"): the edition's
+  presentation for their session only, kept in their settings, no restart, packs all loaded. A lens hides; it does not secure.
+- **Clusters**: a member publishes its edition in its digest; Admin → Net warns when members differ. VaR sharding is unchanged under an
+  edition (two-member test).
+- **Branding**: the console takes the server's product name and tagline (one source; its own `ui.product` still wins); `ui.logo`,
+  `ui.favicon`, `ui.apple_touch_icon`; a generated `/manifest.webmanifest`; `{product}` in help titles and summaries.
+- Docs: [EDITIONS.md](docs/architecture/EDITIONS.md) (the design as built), [EDITIONS_GUIDE.md](docs/admin/EDITIONS_GUIDE.md) (the how-to,
+  in the help centre), CONFIGURATION (`drishti.edition`, `drishti.lenses`, the console's keys), OPERATIONS (Editions), API_GUIDE and
+  TROUBLESHOOTING (`DRS-1017`, `DRS-4023`). Docker and ECS pass `DRISHTI_EDITION`.
+
 ### Direct memory: a server no longer runs out after hours (2026-10-28)
 
 - **The fault.** After about 13 hours a cluster node started with `-XX:MaxDirectMemorySize=256m` failed every lake read with

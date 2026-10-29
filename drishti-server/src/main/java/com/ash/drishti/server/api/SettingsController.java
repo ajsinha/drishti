@@ -102,6 +102,12 @@ public class SettingsController {
                     }
                     next.put("locale", v.asText());
                 }
+                case "lens", "homeLanding" -> {          // the edition a person opened as a lens; their choice of an edition's landing (EDITIONS.md 8)
+                    if (!v.asText().matches("[a-z0-9][a-z0-9-]{0,63}")) {
+                        throw bad(e.getKey() + " is an edition or landing name (lower-case letters, digits and dashes)");
+                    }
+                    next.put(e.getKey(), v.asText());
+                }
                 case "flash" -> next.put("flash", bool(v, "flash"));
                 case "searchLimit" -> {
                     if (!v.canConvertToInt() || v.asInt() < 10 || v.asInt() > 1000) {

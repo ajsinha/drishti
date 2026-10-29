@@ -28,12 +28,31 @@ import org.springframework.core.env.Environment;
 public final class PackPaths {
 
     public static final String DEFAULT_PACKS = "./config/packs";
-    /** The packs enabled when {@code drishti.packs.enabled} is not set: the seven shipped packs. */
-    public static final String DEFAULT_ENABLED = "core,market-data,trading,counterparty-risk,market-risk,world-economy,news-and-markets";
+    /**
+     * The packs enabled when {@code drishti.packs.enabled} is not set (or blank) and no edition names them: the one list,
+     * {@code config/editions/default-packs.yaml} (copied into this jar at build; the console reads the same file).
+     */
+    public static final String DEFAULT_ENABLED = String.join(",", com.ash.drishti.packs.edition.Editions.defaultPacks());
     private static final String LEGACY_PACKS = "./packs";
     private static final AtomicBoolean WARNED = new AtomicBoolean();
 
     private PackPaths() {
+    }
+
+    /** The value of {@code drishti.packs.enabled} that means "the edition's packs, else the default list" (application.yaml's default). */
+    public static final String DEFAULT_WORD = "default";
+
+    /**
+     * The packs enabled in the configuration: {@code drishti.packs.enabled}; when unset or {@value #DEFAULT_WORD}, the edition's
+     * ({@code drishti.edition}), else {@link #DEFAULT_ENABLED}. Set to empty it is empty, as it always was (no packs).
+     */
+    public static String enabled(Environment env) {
+        String v = env.getProperty("drishti.packs.enabled", DEFAULT_WORD);
+        if (!DEFAULT_WORD.equals(v.strip())) {
+            return v;
+        }
+        java.util.List<String> edition = com.ash.drishti.packs.edition.Editions.of(env).packs();
+        return edition.isEmpty() ? DEFAULT_ENABLED : String.join(",", edition);
     }
 
     /** The data umbrella ({@code drishti.data.dir}). */

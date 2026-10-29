@@ -27,6 +27,7 @@ from core.settings import changed_at
 from core.backend import BackendError
 from core.csrf import BodyError, json_body
 from routes import api_routes, designer_routes, history_routes
+from core.edition import WORDS
 from routes.common import ident, packs, render
 from routes.var_routes import redirect_for as var_redirect
 from routes.var_routes import retired_link as var_retired_link
@@ -40,7 +41,8 @@ router = APIRouter(include_in_schema=False)
 @router.get("/t")
 async def home(request: Request, error: str | None = None):
     current = await packs(request)
-    examples = [(cmd, what, p["title"]) for p in current for cmd, what in p["examples"]]
+    ed = getattr(request.state, "edition", None) or request.app.state.editions.instance
+    examples = [(cmd, what, p["title"]) for p in current for cmd, what in p["examples"] if ed.command_shown(str(cmd).split()[0])]
     pinned = (getattr(request.state, "settings", None) or {}).get("pinned") or []
     return render(request, "terminal/home.html", examples=examples, packs=current, error=error, pinned=pinned)
 
@@ -104,6 +106,10 @@ async def rupaka(request: Request, rest: str):
 @router.get("/go")
 async def go(request: Request, q: str = ""):
     typed = q.replace("<GO>", "").replace("<go>", "").strip()
+    ed = getattr(request.state, "edition", None) or request.app.state.editions.instance
+    head = typed.split(None, 1)[0].upper() if typed else ""
+    if head in WORDS and head != "EXP" and not ed.word_on(head):    # a word the edition (or lens) switches off: said, not run (EXP is also a mnemonic)
+        return RedirectResponse(f"/t?error={quote(f'DRS-4023 {head} is not part of {ed.title}: FUNC lists what you can use')}", status_code=303)
     if typed.split(None, 1)[:1] and typed.split(None, 1)[0].upper() in BI_WORDS:        # reserved (RUPAKA.md section 4), whatever packs define
         return await rupaka(request, typed.split(None, 1)[1].strip() if " " in typed else "")
     words = q.replace("<GO>", "").replace("<go>", "").split()
@@ -121,9 +127,9 @@ async def go(request: Request, q: str = ""):
         rest = " ".join(words[1:])
         return RedirectResponse("/datamap" + (f"?q={quote(rest)}" if rest else ""), status_code=303)
     me = getattr(request.state, "identity", None)
-    if (to_var := var_redirect(typed, (me.user if me else "") or "")) is not None:   # VAR DESK RATES: the VaR explorer (var_routes.py)
+    if ed.word_on("VAR") and (to_var := var_redirect(typed, (me.user if me else "") or "")) is not None:   # VAR DESK RATES: the VaR explorer (var_routes.py)
         return to_var
-    if (to_exp := exp_redirect(typed)) is not None:            # EXP NSET NS-X, EXP EXP-X (retired): exposure-result (exposure_routes.py)
+    if ed.word_on("EXP") and (to_exp := exp_redirect(typed)) is not None:            # EXP NSET NS-X, EXP EXP-X (retired): exposure-result (exposure_routes.py)
         return to_exp
     if _SEARCH.match(q.replace("<GO>", "")):
         return RedirectResponse(f"/s?q={quote(q.replace('<GO>', '').strip())}", status_code=303)

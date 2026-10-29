@@ -89,6 +89,15 @@ management:
         enabled: true
 
 drishti:
+  # The edition (docs/architecture/EDITIONS.md, docs/admin/EDITIONS_GUIDE.md): blank is the full Drishti; risk is Drishti Risk. It names
+  # config/editions/<name>.yaml, read as a layer under the site's configuration before the packs load; every member of a cluster sets the
+  # same value, and the console learns it from /api/v1/about. A change needs a restart.
+  edition: ${DRISHTI_EDITION:}
+  editions:
+    dir: ${DRISHTI_EDITIONS_DIR:./config/editions}   # the folder of the edition files (and features.yaml, default-packs.yaml)
+  # Lenses (EDITIONS.md section 8): editions a person may open on a full instance ("Open Drishti Risk"), for their own session; no restart,
+  # every pack stays loaded. A lens hides, it does not secure. Blank: no lens link (the full Drishti as before). Ignored with an edition.
+  lenses: ${DRISHTI_LENSES:}
   data:
     # The umbrella folder every runtime path below defaults under (identity database, caches, loads, collab, designs, reports, the
     # pack overlay and settings, governance, the sample feeds). Each path's own setting still overrides its default.
@@ -1012,7 +1021,7 @@ drishti:
       history-file: ${DRISHTI_PACKS_DEPLOY_HISTORY:${drishti.data.dir}/packs/deploy-history.jsonl}
       probe-dates: 3                       # business dates listed per kind by Test connection
       probe-timeout-seconds: 30
-    enabled: ${DRISHTI_PACKS:core,market-data,trading,counterparty-risk,market-risk,world-economy,news-and-markets}
+    enabled: ${DRISHTI_PACKS:default}      # default: the edition's packs (drishti.edition), else config/editions/default-packs.yaml
     # Sample packs (sample: true in pack.yaml) are demonstrations. visible: everyone sees them; developers: only users with the author
     # or admin power; hidden: nobody, they are not loaded and their connectors do not start. Admin -> Packs ("Hide samples from business
     # users") saves a choice that overrides this. Use developers once real packs exist.

@@ -52,6 +52,12 @@ def render(request: Request, template: str, status_code: int = 200, **context: A
     context.setdefault("settings", getattr(request.state, "settings", None) or {})
     context.setdefault("bi_me", getattr(request.state, "bi_me", None) or {})
     context.setdefault("business_date", getattr(request.state, "business_date", None) or {})
+    edition = getattr(request.state, "edition", None) or request.app.state.editions.instance
+    context.setdefault("edition", edition)
+    if edition.lens:                     # a person's lens: its branding on their pages only (the instance's edition is a settings layer)
+        for g, key in (("PRODUCT", "product"), ("TAGLINE", "tagline")):
+            if edition.branding(key):
+                context.setdefault(g, edition.branding(key))
     return templates.TemplateResponse(request, template, context, status_code=status_code)
 
 

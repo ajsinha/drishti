@@ -103,10 +103,13 @@ public final class PackDeployService {
     private final com.ash.drishti.packs.ConnectorFiles connectorFiles;
     private final ReentrantLock lock = new ReentrantLock();
 
+    private final com.ash.drishti.packs.edition.Edition edition;
+
     public PackDeployService(Environment env, DeployProperties props, RegistryProperties registryProps, PackRegistry running,
             ObjectProvider<BuildProperties> build, SutraRegistry sutras, ViewPipeline pipeline, ShapeService shapes, AutoDesigner designer,
             JsonCodec codec, com.ash.drishti.packs.ConnectorFiles connectorFiles) {
         this.connectorFiles = connectorFiles;
+        this.edition = com.ash.drishti.packs.edition.Editions.of(env);
         this.installed = Path.of(com.ash.drishti.packs.PackPaths.installedDir(env)).toAbsolutePath().normalize();
         this.packsDir = Path.of(com.ash.drishti.packs.PackPaths.packsDir(env)).toAbsolutePath().normalize();
         this.props = props;
@@ -175,6 +178,11 @@ public final class PackDeployService {
             if (!NAME.matcher(name).matches() || !VERSION.matcher(version).matches()) {
                 checks.add(Check.fail("pack.yaml", !NAME.matcher(name).matches() ? "needs a plain 'pack' name (got '" + name + "')"
                         : "'version' must be X.Y.Z, such as 1.4.0 or 2.0.0-rc.1 (got '" + version + "')"));
+                return finish(out, checks, null, null);
+            }
+            if (!edition.packAllowed(name)) {                       // an allow-only edition (DRS-1017): only its own packs
+                checks.add(Check.fail("pack.yaml", "the edition '" + edition.name() + "' does not include the pack '" + name + "' (its packs are "
+                        + edition.packs() + ", allow-only)"));
                 return finish(out, checks, null, null);
             }
             out.put("pack", name);

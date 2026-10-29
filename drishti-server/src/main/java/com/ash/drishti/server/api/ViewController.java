@@ -44,6 +44,14 @@ public class ViewController {
 
     private final PageTimes pageTimes;
 
+    private com.ash.drishti.server.edition.EditionCommands edition = com.ash.drishti.server.edition.EditionCommands.NONE;
+
+    /** The edition's command allow-list (EDITIONS.md section 5.3); none: every command shown. */
+    @org.springframework.beans.factory.annotation.Autowired(required = false)
+    public void setEdition(com.ash.drishti.server.edition.EditionCommands edition) {
+        this.edition = edition;
+    }
+
     public ViewController(ViewPipeline pipeline, RecentEntities recents, MeterRegistry meters, Entitlements entitlements, PageTimes pageTimes) {
         this.pipeline = pipeline;
         this.pageTimes = pageTimes;
@@ -57,6 +65,7 @@ public class ViewController {
     public ViewModel view(@PathVariable String kind, @PathVariable String id, AsOf asOf,
             @RequestAttribute(Principal.ATTRIBUTE) Principal principal, jakarta.servlet.http.HttpServletRequest request) {
         entitlements.requireOpen(principal, kind);
+        edition.requireKind(kind);                                    // a page of a command the edition hides: DRS-4023
         EntityRef ref = EntityRef.of(kind, id);
         long started = System.nanoTime();
         var chosen = ViewEventController.chosen(registry, designs, principal, kind, request);   // ?sutra=book-desk, or ?design=<id>: the reader's own

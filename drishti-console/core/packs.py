@@ -27,8 +27,16 @@ from core.servers import scoped
 from core.user_stamps import EVERYONE, NONE as NO_STAMPS
 
 log = logging.getLogger(__name__)
-# The packs the server enables when DRISHTI_PACKS is not set (PackPaths.DEFAULT_ENABLED): the seven shipped packs.
-DEFAULT_ENABLED = "core,market-data,trading,counterparty-risk,market-risk,world-economy,news-and-markets"
+
+
+def default_enabled(console_dir: Path) -> str:
+    """The packs the server enables when DRISHTI_PACKS is not set and no edition names them: the one list the server reads from its jar,
+    config/editions/default-packs.yaml (docs/architecture/EDITIONS.md section 5.1)."""
+    try:
+        f = (console_dir / "../config/editions/default-packs.yaml").resolve()
+        return ",".join(str(p) for p in (yaml.safe_load(f.read_text(encoding="utf-8")) or {}).get("packs") or [])
+    except (OSError, yaml.YAMLError):
+        return ""
 
 
 class Packs:
@@ -47,7 +55,8 @@ class Packs:
         inst = str(settings.get("packs.installed_dir", "") or "").strip()
         i = Path(inst) if inst else Path(str(settings.get("lakes.data_dir", "../data") or "../data")) / "packs" / "installed"
         self.installed = i if i.is_absolute() else (console_dir / i).resolve()
-        self.fallback = [p.strip() for p in str(settings.get("packs.enabled", DEFAULT_ENABLED)).split(",") if p.strip()]
+        wanted = str(settings.get("packs.enabled", "default"))
+        self.fallback = [p.strip() for p in (default_enabled(console_dir) if wanted.strip() == "default" else wanted).split(",") if p.strip()]
         self._cache: dict[str, tuple[float, list, list, float]] = {}    # user -> (monotonic time, packs, switcher, wall time read)
         # every worker of the console sees a change at once (core/user_stamps.py); other consoles within ``ttl`` (QA3A-02)
         self.stamps = stamps

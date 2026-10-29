@@ -105,31 +105,33 @@ async def rupaka_suggestions(request: Request, word: str, rest: str | None) -> l
 @router.get("/suggest")
 async def suggest(request: Request, q: str = "", limit: int | None = None):
     """The command line's dropdown; without a limit the server's own (drishti.commands.suggest-limit, 25) applies."""
+    ed = getattr(request.state, "edition", None) or request.app.state.editions.instance     # the words an edition (or lens) keeps
     bi = re.match(r"(?is)^\s*(bi|rupaka)(?:\s+(.*))?$", q.replace("<GO>", ""))
-    if bi:                                                     # the reserved word RUPAKA: the BI pages and the reports you may open
+    if bi and ed.word_on(bi.group(1)):                                                     # the reserved word RUPAKA: the BI pages and the reports you may open
         return await rupaka_suggestions(request, bi.group(1), bi.group(2))
     keyword = []
-    if re.match(r"(?i)^\s*(b|bi|r|ru|rup|rupa|rupak)\s*$", q.replace("<GO>", "")) and await rupaka_suggestions(request, "", None):    # the first letters of it: offer the keyword
+    if re.match(r"(?i)^\s*(b|bi|r|ru|rup|rupa|rupak)\s*$", q.replace("<GO>", "")) and ed.word_on("BI" if q.strip().lower().startswith("b") else RUPAKA) \
+            and await rupaka_suggestions(request, "", None):    # the first letters of it: offer the keyword
         kw = "BI" if q.strip().lower().startswith("b") else RUPAKA
         keyword = [{"mnemonic": kw, "title": "BI: business intelligence (Rupaka)", "subtitle": f"{kw} <GO> opens the BI home; {kw} CATALOGUE, {kw} WORKSPACE, {kw} <report>",
                     "complete": f"{kw} ", "href": "/bi", "type": "bi"}]
     func = re.match(r"(?is)^\s*func(?:\s+(.*))?$", q.replace("<GO>", ""))
-    if func:                                                   # the reserved word FUNC: the command directory, filtered by what follows
+    if func and ed.word_on("FUNC"):                                                   # the reserved word FUNC: the command directory, filtered by what follows
         words = (func.group(1) or "").strip()
         return [{"mnemonic": "FUNC", "title": "Functions: every command you can use" + (f", matching {words}" if words else ""),
                  "subtitle": "FUNC <GO> opens the list; FUNC <words> opens it filtered (a command, a word of what it does, a pack)",
                  "complete": f"FUNC {words}".strip(), "href": "/func" + (f"?q={quote(words)}" if words else ""), "type": "func"}]
     dmap = re.match(r"(?is)^\s*datamap(?:\s+(.*))?$", q.replace("<GO>", ""))
-    if dmap:                                                   # the reserved word DATAMAP: the data map, focused on what follows
+    if dmap and ed.word_on("DATAMAP"):                                                   # the reserved word DATAMAP: the data map, focused on what follows
         words = (dmap.group(1) or "").strip()
         return [{"mnemonic": "DATAMAP", "title": "Data map: every kind of data, how it joins, how much there is" + (f", at {words}" if words else ""),
                  "subtitle": "DATAMAP <GO> opens the map; DATAMAP <domain or kind> opens it focused (DATAMAP trade, DATAMAP counterparty)",
                  "complete": f"DATAMAP {words}".strip(), "href": "/datamap" + (f"?q={quote(words)}" if words else ""), "type": "datamap"}]
     what = re.match(r"(?is)^\s*what(?:\s+(.*))?$", q.replace("<GO>", ""))
-    if what:                                                   # the reserved word WHAT: the Knowledge pages, then the glossary's terms
+    if what and ed.word_on("WHAT"):                                                   # the reserved word WHAT: the Knowledge pages, then the glossary's terms
         return await what_suggestions(request, (what.group(1) or "").strip())
     typed = re.match(r"(?i)^\s*form(?:\s+(\S*))?(?:\s+(\S*))?\s*$", q.replace("<GO>", ""))
-    if typed:                                                  # the reserved word FORM: packs you may open, then their kinds
+    if typed and ed.word_on("FORM"):                           # the reserved word FORM: packs you may open, then their kinds
         return await form_suggestions(request, typed.group(1), typed.group(2), q.endswith(" "))
     try:
         return keyword + await request.app.state.backend.suggest(q, ident(request), limit)

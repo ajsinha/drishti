@@ -51,16 +51,17 @@
   </div>
 </section>
 
-<div class="lp-wrap">
+{% set _ed = edition_of(request) %}{# an edition (or lens) switches the general Drishti story off section by section (home.sections) #}
+{% if _ed.home_section('stats') %}<div class="lp-wrap">
   <div class="lp-stats" role="list">
     <div role="listitem"><b>0</b><span>hand-built screens</span></div>
     <div role="listitem"><b>7</b><span>pipeline stages</span></div>
     <div role="listitem"><b>&lt;50ms</b><span>warm view p99 target</span></div>
     <div role="listitem"><a class="lp-stat-link" href="/help/panels" title="Key-value, table, tabs, line, area, bar, ladder, links, status, provenance, markdown, gauge, metric, surface, waterfall, histogram, scatter, candlestick, graph, timeline and pivot: what each shows"><b>21</b><span>panel kinds in the grammar</span></a></div>
   </div>
-</div>
+</div>{% endif %}
 
-<section class="lp-section" id="grammar">
+{% if _ed.home_section('grammar') %}<section class="lp-section" id="grammar">
   <div class="lp-wrap lp-grid2">
     <div>
       <div class="lp-kicker">Rachana · the screen grammar</div>
@@ -86,9 +87,9 @@
   - { id: refs, kind: links }       <span class="tok-c"># every id becomes a door</span></pre>
     </div>
   </div>
-</section>
+</section>{% endif %}
 
-<section class="lp-section" id="pipeline">
+{% if _ed.home_section('pipeline') %}<section class="lp-section" id="pipeline">
   <div class="lp-wrap">
     <div class="lp-kicker">The view pipeline</div>
     <h2 class="lp-h2">Seven stages. Every view. Every tick.</h2>
@@ -107,9 +108,9 @@
       <circle class="pulse" cx="40" cy="65" r="6"/>
     </svg>
   </div>
-</section>
+</section>{% endif %}
 
-<section class="lp-section" id="capabilities">
+{% if _ed.home_section('capabilities') %}<section class="lp-section" id="capabilities">
   <div class="lp-wrap">
     <div class="lp-kicker">What you get</div>
     <h2 class="lp-h2">Built for people who read numbers for a living.</h2>
@@ -122,9 +123,9 @@
       {{ card("stars", "Inference", "Scored, explainable rules turn data shapes into panels. Studio lets you promote an inferred panel into the Sutra.") }}
     </div>
   </div>
-</section>
+</section>{% endif %}
 
-<section class="lp-section" id="views">
+{% if _ed.home_section('views') %}<section class="lp-section" id="views">
   <div class="lp-wrap">
     <div class="lp-kicker">Four products · one grammar</div>
     <h2 class="lp-h2">Different data. The same eye.</h2>
@@ -137,14 +138,14 @@
       {% endfor %}
     </div>
   </div>
-</section>
+</section>{% endif %}
 
-<section class="lp-close">
+{% if _ed.home_section('close') %}<section class="lp-close">
   <div class="lp-wrap">
     <h2 class="lp-h2">See your data the way it wants to be seen.</h2>
     {% if PRODUCT_MEANING %}<p class="lp-lead mx-auto">{{ PRODUCT_MEANING | safe }}</p>{% endif %}
   </div>
-</section>
+</section>{% endif %}
 {% endblock %}
 {% block head %}<link rel="stylesheet" href="/static/css/dyk.css?v={{ ASSET_V }}">{% endblock %}
 {% block scripts %}<script src="/static/js/landing.js?v={{ ASSET_V }}"></script>{% if facts_on %}

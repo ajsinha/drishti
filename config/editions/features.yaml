@@ -1,0 +1,43 @@
+# Project Drishti · Any data. Any domain. One grammar.
+#
+# Copyright (c) 2026 Ashutosh Sinha <ajsinha@gmail.com>.
+# All rights reserved.
+#
+# PROPRIETARY AND CONFIDENTIAL.
+#
+# This file is the confidential and proprietary property of Ashutosh Sinha.
+# Unauthorised copying, use, modification, distribution or disclosure of this
+# file, via any medium, is strictly prohibited except with the express prior
+# written permission of the copyright holder.
+#
+# See the LICENSE file in the root of this repository for the full terms.
+
+# What each feature an edition names (features: in config/editions/<name>.yaml) presets, on the server and in the console
+# (docs/architecture/EDITIONS.md, section 5.6). A value of off presets false; any other value (on, edition) presets true.
+# A setting the product writes as ${VARIABLE:default} keeps its variable, so the site still wins. A feature an edition does not
+# name keeps the product's default. The console's features.* flags are the console-only switches (all on by default).
+features:
+  bi:            { server: [drishti.bi.enabled], console: [bi.enabled] }     # edition: BI with the edition's datasets only (bi.datasets)
+  calc:          { server: [drishti.calc.enabled], console: [calc.enabled] }
+  layouts:       { server: [drishti.layouts.enabled], console: [layouts.enabled] }
+  pivot:         { server: [drishti.pivot.enabled] }
+  reports:       { server: [drishti.reports.enabled], console: [features.reports] }
+  collaboration: { server: [drishti.collab.enabled], console: [features.collaboration] }
+  var:           { server: [drishti.var.enabled] }
+  exposure:      { server: [drishti.ccr.exposure.enabled] }
+  governance:    { server: [drishti.governance.enabled] }
+  ai:            { server: [drishti.ai.enabled], console: [ai.enabled] }
+  mcp:           { server: [drishti.mcp.enabled], console: [mcp.enabled] }
+  embed:         { server: [drishti.embed.enabled], console: [embed.enabled] }
+  pyconsole:     { console: [bi.pyconsole.enabled] }
+  python:        { console: [bi.python.enabled] }
+  designer:      { console: [ui.designer] }
+  facts:         { console: [ui.facts.enabled] }
+  studio:        { console: [studio.enabled] }
+  build:         { console: [features.build] }          # Build: new screens, new packs, designs, reviews, changes
+  forms:         { console: [features.forms] }          # query by form (FORM, /forms)
+  datamap:       { console: [features.datamap] }        # the data map (DATAMAP, /datamap)
+  workspaces:    { console: [features.workspaces] }     # /w
+  monitors:      { console: [features.monitors] }       # /m
+  alerts:        { console: [features.alerts] }         # /alerts
+  lakes:         { console: [features.lakes] }          # Admin -> Lakes

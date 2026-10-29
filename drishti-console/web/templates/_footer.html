@@ -17,10 +17,8 @@
   <div class="inner">
     {% if TAGLINE %}<p class="sf-tag">{{ TAGLINE }}</p>{% endif %}
     <p class="sf-links"><span class="sf-name">{{ PRODUCT }}</span> <span class="mono">{{ ASSET_V.split('-')[0] }}</span>
-      <a href="/help"><i class="bi bi-question-circle" aria-hidden="true"></i> Help</a>
-      <a href="/about"><i class="bi bi-info-circle" aria-hidden="true"></i> About</a>
-      <a href="/about/competitive"><i class="bi bi-bar-chart-steps" aria-hidden="true"></i> Competitive analysis</a>
-      <a href="/help/release-notes"><i class="bi bi-tag" aria-hidden="true"></i> Release notes</a></p>
+      {% for link in footer_links(request) %}<a href="{{ link.href }}"><i class="bi bi-{{ link.icon }}" aria-hidden="true"></i> {{ link.label }}</a>
+      {% endfor %}</p>
     <p class="sf-fine">{{ COPYRIGHT }}{% if NOTICE %} · {{ NOTICE }}{% endif %}</p>
   </div>
 </footer>

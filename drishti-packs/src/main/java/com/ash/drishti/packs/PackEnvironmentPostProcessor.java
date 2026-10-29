@@ -46,12 +46,19 @@ public final class PackEnvironmentPostProcessor implements EnvironmentPostProces
                 System.setProperty("drishti.index.dir", idx);
             }
         }
-        String enabled = env.getProperty("drishti.packs.enabled", PackPaths.DEFAULT_ENABLED);
+        String enabled = PackPaths.enabled(env);
         java.util.LinkedHashSet<String> names = new java.util.LinkedHashSet<>(
                 Arrays.stream(enabled.split(",")).map(String::trim).filter(s -> !s.isEmpty()).toList());
         names.addAll(org.springframework.boot.context.properties.bind.Binder.get(env)
                 .bind("drishti.packs.added", org.springframework.boot.context.properties.bind.Bindable.listOf(String.class))
                 .orElse(List.of()));
+        com.ash.drishti.packs.edition.Edition edition = com.ash.drishti.packs.edition.Editions.of(env);
+        List<String> notInEdition = names.stream().filter(n -> !edition.packAllowed(n)).toList();
+        if (!notInEdition.isEmpty()) {                                                   // allow-only: the edition's packs, nothing else
+            System.getLogger(PackEnvironmentPostProcessor.class.getName()).log(System.Logger.Level.WARNING,
+                    "edition {0} is allow-only: not loading {1} (named by DRISHTI_PACKS, drishti.packs.enabled or Admin -> Packs)", edition.name(), notInEdition);
+            names.removeAll(notInEdition);
+        }
         String connDir = env.getProperty("drishti.sources.connectors-dir", System.getenv().getOrDefault("DRISHTI_CONNECTORS_DIR", "./config/connectors"));
         ConnectorFiles files = new ConnectorFiles(java.nio.file.Path.of(connDir), java.nio.file.Path.of(PackPaths.dataDir(env), "connectors"));
         PackSettings overrides = new PackSettings(java.nio.file.Path.of(PackPaths.settingsDir(env)));

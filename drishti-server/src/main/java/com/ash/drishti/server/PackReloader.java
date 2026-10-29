@@ -331,10 +331,12 @@ public final class PackReloader implements AutoCloseable {
 
     /** The packs that should be loaded: the site's list, the administrator's overlay and new folders, minus hidden samples. */
     private List<String> desired(PackLoader loader, List<Path> dirs) {
-        LinkedHashSet<String> names = new LinkedHashSet<>(java.util.Arrays.stream(env.getProperty("drishti.packs.enabled", com.ash.drishti.packs.PackPaths.DEFAULT_ENABLED).split(","))
+        LinkedHashSet<String> names = new LinkedHashSet<>(java.util.Arrays.stream(com.ash.drishti.packs.PackPaths.enabled(env).split(","))
                 .map(String::trim).filter(s -> !s.isEmpty()).toList());
         names.addAll(overlay.added());
         names.addAll(candidates);
+        com.ash.drishti.packs.edition.Edition edition = com.ash.drishti.packs.edition.Editions.of(env);
+        names.removeIf(n -> !edition.packAllowed(n));              // an allow-only edition: a new folder of another pack is not loaded
         return samples.select(dirs, List.copyOf(names), loader);
     }
 
@@ -443,7 +445,7 @@ public final class PackReloader implements AutoCloseable {
             if (!onDisk) {
                 deleted.add(name);
                 if (neededBy == null) {
-                    if (current.containsKey(name) && java.util.Arrays.stream(env.getProperty("drishti.packs.enabled", com.ash.drishti.packs.PackPaths.DEFAULT_ENABLED).split(",")).map(String::trim).anyMatch(name::equals)) {
+                    if (current.containsKey(name) && java.util.Arrays.stream(com.ash.drishti.packs.PackPaths.enabled(env).split(",")).map(String::trim).anyMatch(name::equals)) {
                         problems.put(name, "its folder was removed and it was unloaded, but drishti.packs.enabled still names it: the server will not start until that is changed");
                     }
                     path.removeLast();
@@ -700,7 +702,7 @@ public final class PackReloader implements AutoCloseable {
 
     /** New folders and unloaded packs are remembered across restarts the way Admin &rarr; Packs Load and Unload do. */
     private void persistLoaded(List<String> loaded, List<String> unloaded) {
-        Set<String> configured = new LinkedHashSet<>(java.util.Arrays.stream(env.getProperty("drishti.packs.enabled", com.ash.drishti.packs.PackPaths.DEFAULT_ENABLED).split(","))
+        Set<String> configured = new LinkedHashSet<>(java.util.Arrays.stream(com.ash.drishti.packs.PackPaths.enabled(env).split(","))
                 .map(String::trim).filter(s -> !s.isEmpty()).toList());
         List<String> added = new ArrayList<>(overlay.added());
         boolean change = false;
@@ -728,6 +730,7 @@ public final class PackReloader implements AutoCloseable {
             if (loadedNames().contains(name)) {
                 throw new DrishtiException(ErrorCode.BAD_REQUEST, "'" + name + "' is already loaded");
             }
+            com.ash.drishti.packs.edition.Editions.of(env).requirePack(name);          // DRS-1017: not in an allow-only edition
             List<String> before = overlay.added();
             List<String> added = new ArrayList<>(before);
             added.add(name);

@@ -99,6 +99,7 @@ class Guide:
     category: str
     path: Path
     listed: bool = True
+    packs: tuple = ()                 # the packs the guide is about (a pack's own guide; help.yaml packs:), for an edition's help filter
 
 
 class Library:
@@ -115,7 +116,7 @@ class Library:
                 src = g.get("doc")
                 path = (docs_dir / src) if src else (console_dir / "web" / "guides" / f"{g['slug']}.md")
                 guide = Guide(g["slug"], g["title"], g.get("summary", "").replace("{tutorials}", tutorial_count_word(docs_dir)), g.get("icon", "journal-text"),
-                              g.get("kind", "reference" if src else "guide"), cat["id"], path)
+                              g.get("kind", "reference" if src else "guide"), cat["id"], path, packs=tuple(g.get("packs") or ()))
                 if path.exists():
                     self.guides[guide.slug] = guide
                     items.append(guide)
@@ -130,7 +131,7 @@ class Library:
                     continue
                 cat = cats.get(g.get("category")) or cats.get("start")
                 guide = Guide(g["slug"], g["title"], g.get("summary", ""), g.get("icon", "journal-text"),
-                              g.get("kind", "guide"), cat["id"], g["path"])
+                              g.get("kind", "guide"), cat["id"], g["path"], packs=(g.get("pack"),) if g.get("pack") else ())
                 self.guides[guide.slug] = guide
                 if g["slug"] == "getting-started":
                     cat["guides"].insert(0, guide)

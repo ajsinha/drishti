@@ -215,7 +215,13 @@ public final class CapabilityTable {
         return out;
     }
 
-    /** What Admin → Net should show: one version of a pack with different contents, different calendars, different mask lists. */
+    /** The digest service a member that runs an edition publishes its name under (none: the full product). */
+    public static final String EDITION_SERVICE = "edition";
+
+    /**
+     * What Admin → Net should show: one version of a pack with different contents, different calendars, different mask lists, different
+     * editions (drishti.edition: every member of a cluster should run the same one).
+     */
     public List<Warning> warnings() {
         List<Warning> out = new ArrayList<>();
         Map<String, Map<String, Set<String>>> hashes = new TreeMap<>();     // pack -> version -> hashes
@@ -234,6 +240,15 @@ public final class CapabilityTable {
         if (calendars.size() > 1) {
             out.add(new Warning("calendar", "the nodes use different business calendars " + calendars
                     + ": a peer with another calendar is used for live reads only"));
+        }
+        Map<String, Set<String>> editions = new TreeMap<>();
+        for (Node n : ordered()) {
+            Map<String, String> svc = n.digest().services() == null ? Map.of() : n.digest().services();
+            editions.computeIfAbsent(svc.getOrDefault(EDITION_SERVICE, "(none)"), x -> new TreeSet<>()).add(n.id());
+        }
+        if (editions.size() > 1) {
+            out.add(new Warning("edition", "the nodes run different editions " + editions
+                    + ": every member should set the same drishti.edition (each shows and refuses what its own edition says)"));
         }
         if (redacts.size() > 1) {
             out.add(new Warning("redact", "the nodes mask different fields " + redacts.values()

@@ -83,3 +83,24 @@ def test_a_rebranded_console_names_the_product_and_owner_from_configuration(back
 def test_the_wordmark_font_is_not_named_after_the_product():
     css = (WEB / "static" / "css" / "theme.css").read_text(encoding="utf-8")
     assert '"Product Wordmark"' in css and "Drishti Wordmark" not in css and "Drishti Tagline" not in css
+
+
+def test_the_menus_and_the_edition_pages_never_write_the_product_name():
+    """The menus and footer as data (config/menus.yaml) say {product}; the edition's landing, its script and the lens links take the
+    product from configuration (EDITIONS.md section 5.10)."""
+    import yaml
+
+    menus = yaml.safe_load((CONSOLE / "config" / "menus.yaml").read_text(encoding="utf-8"))
+    shown = [str(i.get(k, "")) for m in menus["menus"] for c in m["columns"] for i in c["items"] for k in ("label", "desc")]
+    shown += [str(i.get("label", "")) for i in menus["footer"]]
+    assert not [t for t in shown if NAME.search(t)]
+
+
+def test_a_rebranded_console_has_no_drishti_in_its_manifest_title_or_menus(backend):
+    app = create_app(load_settings(CONSOLE / "config", ["--ui.product=Acme Insight", "--ui.tagline=Risk, simply"]))
+    app.state.backend = backend
+    c = TestClient(app)
+    assert c.get("/manifest.webmanifest").json()["name"] == "Acme Insight"
+    page = c.get("/t").text
+    nav = page[page.index('class="tbar-menus"'):page.index('class="tbar-tools"')]
+    assert "Acme Insight*net" in nav and not NAME.search(re.sub(r"<[^>]+>", " ", nav))

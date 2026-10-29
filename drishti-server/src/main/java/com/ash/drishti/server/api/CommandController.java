@@ -57,6 +57,14 @@ public class CommandController {
     private final CommandMemory memory;
     private final SuggestionMasks masks;
 
+    private com.ash.drishti.server.edition.EditionCommands edition = com.ash.drishti.server.edition.EditionCommands.NONE;
+
+    /** The edition's command allow-list (EDITIONS.md section 5.3); none: every command shown. */
+    @org.springframework.beans.factory.annotation.Autowired(required = false)
+    public void setEdition(com.ash.drishti.server.edition.EditionCommands edition) {
+        this.edition = edition;
+    }
+
     public CommandController(CommandParser parser, SuggestionService suggestions, Mnemonics mnemonics, Entitlements entitlements,
             StructuredSearch search, SourceRouter router, SearchProperties searchProps, com.ash.drishti.server.security.PackAccess packs,
             CommandMemory memory, SuggestionMasks masks) {
@@ -178,6 +186,9 @@ public class CommandController {
         String head = text.split("\\s+", 2)[0];
         boolean listable = mnemonics.of(head.toUpperCase(Locale.ROOT)).isPresent();
         mnemonics.of(head.toUpperCase(Locale.ROOT)).ifPresent(m -> entitlements.requireActive(m.kind()));   // a command turned off: DRS-1016
+        if (listable) {
+            edition.requireCode(head);                                // a command the edition hides: DRS-4023
+        }
         if (!listable && !text.contains(" ")) {                       // MKT, market-data: the pack's overview
             Optional<String> pack = packs.byCodeOrName(text);
             if (pack.isPresent()) {
@@ -187,6 +198,7 @@ public class CommandController {
         if (named.isPresent()) {
             EntityRef ref = named.get();
             entitlements.requireOpen(principal, ref.kind());
+            edition.requireKind(ref.kind());
             if (!listable || exists(ref, asOf)) {
                 return open(ref);
             }
@@ -196,6 +208,7 @@ public class CommandController {
         SearchQuery q = SearchQuery.pick(text);
         String kind = search.kindOf(q);
         entitlements.requireOpen(principal, kind);
+        edition.requireKind(kind);
         SearchQuery probe = new SearchQuery(q.head(), q.condition(), q.orderBy(), q.descending(), 2, q.fields(), q.idPattern());
         StructuredSearch.Result r = search.run(probe, asOf, data -> entitlements.redact(principal, data));
         if (r.matched() == 1 && !r.rows().isEmpty()) {
@@ -216,7 +229,8 @@ public class CommandController {
     @GetMapping("/suggest")
     public List<Suggestion> suggest(@RequestParam(defaultValue = "") String q, @RequestParam(required = false) Integer limit, AsOf asOf,
             @RequestAttribute(Principal.ATTRIBUTE) Principal principal) {
-        List<Suggestion> local = masks.apply(principal, q, entitlements.filter(principal, suggestions.suggest(q, principal.user(), limit, asOf)), asOf);
+        List<Suggestion> local = masks.apply(principal, q, entitlements.filter(principal, suggestions.suggest(q, principal.user(), limit, asOf)), asOf)
+                .stream().filter(s -> edition.kindShown(s.kind())).toList();      // the edition's hidden commands are never suggested
         // Drishti*net: the peers' suggestions too, within the short type-ahead budget; a slow peer is simply left out
         com.ash.drishti.server.net.SearchScatter sc = scatter == null ? null : scatter.getIfAvailable();
         if (sc == null || q.isBlank()) {
@@ -232,7 +246,8 @@ public class CommandController {
         // this node's masks and kinds again on what the peers suggested, for the kinds whose packs are here (masks twice)
         // a command turned off is off on every node (the switches are the cluster's): its kind is never suggested, whoever holds it
         return masks.apply(principal, q, merged.stream().filter(s -> s.kind() == null || packAccess == null
-                || !packAccess.commandOff(s.kind()) && (packAccess.ownerOf(s.kind()) == null || entitlements.mayOpen(principal, s.kind()))).toList(), asOf);
+                || !packAccess.commandOff(s.kind()) && edition.kindShown(s.kind())
+                && (packAccess.ownerOf(s.kind()) == null || entitlements.mayOpen(principal, s.kind()))).toList(), asOf);
     }
 
     private org.springframework.beans.factory.ObjectProvider<com.ash.drishti.server.net.SearchScatter> scatter;

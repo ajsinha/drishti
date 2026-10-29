@@ -14,13 +14,14 @@
   See the LICENSE file in the root of this repository for the full terms.
 #}
 {% macro brand_mark(cls="brand-mark") -%}
+{% if LOGO %}<img class="{{ cls }} brand-logo" src="{{ LOGO }}" alt="" aria-hidden="true">{% else %}
 <svg class="{{ cls }}" viewBox="0 0 200 120" aria-hidden="true" focusable="false">
   <path d="M40 18c-12 0-14 6-14 16v14c0 8-4 12-10 12 6 0 10 4 10 12v14c0 10 2 16 14 16" fill="none" stroke="currentColor" stroke-width="10" stroke-linecap="round"/>
   <path d="M160 18c12 0 14 6 14 16v14c0 8 4 12 10 12-6 0-10 4-10 12v14c0 10-2 16-14 16" fill="none" stroke="currentColor" stroke-width="10" stroke-linecap="round"/>
   <path class="eye" d="M58 60c26-26 58-26 84 0-26 26-58 26-84 0z" fill="none" stroke-width="8" stroke-linejoin="round"/>
   <circle cx="100" cy="60" r="15" fill="none" stroke="currentColor" stroke-width="8"/>
   <circle cx="106" cy="54" r="4" fill="currentColor"/>
-</svg>
+</svg>{% endif %}
 {%- endmacro %}
 
 {% macro brand(href="/") -%}

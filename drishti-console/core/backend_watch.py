@@ -46,6 +46,7 @@ class BackendWatch:
         self.timeout = float(timeout)
         self._state: dict[str, dict] = {}
         self._url_of = url_of or (lambda s: s.url)
+        self.on_about = None                    # called with (server, about) after each answer: the console learns the edition
 
     @property
     def enabled(self) -> bool:
@@ -68,6 +69,11 @@ class BackendWatch:
         try:
             about = await self.probe(self._url_of(server))
             up, error, version = True, "", str(about.get("version") or "")
+            if self.on_about is not None:
+                try:
+                    self.on_about(server, about)
+                except Exception:  # noqa: BLE001 - learning the edition never marks the server down
+                    LOG.exception("reading the server's edition failed")
         except Exception as e:  # noqa: BLE001 - any failure means not reachable
             up, error, version = False, _brief(e), (old or {}).get("version", "")
         if old is None or old["reachable"] != up:
