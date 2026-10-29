@@ -55,7 +55,8 @@ class Packs:
         inst = str(settings.get("packs.installed_dir", "") or "").strip()
         i = Path(inst) if inst else Path(str(settings.get("lakes.data_dir", "../data") or "../data")) / "packs" / "installed"
         self.installed = i if i.is_absolute() else (console_dir / i).resolve()
-        self.fallback = [p.strip() for p in str(settings.get("packs.enabled", "") or default_enabled(console_dir)).split(",") if p.strip()]
+        wanted = str(settings.get("packs.enabled", "default"))
+        self.fallback = [p.strip() for p in (default_enabled(console_dir) if wanted.strip() == "default" else wanted).split(",") if p.strip()]
         self._cache: dict[str, tuple[float, list, list, float]] = {}    # user -> (monotonic time, packs, switcher, wall time read)
         # every worker of the console sees a change at once (core/user_stamps.py); other consoles within ``ttl`` (QA3A-02)
         self.stamps = stamps

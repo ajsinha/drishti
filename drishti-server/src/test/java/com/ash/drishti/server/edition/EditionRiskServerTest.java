@@ -38,7 +38,7 @@ import org.springframework.test.web.servlet.MvcResult;
  * the entity page and search, the packs' examples), the BI datasets, the About answers and the branding. DRISHTI_PACKS naming another pack
  * is not loaded, and loading one from Admin -> Packs is refused (DRS-1017).
  */
-@SpringBootTest(properties = {"drishti.edition=risk", "drishti.packs.enabled=", "drishti.rachana.hot-reload=false", "drishti.sources.plugins.demo.enabled=false",
+@SpringBootTest(properties = {"drishti.edition=risk", "drishti.packs.enabled=default", "drishti.rachana.hot-reload=false", "drishti.sources.plugins.demo.enabled=false",
         "drishti.var.official.enabled=false", "drishti.var.official.on-start=false", "drishti.ccr.exposure.official.enabled=false",
         "drishti.bi.dir=../config/bi", "drishti.bi.query.store-dir=${drishti.test.dir}/edition-bi-store/${random.uuid}",
         "drishti.identity.database-url=jdbc:sqlite:${drishti.test.dir}/edition-${random.uuid}/identity.db"})

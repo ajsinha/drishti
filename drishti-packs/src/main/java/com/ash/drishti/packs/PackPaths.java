@@ -39,13 +39,16 @@ public final class PackPaths {
     private PackPaths() {
     }
 
+    /** The value of {@code drishti.packs.enabled} that means "the edition's packs, else the default list" (application.yaml's default). */
+    public static final String DEFAULT_WORD = "default";
+
     /**
-     * The packs enabled in the configuration: {@code drishti.packs.enabled}; when blank, the edition's ({@code drishti.edition}), else
-     * {@link #DEFAULT_ENABLED}.
+     * The packs enabled in the configuration: {@code drishti.packs.enabled}; when unset or {@value #DEFAULT_WORD}, the edition's
+     * ({@code drishti.edition}), else {@link #DEFAULT_ENABLED}. Set to empty it is empty, as it always was (no packs).
      */
     public static String enabled(Environment env) {
-        String v = env.getProperty("drishti.packs.enabled", "");
-        if (!v.isBlank()) {
+        String v = env.getProperty("drishti.packs.enabled", DEFAULT_WORD);
+        if (!DEFAULT_WORD.equals(v.strip())) {
             return v;
         }
         java.util.List<String> edition = com.ash.drishti.packs.edition.Editions.of(env).packs();

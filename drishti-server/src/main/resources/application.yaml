@@ -1021,7 +1021,7 @@ drishti:
       history-file: ${DRISHTI_PACKS_DEPLOY_HISTORY:${drishti.data.dir}/packs/deploy-history.jsonl}
       probe-dates: 3                       # business dates listed per kind by Test connection
       probe-timeout-seconds: 30
-    enabled: ${DRISHTI_PACKS:}             # blank: the edition's packs (drishti.edition), else config/editions/default-packs.yaml
+    enabled: ${DRISHTI_PACKS:default}      # default: the edition's packs (drishti.edition), else config/editions/default-packs.yaml
     # Sample packs (sample: true in pack.yaml) are demonstrations. visible: everyone sees them; developers: only users with the author
     # or admin power; hidden: nobody, they are not loaded and their connectors do not start. Admin -> Packs ("Hide samples from business
     # users") saves a choice that overrides this. Use developers once real packs exist.

@@ -39,7 +39,7 @@ import org.springframework.test.web.servlet.request.MockHttpServletRequestBuilde
  * {@code drishti.lenses=risk} the same instance offers the risk lens: a request that names it (the console's X-Drishti-Lens header for a
  * person who opened it) sees the edition's commands and BI datasets; a request that does not sees everything. Packs stay loaded.
  */
-@SpringBootTest(properties = {"drishti.lenses=risk", "drishti.packs.enabled=", "drishti.rachana.hot-reload=false", "drishti.sources.plugins.demo.enabled=false",
+@SpringBootTest(properties = {"drishti.lenses=risk", "drishti.packs.enabled=default", "drishti.rachana.hot-reload=false", "drishti.sources.plugins.demo.enabled=false",
         "drishti.var.official.enabled=false", "drishti.var.official.on-start=false", "drishti.ccr.exposure.official.enabled=false",
         "drishti.bi.dir=../config/bi", "drishti.bi.query.store-dir=${drishti.test.dir}/lens-bi-store/${random.uuid}",
         "drishti.identity.database-url=jdbc:sqlite:${drishti.test.dir}/lens-${random.uuid}/identity.db"})

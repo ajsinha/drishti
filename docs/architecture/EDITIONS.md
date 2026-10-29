@@ -47,7 +47,7 @@ A **lens** (section 8) is the same file opened by one person on a full instance,
 
 | Area | Before | Built |
 |---|---|---|
-| **Packs** | `DRISHTI_PACKS` chose the packs; the default list was in four places (Java, Python, two YAML files) | one list, `config/editions/default-packs.yaml` (copied into the `drishti-packs` jar at build, read by the console from disk); `drishti.packs.enabled` blank means the edition's packs, else that list; `allow-only` refuses other packs at start, in Admin → Packs, Deploy archive, the registry and the folder watcher |
+| **Packs** | `DRISHTI_PACKS` chose the packs; the default list was in four places (Java, Python, two YAML files) | one list, `config/editions/default-packs.yaml` (copied into the `drishti-packs` jar at build, read by the console from disk); `drishti.packs.enabled` defaults to the word `default`: the edition's packs, else that list (set empty it is still empty: no packs); `allow-only` refuses other packs at start, in Admin → Packs, Deploy archive, the registry and the folder watcher |
 | **Commands** | Admin → Commands switched a mnemonic off for everyone, which made its kind unreadable | an edition **command allow-list**, separate from kind access (`EditionCommands`): hidden from the command line, FUNC, the type-ahead, the packs' examples, the entity page and search (`404 DRS-4023`); the engines still read every kind. The reserved and console words (BI, RUPAKA, FORM, FUNC, WHAT, DATAMAP, VAR, EXP) switch on and off, with their pages |
 | **Menus** | the top bar was a list in a template; Views, Build, Help and the footer were fixed; the placeholder a trading example | `drishti-console/config/menus.yaml`: every menu item and footer link with an id and `requires:`; the edition lists what it shows per menu; the placeholder from configuration |
 | **Features** | about 15 console and 25 server flags; no switch for Build, Forms, Data map, Workspaces, Monitors, Alerts, Lakes; `studio.enabled` read nowhere | `config/editions/features.yaml` maps each feature an edition names to the flags of each side; new console flags `features.build`, `forms`, `datamap`, `workspaces`, `monitors`, `alerts`, `lakes`, `reports`, `collaboration`; `studio.enabled` wired |
@@ -132,7 +132,7 @@ under the edition exactly as on the full product (the `*RiskEditionTest` classes
 ## 5. What was built (by item)
 
 1. **The edition layer.** `drishti-packs`: `edition/Edition.java` (the record), `edition/Editions.java` (reading, the default pack list,
-   lenses), `edition/EditionEnvironmentPostProcessor.java`; `PackPaths.enabled(env)` (blank: the edition's, else the default list);
+   lenses), `edition/EditionEnvironmentPostProcessor.java`; `PackPaths.enabled(env)` (`default`: the edition's, else the default list);
    `config/editions/default-packs.yaml` (the one list, copied into the jar by `drishti-packs/pom.xml`). Console: `core/edition.py`,
    `core/config.py` (`Settings.layer`, `Settings.site`), learning in `core/backend_watch.py` and the app's start.
 2. **Packs.** `allow-only`: `PackEnvironmentPostProcessor` (start), `PackReloader.load` and `desired` (Admin → Packs, the folder

@@ -24,7 +24,7 @@ services:
     environment:
       DRISHTI_SECURITY_ENABLED: "true"
       DRISHTI_TOKEN_SECRET: ${DRISHTI_TOKEN_SECRET:?set DRISHTI_TOKEN_SECRET}
-      DRISHTI_PACKS: ${DRISHTI_PACKS:-}       # blank: the edition's packs, else config/editions/default-packs.yaml
+      DRISHTI_PACKS: ${DRISHTI_PACKS:-default}   # default: the edition's packs, else config/editions/default-packs.yaml
       DRISHTI_EDITION: ${DRISHTI_EDITION:-}   # blank: the full Drishti; risk: Drishti Risk (docs/admin/EDITIONS_GUIDE.md)
       DRISHTI_SEED_ADMIN: "true"              # creates the one administrator below on first start, never the development admin
       DRISHTI_SEED_USERNAME: ${DRISHTI_ADMIN_USER:?set DRISHTI_ADMIN_USER}
@@ -42,7 +42,7 @@ services:
     depends_on: [server]
     environment:
       DRISHTI_BACKEND_URL: http://server:18480
-      DRISHTI_PACKS: ${DRISHTI_PACKS:-}
+      DRISHTI_PACKS: ${DRISHTI_PACKS:-default}
       DRISHTI_AUTH_ENABLED: "true"
       DRISHTI_TOKEN_SECRET: ${DRISHTI_TOKEN_SECRET:?set DRISHTI_TOKEN_SECRET}
       DRISHTI_SESSION_SECRET: ${DRISHTI_SESSION_SECRET:?set DRISHTI_SESSION_SECRET}

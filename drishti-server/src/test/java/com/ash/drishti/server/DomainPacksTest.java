@@ -34,7 +34,7 @@ import org.springframework.boot.test.context.SpringBootTest;
  * by the pack's Sutra with every panel filled and no missing link. news-and-markets is the exception: its pages read two on-demand
  * internet connectors that are off as shipped, so its examples only have to open by their Sutra.
  */
-@SpringBootTest(properties = {"drishti.sources.plugins.demo.settings.ticking=false"})   // drishti.packs.enabled blank: PackPaths.DEFAULT_ENABLED
+@SpringBootTest(properties = {"drishti.sources.plugins.demo.settings.ticking=false", "drishti.packs.enabled=default"})   // PackPaths.DEFAULT_ENABLED
 class DomainPacksTest {
 
     @Autowired ViewPipeline pipeline;

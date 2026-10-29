@@ -62,7 +62,7 @@ class EditionsTest {
 
     @Test
     void noEditionAddsNothingAndAllowsEverything() {
-        StandardEnvironment env = env(map(), map("drishti.packs.enabled", "${DRISHTI_PACKS:}"));
+        StandardEnvironment env = env(map(), map("drishti.packs.enabled", "${DRISHTI_PACKS:default}"));
         new EditionEnvironmentPostProcessor().postProcessEnvironment(env, new SpringApplication());
         assertThat(env.getPropertySources().contains(EditionEnvironmentPostProcessor.SOURCE)).isFalse();
         Edition none = Editions.of(env);
@@ -80,7 +80,7 @@ class EditionsTest {
     void theRiskEditionIsALayerUnderTheSiteAndAboveTheProductDefaults() {
         StandardEnvironment env = env(map("drishti.edition", "risk", "drishti.editions.dir", DIR.toString(),
                 "drishti.edition-spec.commands.also-allow[0]", "FRTB"),
-                map("drishti.packs.enabled", "${DRISHTI_PACKS:}", "drishti.branding.product", "${DRISHTI_PRODUCT:Drishti}"));
+                map("drishti.packs.enabled", "${DRISHTI_PACKS:default}", "drishti.branding.product", "${DRISHTI_PRODUCT:Drishti}"));
         new EditionEnvironmentPostProcessor().postProcessEnvironment(env, new SpringApplication());
         List<String> order = env.getPropertySources().stream().map(p -> p.getName()).toList();
         assertThat(order.indexOf(EditionEnvironmentPostProcessor.SOURCE)).isGreaterThan(order.indexOf("site")).isLessThan(order.indexOf(PRODUCT_DEFAULTS));
@@ -113,7 +113,7 @@ class EditionsTest {
     @Test
     void theSitesVariableStillWinsOverTheEditionsPacks() {
         StandardEnvironment env = env(map("drishti.edition", "risk", "drishti.editions.dir", DIR.toString(), "DRISHTI_PACKS", "core,trading"),
-                map("drishti.packs.enabled", "${DRISHTI_PACKS:}"));
+                map("drishti.packs.enabled", "${DRISHTI_PACKS:default}"));
         new EditionEnvironmentPostProcessor().postProcessEnvironment(env, new SpringApplication());
         assertThat(env.getProperty("drishti.packs.enabled")).isEqualTo("core,trading");
     }

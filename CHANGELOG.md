@@ -28,7 +28,7 @@
   and boards on them. Help, Knowledge (tagged by pack), Admin tabs and routes (404 for hidden ones) and branding follow. Blank: the full
   Drishti, exactly as before (tested).
 - **One default pack list**, `config/editions/default-packs.yaml` (the server reads it from its jar, the console from disk); `DRISHTI_PACKS`
-  now defaults to empty everywhere (the edition's packs, else that list).
+  now defaults to the word `default` everywhere (the edition's packs, else that list); set empty it still means no packs.
 - **Menus and the footer as data**: `drishti-console/config/menus.yaml`, each item with `requires:`; the command line's placeholder from
   configuration (`ui.placeholder`, an edition's `menus.placeholder`). New console switches `features.build`, `forms`, `datamap`,
   `workspaces`, `monitors`, `alerts`, `lakes`, `reports`, `collaboration`; `studio.enabled` is now read.
