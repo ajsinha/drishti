@@ -61,17 +61,17 @@ A book of synthetic P&L strips, and the sum of their paths computed when the pag
 | Column | Type | Key | Presence | Unit | Example or values | Link | Meaning |
 |---|---|---|---|---|---|---|---|
 | `BOOK_ID` | id | key | required |  | `BOOK-CREDIT` (pattern `^BOOK-(RATES\|FX\|CREDIT)$`) | `path-book` | The record's id (the business key) |
-| `NAME` | text |  | required |  | `Credit book` |  | — |
-| `DESK` | id |  | required |  | `CREDIT` | `desk` | Desk |
-| `STRIP_COUNT` | integer |  | required |  | `30` |  | Strips |
-| `MEMBERS` | text list |  | required |  |  |  | — |
-| `PATH_ID` | id |  | required |  | `BOOK-CREDIT` |  | — |
+| `NAME` | text |  | required |  | `Credit book` |  | The book's display name. |
+| `DESK` | id |  | required |  | `CREDIT` | `desk` | The desk that owns the book, a plain desk code of the demo (CREDIT, RATES …); not a core desk id. |
+| `STRIP_COUNT` | integer |  | required |  | `30` |  | How many path strips (path-strip rows) the book holds. |
+| `MEMBERS` | text list |  | required |  |  |  | The ids of the book's P&L strips (path-strip records). |
+| `PATH_ID` | id |  | required |  | `BOOK-CREDIT` |  | The id the book's computed path is asked under (PSUM or PSUMJ <PATH_ID>). |
 
 **Links:** `BOOK_ID` → `path-book`, `DESK` → `desk`.
 
 ### PSTRIP: P&L strip (`path-strip`)
 
-P&L strip (the path-strip kind of the compute-demo pack)
+A synthetic P&L strip of the compute-demo pack: one path vector in a path book, summed by the demo engines.
 
 **Class** input · **Key** `STRIP_ID` · **Dated by** `snapshot` · **Cadence** static · **Stored by** connector `compute-demo-store` (plugin `delta`), table `<root>/compute-demo/path-strip/` · **Ids** `^STRIP-`.
 
@@ -80,11 +80,11 @@ P&L strip (the path-strip kind of the compute-demo pack)
 | Column | Type | Key | Presence | Unit | Example or values | Link | Meaning |
 |---|---|---|---|---|---|---|---|
 | `STRIP_ID` | id | key | required |  | `STRIP-RATES-001` (pattern `^STRIP-`) |  | The record's id (the business key) |
-| `BOOK_ID` | id |  | required |  | `BOOK-RATES` (pattern `^BOOK-(RATES\|FX\|CREDIT)$`) | `path-book` | Book: the path-book it refers to |
-| `DESK` | id |  | required |  | `RATES` | `desk` | Desk: the desk it refers to |
-| `INSTRUMENT` | text |  | required |  | `SWAPTION` |  | — |
-| `DAYS` | integer |  | required |  | `250` |  | — |
-| `PNL` | vector |  | required |  |  |  | — *250 values in the test data* |
+| `BOOK_ID` | id |  | required |  | `BOOK-RATES` (pattern `^BOOK-(RATES\|FX\|CREDIT)$`) | `path-book` | The book the strip belongs to: a BOOK_ID of the compute-demo pack's path-book kind (BOOK-…). |
+| `DESK` | id |  | required |  | `RATES` | `desk` | The desk of the strip's book, a plain desk code of the demo (RATES, CREDIT …); not a core desk id. |
+| `INSTRUMENT` | text |  | required |  | `SWAPTION` |  | The instrument type the strip stands for (synthetic). |
+| `DAYS` | integer |  | required |  | `250` |  | The number of scenario days in PNL (250). |
+| `PNL` | vector |  | required |  |  |  | The strip's synthetic P&L, one number per scenario day, in day order. *250 values in the test data* |
 
 **Links:** `BOOK_ID` → `path-book`, `DESK` → `desk`.
 
@@ -98,8 +98,8 @@ Book path (Python) (the path-sum kind of the compute-demo pack)
 
 | Column | Type | Key | Presence | Unit | Example or values | Link | Meaning |
 |---|---|---|---|---|---|---|---|
-| `SUM` | amount |  | required |  |  |  | — |
-| `WORST` | amount |  | required |  |  |  | — |
+| `SUM` | amount |  | required |  |  |  | The sum over every scenario day of the book's total path (the members' P&L added day by day). |
+| `WORST` | amount |  | required |  |  |  | The lowest day of the book's total path. |
 
 - No stored key: an answer's id is the question asked (the id in the request), the id of the path-book it reads.
 
@@ -113,8 +113,8 @@ Book path (Java) (the path-sum-java kind of the compute-demo pack)
 
 | Column | Type | Key | Presence | Unit | Example or values | Link | Meaning |
 |---|---|---|---|---|---|---|---|
-| `SUM` | amount |  | required |  |  |  | — |
-| `WORST` | amount |  | required |  |  |  | — |
+| `SUM` | amount |  | required |  |  |  | The sum over every scenario day of the book's total path (the members' P&L added day by day). |
+| `WORST` | amount |  | required |  |  |  | The lowest day of the book's total path. |
 
 - No stored key: an answer's id is the question asked (the id in the request), the id of the path-book it reads.
 

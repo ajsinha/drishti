@@ -82,27 +82,30 @@ fields:
 - name: ADD_ONS
   type: record list
   presence: required
-  description: 'Nested: see nested ADD_ONS[]'
+  description: 'The potential-future-exposure add-ons, one element per asset class present (Interest rate, Foreign exchange, Credit, Equity, Commodity): ASSET_CLASS and ADD_ON in USD.'
 - name: HEDGING_SETS
   type: record list
   presence: required
-  description: 'Nested: see nested HEDGING_SETS[]'
+  description: 'The hedging sets of the calculation, one element per asset class and hedging set (a currency for rates and FX): EFFECTIVE_NOTIONAL in USD and the supervisory factor SF (a fraction).'
 - name: NETTING_SET
   type: id
   presence: required
-  description: 'Netting set: the netting-set it refers to'
+  description: 'The netting set the calculation is for: a NETTING_SET_ID of the netting-set kind (NS-<counterparty>-<legal entity>).'
   example: NS-ALDERSHOT-FRA
   pattern: ^NS-
   link: netting-set
 - name: ALPHA
   type: rate
   presence: required
+  unit: 'factor'
+  description: 'The SA-CCR alpha multiplier applied to replacement cost plus PFE (regulatory 1.4).'
   example: 1.4
 nested:
   ADD_ONS[]:
   - name: ASSET_CLASS
     type: text
     presence: required
+    description: 'The SA-CCR asset class: Interest rate, Foreign exchange, Credit, Equity or Commodity.'
     example: Interest rate
     enum:
     - Commodity
@@ -113,6 +116,8 @@ nested:
   - name: ADD_ON
     type: amount
     presence: required
+    unit: 'USD'
+    description: 'The asset class''s aggregate add-on (sum of its hedging sets'' effective notionals times their supervisory factors).'
     example: 791562
   HEDGING_SETS[]:
   - name: ASSET_CLASS
@@ -148,8 +153,8 @@ nested:
   - name: SF
     type: amount
     presence: required
-    unit: '% of effective notional'
-    description: The regulatory percentage applied to the effective notional to get the add-on.
+    unit: fraction of the effective notional (0.005 is 0.5%)
+    description: The supervisory factor, as a fraction, applied to the effective notional to get the add-on.
     example: 0.005
 links:
 - field: NETTING_SET
@@ -218,6 +223,4 @@ review:
   they are closed lists.'
 - 'number types decided by the field''s name: ALPHA rate, ADD_ONS[].ADD_ON amount: confirm amount, rate or integer.'
 - 'no unit stated for the amounts ADD_ONS[].ADD_ON (docs/contracts/README.md section 7: USD unless stated): confirm the currency.'
-- 'no description in about.yaml or the Sutras for ALPHA, ADD_ONS[].ASSET_CLASS, ADD_ONS[].ADD_ON: write them in the pack''s config/about.yaml
-  glossary.'
 - 'ALPHA (1.4) is a regulatory parameter: confirm it becomes a setting of the SA-CCR engine.'

@@ -73,8 +73,8 @@ fields:
 - name: UTILISATION
   type: rate
   presence: required
-  unit: '% of limit'
-  description: 'The share of the limit that is used: used divided by limit. Above 100% is a breach.'
+  unit: fraction of the limit (0.0695 is 6.95%)
+  description: 'The share of the limit that is used: used divided by limit, as a fraction. Above 1 is a breach.'
   example: 0.0695
 - name: CVA
   type: amount
@@ -85,96 +85,97 @@ fields:
 - name: TRADES
   type: record list
   presence: required
-  description: 'Nested: see nested TRADES[]'
+  description: The netting set's member trades, one element per trade with its status, product, asset class, currency, book, notional and MtM; empty when the set has no live trade on the date.
 - name: BY_ASSET
   type: record list
   presence: required
-  description: 'Nested: see nested BY_ASSET[]'
+  description: 'The set''s MtM by asset class, one element per class present: ASSET and MTM in USD.'
 - name: COUNTERPARTY
   type: id
   presence: required
-  description: 'Counterparty: the counterparty it refers to'
+  description: 'The counterparty of the netting set: a COUNTERPARTY_ID of the core pack''s counterparty kind (CP-…).'
   example: CP-ALDERSHOT
   pattern: ^CP-
   link: counterparty
 - name: AGREEMENT
   type: id
   presence: required
-  description: 'Agreement: the agreement it refers to'
+  description: 'The master agreement whose close-out netting defines the set: an AGREEMENT_ID of the agreement kind (AGR-…).'
   example: AGR-ALDERSHOT-ISDA
   pattern: ^AGR-
   link: agreement
 - name: CSA
   type: id
   presence: required
-  description: 'CSA: the csa it refers to'
+  description: 'The CSA margining the set: a CSA_ID of the csa kind (CSA-…); absent for an unmargined set.'
   example: CSA-ALDERSHOT
   pattern: ^CSA-
   link: csa
 - name: CREDIT_LIMIT
   type: id
   presence: required
-  description: 'Credit limit: the credit-limit it refers to'
+  description: 'The counterparty''s credit limit: a LIMIT_ID of the credit-limit kind (LIM-…).'
   example: LIM-ALDERSHOT
   pattern: ^LIM-
   link: credit-limit
 - name: CVA_RESULT
   type: id
   presence: required
-  description: 'CVA: the cva it refers to'
+  description: 'The set''s valuation adjustments: a RESULT_ID of the cva kind (CVA-<counterparty>-<legal entity>).'
   example: CVA-ALDERSHOT-FRA
   pattern: ^CVA-
   link: cva
 - name: SACCR
   type: id
   presence: required
-  description: 'SA-CCR: the sa-ccr it refers to'
+  description: 'The set''s SA-CCR exposure calculation: a CALC_ID of the sa-ccr kind (SACCR-…).'
   example: SACCR-ALDERSHOT-FRA
   pattern: ^SACCR-
   link: sa-ccr
 - name: SIMM
   type: id
   presence: required
-  description: 'SIMM: the simm it refers to'
+  description: 'The counterparty''s SIMM initial-margin calculation: a CALC_ID of the simm kind (SIMM-…).'
   example: SIMM-ALDERSHOT
   pattern: ^SIMM-
   link: simm
 - name: COLLATERAL_BALANCE
   type: id
   presence: required
-  description: 'Collateral: the collateral-balance it refers to'
+  description: 'The set''s collateral balance: a BALANCE_ID of the collateral-balance kind (COLL-…).'
   example: COLL-ALDERSHOT-FRA
   pattern: ^COLL-
   link: collateral-balance
 - name: LEGAL_ENTITY
   type: id
   presence: required
-  description: 'Legal entity: the legal-entity it refers to'
+  description: 'The bank''s legal entity on the bank''s side of the set: an ENTITY_ID of the core pack''s legal-entity kind (LE-…).'
   example: LE-FRA
   pattern: ^LE-
   link: legal-entity
 - name: NETTING_ENFORCEABLE
   type: boolean
   presence: required
+  description: 'true when a legal opinion confirms close-out netting is enforceable for the set; false treats the trades gross.'
   example: true
 - name: TRADE_IDS
   type: id list
   presence: optional
-  description: 'Trade: the trade it refers to'
+  description: The member trades' ids, the same trades as TRADES[].TRADE_ID, as text (ENDUR digits, CLY-…, MX-…); empty when the set has no live trade on the date.
   link: trade
 nested:
   TRADES[]:
   - name: TRADE_ID
     type: id
     presence: required
-    description: The member trade.
+    description: 'The member trade: a TRADE_ID of the trading pack''s trade kind, as text.'
     example: CLY-3000280
-    pattern: ^(MX|CLY)-\d+$
+    pattern: ^((MX|CLY)-)?\d+$
     link: trade
   - name: STATUS
     type: text
     presence: required
-    description: Status
+    description: 'The member trade''s status on the date: NEW, VALIDATED or AMENDED as booked, or LIVE.'
     example: LIVE
   - name: PRODUCT
     type: text
@@ -184,10 +185,12 @@ nested:
   - name: ASSET_CLASS
     type: text
     presence: required
+    description: 'The member trade''s asset class.'
     example: Securities financing
   - name: CURRENCY
     type: text
     presence: required
+    description: 'The member trade''s currency, ISO 4217.'
     example: JPY
     enum:
     - AUD
@@ -200,7 +203,7 @@ nested:
   - name: BOOK
     type: id
     presence: required
-    description: 'Book: the book it refers to'
+    description: 'The book the member trade sits in: a BOOK_ID of the core pack''s book kind (BOOK-…).'
     example: BOOK-SFT-1
     pattern: ^BOOK-
     link: book
@@ -218,6 +221,7 @@ nested:
   - name: MATURITY_BUCKET
     type: text
     presence: required
+    description: 'The remaining maturity bucket of the trade: 0-1Y, 1-2Y, 2-5Y, 5-10Y or 10Y+.'
     example: 0-1Y
     enum:
     - 0-1Y
@@ -235,10 +239,13 @@ nested:
   - name: ASSET
     type: text
     presence: required
+    description: 'An asset class of the set''s trades.'
     example: Securities financing
   - name: MTM
     type: amount
     presence: required
+    unit: 'USD'
+    description: 'The net mark to market of the set''s trades in that asset class, from the bank''s side.'
     example: -339550
 links:
 - field: COUNTERPARTY
@@ -367,8 +374,6 @@ review:
 - 'enum values inferred from the data, not from a glossary: TRADES[].CURRENCY, TRADES[].MATURITY_BUCKET: confirm they are closed lists.'
 - 'number types decided by the field''s name: BY_ASSET[].MTM amount: confirm amount, rate or integer.'
 - 'no unit stated for the amounts BY_ASSET[].MTM (docs/contracts/README.md section 7: USD unless stated): confirm the currency.'
-- 'no description in about.yaml or the Sutras for NETTING_ENFORCEABLE, PROFILE[].TENOR, TRADES[].ASSET_CLASS, TRADES[].CURRENCY, TRADES[].MATURITY_BUCKET,
-  BY_ASSET[].ASSET, BY_ASSET[].MTM: write them in the pack''s config/about.yaml glossary.'
 - 'TRADE_COUNT and TRADES[].MTM: confirm TRADE_COUNT is computed from the membership and TRADES[].MTM is read from the trade valuations (an input),
   not stored here.'
 - 'LIMIT is copied from the credit limit: confirm it is read from LIM instead of stored.'

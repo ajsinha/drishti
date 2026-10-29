@@ -50,11 +50,12 @@ fields:
 - name: NAME
   type: text
   presence: required
-  description: Name
+  description: 'The correlation set''s name (European equities …): the matrix itself is computed from its factors'' price history when asked.'
   example: European equities
 - name: FACTORS
   type: text list
   presence: required
+  description: 'The factors of the set, in matrix order: equity tickers and FX pairs (EURUSD) by their market-data names; the correlations are computed from their price histories.'
 - name: EQUITY_IDS
   type: id list
   presence: required
@@ -72,10 +73,8 @@ validation:
   - MATRIX_ID
   - NAME
   - FACTORS
-  - AVERAGE
-  - PAIRS
-  - WINDOW
-  - ESTIMATOR
+  - EQUITY_IDS
+  - FX_IDS
 - rule: unique
   key:
   - MATRIX_ID
@@ -83,6 +82,12 @@ validation:
 - rule: pattern
   field: MATRIX_ID
   pattern: ^CORR-
+- rule: link
+  field: EQUITY_IDS
+  kind: equity
+- rule: link
+  field: FX_IDS
+  kind: fx-spot
 notes:
 - 'Dated by the lake''s business_date partition: `drishti.py lake build` writes each test-data file''s day into it; the documents carry no date
   field of their own.'
@@ -95,5 +100,4 @@ review:
 - 'source ''md-hub'' is the test data''s _meta.source (synthetic): name the production system that delivers it.'
 - 'due time of each business date is not known: state it (for example, by 06:00 New York the next business day).'
 - 'number types decided by the field''s name: AVERAGE rate, PAIRS[].RHO rate: confirm amount, rate or integer.'
-- 'no description in about.yaml or the Sutras for FACTORS, WINDOW, ESTIMATOR: write them in the pack''s config/about.yaml glossary.'
 - 'The release is 2.9.0 or 2.10.0 (Track B, shipped as each is ready): confirm which.'

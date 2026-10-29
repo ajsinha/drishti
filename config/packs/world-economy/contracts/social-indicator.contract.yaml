@@ -55,14 +55,17 @@ fields:
 - name: INDICATOR
   type: text
   presence: required
+  description: The indicator's name as published (Government expenditure on education).
   example: Government expenditure on education
 - name: COUNTRY_NAME
   type: text
   presence: required
+  description: The country's name (Aruba).
   example: Aruba
 - name: THEME
   type: text
   presence: required
+  description: 'The theme of the indicator (Society or Governance).'
   example: Society
   enum:
   - Governance
@@ -99,18 +102,20 @@ fields:
 - name: DEFINITION
   type: text
   presence: required
+  description: 'The source''s definition of the indicator.'
   example: General government spending on education, as a share of GDP.
 - name: SERIES
   type: record list
   presence: required
-  description: 'Nested: see nested SERIES[]'
+  description: 'The indicator by year, oldest first, one element per year: YEAR (text) and VALUE in the unit of MEANING.UNIT.'
 - name: BY_REGION
   type: record list
   presence: required
-  description: 'Nested: see nested BY_REGION[]'
+  description: 'The latest value for the countries of the same region, one element per country: COUNTRY (its name) and VALUE.'
 - name: REGION_NAME
   type: text
   presence: required
+  description: 'The World Bank region of the country, for the regional comparison.'
   example: Latin America & Caribbean
   enum:
   - East Asia & Pacific
@@ -123,24 +128,24 @@ fields:
 - name: JURISDICTION
   type: id
   presence: required
-  description: 'Country: the jurisdiction it refers to'
+  description: 'The country: an id of the jurisdiction kind (JUR-<ISO3>).'
   example: JUR-ABW
   pattern: ^JUR-
   link: jurisdiction
 - name: PROVENANCE
   type: record
   presence: required
-  description: 'Nested: see nested PROVENANCE'
+  description: 'Where the record comes from, one object: SOURCE (World Bank WDI or WGI, or UNDP), DATASET, RETRIEVED_AT, LICENCE, ATTRIBUTION and URL.'
 - name: MEANING
   type: record
   presence: required
-  description: 'Nested: see nested MEANING'
+  description: 'What the indicator means, one object: INDICATOR, UNIT (% of GDP, births per woman …), DEFINITION and COMPARED_WITH (the region the country is compared with).'
 nested:
   SERIES[]:
   - name: YEAR
     type: text
     presence: required
-    description: The calendar year.
+    description: The calendar year of the value, as four-digit text ("2015").
     example: '2015'
   - name: VALUE
     type: amount
@@ -212,7 +217,7 @@ nested:
   - name: INDICATOR
     type: text
     presence: required
-    description: The statistic's name.
+    description: The indicator's name, the same as INDICATOR.
     example: Government expenditure on education
   - name: UNIT
     type: text
@@ -340,5 +345,3 @@ review:
 - 'number types decided by the field''s name: SERIES[].VALUE amount, BY_REGION[].VALUE amount: confirm amount, rate or integer.'
 - 'no unit stated for the amounts LATEST, CHANGE_5Y, SERIES[].VALUE, BY_REGION[].VALUE (docs/contracts/README.md section 7: USD unless stated):
   confirm the currency.'
-- 'no description in about.yaml or the Sutras for INDICATOR, COUNTRY_NAME, THEME, DEFINITION, REGION_NAME: write them in the pack''s config/about.yaml
-  glossary.'

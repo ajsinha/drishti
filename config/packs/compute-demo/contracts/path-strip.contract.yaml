@@ -21,7 +21,7 @@ version: '1.0'
 class: input
 status: active
 title: P&L strip
-description: P&L strip (the path-strip kind of the compute-demo pack)
+description: 'A synthetic P&L strip of the compute-demo pack: one path vector in a path book, summed by the demo engines.'
 source: synthetic
 grain: One row per p&l strip, keyed by STRIP_ID.
 key:
@@ -54,27 +54,30 @@ fields:
 - name: BOOK_ID
   type: id
   presence: required
-  description: 'Book: the path-book it refers to'
+  description: 'The book the strip belongs to: a BOOK_ID of the compute-demo pack''s path-book kind (BOOK-…).'
   example: BOOK-RATES
   pattern: ^BOOK-(RATES|FX|CREDIT)$
   link: path-book
 - name: DESK
   type: id
   presence: required
-  description: 'Desk: the desk it refers to'
+  description: 'The desk of the strip''s book, a plain desk code of the demo (RATES, CREDIT …); not a core desk id.'
   example: RATES
   link: desk
 - name: INSTRUMENT
   type: text
   presence: required
+  description: 'The instrument type the strip stands for (synthetic).'
   example: SWAPTION
 - name: DAYS
   type: integer
   presence: required
+  description: 'The number of scenario days in PNL (250).'
   example: 250
 - name: PNL
   type: vector
   presence: required
+  description: 'The strip''s synthetic P&L, one number per scenario day, in day order.'
   note: 250 values in the test data
 links:
 - field: BOOK_ID
@@ -114,4 +117,3 @@ review:
 - 'source ''synthetic'' is the test data''s _meta.source (synthetic): name the production system that delivers it.'
 - 'the pack also names ''Synthetic P&L strips (a seeded random walk, config/packs/compute-demo/tools/make_samples.py)'' for this kind (path-book,
   path-strip): state when each source applies.'
-- 'no description in about.yaml or the Sutras for INSTRUMENT, DAYS, PNL: write them in the pack''s config/about.yaml glossary.'

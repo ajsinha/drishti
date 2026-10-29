@@ -54,10 +54,12 @@ fields:
 - name: INDICATOR
   type: text
   presence: required
+  description: The indicator's name as the World Bank publishes it (Agriculture, value added).
   example: Agriculture, value added
 - name: COUNTRY_NAME
   type: text
   presence: required
+  description: The economy's name (Aruba).
   example: Aruba
 - name: UNIT
   type: text
@@ -74,6 +76,7 @@ fields:
 - name: DEFINITION
   type: text
   presence: required
+  description: 'The source''s definition of the indicator.'
   example: Value added of agriculture, forestry and fishing as a share…
 - name: LATEST
   type: amount
@@ -93,6 +96,7 @@ fields:
 - name: PREVIOUS_YEAR
   type: text
   presence: optional
+  description: 'The year of the previous value the change is measured from.'
   example: '2022'
 - name: RANK
   type: integer
@@ -102,26 +106,27 @@ fields:
 - name: OF_COUNT
   type: integer
   presence: optional
+  description: 'How many economies the rank is among.'
   example: 196
 - name: HISTORY
   type: record list
   presence: required
-  description: 'Nested: see nested HISTORY[]'
+  description: 'The indicator by year, oldest first, one element per year: YEAR (text) and VALUE in the unit of FACTS.UNIT.'
 - name: FACTS
   type: record
   presence: required
-  description: 'Nested: see nested FACTS'
+  description: 'About the indicator, one object: INDICATOR, UNIT (% of GDP, t CO2e …), LATEST_YEAR, RANK ("34 of 182", highest value first) and WORLD_BANK_CODE.'
 - name: ECONOMY
   type: id
   presence: required
-  description: 'Economy: the economy it refers to'
+  description: 'The economy: an id of the economy kind (ECON-<ISO3>).'
   example: ECON-ABW
   pattern: ^ECON-
   link: economy
 - name: PROVENANCE
   type: record
   presence: required
-  description: 'Nested: see nested PROVENANCE'
+  description: 'Where the record comes from, one object: SOURCE (World Bank WDI), DATASET, RETRIEVED_AT, LICENCE, ATTRIBUTION and URL.'
 nested:
   HISTORY[]:
   - name: YEAR
@@ -138,7 +143,7 @@ nested:
   - name: INDICATOR
     type: text
     presence: required
-    description: The statistic's name.
+    description: The indicator's name, the same as INDICATOR.
     example: Agriculture, value added
   - name: UNIT
     type: text
@@ -256,5 +261,3 @@ review:
 - 'enum values inferred from the data, not from a glossary: UNIT, FACTS.UNIT: confirm they are closed lists.'
 - 'number types decided by the field''s name: HISTORY[].VALUE amount: confirm amount, rate or integer.'
 - 'no unit stated for the amounts LATEST, PREVIOUS, HISTORY[].VALUE (docs/contracts/README.md section 7: USD unless stated): confirm the currency.'
-- 'no description in about.yaml or the Sutras for INDICATOR, COUNTRY_NAME, DEFINITION, PREVIOUS_YEAR, OF_COUNT: write them in the pack''s config/about.yaml
-  glossary.'

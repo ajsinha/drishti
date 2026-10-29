@@ -43,6 +43,7 @@ A US mutual fund or ETF from SEC public data: the fact sheet, the look-through h
 | Storage | connector `funds-store` (plugin `delta`), table `<root>/funds/fund/` |
 | Columns | `TICKER`, `NAME`, `TYPE`, `TICKERS`, `ADVISER`, `INDEX_ID`, `NET_ASSETS`, `EXPENSE_RATIO`, `HOLDING_COUNT`, `REPORT_DATE`, `RANK` |
 | Test data | data/testdata/funds/fund |
+| Worked example | [funds/fund](../samples/funds/fund.md) (a real record, every field explained, for the production query; tools/testdata/sample_docs.py) |
 
 **Fields**
 
@@ -130,7 +131,7 @@ A US mutual fund or ETF from SEC public data: the fact sheet, the look-through h
 | `COUNTERPARTY_COUNT` | integer | required | counterparties | How many counterparties. Source: computed. | `1` |  |
 | `HOLDINGS` | record list | required |  | The 600 largest holdings by value, each with its identifiers and links. Source: N-PORT FUND_REPORTED_HOLDING, IDENTIFIERS. |  |  |
 | `VIEWS` | record list | required |  | The page's tabs: Look-through holdings, and the fund against its index when there is one. Source: computed. |  |  |
-| `PROVENANCE` | record | required |  | Nested: see nested PROVENANCE |  |  |
+| `PROVENANCE` | record | required |  | Where the record comes from, one object: SOURCE (the SEC data sets read), LICENCE, RETRIEVED_AT (the date the data was downloaded, YYYY-MM-DD) and NOTE. |  |  |
 | `MOST_HELD_COMPANY` | id | optional |  | The largest us-equities company the fund holds. Source: computed. | `NVDA` | `us-company` |
 | `MOST_HELD_NAME` | text | optional |  | That company's name. Source: us-equities. | `Nvidia` |  |
 | `ALSO_HELD_BY` | record list | required |  | The ten other funds holding that company the most, by value. Source: computed from fund-holder. |  |  |
@@ -409,6 +410,7 @@ The reverse look-through: every fund of the pack that holds one us-equities comp
 | Storage | connector `funds-store` (plugin `delta`), table `<root>/funds/fund-holder/` |
 | Columns | `TICKER`, `NAME`, `FUNDS`, `TOTAL_VALUE`, `PCT_OF_SHARES` |
 | Test data | data/testdata/funds/fund-holder |
+| Worked example | [funds/fund-holder](../samples/funds/fund-holder.md) (a real record, every field explained, for the production query; tools/testdata/sample_docs.py) |
 
 **Fields**
 
@@ -429,7 +431,7 @@ The reverse look-through: every fund of the pack that holds one us-equities comp
 | `TOP_HOLDER` | text | required |  | The fund holding the most, by value. Source: computed. | `VTI` |  |
 | `HOLDERS` | record list | required |  | Every fund holding it, by value (at most 250). Source: computed. |  |  |
 | `TOP_WEIGHTS` | record list | required |  | The ten funds where it weighs the most. Source: computed. |  |  |
-| `PROVENANCE` | record | required |  | Nested: see nested PROVENANCE |  |  |
+| `PROVENANCE` | record | required |  | Where the record comes from, one object: SOURCE (the SEC data sets read), LICENCE, RETRIEVED_AT (the date the data was downloaded, YYYY-MM-DD) and NOTE. |  |  |
 
 **Nested `HOLDERS[]`**
 
@@ -496,6 +498,7 @@ The funds and ETFs of the pack that track one us-equities index, by net assets, 
 | Storage | connector `funds-store` (plugin `delta`), table `<root>/funds/index-funds/` |
 | Columns | `INDEX`, `NAME`, `FUNDS`, `TOTAL_NET_ASSETS` |
 | Test data | data/testdata/funds/index-funds |
+| Worked example | [funds/index-funds](../samples/funds/index-funds.md) (a real record, every field explained, for the production query; tools/testdata/sample_docs.py) |
 
 **Fields**
 
@@ -508,7 +511,7 @@ The funds and ETFs of the pack that track one us-equities index, by net assets, 
 | `TOTAL_NET_ASSETS` | amount | required | USD | Their net assets added up. Source: computed from N-PORT NET_ASSETS. | `587254661099.0` |  |
 | `LARGEST` | text | required |  | The largest tracking fund. Source: computed. | `QQQ` |  |
 | `ROWS` | record list | required |  | The tracking funds by net assets. Source: computed. |  |  |
-| `PROVENANCE` | record | required |  | Nested: see nested PROVENANCE |  |  |
+| `PROVENANCE` | record | required |  | Where the record comes from, one object: SOURCE (the SEC data sets read), LICENCE, RETRIEVED_AT (the date the data was downloaded, YYYY-MM-DD) and NOTE. |  |  |
 
 **Nested `ROWS[]`**
 

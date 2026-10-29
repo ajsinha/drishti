@@ -49,33 +49,35 @@ fields:
 - name: CURRENCY
   type: text
   presence: required
-  description: Currency
+  description: 'The currency of the swaptions the cube prices, ISO 4217.'
   example: AUD
 - name: MODEL
   type: text
   presence: required
-  description: Model
+  description: 'The volatility model the quotes are in (Normal (Bachelier), SABR smile).'
   example: Normal (Bachelier), SABR smile
 - name: V_1Y_10Y
   type: amount
   presence: required
-  description: 1Y×10Y
+  unit: 'bp (normal vol)'
+  description: 'The 1-year into 10-year at-the-money swaption volatility: a normal volatility in basis points a year.'
   example: 137.22
 - name: V_5Y_5Y
   type: amount
   presence: required
-  description: 5Y×5Y
+  unit: 'bp (normal vol)'
+  description: 'The 5-year into 5-year at-the-money swaption volatility: a normal volatility in basis points a year.'
   example: 132.72
 - name: GRID
   type: record list
   presence: required
-  description: 'Nested: see nested GRID[]'
+  description: 'The at-the-money swaption grid: one object per option expiry, shortest first, with a column per underlying swap tenor.'
 nested:
   GRID[]:
   - name: EXPIRY
     type: text
     presence: required
-    description: Expiry
+    description: 'The option expiry of the row (1M, 3M … 10Y).'
     example: 1M
     enum:
     - 10Y
@@ -88,27 +90,32 @@ nested:
   - name: T_1Y
     type: amount
     presence: required
-    description: 1Y
+    unit: 'bp (normal vol)'
+    description: 'The volatility of the swaption on a 1-year swap: normal, basis points a year.'
     example: 148.55
   - name: T_2Y
     type: amount
     presence: required
-    description: 2Y
+    unit: 'bp (normal vol)'
+    description: 'The volatility of the swaption on a 2-year swap: normal, basis points a year.'
     example: 146.78
   - name: T_5Y
     type: amount
     presence: required
-    description: 5Y
+    unit: 'bp (normal vol)'
+    description: 'The volatility of the swaption on a 5-year swap: normal, basis points a year.'
     example: 143.74
   - name: T_10Y
     type: amount
     presence: required
-    description: 10Y
+    unit: 'bp (normal vol)'
+    description: 'The volatility of the swaption on a 10-year swap: normal, basis points a year.'
     example: 141.09
   - name: T_30Y
     type: amount
     presence: required
-    description: 30Y
+    unit: 'bp (normal vol)'
+    description: 'The volatility of the swaption on a 30-year swap: normal, basis points a year.'
     example: 136.56
 links: []
 validation:

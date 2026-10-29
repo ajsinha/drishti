@@ -65,15 +65,18 @@ fields:
 - name: HIERARCHY
   type: text
   presence: required
+  description: 'The hierarchy of the node (MGMT or LEGAL).'
   enum: [MGMT, LEGAL]
 - name: NODE_ID
   type: id
   presence: required
+  description: 'The node, <HIERARCHY>~<id>, as in risk-hierarchy.'
   link: risk-hierarchy
   example: MGMT~DESK-RATES
 - name: NODE_NAME
   type: text
   presence: required
+  description: 'The node''s display name.'
 - name: PARENT_ID
   type: id
   presence: optional
@@ -81,6 +84,7 @@ fields:
 - name: LEVEL
   type: text
   presence: required
+  description: 'The node''s level in its hierarchy (bank, division, legal-entity, desk, book).'
   enum: [bank, legal-entity, division, desk, book]
 - name: CAPTURE_ID
   type: id
@@ -97,9 +101,11 @@ fields:
 - name: COMPUTED_AT
   type: timestamp
   presence: required
+  description: 'When the official capture computed the row, ISO-8601 UTC.'
 - name: CONTRACT_VERSION
   type: text
   presence: required
+  description: 'The version of the published table''s contract the row carries.'
   example: '1.3'
 - name: VAR
   type: amount
@@ -114,14 +120,17 @@ fields:
 - name: CONFIDENCE
   type: rate
   presence: required
+  description: 'The VaR confidence level, as a fraction (0.99).'
   example: 0.99
 - name: ES_CONFIDENCE
   type: rate
   presence: required
+  description: 'The expected shortfall confidence level, as a fraction (0.975).'
   example: 0.975
 - name: SCENARIO_SET_ID
   type: id
   presence: required
+  description: 'The scenario set the date''s vectors were valued over (HS-509).'
   example: HS-509
 - name: SCENARIO_WINDOW
   type: integer
@@ -156,9 +165,11 @@ fields:
 - name: TRADE_COUNT
   type: integer
   presence: required
+  description: 'The number of trades counted in the node.'
 - name: POSITION_COUNT
   type: integer
   presence: required
+  description: 'The number of positions counted in the node.'
 - name: EXCEPTIONS_250
   type: integer
   presence: optional
@@ -166,6 +177,7 @@ fields:
 - name: TRAFFIC_LIGHT
   type: text
   presence: optional
+  description: 'The Basel backtest zone over the official history: green up to 4 exceptions in 250 days, amber 5 to 9, red 10 or more.'
   enum: [green, amber, red]
 links:
 - field: NODE_ID

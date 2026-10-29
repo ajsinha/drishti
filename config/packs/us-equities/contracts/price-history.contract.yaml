@@ -38,51 +38,51 @@ fields:
 - name: AS_OF
   type: unknown
   presence: optional
-  description: As of
+  description: 'When PRICE last traded, as text: local date and time and the exchange''s time zone (Yahoo chart meta regularMarketTime).'
 - name: CHANGE
   type: unknown
   presence: optional
-  description: Change
+  description: PRICE minus the previous close, gain positive, in CURRENCY.
 - name: CHANGE_PCT
   type: unknown
   presence: optional
-  description: Change %
+  description: The change as a percentage of the previous close, in percent (0.43 is 0.43%).
 - name: CURRENCY
   type: unknown
   presence: optional
-  description: Currency
+  description: The currency of the prices, ISO 4217 (Yahoo chart meta currency).
 - name: DAY_HIGH
   type: unknown
   presence: optional
-  description: Day high
+  description: The session's highest price, in CURRENCY (Yahoo regularMarketDayHigh).
 - name: DAY_LOW
   type: unknown
   presence: optional
-  description: Day low
+  description: The session's lowest price, in CURRENCY (Yahoo regularMarketDayLow).
 - name: EXCHANGE
   type: unknown
   presence: optional
-  description: Exchange
+  description: The exchange's name as Yahoo gives it (fullExchangeName, else exchangeName).
 - name: FIFTY_TWO_WEEK_HIGH
   type: unknown
   presence: optional
-  description: 52-week high
+  description: The highest price over the last 52 weeks, in CURRENCY (Yahoo fiftyTwoWeekHigh).
 - name: FIFTY_TWO_WEEK_LOW
   type: unknown
   presence: optional
-  description: 52-week low
+  description: The lowest price over the last 52 weeks, in CURRENCY (Yahoo fiftyTwoWeekLow).
 - name: MARKET_STATE
   type: unknown
   presence: optional
-  description: Market
+  description: 'The market''s state when fetched: Yahoo''s marketState as given, else REGULAR or CLOSED from the regular trading period, else UNKNOWN.'
 - name: PRICE
   type: unknown
   presence: optional
-  description: Price
+  description: The last traded price, in CURRENCY (Yahoo regularMarketPrice, else the last bar's close).
 - name: VOLUME
   type: unknown
   presence: optional
-  description: Volume
+  description: The session's traded volume in shares (Yahoo regularMarketVolume).
 - name: ANALYTICS
   type: record
   presence: derived

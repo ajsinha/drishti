@@ -49,42 +49,43 @@ fields:
 - name: NAME
   type: text
   presence: required
-  description: Name
+  description: 'The issuer''s legal name.'
   example: Federal Republic of Germany
 - name: RATING
   type: text
   presence: required
-  description: Rating
+  description: 'The issuer''s credit rating, S&P-style (AAA, BBB- …).'
   example: AAA
 - name: SECTOR
   type: text
   presence: required
-  description: Sector
+  description: 'The issuer''s sector (Sovereign, Banking, Airlines …).'
   example: Sovereign
 - name: COUNTRY
   type: text
   presence: required
-  description: Country
+  description: 'The issuer''s country, ISO 3166-1 alpha-2.'
   example: DE
 - name: BONDS
   type: record list
   presence: required
-  description: 'Nested: see nested BONDS[]'
+  description: 'The issuer''s bonds: one object per bond.'
 - name: CREDIT_CURVE
   type: id
   presence: required
-  description: 'Credit curve: the credit-curve it refers to'
+  description: 'The issuer''s CDS curve: a CURVE_ID of the market-data pack''s credit-curve kind (CDS-…).'
   example: CDS-BUND
   pattern: ^CDS-
   link: credit-curve
 - name: LEI
   type: text
   presence: required
+  description: 'The issuer''s Legal Entity Identifier (ISO 17442, 20 characters); synthetic in the test data.'
   example: 549300PJ21SGLK7KWI16
 - name: EQUITY
   type: id
   presence: optional
-  description: 'Equity: the equity it refers to'
+  description: 'The issuer''s listed share, when it has one: a TICKER of the market-data pack''s equity kind (EQ-…).'
   example: EQ-CSCA
   pattern: ^EQ-
   link: equity
@@ -93,17 +94,18 @@ nested:
   - name: ISIN
     type: text
     presence: required
-    description: ISIN
+    description: 'The bond''s ISIN, 12 characters (without the BND- prefix of the market-data pack''s bond id).'
     example: DEBUND064772
   - name: COUPON
     type: rate
     presence: required
-    description: Coupon
+    unit: 'fraction'
+    description: 'The bond''s annual coupon rate, as a fraction (0.038 is 3.8%).'
     example: 0.038
   - name: MATURITY
     type: date
     presence: required
-    description: Maturity
+    description: 'The bond''s maturity date.'
     example: '2031-03-15'
 links:
 - field: CREDIT_CURVE
@@ -143,4 +145,3 @@ review:
 - 'source ''counterparty-master'' is the test data''s _meta.source (synthetic): name the production system that delivers it.'
 - 'due time of each business date is not known: state it (for example, by 06:00 New York the next business day).'
 - 'number types decided by the field''s name: BONDS[].COUPON rate: confirm amount, rate or integer.'
-- 'no description in about.yaml or the Sutras for LEI: write them in the pack''s config/about.yaml glossary.'

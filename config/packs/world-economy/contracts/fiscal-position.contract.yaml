@@ -54,6 +54,7 @@ fields:
 - name: YEAR
   type: text
   presence: optional
+  description: 'The year of the figures.'
   example: '2025'
 - name: DEBT
   type: amount
@@ -88,32 +89,32 @@ fields:
 - name: RATIOS
   type: record list
   presence: required
-  description: 'Nested: see nested RATIOS[]'
+  description: 'Central-government ratios of the latest year, one element per item (Tax revenue, Revenue (excl. grants), Expense, Military expenditure): ITEM and VALUE in % of GDP (World Bank); empty when none is published.'
 - name: DEBT_PATH
   type: record list
   presence: required
-  description: 'Nested: see nested DEBT_PATH[]'
+  description: 'General government gross debt by year, one element per year: YEAR and DEBT in % of GDP (IMF WEO GGXWDG_NGDP; later years are projections).'
 - name: BALANCE_PATH
   type: record list
   presence: required
-  description: 'Nested: see nested BALANCE_PATH[]'
+  description: 'General government net lending (+) or borrowing (−) by year, one element per year: YEAR and BALANCE in % of GDP (IMF WEO GGXCNL_NGDP; later years are projections).'
 - name: ECONOMY
   type: id
   presence: required
-  description: 'Economy: the economy it refers to'
+  description: 'The economy: an id of the economy kind (ECON-<ISO3>).'
   example: ECON-ABW
   pattern: ^ECON-
   link: economy
 - name: PROVENANCE
   type: record
   presence: required
-  description: 'Nested: see nested PROVENANCE'
+  description: 'Where the record comes from, one object: SOURCE (World Bank WDI, IMF WEO), DATASET, RETRIEVED_AT, LICENCE, ATTRIBUTION and URL.'
 nested:
   DEBT_PATH[]:
   - name: YEAR
     type: text
     presence: required
-    description: The calendar year.
+    description: The calendar year of the value, as four-digit text ("2015").
     example: '2015'
   - name: DEBT
     type: amount
@@ -125,7 +126,7 @@ nested:
   - name: YEAR
     type: text
     presence: required
-    description: The calendar year.
+    description: The calendar year of the value, as four-digit text ("2015").
     example: '2015'
   - name: BALANCE
     type: amount
@@ -168,7 +169,7 @@ nested:
   - name: ITEM
     type: text
     presence: required
-    description: A central-government ratio.
+    description: 'The central-government item: Tax revenue, Revenue (excl. grants), Expense or Military expenditure.'
     example: Tax revenue
     enum:
     - Expense
@@ -219,4 +220,3 @@ review:
 - 'key FISCAL_ID is the field holding the sample catalogue''s id (FISC-ABW): confirm it is the business key.'
 - 'a snapshot refreshed when tools/publicdata/world_economy.py runs: confirm the refresh cadence.'
 - 'enum values inferred from the data, not from a glossary: RATIOS[].ITEM: confirm they are closed lists.'
-- 'no description in about.yaml or the Sutras for YEAR: write them in the pack''s config/about.yaml glossary.'

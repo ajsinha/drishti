@@ -23,15 +23,15 @@ One section per command of the pack: the shape of its data, how it is stored and
 |---|---|---|---|---|---|
 | [AGR](#agr-master-agreement-agreement) | `agreement` | fundamental | active | 9 | 4 |
 | [CSA](#csa-credit-support-annex-csa) | `csa` | fundamental | active | 13 | 5 |
-| [NSET](#nset-netting-set-netting-set) | `netting-set` | fundamental | active | 20 | 11 |
-| [LIM](#lim-credit-limit-credit-limit) | `credit-limit` | fundamental | active | 11 | 6 |
-| [CVA](#cva-cva--xva-cva) | `cva` | fundamental | active | 10 | 7 |
-| [SACCR](#saccr-sa-ccr-exposure-sa-ccr) | `sa-ccr` | fundamental | active | 10 | 9 |
+| [NSET](#nset-netting-set-netting-set) | `netting-set` | fundamental | active | 20 | 10 |
+| [LIM](#lim-credit-limit-credit-limit) | `credit-limit` | fundamental | active | 11 | 5 |
+| [CVA](#cva-cva--xva-cva) | `cva` | fundamental | active | 10 | 6 |
+| [SACCR](#saccr-sa-ccr-exposure-sa-ccr) | `sa-ccr` | fundamental | active | 10 | 8 |
 | [COLL](#coll-collateral-balance-collateral-balance) | `collateral-balance` | fundamental | active | 8 | 5 |
-| [MC](#mc-margin-call-margin-call) | `margin-call` | fundamental | active | 11 | 7 |
-| [SIMM](#simm-isda-simm-initial-margin-simm) | `simm` | fundamental | active | 8 | 5 |
-| [XRUN](#xrun-exposure-simulation-run-simulation-run) | `simulation-run` | input | active | 24 | 4 |
-| [XPATH](#xpath-exposure-path-a-trades-mtm-on-every-path-at-a-grid-date-exposure-path) | `exposure-path` | input | active | 21 | 7 |
+| [MC](#mc-margin-call-margin-call) | `margin-call` | fundamental | active | 11 | 6 |
+| [SIMM](#simm-isda-simm-initial-margin-simm) | `simm` | fundamental | active | 8 | 4 |
+| [XRUN](#xrun-exposure-simulation-run-simulation-run) | `simulation-run` | input | active | 24 | 3 |
+| [XPATH](#xpath-exposure-path-a-trades-mtm-on-every-path-at-a-grid-date-exposure-path) | `exposure-path` | input | active | 21 | 6 |
 | [EXP](#exp-exposure-profile-of-a-scope-computed-exposure-result) | `exposure-result` | computed | active | 27 | 0 |
 | [XWIF](#xwif-exposure-what-if-before-dealing-computed-python-exposure-whatif) | `exposure-whatif` | computed | active | 27 | 0 |
 | [XOFC](#xofc-exposure-official-results-by-netting-set-and-counterparty-published-exposure-official-cpty) | `exposure-official-cpty` | computed | active | 32 | 0 |
@@ -53,6 +53,7 @@ ISDA, GMRA or GMSLA master agreement with its key elections.
 | Cadence | daily (due: to be confirmed) |
 | Storage | connector `legal-store` (plugin `delta`), table `<root>/legal/agreement/` |
 | Test data | data/testdata/counterparty-risk/agreement |
+| Worked example | [counterparty-risk/agreement](../samples/counterparty-risk/agreement.md) (a real record, every field explained, for the production query; tools/testdata/sample_docs.py) |
 
 **Fields**
 
@@ -64,9 +65,9 @@ ISDA, GMRA or GMSLA master agreement with its key elections.
 | `GOVERNING_LAW` | text | required |  | The law the agreement is read under, which decides how close-out netting is enforced. | `English`, `New York` |  |
 | `SIGNED` | date | required |  | The date the agreement was signed. | `2015-12-10` |  |
 | `CLOSE_OUT_NETTING` | text | required |  | Whether a legal opinion confirms that on default the trades net to one amount; only then may exposure be netted. | `Enforceable` |  |
-| `ELECTIONS` | record | required |  | Elections: the election it refers to |  | `election` |
-| `COUNTERPARTY` | id | required |  | Counterparty: the counterparty it refers to | `CP-ALDERSHOT` (pattern `^CP-`) | `counterparty` |
-| `CSA` | id | required |  | CSA: the csa it refers to | `CSA-ALDERSHOT` (pattern `^CSA-`) | `csa` |
+| `ELECTIONS` | record | required |  | The master agreement's elections, one object: AUTOMATIC_EARLY_TERMINATION (boolean), CROSS_DEFAULT (the threshold as text), SET_OFF (boolean), TERMINATION_CURRENCY (ISO 4217), ADDITIONAL_TERMINATION_EVENTS and PROTOCOLS (text). |  | `election` |
+| `COUNTERPARTY` | id | required |  | The counterparty that signed the agreement: a COUNTERPARTY_ID of the core pack's counterparty kind (CP-…). | `CP-ALDERSHOT` (pattern `^CP-`) | `counterparty` |
+| `CSA` | id | required |  | The credit support annex under this agreement: a CSA_ID of the csa kind (CSA-…); absent when the agreement has none. | `CSA-ALDERSHOT` (pattern `^CSA-`) | `csa` |
 
 **Nested `ELECTIONS`**
 
@@ -119,6 +120,7 @@ Collateral terms: thresholds, minimum transfer, eligible collateral and haircuts
 | Cadence | daily (due: to be confirmed) |
 | Storage | connector `legal-store` (plugin `delta`), table `<root>/legal/csa/` |
 | Test data | data/testdata/counterparty-risk/csa |
+| Worked example | [counterparty-risk/csa](../samples/counterparty-risk/csa.md) (a real record, every field explained, for the production query; tools/testdata/sample_docs.py) |
 
 **Fields**
 
@@ -132,11 +134,11 @@ Collateral terms: thresholds, minimum transfer, eligible collateral and haircuts
 | `INDEPENDENT_AMOUNT` | amount | required | USD | Collateral posted up front, whatever the exposure. | `0` |  |
 | `FREQUENCY` | text | required |  | How often margin is called. | `Daily` |  |
 | `MPOR` | text | required |  | The time assumed between the last margin received and closing out a defaulted counterparty. | `10 business days` |  |
-| `ELIGIBLE` | record list | required |  | Nested: see nested ELIGIBLE[] |  |  |
-| `AGREEMENT` | id | required |  | Agreement: the agreement it refers to | `AGR-ALDERSHOT-ISDA` (pattern `^AGR-`) | `agreement` |
-| `COUNTERPARTY` | id | required |  | Counterparty: the counterparty it refers to | `CP-ALDERSHOT` (pattern `^CP-`) | `counterparty` |
-| `NETTING_SETS` | id list | required |  | Netting set: the netting-set it refers to |  | `netting-set` |
-| `COLLATERAL_BALANCES` | id list | required |  | Collateral: the collateral-balance it refers to |  | `collateral-balance` |
+| `ELIGIBLE` | record list | required |  | The collateral the CSA accepts, one element per asset class: ASSET (text) and its HAIRCUT (a fraction). |  |  |
+| `AGREEMENT` | id | required |  | The master agreement the CSA belongs to: an AGREEMENT_ID of the agreement kind (AGR-…). | `AGR-ALDERSHOT-ISDA` (pattern `^AGR-`) | `agreement` |
+| `COUNTERPARTY` | id | required |  | The counterparty of the CSA: a COUNTERPARTY_ID of the core pack's counterparty kind (CP-…). | `CP-ALDERSHOT` (pattern `^CP-`) | `counterparty` |
+| `NETTING_SETS` | id list | required |  | The netting sets margined under the CSA: NETTING_SET_IDs of the netting-set kind (NS-<counterparty>-<legal entity>). |  | `netting-set` |
+| `COLLATERAL_BALANCES` | id list | required |  | The collateral balances held or posted under the CSA, one per netting set: BALANCE_IDs of the collateral-balance kind (COLL-…). |  | `collateral-balance` |
 
 **Nested `ELIGIBLE[]`**
 
@@ -188,6 +190,7 @@ Trades that net on close-out under one agreement and CSA, with exposure and coll
 | Cadence | daily (due: to be confirmed) |
 | Storage | connector `credit-store` (plugin `delta`), table `<root>/credit/netting-set/` |
 | Test data | data/testdata/counterparty-risk/netting-set |
+| Worked example | [counterparty-risk/netting-set](../samples/counterparty-risk/netting-set.md) (a real record, every field explained, for the production query; tools/testdata/sample_docs.py) |
 
 **Fields**
 
@@ -198,43 +201,43 @@ Trades that net on close-out under one agreement and CSA, with exposure and coll
 | `NET_MTM` | amount | required | USD | The sum of the members' mark to market, positive and negative together. Netting lets a loss on one trade cancel a gain on another if the counterparty defaults. | `-339550` |  |
 | `COLLATERAL` | amount | required | USD | The net collateral against the netting set: what is held less what has been posted. | `-229552` |  |
 | `LIMIT` | amount | required | USD | The limit on the counterparty's peak potential future exposure approved for this netting set. | `5000000.0` |  |
-| `UTILISATION` | rate | required | % of limit | The share of the limit that is used: used divided by limit. Above 100% is a breach. | `0.0695` |  |
+| `UTILISATION` | rate | required | fraction of the limit (0.0695 is 6.95%) | The share of the limit that is used: used divided by limit, as a fraction. Above 1 is a breach. | `0.0695` |  |
 | `CVA` | amount | required | USD | The reduction in the value of the trades for the risk that the counterparty defaults before they mature. | `-7` |  |
-| `TRADES` | record list | required |  | Nested: see nested TRADES[] |  |  |
-| `BY_ASSET` | record list | required |  | Nested: see nested BY_ASSET[] |  |  |
-| `COUNTERPARTY` | id | required |  | Counterparty: the counterparty it refers to | `CP-ALDERSHOT` (pattern `^CP-`) | `counterparty` |
-| `AGREEMENT` | id | required |  | Agreement: the agreement it refers to | `AGR-ALDERSHOT-ISDA` (pattern `^AGR-`) | `agreement` |
-| `CSA` | id | required |  | CSA: the csa it refers to | `CSA-ALDERSHOT` (pattern `^CSA-`) | `csa` |
-| `CREDIT_LIMIT` | id | required |  | Credit limit: the credit-limit it refers to | `LIM-ALDERSHOT` (pattern `^LIM-`) | `credit-limit` |
-| `CVA_RESULT` | id | required |  | CVA: the cva it refers to | `CVA-ALDERSHOT-FRA` (pattern `^CVA-`) | `cva` |
-| `SACCR` | id | required |  | SA-CCR: the sa-ccr it refers to | `SACCR-ALDERSHOT-FRA` (pattern `^SACCR-`) | `sa-ccr` |
-| `SIMM` | id | required |  | SIMM: the simm it refers to | `SIMM-ALDERSHOT` (pattern `^SIMM-`) | `simm` |
-| `COLLATERAL_BALANCE` | id | required |  | Collateral: the collateral-balance it refers to | `COLL-ALDERSHOT-FRA` (pattern `^COLL-`) | `collateral-balance` |
-| `LEGAL_ENTITY` | id | required |  | Legal entity: the legal-entity it refers to | `LE-FRA` (pattern `^LE-`) | `legal-entity` |
-| `NETTING_ENFORCEABLE` | boolean | required |  | — | `True` |  |
-| `TRADE_IDS` | id list | optional |  | Trade: the trade it refers to |  | `trade` |
+| `TRADES` | record list | required |  | The netting set's member trades, one element per trade with its status, product, asset class, currency, book, notional and MtM; empty when the set has no live trade on the date. |  |  |
+| `BY_ASSET` | record list | required |  | The set's MtM by asset class, one element per class present: ASSET and MTM in USD. |  |  |
+| `COUNTERPARTY` | id | required |  | The counterparty of the netting set: a COUNTERPARTY_ID of the core pack's counterparty kind (CP-…). | `CP-ALDERSHOT` (pattern `^CP-`) | `counterparty` |
+| `AGREEMENT` | id | required |  | The master agreement whose close-out netting defines the set: an AGREEMENT_ID of the agreement kind (AGR-…). | `AGR-ALDERSHOT-ISDA` (pattern `^AGR-`) | `agreement` |
+| `CSA` | id | required |  | The CSA margining the set: a CSA_ID of the csa kind (CSA-…); absent for an unmargined set. | `CSA-ALDERSHOT` (pattern `^CSA-`) | `csa` |
+| `CREDIT_LIMIT` | id | required |  | The counterparty's credit limit: a LIMIT_ID of the credit-limit kind (LIM-…). | `LIM-ALDERSHOT` (pattern `^LIM-`) | `credit-limit` |
+| `CVA_RESULT` | id | required |  | The set's valuation adjustments: a RESULT_ID of the cva kind (CVA-<counterparty>-<legal entity>). | `CVA-ALDERSHOT-FRA` (pattern `^CVA-`) | `cva` |
+| `SACCR` | id | required |  | The set's SA-CCR exposure calculation: a CALC_ID of the sa-ccr kind (SACCR-…). | `SACCR-ALDERSHOT-FRA` (pattern `^SACCR-`) | `sa-ccr` |
+| `SIMM` | id | required |  | The counterparty's SIMM initial-margin calculation: a CALC_ID of the simm kind (SIMM-…). | `SIMM-ALDERSHOT` (pattern `^SIMM-`) | `simm` |
+| `COLLATERAL_BALANCE` | id | required |  | The set's collateral balance: a BALANCE_ID of the collateral-balance kind (COLL-…). | `COLL-ALDERSHOT-FRA` (pattern `^COLL-`) | `collateral-balance` |
+| `LEGAL_ENTITY` | id | required |  | The bank's legal entity on the bank's side of the set: an ENTITY_ID of the core pack's legal-entity kind (LE-…). | `LE-FRA` (pattern `^LE-`) | `legal-entity` |
+| `NETTING_ENFORCEABLE` | boolean | required |  | true when a legal opinion confirms close-out netting is enforceable for the set; false treats the trades gross. | `True` |  |
+| `TRADE_IDS` | id list | optional |  | The member trades' ids, the same trades as TRADES[].TRADE_ID, as text (ENDUR digits, CLY-…, MX-…); empty when the set has no live trade on the date. |  | `trade` |
 
 **Nested `TRADES[]`**
 
 | Field | Type | Presence | Unit | Description | Example or values | Link |
 |---|---|---|---|---|---|---|
-| `TRADE_ID` | id | required |  | The member trade. | `CLY-3000280` (pattern `^(MX\|CLY)-\d+$`) | `trade` |
-| `STATUS` | text | required |  | Status | `LIVE` |  |
+| `TRADE_ID` | id | required |  | The member trade: a TRADE_ID of the trading pack's trade kind, as text. | `CLY-3000280` (pattern `^((MX\|CLY)-)?\d+$`) | `trade` |
+| `STATUS` | text | required |  | The member trade's status on the date: NEW, VALIDATED or AMENDED as booked, or LIVE. | `LIVE` |  |
 | `PRODUCT` | text | required |  | The kind of instrument the trade is. | `Tri-party repo` |  |
-| `ASSET_CLASS` | text | required |  | — | `Securities financing` |  |
-| `CURRENCY` | text | required |  | — | `AUD`, `CAD`, `CHF`, `EUR`, `GBP`, `JPY`, `USD` |  |
-| `BOOK` | id | required |  | Book: the book it refers to | `BOOK-SFT-1` (pattern `^BOOK-`) | `book` |
+| `ASSET_CLASS` | text | required |  | The member trade's asset class. | `Securities financing` |  |
+| `CURRENCY` | text | required |  | The member trade's currency, ISO 4217. | `AUD`, `CAD`, `CHF`, `EUR`, `GBP`, `JPY`, `USD` |  |
+| `BOOK` | id | required |  | The book the member trade sits in: a BOOK_ID of the core pack's book kind (BOOK-…). | `BOOK-SFT-1` (pattern `^BOOK-`) | `book` |
 | `NOTIONAL` | amount | required | trade currency | The reference amount of the trade, in the trade's own currency. | `237000000.0` |  |
 | `MATURITY` | date | required |  | The date the trade ends. | `2027-02-15` |  |
-| `MATURITY_BUCKET` | text | required |  | — | `0-1Y`, `1-2Y`, `10Y+`, `2-5Y`, `5-10Y` |  |
+| `MATURITY_BUCKET` | text | required |  | The remaining maturity bucket of the trade: 0-1Y, 1-2Y, 2-5Y, 5-10Y or 10Y+. | `0-1Y`, `1-2Y`, `10Y+`, `2-5Y`, `5-10Y` |  |
 | `MTM` | amount | required | USD | The trade's current value, from the bank's side. | `-708216` |  |
 
 **Nested `BY_ASSET[]`**
 
 | Field | Type | Presence | Unit | Description | Example or values | Link |
 |---|---|---|---|---|---|---|
-| `ASSET` | text | required |  | — | `Securities financing` |  |
-| `MTM` | amount | required |  | — | `-339550` |  |
+| `ASSET` | text | required |  | An asset class of the set's trades. | `Securities financing` |  |
+| `MTM` | amount | required | USD | The net mark to market of the set's trades in that asset class, from the bank's side. | `-339550` |  |
 
 **Links:** `COUNTERPARTY` → `counterparty`, `AGREEMENT` → `agreement`, `CSA` → `csa`, `CREDIT_LIMIT` → `credit-limit`, `CVA_RESULT` → `cva`, `SACCR` → `sa-ccr`, `SIMM` → `simm`, `COLLATERAL_BALANCE` → `collateral-balance`, `LEGAL_ENTITY` → `legal-entity`, `TRADE_IDS` → `trade`, `TRADES[].TRADE_ID` → `trade`, `TRADES[].BOOK` → `book`.
 
@@ -263,7 +266,7 @@ Trades that net on close-out under one agreement and CSA, with exposure and coll
 
 - Dated by the lake's business_date partition: `drishti.py lake build` writes each test-data file's day into it; the documents carry no date field of their own.
 
-**To review (11)**
+**To review (10)**
 
 - required inferred from 100% coverage in 218 documents (66 samples and 152 test-data documents (data/testdata/counterparty-risk/netting-set/snapshot-2026-07-08.jsonl.gz, data/testdata/counterparty-risk/netting-set/changes-2026-09-30.jsonl.gz)): confirm each required field is mandatory upstream, and each optional one may be empty.
 - source 'xva-engine' is the test data's _meta.source (synthetic): name the production system that delivers it.
@@ -273,7 +276,6 @@ Trades that net on close-out under one agreement and CSA, with exposure and coll
 - enum values inferred from the data, not from a glossary: TRADES[].CURRENCY, TRADES[].MATURITY_BUCKET: confirm they are closed lists.
 - number types decided by the field's name: BY_ASSET[].MTM amount: confirm amount, rate or integer.
 - no unit stated for the amounts BY_ASSET[].MTM (docs/contracts/README.md section 7: USD unless stated): confirm the currency.
-- no description in about.yaml or the Sutras for NETTING_ENFORCEABLE, PROFILE[].TENOR, TRADES[].ASSET_CLASS, TRADES[].CURRENCY, TRADES[].MATURITY_BUCKET, BY_ASSET[].ASSET, BY_ASSET[].MTM: write them in the pack's config/about.yaml glossary.
 - TRADE_COUNT and TRADES[].MTM: confirm TRADE_COUNT is computed from the membership and TRADES[].MTM is read from the trade valuations (an input), not stored here.
 - LIMIT is copied from the credit limit: confirm it is read from LIM instead of stored.
 
@@ -294,6 +296,7 @@ PFE limit by tenor bucket for a counterparty, with utilisation.
 | Cadence | daily (due: to be confirmed) |
 | Storage | connector `credit-store` (plugin `delta`), table `<root>/credit/credit-limit/` |
 | Test data | data/testdata/counterparty-risk/credit-limit |
+| Worked example | [counterparty-risk/credit-limit](../samples/counterparty-risk/credit-limit.md) (a real record, every field explained, for the production query; tools/testdata/sample_docs.py) |
 
 **Fields**
 
@@ -304,12 +307,12 @@ PFE limit by tenor bucket for a counterparty, with utilisation.
 | `MEASURE` | text | required |  | The exposure measure the limit is set on, for example the peak of the 95th-percentile potential future exposure. | `PFE 95 peak` |  |
 | `LIMIT` | amount | required | USD | The most exposure the bank accepts to the counterparty on this measure. | `337000000.0` |  |
 | `USED` | amount | required | USD | The exposure measured today against the limit. | `224800213` |  |
-| `UTILISATION` | rate | required | % of limit | The share of the limit that is used: used divided by limit. Above 100% is a breach. | `0.6671` |  |
-| `STATUS` | text | required |  | Status | `Early warning`, `Within limit` |  |
-| `BUCKETS` | record list | required |  | Nested: see nested BUCKETS[] |  |  |
-| `COUNTERPARTY` | id | required |  | Counterparty: the counterparty it refers to | `CP-ALDERSHOT` (pattern `^CP-`) | `counterparty` |
-| `APPROVED_BY` | text | required |  | — | `Credit Risk Committee` |  |
-| `REVIEW_DUE` | date | required |  | — | `2027-03-19` |  |
+| `UTILISATION` | rate | required | fraction of the limit (0.6671 is 66.71%) | The share of the limit that is used: USED divided by LIMIT, as a fraction. Above 1 is a breach. | `0.6671` |  |
+| `STATUS` | text | required |  | The limit's state from UTILISATION: Within limit below 80% used, Early warning from 80% to 100%, Breach above 100%. | `Early warning`, `Within limit` |  |
+| `BUCKETS` | record list | required |  | The limit and its use by maturity bucket, one element per bucket (0-1Y, 1-3Y, 3-5Y, 5-10Y, 10Y+): LIMIT, USED and UTILISATION. |  |  |
+| `COUNTERPARTY` | id | required |  | The counterparty the limit is set for: a COUNTERPARTY_ID of the core pack's counterparty kind (CP-…). | `CP-ALDERSHOT` (pattern `^CP-`) | `counterparty` |
+| `APPROVED_BY` | text | required |  | The committee or officer that approved the limit. | `Credit Risk Committee` |  |
+| `REVIEW_DUE` | date | required |  | The date the limit is next due for credit review (YYYY-MM-DD). | `2027-03-19` |  |
 
 **Nested `BUCKETS[]`**
 
@@ -318,7 +321,7 @@ PFE limit by tenor bucket for a counterparty, with utilisation.
 | `BUCKET` | text | required |  | The range of years to maturity the limit is split into; exposure on trades that mature within it is counted against it. | `0-1Y`, `1-3Y`, `10Y+`, `3-5Y`, `5-10Y` |  |
 | `LIMIT` | amount | required | USD | The limit that applies to this tenor bucket. | `337000000` |  |
 | `USED` | amount | required | USD | The exposure in this tenor bucket. | `191080181` |  |
-| `UTILISATION` | rate | required | % of limit | The share of the limit that is used: used divided by limit. Above 100% is a breach. | `0.567` |  |
+| `UTILISATION` | rate | required | fraction of the limit (0.567 is 56.7%) | The share of the bucket's limit that is used: USED divided by LIMIT, as a fraction. Above 1 is a breach. | `0.567` |  |
 
 **Links:** `COUNTERPARTY` → `counterparty`.
 
@@ -335,13 +338,12 @@ PFE limit by tenor bucket for a counterparty, with utilisation.
 
 - Dated by the lake's business_date partition: `drishti.py lake build` writes each test-data file's day into it; the documents carry no date field of their own.
 
-**To review (6)**
+**To review (5)**
 
 - required inferred from 100% coverage in 66 documents (18 samples and 48 test-data documents (data/testdata/counterparty-risk/credit-limit/snapshot-2026-07-08.jsonl.gz, data/testdata/counterparty-risk/credit-limit/changes-2026-09-30.jsonl.gz)): confirm each required field is mandatory upstream, and each optional one may be empty.
 - source 'limits-system' is the test data's _meta.source (synthetic): name the production system that delivers it.
 - due time of each business date is not known: state it (for example, by 06:00 New York the next business day).
 - enum values inferred from the data, not from a glossary: STATUS, BUCKETS[].BUCKET: confirm they are closed lists.
-- no description in about.yaml or the Sutras for APPROVED_BY, REVIEW_DUE: write them in the pack's config/about.yaml glossary.
 - STATUS (Within limit, ...) follows from UTILISATION: confirm it is computed, not set by the limits system.
 
 ## CVA: CVA / XVA (`cva`)
@@ -361,6 +363,7 @@ Credit, debit and funding valuation adjustments with sensitivities.
 | Cadence | daily (due: to be confirmed) |
 | Storage | connector `credit-store` (plugin `delta`), table `<root>/credit/cva/` |
 | Test data | data/testdata/counterparty-risk/cva |
+| Worked example | [counterparty-risk/cva](../samples/counterparty-risk/cva.md) (a real record, every field explained, for the production query; tools/testdata/sample_docs.py) |
 
 **Fields**
 
@@ -372,17 +375,17 @@ Credit, debit and funding valuation adjustments with sensitivities.
 | `FVA` | amount | required | USD | The cost, or benefit, of funding the collateral and the hedges of uncollateralised trades. | `-407` |  |
 | `KVA` | amount | required | USD | The cost of holding regulatory capital against the trades over their life. | `-1389` |  |
 | `CS01` | amount | required | USD per bp | The change in the CVA for a one basis point rise in the counterparty's credit spread. | `0` |  |
-| `COMPONENTS` | record list | required |  | Nested: see nested COMPONENTS[] |  |  |
-| `SENSITIVITIES` | record list | required |  | Nested: see nested SENSITIVITIES[] |  |  |
-| `NETTING_SET` | id | required |  | Netting set: the netting-set it refers to | `NS-ALDERSHOT-FRA` (pattern `^NS-`) | `netting-set` |
-| `CREDIT_CURVE` | id | optional |  | Credit curve: the credit-curve it refers to | `CDS-CASCADIA` (pattern `^CDS-`) | `credit-curve` |
+| `COMPONENTS` | record list | required |  | The valuation adjustments that make up the total, one element per adjustment (CVA, DVA, FVA, KVA): NAME and AMOUNT in USD, a cost negative. |  |  |
+| `SENSITIVITIES` | record list | required |  | The adjustment's sensitivities, one element per risk factor (counterparty spread, USD and EUR rates, FX vol, recovery): FACTOR, BUMP (+1 bp, +1 vol, +1%) and DELTA in USD. |  |  |
+| `NETTING_SET` | id | required |  | The netting set the adjustment is computed for: a NETTING_SET_ID of the netting-set kind (NS-<counterparty>-<legal entity>). | `NS-ALDERSHOT-FRA` (pattern `^NS-`) | `netting-set` |
+| `CREDIT_CURVE` | id | optional |  | The counterparty's credit curve the default probabilities come from: a CURVE_ID of the market-data pack's credit-curve kind (CDS-…). | `CDS-CASCADIA` (pattern `^CDS-`) | `credit-curve` |
 
 **Nested `COMPONENTS[]`**
 
 | Field | Type | Presence | Unit | Description | Example or values | Link |
 |---|---|---|---|---|---|---|
-| `NAME` | text | required |  | — | `CVA`, `DVA`, `FVA`, `KVA` |  |
-| `AMOUNT` | amount | required |  | — | `-7` |  |
+| `NAME` | text | required |  | The valuation adjustment: CVA, DVA, FVA or KVA. | `CVA`, `DVA`, `FVA`, `KVA` |  |
+| `AMOUNT` | amount | required | USD | The adjustment's amount, from the bank's side: a cost is negative. | `-7` |  |
 
 **Nested `SENSITIVITIES[]`**
 
@@ -409,7 +412,7 @@ Credit, debit and funding valuation adjustments with sensitivities.
 
 - Dated by the lake's business_date partition: `drishti.py lake build` writes each test-data file's day into it; the documents carry no date field of their own.
 
-**To review (7)**
+**To review (6)**
 
 - required inferred from 100% coverage in 215 documents (66 samples and 149 test-data documents (data/testdata/counterparty-risk/cva/snapshot-2026-07-08.jsonl.gz, data/testdata/counterparty-risk/cva/changes-2026-09-30.jsonl.gz)): confirm each required field is mandatory upstream, and each optional one may be empty.
 - source 'xva-engine' is the test data's _meta.source (synthetic): name the production system that delivers it.
@@ -417,7 +420,6 @@ Credit, debit and funding valuation adjustments with sensitivities.
 - enum values inferred from the data, not from a glossary: COMPONENTS[].NAME, SENSITIVITIES[].FACTOR, SENSITIVITIES[].BUMP: confirm they are closed lists.
 - number types decided by the field's name: COMPONENTS[].AMOUNT amount: confirm amount, rate or integer.
 - no unit stated for the amounts COMPONENTS[].AMOUNT (docs/contracts/README.md section 7: USD unless stated): confirm the currency.
-- no description in about.yaml or the Sutras for COMPONENTS[].NAME, COMPONENTS[].AMOUNT: write them in the pack's config/about.yaml glossary.
 
 ## SACCR: SA-CCR exposure (`sa-ccr`)
 
@@ -436,6 +438,7 @@ Regulatory EAD: replacement cost, PFE add-ons by asset class, multiplier.
 | Cadence | daily (due: to be confirmed) |
 | Storage | connector `credit-store` (plugin `delta`), table `<root>/credit/sa-ccr/` |
 | Test data | data/testdata/counterparty-risk/sa-ccr |
+| Worked example | [counterparty-risk/sa-ccr](../samples/counterparty-risk/sa-ccr.md) (a real record, every field explained, for the production query; tools/testdata/sample_docs.py) |
 
 **Fields**
 
@@ -447,17 +450,17 @@ Regulatory EAD: replacement cost, PFE add-ons by asset class, multiplier.
 | `MULTIPLIER` | rate | required | factor | A factor between 5% and 1 that reduces the add-on when the netting set is over-collateralised or its value is negative. | `0.933` |  |
 | `EAD` | amount | required | USD | The SA-CCR exposure: 1.4 times the replacement cost plus the potential future exposure, where the potential future exposure is the multiplier times the add-on. | `1033938` |  |
 | `RWA` | amount | required | USD | The exposure at default multiplied by the risk weight of the counterparty. Capital is a percentage of it. | `206788` |  |
-| `ADD_ONS` | record list | required |  | Nested: see nested ADD_ONS[] |  |  |
-| `HEDGING_SETS` | record list | required |  | Nested: see nested HEDGING_SETS[] |  |  |
-| `NETTING_SET` | id | required |  | Netting set: the netting-set it refers to | `NS-ALDERSHOT-FRA` (pattern `^NS-`) | `netting-set` |
-| `ALPHA` | rate | required |  | — | `1.4` |  |
+| `ADD_ONS` | record list | required |  | The potential-future-exposure add-ons, one element per asset class present (Interest rate, Foreign exchange, Credit, Equity, Commodity): ASSET_CLASS and ADD_ON in USD. |  |  |
+| `HEDGING_SETS` | record list | required |  | The hedging sets of the calculation, one element per asset class and hedging set (a currency for rates and FX): EFFECTIVE_NOTIONAL in USD and the supervisory factor SF (a fraction). |  |  |
+| `NETTING_SET` | id | required |  | The netting set the calculation is for: a NETTING_SET_ID of the netting-set kind (NS-<counterparty>-<legal entity>). | `NS-ALDERSHOT-FRA` (pattern `^NS-`) | `netting-set` |
+| `ALPHA` | rate | required | factor | The SA-CCR alpha multiplier applied to replacement cost plus PFE (regulatory 1.4). | `1.4` |  |
 
 **Nested `ADD_ONS[]`**
 
 | Field | Type | Presence | Unit | Description | Example or values | Link |
 |---|---|---|---|---|---|---|
-| `ASSET_CLASS` | text | required |  | — | `Commodity`, `Credit`, `Equity`, `Foreign exchange`, `Interest rate` |  |
-| `ADD_ON` | amount | required |  | — | `791562` |  |
+| `ASSET_CLASS` | text | required |  | The SA-CCR asset class: Interest rate, Foreign exchange, Credit, Equity or Commodity. | `Commodity`, `Credit`, `Equity`, `Foreign exchange`, `Interest rate` |  |
+| `ADD_ON` | amount | required | USD | The asset class's aggregate add-on (sum of its hedging sets' effective notionals times their supervisory factors). | `791562` |  |
 
 **Nested `HEDGING_SETS[]`**
 
@@ -466,7 +469,7 @@ Regulatory EAD: replacement cost, PFE add-ons by asset class, multiplier.
 | `ASSET_CLASS` | text | required |  | The regulatory asset class: interest rate, FX, credit, equity or commodity. | `Commodity`, `Credit`, `Equity`, `Foreign exchange`, `Interest rate` |  |
 | `HEDGING_SET` | text | required |  | The group of trades within an asset class that can offset one another, for example by currency for interest rates. | `AUD`, `CAD`, `CHF`, `EUR`, `GBP`, `JPY`, `USD` |  |
 | `EFFECTIVE_NOTIONAL` | amount | required | USD | The hedging set's notional after supervisory delta and maturity adjustments and netting inside the set. | `-89605479` |  |
-| `SF` | amount | required | % of effective notional | The regulatory percentage applied to the effective notional to get the add-on. | `0.005` |  |
+| `SF` | amount | required | fraction of the effective notional (0.005 is 0.5%) | The supervisory factor, as a fraction, applied to the effective notional to get the add-on. | `0.005` |  |
 
 **Links:** `NETTING_SET` → `netting-set`.
 
@@ -484,7 +487,7 @@ Regulatory EAD: replacement cost, PFE add-ons by asset class, multiplier.
 
 - Dated by the lake's business_date partition: `drishti.py lake build` writes each test-data file's day into it; the documents carry no date field of their own.
 
-**To review (9)**
+**To review (8)**
 
 - required inferred from 100% coverage in 142 documents (66 samples and 76 test-data documents (data/testdata/counterparty-risk/sa-ccr/snapshot-2026-07-08.jsonl.gz, data/testdata/counterparty-risk/sa-ccr/changes-2026-09-30.jsonl.gz)): confirm each required field is mandatory upstream, and each optional one may be empty.
 - source 'capital-engine' is the test data's _meta.source (synthetic): name the production system that delivers it.
@@ -493,7 +496,6 @@ Regulatory EAD: replacement cost, PFE add-ons by asset class, multiplier.
 - enum values inferred from the data, not from a glossary: ADD_ONS[].ASSET_CLASS, HEDGING_SETS[].ASSET_CLASS, HEDGING_SETS[].HEDGING_SET: confirm they are closed lists.
 - number types decided by the field's name: ALPHA rate, ADD_ONS[].ADD_ON amount: confirm amount, rate or integer.
 - no unit stated for the amounts ADD_ONS[].ADD_ON (docs/contracts/README.md section 7: USD unless stated): confirm the currency.
-- no description in about.yaml or the Sutras for ALPHA, ADD_ONS[].ASSET_CLASS, ADD_ONS[].ADD_ON: write them in the pack's config/about.yaml glossary.
 - ALPHA (1.4) is a regulatory parameter: confirm it becomes a setting of the SA-CCR engine.
 
 ## COLL: Collateral balance (`collateral-balance`)
@@ -513,6 +515,7 @@ Collateral held and posted under a CSA, by asset, after haircuts.
 | Cadence | daily (due: to be confirmed) |
 | Storage | connector `collateral-store` (plugin `delta`), table `<root>/collateral/collateral-balance/` |
 | Test data | data/testdata/counterparty-risk/collateral-balance |
+| Worked example | [counterparty-risk/collateral-balance](../samples/counterparty-risk/collateral-balance.md) (a real record, every field explained, for the production query; tools/testdata/sample_docs.py) |
 
 **Fields**
 
@@ -521,11 +524,11 @@ Collateral held and posted under a CSA, by asset, after haircuts.
 | `BALANCE_ID` | id | required |  | The record's id (the business key) | `COLL-ALDERSHOT-FRA` (pattern `^COLL-`) |  |
 | `HELD` | amount | required | USD | The collateral the bank has received from the counterparty. | `0` |  |
 | `POSTED` | amount | required | USD | The collateral the bank has delivered to the counterparty. | `229552` |  |
-| `NET` | amount | required | USD | Held minus posted. | `-229552` |  |
-| `AS_OF` | date | required |  | As of | `2026-09-30` |  |
-| `POSITIONS` | record list | required |  | Nested: see nested POSITIONS[] |  |  |
-| `CSA` | id | required |  | CSA: the csa it refers to | `CSA-ALDERSHOT` (pattern `^CSA-`) | `csa` |
-| `NETTING_SET` | id | required |  | Netting set: the netting-set it refers to | `NS-ALDERSHOT-FRA` (pattern `^NS-`) | `netting-set` |
+| `NET` | amount | required | USD | HELD minus POSTED after haircuts: positive when the bank holds more collateral than it has posted, negative when it has posted more. | `-229552` |  |
+| `AS_OF` | date | required |  | The date the balance is valued on: the business date of the file. | `2026-09-30` |  |
+| `POSITIONS` | record list | required |  | The collateral assets behind the balance, one element per asset held or posted, with its market value, haircut and value after the haircut. |  |  |
+| `CSA` | id | required |  | The CSA the collateral is exchanged under: a CSA_ID of the csa kind (CSA-…). | `CSA-ALDERSHOT` (pattern `^CSA-`) | `csa` |
+| `NETTING_SET` | id | required |  | The netting set the collateral secures: a NETTING_SET_ID of the netting-set kind (NS-<counterparty>-<legal entity>). | `NS-ALDERSHOT-FRA` (pattern `^NS-`) | `netting-set` |
 
 **Nested `POSITIONS[]`**
 
@@ -534,7 +537,7 @@ Collateral held and posted under a CSA, by asset, after haircuts.
 | `ASSET` | text | required |  | The cash or security that is held or posted. | `Solaris Energy Corp. 2031` |  |
 | `DIRECTION` | text | required |  | Whether the bank posted the asset or received it. | `Posted`, `Received`, `Held` |  |
 | `MARKET_VALUE` | amount | required | USD | The current market value of the asset before the haircut. | `76517` |  |
-| `HAIRCUT` | rate | required | % of market value | The percentage taken off the market value to allow for the price moving before the asset can be sold. The CSA sets it by asset type and maturity. | `0.005` |  |
+| `HAIRCUT` | rate | required | fraction of the market value (0.005 is 0.5%) | The share taken off the market value to allow for the price moving before the asset can be sold. The CSA sets it by asset type and maturity. | `0.005` |  |
 | `VALUE` | amount | required | USD | The market value after the haircut, the amount that counts as collateral. | `76134` |  |
 
 **Links:** `CSA` → `csa`, `NETTING_SET` → `netting-set`.
@@ -577,6 +580,7 @@ A variation or initial margin call and its settlement status.
 | Cadence | daily (due: to be confirmed) |
 | Storage | connector `collateral-store` (plugin `delta`), table `<root>/collateral/margin-call/` |
 | Test data | data/testdata/counterparty-risk/margin-call |
+| Worked example | [counterparty-risk/margin-call](../samples/counterparty-risk/margin-call.md) (a real record, every field explained, for the production query; tools/testdata/sample_docs.py) |
 
 **Fields**
 
@@ -586,13 +590,13 @@ A variation or initial margin call and its settlement status.
 | `CALL_DATE` | date | required |  | The day the margin call was issued. | `2026-09-30` |  |
 | `MARGIN_TYPE` | text | required |  | Variation margin settles the change in the value of the trades each day; initial margin is held against the risk of the value moving before a defaulted counterparty can be replaced. | `Variation`, `Initial` |  |
 | `DIRECTION` | text | required |  | Who calls on whom. | `We call`, `They call` |  |
-| `AMOUNT` | amount | required |  | Amount | `18000.0` |  |
-| `STATUS` | text | required |  | Status | `Agreed`, `Settled` |  |
+| `AMOUNT` | amount | required | CURRENCY | The amount called, positive, in CURRENCY; DIRECTION says who pays. | `18000.0` |  |
+| `STATUS` | text | required |  | Where the call stands: Agreed (both sides agreed the amount) or Settled (the collateral moved); the call's EVENTS give the times. | `Agreed`, `Settled` |  |
 | `DISPUTE_AMOUNT` | amount | required | call currency | The part of the call the other party does not accept. Undisputed margin is still due on time; the difference goes to dispute resolution. | `0` |  |
-| `EVENTS` | record list | required |  | Nested: see nested EVENTS[] |  |  |
-| `NETTING_SET` | id | required |  | Netting set: the netting-set it refers to | `NS-ALDERSHOT-FRA` (pattern `^NS-`) | `netting-set` |
-| `CSA` | id | required |  | CSA: the csa it refers to | `CSA-ALDERSHOT` (pattern `^CSA-`) | `csa` |
-| `CURRENCY` | text | required |  | — | `USD` |  |
+| `EVENTS` | record list | required |  | The call's history, one element per step in time order: AT (local date and time as text, YYYY-MM-DD HH:MM), EVENT (Call issued, Agreed, Settled) and BY (who acted). |  |  |
+| `NETTING_SET` | id | required |  | The netting set the call is for: a NETTING_SET_ID of the netting-set kind (NS-<counterparty>-<legal entity>). | `NS-ALDERSHOT-FRA` (pattern `^NS-`) | `netting-set` |
+| `CSA` | id | required |  | The CSA the call is made under: a CSA_ID of the csa kind (CSA-…). | `CSA-ALDERSHOT` (pattern `^CSA-`) | `csa` |
+| `CURRENCY` | text | required |  | The currency of the call's amounts, ISO 4217. | `USD` |  |
 
 **Nested `EVENTS[]`**
 
@@ -623,7 +627,7 @@ A variation or initial margin call and its settlement status.
 - Dated by the lake's business_date partition: `drishti.py lake build` writes each test-data file's day into it; the documents carry no date field of their own.
 - Actual calls and their events are kept (workflow); the expected call (MtM minus collateral minus threshold, then minimum transfer and rounding) is computed and shown beside the call. No stored field is the expected call today.
 
-**To review (7)**
+**To review (6)**
 
 - required inferred from 100% coverage in 284 documents (132 samples and 152 test-data documents (data/testdata/counterparty-risk/margin-call/snapshot-2026-07-08.jsonl.gz, data/testdata/counterparty-risk/margin-call/changes-2026-09-30.jsonl.gz)): confirm each required field is mandatory upstream, and each optional one may be empty.
 - source 'collateral-system' is the test data's _meta.source (synthetic): name the production system that delivers it.
@@ -631,7 +635,6 @@ A variation or initial margin call and its settlement status.
 - enum values inferred from the data, not from a glossary: STATUS, EVENTS[].AT, EVENTS[].EVENT, EVENTS[].BY: confirm they are closed lists.
 - number types decided by the field's name: AMOUNT amount: confirm amount, rate or integer.
 - no unit stated for the amounts AMOUNT (docs/contracts/README.md section 7: USD unless stated): confirm the currency.
-- no description in about.yaml or the Sutras for CURRENCY: write them in the pack's config/about.yaml glossary.
 
 ## SIMM: ISDA SIMM initial margin (`simm`)
 
@@ -650,6 +653,7 @@ Initial margin by risk class and product class.
 | Cadence | daily (due: to be confirmed) |
 | Storage | connector `collateral-store` (plugin `delta`), table `<root>/collateral/simm/` |
 | Test data | data/testdata/counterparty-risk/simm |
+| Worked example | [counterparty-risk/simm](../samples/counterparty-risk/simm.md) (a real record, every field explained, for the production query; tools/testdata/sample_docs.py) |
 
 **Fields**
 
@@ -660,15 +664,15 @@ Initial margin by risk class and product class.
 | `POSTED` | amount | required | USD | The initial margin the bank has delivered to the counterparty or a custodian. | `6856514` |  |
 | `RECEIVED` | amount | required | USD | The initial margin the counterparty has delivered to the bank. | `7209942` |  |
 | `VERSION` | text | required |  | The version of the ISDA Standard Initial Margin Model the calculation used; the model is recalibrated each year. | `ISDA SIMM 2.7` |  |
-| `RISK_CLASSES` | record list | required |  | Nested: see nested RISK_CLASSES[] |  |  |
-| `NETTING_SET` | id | required |  | Netting set: the netting-set it refers to | `NS-ALDERSHOT-FRA` (pattern `^NS-`) | `netting-set` |
-| `COUNTERPARTY` | id | required |  | Counterparty: the counterparty it refers to | `CP-ALDERSHOT` (pattern `^CP-`) | `counterparty` |
+| `RISK_CLASSES` | record list | required |  | The initial margin by SIMM risk class, one element per class (Interest rate, Credit qualifying, Equity, Commodity, FX): RISK_CLASS and IM in USD. |  |  |
+| `NETTING_SET` | id | required |  | The netting set the initial margin is exchanged for: a NETTING_SET_ID of the netting-set kind (NS-<counterparty>-<legal entity>). | `NS-ALDERSHOT-FRA` (pattern `^NS-`) | `netting-set` |
+| `COUNTERPARTY` | id | required |  | The counterparty the initial margin is calculated with: a COUNTERPARTY_ID of the core pack's counterparty kind (CP-…). | `CP-ALDERSHOT` (pattern `^CP-`) | `counterparty` |
 
 **Nested `RISK_CLASSES[]`**
 
 | Field | Type | Presence | Unit | Description | Example or values | Link |
 |---|---|---|---|---|---|---|
-| `RISK_CLASS` | text | required |  | — | `Commodity`, `Credit qualifying`, `Equity`, `FX`, `Interest rate` |  |
+| `RISK_CLASS` | text | required |  | The ISDA SIMM risk class: Interest rate, Credit qualifying, Credit non-qualifying, Equity, Commodity or FX. | `Commodity`, `Credit qualifying`, `Equity`, `FX`, `Interest rate` |  |
 | `IM` | amount | required | USD | The initial margin of one SIMM risk class: interest rate, credit qualifying, credit non-qualifying, equity, commodity or FX. | `3180857` |  |
 
 **Links:** `NETTING_SET` → `netting-set`, `COUNTERPARTY` → `counterparty`.
@@ -686,13 +690,12 @@ Initial margin by risk class and product class.
 
 - Dated by the lake's business_date partition: `drishti.py lake build` writes each test-data file's day into it; the documents carry no date field of their own.
 
-**To review (5)**
+**To review (4)**
 
 - required inferred from 100% coverage in 42 documents (18 samples and 24 test-data documents (data/testdata/counterparty-risk/simm/snapshot-2026-07-08.jsonl.gz, data/testdata/counterparty-risk/simm/changes-2026-09-30.jsonl.gz)): confirm each required field is mandatory upstream, and each optional one may be empty.
 - source 'margin-engine' is the test data's _meta.source (synthetic): name the production system that delivers it.
 - due time of each business date is not known: state it (for example, by 06:00 New York the next business day).
 - enum values inferred from the data, not from a glossary: RISK_CLASSES[].RISK_CLASS: confirm they are closed lists.
-- no description in about.yaml or the Sutras for RISK_CLASSES[].RISK_CLASS: write them in the pack's config/about.yaml glossary.
 
 ## XRUN: Exposure simulation run (`simulation-run`)
 
@@ -712,35 +715,36 @@ An upstream exposure simulation of a business date: its paths, its grid of futur
 | Storage | connector `exposure-store` (plugin `delta`), table `<root>/risk/simulation-run/` |
 | Columns | `RUN_ID`, `CALIBRATION`, `PATHS`, `STATUS`, `BATCH_ID` |
 | Test data | data/testdata/counterparty-risk/simulation-run |
+| Worked example | [counterparty-risk/simulation-run](../samples/counterparty-risk/simulation-run.md) (a real record, every field explained, for the production query; tools/testdata/sample_docs.py) |
 
 **Fields**
 
 | Field | Type | Presence | Unit | Description | Example or values | Link |
 |---|---|---|---|---|---|---|
 | `RUN_ID` | id | required |  | The record's id (the business key) | `XR-2026-09-30-01` (pattern `^XR-[0-9]{4}-[0-9]{2}-[0-9]{2}-[0-9]+$`) | `simulation-run` |
-| `BUSINESS_DATE` | date | required |  | — | `2026-09-30` |  |
-| `MARKET_DATA_DATE` | date | required |  | — | `2026-09-30` |  |
-| `MODEL` | text | required |  | — | `One correlated Brownian factor per asset class (rates, FX, …` |  |
-| `MODEL_VERSION` | text | required |  | — | `drishti-testgen-ccr-1.0` |  |
+| `BUSINESS_DATE` | date | required |  | The close the run starts from (t0). | `2026-09-30` |  |
+| `MARKET_DATA_DATE` | date | required |  | The market data the run calibrated to (normally the business date). | `2026-09-30` |  |
+| `MODEL` | text | required |  | The scenario model, as free text. | `One correlated Brownian factor per asset class (rates, FX, …` |  |
+| `MODEL_VERSION` | text | required |  | The simulator's version; with SEED, market data and trade versions the run is reproducible upstream. | `drishti-testgen-ccr-1.0` |  |
 | `CALIBRATION` | text | required |  | REAL_WORLD (for PFE and limits) or RISK_NEUTRAL (for CVA and pricing) or STRESSED. | `REAL_WORLD` |  |
 | `PATHS` | integer | required |  | The number of simulated market scenarios; every trade's values are on the same paths. | `200` |  |
-| `SEED` | text | required |  | — | `ccr\|XR-2026-09-30-01` |  |
-| `ANTITHETIC` | boolean | required |  | — | `False` |  |
+| `SEED` | text | required |  | The random generator's seed of the run. | `ccr\|XR-2026-09-30-01` |  |
+| `ANTITHETIC` | boolean | required |  | true when paths 2k and 2k+1 are antithetic pairs. | `False` |  |
 | `GRID_DATES` | date list | required |  | The future dates the trades were valued at: the primary dates where exposure is reported and the look-back dates a margin period of risk before them. |  |  |
-| `GRID_ROLE` | text list | required |  | — |  |  |
-| `LOOKBACK_OF` | vector | required |  | — *24 values in the test data* |  |  |
-| `GRID_TENORS` | text list | required |  | — |  |  |
+| `GRID_ROLE` | text list | required |  | One per grid date, in GRID_DATES order: PRIMARY (exposure is reported) or LOOKBACK (used only for collateral, the margin period of risk). |  |  |
+| `LOOKBACK_OF` | vector | required |  | One per grid date: for a LOOKBACK point the index of the PRIMARY point it serves; -1 for a primary point. *24 values in the test data* |  |  |
+| `GRID_TENORS` | text list | required |  | One per grid date: a primary date's tenor label (1W .. 10Y), null for a look-back date; absent, the engine labels by the nearest standard tenor. |  |  |
 | `LOOKBACK_DAYS` | integer | required | business days | How many business days before each primary date its look-back date is: the margin period of risk the run assumes. | `10` |  |
-| `VALUE_BASIS` | text | required |  | — | `FUTURE` |  |
-| `CURRENCY` | text | required |  | — | `USD` |  |
+| `VALUE_BASIS` | text | required |  | FUTURE (each MTM in USD of its grid date; Drishti discounts for CVA) or DISCOUNTED (in today's USD by the run's numeraire). | `FUTURE` |  |
+| `CURRENCY` | text | required |  | The currency of every MTM vector: must be USD. | `USD` |  |
 | `PRECISION` | text | required |  | float32 or float64: how the path values are stored. | `float64` |  |
-| `CREDIT_PATHS` | boolean | required |  | — | `False` |  |
-| `NETTING_SETS` | integer | required |  | Netting set: the netting-set it refers to | `8` | `netting-set` |
-| `TRADES` | integer | required |  | — | `523` |  |
-| `ROWS` | integer | required |  | — | `7540` |  |
-| `BATCH_ID` | id | required |  | — | `XB-2026-09-30-01` |  |
-| `COMPUTED_AT` | timestamp | required |  | — | `2026-09-30T23:40:00Z` |  |
-| `STATUS` | text | required |  | — | `complete` |  |
+| `CREDIT_PATHS` | boolean | required |  | true when the run also wrote credit-path rows (wrong-way risk). | `False` |  |
+| `NETTING_SETS` | integer | required |  | How many netting sets the run simulated (a count, not an id), as an integer. | `8` | `netting-set` |
+| `TRADES` | integer | required |  | The number of trades the run wrote paths for. | `523` |  |
+| `ROWS` | integer | required |  | The number of exposure-path rows the run wrote; the run is complete when the lake holds that many. | `7540` |  |
+| `BATCH_ID` | id | required |  | The run's batch id; every exposure-path row of the run carries the same. | `XB-2026-09-30-01` |  |
+| `COMPUTED_AT` | timestamp | required |  | When the run finished, ISO-8601 UTC. | `2026-09-30T23:40:00Z` |  |
+| `STATUS` | text | required |  | The run's status: complete is read; a run of any other status is not. | `complete` |  |
 
 **Links:** `RUN_ID` → `simulation-run`, `NETTING_SETS` → `netting-set`.
 
@@ -757,12 +761,11 @@ An upstream exposure simulation of a business date: its paths, its grid of futur
 
 - An upstream exposure simulation's record (EXPOSURE_GUIDE.md section 15.2): the grid, the paths, the model; one per run and business date. Drishti reads it; nothing in it is computed by Drishti.
 
-**To review (4)**
+**To review (3)**
 
 - required inferred from 100% coverage in 2 documents (1 samples and 1 test-data documents (data/testdata/counterparty-risk/simulation-run/cob-2026-09-30.jsonl.gz)): confirm each required field is mandatory upstream, and each optional one may be empty.
 - source is the pack's first listed source (its README): confirm.
 - due time of each business date is not known: state it (for example, by 06:00 New York the next business day).
-- no description in about.yaml or the Sutras for BUSINESS_DATE, MARKET_DATA_DATE, MODEL, MODEL_VERSION, SEED, ANTITHETIC, GRID_ROLE, LOOKBACK_OF, GRID_TENORS, VALUE_BASIS, CURRENCY, CREDIT_PATHS and 5 more: write them in the pack's config/about.yaml glossary.
 
 ## XPATH: Exposure path (a trade's MtM on every path at a grid date) (`exposure-path`)
 
@@ -770,7 +773,7 @@ One trade's mark to market on every path of a simulation run at one grid date, i
 
 |  |  |
 |---|---|
-| Contract | [exposure-path.contract.yaml](../../../config/packs/counterparty-risk/contracts/exposure-path.contract.yaml) · version 1.0 |
+| Contract | [exposure-path.contract.yaml](../../../config/packs/counterparty-risk/contracts/exposure-path.contract.yaml) · version 1.1 |
 | Class | input |
 | Status | active |
 | Source | the upstream exposure simulator (test data: tools/packgen/ccr/make_ccr_data.py) |
@@ -783,32 +786,33 @@ One trade's mark to market on every path of a simulation run at one grid date, i
 | Columns | `TRADE_ID`, `NETTING_SET`, `COUNTERPARTY`, `LEGAL_ENTITY`, `DESK`, `TT_BOOK`, `LIMIT_LETTER`, `ASSET_CLASS`, `PRODUCT`, `SOURCE_SYSTEM`, `MATURITY_DATE`, `NOTIONAL`, `GRID_INDEX`, `GRID_DATE`, `RUN_ID`, `BATCH_ID`, `STATUS` |
 | Vectors | `MTM` |
 | Test data | data/testdata/counterparty-risk/exposure-path |
+| Worked example | [counterparty-risk/exposure-path](../samples/counterparty-risk/exposure-path.md) (a real record, every field explained, for the production query; tools/testdata/sample_docs.py) |
 
 **Fields**
 
 | Field | Type | Presence | Unit | Description | Example or values | Link |
 |---|---|---|---|---|---|---|
 | `PATH_ROW_ID` | id | required |  | The record's id (the business key) | `XR-2026-09-30-01~CLY-3000280~0` (pattern `^XR-[^~]+~.+~[0-9]+$`) |  |
-| `BUSINESS_DATE` | date | required |  | — | `2026-09-30` |  |
-| `RUN_ID` | id | required |  | Simulation run: the simulation-run it refers to | `XR-2026-09-30-01` (pattern `^XR-[0-9]{4}-[0-9]{2}-[0-9]{2}-[0-9]+$`) | `simulation-run` |
-| `TRADE_ID` | id | required |  | Trade: the trade it refers to | `CLY-3000280` (pattern `^(MX\|CLY)-\d+$`) | `trade` |
-| `SOURCE_SYSTEM` | text | required |  | — | `CALYPSO`, `MUREX` |  |
+| `BUSINESS_DATE` | date | required |  | The close of business the run starts from (t0); the lake's partition. | `2026-09-30` |  |
+| `RUN_ID` | id | required |  | The simulation run the row belongs to: a RUN_ID of the simulation-run kind (XR-<date>-<nn>), the same on every row of the run. | `XR-2026-09-30-01` (pattern `^XR-[0-9]{4}-[0-9]{2}-[0-9]{2}-[0-9]+$`) | `simulation-run` |
+| `TRADE_ID` | id | required |  | The trade valued on the paths: a TRADE_ID of the trading pack's trade kind (ENDUR digits, CLY-…, MX-…), as text. | `CLY-3000280` (pattern `^((MX\|CLY)-)?\d+$`) | `trade` |
+| `SOURCE_SYSTEM` | text | required |  | The trade's booking system: ENDUR, CALYPSO or MUREX. | `CALYPSO`, `ENDUR`, `MUREX` |  |
 | `NETTING_SET` | id | required |  | The netting set the trade belongs to (its membership wins when they differ). | `NS-ALDERSHOT-FRA` (pattern `^NS-`) | `netting-set` |
-| `COUNTERPARTY` | id | required |  | Counterparty: the counterparty it refers to | `CP-ALDERSHOT` (pattern `^CP-`) | `counterparty` |
-| `LEGAL_ENTITY` | id | required |  | Legal entity: the legal-entity it refers to | `LE-FRA` (pattern `^LE-`) | `legal-entity` |
-| `DESK` | id | required |  | Desk: the desk it refers to | `DESK-SFT` (pattern `^DESK-`) | `desk` |
-| `TT_BOOK` | id | required |  | Book: the book it refers to | `BOOK-SFT-1` (pattern `^BOOK-`) | `book` |
+| `COUNTERPARTY` | id | required |  | The trade's counterparty, denormalised from its netting set: a COUNTERPARTY_ID of the core pack's counterparty kind (CP-…). | `CP-ALDERSHOT` (pattern `^CP-`) | `counterparty` |
+| `LEGAL_ENTITY` | id | required |  | The bank's legal entity that booked the trade: an ENTITY_ID of the core pack's legal-entity kind (LE-…). | `LE-FRA` (pattern `^LE-`) | `legal-entity` |
+| `DESK` | id | required |  | The desk the trade is booked on: a DESK_ID of the core pack's desk kind (DESK-…). | `DESK-SFT` (pattern `^DESK-`) | `desk` |
+| `TT_BOOK` | id | required |  | The book the trade is booked in: a BOOK_ID of the core pack's book kind (BOOK-…). | `BOOK-SFT-1` (pattern `^BOOK-`) | `book` |
 | `LIMIT_LETTER` | text | optional |  | The trade's limit letter (2.9.5), as its VaR records carry it: the level column of the hierarchy LL (LIMIT_LETTER > DESK, VAR_GUIDE.md section 16). When a hierarchy is built from it, every row carries it (a row that leaves it empty is refused, DRS-5211; a table without the column skips that hierarchy alone, with a DRS-5211 warning). | `LL-0003` |  |
-| `ASSET_CLASS` | text | required |  | — | `Equity`, `FX`, `Inflation`, `Securities financing` |  |
-| `PRODUCT` | text | required |  | — | `Tri-party repo` |  |
-| `NOTIONAL` | amount | required |  | — | `237000000.0` |  |
-| `MATURITY_DATE` | date | required |  | — | `2027-02-15` |  |
+| `ASSET_CLASS` | text | required |  | The trade's asset class, denormalised from the netting set's member row (used by the asset scope). | `Commodity`, `Credit`, `Equity`, `FX`, `Fixed income`, `Inflation`, `Money market`, `Rates`, `Securities financing`, `Structured` |  |
+| `PRODUCT` | text | required |  | The trade's product name, denormalised from the netting set's member row (e.g. Basis swap (float/float)). | `Tri-party repo` |  |
+| `NOTIONAL` | amount | required | trade currency | The trade's notional as its netting set lists it, in the trade's currency; denormalised for people and checks. | `237000000.0` |  |
+| `MATURITY_DATE` | date | required |  | The trade's maturity: after it plus 10 business days a missing grid row means the trade is worth 0. | `2027-02-15` |  |
 | `GRID_INDEX` | integer | required |  | The position of the date in the run's grid. | `0` |  |
 | `GRID_DATE` | date | required |  | The future date the values are for. | `2026-10-07` |  |
 | `MTM` | vector | required | USD | The trade's mark to market on each simulated path at the grid date, from the bank's side. *200 values in the test data* |  |  |
 | `STATUS` | text | required |  | ok, proxied (an approximate model) or failed (no values). | `ok` |  |
-| `PRICER` | text | required |  | — | `testgen-factor-walk` |  |
-| `BATCH_ID` | id | required |  | — | `XB-2026-09-30-01` |  |
+| `PRICER` | text | required |  | The pricer the simulator valued the trade with (testgen-factor-walk in the test data). | `testgen-factor-walk` |  |
+| `BATCH_ID` | id | required |  | The run's batch: equal to the simulation-run's BATCH_ID. | `XB-2026-09-30-01` |  |
 
 **Links:** `RUN_ID` → `simulation-run`, `TRADE_ID` → `trade`, `NETTING_SET` → `netting-set`, `COUNTERPARTY` → `counterparty`, `LEGAL_ENTITY` → `legal-entity`, `DESK` → `desk`, `TT_BOOK` → `book`.
 
@@ -819,20 +823,21 @@ One trade's mark to market on every path of a simulation run at one grid date, i
 - pattern: field PATH_ROW_ID; pattern ^XR-[^~]+~.+~[0-9]+$
 - link: field RUN_ID; kind simulation-run
 - link: field TRADE_ID; kind trade
-- enum: field SOURCE_SYSTEM; values `CALYPSO`, `MUREX`
+- enum: field SOURCE_SYSTEM; values `CALYPSO`, `ENDUR`, `MUREX`
 - link: field NETTING_SET; kind netting-set
 - link: field COUNTERPARTY; kind counterparty
 - link: field LEGAL_ENTITY; kind legal-entity
 - link: field DESK; kind desk
 - link: field TT_BOOK; kind book
-- enum: field ASSET_CLASS; values `Equity`, `FX`, `Inflation`, `Securities financing`
+- enum: field ASSET_CLASS; values `Commodity`, `Credit`, `Equity`, `FX`, `Fixed income`, `Inflation`, `Money market`, `Rates`, `Securities financing`, `Structured`
 - vector-length: field MTM; same every row of one business date
 
 **Notes**
 
 - One trade's MtM on every path of the run at one grid date (EXPOSURE_GUIDE.md section 15.3), the vector column MTM; sparse by maturity (no row after maturity plus 10 business days). DESK, TT_BOOK, ASSET_CLASS, PRODUCT, NOTIONAL and MATURITY_DATE are denormalised for the scopes and checks (as built, 2.9.0).
+- 1.1: SOURCE_SYSTEM and ASSET_CLASS list every value of the test data (ENDUR trades have paths too).
 
-**To review (7)**
+**To review (6)**
 
 - required inferred from 100% coverage in 2001 documents (1 samples and 2000 test-data documents (data/testdata/counterparty-risk/exposure-path/cob-2026-09-30.part-001.jsonl.gz, data/testdata/counterparty-risk/exposure-path/cob-2026-09-30.part-002.jsonl.gz)): confirm each required field is mandatory upstream, and each optional one may be empty.
 - source is the pack's first listed source (its README): confirm.
@@ -840,7 +845,6 @@ One trade's mark to market on every path of a simulation run at one grid date, i
 - enum values inferred from the data, not from a glossary: SOURCE_SYSTEM, ASSET_CLASS: confirm they are closed lists.
 - number types decided by the field's name: NOTIONAL amount: confirm amount, rate or integer.
 - no unit stated for the amounts NOTIONAL (docs/contracts/README.md section 7: USD unless stated): confirm the currency.
-- no description in about.yaml or the Sutras for BUSINESS_DATE, SOURCE_SYSTEM, ASSET_CLASS, PRODUCT, NOTIONAL, MATURITY_DATE, PRICER, BATCH_ID: write them in the pack's config/about.yaml glossary.
 
 ## EXP: Exposure profile of a scope (computed) (`exposure-result`)
 

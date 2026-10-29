@@ -66,6 +66,7 @@ fields:
 - name: ISO3
   type: text
   presence: required
+  description: 'The country''s ISO 3166 alpha-3 code.'
   example: ABW
 - name: REGION_NAME
   type: text
@@ -83,6 +84,7 @@ fields:
 - name: INCOME_NAME
   type: text
   presence: required
+  description: 'The World Bank income group (High income, Upper middle income, Lower middle income, Low income).'
   example: High income
   enum:
   - High income
@@ -92,14 +94,17 @@ fields:
 - name: CURRENCY
   type: text
   presence: optional
+  description: 'The currency code as the source gives it.'
   example: AFA
 - name: CAPITAL
   type: text
   presence: optional
+  description: The capital city's name, from the CIA World Factbook.
   example: Oranjestad
 - name: YEAR
   type: text
   presence: required
+  description: 'The year of the headline figures.'
   example: '2024'
 - name: GDP_USD_BN
   type: amount
@@ -146,71 +151,77 @@ fields:
 - name: RESERVES_USD_BN
   type: amount
   presence: optional
+  description: 'Total reserves including gold (World Bank).'
+  unit: 'USD billions'
   example: 2.23143
 - name: TRADE_SHARE
   type: rate
   presence: optional
+  description: 'Trade (exports plus imports) as a share of GDP (World Bank).'
+  unit: 'percent of GDP, in points'
   example: 164.139
 - name: POPULATION_M
   type: amount
   presence: required
+  description: Total mid-year population of the latest year, in millions (World Bank SP.POP.TOTL divided by one million).
+  unit: 'millions'
   example: 0.108785
 - name: GROWTH_PATH
   type: record list
   presence: required
-  description: 'Nested: see nested GROWTH_PATH[]'
+  description: 'Real GDP growth by year, one element per year: YEAR and GROWTH in % a year (World Bank).'
 - name: GDP_PATH
   type: record list
   presence: required
-  description: 'Nested: see nested GDP_PATH[]'
+  description: 'GDP in current US dollars by year, one element per year: YEAR and GDP in USD billions (World Bank).'
 - name: SECTORS
   type: record list
   presence: required
-  description: 'Nested: see nested SECTORS[]'
+  description: 'Value added by sector, one element per sector (Agriculture, Industry, Services): SECTOR and SHARE in % of GDP (World Bank).'
 - name: REGION_GROUP
   type: id
   presence: required
-  description: 'Region: the country-group it refers to'
+  description: 'The economy''s World Bank region: an id of the computed country-group kind (ECG-<World Bank region code>, ECG-LCN).'
   example: ECG-LCN
   pattern: ^ECG-
   link: country-group
 - name: INCOME_GROUP
   type: id
   presence: required
-  description: 'Income group: the country-group it refers to'
+  description: 'The economy''s World Bank income group: an id of the computed country-group kind (ECG-HIC, ECG-UMC, ECG-LMC, ECG-LIC).'
   example: ECG-HIC
   pattern: ^ECG-
   link: country-group
 - name: LABOUR
   type: id
   presence: optional
-  description: 'Labour market: the labour-market it refers to'
+  description: 'The economy''s labour market: an id of the labour-market kind (LABR-<ISO3>); absent when the World Bank has no labour data.'
   example: LABR-AFG
   pattern: ^LABR-
   link: labour-market
 - name: FISCAL
   type: id
   presence: optional
-  description: 'Fiscal position: the fiscal-position it refers to'
+  description: 'The economy''s public finances: an id of the fiscal-position kind (FISC-<ISO3>).'
   example: FISC-ABW
   pattern: ^FISC-
   link: fiscal-position
 - name: OUTLOOK
   type: id
   presence: optional
-  description: 'IMF forecast: the economic-forecast it refers to'
+  description: 'The economy''s IMF outlook: an id of the economic-forecast kind (FCST-<ISO3>-WEO).'
   example: FCST-ABW-WEO
   pattern: ^FCST-
   link: economic-forecast
 - name: INDICATORS
   type: id list
   presence: required
-  description: 'Indicators: the macro-indicator it refers to'
+  description: 'The economy''s macro indicators: ids of the macro-indicator kind (MACRO-<ISO3>-<indicator>).'
   link: macro-indicator
 - name: PROVENANCE
   type: record
   presence: required
-  description: 'Nested: see nested PROVENANCE'
+  description: 'Where the record comes from, one object: SOURCE (World Bank WDI, IMF WEO, CIA World Factbook), DATASET, RETRIEVED_AT, LICENCE, ATTRIBUTION and URL.'
 nested:
   GROWTH_PATH[]:
   - name: YEAR
@@ -372,5 +383,3 @@ review:
 - 'enum values inferred from the data, not from a glossary: REGION_NAME, INCOME_NAME, SECTORS[].SECTOR: confirm they are closed lists.'
 - 'number types decided by the field''s name: RESERVES_USD_BN amount, TRADE_SHARE rate: confirm amount, rate or integer.'
 - 'no unit stated for the amounts RESERVES_USD_BN, POPULATION_M (docs/contracts/README.md section 7: USD unless stated): confirm the currency.'
-- 'no description in about.yaml or the Sutras for ISO3, INCOME_NAME, CURRENCY, CAPITAL, YEAR, RESERVES_USD_BN, TRADE_SHARE, POPULATION_M: write
-  them in the pack''s config/about.yaml glossary.'

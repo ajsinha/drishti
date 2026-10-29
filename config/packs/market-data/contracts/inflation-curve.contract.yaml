@@ -49,30 +49,32 @@ fields:
 - name: INDEX
   type: id
   presence: required
-  description: Index
+  description: 'The inflation index the curve projects: an INDEX_ID of the market-data pack''s inflation-index kind (INF-…).'
   example: INF-HICPX
 - name: BE_5Y
   type: amount
   presence: required
-  description: 5Y breakeven
+  unit: 'fraction'
+  description: 'The 5-year breakeven inflation rate, as a fraction (0.021588 is 2.1588%).'
   example: 0.021588
 - name: BE_10Y
   type: amount
   presence: required
-  description: 10Y breakeven
+  unit: 'fraction'
+  description: 'The 10-year breakeven inflation rate, as a fraction.'
   example: 0.022497
 - name: POINTS
   type: record list
   presence: required
-  description: 'Nested: see nested POINTS[]'
+  description: 'The breakeven curve: one object per tenor, shortest first (1Y to 30Y).'
 - name: SEASONALITY
   type: record list
   presence: required
-  description: 'Nested: see nested SEASONALITY[]'
+  description: 'The monthly seasonal adjustments of the index: one object per calendar month, January first.'
 - name: INFLATION_INDEX
   type: id
   presence: required
-  description: 'Inflation index: the inflation-index it refers to'
+  description: 'The same index, as a link: an INDEX_ID of the market-data pack''s inflation-index kind (INF-…).'
   example: INF-HICPX
   pattern: ^INF-
   link: inflation-index
@@ -81,6 +83,7 @@ nested:
   - name: TENOR
     type: text
     presence: required
+    description: 'The point''s tenor (1Y .. 30Y).'
     example: 1Y
     enum:
     - 10Y
@@ -92,15 +95,20 @@ nested:
   - name: BREAKEVEN
     type: amount
     presence: required
+    unit: 'percent'
+    description: 'The zero-coupon breakeven inflation rate to the tenor, in percent a year (2.25 means 2.25%).'
     example: 1.994
   SEASONALITY[]:
   - name: MONTH
     type: text
     presence: required
+    description: 'The calendar month, by its three-letter English name (Jan .. Dec).'
     example: Jan
   - name: FACTOR
     type: amount
     presence: required
+    unit: 'fraction'
+    description: 'The month''s additive seasonal adjustment to monthly inflation, as a fraction (0.0015 is 15 bp).'
     example: 0.00075
 links:
 - field: INFLATION_INDEX
@@ -146,5 +154,3 @@ review:
 - 'enum values inferred from the data, not from a glossary: POINTS[].TENOR: confirm they are closed lists.'
 - 'no unit stated for the amounts BE_5Y, BE_10Y, POINTS[].BREAKEVEN, SEASONALITY[].FACTOR (docs/contracts/README.md section 7: USD unless stated):
   confirm the currency.'
-- 'no description in about.yaml or the Sutras for POINTS[].TENOR, POINTS[].BREAKEVEN, SEASONALITY[].MONTH, SEASONALITY[].FACTOR: write them in
-  the pack''s config/about.yaml glossary.'

@@ -49,51 +49,52 @@ fields:
 - name: NAME
   type: text
   presence: required
-  description: Name
+  description: 'The calendar''s name (TARGET2, New York, London, Tokyo).'
   example: TARGET2
 - name: HOLIDAYS
   type: record list
   presence: required
-  description: 'Nested: see nested HOLIDAYS[]'
+  description: 'The calendar''s holidays of 2026 and 2027 in date order: one object per holiday.'
 - name: HOLIDAYS_2026
   type: integer
   presence: required
-  description: Holidays 2026
+  description: 'How many holidays the calendar has in 2026 (weekends not counted).'
   example: 5
 - name: HOLIDAYS_2027
   type: integer
   presence: required
-  description: Holidays 2027
+  description: 'How many holidays the calendar has in 2027 (weekends not counted).'
   example: 3
 - name: NEXT_HOLIDAY
   type: text
   presence: required
-  description: Next holiday
+  description: 'The name of the next holiday after the data''s date (none when there is none in the list).'
   example: Christmas Day
 - name: NEXT_HOLIDAY_DATE
   type: date
   presence: required
-  description: 'On'
+  description: 'The date of NEXT_HOLIDAY.'
   example: '2026-12-25'
 - name: WEEKEND
   type: text list
   presence: required
+  description: 'The calendar''s weekend days, by English day name (Saturday, Sunday); they are never business days.'
 nested:
   HOLIDAYS[]:
   - name: DATE
     type: date
     presence: required
-    description: Date
+    description: 'The day the market is closed.'
     example: '2026-01-01'
   - name: NAME
     type: text
     presence: required
-    description: Holiday
+    description: 'The holiday''s name (New Year''s Day, Christmas Day …).'
     example: New Year's Day
   - name: WEEKDAY
     type: text
     presence: required
-    description: Day
+    description: 'The weekday of DATE, in English (Monday … Friday).'
     example: Thursday
     enum:
     - Friday
@@ -104,11 +105,12 @@ nested:
   - name: YEAR
     type: integer
     presence: required
+    description: 'The year of the holiday (four digits).'
     example: 2026
   - name: OBSERVED
     type: text
     presence: optional
-    description: Observed
+    description: 'Yes when DATE is the observed (moved) day of a holiday that falls on a weekend; empty otherwise.'
     example: 'Yes'
 links: []
 validation:
@@ -146,4 +148,3 @@ review:
 - 'source ''reference-master'' is the test data''s _meta.source (synthetic): name the production system that delivers it.'
 - 'due time of each business date is not known: state it (for example, by 06:00 New York the next business day).'
 - 'enum values inferred from the data, not from a glossary: HOLIDAYS[].WEEKDAY: confirm they are closed lists.'
-- 'no description in about.yaml or the Sutras for WEEKEND, HOLIDAYS[].YEAR: write them in the pack''s config/about.yaml glossary.'

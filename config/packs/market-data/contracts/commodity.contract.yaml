@@ -49,7 +49,7 @@ fields:
 - name: NAME
   type: text
   presence: required
-  description: Name
+  description: 'The commodity''s name (Brent crude oil, Gold …).'
   example: Brent crude oil
   enum:
   - Brent crude oil
@@ -63,12 +63,13 @@ fields:
 - name: FRONT
   type: amount
   presence: required
-  description: Front month
+  unit: 'UNIT'
+  description: 'The front-month futures price (the last OHLC close), in UNIT.'
   example: 74.6
 - name: UNIT
   type: text
   presence: required
-  description: Unit
+  description: 'The quotation unit of the prices: currency per physical unit (USD/bbl, USD/oz, USc/bu is US cents per bushel …).'
   example: USD/bbl
   enum:
   - USD/MMBtu
@@ -79,7 +80,7 @@ fields:
 - name: EXCHANGE
   type: text
   presence: required
-  description: Exchange
+  description: 'The exchange the futures trade on (ICE, NYMEX, COMEX, CBOT).'
   example: ICE
   enum:
   - CBOT
@@ -89,7 +90,7 @@ fields:
 - name: SECTOR
   type: text
   presence: required
-  description: Sector
+  description: 'The commodity sector: Energy, Metals or Agriculture.'
   example: Energy
   enum:
   - Agriculture
@@ -98,22 +99,22 @@ fields:
 - name: OHLC
   type: record list
   presence: required
-  description: 'Nested: see nested OHLC[]'
+  description: 'The front month''s daily bars, oldest first: one object per business day (open, high, low and close in UNIT, and a volume).'
 - name: SPEC
   type: record
   presence: required
-  description: 'Nested: see nested SPEC'
+  description: 'The futures contract''s specification: contract code, unit, exchange, settlement, listing cycle, tick size, trading hours.'
 - name: COMMODITY_CURVE
   type: id
   presence: required
-  description: 'Commodity curve: the commodity-curve it refers to'
+  description: 'Its futures curve: a CURVE_ID of the market-data pack''s commodity-curve kind (CMDC-…).'
   example: CMDC-BRENT
   pattern: ^CMDC-
   link: commodity-curve
 - name: COMMODITY_VOL_SURFACE
   type: id
   presence: required
-  description: 'Commodity vol surface: the commodity-vol-surface it refers to'
+  description: 'Its volatility surface: a SURFACE_ID of the market-data pack''s commodity-vol-surface kind (CMDV-…).'
   example: CMDV-BRENT
   pattern: ^CMDV-
   link: commodity-vol-surface
@@ -122,31 +123,43 @@ nested:
   - name: DATE
     type: date
     presence: required
+    description: 'A business day of the daily bars, oldest first, ending at the record''s date.'
     example: '2026-07-08'
   - name: OPEN
     type: amount
     presence: required
+    unit: 'SPEC.UNIT'
+    description: 'The front contract''s opening price that day, in SPEC.UNIT.'
     example: 78.82
   - name: HIGH
     type: amount
     presence: required
+    unit: 'SPEC.UNIT'
+    description: 'The day''s high price, in SPEC.UNIT.'
     example: 81.67
   - name: LOW
     type: amount
     presence: required
+    unit: 'SPEC.UNIT'
+    description: 'The day''s low price, in SPEC.UNIT.'
     example: 77.95
   - name: CLOSE
     type: amount
     presence: required
+    unit: 'SPEC.UNIT'
+    description: 'The day''s closing (settlement) price, in SPEC.UNIT.'
     example: 79.99
   - name: VOLUME
     type: integer
     presence: required
+    unit: 'contracts'
+    description: 'The number of contracts traded that day.'
     example: 393381
   SPEC:
   - name: CONTRACT
     type: text
     presence: required
+    description: 'The contract''s code (WTI, BRENT, NG, GOLD, SILVER, COPPER, CORN, SOY).'
     example: BRENT
     enum:
     - BRENT
@@ -160,6 +173,7 @@ nested:
   - name: UNIT
     type: text
     presence: required
+    description: 'The price unit (e.g. USD/bbl, USD/MMBtu, USD/oz, USD/lb, USc/bu).'
     example: USD/bbl
     enum:
     - USD/MMBtu
@@ -170,6 +184,7 @@ nested:
   - name: EXCHANGE
     type: text
     presence: required
+    description: 'The exchange the contract is listed on (NYMEX, ICE, COMEX, CBOT).'
     example: ICE
     enum:
     - CBOT
@@ -179,6 +194,7 @@ nested:
   - name: SETTLEMENT
     type: text
     presence: required
+    description: 'How the contract settles: Physical or Physical (vault).'
     example: Physical
     enum:
     - Physical
@@ -186,14 +202,18 @@ nested:
   - name: LISTING
     type: text
     presence: required
+    description: 'The contract months listed (Monthly).'
     example: Monthly
   - name: TICK_SIZE
     type: amount
     presence: required
+    unit: 'SPEC.UNIT'
+    description: 'The minimum price move, in SPEC.UNIT.'
     example: 0.01
   - name: TRADING_HOURS
     type: text
     presence: required
+    description: 'The exchange''s trading hours, as text.'
     example: Sun-Fri 18:00-17:00 ET
 links:
 - field: COMMODITY_CURVE
@@ -302,5 +322,3 @@ review:
   confirm they are closed lists.'
 - 'no unit stated for the amounts FRONT, OHLC[].OPEN, OHLC[].HIGH, OHLC[].LOW, OHLC[].CLOSE, SPEC.TICK_SIZE (docs/contracts/README.md section
   7: USD unless stated): confirm the currency.'
-- 'no description in about.yaml or the Sutras for OHLC[].DATE, OHLC[].OPEN, OHLC[].HIGH, OHLC[].LOW, OHLC[].CLOSE, OHLC[].VOLUME, SPEC.CONTRACT,
-  SPEC.UNIT, SPEC.EXCHANGE, SPEC.SETTLEMENT, SPEC.LISTING, SPEC.TICK_SIZE and 1 more: write them in the pack''s config/about.yaml glossary.'

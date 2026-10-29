@@ -55,10 +55,12 @@ fields:
 - name: BUSINESS_DATE
   type: date
   presence: required
+  description: 'The close of business the rates belong to (YYYY-MM-DD): the date of the scenario PVs they convert.'
   example: '2026-09-30'
 - name: SCENARIO_SET_ID
   type: id
   presence: required
+  description: 'The scenario set whose SCENARIO_DATES order RATES; it must be the date''s set (one set per date, DRS-5203).'
   example: HS-509
 - name: CURRENCY
   type: text
@@ -68,6 +70,7 @@ fields:
 - name: QUOTE
   type: text
   presence: required
+  description: 'How the rates are quoted, in words: always USD per one unit of CURRENCY ("USD per 1 EUR").'
   example: USD per 1 EUR
 - name: RATE
   type: rate
@@ -85,10 +88,12 @@ fields:
 - name: SOURCE
   type: text
   presence: required
+  description: 'The system or model that produced the rates (the demo''s synthetic factor model).'
   example: demo-factor-model
 - name: BATCH_ID
   type: id
   presence: required
+  description: 'The risk batch that produced the rates, the same run as the date''s scenario PVs and P&L vectors (one batch per date, DRS-5203).'
   example: B-2026-09-30-01
 links: []
 validation:
@@ -125,5 +130,3 @@ review:
   confirm each required field is mandatory upstream, and each optional one may be empty.'
 - 'source is the pack''s first listed source (its README): confirm.'
 - 'due time of each business date is not known: state it (for example, by 06:00 New York the next business day).'
-- 'no description in about.yaml or the Sutras for BUSINESS_DATE, SCENARIO_SET_ID, QUOTE, SOURCE, BATCH_ID: write them in the pack''s config/about.yaml
-  glossary.'

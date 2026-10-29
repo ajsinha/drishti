@@ -36,9 +36,11 @@ fields:
 - name: SUM
   type: amount
   presence: required
+  description: 'The sum over every scenario day of the book''s total path (the members'' P&L added day by day).'
 - name: WORST
   type: amount
   presence: required
+  description: 'The lowest day of the book''s total path.'
 links: []
 validation:
 - rule: required

@@ -56,6 +56,7 @@ fields:
 - name: NAME
   type: text
   presence: required
+  description: 'The portfolio''s display name.'
   example: Unwind candidates (Asha)
 - name: OWNER
   type: text
@@ -75,11 +76,11 @@ fields:
 - name: DEFINITION
   type: record
   presence: required
-  description: 'Nested: see nested DEFINITION'
+  description: 'What the portfolio holds, one object whose shape follows TYPE: a BASKET lists MEMBERS (POSITION_ID or TRADE_ID each), a HIERARCHY names a NODE (a NODE_ID such as MGMT~BOOK-COMM-1), a RULE gives a RULE expression over the trades'' columns (CURRENCY == ''EUR'').'
 - name: ROLLS_UP_TO
   type: record
   presence: required
-  description: 'Nested: see nested ROLLS_UP_TO'
+  description: 'The hierarchy node the portfolio reports under, one object: KIND (bank, division, legal-entity, desk, book) and ID (BANK, DIV-…, LE-…, DESK-…, BOOK-…).'
 - name: LIMIT_VAR
   type: amount
   presence: required
@@ -89,6 +90,7 @@ fields:
 - name: BUSINESS_DATE
   type: date
   presence: required
+  description: 'The close of business the definition belongs to (YYYY-MM-DD).'
   example: '2026-09-30'
 - name: VALID_FROM
   type: date
@@ -98,6 +100,7 @@ fields:
 - name: VALID_TO
   type: unknown
   presence: optional
+  description: 'The last date the definition is valid (YYYY-MM-DD); null while it is open-ended. Informational.'
 nested:
   DEFINITION:
   - name: MEMBERS
@@ -118,20 +121,21 @@ nested:
   - name: POSITION_ID
     type: id
     presence: optional
-    description: 'Position: the position it refers to'
+    description: 'A position in a BASKET: a position id as Drishti derives it (POS-<book>~<trade or security>); give it or TRADE_ID.'
     example: POS-BOOK-RATES-1~MX-20000002
     pattern: ^POS-
     link: position
   - name: TRADE_ID
     type: id
     presence: optional
-    description: 'Trade: the trade it refers to'
+    description: 'A trade in a BASKET: a TRADE_ID of the trading pack''s trade kind, as text; it brings its part of its position.'
     example: CLY-3000087
     link: trade
   ROLLS_UP_TO:
   - name: KIND
     type: text
     presence: required
+    description: 'The kind of the node the portfolio reports under (bank, division, desk, legal-entity, book).'
     example: division
   - name: ID
     type: id
@@ -188,5 +192,3 @@ review:
 - 'source is the pack''s first listed source (its README): confirm.'
 - 'due time of each business date is not known: state it (for example, by 06:00 New York the next business day).'
 - 'enum values inferred from the data, not from a glossary: TYPE: confirm they are closed lists.'
-- 'no description in about.yaml or the Sutras for NAME, BUSINESS_DATE, VALID_TO, ROLLS_UP_TO.KIND: write them in the pack''s config/about.yaml
-  glossary.'

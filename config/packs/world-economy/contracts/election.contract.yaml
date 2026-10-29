@@ -54,14 +54,17 @@ fields:
 - name: COUNTRY_NAME
   type: text
   presence: required
+  description: The country's name as the World Factbook gives it (Aruba).
   example: Aruba
 - name: CHAMBER
   type: text
   presence: required
+  description: 'The chamber or office elected (Executive, or the chamber''s name).'
   example: Executive
 - name: DATE
   type: date
   presence: optional
+  description: 'The election date (YYYY-MM-DD).'
   example: '2024-12-06'
 - name: DATE_TEXT
   type: text
@@ -76,6 +79,7 @@ fields:
 - name: TERM
   type: text
   presence: optional
+  description: 'The term of office, as published (for example 4 years).'
   example: 4 years
 - name: WINNER
   type: text
@@ -90,30 +94,32 @@ fields:
 - name: WOMEN
   type: text
   presence: optional
+  description: 'The share of seats held by women, as published text (for example 42.4%).'
   example: 42.4%
 - name: SEATS_TEXT
   type: text
   presence: optional
+  description: 'The chamber''s seats as the CIA World Factbook publishes them.'
   example: 257 (all directly elected)
 - name: RESULTS
   type: record list
   presence: required
-  description: 'Nested: see nested RESULTS[]'
+  description: 'The seats won by party at the election, one element per party: PARTY, SEATS and SHARE (% of seats); empty for an executive election or when the Factbook gives none.'
 - name: SUMMARY
   type: record
   presence: required
-  description: 'Nested: see nested SUMMARY'
+  description: 'The election in brief, one object from the World Factbook: SELECTION (how the body is chosen), HELD_ON, NEXT_ELECTION, CHAMBER, ELECTORAL_SYSTEM, SEATS, TERM, WOMEN and RESULTS (all as published text).'
 - name: JURISDICTION
   type: id
   presence: required
-  description: 'Country: the jurisdiction it refers to'
+  description: 'The country the election is in: an id of the jurisdiction kind (JUR-<ISO3>).'
   example: JUR-ABW
   pattern: ^JUR-
   link: jurisdiction
 - name: PROVENANCE
   type: record
   presence: required
-  description: 'Nested: see nested PROVENANCE'
+  description: 'Where the record comes from, one object: SOURCE (CIA World Factbook), DATASET (the mirror commit), RETRIEVED_AT, LICENCE, ATTRIBUTION and URL.'
 nested:
   SUMMARY:
   - name: SELECTION
@@ -139,7 +145,7 @@ nested:
   - name: CHAMBER
     type: text
     presence: optional
-    description: The legislative chamber.
+    description: The legislative chamber elected, as the Factbook names it (Chamber of Deputies (Cámara de Diputados)), or Executive.
     example: Chamber of Deputies (Cámara de Diputados)
   - name: SEATS
     type: text
@@ -253,5 +259,3 @@ review:
 - 'key ELECTION_ID is the field holding the sample catalogue''s id (ELEC-ABW-EXE): confirm it is the business key.'
 - 'a snapshot refreshed when tools/publicdata/world_economy.py runs: confirm the refresh cadence.'
 - 'enum values inferred from the data, not from a glossary: SUMMARY.ELECTORAL_SYSTEM: confirm they are closed lists.'
-- 'no description in about.yaml or the Sutras for COUNTRY_NAME, CHAMBER, DATE, TERM, WOMEN, SEATS_TEXT: write them in the pack''s config/about.yaml
-  glossary.'

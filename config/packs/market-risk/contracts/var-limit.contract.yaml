@@ -76,21 +76,24 @@ fields:
 - name: CURRENCY
   type: text
   presence: required
-  description: USD.
+  description: 'The currency of LIMIT_VAR, ISO 4217: USD.'
   example: USD
   enum:
   - USD
 - name: BUSINESS_DATE
   type: date
   presence: required
+  description: 'The close of business the limit applies to (YYYY-MM-DD).'
   example: '2026-09-30'
 - name: VALID_FROM
   type: date
   presence: required
+  description: 'The first date the limit is valid (YYYY-MM-DD). Informational.'
   example: '2026-01-02'
 - name: VALID_TO
   type: date
   presence: optional
+  description: 'The last date the limit is valid (YYYY-MM-DD); null while it is open-ended. Informational.'
 links:
 - field: NODE_ID
   kind: risk-hierarchy
@@ -111,9 +114,13 @@ validation:
 - rule: pattern
   field: LIMIT_ID
   pattern: ^VL-
-- rule: pattern
+- rule: link
   field: NODE_ID
-  pattern: ^[A-Z][A-Z0-9_]*~
+  kind: risk-hierarchy
+- rule: enum
+  field: CURRENCY
+  values:
+  - USD
 notes:
 - 'JSON Lines, one row per line (UTF-8). Example line: {"LIMIT_ID":"VL-LL~LL-0003","HIERARCHY":"LL","NODE_ID":"LL~LL-0003","LIMIT_VAR":4100000,"CURRENCY":"USD","BUSINESS_DATE":"2026-09-30","VALID_FROM":"2026-01-02","VALID_TO":null}'
 review: []

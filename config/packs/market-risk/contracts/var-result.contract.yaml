@@ -46,10 +46,12 @@ fields:
 - name: SCOPE_KIND
   type: text
   presence: required
+  description: 'What kind of scope was asked for (node, position, trade, portfolio, basket, capture, rule, counterparty, legal-entity, adhoc).'
   enum: [node, position, trade, portfolio, basket, capture, rule, counterparty, legal-entity, adhoc]
 - name: LABEL
   type: text
   presence: required
+  description: 'The scope''s display label.'
 - name: NODE
   type: id
   presence: optional
@@ -57,6 +59,7 @@ fields:
 - name: BUSINESS_DATE
   type: date
   presence: required
+  description: 'The business date answered (YYYY-MM-DD).'
 - name: CURRENCY
   type: text
   presence: required
@@ -76,10 +79,12 @@ fields:
 - name: CONFIDENCE
   type: rate
   presence: required
+  description: 'The VaR confidence level, as a fraction (0.99).'
   example: 0.99
 - name: ES_CONFIDENCE
   type: rate
   presence: required
+  description: 'The expected shortfall confidence level, as a fraction (0.975).'
   example: 0.975
 - name: K
   type: integer
@@ -88,23 +93,29 @@ fields:
 - name: ES_COUNT
   type: integer
   presence: required
+  description: 'The number of worst scenarios averaged into the ES.'
 - name: SCENARIOS
   type: integer
   presence: required
+  description: 'The number of scenarios in the scope''s P&L vector (the scenario set''s SCENARIO_COUNT).'
 - name: LIMIT
   type: amount
   presence: optional
+  description: 'The scope''s VaR limit (a node''s or portfolio''s), converted to the answer''s currency; null when it has none.'
   unit: CURRENCY
 - name: LIMIT_USE
   type: rate
   presence: optional
+  description: 'VAR / LIMIT, as a fraction; null without a limit.'
 - name: SUM_STANDALONE
   type: amount
   presence: optional
+  description: 'The sum of the standalone VaRs of the scope''s children; null when it has none.'
   unit: CURRENCY
 - name: DIVERSIFICATION
   type: amount
   presence: optional
+  description: 'SUM_STANDALONE minus VAR: what the children''s offsets save; null when there are no children.'
   unit: CURRENCY
 - name: BACKTEST
   type: record

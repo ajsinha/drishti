@@ -50,26 +50,26 @@ fields:
 - name: NAME
   type: text
   presence: required
-  description: Name
+  description: 'The trader''s name, initial and last name (A. Shah).'
   example: A. Shah
 - name: DESK_NAME
   type: text
   presence: required
-  description: Desk
+  description: 'The name of the trader''s desk (the desk''s NAME).'
   example: Rates · Swaps and options
 - name: TRADE_COUNT
   type: integer
   presence: required
-  description: Trades
+  description: 'How many trades name this trader (TRADER_ID).'
   example: 76
 - name: BOOKS
   type: record list
   presence: required
-  description: 'Nested: see nested BOOKS[]'
+  description: 'The books of the trader''s desk: one object per book.'
 - name: DESK
   type: id
   presence: required
-  description: 'Desk: the desk it refers to'
+  description: 'The trader''s desk: a DESK_ID of the core pack''s desk kind (DESK-…).'
   example: DESK-RATES
   pattern: ^DESK-
   link: desk
@@ -78,7 +78,7 @@ nested:
   - name: ID
     type: id
     presence: required
-    description: Book
+    description: 'The book: a BOOK_ID of the core pack''s book kind (BOOK-…).'
     example: BOOK-RATES-1
 links:
 - field: TRADER_ID

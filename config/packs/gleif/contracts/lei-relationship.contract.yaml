@@ -17,7 +17,7 @@
 kind: lei-relationship
 mnemonic: LEIR
 pack: gleif
-version: '1.0'
+version: '1.1'
 class: fundamental
 status: active
 title: LEI parent relationship
@@ -55,6 +55,7 @@ fields:
 - name: LEVEL
   type: text
   presence: required
+  description: 'Direct (the child''s direct parent) or Ultimate (its ultimate parent).'
   example: Direct
   enum:
   - Direct
@@ -62,34 +63,40 @@ fields:
 - name: CHILD_ENTITY
   type: id
   presence: required
-  description: 'Child: the lei-entity it refers to'
+  description: 'The child in the relationship: an LEI of the lei-entity kind (20 characters).'
   example: 010PWNH4K3BLIC3I7R03
   pattern: ^[0-9A-Z]{18}[0-9]{2}$
   link: lei-entity
 - name: PARENT_ENTITY
   type: id
   presence: required
-  description: 'Parent: the lei-entity it refers to'
+  description: 'The parent in the relationship (direct or ultimate, per LEVEL): an LEI of the lei-entity kind.'
   example: 549300COKYB5EGSU1838
   pattern: ^[0-9A-Z]{18}[0-9]{2}$
   link: lei-entity
 - name: RELATIONSHIP_STATUS
   type: text
   presence: required
-  description: Status
+  description: 'Whether the relationship holds: ACTIVE or INACTIVE (GLEIF relationship status).'
   example: ACTIVE
 - name: START
   type: date
   presence: required
-  description: Since
+  description: The date the relationship started (the GLEIF relationship record's period start), YYYY-MM-DD.
   example: '2017-12-06'
+- name: END
+  type: date
+  presence: optional
+  description: 'The date the relationship ended (the GLEIF relationship record''s period end); absent while it holds.'
+  example: '2025-06-30'
 - name: PERIODS
   type: record list
   presence: required
-  description: 'Nested: see nested PERIODS[]'
+  description: 'The relationship''s other periods in GLEIF (the accounting period and the document filing period of the consolidation), one element each: TYPE, START and END.'
 - name: REGISTRATION_STATUS
   type: text
   presence: required
+  description: 'The relationship record''s registration status in GLEIF (PUBLISHED, LAPSED ...).'
   example: LAPSED
   enum:
   - LAPSED
@@ -97,28 +104,28 @@ fields:
 - name: INITIAL_REGISTRATION
   type: date
   presence: required
-  description: First registered
+  description: The date the relationship record was first registered with GLEIF, YYYY-MM-DD.
   example: '2023-08-08'
 - name: LAST_UPDATE
   type: date
   presence: required
-  description: Last updated
+  description: The date GLEIF's relationship record was last changed, YYYY-MM-DD.
   example: '2024-10-07'
 - name: NEXT_RENEWAL
   type: date
   presence: required
-  description: Next renewal
+  description: The date the relationship record must be renewed by, YYYY-MM-DD.
   example: '2024-10-07'
 - name: LEI_GROUP
   type: id
   presence: required
-  description: 'Ownership group: the lei-group it refers to'
+  description: 'The child''s ownership group: the LEI of its ultimate parent, the id of the computed lei-group kind.'
   example: 549300B2Q47IR0CR5B54
   link: lei-group
 - name: ACCOUNTING_STANDARD
   type: text
   presence: optional
-  description: Accounting standard
+  description: The accounting standard of the consolidation the relationship is based on (IFRS, US_GAAP, OTHER_ACCOUNTING_STANDARD), comma-separated when several.
   example: IFRS
   enum:
   - IFRS
@@ -129,19 +136,20 @@ nested:
   - name: TYPE
     type: text
     presence: required
-    description: Period
+    description: 'The period''s type in lower case: accounting period or document filing period.'
     example: accounting period
     enum:
     - accounting period
     - document filing period
   - name: START
     type: date
-    presence: required
-    description: From
+    presence: optional
+    description: The first day of the period, YYYY-MM-DD; absent when GLEIF gives none.
     example: '2021-01-01'
   - name: END
     type: date
     presence: optional
+    description: 'The end of the period (YYYY-MM-DD); absent when it is open.'
     example: '2021-12-31'
 links:
 - field: CHILD_ENTITY
@@ -203,10 +211,11 @@ validation:
   - accounting period
   - document filing period
 notes: []
+notes:
+- '1.1: END, the relationship''s end date, is in the contract; PERIODS[].START is optional (GLEIF leaves it out of a few periods).'
 review:
 - 'required inferred from 100% coverage in 2002 documents (2 samples and 2000 test-data documents (data/testdata/gleif/lei-relationship/snapshot-2026-10-25.jsonl.gz)):
   confirm each required field is mandatory upstream, and each optional one may be empty.'
 - 'a snapshot refreshed when tools/publicdata/gleif.py runs: confirm the refresh cadence.'
 - 'enum values inferred from the data, not from a glossary: LEVEL, REGISTRATION_STATUS, ACCOUNTING_STANDARD, PERIODS[].TYPE: confirm they are
   closed lists.'
-- 'no description in about.yaml or the Sutras for LEVEL, REGISTRATION_STATUS, PERIODS[].END: write them in the pack''s config/about.yaml glossary.'

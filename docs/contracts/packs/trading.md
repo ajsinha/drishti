@@ -21,7 +21,7 @@ One section per command of the pack: the shape of its data, how it is stored and
 
 | Command | Kind | Class | Status | Fields | To review |
 |---|---|---|---|---|---|
-| [TRD](#trd-trade-trade) | `trade` | fundamental | active | 47 | 12 |
+| [TRD](#trd-trade-trade) | `trade` | fundamental | active | 47 | 7 |
 | [CTRD](#ctrd-counterparty-trades-derived-from-trades-counterparty-trades) | `counterparty-trades` | computed | active | 15 | 1 |
 | [PTRD](#ptrd-portfolio-trades-derived-from-trades-portfolio-trades) | `portfolio-trades` | computed | active | 15 | 1 |
 | [LTRD](#ltrd-legal-entity-trades-derived-from-trades-legal-entity-trades) | `legal-entity-trades` | computed | active | 15 | 1 |
@@ -29,11 +29,11 @@ One section per command of the pack: the shape of its data, how it is stored and
 
 ## TRD: Trade (`trade`)
 
-Trade
+A booked trade as its source system (ENDUR, CALYPSO or MUREX) extracts it in the common schema: the deal, its legs with their cash flows and resets, and its events.
 
 |  |  |
 |---|---|
-| Contract | [trade.contract.yaml](../../../config/packs/trading/contracts/trade.contract.yaml) · version 1.0 |
+| Contract | [trade.contract.yaml](../../../config/packs/trading/contracts/trade.contract.yaml) · version 1.1 |
 | Class | fundamental |
 | Status | active |
 | Source | murex, calypso |
@@ -46,87 +46,88 @@ Trade
 | Columns | `TRADE_ID`, `SOURCE_SYSTEM`, `PRODUCT_TYPE`, `PRODUCT_SUB_TYPE`, `PRODUCT_GROUP`, `TRADE_STATUS`, `TRADE_VERSION`, `BUY_SELL_CODE`, `CURRENCY`, `QUANTITY`, `TRADE_DATE`, `MATURITY_DATE`, `COUNTERPARTY`, `LEGAL_ENTITY`, `PORTFOLIO`, `TRADER_ID`, `NOTIONAL`, `INDEX_NAME` |
 | Partitioned by | `PRODUCT_TYPE` |
 | Test data | data/testdata/trades/endur, data/testdata/trades/calypso, data/testdata/trades/murex |
+| Worked example | [trades/endur](../samples/trades/endur.md) · [trades/calypso](../samples/trades/calypso.md) · [trades/murex](../samples/trades/murex.md) (a real record, every field explained, for the production query; tools/testdata/sample_docs.py) |
 
 **Fields**
 
 | Field | Type | Presence | Unit | Description | Example or values | Link |
 |---|---|---|---|---|---|---|
-| `SOURCE_SYSTEM` | text | required |  | Source | `CALYPSO`, `ENDUR`, `MUREX` |  |
-| `SOURCE_UPDATE_TIME` | timestamp | optional |  | — | `2026-09-30T18:30:00Z` |  |
-| `TRADE_DATE` | date | required |  | Trade date | `2025-06-20` |  |
-| `INPUT_DATE` | date | optional |  | — | `2024-04-19` |  |
+| `SOURCE_SYSTEM` | text | required |  | The booking system the trade comes from: ENDUR, CALYPSO or MUREX (upper case). | `CALYPSO`, `ENDUR`, `MUREX` |  |
+| `SOURCE_UPDATE_TIME` | timestamp | optional |  | When the booking system last changed the trade, ISO-8601 UTC; moves with every amendment (empty on an ENDUR trade never amended). | `2026-09-30T18:30:00Z` |  |
+| `TRADE_DATE` | date | required |  | The date the trade was agreed. | `2025-06-20` |  |
+| `INPUT_DATE` | date | optional |  | The day the trade was entered in the booking system (CALYPSO and MUREX: the trade date; empty on ENDUR). | `2024-04-19` |  |
 | `TRADE_ID` | id | required |  | The record's id (the business key) | `1000001` | `trade` |
-| `TRADE_STATUS` | text | required |  | — | `AMENDED`, `CANCELLED`, `MATURED`, `NEW`, `VALIDATED` |  |
-| `TRADE_ACTION` | text | optional |  | — | `AMEND`, `NEW` |  |
-| `TRADE_VERSION` | text | optional |  | — | `1`, `2`, `3`, `4` |  |
-| `TRANSACTION_ID` | id | required |  | — | `700000000` |  |
-| `PACKAGE_ID` | id | optional |  | — | `PKG-0001` |  |
-| `QUANTITY` | amount | required |  | — | `72000.0` |  |
-| `PRICE` | amount | optional |  | Price | `2332.9131` |  |
-| `BUY_SELL_CODE` | text | required |  | — | `B`, `S` |  |
-| `PRODUCT_TYPE` | text | required |  | — | `ComSwap` |  |
-| `PRODUCT_SUB_TYPE` | text | required |  | — | `ENGY-SWAP` |  |
-| `PRODUCT_GROUP` | text | optional |  | — | `FX` |  |
-| `PRODUCT_SUB_GROUP` | text | optional |  | — | `linear` |  |
-| `OPTION_TYPE` | text | optional |  | — | `Call`, `Cap`, `Floor`, `Payer`, `Put`, `Receiver` |  |
-| `STRIKE_PRICE` | rate | optional |  | — | `158.79394` |  |
-| `COUNTERPARTY` | id | required |  | Counterparty: the counterparty it refers to | `CP-HARBORPT` (pattern `^CP-`) | `counterparty` |
-| `COUNTERPARTY_UEN` | text | required |  | — | `UEN0100259` |  |
-| `COUNTERPARTY_COUNTRY_OF_RISK` | text | required |  | — | `US` |  |
-| `ORIGINAL_COUNTERPARTY` | id | optional |  | Original counterparty: the counterparty it refers to | `CP-HALCYON` (pattern `^CP-`) | `counterparty` |
-| `ORIGINAL_COUNTERPARTY_UEN` | text | optional |  | — | `UEN0100222` |  |
-| `INTERNAL_EXTERNAL_CODE` | text | required |  | — | `External`, `Portfolio` |  |
-| `TRANSIT` | text | required |  | — | `00107`, `00214`, `00321`, `00428` |  |
-| `LEGAL_ENTITY` | id | required |  | Legal entity: the legal-entity it refers to | `LE-NY` (pattern `^LE-`) | `legal-entity` |
-| `PORTFOLIO` | id | required |  | Portfolio: the book it refers to | `BOOK-COMM-2` (pattern `^BOOK-`) | `book` |
-| `TRADER_ID` | id | required |  | Trader: the trader it refers to | `TRDR-FROSSI` (pattern `^TRDR-`) | `trader` |
-| `TRADER_FIRST_NAME` | text | required |  | — | `F.` |  |
-| `TRADER_LAST_NAME` | text | required |  | — | `Rossi` |  |
-| `START_DATE` | date | required |  | — | `2025-08-01` |  |
-| `MATURITY_DATE` | date | required |  | Maturity | `2028-07-31` |  |
-| `REGISTRY_DELIVERY_DATE` | date | optional |  | — | `2026-06-01` |  |
-| `CURRENCY` | text | required |  | — | `AUD`, `CAD`, `CHF`, `EUR`, `GBP`, `JPY`, `USD` |  |
-| `DELIVERY_VERSUS_PAYMENT` | text | required |  | — | `NO`, `YES` |  |
-| `STRATEGY` | unknown | optional |  | — |  |  |
-| `INTERNAL_TRADING_STRATEGY` | unknown | optional |  | — |  |  |
-| `NY_CURVE_FLAG` | unknown | optional |  | — |  |  |
-| `VAULT_LOCATION_ALLOCATION` | text | optional |  | — | `COMEX New York`, `LME Rotterdam`, `LME Singapore`, `Vault London B`, `Vault Toronto A` |  |
-| `PRECIOUS_METAL_FLAG` | text | optional |  | — | `Y` |  |
-| `TT_GROUP` | id | optional |  | Desk: the desk it refers to | `DESK-FX` (pattern `^DESK-`) | `desk` |
-| `TT_BOOK` | id | optional |  | Book: the book it refers to | `BOOK-FX-3` (pattern `^BOOK-`) | `book` |
-| `LEASE_PERPETUITY_FLAG` | text | optional |  | — | `N`, `Y` |  |
-| `SETTLEMENT_DATE` | date | optional |  | — | `2024-04-22` |  |
-| `LEGS` | record list | required |  | Nested: see nested LEGS[] |  |  |
-| `EVENTS` | record list | required |  | Nested: see nested EVENTS[] |  |  |
+| `TRADE_STATUS` | text | required |  | Life-cycle status: NEW, VALIDATED, AMENDED, MATURED or CANCELLED. A cancellation is a new version with CANCELLED, never a deleted row; VaR counts only live statuses. | `AMENDED`, `CANCELLED`, `MATURED`, `NEW`, `VALIDATED` |  |
+| `TRADE_ACTION` | text | optional |  | The last action on the trade: NEW or AMEND (empty on ENDUR when none). | `AMEND`, `NEW` |  |
+| `TRADE_VERSION` | text | optional |  | The booking system's version of the trade, as text; it goes up by one with every amendment (empty when the system gives none). | `1` |  |
+| `TRANSACTION_ID` | id | required |  | The booking system's number of this version of the trade: it changes with every amendment while TRADE_ID stays. Text. | `700000000` |  |
+| `PACKAGE_ID` | id | optional |  | The package the trade was dealt in with others (ENDUR PKG-nnnn); empty when none. | `PKG-0001` |  |
+| `QUANTITY` | amount | required | PRICE_UNIT or CURRENCY | The trade's quantity: units of the commodity in the leg's PRICE_UNIT for a commodity trade, else the notional or face amount in CURRENCY. Unsigned: the side is BUY_SELL_CODE. | `72000.0` |  |
+| `PRICE` | amount | optional |  | The deal's headline price or rate as booked. ENDUR: the fixed price per the leg's PRICE_UNIT; CALYPSO and MUREX: the first of the product's clean price, trade price, forward price, fixed price, fixed rate, coupon, rate, repo rate, spread or premium (a rate as a fraction, 0.042 is 4.2%; a price in the product's quote); null when the product has none. | `2332.9131` |  |
+| `BUY_SELL_CODE` | text | required |  | The bank's side: B (bought, pays fixed, buys protection) or S (sold). | `B`, `S` |  |
+| `PRODUCT_TYPE` | text | required |  | The product type as the booking system types it; it selects the trade's Sutra. ENDUR: ComSwap, ComFut, Cash, CallNot, Commodity; CALYPSO and MUREX: the product taxonomy code (FRA, SWAPTION_BERM, EQ_TRS, CMD_APO, ...). | `ComSwap` |  |
+| `PRODUCT_SUB_TYPE` | text | required |  | The finer type: ENDUR its sub-type code (ENGY-SWAP, ENGY-B-SWAP, ENGY-EXCH-FUT, CASH, NOSTRO, NGX-COMM-PHYS, COMM-WARRANTS-INV); CALYPSO and MUREX the product's name (Basis swap (float/float)). | `ENGY-SWAP` |  |
+| `PRODUCT_GROUP` | text | optional |  | The asset class (Rates, FX, Credit, Equity, Commodity, Inflation, Fixed income, Money market, Securities financing, Structured); empty on ENDUR. | `FX` |  |
+| `PRODUCT_SUB_GROUP` | text | optional |  | The product family within the group (linear, option, exotic, bond, future, cds, loan, money, note, ...); empty on ENDUR. | `linear` |  |
+| `OPTION_TYPE` | text | optional |  | For an option: Call or Put, Payer or Receiver (swaption), Cap or Floor; null otherwise. | `Call`, `Cap`, `Floor`, `Payer`, `Put`, `Receiver` |  |
+| `STRIKE_PRICE` | rate | optional |  | For an option: the strike, as a price or as a rate (a fraction a year for rates); null otherwise. | `158.79394` |  |
+| `COUNTERPARTY` | id | required |  | The trade's counterparty: a COUNTERPARTY_ID of the core pack's counterparty kind (CP-…). | `CP-HARBORPT` (pattern `^CP-`) | `counterparty` |
+| `COUNTERPARTY_UEN` | text | required |  | The counterparty's unique entity number in the bank's client master (UENnnnnnnn). | `UEN0100259` |  |
+| `COUNTERPARTY_COUNTRY_OF_RISK` | text | required |  | The counterparty's country of risk, ISO 3166-1 alpha-2. | `US` |  |
+| `ORIGINAL_COUNTERPARTY` | id | optional |  | The counterparty before a novation: a COUNTERPARTY_ID of the core pack's counterparty kind (CP-…); empty when the trade was not novated. | `CP-HALCYON` (pattern `^CP-`) | `counterparty` |
+| `ORIGINAL_COUNTERPARTY_UEN` | text | optional |  | The original counterparty's unique entity number, when the trade was novated; empty otherwise. | `UEN0100222` |  |
+| `INTERNAL_EXTERNAL_CODE` | text | required |  | External for a trade with a client or market counterparty; Portfolio (ENDUR's internal code) for one between two of the bank's books. | `External`, `Portfolio` |  |
+| `TRANSIT` | text | required |  | The bank's branch transit number of the booking legal entity: five digits, text, leading zeros kept. | `00107`, `00214`, `00321`, `00428` |  |
+| `LEGAL_ENTITY` | id | required |  | The bank's legal entity that booked the trade: an ENTITY_ID of the core pack's legal-entity kind (LE-…). | `LE-NY` (pattern `^LE-`) | `legal-entity` |
+| `PORTFOLIO` | id | required |  | The book the trade is booked in: a BOOK_ID of the core pack's book kind (BOOK-…). | `BOOK-COMM-2` (pattern `^BOOK-`) | `book` |
+| `TRADER_ID` | id | required |  | The trader who booked it: a TRADER_ID of the core pack's trader kind (TRDR-…). | `TRDR-FROSSI` (pattern `^TRDR-`) | `trader` |
+| `TRADER_FIRST_NAME` | text | required |  | The trader's first name or initial, as the booking system keeps it. | `F.` |  |
+| `TRADER_LAST_NAME` | text | required |  | The trader's last name, as the booking system keeps it. | `Rossi` |  |
+| `START_DATE` | date | required |  | The trade's start (effective) date. | `2025-08-01` |  |
+| `MATURITY_DATE` | date | required |  | The trade's final maturity (last payment or expiry) date. | `2028-07-31` |  |
+| `REGISTRY_DELIVERY_DATE` | date | optional |  | The day a registered instrument is delivered (ENDUR warehouse warrants and emissions); empty otherwise. | `2026-06-01` |  |
+| `CURRENCY` | text | required |  | The trade's currency, ISO 4217. | `AUD`, `CAD`, `CHF`, `EUR`, `GBP`, `JPY`, `USD` |  |
+| `DELIVERY_VERSUS_PAYMENT` | text | required |  | YES when the instrument and the cash change hands together (securities), else NO. | `NO`, `YES` |  |
+| `STRATEGY` | unknown | optional |  | The trading strategy the trade belongs to; null or empty when none (always empty in the test data). |  |  |
+| `INTERNAL_TRADING_STRATEGY` | unknown | optional |  | The bank's internal strategy code; empty when none (always empty in the test data). Carried through; not read by Drishti. |  |  |
+| `NY_CURVE_FLAG` | unknown | optional |  | The booking system's flag for valuing on the New York close curves; empty when not set (always empty in the test data). Carried through; not read by Drishti. |  |  |
+| `VAULT_LOCATION_ALLOCATION` | text | optional |  | The vault a physical metal or warehouse warrant is allocated to (ENDUR Commodity COMM-WARRANTS-INV); empty otherwise. | `COMEX New York`, `LME Rotterdam`, `LME Singapore`, `Vault London B`, `Vault Toronto A` |  |
+| `PRECIOUS_METAL_FLAG` | text | optional |  | Y for a precious-metals trade (gold, silver); empty otherwise. | `Y` |  |
+| `TT_GROUP` | id | optional |  | CALYPSO and MUREX: the desk of the trade, a DESK_ID of the core pack's desk kind (DESK-…); empty on ENDUR. Carried through; not read by Drishti. | `DESK-FX` (pattern `^DESK-`) | `desk` |
+| `TT_BOOK` | id | optional |  | CALYPSO and MUREX: the trade's book, a BOOK_ID of the core pack's book kind (BOOK-…), the same as PORTFOLIO; empty on ENDUR. | `BOOK-FX-3` (pattern `^BOOK-`) | `book` |
+| `LEASE_PERPETUITY_FLAG` | text | optional |  | Y when a metal lease runs until called, N when not (ENDUR warehouse warrants); empty otherwise. | `N`, `Y` |  |
+| `SETTLEMENT_DATE` | date | optional |  | The day the trade settles (CALYPSO and MUREX: the start date; empty on ENDUR). | `2024-04-22` |  |
+| `LEGS` | record list | required |  | The trade's legs, in LEG_ID order: one object per leg (a swap has two, a future or a cash deal one). |  |  |
+| `EVENTS` | record list | required |  | The trade's life-cycle and cash events, in EVENT_NUMBER order: one object per event (an empty array when none). |  |  |
 
 **Nested `LEGS[]`**
 
 | Field | Type | Presence | Unit | Description | Example or values | Link |
 |---|---|---|---|---|---|---|
-| `LEG_ID` | id | required |  | — | `1` |  |
-| `LEG_TYPE` | text | required |  | — | `FIXED`, `FLOAT`, `OPTION`, `PHYSICAL` |  |
-| `LEG_ECONOMIC_TYPE` | text | optional |  | — | `Basis`, `Fee`, `Fixed price`, `Floating price`, `Pay`, `Receive` |  |
-| `CURRENCY` | text | required |  | — | `AUD`, `CAD`, `CHF`, `EUR`, `GBP`, `JPY`, `USD` |  |
-| `LEASE_CURRENCY` | text | optional |  | — | `USD` |  |
-| `FLOAT_SPREAD` | text | optional |  | — | `14.2486` |  |
-| `PRICE_UNIT` | text | optional |  | — | `MT` |  |
-| `NOTIONAL` | amount | required |  | — | `167969743.2` |  |
-| `DISCOUNT_INDEX` | text | optional |  | — | `DISC-USD` |  |
-| `SPOT_CONVERSION_FACTOR` | text | optional |  | — | `1` |  |
-| `PHYSICAL_LOCATION_NAME` | text | optional |  | — | `Henry Hub` |  |
-| `INDEX_LOCATION_NAME` | text | optional |  | — | `Henry Hub` |  |
-| `RESET_FIXING_SHIFT` | text | optional |  | — | `-2`, `0` |  |
-| `RESET_HOLIDAY_SCHEDULE` | text | optional |  | — | `EUTA`, `GBLO`, `JPTO`, `USNY` |  |
-| `RESET_CONVENTION` | text | optional |  | — | `Annual`, `Daily`, `Daily average`, `Monthly`, `Quarterly`, `Semi-annual` |  |
-| `EMISSIONS_VINTAGE_MIN` | unknown | optional |  | — |  |  |
-| `EMISSIONS_VINTAGE_MAX` | unknown | optional |  | — |  |  |
-| `EMISSIONS_VINTAGE_DELIVERY_TYPE` | unknown | optional |  | — |  |  |
-| `SETTLEMENT_TYPE` | text | required |  | — | `Cash Settlement`, `Physical Settlement` |  |
-| `NY_CURVE_FLAG` | unknown | optional |  | — |  |  |
-| `NUM_RRDC_REC` | unknown | optional |  | — |  |  |
-| `NUM_PROFILE_REC` | text | optional |  | — | `1` |  |
-| `DAILY_VOLUME` | text | optional |  | — | `95` |  |
-| `INDEX` | record | required |  | Nested: see nested LEGS[].INDEX |  |  |
+| `LEG_ID` | id | required |  | The leg's number within the trade (1, 2, ...), text; EVENTS[].LEG_ID names it. | `1` |  |
+| `LEG_TYPE` | text | required |  | FIXED, FLOAT (set by an index), OPTION or PHYSICAL. | `FIXED`, `FLOAT`, `OPTION`, `PHYSICAL` |  |
+| `LEG_ECONOMIC_TYPE` | text | optional |  | CALYPSO and MUREX: Pay or Receive (whether the bank pays or receives the leg's flows); ENDUR: what the leg is (Fixed price, Floating price, Basis, Fee), empty when not given. | `Basis`, `Fee`, `Fixed price`, `Floating price`, `Pay`, `Receive` |  |
+| `CURRENCY` | text | required |  | The leg's currency, ISO 4217. | `AUD`, `CAD`, `CHF`, `EUR`, `GBP`, `JPY`, `USD` |  |
+| `LEASE_CURRENCY` | text | optional |  | ENDUR: the currency a metal lease or the leg's financing is in; empty otherwise. | `USD` |  |
+| `FLOAT_SPREAD` | rate | optional |  | The spread added to the floating index of the leg: a rate as a fraction a year (rates) or a price differential in PRICE_UNIT (commodities); text or number; empty when none. | `14.2486` |  |
+| `PRICE_UNIT` | text | optional |  | The unit the leg's quantities and prices are in (ENDUR BBL, MT, MMBTU, MWH, OZ, BU; MUREX USD/bbl, USD/oz, ...); empty for money. | `MT` |  |
+| `NOTIONAL` | amount | required | leg currency | The leg's amount: quantity times price for a commodity leg, the principal for a rates leg, in the leg's CURRENCY. | `167969743.2` |  |
+| `DISCOUNT_INDEX` | text | optional |  | The curve the leg's flows are discounted on (CALYPSO and MUREX an ir-curve id, CRV-USD-OIS; ENDUR DISC-<ccy>); empty when not given. | `DISC-USD` |  |
+| `SPOT_CONVERSION_FACTOR` | text | optional |  | ENDUR: the factor converting the leg's unit to the index's unit (1 in the test data). Carried through; not read by Drishti. | `1` |  |
+| `PHYSICAL_LOCATION_NAME` | text | optional |  | ENDUR: where a physical commodity is delivered (a hub such as Henry Hub, NGX AECO-C); empty otherwise. | `Henry Hub` |  |
+| `INDEX_LOCATION_NAME` | text | optional |  | ENDUR: the location the floating index is quoted at; empty for a fixed leg. | `Henry Hub` |  |
+| `RESET_FIXING_SHIFT` | text | optional | business days | Business days between the fixing and the period start (negative is before): -2 on CALYPSO and MUREX floating legs, 0 on ENDUR; empty for a fixed leg. | `-2`, `0` |  |
+| `RESET_HOLIDAY_SCHEDULE` | text | optional |  | The holiday calendar the fixings follow (MUREX USNY, GBLO, EUTA, JPTO); null otherwise. | `EUTA`, `GBLO`, `JPTO`, `USNY` |  |
+| `RESET_CONVENTION` | text | optional |  | How often or how the floating rate or price is set: Daily, Daily average, Monthly, Quarterly, Semi-annual, Annual; empty for a fixed leg. | `Annual`, `Daily`, `Daily average`, `Monthly`, `Quarterly`, `Semi-annual` |  |
+| `EMISSIONS_VINTAGE_MIN` | unknown | optional |  | The earliest vintage of emission allowances that may be delivered; empty unless an emissions trade (always empty in the test data). Carried through; not read by Drishti. |  |  |
+| `EMISSIONS_VINTAGE_MAX` | unknown | optional |  | The latest vintage of emission allowances that may be delivered; empty unless an emissions trade (always empty in the test data). Carried through; not read by Drishti. |  |  |
+| `EMISSIONS_VINTAGE_DELIVERY_TYPE` | unknown | optional |  | How the vintages of emission allowances are delivered; empty unless an emissions trade (always empty in the test data). Carried through; not read by Drishti. |  |  |
+| `SETTLEMENT_TYPE` | text | required |  | Cash Settlement or Physical Settlement. | `Cash Settlement`, `Physical Settlement` |  |
+| `NY_CURVE_FLAG` | unknown | optional |  | The booking system's New York close curve flag for the leg; empty when not set (always empty in the test data). Carried through; not read by Drishti. |  |  |
+| `NUM_RRDC_REC` | unknown | optional |  | The number of rate records the booking system holds for the leg (always empty in the test data). Carried through; not read by Drishti. |  |  |
+| `NUM_PROFILE_REC` | text | optional |  | The number of profile (flow) records the booking system holds for the leg, as text: the length of CASH_FLOWS on CALYPSO and MUREX; empty on ENDUR. Not read by Drishti. | `1` |  |
+| `DAILY_VOLUME` | text | optional | PRICE_UNIT per day | ENDUR: the leg's quantity per day, in PRICE_UNIT, as text; empty otherwise. | `95` |  |
+| `INDEX` | record | required |  | The leg's floating index: NAME, GROUP and SUB_GROUP, each empty on a fixed leg. |  |  |
 | `CASH_FLOWS` | record list | required |  | The leg's periods: each with its dates, notional, rate or price, and its resets. |  |  |
 
 **Nested `LEGS[].INDEX`**
@@ -134,55 +135,55 @@ Trade
 | Field | Type | Presence | Unit | Description | Example or values | Link |
 |---|---|---|---|---|---|---|
 | `NAME` | text | optional |  | The benchmark a floating leg is set by. | `IDX-ALU-3M` |  |
-| `GROUP` | id | optional |  | Group: the counterparty-group it refers to | `Metals` | `counterparty-group` |
-| `SUB_GROUP` | text | optional |  | — | `Base metals` |  |
+| `GROUP` | id | optional |  | CALYPSO and MUREX: the asset class of the trade the index serves (Rates, Commodity, Inflation …); empty on ENDUR. Not a counterparty group, although the contract links the name GROUP to counterparty-group. | `Metals` | `counterparty-group` |
+| `SUB_GROUP` | text | optional |  | The finer family of the index: ENDUR the commodity sub-sector (Crude oil, Natural gas, Power, Base metals, Precious, Refined, Grains); MUREX the reset frequency (Monthly, Quarterly, ...); empty for a fixed leg. | `Base metals` |  |
 
 **Nested `LEGS[].CASH_FLOWS[]`**
 
 | Field | Type | Presence | Unit | Description | Example or values | Link |
 |---|---|---|---|---|---|---|
-| `FLOW_ID` | id | required |  | — | `5000001` |  |
-| `FLOW_TYPE` | text | optional |  | — | `Fixed price` |  |
-| `NOTIONAL` | amount | required |  | — | `4665826.2` |  |
-| `RATE` | text | optional |  | — | `2332.9131` |  |
-| `FLOAT_SPREAD` | text | optional |  | — | `14.2486` |  |
-| `START_DATE` | date | required |  | — | `2025-08-01` |  |
-| `END_DATE` | date | required |  | — | `2025-08-31` |  |
-| `PAYMENT_DATE` | date | required |  | — | `2025-09-07` |  |
-| `RATE_DETERMINATION_DATE` | date | optional |  | — | `2025-08-31` |  |
-| `FIRST_RESET_DATE` | date | optional |  | — | `2025-08-01` |  |
-| `LAST_RESET_DATE` | date | optional |  | — | `2025-08-31` |  |
-| `STRIKE_PRICE` | rate | required |  | — | `2332.9131` |  |
-| `RESETS` | record list | required |  | Nested: see nested LEGS[].CASH_FLOWS[].RESETS[] |  |  |
+| `FLOW_ID` | id | required |  | The flow's number in the booking system, unique within the system; text. | `5000001` |  |
+| `FLOW_TYPE` | text | optional |  | What the flow is, in the system's words: ENDUR Fixed price or Floating average; CALYPSO and MUREX Interest, Principal, Coupon paid, Premium, Fee, Caplet, Floorlet, Pending (not yet fixed), or the accrual period START..END; may be empty. | `Fixed price` |  |
+| `NOTIONAL` | amount | required | leg currency | The flow's notional (for a commodity flow its quantity times price), in the leg's currency. | `4665826.2` |  |
+| `RATE` | rate | optional |  | The flow's fixed rate (a fraction a year) or fixed price (in PRICE_UNIT); text on ENDUR, number on CALYPSO and MUREX; empty until known. | `2332.9131` |  |
+| `FLOAT_SPREAD` | rate | optional |  | The spread over the index for this flow (rate fraction or price differential); text or number; empty when none. | `14.2486` |  |
+| `START_DATE` | date | required |  | The first day of the flow's accrual or pricing period. | `2025-08-01` |  |
+| `END_DATE` | date | required |  | The last day of the flow's accrual or pricing period. | `2025-08-31` |  |
+| `PAYMENT_DATE` | date | required |  | The day the flow is paid. | `2025-09-07` |  |
+| `RATE_DETERMINATION_DATE` | date | optional |  | The day the flow's floating rate or price is determined (its fixing date); empty when not given. | `2025-08-31` |  |
+| `FIRST_RESET_DATE` | date | optional |  | The first day the flow's floating price or rate is observed (its first RESETS[].RESET_DATE); empty for a fixed flow. | `2025-08-01` |  |
+| `LAST_RESET_DATE` | date | optional |  | The last day the flow's floating price or rate is observed; empty for a fixed flow. | `2025-08-31` |  |
+| `STRIKE_PRICE` | rate | required |  | The flow's strike or fixed price (an option's strike rate; ENDUR a fixed leg's price); 0.0 when none. | `2332.9131` |  |
+| `RESETS` | record list | required |  | The flow's fixings: one object per reset (observation) date in date order; an empty array for a fixed flow. |  |  |
 
 **Nested `LEGS[].CASH_FLOWS[].RESETS[]`**
 
 | Field | Type | Presence | Unit | Description | Example or values | Link |
 |---|---|---|---|---|---|---|
-| `RESET_ID` | id | optional |  | — | `1` |  |
-| `ACCRUAL` | amount | optional |  | — | `1.0` |  |
-| `START_DATE` | date | required |  | — | `2025-08-01` |  |
-| `END_DATE` | date | required |  | — | `2025-08-31` |  |
-| `RESET_DATE` | date | optional |  | — | `2025-08-01` |  |
-| `ACCRUAL_START_DATE` | date | optional |  | — | `2025-07-28` |  |
-| `ACCRUAL_END_DATE` | date | optional |  | — | `2025-09-25` |  |
-| `RATE` | text | optional |  | — | `2217.5435` |  |
+| `RESET_ID` | id | optional |  | The reset's number: ENDUR 1, 2, ... within the flow; CALYPSO and MUREX R-n within the trade; text, may be empty. | `1` |  |
+| `ACCRUAL` | amount | optional | fraction | ENDUR: the share of the period the reset counts for (1 / pricing days of an average); empty otherwise. | `1.0` |  |
+| `START_DATE` | date | required |  | The first day the reset applies to. | `2025-08-01` |  |
+| `END_DATE` | date | required |  | The last day the reset applies to. | `2025-08-31` |  |
+| `RESET_DATE` | date | optional |  | The day the index is observed; may be empty on ENDUR. | `2025-08-01` |  |
+| `ACCRUAL_START_DATE` | date | optional |  | The first day the reset accrues (ENDUR averaging legs, MUREX); empty otherwise. | `2025-07-28` |  |
+| `ACCRUAL_END_DATE` | date | optional |  | The last day the reset accrues (ENDUR averaging legs, MUREX); empty otherwise. | `2025-09-25` |  |
+| `RATE` | rate | optional |  | The fixing the reset observed (a rate fraction or a price); text on ENDUR; empty until fixed. | `2217.5435` |  |
 
 **Nested `EVENTS[]`**
 
 | Field | Type | Presence | Unit | Description | Example or values | Link |
 |---|---|---|---|---|---|---|
-| `LEG_ID` | id | optional |  | — | `1` |  |
-| `EVENT_ID` | id | optional |  | — | `9000001` |  |
-| `EVENT_NUMBER` | integer | optional |  | — | `1` |  |
-| `EVENT_TYPE` | text | optional |  | — | `RESET` |  |
-| `PAYMENT_TYPE` | text | optional |  | — | `Fixing` |  |
-| `EVENT_DATE` | date | optional |  | — | `2026-11-30` |  |
-| `AMOUNT` | amount | optional |  | — | `14409.01` |  |
-| `CURRENCY` | text | optional |  | — | `AUD`, `CAD`, `CHF`, `EUR`, `GBP`, `JPY`, `USD` |  |
-| `SEQUENCE_NUMBER` | integer | optional |  | — | `1` |  |
-| `VAULT_LOCATION_ALLOCATION` | unknown | optional |  | — |  |  |
-| `NY_CURVE_FLAG` | unknown | optional |  | — |  |  |
+| `LEG_ID` | id | optional |  | The leg the event belongs to (a LEGS[].LEG_ID); empty for a deal-level event (BOOKED, CONFIRMED, MATURITY ...). | `1` |  |
+| `EVENT_ID` | id | optional |  | The event's number in the booking system; text. | `9000001` |  |
+| `EVENT_NUMBER` | integer | optional |  | The event's position among the trade's events (1, 2, ...). | `1` |  |
+| `EVENT_TYPE` | text | optional |  | What happened or will: CASH_SETTLEMENT, FEE, RESET, AMENDMENT, NOVATION (ENDUR), BOOKED, CONFIRMED, CLEARED, AMENDED, CASH_SETTLED, NEXT_PAYMENT, PARTIALLY_TERMINATED, MATURITY (CALYPSO, MUREX); may be empty on ENDUR. | `RESET` |  |
+| `PAYMENT_TYPE` | text | optional |  | What a cash event pays (Interest, Premium, Commodity payment, Fee, Amendment fee, Novation fee, Fixing, Adjustment, Futures settlement, Cash payment, Caplet, ... or the accrual period START..END); empty for a non-cash event. | `Fixing` |  |
+| `EVENT_DATE` | date | optional |  | The day of the event; for a cash event the day the cash moves. | `2026-11-30` |  |
+| `AMOUNT` | amount | optional | event currency | The event's cash amount from the bank's side, in EVENTS[].CURRENCY: negative is paid, positive received; empty for a non-cash event. | `14409.01` |  |
+| `CURRENCY` | text | optional |  | The currency of the event's amount, ISO 4217. | `AUD`, `CAD`, `CHF`, `EUR`, `GBP`, `JPY`, `USD` |  |
+| `SEQUENCE_NUMBER` | integer | optional |  | The event's order in the booking system (equal to EVENT_NUMBER in the test data). | `1` |  |
+| `VAULT_LOCATION_ALLOCATION` | unknown | optional |  | The vault a metal delivery event is allocated to; empty when none (always empty in the test data). Carried through; not read by Drishti. |  |  |
+| `NY_CURVE_FLAG` | unknown | optional |  | The booking system's New York close curve flag for the event; empty when not set (always empty in the test data). Carried through; not read by Drishti. |  |  |
 
 **Links:** `TRADE_ID` → `trade`, `COUNTERPARTY` → `counterparty`, `ORIGINAL_COUNTERPARTY` → `counterparty`, `LEGAL_ENTITY` → `legal-entity`, `PORTFOLIO` → `book`, `TRADER_ID` → `trader`, `TT_GROUP` → `desk`, `TT_BOOK` → `book`, `LEGS[].INDEX.GROUP` → `counterparty-group`.
 
@@ -194,7 +195,6 @@ Trade
 - link: field TRADE_ID; kind trade
 - enum: field TRADE_STATUS; values `AMENDED`, `CANCELLED`, `MATURED`, `NEW`, `VALIDATED`
 - enum: field TRADE_ACTION; values `AMEND`, `NEW`
-- enum: field TRADE_VERSION; values `1`, `2`, `3`, `4`
 - enum: field BUY_SELL_CODE; values `B`, `S`
 - enum: field OPTION_TYPE; values `Call`, `Cap`, `Floor`, `Payer`, `Put`, `Receiver`
 - link: field COUNTERPARTY; kind counterparty
@@ -224,21 +224,17 @@ Trade
 
 - Dated by the lake's business_date partition: `drishti.py lake build` writes each test-data file's day into it; the documents carry no date field of their own.
 - Several source systems: the connector trade-endur and trade-calypso, trade-murex each serve this kind from a table of their own with the same layout; the storage above is the first one's.
+- 1.1: TRADE_VERSION is any version number (the enum inferred from a sample is gone); LEGS[].FLOAT_SPREAD, LEGS[].CASH_FLOWS[].RATE, LEGS[].CASH_FLOWS[].FLOAT_SPREAD and LEGS[].CASH_FLOWS[].RESETS[].RATE are numbers (rate); some extracts write them as numeric text.
 
-**To review (12)**
+**To review (7)**
 
 - required inferred from 100% coverage in 2763 documents (765 samples and 1998 test-data documents (data/testdata/trades/endur/snapshot-2026-07-08.jsonl.gz, data/testdata/trades/calypso/snapshot-2026-07-08.jsonl.gz, data/testdata/trades/murex/snapshot-2026-07-08.jsonl.gz)): confirm each required field is mandatory upstream, and each optional one may be empty.
 - source 'murex, calypso' is the test data's _meta.source (synthetic): name the production system that delivers it.
 - due time of each business date is not known: state it (for example, by 06:00 New York the next business day).
 - the id pattern ^(MX|CLY)-\d+$ does not match every TRADE_ID in the data (for example 1000001): widen the pattern or state the id rule.
-- LEGS[].FLOAT_SPREAD holds values of several types (number, string): state its one type.
-- LEGS[].CASH_FLOWS[].RATE holds values of several types (number, string): state its one type.
-- LEGS[].CASH_FLOWS[].FLOAT_SPREAD holds values of several types (number, string): state its one type.
-- LEGS[].CASH_FLOWS[].RESETS[].RATE holds values of several types (number, string): state its one type.
 - enum values inferred from the data, not from a glossary: SOURCE_SYSTEM, TRADE_STATUS, TRADE_ACTION, TRADE_VERSION, BUY_SELL_CODE, OPTION_TYPE, INTERNAL_EXTERNAL_CODE, TRANSIT, CURRENCY, DELIVERY_VERSUS_PAYMENT, VAULT_LOCATION_ALLOCATION, LEASE_PERPETUITY_FLAG, LEGS[].LEG_TYPE, LEGS[].LEG_ECONOMIC_TYPE, LEGS[].CURRENCY, LEGS[].RESET_FIXING_SHIFT, LEGS[].RESET_HOLIDAY_SCHEDULE, LEGS[].RESET_CONVENTION, LEGS[].SETTLEMENT_TYPE, EVENTS[].CURRENCY: confirm they are closed lists.
 - number types decided by the field's name: PRICE amount, STRIKE_PRICE rate, LEGS[].NOTIONAL amount, LEGS[].CASH_FLOWS[].NOTIONAL amount, LEGS[].CASH_FLOWS[].STRIKE_PRICE rate, EVENTS[].AMOUNT amount: confirm amount, rate or integer.
 - no unit stated for the amounts QUANTITY, PRICE, LEGS[].NOTIONAL, LEGS[].CASH_FLOWS[].NOTIONAL, LEGS[].CASH_FLOWS[].RESETS[].ACCRUAL, EVENTS[].AMOUNT (docs/contracts/README.md section 7: USD unless stated): confirm the currency.
-- no description in about.yaml or the Sutras for SOURCE_UPDATE_TIME, INPUT_DATE, TRADE_STATUS, TRADE_ACTION, TRADE_VERSION, TRANSACTION_ID, PACKAGE_ID, QUANTITY, BUY_SELL_CODE, PRODUCT_TYPE, PRODUCT_SUB_TYPE, PRODUCT_GROUP and 76 more: write them in the pack's config/about.yaml glossary.
 
 ## CTRD: Counterparty trades (derived from trades) (`counterparty-trades`)
 

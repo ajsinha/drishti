@@ -49,35 +49,39 @@ fields:
 - name: PAIR
   type: text
   presence: required
-  description: Pair
+  description: 'The currency pair, base then quote currency, six letters (AUDUSD).'
   example: AUDUSD
 - name: ATM_1M
   type: amount
   presence: required
-  description: 1M ATM
+  unit: 'percent'
+  description: 'The 1-month at-the-money implied volatility, in percent a year.'
   example: 9.17
 - name: ATM_1Y
   type: amount
   presence: required
-  description: 1Y ATM
+  unit: 'percent'
+  description: 'The 1-year at-the-money implied volatility, in percent a year.'
   example: 9.9
 - name: RR_1Y
   type: amount
   presence: required
-  description: 1Y 25D RR
+  unit: 'vol points'
+  description: 'The 1-year 25-delta risk reversal: the 25-delta call volatility minus the 25-delta put volatility, in volatility points.'
   example: -0.46
 - name: GRID
   type: record list
   presence: required
-  description: 'Nested: see nested GRID[]'
+  description: 'The surface: one object per expiry, shortest first, quoted by delta.'
 - name: MODEL
   type: text
   presence: required
+  description: 'The smile model and quoting of the surface (e.g. Vanna-volga smile, delta-quoted).'
   example: Vanna-volga smile, delta-quoted
 - name: FX_SPOT
   type: id
   presence: required
-  description: 'Fx spot: the fx-spot it refers to'
+  description: 'The pair''s spot record: a PAIR of the market-data pack''s fx-spot kind (FX-…).'
   example: FX-AUDUSD
   pattern: ^FX-
   link: fx-spot
@@ -86,7 +90,7 @@ nested:
   - name: EXPIRY
     type: text
     presence: required
-    description: Expiry
+    description: 'The option expiry of the row (1M, 3M … 5Y).'
     example: 1M
     enum:
     - 1M
@@ -98,35 +102,44 @@ nested:
   - name: P_10
     type: amount
     presence: required
-    description: 10D P
+    unit: 'percent'
+    description: 'The 10-delta put implied volatility, in percent a year.'
     example: 10.04
   - name: P_25
     type: amount
     presence: required
-    description: 25D P
+    unit: 'percent'
+    description: 'The 25-delta put implied volatility, in percent a year.'
     example: 9.6
   - name: ATM
     type: amount
     presence: required
-    description: ATM
+    unit: 'percent'
+    description: 'The at-the-money implied volatility, in percent a year.'
     example: 9.17
   - name: C_25
     type: amount
     presence: required
-    description: 25D C
+    unit: 'percent'
+    description: 'The 25-delta call implied volatility, in percent a year.'
     example: 9.24
   - name: C_10
     type: amount
     presence: required
-    description: 10D C
+    unit: 'percent'
+    description: 'The 10-delta call implied volatility, in percent a year.'
     example: 9.4
   - name: RR_25
     type: amount
     presence: required
+    unit: 'vol points'
+    description: 'The 25-delta risk reversal at the expiry: call vol minus put vol, in vol points.'
     example: -0.36
   - name: BF_25
     type: amount
     presence: required
+    unit: 'vol points'
+    description: 'The 25-delta butterfly at the expiry: average of the 25-delta wings minus ATM, in vol points.'
     example: 0.25
 links:
 - field: FX_SPOT
@@ -173,4 +186,3 @@ review:
 - 'enum values inferred from the data, not from a glossary: GRID[].EXPIRY: confirm they are closed lists.'
 - 'no unit stated for the amounts ATM_1M, ATM_1Y, RR_1Y, GRID[].P_10, GRID[].P_25, GRID[].ATM, GRID[].C_25, GRID[].C_10, GRID[].RR_25, GRID[].BF_25
   (docs/contracts/README.md section 7: USD unless stated): confirm the currency.'
-- 'no description in about.yaml or the Sutras for MODEL, GRID[].RR_25, GRID[].BF_25: write them in the pack''s config/about.yaml glossary.'

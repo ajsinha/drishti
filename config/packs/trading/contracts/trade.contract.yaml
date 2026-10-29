@@ -17,11 +17,11 @@
 kind: trade
 mnemonic: TRD
 pack: trading
-version: '1.0'
+version: '1.1'
 class: fundamental
 status: active
 title: Trade
-description: Trade
+description: 'A booked trade as its source system (ENDUR, CALYPSO or MUREX) extracts it in the common schema: the deal, its legs with their cash flows and resets, and its events.'
 source: murex, calypso
 grain: One row per trade per business date, keyed by TRADE_ID.
 key:
@@ -69,7 +69,7 @@ fields:
 - name: SOURCE_SYSTEM
   type: text
   presence: required
-  description: Source
+  description: 'The booking system the trade comes from: ENDUR, CALYPSO or MUREX (upper case).'
   example: ENDUR
   enum:
   - CALYPSO
@@ -78,15 +78,17 @@ fields:
 - name: SOURCE_UPDATE_TIME
   type: timestamp
   presence: optional
+  description: 'When the booking system last changed the trade, ISO-8601 UTC; moves with every amendment (empty on an ENDUR trade never amended).'
   example: '2026-09-30T18:30:00Z'
 - name: TRADE_DATE
   type: date
   presence: required
-  description: Trade date
+  description: 'The date the trade was agreed.'
   example: '2025-06-20'
 - name: INPUT_DATE
   type: date
   presence: optional
+  description: 'The day the trade was entered in the booking system (CALYPSO and MUREX: the trade date; empty on ENDUR).'
   example: '2024-04-19'
 - name: TRADE_ID
   type: id
@@ -97,6 +99,7 @@ fields:
 - name: TRADE_STATUS
   type: text
   presence: required
+  description: 'Life-cycle status: NEW, VALIDATED, AMENDED, MATURED or CANCELLED. A cancellation is a new version with CANCELLED, never a deleted row; VaR counts only live statuses.'
   example: VALIDATED
   enum:
   - AMENDED
@@ -107,6 +110,7 @@ fields:
 - name: TRADE_ACTION
   type: text
   presence: optional
+  description: 'The last action on the trade: NEW or AMEND (empty on ENDUR when none).'
   example: NEW
   enum:
   - AMEND
@@ -114,32 +118,33 @@ fields:
 - name: TRADE_VERSION
   type: text
   presence: optional
+  description: 'The booking system''s version of the trade, as text; it goes up by one with every amendment (empty when the system gives none).'
   example: '1'
-  enum:
-  - '1'
-  - '2'
-  - '3'
-  - '4'
 - name: TRANSACTION_ID
   type: id
   presence: required
+  description: 'The booking system''s number of this version of the trade: it changes with every amendment while TRADE_ID stays. Text.'
   example: '700000000'
 - name: PACKAGE_ID
   type: id
   presence: optional
+  description: 'The package the trade was dealt in with others (ENDUR PKG-nnnn); empty when none.'
   example: PKG-0001
 - name: QUANTITY
   type: amount
   presence: required
+  unit: 'PRICE_UNIT or CURRENCY'
+  description: 'The trade''s quantity: units of the commodity in the leg''s PRICE_UNIT for a commodity trade, else the notional or face amount in CURRENCY. Unsigned: the side is BUY_SELL_CODE.'
   example: 72000.0
 - name: PRICE
   type: amount
   presence: optional
-  description: Price
+  description: 'The deal''s headline price or rate as booked. ENDUR: the fixed price per the leg''s PRICE_UNIT; CALYPSO and MUREX: the first of the product''s clean price, trade price, forward price, fixed price, fixed rate, coupon, rate, repo rate, spread or premium (a rate as a fraction, 0.042 is 4.2%; a price in the product''s quote); null when the product has none.'
   example: 2332.9131
 - name: BUY_SELL_CODE
   type: text
   presence: required
+  description: 'The bank''s side: B (bought, pays fixed, buys protection) or S (sold).'
   example: S
   enum:
   - B
@@ -147,22 +152,27 @@ fields:
 - name: PRODUCT_TYPE
   type: text
   presence: required
+  description: 'The product type as the booking system types it; it selects the trade''s Sutra. ENDUR: ComSwap, ComFut, Cash, CallNot, Commodity; CALYPSO and MUREX: the product taxonomy code (FRA, SWAPTION_BERM, EQ_TRS, CMD_APO, ...).'
   example: ComSwap
 - name: PRODUCT_SUB_TYPE
   type: text
   presence: required
+  description: 'The finer type: ENDUR its sub-type code (ENGY-SWAP, ENGY-B-SWAP, ENGY-EXCH-FUT, CASH, NOSTRO, NGX-COMM-PHYS, COMM-WARRANTS-INV); CALYPSO and MUREX the product''s name (Basis swap (float/float)).'
   example: ENGY-SWAP
 - name: PRODUCT_GROUP
   type: text
   presence: optional
+  description: 'The asset class (Rates, FX, Credit, Equity, Commodity, Inflation, Fixed income, Money market, Securities financing, Structured); empty on ENDUR.'
   example: FX
 - name: PRODUCT_SUB_GROUP
   type: text
   presence: optional
+  description: 'The product family within the group (linear, option, exotic, bond, future, cds, loan, money, note, ...); empty on ENDUR.'
   example: linear
 - name: OPTION_TYPE
   type: text
   presence: optional
+  description: 'For an option: Call or Put, Payer or Receiver (swaption), Cap or Floor; null otherwise.'
   example: Call
   enum:
   - Call
@@ -174,36 +184,41 @@ fields:
 - name: STRIKE_PRICE
   type: rate
   presence: optional
+  description: 'For an option: the strike, as a price or as a rate (a fraction a year for rates); null otherwise.'
   example: 158.79394
 - name: COUNTERPARTY
   type: id
   presence: required
-  description: 'Counterparty: the counterparty it refers to'
+  description: 'The trade''s counterparty: a COUNTERPARTY_ID of the core pack''s counterparty kind (CP-…).'
   example: CP-HARBORPT
   pattern: ^CP-
   link: counterparty
 - name: COUNTERPARTY_UEN
   type: text
   presence: required
+  description: 'The counterparty''s unique entity number in the bank''s client master (UENnnnnnnn).'
   example: UEN0100259
 - name: COUNTERPARTY_COUNTRY_OF_RISK
   type: text
   presence: required
+  description: 'The counterparty''s country of risk, ISO 3166-1 alpha-2.'
   example: US
 - name: ORIGINAL_COUNTERPARTY
   type: id
   presence: optional
-  description: 'Original counterparty: the counterparty it refers to'
+  description: 'The counterparty before a novation: a COUNTERPARTY_ID of the core pack''s counterparty kind (CP-…); empty when the trade was not novated.'
   example: CP-HALCYON
   pattern: ^CP-
   link: counterparty
 - name: ORIGINAL_COUNTERPARTY_UEN
   type: text
   presence: optional
+  description: 'The original counterparty''s unique entity number, when the trade was novated; empty otherwise.'
   example: UEN0100222
 - name: INTERNAL_EXTERNAL_CODE
   type: text
   presence: required
+  description: 'External for a trade with a client or market counterparty; Portfolio (ENDUR''s internal code) for one between two of the bank''s books.'
   example: External
   enum:
   - External
@@ -211,6 +226,7 @@ fields:
 - name: TRANSIT
   type: text
   presence: required
+  description: 'The bank''s branch transit number of the booking legal entity: five digits, text, leading zeros kept.'
   example: '00107'
   enum:
   - '00107'
@@ -220,48 +236,53 @@ fields:
 - name: LEGAL_ENTITY
   type: id
   presence: required
-  description: 'Legal entity: the legal-entity it refers to'
+  description: 'The bank''s legal entity that booked the trade: an ENTITY_ID of the core pack''s legal-entity kind (LE-…).'
   example: LE-NY
   pattern: ^LE-
   link: legal-entity
 - name: PORTFOLIO
   type: id
   presence: required
-  description: 'Portfolio: the book it refers to'
+  description: 'The book the trade is booked in: a BOOK_ID of the core pack''s book kind (BOOK-…).'
   example: BOOK-COMM-2
   pattern: ^BOOK-
   link: book
 - name: TRADER_ID
   type: id
   presence: required
-  description: 'Trader: the trader it refers to'
+  description: 'The trader who booked it: a TRADER_ID of the core pack''s trader kind (TRDR-…).'
   example: TRDR-FROSSI
   pattern: ^TRDR-
   link: trader
 - name: TRADER_FIRST_NAME
   type: text
   presence: required
+  description: 'The trader''s first name or initial, as the booking system keeps it.'
   example: F.
 - name: TRADER_LAST_NAME
   type: text
   presence: required
+  description: 'The trader''s last name, as the booking system keeps it.'
   example: Rossi
 - name: START_DATE
   type: date
   presence: required
+  description: 'The trade''s start (effective) date.'
   example: '2025-08-01'
 - name: MATURITY_DATE
   type: date
   presence: required
-  description: Maturity
+  description: 'The trade''s final maturity (last payment or expiry) date.'
   example: '2028-07-31'
 - name: REGISTRY_DELIVERY_DATE
   type: date
   presence: optional
+  description: 'The day a registered instrument is delivered (ENDUR warehouse warrants and emissions); empty otherwise.'
   example: '2026-06-01'
 - name: CURRENCY
   type: text
   presence: required
+  description: 'The trade''s currency, ISO 4217.'
   example: USD
   enum:
   - AUD
@@ -274,6 +295,7 @@ fields:
 - name: DELIVERY_VERSUS_PAYMENT
   type: text
   presence: required
+  description: 'YES when the instrument and the cash change hands together (securities), else NO.'
   example: 'NO'
   enum:
   - 'NO'
@@ -281,15 +303,19 @@ fields:
 - name: STRATEGY
   type: unknown
   presence: optional
+  description: 'The trading strategy the trade belongs to; null or empty when none (always empty in the test data).'
 - name: INTERNAL_TRADING_STRATEGY
   type: unknown
   presence: optional
+  description: 'The bank''s internal strategy code; empty when none (always empty in the test data). Carried through; not read by Drishti.'
 - name: NY_CURVE_FLAG
   type: unknown
   presence: optional
+  description: 'The booking system''s flag for valuing on the New York close curves; empty when not set (always empty in the test data). Carried through; not read by Drishti.'
 - name: VAULT_LOCATION_ALLOCATION
   type: text
   presence: optional
+  description: 'The vault a physical metal or warehouse warrant is allocated to (ENDUR Commodity COMM-WARRANTS-INV); empty otherwise.'
   example: Vault Toronto A
   enum:
   - COMEX New York
@@ -300,24 +326,26 @@ fields:
 - name: PRECIOUS_METAL_FLAG
   type: text
   presence: optional
+  description: 'Y for a precious-metals trade (gold, silver); empty otherwise.'
   example: Y
 - name: TT_GROUP
   type: id
   presence: optional
-  description: 'Desk: the desk it refers to'
+  description: 'CALYPSO and MUREX: the desk of the trade, a DESK_ID of the core pack''s desk kind (DESK-…); empty on ENDUR. Carried through; not read by Drishti.'
   example: DESK-FX
   pattern: ^DESK-
   link: desk
 - name: TT_BOOK
   type: id
   presence: optional
-  description: 'Book: the book it refers to'
+  description: 'CALYPSO and MUREX: the trade''s book, a BOOK_ID of the core pack''s book kind (BOOK-…), the same as PORTFOLIO; empty on ENDUR.'
   example: BOOK-FX-3
   pattern: ^BOOK-
   link: book
 - name: LEASE_PERPETUITY_FLAG
   type: text
   presence: optional
+  description: 'Y when a metal lease runs until called, N when not (ENDUR warehouse warrants); empty otherwise.'
   example: Y
   enum:
   - N
@@ -325,24 +353,27 @@ fields:
 - name: SETTLEMENT_DATE
   type: date
   presence: optional
+  description: 'The day the trade settles (CALYPSO and MUREX: the start date; empty on ENDUR).'
   example: '2024-04-22'
 - name: LEGS
   type: record list
   presence: required
-  description: 'Nested: see nested LEGS[]'
+  description: 'The trade''s legs, in LEG_ID order: one object per leg (a swap has two, a future or a cash deal one).'
 - name: EVENTS
   type: record list
   presence: required
-  description: 'Nested: see nested EVENTS[]'
+  description: 'The trade''s life-cycle and cash events, in EVENT_NUMBER order: one object per event (an empty array when none).'
 nested:
   LEGS[]:
   - name: LEG_ID
     type: id
     presence: required
+    description: 'The leg''s number within the trade (1, 2, ...), text; EVENTS[].LEG_ID names it.'
     example: '1'
   - name: LEG_TYPE
     type: text
     presence: required
+    description: 'FIXED, FLOAT (set by an index), OPTION or PHYSICAL.'
     example: FIXED
     enum:
     - FIXED
@@ -352,6 +383,7 @@ nested:
   - name: LEG_ECONOMIC_TYPE
     type: text
     presence: optional
+    description: 'CALYPSO and MUREX: Pay or Receive (whether the bank pays or receives the leg''s flows); ENDUR: what the leg is (Fixed price, Floating price, Basis, Fee), empty when not given.'
     example: Fixed price
     enum:
     - Basis
@@ -363,6 +395,7 @@ nested:
   - name: CURRENCY
     type: text
     presence: required
+    description: 'The leg''s currency, ISO 4217.'
     example: USD
     enum:
     - AUD
@@ -375,38 +408,49 @@ nested:
   - name: LEASE_CURRENCY
     type: text
     presence: optional
+    description: 'ENDUR: the currency a metal lease or the leg''s financing is in; empty otherwise.'
     example: USD
   - name: FLOAT_SPREAD
-    type: text
+    type: rate
     presence: optional
+    description: 'The spread added to the floating index of the leg: a rate as a fraction a year (rates) or a price differential in PRICE_UNIT (commodities); text or number; empty when none.'
     example: '14.2486'
   - name: PRICE_UNIT
     type: text
     presence: optional
+    description: 'The unit the leg''s quantities and prices are in (ENDUR BBL, MT, MMBTU, MWH, OZ, BU; MUREX USD/bbl, USD/oz, ...); empty for money.'
     example: MT
   - name: NOTIONAL
     type: amount
     presence: required
+    unit: 'leg currency'
+    description: 'The leg''s amount: quantity times price for a commodity leg, the principal for a rates leg, in the leg''s CURRENCY.'
     example: 167969743.2
   - name: DISCOUNT_INDEX
     type: text
     presence: optional
+    description: 'The curve the leg''s flows are discounted on (CALYPSO and MUREX an ir-curve id, CRV-USD-OIS; ENDUR DISC-<ccy>); empty when not given.'
     example: DISC-USD
   - name: SPOT_CONVERSION_FACTOR
     type: text
     presence: optional
+    description: 'ENDUR: the factor converting the leg''s unit to the index''s unit (1 in the test data). Carried through; not read by Drishti.'
     example: '1'
   - name: PHYSICAL_LOCATION_NAME
     type: text
     presence: optional
+    description: 'ENDUR: where a physical commodity is delivered (a hub such as Henry Hub, NGX AECO-C); empty otherwise.'
     example: Henry Hub
   - name: INDEX_LOCATION_NAME
     type: text
     presence: optional
+    description: 'ENDUR: the location the floating index is quoted at; empty for a fixed leg.'
     example: Henry Hub
   - name: RESET_FIXING_SHIFT
     type: text
     presence: optional
+    unit: 'business days'
+    description: 'Business days between the fixing and the period start (negative is before): -2 on CALYPSO and MUREX floating legs, 0 on ENDUR; empty for a fixed leg.'
     example: '0'
     enum:
     - '-2'
@@ -414,6 +458,7 @@ nested:
   - name: RESET_HOLIDAY_SCHEDULE
     type: text
     presence: optional
+    description: 'The holiday calendar the fixings follow (MUREX USNY, GBLO, EUTA, JPTO); null otherwise.'
     example: GBLO
     enum:
     - EUTA
@@ -423,6 +468,7 @@ nested:
   - name: RESET_CONVENTION
     type: text
     presence: optional
+    description: 'How often or how the floating rate or price is set: Daily, Daily average, Monthly, Quarterly, Semi-annual, Annual; empty for a fixed leg.'
     example: Monthly
     enum:
     - Annual
@@ -434,15 +480,19 @@ nested:
   - name: EMISSIONS_VINTAGE_MIN
     type: unknown
     presence: optional
+    description: 'The earliest vintage of emission allowances that may be delivered; empty unless an emissions trade (always empty in the test data). Carried through; not read by Drishti.'
   - name: EMISSIONS_VINTAGE_MAX
     type: unknown
     presence: optional
+    description: 'The latest vintage of emission allowances that may be delivered; empty unless an emissions trade (always empty in the test data). Carried through; not read by Drishti.'
   - name: EMISSIONS_VINTAGE_DELIVERY_TYPE
     type: unknown
     presence: optional
+    description: 'How the vintages of emission allowances are delivered; empty unless an emissions trade (always empty in the test data). Carried through; not read by Drishti.'
   - name: SETTLEMENT_TYPE
     type: text
     presence: required
+    description: 'Cash Settlement or Physical Settlement.'
     example: Cash Settlement
     enum:
     - Cash Settlement
@@ -450,21 +500,26 @@ nested:
   - name: NY_CURVE_FLAG
     type: unknown
     presence: optional
+    description: 'The booking system''s New York close curve flag for the leg; empty when not set (always empty in the test data). Carried through; not read by Drishti.'
   - name: NUM_RRDC_REC
     type: unknown
     presence: optional
+    description: 'The number of rate records the booking system holds for the leg (always empty in the test data). Carried through; not read by Drishti.'
   - name: NUM_PROFILE_REC
     type: text
     presence: optional
+    description: 'The number of profile (flow) records the booking system holds for the leg, as text: the length of CASH_FLOWS on CALYPSO and MUREX; empty on ENDUR. Not read by Drishti.'
     example: '1'
   - name: DAILY_VOLUME
     type: text
     presence: optional
+    unit: 'PRICE_UNIT per day'
+    description: 'ENDUR: the leg''s quantity per day, in PRICE_UNIT, as text; empty otherwise.'
     example: '95'
   - name: INDEX
     type: record
     presence: required
-    description: 'Nested: see nested LEGS[].INDEX'
+    description: 'The leg''s floating index: NAME, GROUP and SUB_GROUP, each empty on a fixed leg.'
   - name: CASH_FLOWS
     type: record list
     presence: required
@@ -478,131 +533,163 @@ nested:
   - name: GROUP
     type: id
     presence: optional
-    description: 'Group: the counterparty-group it refers to'
+    description: 'CALYPSO and MUREX: the asset class of the trade the index serves (Rates, Commodity, Inflation …); empty on ENDUR. Not a counterparty group, although the contract links the name GROUP to counterparty-group.'
     example: Metals
     link: counterparty-group
   - name: SUB_GROUP
     type: text
     presence: optional
+    description: 'The finer family of the index: ENDUR the commodity sub-sector (Crude oil, Natural gas, Power, Base metals, Precious, Refined, Grains); MUREX the reset frequency (Monthly, Quarterly, ...); empty for a fixed leg.'
     example: Base metals
   LEGS[].CASH_FLOWS[]:
   - name: FLOW_ID
     type: id
     presence: required
+    description: 'The flow''s number in the booking system, unique within the system; text.'
     example: '5000001'
   - name: FLOW_TYPE
     type: text
     presence: optional
+    description: 'What the flow is, in the system''s words: ENDUR Fixed price or Floating average; CALYPSO and MUREX Interest, Principal, Coupon paid, Premium, Fee, Caplet, Floorlet, Pending (not yet fixed), or the accrual period START..END; may be empty.'
     example: Fixed price
   - name: NOTIONAL
     type: amount
     presence: required
+    unit: 'leg currency'
+    description: 'The flow''s notional (for a commodity flow its quantity times price), in the leg''s currency.'
     example: 4665826.2
   - name: RATE
-    type: text
+    type: rate
     presence: optional
+    description: 'The flow''s fixed rate (a fraction a year) or fixed price (in PRICE_UNIT); text on ENDUR, number on CALYPSO and MUREX; empty until known.'
     example: '2332.9131'
   - name: FLOAT_SPREAD
-    type: text
+    type: rate
     presence: optional
+    description: 'The spread over the index for this flow (rate fraction or price differential); text or number; empty when none.'
     example: '14.2486'
   - name: START_DATE
     type: date
     presence: required
+    description: 'The first day of the flow''s accrual or pricing period.'
     example: '2025-08-01'
   - name: END_DATE
     type: date
     presence: required
+    description: 'The last day of the flow''s accrual or pricing period.'
     example: '2025-08-31'
   - name: PAYMENT_DATE
     type: date
     presence: required
+    description: 'The day the flow is paid.'
     example: '2025-09-07'
   - name: RATE_DETERMINATION_DATE
     type: date
     presence: optional
+    description: 'The day the flow''s floating rate or price is determined (its fixing date); empty when not given.'
     example: '2025-08-31'
   - name: FIRST_RESET_DATE
     type: date
     presence: optional
+    description: 'The first day the flow''s floating price or rate is observed (its first RESETS[].RESET_DATE); empty for a fixed flow.'
     example: '2025-08-01'
   - name: LAST_RESET_DATE
     type: date
     presence: optional
+    description: 'The last day the flow''s floating price or rate is observed; empty for a fixed flow.'
     example: '2025-08-31'
   - name: STRIKE_PRICE
     type: rate
     presence: required
+    description: 'The flow''s strike or fixed price (an option''s strike rate; ENDUR a fixed leg''s price); 0.0 when none.'
     example: 2332.9131
   - name: RESETS
     type: record list
     presence: required
-    description: 'Nested: see nested LEGS[].CASH_FLOWS[].RESETS[]'
+    description: 'The flow''s fixings: one object per reset (observation) date in date order; an empty array for a fixed flow.'
   LEGS[].CASH_FLOWS[].RESETS[]:
   - name: RESET_ID
     type: id
     presence: optional
+    description: 'The reset''s number: ENDUR 1, 2, ... within the flow; CALYPSO and MUREX R-n within the trade; text, may be empty.'
     example: '1'
   - name: ACCRUAL
     type: amount
     presence: optional
+    unit: 'fraction'
+    description: 'ENDUR: the share of the period the reset counts for (1 / pricing days of an average); empty otherwise.'
     example: 1.0
   - name: START_DATE
     type: date
     presence: required
+    description: 'The first day the reset applies to.'
     example: '2025-08-01'
   - name: END_DATE
     type: date
     presence: required
+    description: 'The last day the reset applies to.'
     example: '2025-08-31'
   - name: RESET_DATE
     type: date
     presence: optional
+    description: 'The day the index is observed; may be empty on ENDUR.'
     example: '2025-08-01'
   - name: ACCRUAL_START_DATE
     type: date
     presence: optional
+    description: 'The first day the reset accrues (ENDUR averaging legs, MUREX); empty otherwise.'
     example: '2025-07-28'
   - name: ACCRUAL_END_DATE
     type: date
     presence: optional
+    description: 'The last day the reset accrues (ENDUR averaging legs, MUREX); empty otherwise.'
     example: '2025-09-25'
   - name: RATE
-    type: text
+    type: rate
     presence: optional
+    description: 'The fixing the reset observed (a rate fraction or a price); text on ENDUR; empty until fixed.'
     example: '2217.5435'
   EVENTS[]:
   - name: LEG_ID
     type: id
     presence: optional
+    description: 'The leg the event belongs to (a LEGS[].LEG_ID); empty for a deal-level event (BOOKED, CONFIRMED, MATURITY ...).'
     example: '1'
   - name: EVENT_ID
     type: id
     presence: optional
+    description: 'The event''s number in the booking system; text.'
     example: '9000001'
   - name: EVENT_NUMBER
     type: integer
     presence: optional
+    description: 'The event''s position among the trade''s events (1, 2, ...).'
     example: 1
   - name: EVENT_TYPE
     type: text
     presence: optional
+    description: 'What happened or will: CASH_SETTLEMENT, FEE, RESET, AMENDMENT, NOVATION (ENDUR), BOOKED, CONFIRMED, CLEARED, AMENDED, CASH_SETTLED, NEXT_PAYMENT, PARTIALLY_TERMINATED, MATURITY (CALYPSO, MUREX); may be empty on ENDUR.'
     example: RESET
   - name: PAYMENT_TYPE
     type: text
     presence: optional
+    description: 'What a cash event pays (Interest, Premium, Commodity payment, Fee, Amendment fee, Novation fee, Fixing, Adjustment, Futures settlement, Cash payment, Caplet, ... or the accrual period START..END); empty for a non-cash event.'
     example: Fixing
   - name: EVENT_DATE
     type: date
     presence: optional
+    description: 'The day of the event; for a cash event the day the cash moves.'
     example: '2026-11-30'
   - name: AMOUNT
     type: amount
     presence: optional
+    unit: 'event currency'
+    description: 'The event''s cash amount from the bank''s side, in EVENTS[].CURRENCY: negative is paid, positive received; empty for a non-cash event.'
     example: 14409.01
   - name: CURRENCY
     type: text
     presence: optional
+    description: 'The currency of the event''s amount, ISO 4217.'
     example: USD
     enum:
     - AUD
@@ -615,13 +702,16 @@ nested:
   - name: SEQUENCE_NUMBER
     type: integer
     presence: optional
+    description: 'The event''s order in the booking system (equal to EVENT_NUMBER in the test data).'
     example: 1
   - name: VAULT_LOCATION_ALLOCATION
     type: unknown
     presence: optional
+    description: 'The vault a metal delivery event is allocated to; empty when none (always empty in the test data). Carried through; not read by Drishti.'
   - name: NY_CURVE_FLAG
     type: unknown
     presence: optional
+    description: 'The booking system''s New York close curve flag for the event; empty when not set (always empty in the test data). Carried through; not read by Drishti.'
 links:
 - field: TRADE_ID
   kind: trade
@@ -695,13 +785,6 @@ validation:
   values:
   - AMEND
   - NEW
-- rule: enum
-  field: TRADE_VERSION
-  values:
-  - '1'
-  - '2'
-  - '3'
-  - '4'
 - rule: enum
   field: BUY_SELL_CODE
   values:
@@ -847,6 +930,7 @@ notes:
   field of their own.'
 - 'Several source systems: the connector trade-endur and trade-calypso, trade-murex each serve this kind from a table of their own with the same
   layout; the storage above is the first one''s.'
+- '1.1: TRADE_VERSION is any version number (the enum inferred from a sample is gone); LEGS[].FLOAT_SPREAD, LEGS[].CASH_FLOWS[].RATE, LEGS[].CASH_FLOWS[].FLOAT_SPREAD and LEGS[].CASH_FLOWS[].RESETS[].RATE are numbers (rate); some extracts write them as numeric text.'
 review:
 - 'required inferred from 100% coverage in 2763 documents (765 samples and 1998 test-data documents (data/testdata/trades/endur/snapshot-2026-07-08.jsonl.gz,
   data/testdata/trades/calypso/snapshot-2026-07-08.jsonl.gz, data/testdata/trades/murex/snapshot-2026-07-08.jsonl.gz)): confirm each required
@@ -854,10 +938,6 @@ review:
 - 'source ''murex, calypso'' is the test data''s _meta.source (synthetic): name the production system that delivers it.'
 - 'due time of each business date is not known: state it (for example, by 06:00 New York the next business day).'
 - 'the id pattern ^(MX|CLY)-\d+$ does not match every TRADE_ID in the data (for example 1000001): widen the pattern or state the id rule.'
-- 'LEGS[].FLOAT_SPREAD holds values of several types (number, string): state its one type.'
-- 'LEGS[].CASH_FLOWS[].RATE holds values of several types (number, string): state its one type.'
-- 'LEGS[].CASH_FLOWS[].FLOAT_SPREAD holds values of several types (number, string): state its one type.'
-- 'LEGS[].CASH_FLOWS[].RESETS[].RATE holds values of several types (number, string): state its one type.'
 - 'enum values inferred from the data, not from a glossary: SOURCE_SYSTEM, TRADE_STATUS, TRADE_ACTION, TRADE_VERSION, BUY_SELL_CODE, OPTION_TYPE,
   INTERNAL_EXTERNAL_CODE, TRANSIT, CURRENCY, DELIVERY_VERSUS_PAYMENT, VAULT_LOCATION_ALLOCATION, LEASE_PERPETUITY_FLAG, LEGS[].LEG_TYPE, LEGS[].LEG_ECONOMIC_TYPE,
   LEGS[].CURRENCY, LEGS[].RESET_FIXING_SHIFT, LEGS[].RESET_HOLIDAY_SCHEDULE, LEGS[].RESET_CONVENTION, LEGS[].SETTLEMENT_TYPE, EVENTS[].CURRENCY:
@@ -866,5 +946,3 @@ review:
   rate, EVENTS[].AMOUNT amount: confirm amount, rate or integer.'
 - 'no unit stated for the amounts QUANTITY, PRICE, LEGS[].NOTIONAL, LEGS[].CASH_FLOWS[].NOTIONAL, LEGS[].CASH_FLOWS[].RESETS[].ACCRUAL, EVENTS[].AMOUNT
   (docs/contracts/README.md section 7: USD unless stated): confirm the currency.'
-- 'no description in about.yaml or the Sutras for SOURCE_UPDATE_TIME, INPUT_DATE, TRADE_STATUS, TRADE_ACTION, TRADE_VERSION, TRANSACTION_ID, PACKAGE_ID,
-  QUANTITY, BUY_SELL_CODE, PRODUCT_TYPE, PRODUCT_SUB_TYPE, PRODUCT_GROUP and 76 more: write them in the pack''s config/about.yaml glossary.'

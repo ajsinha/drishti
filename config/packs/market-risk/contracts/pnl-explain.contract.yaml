@@ -74,15 +74,15 @@ fields:
 - name: ATTRIBUTION
   type: record list
   presence: required
-  description: 'Nested: see nested ATTRIBUTION[]'
+  description: 'The day''s P&L by risk factor, one element per factor (Rates delta, FX delta, Credit, Vega, Carry and theta, New trades): FACTOR and PNL in USD, gain positive.'
 - name: EXPLAIN_STEPS
   type: record list
   presence: required
-  description: 'Nested: see nested EXPLAIN_STEPS[]'
+  description: 'The step-by-step explain of the day''s P&L, one element per step in order (Carry, Roll-down, Rates delta, FX delta, Credit, Vol (vega), Theta, New trades, Unexplained): STEP and PNL in USD, gain positive.'
 - name: BOOK
   type: id
   presence: required
-  description: 'Book: the book it refers to'
+  description: 'The book whose P&L is explained: a BOOK_ID of the core pack''s book kind (BOOK-…).'
   example: BOOK-COMM-1
   pattern: ^BOOK-
   link: book
@@ -91,6 +91,7 @@ nested:
   - name: FACTOR
     type: text
     presence: required
+    description: 'The risk factor (or source) the explained P&L is attributed to: rates delta, FX delta, credit, vega, carry and theta, new trades.'
     example: Rates delta
     enum:
     - Carry and theta
@@ -109,6 +110,7 @@ nested:
   - name: STEP
     type: text
     presence: required
+    description: 'The name of one step of the explain waterfall, in order from zero to the actual P&L; the last step is the unexplained rest.'
     example: Carry
   - name: PNL
     type: amount
@@ -159,5 +161,4 @@ review:
 - 'source ''pnl-explain'' is the test data''s _meta.source (synthetic): name the production system that delivers it.'
 - 'due time of each business date is not known: state it (for example, by 06:00 New York the next business day).'
 - 'enum values inferred from the data, not from a glossary: ATTRIBUTION[].FACTOR: confirm they are closed lists.'
-- 'no description in about.yaml or the Sutras for ATTRIBUTION[].FACTOR, EXPLAIN_STEPS[].STEP: write them in the pack''s config/about.yaml glossary.'
 - 'ACTUAL is the day-over-day MtM change: confirm it is computed from trade valuations, not delivered.'

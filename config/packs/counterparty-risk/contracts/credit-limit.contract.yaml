@@ -71,13 +71,13 @@ fields:
 - name: UTILISATION
   type: rate
   presence: required
-  unit: '% of limit'
-  description: 'The share of the limit that is used: used divided by limit. Above 100% is a breach.'
+  unit: fraction of the limit (0.6671 is 66.71%)
+  description: 'The share of the limit that is used: USED divided by LIMIT, as a fraction. Above 1 is a breach.'
   example: 0.6671
 - name: STATUS
   type: text
   presence: required
-  description: Status
+  description: 'The limit''s state from UTILISATION: Within limit below 80% used, Early warning from 80% to 100%, Breach above 100%.'
   example: Within limit
   enum:
   - Early warning
@@ -85,21 +85,23 @@ fields:
 - name: BUCKETS
   type: record list
   presence: required
-  description: 'Nested: see nested BUCKETS[]'
+  description: 'The limit and its use by maturity bucket, one element per bucket (0-1Y, 1-3Y, 3-5Y, 5-10Y, 10Y+): LIMIT, USED and UTILISATION.'
 - name: COUNTERPARTY
   type: id
   presence: required
-  description: 'Counterparty: the counterparty it refers to'
+  description: 'The counterparty the limit is set for: a COUNTERPARTY_ID of the core pack''s counterparty kind (CP-…).'
   example: CP-ALDERSHOT
   pattern: ^CP-
   link: counterparty
 - name: APPROVED_BY
   type: text
   presence: required
+  description: 'The committee or officer that approved the limit.'
   example: Credit Risk Committee
 - name: REVIEW_DUE
   type: date
   presence: required
+  description: 'The date the limit is next due for credit review (YYYY-MM-DD).'
   example: '2027-03-19'
 nested:
   BUCKETS[]:
@@ -129,8 +131,8 @@ nested:
   - name: UTILISATION
     type: rate
     presence: required
-    unit: '% of limit'
-    description: 'The share of the limit that is used: used divided by limit. Above 100% is a breach.'
+    unit: fraction of the limit (0.567 is 56.7%)
+    description: 'The share of the bucket''s limit that is used: USED divided by LIMIT, as a fraction. Above 1 is a breach.'
     example: 0.567
 links:
 - field: COUNTERPARTY
@@ -182,5 +184,4 @@ review:
 - 'source ''limits-system'' is the test data''s _meta.source (synthetic): name the production system that delivers it.'
 - 'due time of each business date is not known: state it (for example, by 06:00 New York the next business day).'
 - 'enum values inferred from the data, not from a glossary: STATUS, BUCKETS[].BUCKET: confirm they are closed lists.'
-- 'no description in about.yaml or the Sutras for APPROVED_BY, REVIEW_DUE: write them in the pack''s config/about.yaml glossary.'
 - 'STATUS (Within limit, ...) follows from UTILISATION: confirm it is computed, not set by the limits system.'

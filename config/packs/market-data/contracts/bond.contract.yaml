@@ -49,70 +49,76 @@ fields:
 - name: ISIN_CODE
   type: text
   presence: required
+  description: 'The bond''s 12-character ISIN (without the BND- prefix of the record id).'
   example: BRVERD054608
 - name: ISSUER_NAME
   type: text
   presence: required
-  description: Issuer
+  description: 'The issuer''s legal name.'
   example: Verdant Agri Holdings
 - name: COUPON
   type: rate
   presence: required
-  description: Coupon
+  unit: 'fraction'
+  description: 'The annual coupon rate, as a fraction (0.0579 is 5.79%).'
   example: 0.0579
 - name: MATURITY
   type: date
   presence: required
-  description: Maturity
+  description: 'The bond''s maturity date.'
   example: '2031-09-15'
 - name: PRICE
   type: amount
   presence: required
-  description: Price
+  unit: 'per 100 face'
+  description: 'The bond''s price per 100 of face value, in the bond''s currency (TERMS.CURRENCY).'
   example: 94.302
 - name: YIELD
   type: rate
   presence: required
-  description: Yield
+  unit: 'fraction'
+  description: 'The yield to maturity, as a fraction (0.071 is 7.1%).'
   example: 0.071
 - name: Z_SPREAD
   type: rate
   presence: required
-  description: Z-spread
+  unit: 'bp'
+  description: 'The zero-volatility spread over the benchmark curve, in basis points.'
   example: 323.0
 - name: MOD_DURATION
   type: amount
   presence: required
-  description: Duration
+  unit: 'years'
+  description: 'The modified duration, in years.'
   example: 4.35
 - name: RATING
   type: text
   presence: required
-  description: Rating
+  description: 'The bond''s credit rating, S&P-style (BB-, A+ …).'
   example: BB-
 - name: TERMS
   type: record
   presence: required
-  description: 'Nested: see nested TERMS'
+  description: 'The bond''s static terms: currency, coupon frequency, day count, issue date, amount issued, seniority, callable, CUSIP.'
 - name: COUPONS
   type: record list
   presence: required
-  description: 'Nested: see nested COUPONS[]'
+  description: 'The bond''s next coupon payments, at most six, earliest first: one object per payment.'
 - name: HISTORY
   type: record list
   presence: required
-  description: 'Nested: see nested HISTORY[]'
+  description: 'The bond''s daily price history, oldest first: one object per business day.'
 - name: ISSUER
   type: id
   presence: required
-  description: 'Reference entity: the issuer it refers to'
+  description: 'The issuer: an ISSUER_ID of the core pack''s issuer kind (ISS-…).'
   example: ISS-VERDANT
   pattern: ^ISS-
   link: issuer
 - name: BENCHMARK_CURVE
   type: id
   presence: required
-  description: 'Benchmark curve: the ir-curve it refers to'
+  description: 'The government curve the bond is spread over: a CURVE_ID of the market-data pack''s ir-curve kind (CRV-<ccy>-GOVT).'
   example: CRV-USD-GOVT
   pattern: ^CRV-
   link: ir-curve
@@ -121,6 +127,7 @@ nested:
   - name: CURRENCY
     type: text
     presence: required
+    description: 'The bond''s currency, ISO 4217.'
     example: USD
     enum:
     - CAD
@@ -132,6 +139,7 @@ nested:
   - name: COUPON_FREQUENCY
     type: text
     presence: required
+    description: 'How often the coupon is paid: Annual or Semi-annual.'
     example: Semi-annual
     enum:
     - Annual
@@ -139,18 +147,23 @@ nested:
   - name: DAY_COUNT
     type: text
     presence: required
+    description: 'The coupon''s day-count convention (e.g. ACT/ACT).'
     example: ACT/ACT
   - name: ISSUE_DATE
     type: date
     presence: required
+    description: 'The bond''s issue date.'
     example: '2021-09-15'
   - name: AMOUNT_ISSUED
     type: amount
     presence: required
+    unit: 'bond currency'
+    description: 'The face amount issued, in the bond''s currency.'
     example: 5100000000
   - name: SENIORITY
     type: text
     presence: required
+    description: 'The bond''s ranking: Sovereign or Senior unsecured.'
     example: Senior unsecured
     enum:
     - Senior unsecured
@@ -158,30 +171,36 @@ nested:
   - name: CALLABLE
     type: boolean
     presence: required
+    description: 'true when the issuer may redeem the bond early.'
     example: false
   - name: CUSIP
     type: text
     presence: optional
+    description: 'The 9-character CUSIP, for US issues; null otherwise.'
     example: 0UST03005
   COUPONS[]:
   - name: DATE
     type: date
     presence: required
-    description: Date
+    description: 'The coupon''s payment date.'
     example: '2027-09-15'
   - name: AMOUNT
     type: amount
     presence: required
-    description: Coupon
+    unit: 'per 100 face'
+    description: 'The coupon paid on that date per 100 of face value (the annual coupon divided by the payments a year).'
     example: 2.895
   HISTORY[]:
   - name: DATE
     type: date
     presence: required
+    description: 'A business day of the price history, oldest first, ending at the record''s date.'
     example: '2026-08-19'
   - name: PRICE
     type: amount
     presence: required
+    unit: 'per 100 face'
+    description: 'The bond''s clean price that day, per 100 of face.'
     example: 95.492
 links:
 - field: ISSUER
@@ -252,5 +271,3 @@ review:
   amount, HISTORY[].PRICE amount: confirm amount, rate or integer.'
 - 'no unit stated for the amounts PRICE, MOD_DURATION, TERMS.AMOUNT_ISSUED, COUPONS[].AMOUNT, HISTORY[].PRICE (docs/contracts/README.md section
   7: USD unless stated): confirm the currency.'
-- 'no description in about.yaml or the Sutras for ISIN_CODE, TERMS.CURRENCY, TERMS.COUPON_FREQUENCY, TERMS.DAY_COUNT, TERMS.ISSUE_DATE, TERMS.AMOUNT_ISSUED,
-  TERMS.SENIORITY, TERMS.CALLABLE, TERMS.CUSIP, HISTORY[].DATE, HISTORY[].PRICE: write them in the pack''s config/about.yaml glossary.'

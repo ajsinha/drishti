@@ -49,27 +49,29 @@ fields:
 - name: CURRENCY
   type: text
   presence: required
-  description: Currency
+  description: 'The currency of the caps and floors the surface prices, ISO 4217.'
   example: AUD
 - name: ATM_5Y
   type: amount
   presence: required
-  description: 5Y ATM
+  unit: 'bp (normal vol)'
+  description: 'The 5-year at-the-money cap volatility: a normal volatility in basis points a year.'
   example: 124.3
 - name: GRID
   type: record list
   presence: required
-  description: 'Nested: see nested GRID[]'
+  description: 'The surface: one object per cap maturity, shortest first, with the at-the-money and fixed-strike volatilities.'
 - name: MODEL
   type: text
   presence: required
+  description: 'The volatility model and quoting of the surface (e.g. Normal, stripped caplets).'
   example: Normal, stripped caplets
 nested:
   GRID[]:
   - name: MATURITY
     type: text
     presence: required
-    description: Maturity
+    description: 'The cap maturity of the row (1Y, 2Y … 10Y).'
     example: 1Y
     enum:
     - 10Y
@@ -81,27 +83,32 @@ nested:
   - name: ATM
     type: amount
     presence: required
-    description: ATM
+    unit: 'bp (normal vol)'
+    description: 'The at-the-money cap volatility for MATURITY: a normal volatility in basis points a year.'
     example: 130.38
   - name: K_2
     type: amount
     presence: required
-    description: 2%
+    unit: 'bp (normal vol)'
+    description: 'The cap volatility at a 2% strike for MATURITY: a normal volatility in basis points a year.'
     example: 140.42
   - name: K_3
     type: amount
     presence: required
-    description: 3%
+    unit: 'bp (normal vol)'
+    description: 'The cap volatility at a 3% strike for MATURITY: a normal volatility in basis points a year.'
     example: 135.86
   - name: K_4
     type: amount
     presence: required
-    description: 4%
+    unit: 'bp (normal vol)'
+    description: 'The cap volatility at a 4% strike for MATURITY: a normal volatility in basis points a year.'
     example: 131.29
   - name: K_5
     type: amount
     presence: required
-    description: 5%
+    unit: 'bp (normal vol)'
+    description: 'The cap volatility at a 5% strike for MATURITY: a normal volatility in basis points a year.'
     example: 134.03
 links: []
 validation:
@@ -140,4 +147,3 @@ review:
 - 'enum values inferred from the data, not from a glossary: GRID[].MATURITY: confirm they are closed lists.'
 - 'no unit stated for the amounts ATM_5Y, GRID[].ATM, GRID[].K_2, GRID[].K_3, GRID[].K_4, GRID[].K_5 (docs/contracts/README.md section 7: USD
   unless stated): confirm the currency.'
-- 'no description in about.yaml or the Sutras for MODEL: write them in the pack''s config/about.yaml glossary.'

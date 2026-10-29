@@ -49,35 +49,38 @@ fields:
 - name: NAME
   type: text
   presence: required
-  description: Name
+  description: 'The index''s name (US CPI-U NSA, Euro HICP ex-tobacco …).'
   example: Euro HICP ex-tobacco
 - name: LATEST
   type: amount
   presence: required
-  description: Latest
+  unit: 'index points'
+  description: 'The latest published index level (FIXINGS[0].VALUE), in index points.'
   example: 128.4
 - name: YOY
   type: amount
   presence: required
-  description: YoY
+  unit: 'fraction'
+  description: 'The latest year-on-year change of the index, as a fraction (0.021 is 2.1%).'
   example: 0.021
 - name: LAG
   type: text
   presence: required
-  description: Publication lag
+  description: 'The publication lag a contract applies when it references the index (3 months, 2 months).'
   example: 3 months
 - name: CURRENCY
   type: text
   presence: required
+  description: 'The currency of the economy the index measures, ISO 4217.'
   example: EUR
 - name: FIXINGS
   type: record list
   presence: required
-  description: 'Nested: see nested FIXINGS[]'
+  description: 'The monthly index levels, latest month first: one object per month.'
 - name: INFLATION_CURVE
   type: id
   presence: required
-  description: 'Inflation curve: the inflation-curve it refers to'
+  description: 'Its breakeven curve: a CURVE_ID of the market-data pack''s inflation-curve kind (INFC-…).'
   example: INFC-HICPX
   pattern: ^INFC-
   link: inflation-curve
@@ -86,17 +89,19 @@ nested:
   - name: MONTH
     type: text
     presence: required
-    description: Month
+    description: 'The reference month, YYYY-MM.'
     example: 2026-08
   - name: VALUE
     type: amount
     presence: required
-    description: Index
+    unit: 'index points'
+    description: 'The index level for MONTH, in index points.'
     example: 128.4
   - name: YOY
     type: amount
     presence: required
-    description: YoY
+    unit: 'fraction'
+    description: 'The year-on-year change for MONTH, as a fraction.'
     example: 0.021
 links:
 - field: INFLATION_CURVE
@@ -134,4 +139,3 @@ review:
 - 'number types decided by the field''s name: FIXINGS[].VALUE amount: confirm amount, rate or integer.'
 - 'no unit stated for the amounts LATEST, YOY, FIXINGS[].VALUE, FIXINGS[].YOY (docs/contracts/README.md section 7: USD unless stated): confirm
   the currency.'
-- 'no description in about.yaml or the Sutras for CURRENCY: write them in the pack''s config/about.yaml glossary.'

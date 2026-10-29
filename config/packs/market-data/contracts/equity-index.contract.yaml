@@ -49,7 +49,7 @@ fields:
 - name: NAME
   type: text
   presence: required
-  description: Name
+  description: 'The index''s name (Nasdaq-100, S&P 500 …).'
   example: Nasdaq-100
   enum:
   - EURO STOXX 50
@@ -60,22 +60,24 @@ fields:
 - name: LEVEL
   type: amount
   presence: required
-  description: Level
+  unit: 'index points'
+  description: 'The index level (the last HISTORY close), in index points.'
   example: 24530.0
 - name: CHANGE_1D
   type: amount
   presence: required
-  description: 1D
+  unit: 'fraction'
+  description: 'The day''s move of LEVEL, as a fraction (0.00986 is +0.986%).'
   example: 0.00986
 - name: CONSTITUENT_COUNT
   type: integer
   presence: required
-  description: Constituents
+  description: 'How many members the index has officially (not the length of CONSTITUENTS, which lists only the demo''s equities).'
   example: 101
 - name: CURRENCY
   type: text
   presence: required
-  description: Currency
+  description: 'The index currency, ISO 4217.'
   example: USD
   enum:
   - EUR
@@ -85,22 +87,22 @@ fields:
 - name: CONSTITUENTS
   type: record list
   presence: required
-  description: 'Nested: see nested CONSTITUENTS[]'
+  description: 'The demo equities that are members of the index: one object per equity.'
 - name: HISTORY
   type: record list
   presence: required
-  description: 'Nested: see nested HISTORY[]'
+  description: 'The index''s daily closes, oldest first: one object per business day.'
 - name: EQUITY_VOL_SURFACE
   type: id
   presence: required
-  description: 'Equity vol surface: the equity-vol-surface it refers to'
+  description: 'Its volatility surface: a SURFACE_ID of the market-data pack''s equity-vol-surface kind (EQV-…).'
   example: EQV-NDX
   pattern: ^EQV-
   link: equity-vol-surface
 - name: DIVIDEND_CURVE
   type: id
   presence: required
-  description: 'Dividend curve: the dividend-curve it refers to'
+  description: 'Its dividend curve: a CURVE_ID of the market-data pack''s dividend-curve kind (DIV-…).'
   example: DIV-NDX
   pattern: ^DIV-
   link: dividend-curve
@@ -109,23 +111,27 @@ nested:
   - name: EQUITY
     type: id
     presence: required
-    description: Equity
+    description: 'The member: a TICKER of the market-data pack''s equity kind (EQ-…).'
     example: EQ-NVTK
     pattern: ^EQ-
     link: equity
   - name: WEIGHT
     type: rate
     presence: required
-    description: Weight
+    unit: 'fraction'
+    description: 'The member''s weight in the index, as a fraction (0.02 is 2%).'
     example: 0.02
   HISTORY[]:
   - name: DATE
     type: date
     presence: required
+    description: 'A business day of the close history, oldest first, ending at the record''s date.'
     example: '2026-08-19'
   - name: CLOSE
     type: amount
     presence: required
+    unit: 'index points'
+    description: 'The index''s closing level that day.'
     example: 25294.78
 links:
 - field: EQUITY_VOL_SURFACE
@@ -193,4 +199,3 @@ review:
 - 'enum values inferred from the data, not from a glossary: NAME, CURRENCY: confirm they are closed lists.'
 - 'number types decided by the field''s name: CONSTITUENTS[].WEIGHT rate: confirm amount, rate or integer.'
 - 'no unit stated for the amounts LEVEL, CHANGE_1D, HISTORY[].CLOSE (docs/contracts/README.md section 7: USD unless stated): confirm the currency.'
-- 'no description in about.yaml or the Sutras for HISTORY[].DATE, HISTORY[].CLOSE: write them in the pack''s config/about.yaml glossary.'

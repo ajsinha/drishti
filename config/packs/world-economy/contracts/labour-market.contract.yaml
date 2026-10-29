@@ -54,6 +54,7 @@ fields:
 - name: YEAR
   type: text
   presence: required
+  description: 'The year of the figures.'
   example: '2025'
 - name: UNEMPLOYMENT
   type: amount
@@ -88,32 +89,34 @@ fields:
 - name: VULNERABLE
   type: amount
   presence: required
+  description: 'Vulnerable employment (own-account and contributing family workers) as a share of total employment (World Bank).'
+  unit: 'percent, in points'
   example: 81.7702
 - name: UNEMPLOYMENT_PATH
   type: record list
   presence: required
-  description: 'Nested: see nested UNEMPLOYMENT_PATH[]'
+  description: 'The unemployment rate by year, one element per year: YEAR and RATE in % of the labour force (World Bank, ILO modelled estimate).'
 - name: BY_SECTOR
   type: record list
   presence: required
-  description: 'Nested: see nested BY_SECTOR[]'
+  description: 'Jobs and output by sector, one element per sector (Agriculture, Industry, Services): EMPLOYMENT_SHARE in % of employment and VALUE_ADDED_SHARE in % of GDP.'
 - name: ECONOMY
   type: id
   presence: required
-  description: 'Economy: the economy it refers to'
+  description: 'The economy: an id of the economy kind (ECON-<ISO3>).'
   example: ECON-AFG
   pattern: ^ECON-
   link: economy
 - name: PROVENANCE
   type: record
   presence: required
-  description: 'Nested: see nested PROVENANCE'
+  description: 'Where the record comes from, one object: SOURCE (World Bank WDI), DATASET, RETRIEVED_AT, LICENCE, ATTRIBUTION and URL.'
 nested:
   UNEMPLOYMENT_PATH[]:
   - name: YEAR
     type: text
     presence: required
-    description: The calendar year.
+    description: The calendar year of the value, as four-digit text ("2015").
     example: '2015'
   - name: RATE
     type: rate
@@ -217,4 +220,3 @@ review:
 - 'a snapshot refreshed when tools/publicdata/world_economy.py runs: confirm the refresh cadence.'
 - 'enum values inferred from the data, not from a glossary: BY_SECTOR[].SECTOR: confirm they are closed lists.'
 - 'no unit stated for the amounts VULNERABLE (docs/contracts/README.md section 7: USD unless stated): confirm the currency.'
-- 'no description in about.yaml or the Sutras for YEAR, VULNERABLE: write them in the pack''s config/about.yaml glossary.'

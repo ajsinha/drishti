@@ -75,10 +75,12 @@ fields:
 - name: RANK
   type: integer
   presence: required
+  description: 'The party''s rank by seats won in the chamber (1 = most).'
   example: 1
 - name: TOTAL_SEATS
   type: amount
   presence: required
+  description: 'The total seats in the chamber.'
   example: 128
 - name: ELECTION_DATE
   type: text
@@ -88,25 +90,25 @@ fields:
 - name: RESULTS
   type: record list
   presence: required
-  description: 'Nested: see nested RESULTS[]'
+  description: 'The whole election''s seats by party, one element per party: PARTY, SEATS and SHARE (% of seats).'
 - name: ELECTION
   type: id
   presence: required
-  description: 'Election: the election it refers to'
+  description: 'The election the party won seats at: an id of the election kind (ELEC-<ISO3>-LOW).'
   example: ELEC-ARG-LOW
   pattern: ^ELEC-
   link: election
 - name: JURISDICTION
   type: id
   presence: required
-  description: 'Country: the jurisdiction it refers to'
+  description: 'The party''s country: an id of the jurisdiction kind (JUR-<ISO3>).'
   example: JUR-ARG
   pattern: ^JUR-
   link: jurisdiction
 - name: PROVENANCE
   type: record
   presence: required
-  description: 'Nested: see nested PROVENANCE'
+  description: 'Where the record comes from, one object: SOURCE (CIA World Factbook), DATASET, RETRIEVED_AT, LICENCE, ATTRIBUTION and URL.'
 nested:
   RESULTS[]:
   - name: PARTY
@@ -122,6 +124,8 @@ nested:
   - name: SHARE
     type: rate
     presence: required
+    description: 'The party''s share of the chamber''s seats.'
+    unit: 'percent, in points'
     example: 37.5
   PROVENANCE:
   - name: SOURCE
@@ -195,4 +199,3 @@ review:
 - 'a snapshot refreshed when tools/publicdata/world_economy.py runs: confirm the refresh cadence.'
 - 'number types decided by the field''s name: TOTAL_SEATS amount, RESULTS[].SHARE rate: confirm amount, rate or integer.'
 - 'no unit stated for the amounts TOTAL_SEATS (docs/contracts/README.md section 7: USD unless stated): confirm the currency.'
-- 'no description in about.yaml or the Sutras for RANK, TOTAL_SEATS, RESULTS[].SHARE: write them in the pack''s config/about.yaml glossary.'

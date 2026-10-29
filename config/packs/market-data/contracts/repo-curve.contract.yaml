@@ -49,7 +49,7 @@ fields:
 - name: CURRENCY
   type: text
   presence: required
-  description: Currency
+  description: 'The currency of the repo rates, ISO 4217.'
   example: AUD
   enum:
   - AUD
@@ -62,28 +62,29 @@ fields:
 - name: COLLATERAL
   type: text
   presence: required
-  description: Collateral
+  description: 'The collateral the rates are for (General collateral (government)).'
   example: General collateral (government)
 - name: OVERNIGHT
   type: amount
   presence: required
-  description: O/N
+  unit: 'fraction'
+  description: 'The overnight repo rate, as a fraction (0.0352 is 3.52%).'
   example: 0.0352
 - name: AS_OF
   type: date
   presence: required
-  description: As of
+  description: 'The date the curve was built for (the business date).'
   example: '2026-09-30'
 - name: POINTS
   type: record list
   presence: required
-  description: 'Nested: see nested POINTS[]'
+  description: 'The repo term structure: one object per term, shortest first (ON to 1Y).'
 nested:
   POINTS[]:
   - name: TENOR
     type: text
     presence: required
-    description: Term
+    description: 'The repo term (ON, 1W, 1M, 3M, 6M, 1Y).'
     example: 'ON'
     enum:
     - 1M
@@ -95,7 +96,8 @@ nested:
   - name: RATE
     type: rate
     presence: required
-    description: Rate (%)
+    unit: 'percent'
+    description: 'The repo rate for TENOR, in percent (3.5221 is 3.5221%; note: OVERNIGHT is a fraction).'
     example: 3.5221
 links: []
 validation:

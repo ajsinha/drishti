@@ -72,18 +72,18 @@ fields:
 - name: RISK_CLASSES
   type: record list
   presence: required
-  description: 'Nested: see nested RISK_CLASSES[]'
+  description: 'The initial margin by SIMM risk class, one element per class (Interest rate, Credit qualifying, Equity, Commodity, FX): RISK_CLASS and IM in USD.'
 - name: NETTING_SET
   type: id
   presence: required
-  description: 'Netting set: the netting-set it refers to'
+  description: 'The netting set the initial margin is exchanged for: a NETTING_SET_ID of the netting-set kind (NS-<counterparty>-<legal entity>).'
   example: NS-ALDERSHOT-FRA
   pattern: ^NS-
   link: netting-set
 - name: COUNTERPARTY
   type: id
   presence: required
-  description: 'Counterparty: the counterparty it refers to'
+  description: 'The counterparty the initial margin is calculated with: a COUNTERPARTY_ID of the core pack''s counterparty kind (CP-…).'
   example: CP-ALDERSHOT
   pattern: ^CP-
   link: counterparty
@@ -92,6 +92,7 @@ nested:
   - name: RISK_CLASS
     type: text
     presence: required
+    description: 'The ISDA SIMM risk class: Interest rate, Credit qualifying, Credit non-qualifying, Equity, Commodity or FX.'
     example: Interest rate
     enum:
     - Commodity
@@ -152,4 +153,3 @@ review:
 - 'source ''margin-engine'' is the test data''s _meta.source (synthetic): name the production system that delivers it.'
 - 'due time of each business date is not known: state it (for example, by 06:00 New York the next business day).'
 - 'enum values inferred from the data, not from a glossary: RISK_CLASSES[].RISK_CLASS: confirm they are closed lists.'
-- 'no description in about.yaml or the Sutras for RISK_CLASSES[].RISK_CLASS: write them in the pack''s config/about.yaml glossary.'

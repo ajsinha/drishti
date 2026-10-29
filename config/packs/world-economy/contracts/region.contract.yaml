@@ -72,6 +72,7 @@ fields:
 - name: YEAR
   type: text
   presence: required
+  description: 'The year of the figures.'
   example: '2024'
 - name: INTERNET
   type: amount
@@ -88,34 +89,36 @@ fields:
 - name: URBAN
   type: amount
   presence: required
+  description: 'Urban population as a share of the total (World Bank).'
+  unit: 'percent, in points'
   example: 64.771
 - name: LIFE_TREND
   type: record list
   presence: required
-  description: 'Nested: see nested LIFE_TREND[]'
+  description: 'Life expectancy at birth across the region by year, one element per year: YEAR and VALUE in years (World Bank).'
 - name: INTERNET_TREND
   type: record list
   presence: required
-  description: 'Nested: see nested INTERNET_TREND[]'
+  description: 'Internet use across the region by year, one element per year: YEAR and VALUE in % of population (World Bank).'
 - name: GOVERNMENT_TYPES
   type: record list
   presence: required
-  description: 'Nested: see nested GOVERNMENT_TYPES[]'
+  description: 'How many member countries have each form of government, one element per type: TYPE (World Factbook wording) and COUNT.'
 - name: MEMBER_STATES
   type: id list
   presence: required
-  description: 'Countries: the jurisdiction it refers to'
+  description: 'The region''s countries: ids of the jurisdiction kind (JUR-<ISO3>).'
   link: jurisdiction
 - name: PROVENANCE
   type: record
   presence: required
-  description: 'Nested: see nested PROVENANCE'
+  description: 'Where the record comes from, one object: SOURCE (World Bank WDI, CIA World Factbook), DATASET, RETRIEVED_AT, LICENCE, ATTRIBUTION and URL.'
 nested:
   LIFE_TREND[]:
   - name: YEAR
     type: text
     presence: required
-    description: The calendar year.
+    description: The calendar year of the value, as four-digit text ("2015").
     example: '2015'
   - name: VALUE
     type: amount
@@ -127,7 +130,7 @@ nested:
   - name: YEAR
     type: text
     presence: required
-    description: The calendar year.
+    description: The calendar year of the value, as four-digit text ("2015").
     example: '2015'
   - name: VALUE
     type: amount
@@ -217,4 +220,3 @@ review:
 - 'key REGION_ID is the field holding the sample catalogue''s id (REGN-EAS): confirm it is the business key.'
 - 'a snapshot refreshed when tools/publicdata/world_economy.py runs: confirm the refresh cadence.'
 - 'no unit stated for the amounts URBAN (docs/contracts/README.md section 7: USD unless stated): confirm the currency.'
-- 'no description in about.yaml or the Sutras for YEAR, URBAN: write them in the pack''s config/about.yaml glossary.'

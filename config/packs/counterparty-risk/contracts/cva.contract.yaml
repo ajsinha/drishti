@@ -79,22 +79,22 @@ fields:
 - name: COMPONENTS
   type: record list
   presence: required
-  description: 'Nested: see nested COMPONENTS[]'
+  description: 'The valuation adjustments that make up the total, one element per adjustment (CVA, DVA, FVA, KVA): NAME and AMOUNT in USD, a cost negative.'
 - name: SENSITIVITIES
   type: record list
   presence: required
-  description: 'Nested: see nested SENSITIVITIES[]'
+  description: 'The adjustment''s sensitivities, one element per risk factor (counterparty spread, USD and EUR rates, FX vol, recovery): FACTOR, BUMP (+1 bp, +1 vol, +1%) and DELTA in USD.'
 - name: NETTING_SET
   type: id
   presence: required
-  description: 'Netting set: the netting-set it refers to'
+  description: 'The netting set the adjustment is computed for: a NETTING_SET_ID of the netting-set kind (NS-<counterparty>-<legal entity>).'
   example: NS-ALDERSHOT-FRA
   pattern: ^NS-
   link: netting-set
 - name: CREDIT_CURVE
   type: id
   presence: optional
-  description: 'Credit curve: the credit-curve it refers to'
+  description: 'The counterparty''s credit curve the default probabilities come from: a CURVE_ID of the market-data pack''s credit-curve kind (CDS-…).'
   example: CDS-CASCADIA
   pattern: ^CDS-
   link: credit-curve
@@ -103,6 +103,7 @@ nested:
   - name: NAME
     type: text
     presence: required
+    description: 'The valuation adjustment: CVA, DVA, FVA or KVA.'
     example: CVA
     enum:
     - CVA
@@ -112,6 +113,8 @@ nested:
   - name: AMOUNT
     type: amount
     presence: required
+    unit: 'USD'
+    description: 'The adjustment''s amount, from the bank''s side: a cost is negative.'
     example: -7
   SENSITIVITIES[]:
   - name: FACTOR
@@ -204,4 +207,3 @@ review:
   closed lists.'
 - 'number types decided by the field''s name: COMPONENTS[].AMOUNT amount: confirm amount, rate or integer.'
 - 'no unit stated for the amounts COMPONENTS[].AMOUNT (docs/contracts/README.md section 7: USD unless stated): confirm the currency.'
-- 'no description in about.yaml or the Sutras for COMPONENTS[].NAME, COMPONENTS[].AMOUNT: write them in the pack''s config/about.yaml glossary.'

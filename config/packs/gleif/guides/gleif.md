@@ -124,7 +124,7 @@ Every kind of the pack has a data contract: a YAML file beside the pack (`config
 |---|---|---|---|---|---|
 | `LEI` | `lei-entity` | fundamental | `LEI` | One row per lei legal entity, keyed by LEI. | 60 |
 | `LEIG` | `lei-group` | computed | `GROUP_ID` | One record per GROUP_ID of the lei-entity records, computed when asked. | 46 |
-| `LEIR` | `lei-relationship` | fundamental | `RELATIONSHIP_ID` | One row per lei parent relationship, keyed by RELATIONSHIP_ID. | 16 |
+| `LEIR` | `lei-relationship` | fundamental | `RELATIONSHIP_ID` | One row per lei parent relationship, keyed by RELATIONSHIP_ID. | 17 |
 | `LEIC` | `lei-country` | computed | `COUNTRY` | One record per COUNTRY of the lei-entity records, computed when asked. | 28 |
 | `LEIM` | `lei-mapping` | fundamental | `IDENTIFIER` | One row per isin or bic to lei, keyed by IDENTIFIER. | 8 |
 
@@ -140,93 +140,95 @@ A legal entity from its LEI record: key facts, addresses, registration and renew
 
 | Column | Type | Key | Presence | Unit | Example or values | Link | Meaning |
 |---|---|---|---|---|---|---|---|
-| `LEI` | id | key | required |  | `HWUPKR0MPOU8FGXBT394` (pattern `^[0-9A-Z]{18}[0-9]{2}$`) |  | LEI |
-| `NAME` | text |  | required |  | `Apple Inc.` |  | — |
-| `OTHER_NAMES` | record list |  | optional |  |  |  | Nested: see nested OTHER_NAMES[] |
-| `LEGAL_FORM` | text |  | required |  | `For-Profit Corporation General Stock` |  | Legal form |
-| `JURISDICTION` | id |  | optional |  | `US-CA` | `jurisdiction` | Country: the jurisdiction it refers to |
-| `LEI_COUNTRY` | id |  | required |  | `US` | `lei-country` | Country (LEI): the lei-country it refers to |
-| `COUNTRY_NAME` | text |  | required |  | `United States of America (the)` |  | — |
-| `LEGAL_ADDRESS` | text |  | required |  | `C/O C T Corporation System, 330 N. Brand Blvd, Suite 700, 9…` |  | Legal address |
-| `LEGAL_CITY` | text |  | required |  | `Glendale` |  | — |
-| `HQ_ADDRESS` | text |  | optional |  | `One Apple Park Way, 95014 Cupertino, US-CA, US` |  | — |
-| `REGISTERED_AS` | text |  | optional |  | `806592` |  | — |
-| `ENTITY_STATUS` | text |  | required |  | `ACTIVE` |  | Entity |
-| `CREATED` | date |  | optional |  | `1977-01-03` |  | Entity created |
-| `REGISTRATION_STATUS` | text |  | required |  | `ISSUED` |  | — |
-| `INITIAL_REGISTRATION` | date |  | required |  | `2012-06-06` |  | First registered |
-| `LAST_UPDATE` | date |  | required |  | `2026-03-03` |  | Last updated |
-| `NEXT_RENEWAL` | date |  | required |  | `2027-03-08` |  | Next renewal |
-| `RENEWAL_LATE` | boolean |  | required |  | `False` |  | — |
-| `MANAGING_LOU` | text |  | required |  | `Bloomberg Finance L.P.` |  | Managing LOU |
-| `BICS` | text |  | optional |  | `APLEUS66XXX` |  | — |
-| `BIC_COUNT` | integer |  | optional |  | `1` |  | — |
-| `ISIN_COUNT` | integer |  | optional |  | `949` |  | — |
-| `LEI_GROUP` | id |  | required |  | `HWUPKR0MPOU8FGXBT394` | `lei-group` | Ownership group: the lei-group it refers to |
-| `PARENT_EXCEPTIONS` | record list |  | optional |  |  |  | Nested: see nested PARENT_EXCEPTIONS[] |
-| `CHILDREN` | record list |  | optional |  |  |  | Nested: see nested CHILDREN[] |
-| `CHILD_COUNT` | integer |  | optional |  | `8` |  | — |
-| `DIRECT_CHILDREN_GLEIF` | integer |  | optional |  | `8` |  | — |
-| `ULTIMATE_CHILDREN_GLEIF` | integer |  | optional |  | `20` |  | — |
+| `LEI` | id | key | required |  | `HWUPKR0MPOU8FGXBT394` (pattern `^[0-9A-Z]{18}[0-9]{2}$`) |  | The entity's Legal Entity Identifier (ISO 17442): 20 characters, letters and digits; the record's key. |
+| `NAME` | text |  | required |  | `Apple Inc.` |  | The entity's legal name (GLEIF entity.legalName). |
+| `OTHER_NAMES` | record list |  | optional |  |  |  | The entity's other names in GLEIF (otherNames, then transliteratedOtherNames), at most two, one element each: NAME and TYPE (previous legal name, trading or operating name, …). |
+| `LEGAL_FORM` | text |  | required |  | `For-Profit Corporation General Stock` |  | The entity's legal form, as the ISO 20275 entity legal form code's name (GLEIF legalForm), or the code itself (9999 and the like) when it has no name. |
+| `JURISDICTION` | id |  | optional |  | `US-CA` | `jurisdiction` | The jurisdiction the entity is registered in, as ISO 3166-2 (US-DE, CA-QC) when it is a subdivision; absent when it is the whole country (LEI_COUNTRY). |
+| `LEI_COUNTRY` | id |  | required |  | `US` | `lei-country` | The country of the entity's legal address, ISO 3166-1 alpha-2 (US, GB …): a country of the computed lei-country kind. |
+| `COUNTRY_NAME` | text |  | required |  | `United States of America (the)` |  | The name of the legal address's country (LEI_COUNTRY), from the ISO 3166 list. |
+| `LEGAL_ADDRESS` | text |  | required |  | `C/O C T Corporation System, 330 N. Brand Blvd, Suite 700, 9…` |  | The entity's legal address on one line: street lines, postal code, city, region and country, as GLEIF gives them. |
+| `LEGAL_CITY` | text |  | required |  | `Glendale` |  | The city of the legal address. |
+| `HQ_ADDRESS` | text |  | optional |  | `One Apple Park Way, 95014 Cupertino, US-CA, US` |  | The headquarters address, one line; absent when it is the legal address. |
+| `REGISTERED_AS` | text |  | optional |  | `806592` |  | The entity's id in its registration authority's register (GLEIF entity.registeredAs). |
+| `ENTITY_STATUS` | text |  | required |  | `ACTIVE` |  | Whether the entity itself still exists: ACTIVE or INACTIVE (GLEIF entity status), or NULL as GLEIF gives it. |
+| `CREATED` | date |  | optional |  | `1977-01-03` |  | The date the legal entity was established (GLEIF entityCreationDate), YYYY-MM-DD. |
+| `REGISTRATION_STATUS` | text |  | required |  | `ISSUED` |  | The LEI's registration status in GLEIF (ISSUED, LAPSED, RETIRED, MERGED, PENDING_TRANSFER ...). |
+| `INITIAL_REGISTRATION` | date |  | required |  | `2012-06-06` |  | The date the LEI was first issued (GLEIF initialRegistrationDate), YYYY-MM-DD. |
+| `LAST_UPDATE` | date |  | required |  | `2026-03-03` |  | The date GLEIF's record was last changed (lastUpdateDate), YYYY-MM-DD. |
+| `NEXT_RENEWAL` | date |  | required |  | `2027-03-08` |  | The date the LEI must be renewed by (nextRenewalDate), YYYY-MM-DD; a date before the retrieval date means the LEI has lapsed. |
+| `RENEWAL_LATE` | boolean |  | required |  | `False` |  | true when the registration has lapsed or its next renewal date has passed (the record was not renewed in time). |
+| `MANAGING_LOU` | text |  | required |  | `Bloomberg Finance L.P.` |  | The Local Operating Unit that manages the LEI (GLEIF managingLou), by name when GLEIF's list names it, else its LEI. |
+| `BICS` | text |  | optional |  | `APLEUS66XXX` |  | The entity's BIC codes from GLEIF's BIC-to-LEI mapping file, comma separated. |
+| `BIC_COUNT` | integer |  | optional |  | `1` |  | How many BICs map to the entity; absent when none. |
+| `ISIN_COUNT` | integer |  | optional |  | `949` |  | How many ISINs GLEIF's ISIN-to-LEI mapping gives the entity; absent when none. |
+| `LEI_GROUP` | id |  | required |  | `HWUPKR0MPOU8FGXBT394` | `lei-group` | The entity's ownership group: the LEI of its ultimate parent (the entity's own LEI when it has none), the id of the computed lei-group kind. |
+| `PARENT_EXCEPTIONS` | record list |  | optional |  |  |  | Why GLEIF has no parent for the entity (its reporting exceptions), one element per level: LEVEL (Direct parent, Ultimate parent), REASON (GLEIF's code, NATURAL_PERSONS, NON_PUBLIC …) and MEANING. |
+| `CHILDREN` | record list |  | optional |  |  |  | The entity's direct children that are in the pack, one element each: LEI, NAME, COUNTRY (ISO 3166-1 alpha-2) and KIDS (how many children it has in turn). |
+| `CHILD_COUNT` | integer |  | optional |  | `8` |  | How many of the entity's direct children are in the pack (CHILDREN); absent when none. |
+| `DIRECT_CHILDREN_GLEIF` | integer |  | optional |  | `8` |  | How many entities report this one as their direct parent in GLEIF level 2 data (all of GLEIF, not only the pack). |
+| `ULTIMATE_CHILDREN_GLEIF` | integer |  | optional |  | `20` |  | How many entities report this one as their ultimate parent in GLEIF level 2 data. |
 | `GLEIF_GROUP_SIZE` | integer |  | optional |  | `173` |  | On an ultimate parent: its ownership group's size in GLEIF's golden copy, itself included (an input from GLEIF; the computed LEIG reads it as MEMBERS_IN_GLEIF) |
-| `MAPPING_IDS` | id list |  | optional |  |  | `lei-mapping` | Identifier: the lei-mapping it refers to |
+| `MAPPING_IDS` | id list |  | optional |  |  | `lei-mapping` | The entity's identifiers in GLEIF's mapping files, kept for the seed entities and the groups' ultimate parents: its BICs, MICs and a sample of its ISINs, each an IDENTIFIER of the lei-mapping kind. |
 | `SEGMENT` | text |  | optional |  | `US equities` |  | Why in this pack |
-| `US_COMPANY` | id |  | optional |  | `AAPL` | `us-company` | Ticker |
-| `US_COMPANY_NAME` | text |  | optional |  | `Apple Inc.` |  | — |
-| `RENEWAL` | text |  | optional |  | `Late: renewal was due 2024-10-07 (lapsed)` |  | — |
-| `DIRECT_PARENT` | text |  | optional |  | `549300COKYB5EGSU1838` |  | — |
-| `ULTIMATE_PARENT` | text |  | optional |  | `549300B2Q47IR0CR5B54` |  | — |
-| `PARENTS` | record list |  | optional |  |  |  | Nested: see nested PARENTS[] |
-| `OPENCORPORATES` | text |  | optional |  | `nl/34153487` |  | — |
-| `HQ_COUNTRY` | text |  | optional |  | `US` |  | — |
-| `MIC` | text |  | optional |  | `MAQI` |  | MIC |
-| `CATEGORY` | text |  | optional |  | `Branch`, `Fund` |  | — |
-| `SUCCESSOR` | text |  | optional |  | `724500ZSA7ZOZHUXBS53` |  | — |
-| `PROVENANCE` | record |  | required |  |  |  | Nested: see nested PROVENANCE |
+| `US_COMPANY` | id |  | optional |  | `AAPL` | `us-company` | The us-equities company this entity is: a TICKER of the us-equities pack's us-company kind; absent when it is none. |
+| `US_COMPANY_NAME` | text |  | optional |  | `Apple Inc.` |  | The name of the us-equities company with this LEI (US_COMPANY its ticker); empty when none. |
+| `RENEWAL` | text |  | optional |  | `Late: renewal was due 2024-10-07 (lapsed)` |  | A note on the renewal, only when it is late or due within 30 days (for example "Late: renewal was due 2024-10-07 (lapsed)"). |
+| `DIRECT_PARENT` | text |  | optional |  | `549300COKYB5EGSU1838` |  | The LEI of the entity's direct accounting-consolidation parent, when that parent is in the pack. |
+| `ULTIMATE_PARENT` | text |  | optional |  | `549300B2Q47IR0CR5B54` |  | The LEI of the entity's ultimate parent, when it is in the pack and not the direct parent. |
+| `PARENTS` | record list |  | optional |  |  |  | The entity's chain of parents from the direct parent up to the ultimate parent, one element per level: LEVEL (1 is the direct parent), LEI, NAME and RELATIONSHIP. |
+| `OPENCORPORATES` | text |  | optional |  | `nl/34153487` |  | The entity's OpenCorporates id (<jurisdiction>/<company number>), from GLEIF's mapping. |
+| `HQ_COUNTRY` | text |  | optional |  | `US` |  | The headquarters' country (ISO 3166 alpha-2), only when it differs from the legal address's. |
+| `MIC` | text |  | optional |  | `MAQI` |  | The market identifier codes (ISO 10383) GLEIF maps to the entity, comma-separated ("AACA, UKCA"). |
+| `CATEGORY` | text |  | optional |  | `Branch`, `Fund`, `Government entity` |  | The GLEIF entity category when not GENERAL: Fund, Branch, Sole proprietor ... |
+| `SUCCESSOR` | text |  | optional |  | `724500ZSA7ZOZHUXBS53` |  | The LEI of the entity that succeeded this one (after a merger or transfer). |
+| `PROVENANCE` | record |  | required |  |  |  | Where the record comes from, one object: SOURCE (GLEIF golden copy and mapping files), RETRIEVED_AT (YYYY-MM-DD), LICENCE (CC0) and URL (the record on search.gleif.org). |
 
 Nested `OTHER_NAMES[]`:
 
 | Column | Type | Key | Presence | Unit | Example or values | Link | Meaning |
 |---|---|---|---|---|---|---|---|
-| `NAME` | text |  | required |  | `Apple Computer, Inc.` |  | — |
-| `TYPE` | text |  | required |  | `alternative language legal name`, `auto ascii transliterated legal name`, `preferred ascii transliterated legal name`, `previous legal name`, `trading or operating name` |  | — |
+| `NAME` | text |  | required |  | `Apple Computer, Inc.` |  | Another name of the entity. |
+| `TYPE` | text |  | required |  | `alternative language legal name`, `auto ascii transliterated legal name`, `preferred ascii transliterated legal name`, `previous legal name`, `trading or operating name` |  | What kind of name it is (previous legal name, trading or operating name, transliterated legal name ...). |
 
 Nested `PARENT_EXCEPTIONS[]`:
 
 | Column | Type | Key | Presence | Unit | Example or values | Link | Meaning |
 |---|---|---|---|---|---|---|---|
-| `LEVEL` | text |  | required |  | `Direct parent`, `Ultimate parent` |  | For |
-| `REASON` | text |  | required |  | `NATURAL_PERSONS`, `NON_CONSOLIDATING`, `NON_PUBLIC`, `NO_KNOWN_PERSON`, `NO_LEI` |  | Reason |
-| `MEANING` | text |  | required |  | `Controlled by natural persons, not by an entity`, `No known person controls it (shares widely held)`, `The parent does not consolidate it (no consolidated accounts that include it)`, `The parent may not be disclosed (legal obstacle or harm)`, `no lei` |  | Meaning |
+| `LEVEL` | text |  | required |  | `Direct parent`, `Ultimate parent` |  | Which parent the exception is for: Direct parent or Ultimate parent. |
+| `REASON` | text |  | required |  | `NATURAL_PERSONS`, `NON_CONSOLIDATING`, `NON_PUBLIC`, `NO_KNOWN_PERSON`, `NO_LEI` |  | GLEIF's reporting-exception code: NATURAL_PERSONS, NON_CONSOLIDATING, NO_KNOWN_PERSON, NON_PUBLIC or NO_LEI. |
+| `MEANING` | text |  | required |  | `Controlled by natural persons, not by an entity`, `No known person controls it (shares widely held)`, `The parent does not consolidate it (no consolidated accounts that include it)`, `The parent may not be disclosed (legal obstacle or harm)`, `no lei` |  | The reason in words ("Controlled by natural persons, not by an entity"); the code in lower case when the pack has no wording for it. |
 
 Nested `CHILDREN[]`:
 
 | Column | Type | Key | Presence | Unit | Example or values | Link | Meaning |
 |---|---|---|---|---|---|---|---|
 | `LEI` | id |  | required |  | `2549008YU9EOMHFUA249` (pattern `^[0-9A-Z]{18}[0-9]{2}$`) |  | The record's id (the business key) |
-| `NAME` | text |  | required |  | `APPLE OPERATIONS INDIA PRIVATE LIMITED` |  | — |
-| `COUNTRY` | text |  | required |  | `IN` |  | — |
-| `KIDS` | integer |  | optional |  | `9` |  | — |
+| `NAME` | text |  | required |  | `APPLE OPERATIONS INDIA PRIVATE LIMITED` |  | The child entity's legal name. |
+| `COUNTRY` | text |  | required |  | `IN` |  | The child's legal address country (ISO 3166 alpha-2). |
+| `KIDS` | integer |  | optional |  | `9` |  | How many children of its own the child has in the pack; absent when none. |
 
 Nested `PARENTS[]`:
 
 | Column | Type | Key | Presence | Unit | Example or values | Link | Meaning |
 |---|---|---|---|---|---|---|---|
-| `LEVEL` | integer |  | required |  | `1` |  | Level |
-| `LEI` | id |  | required |  | `549300COKYB5EGSU1838` (pattern `^[0-9A-Z]{18}[0-9]{2}$`) |  | LEI |
-| `NAME` | text |  | required |  | `Desjardins Holding financier inc.` |  | — |
-| `RELATIONSHIP` | text |  | required |  | `Direct and ultimate parent`, `Direct parent`, `Higher parent`, `Ultimate parent`, `Ultimate parent (chain not reported)` |  | Relationship |
+| `LEVEL` | integer |  | required |  | `1` |  | The parent's place in the chain: 1 the direct parent, 2 its parent, and so on up to the ultimate parent. |
+| `LEI` | id |  | required |  | `549300COKYB5EGSU1838` (pattern `^[0-9A-Z]{18}[0-9]{2}$`) |  | The parent's LEI (20 characters): a lei-entity when the parent is in the pack. |
+| `NAME` | text |  | required |  | `Desjardins Holding financier inc.` |  | The parent's legal name (its LEI when the name is unknown). |
+| `RELATIONSHIP` | text |  | required |  | `Direct and ultimate parent`, `Direct parent`, `Higher parent`, `Ultimate parent`, `Ultimate parent (chain not reported)` |  | The parent's role: Direct parent, Higher parent, Ultimate parent, Direct and ultimate parent, or Ultimate parent (chain not reported). |
 
 Nested `PROVENANCE`:
 
 | Column | Type | Key | Presence | Unit | Example or values | Link | Meaning |
 |---|---|---|---|---|---|---|---|
-| `SOURCE` | text |  | required |  | `GLEIF, the Global Legal Entity Identifier Foundation (LEI records, golden copy level 2, mapping files)` |  | — |
-| `RETRIEVED_AT` | date |  | required |  | `2026-10-25` |  | — |
-| `LICENCE` | text |  | required |  | `CC0 1.0 (GLEIF's terms: free of charge, no restriction; attribution appreciated)` |  | — |
-| `URL` | text |  | required |  | `https://search.gleif.org/#/record/HWUPKR0MPOU8FGXBT394` |  | — |
+| `SOURCE` | text |  | required |  | `GLEIF, the Global Legal Entity Identifier Foundation (LEI records, golden copy level 2, mapping files)` |  | The public source of the record (GLEIF LEI records, level 2 relationships and mapping files). |
+| `RETRIEVED_AT` | date |  | required |  | `2026-10-25` |  | The date GLEIF's data was retrieved (YYYY-MM-DD). |
+| `LICENCE` | text |  | required |  | `CC0 1.0 (GLEIF's terms: free of charge, no restriction; attribution appreciated)` |  | The licence of the source (CC0 1.0). |
+| `URL` | text |  | required |  | `https://search.gleif.org/#/record/HWUPKR0MPOU8FGXBT394` |  | The LEI's record on search.gleif.org. |
 
 **Links:** `JURISDICTION` → `jurisdiction`, `LEI_COUNTRY` → `lei-country`, `LEI_GROUP` → `lei-group`, `MAPPING_IDS` → `lei-mapping`, `US_COMPANY` → `us-company`.
+
+- 1.1: CATEGORY may be Government entity.
 
 ### LEIG: LEI ownership group (`lei-group`)
 
@@ -305,28 +307,31 @@ One consolidation relationship from GLEIF's level 2 data: the child, its direct 
 | Column | Type | Key | Presence | Unit | Example or values | Link | Meaning |
 |---|---|---|---|---|---|---|---|
 | `RELATIONSHIP_ID` | id | key | required |  | `LEIREL-010PWNH4K3BLIC3I7R03-DIRECT` (pattern `^LEIREL-`) |  | The record's id (the business key) |
-| `LEVEL` | text |  | required |  | `Direct`, `Ultimate` |  | — |
-| `CHILD_ENTITY` | id |  | required |  | `010PWNH4K3BLIC3I7R03` (pattern `^[0-9A-Z]{18}[0-9]{2}$`) | `lei-entity` | Child: the lei-entity it refers to |
-| `PARENT_ENTITY` | id |  | required |  | `549300COKYB5EGSU1838` (pattern `^[0-9A-Z]{18}[0-9]{2}$`) | `lei-entity` | Parent: the lei-entity it refers to |
-| `RELATIONSHIP_STATUS` | text |  | required |  | `ACTIVE` |  | Status |
-| `START` | date |  | required |  | `2017-12-06` |  | Since |
-| `PERIODS` | record list |  | required |  |  |  | Nested: see nested PERIODS[] |
-| `REGISTRATION_STATUS` | text |  | required |  | `LAPSED`, `PUBLISHED` |  | — |
-| `INITIAL_REGISTRATION` | date |  | required |  | `2023-08-08` |  | First registered |
-| `LAST_UPDATE` | date |  | required |  | `2024-10-07` |  | Last updated |
-| `NEXT_RENEWAL` | date |  | required |  | `2024-10-07` |  | Next renewal |
-| `LEI_GROUP` | id |  | required |  | `549300B2Q47IR0CR5B54` | `lei-group` | Ownership group: the lei-group it refers to |
-| `ACCOUNTING_STANDARD` | text |  | optional |  | `IFRS`, `OTHER_ACCOUNTING_STANDARD`, `US_GAAP` |  | Accounting standard |
+| `LEVEL` | text |  | required |  | `Direct`, `Ultimate` |  | Direct (the child's direct parent) or Ultimate (its ultimate parent). |
+| `CHILD_ENTITY` | id |  | required |  | `010PWNH4K3BLIC3I7R03` (pattern `^[0-9A-Z]{18}[0-9]{2}$`) | `lei-entity` | The child in the relationship: an LEI of the lei-entity kind (20 characters). |
+| `PARENT_ENTITY` | id |  | required |  | `549300COKYB5EGSU1838` (pattern `^[0-9A-Z]{18}[0-9]{2}$`) | `lei-entity` | The parent in the relationship (direct or ultimate, per LEVEL): an LEI of the lei-entity kind. |
+| `RELATIONSHIP_STATUS` | text |  | required |  | `ACTIVE` |  | Whether the relationship holds: ACTIVE or INACTIVE (GLEIF relationship status). |
+| `START` | date |  | required |  | `2017-12-06` |  | The date the relationship started (the GLEIF relationship record's period start), YYYY-MM-DD. |
+| `END` | date |  | optional |  | `2025-06-30` |  | The date the relationship ended (the GLEIF relationship record's period end); absent while it holds. |
+| `PERIODS` | record list |  | required |  |  |  | The relationship's other periods in GLEIF (the accounting period and the document filing period of the consolidation), one element each: TYPE, START and END. |
+| `REGISTRATION_STATUS` | text |  | required |  | `LAPSED`, `PUBLISHED` |  | The relationship record's registration status in GLEIF (PUBLISHED, LAPSED ...). |
+| `INITIAL_REGISTRATION` | date |  | required |  | `2023-08-08` |  | The date the relationship record was first registered with GLEIF, YYYY-MM-DD. |
+| `LAST_UPDATE` | date |  | required |  | `2024-10-07` |  | The date GLEIF's relationship record was last changed, YYYY-MM-DD. |
+| `NEXT_RENEWAL` | date |  | required |  | `2024-10-07` |  | The date the relationship record must be renewed by, YYYY-MM-DD. |
+| `LEI_GROUP` | id |  | required |  | `549300B2Q47IR0CR5B54` | `lei-group` | The child's ownership group: the LEI of its ultimate parent, the id of the computed lei-group kind. |
+| `ACCOUNTING_STANDARD` | text |  | optional |  | `IFRS`, `OTHER_ACCOUNTING_STANDARD`, `US_GAAP` |  | The accounting standard of the consolidation the relationship is based on (IFRS, US_GAAP, OTHER_ACCOUNTING_STANDARD), comma-separated when several. |
 
 Nested `PERIODS[]`:
 
 | Column | Type | Key | Presence | Unit | Example or values | Link | Meaning |
 |---|---|---|---|---|---|---|---|
-| `TYPE` | text |  | required |  | `accounting period`, `document filing period` |  | Period |
-| `START` | date |  | required |  | `2021-01-01` |  | From |
-| `END` | date |  | optional |  | `2021-12-31` |  | — |
+| `TYPE` | text |  | required |  | `accounting period`, `document filing period` |  | The period's type in lower case: accounting period or document filing period. |
+| `START` | date |  | optional |  | `2021-01-01` |  | The first day of the period, YYYY-MM-DD; absent when GLEIF gives none. |
+| `END` | date |  | optional |  | `2021-12-31` |  | The end of the period (YYYY-MM-DD); absent when it is open. |
 
 **Links:** `CHILD_ENTITY` → `lei-entity`, `PARENT_ENTITY` → `lei-entity`, `LEI_GROUP` → `lei-group`.
+
+- 1.1: END, the relationship's end date, is in the contract; PERIODS[].START is optional (GLEIF leaves it out of a few periods).
 
 ### LEIC: LEI country (`lei-country`)
 
@@ -386,13 +391,13 @@ An ISIN, BIC or MIC and the legal entity GLEIF's mapping files give it.
 
 | Column | Type | Key | Presence | Unit | Example or values | Link | Meaning |
 |---|---|---|---|---|---|---|---|
-| `IDENTIFIER` | id | key | required |  | `WABTUS3WXXX` |  | Identifier |
-| `TYPE` | text |  | required |  | `BIC`, `ISIN`, `MIC` |  | Type |
-| `ENTITY_LEI` | id |  | required |  | `06BTX5UWZD0GQ5N5Y745` (pattern `^[0-9A-Z]{18}[0-9]{2}$`) | `lei-entity` | LEI record: the lei-entity it refers to |
-| `ENTITY_NAME` | text |  | required |  | `WESTINGHOUSE AIR BRAKE TECHNOLOGIES CORPORATION` |  | Entity |
-| `COUNTRY` | text |  | required |  | `US` |  | — |
-| `LEI_GROUP` | id |  | required |  | `06BTX5UWZD0GQ5N5Y745` | `lei-group` | Ownership group: the lei-group it refers to |
-| `MAPPING_FILE` | text |  | required |  | `LEI-BIC-20260925.zip`, `LEI-MIC-20261012.zip`, `isin-lei-20261024T071512.zip` |  | Mapping file |
+| `IDENTIFIER` | id | key | required |  | `WABTUS3WXXX` |  | The identifier GLEIF maps to an LEI: an ISIN (12 characters), a BIC (8 or 11) or a MIC (4); the record's key. |
+| `TYPE` | text |  | required |  | `BIC`, `ISIN`, `MIC` |  | What IDENTIFIER is: ISIN, BIC or MIC (the mapping file it came from). |
+| `ENTITY_LEI` | id |  | required |  | `06BTX5UWZD0GQ5N5Y745` (pattern `^[0-9A-Z]{18}[0-9]{2}$`) | `lei-entity` | The entity the identifier belongs to: an LEI of the lei-entity kind (20 characters). |
+| `ENTITY_NAME` | text |  | required |  | `WESTINGHOUSE AIR BRAKE TECHNOLOGIES CORPORATION` |  | The legal name of that entity, as in its GLEIF record. |
+| `COUNTRY` | text |  | required |  | `US` |  | The legal address country of the entity the identifier maps to (ISO 3166 alpha-2). |
+| `LEI_GROUP` | id |  | required |  | `06BTX5UWZD0GQ5N5Y745` | `lei-group` | The entity's ownership group: the LEI of its ultimate parent, the id of the computed lei-group kind. |
+| `MAPPING_FILE` | text |  | required |  | `LEI-BIC-20260925.zip`, `LEI-MIC-20261012.zip`, `isin-lei-20261024T071512.zip` |  | The GLEIF mapping file the pair was read from (isin-lei-…, LEI-BIC-…, LEI-MIC-….zip), which dates it. |
 | `ISIN_COUNT` | integer |  | optional |  | `909` |  | ISINs of the issuer |
 
 **Links:** `ENTITY_LEI` → `lei-entity`, `LEI_GROUP` → `lei-group`.

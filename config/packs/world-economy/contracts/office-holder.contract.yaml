@@ -72,22 +72,27 @@ fields:
 - name: PUBLISHED
   type: text
   presence: required
+  description: 'The office holder as the CIA World Factbook writes it.'
   example: King WILLEM-ALEXANDER of the Netherlands (since 30 April 20…
 - name: PROCESS
   type: text
   presence: optional
+  description: 'How the office is filled, as published.'
   example: the monarchy is hereditary; governor general appointed by t…
 - name: ELECTION_HELD
   type: text
   presence: optional
+  description: 'When the last election was held, as published text.'
   example: 6 December 2024
 - name: NEXT_ELECTION
   type: text
   presence: optional
+  description: 'When the next election is due, as published text.'
   example: by December 2028
 - name: RESULTS
   type: text
   presence: optional
+  description: 'The last election''s result, as published.'
   example: Mike EMAN (AVP) elected prime minister; percent of Staten v…
 - name: GOVERNMENT_TYPE
   type: text
@@ -97,22 +102,23 @@ fields:
 - name: CABINET
   type: text
   presence: optional
+  description: 'How the cabinet is formed, as published.'
   example: Council of Ministers elected by the Legislature (Staten)
 - name: JURISDICTION
   type: id
   presence: required
-  description: 'Country: the jurisdiction it refers to'
+  description: 'The country of the office: an id of the jurisdiction kind (JUR-<ISO3>).'
   example: JUR-ABW
   pattern: ^JUR-
   link: jurisdiction
 - name: PROVENANCE
   type: record
   presence: required
-  description: 'Nested: see nested PROVENANCE'
+  description: 'Where the record comes from, one object: SOURCE (CIA World Factbook), DATASET (the mirror commit), RETRIEVED_AT, LICENCE, ATTRIBUTION and URL.'
 - name: MANDATE
   type: record
   presence: required
-  description: 'Nested: see nested MANDATE'
+  description: 'How the office is filled, one object of World Factbook text: SELECTION, HELD_ON, NEXT_ELECTION, RESULTS, CABINET and AS_PUBLISHED.'
 nested:
   PROVENANCE:
   - name: SOURCE
@@ -213,5 +219,3 @@ review:
 - 'key OFFICE_ID is the field holding the sample catalogue''s id (OFFC-ABW-COS): confirm it is the business key.'
 - 'a snapshot refreshed when tools/publicdata/world_economy.py runs: confirm the refresh cadence.'
 - 'enum values inferred from the data, not from a glossary: ROLE: confirm they are closed lists.'
-- 'no description in about.yaml or the Sutras for PUBLISHED, PROCESS, ELECTION_HELD, NEXT_ELECTION, RESULTS, CABINET: write them in the pack''s
-  config/about.yaml glossary.'

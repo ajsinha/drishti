@@ -49,7 +49,7 @@ fields:
 - name: NAME
   type: text
   presence: required
-  description: Name
+  description: 'The legal entity''s registered name.'
   example: Drishti Bank Europe AG
   enum:
   - Drishti Bank Europe AG
@@ -59,7 +59,7 @@ fields:
 - name: LEI
   type: text
   presence: required
-  description: LEI
+  description: 'The entity''s Legal Entity Identifier: 20 characters, ISO 17442.'
   example: 549300Z9DXU4T18OK744
   enum:
   - 549300BLAOJ55ZE6F474
@@ -69,13 +69,13 @@ fields:
 - name: JURISDICTION
   type: id
   presence: required
-  description: Jurisdiction
+  description: 'The country the entity is incorporated and regulated in, ISO 3166-1 alpha-2.'
   example: DE
   link: jurisdiction
 - name: REGULATOR
   type: text
   presence: required
-  description: Regulator
+  description: 'The entity''s prudential and conduct regulators, separated by '' / '' (ECB / BaFin, PRA / FCA …).'
   example: ECB / BaFin
   enum:
   - ECB / BaFin
@@ -85,48 +85,53 @@ fields:
 - name: DESKS
   type: record list
   presence: required
-  description: 'Nested: see nested DESKS[]'
+  description: 'The desks that book in the entity: one object per desk.'
 - name: BOOKS
   type: record list
   presence: required
-  description: 'Nested: see nested BOOKS[]'
+  description: 'The books of those desks that hold trades: one object per book, with its P&L, MTM and trade count.'
 nested:
   DESKS[]:
   - name: ID
     type: id
     presence: required
-    description: Desk
+    description: 'The desk: a DESK_ID of the core pack''s desk kind (DESK-…).'
     example: DESK-SFT
   - name: NAME
     type: text
     presence: required
-    description: Name
+    description: 'The desk''s name (its desk NAME).'
     example: Repo and securities lending
   BOOKS[]:
   - name: BOOK
     type: id
     presence: required
-    description: 'Book: the book it refers to'
+    description: 'The book: a BOOK_ID of the core pack''s book kind (BOOK-…).'
     example: BOOK-SFT-1
     pattern: ^BOOK-
     link: book
   - name: DESK
     type: id
     presence: required
-    description: 'Desk: the desk it refers to'
+    description: 'The NAME of the book''s desk (a name such as Repo and securities lending, not a DESK_ID, although the contract links it to desk).'
     example: Repo and securities lending
     link: desk
   - name: PNL
     type: amount
     presence: required
+    unit: 'USD'
+    description: 'The book''s one-day P&L: the sum of its trades'' PNL_1D, gain positive.'
     example: -327989
   - name: MTM
     type: amount
     presence: required
+    unit: 'USD'
+    description: 'The book''s mark to market: the sum of its trades'' MTM, from the bank''s side (positive is owed to the bank).'
     example: 8879873
   - name: TRADES
     type: integer
     presence: required
+    description: 'The number of trades in the book.'
     example: 17
 links:
 - field: JURISDICTION
@@ -196,5 +201,3 @@ review:
 - 'enum values inferred from the data, not from a glossary: NAME, LEI, REGULATOR: confirm they are closed lists.'
 - 'number types decided by the field''s name: BOOKS[].PNL amount, BOOKS[].MTM amount: confirm amount, rate or integer.'
 - 'no unit stated for the amounts BOOKS[].PNL, BOOKS[].MTM (docs/contracts/README.md section 7: USD unless stated): confirm the currency.'
-- 'no description in about.yaml or the Sutras for BOOKS[].PNL, BOOKS[].MTM, BOOKS[].TRADES: write them in the pack''s config/about.yaml
-  glossary.'

@@ -75,18 +75,18 @@ fields:
 - name: BY_BOOK
   type: record list
   presence: required
-  description: 'Nested: see nested BY_BOOK[]'
+  description: 'The scenario''s P&L by book, one element per book of the desk: BOOK and PNL in USD, a loss negative.'
 - name: SCENARIO
   type: id
   presence: required
-  description: 'Scenario: the stress-scenario it refers to'
+  description: 'The stress scenario applied: a SCENARIO_ID of the stress-scenario kind (SCN-…).'
   example: SCN-COVID2020
   pattern: ^SCN-
   link: stress-scenario
 - name: DESK
   type: id
   presence: required
-  description: 'Desk: the desk it refers to'
+  description: 'The desk the result is for: a DESK_ID of the core pack''s desk kind (DESK-…).'
   example: DESK-COMM
   pattern: ^DESK-
   link: desk
@@ -95,7 +95,7 @@ nested:
   - name: BOOK
     type: id
     presence: required
-    description: 'Book: the book it refers to'
+    description: 'The book: a BOOK_ID of the core pack''s book kind (BOOK-…).'
     example: BOOK-COMM-1
     pattern: ^BOOK-
     link: book

@@ -49,23 +49,24 @@ fields:
 - name: COMMODITY
   type: text
   presence: required
-  description: Commodity
+  description: 'The commodity''s name (Brent crude oil …).'
   example: Brent crude oil
 - name: ATM_FRONT
   type: amount
   presence: required
-  description: Front ATM
+  unit: 'percent'
+  description: 'The front month''s at-the-money implied volatility, in percent a year.'
   example: 31.32
 - name: GRID
   type: record list
   presence: required
-  description: 'Nested: see nested GRID[]'
+  description: 'The surface: one object per contract month, front first, with the volatilities at 90%, 100% and 110% moneyness.'
 nested:
   GRID[]:
   - name: MONTH
     type: text
     presence: required
-    description: Month
+    description: 'The contract month as a futures code: the month letter (F Jan … Z Dec) and the year''s last digit (X6 is November 2026).'
     example: X6
     enum:
     - F7
@@ -79,17 +80,20 @@ nested:
   - name: M_90
     type: amount
     presence: required
-    description: 90%
+    unit: 'percent'
+    description: 'The implied volatility at a strike of 90% of the month''s futures price, in percent a year.'
     example: 32.82
   - name: M_100
     type: amount
     presence: required
-    description: 100%
+    unit: 'percent'
+    description: 'The at-the-money implied volatility (strike 100% of the futures price), in percent a year.'
     example: 31.32
   - name: M_110
     type: amount
     presence: required
-    description: 110%
+    unit: 'percent'
+    description: 'The implied volatility at a strike of 110% of the month''s futures price, in percent a year.'
     example: 32.12
 links: []
 validation:

@@ -49,99 +49,101 @@ fields:
 - name: NAME
   type: text
   presence: required
-  description: Name
+  description: 'The counterparty''s legal name.'
   example: Aldershot Pension Trust
 - name: LEI
   type: text
   presence: required
-  description: LEI
+  description: 'The counterparty''s Legal Entity Identifier: 20 characters, ISO 17442.'
   example: 549300H5KZ2QJHEAMB55
 - name: RATING
   type: text
   presence: required
-  description: Rating
+  description: 'The counterparty''s credit rating, S&P-style (AA-, BBB+ …).'
   example: AA-
 - name: SECTOR
   type: text
   presence: required
-  description: Sector
+  description: 'The counterparty''s industry sector (Pensions, Banking, Utilities …).'
   example: Pensions
 - name: COUNTRY
   type: text
   presence: required
+  description: 'The counterparty''s country, ISO 3166-1 alpha-2.'
   example: GB
 - name: TYPE
   type: text
   presence: required
-  description: Type
+  description: 'The kind of counterparty (Bank, Corporate, Hedge fund, Insurer, Pension fund …).'
   example: Pension fund
 - name: COUNTRY_OF_RISK
   type: text
   presence: required
-  description: Country of risk
+  description: 'The country of risk, ISO 3166-1 alpha-2; trades carry the same value as COUNTERPARTY_COUNTRY_OF_RISK.'
   example: GB
 - name: UEN
   type: text
   presence: required
-  description: UEN
+  description: 'The counterparty''s unique entity number in the bank''s client master (UEN and seven digits); trades carry it as COUNTERPARTY_UEN.'
   example: UEN0100037
 - name: ECONOMY
   type: id
   presence: required
-  description: 'Economy: the economy it refers to'
+  description: 'The economy of its country: an ECONOMY_ID of the world-economy pack''s economy kind (ECON- and the ISO 3166-1 alpha-3 code).'
   example: ECON-GBR
   pattern: ^ECON-
   link: economy
 - name: NEWS_ID
   type: id
   presence: required
-  description: 'Headlines: the news it refers to'
+  description: 'Its headlines: a NEWS_ID of the news-and-markets pack''s news kind (NEWS- and the name with underscores).'
   example: NEWS-Aldershot_Pension_Trust
   pattern: ^NEWS-
   link: news
 - name: NET_MTM
   type: amount
   presence: required
-  description: Net MTM
+  unit: 'USD'
+  description: 'The sum of the NET_MTM of its netting sets, in the bank''s reporting currency (USD in the demo); positive when the counterparty owes the bank.'
   example: 15036789
 - name: NETTING_SETS
   type: record list
   presence: required
-  description: 'Netting set: the netting-set it refers to'
+  description: 'The counterparty''s netting sets: one object per netting set.'
   link: netting-set
 - name: KYC
   type: record
   presence: required
-  description: 'Nested: see nested KYC'
+  description: 'The counterparty''s know-your-customer record: one object.'
 - name: GROUP
   type: id
   presence: required
-  description: 'Group: the counterparty-group it refers to'
+  description: 'The group it belongs to: a GROUP_ID of the core pack''s counterparty-group kind (GRP-…).'
   example: GRP-ALDERSHOT
   pattern: ^GRP-
   link: counterparty-group
 - name: CREDIT_LIMIT
   type: id
   presence: required
-  description: 'Credit limit: the credit-limit it refers to'
+  description: 'Its credit limit: a LIMIT_ID of the counterparty-risk pack''s credit-limit kind (LIM-…).'
   example: LIM-ALDERSHOT
   pattern: ^LIM-
   link: credit-limit
 - name: HIERARCHY
   type: record
   presence: required
-  description: 'Nested: see nested HIERARCHY'
+  description: 'The counterparty in its legal hierarchy, as a graph: its group over its members, and under it its agreement, CSA and netting sets.'
 - name: CREDIT_CURVE
   type: id
   presence: optional
-  description: 'Credit curve: the credit-curve it refers to'
+  description: 'Its CDS curve, when it is also a bond issuer: a CURVE_ID of the market-data pack''s credit-curve kind (CDS-…).'
   example: CDS-CASCADIA
   pattern: ^CDS-
   link: credit-curve
 - name: LEGAL_ENTITY
   type: id
   presence: optional
-  description: 'Legal entity: the legal-entity it refers to'
+  description: 'The bank''s legal entity that faces it: an ENTITY_ID of the core pack''s legal-entity kind (LE-…).'
   example: LE-NY
   pattern: ^LE-
   link: legal-entity
@@ -150,35 +152,36 @@ nested:
   - name: ID
     type: id
     presence: required
-    description: Netting set
+    description: 'The netting set: a NETTING_SET_ID of the counterparty-risk pack''s netting-set kind (NS-…).'
     example: NS-ALDERSHOT-FRA
   - name: AGREEMENT
     type: id
     presence: required
-    description: Agreement
+    description: 'The master agreement governing it: an AGREEMENT_ID of the counterparty-risk pack''s agreement kind (AGR-…).'
     example: AGR-ALDERSHOT-ISDA
     pattern: ^AGR-
     link: agreement
   - name: TRADES
     type: integer
     presence: required
-    description: Trades
+    description: 'How many trades the netting set holds.'
     example: 3
   - name: NET_MTM
     type: amount
     presence: required
-    description: Net MTM
+    unit: 'USD'
+    description: 'The netting set''s net MTM, in the bank''s reporting currency (USD in the demo); positive when the counterparty owes the bank.'
     example: -339550
   KYC:
   - name: STATUS
     type: text
     presence: required
-    description: Status
+    description: 'The KYC review''s outcome (Approved …).'
     example: Approved
   - name: RISK_RATING
     type: text
     presence: required
-    description: Risk rating
+    description: 'The KYC risk rating: Standard for a counterparty rated A or better, Enhanced otherwise.'
     example: Standard
     enum:
     - Enhanced
@@ -186,12 +189,12 @@ nested:
   - name: LAST_REVIEW
     type: date
     presence: required
-    description: Last review
+    description: 'The date of the last KYC review.'
     example: '2026-02-11'
   - name: EMIR_CLASSIFICATION
     type: text
     presence: required
-    description: EMIR classification
+    description: 'The counterparty''s EMIR class: FC (financial counterparty) or NFC- (non-financial below the clearing threshold).'
     example: FC
     enum:
     - FC
@@ -199,29 +202,33 @@ nested:
   - name: PD_1Y
     type: rate
     presence: required
-    description: PD (1 year)
+    unit: 'fraction'
+    description: 'The one-year probability of default implied by RATING, as a fraction (0.0004 is 0.04%).'
     example: 0.0004
   HIERARCHY:
   - name: NODES
     type: record list
     presence: required
-    description: 'Nested: see nested HIERARCHY.NODES[]'
+    description: 'The graph''s nodes: one object per entity (the group, its counterparties, the agreement, the CSA, the netting sets).'
   - name: EDGES
     type: record list
     presence: required
-    description: 'Nested: see nested HIERARCHY.EDGES[]'
+    description: 'The graph''s edges: one object per link between two nodes (parent of, signed, secured by, nets).'
   HIERARCHY.NODES[]:
   - name: ID
     type: id
     presence: required
+    description: 'The node''s entity id: a group (GRP-), counterparty (CP-), agreement (AGR-), CSA (CSA-) or netting set (NS-).'
     example: GRP-ALDERSHOT
   - name: LABEL
     type: text
     presence: required
+    description: 'The node''s display name (for a netting set its id and trade count).'
     example: Aldershot Pension Trust
   - name: TYPE
     type: text
     presence: required
+    description: 'What the node is: Group (ultimate parent), Counterparty, Agreement, CSA or Netting set.'
     example: Group (ultimate parent)
     enum:
     - Agreement
@@ -233,14 +240,17 @@ nested:
   - name: FROM
     type: id
     presence: required
+    description: 'The parent node''s id (a NODES[].ID).'
     example: GRP-ALDERSHOT
   - name: TO
     type: id
     presence: required
+    description: 'The child node''s id (a NODES[].ID).'
     example: CP-ALDERSHOT
   - name: LABEL
     type: text
     presence: required
+    description: 'How FROM relates to TO: parent of (group to member), signed (counterparty to ISDA), secured by (ISDA to CSA), nets (ISDA to netting set).'
     example: parent of
     enum:
     - nets
@@ -353,7 +363,5 @@ review:
   confirm they are closed lists.'
 - 'number types decided by the field''s name: NET_MTM amount, NETTING_SETS[].NET_MTM amount, KYC.PD_1Y rate: confirm amount, rate or integer.'
 - 'no unit stated for the amounts NET_MTM, NETTING_SETS[].NET_MTM (docs/contracts/README.md section 7: USD unless stated): confirm the currency.'
-- 'no description in about.yaml or the Sutras for COUNTRY, HIERARCHY.NODES[].ID, HIERARCHY.NODES[].LABEL, HIERARCHY.NODES[].TYPE, HIERARCHY.EDGES[].FROM,
-  HIERARCHY.EDGES[].TO, HIERARCHY.EDGES[].LABEL: write them in the pack''s config/about.yaml glossary.'
 - 'NET_MTM and NETTING_SETS[].NET_MTM are computed figures on a fundamental master (docs/contracts/README.md section 3): confirm they are removed
   when NSET''s figures are computed (2.10.0).'

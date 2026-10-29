@@ -45,7 +45,8 @@ table per source system, `data/delta/trading/trade_endur`, `trade_calypso` and `
 (world-economy, news-and-markets) are built from those packs' samples, the same on every day. The real output, the options
 (`--lake`, `--only`, `--with-real`, `--server`, `--no-signal`) and what a running server is told are in
 [GETTING_STARTED.md, Step 5](../guides/GETTING_STARTED.md#step-5--build-the-demo-lakes); the datasets, one row each (key, connector,
-table, partitions, documents on day 1, changes a day, size), are in [data/testdata/README.md](../../data/testdata/README.md).
+table, partitions, documents on day 1, changes a day, size), are in [data/testdata/README.md](../../data/testdata/README.md). One record of
+every data type, every field explained for the query that must produce it, is in the **[data samples](../contracts/samples/README.md)**.
 
 | What | Value |
 |---|---|

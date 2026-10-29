@@ -62,28 +62,28 @@ fields:
   type: amount
   presence: required
   unit: USD
-  description: Held minus posted.
+  description: 'HELD minus POSTED after haircuts: positive when the bank holds more collateral than it has posted, negative when it has posted more.'
   example: -229552
 - name: AS_OF
   type: date
   presence: required
-  description: As of
+  description: 'The date the balance is valued on: the business date of the file.'
   example: '2026-09-30'
 - name: POSITIONS
   type: record list
   presence: required
-  description: 'Nested: see nested POSITIONS[]'
+  description: The collateral assets behind the balance, one element per asset held or posted, with its market value, haircut and value after the haircut.
 - name: CSA
   type: id
   presence: required
-  description: 'CSA: the csa it refers to'
+  description: 'The CSA the collateral is exchanged under: a CSA_ID of the csa kind (CSA-…).'
   example: CSA-ALDERSHOT
   pattern: ^CSA-
   link: csa
 - name: NETTING_SET
   type: id
   presence: required
-  description: 'Netting set: the netting-set it refers to'
+  description: 'The netting set the collateral secures: a NETTING_SET_ID of the netting-set kind (NS-<counterparty>-<legal entity>).'
   example: NS-ALDERSHOT-FRA
   pattern: ^NS-
   link: netting-set
@@ -112,8 +112,8 @@ nested:
   - name: HAIRCUT
     type: rate
     presence: required
-    unit: '% of market value'
-    description: The percentage taken off the market value to allow for the price moving before the asset can be sold. The CSA sets it by asset
+    unit: fraction of the market value (0.005 is 0.5%)
+    description: The share taken off the market value to allow for the price moving before the asset can be sold. The CSA sets it by asset
       type and maturity.
     example: 0.005
   - name: VALUE
