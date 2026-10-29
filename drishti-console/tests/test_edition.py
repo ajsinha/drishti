@@ -140,6 +140,7 @@ def test_home_offers_the_three_landings_and_remembers_the_choice(backend, monkey
     c = _client(app)
     home = c.get("/").text
     assert 'data-risk-landing="desk"' in home                                          # A, the default
+    assert 'data-home-card="VAR BANK"' in home and 'data-home-card="EXP CPTY:CP-ALDERSHOT"' in home
     assert 'href="/home/landing/command"' in home and 'href="/home/landing/map"' in home
     assert c.get("/home/landing/map", follow_redirects=False).status_code == 303
     assert app.state.store["alice"]["homeLanding"] == "map"

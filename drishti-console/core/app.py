@@ -110,6 +110,15 @@ def protected(path: str) -> bool:
     return path in EXACT or path.startswith(PROTECTED[1:])
 
 
+def _real_backend(app) -> bool:
+    """True when the console talks to its configured server(s): the edition is learned from them only, never from the network when a test
+    has put a stand-in server in their place."""
+    from core.backend import BackendClient
+    from core.servers import Switch
+
+    return isinstance(getattr(app.state, "backend", None), (BackendClient, Switch))
+
+
 async def _edition_of(request, path: str) -> None:
     """The edition this request is seen through (core/edition.py): the instance's, or the person's lens (their ``lens`` setting, so it
     follows them across servers and workers); the lens also travels to the server on every backend call (X-Drishti-Lens)."""
@@ -305,7 +314,7 @@ def create_app(settings: Settings) -> FastAPI:
         watcher = asyncio.create_task(ai.supervise()) if ai is not None and (ai.enabled or ai.mcp_enabled) else None
         try:                                                 # the edition before the first page (the watch keeps it fresh after a restart)
             default = app.state.servers.get(app.state.servers.default)
-            if default is not None:
+            if default is not None and _real_backend(app):
                 await asyncio.wait_for(app.state.backend_watch.check(default), 5)
         except Exception:  # noqa: BLE001 - the server is not up yet: the watch learns it later
             pass
@@ -420,7 +429,7 @@ def create_app(settings: Settings) -> FastAPI:
     app.state.backend_watch = BackendWatch(catalogue, _seconds(settings.get("backend.check_seconds", 5)),
                                            url_of=(lambda s: pool.current() if s.id == catalogue.default else s.url) if pool.enabled else None)
     # the console learns the server's edition, lenses and branding from its about answer (docs/architecture/EDITIONS.md, section 5.1)
-    app.state.backend_watch.on_about = lambda s, about: app.state.editions.learn(about) if s.id == catalogue.default else None
+    app.state.backend_watch.on_about = lambda s, about: app.state.editions.learn(about) if s.id == catalogue.default and _real_backend(app) else None
     from core.user_stamps import UserStamps
 
     # a change through one worker process (a setting, packs, a layout, a disabled user) reaches every worker of this console at once

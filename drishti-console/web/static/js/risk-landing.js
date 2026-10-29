@@ -219,18 +219,23 @@
     });
   }
   Promise.all([
-    get("/api/var/intraday/streams").then(function (s) {
-      (s.streams || s || []).forEach(function (st) {
-        if (st && (st.applied || st.lastApplied)) lines.push({ at: st.lastApplied || st.at || "", text: "Intraday " + (st.name || "stream") + ": " + (st.applied || 0) + " batches applied" });
+    get("/api/var/intraday/streams").then(function (s) {           // the PV topics' streams: their state and last message
+      (Array.isArray(s) ? s : s.streams || []).forEach(function (st) {
+        if (!st) return;
+        lines.push({ at: st.lastMessage || st.windowOpened || "", text: "Intraday " + (st.connector || st.topic || "stream") + ": " + (st.state || "running")
+          + (st.waiting ? ", " + st.waiting + " waiting" : "") });
       });
     }).catch(function () {}),
-    get("/api/var/official").then(function (o) {
-      var d = (o.dates || [])[0] || o.latest;
-      if (d) { lines.push({ at: o.capturedAt || "", text: "VaR official record captured for " + (d.date || d) }); text("[data-rl-official]", " · VaR official record " + (d.date || d)); }
+    get("/api/var/official").then(function (o) {                   // the date's official record, when there is one
+      var d = o.date || o.businessDate || ((o.dates || [])[0] || {}).date || (o.dates || [])[0];
+      if (d) {
+        lines.push({ at: o.capturedAt || o.computedAt || "", text: "VaR official record captured for " + d });
+        text("[data-rl-official]", " · VaR official record " + d);
+      }
     }).catch(function () {}),
     get("/api/exposure/official").then(function (o) {
-      var d = (o.dates || [])[0] || o.latest;
-      if (d) lines.push({ at: o.capturedAt || "", text: "Exposure official record captured for " + (d.date || d) });
+      var d = o.date || o.businessDate || ((o.dates || [])[0] || {}).date || (o.dates || [])[0];
+      if (d) lines.push({ at: o.capturedAt || o.computedAt || "", text: "Exposure official record captured for " + d });
     }).catch(function () {})
   ]).then(function () {
     breaches.var !== null && breaches.var > 0 && lines.push({ at: "", text: breaches.var + " VaR limit(s) at or over 100% in " + hierarchy });

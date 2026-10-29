@@ -67,7 +67,7 @@ async def render_landing(request, ed: Edition, landing: str, cards: list):
     """One of the edition's landings: a shell whose panels read the engines' own answers (VaR, exposure, limits, hierarchies,
     intraday status, official capture) through the console's /api/var and /api/exposure, drawn by static/js/risk-landing.js."""
     offered = [{"id": x, "title": LANDINGS[x], "href": f"/home/landing/{x}"} for x in ed.landings() if x in LANDINGS]
-    chips = [str(c) for c in (ed._get("home.chips") or []) if ed.command_shown(str(c).split()[0])]
+    chips = [str(c) for c in (ed._get("home.chips") or []) if ed.typed_shown(str(c))]
     monitors = []
     if landing == "command":                              # B's watch list: the person's monitors
         try:

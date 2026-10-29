@@ -116,6 +116,12 @@ class Edition:
         allow = self.commands() if self.active else set()
         return not allow or not code or code.strip().upper() in allow
 
+    def typed_shown(self, text: str) -> bool:
+        """Whether a command as typed (``VAR BANK``, ``VRES DESK:RATES``) is offered: a reserved or console word that is on, or a shown
+        command (EXP is both: the word decides)."""
+        head = str(text or "").split()[0].upper() if str(text or "").split() else ""
+        return self.word_on(head) if head in WORDS else self.command_shown(head)
+
     def word_on(self, word: str) -> bool:
         if not self.active:
             return True

@@ -21,6 +21,11 @@ from __future__ import annotations
 from core.edition import ADMIN_PAGES, FEATURE_PATHS, WORD_PATHS, Edition
 
 
+#: the console's own switches (features.*, and studio.enabled, read nowhere before): a page of one switched off answers 404 with or
+#: without an edition
+CONSOLE_SWITCHES = frozenset({"build", "forms", "datamap", "workspaces", "monitors", "alerts", "lakes", "reports", "collaboration", "studio"})
+
+
 def feature_on(request_or_app, edition: Edition, name: str) -> bool:
     """A feature as the person sees it: the lens's preset (a lens presets features for that person only), else the console settings
     (where the instance's edition is a layer under the site's configuration); a feature no setting names is on."""
@@ -46,6 +51,8 @@ def hidden(request, edition: Edition, path: str) -> str | None:
         if _under(path, prefixes) and not edition.word_on(word):
             return f"{word} is not part of {edition.title}"
     for feature, prefixes in FEATURE_PATHS.items():
+        if not edition.active and feature not in CONSOLE_SWITCHES:
+            continue                    # without an edition a product switch (calc, bi, pyconsole) answers as it always did, not 404
         if _under(path, prefixes) and not feature_on(request, edition, feature):
             return f"this page is switched off ({feature})"
     if path.startswith("/admin/"):

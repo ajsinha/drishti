@@ -52,7 +52,7 @@ async def landing(request: Request):
     me = getattr(request.state, "identity", None)
     facts_on = me is not None and request.app.state.facts.enabled
     raw_cards = ed.home_cards if ed.lens and ed.home_cards is not None else settings.get("ui.home_cards") or []
-    cards = [c for c in home_cards(raw_cards, active) if ed.command_shown(c["cmd"].split()[0])] if me is not None else []
+    cards = [c for c in home_cards(raw_cards, active) if ed.typed_shown(c["cmd"])] if me is not None else []
     if me is not None and ed.active and (landing := edition_routes.landing_for(request, ed)) is not None:
         return await edition_routes.render_landing(request, ed, landing, cards)        # the edition's landing (home.landing, the person's choice)
     return render(request, "landing.html", showcase=showcase, commands=commands, back=back, facts_on=facts_on, home_cards=cards)
