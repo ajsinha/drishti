@@ -40,9 +40,39 @@ import jsonstream
 
 MISSING = object()
 KEEP_REJECTS = 50                    # rejects kept with where and why (all are counted)
+KEEP_DUPLICATE_EXAMPLES = 10         # duplicates named (kept and dropped file:line); all are counted
+LATEST_BY = "COMPUTED_AT"            # the timestamp field that decides which duplicate is kept (TOOLS.md section 4.13)
 OPEN_FILES = 64                      # staged files kept open at once
-DUPLICATE_WATCH = 5_000_000          # ids remembered (8 bytes each) to count duplicates; past this, duplicates are not counted
+DUPLICATE_WATCH = 5_000_000          # ids remembered (8 bytes each) to find duplicates; past this, duplicates are neither found nor dropped
 _YMD = re.compile(r"^(\d{4})(\d{2})(\d{2})$")
+_ISO = re.compile(r"^(\d{4})-(\d{2})-(\d{2})(?:[T ](\d{2}):(\d{2})(?::(\d{2})(?:[.,](\d+))?)?)?\s*(Z|z|[+-]\d{2}(?::?\d{2})?)?$")
+
+
+def instant_micros(v) -> int | None:
+    """A ``latest-by`` timestamp as microseconds since the epoch (UTC): ISO-8601 text (a date, a date-time with seconds, a fraction to
+    microseconds and an offset; no offset is UTC). None for anything else. The Java loader's Latest.micros is the same rule."""
+    if not isinstance(v, str):
+        return None
+    m = _ISO.match(v.strip())
+    if not m:
+        return None
+    try:
+        day = date(int(m[1]), int(m[2]), int(m[3])).toordinal() - date(1970, 1, 1).toordinal()
+    except ValueError:
+        return None
+    h, mi, s = int(m[4] or 0), int(m[5] or 0), int(m[6] or 0)
+    if h > 23 or mi > 59 or s > 59:
+        return None
+    frac = int(((m[7] or "") + "000000")[:6])
+    off = 0
+    z = m[8]
+    if z and z not in ("Z", "z"):
+        d = z[1:].replace(":", "")
+        oh, om = int(d[:2]), int(d[2:] or 0)
+        if oh > 23 or om > 59:
+            return None
+        off = (-1 if z[0] == "-" else 1) * (oh * 3600 + om * 60)
+    return (day * 86400 + h * 3600 + mi * 60 + s - off) * 1_000_000 + frac
 
 
 def get(doc, path: str):
@@ -147,7 +177,8 @@ class Stats:
     accepted: int = 0
     rejects: Counter = field(default_factory=Counter)                # reason -> count
     reject_samples: list = field(default_factory=list)                # [{where, reason}]
-    duplicates: Counter = field(default_factory=Counter)             # business date -> ids seen more than once
+    duplicates: Counter = field(default_factory=Counter)             # business date -> copies dropped (an id seen more than once)
+    duplicate_examples: list = field(default_factory=list)            # [{date, kept, dropped}] (file:line), in input order
     numeric: dict = field(default_factory=dict)                       # promoted column -> True while every value is a number
     files: list = field(default_factory=list)                         # [{file, bytes}]
     doc_bytes: int = 0                                                # characters of the accepted documents (compact JSON)
@@ -167,8 +198,11 @@ class Stager:
     """Writes accepted documents into staged files by (business date, partition values)."""
 
     def __init__(self, folder: pathlib.Path | None, key: str, date_field: str | None, as_of: date | None,
-                 partition_by: list[str], promote: list[str], flatten: dict | None = None, vectors: list[str] | None = None):
+                 partition_by: list[str], promote: list[str], flatten: dict | None = None, vectors: list[str] | None = None,
+                 latest_by: str | None = LATEST_BY):
         self.folder, self.key, self.date_field, self.as_of = folder, key, date_field, as_of
+        self.latest_by = (latest_by or "").strip() or None
+        self._twice: dict[date, set] = {}                                      # per date: the id hashes seen more than once
         # flattened fields (the pack's layout.<kind>.flatten: NOTIONAL: LEGS[0].NOTIONAL): a plain field of the document and a
         # column, so searches, totals and BI read it without the document; a field the document already has is never replaced
         self.flatten = dict(flatten or {})
@@ -239,7 +273,8 @@ class Stager:
         h = int.from_bytes(hashlib.blake2b(ident.encode("utf-8"), digest_size=8).digest(), "big")
         seen = self._seen.setdefault(day, set())
         if h in seen:
-            st.duplicates[day.isoformat()] += 1
+            st.duplicates[day.isoformat()] += 1                           # one copy will be dropped (resolve)
+            self._twice.setdefault(day, set()).add(h)
         elif st.accepted < DUPLICATE_WATCH:
             seen.add(h)
         st.accepted += 1
@@ -252,7 +287,7 @@ class Stager:
         text = json.dumps(doc, ensure_ascii=False, separators=(",", ":"))
         st.doc_bytes += len(text)
         if self.folder:
-            self._handle(part).write(row_line(ident, text, promoted))
+            self._handle(part).write(row_line(ident, text, promoted, st.read, where))
 
     def _handle(self, part: Part):
         k = (part.day, part.values)
@@ -271,6 +306,62 @@ class Stager:
             fh.close()
         self._open.clear()
 
+    # ----------------------------------------------------------------------------------------------- duplicates
+
+    def resolve(self) -> None:
+        """The duplicate-record rule (TOOLS.md section 4.13; the Java loader's Latest and LoadReport do the same): of an id's copies on one
+        business date, the one with the latest ``latest-by`` timestamp is kept, else (none, or a tie) the last one read in input order
+        (files sorted by path, then line order); a copy with a timestamp beats one without. The others leave their staged files and the
+        row counts, are counted in ``duplicates`` and named in ``duplicate_examples``. Only the dates with duplicates are read again.
+        Without staged files (a dry run without --lake) the counts stand and nothing is named."""
+        self.close()
+        if not self.folder or not self._twice:
+            return
+        st = self.stats
+        examples = []
+        for day, twice in self._twice.items():
+            parts = [p for p in self.parts.values() if p.day == day]
+            copies: dict[str, list] = {}
+            for part in parts:
+                with open(part.file, encoding="utf-8") as fh:
+                    for line in fh:
+                        r = json.loads(line)
+                        ident = r["id"]
+                        if int.from_bytes(hashlib.blake2b(ident.encode("utf-8"), digest_size=8).digest(), "big") not in twice:
+                            continue
+                        ts = None
+                        if self.latest_by:
+                            v = get(json.loads(r["doc"]), self.latest_by)
+                            ts = instant_micros(v if v is not MISSING else None)
+                        copies.setdefault(ident, []).append((ts, r["n"], r["w"], part))
+            drop: dict[int, Part] = {}
+            for cs in copies.values():
+                if len(cs) < 2:
+                    continue
+                best = max(cs, key=lambda c: (c[0] is not None, c[0] or 0, c[1]))
+                for c in cs:
+                    if c is not best:
+                        drop[c[1]] = c[3]
+                        examples.append((day, c[1], best[2], c[2]))
+            iso = day.isoformat()
+            if drop:
+                st.duplicates[iso] = len(drop)
+            else:
+                st.duplicates.pop(iso, None)
+            for part in {id(p): p for p in drop.values()}.values():
+                kept = part.file.with_suffix(".kept")
+                with open(part.file, encoding="utf-8") as src, open(kept, "w", encoding="utf-8") as out:
+                    for line in src:
+                        if json.loads(line)["n"] not in drop:
+                            out.write(line)
+                kept.replace(part.file)
+                part.rows -= sum(1 for p in drop.values() if p is part)
+        for k in [k for k, p in self.parts.items() if p.rows <= 0]:
+            self.parts[k].file.unlink(missing_ok=True)
+            del self.parts[k]
+        examples.sort(key=lambda e: (e[0], e[1]))
+        st.duplicate_examples = [{"date": d.isoformat(), "kept": k, "dropped": w} for d, _, k, w in examples[:KEEP_DUPLICATE_EXAMPLES]]
+
     # ----------------------------------------------------------------------------------------------- results
 
     def types(self) -> dict[str, str]:
@@ -286,10 +377,14 @@ class Stager:
         return {d: sorted(out[d], key=lambda p: tuple("" if v is None else v for v in p.values)) for d in sorted(out)}
 
 
-def row_line(ident, text: str, promoted: dict) -> str:
+def row_line(ident, text: str, promoted: dict, n: int | None = None, where: str | None = None) -> str:
     """One staged row: one JSON object a line, {"id", "doc" (the document as JSON text), "columns" (the promoted values)} (2.9.4,
-    docs/guides/DATA_FORMATS.md); the Java writer (LakeWriter) reads the same form."""
-    return json.dumps({"id": ident, "doc": text, "columns": promoted}, ensure_ascii=False, separators=(",", ":")) + "\n"
+    docs/guides/DATA_FORMATS.md); the Java writer (LakeWriter) reads the same form. While staging, also "n" (the document's place in the
+    input) and "w" (file:line), which the duplicate rule reads (Stager.resolve) and the writers ignore."""
+    row = {"id": ident, "doc": text, "columns": promoted}
+    if n is not None:
+        row["n"], row["w"] = n, where
+    return json.dumps(row, ensure_ascii=False, separators=(",", ":")) + "\n"
 
 
 def read_rows(file: pathlib.Path, batch: int):

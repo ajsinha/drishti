@@ -105,10 +105,65 @@ class PythonPathEqualityTest {
         compare(common, null, "SCENARIO_PV", null, LocalDate.parse("2026-09-30"));
     }
 
+    /**
+     * The duplicate-record rule (TOOLS.md section 4.13) gives the same table on both paths and both formats: a plain {@code pv.jsonl}
+     * beside its {@code pv.jsonl.gz} (the case that once made the paths differ) with ids repeated across the two files and within the
+     * {@code .gz}; without {@code COMPUTED_AT} the last copy read is kept (pv.jsonl sorts before pv.jsonl.gz), with it the latest (some
+     * copies without one, some ties).
+     */
+    @Test
+    void duplicatesAcrossAndWithinFilesKeepTheSameCopyOnBothPathsAndBothFormats() throws Exception {
+        assumeTrue(python(), "python3 with PyYAML is not available");
+        for (boolean stamped : new boolean[] {false, true}) {
+            java.util.Random r = new java.util.Random(stamped ? 7 : 3);
+            List<String> base = PvData.lines(400, 20, 2, 5);
+            List<String> gz = new ArrayList<>();
+            for (int i = 0; i < base.size(); i++) {
+                gz.add(tagged(base.get(i), "gz-" + i, stamped ? r : null));
+            }
+            for (int i = 0; i < 40; i++) {                                      // within the .gz: lines 0..39 again, later
+                gz.add(tagged(base.get(i), "gz-again-" + i, stamped ? r : null));
+            }
+            List<String> plain = new ArrayList<>();
+            for (int i = 20; i < 80; i++) {                                     // across the files: lines 20..79 in pv.jsonl
+                plain.add(tagged(base.get(i), "plain-" + i, stamped ? r : null));
+            }
+            Path in = tmp.resolve("dups-" + stamped);
+            PvData.gzip(in.resolve("pv.jsonl.gz"), gz, 2);
+            PvData.write(in.resolve("pv.jsonl"), plain);
+            List<String> common = List.of("--from", in.toString(), "--domain", "risk", "--kind", "scenario-pv", "--key", "POSITION_ID", "--date",
+                    "BUSINESS_DATE", "--promote", "LEGAL_ENTITY,DESK,TT_BOOK,TRADE_ID,QUANTITY,BASE_PV,CCY,POSITION_ID,TINY", "--vector", "SCENARIO_PV");
+            JsonNode s = compare("dups-" + stamped + "-", common, "LEGAL_ENTITY,DESK,TT_BOOK,TRADE_ID,QUANTITY,BASE_PV,CCY,POSITION_ID,TINY",
+                    "SCENARIO_PV", "P-1000030", LocalDate.parse("2026-10-27"));
+            long dropped = 0;
+            for (JsonNode n : s.path("duplicates")) {
+                dropped += n.asLong();
+            }
+            assertThat(dropped).isEqualTo(40 + 60);
+            assertThat(s.path("duplicateExamples").size()).isEqualTo(LoadReport.KEEP_DUPLICATE_EXAMPLES);
+        }
+    }
+
+    /** A line with a {@code COPY} tag and (with {@code r}) a {@code COMPUTED_AT} of a few minutes' spread: some missing, some equal. */
+    private static String tagged(String line, String copy, java.util.Random r) {
+        String at = "";
+        if (r != null) {
+            int k = r.nextInt(8);
+            at = k == 0 ? "" : "\"COMPUTED_AT\":\"2026-10-27T1" + (k % 3) + ":0" + r.nextInt(3) + ":00Z\",";
+        }
+        return "{" + at + "\"COPY\":\"" + copy + "\"," + line.substring(1);
+    }
+
     private void compare(List<String> common, String columns, String vector, String someId, LocalDate day) throws Exception {
+        compare("", common, columns, vector, someId, day);
+    }
+
+    /** Builds both ways in both formats and compares; returns the loader's (Delta) summary. */
+    private JsonNode compare(String prefix, List<String> common, String columns, String vector, String someId, LocalDate day) throws Exception {
+        JsonNode first = null;
         for (String format : List.of("delta", "iceberg")) {
-            Path py = tmp.resolve("py-" + format);
-            Path jv = tmp.resolve("java-" + format);
+            Path py = tmp.resolve(prefix + "py-" + format);
+            Path jv = tmp.resolve(prefix + "java-" + format);
             List<String> a = new ArrayList<>(common);
             a.addAll(List.of("--lake", py.toString(), "--format", format));
             if (format.equals("delta")) {
@@ -125,7 +180,10 @@ class PythonPathEqualityTest {
             assertThat(sj.path("rejects").path("byReason")).isEqualTo(sp.path("rejects").path("byReason"));
             assertThat(sj.path("rejects").path("first")).isEqualTo(sp.path("rejects").path("first"));
             assertThat(sj.path("rows")).isEqualTo(sp.path("rows"));
+            assertThat(sj.path("duplicates")).isEqualTo(sp.path("duplicates"));
+            assertThat(sj.path("duplicateExamples")).isEqualTo(sp.path("duplicateExamples"));
             assertThat(sj.path("sampleId")).isEqualTo(sp.path("sampleId"));
+            first = first == null ? sj : first;
             String kind = "scenario-pv";
             Map<String, Map<String, Object>> tp;
             Map<String, Map<String, Object>> tj;
@@ -139,9 +197,14 @@ class PythonPathEqualityTest {
                 // the Python path's Iceberg loader makes no column for a field that is null on every row; the loader makes it (as Delta)
                 assertThat(TableDump.withoutEmptyColumns(tj)).isEqualTo(TableDump.withoutEmptyColumns(tp));
             }
-            assertThat(tj.size()).isEqualTo(sj.path("accepted").asLong());
+            long rows = 0;
+            for (JsonNode n : sj.path("rows")) {
+                rows += n.asLong();
+            }
+            assertThat(tj.size()).isEqualTo(rows);                               // one row per id and date: duplicates dropped
             connectorsAgree(format, py, jv, kind, columns, vector, someId != null ? someId : firstId(tj, day), day);
         }
+        return first;
     }
 
     private static String firstId(Map<String, Map<String, Object>> t, LocalDate day) {

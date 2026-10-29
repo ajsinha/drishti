@@ -46,7 +46,7 @@ record LoadConfig(Source source, Target target, Parallel parallel, Memory memory
 
     /** The input files and what a row is. */
     record Source(List<String> files, boolean recursive, Map<String, String> storage, String id, String date, LocalDate asOf,
-            List<String> promote, List<String> vectors, Map<String, String> flatten, List<String> partitionBy) {}
+            List<String> promote, List<String> vectors, Map<String, String> flatten, List<String> partitionBy, String latestBy) {}
 
     /** The table and its layout. */
     record Target(String format, String path, String lake, String domain, String kind, String table, Map<String, String> storage,
@@ -80,6 +80,8 @@ record LoadConfig(Source source, Target target, Parallel parallel, Memory memory
 
     record Report(String summary, String manifest, String progress, boolean runLog, boolean dryRun) {}
 
+    /** The timestamp field that decides which of an id's records on one date is kept (TOOLS.md section 4.13); blank: the last read. */
+    static final String DEFAULT_LATEST_BY = "COMPUTED_AT";
     static final List<String> DEFAULT_SORT = List.of("LEGAL_ENTITY", "DESK", "id");
     private static final Pattern ENV = Pattern.compile("\\$\\{([A-Za-z_][A-Za-z0-9_]*)(?::-([^}]*))?}");
     private static final Set<String> SECRETS = Set.of("access-key", "secret-key", "s3.access-key", "s3.secret-key", "session-token",
@@ -87,7 +89,7 @@ record LoadConfig(Source source, Target target, Parallel parallel, Memory memory
     private static final Map<String, Set<String>> KEYS = Map.of(
             "", Set.of("source", "target", "parallel", "memory", "rejects", "report", "lock"),
             "source", Set.of("files", "recursive", "storage-options", "format", "id", "date", "as-of", "promote", "vectors", "vector", "flatten",
-                    "partition-by", "pack", "connector"),
+                    "partition-by", "pack", "connector", "latest-by"),
             "target", Set.of("format", "path", "lake", "domain", "kind", "table", "storage-options", "mode", "properties", "iceberg", "layout"),
             "target.layout", Set.of("sort-by", "file-size-mb", "row-group-mb", "compression", "vector-compression", "byte-stream-split",
                     "shard-aligned"),
@@ -195,16 +197,18 @@ record LoadConfig(Source source, Target target, Parallel parallel, Memory memory
         List<String> promote = r.list(s, "promote");
         Map<String, String> flatten = new java.util.LinkedHashMap<>();
         String id = r.text(s, "id", null);
+        String latestBy = r.text(s, "latest-by", null);
         if (pack != null) {
             promote = s.has("promote") ? promote : pack.promote();
             vectors = s.has("vectors") || s.has("vector") ? vectors : pack.vectors();
             flatten.putAll(s.has("flatten") ? Map.of() : pack.flatten());
             id = id != null ? id : pack.key();
+            latestBy = latestBy != null ? latestBy : pack.latestBy();
         }
         flatten.putAll(r.map(s.path("flatten"), "source.flatten"));
         Map<String, String> sourceStorage = storage(r, s.path("storage-options"), "source.storage-options");
         Source src = new Source(files, r.bool(s, "recursive", false), sourceStorage, id == null ? "id" : id, date, asOf, promote, vectors, flatten,
-                r.list(s, "partition-by"));
+                r.list(s, "partition-by"), latestBy == null ? DEFAULT_LATEST_BY : latestBy.strip());
 
         String tf = r.text(t, "format", "delta").toLowerCase(Locale.ROOT);
         if (!tf.equals("delta") && !tf.equals("iceberg")) {

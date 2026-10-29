@@ -117,7 +117,8 @@ def config(a, p: dict, as_of, lake: str, iceberg: bool, workdir: pathlib.Path, e
         promote = partition + [x for x in promote if x not in partition]
         partition = []
     src = {"files": [str(s) for s in a.src], "recursive": bool(a.recursive), "id": p["key"], "promote": promote,
-           "vectors": list(p.get("vectors") or []), "flatten": dict(p.get("flatten") or {}), "partition-by": partition}
+           "vectors": list(p.get("vectors") or []), "flatten": dict(p.get("flatten") or {}), "partition-by": partition,
+           "latest-by": p.get("latest_by") or ""}
     if getattr(a, "pack", None):                   # the pack's layout.<kind>.sort-by too (the options above win over the rest of it)
         src["pack"] = str(pathlib.Path(a.pack).resolve())
         if p.get("connector"):
@@ -180,7 +181,7 @@ def run(a, p: dict, as_of, lake: str, iceberg: bool, workdir: pathlib.Path, prog
     return s
 
 
-MERGED = ("rows", "partitions", "documents", "accepted", "rejected", "rejects", "duplicates", "files", "sampleId", "sampleDate",
+MERGED = ("rows", "partitions", "documents", "accepted", "rejected", "rejects", "duplicates", "duplicateExamples", "latestBy", "files", "sampleId", "sampleDate",
           "commit", "columns", "throughput", "memory", "sortBy", "manifestFile", "peakMemoryMb")
 
 

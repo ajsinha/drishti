@@ -73,6 +73,10 @@ final class LoadReport {
     final Map<String, Long> rowsByDate = new TreeMap<>();
     final List<ObjectNode> partitions = new ArrayList<>();
     final Map<String, Long> duplicates = new TreeMap<>();
+    /** The duplicates named: date, the copy kept and a copy dropped ({@code file:line}), in input order. */
+    final List<ObjectNode> duplicateExamples = new ArrayList<>();
+    static final int KEEP_DUPLICATE_EXAMPLES = 10;
+    private final Map<Integer, java.util.Set<Long>> dropped = new TreeMap<>();
     final List<ObjectNode> files = new ArrayList<>();
     final Map<String, ObjectNode> commits = new TreeMap<>();
     final Map<String, List<WrittenFile>> written = new TreeMap<>();
@@ -125,6 +129,7 @@ final class LoadReport {
         List<ParseWorker.Reject> first = new ArrayList<>();
         Map<String, Map<List<String>, Long>> parts = new TreeMap<>();
         Map<Integer, List<long[]>> hashes = new TreeMap<>();
+        Map<Integer, List<ParseWorker.DateRows>> byDay = new TreeMap<>();
         ParseWorker.Where sampleAt = null;
         for (ParseWorker w : workers) {
             documents += w.documents;
@@ -138,7 +143,7 @@ final class LoadReport {
                 accepted += d.rows;
                 d.partitions.forEach((k, v) -> parts.computeIfAbsent(day, x -> new LinkedHashMap<>()).merge(k, v, Long::sum));
                 hashes.computeIfAbsent(e.getKey(), k -> new ArrayList<>()).add(Arrays.copyOf(d.hashes, d.nHashes));
-                d.hashes = null;
+                byDay.computeIfAbsent(e.getKey(), k -> new ArrayList<>()).add(d);
             }
             if (w.sampleAt != null && (sampleAt == null || w.sampleAt.compareTo(sampleAt) < 0)) {
                 sampleAt = w.sampleAt;
@@ -154,6 +159,16 @@ final class LoadReport {
         for (ParseWorker.Reject r : first.subList(0, Math.min(cfg.rejects().keep(), first.size()))) {
             firstRejects.add(JSON.createObjectNode().put("where", where(r.where(), splits, lines)).put("reason", r.reason()));
         }
+        resolveDuplicates(hashes, byDay, parts, splits, lines);
+        for (List<ParseWorker.DateRows> ds : byDay.values()) {
+            for (ParseWorker.DateRows d : ds) {
+                d.hashes = null;
+                d.hashes2 = null;
+                d.latest = null;
+                d.order = null;
+                d.part = null;
+            }
+        }
         List<String> names = plan.partition.stream().map(RowPlan::column).toList();
         parts.forEach((day, m) -> m.forEach((values, n) -> {
             ObjectNode p = JSON.createObjectNode().put("date", day);
@@ -164,6 +179,19 @@ final class LoadReport {
             p.put("rows", n);
             partitions.add(p);
         }));
+        writeRejects(workers, splits, lines);
+    }
+
+    /**
+     * The duplicate-record rule ({@link Latest}; TOOLS.md section 4.13): per date, the ids seen more than once (by both hashes), the copy
+     * kept (latest {@code latest-by}, else the last read) and the copies dropped. The dropped ones leave the row and partition counts, are
+     * counted in {@link #duplicates} and named in {@link #duplicateExamples}; {@link #dropped} tells the write stage which to skip.
+     */
+    private void resolveDuplicates(Map<Integer, List<long[]>> hashes, Map<Integer, List<ParseWorker.DateRows>> byDay,
+            Map<String, Map<List<String>, Long>> parts, List<Split> splits, ParseWorker.LineCounts lines) {
+        record Copy(long ts, long order, List<String> part) {}
+        record Drop(long dropped, long kept) {}
+        List<Object[]> examples = new ArrayList<>();
         hashes.forEach((day, lists) -> {
             int n = lists.stream().mapToInt(a -> a.length).sum();
             long[] all = new long[n];
@@ -173,17 +201,72 @@ final class LoadReport {
                 at += a.length;
             }
             Arrays.sort(all);
-            long dups = 0;
+            java.util.Set<Long> twice = new java.util.HashSet<>();
             for (int i = 1; i < all.length; i++) {
                 if (all[i] == all[i - 1]) {
-                    dups++;
+                    twice.add(all[i]);
                 }
             }
-            if (dups > 0) {
-                duplicates.put(LocalDate.ofEpochDay(day).toString(), dups);
+            if (twice.isEmpty()) {
+                return;
             }
+            Map<List<Long>, List<Copy>> copies = new LinkedHashMap<>();
+            for (ParseWorker.DateRows d : byDay.get(day)) {
+                for (int i = 0; i < d.nHashes; i++) {
+                    if (twice.contains(d.hashes[i])) {
+                        copies.computeIfAbsent(List.of(d.hashes[i], d.hashes2[i]), k -> new ArrayList<>())
+                                .add(new Copy(d.latest[i], d.order[i], d.partValues.get(d.part[i])));
+                    }
+                }
+            }
+            String iso = LocalDate.ofEpochDay(day).toString();
+            java.util.Set<Long> drop = new java.util.HashSet<>();
+            List<Drop> drops = new ArrayList<>();
+            for (List<Copy> c : copies.values()) {
+                if (c.size() < 2) {
+                    continue;
+                }
+                Copy best = c.get(0);
+                for (Copy x : c) {
+                    if (Latest.beats(x.ts(), x.order(), best.ts(), best.order())) {
+                        best = x;
+                    }
+                }
+                for (Copy x : c) {
+                    if (x != best) {
+                        drop.add(x.order());
+                        drops.add(new Drop(x.order(), best.order()));
+                        parts.get(iso).merge(x.part(), -1L, Long::sum);
+                    }
+                }
+            }
+            if (drop.isEmpty()) {
+                return;
+            }
+            dropped.put(day, drop);
+            duplicates.put(iso, (long) drop.size());
+            rowsByDate.merge(iso, (long) -drop.size(), Long::sum);
+            parts.get(iso).values().removeIf(v -> v <= 0);
+            drops.forEach(x -> examples.add(new Object[] {day, x}));
         });
-        writeRejects(workers, splits, lines);
+        examples.sort((x, y) -> {
+            int c = Integer.compare((Integer) x[0], (Integer) y[0]);
+            return c != 0 ? c : Long.compareUnsigned(((Drop) x[1]).dropped(), ((Drop) y[1]).dropped());
+        });
+        for (Object[] e : examples.subList(0, Math.min(KEEP_DUPLICATE_EXAMPLES, examples.size()))) {
+            Drop x = (Drop) e[1];
+            duplicateExamples.add(JSON.createObjectNode().put("date", LocalDate.ofEpochDay((Integer) e[0]).toString())
+                    .put("kept", where(x.kept(), splits, lines)).put("dropped", where(x.dropped(), splits, lines)));
+        }
+    }
+
+    private static String where(long order, List<Split> splits, ParseWorker.LineCounts lines) {
+        return where(new ParseWorker.Where(Latest.split(order), Latest.seq(order), Latest.line(order)), splits, lines);
+    }
+
+    /** The places in the input ({@link Latest#order}) of the copies a date drops; empty when it has no duplicates. */
+    java.util.Set<Long> dropped(LocalDate date) {
+        return dropped.getOrDefault((int) date.toEpochDay(), java.util.Set.of());
     }
 
     /** {@code file:line} (the line counted in its file, as lake build counts it). */
@@ -282,6 +365,8 @@ final class LoadReport {
             rj.put("file", rejectsFile);
         }
         s.set("duplicates", JSON.valueToTree(duplicates));
+        s.set("duplicateExamples", JSON.valueToTree(duplicateExamples));
+        s.put("latestBy", plan.latestBy);
         s.set("files", JSON.valueToTree(files));
         s.put("sampleId", sampleId).put("sampleDate", sampleDate);
         ObjectNode timings = s.putObject("timings");

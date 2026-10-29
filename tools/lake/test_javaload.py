@@ -41,7 +41,8 @@ def test_the_options_become_the_loaders_configuration(tmp_path):
     c = javaload.config(a, p, None, "/lake", True, tmp_path, env)
     assert c["source"] == {"files": ["/data/pv"], "recursive": True, "id": "POSITION_ID", "date": "BUSINESS_DATE",
                            "promote": ["LEGAL_ENTITY", "DESK"], "vectors": ["SCENARIO_PV"], "flatten": {"NOTIONAL": "LEGS[0].NOTIONAL"},
-                           "partition-by": []}         # Iceberg keeps the partition field as a column, as lake build's Iceberg path does
+                           "partition-by": [], "latest-by": ""}   # Iceberg keeps the partition field as a column, as lake build's Iceberg path does
+    assert javaload.config(a, {**p, "latest_by": "COMPUTED_AT"}, None, "/lake", True, tmp_path, {})["source"]["latest-by"] == "COMPUTED_AT"
     assert c["target"]["format"] == "iceberg" and c["target"]["lake"] == "/lake" and c["target"]["kind"] == "scenario-pv"
     assert c["target"]["iceberg"]["s3.region"] == "eu-west-2"
     assert c["target"]["iceberg"]["token"] == "${DRISHTI_LOADER_SECRET_1}" and env["DRISHTI_LOADER_SECRET_1"] == "s3cr3t"

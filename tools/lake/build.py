@@ -200,6 +200,8 @@ def pack_defaults(pack: pathlib.Path, kind: str | None, connector: str | None = 
     if kind and isinstance(ing.get(kind), dict):
         out["key"] = ing[kind].get("key")
         out["date"] = ing[kind].get("date")
+        if isinstance(ing[kind].get("latest-by"), str):
+            out["latest_by"] = ing[kind]["latest-by"]
         fl = ing[kind].get("flatten") or {}
         if isinstance(fl, dict) and fl:
             out["flatten"] = {str(n): str(p) for n, p in fl.items()}
@@ -210,9 +212,11 @@ def plan(a) -> dict:
     """The run's settings: the options, filled from --pack where they are missing."""
     p = {"pack": a.pack_name, "domain": a.domain, "kind": a.kind, "key": a.key, "date": a.date, "promote": split(a.promote),
          "partition_by": split(a.partition_by), "connector": getattr(a, "connector", None), "table": getattr(a, "table", None),
-         "vectors": split(getattr(a, "vector", None))}
+         "vectors": split(getattr(a, "vector", None)), "latest_by": getattr(a, "latest_by", None)}
     if a.pack:
         d = pack_defaults(pathlib.Path(a.pack), a.kind, p["connector"])
+        if p["latest_by"] is None:
+            p["latest_by"] = d.get("latest_by")
         for k in ("pack", "domain", "kind", "key", "date", "connector", "table"):
             p[k] = p[k] or d.get(k)
         if not p["promote"] and a.promote is None:
@@ -220,6 +224,7 @@ def plan(a) -> dict:
         p["flatten"] = d.get("flatten") or {}
         p["vectors"] = p.get("vectors") or d.get("vectors") or []
     p["key"] = p["key"] or "id"
+    p["latest_by"] = stage.LATEST_BY if p["latest_by"] is None else (p["latest_by"].strip() or None)
     if p["table"] and (not str(p["table"]).replace("_", "").replace("-", "").isalnum()):
         raise BuildError(f"--table is a folder name under the domain, not a path: {p['table']}")
     if not p["kind"]:
@@ -327,7 +332,8 @@ def _go(a, p, as_of, lake, table, summary, prog, started, say, remote_root: str 
             javaload.wanted(a, jsonstream.input_files(a.src, a.recursive), a.jar, a.java)
         if use:
             return _go_java(a, p, as_of, lake, table, summary, prog, started, say, staging, remote_root, iceberg, why)
-    st = stage.Stager(staging, p["key"], p["date"], as_of, p["partition_by"], p["promote"], p.get("flatten"), p.get("vectors"))
+    st = stage.Stager(staging, p["key"], p["date"], as_of, p["partition_by"], p["promote"], p.get("flatten"), p.get("vectors"),
+                      p.get("latest_by"))
     try:
         if table and not iceberg:                                          # a table of another partitioning fails before anything is read
             writers.check_layout(writers.Table(table, [stage.column_name(c) for c in p["partition_by"]], {}, a.mode, a.batch_rows, []))
@@ -346,8 +352,8 @@ def _go(a, p, as_of, lake, table, summary, prog, started, say, remote_root: str 
                                 documents=st.stats.read, rejected=st.stats.rejected)
             done_bytes += r.size
             st.stats.files.append({"file": str(f), "bytes": r.size})
-        st.close()
-        prog.update(force=True, phase="read", bytesRead=total_bytes, bytesTotal=total_bytes, documents=st.stats.read, rejected=st.stats.rejected)
+        st.resolve()                                       # one copy of an id per date: the latest, else the last read
+        prog.update(force=True, phase="read",bytesRead=total_bytes, bytesTotal=total_bytes, documents=st.stats.read, rejected=st.stats.rejected)
         read_s = time.monotonic() - t0
         by_day = st.by_day()
         names = [stage.column_name(c) for c in p["partition_by"]]
@@ -356,7 +362,8 @@ def _go(a, p, as_of, lake, table, summary, prog, started, say, remote_root: str 
                                  for d, parts in by_day.items() for x in parts]
         summary.update(documents=st.stats.read, accepted=st.stats.accepted, rejected=st.stats.rejected,
                        rejects={"byReason": dict(st.stats.rejects.most_common()), "first": st.stats.reject_samples},
-                       duplicates=dict(st.stats.duplicates), files=st.stats.files,
+                       duplicates=dict(sorted(st.stats.duplicates.items())), duplicateExamples=st.stats.duplicate_examples,
+                       latestBy=p.get("latest_by"), files=st.stats.files,
                        sampleId=st.stats.sample[0] if st.stats.sample else None, sampleDate=st.stats.sample[1] if st.stats.sample else None)
         timings = {"readSeconds": round(read_s, 3)}
         summary["timings"] = timings
@@ -577,14 +584,17 @@ def report(s: dict, say) -> None:
         say(f"{'business date':<15}" + "".join(f"{n:<18}" for n in names) + f"{'rows':>9}" + ("   (dry run)" if s.get("dryRun") else ""))
         for x in s["partitions"]:
             say(f"{x['date']:<15}" + "".join(f"{str(v if v is not None else '(none)'):<18}" for v in x["values"].values()) + f"{x['rows']:>9}")
-        written = 0 if s.get("dryRun") or s["status"] == "failed" else s["accepted"]
+        written = 0 if s.get("dryRun") or s["status"] == "failed" else sum((s.get("rows") or {}).values())
         say(f"documents read: {s['documents']}, rows written: {written}, rejected: {s['rejected']}" + (" (nothing was committed)" if s["status"] == "failed" else ""))
     for reason, n in (s.get("rejects") or {}).get("byReason", {}).items():
         say(f"  rejected {n}: {reason}")
     for x in (s.get("rejects") or {}).get("first", [])[:5]:
         say(f"    e.g. {x['where']}: {x['reason']}")
+    rule = f"the latest {s['latestBy']} kept, else the last read" if s.get("latestBy") else "the last read kept"
     for d, n in (s.get("duplicates") or {}).items():
-        say(f"  {n} id(s) appear more than once on {d} (a reader keeps one of them)")
+        say(f"  {n} duplicate cop{'y' if n == 1 else 'ies'} dropped on {d} ({rule})")
+    for x in (s.get("duplicateExamples") or [])[:5]:
+        say(f"    e.g. {x['date']}: kept {x['kept']}, dropped {x['dropped']}")
     for x in s.get("signal") or []:
         say(f"  signal {x.get('date', '')}: " + ("sent" + (f", {x['verified']}" if x.get("verified") else "") if x.get("ok") else f"FAILED {x.get('status', '')} {x.get('error', '')}"))
     if s.get("summaryFile"):
@@ -602,6 +612,9 @@ def add_arguments(p: argparse.ArgumentParser) -> argparse.ArgumentParser:
     g.add_argument("--key", help="the id field, a dotted path (default: the pack's ingest key, else id)")
     g.add_argument("--date", help="the business-date field, a dotted path (ISO date or date-time, or yyyymmdd)")
     g.add_argument("--as-of", metavar="YYYY-MM-DD", help="one business date for every document (a snapshot) instead of --date")
+    g.add_argument("--latest-by", metavar="FIELD",
+                   help="when an id appears more than once on one business date, keep the copy with the latest FIELD (an ISO timestamp); "
+                        "default: the pack's ingest latest-by, else COMPUTED_AT; give '' for the last one read (TOOLS.md section 4.13)")
     g.add_argument("--partition-by", action="append", metavar="COL[,COL]", help="partition columns after business_date (dotted paths; up to 4)")
     g.add_argument("--promote", action="append", metavar="COL[,COL]", help="fields to keep as real columns too (default: the pack's layout columns)")
     g.add_argument("--vector", action="append", metavar="COL[,COL]",

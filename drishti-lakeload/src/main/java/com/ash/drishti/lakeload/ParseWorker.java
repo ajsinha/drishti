@@ -62,7 +62,14 @@ final class ParseWorker implements Callable<Void> {
         final List<Runs.Run> runs = new ArrayList<>();
         long[] hashes = new long[1024];
         int nHashes;
+        /** Per row, beside its hash: the second hash, the {@code latest-by} timestamp, the place in the input, the partition (index). */
+        long[] hashes2 = new long[1024];
+        long[] latest = new long[1024];
+        long[] order = new long[1024];
+        int[] part = new int[1024];
         final Map<List<String>, Long> partitions = new LinkedHashMap<>();
+        final Map<List<String>, Integer> partIndex = new HashMap<>();
+        final List<List<String>> partValues = new ArrayList<>();
         long rows;
 
         DateRows(int arena) {
@@ -200,24 +207,44 @@ final class ParseWorker implements Callable<Void> {
 
     private void accept(Chunk c, int line) {
         DateRows d = dates.computeIfAbsent(parser.epochDay, k -> new DateRows((int) Math.min(8 << 20, Math.max(64 << 10, budget / 4))));
+        long order = Latest.order(c.split().id(), c.seq(), line);
+        parser.record.putLong(order);                                  // the record's place in the input, last: the write stage drops duplicates by it
         long before = d.buffer.bytes;
         d.buffer.add(parser.record.a, parser.record.n);
         buffered += d.buffer.bytes - before;
         if (d.nHashes == d.hashes.length) {
-            d.hashes = Arrays.copyOf(d.hashes, d.nHashes * 2);
+            int n = d.nHashes * 2;
+            d.hashes = Arrays.copyOf(d.hashes, n);
+            d.hashes2 = Arrays.copyOf(d.hashes2, n);
+            d.latest = Arrays.copyOf(d.latest, n);
+            d.order = Arrays.copyOf(d.order, n);
+            d.part = Arrays.copyOf(d.part, n);
         }
-        d.hashes[d.nHashes++] = parser.idHash;
-        d.rows++;
+        List<String> values;
         if (view.plan().partition.isEmpty()) {
-            d.partitions.merge(List.of(), 1L, Long::sum);
+            values = List.of();
         } else {
             view.at(parser.record.a, 0);
-            String[] values = new String[view.partitions()];
-            for (int j = 0; j < values.length; j++) {
-                values[j] = view.partition(j);
+            String[] v = new String[view.partitions()];
+            for (int j = 0; j < v.length; j++) {
+                v[j] = view.partition(j);
             }
-            d.partitions.merge(Arrays.asList(values), 1L, Long::sum);
+            values = Arrays.asList(v);
         }
+        d.partitions.merge(values, 1L, Long::sum);
+        Integer pi = d.partIndex.get(values);
+        if (pi == null) {
+            pi = d.partValues.size();
+            d.partIndex.put(values, pi);
+            d.partValues.add(values);
+        }
+        int i = d.nHashes++;
+        d.hashes[i] = parser.idHash;
+        d.hashes2[i] = parser.idHash2;
+        d.latest[i] = parser.latest;
+        d.order[i] = order;
+        d.part[i] = pi;
+        d.rows++;
         Where w = new Where(c.split().id(), c.seq(), line);
         if (sampleAt == null || w.compareTo(sampleAt) < 0) {
             sampleAt = w;

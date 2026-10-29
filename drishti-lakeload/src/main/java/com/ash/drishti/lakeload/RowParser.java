@@ -76,6 +76,7 @@ final class RowParser {
     private final Cap[] caps;
     private final int keySlot;
     private final int dateSlot;
+    private final int latestSlot;
     private final int[] promotedSlots;
     private final int[] partitionSlots;
     private final int[] flattenSlots;
@@ -92,6 +93,10 @@ final class RowParser {
     int epochDay;
     String id;
     long idHash;
+    /** A second, independent hash of the id: two ids are one record's copies only when both hashes agree. */
+    long idHash2;
+    /** The record's {@code latest-by} timestamp ({@link Latest#micros}), {@link Latest#NONE} without one. */
+    long latest;
     /** Per promoted column: a value that is not a number was seen (or it is an id field); a value was seen at all. */
     final boolean[] notNumeric;
     final boolean[] seen;
@@ -101,6 +106,7 @@ final class RowParser {
         Map<String, Integer> slots = new HashMap<>();
         keySlot = slot(slots, plan.key, false);
         dateSlot = plan.date == null || plan.asOf != null ? -1 : slot(slots, plan.date, false);
+        latestSlot = plan.latestBy == null ? -1 : slot(slots, plan.latestBy, false);
         promotedSlots = new int[plan.promoted.size()];
         for (int i = 0; i < promotedSlots.length; i++) {
             promotedSlots[i] = slot(slots, plan.promoted.get(i).path(), false);
@@ -454,6 +460,8 @@ final class RowParser {
         }
         byte[] idBytes = id.getBytes(StandardCharsets.UTF_8);
         idHash = hash(idBytes);
+        idHash2 = hash2(idBytes);
+        latest = latestSlot < 0 || caps[latestSlot].kind != Cap.STRING ? Latest.NONE : Latest.micros(caps[latestSlot].text);
         // the sort key: the partition values, the sort fields, the id
         key.clear();
         for (int slot : partitionSlots) {
@@ -624,6 +632,18 @@ final class RowParser {
         h ^= h >>> 33;
         h *= 0xc4ceb9fe1a85ec53L;
         return h ^ h >>> 33;
+    }
+
+    /** A second hash of the id (another basis and mix), to tell two ids apart whose {@link #hash} agrees. */
+    static long hash2(byte[] b) {
+        long h = 0x84222325cbf29ce4L;
+        for (byte x : b) {
+            h = (h ^ (x & 0xff)) * 0x9e3779b97f4a7c15L;
+            h = Long.rotateLeft(h, 29);
+        }
+        h ^= h >>> 31;
+        h *= 0xbf58476d1ce4e5b9L;
+        return h ^ h >>> 29;
     }
 
     /** A growable list of doubles (one vector's values, reused row after row). */

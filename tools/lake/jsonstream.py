@@ -52,18 +52,19 @@ class Bad:
 
 
 def input_files(inputs, recursive: bool = False) -> list[pathlib.Path]:
-    """The files named by ``inputs`` (files or folders), in a stable order."""
+    """The files named by ``inputs`` (files or folders), in one deterministic order: sorted by absolute path (as text), whatever the
+    order of the inputs, so "the last one read" means the same in the Python path and the Java loader (TOOLS.md section 4.13)."""
     out: list[pathlib.Path] = []
     for i in inputs if isinstance(inputs, (list, tuple)) else [inputs]:
         p = pathlib.Path(i)
         if p.is_dir():
             pattern = "**/*" if recursive else "*"
-            out += sorted(f for f in p.glob(pattern) if f.is_file() and f.name.lower().endswith(SUFFIXES))
+            out += [f for f in p.glob(pattern) if f.is_file() and f.name.lower().endswith(SUFFIXES)]
         elif p.is_file():
             out.append(p)
         else:
             raise FileNotFoundError(str(p))
-    return out
+    return sorted(out, key=lambda f: str(f.absolute()))
 
 
 class _Counted(io.RawIOBase):

@@ -120,7 +120,7 @@ One setting bounds the load whatever its input: **`memory.budget-mb`** (default 
 | the writers | 30 % (the rest) | half for reading runs while merging (each writer reads each run of its range through `share / (writers × runs)`, 8 KB to 1 MB; more runs than fit at 64 KB each are first merged into fewer), half for the Parquet row groups being filled |
 
 An explicit `parallel.queue-mb` or `memory.sort-buffer-mb` must leave the writers at least a tenth of the budget. The budget is
-for the load's data; the JVM's own (classes, Kernel, the S3 client, the id hashes that count duplicates: 8 bytes a row) comes on top,
+for the load's data; the JVM's own (classes, Kernel, the S3 client, the per-row duplicate arrays: about 36 bytes a row, freed before the write) comes on top,
 so `-Xmx` should be the budget plus 1 to 2 GB. The summary's `memory` reports the shares, the **peak heap used** (sampled every 20 ms,
 garbage included), the **peak heap after GC** (what the load really held) and the MB spilled. Measured: the 10,000-position load below
 ran in a JVM of `-Xmx192m` with a 32 MB budget (peak after GC 78 MB, 33 MB spilled) and wrote the same table as with 7.8 GB.
@@ -292,8 +292,18 @@ Made by the builder where the brief left a choice; each the conservative one.
    rejected a row (a promoted field holding a list) or dropped a value (an object), the loader keeps the JSON text; the Python Iceberg path
    makes no column for a field null on every row, the loader makes it.
 8. **Format**: JSON Lines only (the data standard); a JSON array is the Python path's (auto never sends one to the loader).
-9. **Duplicates** in a JSON object keep both keys in the document (Python keeps the last value); duplicate ids are counted per date
-   exactly (64-bit hashes, sorted), with no cap.
+9. **Duplicates** in a JSON object keep both keys in the document (Python keeps the last value).
+   **Duplicate records** (one id twice on one business date; product owner, 2026-10-29) follow one rule on both paths, so both write
+   the same table: the copy with the latest `COMPUTED_AT` (`source.latest-by`; ISO-8601 text, no offset is UTC) is kept, else (none,
+   or a tie) the last one read in one deterministic order (files sorted by path, then line order; a copy with a timestamp beats one
+   without); the others are dropped, counted per date (`duplicates`) and named (up to ten `duplicateExamples`: `kept` and `dropped`
+   as `file:line`); never a failure. How: each row record ends with its place in the input (split, chunk, line: 8 bytes); after the
+   read the ids seen twice (64-bit hashes sorted, exact, no cap; a second 64-bit hash tells two ids with one first hash apart) are
+   resolved from per-row arrays (the hashes, the timestamp, the place, the partition: about 36 bytes a row, freed before the write),
+   the losers leave the row and partition counts, and the write stage skips them by their place. The Python path stages every row with
+   its place, then re-reads only the dates with duplicates (`stage.Stager.resolve`). Before 2.9.6 both copies were written by both
+   paths, in an order that differed between them (`PythonPathEqualityTest` failed when an uncompressed copy of a test file sat beside its
+   `.gz`); the test now builds that very case, with and without `COMPUTED_AT`, on Delta and Iceberg.
 10. **Rejects' place**: `file:line` counted in the file, as lake build, also for byte ranges (the ranges' line counts are summed).
 11. **Vectors**: a NaN element is stored as null (as Drishti's Delta writer); JSON has no NaN except Python's extension.
 12. **Lock interop**: `lake build` also takes a POSIX lock (section 9) rather than the loader learning `flock`, which Java cannot take.
