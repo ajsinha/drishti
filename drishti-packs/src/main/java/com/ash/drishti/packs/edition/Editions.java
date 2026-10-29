@@ -132,7 +132,7 @@ public final class Editions {
         Path f = dir.resolve(name + ".yaml");
         if (!Files.isRegularFile(f)) {
             throw new IllegalStateException(NAME + "='" + name + "': no edition file " + f.toAbsolutePath().normalize()
-                    + " (set " + DIR + " / DRISHTI_EDITIONS_DIR to the folder of the edition files, or blank " + NAME + " for the full Drishti)");
+                    + " (set " + DIR + " / DRISHTI_EDITIONS_DIR to the folder of the edition files, or blank " + NAME + " for the full product)");
         }
         return f;
     }

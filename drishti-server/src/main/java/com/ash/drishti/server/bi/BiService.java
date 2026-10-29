@@ -81,8 +81,12 @@ public final class BiService {
     private final ImpactAnalyzer impact;
     private final BiNotifier notifier;
     private final BiRenames renames;
-    @org.springframework.beans.factory.annotation.Autowired(required = false)
     private com.ash.drishti.server.edition.EditionBi editionBi = com.ash.drishti.server.edition.EditionBi.NONE;
+
+    @org.springframework.beans.factory.annotation.Autowired(required = false)
+    void editionBi(com.ash.drishti.server.edition.EditionBi e) {   // EDITIONS.md 5.5; setter injection: optional, NONE without an edition
+        this.editionBi = e == null ? com.ash.drishti.server.edition.EditionBi.NONE : e;
+    }
 
     public BiService(BiProperties props, BiStore store, BiFolder folder, BiAccess access, AuditLog audit, UserService users, RoleCatalog roles,
             PackAccess packs, Entitlements entitlements, GovernanceProperties governance, SecurityProperties security, BiGovProperties gov, ImpactAnalyzer impact,
