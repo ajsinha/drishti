@@ -169,7 +169,7 @@ dates, not the day of the extract), so the walk-through below uses `--as-of` for
 $ drishti-console/.venv/bin/python tools/drishti.py lake build --from data/testdata/trades/endur/snapshot-2026-07-08.jsonl.gz \
     --kind trade --key TRADE_ID --as-of 2026-09-22 --partition-by PRODUCT_TYPE --promote COUNTERPARTY,PORTFOLIO,QUANTITY \
     --lake lake --domain trading
-engine: drishti (Drishti's Java writer in drishti-server-2.9.5-exec.jar)
+engine: drishti (Drishti's Java writer in drishti-server-2.9.6-exec.jar)
 business date  PRODUCT_TYPE           rows
 2026-09-22     CallNot                  50
 2026-09-22     Cash                    723
@@ -197,7 +197,7 @@ The next file of the book holds the day's changes (159 trades). Two bad lines ad
 $ (zcat data/testdata/trades/endur/changes-2026-09-23.jsonl.gz; echo '{"PRODUCT_TYPE": "Cash"}'; echo 'not json') | gzip > day2.jsonl.gz
 $ drishti-console/.venv/bin/python tools/drishti.py lake build --from day2.jsonl.gz --kind trade --key TRADE_ID --as-of 2026-09-23 --partition-by PRODUCT_TYPE \
     --promote COUNTERPARTY,PORTFOLIO,QUANTITY --lake lake --domain trading
-engine: drishti (Drishti's Java writer in drishti-server-2.9.5-exec.jar)
+engine: drishti (Drishti's Java writer in drishti-server-2.9.6-exec.jar)
 business date  PRODUCT_TYPE           rows
 2026-09-23     Cash                     27
 2026-09-23     ComFut                   29
@@ -402,7 +402,7 @@ removed by the next run, which holds the lock. A summary (the run of 4.3, two of
  "sampleId": "1000029", "sampleDate": "2026-09-23",
  "timings": {"readSeconds": 0.035, "writeSeconds": 2.159, "totalSeconds": 2.201},
  "engine": "drishti",
- "engineWhy": "Drishti's Java writer in drishti-server-2.9.5-exec.jar",
+ "engineWhy": "Drishti's Java writer in drishti-server-2.9.6-exec.jar",
  "batchRows": 10565, "averageDocumentBytes": 12703,
  "commit": {"commits": 1, "version": 1, "files": 4},
  "columns": {"partition": ["PRODUCT_TYPE"], "promoted": {"COUNTERPARTY": "string", "PORTFOLIO": "string", "QUANTITY": "double"}},
@@ -949,7 +949,7 @@ and `server smoke` (opens sample views of every kind on two dates; exit `1` on a
 ```
 $ drishti-console/.venv/bin/python tools/drishti.py doctor --server http://127.0.0.1:19590 --token-file ~/.drishti-token
 GREEN  java                    /usr/lib/jvm/java-21-openjdk-amd64/bin/java: Java 21.0 (Ubuntu)
-GREEN  server jar              <repo>/drishti-server/target/drishti-server-2.9.5-exec.jar (version 2.5.0)
+GREEN  server jar              <repo>/drishti-server/target/drishti-server-2.9.6-exec.jar (version 2.5.0)
 GREEN  python                  <repo>/drishti-console/.venv/bin/python: Python 3.13.15
 GREEN  python pyyaml           installed
 GREEN  python deltalake        installed

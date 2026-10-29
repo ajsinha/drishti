@@ -13,6 +13,44 @@
 
   See the LICENSE file in the root of this repository for the full terms.
 -->
+# Drishti 2.9.6 — release notes
+
+*Released 2026-10-29.* **Drishti Risk with one setting; VaR sharded across servers; a parallel Java loader; servers that run for
+days.**
+
+- **Editions: Drishti Risk** ([EDITIONS_GUIDE](docs/admin/EDITIONS_GUIDE.md), [EDITIONS](docs/architecture/EDITIONS.md)): one setting,
+  `drishti.edition: risk` (or `DRISHTI_EDITION=risk`), turns an instance into **Drishti Risk**, VaR and exposure first: its packs
+  (others refused, `DRS-1017`), its commands (others hidden from the command line, FUNC and type-ahead, `DRS-4023`; the engines still
+  read every kind), its menus, help, Knowledge, Admin pages, BI datasets and models, and its name. Three landings: **Risk desk** (the
+  default), **Command first** and **Risk map**, each person's choice remembered. On a full instance, the **lens** (`drishti.lenses:
+  risk`, off by default) gives each person *Open Drishti Risk* and *Leave Drishti Risk*, with no restart; a lens hides, it does not
+  secure. Without an edition Drishti is exactly as before. Works across a cluster; Admin → Net warns when members differ.
+- **VaR sharded across Drishti\*net** ([VAR_SHARDING](docs/architecture/VAR_SHARDING.md)): off by default; with the market-risk pack's
+  `sharding:` block each date is cut into legal-entity and desk ranges, owned by two members each (rendezvous hashing, no consensus
+  protocol); every member keeps every node's aggregate, so bank and desk totals answer even with a shard's owners down; other scopes sum
+  one partial per shard, never a partial VaR (`DRS-5215`); handover and drain for scale-in. Equal to one server to the cent.
+- **The parallel lake loader** ([PARALLEL_LOADER](docs/architecture/PARALLEL_LOADER.md), [TOOLS 4.13](docs/guides/TOOLS.md)): a
+  config-driven, multi-threaded Java loader of JSON Lines from a folder or S3 into Delta or Iceberg, memory bounded, one commit per
+  date. `lake build` keeps the Python path as the default; `--engine java` asks for the loader. Both follow one duplicate-record rule:
+  the latest `COMPUTED_AT` wins (else the last read), the others counted, never a failure.
+- **Servers that run for days:** lake, hot-file, compute and content-store reads no longer exhaust direct memory (a server had stopped
+  answering trade pages after about 13 hours); Kafka fetches capped; every launcher gains the long-run JVM flags (a cached-buffer cap,
+  a heap dump on out-of-memory, a rotated GC log, native memory tracking); Admin → Health shows memory and files (direct, mapped, heap,
+  threads, open and deleted files).
+- **Fixes:** an intraday batch can no longer bring back a date a reload dropped (published only over the date it was built on);
+  reporting currencies always carry the current intraday layer; batches listed in a stable order; cluster changes queued for suspected
+  members; the browser tests ignore a checkout's own connector and cluster files.
+- **Documents:** the ViewModel contract and its JSON Schema ([VIEWMODEL](docs/architecture/VIEWMODEL.md),
+  `GET /api/v1/viewmodel/schema`); how a screen is made, generic not bespoke (ARCHITECTURE section 7a); a worked example of every data
+  type, field by field ([data samples](docs/contracts/samples/README.md)), with every input contract audited against all its rows and a
+  drift test; the computed-attributes analysis of the market-risk and counterparty-risk packs, with its decisions
+  ([COMPUTED_ATTRIBUTES](docs/architecture/COMPUTED_ATTRIBUTES.md)); the documentation consolidated (178 to 152 active documents,
+  obsolete designs deleted); the README rewritten as a product page.
+- **Upgrade:** rebuild the server image or jar so the new launch flags apply; nothing else to do. The lens and sharding are off until
+  you turn them on.
+- **Known open:** the soak audit's long-run items, the scale benchmark at 200K positions, the remaining computed-attribute work,
+  stressed and 10-day VaR, the client-side renderer and the deck clean-up are planned for 2.9.7.
+
 # Drishti 2.9.5 — release notes
 
 *Released 2026-10-28.* **Iceberg as a full alternative to Delta; VaR hierarchies of your own, such as

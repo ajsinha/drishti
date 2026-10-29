@@ -35,7 +35,7 @@ from core.config import Settings
 from core.nextpath import to_login
 
 WEB = Path(__file__).resolve().parent.parent / "web"
-ASSET_VERSION = "2.9.5"
+ASSET_VERSION = "2.9.6"
 
 
 def _bounded(value, low: int, high: int, default: int) -> int:

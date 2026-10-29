@@ -15,7 +15,7 @@
 -->
 # Changelog
 
-## Unreleased (2.9.6)
+## 2.9.6 — Drishti Risk (editions, landings, lens); VaR sharded across servers; the parallel Java loader; servers that run for days (2026-10-29)
 
 ### Editions: Drishti Risk with one setting, and the risk lens (2026-10-29)
 

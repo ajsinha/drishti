@@ -346,7 +346,7 @@ server in), then in the folders of `drishti.packs.extra-dirs` (`DRISHTI_PACKS_EX
 
    ```bash
    export JAVA_HOME=/usr/lib/jvm/java-21-openjdk-amd64
-   DRISHTI_PACKS=market-risk,world-economy java -jar drishti-server/target/drishti-server-2.9.5-exec.jar
+   DRISHTI_PACKS=market-risk,world-economy java -jar drishti-server/target/drishti-server-2.9.6-exec.jar
    ```
 
    (or, from the IDE, the run configuration **Drishti server** with `DRISHTI_PACKS` changed; [GETTING_STARTED.md (IDE)](GETTING_STARTED.md#running-from-intellij-idea-and-pycharm)).
