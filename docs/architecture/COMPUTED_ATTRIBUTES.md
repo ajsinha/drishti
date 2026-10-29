@@ -36,7 +36,7 @@ points to the contract's section; where no contract covers an attribute, the for
 4. [Market-risk pack, kind by kind](#4-market-risk-pack-kind-by-kind)
 5. [Counterparty credit risk pack, kind by kind](#5-counterparty-credit-risk-pack-kind-by-kind)
 6. [Findings: duplicates and inconsistencies](#6-findings-duplicates-and-inconsistencies)
-7. [Cross-pack consistency rules](#7-cross-pack-consistency-rules)
+7. [Cross-pack consistency rules](#7-cross-pack-consistency-rules-proposal)
 8. [Proposed derived kinds and Sutra expressions (illustrations)](#8-proposed-derived-kinds-and-sutra-expressions-illustrations)
 9. [Recommended build order, retirement and reconciliation](#9-recommended-build-order-retirement-and-reconciliation)
 10. [Modelling choices for the product owner](#10-modelling-choices-for-the-product-owner)
