@@ -40,7 +40,7 @@ points to the contract's section; where no contract covers an attribute, the for
 8. [Proposed derived kinds and Sutra expressions (illustrations)](#8-proposed-derived-kinds-and-sutra-expressions-illustrations)
 9. [Recommended build order, retirement and reconciliation](#9-recommended-build-order-retirement-and-reconciliation)
 10. [Modelling choices for the product owner](#10-modelling-choices-for-the-product-owner)
-11. [Open questions](#11-open-questions)
+11. [Open questions](#11-open-questions-decided)
 12. [Sources read](#12-sources-read)
 
 ---
@@ -685,7 +685,7 @@ date order to the final business date 2026-09-30 (the `cob-*` files for the sing
 | F22 | **Product named three ways** | `trade-valuation.PRODUCT_TYPE` `TRIPARTY_REPO`; `netting-set.TRADES[].PRODUCT` and `exposure-path.PRODUCT` "Tri-party repo"; `ASSET_CLASS` in CCR vs `PRODUCT_GROUP` in market risk for the same grouping | joins and filters across pages fail | codes stored, labels from a lookup (7.2) |
 | F23 | **Two maturity-bucket sets** | netting-set `MATURITY_BUCKET` 0-1Y, 1-2Y, 2-5Y, 5-10Y, 10Y+ (`netting-set.contract.yaml`; TVAL.md setting) vs credit-limit buckets 0-1Y, 1-3Y, 3-5Y, 5-10Y, 10Y+ (`samples/credit-limit.jsonl`) | a 2.5-year trade is in "2-5Y" on one page and "1-3Y" on another | one bucket set per purpose, named (open question 10) |
 | F24 | **SA-CCR add-ons do not follow the trades** | add-on asset classes match the set's trade asset classes on 7 of 76; securities-financing-only sets carry interest-rate add-ons; SACCR.md section 5 excludes SFTs | EAD not explainable from the trades | SACCR engine (5.7) |
-| F25 | **Book named four ways** | `PORTFOLIO` (trade-valuation, pnl-vector: a book id), `TT_BOOK` (pnl-vector, position), `BOOK` (netting-set trades, frtb-sensitivity, pnl-explain, stress `BY_BOOK`), while `portfolio` is also a kind (`PF-…`) of a different thing; the TVAL Sutra links `PORTFOLIO` as a `book` (line 54) | "portfolio" means two things in one pack | `BOOK` (or `TT_BOOK`) for the book everywhere; `PORTFOLIO` only for `PF-` (open question 11) |
+| F25 | **Book named four ways** | `PORTFOLIO` (trade-valuation, pnl-vector: a book id), `TT_BOOK` (pnl-vector, position), `BOOK` (netting-set trades, frtb-sensitivity, pnl-explain, stress `BY_BOOK`), while `portfolio` is also a kind (`PF-…`) of a different thing; the TVAL Sutra links `PORTFOLIO` as a `book` (line 54) | "portfolio" means two things in one pack | `BOOK` (or `TT_BOOK`) for the book everywhere; `PORTFOLIO` only for `PF-` (open question 11) (decided: `PORTFOLIO` keeps its name; descriptions say it holds the book id; open question 11) |
 
 **Top ten, by effect:** F3, F4, F1/F2, F7/F8, F11/F12, F17, F20, F5, F10, F19.
 
@@ -1003,30 +1003,32 @@ These are choices, not facts. Each has a default in a contract; the product owne
 | SIMM version and licensed parameters | the CSA's agreed version | — | SIMM, MC |
 | FRTB GIRR specified-currency reduction | off unless chosen (MAR21.44) | on | FRTB |
 | SA-CCR jurisdiction | BCBS | US, EU, OSFI overlays | SACCR |
-| Reporting currency for CCR | USD | per netting set's CSA currency | NSET, COLL, MC |
+| Reporting currency for CCR | **decided:** the sum currency rule (USD by default, configurable per entity; section 3) | — | NSET, COLL, MC |
 | Stress P&L method | full revaluation for defined scenarios | sensitivities, both | STR |
 | P&L explain tolerance | 10,000 USD and 10% | — | PNL |
 
 ---
 
-## 11. Open questions
+## 11. Open questions, decided
+
+The product owner decided every open question on 2026-10-29 (analysis decisions only: nothing is built or changed by them).
 
 | # | Question | Why it matters | Proposed answer |
 |---|---|---|---|
 | 1 | ~~In which currency are netting-set sums made?~~ **Decided (product owner):** every sum in USD by default, configurable per entity (a netting set, counterparty, group, limit… may ask for CAD or any currency); convert each member at FX(*d*), then add (section 3, *Sum currency*) | — | applies to every sum in both packs; the margin call may still be expressed in the CSA currency as the CSA requires, shown with its USD (or configured) equivalent |
-| 2 | **Is a parallel period wanted** (stored and computed both on the pages for a while), given the rule that they never coexist in a release? | Section 9.3 | Shadow and reconcile during development, publish the table, retire in the release |
-| 3 | **Do trades past their maturity date with a live status count?** 827 netting-set members do today; VaR positions exclude them. | NET_MTM on 21 of 76 sets | exclude (VaR's rule) and flag "past maturity, not matured" as a data-quality warning |
-| 4 | **Are the derived quick wins (Q1–Q4) wanted before the engines?** The plan parks every measure but VaR and EXP. | They are configuration only and remove F1, F2, F7 from view | yes for Q1, Q3; Q2 after check (a); Q4 with F5 |
-| 5 | **Do stored values stay as a reconciliation reference after retirement?** | The guard test forbids engine columns on inputs | no: keep the reconciliation table in the guide and the last stored date in Delta time travel |
-| 6 | Who may see derived totals that are shared by every reader (section 2)? | per-trade entitlements | risk roles only until the NSET engine computes as the reader |
-| 7 | Is a group's limit its own approved amount or the sum of members' limits? | F17 | its own, approved, stored on `counterparty-group` |
-| 8 | Should every VaR limit live in `var-limit` (with currency), leaving `risk-hierarchy` and `portfolio` without `LIMIT_VAR`? | F6 | yes |
-| 9 | One CSA per counterparty covering netting sets in four legal entities (test data): intended? A CSA normally sits under one agreement between two legal entities. | MC and COLL per CSA | regenerate one CSA per agreement and legal entity |
-| 10 | One maturity-bucket set, or one per purpose (limits vs display)? | F23 | named sets: `display` and `limit`, both in configuration |
-| 11 | `PORTFOLIO` for a book id: rename to `TT_BOOK`/`BOOK` in the market-risk inputs? | F25 | yes, with a contract major version |
-| 12 | Names and mnemonics for the derived kinds (`nset-mtm`, `cpty-mtm`, `stress-scenario-pnl`), or computed in place under the existing kinds' names? | navigation | computed in place when the engine ships; separate kinds only for the quick-win period |
-| 13 | Is the `netting-set.UTILISATION` formula known to the source? | F8 | if not, drop it now rather than reconcile |
-| 14 | Should `PNL_1D` stay delivered when PNL computes `ACTUAL`? | F14 | keep as the engine's own figure, shown with the MtM bridge |
+| 2 | **Is a parallel period wanted** (stored and computed both on the pages for a while), given the rule that they never coexist in a release? | Section 9.3 | **Decided: as proposed.** Shadow and reconcile during development, publish the table, retire in the release |
+| 3 | **Do trades past their maturity date with a live status count?** 827 netting-set members do today; VaR positions exclude them. | NET_MTM on 21 of 76 sets | **Decided: as proposed.** exclude (VaR's rule) and flag "past maturity, not matured" as a data-quality warning |
+| 4 | **Are the derived quick wins (Q1–Q4) wanted before the engines?** The plan parks every measure but VaR and EXP. | They are configuration only and remove F1, F2, F7 from view | **Decided: as proposed.** yes for Q1, Q3; Q2 after check (a); Q4 with F5 |
+| 5 | **Do stored values stay as a reconciliation reference after retirement?** | The guard test forbids engine columns on inputs | **Decided: as proposed.** no: keep the reconciliation table in the guide and the last stored date in Delta time travel |
+| 6 | Who may see derived totals that are shared by every reader (section 2)? | per-trade entitlements | **Decided: everyone.** Derived totals are visible to every user who may open the kind; per-trade entitlements are not applied to them until the netting-set engine computes per reader (a trade-off the product owner accepts) |
+| 7 | Is a group's limit its own approved amount or the sum of members' limits? | F17 | **Decided: as proposed.** its own, approved, stored on `counterparty-group` |
+| 8 | Should every VaR limit live in `var-limit` (with currency), leaving `risk-hierarchy` and `portfolio` without `LIMIT_VAR`? | F6 | **Decided: as proposed.** yes |
+| 9 | One CSA per counterparty covering netting sets in four legal entities (test data): intended? A CSA normally sits under one agreement between two legal entities. | MC and COLL per CSA | **Decided: as proposed.** regenerate one CSA per agreement and legal entity |
+| 10 | One maturity-bucket set, or one per purpose (limits vs display)? | F23 | **Decided: as proposed.** named sets: `display` and `limit`, both in configuration |
+| 11 | `PORTFOLIO` for a book id: rename to `TT_BOOK`/`BOOK` in the market-risk inputs? | F25 | **Decided: no.** `PORTFOLIO` keeps its name in the market-risk inputs; its description states that it holds the book id |
+| 12 | Names and mnemonics for the derived kinds (`nset-mtm`, `cpty-mtm`, `stress-scenario-pnl`), or computed in place under the existing kinds' names? | navigation | **Decided: as proposed.** computed in place when the engine ships; separate kinds only for the quick-win period |
+| 13 | Is the `netting-set.UTILISATION` formula known to the source? | F8 | **Decided: as proposed.** if not, drop it now rather than reconcile |
+| 14 | Should `PNL_1D` stay delivered when PNL computes `ACTUAL`? | F14 | **Decided: as proposed.** keep as the engine's own figure, shown with the MtM bridge |
 
 ---
 
