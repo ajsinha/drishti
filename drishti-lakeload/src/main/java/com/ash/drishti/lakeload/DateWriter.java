@@ -22,6 +22,7 @@ import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
+import java.util.Set;
 import java.util.UUID;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ExecutorService;
@@ -54,8 +55,12 @@ final class DateWriter {
         this.meter = meter;
     }
 
-    /** Writes the date's rows (every run) on {@code pool}; returns its files in key order. */
-    List<WrittenFile> write(LocalDate date, List<Runs.Run> runs, ExecutorService pool, int bufferBytes) throws IOException, InterruptedException {
+    /**
+     * Writes the date's rows (every run) on {@code pool}, leaving out the duplicate copies {@code dropped} names (their places in the
+     * input, {@link Latest#order}, the last eight bytes of each record); returns its files in key order.
+     */
+    List<WrittenFile> write(LocalDate date, List<Runs.Run> runs, ExecutorService pool, int bufferBytes, Set<Long> dropped)
+            throws IOException, InterruptedException {
         long bytes = runs.stream().mapToLong(r -> r.bytes).sum();
         int ranges = (int) Math.max(1, Math.min(writers * 2L, (bytes + layout.fileBytes() - 1) / layout.fileBytes()));
         List<byte[]> bounds = Runs.bounds(runs, ranges);
@@ -64,7 +69,7 @@ final class DateWriter {
             int range = r;
             byte[] lo = bounds.get(r);
             byte[] hi = bounds.get(r + 1);
-            tasks.add(pool.submit(() -> range(date, runs, lo, hi, range, bufferBytes)));
+            tasks.add(pool.submit(() -> range(date, runs, lo, hi, range, bufferBytes, dropped)));
         }
         List<WrittenFile> out = new ArrayList<>();
         try {
@@ -86,7 +91,8 @@ final class DateWriter {
     }
 
     /** One range: merged in key order and written into files. */
-    private List<WrittenFile> range(LocalDate date, List<Runs.Run> runs, byte[] lo, byte[] hi, int range, int bufferBytes) throws IOException {
+    private List<WrittenFile> range(LocalDate date, List<Runs.Run> runs, byte[] lo, byte[] hi, int range, int bufferBytes, Set<Long> dropped)
+            throws IOException {
         long t0 = System.nanoTime();
         RowView view = new RowView(plan);
         List<WrittenFile> files = new ArrayList<>();
@@ -94,6 +100,9 @@ final class DateWriter {
         Object[] state = new Object[3];                                 // the open file, its partition values, the last group key
         int[] seq = {0};
         Runs.merge(runs, lo, hi, (buf, off, len) -> {
+            if (!dropped.isEmpty() && dropped.contains((long) Bytes.LONG.get(buf, off + len - 8))) {
+                return;                                                 // a duplicate's copy that is not kept (TOOLS.md section 4.13)
+            }
             view.at(buf, off);
             String[] values = new String[view.partitions()];
             for (int j = 0; j < values.length; j++) {

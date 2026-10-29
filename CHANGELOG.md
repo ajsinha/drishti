@@ -49,6 +49,19 @@
 
 ### The parallel lake loader
 
+- **One duplicate-record rule for both loaders (2026-10-29, product owner).** When one id appears more than once on one business date
+  in one load, `lake build`'s Python path and the parallel loader now write the same table: the copy with the latest `COMPUTED_AT` is
+  kept (`--latest-by` / `source.latest-by` / the pack's `ingest.<kind>.latest-by` name another ISO-timestamp field; `''` turns it off),
+  else the last one read in one deterministic order (files sorted by path whatever order `--from` gives, then line order); the others
+  are dropped, counted per date in `duplicates` and named in `duplicateExamples` (`kept`, `dropped` as `file:line`); a load never fails
+  for them. Before, both copies were written, in an order that differed between the paths (`PythonPathEqualityTest` failed when a plain
+  copy of a test file sat beside its `.gz`). `rows` and the partitions now count the rows written; `accepted` still every valid document.
+  Code: `tools/lake/stage.py` (`instant_micros`, `Stager.resolve`), `jsonstream.input_files` (one sort by path), `build.py`,
+  `javaload.py`; `drishti-lakeload` `Latest` (new), `RowParser`, `ParseWorker`, `LoadReport.resolveDuplicates`, `DateWriter`.
+  Tests: `PythonPathEqualityTest.duplicatesAcrossAndWithinFilesKeepTheSameCopyOnBothPathsAndBothFormats` (with and without
+  `COMPUTED_AT`, Delta and Iceberg), `LatestTest`, `test_build.py` (last read, latest, the timestamp rule), `test_javaload.py`. Docs:
+  TOOLS.md sections 4.3, 4.6 and 4.13, PARALLEL_LOADER.md section 13 (decision 9).
+
 - **A config-driven, multi-threaded Java loader of JSON Lines into Delta or Iceberg (2026-10-28; the release's top item).** New module
   `drishti-lakeload` (`com.ash.drishti.lakeload.LakeLoad`, in the server's exec jar), for the bank's scenario-PV load (2.3M positions x
   510 scenarios, 20+ GB): readers (a plain file in byte ranges, ranged GETs on S3; a `.gz` or `.zst` decompressed as a stream by one

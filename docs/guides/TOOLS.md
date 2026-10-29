@@ -215,7 +215,18 @@ summary: lake/_drishti-lake/runs/20261017T174355-1339986.json
 A reject never stops the run: it is counted per reason, the first 50 are kept with where they were (`file:line` for JSON Lines,
 `file[n]` for an element of an array), and the run exits `2` so a scheduler can tell "loaded, look at the rejects" from "all
 good". The reasons: not JSON, not a JSON object, no id, an id that is an object, no business date, a date that is not a date
-(ISO dates and date-times, `yyyymmdd` as text or a number are dates). An id seen twice on one date is reported as a duplicate.
+(ISO dates and date-times, `yyyymmdd` as text or a number are dates).
+
+**Duplicates: one rule for both paths (2.9.6).** When the same record (the same id on the same business date) appears more than once in
+one load, **the latest wins**: the copy with the latest `COMPUTED_AT` is kept (`--latest-by FIELD` or the pack's `ingest.<kind>.latest-by`
+names another ISO-timestamp field; `--latest-by ''` turns it off); without one, or on a tie, **the last one read** is kept, in one
+deterministic order: the input files sorted by their path (whatever order `--from` names them; `day.jsonl` sorts before
+`day.jsonl.gz`), then line order. A copy with a timestamp beats one without. The other copies are dropped and **counted**:
+`duplicates` (per date) in the summary, with up to ten `duplicateExamples` (`date`, `kept` and `dropped` as `file:line`), and a line
+each on the console. Duplicates **never fail a load** and do not change the exit code; `accepted` still counts every valid document,
+`rows` counts what was written. The parallel loader (section 4.13) applies the identical rule, so both paths write the same table.
+The timestamp is ISO-8601 text (a date, or a date-time with optional seconds, fraction and offset; no offset is UTC); any other value
+counts as none.
 (The table holds what each file holds: the changes file is a day's changes, so the 2026-09-23 date has 159 trades. `lake demo`
 applies each day's changes to the previous day by key and writes the whole book every day: section 4.9.)
 
@@ -386,7 +397,7 @@ removed by the next run, which holds the lock. A summary (the run of 4.3, two of
   "first": [{"where": "day2.jsonl.gz:160", "reason": "no id (field 'TRADE_ID' is missing or empty)"},
             {"where": "day2.jsonl.gz:161", "reason": "not JSON (Expecting value)"}]
  },
- "duplicates": {},
+ "duplicates": {}, "duplicateExamples": [], "latestBy": "COMPUTED_AT",
  "files": [{"file": "day2.jsonl.gz", "bytes": 148726}],
  "sampleId": "1000029", "sampleDate": "2026-09-23",
  "timings": {"readSeconds": 0.035, "writeSeconds": 2.159, "totalSeconds": 2.201},
@@ -704,6 +715,7 @@ Options: `--config FILE`, `--set key.path=value` (repeatable; overrides the file
 | `source.vectors` (`vector`) | the pack's | list-of-numbers fields as `list<double>` columns, the document keeping a `{"$vector": …}` marker (VAR_GUIDE.md section 29.3) |
 | `source.flatten` | the pack's | `NAME: LEGS[0].NOTIONAL`: fields added to the document and promoted |
 | `source.partition-by` | none | Delta partition folders after `business_date` (Iceberg: keep them as `promote`) |
+| `source.latest-by` | `COMPUTED_AT` (or the pack's `ingest.<kind>.latest-by`) | duplicates (one id twice on one date): the copy with the latest of this ISO timestamp is kept, else the last read (files sorted by path, then line order); the others dropped and counted (`duplicates`, `duplicateExamples`), never a failure; `''` keeps the last read. The same rule as lake build's Python path (section 4.3) |
 | `target.format` | `delta` | `delta` or `iceberg` (Iceberg through the native engine: no Hadoop) |
 | `target.lake`, `target.domain`, `target.kind`, `target.table` | (lake, domain, kind) | the table `<lake>/<domain>/<table or kind>`; `lake` a folder or `s3://bucket/prefix` |
 | `target.path` | none | the table's location instead of the four above |

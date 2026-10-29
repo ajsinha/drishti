@@ -53,6 +53,8 @@ final class RowPlan {
     final boolean keyTop;
     final String date;
     final java.time.LocalDate asOf;
+    /** The timestamp field that decides which duplicate is kept ({@link Latest}); null: the last read. */
+    final String latestBy;
     final List<Promoted> promoted = new ArrayList<>();
     final List<String> partition = new ArrayList<>();
     final List<Vector> vectors = new ArrayList<>();
@@ -67,6 +69,7 @@ final class RowPlan {
         this.keyTop = !key.contains(".");
         this.date = s.date();
         this.asOf = s.asOf();
+        this.latestBy = s.latestBy() == null || s.latestBy().isBlank() ? null : s.latestBy();
         this.flatten = new LinkedHashMap<>(s.flatten());
         List<String> promote = new ArrayList<>(s.promote());
         flatten.keySet().stream().filter(n -> !promote.contains(n)).forEach(promote::add);

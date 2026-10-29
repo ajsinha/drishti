@@ -34,7 +34,7 @@ import java.util.Map;
  * @param table the connector's {@code table.<kind>} folder (trade_endur), or null for the kind's name
  */
 record PackLayout(String domain, String table, String key, String date, List<String> promote, List<String> vectors, Map<String, String> flatten,
-        List<String> sortBy) {
+        List<String> sortBy, String latestBy) {
 
     static PackLayout read(Path pack, String kind, String connector) throws IOException {
         Path file = Files.isDirectory(pack) ? pack.resolve("pack.yaml") : pack;
@@ -84,7 +84,8 @@ record PackLayout(String domain, String table, String key, String date, List<Str
         }
         String key = ingest.path("key").isTextual() ? ingest.path("key").asText() : null;
         String date = ingest.path("date").isTextual() ? ingest.path("date").asText() : null;
-        return new PackLayout(domain, table, key, date, promote, vectors, flatten, sortBy);
+        String latestBy = ingest.path("latest-by").isTextual() ? ingest.path("latest-by").asText() : null;
+        return new PackLayout(domain, table, key, date, promote, vectors, flatten, sortBy, latestBy);
     }
 
     private static boolean serves(JsonNode connector, String kind) {

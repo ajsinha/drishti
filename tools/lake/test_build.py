@@ -194,6 +194,59 @@ class BuildTest(unittest.TestCase):
         self.assertEqual(counts["Swap"], 3)
         self.assertGreater(counts["Future"], 0)
 
+    def duplicates(self, stamped: bool):
+        """Two JSON Lines files (b sorted after a): deal 100001 twice in a.jsonl and once in b.jsonl on 2026-10-01, deal 100002 in both,
+        deal 100003 on two dates (not a duplicate); with ``stamped`` each copy carries a COMPUTED_AT, the latest not the last read."""
+        folder = self.root / "drop"
+        folder.mkdir()
+
+        def d(i, day, tag, at=None):
+            x = dict(deal(i, day), TAG=tag)
+            if stamped and at:
+                x["COMPUTED_AT"] = at
+            return json.dumps(x)
+        (folder / "b.jsonl").write_text("\n".join([d(1, DATES[0], "b1", "2026-10-01T09:00:00Z"),
+                                                   d(2, DATES[0], "b2", "2026-10-01T12:00:00+02:00")]) + "\n", encoding="utf-8")
+        (folder / "a.jsonl").write_text("\n".join([d(1, DATES[0], "a1", "2026-10-01T10:00:00Z"),
+                                                   d(2, DATES[0], "a2", "2026-10-01T10:30:00Z"),
+                                                   d(1, DATES[0], "a3", "2026-10-01T08:00:00Z"),
+                                                   d(3, DATES[0], "a4"), d(3, DATES[1], "a5")]) + "\n", encoding="utf-8")
+        code, s = build.run(self.base(src=[str(folder)], partition_by=None), quiet)
+        self.assertEqual(code, build.EXIT_OK, s.get("error"))       # duplicates never fail a load
+        rows = {(str(r["business_date"]), r["id"]): json.loads(r["doc"])["TAG"] for r in self.table().to_pyarrow_table().to_pylist()}
+        return s, rows
+
+    def test_duplicates_keep_the_last_read_in_file_then_line_order(self):
+        s, rows = self.duplicates(stamped=False)
+        self.assertEqual(rows, {("2026-10-01", "100001"): "b1", ("2026-10-01", "100002"): "b2", ("2026-10-01", "100003"): "a4",
+                                ("2026-10-02", "100003"): "a5"})
+        self.assertEqual(s["duplicates"], {"2026-10-01": 3})
+        self.assertEqual(s["accepted"], 7)
+        self.assertEqual(s["rows"], {"2026-10-01": 3, "2026-10-02": 1})
+        self.assertEqual(s["duplicateExamples"], [{"date": "2026-10-01", "kept": "b.jsonl:1", "dropped": "a.jsonl:1"},
+                                                  {"date": "2026-10-01", "kept": "b.jsonl:2", "dropped": "a.jsonl:2"},
+                                                  {"date": "2026-10-01", "kept": "b.jsonl:1", "dropped": "a.jsonl:3"}])
+
+    def test_duplicates_keep_the_latest_computed_at(self):
+        s, rows = self.duplicates(stamped=True)
+        # 100001: a1 at 10:00Z beats b1 at 09:00Z and a3 at 08:00Z; 100002: a2 at 10:30Z beats b2 at 12:00+02:00 (10:00Z)
+        self.assertEqual(rows[("2026-10-01", "100001")], "a1")
+        self.assertEqual(rows[("2026-10-01", "100002")], "a2")
+        self.assertEqual(s["duplicates"], {"2026-10-01": 3})
+        self.assertEqual(s["latestBy"], "COMPUTED_AT")
+        self.assertEqual(s["duplicateExamples"][0], {"date": "2026-10-01", "kept": "a.jsonl:1", "dropped": "a.jsonl:3"})
+
+    def test_the_timestamp_rule(self):
+        import stage
+        m = stage.instant_micros
+        self.assertEqual(m("1970-01-01"), 0)
+        self.assertEqual(m("1970-01-01T00:00:01.5Z"), 1_500_000)
+        self.assertEqual(m("2026-10-01T12:00:00+02:00"), m("2026-10-01T10:00:00Z"))
+        self.assertEqual(m("2026-10-01 10:00"), m("2026-10-01T10:00:00"))
+        self.assertEqual(m("2026-10-01T10:00:00.1234567Z") - m("2026-10-01T10:00:00Z"), 123456)
+        for bad in ("2026-13-01", "soon", 20261001, None, "2026-10-01T25:00:00"):
+            self.assertIsNone(m(bad))
+
     def test_as_of_and_batches(self):
         code, s = build.run(self.base(date=None, as_of="2026-09-30", partition_by=None, batch_rows=40), quiet)
         self.assertEqual(code, 0, s.get("error"))

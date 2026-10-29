@@ -277,7 +277,7 @@ final class Loader {
                     target.begin(date);
                     List<Runs.Run> runs = fanIn(date, e.getValue());
                     e.setValue(runs);
-                    List<WrittenFile> files = dw.write(date, runs, pool, mergeBuffer(runs));
+                    List<WrittenFile> files = dw.write(date, runs, pool, mergeBuffer(runs), report.dropped(date));
                     long c0 = System.nanoTime();
                     long version = target.commit(date, files);
                     commit.rows.add(files.stream().mapToLong(WrittenFile::rows).sum());
