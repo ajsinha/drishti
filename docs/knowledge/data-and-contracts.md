@@ -132,7 +132,7 @@ links:  COUNTERPARTY → counterparty, AGREEMENT → agreement, CSA → csa, CRE
 ```text
 TRD CLY-4003028           a CALYPSO reverse repo, USD 994,297,500, book BOOK-SFT-1, booked by LE-FRA, counterparty CP-ALDERSHOT
  └─ NSET NS-ALDERSHOT-FRA  its netting set: Aldershot's live trades booked in Frankfurt (35 trades)
-     ├─ CSA CSA-ALDERSHOT  the collateral terms: thresholds 10m each way, MTA 500,000, MPOR 10 business days
+     ├─ CSA CSA-ALDERSHOT-FRA  the collateral terms of the Frankfurt entity: thresholds 10m each way, MTA 500,000, MPOR 10 business days
      │   └─ AGR AGR-ALDERSHOT-ISDA   the ISDA 2002 Master, English law, close-out netting enforceable
      ├─ COLL COLL-ALDERSHOT-FRA     the collateral held and posted for this set
      └─ CPTY CP-ALDERSHOT  the counterparty: Aldershot Pension Trust, AA-, country of risk GB

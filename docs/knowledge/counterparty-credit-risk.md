@@ -69,13 +69,13 @@ the expected loss from EE; **regulatory capital** under the internal model metho
 | <a id="term-master-agreement"></a>**Master agreement** | The legal contract (ISDA for derivatives, GMRA for repo, GMSLA for securities lending) under which all trades with a counterparty sit, including close-out netting. | `AGR AGR-ALDERSHOT-ISDA <GO>` |
 | <a id="term-close-out-netting"></a>**Close-out netting** | The right, on default, to end every trade under an agreement and settle one net amount. Exposure may be netted only where a legal opinion says it is enforceable. | `AGR AGR-ALDERSHOT-ISDA <GO>` |
 | <a id="term-netting-set"></a>**Netting set** | The trades that net on close-out under one agreement and CSA. In Drishti one per counterparty and bank legal entity: `NS-<counterparty>-<legal entity>`. | `NSET NS-ALDERSHOT-LDN <GO>` |
-| <a id="term-csa"></a>**CSA** (credit support annex) | The part of the agreement that sets the collateral terms: thresholds, minimum transfer amount, independent amount, eligible assets, margin frequency and the margin period of risk. | `CSA CSA-ALDERSHOT <GO>` |
-| <a id="term-threshold"></a>**Threshold** | The exposure one side may run before the other may call collateral. Exposure up to the threshold stays uncollateralised. | `CSA CSA-ALDERSHOT <GO>` |
-| <a id="term-mta"></a>**MTA** (minimum transfer amount) | The smallest collateral movement either side may call; smaller changes wait. | `CSA CSA-ALDERSHOT <GO>` |
-| <a id="term-independent-amount"></a>**Independent amount** | Collateral posted up front whatever the exposure, a cushion on top of variation margin. | `CSA CSA-ALDERSHOT <GO>` |
+| <a id="term-csa"></a>**CSA** (credit support annex) | The part of the agreement that sets the collateral terms: thresholds, minimum transfer amount, independent amount, eligible assets, margin frequency and the margin period of risk. | `CSA CSA-ALDERSHOT-FRA <GO>` |
+| <a id="term-threshold"></a>**Threshold** | The exposure one side may run before the other may call collateral. Exposure up to the threshold stays uncollateralised. | `CSA CSA-ALDERSHOT-FRA <GO>` |
+| <a id="term-mta"></a>**MTA** (minimum transfer amount) | The smallest collateral movement either side may call; smaller changes wait. | `CSA CSA-ALDERSHOT-FRA <GO>` |
+| <a id="term-independent-amount"></a>**Independent amount** | Collateral posted up front whatever the exposure, a cushion on top of variation margin. | `CSA CSA-ALDERSHOT-FRA <GO>` |
 | <a id="term-variation-margin"></a>**Variation margin** | Collateral that follows today's value of the trades, called as it changes (daily under most CSAs). | `MC MC-ALDERSHOT-FRA-1 <GO>` |
 | <a id="term-initial-margin"></a>**Initial margin** | Collateral held against how much the value could move before a defaulted counterparty is closed out. Usually segregated; the bank keeps what it receives on every path. | `SIMM SIMM-ALDERSHOT <GO>` |
-| <a id="term-mpor"></a>**MPOR** (margin period of risk) | The time between the last collateral received and closing out a defaulted counterparty (10 business days in the demo). Exposure is measured over it. | `CSA CSA-ALDERSHOT <GO>` |
+| <a id="term-mpor"></a>**MPOR** (margin period of risk) | The time between the last collateral received and closing out a defaulted counterparty (10 business days in the demo). Exposure is measured over it. | `CSA CSA-ALDERSHOT-FRA <GO>` |
 | <a id="term-collateral-balance"></a>**Collateral balance** | The collateral held from, and posted to, a counterparty under a CSA for one netting set, after haircuts. Net = held minus posted. | `COLL COLL-ALDERSHOT-LDN <GO>` |
 | <a id="term-margin-call"></a>**Margin call** | A demand for collateral under a CSA, its amount, who calls whom, its status and any disputed part. | `MC MC-ALDERSHOT-FRA-1 <GO>` |
 | <a id="term-credit-limit"></a>**Credit limit** | The most exposure the bank accepts to a counterparty on a measure (usually peak PFE at 95%), with its use. Above 100% is a breach. | `LIM LIM-ALDERSHOT <GO>` |
@@ -157,26 +157,27 @@ From a scratch server over the default demo lake (`drishti.py lake demo`): busin
 
 **A counterparty and its four netting sets.** `EXP CP-ALDERSHOT <GO>` (or `drishti.py exposure show CPTY:CP-ALDERSHOT`): Aldershot
 Pension Trust trades with all four of the bank's legal entities under one ISDA (`AGR-ALDERSHOT-ISDA`, English law, close-out netting
-enforceable) and one CSA (`CSA-ALDERSHOT`: thresholds 10 million each way, MTA 500,000, daily calls, MPOR 10 business days):
+enforceable) and one CSA per legal entity (`CSA-ALDERSHOT-NY`, `-LDN`, `-TKY`, `-FRA` since 2.9.6: thresholds 10 million each way, MTA
+500,000, daily calls, MPOR 10 business days, in USD):
 
 | Scope | Trades | CE | EPE | Peak PFE 95% | at |
 |---|---|---|---|---|---|
-| `NSET:NS-ALDERSHOT-NY` | 233 | 226.4 m | 35.9 m | 355.3 m | 2W |
+| `NSET:NS-ALDERSHOT-NY` | 233 | 228.5 m | 36.0 m | 357.4 m | 2W |
 | `NSET:NS-ALDERSHOT-LDN` | 141 | 0 | 14.8 m | 85.1 m | 2M |
-| `NSET:NS-ALDERSHOT-TKY` | 21 | 5.0 m | 12.0 m | 61.4 m | 2M |
-| `NSET:NS-ALDERSHOT-FRA` | 22 | 7.2 m | 2.2 m | 23.8 m | 2W |
-| **`CPTY:CP-ALDERSHOT`** | 417 | **238.5 m** | 63.5 m | **395.3 m** | 2W |
+| `NSET:NS-ALDERSHOT-TKY` | 21 | 5.5 m | 12.0 m | 61.4 m | 2M |
+| `NSET:NS-ALDERSHOT-FRA` | 22 | 7.1 m | 2.2 m | 23.7 m | 2W |
+| **`CPTY:CP-ALDERSHOT`** | 417 | **241.1 m** | 63.6 m | **396.8 m** | 2W |
 
 The trades are the live ones (status `NEW`, `VALIDATED` or `AMENDED`) that have not matured by 2026-10-26.
 
-- **CE adds up**: 226.4 + 0 + 5.0 + 7.2 = 238.5 million.
-- **PFE does not**: the four peaks sum to 525.5 million; the counterparty's peak is 395.3 million. The sets' bad paths and dates differ.
-- **Where the peak comes from** (`drishti.py exposure parts CPTY:CP-ALDERSHOT --by netting-set`): NY 348.8 m (88.2%), TKY 22.5 m,
-  FRA 15.2 m, LDN 8.8 m. LDN's own peak is 85.1 million, but it peaks at 2M; at the counterparty's peak (2W) it adds little.
+- **CE adds up**: 228.5 + 0 + 5.5 + 7.1 = 241.1 million.
+- **PFE does not**: the four peaks sum to 527.6 million; the counterparty's peak is 396.8 million. The sets' bad paths and dates differ.
+- **Where the peak comes from** (`drishti.py exposure parts CPTY:CP-ALDERSHOT --by netting-set`): NY 350.4 m (88.3%), TKY 22.9 m,
+  FRA 15.1 m, LDN 8.4 m. LDN's own peak is 85.1 million, but it peaks at 2M; at the counterparty's peak (2W) it adds little.
 - Its limit `LIM-ALDERSHOT` is 7,980 million on peak PFE: 5.0% used.
 
 **Collateral that raises exposure.** `EXP NS-ALDERSHOT-LDN <GO>`, the Collateral tab. The set's trades are worth −139.1 million to the
-bank today (the bank owes Aldershot) and the bank has *posted* 112.2 million of collateral (`COLL COLL-ALDERSHOT-LDN <GO>`). At the peak (2M) EE is **19.5 million with collateral
+bank today (the bank owes Aldershot) and the bank has *posted* 111.1 million of collateral after haircut (`COLL COLL-ALDERSHOT-LDN <GO>`). At the peak (2M) EE is **19.5 million with collateral
 against 3.5 million without: +452%**. On paths where the trades swing in the bank's favour, the bank is owed the trades' value *and*
 its posted collateral back until the next call settles. After a year the effect turns: at 5Y EE is 6.8 million with collateral against
 86.7 million without.
@@ -217,7 +218,7 @@ on one page: the computed one is made from the paths you can see, the stored one
 | Would this unwind free up limit before I deal? | `drishti.py exposure whatif CPTY:CP-ALDERSHOT --like CLY-4003028 --factor -1 --set NS-ALDERSHOT-FRA` | PFE before and after, by the exact paths or the add-on proxy |
 | Who is in breach of their limit? | `drishti.py exposure tree` | peak PFE against each counterparty's limit |
 | How spread out could the exposure be in a year? | `drishti.py exposure distribution NSET:NS-ALDERSHOT-NY --at 1Y` | the histogram of exposures over the paths, the share at zero |
-| What are the terms we trade under with them? | `AGR AGR-ALDERSHOT-ISDA <GO>`, then `CSA CSA-ALDERSHOT <GO>` | governing law, close-out netting, thresholds, MTA, MPOR |
+| What are the terms we trade under with them? | `AGR AGR-ALDERSHOT-ISDA <GO>`, then `CSA CSA-ALDERSHOT-NY <GO>` (one CSA per legal entity) | governing law, close-out netting, thresholds, MTA, MPOR |
 | How much market risk sits in the same trades? | `drishti.py var show CPTY:CP-ALDERSHOT` | the VaR of the counterparty's trades ([Market risk](market-risk.md)) |
 
 ## 6. Common confusions

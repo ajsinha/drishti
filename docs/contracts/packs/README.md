@@ -19,7 +19,7 @@
 
 Every command (mnemonic) of every pack has a data contract: a YAML file beside its pack (`config/packs/<pack>/contracts/<kind>.contract.yaml`, checked against `tools/contracts.schema.json`) and a section of its pack's page here. The shared rules are in [the contracts README](../README.md); the computed measures that replace the retiring kinds have their own contracts there.
 
-103 contracts, 407 points still to review. Check them with `drishti.py contract check`; draft a new one with `drishti.py contract bootstrap KIND --write`.
+106 contracts, 406 points still to review. Check them with `drishti.py contract check`; draft a new one with `drishti.py contract bootstrap KIND --write`.
 
 | Command | Kind | Pack | Class | Status | Replaced by | To review |
 |---|---|---|---|---|---|---|
@@ -39,7 +39,7 @@ Every command (mnemonic) of every pack has a data contract: a YAML file beside i
 | `CLR` | `clearing-account` | [core](core.md#clr-clearing-account-clearing-account) | fundamental | active |  | 6 |
 | `AGR` | `agreement` | [counterparty-risk](counterparty-risk.md#agr-master-agreement-agreement) | fundamental | active |  | 4 |
 | `CSA` | `csa` | [counterparty-risk](counterparty-risk.md#csa-credit-support-annex-csa) | fundamental | active |  | 5 |
-| `NSET` | `netting-set` | [counterparty-risk](counterparty-risk.md#nset-netting-set-netting-set) | fundamental | active |  | 10 |
+| `NSET` | `netting-set` | [counterparty-risk](counterparty-risk.md#nset-netting-set-netting-set) | fundamental | active |  | 9 |
 | `LIM` | `credit-limit` | [counterparty-risk](counterparty-risk.md#lim-credit-limit-credit-limit) | fundamental | active |  | 5 |
 | `CVA` | `cva` | [counterparty-risk](counterparty-risk.md#cva-cva--xva-cva) | fundamental | active |  | 6 |
 | `SACCR` | `sa-ccr` | [counterparty-risk](counterparty-risk.md#saccr-sa-ccr-exposure-sa-ccr) | fundamental | active |  | 8 |
@@ -51,6 +51,8 @@ Every command (mnemonic) of every pack has a data contract: a YAML file beside i
 | `EXP` | `exposure-result` | [counterparty-risk](counterparty-risk.md#exp-exposure-profile-of-a-scope-computed-exposure-result) | computed | active |  | 0 |
 | `XWIF` | `exposure-whatif` | [counterparty-risk](counterparty-risk.md#xwif-exposure-what-if-before-dealing-computed-python-exposure-whatif) | computed | active |  | 0 |
 | `XOFC` | `exposure-official-cpty` | [counterparty-risk](counterparty-risk.md#xofc-exposure-official-results-by-netting-set-and-counterparty-published-exposure-official-cpty) | computed | active |  | 0 |
+| `NSMTM` | `nset-mtm` | [counterparty-risk](counterparty-risk.md#nsmtm-netting-set-mtm-totals-derived-from-the-trade-valuations-nset-mtm) | computed | active |  | 0 |
+| `CPMTM` | `cpty-mtm` | [counterparty-risk](counterparty-risk.md#cpmtm-counterparty-mtm-totals-derived-from-the-trade-valuations-cpty-mtm) | computed | active |  | 0 |
 | `FUND` | `fund` | [funds](funds.md#fund-fund-or-etf-fund) | fundamental | active |  | 0 |
 | `HELD` | `fund-holder` | [funds](funds.md#held-funds-holding-a-company-fund-holder) | fundamental | active |  | 0 |
 | `TRACK` | `index-funds` | [funds](funds.md#track-funds-tracking-an-index-index-funds) | fundamental | active |  | 0 |
@@ -97,6 +99,7 @@ Every command (mnemonic) of every pack has a data contract: a YAML file beside i
 | `VRES` | `var-result` | [market-risk](market-risk.md#vres-var-of-a-scope-computed-var-result) | computed | active |  | 0 |
 | `VWIF` | `var-whatif` | [market-risk](market-risk.md#vwif-var-what-if-computed-python-var-whatif) | computed | active |  | 0 |
 | `VOFF` | `var-official` | [market-risk](market-risk.md#voff-var-official-results-published-var-official) | computed | active |  | 0 |
+| `SSPNL` | `stress-scenario-pnl` | [market-risk](market-risk.md#sspnl-stress-pl-of-a-scenario-across-desks-derived-from-the-stress-results-stress-scenario-pnl) | computed | active |  | 0 |
 | `TOPIC` | `news-topic` | [news-and-markets](news-and-markets.md#topic-news-topic-news-topic) | fundamental | active |  | 6 |
 | `NEWS` | `news` | [news-and-markets](news-and-markets.md#news-headlines-news) | fundamental | active |  | 3 |
 | `CO` | `listed-company` | [news-and-markets](news-and-markets.md#co-listed-company-listed-company) | fundamental | active |  | 6 |

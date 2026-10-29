@@ -27,7 +27,7 @@ expressions: 2                  # DEL v2, the Python-like expression language (d
 model: live-exposure
 version: 1.0.0
 title: "Live exposure"
-description: "Netting sets with their net mark-to-market, collateral and limit utilisation, updated as they tick. The computed exposure (EE and PFE peaks) is not live: it is the exposure engine's official end-of-day result, in the models counterparty-exposure and trading-risk."
+description: "Netting sets with their net mark-to-market, collateral, limit and trade count, updated as they tick. The computed exposure (EE and PFE peaks) is not live: it is the exposure engine's official end-of-day result, in the models counterparty-exposure and trading-risk."
 sample: true
 endorsement: "promoted"
 tags: [sample, counterparty-risk, live, streaming]
@@ -39,5 +39,5 @@ measures:
   Netting sets:    { expr: "count(netting)" }
   Net MTM:         { expr: "sum(netting.NET_MTM)", format: signed0 }
   Collateral:      { expr: "sum(netting.COLLATERAL)", format: signed0 }
-  Max utilisation: { expr: "max(netting.UTILISATION)" }
+  Trades:          { expr: "sum(netting.TRADE_COUNT)", format: amount0 }
   Worst net MTM:   { expr: "min(netting.NET_MTM)", format: signed0 }

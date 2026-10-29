@@ -56,7 +56,9 @@ kinds:
       MTA: { term: "Minimum transfer amount", means: "The smallest collateral movement either side may call.", unit: "USD" }
       INDEPENDENT_AMOUNT: { term: "Independent amount", means: "Collateral posted up front, whatever the exposure.", unit: "USD" }
       FREQUENCY: { term: "Call frequency", means: "How often margin is called." }
-      MPOR: { term: "Margin period of risk", means: "The time assumed between the last margin received and closing out a defaulted counterparty." }
+      MPOR_DAYS: { term: "Margin period of risk", means: "The time assumed between the last margin received and closing out a defaulted counterparty, in business days." }
+      CSA_CURRENCY: { term: "CSA currency", means: "The currency the CSA's amounts are in and its calls are made in." }
+      LEGAL_ENTITY: { term: "Bank legal entity", means: "The bank's entity that signed this CSA: one CSA per agreement and legal entity." }
       ELIGIBLE.ASSET: { term: "Eligible collateral", means: "An asset the counterparty may deliver as collateral." }
       ELIGIBLE.HAIRCUT: { term: "Haircut", means: "The share taken off the asset's value when it is counted as collateral." }
   netting-set:
@@ -75,7 +77,7 @@ kinds:
         sign: "Positive is owed to the bank."
       COLLATERAL:
         term: "Collateral"
-        means: "The net collateral against the netting set: what is held less what has been posted."
+        means: "The net collateral against the netting set after haircut: what is held less what has been posted, each holding at its market value less the CSA's haircut."
         unit: "USD"
         sign: "Positive is held by the bank, negative is posted to the counterparty."
       EXPOSURE_ENGINE.EPE: { use: "epe" }
@@ -89,7 +91,6 @@ kinds:
       EXPOSURE_ENGINE.PROFILE.PFE: { use: "pfe95" }
       EXPOSURE_ENGINE.PROFILE.PFE_99: { use: "pfe99" }
       LIMIT: { term: "Credit limit", means: "The limit on the counterparty's peak potential future exposure approved for this netting set.", unit: "USD" }
-      UTILISATION: { use: "utilisation" }
       CVA:
         term: "Credit valuation adjustment"
         means: "The reduction in the value of the trades for the risk that the counterparty defaults before they mature."
@@ -102,6 +103,31 @@ kinds:
       TRADES.MTM: { term: "Mark to market", means: "The trade's current value, from the bank's side.", unit: "USD", sign: "Positive is owed to the bank." }
     panels:
       exposure: { about: "The curves show how the exposure of the ${$.TRADE_COUNT} trades may develop, computed from the simulated paths; the PFE 95 peak (${fmt($.EXPOSURE_ENGINE.PEAK_PFE, 'compact')} USD) is the figure compared with the limit." }
+  nset-mtm:
+    title: Netting-set totals derived from the trade valuations
+    about: >-
+      ${$.NETTING_SET_ID}: ${$.TRADE_COUNT} live trades worth ${fmt($.NET_MTM, 'signed0')} USD together, worked out from the day's trade
+      valuations (not stored); ${$.PAST_MATURITY_COUNT} trades of a live status are past their maturity date and count in no total.
+    guide: counterparty-risk
+    glossary:
+      NET_MTM: { term: "Net mark to market (derived)", means: "The sum of the live trades' mark to market, from the trade valuations.", unit: "USD", sign: "Positive is owed to the bank." }
+      TRADE_COUNT: { term: "Live trades", means: "Trades of a live status (new, validated, amended) not past their maturity date." }
+      GROSS_POSITIVE_MTM: { term: "Gross positive MTM", means: "The sum of the live trades worth something to the bank.", unit: "USD" }
+      GROSS_NEGATIVE_MTM: { term: "Gross negative MTM", means: "The sum of the live trades the bank owes on.", unit: "USD" }
+      NETTING_BENEFIT: { term: "Netting benefit", means: "How much netting removes from the exposure: gross positive less the positive part of the net.", unit: "USD" }
+      NET_TO_GROSS: { term: "Net-to-gross ratio", means: "The positive part of the net over the gross positive: the lower, the more netting helps." }
+      CE_UNCOLLATERALISED: { term: "Current exposure before collateral", means: "The positive part of the net mark to market.", unit: "USD" }
+      PAST_MATURITY_COUNT: { term: "Past maturity", means: "Trades of a live status whose maturity date has passed: a data-quality warning, left out of every total." }
+  cpty-mtm:
+    title: Counterparty totals derived from the trade valuations
+    about: >-
+      ${$.COUNTERPARTY}: ${$.TRADE_COUNT} live trades in ${$.NETTING_SET_COUNT} netting sets worth ${fmt($.NET_MTM, 'signed0')} USD
+      together, worked out from the day's trade valuations; before collateral its exposure is ${fmt($.CE_UNCOLLATERALISED, 'compact')}
+      (each set's positive net, added: exposures never net across netting sets).
+    guide: counterparty-risk
+    glossary:
+      NET_MTM: { term: "Net mark to market (derived)", means: "The sum of the live trades' mark to market over all the counterparty's netting sets.", unit: "USD" }
+      CE_UNCOLLATERALISED: { term: "Current exposure before collateral", means: "The sum over the netting sets of each set's positive net mark to market.", unit: "USD" }
   credit-limit:
     title: Counterparty credit limit
     about: >-

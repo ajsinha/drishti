@@ -40,7 +40,6 @@ columns:
   NET_MTM:      { type: decimal, format: signed0 }
   COLLATERAL:   { type: decimal, format: signed0 }
   LIMIT:        { type: decimal, format: amount0 }
-  UTILISATION:  { type: decimal }
 security:
   rows:
     - { role: [risk, analyst, admin, desk-head], where: "True" }

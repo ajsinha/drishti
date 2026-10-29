@@ -57,6 +57,14 @@ panels:
     label: BUCKET
     value: UTILISATION
     fmt: pct0
+  - id: checks
+    kind: kv
+    title: "Checks: headroom and utilisation"
+    area: right
+    columns:
+      - { label: Headroom, bind: $.LIMIT - $.USED, fmt: compact, tone: sign }
+      - { label: "Utilisation (check: used / limit)", bind: "$.LIMIT > 0 ? $.USED / $.LIMIT : null", fmt: pct0 }
+      - { label: Utilisation difference, bind: "$.LIMIT > 0 ? $.USED / $.LIMIT - $.UTILISATION : null", fmt: pct2 }
   - { id: built, kind: provenance, title: How this view was built }
   - { id: refs, kind: links, title: Linked entities, code: REFS, area: right }
 keys: { F7: "link($.COUNTERPARTY, 'counterparty')", F8: impact, F9: raw }

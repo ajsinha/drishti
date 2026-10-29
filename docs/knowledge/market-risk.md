@@ -248,7 +248,7 @@ incremental VaR of −5.1 m: take it out and the desk's VaR rises.
 **One trade.** `VAR SCOPE DESK:RATES - TRD:MX-30000121 <GO>`: 74,720,890, so this swap's incremental VaR in its desk is −87,210.
 
 **From the credit side.** `drishti.py var show CPTY:CP-ALDERSHOT`: the 469 live trades with Aldershot Pension Trust, across desks, have
-a VaR of 25.1 million (ES 37.3 m). The same counterparty's peak PFE on the same date is 400.0 million (`drishti.py exposure show
+a VaR of 25.1 million (ES 37.3 m). The same counterparty's peak PFE on the same date is 401.5 million (`drishti.py exposure show
 CPTY:CP-ALDERSHOT`; [Counterparty credit risk](counterparty-credit-risk.md#4-a-worked-example-on-the-demo-data)): two different questions
 about the same trades.
 

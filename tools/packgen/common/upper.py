@@ -207,6 +207,10 @@ def pivot(pv):
 
 
 def panel(p):
+    if isinstance(p.opts.get("source"), dict):
+        # a panel reading another kind's record ($src: a derived or computed page) keeps its names as written: that record's own names
+        # (group() rows are label, value, count), and its $. paths are already the page's UPPER_SNAKE names
+        return p
     return dataclasses.replace(
         p, rows=rachana(p.rows), columns=[(c[0], rachana(c[1]), *c[2:]) for c in p.columns], x=_field(p.x), y=_field(p.y),
         series=[(s[0], _field(s[1]), *s[2:]) for s in p.series], label=_field(p.label), value=_field(p.value), limit=rachana(p.limit),

@@ -26,8 +26,9 @@ strip:
   - { label: Threshold (them), bind: $.THRESHOLD_THEM, fmt: compact }
   - { label: MTA, bind: $.MTA, fmt: compact }
   - { label: IA, bind: $.INDEPENDENT_AMOUNT, fmt: compact }
+  - { label: Currency, bind: $.CSA_CURRENCY }
   - { label: Frequency, bind: $.FREQUENCY }
-  - { label: MPoR, bind: $.MPOR, emphasis: true }
+  - { label: MPoR (business days), bind: $.MPOR_DAYS, fmt: amount0, emphasis: true }
 panels:
   - id: eligible
     kind: table

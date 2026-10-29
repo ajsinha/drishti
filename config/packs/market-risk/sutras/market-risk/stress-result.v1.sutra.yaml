@@ -20,8 +20,9 @@ description: "P&L of a desk under a scenario, by book."
 doc:
   summary: "P&L of a desk under a scenario, by book."
   description: >-
-    P&L of a desk under a scenario, by book. One page per stress result, its panels: P&L by book; how the view was built; the
-    entities it links to. The strip gives Scenario, P&L and Limit. Linked entities: scenario (stress-scenario) and desk (desk).
+    P&L of a desk under a scenario, by book. One page per stress result, its panels: P&L by book; limit use and checks; how the
+    view was built; the entities it links to. The strip gives Scenario, P&L and Limit. Linked entities: scenario (stress-
+    scenario) and desk (desk).
   params: {}
   emits: []
   expects: []
@@ -37,6 +38,15 @@ strip:
   - { label: Limit, bind: $.LIMIT, fmt: compact }
 panels:
   - { use: ranked-bars@1, with: { id: books, title: "P&L by book", key: F2, rows: $.BY_BOOK, label: BOOK, value: PNL, tone: sign } }
+  - id: checks
+    kind: kv
+    title: Limit use and checks
+    area: right
+    columns:
+      - { label: Limit use (loss / limit), bind: "$.LIMIT > 0 ? max(-$.PNL, 0) / $.LIMIT : null", fmt: pct0 }
+      - { label: Limit status, bind: "$.LIMIT > 0 ? (max(-$.PNL, 0) / $.LIMIT > 1 ? 'BREACH' : 'OK') : null", tone: status }
+      - { label: Headroom, bind: "$.LIMIT > 0 ? $.LIMIT - max(-$.PNL, 0) : null", fmt: compact, tone: sign }
+      - { label: "P&L by book (check: sum)", bind: "sum($.BY_BOOK, 'PNL')", fmt: signed0 }
   - { use: data-provenance@1 }
   - { use: linked-entities@1 }
 keys: { F7: "link($.SCENARIO, 'stress-scenario')", F8: impact, F9: raw }

@@ -106,6 +106,7 @@ final class VarHierarchyFixture {
         limits.add(limit("LL", "LL~LL-A/DESK-Y", 300));
         limits.add(limit("LL", "LL~LL-NOPE", 1));
         limits.add(limit("MGMT", "MGMT~DESK-X", 999));                // MGMT's limits are its rows' (its limits name no kind): unused
+        limits.add(limit("PORTFOLIO", "PF-LL-A", 640));               // a portfolio's limit (2.9.6): wins over the record's own LIMIT_VAR
         VarLakeFixture.table(root, work, "var-limit", "LIMIT_ID", limits, List.of("HIERARCHY", "NODE_ID", "LIMIT_VAR"), null);
         VarLakeFixture.table(root, work, "portfolio", "PORTFOLIO_ID", List.of(Map.of("PORTFOLIO_ID", "PF-LL-A", "BUSINESS_DATE", DAY.toString(),
                 "NAME", "Letter A", "TYPE", "HIERARCHY", "OWNER", "risk", "DEFINITION", Map.of("NODE", "LL~LL-A"), "LIMIT_VAR", 650.0)),
