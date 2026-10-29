@@ -81,6 +81,8 @@ public final class BiService {
     private final ImpactAnalyzer impact;
     private final BiNotifier notifier;
     private final BiRenames renames;
+    @org.springframework.beans.factory.annotation.Autowired(required = false)
+    private com.ash.drishti.server.edition.EditionBi editionBi = com.ash.drishti.server.edition.EditionBi.NONE;
 
     public BiService(BiProperties props, BiStore store, BiFolder folder, BiAccess access, AuditLog audit, UserService users, RoleCatalog roles,
             PackAccess packs, Entitlements entitlements, GovernanceProperties governance, SecurityProperties security, BiGovProperties gov, ImpactAnalyzer impact,
@@ -372,6 +374,9 @@ public final class BiService {
     // Items
     // ===================================================================================================================
     private BiStore.Item itemOf(String id) {
+        if (BiFolder.isShipped(id) && !folder.item(id).map(editionBi::shown).orElse(true)) {
+            throw new DrishtiException(ErrorCode.BI_NOT_FOUND, "no item '" + id + "' in this edition");
+        }
         if (BiFolder.isShipped(id)) {
             return folder.item(id).orElseThrow(() -> new DrishtiException(ErrorCode.BI_NOT_FOUND, "no item '" + id + "' (a shipped file deleted from the BI folder is gone)"));
         }
@@ -1302,7 +1307,7 @@ public final class BiService {
         boolean admin = access.has(p, BiAccess.ADMIN);
         List<BiStore.Item> all = new ArrayList<>(store.published());
         all.addAll(folder.items());
-        return all.stream().filter(i -> visible(i, p, mine, myPacks, admin)).toList();
+        return all.stream().filter(i -> visible(i, p, mine, myPacks, admin) && editionBi.shown(i)).toList();   // EDITIONS.md 5.5
     }
 
     /** The published items the caller may see, searched, filtered and sorted; certified ones first (unless sorted by title). */

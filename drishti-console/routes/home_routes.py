@@ -23,6 +23,7 @@ from fastapi.responses import FileResponse, JSONResponse
 
 from core.nextpath import safe_next
 from core.packs import samples
+from routes import edition_routes
 from routes.common import library, packs, render
 
 ICONS = Path(__file__).resolve().parent.parent / "web" / "static" / "img" / "icons"
@@ -38,7 +39,8 @@ async def landing(request: Request):
     absent (UX-05); with no examples it shows the command's form instead of an entity."""
     settings = request.app.state.settings
     active = await packs(request)
-    current = samples(active)
+    ed = edition_routes.edition_of(request)
+    current = [s for s in samples(active) if ed.command_shown(s["cmd"].split()[0])]   # an edition's hidden commands are not shown as examples
     commands = [s["cmd"] + " <GO>" for s in current][: int(settings.get("ui.landing_examples", 4) or 4)] or [GENERIC]
     known = {s["cmd"].upper() for s in current}
     showcase = [{**s, "cmd": s.get("cmd") if str(s.get("cmd", "")).upper() in known else ""} for s in settings.get("ui.showcase") or []]
@@ -49,8 +51,11 @@ async def landing(request: Request):
             back = {"href": target, "label": back_label(target)}
     me = getattr(request.state, "identity", None)
     facts_on = me is not None and request.app.state.facts.enabled
-    return render(request, "landing.html", showcase=showcase, commands=commands, back=back, facts_on=facts_on,
-                  home_cards=home_cards(settings.get("ui.home_cards") or [], active) if me is not None else [])
+    raw_cards = ed.home_cards if ed.lens and ed.home_cards is not None else settings.get("ui.home_cards") or []
+    cards = [c for c in home_cards(raw_cards, active) if ed.command_shown(c["cmd"].split()[0])] if me is not None else []
+    if me is not None and ed.active and (landing := edition_routes.landing_for(request, ed)) is not None:
+        return await edition_routes.render_landing(request, ed, landing, cards)        # the edition's landing (home.landing, the person's choice)
+    return render(request, "landing.html", showcase=showcase, commands=commands, back=back, facts_on=facts_on, home_cards=cards)
 
 
 def home_cards(cards: list, current: list) -> list:
@@ -100,6 +105,25 @@ def back_label(path: str) -> str:
     names = {"t": "the terminal", "build": "Build", "admin": "Admin", "help": "Help", "inbox": "your inbox", "w": "your workspace",
              "account": "your account", "alerts": "alerts", "monitors": "monitors", "compare": "Compare"}
     return names.get(parts[0], "where you were") if parts else "where you were"
+
+
+@router.get("/manifest.webmanifest", include_in_schema=False)
+def manifest(request: Request):
+    """The web manifest, from configuration (EDITIONS.md section 5.10): the product's name (an edition's or a lens's), its tagline and
+    copyright, its icons (the eye's unless ui.apple_touch_icon / ui.favicon name others). Replaces the fixed static file."""
+    g = request.app.state.templates.env.globals
+    ed = edition_routes.edition_of(request)
+    name = (ed.branding("product") if ed.lens else "") or str(g.get("PRODUCT") or "")
+    tagline = (ed.branding("tagline") if ed.lens else "") or str(g.get("TAGLINE") or "")
+    icons = [{"src": "/static/img/icons/icon-192.png", "sizes": "192x192", "type": "image/png", "purpose": "any"},
+             {"src": "/static/img/icons/icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any"},
+             {"src": "/static/img/icons/icon-maskable-512.png", "sizes": "512x512", "type": "image/png", "purpose": "maskable"},
+             {"src": "/static/img/icons/favicon.svg", "sizes": "any", "type": "image/svg+xml", "purpose": "any"}]
+    if g.get("APPLE_TOUCH_ICON") or g.get("FAVICON"):
+        icons = [{"src": str(g.get("APPLE_TOUCH_ICON") or g.get("FAVICON")), "sizes": "any", "purpose": "any"}]
+    body = {"name": name, "short_name": name, "description": " ".join(x for x in (tagline, str(g.get("COPYRIGHT") or "")) if x),
+            "start_url": "/t", "scope": "/", "display": "standalone", "background_color": "#0e1628", "theme_color": "#0e1628", "icons": icons}
+    return JSONResponse(body, media_type="application/manifest+json", headers={"Cache-Control": "no-cache"})
 
 
 @router.get("/favicon.ico", include_in_schema=False)

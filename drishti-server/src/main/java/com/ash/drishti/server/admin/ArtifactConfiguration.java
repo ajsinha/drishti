@@ -80,7 +80,7 @@ public class ArtifactConfiguration {
         Duration keep = env.getProperty("drishti.admin.uninstalled-keep", Duration.class, Duration.ofDays(30));
         Path hidden = Path.of(env.getProperty("drishti.admin.hidden-bi-file", PackPaths.dataDir(env) + "/admin/bi-hidden.txt"));
         ArtifactService s = new ArtifactService(paths, archive, impact, packs, access, reloader, new PackOverlay(Path.of(PackPaths.overlay(env))), connectors, folder, audit, hidden,
-                keep, env.getProperty("drishti.packs.enabled", com.ash.drishti.packs.PackPaths.DEFAULT_ENABLED), env.getProperty("drishti.admin.bi-upload-max-bytes", Integer.class, 1_048_576));
+                keep, com.ash.drishti.packs.PackPaths.enabled(env), env.getProperty("drishti.admin.bi-upload-max-bytes", Integer.class, 1_048_576));
         s.start();
         return s;
     }

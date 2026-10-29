@@ -41,8 +41,8 @@ public class SwitchesConfiguration {
     }
 
     @Bean
-    public CommandCatalog commandCatalog(PackRegistry registry, Mnemonics mnemonics) {
-        return new CommandCatalog(registry, mnemonics);
+    public CommandCatalog commandCatalog(PackRegistry registry, Mnemonics mnemonics, com.ash.drishti.packs.edition.Edition edition) {
+        return new CommandCatalog(registry, mnemonics, edition);
     }
 
     @Bean

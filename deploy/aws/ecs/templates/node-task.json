@@ -30,6 +30,7 @@
         { "name": "DRISHTI_SECURITY_ENABLED", "value": "true" },
         { "name": "DRISHTI_SEED_ADMIN", "value": "true" },
         { "name": "DRISHTI_PACKS", "value": "${DRISHTI_PACKS}" },
+        { "name": "DRISHTI_EDITION", "value": "${DRISHTI_EDITION}" },
         { "name": "DRISHTI_DELTA_ROOT", "value": "s3://${LAKE_BUCKET}/${LAKE_PREFIX}" },
         { "name": "AWS_REGION", "value": "${AWS_REGION}" } ],
       "secrets": [

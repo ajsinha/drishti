@@ -13,27 +13,28 @@
 
   See the LICENSE file in the root of this repository for the full terms.
 #}
+{% set _ed = edition_of(request) %}{# the edition's Admin pages (admin.pages); a hidden page answers 404 (core/edition_gate.py) #}
 <nav class="adm-tabs" aria-label="Administration">
-  <a href="/admin/users"{% if tab == 'users' %} aria-current="page"{% endif %}><i class="bi bi-people" aria-hidden="true"></i> Users</a>
-  <a href="/admin/roles"{% if tab == 'roles' %} aria-current="page"{% endif %}><i class="bi bi-shield-lock" aria-hidden="true"></i> Roles</a>
-  <a href="/admin/packs"{% if tab == 'packs' %} aria-current="page"{% endif %}><i class="bi bi-box-seam" aria-hidden="true"></i> Packs</a>
-  <a href="/func" title="On the Functions page (FUNC)"><i class="bi bi-toggles" aria-hidden="true"></i> Commands</a>
-  <a href="/admin/tokens"{% if tab == 'tokens' %} aria-current="page"{% endif %}><i class="bi bi-key" aria-hidden="true"></i> Tokens</a>
-  <a href="/admin/access"{% if tab == 'access' %} aria-current="page"{% endif %}><i class="bi bi-eye" aria-hidden="true"></i> Access</a>
-  <a href="/admin/connectors"{% if tab == 'connectors' %} aria-current="page"{% endif %}><i class="bi bi-plug" aria-hidden="true"></i> Connectors{% if status and status.connectorTemplateDrift %} <span class="adm-badge" data-drift-badge title="{{ status.connectorTemplateDrift }} connector(s) differ from their pack's template: see Template updates">{{ status.connectorTemplateDrift }}<span class="visually-hidden"> connectors differ from their pack's template</span></span>{% endif %}</a>
-  <a href="/admin/artifacts"{% if tab == 'artifacts' %} aria-current="page"{% endif %}><i class="bi bi-archive" aria-hidden="true"></i> Artifacts</a>
-  <a href="/admin/ai"{% if tab == 'ai' %} aria-current="page"{% endif %}><i class="bi bi-stars" aria-hidden="true"></i> AI</a>
-  <a href="/admin/loads"{% if tab == 'loads' %} aria-current="page"{% endif %}><i class="bi bi-cloud-upload" aria-hidden="true"></i> Data loads</a>
-  <a href="/admin/lakes"{% if tab == 'lakes' %} aria-current="page"{% endif %}><i class="bi bi-layers" aria-hidden="true"></i> Lakes</a>
-  <a href="/admin/collab"{% if tab == 'collab' %} aria-current="page"{% endif %}><i class="bi bi-chat-square-text" aria-hidden="true"></i> Collaboration</a>
-  <a href="/admin/embedding"{% if tab == 'embedding' %} aria-current="page"{% endif %}><i class="bi bi-window-stack" aria-hidden="true"></i> Embedding</a>
-  <a href="/admin/bi"{% if tab == 'bi' %} aria-current="page"{% endif %}><i class="bi bi-bar-chart-line" aria-hidden="true"></i> BI</a>
-  <a href="/admin/audit"{% if tab == 'audit' %} aria-current="page"{% endif %}><i class="bi bi-journal-text" aria-hidden="true"></i> Audit log</a>
-  <a href="/admin/net"{% if tab == 'net' %} aria-current="page"{% endif %}><i class="bi bi-diagram-3" aria-hidden="true"></i> Net</a>
-  <a href="/admin/edits"{% if tab == 'edits' %} aria-current="page"{% endif %}><i class="bi bi-pencil-square" aria-hidden="true"></i> Edits</a>
-  <a href="/admin/compute"{% if tab == 'compute' %} aria-current="page"{% endif %}><i class="bi bi-cpu" aria-hidden="true"></i> Compute</a>
-  <a href="/admin/health"{% if tab == 'health' %} aria-current="page"{% endif %}><i class="bi bi-heart-pulse" aria-hidden="true"></i> Health</a>
-  <a href="/admin/caches"{% if tab == 'caches' %} aria-current="page"{% endif %}><i class="bi bi-hdd-stack" aria-hidden="true"></i> Caches</a>
+  {% if _ed.admin_page_shown('users') %}  <a href="/admin/users"{% if tab == 'users' %} aria-current="page"{% endif %}><i class="bi bi-people" aria-hidden="true"></i> Users</a>{% endif %}
+  {% if _ed.admin_page_shown('roles') %}  <a href="/admin/roles"{% if tab == 'roles' %} aria-current="page"{% endif %}><i class="bi bi-shield-lock" aria-hidden="true"></i> Roles</a>{% endif %}
+  {% if _ed.admin_page_shown('packs') %}  <a href="/admin/packs"{% if tab == 'packs' %} aria-current="page"{% endif %}><i class="bi bi-box-seam" aria-hidden="true"></i> Packs</a>{% endif %}
+  {% if _ed.admin_page_shown('commands') and _ed.word_on('FUNC') %}  <a href="/func" title="On the Functions page (FUNC)"><i class="bi bi-toggles" aria-hidden="true"></i> Commands</a>{% endif %}
+  {% if _ed.admin_page_shown('tokens') %}  <a href="/admin/tokens"{% if tab == 'tokens' %} aria-current="page"{% endif %}><i class="bi bi-key" aria-hidden="true"></i> Tokens</a>{% endif %}
+  {% if _ed.admin_page_shown('access') %}  <a href="/admin/access"{% if tab == 'access' %} aria-current="page"{% endif %}><i class="bi bi-eye" aria-hidden="true"></i> Access</a>{% endif %}
+  {% if _ed.admin_page_shown('connectors') %}  <a href="/admin/connectors"{% if tab == 'connectors' %} aria-current="page"{% endif %}><i class="bi bi-plug" aria-hidden="true"></i> Connectors{% if status and status.connectorTemplateDrift %} <span class="adm-badge" data-drift-badge title="{{ status.connectorTemplateDrift }} connector(s) differ from their pack's template: see Template updates">{{ status.connectorTemplateDrift }}<span class="visually-hidden"> connectors differ from their pack's template</span></span>{% endif %}</a>{% endif %}
+  {% if _ed.admin_page_shown('artifacts') %}  <a href="/admin/artifacts"{% if tab == 'artifacts' %} aria-current="page"{% endif %}><i class="bi bi-archive" aria-hidden="true"></i> Artifacts</a>{% endif %}
+  {% if _ed.admin_page_shown('ai') %}  <a href="/admin/ai"{% if tab == 'ai' %} aria-current="page"{% endif %}><i class="bi bi-stars" aria-hidden="true"></i> AI</a>{% endif %}
+  {% if _ed.admin_page_shown('loads') %}  <a href="/admin/loads"{% if tab == 'loads' %} aria-current="page"{% endif %}><i class="bi bi-cloud-upload" aria-hidden="true"></i> Data loads</a>{% endif %}
+  {% if _ed.admin_page_shown('lakes') %}  <a href="/admin/lakes"{% if tab == 'lakes' %} aria-current="page"{% endif %}><i class="bi bi-layers" aria-hidden="true"></i> Lakes</a>{% endif %}
+  {% if _ed.admin_page_shown('collab') %}  <a href="/admin/collab"{% if tab == 'collab' %} aria-current="page"{% endif %}><i class="bi bi-chat-square-text" aria-hidden="true"></i> Collaboration</a>{% endif %}
+  {% if _ed.admin_page_shown('embedding') %}  <a href="/admin/embedding"{% if tab == 'embedding' %} aria-current="page"{% endif %}><i class="bi bi-window-stack" aria-hidden="true"></i> Embedding</a>{% endif %}
+  {% if _ed.admin_page_shown('bi') %}  <a href="/admin/bi"{% if tab == 'bi' %} aria-current="page"{% endif %}><i class="bi bi-bar-chart-line" aria-hidden="true"></i> BI</a>{% endif %}
+  {% if _ed.admin_page_shown('audit') %}  <a href="/admin/audit"{% if tab == 'audit' %} aria-current="page"{% endif %}><i class="bi bi-journal-text" aria-hidden="true"></i> Audit log</a>{% endif %}
+  {% if _ed.admin_page_shown('net') %}  <a href="/admin/net"{% if tab == 'net' %} aria-current="page"{% endif %}><i class="bi bi-diagram-3" aria-hidden="true"></i> Net</a>{% endif %}
+  {% if _ed.admin_page_shown('edits') %}  <a href="/admin/edits"{% if tab == 'edits' %} aria-current="page"{% endif %}><i class="bi bi-pencil-square" aria-hidden="true"></i> Edits</a>{% endif %}
+  {% if _ed.admin_page_shown('compute') %}  <a href="/admin/compute"{% if tab == 'compute' %} aria-current="page"{% endif %}><i class="bi bi-cpu" aria-hidden="true"></i> Compute</a>{% endif %}
+  {% if _ed.admin_page_shown('health') %}  <a href="/admin/health"{% if tab == 'health' %} aria-current="page"{% endif %}><i class="bi bi-heart-pulse" aria-hidden="true"></i> Health</a>{% endif %}
+  {% if _ed.admin_page_shown('caches') %}  <a href="/admin/caches"{% if tab == 'caches' %} aria-current="page"{% endif %}><i class="bi bi-hdd-stack" aria-hidden="true"></i> Caches</a>{% endif %}
   <a href="/account"><i class="bi bi-person-circle" aria-hidden="true"></i> My account</a>
 </nav>
 {% if status and status.defaultAdminPasswordInUse %}

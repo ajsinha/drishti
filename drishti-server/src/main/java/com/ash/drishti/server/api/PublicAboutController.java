@@ -38,8 +38,11 @@ public class PublicAboutController {
     private final SecurityProperties security;
     private final ObjectProvider<OidcProperties> oidc;
 
+    private final com.ash.drishti.server.edition.EditionContext edition;
+
     public PublicAboutController(Branding branding, ObjectProvider<BuildProperties> build, SecurityProperties security,
-            ObjectProvider<OidcProperties> oidc) {
+            ObjectProvider<OidcProperties> oidc, com.ash.drishti.server.edition.EditionContext edition) {
+        this.edition = edition;
         this.branding = branding;
         this.build = Optional.ofNullable(build.getIfAvailable());
         this.security = security;
@@ -52,6 +55,9 @@ public class PublicAboutController {
         m.put("product", branding.product());
         m.put("version", build.map(BuildProperties::getVersion).orElse("dev"));
         m.put("notice", branding.notice());
+        m.put("tagline", branding.tagline());
+        m.put("edition", edition.instance().about());       // the console learns the edition here (EDITIONS.md section 5.1)
+        m.put("lenses", edition.lensNames());               // the editions a person may open as a lens (none with an edition)
         OidcProperties o = oidc.getIfAvailable();
         m.put("signIn", Map.of("required", security.enabled(), "password", true, "singleSignOn", o != null && Boolean.TRUE.equals(o.enabled())));
         return m;

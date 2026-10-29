@@ -44,9 +44,11 @@ public class RegistryController {
     private final PackAdminController admin;
     private final Entitlements entitlements;
     private final com.ash.drishti.identity.AuditLog audit;
+    private final com.ash.drishti.packs.edition.Edition edition;
 
     public RegistryController(PackRegistryClient registry, PackRegistry packs, PackAdminController admin, Entitlements entitlements,
-            com.ash.drishti.identity.AuditLog audit) {
+            com.ash.drishti.identity.AuditLog audit, com.ash.drishti.packs.edition.Edition edition) {
+        this.edition = edition;
         this.registry = registry;
         this.packs = packs;
         this.admin = admin;
@@ -89,6 +91,7 @@ public class RegistryController {
     @PostMapping("/{name}/{version}/install")
     public Map<String, Object> install(@PathVariable String name, @PathVariable String version, @RequestAttribute(Principal.ATTRIBUTE) Principal p) {
         entitlements.requireAdmin(p);
+        edition.requirePack(name);                                  // DRS-1017: an allow-only edition installs only its own packs
         PackRegistryClient.Installed done = registry.install(name, version);
         audit.record(p.user(), "pack-installed", name, version + " from " + registry.url() + " signed by " + done.publisher() + ", sha256 " + done.sha256());
         Set<String> loaded = packs.packs().stream().map(Pack::name).collect(Collectors.toSet());

@@ -1,0 +1,107 @@
+{#
+  Project Drishti · Any data. Any domain. One grammar.
+
+  Copyright (c) 2026 Ashutosh Sinha <ajsinha@gmail.com>.
+  All rights reserved.
+
+  PROPRIETARY AND CONFIDENTIAL.
+
+  This file is the confidential and proprietary property of Ashutosh Sinha.
+  Unauthorised copying, use, modification, distribution or disclosure of this
+  file, via any medium, is strictly prohibited except with the express prior
+  written permission of the copyright holder.
+
+  See the LICENSE file in the root of this repository for the full terms.
+#}
+{# Drishti Risk's Home (the product owner's mock-ups A, B and C, 2026-10-29; EDITIONS.md section 7): A "desk" (headline tiles, VaR by desk with
+   limit use, exposure by counterparty, quick cards), B "command" (a big command line, risk chips, a status strip, baskets, monitors) and
+   C "map" (a hierarchy with VaR and limit use per node, a hierarchy switch, a limit-use heat map, Today's feed). A shell: every figure comes
+   from the engines' own answers (/api/var/..., /api/exposure/...), drawn by risk-landing.js; a panel whose answer is refused or empty says
+   so and nothing is invented. The choice of landing is the person's, kept in their settings (routes/edition_routes.py). #}
+{% extends "base.html" %}
+{% block title %}{{ PRODUCT }}{% endblock %}
+{% block screen %}home{% endblock %}
+{% block body_class %}terminal{% endblock %}
+{% block head %}<link rel="stylesheet" href="/static/css/risk-landing.css?v={{ ASSET_V }}">{% endblock %}
+{% block content %}
+<div class="rl" data-risk-landing="{{ landing }}" data-hierarchy="{{ hierarchies[0] }}">
+  <nav class="rl-switch" aria-label="Choose your Home">
+    <span class="rl-switch-l">Home</span>
+    {% for l in landings %}<a href="{{ l.href }}"{% if l.id == landing %} aria-current="page" class="on"{% endif %} data-landing-link="{{ l.id }}">{{ l.title }}</a>{% endfor %}
+    {% for link in lens_links(request) %}<a class="rl-lens" href="{{ link.href }}" data-lens-link="{{ link.name }}"><i class="bi bi-{{ 'box-arrow-left' if link.leave else 'eye' }}" aria-hidden="true"></i> {{ link.label }}</a>{% endfor %}
+  </nav>
+
+  <p class="rl-meta" data-rl-meta aria-live="polite">Business date <b class="mono" data-rl-date>…</b> · shown in <b class="mono" data-rl-ccy>USD</b>
+    <span data-rl-intraday></span><span data-rl-official></span></p>
+
+  {% if landing == 'command' %}
+  <section class="rl-hero" aria-label="Command line">
+    <form class="rl-big" action="/go" method="get" role="search" autocomplete="off">
+      <label class="visually-hidden" for="rlCmd">Command</label>
+      <span class="mono" aria-hidden="true">&gt;</span>
+      <input id="rlCmd" name="q" class="mono" type="text" spellcheck="false" placeholder="{{ command_placeholder(request) }}">
+    </form>
+    {% if chips %}<div class="rl-chips">{% for c in chips %}<a class="rl-chip mono" href="/go?q={{ (c ~ ' <GO>') | urlencode }}">{{ c }}</a>{% endfor %}</div>{% endif %}
+    <div class="rl-strip" data-rl-strip>
+      <span>VaR BANK <b class="mono" data-rl-var>…</b></span>
+      <span>EPE BANK <b class="mono" data-rl-epe>…</b></span>
+      <span>backtest <b class="mono" data-rl-backtest>…</b></span>
+      <span>breaches <b class="mono" data-rl-breaches>…</b></span>
+    </div>
+  </section>
+  <div class="rl-qc">
+    <div class="rl-q"><h2>Saved baskets</h2><ul data-rl-baskets><li class="rl-muted">…</li></ul></div>
+    <div class="rl-q"><h2>Watch list</h2><ul data-rl-monitors>{% for m in monitors %}<li><a href="/m/{{ m | urlencode }}">{{ m }}</a></li>{% else %}<li class="rl-muted">No monitors yet: <a href="/m">make one</a></li>{% endfor %}</ul></div>
+    <div class="rl-q"><h2>Learn</h2><ul>
+      <li><a href="/help/context/var">The VaR guide</a></li><li><a href="/help/context/exposure">The exposure guide</a></li>
+      <li><a href="/what">Knowledge: market and counterparty risk</a></li></ul></div>
+  </div>
+  {% else %}
+  {% if landing == 'desk' %}
+  <section class="rl-tiles" aria-label="Headline figures">
+    <a class="rl-tile" href="/var?scope=BANK" data-rl-tile="var"><span class="k">VaR · BANK</span><span class="v mono" data-rl-var>…</span><span class="s" data-rl-var-s></span></a>
+    <a class="rl-tile" href="/var?scope=BANK" data-rl-tile="backtest"><span class="k">Backtest</span><span class="v mono" data-rl-backtest>…</span><span class="s" data-rl-backtest-s></span></a>
+    <a class="rl-tile" href="/exposure?scope=BANK" data-rl-tile="epe"><span class="k">Exposure EPE · BANK</span><span class="v mono" data-rl-epe>…</span><span class="s" data-rl-epe-s></span></a>
+    <div class="rl-tile" data-rl-tile="breaches"><span class="k">Limits in breach</span><span class="v mono" data-rl-breaches>…</span><span class="s" data-rl-breaches-s></span></div>
+    <a class="rl-tile" href="/exposure" data-rl-tile="cpty"><span class="k">Counterparties</span><span class="v mono" data-rl-cpty>…</span><span class="s" data-rl-cpty-s></span></a>
+  </section>
+  {% endif %}
+  <div class="rl-cols">
+    {% if landing == 'map' %}
+    <section class="rl-card" aria-labelledby="rlTreeH">
+      <h2 id="rlTreeH"><span data-rl-tree-title>{{ hierarchies[0] }}</span><small>VaR · limit use</small></h2>
+      <div class="rl-hier" data-rl-hierarchies role="group" aria-label="Hierarchy"></div>
+      <div class="rl-tree mono" data-rl-tree role="tree"><p class="rl-muted">…</p></div>
+    </section>
+    <section class="rl-card" aria-labelledby="rlHeatH">
+      <h2 id="rlHeatH">Limit use<small>each node against its VaR limit</small></h2>
+      <div class="rl-heat" data-rl-heat><p class="rl-muted">…</p></div>
+      <p class="rl-note">Amber from 80%, red from 100%; each cell opens its scope.</p>
+    </section>
+    <section class="rl-card" aria-labelledby="rlTodayH">
+      <h2 id="rlTodayH">Today<small>what the engines did</small></h2>
+      <ul class="rl-feed" data-rl-feed><li class="rl-muted">…</li></ul>
+    </section>
+    {% else %}
+    <section class="rl-card" aria-labelledby="rlDeskH">
+      <h2 id="rlDeskH">VaR by desk<small>limit use, worst first</small></h2>
+      <table class="rl-table"><thead><tr><th scope="col">Desk</th><th scope="col" class="n">VaR</th><th scope="col">Limit use</th></tr></thead>
+        <tbody data-rl-desks><tr><td colspan="3" class="rl-muted">…</td></tr></tbody></table>
+    </section>
+    <section class="rl-card" aria-labelledby="rlCptyH">
+      <h2 id="rlCptyH">Exposure by counterparty<small>PFE peak against limit</small></h2>
+      <table class="rl-table"><thead><tr><th scope="col">Counterparty</th><th scope="col" class="n">EPE</th><th scope="col">Limit use</th></tr></thead>
+        <tbody data-rl-cptys><tr><td colspan="3" class="rl-muted">…</td></tr></tbody></table>
+    </section>
+    {% endif %}
+  </div>
+  {% if cards and landing == 'desk' %}
+  <nav class="rl-qc" aria-label="Quick commands">
+    {% for c in cards %}<a class="rl-q" href="{{ c.href }}" data-home-card="{{ c.cmd }}"><code class="mono">{{ c.cmd }}</code><span>{{ c.title }}</span></a>{% endfor %}
+  </nav>
+  {% endif %}
+  {% endif %}
+  <p class="rl-classic"><a href="/?landing=today">The classic Home</a></p>
+</div>
+{% endblock %}
+{% block scripts %}<script src="/static/js/risk-landing.js?v={{ ASSET_V }}"></script>{% endblock %}

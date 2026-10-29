@@ -43,6 +43,11 @@ public enum ErrorCode {
      * or AI alike, and nothing of it is shown.
      */
     COMMAND_OFF("DRS-1016", 403),
+    /**
+     * The server's edition (drishti.edition, docs/architecture/EDITIONS.md) refuses the pack: the edition lists its packs with
+     * {@code allow-only}, so Admin → Packs, Deploy archive and the registry may not load another one.
+     */
+    EDITION_PACK_REFUSED("DRS-1017", 403),
     SUTRA_PARSE("DRS-2001", 422),
     SUTRA_INVALID("DRS-2002", 422),
     SUTRA_NOT_FOUND("DRS-2003", 404),
@@ -92,6 +97,11 @@ public enum ErrorCode {
     HISTORY_RANGE_TOO_LARGE("DRS-4021", 400),
     /** History queries: a range that cannot be read (TO before FROM, a future FROM, an unreadable date or range). */
     HISTORY_BAD_RANGE("DRS-4022", 400),
+    /**
+     * A command the server's edition hides from people (drishti.edition, its commands.allow): typed, opened as a page or asked for by
+     * the type-ahead. Its kind stays readable by the engines (VaR, exposure) that need it.
+     */
+    EDITION_COMMAND_HIDDEN("DRS-4023", 404),
     BAD_REQUEST("DRS-5001", 400),
     CACHE_NOT_FOUND("DRS-5004", 404),
     FORBIDDEN("DRS-5002", 403),

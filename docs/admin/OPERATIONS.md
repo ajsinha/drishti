@@ -35,7 +35,7 @@ when other people will use the installation.
 9. [Production checklist](#9-production-checklist) · [The token secret is a master key](#9a-1-the-token-secret-is-a-master-key) · [Scheduled reports](#9a-scheduled-reports) · [Collaboration email](#9a-2-collaboration-email-and-the-outbox) · [Retention, holds and export](#9a-3-collaboration-retention-legal-holds-and-the-compliance-export) · [Watermarked snapshots](#9a-3b-watermarked-snapshots-privacy-note) · [Chat bridges](#9a-4-chat-bridges-teams-slack-webhooks) · [The access log](#9b-the-access-log) · [Pack registry keys](#9c-pack-registry-keys)
 10. [Backups and restore](#10-backups-and-restore)
 11. [The lake: where it lives and keeping it bounded](#11-the-lake-where-it-lives-and-keeping-it-bounded)
-12. [Memory and caches](#12-memory-and-caches) · [Several servers as one (Drishti*net)](#12a-several-servers-as-one-drishtinet)
+12. [Memory and caches](#12-memory-and-caches) · [Several servers as one (Drishti*net)](#12a-several-servers-as-one-drishtinet) · [Editions](#12b-editions)
 13. [Monitoring](#13-monitoring)
 14. [Logs](#14-logs)
 15. [Upgrades and rollback](#15-upgrades-and-rollback)
@@ -1514,6 +1514,20 @@ HTTP and answers requests for packs and data the others hold ([NET.md](NET.md), 
   minutes, and on the share of `outcome!="ok"` among the forwarded requests.
 - **The console.** With `backend.urls` the console keeps `<console data dir>/net/servers.json` (the servers it learnt, saved atomically): nothing to
   back up, it is rebuilt from the cluster within a minute; keep it if the console may restart while its configured servers are down.
+
+## 12b. Editions
+
+One setting turns an instance into a focused product: `drishti.edition: risk` (`DRISHTI_EDITION=risk`) on the server runs **Drishti Risk**
+(VaR and exposure first): its packs only (others refused, `DRS-1017`), its commands (others hidden, `DRS-4023`), its menus, Home landings,
+help, Admin pages, BI datasets and branding. The console learns it from the server. Blank is the full Drishti, exactly as before.
+
+- **Set it on every server** of a cluster, then restart: Admin → Net warns when members run different editions. The stack, Docker and ECS
+  steps are in [EDITIONS_GUIDE.md](EDITIONS_GUIDE.md#1-run-an-instance-as-drishti-risk).
+- **Check it**: `curl -s http://<server>/public/about` answers `"edition": {"name": "risk", ...}`.
+- **Adjust it** in the site's configuration (`drishti.edition-spec.*` on the server, `edition:` in the console), without editing the file.
+- **A lens** (`drishti.lenses: risk` on a full instance) lets each person open Drishti Risk for their own session, with no restart; it hides,
+  it does not secure.
+- **White-label**: the checklist is in [EDITIONS_GUIDE.md section 6](EDITIONS_GUIDE.md#white-labelling-checklist).
 
 ## 13. Monitoring
 

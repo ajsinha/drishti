@@ -12,13 +12,14 @@
 #
 # See the LICENSE file in the root of this repository for the full terms.
 
-"""Layered configuration: YAML -> local YAML -> environment -> command line.
+"""Layered configuration: YAML -> (the server's branding, the edition: :meth:`Settings.layer`) -> local YAML -> environment -> command line.
 
 ``${VAR:default}`` placeholders in YAML values are resolved from the environment.
 Environment overrides use ``DRISHTI_CONSOLE__A__B=value`` for key ``a.b``.
 """
 from __future__ import annotations
 
+import copy
 import os
 import re
 from pathlib import Path
@@ -31,10 +32,36 @@ _ENV_PREFIX = "DRISHTI_CONSOLE__"
 
 
 class Settings:
-    """Immutable-by-convention view over a nested dict with dotted-key access."""
+    """Immutable-by-convention view over a nested dict with dotted-key access. ``base`` (application.yaml) and ``over`` (the site's own:
+    application.local.yaml, environment, command line) are kept apart so a layer can go between them (:meth:`layer`): the edition
+    (docs/architecture/EDITIONS.md) sits there, so the site's configuration always wins over it, key by key."""
 
-    def __init__(self, data: dict[str, Any]):
+    def __init__(self, data: dict[str, Any], base: dict[str, Any] | None = None, over: dict[str, Any] | None = None):
         self._data = data
+        self._base = base if base is not None else copy.deepcopy(data)
+        self._over = over if over is not None else {}
+        self._layers: dict[str, dict[str, Any]] = {}
+
+    def layer(self, name: str, values: dict[str, Any] | None) -> None:
+        """Puts (or, with None, removes) a named layer between the product's defaults and the site's configuration; the order the
+        layers were first set is their precedence (later wins). Every reader of :meth:`get` sees the result at once."""
+        if values is None:
+            self._layers.pop(name, None)
+        else:
+            self._layers[name] = values
+        data = copy.deepcopy(self._base)
+        for v in self._layers.values():
+            _merge(data, copy.deepcopy(v))
+        self._data = _merge(data, copy.deepcopy(self._over))
+
+    def site(self, key: str, default: Any = None) -> Any:
+        """A key as the site's own configuration sets it (application.local.yaml, environment, command line), or ``default``."""
+        node: Any = self._over
+        for part in key.split("."):
+            if not isinstance(node, dict) or part not in node:
+                return default
+            node = node[part]
+        return node
 
     def get(self, key: str, default: Any = None) -> Any:
         node: Any = self._data
@@ -89,17 +116,17 @@ def _merge(base: dict[str, Any], over: dict[str, Any]) -> dict[str, Any]:
 
 
 def load_settings(config_dir: Path, argv: list[str] | None = None) -> Settings:
-    data: dict[str, Any] = {}
+    files: list[dict[str, Any]] = []
     for name in ("application.yaml", "application.local.yaml"):
         path = config_dir / name
-        if path.exists():
-            _merge(data, yaml.safe_load(path.read_text(encoding="utf-8")) or {})
-    data = _interpolate(data)
+        files.append(_interpolate(yaml.safe_load(path.read_text(encoding="utf-8")) or {}) if path.exists() else {})
+    base, over = files
     for key, value in os.environ.items():
         if key.startswith(_ENV_PREFIX):
-            _set(data, key[len(_ENV_PREFIX):].lower().replace("__", "."), _coerce(value))
+            _set(over, key[len(_ENV_PREFIX):].lower().replace("__", "."), _coerce(value))
     for arg in argv or []:
         if arg.startswith("--") and "=" in arg:
             k, v = arg[2:].split("=", 1)
-            _set(data, k, _coerce(v))
-    return Settings(data)
+            _set(over, k, _coerce(v))
+    data = _merge(copy.deepcopy(base), copy.deepcopy(over))
+    return Settings(data, base, over)

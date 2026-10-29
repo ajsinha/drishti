@@ -32,4 +32,15 @@
     <dependency><groupId>org.springframework.boot</groupId><artifactId>spring-boot</artifactId></dependency>
     <dependency><groupId>com.fasterxml.jackson.dataformat</groupId><artifactId>jackson-dataformat-yaml</artifactId></dependency>
   </dependencies>
+  <build>
+    <resources>
+      <resource><directory>src/main/resources</directory></resource>
+      <!-- the one default pack list (config/editions/default-packs.yaml), read by the server from its jar and by the console from disk -->
+      <resource>
+        <directory>${project.basedir}/../config/editions</directory>
+        <targetPath>com/ash/drishti/packs/edition</targetPath>
+        <includes><include>default-packs.yaml</include></includes>
+      </resource>
+    </resources>
+  </build>
 </project>

@@ -120,6 +120,7 @@
             <drishti.identity.iterations>1000</drishti.identity.iterations>
             <spring.test.context.cache.maxSize>8</spring.test.context.cache.maxSize>
             <drishti.packs.dir>${project.basedir}/../config/packs</drishti.packs.dir>
+            <drishti.editions.dir>${project.basedir}/../config/editions</drishti.editions.dir>
             <drishti.ui-kit.dir>${project.basedir}/../config/ui-kit</drishti.ui-kit.dir>
             <drishti.ui-kit.site-dir>${project.build.directory}/test-run/fork${surefire.forkNumber}/ui-kit</drishti.ui-kit.site-dir>
             <!-- the retired example packs stay loadable for the tests that use them as fixtures (finance, logistics…);

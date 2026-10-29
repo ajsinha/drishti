@@ -52,9 +52,17 @@ public final class CommandCatalog {
     private final Mnemonics mnemonics;
     private volatile Cached cached = new Cached(-1, List.of());
 
+    private final com.ash.drishti.packs.edition.Edition edition;
+
     public CommandCatalog(PackRegistry registry, Mnemonics mnemonics) {
+        this(registry, mnemonics, com.ash.drishti.packs.edition.Edition.NONE);
+    }
+
+    /** With an edition: the commands it hides are not in the catalogue (FUNC, Admin → Commands). */
+    public CommandCatalog(PackRegistry registry, Mnemonics mnemonics, com.ash.drishti.packs.edition.Edition edition) {
         this.registry = registry;
         this.mnemonics = mnemonics;
+        this.edition = edition;
     }
 
     public List<PackCommands> packs() {
@@ -79,7 +87,7 @@ public final class CommandCatalog {
             List<Command> commands = new ArrayList<>();
             for (String kind : p.kinds()) {
                 String code = mnemonics.codeFor(kind);
-                if (code == null) {
+                if (code == null || !edition.commandShown(code)) {
                     continue;
                 }
                 JsonNode contract = contract(p.dir(), kind);

@@ -55,6 +55,14 @@ public class CatalogController {
     private final com.ash.drishti.server.security.PackAccess packAccess;
     private final com.ash.drishti.common.Branding branding;
 
+    private com.ash.drishti.server.edition.EditionCommands edition = com.ash.drishti.server.edition.EditionCommands.NONE;
+
+    /** The edition's command allow-list (EDITIONS.md section 5.3); none: every command shown. */
+    @org.springframework.beans.factory.annotation.Autowired(required = false)
+    public void setEdition(com.ash.drishti.server.edition.EditionCommands edition) {
+        this.edition = edition;
+    }
+
     public CatalogController(SourceRouter router, SourceRegistry sources, SutraRegistry sutras, Entitlements entitlements,
             org.springframework.beans.factory.ObjectProvider<org.springframework.boot.info.BuildProperties> build,
             com.ash.drishti.server.security.SecurityProperties security, com.ash.drishti.packs.PackRegistry packRegistry,
@@ -101,6 +109,7 @@ public class CatalogController {
         m.put("packs", packs(null));
         m.put("copyright", branding.copyright());
         m.put("notice", branding.notice());
+        m.put("edition", edition.edition().about());       // the instance's edition, or the caller's lens       // {name, title, packs, allowOnly}, or null: the full Drishti (EDITIONS.md)
         return m;
     }
 
@@ -118,7 +127,7 @@ public class CatalogController {
             m.put("description", p.description());
             m.put("console", withoutInactive(p.manifest().getOrDefault("console", Map.of())));
             m.put("sample", p.sample());
-            m.put("kinds", p.kinds().stream().filter(k -> !packAccess.commandOff(k)).toList());   // a command turned off: its kind is not named
+            m.put("kinds", p.kinds().stream().filter(k -> !packAccess.commandOff(k) && edition.kindShown(k)).toList());   // a command turned off: its kind is not named
             Map<String, Object> links = links(p.manifest());
             links.values().removeIf(l -> l instanceof Map<?, ?> r && packAccess.commandOff(String.valueOf(r.get("kind"))));
             m.put("links", links);                 // graph.fields: which fields name which kinds (the designer's linked records)
@@ -131,14 +140,14 @@ public class CatalogController {
 
     /** The pack's console settings without the example commands whose command an administrator turned off (Admin → Commands). */
     private Object withoutInactive(Object console) {
-        if (!(console instanceof Map<?, ?> c) || !(c.get("examples") instanceof List<?> examples) || packAccess.commands() == null) {
+        if (!(console instanceof Map<?, ?> c) || !(c.get("examples") instanceof List<?> examples) || packAccess.commands() == null && !edition.edition().active()) {
             return console;
         }
         Map<Object, Object> out = new java.util.LinkedHashMap<>(c);
         out.put("examples", examples.stream().filter(e -> {
             Object cmd = e instanceof List<?> l && !l.isEmpty() ? l.get(0) : e;
             String head = String.valueOf(cmd).trim().split("\\s+", 2)[0];
-            return packAccess.commands().commandOn(head);
+            return (packAccess.commands() == null || packAccess.commands().commandOn(head)) && edition.codeShown(head);
         }).toList());
         return out;
     }

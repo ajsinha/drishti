@@ -45,6 +45,14 @@ public class SearchController {
     private final com.ash.drishti.engine.source.SourceRouter router;
     private final com.ash.drishti.engine.time.BusinessDates dates;
 
+    private com.ash.drishti.server.edition.EditionCommands edition = com.ash.drishti.server.edition.EditionCommands.NONE;
+
+    /** The edition's command allow-list (EDITIONS.md section 5.3); none: every command shown. */
+    @org.springframework.beans.factory.annotation.Autowired(required = false)
+    public void setEdition(com.ash.drishti.server.edition.EditionCommands edition) {
+        this.edition = edition;
+    }
+
     public SearchController(StructuredSearch search, Entitlements entitlements, Mnemonics mnemonics,
             com.ash.drishti.engine.search.SearchPivot pivot, com.ash.drishti.engine.source.SourceRouter router,
             com.ash.drishti.engine.time.BusinessDates dates) {
@@ -78,6 +86,7 @@ public class SearchController {
         SearchQuery query = SearchQuery.pick(q);           // TRD where …, TRD MX-200000, TRD productType=Revolver, TRD
         String kind = search.kindOf(query);
         entitlements.requireOpen(principal, kind);
+        edition.requireKind(kind);
         StructuredSearch.Result r = search.run(query, asOf, data -> entitlements.redact(principal, data));
         Map<String, Object> out = new java.util.LinkedHashMap<>();
         out.put("query", q);

@@ -103,8 +103,31 @@ EXACT = ("/t", "/s")                        # pages whose path is a prefix of pu
 WHILE_MUST_CHANGE = ("/account", "/account/password", "/logout")
 
 
+from core import edition_gate as _edition_gate   # noqa: E402  (route gating by edition, lens and feature switch)
+
+
 def protected(path: str) -> bool:
     return path in EXACT or path.startswith(PROTECTED[1:])
+
+
+async def _edition_of(request, path: str) -> None:
+    """The edition this request is seen through (core/edition.py): the instance's, or the person's lens (their ``lens`` setting, so it
+    follows them across servers and workers); the lens also travels to the server on every backend call (X-Drishti-Lens)."""
+    from core import edition as ed
+
+    editions = request.app.state.editions
+    lens = None
+    if editions.lenses and request.state.identity is not None and not path.startswith(("/static/", PYODIDE, EMBED, "/healthz", "/readyz")):
+        s = request.state.settings
+        if s is None:
+            from core.settings import changed_at
+            try:
+                s = await request.app.state.user_settings.get(request.app.state.backend, request.state.identity, changed_at(request))
+            except Exception:  # noqa: BLE001 - no settings: no lens
+                s = {}
+        lens = (s or {}).get("lens")
+    request.state.edition = editions.for_request(lens)
+    ed.set_lens(request.state.edition.name if request.state.edition.lens else None)
 
 
 class AuthGate(BaseHTTPMiddleware):
@@ -166,6 +189,13 @@ class AuthGate(BaseHTTPMiddleware):
                 request.state.pack_switcher = await request.app.state.packs.assigned(request.app.state.backend, request.state.identity)
             except Exception:  # noqa: BLE001 - the switcher is a convenience; never fail a page for it
                 request.state.pack_switcher = []
+        await _edition_of(request, path)
+        why = None if path.startswith(("/static/", PYODIDE, EMBED)) else _edition_gate.hidden(request, request.state.edition, path)
+        if why is not None and request.state.identity is not None:
+            from core.notfound import not_found
+            from starlette.exceptions import HTTPException
+
+            return await not_found(request, HTTPException(404, why))
         if request.state.identity is None and protected(path):
             if path.startswith("/api/"):
                 return JSONResponse({"code": "DRS-5010", "detail": "sign in first"}, status_code=401)
@@ -233,6 +263,7 @@ def create_app(settings: Settings) -> FastAPI:
                         workspace_routes, collab_routes, thread_routes, collab_admin_routes, embed_admin_routes, connector_routes, form_routes,
                         ai_routes)
 
+    from routes import edition_routes
     from routes import admin_commands_routes, artifact_routes, changes_routes, compute_admin_routes, datamap_routes, drafts_routes, exposure_routes, functions_routes, history_routes, lake_maint_routes, lake_routes, net_routes, var_routes
 
     def _lake_schedules(app):
@@ -272,6 +303,12 @@ def create_app(settings: Settings) -> FastAPI:
             pool.on_failover = _on_failover
         ai = getattr(app.state, "ai", None)
         watcher = asyncio.create_task(ai.supervise()) if ai is not None and (ai.enabled or ai.mcp_enabled) else None
+        try:                                                 # the edition before the first page (the watch keeps it fresh after a restart)
+            default = app.state.servers.get(app.state.servers.default)
+            if default is not None:
+                await asyncio.wait_for(app.state.backend_watch.check(default), 5)
+        except Exception:  # noqa: BLE001 - the server is not up yet: the watch learns it later
+            pass
         backend_task = asyncio.create_task(app.state.backend_watch.run()) if app.state.backend_watch.enabled else None
         maint_task = _lake_schedules(app)                    # Admin -> Lakes -> Maintain: the schedules (core/lake_maint.py)
         runner = getattr(app.state, "pyrunner", None)
@@ -348,7 +385,30 @@ def create_app(settings: Settings) -> FastAPI:
         return local_when(instant, zone, zone_label(zone))
 
     templates.env.globals["when_local"] = when_local
+
+    @pass_context
+    def product(ctx, text):
+        """``{product}`` in a help summary or title (config/help.yaml): the product name this page shows (an edition's, a lens's)."""
+        return str(text or "").replace("{product}", str(ctx.get("PRODUCT") or ""))
+
+    templates.env.filters["product"] = product
     app.state.settings = settings
+    from core.edition import Editions
+
+    def _branding_changed() -> None:                    # the instance's edition or the server's branding changed: the pages follow
+        for g, key in (("PRODUCT", "ui.product"), ("TAGLINE", "ui.tagline"), ("LOGO", "ui.logo"), ("FAVICON", "ui.favicon"),
+                       ("APPLE_TOUCH_ICON", "ui.apple_touch_icon")):
+            templates.env.globals[g] = settings.get(key, "") or ""
+
+    app.state.editions = Editions(settings, WEB.parent, on_change=_branding_changed)
+    _branding_changed()                                  # the logo, favicon and touch icon from configuration (blank: the eye)
+    templates.env.globals["edition_of"] = lambda request: getattr(request.state, "edition", None) or app.state.editions.instance
+    from core import menus as _menus
+
+    templates.env.globals["top_bar_menus"] = _menus.top_bar
+    templates.env.globals["footer_links"] = _menus.footer
+    templates.env.globals["command_placeholder"] = _menus.placeholder
+    templates.env.globals["lens_links"] = _menus.lens_links
     app.state.servers = catalogue
     from core.backend_watch import BackendWatch
 
@@ -359,6 +419,8 @@ def create_app(settings: Settings) -> FastAPI:
     app.state.cluster = pool if pool.enabled else None
     app.state.backend_watch = BackendWatch(catalogue, _seconds(settings.get("backend.check_seconds", 5)),
                                            url_of=(lambda s: pool.current() if s.id == catalogue.default else s.url) if pool.enabled else None)
+    # the console learns the server's edition, lenses and branding from its about answer (docs/architecture/EDITIONS.md, section 5.1)
+    app.state.backend_watch.on_about = lambda s, about: app.state.editions.learn(about) if s.id == catalogue.default else None
     from core.user_stamps import UserStamps
 
     # a change through one worker process (a setting, packs, a layout, a disabled user) reaches every worker of this console at once
@@ -445,6 +507,7 @@ def create_app(settings: Settings) -> FastAPI:
     if app.state.calc.runtime.installed:          # the Python runtime of Calc, from this origin only (tools/fetch-pyodide.sh)
         app.mount(app.state.calc.runtime.base.rstrip("/"), StaticFiles(directory=str(app.state.calc.runtime.folder)), name="pyodide")
     app.include_router(home_routes.router)
+    app.include_router(edition_routes.router)              # an edition's landings and the lens (EDITIONS.md sections 7, 8)
     app.include_router(history_routes.router)          # history queries: before the terminal (/v/{kind}/{id}) and export routes
     app.include_router(var_routes.router)              # the VaR explorer (/var) and its JSON (/api/var/...)
     app.include_router(exposure_routes.router)         # the exposure explorer (/exposure) and its JSON (/api/exposure/...)

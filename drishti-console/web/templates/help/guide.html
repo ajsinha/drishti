@@ -30,7 +30,7 @@
       <h2>In {{ category.name }}</h2><ul>{% for g in category.guides %}<li{% if g.slug == guide.slug %} aria-current="page"{% endif %}><a href="/help/{{ g.slug }}">{{ g.title }}</a></li>{% endfor %}</ul>
     </aside>
     <article class="help-article">
-      <header><span class="badge-kind">{{ guide.kind }}</span><h1>{{ guide.title }}</h1><p class="lead">{{ guide.summary }}</p></header>
+      <header><span class="badge-kind">{{ guide.kind }}</span><h1>{{ guide.title | product }}</h1><p class="lead">{{ guide.summary | product }}</p></header>
       {{ page.html | safe }}
       <footer class="help-foot">Found something out of date? The source is <span class="mono">{{ guide.path.name }}</span>; the in-app help renders the repository's documents, so fixing the file fixes this page.</footer>
     </article>

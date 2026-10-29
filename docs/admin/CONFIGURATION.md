@@ -290,6 +290,9 @@ files (`application-files.yaml`, `application-postgres.yaml`, …) and packs hav
 | `DRISHTI_PORT` | `server.port` | `18480` | The server's HTTP port. |
 | `DRISHTI_HTTP2` | `server.http2.enabled` | `true` | HTTP/2 on the server's port as well as HTTP/1.1 (2.6.7): Drishti*net peers multiplex their forwarded reads over one connection (`h2c` by the upgrade on plain HTTP, ALPN on TLS; up to 1,000 streams per connection), and browsers over TLS get it too. `false`: HTTP/1.1 only; peers then fall back to it on the same call ([NET.md section 7](NET.md#7-routing-where-a-request-goes)). |
 | `DRISHTI_PRODUCT` | `drishti.branding.product` | `Drishti` | The product name shown in pages and messages. |
+| `DRISHTI_EDITION` | `drishti.edition` | empty | The edition the server runs ([EDITIONS_GUIDE.md](EDITIONS_GUIDE.md)): empty is the full Drishti; `risk` is Drishti Risk. Every member of a cluster sets the same; the console learns it from the server. A restart applies it. |
+| `DRISHTI_EDITIONS_DIR` | `drishti.editions.dir` | `./config/editions` | The folder of the edition files (and `features.yaml`, `default-packs.yaml`). |
+| `DRISHTI_LENSES` | `drishti.lenses` | empty | The editions a person may open as a lens on a full instance (`risk`); empty: no lens link. Ignored when the server runs an edition. A lens hides, it does not secure. |
 | `DRISHTI_PLUGIN_DIR` | `drishti.sources.plugin-dir` | empty | A directory of extra plugin jars; empty: none. |
 | `DRISHTI_HTTP_PROXY_URL` | `drishti.http.proxy.url` | empty | The site's outbound HTTP proxy (`http://host:port`); empty: none. See [`drishti.http.proxy`](#drishtihttpproxy--the-sites-outbound-http-proxy). |
 | `DRISHTI_HTTP_PROXY_USERNAME` | `drishti.http.proxy.username` | empty | The proxy's Basic-authentication user. |
@@ -426,7 +429,7 @@ files (`application-files.yaml`, `application-postgres.yaml`, …) and packs hav
 | `DRISHTI_LOADS_DIR` | `drishti.loads.dir` | `./data/loads` | The data-load history per pack and the administrators' expectation overrides ([DATA_LOADS.md](../guides/DATA_LOADS.md)). |
 | `DRISHTI_PACKS_DEPLOY_HISTORY` | `drishti.packs.deploy.history-file` | `./data/packs/deploy-history.jsonl` | The history of archive deployments and rollbacks. |
 | `DRISHTI_PACK_REGISTRY` | `drishti.packs.registry.url` | empty | A signed pack registry (a folder, `file:` or `https:` URL with `index.json`); empty: none. |
-| `DRISHTI_PACKS` | `drishti.packs.enabled` | `core,market-data,trading,counterparty-risk,market-risk,world-economy,news-and-markets` | The packs to load (comma list); a pack's parents load with it. The default is the seven shipped packs. |
+| `DRISHTI_PACKS` | `drishti.packs.enabled` | empty | The packs to load (comma list); a pack's parents load with it. Empty: the edition's packs (`drishti.edition`), else the seven shipped packs of `config/editions/default-packs.yaml` (the one default list). |
 | `DRISHTI_DEFAULT_PACKS` | `drishti.packs.default-for-users` | empty | Packs new users get; empty: every installed pack. |
 | `DRISHTI_SUGGEST_LIMIT` | `drishti.commands.suggest-limit` | `25` | Entries in the command line's dropdown. |
 
@@ -496,7 +499,8 @@ From `drishti-console/config/application.yaml`, resolved from environment variab
 | `DRISHTI_PACKS_DIR` | `packs.dir` | `../config/packs` | The packs directory (a relative path resolves from `drishti-console/`). |
 | `DRISHTI_PACKS_EXTRA_DIRS` | `packs.extra_dirs` | empty | Further pack folders, comma-separated, as on the server (relative paths resolve from `drishti-console/`, so `../examples/packs`). |
 | `DRISHTI_PACKS_INSTALLED` | `packs.installed_dir` | empty | The server's installed packs (registry and Deploy archive); empty: `<data dir>/packs/installed`. Read first as the server does, so an installed pack's guides, examples and workspaces reach the console. |
-| `DRISHTI_PACKS` | `packs.enabled` | `core,market-data,trading,counterparty-risk,market-risk,world-economy,news-and-markets` | Only used when the server cannot be asked which packs are on. |
+| `DRISHTI_PACKS` | `packs.enabled` | empty | Only used when the server cannot be asked which packs are on; empty: `config/editions/default-packs.yaml`. |
+| `DRISHTI_EDITIONS_DIR` | `editions.dir` | `../config/editions` | The folder of the edition files, the same the server reads (relative to `drishti-console/`). |
 | `DRISHTI_LAKE_ROOTS` | `lakes.roots` | empty | Admin → Data loads → Lakes ([TOOLS.md](../guides/TOOLS.md#4-lake-build-a-large-json-export-into-a-delta-lake)): the lake roots this console may write, comma-separated (relative paths resolve from `drishti-console/`); empty: `<data dir>/delta`, the server's own root. The page offers no other folder. |
 | `DRISHTI_JAR` | `lakes.jar` | empty | The drishti-server exec jar whose Java writer the page's builds use (`lakes.engine: auto`); empty: the newest `drishti-server/target/drishti-server-*-exec.jar`, else the Python `deltalake` package. |
 | `DRISHTI_DATA_DIR` | `lakes.data_dir` | `../data` | Admin → Lakes → Maintain ([LAKE_MAINTENANCE.md](LAKE_MAINTENANCE.md)): the data folder whose `lakes/lake-maintenance.yaml` (the file `lake maintain` reads by default) and `lakes/maintenance-history.jsonl` the page uses (relative paths resolve from `drishti-console/`). |
@@ -876,7 +880,7 @@ without a restart. A pack's `history:` block can lower `max-days` and set `defau
 |---|---|---|
 | `dir` | `./config/packs` (`DRISHTI_PACKS_DIR`) | The folder holding one sub-folder per pack. Relative to the server's working directory. The console reads the same variable (its default `../config/packs` is relative to `drishti-console/`), so use an absolute path when you set it. |
 | `extra-dirs` | empty (`DRISHTI_PACKS_EXTRA_DIRS`) | Further pack folders, comma-separated, looked in after `dir`; `examples/packs` holds the retired example packs. A pack there may extend the shipped ones. |
-| `enabled` | `core,market-data,trading,counterparty-risk,market-risk,world-economy,news-and-markets` (`DRISHTI_PACKS`) | Comma-separated packs to load, in order. Packs they `extends:` (or the older `requires:`) are loaded as well. A missing pack stops start-up with a clear message. |
+| `enabled` | empty (`DRISHTI_PACKS`): the edition's packs, else `config/editions/default-packs.yaml` (the seven shipped packs) | Comma-separated packs to load, in order. Packs they `extends:` (or the older `requires:`) are loaded as well. A missing pack stops start-up with a clear message. |
 | `default-for-users` | empty = every installed pack (`DRISHTI_DEFAULT_PACKS`) | The packs a user sees until an admin assigns packs to them. |
 | `samples` | `visible` (`DRISHTI_PACKS_SAMPLES`) | Who sees sample packs (`sample: true` in `pack.yaml`): `visible` (everyone), `developers` (only users with the author or admin power; use this once real packs exist) or `hidden` (nobody; sample packs are not loaded and their connectors do not start). The setting an administrator saves in Admin → Packs overrides it. |
 | `samples-file` | `./data/packs/samples-mode` (`DRISHTI_PACKS_SAMPLES_FILE`) | Where that saved setting is kept (one word). Delete it, or press *Use the configuration*, to let `samples` decide again. |
@@ -974,6 +978,31 @@ The console has its own copy under `ui:` (`product`, `tagline`, `owner`, `copyri
 Messages name the product's features after `product` (`<product> SQL` in a SQL error, `<product>*net` in a cluster answer); no server
 message writes the name in code, and `BrandingLiteralTest` (drishti-it) fails on a literal. Header names (`X-Drishti-…`) and the
 `DRISHTI_` variables are identifiers and keep their names.
+
+### `drishti.edition` — editions and lenses
+
+An edition turns Drishti into a focused product with one setting ([EDITIONS_GUIDE.md](EDITIONS_GUIDE.md), the design in
+[EDITIONS.md](../architecture/EDITIONS.md)). The edition file is a layer under the site's configuration: every key below it can still be set
+by the site.
+
+| Key | Default | Meaning |
+|---|---|---|
+| `drishti.edition` | empty (`DRISHTI_EDITION`) | The edition: empty is the full Drishti, exactly as without editions; `risk` is Drishti Risk (`config/editions/risk.yaml`). Names a file in `drishti.editions.dir`; a name with no file stops the start. Set the same on every member of a cluster. |
+| `drishti.editions.dir` | `./config/editions` (`DRISHTI_EDITIONS_DIR`) | The folder of the edition files, `features.yaml` (which settings each feature presets) and `default-packs.yaml` (the one default pack list). |
+| `drishti.edition-spec.*` | the edition file's keys | The site's overrides of the edition file, key by key: `drishti.edition-spec.commands.also-allow[0]=FRTB` adds a command, `drishti.edition-spec.packs.allow-only=false` lets other packs load, a list (`bi.datasets`) replaces the file's. |
+| `drishti.lenses` | empty (`DRISHTI_LENSES`) | The editions a person may open as a lens on a full instance ("Open Drishti Risk"), comma list. A lens hides, it does not secure. Ignored with an edition. |
+
+The console's side: `editions.dir` (`DRISHTI_EDITIONS_DIR`, default `../config/editions`); an `edition:` block in its
+`application.local.yaml` overrides the edition file's keys for the console (menus, Home, help, words); `lens.roles` is the hook for
+role-based access to the lens link (read, not wired). Its own feature switches, each on by default and preset by an edition through
+`config/editions/features.yaml`: `features.build` (Build: new screens, packs, designs, reviews, changes), `features.forms` (`FORM`, `/forms`),
+`features.datamap`, `features.workspaces`, `features.monitors`, `features.alerts`, `features.lakes` (Admin → Lakes), `features.reports`,
+`features.collaboration` (Admin → Collaboration); `studio.enabled` (`/studio`). A page whose switch is off answers 404.
+
+Branding keys of the console beside `ui.product`: `ui.placeholder` (the command line's placeholder; blank: `config/menus.yaml`'s),
+`ui.logo` (an image under `/static/`, or a `data:` URL, drawn instead of the eye mark), `ui.favicon` and `ui.apple_touch_icon` (the
+browser and home-screen icons; the generated `/manifest.webmanifest` follows them). The console takes the server's product name and
+tagline from its about answer unless its own `ui.product` is set. The advice for `DRS-1017` and `DRS-4023` is in `ui.error_advice`.
 
 ### `drishti.identity` — users, passwords and the identity database
 

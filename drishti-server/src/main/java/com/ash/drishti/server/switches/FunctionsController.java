@@ -39,6 +39,14 @@ public class FunctionsController {
     private final CommandCatalog catalog;
     private final Entitlements entitlements;
 
+    private com.ash.drishti.server.edition.EditionCommands edition = com.ash.drishti.server.edition.EditionCommands.NONE;
+
+    /** The edition's (or the person's lens's) command allow-list; none: every command. */
+    @org.springframework.beans.factory.annotation.Autowired(required = false)
+    public void setEdition(com.ash.drishti.server.edition.EditionCommands edition) {
+        this.edition = edition;
+    }
+
     public FunctionsController(CommandCatalog catalog, Entitlements entitlements) {
         this.catalog = catalog;
         this.entitlements = entitlements;
@@ -52,7 +60,7 @@ public class FunctionsController {
         for (CommandCatalog.PackCommands pc : catalog.packs()) {
             List<Map<String, Object>> cmds = new ArrayList<>();
             for (CommandCatalog.Command c : pc.commands()) {
-                if (!entitlements.mayOpen(p, c.kind())) {
+                if (!entitlements.mayOpen(p, c.kind()) || !edition.codeShown(c.code())) {   // and a person's lens
                     continue;
                 }
                 Map<String, Object> cm = new LinkedHashMap<>();

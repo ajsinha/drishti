@@ -1,0 +1,122 @@
+# Project Drishti · Any data. Any domain. One grammar.
+#
+# Copyright (c) 2026 Ashutosh Sinha <ajsinha@gmail.com>.
+# All rights reserved.
+#
+# PROPRIETARY AND CONFIDENTIAL.
+#
+# This file is the confidential and proprietary property of Ashutosh Sinha.
+# Unauthorised copying, use, modification, distribution or disclosure of this
+# file, via any medium, is strictly prohibited except with the express prior
+# written permission of the copyright holder.
+#
+# See the LICENSE file in the root of this repository for the full terms.
+
+# The top bar's menus and the footer, as data (docs/architecture/EDITIONS.md, section 5.4; core/menus.py draws them).
+# Each item: id, href, icon, label, desc, match (the path prefix that marks it current; blank: the href only) and requires: a list,
+# every entry of which must hold:
+#   admin                the person is an administrator          bi        BI is on for the person (the bi power, BI switched on)
+#   bi-admin             the person holds the bi-admin power     designer  the Sutra designer is on (ui.designer)
+#   feature:<name>       a feature switch (config/editions/features.yaml; the console's features.* and the presets of an edition)
+#   word:<WORD>          a reserved or console word the edition keeps (BI, FORM, FUNC, WHAT, DATAMAP, VAR, EXP)
+#   admin-page:<id>      an Admin page the edition keeps          edition   only with an edition or a lens (a full Drishti hides it)
+#   pack:<name>          a pack that is on for the person
+# An edition (or a lens) lists the items it shows per menu (menus.<menu-id>: [item ids]); a menu it does not name keeps every item its
+# requirements allow, and a menu with no item left is not drawn. {product} and {tutorials} are filled in.
+menus:
+  - id: views
+    label: Views
+    icon: grid-1x2
+    columns:
+      - title: Look up
+        items:
+          - { id: terminal, href: /t, icon: terminal, label: Terminal, desc: "Type a command or an id, then <GO>", match: /t }
+          - { id: search, href: /s, icon: search, label: "Search & pick lists", desc: "TRD MX-200000, TRD PRODUCT_TYPE=FX_QUANTO, TRD where …", match: /s }
+          - { id: forms, href: /forms, icon: card-checklist, label: Forms, desc: "Query by form: every pack with a search form, your recent forms and saved searches. Also: FORM <GO>", match: /form, requires: [feature:forms, word:FORM] }
+          - { id: functions, href: /func, icon: list-ul, label: Functions, desc: "Every command you can use, what it does · also FUNC <GO>", match: /func, requires: [word:FUNC] }
+          - { id: datamap, href: /datamap, icon: diagram-3, label: Data map, desc: "Every kind of data, how it joins and how much there is · also DATAMAP <GO>", match: /datamap, requires: [feature:datamap, word:DATAMAP] }
+          - { id: var, href: /var, icon: shield-check, label: VaR, desc: "Value at risk of the bank, a desk or any set of trades · also VAR <GO>", match: /var, requires: [edition, word:VAR] }
+          - { id: exposure, href: /exposure, icon: graph-up, label: Exposure, desc: "EE, PFE and EPE of a counterparty or netting set · also EXP <GO>", match: /exposure, requires: [edition, word:EXP] }
+          - { id: reports, href: /reports, icon: file-earmark-bar-graph, label: Reports, desc: "Every report you have: scheduled reports, subscriptions, alerts, and BI reports", match: /reports, requires: [feature:reports] }
+      - title: Watch
+        items:
+          - { id: workspaces, href: /w, icon: grid-1x2, label: Workspaces, desc: Several live views on one screen, match: /w, requires: [feature:workspaces] }
+          - { id: monitors, href: /m, icon: list-columns, label: Monitors, desc: Live watchlists of entities, match: /m, requires: [feature:monitors] }
+          - { id: alerts, href: /alerts, icon: bell, label: Alerts, desc: Rules checked on every change, match: /alerts, requires: [feature:alerts] }
+  - id: bi
+    label: BI
+    icon: bar-chart-line
+    columns:
+      - title: "Rupaka: business intelligence"
+        items:
+          - { id: bi-home, href: /bi, icon: house, label: BI home, desc: "Recent, favourites, certified for you, shared with me. Also: RUPAKA <GO>", match: /bi, requires: [bi, word:BI] }
+          - { id: bi-workspace, href: /bi/w/me, icon: person-workspace, label: My workspace, desc: "Your drafts, and the shared workspaces you belong to. Also: RUPAKA WORKSPACE", match: /bi/w/, requires: [bi, word:BI] }
+          - { id: bi-catalogue, href: /bi/catalogue, icon: collection, label: Catalogue, desc: "Every published report and board you may open. Also: RUPAKA CATALOGUE", match: /bi/catalogue, requires: [bi, word:BI] }
+      - title: Administer
+        items:
+          - { id: bi-settings, href: /admin/bi, icon: sliders, label: BI settings, desc: "Powers per role, who creates workspaces", match: /admin/bi, requires: [bi, bi-admin, admin-page:bi] }
+  - id: build
+    label: Build
+    icon: braces
+    columns:
+      - title: Create
+        items:
+          - { id: new-screen, href: /build/new, icon: plus-square, label: New screen, desc: "Bring JSON files, a schema or stored entities, then design", match: /build/new, requires: [feature:build] }
+          - { id: new-pack, href: /build/pack/new, icon: box-seam, label: New pack, desc: "Schema files and/or a folder of JSON Lines in, a pack to download or deploy out", match: /build/pack/new, requires: [feature:build] }
+          - { id: designs, href: /build, icon: collection, label: My designs, desc: "Your saved work: open, rename, duplicate, delete", match: /build/d/, requires: [feature:build] }
+          - { id: examples, href: "/build/new#examples", icon: journal-richtext, label: Examples, desc: Every example opens as your own copy, requires: [feature:build] }
+      - title: Govern
+        items:
+          - { id: reviews, href: /build/reviews, icon: patch-check, label: Reviews, desc: Proposed Sutras waiting for approval, match: /build/reviews, requires: [feature:build] }
+          - { id: changes, href: /review/changes, icon: pencil-square, label: Changes, desc: "Edits submitted from forms waiting for approval, and your own", match: /review/changes, requires: [feature:build] }
+      - title: Learn
+        items:
+          - { id: knowledge, href: /what, icon: lightbulb, label: Knowledge, desc: "What the words of your data mean and how it connects · also WHAT <GO>", match: /help/knowledge, requires: [word:WHAT] }
+          - { id: tutorials, href: /help/tutorials, icon: mortarboard, label: Tutorials, desc: "{tutorials} hands-on tutorials, a picture of every step", requires: [feature:build] }
+          - { id: schema-to-pack, href: /help/schema-to-pack, icon: diagram-3, label: Schema to pack, desc: "Every rule that turns a JSON Schema into a pack, with examples", requires: [feature:build] }
+          - { id: screen-designer, href: /help/screen-designer, icon: bounding-box, label: Screen designer guide, desc: "From JSON files to a screen: the canvas, step by step", requires: [feature:build] }
+          - { id: sutra-guide, href: /help/sutra-developer-guide, icon: journal-code, label: Sutra developer guide, desc: "Writing a layout end to end, by example", requires: [feature:build] }
+          - { id: panels, href: /help/panels, icon: grid-1x2, label: Panel kinds, desc: "The 22 panel kinds, one entry each", requires: [feature:build] }
+          - { id: rachana-reference, href: /help/rachana-reference, icon: book, label: Rachana reference, desc: "Every key, panel option, format and problem code", requires: [feature:build] }
+          - { id: pack-guide, href: /help/pack-developer-guide, icon: box-seam, label: Pack developer guide, desc: "Bring a new domain in, step by step", requires: [feature:build] }
+  - id: admin
+    label: Admin
+    icon: shield-lock
+    columns:
+      - title: "People & access"
+        items:
+          - { id: users, href: /admin/users, icon: people, label: Users, desc: "Accounts, roles and packs per person", match: /admin/users, requires: [admin, admin-page:users] }
+          - { id: roles, href: /admin/roles, icon: shield-lock, label: Roles, desc: What each role opens and may do, match: /admin/roles, requires: [admin, admin-page:roles] }
+          - { id: audit, href: /admin/audit, icon: journal-text, label: Audit log, desc: "Every sign-in and change, by whom", match: /admin/audit, requires: [admin, admin-page:audit] }
+      - title: Operations
+        items:
+          - { id: packs, href: /admin/packs, icon: box-seam, label: Packs, desc: "Switch domain packs on and off; deploy archives; the connectors each uses", match: /admin/packs, requires: [admin, admin-page:packs] }
+          - { id: connectors, href: /admin/connectors, icon: plug, label: Connectors, desc: "Where each pack reads its data: create, test, change, switch off", match: /admin/connectors, requires: [admin, admin-page:connectors] }
+          - { id: artifacts, href: /admin/artifacts, icon: archive, label: Artifacts, desc: "Everything installed: disable, uninstall safely, restore, install", match: /admin/artifacts, requires: [admin, admin-page:artifacts] }
+          - { id: commands, href: /func, icon: toggles, label: Commands, desc: "Turn commands on or off for everyone, with a reason, on Functions; every server follows", requires: [admin, admin-page:commands, word:FUNC] }
+          - { id: loads, href: /admin/loads, icon: cloud-upload, label: Data loads, desc: "What your ETL announced, what is due, what is late", match: /admin/loads, requires: [admin, admin-page:loads] }
+          - { id: lakes, href: /admin/lakes, icon: layers, label: Lakes, desc: "Delta tables: load a file, see every table, maintain them now or on a schedule", match: /admin/lakes, requires: [admin, admin-page:lakes, feature:lakes] }
+          - { id: collab, href: /admin/collab, icon: chat-square-text, label: Collaboration, desc: "Moderation, legal holds, export, mail outbox, bridges", match: /admin/collab, requires: [admin, admin-page:collab, feature:collaboration] }
+          - { id: embedding, href: /admin/embedding, icon: window-stack, label: Embedding, desc: Host applications that show views in their own pages, match: /admin/embedding, requires: [admin, admin-page:embedding] }
+          - { id: net, href: /admin/net, icon: diagram-3, label: Net, desc: "{product}*net: the servers acting as one, their packs and data, routing, access", match: /admin/net, requires: [admin, admin-page:net] }
+          - { id: health, href: /admin/health, icon: heart-pulse, label: Health, desc: "Connectors, packs, live streams", match: /admin/health, requires: [admin, admin-page:health] }
+          - { id: caches, href: /admin/caches, icon: hdd-stack, label: Caches, desc: "What each cache holds; purge", match: /admin/caches, requires: [admin, admin-page:caches] }
+  - id: help
+    label: Help
+    icon: question-circle
+    columns:
+      - title: Learn
+        items:
+          - { id: help-centre, href: /help, icon: question-circle, label: Help centre, desc: "Guides, concepts and reference (F1)", match: /help }
+          - { id: knowledge, href: /what, icon: lightbulb, label: Knowledge, desc: "Market risk, counterparty risk and more, in plain words · WHAT <term>", requires: [word:WHAT] }
+          - { id: install, href: /help/install-and-run, icon: flag, label: Install and run, desc: From nothing to your first view }
+          - { id: about, href: /about, icon: info-circle, label: "About {product}", desc: "Version, licence and credits", match: /about }
+
+footer:
+  - { id: help, href: /help, icon: question-circle, label: Help }
+  - { id: about, href: /about, icon: info-circle, label: About }
+  - { id: competitive, href: /about/competitive, icon: bar-chart-steps, label: Competitive analysis }
+  - { id: release-notes, href: /help/release-notes, icon: tag, label: Release notes }
+
+# The command line's placeholder (an edition's menus.placeholder, or ui.placeholder, wins)
+placeholder: "TRD MX-20000001, CPTY north, TRD PRODUCT_TYPE=FX_QUANTO …  then <GO>"
